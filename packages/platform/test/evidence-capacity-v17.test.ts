@@ -6,8 +6,9 @@ import type { FactRef } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { d, keys, otherLane } from "@generalbusiness/dap-derive/testing";
 import type { Item, RuleGiven } from "@generalbusiness/dap-derive";
-import { evidenceFundCapacityV17 } from "../src/destination-evidence-capacity-v17.ts";
+import { evidenceFundCapacityV17, evidencePendingCapacityForecastV17, readEvidenceCapacityWireV17 } from "../src/destination-evidence-capacity-v17.ts";
 import type { EvidenceBatchRecordV17 } from "../src/evidence-batch-v17.ts";
+import { evidenceBatchWireV17 } from "../src/evidence-batch-v17.ts";
 import { rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
 import { RULES } from "./support-destination.ts";
@@ -51,7 +52,7 @@ describe("exact pre-publication capacity identities", () => {
       time: "2026-10-28T00:00:00.000Z", uses: [], resolved: { at: destination, self, bounds: PROPOSED_BOUNDS },
       state: { page: () => ({ items: [branch], more: false }), lookup: () => anchor ? [anchor.id] : [],
         item: (id: number) => id === 0 ? branch : anchor && id === anchor.id ? { id, values: { capacity: anchor.capacity } }
-          : [10, 30, 40].includes(id) ? { id, type: "publication", refs: { manifest: fact(5) }, values: {} } : null,
+          : [10, 30, 40, 50].includes(id) ? { id, type: "publication", refs: { manifest: fact(5) }, values: {} } : null,
         scope: () => ({ at: destination, head: { seq: 90, hash: d("a") } }) },
     } as unknown as RuleGiven;
   }
@@ -66,5 +67,37 @@ describe("exact pre-publication capacity identities", () => {
   });
   it("refuses a selected holds obligation with no associated or touched extent before funding", () => {
     expect(evidenceFundCapacityV17(scripted(100), batch(10, []))).toBeNull();
+  });
+  it("reserves three publication identities before work and refuses a fourth without eviction", () => {
+    const first = evidenceFundCapacityV17(scripted(100), batch(10, ["code"]));
+    expect(first).not.toBeNull();
+    let capacity = first!.capacity;
+    for (const [n, seq] of [30, 40].entries()) {
+      const next = evidenceFundCapacityV17(scripted(101 + n, { keys: 0, holds: 1, policyGenerations: 1, incidents: 1 + n }, { id: 100, capacity }), batch(seq, ["code"]));
+      expect(next).not.toBeNull();
+      const update = next!.effects.find(effect => effect.effect === "value" && effect.item === 100 && effect.slot === "capacity");
+      if (!update || update.effect !== "value") throw Error("The scripted shared anchor was not reserved");
+      capacity = update.value!;
+    }
+    const slots = readEvidenceCapacityWireV17(capacity)!.holds![0]!.pending;
+    expect(slots.map(slot => [slot.publication.seq, slot.job, slot.admittedAt])).toEqual([[10, null, null], [30, null, null], [40, null, null]]);
+    const before = JSON.stringify(capacity);
+    expect(evidenceFundCapacityV17(scripted(103, { keys: 0, holds: 1, policyGenerations: 1, incidents: 3 }, { id: 100, capacity }), batch(50, ["code"]))).toBeNull();
+    expect(JSON.stringify(capacity)).toBe(before);
+  });
+  it("future carriers quote all frozen potential extent keys and all three bound pointers, beyond the sparse current anchor", () => {
+    const source = batch(10, ["code"]), first = evidenceFundCapacityV17(scripted(100), source);
+    expect(first).not.toBeNull();
+    const given = scripted(101, { keys: 0, holds: 1, policyGenerations: 1, incidents: 1 }, { id: 100, capacity: first!.capacity });
+    const original = given.state.item.bind(given.state);
+    const future = evidencePendingCapacityForecastV17({ ...given, state: { ...given.state, item: (id: number) => id === 100
+      ? { ...original(id)!, values: { capacity: first!.capacity, batch: evidenceBatchWireV17(source) } } : original(id) } }, 100, otherLane);
+    const effect = future[0];
+    if (!effect || effect.effect !== "value") throw Error("The actual future carrier helper gave no capacity");
+    const decoded = readEvidenceCapacityWireV17(effect.value)!;
+    expect(readEvidenceCapacityWireV17(first!.capacity)!.holds!.map(row => row.key.extent)).toEqual(["code"]);
+    expect(decoded.holds!.map(row => row.key.extent).sort()).toEqual(["code", "docs", "rules"]);
+    expect(decoded.holds!.every(row => row.pending.length === 3 && row.pending.every(slot => slot.job !== null && slot.admittedAt !== null))).toBe(true);
+    expect(JSON.stringify(effect.value).length).toBeGreaterThan(JSON.stringify(first!.capacity).length);
   });
 });

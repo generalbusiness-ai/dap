@@ -23,10 +23,10 @@ function fundingPreview() {
     ] });
   if (!proposed.ok) throw Error("The scripted funding policy is invalid");
   const certificate = { request: fact(1, destination), certificate: fact(2, destination), proof: d("c"), commit: "a".repeat(40) };
-  const envelope = { configured: true, policy: proposed.policy, proposal: proposed.digest, certificate };
+  const envelope = { configured: true, policy: proposed.policy, proposal: proposed.digest, certificate, serviceGeneration: { rules, seq: 0 } };
   const observation: RulesObservation = { subject: "rules", of: rules, head: { seq: 3, hash: d("d") }, revision: 3, definition: "platform:rules@13", at: t(0),
     content: { asked: "rules", approvals: 1, ownerMayReview: false, checks: [{ name: "published", configuration: d("b"), required: true, checker: keys.una.member.member }],
-      labels: ['TEST\\"'], singleControllerException: false, extents: valueDigest("artroom-rules-extents-3", envelope), roomService: null, serviceGeneration: { rules, seq: 0 } } };
+      labels: ['TEST\\"'], singleControllerException: false, extents: valueDigest("artroom-rules-extents-3", envelope) } };
   const snapshot: CertifiedPublicationStateV17 = { policy: { observation, input: { rules, destination, extents: envelope }, touched: ["source"], required: [], tree: "b".repeat(40), manifest: fact(4) }, generations: [] };
   const seal = (seq: number, input: Input, effects: Effect[], sends: Entry["sends"] = []): Sealed => {
     const entry: Entry = { v: 1, at: destination, seq, prev: d("0"), time: t(0), clamped: false, epoch: 0, input, uses: [], prepared: [], effects, sends };

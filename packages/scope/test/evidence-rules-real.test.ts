@@ -1,18 +1,20 @@
 import { expect, inject, test } from "vitest";
 import { runDurableObjectAlarm } from "cloudflare:test";
-import type { EvidenceBinding, Observation } from "@generalbusiness/dap-contract";
-import { canonicalize, evidenceBindingDigest, factRefOf, isDigest, isRecord, isSeed, readEvidenceBinding, scopeIdOf } from "@generalbusiness/dap-bytes";
+import type { Observation } from "@generalbusiness/dap-contract";
+import { canonicalize, evidenceBindingDigest, factRefOf, isDigest, isRecord, isSeed, readEvidenceBinding, scopeIdOf, timeMs, type EvidenceBinding } from "@generalbusiness/dap-bytes";
 import { isObjectId } from "@generalbusiness/dap-git";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { EVIDENCE_RULES_COHORT } from "../../platform/src/evidence-cohort.ts";
 import { claimEvidenceWork, configureEvidenceRules, enrolEvidenceKey, evidenceCertificate, evidenceChecker, evidenceNativeRoom,
-  evidenceEntry, evidenceRecord, evidenceRulesObservation, evidenceRulesPolicy, prepareEvidenceWork, publishEvidenceRulesCertificate, requestEvidenceWork } from "./evidence-rules-real-fixture.ts";
+  evidenceEntry, evidenceNativeState, evidenceRecord, evidenceRulesObservation, evidenceRulesPolicy, prepareEvidenceWork, publishEvidenceRulesCertificate, requestEvidenceWork } from "./evidence-rules-real-fixture.ts";
 import { claimLandingEvidence, claimPublishedEvidence, evidenceFailureNotice, evidenceOutcomeRace, prepareAuditEvidence, prepareLandingEvidence,
   preparePublishedEvidence, publishEvidenceFile, requestLandingEvidence, revisePublishedEvidence, type LandingEvidenceJob } from "./evidence-rules-real-fixture.ts";
 import { runEvidenceContainerCase } from "./evidence-runner-case.ts";
 import { hardeningItems, hardeningSealed } from "./certified-rules-hardening-fixture.ts";
 import { readEvidenceJobRecordWireV17, readEvidenceServiceWireV17 } from "../../platform/src/destination-evidence-v17.ts";
 import { evidenceHoldActiveV17 } from "../../platform/src/evidence-holds-v17.ts";
+import { evidenceIncidentAdmissionPositionV17 } from "../../platform/src/evidence-incident-origin-v17.ts";
+import { evidenceWireV17, readEvidenceWireV17 } from "../../platform/src/evidence-wire-v17.ts";
 import { rita } from "./repository.ts";
 
 // Register/Directory/Membership/Rules/Destination creation, authority, native
@@ -27,7 +29,10 @@ test("the real evidence cohort publishes a scoped mark, preserves unchanged gene
     for (const [node, pin] of [[room.R, EVIDENCE_RULES_COHORT.register], [room.D, EVIDENCE_RULES_COHORT.directory],
       [room.M, EVIDENCE_RULES_COHORT.membership], [room.Q, EVIDENCE_RULES_COHORT.rules], [room.G, EVIDENCE_RULES_COHORT.destination]] as const)
       expect((await node.summary()).value.definition).toBe(pin);
-    expect((await observedRules(room)).content).toMatchObject({ roomService: null, serviceGeneration: { rules: await room.Q.at(), seq: 0 } });
+    const unconfigured = await observedRules(room);
+    expect(unconfigured).toMatchObject({ roomService: null, serviceGeneration: { rules: await room.Q.at(), seq: 0 } });
+    expect(Object.hasOwn(unconfigured.content, 'roomService')).toBe(false);
+    expect(Object.hasOwn(unconfigured.content, 'serviceGeneration')).toBe(false);
     const service = await evidenceChecker(room), policy = evidenceRulesPolicy({ checker: service.member, key: service.actor.key });
     await configureEvidenceRules(room, policy);
     const first = await observedRules(room), firstPublish = (await room.Q.item(0)).refs['published'];
@@ -47,11 +52,11 @@ test("the real evidence cohort publishes a scoped mark, preserves unchanged gene
     expect(await publishEvidenceRulesCertificate(room, withdrawnPolicy, certificate.request, certificate.certificate, certificate.proof, certificate.proofBytes))
       .toMatchObject({ answer: "accepted" });
     const withdrawn = await observedRules(room);
-    expect(withdrawn.content.roomService).toBe(null);
+    expect(withdrawn.roomService).toBe(null);
     expect(withdrawn.serviceGeneration.seq).toBeGreaterThan(first.serviceGeneration.seq);
     await configureEvidenceRules(room, policy);
     const returned = await observedRules(room);
-    expect(returned.content.roomService).toEqual(first.content.roomService);
+    expect(returned.roomService).toEqual(first.roomService);
     expect(returned.serviceGeneration.seq).toBeGreaterThan(withdrawn.serviceGeneration.seq);
     expect(returned.serviceGeneration).not.toEqual(first.serviceGeneration);
   } finally { room.life.release(); }
@@ -193,15 +198,16 @@ test("real published holds survive newer counted passes and clear only through d
     const older = await publishEvidenceFile(room, setup, "Older published failure notice"), olderJob = await older.job();
     const first = await publishEvidenceFile(room, setup, "First published check"), firstJob = await first.job();
     const second = await publishEvidenceFile(room, setup, "Second published check"), secondJob = await second.job();
+    const firstResult = await claimPublishedEvidence(room, setup, first, firstJob, "passed");
     const third = await publishEvidenceFile(room, setup, "Third published check"), thirdJob = await third.job();
     const newGeneration = await revisePublishedEvidence(room, setup, { label: "TEST same configuration, new policy generation" });
     const fourth = await publishEvidenceFile(room, newGeneration, "New-generation published check"), fourthJob = await fourth.job();
     const newConfiguration = await revisePublishedEvidence(room, newGeneration, { label: "TEST changed configuration", image: `sha256:${"4".repeat(64)}` });
     const fifth = await publishEvidenceFile(room, newConfiguration, "Changed-configuration published check"), fifthJob = await fifth.job();
     expect(secondJob.binding.subject.kind).toBe("published");
-    // All actual publications complete while their published jobs run.
-    // No pending check retrospectively blocks an already admitted publication.
-    expect(firstJob.record.state).toBe("admitted");
+    // Settle the first actual job before commissioning the fourth on this
+    // exact key. Its pass frees one of the three pending slots.
+    expect(await evidenceRecord(room, firstJob.job)).toMatchObject({ state: "passed", result: firstResult });
     expect(secondJob.record.state).toBe("admitted");
     expect(thirdJob.record.state).toBe("admitted");
     // Restore this descriptor before its late outcome; each result is
@@ -229,7 +235,13 @@ test("real published holds survive newer counted passes and clear only through d
     expect(fourthJob.record.configuration).toBe(secondJob.record.configuration);
     await claimPublishedEvidence(room, newGeneration, fourth, fourthJob, "passed");
     expect(await evidenceRecord(room, fourthJob.job)).toMatchObject({ state: "passed" });
-    await claimPublishedEvidence(room, setup, first, firstJob, "passed");
+    // Replay that earlier actual result's exact sealed delivery, rather
+    // than claiming a newly counted pass after the newer failure.
+    const destination = await room.G.at(), passedEntry = await evidenceEntry(first.lane, firstResult.seq), passedSend = passedEntry.sends.find(send => canonicalize(send.to) === canonicalize(destination)
+      && send.message.class === 'request' && send.message.type === 'tell' && isRecord(send.message.body) && send.message.body['message'] === 'checked');
+    if (!passedSend) throw Error('Actual earlier counted result delivery required');
+    await room.G.stub.deliver({ from: firstResult, n: passedSend.n, to: await room.G.at(), message: passedSend.message });
+    await room.pause(room.nodes);
     expect(await evidenceRecord(room, firstJob.job)).toMatchObject({ state: "passed" });
     expect((await holds()).find(hold => hold.key.extent === "other" && evidenceHoldActiveV17(hold))?.failure?.job).toEqual(secondJob.job);
     expect(fifthJob.record.configuration).not.toBe(secondJob.record.configuration);
@@ -276,23 +288,66 @@ test("real published holds survive newer counted passes and clear only through d
     expect(await child.act(rita, "close-own", { on: 0, expected: await child.expected({ on: 0 }) })).toMatchObject({ answer: "refused", reason: "guard-failed" });
     await child.did(rita, "close-any", { on: 0, expected: await child.expected({ on: 0 }) });
     expect((await holds()).some(hold => hold.key.extent === "other" && evidenceHoldActiveV17(hold))).toBe(true);
+    const failedRecord = await evidenceRecord(room, secondJob.job);
+    if (failedRecord.holdOwner === null) throw Error("Actual hold owner required");
+    const current = await observedRules(room), nextGeneration = { rules: await room.Q.at(), seq: current.revision };
+    await room.G.did(rita, "evidence-hold-transition", { on: failedRecord.holdOwner, expected: await room.G.expected({ on: failedRecord.holdOwner }), fields: {
+      extent: "readme", job: secondJob.job, generation: canonicalize(nextGeneration), reason: "TEST authorized policy transition" } });
+    const transitioned = (await holds()).find(hold => hold.key.extent === "readme" && canonicalize(hold.key.generation) === canonicalize(secondJob.binding.policyGeneration));
+    expect(transitioned?.release).toMatchObject({ kind: "transition", next: nextGeneration, reason: "TEST authorized policy transition" });
+    expect(transitioned && evidenceHoldActiveV17(transitioned)).toBe(false);
+    expect((await holds()).some(hold => hold.key.extent === "other" && evidenceHoldActiveV17(hold))).toBe(true);
+    await room.G.did(rita, "evidence-hold-override", { on: failedRecord.holdOwner, expected: await room.G.expected({ on: failedRecord.holdOwner }), fields: {
+      extent: "other", job: secondJob.job, reason: "TEST explicit triager override" } });
+    const released = (await holds()).find(hold => hold.key.extent === "other");
+    expect(released?.release).toMatchObject({ kind: "override", reason: "TEST explicit triager override" });
+    expect(released && evidenceHoldActiveV17(released)).toBe(false);
     // No triager exists while the real timeout decides. Its incident cause
     // must remain that timeout even if an authentic late pass arrives first.
     const administrator = await room.M.stub.observe({ of: await room.M.at(), key: rita.key }) as Observation;
     await room.M.did(rita, "set-actions", { on: 0, expected: await room.M.expected({ on: 0 }), fields: {
       role: "admin", actions: administrator.actions.filter(action => action !== "issue.triage") } });
     room.life.advance(1_801_000); await runDurableObjectAlarm(room.G.object); await room.pause(room.nodes);
+    const timedView = (await evidenceNativeState(room)).jobs.find(row => canonicalize(row.raw.job) === canonicalize(thirdJob.job));
+    if (!timedView || timedView.raw.admittedAt === null) throw Error('Actual literal timed job required');
+    expect(timedView.raw.state).toBe('admitted');
+    expect(timedView.current.state).toBe('timeout');
+    await room.G.did(rita, 'evidence-recover-timeout', { on: 0, fields: { admission: factRefOf(await evidenceEntry(room.G, timedView.raw.admittedAt)), operation: third.operation },
+      expected: await room.G.expected({ on: 0, job: timedView.raw.admittedAt }) });
+    await room.pause(room.nodes);
     const timed = await evidenceRecord(room, thirdJob.job);
     expect(timed).toMatchObject({ state: "timeout", result: null, noticeAt: null, incident: { cause: { kind: "timeout", result: null } } });
     expect(await hardeningItems(third.lane, "incident")).toHaveLength(0);
     const timedHold = (await holds()).find(hold => hold.key.extent === "other" && evidenceHoldActiveV17(hold));
     expect(timedHold?.failure).toMatchObject({ job: thirdJob.job, kind: "timeout", result: null });
-    if (timed.holdOwner === null) throw Error("Actual hold owner required");
-    await room.M.did(rita, "set-actions", { on: 0, expected: await room.M.expected({ on: 0 }), fields: { role: "admin", actions: administrator.actions } });
     await configureEvidenceRules(room, newGeneration.policy);
-    const latePass = await claimPublishedEvidence(room, setup, third, thirdJob, "passed"), settled = await evidenceRecord(room, thirdJob.job);
-    expect(settled).toMatchObject({ state: "passed", result: latePass, incident: { cause: timed.incident?.cause } });
+    const latePass = await claimPublishedEvidence(room, setup, third, thirdJob, "passed"), late = await evidenceRecord(room, thirdJob.job);
+    expect(late).toMatchObject({ state: "passed", result: latePass, noticeAt: null, incident: { cause: timed.incident?.cause } });
+    expect(await hardeningItems(third.lane, 'incident')).toHaveLength(0);
+    await room.M.did(rita, "set-actions", { on: 0, expected: await room.M.expected({ on: 0 }), fields: { role: "admin", actions: administrator.actions } });
+    // Reoffer the same held native answer at its maintained one-second
+    // retry boundary; this advances the fixture clock, without sleeping.
+    room.life.advance(1000); await runDurableObjectAlarm(room.G.object); await room.pause(room.nodes);
+    const settled = await evidenceRecord(room, thirdJob.job);
+    expect(settled).toMatchObject({ state: 'passed', result: latePass, incident: { cause: timed.incident?.cause } });
     expect(settled.noticeAt).not.toBeNull();
+    const timeoutNotice = await evidenceFailureNotice(room, thirdJob.job), nativeNotice = await evidenceEntry(room.G, timeoutNotice.from.seq);
+    expect(evidenceIncidentAdmissionPositionV17(nativeNotice)).toBe(settled.admittedAt);
+    // Synthetic projection controls over a copied actual notice: these
+    // are not Native authority or additional history facts.
+    const projected = (state: 'timeout' | 'passed', decidedAt: number | null) => {
+      const copy = structuredClone(nativeNotice), row = copy.effects.find(effect => effect.effect === 'value' && effect.slot === 'record' && effect.item === settled.admittedAt);
+      if (!row || row.effect !== 'value') throw Error('Actual notice record effect required');
+      const read = readEvidenceWireV17(row.value, 196608);
+      if (!read.ok || !isRecord(read.value)) throw Error('Actual notice wire required');
+      row.value = evidenceWireV17({ ...read.value, state, decidedAt, result: state === 'timeout' ? null : settled.result }, 196608);
+      return evidenceIncidentAdmissionPositionV17(copy);
+    };
+    if (timed.decidedAt === null) throw Error('Actual immutable TIME position required');
+    expect(projected('timeout', timed.decidedAt)).toBe(settled.admittedAt);
+    expect(projected('timeout', null)).toBeNull();
+    expect(projected('timeout', timed.decidedAt + 1)).toBeNull();
+    expect(projected('passed', timed.decidedAt)).toBeNull();
     const delayed = (await hardeningItems(third.lane, "incident"))[0];
     if (!delayed) throw Error("Actual delayed timeout incident required");
     expect(JSON.parse(String(delayed.values['cause']))).toMatchObject({ kind: "timeout", result: null, decidedAt: timed.incident?.cause?.decidedAt });
@@ -303,19 +358,107 @@ test("real published holds survive newer counted passes and clear only through d
     expect(delayedSource?.under).toBe("issue");
     expect(delayedSource?.origin).toHaveLength(9);
     expect((await delayedChild.item(0)).refs['failedResult'] ?? null).toBeNull();
-    expect((await holds()).find(hold => hold.key.extent === "other" && evidenceHoldActiveV17(hold))?.failure).toMatchObject({ job: thirdJob.job, kind: "timeout", result: null });
-    const current = await observedRules(room), nextGeneration = { rules: await room.Q.at(), seq: current.revision };
-    await room.G.did(rita, "evidence-hold-transition", { on: timed.holdOwner, expected: await room.G.expected({ on: timed.holdOwner }), fields: {
-      extent: "readme", generation: canonicalize(nextGeneration), reason: "TEST authorized policy transition" } });
-    const transitioned = (await holds()).find(hold => hold.key.extent === "readme" && canonicalize(hold.key.generation) === canonicalize(thirdJob.binding.policyGeneration));
-    expect(transitioned?.release).toMatchObject({ kind: "transition", next: nextGeneration, reason: "TEST authorized policy transition" });
-    expect(transitioned && evidenceHoldActiveV17(transitioned)).toBe(false);
-    expect((await holds()).some(hold => hold.key.extent === "other" && evidenceHoldActiveV17(hold))).toBe(true);
-    await room.G.did(rita, "evidence-hold-override", { on: timed.holdOwner, expected: await room.G.expected({ on: timed.holdOwner }), fields: { extent: "other", reason: "TEST explicit triager override" } });
-    const released = (await holds()).find(hold => hold.key.extent === "other");
-    expect(released?.release).toMatchObject({ kind: "override", reason: "TEST explicit triager override" });
-    expect(released && evidenceHoldActiveV17(released)).toBe(false);
+    expect((await holds()).find(hold => hold.key.extent === "other")?.failure).toMatchObject({ job: thirdJob.job, kind: "timeout", result: null });
+    expect((await holds()).some(hold => evidenceHoldActiveV17(hold))).toBe(false);
   } finally { room.life.release(); }
+});
+
+test("literal native TIME holds at its own head, replays unchanged, and recovers one funded incident within the pending bound", { timeout: 240_000 }, async () => {
+  const room = await evidenceNativeRoom();
+  try {
+    const setup = await preparePublishedEvidence(room);
+    const a = await publishEvidenceFile(room, setup, 'TEST pending A'), aJob = await a.job();
+    const b = await publishEvidenceFile(room, setup, 'TEST pending B'), bJob = await b.job();
+    const c = await publishEvidenceFile(room, setup, 'TEST literal TIME target'), target = await c.job();
+    const full = await evidenceNativeState(room), pending = full.capacities.flatMap(row => row.holds ?? []).filter(row => row.key.extent === 'other');
+    expect(pending).toHaveLength(1); expect(pending[0]!.pending.map(row => row.job)).toEqual([aJob.job, bJob.job, target.job]);
+    const pushes = () => room.gitRequests.filter(row => row.method === 'POST' && row.path.endsWith('/git-receive-pack')).length;
+    const pushed = pushes(), main = room.host.stand.refs.get('refs/heads/main');
+    const excess = await publishEvidenceFile(room, setup, 'TEST full pending key');
+    expect((await hardeningItems(room.G, 'publication')).find(item => canonicalize(item.refs['operation']) === canonicalize(excess.operation)))
+      .toMatchObject({ state: 'reserved', values: { evidenceReady: false } });
+    const refusedFunding = (await hardeningSealed(room.G)).map(row => row.entry).filter(entry => entry.input.type === 'delivery'
+      && entry.input.message.class === 'request' && entry.input.message.type === 'tell' && isRecord(entry.input.message.body)
+      && entry.input.message.body['message'] === 'evidence-fund' && isRecord(entry.input.message.body['fields'])
+      && canonicalize(entry.input.message.body['fields']['operation']) === canonicalize(excess.operation));
+    expect(refusedFunding).toHaveLength(1);
+    expect(refusedFunding[0]!.input).toMatchObject({ decision: 'refused', reason: { code: 'guard-failed', name: 'evidence-funding-unavailable' } });
+    expect(refusedFunding[0]!.effects.some(effect => effect.effect === 'open' && ['evidence-batch', 'evidence-job'].includes(effect.type))).toBe(false);
+    expect(pushes()).toBe(pushed); expect(room.host.stand.refs.get('refs/heads/main')).toBe(main);
+    expect(await hardeningItems(excess.lane, 'job')).toHaveLength(0);
+    expect((await evidenceNativeState(room)).capacities.flatMap(row => row.holds ?? []).find(row => row.key.extent === 'other')?.pending).toEqual(pending[0]!.pending);
+    await excess.lane.did(rita, 'cancel-merge', { on: excess.operation.seq, expected: await excess.lane.expected({ on: excess.operation.seq, proposal: 0 }) });
+    await room.pause(room.nodes);
+    expect((await hardeningItems(room.G, 'publication')).find(item => canonicalize(item.refs['operation']) === canonicalize(excess.operation))?.state).not.toBe('reserved');
+    await claimPublishedEvidence(room, setup, a, aJob, 'passed'); await claimPublishedEvidence(room, setup, b, bJob, 'passed');
+    room.life.advance(1000);
+    const before = await publishEvidenceFile(room, setup, 'TEST admitted before TIME'), beforeJob = await before.job();
+    expect(beforeJob.record.state).toBe('admitted');
+    const admission = target.record.admittedAt;
+    if (admission === null) throw Error('Actual target admission required');
+    const admissionFact = factRefOf(await evidenceEntry(room.G, admission));
+    expect(await room.G.act(rita, 'evidence-recover-timeout', { on: 0, fields: { admission: admissionFact, operation: c.operation },
+      expected: await room.G.expected({ on: 0, job: admission }) })).toMatchObject({ answer: 'refused', reason: 'guard-failed', name: 'not-a-timed-incident' });
+    const due = timeMs(target.record.deadline);
+    if (due === null || due <= room.life.now()) throw Error('Actual future native deadline required');
+    const priorItem = (await evidenceNativeState(room)).jobs.find(row => row.item.id === admission)?.item;
+    if (!priorItem) throw Error('Actual running target item required');
+    room.life.advance(due - room.life.now()); await runDurableObjectAlarm(room.G.object); await room.pause(room.nodes);
+    const timed = await evidenceNativeState(room, true), targetRow = timed.jobs.find(row => row.item.id === admission);
+    if (!targetRow) throw Error('Actual timed target item required');
+    expect(targetRow.item.state).toBe(`${priorItem.state}-timedout`);
+    expect(targetRow.item.values['record']).toBe(priorItem.values['record']);
+    expect(targetRow.raw).toMatchObject({ state: 'admitted', decidedAt: null, incident: { cause: null } });
+    expect(targetRow.current).toMatchObject({ state: 'timeout', reason: 'check-timeout' });
+    const timeoutPosition = targetRow.item.refs['timeoutDecision'];
+    if (typeof timeoutPosition !== 'number') throw Error('Actual local TIME self reference required');
+    const literal = await evidenceEntry(room.G, timeoutPosition);
+    const timedRule = priorItem.state === 'hold-anchor' ? 'evidence-hold-deadline' : priorItem.state === 'reuse-anchor' ? 'evidence-reuse-deadline' : 'evidence-job-deadline';
+    expect(literal.input).toMatchObject({ type: 'timed', item: admission, rule: timedRule, due: target.record.deadline });
+    expect(targetRow.item.values['timeoutReason']).toBe('check-timeout');
+    expect(literal.effects).toContainEqual({ effect: 'ref', item: admission, slot: 'timeoutDecision', to: timeoutPosition });
+    expect(literal.sends).toHaveLength(0);
+    expect(literal.effects.every(effect => ['state', 'value', 'ref'].includes(effect.effect) && 'item' in effect && effect.item === admission)).toBe(true);
+    expect(targetRow.item.values['noticeOpenedAt']).toBeUndefined();
+    const held = timed.holds.find(row => row.hold.key.extent === 'other');
+    expect(held?.effective).toMatchObject({ ok: true, active: true, cause: { job: target.job, decidedAt: timeoutPosition, kind: 'timeout', reason: 'check-timeout', result: null } });
+    expect(timed.jobs.find(row => canonicalize(row.raw.job) === canonicalize(beforeJob.job))?.current.state).toBe('admitted');
+    expect(timed.capacities.flatMap(row => row.holds ?? []).find(row => row.key.extent === 'other')?.pending).toHaveLength(2);
+    const after = await publishEvidenceFile(room, setup, 'TEST refused after TIME');
+    expect((await hardeningItems(room.G, 'publication')).find(item => canonicalize(item.refs['operation']) === canonicalize(after.operation)))
+      .toMatchObject({ state: 'not-reserved', values: { reason: 'extent-regressed' } });
+    expect(room.host.stand.refs.get('refs/heads/main')).toBe(beforeJob.record.commit);
+    const hydrated = await evidenceRecord(room, target.job);
+    expect(hydrated.incident?.cause).toMatchObject({ job: target.job, decidedAt: timeoutPosition, kind: 'timeout', result: null });
+    const opened = (await evidenceNativeState(room)).jobs.find(row => row.item.id === admission)?.item.values['noticeOpenedAt'];
+    expect(typeof opened).toBe('number');
+    const noticeOperations = async () => (await hardeningSealed(room.G)).flatMap(({ entry }) => entry.effects)
+      .filter(effect => effect.effect === 'operation' && effect.kind === 'evidence-notice' && effect.for === hydrated.holder);
+    expect(await noticeOperations()).toHaveLength(1);
+    expect(await room.G.act(setup.service.actor, 'evidence-recover-timeout', { on: 0, fields: { admission: admissionFact },
+      expected: await room.G.expected({ on: 0, job: admission }) })).toMatchObject({ answer: 'refused', reason: 'guard-failed', name: 'evidence-recovery-authority' });
+    const checker = await room.M.stub.observe({ of: await room.M.at(), key: setup.service.actor.key }) as Observation;
+    await room.M.did(rita, 'set-actions', { on: 0, fields: { role: 'checker', actions: [...checker.actions, 'issue.triage'] }, expected: await room.M.expected({ on: 0 }) });
+    const triagerRecovery = await room.G.did(setup.service.actor, 'evidence-recover-timeout', { on: 0, fields: { admission: admissionFact }, expected: await room.G.expected({ on: 0, job: admission }) });
+    const triagerEntry = await evidenceEntry(room.G, triagerRecovery);
+    if (triagerEntry.input.type !== 'act') throw Error('Actual authorized triager act required');
+    expect(triagerEntry.input.authority[0]?.actions).toContain('issue.triage');
+    const administrator = await room.M.stub.observe({ of: await room.M.at(), key: rita.key }) as Observation;
+    await room.M.did(rita, 'set-actions', { on: 0, fields: { role: 'admin', actions: administrator.actions.filter(action => action !== 'issue.triage') }, expected: await room.M.expected({ on: 0 }) });
+    const performerRecovery = await room.G.did(rita, 'evidence-recover-timeout', { on: 0, fields: { admission: admissionFact, operation: c.operation }, expected: await room.G.expected({ on: 0, job: admission }) });
+    const performerEntry = await evidenceEntry(room.G, performerRecovery);
+    if (performerEntry.input.type !== 'act') throw Error('Actual original performer act required');
+    expect(performerEntry.input.authority[0]?.actions).not.toContain('issue.triage');
+    expect((await evidenceNativeState(room)).jobs.find(row => row.item.id === admission)?.item.values['noticeOpenedAt']).toBe(opened);
+    expect(await noticeOperations()).toHaveLength(1);
+    expect((await evidenceRecord(room, target.job)).incident?.cause).toEqual(hydrated.incident?.cause);
+    const liveAdmission = beforeJob.record.admittedAt;
+    if (liveAdmission === null) throw Error('Actual still-running job admission required');
+    expect(await room.G.act(setup.service.actor, 'evidence-recover-timeout', { on: 0, fields: { admission: factRefOf(await evidenceEntry(room.G, liveAdmission)) },
+      expected: await room.G.expected({ on: 0, job: liveAdmission }) })).toMatchObject({ answer: 'refused', reason: 'guard-failed', name: 'not-a-timed-incident' });
+    expect((await evidenceNativeState(room)).jobs.find(row => row.item.id === liveAdmission)?.item.values['noticeOpenedAt']).toBeUndefined();
+    expect(await noticeOperations()).toHaveLength(1);
+  } finally { try { await room.pause(room.nodes); } finally { room.life.release(); } }
 });
 
 test("the real failure and reservation outcomes serialize atomically in both admitted-before-failure and failure-before-admission schedules", { timeout: 240_000 }, async () => {
@@ -388,7 +531,7 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
     if (!opening) throw Error("Actual sealed reservation opening required");
     const observed = await observedRules(room);
     const binding: EvidenceBinding = { v: 1, source: "member", stage: "landing", checker: setup.service.member,
-      policyGeneration: { rules: await room.Q.at(), seq: observed.revision }, roomService: observed.content.roomService ?? null,
+      policyGeneration: { rules: await room.Q.at(), seq: observed.revision }, roomService: observed.roomService,
       serviceGeneration: observed.serviceGeneration, auditOf: null, subject: { kind: "landing", publication: factRefOf(opening.entry), manifest: change.manifest } };
     const laneRules = (await hardeningItems(change.lane, "rules"))[0]!;
     const request = async (proposed: EvidenceBinding, earlier?: number) => {

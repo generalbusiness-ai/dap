@@ -605,11 +605,8 @@ export function snapshotReaderOf(binding: Binding): import("./destination-host.t
   return {
     rules: async (rules) => {
       const peer = binding.get(binding.idFromName(rules.scope)) as { observe(ask: unknown): Promise<unknown> };
-      const read = await peer.observe({ of: rules, asked: "rules" });
-      // Rules observations also carry retained value bytes for Native readers.
-      // This host callback consumes the authenticated projection alone.
-      return isObject(read) && Object.keys(read).sort().join() === "answer,values" && Array.isArray(read["values"])
-        ? read["answer"] : read;
+      // Keep the authenticated retained policy beside its digest-naming answer.
+      return peer.observe({ of: rules, asked: "rules" });
     },
     sourceState: async (fact) => {
       const peer = binding.get(binding.idFromName(fact.at.scope)) as { workSourceState(fact: FactRef): Promise<string | null> };

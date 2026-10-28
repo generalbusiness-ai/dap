@@ -1,14 +1,23 @@
 import { expect } from "vitest";
-import type { Answer, Digest, EvidenceBinding, FactRef, Intent, MemberRef, OperationId, Read, RulesObservation, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, digestBytes, evidenceBindingDigest, factRefOf, intentDigest, isDigest, isRecord, isSeed, readEvidenceBinding, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { runInDurableObject } from "cloudflare:test";
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import type { Answer, Digest, FactRef, Intent, MemberRef, OperationId, Read, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
+import { b64url, canonicalize, definitionDigest, digestBytes, evidenceBindingDigest, factRefOf, intentDigest, isDigest, isHead, isRecord, isScopeRef, isSeed, readEvidenceBinding, same, scopeIdOf, signIntent, timeOf, utf8, type EvidenceBinding } from "@generalbusiness/dap-bytes";
+import { CAPABILITY_CODE, localRetainedPlan, outcomeValueDomains, ownersOf, validateDefinition, valueDigest, type StateView } from "@generalbusiness/dap-derive";
+import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
+import { httpSource, verify } from "@generalbusiness/dap-replay";
+import { View } from "../../replay/src/view.ts";
 import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/dap-client";
 import { configurationDigest, type Configuration, type Notice, type Scopes, type Variable } from "../../checkers/src/index.ts";
 import { idOf, isObjectId, parseCommit } from "@generalbusiness/dap-git";
 import { keys, type Actor } from "@generalbusiness/dap-derive/testing";
-import { RULES_CERTIFICATE_KIND, RULES_PATTERNS, RULES_TREE_PROOF } from "@generalbusiness/dap-platform";
+import { platform as nativePlatform, RULES_CERTIFICATE_KIND, RULES_PATTERNS, RULES_TREE_PROOF } from "@generalbusiness/dap-platform";
 import { EVIDENCE_RULES_COHORT } from "../../platform/src/evidence-cohort.ts";
-import { rulesPolicyCheckersV13, rulesPolicyProposalV13, type RulesPolicyV13 } from "../../platform/src/rules-policy-v13.ts";
-import { readEvidenceJobRecordWireV17 } from "../../platform/src/destination-evidence-v17.ts";
+import { rulesPolicyCheckersV13, rulesPolicyProposalV13, RULES_EXTENTS_VALUE_V13, type RulesPolicyV13 } from "../../platform/src/rules-policy-v13.ts";
+import { readEvidenceWireV17 } from "../../platform/src/evidence-wire-v17.ts";
+import { readRulesPolicyReplyV17 } from "../../platform/src/reservation-v17.ts";
+import { currentEvidenceRecordV17, evidenceEffectiveHoldV17, readEvidenceJobRecordWireV17 } from "../../platform/src/destination-evidence-v17.ts";
+import { readEvidenceCapacityWireV17 } from "../../platform/src/destination-evidence-capacity-v17.ts";
 import { issueEvidence4 } from "../../../apps/room/lanes/src/issue4.ts";
 import { changeEvidence4 } from "../../../apps/room/lanes/src/change4.ts";
 import { certificateGate, hardeningItems, hardeningSealed } from "./certified-rules-hardening-fixture.ts";
@@ -16,10 +25,12 @@ import type { EffectRequest } from "../src/operations.ts";
 import type { OperationStatus } from "../src/store.ts";
 import { DestinationHost, type DestinationProvider } from "../src/destination-host.ts";
 import { CredentialStore } from "../src/credential-store.ts";
+import { ownOf, retainedFacts, snapshotsOf } from "../src/core.ts";
+import { SqliteStore } from "../src/sqlite.ts";
 import { readRulesTree } from "../src/rules-tree-provider.ts";
 import { ownHost } from "./hosts.ts";
 import { soon } from "./net.ts";
-import { Platform, rita, sam } from "./repository.ts";
+import { Platform, rita, routed, sam } from "./repository.ts";
 import { reader, driveFixture, nativeFixtureLifetime } from "./fixtures-native.ts";
 import { beginSessionFixture } from "./session-settings.ts";
 
@@ -150,9 +161,30 @@ export function evidenceOutcomeRace(room: EvidenceRoom, heldKind: EvidenceOutcom
 export async function evidenceRulesObservation(room: EvidenceRoom) {
   const raw = await room.Q.stub.observe({ of: await room.Q.at(), asked: "rules" });
   if (!isRecord(raw) || Object.keys(raw).sort().join() !== "answer,values" || !isRecord(raw['answer']) || !Array.isArray(raw['values'])) throw Error("Actual Q13 answer and retained values required");
-  const answer = raw['answer'] as unknown as Omit<RulesObservation, 'at'>;
-  if (answer.subject !== "rules" || answer.definition !== "platform:rules@13" || answer.content.asked !== "rules" || !answer.content.serviceGeneration) throw Error("Actual Q13 evidence observation required");
-  return { ...answer, content: answer.content, serviceGeneration: answer.content.serviceGeneration };
+  const answer = raw['answer'], content = answer['content'], kept = raw['values'][0];
+  if (!isRecord(content)) throw Error("Actual outer Rules content required");
+  const configured = readRulesPolicyReplyV17(raw, await room.Q.at(), await room.G.at(), timeOf(room.life.now()));
+  if (configured.ok) return { of: configured.view.rules, head: configured.view.head, revision: configured.view.revision, content,
+    roomService: configured.view.policy.roomService, serviceGeneration: configured.view.serviceGeneration };
+  // The production room-service reader deliberately refuses unconfigured
+  // Rules. This fixture also observes their explicit initial null mark.
+  if (Object.keys(answer).sort().join() !== "content,definition,head,of,revision,subject" || answer['subject'] !== "rules" || answer['definition'] !== "platform:rules@13"
+    || !isScopeRef(answer['of']) || !same(answer['of'], await room.Q.at()) || !isHead(answer['head']) || typeof answer['revision'] !== "number"
+    || !Number.isSafeInteger(answer['revision']) || answer['revision'] < 0 || answer['revision'] > answer['head'].seq || !isRecord(content)
+    || Object.keys(content).sort().join() !== "approvals,asked,checks,extents,labels,ownerMayReview,singleControllerException" || content['asked'] !== "rules"
+    || raw['values'].length !== 1 || !isRecord(kept) || Object.keys(kept).sort().join() !== "bytes,domain" || kept['domain'] !== RULES_EXTENTS_VALUE_V13.domain)
+    throw Error("Actual unchanged Rules observation grammar required");
+  const decoded = readEvidenceWireV17(kept['bytes'], RULES_EXTENTS_VALUE_V13.max), envelope = decoded.ok ? decoded.value : null;
+  if (!isRecord(envelope) || Object.keys(envelope).sort().join() !== "certificate,configured,policy,proposal,serviceGeneration"
+    || envelope['configured'] !== false || envelope['policy'] !== null || envelope['proposal'] !== null || envelope['certificate'] !== null
+    || valueDigest(RULES_EXTENTS_VALUE_V13.domain, envelope) !== content['extents'] || !isRecord(envelope['serviceGeneration']))
+    throw Error("Authenticated explicit unconfigured extents-3 envelope required");
+  const generation = envelope['serviceGeneration'];
+  if (Object.keys(generation).sort().join() !== "rules,seq" || !isScopeRef(generation['rules']) || !same(generation['rules'], answer['of'])
+    || generation['seq'] !== 0)
+    throw Error("Scoped retained service generation required");
+  return { of: answer['of'], head: answer['head'], revision: answer['revision'], content, roomService: null,
+    serviceGeneration: { rules: generation['rules'], seq: generation['seq'] } };
 }
 
 /** An exact retained entry read, independent of the history page ceiling. */
@@ -357,6 +389,64 @@ export async function evidenceRecord(room: EvidenceRoom, job: FactRef) {
   return found;
 }
 
+/** Read the recorded SQLite state, then interpret its bounded native index.
+ * Optional Replay uses the unchanged verifier and View at this exact head. */
+export async function evidenceNativeState(room: EvidenceRoom, replay = false) {
+  const before = (await room.G.summary()).at;
+  const inspected = await room.life.wait(() => runInDurableObject(room.G.object, (_instance, state) => {
+    const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+    const own = ownOf(store), head = store.scope()?.head;
+    expect(head).toEqual(before);
+    const project = (view: StateView) => {
+      const items = view.all().items;
+      const jobs = items.filter(item => item.type === 'evidence-job').map(item => {
+        const raw = readEvidenceJobRecordWireV17(item.values['record']);
+        if (!raw) throw Error('Actual native job wire required');
+        return { item, raw, current: currentEvidenceRecordV17(item, raw) };
+      });
+      return { jobs, holds: jobs.flatMap(({ item, raw }) => raw.holds.map(hold => ({ owner: item.id, hold, effective: evidenceEffectiveHoldV17(view, own, item, hold) }))),
+        capacities: items.flatMap(item => { const capacity = readEvidenceCapacityWireV17(item.values['capacity']); return capacity ? [capacity] : []; }) };
+    };
+    const runtime = project(store);
+    if (replay) {
+      const native = nativePlatform(EVIDENCE_RULES_COHORT.destination);
+      if (!native) throw Error('Actual G17 native profile required');
+      const checked = validateDefinition(native.data, PROPOSED_BOUNDS, RULE_PROFILES, { platform: true, outcomeValues: outcomeValueDomains(native.data, native.rules) });
+      if (!checked.ok) throw Error('The whole actual native definition must validate before folding');
+      const pinned = { named: EVIDENCE_RULES_COHORT.destination, rules: native.rules }, view = new View(), owners = ownersOf(checked.definition, pinned, CAPABILITY_CODE);
+      for (let seq = 0; seq <= before.seq; seq++) {
+        const sealed = own(seq);
+        if (!sealed) throw Error('Complete actual local history required');
+        const { entry, hash } = sealed, operation = entry.input.type === 'outcome' ? view.operation(entry.input.operation) : null;
+        const rules = operation ? owners?.rules(operation.owner, operation.kind) ?? null : null;
+        const plan = localRetainedPlan(checked.definition, entry, hash, rules, PROPOSED_BOUNDS);
+        const values = plan.dependencies.flatMap(({ dependency }) => {
+          if (dependency.mode !== 'required' || dependency.key.kind !== 'value') return [];
+          const kept = store.retained('value', dependency.key.digest, dependency.key.domain);
+          if (!kept) throw Error('Actual named retained value required');
+          return [kept.bytes];
+        });
+        view.fold(checked.definition, entry, hash, { bounds: PROPOSED_BOUNDS, platform: pinned, own, facts: retainedFacts(store, entry), values,
+          snapshot: snapshotsOf(store), texts: digest => { const kept = store.retained('text', digest); if (!kept) return undefined;
+            const text: unknown = JSON.parse(kept.bytes); return typeof text === 'string' ? utf8(text).length : undefined; } });
+      }
+      expect(view.scope()?.head).toEqual(before);
+      expect(view.all()).toEqual(store.all());
+      expect(project(view)).toEqual(runtime);
+    }
+    expect(store.scope()?.head).toEqual(before);
+    return { head, ...runtime };
+  }));
+  if (replay) {
+    const source = httpSource('https://scopes.test', { reader, fetch: (url, init) => room.life.wait(() => routed(url, init)) });
+    const checked = await room.life.wait(() => verify(source, { mode: 'replay', platform: nativePlatform, grants: 'proven', scope: room.G.name, head: before }));
+    expect([checked.report.result, checked.why, checked.report.target]).toEqual(['consistent', null, { at: await room.G.at(), ...before }]);
+    expect(checked.report.coverage).toContainEqual({ scope: await room.G.at(), from: 0, through: before.seq });
+  }
+  expect((await room.G.summary()).at).toEqual(before);
+  return inspected;
+}
+
 /** Another explicit request, with the caller's stated generation. No automatic fence repair. */
 export async function requestEvidenceWork(room: EvidenceRoom, prepared: PreparedEvidenceWork, options: { reuse?: boolean; binding?: EvidenceBinding } = {}) {
   const binding = options.binding ?? prepared.binding, bindingDigest = evidenceBindingDigest(binding);
@@ -509,7 +599,7 @@ export async function requestLandingEvidence(room: EvidenceRoom, setup: Prepared
   const tree = reserved.values['tree'], observed = await evidenceRulesObservation(room), rules = (await hardeningItems(publication.lane, "rules"))[0];
   if (!rules) throw Error("Actual lane Rules copy required");
   const binding: EvidenceBinding = { v: 1, source: "member", stage: "landing", checker: setup.service.member,
-    policyGeneration: { rules: await room.Q.at(), seq: observed.revision }, roomService: observed.content.roomService ?? null,
+    policyGeneration: { rules: await room.Q.at(), seq: observed.revision }, roomService: observed.roomService,
     serviceGeneration: observed.serviceGeneration, auditOf: null,
     subject: { kind: "landing", publication: factRefOf(await evidenceEntry(room.G, reserved.id)), manifest: publication.manifest } };
   const bindingDigest = evidenceBindingDigest(binding), seq = await publication.lane.did(rita, "request-check", { fields: {

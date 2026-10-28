@@ -1,8 +1,8 @@
 /** Signed stage read. Native admission owns authority; this port only supplies immutable execution bytes. */
-import type { FactRef, KeyId, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalBytes, canonicalize, entryHash, isDigest, isFactRef, isHead, isMemberId, isRecord, isScopeRef, timeMs, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import type { FactRef, KeyId, ScopeRef, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
+import { canonicalBytes, canonicalize, entryHash, isFactRef, isRecord, isScopeRef, timeMs, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { isEntryOf } from "@generalbusiness/dap-derive";
-import { destinationBranch, destinationEvidenceAdmissionCurrent, destinationEvidenceJob } from "@generalbusiness/dap-platform";
+import { destinationBranch, destinationEvidenceAdmissionCurrent, destinationEvidenceJob, readRulesPolicyReplyV17 } from "@generalbusiness/dap-platform";
 import { readOwnedCheckoutSnapshot, STAGE_SNAPSHOT_BOUNDS, verifyOwnedCheckoutSnapshot, type StageSnapshotReply } from "@generalbusiness/dap-git";
 import type { DestinationHostOptions, DestinationRepository } from "./destination-host.ts";
 import type { OutsideGiven } from "./given.ts";
@@ -21,34 +21,16 @@ function eligible(value: unknown, key: KeyId, admitted: NonNullable<ReturnType<t
 }
 
 /** The current authenticated projection is an independent read, not a Native state update. */
-function currentRoomRules(value: unknown, admitted: NonNullable<ReturnType<typeof destinationEvidenceJob>>, name: unknown, configuration: unknown): boolean {
-  try {
+function currentRoomRules(value: unknown, admitted: NonNullable<ReturnType<typeof destinationEvidenceJob>>, name: unknown, configuration: unknown, destination: ScopeRef, time: Timestamp): boolean {
   const binding = admitted.binding;
   if (binding.source !== "room") return true;
-  if (!isRecord(value) || value["subject"] !== "rules" || value["definition"] !== "platform:rules@13"
-    || !isScopeRef(value["of"]) || value["of"].kind !== "rules" || !same(value["of"], binding.policyGeneration.rules)
-    || !same(value["of"], binding.serviceGeneration.rules) || !isHead(value["head"])
-    || typeof value["revision"] !== "number" || !Number.isSafeInteger(value["revision"]) || Object.is(value["revision"], -0)
-    || value["revision"] < binding.policyGeneration.seq || value["revision"] > value["head"].seq
-    || !isRecord(value["content"])) return false;
-  const content = value["content"];
-  if (content["asked"] !== "rules" || !same(content["roomService"], binding.roomService)
-    || !same(content["serviceGeneration"], binding.serviceGeneration) || binding.serviceGeneration.seq > value["revision"]
-    || typeof content["approvals"] !== "number" || !Number.isSafeInteger(content["approvals"]) || content["approvals"] < 0
-    || typeof content["ownerMayReview"] !== "boolean" || typeof content["singleControllerException"] !== "boolean"
-    || !isDigest(content["extents"]) || !Array.isArray(content["labels"]) || !content["labels"].every(label => typeof label === "string")
-    || !Array.isArray(content["checks"]) || content["checks"].length > 32 || typeof name !== "string" || !isDigest(configuration)) return false;
-  const names = new Set<string>();
-  let matched = false;
-  for (const check of content["checks"]) {
-    if (!isRecord(check) || Object.keys(check).sort().join() !== "checker,configuration,name,required"
-      || typeof check["name"] !== "string" || check["name"].length === 0 || names.has(check["name"])
-      || !isDigest(check["configuration"]) || !isMemberId(check["checker"]) || typeof check["required"] !== "boolean") return false;
-    names.add(check["name"]);
-    if (check["name"] === name) matched = check["configuration"] === configuration && check["checker"] === binding.checker.member;
-  }
-  return matched;
-  } catch { return false; }
+  const read = readRulesPolicyReplyV17(value, binding.policyGeneration.rules, destination, time);
+  if (!read.ok || read.view.revision < binding.policyGeneration.seq || !same(read.view.serviceGeneration, binding.serviceGeneration)
+    || !same(read.view.policy.roomService, binding.roomService)) return false;
+  const checks = read.view.policy.checks.filter(check => check.name === name);
+  const check = checks.length === 1 ? checks[0] : null;
+  return !!check && check.configuration === configuration && same(check.checker, binding.checker)
+    && (check.source ?? "member") === binding.source && (check.stage ?? "landing") === binding.stage;
 }
 
 export async function readStageSnapshot(given: OutsideGiven, options: DestinationHostOptions, asked: SignedIntent): Promise<StageSnapshotReply> {
@@ -76,7 +58,7 @@ export async function readStageSnapshot(given: OutsideGiven, options: Destinatio
     const membership = admitted.binding.checker.membership.scope;
     const roomRulesCurrent = async (): Promise<boolean> => {
       if (admitted.binding.source !== "room") return true;
-      try { return !!reader.rules && currentRoomRules(await reader.rules(admitted.binding.policyGeneration.rules), admitted, name, configuration); }
+      try { return !!reader.rules && currentRoomRules(await reader.rules(admitted.binding.policyGeneration.rules), admitted, name, configuration, scope.at, given.clock.read()); }
       catch { return false; }
     };
     const sources: Sealed[] = [], ids = new Set<string>();

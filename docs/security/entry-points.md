@@ -214,7 +214,9 @@ body and the successor `{signed, stage: true}` body at the same membership gate.
 The hint selects the proof format and grants no authority. The successor requires
 the actual Native17 admission, full job identity, current checker key and source.
 Room jobs also read fresh Rules13 observations before Git access and before the
-answer. The full Rules reference, current service mark and generation, and check
+answer. The host authenticates the bounded canonical retained extents value
+against that observation's digest; the generic observation grammar is unchanged.
+The full Rules reference, current service mark and generation, and check
 name, configuration and checker must match the admitted binding. Member jobs do
 not depend on the room service mark.
 

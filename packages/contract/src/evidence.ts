@@ -12,31 +12,6 @@
  * `refused` have `own-answer` or `read`.
  */
 
-import type { FactRef, KeyId, MemberRef, ScopeRef } from "./scope.ts";
-
-/** Who supplies a check result, and when its job runs. Omitted legacy fields keep member/landing meaning. */
-export type CheckSource = "member" | "room";
-export type CheckStage = "work" | "landing" | "published";
-export interface ServiceMark { checker: MemberRef; key: KeyId }
-/** A native position under one exact Rules incarnation. This is not a fact hash. */
-export interface ScopedRulesPosition { rules: ScopeRef; seq: number }
-export type CheckSubject =
-  | { kind: "landing"; publication: FactRef; manifest: FactRef }
-  | { kind: "work"; source: FactRef }
-  | { kind: "published"; publication: FactRef; receipt: FactRef; written: FactRef; manifest: FactRef };
-/** Closed successor job binding. The native reader proves the facts and source standing. */
-export interface EvidenceBinding {
-  v: 1;
-  source: CheckSource;
-  stage: CheckStage;
-  checker: MemberRef;
-  policyGeneration: ScopedRulesPosition;
-  roomService: ServiceMark | null;
-  serviceGeneration: ScopedRulesPosition;
-  auditOf: FactRef | null;
-  subject: CheckSubject;
-}
-
 /** The authenticated answer to that attempt's own request. */
 export interface OwnAnswerEvidence { basis: "own-answer"; body: unknown }
 

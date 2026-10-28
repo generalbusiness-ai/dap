@@ -1,7 +1,7 @@
 /** Q13 consumes each admitted G17 certificate once. Q12 stays exact.
  * The last full destination request is retained atomically with policy. */
-import type { FieldValue, MemberObservation, ObservationRequest, PlatformData, RulesObservation, ScopeRef, ServiceMark } from '@generalbusiness/dap-contract';
-import { canonicalize, isDigest, isFactRef, isRecord, isScopeRef, same, utf8 } from '@generalbusiness/dap-bytes';
+import type { FieldValue, MemberObservation, ObservationRequest, PlatformData, RulesObservation } from '@generalbusiness/dap-contract';
+import { canonicalize, isDigest, isFactRef, isRecord, isScopeRef, same, utf8, type ServiceMark } from '@generalbusiness/dap-bytes';
 import { valueDigest, type GuardRule, type RuleGiven, type RuleEffect, type Rules, type StateView } from '@generalbusiness/dap-derive';
 import { archiveDeviceRulesScope, archiveDeviceRules } from './archive-binding.ts';
 import { extentsOf, rulesAnswer, revisionOf, rulesMembership } from './rules-scope.ts';
@@ -38,11 +38,11 @@ function generation(state:Pick<StateView,'page'>):number|null {
   const held=rulesOf(state)?.refs['roomServiceChanged'];
   return held===undefined||held===null?0:typeof held==='number'&&Number.isSafeInteger(held)&&held>=1?held:null;
 }
-function content(policy:Pick<RulesPolicyV13,'approvals'|'ownerMayReview'|'checks'|'labels'|'singleControllerException'|'roomService'>,envelope:unknown,rules:ScopeRef,seq:number) {
+function content(policy:Pick<RulesPolicyV13,'approvals'|'ownerMayReview'|'checks'|'labels'|'singleControllerException'>,envelope:unknown) {
   return {asked:'rules' as const,approvals:policy.approvals,ownerMayReview:policy.ownerMayReview,
     checks:policy.checks.map(({name,configuration,required,checker})=>({name,configuration,required,checker:checker.member})),
     labels:policy.labels,singleControllerException:policy.singleControllerException===true,
-    extents:valueDigest(RULES_EXTENTS_VALUE_V13.domain,envelope),roomService:policy.roomService,serviceGeneration:{rules,seq}};
+    extents:valueDigest(RULES_EXTENTS_VALUE_V13.domain,envelope)};
 }
 function completePolicy(given:RuleGiven) {
   const policy=Object.fromEntries(Object.entries(given.resolved.fields).filter(([name])=>!TRANSPORT.includes(name)));
@@ -71,10 +71,12 @@ function publication(given:RuleGiven) {
   }
   const checked=verifyRulesTree(canonicalize(tree),proof,certificate.binding,rulesPolicyPatternsV13(owned.policy));
   if(!checked.ok)return checked;
-  const envelope={configured:true,policy:owned.policy,proposal,certificate:certificate.provenance};
-  if(!bounded(envelope,RULES_EXTENTS_VALUE_V13.max))return {ok:false as const,reason:'invalid-policy' as const};
   const changed=!same(oldMark(given.state),owned.policy.roomService),previousGeneration=generation(given.state);
-  if(previousGeneration===null||previousGeneration>given.resolved.self||!bounded(content(owned.policy,envelope,given.resolved.at,changed?given.resolved.self:previousGeneration),RULES_CONTENT_BYTES_V13))return {ok:false as const,reason:'rules-content-too-large' as const};
+  if(previousGeneration===null||previousGeneration>given.resolved.self)return {ok:false as const,reason:'rules-content-too-large' as const};
+  const envelope={configured:true,policy:owned.policy,proposal,certificate:certificate.provenance,
+    serviceGeneration:{rules:given.resolved.at,seq:changed?given.resolved.self:previousGeneration}};
+  if(!bounded(envelope,RULES_EXTENTS_VALUE_V13.max))return {ok:false as const,reason:'invalid-policy' as const};
+  if(!bounded(content(owned.policy,envelope),RULES_CONTENT_BYTES_V13))return {ok:false as const,reason:'rules-content-too-large' as const};
   return {ok:true as const,policy:owned.policy,proposal,certificate:certificate.provenance};
 }
 const oldRules=archiveDeviceRulesScope.items['rules']!,oldEstablish=archiveDeviceRulesScope.acts['establish']!,oldPublish=archiveDeviceRulesScope.acts['publish']!;
@@ -167,12 +169,14 @@ export const rulesScopeRulesV13:Rules={...archiveDeviceRules,
   }},
 };
 
-function observationPolicy(state:Pick<StateView,'page'>) {
-  const item=rulesOf(state);if(!item)return null;
+function observationPolicy(state:Pick<StateView,'scope'|'page'>) {
+  const item=rulesOf(state),scope=state.scope(),seq=generation(state);
+  if(!item||!scope||scope.at.kind!=='rules'||seq===null)return null;
+  const serviceGeneration={rules:scope.at,seq};
   if(item.values['configured']===true){
     const result=policyWire(item.values['policy']);
     if(!result.ok||result.digest!==item.values['proposal']||!provenance(item.values['certificate']))return null;
-    const envelope={configured:true,policy:result.policy,proposal:result.digest,certificate:item.values['certificate']};
+    const envelope={configured:true,policy:result.policy,proposal:result.digest,certificate:item.values['certificate'],serviceGeneration};
     if(!bounded(envelope,RULES_EXTENTS_VALUE_V13.max))return null;
     return {policy:result.policy,envelope};
   }
@@ -180,7 +184,7 @@ function observationPolicy(state:Pick<StateView,'page'>) {
   const checks=(Array.isArray(item.values['checks'])?item.values['checks']:[]) as unknown as readonly RulesCheckV13[];
   return {policy:{approvals:item.values['approvals'],ownerMayReview:item.values['ownerMayReview'] as boolean,checks,
     labels:(Array.isArray(item.values['labels'])?item.values['labels']:[]) as readonly string[],singleControllerException:item.values['singleControllerException']===true,roomService:null},
-    envelope:{configured:false,policy:null,proposal:null,certificate:null}};
+    envelope:{configured:false,policy:null,proposal:null,certificate:null,serviceGeneration}};
 }
 export function rulesAnswerV13(state:Pick<StateView,'scope'|'page'>,asked:ObservationRequest):Omit<RulesObservation,'at'>|null {
   if('asked'in asked&&asked.asked==='definitions')return rulesAnswer(state,asked,'platform:rules@13');
@@ -189,7 +193,7 @@ export function rulesAnswerV13(state:Pick<StateView,'scope'|'page'>,asked:Observ
     ||('inc'in asked.of&&asked.of.inc!==scope.at.inc)||!('asked'in asked)||asked.asked!=='rules'||!held||revision===null)return null;
   const serviceGeneration=generation(state);
   if(serviceGeneration===null||serviceGeneration>revision||revision>scope.head.seq||held.policy.roomService!==null&&serviceGeneration===0)return null;
-  const projection=content(held.policy,held.envelope,scope.at,serviceGeneration);
+  const projection=content(held.policy,held.envelope);
   if(!bounded(projection,RULES_CONTENT_BYTES_V13))return null;
   return {subject:'rules',of:scope.at,head:scope.head,revision,definition:'platform:rules@13',content:projection};
 }

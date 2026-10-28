@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
-import type { EvidenceBinding, FactRef, KeyId } from "@generalbusiness/dap-contract";
+import type { FactRef, KeyId } from "@generalbusiness/dap-contract";
+import type { EvidenceBinding } from "@generalbusiness/dap-bytes";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { keys, otherLane, d } from "@generalbusiness/dap-derive/testing";
 import { NOTHING } from "@generalbusiness/dap-derive";

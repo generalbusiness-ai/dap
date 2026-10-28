@@ -112,6 +112,7 @@ export { evidenceRulesRegister, evidenceRulesDirectory, evidenceRulesDirectoryRu
 export { rulesScopeV13, rulesScopeRulesV13, rulesAnswerV13, rulesObservedValuesV13 } from "./rules-scope-v13.ts";
 export { RULES_POLICY_VALUE_V13, RULES_EXTENTS_VALUE_V13, RULES_POLICY_V13_DOMAIN, readRulesPolicyV13, rulesPolicyProposalV13, rulesPolicyPatternsV13, rulesPolicyCheckersV13 } from "./rules-policy-v13.ts";
 export type { RulesCheckV13, RulesPolicyV13 } from "./rules-policy-v13.ts";
+export { readRulesPolicyReplyV17 } from "./reservation-v17.ts";
 export { destinationV17, destinationRulesV17, destinationEvidenceJob, destinationEvidenceAdmissionCurrent, destinationEvidencePending, destinationEvidenceResultPending, destinationEvidenceNoticePending, destinationEvidenceProgressPending, evidenceFloorReferencesV17, WORK_COMMIT_PROOF_V17, EVIDENCE_ADMIT_V17 } from "./destination-v17.ts";
 export type { EvidenceJobAdmissionV17 } from "./destination-v17.ts";
 export { rulesCertificateFamilyV17, rulesCertificateOpeningV17, rulesPublishedCertificateV17, rulesCertificateDeclineV17, rulesCertificateInterveningFactV17, readRulesCertificateDeclinedV17, RULES_CERTIFICATE_DECLINED_V17_MAX } from "./rules-certificate-v17.ts";

@@ -1,19 +1,19 @@
 /** G17 native job records. Every full native fact below is resolved only
  * after its entry was sealed. Indexes contain live and decided anchors. */
-import type { Digest, Entry, EvidenceBinding, FactRef, FieldValue, KeyId, Observation, PlatformData, ScopedRulesPosition, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, evidenceBindingDigest, isDigest, isFactRef, isHead, isKeyId, isRecord, isScopeRef, parseStrict, readEvidenceBinding, same as equalCanonical, textDigest, timeMs, unb64url, utf8 } from "@generalbusiness/dap-bytes";
+import type { Digest, Entry, FactRef, FieldValue, KeyId, Observation, PlatformData, Timestamp } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, evidenceBindingDigest, isDigest, isFactRef, isHead, isKeyId, isRecord, isScopeRef, parseStrict, readEvidenceBinding, same as equalCanonical, textDigest, timeMs, unb64url, utf8, type EvidenceBinding, type ScopedRulesPosition } from "@generalbusiness/dap-bytes";
 import { idOf, isObjectId, parseCommit } from "@generalbusiness/dap-git/tree-proof";
-import { isEntryOf, type Item, type Operation, type Own, type Opening, type OutcomeGives, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView, type ValidDefinition } from "@generalbusiness/dap-derive";
+import { isEntryOf, RuleFault, type Item, type Operation, type Own, type Opening, type OutcomeGives, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { readEvidenceDecisionV17 } from "./evidence-decision-v17.ts";
 import { evidenceFutureEntriesV17 } from "./evidence-forecast-v17.ts";
 import { readEvidenceBatchV17, readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
-import { evidenceCapacityValidV17, evidenceSpendPublishedCapacityV17, readEvidenceCapacityWireV17 } from "./destination-evidence-capacity-v17.ts";
+import { evidenceCapacityValidV17, evidencePendingCapacityForecastV17, evidenceSettlePendingCapacityV17, evidenceSpendPublishedCapacityV17, readEvidenceCapacityWireV17 } from "./destination-evidence-capacity-v17.ts";
 import { evidenceFundingFloorReferencesV17 } from "./destination-evidence-funding-v17.ts";
 export { evidenceFundCapacityV17, evidenceCapacityValidV17 } from "./destination-evidence-capacity-v17.ts";
 import { classify } from "./extents.ts";
 import { branchOf, destinationRulesScope, destinationStageConfirmedV17 } from "./destination.ts";
 import { EVIDENCE_LIMITS_V17, assessEvidenceV17, evidenceKeyDigestV17, newEvidenceIndexV17, readEvidenceCountsV17, readEvidenceIndexV17, releaseEvidenceCandidateV17, reserveEvidenceCandidateV17, reserveEvidenceCountsV17, settleEvidenceCandidateV17, type EvidenceCandidateV17, type EvidenceCountsV17, type EvidenceIndexRecordV17 } from "./evidence-index-v17.ts";
-import { decideEvidenceIncidentV17, evidenceHoldActiveV17, evidenceTriagersV17, failEvidenceHoldV17, newEvidenceHoldV17, passEvidenceHoldV17, readEvidenceHoldKeyV17, readEvidenceHoldV17, readEvidenceIncidentV17, releaseEvidenceHoldV17, reserveEvidenceIncidentV17, type EvidenceFailureV17, type EvidenceHoldKeyV17, type EvidenceHoldRecordV17, type EvidenceIncidentV17 } from "./evidence-holds-v17.ts";
+import { decideEvidenceIncidentV17, effectiveEvidenceHoldV17, evidenceTriagersV17, failEvidenceHoldV17, newEvidenceHoldV17, passEvidenceHoldV17, readEvidenceHoldKeyV17, readEvidenceHoldV17, readEvidenceIncidentV17, releaseEvidenceHoldV17, reserveEvidenceIncidentV17, type EvidenceFailureV17, type EvidenceHoldKeyV17, type EvidenceHoldRecordV17, type EvidenceIncidentV17 } from "./evidence-holds-v17.ts";
 import { evidenceSourceV17, judgeListEligibilityV17, judgeReservationV17, readRulesPolicyObservationV17, type ReservationPolicyViewV17 } from "./reservation-v17.ts";
 import { RULES_EXTENTS_VALUE_V13, checkHoldsV13, checkReuseV13, checkSourceV13, checkStageV13, readRulesPolicyV13, readServiceMarkV13, type RulesCheckV13 } from "./rules-policy-v13.ts";
 import { certifiedPublicationStateV17, certifiedPublicationStateWireV17, certifiedPublicationWireV17, CERTIFIED_PUBLICATION_TEXT_BYTES_V17, certifiedReservationBudgetV17, evidenceCarryingBudgetV17, type CertifiedGenerationV17 } from "./destination-budget-v17.ts";
@@ -124,7 +124,16 @@ export function evidenceRowV17(state: StateView, job: FactRef): { item: Item; re
   const found = state.lookup("evidence-job", "jobKey", canonicalize(evidenceJobKeyV17(job)), 2);
   if (!found || found.length !== 1) return null;
   const item = state.item(found[0]!), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
-  return item && item.type === "evidence-job" && record && same(record.job, job) ? { item, record } : null;
+  return item && item.type === "evidence-job" && record && same(record.job, job) ? { item, record: currentEvidenceRecordV17(item, record) } : null;
+}
+/** Literal TIMED changes the job alone. The immutable admission record is
+ * decoded first; this current-state view is never substituted in its proof. */
+export function currentEvidenceRecordV17(item: Pick<Item, "id" | "state" | "refs" | "values">, record: EvidenceJobRecordV17): EvidenceJobRecordV17 {
+  if (!item.state.endsWith("-timedout") || record.state !== "admitted") return record;
+  const deciding = item.refs["timeoutDecision"];
+  const position = typeof deciding === "number" ? deciding : isFactRef(deciding) ? deciding.seq : null;
+  if (position === null || !natural(position) || item.values["timeoutReason"] !== "check-timeout" || position <= item.id) throw Error("The literal timeout record is unavailable");
+  return { ...record, state: "timeout", reason: "check-timeout", decidedAt: position };
 }
 export function evidenceOwnerV17(state: StateView, slot: "reuseKey" | "holdKey" | "policyKey", key: Digest): { item: Item; record: EvidenceJobRecordV17 } | null {
   const found = state.lookup("evidence-job", slot, canonicalize(key), 2);
@@ -132,7 +141,7 @@ export function evidenceOwnerV17(state: StateView, slot: "reuseKey" | "holdKey" 
   if (!found.length) return null;
   const item = state.item(found[0]!), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
   if (!item || !record) throw Error("Evidence index record is unavailable");
-  return { item, record };
+  return { item, record: currentEvidenceRecordV17(item, record) };
 }
 export function destinationEvidencePending(state: StateView, own: Own, operation: Operation): { job: FactRef } | null {
   if (operation.owner !== "platform:destination@17" || operation.kind !== EVIDENCE_ADMIT_V17 || operation.most !== 1 || operation.for === undefined) return null;
@@ -213,7 +222,39 @@ export function workCommitV17(value: unknown, commit: string): { commit: string;
     return base ? { commit, tree: parsed.tree, base } : null;
   } catch { return null; }
 }
-export function evidenceBlocksV17(given: RuleGiven, paths: readonly string[]): boolean {
+/** An actual literal job TIME is the cause, even before a normal entry
+ * materializes its incident. No callback time or guessed self hash enters. */
+function literalTimeoutCause(state: StateView, own: Own, row: { item: Item; record: EvidenceJobRecordV17 }): EvidenceFailureV17 | null {
+  const { item, record } = row, reference = item.refs["timeoutDecision"];
+  const position = typeof reference === "number" ? reference : isFactRef(reference) ? reference.seq : null;
+  if (position === null) return null;
+  const scope = state.scope(), sealed = own(position), input = sealed?.entry.input;
+  const subject = record.binding.subject;
+  if (!scope || subject.kind !== "published" || !record.commit || record.admittedAt !== item.id || item.values["timeoutReason"] !== "check-timeout"
+    || !sealed || entryHash(sealed.entry) !== sealed.hash || !same(sealed.entry.at, scope.at) || input?.type !== "timed" || input.item !== item.id
+    || !["evidence-job-deadline", "evidence-reuse-deadline", "evidence-hold-deadline"].includes(input.rule) || input.due !== record.deadline
+    || isFactRef(reference) && !same(reference, { at: scope.at, seq: position, hash: sealed.hash })
+    || !sealed.entry.effects.some(effect => effect.effect === "state" && effect.item === item.id && effect.state.endsWith("-timedout"))
+    || !sealed.entry.effects.some(effect => effect.effect === "value" && effect.item === item.id && effect.slot === "timeoutReason" && effect.value === "check-timeout")
+    || !sealed.entry.effects.some(effect => effect.effect === "ref" && effect.item === item.id && effect.slot === "timeoutDecision" && effect.to === position)
+    || !destinationEvidenceJob(state, own, record.job)) throw new RuleFault("The literal timeout cause is unavailable");
+  return { job: record.job, publication: subject.publication, commit: record.commit, order: { publication: subject.publication.seq, job: item.id },
+    decidedAt: position, kind: "timeout", reason: "check-timeout", result: null };
+}
+/** The same pure current hold view serves Native admission and its witness. */
+export function evidenceEffectiveHoldV17(state: StateView, own: Own, owner: Item, hold: EvidenceHoldRecordV17) {
+  const record = readEvidenceJobRecordWireV17(owner.values["record"]), capacity = record?.policyOwner === null || record?.policyOwner === undefined ? null
+    : readEvidenceCapacityWireV17(state.item(record.policyOwner)?.values["capacity"]);
+  const indexed = capacity?.holds?.find(row => same(row.key, hold.key) && row.owner === owner.id);
+  if (!record || !capacity || !indexed || !same(capacity.generation, hold.key.generation)) return { ok: false as const, reason: "assessment-unavailable" as const };
+  return effectiveEvidenceHoldV17(hold, indexed.pending, slot => {
+    const row = slot.job === null ? null : evidenceRowV17(state, slot.job), subject = row?.record.binding.subject;
+    if (!row || row.item.id !== slot.admittedAt || subject?.kind !== "published" || !same(subject.publication, slot.publication)
+      || row.record.policyOwner !== capacity.owner || !row.record.covered.some(key => same(key, hold.key))) return "unavailable";
+    return row.item.state.endsWith("-timedout") || row.record.state === "timeout" ? literalTimeoutCause(state, own, row) : null;
+  });
+}
+function firstEvidenceBlock(given: RuleGiven, paths: readonly string[]): EvidenceFailureV17 | null {
   const page = given.state.page("evidence-job", ["hold-anchor", "hold-anchor-timedout"], null, EVIDENCE_LIMITS_V17.holds + 1);
   if (page.more) throw Error("Evidence anchor index exceeded its capacity");
   let holds = 0;
@@ -221,15 +262,18 @@ export function evidenceBlocksV17(given: RuleGiven, paths: readonly string[]): b
     const record = readEvidenceJobRecordWireV17(item.values["record"]); if (!record) throw Error("Evidence anchor is malformed");
     for (const hold of record.holds) {
       if (++holds > EVIDENCE_LIMITS_V17.holds) throw Error("Evidence hold index exceeded its capacity");
-      if (!evidenceHoldActiveV17(hold)) continue;
       const owner = record.policyOwner === null ? null : given.state.item(record.policyOwner), policy = readEvidenceBatchWireV17(owner?.values["batch"])?.policy;
       const extent = policy?.policy.extents.find(extent => extent.name === hold.key.extent);
       if (!extent) throw Error("The held policy extent is unavailable");
-      if (classify(policy!.policy.extents, paths, []).touched.some(row => row.extent === extent.name)) return true;
+      if (!classify(policy!.policy.extents, paths, []).touched.some(row => row.extent === extent.name)) continue;
+      const effective = evidenceEffectiveHoldV17(given.state, given.own, item, hold);
+      if (!effective.ok) throw new RuleFault("The bounded hold assessment is unavailable");
+      if (effective.active) return effective.cause;
     }
   }
-  return false;
+  return null;
 }
+export const evidenceBlocksV17 = (given: RuleGiven, paths: readonly string[]): boolean => firstEvidenceBlock(given, paths) !== null;
 
 const foreign = (given: RuleGiven, fact: FactRef): Entry | null => {
   const copy = given.uses.find(copy => same(copy.fact, fact));
@@ -325,7 +369,8 @@ const FACT_ISSUE_JOB = { type: "fact" as const, kind: ["request-work-check"], un
 const fenceFields = { name: { type: "text" as const, max: 128, required: true }, binding: { type: "text" as const, max: EVIDENCE_BINDING_TEXT_V17, required: true }, bindingDigest: { type: "digest" as const, required: true }, reuse: { type: "bool" as const, required: false } };
 export function evidenceDestinationDataV17(base: PlatformData): PlatformData {
   const deadline = (state: string): PlatformData["timed"][string] => ({ on: "evidence-job", states: [state], deadline: "deadline",
-    effects: [{ state: `${state}-timedout` }, { code: "evidence-timeout-v17", row: "E3", most: { effects: 6, operations: [EVIDENCE_NOTICE_V17] } }], attention: [] });
+    effects: [{ state: `${state}-timedout` }, { value: { slot: "timeoutReason", from: { const: "check-timeout" } } },
+      { ref: { slot: "timeoutDecision", from: "self" } }, { value: { slot: "deadline", from: null } }], attention: [] });
   const publicationBinding = { item: "publication", index: "operation", key: "operation", code: "evidence-publication-v17", row: "E1" };
   const fence = (work: boolean): PlatformData["receives"][string] => ({ message: work ? "work-check-fence" : "check-fence", class: "tell", from: { kind: "lane", under: work ? "issue" : "change" }, opens: work ? "evidence-request" : null,
     also: work ? {} : { publication: publicationBinding },
@@ -335,9 +380,9 @@ export function evidenceDestinationDataV17(base: PlatformData): PlatformData {
         : { operation: { type: "fact" as const, kind: ["merge"], under: "change", required: true }, manifest: { type: "fact" as const, kind: ["propose-manifest", "propose-file"], under: "change", required: true }, earlier: { ...FACT_CHANGE_JOB, required: false }, forJob: { ...FACT_CHANGE_JOB, required: false } }) },
     guards: [{ code: "evidence-fence-v17", row: "E1" }], effects: [{ code: "evidence-open-v17", row: "E1", most: { effects: 5, operations: [EVIDENCE_ADMIT_V17], ...(!work ? { opens: "evidence-slot" } : {}) } }], sends: [], attention: [] });
   const release = (transition: boolean): PlatformData["acts"][string] => ({ step: "transition", on: "evidence-job", grant: "issue.triage", also: {},
-    fields: { extent: { type: "text", max: 64, required: true }, reason: { type: "text", max: 1024, required: true },
+    fields: { extent: { type: "text", max: 64, required: true }, job: FACT_CHANGE_JOB, reason: { type: "text", max: 1024, required: true },
       ...(transition ? { generation: { type: "text" as const, max: 1024, required: true } } : {}) },
-    guards: [{ code: "evidence-release-v17", row: "E4" }], effects: [{ code: "evidence-release-record-v17", row: "E4" }], sends: [], attention: [],
+    guards: [{ code: "evidence-release-v17", row: "E4" }], effects: [{ code: "evidence-release-record-v17", row: "E4", most: { effects: 2 } }], sends: [], attention: [],
     observes: [{ of: "rules", window: 10, use: "once", without: "wait", retains: [RULES_EXTENTS_VALUE_V13] }] });
   const checked = (work: boolean): PlatformData["receives"][string] => ({ message: work ? "work-checked" : "checked", class: "tell", from: { kind: "lane", under: work ? "issue" : "change" }, opens: null,
     also: { job: { item: "evidence-job", by: "admission" }, ...(work ? { request: { item: "evidence-request", index: "job", key: "job", code: "evidence-holder-v17", row: "E2" } } : { publication: publicationBinding }) },
@@ -356,12 +401,20 @@ export function evidenceDestinationDataV17(base: PlatformData): PlatformData {
     "evidence-slot": { many: true, max: 2048, initial: "pending", states: { pending: { final: false }, waiting: { final: false }, settled: { final: true } }, parties: {}, refs: {}, indexes: ["job"],
       values: { job: { fixed: true, required: true, of: { type: "fact", kind: ["request-check", "admit-published-check", "admit-audit-check"], under: "change" } }, record: { fixed: false, required: true, of: { type: "code", code: "evidence-record-v17", row: "E1" } } } },
     "evidence-job": { many: true, max: 16384, initial: "job", states: { job: { final: false }, "reuse-anchor": { final: false }, "hold-anchor": { final: false },
-      "job-timedout": { final: false }, "reuse-anchor-timedout": { final: false }, "hold-anchor-timedout": { final: false }, decided: { final: true } },
-      parties: {}, refs: { lane: { fixed: true, required: true, to: { type: "scope", kind: "lane" } } }, indexes: ["jobKey", "reuseKey", "holdKey", "policyKey"],
+      "job-timedout": { final: false }, "reuse-anchor-timedout": { final: false }, "hold-anchor-timedout": { final: false }, "incident-pending": { final: false }, decided: { final: true } },
+      parties: {}, refs: { lane: { fixed: true, required: true, to: { type: "scope", kind: "lane" } },
+        timeoutDecision: { fixed: false, required: false, to: { type: "fact", kind: ["timed:evidence-job-deadline", "timed:evidence-reuse-deadline", "timed:evidence-hold-deadline"], under: "platform:destination" } } }, indexes: ["jobKey", "reuseKey", "holdKey", "policyKey"],
       values: { jobKey: { fixed: true, required: true, of: { type: "digest" } }, reuseKey: { fixed: true, required: true, of: { type: "digest" } },
         holdKey: { fixed: true, required: true, of: { type: "digest" } }, policyKey: { fixed: true, required: true, of: { type: "digest" } },
-        record: { fixed: false, required: true, of: { type: "code", code: "evidence-record-v17", row: "E1" } }, deadline: { fixed: false, required: false, of: { type: "time" } } } },
-  }, acts: { ...base.acts, "evidence-hold-override": release(false), "evidence-hold-transition": release(true) },
+        record: { fixed: false, required: true, of: { type: "code", code: "evidence-record-v17", row: "E1" } }, deadline: { fixed: false, required: false, of: { type: "time" } },
+        timeoutReason: { fixed: false, required: false, of: { type: "text", max: 128 } }, noticeOpenedAt: { fixed: false, required: false, of: { type: "int", min: 0, max: 1000000000 } } } },
+  }, acts: { ...base.acts, "evidence-hold-override": release(false), "evidence-hold-transition": release(true),
+    "evidence-recover-timeout": { step: "transition", on: "branch", grant: "destination.read-token",
+      also: { job: { item: "evidence-job", by: "admission" } },
+      fields: { admission: { type: "fact", kind: ["platform:destination@17:evidence-admit"], under: "platform:destination", required: true },
+        operation: { type: "fact", kind: ["merge"], under: "change", required: false } },
+      guards: [{ code: "evidence-recovery-authority-v17", row: "E3" }, { code: "evidence-recovery-ready-v17", row: "E3" }],
+      effects: [{ code: "evidence-recovery-v17", row: "E3", most: { effects: 5, operations: [EVIDENCE_NOTICE_V17] } }], sends: [], attention: [] } },
     receives: { ...base.receives, "check-fence": fence(false), "work-check-fence": fence(true), checked: checked(false), "work-checked": checked(true) },
     outcomes: { ...base.outcomes,
       [EVIDENCE_ADMIT_V17]: { code: "evidence-admit-v17", row: "E1", attempts: 1, origin: "rule", most: { effects: 16, operations: [EVIDENCE_PROGRESS_V17], opens: "evidence-job" }, observes: [
@@ -369,7 +422,7 @@ export function evidenceDestinationDataV17(base: PlatformData): PlatformData {
         { of: "member", from: "rule", max: 1, window: 10, use: "once", without: "wait" },
         { of: "key", from: "rule", max: 9, window: 10, use: "once", without: "wait", second: true },
       ] },
-      [EVIDENCE_RESULT_V17]: { code: "evidence-result-v17", row: "E2", attempts: 1, origin: "rule", most: { effects: 16, operations: [EVIDENCE_PROGRESS_V17] }, observes: [
+      [EVIDENCE_RESULT_V17]: { code: "evidence-result-v17", row: "E2", attempts: 1, origin: "rule", most: { effects: 16, operations: [EVIDENCE_PROGRESS_V17, EVIDENCE_NOTICE_V17] }, observes: [
         { of: "rules", window: 10, use: "once", without: "wait", retains: [RULES_EXTENTS_VALUE_V13] },
         { of: "member", from: "rule", max: 1, window: 10, use: "once", without: "wait" },
         { of: "holders", action: "issue.triage", most: 32, window: 10, use: "once", without: "wait" },
@@ -382,18 +435,24 @@ export function evidenceDestinationDataV17(base: PlatformData): PlatformData {
         { of: "rules", window: 10, use: "once", without: "wait", retains: [RULES_EXTENTS_VALUE_V13] },
         { of: "key", from: "rule", max: 32, window: 10, use: "once", without: "wait", second: true },
       ] },
+      ...Object.fromEntries(["judge", "read"].flatMap(kind => base.outcomes?.[kind] ? [[kind, { ...base.outcomes[kind]!,
+        most: { ...base.outcomes[kind]!.most, effects: base.outcomes[kind]!.most?.effects ?? 16, operations: [...(base.outcomes[kind]!.most?.operations ?? []), EVIDENCE_NOTICE_V17] } }]] : [])),
     }, timed: { ...base.timed, "evidence-job-deadline": deadline("job"), "evidence-reuse-deadline": deadline("reuse-anchor"), "evidence-hold-deadline": deadline("hold-anchor") } };
 }
 
-function evidenceRelease(given: RuleGiven): { item: Item; record: EvidenceJobRecordV17 } | null {
+function evidenceRelease(given: RuleGiven): { item: Item; record: EvidenceJobRecordV17; effects: readonly RuleEffect[] } | null {
   if (given.input.type !== "act") return null;
   const item = given.resolved.subjects.get("on"), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
   const observation = given.input.grant?.fresh?.observation;
   if (!item || !record || !observation || "subject" in observation || !["admin", "maintainer"].includes(observation.role)
     || typeof given.resolved.fields["reason"] !== "string" || given.resolved.fields["reason"] === "") return null;
-  const extent = given.resolved.fields["extent"], index = record.holds.findIndex(hold => hold.key.extent === extent && evidenceHoldActiveV17(hold));
+  const extent = given.resolved.fields["extent"], index = record.holds.findIndex(hold => hold.key.extent === extent);
   if (index < 0) return null;
-  const hold = record.holds[index]!, through = hold.failure!.order;
+  const effective = evidenceEffectiveHoldV17(given.state, given.own, item, record.holds[index]!);
+  if (!effective.ok || !effective.active || !effective.cause || !same(given.resolved.fields["job"], effective.cause.job)) return null;
+  const materialized = failEvidenceHoldV17(record.holds[index]!, effective.cause);
+  if (!materialized.ok) return null;
+  const hold = materialized.record, through = effective.cause.order;
   const transition = given.input.signed.intent.kind === "evidence-hold-transition";
   let next: ScopedRulesPosition | null = null;
   if (transition) {
@@ -408,7 +467,9 @@ function evidenceRelease(given: RuleGiven): { item: Item; record: EvidenceJobRec
     : { kind: "override", decidedAt: given.resolved.self, through, reason: given.resolved.fields["reason"] });
   if (!released.ok) return null;
   const result = { ...record, holds: record.holds.map((held, n) => n === index ? released.record : held) };
-  return readEvidenceJobRecordV17(result) ? { item, record: result } : null;
+  const effects = record.policyOwner === null ? [] : evidenceSettlePendingCapacityV17(given, record.policyOwner, [hold.key], effective.cause.job, through.publication);
+  return readEvidenceJobRecordV17(result) && evidenceCarryingBudgetV17(given, [evidenceRecordEffectV17(item.id, result), ...effects], [], [], []).admitted
+    ? { item, record: result, effects } : null;
 }
 
 function nativeDecided(given: RuleGiven, record: EvidenceJobRecordV17): boolean {
@@ -467,7 +528,7 @@ export const evidenceDestinationProfileV17: DestinationSuccessorV17 = {
     const record = certifiedPublicationStateV17(value, bounds); if (!record) throw Error("The publication record is malformed");
     return certifiedPublicationWireV17(record, bounds);
   },
-  budget: certifiedReservationBudgetV17, list: judgeListEligibilityV17, blocks: evidenceBlocksV17, complete: evidenceComplete,
+  budget: certifiedReservationBudgetV17, list: judgeListEligibilityV17, blocks: evidenceBlocksV17, blocked: evidenceBlockedRecovery, complete: evidenceComplete,
   // Landing jobs start only after a reservation exposes its integration tree.
   // Reservation proves the policy; the push fence below proves its jobs.
   judge: asked => judgeReservationV17(asked),
@@ -505,7 +566,7 @@ function evidenceOpening(given: RuleGiven, proposedRecord: EvidenceJobRecordV17)
 const readRow = (given: RuleGiven, id: number): { item: Item; record: EvidenceJobRecordV17 } => {
   const item = given.state.item(id), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
   if (!item || !record) throw Error("A funded evidence row is missing");
-  return { item, record };
+  return { item, record: item.type === "evidence-job" ? currentEvidenceRecordV17(item, record) : record };
 };
 function operationRecordId(state: StateView, own: Own, operation: Operation): number | null {
   const opened = own(Number(operation.id.split(":")[0]))?.entry;
@@ -515,9 +576,10 @@ function operationRecordId(state: StateView, own: Own, operation: Operation): nu
     const fields = opened.input.message.body["fields"];
     return isRecord(fields) && isFactRef(fields["admission"]) && same(fields["admission"].at, opened.at) ? fields["admission"].seq : null;
   }
-  if (operation.kind === EVIDENCE_NOTICE_V17 && opened.input.type === "timed") return opened.input.item;
-  if (operation.kind === EVIDENCE_NOTICE_V17 && opened.input.type === "outcome" && exact(opened.input.evidence.body, ["job"]) && isFactRef(opened.input.evidence.body["job"]))
-    return evidenceRowV17(state, opened.input.evidence.body["job"])?.item.id ?? null;
+  if (operation.kind === EVIDENCE_NOTICE_V17) {
+    const marked = opened.effects.filter(effect => effect.effect === "value" && effect.slot === "noticeOpenedAt" && effect.value === opened.seq);
+    return marked.length === 1 && marked[0]!.effect === "value" ? marked[0]!.item : null;
+  }
   if (operation.kind === EVIDENCE_PROGRESS_V17 && opened.input.type === "outcome" && exact(opened.input.evidence.body, ["job"]) && isFactRef(opened.input.evidence.body["job"]))
     return evidenceRowV17(state, opened.input.evidence.body["job"])?.item.id ?? null;
   return null;
@@ -531,6 +593,7 @@ function evidenceRecordState(record: EvidenceJobRecordV17, _item: number): strin
   if (record.funded.holds || record.funded.policy) return record.state === "timeout" ? "hold-anchor-timedout" : "hold-anchor";
   if (record.reuse !== null) return record.state === "timeout" ? "reuse-anchor-timedout" : "reuse-anchor";
   if (record.state === "timeout") return "job-timedout";
+  if (record.incident?.cause && record.noticeAt === null) return "incident-pending";
   return ["passed", "failed", "error", "refused", "reused"].includes(record.state) ? "decided" : "job";
 }
 const keyObservation = (given: RuleGiven, key: KeyId | null): Observation | null => {
@@ -567,7 +630,7 @@ function publishedRefusal(given: RuleGiven, request: Item, proposed: EvidenceJob
   if (proposed.binding.stage !== "published" || proposed.binding.subject.kind !== "published") return null;
   const subject = proposed.binding.subject;
   const batch = readEvidenceBatchWireV17(given.state.item(proposed.holder)?.values["batch"]), triple = evidenceSubjectV17(given, proposed);
-  const spent = evidenceSpendPublishedCapacityV17(given, proposed.holder, proposed.binding, proposed.name, proposed.configuration, proposed.job);
+  const spent = evidenceSpendPublishedCapacityV17(given, proposed.holder, proposed.binding, proposed.name, proposed.configuration, proposed.job, false);
   if (!batch || !triple || !spent) return null;
   const record: EvidenceJobRecordV17 = { ...copy(proposed), ...triple, commitProof: triple.proof, policy: batch.policy,
     state: "refused", admittedAt: null, reason, observedGeneration: view?.serviceGeneration ?? null, decidedAt: given.resolved.self,
@@ -763,7 +826,8 @@ function evidenceAdmission(given: RuleGiven, operation: Operation): OutcomeGives
   if (audit) sends.push(audit);
   const progress = landingNeedsProgress(given, record) ? [openingV17(EVIDENCE_PROGRESS_V17, record.holder)] : [];
   const forecast = record.state === "reused" ? { admitted: true } : evidenceFutureEntriesV17(given, { item: admittedItem, record }, [...updates].map(([item, record]) => ({ item, record })),
-    job => same(job, record.job) ? record : evidenceRowV17(given.state, job)?.record ?? null);
+    job => same(job, record.job) ? record : evidenceRowV17(given.state, job)?.record ?? null,
+    record.covered.length && record.policyOwner !== null ? evidencePendingCapacityForecastV17(given, record.policyOwner, record.job.at) : []);
   if (!forecast.admitted || !evidenceCarryingBudgetV17(given, effects, progress, sends, []).admitted) return refuse("evidence-too-large");
   return { effects, sends, opens: progress };
 }
@@ -867,16 +931,98 @@ function publishedDecision(given: RuleGiven, record: EvidenceJobRecordV17, outco
     record.incident = next.incident;
   }
 }
+function hydrateTimeout(given: RuleGiven, row: { item: Item; record: EvidenceJobRecordV17 }, record: EvidenceJobRecordV17,
+  updates: Map<number, EvidenceJobRecordV17>): EvidenceFailureV17 | null {
+  const cause = literalTimeoutCause(given.state, given.own, row);
+  if (!cause) return null;
+  if (record.incident && record.incident.cause === null) {
+    const next = decideEvidenceIncidentV17(record.incident, cause);
+    if (!next.ok) throw new RuleFault("The admitted timeout incident is unavailable");
+    record.incident = next.incident;
+  }
+  if (record.holdOwner !== null) {
+    const owner = updates.get(record.holdOwner) ?? copy(readRow(given, record.holdOwner).record);
+    owner.holds = owner.holds.map(hold => {
+      if (!record.covered.some(key => same(key, hold.key))) return hold;
+      // A later normal entry may already have refined this same timeout
+      // to an observation/result reason. Retain that newer hold history.
+      if (hold.failure && same(hold.failure.job, cause.job) && same(hold.failure.publication, cause.publication)
+        && hold.failure.decidedAt >= cause.decidedAt) return hold;
+      const next = failEvidenceHoldV17(hold, cause);
+      if (!next.ok) throw new RuleFault("The admitted timeout hold is unavailable");
+      return next.record;
+    });
+    updates.set(record.holdOwner, owner);
+  }
+  updates.set(row.item.id, record);
+  return cause;
+}
+/** The local marker names one real opening entry. An empty or unknown
+ * triager answer never clears it or spends another held notice count. */
+export function evidenceNoticeOpeningV17(given: RuleGiven, item: Item, record: EvidenceJobRecordV17): Pick<OutcomeGives, "effects" | "opens"> {
+  const marked = item.values["noticeOpenedAt"];
+  if (marked !== undefined) {
+    const opened = natural(marked) ? given.own(marked)?.entry : null;
+    const matches = opened?.effects.filter(effect => effect.effect === "operation" && effect.owner === "platform:destination@17"
+      && effect.kind === EVIDENCE_NOTICE_V17 && effect.for === record.holder) ?? [];
+    if (!opened || matches.length !== 1 || !opened.effects.some(effect => effect.effect === "value" && effect.item === item.id && effect.slot === "noticeOpenedAt" && effect.value === opened.seq))
+      throw new RuleFault("The original incident notice is unavailable");
+    return { effects: [], opens: [] };
+  }
+  if (!record.incident?.cause || record.noticeAt !== null) return { effects: [], opens: [] };
+  return { effects: [{ effect: "value", item: item.id, slot: "noticeOpenedAt", value: given.resolved.self }],
+    opens: [openingV17(EVIDENCE_NOTICE_V17, record.holder)] };
+}
+function recoverIncident(given: RuleGiven, row: { item: Item; record: EvidenceJobRecordV17 }, carrier?: Pick<OutcomeGives, "effects" | "opens" | "sends">): OutcomeGives {
+  const record = copy(row.record), updates = new Map<number, EvidenceJobRecordV17>([[row.item.id, record]]);
+  hydrateTimeout(given, row, record, updates);
+  const opening = evidenceNoticeOpeningV17(given, row.item, record);
+  const effects = [...updates].filter(([id, value]) => !same(readEvidenceJobRecordWireV17(given.state.item(id)?.values["record"]), value))
+    .map(([id, value]) => evidenceRecordEffectV17(id, value));
+  effects.push(...opening.effects);
+  if ((effects.length || opening.opens.length) && !evidenceCarryingBudgetV17(given, [...(carrier?.effects ?? []), ...effects],
+    [...(carrier?.opens ?? []), ...opening.opens], carrier?.sends ?? [], []).admitted) throw new RuleFault("The funded incident recovery entry is unavailable");
+  return { effects, sends: [], opens: opening.opens };
+}
+function evidenceBlockedRecovery(given: RuleGiven, paths: readonly string[], carrier: Pick<OutcomeGives, "effects" | "opens" | "sends">): Pick<OutcomeGives, "effects" | "opens"> {
+  const cause = firstEvidenceBlock(given, paths), row = cause && evidenceRowV17(given.state, cause.job);
+  return row ? recoverIncident(given, row, carrier) : { effects: [], opens: [] };
+}
+function recoveryRow(given: RuleGiven): { item: Item; record: EvidenceJobRecordV17 } | null {
+  const item = given.resolved.subjects.get("also.job"), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
+  const admission = record && destinationEvidenceJob(given.state, given.own, record.job);
+  return item && item.type === "evidence-job" && record && admission && same(admission.admission, given.resolved.fields["admission"])
+    ? { item, record: currentEvidenceRecordV17(item, record) } : null;
+}
+function recoveryAuthority(given: RuleGiven): boolean {
+  if (given.input.type !== "act") return false;
+  const grant = given.input.grant, observation = grant?.fresh.observation, now = timeMs(given.time), at = observation && timeMs(observation.at);
+  if (!grant || !observation || "subject" in observation || now === null || at === null || now < at || now - at > 10000
+    || grant.key !== given.input.signed.intent.actor || observation.key !== grant.key || !same(grant.subject, { membership: observation.of, member: observation.member })
+    || observation.keyState !== "active" || observation.memberState !== "active" || observation.controllerActive === false
+    || !observation.actions.includes("destination.read-token") || !grant.actions.includes("destination.read-token")) return false;
+  if (grant.actions.includes("issue.triage") && observation.actions.includes("issue.triage")) return true;
+  const row = recoveryRow(given), subject = row?.record.binding.subject, operation = subject?.kind === "published"
+    ? given.state.item(subject.publication.seq)?.refs["operation"] : null;
+  const supplied = given.resolved.fields["operation"];
+  const merge = isFactRef(operation) && same(operation, supplied) ? foreign(given, operation) : null;
+  if (merge?.input.type !== "act" || merge.input.signed.intent.kind !== "merge" || merge.input.authority.length !== 1) return false;
+  const accepted = merge.input.authority[0]!;
+  return accepted.key === merge.input.signed.intent.actor && same(accepted.subject, grant.subject);
+}
 function evidenceResult(given: RuleGiven, operation: Operation): OutcomeGives {
   if (operation.for === undefined) throw Error("An evidence result has no funded job");
   const row = operationRow(given, operation), record = copy(row.record), view = evidencePolicyV17(given), fields = resultFields(given, operation);
   if (!["admitted", "timeout", "unknown"].includes(record.state)) return { effects: [], sends: [], opens: [] };
+  const initial = new Map<number, EvidenceJobRecordV17>([[row.item.id, record]]);
+  hydrateTimeout(given, row, record, initial);
   const refuse = (reason: string): OutcomeGives => {
-    const held = { ...copy(row.record), reason, observedGeneration: view?.serviceGeneration ?? null };
-    const updates = new Map<number, EvidenceJobRecordV17>([[row.item.id, held]]);
+    const held = { ...copy(record), reason, observedGeneration: view?.serviceGeneration ?? null };
+    const updates = new Map(initial); updates.set(row.item.id, held);
     publishedDecision(given, held, "observation-unavailable", reason, updates);
-    return { effects: [...serviceEffect(given, view), ...[...updates].map(([id, record]) => evidenceRecordEffectV17(id, record))],
-      sends: [decisionRequest(held, reason, "result")], opens: [] };
+    const notice = evidenceNoticeOpeningV17(given, row.item, held);
+    return { effects: [...serviceEffect(given, view), ...[...updates].map(([id, record]) => evidenceRecordEffectV17(id, record)), ...notice.effects],
+      sends: [decisionRequest(held, reason, "result")], opens: notice.opens };
   };
   if (!fields || !isFactRef(fields["result"]) || !same(fields["job"], record.job)) return refuse("evidence-invalid");
   const actual = given.uses.find(use => same(use.fact, fields["result"])), admission = destinationEvidenceJob(given.state, given.own, record.job);
@@ -895,7 +1041,7 @@ function evidenceResult(given: RuleGiven, operation: Operation): OutcomeGives {
   // The complete signed reason (up to 4096 bytes) stays in the retained
   // result fact. This bounded native summary never truncates or retypes it.
   record.decidedAt = given.resolved.self; record.reason = decision.outcome === "error" ? "check-error" : decision.reason; record.observedGeneration = view!.serviceGeneration;
-  const updates = new Map<number, EvidenceJobRecordV17>([[row.item.id, record]]);
+  const updates = new Map(initial); updates.set(row.item.id, record);
   if (record.reuseOwner !== null) {
     const owner = record.reuseOwner === row.item.id ? record : copy(readRow(given, record.reuseOwner).record);
     if (!owner.reuse) throw Error("A funded candidate index is unavailable");
@@ -910,9 +1056,12 @@ function evidenceResult(given: RuleGiven, operation: Operation): OutcomeGives {
     same(record.binding.policyGeneration, { rules: view!.rules, seq: view!.revision }));
   const sends = [decisionRequest(record, "counted", "result")], incident = incidentRequest(given, record);
   if (incident) sends.push(incident);
-  const progress = landingNeedsProgress(given, record) ? [openingV17(EVIDENCE_PROGRESS_V17, record.holder)] : [];
+  const notice = evidenceNoticeOpeningV17(given, row.item, record);
+  const progress = [...(landingNeedsProgress(given, record) ? [openingV17(EVIDENCE_PROGRESS_V17, record.holder)] : []), ...notice.opens];
   const effects: RuleEffect[] = [...serviceEffect(given, view), { effect: "value", item: row.item.id, slot: "deadline", value: null },
-    { effect: "state", item: record.requestAt, state: "settled" }];
+    { effect: "state", item: record.requestAt, state: "settled" }, ...notice.effects];
+  if (record.binding.subject.kind === "published" && record.covered.length && record.policyOwner !== null) effects.push(...evidenceSettlePendingCapacityV17(given,
+    record.policyOwner, record.covered, record.job, decision.outcome === "passed" && same(record.binding.policyGeneration, { rules: view!.rules, seq: view!.revision }) ? record.binding.subject.publication.seq : null));
   for (const [id, next] of updates) {
     effects.push(evidenceRecordEffectV17(id, next));
     if (given.state.item(id)?.state !== evidenceRecordState(next, id)) effects.push({ effect: "state", item: id, state: evidenceRecordState(next, id) });
@@ -921,26 +1070,13 @@ function evidenceResult(given: RuleGiven, operation: Operation): OutcomeGives {
   return { effects, sends, opens: progress };
 }
 
-/** Timeout settles waiting only. It neither proves process termination nor
- * releases a reserved candidate that may still yield an authentic late result. */
-function evidenceTimeout(given: RuleGiven): readonly RuleEffect[] {
-  const item = given.resolved.subjects.get("on"), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
-  if (!item || !record || record.state !== "admitted") return [];
-  record.state = "timeout"; record.reason = "check-timeout";
-  const updates = new Map<number, EvidenceJobRecordV17>([[item.id, record]]);
-  publishedDecision(given, record, "timeout", "check-timeout", updates);
-  const effects: RuleEffect[] = [{ effect: "value", item: item.id, slot: "deadline", value: null }];
-  for (const [id, next] of updates) effects.push(evidenceRecordEffectV17(id, next));
-  // TIMED has no observations and sends no messages. The separately funded
-  // notice owns the complete triager observation and the typed delivery.
-  if (record.incident?.cause) effects.push(...openedEffectsV17(EVIDENCE_NOTICE_V17, record.holder));
-  return effects;
-}
 function evidenceNotice(given: RuleGiven, operation: Operation): OutcomeGives {
   if (operation.for === undefined) throw Error("An evidence notice has no funded job");
   if (given.input.type !== "outcome" || given.input.result !== "confirmed") return { effects: [], sends: [], opens: [] };
   const row = operationRow(given, operation), record = copy(row.record), request = incidentRequest(given, record);
-  return { effects: [evidenceRecordEffectV17(row.item.id, record)], sends: request ? [request] : [], opens: [] };
+  if (!request && record.noticeAt === null) throw new RuleFault("The incident awaits a complete nonempty bounded triager observation");
+  return { effects: [evidenceRecordEffectV17(row.item.id, record), ...(row.item.state === evidenceRecordState(record, row.item.id) ? []
+    : [{ effect: "state" as const, item: row.item.id, state: evidenceRecordState(record, row.item.id) }])], sends: request ? [request] : [], opens: [] };
 }
 /** The keys of exactly the generations this progress turn may retain.
  * Reads supply retained Native records; this helper creates no authority. */
@@ -1006,10 +1142,10 @@ export function evidenceDestinationRulesV17(base: Rules): Rules {
   const outcome = (kind: "admit" | "result" | "notice" | "progress"): Extract<Rules[string], { place: "outcome" }> => ({ place: "outcome", clock: true, rules: {
     selects: kind === "admit", read: false, retries: () => false,
     most: { effects: 16, requests: 3, operations: 2 },
-    origin: (_given, operation) => Number(operation.id.split(":")[0]),
+    origin: (given, operation) => kind === "notice" ? operationRow(given, operation).record.admittedAt : Number(operation.id.split(":")[0]),
     unknown: () => ({}),
     wellFormed: (result, answer, given) => {
-      if (result !== "confirmed") return exact(answer.body, []);
+      if (result !== "confirmed") return kind !== "notice" && exact(answer.body, []);
       if (answer.basis !== "own-answer" || !exact(answer.body, ["job"]) || given.input.type !== "outcome") return false;
       const operation = given.state.operation(given.input.operation), row = operation ? operationRow(given, operation) : null;
       return !!row && same(answer.body["job"], row.record.job);
@@ -1025,7 +1161,11 @@ export function evidenceDestinationRulesV17(base: Rules): Rules {
       if (entry?.input.type === "act") keys.add(entry.input.signed.intent.actor);
       if (kind === "admit") {
         const observation = first?.observed({ asked: "rules" })?.observation;
-        if (observation && "subject" in observation && observation.subject === "rules" && observation.content.asked === "rules" && observation.content.roomService) keys.add(observation.content.roomService.key);
+        if (observation && "subject" in observation && observation.subject === "rules" && observation.content.asked === "rules" && observation.content.extents) {
+          const extents = given.value(RULES_EXTENTS_VALUE_V13.domain, observation.content.extents, RULES_EXTENTS_VALUE_V13.max);
+          const read = readRulesPolicyObservationV17(observation, { rules: observation.of, destination: given.resolved.at, extents }, given.time);
+          if (read.ok && read.view.policy.roomService) keys.add(read.view.policy.roomService.key);
+        }
       }
       const owner = record.reuseOwner === null ? null : given.state.item(record.reuseOwner);
       const bucket = readEvidenceJobRecordWireV17(owner?.values["record"])?.reuse;
@@ -1066,10 +1206,18 @@ export function evidenceDestinationRulesV17(base: Rules): Rules {
     "evidence-result-bound-v17": { place: "guard", refusals: ["not-this-check"], run: given => resultBound(given) ? { holds: true } : { holds: false, name: "not-this-check" } },
     "evidence-result-open-v17": { place: "effect", most: 2, run: given => { const row = resultBound(given); if (!row) throw Error("A result lost its admitted job"); return openedEffectsV17(EVIDENCE_RESULT_V17, row.record.holder); } },
     "evidence-release-v17": { place: "guard", clock: true, refusals: ["not-an-active-hold"], run: given => evidenceRelease(given) ? { holds: true } : { holds: false, name: "not-an-active-hold" } },
-    "evidence-release-record-v17": { place: "effect", clock: true, most: 1, run: given => { const released = evidenceRelease(given); if (!released) throw Error("An authorized hold release lost its hold"); return [evidenceRecordEffectV17(released.item.id, released.record)]; } },
+    "evidence-release-record-v17": { place: "effect", clock: true, most: 2, run: given => { const released = evidenceRelease(given); if (!released) throw Error("An authorized hold release lost its hold"); return [evidenceRecordEffectV17(released.item.id, released.record), ...released.effects]; } },
+    "evidence-recovery-authority-v17": { place: "guard", clock: true, refusals: ["evidence-recovery-authority"], run: given => recoveryAuthority(given) ? { holds: true } : { holds: false, name: "evidence-recovery-authority" } },
+    "evidence-recovery-ready-v17": { place: "guard", refusals: ["not-a-timed-incident"], run: given => {
+      const row = recoveryRow(given); return row && literalTimeoutCause(given.state, given.own, row) ? { holds: true } : { holds: false, name: "not-a-timed-incident" };
+    } },
+    "evidence-recovery-v17": { place: "effect", most: 5, run: given => {
+      const row = recoveryRow(given); if (!row) throw new RuleFault("The admitted recovery job is unavailable");
+      const recovered = recoverIncident(given, row);
+      return [...recovered.effects, ...recovered.opens.flatMap(open => openedEffectsV17(open.kind, row.record.holder))];
+    } },
     "evidence-admit-v17": outcome("admit"), "evidence-result-v17": outcome("result"), "evidence-notice-v17": outcome("notice"),
     "evidence-progress-v17": outcome("progress"),
-    "evidence-timeout-v17": { place: "effect", clock: true, most: 6, run: evidenceTimeout },
   };
 }
 export const evidenceJobStateV17 = (state: StateView, job: FactRef): { state: string; admittedAt: number | null } | null => {
@@ -1111,10 +1259,14 @@ export function* evidenceFloorReferencesV17(snapshot: StateSnapshot, _definition
       fact(batch.publication); fact(batch.capture); fact(batch.operation);
       fact(batch.policy.certificate.request); fact(batch.policy.certificate.certificate);
       for (const row of capacity.holds ?? []) position(row.owner);
+      for (const row of capacity.holds ?? []) for (const pending of row.pending) { fact(pending.publication); fact(pending.job); position(pending.admittedAt); }
     } else if (item.type === "evidence-job" || item.type === "evidence-request" || item.type === "evidence-slot") {
       const record = readEvidenceJobRecordWireV17(item.values["record"]); if (!record) throw Error("Evidence floor record is malformed");
       if (item.state === "settled") continue;
       position(item.id); position(record.admittedAt); position(record.decidedAt); position(record.holder); position(record.requestAt); position(record.noticeAt);
+      const timeout = item.refs["timeoutDecision"], notice = item.values["noticeOpenedAt"];
+      if (typeof timeout === "number") position(timeout); else if (isFactRef(timeout)) fact(timeout);
+      if (natural(notice)) position(notice);
       for (const source of record.sourceFacts) fact(source);
       position(record.reuseOwner); position(record.holdOwner); position(record.policyOwner);
       for (const candidate of record.reuse?.candidates ?? []) { position(candidate.admission); position(candidate.decidedBy); fact(candidate.job); fact(candidate.result); }

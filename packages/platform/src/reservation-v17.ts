@@ -2,12 +2,12 @@
  * passed native canonical/domain/member bounds and sibling authentication.
  * This module checks correspondence and policy; it neither fetches nor
  * authenticates an observation or a certificate supplied by a caller. */
-import type { Digest, EvidenceBinding, FactRef, Head, MemberObservation, Observation, RulesObservation, ScopedRulesPosition, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, utf8, isDigest, isFactRef, isHead, isRecord, isScopeRef, same, timeMs } from "@generalbusiness/dap-bytes";
+import type { Digest, FactRef, Head, MemberObservation, Observation, RulesObservation, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
+import { canonicalize, utf8, isDigest, isFactRef, isHead, isRecord, isScopeRef, parseStrict, same, timeMs, type EvidenceBinding, type ScopedRulesPosition } from "@generalbusiness/dap-bytes";
 import { byteOrder, valueDigest } from "@generalbusiness/dap-derive";
 import { classify } from "./extents.ts";
 import { fileSound, judgeReservation, judgeReservationWithStanding, reservationCheckStatus, type Reservation, type ReservationAsked, type ReservationRead, type ReservationStanding, type ReservationWithStanding, type Statement } from "./reservation.ts";
-import { checkSourceV13, checkStageV13, rulesPolicyProposalV13, type RulesCheckV13, type RulesPolicyV13 } from "./rules-policy-v13.ts";
+import { checkSourceV13, checkStageV13, rulesPolicyProposalV13, RULES_CONTENT_BYTES_V13, type RulesCheckV13, type RulesPolicyV13 } from "./rules-policy-v13.ts";
 
 /** Inputs from the native reader's exact, authenticated Q13 observation.
  * The single extents-3 envelope was admitted at most 262144 canonical UTF-8 bytes;
@@ -30,8 +30,8 @@ export interface ReservationPolicyViewV17 {
 export type RulesPolicyObservationV17 = { ok: true; view: ReservationPolicyViewV17 }
   | { ok: false; reason: "rules-not-configured" | "evidence-invalid" };
 export type ReservationAskedV17 = ReservationAsked & { policy: ReservationPolicyInputV17 };
-const exact = (value: Record<string, unknown>, names: readonly string[]): boolean =>
-  Object.keys(value).length === names.length && names.every(name => Object.hasOwn(value, name));
+const exact = (value: unknown, names: readonly string[]): value is Record<string, unknown> =>
+  isRecord(value) && Object.keys(value).length === names.length && names.every(name => Object.hasOwn(value, name));
 const no = (reason: string): Reservation => ({ reserved: false, reason });
 const SHA1 = /^(?!0{40}$)[0-9a-f]{40}$/;
 const EXTENTS_DOMAIN = "artroom-rules-extents-3";
@@ -84,26 +84,29 @@ export function readRulesPolicyObservationV17(observed: RulesObservation | null,
   if (!observed || observed.subject !== "rules" || observed.definition !== "platform:rules@13" || observed.content.asked !== "rules"
     || !isScopeRef(input.rules) || input.rules.kind !== "rules" || !same(observed.of, input.rules)
     || !isScopeRef(input.destination) || input.destination.kind !== "destination" || !isHead(observed.head)
-    || !Number.isSafeInteger(observed.revision) || observed.revision < 0 || observed.revision > observed.head.seq) return invalid();
+    || !Number.isSafeInteger(observed.revision) || Object.is(observed.revision, -0) || observed.revision < 0 || observed.revision > observed.head.seq) return invalid();
   const at = timeMs(observed.at), now = timeMs(time);
   if (at === null || now === null || now < at || now - at > 10000) return invalid();
   const envelope = input.extents;
-  if (!isRecord(envelope) || !exact(envelope, ["configured", "policy", "proposal", "certificate"]) || typeof envelope["configured"] !== "boolean" || !envelopeFits(envelope)) return invalid();
+  if (!isRecord(envelope) || !exact(envelope, ["configured", "policy", "proposal", "certificate", "serviceGeneration"]) || typeof envelope["configured"] !== "boolean" || !envelopeFits(envelope)) return invalid();
   const outer = observed.content;
-  if (!isDigest(outer.extents)) return invalid();
+  if (!exact(outer, ["asked", "approvals", "ownerMayReview", "checks", "labels", "singleControllerException", "extents"]) || !isDigest(outer.extents)) return invalid();
   // Values are native byte-admitted before this call. Even the unconfigured
   // envelope must be the one this authenticated observation actually names.
   if (valueDigest(EXTENTS_DOMAIN, envelope) !== outer.extents) return invalid();
+  const generation = envelope["serviceGeneration"];
+  if (!isRecord(generation) || !exact(generation, ["rules", "seq"]) || !isScopeRef(generation["rules"]) || !same(generation["rules"], observed.of)
+    || typeof generation["seq"] !== "number" || !Number.isSafeInteger(generation["seq"]) || Object.is(generation["seq"], -0)
+    || generation["seq"] < 0 || generation["seq"] > observed.revision) return invalid();
   if (!envelope["configured"]) return envelope["policy"] === null && envelope["proposal"] === null && envelope["certificate"] === null
-    ? { ok: false, reason: "rules-not-configured" } : invalid();
+    && generation["seq"] === 0 ? { ok: false, reason: "rules-not-configured" } : invalid();
   const proposal = rulesPolicyProposalV13(envelope["policy"]);
   if (!proposal.ok || !isDigest(envelope["proposal"]) || proposal.digest !== envelope["proposal"]) return invalid();
   const { policy } = proposal;
   if (outer.approvals !== policy.approvals || outer.ownerMayReview !== policy.ownerMayReview || !same(outer.labels, policy.labels)
     || outer.singleControllerException !== (policy.singleControllerException === true)
     || !same(outer.checks, policy.checks.map(({ name, configuration, required, checker }) => ({ name, configuration, required, checker: checker.member })))
-    || !Object.hasOwn(outer, "roomService") || !same(outer.roomService, policy.roomService) || !outer.serviceGeneration || !same(outer.serviceGeneration.rules, observed.of)
-    || !Number.isSafeInteger(outer.serviceGeneration.seq) || outer.serviceGeneration.seq < 0 || outer.serviceGeneration.seq > observed.revision) return invalid();
+    || policy.roomService !== null && generation["seq"] === 0) return invalid();
   const certificate = envelope["certificate"];
   if (!isRecord(certificate) || !exact(certificate, ["request", "certificate", "proof", "commit"])
     || !isFactRef(certificate["request"]) || !isFactRef(certificate["certificate"]) || !isDigest(certificate["proof"])
@@ -111,8 +114,34 @@ export function readRulesPolicyObservationV17(observed: RulesObservation | null,
     || !same(certificate["request"].at, input.destination) || !same(certificate["certificate"].at, input.destination)
     || certificate["request"].seq >= certificate["certificate"].seq) return invalid();
   const copy = (fact: FactRef): FactRef => ({ ...fact, at: { ...fact.at } });
-  return { ok: true, view: { rules: { ...input.rules }, head: { ...observed.head }, revision: observed.revision, proposal: proposal.digest, policy, serviceGeneration: { rules: { ...outer.serviceGeneration.rules }, seq: outer.serviceGeneration.seq },
+  return { ok: true, view: { rules: { ...input.rules }, head: { ...observed.head }, revision: observed.revision, proposal: proposal.digest, policy, serviceGeneration: { rules: { ...generation["rules"] }, seq: generation["seq"] },
     certificate: { request: copy(certificate["request"]), certificate: copy(certificate["certificate"]), proof: certificate["proof"], commit: certificate["commit"] } } };
+}
+
+/** Authenticated namespace reply, read now by the host. The timestamp is the
+ * host's current clock; callers separately bound the whole read sequence. */
+export function readRulesPolicyReplyV17(reply: unknown, rules: ScopeRef, destination: ScopeRef, time: Timestamp): RulesPolicyObservationV17 {
+  const invalid = (): RulesPolicyObservationV17 => ({ ok: false, reason: "evidence-invalid" });
+  try {
+    if (!exact(reply, ["answer", "values"]) || !isRecord(reply["answer"]) || !Array.isArray(reply["values"]) || reply["values"].length !== 1) return invalid();
+    const answer = reply["answer"], retained: unknown = reply["values"][0];
+    if (!exact(answer, ["subject", "of", "head", "revision", "definition", "content"]) || answer["subject"] !== "rules" || answer["definition"] !== "platform:rules@13"
+      || !isScopeRef(answer["of"]) || !same(answer["of"], rules) || !isHead(answer["head"]) || typeof answer["revision"] !== "number"
+      || !Number.isSafeInteger(answer["revision"]) || answer["revision"] < 0 || answer["revision"] > answer["head"].seq
+      || !isRecord(answer["content"]) || !isDigest(answer["content"]["extents"]) || utf8(canonicalize(answer["content"])).length > RULES_CONTENT_BYTES_V13
+      || !exact(retained, ["domain", "bytes"]) || retained["domain"] !== EXTENTS_DOMAIN || typeof retained["bytes"] !== "string"
+      || retained["bytes"].length > EXTENTS_MAX_BYTES || utf8(retained["bytes"]).length > EXTENTS_MAX_BYTES) return invalid();
+    const envelope = parseStrict(retained["bytes"]);
+    if (!isRecord(envelope) || canonicalize(envelope) !== retained["bytes"] || valueDigest(EXTENTS_DOMAIN, envelope) !== answer["content"]["extents"]) return invalid();
+    const proposed = rulesPolicyProposalV13(envelope["policy"]);
+    if (!proposed.ok) return invalid();
+    const policy = proposed.policy, content = { asked: "rules" as const, approvals: policy.approvals, ownerMayReview: policy.ownerMayReview,
+      checks: policy.checks.map(({ name, configuration, required, checker }) => ({ name, configuration, required, checker: checker.member })), labels: policy.labels,
+      singleControllerException: policy.singleControllerException === true, extents: answer["content"]["extents"] };
+    if (!same(answer["content"], content)) return invalid();
+    const observed: RulesObservation = { subject: "rules", of: answer["of"], head: answer["head"], revision: answer["revision"], definition: "platform:rules@13", content, at: time };
+    return readRulesPolicyObservationV17(observed, { rules, destination, extents: envelope }, time);
+  } catch { return invalid(); }
 }
 
 /** Full, distinct descriptors, not a passed-name list. Every global required

@@ -1,9 +1,32 @@
 /** Closed, owned successor check bindings. Facts are proved by their native readers. */
-import type { CheckSubject, Digest, EvidenceBinding, FactRef, MemberRef, ScopedRulesPosition, ScopeRef, ServiceMark } from "@generalbusiness/dap-contract";
+import type { Digest, FactRef, KeyId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalBytes } from "./canonical.ts";
 import { digestBytes } from "./hash.ts";
 import { isKeyId } from "./ids.ts";
 import { isFactRef, isMemberRef, isScopeRef } from "./records.ts";
+
+/** Who supplies a check result, and when its job runs. Omitted legacy fields keep member/landing meaning. */
+export type CheckSource = "member" | "room";
+export type CheckStage = "work" | "landing" | "published";
+export interface ServiceMark { checker: MemberRef; key: KeyId }
+/** A native position under one exact Rules incarnation. This is not a fact hash. */
+export interface ScopedRulesPosition { rules: ScopeRef; seq: number }
+export type CheckSubject =
+  | { kind: "landing"; publication: FactRef; manifest: FactRef }
+  | { kind: "work"; source: FactRef }
+  | { kind: "published"; publication: FactRef; receipt: FactRef; written: FactRef; manifest: FactRef };
+/** Closed successor job binding. The native reader proves the facts and source standing. */
+export interface EvidenceBinding {
+  v: 1;
+  source: CheckSource;
+  stage: CheckStage;
+  checker: MemberRef;
+  policyGeneration: ScopedRulesPosition;
+  roomService: ServiceMark | null;
+  serviceGeneration: ScopedRulesPosition;
+  auditOf: FactRef | null;
+  subject: CheckSubject;
+}
 
 export const EVIDENCE_BINDING_DOMAIN = "artroom-check-binding-1";
 

@@ -177,6 +177,7 @@ const namedOwners = {
 
 // Reviewed matcher/gate owners. These are change tripwires, not runtime proof.
 const seals = {
+  "packages/platform/src/reservation-v17.ts": "pending", // Delegated retained-policy decoder; measure only after source review and freeze.
   "packages/bytes/src/evidence.ts": "b10a6a23205f8bbaf7c745eced37fc2bf72d0f5da400fe905e961037fcdec774", // Reviewed successor binding codec; actual maintained parser output.
   "packages/git/src/checkout-snapshot.ts": "b0a33b2434f08f9b2e1cb20a342ac55702365c2006da7849c60f8ba78fc87e0f", // Detached object identity and closure bounds; imports do not seal this implementation.
   "packages/checkers/src/stage-origin.ts": "3b0ff50fad9f27c38bc0bc2c0c611a742405337f14fb3d204787f64708e3126b", // Actual Native admission and causal proof verifier.

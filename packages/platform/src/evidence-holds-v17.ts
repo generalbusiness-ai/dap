@@ -1,5 +1,6 @@
 /** Pure G17 hold order and incident state. Authority and native atomicity belong to the caller. */
-import type { CheckSource, Digest, FactRef, HoldersObservation, MemberRef, ScopeRef, ScopedRulesPosition } from "@generalbusiness/dap-contract";
+import type { Digest, FactRef, HoldersObservation, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
+import type { CheckSource, ScopedRulesPosition } from "@generalbusiness/dap-bytes";
 import { canonicalize, digestBytes, isDigest, isFactRef, isMemberRef, isRecord, isScopeRef, parseStrict, same, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import { EVIDENCE_LIMITS_V17, evidencePositionV17 } from "./evidence-index-v17.ts";
 
@@ -122,6 +123,116 @@ export function releaseEvidenceHoldV17(value: EvidenceHoldRecordV17, supplied: E
   if (!same(released.through, record.failure.order) || released.decidedAt <= record.failure.decidedAt) return invalid();
   if (released.kind === "transition" && same(released.next, record.key.generation)) return invalid();
   return { ok: true, record: { ...record, release: released } };
+}
+
+export const EVIDENCE_HOLD_PENDING_V17 = 3;
+/** Capacity is reserved before publication. Actual admission binds the
+ * foreign job and local admission position once; neither is a future fact. */
+export interface EvidenceHoldPendingV17 {
+  publication: FactRef; name: string; job: FactRef | null; admittedAt: number | null;
+}
+export type EvidenceHoldPendingChangeV17 = { ok: true; pending: readonly EvidenceHoldPendingV17[] }
+  | { ok: false; reason: "evidence-invalid" | "hold-pending-full" | "hold-pending-conflict" };
+const samePosition = (left: FactRef, right: FactRef): boolean => same(left.at, right.at) && left.seq === right.seq;
+const pendingInvalid = (): EvidenceHoldPendingChangeV17 => ({ ok: false, reason: "evidence-invalid" });
+const pendingConflict = (): EvidenceHoldPendingChangeV17 => ({ ok: false, reason: "hold-pending-conflict" });
+const publicationValue = (value: unknown): value is FactRef => factValue(value) && value.at.kind === "destination";
+const jobValue = (value: unknown): value is FactRef => factValue(value) && value.at.kind === "lane";
+export function readEvidenceHoldPendingV17(value: unknown): readonly EvidenceHoldPendingV17[] | null {
+  try {
+    if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype || value.length > EVIDENCE_HOLD_PENDING_V17
+      || Reflect.ownKeys(value).length !== value.length + 1) return null;
+    const pending: EvidenceHoldPendingV17[] = [];
+    for (let n = 0; n < value.length; n++) {
+      const field = Object.getOwnPropertyDescriptor(value, String(n));
+      if (!field?.enumerable || !Object.hasOwn(field, "value")) return null;
+      const row: unknown = field.value;
+      if (!exact(row, ["publication", "name", "job", "admittedAt"]) || !publicationValue(row["publication"])
+        || !text(row["name"], 128) || row["name"] === "") return null;
+      const publication = row["publication"], name = row["name"];
+      const unbound = row["job"] === null && row["admittedAt"] === null;
+      if (!unbound && (!jobValue(row["job"]) || !evidencePositionV17(row["admittedAt"]) || row["admittedAt"] < publication.seq)) return null;
+      const job = row["job"] as FactRef | null;
+      if (pending.some(previous => previous.name === name && samePosition(previous.publication, publication)
+        || job !== null && previous.job !== null && samePosition(previous.job, job))) return null;
+      pending.push({ publication, name, job, admittedAt: row["admittedAt"] as number | null });
+    }
+    return owned(pending);
+  } catch { return null; }
+}
+export function reserveEvidenceHoldPendingV17(value: readonly EvidenceHoldPendingV17[], publication: FactRef, name: string): EvidenceHoldPendingChangeV17 {
+  const pending = readEvidenceHoldPendingV17(value);
+  if (!pending || !publicationValue(publication) || !text(name, 128) || name === "") return pendingInvalid();
+  const prior = pending.find(row => row.name === name && samePosition(row.publication, publication));
+  if (prior) return same(prior.publication, publication) ? { ok: true, pending } : pendingConflict();
+  if (pending.length >= EVIDENCE_HOLD_PENDING_V17) return { ok: false, reason: "hold-pending-full" };
+  return { ok: true, pending: [...pending, { publication: owned(publication), name, job: null, admittedAt: null }] };
+}
+export function bindEvidenceHoldPendingV17(value: readonly EvidenceHoldPendingV17[], publication: FactRef, name: string,
+  job: FactRef, admittedAt: number, clearedThrough: number | null): EvidenceHoldPendingChangeV17 {
+  const pending = readEvidenceHoldPendingV17(value);
+  if (!pending || !publicationValue(publication) || !text(name, 128) || name === "" || !jobValue(job)
+    || !evidencePositionV17(admittedAt) || admittedAt < publication.seq || !(clearedThrough === null || evidencePositionV17(clearedThrough))) return pendingInvalid();
+  const index = pending.findIndex(row => row.name === name && samePosition(row.publication, publication)), prior = pending[index];
+  if (!prior || !same(prior.publication, publication)) return pendingConflict();
+  if (prior.job !== null) return same(prior.job, job) && prior.admittedAt === admittedAt ? { ok: true, pending } : pendingConflict();
+  if (pending.some(row => row.job !== null && samePosition(row.job, job))) return pendingConflict();
+  if (clearedThrough !== null && publication.seq <= clearedThrough) return { ok: true, pending: pending.filter((_row, n) => n !== index) };
+  return { ok: true, pending: pending.map((row, n) => n === index ? { publication: owned(publication), name, job: owned(job), admittedAt } : row) };
+}
+/** Caller proves an actual terminal result. Timer/notification code must
+ * never call this helper merely because it observed or announced a job. */
+export function removeEvidenceHoldPendingV17(value: readonly EvidenceHoldPendingV17[], job: FactRef): EvidenceHoldPendingChangeV17 {
+  const pending = readEvidenceHoldPendingV17(value);
+  if (!pending || !jobValue(job)) return pendingInvalid();
+  if (pending.some(row => row.job !== null && samePosition(row.job, job) && !same(row.job, job))) return pendingConflict();
+  return { ok: true, pending: pending.filter(row => row.job === null || !same(row.job, job)) };
+}
+/** A proven eligible pass or authorized prefix release prunes bound rows.
+ * An unbound reservation still owns its capacity until actual binding or
+ * independently proved irreversible withdrawal. */
+export function clearEvidenceHoldPendingV17(value: readonly EvidenceHoldPendingV17[], throughPub: number): EvidenceHoldPendingChangeV17 {
+  const pending = readEvidenceHoldPendingV17(value);
+  if (!pending || !evidencePositionV17(throughPub)) return pendingInvalid();
+  return { ok: true, pending: pending.filter(row => row.job === null || row.publication.seq > throughPub) };
+}
+export function withdrawEvidenceHoldPendingV17(value: readonly EvidenceHoldPendingV17[], publication: FactRef): EvidenceHoldPendingChangeV17 {
+  const pending = readEvidenceHoldPendingV17(value);
+  if (!pending || !publicationValue(publication)) return pendingInvalid();
+  if (pending.some(row => samePosition(row.publication, publication) && !same(row.publication, publication))) return pendingConflict();
+  return { ok: true, pending: pending.filter(row => row.job !== null || !same(row.publication, publication)) };
+}
+export type EffectiveEvidenceHoldV17 = { ok: true; active: boolean; cause: EvidenceFailureV17 | null; clearedThrough: number | null }
+  | { ok: false; reason: "evidence-invalid" | "assessment-unavailable" };
+/** Native readBound proves the job's actual literal timed state, reason and
+ * deciding self-reference, and its coverage of this exact key/generation.
+ * Null means an actually read non-timeout job; missing data is unavailable.
+ * No row or incident is materialized by this bounded, short-circuit read. */
+export function effectiveEvidenceHoldV17(value: EvidenceHoldRecordV17, slots: readonly EvidenceHoldPendingV17[],
+  readBound: (slot: EvidenceHoldPendingV17) => EvidenceFailureV17 | null | "unavailable"): EffectiveEvidenceHoldV17 {
+  try {
+    const record = readEvidenceHoldV17(value), pending = readEvidenceHoldPendingV17(slots);
+    if (!record || !pending || pending.some(row => row.name !== record.key.name)) return { ok: false, reason: "evidence-invalid" };
+    const clearedThrough = record.release?.through.publication ?? null;
+    const recordedActive = record.failure !== null && (record.failure.kind === "timeout"
+      ? clearedThrough === null || record.failure.publication.seq > clearedThrough : evidenceHoldActiveV17(record));
+    if (recordedActive) return { ok: true, active: true, cause: record.failure, clearedThrough };
+    const ordered = [...pending].sort((left, right) => left.publication.seq - right.publication.seq
+      || (left.admittedAt ?? Number.MAX_SAFE_INTEGER) - (right.admittedAt ?? Number.MAX_SAFE_INTEGER)
+      || (canonicalize(left) < canonicalize(right) ? -1 : canonicalize(left) > canonicalize(right) ? 1 : 0));
+    for (const slot of ordered) {
+      if (slot.job === null || clearedThrough !== null && slot.publication.seq <= clearedThrough) continue;
+      let supplied: EvidenceFailureV17 | null | "unavailable";
+      try { supplied = readBound(slot); } catch { return { ok: false, reason: "assessment-unavailable" }; }
+      if (supplied === "unavailable") return { ok: false, reason: "assessment-unavailable" };
+      if (supplied === null) continue;
+      const cause = readEvidenceFailureV17(supplied);
+      if (!cause || cause.kind !== "timeout" || !same(cause.job, slot.job) || !same(cause.publication, slot.publication)
+        || cause.order.job !== slot.admittedAt) return { ok: false, reason: "assessment-unavailable" };
+      return { ok: true, active: true, cause, clearedThrough };
+    }
+    return { ok: true, active: false, cause: null, clearedThrough };
+  } catch { return { ok: false, reason: "evidence-invalid" }; }
 }
 
 export type EvidenceTriagersV17 = Pick<HoldersObservation, "of" | "action" | "holders" | "count">;

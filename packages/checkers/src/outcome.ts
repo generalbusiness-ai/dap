@@ -22,8 +22,8 @@
  * word. The words here are this package's (I3 deltas, entry EW14).
  */
 
-import type { Digest, EvidenceBinding, FactRef } from "@generalbusiness/dap-contract";
-import { canonicalBytes, digestBytes, evidenceBindingDigest, isDigest, utf8, wellFormed } from "@generalbusiness/dap-bytes";
+import type { Digest, FactRef } from "@generalbusiness/dap-contract";
+import { canonicalBytes, digestBytes, evidenceBindingDigest, isDigest, utf8, wellFormed, type EvidenceBinding } from "@generalbusiness/dap-bytes";
 import { environmentDigest, exactly, type Configuration, type Variable } from "./configuration.ts";
 
 /** The reasons of a `check-error` that names no step. */

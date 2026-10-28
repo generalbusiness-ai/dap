@@ -319,6 +319,10 @@ Only an admin can change that pair. Destination observes current Rules and
 Membership when it admits and counts a result. Rotation refuses unfinished
 room jobs under the earlier generation. Member jobs retain their separate
 member authority.
+The generic Rules observation grammar stays unchanged. Its existing retained
+extents value carries the successor policy and service generation under a
+dedicated domain. Native and host readers verify those exact bounded bytes.
+The dedicated bytes evidence API owns the successor binding types and codec.
 
 A lane queues an evidence request before Destination decides it. A selected
 `evidence-admit` outcome opens the admitted job and records its immutable
@@ -333,6 +337,10 @@ or a later publication. Transitions and overrides have distinct recorded
 causes. A failed published job asks its Change lane to create a nested
 incident Issue, addressed to current active `issue.triage` holders. Unknown
 creation remains pending under the original request.
+A timeout changes only its job through literal timed effects. Admissions
+judge that state through a bounded, pre-funded pending-job index, so the hold
+is effective at the timed entry. A later entry or authorized recovery act
+opens its owed notice; until then the timed-out job visibly owes an incident.
 
 The signed job-read route can return a bounded `StageSnapshot` for this
 cohort. The host reads immutable Git objects at the admitted commit, checks

@@ -1,7 +1,7 @@
 /** SCRIPTED scope/admission shape fixture. No Native scope judged these
  * entries. This owns service retry/deadline behavior, never Native authority. */
-import type { Answer, Effect, Entry, EvidenceBinding, FactRef, FieldValue, Input, ScopeRef, Sealed, Send, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, evidenceBindingDigest, isEntry, signIntent, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import type { Answer, Effect, Entry, FactRef, FieldValue, Input, ScopeRef, Sealed, Send, SignedIntent } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, evidenceBindingDigest, isEntry, signIntent, timeOf, utf8, verifySignedIntent, type EvidenceBinding } from "@generalbusiness/dap-bytes";
 import { idOf, type OwnedCheckoutSnapshot, type StageSnapshot } from "@generalbusiness/dap-git";
 import { CheckerService, configurationDigest, Outcomes, type Scopes } from "../../src/index.ts";
 import { configuration, digest, lane, MemoryDurable, newKey, ScriptedRunner, T0 } from "../support.ts";

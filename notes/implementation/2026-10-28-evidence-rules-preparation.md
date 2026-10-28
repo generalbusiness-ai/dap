@@ -147,7 +147,10 @@ the optional check fields already listed above. Its transport-only
 `checkers` field is the exact distinct union of configured checker members
 and the marked service member, at most 33. It is excluded from the policy
 digest. The new policy domain is `artroom-rules-policy-2`; its retained
-observation envelope uses `artroom-rules-extents-3`. The complete policy,
+observation envelope uses `artroom-rules-extents-3`. The existing outer
+Rules observation grammar stays exact. Its authenticated retained envelope
+contains configured status, policy, proposal, certificate and service
+generation; the policy carries the service mark. The complete policy,
 proof, and envelope each retain a 262,144-byte ceiling. The unchanged
 49,571-byte Rules content ceiling is checked on the complete successor
 projection. Every accepted publication must also fit its actual carrying
@@ -159,7 +162,7 @@ unchanged pairs keep their generation. The member union proves active
 checker members. A mark change additionally requires the fresh grant's
 admin role, rather than possession of a customizable publish action alone.
 
-Neutral contract types are `CheckSource`, `CheckStage`, `ServiceMark`,
+The dedicated bytes evidence API owns `CheckSource`, `CheckStage`, `ServiceMark`,
 `ScopedRulesPosition`, `CheckSubject`, and `EvidenceBinding`. The binding
 is a closed record with version 1, source, stage, checker, policy generation,
 service mark and generation, nullable auditOf, and subject. Each generation
@@ -204,6 +207,12 @@ bytes per complete key record, 512 hold keys across all generations and
 states, 512 retained hold-policy generations, and 8,192 published incident
 identities. Triager observations require complete coverage of at most 32
 active holders. Unknown, empty, or over-bound sets remain visible.
+Each exact hold key admits at most three pending published-job slots.
+The existing capacity anchor reserves actual publication/descriptor
+identities before publication; admission binds the actual job. Full lists
+refuse funding before push. A timer, notice or unknown creation never
+releases a slot. Actual result, eligible clearing pass, reasoned release or
+confirmed withdrawal supplies the proof needed to remove one.
 
 All work and landing jobs that could supply later reusable evidence reserve
 a candidate slot, including fresh and audit jobs. Published jobs cannot be
@@ -226,9 +235,11 @@ capacity checks. Use the maintained checked Amount helpers, complete
 carrying-entry forecasts, retained source/observation/value charges, and
 all future outcomes. Refuse before opening work when any bound cannot be
 proved. Per-check assessment bounds candidate standing reads; the old
-G15 capture budget is not evidence for a larger cohort. The 16-effect
-allowance still applies unless the actual existing bound explicitly permits
-another declared native maximum. No new kernel allowance is implied.
+G15 capture budget is not evidence for a larger cohort. New carrier quotes
+include automatic attempts, implicit item opens, sealed input syntax and
+complete observations within the existing 16-effect allowance. Shared
+capacity carriers include possible later key and slot growth under the
+complete frozen policy. No new kernel allowance is implied.
 
 | Owner | Bounded implementation scope | Existing useful boundary at Main |
 |---|---|---|
@@ -421,6 +432,10 @@ The selected design has these boundaries:
   entry that reads it, or an authorized triager or actual publication
   performer's recovery act, opens its already-funded incident notice.
   Recovery does not create a new cause, clear a hold or invent a failed run.
+  It opens at most one notice kind per entry and keeps the original marked
+  attempt recoverable while complete triagers are unavailable. A job with
+  an actual cause and an owed notice stays nonfinal, even after a late pass;
+  notice delivery then permits its ordinary terminal state.
 
 The implementation owes real landings on both sides of the timed boundary,
 Runtime/Replay equality, preserved historical and declared `timed-partial`
@@ -428,11 +443,12 @@ controls, a full pending-list refusal and the hold case table for Decisions
 13, 14, 16, 17 and 18. No kernel timeout extension is authorized.
 
 Ruling point 1 also excludes kernel package changes. Question `2356b681`
-asks how that applies to the draft's pre-existing shared binding types and
-Rules observation members. Root recommends preserving the old observation
-grammar and carrying new service metadata in the existing authenticated
-retained extents value. No transport rewrite is claimed while that scope
-clarification is pending. Independent Native timeout design continues.
+records the draft's pre-existing shared binding types and Rules observation
+members. Root follows the literal ban: restore the generic contract,
+observation decoder and derivation code to the Main base; move successor
+structural types to the dedicated bytes evidence API; carry service
+metadata in the existing authenticated retained extents value. The Native
+semantic policy view stays stable. That transport rewrite is in progress.
 
 ## First component checks and record-wire correction
 

@@ -1,11 +1,11 @@
 import { expect, test } from "vitest";
 import type { Digest, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import type { RuleGiven, StateView } from "@generalbusiness/dap-derive";
-import { contentChecked, contentStates } from "@generalbusiness/dap-derive";
-import { canonicalize } from "@generalbusiness/dap-bytes";
+import { contentChecked, contentStates, valueDigest } from "@generalbusiness/dap-derive";
+import { canonicalize, isRecord, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { rulesScopeV12 } from "../src/rules-scope-v12.ts";
-import { rulesAnswerV13, rulesScopeRulesV13, rulesScopeV13 } from "../src/rules-scope-v13.ts";
-import { firstExtentsV13, rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
+import { rulesAnswerV13, rulesObservedValuesV13, rulesScopeRulesV13, rulesScopeV13 } from "../src/rules-scope-v13.ts";
+import { firstExtentsV13, rulesPolicyProposalV13, RULES_CONTENT_BYTES_V13, RULES_EXTENTS_VALUE_V13 } from "../src/rules-policy-v13.ts";
 
 // Folded state and membership observations are explicit stand-ins. No certificate or native turn runs here.
 const rules: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "rules" };
@@ -15,14 +15,28 @@ const digest = `sha256:${"1".repeat(64)}` as Digest;
 const item = { id: 0, refs: {}, values: { configured: false, membership: membership.scope, approvals: 1, ownerMayReview: false } };
 const state = { page: () => ({ items: [item] }), incarnations: () => [membership.inc], scope: () => ({ status: "active", at: rules, head: { seq: 0, hash: digest } }) } as unknown as StateView;
 
-test("the successor alone exposes the scoped unmarked generation and refuses a projection beyond the retained observation ceiling", () => {
+function retainedPolicy(state: StateView): Record<string, unknown> {
+  const answer = rulesAnswerV13(state, { of: rules, asked: "rules" }), values = rulesObservedValuesV13(state, { of: rules, asked: "rules" });
+  if (!answer || answer.content.asked !== "rules" || values.length !== 1) throw Error("The actual Q13 answer must name exactly one retained policy");
+  const value = values[0]!, envelope = parseStrict(value.bytes);
+  if (!isRecord(envelope)) throw Error("The retained policy must be a record");
+  expect(Object.keys(envelope).sort()).toEqual(["certificate", "configured", "policy", "proposal", "serviceGeneration"]);
+  expect(value.domain).toBe(RULES_EXTENTS_VALUE_V13.domain);
+  expect(utf8(value.bytes).length).toBeLessThanOrEqual(RULES_EXTENTS_VALUE_V13.max);
+  expect(canonicalize(envelope)).toBe(value.bytes);
+  expect(valueDigest(value.domain, envelope)).toBe(answer.content.extents);
+  return envelope;
+}
+
+test("Q13 retains scoped service metadata beside the unchanged Rules projection and preserves its observation ceiling", () => {
   const answer = rulesAnswerV13(state, { of: rules, asked: "rules" });
   expect(answer?.content.asked).toBe("rules");
   if (!answer || answer.content.asked !== "rules") throw Error("Missing Rules answer");
-  expect(answer.content.roomService).toBe(null);
-  expect(answer.content.serviceGeneration).toEqual({ rules, seq: 0 });
+  expect(Object.hasOwn(answer.content, "roomService")).toBe(false);
+  expect(Object.hasOwn(answer.content, "serviceGeneration")).toBe(false);
+  expect(retainedPolicy(state)).toMatchObject({ configured: false, policy: null, serviceGeneration: { rules, seq: 0 } });
   expect(contentChecked({ ...answer, at: "2026-10-28T00:00:00Z" }, contentStates(rulesScopeV13))).toBe(true);
-  expect(contentChecked({ ...answer, at: "2026-10-28T00:00:00Z" }, contentStates(rulesScopeV12))).toBe(false);
+  expect(contentChecked({ ...answer, at: "2026-10-28T00:00:00Z" }, contentStates(rulesScopeV12))).toBe(true);
   const longChecker = { ...checker, member: `@${"a".repeat(255)}` as const };
   const policy = { approvals: 1, ownerMayReview: false, roomService: { checker: longChecker, key: `key_${"A".repeat(43)}` },
     checks: Array.from({ length: 32 }, (_, n) => ({ name: "\0".repeat(127) + String.fromCharCode(n), configuration: digest, required: true, checker: longChecker })),
@@ -34,7 +48,13 @@ test("the successor alone exposes the scoped unmarked generation and refuses a p
   const huge = { ...state, scope: () => ({ status: "active", at: rules, head: { seq: 8, hash: digest } }),
     page: () => ({ items: [{ ...item, refs: { published: 8, roomServiceChanged: 8 }, values: { ...item.values, configured: true,
       policy: canonicalize(parsed.policy), proposal: parsed.digest, certificate: { request: fact, certificate: { ...fact, seq: 2 }, proof: digest, commit: "a".repeat(40) } } }] }) } as unknown as StateView;
-  expect(rulesAnswerV13(huge, { of: rules, asked: "rules" })).toBe(null);
+  const oldProjection = { asked: "rules", approvals: policy.approvals, ownerMayReview: policy.ownerMayReview,
+    checks: policy.checks.map(({ name, configuration, required, checker }) => ({ name, configuration, required, checker: checker.member })),
+    labels: policy.labels, singleControllerException: false, extents: digest };
+  const largeAnswer = rulesAnswerV13(huge, { of: rules, asked: "rules" });
+  expect(largeAnswer === null).toBe(utf8(canonicalize(oldProjection)).length > RULES_CONTENT_BYTES_V13);
+  if (largeAnswer) expect(utf8(canonicalize(largeAnswer.content)).length).toBeLessThanOrEqual(RULES_CONTENT_BYTES_V13);
+  else expect(rulesObservedValuesV13(huge, { of: rules, asked: "rules" })).toEqual([]);
   const withdrawn = rulesPolicyProposalV13({ approvals: 1, ownerMayReview: false, roomService: null, checks: [], labels: [], extents: firstExtentsV13({ approvals: 1, checks: [] }) });
   if (!withdrawn.ok) throw Error("Expected withdrawn policy");
   const later = { ...state, scope: () => ({ status: "active", at: rules, head: { seq: 10, hash: digest } }),
@@ -42,7 +62,8 @@ test("the successor alone exposes the scoped unmarked generation and refuses a p
       policy: canonicalize(withdrawn.policy), proposal: withdrawn.digest, certificate: { request: fact, certificate: { ...fact, seq: 2 }, proof: digest, commit: "a".repeat(40) } } }] }) } as unknown as StateView;
   const observed = rulesAnswerV13(later, { of: rules, asked: "rules" });
   expect(observed?.revision).toBe(10);
-  expect(observed?.content.asked === "rules" && observed.content.serviceGeneration).toEqual({ rules, seq: 7 });
+  expect(observed?.content.asked).toBe("rules");
+  expect(retainedPolicy(later)).toMatchObject({ configured: true, policy: { roomService: null }, serviceGeneration: { rules, seq: 7 } });
   const objectFallback = { ...later, page: () => ({ items: later.page("rules", ["current"], null, 1).items.map(row => ({ ...row, values: { ...row.values, policy: withdrawn.policy } })) }) } as unknown as StateView;
   expect(rulesAnswerV13(objectFallback, { of: rules, asked: "rules" })).toBeNull();
 });

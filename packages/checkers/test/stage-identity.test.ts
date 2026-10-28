@@ -1,7 +1,6 @@
 /** Pure wire/ownership tests. Binding and job DTOs are stand-ins, not native admission proof. */
 import { expect, test } from "vitest";
-import type { EvidenceBinding } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, evidenceBindingDigest, isEntry, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, evidenceBindingDigest, isEntry, verifySignedIntent, type EvidenceBinding } from "@generalbusiness/dap-bytes";
 import { verifyOwnedCheckoutSnapshot } from "@generalbusiness/dap-git";
 import { decodeAsk, encodeAsk, encodeJob } from "../src/container-records.ts";
 import { configurationDigest, originOf, signResult } from "../src/index.ts";

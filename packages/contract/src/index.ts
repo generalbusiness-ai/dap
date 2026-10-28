@@ -1,7 +1,6 @@
 export type * from "./scope.ts";
 export * from "./intent.ts";
 export type * from "./entry.ts";
-// Outcome evidence and the closed successor check binding types.
 export type * from "./evidence.ts";
 export type * from "./observation.ts";
 export type * from "./definition.ts";

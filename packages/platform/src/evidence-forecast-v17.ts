@@ -130,7 +130,8 @@ function publicationPasses(given: RuleGiven, record: EvidenceJobRecordV17): { va
   return { value: { ...raw, generations: [...generations.values()] }, signers: names.size };
 }
 
-export function evidenceFutureEntriesV17(given: RuleGiven, current: Row, owners: readonly Row[], pending: (job: FactRef) => EvidenceJobRecordV17 | null): Forecast {
+export function evidenceFutureEntriesV17(given: RuleGiven, current: Row, owners: readonly Row[], pending: (job: FactRef) => EvidenceJobRecordV17 | null,
+  settlement: readonly RuleEffect[] = []): Forecast {
   try {
     const bounds = given.resolved.bounds, record = current.record;
     const uses = Math.max(5, given.uses.length);
@@ -150,7 +151,7 @@ export function evidenceFutureEntriesV17(given: RuleGiven, current: Row, owners:
     const updated = [current.item, ...(related !== null && related !== current.item ? [related] : [])];
     const rowEffects = updated.flatMap(id => [codeEffect(id, "record", completed.get(id)!, 196608), { effect: "state" as const, item: id, state: "reuse-anchor-timedout" }]);
     const result = [...rowEffects, codeEffect(MAX, "evidenceService", service(main, bounds.memberBytes), 16384), valueEffect(current.item, "deadline", null),
-      { effect: "state" as const, item: main.requestAt, state: "settled" }];
+      { effect: "state" as const, item: main.requestAt, state: "settled" }, ...settlement];
     const base = { v: 1, at: given.resolved.at, seq: MAX, prev: HASH, time: TIME, clamped: false, epoch: 0, prepared: [],
       // Typed origins retain at most five named facts. Already observed
       // provenance can be larger and is never dropped from the quote.
@@ -182,12 +183,18 @@ export function evidenceFutureEntriesV17(given: RuleGiven, current: Row, owners:
         { effect: "state", item: publication, state: "cleanup-aborted" }, valueEffect(publication, "reason", "required-check-failed"),
         { effect: "ref", item: MAX, slot: "slot", to: null }, ...openings], sends: [decision(main)], observed: progressObservation });
     }
-    const notice = main.incident ? opening(0, { owner: "platform:destination@17", kind: "evidence-notice", attempts: 1, for: main.holder }) : [];
     variants.push({ input: { type: "timed", item: current.item, rule: "evidence-reuse-deadline", due: TIME },
-      effects: [{ effect: "state", item: current.item, state: "reuse-anchor-timedout" }, valueEffect(current.item, "deadline", null),
-        ...updated.map(id => codeEffect(id, "record", completed.get(id)!, 196608)), ...notice], sends: [], observed: 0 });
-    if (main.incident) variants.push({ input: outcome("evidence-notice"), effects: [attempt, codeEffect(current.item, "record", main, 196608)],
-      sends: [incident(main, bounds.memberBytes)], observed: observationBytes("holders", bounds, 32) + 1 });
+      effects: [{ effect: "state", item: current.item, state: "reuse-anchor-timedout" }, valueEffect(current.item, "timeoutReason", "check-timeout"),
+        { effect: "ref", item: current.item, slot: "timeoutDecision", to: MAX }, valueEffect(current.item, "deadline", null)], sends: [], observed: 0 });
+    if (main.incident) {
+      const notice = opening(0, { owner: "platform:destination@17", kind: "evidence-notice", attempts: 1, for: main.holder });
+      // A result with unavailable triagers keeps the cause and opens one
+      // held notice. Its complete capacity pointer settlement is included.
+      variants.push({ input: outcome("evidence-result"), effects: [attempt, ...result,
+        valueEffect(current.item, "noticeOpenedAt", MAX), ...notice], sends: [decision(main)], observed: observation });
+      variants.push({ input: outcome("evidence-notice"), effects: [attempt, codeEffect(current.item, "record", main, 196608),
+        { effect: "state", item: current.item, state: "decided" }], sends: [incident(main, bounds.memberBytes)], observed: observationBytes("holders", bounds, 32) + 1 });
+    }
     let entryBytes = 0, effects = 0, admitted = true;
     for (const variant of variants) {
       const size = bytes({ ...base, input: variant.input, effects: variant.effects, sends: variant.sends.map((send, n) => ({ n: MAX - n, ...send })) }) + variant.observed;

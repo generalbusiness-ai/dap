@@ -8,7 +8,6 @@
  */
 
 import type { Head } from "./result.ts";
-import type { ScopedRulesPosition, ServiceMark } from "./evidence.ts";
 import type { Digest, KeyId, MemberId, PlatformDefinition, ScopeFilter, ScopeRef, Timestamp } from "./scope.ts";
 
 /** The scope's run: random, chosen when its process starts and held in memory (section 16.1). */
@@ -77,19 +76,13 @@ export interface MemberObservation {
  * records. The check of the record is exact: each is present exactly when
  * the data of the observation's `definition` states it (derive's
  * `contentStates`).
- *
- * Rules 13 additionally states `roomService` and `serviceGeneration`,
- * including a null mark. Both occur exactly when the data declares its
- * native `roomServiceChanged` reference. Earlier definitions have neither.
  */
 export type RulesContent =
   | { asked: "rules"; approvals: number; ownerMayReview: boolean;
       checks: readonly { name: string; configuration: Digest; required: boolean; checker: MemberId }[];
       labels: readonly string[];
       singleControllerException?: boolean;
-      extents?: Digest;
-      roomService?: ServiceMark | null;
-      serviceGeneration?: ScopedRulesPosition }
+      extents?: Digest }
   | { asked: "definitions"; active: readonly { digest: Digest; name: string }[] };
 
 /** An observation of the rules scope (section 16.1). It stands only in the member `observed` of an input. */

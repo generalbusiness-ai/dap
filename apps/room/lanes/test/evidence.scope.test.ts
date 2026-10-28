@@ -4,8 +4,8 @@
 import { env } from "cloudflare:workers";
 import { expect, test } from "vitest";
 import { namespace } from "@generalbusiness/dap-scope";
-import type { EvidenceBinding, FieldValue } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, evidenceBindingDigest, isSeed, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import type { FieldValue } from "@generalbusiness/dap-contract";
+import { b64url, canonicalize, evidenceBindingDigest, isSeed, scopeIdOf, textDigest, utf8, type EvidenceBinding } from "@generalbusiness/dap-bytes";
 import { idOf } from "@generalbusiness/dap-git/tree-proof";
 import { evidenceGraph } from "./support/evidence-graph.ts";
 import { Peer, capable, net, onCode, paul, reader, rita, transport, una, vic } from "./support/graph.ts";

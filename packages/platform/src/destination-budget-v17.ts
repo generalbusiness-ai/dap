@@ -18,10 +18,15 @@ export const rulesCertificateEvidenceValuesV17: NonNullable<OperationRules['valu
     ? [{...RULES_POLICY_VALUE_V13,digest:body['proposal']},{...RULES_TREE_PROOF,digest:body['proof']}] : [];
 };
 
+/** The sealed input form, before the judge appends retained observations. */
+export function evidenceCarryingInputV17(stated: RuleGiven['input']) {
+  return stated.type==='act'?{type:'act' as const,signed:stated.signed,authority:stated.grant?[stated.grant]:[],presented:stated.presented}
+    :stated.type==='delivery'&&stated.message.class==='request'?{...stated,decision:'applied' as const}:{...stated};
+}
 /** One actual carrying entry. This is independent of the kernel's complete
  * five-dimensional holder quote and of the terminal forecasts below. */
 export function evidenceCarryingBudgetV17(given: RuleGiven, effects: readonly RuleEffect[], opens: readonly Opening[], sends: readonly RuleRequest[], futureRecords: readonly unknown[]) {
-  const input={...given.input};
+  const input=evidenceCarryingInputV17(given.input);
   // RuleGiven's judged input excludes observations. Their full declared
   // cohort is quoted separately below, once, as it is added to the entry.
   const attempt=given.input.type==='outcome'?[{effect:'attempt',operation:given.input.operation,attempt:given.input.attempt,result:given.input.result,selected:given.resolved.outcome?.selected??null}]:[];
@@ -31,9 +36,13 @@ export function evidenceCarryingBudgetV17(given: RuleGiven, effects: readonly Ru
     uses:given.uses.map(use=>({fact:use.fact,content:HASH})),prepared:[],effects:actualEffects,sends:[...sends.map((send,n)=>({n,...send})),...reply]};
   const actual=bytes(maximumEnvelope(body));
   const admission=input.type==='outcome'&&input.kind==='evidence-admit',result=input.type==='outcome'&&input.kind==='evidence-result',notice=input.type==='outcome'&&input.kind==='evidence-notice';
+  const capture=input.type==='outcome'&&['judge','read'].includes(input.kind);
+  const release=input.type==='act'&&['evidence-hold-override','evidence-hold-transition'].includes(input.signed.intent.kind);
   const observed=admission||result?observationBytes('rules',given.resolved.bounds)+9*observationBytes('key',given.resolved.bounds)+observationBytes('member',given.resolved.bounds)
-    +(result?observationBytes('holders',given.resolved.bounds,32):0):notice?observationBytes('holders',given.resolved.bounds,32):0;
-  const observationReserve=observed===0?0:bytes({...input,observed:[]})-bytes(input)+observed+(result?11:admission?10:0);
+    +(result?observationBytes('holders',given.resolved.bounds,32):0):notice?observationBytes('holders',given.resolved.bounds,32)
+      :capture?observationBytes('rules',given.resolved.bounds)+9*observationBytes('key',given.resolved.bounds)+65*observationBytes('member',given.resolved.bounds)+observationBytes('holders',given.resolved.bounds,1)
+        :release?observationBytes('rules',given.resolved.bounds):0;
+  const observationReserve=observed===0?0:bytes({...input,observed:[]})-bytes(input)+observed+(capture?75:result?11:admission?10:0);
   const futureGrowth=futureRecords.reduce<number>((total,record)=>{
     const measured=bytes(record); return amountMath(true).sum({...NOTHING,bytes:total},{...NOTHING,bytes:measured}).bytes;
   },0);

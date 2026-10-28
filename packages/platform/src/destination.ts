@@ -1331,6 +1331,7 @@ export interface DestinationSuccessorV17 {
   complete(given: RuleGiven, publication: Item, passes: readonly CertifiedGeneration[]): boolean;
   checked(given: RuleGiven, publication: Item, fields: Readonly<Record<string, unknown>>, current: boolean): { name: string; proof: CertifiedCheckProof } | null;
   blocks(given: RuleGiven, paths: readonly string[]): boolean;
+  blocked?(given: RuleGiven, paths: readonly string[], carrier: { effects: readonly RuleEffect[]; opens: readonly Opening[]; sends: readonly RuleRequest[] }): { effects: readonly RuleEffect[]; opens: readonly Opening[] };
 }
 const SUCCESSOR_V17 = Symbol("Destination G17 policy");
 type SuccessorGiven = RuleGiven & { readonly [SUCCESSOR_V17]?: DestinationSuccessorV17 };
@@ -1711,14 +1712,21 @@ const judgeDecides = (reads: Reads, list = false): Decides => (given) => {
     } else judged = decide({ ...asked, read });
   }
   if (judged.reserved === null) throw new Error("what observed and uses say of this reservation is not at hand");
-  if (judged.reserved && evidence.changes && !("over" in evidence.changes) && successorOf(given)?.blocks(given, evidence.changes.paths)) judged = { reserved: false, reason: "extent-regressed" };
+  let blockedPaths: readonly string[] | null = null;
+  if (judged.reserved && evidence.changes && !("over" in evidence.changes) && successorOf(given)?.blocks(given, evidence.changes.paths)) {
+    judged = { reserved: false, reason: "extent-regressed" };
+    blockedPaths = evidence.changes.paths;
+  }
   const rules = read?.rules?.revision ?? null;
   if (!judged.reserved) {
     const next = andNext(given, state, { judging: true, ended: publication.id }, true);
+    const effects: RuleEffect[] = [{ effect: "state", item: publication.id, state: "not-reserved" }, { effect: "value", item: publication.id, slot: "reason", value: judged.reason }, ...next.effects];
+    const update: Update = { publication, state: "not-reserved", outcome: "refused", reason: judged.reason, rules };
+    const blocked = blockedPaths ? successorOf(given)?.blocked?.(given, blockedPaths, { effects, opens: next.opens, sends: [updateRequest(given, update)] }) : undefined;
     return {
-      effects: [{ effect: "state", item: publication.id, state: "not-reserved" }, { effect: "value", item: publication.id, slot: "reason", value: judged.reason }, ...next.effects],
-      opens: next.opens,
-      update: { publication, state: "not-reserved", outcome: "refused", reason: judged.reason, rules },
+      effects: [...effects, ...(blocked?.effects ?? [])],
+      opens: [...next.opens, ...(blocked?.opens ?? [])],
+      update,
     };
   }
   let standingRecord: PublicationStandingRecord | null = null;

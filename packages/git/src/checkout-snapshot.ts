@@ -1,6 +1,6 @@
 /** Public immutable checkout data, independent of a live reservation or credential. */
-import type { EvidenceBinding, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
-import { isRecord } from "@generalbusiness/dap-bytes";
+import type { ScopeRef, Sealed } from "@generalbusiness/dap-contract";
+import { isRecord, type EvidenceBinding } from "@generalbusiness/dap-bytes";
 import { isObjectId } from "./names.ts";
 import { idOf, READ_BOUNDS, Reader } from "./reader.ts";
 

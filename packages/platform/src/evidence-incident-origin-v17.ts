@@ -46,7 +46,7 @@ function historicalCause(held: Record<string, unknown>, cause: Record<string, un
   const currentResult = held["result"], currentDecision = held["decidedAt"];
   const settled = isFactRef(currentResult) && same(currentResult.at, job.at) && currentResult.seq > job.seq
     && natural(currentDecision) && currentDecision >= decided && currentDecision <= through;
-  if (cause["kind"] === "timeout") return cause["result"] === null && (held["state"] === "timeout" && currentResult === null && currentDecision === null
+  if (cause["kind"] === "timeout") return cause["result"] === null && (held["state"] === "timeout" && currentResult === null && currentDecision === decided
     || ["passed", "failed", "error"].includes(String(held["state"])) && settled && natural(currentDecision) && currentDecision > decided);
   return ["failed", "error"].includes(String(cause["kind"])) && held["state"] === cause["kind"] && settled
     && same(cause["result"], currentResult) && currentDecision === decided;

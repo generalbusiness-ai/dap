@@ -1,10 +1,11 @@
 /** Native funding identities are known before the published job exists.
  * A null job/owner is reserved capacity, never a fabricated future fact. */
-import type { Digest, EvidenceBinding, FactRef, FieldValue, ScopedRulesPosition } from "@generalbusiness/dap-contract";
-import { canonicalize, evidenceBindingDigest, isFactRef, isRecord, isScopeRef, parseStrict, same, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import type { Digest, FactRef, FieldValue } from "@generalbusiness/dap-contract";
+import { canonicalize, evidenceBindingDigest, isFactRef, isRecord, isScopeRef, parseStrict, same, textDigest, utf8, type EvidenceBinding, type ScopedRulesPosition } from "@generalbusiness/dap-bytes";
 import type { Item, RuleEffect, RuleGiven, StateView } from "@generalbusiness/dap-derive";
 import { readEvidenceBatchV17, readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
-import { newEvidenceHoldV17, readEvidenceHoldKeyV17, type EvidenceHoldKeyV17 } from "./evidence-holds-v17.ts";
+import { bindEvidenceHoldPendingV17, clearEvidenceHoldPendingV17, EVIDENCE_HOLD_PENDING_V17, newEvidenceHoldV17, readEvidenceHoldKeyV17, readEvidenceHoldPendingV17,
+  removeEvidenceHoldPendingV17, reserveEvidenceHoldPendingV17, withdrawEvidenceHoldPendingV17, type EvidenceHoldKeyV17, type EvidenceHoldPendingV17 } from "./evidence-holds-v17.ts";
 import { readEvidenceCountsV17, reserveEvidenceCountsV17 } from "./evidence-index-v17.ts";
 import { checkHoldsV13, checkSourceV13, checkStageV13, type RulesCheckV13, type RulesPolicyV13 } from "./rules-policy-v13.ts";
 import { branchOf } from "./destination.ts";
@@ -15,7 +16,7 @@ import { evidenceWireV17, readEvidenceWireV17 } from "./evidence-wire-v17.ts";
 
 export interface EvidenceCapacityAnchorV17 {
   v: 1; owner: number; generation: ScopedRulesPosition;
-  holds: readonly { key: EvidenceHoldKeyV17; owner: number | null }[] | null;
+  holds: readonly { key: EvidenceHoldKeyV17; owner: number | null; pending: readonly EvidenceHoldPendingV17[] }[] | null;
   incidents: readonly { name: string; job: FactRef | null }[];
 }
 const exact = (value: unknown, keys: readonly string[]): value is Record<string, unknown> => isRecord(value)
@@ -29,8 +30,8 @@ export function readEvidenceCapacityAnchorV17(value: unknown): EvidenceCapacityA
     || !Array.isArray(value["incidents"]) || value["incidents"].length > 8 || value["incidents"].some(row => !exact(row, ["name", "job"])
       || typeof row["name"] !== "string" || utf8(row["name"]).length > 128 || !(row["job"] === null || isFactRef(row["job"]) && row["job"].at.kind === "lane"))
     || new Set(value["incidents"].map(row => row["name"])).size !== value["incidents"].length) return null;
-  if (value["holds"] !== null && (!Array.isArray(value["holds"]) || value["holds"].length > 256 || value["holds"].some(row => !exact(row, ["key", "owner"])
-    || !readEvidenceHoldKeyV17(row["key"]) || !same((row["key"] as EvidenceHoldKeyV17).generation, value["generation"]) || !(row["owner"] === null || natural(row["owner"])))
+  if (value["holds"] !== null && (!Array.isArray(value["holds"]) || value["holds"].length > 256 || value["holds"].some(row => !exact(row, ["key", "owner", "pending"])
+    || !readEvidenceHoldKeyV17(row["key"]) || !same((row["key"] as EvidenceHoldKeyV17).generation, value["generation"]) || !(row["owner"] === null || natural(row["owner"])) || !readEvidenceHoldPendingV17(row["pending"]))
     || new Set(value["holds"].map(row => canonicalize(row["key"]))).size !== value["holds"].length)) return null;
   const text = canonicalize(value);
   return utf8(text).length <= 196608 ? parseStrict(text) as EvidenceCapacityAnchorV17 : null;
@@ -45,6 +46,26 @@ export function evidenceCapacityWireV17(value: EvidenceCapacityAnchorV17): strin
   return evidenceWireV17(value, 196608);
 }
 export const evidenceCapacityValidV17 = (value: unknown): boolean => readEvidenceCapacityWireV17(value) !== null;
+function maximumCapacity(value: EvidenceCapacityAnchorV17, publicationAt: FactRef["at"], jobAt: FactRef["at"], policy: RulesPolicyV13): EvidenceCapacityAnchorV17 {
+  const max = Number.MAX_SAFE_INTEGER, hash = `sha256:${"f".repeat(64)}` as const;
+  const keys = [...(value.holds ?? []).map(row => row.key)];
+  if (value.holds !== null) for (const check of policy.checks.filter(check => checkStageV13(check) === "published" && checkHoldsV13(check))) {
+    for (const extent of policy.extents.filter(extent => check.required || extent.checks.includes(check.name))) {
+      const key: EvidenceHoldKeyV17 = { generation: value.generation, extent: extent.name, name: check.name,
+        configuration: check.configuration, source: checkSourceV13(check), stage: "published" };
+      if (!keys.some(old => same(old, key))) keys.push(key);
+    }
+  }
+  return { ...value, owner: max, holds: value.holds === null ? null : keys.map(key => ({ key, owner: max,
+    pending: Array.from({ length: EVIDENCE_HOLD_PENDING_V17 }, (_, n) => ({ publication: { at: publicationAt, seq: max - n, hash },
+      name: key.name, job: { at: jobAt, seq: max - n, hash }, admittedAt: max - n })) })),
+    incidents: value.incidents.map((row, n) => ({ ...row, job: { at: jobAt, seq: max - n, hash } })) };
+}
+export function evidencePendingCapacityForecastV17(given: RuleGiven, owner: number, jobAt: FactRef["at"]): readonly RuleEffect[] {
+  const item = given.state.item(owner), capacity = readEvidenceCapacityWireV17(item?.values["capacity"]), batch = readEvidenceBatchWireV17(item?.values["batch"]);
+  if (!capacity || !capacity.holds || !batch) throw Error("The future pending capacity record is unavailable");
+  return [{ effect: "value", item: owner, slot: "capacity", value: evidenceCapacityWireV17(maximumCapacity(capacity, given.resolved.at, jobAt, batch.policy.policy)) }];
+}
 function policyAnchor(state: StateView, generation: ScopedRulesPosition): { item: Item; capacity: EvidenceCapacityAnchorV17 } | null {
   const ids = state.lookup("evidence-batch", "policyKey", canonicalize(evidenceCapacityPolicyKeyV17(generation)), 2);
   if (!ids || ids.length > 1) throw Error("Evidence generation capacity index is unavailable");
@@ -71,8 +92,11 @@ function publishedForecast(given: RuleGiven, batch: EvidenceBatchRecordV17, capa
   const nativeFact: FactRef = { at: batch.publication.at, seq: MAX, hash: HASH }, job: FactRef = { at: batch.operation.at, seq: MAX, hash: HASH };
   const publication = given.state.item(batch.publication.seq), manifest = publication?.refs["manifest"];
   if (!isFactRef(manifest)) return false;
-  for (const check of batch.checks.filter(check => checkStageV13(check) === "published")) {
-    const keys = expectedHolds(batch).filter(key => key.name === check.name);
+  const maximumAnchor = maximumCapacity(anchor, batch.publication.at, batch.operation.at, batch.policy.policy);
+  // Growing this generation's shared anchor must still fit older admitted
+  // descriptors too. The complete frozen policy bounds this loop at32.
+  for (const check of batch.policy.policy.checks.filter(check => checkStageV13(check) === "published")) {
+    const keys = (maximumAnchor.holds ?? []).filter(row => row.key.name === check.name && row.key.configuration === check.configuration && row.key.source === checkSourceV13(check)).map(row => row.key);
     const owners = new Set((anchor.holds ?? []).filter(row => row.key.name === check.name && row.key.configuration === check.configuration && row.key.source === checkSourceV13(check))
       .flatMap(row => row.owner === null ? [] : [row.owner]));
     if (owners.size > 1) return false;
@@ -94,13 +118,15 @@ function publishedForecast(given: RuleGiven, batch: EvidenceBatchRecordV17, capa
       // An outstanding reservation can acquire another job owner before
       // this job arrives. Quote that distinct owner even while its pointer
       // is still null, rather than assuming this job will own the anchor.
-      const priorKeys = (anchor.holds ?? []).filter(row => row.key.name === check.name && row.key.configuration === check.configuration && row.key.source === checkSourceV13(check)).map(row => row.key);
+      const priorKeys = (maximumAnchor.holds ?? []).filter(row => row.key.name === check.name && row.key.configuration === check.configuration && row.key.source === checkSourceV13(check)).map(row => row.key);
       if (stored !== undefined && !decoded?.ok || old !== undefined && (!isRecord(old) || !Array.isArray(old["holds"]))) return false;
       const held = old === undefined ? { ...record, job: { ...job, seq: MAX - 4 }, holds: priorKeys.map(key => newEvidenceHoldV17(key)!) } : old as unknown as EvidenceJobRecordV17;
       const next = { ...held, holds: [...held.holds, ...keys.filter(key => !held.holds.some(row => same(row.key, key))).map(key => newEvidenceHoldV17(key)!)] };
       related.push({ item: owner, record: next });
     }
-    if (!evidenceFutureEntriesV17(given, { item: MAX, record }, related, () => null).admitted) return false;
+    const settlement: RuleEffect[] = keys.length ? [{ effect: "value", item: capacity.owner, slot: "capacity",
+      value: evidenceCapacityWireV17(maximumCapacity(anchor, batch.publication.at, batch.operation.at, batch.policy.policy)) }] : [];
+    if (!evidenceFutureEntriesV17(given, { item: MAX, record }, related, () => null, settlement).admitted) return false;
     const value = (item: number, slot: string, field: FieldValue | null): RuleEffect => ({ effect: "value", item, slot, value: field });
     const admission: RuleEffect[] = [{ effect: "state", item: MAX - 2, state: "waiting" }, value(MAX - 2, "record", evidenceWireV17({ ...record, state: "pending" }, 196608)),
       { effect: "open", item: MAX, type: "evidence-job", state: keys.length && owner === MAX ? "hold-anchor" : "job" },
@@ -130,7 +156,24 @@ export function evidenceFundCapacityV17(given: RuleGiven, batch: EvidenceBatchRe
   const held = [...existing?.capacity.holds ?? []], requested = expectedHolds(batch);
   if (batch.checks.some(check => checkStageV13(check) === "published" && checkHoldsV13(check) && !requested.some(key => key.name === check.name))) return null;
   let added = 0;
-  for (const key of requested) if (!held.some(row => same(row.key, key))) { held.push({ key, owner: null }); added++; }
+  for (const key of requested) {
+    let index = held.findIndex(row => same(row.key, key));
+    if (index < 0) { held.push({ key, owner: null, pending: [] }); index = held.length - 1; added++; }
+    let pending = held[index]!.pending;
+    // Only an explicit withdrawn publication in an irreversible Native
+    // terminal state releases an unbound identity. Time never evicts it.
+    for (const slot of pending) {
+      const publication = given.state.item(slot.publication.seq), sealed = given.own?.(slot.publication.seq);
+      if (slot.job !== null || !publication || publication.type !== "publication" || !sealed || sealed.hash !== slot.publication.hash
+        || !same(sealed.entry.at, slot.publication.at) || !same(slot.publication.at, given.resolved.at)
+        || publication.values["withdrawDecided"] !== true || !["not-reserved", "cleanup-deleted", "cleaned"].includes(publication.state)) continue;
+      const removed = withdrawEvidenceHoldPendingV17(pending, slot.publication);
+      if (!removed.ok) return null; pending = removed.pending;
+    }
+    const reserved = reserveEvidenceHoldPendingV17(pending, batch.publication, key.name);
+    if (!reserved.ok) return null;
+    held[index] = { ...held[index]!, pending: reserved.pending };
+  }
   const incidents = batch.checks.filter(check => checkStageV13(check) === "published").map(check => ({ name: check.name, job: null }));
   const ownsPolicy = !existing && requested.length > 0;
   const next = reserveEvidenceCountsV17(counts, { keys: 0, holds: added, policyGenerations: ownsPolicy ? 1 : 0, incidents: incidents.length });
@@ -140,12 +183,10 @@ export function evidenceFundCapacityV17(given: RuleGiven, batch: EvidenceBatchRe
   const anchor = existing ? { ...existing.capacity, holds: held } : capacity;
   if (!readEvidenceCapacityAnchorV17(capacity) || !readEvidenceCapacityAnchorV17(anchor)) return null;
   const effects: RuleEffect[] = same(counts, next.counts) ? [] : [{ effect: "value", item: branch.id, slot: "evidenceCounts", value: next.counts as unknown as FieldValue }];
-  if (existing && added) effects.push({ effect: "value", item: existing.item.id, slot: "capacity", value: evidenceCapacityWireV17(anchor) });
+  if (existing && !same(existing.capacity, anchor)) effects.push({ effect: "value", item: existing.item.id, slot: "capacity", value: evidenceCapacityWireV17(anchor) });
   // Only decimal positions and the exact descriptor's future job identity
   // can grow. No invented future fact is stored by this forecast.
-  const futureCapacity = (value: EvidenceCapacityAnchorV17): EvidenceCapacityAnchorV17 => ({ ...value, owner: Number.MAX_SAFE_INTEGER,
-    holds: value.holds?.map(row => ({ ...row, owner: Number.MAX_SAFE_INTEGER })) ?? null,
-    incidents: value.incidents.map(row => ({ ...row, job: { at: batch.operation.at, seq: Number.MAX_SAFE_INTEGER, hash: `sha256:${"f".repeat(64)}` } })) });
+  const futureCapacity = (value: EvidenceCapacityAnchorV17): EvidenceCapacityAnchorV17 => maximumCapacity(value, batch.publication.at, batch.operation.at, batch.policy.policy);
   const futureAnchor = futureCapacity(anchor), futureLocal = futureCapacity(capacity);
   const longest = [...batch.checks].sort((a, b) => utf8(canonicalize(b.name)).length - utf8(canonicalize(a.name)).length)[0];
   if (!longest) return null;
@@ -166,7 +207,7 @@ export function evidenceFundCapacityV17(given: RuleGiven, batch: EvidenceBatchRe
 /** Binds one pre-funded identity to the actual admitted job. Counts do not
  * change here: every published descriptor was charged before the write. */
 export function evidenceSpendPublishedCapacityV17(given: RuleGiven, holder: number, binding: EvidenceBinding, name: string, configuration: Digest,
-  job: FactRef): { policyOwner: number; holdOwner: number; keys: readonly EvidenceHoldKeyV17[]; effects: RuleEffect[] } | null {
+  job: FactRef, admitted = true): { policyOwner: number; holdOwner: number; keys: readonly EvidenceHoldKeyV17[]; effects: RuleEffect[] } | null {
   if (binding.stage !== "published") return null;
   const item = given.state.item(holder), batch = item && readEvidenceBatchWireV17(item.values["batch"]), capacity = item && readEvidenceCapacityWireV17(item.values["capacity"]);
   if (!item || !batch || !capacity || !same(binding.policyGeneration, capacity.generation) || !batch.jobs.some(row => row.name === name && same(row.job, job))
@@ -182,11 +223,39 @@ export function evidenceSpendPublishedCapacityV17(given: RuleGiven, holder: numb
     .flatMap(row => row.owner === null ? [] : [row.owner]));
   if (owners.size > 1) return null;
   const holdOwner = [...owners][0] ?? given.resolved.self;
-  const nextAnchor = { ...anchor, holds: anchor.holds.map(row => required.some(key => same(row.key, key)) ? { ...row, owner: holdOwner } : row) };
+  const holds: NonNullable<EvidenceCapacityAnchorV17["holds"]>[number][] = [];
+  for (const row of anchor.holds) {
+    if (!required.some(key => same(row.key, key))) { holds.push(row); continue; }
+    const owner = row.owner === null ? null : given.state.item(row.owner), wire = owner?.values["record"];
+    const read = wire === undefined ? null : readEvidenceWireV17(wire, 196608), decoded = read?.ok ? read.value : null;
+    const old = isRecord(decoded) && Array.isArray(decoded["holds"]) ? decoded["holds"].find(value => isRecord(value) && same(value["key"], row.key)) : null;
+    const release = isRecord(old) && isRecord(old["release"]) && isRecord(old["release"]["through"]) ? old["release"]["through"]["publication"] : null;
+    if (release !== null && !natural(release)) return null;
+    const bound = admitted ? bindEvidenceHoldPendingV17(row.pending, batch.publication, name, job, given.resolved.self, release)
+      : withdrawEvidenceHoldPendingV17(row.pending, batch.publication);
+    if (!bound.ok) return null;
+    holds.push({ ...row, owner: holdOwner, pending: bound.pending });
+  }
+  const nextAnchor = { ...anchor, holds };
   const nextCapacity = { ...(capacity.owner === holder ? nextAnchor : capacity), incidents: capacity.incidents.map(row => row.name === name ? { ...row, job } : row) };
   if (!readEvidenceCapacityAnchorV17(nextCapacity) || !readEvidenceCapacityAnchorV17(nextAnchor)) return null;
   const effects: RuleEffect[] = [{ effect: "value", item: holder, slot: "capacity", value: evidenceCapacityWireV17(nextCapacity) }];
-  if (capacity.owner !== holder && required.some(key => anchor.holds!.some(row => same(row.key, key) && row.owner === null)))
+  if (capacity.owner !== holder && !same(anchor, nextAnchor))
     effects.push({ effect: "value", item: capacity.owner, slot: "capacity", value: evidenceCapacityWireV17(nextAnchor) });
   return { policyOwner: capacity.owner, holdOwner, keys: required, effects };
+}
+
+/** A proved terminal result or explicit release changes only the indexed
+ * pointers it names. Notification and elapsed time do not call this. */
+export function evidenceSettlePendingCapacityV17(given: RuleGiven, owner: number, keys: readonly EvidenceHoldKeyV17[], job: FactRef,
+  throughPublication: number | null = null): readonly RuleEffect[] {
+  const item = given.state.item(owner), anchor = item && readEvidenceCapacityWireV17(item.values["capacity"]);
+  if (!anchor?.holds || anchor.owner !== owner) throw Error("The pending hold capacity anchor is unavailable");
+  const holds = anchor.holds.map(row => {
+    if (!keys.some(key => same(key, row.key))) return row;
+    const changed = throughPublication === null ? removeEvidenceHoldPendingV17(row.pending, job) : clearEvidenceHoldPendingV17(row.pending, throughPublication);
+    if (!changed.ok) throw Error("A proved hold settlement lost its pending identity");
+    return { ...row, pending: changed.pending };
+  });
+  return same(holds, anchor.holds) ? [] : [{ effect: "value", item: owner, slot: "capacity", value: evidenceCapacityWireV17({ ...anchor, holds }) }];
 }

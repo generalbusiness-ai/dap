@@ -34,8 +34,8 @@
  * the actual native admission checked by `stage-origin.ts`.
  */
 
-import type { EvidenceBinding, ReservationSnapshot, Digest, Effect, FactRef, PlatformDefinition, ScopeRef, Sealed, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, utf8, entryHash, isDigest, isEntry, isFactRef, isLocalId, isScopeRef, timeMs, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import type { ReservationSnapshot, Digest, Effect, FactRef, PlatformDefinition, ScopeRef, Sealed, Timestamp } from "@generalbusiness/dap-contract";
+import { canonicalize, digestBytes, utf8, entryHash, isDigest, isEntry, isFactRef, isLocalId, isScopeRef, timeMs, verifySignedIntent, type EvidenceBinding } from "@generalbusiness/dap-bytes";
 import { idOf, READ_BOUNDS, parseCommit, isObjectId, type ObjectId, type OwnedCheckoutSnapshot } from "@generalbusiness/dap-git";
 
 /** The name that the rules scope holds an activated `change` definition under (section 3.11: "a `change` definition"). */

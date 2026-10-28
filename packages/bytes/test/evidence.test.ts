@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import type { EvidenceBinding, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, evidenceBindingDigest, newIncarnation, readEvidenceBinding } from "../src/index.ts";
+import type { ScopeRef } from "@generalbusiness/dap-contract";
+import { b64url, evidenceBindingDigest, newIncarnation, readEvidenceBinding, type EvidenceBinding } from "../src/index.ts";
 
 const scope = (kind: ScopeRef["kind"]): ScopeRef => ({ scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind });
 const binding = (): EvidenceBinding => ({ v: 1, source: "room", stage: "work",
