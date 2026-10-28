@@ -148,23 +148,24 @@ async function smoke(options) {
   const memberConfig = await member.store.config();
   if (!memberConfig?.repository) await command(member, ["join", new TextDecoder("utf-8", { fatal: true }).decode(invitation)], "join");
   const joined = await member.store.config();
-  if (joined?.service !== base || joined.handle !== "@member" || joined.repository?.membership?.scope !== repository.membership.scope) fail("join-identity");
+  if (joined?.service !== base || joined.handle !== "@member" || joined.repository?.membership?.scope !== repository.membership.scope
+    || !scope(joined.repository?.inbox) || joined.repository.inbox === repository.inbox) fail("join-identity");
   await command(member, ["status", "membership"], "member-read");
   const verified = await command(ctx, ["verify", "--all"], "verify-all");
   const expected = [
     ["register", installed.register.scope], ["directory", repository.directory.scope],
     ["membership", repository.membership.scope], ["rules", repository.rules],
-    ["destination", repository.destination], ["inbox", repository.inbox],
+    ["destination", repository.destination], ["inbox", repository.inbox], ["inbox", joined.repository.inbox],
   ].map(([kind, id]) => `${kind} ${id}`).sort();
   const actual = verified.lines.flatMap(line => {
     const match = /^(register|directory|membership|rules|destination|inbox) (sc_[a-z2-7]{52}), entry [0-9]+: consistent\.$/.exec(line);
     return match ? [`${match[1]} ${match[2]}`] : [];
   }).sort();
-  if (verified.lines.at(-1) !== "All consistent: 6 scopes." || actual.length !== 6
-    || new Set(actual).size !== 6 || actual.some((identity, index) => identity !== expected[index])) fail("verify-coverage");
+  if (verified.lines.at(-1) !== "All consistent: 7 scopes." || actual.length !== 7
+    || new Set(actual).size !== 7 || actual.some((identity, index) => identity !== expected[index])) fail("verify-coverage");
   return { version: 1, phase, register: publicRef(installed.register), directory: publicRef(repository.directory),
     membership: publicRef(repository.membership), rules: repository.rules, destination: repository.destination,
-    health: await health(ctx, base), verifiedScopes: 6 };
+    health: await health(ctx, base), verifiedScopes: 7 };
 }
 
 export async function runCelldSmoke(options) {

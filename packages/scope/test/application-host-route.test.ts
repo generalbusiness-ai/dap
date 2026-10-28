@@ -11,7 +11,7 @@ import { applicationPage, applicationSandboxPage } from "../src/applications/rou
 
 test("public screen redirect matches the configured room identity rather than internal HTTP or forwarded headers", async () => {
   const directory = scopeIdOf({ v: 1, kind: "directory", definition: "platform:directory@20", creator: null, cause: textDigest("TEST public screen identity"), ordinal: 0 });
-  const host = readApplicationScreenHost({ v: 1, screenOrigin: "https://screen.example", roomOrigin: "https://room.example", directory, item: 7, presentation: textDigest("TEST presentation") });
+  const host = readApplicationScreenHost({ v: 1, screenOrigin: "https://h1-screen.inguz.space", roomOrigin: "https://room.example", directory, item: 7, presentation: textDigest("TEST presentation") });
   const path = applicationScreenPath(directory, 7, host.presentation) + "index.html";
   const internal = new Request("http://celld.internal:8787" + path, { headers: { host: "different-host.example", forwarded: "host=room.example;proto=https", "x-forwarded-proto": "https", "x-forwarded-host": "room.example" } });
   const settings = { APPLICATION_SCREEN_HOSTS: JSON.stringify([host]) };

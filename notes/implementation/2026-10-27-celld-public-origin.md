@@ -48,6 +48,14 @@ named RPC methods. These are structural harness repairs. The first version
 probe returned celld 0.6.3, so that executable was rejected. The pinned 0.6.2
 release was obtained separately in scratch with a successful attestation
 command. All attempts remain separate; no failed result is called a pass.
+The repaired inventory run had seven passes and one overlooked type-binding
+seal. Root reviewed its three-line interface change and adopted the actual
+parser value. Focused Native checks had 37 passes and one invalid sandbox
+host fixture, corrected to the existing permitted domain. The first proxy
+smoke reached real installation, room creation and guest join, then failed.
+The smoke’s six-scope expectation omitted the joined guest’s new inbox. It
+now requires all seven exact identities, including distinct owner and guest
+inboxes. The original private custody remains untouched and is not retried.
 This section will record the final terminal results before review. The final evidence will be sealed under
 `/Users/hughpyle/play/artroom-evidence/2026-10-27-celld-public-origin`.
 The first draft inventory generator failed before parsing because a flat
