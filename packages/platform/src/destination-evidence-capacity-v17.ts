@@ -8,7 +8,7 @@ import { bindEvidenceHoldPendingV17, clearEvidenceHoldPendingV17, EVIDENCE_HOLD_
   removeEvidenceHoldPendingV17, reserveEvidenceHoldPendingV17, withdrawEvidenceHoldPendingV17, type EvidenceHoldKeyV17, type EvidenceHoldPendingV17 } from "./evidence-holds-v17.ts";
 import { readEvidenceCountsV17, reserveEvidenceCountsV17 } from "./evidence-index-v17.ts";
 import { checkHoldsV13, checkSourceV13, checkStageV13, type RulesCheckV13, type RulesPolicyV13 } from "./rules-policy-v13.ts";
-import { branchOf } from "./destination.ts";
+import { evidenceLedgerOfV17 } from "./evidence-ledger-v17.ts";
 import { evidenceCarryingBudgetV17 } from "./destination-budget-v17.ts";
 import { evidenceFutureEntriesV17 } from "./evidence-forecast-v17.ts";
 import type { EvidenceJobRecordV17 } from "./destination-evidence-v17.ts";
@@ -134,7 +134,7 @@ function publishedForecast(given: RuleGiven, batch: EvidenceBatchRecordV17, capa
       ...["jobKey", "reuseKey", "holdKey", "policyKey"].map(slot => value(MAX, slot, HASH)), value(MAX, "deadline", time), value(MAX, "record", evidenceWireV17(record, 196608)),
       ...related.map(row => value(row.item, "record", evidenceWireV17(row.record, 196608))), value(MAX - 3, "capacity", evidenceWireV17({ ...capacity, incidents: capacity.incidents.map(row => ({ ...row, job })) }, 196608)),
       ...(capacity.owner === given.resolved.self ? [] : [value(capacity.owner, "capacity", evidenceWireV17({ ...anchor, holds: anchor.holds?.map(row => ({ ...row, owner: MAX - 1 })) ?? null }, 196608))]),
-      value(0, "evidenceService", evidenceWireV17({ mark: binding.roomService, generation: binding.serviceGeneration }, 16384)),
+      value(Number.MAX_SAFE_INTEGER, "service", evidenceWireV17({ mark: binding.roomService, generation: binding.serviceGeneration }, 16384)),
     ];
     const future = { ...given, input: { type: "outcome", owner: "platform:destination@17", kind: "evidence-admit", operation: `${MAX}:0`, attempt: 1,
       result: "confirmed", evidence: { basis: "own-answer", body: { job } } } } as unknown as RuleGiven;
@@ -150,8 +150,8 @@ function publishedForecast(given: RuleGiven, batch: EvidenceBatchRecordV17, capa
 export function evidenceFundCapacityV17(given: RuleGiven, batch: EvidenceBatchRecordV17): { effects: RuleEffect[]; capacity: FieldValue; policyKey: Digest } | null {
   try {
   if (!readEvidenceBatchV17(batch)) return null;
-  const branch = branchOf(given.state); if (!branch) return null;
-  const raw = branch.values["evidenceCounts"], counts = readEvidenceCountsV17(raw === undefined ? { keys: 0, holds: 0, policyGenerations: 0, incidents: 0 } : raw); if (!counts) return null;
+  const ledger = evidenceLedgerOfV17(given.state); if (!ledger) return null;
+  const counts = readEvidenceCountsV17(ledger.values["counts"]); if (!counts) return null;
   const generation = { rules: batch.policy.rules, seq: batch.policy.revision }, existing = policyAnchor(given.state, generation);
   const held = [...existing?.capacity.holds ?? []], requested = expectedHolds(batch);
   if (batch.checks.some(check => checkStageV13(check) === "published" && checkHoldsV13(check) && !requested.some(key => key.name === check.name))) return null;
@@ -182,7 +182,7 @@ export function evidenceFundCapacityV17(given: RuleGiven, batch: EvidenceBatchRe
     holds: existing ? null : held, incidents };
   const anchor = existing ? { ...existing.capacity, holds: held } : capacity;
   if (!readEvidenceCapacityAnchorV17(capacity) || !readEvidenceCapacityAnchorV17(anchor)) return null;
-  const effects: RuleEffect[] = same(counts, next.counts) ? [] : [{ effect: "value", item: branch.id, slot: "evidenceCounts", value: next.counts as unknown as FieldValue }];
+  const effects: RuleEffect[] = same(counts, next.counts) ? [] : [{ effect: "value", item: ledger.id, slot: "counts", value: next.counts as unknown as FieldValue }];
   if (existing && !same(existing.capacity, anchor)) effects.push({ effect: "value", item: existing.item.id, slot: "capacity", value: evidenceCapacityWireV17(anchor) });
   // Only decimal positions and the exact descriptor's future job identity
   // can grow. No invented future fact is stored by this forecast.

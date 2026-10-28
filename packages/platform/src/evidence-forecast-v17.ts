@@ -150,7 +150,7 @@ export function evidenceFutureEntriesV17(given: RuleGiven, current: Row, owners:
     if (related !== null && !completed.has(related)) return refused();
     const updated = [current.item, ...(related !== null && related !== current.item ? [related] : [])];
     const rowEffects = updated.flatMap(id => [codeEffect(id, "record", completed.get(id)!, 196608), { effect: "state" as const, item: id, state: "reuse-anchor-timedout" }]);
-    const result = [...rowEffects, codeEffect(MAX, "evidenceService", service(main, bounds.memberBytes), 16384), valueEffect(current.item, "deadline", null),
+    const result = [...rowEffects, codeEffect(MAX, "service", service(main, bounds.memberBytes), 16384), valueEffect(current.item, "deadline", null),
       { effect: "state" as const, item: main.requestAt, state: "settled" }, ...settlement];
     const base = { v: 1, at: given.resolved.at, seq: MAX, prev: HASH, time: TIME, clamped: false, epoch: 0, prepared: [],
       // Typed origins retain at most five named facts. Already observed
@@ -175,7 +175,7 @@ export function evidenceFutureEntriesV17(given: RuleGiven, current: Row, owners:
       // holder observation is borrowed from the earlier result entry.
       const passes = publicationPasses(given, main);
       const progressObservation = observationBytes("rules", bounds) + passes.signers * observationBytes("key", bounds) + passes.signers + 1;
-      const progressRecord = [codeEffect(current.item, "record", main, 196608), codeEffect(MAX, "evidenceService", service(main, bounds.memberBytes), 16384)];
+      const progressRecord = [codeEffect(current.item, "record", main, 196608), codeEffect(MAX, "service", service(main, bounds.memberBytes), 16384)];
       variants.push({ input: outcome("evidence-progress"), effects: [attempt, ...progressRecord,
         codeEffect(publication, "passes", passes.value, bounds.entryBytes), valueEffect(publication, "checkDeadline", null), ...openings],
         sends: [decision(main)], observed: progressObservation });

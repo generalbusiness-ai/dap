@@ -30,20 +30,26 @@ function batches(state: StateView, operation: FactRef): { item: Item; record: Ev
   const rows: { item: Item; record: EvidenceBatchRecordV17 }[] = [];
   for (const id of ids) {
     const item = state.item(id), record = item && batchValue(item);
-    if (!item || !record || !same(record.operation, operation)) return null;
+    if (!item || item.type !== "evidence-batch" || item.state !== "funded" || typeof item.values["ready"] !== "boolean"
+      || !record || !same(record.operation, operation) || !same(item.refs["operation"], operation)) return null;
     rows.push({ item, record });
   }
   return rows.sort((a, b) => a.record.ordinal - b.record.ordinal);
 }
 function completeRows(state: StateView, publication: Item): ReturnType<typeof batches> {
-  const operation = publication.refs["operation"];
-  if (!isFactRef(operation)) return null;
+  const operation = publication.refs["operation"], scope = state.scope();
+  if (!scope || publication.type !== "publication" || publication.opened === null || !isFactRef(operation)) return null;
   const rows = batches(state, operation);
   if (!rows?.length) return null;
   const first = rows[0]!.record;
   return rows.length === first.total && rows.every((row, n) => row.record.ordinal === n && row.record.total === first.total
-    && row.record.publication.seq === publication.id && same(row.record.publication, first.publication)
+    && same(row.record.publication, { at: scope.at, seq: publication.id, hash: publication.opened })
     && same(row.record.capture, first.capture) && same(row.record.policy, first.policy) && same(row.record.touched, first.touched)) ? rows : null;
+}
+/** Readiness is stamped only on the real ordinal-zero account of this exact
+ * current publication. No caller-supplied account can replace the folded row. */
+export function evidenceFundingReadyV17(state: StateView, publication: Item): boolean {
+  return completeRows(state, publication)?.[0]?.item.values["ready"] === true;
 }
 /** Empty obligations require no account. Nonempty obligations require the exact complete set. */
 export function evidenceFundingCompleteV17(state: StateView, publication: Item): boolean {
@@ -230,12 +236,13 @@ export function fundingData(base: PlatformData): PlatformData {
   const outcomes = { ...base.outcomes };
   if (outcomes["reservation-stage"]) outcomes["reservation-stage"] = { ...outcomes["reservation-stage"]!, most: { ...outcomes["reservation-stage"]!.most, effects: 16 } };
   return { ...base, receives, items: { ...base.items,
-    publication: { ...publication, values: { ...publication.values, evidenceReady: { fixed: false, required: true, of: { type: "bool" }, default: false } }, holds: { ...publication.holds!, decisions: publicationDecisions, requests: (publication.holds?.requests ?? 0) + 5 } },
+    publication: { ...publication, holds: { ...publication.holds!, decisions: publicationDecisions, requests: (publication.holds?.requests ?? 0) + 5 } },
     "evidence-batch": { many: true, max: 8192, initial: "funded", states: { funded: { final: false } }, parties: {},
       refs: { operation: { fixed: true, required: true, to: { type: "fact", kind: ["merge"], under: "change" } }, lane: { fixed: true, required: true, to: { type: "scope", kind: "lane" } } },
       indexes: ["operation", "policyKey"], holds: { operations: { "evidence-admit": 8, "evidence-result": 8, "evidence-notice": 8, "evidence-progress": 16, "published-checks": 8 }, requests: 58, items: 25, decisions: { "check-fence": 8, checked: 8, "evidence-plan-open": 1 } },
       values: { batch: { fixed: false, required: true, of: { type: "code", code: "evidence-batch-record-v17", row: "E5" } },
-        capacity: { fixed: false, required: true, of: { type: "code", code: "evidence-capacity-anchor-v17", row: "E5" } }, policyKey: { fixed: true, required: true, of: { type: "digest" } } } },
+        capacity: { fixed: false, required: true, of: { type: "code", code: "evidence-capacity-anchor-v17", row: "E5" } }, policyKey: { fixed: true, required: true, of: { type: "digest" } },
+        ready: { fixed: false, required: true, of: { type: "bool" }, default: false } } },
     "published-plan": { many: true, max: 2048, initial: "pending", states: { pending: { final: false }, complete: { final: true } }, parties: {}, refs: {},
       values: { plan: { fixed: false, required: true, of: { type: "code", code: "evidence-published-plan-v17", row: "E5" } } } },
   }, outcomes: { ...outcomes, [PUBLISHED_CHECKS_V17]: { code: "evidence-published-checks-v17", row: "E5", attempts: 1, origin: "rule", most: { effects: 2, operations: [PUBLISHED_CHECKS_V17] } } } };
@@ -247,13 +254,18 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
   // The receive's `opens` adds this before the code effects. Quote it once,
   // but leave its emission to deriveEffects so the carrying entry has one open.
   const implicitBatchOpen = (given: RuleGiven): RuleEffect => ({ effect: "open", item: given.resolved.self, type: "evidence-batch", state: "funded" });
-  const ready = (given: RuleGiven, batch: EvidenceBatchRecordV17): RuleRequest | null => {
+  const ready = (given: RuleGiven, batch: EvidenceBatchRecordV17): { request: RuleRequest; marker: number } | null => {
     const publication = given.state.item(batch.publication.seq), previous = batches(given.state, batch.operation);
-    if (!publication || !previous) return null;
+    if (!publication || publication.type !== "publication" || publication.opened !== batch.publication.hash || !previous
+      || !same(factOf(given.own, given.resolved.at, publication.id), batch.publication)) return null;
     const accounts = [...previous.map(row => row.record), batch].sort((a, b) => a.ordinal - b.ordinal);
     if (accounts.length !== batch.total || accounts.some((row, n) => row.ordinal !== n || row.total !== batch.total
-      || !same(row.publication, batch.publication) || !same(row.capture, batch.capture) || !same(row.policy, batch.policy))) return null;
-    return hooks.readyUpdate(given, publication, accounts);
+      || !same(row.publication, batch.publication) || !same(row.capture, batch.capture) || !same(row.policy, batch.policy) || !same(row.touched, batch.touched))) return null;
+    const zero = previous.find(row => row.record.ordinal === 0);
+    if ((zero && zero.item.values["ready"] !== false) || (!zero && batch.ordinal !== 0)) return null;
+    const marker = zero?.item.id ?? given.resolved.self;
+    const request = hooks.readyUpdate(given, publication, accounts);
+    return request ? { request, marker } : null;
   };
   const funded = (given: RuleGiven) => {
     const batch = fundingProposal(given);
@@ -267,8 +279,8 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
       { effect: "value", item: given.resolved.self, slot: "batch", value: evidenceBatchWireV17(batch) },
       { effect: "value", item: given.resolved.self, slot: "capacity", value: capacity.capacity }, { effect: "value", item: given.resolved.self, slot: "policyKey", value: capacity.policyKey }];
     const update = ready(given, batch);
-    if (update) effects.push({ effect: "value", item: batch.publication.seq, slot: "evidenceReady", value: true });
-    return evidenceCarryingBudgetV17(given, [implicitBatchOpen(given), ...effects], [], update ? [update] : [], []).admitted ? { batch, ...capacity } : null;
+    if (update) effects.push({ effect: "value", item: update.marker, slot: "ready", value: true });
+    return evidenceCarryingBudgetV17(given, [implicitBatchOpen(given), ...effects], [], update ? [update.request] : [], []).admitted ? { batch, ...capacity } : null;
   };
   next["evidence-fund-v17"] = { place: "guard", refusals: ["evidence-funding-unavailable"], run: given => funded(given) ? { holds: true } : { holds: false, name: "evidence-funding-unavailable" } };
   next["evidence-fund-open-v17"] = { place: "effect", most: 16, run: given => {
@@ -278,12 +290,12 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
       { effect: "value", item: given.resolved.self, slot: "batch", value: evidenceBatchWireV17(value.batch) },
       { effect: "value", item: given.resolved.self, slot: "capacity", value: value.capacity }, { effect: "value", item: given.resolved.self, slot: "policyKey", value: value.policyKey }];
     const update = ready(given, value.batch);
-    if (update) effects.push({ effect: "value", item: value.batch.publication.seq, slot: "evidenceReady", value: true });
-    if (!evidenceCarryingBudgetV17(given, [implicitBatchOpen(given), ...effects], [], update ? [update] : [], []).admitted) throw Error("A funding record exceeds its carrying entry");
+    if (update) effects.push({ effect: "value", item: update.marker, slot: "ready", value: true });
+    if (!evidenceCarryingBudgetV17(given, [implicitBatchOpen(given), ...effects], [], update ? [update.request] : [], []).admitted) throw Error("A funding record exceeds its carrying entry");
     return effects;
   } };
   next["evidence-funding-ready-v17"] = { place: "send", run: given => {
-    const batch = fundingProposal(given); return batch ? ready(given, batch) : null;
+    const batch = fundingProposal(given); return batch ? ready(given, batch)?.request ?? null : null;
   } };
   next["evidence-batch-record-v17"] = { place: "type", run: (_given, value) => readEvidenceBatchWireV17(value) !== null };
   next["evidence-published-plan-v17"] = { place: "type", run: (_given, value) => readPlanWire(value) !== null };
@@ -322,7 +334,7 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
     return [...effects, { effect: "value", item: item.id, slot: "batch", value: evidenceBatchWireV17(claimed.record) }];
   } };
   const publicationUpdate = next["publication-update"];
-  const releasedUpdate = (given: RuleGiven): { request: RuleRequest; publication: Item } | null => {
+  const releasedUpdate = (given: RuleGiven): { request: RuleRequest; marker: number | null } | null => {
     if (publicationUpdate?.place !== "send") return null;
     const request = publicationUpdate.run(given);
     if (!request || request.message.class !== "request" || request.message.type !== "relate" || !isRecord(request.message.body)) return null;
@@ -330,11 +342,12 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
     if (body["name"] !== "publication" || !isFactRef(body["item"]) || !isRecord(detail) || detail["outcome"] !== "committed") return null;
     const publication = given.state.item(body["item"].seq);
     if (!publication || publication.type !== "publication" || !same(body["item"].at, given.resolved.at)
-      || !same(publication.refs["operation"], detail["operation"]) || publication.values["evidenceReady"] === true
+      || !same(factOf(given.own, given.resolved.at, publication.id), body["item"])
+      || !same(publication.refs["operation"], detail["operation"]) || evidenceFundingReadyV17(given.state, publication)
       || !evidenceFundingCompleteV17(given.state, publication)) return null;
     // A committed stage update is produced only by the retained base rule's
     // exact current outcome. Fund-first uses it; stage-first uses readyUpdate.
-    return { request, publication };
+    return { request, marker: completeRows(given.state, publication)?.[0]?.item.id ?? null };
   };
   if (publicationUpdate?.place === "send") next["publication-update"] = { ...publicationUpdate, run: (given: RuleGiven) => {
     const request = publicationUpdate.run(given);
@@ -349,7 +362,8 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
     next["reservation-stage"] = { ...stage, rules: { ...stage.rules,
       most: { ...most, effects: 16 }, derives: (given, operation, selected): OutcomeGives => {
         const result = stage.rules.derives!(given, operation, selected), update = releasedUpdate(given);
-        return update ? { ...result, effects: [...result.effects, { effect: "value", item: update.publication.id, slot: "evidenceReady", value: true }] } : result;
+        return update?.marker !== null && update?.marker !== undefined
+          ? { ...result, effects: [...result.effects, { effect: "value", item: update.marker, slot: "ready", value: true }] } : result;
       } } };
   }
   const judge = next["judge"];

@@ -18,6 +18,7 @@ import { readEvidenceWireV17 } from "../../platform/src/evidence-wire-v17.ts";
 import { readRulesPolicyReplyV17 } from "../../platform/src/reservation-v17.ts";
 import { currentEvidenceRecordV17, evidenceEffectiveHoldV17, readEvidenceJobRecordWireV17 } from "../../platform/src/destination-evidence-v17.ts";
 import { readEvidenceCapacityWireV17 } from "../../platform/src/destination-evidence-capacity-v17.ts";
+import { evidenceLedgerOfV17 } from "../../platform/src/evidence-ledger-v17.ts";
 import { issueEvidence4 } from "../../../apps/room/lanes/src/issue4.ts";
 import { changeEvidence4 } from "../../../apps/room/lanes/src/change4.ts";
 import { certificateGate, hardeningItems, hardeningSealed } from "./certified-rules-hardening-fixture.ts";
@@ -404,7 +405,7 @@ export async function evidenceNativeState(room: EvidenceRoom, replay = false) {
         if (!raw) throw Error('Actual native job wire required');
         return { item, raw, current: currentEvidenceRecordV17(item, raw) };
       });
-      return { jobs, holds: jobs.flatMap(({ item, raw }) => raw.holds.map(hold => ({ owner: item.id, hold, effective: evidenceEffectiveHoldV17(view, own, item, hold) }))),
+      return { ledger: evidenceLedgerOfV17(view), jobs, holds: jobs.flatMap(({ item, raw }) => raw.holds.map(hold => ({ owner: item.id, hold, effective: evidenceEffectiveHoldV17(view, own, item, hold) }))),
         capacities: items.flatMap(item => { const capacity = readEvidenceCapacityWireV17(item.values['capacity']); return capacity ? [capacity] : []; }) };
     };
     const runtime = project(store);

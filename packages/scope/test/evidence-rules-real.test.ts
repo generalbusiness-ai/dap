@@ -15,6 +15,8 @@ import { readEvidenceJobRecordWireV17, readEvidenceServiceWireV17 } from "../../
 import { evidenceHoldActiveV17 } from "../../platform/src/evidence-holds-v17.ts";
 import { evidenceIncidentAdmissionPositionV17 } from "../../platform/src/evidence-incident-origin-v17.ts";
 import { evidenceWireV17, readEvidenceWireV17 } from "../../platform/src/evidence-wire-v17.ts";
+import { readEvidenceCountsV17 } from "../../platform/src/evidence-index-v17.ts";
+import { readEvidenceBatchWireV17 } from "../../platform/src/evidence-batch-v17.ts";
 import { rita } from "./repository.ts";
 
 // Register/Directory/Membership/Rules/Destination creation, authority, native
@@ -33,12 +35,30 @@ test("the real evidence cohort publishes a scoped mark, preserves unchanged gene
     expect(unconfigured).toMatchObject({ roomService: null, serviceGeneration: { rules: await room.Q.at(), seq: 0 } });
     expect(Object.hasOwn(unconfigured.content, 'roomService')).toBe(false);
     expect(Object.hasOwn(unconfigured.content, 'serviceGeneration')).toBe(false);
+    expect((await evidenceNativeState(room)).ledger).toBeNull();
     const service = await evidenceChecker(room), policy = evidenceRulesPolicy({ checker: service.member, key: service.actor.key });
-    await configureEvidenceRules(room, policy);
+    const firstCertificate = await configureEvidenceRules(room, policy), firstLedger = (await evidenceNativeState(room)).ledger;
+    if (!firstLedger) throw Error('The first actual certificate must initialize the ledger');
+    expect(await hardeningItems(room.G, 'evidence-ledger')).toHaveLength(1);
+    expect(firstLedger.id).toBe(firstCertificate.request.seq);
+    expect(readEvidenceCountsV17(firstLedger.values['counts'])).toEqual({ keys: 0, holds: 0, policyGenerations: 0, incidents: 0 });
+    const firstBranch = (await hardeningItems(room.G, 'branch'))[0];
+    if (!firstBranch) throw Error('The actual Native branch must retain its ledger reference');
+    expect(firstBranch.refs['evidenceLedger']).toBe(firstLedger.id);
+    const firstCertificateEntry = await evidenceEntry(room.G, firstCertificate.request.seq);
+    expect(firstCertificateEntry.input).toMatchObject({ type: 'act', signed: { intent: { kind: 'certify-rules-tree' } } });
+    expect(firstCertificateEntry.effects).toContainEqual({ effect: 'open', item: firstLedger.id, type: 'evidence-ledger', state: 'ready' });
+    expect(firstCertificateEntry.effects).toContainEqual({ effect: 'value', item: firstLedger.id, slot: 'counts', value: { keys: 0, holds: 0, policyGenerations: 0, incidents: 0 } });
+    expect(firstCertificateEntry.effects).toContainEqual({ effect: 'ref', item: firstBranch.id, slot: 'evidenceLedger', to: firstLedger.id });
     const first = await observedRules(room), firstPublish = (await room.Q.item(0)).refs['published'];
     expect(first.serviceGeneration).toEqual({ rules: await room.Q.at(), seq: firstPublish });
     expect((await room.Q.last()).effects).toContainEqual({ effect: "ref", item: 0, slot: "roomServiceChanged", to: firstPublish });
-    await configureEvidenceRules(room, { ...policy, labels: ["same service"] });
+    const repeatedCertificate = await configureEvidenceRules(room, { ...policy, labels: ["same service"] }), repeatedLedger = (await evidenceNativeState(room)).ledger;
+    expect(await hardeningItems(room.G, 'evidence-ledger')).toHaveLength(1);
+    expect(repeatedLedger?.id).toBe(firstLedger.id); expect(repeatedLedger?.opened).toBe(firstLedger.opened);
+    expect((await hardeningItems(room.G, 'branch'))[0]?.refs['evidenceLedger']).toBe(firstLedger.id);
+    expect((await evidenceEntry(room.G, repeatedCertificate.request.seq)).effects.some(effect => effect.effect === 'open' && effect.type === 'evidence-ledger')).toBe(false);
+    expect(readEvidenceCountsV17(repeatedLedger?.values['counts'])).toEqual({ keys: 0, holds: 0, policyGenerations: 0, incidents: 0 });
     const unchanged = await observedRules(room);
     expect(unchanged.revision).toBeGreaterThan(first.revision);
     expect(unchanged.serviceGeneration).toEqual(first.serviceGeneration);
@@ -168,8 +188,9 @@ test("observed room-key rotation refuses both keys for the frozen real work job 
     await configureEvidenceRules(room, rotatedPolicy);
     const current = await observedRules(room);
     expect(current.serviceGeneration).not.toEqual(work.binding.serviceGeneration);
-    const branch = (await hardeningItems(room.G, "branch"))[0];
-    expect(readEvidenceServiceWireV17(branch?.values['evidenceService'])).toMatchObject({ generation: work.binding.serviceGeneration });
+    const ledger = (await evidenceNativeState(room)).ledger;
+    if (!ledger) throw Error('The actual branch-bound singleton ledger is required');
+    expect(readEvidenceServiceWireV17(ledger.values['service'])).toMatchObject({ generation: work.binding.serviceGeneration });
     const readsBefore = room.gitRequests.length;
     const readRequest = await work.lane.intent(work.service.actor, "git-read@1:job-read", { fields: { job: work.job } });
     expect(await work.scopes.stageSnapshot!(await work.lane.at(), readRequest)).toEqual({ refused: "wrong-source" });
@@ -372,11 +393,25 @@ test("literal native TIME holds at its own head, replays unchanged, and recovers
     const c = await publishEvidenceFile(room, setup, 'TEST literal TIME target'), target = await c.job();
     const full = await evidenceNativeState(room), pending = full.capacities.flatMap(row => row.holds ?? []).filter(row => row.key.extent === 'other');
     expect(pending).toHaveLength(1); expect(pending[0]!.pending.map(row => row.job)).toEqual([aJob.job, bJob.job, target.job]);
+    const fundedBefore = await hardeningItems(room.G, 'evidence-batch');
+    expect(fundedBefore).toHaveLength(3);
+    for (const item of fundedBefore) {
+      const batch = readEvidenceBatchWireV17(item.values['batch']);
+      if (!batch) throw Error('Actual funded account wire required');
+      expect(batch.ordinal).toBe(0); expect(item.values['ready']).toBe(true);
+    }
     const pushes = () => room.gitRequests.filter(row => row.method === 'POST' && row.path.endsWith('/git-receive-pack')).length;
     const pushed = pushes(), main = room.host.stand.refs.get('refs/heads/main');
     const excess = await publishEvidenceFile(room, setup, 'TEST full pending key');
     expect((await hardeningItems(room.G, 'publication')).find(item => canonicalize(item.refs['operation']) === canonicalize(excess.operation)))
-      .toMatchObject({ state: 'reserved', values: { evidenceReady: false } });
+      .toMatchObject({ state: 'reserved' });
+    const fundedAfter = await hardeningItems(room.G, 'evidence-batch'), excessAccounts = fundedAfter.filter(item => {
+      const batch = readEvidenceBatchWireV17(item.values['batch']);
+      if (!batch) throw Error('Actual funded account wire required');
+      return canonicalize(batch.operation) === canonicalize(excess.operation);
+    });
+    expect(excessAccounts).toHaveLength(0);
+    expect(fundedAfter).toEqual(fundedBefore);
     const refusedFunding = (await hardeningSealed(room.G)).map(row => row.entry).filter(entry => entry.input.type === 'delivery'
       && entry.input.message.class === 'request' && entry.input.message.type === 'tell' && isRecord(entry.input.message.body)
       && entry.input.message.body['message'] === 'evidence-fund' && isRecord(entry.input.message.body['fields'])

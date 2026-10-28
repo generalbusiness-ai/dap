@@ -8,7 +8,8 @@ import { readEvidenceDecisionV17 } from "./evidence-decision-v17.ts";
 import { evidenceFutureEntriesV17 } from "./evidence-forecast-v17.ts";
 import { readEvidenceBatchV17, readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
 import { evidenceCapacityValidV17, evidencePendingCapacityForecastV17, evidenceSettlePendingCapacityV17, evidenceSpendPublishedCapacityV17, readEvidenceCapacityWireV17 } from "./destination-evidence-capacity-v17.ts";
-import { evidenceFundingFloorReferencesV17 } from "./destination-evidence-funding-v17.ts";
+import { evidenceFundingFloorReferencesV17, evidenceFundingReadyV17 } from "./destination-evidence-funding-v17.ts";
+import { EVIDENCE_LEDGER_ITEM_V17, evidenceLedgerOfV17 } from "./evidence-ledger-v17.ts";
 export { evidenceFundCapacityV17, evidenceCapacityValidV17 } from "./destination-evidence-capacity-v17.ts";
 import { classify } from "./extents.ts";
 import { branchOf, destinationRulesScope, destinationStageConfirmedV17 } from "./destination.ts";
@@ -190,10 +191,10 @@ export function destinationEvidenceJob(state: StateView, own: Own, job: FactRef)
     sourceFacts: record.sourceFacts, admission: { at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash } });
 }
 export function destinationEvidenceAdmissionCurrent(state: StateView, own: Own, admitted: EvidenceJobAdmissionV17, signerKey: KeyId): boolean {
-  const actual = destinationEvidenceJob(state, own, admitted.job), row = evidenceRowV17(state, admitted.job), branch = branchOf(state);
+  const actual = destinationEvidenceJob(state, own, admitted.job), row = evidenceRowV17(state, admitted.job);
   if (!actual || !row || !same(actual, admitted) || !["admitted", "timeout", "unknown"].includes(row.record.state)) return false;
   if (admitted.binding.source === "member") return true; // The host separately proves this key's current configured member standing.
-  const current = readEvidenceServiceWireV17(branch?.values["evidenceService"]);
+  const current = readEvidenceServiceWireV17(evidenceLedgerOfV17(state)?.values["service"]);
   return current !== null && same(current.generation, admitted.binding.serviceGeneration)
     && same(current.mark, admitted.binding.roomService) && admitted.binding.roomService?.key === signerKey;
 }
@@ -206,8 +207,7 @@ export function evidencePolicyV17(given: RuleGiven): ReservationPolicyViewV17 | 
   return read.ok ? read.view : null;
 }
 export function evidenceCountsV17(state: StateView): EvidenceCountsV17 {
-  const branch = branchOf(state), raw = branch?.values["evidenceCounts"];
-  const result = readEvidenceCountsV17(raw === undefined ? { keys: 0, holds: 0, policyGenerations: 0, incidents: 0 } : raw);
+  const ledger = evidenceLedgerOfV17(state), result = ledger && readEvidenceCountsV17(ledger.values["counts"]);
   if (!result) throw Error("Evidence capacity counters are unavailable");
   return result;
 }
@@ -392,9 +392,9 @@ export function evidenceDestinationDataV17(base: PlatformData): PlatformData {
     bound: { of: work ? "also.request" : "also.publication", where: [{ equals: { a: { sender: true }, b: { slot: "lane", of: work ? "also.request" : "also.publication" } } }] },
     guards: [{ code: "evidence-result-bound-v17", row: "E2" }], effects: [{ code: "evidence-result-open-v17", row: "E2", most: { effects: 2, operations: [EVIDENCE_RESULT_V17] } }], sends: [], attention: [] });
   return { ...base, capacity: { name: "whole-scope", version: 1 }, items: { ...base.items,
-    branch: { ...base.items["branch"]!, values: { ...base.items["branch"]!.values,
-      evidenceCounts: { fixed: false, required: false, of: { type: "code", code: "evidence-counts-v17", row: "E1" } },
-      evidenceService: { fixed: false, required: false, of: { type: "code", code: "evidence-service-v17", row: "E1" } } } },
+    branch: { ...base.items["branch"]!, refs: { ...base.items["branch"]!.refs,
+      evidenceLedger: { fixed: false, required: false, to: { type: "item", of: "evidence-ledger" } } } },
+    "evidence-ledger": EVIDENCE_LEDGER_ITEM_V17,
     "evidence-request": { many: true, max: 2048, initial: "pending", states: { pending: { final: false }, waiting: { final: false }, settled: { final: true } }, parties: {}, refs: { lane: { fixed: true, required: true, to: { type: "scope", kind: "lane" } } }, indexes: ["job"],
       holds: { operations: { [EVIDENCE_ADMIT_V17]: 1, [EVIDENCE_RESULT_V17]: 1, [EVIDENCE_NOTICE_V17]: 1 }, requests: 4, items: 1, decisions: { "work-checked": 1 } },
       values: { job: { fixed: true, required: true, of: { type: "fact", kind: ["request-work-check"], under: "issue" } }, record: { fixed: false, required: true, of: { type: "code", code: "evidence-record-v17", row: "E1" } } } },
@@ -618,10 +618,13 @@ function decisionRequest(record: EvidenceJobRecordV17, reason: string, phase: "a
     ...(reason === "admitted" || reason === "reused" ? { commit: record.commit, tree: record.tree, base: record.base } : {}) } } } };
 }
 function serviceEffect(given: RuleGiven, view: ReservationPolicyViewV17 | null): RuleEffect[] {
-  const branch = branchOf(given.state);
+  const ledger = evidenceLedgerOfV17(given.state);
   const value = view && { mark: view.policy.roomService, generation: view.serviceGeneration };
-  return branch && value && !same(readEvidenceServiceWireV17(branch.values["evidenceService"]), value)
-    ? [{ effect: "value", item: branch.id, slot: "evidenceService", value: evidenceWireV17(value, EVIDENCE_SERVICE_BYTES_V17) }] : [];
+  if (value && !ledger) throw new RuleFault("The commissioned evidence ledger is unavailable");
+  const stored = ledger?.values["service"], current = readEvidenceServiceWireV17(stored);
+  if (stored !== undefined && !current) throw new RuleFault("The current evidence service record is unavailable");
+  return ledger && value && !same(current, value)
+    ? [{ effect: "value", item: ledger.id, slot: "service", value: evidenceWireV17(value, EVIDENCE_SERVICE_BYTES_V17) }] : [];
 }
 /** A delayed frozen published obligation can be refused by current
  * authority. Its reasoned hold is funded already; it is not a failed run. */
@@ -820,8 +823,8 @@ function evidenceAdmission(given: RuleGiven, operation: Operation): OutcomeGives
     if (id !== admittedItem && same(readEvidenceJobRecordWireV17(given.state.item(id)?.values["record"]), next)) continue;
     effects.push(evidenceRecordEffectV17(id, next), ...(id === admittedItem || given.state.item(id)?.state === evidenceRecordState(next, id) ? [] : [{ effect: "state" as const, item: id, state: evidenceRecordState(next, id) }]));
   }
-  const branch = branchOf(given.state); if (!branch) return refuse("evidence-invalid");
-  if (!same(counts, capacity.counts)) effects.push({ effect: "value", item: branch.id, slot: "evidenceCounts", value: capacity.counts as unknown as FieldValue });
+  const ledger = evidenceLedgerOfV17(given.state); if (!ledger) return refuse("evidence-invalid");
+  if (!same(counts, capacity.counts)) effects.push({ effect: "value", item: ledger.id, slot: "counts", value: capacity.counts as unknown as FieldValue });
   const sends = [decisionRequest(record, record.state === "reused" ? "reused" : "admitted")], audit = auditRequest(given, record, view);
   if (audit) sends.push(audit);
   const progress = landingNeedsProgress(given, record) ? [openingV17(EVIDENCE_PROGRESS_V17, record.holder)] : [];
@@ -996,7 +999,7 @@ function recoveryRow(given: RuleGiven): { item: Item; record: EvidenceJobRecordV
 }
 function recoveryAuthority(given: RuleGiven): boolean {
   if (given.input.type !== "act") return false;
-  const grant = given.input.grant, observation = grant?.fresh.observation, now = timeMs(given.time), at = observation && timeMs(observation.at);
+  const grant = given.input.grant, observation = grant?.fresh.observation, now = timeMs(given.time), at = observation ? timeMs(observation.at) : null;
   if (!grant || !observation || "subject" in observation || now === null || at === null || now < at || now - at > 10000
     || grant.key !== given.input.signed.intent.actor || observation.key !== grant.key || !same(grant.subject, { membership: observation.of, member: observation.member })
     || observation.keyState !== "active" || observation.memberState !== "active" || observation.controllerActive === false
@@ -1224,7 +1227,7 @@ export const evidenceJobStateV17 = (state: StateView, job: FactRef): { state: st
   const record = evidenceRowV17(state, job)?.record; return record ? { state: record.state, admittedAt: record.admittedAt } : null;
 };
 export function evidenceReadyUpdateV17(given: RuleGiven, publication: Item, accounts: readonly EvidenceBatchRecordV17[]): RuleRequest | null {
-  if (publication.state !== "reserved" || publication.values["evidenceReady"] === true || accounts.length < 1 || accounts.length > 4
+  if (publication.state !== "reserved" || evidenceFundingReadyV17(given.state, publication) || accounts.length < 1 || accounts.length > 4
     || accounts.some((account, ordinal) => !readEvidenceBatchV17(account) || account.ordinal !== ordinal || account.total !== accounts.length
       || account.publication.seq !== publication.id || !same(account.publication.at, given.resolved.at)
       || !same(account.capture, accounts[0]!.capture) || !same(account.policy, accounts[0]!.policy))
@@ -1232,7 +1235,7 @@ export function evidenceReadyUpdateV17(given: RuleGiven, publication: Item, acco
   const opening = given.own(publication.id), reservation = typeof publication.values["reservedAt"] === "number" ? given.own(publication.values["reservedAt"]) : null;
   const operation = publication.refs["operation"], lane = publication.refs["lane"], tree = publication.values["tree"], commit = publication.values["integration"];
   if (!opening || !reservation || !isFactRef(operation) || !isScopeRef(lane) || !isObjectId(tree) || !isObjectId(commit)
-    || accounts.some(account => !same(account.operation, operation))) return null;
+    || accounts.some(account => !same(account.operation, operation) || !same(account.publication, { at: given.resolved.at, seq: publication.id, hash: opening.hash }))) return null;
   return { to: lane, message: { class: "request", type: "relate", body: { name: "publication", item: { at: given.resolved.at, seq: publication.id, hash: opening.hash },
     state: "reserved", detail: { operation, outcome: "committed", tree, commit, rules: accounts[0]!.policy.revision,
       reservationRef: `refs/artroom/reservations/${reservation.hash.slice(7)}`,
@@ -1252,6 +1255,10 @@ export function* evidenceFloorReferencesV17(snapshot: StateSnapshot, _definition
     if (item.type === "branch") {
       const declined = readRulesCertificateDeclinedV17(item.values["rulesCertificateDeclined"]);
       if (declined) { fact(declined.request); fact(declined.interveningFact); }
+      const ledger = item.refs["evidenceLedger"];
+      if (typeof ledger === "number") position(ledger); else if (isFactRef(ledger)) fact(ledger);
+    } else if (item.type === "evidence-ledger") {
+      position(item.id);
     } else if (item.type === "evidence-batch") {
       const batch = readEvidenceBatchWireV17(item.values["batch"]), capacity = readEvidenceCapacityWireV17(item.values["capacity"]);
       if (!batch || !capacity) throw Error("Evidence batch floor record is malformed");

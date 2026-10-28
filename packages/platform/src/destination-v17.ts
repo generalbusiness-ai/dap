@@ -10,6 +10,7 @@ import { RULES_POLICY_VALUE_V13, rulesPolicyProposalV13, rulesPolicyPatternsV13 
 import { RULES_TREE_PROOF, verifyRulesTree } from './rules-policy-tree.ts';
 import { RULES_CERTIFICATE_KIND, readRulesCertificateBinding, rulesCertificateBranchMatches } from './rules-certificate.ts';
 import { rulesCertificateEvidenceValuesV17 } from './destination-budget-v17.ts';
+import { evidenceLedgerInitializationV17 } from './evidence-ledger-v17.ts';
 import { rulesCertificateFamilyV17, rulesCertificateOpeningV17, rulesCertificateDeclineV17, readRulesCertificateDeclinedV17 } from './rules-certificate-v17.ts';
 
 const birthField=(under:string)=>({type:'fact' as const,kind:['establish'],under,required:true});
@@ -58,8 +59,9 @@ const certificateAct:PlatformData['acts'][string]={step:'transition',on:'branch'
   fields:{proposal:{type:'digest',required:true,value:RULES_POLICY_VALUE_V13},directoryBirth:birthField('platform:directory'),
     rulesBirth:birthField('platform:rules'),membershipBirth:birthField('platform:membership')},
   guards:[{state:['ready']},{code:'rules-certificate-request-v17',row:'R7'}],
-  effects:[{code:'rules-certificate-open-v17',row:'R7'}],sends:[],attention:[]};
+  effects:[{code:'rules-certificate-open-v17',row:'R7',most:{effects:6,operations:[RULES_CERTIFICATE_KIND],opens:'evidence-ledger'}}],sends:[],attention:[]};
 const oldBranch=destination4.items['branch']!;
+if(oldBranch.holds?.items!==1)throw Error('G17 preserves the original first-head receipt item before reserving its ledger');
 const oldPublication=destination4.items['publication']!;
 const oldJudge=destination4.outcomes['judge']!;
 const baseRules=destinationRulesForV17(evidenceDestinationProfileV17);
@@ -67,7 +69,7 @@ const oldJudgeRule=baseRules['judge'];
 if(!oldJudgeRule||oldJudgeRule.place!=='outcome')throw Error('native judge outcome required');
 const certifiedDestinationV17:PlatformData={...destination4,items:{...destination4.items,publication:{...oldPublication,values:{...oldPublication.values,
   passes:{fixed:false,required:false,of:{type:'code',code:'certified-publication-state-v17',row:'R7'}}}},branch:{...oldBranch,
-  values:{...oldBranch.values,rulesCertificateRequest:{fixed:false,required:false,of:{type:'code',code:'rules-certificate-binding-v17',row:'R7'}},
+  holds:{...oldBranch.holds,items:2},values:{...oldBranch.values,rulesCertificateRequest:{fixed:false,required:false,of:{type:'code',code:'rules-certificate-binding-v17',row:'R7'}},
     rulesCertificateDeclined:{fixed:false,required:false,of:{type:'code',code:'rules-certificate-declined-v17',row:'R7'}}}}},
   acts:{...destination4.acts,[RULES_CERTIFICATE_KIND]:certificateAct},outcomes:{...destination4.outcomes,
     judge:{...oldJudge,most:{...oldJudge.most!,effects:16},observes:oldJudge.observes!.map(row=>row.of==='rules'?{...row,retains:[{domain:'artroom-rules-extents-3',max:262144}]}:row)},
@@ -80,12 +82,13 @@ const certifiedDestinationRulesV17:Rules={...baseRules,
   'rules-certificate-binding-v17':{place:'type',run:(_given,value)=>readRulesCertificateBinding(value)!==null},
   'rules-certificate-request-v17':{place:'guard',refusals:['rules-certificate-unavailable'],run:given=>{
     // Standard native grant/key/member checks still precede this sibling proof.
-    return bindingAt(given)&&checkedPolicy(given,given.resolved.fields['proposal'])?{holds:true}:refuse;
+    if(!bindingAt(given)||!checkedPolicy(given,given.resolved.fields['proposal']))return refuse;
+    evidenceLedgerInitializationV17(given);return {holds:true};
   }},
-  'rules-certificate-open-v17':{place:'effect',most:3,run:given=>{
+  'rules-certificate-open-v17':{place:'effect',most:6,run:given=>{
     const held=bindingAt(given);if(!held)throw Error('checked certificate binding missing');
     // Serialization cast follows closed bounded native snapshot validation.
-    return [{effect:'value',item:held.item.id,slot:'rulesCertificateRequest',value:held.binding as unknown as FieldValue},
+    return [...evidenceLedgerInitializationV17(given),{effect:'value',item:held.item.id,slot:'rulesCertificateRequest',value:held.binding as unknown as FieldValue},
       {effect:'operation',k:0,owner:'platform:destination@17',kind:RULES_CERTIFICATE_KIND,attempts:1,for:held.item.id},
       {effect:'attempt',operation:{k:0},attempt:1,result:'opened',selected:null}] satisfies readonly RuleEffect[];
   }},

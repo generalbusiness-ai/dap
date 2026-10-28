@@ -47,11 +47,12 @@ describe("exact pre-publication capacity identities", () => {
         certificate: { request: fact(3, destination), certificate: fact(4, destination), proof: d("d"), commit: "a".repeat(40) }, serviceGeneration: { rules: RULES, seq: 5 } }, jobs: [], planAt: null };
   }
   function scripted(self: number, counts = { keys: 0, holds: 0, policyGenerations: 0, incidents: 0 }, anchor?: { id: number; capacity: unknown }): RuleGiven {
-    const branch = { id: 0, type: "branch", state: "ready", values: { evidenceCounts: counts }, refs: {}, parties: {} } as unknown as Item;
+    const branch = { id: 0, type: "branch", state: "ready", values: {}, refs: { evidenceLedger: 1 }, parties: {} } as unknown as Item;
+    const ledger = { id: 1, type: "evidence-ledger", state: "ready", values: { counts }, refs: {}, parties: {} } as unknown as Item;
     return { input: { type: "delivery", from: fact(20, destination), n: 0, message: { class: "request", type: "tell", body: { message: "evidence-fund", fields: {} } } },
       time: "2026-10-28T00:00:00.000Z", uses: [], resolved: { at: destination, self, bounds: PROPOSED_BOUNDS },
-      state: { page: () => ({ items: [branch], more: false }), lookup: () => anchor ? [anchor.id] : [],
-        item: (id: number) => id === 0 ? branch : anchor && id === anchor.id ? { id, values: { capacity: anchor.capacity } }
+      state: { page: (type: string) => ({ items: type === "branch" ? [branch] : type === "evidence-ledger" ? [ledger] : [], more: false }), lookup: () => anchor ? [anchor.id] : [],
+        item: (id: number) => id === 0 ? branch : id === 1 ? ledger : anchor && id === anchor.id ? { id, values: { capacity: anchor.capacity } }
           : [10, 30, 40, 50].includes(id) ? { id, type: "publication", refs: { manifest: fact(5) }, values: {} } : null,
         scope: () => ({ at: destination, head: { seq: 90, hash: d("a") } }) },
     } as unknown as RuleGiven;
@@ -61,9 +62,9 @@ describe("exact pre-publication capacity identities", () => {
     expect(first).not.toBeNull();
     const counts = { keys: 0, holds: 1, policyGenerations: 1, incidents: 1 };
     const repeated = evidenceFundCapacityV17(scripted(101, counts, { id: 100, capacity: first!.capacity }), batch(30, ["code"]));
-    expect(repeated?.effects.find(effect => effect.effect === "value" && effect.slot === "evidenceCounts")).toMatchObject({ value: { ...counts, incidents: 2 } });
+    expect(repeated?.effects.find(effect => effect.effect === "value" && effect.slot === "counts")).toMatchObject({ item: 1, value: { ...counts, incidents: 2 } });
     const expanded = evidenceFundCapacityV17(scripted(102, counts, { id: 100, capacity: first!.capacity }), batch(40, ["code", "docs"]));
-    expect(expanded?.effects.find(effect => effect.effect === "value" && effect.slot === "evidenceCounts")).toMatchObject({ value: { ...counts, holds: 2, incidents: 2 } });
+    expect(expanded?.effects.find(effect => effect.effect === "value" && effect.slot === "counts")).toMatchObject({ item: 1, value: { ...counts, holds: 2, incidents: 2 } });
   });
   it("refuses a selected holds obligation with no associated or touched extent before funding", () => {
     expect(evidenceFundCapacityV17(scripted(100), batch(10, []))).toBeNull();

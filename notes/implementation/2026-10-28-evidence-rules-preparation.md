@@ -213,6 +213,12 @@ identities before publication; admission binds the actual job. Full lists
 refuse funding before push. A timer, notice or unknown creation never
 releases a slot. Actual result, eligible clearing pass, reasoned release or
 confirmed withdrawal supplies the proof needed to remove one.
+The branch keeps its existing value-slot layout. A singleton nonholder
+evidence ledger holds counts and the latest observed service pair. The
+first actual Rules-certificate act opens it and records the branch's item
+reference; later requests reuse it. Genesis reserves its one item alongside
+the original receipt item. It does not add unused item credits on every
+certificate request. The generic 12-value-slot bound stays unchanged.
 
 All work and landing jobs that could supply later reusable evidence reserve
 a candidate slot, including fresh and audit jobs. Published jobs cannot be
@@ -380,6 +386,10 @@ The recovered write path keeps the old read outcome's receipt opening. An
 authenticated self-request opens the nonholder published-plan through a
 bounded effect mark. It draws on the actual batch account and names the
 already recorded written fact. No outcome opens a holder.
+The actual ordinal-zero funding batch carries the readiness stamp. Both
+fund-first and stage-first completion use that same committed marker;
+the publication gains no extra value slot. With no obligations there is
+no artificial batch: the original stage update behavior remains.
 
 A deadline records the actual timeout on its own job. Every later admission
 judges that state through the exact-key pending-job index. A subsequent

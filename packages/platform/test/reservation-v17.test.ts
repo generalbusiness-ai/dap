@@ -129,9 +129,13 @@ test("Q13 reads its complete retained policy and generation against the unchange
     content: { ...scripted.observed.content, extents: valueDigest("artroom-rules-extents-3", envelope) } }, { ...scripted.input, extents: envelope }, t(10));
   const { serviceGeneration: _generation, ...missingGeneration } = scripted.envelope;
   expect(withEnvelope(missingGeneration)).toEqual({ ok: false, reason: "evidence-invalid" });
-  for (const serviceGeneration of [generation(6), generation(0), { ...generation(2), rules: { ...RULES, inc: MEMBERSHIP.inc } }, { ...generation(2), seq: -0 }]) {
+  for (const serviceGeneration of [generation(6), generation(0), { ...generation(2), rules: { ...RULES, inc: MEMBERSHIP.inc } }]) {
     expect(withEnvelope({ ...scripted.envelope, serviceGeneration })).toEqual({ ok: false, reason: "evidence-invalid" });
   }
+  // Negative zero has no canonical digest. Pass the malformed input directly;
+  // never manufacture an impossible authenticated canonical envelope for it.
+  expect(readRulesPolicyObservationV17(scripted.observed, { ...scripted.input,
+    extents: { ...scripted.envelope, serviceGeneration: { ...generation(2), seq: -0 } } }, t(10))).toEqual({ ok: false, reason: "evidence-invalid" });
   expect(readRulesPolicyObservationV17({ ...scripted.observed, definition: "platform:rules@12" }, scripted.input, t(10))).toEqual({ ok: false, reason: "evidence-invalid" });
   expect(readRulesPolicyObservationV17(scripted.observed, scripted.input, t(20.001))).toEqual({ ok: false, reason: "evidence-invalid" });
   expect(readRulesPolicyObservationV17(scripted.observed, scripted.input, t(9))).toEqual({ ok: false, reason: "evidence-invalid" });
