@@ -14,11 +14,35 @@ import {
 } from "./usage-report.mjs";
 import { aliases, row, response, window } from "./test/fixtures/usage-report/scripted-sql.mjs";
 
-// The sink recording comes from the actual Metrics writer. SQL API responses
-// and fetch below are scripted stand-ins: no hosted query or SQL execution.
+// Capture the actual current Metrics writer once, using the existing recorder.
+// Keep the checked-in recording as historical expected TEST emissions: only
+// its source digest may differ. SQL API responses/fetch remain scripted;
+// neither recording is hosted SQL, a provider query or Native plan evidence.
 const fixtureUrl = new URL("./test/fixtures/usage-report/metrics-test-emissions.json", import.meta.url);
-const fixture = () => JSON.parse(readFileSync(fixtureUrl, "utf8"));
+const recorder = fileURLToPath(new URL("./test/fixtures/usage-report/record-metrics.ts", import.meta.url));
 const root = fileURLToPath(new URL("../", import.meta.url));
+let capturedFixture;
+function fixture() {
+  if (capturedFixture === undefined) {
+    const historical = JSON.parse(readFileSync(fixtureUrl, "utf8"));
+    const child = spawnSync(process.execPath, [recorder], {
+      cwd: root, encoding: "utf8", timeout: 10_000, maxBuffer: 1024 * 1024,
+    });
+    assert.ifError(child.error);
+    assert.equal(child.signal, null, "the existing Metrics recorder completed naturally");
+    assert.equal(child.status, 0, "the existing Metrics recorder exited successfully");
+    let current;
+    assert.doesNotThrow(() => { current = JSON.parse(child.stdout); }, "the existing Metrics recorder emitted JSON");
+    assert.ok(current && typeof current === "object" && !Array.isArray(current), "the existing Metrics recorder emitted an object");
+    const { sourceSha256: historicalSource, ...expected } = historical;
+    const { sourceSha256: currentSource, ...actual } = current;
+    assert.match(historicalSource, /^[0-9a-f]{64}$/, "historical recording source digest");
+    assert.match(currentSource, /^[0-9a-f]{64}$/, "current recording source digest");
+    assert.deepEqual(actual, expected, "current TEST cases, window, source and qualification preserve the historical recording");
+    capturedFixture = current;
+  }
+  return structuredClone(capturedFixture);
+}
 const token = "TEST-usage-token-DO-NOT-DISCLOSE-7e0a3c19";
 const account = "a".repeat(32);
 const now = () => new Date(window.through);
