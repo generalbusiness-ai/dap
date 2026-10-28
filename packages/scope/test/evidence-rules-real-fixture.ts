@@ -3,13 +3,14 @@ import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Answer, Digest, FactRef, Intent, MemberRef, OperationId, Read, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isDigest, isHead, isRecord, isScopeRef, isSeed, same, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { CAPABILITY_CODE, localRetainedPlan, outcomeValueDomains, ownersOf, validateDefinition, valueDigest, type Item, type StateView } from "@generalbusiness/dap-derive";
+import { ANCESTRY_BOUNDS, CAPABILITY_CODE, ledgerOf, localRetainedPlan, outcomeValueDomains, ownersOf, snapshotInput, stagedRefName, validateDefinition, valueDigest, walk, type Item, type StateView } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { View } from "../../replay/src/view.ts";
 import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/dap-client";
 import { configurationDigest, type Configuration, type Notice, type Scopes, type Variable } from "../../checkers/src/index.ts";
-import { idOf, isObjectId, parseCommit } from "@generalbusiness/dap-git";
+import { idOf, isObjectId, parseCommit, READ_BOUNDS, TokenDriver } from "@generalbusiness/dap-git";
+import { TokenHost, Vault } from "../../git/test/support/tokens.ts";
 import { keys, type Actor } from "@generalbusiness/dap-derive/testing";
 import { platform as nativePlatform, RULES_CERTIFICATE_KIND, RULES_PATTERNS, RULES_TREE_PROOF, evidenceBindingDigest, readEvidenceBinding, type EvidenceBinding } from "@generalbusiness/dap-platform";
 import { EVIDENCE_RULES_COHORT } from "../../platform/src/evidence-cohort.ts";
@@ -22,7 +23,8 @@ import { evidenceLedgerOfV17 } from "../../platform/src/evidence-ledger-v17.ts";
 import { issueEvidence4 } from "../../../apps/room/lanes/src/issue4.ts";
 import { changeEvidence4 } from "../../../apps/room/lanes/src/change4.ts";
 import { certificateGate, hardeningItems as finalEvidenceItems, hardeningSealed } from "./certified-rules-hardening-fixture.ts";
-import type { EffectRequest } from "../src/operations.ts";
+import type { EffectRequest, Outside } from "../src/operations.ts";
+import type { OutsideGiven } from "../src/given.ts";
 import type { OperationStatus } from "../src/store.ts";
 import { DestinationHost, type DestinationProvider } from "../src/destination-host.ts";
 import { CredentialStore } from "../src/credential-store.ts";
@@ -36,7 +38,7 @@ import { reader, driveFixture, nativeFixtureLifetime } from "./fixtures-native.t
 import { beginSessionFixture } from "./session-settings.ts";
 
 // Actual R22/D21/M8/Q13/G17 creation, observations, native grants and SQLite.
-// Git/provider replies, task instance locator and callback scheduling are TEST stands.
+// Git/provider replies, hold token/staging provider, task instance locator and callback scheduling are TEST stands.
 // No external runner, task creation, hosted provider or deployment is proved here.
 export async function evidenceNativeRoom() {
   const cohort = EVIDENCE_RULES_COHORT;
@@ -320,6 +322,57 @@ export interface EvidenceWorkOptions {
   reuse?: boolean;
 }
 
+/** TEST provider composition, following hosted.ts: the real TokenDriver and
+ * capability outcome rules run over TokenHost/Vault and the fixture Git map.
+ * This is not a production hold host, gateway or external Git service. */
+function evidenceWorkOutside(room: EvidenceRoom, given: OutsideGiven, actual: Outside): Outside {
+  const host = new TokenHost(), vault = new Vault(), tokens = new TokenDriver({ host, custody: vault });
+  room.life.cleanup(() => { vault.held.length = 0; host.tokens.clear(); host.reply.clear(); });
+  const accepts = (owner: string, kind: string) => owner === 'hold@1' && (tokens.accepts(owner, kind) || kind === 'stage' || kind === 'check');
+  return { ...actual,
+    accepts: (owner, kind) => accepts(owner, kind) || actual.accepts(owner, kind),
+    send: async request => {
+      if (!accepts(request.owner, request.kind)) return actual.send(request);
+      if (tokens.accepts(request.owner, request.kind)) return tokens.send(request);
+      if (request.kind === 'stage') {
+        const root = request.origin.entry.effects.find(effect => effect.effect === 'record' && effect.capability === 'hold@1'
+          && effect.kind === 'root' && effect.values['operation'] === request.operation);
+        if (!root || root.effect !== 'record' || typeof root.key[0] !== 'number' || typeof root.values['commit'] !== 'string')
+          throw Error('Actual opening hold root required by TEST staging provider');
+        const commit = root.values['commit'], object = room.host.stand.objects.get(commit);
+        if (!object || object.type !== 'commit' || object.data.length > READ_BOUNDS.commitBytes || idOf(object.type, object.data) !== commit)
+          throw Error('Exact bounded TEST Git commit required');
+        const ref = stagedRefName(request.scope, commit, root.key[0]);
+        room.host.stand.refs.set(ref, commit);
+        return { result: 'confirmed', evidence: { basis: 'read', body: { ref, value: room.host.stand.refs.get(ref)! } } };
+      }
+      const pin = given.state.records('hold@1', 'pin', { member: 'check', value: request.operation }).find(pin => pin.state === 'provisional');
+      const number = pin?.values['root'], root = typeof number === 'number' ? given.state.record('hold@1', 'root', [number]) : null;
+      const head = room.host.stand.refs.get('refs/heads/main'), scope = given.scope();
+      if (!pin || !root || typeof number !== 'number' || root.state !== 'live' || typeof root.values['commit'] !== 'string' || !head || !scope)
+        throw Error('Actual live root and provisional pin required by TEST ancestry provider');
+      if (given.state.page('input', ['selected'], null, 1).items.length !== 0) throw Error('This fresh work fixture does not model selected reports');
+      const snapshot = [...room.host.stand.refs].filter(([ref]) => ref.startsWith('refs/artroom/staged/')).map(([ref, target]) => ({ ref, target }));
+      if (snapshot.length > READ_BOUNDS.refs) throw Error('TEST staged ref snapshot exceeded its bound');
+      const retained = snapshotInput(snapshot);
+      if (!retained) throw Error('Exact TEST staged ref snapshot required');
+      const checked = walk({ commit: root.values['commit'], head, lane: request.scope, root: number,
+        ...ledgerOf(given.state, given.own, request.scope, root.values['under'], scope.head.seq + 1), inputs: [], snapshot,
+        bounds: { ...ANCESTRY_BOUNDS, reads: ANCESTRY_BOUNDS.visited }, read: id => {
+          const object = room.host.stand.objects.get(id);
+          if (!object) return null;
+          if (object.type !== 'commit' || object.data.length > READ_BOUNDS.commitBytes || idOf(object.type, object.data) !== id)
+            throw Error('TEST ancestry object must have its actual bounded Git content hash');
+          return { type: object.type, body: object.data };
+        } });
+      if (checked.result !== 'recorded') throw Error(`TEST ancestry walk refused: ${canonicalize(checked)}`);
+      return { result: 'confirmed', evidence: { basis: 'own-answer', body: { record: checked.record } }, retain: [retained] };
+    },
+    late: deliver => { actual.late?.(deliver); tokens.late(deliver); },
+    judged: (at, sealed) => { actual.judged?.(at, sealed); tokens.judged(at, sealed); },
+  };
+}
+
 /** Stage and admit real work; the task-instance locator is a labelled provider fixture, not a Task authority claim. */
 export async function prepareEvidenceWork(room: EvidenceRoom, options: EvidenceWorkOptions = {}) {
   const definitions = await evidenceDefinitions(room), service = await evidenceChecker(room), membership = await room.M.at();
@@ -342,7 +395,7 @@ export async function prepareEvidenceWork(room: EvidenceRoom, options: EvidenceW
   expect(opened, canonicalize(opened)).toMatchObject({ answer: "accepted" });
   if (opened.answer !== "accepted") throw Error("Native Issue creation required");
   const created = await room.D.created(opened.receipt.fact.seq), lane = room.life.platform(created.name);
-  room.nodes.push(lane); room.life.outside(lane.name, (given, sql) => room.host.outside(given, sql, room.bindings));
+  room.nodes.push(lane); room.life.outside(lane.name, (given, sql) => evidenceWorkOutside(room, given, room.host.outside(given, sql, room.bindings)));
   await lane.restart(); await room.pause(room.nodes);
   expect((await lane.summary()).value.definition).toBe(definitions.issue);
   const terms = factRefOf((await lane.entries())[0]!);
@@ -362,7 +415,18 @@ export async function prepareEvidenceWork(room: EvidenceRoom, options: EvidenceW
   const signed = await lane.intent(rita, "stage-work", { fields: { commitment, terms, commit, destination: await room.G.at() }, expected: await lane.expected({ commitment }) });
   const staged = await (lane.stub as NativeReadPort).prepare(signed, [], "hold@1", "stage");
   expect(staged, canonicalize(staged)).toMatchObject({ answer: "accepted" });
+  if (staged.answer !== 'accepted') throw Error('Actual hold stage preparation required');
   await room.pause(room.nodes);
+  const history = await lane.entries(), operation = `${staged.receipt.fact.seq}:0`;
+  const stageOutcome = history.find(entry => entry.input.type === 'outcome' && entry.input.operation === operation && entry.input.result === 'confirmed');
+  if (!stageOutcome) throw Error('Actual confirmed TEST-provider stage outcome required before work submission');
+  const check = stageOutcome.effects.find(effect => effect.effect === 'operation' && effect.owner === 'hold@1' && effect.kind === 'check');
+  if (!check || check.effect !== 'operation') throw Error('Actual stage outcome must open the ancestry check');
+  expect(stageOutcome.effects).toContainEqual(expect.objectContaining({ effect: 'record', capability: 'hold@1', kind: 'root', state: 'live', values: expect.objectContaining({ commit }) }));
+  expect(stageOutcome.effects).toContainEqual(expect.objectContaining({ effect: 'record', capability: 'hold@1', kind: 'pin', key: [await lane.at(), intentDigest(signed.intent)], state: 'provisional' }));
+  const checked = history.find(entry => entry.input.type === 'outcome' && entry.input.operation === `${stageOutcome.seq}:${check.k}` && entry.input.result === 'confirmed');
+  if (!checked) throw Error('Actual confirmed TEST-provider ancestry outcome required before work submission');
+  expect(checked.effects).toContainEqual(expect.objectContaining({ effect: 'record', capability: 'hold@1', kind: 'check', state: 'recorded', values: expect.objectContaining({ intent: intentDigest(signed.intent), commit }) }));
   const accepted = await lane.stub.submit(signed, []);
   expect(accepted, canonicalize(accepted)).toMatchObject({ answer: "accepted" });
   if (accepted.answer !== "accepted") throw Error("Actual staged work admission required");
@@ -557,7 +621,7 @@ export async function prepareAuditEvidence(room: EvidenceRoom): Promise<Prepared
 
 /** A real Change manifest and merge. The job reader demands its actual automatic published job. */
 export async function publishEvidenceFile(room: EvidenceRoom, setup: PreparedPublishedEvidence, title: string) {
-  const opening = await room.D.stub.submit(await room.D.intent(rita, "open-pr", { fields: { definition: setup.definitions.change, title, draft: false },
+  const opening = await room.D.stub.submit(await room.D.intent(rita, "open-pr", { fields: { definition: setup.definitions.change, dependency1: setup.definitions.issue, title, draft: false },
     expected: await room.D.expected({ repository: 0 }) }), [], { values: [setup.definitions.changeBytes, setup.definitions.issueBytes] });
   expect(opening, canonicalize(opening)).toMatchObject({ answer: "accepted" });
   if (opening.answer !== "accepted") throw Error("Actual Change creation required");
