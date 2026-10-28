@@ -1,13 +1,13 @@
 import { expect, test } from "vitest";
 import type { ScopeRef, SignedSessionRequest } from "@generalbusiness/dap-contract";
-import { canonicalize, keyIdOfSecret, newIncarnation, signIntent, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { base32, canonicalize, keyIdOfSecret, newIncarnation, signIntent, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { secretSigner, type Fetch } from "@generalbusiness/dap-client";
 import { handleOf, managedReadsOf, readerOf, requiredSessionOf, run, sessionOf, Stop } from "../src/command-support.ts";
 import { memoryStore, type Config } from "../src/store.ts";
 
 const START = Date.parse("2099-01-01T00:00:00Z"), SECRET = new Uint8Array(32).fill(17);
 const M: ScopeRef = { scope: `sc_${"a".repeat(52)}`, kind: "membership", inc: newIncarnation(new Uint8Array(16).fill(1)) };
-const TARGET: ScopeRef = { ...M, scope: `sc_${"b".repeat(52)}` };
+const TARGET: ScopeRef = { ...M, scope: `sc_${base32(new Uint8Array(32).fill(1))}` };
 const HEAD = { seq: 0, hash: textDigest("TEST cache head") };
 async function fixture() {
   const store = memoryStore(); await store.keep("device", SECRET);
