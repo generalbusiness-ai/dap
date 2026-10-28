@@ -71,8 +71,12 @@ For the Lima instance used in development, the lifecycle prefix is:
 
 Use the same Lima prefix before `ctr` and its complete address, namespace
 and tasks exec arguments. The FIFO directory is inside that guest.
-ctr preserves the job's exit status and output without a nerdctl diagnostic
-line changing the last output line used for judgment.
+The adapter judges the last stdout line. Both stdout and stderr count
+toward the output limit. An abnormal close, status `255`, or a nonzero
+status with any stderr leaves the run lost because the adapter cannot
+distinguish that result from a transport or ctr setup failure. A nonzero
+status with empty stderr remains judgeable. For a check that needs stderr
+in its judgment, combine the job's streams in its configured shell command.
 
 Give this runner and the external `ResultSigner` to `CheckerService`.
 The service authenticates the job and configuration before calling

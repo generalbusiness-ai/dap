@@ -45,7 +45,7 @@ try {
   const results = JSON.parse(await readFile(join(output, "native.json"), "utf8"));
   const cases = results.testResults.flatMap(file => file.assertionResults).filter(item => item.status !== "pending" && item.status !== "skipped");
   assert.equal(cases.length, 1); assert.equal(cases[0].status, "passed");
-  assert.equal(results.numFailedTests, 0); assert.equal(results.numRuntimeErrorTestSuites, 0);
+  assert.equal(results.numFailedTests, 0); assert.equal(results.numFailedTestSuites, 0); assert.equal(results.success, true);
   assert.equal(bridge.receipts.length, 2);
   assert.deepEqual(bridge.receipts.map(item => item.report.steps.at(-1)?.status), [0, 1]);
   status = 0;

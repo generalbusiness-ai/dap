@@ -59,12 +59,12 @@ function variables(value: unknown): Variable[] {
 }
 
 /** Bounded output ownership, not execFile's potentially gigabyte buffer. */
-async function command(prefix: readonly string[], args: readonly string[], options: { milliseconds: number; bytes: number; capture?: boolean; stdin?: Uint8Array; signal?: AbortSignal }): Promise<ExecResult & { bytes: number; line: string | null; limited: boolean }> {
+async function command(prefix: readonly string[], args: readonly string[], options: { milliseconds: number; bytes: number; capture?: boolean; stdin?: Uint8Array; signal?: AbortSignal }): Promise<ExecResult & { bytes: number; stderrBytes: number; line: string | null; limited: boolean }> {
   if (options.signal?.aborted) return error("stopped");
   return new Promise((resolve, reject) => {
     const child = spawn(prefix[0]!, [...prefix.slice(1), ...args], { env: { PATH: process.env["PATH"] ?? "/usr/bin:/bin", HOME: process.env["HOME"] ?? "/nonexistent" }, stdio: "pipe" });
     const stdout: Buffer[] = [], stderr: Buffer[] = [];
-    let bytes = 0, timedOut = false, limited = false;
+    let bytes = 0, stderrBytes = 0, timedOut = false, limited = false;
     let current: number[] = [], last: Uint8Array | null = null, long = false;
     let closeBound: ReturnType<typeof setTimeout> | undefined;
     const kill = () => {
@@ -74,17 +74,19 @@ async function command(prefix: readonly string[], args: readonly string[], optio
     const stop = () => { timedOut = true; kill(); };
     const timer = setTimeout(stop, Math.max(1, options.milliseconds));
     options.signal?.addEventListener("abort", stop, { once: true });
-    const receive = (chunk: Buffer, sink: Buffer[]) => {
+    const receive = (chunk: Buffer, sink: Buffer[], isStdout: boolean) => {
       bytes += chunk.length;
+      if (!isStdout) stderrBytes += chunk.length;
       if (bytes > options.bytes) { limited = true; kill(); return; }
       if (options.capture) sink.push(Buffer.from(chunk));
+      if (!isStdout) return;
       for (const byte of chunk) {
         if (byte === 10) { last = long ? null : Uint8Array.from(current); current = []; long = false; }
         else if (current.length < 1025) current.push(byte); else long = true;
       }
     };
-    child.stdout.on("data", (chunk: Buffer) => receive(chunk, stdout));
-    child.stderr.on("data", (chunk: Buffer) => receive(chunk, stderr));
+    child.stdout.on("data", (chunk: Buffer) => receive(chunk, stdout, true));
+    child.stderr.on("data", (chunk: Buffer) => receive(chunk, stderr, false));
     child.stdin.on("error", () => undefined);
     child.stdin.end(options.stdin);
     child.on("error", () => undefined);
@@ -93,7 +95,7 @@ async function command(prefix: readonly string[], args: readonly string[], optio
       let line: string | null = null;
       const tail = long ? null : current.length > 0 ? Uint8Array.from(current) : last;
       try { if (tail !== null && tail.length <= 1024) line = text.decode(tail).replace(/\r$/, ""); } catch { /* No judgment from invalid text. */ }
-      resolve({ code: code ?? -1, stdout: Buffer.concat(stdout), stderr: Buffer.concat(stderr), timedOut, bytes, line, limited });
+      resolve({ code: code ?? -1, stdout: Buffer.concat(stdout), stderr: Buffer.concat(stderr), timedOut, bytes, stderrBytes, line, limited });
     });
   });
 }
@@ -278,7 +280,11 @@ export function createContainerEngine(options: ContainerEngineOptions): Containe
         ensure(); const result = await command(execCommand, ["--exec-id", randomUUID(), "--user", "65532:65532", "--cwd", gitEnv ? "/work" : WORK, id,
           ...(gitEnv ? [RELAY, "exec", String(toolEnv.length), ...toolEnv, "--", program!, ...argv.slice(1)] : argv)],
           { milliseconds: Math.min(milliseconds, remaining()), bytes, capture, ...(input ? { stdin: input } : {}), ...(signal ? { signal } : {}) });
-        if (result.timedOut || result.limited) { expired = true; end(); return result; } ensure(); return result;
+        if (result.timedOut || result.limited) { expired = true; end(); return result; } ensure();
+        // ctr setup errors share stderr with jobs; SSH also reserves 255.
+        // Neither is authority for a completed process judgment.
+        if (result.code < 0 || result.code === 255 || result.code !== 0 && result.stderrBytes > 0) { end(); return error("engine"); }
+        return result;
       };
       const identity = await execute(["/usr/bin/id", "-u"], remaining(), 4096, true, undefined, {});
       if (identity.code !== 0 || text.decode(identity.stdout).trim() !== "65532") return error("isolation");

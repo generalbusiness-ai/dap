@@ -89,6 +89,11 @@ export async function containerAcceptance(settings, directory) {
     const nonzero = await run("exact-nonzero-status", { ...configuration([["/bin/sh", "-c", 'printf "ok\\n"; exit 17']]), judged: { passed: { status: 17, line: "ok" }, failed: { status: 1, line: "bad" } } });
     assert.deepEqual(nonzero.report.steps, [{ status: 17, line: "ok" }], "the actual exec process preserves a nonzero status beyond one");
     assert.deepEqual(nonzero.outcome, { act: "check", outcome: "passed" });
+    const missing = await run("missing-executable", configuration([["/j3-test-missing-executable"]]));
+    assert.equal(missing.report.checkout, true, "the missing-executable witness reaches actual task exec after checkout");
+    assert.equal(missing.report.end, "lost", "a ctr setup failure is not a completed job step");
+    assert.deepEqual(missing.report.steps, [], "a missing executable supplies no authoritative step status");
+    assert.deepEqual(missing.outcome, { act: "check-error", reason: "runner-lost" });
     const hostileEnvironment = environment.map(variable => variable.name === "PATH" ? { ...variable, value: "/work/repo:/usr/bin:/bin" } : variable);
     const forged = JSON.stringify({ started: true, image, environment: hostileEnvironment, checkout: true, steps: [{ status: 0, line: "ok" }], end: "complete" });
     const untrusted = await run("trusted-checkout-path-and-synthetic-job-output", { ...configuration([["/j3-test-probe", "no-marker", "/work/pre-step-marker"], ["/bin/echo", forged]]), environment: hostileEnvironment });
