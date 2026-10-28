@@ -131,6 +131,103 @@ limits are separate from the lane's native waiting deadline.
 
 ## Coordinate the source shape before parallel edits
 
+### Selected implementation boundary
+
+The slice adds the explicit `EVIDENCE_RULES_COHORT`: Register 22,
+Directory 21, Membership 8, Rules 13, Destination 17, Inbox 1. Destination
+16 and the unpublished cohort already exist and stay exact. Global
+defaults and deployed creation policy stay unchanged. The new declared
+Issue and Change definitions have new digests; old definitions and pins
+are preserved. Pin generation waits for a coordinated committed freeze.
+
+Rules 13 uses a complete policy with required nullable `roomService` and
+the optional check fields already listed above. Its transport-only
+`checkers` field is the exact distinct union of configured checker members
+and the marked service member, at most 33. It is excluded from the policy
+digest. The new policy domain is `artroom-rules-policy-2`; its retained
+observation envelope uses `artroom-rules-extents-3`. The complete policy,
+proof, and envelope each retain a 262,144-byte ceiling. The unchanged
+49,571-byte Rules content ceiling is checked on the complete successor
+projection. Every accepted publication must also fit its actual carrying
+entry and retained-value budget.
+
+The mark stays inside the complete policy. An optional local reference
+`roomServiceChanged` records native self only on pair change or withdrawal;
+unchanged pairs keep their generation. The member union proves active
+checker members. A mark change additionally requires the fresh grant's
+admin role, rather than possession of a customizable publish action alone.
+
+Neutral contract types are `CheckSource`, `CheckStage`, `ServiceMark`,
+`ScopedRulesPosition`, `CheckSubject`, and `EvidenceBinding`. The binding
+is a closed record with version 1, source, stage, checker, policy generation,
+service mark and generation, nullable auditOf, and subject. Each generation
+is the full Rules reference plus a native position. Room-source jobs freeze
+the mark and cannot finish after an observed rotation. Ordinary member
+source does not gain authority from that mark. Audit room jobs use their
+own fresh room-source admission. The original answered question explicitly
+scoped the unfinished-job rotation rule to room jobs.
+
+Subjects contain actual facts, while the common Job retains commit, tree,
+and base without duplication:
+
+- `landing`: publication-opening and manifest facts;
+- `work`: an already admitted Issue `stage-work` source fact;
+- `published`: publication-opening, receipt-opening, receipt-written, and
+  manifest facts.
+
+Each subject has `kind` equal to its stage. The binding digest hashes the
+canonical bytes of `{domain: "artroom-check-binding-1", binding}` using the
+existing bytes hash helper. Successor result acts bind the actual job fact
+and this digest. Their native reader compares the complete admitted job;
+echoed fields grant no authority. Old signed result bytes stay unchanged.
+
+Work checks use a new Issue successor with a separately admitted staged
+source and a later explicit work-check request. The source uses the existing
+performer, terms, staged, ancestry, and held-pin rules; it is not a report.
+The native admission derives tree and first parent from actual commit bytes.
+Its retained commit proof is limited to 32 KiB decoded and 48 KiB canonical
+bytes. A root commit or unsupported object format is refused. The source
+owns its pin until unresolved jobs settle or an authorized explicit release.
+
+Published jobs follow actual receipt-written state, including its recovered
+deciding-read path. Their successor origin proof is distinct from a live
+reservation. It reads bounded immutable objects at the recorded commit and
+never recreates a cleaned reservation ref. New delivery-origin jobs prove
+the native sender and admission, without a fabricated member signature.
+J3 consumes the same operational immutable object overlay after validation.
+
+The selected lifetime limits per Destination incarnation are 2,048 reuse
+keys, eight retained or reserved candidate slots per key, 32,768 canonical
+bytes per complete key record, 512 hold keys across all generations and
+states, 512 retained hold-policy generations, and 8,192 published incident
+identities. Triager observations require complete coverage of at most 32
+active holders. Unknown, empty, or over-bound sets remain visible.
+
+All work and landing jobs that could supply later reusable evidence reserve
+a candidate slot, including fresh and audit jobs. Published jobs cannot be
+reused. Retain older candidates through key rotation. Eligible disagreement
+permanently disables reuse for that key; a fresh job for a conflicted key
+needs no new candidate slot and remains allowed. A nonconflicted full key
+refuses a new candidate-producing admission. There is no silent eviction,
+replacement of old results, or fallback history scan.
+
+Index and hold rows stay nonfinal, or use explicit all-state counters;
+`item.max` alone bounds only live items. Hold assessment reads at most 512
+indexed active holds, including retained extent patterns from older policy
+generations. Reserve all affected holds and an incident identity before
+admitting a published job. Every published job reserves incident capacity,
+even without holds. Failed and unknown settlements cannot lose already
+funded state to later admissions.
+
+These limits are independent of the five-dimensional used-plus-reserved
+capacity checks. Use the maintained checked Amount helpers, complete
+carrying-entry forecasts, retained source/observation/value charges, and
+all future outcomes. Refuse before opening work when any bound cannot be
+proved. Per-check assessment bounds candidate standing reads; the old
+G15 capture budget is not evidence for a larger cohort. The 16-effect
+allowance still applies unless the actual existing bound explicitly permits
+another declared native maximum. No new kernel allowance is implied.
+
 | Owner | Bounded implementation scope | Existing useful boundary at Main |
 |---|---|---|
 | Rules and policy | A new successor beside `packages/platform/src/rules-scope-v12.ts` and `rules-policy-v11.ts`; admin mark, native generation, observation projection and strict policy codec. Minimal versioned types in `packages/contract/src/observation.ts` if needed. | `rules-scope.test.ts` publishes under active-checker observations and projects Rules at an exact head. `rules-policy-v11.test.ts` checks strict owned policy and extent requirements. Keep old-version assertions. |
