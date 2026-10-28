@@ -62,6 +62,12 @@ separate. Two different configured register roots remain ambiguous. A
 connectivity, GitHub installation authority, valid tokens, package trust,
 MCP enablement, serving capacity, or archive recovery.
 
+Lending's [`wrangler.lending.jsonc`](../../apps/room/wrangler.lending.jsonc)
+adds the nonsecret production binding `VERSION_METADATA`, matching Grow
+and Demo. Wrangler supplies its value on deployment; health reports
+`unknown` when the binding or its valid version id is absent. The planner
+checks the actual Lending `/health` version after deployment.
+
 `SCOPE_INDEX_MODE=register` is a transition: an unknown target may be activated
 so that its own verified applied genesis can register it. `enforce` refuses
 an unknown existing target before target lookup. Checked-in mode, a health

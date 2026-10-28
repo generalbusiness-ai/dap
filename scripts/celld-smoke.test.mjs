@@ -5,6 +5,59 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { configOf } from "./security-settings.mjs";
 import { contextForCelldSmoke, runCelldSmoke, smokeSettings } from "./celld-smoke.mjs";
+import { matchesCelldVersion } from "./test-celld-proxy.mjs";
+
+test("the proxy compares the maintained celld pin as a whole version token without a hidden release literal", async () => {
+  const pin = await readFile(new URL("../apps/room/celld/celld.version", import.meta.url), "utf8");
+  assert.equal(matchesCelldVersion(pin, `celld ${pin.trim()}`), true);
+  assert.equal(matchesCelldVersion(pin, `celld ${pin.trim().slice(1)}\n`), true);
+  // This version is synthetic comparison input, not a release or compatibility claim.
+  const synthetic = "v12.34.567\n";
+  assert.equal(matchesCelldVersion(synthetic, "celld v12.34.567"), true);
+  assert.equal(matchesCelldVersion(synthetic, "celld\t12.34.567\n"), true);
+  for (const reported of ["celld 12.34.568", "celld 12.34.5670", "celld 112.34.567", "celld v12.34.567-rc.1", "celld prefixv12.34.567", "celld v12.34.567suffix"])
+    assert.equal(matchesCelldVersion(synthetic, reported), false, reported);
+  for (const invalid of [undefined, "", "v12.34.567", "12.34.567\n", "v12x34x567\n", "v12.34.567.*\n", "v12.34.567\n\n", " v12.34.567\n", "v12.34.567\r\n"])
+    assert.throws(() => matchesCelldVersion(invalid, "celld 12.34.567"), /Invalid maintained celld version pin/);
+});
+
+function triggerBlock(workflow, trigger) {
+  const lines = workflow.split("\n"), header = `  ${trigger}:`, start = lines.indexOf(header);
+  assert.ok(start >= 0 && start === lines.lastIndexOf(header), `One ${trigger} block is required`);
+  let end = start + 1;
+  while (end < lines.length && (!lines[end] || lines[end].startsWith("    "))) end++;
+  return lines.slice(start, end).join("\n");
+}
+
+function assertTriggerPaths(workflow, trigger) {
+  const lines = triggerBlock(workflow, trigger).split("\n"), start = lines.indexOf("    paths:");
+  assert.ok(start >= 0, `${trigger} keeps its paths list`);
+  const paths = [];
+  for (const line of lines.slice(start + 1)) {
+    if (!line.trim()) continue;
+    const match = /^      - '([^']+)'$/.exec(line);
+    if (!match) break;
+    paths.push(match[1]);
+  }
+  for (const path of ["packages/scope/**", "packages/mcp/**", "packages/cli/**", "packages/platform/**", "packages/derive/**", "packages/bytes/**", "apps/room/**", "scripts/celld-smoke*", "scripts/test-celld-proxy*", ".github/workflows/celld-smoke.yml", "package.json", "package-lock.json"])
+    assert.ok(paths.includes(path), `${trigger} must include ${path}`);
+}
+
+test("both smoke workflow triggers cover runtime packages and retain lockfile coverage", async () => {
+  const workflow = await readFile(new URL("../.github/workflows/celld-smoke.yml", import.meta.url), "utf8");
+  // Literal source policy only: this does not emulate GitHub glob matching or run CI.
+  for (const trigger of ["pull_request", "push"]) {
+    assertTriggerPaths(workflow, trigger);
+    const block = triggerBlock(workflow, trigger), other = trigger === "push" ? "pull_request" : "push";
+    for (const path of ["packages/cli/**", "package-lock.json"]) {
+      const missing = block.replace(`      - '${path}'`, "");
+      assert.notEqual(missing, block);
+      const specimen = workflow.replace(block, missing);
+      assert.throws(() => assertTriggerPaths(specimen, trigger), error => error.message.includes(trigger) && error.message.includes(path));
+      assertTriggerPaths(specimen, other);
+    }
+  }
+});
 
 test("local project keeps a distinct deployment identity, native migrations and pinned workflow actions without committed secrets", async () => {
   const local = JSON.parse(await readFile(new URL("../apps/room/celld/wrangler.json", import.meta.url), "utf8"));

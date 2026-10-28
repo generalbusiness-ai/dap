@@ -24,6 +24,18 @@ const failureMetadata = { stage: "preflight", scratch: null, signal: null };
 const digest = bytes => createHash("sha256").update(bytes).digest("hex");
 const MAX_REPLY = 4 * 1024 * 1024;
 const must = (condition, label) => assert.ok(condition, label);
+function celldVersionOf(pin) {
+  const match = typeof pin === "string" ? /^(v[0-9]+\.[0-9]+\.[0-9]+)\n$/.exec(pin) : null;
+  must(match !== null && match[0] === pin, "Invalid maintained celld version pin");
+  return match[1];
+}
+
+/** Exact whitespace-delimited version token; importing this module runs no driver. */
+export function matchesCelldVersion(pin, reported) {
+  const expected = celldVersionOf(pin);
+  return typeof reported === "string" && reported.split(/\s+/).some(token => token === expected || token === expected.slice(1));
+}
+
 const boundedJoin = async (promise, milliseconds, label) => {
   let timer;
   try { return await Promise.race([promise, new Promise((_, reject) => { timer = setTimeout(() => reject(Error(label)), milliseconds); })]); }
@@ -59,8 +71,8 @@ async function privateProcess(argv, directory, label, owned) {
 async function run() {
   const binary = process.env.CELLD_BIN;
   must(binary && resolve(binary) === binary && (await stat(binary)).isFile(), "CELLD_BIN must name the explicit reviewed executable");
-  const expectedVersion = (await readFile(join(ROOT, "apps/room/celld/celld.version"), "utf8")).trim();
-  must(expectedVersion === "v0.6.2", "Unexpected maintained celld version pin");
+  const versionPin = await readFile(join(ROOT, "apps/room/celld/celld.version"), "utf8");
+  const expectedVersion = celldVersionOf(versionPin);
   const directory = await mkdtemp(join(tmpdir(), "artroom-celld-proxy-"));
   failureMetadata.scratch = directory;
   await chmod(directory, 0o700); await mkdir(join(directory, "home"), { mode: 0o700 });
@@ -88,7 +100,7 @@ async function run() {
   try {
   failureMetadata.stage = "version";
   const version = await privateProcess([binary, "--version"], directory, "version", owned);
-  must(/(?:^|\s)v?0\.6\.2(?:\s|$)/.test(version.stdout.toString("utf8")), "CELLD_BIN does not match the reviewed pin");
+  must(matchesCelldVersion(versionPin, version.stdout.toString("utf8")), "CELLD_BIN does not match the reviewed pin");
   failureMetadata.stage = "certificate";
   await privateProcess(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1", "-subj", "/CN=artroom TEST local proxy",
     "-addext", "subjectAltName=IP:127.0.0.1", "-keyout", join(directory, "proxy.key"), "-out", join(directory, "proxy.crt")], directory, "certificate", owned);

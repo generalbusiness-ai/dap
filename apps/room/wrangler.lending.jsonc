@@ -8,6 +8,7 @@
   "main": "worker.ts",
   "compatibility_date": "2026-08-15",
   "compatibility_flags": ["nodejs_compat"],
+  "version_metadata": { "binding": "VERSION_METADATA" },
   "durable_objects": {
     "bindings": [{ "name": "SCOPES", "class_name": "DeployedScope" }, { "name": "SCOPE_INDEX", "class_name": "ScopeIndex" }]
   },

@@ -4,6 +4,10 @@ on:
     paths:
       - 'packages/scope/**'
       - 'packages/mcp/**'
+      - 'packages/cli/**'
+      - 'packages/platform/**'
+      - 'packages/derive/**'
+      - 'packages/bytes/**'
       - 'apps/room/**'
       - 'scripts/celld-smoke*'
       - 'scripts/test-celld-proxy*'
@@ -15,6 +19,10 @@ on:
     paths:
       - 'packages/scope/**'
       - 'packages/mcp/**'
+      - 'packages/cli/**'
+      - 'packages/platform/**'
+      - 'packages/derive/**'
+      - 'packages/bytes/**'
       - 'apps/room/**'
       - 'scripts/celld-smoke*'
       - 'scripts/test-celld-proxy*'
