@@ -3,7 +3,7 @@ import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Answer, Digest, FactRef, Intent, MemberRef, OperationId, Read, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isDigest, isHead, isRecord, isScopeRef, isSeed, same, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { CAPABILITY_CODE, localRetainedPlan, outcomeValueDomains, ownersOf, validateDefinition, valueDigest, type StateView } from "@generalbusiness/dap-derive";
+import { CAPABILITY_CODE, localRetainedPlan, outcomeValueDomains, ownersOf, validateDefinition, valueDigest, type Item, type StateView } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { View } from "../../replay/src/view.ts";
@@ -21,7 +21,7 @@ import { readEvidenceCapacityWireV17 } from "../../platform/src/destination-evid
 import { evidenceLedgerOfV17 } from "../../platform/src/evidence-ledger-v17.ts";
 import { issueEvidence4 } from "../../../apps/room/lanes/src/issue4.ts";
 import { changeEvidence4 } from "../../../apps/room/lanes/src/change4.ts";
-import { certificateGate, hardeningItems, hardeningSealed } from "./certified-rules-hardening-fixture.ts";
+import { certificateGate, hardeningItems as finalEvidenceItems, hardeningSealed } from "./certified-rules-hardening-fixture.ts";
 import type { EffectRequest } from "../src/operations.ts";
 import type { OperationStatus } from "../src/store.ts";
 import { DestinationHost, type DestinationProvider } from "../src/destination-host.ts";
@@ -195,6 +195,19 @@ export async function evidenceEntry(node: Platform, seq: number) {
   return read.value.entry;
 }
 
+/** The public summary owns live items; the paged items read owns finals.
+ * Join both only at one unchanged head, and refuse a partial summary. */
+export async function evidenceItems(node: Platform, type: string): Promise<readonly Item[]> {
+  const before = await node.summary();
+  if (!before.complete) throw Error('Complete actual Native live summary required');
+  const final = await finalEvidenceItems(node, type), after = await node.summary();
+  if (!after.complete || !same(after.at, before.at)) throw Error('Native item reads must share one complete unchanged head');
+  const items = [...before.value.items.filter(item => item.type === type), ...final].sort((left, right) => left.id - right.id);
+  if (items.some(item => item.type !== type) || new Set(items.map(item => item.id)).size !== items.length) throw Error('Actual live and final Native items must be disjoint');
+  return items;
+}
+const hardeningItems = evidenceItems;
+
 export async function openEvidenceRulesCertificate(room: EvidenceRoom, policy: RulesPolicyV13): Promise<FactRef> {
   const proposal = rulesPolicyProposalV13(policy);
   if (!proposal.ok) throw Error("Strict policy required");
@@ -333,7 +346,7 @@ export async function prepareEvidenceWork(room: EvidenceRoom, options: EvidenceW
   await lane.restart(); await room.pause(room.nodes);
   expect((await lane.summary()).value.definition).toBe(definitions.issue);
   const terms = factRefOf((await lane.entries())[0]!);
-  const commitment = await lane.did(rita, "offer", { fields: { offeree: { membership, member: "@rita" } } });
+  const commitment = await lane.did(rita, "offer", { fields: { offeree: { membership, member: "@rita" } }, expected: await lane.expected({ goal: 0 }) });
   await lane.did(rita, "accept", { on: commitment, expected: await lane.expected({ on: commitment }), fields: { terms } });
   const hold = await lane.did(rita, "take-hold", { fields: { commitment }, expected: await lane.expected({ commitment }) });
   const instance: Intent = { v: 1, to: await lane.at(), actor: rita.key, kind: "hold@1:instance", on: null, expected: {},

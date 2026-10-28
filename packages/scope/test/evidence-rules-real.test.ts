@@ -7,11 +7,11 @@ import { isObjectId } from "@generalbusiness/dap-git";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { EVIDENCE_RULES_COHORT } from "../../platform/src/evidence-cohort.ts";
 import { claimEvidenceWork, configureEvidenceRules, enrolEvidenceKey, evidenceCertificate, evidenceChecker, evidenceNativeRoom,
-  evidenceEntry, evidenceNativeState, evidenceRecord, evidenceRulesObservation, evidenceRulesPolicy, prepareEvidenceWork, publishEvidenceRulesCertificate, requestEvidenceWork } from "./evidence-rules-real-fixture.ts";
+  evidenceEntry, evidenceItems as hardeningItems, evidenceNativeState, evidenceRecord, evidenceRulesObservation, evidenceRulesPolicy, prepareEvidenceWork, publishEvidenceRulesCertificate, requestEvidenceWork } from "./evidence-rules-real-fixture.ts";
 import { claimLandingEvidence, claimPublishedEvidence, evidenceFailureNotice, evidenceOutcomeRace, prepareAuditEvidence, prepareLandingEvidence,
   preparePublishedEvidence, publishEvidenceFile, requestLandingEvidence, revisePublishedEvidence, type LandingEvidenceJob } from "./evidence-rules-real-fixture.ts";
 import { runEvidenceContainerCase } from "./evidence-runner-case.ts";
-import { hardeningItems, hardeningSealed } from "./certified-rules-hardening-fixture.ts";
+import { hardeningSealed } from "./certified-rules-hardening-fixture.ts";
 import { readEvidenceJobRecordWireV17, readEvidenceServiceWireV17 } from "../../platform/src/destination-evidence-v17.ts";
 import { evidenceHoldActiveV17 } from "../../platform/src/evidence-holds-v17.ts";
 import { evidenceIncidentAdmissionPositionV17 } from "../../platform/src/evidence-incident-origin-v17.ts";
