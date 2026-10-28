@@ -42,7 +42,7 @@ const namedOwners = {
     "packages/scope/src/worker.ts:McpAgent": "a36d308c7bd5a575e6784a307fb3b404eb2187d39da8a93294eea2217b765c8f",
   },
   "packages/cli/src/commands.ts": {
-    "packages/cli/src/commands.ts:$module": "231bbfefba83051e6732e6f5970aa964846e40acc8002b9a5ed780e71e954ed3",
+    "packages/cli/src/commands.ts:$module": "f01145b2807692fd13b82de9222af26a5a27bc042eabf8175f4c505609ec8093",
     "packages/cli/src/commands.ts:NEW_REGISTER": "f828e83eeb39a37566e323156efb63274fc43b1d6b9e95b38fbf0cdbba327fbf",
     "packages/cli/src/commands.ts:short": "62f9d565f48fc73fc6b282a941d6d37a48055c6c32f2ef88f21b22ead55f6e57",
     "packages/cli/src/commands.ts:scopeIndexAccess": "b54a6859075907491f4c19313b149572acd5b3bd94c492d61fb342601759c299",
@@ -94,7 +94,7 @@ const namedOwners = {
     "packages/cli/src/commands.ts:authorization": "e4e08477eb4c8766ccbb228da6d28f0b0c98a11500d80fcbe92e686eabb654ec",
     "packages/cli/src/commands.ts:b64": "2ccaf086d7986f6c72fc6eb746042e77b2da0a99cba0d51e10a9aa87025e0c6d",
     "packages/cli/src/commands.ts:headerEnv": "2b29643df8f13576381b9be7133dd6f5dc668a80d10822ac7fbc0d3bcb1ee878",
-    "packages/cli/src/commands.ts:clone": "9bf3d3f923e215d7ff1c404d1d925fdff86a7faf29322e90254632b7649ec994",
+    "packages/cli/src/commands.ts:clone": "90ea609e9984ae81dc13547ecc44b5c0a3a00d6ac74d0de46cf1e5f940d9da94",
     "packages/cli/src/commands.ts:EDIT_BYTES": "9bbee0ea572e3aee4339d86e8e59defc86538133d2ad92449cdc827c7b86b2b5",
     "packages/cli/src/commands.ts:fileOf": "f2c2de1136cfd275c0b2003f3ae5abd2ff8d7ba508351a05dc8145664dada339",
     "packages/cli/src/commands.ts:textOf": "1ae1ce4970caf7b99eb7370475b4506f47b23c9f8b09fd93933a664f2406747a",
@@ -107,7 +107,7 @@ const namedOwners = {
     "packages/cli/src/commands.ts:propose": "cd58d412a613dbacbc96ae2e0222949f99377272c7f4089e78269009e3ff5142",
     "packages/cli/src/commands.ts:proposingFiles": "22a95036e1d4e2b2541a999f5ada1f69b83fec0fae29c0ce241319a211395daf",
     "packages/cli/src/commands.ts:merge": "fb866a06e19ec5713108a7f665cd9c6de0be1f986e0cec9f7c35b281bd1eb5ac",
-    "packages/cli/src/commands.ts:merging": "9f9bc34cce2621ddc4c6a15cbd04c452636b6f252665729b20c2ef62eef72343",
+    "packages/cli/src/commands.ts:merging": "05659e2afd0ed66897e18c2003d90ea697e0adc3d96e8c1a35a35a677d2ce2ce",
     "packages/cli/src/commands.ts:memberOf": "82b7786a17e358f6ae9e91da4bc64425092497ebd78da4369235ae1653e092e7",
     "packages/cli/src/commands.ts:issuesOf": "d24885bf29ab4542768b2b73e65c1e33ff4c8f4a01b3308391a96b468bf22b68",
     "packages/cli/src/commands.ts:issueNamed": "41f15c6fce12bc4ac95a9cd53a9a17872a1443ff2a7827b388b087dbf62a9c57",
@@ -263,14 +263,15 @@ const pendingR8Seals = {
   "packages/cli/src/commands.ts": namedOwners["packages/cli/src/commands.ts"],
   "packages/cli/src/browser-helpers.ts": "7e5f139e800efad56f08799f4e34700f2fde7c76de33422a2eb69d03de4f03fa", // Moved description, expectation and value helpers; actual maintained parser output.
   "packages/cli/src/claim.ts": "26858433403847e4857951909bd48ca1153d92dc28595081c093141db550773a", // Moved claim verification and retained custody; actual maintained parser output.
-  "packages/cli/src/command-support.ts": "1d9779c0d5554e823a5486771315dd54f5a5b73a8a4d254d98f0f85003c998c0", // Moved shared read, session and signing support; actual maintained parser output.
+  "packages/cli/src/command-support.ts": "3d8bb5498e66827db4f74943f90b441b614340663dc30be2a9d17efec9d1817e", // Moved shared read, session and signing support; actual maintained parser output.
   "packages/cli/src/read-session-cache.ts": "12a5cf131a166001f66672bc3c4b6daf70070645255c61db7b93f18b6fbb83b7", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/verification.ts": "51042fd79fae343e7369ca49bae9351f2672fe868e9e3b934aa5c7fbb1c01219", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/files.ts": "7d0d64f352787e5d30ea03265fb5137a17a1eef61e97454e5408959297ca1d5c", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/store.ts": "e452f4b9087d3d4d1dcfb90766e83e0805699598739157ee51bf07a68266d377", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/line.ts": "029e530d325e9ca0a47859a306a30884151401e26ce59d40e6768dfd4912b4c4", // Reviewed CLI session or verification boundary; actual maintained parser output.
-  "packages/cli/src/invitations.ts": "efc935c9348b12dad98340993e1adf4f083e150f83af50bd4d6ed3012d451913", // Reviewed CLI session or verification boundary; actual maintained parser output.
+  "packages/cli/src/invitations.ts": "98580f46ed9468bb0fddc9736d19e222a82d4fe6e7483caf8559e53a25d4ef0b", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/scope-index-applications-command.ts": "e72f729f4232f674d0e132c865e4d7c359ac567a21e97b4e7b905342379d33b7", // Reviewed CLI session or verification boundary; actual maintained parser output.
+  "packages/cli/src/scope-index-manifest.ts": "da24a4005531491586b09cbe793175a5cf1d2ccf9f1e637b364b89121c1c2c52", // Preserve trusted session refusal outcomes; actual maintained parser output.
   "packages/cli/src/status-report.ts": "00e41c40d07337fa5a6eb28ff3fa3df27670a861f718598a8ecc7ad83596b7cf", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/client/src/session.ts": "3e4dfcbab9c9ab8585929b4c75ba01ac86c4e9ea7978f70f6bf3681af15bddb6", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "apps/sandbox/worker.ts": "d354c1740d51e2b83e0b93272384607c609c65386c3fc4b8d977edfb89b6636a",
