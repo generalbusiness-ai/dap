@@ -371,7 +371,8 @@ export function evidenceDestinationDataV17(base: PlatformData): PlatformData {
   const deadline = (state: string): PlatformData["timed"][string] => ({ on: "evidence-job", states: [state], deadline: "deadline",
     effects: [{ state: `${state}-timedout` }, { value: { slot: "timeoutReason", from: { const: "check-timeout" } } },
       { ref: { slot: "timeoutDecision", from: "self" } }, { value: { slot: "deadline", from: null } }], attention: [] });
-  const publicationBinding = { item: "publication", index: "operation", key: "operation", code: "evidence-publication-v17", row: "E1" };
+  const publicationBinding = { item: "publication", code: "evidence-publication-v17", row: "E1" };
+  const admittedJob = { item: "evidence-job", code: "evidence-admitted-job-v17", row: "E2" };
   const fence = (work: boolean): PlatformData["receives"][string] => ({ message: work ? "work-check-fence" : "check-fence", class: "tell", from: { kind: "lane", under: work ? "issue" : "change" }, opens: work ? "evidence-request" : null,
     also: work ? {} : { publication: publicationBinding },
     ...(!work ? { bound: { of: "also.publication" as const, where: [{ equals: { a: { sender: true as const }, b: { slot: "lane", of: "also.publication" as const } } }] } } : {}),
@@ -383,9 +384,9 @@ export function evidenceDestinationDataV17(base: PlatformData): PlatformData {
     fields: { extent: { type: "text", max: 64, required: true }, job: FACT_CHANGE_JOB, reason: { type: "text", max: 1024, required: true },
       ...(transition ? { generation: { type: "text" as const, max: 1024, required: true } } : {}) },
     guards: [{ code: "evidence-release-v17", row: "E4" }], effects: [{ code: "evidence-release-record-v17", row: "E4", most: { effects: 2 } }], sends: [], attention: [],
-    observes: [{ of: "rules", window: 10, use: "once", without: "wait", retains: [RULES_EXTENTS_VALUE_V13] }] });
+    observes: [{ of: "rules", window: 10, use: "once", retains: [RULES_EXTENTS_VALUE_V13] }] });
   const checked = (work: boolean): PlatformData["receives"][string] => ({ message: work ? "work-checked" : "checked", class: "tell", from: { kind: "lane", under: work ? "issue" : "change" }, opens: null,
-    also: { job: { item: "evidence-job", by: "admission" }, ...(work ? { request: { item: "evidence-request", index: "job", key: "job", code: "evidence-holder-v17", row: "E2" } } : { publication: publicationBinding }) },
+    also: { job: admittedJob, ...(work ? { request: { item: "evidence-request", index: "job", key: "job", code: "evidence-holder-v17", row: "E2" } } : { publication: publicationBinding }) },
     fields: { admission: { type: "fact", kind: ["platform:destination@17:evidence-admit"], under: "platform:destination", required: true },
       job: work ? FACT_ISSUE_JOB : FACT_CHANGE_JOB, ...(!work ? { operation: { type: "fact" as const, kind: ["merge"], under: "change", required: true } } : {}),
       result: { type: "fact", kind: ["check", "check-error"], under: work ? "issue" : "change", required: true }, bindingDigest: { type: "digest", required: true } },
@@ -410,7 +411,7 @@ export function evidenceDestinationDataV17(base: PlatformData): PlatformData {
         timeoutReason: { fixed: false, required: false, of: { type: "text", max: 128 } }, noticeOpenedAt: { fixed: false, required: false, of: { type: "int", min: 0, max: 1000000000 } } } },
   }, acts: { ...base.acts, "evidence-hold-override": release(false), "evidence-hold-transition": release(true),
     "evidence-recover-timeout": { step: "transition", on: "branch", grant: "destination.read-token",
-      also: { job: { item: "evidence-job", by: "admission" } },
+      also: { job: admittedJob },
       fields: { admission: { type: "fact", kind: ["platform:destination@17:evidence-admit"], under: "platform:destination", required: true },
         operation: { type: "fact", kind: ["merge"], under: "change", required: false } },
       guards: [{ code: "evidence-recovery-authority-v17", row: "E3" }, { code: "evidence-recovery-ready-v17", row: "E3" }],
@@ -1199,7 +1200,24 @@ export function evidenceDestinationRulesV17(base: Rules): Rules {
       return pending && pending.length === 0 && !evidenceRowV17(given.state, record.job) ? { holds: true } : { holds: false, name: "already-admitted" };
     } },
     "evidence-holder-v17": { place: "also", bind: items => items.length === 1 ? items[0]!.id : null },
-    "evidence-publication-v17": { place: "also", bind: items => items.length === 1 ? items[0]!.id : null },
+    "evidence-publication-v17": { place: "also", run: (given: RuleGiven) => {
+      const operation = given.resolved.fields["operation"];
+      if (!isFactRef(operation)) return null;
+      const ids = given.state.lookup("publication", "operation", canonicalize(operation), 2);
+      if (!ids || ids.length > 1) throw new RuleFault("The publication operation index is unavailable");
+      if (!ids.length) return null;
+      const item = given.state.item(ids[0]!);
+      if (!item || item.type !== "publication" || !same(item.refs["operation"], operation)) throw new RuleFault("The indexed publication is unavailable");
+      return item.id;
+    } },
+    "evidence-admitted-job-v17": { place: "also", run: (given: RuleGiven) => {
+      const fact = given.resolved.fields["admission"];
+      if (!isFactRef(fact) || !same(fact.at, given.resolved.at)) return null;
+      const item = given.state.item(fact.seq), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
+      if (!item || item.type !== "evidence-job" || !record) return null;
+      const actual = destinationEvidenceJob(given.state, given.own, record.job);
+      return actual && same(actual.admission, fact) ? item.id : null;
+    } },
     "evidence-open-v17": { place: "effect", most: 5, run: given => {
       const record = proposed(given); if (!record) throw Error("An admitted evidence fence lost its job");
       return [...(record.binding.stage === "work" ? [{ effect: "ref" as const, item: given.resolved.self, slot: "lane", to: record.job.at }]

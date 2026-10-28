@@ -61,7 +61,7 @@ test("declared input refuses timed code at its untrusted boundary, and the platf
 test("the timed controls cover every actual historical Destination version from 1 through 16", () => {
   const expected = Array.from({ length: 16 }, (_, n) => `platform:destination@${n + 1}`);
   const actual = Object.keys(VERSIONS).filter(pin => /^platform:destination@(?:[1-9]|1[0-6])$/.test(pin));
-  expect(actual.toSorted()).toEqual(expected.toSorted());
+  expect([...actual].sort()).toEqual([...expected].sort());
 });
 
 for (let version = 1; version <= 16; version++) {
@@ -87,7 +87,7 @@ test("the three new G17 evidence timers are literal while inherited Main cleanup
   const added = ["evidence-job-deadline", "evidence-reuse-deadline", "evidence-hold-deadline"];
   const inherited = Object.entries(historical.data.timed);
   expect(inherited.length).toBeGreaterThan(0);
-  expect(Object.keys(native.data.timed).toSorted()).toEqual([...inherited.map(([name]) => name), ...added].toSorted());
+  expect(Object.keys(native.data.timed).sort()).toEqual([...inherited.map(([name]) => name), ...added].sort());
   // c201 point 6 keeps Main's fixed cleanup opener. The new evidence timers
   // cannot borrow that exception or change any inherited declaration.
   for (const [name, timer] of inherited) expect(native.data.timed[name], name).toEqual(timer);

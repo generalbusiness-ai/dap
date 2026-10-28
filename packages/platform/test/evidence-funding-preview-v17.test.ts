@@ -48,6 +48,7 @@ function fundingPreview(options: { checks?: number; productionReady?: boolean; s
   state.setScope({ at: destination, creator: null, status: "active", head: { seq: 3, hash: capture.hash }, time: t(0), genesis: { hash: genesis.hash, source: null, n: null }, held: [] });
   state.putItem({ id: 2, type: "publication", state: "reserved", revision: 3, opened: publication.hash, parties: {}, refs: { operation, lane: operation.at },
     values: { reservedAt: 3, integration: "a".repeat(40), tree: snapshot.policy.tree, passes: certifiedPublicationWireV17(snapshot, PROPOSED_BOUNDS) }, attributed: [] });
+  state.addCount("publication", "reserved", 1);
   const staged = options.stageFirst === true;
   const stage = seal(4, { type: "outcome", owner: "platform:destination@17", kind: "reservation-stage", operation: "3:0", attempt: 1, result: "confirmed",
     evidence: { basis: "own-answer", body: { seen: "a".repeat(40), tree: snapshot.policy.tree } } }, []);
@@ -80,6 +81,9 @@ function fundingPreview(options: { checks?: number; productionReady?: boolean; s
     const values: Record<string, import("@generalbusiness/dap-contract").FieldValue | null> = { ready: false };
     for (const effect of emitted) if (effect.effect === "value" && effect.item === at.resolved.self) values[effect.slot] = effect.value;
     state.putItem({ id: at.resolved.self, type: "evidence-batch", state: "funded", revision: at.resolved.self, opened: d("d"), parties: {}, refs: { operation, lane: operation.at }, values, attributed: [] });
+    // The real fold updates both the item count and index. MemoryState refuses
+    // an index whose indexed-row count differs from its complete type count.
+    state.addCount("evidence-batch", "funded", 1);
     state.putIndexed("evidence-batch", "operation", canonicalize(operation), at.resolved.self);
   };
   const stamp = (emitted: readonly RuleEffect[]) => {
@@ -120,12 +124,15 @@ test("stage-first funding stamps the actual ordinal-zero account when the final 
   expect(firstEffects.some(effect => effect.effect === "value" && effect.slot === "ready")).toBe(false);
   expect(send.run(first)).toBeNull();
   fixture.batch(first, firstEffects);
+  expect(fixture.state.count("evidence-batch", "funded")).toBe(1);
+  expect(evidenceFundingCompleteV17(fixture.state, fixture.state.item(2)!)).toBe(false);
   const final = fixture.given({}, 1), effects = fixture.effects.run(final);
   expect(fixture.guard.run(final)).toEqual({ holds: true });
   expect(send.run(final)).not.toBeNull();
   expect(effects.filter(effect => effect.effect === "value" && effect.slot === "ready")).toEqual([{ effect: "value", item: first.resolved.self, slot: "ready", value: true }]);
   expect(first.resolved.self).not.toBe(final.resolved.self);
   fixture.batch(final, effects); fixture.stamp(effects);
+  expect(fixture.state.count("evidence-batch", "funded")).toBe(2);
   const publication = fixture.state.item(2)!;
   expect(evidenceFundingReadyV17(fixture.state, publication)).toBe(true);
   expect(evidenceFundingReadyV17(fixture.state, { ...publication, opened: d("e") })).toBe(false);

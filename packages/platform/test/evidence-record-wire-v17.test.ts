@@ -2,7 +2,8 @@ import { expect, test } from "vitest";
 import type { FactRef } from "@generalbusiness/dap-contract";
 import { canonicalize, evidenceBindingDigest, isFieldValue, type EvidenceBinding } from "@generalbusiness/dap-bytes";
 import { d, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
-import { evidenceJobRecordWireV17, evidenceRecordEffectV17, readEvidenceJobRecordV17, readEvidenceJobRecordWireV17, readEvidenceServiceWireV17,
+import { RuleFault, type RuleGiven } from "@generalbusiness/dap-derive";
+import { evidenceDestinationRulesV17, evidenceJobRecordWireV17, evidenceRecordEffectV17, readEvidenceJobRecordV17, readEvidenceJobRecordWireV17, readEvidenceServiceWireV17,
   EVIDENCE_RECORD_BYTES_V17, type EvidenceJobRecordV17 } from "../src/destination-evidence-v17.ts";
 import { evidenceCapacityWireV17, readEvidenceCapacityAnchorV17, readEvidenceCapacityWireV17 } from "../src/destination-evidence-capacity-v17.ts";
 
@@ -43,4 +44,23 @@ test("nullable service marks and capacity reservations also require explicit tex
   expect(readEvidenceCapacityWireV17(capacity)).toBeNull();
   expect(isFieldValue(capacity)).toBe(false);
   expect(isFieldValue(text)).toBe(true);
+});
+
+test("ordinary Native selectors use an exact bounded publication index and cannot turn a foreign admission into a local job", () => {
+  // SCRIPTED state ports exercise the actual selector callbacks. They do
+  // not authenticate an admission; that remains the native proof reader's
+  // responsibility, also checked again by result/recovery guards.
+  const rules = evidenceDestinationRulesV17({}), publication = rules["evidence-publication-v17"], admitted = rules["evidence-admitted-job-v17"];
+  if (publication?.place !== "also" || !("run" in publication) || admitted?.place !== "also" || !("run" in admitted)) throw Error("The ordinary Native selectors are absent");
+  const operation = fact(8), calls: unknown[] = [];
+  const given = { resolved: { at: { ...otherLane, kind: "destination" }, fields: { operation } }, state: {
+    lookup: (...args: unknown[]) => { calls.push(args); return [12]; },
+    item: () => ({ id: 12, type: "publication", refs: { operation } }),
+  } } as unknown as RuleGiven;
+  expect(publication.run(given, "publication")).toBe(12);
+  expect(calls).toEqual([["publication", "operation", canonicalize(operation), 2]]);
+  expect(() => publication.run({ ...given, state: { ...given.state, lookup: () => [12, 13] } }, "publication")).toThrow(RuleFault);
+  expect(() => publication.run({ ...given, state: { ...given.state, item: () => ({ id: 12, type: "publication", refs: { operation: fact(9) } }) } } as unknown as RuleGiven, "publication")).toThrow(RuleFault);
+  expect(admitted.run({ resolved: { at: { ...otherLane, kind: "destination" }, fields: { admission: fact(12) } },
+    state: { item: () => { throw Error("A foreign admission must not be guessed by its position"); } } } as unknown as RuleGiven, "evidence-job")).toBeNull();
 });

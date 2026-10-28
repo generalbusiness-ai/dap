@@ -334,7 +334,7 @@ test("real published holds survive newer counted passes and clear only through d
     expect(timedView.raw.state).toBe('admitted');
     expect(timedView.current.state).toBe('timeout');
     await room.G.did(rita, 'evidence-recover-timeout', { on: 0, fields: { admission: factRefOf(await evidenceEntry(room.G, timedView.raw.admittedAt)), operation: third.operation },
-      expected: await room.G.expected({ on: 0, job: timedView.raw.admittedAt }) });
+      expected: await room.G.expected({ on: 0 }) });
     await room.pause(room.nodes);
     const timed = await evidenceRecord(room, thirdJob.job);
     expect(timed).toMatchObject({ state: "timeout", result: null, noticeAt: null, incident: { cause: { kind: "timeout", result: null } } });
@@ -433,7 +433,7 @@ test("literal native TIME holds at its own head, replays unchanged, and recovers
     if (admission === null) throw Error('Actual target admission required');
     const admissionFact = factRefOf(await evidenceEntry(room.G, admission));
     expect(await room.G.act(rita, 'evidence-recover-timeout', { on: 0, fields: { admission: admissionFact, operation: c.operation },
-      expected: await room.G.expected({ on: 0, job: admission }) })).toMatchObject({ answer: 'refused', reason: 'guard-failed', name: 'not-a-timed-incident' });
+      expected: await room.G.expected({ on: 0 }) })).toMatchObject({ answer: 'refused', reason: 'guard-failed', name: 'not-a-timed-incident' });
     const due = timeMs(target.record.deadline);
     if (due === null || due <= room.life.now()) throw Error('Actual future native deadline required');
     const priorItem = (await evidenceNativeState(room)).jobs.find(row => row.item.id === admission)?.item;
@@ -471,16 +471,16 @@ test("literal native TIME holds at its own head, replays unchanged, and recovers
       .filter(effect => effect.effect === 'operation' && effect.kind === 'evidence-notice' && effect.for === hydrated.holder);
     expect(await noticeOperations()).toHaveLength(1);
     expect(await room.G.act(setup.service.actor, 'evidence-recover-timeout', { on: 0, fields: { admission: admissionFact },
-      expected: await room.G.expected({ on: 0, job: admission }) })).toMatchObject({ answer: 'refused', reason: 'guard-failed', name: 'evidence-recovery-authority' });
+      expected: await room.G.expected({ on: 0 }) })).toMatchObject({ answer: 'refused', reason: 'guard-failed', name: 'evidence-recovery-authority' });
     const checker = await room.M.stub.observe({ of: await room.M.at(), key: setup.service.actor.key }) as Observation;
     await room.M.did(rita, 'set-actions', { on: 0, fields: { role: 'checker', actions: [...checker.actions, 'issue.triage'] }, expected: await room.M.expected({ on: 0 }) });
-    const triagerRecovery = await room.G.did(setup.service.actor, 'evidence-recover-timeout', { on: 0, fields: { admission: admissionFact }, expected: await room.G.expected({ on: 0, job: admission }) });
+    const triagerRecovery = await room.G.did(setup.service.actor, 'evidence-recover-timeout', { on: 0, fields: { admission: admissionFact }, expected: await room.G.expected({ on: 0 }) });
     const triagerEntry = await evidenceEntry(room.G, triagerRecovery);
     if (triagerEntry.input.type !== 'act') throw Error('Actual authorized triager act required');
     expect(triagerEntry.input.authority[0]?.actions).toContain('issue.triage');
     const administrator = await room.M.stub.observe({ of: await room.M.at(), key: rita.key }) as Observation;
     await room.M.did(rita, 'set-actions', { on: 0, fields: { role: 'admin', actions: administrator.actions.filter(action => action !== 'issue.triage') }, expected: await room.M.expected({ on: 0 }) });
-    const performerRecovery = await room.G.did(rita, 'evidence-recover-timeout', { on: 0, fields: { admission: admissionFact, operation: c.operation }, expected: await room.G.expected({ on: 0, job: admission }) });
+    const performerRecovery = await room.G.did(rita, 'evidence-recover-timeout', { on: 0, fields: { admission: admissionFact, operation: c.operation }, expected: await room.G.expected({ on: 0 }) });
     const performerEntry = await evidenceEntry(room.G, performerRecovery);
     if (performerEntry.input.type !== 'act') throw Error('Actual original performer act required');
     expect(performerEntry.input.authority[0]?.actions).not.toContain('issue.triage');
@@ -490,7 +490,7 @@ test("literal native TIME holds at its own head, replays unchanged, and recovers
     const liveAdmission = beforeJob.record.admittedAt;
     if (liveAdmission === null) throw Error('Actual still-running job admission required');
     expect(await room.G.act(setup.service.actor, 'evidence-recover-timeout', { on: 0, fields: { admission: factRefOf(await evidenceEntry(room.G, liveAdmission)) },
-      expected: await room.G.expected({ on: 0, job: liveAdmission }) })).toMatchObject({ answer: 'refused', reason: 'guard-failed', name: 'not-a-timed-incident' });
+      expected: await room.G.expected({ on: 0 }) })).toMatchObject({ answer: 'refused', reason: 'guard-failed', name: 'not-a-timed-incident' });
     expect((await evidenceNativeState(room)).jobs.find(row => row.item.id === liveAdmission)?.item.values['noticeOpenedAt']).toBeUndefined();
     expect(await noticeOperations()).toHaveLength(1);
   } finally { try { await room.pause(room.nodes); } finally { room.life.release(); } }
