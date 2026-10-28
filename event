@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at .github/workflows/celld-smoke.yml","body":{"commit":"a78e09818302feb0b063b18b5994130a303cc28b","path":".github/workflows/celld-smoke.yml"}}
+{"kind":"artifact","text":"Merge published the current artifact at apps/room/celld/wrangler.json","body":{"commit":"a78e09818302feb0b063b18b5994130a303cc28b","path":"apps/room/celld/wrangler.json"}}
