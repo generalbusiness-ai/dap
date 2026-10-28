@@ -156,7 +156,8 @@ test("archive Node exceptions are exact and preserve portable and Git dependency
 // The checkers package is the checker service: a separate service with its own key, and not a scope (I3 plan, section 3.1). It
 // depends only on contract, bytes and git. No package names it. The lanes' scenario of a check reads its origin read and its signer
 // by path, in a test. The manifest scenario also runs the actual checker service
-// against a real lane and a job-bound snapshot. No production source reaches it.
+// against a real lane and a job-bound snapshot. Its test-only container bridge
+// shares that service boundary. No production source reaches it.
 test("the checkers package depends only on contract, bytes and git, and no package names it", () => {
   assert.ok(files.includes("packages/checkers/package.json"), "the checkers package was listed");
   const source = (f) => packagePath(f).startsWith("packages/") && !f.endsWith(".md");
@@ -165,7 +166,7 @@ test("the checkers package depends only on contract, bytes and git, and no packa
   const named = files.filter((f) => source(f) && !packagePath(f).startsWith("packages/checkers/"));
   assert.deepEqual(named.filter((f) => /dap-checkers/.test(text(f))), []);
   const reaches = files.filter((f) => source(f) && !packagePath(f).startsWith("packages/checkers/") && /(?:[.\/]\/|packages\/)checkers\//.test(text(f)));
-  assert.deepEqual(reaches, ["apps/room/lanes/test/checks.scope.test.ts", "apps/room/lanes/test/manifest-tree.scope.test.ts"]);
+  assert.deepEqual(reaches, ["apps/room/lanes/test/checks.scope.test.ts", "apps/room/lanes/test/manifest-tree.scope.test.ts", "apps/room/lanes/test/support/container-runner.ts"]);
 });
 
 // The MCP server derives every tool from definitions as data (plan 031): its source imports the contract, the bytes, the client,
