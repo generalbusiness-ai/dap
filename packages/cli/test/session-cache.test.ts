@@ -72,6 +72,25 @@ test("cache identity includes exact service, signing key and membership incarnat
   expect(await f.store.sessionCache!.read()).toBeNull();
 });
 
+test("a new reader adapter reselects initial Signed authority after membership eligibility changes in the same Context, without per-page issuance", async () => {
+  const f = await fixture(), ctx = f.context();
+  f.state.refused = { reason: "unauthorized" };
+  expect(await readerOf(ctx, f.config)).toBeNull();
+  const managed = await managedReadsOf(ctx, f.config);
+  expect(f.state.issued).toBe(1);
+  f.state.refused = null;
+  for (let page = 0; page < 3; page++) {
+    expect(await managed.read(async reader => {
+      expect(reader).toBeNull(); return { ok: false as const, reason: "forbidden" };
+    })).toEqual({ ok: false, reason: "forbidden" });
+  }
+  expect(f.state.issued).toBe(1);
+  const reader = await readerOf(ctx, f.config);
+  expect(typeof reader).toBe("string");
+  expect((await (await handleOf(ctx, f.config, TARGET.scope, reader)).summary()).ok).toBe(true);
+  expect([f.state.issued, f.state.probes, f.state.reads]).toEqual([2, 0, 1]);
+});
+
 test("a credential first issued and used in this Context can renew once per read, including a rejected replacement; unrelated and Signed readers stay explicit", async () => {
   const f = await fixture(), ctx = f.context();
   const reader = await readerOf(ctx, f.config);

@@ -209,7 +209,12 @@ function makeConnection(ctx: Context, config: Config, signer: Signer): Connectio
     waiting: (scope, given, list, cursor) => dispatch(given, reader => base.waiting(scope, reader, list, cursor)),
     requests: (scope, given, request, cursor) => dispatch(given, reader => base.requests(scope, reader, request, cursor)),
   };
-  return { key: signer.key, recognizes: reader => readers.has(reader), transport, session: async () => (await load())?.session ?? null, read };
+  return { key: signer.key, recognizes: reader => readers.has(reader), transport, session: async () => {
+    // A later adapter call may follow seat/first-key acceptance in this same
+    // Context. Reselect initial no-session authority here, never per read page.
+    if (selected === null && !hadSession) selected = undefined;
+    return (await load())?.session ?? null;
+  }, read };
 }
 
 /** The existing public adapters keep tokens out of Config and output. */

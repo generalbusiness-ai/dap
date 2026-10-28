@@ -879,7 +879,9 @@ fallback. A failed renewal keeps its actual refusal.
 
 The initial no-session path remains available when membership gives none,
 for example when the service has no session secret or the key is not an
-active member's. An issuance limit instead exits with `rate-limited`.
+active member's. A later command can ask again after the key becomes eligible;
+an initial refusal is not kept as a successful credential.
+An issuance limit instead exits with `rate-limited`.
 The server's advisory `Retry-After` names the window until the earliest
 outstanding request deadline; it is not a fixed one-minute delay. A server
 that supplies no valid window is reported with an unknown window.
