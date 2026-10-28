@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:06301351112ae68eb96234256229cff9a301e58c","text":"Merge retired a covered predecessor; the successor is at docs/security/entry-points.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:09d6c6286a7c6586bb1ad8a157ef1a4bebad5a77","text":"Merge retired a covered predecessor; the successor is at .github/workflows/celld-smoke.yml."}
