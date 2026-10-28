@@ -13,7 +13,7 @@ export function containerTestRunner(settings: ContainerRunnerTest): Runner {
     if (new TextEncoder().encode(bytes).length > 2 * 1024 * 1024) throw Error("TEST runner bridge request bound");
     const response = await fetch(new URL(kind, url), { method: "POST", headers: { "content-type": "application/json", "x-j3-test": settings.nonce }, body: bytes, redirect: "manual", signal: AbortSignal.timeout(210_000) });
     if (![200, 409].includes(response.status) || !response.body) throw Error("TEST runner bridge did not complete");
-    const reader = response.body.getReader(); let size = 0, text = ""; const decoder = new TextDecoder("utf-8", { fatal: true });
+    const reader = response.body.getReader(); let size = 0, text = ""; const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: false });
     try { for (;;) { const chunk = await reader.read(); if (chunk.done) break; size += chunk.value.length; if (size > 64 * 1024) throw Error("TEST runner bridge response bound"); text += decoder.decode(chunk.value, { stream: true }); } const value: unknown = JSON.parse(text + decoder.decode());
       if (response.status === 409) { if (value && typeof value === "object" && Object.keys(value).length === 1 && "error" in value && value.error === "run-identity-refused") throw new RunIdentityRefusal(); throw Error("TEST runner bridge refusal malformed"); }
       return value; }
