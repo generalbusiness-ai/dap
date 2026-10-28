@@ -12,8 +12,9 @@ Clarity is more valuable than features.  Clear and simple communication is a par
 
 Use gitseq requests to track all tasks in this project.
 
-User-facing notes, documentation and other communications prefer plain English,
-per ISO 24495-1, for a technical audience.
+USe the technical-writing skill for all user-facing notes, documentation and
+other communications. Avoid passive voice, meta-voice and commentary.
+Review for narrative clarity within every sentence's context.
 
 Tests: read [docs/testing.md](docs/testing.md). Run the tests of what you change
 while you work, and the gate (`npm run gate`) once before review. Do not run
