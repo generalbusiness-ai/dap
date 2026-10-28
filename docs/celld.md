@@ -1,9 +1,10 @@
 # Run the local Worker
 
 Run the production room Worker with celld `v0.6.2`, Node 26 and the
-checkout's locked dependencies. The project keeps the four Durable Object
-bindings and all three migration tags from the room configuration. It has
-no Git host, application content bucket or committed secret.
+checkout's locked dependencies. The local project is named `dap-celld-local`,
+separate from the deployed `artroom-scope` configuration. It keeps the four
+Durable Object bindings and all three migration tags from the room configuration.
+It has no Git host, application content bucket or committed secret.
 
 1. Obtain the release named in
    [`celld.version`](../apps/room/celld/celld.version). Verify its GitHub

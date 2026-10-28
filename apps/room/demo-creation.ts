@@ -2,7 +2,7 @@
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import type { Binding } from "../../packages/scope/src/namespace.ts";
 import { readPublicOrigin, type PublicOriginBindings } from "../../packages/scope/src/public-origin.ts";
-import { demoCreationConfig, legacyGitHubDemoConfig, registerRef, type DemoCreationBindings, type DemoCreationConfig, type DemoCreationOffer } from "../../packages/scope/src/demo-creation.ts";
+import { demoCreationConfig, registerRef, type DemoCreationBindings, type DemoCreationConfig, type DemoCreationOffer } from "../../packages/scope/src/demo-creation.ts";
 export { demoCreationConfig, type DemoCreationOffer } from "../../packages/scope/src/demo-creation.ts";
 export const DEMO_OFFER_PATH = "/v1/demo/creation-offer";
 export async function demoCreationRoute(request: Request, env: DemoCreationBindings & PublicOriginBindings & { SCOPES: Binding }): Promise<Response> {
@@ -18,23 +18,10 @@ export async function demoCreationRoute(request: Request, env: DemoCreationBindi
   }
   const origin = readPublicOrigin(env, request.url);
   if (origin === null) return reply(404, { error: "not-found" });
-  let config: DemoCreationConfig;
-  if (origin === "https://dap-demo.inguz.workers.dev") {
-    const settings = demoCreationConfig(env.DEMO_START_CONFIG, env.DEPLOYMENT, env);
-    if (!settings || origin !== settings.current.origin
-      || selected && canonicalize(selected) !== canonicalize(settings.current.register)) return reply(404, { error: "not-found" });
-    config = settings.current;
-  } else {
-    // Deliberately preserve Part1's retained preflight, not fresh old creation.
-    // Origin selects this legacy reader; failed v3 parsing never falls back.
-    if (!selected) return reply(404, { error: "not-found" });
-    const settings = legacyGitHubDemoConfig(env.DEMO_START_CONFIG, env.DEPLOYMENT);
-    if (!settings || origin !== settings.current.origin) return reply(404, { error: "not-found" });
-    const match = canonicalize(selected) === canonicalize(settings.current.register) ? settings.current
-      : settings.legacy && canonicalize(selected) === canonicalize(settings.legacy.register) ? settings.legacy : null;
-    if (!match) return reply(404, { error: "not-found" });
-    config = match;
-  }
+  const settings = demoCreationConfig(env.DEMO_START_CONFIG, env.DEPLOYMENT, env);
+  if (!settings || origin !== settings.current.origin
+    || selected && canonicalize(selected) !== canonicalize(settings.current.register)) return reply(404, { error: "not-found" });
+  const config = settings.current;
   if (request.method !== "GET") return reply(405, { error: "method-not-allowed" });
   const stub = env.SCOPES.get(env.SCOPES.idFromName(config.register.scope)) as unknown as { demoCreationOffer(config: DemoCreationConfig): DemoCreationOffer | null | Promise<DemoCreationOffer | null> };
   const offer = await stub.demoCreationOffer(config);

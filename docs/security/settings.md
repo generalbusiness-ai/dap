@@ -24,7 +24,8 @@ No table entry authorizes a new setting or changes its parser.
 
 | Worker | Configuration and runtime entry |
 |---|---|
-| `artroom-scope` | `apps/room/wrangler.jsonc` → `apps/room/worker.ts`; local `apps/room/celld/wrangler.json` → its two-export `worker.ts` shim |
+| `artroom-scope` | `apps/room/wrangler.jsonc` → `apps/room/worker.ts` |
+| `dap-celld-local` | `apps/room/celld/wrangler.json` → `apps/room/celld/worker.ts` → `apps/room/worker.ts` |
 | `dap-demo` | `apps/room/wrangler.demo.jsonc` → `apps/room/worker.ts` |
 | `dap-lending` | `apps/room/wrangler.lending.jsonc` → `apps/room/worker.ts` |
 | `dap-grow` | `apps/room/wrangler.grow.jsonc` → `apps/room/worker.grow.ts` |
@@ -37,9 +38,9 @@ HTTP dispatch. Its named Durable Object and service entrypoints share the
 same configuration closure. Grow adds its explicit archive wrapper. The
 sandbox and scheduled simulator have independent environments; neither
 inherits the room's session secret or namespaces from a TypeScript name.
-The local celld JSON configuration shares the room script identity and runtime
-closure through an exact two-export shim. The checker retains its physical entry
-and follows its imports. Other conflicting entries still fail.
+The local celld project has its own Worker name and physical entry. Its
+two-export shim imports the production room Worker. The checker follows the
+complete runtime closure and rejects conflicting names for distinct entries.
 Test Wrangler configurations and local build/CLI environment variables are
 not deployed runtime settings in this inventory.
 
@@ -121,46 +122,46 @@ parser, failure behavior, health visibility, and other readers.
 <!-- dap-settings-lookup:start -->
 | Name | Kind | Workers | Main reader |
 | --- | --- | --- | --- |
-| `AGENTS` | binding | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
-| `ALLOW_OPEN_CREATION` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/creation-admission.ts`](../../packages/scope/src/creation-admission.ts) |
-| `APPLICATION_CONTENT` | binding | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
-| `APPLICATION_SCREEN_HOSTS` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
-| `APPLICATION_TRUST` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `AGENTS` | binding | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `ALLOW_OPEN_CREATION` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/creation-admission.ts`](../../packages/scope/src/creation-admission.ts) |
+| `APPLICATION_CONTENT` | binding | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `APPLICATION_SCREEN_HOSTS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `APPLICATION_TRUST` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `ARCHIVE_RESTART_DIRECTIVE` | text | `dap-grow` | [`apps/room/worker.grow.ts`](../../apps/room/worker.grow.ts) |
-| `ARTIFACTS` | binding | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
-| `ARTIFACTS_CONFIG` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
-| `ARTIFACTS_NAMESPACE` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
-| `DEMO_START_CONFIG` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
-| `DEPLOYMENT` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
-| `GITHUB_APP_CONFIG` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
-| `GITHUB_APP_PRIVATE_KEY` | secret | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
-| `GITHUB_CLEANUP_TOKENS` | secret | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
-| `GITHUB_CREATION_TOKEN` | secret | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
-| `GITHUB_READ_TOKEN` | secret | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `ARTIFACTS` | binding | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `ARTIFACTS_CONFIG` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `ARTIFACTS_NAMESPACE` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `DEMO_START_CONFIG` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`apps/room/demo-creation.ts`](../../apps/room/demo-creation.ts) |
+| `DEPLOYMENT` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `GITHUB_APP_CONFIG` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `GITHUB_APP_PRIVATE_KEY` | secret | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `GITHUB_CLEANUP_TOKENS` | secret | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `GITHUB_CREATION_TOKEN` | secret | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `GITHUB_READ_TOKEN` | secret | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `GROW` | binding | `dap-application-sandbox` | [`apps/sandbox/worker.ts`](../../apps/sandbox/worker.ts) |
 | `GROW_ARCHIVE_CONFIG` | text | `dap-grow` | [`apps/room/archive.ts`](../../apps/room/archive.ts) |
 | `GROW_BINDING` | text | `dap-grow-simulator` | [`examples/grow/simulator-host.ts`](../../examples/grow/simulator-host.ts) |
 | `GROW_CLIMATE_SECRET` | secret | `dap-grow-simulator` | [`examples/grow/simulator-host.ts`](../../examples/grow/simulator-host.ts) |
 | `GROW_SENSORS_SECRET` | secret | `dap-grow-simulator` | [`examples/grow/simulator-host.ts`](../../examples/grow/simulator-host.ts) |
 | `LENDING` | binding | `dap-application-sandbox` | [`apps/sandbox/worker.ts`](../../apps/sandbox/worker.ts) |
-| `MCP_ENABLED` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
-| `MCP_TOOL_ADDITIONS` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
-| `METRICS` | binding | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
-| `PLATFORM_CREATION_PINS` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/creation-versions.ts`](../../packages/scope/src/creation-versions.ts) |
-| `PUBLIC_ORIGIN` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/public-origin.ts`](../../packages/scope/src/public-origin.ts) |
-| `REGISTER_SCOPE` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/register-setting.ts`](../../packages/scope/src/register-setting.ts) |
-| `REGISTRIES` | binding | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `MCP_ENABLED` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
+| `MCP_TOOL_ADDITIONS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
+| `METRICS` | binding | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `PLATFORM_CREATION_PINS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/creation-versions.ts`](../../packages/scope/src/creation-versions.ts) |
+| `PUBLIC_ORIGIN` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/public-origin.ts`](../../packages/scope/src/public-origin.ts) |
+| `REGISTER_SCOPE` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/register-setting.ts`](../../packages/scope/src/register-setting.ts) |
+| `REGISTRIES` | binding | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `ROOM` | binding | `dap-application-sandbox` | [`apps/sandbox/worker.ts`](../../apps/sandbox/worker.ts) |
-| `SCOPES` | binding | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
-| `SCOPE_INDEX` | binding | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/scope-index.ts`](../../packages/scope/src/scope-index.ts) |
-| `SCOPE_INDEX_MODE` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `SCOPES` | binding | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `SCOPE_INDEX` | binding | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/scope-index.ts`](../../packages/scope/src/scope-index.ts) |
+| `SCOPE_INDEX_MODE` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `SCREEN_HOSTS` | text | `dap-application-sandbox` | [`apps/sandbox/worker.ts`](../../apps/sandbox/worker.ts) |
-| `SERVING_CREATION_ADDRESS_PER_HOUR` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/serving-limits.ts`](../../packages/scope/src/serving-limits.ts) |
-| `SERVING_CREATION_KEY_PER_HOUR` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/serving-limits.ts`](../../packages/scope/src/serving-limits.ts) |
-| `SERVING_READ_ADDRESS_PER_MINUTE` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/serving-limits.ts`](../../packages/scope/src/serving-limits.ts) |
-| `SERVING_READ_KEY_PER_MINUTE` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/serving-limits.ts`](../../packages/scope/src/serving-limits.ts) |
-| `SESSION_SECRET` | secret | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
-| `VERSION_METADATA` | binding | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `SERVING_CREATION_ADDRESS_PER_HOUR` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/serving-limits.ts`](../../packages/scope/src/serving-limits.ts) |
+| `SERVING_CREATION_KEY_PER_HOUR` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/serving-limits.ts`](../../packages/scope/src/serving-limits.ts) |
+| `SERVING_READ_ADDRESS_PER_MINUTE` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/serving-limits.ts`](../../packages/scope/src/serving-limits.ts) |
+| `SERVING_READ_KEY_PER_MINUTE` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/serving-limits.ts`](../../packages/scope/src/serving-limits.ts) |
+| `SESSION_SECRET` | secret | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `VERSION_METADATA` | binding | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 <!-- dap-settings-lookup:end -->
 
 <!-- security-settings -->
@@ -175,7 +176,7 @@ parser, failure behavior, health visibility, and other readers.
       "kind": "worker"
     },
     {
-      "name": "artroom-scope",
+      "name": "dap-celld-local",
       "config": "apps/room/celld/wrangler.json",
       "entry": "apps/room/celld/worker.ts",
       "kind": "worker"
@@ -233,6 +234,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -249,7 +251,6 @@ parser, failure behavior, health visibility, and other readers.
         "apps/room/demo-creation.ts",
         "packages/scope/src/applications/route.ts",
         "packages/scope/src/scope-index.ts",
-        "packages/scope/src/github-wiring.ts",
         "packages/scope/src/creation-versions.ts"
       ],
       "parser": "readDeployment: nonempty string of at most 128 UTF-8 bytes; shared by sessions, creation, demo, screens and metrics.",
@@ -260,6 +261,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -278,6 +280,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -297,6 +300,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -325,6 +329,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -346,6 +351,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -368,6 +374,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -389,6 +396,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -409,6 +417,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -429,6 +438,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -449,6 +459,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -469,6 +480,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -489,6 +501,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -509,6 +522,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -528,6 +542,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -552,6 +567,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -573,6 +589,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -591,6 +608,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -609,6 +627,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -627,6 +646,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -645,6 +665,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -665,6 +686,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -685,6 +707,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -704,6 +727,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -712,19 +736,18 @@ parser, failure behavior, health visibility, and other readers.
       "kind": "text",
       "status": "read",
       "readers": [
-        "packages/scope/src/worker.ts",
         "apps/room/demo-creation.ts",
-        "packages/scope/src/github-wiring.ts",
         "apps/room/fetch.ts"
       ],
-      "parser": "demoCreationConfig/legacyGitHubDemoConfig bind the supported exact version, origin, deployment, register/cohort and host context. The Page route exposes only a boolean for setting presence; the offer route retains its full parser and authority checks.",
+      "parser": "demoCreationConfig accepts closed wire version 3 and binds its explicit canonical origin, deployment, full Register17 reference and Artifacts adapter register/namespace. Its checked native context and public offer are version 2. The effective request origin must match; forwarded headers supply no identity. The Page route exposes only a boolean for setting presence.",
       "missing": "Demo creation route unavailable. Page Start shows the CLI instruction and makes no creation-offer request.",
-      "invalid": "Invalid config refuses demo creation; no loose config fallback.",
+      "invalid": "Invalid config or origin mismatch returns 404 before namespace lookup. Legacy versions 1 and 2 return no offer, including for an exact retained-reference query; no fallback.",
       "health": "Not reported separately."
     },
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -744,6 +767,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -764,6 +788,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -782,6 +807,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -800,6 +826,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -818,6 +845,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -971,6 +999,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"

@@ -273,7 +273,7 @@ Configuration: [apps/room/wrangler.demo.jsonc](../../apps/room/wrangler.demo.jso
 Entry: `apps/room/worker.ts` → `apps/room/fetch.ts`. The committed private
 namespaces include both hosted MCP bindings. Those routes require
 `MCP_ENABLED` exactly `"true"` and an absent or valid `MCP_TOOL_ADDITIONS`.
-The fixed Start offer requires the committed `DEMO_START_CONFIG` and exact
+The Start offer requires `DEMO_START_CONFIG`, its configured origin and exact
 register root. Application redirects, sandbox rendering and publication
 still require their existing settings and authority checks. This table
 records shared source reachability with valid required settings, not a

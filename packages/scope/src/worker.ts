@@ -74,6 +74,7 @@ import { credentialInUrl, relay, sessionReaders, sessionsOf, type Opened, type S
 import type { OutboxItem, Sealed } from "./store.ts";
 import type { ReadCredential } from "./destination-host.ts";
 import { gitHubOutside, type GitHubBindings } from "./github-wiring.ts";
+import type { DemoCreationBindings } from "./demo-creation.ts";
 import { within } from "./turn.ts";
 import { ARTIFACTS_HOST, artifactsOutside, artifactsReadiness, type ArtifactsBindings } from "./artifacts-wiring.ts";
 import { recordedHost } from "./host-wiring.ts";
@@ -104,7 +105,7 @@ import { presentsSignedRead } from "./signed-reads.ts";
  * the operator sets it, and no file of this repository holds one.
  * `DEPLOYMENT` is the deployment's name, which a session's token names.
  */
-export interface Env extends GitHubBindings, ArtifactsBindings, ApplicationBindings, MetricEnvironment, CreationAdmission, ScopeIndexEnvironment, ServingEnvironment, HostedMcpSettings { SCOPES: DurableObjectNamespace; SESSION_SECRET?: string; DEPLOYMENT?: string }
+export interface Env extends GitHubBindings, DemoCreationBindings, ArtifactsBindings, ApplicationBindings, MetricEnvironment, CreationAdmission, ScopeIndexEnvironment, ServingEnvironment, HostedMcpSettings { SCOPES: DurableObjectNamespace; SESSION_SECRET?: string; DEPLOYMENT?: string }
 
 /** Fixed internal owner; HTTP exposes only its authenticated census page. */
 export class ScopeIndex extends DurableObject<Env> {
@@ -525,7 +526,7 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
   const announcement = applicationAnnouncementOutside(given);
   const pick = (): Outside => {
     const host = recordedHost(given);
-    if (host === "github.com" && env.GITHUB_APP_CONFIG) return wiring(host, [env.GITHUB_APP_CONFIG, env.GITHUB_APP_PRIVATE_KEY, env.GITHUB_CREATION_TOKEN, env.GITHUB_READ_TOKEN, env.GITHUB_CLEANUP_TOKENS, env.DEMO_START_CONFIG, env.DEPLOYMENT], () => gitHubOutside(given, sql, env, fetch, snapshotReader));
+    if (host === "github.com" && env.GITHUB_APP_CONFIG) return wiring(host, [env.GITHUB_APP_CONFIG, env.GITHUB_APP_PRIVATE_KEY, env.GITHUB_CREATION_TOKEN, env.GITHUB_READ_TOKEN, env.GITHUB_CLEANUP_TOKENS], () => gitHubOutside(given, sql, env, fetch, snapshotReader));
     if (host === ARTIFACTS_HOST && env.ARTIFACTS_CONFIG) return wiring(host, [env.ARTIFACTS_CONFIG, env.ARTIFACTS_NAMESPACE, env.ARTIFACTS], () => artifactsOutside(given, sql, env, fetch, snapshotReader));
     return NO_OUTSIDE;
   };
