@@ -60,7 +60,7 @@ describe("serving limits of a join (authority note, section 3.6; `limits.ts`)", 
       .toMatchObject({ answer: "refused", name: "invitation-used" });
   });
 
-  test("the actual ScopeService's addressless joins count failed native invitation checks by verified key", async () => {
+  test("the test platform binding's addressless joins count failed native invitation checks by verified key", async () => {
     platformNet.limits = { ...FIXTURE, failures: 2, windows: 4 };
     try {
       const { M } = await office();

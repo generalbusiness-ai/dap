@@ -96,7 +96,7 @@ test("synthetic HTTP ignores forwarded edge headers; only an explicit trusted tr
   expect(await client.summary(target, reader)).toEqual({ ok: false, reason: "rate-limited" });
 });
 
-test("the direct HTTP item-query shortcut and ScopeService API each charge a signed attempt exactly once", async () => {
+test("the direct HTTP item-query shortcut and in-process API each charge a signed attempt exactly once", async () => {
   const owner = fixed(), query: ItemQuery = { v: 1,
     scope: { scope: target, inc: newIncarnation(new Uint8Array(16).fill(9)), kind: "register" },
     type: "claim", states: ["open"], ids: null, limit: 1, cursor: null };
@@ -139,13 +139,13 @@ test("the real fixed object's memory survives calls without SQLite writes and re
   expect(await tables()).toEqual(before);
 });
 
-test("actual ScopeService and HTTP share the same addressless key window on the fixed serving object", async () => {
+test("the test service binding and HTTP share the same addressless key window on the fixed serving object", async () => {
   const seed = crypto.getRandomValues(new Uint8Array(32));
   const reader = await signedReader(secretSigner(seed), target, "summary", "summary", { now: () => 0 });
   const actual = env.SERVING_API as unknown as Api;
   expect(await actual.summary(target, reader)).toEqual({ ok: false, reason: "not-found" });
   const binding: Binding<string> = { idFromName() { return expect.fail("Unknown indexed target must not be addressed"); }, get() { return expect.fail("No target storage"); } };
-  // Unknown target refusal through actual ScopeService already consumed one
+  // Unknown target refusal through the actual test binding already consumed one
   // eligible request; no proof/result is cached by that serving decision.
   expect(await actual.summary(target, reader)).toEqual({ ok: false, reason: "not-found" });
   const response = await route(new Request(`https://serving.test/v1/scopes/${target}`, { headers: { authorization: reader } }), binding, { SCOPE_INDEX: env.SERVING_INDEX });

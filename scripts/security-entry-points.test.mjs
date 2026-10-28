@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { assertInventory, documentedInventory, servedInventory, sourceSeal, namedSourceSeals, roomHttpEntry, sandboxInventory } from "./security-entry-points.mjs";
+import { assertInventory, documentedInventory, servedInventory, sourceSeal, namedSourceSeals, roomHttpEntry, sandboxInventory, workerEntrypoints } from "./security-entry-points.mjs";
 
 // Every runtime declaration is selected. $module retains ordered imports,
 // exports, declaration identities, and module execution. Each expected hash has
@@ -34,7 +34,6 @@ const namedOwners = {
     "packages/scope/src/worker.ts:DeployedScope": "0714da9436f9fd5a4c70169986ba9f056046490903dc6072b7d2a28adb28b5ef",
     "packages/scope/src/worker.ts:ApplicationStreamLifetime": "4c82d6b5ea8ae68089f2f80321e3361b6176c9725d0b46481b6f32b6d2093ba3",
     "packages/scope/src/worker.ts:ApplicationScreenService": "d0e151737f0a735c031d7bb134c45d0ce8e87e7ec6d7a03eaf5455acbb92ac25",
-    "packages/scope/src/worker.ts:ScopeService": "943cdeb596c860208cf2914114d36e0e25a196ea0afcc763212d2184e181be9b",
     "packages/scope/src/worker.ts:mcpRoute": "1ab549b7363fa9deed65368e72c0a8fbde019972cd0d81321d5cabf00b4cd962",
     "packages/scope/src/worker.ts:boundedBytes": "6553fab5e2b9129266d64c02f7c3c9317095f1888fd12a10d12490d9f5d90f40",
     "packages/scope/src/worker.ts:observeThrough": "7e507f9bd9233223446711d089eb6d6b4236b69642eb9d39260e4712d81dab7a",
@@ -284,6 +283,17 @@ function assertOwner(file, expected, source) {
 }
 
 const document = () => documentedInventory(readFileSync(new URL("../docs/security/entry-points.md", import.meta.url), "utf8"));
+
+test("production RPC export inventory rejects an additional entrypoint with documented routes unchanged", async () => {
+  const source = readFileSync(new URL("../packages/scope/src/worker.ts", import.meta.url), "utf8");
+  assert.deepEqual(workerEntrypoints(source), ["ApplicationScreenService"]);
+  assertInventory(await servedInventory({ scopeSource: source }), document());
+  // Source text only: neither this neutral class nor a Worker module runs.
+  const changed = source + "\nexport class UnexpectedEntry extends WorkerEntrypoint {}\n";
+  assert.deepEqual(workerEntrypoints(changed), ["ApplicationScreenService", "UnexpectedEntry"]);
+  await assert.rejects(() => servedInventory({ scopeSource: changed }),
+    { code: "ERR_ASSERTION", message: /Production WorkerEntrypoint exports/ });
+});
 
 test("every served Worker route/method has exactly its reviewed gate-class row", async () => {
   assertInventory(await servedInventory(), document());

@@ -6,7 +6,7 @@
  * wired for that name (`wired`). `ScopeObject` is bound as it is deployed, with
  * every production default. `NetScope` is the deployed class in a namespace
  * of its own, `NET`, with the test ports of `netPorts`; `NetService` and the
- * default export are the deployed entrypoint and routes over that
+ * default export are the test binding and deployed HTTP routes over that
  * namespace. The test authority reaches a scope only through these classes,
  * which the production entry, `src/worker.ts`, does not import.
  *
@@ -30,6 +30,8 @@
  * of a package that runs its own definitions on real scopes.
  */
 
+import { WorkerEntrypoint } from "cloudflare:workers";
+import type { ScopeApi } from "@generalbusiness/dap-contract";
 import { platform, VERSIONS } from "@generalbusiness/dap-platform";
 import { lacking } from "@generalbusiness/dap-platform/testing";
 import { scopeIdOf } from "@generalbusiness/dap-bytes";
@@ -42,8 +44,28 @@ import { sessionFields, testSessionBypass } from "./session-settings.ts";
 import { startupTest, startupScopes, StartupReadTrace } from "./support/serving-startup.ts";
 import { applicationTrustSettings } from "./support/application-trust-settings.ts";
 import type { Binding } from "../src/namespace.ts";
+import { indexedScopes } from "../src/scope-index.ts";
 export { StartupServingIndex } from "./support/serving-startup.ts";
-import scopeWorker, { ApplicationScreenService, DeployedScope, McpAgent, McpRegistry, ScopeIndex as DeployedScopeIndex, ScopeService, route, sessionWiring, type Env, type McpEnv } from "../src/worker.ts";
+import scopeWorker, { api, ApplicationScreenService, DeployedScope, McpAgent, McpRegistry, ScopeIndex as DeployedScopeIndex, route, sessionWiring, type Env, type McpEnv } from "../src/worker.ts";
+/** Test-only binding surface. Authority and serving behavior stay in api().
+ * Raw fixture namespaces override scopes(); the default keeps indexed lookup. */
+class TestApiEntry<E extends Env = Env> extends WorkerEntrypoint<E> implements ScopeApi {
+  protected scopes(): Binding { return indexedScopes(this.env.SCOPES, this.env); }
+  create(...args: Parameters<ScopeApi["create"]>): ReturnType<ScopeApi["create"]> { return api(this.scopes(), null, this.env).create(...args); }
+  submit(...args: Parameters<ScopeApi["submit"]>): ReturnType<ScopeApi["submit"]> { return api(this.scopes(), null, this.env).submit(...args); }
+  prepare(...args: Parameters<ScopeApi["prepare"]>): ReturnType<ScopeApi["prepare"]> { return api(this.scopes(), null, this.env).prepare(...args); }
+  settle(...args: Parameters<ScopeApi["settle"]>): ReturnType<ScopeApi["settle"]> { return api(this.scopes(), null, this.env).settle(...args); }
+  summary(...args: Parameters<ScopeApi["summary"]>): ReturnType<ScopeApi["summary"]> { return api(this.scopes(), null, this.env).summary(...args); }
+  items(...args: Parameters<ScopeApi["items"]>): ReturnType<ScopeApi["items"]> { return api(this.scopes(), null, this.env).items(...args); }
+  queryItems(...args: Parameters<ScopeApi["queryItems"]>): ReturnType<ScopeApi["queryItems"]> { return api(this.scopes(), null, this.env).queryItems(...args); }
+  applicationProjection(...args: Parameters<ScopeApi["applicationProjection"]>): ReturnType<ScopeApi["applicationProjection"]> { return api(this.scopes(), null, this.env).applicationProjection(...args); }
+  history(...args: Parameters<ScopeApi["history"]>): ReturnType<ScopeApi["history"]> { return api(this.scopes(), null, this.env).history(...args); }
+  entry(...args: Parameters<ScopeApi["entry"]>): ReturnType<ScopeApi["entry"]> { return api(this.scopes(), null, this.env).entry(...args); }
+  outbox(...args: Parameters<ScopeApi["outbox"]>): ReturnType<ScopeApi["outbox"]> { return api(this.scopes(), null, this.env).outbox(...args); }
+  outboxItem(...args: Parameters<ScopeApi["outboxItem"]>): ReturnType<ScopeApi["outboxItem"]> { return api(this.scopes(), null, this.env).outboxItem(...args); }
+  log(...args: Parameters<ScopeApi["log"]>): ReturnType<ScopeApi["log"]> { return api(this.scopes(), null, this.env).log(...args); }
+  retained(...args: Parameters<ScopeApi["retained"]>): ReturnType<ScopeApi["retained"]> { return api(this.scopes(), null, this.env).retained(...args); }
+}
 /** Scripted provider settings only; fixed-owner RPC, SQL and alarms are actual. */
 export const siteTokenTestSettings = new Map<string, import("../src/artifacts-wiring.ts").ArtifactsBindings>();
 /** Env-only census fixtures; authorization, exact proof RPC and SQL are production. */
@@ -65,7 +87,7 @@ export class ServingTestIndex extends ScopeIndex {
     SERVING_CREATION_KEY_PER_HOUR: "2", SERVING_CREATION_ADDRESS_PER_HOUR: "3",
     SERVING_READ_KEY_PER_MINUTE: "2", SERVING_READ_ADDRESS_PER_MINUTE: "3" }); }
 }
-export class ServingTestService extends ScopeService<Env & { SERVING_INDEX: DurableObjectNamespace }> {
+export class ServingTestService extends TestApiEntry<Env & { SERVING_INDEX: DurableObjectNamespace }> {
   constructor(ctx: ExecutionContext, env: Env & { SERVING_INDEX: DurableObjectNamespace }) { super(ctx, { ...env, SCOPE_INDEX: env.SERVING_INDEX }); }
 }
 import type { AgentPorts, HostedAgent } from "@generalbusiness/dap-mcp";
@@ -259,14 +281,14 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
   }
 }
 
-export class NetService extends ScopeService<NetEnv> {
+export class NetService extends TestApiEntry<NetEnv> {
   protected override scopes() { return this.env.NET; }
 }
 /** Test-only deployment settings, captured when a native entrypoint is constructed.
  * A case must restore these in finally; unique agent IDs keep captured settings local. */
 export const creationTest: { settings: CreationAdmission | null; productionHostedFetch: boolean } = { settings: null, productionHostedFetch: false };
-/** Real ScopeService RPC over the native platform test namespace. */
-export class PlatformService extends ScopeService<NetEnv & { PLATFORM: DurableObjectNamespace }> {
+/** Test binding to the production API over the native platform namespace. */
+export class PlatformService extends TestApiEntry<NetEnv & { PLATFORM: DurableObjectNamespace }> {
   protected override scopes() { return this.env.PLATFORM; }
 }
 /** A separate entrypoint/binding, used only by the admission witness after it
