@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:48e63284477dddf3eb1b2b2fe724adc3dcff0b5e","text":"Merge retired a covered predecessor; the successor is at docs/security/entry-points.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:48f0c5861e0eb0df74810074269930c3b370b6d2","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/unpublished-register.ts."}
