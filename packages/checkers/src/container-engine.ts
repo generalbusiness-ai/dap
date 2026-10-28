@@ -100,6 +100,17 @@ function single(bytes: Uint8Array): RecordValue {
   return error("engine");
 }
 
+/** nerdctl can report both a tag and its digest alias. Every reported target
+ * must resolve to this exact digest; container inspection stays single-row. */
+function resolvedImage(bytes: Uint8Array, digest: Digest): void {
+  try {
+    const rows: unknown = JSON.parse(text.decode(bytes));
+    if (Array.isArray(rows) && rows.length > 0 && rows.length <= 256
+      && rows.every(row => record(record(record(row)["Image"])["Target"])["digest"] === digest)) return;
+  } catch { /* No image provenance from malformed metadata. */ }
+  return error("image");
+}
+
 export function createContainerEngine(options: ContainerEngineOptions): ContainerEngine {
   const prefix = [...options.argvPrefix], imageRef = options.image;
   if (!prefix.length || prefix.some(v => !v || /[\u0000\r\n]/.test(v)) || !imageRef || /[\u0000\r\n]/.test(imageRef)) return error("configuration");
@@ -134,8 +145,7 @@ export function createContainerEngine(options: ContainerEngineOptions): Containe
     let stopped = false, expired = false, ran = false, memoryLost = false;
     const remaining = () => Math.max(1, deadline - performance.now());
     const ensure = () => { if (performance.now() >= deadline) expired = true; if (stopped || signal?.aborted || expired) return error("stopped"); };
-    const measuredImage = single(await cli(["image", "inspect", "--mode=native", imageRef], signal));
-    if (record(record(measuredImage["Image"])["Target"])["digest"] !== configuration.image) return error("image");
+    resolvedImage(await cli(["image", "inspect", "--mode=native", imageRef], signal), configuration.image);
     if (await native(ask.run, signal)) return error("job");
     let upstream: URL | undefined;
     if (origin) { try { upstream = new URL(origin.repository); } catch { return error("job"); }
