@@ -226,7 +226,7 @@ const seals = {
   "packages/scope/src/session-preparation.ts": "44b7bf3227e638fa2cc9e49e61162d903b4d915102069ab7848511f102b9ccf1",
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
   "packages/scope/src/applications/projection.ts": "f7d3bb45d448ec654a89f875697f865e1e89baeb5d7529e0db0859bd855b009f",
-  "packages/scope/src/destination-host.ts": "7de9e5038959b9acd7fea8bbbbf4da04e95853aaab70b3e944b4b332ecb41355",
+  "packages/scope/src/destination-host.ts": "e03e0a14ecd7f7e10d5466e1ffd557b91ec6ea454e883e2cbb4387728b981d60",
   "packages/mcp/src/hosted.ts": "c78bce660a4927fd05a5856e9d19f7b93d8737659ce58c4dc50842f39ee0db9a",
   "packages/mcp/src/hosted-tools.ts": "5bb4dd74b12896bb8f5f5cb366f25bd31af849c2690d0e3ab5d81eb277f94a47", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": namedOwners["packages/mcp/src/service.ts"],
@@ -261,7 +261,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-host-item.ts": "44fd36bee675f5abc450ffb60b9858d820e20c88461589ecfeff61e36ef0e327",
   "packages/scope/src/archive-host.ts": "ad759aff6f090fab3401d2f75274af294269f7db488ae2d5c56954759cdf754a", // Migration collectors settle only checked POST byte receipts; decoder fees and authority fences unchanged.
   "packages/scope/src/artifacts-host.ts": "df100e1d2d24bb859af31935b21598cd948e2dec0199d954c34742e33dc38f53",
-  "packages/scope/src/artifacts-wiring.ts": "e3527fcdc76891e414db2986178a01633311c08be36c27ec163bf0bbec943180",
+  "packages/scope/src/artifacts-wiring.ts": "50c9248563a085a5902a97fbb8c9b350e2864211945f9d2f349cd8ea9c585cb5",
 };
 // Actual maintained parser outputs adopted by root; never infer hashes from intent.
 const pendingR8Seals = {
