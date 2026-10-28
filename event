@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1f176c50b544e08af789b77cadbc6fa36abb882c","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-27-r14-scope-service-retirement.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3d40ebc7a62d3acb036ca2b633fa9bd3716f2048","text":"Merge retired a covered predecessor; the successor is at docs/security/entry-points.md."}
