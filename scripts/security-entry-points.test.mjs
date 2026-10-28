@@ -12,7 +12,7 @@ const namedOwners = {
     "packages/scope/src/object.ts:ScopeObject": "5fa6cbcdbe7850aee89ba1ce735e9fc285de5e197a217d8101e3838da9d983e7",
   },
   "packages/scope/src/worker.ts": {
-    "packages/scope/src/worker.ts:$module": "946235b3ca6864c27543f46eb0e9a477d0c8d246b9d82784a7089d9ac046521c",
+    "packages/scope/src/worker.ts:$module": "2c91d0f57f2e0e12f9bf1ed992ad61b179ba900fa41d3b840b36ae773a22e6eb",
     "packages/scope/src/worker.ts:ScopeIndex": "2883602f5b49f79a54d5d0daa8784b4c099cfdd6e2ac05654ef866fdc78d62dd",
     "packages/scope/src/worker.ts:MISSING": "e8958a6cf8d4cd2f412b30c76b38aca2f4523bc2b9df96606ac01059b6d4fb42",
     "packages/scope/src/worker.ts:api": "98a884347f39fdea24190b3e891e5dd025366845acb2d0f6d6e3414d7227d734",
