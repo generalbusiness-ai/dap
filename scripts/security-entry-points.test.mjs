@@ -262,7 +262,7 @@ const pendingR8Seals = {
   "packages/cli/src/commands.ts": namedOwners["packages/cli/src/commands.ts"],
   "packages/cli/src/browser-helpers.ts": "7e5f139e800efad56f08799f4e34700f2fde7c76de33422a2eb69d03de4f03fa", // Moved description, expectation and value helpers; actual maintained parser output.
   "packages/cli/src/claim.ts": "26858433403847e4857951909bd48ca1153d92dc28595081c093141db550773a", // Moved claim verification and retained custody; actual maintained parser output.
-  "packages/cli/src/command-support.ts": "a082953d80c092845c748001853b27e8ec4588ffaf67090ba81b12c9933717c3", // Moved shared read, session and signing support; actual maintained parser output.
+  "packages/cli/src/command-support.ts": "1d9779c0d5554e823a5486771315dd54f5a5b73a8a4d254d98f0f85003c998c0", // Moved shared read, session and signing support; actual maintained parser output.
   "packages/cli/src/read-session-cache.ts": "12a5cf131a166001f66672bc3c4b6daf70070645255c61db7b93f18b6fbb83b7", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/verification.ts": "51042fd79fae343e7369ca49bae9351f2672fe868e9e3b934aa5c7fbb1c01219", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/files.ts": "7d0d64f352787e5d30ea03265fb5137a17a1eef61e97454e5408959297ca1d5c", // Reviewed CLI session or verification boundary; actual maintained parser output.
