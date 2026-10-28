@@ -16,7 +16,7 @@ import { EVIDENCE_LIMITS_V17, assessEvidenceV17, evidenceKeyDigestV17, newEviden
 import { decideEvidenceIncidentV17, evidenceHoldActiveV17, evidenceTriagersV17, failEvidenceHoldV17, newEvidenceHoldV17, passEvidenceHoldV17, readEvidenceHoldKeyV17, readEvidenceHoldV17, readEvidenceIncidentV17, releaseEvidenceHoldV17, reserveEvidenceIncidentV17, type EvidenceFailureV17, type EvidenceHoldKeyV17, type EvidenceHoldRecordV17, type EvidenceIncidentV17 } from "./evidence-holds-v17.ts";
 import { evidenceSourceV17, judgeListEligibilityV17, judgeReservationV17, readRulesPolicyObservationV17, type ReservationPolicyViewV17 } from "./reservation-v17.ts";
 import { RULES_EXTENTS_VALUE_V13, checkHoldsV13, checkReuseV13, checkSourceV13, readRulesPolicyV13, readServiceMarkV13, type RulesCheckV13 } from "./rules-policy-v13.ts";
-import { certifiedPublicationStateV17, certifiedPublicationStateWireV17, certifiedPublicationWireV17, CERTIFIED_PUBLICATION_TEXT_BYTES_V17, certifiedReservationBudgetV17, evidenceCarryingBudgetV17 } from "./destination-budget-v17.ts";
+import { certifiedPublicationStateV17, certifiedPublicationStateWireV17, certifiedPublicationWireV17, CERTIFIED_PUBLICATION_TEXT_BYTES_V17, certifiedReservationBudgetV17, evidenceCarryingBudgetV17, type CertifiedGenerationV17 } from "./destination-budget-v17.ts";
 import { evidenceWireV17, readEvidenceWireV17 } from "./evidence-wire-v17.ts";
 import type { DestinationSuccessorV17 } from "./destination.ts";
 import { platformFloorReferences } from "./floor.ts";
@@ -427,6 +427,12 @@ function acceptedCandidate(given: RuleGiven, candidate: EvidenceCandidateV17, ch
     && row.record.name === check.name && row.record.configuration === check.configuration
     && evidenceSourceV17(candidate.binding, check, view, key && !("subject" in key) ? key : null, given.time, false, null, false).ok;
 }
+function projectedLogicalJob(given: RuleGiven, publication: number, selected: { job: FactRef; proof?: { decided: number } }): FactRef | null {
+  const accepted = selected.proof ? given.own(selected.proof.decided)?.entry : null;
+  const alias = accepted?.effects.flatMap(effect => effect.effect === "value" && effect.slot === "record" ? [readEvidenceJobRecordWireV17(effect.value)] : [])
+    .find(value => value?.state === "reused" && same(value.countedJob, selected.job) && value.binding.subject.kind === "landing" && value.binding.subject.publication.seq === publication);
+  return alias?.job ?? null;
+}
 function evidenceComplete(given: RuleGiven, publication: Item, passes: readonly { name: string; job: FactRef; passed: boolean; proof?: { decided: number } }[]): boolean {
   const snapshot = certifiedPublicationStateWireV17(publication.values["passes"], given.resolved.bounds)?.policy;
   if (!snapshot) return false;
@@ -442,10 +448,7 @@ function evidenceComplete(given: RuleGiven, publication: Item, passes: readonly 
     const current = view.policy.checks.find(row => row.name === check.name && row.configuration === check.configuration);
     if (!current || !record.signer || !evidenceSourceV17(record.binding, current, view, keyObservation(given, record.signer), given.time, false, null, false).ok) return false;
     if (check.audit) {
-      const accepted = selected.proof ? given.own(selected.proof.decided)?.entry : null;
-      const alias = accepted?.effects.flatMap(effect => effect.effect === "value" && effect.slot === "record" ? [readEvidenceJobRecordWireV17(effect.value)] : [])
-        .find(value => value?.state === "reused" && same(value.countedJob, record.job) && value.binding.subject.kind === "landing" && value.binding.subject.publication.seq === publication.id);
-      const logical = alias?.job ?? record.job;
+      const logical = projectedLogicalJob(given, publication.id, selected) ?? record.job;
       const audit = given.state.lookup("evidence-job", "policyKey", canonicalize(evidenceAuditKeyV17(logical)), 2);
       if (!audit || audit.length !== 1) return false;
       const paired = readEvidenceJobRecordWireV17(given.state.item(audit[0]!)?.values["record"]);
@@ -898,28 +901,50 @@ function evidenceNotice(given: RuleGiven, operation: Operation): OutcomeGives {
   const row = operationRow(given, operation), record = copy(row.record), request = incidentRequest(given, record);
   return { effects: [evidenceRecordEffectV17(row.item.id, record)], sends: request ? [request] : [], opens: [] };
 }
-function progressKeys(given: RuleGiven, record: EvidenceJobRecordV17): readonly string[] {
-  if (record.binding.subject.kind !== "landing") return [];
-  const publication = given.state.item(record.binding.subject.publication.seq), snapshot = publication && certifiedPublicationStateWireV17(publication.values["passes"], given.resolved.bounds);
-  if (!snapshot) return [];
-  const keys = new Set<string>();
-  const logical = (job: FactRef) => evidenceRowV17(given.state, job)?.record;
-  for (const row of snapshot.generations) {
-    if (!snapshot.policy.required.some(check => check.name === row.name)) continue;
-    const selected = logical(row.job); if (selected?.signer) keys.add(selected.signer);
-    const alias = row.proof && given.own(row.proof.decided)?.entry.effects.flatMap(effect => effect.effect === "value" && effect.slot === "record" ? [readEvidenceJobRecordWireV17(effect.value)] : [])
-      .find(value => value?.state === "reused" && same(value.countedJob, row.job) && value.binding.subject.kind === "landing" && value.binding.subject.publication.seq === publication!.id);
-    const pair = evidenceOwnerV17(given.state, "policyKey", evidenceAuditKeyV17(alias?.job ?? row.job));
-    if (pair?.record.signer) keys.add(pair.record.signer);
+/** The keys of exactly the generations this progress turn may retain.
+ * Reads supply retained Native records; this helper creates no authority. */
+export function evidenceProgressCohortV17(required: readonly Pick<RulesCheckV13, "name" | "audit">[], generations: readonly CertifiedGenerationV17[],
+  current: EvidenceJobRecordV17, read: (job: FactRef) => EvidenceJobRecordV17 | null,
+  alias: (generation: CertifiedGenerationV17) => FactRef | null, audit: (logical: FactRef) => EvidenceJobRecordV17 | null): { applies: boolean; keys: readonly KeyId[] } {
+  const actual = current.countedJob ? read(current.countedJob) : current;
+  const replaces = required.some(check => check.name === current.name);
+  const applies = replaces || current.binding.auditOf !== null && current.forJob !== null && required.some(check => {
+    const selected = generations.find(row => row.name === check.name);
+    return !!check.audit && !!selected && same(alias(selected) ?? selected.job, current.forJob)
+      && same(audit(current.forJob!)?.job, current.job);
+  });
+  if (!applies) return { applies: false, keys: [] };
+  // Failed/error progress aborts before reading retained generations. The
+  // deciding signer still owns the fresh eligibility/wrong-source check.
+  if (current.state === "failed" || current.state === "error") return { applies: true, keys: actual?.signer ? [actual.signer] : [] };
+  const keys = new Set<KeyId>();
+  for (const check of required) {
+    const replacing = check.name === current.name;
+    const selected = generations.find(row => row.name === check.name);
+    const record = replacing ? actual : selected ? read(selected.job) : null;
+    if (record?.signer) keys.add(record.signer);
+    const logical = replacing ? current.job : selected ? alias(selected) ?? selected.job : null;
+    if (check.audit && logical) { const pair = audit(logical); if (pair?.signer) keys.add(pair.signer); }
   }
-  const actual = logical(record.countedJob ?? record.job); if (actual?.signer) keys.add(actual.signer);
-  const pair = evidenceOwnerV17(given.state, "policyKey", evidenceAuditKeyV17(record.forJob ?? record.job));
-  if (pair?.record.signer) keys.add(pair.record.signer);
-  return [...keys];
+  return { applies: true, keys: [...keys] };
+}
+function progressCohort(given: RuleGiven, record: EvidenceJobRecordV17): { applies: boolean; keys: readonly KeyId[] } {
+  if (record.binding.subject.kind !== "landing") return { applies: false, keys: [] };
+  const publication = given.state.item(record.binding.subject.publication.seq), snapshot = publication && certifiedPublicationStateWireV17(publication.values["passes"], given.resolved.bounds);
+  if (!snapshot) return { applies: false, keys: [] };
+  return evidenceProgressCohortV17(snapshot.policy.required, snapshot.generations, record,
+    job => evidenceRowV17(given.state, job)?.record ?? null,
+    selected => projectedLogicalJob(given, publication!.id, selected),
+    logical => evidenceOwnerV17(given.state, "policyKey", evidenceAuditKeyV17(logical))?.record ?? null);
 }
 function evidenceProgress(given: RuleGiven, operation: Operation): OutcomeGives {
-  const row = operationRow(given, operation), record = row.record, view = evidencePolicyV17(given);
+  const row = operationRow(given, operation), record = row.record;
   if (record.binding.subject.kind !== "landing" || given.input.type !== "outcome" || given.input.result !== "confirmed") return { effects: [], sends: [], opens: [] };
+  // An audit result remains retained even when its parent projection has
+  // moved on. Only that obsolete progress is a no-op; a pending parent's
+  // later progress reads the actual sealed audit through its own pairing.
+  if (!progressCohort(given, record).applies) return { effects: [], sends: [], opens: [] };
+  const view = evidencePolicyV17(given);
   const publication = given.state.item(record.binding.subject.publication.seq);
   if (!publication || publication.state !== "reserved") return { effects: [], sends: [], opens: [] };
   if (!["admitted", "passed", "failed", "error", "reused", "timeout", "unknown"].includes(record.state)) return { effects: [], sends: [], opens: [] };
@@ -951,7 +976,7 @@ export function evidenceDestinationRulesV17(base: Rules): Rules {
     subjects: (given, operation, row, first) => {
       const record = operationRow(given, operation).record;
       if (!record) return [];
-      if (kind === "progress") return row === 1 ? progressKeys(given, record) : [];
+      if (kind === "progress") return row === 1 ? progressCohort(given, record).keys : [];
       if (row === 1) return [record.binding.checker.member];
       if (row !== (kind === "result" ? 3 : 2)) return [];
       const keys = new Set<string>();

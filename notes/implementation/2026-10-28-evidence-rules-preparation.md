@@ -1,8 +1,9 @@
 # Evidence rules: preparation and implementation evidence
 
-Status: Source implementation in progress. This note retains the
-before-source choices required by the first-slice request. Checks, review,
-landing and deployment remain owed.
+Status: Implementation and component validation in progress. This note
+retains the before-source choices required by the first-slice request.
+The atomic timeout contract decision, Native acceptance, gate, review,
+landing and deployment remain owed. Component results appear below.
 
 Base: Main `06e4d33fe17937610891f29b5d1513b9e224edea`, after J3.
 Branch: `request/evidence-rules-20261028`.
@@ -367,8 +368,9 @@ authenticated self-request opens the nonholder published-plan through a
 bounded effect mark. It draws on the actual batch account and names the
 already recorded written fact. No outcome opens a holder.
 
-A deadline atomically records the actual timeout and reasoned hold. A funded
-notice operation separately obtains current triagers. Timeout ends waiting;
+A deadline must atomically record the actual timeout and reasoned hold; the
+contract gap below currently prevents that implementation. A funded notice
+operation separately obtains current triagers. Timeout ends waiting;
 it does not release budget needed for an eligible late result or prove a
 physical runner stopped. The service cannot start a first run after its
 deadline. A persisted run may finish under fresh current authority.
@@ -481,3 +483,22 @@ found independent type errors, and the first whole-lane validation found
 three incorrect local fact bindings in Change 4. Those originals remain
 retained; their Source repairs are in progress. The unsupported timed code
 effect remains a separate contract error pending the planner's disposition.
+
+After the independent repairs, the Platform, Scope and lane test compiler
+roots report only that known timed code-effect error. Bytes, Checkers,
+Contract and Git compiler roots pass. Whole successor-lane validation
+passes, with all historical lane bytes unchanged. The new pure capacity
+checks pass four tests; the affected future-entry checks pass seven, and
+the maintained observation checks pass eleven. The security inventory
+passes ten checks, including exact route dispatch and source-owner seals.
+Imported implementations have explicit seals where needed; a seal is a
+change tripwire, not evidence of Native admission correctness.
+
+The declared work-staging scenario passes against actual lane turns,
+SQLite and hold code, with remote Git and Native admission explicitly
+scripted. The scripted-peer incident scenario first exposed assertions at
+the wrong API layer: a recorded delivery may hold a refused decision. The
+repaired assertions require the exact journal refusal and no job opening.
+The scenario now reaches child creation but does not yet obtain the child
+handle. That unresolved fixture/creation boundary is not a passing incident
+witness. No real G17 authority story, physical J3 case or gate has run.

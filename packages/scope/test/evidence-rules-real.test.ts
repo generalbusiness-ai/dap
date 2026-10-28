@@ -64,22 +64,32 @@ test("real admitted member work reuses its actual earlier pass, disables reuse o
     expect(await work.record()).toMatchObject({ state: "passed", result, signer: work.service.actor.key });
     const reused = await requestEvidenceWork(room, work, { reuse: true });
     expect(await reused.record()).toMatchObject({ state: "reused", countedJob: work.job, result });
-    const fresh = await requestEvidenceWork(room, work);
+    // A harmless policy revision must still reuse the same member pass.
+    // This isolates the later source change from accidental generation keys.
+    const memberPolicy = { ...work.policy, labels: ["TEST unchanged member descriptor"] };
+    await configureEvidenceRules(room, memberPolicy);
+    const harmless = await observedRules(room);
+    expect(harmless.revision).toBeGreaterThan(work.binding.policyGeneration.seq);
+    expect(harmless.serviceGeneration).toEqual(work.binding.serviceGeneration);
+    const memberBinding: EvidenceBinding = { ...work.binding, policyGeneration: { rules: await room.Q.at(), seq: harmless.revision } };
+    const acrossGeneration = await requestEvidenceWork(room, work, { reuse: true, binding: memberBinding });
+    expect(await acrossGeneration.record()).toMatchObject({ state: "reused", countedJob: work.job, result });
+    const fresh = await requestEvidenceWork(room, work, { binding: memberBinding });
     expect(await fresh.record()).toMatchObject({ state: "admitted" });
     const failed = await claimEvidenceWork(room, work, fresh, "failed");
     expect(await fresh.record()).toMatchObject({ state: "failed", result: failed });
-    const refused = await requestEvidenceWork(room, work, { reuse: true });
+    const refused = await requestEvidenceWork(room, work, { reuse: true, binding: memberBinding });
     expect(await refused.record()).toMatchObject({ state: "refused", reason: "check-disagrees" });
-    const explicit = await requestEvidenceWork(room, work);
+    const explicit = await requestEvidenceWork(room, work, { binding: memberBinding });
     expect(await explicit.record()).toMatchObject({ state: "admitted" });
     await claimEvidenceWork(room, work, explicit, "passed");
     expect(await explicit.record()).toMatchObject({ state: "passed" });
-    const stillDisabled = await requestEvidenceWork(room, work, { reuse: true });
+    const stillDisabled = await requestEvidenceWork(room, work, { reuse: true, binding: memberBinding });
     expect(await stillDisabled.record()).toMatchObject({ state: "refused", reason: "check-disagrees" });
     expect((await hardeningItems(work.lane, "result")).map(item => item.refs['job'])).toEqual([work.job.seq, fresh.job.seq, explicit.job.seq]);
     // The identical tree and configuration cannot reuse a member-source
     // claim after the policy selects the room service. It needs a fresh job.
-    const roomPolicy = { ...work.policy, checks: work.policy.checks.map(check => ({ ...check, source: "room" as const })) };
+    const roomPolicy = { ...memberPolicy, checks: memberPolicy.checks.map(check => ({ ...check, source: "room" as const })) };
     await configureEvidenceRules(room, roomPolicy);
     const observed = await observedRules(room);
     const roomBinding: EvidenceBinding = { ...work.binding, source: "room", policyGeneration: { rules: await room.Q.at(), seq: observed.revision } };

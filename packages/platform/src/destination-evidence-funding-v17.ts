@@ -244,6 +244,9 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
   const fence = base["evidence-fence-v17"], open = base["evidence-open-v17"];
   if (fence?.place !== "guard" || open?.place !== "effect") throw Error("Funding requires the G17 fence rules");
   const next: Record<string, Rules[string]> = { ...base };
+  // The receive's `opens` adds this before the code effects. Quote it once,
+  // but leave its emission to deriveEffects so the carrying entry has one open.
+  const implicitBatchOpen = (given: RuleGiven): RuleEffect => ({ effect: "open", item: given.resolved.self, type: "evidence-batch", state: "funded" });
   const ready = (given: RuleGiven, batch: EvidenceBatchRecordV17): RuleRequest | null => {
     const publication = given.state.item(batch.publication.seq), previous = batches(given.state, batch.operation);
     if (!publication || !previous) return null;
@@ -265,7 +268,7 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
       { effect: "value", item: given.resolved.self, slot: "capacity", value: capacity.capacity }, { effect: "value", item: given.resolved.self, slot: "policyKey", value: capacity.policyKey }];
     const update = ready(given, batch);
     if (update) effects.push({ effect: "value", item: batch.publication.seq, slot: "evidenceReady", value: true });
-    return evidenceCarryingBudgetV17(given, effects, [], update ? [update] : [], []).admitted ? { batch, ...capacity } : null;
+    return evidenceCarryingBudgetV17(given, [implicitBatchOpen(given), ...effects], [], update ? [update] : [], []).admitted ? { batch, ...capacity } : null;
   };
   next["evidence-fund-v17"] = { place: "guard", refusals: ["evidence-funding-unavailable"], run: given => funded(given) ? { holds: true } : { holds: false, name: "evidence-funding-unavailable" } };
   next["evidence-fund-open-v17"] = { place: "effect", most: 16, run: given => {
@@ -276,7 +279,7 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
       { effect: "value", item: given.resolved.self, slot: "capacity", value: value.capacity }, { effect: "value", item: given.resolved.self, slot: "policyKey", value: value.policyKey }];
     const update = ready(given, value.batch);
     if (update) effects.push({ effect: "value", item: value.batch.publication.seq, slot: "evidenceReady", value: true });
-    if (!evidenceCarryingBudgetV17(given, effects, [], update ? [update] : [], []).admitted) throw Error("A funding record exceeds its carrying entry");
+    if (!evidenceCarryingBudgetV17(given, [implicitBatchOpen(given), ...effects], [], update ? [update] : [], []).admitted) throw Error("A funding record exceeds its carrying entry");
     return effects;
   } };
   next["evidence-funding-ready-v17"] = { place: "send", run: given => {
