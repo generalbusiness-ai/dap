@@ -30,10 +30,10 @@ export async function containerAcceptance(settings, directory) {
   const exactTree = tree(remote, [`100644 blob ${file}\tREADME.md`, `100755 blob ${maliciousGit}\tgit`, `100644 blob ${file}\tone.md`]), tip = commit(remote, exactTree, [base]);
   setRef(remote, "refs/heads/main", tip);
   const token = randomBytes(32).toString("base64url"), host = new Host(remote, token), records = new MemoryRecords();
+  const repository = `https://j3.test/${basename(remote)}`;
   let origins = 0, closed = 0;
   const options = { root, command, originFor: async ask => {
     origins++;
-    const repository = `https://j3.test/${basename(remote)}`;
     const origin = await gatewayOrigin({ records, upstream: host.upstream, credential: value => ["authorization", `Bearer ${value}`] }, { attempt: ask.run, repository, update: null, token: { id: "TEST-read", state: "live", plaintext: token } });
     return { ...origin, close: async () => { await origin.close(); closed++; } };
   } };
@@ -65,7 +65,7 @@ export async function containerAcceptance(settings, directory) {
     const passed = await run("exact-tree-custody-network-private-write", configuration([
       ["/bin/sh", "-c", 'if [ "$(cat one.md)" = "# One" ]; then printf "ok\\n"; else printf "bad\\n"; exit 1; fi'],
       ["/j3-test-probe", "custody", keyFile],
-      ["/j3-test-probe", "network", "http://127.0.0.1:18080/repo.git", address],
+      ["/j3-test-probe", "network", `http://127.0.0.1:18080${new URL(repository).pathname}`, address],
       ["/j3-test-probe", "put-marker"],
     ]));
     assert.deepEqual(passed.outcome, { act: "check", outcome: "passed" });

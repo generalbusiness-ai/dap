@@ -150,10 +150,13 @@ export function createContainerEngine(options: ContainerEngineOptions): Containe
     let upstream: URL | undefined;
     if (origin) { try { upstream = new URL(origin.repository); } catch { return error("job"); }
       if (!["http:", "https:"].includes(upstream.protocol) || upstream.username || upstream.password || upstream.search || upstream.hash || ask.job.remote !== undefined && ask.job.remote !== origin.repository) return error("job"); }
+    // nerdctl injects HOSTNAME from --hostname; also passing the same --env
+    // would duplicate that row in OCI metadata. Exact environment checks stay.
+    const explicitEnv = configuration.environment.filter(v => v.name !== "HOSTNAME" || v.value !== "artroom-checker");
     const args = ["run", "-i", "--pull=never", "--name", name, "--label", `artroom.checker.run=${textDigest(ask.run)}`,
       "--network=none", `--memory=${memory}`, `--memory-swap=${memory}`, `--pids-limit=${pids}`, "--cpus=1", "--cap-drop=ALL", "--security-opt=no-new-privileges", "--read-only",
       "--user=65533:65533", "--hostname=artroom-checker", `--tmpfs=/work:exec,nosuid,nodev,uid=65532,gid=65532,mode=0700,size=${work}`,
-      "--tmpfs=/tmp:nosuid,nodev,mode=1777,size=16777216", "--entrypoint", RELAY, ...configuration.environment.flatMap(v => ["--env", `${v.name}=${v.value}`]), imageRef, String(configuration.limits.seconds + 120)];
+      "--tmpfs=/tmp:nosuid,nodev,mode=1777,size=16777216", "--entrypoint", RELAY, ...explicitEnv.flatMap(v => ["--env", `${v.name}=${v.value}`]), imageRef, String(configuration.limits.seconds + 120)];
     const child = spawn(prefix[0]!, [...prefix.slice(1), ...args], { env: { PATH: process.env["PATH"] ?? "/usr/bin:/bin", HOME: process.env["HOME"] ?? "/nonexistent" }, stdio: "pipe" });
     const closed = new Promise<void>(resolve => { child.once("close", () => resolve()); });
     const relayOwner = new AbortController();
