@@ -24,7 +24,7 @@ No table entry authorizes a new setting or changes its parser.
 
 | Worker | Configuration and runtime entry |
 |---|---|
-| `artroom-scope` | `apps/room/wrangler.jsonc` → `apps/room/worker.ts` |
+| `artroom-scope` | `apps/room/wrangler.jsonc` → `apps/room/worker.ts`; local `apps/room/celld/wrangler.json` → its two-export `worker.ts` shim |
 | `dap-demo` | `apps/room/wrangler.demo.jsonc` → `apps/room/worker.ts` |
 | `dap-lending` | `apps/room/wrangler.lending.jsonc` → `apps/room/worker.ts` |
 | `dap-grow` | `apps/room/wrangler.grow.jsonc` → `apps/room/worker.grow.ts` |
@@ -37,6 +37,9 @@ HTTP dispatch. Its named Durable Object and service entrypoints share the
 same configuration closure. Grow adds its explicit archive wrapper. The
 sandbox and scheduled simulator have independent environments; neither
 inherits the room's session secret or namespaces from a TypeScript name.
+The local celld JSON configuration shares the room script identity and runtime
+closure through an exact two-export shim. The checker retains its physical entry
+and follows its imports. Other conflicting entries still fail.
 Test Wrangler configurations and local build/CLI environment variables are
 not deployed runtime settings in this inventory.
 
@@ -95,6 +98,13 @@ recovery, replay, and pending settlement do not consult this admission gate.
 This reference changes no trust schema or provider custody.
 Deployment and secret-setting procedures remain in [Deploy dap](../deploy.md).
 
+`PUBLIC_ORIGIN` supplies service identity behind an HTTP reverse proxy. It
+binds hosted MCP creation, application context and deployment defaults, and
+demo origin checks. An explicit `DEPLOYMENT` still takes precedence over the
+application default. Transport Host need not equal the configured origin.
+No forwarded header supplies identity. The proxy remains responsible for the
+trusted client address. See [Run the local Worker](../celld.md).
+
 ## Source-owned inventory
 
 Each row below keys exact Worker names and one exact setting or binding.
@@ -137,6 +147,7 @@ parser, failure behavior, health visibility, and other readers.
 | `MCP_TOOL_ADDITIONS` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `METRICS` | binding | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `PLATFORM_CREATION_PINS` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/creation-versions.ts`](../../packages/scope/src/creation-versions.ts) |
+| `PUBLIC_ORIGIN` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/public-origin.ts`](../../packages/scope/src/public-origin.ts) |
 | `REGISTER_SCOPE` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/register-setting.ts`](../../packages/scope/src/register-setting.ts) |
 | `REGISTRIES` | binding | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `ROOM` | binding | `dap-application-sandbox` | [`apps/sandbox/worker.ts`](../../apps/sandbox/worker.ts) |
@@ -161,6 +172,12 @@ parser, failure behavior, health visibility, and other readers.
       "name": "artroom-scope",
       "config": "apps/room/wrangler.jsonc",
       "entry": "apps/room/worker.ts",
+      "kind": "worker"
+    },
+    {
+      "name": "artroom-scope",
+      "config": "apps/room/celld/wrangler.json",
+      "entry": "apps/room/celld/worker.ts",
       "kind": "worker"
     },
     {
@@ -239,6 +256,24 @@ parser, failure behavior, health visibility, and other readers.
       "missing": "Sessions unavailable; genuinely absent local creation retains the local API.",
       "invalid": "Sessions and configured creation refuse; screens unavailable; metrics label unknown. An invalid value is not absent.",
       "health": "deployment is the valid value or unknown; sessions unavailable makes status 503."
+    },
+    {
+      "deployments": [
+        "artroom-scope",
+        "dap-demo",
+        "dap-lending",
+        "dap-grow"
+      ],
+      "name": "PUBLIC_ORIGIN",
+      "kind": "text",
+      "status": "read",
+      "readers": [
+        "packages/scope/src/public-origin.ts"
+      ],
+      "parser": "readPublicOrigin: exact canonical ASCII origin of at most 2048 bytes, HTTPS or invitation-policy loopback HTTP (127/8 or [::1]); no credentials, path, query, fragment or trailing slash. Forwarded headers are not read.",
+      "missing": "Uses the original request URL origin, including internal HTTP.",
+      "invalid": "No fallback. Opted-in MCP returns 503 unavailable before object selection; application pages return 503 application-unavailable; demo offers and sandbox descriptor gates return 404. Existing path, method and opt-in gates still apply.",
+      "health": "Not inspected. Health attests actual register/session readiness, not public-origin or proxy correctness."
     },
     {
       "deployments": [

@@ -1,6 +1,6 @@
 # Worker entry points and gates
 
-This reference inventories the seven Worker configurations named by D1 in this repository.
+This reference inventories the Worker entry points named by D1 and the local celld project in this repository.
 It describes source at this revision, not a probe of deployed settings. It closes
 security finding 2.5 in request `6dd06d03`.
 
@@ -68,6 +68,14 @@ names to the hosted default list. If present, it must be a JSON array of unique,
 known names within 1024 characters. Missing opt-in or invalid additions return
 404 before the MCP route reads a body or selects an agent or registry object.
 The shared room request setup described below still runs first.
+
+`PUBLIC_ORIGIN`, when set, supplies the exact service origin for hosted MCP
+creation, application context and redirects, and demo offer checks. Missing
+configuration retains the request URL origin. An invalid explicit value fails
+closed before these routes select their protected objects. Neither forwarded
+headers nor transport Host override it. The shared accessor is a sealed gate
+owner. The local celld shim reexports the same production room entry, bindings
+and migration history. It introduces no route or caller authority.
 
 The hosted default omits `create`, `install_application`, `credential`,
 `prepare`, `join`, `record`, `step`, and `text`. An explicit addition affects
@@ -604,7 +612,8 @@ unchanged enabled-deployment table. That control proves structural dispatch,
 not a deployed setting or a native grant decision.
 
 The room entry model accepts only the exact generic/lending entry and the
-Grow wrapper’s two-hop default re-export chain. It does not follow arbitrary
+Grow wrapper’s two-hop default re-export chain. The local celld project adds
+an exact two-export shim to the same room entry. It does not follow arbitrary
 module re-exports. Whole-owner seals separately cover the wrapper and archive
 configuration, target, host-item and provider boundaries.
 
@@ -624,7 +633,8 @@ from source review; the witness checks that all columns are present but does
 not prove those descriptions. Changes in runtime settings need the settings
 and deployment review as well.
 
-Gate owners: [core.ts](../../packages/scope/src/core.ts),
+Gate owners: [public-origin.ts](../../packages/scope/src/public-origin.ts),
+[core.ts](../../packages/scope/src/core.ts),
 [applications/act-admission.ts](../../packages/scope/src/applications/act-admission.ts),
 [judge.ts](../../packages/derive/src/judge.ts),
 [sessions.ts](../../packages/scope/src/sessions.ts),

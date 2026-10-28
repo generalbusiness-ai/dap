@@ -1,13 +1,16 @@
 import { env } from "cloudflare:workers";
 import { SELF, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { digestBytes, intentDigest, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, digestBytes, intentDigest, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 import { health, HealthProbe } from "../src/health.ts";
 import { LATE } from "../src/turn.ts";
 import { controls } from "../src/testing.ts";
 import { at, create, rita, type Remote } from "./fixtures-native.ts";
 import scopeWorker from "../src/worker.ts";
 import { indexedScopes, type ScopeIndexPort } from "../src/scope-index.ts";
+import { beginSessionFixture } from "./session-settings.ts";
+import { nativeFixtureLifetime, reader } from "./fixtures-native.ts";
 
 const version = "01234567-89ab-cdef-0123-456789abcdef";
 // Syntactically shaped TEST key only: readiness performs no RSA/provider work.
@@ -19,6 +22,22 @@ function github(registerScope: string) {
 }
 function artifacts(registerScope: string) { return JSON.stringify({ registerScope, namespace: "artroom-demo", host: "service.invalid", maxBytes: 1024, credentialIdentity: "adapter-attempt" }); }
 const request = (suffix = "", method = "GET") => new Request(`https://scope.test/health${suffix}`, { method });
+
+test("host-none health probes its actual active Native Register without repository-provider wiring or journal writes", async () => {
+  const secret = b64url(crypto.getRandomValues(new Uint8Array(32)));
+  const life = nativeFixtureLifetime(beginSessionFixture({ secret, sessions: true, inspector: reader }));
+  const intent = { v: 1, to: null, actor: rita.key, kind: "install", on: null, expected: {},
+    fields: { host: "none", namespace: "", policy: "keys", founders: [rita.key] },
+    idempotencyKey: crypto.randomUUID(), notAfter: timeOf(life.now() + 60_000) } as const;
+  const node = life.platform(scopeIdOf({ v: 1, kind: "register", definition: UNPUBLISHED_COHORT.register, creator: null, cause: intentDigest(intent), ordinal: 0 }));
+  expect(await life.wait(() => node.stub.create(signIntent(intent, rita.secret), UNPUBLISHED_COHORT.register))).toMatchObject({ answer: "accepted" });
+  const before = await life.wait(() => node.entries());
+  const response = await life.wait(() => health(new Request("http://internal:8787/health"), {
+    SCOPES: env.PLATFORM, REGISTER_SCOPE: node.name, SESSION_SECRET: secret, DEPLOYMENT: "TEST host-none health",
+  }, new HealthProbe()));
+  expect([response?.status, await response!.json()]).toEqual([200, { deployment: "TEST host-none health", version: "unknown", sessions: "ok", register: "ready", wiring: { artifacts: { state: "off", reason: "unconfigured" }, github: { state: "off", reason: "unconfigured" } } }]);
+  expect(await life.wait(() => node.entries())).toEqual(before);
+});
 
 test("production health keeps indexed transport identity for concurrent and cached probes without caching admission", async () => {
   // Transport/readiness are stand-ins. Production fetch and HealthProbe are

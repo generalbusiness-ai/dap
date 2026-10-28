@@ -199,6 +199,7 @@ async function scopeRows(text) {
 
 async function hostedInventory(source, settings) {
   const { hostedMcpTools } = load(readSource("packages/mcp/src/hosted-tools.ts"), ["GENERIC_TOOL_NAMES", "HOSTED_TOOL_OMISSIONS", "hostedMcpTools"], {});
+  const { readPublicOrigin } = load(readSource("packages/scope/src/public-origin.ts"), ["PUBLIC_ORIGIN_MAX_BYTES", "readPublicOrigin"], { URL });
   const text = declaration(source, "mcpRoute"), agent = "a".repeat(64), paths = strings(text, value => value.startsWith("/") && !value.endsWith("/"));
   const { SCOPE_INDEX_NAME, scopeIndex } = load(readSource("packages/scope/src/scope-index.ts"), ["SCOPE_INDEX_NAME", "scopeIndex"], {});
   walk(parse(text), node => {
@@ -215,7 +216,7 @@ async function hostedInventory(source, settings) {
   const result = new Map(), marker = dispatch => { throw { dispatch }; };
   let action;
   const { mcpRoute } = load(source, ["mcpRoute", "boundedBytes"], {
-    admittedRequestUrl: () => true, URL, Response, Uint8Array, CONTROL_BODY_BYTES: 64 * 1024, scopeIndex, hostedMcpTools,
+    admittedRequestUrl: () => true, URL, Response, Uint8Array, CONTROL_BODY_BYTES: 64 * 1024, scopeIndex, hostedMcpTools, readPublicOrigin,
     json: status => new Response(null, { status }),
     controlOf: () => ({ request: { action, agent: action === "create" ? null : agent, membership: { scope: "witness" } } }),
   });
@@ -330,7 +331,7 @@ function sandboxBindings() {
   // owner in addition to checking its finite named RPC surface.
   const service = parse(readSource(scopeFile)).body.map(node => node.declaration ?? node).find(node => node.id?.name === "ApplicationScreenService");
   assert.ok(service, "Named sandbox RPC entry");
-  assert.deepEqual(service.body.body.map(node => node.key.name), ["screenHost", "screen", "nativeStream", "native"]);
+  assert.deepEqual(service.body.body.map(node => node.key.type === "PrivateIdentifier" ? "#" + node.key.name : node.key.name), ["screenHost", "#gateway", "screen", "nativeStream", "native"]);
   return config.name;
 }
 

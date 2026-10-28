@@ -73,6 +73,26 @@ test("the real Worker source inventory rejects an undocumented setting read", ()
   assert.equal(lookup[0][1], renderSettingsLookup(readSettingsDocument(page)));
   const original = checkSettings(root);
   assert.ok(original.settings > 0);
+  // A second physical entry may share the permanent Worker name only through
+  // the real, literal celld re-export shim; its complete runtime closure stays
+  // under the existing undocumented-read controls below.
+  const celld = "apps/room/celld/worker.ts";
+  const deployments = readSettingsDocument(page).deployments;
+  assert.deepEqual(deployments.find(row => row.config === "apps/room/celld/wrangler.json"), {
+    name: "artroom-scope", config: "apps/room/celld/wrangler.json", entry: celld, kind: "worker",
+  });
+  assert.equal(original.deployments, deployments.length, "the real JSON configuration participates in coverage");
+  const shim = source(celld);
+  assert.throws(() => checkSettings(root, { overrides: new Map([[celld, shim + "\nvoid Date.now();\n"]]) }), /artroom-scope: conflicting entries/,
+    "an extra runtime statement cannot inherit the shared Worker identity");
+  assert.throws(() => checkSettings(root, { overrides: new Map([[celld, shim.replace('export { default } from "../worker.ts"', 'export { default } from "../worker.grow.ts"')]]) }), /artroom-scope: conflicting entries/,
+    "the default export must come from the same Worker as the export-all");
+  for (const target of ["../untracked-settings-entry.ts", "../../../../outside-settings-entry.ts"]) {
+    const changed = `export * from ${JSON.stringify(target)};\nexport { default } from ${JSON.stringify(target)};\n`;
+    assert.throws(() => checkSettings(root, { overrides: new Map([[celld, changed]]) }), /Untracked or escaping Worker source/,
+      "only a tracked, contained one-hop target can share an identity");
+  }
+
   const file = "packages/scope/src/health.ts";
   const inherited = source(file) + "\ninterface D3InheritedEnvironment extends HealthEnvironment {}\nfunction inheritedRead(env: D3InheritedEnvironment) { return env.SECURITY_SETTINGS_UNDOCUMENTED; }\n";
   assert.throws(() => checkSettings(root, { overrides: new Map([[file, inherited]]) }), /undocumented setting read SECURITY_SETTINGS_UNDOCUMENTED/);

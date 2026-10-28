@@ -217,7 +217,7 @@ journal has not been cut short, give it a head from a receipt you kept.
 
 ## How it is deployed today
 
-Clients sign requests. A Cloudflare Worker routes each one to a scope's
+Clients sign requests. The room Worker routes each one to a scope's
 Durable Object. That object keeps the scope's journal and derived state
 in its own storage. The judges in `dap-derive` decide the allowed
 changes. The runtime controls reads, the clock, bounded turns and storage
@@ -241,6 +241,12 @@ flowchart TB
   H -->|Answers, or no answer| O
   O -->|Later outcome input| P
 ```
+
+The [local celld project](celld.md) reexports the production room Worker
+with the same object bindings and migration history. Hosted MCP calls the
+scope API in process. Behind a proxy, the optional `PUBLIC_ORIGIN` supplies
+service identity independently of transport Host and forwarded headers. This
+changes no journal, native definition or membership authority.
 
 Each scope owns a separate order and transaction. Dashed observations are
 checked inputs to a judgment, not shared storage.

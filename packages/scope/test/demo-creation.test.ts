@@ -43,6 +43,16 @@ test("Register17 offer exposes only its configured Artifacts register and admits
     for (const valid of ["a".repeat(128), "界".repeat(42) + "aa"]) expect(demoCreationConfig(canonicalize({ ...config, deployment: valid }), valid, bindings)).not.toBeNull();
     expect(first.headers.get("cache-control")).toBe("no-store");
     expect([first.status,offer]).toEqual([200,{v:2,origin,register:at,definition:ARCHIVE_DEVICE_APPLICATION_COHORT.register,at:{seq:0,hash:(await lifetime.wait(()=>register.summary())).at.hash},registerItem:{id:0,revision:1,state:"open",host:"artifacts",namespace:"dap-demo",policy:"open"}}]);
+    // Rewritten Requests expose only the Worker boundary, not a real proxy.
+    const internal = "http://celld.internal:8787/v1/demo/creation-offer";
+    const proxyOffer = await lifetime.wait(() => demoCreationRoute(new Request(internal, { headers: { host: "different-host.example" } }), { ...bindings, PUBLIC_ORIGIN: origin }));
+    expect([proxyOffer.status, await proxyOffer.json()]).toEqual([200, offer]);
+    const beforeOriginRefusal = { ...lookups };
+    for (const settings of [bindings, { ...bindings, PUBLIC_ORIGIN: origin + "/" }]) {
+      const response = await lifetime.wait(() => demoCreationRoute(new Request(internal, { headers: { forwarded: "proto=https;host=dap-demo.inguz.workers.dev", "x-forwarded-proto": "https", "x-forwarded-host": "dap-demo.inguz.workers.dev" } }), settings));
+      expect([response.status, await response.json()]).toEqual([404, { error: "not-found" }]);
+    }
+    expect(lookups).toEqual(beforeOriginRefusal);
     expect(JSON.stringify(offer)).not.toContain(newcomer.key);
     // Native found is the judgment; the anonymous offer grants no authority.
     const matched=await signedIntent(newcomer,{to:at,kind:"found",expected:{register:offer.registerItem.revision},fields:{branch:"main","founderHandle":"@newcomer",recoveryKey:installer.key}},{now:lifetime.now()});

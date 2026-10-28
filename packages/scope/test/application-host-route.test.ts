@@ -2,12 +2,25 @@
  * is witnessed on real installed scopes in application-install-custody. */
 import { env } from "cloudflare:test";
 import { newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
-import { applicationScreenPath } from "@generalbusiness/dap-client/application";
+import { applicationScreenPath, readApplicationScreenHost } from "@generalbusiness/dap-client/application";
 import type { ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
 import { applicationResolverFixture, applicationWorkerBindings } from "./fixtures-native.ts";
 import { expect, test } from "vitest";
 import worker, { type Env } from "../../../apps/room/worker.ts";
-import { applicationSandboxPage } from "../src/applications/route.ts";
+import { applicationPage, applicationSandboxPage } from "../src/applications/route.ts";
+
+test("public screen redirect matches the configured room identity rather than internal HTTP or forwarded headers", async () => {
+  const directory = scopeIdOf({ v: 1, kind: "directory", definition: "platform:directory@20", creator: null, cause: textDigest("TEST public screen identity"), ordinal: 0 });
+  const host = readApplicationScreenHost({ v: 1, screenOrigin: "https://h1-screen.inguz.space", roomOrigin: "https://room.example", directory, item: 7, presentation: textDigest("TEST presentation") });
+  const path = applicationScreenPath(directory, 7, host.presentation) + "index.html";
+  const internal = new Request("http://celld.internal:8787" + path, { headers: { host: "different-host.example", forwarded: "host=room.example;proto=https", "x-forwarded-proto": "https", "x-forwarded-host": "room.example" } });
+  const settings = { APPLICATION_SCREEN_HOSTS: JSON.stringify([host]) };
+  expect((await applicationPage(internal, settings))?.status).toBe(404);
+  const configured = await applicationPage(internal, { ...settings, PUBLIC_ORIGIN: host.roomOrigin });
+  expect([configured?.status, configured?.headers.get("location"), await configured!.text()]).toEqual([302, host.screenOrigin + path, ""]);
+  expect((await applicationPage(internal, { ...settings, PUBLIC_ORIGIN: host.roomOrigin + "/" }))?.status).toBe(503);
+  expect((await applicationPage(new Request("http://celld.internal:8787" + path + "?extra=1"), { ...settings, PUBLIC_ORIGIN: host.roomOrigin }))?.status).toBe(404);
+});
 test("Room refuses retired application paths and still rejects URL credentials before dispatch", async () => {
   const get = (path: string, method = "GET") => worker.fetch(new Request("https://scopes.test" + path, { method, headers: { authorization: "Bearer TEST-header", cookie: "private=TEST-cookie" } }), { SCOPES: env.PLATFORM, SCOPE_INDEX: env.SCOPE_INDEX } as Env);
   for (const path of ["/counting", "/counting/", "/counting/counting.js", "/counting/brand/dap-wordmark.svg", "/lending", "/lending/", "/lending/lending.css", "/lending/keys.json"]) {
@@ -74,5 +87,14 @@ test("two pending packet loads coalesce while a third distinct release refuses b
     }
     const local = await applicationSandboxPage(new Request("https://cache.test" + applicationScreenPath(directory.scope, 0, fixtures[0]!.packet.ids.presentation) + "_/context"), bindings);
     expect([local?.status, (await local!.json<{ deployment: string }>()).deployment]).toEqual([200, "https://cache.test"]);
+    // Actual packet/R2/context validation; native installation RPCs above
+    // remain explicit stand-ins. This rewrites no gateway path or identity.
+    const internal = "http://celld.internal:8787" + applicationScreenPath(directory.scope, 0, fixtures[0]!.packet.ids.presentation) + "_/context";
+    const configured = await applicationSandboxPage(new Request(internal, { headers: { host: "different-host.example" } }), { ...bindings, PUBLIC_ORIGIN: "https://cache.test" });
+    expect([configured?.status, await configured!.json()]).toEqual([200, expect.objectContaining({ origin: "https://cache.test", deployment: "https://cache.test" })]);
+    const explicit = await applicationSandboxPage(new Request(internal), { ...bindings, PUBLIC_ORIGIN: "https://cache.test", DEPLOYMENT: "TEST explicit deployment" });
+    expect([explicit?.status, (await explicit!.json<{ deployment: string }>()).deployment]).toEqual([200, "TEST explicit deployment"]);
+    const invalid = await applicationSandboxPage(new Request(internal), { ...bindings, PUBLIC_ORIGIN: "https://cache.test/" });
+    expect([invalid?.status, await invalid!.json()]).toEqual([503, { error: "application-unavailable" }]);
   } finally { releaseFirst(); releaseSecond(); await Promise.allSettled(outstanding); for (const f of fixtures) await env.APPLICATION_CONTENT.delete(f.key); }
 });
