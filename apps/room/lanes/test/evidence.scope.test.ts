@@ -97,7 +97,13 @@ test("a merged change accepts only its configured native peer's published job an
   const binding = bindingOf(g, paul.member, { kind: "published", publication, receipt, written, manifest }), digest = evidenceBindingDigest(binding);
   const open = { class: "request", type: "tell", body: { message: "admit-published-check", fields: { operation, manifest, name: "published", configuration, tree: oid("d"), commit: oid("c"), base: oid("b"), checker: paul.member, binding: canonicalize(binding), bindingDigest: digest } } } as const;
   const wrong = new Peer("destination", "platform:destination");
-  expect(await lane.stub.deliver(wrong.sends(lane.at, open, "platform:destination@17:evidence-notice"))).toMatchObject({ answer: "refused", name: "not-the-destination" });
+  expect(wrong.at).not.toEqual(g.graph.destination.at);
+  const denied = await lane.stub.deliver(wrong.sends(lane.at, open, "platform:destination@17:evidence-notice"));
+  expect(denied).toMatchObject({ answer: "recorded" });
+  if (denied.answer !== "recorded") return expect.fail("The wrong destination must reach a recorded refusal");
+  const deniedEntry = await lane.entry(denied.fact.seq);
+  expect(deniedEntry.input).toMatchObject({ type: "delivery", decision: "refused", reason: { code: "guard-failed", name: "not-the-destination" } });
+  expect(deniedEntry.effects.some(effect => effect.effect === "open" && effect.type === "job")).toBe(false);
   const refusedOpen = { ...open, body: { ...open.body, fields: { ...open.body.fields, name: "refused" } } };
   expect(await lane.stub.deliver(g.graph.destination.sends(lane.at, refusedOpen, "platform:destination@17:evidence-notice"))).toMatchObject({ answer: "recorded" });
   const refusedJob = (await lane.state()).page("job", ["queued"], null, 64).items[0]!;
@@ -128,7 +134,10 @@ test("a merged change accepts only its configured native peer's published job an
   // for the same exact job also cannot allocate a replacement incident.
   await lane.stub.deliver(notice);
   const again = g.graph.destination.sends(lane.at, notice.message, "platform:destination@17:evidence-result");
-  expect(await lane.stub.deliver(again)).toMatchObject({ answer: "refused", name: "incident-exists" });
+  const duplicate = await lane.stub.deliver(again);
+  expect(duplicate).toMatchObject({ answer: "recorded" });
+  if (duplicate.answer !== "recorded") return expect.fail("A new notification must reach the incident identity guard");
+  expect((await lane.entry(duplicate.fact.seq)).input).toMatchObject({ type: "delivery", decision: "refused", reason: { code: "guard-failed", name: "incident-exists" } });
   expect((await lane.state()).page("incident", ["creating", "created", "refused", "conflict", "unknown"], null, 8192).items).toHaveLength(1);
   net.hold = envelope => "scope" in envelope.to && envelope.to.scope === g.graph.destination.at.scope;
   const child = await g.graph.created(lane, incident.id, g.issue, g.valid(g.issue), send.n);
