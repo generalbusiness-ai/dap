@@ -23,7 +23,7 @@ import { creationRita as rita } from "./fixtures-entry.ts";
 const DIGESTS: Readonly<Record<string, string>> = {
   // Observed opt-in evidence generation; all 76 historical identities stay exact.
   "platform:register@22": "sha256:af4c384cebbf4e9b9526bf939dee17b7faa370dc3026b54ae7a7b57c2a254091",
-  "platform:directory@21": "sha256:c8c40477f369a19213439eaa1a3263dad1ce16038e5df605b6f7322737380b55",
+  "platform:directory@21": "sha256:439af34d88a076581b51cb833eea276799f3fa7d9d75e5e1cf274792e1c28eb3",
   "platform:rules@13": "sha256:d7baafb3501bdc1682f7c671fb43ad0fd82aab2b541d9b01f7893914ab73d5cd",
   "platform:destination@17": "sha256:71de60215c858c9f21b14a7055f78573e8759ec1dc97f609bd180c744a41c9dd",
   // G1 canonical generation; every historical literal below stays exact.
