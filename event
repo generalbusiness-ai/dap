@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9e401d1c4369febc9c21cb34798f9c8a6aceb175","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-28-lan-address-keys.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a376d30e422c4e23b5a12b99589ebf3597b752a4","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/limits.ts."}
