@@ -6,6 +6,7 @@ import { canonicalize, deliveryCauseDigest, evidenceBindingDigest, intentDigest,
 import { isEntryOf, sentBy, type Fetched } from "@generalbusiness/dap-derive";
 import { EVIDENCE_LANE_PINS } from "./evidence-lane-pins.generated.ts";
 import { EVIDENCE_RULES_COHORT as C } from "./evidence-cohort.ts";
+import { readEvidenceWireV17 } from "./evidence-wire-v17.ts";
 
 export const EVIDENCE_INCIDENT_PINS_V17 = Object.freeze({ issue: EVIDENCE_LANE_PINS.issue, change: EVIDENCE_LANE_PINS.change,
   directory: C.directory, destination: C.destination });
@@ -19,9 +20,12 @@ function body(entry: Entry, message: string): Record<string, unknown> | null {
     && isRecord(input.message.body) && input.message.body["message"] === message && isRecord(input.message.body["fields"]) ? input.message.body["fields"] : null;
 }
 function record(entry: Entry, item?: number): Record<string, unknown> | null {
-  const rows = entry.effects.filter(effect => effect.effect === "value" && effect.slot === "record" && (item === undefined || effect.item === item)
-    && isRecord(effect.value) && effect.value["noticeAt"] === entry.seq);
-  return rows.length === 1 && rows[0]!.effect === "value" && isRecord(rows[0]!.value) ? rows[0]!.value : null;
+  const rows = entry.effects.flatMap(effect => {
+    if (effect.effect !== "value" || effect.slot !== "record" || item !== undefined && effect.item !== item) return [];
+    const read = readEvidenceWireV17(effect.value, 196608);
+    return read.ok && isRecord(read.value) && read.value["noticeAt"] === entry.seq ? [read.value] : [];
+  });
+  return rows.length === 1 ? rows[0]! : null;
 }
 function outcome(entry: Entry, kind: "evidence-result" | "evidence-notice" | "evidence-admit", selected: true | null): boolean {
   const input = entry.input;
@@ -133,7 +137,8 @@ export function evidenceIncidentOriginV17(named: Digest, facts: readonly Fetched
     if (!job || !admitted) return missing;
     const jobFields = body(job.entry, "admit-published-check");
     const admittedRows = admitted.entry.effects.filter(effect => effect.effect === "value" && effect.item === position && effect.slot === "record");
-    const initial = admittedRows.length === 1 && admittedRows[0]!.effect === "value" && isRecord(admittedRows[0]!.value) ? admittedRows[0]!.value : null;
+    const initialWire = admittedRows.length === 1 && admittedRows[0]!.effect === "value" ? readEvidenceWireV17(admittedRows[0]!.value, 196608) : null;
+    const initial = initialWire?.ok && isRecord(initialWire.value) ? initialWire.value : null;
     if (job.under !== "change" || !jobFields || job.entry.input.type !== "delivery" || !same(job.entry.input.from.at, destination.fact.at)
       || !job.entry.effects.some(effect => effect.effect === "open" && effect.item === job.fact.seq && effect.type === "job")
       || !outcome(admitted.entry, "evidence-admit", true) || !initial || initial["state"] !== "admitted" || initial["admittedAt"] !== position

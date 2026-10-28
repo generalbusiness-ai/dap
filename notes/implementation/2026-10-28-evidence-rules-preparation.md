@@ -431,3 +431,42 @@ All current implementation Source is retained for review. The unaffected
 bytes, Git, checker, policy and lane components can be checked after a
 committed freeze while this decision is pending. No whole implementation,
 Native authority scenario, gate, review or deployment is claimed.
+
+## First component checks and record-wire correction
+
+After all Source owners froze, commit `624b5ce29b` recorded the draft.
+No whole validity claim followed that checkpoint. The first lane generator
+attempt failed because the copied scratch dependency directory lacked a
+real `node_modules` parent. The corrected owned namespace uses the same
+verified installed packages and 14 worktree links. No package was installed
+and the lockfile is unchanged. The second attempt passed. Commit
+`464b1205c2` records both successor JSON definitions and their exact pins;
+all six historical lane byte files and earlier digest files are unchanged.
+
+The first focused policy/helper run passed 37 tests in eight files. The
+owning bytes run passed 90 tests and failed the new binding test because
+its second incarnation string was not canonical base32. The fixture now
+uses the maintained incarnation constructor with explicit public test
+bytes. The owning checker run passed 21 tests and failed five. Four new
+failures exposed a real admission-wire defect; the fifth was an existing
+Unix-socket test refused by the execution sandbox. Its isolated rerun
+needs the socket permission and no product change.
+
+Generic `FieldValue` excludes nested nulls. The new semantic records had
+nullable members, so casting them to `FieldValue` did not make their
+journal effects valid. The correction keeps semantic policy and record
+APIs separate from strict versioned wire APIs. New opaque persisted
+policy, admission, batch, capacity, service and publication records travel
+as canonical JSON text. The required publish service mark is also explicit
+text, including `"null"` for withdrawal. Retained value-domain JSON keeps
+its existing semantic representation. No generic scalar or historical
+protocol is widened.
+
+Wire readers bound characters and UTF-8 bytes before parsing, require
+canonical round-trip equality and reject object fallbacks. Carrying-entry
+forecasts count the outer string's quotes and escapes. The checker reads
+the actual admitted record through that same wire contract, while keeping
+its lower-layer dependencies. The first failed runs remain retained under
+`/private/tmp/artroom-evidence-rules-evidence-20261028`, with command,
+Source snapshot, output hashes, exit, elapsed time and host child CPU.
+These are component results, not a Native cohort, gate or deployment pass.

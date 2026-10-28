@@ -1,7 +1,9 @@
 import { expect, test } from "vitest";
 import type { FactRef } from "@generalbusiness/dap-contract";
 import { d, keys, otherLane } from "@generalbusiness/dap-derive/testing";
-import { EVIDENCE_BATCH_JOBS_V17, claimEvidenceBatchJobV17, obligationChecksV17, readEvidenceBatchV17, selectEvidenceBatchV17, type EvidenceBatchRecordV17 } from "../src/evidence-batch-v17.ts";
+import { canonicalize } from "@generalbusiness/dap-bytes";
+import { EVIDENCE_BATCH_JOBS_V17, claimEvidenceBatchJobV17, evidenceBatchWireV17, obligationChecksV17, readEvidenceBatchV17, readEvidenceBatchWireV17, selectEvidenceBatchV17, type EvidenceBatchRecordV17 } from "../src/evidence-batch-v17.ts";
+import { evidenceWireV17, readEvidenceWireV17 } from "../src/evidence-wire-v17.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
 import { rulesPolicyProposalV13, type RulesCheckV13 } from "../src/rules-policy-v13.ts";
 import type { ReservationPolicyViewV17 } from "../src/reservation-v17.ts";
@@ -107,4 +109,28 @@ test("closed records refuse altered partitions, frozen policy metadata and borro
   const accessor = { ...record };
   Object.defineProperty(accessor, "jobs", { enumerable: true, get: () => { throw Error("An accessor is not retained data"); } });
   expect(readEvidenceBatchV17(accessor)).toBeNull();
+});
+
+test("batch code slots accept only canonical text, preserving nested nulls without object fallback", () => {
+  const record = { ...batches(view([check("a")]))[0]!, planAt: null };
+  const text = evidenceBatchWireV17(record);
+  expect(text).toBe(canonicalize(record));
+  expect(readEvidenceBatchWireV17(text)).toEqual(record);
+  expect(readEvidenceBatchWireV17(text)?.policy.policy.roomService).toBeNull();
+  expect(readEvidenceBatchWireV17(record)).toBeNull();
+  expect(readEvidenceBatchV17(text)).toBeNull();
+  expect(readEvidenceBatchWireV17(` ${text}`)).toBeNull();
+  expect(readEvidenceBatchWireV17(text.replace('"v":1', '"v":1.0'))).toBeNull();
+  expect(readEvidenceBatchWireV17('"null"')).toBeNull();
+});
+
+test("wire bounds check both input characters and UTF8 before parsing, with no object coercion", () => {
+  expect(readEvidenceWireV17({ toString: () => { throw Error("A code slot never coerces an object"); } }, 32)).toEqual({ ok: false });
+  expect(readEvidenceWireV17("[".repeat(33), 32)).toEqual({ ok: false });
+  const multibyte = canonicalize("é".repeat(16)); //18characters,34UTF8bytes
+  expect(multibyte.length).toBeLessThan(32);
+  expect(readEvidenceWireV17(multibyte, 32)).toEqual({ ok: false });
+  expect(() => evidenceWireV17("é".repeat(16), 32)).toThrow();
+  const nested = { a: [null, { b: null }] };
+  expect(readEvidenceWireV17(evidenceWireV17(nested, 128), 128)).toEqual({ ok: true, value: nested });
 });

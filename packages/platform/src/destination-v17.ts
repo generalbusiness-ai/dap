@@ -5,7 +5,7 @@ import { type RuleGiven, type Rules, type RuleEffect } from '@generalbusiness/da
 import { destination4, destinationRulesForV17 } from './destination.ts';
 import { evidenceDestinationProfileV17, evidenceDestinationDataV17, evidenceDestinationRulesV17, evidenceFundCapacityV17, evidenceCapacityValidV17, evidenceJobStateV17, evidenceReadyUpdateV17 } from './destination-evidence-v17.ts';
 import { fundingData, fundingRules } from './destination-evidence-funding-v17.ts';
-import { certifiedPublicationStateV17 } from './destination-budget-v17.ts';
+import { certifiedPublicationStateWireV17 } from './destination-budget-v17.ts';
 import { RULES_POLICY_VALUE_V13, rulesPolicyProposalV13, rulesPolicyPatternsV13 } from './rules-policy-v13.ts';
 import { RULES_TREE_PROOF, verifyRulesTree } from './rules-policy-tree.ts';
 import { RULES_CERTIFICATE_KIND, readRulesCertificateBinding, rulesCertificateBranchMatches } from './rules-certificate.ts';
@@ -75,7 +75,7 @@ const certifiedDestinationV17:PlatformData={...destination4,items:{...destinatio
 
 const certifiedDestinationRulesV17:Rules={...baseRules,
   judge:{...oldJudgeRule,rules:{...oldJudgeRule.rules,most:{...oldJudgeRule.rules.most!,effects:16}}},
-  'certified-publication-state-v17':{place:'type',run:(given,value)=>certifiedPublicationStateV17(value,given.resolved.bounds)!==null},
+  'certified-publication-state-v17':{place:'type',run:(given,value)=>certifiedPublicationStateWireV17(value,given.resolved.bounds)!==null},
   'rules-certificate-declined-v17':{place:'type',run:(given,value)=>{ const read=readRulesCertificateDeclinedV17(value);return read!==null&&same(read.request.at,given.resolved.at); }},
   'rules-certificate-binding-v17':{place:'type',run:(_given,value)=>readRulesCertificateBinding(value)!==null},
   'rules-certificate-request-v17':{place:'guard',refusals:['rules-certificate-unavailable'],run:given=>{
@@ -138,4 +138,5 @@ export const destinationRulesV17:Rules=fundingRules(evidenceDestinationRulesV17(
 });
 export { destinationEvidenceJob,destinationEvidenceAdmissionCurrent,destinationEvidencePending,destinationEvidenceResultPending,destinationEvidenceNoticePending,destinationEvidenceProgressPending,evidenceFloorReferencesV17,WORK_COMMIT_PROOF_V17,EVIDENCE_ADMIT_V17 } from "./destination-evidence-v17.ts";
 export type { EvidenceJobAdmissionV17 } from "./destination-evidence-v17.ts";
+export { readEvidenceJobRecordWireV17, evidenceJobRecordWireV17, readEvidenceServiceWireV17, EVIDENCE_RECORD_BYTES_V17, EVIDENCE_SERVICE_BYTES_V17 } from "./destination-evidence-v17.ts";
 export { destinationPublishedChecksPending } from "./destination-evidence-funding-v17.ts";

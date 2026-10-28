@@ -1,12 +1,13 @@
 /** Pure wire/ownership tests. Binding and job DTOs are stand-ins, not native admission proof. */
 import { expect, test } from "vitest";
 import type { EvidenceBinding } from "@generalbusiness/dap-contract";
-import { canonicalize, evidenceBindingDigest, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, evidenceBindingDigest, isEntry, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { verifyOwnedCheckoutSnapshot } from "@generalbusiness/dap-git";
 import { decodeAsk, encodeAsk, encodeJob } from "../src/container-records.ts";
 import { configurationDigest, originOf, signResult } from "../src/index.ts";
 import { digest, newKey, T0, world } from "./support.ts";
 import { stageOverlay, stageService } from "./support/stage-service.ts";
+import { stageOriginOf } from "../src/stage-origin.ts";
 
 test("successor signatures bind the full actual job and semantic binding while legacy fields stay unchanged", async () => {
   const w = world(), read = originOf(w.notice, { entry: w.job, manifest: w.manifest, pinned: digest("a"), activated: { name: "change", state: "active" } });
@@ -61,4 +62,23 @@ test("distinct successor member and audit check names share the exact configurat
   expect(() => encodeAsk({ run: "TEST-wrong-audit-config", job: { ...audit, configuration: digest("f") }, configuration: w.config })).toThrow();
   expect(() => encodeAsk({ run: "TEST-legacy-name", job: { ...read.job, name: audit.name }, configuration: w.config })).toThrow();
   expect(() => encodeAsk({ run: "TEST-invalid-binding", job: { ...audit, evidence: { ...audit.evidence, v: 2 } as unknown as EvidenceBinding }, configuration: w.config })).toThrow();
+});
+
+test("successor admission reads bounded canonical record text with nullable semantic binding and no object fallback", () => {
+  const fixture = stageService(), read = { entry: fixture.snapshot.job, pinned: fixture.definitions.issue, activated: { name: "issue", state: "active" } };
+  const origin = (snapshot: typeof fixture.snapshot) => stageOriginOf(fixture.notice, read, snapshot, fixture.key.signer.key, fixture.definitions);
+  expect(isEntry(fixture.snapshot.admission.entry)).toBe(true);
+  expect(origin(fixture.snapshot)).toHaveProperty("job");
+  const effect = fixture.snapshot.admission.entry.effects.find(effect => effect.effect === "value" && effect.slot === "record");
+  if (effect?.effect !== "value" || typeof effect.value !== "string") return expect.fail("The scripted G17 record must use canonical text");
+  const parsed = JSON.parse(effect.value);
+  expect(parsed.binding.auditOf).toBeNull();
+  for (const invalid of [" " + effect.value, "{", " ".repeat(196_609), { v: 1 }]) {
+    const snapshot = structuredClone(fixture.snapshot), row = snapshot.admission.entry.effects.find(effect => effect.effect === "value" && effect.slot === "record");
+    if (row?.effect !== "value") return expect.fail("The scripted record effect must remain present");
+    row.value = invalid;
+    snapshot.admission.hash = entryHash(snapshot.admission.entry);
+    expect(isEntry(snapshot.admission.entry)).toBe(true);
+    expect(origin(snapshot)).toEqual({ not: "stage-origin-mismatch" });
+  }
 });

@@ -3,10 +3,11 @@
 import type { Digest, FactRef, FieldValue, PlatformData } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, evidenceBindingDigest, isFactRef, isRecord, same } from "@generalbusiness/dap-bytes";
 import { operationOpening, type Item, type Operation, type OutcomeGives, type Own, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView } from "@generalbusiness/dap-derive";
-import { claimEvidenceBatchJobV17, obligationChecksV17, readEvidenceBatchV17, selectEvidenceBatchV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
-import { certifiedPublicationStateV17, evidenceCarryingBudgetV17, type CertifiedPublicationStateV17 } from "./destination-budget-v17.ts";
+import { claimEvidenceBatchJobV17, obligationChecksV17, readEvidenceBatchV17, readEvidenceBatchWireV17, evidenceBatchWireV17, selectEvidenceBatchV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
+import { certifiedPublicationStateWireV17, CERTIFIED_PUBLICATION_TEXT_BYTES_V17, evidenceCarryingBudgetV17, type CertifiedPublicationStateV17 } from "./destination-budget-v17.ts";
 import { readRulesPolicyObservationV17 } from "./reservation-v17.ts";
 import { isObjectId } from "./reservation.ts";
+import { readEvidenceWireV17, evidenceWireV17 } from "./evidence-wire-v17.ts";
 import { checkSourceV13, checkStageV13 } from "./rules-policy-v13.ts";
 
 export const PUBLISHED_CHECKS_V17 = "published-checks";
@@ -22,7 +23,7 @@ const factOf = (own: Own, at: FactRef["at"], seq: number): FactRef | null => {
   const sealed = own(seq);
   return sealed && same(sealed.entry.at, at) && sealed.entry.seq === seq && entryHash(sealed.entry) === sealed.hash ? { at, seq, hash: sealed.hash } : null;
 };
-const batchValue = (item: Pick<Item, "values">) => readEvidenceBatchV17(item.values["batch"]);
+const batchValue = (item: Pick<Item, "values">) => readEvidenceBatchWireV17(item.values["batch"]);
 function batches(state: StateView, operation: FactRef): { item: Item; record: EvidenceBatchRecordV17 }[] | null {
   const ids = state.lookup("evidence-batch", "operation", canonicalize(operation), 5);
   if (!ids || ids.length > 4) return null;
@@ -48,7 +49,8 @@ function completeRows(state: StateView, publication: Item): ReturnType<typeof ba
 export function evidenceFundingCompleteV17(state: StateView, publication: Item): boolean {
   const rows = completeRows(state, publication);
   if (rows) return true;
-  const passes = publication.values["passes"];
+  const wire = readEvidenceWireV17(publication.values["passes"], CERTIFIED_PUBLICATION_TEXT_BYTES_V17);
+  const passes = wire.ok ? wire.value : null;
   if (!isRecord(passes) || !isRecord(passes["policy"]) || !isRecord(passes["policy"]["observation"]) || !Array.isArray(passes["policy"]["touched"])) return false;
   const observation = passes["policy"]["observation"] as unknown as CertifiedPublicationStateV17["policy"]["observation"];
   const input = passes["policy"]["input"] as CertifiedPublicationStateV17["policy"]["input"];
@@ -93,7 +95,7 @@ function fundingProposal(given: RuleGiven): EvidenceBatchRecordV17 | null {
     || !same(fields["operation"], operation) || fields["ordinal"] !== ordinal || !same(fields["capture"], { self: true })) return null;
   const writes = source.entry.effects.filter(effect => effect.effect === "value" && effect.item === item.id && effect.slot === "passes");
   const write = writes.length === 1 ? writes[0] : null;
-  const snapshot = write?.effect === "value" ? certifiedPublicationStateV17(write.value, given.resolved.bounds) : null;
+  const snapshot = write?.effect === "value" ? certifiedPublicationStateWireV17(write.value, given.resolved.bounds) : null;
   const selected = snapshot && captured(given, item, snapshot);
   if (!selected || !same(selected.ref, publication) || ordinal >= Math.ceil(selected.checks.length / 8)) return null;
   return readEvidenceBatchV17({ v: 1, publication, operation, capture, ordinal, total: Math.ceil(selected.checks.length / 8),
@@ -107,6 +109,15 @@ function readPlan(value: unknown): PublishedPlanV17 | null {
     && natural(value["written"]) && natural(value["cursor"]) && natural(value["total"]) && value["total"] >= 1 && value["total"] <= 32 && value["cursor"] <= value["total"]
     ? owned(value as unknown as PublishedPlanV17) : null;
 }
+const PLAN_BYTES_V17 = 196608;
+function readPlanWire(value: unknown): PublishedPlanV17 | null {
+  const wire = readEvidenceWireV17(value, PLAN_BYTES_V17);
+  return wire.ok ? readPlan(wire.value) : null;
+}
+function planWire(value: PublishedPlanV17): string {
+  if (!readPlan(value)) throw Error("A published plan is malformed");
+  return evidenceWireV17(value, PLAN_BYTES_V17);
+}
 function publishedRows(state: StateView, publication: Item) {
   const rows = completeRows(state, publication);
   return rows?.flatMap(row => row.record.checks.filter(check => checkStageV13(check) === "published").map(check => ({ ...row, check }))) ?? null;
@@ -116,7 +127,7 @@ function planFor(state: StateView, own: Own, operation: Operation) {
   const opening = own(Number(operation.id.split(":")[0]));
   const candidates = opening?.entry.effects.flatMap(effect => effect.effect === "value" && effect.slot === "plan" ? [effect.item] : []) ?? [];
   if (candidates.length !== 1) return null;
-  const item = state.item(candidates[0]!), plan = item && readPlan(item.values["plan"]);
+  const item = state.item(candidates[0]!), plan = item && readPlanWire(item.values["plan"]);
   const publication = plan && state.item(plan.publication.seq), rows = publication && publishedRows(state, publication), selected = plan && rows?.[plan.cursor];
   const written = plan && own(plan.written), receipt = plan && state.item(plan.receipt.seq);
   if (!plan || !publication || !same(factOf(own, plan.publication.at, plan.publication.seq), plan.publication)
@@ -186,8 +197,8 @@ function planProposal(given: RuleGiven): { plan: PublishedPlanV17; accounts: Non
 }
 function planEffects(given: RuleGiven, value: NonNullable<ReturnType<typeof planProposal>>): readonly RuleEffect[] {
   return [{ effect: "open", item: given.resolved.self, type: "published-plan", state: "pending" },
-    { effect: "value", item: given.resolved.self, slot: "plan", value: value.plan as unknown as FieldValue },
-    ...value.accounts.map(row => ({ effect: "value" as const, item: row.item.id, slot: "batch", value: { ...row.record, planAt: given.resolved.self } as unknown as FieldValue })),
+    { effect: "value", item: given.resolved.self, slot: "plan", value: planWire(value.plan) },
+    ...value.accounts.map(row => ({ effect: "value" as const, item: row.item.id, slot: "batch", value: evidenceBatchWireV17({ ...row.record, planAt: given.resolved.self }) })),
     ...operationOpening(0, { owner: "platform:destination@17", kind: PUBLISHED_CHECKS_V17, attempts: 1, for: value.holder })];
 }
 export function fundingData(base: PlatformData): PlatformData {
@@ -246,29 +257,29 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
     if (!capacity || !hooks.capacityValid(capacity.capacity)) return null;
     const effects: RuleEffect[] = [...capacity.effects,
       { effect: "ref", item: given.resolved.self, slot: "operation", to: batch.operation }, { effect: "ref", item: given.resolved.self, slot: "lane", to: batch.operation.at },
-      { effect: "value", item: given.resolved.self, slot: "batch", value: batch as unknown as FieldValue },
+      { effect: "value", item: given.resolved.self, slot: "batch", value: evidenceBatchWireV17(batch) },
       { effect: "value", item: given.resolved.self, slot: "capacity", value: capacity.capacity }, { effect: "value", item: given.resolved.self, slot: "policyKey", value: capacity.policyKey }];
     const update = ready(given, batch);
     if (update) effects.push({ effect: "value", item: batch.publication.seq, slot: "evidenceReady", value: true });
-    return evidenceCarryingBudgetV17(given, effects, [], update ? [update] : [], [batch, capacity.capacity]).admitted ? { batch, ...capacity } : null;
+    return evidenceCarryingBudgetV17(given, effects, [], update ? [update] : [], []).admitted ? { batch, ...capacity } : null;
   };
   next["evidence-fund-v17"] = { place: "guard", refusals: ["evidence-funding-unavailable"], run: given => funded(given) ? { holds: true } : { holds: false, name: "evidence-funding-unavailable" } };
   next["evidence-fund-open-v17"] = { place: "effect", most: 16, run: given => {
     const value = funded(given); if (!value) throw Error("A funding request lost its capacity proof");
     const effects: RuleEffect[] = [...value.effects,
       { effect: "ref", item: given.resolved.self, slot: "operation", to: value.batch.operation }, { effect: "ref", item: given.resolved.self, slot: "lane", to: value.batch.operation.at },
-      { effect: "value", item: given.resolved.self, slot: "batch", value: value.batch as unknown as FieldValue },
+      { effect: "value", item: given.resolved.self, slot: "batch", value: evidenceBatchWireV17(value.batch) },
       { effect: "value", item: given.resolved.self, slot: "capacity", value: value.capacity }, { effect: "value", item: given.resolved.self, slot: "policyKey", value: value.policyKey }];
     const update = ready(given, value.batch);
     if (update) effects.push({ effect: "value", item: value.batch.publication.seq, slot: "evidenceReady", value: true });
-    if (!evidenceCarryingBudgetV17(given, effects, [], update ? [update] : [], [value.batch, value.capacity]).admitted) throw Error("A funding record exceeds its carrying entry");
+    if (!evidenceCarryingBudgetV17(given, effects, [], update ? [update] : [], []).admitted) throw Error("A funding record exceeds its carrying entry");
     return effects;
   } };
   next["evidence-funding-ready-v17"] = { place: "send", run: given => {
     const batch = fundingProposal(given); return batch ? ready(given, batch) : null;
   } };
-  next["evidence-batch-record-v17"] = { place: "type", run: (_given, value) => readEvidenceBatchV17(value) !== null };
-  next["evidence-published-plan-v17"] = { place: "type", run: (_given, value) => readPlan(value) !== null };
+  next["evidence-batch-record-v17"] = { place: "type", run: (_given, value) => readEvidenceBatchWireV17(value) !== null };
+  next["evidence-published-plan-v17"] = { place: "type", run: (_given, value) => readPlanWire(value) !== null };
   next["evidence-plan-batch-v17"] = { place: "also", bind: items => {
     const rows = items.map(item => ({ id: item.id, record: batchValue(item) })).sort((a, b) => (a.record?.ordinal ?? -1) - (b.record?.ordinal ?? -1));
     if (!rows.length || rows.some((row, n) => !row.record || row.record.ordinal !== n || row.record.total !== rows.length)) return null;
@@ -276,7 +287,7 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
   } };
   next["evidence-plan-v17"] = { place: "guard", refusals: ["published-plan-unavailable"], run: given => {
     const value = planProposal(given);
-    return value && evidenceCarryingBudgetV17(given, planEffects(given, value), [], [], [value.plan]).admitted ? { holds: true } : { holds: false, name: "published-plan-unavailable" };
+    return value && evidenceCarryingBudgetV17(given, planEffects(given, value), [], [], []).admitted ? { holds: true } : { holds: false, name: "published-plan-unavailable" };
   } };
   next["evidence-plan-open-v17"] = { place: "effect", most: 8, run: given => {
     const value = planProposal(given); if (!value) throw Error("A published plan lost its recorded written source");
@@ -301,7 +312,7 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
     const batch = batchValue(item), job = given.resolved.fields["job"], name = given.resolved.fields["name"];
     const claimed = batch && isFactRef(job) && typeof name === "string" ? claimEvidenceBatchJobV17(batch, job, name) : null;
     if (!claimed?.ok) throw Error("An admitted job lost its batch slot");
-    return [...effects, { effect: "value", item: item.id, slot: "batch", value: claimed.record as unknown as FieldValue }];
+    return [...effects, { effect: "value", item: item.id, slot: "batch", value: evidenceBatchWireV17(claimed.record) }];
   } };
   const publicationUpdate = next["publication-update"];
   const releasedUpdate = (given: RuleGiven): { request: RuleRequest; publication: Item } | null => {
@@ -336,7 +347,7 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
       const result = judge.rules.derives!(given, operation, selected);
       const captures = result.effects.filter(effect => effect.effect === "value" && effect.slot === "passes");
       if (captures.length !== 1 || captures[0]!.effect !== "value") return result;
-      const effect = captures[0]!, publication = given.state.item(effect.item), snapshot = certifiedPublicationStateV17(effect.value, given.resolved.bounds);
+      const effect = captures[0]!, publication = given.state.item(effect.item), snapshot = certifiedPublicationStateWireV17(effect.value, given.resolved.bounds);
       if (!publication || !snapshot) return result;
       return { ...result, sends: [...result.sends, ...evidenceFundingRequestsV17(given, publication, snapshot)] };
     } } };
@@ -376,7 +387,7 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
         subject: { kind: "published" as const, publication: plan.publication, receipt: plan.receipt, written, manifest: (given.state.item(plan.publication.seq)!.refs["manifest"] as FactRef) } };
       const publication = given.state.item(plan.publication.seq)!, cursor = plan.cursor + 1;
       const following = current.rows[cursor];
-      return { effects: [{ effect: "value", item: current.item.id, slot: "plan", value: { ...plan, cursor } as unknown as FieldValue },
+      return { effects: [{ effect: "value", item: current.item.id, slot: "plan", value: planWire({ ...plan, cursor }) },
         ...(cursor === plan.total ? [{ effect: "state" as const, item: current.item.id, state: "complete" }] : [])],
         sends: [{ to: plan.operation.at, message: { class: "request", type: "tell", body: { message: "admit-published-check", fields: {
           operation: plan.operation, manifest: binding.subject.manifest, name: check.name, configuration: check.configuration,
@@ -399,7 +410,7 @@ export function* evidenceFundingFloorReferencesV17(snapshot: StateSnapshot, own:
       fact(batch.policy.certificate.request); fact(batch.policy.certificate.certificate);
       if (batch.planAt !== null) positions.add(batch.planAt);
     } else if (item.type === "published-plan" && item.state === "pending") {
-      const plan = readPlan(item.values["plan"]); if (!plan) throw Error("A retained published plan is malformed");
+      const plan = readPlanWire(item.values["plan"]); if (!plan) throw Error("A retained published plan is malformed");
       positions.add(item.id); fact(plan.publication); fact(plan.receipt); positions.add(plan.written);
     }
   }

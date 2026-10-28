@@ -7,6 +7,7 @@ import type { EvidenceJobRecordV17 } from "./destination-evidence-v17.ts";
 import { evidenceKeyDigestV17, readEvidenceIndexV17, type EvidenceCandidateV17 } from "./evidence-index-v17.ts";
 import type { EvidenceFailureV17, EvidenceHoldRecordV17 } from "./evidence-holds-v17.ts";
 import { checkStageV13, readRulesPolicyV13 } from "./rules-policy-v13.ts";
+import { evidenceWireV17, readEvidenceWireV17 } from "./evidence-wire-v17.ts";
 
 const MAX = Number.MAX_SAFE_INTEGER;
 const HASH = `sha256:${"f".repeat(64)}` as const;
@@ -20,7 +21,8 @@ type Row = { item: number; record: EvidenceJobRecordV17 };
 type Forecast = { admitted: boolean; entryBytes: number; effects: number };
 const refused = (): Forecast => ({ admitted: false, entryBytes: 0, effects: 0 });
 const full = (fact: FactRef): FactRef => ({ at: fact.at, seq: MAX, hash: HASH });
-const valueEffect = (item: number, slot: string, value: unknown): RuleEffect => ({ effect: "value", item, slot, value: value as FieldValue });
+const valueEffect = (item: number, slot: string, value: FieldValue | null): RuleEffect => ({ effect: "value", item, slot, value });
+const codeEffect = (item: number, slot: string, value: unknown, max: number): RuleEffect => valueEffect(item, slot, evidenceWireV17(value, max));
 const larger = <T>(left: T | null, right: T): T => left !== null && bytes(left) > bytes(right) ? left : right;
 
 function failure(record: EvidenceJobRecordV17): EvidenceFailureV17 {
@@ -94,7 +96,8 @@ function incident(record: EvidenceJobRecordV17, memberBytes: number): RuleReques
  * code record. Existing rows are retained if a policy has since changed. */
 function publicationPasses(given: RuleGiven, record: EvidenceJobRecordV17): { value: unknown; signers: number } {
   if (record.binding.subject.kind !== "landing" || !record.policy) throw Error("No captured landing policy");
-  const raw = given.state.item(record.binding.subject.publication.seq)?.values["passes"];
+  const stored = readEvidenceWireV17(given.state.item(record.binding.subject.publication.seq)?.values["passes"], given.resolved.bounds.entryBytes);
+  const raw = stored.ok ? stored.value : null;
   if (!isRecord(raw) || !Array.isArray(raw["generations"]) || raw["generations"].length > 32 || !isRecord(raw["policy"])) throw Error("No captured passes record");
   const captured = raw["policy"], required = captured["required"], input = captured["input"];
   if (!Array.isArray(required) || required.length > 32 || !isRecord(input) || !isRecord(input["extents"])) throw Error("No complete captured policy");
@@ -140,8 +143,8 @@ export function evidenceFutureEntriesV17(given: RuleGiven, current: Row, owners:
     const related = main.binding.stage === "published" ? main.holdOwner : main.reuseOwner;
     if (related !== null && !completed.has(related)) return refused();
     const updated = [current.item, ...(related !== null && related !== current.item ? [related] : [])];
-    const rowEffects = updated.flatMap(id => [valueEffect(id, "record", completed.get(id)!), { effect: "state" as const, item: id, state: "reuse-anchor-timedout" }]);
-    const result = [...rowEffects, valueEffect(MAX, "evidenceService", service(main, bounds.memberBytes)), valueEffect(current.item, "deadline", null),
+    const rowEffects = updated.flatMap(id => [codeEffect(id, "record", completed.get(id)!, 196608), { effect: "state" as const, item: id, state: "reuse-anchor-timedout" }]);
+    const result = [...rowEffects, codeEffect(MAX, "evidenceService", service(main, bounds.memberBytes), 16384), valueEffect(current.item, "deadline", null),
       { effect: "state" as const, item: main.requestAt, state: "settled" }];
     const base = { v: 1, at: given.resolved.at, seq: MAX, prev: HASH, time: TIME, clamped: false, epoch: 0, prepared: [],
       // Typed origins retain at most five named facts. Already observed
@@ -166,9 +169,9 @@ export function evidenceFutureEntriesV17(given: RuleGiven, current: Row, owners:
       // holder observation is borrowed from the earlier result entry.
       const passes = publicationPasses(given, main);
       const progressObservation = observationBytes("rules", bounds) + passes.signers * observationBytes("key", bounds) + passes.signers + 1;
-      const progressRecord = [valueEffect(current.item, "record", main), valueEffect(MAX, "evidenceService", service(main, bounds.memberBytes))];
+      const progressRecord = [codeEffect(current.item, "record", main, 196608), codeEffect(MAX, "evidenceService", service(main, bounds.memberBytes), 16384)];
       variants.push({ input: outcome("evidence-progress"), effects: [attempt, ...progressRecord,
-        valueEffect(publication, "passes", passes.value), valueEffect(publication, "checkDeadline", null), ...openings],
+        codeEffect(publication, "passes", passes.value, bounds.entryBytes), valueEffect(publication, "checkDeadline", null), ...openings],
         sends: [decision(main)], observed: progressObservation });
       variants.push({ input: outcome("evidence-progress"), effects: [attempt, ...progressRecord,
         { effect: "state", item: publication, state: "cleanup-aborted" }, valueEffect(publication, "reason", "required-check-failed"),
@@ -177,8 +180,8 @@ export function evidenceFutureEntriesV17(given: RuleGiven, current: Row, owners:
     const notice = main.incident ? operationOpening(0, { owner: "platform:destination@17", kind: "evidence-notice", attempts: 1, for: main.holder }) : [];
     variants.push({ input: { type: "timed", item: current.item, rule: "evidence-reuse-deadline", due: TIME },
       effects: [{ effect: "state", item: current.item, state: "reuse-anchor-timedout" }, valueEffect(current.item, "deadline", null),
-        ...updated.map(id => valueEffect(id, "record", completed.get(id)!)), ...notice], sends: [], observed: 0 });
-    if (main.incident) variants.push({ input: outcome("evidence-notice"), effects: [attempt, valueEffect(current.item, "record", main)],
+        ...updated.map(id => codeEffect(id, "record", completed.get(id)!, 196608)), ...notice], sends: [], observed: 0 });
+    if (main.incident) variants.push({ input: outcome("evidence-notice"), effects: [attempt, codeEffect(current.item, "record", main, 196608)],
       sends: [incident(main, bounds.memberBytes)], observed: observationBytes("holders", bounds, 32) + 1 });
     let entryBytes = 0, effects = 0, admitted = true;
     for (const variant of variants) {

@@ -11,16 +11,26 @@ import type { RulesCheckV13, RulesPolicyV13 } from './rules-policy-v13.ts';
 import { RULES_TREE_PROOF, verifyRulesTree } from './rules-policy-tree.ts';
 import type { RulesCertificateProvenanceV11 } from './rules-certificate.ts';
 import { rulesPublishedCertificateV17 } from './rules-certificate-v17.ts';
+import { evidenceWireV17, readEvidenceWireV17 } from './evidence-wire-v17.ts';
 
 const TRANSPORT=['proposal','proof','certificateRequest','certificate','directoryBirth','destinationBirth','membershipBirth','checkers'];
 const birthField=(under:string,kind:string)=>({type:'fact' as const,kind:[kind],under,required:true});
 const no=(name:string):ReturnType<GuardRule>=>({holds:false,name});
 const bounded=(value:unknown,max:number)=>{try{return utf8(canonicalize(value)).length<=max;}catch{return false;}};
 const rulesOf=(state:Pick<StateView,'page'>)=>state.page('rules',['current'],null,1).items[0]??null;
+const SERVICE_MARK_TEXT_BYTES=16384;
+function policyWire(value:unknown) {
+  const read=readEvidenceWireV17(value,RULES_POLICY_VALUE_V13.max);
+  return read.ok?rulesPolicyProposalV13(read.value):{ok:false as const,reason:'invalid-policy' as const};
+}
+function markWire(value:unknown) {
+  const read=readEvidenceWireV17(value,SERVICE_MARK_TEXT_BYTES);
+  return read.ok?readServiceMarkV13(read.value):{ok:false as const};
+}
 function oldMark(state:Pick<StateView,'page'>):ServiceMark|null {
   const item=rulesOf(state);
   if(item?.values['configured']!==true)return null;
-  const policy=rulesPolicyProposalV13(item.values['policy']);
+  const policy=policyWire(item.values['policy']);
   if(!policy.ok)throw Error('Q13 stored policy is invalid');
   return policy.policy.roomService;
 }
@@ -36,7 +46,8 @@ function content(policy:Pick<RulesPolicyV13,'approvals'|'ownerMayReview'|'checks
 }
 function completePolicy(given:RuleGiven) {
   const policy=Object.fromEntries(Object.entries(given.resolved.fields).filter(([name])=>!TRANSPORT.includes(name)));
-  return rulesPolicyProposalV13(policy);
+  const mark=markWire(policy['roomService']);
+  return mark.ok?rulesPolicyProposalV13({...policy,roomService:mark.mark}):{ok:false as const,reason:'invalid-policy' as const};
 }
 function publication(given:RuleGiven) {
   if(!given.resolved.signer)return {ok:false as const,reason:'rules-certificate-unavailable' as const};
@@ -84,7 +95,7 @@ export const rulesScopeV13:PlatformData={...archiveDeviceRulesScope,
     establish:{...oldEstablish,fields:{...oldEstablish.fields,ownerMayReview:{type:'bool',required:true}},
       effects:[...oldEstablish.effects,{value:{slot:'ownerMayReview',from:{field:'ownerMayReview'}}}]},
     publish:{...oldPublish,fields:{...oldPublish.fields,checks:{...checksType,required:true},extents:{...extentsType,required:true},
-      roomService:{type:'code',code:'q13-service-mark',row:'ER1',required:true},checkers:{type:'list',max:33,of:{type:'member'},required:true},
+      roomService:{type:'text',max:SERVICE_MARK_TEXT_BYTES,required:true},checkers:{type:'list',max:33,of:{type:'member'},required:true},
       singleControllerException:exceptionField,allowZeroApprovals:{type:'bool',required:false},
       proposal:{type:'digest',required:true,value:RULES_POLICY_VALUE_V13},proof:{type:'digest',required:true,value:RULES_TREE_PROOF},
       certificateRequest:birthField('platform:destination','certify-rules-tree'),certificate:birthField('platform:destination','certify-rules-tree'),
@@ -118,7 +129,6 @@ export const rulesScopeRulesV13:Rules={...archiveDeviceRules,
     return {to:given.input.from.at,message:{class:'request',type:'relate',body:{name:'rules',
       item:{at:given.resolved.at,seq:item.id,hash:item.opened},state:'current',detail}}};
   }},
-  'q13-service-mark':{place:'type',run:(_given,value)=>readServiceMarkV13(value).ok},
   'q13-checker-union':{place:'guard',refusals:['invalid-policy','not-a-checker','room-service-admin-required'],run:given=>{
     const proposed=completePolicy(given),provided=given.resolved.fields['checkers'];
     if(!proposed.ok||!Array.isArray(provided)||provided.length>33)return no('invalid-policy');
@@ -140,7 +150,7 @@ export const rulesScopeRulesV13:Rules={...archiveDeviceRules,
     return {holds:true};
   }},
   'q13-bounded-extents':{place:'type',run:(_given,value)=>Array.isArray(value)&&value.length>=1&&value.length<=8&&bounded(value,RULES_POLICY_VALUE_V13.max)},
-  'q13-complete-policy':{place:'type',run:(_given,value)=>rulesPolicyProposalV13(value).ok&&bounded(value,RULES_POLICY_VALUE_V13.max)},
+  'q13-complete-policy':{place:'type',run:(_given,value)=>policyWire(value).ok},
   'q13-certificate-provenance':{place:'type',run:(_given,value)=>provenance(value)},
   'q13-certified-policy':{place:'guard',refusals:['invalid-policy','approval-opt-in-required','approver-not-review','rules-extent-required','catch-all-required','extent-check-unknown','audit-invalid','published-reuse','holds-stage','rules-content-too-large','extent-tree-unavailable','extent-pattern-unmatched','rules-certificate-unavailable','rules-certificate-destination-mismatch','rules-certificate-used','rules-certificate-stale'],run:given=>{
     const result=publication(given);return result.ok?{holds:true}:no(result.reason);
@@ -150,7 +160,7 @@ export const rulesScopeRulesV13:Rules={...archiveDeviceRules,
     const p=result.policy;
     return [
       ...Object.entries({approvals:p.approvals,ownerMayReview:p.ownerMayReview,checks:p.checks,labels:p.labels,extents:p.extents,
-        singleControllerException:p.singleControllerException===true,configured:true,policy:p,proposal:result.proposal,certificate:result.certificate})
+        singleControllerException:p.singleControllerException===true,configured:true,policy:evidenceWireV17(p,RULES_POLICY_VALUE_V13.max),proposal:result.proposal,certificate:result.certificate})
         .map(([slot,value]):RuleEffect=>({effect:'value',item:item.id,slot,value:value as FieldValue})),
       ...(!same(oldMark(given.state),p.roomService)?[{effect:'ref' as const,item:item.id,slot:'roomServiceChanged',to:given.resolved.self}]:[]),
     ];
@@ -160,7 +170,7 @@ export const rulesScopeRulesV13:Rules={...archiveDeviceRules,
 function observationPolicy(state:Pick<StateView,'page'>) {
   const item=rulesOf(state);if(!item)return null;
   if(item.values['configured']===true){
-    const result=rulesPolicyProposalV13(item.values['policy']);
+    const result=policyWire(item.values['policy']);
     if(!result.ok||result.digest!==item.values['proposal']||!provenance(item.values['certificate']))return null;
     const envelope={configured:true,policy:result.policy,proposal:result.digest,certificate:item.values['certificate']};
     if(!bounded(envelope,RULES_EXTENTS_VALUE_V13.max))return null;

@@ -5,6 +5,7 @@ import { keys, otherLane, d, t } from "@generalbusiness/dap-derive/testing";
 import type { RuleGiven } from "@generalbusiness/dap-derive";
 import type { EvidenceJobRecordV17 } from "../src/destination-evidence-v17.ts";
 import { evidenceFutureEntriesV17 } from "../src/evidence-forecast-v17.ts";
+import { evidenceWireV17 } from "../src/evidence-wire-v17.ts";
 import { newEvidenceIndexV17 } from "../src/evidence-index-v17.ts";
 import { newEvidenceHoldV17 } from "../src/evidence-holds-v17.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
@@ -45,8 +46,8 @@ function record(stage: CheckStage = "work", count = 1): EvidenceJobRecordV17 {
 }
 function given(row: EvidenceJobRecordV17, over: Partial<Bounds> = {}): RuleGiven {
   const source = { resolved: { at: destination, bounds: { ...PROPOSED_BOUNDS, derivedEffects: 16, ...over } }, uses: [],
-    state: { item: () => ({ values: { passes: { policy: { required: row.policy!.policy.checks,
-      input: { extents: { policy: row.policy!.policy } } }, generations: [] } } }) } };
+    state: { item: () => ({ values: { passes: evidenceWireV17({ policy: { required: row.policy!.policy.checks,
+      input: { extents: { policy: row.policy!.policy } } }, generations: [] }, 196608) } }) } };
   Object.defineProperty(source, "input", { get: () => { throw Error("The current input is not a future input"); } });
   return source as unknown as RuleGiven;
 }
@@ -117,4 +118,14 @@ test("over-bound code records and absent admitted triples refuse before a future
   expect(quote({ ...row, reason: "\u0000".repeat(40000) }).admitted).toBe(false);
   expect(quote({ ...row, policy: null }).admitted).toBe(false);
   expect(quote({ ...row, commit: null }).admitted).toBe(false);
+});
+
+test("future carrying bytes include the outer JSON escaping of canonical code text", () => {
+  const row = record(), ascii = quote({ ...row, reason: "a".repeat(1024) }), escaped = quote({ ...row, reason: "\\".repeat(1024) });
+  expect(ascii.admitted).toBe(true);
+  expect(escaped.admitted).toBe(true);
+  // One record slot: a literal backslash becomes two in the code text,
+  // then four in its containing Entry, versus one byte for ASCII 'a'.
+  expect(escaped.entryBytes - ascii.entryBytes).toBe(3 * 1024);
+  expect(quote({ ...row, reason: "\\".repeat(1024) }, { entryBytes: escaped.entryBytes - 1 }).admitted).toBe(false);
 });

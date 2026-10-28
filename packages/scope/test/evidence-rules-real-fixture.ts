@@ -8,7 +8,7 @@ import { keys, type Actor } from "@generalbusiness/dap-derive/testing";
 import { RULES_CERTIFICATE_KIND, RULES_PATTERNS, RULES_TREE_PROOF } from "@generalbusiness/dap-platform";
 import { EVIDENCE_RULES_COHORT } from "../../platform/src/evidence-cohort.ts";
 import { rulesPolicyCheckersV13, rulesPolicyProposalV13, type RulesPolicyV13 } from "../../platform/src/rules-policy-v13.ts";
-import { readEvidenceJobRecordV17 } from "../../platform/src/destination-evidence-v17.ts";
+import { readEvidenceJobRecordWireV17 } from "../../platform/src/destination-evidence-v17.ts";
 import { issueEvidence4 } from "../../../apps/room/lanes/src/issue4.ts";
 import { changeEvidence4 } from "../../../apps/room/lanes/src/change4.ts";
 import { hardeningItems, hardeningSealed } from "./certified-rules-hardening-fixture.ts";
@@ -132,7 +132,7 @@ export async function publishEvidenceRulesCertificate(room: EvidenceRoom, policy
   if (!proposed.ok) throw Error("Strict policy required");
   const { D, M, Q, G } = room;
   return Q.stub.submit(await Q.intent(actor, "publish", { on: 0, expected: await Q.expected({ on: 0 }),
-    fields: JSON.parse(canonicalize({ ...proposed.policy, checkers: rulesPolicyCheckersV13(proposed.policy), proposal: proposed.digest, proof, certificateRequest: request, certificate,
+    fields: JSON.parse(canonicalize({ ...proposed.policy, roomService: canonicalize(proposed.policy.roomService), checkers: rulesPolicyCheckersV13(proposed.policy), proposal: proposed.digest, proof, certificateRequest: request, certificate,
       directoryBirth: factRefOf((await D.entries())[0]!), destinationBirth: factRefOf((await G.entries())[0]!), membershipBirth: factRefOf((await M.entries())[0]!) })) }), [],
     { values: [canonicalize(proposed.policy), proofBytes] });
 }
@@ -282,7 +282,7 @@ export async function prepareEvidenceWork(room: EvidenceRoom, options: EvidenceW
   const notice: Notice = { lane: await lane.at(), job: jobFact, name: configuration.name, tree };
   const record = async () => {
     const rows = await hardeningItems(room.G, "evidence-job");
-    const found = rows.map(row => readEvidenceJobRecordV17(row.values['record'])).find(row => row && canonicalize(row.job) === canonicalize(jobFact));
+    const found = rows.map(row => readEvidenceJobRecordWireV17(row.values['record'])).find(row => row && canonicalize(row.job) === canonicalize(jobFact));
     if (!found) throw Error("Actual G17 job record required");
     return found;
   };
@@ -301,7 +301,7 @@ export type PreparedEvidenceWork = Awaited<ReturnType<typeof prepareEvidenceWork
 
 export async function evidenceRecord(room: EvidenceRoom, job: FactRef) {
   const rows = [...await hardeningItems(room.G, "evidence-job"), ...await hardeningItems(room.G, "evidence-request")];
-  const found = rows.map(row => readEvidenceJobRecordV17(row.values['record']))
+  const found = rows.map(row => readEvidenceJobRecordWireV17(row.values['record']))
     .find(record => record && canonicalize(record.job) === canonicalize(job));
   if (!found) throw Error("Actual G17 admitted or refused record required");
   return found;

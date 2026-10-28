@@ -44,7 +44,7 @@ export function stageService() {
   const record = { v: 1, state: "admitted", job: jobFact, name: configuration.name, configuration: configurationDigest(configuration), binding, bindingDigest,
     commit: overlay.commit, tree: overlay.tree, base: overlay.base, admittedAt: 5, sourceFacts: sources.map(fact) };
   const admission = sealed(destination, 5, { type: "outcome", operation: "4:0", attempt: 1, owner: "platform:destination@17", kind: "evidence-admit", result: "confirmed", evidence: { basis: "own-answer", body: { job: jobFact } } }, [
-    { effect: "attempt", operation: "4:0", attempt: 1, result: "confirmed", selected: true }, { effect: "open", item: 5, type: "evidence-job", state: "open" }, { effect: "value", item: 5, slot: "record", value: record as unknown as FieldValue },
+    { effect: "attempt", operation: "4:0", attempt: 1, result: "confirmed", selected: true }, { effect: "open", item: 5, type: "evidence-job", state: "open" }, { effect: "value", item: 5, slot: "record", value: canonicalize(record) },
   ]);
   const snapshot: StageSnapshot = { v: 1, destination, job, admission, binding, sources, ...overlay };
   const runner = new ScriptedRunner(), durable = new MemoryDurable(), outcomes = new Outcomes(durable);
@@ -67,7 +67,7 @@ export function stageService() {
     },
   };
   const service = new CheckerService({ signer: key.signer, scopes, runner, outcomes, evidenceDefinitions: definitions, clock: () => now, random: length => new Uint8Array(length).fill(++n) });
-  return { service, scopes, runner, outcomes, key, snapshot, jobFact, submitted,
+  return { service, scopes, runner, outcomes, key, snapshot, jobFact, submitted, definitions,
     notice: { lane, job: jobFact, name: configuration.name, tree: overlay.tree },
     expire: () => { now = T0 + 1_800_001; }, loseReply: () => { loseReply = true; }, withdraw: () => { current = false; }, stageReads: () => stageReads };
 }

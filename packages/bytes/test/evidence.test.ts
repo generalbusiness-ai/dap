@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { EvidenceBinding, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, evidenceBindingDigest, readEvidenceBinding } from "../src/index.ts";
+import { b64url, evidenceBindingDigest, newIncarnation, readEvidenceBinding } from "../src/index.ts";
 
 const scope = (kind: ScopeRef["kind"]): ScopeRef => ({ scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind });
 const binding = (): EvidenceBinding => ({ v: 1, source: "room", stage: "work",
@@ -17,10 +17,11 @@ test("a binding owns its nested facts and its digest distinguishes native genera
   if (!owned) return expect.fail("The explicit binding must be readable");
   const digest = evidenceBindingDigest(owned);
   original.serviceGeneration.seq++;
-  original.checker.membership.inc = `in_${"b".repeat(26)}`;
+  // Explicit public TEST bytes produce another canonical 16-byte incarnation.
+  original.checker.membership.inc = newIncarnation(new Uint8Array(16).fill(1));
   expect(evidenceBindingDigest(owned)).toBe(digest);
   expect(evidenceBindingDigest(original)).not.toBe(digest);
-  const recreated = binding(); recreated.policyGeneration.rules.inc = `in_${"b".repeat(26)}`;
+  const recreated = binding(); recreated.policyGeneration.rules.inc = newIncarnation(new Uint8Array(16).fill(1));
   expect(evidenceBindingDigest(recreated)).not.toBe(digest);
   expect(readEvidenceBinding({ ...binding(), stage: "landing" })).toBeNull();
   expect(readEvidenceBinding({ ...binding(), callerKey: binding().roomService!.key })).toBeNull();

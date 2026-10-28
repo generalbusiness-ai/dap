@@ -11,6 +11,13 @@ const value = (effects: readonly Effect[], item: number, slot: string): unknown 
   return rows.length === 1 && rows[0]!.effect === "value" ? rows[0]!.value : undefined;
 };
 const sound = (sealed: Sealed): boolean => isRecord(sealed) && isEntry(sealed.entry) && entryHash(sealed.entry) === sealed.hash;
+// G17's versioned opaque record wire. Generic FieldValue still excludes nested nulls.
+const ADMISSION_RECORD_BYTES_V17 = 196_608;
+function admissionRecord(value: unknown): Record<string, unknown> | null {
+  if (typeof value !== "string" || value.length > ADMISSION_RECORD_BYTES_V17 || utf8(value).length > ADMISSION_RECORD_BYTES_V17) return null;
+  const parsed = parseStrict(value);
+  return isRecord(parsed) && canonicalize(parsed) === value ? parsed : null;
+}
 const sent = (source: Sealed, target: Sealed): boolean => {
   const input = target.entry.input;
   if (input.type !== "delivery" || !same(factOf(source), input.from)) return false;
@@ -40,9 +47,9 @@ export function stageOriginOf(notice: Notice, read: Pick<OriginRead, "entry" | "
       || input.evidence.basis !== "own-answer" || !isRecord(input.evidence.body) || Object.keys(input.evidence.body).join() !== "job" || !same(input.evidence.body["job"], notice.job)
       || !admitted.effects.some(effect => effect.effect === "attempt" && effect.selected === true)) return no();
     if (admitted.effects.filter(effect => effect.effect === "open").length !== 1 || !admitted.effects.some(effect => effect.effect === "open" && effect.item === admitted.seq && effect.type === "evidence-job")) return no();
-    const records = admitted.effects.filter(effect => effect.effect === "value" && effect.item === admitted.seq && effect.slot === "record" && isRecord(effect.value) && same(effect.value["job"], notice.job));
+    const records = admitted.effects.filter(effect => effect.effect === "value" && effect.item === admitted.seq && effect.slot === "record");
     const effect = records.length === 1 ? records[0] : null;
-    const record = effect?.effect === "value" && isRecord(effect.value) ? effect.value : null;
+    const record = effect?.effect === "value" ? admissionRecord(effect.value) : null;
     if (!record || !effect || effect.effect !== "value" || record["v"] !== 1 || record["state"] !== "admitted" || record["admittedAt"] !== admitted.seq || !same(record["binding"], binding)
       || record["bindingDigest"] !== evidenceBindingDigest(binding) || !same(record["job"], notice.job) || record["commit"] !== snapshot.commit || record["tree"] !== snapshot.tree || record["base"] !== snapshot.base
       || !Array.isArray(record["sourceFacts"]) || record["sourceFacts"].length > 32 || !record["sourceFacts"].every(isFactRef)) return no();

@@ -8,6 +8,9 @@ import { readRulesPolicyObservationV17, requiredChecksV17, type ReservationPolic
 import type { RulesCheckV13 } from './rules-policy-v13.ts';
 import { RULES_POLICY_VALUE_V13 } from './rules-policy-v13.ts';
 import { RULES_TREE_PROOF } from './rules-policy-tree.ts';
+import { evidenceWireV17, readEvidenceWireV17 } from './evidence-wire-v17.ts';
+
+export const CERTIFIED_PUBLICATION_TEXT_BYTES_V17 = 262144;
 
 export const rulesCertificateEvidenceValuesV17: NonNullable<OperationRules['values']> = evidence => {
   const body=evidence.body;
@@ -140,12 +143,14 @@ export function certifiedPublicationBudgetV17(record: CertifiedPublicationStateV
   const checker = record.policy.required.reduce<RulesCheckV13['checker']>((largest, check) => bytes(check.checker) > bytes(largest) ? check.checker : largest,
     { membership: SCOPE, member: '@a' });
   const row = { name: TEXT128, job: FACT, passed: false, proof: { result: FACT, key: KEY, decided: MAX, configuration: HASH, checker, tree: 'f'.repeat(64), proposal: HASH } };
-  const generationsReserveBytes = 32 * (bytes(row) + 1); // one comma per row safely includes the last
-  const emptyRecordBytes = bytes({ policy: record.policy, generations: [] });
-  const recordBytes = bytes(record), maximumRecordBytes = emptyRecordBytes + generationsReserveBytes;
+  const emptyText = canonicalize({ policy: record.policy, generations: [] }), recordText = canonicalize(record);
+  const maximumText = canonicalize({ policy: record.policy, generations: Array.from({length:32},()=>row) });
+  const emptyRecordBytes = bytes(emptyText), recordBytes = bytes(recordText), maximumRecordBytes = bytes(maximumText);
+  const generationsReserveBytes = maximumRecordBytes - emptyRecordBytes;
   const futureEnvelopeBytes = certifiedFutureEnvelopeBytesV17(bounds), recordCeiling = bounds.entryBytes - futureEnvelopeBytes;
   return { entryBytes: bounds.entryBytes, recordBytes, emptyRecordBytes, generationsReserveBytes, maximumRecordBytes, futureEnvelopeBytes, recordCeiling,
-    admitted: recordBytes <= recordCeiling && maximumRecordBytes <= recordCeiling };
+    admitted: utf8(recordText).length <= CERTIFIED_PUBLICATION_TEXT_BYTES_V17 && utf8(maximumText).length <= CERTIFIED_PUBLICATION_TEXT_BYTES_V17
+      && recordBytes <= recordCeiling && maximumRecordBytes <= recordCeiling };
 }
 
 export function certifiedPublicationStateV17(value: unknown, bounds: Bounds): CertifiedPublicationStateV17 | null {
@@ -161,6 +166,14 @@ export function certifiedPublicationStateV17(value: unknown, bounds: Bounds): Ce
     if (record.generations.some(row => row.proof && !policy.required.some(check => check.name === row.name && same(check.checker, row.proof!.checker)))) return null;
     return certifiedPublicationBudgetV17(record, bounds).admitted ? record : null;
   } catch { return null; }
+}
+export function certifiedPublicationStateWireV17(value: unknown, bounds: Bounds): CertifiedPublicationStateV17 | null {
+  const read = readEvidenceWireV17(value, Math.min(bounds.entryBytes, CERTIFIED_PUBLICATION_TEXT_BYTES_V17));
+  return read.ok ? certifiedPublicationStateV17(read.value, bounds) : null;
+}
+export function certifiedPublicationWireV17(record: CertifiedPublicationStateV17, bounds: Bounds): string {
+  if (!certifiedPublicationStateV17(record, bounds)) throw Error('The certified publication record is malformed');
+  return evidenceWireV17(record, Math.min(bounds.entryBytes, CERTIFIED_PUBLICATION_TEXT_BYTES_V17));
 }
 
 export interface CaptureEnvelopeV17 { effects: readonly RuleEffect[]; opens: readonly Opening[]; sends: readonly RuleRequest[]; uses: readonly FactUse[] }

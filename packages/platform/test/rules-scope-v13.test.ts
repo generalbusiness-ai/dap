@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import type { Digest, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import type { RuleGiven, StateView } from "@generalbusiness/dap-derive";
 import { contentChecked, contentStates } from "@generalbusiness/dap-derive";
+import { canonicalize } from "@generalbusiness/dap-bytes";
 import { rulesScopeV12 } from "../src/rules-scope-v12.ts";
 import { rulesAnswerV13, rulesScopeRulesV13, rulesScopeV13 } from "../src/rules-scope-v13.ts";
 import { firstExtentsV13, rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
@@ -32,22 +33,25 @@ test("the successor alone exposes the scoped unmarked generation and refuses a p
   const fact = { at: rules, seq: 1, hash: digest };
   const huge = { ...state, scope: () => ({ status: "active", at: rules, head: { seq: 8, hash: digest } }),
     page: () => ({ items: [{ ...item, refs: { published: 8, roomServiceChanged: 8 }, values: { ...item.values, configured: true,
-      policy: parsed.policy, proposal: parsed.digest, certificate: { request: fact, certificate: { ...fact, seq: 2 }, proof: digest, commit: "a".repeat(40) } } }] }) } as unknown as StateView;
+      policy: canonicalize(parsed.policy), proposal: parsed.digest, certificate: { request: fact, certificate: { ...fact, seq: 2 }, proof: digest, commit: "a".repeat(40) } } }] }) } as unknown as StateView;
   expect(rulesAnswerV13(huge, { of: rules, asked: "rules" })).toBe(null);
   const withdrawn = rulesPolicyProposalV13({ approvals: 1, ownerMayReview: false, roomService: null, checks: [], labels: [], extents: firstExtentsV13({ approvals: 1, checks: [] }) });
   if (!withdrawn.ok) throw Error("Expected withdrawn policy");
   const later = { ...state, scope: () => ({ status: "active", at: rules, head: { seq: 10, hash: digest } }),
     page: () => ({ items: [{ ...item, refs: { published: 10, roomServiceChanged: 7 }, values: { ...item.values, configured: true,
-      policy: withdrawn.policy, proposal: withdrawn.digest, certificate: { request: fact, certificate: { ...fact, seq: 2 }, proof: digest, commit: "a".repeat(40) } } }] }) } as unknown as StateView;
+      policy: canonicalize(withdrawn.policy), proposal: withdrawn.digest, certificate: { request: fact, certificate: { ...fact, seq: 2 }, proof: digest, commit: "a".repeat(40) } } }] }) } as unknown as StateView;
   const observed = rulesAnswerV13(later, { of: rules, asked: "rules" });
   expect(observed?.revision).toBe(10);
   expect(observed?.content.asked === "rules" && observed.content.serviceGeneration).toEqual({ rules, seq: 7 });
+  const objectFallback = { ...later, page: () => ({ items: later.page("rules", ["current"], null, 1).items.map(row => ({ ...row, values: { ...row.values, policy: withdrawn.policy } })) }) } as unknown as StateView;
+  expect(rulesAnswerV13(objectFallback, { of: rules, asked: "rules" })).toBeNull();
 });
 
 test("a mark-only member must be observed and a customizable publish grant cannot mark or withdraw without the admin role", () => {
   const rule = rulesScopeRulesV13['q13-checker-union'];
   if (!rule || rule.place !== "guard") throw Error("Missing union guard");
-  const fields = { approvals: 1, ownerMayReview: false, labels: [], checks: [], extents: firstExtentsV13({ approvals: 1, checks: [] }), roomService: { checker, key: `key_${"A".repeat(43)}` }, checkers: [checker] };
+  const mark = { checker, key: `key_${"A".repeat(43)}` };
+  const fields = { approvals: 1, ownerMayReview: false, labels: [], checks: [], extents: firstExtentsV13({ approvals: 1, checks: [] }), roomService: canonicalize(mark), checkers: [checker] };
   const given = (role: string, observedRole = "checker", supplied: unknown = fields.checkers) => ({ state,
     input: { type: "act", grant: { fresh: { observation: { role } } } },
     resolved: { fields: { ...fields, checkers: supplied } },
@@ -58,10 +62,13 @@ test("a mark-only member must be observed and a customizable publish grant canno
   expect(rule.run(given("admin", "member"))).toEqual({ holds: false, name: "not-a-checker" });
   expect(rule.run(given("admin", "checker", []))).toEqual({ holds: false, name: "invalid-policy" });
   expect(rule.run(given("admin", "checker", [checker, checker]))).toEqual({ holds: false, name: "invalid-policy" });
+  const objectMark = given("admin") as unknown as { resolved: { fields: Record<string, unknown> } };
+  objectMark.resolved.fields['roomService'] = mark;
+  expect(rule.run(objectMark as unknown as RuleGiven)).toEqual({ holds: false, name: "invalid-policy" });
   const { checkers: _transport, ...priorPolicy } = fields;
   const withdrawing = given("maintainer") as unknown as { state: StateView; resolved: { fields: unknown } };
-  withdrawing.state = { ...state, page: () => ({ items: [{ ...item, values: { ...item.values, configured: true, policy: priorPolicy } }] }) } as unknown as StateView;
-  withdrawing.resolved.fields = { ...priorPolicy, roomService: null, checkers: [] };
+  withdrawing.state = { ...state, page: () => ({ items: [{ ...item, values: { ...item.values, configured: true, policy: canonicalize({ ...priorPolicy, roomService: mark }) } }] }) } as unknown as StateView;
+  withdrawing.resolved.fields = { ...priorPolicy, roomService: "null", checkers: [] };
   expect(rule.run(withdrawing as unknown as RuleGiven)).toEqual({ holds: false, name: "room-service-admin-required" });
 });
 

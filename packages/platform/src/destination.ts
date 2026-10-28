@@ -1325,6 +1325,8 @@ export interface DestinationSuccessorV17 {
   judge(asked: Parameters<typeof judgeReservationV15>[0], given: RuleGiven): ReturnType<typeof judgeReservationV15>;
   list: typeof judgeListEligibilityV15;
   publication: typeof certifiedPublicationStateV15;
+  publicationWire: typeof certifiedPublicationStateV15;
+  encodePublication(value: unknown, bounds: RuleGiven["resolved"]["bounds"]): FieldValue;
   budget: typeof certifiedReservationBudgetV15;
   complete(given: RuleGiven, publication: Item, passes: readonly CertifiedGeneration[]): boolean;
   checked(given: RuleGiven, publication: Item, fields: Readonly<Record<string, unknown>>, current: boolean): { name: string; proof: CertifiedCheckProof } | null;
@@ -1400,7 +1402,7 @@ export function certifiedPublicationState(value: unknown): CertifiedPublicationS
     return policy && certifiedCheckGenerations(generations) ? { policy, generations } : null;
   } catch { return null; }
 }
-const certifiedRecord = (given: RuleGiven, value: unknown) => successorOf(given)?.publication(value, given.resolved.bounds)
+const certifiedRecord = (given: RuleGiven, value: unknown, semantic = false) => (semantic ? successorOf(given)?.publication : successorOf(given)?.publicationWire)?.(value, given.resolved.bounds)
   ?? (successorOf(given) ? null : hardened(given) ? certifiedPublicationStateV15(value, given.resolved.bounds) : certifiedPublicationState(value));
 function captured14(given: RuleGiven, publication: Item): CertifiedReservationSnapshot | null {
   const snapshot = certifiedRecord(given, publication.values["passes"])?.policy;
@@ -1740,7 +1742,7 @@ const judgeDecides = (reads: Reads, list = false): Decides => (given) => {
     const selected = eligibility14 as Extract<ListEligibilityV14, { eligible: true }> | null, policy = policyInput14(given);
     if (!selected || !policy || !read?.rules || !evidence.changes || "over" in evidence.changes) throw Error("G14 configured list snapshot required");
     const touched = classify(selected.view.policy.extents, evidence.changes.paths, evidence.changes.links, evidence.changes.unreadable).touched.map(row => row.extent);
-    captured = certifiedRecord(given, { policy: { observation: read.rules, input: policy, touched, required: selected.required, tree: evidence.tree, manifest: statement.manifest }, generations: [] });
+    captured = certifiedRecord(given, { policy: { observation: read.rules, input: policy, touched, required: selected.required, tree: evidence.tree, manifest: statement.manifest }, generations: [] }, true);
     if (!captured) {
       if (!hardened(given)) throw Error("G14 captured policy exceeds native bound");
       const next = andNext(given, state, { judging: true, ended: publication.id }, true);
@@ -1750,7 +1752,7 @@ const judgeDecides = (reads: Reads, list = false): Decides => (given) => {
   }
   const decided: Decided = {
     effects: [
-      ...(captured ? [{ effect: "value", item: publication.id, slot: "passes", value: captured as unknown as FieldValue } as const,
+      ...(captured ? [{ effect: "value", item: publication.id, slot: "passes", value: successorOf(given) ? successorOf(given)!.encodePublication(captured, given.resolved.bounds) : captured as unknown as FieldValue } as const,
         { effect: "value", item: publication.id, slot: "requiredChecks", value: requiredChecks } as const] : []),
       { effect: "state", item: publication.id, state: "reserved" }, { effect: "ref", item: branch.id, slot: "slot", to: publication.id }, { effect: "ref", item: branch.id, slot: "judging", to: null },
       { effect: "value", item: publication.id, slot: "integration", value: judged.integration }, { effect: "value", item: publication.id, slot: "reservedAt", value: resolved.self },
@@ -2498,9 +2500,9 @@ const generations = (publication: Item, given: RuleGiven): CheckGeneration[] => 
  * their original evaluator and the D1 wrapper without a shape change. */
 function generationValue(publication: Item, given: RuleGiven, rows: readonly CheckGeneration[]): FieldValue {
   if (!certified(given)) return rows as unknown as FieldValue;
-  const policy = captured14(given, publication), record = policy ? certifiedRecord(given, { policy, generations: rows }) : null;
+  const policy = captured14(given, publication), record = policy ? certifiedRecord(given, { policy, generations: rows }, true) : null;
   if (!record) throw new Error("G14 updated policy and generations exceed the native bound");
-  return record as unknown as FieldValue;
+  return successorOf(given) ? successorOf(given)!.encodePublication(record, given.resolved.bounds) : record as unknown as FieldValue;
 }
 const resultGeneration = (given: RuleGiven, publication: Item): boolean => {
   const job = given.uses.find((use) => use.entry.input.type === "act" && use.entry.input.signed.intent.kind === "request-check");

@@ -7,6 +7,7 @@ import { byteOrder } from "@generalbusiness/dap-derive";
 import { isObjectId } from "./reservation.ts";
 import { requiredChecksV17, type ReservationPolicyViewV17 } from "./reservation-v17.ts";
 import { checkStageV13, rulesPolicyProposalV13, type RulesCheckV13 } from "./rules-policy-v13.ts";
+import { evidenceWireV17, readEvidenceWireV17 } from "./evidence-wire-v17.ts";
 
 export const EVIDENCE_BATCH_JOBS_V17 = 8;
 export const EVIDENCE_BATCH_ACCOUNTS_V17 = 4;
@@ -15,6 +16,17 @@ export interface EvidenceBatchRecordV17 {
   ordinal: number; total: number; touched: readonly string[];
   checks: readonly RulesCheckV13[]; policy: ReservationPolicyViewV17;
   jobs: readonly { job: FactRef; name: string }[]; planAt: number | null;
+}
+/** Code slots persist canonical JSON text; the semantic reader below keeps
+ * its object-only API for Native logic and owned intermediate values. */
+export function readEvidenceBatchWireV17(value: unknown): EvidenceBatchRecordV17 | null {
+  const read = readEvidenceWireV17(value, 196608);
+  return read.ok ? readEvidenceBatchV17(read.value) : null;
+}
+export function evidenceBatchWireV17(value: EvidenceBatchRecordV17): string {
+  const record = readEvidenceBatchV17(value);
+  if (!record) throw Error("Invalid evidence batch record");
+  return evidenceWireV17(record, 196608);
 }
 const exact = (value: unknown, keys: readonly string[]): value is Record<string, unknown> => isRecord(value)
   && [Object.prototype, null].includes(Object.getPrototypeOf(value) as object | null) && Reflect.ownKeys(value).length === keys.length

@@ -6,8 +6,8 @@ import { idOf, isObjectId, parseCommit } from "@generalbusiness/dap-git";
 import { isEntryOf, type Item, type Operation, type Own, type Opening, type OutcomeGives, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { readEvidenceDecisionV17 } from "./evidence-decision-v17.ts";
 import { evidenceFutureEntriesV17 } from "./evidence-forecast-v17.ts";
-import { readEvidenceBatchV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
-import { evidenceCapacityValidV17, evidenceSpendPublishedCapacityV17, readEvidenceCapacityAnchorV17 } from "./destination-evidence-capacity-v17.ts";
+import { readEvidenceBatchV17, readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
+import { evidenceCapacityValidV17, evidenceSpendPublishedCapacityV17, readEvidenceCapacityWireV17 } from "./destination-evidence-capacity-v17.ts";
 import { evidenceFundingFloorReferencesV17 } from "./destination-evidence-funding-v17.ts";
 export { evidenceFundCapacityV17, evidenceCapacityValidV17 } from "./destination-evidence-capacity-v17.ts";
 import { classify } from "./extents.ts";
@@ -16,7 +16,8 @@ import { EVIDENCE_LIMITS_V17, assessEvidenceV17, evidenceKeyDigestV17, newEviden
 import { decideEvidenceIncidentV17, evidenceHoldActiveV17, evidenceTriagersV17, failEvidenceHoldV17, newEvidenceHoldV17, passEvidenceHoldV17, readEvidenceHoldKeyV17, readEvidenceHoldV17, readEvidenceIncidentV17, releaseEvidenceHoldV17, reserveEvidenceIncidentV17, type EvidenceFailureV17, type EvidenceHoldKeyV17, type EvidenceHoldRecordV17, type EvidenceIncidentV17 } from "./evidence-holds-v17.ts";
 import { evidenceSourceV17, judgeListEligibilityV17, judgeReservationV17, readRulesPolicyObservationV17, type ReservationPolicyViewV17 } from "./reservation-v17.ts";
 import { RULES_EXTENTS_VALUE_V13, checkHoldsV13, checkReuseV13, checkSourceV13, readRulesPolicyV13, readServiceMarkV13, type RulesCheckV13 } from "./rules-policy-v13.ts";
-import { certifiedPublicationStateV17, certifiedReservationBudgetV17, evidenceCarryingBudgetV17 } from "./destination-budget-v17.ts";
+import { certifiedPublicationStateV17, certifiedPublicationStateWireV17, certifiedPublicationWireV17, CERTIFIED_PUBLICATION_TEXT_BYTES_V17, certifiedReservationBudgetV17, evidenceCarryingBudgetV17 } from "./destination-budget-v17.ts";
+import { evidenceWireV17, readEvidenceWireV17 } from "./evidence-wire-v17.ts";
 import type { DestinationSuccessorV17 } from "./destination.ts";
 import { platformFloorReferences } from "./floor.ts";
 import { readRulesCertificateDeclinedV17 } from "./rules-certificate-v17.ts";
@@ -29,6 +30,7 @@ export const EVIDENCE_PROGRESS_V17 = "evidence-progress";
 export const WORK_COMMIT_PROOF_V17 = { domain: "artroom-work-commit-1", max: 49152 } as const;
 export const EVIDENCE_BINDING_TEXT_V17 = 16384;
 export const EVIDENCE_RECORD_BYTES_V17 = 196608;
+export const EVIDENCE_SERVICE_BYTES_V17 = 16384;
 const exact = (value: unknown, names: readonly string[]): value is Record<string, unknown> => isRecord(value)
   && Object.keys(value).length === names.length && names.every(name => Object.hasOwn(value, name));
 const natural = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
@@ -102,29 +104,45 @@ export function readEvidenceJobRecordV17(value: unknown): EvidenceJobRecordV17 |
     return copy({ ...value, binding } as unknown as EvidenceJobRecordV17);
   } catch { return null; }
 }
+export function readEvidenceJobRecordWireV17(value: unknown): EvidenceJobRecordV17 | null {
+  const read = readEvidenceWireV17(value, EVIDENCE_RECORD_BYTES_V17);
+  return read.ok ? readEvidenceJobRecordV17(read.value) : null;
+}
+export function evidenceJobRecordWireV17(record: EvidenceJobRecordV17): string {
+  if (!readEvidenceJobRecordV17(record)) throw Error("The evidence record is malformed");
+  return evidenceWireV17(record, EVIDENCE_RECORD_BYTES_V17);
+}
+export interface EvidenceServiceV17 { mark: EvidenceBinding["roomService"]; generation: ScopedRulesPosition }
+export function readEvidenceServiceWireV17(value: unknown): EvidenceServiceV17 | null {
+  const read = readEvidenceWireV17(value, EVIDENCE_SERVICE_BYTES_V17), parsed = read.ok ? read.value : null;
+  if (!exact(parsed, ["mark", "generation"]) || !exact(parsed["generation"], ["rules", "seq"]) || !isScopeRef(parsed["generation"]["rules"])
+    || parsed["generation"]["rules"].kind !== "rules" || !natural(parsed["generation"]["seq"])) return null;
+  const mark = readServiceMarkV13(parsed["mark"]);
+  return mark.ok ? { mark: mark.mark, generation: parsed["generation"] as unknown as ScopedRulesPosition } : null;
+}
 export function evidenceRowV17(state: StateView, job: FactRef): { item: Item; record: EvidenceJobRecordV17 } | null {
   const found = state.lookup("evidence-job", "jobKey", canonicalize(evidenceJobKeyV17(job)), 2);
   if (!found || found.length !== 1) return null;
-  const item = state.item(found[0]!), record = item && readEvidenceJobRecordV17(item.values["record"]);
+  const item = state.item(found[0]!), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
   return item && item.type === "evidence-job" && record && same(record.job, job) ? { item, record } : null;
 }
 export function evidenceOwnerV17(state: StateView, slot: "reuseKey" | "holdKey" | "policyKey", key: Digest): { item: Item; record: EvidenceJobRecordV17 } | null {
   const found = state.lookup("evidence-job", slot, canonicalize(key), 2);
   if (!found || found.length > 1) throw Error("Evidence index is unavailable");
   if (!found.length) return null;
-  const item = state.item(found[0]!), record = item && readEvidenceJobRecordV17(item.values["record"]);
+  const item = state.item(found[0]!), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
   if (!item || !record) throw Error("Evidence index record is unavailable");
   return { item, record };
 }
 export function destinationEvidencePending(state: StateView, own: Own, operation: Operation): { job: FactRef } | null {
   if (operation.owner !== "platform:destination@17" || operation.kind !== EVIDENCE_ADMIT_V17 || operation.most !== 1 || operation.for === undefined) return null;
-  const id = operationRecordId(state, own, operation), item = id === null ? null : state.item(id), record = item && readEvidenceJobRecordV17(item.values["record"]), opened = own(Number(operation.id.split(":")[0]));
+  const id = operationRecordId(state, own, operation), item = id === null ? null : state.item(id), record = item && readEvidenceJobRecordWireV17(item.values["record"]), opened = own(Number(operation.id.split(":")[0]));
   return item && ["evidence-request", "evidence-slot"].includes(item.type) && item.state === "pending" && record?.state === "pending" && record.holder === operation.for && opened && opened.entry.effects.some(effect => effect.effect === "operation" && effect.owner === operation.owner && effect.kind === operation.kind && effect.for === operation.for)
     ? { job: copy(record.job) } : null;
 }
 export function destinationEvidenceResultPending(state: StateView, own: Own, operation: Operation): { job: FactRef } | null {
   if (operation.owner !== "platform:destination@17" || operation.kind !== EVIDENCE_RESULT_V17 || operation.most !== 1 || operation.for === undefined) return null;
-  const id = operationRecordId(state, own, operation), item = id === null ? null : state.item(id), record = item && readEvidenceJobRecordV17(item.values["record"]), opened = own(Number(operation.id.split(":")[0]));
+  const id = operationRecordId(state, own, operation), item = id === null ? null : state.item(id), record = item && readEvidenceJobRecordWireV17(item.values["record"]), opened = own(Number(operation.id.split(":")[0]));
   const input = opened?.entry.input, body = input?.type === "delivery" && input.message.class === "request" ? input.message.body : null;
   const fields = isRecord(body) && ["checked", "work-checked"].includes(String(body["message"])) && isRecord(body["fields"]) ? body["fields"] : null;
   return record && record.holder === operation.for && record.admittedAt !== null && fields && same(fields["job"], record.job) && isFactRef(fields["result"])
@@ -133,13 +151,13 @@ export function destinationEvidenceResultPending(state: StateView, own: Own, ope
 }
 export function destinationEvidenceNoticePending(state: StateView, own: Own, operation: Operation): { job: FactRef } | null {
   if (operation.owner !== "platform:destination@17" || operation.kind !== EVIDENCE_NOTICE_V17 || operation.most !== 1 || operation.for === undefined) return null;
-  const id = operationRecordId(state, own, operation), item = id === null ? null : state.item(id), record = item && readEvidenceJobRecordV17(item.values["record"]), opened = own(Number(operation.id.split(":")[0]));
+  const id = operationRecordId(state, own, operation), item = id === null ? null : state.item(id), record = item && readEvidenceJobRecordWireV17(item.values["record"]), opened = own(Number(operation.id.split(":")[0]));
   return record?.admittedAt !== null && record?.incident?.cause && opened?.entry.effects.some(effect => effect.effect === "operation"
     && effect.owner === operation.owner && effect.kind === operation.kind && effect.for === operation.for) ? { job: copy(record.job) } : null;
 }
 export function destinationEvidenceProgressPending(state: StateView, own: Own, operation: Operation): { job: FactRef } | null {
   if (operation.owner !== "platform:destination@17" || operation.kind !== EVIDENCE_PROGRESS_V17 || operation.most !== 1) return null;
-  const id = operationRecordId(state, own, operation), record = id === null ? null : readEvidenceJobRecordV17(state.item(id)?.values["record"]);
+  const id = operationRecordId(state, own, operation), record = id === null ? null : readEvidenceJobRecordWireV17(state.item(id)?.values["record"]);
   const opened = own(Number(operation.id.split(":")[0]))?.entry;
   return record && record.holder === operation.for && record.admittedAt !== null && record.binding.stage === "landing" && opened?.input.type === "outcome"
     && opened.input.owner === "platform:destination@17" && [EVIDENCE_ADMIT_V17, EVIDENCE_RESULT_V17].includes(opened.input.kind)
@@ -158,7 +176,7 @@ export function destinationEvidenceJob(state: StateView, own: Own, job: FactRef)
     || sealed.entry.input.kind !== EVIDENCE_ADMIT_V17 || sealed.entry.input.attempt !== 1 || sealed.entry.input.result !== "confirmed"
     || !sealed.entry.effects.some(effect => effect.effect === "attempt" && effect.selected === true)
     || row.item.id !== sealed.entry.seq || !sealed.entry.effects.some(effect => effect.effect === "open" && effect.item === sealed.entry.seq && effect.type === "evidence-job")
-    || !sealed.entry.effects.some(effect => effect.effect === "value" && effect.item === row.item.id && effect.slot === "record" && same((effect.value as unknown as EvidenceJobRecordV17)?.job, job))) return null;
+    || !sealed.entry.effects.some(effect => effect.effect === "value" && effect.item === row.item.id && effect.slot === "record" && same(readEvidenceJobRecordWireV17(effect.value)?.job, job))) return null;
   return copy({ job, binding: record.binding, bindingDigest: record.bindingDigest, commit: record.commit, tree: record.tree, base: record.base,
     sourceFacts: record.sourceFacts, admission: { at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash } });
 }
@@ -166,9 +184,9 @@ export function destinationEvidenceAdmissionCurrent(state: StateView, own: Own, 
   const actual = destinationEvidenceJob(state, own, admitted.job), row = evidenceRowV17(state, admitted.job), branch = branchOf(state);
   if (!actual || !row || !same(actual, admitted) || !["admitted", "timeout", "unknown"].includes(row.record.state)) return false;
   if (admitted.binding.source === "member") return true; // The host separately proves this key's current configured member standing.
-  const current = branch?.values["evidenceService"];
-  return exact(current, ["mark", "generation"]) && same(current["generation"], admitted.binding.serviceGeneration)
-    && same(current["mark"], admitted.binding.roomService) && admitted.binding.roomService?.key === signerKey;
+  const current = readEvidenceServiceWireV17(branch?.values["evidenceService"]);
+  return current !== null && same(current.generation, admitted.binding.serviceGeneration)
+    && same(current.mark, admitted.binding.roomService) && admitted.binding.roomService?.key === signerKey;
 }
 export function evidencePolicyV17(given: RuleGiven): ReservationPolicyViewV17 | null {
   const observation = given.observed({ asked: "rules" })?.observation, rules = destinationRulesScope(given.state);
@@ -184,7 +202,7 @@ export function evidenceCountsV17(state: StateView): EvidenceCountsV17 {
   if (!result) throw Error("Evidence capacity counters are unavailable");
   return result;
 }
-export const evidenceRecordEffectV17 = (item: number, record: EvidenceJobRecordV17): RuleEffect => ({ effect: "value", item, slot: "record", value: copy(record) as unknown as FieldValue });
+export const evidenceRecordEffectV17 = (item: number, record: EvidenceJobRecordV17): RuleEffect => ({ effect: "value", item, slot: "record", value: evidenceJobRecordWireV17(record) });
 export function workCommitV17(value: unknown, commit: string): { commit: string; tree: string; base: string } | null {
   try {
     if (!exact(value, ["v", "id", "data"]) || value["v"] !== 1 || value["id"] !== commit || !isObjectId(commit) || typeof value["data"] !== "string"
@@ -200,11 +218,11 @@ export function evidenceBlocksV17(given: RuleGiven, paths: readonly string[]): b
   if (page.more) throw Error("Evidence anchor index exceeded its capacity");
   let holds = 0;
   for (const item of page.items) {
-    const record = readEvidenceJobRecordV17(item.values["record"]); if (!record) throw Error("Evidence anchor is malformed");
+    const record = readEvidenceJobRecordWireV17(item.values["record"]); if (!record) throw Error("Evidence anchor is malformed");
     for (const hold of record.holds) {
       if (++holds > EVIDENCE_LIMITS_V17.holds) throw Error("Evidence hold index exceeded its capacity");
       if (!evidenceHoldActiveV17(hold)) continue;
-      const owner = record.policyOwner === null ? null : given.state.item(record.policyOwner), policy = readEvidenceBatchV17(owner?.values["batch"])?.policy;
+      const owner = record.policyOwner === null ? null : given.state.item(record.policyOwner), policy = readEvidenceBatchWireV17(owner?.values["batch"])?.policy;
       const extent = policy?.policy.extents.find(extent => extent.name === hold.key.extent);
       if (!extent) throw Error("The held policy extent is unavailable");
       if (classify(policy!.policy.extents, paths, []).touched.some(row => row.extent === extent.name)) return true;
@@ -369,7 +387,7 @@ export function evidenceDestinationDataV17(base: PlatformData): PlatformData {
 
 function evidenceRelease(given: RuleGiven): { item: Item; record: EvidenceJobRecordV17 } | null {
   if (given.input.type !== "act") return null;
-  const item = given.resolved.subjects.get("on"), record = item && readEvidenceJobRecordV17(item.values["record"]);
+  const item = given.resolved.subjects.get("on"), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
   const observation = given.input.grant?.fresh?.observation;
   if (!item || !record || !observation || "subject" in observation || !["admin", "maintainer"].includes(observation.role)
     || typeof given.resolved.fields["reason"] !== "string" || given.resolved.fields["reason"] === "") return null;
@@ -400,7 +418,7 @@ function nativeDecided(given: RuleGiven, record: EvidenceJobRecordV17): boolean 
   return !!sealed && entryHash(sealed.entry) === sealed.hash && sealed.entry.input.type === "outcome"
     && sealed.entry.input.owner === "platform:destination@17" && sealed.entry.input.kind === EVIDENCE_RESULT_V17
     && sealed.entry.effects.some(effect => effect.effect === "value" && effect.slot === "record"
-      && same((effect.value as unknown as EvidenceJobRecordV17)?.job, record.job) && same((effect.value as unknown as EvidenceJobRecordV17)?.result, record.result));
+      && same(readEvidenceJobRecordWireV17(effect.value)?.job, record.job) && same(readEvidenceJobRecordWireV17(effect.value)?.result, record.result));
 }
 function acceptedCandidate(given: RuleGiven, candidate: EvidenceCandidateV17, check: RulesCheckV13, view: ReservationPolicyViewV17): boolean {
   const row = evidenceRowV17(given.state, candidate.job), key = given.observed({ key: candidate.key })?.observation;
@@ -410,7 +428,7 @@ function acceptedCandidate(given: RuleGiven, candidate: EvidenceCandidateV17, ch
     && evidenceSourceV17(candidate.binding, check, view, key && !("subject" in key) ? key : null, given.time, false, null, false).ok;
 }
 function evidenceComplete(given: RuleGiven, publication: Item, passes: readonly { name: string; job: FactRef; passed: boolean; proof?: { decided: number } }[]): boolean {
-  const snapshot = certifiedPublicationStateV17(publication.values["passes"], given.resolved.bounds)?.policy;
+  const snapshot = certifiedPublicationStateWireV17(publication.values["passes"], given.resolved.bounds)?.policy;
   if (!snapshot) return false;
   if (!snapshot.required.length) return true;
   const view = evidencePolicyV17(given);
@@ -425,12 +443,12 @@ function evidenceComplete(given: RuleGiven, publication: Item, passes: readonly 
     if (!current || !record.signer || !evidenceSourceV17(record.binding, current, view, keyObservation(given, record.signer), given.time, false, null, false).ok) return false;
     if (check.audit) {
       const accepted = selected.proof ? given.own(selected.proof.decided)?.entry : null;
-      const alias = accepted?.effects.flatMap(effect => effect.effect === "value" && effect.slot === "record" ? [readEvidenceJobRecordV17(effect.value)] : [])
+      const alias = accepted?.effects.flatMap(effect => effect.effect === "value" && effect.slot === "record" ? [readEvidenceJobRecordWireV17(effect.value)] : [])
         .find(value => value?.state === "reused" && same(value.countedJob, record.job) && value.binding.subject.kind === "landing" && value.binding.subject.publication.seq === publication.id);
       const logical = alias?.job ?? record.job;
       const audit = given.state.lookup("evidence-job", "policyKey", canonicalize(evidenceAuditKeyV17(logical)), 2);
       if (!audit || audit.length !== 1) return false;
-      const paired = readEvidenceJobRecordV17(given.state.item(audit[0]!)?.values["record"]);
+      const paired = readEvidenceJobRecordWireV17(given.state.item(audit[0]!)?.values["record"]);
       const currentPolicy = readRulesPolicyV13((snapshot.input.extents as Record<string, unknown>)["policy"]);
       const target = currentPolicy.ok ? currentPolicy.policy.checks.find(target => target.name === check.audit!.check) : null;
       if (!target || !paired || paired.name !== target.name || paired.configuration !== target.configuration || paired.state !== "passed" || paired.binding.source !== "room"
@@ -442,6 +460,10 @@ function evidenceComplete(given: RuleGiven, publication: Item, passes: readonly 
 }
 export const evidenceDestinationProfileV17: DestinationSuccessorV17 = {
   readPolicy: readRulesPolicyObservationV17, publication: certifiedPublicationStateV17,
+  publicationWire: certifiedPublicationStateWireV17, encodePublication: (value, bounds) => {
+    const record = certifiedPublicationStateV17(value, bounds); if (!record) throw Error("The publication record is malformed");
+    return certifiedPublicationWireV17(record, bounds);
+  },
   budget: certifiedReservationBudgetV17, list: judgeListEligibilityV17, blocks: evidenceBlocksV17, complete: evidenceComplete,
   // Landing jobs start only after a reservation exposes its integration tree.
   // Reservation proves the policy; the push fence below proves its jobs.
@@ -449,7 +471,7 @@ export const evidenceDestinationProfileV17: DestinationSuccessorV17 = {
   checked: (given, publication, fields) => {
     const job = fields["job"], result = fields["result"];
     if (!isFactRef(job) || !isFactRef(result)) return null;
-    const record = evidenceRowV17(given.state, job)?.record, snapshot = certifiedPublicationStateV17(publication.values["passes"], given.resolved.bounds)?.policy;
+    const record = evidenceRowV17(given.state, job)?.record, snapshot = certifiedPublicationStateWireV17(publication.values["passes"], given.resolved.bounds)?.policy;
     if (!record || !snapshot || record.state !== "passed" || !nativeDecided(given, record) || !same(record.result, result) || !record.signer
       || record.tree !== snapshot.tree || record.binding.stage !== "landing") return null;
     return { name: record.name, proof: { result, key: record.signer, decided: record.decidedAt!, configuration: record.configuration,
@@ -478,7 +500,7 @@ function evidenceOpening(given: RuleGiven, proposedRecord: EvidenceJobRecordV17)
     policyKey: record.forJob ? evidenceAuditKeyV17(record.forJob) : record.policyOwner === given.resolved.self ? policyKey : evidenceUnusedKeyV17(record.job, "policy") } };
 }
 const readRow = (given: RuleGiven, id: number): { item: Item; record: EvidenceJobRecordV17 } => {
-  const item = given.state.item(id), record = item && readEvidenceJobRecordV17(item.values["record"]);
+  const item = given.state.item(id), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
   if (!item || !record) throw Error("A funded evidence row is missing");
   return { item, record };
 };
@@ -532,14 +554,15 @@ function decisionRequest(record: EvidenceJobRecordV17, reason: string, phase: "a
 function serviceEffect(given: RuleGiven, view: ReservationPolicyViewV17 | null): RuleEffect[] {
   const branch = branchOf(given.state);
   const value = view && { mark: view.policy.roomService, generation: view.serviceGeneration };
-  return branch && value && !same(branch.values["evidenceService"], value) ? [{ effect: "value", item: branch.id, slot: "evidenceService", value: value as unknown as FieldValue }] : [];
+  return branch && value && !same(readEvidenceServiceWireV17(branch.values["evidenceService"]), value)
+    ? [{ effect: "value", item: branch.id, slot: "evidenceService", value: evidenceWireV17(value, EVIDENCE_SERVICE_BYTES_V17) }] : [];
 }
 /** A delayed frozen published obligation can be refused by current
  * authority. Its reasoned hold is funded already; it is not a failed run. */
 function publishedRefusal(given: RuleGiven, request: Item, proposed: EvidenceJobRecordV17, reason: string,
   view: ReservationPolicyViewV17 | null): OutcomeGives | null {
   if (proposed.binding.stage !== "published" || proposed.binding.subject.kind !== "published") return null;
-  const batch = readEvidenceBatchV17(given.state.item(proposed.holder)?.values["batch"]), triple = evidenceSubjectV17(given, proposed);
+  const batch = readEvidenceBatchWireV17(given.state.item(proposed.holder)?.values["batch"]), triple = evidenceSubjectV17(given, proposed);
   const spent = evidenceSpendPublishedCapacityV17(given, proposed.holder, proposed.binding, proposed.name, proposed.configuration, proposed.job);
   if (!batch || !triple || !spent) return null;
   const record: EvidenceJobRecordV17 = { ...copy(proposed), ...triple, commitProof: triple.proof, policy: batch.policy,
@@ -686,7 +709,7 @@ function evidenceAdmission(given: RuleGiven, operation: Operation): OutcomeGives
   if (record.state === "admitted") effects.push({ effect: "value", item: admittedItem, slot: "deadline", value: record.deadline });
   for (const [id, next] of updates) {
     if (!readEvidenceJobRecordV17(next)) return refuse("evidence-too-large");
-    if (id !== admittedItem && same(given.state.item(id)?.values["record"], next)) continue;
+    if (id !== admittedItem && same(readEvidenceJobRecordWireV17(given.state.item(id)?.values["record"]), next)) continue;
     effects.push(evidenceRecordEffectV17(id, next), ...(id === admittedItem || given.state.item(id)?.state === evidenceRecordState(next, id) ? [] : [{ effect: "state" as const, item: id, state: evidenceRecordState(next, id) }]));
   }
   const branch = branchOf(given.state); if (!branch) return refuse("evidence-invalid");
@@ -703,7 +726,7 @@ function evidenceAdmission(given: RuleGiven, operation: Operation): OutcomeGives
 const openingV17 = (kind: string, item: number): Opening => ({ owner: "platform:destination@17", kind, attempts: 1, for: item });
 function landingNeedsProgress(given: RuleGiven, record: EvidenceJobRecordV17): boolean {
   if (record.binding.subject.kind !== "landing") return false;
-  const publication = given.state.item(record.binding.subject.publication.seq), frozen = publication && certifiedPublicationStateV17(publication.values["passes"], given.resolved.bounds);
+  const publication = given.state.item(record.binding.subject.publication.seq), frozen = publication && certifiedPublicationStateWireV17(publication.values["passes"], given.resolved.bounds);
   const name = record.forJob ? evidenceRowV17(given.state, record.forJob)?.record.name : record.name;
   return !!frozen && frozen.policy.required.some(check => check.name === name);
 }
@@ -719,7 +742,7 @@ function resultFields(given: RuleGiven, operation: Operation): Record<string, un
     ? input.message.body["fields"] : null;
 }
 function resultBound(given: RuleGiven): { item: Item; record: EvidenceJobRecordV17 } | null {
-  const item = given.resolved.subjects.get("also.job"), record = item && readEvidenceJobRecordV17(item.values["record"]);
+  const item = given.resolved.subjects.get("also.job"), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
   const admission = record && destinationEvidenceJob(given.state, given.own, record.job);
   return item && record && admission && given.input.type === "delivery" && same(given.input.from.at, record.job.at)
     && same(given.resolved.fields["admission"], admission.admission) && same(given.resolved.fields["job"], record.job)
@@ -730,7 +753,7 @@ function resultBound(given: RuleGiven): { item: Item; record: EvidenceJobRecordV
 function landingEffects(given: RuleGiven, record: EvidenceJobRecordV17): OutcomeGives {
   const subject = record.binding.subject;
   if (subject.kind !== "landing") return { effects: [], sends: [], opens: [] };
-  const publication = given.state.item(subject.publication.seq), captured = publication && certifiedPublicationStateV17(publication.values["passes"], given.resolved.bounds);
+  const publication = given.state.item(subject.publication.seq), captured = publication && certifiedPublicationStateWireV17(publication.values["passes"], given.resolved.bounds);
   if (!publication || publication.state !== "reserved" || !captured || publication.values["tree"] !== record.tree) return { effects: [], sends: [], opens: [] };
   const check = captured.policy.required.find(check => check.name === record.name), isAudit = record.binding.auditOf !== null;
   if (!check && !isAudit) return { effects: [], sends: [], opens: [] };
@@ -751,7 +774,7 @@ function landingEffects(given: RuleGiven, record: EvidenceJobRecordV17): Outcome
     const prior = generations.findIndex(row => row.name === record.name);
     if (prior < 0) generations.push(generation); else generations[prior] = generation;
   }
-  const effects: RuleEffect[] = check ? [{ effect: "value", item: publication.id, slot: "passes", value: { ...captured, generations } as unknown as FieldValue }] : [];
+  const effects: RuleEffect[] = check ? [{ effect: "value", item: publication.id, slot: "passes", value: certifiedPublicationWireV17({ ...captured, generations }, given.resolved.bounds) }] : [];
   const ready = publication.values["checkDeadline"] !== undefined && publication.values["checkDeadline"] !== null
     && destinationStageConfirmedV17(given, publication, given.resolved.self)
     && evidenceComplete(given, publication, generations);
@@ -856,7 +879,7 @@ function evidenceResult(given: RuleGiven, operation: Operation): OutcomeGives {
 /** Timeout settles waiting only. It neither proves process termination nor
  * releases a reserved candidate that may still yield an authentic late result. */
 function evidenceTimeout(given: RuleGiven): readonly RuleEffect[] {
-  const item = given.resolved.subjects.get("on"), record = item && readEvidenceJobRecordV17(item.values["record"]);
+  const item = given.resolved.subjects.get("on"), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
   if (!item || !record || record.state !== "admitted") return [];
   record.state = "timeout"; record.reason = "check-timeout";
   const updates = new Map<number, EvidenceJobRecordV17>([[item.id, record]]);
@@ -876,14 +899,14 @@ function evidenceNotice(given: RuleGiven, operation: Operation): OutcomeGives {
 }
 function progressKeys(given: RuleGiven, record: EvidenceJobRecordV17): readonly string[] {
   if (record.binding.subject.kind !== "landing") return [];
-  const publication = given.state.item(record.binding.subject.publication.seq), snapshot = publication && certifiedPublicationStateV17(publication.values["passes"], given.resolved.bounds);
+  const publication = given.state.item(record.binding.subject.publication.seq), snapshot = publication && certifiedPublicationStateWireV17(publication.values["passes"], given.resolved.bounds);
   if (!snapshot) return [];
   const keys = new Set<string>();
   const logical = (job: FactRef) => evidenceRowV17(given.state, job)?.record;
   for (const row of snapshot.generations) {
     if (!snapshot.policy.required.some(check => check.name === row.name)) continue;
     const selected = logical(row.job); if (selected?.signer) keys.add(selected.signer);
-    const alias = row.proof && given.own(row.proof.decided)?.entry.effects.flatMap(effect => effect.effect === "value" && effect.slot === "record" ? [readEvidenceJobRecordV17(effect.value)] : [])
+    const alias = row.proof && given.own(row.proof.decided)?.entry.effects.flatMap(effect => effect.effect === "value" && effect.slot === "record" ? [readEvidenceJobRecordWireV17(effect.value)] : [])
       .find(value => value?.state === "reused" && same(value.countedJob, row.job) && value.binding.subject.kind === "landing" && value.binding.subject.publication.seq === publication!.id);
     const pair = evidenceOwnerV17(given.state, "policyKey", evidenceAuditKeyV17(alias?.job ?? row.job));
     if (pair?.record.signer) keys.add(pair.record.signer);
@@ -901,7 +924,7 @@ function evidenceProgress(given: RuleGiven, operation: Operation): OutcomeGives 
   if (!["admitted", "passed", "failed", "error", "reused", "timeout", "unknown"].includes(record.state)) return { effects: [], sends: [], opens: [] };
   const actual = evidenceRowV17(given.state, record.countedJob ?? record.job)?.record ?? record;
   const check = view?.policy.checks.find(check => check.name === record.name && check.configuration === record.configuration);
-  const frozen = certifiedPublicationStateV17(publication.values["passes"], given.resolved.bounds)?.policy;
+  const frozen = certifiedPublicationStateWireV17(publication.values["passes"], given.resolved.bounds)?.policy;
   const eligible = check && view && frozen && view.revision === frozen.observation.revision && (actual.signer === null
     || evidenceSourceV17(actual.binding, check, view, keyObservation(given, actual.signer), given.time, false, null, false).ok);
   if (!eligible) {
@@ -938,14 +961,14 @@ export function evidenceDestinationRulesV17(base: Rules): Rules {
         if (observation && "subject" in observation && observation.subject === "rules" && observation.content.asked === "rules" && observation.content.roomService) keys.add(observation.content.roomService.key);
       }
       const owner = record.reuseOwner === null ? null : given.state.item(record.reuseOwner);
-      const bucket = readEvidenceJobRecordV17(owner?.values["record"])?.reuse;
+      const bucket = readEvidenceJobRecordWireV17(owner?.values["record"])?.reuse;
       for (const candidate of bucket?.candidates ?? []) keys.add(candidate.key);
       // Pending admission chooses its real owner only after the source is
       // proved. The six-part key is already derivable from the pending job.
       if (kind === "admit" && record.reuseOwner === null) {
         const candidate = evidenceOpening(given, record)?.record;
         const stored = candidate?.reuseOwner === undefined || candidate.reuseOwner === null || candidate.reuseOwner === given.resolved.self ? null : given.state.item(candidate.reuseOwner);
-        for (const value of readEvidenceJobRecordV17(stored?.values["record"])?.reuse?.candidates ?? []) keys.add(value.key);
+        for (const value of readEvidenceJobRecordWireV17(stored?.values["record"])?.reuse?.candidates ?? []) keys.add(value.key);
       }
       return [...keys];
     },
@@ -953,10 +976,9 @@ export function evidenceDestinationRulesV17(base: Rules): Rules {
   } });
   return { ...base,
     "evidence-capacity-anchor-v17": { place: "type", run: (_given, value) => evidenceCapacityValidV17(value) },
-    "evidence-record-v17": { place: "type", run: (_given, value) => readEvidenceJobRecordV17(value) !== null },
+    "evidence-record-v17": { place: "type", run: (_given, value) => readEvidenceJobRecordWireV17(value) !== null },
     "evidence-counts-v17": { place: "type", run: (_given, value) => readEvidenceCountsV17(value) !== null },
-    "evidence-service-v17": { place: "type", run: (_given, value) => exact(value, ["mark", "generation"]) && readServiceMarkV13(value["mark"]).ok
-      && exact(value["generation"], ["rules", "seq"]) && isScopeRef(value["generation"]["rules"]) && value["generation"]["rules"].kind === "rules" && natural(value["generation"]["seq"]) },
+    "evidence-service-v17": { place: "type", run: (_given, value) => readEvidenceServiceWireV17(value) !== null },
     "evidence-fence-v17": { place: "guard", refusals: ["not-this-check", "already-admitted"], run: given => {
       const record = proposed(given); if (!record) return { holds: false, name: "not-this-check" };
       if (record.binding.subject.kind !== "work") {
@@ -1016,14 +1038,14 @@ export function* evidenceFloorReferencesV17(snapshot: StateSnapshot, _definition
       const declined = readRulesCertificateDeclinedV17(item.values["rulesCertificateDeclined"]);
       if (declined) { fact(declined.request); fact(declined.interveningFact); }
     } else if (item.type === "evidence-batch") {
-      const batch = readEvidenceBatchV17(item.values["batch"]), capacity = readEvidenceCapacityAnchorV17(item.values["capacity"]);
+      const batch = readEvidenceBatchWireV17(item.values["batch"]), capacity = readEvidenceCapacityWireV17(item.values["capacity"]);
       if (!batch || !capacity) throw Error("Evidence batch floor record is malformed");
       position(item.id); position(batch.planAt); position(capacity.owner);
       fact(batch.publication); fact(batch.capture); fact(batch.operation);
       fact(batch.policy.certificate.request); fact(batch.policy.certificate.certificate);
       for (const row of capacity.holds ?? []) position(row.owner);
     } else if (item.type === "evidence-job" || item.type === "evidence-request" || item.type === "evidence-slot") {
-      const record = readEvidenceJobRecordV17(item.values["record"]); if (!record) throw Error("Evidence floor record is malformed");
+      const record = readEvidenceJobRecordWireV17(item.values["record"]); if (!record) throw Error("Evidence floor record is malformed");
       if (item.state === "settled") continue;
       position(item.id); position(record.admittedAt); position(record.decidedAt); position(record.holder); position(record.requestAt); position(record.noticeAt);
       for (const source of record.sourceFacts) fact(source);
@@ -1037,7 +1059,7 @@ export function* evidenceFloorReferencesV17(snapshot: StateSnapshot, _definition
       if (record.incident?.cause) { position(record.incident.cause.decidedAt); fact(record.incident.cause.publication); }
       if (record.policy) { fact(record.policy.certificate.request); fact(record.policy.certificate.certificate); }
     } else if (item.type === "publication") {
-      const value = item.values["passes"];
+      const wire = readEvidenceWireV17(item.values["passes"], CERTIFIED_PUBLICATION_TEXT_BYTES_V17), value = wire.ok ? wire.value : null;
       // The native type already checked this exact G17 generation grammar;
       // keep its deciding native entry even for a fresh conflicted-key job.
       if (isRecord(value) && Array.isArray(value["generations"]) && value["generations"].length <= 32) for (const generation of value["generations"]) {

@@ -9,7 +9,7 @@ import { claimEvidenceWork, configureEvidenceRules, enrolEvidenceKey, evidenceCe
 import { claimPublishedEvidence, prepareAuditEvidence, preparePublishedEvidence, publishEvidenceFile, revisePublishedEvidence } from "./evidence-rules-real-fixture.ts";
 import { runEvidenceContainerCase } from "./evidence-runner-case.ts";
 import { hardeningItems, hardeningSealed } from "./certified-rules-hardening-fixture.ts";
-import { readEvidenceJobRecordV17 } from "../../platform/src/destination-evidence-v17.ts";
+import { readEvidenceJobRecordWireV17, readEvidenceServiceWireV17 } from "../../platform/src/destination-evidence-v17.ts";
 import { evidenceHoldActiveV17 } from "../../platform/src/evidence-holds-v17.ts";
 import { rita } from "./repository.ts";
 
@@ -104,7 +104,7 @@ test("observed room-key rotation refuses both keys for the frozen real work job 
     const current = await observedRules(room);
     expect(current.serviceGeneration).not.toEqual(work.binding.serviceGeneration);
     const branch = (await hardeningItems(room.G, "branch"))[0];
-    expect(branch?.values['evidenceService']).toMatchObject({ generation: work.binding.serviceGeneration });
+    expect(readEvidenceServiceWireV17(branch?.values['evidenceService'])).toMatchObject({ generation: work.binding.serviceGeneration });
     const readsBefore = room.gitRequests.length;
     const readRequest = await work.lane.intent(work.service.actor, "git-read@1:job-read", { fields: { job: work.job } });
     expect(await work.scopes.stageSnapshot!(await work.lane.at(), readRequest)).toEqual({ refused: "wrong-source" });
@@ -147,7 +147,7 @@ test("real published holds survive newer counted passes and clear only through d
     // independently counted under a fresh current Rules observation.
     await configureEvidenceRules(room, newGeneration.policy);
     const failed = await claimPublishedEvidence(room, setup, second, secondJob, "failed");
-    const holds = async () => (await hardeningItems(room.G, "evidence-job")).flatMap(item => readEvidenceJobRecordV17(item.values['record'])?.holds ?? []);
+    const holds = async () => (await hardeningItems(room.G, "evidence-job")).flatMap(item => readEvidenceJobRecordWireV17(item.values['record'])?.holds ?? []);
     const held = (await holds()).find(hold => hold.key.extent === "other" && evidenceHoldActiveV17(hold));
     if (!held) throw Error("Actual active native extent hold required");
     expect(held.failure).toMatchObject({ job: secondJob.job, result: failed, kind: "failed" });
