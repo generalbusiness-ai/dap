@@ -8,8 +8,8 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 // its own source-ordered line. Root adopts actual parser values after review.
 const namedOwners = {
   "packages/scope/src/object.ts": {
-    "packages/scope/src/object.ts:$module": "24d535ca571800f34e91a62eac84f47148c4e8c4a04aa184a1c89d5d449d2824",
-    "packages/scope/src/object.ts:ScopeObject": "a37fc3031e80278cbfc2e568910b112f9d3a5cfead5d290d7fc3d891403cee86",
+    "packages/scope/src/object.ts:$module": "54cd1a42de7dc10191191a46a03326ee8c7ecd5ee3afed596bdace1e37fc5d00",
+    "packages/scope/src/object.ts:ScopeObject": "1e6aa08fb44adc456b93df33629a71c7df6fadcb5dc2efac7279ef45832b76ac",
   },
   "packages/scope/src/worker.ts": {
     "packages/scope/src/worker.ts:$module": "ea5fa597ed7ca5c673dad1c33a3763d1356b673f090c6646c2d15cdb09fe40e8",
@@ -177,7 +177,7 @@ const namedOwners = {
 
 // Reviewed matcher/gate owners. These are change tripwires, not runtime proof.
 const seals = {
-  "packages/bytes/src/evidence.ts": "b10a6a23205f8bbaf7c745eced37fc2bf72d0f5da400fe905e961037fcdec774", // Explicit successor binding codec owner; adopt only after source review and maintained-parser measurement.
+  "packages/bytes/src/evidence.ts": "b10a6a23205f8bbaf7c745eced37fc2bf72d0f5da400fe905e961037fcdec774", // Reviewed successor binding codec; actual maintained parser output.
   "packages/git/src/checkout-snapshot.ts": "b0a33b2434f08f9b2e1cb20a342ac55702365c2006da7849c60f8ba78fc87e0f", // Detached object identity and closure bounds; imports do not seal this implementation.
   "packages/checkers/src/stage-origin.ts": "3b0ff50fad9f27c38bc0bc2c0c611a742405337f14fb3d204787f64708e3126b", // Actual Native admission and causal proof verifier.
   "packages/scope/src/stage-snapshot.ts": "005dafe590ea60501a8970a6948fec29303fa6124076e30b4880e4c148fddd5e", // Signed stage read and current Rules, key and work-source gates.
