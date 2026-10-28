@@ -210,6 +210,47 @@ export async function evidenceItems(node: Platform, type: string): Promise<reado
 }
 const hardeningItems = evidenceItems;
 
+/** Failure-only context from actual reads. Never print signed fields,
+ * provider bodies or record payloads; preserve bounds and incomplete pages. */
+async function evidenceNativeDiagnostic(nodes: readonly Platform[]) {
+  const text = (value: unknown) => typeof value === 'string' ? value.length <= 512 ? value : { prefix: value.slice(0, 512), characters: value.length } : value === null || typeof value === 'boolean' || typeof value === 'number' ? value : null;
+  const message = (value: import('@generalbusiness/dap-contract').Message) => ({ class: value.class,
+    type: 'type' in value ? value.type : null, outcome: value.class === 'result' ? value.outcome : null,
+    reason: value.class === 'result' ? value.reason ?? null : null,
+    message: 'body' in value && isRecord(value.body) ? text(value.body['message']) : null });
+  const observed: Record<string, unknown>[] = [];
+  for (const node of nodes) {
+    const summary = await node.summary(), history: Record<string, unknown>[] = [];
+    for (let seq = Math.max(0, summary.at.seq - 7); seq <= summary.at.seq; seq++) {
+      const read = await node.stub.entry(reader, seq);
+      if (!read.ok) { history.push({ seq, unavailable: read.reason }); continue; }
+      const { entry } = read.value, input = entry.input;
+      const changes = entry.effects.flatMap<Record<string, unknown>>(effect => {
+        if (effect.effect === 'state') return [{ item: effect.item, state: effect.state }];
+        if (effect.effect !== 'value') return [];
+        if (['reason', 'detail', 'error'].includes(effect.slot)) return [{ item: effect.item, slot: effect.slot, value: text(effect.value) }];
+        if (effect.slot !== 'record') return [];
+        const record = readEvidenceJobRecordWireV17(effect.value);
+        return record ? [{ item: effect.item, state: record.state, reason: text(record.reason) }] : [];
+      });
+      const details = input.type === 'outcome' && isRecord(input.evidence.body) ? { reason: text(input.evidence.body['reason']), detail: text(input.evidence.body['detail']) } : null;
+      history.push({ seq, input: input.type,
+        kind: input.type === 'outcome' ? input.kind : input.type === 'act' || input.type === 'preparation' ? input.signed.intent.kind : null,
+        operation: input.type === 'outcome' ? input.operation : null, result: input.type === 'outcome' ? input.result : null,
+        delivery: input.type === 'delivery' ? { ...message(input.message), decision: 'decision' in input ? input.decision : 'clause' in input ? input.clause : null,
+          reason: 'reason' in input ? input.reason ?? null : null } : null,
+        details, changes: changes.slice(0, 16), changeCount: changes.length,
+        sends: entry.sends.slice(0, 8).map(send => ({ n: send.n, ...message(send.message) })), sendCount: entry.sends.length });
+    }
+    const pending = await (node.stub as NativeReadPort).operations(reader, undefined, true);
+    observed.push({ scope: await node.at(), head: summary.at, afterHead: (await node.summary()).at, summaryComplete: summary.complete, history,
+      pending: pending.ok ? { at: pending.at, complete: pending.complete, next: pending.next ?? null, pageCount: pending.value.length,
+        shown: pending.value.slice(0, 8).map(row => ({ id: row.operation.id, owner: row.operation.owner, kind: row.operation.kind,
+          state: row.state, sends: row.sends, attempts: row.operation.attempts })) } : { refused: pending.reason } });
+  }
+  return canonicalize(observed);
+}
+
 export async function openEvidenceRulesCertificate(room: EvidenceRoom, policy: RulesPolicyV13): Promise<FactRef> {
   const proposal = rulesPolicyProposalV13(policy);
   if (!proposal.ok) throw Error("Strict policy required");
@@ -293,6 +334,7 @@ type NativeReadPort = Platform['stub'] & {
   prepare(signed: SignedIntent, grants: readonly [], capability: string, step: string): Promise<Answer>;
   stageSnapshot(signed: SignedIntent): ReturnType<NonNullable<Scopes['stageSnapshot']>>;
   operation(reader: unknown, operation: OperationId): Promise<Read<OperationStatus>>;
+  operations(reader: unknown, cursor: string | undefined, open: boolean): Promise<Read<readonly OperationStatus[]>>;
   effect(): Promise<number>;
 };
 
@@ -440,7 +482,9 @@ export async function prepareEvidenceWork(room: EvidenceRoom, options: EvidenceW
     checker: service.member, binding: canonicalize(binding), bindingDigest, commitProof, reuse: options.reuse === true }, expected: await lane.expected({ source: stagedSource.seq }) });
   const jobFact = factRefOf(await evidenceEntry(lane, job));
   await room.pause(room.nodes);
-  expect(await lane.item(job)).toMatchObject({ state: "requested", values: { tree, base, commit, reason: "admitted" } });
+  const requested = await lane.item(job), expected = { state: "requested", values: { tree, base, commit, reason: "admitted" } };
+  try { expect(requested).toMatchObject(expected); }
+  catch { expect(requested, await evidenceNativeDiagnostic([lane, room.G])).toMatchObject(expected); }
   const notice: Notice = { lane: await lane.at(), job: jobFact, name: configuration.name, tree };
   const record = async () => {
     const rows = await hardeningItems(room.G, "evidence-job");
@@ -675,7 +719,8 @@ export type PublishedEvidenceJob = Awaited<ReturnType<EvidencePublication['job']
 
 export async function requestLandingEvidence(room: EvidenceRoom, setup: PreparedPublishedEvidence, publication: EvidencePublication, reuse: boolean) {
   const reserved = (await hardeningItems(room.G, "publication")).find(item => canonicalize(item.refs['operation']) === canonicalize(publication.operation));
-  if (!reserved || reserved.state !== "reserved" || !isObjectId(reserved.values['tree'])) throw Error("Actual landing reservation tree required");
+  if (!reserved || reserved.state !== "reserved" || !isObjectId(reserved.values['tree']))
+    throw Error(`Actual landing reservation tree required; Native context: ${await evidenceNativeDiagnostic([publication.lane, room.G])}`);
   const tree = reserved.values['tree'], observed = await evidenceRulesObservation(room), rules = (await hardeningItems(publication.lane, "rules"))[0];
   if (!rules) throw Error("Actual lane Rules copy required");
   const binding: EvidenceBinding = { v: 1, source: "member", stage: "landing", checker: setup.service.member,
