@@ -96,9 +96,9 @@ const applicationGitUsers = new Set(["packages/mcp/package.json", "packages/mcp/
 // below Replay and imports none of it, including from its own tests.
 const rulesProofGitUsers = new Set(["packages/platform/package.json", "packages/platform/src/rules-policy-tree.ts", "packages/platform/src/destination-evidence-v17.ts"]);
 const checkoutTypeEdge = (file, body, span) => {
-  if (file !== "packages/platform/src/evidence.ts" || span.value !== "@generalbusiness/dap-git") return false;
+  if (file !== "packages/platform/src/evidence.ts" || span.value !== "@generalbusiness/dap-git/checkout-types") return false;
   const start = body.lastIndexOf("\n", span.start) + 1, end = body.indexOf("\n", span.end);
-  return body.slice(start, end < 0 ? body.length : end).trim() === 'import type { OwnedCheckoutSnapshot } from "@generalbusiness/dap-git";';
+  return body.slice(start, end < 0 ? body.length : end).trim() === 'import type { OwnedCheckoutSnapshot } from "@generalbusiness/dap-git/checkout-types";';
 };
 const evidenceGitTypeOnly = (file, body = text(file)) => {
   if (file !== "packages/platform/src/evidence.ts") return false;
@@ -132,15 +132,18 @@ test("rules tree proofs use only the exact pure Git parser boundary", () => {
   assert.equal(evidenceGitTypeOnly(bindingFile, bindingSource), true);
   const runtimeImport = bindingSource.replace('import type { OwnedCheckoutSnapshot }', 'import { OwnedCheckoutSnapshot }');
   assert.notEqual(runtimeImport, bindingSource, "The control changes the actual type import");
-  assert.equal(evidenceGitTypeOnly(bindingFile, runtimeImport), false, "A runtime Git barrel import stays forbidden");
+  assert.equal(evidenceGitTypeOnly(bindingFile, runtimeImport), false, "A runtime Git type-module import stays forbidden");
+  assert.equal(evidenceGitTypeOnly(bindingFile, bindingSource.replace("dap-git/checkout-types", "dap-git")), false, "The Git barrel stays forbidden even for a type import");
   const finite = new Map([
     ["packages/git/src/tree-proof.ts", ["./reader.ts", "./pure-names.ts"]],
     ["packages/git/src/reader.ts", ["./ascii.ts", "@generalbusiness/dap-bytes", "@noble/hashes/legacy.js", "./pure-names.ts"]],
     ["packages/git/src/pure-names.ts", []],
     ["packages/git/src/ascii.ts", []],
+    ["packages/git/src/checkout-types.ts", []],
   ]);
   for (const [file, expected] of finite) assert.deepEqual([...new Set(moduleSpecifierSpans(text(file)).map(r => r.value))].sort(), [...expected].sort(), file);
   assert.equal(JSON.parse(text("packages/git/package.json")).exports["./tree-proof"], "./src/tree-proof.ts");
+  assert.equal(JSON.parse(text("packages/git/package.json")).exports["./checkout-types"], "./src/checkout-types.ts");
   assert.deepEqual(text("packages/git/src/tree-proof.ts").match(/export \{[^}]+\}/g), ["export { idOf, parseCommit, parseTree }", "export { GitRefusal, isObjectId }"]);
 });
 

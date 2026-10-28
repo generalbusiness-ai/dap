@@ -2,13 +2,8 @@
 import { isRecord } from "@generalbusiness/dap-bytes";
 import { isObjectId } from "./names.ts";
 import { idOf, READ_BOUNDS, Reader } from "./reader.ts";
-
-export interface OwnedCheckoutSnapshot {
-  base: string;
-  commit: string;
-  tree: string;
-  objects: readonly { id: string; type: "blob" | "tree" | "commit"; data: Uint8Array }[];
-}
+import type { OwnedCheckoutSnapshot } from "./checkout-types.ts";
+export type { OwnedCheckoutSnapshot } from "./checkout-types.ts";
 
 export const STAGE_SNAPSHOT_BOUNDS = { proofBytes: 262_144, objectBytes: 16 * 1024 * 1024, objects: 4096 } as const;
 

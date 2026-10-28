@@ -1,7 +1,7 @@
 /** Closed, owned successor check bindings. Facts are proved by their native readers. */
 import type { Digest, FactRef, MemberRef, ScopeRef, ScopedRulesPosition, Sealed, ServiceMark } from "@generalbusiness/dap-contract";
 import { canonicalBytes, digestBytes, isKeyId, isFactRef, isMemberRef, isScopeRef } from "@generalbusiness/dap-bytes";
-import type { OwnedCheckoutSnapshot } from "@generalbusiness/dap-git";
+import type { OwnedCheckoutSnapshot } from "@generalbusiness/dap-git/checkout-types";
 
 /** Who supplies a check result, and when its job runs. Omitted legacy fields keep member/landing meaning. */
 export type CheckSource = "member" | "room";

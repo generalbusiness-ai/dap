@@ -227,7 +227,8 @@ export async function configureEvidenceRules(room: EvidenceRoom, policy: RulesPo
   const kept = await room.G.stub.retained(reader, "value", body["proof"], RULES_TREE_PROOF.domain);
   if (!kept.ok) throw Error("Actual retained proof required");
   const certificate = factRefOf(outcome);
-  expect(await publishEvidenceRulesCertificate(room, policy, request, certificate, body["proof"], kept.value.bytes)).toMatchObject({ answer: "accepted" });
+  const published = await publishEvidenceRulesCertificate(room, policy, request, certificate, body["proof"], kept.value.bytes);
+  expect(published, canonicalize(published)).toMatchObject({ answer: "accepted" });
   return { request, certificate, proof: body["proof"] };
 }
 
@@ -256,8 +257,9 @@ export function evidenceRulesPolicy(roomService: RulesPolicyV13['roomService'], 
 export async function evidenceDefinitions(room: EvidenceRoom) {
   const issue = issueEvidence4, issueId = definitionDigest(issue), change = changeEvidence4(issueId), changeId = definitionDigest(change);
   for (const [definition, digest] of [[issue, issueId], [change, changeId]] as const) {
-    const answer = await room.Q.stub.submit(await room.Q.intent(rita, "activate", { fields: { digest, name: definition.name } }), [],
-      { values: [canonicalize(issue), canonicalize(change)] });
+    const dependencies = digest === changeId ? { dependency1: issueId } : {};
+    const values = digest === changeId ? [canonicalize(change), canonicalize(issue)] : [canonicalize(issue)];
+    const answer = await room.Q.stub.submit(await room.Q.intent(rita, "activate", { fields: { digest, name: definition.name, ...dependencies } }), [], { values });
     expect(answer, canonicalize(answer)).toMatchObject({ answer: "accepted" });
   }
   return { issue: issueId, change: changeId, issueBytes: canonicalize(issue), changeBytes: canonicalize(change) };
