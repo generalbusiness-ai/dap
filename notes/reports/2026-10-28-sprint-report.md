@@ -10,8 +10,8 @@ the single runtime pin with wider smoke coverage, separate rate-limit
 windows for local-network clients, the command-line client under load,
 and the first journey slice: a checker that runs in a container. The
 three room Workers were deployed eight times each and run the 15:16
-landing. A test Worker was deployed twice for the first room without a
-host. The cost-of-change review is below.
+landing. A test Worker was deployed three times for the first room
+without a host. The cost-of-change review is below.
 
 ## Story: a room on your own machine, with or without a Git host
 
@@ -54,8 +54,8 @@ and its founding signature. It adds no setting, index or replay record,
 and an incomplete census writes no manifest. The first census of each
 Worker ran after the deploy: every scope on the grow and lending Workers
 verified and ready; on the demo Worker six verified and five
-unavailable, all five founded by visitors, which is the expected state
-for rooms whose founders have left.
+unavailable, all five rooms that the Worker's operator did not found,
+which the census reports as forbidden rather than as an error.
 
 ## Story: clients that hold up under load and on local networks
 
@@ -103,10 +103,11 @@ Two spikes measured a typed form of the declared definition. Both
 compile to exactly the bytes a scope pins: the lending library, the
 live Counter and the grow site reproduce their digests, and the grow
 room and the change lane reproduce theirs up to a spelling the kernel
-reads alike. The second spike's surface has six patterns and the same
-verbs on every subject; nine name mistakes that the data form accepts
-are compile errors; a story typed from the definition runs on the real
-judges and writes the scenario file the repository already pins. The
+reads alike. In the first spike, nine name mistakes that the data form
+accepts are compile errors. The second spike's surface has six patterns
+and the same verbs on every subject, and a story typed from the
+definition runs on the real judges and writes the scenario file the
+repository already pins. The
 spikes also found that the contract admits two spellings of one
 meaning, which gives one definition two digests; a kernel item now
 makes the spelling canonical and migrates the two definitions that
@@ -171,7 +172,7 @@ after each round.
 
 First census, 19:36, from the deployed Workers: grow 11 of 11 scopes
 verified and ready; lending 8 of 8; demo 6 verified and 5 unavailable
-(visitor-founded). The test Worker's first room: register at cohort 21
+(not founded by the operator). The test Worker's first room: register at cohort 21
 under host `none`, six scopes consistent, refusals `no-repository` and
 `host-unknown` as designed.
 
@@ -195,9 +196,9 @@ would have cut it, and whether to revisit.
   beside it. Revisit: yes, retire the listing's reader in favour of the
   census predicate, as the 27 October review already said.
 - Two retirements (`c7c51714`, `a78e0981`). Cost: the second head
-  waited four and a half hours between approval and landing, because
-  the approval needed the requester's ratification and the builder's
-  sandbox refused the merge; one observation made after the head froze
+  waited five hours and nineteen minutes between its approval at 00:43
+  and its landing at 06:02, because the approval needed the
+  requester's ratification and the builder's sandbox refused the merge; one observation made after the head froze
   became a separate follow-up head, refiled twice because a landing
   retires the note the follow-up rested on. Alternative: approvals and
   follow-ups rest on the request and the promise, never on an
@@ -222,9 +223,10 @@ would have cut it, and whether to revisit.
   40,960-byte advisory. Alternative: the manifest bounded to the index
   with the collection referenced by digest; the inventory test listing
   by package rather than by file. Revisit: yes, as the follow-up slice
-  that also settles the four non-blocking review points: an empty run
-  directory should leave a job waiting, the claim-size refusal needs
-  its own name, a failing step that writes to stderr should not end as
+  that also settles the three other non-blocking review points: an
+  empty run directory should end as run-lost instead of leaving the
+  job waiting, the claim-size refusal needs its own name, and a
+  failing step that writes to stderr should end as failed, not
   run-lost.
 - Typed definitions (spikes, not landed). Cost: two spike directories
   before a package, and the finding that two spellings give one
