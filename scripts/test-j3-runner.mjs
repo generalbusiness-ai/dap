@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /** Explicit real-container acceptance. No daemon-dependent skip/pass in gate.
- * node --experimental-transform-types scripts/test-j3-runner.mjs --config /absolute/public.json --out /absolute/new-directory
+ * node --import tsx scripts/test-j3-runner.mjs --config /absolute/public.json --out /absolute/new-directory
  * Config: {command:[absolute engine,...prefix],image:sha256,environment:[{name,value}],canaryPort:number}.
  * Root builds/pins the relay + /j3-test-probe image before this command. */
 import assert from "node:assert/strict";

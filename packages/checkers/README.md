@@ -5,7 +5,9 @@ judgment and signing. The separate `@generalbusiness/dap-checkers/node`
 entry exports `containerRunner` and `gatewayOrigin`. It starts real containers through nerdctl;
 it does not deploy a checker service or configure a Worker.
 
-Use Node 26 with TypeScript transformation enabled. The adapter targets
+Use Node 26 and launch the host with `node --import tsx`. The adapter
+resolves its pinned `tsx` 4.21.0 loader beside the package when it starts
+the detached supervisor. No loader is fetched at runtime. The adapter targets
 nerdctl 2.4.1 and containerd on Linux. A macOS host can use the same engine
 through Lima. The runner image must contain `/usr/bin/git`, `/usr/bin/id`,
 `/bin/mkdir`, `/bin/sh` and the reviewed relay at
@@ -134,7 +136,7 @@ configuration with exactly `command`, `image`, `environment` and
 `/j3-test-probe`.
 
 ```sh
-node --experimental-transform-types scripts/test-j3-runner.mjs \
+node --import tsx scripts/test-j3-runner.mjs \
   --config /absolute/path/to/public-runner.json \
   --out /absolute/path/to/new-evidence-directory
 ```

@@ -98,7 +98,7 @@ export function containerRunner(options: ContainerRunnerOptions): Runner {
       const launch: RunLaunch = { v: 1, origin: origin && bridge ? { repository: origin.repository, socket: bridge.socket } : null };
       await writePrivate(join(dir, "launch.json"), canonicalize(launch));
       let exited = false;
-      const child = spawn(process.execPath, ["--experimental-transform-types", fileURLToPath(new URL("./container-supervisor.ts", import.meta.url)), dir], {
+      const child = spawn(process.execPath, ["--import", import.meta.resolve("tsx"), fileURLToPath(new URL("./container-supervisor.ts", import.meta.url)), dir], {
         detached: true, stdio: "ignore", env: { PATH: process.env["PATH"] ?? "/usr/bin:/bin", HOME: process.env["HOME"] ?? "/nonexistent", TMPDIR: tmpdir(), LANG: "C" },
       });
       child.once("error", () => { exited = true; }); child.once("exit", () => { exited = true; }); child.unref();
