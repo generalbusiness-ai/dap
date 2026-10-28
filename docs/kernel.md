@@ -109,12 +109,14 @@ scoped continuations as separate results.
 - **K1. Platform rules are code that replay needs.** A platform scope pins
   `platform:<name>@<n>`. Replay derives it only with code that its caller
   supplies (`replay/src/verify.ts:1031-1055`), and its report says that no
-  digest names those rules (`verify.ts:252-258`). The catalog pins 76
+  digest names those rules (`verify.ts:252-258`). The catalog pins 80
   versions (`platform/src/native-catalog.ts`, one row each): 62
   when this page landed, three more from the versioned publication family
   (`c8a3fb24`), four from the certified rules family (`6852f78d`) and four
   from its hardening (`33690b69`), and three from the unpublished cohort
-  (`register@21`, `directory@20` and `destination@16`). Passing takes one
+  (`register@21`, `directory@20` and `destination@16`), and four from the
+  opt-in evidence cohort (`register@22`, `directory@21`, `rules@13` and
+  `destination@17`). Passing takes one
   of three things: pin
   each version's rules by digest and archive the code;
   move the shipped versions into a frozen part of the kernel; or replace

@@ -2,11 +2,11 @@
  * own this carrying-budget boundary; this is not Native funding authority. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Bounds, type Effect, type Entry, type FactRef, type Input, type RulesObservation, type Sealed } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isEntry } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, isEntry, isRecord } from "@generalbusiness/dap-bytes";
 import { MemoryState, valueDigest, type RuleEffect, type RuleGiven, type RuleRequest, type Rules } from "@generalbusiness/dap-derive";
 import { d, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { certifiedPublicationWireV17, evidenceCarryingBudgetV17, type CertifiedPublicationStateV17 } from "../src/destination-budget-v17.ts";
-import { evidenceFundingCompleteV17, evidenceFundingReadyV17, fundingRules } from "../src/destination-evidence-funding-v17.ts";
+import { EVIDENCE_FUNDING_V17, destinationEvidenceFundingPending, evidenceFundedBatchV17, evidenceFundingCompleteV17, evidenceFundingReadyV17, fundingRules } from "../src/destination-evidence-funding-v17.ts";
 import { evidenceReadyUpdateV17 } from "../src/destination-evidence-v17.ts";
 import { evidenceBatchWireV17, readEvidenceBatchWireV17 } from "../src/evidence-batch-v17.ts";
 import { destinationV17 } from "../src/destination-v17.ts";
@@ -39,10 +39,10 @@ function fundingPreview(options: { checks?: number; productionReady?: boolean; s
     inc: destination.inc, kind: "establish", founding: null, source: null, n: null, message: null, decision: "applied" }, []);
   const publication = seal(2, { type: "timed", item: 2, rule: "TEST-publication", due: t(0) }, []);
   const publicationFact: FactRef = { at: destination, seq: 2, hash: publication.hash }, operation = fact(1);
-  const requests = Array.from({ length: Math.ceil((options.checks ?? 1) / 8) }, (_, ordinal) => ({ class: "request" as const, type: "tell" as const,
-    body: { message: "evidence-fund", fields: { publication: publicationFact, operation, capture: { self: true }, ordinal } } }));
   const capture = seal(3, { type: "outcome", owner: "platform:destination@17", kind: "judge", operation: "2:0", attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: {} } },
-    [{ effect: "state", item: 2, state: "reserved" }, { effect: "value", item: 2, slot: "passes", value: certifiedPublicationWireV17(snapshot, PROPOSED_BOUNDS) }], requests.map((message, n) => ({ n, to: destination, message })));
+    [{ effect: "state", item: 2, state: "reserved" }, { effect: "value", item: 2, slot: "passes", value: certifiedPublicationWireV17(snapshot, PROPOSED_BOUNDS) },
+      ...((options.checks ?? 1) ? [{ effect: "operation" as const, k: 1, owner: "platform:destination@17" as const, kind: EVIDENCE_FUNDING_V17, attempts: 1, for: 2 },
+        { effect: "attempt" as const, operation: { k: 1 }, attempt: 1, result: "opened" as const, selected: null }] : [])]);
   const captureFact: FactRef = { at: destination, seq: 3, hash: capture.hash };
   const state = new MemoryState();
   state.setScope({ at: destination, creator: null, status: "active", head: { seq: 3, hash: capture.hash }, time: t(0), genesis: { hash: genesis.hash, source: null, n: null }, held: [] });
@@ -53,7 +53,9 @@ function fundingPreview(options: { checks?: number; productionReady?: boolean; s
   const stage = seal(4, { type: "outcome", owner: "platform:destination@17", kind: "reservation-stage", operation: "3:0", attempt: 1, result: "confirmed",
     evidence: { basis: "own-answer", body: { seen: "a".repeat(40), tree: snapshot.policy.tree } } }, []);
   state.putOperation({ id: "3:0", owner: "platform:destination@17", kind: "reservation-stage", most: 1, attempts: [], selected: null, for: 2 });
-  const own = (seq: number): Sealed | null => seq === 0 ? genesis : seq === 2 ? publication : seq === 3 ? capture : seq === 4 && staged ? stage : null;
+  const history = new Map<number, Sealed>([[0, genesis], [2, publication], [3, capture], ...(staged ? [[4, stage] as [number, Sealed]] : [])]);
+  const own = (seq: number): Sealed | null => history.get(seq) ?? null;
+  state.putOperation({ id: "3:1", owner: "platform:destination@17", kind: EVIDENCE_FUNDING_V17, most: 1, attempts: [], selected: null, for: 2 });
   // A bounded capacity-hook stand-in with escaping large enough that the
   // actual carrying entry, rather than the earlier capture, owns the byte edge.
   const capacity = evidenceWireV17({ test: "\\".repeat(32_768) }, 196_608);
@@ -70,17 +72,39 @@ function fundingPreview(options: { checks?: number; productionReady?: boolean; s
     jobState: () => null, readyUpdate: options.productionReady ? evidenceReadyUpdateV17 : () => null });
   const guard = configured["evidence-fund-v17"], effects = configured["evidence-fund-open-v17"];
   if (guard?.place !== "guard" || effects?.place !== "effect") throw Error("The actual funding guard and effect are required");
-  const self = options.productionReady ? 5 : 4;
-  const given = (over: Partial<Bounds> = {}, ordinal = 0): RuleGiven => ({ state, own, time: t(0), uses: [], observed: () => null, value: () => undefined, placed: () => undefined,
-    input: { type: "delivery", from: captureFact, n: ordinal, message: requests[ordinal] ?? { class: "request", type: "tell", body: {} } },
-    resolved: { at: destination, self: self + ordinal, fields: { publication: publicationFact, operation, capture: captureFact, ordinal }, subjects: new Map(), signer: null, bounds: { ...PROPOSED_BOUNDS, ...over } } });
+  const self = 6;
+  const fundingSend = configured["evidence-funding-dispatch-v17"];
+  if (fundingSend?.place !== "send") throw Error("The actual counted funding dispatch is required");
+  const fundingGiven: RuleGiven = { state, own, time: t(0), uses: [], observed: () => null, value: () => undefined, placed: () => undefined,
+    input: { type: "outcome", owner: "platform:destination@17", kind: EVIDENCE_FUNDING_V17, operation: "3:1", attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: { capture: captureFact } } },
+    resolved: { at: destination, self: 5, fields: {}, subjects: new Map(), signer: null, bounds: PROPOSED_BOUNDS } };
+  const first = fundingSend.run(fundingGiven);
+  const dispatchEntry = seal(5, { type: "outcome", owner: "platform:destination@17", kind: EVIDENCE_FUNDING_V17, operation: "3:1", attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: { capture: captureFact } } }, [],
+    first ? [{ n: 0, ...first }] : []);
+  history.set(5, dispatchEntry);
+  const given = (over: Partial<Bounds> = {}, ordinal = 0): RuleGiven => {
+    const source = history.get(ordinal === 0 ? 5 : self + ordinal - 1);
+    const sent = source?.entry.sends.find(send => send.message.class === "request" && isRecord(send.message.body)
+      && send.message.body["message"] === "evidence-fund" && isRecord(send.message.body["fields"]) && send.message.body["fields"]["ordinal"] === ordinal);
+    return { state, own, time: t(0), uses: [], observed: () => null, value: () => undefined, placed: () => undefined,
+      input: { type: "delivery", from: source ? { at: destination, seq: source.entry.seq, hash: source.hash } : captureFact, n: sent?.n ?? 0,
+        message: sent?.message.class === "request" ? sent.message : { class: "request", type: "tell", body: {} } },
+      // Actual readFacts normal forms: own facts are numbers, foreign merge stays full.
+      resolved: { at: destination, self: self + ordinal, fields: { publication: publicationFact.seq, operation, capture: captureFact.seq, ordinal }, subjects: new Map(), signer: null, bounds: { ...PROPOSED_BOUNDS, ...over } } };
+  };
   const type = destinationV17.receives["evidence-fund"]!.opens;
   if (!type) throw Error("The actual receive must implicitly open its batch");
   const implicit: RuleEffect = { effect: "open", item: self, type, state: destinationV17.items[type]!.initial };
   const batch = (at: RuleGiven, emitted: readonly RuleEffect[]) => {
     const values: Record<string, import("@generalbusiness/dap-contract").FieldValue | null> = { ready: false };
     for (const effect of emitted) if (effect.effect === "value" && effect.item === at.resolved.self) values[effect.slot] = effect.value;
-    state.putItem({ id: at.resolved.self, type: "evidence-batch", state: "funded", revision: at.resolved.self, opened: d("d"), parties: {}, refs: { operation, lane: operation.at }, values, attributed: [] });
+    const dispatch = configured["evidence-funding-ready-v17"];
+    if (dispatch?.place !== "send" || at.input.type !== "delivery" || at.input.message.class !== "request") throw Error("The actual serial batch dispatcher is required");
+    const request = dispatch.run(at), requests = request ? [{ n: 0, ...request }] : [];
+    const born = seal(at.resolved.self, { ...at.input, decision: "applied" }, [{ ...implicit, item: at.resolved.self }, ...emitted],
+      [...requests, { n: requests.length, to: at.input.from.at, message: { class: "result", of: { from: at.input.from, n: at.input.n }, outcome: "applied" } }]);
+    history.set(at.resolved.self, born);
+    state.putItem({ id: at.resolved.self, type: "evidence-batch", state: "funded", revision: at.resolved.self, opened: born.hash, parties: {}, refs: { operation, lane: operation.at }, values, attributed: [] });
     // The real fold updates both the item count and index. MemoryState refuses
     // an index whose indexed-row count differs from its complete type count.
     state.addCount("evidence-batch", "funded", 1);
@@ -92,7 +116,7 @@ function fundingPreview(options: { checks?: number; productionReady?: boolean; s
       state.putItem({ ...item, values: { ...item.values, ready: effect.value } });
     }
   };
-  return { given, guard, effects, implicit, capacity, state, configured, baseUpdate, batch, stamp };
+  return { given, guard, effects, implicit, capacity, state, configured, baseUpdate, batch, stamp, history, own, captureFact, fundingGiven };
 }
 
 test("the actual funding preview includes its implicit batch open at exact byte and effect edges without emitting it twice", () => {
@@ -122,7 +146,7 @@ test("stage-first funding stamps the actual ordinal-zero account when the final 
   if (send?.place !== "send") throw Error("The actual funding send is required");
   const first = fixture.given(), firstEffects = fixture.effects.run(first);
   expect(firstEffects.some(effect => effect.effect === "value" && effect.slot === "ready")).toBe(false);
-  expect(send.run(first)).toBeNull();
+  expect(send.run(first)).toMatchObject({ message: { class: "request", type: "tell", body: { message: "evidence-fund", fields: { ordinal: 1, capture: fixture.captureFact } } } });
   fixture.batch(first, firstEffects);
   expect(fixture.state.count("evidence-batch", "funded")).toBe(1);
   expect(evidenceFundingCompleteV17(fixture.state, fixture.state.item(2)!)).toBe(false);
@@ -178,4 +202,48 @@ test("zero obligations preserve the base stage update without inventing a fundin
   expect(Object.hasOwn(destinationV17.items["publication"]!.values, "evidenceReady")).toBe(false);
   expect(Object.keys(destinationV17.items["publication"]!.values).length).toBeLessThanOrEqual(12);
   expect(destinationV17.items["evidence-batch"]!.values["ready"]).toMatchObject({ of: { type: "bool" }, default: false });
+});
+
+test("one counted initial send retains the original capture and proves a serial chain of at most four accounts", () => {
+  const fixture = fundingPreview({ checks: 32 }), pending = fixture.state.operation("3:1")!;
+  expect(destinationEvidenceFundingPending(fixture.state, fixture.own, pending)).toEqual({ capture: fixture.captureFact });
+  const outcome = fixture.configured["evidence-funding-outcome-v17"], send = fixture.configured["evidence-funding-dispatch-v17"];
+  if (outcome?.place !== "outcome" || !outcome.rules.derives || send?.place !== "send") throw Error("The actual counted funding forms are required");
+  expect(outcome.rules.derives(fixture.fundingGiven, pending, false).sends).toEqual([]);
+  expect(send.run(fixture.fundingGiven)).toMatchObject({ message: { body: { fields: { ordinal: 0, capture: fixture.captureFact } } } });
+  expect(destinationV17.outcomes[EVIDENCE_FUNDING_V17]!.send).toMatchObject({ once: true, code: "evidence-funding-dispatch-v17" });
+  for (let ordinal = 0; ordinal < 4; ordinal++) {
+    const context = fixture.given({}, ordinal);
+    expect(context.resolved.fields["capture"]).toBe(fixture.captureFact.seq);
+    expect(context.resolved.fields["publication"]).toBe(2);
+    expect(fixture.guard.run(context)).toEqual({ holds: true });
+    const emitted = fixture.effects.run(context); fixture.batch(context, emitted);
+    const current = fixture.state.item(context.resolved.self)!;
+    expect(evidenceFundedBatchV17(fixture.state, fixture.own, current, PROPOSED_BOUNDS)?.ordinal).toBe(ordinal);
+  }
+  expect(fixture.state.count("evidence-batch", "funded")).toBe(4);
+  expect(evidenceFundingCompleteV17(fixture.state, fixture.state.item(2)!)).toBe(true);
+});
+
+test("new funding binds actual local normal forms and refuses after withdrawal, while existing proof permits legitimate mutable fields", () => {
+  const fixture = fundingPreview(), context = fixture.given();
+  expect(fixture.guard.run(context)).toEqual({ holds: true });
+  const fullLocalShortcut: RuleGiven = { ...context, resolved: { ...context.resolved, fields: { ...context.resolved.fields, capture: fixture.captureFact } } };
+  expect(fixture.guard.run(fullLocalShortcut)).toEqual({ holds: false, name: "evidence-funding-unavailable" });
+  const publication = fixture.state.item(2)!;
+  fixture.state.putItem({ ...publication, state: "aborted" });
+  expect(fixture.guard.run(context)).toEqual({ holds: false, name: "evidence-funding-unavailable" });
+  fixture.state.putItem(publication);
+  fixture.batch(context, fixture.effects.run(context));
+  const current = fixture.state.item(context.resolved.self)!, original = readEvidenceBatchWireV17(current.values["batch"]);
+  if (!original) throw Error("A real batch wire is required");
+  const changed = { ...original, planAt: 100, jobs: [{ name: original.checks[0]!.name, job: { at: original.operation.at, seq: 40, hash: d("a") } }] };
+  const mutable = { ...current, values: { ...current.values, ready: true, batch: evidenceBatchWireV17(changed) } };
+  fixture.state.putItem(mutable);
+  expect(evidenceFundedBatchV17(fixture.state, fixture.own, mutable, PROPOSED_BOUNDS)).toEqual(changed);
+  fixture.state.putItem({ ...publication, state: "published" });
+  expect(evidenceFundedBatchV17(fixture.state, fixture.own, mutable, PROPOSED_BOUNDS)).toEqual(changed);
+  const forged = { ...mutable, values: { ...mutable.values, batch: evidenceBatchWireV17({ ...changed, capture: { ...changed.capture, hash: d("b") } }) } };
+  fixture.state.putItem(forged);
+  expect(evidenceFundedBatchV17(fixture.state, fixture.own, forged, PROPOSED_BOUNDS)).toBeNull();
 });

@@ -121,9 +121,9 @@ export function artifactsOutside(given: OutsideGiven, sql: Pick<Sql, "exec">, en
       accepts, send,
       recovery: {
         accepts: (owner, kind) => accepts(owner, kind) && (kind === "check-judge"
-          || owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks"].includes(kind)),
+          || owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(kind)),
         read: request => accepts(request.owner, request.kind) && (request.kind === "check-judge"
-          || request.owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks"].includes(request.kind))
+          || request.owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(request.kind))
           ? destination.recovery.read(request) : Promise.resolve(null),
       },
       snapshot: (asked) => bound(given.genesis()?.seed.definition ?? "") ? destination.snapshot(asked) : Promise.resolve(null),

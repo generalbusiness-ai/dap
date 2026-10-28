@@ -8,7 +8,7 @@ export const STAGE = { type: "enum", of: ["work", "landing", "published"] } as c
 export const TRIAGERS = { type: "list", max: 32, of: { type: "member" } } as const;
 export const cloneEvidence = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 export const nativeFact = { type: "fact", kind: ["check-fence", "work-check-fence", "reserve",
-  ...["evidence-admit", "evidence-result", "evidence-progress", "judge", "check-judge", "receipt", "read", "evidence-notice", "published-checks"].map(kind => `platform:destination@17:${kind}`),
+  ...["evidence-admit", "evidence-result", "evidence-progress", "judge", "check-judge", "receipt", "read", "evidence-notice", "evidence-audit", "published-checks"].map(kind => `platform:destination@17:${kind}`),
 ], under: "platform:destination" } as const;
 export const jobFact = (name: "issue" | "change"): FieldType => ({ type: "fact", kind: name === "issue" ? ["request-work-check"] : ["request-check", "admit-published-check", "admit-audit-check"], under: name });
 export const resultFact = (name: "issue" | "change"): FieldType => ({ type: "fact", kind: ["check", "check-error"], under: name });

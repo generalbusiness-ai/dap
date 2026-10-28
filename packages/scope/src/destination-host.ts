@@ -15,7 +15,7 @@ import { DESTINATION_KINDS, READ_TOKEN_HOURS, destinationBranch, destinationMint
 import { GitRefusal, READ_BOUNDS, Reader, type GitSource } from "@generalbusiness/dap-git";
 import { RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, rulesCertificateOpening, rulesCertificateBranchMatches, rulesPolicyProposalV11, rulesPolicyPatternsV11, RULES_TREE_PROOF, RULES_TREE_BOUNDS, verifyRulesTree, type RulesTreeBinding } from "@generalbusiness/dap-platform";
 import { rulesCertificateOpeningV15, rulesCertificateDeclineV15 } from "@generalbusiness/dap-platform";
-import { rulesCertificateOpeningV17, rulesCertificateDeclineV17, RULES_POLICY_VALUE_V13, rulesPolicyProposalV13, destinationEvidencePending, destinationEvidenceResultPending, destinationEvidenceNoticePending, destinationEvidenceProgressPending, destinationPublishedChecksPending } from "@generalbusiness/dap-platform";
+import { rulesCertificateOpeningV17, rulesCertificateDeclineV17, RULES_POLICY_VALUE_V13, rulesPolicyProposalV13, destinationEvidencePending, destinationEvidenceResultPending, destinationEvidenceNoticePending, destinationEvidenceProgressPending, destinationPublishedChecksPending, destinationEvidenceFundingPending, destinationEvidenceAuditPending, destinationEvidencePlanPending } from "@generalbusiness/dap-platform";
 import type { RulesTreeRequest, RulesTreeObjects } from "./rules-tree-provider.ts";
 import type { CredentialPosition, CredentialStore, RevocationPosition } from "./credential-store.ts";
 import type { OutsideGiven } from "./given.ts";
@@ -96,10 +96,10 @@ export class DestinationHost implements Outside {
   /** Successor source/stage proof; distinct from a live legacy reservation snapshot. */
   stageSnapshot(asked: SignedIntent) { return readStageSnapshot(this.#given, this.#options, asked); }
 
-  accepts(owner: string, kind: string): boolean { return (owner === "platform:destination@14" || owner === "platform:destination@15" || owner === "platform:destination@17") && kind === RULES_CERTIFICATE_KIND || owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks"].includes(kind) || usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && ([...Object.values(DESTINATION_KINDS), "check-judge", "reservation-stage", "reservation-delete"] as string[]).includes(kind); }
+  accepts(owner: string, kind: string): boolean { return (owner === "platform:destination@14" || owner === "platform:destination@15" || owner === "platform:destination@17") && kind === RULES_CERTIFICATE_KIND || owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(kind) || usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && ([...Object.values(DESTINATION_KINDS), "check-judge", "reservation-stage", "reservation-delete"] as string[]).includes(kind); }
   /** Repeating these reads never repeats a host mutation. The driver keeps the same attempt. */
   readonly recovery = {
-    accepts: (owner: string, kind: string): boolean => owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks"].includes(kind) || usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && [DESTINATION_KINDS.judge, DESTINATION_KINDS.read, DESTINATION_KINDS.adoptRead, "check-judge"].includes(kind as "judge" | "read" | "adopt-read" | "check-judge"),
+    accepts: (owner: string, kind: string): boolean => owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(kind) || usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && [DESTINATION_KINDS.judge, DESTINATION_KINDS.read, DESTINATION_KINDS.adoptRead, "check-judge"].includes(kind as "judge" | "read" | "adopt-read" | "check-judge"),
     read: (request: EffectRequest): Promise<EffectAnswer | null> => this.recovery.accepts(request.owner, request.kind) ? this.send(request) : Promise.resolve(null),
   };
 
@@ -152,8 +152,16 @@ export class DestinationHost implements Outside {
       const context = this.#bound(request);
       if (!context) return null;
       const { operation, repository, ref } = context;
-      if (operation.owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks"].includes(operation.kind)) {
+      if (operation.owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(operation.kind)) {
         if (request.attempt !== 1) return null;
+        if (operation.kind === "evidence-funding") {
+          const pending = destinationEvidenceFundingPending(this.#given.state, this.#given.own, operation);
+          return pending ? answer("confirmed", { capture: pending.capture }) : null;
+        }
+        if (operation.kind === "evidence-plan") {
+          const pending = destinationEvidencePlanPending(this.#given.state, this.#given.own, operation);
+          return pending ? answer("confirmed", { written: pending.written }) : null;
+        }
         if (operation.kind === "published-checks") {
           const pending = destinationPublishedChecksPending(this.#given.state, this.#given.own, operation);
           return pending ? answer("confirmed", { plan: pending.plan }) : null;
@@ -162,9 +170,11 @@ export class DestinationHost implements Outside {
           ? destinationEvidencePending(this.#given.state, this.#given.own, operation)
           : operation.kind === "evidence-result"
             ? destinationEvidenceResultPending(this.#given.state, this.#given.own, operation)
-            : operation.kind === "evidence-progress"
-              ? destinationEvidenceProgressPending(this.#given.state, this.#given.own, operation)
-              : destinationEvidenceNoticePending(this.#given.state, this.#given.own, operation);
+            : operation.kind === "evidence-audit"
+              ? destinationEvidenceAuditPending(this.#given.state, this.#given.own, operation)
+              : operation.kind === "evidence-progress"
+                ? destinationEvidenceProgressPending(this.#given.state, this.#given.own, operation)
+                : destinationEvidenceNoticePending(this.#given.state, this.#given.own, operation);
         return pending ? answer("confirmed", { job: pending.job }) : null;
       }
       if ((operation.owner === "platform:destination@14" || operation.owner === "platform:destination@15" || operation.owner === "platform:destination@17") && operation.kind === RULES_CERTIFICATE_KIND) {

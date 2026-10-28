@@ -119,5 +119,6 @@ export type { EvidenceJobAdmissionV17 } from "./destination-v17.ts";
 export { rulesCertificateFamilyV17, rulesCertificateOpeningV17, rulesPublishedCertificateV17, rulesCertificateDeclineV17, rulesCertificateInterveningFactV17, readRulesCertificateDeclinedV17, RULES_CERTIFICATE_DECLINED_V17_MAX } from "./rules-certificate-v17.ts";
 export type { RulesCertificateDeclinedV17, RulesCertificateProvenanceV17 } from "./rules-certificate-v17.ts";
 
-export { destinationPublishedChecksPending } from "./destination-evidence-funding-v17.ts";
+export { destinationPublishedChecksPending, destinationEvidenceFundingPending, destinationEvidencePlanPending } from "./destination-evidence-funding-v17.ts";
+export { destinationEvidenceAuditPending } from "./destination-evidence-v17.ts";
 export { evidenceIncidentAdmissionPositionV17, EVIDENCE_INCIDENT_PINS_V17 } from "./evidence-incident-origin-v17.ts";

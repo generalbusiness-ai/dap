@@ -1,7 +1,8 @@
 /** Synthetic maximum future entries only. No forecast fact is recorded or
  * treated as authority. Kernel holder closure owns used-plus-reserved Amount. */
 import type { Effect, FactRef, FieldValue } from "@generalbusiness/dap-contract";
-import { canonicalize, isRecord, parseStrict, same, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, isFactRef, isRecord, parseStrict, same, utf8 } from "@generalbusiness/dap-bytes";
+import { evidenceBindingDigest } from "./evidence.ts";
 import { observationBytes, operationOpening, type Opening, type RuleEffect, type RuleGiven, type RuleRequest } from "@generalbusiness/dap-derive";
 import type { EvidenceJobRecordV17 } from "./destination-evidence-v17.ts";
 import { evidenceKeyDigestV17, readEvidenceIndexV17, type EvidenceCandidateV17 } from "./evidence-index-v17.ts";
@@ -97,6 +98,19 @@ function incident(record: EvidenceJobRecordV17, memberBytes: number): RuleReques
     cause: canonicalize(record.incident?.cause ?? failure(record)), triagers, policyGeneration: canonicalize(record.binding.policyGeneration),
   } } } };
 }
+function audit(given: RuleGiven, record: EvidenceJobRecordV17): RuleRequest | null {
+  if (record.binding.subject.kind !== "landing" || record.binding.source !== "member" || record.binding.auditOf !== null || !record.policy) return null;
+  const parent = record.policy.policy.checks.find(check => check.name === record.name), target = parent?.audit && record.policy.policy.checks.find(check => check.name === parent.audit!.check);
+  if (!target) return null;
+  const operation = given.state.item(record.binding.subject.publication.seq)?.refs["operation"];
+  if (!isFactRef(operation)) throw Error("The audit forecast has no actual publication operation");
+  const binding = { ...record.binding, checker: target.checker, source: "room" as const, auditOf: record.countedJob ?? record.job };
+  return { to: record.job.at, message: { class: "request", type: "tell", body: { message: "admit-audit-check", fields: {
+    operation, manifest: record.binding.subject.manifest, name: target.name, configuration: target.configuration,
+    tree: record.tree, commit: record.commit, base: record.base, checker: target.checker, auditOf: binding.auditOf, forJob: record.job,
+    binding: canonicalize(binding), bindingDigest: evidenceBindingDigest(binding),
+  } } } };
+}
 /** One proof row per actual configured descriptor, never copies of a whole
  * code record. Existing rows are retained if a policy has since changed. */
 function publicationPasses(given: RuleGiven, record: EvidenceJobRecordV17): { value: unknown; signers: number } {
@@ -162,7 +176,7 @@ export function evidenceFutureEntriesV17(given: RuleGiven, current: Row, owners:
     const observation = observationBytes("rules", bounds) + observationBytes("member", bounds) + 9 * observationBytes("key", bounds)
       + observationBytes("holders", bounds, 32) + 12; // commas between complete ObservationUse envelopes
     const variants: { input: unknown; effects: readonly RuleEffect[]; sends: readonly RuleRequest[]; observed: number }[] = [];
-    const messages = [decision(main), ...(main.incident ? [incident(main, bounds.memberBytes)] : [])];
+    const messages = [decision(main)];
     const progress = main.binding.stage === "landing" ? opening(0,
       { owner: "platform:destination@17", kind: "evidence-progress", attempts: 1, for: main.holder }) : [];
     variants.push({ input: outcome("evidence-result"), effects: [attempt, ...result, ...progress], sends: messages, observed: observation });
@@ -176,9 +190,13 @@ export function evidenceFutureEntriesV17(given: RuleGiven, current: Row, owners:
       const passes = publicationPasses(given, main);
       const progressObservation = observationBytes("rules", bounds) + passes.signers * observationBytes("key", bounds) + passes.signers + 1;
       const progressRecord = [codeEffect(current.item, "record", main, 196608), codeEffect(MAX, "service", service(main, bounds.memberBytes), 16384)];
+      const auditRequest = audit(given, main), auditOpening = auditRequest ? opening(2,
+        { owner: "platform:destination@17", kind: "evidence-audit", attempts: 1, for: main.holder }) : [];
       variants.push({ input: outcome("evidence-progress"), effects: [attempt, ...progressRecord,
-        codeEffect(publication, "passes", passes.value, bounds.entryBytes), valueEffect(publication, "checkDeadline", null), ...openings],
+        codeEffect(publication, "passes", passes.value, bounds.entryBytes), valueEffect(publication, "checkDeadline", null), ...openings,
+        ...(auditRequest ? [valueEffect(current.item, "auditOpenedAt", MAX), ...auditOpening] : [])],
         sends: [decision(main)], observed: progressObservation });
+      if (auditRequest) variants.push({ input: outcome("evidence-audit"), effects: [attempt], sends: [auditRequest], observed: 0 });
       variants.push({ input: outcome("evidence-progress"), effects: [attempt, ...progressRecord,
         { effect: "state", item: publication, state: "cleanup-aborted" }, valueEffect(publication, "reason", "required-check-failed"),
         { effect: "ref", item: MAX, slot: "slot", to: null }, ...openings], sends: [decision(main)], observed: progressObservation });

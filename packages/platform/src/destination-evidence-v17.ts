@@ -9,7 +9,7 @@ import { readEvidenceDecisionV17 } from "./evidence-decision-v17.ts";
 import { evidenceFutureEntriesV17 } from "./evidence-forecast-v17.ts";
 import { readEvidenceBatchV17, readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
 import { evidenceCapacityValidV17, evidencePendingCapacityForecastV17, evidenceSettlePendingCapacityV17, evidenceSpendPublishedCapacityV17, readEvidenceCapacityWireV17 } from "./destination-evidence-capacity-v17.ts";
-import { evidenceFundingFloorReferencesV17, evidenceFundingReadyV17 } from "./destination-evidence-funding-v17.ts";
+import { evidenceFundedBatchV17, evidenceFundingCaptureV17, evidenceFundingFloorReferencesV17, evidenceFundingReadyV17 } from "./destination-evidence-funding-v17.ts";
 import { EVIDENCE_LEDGER_ITEM_V17, evidenceLedgerOfV17 } from "./evidence-ledger-v17.ts";
 export { evidenceFundCapacityV17, evidenceCapacityValidV17 } from "./destination-evidence-capacity-v17.ts";
 import { classify } from "./extents.ts";
@@ -30,6 +30,7 @@ export const EVIDENCE_ADMIT_V17 = "evidence-admit";
 export const EVIDENCE_RESULT_V17 = "evidence-result";
 export const EVIDENCE_NOTICE_V17 = "evidence-notice";
 export const EVIDENCE_PROGRESS_V17 = "evidence-progress";
+export const EVIDENCE_AUDIT_V17 = "evidence-audit";
 export const WORK_COMMIT_PROOF_V17 = { domain: "artroom-work-commit-1", max: 49152 } as const;
 export const EVIDENCE_BINDING_TEXT_V17 = 16384;
 export const EVIDENCE_RECORD_BYTES_V17 = 196608;
@@ -175,6 +176,29 @@ export function destinationEvidenceProgressPending(state: StateView, own: Own, o
     && evidenceOperationOpeningV17(opened, operation)
     ? { job: record.job } : null;
 }
+/** The second admission request has its own counted operation. Its record
+ * is read from the actual admission, never reconstructed from caller data. */
+function auditOpening(state: StateView, own: Own, operation: Operation): EvidenceJobRecordV17 | null {
+  if (operation.owner !== "platform:destination@17" || operation.kind !== EVIDENCE_AUDIT_V17 || operation.most !== 1 || operation.for === undefined) return null;
+  const opened = own(Number(operation.id.split(":")[0])), entry = opened?.entry;
+  if (!entry || entry.input.type !== "outcome" || entry.input.owner !== "platform:destination@17" || entry.input.kind !== EVIDENCE_PROGRESS_V17
+    || entry.input.attempt !== 1 || entry.input.result !== "confirmed" || entryHash(entry) !== opened!.hash || !evidenceOperationOpeningV17(entry, operation)) return null;
+  const markers = entry.effects.filter(effect => effect.effect === "value" && effect.slot === "auditOpenedAt" && effect.value === entry.seq);
+  const id = markers.length === 1 && markers[0]!.effect === "value" ? markers[0]!.item : null;
+  const item = id === null ? null : state.item(id), current = item && readEvidenceJobRecordWireV17(item.values["record"]);
+  const admitted = current && destinationEvidenceJob(state, own, current.job), admission = admitted && own(admitted.admission.seq);
+  const rows = admission?.entry.effects.filter(effect => effect.effect === "value" && effect.item === id && effect.slot === "record") ?? [];
+  const record = rows.length === 1 && rows[0]!.effect === "value" ? readEvidenceJobRecordWireV17(rows[0]!.value) : null;
+  return record && ["admitted", "reused"].includes(record.state) && record.admittedAt === id && record.holder === operation.for
+    && record.binding.stage === "landing" && record.binding.source === "member" && record.binding.auditOf === null && record.policy
+    && item?.type === "evidence-job" && item.values["auditOpenedAt"] === entry.seq
+    && exact(entry.input.evidence.body, ["job"]) && same(entry.input.evidence.body["job"], record.job)
+    && admitted && admission && same(admitted.admission, { at: admission.entry.at, seq: admission.entry.seq, hash: admission.hash }) ? record : null;
+}
+export function destinationEvidenceAuditPending(state: StateView, own: Own, operation: Operation): { job: FactRef } | null {
+  const record = auditOpening(state, own, operation);
+  return record ? { job: copy(record.job) } : null;
+}
 export interface EvidenceJobAdmissionV17 {
   job: FactRef; binding: EvidenceBinding; bindingDigest: Digest; commit: string; tree: string; base: string;
   sourceFacts: readonly FactRef[]; admission: FactRef;
@@ -284,6 +308,20 @@ const local = (given: RuleGiven, fact: FactRef): Entry | null => {
   const sealed = same(fact.at, given.resolved.at) ? given.own(fact.seq) : null;
   return sealed && sealed.hash === fact.hash && isEntryOf(sealed.entry, fact) ? sealed.entry : null;
 };
+/** readFacts normalizes an authenticated local Fact field to its position.
+ * Recover only the actual sealed fact and require the arriving full ref to
+ * agree; an arbitrary numeric slot is never interpreted as authority. */
+function localFactField(given: RuleGiven, name: string): FactRef | null {
+  const resolved = given.resolved.fields[name];
+  if (isFactRef(resolved) && !same(resolved.at, given.resolved.at)) return null;
+  const fields = given.input.type === "act" ? given.input.signed.intent.fields
+    : given.input.type === "delivery" && given.input.message.class === "request" && isRecord(given.input.message.body)
+      && isRecord(given.input.message.body["fields"]) ? given.input.message.body["fields"] : null;
+  const stated = fields?.[name];
+  if (!isFactRef(stated) || !same(stated.at, given.resolved.at) || !(natural(resolved) && resolved === stated.seq || isFactRef(resolved) && same(resolved, stated))) return null;
+  const sealed = given.own(stated.seq);
+  return sealed && sealed.hash === stated.hash && isEntryOf(sealed.entry, stated) ? copy(stated) : null;
+}
 const effectValue = (entry: Entry, slot: string, item = entry.seq): unknown => {
   const rows = entry.effects.filter(effect => effect.effect === "value" && effect.item === item && effect.slot === slot);
   return rows.length === 1 && rows[0]!.effect === "value" ? rows[0]!.value : undefined;
@@ -409,7 +447,8 @@ export function evidenceDestinationDataV17(base: PlatformData): PlatformData {
       values: { jobKey: { fixed: true, required: true, of: { type: "digest" } }, reuseKey: { fixed: true, required: true, of: { type: "digest" } },
         holdKey: { fixed: true, required: true, of: { type: "digest" } }, policyKey: { fixed: true, required: true, of: { type: "digest" } },
         record: { fixed: false, required: true, of: { type: "code", code: "evidence-record-v17", row: "E1" } }, deadline: { fixed: false, required: false, of: { type: "time" } },
-        timeoutReason: { fixed: false, required: false, of: { type: "text", max: 128 } }, noticeOpenedAt: { fixed: false, required: false, of: { type: "int", min: 0, max: 1000000000 } } } },
+        timeoutReason: { fixed: false, required: false, of: { type: "text", max: 128 } }, noticeOpenedAt: { fixed: false, required: false, of: { type: "int", min: 0, max: 1000000000 } },
+        auditOpenedAt: { fixed: false, required: false, of: { type: "int", min: 0, max: 1000000000 } } } },
   }, acts: { ...base.acts, "evidence-hold-override": release(false), "evidence-hold-transition": release(true),
     "evidence-recover-timeout": { step: "transition", on: "branch", grant: "destination.read-token",
       also: { job: admittedJob },
@@ -419,24 +458,25 @@ export function evidenceDestinationDataV17(base: PlatformData): PlatformData {
       effects: [{ code: "evidence-recovery-v17", row: "E3", most: { effects: 5, operations: [EVIDENCE_NOTICE_V17] } }], sends: [], attention: [] } },
     receives: { ...base.receives, "check-fence": fence(false), "work-check-fence": fence(true), checked: checked(false), "work-checked": checked(true) },
     outcomes: { ...base.outcomes,
-      [EVIDENCE_ADMIT_V17]: { code: "evidence-admit-v17", row: "E1", attempts: 1, origin: "rule", most: { effects: 16, operations: [EVIDENCE_PROGRESS_V17], opens: "evidence-job" }, observes: [
+      [EVIDENCE_ADMIT_V17]: { code: "evidence-admit-v17", row: "E1", attempts: 1, origin: "rule", send: { code: "evidence-admit-send-v17", row: "E1", once: true, result: {} }, most: { effects: 16, operations: [EVIDENCE_PROGRESS_V17], opens: "evidence-job" }, observes: [
         { of: "rules", window: 10, use: "once", without: "wait", retains: [RULES_EXTENTS_VALUE_V13] },
         { of: "member", from: "rule", max: 1, window: 10, use: "once", without: "wait" },
         { of: "key", from: "rule", max: 9, window: 10, use: "once", without: "wait", second: true },
       ] },
-      [EVIDENCE_RESULT_V17]: { code: "evidence-result-v17", row: "E2", attempts: 1, origin: "rule", most: { effects: 16, operations: [EVIDENCE_PROGRESS_V17, EVIDENCE_NOTICE_V17] }, observes: [
+      [EVIDENCE_RESULT_V17]: { code: "evidence-result-v17", row: "E2", attempts: 1, origin: "rule", send: { code: "evidence-result-send-v17", row: "E2", once: true, result: {} }, most: { effects: 16, operations: [EVIDENCE_PROGRESS_V17, EVIDENCE_NOTICE_V17] }, observes: [
         { of: "rules", window: 10, use: "once", without: "wait", retains: [RULES_EXTENTS_VALUE_V13] },
         { of: "member", from: "rule", max: 1, window: 10, use: "once", without: "wait" },
         { of: "holders", action: "issue.triage", most: 32, window: 10, use: "once", without: "wait" },
         { of: "key", from: "rule", max: 9, window: 10, use: "once", without: "wait", second: true },
       ] },
-      [EVIDENCE_NOTICE_V17]: { code: "evidence-notice-v17", row: "E3", attempts: 1, origin: "rule", most: { effects: 2, operations: [] }, observes: [
+      [EVIDENCE_NOTICE_V17]: { code: "evidence-notice-v17", row: "E3", attempts: 1, origin: "rule", send: { code: "evidence-notice-send-v17", row: "E3", once: true, result: {} }, most: { effects: 2, operations: [] }, observes: [
         { of: "holders", action: "issue.triage", most: 32, window: 10, use: "once", without: "wait" },
       ] },
-      [EVIDENCE_PROGRESS_V17]: { code: "evidence-progress-v17", row: "E6", attempts: 1, origin: "rule", most: { effects: 8, operations: ["push", "mint", "reservation-delete"] }, observes: [
+      [EVIDENCE_PROGRESS_V17]: { code: "evidence-progress-v17", row: "E6", attempts: 1, origin: "rule", send: { code: "evidence-progress-send-v17", row: "E6", once: true, result: {} }, most: { effects: 9, operations: ["push", "mint", "reservation-delete", EVIDENCE_AUDIT_V17] }, observes: [
         { of: "rules", window: 10, use: "once", without: "wait", retains: [RULES_EXTENTS_VALUE_V13] },
         { of: "key", from: "rule", max: 32, window: 10, use: "once", without: "wait", second: true },
       ] },
+      [EVIDENCE_AUDIT_V17]: { code: "evidence-audit-v17", row: "E1", attempts: 1, origin: "rule", send: { code: "evidence-audit-send-v17", row: "E1", once: true, result: {} }, most: { effects: 0, operations: [] } },
       ...Object.fromEntries(["judge", "read"].flatMap(kind => base.outcomes?.[kind] ? [[kind, { ...base.outcomes[kind]!,
         most: { ...base.outcomes[kind]!.most, effects: base.outcomes[kind]!.most?.effects ?? 16, operations: [...(base.outcomes[kind]!.most?.operations ?? []), EVIDENCE_NOTICE_V17] } }]] : [])),
     }, timed: { ...base.timed, "evidence-job-deadline": deadline("job"), "evidence-reuse-deadline": deadline("reuse-anchor"), "evidence-hold-deadline": deadline("hold-anchor") } };
@@ -530,7 +570,12 @@ export const evidenceDestinationProfileV17: DestinationSuccessorV17 = {
     const record = certifiedPublicationStateV17(value, bounds); if (!record) throw Error("The publication record is malformed");
     return certifiedPublicationWireV17(record, bounds);
   },
-  budget: certifiedReservationBudgetV17, list: judgeListEligibilityV17, blocks: evidenceBlocksV17, blocked: evidenceBlockedRecovery, complete: evidenceComplete,
+  budget: (given, record, capture) => {
+    const writes = capture.effects.filter((effect): effect is Extract<RuleEffect, { effect: "value" }> => effect.effect === "value" && effect.slot === "passes");
+    const publication = writes.length === 1 ? given.state.item(writes[0]!.item) : null;
+    const funding = publication && evidenceFundingCaptureV17(given, publication, record);
+    return certifiedReservationBudgetV17(given, record, { ...capture, opens: funding ? [...capture.opens, funding] : capture.opens });
+  }, list: judgeListEligibilityV17, blocks: evidenceBlocksV17, blocked: evidenceBlockedRecovery, complete: evidenceComplete,
   // Landing jobs start only after a reservation exposes its integration tree.
   // Reservation proves the policy; the push fence below proves its jobs.
   judge: asked => judgeReservationV17(asked),
@@ -573,7 +618,7 @@ const readRow = (given: RuleGiven, id: number): { item: Item; record: EvidenceJo
 function operationRecordId(state: StateView, own: Own, operation: Operation): number | null {
   const opened = own(Number(operation.id.split(":")[0]))?.entry;
   if (!opened) return null;
-  if (operation.kind === EVIDENCE_ADMIT_V17) return opened.seq;
+  if (operation.kind === EVIDENCE_ADMIT_V17 || operation.kind === EVIDENCE_AUDIT_V17) return opened.seq;
   if (operation.kind === EVIDENCE_RESULT_V17 && opened.input.type === "delivery" && opened.input.message.class === "request" && isRecord(opened.input.message.body)) {
     const fields = opened.input.message.body["fields"];
     return isRecord(fields) && isFactRef(fields["admission"]) && same(fields["admission"].at, opened.at) ? fields["admission"].seq : null;
@@ -677,6 +722,41 @@ function auditRequest(given: RuleGiven, record: EvidenceJobRecordV17, view: Rese
     checker: target.checker, operation, auditOf: binding.auditOf, forJob: record.job, binding: canonicalize(binding), bindingDigest: evidenceBindingDigest(binding),
   } } } };
 }
+/** Forecast only: the actual future outcome retains its sealed admission
+ * and emits this one request. No hypothetical fact is persisted. */
+function evidenceAuditBudgetV17(given: RuleGiven, job: FactRef, request: RuleRequest): boolean {
+  const maximum = Number.MAX_SAFE_INTEGER;
+  const future: RuleGiven = { ...given, input: { type: "outcome", owner: "platform:destination@17", kind: EVIDENCE_AUDIT_V17,
+    operation: `${maximum}:0`, attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: { job } } },
+    resolved: { ...given.resolved, self: maximum } };
+  return evidenceCarryingBudgetV17(future, [], [], [request], []).admitted;
+}
+function evidenceAudit(given: RuleGiven, operation: Operation): OutcomeGives {
+  if (given.input.type !== "outcome" || given.input.result !== "confirmed") return { effects: [], opens: [], sends: [] };
+  const record = auditOpening(given.state, given.own, operation);
+  if (!record?.policy || record.binding.subject.kind !== "landing") throw new RuleFault("The original audit admission is unavailable");
+  const publication = given.state.item(record.binding.subject.publication.seq);
+  if (!publication || publication.state !== "reserved") return { effects: [], opens: [], sends: [] };
+  const request = auditRequest(given, record, record.policy);
+  if (!request || !evidenceCarryingBudgetV17(given, [], [], [request], []).admitted) throw new RuleFault("The funded audit request is unavailable");
+  return { effects: [], opens: [], sends: [request] };
+}
+/** One marked opening belongs to this logical member request. An unknown
+ * original operation is still the original; later progress cannot replace it. */
+export function evidenceAuditOpeningV17(given: RuleGiven, item: Item, record: EvidenceJobRecordV17): Pick<OutcomeGives, "effects" | "opens"> {
+  const marked = item.values["auditOpenedAt"];
+  if (marked !== undefined && marked !== null) {
+    const source = natural(marked) ? given.own(marked)?.entry : null;
+    const effects = source?.effects.filter(effect => effect.effect === "operation" && effect.owner === "platform:destination@17" && effect.kind === EVIDENCE_AUDIT_V17) ?? [];
+    const effect = effects.length === 1 ? effects[0] : null;
+    const operation = source && effect?.effect === "operation" ? given.state.operation(`${source.seq}:${effect.k}`) : null;
+    const admitted = operation && auditOpening(given.state, given.own, operation);
+    if (!admitted || !same(admitted.job, record.job)) throw new RuleFault("The original audit dispatch is unavailable");
+    return { effects: [], opens: [] };
+  }
+  return { effects: [{ effect: "value", item: item.id, slot: "auditOpenedAt", value: given.resolved.self }],
+    opens: [openingV17(EVIDENCE_AUDIT_V17, record.holder)] };
+}
 /** Semantic correspondence only. The Native wrapper below proves the
  * retained capture and funded account; current Q13 authority is separate. */
 export function evidenceFrozenBatchMatchesV17(binding: EvidenceBinding, name: string, configuration: Digest, value: EvidenceBatchRecordV17): boolean {
@@ -705,14 +785,13 @@ function frozenEvidenceBatch(given: RuleGiven, binding: EvidenceBinding, name: s
   const selected = rows.find(row => (holder === undefined || row.item!.id === holder) && (!job || row.batch!.jobs.some(row => same(row.job, job) && row.name === name))
     && evidenceFrozenBatchMatchesV17(binding, name, configuration, row.batch!));
   if (!selected?.batch) return null;
-  const capture = local(given, selected.batch.capture), born = given.own(selected.item!.id)?.entry;
+  const capture = local(given, selected.batch.capture), funded = evidenceFundedBatchV17(given.state, given.own, selected.item!, given.resolved.bounds);
   const captured = capture && certifiedPublicationStateWireV17(effectValue(capture, "passes", publication.id), given.resolved.bounds);
   const current = certifiedPublicationStateWireV17(publication.values["passes"], given.resolved.bounds);
   const view = captured && readRulesPolicyObservationV17(captured.policy.observation, captured.policy.input, captured.policy.observation.at);
   return capture?.input.type === "outcome" && capture.input.owner === "platform:destination@17" && ["judge", "read"].includes(capture.input.kind)
     && capture.input.result === "confirmed" && capture.effects.some(effect => effect.effect === "state" && effect.item === publication.id && effect.state === "reserved")
-    && born?.input.type === "delivery" && same(born.input.from, selected.batch.capture)
-    && born.effects.some(effect => effect.effect === "open" && effect.item === born.seq && effect.type === "evidence-batch")
+    && funded && same(funded, selected.batch)
     && captured && current && same(current.policy, captured.policy) && same(captured.policy.manifest, subject.manifest)
     && same(captured.policy.touched, selected.batch.touched) && view?.ok && same(view.view, selected.batch.policy) ? selected.batch : null;
 }
@@ -828,12 +907,12 @@ function evidenceAdmission(given: RuleGiven, operation: Operation): OutcomeGives
   const ledger = evidenceLedgerOfV17(given.state); if (!ledger) return refuse("evidence-invalid");
   if (!same(counts, capacity.counts)) effects.push({ effect: "value", item: ledger.id, slot: "counts", value: capacity.counts as unknown as FieldValue });
   const sends = [decisionRequest(record, record.state === "reused" ? "reused" : "admitted")], audit = auditRequest(given, record, view);
-  if (audit) sends.push(audit);
-  const progress = landingNeedsProgress(given, record) ? [openingV17(EVIDENCE_PROGRESS_V17, record.holder)] : [];
+  const progress = landingNeedsProgress(given, record) || audit ? [openingV17(EVIDENCE_PROGRESS_V17, record.holder)] : [];
   const forecast = record.state === "reused" ? { admitted: true } : evidenceFutureEntriesV17(given, { item: admittedItem, record }, [...updates].map(([item, record]) => ({ item, record })),
     job => same(job, record.job) ? record : evidenceRowV17(given.state, job)?.record ?? null,
     record.covered.length && record.policyOwner !== null ? evidencePendingCapacityForecastV17(given, record.policyOwner, record.job.at) : []);
-  if (!forecast.admitted || !evidenceCarryingBudgetV17(given, effects, progress, sends, []).admitted) return refuse("evidence-too-large");
+  if (!forecast.admitted || !evidenceCarryingBudgetV17(given, effects, progress, sends, []).admitted
+    || audit && !evidenceAuditBudgetV17(given, record.job, audit)) return refuse("evidence-too-large");
   return { effects, sends, opens: progress };
 }
 
@@ -859,7 +938,7 @@ function resultBound(given: RuleGiven): { item: Item; record: EvidenceJobRecordV
   const item = given.resolved.subjects.get("also.job"), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
   const admission = record && destinationEvidenceJob(given.state, given.own, record.job);
   return item && record && admission && given.input.type === "delivery" && same(given.input.from.at, record.job.at)
-    && same(given.resolved.fields["admission"], admission.admission) && same(given.resolved.fields["job"], record.job)
+    && same(localFactField(given, "admission"), admission.admission) && same(given.resolved.fields["job"], record.job)
     && given.resolved.fields["bindingDigest"] === record.bindingDigest && isFactRef(given.resolved.fields["result"])
     && same(given.resolved.fields["result"], given.input.from) && ["admitted", "timeout", "unknown"].includes(record.state)
     ? { item, record } : null;
@@ -996,7 +1075,7 @@ function evidenceBlockedRecovery(given: RuleGiven, paths: readonly string[], car
 function recoveryRow(given: RuleGiven): { item: Item; record: EvidenceJobRecordV17 } | null {
   const item = given.resolved.subjects.get("also.job"), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
   const admission = record && destinationEvidenceJob(given.state, given.own, record.job);
-  return item && item.type === "evidence-job" && record && admission && same(admission.admission, given.resolved.fields["admission"])
+  return item && item.type === "evidence-job" && record && admission && same(admission.admission, localFactField(given, "admission"))
     ? { item, record: currentEvidenceRecordV17(item, record) } : null;
 }
 function recoveryAuthority(given: RuleGiven): boolean {
@@ -1059,8 +1138,7 @@ function evidenceResult(given: RuleGiven, operation: Operation): OutcomeGives {
   }
   publishedDecision(given, record, decision.outcome, record.reason ?? decision.outcome, updates,
     same(record.binding.policyGeneration, { rules: view!.rules, seq: view!.revision }));
-  const sends = [decisionRequest(record, "counted", "result")], incident = incidentRequest(given, record);
-  if (incident) sends.push(incident);
+  const sends = [decisionRequest(record, "counted", "result")];
   const notice = evidenceNoticeOpeningV17(given, row.item, record);
   const progress = [...(landingNeedsProgress(given, record) ? [openingV17(EVIDENCE_PROGRESS_V17, record.holder)] : []), ...notice.opens];
   const effects: RuleEffect[] = [...serviceEffect(given, view), { effect: "value", item: row.item.id, slot: "deadline", value: null },
@@ -1125,7 +1203,7 @@ function evidenceProgress(given: RuleGiven, operation: Operation): OutcomeGives 
   // An audit result remains retained even when its parent projection has
   // moved on. Only that obsolete progress is a no-op; a pending parent's
   // later progress reads the actual sealed audit through its own pairing.
-  if (!progressCohort(given, record).applies) return { effects: [], sends: [], opens: [] };
+  const applies = progressCohort(given, record).applies;
   const view = evidencePolicyV17(given);
   const publication = given.state.item(record.binding.subject.publication.seq);
   if (!publication || publication.state !== "reserved") return { effects: [], sends: [], opens: [] };
@@ -1139,11 +1217,27 @@ function evidenceProgress(given: RuleGiven, operation: Operation): OutcomeGives 
     const refused = { ...record, reason: "wrong-source", observedGeneration: view?.serviceGeneration ?? null };
     return { effects: [...serviceEffect(given, view), evidenceRecordEffectV17(row.item.id, refused)], sends: [decisionRequest(refused, "wrong-source", "result")], opens: [] };
   }
-  const projection = landingEffects(given, record);
-  return { ...projection, effects: [...serviceEffect(given, view), ...projection.effects] };
+  const audit = view && auditRequest(given, record, view);
+  if (!applies && !audit) return { effects: [], sends: [], opens: [] };
+  const projection = applies ? landingEffects(given, record) : { effects: [], sends: [], opens: [] };
+  const opening = audit ? evidenceAuditOpeningV17(given, row.item, record) : { effects: [], opens: [] };
+  const effects = [...serviceEffect(given, view), ...projection.effects, ...opening.effects], opens = [...projection.opens, ...opening.opens];
+  if (!evidenceCarryingBudgetV17(given, effects, opens, projection.sends, []).admitted) throw new RuleFault("The funded evidence progress is unavailable");
+  return { ...projection, effects, opens };
 }
 
 export function evidenceDestinationRulesV17(base: Rules): Rules {
+  const derive = (kind: "admit" | "result" | "notice" | "progress", given: RuleGiven, operation: Operation): OutcomeGives =>
+    kind === "admit" ? evidenceAdmission(given, operation) : kind === "result" ? evidenceResult(given, operation) : kind === "progress" ? evidenceProgress(given, operation) : evidenceNotice(given, operation);
+  const single = (result: OutcomeGives): RuleRequest | null => {
+    if (result.sends.length > 1) throw new RuleFault("A counted evidence outcome has more than one marked request");
+    return result.sends[0] ?? null;
+  };
+  const send = (kind: "admit" | "result" | "notice" | "progress"): Extract<Rules[string], { place: "send" }> => ({ place: "send", run: given => {
+    const operation = given.input.type === "outcome" ? given.state.operation(given.input.operation) : null;
+    if (!operation) throw new RuleFault("The counted evidence send lost its operation");
+    return single(derive(kind, given, operation));
+  } });
   const outcome = (kind: "admit" | "result" | "notice" | "progress"): Extract<Rules[string], { place: "outcome" }> => ({ place: "outcome", clock: true, rules: {
     selects: kind === "admit", read: false, retries: () => false,
     most: { effects: 16, requests: 3, operations: 2 },
@@ -1184,7 +1278,10 @@ export function evidenceDestinationRulesV17(base: Rules): Rules {
       }
       return [...keys];
     },
-    derives: (given, operation) => kind === "admit" ? evidenceAdmission(given, operation) : kind === "result" ? evidenceResult(given, operation) : kind === "progress" ? evidenceProgress(given, operation) : evidenceNotice(given, operation),
+    derives: (given, operation) => {
+      const result = derive(kind, given, operation); single(result);
+      return { ...result, sends: [] };
+    },
   } });
   return { ...base,
     "evidence-capacity-anchor-v17": { place: "type", run: (_given, value) => evidenceCapacityValidV17(value) },
@@ -1212,8 +1309,8 @@ export function evidenceDestinationRulesV17(base: Rules): Rules {
       return item.id;
     } },
     "evidence-admitted-job-v17": { place: "also", run: (given: RuleGiven) => {
-      const fact = given.resolved.fields["admission"];
-      if (!isFactRef(fact) || !same(fact.at, given.resolved.at)) return null;
+      const fact = localFactField(given, "admission");
+      if (!fact) return null;
       const item = given.state.item(fact.seq), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
       if (!item || item.type !== "evidence-job" || !record) return null;
       const actual = destinationEvidenceJob(given.state, given.own, record.job);
@@ -1240,6 +1337,22 @@ export function evidenceDestinationRulesV17(base: Rules): Rules {
     } },
     "evidence-admit-v17": outcome("admit"), "evidence-result-v17": outcome("result"), "evidence-notice-v17": outcome("notice"),
     "evidence-progress-v17": outcome("progress"),
+    "evidence-admit-send-v17": send("admit"), "evidence-result-send-v17": send("result"), "evidence-notice-send-v17": send("notice"),
+    "evidence-progress-send-v17": send("progress"),
+    "evidence-audit-v17": { place: "outcome", rules: { selects: false, read: false, retries: () => false,
+      most: { effects: 0, requests: 1, operations: 0 }, origin: (_given, operation) => Number(operation.id.split(":")[0]), unknown: () => ({}),
+      wellFormed: (result, evidence, given) => {
+        if (result !== "confirmed") return exact(evidence.body, []);
+        const operation = given.input.type === "outcome" ? given.state.operation(given.input.operation) : null;
+        const pending = operation && destinationEvidenceAuditPending(given.state, given.own, operation);
+        return evidence.basis === "own-answer" && exact(evidence.body, ["job"]) && !!pending && same(evidence.body["job"], pending.job);
+      }, derives: (given, operation) => { const result = evidenceAudit(given, operation); single(result); return { ...result, sends: [] }; },
+    } },
+    "evidence-audit-send-v17": { place: "send", run: given => {
+      const operation = given.input.type === "outcome" ? given.state.operation(given.input.operation) : null;
+      if (!operation) throw new RuleFault("The counted audit send lost its operation");
+      return single(evidenceAudit(given, operation));
+    } },
   };
 }
 export const evidenceJobStateV17 = (state: StateView, job: FactRef): { state: string; admittedAt: number | null } | null => {
@@ -1290,9 +1403,10 @@ export function* evidenceFloorReferencesV17(snapshot: StateSnapshot, _definition
       const record = readEvidenceJobRecordWireV17(item.values["record"]); if (!record) throw Error("Evidence floor record is malformed");
       if (item.state === "settled") continue;
       position(item.id); position(record.admittedAt); position(record.decidedAt); position(record.holder); position(record.requestAt); position(record.noticeAt);
-      const timeout = item.refs["timeoutDecision"], notice = item.values["noticeOpenedAt"];
+      const timeout = item.refs["timeoutDecision"], notice = item.values["noticeOpenedAt"], audit = item.values["auditOpenedAt"];
       if (typeof timeout === "number") position(timeout); else if (isFactRef(timeout)) fact(timeout);
       if (natural(notice)) position(notice);
+      if (natural(audit)) position(audit);
       for (const source of record.sourceFacts) fact(source);
       position(record.reuseOwner); position(record.holdOwner); position(record.policyOwner);
       for (const candidate of record.reuse?.candidates ?? []) { position(candidate.admission); position(candidate.decidedBy); fact(candidate.job); fact(candidate.result); }

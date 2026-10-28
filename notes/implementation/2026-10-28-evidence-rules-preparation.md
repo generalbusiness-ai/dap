@@ -1,530 +1,276 @@
 # Evidence rules: preparation and implementation evidence
 
-Status: Implementation and component validation in progress. This note
-retains the before-source choices required by the first-slice request.
-The existing-form timeout implementation, shared transport scope
-clarification, Native acceptance, gate, review, landing and deployment
-remain owed. Component results appear below.
+Status: In progress. Component checks and the first real cohort scenario
+have recorded passes. Other Native scenarios, marked-room physical J3,
+gate, review, landing and deployment remain owed.
+
+## What changed
+
+The explicit cohort adds Register 22, Directory 21, Rules 13 and Destination
+17 with Membership 8/Inbox 1, plus new Issue/Change 4 digests. Old definitions,
+pins, signed bytes, default cohorts and deployed creation policy stay exact.
+Rules owns the admin service mark; Destination judges fresh authority,
+bounded reuse/audits and ordered published holds/incidents. CheckerService
+binds actual stage facts to J3's existing Runner and external signer.
+
+Counted native outcomes now use one declared send. Separate funded
+`evidence-funding`, `evidence-audit` and `evidence-plan` operations serialize
+at most four batches; no global send cap widens. First current progress
+opens audit once via ninth job value `auditOpenedAt` (null means empty).
+The shared sealed-opening helper resolves actual self. This split is still
+in flight; complete Native funding/acceptance remains unproved.
 
 Base: Main `06e4d33fe17937610891f29b5d1513b9e224edea`, after J3.
 Branch: `request/evidence-rules-20261028`.
+
+## Decisions and reasons retained from before source
+
+Preparation commit `0ff2027f3505f53d8264d4f90ab65f4bbcf812d7`
+recorded the required service-mark choices before implementation. These
+full records govern the slice:
 
 Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a53e146477354f07cf6ff657e93b36d411d846c8
 Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a891555c470d4693e466b9c5240b5ed35a95b388
 Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ed8187819e92ad401315e78a5a7f0a6c6073509f
 Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f73805e41fb84d460ea391b66a2c6ab23568f15b
 Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c20152ef7919ec4b03c7647a6b734aadc1cec7dd
-
-The full request and ruling were read through gitseq as builder. The
-ruling remains effective. Its stale metadata follows retirement of the
-answered question, not withdrawal of the decision. The workroom permits
-stale bases without an override. No renewed ruling is required.
-
-J3 landed as `06e4d33f` after exact-head approval `c9bd8822`.
-Receipt `ceba0366` and independent landing check `3c884798` confirm it.
-The preparation branch is rebased onto that Main. The production Runner
-is the base for this slice. Source changes now implement the selected
-boundary below; the earlier scratch proposals remain historical.
-
-## Rules owns the service mark
-
-The successor Rules singleton holds at most one `roomService` pair:
-`{checker member, key}`. Only an active admin publishes it through the
-native `publish` path. New genesis is unmarked. Explicit null withdraws
-it. Publication observes that the named member is active and has the
-checker role. An inactive member or another role is refused.
-
-Publication does not prove the key atomically. Admission and result
-judgment each prove the exact key's current eligibility through the
-existing native observations. No extra native owner or marking-time
-exchange is needed. Local settings or the checker role alone cannot mark
-a service key.
-
-The generation is the native-selected last-mark-change position, scoped
-to the exact Rules reference, including incarnation. Callers do not choose
-it. An unchanged pair does not rotate because another policy field changed.
-Native effects keep a local position or reference, never the hash of the
-entry being written. If an implementation uses a full fact later, its
-entry and hash come from actual recorded bytes. A later head's hash cannot
-supply the hash of an earlier mark position.
-
-The authoritative Rules observation supplies the mark, generation and
-observed head under the successor's exact definition. Keep the existing
-observation identity, clock and replay checks. Do not add a foreign-history
-proof, history scan or caller anchor beyond this observed native boundary.
-
-The marked key is exactly `CheckerService`'s external `ResultSigner.key`.
-That signer signs the result after J3's production Runner returns eligible
-execution evidence. It stays outside the job and container. An image,
-bridge nonce, URL, process setting or runner assertion cannot replace the
-Rules mark. This preparation chooses no new service key.
-
-## Rotation invalidates the observed in-flight fence
-
-Destination admission freezes the marked member, key and generation with
-the exact job, tree, configuration, source and stage. Result judgment
-observes the current mark and exact key eligibility again.
-
-After Destination observes another generation, neither the old key nor
-the replacement key completes that frozen job. A new job must be explicitly
-requested. There is no automatic restart, new signature, reclassification
-or reuse to repair the old fence. Returning to a former member/key pair
-does not erase the intervening generation change.
-
-This is bounded native observation order, not immediate global revocation
-at the Rules commit. There is no Destination-local fence or handshake.
-Old accepted results remain historical facts. Reuse applies today's full
-eligibility rule separately; past admission never supplies current signer
-authority. Keep the documented reuse key rather than silently adding a
-new identity field to it.
-
-A refusal retains `wrong-source` and records the frozen and observed
-scoped generations in typed data. The lane's readers see that refusal.
-An unavailable observation is not an invented generation or proof of a
-rotation.
-
-The lane may retain an ordinarily member-authorized result. Destination's
-recorded refusal to count it is the commissioned enforcement. No actor-key
-DSL operand, new generic guard or extra exchange is commissioned for that
-choice. Identify the signer from the actual signed result entry and its
-admitted fact, not a caller-supplied key or diagnostic prose.
-
-## Successors retain historical meaning
-
-Add new versions of Rules data, the change lane and Destination. Preserve
-all shipped native bytes and lane pins. A check without `source` keeps
-`member` meaning. Missing `stage` remains `landing`; absent reuse and hold
-choices keep the existing non-reuse and non-holding behavior. The first
-slice supports `room` and `member`, with audit `every: 1` only.
-
-The reuse key is room, tree, check name, configuration, source and stage.
-An eligible result decided a real job admitted under its then-current
-rules. Its signer must still meet today's source, checker, role and key
-checks, using the required fresh authority observations. One predicate compares eligible passes and failures.
-Disagreement permanently disables reuse for that key, while a fresh job
-can still land. Record the earlier job actually counted. Use a bounded
-keyed index, not a room-history walk.
-
-A `work` result never meets an extent's landing checks. A `landing` job
-uses the reservation tree. A `published` job uses the confirmed published
-commit and cannot undo that publication. Audit jobs always run fresh,
-including after cancellation and a same-tree retry. Refuse mismatched
-audit configuration or stage, reused audit targets, `every != 1`, and
-`reuse: true` on published checks.
-
-Destination owns holds. A hold names the check, source, stage,
-configuration, rules generation and extent, with the failed job and
-published commit. Its failure and hold update are atomic with admissions.
-A still-running published check does not block a landing. Order by the
-recorded publication sequence and admitted job order, never hashes or
-notice arrival. Duplicate notices are idempotent.
-
-Only a current eligible pass on the exact hold key, for the same or a later
-publication, clears a hold. An earlier pass cannot clear a later hold.
-A timeout, error, unknown result or unavailable observation is not a pass;
-with `holds: true`, it sets a hold with its reason. Closing an intent clears
-nothing. Changed configuration or rules generation requires an authorized
-transition naming the old hold and new generation, or an override with a
-reason. Record those acts as transition or override, never as pass.
-
-Keep the native job deadline and its default unless the successor's
-bounded per-check deadline field deliberately changes it. J3's runtime
-limits are separate from the lane's native waiting deadline.
-
-## Coordinate the source shape before parallel edits
-
-### Selected implementation boundary
-
-The slice adds the explicit `EVIDENCE_RULES_COHORT`: Register 22,
-Directory 21, Membership 8, Rules 13, Destination 17, Inbox 1. Destination
-16 and the unpublished cohort already exist and stay exact. Global
-defaults and deployed creation policy stay unchanged. The new declared
-Issue and Change definitions have new digests; old definitions and pins
-are preserved. Pin generation waits for a coordinated committed freeze.
-
-Rules 13 uses a complete policy with required nullable `roomService` and
-the optional check fields already listed above. Its transport-only
-`checkers` field is the exact distinct union of configured checker members
-and the marked service member, at most 33. It is excluded from the policy
-digest. The new policy domain is `artroom-rules-policy-2`; its retained
-observation envelope uses `artroom-rules-extents-3`. The existing outer
-Rules observation grammar stays exact. Its authenticated retained envelope
-contains configured status, policy, proposal, certificate and service
-generation; the policy carries the service mark. The complete policy,
-proof, and envelope each retain a 262,144-byte ceiling. The unchanged
-49,571-byte Rules content ceiling is checked on the complete successor
-projection. Every accepted publication must also fit its actual carrying
-entry and retained-value budget.
-
-The mark stays inside the complete policy. An optional local reference
-`roomServiceChanged` records native self only on pair change or withdrawal;
-unchanged pairs keep their generation. The member union proves active
-checker members. A mark change additionally requires the fresh grant's
-admin role, rather than possession of a customizable publish action alone.
-
-The dedicated bytes evidence API owns `CheckSource`, `CheckStage`, `ServiceMark`,
-`ScopedRulesPosition`, `CheckSubject`, and `EvidenceBinding`. The binding
-is a closed record with version 1, source, stage, checker, policy generation,
-service mark and generation, nullable auditOf, and subject. Each generation
-is the full Rules reference plus a native position. Room-source jobs freeze
-the mark and cannot finish after an observed rotation. Ordinary member
-source does not gain authority from that mark. Audit room jobs use their
-own fresh room-source admission. The original answered question explicitly
-scoped the unfinished-job rotation rule to room jobs.
-
-Subjects contain actual facts, while the common Job retains commit, tree,
-and base without duplication:
-
-- `landing`: publication-opening and manifest facts;
-- `work`: an already admitted Issue `stage-work` source fact;
-- `published`: publication-opening, receipt-opening, receipt-written, and
-  manifest facts.
-
-Each subject has `kind` equal to its stage. The binding digest hashes the
-canonical bytes of `{domain: "artroom-check-binding-1", binding}` using the
-existing bytes hash helper. Successor result acts bind the actual job fact
-and this digest. Their native reader compares the complete admitted job;
-echoed fields grant no authority. Old signed result bytes stay unchanged.
-
-Work checks use a new Issue successor with a separately admitted staged
-source and a later explicit work-check request. The source uses the existing
-performer, terms, staged, ancestry, and held-pin rules; it is not a report.
-The native admission derives tree and first parent from actual commit bytes.
-Its retained commit proof is limited to 32 KiB decoded and 48 KiB canonical
-bytes. A root commit or unsupported object format is refused. The source
-owns its pin until unresolved jobs settle or an authorized explicit release.
-
-Published jobs follow actual receipt-written state, including its recovered
-deciding-read path. Their successor origin proof is distinct from a live
-reservation. It reads bounded immutable objects at the recorded commit and
-never recreates a cleaned reservation ref. New delivery-origin jobs prove
-the native sender and admission, without a fabricated member signature.
-J3 consumes the same operational immutable object overlay after validation.
-
-The selected lifetime limits per Destination incarnation are 2,048 reuse
-keys, eight retained or reserved candidate slots per key, 32,768 canonical
-bytes per complete key record, 512 hold keys across all generations and
-states, 512 retained hold-policy generations, and 8,192 published incident
-identities. Triager observations require complete coverage of at most 32
-active holders. Unknown, empty, or over-bound sets remain visible.
-Each exact hold key admits at most three pending published-job slots.
-The existing capacity anchor reserves actual publication/descriptor
-identities before publication; admission binds the actual job. Full lists
-refuse funding before push. A timer, notice or unknown creation never
-releases a slot. Actual result, eligible clearing pass, reasoned release or
-confirmed withdrawal supplies the proof needed to remove one.
-The branch keeps its existing value-slot layout. A singleton nonholder
-evidence ledger holds counts and the latest observed service pair. The
-first actual Rules-certificate act opens it and records the branch's item
-reference; later requests reuse it. Genesis reserves its one item alongside
-the original receipt item. It does not add unused item credits on every
-certificate request. The generic 12-value-slot bound stays unchanged.
-
-All work and landing jobs that could supply later reusable evidence reserve
-a candidate slot, including fresh and audit jobs. Published jobs cannot be
-reused. Retain older candidates through key rotation. Eligible disagreement
-permanently disables reuse for that key; a fresh job for a conflicted key
-needs no new candidate slot and remains allowed. A nonconflicted full key
-refuses a new candidate-producing admission. There is no silent eviction,
-replacement of old results, or fallback history scan.
-
-Index and hold rows stay nonfinal, or use explicit all-state counters;
-`item.max` alone bounds only live items. Hold assessment reads at most 512
-indexed active holds, including retained extent patterns from older policy
-generations. Reserve all affected holds and an incident identity before
-admitting a published job. Every published job reserves incident capacity,
-even without holds. Failed and unknown settlements cannot lose already
-funded state to later admissions.
-
-These limits are independent of the five-dimensional used-plus-reserved
-capacity checks. Use the maintained checked Amount helpers, complete
-carrying-entry forecasts, retained source/observation/value charges, and
-all future outcomes. Refuse before opening work when any bound cannot be
-proved. Per-check assessment bounds candidate standing reads; the old
-G15 capture budget is not evidence for a larger cohort. New carrier quotes
-include automatic attempts, implicit item opens, sealed input syntax and
-complete observations within the existing 16-effect allowance. Shared
-capacity carriers include possible later key and slot growth under the
-complete frozen policy. No new kernel allowance is implied.
-
-| Owner | Bounded implementation scope | Existing useful boundary at Main |
-|---|---|---|
-| Rules and policy | A new successor beside `packages/platform/src/rules-scope-v12.ts` and `rules-policy-v11.ts`; admin mark, native generation, observation projection and strict policy codec. Minimal versioned types in `packages/contract/src/observation.ts` if needed. | `rules-scope.test.ts` publishes under active-checker observations and projects Rules at an exact head. `rules-policy-v11.test.ts` checks strict owned policy and extent requirements. Keep old-version assertions. |
-| Lane and checker wire | A new successor beside `apps/room/lanes/src/change3.ts`; stage jobs, frozen descriptors, audit identity and typed result/refusal data. Keep `packages/checkers/src/job.ts`, `outcome.ts`, `signing.ts` and service origin consistent with that shape. | T34 in `checks.scope.test.ts` covers authentic results and retries. `manifest.scope.test.ts` covers exact version, checker and tree. J3 adds the actual one-file Runner/CheckerService path. |
-| Destination and judgment | A new successor beside the chosen current Destination protocol; bounded result index, reuse disablement, source judgment, audit pairing, published jobs, ordered holds, transitions and overrides. New pure eligibility logic beside `reservation-v14.ts` and `reservation-v15.ts`. | `reservation-authority.test.ts` retains deciding entries and current key standing. `support-destination.ts` supplies real package rules. W5 and manifest-tree scenarios exercise native cross-scope admission. |
-| Integration and display | Catalog, cohort and lineage exports; exact native/lane generation; design disposition and visible typed refusal. Use the maintained `pin-native-declarations.mjs`, lane `pin.mjs` and `reference.mjs` at the coordinated checkpoint. | `certified-rules.scope.test.ts` covers a fresh Rules-generation fence. `wiring.scope.test.ts` supplies real Rules/Membership/Destination; `manifest-tree.scope.test.ts` supplies reservations and publication cleanup. |
-
-Future implementation waits for Root's coordinated version and shared
-job/result-shape ownership. No future pin number is chosen here. Preserve
-the current certified Rules path and its read limits; do not downgrade it
-to an older publication path.
-
-Cheap pure or Native fixtures can cover policy combinations without one
-container per field. At least one integrated case must bind the marked key
-to J3's actual production adapter and external signer. Keep stand-ins
-explicit: W5 alone has no runner; T34 uses a scripted Rules peer and does
-not prove Destination admission. A historical reservation recording is
-not a fresh service run.
-
-## Preserve all Decisions witnesses
-
-These are planned observations, not results. The first two columns retain
-all 19 witnesses in the design's Decisions section. Mark/rotation and
-transition checks strengthen those boundaries without replacing them.
-
-| No. | Required witness | Smallest useful extension |
-|---|---|---|
-| 1 | A member result cannot satisfy a room check. | W5 or J3 one-file native path: allow ordinary lane retention, then observe Destination's visible `wrong-source` with frozen/observed generations. Include mark withdrawal, wrong key and observed rotation; only an explicit fresh job proceeds. |
-| 2 | Omitted source keeps its member meaning. | Preserve existing lane/Rules cases and add one successor policy compatibility case. Old pins stay exact. |
-| 3 | Disagreeing member and fresh room audit results refuse landing. | One native reservation sequence plus the pure Destination pairing table. |
-| 4 | Audit configuration mismatch refuses publication of rules. | Successor policy/publish case beside the current strict codec cases. |
-| 5 | `every` other than one refuses in this slice. | The same bounded policy/publish case. |
-| 6 | Cancellation and same-tree retry get a fresh audit despite an earlier admitted pass. | Extend manifest-tree's actual cancellation/retry flow. Require distinct explicit audit jobs and fresh runs. |
-| 7 | An audit target cannot have reuse enabled. | The same policy case; Destination also refuses an earlier result as a fresh audit. |
-| 8 | A reused admitted pass counts only for an equal tree. | Pure eligibility table with actual job/result facts, then one native reservation sequence. |
-| 9 | Another source is ineligible for reuse. | The same eligibility predicate and table. Current signer eligibility remains required. |
-| 10 | Eligible pass/fail disagreement disables reuse for that key; a fresh run still lands. | The same bounded result index, followed by one explicit fresh native job. No history sweep or fictional deciding fact. |
-| 11 | Published checks refuse reuse. | The bounded successor policy case. |
-| 12 | Published failure opens the triagers' intent and, with holds, blocks the next affected extent. | One native room sequence with real lane/Rules/Destination and recorded publication identity. |
-| 13 | A late earlier-publication pass does not clear a later hold. | The same native sequence; pure hold-order cases cover the selected key. |
-| 14 | Another configuration or rules generation does not clear a hold. | Exact hold-key judgment cases; a real authorized transition names the old hold and new generation and is not shown as pass. |
-| 15 | Failure/admission ordering is atomic: before refuses that admission; after affects the next. | Destination transaction/journal order with explicit gates, not sleeps. |
-| 16 | Duplicate/reordered failure notices preserve the hold. | Reuse the same admitted job/publication facts and dispatcher gates. |
-| 17 | Closing the triagers' intent, or another intent, clears no hold. | Follow actual intent closure and read Destination's retained hold. |
-| 18 | A published timeout does not clear a hold. | Native deadline/turn plus the pure hold judgment table; no elapsed-time guess or fabricated pass. |
-| 19 | Authorized override clears as override, never as pass. | Actual Destination act, role checks and recorded release reason. |
-
-The published-failure intent exchange is new commissioned work. It needs
-actual job/publication binding, idempotence by recorded facts and native
-creation authority. It is distinct from the extra marking-time proof
-exchange that the ruling excludes. No deployment health claim follows
-from any of these checks.
-
-### The published-failure incident has its authority ruling
-
-Ruling `f73805e4` answers the incident question. The recipients are the
-complete bounded active holders of `issue.triage`, called triagers in data
-and UI. This uses the existing holders observation, not a new literal
-admin or maintainer roster. The implementation head updates the design's
-stage table and following sentence to use that meaning.
-
-The incident is a declared nested successor of the Change that landed.
-The existing Directory-rooted creation closure and index row give it its
-authority and number. Its system origin records the exact sibling
-Destination, admitted published job, publication, and native failure
-decision. No human requester or automatic signing key is fabricated.
-Ordinary edit-own gives nobody special authority over a system origin.
-
-There is one incident state per job, including jobs without `holds`.
-Pending delivery resends only its original envelope. An unknown creation
-does not start a replacement. Unknown, empty, or over-bound triagers leave
-visible pending or refused state; failure and hold state remain owned by
-Destination and atomic with admissions.
-
-A reasoned hold and an incident's cause are distinct. With `holds: true`,
-timeout, error, unknown check outcome, or unavailable observation sets a
-hold with its actual reason. An incident requires a recorded native
-decision for the admitted published job and actual publication. It keeps
-the real deciding result or error cause; it never invents a failed result
-fact. Unknown incident creation preserves that decision and its original
-create envelope. It does not turn an unknown check into a signed failure.
-
-The answered question was retired as `2fccf06d`. The ruling remains
-effective; its stale metadata follows the already answered earlier basis.
-No marking-time exchange is added.
-
-## Source implementation checkpoint
-
-The shared contract, Rules successor, lane successors, checker service and
-host stage-read path now have Source implementations. They are not yet
-validated. Root freezes and commits every source owner before any project
-import, parser, generator, compiler or test runs. The selected cohort is
-Register 22, Directory 21, Membership 8, Rules 13, Destination 17 and Inbox 1.
-
-The queue entry and admitted job are separate. Initial `check-fence` or
-`work-check-fence` delivery opens an evidence-request. Its acknowledgement
-means queued only. A selected `evidence-admit` outcome opens the admitted
-nonholder evidence-job at the outcome's own sequence. For work jobs, the request remains
-the complete funded lifetime account for result, notice and late settlement.
-Landing and published jobs use nonholder evidence slots and their exact
-pre-existing batch account. Messages carry the recorded merge operation;
-Native proves that it belongs to the admitted job and publication.
-No settling outcome opens a new holder or transfers unfunded reservations.
-
-A fresh audit names two facts with distinct meanings. `binding.auditOf`
-names the actual counted Member job, which may belong to another lane.
-`forJob` names the current logical Member request, including a reused alias.
-Pairing uses the latter so cancellation and retry require a fresh audit.
-The audit still compares the same tree, stage and configuration.
-
-Published setup uses bounded Native self-requests. Each actual new-work
-delivery opens one funded batch account of eight lifetime job slots. A
-publication needs at most four accounts, selected from its complete
-landing, audit and published obligations. A settling outcome opens no
-holder. The publication cannot write until all needed accounts and exact
-hold, policy-generation and incident identities are funded. Unknown setup
-remains visible and cannot grant permission to write.
-
-A published-plan is a nonholder cursor. Only an actual written receipt,
-including a proven recovered write, can start it. Later outcomes emit one
-bounded descriptor at a time, after the written fact exists. The actual
-batch accounts fund complete job, incident and hold closures before the
-irreversible write and stay available while that work remains unresolved.
-Running published checks alone do not hold the branch slot.
-
-Readiness requires both complete batch accounts and a confirmed stage. The
-last funding delivery or the later stage outcome emits the same authenticated
-committed update, once. It never depends on network delivery order.
-
-`evidence-progress` separates result retention from final publication work,
-so the carrying entry keeps the 16-effect limit. It reads the actual sealed
-admission or result, observes current Rules and all required result keys,
-and then updates the publication. A prior accepted result does not itself
-assert fresh authority.
-
-The recovered write path keeps the old read outcome's receipt opening. An
-authenticated self-request opens the nonholder published-plan through a
-bounded effect mark. It draws on the actual batch account and names the
-already recorded written fact. No outcome opens a holder.
-The actual ordinal-zero funding batch carries the readiness stamp. Both
-fund-first and stage-first completion use that same committed marker;
-the publication gains no extra value slot. With no obligations there is
-no artificial batch: the original stage update behavior remains.
-
-A deadline records the actual timeout on its own job. Every later admission
-judges that state through the exact-key pending-job index. A subsequent
-entry or explicit recovery act opens the funded incident notice; until then
-the timed-out job visibly owes it. The notice obtains current triagers.
-Timeout ends waiting;
-it does not release budget needed for an eligible late result or prove a
-physical runner stopped. The service cannot start a first run after its
-deadline. A persisted run may finish under fresh current authority.
-
-The performer can explicitly abandon a staged work source with a nonempty
-reason and `issue.work` authority. That releases its pin, while unresolved
-jobs keep their actual state. A fresh stage snapshot refuses a released
-source. Kept unsigned outcomes remain retained if a fresh source read is
-unavailable; an original signed retry sends identical bytes. Native rules
-independently judge eligible late results.
-
-The design now states Rules ownership, native scoped generation, observed
-rotation, and the triagers' nested incident exchange. The implementation
-still owes owning checks, all 19 Decisions witnesses, the explicit actual
-J3 marked-room case, one ordinary gate and independent exact-head review.
-No test result or deployment is claimed at this Source checkpoint.
-
-## Adopted timeout design
-
-Static review before the first run found the draft timed code effect
-unsupported: the contract holds no mark there, and derivation refuses it
-with `timed-partial`. Root filed question `1a97e9d5`; planner ruling
-`c20152ef` rejected a new timed projection port and chose existing forms.
-The original port proposal was not implemented. The draft's unsupported
-mark remains until this replacement is complete; no whole validity claim
-follows the component checks.
-
-The selected design has these boundaries:
-
-- The timed job alone transitions, sets its reason and records its own
-  deciding reference from self. The entry opens no operation and sends
-  nothing. Its recorded sequence is the actual timeout cause.
-- A bounded pending-job list in the exact-key hold index is reserved before
-  publication and bound at admission. A running job does not hold; its
-  timed-out state holds from that entry. Admission reads the row and the
-  named jobs, so there is no deferred hold-update window or history scan.
-- Exact-key passes advance cleared-through by publication order. Earlier
-  late passes, other keys, duplicate notices and incident closure cannot
-  clear a later hold. Transition and override are distinct reasoned acts.
-- Result, clearing pass, transition or override may remove a pending job.
-  The timed entry never edits another item. Full lists refuse before work;
-  their bytes and extra effects stay inside the existing finite allowances.
-- A timed-out job with no incident is visibly pending. A subsequent Native
-  entry that reads it, or an authorized triager or actual publication
-  performer's recovery act, opens its already-funded incident notice.
-  Recovery does not create a new cause, clear a hold or invent a failed run.
-  It opens at most one notice kind per entry and keeps the original marked
-  attempt recoverable while complete triagers are unavailable. A job with
-  an actual cause and an owed notice stays nonfinal, even after a late pass;
-  notice delivery then permits its ordinary terminal state.
-
-The implementation owes real landings on both sides of the timed boundary,
-Runtime/Replay equality, preserved historical and declared `timed-partial`
-controls, a full pending-list refusal and the hold case table for Decisions
-13, 14, 16, 17 and 18. No kernel timeout extension is authorized.
-
-Ruling point 1 also excludes kernel package changes. Question `2356b681`
-records the draft's pre-existing shared binding types and Rules observation
-members. Root follows the literal ban: restore the generic contract,
-observation decoder and derivation code to the Main base; move successor
-structural types to the dedicated bytes evidence API; carry service
-metadata in the existing authenticated retained extents value. The Native
-semantic policy view stays stable. That transport rewrite is in progress.
-
-## First component checks and record-wire correction
-
-After all Source owners froze, commit `624b5ce29b` recorded the draft.
-No whole validity claim followed that checkpoint. The first lane generator
-attempt failed because the copied scratch dependency directory lacked a
-real `node_modules` parent. The corrected owned namespace uses the same
-verified installed packages and 14 worktree links. No package was installed
-and the lockfile is unchanged. The second attempt passed. Commit
-`464b1205c2` records both successor JSON definitions and their exact pins;
-all six historical lane byte files and earlier digest files are unchanged.
-
-The first focused policy/helper run passed 37 tests in eight files. The
-owning bytes run passed 90 tests and failed the new binding test because
-its second incarnation string was not canonical base32. The fixture now
-uses the maintained incarnation constructor with explicit public test
-bytes. The owning checker run passed 21 tests and failed five. Four new
-failures exposed a real admission-wire defect; the fifth was an existing
-Unix-socket test refused by the execution sandbox. Its isolated rerun
-passed with the socket permission and no product change.
-
-Generic `FieldValue` excludes nested nulls. The new semantic records had
-nullable members, so casting them to `FieldValue` did not make their
-journal effects valid. The correction keeps semantic policy and record
-APIs separate from strict versioned wire APIs. New opaque persisted
-policy, admission, batch, capacity, service and publication records travel
-as canonical JSON text. The required publish service mark is also explicit
-text, including `"null"` for withdrawal. Retained value-domain JSON keeps
-its existing semantic representation. No generic scalar or historical
-protocol is widened.
-
-Wire readers bound characters and UTF-8 bytes before parsing, require
-canonical round-trip equality and reject object fallbacks. Carrying-entry
-forecasts count the outer string's quotes and escapes. The checker reads
-the actual admitted record through that same wire contract, while keeping
-its lower-layer dependencies. The first failed runs remain retained under
-`/private/tmp/artroom-evidence-rules-evidence-20261028`, with command,
-Source snapshot, output hashes, exit, elapsed time and host child CPU.
-These are component results, not a Native cohort, gate or deployment pass.
-
-Commit `de3ea0b506` froze the text-wire repair. The focused bytes binding
-test and seven checker admission/service tests passed. The policy wire run
-passed 23 tests in five files but could not import the new record-wire
-test: a missing outer brace in the draft Native data caused a parser error.
-Commit `f33bae9e65` fixed that brace; the two record-wire tests then passed.
-The bytes compiler passed. The first checker and platform compiler runs
-found independent type errors, and the first whole-lane validation found
-three incorrect local fact bindings in Change 4. Those originals remain
-retained; their Source repairs are in progress. The unsupported timed code
-effect remains a separate contract error pending the planner's disposition.
-
-After the independent repairs, the Platform, Scope and lane test compiler
-roots report only that known timed code-effect error. Bytes, Checkers,
-Contract and Git compiler roots pass. Whole successor-lane validation
-passes, with all historical lane bytes unchanged. The new pure capacity
-checks pass four tests; the affected future-entry checks pass seven, and
-the maintained observation checks pass eleven. The security inventory
-passes ten checks, including exact route dispatch and source-owner seals.
-Imported implementations have explicit seals where needed; a seal is a
-change tripwire, not evidence of Native admission correctness.
-
-The declared work-staging scenario passes against actual lane turns,
-SQLite and hold code, with remote Git and Native admission explicitly
-scripted. The scripted-peer incident scenario first exposed assertions at
-the wrong API layer: a recorded delivery may hold a refused decision. The
-repaired assertions require the exact journal refusal and no job opening.
-The scenario now reaches child creation but does not yet obtain the child
-handle. That unresolved fixture/creation boundary is not a passing incident
-witness. No real G17 authority story, physical J3 case or gate has run.
+Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1bc4f7fdc0f8bd2a31b54d04b74ccbb91228dbd4
+
+Retirement of answered questions did not withdraw the rulings. Their stale
+metadata requires no renewed authority. J3 landed at `06e4d33f` after
+approval `c9bd8822`, receipt `ceba0366` and landing check `3c884798`
+but does not prove this slice's marked-room acceptance.
+
+### Rules mark, rotation and revision 21
+
+Rules holds one nullable `{checker: MemberRef, key: KeyId}` mark. Genesis
+is unmarked. An active admin publishes or withdraws it; the named member
+must be an active checker. A customizable publish action alone is not admin
+authority. Admission and judgment separately prove the exact key's current
+member, role, action, controller, lifetime and clock eligibility.
+
+The mark binds exactly the external `CheckerService` `ResultSigner.key`.
+The signer stays outside the job/container and signs eligible Runner
+evidence. Settings, URLs, images or claimed keys cannot replace that mark.
+No service key is selected here.
+
+Native selects the last mark-change position scoped to the exact Rules
+incarnation. Unchanged pairs keep it; withdrawal and reinstatement each
+change it. Effects retain local positions, never their own future hash.
+Full facts later use actual recorded bytes, not a later head's hash.
+
+After Destination observes rotation, neither key completes the frozen
+room job, even if the former pair returns. Only a fresh explicit admission
+proceeds. This is observed order, not immediate global revocation. An
+unavailable observation records null, not a fabricated generation. Past
+accepted results stay facts; reuse applies current eligibility separately.
+A lane may retain a member-authorized claim that Destination refuses to
+count. Typed `wrong-source` keeps frozen/observed generations. No actor-key
+DSL operand or marking-time proof exchange is added.
+
+Ruling `1bc4f7fd`, under [Kernel boundary, section 7](../../docs/kernel.md#7-rule-for-adding-to-the-kernel),
+permits RulesContent revision 21: `roomService` and `serviceGeneration`
+exist exactly when the definition declares `roomServiceChanged`. Derive
+and bytes enforce that shape; Rules 12 and earlier have neither member.
+Contract retains only its required type-only `ServiceMark` and
+`ScopedRulesPosition`. The records comment and contract section 16.1 name
+revision 21 beside revisions 19/20. It closes no kernel item.
+
+The reason is authority: the Rules observation states what a foreign judge
+may know. A retained extents value alone cannot prove the native mark
+position. `EvidenceBinding`, source/stage/subject vocabulary and the
+`artroom-check-binding-1` codec instead live in platform. Bytes supplies
+canonical bytes/digests/ref checks; no kernel package imports this platform
+vocabulary. The earlier bytes-layer and envelope-only proposals are
+superseded. Historical grammar, fold, replay and custody remain unchanged.
+
+### Literal TIME, stage custody and binding
+
+The draft timed code failed `timed-partial`. Ruling `c20152ef`, preserved
+by `1bc4f7fd`, rejects a new timed port. TIME changes only its own job's
+literal state, reason and self deciding ref, with no sends or operations.
+Historical Destination 1–16 timers remain exact. Admission reads bounded
+pending-job rows, so a timeout holds at its own entry without a deferred
+cross-item update. A later native entry or authorized recovery opens the
+funded notice. Timeout neither proves physical drain nor releases capacity.
+Authentic late results remain eligible under fresh current authority.
+
+Defaults remain Member source, landing stage, no reuse/holds; audit
+`every` is exactly 1. Binding version 1 holds checker/source/stage, policy
+and service generations, nullable mark/auditOf and actual subject facts.
+Work names staged Issue source; landing names publication/manifest;
+published adds receipt opening/written facts. Common job retains Git IDs.
+Digest is canonical `{domain: "artroom-check-binding-1", binding}`.
+Results bind actual job/admission, not caller-claimed identity.
+
+Opaque records use bounded canonical text, no object fallback. Readers
+bound UTF-8 before parsing; forecasts include escapes. Fence ACK is queued
+only; fresh `evidence-admit` opens the admitted nonholder job at actual seq.
+Work preserves performer/terms/ancestry/pin custody and derives Git tree
+from signed proof (32 KiB decoded/48 KiB text). Explicit reasoned abandonment
+releases its source pin, not jobs/drain. Fresh snapshots refuse it; retained
+outcomes, identical signed retries and eligible late results remain valid.
+Checker snapshots retain actual admission/source facts and recheck fresh
+authority before launch/sign. Published reads use immutable confirmed Git
+objects, no revived reservation ref or invented human signature.
+
+### Reuse, funding and holds
+
+Reuse keys remain room/tree/name/configuration/source/stage. One current
+predicate compares passes and failures; disagreement permanently disables
+reuse while fresh work can still land. A reused alias names the actual
+earlier job/result, never a new run or signature. Work cannot satisfy
+landing. Published checks and audit targets are always fresh. Audits match
+tree, stage and configuration. `auditOf` names actual counted Member job;
+`forJob` names this logical request, preserving fresh audits after retry.
+
+Before push, at most four native accounts fund eight lifetime job slots
+each, with actual capture/operation/ordinal and hold/policy/incident
+identities. Settling outcomes open no holder. Complete funding and staging
+produce one readiness update in either order. Zero obligations need no
+account. Only actual written receipt proof, including recovery, starts
+the nonholder published plan.
+
+Limits: 2,048 keys, eight candidates/key, 32,768 canonical bytes/key,
+512 holds, 512 policy generations, 8,192 incidents, three pending slots/key,
+32 complete triagers. No truncation/eviction hides full/unknown state.
+Full future forecasts and used-plus-reserved limits independently apply.
+First certificate opens its reserved singleton ledger; repeats add no credit.
+
+Holds bind check/source/stage/configuration/generation/extent. Publication
+and job order decide clearing, not hashes or arrival. Failure and admission
+serialize atomically. Running checks do not hold. Only an eligible exact-key
+pass from the same/later publication clears; timeout/error/unknown do not.
+Other configurations/generations need a reasoned transition or override.
+
+Ruling `f73805e4` chooses complete active `issue.triage` holders, called
+triagers. The landed Change creates one nested system Issue through the
+Directory-rooted closure, naming actual Destination/job/publication/native
+decision. It invents no requester or key; edit-own grants no privilege.
+Unknown creation retains the original envelope, never a replacement.
+Timeout invents no failed-result fact. Missing triagers remain visible;
+late results do not replace the incident cause. Closing intent clears no
+hold. This commissioned failure exchange is distinct from marking-time
+proof exchange.
+
+## Decisions witness map
+
+This is a static coverage map, not a Native pass list. Exact case-title
+keys N1–N8 refer to `packages/scope/test/evidence-rules-real.test.ts`:
+
+- **N1** `the real evidence cohort publishes a scoped mark, preserves unchanged generations and requires an admin beyond a customized publish action`
+- **N2** `real admitted member work reuses its actual earlier pass, disables reuse on eligible disagreement and still admits a fresh job`
+- **N3** `actual landing reuse follows the tree key and a fresh passed job still publishes after disagreement disables reuse`
+- **N4** `observed room-key rotation refuses both keys for the frozen real work job and only an explicit new admission can count`
+- **N5** `real published holds survive newer counted passes and clear only through distinct authorized transition and override records`
+- **N6** `literal native TIME holds at its own head, replays unchanged, and recovers one funded incident within the pending bound`
+- **N7** `the real failure and reservation outcomes serialize atomically in both admitted-before-failure and failure-before-admission schedules`
+- **N8** `a cancelled same-tree landing needs a fresh room audit and disagreeing results refuse its actual retry`
+
+Pure owners below are in `packages/platform/test/`:
+
+- **P1**, `rules-policy-v13.test.ts`: `Q13 owns complete choices without changing omitted member/landing meaning or the old policy domain`.
+- **P2**, that file: `audits compare fresh room runs under one configuration while published reuse and misplaced holds refuse`.
+- **P3**, `evidence-index-v17.test.ts`: `retained records are owned and closed; another source or a second result for one job cannot replace provenance`.
+- **P4**, that file: `key rotation preserves earlier candidates; one current predicate compares both outcomes and disagreement stays disabled`.
+- **P5**, `evidence-holds-v17.test.ts`: `native publication and admitted-job order defeats duplicates, reordered failure, and an earlier pass`.
+- **P6**, that file: `only a current eligible exact-key pass clears; override and transition remain their actual acts`.
+
+All 19 Decisions retain an owning assertion:
+
+1. Member cannot satisfy room: N4 and pure `reservation-v17.test.ts`
+   rotation/eligibility cases; ordinary lane retention stays visible.
+2. Omitted source remains Member: N2 and P1; old pins stay exact.
+3. Audit disagreement refuses landing: N8 retains both results/head.
+4. Different audit configuration refuses: P2, strict-policy boundary.
+5. `every != 1` refuses: P2's explicit `every: 2`.
+6. Canceled equal-tree retry gets fresh audit despite old pass: N8's
+   distinct Room jobs. Its Member requests are fresh, not reused aliases.
+7. Audit target cannot reuse: P2. Member parent reuse is valid;
+   `evidence-progress-v17.test.ts` covers counted-job/logical-alias pairing.
+8. Equal-tree reuse only: N3; N2 retains actual earlier work references.
+9. Other source cannot supply reuse: N2 and P3.
+10. Conflict disables reuse but fresh work lands: N2/N3 and P4.
+11. Published reuse refuses: P2, not a Native publication claim.
+12. Published failure opens incident/blocks affected landing: N5's actual
+    publication/job/result/child and next refusal.
+13. Late earlier pass cannot clear newer hold: N7's unchanged-policy
+    ordering and P5. N5's changed-generation case alone cannot isolate order.
+14. Other config/generation cannot clear: N5/P6; transition is not pass.
+15. Atomic failure/admission order: N7 gates both journal schedules.
+16. Duplicate/reordered failure preserves hold: N5/P5, original notices.
+17. Closing incident/other intent clears nothing: N5 closes incident;
+    unrelated intent closure remains unexercised in its current body.
+18. Published timeout cannot clear: N5/N6 and pure hold/TIME cases;
+    own-head state, replay and pre-recovery refusal stay separate.
+19. Override clears as override: N5/P6 retain reason, key and release kind.
+
+N4 uses separate pre-rotation jobs for first-deciding claims. N7 keeps
+policy unchanged to isolate order. Both need owning acceptance. Decisions
+4/5/7/11 use the cheaper pure owner.
+
+## Evidence and current results
+
+The durable provisional collection is
+`/Users/hughpyle/play/artroom-evidence/2026-10-28-evidence-rules`.
+At the 23:27 UTC copy it held 11,937 files and 297,527,306 bytes. It remains
+open and unsealed; those are copy-time counts, not final manifest totals.
+Receipts/snapshots/streams bind each run; earlier passes are not current.
+
+Selected receipts, without summing overlapping runs:
+
+- Whole lane validation/source compilation passed at `73c49b9724`.
+  Ruled policy passed 37 tests/eight files at `1e1b495731`; timed/wire/funding
+  selection passed 26/three at `cd12e5f634`.
+- At `52f4fd60bc`, observation tests passed 11, checker stage tests seven,
+  and Platform compiler/active-source check exited 0. Other compiler passes
+  retain their own heads, not a latest-head all-context claim.
+- Security inventory passed ten Node cases at `2f0af7000b`. Later comparison
+  records 80 identities/43 declarations with all 76 historical pins and
+  40 historical texts exact. Q13 is
+  `sha256:d7baafb3501bdc1682f7c671fb43ad0fd82aab2b541d9b01f7893914ab73d5cd`;
+  D21 is
+  `sha256:439af34d88a076581b51cb833eea276799f3fa7d9d75e5e1cf274792e1c28eb3`.
+- `opening-correspondence-owning-1` passed ten cases/three files at
+  `7ab618f024`; its Platform compiler exited 0.
+- `native-live-items-prefix-6` at `0599da9ea8` passed N1 but exited 1:
+  N2 failed, six skipped. No passing file is claimed.
+- `native-work-landing-prefix-7` at `c94a00f526` reached actual stage/check
+  provenance with explicit TEST hold-provider/TokenDriver wiring. Both
+  selected cases failed; six skipped. Complete acceptance remains open.
+
+Failed generation/dependency links, incarnation, nullable record wire,
+parser, fact binding, type checks and timed code attempts remain retained.
+No package was installed. The isolated socket rerun changed no product.
+The first full Native attempt failed eight setups; the `52f4` prefix failed
+Q13 publish with `bad-field`. N1's later pass supersedes only its measured
+prefix. Declared scenarios use actual lane/SQLite with scripted remote
+peers. Their retained incident-boundary pass asserts truthful unproven
+child origin, not real Native creation; its earlier quiet diagnostic pass
+retained no measurement. Positive child acceptance belongs to N5.
+
+### Final evidence table placeholder
+
+Root will replace this row with actual command/checkpoint, exit, stream
+digest, manifest and closed-gate analysis rows. No expected count, timing,
+callback or digest is substituted for an observation.
+
+| Check | Actual invocation and checkpoint | Exit and output digest | Qualification |
+|---|---|---|---|
+| Pending final assembly | Retained receipts and future closed ordinary gate | Pending | Preserve failed attempts and source-specific follow-ups. |
+
+## Open acceptance and limits
+
+Remaining Native work/reuse/rotation/landing/published/hold/audit scenarios,
+physical marked-room J3, ordinary gate and exact-head review remain owed.
+A partial assertion, skip or absent driver is not acceptance. Manual result
+claims are real signed acts, not proof a Runner executed them. Stand-ins
+retain their stated limits. No global cap or authority widening is implied.
+
+Final evidence must bind exact source, complete retention, old pins,
+all attempts, output digests and measured costs. Wall, host child CPU and
+guest CPU differ; concurrent durations cannot sum to gate wall time.
+Missing callbacks and skips need qualification. Seals detect changes,
+not correctness. No hosted rollout, service deployment, physical drain,
+provider, backup, device or remote CI success is claimed. Deployment follows exact-head review and landing; the planner owns rollout.
+The user has already authorized deployments.

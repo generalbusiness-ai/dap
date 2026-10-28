@@ -22,8 +22,9 @@ import { rita } from "./repository.ts";
 
 // Register/Directory/Membership/Rules/Destination creation, authority, native
 // observations, admitted source/job facts, delivery and SQLite are real.
-// Git/provider replies, task-instance locator, clock and scheduling are TEST
-// stands. Manual signed outcomes below are claims, not executed checker runs.
+// Git/provider replies, hold token/staging provider, task-instance locator,
+// clock and scheduling are TEST stands. Manual signed outcomes below are
+// claims, not executed checker runs.
 const observedRules = evidenceRulesObservation;
 
 test("the real evidence cohort publishes a scoped mark, preserves unchanged generations and requires an admin beyond a customized publish action", { timeout: 120_000 }, async () => {
@@ -93,9 +94,10 @@ test("real admitted member work reuses its actual earlier pass, disables reuse o
     expect(await work.record()).toMatchObject({ state: "passed", result, signer: work.service.actor.key });
     const reused = await requestEvidenceWork(room, work, { reuse: true });
     expect(await reused.record()).toMatchObject({ state: "reused", countedJob: work.job, result });
-    // A harmless policy revision must still reuse the same member pass.
-    // This isolates the later source change from accidental generation keys.
-    const memberPolicy = { ...work.policy, labels: ["TEST unchanged member descriptor"] };
+    // Omitted source defaults to member, so this harmless policy revision
+    // must reuse the same member pass across the policy-generation change.
+    const memberPolicy = { ...work.policy, checks: work.policy.checks.map(({ source: _source, ...check }) => check), labels: ["TEST unchanged member descriptor"] };
+    expect(memberPolicy.checks.every(check => !Object.hasOwn(check, 'source'))).toBe(true);
     await configureEvidenceRules(room, memberPolicy);
     const harmless = await observedRules(room);
     expect(harmless.revision).toBeGreaterThan(work.binding.policyGeneration.seq);

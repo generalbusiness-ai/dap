@@ -58,9 +58,9 @@ function given(current: Item, value: EvidenceJobRecordV17, opened: Entry | null 
     observed: () => observation, value: () => undefined, placed: () => undefined } as unknown as RuleGiven;
 }
 function notice() {
-  const rule = evidenceDestinationRulesV17({})["evidence-notice-v17"];
-  if (!rule || rule.place !== "outcome" || !rule.rules.wellFormed || !rule.rules.derives) throw Error("The actual notice rule is absent");
-  return { wellFormed: rule.rules.wellFormed, derives: rule.rules.derives };
+  const rules = evidenceDestinationRulesV17({}), rule = rules["evidence-notice-v17"], send = rules["evidence-notice-send-v17"];
+  if (!rule || rule.place !== "outcome" || !rule.rules.wellFormed || !rule.rules.derives || send?.place !== "send") throw Error("The actual notice rule or marked send is absent");
+  return { wellFormed: rule.rules.wellFormed, derives: rule.rules.derives, send: send.run };
 }
 const holders = (count = 1): HoldersObservation => ({ subject: "holders", of: keys.una.member.membership, head: { seq: 10, hash: d("a") },
   action: "issue.triage", count, holders: count ? [keys.rita.member.member] : [], definition: "platform:membership@8", at: t(20) });
@@ -95,11 +95,13 @@ test("unknown and incomplete triagers cannot consume the original offer; fresh c
     const context = given(marked, value, opening(value), observation);
     expect(rule.wellFormed("confirmed", answer, context)).toBe(true);
     expect(() => rule.derives(context, operation, false)).toThrow(RuleFault);
+    expect(() => rule.send(context)).toThrow(RuleFault);
   }
   const context = given(marked, value, opening(value), holders()), result = rule.derives(context, operation, false);
   expect(result.opens).toEqual([]);
-  expect(result.sends).toHaveLength(1);
-  expect(result.sends[0]!.message).toMatchObject({ class: "request", type: "tell", body: { message: "published-check-failure",
+  expect(result.sends).toEqual([]);
+  const request = rule.send(context);
+  expect(request?.message).toMatchObject({ class: "request", type: "tell", body: { message: "published-check-failure",
     fields: { job: value.job, cause: canonicalize(value.incident!.cause), triagers: [keys.rita.member] } } });
   expect(result.effects.length).toBeLessThanOrEqual(2);
   const effect = result.effects.find(effect => effect.effect === "value" && effect.slot === "record");
@@ -108,4 +110,5 @@ test("unknown and incomplete triagers cannot consume the original offer; fresh c
   if (!sent) throw Error("The actual notice record wire is invalid");
   expect(sent.incident!.cause).toEqual(value.incident!.cause);
   expect(rule.derives(given(item(sent, true), sent, opening(value), holders()), operation, false).sends).toEqual([]);
+  expect(rule.send(given(item(sent, true), sent, opening(value), holders()))).toBeNull();
 });

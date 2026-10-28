@@ -47,7 +47,7 @@ function record(stage: CheckStage = "work", count = 1): EvidenceJobRecordV17 {
 }
 function given(row: EvidenceJobRecordV17, over: Partial<Bounds> = {}): RuleGiven {
   const source = { resolved: { at: destination, bounds: { ...PROPOSED_BOUNDS, derivedEffects: 16, ...over } }, uses: [],
-    state: { item: () => ({ values: { passes: evidenceWireV17({ policy: { required: row.policy!.policy.checks,
+    state: { item: () => ({ refs: { operation: fact(3) }, values: { passes: evidenceWireV17({ policy: { required: row.policy!.policy.checks,
       input: { extents: { policy: row.policy!.policy } } }, generations: [] }, 196608) } }) } };
   Object.defineProperty(source, "input", { get: () => { throw Error("The current input is not a future input"); } });
   return source as unknown as RuleGiven;
@@ -112,6 +112,22 @@ test("hold forecasts include future failure, escaped1024-byte transition reasons
   expect(withHolds.admitted).toBe(true);
   expect(withHolds.entryBytes - plain.entryBytes).toBeGreaterThan(8 * 1024 * 6);
   expect(quote(row, { entryBytes: withHolds.entryBytes - 1 }).admitted).toBe(false);
+});
+
+test("a separate counted audit send and its progress opening fit before an audited member is admitted", () => {
+  const plain = record("landing"), audited = record("landing");
+  const proposal = rulesPolicyProposalV13({ ...audited.policy!.policy, checks: [
+    { ...audited.policy!.policy.checks[0]!, source: "member", audit: { check: "audit", every: 1 } },
+    { ...audited.policy!.policy.checks[0]!, name: "audit", source: "room", required: false },
+  ] });
+  if (!proposal.ok) throw Error("The scripted same-configuration audit policy is invalid");
+  audited.policy = { ...audited.policy!, policy: proposal.policy, proposal: proposal.digest };
+  const ordinary = quote(plain), complete = quote(audited);
+  expect(complete.admitted).toBe(true);
+  expect(complete.effects).toBe(ordinary.effects + 3);
+  expect(complete.entryBytes).toBeGreaterThan(ordinary.entryBytes);
+  expect(quote(audited, { derivedEffects: complete.effects - 1 }).admitted).toBe(false);
+  expect(quote(audited, { entryBytes: complete.entryBytes - 1 })).toMatchObject({ admitted: false, entryBytes: complete.entryBytes });
 });
 
 test("over-bound code records and absent admitted triples refuse before a future entry can be promised", () => {

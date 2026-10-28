@@ -5,7 +5,7 @@ import type { Operation, RuleEffect } from "@generalbusiness/dap-derive";
 import { evidenceOperationOpeningV17 } from "../src/evidence-opening-v17.ts";
 // The maintained reservation witness is not in dap-derive/testing's public
 // exports. Reuse that narrow test fixture, without importing kernel internals.
-import { OWNER, Works, opened, worksDefinition } from "../../derive/test/fixtures-holds.ts";
+import { OWNER, TELL, Works, opened, worksDefinition } from "../../derive/test/fixtures-holds.ts";
 
 function selfOpening() {
   // SCRIPTED marked rule and incoming source; the maintained judge, seal
@@ -60,4 +60,20 @@ test("numeric and absent holders preserve their own meanings; duplicate or malfo
   expect(evidenceOperationOpeningV17({ ...entry, effects: [...entry.effects, opening] }, operation)).toBe(false);
   expect(evidenceOperationOpeningV17({ ...entry, seq: -1 }, operation)).toBe(false);
   expect(evidenceOperationOpeningV17({ ...entry, effects: entry.effects.map(effect => effect.effect === "operation" ? { ...effect, k: -1 } : effect) }, operation)).toBe(false);
+});
+
+test("a counted outcome's own request is refused, while its actual marked send seals once under the same held operation", () => {
+  // SCRIPTED rule/provider boundary; the maintained Native-form judge,
+  // reservation ledger and fold enforce the marked-send distinction.
+  const { scope, operation } = selfOpening(), head = scope.head;
+  scope.script.derives = () => ({ effects: [], sends: [TELL], opens: [] });
+  expect(scope.outcome(operation.id, 1, "confirmed")).toBe("unavailable");
+  expect(scope.head).toEqual(head);
+  scope.script.derives = () => ({ effects: [], sends: [], opens: [] });
+  scope.script.report = () => TELL;
+  expect(scope.outcome(operation.id, 1, "confirmed")).toBe("written");
+  expect(scope.last.sends).toEqual([{ n: 0, ...TELL }]);
+  const settled = scope.state.operation(operation.id);
+  expect(settled?.for).toBe(operation.for);
+  expect(settled?.attempts[0]?.outcomes).toHaveLength(1);
 });
