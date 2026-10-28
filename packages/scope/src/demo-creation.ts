@@ -41,4 +41,3 @@ export function demoCreationOffer(store: Pick<Store, "scope" | "page">, pinned: 
     at: structuredClone(scope.head), registerItem: { id: item.id, revision: item.revision, state: "open", host: ARTIFACTS_HOST, namespace: config.namespace, policy: "open" } };
   return utf8(canonicalize(offer)).length <= 16 * 1024 ? offer : null;
 }
-
