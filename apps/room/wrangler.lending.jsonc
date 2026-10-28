@@ -25,6 +25,7 @@
     "SERVING_READ_KEY_PER_MINUTE": "240",
     "SERVING_READ_ADDRESS_PER_MINUTE": "600",
     "ARTIFACTS_NAMESPACE": "dap-lending",
+    "REGISTER_SCOPE": "sc_c67lq575p5nfkfiwwbr7buodsv6t44i4u6ptcuuhmpcgcduljd7q",
     "ARTIFACTS_CONFIG": "{\"registerScope\":\"sc_c67lq575p5nfkfiwwbr7buodsv6t44i4u6ptcuuhmpcgcduljd7q\",\"namespace\":\"dap-lending\",\"host\":\"6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net\",\"maxBytes\":10485760,\"credentialIdentity\":\"adapter-attempt\"}"
   }
 }
