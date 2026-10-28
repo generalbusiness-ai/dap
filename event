@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7bd4a1abd6e63985468cc89aa150f4dda6a88b21","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/vitest.scope.config.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:853387e413e4c7e2250d8fc7ffa3929638e1e3e0","text":"Merge retired a covered predecessor; the successor is at packages/checkers/runner/relay.go."}
