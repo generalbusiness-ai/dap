@@ -287,7 +287,9 @@ export const SCREEN_TEST_HOST = readApplicationScreenHost({
  * test namespace differ. No test override admits a session or a read. */
 export class SandboxScreenService extends ApplicationScreenService<NetEnv & { PLATFORM: DurableObjectNamespace }> {
   constructor(ctx: ExecutionContext, env: NetEnv & { PLATFORM: DurableObjectNamespace }) {
-    super(ctx, { ...env, SCOPES: env.PLATFORM, APPLICATION_SCREEN_HOSTS: JSON.stringify([SCREEN_TEST_HOST]) });
+    // Fixed TEST public identity. The witness transports these RPCs over HTTP;
+    // production inherited methods still judge descriptor, session and path.
+    super(ctx, { ...env, SCOPES: env.PLATFORM, PUBLIC_ORIGIN: SCREEN_TEST_HOST.roomOrigin, APPLICATION_SCREEN_HOSTS: JSON.stringify([SCREEN_TEST_HOST]) });
   }
 }
 

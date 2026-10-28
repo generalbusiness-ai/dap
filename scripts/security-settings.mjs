@@ -1,5 +1,5 @@
 /** Static setting-read coverage. Never import or evaluate a Worker. */
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { dirname, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -288,7 +288,7 @@ export function checkSettings(root, { overrides = new Map(), document, tracked }
   const read = path => overrides.get(path) ?? readFileSync(resolve(root, path), "utf8");
   const files = tracked ?? execFileSync("git", ["ls-files", "-z"], { cwd: root, encoding: "utf8" }).split("\0").filter(Boolean);
   const doc = readSettingsDocument(document ?? read("docs/security/settings.md"));
-  const configs = files.filter(p => /(?:^|\/)wrangler(?:\.[^.]+)?\.jsonc$/.test(p) && !p.includes("/test/") && !p.includes(".test."));
+  const configs = files.filter(p => /(?:^|\/)wrangler(?:\.[^.]+)?\.jsonc?$/.test(p) && !p.includes("/test/") && !p.includes(".test."));
   if (JSON.stringify([...configs].sort()) !== JSON.stringify(doc.deployments.map(d => d.config).sort())) throw Error("Deployment configurations differ from settings rows");
   const packages = new Map(files.filter(p => /^(?:packages|apps)\/[^/]+\/package\.json$/.test(p)).map(p => { const m = JSON.parse(read(p)); return [m.name, { path: p, exports: m.exports }]; }));
   function imported(file, specifier) {
@@ -298,14 +298,41 @@ export function checkSettings(root, { overrides = new Map(), document, tracked }
     if (!item || typeof item.exports?.[sub] !== "string") throw Error(`${file}: unsupported workspace export ${specifier}`);
     return relative(root, resolve(root, dirname(item.path), item.exports[sub]));
   }
+  // Only this literal two-export shim has the identity of its one-hop target.
+  // Physical entries still match the document, and traversal below starts at
+  // that physical entry, so no runtime module or setting read is skipped.
+  const physicalRoot = realpathSync(root);
+  const trackedEntry = file => {
+    if (file.startsWith("../") || !files.includes(file) || !/\.[cm]?[jt]sx?$/.test(file)) throw Error(`Untracked or escaping Worker source ${file}`);
+    if (relative(physicalRoot, realpathSync(resolve(root, file))) !== file) throw Error(`Symlinked or escaping Worker entry ${file}`);
+  };
+  function entryIdentity(entry) {
+    if (!entry) return entry;
+    trackedEntry(entry);
+    const tree = parse(read(entry), entry);
+    if (tree.body.length !== 2) return entry;
+    const all = tree.body.find(node => node.type === "ExportAllDeclaration");
+    const main = tree.body.find(node => node.type === "ExportNamedDeclaration");
+    const noAttributes = node => [node?.attributes, node?.assertions].every(value => value === undefined || Array.isArray(value) && value.length === 0);
+    const literalSource = node => node?.source?.type === "Literal" && typeof node.source.value === "string" && /^\.\.?\//.test(node.source.value);
+    if (!all || !main || all.exportKind === "type" || all.exported != null || !noAttributes(all) || !literalSource(all)
+      || main.exportKind === "type" || main.declaration != null || !noAttributes(main) || !literalSource(main)
+      || main.source.value !== all.source.value || main.specifiers.length !== 1) return entry;
+    const only = main.specifiers[0];
+    if (only.type !== "ExportSpecifier" || only.exportKind === "type" || only.local?.type !== "Identifier" || only.local.name !== "default"
+      || only.exported?.type !== "Identifier" || only.exported.name !== "default") return entry;
+    const target = imported(entry, all.source.value);
+    trackedEntry(target);
+    return target;
+  }
   const discovered = [], declarations = [], deploymentNames = new Map();
   for (const deployment of doc.deployments) {
     const config = configOf(read(deployment.config), deployment.config);
     const entry = config.main ? relative(root, resolve(root, dirname(deployment.config), config.main)) : null;
     if (deployment.name !== config.name || deployment.entry !== entry || deployment.kind !== (entry ? "worker" : "assets")) throw Error(`${deployment.config}: deployment identity changed`);
-    const previous = deploymentNames.get(config.name);
-    if (previous && previous !== entry) throw Error(`${config.name}: conflicting entries`);
-    deploymentNames.set(config.name, entry);
+    const identity = entryIdentity(entry);
+    if (deploymentNames.has(config.name) && deploymentNames.get(config.name) !== identity) throw Error(`${config.name}: conflicting entries`);
+    deploymentNames.set(config.name, identity);
     declarations.push(...configNames(config).map(name => ({ deployment: config.name, name })));
     if (!entry) continue;
     const sources = new Map(), pending = [entry];

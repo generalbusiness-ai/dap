@@ -237,6 +237,55 @@ const mcp = async (bearer: string, method: string, headers: Record<string, strin
 const META = { "io.modelcontextprotocol/protocolVersion": MODERN, "io.modelcontextprotocol/clientCapabilities": {} };
 const modernCall = (bearer: string, name: string, args: Record<string, unknown>, id = 1) =>
   mcp(bearer, "POST", { "mcp-protocol-version": MODERN, "mcp-method": "tools/call", "mcp-name": name }, { jsonrpc: "2.0", id, method: "tools/call", params: { name, arguments: args, _meta: META } });
+
+// A rewritten Request is ONLY the Worker boundary of a proxy, not an actual
+// proxy/celld witness. Registry, agent, invitation/enrolment and MCP are real
+// Native objects; the room's Git host and clock retain their TEST fixtures.
+test("configured public HTTPS origin binds a real hosted create and MCP session behind an internal HTTP Worker request", async context => {
+  const room = mcpRoom(), publicOrigin = "https://public-room.example", internalOrigin = "http://celld.internal:8787";
+  hostedTest.now = () => room.now(); hostedTest.pause = waiting => room.pause(waiting);
+  let client: Client | undefined;
+  try {
+    const rita = room.agent("rita");
+    await createRoom(room, rita);
+    const membership = rita.config.repository!.membership;
+    const boundary = (path: string, init: RequestInit, settings: { PUBLIC_ORIGIN?: string } = {}) => room.wait(() => worker.fetch(
+      new Request(internalOrigin + path, init), { ...env, SCOPES: env.PLATFORM, MCP_ENABLED: "true", ...settings }));
+    const fresh = async (handle: string, op: string, signedService = publicOrigin) => {
+      const invitation = (await invite(room, rita, handle)).invitation;
+      const body = JSON.stringify({ link: encodeAgentKeyInvitation({ ...invitation, service: publicOrigin }) });
+      return { body, authorization: control(room, rita.secret, "create", membership, null, body, op, { service: signedService }) };
+    };
+    const refused = async (handle: string, op: string, headers: Record<string, string> = {}, service = publicOrigin) => {
+      const input = await fresh(handle, op, service);
+      const response = await boundary("/mcp/agents", { method: "POST", headers: { "content-type": "application/json", authorization: input.authorization, ...headers }, body: input.body }, service === publicOrigin ? {} : { PUBLIC_ORIGIN: publicOrigin });
+      expect([response.status, await response.json()]).toEqual([403, { error: "control", rule: "service" }]);
+    };
+    await refused("@unset-origin", "h1-unset");
+    await refused("@forwarded-only", "h1-forwarded", { host: "different-host.example", forwarded: 'host="public-room.example";proto=https', "x-forwarded-host": "public-room.example", "x-forwarded-proto": "https" });
+    await refused("@wrong-service", "h1-wrong-service", {}, "https://different-service.example");
+    const input = await fresh("@public-origin", "h1-public-origin");
+    const created = await boundary("/mcp/agents", { method: "POST", headers: { "content-type": "application/json", authorization: input.authorization, host: "different-host.example" }, body: input.body }, { PUBLIC_ORIGIN: publicOrigin });
+    const issued = await created.json() as IssuedBearer;
+    expect(created.status).toBe(201);
+    expect(issued.bearer.startsWith(issued.agent + ".")).toBe(true);
+    const proxyBoundary = (async (url: string | URL | Request, init?: RequestInit) => {
+      const requested = new URL(url instanceof Request ? url.url : url);
+      expect(requested.origin).toBe(publicOrigin);
+      return boundary(requested.pathname + requested.search, { ...init, headers: { ...Object.fromEntries(new Headers(init?.headers)), host: "different-host.example" } }, { PUBLIC_ORIGIN: publicOrigin });
+    }) as unknown as typeof fetch;
+    client = new Client({ name: "public-origin-native", version: "1" }, { versionNegotiation: { mode: { pin: MODERN } } });
+    await room.wait(() => client!.connect(new StreamableHTTPClientTransport(new URL(publicOrigin + "/mcp"), {
+      fetch: proxyBoundary, requestInit: { headers: { authorization: `Bearer ${issued.bearer}` } },
+    } as never)));
+    expect((await room.wait(() => client!.listTools())).tools.map(tool => tool.name)).toContain("room");
+    expect((await room.wait(() => client!.callTool({ name: "room", arguments: {} }))).isError).not.toBe(true);
+    const wrong = control(room, rita.secret, "bearer", membership, issued.agent, "{}", "h1-wrong-rotation", { service: "https://different-service.example" });
+    const rotation = await boundary(`/mcp/agents/${issued.agent}/bearer`, { method: "POST", headers: { authorization: wrong, "content-type": "application/json" }, body: "{}" }, { PUBLIC_ORIGIN: publicOrigin });
+    expect([rotation.status, await rotation.json()]).toEqual([403, { error: "control", rule: "service" }]);
+    Object.assign(context.task.meta, { publicOrigin: { qualification: "Real Native registry/agent and MCP client; rewritten Request covers Worker boundary only, not an actual TLS proxy or celld.", internalProtocol: "http", publicProtocol: "https", createdStatus: created.status, unsetStatus: 403, forwardedOnlyStatus: 403, wrongServiceStatus: 403, initialized: true, roomTool: true } });
+  } finally { if (client) await room.wait(() => client!.close()); done(room); }
+});
 test("hosted default policy travels through Worker Env and the actual agent constructor to list and call", async () => {
   const previousToolSettings = hostedTest.toolSettings;
   hostedTest.toolSettings = { MCP_ENABLED: "true" };

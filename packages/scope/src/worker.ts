@@ -1,7 +1,8 @@
 import { readDeployment } from "./deployment-setting.ts";
+import { readPublicOrigin, type PublicOriginBindings } from "./public-origin.ts";
 import { jsonReply as json } from "./response.ts";
 import { applicationPage, applicationSandboxPage, applicationScreenHosts } from "./applications/route.ts";
-import { applicationGatewayRoute, applicationScreenHostMatches } from "@generalbusiness/dap-client/application";
+import { applicationGatewayRoute, applicationScreenHostMatches, type ApplicationScreenHost } from "@generalbusiness/dap-client/application";
 import { REPLY_SECONDS } from "@generalbusiness/dap-client";
 import { within as boundedWait } from "@generalbusiness/dap-bytes";
 import { applicationHostOutside } from "./applications/wiring.ts";
@@ -644,9 +645,19 @@ export class ApplicationScreenService<E extends Env = Env> extends WorkerEntrypo
   screenHost(screenOrigin: string) {
     return applicationScreenHosts(this.env.APPLICATION_SCREEN_HOSTS).find(host => host.screenOrigin === screenOrigin) ?? null;
   }
+  #gateway(host: ApplicationScreenHost, request: Request): boolean {
+    const origin = readPublicOrigin(this.env, request.url);
+    if (origin !== host.roomOrigin) return false;
+    // Public identity is already bound to the trusted descriptor. The same
+    // matcher then checks the unchanged transport URL, path and method.
+    try {
+      const url = new URL(request.url);
+      return applicationGatewayRoute(origin === url.origin ? host : { ...host, roomOrigin: url.origin }, request.url, request.method);
+    } catch { return false; }
+  }
   async screen(screenOrigin: string, request: Request): Promise<Response> {
     const host = this.screenHost(screenOrigin), url = new URL(request.url);
-    if (!host || url.origin !== host.roomOrigin || !applicationScreenHostMatches(host, url.pathname)) return json(404, { error: "not-found" });
+    if (!host || readPublicOrigin(this.env, request.url) !== host.roomOrigin || !applicationScreenHostMatches(host, url.pathname)) return json(404, { error: "not-found" });
     return await applicationSandboxPage(request, { ...this.env, SCOPES: indexedScopes(this.env.SCOPES, this.env) }) ?? json(404, { error: "not-found" });
   }
   /** Stream-only named RPC exchange. Ordinary native() remains Response-only. */
@@ -654,7 +665,7 @@ export class ApplicationScreenService<E extends Env = Env> extends WorkerEntrypo
     let close = (): Promise<void> => Promise.resolve();
     const response = await measuredRequest(request, this.env, async () => {
       const host = this.screenHost(screenOrigin), url = new URL(request.url), parts = url.pathname.split("/");
-      if (!host || !applicationGatewayRoute(host, request.url, request.method)
+      if (!host || !this.#gateway(host, request)
         || request.method !== "GET" || parts.length !== 5 || parts[1] !== "v1" || parts[2] !== "scopes" || parts[4] !== "stream") return json(404, { error: "not-found" });
       if (!admittedRequestUrl(request.url)) return json(413, { error: "too-large" });
       if (credentialInUrl(url)) return json(400, { error: "credential-in-url" });
@@ -667,7 +678,7 @@ export class ApplicationScreenService<E extends Env = Env> extends WorkerEntrypo
   }
   async native(screenOrigin: string, request: Request): Promise<Response> {
     const host = this.screenHost(screenOrigin);
-    if (!host || !applicationGatewayRoute(host, request.url, request.method)) return json(404, { error: "not-found" });
+    if (!host || !this.#gateway(host, request)) return json(404, { error: "not-found" });
     if (credentialInUrl(new URL(request.url))) return json(400, { error: "credential-in-url" });
     return isSite(request) ? site(request, { ...this.env, SCOPES: indexedScopes(this.env.SCOPES, this.env) }) : route(request, indexedScopes(this.env.SCOPES, this.env), this.env);
   }
@@ -724,7 +735,7 @@ export default {
  * | `DELETE /mcp/agents/<id>` | `Control`, action `retire` | the agent |
  * | `POST`, `GET`, `DELETE /mcp` | `Bearer <id>.<secret>` | the agent |
  */
-export async function mcpRoute(request: Request, env: HostedMcpSettings & Partial<Pick<McpEnv, "REGISTRIES" | "AGENTS" | "SCOPES">> & ScopeIndexEnvironment): Promise<Response | null> {
+export async function mcpRoute(request: Request, env: HostedMcpSettings & PublicOriginBindings & Partial<Pick<McpEnv, "REGISTRIES" | "AGENTS" | "SCOPES">> & ScopeIndexEnvironment): Promise<Response | null> {
   if (!admittedRequestUrl(request.url)) return json(413, { error: "too-large" });
   const url = new URL(request.url);
   const path = url.pathname;
@@ -736,6 +747,7 @@ export async function mcpRoute(request: Request, env: HostedMcpSettings & Partia
   if (path === "/mcp") {
     const named = /^Bearer ([0-9a-f]{64})\./.exec(request.headers.get("authorization") ?? "");
     if (!named) return new Response(null, { status: 401 });
+    if (readPublicOrigin(env, request.url) === null) return json(503, { error: "unavailable" });
     let id: DurableObjectId;
     try { id = AGENTS.idFromString(named[1]!); } catch { return new Response(null, { status: 401 }); }
     return AGENTS.get(id).fetch(request);
@@ -746,6 +758,8 @@ export async function mcpRoute(request: Request, env: HostedMcpSettings & Partia
     : agentPath && !agentPath[2] && request.method === "DELETE" ? { action: "retire" as const, agent: agentPath[1]! }
     : null;
   if (!control) return json(path === "/mcp/agents" || agentPath ? 405 : 404, { error: path === "/mcp/agents" || agentPath ? "method-not-allowed" : "not-found" });
+  const origin = readPublicOrigin(env, request.url);
+  if (origin === null) return json(503, { error: "unavailable" });
   const signed = controlOf(request.headers.get("authorization"));
   if (!signed) return json(400, { error: "control", rule: "header" });
   if (signed.request.action !== control.action || signed.request.agent !== control.agent) return json(400, { error: "control", rule: "binding" });
@@ -769,12 +783,12 @@ export async function mcpRoute(request: Request, env: HostedMcpSettings & Partia
   if (bytes === "unreadable") return json(400, { error: "bad-request" });
   if (control.action === "create") {
     const registry = REGISTRIES.get(REGISTRIES.idFromName(signed.request.membership.scope)) as unknown as { create(signed: unknown, body: Uint8Array, origin: string): Promise<ControlAnswer> };
-    return answered(await registry.create(signed, bytes, url.origin));
+    return answered(await registry.create(signed, bytes, origin));
   }
   let id: DurableObjectId;
   try { id = AGENTS.idFromString(control.agent); } catch { return json(404, { error: "agent" }); }
-  const agent = AGENTS.get(id) as unknown as { control(signed: unknown, action: "bearer" | "retire", body: Uint8Array, origin: string): Promise<ControlAnswer> };
-  return answered(await agent.control(signed, control.action, bytes, url.origin));
+  const agent = AGENTS.get(id) as unknown as { control(signed: unknown, action: "bearer" | "retire", body: Uint8Array): Promise<ControlAnswer> };
+  return answered(await agent.control(signed, control.action, bytes));
 }
 
 /** A request body as exact bytes within `most`: cancelled at the chunk that passes the bound; a declared length over it is not read. */

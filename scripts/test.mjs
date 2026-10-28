@@ -10,6 +10,7 @@ const stageNames = ['kernel', 'node', 'counting', 'plain', 'native'];
 const nodeFiles = [
   'scripts/usage-report.test.mjs',
   'scripts/security-settings.test.mjs',
+  'scripts/celld-smoke.test.mjs',
   'scripts/security-entry-points.test.mjs',
   'scripts/active-source.test.mjs',
   'scripts/check-kernel-boundary.test.mjs',

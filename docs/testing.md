@@ -726,12 +726,24 @@ owners change. This structural test supplies no native authority evidence.
 The in-memory control changes a real route matcher with the inventory fixed.
 The root `npm test` command includes this Node file once.
 
+## Local celld smoke
+
+The fixed Node stage includes `scripts/celld-smoke.test.mjs` once. Its offline
+cases check project identity, retained CLI planning and transport custody.
+They do not start celld. The kept `scripts/test-celld-proxy.mjs` driver runs
+separately against an explicit pinned executable and actual production Worker.
+It owns its test TLS proxy, private configuration, client custody and process
+closure. Its local result establishes no deployment, backup or fleet recovery.
+See [Run the local Worker](celld.md).
+
 ## Settings inventory
 
 `node --test scripts/security-settings.test.mjs` checks the static inventory in
 [Worker settings and bindings](security/settings.md). The checker follows
 tracked relative and workspace runtime imports from each configured Worker
-entry. It compares configured names and supported environment reads with the
+entry, including the local celld JSON configuration. Only an exact tracked
+two-export shim can share another entry’s permanent Worker name. Its physical
+entry and full runtime closure remain checked. It compares configured names and supported environment reads with the
 inventory, and refuses unsupported environment syntax or forwarding rather
 than silently omitting it. The tests compare the displayed lookup with the
 canonical inventory rows and require undocumented source reads and configured

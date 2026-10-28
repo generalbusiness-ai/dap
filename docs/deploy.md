@@ -1,5 +1,8 @@
 # Deploy the scope Worker
 
+For the local celld project, use [Run the local Worker](celld.md). Its
+`PUBLIC_ORIGIN` setting binds public service identity behind a proxy.
+
 `npm run deploy:scope` deploys the scope Worker from
 `apps/room/wrangler.jsonc` with Wrangler 4.147.0 and `--keep-vars`, preserving
 plain settings already set on the Worker when the file omits them. Values

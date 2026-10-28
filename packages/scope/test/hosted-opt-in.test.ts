@@ -20,4 +20,9 @@ test("hosted MCP opt-in and valid additions precede namespace addressing and bod
   }
   const enabled = await mcpRoute(new Request("https://room.test/mcp"), { MCP_ENABLED: "true", REGISTRIES: namespace, AGENTS: namespace } as unknown as Parameters<typeof mcpRoute>[1]);
   expect(enabled?.status).toBe(401);
+  const invalid = new Request("http://internal:8787/mcp/agents", { method: "POST", body: "unread" });
+  Object.defineProperty(invalid, "body", { get() { expect.fail("Invalid public origin must precede body access"); } });
+  const unavailable = await mcpRoute(invalid, { MCP_ENABLED: "true", PUBLIC_ORIGIN: "https://room.test/", REGISTRIES: namespace, AGENTS: namespace } as unknown as Parameters<typeof mcpRoute>[1]);
+  expect([unavailable?.status, await unavailable!.json()]).toEqual([503, { error: "unavailable" }]);
+  expect(invalid.bodyUsed).toBe(false);
 });

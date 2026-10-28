@@ -1,0 +1,24 @@
+{
+  "name": "artroom-scope",
+  "main": "worker.ts",
+  "compatibility_date": "2026-08-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "DEPLOYMENT": "dap-celld-local",
+    "SCOPE_INDEX_MODE": "enforce",
+    "APPLICATION_SCREEN_HOSTS": "[]"
+  },
+  "durable_objects": {
+    "bindings": [
+      { "name": "SCOPES", "class_name": "DeployedScope" },
+      { "name": "SCOPE_INDEX", "class_name": "ScopeIndex" },
+      { "name": "REGISTRIES", "class_name": "McpRegistry" },
+      { "name": "AGENTS", "class_name": "McpAgent" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["DeployedScope"] },
+    { "tag": "v2", "new_sqlite_classes": ["McpRegistry", "McpAgent"] },
+    { "tag": "v3", "new_sqlite_classes": ["ScopeIndex"] }
+  ]
+}

@@ -88,7 +88,7 @@ test.each(["grow", "lending"] as const)("sandbox serves maintained %s bytes with
   } finally { await Promise.all(background); await env.APPLICATION_CONTENT.delete(applicationReleaseKey(packet.ids.release)); }
 });
 
-test("named sandbox RPC carries a real session and stream, and cancellation releases the native subscription", async () => {
+test("named sandbox RPC binds its configured public origin over internal HTTP, carries a real session and stream, and releases the subscription on cancellation", async () => {
   // Real WorkerEntrypoint RPC and PLATFORM membership/session/stream routes.
   // repository.ts labels the office/clock/host stand-ins; this fixed TEST
   // locator is not evidence of an installed screen or a hosted deployment.
@@ -105,8 +105,17 @@ test("named sandbox RPC carries a real session and stream, and cancellation rele
       && descriptor["roomOrigin"] === host.roomOrigin && descriptor["directory"] === host.directory
       && descriptor["item"] === host.item && descriptor["presentation"] === host.presentation;
   };
-  // Temporary stage observation only. No additional RPC, body read or retry;
-  // every original method receives its original receiver and arguments once.
+  // TEST transport changes only the URL origin before real named-service RPC.
+  // The public descriptor, path, query, method, headers and body stay intact.
+  // As in the actual sandbox gateway, omit an explicit AbortSignal from RPC.
+  const internalOrigin = "http://127.0.0.1:9876";
+  const internalRequest = (request: Request): Request => {
+    const url = new URL(request.url);
+    expect(url.origin).toBe(host.roomOrigin);
+    return new Request(internalOrigin + url.pathname + url.search, { method: request.method, headers: request.headers, body: request.body, redirect: "manual" });
+  };
+  // Stage observations add no RPC, body read, retry or authority substitute.
+  // Each inherited method receives its original receiver exactly once.
   const observed: NonNullable<SandboxEnv["ROOM"]> = {
     screenHost(...args) {
       console.info("R8 sandbox RPC", { stage: "screenHost", event: "entered" });
@@ -124,11 +133,11 @@ test("named sandbox RPC carries a real session and stream, and cancellation rele
       }
     },
     screen(...args) { return Reflect.apply(original.screen, original, args); },
-    nativeStream(...args) { return Reflect.apply(original.nativeStream, original, args); },
+    nativeStream(origin, request) { return Reflect.apply(original.nativeStream, original, [origin, internalRequest(request)]); },
     native(...args) {
       console.info("R8 sandbox RPC", { stage: "native", event: "entered" });
       try {
-        return Reflect.apply(original.native, original, args).then((value: Response) => {
+        return Reflect.apply(original.native, original, [args[0], internalRequest(args[1])]).then((value: Response) => {
           console.info("R8 sandbox RPC", { stage: "native", event: "resolved" });
           return value;
         }, (error: unknown) => {
@@ -173,6 +182,26 @@ test("named sandbox RPC carries a real session and stream, and cancellation rele
         expect((await counts()).streams.open).toBe(before.open + 1);
       } finally { await reader.cancel(); }
       expect((await counts()).streams).toEqual({ open: before.open, released: before.released + 1 });
+      // The configured origin does not broaden the trusted screen descriptor
+      // or the maintained finite method, path and query guards.
+      const stopped = (await counts()).streams;
+      for (const [screenOrigin, path, method] of [
+        ["https://wrong-screen.inguz.space", `/v1/scopes/${M.name}/stream`, "GET"],
+        [host.screenOrigin, "/mcp", "POST"],
+        [host.screenOrigin, "/v1/scopes/not-a-scope/stream", "GET"],
+        [host.screenOrigin, `/v1/scopes/${M.name}/stream`, "POST"],
+        [host.screenOrigin, `/v1/scopes/${M.name}/stream?extra=1`, "GET"],
+      ] as const) {
+        const refused = await original.native(screenOrigin, new Request(internalOrigin + path, { method, headers }));
+        expect([refused.status, await refused.json()]).toEqual([404, { error: "not-found" }]);
+      }
+      const refusedStream = await original.nativeStream(host.screenOrigin, new Request(`${internalOrigin}/v1/scopes/${M.name}/stream?extra=1`, { headers }));
+      try {
+        expect([refusedStream.response.status, await refusedStream.response.json()]).toEqual([404, { error: "not-found" }]);
+      } finally {
+        try { await refusedStream.lifetime.close(); } finally { refusedStream[Symbol.dispose]?.(); }
+      }
+      expect((await counts()).streams).toEqual(stopped);
     });
     const wrong = await sandbox.fetch(new Request(`https://wrong-host.inguz.space/v1/scopes/${M.name}`), bindings, execution);
     expect(wrong.status).toBe(404);

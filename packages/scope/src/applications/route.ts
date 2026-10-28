@@ -1,4 +1,5 @@
 import { readDeployment } from "../deployment-setting.ts";
+import { readPublicOrigin } from "../public-origin.ts";
 /** Generic trusted screen bytes, bound to one native active installation and
  * its exact presentation. This serves no application state and grants no
  * member authority. Only the dedicated sandbox service serves package bytes. */
@@ -59,8 +60,10 @@ async function screenResponse(request: Request, env: ApplicationBindings & { SCO
   if (request.method !== "GET" && request.method !== "HEAD") return new Response(null, { status: 405, headers: { allow: "GET, HEAD", "cache-control": "no-store" } });
   const address = readApplicationScreenAddress(url.pathname);
   if (!address || url.search || url.hash || url.username || url.password) return applicationJsonReply(404, { error: "not-found" });
+  const origin = readPublicOrigin(env, request.url);
+  if (origin === null) return applicationJsonReply(503, { error: "application-unavailable" });
   if (!env.APPLICATION_CONTENT) return applicationJsonReply(503, { error: "application-unavailable" });
-  const deployment = env.DEPLOYMENT === undefined ? url.origin : readDeployment(env.DEPLOYMENT);
+  const deployment = env.DEPLOYMENT === undefined ? origin : readDeployment(env.DEPLOYMENT);
   if (deployment === null) return applicationJsonReply(503, { error: "application-unavailable" });
   try {
     const trust = readApplicationTrust(env.APPLICATION_TRUST);
@@ -71,7 +74,7 @@ async function screenResponse(request: Request, env: ApplicationBindings & { SCO
     if (install === LATE) return applicationJsonReply(503, { error: "application-unavailable" });
     if (!install || canonicalize(install.rules) !== canonicalize(room.rules) || canonicalize(install.directory) !== canonicalize(room.directory)
       || install.ids.presentation !== address.presentation || !trust.some(row => row.release === install.ids.release)) return applicationJsonReply(404, { error: "not-found" });
-    const context = readApplicationScreenContext({ ...install, v: 1, origin: url.origin, deployment, membershipDefinition: install.membershipDefinition ?? "platform:membership@7" }, address, url.origin);
+    const context = readApplicationScreenContext({ ...install, v: 1, origin, deployment, membershipDefinition: install.membershipDefinition ?? "platform:membership@7" }, address, origin);
     const packet = await packetOf(env.APPLICATION_CONTENT, env.APPLICATION_TRUST, trust, install.ids.release);
     if (!packet) return applicationJsonReply(503, { error: "application-unavailable" });
     if (canonicalize(packet.ids) !== canonicalize(install.ids) || packet.package.semantic.entry !== install.definition) return applicationJsonReply(404, { error: "not-found" });
@@ -112,7 +115,9 @@ export async function applicationPage(request: Request, env: ApplicationBindings
   if (request.method !== "GET" && request.method !== "HEAD") return new Response(null, { status: 405, headers: { allow: "GET, HEAD", "cache-control": "no-store" } });
   const address = readApplicationScreenAddress(url.pathname);
   if (!address || url.search || url.hash || url.username || url.password) return applicationJsonReply(404, { error: "not-found" });
-  const host = applicationScreenHosts(env.APPLICATION_SCREEN_HOSTS).find(candidate => candidate.roomOrigin === url.origin && applicationScreenHostMatches(candidate, url.pathname));
+  const origin = readPublicOrigin(env, request.url);
+  if (origin === null) return applicationJsonReply(503, { error: "application-unavailable" });
+  const host = applicationScreenHosts(env.APPLICATION_SCREEN_HOSTS).find(candidate => candidate.roomOrigin === origin && applicationScreenHostMatches(candidate, url.pathname));
   return host ? new Response(null, { status: 302, headers: { location: host.screenOrigin + url.pathname, "cache-control": "no-store", "referrer-policy": "no-referrer" } })
     : applicationJsonReply(404, { error: "not-found" });
 }
