@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:84151404412569b400f1d23518b12cfded75293e","text":"Merge retired a covered predecessor; the successor is at scripts/security-entry-points.test.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8805a7e15700e371c09cb84cb15a5a6b93864ecc","text":"Merge retired a covered predecessor; the successor is at scripts/test-celld-proxy.mjs."}
