@@ -106,7 +106,9 @@ export async function checkout(git: GitProgram, ask: CheckoutAsk, bounds?: ReadB
     const closure = await reader.closure(commit, new Set(read.parents));
     if (!closure.complete) return no(closure.reason);
     // 6. The work tree, and then what it is, by two commands. Both exit codes are read.
-    const out = await git.run([...at, "checkout", "-q", "--detach", "--end-of-options", commit, "--"]);
+    // The validated hexadecimal object ID cannot be an option. The final
+    // separator keeps this a revision checkout on older Git versions too.
+    const out = await git.run([...at, "checkout", "-q", "--detach", commit, "--"]);
     if (out.code !== 0 || out.timedOut) return no("checkout-failed");
     const head = await git.run([...at, "rev-parse", "--verify", "--end-of-options", "HEAD^{commit}"]);
     const written = await git.run([...at, "write-tree"]);
@@ -211,7 +213,7 @@ export async function checkoutObjects(git: GitProgram, ask: CheckoutObjectsAsk, 
       const written = await git.ok("hash-object", [...at, "hash-object", "-w", "--no-filters", "-t", stored.type, "--stdin"], stored.data);
       if (written.trim() !== id) return no("hash-mismatch");
     }
-    const out = await git.run([...at, "checkout", "-q", "--detach", "--end-of-options", commit, "--"]);
+    const out = await git.run([...at, "checkout", "-q", "--detach", commit, "--"]);
     if (out.code !== 0 || out.timedOut) return no("checkout-failed");
     const head = await git.ok("rev-parse", [...at, "rev-parse", "--verify", "--end-of-options", "HEAD^{commit}"]);
     const written = await git.ok("write-tree", [...at, "write-tree"]);
