@@ -324,7 +324,7 @@ async function resumed(owner: SessionOwner, cleanups: (() => void)[], resourcesA
 let lateClaimClock: { failed: boolean } | null = null;
 // Actual current unpublished cohort and open Register. The host-time clock,
 // HTTP option bridge and finite scheduler are TEST fixtures, not a deployment.
-test("a retained selected install founds a second real room after its Signed window and verifies Register dependencies by that room's session", async context => {
+test("a retained selected install founds a second real room after its Signed window and names its session-denied genesis proof without widening authority", async context => {
   if (lateClaimClock?.failed) return context.skip("Late-claim fixture skipped: failed close retained ownership");
   if (lateClaimClock !== null) throw Error("Late-claim fixture clock already owned");
   const previous = net.clock, clock = new ScriptedClock(timeOf(Date.now())), owned = { failed: false };
@@ -410,11 +410,18 @@ test("a retained selected install founds a second real room after its Signed win
     measure = true;
     const outcome = await run(second, "verify", "--all");
     measure = false;
-    ok(outcome);
-    expect(outcome.lines.some(line => line.startsWith(`register ${R.name}, entry `) && line.endsWith(": consistent."))).toBe(true);
-    expect(outcome.lines.at(-1)).toMatch(/^All consistent: [6-9] scopes\.$/);
+    const firstDirectory = saved.repository!.directory.scope;
+    const qualified = `not proven: needs ${firstDirectory} entries 0 to 0, not readable by this session`;
+    expect(outcome.code, outcome.lines.join("\n")).toBe(1);
+    const registerLine = outcome.lines.find(line => line.startsWith(`register ${R.name}, entry `))!;
+    expect(registerLine).toContain(qualified);
+    expect(registerLine).not.toMatch(/incomplete|consistent/);
+    expect(outcome.lines.at(-1)).not.toMatch(/^All consistent/);
+    const result = (await life.wait(() => R.entries())).find(entry => entry.input.type === "delivery" && entry.input.message.class === "result" && entry.input.from.at.scope === firstDirectory)!;
+    expect(result).toBeDefined();
+    expect(outcome.lines).toContain(`Proof dependency: Register creation result ${R.name}:${result.seq}.`);
     expect(sessionRegisterReads).toBeGreaterThan(0); expect(signedRegisterReads).toBe(0);
     expect((await first.store.config())!.repository).toEqual(saved.repository);
-    Object.assign(context.task.meta, { lateClaim: { qualification: "Actual two-room CLI/Worker/Native creation and chained session replay; TEST clock, scheduler, transport-option bridge and generated session secret. No hosted runtime or throughput claim.", register: R.name, first: saved.repository!.directory.scope, second: selected.repository!.directory.scope, sessionRegisterReads, signedRegisterReads } });
+    Object.assign(context.task.meta, { lateClaim: { qualification: "Actual two-room CLI/Worker/Native creation and qualified full-replay missing-dependency result; no retained copy or caller anchor supplies admission proof. TEST clock, scheduler, transport-option bridge and generated session secret. No hosted runtime or throughput claim.", register: R.name, first: firstDirectory, second: selected.repository!.directory.scope, sessionRegisterReads, signedRegisterReads, qualifiedLines: outcome.lines.filter(line => line.includes(qualified)), dependency: { journal: firstDirectory, from: 0, through: 0, registerCreationResult: result.seq } } });
   } finally { await close(); }
 });

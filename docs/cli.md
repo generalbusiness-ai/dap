@@ -537,7 +537,17 @@ Progress lines go to stderr while the command runs. A budget or cancellation
 stop exits 1 and names the phase, scope and input cursor where it stopped.
 It does not print `All consistent`. A session-request limit is reported as
 `rate-limited`, with its supplied retry window; it is not a replay finding
-of `incomplete` and does not trigger a signed read. The example is from
+of `incomplete` and does not trigger a signed read.
+
+A later room can read the shared Register through its membership session
+but still lack a journal needed to prove an earlier room's creation result.
+Verification then exits 1 and names the dependency as `not proven: needs
+<journal> entries <range>, not readable by this session`. The Register's
+retained copy does not prove that the source admitted the entry. The command
+keeps full replay checks and does not widen access to another room's journal.
+This dependency can also prevent proof of a later room's own creation.
+
+The example below is from
 `apps/room/lanes/test/issues.scope.test.ts`, after two issues were closed by
 two published changes:
 

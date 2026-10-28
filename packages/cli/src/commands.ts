@@ -35,7 +35,7 @@ import { applicationList } from "./application-list.ts";
  */
 
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type EffectForm, type Entry, type FactRef, type FieldValue, type Item, type KeyId, type PlatformDefinition, type ScopeId, type ScopeRef, type Seed, type SignedIntent, type Summary } from "@generalbusiness/dap-contract";
-import { READ_REFUSALS, readItemQuery, b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isReceipt, isSignedIntentShape, isFactRef, isScopeId, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { READ_REFUSALS, readItemQuery, b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isReceipt, isSignedIntentShape, isFactRef, isEntry, isScopeId, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, ShapeError, TransportError, activeDirectory, partitionIndexes, wellFormedInvitation, readCredential, declaredHandle, create, shapeDeclaredAct, signedIntent, signedLogReader, type Fetch, type Session, type CreationOffer, type Signing, type Transport } from "@generalbusiness/dap-client";
 import { CAPABILITY_CODE as REPLAY_CAPABILITY_CODE } from "@generalbusiness/dap-derive";
 import { UNPUBLISHED_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
@@ -733,6 +733,20 @@ export function show(ctx: Context, named: string): Promise<Outcome> {
 /** The same capability instances and hold numbers as the serving runtime. */
 export { REPLAY_CAPABILITY_CODE };
 
+interface SessionDeniedDependency { neededFact: FactRef; at: FactRef; from: 0; through: 0; line: string }
+/** A permission finding needs the verifier's exact missing fact, its actual
+ * Register creation-result context and a final Session HTTP403 at that page.
+ * Other absent/unavailable histories retain their original result labels.
+ */
+function sessionDeniedDependency(report: import("@generalbusiness/dap-contract").Report, results: ReadonlyMap<string, FactRef>, denied: ReadonlySet<string>): SessionDeniedDependency | null {
+  if (report.mode !== "replay" || report.result !== "missing-dependency" || !report.at || report.dependencies.missing.length !== 1) return null;
+  const neededFact = report.dependencies.missing[0]!;
+  if (neededFact.at.kind !== "directory" || neededFact.seq !== 0 || !denied.has(`${neededFact.at.scope}:0`)) return null;
+  const named = results.get(canonicalize(report.at));
+  if (!named || canonicalize(named) !== canonicalize(neededFact)) return null;
+  return { neededFact, at: report.at, from: 0, through: 0, line: `not proven: needs ${neededFact.at.scope} entries 0 to 0, not readable by this session` };
+}
+
 /** The replay of one scope's history over the read routes: with the caller's session first, then by signed reads. */
 async function replayOf(ctx: Context, config: Config, scope: ScopeId, budget: Verification) {
   budget.at("replay", scope, 0); budget.historyRead();
@@ -740,14 +754,40 @@ async function replayOf(ctx: Context, config: Config, scope: ScopeId, budget: Ve
   const signer = await budget.wait(() => signerOf(ctx, config));
   const options = ctx.fetch ? { fetch: ctx.fetch } : {};
   const signed = httpSource(config.service, { ...options, reader: signedLogReader(signer, readSigning(ctx)) });
-  const sourceFor = (reader: string | null) => reader === null ? signed : httpSource(config.service, { ...options, reader });
+  const sourceFor = (reader: string | null, observe?: (status: number) => void) => reader === null ? signed : httpSource(config.service, { ...options, reader, ...(observe ? { fetch: async (url: string, init?: Parameters<Fetch>[1]) => {
+    const response = await (ctx.fetch ?? globalThis.fetch as unknown as Fetch)(url, init);
+    observe(response.status); return response;
+  } } : {}) });
+  const denied = new Set<string>(), results = new Map<string, FactRef>();
   const source: HistorySource = {
     page: async (named, from, allow) => {
       budget.at("replay", named, from); budget.historyRead();
-      let usedSession = false;
-      let got = await budget.wait(() => managed.read(reader => { usedSession = reader !== null; return sourceFor(reader).page(named, from, allow); }));
+      let usedSession = false, sessionDenied = false;
+      let got = await budget.wait(() => managed.read(async reader => {
+        usedSession = reader !== null;
+        let status = 0;
+        const result = await sourceFor(reader, code => { status = code; }).page(named, from, allow);
+        sessionDenied = reader?.startsWith("Session ") === true && status === 403 && !result.ok && result.reason === "forbidden";
+        return result;
+      }));
+      if (sessionDenied && !got.ok && got.reason === "forbidden") denied.add(`${named}:${from}`);
       if (!got.ok && got.reason === "forbidden" && usedSession) got = await budget.wait(() => signed.page(named, from, allow));
-      if (got.ok) budget.entries(got.page.entries.length);
+      if (got.ok) {
+        budget.entries(got.page.entries.length);
+        if (got.page.scope.kind === "register") for (const stored of got.page.entries) {
+          budget.check();
+          // Keep only result metadata from actual journal pages. Retained
+          // copies never substitute for the missing admission-proof page.
+          let entry: unknown;
+          try { entry = parseStrict(stored.bytes); } catch { continue; }
+          if (!isEntry(entry) || entry.at.scope !== named || entry.seq !== stored.seq) continue;
+          const input = entry.input;
+          if (input.type !== "delivery" || input.message.class !== "result" || input.message.outcome !== "applied"
+            || input.from.at.kind !== "directory" || input.from.seq !== 0 || canonicalize(input.message.of.from.at) !== canonicalize(entry.at)) continue;
+          const at = factRefOf(entry);
+          if (at.hash === stored.hash) results.set(canonicalize(at), input.from);
+        }
+      }
       return got;
     },
     retained: async (named, kind, digest, allow, domain) => {
@@ -758,7 +798,8 @@ async function replayOf(ctx: Context, config: Config, scope: ScopeId, budget: Ve
       return got;
     },
   };
-  return budget.wait(() => replay(source, { mode: "replay", scope, limits: budget.remaining(), platform, sourceName: ARCHIVE_REPLAY_CODE.sourceName, receiverIdentity: ARCHIVE_REPLAY_CODE.receiverIdentity, grants: "proven", capabilities: REPLAY_CAPABILITY_CODE, owners: REPLAY_CAPABILITY_CODE }));
+  const verification = await budget.wait(() => replay(source, { mode: "replay", scope, limits: budget.remaining(), platform, sourceName: ARCHIVE_REPLAY_CODE.sourceName, receiverIdentity: ARCHIVE_REPLAY_CODE.receiverIdentity, grants: "proven", capabilities: REPLAY_CAPABILITY_CODE, owners: REPLAY_CAPABILITY_CODE }));
+  return { ...verification, notProven: sessionDeniedDependency(verification.report, results, denied) };
 }
 
 /** The derived context reaches session probes/retries as well as replay HTTP. */
@@ -776,9 +817,10 @@ export function verifyScopeCommand(ctx: Context, named: string | undefined, opti
       const config = await budget.wait(() => configOf(reading));
       const scope = scopeNamed(config, named);
       budget.at("replay", scope); budget.progress();
-      const { report, why } = await replayOf(reading, config, scope, budget);
+      const { report, why, notProven } = await replayOf(reading, config, scope, budget);
       budget.check();
-      const lines = render(report, why).split("\n").filter((line) => line.length > 0);
+      const lines = render(report, notProven ? `Register creation result ${notProven.at.at.scope}:${notProven.at.seq}.` : why).split("\n").filter((line) => line.length > 0);
+      if (notProven) lines[0] = `Result: ${notProven.line}.`;
       return report.result === "consistent" ? done(...lines) : failed(...lines);
     } finally { budget.close(); }
   });
@@ -843,10 +885,11 @@ function verifyAll(ctx: Context): Promise<Outcome> {
       for (const { kind, scope } of scopes) {
         try {
           budget.at("replay", scope); budget.progress();
-          const { report, why } = await replayOf(reading, config, scope, budget);
+          const { report, why, notProven } = await replayOf(reading, config, scope, budget);
           budget.at("replay", scope); budget.progress(true);
-          lines.push(`${kind} ${scope}, entry ${report.target.seq}: ${report.result}.`);
-          if (report.result !== "consistent") first ??= `First finding: ${kind} ${scope} is ${report.result}${why ? `: ${why}` : ""}.`;
+          lines.push(`${kind} ${scope}, entry ${report.target.seq}: ${notProven?.line ?? report.result}.`);
+          if (notProven) lines.push(`Proof dependency: Register creation result ${notProven.at.at.scope}:${notProven.at.seq}.`);
+          if (report.result !== "consistent") first ??= notProven ? `First finding: ${kind} ${scope}: ${notProven.line}.` : `First finding: ${kind} ${scope} is ${report.result}${why ? `: ${why}` : ""}.`;
           if (kind === "destination" && report.result === "consistent") {
             try {
               budget.at("cleanup", scope); budget.progress();
@@ -860,7 +903,7 @@ function verifyAll(ctx: Context): Promise<Outcome> {
               lines.push(finding); first ??= finding;
             }
           } else if (kind === "destination") {
-            lines.push(`Cleanup status not read: destination ${scope}: historical replay is ${report.result}; no verified cleanup snapshot.`);
+            lines.push(`Cleanup status not read: destination ${scope}: ${notProven?.line ?? `historical replay is ${report.result}`}; no verified cleanup snapshot.`);
           }
         } catch (error) {
           if (!(error instanceof SourceError)) throw error;

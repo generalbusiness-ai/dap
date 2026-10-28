@@ -5,7 +5,7 @@ import { act, command, memoryStore, type Context } from "../src/index.ts";
 test("a handle or noninteger target is refused before I/O rather than becoming NaN", async () => {
   const store = memoryStore();
   let reads = 0;
-  const ctx: Context = { store: { ...store, config: async () => { reads++; throw Error("invalid target must not read configuration"); } }, fetch: async () => { throw Error("invalid target must not reach the network"); } };
+  const ctx: Context = { store: { ...store, config: async () => { reads++; return null; } }, fetch: async () => { throw Error("invalid target must not reach the network"); } };
   const handle = await command(ctx, ["act", "set-role", "--on", "membership", "--target", "@m1", "--set", "role=member"]);
   expect(handle.code).toBe(2);
   expect(handle.lines.join("\n")).toContain("nonnegative item number");

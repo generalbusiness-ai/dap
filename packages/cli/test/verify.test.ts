@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Entry, ScopeRef, Seed } from "@generalbusiness/dap-contract";
-import { entryHash, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { b64url, entryHash, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
 import { command, memoryStore } from "../src/index.ts";
 
@@ -79,7 +79,7 @@ function broadRegister() {
   return { R, children, memory: new MemorySource(scopes, 32) };
 }
 
-async function broadContext(wide: ReturnType<typeof broadRegister>, discovery: "empty" | "wide", progress: string[]) {
+async function broadContext(wide: ReturnType<typeof broadRegister>, discovery: "empty" | "wide", progress: string[], refusal?: "forbidden" | "unavailable") {
   const { R, children, memory } = wide, D = children[0]!;
   const store = memoryStore(); await store.keep("device", rita.secret);
   await store.save({ v: 1, service: "https://service.test", key: "device", repository: { directory: D.at, membership: { ...D.at, kind: "membership" }, rules: D.at.scope, destination: D.at.scope } });
@@ -87,8 +87,12 @@ async function broadContext(wide: ReturnType<typeof broadRegister>, discovery: "
   let elapsed = 0;
   const fetch: Fetch = async (url, init) => {
     const address = new URL(url), parts = address.pathname.split("/").map(decodeURIComponent), scope = parts[3] as ScopeId;
-    if (address.pathname.endsWith("/sessions")) return Response.json({ ok: false, reason: "sessions-unavailable" }, { status: 503 });
-    expect(init?.headers?.["authorization"]).toMatch(/^Signed /);
+    if (address.pathname.endsWith("/sessions")) {
+      if (!refusal) return Response.json({ ok: false, reason: "sessions-unavailable" }, { status: 503 });
+      const request = JSON.parse(init!.body!).request;
+      return Response.json({ ok: true, token: b64url(new Uint8Array(32).fill(7)), session: { v: 1, deployment: "SCRIPTED session", membership: { ...D.at, kind: "membership" }, member: "@rita", key: request.actor, reads: ["summary", "entry", "history", "log", "retained"], ends: request.notAfter } });
+    }
+    expect(init?.headers?.["authorization"]).toMatch(refusal ? /^(Session|Signed) / : /^Signed /);
     if (address.pathname === `/v1/scopes/${D.at.scope}`) return Response.json({ ok: true, at: D.head, complete: true, value: { scope: D.at, status: "active", definition: "platform:directory@2", time: D.now, counts: [], items: [{ id: 0, revision: 1, type: "repository", state: "ready", opened: textDigest("SCRIPTED discovery"), attributed: [], parties: {}, values: {}, refs: { register: R.at } }] } });
     if (parts[4] === "history") {
       histories.push(scope);
@@ -101,6 +105,7 @@ async function broadContext(wide: ReturnType<typeof broadRegister>, discovery: "
     }
     if (parts[4] === "log") {
       logs.add(scope);
+      if (refusal && scope === D.at.scope) return Response.json({ ok: false, reason: refusal }, { status: refusal === "forbidden" ? 403 : 503 });
       const got = await memory.page(scope, Number(address.searchParams.get("cursor") ?? 0), { entries: 32, bytes: 4 * 1024 * 1024 });
       return Response.json(got.ok ? { ok: true, at: got.page.head, complete: got.page.next === null, value: { scope: got.page.scope, entries: got.page.entries }, ...(got.page.next === null ? {} : { next: String(got.page.next) }) } : got);
     }
@@ -158,4 +163,30 @@ test("verify --all reports a session rate window without Signed fallback or an i
   expect(outcome.lines.join("\n")).toContain("17 seconds");
   expect(outcome.lines.join("\n")).not.toMatch(/incomplete|All consistent/);
   expect([sessions, reads]).toEqual([1, 0]);
+});
+
+// Both denial replies and the Session itself are SCRIPTED. All /log and
+// retained bytes outside the refused page remain the actual judged fixture.
+test("only an actual Session-forbidden Directory genesis matching the replay's needed fact is reported not proven", async () => {
+  const wide = broadRegister(), needed = wide.children[0]!.at.scope;
+  const qualified = `not proven: needs ${needed} entries 0 to 0, not readable by this session`;
+  const result = wide.R.entries.find(({ entry }) => entry.input.type === "delivery" && entry.input.message.class === "result" && entry.input.from.at.scope === needed)!;
+  for (const refusal of ["forbidden", "unavailable"] as const) {
+    const { ctx } = await broadContext(wide, "empty", [], refusal);
+    const outcome = await command(ctx, ["verify", "--all"]);
+    expect(outcome.code).toBe(1);
+    const register = outcome.lines.find(line => line.startsWith(`register ${wide.R.at.scope},`))!;
+    if (refusal === "forbidden") {
+      expect(register).toBe(`register ${wide.R.at.scope}, entry ${wide.R.head.seq}: ${qualified}.`);
+      expect(outcome.lines).toContain(`Proof dependency: Register creation result ${wide.R.at.scope}:${result.entry.seq}.`);
+      expect(register).not.toMatch(/incomplete|consistent/);
+      const standalone = await command(ctx, ["verify", wide.R.at.scope]);
+      expect(standalone.code).toBe(1);
+      expect(standalone.lines[0]).toBe(`Result: ${qualified}.`);
+    } else {
+      expect(register).toBe(`register ${wide.R.at.scope}, entry ${wide.R.head.seq}: missing-dependency.`);
+      expect(outcome.lines.join("\n")).not.toContain("not readable by this session");
+    }
+    expect(outcome.lines.at(-1)).not.toMatch(/^All consistent/);
+  }
 });
