@@ -663,6 +663,11 @@ excluded from seals. The in-memory control changes a real matcher while
 leaving this page unchanged and observes a bijection assertion failure.
 The snapshot body witness executes both actual dispatch branches and requires
 one membership-classified route row. It adds no duplicate route for the hint.
+Seals cover their selected source only; imported implementations are not
+covered transitively. The successor stage read, checker origin verifier,
+binding codec and detached checkout verifier each have an explicit owner
+seal. Native version pins and owning tests provide separate evidence for
+the imported policy and admission rules.
 
 This is structural drift evidence. Stand-ins prove dispatch, not Durable
 Object behavior, authentication, storage bounds, credential custody, outbound
@@ -684,6 +689,9 @@ Gate owners: [address.ts](../../packages/bytes/src/address.ts),
 [applications/projection.ts](../../packages/scope/src/applications/projection.ts),
 [destination-host.ts](../../packages/scope/src/destination-host.ts),
 [stage-snapshot.ts](../../packages/scope/src/stage-snapshot.ts),
+[stage-origin.ts](../../packages/checkers/src/stage-origin.ts),
+[evidence.ts](../../packages/bytes/src/evidence.ts),
+[checkout-snapshot.ts](../../packages/git/src/checkout-snapshot.ts),
 [hosted.ts](../../packages/mcp/src/hosted.ts),
 [hosted-tools.ts](../../packages/mcp/src/hosted-tools.ts),
 [service.ts](../../packages/mcp/src/service.ts),

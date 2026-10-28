@@ -177,6 +177,10 @@ const namedOwners = {
 
 // Reviewed matcher/gate owners. These are change tripwires, not runtime proof.
 const seals = {
+  "packages/bytes/src/evidence.ts": "pending", // Explicit successor binding codec owner; adopt only after source review and maintained-parser measurement.
+  "packages/git/src/checkout-snapshot.ts": "pending", // Detached object identity and closure bounds; imports do not seal this implementation.
+  "packages/checkers/src/stage-origin.ts": "pending", // Actual Native admission and causal proof verifier.
+  "packages/scope/src/stage-snapshot.ts": "pending", // Signed stage read and current Rules, key and work-source gates.
   "packages/bytes/src/address.ts": "d6d2fc3f86f50318c6a88b21649daef212f40c4d46b942033d27b3853902ccd2", // Canonical local full-address and routable /64 counter keys; actual maintained output.
   "packages/bytes/src/index.ts": "8ef5b10b548cf682eabcd3057c2ee4f86e4d14dad870da2ab41997a8dd9fcb02", // Bind the shared address-key export to its reviewed owner.
   "apps/room/celld/worker.ts": "d1bc465525bd0af046fa0703464f14aeaaee8286b88415dfec3b9e03869fb644", // H1 reviewed production entry or public-origin gate owner.

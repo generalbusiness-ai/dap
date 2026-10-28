@@ -3129,12 +3129,12 @@ export function destinationRulesForV17(profile: DestinationSuccessorV17): Rules 
   };
   const wrap = (rule: PlatformRule): PlatformRule => {
     switch (rule.place) {
-      case "grant": return { ...rule, run: value => rule.run(given(value)) };
-      case "also": return "bind" in rule ? rule : { ...rule, run: (value, type) => rule.run(given(value), type) };
+      case "grant": return { ...rule, run: (value: RuleGiven) => rule.run(given(value)) };
+      case "also": return "bind" in rule ? rule : { ...rule, run: (value: RuleGiven, type: string) => rule.run(given(value), type) };
       case "type": return { ...rule, run: (value, field, of) => rule.run(given(value), field, of) };
-      case "guard": return { ...rule, run: value => rule.run(given(value)) };
-      case "effect": return { ...rule, run: value => rule.run(given(value)) };
-      case "send": return { ...rule, run: value => rule.run(given(value)) };
+      case "guard": return { ...rule, run: (value: RuleGiven) => rule.run(given(value)) };
+      case "effect": return { ...rule, run: (value: RuleGiven) => rule.run(given(value)) };
+      case "send": return { ...rule, run: (value: RuleGiven) => rule.run(given(value)) };
       case "outcome": {
         const rules = rule.rules;
         return { ...rule, rules: { ...rules,

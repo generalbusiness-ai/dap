@@ -450,7 +450,7 @@ uses the maintained incarnation constructor with explicit public test
 bytes. The owning checker run passed 21 tests and failed five. Four new
 failures exposed a real admission-wire defect; the fifth was an existing
 Unix-socket test refused by the execution sandbox. Its isolated rerun
-needs the socket permission and no product change.
+passed with the socket permission and no product change.
 
 Generic `FieldValue` excludes nested nulls. The new semantic records had
 nullable members, so casting them to `FieldValue` did not make their
@@ -470,3 +470,14 @@ its lower-layer dependencies. The first failed runs remain retained under
 `/private/tmp/artroom-evidence-rules-evidence-20261028`, with command,
 Source snapshot, output hashes, exit, elapsed time and host child CPU.
 These are component results, not a Native cohort, gate or deployment pass.
+
+Commit `de3ea0b506` froze the text-wire repair. The focused bytes binding
+test and seven checker admission/service tests passed. The policy wire run
+passed 23 tests in five files but could not import the new record-wire
+test: a missing outer brace in the draft Native data caused a parser error.
+Commit `f33bae9e65` fixed that brace; the two record-wire tests then passed.
+The bytes compiler passed. The first checker and platform compiler runs
+found independent type errors, and the first whole-lane validation found
+three incorrect local fact bindings in Change 4. Those originals remain
+retained; their Source repairs are in progress. The unsupported timed code
+effect remains a separate contract error pending the planner's disposition.

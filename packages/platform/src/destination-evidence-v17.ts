@@ -2,7 +2,7 @@
  * after its entry was sealed. Indexes contain live and decided anchors. */
 import type { Digest, Entry, EvidenceBinding, FactRef, FieldValue, KeyId, Observation, PlatformData, ScopedRulesPosition, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, evidenceBindingDigest, isDigest, isFactRef, isHead, isKeyId, isRecord, isScopeRef, parseStrict, readEvidenceBinding, same as equalCanonical, textDigest, timeMs, unb64url, utf8 } from "@generalbusiness/dap-bytes";
-import { idOf, isObjectId, parseCommit } from "@generalbusiness/dap-git";
+import { idOf, isObjectId, parseCommit } from "@generalbusiness/dap-git/tree-proof";
 import { isEntryOf, type Item, type Operation, type Own, type Opening, type OutcomeGives, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { readEvidenceDecisionV17 } from "./evidence-decision-v17.ts";
 import { evidenceFutureEntriesV17 } from "./evidence-forecast-v17.ts";
@@ -352,9 +352,9 @@ export function evidenceDestinationDataV17(base: PlatformData): PlatformData {
       evidenceService: { fixed: false, required: false, of: { type: "code", code: "evidence-service-v17", row: "E1" } } } },
     "evidence-request": { many: true, max: 2048, initial: "pending", states: { pending: { final: false }, waiting: { final: false }, settled: { final: true } }, parties: {}, refs: { lane: { fixed: true, required: true, to: { type: "scope", kind: "lane" } } }, indexes: ["job"],
       holds: { operations: { [EVIDENCE_ADMIT_V17]: 1, [EVIDENCE_RESULT_V17]: 1, [EVIDENCE_NOTICE_V17]: 1 }, requests: 4, items: 1, decisions: { "work-checked": 1 } },
-      values: { job: { fixed: true, required: true, of: { type: "fact", kind: ["request-check", "request-work-check", "admit-published-check", "admit-audit-check"] } }, record: { fixed: false, required: true, of: { type: "code", code: "evidence-record-v17", row: "E1" } } } },
+      values: { job: { fixed: true, required: true, of: { type: "fact", kind: ["request-work-check"], under: "issue" } }, record: { fixed: false, required: true, of: { type: "code", code: "evidence-record-v17", row: "E1" } } } },
     "evidence-slot": { many: true, max: 2048, initial: "pending", states: { pending: { final: false }, waiting: { final: false }, settled: { final: true } }, parties: {}, refs: {}, indexes: ["job"],
-      values: { job: { fixed: true, required: true, of: { type: "fact", kind: ["request-check", "admit-published-check", "admit-audit-check"] } }, record: { fixed: false, required: true, of: { type: "code", code: "evidence-record-v17", row: "E1" } } } },
+      values: { job: { fixed: true, required: true, of: { type: "fact", kind: ["request-check", "admit-published-check", "admit-audit-check"], under: "change" } }, record: { fixed: false, required: true, of: { type: "code", code: "evidence-record-v17", row: "E1" } } } },
     "evidence-job": { many: true, max: 16384, initial: "job", states: { job: { final: false }, "reuse-anchor": { final: false }, "hold-anchor": { final: false },
       "job-timedout": { final: false }, "reuse-anchor-timedout": { final: false }, "hold-anchor-timedout": { final: false }, decided: { final: true } },
       parties: {}, refs: { lane: { fixed: true, required: true, to: { type: "scope", kind: "lane" } } }, indexes: ["jobKey", "reuseKey", "holdKey", "policyKey"],
@@ -562,6 +562,7 @@ function serviceEffect(given: RuleGiven, view: ReservationPolicyViewV17 | null):
 function publishedRefusal(given: RuleGiven, request: Item, proposed: EvidenceJobRecordV17, reason: string,
   view: ReservationPolicyViewV17 | null): OutcomeGives | null {
   if (proposed.binding.stage !== "published" || proposed.binding.subject.kind !== "published") return null;
+  const subject = proposed.binding.subject;
   const batch = readEvidenceBatchWireV17(given.state.item(proposed.holder)?.values["batch"]), triple = evidenceSubjectV17(given, proposed);
   const spent = evidenceSpendPublishedCapacityV17(given, proposed.holder, proposed.binding, proposed.name, proposed.configuration, proposed.job);
   if (!batch || !triple || !spent) return null;
@@ -576,8 +577,8 @@ function publishedRefusal(given: RuleGiven, request: Item, proposed: EvidenceJob
     owner.policyOwner = spent.policyOwner; owner.funded.holds = true;
     owner.holds = owner.holds.map(hold => {
       if (!record.covered.some(key => same(key, hold.key))) return hold;
-      const held = failEvidenceHoldV17(hold, { job: record.job, publication: proposed.binding.subject.publication, commit: triple.commit,
-        order: { publication: proposed.binding.subject.publication.seq, job: given.resolved.self }, decidedAt: given.resolved.self,
+      const held = failEvidenceHoldV17(hold, { job: record.job, publication: subject.publication, commit: triple.commit,
+        order: { publication: subject.publication.seq, job: given.resolved.self }, decidedAt: given.resolved.self,
         kind: "observation-unavailable", reason, result: null });
       if (!held.ok) throw Error("A refused published obligation lost its funded hold"); return held.record;
     });

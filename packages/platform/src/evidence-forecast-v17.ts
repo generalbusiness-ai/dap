@@ -1,8 +1,8 @@
 /** Synthetic maximum future entries only. No forecast fact is recorded or
  * treated as authority. Kernel holder closure owns used-plus-reserved Amount. */
-import type { FactRef, FieldValue } from "@generalbusiness/dap-contract";
+import type { Effect, FactRef, FieldValue } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, parseStrict, same, utf8 } from "@generalbusiness/dap-bytes";
-import { observationBytes, operationOpening, type RuleEffect, type RuleGiven, type RuleRequest } from "@generalbusiness/dap-derive";
+import { observationBytes, operationOpening, type Opening, type RuleEffect, type RuleGiven, type RuleRequest } from "@generalbusiness/dap-derive";
 import type { EvidenceJobRecordV17 } from "./destination-evidence-v17.ts";
 import { evidenceKeyDigestV17, readEvidenceIndexV17, type EvidenceCandidateV17 } from "./evidence-index-v17.ts";
 import type { EvidenceFailureV17, EvidenceHoldRecordV17 } from "./evidence-holds-v17.ts";
@@ -24,6 +24,11 @@ const full = (fact: FactRef): FactRef => ({ at: fact.at, seq: MAX, hash: HASH })
 const valueEffect = (item: number, slot: string, value: FieldValue | null): RuleEffect => ({ effect: "value", item, slot, value });
 const codeEffect = (item: number, slot: string, value: unknown, max: number): RuleEffect => valueEffect(item, slot, evidenceWireV17(value, max));
 const larger = <T>(left: T | null, right: T): T => left !== null && bytes(left) > bytes(right) ? left : right;
+const opening = (k: number, open: Opening): Extract<Effect, { effect: "operation" | "attempt" }>[] =>
+  operationOpening(k, open).map(effect => {
+    if (effect.effect !== "operation" && effect.effect !== "attempt") throw Error("An operation opening has an unsupported forecast effect");
+    return effect;
+  });
 
 function failure(record: EvidenceJobRecordV17): EvidenceFailureV17 {
   if (record.binding.subject.kind !== "published" || record.commit === null) throw Error("No published forecast subject");
@@ -157,13 +162,13 @@ export function evidenceFutureEntriesV17(given: RuleGiven, current: Row, owners:
       + observationBytes("holders", bounds, 32) + 12; // commas between complete ObservationUse envelopes
     const variants: { input: unknown; effects: readonly RuleEffect[]; sends: readonly RuleRequest[]; observed: number }[] = [];
     const messages = [decision(main), ...(main.incident ? [incident(main, bounds.memberBytes)] : [])];
-    const progress = main.binding.stage === "landing" ? operationOpening(0,
+    const progress = main.binding.stage === "landing" ? opening(0,
       { owner: "platform:destination@17", kind: "evidence-progress", attempts: 1, for: main.holder }) : [];
     variants.push({ input: outcome("evidence-result"), effects: [attempt, ...result, ...progress], sends: messages, observed: observation });
     if (main.binding.subject.kind === "landing") {
       const publication = main.binding.subject.publication.seq;
-      const openings = [operationOpening(0, { owner: "platform:destination@17", kind: "reservation-delete", attempts: 3, for: publication }),
-        operationOpening(1, { owner: "platform:destination@17", kind: "mint", attempts: 1, for: publication })].flat();
+      const openings = [opening(0, { owner: "platform:destination@17", kind: "reservation-delete", attempts: 3, for: publication }),
+        opening(1, { owner: "platform:destination@17", kind: "mint", attempts: 1, for: publication })].flat();
       // Progress reads already sealed Native decisions. Its separate key
       // cohort covers the frozen required/audit descriptors, at most32; no member or
       // holder observation is borrowed from the earlier result entry.
@@ -177,7 +182,7 @@ export function evidenceFutureEntriesV17(given: RuleGiven, current: Row, owners:
         { effect: "state", item: publication, state: "cleanup-aborted" }, valueEffect(publication, "reason", "required-check-failed"),
         { effect: "ref", item: MAX, slot: "slot", to: null }, ...openings], sends: [decision(main)], observed: progressObservation });
     }
-    const notice = main.incident ? operationOpening(0, { owner: "platform:destination@17", kind: "evidence-notice", attempts: 1, for: main.holder }) : [];
+    const notice = main.incident ? opening(0, { owner: "platform:destination@17", kind: "evidence-notice", attempts: 1, for: main.holder }) : [];
     variants.push({ input: { type: "timed", item: current.item, rule: "evidence-reuse-deadline", due: TIME },
       effects: [{ effect: "state", item: current.item, state: "reuse-anchor-timedout" }, valueEffect(current.item, "deadline", null),
         ...updated.map(id => codeEffect(id, "record", completed.get(id)!, 196608)), ...notice], sends: [], observed: 0 });

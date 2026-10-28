@@ -34,8 +34,9 @@ export function stageOriginOf(notice: Notice, read: Pick<OriginRead, "entry" | "
       || snapshot.v !== 1 || !read.entry || !sound(snapshot.job) || !sound(snapshot.admission) || !same(snapshot.job, read.entry)
       || !same(factOf(snapshot.job), notice.job) || !same(snapshot.job.entry.at, notice.lane) || snapshot.destination.kind !== "destination"
       || !same(snapshot.admission.entry.at, snapshot.destination) || !Array.isArray(snapshot.sources) || snapshot.sources.length > 32 || snapshot.sources.some(source => !sound(source))) return no();
+    const sourceEntries: readonly Sealed[] = snapshot.sources;
     const proof = { v: snapshot.v, destination: snapshot.destination, job: snapshot.job, admission: snapshot.admission, binding: snapshot.binding,
-      sources: snapshot.sources, base: snapshot.base, commit: snapshot.commit, tree: snapshot.tree };
+      sources: sourceEntries, base: snapshot.base, commit: snapshot.commit, tree: snapshot.tree };
     if (canonicalBytes(proof).length > STAGE_SNAPSHOT_BOUNDS.proofBytes) return no();
     const binding = readEvidenceBinding(snapshot.binding), jobEntry = snapshot.job.entry, admitted = snapshot.admission.entry;
     const lane = binding?.stage === "work" ? "issue" : "change";
@@ -53,21 +54,21 @@ export function stageOriginOf(notice: Notice, read: Pick<OriginRead, "entry" | "
     if (!record || !effect || effect.effect !== "value" || record["v"] !== 1 || record["state"] !== "admitted" || record["admittedAt"] !== admitted.seq || !same(record["binding"], binding)
       || record["bindingDigest"] !== evidenceBindingDigest(binding) || !same(record["job"], notice.job) || record["commit"] !== snapshot.commit || record["tree"] !== snapshot.tree || record["base"] !== snapshot.base
       || !Array.isArray(record["sourceFacts"]) || record["sourceFacts"].length > 32 || !record["sourceFacts"].every(isFactRef)) return no();
-    const sources = new Map(snapshot.sources.map(source => [canonicalize(factOf(source)), source]));
-    if (sources.size !== snapshot.sources.length || record["sourceFacts"].length !== sources.size || record["sourceFacts"].some(fact => !sources.has(canonicalize(fact)))) return no();
-    const genesis = snapshot.sources.find(source => source.entry.at.kind === "destination" && same(source.entry.at, snapshot.destination) && source.entry.input.type === "genesis");
+    const sources = new Map(sourceEntries.map(source => [canonicalize(factOf(source)), source]));
+    if (sources.size !== sourceEntries.length || record["sourceFacts"].length !== sources.size || record["sourceFacts"].some(fact => !sources.has(canonicalize(fact)))) return no();
+    const genesis = sourceEntries.find(source => source.entry.at.kind === "destination" && same(source.entry.at, snapshot.destination) && source.entry.input.type === "genesis");
     if (!genesis || genesis.entry.input.type !== "genesis" || genesis.entry.input.seed.definition !== "platform:destination@17") return no();
-    const pendingRows = snapshot.sources.filter(source => same(source.entry.at, snapshot.destination) && sent(snapshot.job, source)
+    const pendingRows = sourceEntries.filter(source => same(source.entry.at, snapshot.destination) && sent(snapshot.job, source)
       && source.entry.effects.some(effect => effect.effect === "open" && effect.item === source.entry.seq && effect.type === (binding.stage === "work" ? "evidence-request" : "evidence-slot")));
     const pending = pendingRows.length === 1 ? pendingRows[0] : null;
-    if (!pending || pending.entry.input.type !== "delivery" || pending.entry.input.message.class !== "request" || pending.entry.input.decision !== "applied" || !sent(snapshot.job, pending)
+    if (!pending || pending.entry.input.type !== "delivery" || pending.entry.input.message.class !== "request" || !("decision" in pending.entry.input) || pending.entry.input.decision !== "applied" || !sent(snapshot.job, pending)
       || !isRecord(pending.entry.input.message.body) || !["check-fence", "work-check-fence"].includes(pending.entry.input.message.body["message"] as string)) return no();
     const jobInput = jobEntry.input;
     if (jobInput.type === "act") {
       const expected = binding.stage === "work" ? "request-work-check" : "request-check";
       if (!verifySignedIntent(jobInput.signed) || jobInput.signed.intent.kind !== expected || !same(jobInput.signed.intent.to, notice.lane)) return no();
     } else {
-      if (jobInput.type !== "delivery" || jobInput.message.class !== "request" || jobInput.decision !== "applied" || !isRecord(jobInput.message.body)
+      if (jobInput.type !== "delivery" || jobInput.message.class !== "request" || !("decision" in jobInput) || jobInput.decision !== "applied" || !isRecord(jobInput.message.body)
         || !["admit-published-check", "admit-audit-check"].includes(jobInput.message.body["message"] as string)) return no();
       const sender = sources.get(canonicalize(jobInput.from));
       if (!sender || !same(sender.entry.at, snapshot.destination) || !sent(sender, snapshot.job)) return no();

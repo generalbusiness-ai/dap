@@ -86,7 +86,8 @@ export async function readStageSnapshot(given: OutsideGiven, options: Destinatio
       if (!sealed || !isEntryOf(sealed.entry, fact) || sealed.hash !== fact.hash) return null;
       ids.add(canonicalize(fact)); sources.push(sealed);
       // Reserve the complete proof before fetching or copying object bodies.
-      if (canonicalBytes({ v: 1, destination: scope.at, job: { entry: job.entry, hash: jobFact.hash }, admission, binding: admitted.binding, sources }).length > STAGE_SNAPSHOT_BOUNDS.proofBytes) return null;
+      if (canonicalBytes({ v: 1, destination: scope.at, job: { entry: job.entry, hash: jobFact.hash }, admission, binding: admitted.binding, sources,
+        base: admitted.base, commit: admitted.commit, tree: admitted.tree }).length > STAGE_SNAPSHOT_BOUNDS.proofBytes) return null;
     }
     const branch = destinationBranch(given.state), repository = branch?.values["repository"];
     if (!isRecord(repository) || Object.keys(repository).sort().join() !== "host,id,name,namespace" || repository["host"] !== options.host || repository["namespace"] !== options.namespace) return null;

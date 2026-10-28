@@ -22,7 +22,8 @@ export const rulesCertificateEvidenceValuesV17: NonNullable<OperationRules['valu
  * five-dimensional holder quote and of the terminal forecasts below. */
 export function evidenceCarryingBudgetV17(given: RuleGiven, effects: readonly RuleEffect[], opens: readonly Opening[], sends: readonly RuleRequest[], futureRecords: readonly unknown[]) {
   const input={...given.input};
-  if(input.type==='outcome'&&['evidence-admit','evidence-result','evidence-notice'].includes(input.kind))delete input.observed;
+  // RuleGiven's judged input excludes observations. Their full declared
+  // cohort is quoted separately below, once, as it is added to the entry.
   const attempt=given.input.type==='outcome'?[{effect:'attempt',operation:given.input.operation,attempt:given.input.attempt,result:given.input.result,selected:given.resolved.outcome?.selected??null}]:[];
   const actualEffects=[...attempt,...effects,...opens.flatMap((open,n)=>operationOpening(n,open))];
   const reply=given.input.type==='delivery'&&given.input.message.class==='request'?[{n:MAX,to:given.input.from.at,message:{class:'result',of:{from:given.input.from,n:given.input.n},outcome:'applied'}}]:[];

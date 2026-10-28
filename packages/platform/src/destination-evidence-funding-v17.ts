@@ -147,7 +147,7 @@ export function destinationPublishedChecksPending(state: StateView, own: Own, op
   return plan ? { plan } : null;
 }
 function appendWrittenPlan(given: RuleGiven, result: OutcomeGives): OutcomeGives {
-  const writes = result.effects.filter(effect => effect.effect === "state" && effect.state === "written");
+  const writes = result.effects.filter((effect): effect is Extract<RuleEffect, { effect: "state" }> => effect.effect === "state" && effect.state === "written");
   if (!writes.length) return result;
   if (writes.length !== 1) throw Error("A publication wrote more than one receipt");
   const receipt = given.state.item(writes[0]!.item), publicationId = receipt?.refs["publication"] ?? receipt?.values["publication"];
@@ -196,10 +196,14 @@ function planProposal(given: RuleGiven): { plan: PublishedPlanV17; accounts: Non
   return { plan: { v: 1, publication: p, receipt: r, written: w.seq, operation: operation as FactRef, base, cursor: 0, total: rows.length }, accounts, holder: holder.id };
 }
 function planEffects(given: RuleGiven, value: NonNullable<ReturnType<typeof planProposal>>): readonly RuleEffect[] {
-  return [{ effect: "open", item: given.resolved.self, type: "published-plan", state: "pending" },
+  const effects: RuleEffect[] = [{ effect: "open", item: given.resolved.self, type: "published-plan", state: "pending" },
     { effect: "value", item: given.resolved.self, slot: "plan", value: planWire(value.plan) },
-    ...value.accounts.map(row => ({ effect: "value" as const, item: row.item.id, slot: "batch", value: evidenceBatchWireV17({ ...row.record, planAt: given.resolved.self }) })),
-    ...operationOpening(0, { owner: "platform:destination@17", kind: PUBLISHED_CHECKS_V17, attempts: 1, for: value.holder })];
+    ...value.accounts.map(row => ({ effect: "value" as const, item: row.item.id, slot: "batch", value: evidenceBatchWireV17({ ...row.record, planAt: given.resolved.self }) }))];
+  for (const effect of operationOpening(0, { owner: "platform:destination@17", kind: PUBLISHED_CHECKS_V17, attempts: 1, for: value.holder })) {
+    if (effect.effect !== "operation" && effect.effect !== "attempt") throw Error("An operation opening returned an unsupported effect");
+    effects.push(effect);
+  }
+  return effects;
 }
 export function fundingData(base: PlatformData): PlatformData {
   const receives = { ...base.receives };
@@ -300,13 +304,13 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
     const selected = selectEvidenceBatchV17(records as EvidenceBatchRecordV17[], job, typeof name === "string" ? name : undefined);
     return selected.ok ? items.find(item => batchValue(item)?.ordinal === selected.record.ordinal)?.id ?? null : null;
   } };
-  next["evidence-fence-v17"] = { ...fence, run: given => {
+  next["evidence-fence-v17"] = { ...fence, run: (given: RuleGiven) => {
     const old = fence.run(given); if (!old.holds || given.input.type !== "delivery" || given.input.message.class !== "request" || given.input.message.type !== "tell"
       || !isRecord(given.input.message.body) || given.input.message.body["message"] !== "check-fence") return old;
     const item = given.resolved.subjects.get("also.batch"), batch = item && batchValue(item), job = given.resolved.fields["job"], name = given.resolved.fields["name"];
     return batch && isFactRef(job) && typeof name === "string" && claimEvidenceBatchJobV17(batch, job, name).ok ? old : { holds: false, name: "not-this-check" };
   } };
-  next["evidence-open-v17"] = { ...open, most: open.most + 1, run: given => {
+  next["evidence-open-v17"] = { ...open, most: open.most + 1, run: (given: RuleGiven): readonly RuleEffect[] => {
     const effects = open.run(given), item = given.resolved.subjects.get("also.batch");
     if (!item) return effects;
     const batch = batchValue(item), job = given.resolved.fields["job"], name = given.resolved.fields["name"];
@@ -329,28 +333,36 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
     // exact current outcome. Fund-first uses it; stage-first uses readyUpdate.
     return { request, publication };
   };
-  if (publicationUpdate?.place === "send") next["publication-update"] = { ...publicationUpdate, run: given => {
+  if (publicationUpdate?.place === "send") next["publication-update"] = { ...publicationUpdate, run: (given: RuleGiven) => {
     const request = publicationUpdate.run(given);
     if (!request || request.message.class !== "request" || request.message.type !== "relate" || !isRecord(request.message.body)
       || !isRecord(request.message.body["detail"]) || request.message.body["detail"]["outcome"] !== "committed") return request;
     return releasedUpdate(given)?.request ?? null;
   } };
   const stage = next["reservation-stage"];
-  if (stage?.place === "outcome" && stage.rules.derives) next["reservation-stage"] = { ...stage, rules: { ...stage.rules,
-    most: { ...stage.rules.most, effects: 16 }, derives: (given, operation, selected) => {
-      const result = stage.rules.derives!(given, operation, selected), update = releasedUpdate(given);
-      return update ? { ...result, effects: [...result.effects, { effect: "value", item: update.publication.id, slot: "evidenceReady", value: true }] } : result;
-    } } };
+  if (stage?.place === "outcome" && stage.rules.derives) {
+    const most = stage.rules.most;
+    if (!most) throw Error("Funding requires the stage's complete finite budget");
+    next["reservation-stage"] = { ...stage, rules: { ...stage.rules,
+      most: { ...most, effects: 16 }, derives: (given, operation, selected): OutcomeGives => {
+        const result = stage.rules.derives!(given, operation, selected), update = releasedUpdate(given);
+        return update ? { ...result, effects: [...result.effects, { effect: "value", item: update.publication.id, slot: "evidenceReady", value: true }] } : result;
+      } } };
+  }
   const judge = next["judge"];
-  if (judge?.place === "outcome" && judge.rules.derives) next["judge"] = { ...judge, rules: { ...judge.rules, most: { ...judge.rules.most, effects: 16, requests: 5 },
-    derives: (given, operation, selected) => {
-      const result = judge.rules.derives!(given, operation, selected);
-      const captures = result.effects.filter(effect => effect.effect === "value" && effect.slot === "passes");
-      if (captures.length !== 1 || captures[0]!.effect !== "value") return result;
-      const effect = captures[0]!, publication = given.state.item(effect.item), snapshot = certifiedPublicationStateWireV17(effect.value, given.resolved.bounds);
-      if (!publication || !snapshot) return result;
-      return { ...result, sends: [...result.sends, ...evidenceFundingRequestsV17(given, publication, snapshot)] };
-    } } };
+  if (judge?.place === "outcome" && judge.rules.derives) {
+    const most = judge.rules.most;
+    if (!most) throw Error("Funding requires the judge's complete finite budget");
+    next["judge"] = { ...judge, rules: { ...judge.rules, most: { ...most, effects: 16, requests: 5 },
+      derives: (given, operation, selected) => {
+        const result = judge.rules.derives!(given, operation, selected);
+        const captures = result.effects.filter(effect => effect.effect === "value" && effect.slot === "passes");
+        if (captures.length !== 1 || captures[0]!.effect !== "value") return result;
+        const effect = captures[0]!, publication = given.state.item(effect.item), snapshot = certifiedPublicationStateWireV17(effect.value, given.resolved.bounds);
+        if (!publication || !snapshot) return result;
+        return { ...result, sends: [...result.sends, ...evidenceFundingRequestsV17(given, publication, snapshot)] };
+      } } };
+  }
   const push = next["push"];
   if (push?.place === "outcome") next["push"] = { ...push, rules: { ...push.rules,
     holds: (given, operation) => {
@@ -367,7 +379,11 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
     } } };
   for (const name of ["receipt", "read"]) {
     const rule = next[name];
-    if (rule?.place === "outcome" && rule.rules.derives) next[name] = { ...rule, rules: { ...rule.rules, most: { ...rule.rules.most, requests: (rule.rules.most?.requests ?? 0) + 1 }, derives: (given, operation, selected) => appendWrittenPlan(given, rule.rules.derives!(given, operation, selected)) } };
+    if (rule?.place === "outcome" && rule.rules.derives) {
+      const most = rule.rules.most;
+      if (!most) throw Error("Funding requires the receipt/read's complete finite budget");
+      next[name] = { ...rule, rules: { ...rule.rules, most: { ...most, requests: most.requests + 1 }, derives: (given, operation, selected) => appendWrittenPlan(given, rule.rules.derives!(given, operation, selected)) } };
+    }
   }
   next["evidence-published-checks-v17"] = { place: "outcome", rules: { selects: false, read: false, retries: () => false,
     most: { effects: 2, requests: 1, operations: 1 }, origin: (_given, operation) => Number(operation.id.split(":")[0]), unknown: () => ({}),

@@ -50,7 +50,7 @@ export function changeEvidence4(issueDigest: Digest): DeclaredDefinition {
   const automatic = (audit: boolean): ReceiveType => ({
     message: audit ? "admit-audit-check" : "admit-published-check", class: "tell", from: { kind: "destination", under: "platform:destination" }, opens: "job",
     also: { proposal: { item: "proposal", one: true }, manifest: { item: "manifest", by: "manifest" }, ...(audit ? { memberJob: { item: "job" as const, by: "forJob" } } : {}) },
-    fields: { ...bindingFields, operation: { type: "fact", kind: ["merge"], under: "change", required: true }, manifest: { ...manifestFact, required: true }, name: { type: "text", max: 128, required: true }, configuration: { type: "digest", required: true },
+    fields: { ...bindingFields, operation: { type: "fact", kind: ["merge"], under: "change", required: true }, manifest: { type: "fact", kind: ["propose-manifest"], under: "change", required: true }, name: { type: "text", max: 128, required: true }, configuration: { type: "digest", required: true },
       tree: { type: "tree", required: true }, commit: { type: "commit", required: true }, base: { type: "commit", required: true }, ...(audit ? { auditOf: { ...jobFact("change"), required: true }, forJob: { ...jobFact("change"), required: true } } : {}) },
     guards: [
       { equals: { a: { sender: true }, b: { slot: "destination", of: "also.proposal" } }, reason: "not-the-destination" },
@@ -67,7 +67,7 @@ export function changeEvidence4(issueDigest: Digest): DeclaredDefinition {
       { ref: { slot: "destination", from: { sender: true } } }, { ref: { slot: "opening", from: { source: "ref" } } },
       ...["name", "configuration", "tree", "commit", "base", "binding", "bindingDigest"].map(slot => ({ value: { slot, from: { field: slot } } } as EffectForm)),
       { value: { slot: "stage", from: { const: audit ? "landing" : "published" } } }, { value: { slot: "deadline", from: { time: { plusSeconds: 1800 } } } },
-      ...(audit ? [{ ref: { slot: "auditOf", from: { field: "auditOf" } } }, { ref: { slot: "forJob", from: { item: "also.memberJob" } } }] as EffectForm[] : []),
+      ...(audit ? [{ ref: { slot: "auditOf", from: { field: "auditOf" } } }, { ref: { slot: "forJob", from: { field: "forJob" } } }] as EffectForm[] : []),
     ], sends: [{ tell: { to: { slot: "destination", of: "also.proposal" }, message: "check-fence", fields: {
       operation: { slot: "operation", of: "also.manifest" }, manifest: { item: "also.manifest" }, job: "self", name: { field: "name" }, ...(audit ? { forJob: { item: "also.memberJob" as const } } : {}), binding: { field: "binding" }, bindingDigest: { field: "bindingDigest" },
     }, result: { applied: [], refused: [{ state: "fence-refused" }], undelivered: [{ value: { slot: "reason", from: { const: "delivery-unknown" } }, if: [{ state: ["queued"] }] }] } } }], attention: [],

@@ -99,9 +99,10 @@ test("Git keeps its lower-layer dependencies; Replay names it only at its exact 
   assert.equal(replay.devDependencies?.["@generalbusiness/dap-git"], replay.version);
 });
 
-// One pure proof parser edge; platform cannot use a provider or a Git barrel.
+// Exact pure proof parser edges; platform cannot use a provider or a Git barrel.
 test("rules tree proofs use only the exact pure Git parser boundary", () => {
-  const allowed = (file, specifier) => file === "packages/platform/src/rules-policy-tree.ts" && specifier === "@generalbusiness/dap-git/tree-proof";
+  const allowed = (file, specifier) => ["packages/platform/src/rules-policy-tree.ts", "packages/platform/src/destination-evidence-v17.ts"].includes(file)
+    && specifier === "@generalbusiness/dap-git/tree-proof";
   for (const file of files.filter(f => /^packages\/platform\/src\/.*\.ts$/.test(f))) {
     for (const { value } of moduleSpecifierSpans(text(file))) if (/dap-git|(?:^|\/)git\//.test(value)) assert.equal(allowed(file, value), true, `${file}: ${value}`);
   }
@@ -113,7 +114,7 @@ test("rules tree proofs use only the exact pure Git parser boundary", () => {
   ]);
   for (const [file, expected] of finite) assert.deepEqual([...new Set(moduleSpecifierSpans(text(file)).map(r => r.value))].sort(), [...expected].sort(), file);
   assert.equal(JSON.parse(text("packages/git/package.json")).exports["./tree-proof"], "./src/tree-proof.ts");
-  assert.deepEqual(text("packages/git/src/tree-proof.ts").match(/export \{[^}]+\}/g), ["export { idOf, parseCommit, parseTree }", "export { GitRefusal }"]);
+  assert.deepEqual(text("packages/git/src/tree-proof.ts").match(/export \{[^}]+\}/g), ["export { idOf, parseCommit, parseTree }", "export { GitRefusal, isObjectId }"]);
 });
 
 const nodeReplayInputs = new Set(["packages/replay/src/git.ts", "packages/replay/src/bin.ts"]);
