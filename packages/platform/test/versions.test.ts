@@ -25,7 +25,7 @@ const DIGESTS: Readonly<Record<string, string>> = {
   "platform:register@22": "sha256:af4c384cebbf4e9b9526bf939dee17b7faa370dc3026b54ae7a7b57c2a254091",
   "platform:directory@21": "sha256:439af34d88a076581b51cb833eea276799f3fa7d9d75e5e1cf274792e1c28eb3",
   "platform:rules@13": "sha256:d7baafb3501bdc1682f7c671fb43ad0fd82aab2b541d9b01f7893914ab73d5cd",
-  "platform:destination@17": "sha256:71de60215c858c9f21b14a7055f78573e8759ec1dc97f609bd180c744a41c9dd",
+  "platform:destination@17": "sha256:f8164835e31e5f7c91ffabe720df2f2c62f8ee36470956c9ed09d930b103d049",
   // G1 canonical generation; every historical literal below stays exact.
   "platform:register@21": "sha256:fbdc6072c321e201a966a2179a72db4519597dd262c81bd83f366b183e66125c",
   "platform:directory@20": "sha256:061289c868b371dfe97b692e95627e78afa550db1b83a2b664a40dfaa3fcf8b1",
