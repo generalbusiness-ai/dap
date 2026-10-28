@@ -1,0 +1,202 @@
+# Evidence rules: preparation before source changes
+
+Status: preparation for review. This note records the before-source
+choices required by the first-slice request. It claims no implementation,
+passing check, landing, deployment or completion of that request.
+
+Base: Main `0881c1bca1df31a9fdb4ae72947cbbedf1b3ec51`.
+Branch: `request/evidence-rules-20261028`.
+
+Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a53e146477354f07cf6ff657e93b36d411d846c8
+Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a891555c470d4693e466b9c5240b5ed35a95b388
+Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ed8187819e92ad401315e78a5a7f0a6c6073509f
+
+The full request and ruling were read through gitseq as builder. The
+ruling remains effective. Its stale metadata follows retirement of the
+answered question, not withdrawal of the decision. The workroom permits
+stale bases without an override. No renewed ruling is required.
+
+J3's code is separately committed and under validation. It is not yet
+landed or accepted. Building this slice with or after J3 remains authorized.
+The earlier scratch proposal memo remains unchanged. This note makes no
+native or checker-service source change.
+
+## Rules owns the service mark
+
+The successor Rules singleton holds at most one `roomService` pair:
+`{checker member, key}`. Only an active admin publishes it through the
+native `publish` path. New genesis is unmarked. Explicit null withdraws
+it. Publication observes that the named member is active and has the
+checker role. An inactive member or another role is refused.
+
+Publication does not prove the key atomically. Admission and result
+judgment each prove the exact key's current eligibility through the
+existing native observations. No extra native owner or marking-time
+exchange is needed. Local settings or the checker role alone cannot mark
+a service key.
+
+The generation is the native-selected last-mark-change position, scoped
+to the exact Rules reference, including incarnation. Callers do not choose
+it. An unchanged pair does not rotate because another policy field changed.
+Native effects keep a local position or reference, never the hash of the
+entry being written. If an implementation uses a full fact later, its
+entry and hash come from actual recorded bytes. A later head's hash cannot
+supply the hash of an earlier mark position.
+
+The authoritative Rules observation supplies the mark, generation and
+observed head under the successor's exact definition. Keep the existing
+observation identity, clock and replay checks. Do not add a foreign-history
+proof, history scan or caller anchor beyond this observed native boundary.
+
+The marked key is exactly `CheckerService`'s external `ResultSigner.key`.
+That signer signs the result after J3's production Runner returns eligible
+execution evidence. It stays outside the job and container. An image,
+bridge nonce, URL, process setting or runner assertion cannot replace the
+Rules mark. This preparation chooses no new service key.
+
+## Rotation invalidates the observed in-flight fence
+
+Destination admission freezes the marked member, key and generation with
+the exact job, tree, configuration, source and stage. Result judgment
+observes the current mark and exact key eligibility again.
+
+After Destination observes another generation, neither the old key nor
+the replacement key completes that frozen job. A new job must be explicitly
+requested. There is no automatic restart, new signature, reclassification
+or reuse to repair the old fence. Returning to a former member/key pair
+does not erase the intervening generation change.
+
+This is bounded native observation order, not immediate global revocation
+at the Rules commit. There is no Destination-local fence or handshake.
+Old accepted results remain historical facts. Reuse applies today's full
+eligibility rule separately; past admission never supplies current signer
+authority. Keep the documented reuse key rather than silently adding a
+new identity field to it.
+
+A refusal retains `wrong-source` and records the frozen and observed
+scoped generations in typed data. The lane's readers see that refusal.
+An unavailable observation is not an invented generation or proof of a
+rotation.
+
+The lane may retain an ordinarily member-authorized result. Destination's
+recorded refusal to count it is the commissioned enforcement. No actor-key
+DSL operand, new generic guard or extra exchange is commissioned for that
+choice. Identify the signer from the actual signed result entry and its
+admitted fact, not a caller-supplied key or diagnostic prose.
+
+## Successors retain historical meaning
+
+Add new versions of Rules data, the change lane and Destination. Preserve
+all shipped native bytes and lane pins. A check without `source` keeps
+`member` meaning. Missing `stage` remains `landing`; absent reuse and hold
+choices keep the existing non-reuse and non-holding behavior. The first
+slice supports `room` and `member`, with audit `every: 1` only.
+
+The reuse key is room, tree, check name, configuration, source and stage.
+An eligible result decided a real job admitted under its then-current
+rules. Its signer must still meet today's source, checker, role and key
+checks, using the required fresh authority observations. One predicate compares eligible passes and failures.
+Disagreement permanently disables reuse for that key, while a fresh job
+can still land. Record the earlier job actually counted. Use a bounded
+keyed index, not a room-history walk.
+
+A `work` result never meets an extent's landing checks. A `landing` job
+uses the reservation tree. A `published` job uses the confirmed published
+commit and cannot undo that publication. Audit jobs always run fresh,
+including after cancellation and a same-tree retry. Refuse mismatched
+audit configuration or stage, reused audit targets, `every != 1`, and
+`reuse: true` on published checks.
+
+Destination owns holds. A hold names the check, source, stage,
+configuration, rules generation and extent, with the failed job and
+published commit. Its failure and hold update are atomic with admissions.
+A still-running published check does not block a landing. Order by the
+recorded publication sequence and admitted job order, never hashes or
+notice arrival. Duplicate notices are idempotent.
+
+Only a current eligible pass on the exact hold key, for the same or a later
+publication, clears a hold. An earlier pass cannot clear a later hold.
+A timeout, error, unknown result or unavailable observation is not a pass;
+with `holds: true`, it sets a hold with its reason. Closing an intent clears
+nothing. Changed configuration or rules generation requires an authorized
+transition naming the old hold and new generation, or an override with a
+reason. Record those acts as transition or override, never as pass.
+
+Keep the native job deadline and its default unless the successor's
+bounded per-check deadline field deliberately changes it. J3's runtime
+limits are separate from the lane's native waiting deadline.
+
+## Coordinate the source shape before parallel edits
+
+| Owner | Bounded implementation scope | Existing useful boundary at Main |
+|---|---|---|
+| Rules and policy | A new successor beside `packages/platform/src/rules-scope-v12.ts` and `rules-policy-v11.ts`; admin mark, native generation, observation projection and strict policy codec. Minimal versioned types in `packages/contract/src/observation.ts` if needed. | `rules-scope.test.ts` publishes under active-checker observations and projects Rules at an exact head. `rules-policy-v11.test.ts` checks strict owned policy and extent requirements. Keep old-version assertions. |
+| Lane and checker wire | A new successor beside `apps/room/lanes/src/change3.ts`; stage jobs, frozen descriptors, audit identity and typed result/refusal data. Keep `packages/checkers/src/job.ts`, `outcome.ts`, `signing.ts` and service origin consistent with that shape. | T34 in `checks.scope.test.ts` covers authentic results and retries. `manifest.scope.test.ts` covers exact version, checker and tree. J3 adds the actual one-file Runner/CheckerService path. |
+| Destination and judgment | A new successor beside the chosen current Destination protocol; bounded result index, reuse disablement, source judgment, audit pairing, published jobs, ordered holds, transitions and overrides. New pure eligibility logic beside `reservation-v14.ts` and `reservation-v15.ts`. | `reservation-authority.test.ts` retains deciding entries and current key standing. `support-destination.ts` supplies real package rules. W5 and manifest-tree scenarios exercise native cross-scope admission. |
+| Integration and display | Catalog, cohort and lineage exports; exact native/lane generation; design disposition and visible typed refusal. Use the maintained `pin-native-declarations.mjs`, lane `pin.mjs` and `reference.mjs` at the coordinated checkpoint. | `certified-rules.scope.test.ts` covers a fresh Rules-generation fence. `wiring.scope.test.ts` supplies real Rules/Membership/Destination; `manifest-tree.scope.test.ts` supplies reservations and publication cleanup. |
+
+Future implementation waits for Root's coordinated version and shared
+job/result-shape ownership. No future pin number is chosen here. Preserve
+the current certified Rules path and its read limits; do not downgrade it
+to an older publication path.
+
+Cheap pure or Native fixtures can cover policy combinations without one
+container per field. At least one integrated case must bind the marked key
+to J3's actual production adapter and external signer. Keep stand-ins
+explicit: W5 alone has no runner; T34 uses a scripted Rules peer and does
+not prove Destination admission. A historical reservation recording is
+not a fresh service run.
+
+## Preserve all Decisions witnesses
+
+These are planned observations, not results. The first two columns retain
+all 19 witnesses in the design's Decisions section. Mark/rotation and
+transition checks strengthen those boundaries without replacing them.
+
+| No. | Required witness | Smallest useful extension |
+|---|---|---|
+| 1 | A member result cannot satisfy a room check. | W5 or J3 one-file native path: allow ordinary lane retention, then observe Destination's visible `wrong-source` with frozen/observed generations. Include mark withdrawal, wrong key and observed rotation; only an explicit fresh job proceeds. |
+| 2 | Omitted source keeps its member meaning. | Preserve existing lane/Rules cases and add one successor policy compatibility case. Old pins stay exact. |
+| 3 | Disagreeing member and fresh room audit results refuse landing. | One native reservation sequence plus the pure Destination pairing table. |
+| 4 | Audit configuration mismatch refuses publication of rules. | Successor policy/publish case beside the current strict codec cases. |
+| 5 | `every` other than one refuses in this slice. | The same bounded policy/publish case. |
+| 6 | Cancellation and same-tree retry get a fresh audit despite an earlier admitted pass. | Extend manifest-tree's actual cancellation/retry flow. Require distinct explicit audit jobs and fresh runs. |
+| 7 | An audit target cannot have reuse enabled. | The same policy case; Destination also refuses an earlier result as a fresh audit. |
+| 8 | A reused admitted pass counts only for an equal tree. | Pure eligibility table with actual job/result facts, then one native reservation sequence. |
+| 9 | Another source is ineligible for reuse. | The same eligibility predicate and table. Current signer eligibility remains required. |
+| 10 | Eligible pass/fail disagreement disables reuse for that key; a fresh run still lands. | The same bounded result index, followed by one explicit fresh native job. No history sweep or fictional deciding fact. |
+| 11 | Published checks refuse reuse. | The bounded successor policy case. |
+| 12 | Published failure opens the maintainers' intent and, with holds, blocks the next affected extent. | One native room sequence with real lane/Rules/Destination and recorded publication identity. |
+| 13 | A late earlier-publication pass does not clear a later hold. | The same native sequence; pure hold-order cases cover the selected key. |
+| 14 | Another configuration or rules generation does not clear a hold. | Exact hold-key judgment cases; a real authorized transition names the old hold and new generation and is not shown as pass. |
+| 15 | Failure/admission ordering is atomic: before refuses that admission; after affects the next. | Destination transaction/journal order with explicit gates, not sleeps. |
+| 16 | Duplicate/reordered failure notices preserve the hold. | Reuse the same admitted job/publication facts and dispatcher gates. |
+| 17 | Closing the maintainers' intent, or another intent, clears no hold. | Follow actual intent closure and read Destination's retained hold. |
+| 18 | A published timeout does not clear a hold. | Native deadline/turn plus the pure hold judgment table; no elapsed-time guess or fabricated pass. |
+| 19 | Authorized override clears as override, never as pass. | Actual Destination act, role checks and recorded release reason. |
+
+The published-failure intent exchange is new commissioned work. It needs
+actual job/publication binding, idempotence by recorded facts and native
+creation authority. It is distinct from the extra marking-time proof
+exchange that the ruling excludes. No deployment health claim follows
+from any of these checks.
+
+## Design update and remaining work
+
+The eventual implementation head must replace the open-question sentence
+at `notes/2026-10-16-evidence-rules-design.md:109-112`. It must state Rules
+ownership, admin publication, native scoped generation, member observation
+at marking, exact key eligibility at use, Destination's observed fence,
+and the J3 external signer binding. Update the matching dependency-table
+row too, so it no longer says ownership and rotation are undecided.
+
+New result-index and hold growth need explicit native bounds and capacity
+accounting before successor pins are generated. Preserve old accepted
+facts without treating them as current standing. Never reconstruct a full
+fact from partial metadata, add unsupported foreign-proof obligations, or
+use retained bytes as a replacement authority source.
+
+This document changes only preparation prose. No checks were run under the
+writing-only scope. The implementation still owes its owning checks, all
+listed witnesses, one ordinary gate before review, and independent review
+of the exact head. Deployment follows review under the owner's standing authorization.
