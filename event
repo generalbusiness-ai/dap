@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4e6351c74456f5f4e1d4f2ab57ec967e12ff0e3b","text":"Merge retired a covered predecessor; the successor is at vitest.projects.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5cafbe68f1d07d5ada5801b5754b969965bb0b33","text":"Merge retired a covered predecessor; the successor is at packages/checkers/src/container-engine.ts."}
