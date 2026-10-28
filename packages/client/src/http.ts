@@ -31,7 +31,7 @@ const HTTP_ANSWERS = { ...ANSWERS, ...OPERATIONAL_ANSWERS };
 import { TransportError, type Transport } from "./handle.ts";
 
 /** The little of `fetch` this package uses. The global `fetch` of Node, workerd and a browser satisfies it. */
-export type Fetch = (url: string, init?: { method?: string; headers?: Record<string, string>; body?: string; signal?: never }) => Promise<{ status: number; body: ByteStream | null }>;
+export type Fetch = (url: string, init?: { method?: string; headers?: Record<string, string>; body?: string; signal?: never }) => Promise<{ status: number; body: ByteStream | null; headers?: { get(name: string): string | null } }>;
 
 /**
  * The most raw bytes one reply may be: 4 MiB. Temporary. The contract bounds

@@ -114,7 +114,15 @@ test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platfor
   expect(pointer.operation === operation && !!await issuer.private(pointer.request)).toBe(true);
   loseSettle = true;
   expect((await issueInvitation(ctx, input, { mode: "check", operation, privateRequests: [...requests] })).state).toBe("unknown");
-  expect(sent.length).toBe(1); loseSettle = false;
+  const originalBeforeCheck = canonicalize(first);
+  const unknown = await command(ctx, ["invite", "--check"]);
+  expect(unknown.code).toBe(1);
+  expect(unknown.lines.join("\n")).toContain("may still take effect");
+  expect(unknown.lines.join("\n")).toContain("dap invite --check");
+  expect(unknown.lines.join("\n")).toContain("dap invite --continue");
+  expect(sent.length).toBe(1);
+  expect(canonicalize(sent[0])).toBe(originalBeforeCheck);
+  loseSettle = false;
   failPointer = "invitation";
   await expect(issueInvitation(ctx, input, { mode: "continue", operation, privateRequests: [...requests] })).rejects.toThrow("public pointer");
   const preparedInvitation = JSON.parse(new TextDecoder().decode((await issuer.private(orphanRequest!))!)).invitation.signed;
@@ -248,4 +256,27 @@ test("a retained successor preserves the effective membership declaration, inclu
   }
   expect(await attempt(MEMBERSHIP)).toBe("unknown"); // legal private successor, no automatic pointer restoration.
   expect(await attempt("platform:membership@4")).toBe("blocked");
+});
+
+// Scripted session issuance refusal: no Native session or membership route runs.
+test("kept invitation issuance reports the actual session rate window before target reads or mutation", async () => {
+  const model = new Roster(MEMBERSHIP).seated(), store = memoryStore();
+  const directory = { ...model.office.at, kind: "directory" as const };
+  await store.keep("founder", rita.secret);
+  await store.save({ v: 1, service: "https://rate.test", key: "founder", repository: { directory, membership: model.at, rules: directory.scope, destination: directory.scope }, handle: "@rita" });
+  let sessions = 0, targetReads = 0;
+  const fetch: Fetch = async url => {
+    if (new URL(url).pathname.endsWith("/sessions")) {
+      sessions++;
+      return Response.json({ ok: false, reason: "rate-limited" }, { status: 429, headers: { "retry-after": "17" } });
+    }
+    targetReads++; throw Error("A session rate limit must precede target reads or submission");
+  };
+  const outcome = await command({ store, fetch, now: () => timeMs(model.now)! }, ["invite", "@peer", "--role", "member", "--keep"]);
+  expect(outcome.code).toBe(1);
+  expect(outcome.lines.join("\n")).toContain("rate-limited");
+  expect(outcome.lines.join("\n")).toContain("17 seconds");
+  expect(outcome.lines.join("\n")).not.toContain("forbidden");
+  expect(outcome.lines.join("\n")).not.toContain("Bearer ");
+  expect([sessions, targetReads]).toEqual([1, 0]);
 });

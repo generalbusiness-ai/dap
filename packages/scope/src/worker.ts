@@ -61,7 +61,7 @@ import { health } from "./health.ts";
 import { DurableObject, RpcTarget, WorkerEntrypoint } from "cloudflare:workers";
 import { CONTROL_BODY_BYTES, HostedAgent, HostedRegistry, controlOf, hostedMcpTools, type HostedMcpSettings, type AgentPorts, type ControlAnswer, type RegistryPorts } from "@generalbusiness/dap-mcp";
 import { PROPOSED_BOUNDS, ITEM_QUERY_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
-import type { FactRef, Entry, ItemQueryRead, ItemQueryRefusal, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxId, Grant, LogPage, PlatformDefinition, Read, ReadRefusal, RetainedInput, ScopeApi, ScopeId, ScopeKind, Seed, SessionAnswer, SessionRefusal, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
+import type { FactRef, Entry, ItemQueryRead, ItemQueryRefusal, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxId, Grant, LogPage, PlatformDefinition, Read, ReadRefusal, RetainedInput, ScopeApi, ScopeId, ScopeKind, Seed, SessionRefusal, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, parseStrict, readItemQueryReply, utf8, definitionDigest, intentDigest, isPlatformDefinition, isScopeId, positionOf, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { isObject, type Item } from "@generalbusiness/dap-derive";
 import { creationKind, type Created } from "./core.ts";
@@ -70,7 +70,7 @@ import { membershipIn, namespace, sessionReferencesIn, type Binding } from "./na
 import { ScopeObject, type OutsideGiven, type Wiring } from "./object.ts";
 import type { Incident } from "./operator.ts";
 import type { Summary } from "./reads.ts";
-import { credentialInUrl, relay, sessionReaders, sessionsOf, type Opened, type Sessions, type StreamRefusal } from "./sessions.ts";
+import { credentialInUrl, relay, sessionReaders, sessionsOf, type Opened, type SessionIssueAnswer, type Sessions, type StreamRefusal } from "./sessions.ts";
 import type { OutboxItem, Sealed } from "./store.ts";
 import type { ReadCredential } from "./destination-host.ts";
 import { gitHubOutside, type GitHubBindings } from "./github-wiring.ts";
@@ -181,7 +181,7 @@ interface Remote {
   retained(reader: unknown, kind: RetainedInput["kind"], digest: Digest, domain?: string): Promise<Read<RetainedInput>>;
   queryItems(encoded: unknown, reader: unknown): Promise<NativeItemQuery>;
   applicationProjection(encoded: unknown, reader: unknown): Promise<NativeApplicationProjection>;
-  session(asked: unknown): Promise<SessionAnswer>;
+  session(asked: unknown): Promise<SessionIssueAnswer>;
   stream(reader: unknown): Promise<Opened | StreamRefusal>;
   release(id: string): Promise<void>;
   incidents(reader: unknown, cursor?: Cursor): Promise<Read<readonly Incident[]>>;
@@ -196,7 +196,7 @@ const MISSING = { ok: false, reason: "not-found" } as const;
 interface StreamExchange { body: ReadableStream<Uint8Array>; close(): Promise<void> }
 export interface Api extends ScopeApi {
   reservationSnapshot(scope: string, asked: SignedIntent): Promise<import("@generalbusiness/dap-contract").ReservationSnapshot | { refused: "reservation-stage-missing" | "reservation-stage-mismatch" } | null>;
-  session(scope: string, asked: unknown): Promise<SessionAnswer>;
+  session(scope: string, asked: unknown): Promise<SessionIssueAnswer>;
   /** The body is the reader's side of the stream (`relay`): cancelling it releases the scope's subscription at once. */
   stream(scope: string, reader: unknown): Promise<ReadableStream<Uint8Array> | StreamRefusal | typeof MISSING>;
   /** Internal route ownership, not a public HTTP operation. */
@@ -317,7 +317,7 @@ export function api(binding: Binding, address: string | null = null, creationAdm
     async outboxItem(scope: string, reader: unknown, outboxId: OutboxId): Promise<Read<OutboxItem>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.outboxItem(reader, outboxId)) ?? MISSING; },
     async log(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<LogPage>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.log(reader, cursor)) ?? MISSING; },
     async retained(scope: string, reader: unknown, kind: RetainedInput["kind"], digest: Digest, domain?: string): Promise<Read<RetainedInput>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.retained(reader, kind, digest, domain)) ?? MISSING; },
-    async session(scope: string, asked: unknown): Promise<SessionAnswer> { return (await at(scope)?.session(asked)) ?? MISSING; },
+    async session(scope: string, asked: unknown): Promise<SessionIssueAnswer> { return (await at(scope)?.session(asked)) ?? MISSING; },
     streamExchange: openStream,
     async stream(scope: string, reader: unknown) {
       const opened = await openStream(scope, reader);
@@ -472,7 +472,10 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
     if (what === "sessions") {
       // The whole body is the signed request. The answer holds a credential: it is marked so that nothing between here and the device stores it.
       const answer = await scopes.session(scope, given);
-      return new Response(JSON.stringify(answer), { status: answer.ok ? 200 : (SESSION_STATUS[answer.reason] ?? 400), headers: { "content-type": "application/json", "cache-control": "no-store" } });
+      const headers: Record<string, string> = { "content-type": "application/json", "cache-control": "no-store" };
+      if (!answer.ok && answer.reason === "rate-limited") headers["Retry-After"] = String(answer.retryAfterSeconds);
+      const body = answer.ok ? answer : { ok: false, reason: answer.reason };
+      return new Response(JSON.stringify(body), { status: answer.ok ? 200 : (SESSION_STATUS[answer.reason] ?? 400), headers });
     }
     if (what === "preparations") return answered(await scopes.prepare(scope, given["signed"] as SignedIntent, (given["grants"] ?? []) as Grant[], given["capability"] as string, given["step"] as string), 200);
     return read(await scopes.settle(scope, given["signed"] as SignedIntent));

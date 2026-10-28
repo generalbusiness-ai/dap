@@ -3,7 +3,7 @@ import { abortAllDurableObjects, runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
 import type { Digest, SessionClaims, SignedSessionRequest } from "@generalbusiness/dap-contract";
 import { b64url, canonicalBytes, canonicalize, parseStrict, unb64url, utf8 } from "@generalbusiness/dap-bytes";
-import { checkpointOf, snapshotInput, snapshotRead, stagedRefName, timeMs, validateDefinition } from "@generalbusiness/dap-derive";
+import { checkpointOf, snapshotInput, snapshotRead, stagedRefName, timeMs, timeOf, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { platform } from "@generalbusiness/dap-platform";
 import { httpSource } from "@generalbusiness/dap-replay";
@@ -188,6 +188,46 @@ describe("read sessions (authority note, sections 3.9, 3.12 row W6, 5.3 and 5.5;
       const ended = kept.from.read();
       await abortAllDurableObjects();
       expect([(await ended).done, await streams(M), await read(owner, M, "", fresh.reader())]).toEqual([true, { open: 0, released: 0 }, [200, "ok"]]);
+    } finally {
+      owner.close();
+    }
+  });
+
+  test("the session cap reports this key's earliest outstanding request deadline, rounds up on membership's clock, and admits again at the purge boundary", async () => {
+    const owner = beginSessionFixture({ secret: testSecret(), sessions: false, inspector: null });
+    onTestFinished(owner.close);
+    try {
+      const { M } = await repository();
+      const began = timeMs(net.clock.now)!;
+      const first = await signedRequest(M, rita, 90);
+      expect((await ask(owner, M, first)).ok).toBe(true);
+      // Another verified key's earlier deadline must not determine rita's wait.
+      expect((await ask(owner, M, await signedRequest(M, una, 20))).ok).toBe(true);
+      for (let n = 1; n < 64; n++) expect((await ask(owner, M, await signedRequest(M, rita, 120))).ok).toBe(true);
+      const waiting = await signedRequest(M, rita, 120);
+      const response = async (signed: SignedSessionRequest) => {
+        const reply = await real(owner, () => routed(url(M, "/sessions"), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(signed) }));
+        return { status: reply.status, retryAfter: reply.headers.get("Retry-After"), cache: reply.headers.get("cache-control"), body: await reply.json() };
+      };
+      const limited = (seconds: number) => ({ status: 429, retryAfter: String(seconds), cache: "no-store", body: { ok: false, reason: "rate-limited" } });
+      expect(await response(waiting)).toEqual(limited(90));
+      // Replay is checked before the full-key cap and has no retry metadata.
+      expect(await response(first)).toEqual({ status: 409, retryAfter: null, cache: "no-store", body: { ok: false, reason: "replayed" } });
+      net.clock.now = timeOf(began + 20_250);
+      expect(await response(waiting)).toEqual(limited(70));
+      // This read clock can return to the entry's time: the wait is measured anew, not from a wall timer or a fixed window.
+      net.clock.now = timeOf(began);
+      expect(await response(waiting)).toEqual(limited(90));
+      net.clock.now = timeOf(began + 89_500);
+      expect(await response(waiting)).toEqual(limited(1));
+      net.clock.now = timeOf(began + 90_000);
+      const admitted = await response(waiting);
+      expect([admitted.status, admitted.retryAfter, admitted.cache, (admitted.body as { ok: boolean }).ok]).toEqual([200, null, "no-store", true]);
+      // The rejected operation was not retained; after its successful admission the next earliest deadline is 120 seconds.
+      expect(await response(await signedRequest(M, rita, 120))).toEqual(limited(30));
+      expect(await response(first)).toEqual({ status: 422, retryAfter: null, cache: "no-store", body: { ok: false, reason: "expired" } });
+      net.clock.now = timeOf(began + 120_000);
+      expect((await ask(owner, M, await signedRequest(M, rita))).ok).toBe(true);
     } finally {
       owner.close();
     }

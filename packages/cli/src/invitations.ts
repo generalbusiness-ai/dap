@@ -5,10 +5,11 @@ import { UNPUBLISHED_COHORT, INVITATION_KEY_COHORT, TRUSTED_APPLICATION_COHORT, 
  * Callers serialize one Store and fence their captured Page context. */
 import type { Answer, Entry, FactRef, MemberRef, Receipt, SignedIntent, Summary, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, entryHash, factRefOf, intentDigest, isMemberRef, isScopeRef, isScopeId, isRecord, isHead, isKeyId, REFUSAL_REASONS, unb64url, timeMs, isReceipt, isSignedIntentShape, keyIdOfSecret, parseStrict, scopeIdOf, textDigest, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { agentKeyInvitationOf, encodeAgentKeyInvitation, httpTransport, isAgentKeyMembership, ScopeHandle, secretSigner, signedIntent, requestSession, signerSessionRequest, type AgentKeyMembership, type Signer } from "@generalbusiness/dap-client";
+import { agentKeyInvitationOf, encodeAgentKeyInvitation, httpTransport, isAgentKeyMembership, ScopeHandle, secretSigner, signedIntent, type AgentKeyMembership, type Signer } from "@generalbusiness/dap-client";
 import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, DEMO_REGISTER, DIRECTORY_OF, WEB_DEMO_COHORT, isHandle, platform } from "@generalbusiness/dap-platform";
 import { expectedOf, LINK, linkOf, type DefinitionShape, type Link } from "./browser-helpers.ts";
 import type { Context, Outcome } from "./commands.ts";
+import { requiredSessionOf } from "./command-support.ts";
 import type { Config, PendingInvitationIssue, Repository } from "./store.ts";
 
 export interface InvitationIssueInput { kind: "person" | "agent-key"; handle: string; hours: number; role?: "member" | "maintainer" | "admin"; controller?: MemberRef }
@@ -25,10 +26,9 @@ function check(options: InvitationIssueOptions): void { if (options.current?.() 
 const wait = async <T>(options: InvitationIssueOptions, work: () => Promise<T>): Promise<T> => { check(options); const result = await work(); check(options); return result; };
 async function readerFor(ctx: Context, service: string, membership: ScopeRef, key: Uint8Array | Signer): Promise<string> {
   const signer = key instanceof Uint8Array ? secretSigner(key) : key;
-  const signed = await signerSessionRequest(membership, signer, timeOf(Math.floor(now(ctx) / 1000) * 1000 + 60_000), b64url(crypto.getRandomValues(new Uint8Array(16))));
-  const answer = await requestSession(service, membership.scope, signed, ctx.fetch ? { fetch: ctx.fetch } : {});
-  if (!answer.ok || answer.session.claims.key !== signer.key || !sameOptional(answer.session.claims.membership, membership)) throw blocked();
-  return answer.session.reader(); // Volatile only; never stored or used as act authority.
+  const session = await requiredSessionOf(ctx, service, membership, signer);
+  if (session.claims.key !== signer.key || !sameOptional(session.claims.membership, membership)) throw blocked();
+  return session.reader(); // Private cache only; never act authority or public custody.
 }
 function handle(ctx: Context, service: string, scope: import("@generalbusiness/dap-contract").ScopeId, reader: string): ScopeHandle {
   return new ScopeHandle(httpTransport(service, ctx.fetch ? { fetch: ctx.fetch } : {}), scope, reader);
@@ -458,7 +458,7 @@ export async function invitePerson(ctx: Context, member: string | undefined, opt
     }
     if (result.state === "verified") return say(0, `Invited ${result.handle}: the invitation is recorded and verified.`, `Link for ${result.handle} only (it holds the invitation's secret): ${result.link}`);
     if (result.state === "refused") return say(1, `The invitation of ${result.handle} was refused. ${result.reason ?? ""}`.trim());
-    return say(1, `The invitation of ${result.handle} is ${result.state}. ${result.reason ?? ""} Run dap invite --check, or dap invite --continue to resume the exact original.`.replace(/\s+/g, " ").trim());
+    return say(1, `The invitation of ${result.handle} is ${result.state}. ${result.state === "unknown" ? "The act may still take effect. " : ""}${result.reason ?? ""} Run dap invite --check, or dap invite --continue to resume the exact original.`.replace(/\s+/g, " ").trim());
   };
   try {
     const config = await ctx.store.config();

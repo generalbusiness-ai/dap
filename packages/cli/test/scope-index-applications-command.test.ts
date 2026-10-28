@@ -145,6 +145,19 @@ test("application listing selects initial Signed reads after a valid session ref
   expect(JSON.parse(new TextDecoder().decode(f.published()!)).errors).toEqual([{ scope: f.rules[0], why: "forbidden" }]);
 });
 
+test("application listing reports a session limit with its actual or unknown window before any summary or Signed fallback", async () => {
+  for (const retry of ["75", undefined, "01"]) {
+    const f = fixture(1, true);
+    f.session(async () => Response.json({ ok: false, reason: "rate-limited" }, { status: 429, headers: retry === undefined ? {} : { "retry-after": retry } }));
+    const outcome = await scopeIndexCommand(f.ctx, argv, f.files);
+    expect(outcome).toEqual({ code: 1, lines: [JSON.stringify({ manifestPath, manifestDigest: digestBytes(f.saved()), error: "rate-limited", retryAfterSeconds: retry === "75" ? 75 : null })] });
+    expect(f.calls.map(call => call.method)).toEqual(["POST"]);
+    expect(f.readers).toEqual([]); expect(f.published()).toBeUndefined(); expect(f.local).not.toContain("output");
+    expect(outcome.lines.join("\n")).not.toContain(sessionToken);
+    expect(outcome.lines.join("\n")).not.toContain(sentinel);
+  }
+});
+
 // Invariant: an uncertain or malformed acquisition stops with a fixed error,
 // with no summary, retry, published report, or private request/reply text.
 test("application listing stops private session exceptions, malformed answers and redirects before summary reads", async () => {
