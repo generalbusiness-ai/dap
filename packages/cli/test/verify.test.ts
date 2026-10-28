@@ -53,7 +53,7 @@ import { written } from "../../platform/test/fixtures.ts";
 function broadRegister() {
   const R = new Register(), children: Ledger[] = [];
   for (let n = 0; n < 65; n++) {
-    written(R.create(rita, {}, `wide-${n}`));
+    expect(R.create(rita, {}, `wide-${n}`).result).toBe("write");
     const claim = R.fact(R.head.seq);
     const name = repositoryName(R.item(claim.seq).values["seed"] as Digest, 1);
     written(R.outcome(`${claim.seq}:0`, 1, "confirmed", { name, id: `TEST-repository-${n}` }));
