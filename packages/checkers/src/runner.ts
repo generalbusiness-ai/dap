@@ -106,7 +106,9 @@ export async function checkout(git: GitProgram, ask: CheckoutAsk, bounds?: ReadB
     const closure = await reader.closure(commit, new Set(read.parents));
     if (!closure.complete) return no(closure.reason);
     // 6. The work tree, and then what it is, by two commands. Both exit codes are read.
-    const out = await git.run([...at, "checkout", "-q", "--detach", "--end-of-options", commit, "--"]);
+    // The validated hexadecimal object ID cannot be an option. The final
+    // separator keeps this a revision checkout on older Git versions too.
+    const out = await git.run([...at, "checkout", "-q", "--detach", commit, "--"]);
     if (out.code !== 0 || out.timedOut) return no("checkout-failed");
     const head = await git.run([...at, "rev-parse", "--verify", "--end-of-options", "HEAD^{commit}"]);
     const written = await git.run([...at, "write-tree"]);
@@ -130,12 +132,16 @@ export interface CheckoutObjectsAsk {
   objects: readonly { id: string; type: "blob" | "tree" | "commit"; data: Uint8Array }[];
 }
 
+/** Trusted filesystem boundary for a remote container. It must require a
+ * private owned parent and exclusively create the nonexistent leaf. */
+export interface CheckoutDirectory { createPrivate(dir: string): Promise<string> }
+
 /**
  * A Node/container checkout from the reservation's verified object overlay.
  * Validation and byte copying finish before any directory or object is written.
  * The reader currently supports SHA-1 only; SHA-256 receives its named refusal.
  */
-export async function checkoutObjects(git: GitProgram, ask: CheckoutObjectsAsk, bounds: ReadBounds = READ_BOUNDS): Promise<Checkout> {
+export async function checkoutObjects(git: GitProgram, ask: CheckoutObjectsAsk, bounds: ReadBounds = READ_BOUNDS, directory?: CheckoutDirectory): Promise<Checkout> {
   const no = (reason: CheckoutReason): Checkout => ({ confirmed: false, reason });
   if (!isDirectory(ask.dir)) return no("bad-directory");
   try {
@@ -184,15 +190,20 @@ export async function checkoutObjects(git: GitProgram, ask: CheckoutObjectsAsk, 
     // Node is used only at this private checkout boundary. Resolve the parent
     // once, require ownership and privacy, and create the leaf exclusively:
     // an existing repository, file or symlink is never initialized or changed.
-    const fs = await import("node:fs/promises");
-    const path = await import("node:path");
     let dir: string;
     try {
-      const parent = await fs.realpath(path.dirname(ask.dir));
-      const stat = await fs.stat(parent);
-      if (!stat.isDirectory() || (stat.mode & 0o077) !== 0 || (process.getuid && stat.uid !== process.getuid())) return no("bad-directory");
-      dir = path.join(parent, path.basename(ask.dir));
-      await fs.mkdir(dir, { mode: 0o700 });
+      if (directory) {
+        dir = await directory.createPrivate(ask.dir);
+        if (dir !== ask.dir || !isDirectory(dir)) return no("bad-directory");
+      } else {
+        const fs = await import("node:fs/promises");
+        const path = await import("node:path");
+        const parent = await fs.realpath(path.dirname(ask.dir));
+        const stat = await fs.stat(parent);
+        if (!stat.isDirectory() || (stat.mode & 0o077) !== 0 || (process.getuid && stat.uid !== process.getuid())) return no("bad-directory");
+        dir = path.join(parent, path.basename(ask.dir));
+        await fs.mkdir(dir, { mode: 0o700 });
+      }
     } catch {
       return no("bad-directory");
     }
@@ -202,7 +213,7 @@ export async function checkoutObjects(git: GitProgram, ask: CheckoutObjectsAsk, 
       const written = await git.ok("hash-object", [...at, "hash-object", "-w", "--no-filters", "-t", stored.type, "--stdin"], stored.data);
       if (written.trim() !== id) return no("hash-mismatch");
     }
-    const out = await git.run([...at, "checkout", "-q", "--detach", "--end-of-options", commit, "--"]);
+    const out = await git.run([...at, "checkout", "-q", "--detach", commit, "--"]);
     if (out.code !== 0 || out.timedOut) return no("checkout-failed");
     const head = await git.ok("rev-parse", [...at, "rev-parse", "--verify", "--end-of-options", "HEAD^{commit}"]);
     const written = await git.ok("write-tree", [...at, "write-tree"]);

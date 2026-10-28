@@ -297,6 +297,20 @@ current-job read finished first. Other cases preserve an unresolved push
 when its retry is refused, cancel a pre-push reservation, drain its recorded
 deadline, and refuse a final membership read that exceeded its window.
 
+The explicit `scripts/test-j3-runner.mjs` command supplies the production
+Node/container runner to that file's one-file proposal scenario. It requires
+a running nerdctl engine and a pinned image containing the reviewed relay
+and the test probe. It runs an actual passing check, admits its signed result
+and publishes its exact tree, then keeps a second proposal unpublished after
+an actual failing check under the same configuration. It also checks the
+existing wrong-tree refusals. The host, scheduler, activation and configuration
+ports, and service durability remain labelled stand-ins. Separate direct jobs
+exercise read-only Git access, custody and network isolation, fresh filesystems,
+bounded termination and retained recovery. This command fails when its runtime
+is unavailable; the ordinary gate retains its stand-in runner. Neither mode
+establishes a deployed checker service. See
+[the runner guide](../packages/checkers/README.md) for the explicit command.
+
 `apps/room/lanes/test/issues.scope.test.ts` runs `dap issue`,
 `issues`, `edit --closes`, `merge --closes` and `verify --all` the same way,
 on Artifacts only, for the same reason.
