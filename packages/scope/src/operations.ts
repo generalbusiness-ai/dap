@@ -603,6 +603,8 @@ export class Operations {
     const { operation, attempt } = row;
     const key = attemptKey(operation, attempt);
     let recorded = await this.#record(input);
+    const traced = this.#store.operation(operation);
+    if (traced?.owner === "platform:destination@17" && ["judge", "evidence-admit"].includes(traced.kind)) console.info("TEST evidence offer", { kind: traced.kind, result: input.result, recorded });
     if (recorded.recorded === "refused" && input.result !== "unknown") recorded = await this.#record({ ...this.#unknown(operation, attempt), retain: undefined });
     if (recorded.recorded === "unavailable") {
       if (input.result !== "unknown") this.#held.set(key, input);
@@ -660,6 +662,7 @@ export class Operations {
     const receiver = definition.observing || rules?.publicationOrigin ? await this.#scope.receiverReads() : undefined;
     if (receiver === null) return { recorded: "unavailable" };
     if (operation && !await this.#publicationReady(operation, receiver)) {
+      if (operation.owner === "platform:destination@17" && ["judge", "evidence-admit"].includes(operation.kind)) console.info("TEST evidence publication readiness", { kind: operation.kind, ready: false });
       this.#waiting = true;
       return { recorded: "unavailable" };
     }
@@ -720,6 +723,7 @@ export class Operations {
       asks: () => [],
       judge: (view, clock) => {
         const judged = settleOutcome(view, definition, input, context(clock));
+        if (operation?.owner === "platform:destination@17" && ["judge", "evidence-admit"].includes(operation.kind)) console.info("TEST evidence settlement", { kind: operation.kind, result: judged.result, ...("reason" in judged ? { reason: judged.reason } : {}), ...("detail" in judged ? { detail: judged.detail } : {}), ...("missing" in judged ? { missing: judged.missing } : {}) });
         // Section 16.1, "In the commit": a subject of the commit's list with no observation at hand stops the commit. The scope
         // reads what is missing, and the turn starts again. The outcome stays offered.
         stop(judged.result === "unavailable" ? judged.missing : undefined);
