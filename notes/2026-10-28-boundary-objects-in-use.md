@@ -219,135 +219,220 @@ not that the others need more fold.
 
 ## 5. Interfaces that work at the boundary
 
-Seven kinds of view cover the table. Each names what the person does in
-it, what the agent does, and what crosses to the other party.
+In each of the five cases, the person had one thing on the table that
+they could work in: a table, a list, a grid, a chart, a text with
+remarks. Across the whole catalogue those things come in seven shapes.
+This section tells each shape through the case where it appeared, in
+three parts: what the person sees and does, what the agent did to make
+it, and what goes across to the other party.
 
-- **Lined-up table**: lines from one document against lines from another.
-  Cases 01, 02, 04 to 07, 11, 13, 37, 38, 49. The person marks rows. The
-  agent builds the table from the pile, cites a page or a code in every
-  cell, drafts the exact thing from the marked rows, and re-lines the
-  reply. The marked rows cross, as one exact text.
-- **List with a column per party**: rows, each with every party's own
-  status and remark. Cases 08, 15, 22, 23, 26, 27, 30. The person sets
-  their own column. The agent groups the pile into rows, re-cuts the
-  rows the way the other party reads them, and keeps both columns. Rows
-  cross by the hashes they cite, and a column never crosses.
-- **Grid**: slots by time against people or places. Cases 20, 21, 33,
-  and the grow plan. The person fills or confirms a cell. The agent reads
-  messages into cells, shows maybes apart from commitments, and shows the
-  gaps. A confirmed cell crosses. A purpose or a child's details do not.
-- **Timeline**: events from several sources on one axis, in lanes. Cases
-  10, 16, 27, 28, 36, 48. The person marks a span. The agent places
-  documents and observations by their times, keeps lanes apart, and shows
-  a span with nothing in it. An observation crosses with its author.
-- **Side by side**: one text or quote at two revisions with the
-  differences marked. Cases 04, 09, 29, 34, 39, 41, 42, and this
-  workroom. The person marks a difference. The agent computes the
-  differences and carries the earlier marks forward. The accepted
-  revision crosses, by hash.
-- **Marked image**: regions on a photo, a drawing or a page, each with a
-  remark. Cases 10, 15, 27, 29, 30. The person draws a region and says
-  what it is. The agent attaches the region to the row it belongs to.
-  The region crosses with the photo's hash and the remark's author.
-- **Brief**: a short document the person edits directly and the agent
-  reads before acting. Cases 18, 19, 24, 35, 47, and the person's page
-  of current intentions in this workroom. The person writes it. The agent
-  drafts from the pile and never overwrites the person's words. The brief
-  crosses whole, as the person's own statement.
+**A table that matches one document against another.** The patient's
+bill lists fourteen charges, each with a code and an amount. The
+insurer's statement lists the amounts the insurer allowed, for eleven of
+those charges. The agent makes one table with a row for each charge on
+the bill. In each row it puts the charge, the insurer's amount for that
+charge if it found one, and the page of each document it took the
+figures from. Three rows have no insurer's amount. One row has two
+amounts that differ. The patient reads the table as what they owe and
+marks those four rows: ask about these. The agent writes one question
+that quotes the four charges by code and page. The patient approves that
+text, and that text is what goes to the billing office. Nothing else in
+the table goes anywhere. When the office's letter comes back, the agent
+adds its explanation to each of the four rows, and the patient decides
+row by row.
 
-Three demands from Bowker and Star apply to every kind. The view shows
-what it left out: the lines that matched nothing, the span with no
-reading, the rows cut from a list. Every cell's author is retrievable:
-the document, the agent's reading of it, or the person's mark. And what a
-party may not read appears as unreadable, never as absent, so a view
-that hides a column does not claim the column is empty.
+The same shape serves the two garages' estimates (case 07), the
+pharmacies' prices (02), the lenders' offers (04), a renewal beside
+other quotes (05 and 06), a receipt beside the bank's transactions (11),
+a fee beside the clause in the terms that allows it (13), a freelancer's
+agreed scope beside their invoice (38), and a buyer's request broken into
+requirements with one answer each (49). In every one of them the person
+marks rows, the agent cites a source for every figure, and what crosses
+is one exact text that quotes the marked rows.
 
-An agent generates these on demand because no package can declare them
-in advance. The lined-up table for case 01 depends on which bill and
-which statement arrived. The grid for case 20 depends on who wrote and
-what they said. A package can keep a view once the parties want it
-every time. Until then the view is the agent's work for one party, and
-the host's job is to show it, let the person work in it, and let the
+**A list where each party has its own column.** The snag list has nine
+rows, one for each unfinished thing, and each row cites its photos. The
+owner's column says accepted as is, disputed or fixed. The contractor's
+column says fixed on 3 November, not in scope, or supplier's defect.
+Neither party writes in the other's column, and the record never
+decides between them. What makes it one list for both is that both
+columns hang on the same nine rows, and each row names the same photos
+by their hashes. The contractor's agent can sort the rows by trade, and
+the owner's by room, and it is still one list. What crosses is the rows,
+by those hashes. A column never crosses, because it is one party's own
+reading. The same shape serves each deduction beside the move-in and
+move-out photos (15), the inventory of a parent's possessions (22), the
+handover checklist (23), the bulk order's allocation (26), the claim
+bundle (27), and the assistance checklist where each household member
+decides what to disclose (08).
+
+**A grid of days against people.** The rota is a grid with a column for
+each day and a row for each person. The agent reads the siblings'
+messages into cells, and the cell keeps the difference between "could
+probably do Tuesday" and "I will take Thursday". Two cells are empty,
+and the grid shows the gap. The parent sees who is coming and chooses
+which of their own preferences the grid may show. A sibling turns a
+maybe into a commitment by saying so against the cell. The paid carer's
+hours appear as cells, and the terms behind them do not. What crosses is
+a confirmed cell, with who confirmed it. The reason a slot is wanted, a
+child's details and the carer's terms never cross. The same shape serves
+a booked room (33), the childcare gap (21), and the plan of benches in
+the grow room.
+
+**A timeline.** For the electricity bill, the agent draws one time axis.
+Each bill is a span on it, and each meter photo is a point. One span has
+no photo inside it, and the chart says so. One resident marks a week:
+nobody was home. Another marks two days: heater on. The provider's agent
+reads the same axis as billing periods and estimated readings. What
+crosses is an observation with its author and its time, and a marked
+span with its remark. The same shape serves the defect that keeps coming
+back, with its reports, visits and "job complete" in order (16), the
+incident with its alerts and observations (36), the claim and the
+accident, where the insurer, the garage and the hire car each get a lane
+of their own (27 and 28), and a prospect's history of touches (48).
+
+**Two versions of one text.** In this workroom the thing on the table is
+a note at two commits. The person reads the later version with the
+differences from the earlier one marked, and with their earlier remarks
+still attached to the paragraphs that survived. What crosses is the
+version they accept, by its hash. The remarks stay with their author. The
+same shape serves a contractor's quote at two revisions (29), a lease
+offer and its revision (09), a repayment plan and its versions (04), a
+candidate and its fix (34), a manuscript and its revision (41), a
+proposal to a community (42), and the versions of a job application
+(39).
+
+**A photo or a page with marked regions.** The owner draws around the
+unfinished skirting on a photo and writes what is wrong. The contractor's
+reply attaches to that region. In the renovation, the wall to be removed
+is marked on the drawing. In the electricity case, the dial is marked on
+the meter photo. What crosses is the region, with the photo's hash and
+the author of the remark. The same shape serves the deposit photos (15)
+and the claim photos (27).
+
+**A brief.** For the specialist appointment, the patient writes their
+questions in their own order and chooses the records to attach. The
+agent drafts the brief from the pile, and the patient's own words stay
+as the patient wrote them. The clinician reads the brief whole. The
+learner's plan (47), the rollout plan (35), the family's itinerary (24),
+and the planner's page of current intentions in this workroom are briefs
+too. The person writes it. The agent reads it before acting and never
+overwrites it. What crosses is the whole brief, as the person's own
+statement.
+
+Three rules hold for all seven shapes. They come from Bowker and Star's
+study of how classification works in practice. First, a view shows what
+it left out: the charges that matched nothing, the span with no photo,
+the rows cut from a long list. Second, every figure, row and remark can
+be traced to who made it: a document, the agent that read it, or the
+person who marked it. Third, what a party may not read appears as
+unreadable, never as absent. A list that hides a column for one reader
+does not tell that reader the column is empty.
+
+No package can declare these views in advance. The table for the bill
+depends on which bill and which statement arrived. The grid for the rota
+depends on who wrote and what they said. So an agent builds the view on
+demand, for one party, from what is on the table that day. A package can
+keep a view once the parties want it every time. Until then the host's
+job is to show the agent's view, let the person work in it, and let the
 person share it.
 
 ## 6. What the record holds so that an agent can build them
 
-Five things, and the first three already have designs.
+Take the bill table again and ask what the agent needed from the record
+to build it, and what it needs to put back. Five things, and the first
+three have designs already.
 
-- **The pile, with locators finer than a file.** Capture keeps a document
-  with its source. A cell in a view cites a page, a region of a page or a
-  photo, a row of a table, or a time range of a recording or a journal.
-  So a retained document needs locators the record can cite, and a
-  reference to a document carries one.
-- **Readings as data.** The agent's parse of a bill into fourteen rows is
-  its statement. The record keeps free text as a statement today; the
-  cases need a table, a list of groups or a timeline kept the same way,
-  attributed to the reader and resting on the document's hash. The
-  reading is never merged with the document.
-- **Marks, attributed and placed.** A remark or a choice against one row,
-  region or moment, by one party, resting on the reading and the
-  document. Two parties' marks on one row stand side by side and are
-  never reconciled.
-- **Views as data, kept and shared.** A declaration that names its
-  sources by hash and its form by kind, kept in the room and shareable,
-  as [chat-composed views](2026-10-20-chat-composed-views.md) keeps a
-  chart. The identity of the view for the parties is the set of hashes
-  it cites. Its form is each party's own, and the other party's agent can
-  re-cut it from the same hashes.
-- **Exact things.** A text or bundle pinned by hash, with the locators it
-  quotes, which an approval, a submission or an acceptance names. These
-  exist as detached texts.
+**The documents themselves.** The agent needed the bill and the
+insurer's statement, unchanged, with where each came from. The
+[capture](2026-10-21-capture-with-source.md) design keeps a document that
+way. But every figure in the table cites a page, and in other cases a
+region of a photo, a row of a spreadsheet or a minute of a recording. So
+a reference to a document needs to be able to name a place inside it,
+not only the whole.
 
-This is the pile, the reading and the mark of section 2, and nothing
-more. It is also what the workroom record already is, by count: a
-reference to a thing at a version, and free text that rests on it, make
-up nine statements in ten. The cases ask for the same two with a shape
-and a place: a reading that is a table, and a mark that is against a
-row.
+**The agent's readings, kept as data.** The table of fourteen rows is
+the agent's reading of two documents. The record keeps a reading today
+when it is prose: a note, or a free-text assert in the workroom. The
+cases need the same for a table, a grouping of photos or a timeline:
+kept as data, signed by the agent that made it, resting on the hashes of
+the documents it read, and never mixed with the documents themselves.
+
+**The person's marks, placed on a row.** The patient's "ask about these"
+is a choice and a remark against four rows of the agent's reading. Each
+mark is the patient's own. When the billing office's letter comes back,
+the agent's placing of its explanation on the rows is a reading again,
+and the patient's accept or dispute on each row is a mark again. Two
+parties' marks on one row stand side by side. The record never
+reconciles them, and a rule reads them only when the parties have asked
+for one.
+
+**The view's recipe, kept and shared.** For the owner to show the snag
+list to the contractor, the record keeps a recipe: which photos and
+which reading it draws from, named by hash, and what shape to draw. The
+[chat-composed views](2026-10-20-chat-composed-views.md) design keeps
+such a recipe for a chart. For the two parties, the identity of the list
+is the set of hashes the recipe names. Its shape is each party's own, so
+the contractor's agent re-cuts the owner's list by trade from the same
+hashes, and both know they are looking at one list.
+
+**The exact text.** The one question is a text pinned by its hash that
+quotes four rows by page and code. Approvals, submissions and
+acceptances name such texts, and the record keeps them as detached texts
+today.
+
+That is all: documents, readings, marks, recipes and exact texts. The
+workroom record is already made of the first and the second, by count. A
+reference to a thing at a version and free text resting on it are nine
+statements in ten. The cases ask for the same two things with a shape
+and a place: a reading that is a table, and a remark that sits on a row.
 
 ## 7. How structure enters later
 
-Structure enters when two parties want the same reading of a row's
-state. Then a package's item takes the row, the states become acts under
-rules, and the item cites the same hashes the view cited. A kept view
-becomes a package view by the path the composed-views note already
-gives. The other note's four acts, reference, note, ratify and close, are
-one encoding of a reading, a mark and an agreement. Whether the record
-needs them as kinds is decided after the views exist and show which
-marks a rule must read, not before.
+The owner and the contractor can work the snag list for weeks with two
+columns. Structure enters on the day they want one meaning for "fixed":
+the contractor says it, the owner confirms it, and a rule reads both.
+Then they install a package. Its item takes each row of the list, its
+states are the words the two agreed, and the item cites the same photos
+the row cited. The list does not change. It gains a third column that a
+rule keeps. A kept recipe becomes a package's view by the path the
+composed-views note already gives.
 
-So the order is: pile, reading, marks, exact thing, and only then an act
-under rules. Every case in section 4 runs that order, and the four built
-cases are the ones whose parties had already agreed on the rules before
-dap existed.
+The references note proposed four acts: reference, note, ratify and
+close. They are one way to encode a reading, a mark and an agreement.
+Whether the record needs them as kinds of their own is decided after the
+views exist, when the cases show which marks a rule must read. The order
+in every case of section 4 is the same: the documents first, then
+readings, marks and an exact text, and an act under rules last. The four
+cases that fit the fold now are the ones whose parties had agreed the
+rules before dap existed.
 
 ## 8. What this changes
 
-The [chat-composed views](2026-10-20-chat-composed-views.md) design is
-the right instrument and it is pointed at the wrong end. It composes
-five chart kinds over a package's projections, so it can show only what
-the fold already schematised. The cases need:
+dap has one way today for an agent to build an interface while it
+works: the composed views of the chat-composed views note. A chat model
+writes a small recipe, the host checks it, and the host draws a chart of
+a package's data in the person's AI app. It is the right instrument, and
+it draws the wrong things. It reads only what a package has declared, so
+it can draw the grow room's moisture and cannot draw the patient's bill.
+Five changes point it at the boundary.
 
-- **Sources beyond projections.** Captured documents, readings, marks
-  and journal rows, not only a package's items.
-- **Kinds beyond charts.** The seven kinds of section 5. A table, a list
-  with party columns, a grid, a timeline, a side-by-side, a marked image
-  and a brief.
-- **Marks that write back.** A composed view contains no acts today, and
-  a tap opens a card. A view at the boundary takes the person's mark and
-  records it, attributed and placed, without a package act.
-- **Identity by hashes.** Two parties' views of one thing are known to be
-  of one thing by the hashes they cite, so that "look at this" means the
-  same rows on both sides.
-- **The host shows the view where the person is.** In their AI app
-  through the hosted endpoint, and in the browser, which is the path the
-  views prototype and the sandbox domain already provide.
+- A recipe can read documents, readings, marks and journal rows, not
+  only a package's items.
+- The seven shapes of section 5 join its five kinds of chart.
+- The person's marks go from the view into the record, signed by the
+  person and placed on a row. Today a composed view has no acts, and a
+  tap on a mark only opens a card.
+- A recipe names its sources by hash, so that two parties' views of one
+  thing are known to be of one thing.
+- The host shows the view where the person is: in their AI app through
+  the hosted endpoint, and in the browser, by the path the views
+  prototype and the sandbox domain already give.
 
-The matter package of the file-first direction then starts from a pile
-and a view, not from item types. The [capture](2026-10-21-capture-with-source.md)
-and retained-files slices gain locators. The references note is kept as
-one possible encoding and not landed until the views show what the
-record must read.
+After that, the matter package of the file-first direction starts from
+documents and a view, not from item types. The capture and retained
+files slices gain places inside a document. The references note waits
+until the views show what the record must read.
 
 ## Source
 
