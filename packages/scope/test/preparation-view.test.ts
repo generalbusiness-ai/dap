@@ -47,13 +47,18 @@ test("current exact native membership and rules callbacks agree with the complet
     const item = (id: number, type: string, state: string): Item => ({ ...sample, id, type, state, refs: { membership, rules }, values: { membership: membership.scope, rules: rules.scope } });
     store.putItem(item(10, "repository", "open")); store.putItem(item(20, "rules", "current")); store.putItem(item(30, "branch", "ready"));
     store.putObserved({ of: membership, subject: "member", seq: 0 }); store.putObserved({ of: rules, subject: "rules", seq: 0 });
-    const results: { named: string; equal: boolean; available: boolean }[] = [];
+    const results: { named: string; reader: string; equal: boolean; available: boolean }[] = [];
     for (const [named, code] of Object.entries(VERSIONS)) {
-      if (!code.membership && !code.rulesScope) continue;
-      const budget = new PreparationBudget(), snapshot = preparationScope(sql, budget);
-      if (snapshot.kind !== "scope") return expect.fail("native snapshot unavailable");
-      const view = preparationView(sql, snapshot.scope, budget);
-      results.push({ named, equal: canonicalize([code.membership?.(view) ?? null, code.rulesScope?.(view) ?? null]) === canonicalize([code.membership?.(store) ?? null, code.rulesScope?.(store) ?? null]), available: budget.available });
+      // Each native callback is a separate bounded operation, rather than
+      // two uncached callback reads sharing one preparation allowance.
+      for (const reader of ["membership", "rulesScope"] as const) {
+        const read = code[reader];
+        if (!read) continue;
+        const budget = new PreparationBudget(), snapshot = preparationScope(sql, budget);
+        if (snapshot.kind !== "scope") return expect.fail("native snapshot unavailable");
+        const view = preparationView(sql, snapshot.scope, budget);
+        results.push({ named, reader, equal: canonicalize(read(view)) === canonicalize(read(store)), available: budget.available });
+      }
     }
     return results;
   });

@@ -56,7 +56,7 @@ test.each([{ name: "application", cohort: APPLICATION_COHORT }, { name: "applica
     now: () => { lifetime.active(); return timeMs(soon(0))!; } };
   const run = (...argv: string[]) => lifetime.wait(() => command(context, argv));
   if (name === "application") {
-    const planned = await run("install", "--plan", SERVICE, "--cohort", name, "--host", "git.example", "--namespace", "application");
+    const planned = await run("install", "--plan", SERVICE, "--cohort", name, "--host", "github.com", "--namespace", "application");
     expect(planned.code, planned.lines.join("\n")).toBe(0);
   } else {
     await lifetime.wait(() => retainHistoricalInstallPlan(context, SERVICE, cohort.register, { host: "git.example", namespace: "application" }));

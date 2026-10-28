@@ -25,7 +25,7 @@ test("stale session cleanup and one completed lease cannot expose a new owner's 
   const choices: SessionReadChoice[] = [];
   try {
     const store = memoryStore();
-    const installed = await command({ store, fetch: routed as never, now: () => timeMs(net.clock.now)! }, ["install", "https://scopes.test", "--host", "git.example", "--namespace", "session-owner"]);
+    const installed = await command({ store, fetch: routed as never, now: () => timeMs(net.clock.now)! }, ["install", "https://scopes.test", "--host", "github.com", "--namespace", "session-owner"]);
     expect(installed.code).toBe(0);
     const register = (await store.config())!.register!;
     gate.release(); await lateCleanup;

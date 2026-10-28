@@ -159,7 +159,7 @@ function shots(stage: Stage): Shot[] {
       typed: () => ["dap", "install", "--plan", stage.service, "--host", stage.host, "--namespace", stage.namespace],
       expect: { code: 0, lines: () => [
         `Planned: register <register>, under <registerDefinition>, on host ${stage.host}, namespace ${stage.namespace}. The seed's time is <until>.`,
-        "Set registerScope to {register} in the Worker's host setting, then run dap install --planned before {until}.",
+        "Set REGISTER_SCOPE to {register} in the Worker's settings, then run dap install --planned before {until}.",
       ] },
       after: (v, s) => s.pin(v["register"]!),
     },
