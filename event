@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7283d674dbcc033b9a85f33fa1fcdbaca950c852","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-28-j3-runner.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:766f2179a7ad887ada0f4928d7183ef3a4cfcd52","text":"Merge retired a covered predecessor; the successor is at packages/checkers/src/service.ts."}
