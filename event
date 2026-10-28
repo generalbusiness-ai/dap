@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d009cc31c8727680a31eb02726f539d29c5994ed","text":"Replaced by the review request for exact head 8759bbf492061a66013eec1ab3354a6ef1edc984; any review promised on this request is released, and a verdict filed against it would bind to nothing."}
+{"kind":"promise","text":"Review the boundary-objects design note at exact head 8759bbf492061a66013eec1ab3354a6ef1edc984."}
