@@ -180,8 +180,7 @@ function makeConnection(ctx: Context, config: Config, signer: Signer): Connectio
       throw error;
     }
     if (selected === held) selected = undefined;
-    const next = await load(true);
-    if (!next) stopCommand(failed("No renewed read session was issued."));
+    const next = await load(true) ?? stopCommand(failed("No renewed read session was issued."));
     // Exactly one retry; even another forbidden result is returned as-is.
     const retried = await perform(next.session.reader());
     if (retried.ok) used.add(next);

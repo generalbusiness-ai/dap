@@ -1,7 +1,7 @@
 /** Room creation and exact retained claim recovery, shared with the browser. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { readFields } from "@generalbusiness/dap-derive";
-import type { Digest, Entry, FactRef, Item, KeyId, PlatformDefinition, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
+import type { ActType, Digest, Entry, FactRef, Item, KeyId, PlatformDefinition, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, intentDigest, isDigest, isFactRef, isReceipt, isSignedIntentShape, textDigest, verifySignedIntent, isIncarnation, isScopeId, parseStrict, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, TransportError, creationOffer, isCreationOffer, isCurrentCreationOffer, signedIntent, signedReads, type CreationOffer } from "@generalbusiness/dap-client";
 import { DIRECTORY_OF, SIBLINGS_OF, platform } from "@generalbusiness/dap-platform";
@@ -29,8 +29,9 @@ function retainedRegisterSelector(config: Config, register: ScopeRef, key: KeyId
     const intent = plan.founding.intent, definition = platform(plan.definition);
     if (!definition || definition.data.name !== "platform:register" || intent.actor !== key || intent.kind !== "install" || intent.to !== null || intent.on !== null
       || Object.keys(intent.expected).length !== 0 || intent.fields["policy"] !== "open") return null;
-    // Validate the exact native closed fields before using any local selector.
-    const shaped = readFields(definition.data.acts["install"]!.fields, intent.fields, PROPOSED_BOUNDS);
+    // These closed pins retain ordinary text/list/enum install fields;
+    // PlatformAct's wider type also allows marks, which these fields omit.
+    const shaped = readFields(definition.data.acts["install"]!.fields as ActType["fields"], intent.fields, PROPOSED_BOUNDS);
     if (!shaped.ok || canonicalize(shaped.fields) !== canonicalize(intent.fields)) return null;
     if (plan.definition === "platform:register@21" && intent.fields["host"] === "none" && intent.fields["namespace"] !== "") return null;
     const seed: Seed = { v: 1, kind: "register", definition: plan.definition, creator: null, cause: intentDigest(intent), ordinal: 0 };
