@@ -1,12 +1,12 @@
 # Boundary objects in use: what the cases pass between parties
 
-Status: draft for review, 28 October 2026, against main `a78e0981`.
-Nothing here is built, and this note changes no landed document. It
-reconsiders [references, notes and ratifications](2026-10-27-pointing-and-claims.md)
-from the other end. That note started from acts the record could define.
-This one starts from what the cases pass between people and agents, and
-asks what interface works there, before asking what the record should
-hold. It defines no act.
+Status: current. A proposal to the planner, 28 October 2026, against
+main `a78e0981`. Nothing here is built, and this note changes no landed
+document. It replaces an earlier draft, references, notes and
+ratifications, which was reviewed and never landed. That draft started
+from acts the record could define. This note starts from what the cases
+pass between people and agents and asks what interface works there.
+Section 9 gives the smallest mechanism that needs.
 
 ## 1. Scene
 
@@ -38,6 +38,7 @@ between parties. Section 5 names the interfaces that work at those
 boundaries. Sections 6 to 8 say what the record must hold so that an
 agent can build such an interface on demand from raw materials, how
 structure enters later, and what this changes in the current direction.
+Section 9 gives the smallest mechanism that those sections need.
 
 ## 2. Terms
 
@@ -400,14 +401,13 @@ the row cited. The list does not change. It gains a third column that a
 rule keeps. A kept recipe becomes a package's view by the path the
 composed-views note already gives.
 
-The references note proposed four acts: reference, note, ratify and
-close. They are one way to encode a reading, a mark and an agreement.
-Whether the record needs them as kinds of their own is decided after the
-views exist, when the cases show which marks a rule must read. The order
-in every case of section 4 is the same: the documents first, then
-readings, marks and an exact text, and an act under rules last. The four
-cases that fit the fold now are the ones whose parties had agreed the
-rules before dap existed.
+A reading, a mark and a ratification are the three things that a rule
+or a projection reads in every case above, and section 9 gives them as
+three acts. Nothing else gets a kind of its own until a case shows a
+rule that must read it. The order in every case of section 4 is the
+same: the documents first, then readings, marks and an exact text, and
+an act under rules last. The four cases that fit the fold now are the
+ones whose parties had agreed the rules before dap existed.
 
 ## 8. What this changes
 
@@ -433,17 +433,134 @@ Five changes point it at the boundary.
 
 After that, the matter package of the file-first direction starts from
 documents and a view, not from item types. The capture and retained
-files slices gain places inside a document. The references note waits
-until the views show what the record must read.
+files slices gain places inside a document. Section 9 gives the smallest
+mechanism that these five changes need.
+
+## 9. Minimal mechanism
+
+This section gives the smallest set of mechanical parts that sections 5
+to 8 need. It replaces the earlier draft's four acts and per-member
+presentations with one value shape, three acts and one rule.
+
+**A place inside a document.** A reference to a retained document is its
+digest. A locator is that digest with a place: a page number, a region
+of a page or a photo as four integers, a row number of a table, a time
+range of a recording in milliseconds, or an entry range of a journal as
+`{ scope, from, to }`. A locator is a value, not an act. It appears
+wherever a reference appears: in a note's `about`, in a recipe's
+sources, and in an exact text's quotations. The capture and retained
+files designs gain the locator and nothing else.
+
+**Three acts in every room.** A native definition, `platform:commons@1`,
+pinned in every creation cohort beside the directory, membership, rules
+and destination definitions, gives every room three comment acts. They
+have no guards and no effects: the entry is the fact. One grant,
+`commons.write`, is given to every member role when the room is created,
+and the room's membership can narrow it later. Lists hold at most 16.
+
+| Act | Fields | What it is |
+|---|---|---|
+| `note` | `text`: detached, at most 64 KiB, prose or data. `about`: a list of locators, of facts of kind `note`, `ratify` or `close` under the commons, and of entries of any other definition. `replaces`: a `note` fact, optional. | A reading, when the text is data and `about` names the documents read. A mark, when `about` names one row or region of a reading and the text is short. A brief, when it replaces the signer's earlier note. A re-cut, when it replaces a reading and names the same locators. |
+| `ratify` | `of`: a `note` fact. `text`: optional, at most 1,024 bytes. | One party's signature on another party's words. It is the only act that makes a note bind its signer. |
+| `close` | `about`: as on `note`. `outcome`: text, at most 64 bytes. `text`: detached, optional. | One party's statement that its own part of a matter is closed, in its own word. It ends no item. |
+
+The commons gains no kinds and holds no enumerations. A reading that is
+a table is still a note, and an outcome is still the party's word. The
+commons verifies no locator and merges nothing. A reference needs no act
+of its own: the retained document is the reference, and the locator says
+where in it.
+
+**How a package binds a party.** A package that takes a row from a view
+declares a connection to the commons as an `outside` endpoint, in the
+form of the [application packages](2026-10-18-application-packages-and-builder-room.md)
+note, and any of its acts can carry `about`, so that an item cites the
+hashes the row cited. A party slot in its item types carries a `consent`
+rule with one of three values. `signer`, the default: only the act's
+signer enters the slot. `ratified`: a member enters the slot only on
+their own ratification of the terms. The act presents a `note` fact as
+`terms` and a `ratify` fact as `consent`, and the validator proves
+guards that the ratification is of that note, that its signer is the
+member written, and that the note's text digest equals the act's own
+`terms` field. `declared`: the package writes the slot without the
+member's signature, and the install screen lists every such slot with
+the acts that write it. A slot with no `consent` and an effect that
+writes it is refused `consent-unstated`. A presented ratification is
+used once, as the certified-rules hardening uses a certificate once, and
+a second presentation is refused `consent-consumed`. Reading a presented
+entry's signer needs one new part in the contract, `signer`, beside
+`kind`, `intent` and `time`.
+
+**A recipe for a view.** The composed-views design keeps a chart's
+declaration as a `view` item in the Rules scope, with `keep-view`,
+`share-view` and `drop-view`. The same item keeps the recipes of section
+5. A recipe's sources are locators and `note` facts named by hash, as
+well as a package's projections, and its kind is one of `table`, `list`,
+`grid`, `timeline`, `compare`, `image` or `brief`. The host draws it in
+the person's AI app and in the browser. A mark made in a view is a
+`note` act placed by locator, which the host's server signs as it signs
+any act from a view. Two parties' recipes that name the same hashes are
+recipes for one thing, and the host says so.
+
+**Item ends and party closings.** An item's final state ends the item
+and never a party's part of the matter. A package does not declare a
+final state whose description says that the matter is closed. A
+projection that shows a matter as closed reads the parties' `close`
+acts, and a closing ends no item.
+
+**Witnesses.** The host runs the first two with no package installed.
+`dap check` runs all four for a package that connects to the commons.
+
+| Witness | Scenario | Passes when |
+|---|---|---|
+| W1 | **The bill table.** A member's agent retains two documents and writes a `note` whose text is a table and whose `about` names pages of both. The member writes four marks against rows of it. The agent writes an exact text that quotes four locators. | Every act is recorded with its signer. A projection of either document lists the reading, the marks and the exact text, each with its author, and nothing of the member's is attributed to the agent. |
+| W2 | **One list, two recipes.** Member A keeps a recipe of kind `list` over nine notes that cite photos. Member B keeps a recipe over the same hashes, sorted differently. A and B each write a mark on row six. | Both recipes mount and the host names them as recipes for one thing. Row six shows two marks with two authors, and neither replaces the other. |
+| W3 | **Consent before binding.** A package with a `ratified` slot is installed. B signs its act five times: with no ratification, with B's own ratification of the terms, with A's ratification of another note, with A's ratification of the terms, and again with that same ratification. | The first three are refused with the reasons the guards name. The fourth takes effect and its item cites the row's hashes. The fifth is refused `consent-consumed`. |
+| W4 | **Close without agreement.** C's package item ends `decided`. A writes `close` with outcome `disputed` about it. B writes `close` with outcome `done`. | All three stand. A projection shows the matter closed for A and B in their own words and C's item ended, and none of the three changed another. |
+
+**What changes where.** The slices change these with their code. This
+head changes nothing.
+
+| Where | Today | After |
+|---|---|---|
+| `packages/contract/src/definition.ts` | No locator value. `EntryPart` has no signer. `ItemType.parties` is `SlotRule & { list, max, author }`. | A `locator` value. `EntryPart` gains `"signer"`. Party slots gain `consent?: "signer" \| "ratified" \| "declared"`. `PlatformDefinition` gains `commons`. |
+| [kernel page](../docs/kernel.md), K1, and each Worker's `PLATFORM_CREATION_PINS` | 73 pinned versions. | 74, with `platform:commons@1` in every creation cohort. |
+| [capture](2026-10-21-capture-with-source.md) and retained files | A reference is a digest and a source. | A reference can carry a locator. |
+| [chat-composed views](2026-10-20-chat-composed-views.md) | Five chart kinds over a package's projections. No acts in a view. | Seven more kinds. Sources by hash. A mark from a view is a `note`. |
+| The host's generic interface and sessions | Shows a room's items. | Shows notes, marks, closings and recipes, in the browser and over MCP. |
+| [write an application](../docs/write-an-application.md) and [roadmap](../docs/roadmap.md) | Declare the item types first. No roadmap row. | Cite locators first, declare `consent` on each party slot, final states end items. One roadmap row. |
+| [use cases](../docs/use-cases.md), "Pointing at things, and claims of agreement" and "Three kinds of statement" | "Pointing" and "a claim of agreement" as a signed act by several. | A reading, a mark and a ratification, with a link to this note. |
+
+**Slices.** Each is a request to the builder, in this order. None is
+filed by this note.
+
+- **BO1. Locators and the commons.** The locator value, the three acts,
+  `platform:commons@1` pinned in the three Workers' creation cohorts and
+  shown by the generic interface. Witness W1.
+- **BO2. Recipes over hashes.** The `view` item with document and note
+  sources, the seven kinds, and marks that write back. Witness W2. After
+  declared views reach the generic server and the hosted endpoint.
+- **BO3. Consent on party slots.** The rule, the `signer` part, the
+  validator's checks, consumption, the install screen's list of
+  `declared` slots, and the first `ratified` slot in a package, the snag
+  list. Witness W3.
+- **BO4. Closings and the matter projection.** Closings in the room's
+  views, the matter projection, and the four witnesses in `dap check`.
+  Witness W4, and the renovation exit test with the matter package of
+  the file-first direction.
 
 ## Source
 
 Written from `docs/use-cases.md`, `docs/roadmap.md` and the
 chat-composed views, capture, retained files and self-contained
-applications notes at main `a78e0981`. The workroom counts are the
-script count of 28 October 2026 given in the references note. The
-observed case is this session's work on that note. The walks in section
-3 are readings of the catalogue cards, and no case was built or run.
+applications and application packages notes, and from
+`packages/contract/src/definition.ts`, at main `a78e0981`. The workroom
+counts are a script count over `gs status -json` of the artroom
+workroom on 28 October 2026, at frontier depth 81838: 34,549 artifacts
+and 7,877 asserts among 49,090 statements. The observed case is this
+session's work on the earlier draft. The walks in section 3 are readings
+of the catalogue cards, and no case was built or run. The commons, the
+consent rule and the witnesses are cut down from the earlier draft,
+which this note replaces.
 Boundary objects are Star and Griesemer's (1989). Weakly and strongly
 structured, standards against boundary objects, what a view must show
 it left out and whose voice it keeps are Bowker and Star's, Sorting
