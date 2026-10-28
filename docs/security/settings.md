@@ -24,7 +24,8 @@ No table entry authorizes a new setting or changes its parser.
 
 | Worker | Configuration and runtime entry |
 |---|---|
-| `artroom-scope` | `apps/room/wrangler.jsonc` → `apps/room/worker.ts`; local `apps/room/celld/wrangler.json` → its two-export `worker.ts` shim |
+| `artroom-scope` | `apps/room/wrangler.jsonc` → `apps/room/worker.ts` |
+| `dap-celld-local` | `apps/room/celld/wrangler.json` → `apps/room/celld/worker.ts` → `apps/room/worker.ts` |
 | `dap-demo` | `apps/room/wrangler.demo.jsonc` → `apps/room/worker.ts` |
 | `dap-lending` | `apps/room/wrangler.lending.jsonc` → `apps/room/worker.ts` |
 | `dap-grow` | `apps/room/wrangler.grow.jsonc` → `apps/room/worker.grow.ts` |
@@ -37,9 +38,9 @@ HTTP dispatch. Its named Durable Object and service entrypoints share the
 same configuration closure. Grow adds its explicit archive wrapper. The
 sandbox and scheduled simulator have independent environments; neither
 inherits the room's session secret or namespaces from a TypeScript name.
-The local celld JSON configuration shares the room script identity and runtime
-closure through an exact two-export shim. The checker retains its physical entry
-and follows its imports. Other conflicting entries still fail.
+The local celld project has its own Worker name and physical entry. Its
+two-export shim imports the production room Worker. The checker follows the
+complete runtime closure and rejects conflicting names for distinct entries.
 Test Wrangler configurations and local build/CLI environment variables are
 not deployed runtime settings in this inventory.
 
