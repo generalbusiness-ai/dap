@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:31780a1a5997acbf1711b092c473e5e0f50b18b1","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/.gitignore."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:322bac8b380075e521de12093163e184222a1461","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/health.test.ts."}
