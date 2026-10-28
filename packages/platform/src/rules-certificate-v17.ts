@@ -5,6 +5,7 @@ import { isEntryOf, sentBy, type Fetched, type Operation, type Own, type RuleGiv
 import type { RulesTreeBinding } from "./rules-policy-tree.ts";
 import { EVIDENCE_RULES_COHORT } from "./evidence-cohort.ts";
 import { RULES_CERTIFICATE_KIND, readRulesCertificateBinding, type RulesCertificateProvenanceV11 } from "./rules-certificate.ts";
+import { evidenceOperationOpeningV17 } from "./evidence-opening-v17.ts";
 
 export type RulesCertificateProvenanceV17 = RulesCertificateProvenanceV11;
 const exact = (value: unknown, names: readonly string[]): value is Record<string, unknown> => isRecord(value)
@@ -20,7 +21,7 @@ export function rulesCertificateOpeningV17(own:Own,operation:Operation,at:ScopeR
     if(!sealed || operation.id!==`${opened}:0` || sealed.entry.seq!==opened || !same(sealed.entry.at,at) || entryHash(sealed.entry)!==sealed.hash
       || sealed.entry.input.type!=='act' || sealed.entry.input.signed.intent.kind!==RULES_CERTIFICATE_KIND)return null;
     const operations=sealed.entry.effects.filter(e=>e.effect==='operation');
-    if(operations.length!==1 || !operations.some(e=>e.effect==='operation' && e.k===0 && e.owner===operation.owner && e.kind===operation.kind && e.attempts===1 && e.for===operation.for))return null;
+    if(operations.length!==1 || !evidenceOperationOpeningV17(sealed.entry,operation))return null;
     const attempts=sealed.entry.effects.filter(e=>e.effect==='attempt');
     if(attempts.length!==1 || !attempts.some(e=>e.effect==='attempt' && same(e.operation,{k:0}) && e.attempt===1 && e.result==='opened' && e.selected===null))return null;
     const snapshots=sealed.entry.effects.filter(e=>e.effect==='value' && e.item===operation.for && e.slot==='rulesCertificateRequest');

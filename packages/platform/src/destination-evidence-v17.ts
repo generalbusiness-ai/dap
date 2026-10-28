@@ -20,6 +20,7 @@ import { evidenceSourceV17, judgeListEligibilityV17, judgeReservationV17, readRu
 import { RULES_EXTENTS_VALUE_V13, checkHoldsV13, checkReuseV13, checkSourceV13, checkStageV13, readRulesPolicyV13, readServiceMarkV13, type RulesCheckV13 } from "./rules-policy-v13.ts";
 import { certifiedPublicationStateV17, certifiedPublicationStateWireV17, certifiedPublicationWireV17, CERTIFIED_PUBLICATION_TEXT_BYTES_V17, certifiedReservationBudgetV17, evidenceCarryingBudgetV17, type CertifiedGenerationV17 } from "./destination-budget-v17.ts";
 import { evidenceWireV17, readEvidenceWireV17 } from "./evidence-wire-v17.ts";
+import { evidenceOperationOpeningV17 } from "./evidence-opening-v17.ts";
 import type { DestinationSuccessorV17 } from "./destination.ts";
 import { platformFloorReferences } from "./floor.ts";
 import { readRulesCertificateDeclinedV17 } from "./rules-certificate-v17.ts";
@@ -148,7 +149,7 @@ export function evidenceOwnerV17(state: StateView, slot: "reuseKey" | "holdKey" 
 export function destinationEvidencePending(state: StateView, own: Own, operation: Operation): { job: FactRef } | null {
   if (operation.owner !== "platform:destination@17" || operation.kind !== EVIDENCE_ADMIT_V17 || operation.most !== 1 || operation.for === undefined) return null;
   const id = operationRecordId(state, own, operation), item = id === null ? null : state.item(id), record = item && readEvidenceJobRecordWireV17(item.values["record"]), opened = own(Number(operation.id.split(":")[0]));
-  return item && ["evidence-request", "evidence-slot"].includes(item.type) && item.state === "pending" && record?.state === "pending" && record.holder === operation.for && opened && opened.entry.effects.some(effect => effect.effect === "operation" && effect.owner === operation.owner && effect.kind === operation.kind && effect.for === operation.for)
+  return item && ["evidence-request", "evidence-slot"].includes(item.type) && item.state === "pending" && record?.state === "pending" && record.holder === operation.for && opened && evidenceOperationOpeningV17(opened.entry, operation)
     ? { job: copy(record.job) } : null;
 }
 export function destinationEvidenceResultPending(state: StateView, own: Own, operation: Operation): { job: FactRef } | null {
@@ -157,14 +158,13 @@ export function destinationEvidenceResultPending(state: StateView, own: Own, ope
   const input = opened?.entry.input, body = input?.type === "delivery" && input.message.class === "request" ? input.message.body : null;
   const fields = isRecord(body) && ["checked", "work-checked"].includes(String(body["message"])) && isRecord(body["fields"]) ? body["fields"] : null;
   return record && record.holder === operation.for && record.admittedAt !== null && fields && same(fields["job"], record.job) && isFactRef(fields["result"])
-    && opened!.entry.effects.some(effect => effect.effect === "operation" && effect.owner === operation.owner && effect.kind === operation.kind && effect.for === operation.for)
+    && evidenceOperationOpeningV17(opened!.entry, operation)
     ? { job: copy(record.job) } : null;
 }
 export function destinationEvidenceNoticePending(state: StateView, own: Own, operation: Operation): { job: FactRef } | null {
   if (operation.owner !== "platform:destination@17" || operation.kind !== EVIDENCE_NOTICE_V17 || operation.most !== 1 || operation.for === undefined) return null;
   const id = operationRecordId(state, own, operation), item = id === null ? null : state.item(id), record = item && readEvidenceJobRecordWireV17(item.values["record"]), opened = own(Number(operation.id.split(":")[0]));
-  return record?.admittedAt !== null && record?.incident?.cause && opened?.entry.effects.some(effect => effect.effect === "operation"
-    && effect.owner === operation.owner && effect.kind === operation.kind && effect.for === operation.for) ? { job: copy(record.job) } : null;
+  return record?.admittedAt !== null && record?.incident?.cause && opened && evidenceOperationOpeningV17(opened.entry, operation) ? { job: copy(record.job) } : null;
 }
 export function destinationEvidenceProgressPending(state: StateView, own: Own, operation: Operation): { job: FactRef } | null {
   if (operation.owner !== "platform:destination@17" || operation.kind !== EVIDENCE_PROGRESS_V17 || operation.most !== 1) return null;
@@ -172,7 +172,7 @@ export function destinationEvidenceProgressPending(state: StateView, own: Own, o
   const opened = own(Number(operation.id.split(":")[0]))?.entry;
   return record && record.holder === operation.for && record.admittedAt !== null && record.binding.stage === "landing" && opened?.input.type === "outcome"
     && opened.input.owner === "platform:destination@17" && [EVIDENCE_ADMIT_V17, EVIDENCE_RESULT_V17].includes(opened.input.kind)
-    && opened.effects.some(effect => effect.effect === "operation" && effect.kind === EVIDENCE_PROGRESS_V17 && effect.owner === operation.owner && effect.for === operation.for)
+    && evidenceOperationOpeningV17(opened, operation)
     ? { job: record.job } : null;
 }
 export interface EvidenceJobAdmissionV17 {
@@ -969,7 +969,7 @@ export function evidenceNoticeOpeningV17(given: RuleGiven, item: Item, record: E
   if (marked !== undefined && marked !== null) {
     const opened = natural(marked) ? given.own(marked)?.entry : null;
     const matches = opened?.effects.filter(effect => effect.effect === "operation" && effect.owner === "platform:destination@17"
-      && effect.kind === EVIDENCE_NOTICE_V17 && effect.for === record.holder) ?? [];
+      && effect.kind === EVIDENCE_NOTICE_V17 && (effect.for === "self" ? opened?.seq : effect.for) === record.holder) ?? [];
     if (!opened || matches.length !== 1 || !opened.effects.some(effect => effect.effect === "value" && effect.item === item.id && effect.slot === "noticeOpenedAt" && effect.value === opened.seq))
       throw new RuleFault("The original incident notice is unavailable");
     return { effects: [], opens: [] };

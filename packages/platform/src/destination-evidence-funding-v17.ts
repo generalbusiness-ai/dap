@@ -10,6 +10,7 @@ import { readRulesPolicyObservationV17 } from "./reservation-v17.ts";
 import { isObjectId } from "./reservation.ts";
 import { readEvidenceWireV17, evidenceWireV17 } from "./evidence-wire-v17.ts";
 import { checkSourceV13, checkStageV13 } from "./rules-policy-v13.ts";
+import { evidenceOperationOpeningV17 } from "./evidence-opening-v17.ts";
 
 export const PUBLISHED_CHECKS_V17 = "published-checks";
 export interface FundingHooksV17 {
@@ -144,7 +145,7 @@ function planFor(state: StateView, own: Own, operation: Operation) {
     || written.entry.input.owner !== "platform:destination@17" || !["receipt", "read"].includes(written.entry.input.kind) || written.entry.input.result !== "confirmed"
     || !written.entry.effects.some(effect => effect.effect === "state" && effect.item === receipt.id && effect.state === "written")) return null;
   return item && item.type === "published-plan" && item.state === "pending" && plan && rows && rows.length === plan.total && selected && selected.item.id === operation.for
-    && opening!.entry.effects.some(effect => effect.effect === "operation" && effect.for === operation.for && effect.kind === PUBLISHED_CHECKS_V17 && effect.owner === operation.owner)
+    && evidenceOperationOpeningV17(opening!.entry, operation)
     ? { item, plan, rows, selected } : null;
 }
 /** Host can acknowledge only the actual pending plan fact, never a fabricated job. */
