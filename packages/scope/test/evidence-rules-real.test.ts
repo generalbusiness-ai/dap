@@ -320,9 +320,24 @@ test("real published holds survive newer counted passes and clear only through d
     await older.lane.stub.deliver(olderNotice); await room.pause(room.nodes);
     expect(await hardeningItems(older.lane, "incident")).toHaveLength(1);
     await unchangedActiveHold();
+    const ordinaryOpening = await room.D.stub.submit(await room.D.intent(rita, 'open-issue', { expected: await room.D.expected({ repository: 0 }),
+      fields: { definition: setup.definitions.issue, title: 'Unrelated ordinary intent', conditions: [] } }), [], { values: [setup.definitions.issueBytes] });
+    expect(ordinaryOpening, canonicalize(ordinaryOpening)).toMatchObject({ answer: 'accepted' });
+    if (ordinaryOpening.answer !== 'accepted') throw Error('Actual unrelated ordinary Issue creation required');
+    const ordinaryCreated = await room.D.created(ordinaryOpening.receipt.fact.seq), ordinary = room.life.platform(ordinaryCreated.name);
+    room.nodes.push(ordinary); await room.pause(room.nodes);
+    expect((await ordinary.summary()).value.definition).toBe(setup.definitions.issue);
+    expect(await ordinary.item(0)).toMatchObject({ state: 'open', values: { kind: 'ordinary' },
+      parties: { requester: { membership: await room.M.at(), member: '@rita' } } });
+    const ordinaryClosed = await ordinary.act(rita, 'close-own', { on: 0, expected: await ordinary.expected({ on: 0 }) });
+    expect(ordinaryClosed, canonicalize(ordinaryClosed)).toMatchObject({ answer: 'accepted' });
+    if (ordinaryClosed.answer !== 'accepted') throw Error('Actual requester closure of the unrelated intent required');
+    await room.pause(room.nodes);
+    expect((await hardeningItems(ordinary, 'intent')).find(item => item.id === 0)).toMatchObject({ state: 'closed', refs: { closedBy: ordinaryClosed.receipt.fact.seq } });
+    await unchangedActiveHold();
     expect(await child.act(rita, "close-own", { on: 0, expected: await child.expected({ on: 0 }) })).toMatchObject({ answer: "refused", reason: "guard-failed" });
     await child.did(rita, "close-any", { on: 0, expected: await child.expected({ on: 0 }) });
-    expect((await holds()).some(hold => hold.key.extent === "other" && evidenceHoldActiveV17(hold))).toBe(true);
+    await unchangedActiveHold();
     const failedRecord = await evidenceRecord(room, secondJob.job);
     if (failedRecord.holdOwner === null) throw Error("Actual hold owner required");
     const current = await observedRules(room), nextGeneration = { rules: await room.Q.at(), seq: current.revision };
