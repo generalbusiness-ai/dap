@@ -1,1 +1,1 @@
-{"kind":"promise","text":"Accept request git:sha1…9fbad2d: H1 follow-up head: single celld version pin, wider CI path filter, and","body":{"branch":"request/h1-followup-20261028"}}
+{"kind":"artifact","text":".github/workflows/celld-smoke.yml at exact 48ce36ac524b3dcd0a28155e036b5a1357010b43 on request/h1-followup-20261028, under promise git:sha1…22a1ae7 on request git:sha1…9fbad2d","body":{"commit":"48ce36ac524b3dcd0a28155e036b5a1357010b43","path":".github/workflows/celld-smoke.yml"}}
