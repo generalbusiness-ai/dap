@@ -236,7 +236,11 @@ async function run() {
       const signed = bytes.signControl(request, secret);
       const path = action === "create" ? "/mcp/agents" : `/mcp/agents/${agent}${action === "bearer" ? "/bearer" : ""}`;
       const response = await transport(base + path, { method: action === "retire" ? "DELETE" : "POST", headers: { "content-type": "application/json", ...headers, authorization: `Control ${bytes.b64url(bytes.utf8(bytes.canonicalize(request)))}.${signed.sig}` }, body });
-      return { status: response.status, value: await readJson(response) };
+      const value = await readJson(response);
+      // A closed diagnostic vocabulary exposes no body, bearer or invitation.
+      const known = ["agent", "archived", "control", "custody", "enrol", "enrolling", "full", "link", "op", "rate-limited", "refused", "retired", "unauthorized", "unresolved", "bad-request", "forbidden", "method-not-allowed", "not-found", "too-large", "unavailable", "agent-key-invitation", "binding", "body", "control-budget", "entry", "fingerprint", "key-not-active", "membership", "notAfter", "read-back", "service", "signature", "stale", "header"];
+      failureMetadata.lastControl = { status: response.status, error: known.includes(value?.error) ? value.error : null, rule: known.includes(value?.rule) ? value.rule : null };
+      return { status: response.status, value };
     };
     failureMetadata.stage = "configured-create";
     const configured = await control("create", null, await fresh("configured"));

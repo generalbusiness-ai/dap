@@ -56,6 +56,12 @@ smoke reached real installation, room creation and guest join, then failed.
 The smoke’s six-scope expectation omitted the joined guest’s new inbox. It
 now requires all seven exact identities, including distinct owner and guest
 inboxes. The original private custody remains untouched and is not retried.
+The focused inventory and repaired Native route file then passed. The fresh
+proxy smoke passed its seven-scope phase but stopped at configured MCP
+creation. Its first driver diagnostic named only the stage. The driver now
+retains the actual HTTP status and a closed refusal vocabulary on failure,
+without response bodies, invitations or bearers. No original custody is
+reused and no runtime pass is inferred.
 This section will record the final terminal results before review. The final evidence will be sealed under
 `/Users/hughpyle/play/artroom-evidence/2026-10-27-celld-public-origin`.
 The first draft inventory generator failed before parsing because a flat
