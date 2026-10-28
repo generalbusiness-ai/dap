@@ -482,7 +482,7 @@ export async function prepareEvidenceWork(room: EvidenceRoom, options: EvidenceW
     checker: service.member, binding: canonicalize(binding), bindingDigest, commitProof, reuse: options.reuse === true }, expected: await lane.expected({ source: stagedSource.seq }) });
   const jobFact = factRefOf(await evidenceEntry(lane, job));
   await room.pause(room.nodes);
-  const requested = await lane.item(job), expected = { state: "requested", values: { tree, base, commit, reason: "admitted" } };
+  const requested = (await hardeningItems(lane, 'job')).find(item => item.id === job), expected = { state: "requested", values: { tree, base, commit, reason: "admitted" } };
   try { expect(requested).toMatchObject(expected); }
   catch { expect(requested, await evidenceNativeDiagnostic([lane, room.G])).toMatchObject(expected); }
   const notice: Notice = { lane: await lane.at(), job: jobFact, name: configuration.name, tree };
@@ -727,10 +727,13 @@ export async function requestLandingEvidence(room: EvidenceRoom, setup: Prepared
     policyGeneration: { rules: await room.Q.at(), seq: observed.revision }, roomService: observed.roomService,
     serviceGeneration: observed.serviceGeneration, auditOf: null,
     subject: { kind: "landing", publication: factRefOf(await evidenceEntry(room.G, reserved.id)), manifest: publication.manifest } };
-  const bindingDigest = evidenceBindingDigest(binding), seq = await publication.lane.did(rita, "request-check", { fields: {
+  const bindingDigest = evidenceBindingDigest(binding), requested = await publication.lane.act(rita, "request-check", { fields: {
     manifest: publication.manifest.seq, name: setup.configuration.name, configuration: setup.configurationDigest, checker: setup.service.member,
     binding: canonicalize(binding), bindingDigest, reuse }, expected: await publication.lane.expected({ manifest: publication.manifest.seq, proposal: 0, rules: rules.id }) });
-  const job = factRefOf(await evidenceEntry(publication.lane, seq));
+  try { expect(requested).toMatchObject({ answer: 'accepted' }); }
+  catch { expect(requested, await evidenceNativeDiagnostic([publication.lane, room.G])).toMatchObject({ answer: 'accepted' }); }
+  if (requested.answer !== 'accepted') throw Error('Actual accepted landing check request required');
+  const job = requested.receipt.fact;
   await room.pause(room.nodes);
   return { job, binding, bindingDigest, tree, record: () => evidenceRecord(room, job) };
 }
