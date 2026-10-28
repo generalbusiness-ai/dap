@@ -40,7 +40,10 @@ export function preparedSessionRefusal(config: { sessions(): Sessions | null; cl
 function referenceView(frame: PreparedRead): StateView {
   const pages = new Map<string, Page>();
   const methods = {
-    scope: () => frame.view.scope(), incarnations: (scope: Parameters<StateView["incarnations"]>[0]) => frame.view.incarnations(scope),
+    // Reuse the captured scope so G16's extra state seek fits the same budget.
+    // The caller still revalidates the full frame after any peer read.
+    scope: () => frame.pinned.named === UNPUBLISHED_COHORT.destination ? frame.scope : frame.view.scope(),
+    incarnations: (scope: Parameters<StateView["incarnations"]>[0]) => frame.view.incarnations(scope),
     page(type: string, states: readonly string[], after: number | null, limit: number): Page {
       if (!Array.isArray(states) || after !== null || limit !== 1 || !(
         (type === "branch" && states.length === 2 && states[0] === "empty" && states[1] === "ready")
