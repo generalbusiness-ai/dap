@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import type { Answer, Head, Intent, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
 import { newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { d } from "@generalbusiness/dap-derive/testing";
-import { JoinLimits, addressKey, isJoin, type LimitConfig } from "../src/index.ts";
+import { JoinLimits, isJoin, type LimitConfig } from "../src/index.ts";
 import { soon } from "./net.ts";
 import { office, rita, routed, settle, una, vic, type Platform } from "./repository.ts";
 import type { MetricPoint } from "../src/metrics.ts";
@@ -58,6 +58,24 @@ describe("serving limits of a join (authority note, section 3.6; `limits.ts`)", 
     const afterExpiry = join(vic);
     expect(await limits.serve({ address: null, now: 60_000, head: HEAD }, afterExpiry, submit(afterExpiry)))
       .toMatchObject({ answer: "refused", name: "invitation-used" });
+  });
+
+  test("forged joins keep local IPv6 clients separate while global neighbors share their address window", async () => {
+    for (const [first, second, answer] of [
+      ["fe80::7", "fe80::9", "accepted"],
+      ["fd00::7", "fd00::9", "accepted"],
+      ["2001:db8:1:2::7", "2001:db8:1:2::9", "rate-limited"],
+    ] as const) {
+      const limits = new JoinLimits({ ...FIXTURE, failures: 2 });
+      const { state, submit } = membership();
+      const serve = async (address: string, signed: SignedIntent) => said(await limits.serve({ address, now: 0, head: HEAD }, signed, submit(signed)));
+      // Forged signatures cannot charge una's verified-key window. The
+      // same real join therefore distinguishes address isolation/sharing.
+      const real = join(una);
+      expect([await serve(first, junk()), await serve(first, junk()), await serve(first, real), await serve(second, real)])
+        .toEqual(["bad-intent", "bad-intent", "rate-limited", answer]);
+      expect(state.calls).toBe(answer === "accepted" ? 1 : 0);
+    }
   });
 
   test("the test platform binding's addressless joins count failed native invitation checks by verified key", async () => {
@@ -122,10 +140,6 @@ describe("serving limits of a join (authority note, section 3.6; `limits.ts`)", 
     expect([isJoin(one), isJoin({ ...one, intent: { ...one.intent, kind: "enrol" } }), isJoin(revoke), isJoin(null)]).toEqual([true, true, false, false]);
     open();
     expect([said(await waiting), said(await fresh.serve({ address: B, now: 0, head: HEAD }, two, second.submit(two))), fresh.counts()]).toEqual(["accepted", "invitation-refused", { windows: 1, waiting: 0 }]);
-
-    // The key of an address. One IPv6 network of 64 bits is one address here; an IPv4 address inside an IPv6 one is that IPv4 address.
-    expect([addressKey("2001:db8:1:2:aaaa::1") === addressKey("2001:DB8:1:2::9"), addressKey("2001:db8:1:3::1") === addressKey("2001:db8:1:2::1"), addressKey("::ffff:192.0.2.7"), addressKey("192.0.2.7"), addressKey("not an address"), addressKey("1:2:3"), addressKey(null)])
-      .toEqual([true, false, "v4:192.0.2.7", "v4:192.0.2.7", null, null, null]);
   });
 
   test("T39, at a real membership scope through the Worker's route: junk-signed joins from one address that name a real invitation are refused and then limited, while the invitee joins from another address; the invitation was never counted; and an admin's act from the limited address is admitted", async () => {
@@ -148,14 +162,14 @@ describe("serving limits of a join (authority note, section 3.6; `limits.ts`)", 
       const forged = async () => ({ ...(await scope.intent(una, "join", { fields })), sig: real.sig });
       const head = (await scope.summary()).at;
 
-      expect([await post(scope, await forged(), "198.51.100.7"), await post(scope, await forged(), "198.51.100.7"), await post(scope, real, "198.51.100.7")]).toEqual([[422, "bad-intent"], [422, "bad-intent"], [503, "rate-limited"]]);
+      expect([await post(scope, await forged(), "fe80::7"), await post(scope, await forged(), "fe80::7"), await post(scope, real, "fe80::7")]).toEqual([[422, "bad-intent"], [422, "bad-intent"], [503, "rate-limited"]]);
       // Nothing was judged and nothing recorded: the head has not moved, and the invitation is as it was issued.
       expect([(await scope.summary()).at, (await scope.item(invitation)).state]).toEqual([head, "invited"]);
       // The invitee, from another address, with the same signed bytes that the limited address was refused.
-      expect(await post(scope, real, "203.0.113.9")).toEqual([200, "accepted"]);
+      expect(await post(scope, real, "fe80::9")).toEqual([200, "accepted"]);
       // The limited address is still limited for a join, and an admin's invitation from it is admitted: only a join is counted or bounded.
       const again = await scope.intent(rita, "invite-member", { fields: { handle: "@vera", role: "member", inviteHash: textDigest(`${SECRET}2`), inviteEnds: soon(3600) } });
-      expect([await post(scope, await forged(), "198.51.100.7"), await post(scope, again, "198.51.100.7")]).toEqual([[503, "rate-limited"], [200, "accepted"]]);
+      expect([await post(scope, await forged(), "fe80::7"), await post(scope, again, "fe80::7")]).toEqual([[503, "rate-limited"], [200, "accepted"]]);
       // The collector finishes after the invocation's actual background work,
       // including the admitted join's inbox creation. Join those callbacks
       // before reading the sink; the HTTP answer need not wait for telemetry.
@@ -164,7 +178,8 @@ describe("serving limits of a join (authority note, section 3.6; `limits.ts`)", 
       expect(joins.map(p => [p.blobs[4], p.blobs[5]])).toEqual([["refused", "none"], ["refused", "none"], ["unavailable", "rate-limited"], ["served", "none"], ["unavailable", "rate-limited"]]);
       expect(joins.filter(p => p.blobs[5] === "rate-limited").map(p => p.doubles)).toEqual([[1, 0, 1, 0, 0, 0], [1, 0, 1, 0, 0, 0]]);
       expect(JSON.stringify(metrics)).not.toContain(SECRET);
-      expect(JSON.stringify(metrics)).not.toContain("198.51.100.7");
+      expect(JSON.stringify(metrics)).not.toContain("fe80::7");
+      expect(JSON.stringify(metrics)).not.toContain("fe80::9");
     } finally {
       platformNet.limits = null;
     }

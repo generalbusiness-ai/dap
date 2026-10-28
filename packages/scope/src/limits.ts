@@ -40,9 +40,11 @@
  */
 
 import type { Answer, Head, KeyId, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalBytes, isSignature, isSignedIntentShape, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { addressKey, canonicalBytes, isSignature, isSignedIntentShape, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { isObject } from "@generalbusiness/dap-derive";
 import { metric } from "./operational.ts";
+
+export { addressKey } from "@generalbusiness/dap-bytes";
 
 /**
  * The window, the two bounds, the limit of one address and the most bytes of
@@ -73,52 +75,6 @@ const JOINS: ReadonlySet<string> = new Set(["join", "enrol"]);
 export function isJoin(signed: unknown): boolean {
   const intent: unknown = isObject(signed) ? signed["intent"] : null;
   return isObject(intent) && typeof intent["kind"] === "string" && JOINS.has(intent["kind"]);
-}
-
-/**
- * The key of an address's window. An IPv4 address is its own key. An IPv6
- * address is keyed by its first 64 bits, so that one network is not as many
- * addresses as it likes (section 3.6; I3 deltas, entry ES10). An IPv4
- * address that is written inside an IPv6 one is keyed as the IPv4 address.
- * Null: the value is no address, and nothing is counted for it. A caller
- * over a service binding has no address.
- */
-export function addressKey(address: string | null): string | null {
-  if (address === null || address.length > 64) return null;
-  const v4 = (text: string): number[] | null => {
-    const parts = text.split(".");
-    if (parts.length !== 4 || !parts.every((p) => /^(0|[1-9][0-9]{0,2})$/.test(p) && Number(p) <= 255)) return null;
-    return parts.map(Number);
-  };
-  const four = v4(address);
-  if (four) return `v4:${four.join(".")}`;
-  // IPv6: eight groups of 16 bits, with at most one `::`, and perhaps an IPv4 address as the last 32 bits. A zone is not part of it.
-  const text = address.split("%")[0]!.toLowerCase();
-  if (!/^[0-9a-f:.]+$/.test(text) || !text.includes(":")) return null;
-  const halves = text.split("::");
-  if (halves.length > 2) return null;
-  const groups = (side: string): number[] | null => {
-    if (side === "") return [];
-    const out: number[] = [];
-    const parts = side.split(":");
-    for (const [i, part] of parts.entries()) {
-      if (part.includes(".")) {
-        const inner = i === parts.length - 1 ? v4(part) : null;
-        if (!inner) return null;
-        out.push((inner[0]! << 8) | inner[1]!, (inner[2]! << 8) | inner[3]!);
-      } else if (/^[0-9a-f]{1,4}$/.test(part)) out.push(parseInt(part, 16));
-      else return null;
-    }
-    return out;
-  };
-  const [head, tail] = [groups(halves[0]!), halves.length === 2 ? groups(halves[1]!) : []];
-  if (!head || !tail) return null;
-  const missing = 8 - head.length - tail.length;
-  if (halves.length === 2 ? missing < 1 : missing !== 0) return null;
-  const all = [...head, ...new Array<number>(missing).fill(0), ...tail];
-  // `::ffff:a.b.c.d`: the IPv4 address itself.
-  if (all.slice(0, 5).every((g) => g === 0) && all[5] === 0xffff) return `v4:${all[6]! >> 8}.${all[6]! & 255}.${all[7]! >> 8}.${all[7]! & 255}`;
-  return `v6:${all.slice(0, 4).map((g) => g.toString(16)).join(":")}`;
 }
 
 /** What one served join is given. */

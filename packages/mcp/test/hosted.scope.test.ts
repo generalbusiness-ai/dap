@@ -570,13 +570,13 @@ test("H2, H3 and H4: agents kept apart, control authority, the bearer and revoca
     expect((await mcp(bot3Rotated, "POST", { "mcp-protocol-version": LEGACY, "mcp-session-id": botSession }, { jsonrpc: "2.0", id: 2, method: "tools/list" })).status, "another agent's session").toBe(404);
     // H4: the bearer. Missing, malformed, wrong and retired each answer 401 with no body; eleven failures from one address, 429.
     for (const [why, authorization] of [["missing", ""], ["malformed", "Bearer nonsense"], ["wrong id", `Bearer ${"0".repeat(64)}.x`], ["wrong secret", `Bearer ${bot.agent}.nope`]] as const) {
-      const r = await routed(`${SERVICE}/mcp`, { method: "POST", headers: { ...(authorization ? { authorization } : {}), "content-type": "application/json", "cf-connecting-ip": "10.0.0.1" }, body: "{}" });
+      const r = await routed(`${SERVICE}/mcp`, { method: "POST", headers: { ...(authorization ? { authorization } : {}), "content-type": "application/json", "cf-connecting-ip": "fe80::1%en0" }, body: "{}" });
       expect([r.status, await r.text()], why).toEqual([401, ""]);
     }
     // The failures an agent counts are those that name it: eleven wrong secrets from one address, then that address is refused.
-    for (let n = 0; n < 9; n++) expect((await routed(`${SERVICE}/mcp`, { method: "POST", headers: { authorization: `Bearer ${bot.agent}.nope${n}`, "cf-connecting-ip": "10.0.0.1" }, body: "{}" })).status, "the tenth failure is still 401").toBe(401);
-    expect((await routed(`${SERVICE}/mcp`, { method: "POST", headers: { authorization: `Bearer ${bot.bearer}`, "cf-connecting-ip": "10.0.0.1", "content-type": "application/json", "mcp-protocol-version": MODERN, "mcp-method": "tools/list" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: { _meta: META } }) })).status, "the limiter, even with the right bearer").toBe(429);
-    expect((await mcp(bot.bearer, "POST", { "mcp-protocol-version": MODERN, "mcp-method": "tools/list" }, { jsonrpc: "2.0", id: 1, method: "tools/list", params: { _meta: META } })).status, "another address is served").toBe(200);
+    for (let n = 0; n < 9; n++) expect((await routed(`${SERVICE}/mcp`, { method: "POST", headers: { authorization: `Bearer ${bot.agent}.nope${n}`, "cf-connecting-ip": "fe80::1%en0" }, body: "{}" })).status, "the tenth failure is still 401").toBe(401);
+    expect((await routed(`${SERVICE}/mcp`, { method: "POST", headers: { authorization: `Bearer ${bot.bearer}`, "cf-connecting-ip": "FE80:0000:0000:0000:0000:0000:0000:0001%en0", "content-type": "application/json", "mcp-protocol-version": MODERN, "mcp-method": "tools/list" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: { _meta: META } }) })).status, "the expanded zoned alias is limited, even with the right bearer").toBe(429);
+    expect((await mcp(bot.bearer, "POST", { "cf-connecting-ip": "fe80::2%en0", "mcp-protocol-version": MODERN, "mcp-method": "tools/list" }, { jsonrpc: "2.0", id: 1, method: "tools/list", params: { _meta: META } })).status, "another link-local client in the same /64 is served").toBe(200);
     // After bearer: the old bearer answers 401, the new one serves, and the sessions and streams open under the old one are gone.
     const open = stream(bot.bearer, botSession);
     expect(await open.ready, "the stream attached before bearer rotation").toBe(200);

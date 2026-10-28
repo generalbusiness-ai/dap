@@ -1,4 +1,4 @@
-import { isRecord, same } from "@generalbusiness/dap-bytes";
+import { addressKey, isRecord, same } from "@generalbusiness/dap-bytes";
 import { invitationRedemptionFields } from "@generalbusiness/dap-client";
 /**
  * The hosted MCP endpoint (notes/2026-10-13-hosted-mcp-endpoint.md): the
@@ -62,10 +62,11 @@ export class BearerFailures {
   get size(): number { return this.#keys.size; }
 
   check(address: string | null, now: number, authenticate: () => boolean): "ok" | "unauthorized" | "limited" {
-    const key = address ?? "";
+    const raw = address ?? "";
     // Cloudflare's IPv4/IPv6 address fits this bound. Reject, never truncate
     // or hash, an oversized representation into another caller's window.
-    if (key.length > BEARER_ADDRESS_BYTES || utf8(key).length > BEARER_ADDRESS_BYTES) return "limited";
+    if (raw.length > BEARER_ADDRESS_BYTES || utf8(raw).length > BEARER_ADDRESS_BYTES) return "limited";
+    const key = addressKey(address) ?? "";
     const recent = (this.#keys.get(key) ?? []).filter(at => now - at < 60_000);
     if (recent.length > 0) this.#keys.set(key, recent);
     else this.#keys.delete(key);

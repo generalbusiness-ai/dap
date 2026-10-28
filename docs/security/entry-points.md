@@ -131,6 +131,23 @@ The scope rows use these shared descriptions:
   first use the fixed serving windows below. Joins retain their membership-local
   failed-address window and also count verified-key failures without an address.
 
+The join, creation, signed-read and MCP bearer-failure windows use
+[`addressKey`](../../packages/bytes/src/address.ts). Address spellings are
+canonicalized before counting; IPv6 zones do not distinguish clients.
+
+| Address form | Counter key |
+|---|---|
+| IPv4, including IPv4-mapped IPv6 | Full IPv4 address, prefixed `v4:` |
+| Link-local IPv6 (`fe80::/10`) | All 128 bits, prefixed `v6l:` |
+| Unique-local IPv6 (`fc00::/7`) | All 128 bits, prefixed `v6u:` |
+| Other IPv6 | First 64 bits, prefixed `v6:` |
+
+The IPv6 `/64` grouping limits address rotation in routable space. Local
+clients keep separate windows within one subnet. MCP checks the raw address's
+64-character and 64-UTF-8-byte bounds before canonicalization. Missing and
+invalid MCP addresses share one failure window; they do not bypass the limit.
+The [public Site window](#public-site-address-window) keeps its separate policy.
+
 Fresh submitted acts also pass deployment admission in
 [applications/act-admission.ts](../../packages/scope/src/applications/act-admission.ts).
 HTTP, service-binding, and direct native calls reach this same Core gate.
@@ -261,7 +278,7 @@ valid required settings, not whether a particular public room exists.
 | `GET /v1/scopes/:scope/waiting/diagnosed` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
 | `GET /v1/scopes/:scope/waiting/unanswered` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
 | `GET /v1/scopes/:scope/credential/:handle` | `session` | Activation, restart retry; read preparation and holder-key check before unpublished-mode refusal or credential lookup | Activation; prior-work retry; credential consumed only after holder passes | Read bounds; one read before credential end | Membership-reference RPC; prior-work retry |
-| `POST, DELETE, GET /mcp` | `bearer` | Origin refusal, bearer ID parse, agent activation, failure-window check, bearer digest | Agent schema initialization; in-memory bearer-failure windows | 10 failures per address per minute; 1 MiB hosted body after bearer; MCP session and stream bounds | Agent RPC; authenticated tools can call scope and configured Git hosts |
+| `POST, DELETE, GET /mcp` | `bearer` | Origin refusal, bearer ID parse, agent activation, failure-window check, bearer digest | Agent schema initialization; in-memory bearer-failure windows | 10 failures per canonical address key per minute; 4096 keys; 64-byte raw address; 1 MiB hosted body after bearer; MCP session and stream bounds | Agent RPC; authenticated tools can call scope and configured Git hosts |
 | `POST /mcp/agents` | `control` | Control header shape and action binding; bounded raw body; object activation; expiry sweep; signature and authority | Registry or agent schema; expired control-answer cleanup before signature | 64 KiB body; 16 MiB control budget with 1 MiB retirement reserve; no control rate limit | Registry or agent RPC; authority RPC; enrolment follows authorized creation |
 | `DELETE /mcp/agents/:agent` | `control` | Control header shape and action binding; bounded raw body; object activation; expiry sweep; signature and authority | Registry or agent schema; expired control-answer cleanup before signature | 64 KiB body; 16 MiB control budget with 1 MiB retirement reserve; no control rate limit | Registry or agent RPC; authority RPC; enrolment follows authorized creation |
 | `POST /mcp/agents/:agent/bearer` | `control` | Control header shape and action binding; bounded raw body; object activation; expiry sweep; signature and authority | Registry or agent schema; expired control-answer cleanup before signature | 64 KiB body; 16 MiB control budget with 1 MiB retirement reserve; no control rate limit | Registry or agent RPC; authority RPC; enrolment follows authorized creation |
@@ -312,7 +329,7 @@ probe of live settings or proof that an optional feature is enabled.
 | `GET /v1/scopes/:scope/waiting/diagnosed` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
 | `GET /v1/scopes/:scope/waiting/unanswered` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
 | `GET /v1/scopes/:scope/credential/:handle` | `session` | Activation, restart retry; read preparation and holder-key check before unpublished-mode refusal or credential lookup | Activation; prior-work retry; credential consumed only after holder passes | Read bounds; one read before credential end | Membership-reference RPC; prior-work retry |
-| `POST, DELETE, GET /mcp` | `bearer` | Origin refusal, bearer ID parse, agent activation, failure-window check, bearer digest | Agent schema initialization; in-memory bearer-failure windows | 10 failures per address per minute; 1 MiB hosted body after bearer; MCP session and stream bounds | Agent RPC; authenticated tools can call scope and configured Git hosts |
+| `POST, DELETE, GET /mcp` | `bearer` | Origin refusal, bearer ID parse, agent activation, failure-window check, bearer digest | Agent schema initialization; in-memory bearer-failure windows | 10 failures per canonical address key per minute; 4096 keys; 64-byte raw address; 1 MiB hosted body after bearer; MCP session and stream bounds | Agent RPC; authenticated tools can call scope and configured Git hosts |
 | `POST /mcp/agents` | `control` | Control header shape and action binding; bounded raw body; object activation; expiry sweep; signature and authority | Registry or agent schema; expired control-answer cleanup before signature | 64 KiB body; 16 MiB control budget with 1 MiB retirement reserve; no control rate limit | Registry or agent RPC; authority RPC; enrolment follows authorized creation |
 | `DELETE /mcp/agents/:agent` | `control` | Control header shape and action binding; bounded raw body; object activation; expiry sweep; signature and authority | Registry or agent schema; expired control-answer cleanup before signature | 64 KiB body; 16 MiB control budget with 1 MiB retirement reserve; no control rate limit | Registry or agent RPC; authority RPC; enrolment follows authorized creation |
 | `POST /mcp/agents/:agent/bearer` | `control` | Control header shape and action binding; bounded raw body; object activation; expiry sweep; signature and authority | Registry or agent schema; expired control-answer cleanup before signature | 64 KiB body; 16 MiB control budget with 1 MiB retirement reserve; no control rate limit | Registry or agent RPC; authority RPC; enrolment follows authorized creation |
@@ -405,7 +422,7 @@ Rules identity in Room mode. This metadata replaces no source or host check.
 | `GET /v1/scopes/:scope/waiting/diagnosed` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
 | `GET /v1/scopes/:scope/waiting/unanswered` | `admin` | Activation, restart retry; legacy read preparation before final read check | Activation; prior-work retry; preparation can update control caches | Read bounds; signed-read causal-chain bounds; fixed key/address window for signed headers before target lookup | Membership and causal-chain scope RPC; prior-work retry |
 | `GET /v1/scopes/:scope/credential/:handle` | `session` | Activation, restart retry; read preparation and holder-key check before unpublished-mode refusal or credential lookup | Activation; prior-work retry; credential consumed only after holder passes | Read bounds; one read before credential end | Membership-reference RPC; prior-work retry |
-| `POST, DELETE, GET /mcp` | `bearer` | Origin refusal, bearer ID parse, agent activation, failure-window check, bearer digest | Agent schema initialization; in-memory bearer-failure windows | 10 failures per address per minute; 1 MiB hosted body after bearer; MCP session and stream bounds | Agent RPC; authenticated tools can call scope and configured Git hosts |
+| `POST, DELETE, GET /mcp` | `bearer` | Origin refusal, bearer ID parse, agent activation, failure-window check, bearer digest | Agent schema initialization; in-memory bearer-failure windows | 10 failures per canonical address key per minute; 4096 keys; 64-byte raw address; 1 MiB hosted body after bearer; MCP session and stream bounds | Agent RPC; authenticated tools can call scope and configured Git hosts |
 | `POST /mcp/agents` | `control` | Control header shape and action binding; bounded raw body; object activation; expiry sweep; signature and authority | Registry or agent schema; expired control-answer cleanup before signature | 64 KiB body; 16 MiB control budget with 1 MiB retirement reserve; no control rate limit | Registry or agent RPC; authority RPC; enrolment follows authorized creation |
 | `DELETE /mcp/agents/:agent` | `control` | Control header shape and action binding; bounded raw body; object activation; expiry sweep; signature and authority | Registry or agent schema; expired control-answer cleanup before signature | 64 KiB body; 16 MiB control budget with 1 MiB retirement reserve; no control rate limit | Registry or agent RPC; authority RPC; enrolment follows authorized creation |
 | `POST /mcp/agents/:agent/bearer` | `control` | Control header shape and action binding; bounded raw body; object activation; expiry sweep; signature and authority | Registry or agent schema; expired control-answer cleanup before signature | 64 KiB body; 16 MiB control budget with 1 MiB retirement reserve; no control rate limit | Registry or agent RPC; authority RPC; enrolment follows authorized creation |
@@ -634,7 +651,8 @@ from source review; the witness checks that all columns are present but does
 not prove those descriptions. Changes in runtime settings need the settings
 and deployment review as well.
 
-Gate owners: [public-origin.ts](../../packages/scope/src/public-origin.ts),
+Gate owners: [address.ts](../../packages/bytes/src/address.ts),
+[public-origin.ts](../../packages/scope/src/public-origin.ts),
 [core.ts](../../packages/scope/src/core.ts),
 [applications/act-admission.ts](../../packages/scope/src/applications/act-admission.ts),
 [judge.ts](../../packages/derive/src/judge.ts),
