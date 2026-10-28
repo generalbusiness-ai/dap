@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/usage-report.test.mjs","body":{"commit":"248edb4197834a679872cab261945fb3e5f61a5e","path":"scripts/usage-report.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:01ca865c73320d6d9924f837fc119217e91e4a7c","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support/scope-census-fixture.ts."}
