@@ -5,31 +5,34 @@ import { PROPOSED_BOUNDS, type Bounds, type Effect, type Entry, type FactRef, ty
 import { canonicalize, entryHash, isEntry, isRecord } from "@generalbusiness/dap-bytes";
 import { MemoryState, valueDigest, type RuleEffect, type RuleGiven, type RuleRequest, type Rules } from "@generalbusiness/dap-derive";
 import { d, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
-import { certifiedPublicationWireV17, evidenceCarryingBudgetV17, type CertifiedPublicationStateV17 } from "../src/destination-budget-v17.ts";
-import { EVIDENCE_FUNDING_V17, destinationEvidenceFundingPending, evidenceFundedBatchV17, evidenceFundingCompleteV17, evidenceFundingReadyV17, fundingRules } from "../src/destination-evidence-funding-v17.ts";
+import { certifiedPublicationWireV17, certifiedWrittenPlanBudgetV17, evidenceCarryingBudgetV17, type CertifiedPublicationStateV17 } from "../src/destination-budget-v17.ts";
+import { EVIDENCE_FUNDING_V17, destinationEvidenceFundingPending, evidenceFundedBatchV17, evidenceFundingCaptureV17, evidenceFundingCompleteV17, evidenceFundingReadyV17, fundingRules } from "../src/destination-evidence-funding-v17.ts";
 import { evidenceReadyUpdateV17 } from "../src/destination-evidence-v17.ts";
 import { evidenceBatchWireV17, readEvidenceBatchWireV17 } from "../src/evidence-batch-v17.ts";
 import { destinationV17 } from "../src/destination-v17.ts";
 import { evidenceWireV17 } from "../src/evidence-wire-v17.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
 import { rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
+import { requiredChecksV17 } from "../src/reservation-v17.ts";
 
-function fundingPreview(options: { checks?: number; productionReady?: boolean; stageFirst?: boolean } = {}) {
+function fundingPreview(options: { checks?: number; productionReady?: boolean; stageFirst?: boolean; stage?: "landing" | "published" } = {}) {
   const destination = { ...otherLane, kind: "destination" as const }, rules = { ...otherLane, kind: "rules" as const };
   const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
   const proposed = rulesPolicyProposalV13({ approvals: 1, ownerMayReview: false, roomService: null, labels: ['TEST\\"'],
-    checks: Array.from({ length: options.checks ?? 1 }, (_, n) => ({ name: `published${n}`, configuration: d("b"), required: true, checker: keys.una.member, stage: "published" })),
+    checks: Array.from({ length: options.checks ?? 1 }, (_, n) => ({ name: `published${n}`, configuration: d("b"), required: true, checker: keys.una.member, stage: options.stage ?? "published" })),
     extents: [
       { name: "rules", patterns: [...RULES_PATTERNS], approvals: 1, approver: "change.review", checks: [], class: "authority" },
       { name: "source", patterns: [], approvals: 1, approver: "change.review", checks: [], class: "content" },
     ] });
   if (!proposed.ok) throw Error("The scripted funding policy is invalid");
+  const required = requiredChecksV17(proposed.policy, ["source"]);
+  if (!required.ok) throw Error("The scripted landing obligations are invalid");
   const certificate = { request: fact(1, destination), certificate: fact(2, destination), proof: d("c"), commit: "a".repeat(40) };
   const envelope = { configured: true, policy: proposed.policy, proposal: proposed.digest, certificate };
   const observation: RulesObservation = { subject: "rules", of: rules, head: { seq: 3, hash: d("d") }, revision: 3, definition: "platform:rules@13", at: t(0),
     content: { asked: "rules", approvals: 1, ownerMayReview: false, checks: proposed.policy.checks.map(({ name, configuration, required, checker }) => ({ name, configuration, required, checker: checker.member })),
       labels: ['TEST\\"'], singleControllerException: false, extents: valueDigest("artroom-rules-extents-3", envelope), roomService: null, serviceGeneration: { rules, seq: 0 } } };
-  const snapshot: CertifiedPublicationStateV17 = { policy: { observation, input: { rules, destination, extents: envelope }, touched: ["source"], required: [], tree: "b".repeat(40), manifest: fact(4) }, generations: [] };
+  const snapshot: CertifiedPublicationStateV17 = { policy: { observation, input: { rules, destination, extents: envelope }, touched: ["source"], required: required.checks, tree: "b".repeat(40), manifest: fact(4) }, generations: [] };
   const seal = (seq: number, input: Input, effects: Effect[], sends: Entry["sends"] = []): Sealed => {
     const entry: Entry = { v: 1, at: destination, seq, prev: d("0"), time: t(0), clamped: false, epoch: 0, input, uses: [], prepared: [], effects, sends };
     if (!isEntry(entry)) throw Error("The scripted funding entry must retain the real wire shape");
@@ -116,11 +119,11 @@ function fundingPreview(options: { checks?: number; productionReady?: boolean; s
       state.putItem({ ...item, values: { ...item.values, ready: effect.value } });
     }
   };
-  return { given, guard, effects, implicit, capacity, state, configured, baseUpdate, batch, stamp, history, own, captureFact, fundingGiven };
+  return { given, guard, effects, implicit, capacity, state, configured, baseUpdate, batch, stamp, history, own, captureFact, fundingGiven, snapshot };
 }
 
 test("the actual funding preview includes its implicit batch open at exact byte and effect edges without emitting it twice", () => {
-  const fixture = fundingPreview(), given = fixture.given();
+  const fixture = fundingPreview({ stage: "landing" }), given = fixture.given();
   expect(fixture.guard.run(given)).toEqual({ holds: true });
   const emitted = fixture.effects.run(given);
   expect(emitted.some(effect => effect.effect === "open")).toBe(false);
@@ -138,6 +141,19 @@ test("the actual funding preview includes its implicit batch open at exact byte 
   expect(fixture.guard.run(fixture.given({ derivedEffects: actual.length - 1 }))).toEqual({ holds: false, name: "evidence-funding-unavailable" });
   expect(() => fixture.effects.run(fixture.given({ derivedEffects: actual.length - 1 }))).toThrow();
   expect(canonicalize(fixture.effects.run(fixture.given({ entryBytes: quote.entryBytes })))).toBe(canonicalize(emitted));
+});
+
+test("published obligations refuse before capture or new work when the future written plan cannot fit, even though the funding entry fits", () => {
+  const fixture = fundingPreview(), current = fixture.given(), emitted = fixture.effects.run(current);
+  const constrained = fixture.given({ derivedEffects: 10 });
+  expect(evidenceCarryingBudgetV17(constrained, [fixture.implicit, ...emitted], [], [], []).admitted).toBe(true);
+  expect(certifiedWrittenPlanBudgetV17(constrained.resolved.bounds)).toMatchObject({ admitted: false, effects: 11 });
+  expect(() => evidenceFundingCaptureV17(constrained, fixture.state.item(2)!, fixture.snapshot)).toThrow("future carrying entry");
+  expect(fixture.guard.run(constrained)).toEqual({ holds: false, name: "evidence-funding-unavailable" });
+  expect(() => fixture.effects.run(constrained)).toThrow();
+  const landing = fundingPreview({ stage: "landing" }), landingGiven = landing.given({ derivedEffects: 10 });
+  expect(evidenceFundingCaptureV17(landingGiven, landing.state.item(2)!, landing.snapshot)).not.toBeNull();
+  expect(landing.guard.run(landingGiven)).toEqual({ holds: true });
 });
 
 test("stage-first funding stamps the actual ordinal-zero account when the final account has another item", () => {

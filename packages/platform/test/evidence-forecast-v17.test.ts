@@ -124,7 +124,15 @@ test("a separate counted audit send and its progress opening fit before an audit
   audited.policy = { ...audited.policy!, policy: proposal.policy, proposal: proposal.digest };
   const ordinary = quote(plain), complete = quote(audited);
   expect(complete.admitted).toBe(true);
-  expect(complete.effects).toBe(ordinary.effects + 3);
+  const ordinarySuccess = ordinary.variants.find(variant => variant.name === "landing-success")!;
+  const auditedSuccess = complete.variants.find(variant => variant.name === "landing-success")!;
+  // Compare the same actual forecast branch: the ordinary aggregate maximum
+  // is its failure branch, which has a different set of publication effects.
+  expect(auditedSuccess.effects).toBe(ordinarySuccess.effects + 3);
+  expect(complete.effects).toBe(auditedSuccess.effects);
+  expect(complete.variants.find(variant => variant.name === "audit-dispatch"))
+    .toMatchObject({ effects: 1, requests: 1 });
+  expect(ordinary.variants.some(variant => variant.name === "audit-dispatch")).toBe(false);
   expect(complete.entryBytes).toBeGreaterThan(ordinary.entryBytes);
   expect(quote(audited, { derivedEffects: complete.effects - 1 }).admitted).toBe(false);
   expect(quote(audited, { entryBytes: complete.entryBytes - 1 })).toMatchObject({ admitted: false, entryBytes: complete.entryBytes });

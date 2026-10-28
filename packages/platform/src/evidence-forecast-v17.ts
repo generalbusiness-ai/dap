@@ -19,8 +19,9 @@ const RELEASE_REASON = "\u0000".repeat(1024);
 const bytes = (value: unknown) => utf8(canonicalize(value)).length;
 const copy = <T>(value: T): T => parseStrict(canonicalize(value)) as T;
 type Row = { item: number; record: EvidenceJobRecordV17 };
-type Forecast = { admitted: boolean; entryBytes: number; effects: number };
-const refused = (): Forecast => ({ admitted: false, entryBytes: 0, effects: 0 });
+type VariantQuote = { name: string; entryBytes: number; effects: number; requests: number };
+type Forecast = { admitted: boolean; entryBytes: number; effects: number; variants: readonly VariantQuote[] };
+const refused = (): Forecast => ({ admitted: false, entryBytes: 0, effects: 0, variants: [] });
 const full = (fact: FactRef): FactRef => ({ at: fact.at, seq: MAX, hash: HASH });
 const valueEffect = (item: number, slot: string, value: FieldValue | null): RuleEffect => ({ effect: "value", item, slot, value });
 const codeEffect = (item: number, slot: string, value: unknown, max: number): RuleEffect => valueEffect(item, slot, evidenceWireV17(value, max));
@@ -175,11 +176,11 @@ export function evidenceFutureEntriesV17(given: RuleGiven, current: Row, owners:
     const attempt: RuleEffect = { effect: "attempt", operation: `${MAX}:${MAX}`, attempt: MAX, result: "confirmed", selected: false };
     const observation = observationBytes("rules", bounds) + observationBytes("member", bounds) + 9 * observationBytes("key", bounds)
       + observationBytes("holders", bounds, 32) + 12; // commas between complete ObservationUse envelopes
-    const variants: { input: unknown; effects: readonly RuleEffect[]; sends: readonly RuleRequest[]; observed: number }[] = [];
+    const variants: { name: string; input: unknown; effects: readonly RuleEffect[]; sends: readonly RuleRequest[]; observed: number }[] = [];
     const messages = [decision(main)];
     const progress = main.binding.stage === "landing" ? opening(0,
       { owner: "platform:destination@17", kind: "evidence-progress", attempts: 1, for: main.holder }) : [];
-    variants.push({ input: outcome("evidence-result"), effects: [attempt, ...result, ...progress], sends: messages, observed: observation });
+    variants.push({ name: "result", input: outcome("evidence-result"), effects: [attempt, ...result, ...progress], sends: messages, observed: observation });
     if (main.binding.subject.kind === "landing") {
       const publication = main.binding.subject.publication.seq;
       const openings = [opening(0, { owner: "platform:destination@17", kind: "reservation-delete", attempts: 3, for: publication }),
@@ -192,34 +193,36 @@ export function evidenceFutureEntriesV17(given: RuleGiven, current: Row, owners:
       const progressRecord = [codeEffect(current.item, "record", main, 196608), codeEffect(MAX, "service", service(main, bounds.memberBytes), 16384)];
       const auditRequest = audit(given, main), auditOpening = auditRequest ? opening(2,
         { owner: "platform:destination@17", kind: "evidence-audit", attempts: 1, for: main.holder }) : [];
-      variants.push({ input: outcome("evidence-progress"), effects: [attempt, ...progressRecord,
+      variants.push({ name: "landing-success", input: outcome("evidence-progress"), effects: [attempt, ...progressRecord,
         codeEffect(publication, "passes", passes.value, bounds.entryBytes), valueEffect(publication, "checkDeadline", null), ...openings,
         ...(auditRequest ? [valueEffect(current.item, "auditOpenedAt", MAX), ...auditOpening] : [])],
         sends: [decision(main)], observed: progressObservation });
-      if (auditRequest) variants.push({ input: outcome("evidence-audit"), effects: [attempt], sends: [auditRequest], observed: 0 });
-      variants.push({ input: outcome("evidence-progress"), effects: [attempt, ...progressRecord,
+      if (auditRequest) variants.push({ name: "audit-dispatch", input: outcome("evidence-audit"), effects: [attempt], sends: [auditRequest], observed: 0 });
+      variants.push({ name: "landing-failure", input: outcome("evidence-progress"), effects: [attempt, ...progressRecord,
         { effect: "state", item: publication, state: "cleanup-aborted" }, valueEffect(publication, "reason", "required-check-failed"),
         { effect: "ref", item: MAX, slot: "slot", to: null }, ...openings], sends: [decision(main)], observed: progressObservation });
     }
-    variants.push({ input: { type: "timed", item: current.item, rule: "evidence-reuse-deadline", due: TIME },
+    variants.push({ name: "timeout", input: { type: "timed", item: current.item, rule: "evidence-reuse-deadline", due: TIME },
       effects: [{ effect: "state", item: current.item, state: "reuse-anchor-timedout" }, valueEffect(current.item, "timeoutReason", "check-timeout"),
         { effect: "ref", item: current.item, slot: "timeoutDecision", to: MAX }, valueEffect(current.item, "deadline", null)], sends: [], observed: 0 });
     if (main.incident) {
       const notice = opening(0, { owner: "platform:destination@17", kind: "evidence-notice", attempts: 1, for: main.holder });
       // A result with unavailable triagers keeps the cause and opens one
       // held notice. Its complete capacity pointer settlement is included.
-      variants.push({ input: outcome("evidence-result"), effects: [attempt, ...result,
+      variants.push({ name: "result-notice", input: outcome("evidence-result"), effects: [attempt, ...result,
         valueEffect(current.item, "noticeOpenedAt", MAX), ...notice], sends: [decision(main)], observed: observation });
-      variants.push({ input: outcome("evidence-notice"), effects: [attempt, codeEffect(current.item, "record", main, 196608),
+      variants.push({ name: "notice", input: outcome("evidence-notice"), effects: [attempt, codeEffect(current.item, "record", main, 196608),
         { effect: "state", item: current.item, state: "decided" }], sends: [incident(main, bounds.memberBytes)], observed: observationBytes("holders", bounds, 32) + 1 });
     }
     let entryBytes = 0, effects = 0, admitted = true;
+    const quotes: VariantQuote[] = [];
     for (const variant of variants) {
       const size = bytes({ ...base, input: variant.input, effects: variant.effects, sends: variant.sends.map((send, n) => ({ n: MAX - n, ...send })) }) + variant.observed;
+      quotes.push({ name: variant.name, entryBytes: size, effects: variant.effects.length, requests: variant.sends.length });
       entryBytes = Math.max(entryBytes, size); effects = Math.max(effects, variant.effects.length);
       if (size > bounds.entryBytes || variant.effects.length > Math.min(16, bounds.derivedEffects)
         || variant.effects.filter(effect => effect.effect === "open").length > 1 || variant.sends.length > bounds.sendsPerEntry) admitted = false;
     }
-    return { admitted, entryBytes, effects };
+    return { admitted, entryBytes, effects, variants: quotes };
   } catch { return refused(); }
 }

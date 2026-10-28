@@ -5,7 +5,7 @@ import { canonicalize, entryHash, isFactRef, isOperationId, isRecord, same } fro
 import { evidenceBindingDigest } from "./evidence.ts";
 import { operationOpening, type Item, type Opening, type Operation, type OutcomeGives, type Own, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView } from "@generalbusiness/dap-derive";
 import { claimEvidenceBatchJobV17, obligationChecksV17, readEvidenceBatchV17, readEvidenceBatchWireV17, evidenceBatchWireV17, selectEvidenceBatchV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
-import { certifiedPublicationStateWireV17, CERTIFIED_PUBLICATION_TEXT_BYTES_V17, evidenceCarryingBudgetV17, type CertifiedPublicationStateV17 } from "./destination-budget-v17.ts";
+import { certifiedPublicationStateWireV17, certifiedWrittenPlanBudgetV17, CERTIFIED_PUBLICATION_TEXT_BYTES_V17, evidenceCarryingBudgetV17, type CertifiedPublicationStateV17 } from "./destination-budget-v17.ts";
 import { readRulesPolicyObservationV17 } from "./reservation-v17.ts";
 import { isObjectId } from "./reservation.ts";
 import { readEvidenceWireV17, evidenceWireV17 } from "./evidence-wire-v17.ts";
@@ -91,6 +91,8 @@ function captured(own: Own, at: ScopeRef, publication: Item, snapshot: Certified
 export function evidenceFundingCaptureV17(given: RuleGiven, publication: Item, snapshot: CertifiedPublicationStateV17): Opening | null {
   const selected = captured(given.own, given.resolved.at, publication, snapshot);
   if (!selected) throw Error("The captured funding policy is unavailable");
+  if (selected.checks.some(check => checkStageV13(check) === "published") && !certifiedWrittenPlanBudgetV17(given.resolved.bounds).admitted)
+    throw Error("The published check plan exceeds its future carrying entry");
   return selected.checks.length ? { owner: "platform:destination@17", kind: EVIDENCE_FUNDING_V17, attempts: 1, for: publication.id } : null;
 }
 function captureSource(state: StateView, own: Own, capture: FactRef) {
@@ -195,11 +197,12 @@ function fundingProposal(given: RuleGiven): EvidenceBatchRecordV17 | null {
   const selected = captureAt(given.state, given.own, capture, given.resolved.bounds);
   if (!selected || given.state.item(selected.ref.seq)?.state !== "reserved" || !same(publication, selected.ref)
     || !same(operation, selected.operation) || ordinal >= selected.total) return null;
+  if (selected.checks.some(check => checkStageV13(check) === "published") && !certifiedWrittenPlanBudgetV17(given.resolved.bounds).admitted) return null;
   const batch = readEvidenceBatchV17({ v: 1, publication, operation, capture, ordinal, total: selected.total,
     touched: selected.touched, checks: selected.checks.slice(ordinal * 8, ordinal * 8 + 8), policy: selected.view, jobs: [], planAt: null });
   if (!batch) return null;
   const preview: Entry = { v: 1, at: given.resolved.at, seq: given.resolved.self, prev: null, time: given.time, clamped: false, epoch: 0,
-    input: { ...given.input, decision: "applied" }, uses: [], prepared: [], effects: [{ effect: "open", item: given.resolved.self, type: "evidence-batch", state: "funded" },
+    input: { ...given.input, message: given.input.message, decision: "applied" }, uses: [], prepared: [], effects: [{ effect: "open", item: given.resolved.self, type: "evidence-batch", state: "funded" },
       { effect: "value", item: given.resolved.self, slot: "batch", value: evidenceBatchWireV17(batch) }], sends: [] };
   return batchAt(given.state, given.own, preview, given.resolved.bounds, 0);
 }
@@ -269,6 +272,7 @@ function writtenPlan(given: RuleGiven, result: OutcomeGives) {
 }
 function appendWrittenPlan(given: RuleGiven, result: OutcomeGives): OutcomeGives {
   const plan = writtenPlan(given, result);
+  if (plan && !certifiedWrittenPlanBudgetV17(given.resolved.bounds).admitted) throw Error("The published check plan exceeds its future carrying entry");
   return plan ? { ...result, opens: [...result.opens, { owner: "platform:destination@17", kind: EVIDENCE_PLAN_V17, attempts: 1, for: plan.holder }] } : result;
 }
 function planOpening(state: StateView, own: Own, operation: Operation) {
@@ -524,6 +528,7 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
       const publication = operation.for === undefined ? null : given.state.item(operation.for);
       const rows = publication && completeRows(given.state, publication);
       return !!publication && evidenceFundingCompleteV17(given.state, publication) && (rows === null || rows.every(row => hooks.capacityValid(row.item.values["capacity"]!)))
+        && (!rows?.some(row => row.record.checks.some(check => checkStageV13(check) === "published")) || certifiedWrittenPlanBudgetV17(given.resolved.bounds).admitted)
         && (push.rules.holds?.(given, operation) ?? true);
     },
     ready: (state, operation, attempt) => {

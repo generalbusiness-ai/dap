@@ -120,6 +120,50 @@ const frame = (input: unknown, effects: readonly unknown[], sends: readonly unkn
 const passes = { effect: 'value', item: MAX, slot: 'passes', value: null } as const;
 const requestResult = { n: MAX, to: SCOPE, message: { class: 'result', of: { from: FACT, n: MAX }, outcome: 'applied' } };
 
+/** Reachable written-receipt closures, quoted before any published work.
+ * These are forecast shells, never recorded facts. Receipt's token cleanup
+ * and staged-ref cleanup are independent of the separate plan dispatch.
+ * Each shell carries the full allowed FactUse count; full foreign entries
+ * remain in holder custody, rather than being copied into the Entry. */
+export function certifiedWrittenPlanBudgetV17(bounds: Bounds) {
+  const uses = bounds.usesPerEntry;
+  if (!Number.isSafeInteger(uses) || uses < 0) return { admitted: false, entryBytes: 0, effects: 0, variants: [] };
+  const attempt: Effect = { effect: 'attempt', operation: OPERATION, attempt: MAX, result: 'confirmed', selected: false };
+  const opening = (k: number, kind: string, attempts: number) => operationOpening(k, { owner: 'platform:destination@17', kind, attempts, for: MAX });
+  const input = (kind: string, body: import('@generalbusiness/dap-contract').FieldValue): Entry['input'] => ({
+    type: 'outcome', operation: OPERATION, attempt: MAX, owner: 'platform:destination@17', kind, result: 'confirmed',
+    evidence: { basis: 'own-answer', body }, observed: [],
+  });
+  const shell = (kind: string, body: import('@generalbusiness/dap-contract').FieldValue, effects: Effect[], sends: Entry['sends']): Entry => ({
+    v: 1, at: SCOPE, seq: MAX, prev: HASH, time: TIME, clamped: false, epoch: 0,
+    input: input(kind, body), uses: [], prepared: [], effects: [attempt, ...effects], sends,
+  });
+  const written: Effect = { effect: 'state', item: MAX, state: 'written' };
+  const variants = [
+    { name: 'receipt', entry: shell('receipt', { send: 'accepted', seen: 'f'.repeat(64) }, [
+      { effect: 'value', item: MAX, slot: 'token', value: null }, written,
+      ...opening(0, 'revoke', 3), ...opening(1, 'reservation-delete', 3), ...opening(2, 'mint', 1), ...opening(3, 'evidence-plan', 1),
+    ], []), observed: 0 },
+    { name: 'read', entry: shell('read', { seen: 'f'.repeat(64) }, [written, ...opening(0, 'evidence-plan', 1)], []),
+      // Read declares the complete Rules/member/key/holder cohort, including
+      // the property, array and row separators even on this receipt branch.
+      observed: observationBytes('rules', bounds) + 9 * observationBytes('key', bounds)
+        + 65 * observationBytes('member', bounds) + observationBytes('holders', bounds, 1) + 75 },
+    { name: 'evidence-plan', entry: shell('evidence-plan', { written: FACT }, [], [{ n: MAX, to: SCOPE,
+      message: { class: 'request', type: 'tell', body: { message: 'evidence-plan-open', fields: {
+        publication: FACT, operation: FACT, receipt: FACT, written: FACT, manifest: FACT,
+      } } } }]), observed: 0 },
+  ].map(variant => ({ ...variant,
+    // Empty uses[] syntax is already present. No array proportional to a
+    // caller-supplied bound is allocated merely to compute its exact size.
+    entryBytes: bytes(variant.entry) + uses * bytes(USE) + Math.max(0, uses - 1) + variant.observed,
+    effects: variant.entry.effects.length,
+  }));
+  return { admitted: variants.every(variant => variant.entryBytes <= bounds.entryBytes
+      && variant.effects <= Math.min(16, bounds.derivedEffects) && variant.entry.sends.length <= bounds.sendsPerEntry),
+    entryBytes: Math.max(...variants.map(variant => variant.entryBytes)), effects: Math.max(...variants.map(variant => variant.effects)), variants };
+}
+
 /** Maximum native envelopes without the passes value. Foreign signed
  * entries are retained separately: only their FactUse records occur here. */
 export function certifiedFutureEnvelopeBytesV17(bounds: Bounds): number {

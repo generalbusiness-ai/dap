@@ -1,12 +1,12 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FactRef, type RulesObservation } from "@generalbusiness/dap-contract";
 import { canonicalize, isEntry, isFieldValue, signIntent, utf8 } from "@generalbusiness/dap-bytes";
-import { valueDigest, type RuleGiven } from "@generalbusiness/dap-derive";
+import { observationBytes, valueDigest, type RuleGiven } from "@generalbusiness/dap-derive";
 import { d, grantOf, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { RULES_PATTERNS } from "../src/extents.ts";
 import { rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
 import { CERTIFIED_PUBLICATION_TEXT_BYTES_V17, certifiedCaptureBudgetV17, certifiedPublicationBudgetV17, certifiedPublicationStateV17,
-  certifiedPublicationStateWireV17, certifiedPublicationWireV17, evidenceCarryingBudgetV17, evidenceCarryingInputV17, type CertifiedPublicationStateV17 } from "../src/destination-budget-v17.ts";
+  certifiedPublicationStateWireV17, certifiedPublicationWireV17, certifiedWrittenPlanBudgetV17, evidenceCarryingBudgetV17, evidenceCarryingInputV17, type CertifiedPublicationStateV17 } from "../src/destination-budget-v17.ts";
 
 // SCRIPTED policy observations and facts. These tests exercise byte and
 // wire correspondence, not Native certificates or publication authority.
@@ -84,4 +84,37 @@ test("carrying act input uses its actual grant authority and presented facts, wi
   const given = { input: offered, uses: [], resolved: { at: destination, self: 5, bounds: PROPOSED_BOUNDS } } as unknown as RuleGiven;
   expect(evidenceCarryingBudgetV17(given, [{ effect: "value", item: 3, slot: "record", value: canonicalize({ reason: "\\" }) }], [], [], []).entryBytes)
     .toBeGreaterThanOrEqual(utf8(canonicalize(entry)).length);
+});
+
+
+test("published written callbacks and the separate plan dispatch fit before push, with full carrying syntax", () => {
+  // SCRIPTED maximum future entries. Native receipt/read dispatch and
+  // original capture authority are exercised by the separate real journey.
+  const measured = certifiedWrittenPlanBudgetV17(PROPOSED_BOUNDS);
+  expect(measured.admitted).toBe(true);
+  expect(measured.effects).toBe(11);
+  for (const variant of measured.variants) {
+    const entry = { ...variant.entry, uses: Array.from({ length: PROPOSED_BOUNDS.usesPerEntry }, (_, n) => ({
+      fact: { ...fact(n, destination), seq: Number.MAX_SAFE_INTEGER - n }, content: d("f"),
+    })) };
+    expect(isEntry(entry)).toBe(true);
+    // Independently materialize the full canonical uses array rather than
+    // repeating the forecast's size multiplication and comma arithmetic.
+    const fullWidthUses = entry.uses.map(use => ({ ...use, fact: { ...use.fact, seq: Number.MAX_SAFE_INTEGER } }));
+    expect(variant.entryBytes).toBe(utf8(canonicalize({ ...entry, uses: fullWidthUses })).length + variant.observed);
+  }
+  const receipt = measured.variants.find(variant => variant.name === "receipt")!;
+  expect(receipt.entry.effects.filter(effect => effect.effect === "operation").map(effect => effect.kind))
+    .toEqual(["revoke", "reservation-delete", "mint", "evidence-plan"]);
+  const read = measured.variants.find(variant => variant.name === "read")!;
+  expect(read.effects).toBe(4);
+  expect(read.observed).toBe(observationBytes("rules", PROPOSED_BOUNDS) + 9 * observationBytes("key", PROPOSED_BOUNDS)
+    + 65 * observationBytes("member", PROPOSED_BOUNDS) + observationBytes("holders", PROPOSED_BOUNDS, 1) + 75);
+  const dispatch = measured.variants.find(variant => variant.name === "evidence-plan")!;
+  expect(dispatch.effects).toBe(1);
+  expect(dispatch.entry.sends).toHaveLength(1);
+  expect(certifiedWrittenPlanBudgetV17({ ...PROPOSED_BOUNDS, entryBytes: measured.entryBytes }).admitted).toBe(true);
+  expect(certifiedWrittenPlanBudgetV17({ ...PROPOSED_BOUNDS, entryBytes: measured.entryBytes - 1 }).admitted).toBe(false);
+  expect(certifiedWrittenPlanBudgetV17({ ...PROPOSED_BOUNDS, derivedEffects: 10 }).admitted).toBe(false);
+  expect(certifiedWrittenPlanBudgetV17({ ...PROPOSED_BOUNDS, sendsPerEntry: 0 }).admitted).toBe(false);
 });
