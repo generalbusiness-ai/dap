@@ -95,7 +95,8 @@ export async function scopeIndexApplicationsCommand(ctx: Context, argv: readonly
       const asked = await signerSessionRequest(membership, signer, timeOf(Math.floor(now / 1000) * 1000 + 60_000), b64url(crypto.getRandomValues(new Uint8Array(16))));
       const answer = await requestSession(manifest.service, membership.scope, asked, { fetch, seconds: 30 });
       if (answer.ok) reader = answer.session.reader();
-      // A definite refusal selects Signed authority before any summary read.
+      else if (answer.reason === "rate-limited") return { code: 1, lines: [JSON.stringify({ ...identity, error: "rate-limited", retryAfterSeconds: answer.retryAfterSeconds ?? null })] };
+      // Other definite initial refusals select Signed authority before a read.
     } catch { return fail("session-unavailable"); }
   }
   const transport = signedReads(httpTransport(manifest.service, { fetch, bytes: 4 * 1024 * 1024, seconds: 30 }), signer, ctx.now ? { now: ctx.now } : {});

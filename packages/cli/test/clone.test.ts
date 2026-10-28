@@ -1,5 +1,5 @@
 import { expect, test, vi } from "vitest";
-import { newIncarnation, parseStrictBytes, unb64url, verifySignedRead } from "@generalbusiness/dap-bytes";
+import { base32, newIncarnation, parseStrictBytes, unb64url, verifySignedRead } from "@generalbusiness/dap-bytes";
 import * as bytes from "@generalbusiness/dap-bytes";
 import type { SignedRead, SignedSessionRequest } from "@generalbusiness/dap-contract";
 import { secretSigner, type Fetch, type Signer } from "@generalbusiness/dap-client";
@@ -15,7 +15,7 @@ test("remote reads the recorded repository; missing Git and the pinned @1 withou
   const store = memoryStore();
   await store.keep("operator", new Uint8Array(32).fill(7));
   const at = { scope: `sc_${"a".repeat(52)}` as const, kind: "destination" as const, inc: newIncarnation(new Uint8Array(16).fill(8)) };
-  const membership = { ...at, scope: `sc_${"b".repeat(52)}` as const, kind: "membership" as const };
+  const membership = { ...at, scope: `sc_${base32(new Uint8Array(32).fill(1))}` as const, kind: "membership" as const };
   const config: Config = { v: 1 as const, service: "https://service.test", key: "operator", repository: { directory: { ...at, kind: "directory" }, membership, destination: at.scope, rules: `sc_${"c".repeat(52)}` as const }, remote: "https://git.test/git/demo/r.git" };
   await store.save(config);
   const calls: string[] = [];
@@ -36,6 +36,8 @@ test("remote reads the recorded repository; missing Git and the pinned @1 withou
     }
     const reader = init?.headers?.["authorization"] ?? "";
     readers.push(reader);
+    if (url.endsWith(`/${membership.scope}`)) return Response.json({ ok: true, at: { seq: 0, hash: `sha256:${"a".repeat(64)}` }, complete: true,
+      value: { scope: membership, status: "active", definition: "platform:membership@2", time: "2026-10-07T12:00:00Z", counts: [], items: [] } });
     if (sessionMode === "read-refused" && reader === "Session scripted-reader") return Response.json({ ok: false, reason: "forbidden" }, { status: 403 });
     return new Response(JSON.stringify({ ok: true, at: { seq: 0, hash: `sha256:${"a".repeat(64)}` }, complete: true, value: { scope: at, status: "active", definition, time: "2026-10-07T12:00:00Z", counts: [], items: [{ id: 0, type: "branch", state: "ready", revision: 0, opened: null, parties: {}, refs: {}, attributed: [], values: { repository: { host: "artifacts", namespace: "demo", name: "r", id: "r" } } }] } }));
   };
@@ -58,11 +60,12 @@ test("remote reads the recorded repository; missing Git and the pinned @1 withou
     sessionMode = "issued"; readers.length = 0;
     expect((await command(context, ["remote"])).code).toBe(0);
     expect([derivations.mock.calls.length, readers]).toEqual([1, ["Session scripted-reader"]]);
-    derivations.mockClear(); sessionMode = "read-refused"; readers.length = 0;
+    derivations.mockClear(); sessionMode = "read-refused"; readers.length = 0; calls.length = 0;
     expect((await command(context, ["remote"])).code).toBe(0);
-    expect([derivations.mock.calls.length, readers[0], readers.length]).toEqual([2, "Session scripted-reader", 2]);
-    const signed = parseStrictBytes(unb64url(readers[1]!.slice("Signed ".length))!) as SignedRead;
-    expect([readers[1]!.startsWith("Signed "), verifySignedRead(signed), signed.request.read]).toEqual([true, true, "summary"]);
+    expect([derivations.mock.calls.length, readers.slice(0, 2), readers.length]).toEqual([2, ["Session scripted-reader", "Session scripted-reader"], 3]);
+    expect(calls).toEqual([`${config.service}/v1/scopes/${at.scope}`, `${config.service}/v1/scopes/${membership.scope}`, `${config.service}/v1/scopes/${at.scope}`]);
+    const signed = parseStrictBytes(unb64url(readers[2]!.slice("Signed ".length))!) as SignedRead;
+    expect([readers[2]!.startsWith("Signed "), verifySignedRead(signed), signed.request.read]).toEqual([true, true, "summary"]);
     readers.length = 0; sessionMode = "issued";
     let keyLoads = 0;
     const missingKey = await command({ ...context, store: { ...store, secret: async name => ++keyLoads === 1 ? store.secret(name) : null } }, ["remote"]);

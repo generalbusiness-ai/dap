@@ -99,7 +99,18 @@ export interface Config {
   invitationIssue?: PendingInvitationIssue;
 }
 
+export const READ_SESSION_CACHE_BYTES = 32 * 1024;
+/** Disposable credential cache, separate from immutable private requests.
+ * Reads and replacements are bounded before allocation/publication. Discard
+ * compares complete bytes; it is not an independent-process CAS guarantee. */
+export interface ReadSessionCache {
+  read(): Promise<Uint8Array | null>;
+  replace(bytes: Uint8Array): Promise<void>;
+  discard(expected: Uint8Array): Promise<void>;
+}
+
 export interface Store {
+  sessionCache?: ReadSessionCache;
   config(): Promise<Config | null>;
   save(config: Config): Promise<void>;
   /** Optional nonexportable key custody. When present, missing keys must not
@@ -122,7 +133,18 @@ export function memoryStore(): Store {
   let config: Config | null = null;
   const secrets = new Map<string, Uint8Array>();
   const privateBytes = new Map<string, Uint8Array>();
+  let sessionBytes: Uint8Array | null = null;
   return {
+    sessionCache: {
+      read: async () => sessionBytes?.slice() ?? null,
+      replace: async bytes => {
+        if (bytes.length > READ_SESSION_CACHE_BYTES) throw new Error("Read-session cache exceeds its byte bound");
+        sessionBytes = bytes.slice();
+      },
+      discard: async expected => {
+        if (sessionBytes && sessionBytes.length === expected.length && sessionBytes.every((byte, i) => byte === expected[i])) sessionBytes = null;
+      },
+    },
     private: async (name) => privateBytes.get(name)?.slice() ?? null,
     keepPrivate: async (name, bytes) => {
       if (privateBytes.has(name)) throw new Error(`a private record named ${name} exists already; it is not replaced`);

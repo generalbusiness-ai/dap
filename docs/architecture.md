@@ -248,6 +248,14 @@ scope API in process. Behind a proxy, the optional `PUBLIC_ORIGIN` supplies
 service identity independently of transport Host and forwarded headers. This
 changes no journal, native definition or membership authority.
 
+The command line reuses issued read sessions in private device storage.
+Cache identity includes the service, membership incarnation and signing key;
+reuse changes no read grant. Its managed read transport refreshes a rejected
+cached credential once. Verification owns one byte, request, entry and time
+budget across discovery, replay and session work. Session issuance limits
+retain their own server accounting and return an advisory retry window;
+they do not become signed-read retries or replay findings.
+
 Each scope owns a separate order and transaction. Dashed observations are
 checked inputs to a judgment, not shared storage.
 

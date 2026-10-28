@@ -129,7 +129,9 @@ export async function command(ctx: Context, argv: readonly string[]): Promise<Ou
       return first === undefined ? needs("a member's handle") : invite(ctx, first, { ...(flag("role") ? { role: flag("role")! } : {}), ...(flag("acts") !== undefined ? { acts: flag("acts")! } : {}), ...(flag("hours") ? { hours: number("hours")! } : {}) });
     case "join": return first === undefined ? needs("a link") : flag("check") !== undefined ? first.startsWith(AGENT_KEY_LINK) ? enrolAgentKey(ctx, first, { mode: "check" }) : needs("an explicitly tagged agent-key invitation for --check") : join(ctx, first);
     case "acts": return acts(ctx, first);
-    case "act": return first === undefined ? needs("an act kind") : act(ctx, first, { ...(flag("on") ? { on: flag("on")! } : {}), ...(flag("target") ? { target: number("target")! } : {}), set: parsed.flags.get("set") ?? [], value: parsed.flags.get("value") ?? [] });
+    case "act":
+      if (flag("target") !== undefined && (!/^(0|[1-9][0-9]*)$/.test(flag("target")!) || !Number.isSafeInteger(number("target")))) return { code: 2, lines: ["--target must be a nonnegative item number; a member handle is not accepted here. Nothing was signed or sent."] };
+      return first === undefined ? needs("an act kind") : act(ctx, first, { ...(flag("on") ? { on: flag("on")! } : {}), ...(flag("target") ? { target: number("target")! } : {}), set: parsed.flags.get("set") ?? [], value: parsed.flags.get("value") ?? [] });
     case "log": return log(ctx, first, { ...(flag("limit") ? { limit: number("limit")! } : {}) });
     case "items": return first === undefined || flag("query") === undefined ? needs("a scope and --query JSON") : items(ctx, first, flag("query")!);
     case "show": return first === undefined ? needs("an entry") : show(ctx, first);

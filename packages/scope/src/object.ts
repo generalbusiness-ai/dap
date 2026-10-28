@@ -34,7 +34,6 @@ import { permitsNewPlatformScope, type PlatformCreationPolicy } from "./creation
 import { demoCreationOffer, type DemoCreationConfig } from "./demo-creation.ts";
 import { DurableObject } from "cloudflare:workers";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { SessionAnswer } from "@generalbusiness/dap-contract";
 import type { Answer, Beside, Bounds, Cursor, DeclaredDefinition, Digest, OutboxId, Entry, Grant, Input, LogPage, OperationId, PlatformDefinition, Read, RetainedInput, Seed, ScopeId, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, isPlatformDefinition, isSeed, isSignedIntentShape, intentDigest, digestBytes, isHead, isScopeId, isScopeRef, parseStrict, retainedReadArgument, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { isEntryOf, timeMs, timeOf, type Item } from "@generalbusiness/dap-derive";
@@ -67,7 +66,7 @@ import { SessionReferences, type SessionReferenceSource } from "./session-refere
 import { SessionPreparation, type QueryVisibility } from "./session-preparation.ts";
 import { SIGNER_INDEX_BOUNDS } from "./local-signers.ts";
 import { production, type Alarm, type Authority, type Clock, type Delivery, type Ports, type ReadName, type Readers, type Resolver, type Transport } from "./ports.ts";
-import { SessionRequests, Streams, issueSession, type Opened, type Sessions, type StreamRefusal } from "./sessions.ts";
+import { SessionRequests, Streams, issueSession, type Opened, type SessionIssueAnswer, type Sessions, type StreamRefusal } from "./sessions.ts";
 import { READ_BOUNDS, Reads, type ReadBounds, type Summary } from "./reads.ts";
 import { Chains, checkLocalSignedRead, checkSignedReadRequest, presentsSignedRead, signerOf, type SignedReading, type SignedReadObserver } from "./signed-reads.ts";
 import { LATE, within } from "./turn.ts";
@@ -756,7 +755,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
    * A read session, for a device that asks with a signed request (authority note, section 3.9). Only an active membership scope
    * answers one, from its head and its own clock. It is an answer and no entry: nothing is written.
    */
-  session(asked: unknown): SessionAnswer { return this.#invokeSync("sessions", () => {
+  session(asked: unknown): SessionIssueAnswer { return this.#invokeSync("sessions", () => {
     this.#first();
     const answer = issueSession({ sessions: this.#sessions(), clock: this.#clock, requests: this.#requests }, this.#store, this.#scope.pinned(), asked);
     metric({ kind: "session", place: "sessions", end: answer.ok ? "issued" : "refused", reason: answer.ok ? "none" : answer.reason });

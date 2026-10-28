@@ -325,6 +325,15 @@ which makes the creator the first admin. `<name>` is a label for this
 output only: the register's `found` act has no name field (see "What it
 does not do yet").
 
+An operator with a retained planned install can create another room on its
+`open` register after the signed-read window. For supported Register pins
+5, 17, 18, 19, 20 and 21, the command checks the original signed install,
+service acknowledgement and exact Register reference before selecting the
+unchanged singleton revision. It signs a fresh `found`; the Register judges
+that act. This local selector supplies no read authority or journal proof.
+Legacy configuration without that retained proof keeps the existing read
+path and can still need a readable Register summary.
+
 Before each creation step, the command saves its exact signed envelope:
 `found`, then `seat`, then `first-key`. It saves the recorded fact references as each step completes. These records contain no private signing key.
 A refusal, unavailable reply or lost answer leaves the request pending;
@@ -370,7 +379,8 @@ With `--keep`, the invitation is kept before it is sent: the command
 makes the secret, signs `invite-member`, and saves both in an owner-only
 private file first. The link names the membership's exact definition,
 for example `platform:membership@4` in a room of the application cohort.
-If the answer is lost, run `dap invite --check`, which reads the outcome
+An unknown answer means the act may still take effect. If the answer is
+lost, run `dap invite --check`, which reads the outcome
 and sends nothing, or `dap invite --continue`, which resumes the exact
 original request. While one kept invitation is unresolved, a new one is
 refused, so a lost answer is never replaced by a second invitation. A
@@ -438,6 +448,9 @@ record is JSON, and `@handle` is a member of this repository. The command
 fills in the current revision of each item the act names, from the
 scope's summary; the scope checks it again.
 
+`--target` takes a nonnegative item number. A member handle such as `@m1`
+is refused before signing; member handles in typed field values still resolve.
+
 ```
 Took effect: entry sc_p6xp2lmd...:8, hash sha256:2cd70f9ada97.
 Refused: guard-failed (not-activated), judged at entry sc_hs5f27fz...:4. The request was refused.
@@ -494,8 +507,8 @@ refusal cannot make it complete.
 **`dap verify <scope>`** runs the replay verifier over the read
 routes, with the platform package's rules and the code of the two lane
 capabilities, `hold@1` and `git-read@1`, so it replays a lane too. It reads with the caller's
-session, and a read that the session is refused goes again as a signed
-read by the caller's key. It prints the verifier's report: the result,
+session. A read refused as `forbidden` goes again as a signed read by the
+caller's key; other refusals do not take that fallback. It prints the verifier's report: the result,
 what it covered, and what it takes on trust. A journal whose first page
 cannot be read has no report; the command prints
 `... cannot be read: <reason>` and exits 1.
@@ -512,7 +525,29 @@ destination, each lane, each inbox), reached by the creations in their
 journals. It prints one line for each scope: its kind, its ID, the entry
 the replay reached and the result. The last line is `All consistent: <n>
 scopes.`, or the first finding, and then the command exits 1. A journal
-that cannot be read is a finding. The example is from
+that cannot be read is a finding. Discovery, replay dependencies, session
+requests and cleanup share a five-minute, 256 MiB budget, with at most
+100,000 HTTP attempts and 100,000 history entries read. Repeated reads
+count again. The generic replay defaults are unchanged; this command uses
+its finite request allowance instead of the default 64-dependency limit.
+The existing per-read bounds, 1,000-page discovery bound and depth bound
+still apply.
+
+Progress lines go to stderr while the command runs. A budget or cancellation
+stop exits 1 and names the phase, scope and input cursor where it stopped.
+It does not print `All consistent`. A session-request limit is reported as
+`rate-limited`, with its supplied retry window; it is not a replay finding
+of `incomplete` and does not trigger a signed read.
+
+A later room can read the shared Register through its membership session
+but still lack a journal needed to prove an earlier room's creation result.
+Verification then exits 1 and names the dependency as `not proven: needs
+<journal> entries <range>, not readable by this session`. The Register's
+retained copy does not prove that the source admitted the entry. The command
+keeps full replay checks and does not widen access to another room's journal.
+This dependency can also prevent proof of a later room's own creation.
+
+The example below is from
 `apps/room/lanes/test/issues.scope.test.ts`, after two issues were closed by
 two published changes:
 
@@ -821,7 +856,7 @@ repository's recorded creations and keeps its existing session authority.
 ## Reads and sessions
 
 **`dap status [<scope>] [--request <16-hex-id>]`** reports bounded
-operational observations through a fresh room session. With no scope it
+operational observations through a room session. With no scope it
 starts from the configured room and discovers readable scopes. A scope
 name or ID selects one scope. Each column prints its own native head.
 Lists stop after 20 pages, and discovery stops at 1,000 scopes. Denied,
@@ -832,13 +867,39 @@ for the columns, bounds and permission rules.
 Status exits 0 when it produces a report, including a report with unknown
 or partial columns. Failure to obtain a room session exits 1.
 
-Before it reads, the command asks the repository's membership scope for a
-read session, signed by its key. If membership gives none (a service with
-no session secret, or a key that is no active member's), the command
-reads by signed reads of its key, and the scope decides. Under a real
-session a member can read the scopes that record their membership, and,
-at the register, its genesis and the entries that come from the claim
-that created the repository. A signed read reads the entries that the
+Ordinary room reads keep an issued session in a separate private cache under
+`DAP_HOME`, including its membership reference, key, read permissions and
+end time. It reuses the session until 30 seconds before that end. The cache
+is bound to the exact service, membership incarnation and current signing
+key. Its files are owner-only; the token stays out of public configuration,
+JSON output and logs. Signing keys and retained envelopes keep their
+existing no-overwrite rules.
+
+The operator application listing keeps its separate single-acquisition
+contract: its credential lives only for that invocation, and it retries no
+summary read. A session limit stops the listing before any summary or
+signed fallback. Its JSON reports `rate-limited` and `retryAfterSeconds`,
+or `null` for an unknown window.
+
+A reused session refused as `forbidden` gets one membership-summary check. If
+that check also refuses the credential, the command discards that cached
+session, asks once for a replacement and retries once. A denied target
+under a valid session keeps its `forbidden` result and the existing signed
+fallback. A failed renewal keeps its actual refusal.
+
+The initial no-session path remains available when membership gives none,
+for example when the service has no session secret or the key is not an
+active member's. A later command can ask again after the key becomes eligible;
+an initial refusal is not kept as a successful credential.
+An issuance limit instead exits with `rate-limited`.
+The server's advisory `Retry-After` names the window until the earliest
+outstanding request deadline; it is not a fixed one-minute delay. A server
+that supplies no valid window is reported with an unknown window.
+
+Under a real session a member can read the scopes that record their
+membership. At the register it can read the whole journal and its typed
+retained inputs through the room's claim chain, without the signed-entry
+window. This grants no register summary or another room's private journal. A signed read reads the entries that the
 key signed, the entries that come from one of those within 15 minutes of
 it (the intent window), and the retained inputs those entries carry. Journal and log pages can
 be filtered; a sparse page is not complete replay evidence. Replay still states its actual coverage and foreign-journal trust.

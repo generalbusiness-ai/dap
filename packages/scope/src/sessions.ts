@@ -334,6 +334,11 @@ export function readsOf(actions: readonly string[]): readonly ReadName[] {
   return admin ? [...MEMBER_READS, ...ADMIN_READS] : MEMBER_READS;
 }
 
+/** Local admission metadata; the HTTP response keeps the contract's SessionAnswer body. */
+export type SessionIssueAnswer = Extract<SessionAnswer, { ok: true }>
+  | { ok: false; reason: Exclude<SessionRefusal, "rate-limited"> }
+  | { ok: false; reason: "rate-limited"; retryAfterSeconds: number };
+
 /**
  * Membership's answer to a request for a read session (sections 3.9 and
  * 12.1.3, "Two things that are answers and no entries"). It writes nothing.
@@ -356,8 +361,8 @@ export function readsOf(actions: readonly string[]): readonly ReadName[] {
  */
 export function issueSession(
   config: { sessions: Sessions | null; clock: Clock; requests: SessionRequests | null }, state: Pick<StateView, "scope" | "page" | "item">, pinned: { named: unknown } | null, asked: unknown,
-): SessionAnswer {
-  const no = (reason: SessionRefusal): SessionAnswer => ({ ok: false, reason });
+): SessionIssueAnswer {
+  const no = (reason: Exclude<SessionRefusal, "rate-limited">): SessionIssueAnswer => ({ ok: false, reason });
   if (!config.sessions || !config.requests) return no("sessions-unavailable");
   if (!isSessionRequest(asked) || !verifySessionRequest(asked)) return no("bad-request");
   const { to, actor, notAfter } = asked.request;
@@ -374,7 +379,8 @@ export function issueSession(
   if (!standing || !("key" in standing) || standing.keyState !== "active" || standing.memberState !== "active" || standing.controllerActive === false) return no("unauthorized");
   // The last check, and the one write: this key has not been given a session for this operation identity.
   const noted = config.requests.note(actor, asked.request.operation, reading, ends);
-  if (noted !== "new") return no(noted);
+  if (noted === "replayed") return no(noted);
+  if (noted !== "new") return { ok: false, ...noted };
   const session: SessionClaims = {
     v: 1, deployment: config.sessions.deployment, membership: scope.at, member: standing.member, key: actor, reads: readsOf(standing.actions), ends: timeOf(reading + SESSION_SECONDS * 1000),
   };
@@ -408,11 +414,16 @@ export class SessionRequests {
   }
 
   /** Note one request at `now`, which is before its `ends`. `new`: it was not noted before, and is now. */
-  note(key: string, operation: string, now: number, ends: number): "new" | "replayed" | "rate-limited" {
+  note(key: string, operation: string, now: number, ends: number): "new" | "replayed" | { reason: "rate-limited"; retryAfterSeconds: number } {
     // A request past its `notAfter` is refused `expired` before it reaches here, so its row is no longer needed.
     this.#sql.exec("DELETE FROM session_request WHERE ends <= ?", now).toArray();
     if (this.#sql.exec("SELECT 1 AS x FROM session_request WHERE key = ? AND operation = ?", key, operation).toArray().length > 0) return "replayed";
-    if ((this.#sql.exec("SELECT COUNT(*) AS n FROM session_request WHERE key = ?", key).toArray()[0]?.["n"] as number) >= this.#perKey) return "rate-limited";
+    const outstanding = this.#sql.exec("SELECT COUNT(*) AS n, MIN(ends) AS earliest FROM session_request WHERE key = ?", key).toArray()[0]!;
+    if ((outstanding["n"] as number) >= this.#perKey) {
+      // Purge and admission use the same membership clock reading. Other keys' deadlines do not shorten this wait.
+      const retryAfterSeconds = Math.ceil(((outstanding["earliest"] as number) - now) / 1000);
+      return { reason: "rate-limited", retryAfterSeconds };
+    }
     this.#sql.exec("INSERT INTO session_request (key, operation, ends) VALUES (?, ?, ?)", key, operation, ends).toArray();
     return "new";
   }

@@ -1,9 +1,14 @@
 import { describe, expect, test, onTestFinished } from "vitest";
 import type { Entry, OperationId, ScopeId, Seed, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, intentDigest, scopeIdOf, seedDigest, timeMs, timeOf } from "@generalbusiness/dap-bytes";
+import { b64url, intentDigest, isSeed, LATE, scopeIdOf, seedDigest, timeMs, timeOf, within } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
 import { DIRECTORY_OF, repositoryName } from "@generalbusiness/dap-platform";
 import { net } from "@generalbusiness/dap-scope/testing";
+import { ScriptedClock } from "../../scope/src/testing.ts";
+import { env } from "cloudflare:test";
+import { route } from "../../scope/src/worker.ts";
+import { TEST_DEPLOYMENT } from "../../scope/test/worker.ts";
+import { nativeFixtureLifetime, driveFixture } from "../../scope/test/support/native-fixture-lifetime.ts";
 import { captureSignedSummary, installSignedDiagnostic } from "../../scope/test/signed-read-diagnostic.ts";
 import { beginSessionFixture, type SessionOwner } from "../../scope/test/session-settings.ts";
 import { Platform, routed } from "../../scope/test/repository.ts";
@@ -314,3 +319,109 @@ async function resumed(owner: SessionOwner, cleanups: (() => void)[], resourcesA
   expect([sent["found"]!.length, sent["seat"]!.length, sent["first-key"]!.length]).toEqual(beforeLegacySends);
   expect((await configOf())!.repository!.membership).toEqual(config.repository!.membership);
 }
+
+
+let lateClaimClock: { failed: boolean } | null = null;
+// Actual current unpublished cohort and open Register. The host-time clock,
+// HTTP option bridge and finite scheduler are TEST fixtures, not a deployment.
+test("a retained selected install founds a second real room after its Signed window and names its session-denied genesis proof without widening authority", async context => {
+  if (lateClaimClock?.failed) return context.skip("Late-claim fixture skipped: failed close retained ownership");
+  if (lateClaimClock !== null) throw Error("Late-claim fixture clock already owned");
+  const previous = net.clock, clock = new ScriptedClock(timeOf(Date.now())), owned = { failed: false };
+  lateClaimClock = owned; net.clock = clock;
+  const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
+  const life = nativeFixtureLifetime(owner, { finish: "external" });
+  let closing: Promise<void> | null = null;
+  const active = () => { if (lateClaimClock !== owned || net.clock !== clock) throw Error("Late-claim ownership changed"); };
+  const close = () => closing ??= (async () => {
+    const joined = await within(9, async () => {
+      for (let round = 0, count = 0; round < 64; round++) {
+        const before = life.platforms().length;
+        let callbacks = 0;
+        for (const node of life.platforms()) {
+          const value = await life.wait(() => (node.stub as unknown as { awaitScheduledCallbacks(): Promise<{ callbacks: number }> }).awaitScheduledCallbacks());
+          callbacks += value.callbacks; count += value.callbacks;
+          if (!Number.isSafeInteger(count) || count > 4096) throw Error("Late-claim callback bound exceeded");
+        }
+        if (!callbacks && life.platforms().length === before) return true;
+      }
+      throw Error("Late-claim callback rounds exceeded");
+    });
+    if (joined === LATE) throw Error("Late-claim close exceeded nine seconds; ownership retained");
+    active(); life.release(); active(); net.clock = previous; lateClaimClock = null;
+  })().catch(error => { if (lateClaimClock === owned) owned.failed = true; throw error; });
+  onTestFinished(close);
+  try {
+    const track = life.platform;
+    life.setHold(envelope => { if (isSeed(envelope.to)) track(scopeIdOf(envelope.to)); return false; });
+    const pause = async (waiting: readonly ScopeId[]) => {
+      for (const scope of waiting) track(scope);
+      for (let round = 0; round < 16; round++) {
+        const before = life.platforms().length;
+        let callbacks = 0;
+        for (const node of life.platforms()) callbacks += (await life.wait(() => (node.stub as unknown as { awaitScheduledCallbacks(): Promise<{ callbacks: number }> }).awaitScheduledCallbacks())).callbacks;
+        await driveFixture(life.platforms(), life.wait);
+        for (const node of life.platforms()) callbacks += (await life.wait(() => (node.stub as unknown as { awaitScheduledCallbacks(): Promise<{ callbacks: number }> }).awaitScheduledCallbacks())).callbacks;
+        if (!callbacks && life.platforms().length === before) return;
+      }
+      throw Error("Late-claim scheduler rounds exceeded");
+    };
+    let register: ScopeId | null = null, measure = false, signedRegisterReads = 0, sessionRegisterReads = 0;
+    const fetch: Fetch = async (url, init) => {
+      active();
+      const parsed = new URL(url), authorization = init?.headers?.["authorization"];
+      const chained = register !== null && parsed.pathname.startsWith(`/v1/scopes/${register}/`) && /\/(log|entries|retained)(\/|$)/.test(parsed.pathname);
+      if (measure && chained) {
+        if (authorization?.startsWith("Signed ")) { signedRegisterReads++; throw Error("Second-room verification must not fall back to Signed Register reads"); }
+        if (authorization?.startsWith("Session ")) sessionRegisterReads++;
+      }
+      const { redirect: _redirect, credentials: _credentials, ...wire } = init as typeof init & { redirect?: string; credentials?: string };
+      return life.wait(() => route(new Request(url, { ...wire, redirect: "manual" }), env.PLATFORM,
+        { ...(register === null ? {} : { REGISTER_SCOPE: register }), SCOPE_INDEX: env.SCOPE_INDEX, DEPLOYMENT: TEST_DEPLOYMENT }));
+    };
+    const first: Context = { store: memoryStore(), fetch, now: life.now, pause, trustedCreationService: { service: SERVICE, fetch } };
+    const run = (who: Context, ...args: string[]) => life.wait(() => command(who, args));
+    const ok = (value: Awaited<ReturnType<typeof run>>) => { expect(value.code, value.lines.join("\n")).toBe(0); };
+    ok(await run(first, "install", "--plan", SERVICE, "--host", "none", "--register-policy", "open"));
+    const installed = (await first.store.config())!; register = installed.plan!.register;
+    const R = track(register);
+    ok(await run(first, "install", "--planned"));
+    ok(await run(first, "create", "first", "--handle", "@owner"));
+    const saved = (await first.store.config())!, secret = (await first.store.secret(saved.key))!;
+    const secondStore = memoryStore(); await secondStore.keep(saved.key, secret);
+    await secondStore.save({ v: 1, service: saved.service, key: saved.key, register: saved.register!, plan: saved.plan! });
+    const second: Context = { ...first, store: secondStore };
+    life.advance(16 * 60_000);
+    const before = (await life.wait(() => R.summary())).at;
+    const refused = await life.wait(() => routed(`${SERVICE}/v1/scopes/${R.name}`));
+    expect(refused.status).toBe(403);
+    const legacyStore = memoryStore(); await legacyStore.keep(saved.key, secret);
+    await legacyStore.save({ v: 1, service: saved.service, key: saved.key, register: saved.register! });
+    const legacy = await run({ ...first, store: legacyStore }, "create", "legacy", "--handle", "@owner");
+    expect(legacy.code).toBe(1); expect(legacy.lines.join("\n")).toContain("forbidden");
+    expect((await life.wait(() => R.summary())).at).toEqual(before);
+    ok(await run(second, "create", "second", "--handle", "@owner"));
+    const selected = (await second.store.config())!;
+    expect(selected.repository!.directory.scope).not.toBe(saved.repository!.directory.scope);
+    expect((await life.wait(() => R.summary())).at.seq).toBeGreaterThan(before.seq);
+    // The second found itself is now old too: recent Signed authority cannot
+    // conceal whether the second membership's chained session reads Register.
+    life.advance(16 * 60_000);
+    measure = true;
+    const outcome = await run(second, "verify", "--all");
+    measure = false;
+    const firstDirectory = saved.repository!.directory.scope;
+    const qualified = `not proven: needs ${firstDirectory} entries 0 to 0, not readable by this session`;
+    expect(outcome.code, outcome.lines.join("\n")).toBe(1);
+    const registerLine = outcome.lines.find(line => line.startsWith(`register ${R.name}, entry `))!;
+    expect(registerLine).toContain(qualified);
+    expect(registerLine).not.toMatch(/incomplete|consistent/);
+    expect(outcome.lines.at(-1)).not.toMatch(/^All consistent/);
+    const result = (await life.wait(() => R.entries())).find(entry => entry.input.type === "delivery" && entry.input.message.class === "result" && entry.input.from.at.scope === firstDirectory)!;
+    expect(result).toBeDefined();
+    expect(outcome.lines).toContain(`Proof dependency: Register creation result ${R.name}:${result.seq}.`);
+    expect(sessionRegisterReads).toBeGreaterThan(0); expect(signedRegisterReads).toBe(0);
+    expect((await first.store.config())!.repository).toEqual(saved.repository);
+    Object.assign(context.task.meta, { lateClaim: { qualification: "Actual two-room CLI/Worker/Native creation and qualified full-replay missing-dependency result; no retained copy or caller anchor supplies admission proof. TEST clock, scheduler, transport-option bridge and generated session secret. No hosted runtime or throughput claim.", register: R.name, first: firstDirectory, second: selected.repository!.directory.scope, sessionRegisterReads, signedRegisterReads, qualifiedLines: outcome.lines.filter(line => line.includes(qualified)), dependency: { journal: firstDirectory, from: 0, through: 0, registerCreationResult: result.seq } } });
+  } finally { await close(); }
+});

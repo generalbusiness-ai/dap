@@ -51,7 +51,8 @@ export class Session {
 
   constructor(token: string, claims: SessionClaims) {
     this.#token = token;
-    this.claims = claims;
+    this.claims = { v: claims.v, deployment: claims.deployment, membership: { scope: claims.membership.scope, inc: claims.membership.inc, kind: claims.membership.kind },
+      member: claims.member, key: claims.key, reads: [...claims.reads], ends: claims.ends };
   }
 
   /** The value of the `Authorization` header: what a transport presents to the read port. */
@@ -85,20 +86,22 @@ const ANSWER_BYTES = 16 * 1024;
  * in the answer's body: neither is ever in a URL.
  *
  * A session, or the reason that membership gave none. A reply that is no
- * answer, that names another repository, member key or a later end than the
- * request allows for, or that does not come in time is a `TransportError`,
+ * answer, that names another repository or member key, or that does not
+ * come in time is a `TransportError`,
  * whose text holds nothing of the reply.
  */
-export async function requestSession(service: string, membership: ScopeId, signed: SignedSessionRequest, options: { fetch?: Fetch; seconds?: number } = {}): Promise<{ ok: true; session: Session } | { ok: false; reason: SessionRefusal }> {
+export async function requestSession(service: string, membership: ScopeId, signed: SignedSessionRequest, options: { fetch?: Fetch; seconds?: number } = {}): Promise<{ ok: true; session: Session } | { ok: false; reason: SessionRefusal; retryAfterSeconds?: number }> {
   const send = options.fetch ?? (globalThis as { fetch?: Fetch }).fetch;
   if (!send) throw new TransportError("this runtime has no fetch; nothing was sent");
   const seconds = options.seconds ?? REPLY_SECONDS;
   const failed = (what: string) => new TransportError(`${what}. No session was taken; a new signed request may be sent.`);
-  let got: { bytes: Uint8Array | null | typeof LATE } | typeof LATE;
+  let got: { bytes: Uint8Array | null | typeof LATE; status: number; retryAfter: string | null } | typeof LATE;
   try {
     got = await within(seconds, async (signal) => {
       const response = await send(`${service.replace(/\/+$/, "")}/v1/scopes/${encodeURIComponent(membership)}/sessions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(signed), signal: signal as never });
-      return { bytes: response.body ? await takeBytes(response.body, ANSWER_BYTES, signal) : new Uint8Array(0) };
+      const header = response.headers?.get("retry-after");
+      return { bytes: response.body ? await takeBytes(response.body, ANSWER_BYTES, signal) : new Uint8Array(0), status: response.status,
+        retryAfter: typeof header === "string" && header.length <= 16 ? header : null };
     });
   } catch {
     throw failed("no reply");
@@ -112,9 +115,13 @@ export async function requestSession(service: string, membership: ScopeId, signe
     answer = null;
   }
   if (!isSessionAnswer(answer)) throw failed("the reply is not an answer to a session request");
-  if (!answer.ok) return answer;
+  if (got.status === 429 && (answer.ok || answer.reason !== "rate-limited")) throw failed("the 429 reply is not a rate-limit refusal");
+  if (!answer.ok) {
+    const retry = got.status === 429 && answer.reason === "rate-limited" && got.retryAfter !== null && /^[1-9][0-9]{0,15}$/.test(got.retryAfter) ? Number(got.retryAfter) : null;
+    return retry !== null && Number.isSafeInteger(retry) ? { ...answer, retryAfterSeconds: retry } : answer;
+  }
   // The session must be the one that was asked for: of that membership scope and incarnation, and for the key that signed.
   const { membership: of, key } = answer.session;
-  if (of.scope !== signed.request.to.scope || of.inc !== signed.request.to.inc || key !== signed.request.actor) throw failed("the reply is a session of another repository or key");
+  if (of.scope !== signed.request.to.scope || of.inc !== signed.request.to.inc || of.kind !== signed.request.to.kind || key !== signed.request.actor) throw failed("the reply is a session of another repository or key");
   return { ok: true, session: new Session(answer.token, answer.session) };
 }

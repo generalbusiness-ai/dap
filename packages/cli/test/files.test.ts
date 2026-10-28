@@ -1,14 +1,16 @@
-import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { Worker } from "node:worker_threads";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, test } from "vitest";
-import { b64url } from "@generalbusiness/dap-bytes";
+import { b64url, keyIdOfSecret, newIncarnation, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
 import { fileStore } from "../src/files.ts";
 import { command } from "../src/line.ts";
+import { sessionOf } from "../src/command-support.ts";
+import { READ_SESSION_CACHE_BYTES } from "../src/store.ts";
 
 // Invariant: a key the command makes is kept owner-only and never replaced, and no line the command prints holds it.
 test("install keeps its operator key owner-only under the config directory, refuses to replace it, and prints only the key's ID; a refused founding is printed with its reason", async () => {
@@ -120,5 +122,38 @@ test("private pending envelopes persist owner-only separately from public config
     expect(await reopened.secret("join-pending")).toBeNull();
     await expect(reopened.keepPrivate("join-pending", new Uint8Array([1]))).rejects.toThrow(/exists already; it is not replaced/);
     expect(await reopened.private("join-pending")).toEqual(bytes);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("issued session cache survives a new fileStore owner-only, rotates separately from immutable custody and rejects oversized files before decoding", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "artroom-session-cache-"));
+  try {
+    const store = fileStore(dir), seed = new Uint8Array(32).fill(27), secret = "TEST-private-persisted-session";
+    const membership = { scope: `sc_${"a".repeat(52)}` as const, kind: "membership" as const, inc: newIncarnation(new Uint8Array(16).fill(1)) };
+    const config = { v: 1 as const, service: "https://session.test", key: "device", repository: { directory: { ...membership, kind: "directory" as const }, membership, rules: membership.scope, destination: membership.scope } };
+    await store.keep("device", seed); await store.save(config); await store.keepPrivate("read", utf8("immutable original request"));
+    let requests = 0; const now = () => Date.parse("2099-01-01T00:00:00Z");
+    const fetch: Fetch = async () => { requests++; return Response.json({ ok: true, token: secret,
+      session: { v: 1, deployment: "TEST", membership, member: "@member", key: keyIdOfSecret(seed), reads: ["summary"], ends: timeOf(now() + 600_000) } }); };
+    await sessionOf({ store, fetch, now }, config);
+    const reopened = fileStore(dir), session = await sessionOf({ store: reopened, fetch, now }, config);
+    expect(requests).toBe(1); expect(session?.claims.membership).toEqual(membership);
+    const cache = join(dir, "session-cache", "read.data");
+    expect([statSync(join(dir, "session-cache")).mode & 0o777, statSync(cache).mode & 0o777]).toEqual([0o700, 0o600]);
+    expect(JSON.stringify([session, await reopened.config()])).not.toContain(secret);
+    expect(readFileSync(join(dir, "config.json"), "utf8")).not.toContain(secret);
+    const original = (await reopened.sessionCache!.read())!;
+    const replacement = utf8("new complete disposable cache");
+    await reopened.sessionCache!.replace(replacement);
+    await reopened.sessionCache!.discard(original);
+    expect(await reopened.sessionCache!.read()).toEqual(replacement);
+    await reopened.sessionCache!.discard(replacement);
+    expect(await reopened.sessionCache!.read()).toBeNull();
+    expect(await reopened.private("read")).toEqual(utf8("immutable original request"));
+    await expect(reopened.keepPrivate("read", utf8("replacement"))).rejects.toThrow(/exists already; it is not replaced/);
+    await expect(reopened.sessionCache!.replace(new Uint8Array(READ_SESSION_CACHE_BYTES + 1))).rejects.toThrow(/byte bound/);
+    writeFileSync(cache, new Uint8Array(READ_SESSION_CACHE_BYTES * 4), { mode: 0o600 });
+    expect(await reopened.sessionCache!.read()).toBeNull(); expect(existsSync(cache)).toBe(false);
+    expect(await reopened.private("read")).toEqual(utf8("immutable original request"));
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });

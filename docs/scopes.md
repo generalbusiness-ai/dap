@@ -798,6 +798,14 @@ grant access to another directory's private journal. A reader with
 neither reads nothing. The scope package's guide says what a
 session binds, how it ends, and the form of a signed read.
 
+Membership retains at most 64 answered session requests per key until each
+request's signed `notAfter`, which can be at most 900 seconds ahead of its
+clock. At that limit the HTTP route returns 429 with the unchanged
+`rate-limited` answer and an advisory `Retry-After` header. It calculates
+the delay from that key's earliest retained request deadline using the same
+clock reading. This is separate from the session's ten-minute lifetime.
+Waiting does not guarantee a later admission; standing is checked again.
+
 One credential route answers a read token once to the authorized session of the key that signed its read-token act, before its end; the token then leaves private custody. Other reads are forbidden.
 
 ## Replay, and what a report means

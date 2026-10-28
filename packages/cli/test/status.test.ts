@@ -3,6 +3,7 @@ import type { OutboxItem, Read, Summary } from "@generalbusiness/dap-contract";
 import type { OperationalApi, Transport } from "@generalbusiness/dap-client";
 import { newIncarnation, textDigest } from "@generalbusiness/dap-bytes";
 import { statusReport, STATUS_PAGES } from "../src/status-report.ts";
+import { Stop } from "../src/command-support.ts";
 const at = { scope: `sc_${"a".repeat(52)}` as const, kind: "membership" as const, inc: newIncarnation(new Uint8Array(16).fill(1)) };
 const head = { seq: 9, hash: textDigest("head") }, time = "2099-01-01T00:00:00Z";
 const summary: Read<Summary> = { ok: true, at: head, complete: true, value: { scope: at, definition: "platform:membership@2", status: "active", time, items: [], counts: [["member", "active", 2]] } };
@@ -13,6 +14,14 @@ function fixture() {
   const http = { summary: async () => summary, outbox: async () => page([outboxId]), waiting: async () => page([]), incidents: async () => page([{ n: 1, time, scope: at, kind: "bad-input" as const, refs: [] }]), requests: async () => { requests++; return { ok: true as const, at: head, complete: true, value: { rows: [], window: null } }; }, history: async () => page([]) } as unknown as Transport & OperationalApi;
   return { http, requests: () => requests };
 }
+test("status preserves a managed authentication stop during summary or a later paged column", async () => {
+  for (const port of ["summary", "outbox"] as const) {
+    const f = fixture();
+    const stopped = new Stop({ code: 1, lines: ["Read session refused: rate-limited. The service reports 75 seconds."] });
+    f.http[port] = async () => { throw stopped; };
+    await expect(statusReport(f.http, "Session fixture", [{ kind: "membership", scope: at.scope }], true, undefined, false)).rejects.toBe(stopped);
+  }
+});
 // These are scripted read-port witnesses, not native creation/authority proof.
 // Invariant: each column preserves its own head and distinguishes denial,
 // unknown data and bounded partial counts from a genuine zero.

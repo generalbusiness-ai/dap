@@ -34,23 +34,30 @@ const reader = "a test reader";
 // | The test's own reads | The test, and the scheduler stand-in, read what each scope holds with a reader that the command never presents (the fixture inspector), past the read sessions. |
 // | Who may install | Nothing checks it: that is the installation design's. |
 describe("the artroom command on real scopes with the real read sessions. The Git host and the scheduler are STAND-INs", () => {
-  test("install, create by signed reads, seat and session, invite and join over the Worker's routes; acts lists what the role holds; one act takes effect and one is refused by name with nothing written; after the destination's founding publication, log, show and remote read the histories back with the founder's session, and verify reports each of the six consistent over the live read surface after the signed-read window; a key of another register reads none of it", async () => {
+  test("install, create by signed reads, seat and session, invite and join over the Worker's routes; acts lists what the role holds; one act takes effect and one is refused by name with nothing written; after the destination's founding publication, log, show and remote read the histories back with the founder's session, and verify reports each of the six consistent over the live read surface after the signed-read window; a key of another register reads none of it", async context => {
     const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
     const lifetime = nativeFixtureLifetime(owner);
     try {
-      await story(lifetime);
+      await story(lifetime, context.task.meta);
     } finally {
       lifetime.release();
     }
   });
 });
 
-async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promise<void> {
+async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>, metadata: object): Promise<void> {
   let lastActRequest: string | null = null, correlationReads = 0;
+  let measuredScope: string | null = null, sessionPosts = 0, entryReads = 0, sessionEntryReads = 0;
   const fetch = (async (url: string, init?: RequestInit) => {
+    const path = new URL(url).pathname;
+    if (measuredScope !== null && path.endsWith("/sessions") && init?.method === "POST") sessionPosts++;
     if (new URL(url).pathname.endsWith("/requests")) correlationReads++;
     const response = await lifetime.wait(() => routed(url, init));
     if (new URL(url).pathname.endsWith("/acts")) lastActRequest = response.headers.get("dap-request-id");
+    if (measuredScope !== null && path === `/v1/scopes/${measuredScope}/entries/0` && response.status === 200) {
+      entryReads++;
+      if (new Headers(init?.headers).get("authorization")?.startsWith("Session ")) sessionEntryReads++;
+    }
     return response;
   }) as unknown as Fetch;
   const now = lifetime.now;
@@ -221,6 +228,28 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
     // The destination is folded through the publication's last outcome, entry 7.
     if (scope === "destination") expect(live.lines[2]).toMatch(/, destination, through entry 7 \(sha256:/);
   }
+
+  // One real room and key, not 1,000 fixtures. Fresh command Contexts share
+  // the same private Store. The existing required-session lease and aged
+  // Signed window mean these actual entry reads need membership sessions.
+  const readStart = now(), readWallStart = performance.now();
+  measuredScope = M.name;
+  try {
+    for (let n = 0; n < 1000; n++) {
+      const shown = await run({ ...rita }, "show", `${M.name}:0`);
+      expect(shown.code, shown.lines.join("\n")).toBe(0);
+      lifetime.advance(60);
+    }
+  } finally { measuredScope = null; }
+  expect([entryReads, sessionEntryReads]).toEqual([1000, 1000]);
+  expect(sessionPosts).toBeLessThanOrEqual(3);
+  expect(now() - readStart).toBeLessThanOrEqual(60_000);
+  const reading = { qualification: "Actual routed entry reads with fresh Contexts sharing one memoryStore and real Native sessions; owned clock, scheduler and Git-host fixtures. Not cross-process persistence or hosted throughput.", successfulEntryReads: entryReads, sessionEntryReads, sessionPosts, ownedClockMilliseconds: now() - readStart, elapsedMilliseconds: performance.now() - readWallStart };
+  Object.assign(metadata, { cliLoadReadPhase: reading });
+  console.info("TEST-cli-load-read-phase-v1", JSON.stringify(reading));
+  // A session may already have been minted by the preceding actual reads;
+  // this counts issuances during the sustained phase, not a fictional cold
+  // start. The owned-clock minute is no hosted throughput measurement.
 
   // Operational status uses these actual sessions and live HTTP reads,
   // preserves column heads, and reads no sidecar unless explicitly asked.

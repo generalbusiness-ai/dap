@@ -3,6 +3,7 @@ import { UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 import type { Head, Read, ScopeId } from "@generalbusiness/dap-contract";
 import { isScopeRef, scopeIdOf } from "@generalbusiness/dap-bytes";
 import type { OperationalApi, Transport } from "@generalbusiness/dap-client";
+import { Stop } from "./command-support.ts";
 
 export const STATUS_PAGES = 20;
 export const STATUS_SCOPES = 1000;
@@ -25,7 +26,7 @@ async function pages<T, A>(read: (cursor?: string) => Promise<Read<readonly T[]>
       if (reply.complete) return { value, head, state: "complete" };
       if (reply.next === undefined || !reply.next || reply.next.length > 256 || seen.has(reply.next)) return { value, head, state: "unknown" };
       seen.add(reply.next); cursor = reply.next;
-    } catch { return { value, head, state: "unknown" }; }
+    } catch (error) { if (error instanceof Stop) throw error; return { value, head, state: "unknown" }; }
   }
   return { value, head, state: "more" };
 }
@@ -56,7 +57,7 @@ export async function statusReport(http: Http, reader: string, known: readonly {
           if (isScopeRef(reference) && !add(reference.kind, reference.scope)) lines.push("  discovery: more; scope limit reached.");
         }
       }
-    } catch { lines.push("  summary: unknown; head unknown."); }
+    } catch (error) { if (error instanceof Stop) throw error; lines.push("  summary: unknown; head unknown."); }
     const outbox = await pages(cursor => http.outbox(scope, reader, cursor), { unanswered: 0, diagnosed: 0 }, (value, row) => {
       if (row.class === "request" && row.result === null) value.unanswered++;
       if (row.diagnosis !== null) value.diagnosed++;

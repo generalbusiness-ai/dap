@@ -1,7 +1,7 @@
 import { describe, expectedOf, heldActs, LINK, linkOf, valueOf, type ActShape, type DefinitionShape, type Link, type Standing } from "./browser-helpers.ts";
 export { describe, expectedOf, heldActs, LINK, linkOf, valueOf, type ActShape, type DefinitionShape, type Link, type Standing } from "./browser-helpers.ts";
 export { claim, checkClaim } from "./claim.ts";
-import { Stop, validStep, sessionOf, accepted, active, answered, configOf, createdBy, done, failed, fresh, handleOf, readSigning, readTransportOf, readerOf, run, signerOf, signing, stopCommand, summaryOf, transportOf, usage, waitFor } from "./command-support.ts";
+import { Stop, validStep, managedReadsOf, requiredReadsOf, sessionOf, accepted, active, answered, configOf, createdBy, done, failed, fresh, handleOf, readSigning, readTransportOf, readerOf, run, signerOf, signing, stopCommand, summaryOf, transportOf, usage, waitFor } from "./command-support.ts";
 import { ARCHIVE_REPLAY_CODE, INVITATION_KEY_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
 import { invitationIssueFields, invitationRedemptionFields, isInvitationMembership } from "@generalbusiness/dap-client";
 import { applicationList } from "./application-list.ts";
@@ -35,8 +35,8 @@ import { applicationList } from "./application-list.ts";
  */
 
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type EffectForm, type Entry, type FactRef, type FieldValue, type Item, type KeyId, type PlatformDefinition, type ScopeId, type ScopeRef, type Seed, type SignedIntent, type Summary } from "@generalbusiness/dap-contract";
-import { READ_REFUSALS, readItemQuery, b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isReceipt, isSignedIntentShape, isFactRef, isScopeId, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { ScopeHandle, ShapeError, TransportError, activeDirectory, partitionIndexes, wellFormedInvitation, readCredential, declaredHandle, create, httpTransport, shapeDeclaredAct, signedIntent, signedLogReader, type Fetch, type Session, type CreationOffer, type Signing, type Transport } from "@generalbusiness/dap-client";
+import { READ_REFUSALS, readItemQuery, b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isReceipt, isSignedIntentShape, isFactRef, isEntry, isScopeId, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { ScopeHandle, ShapeError, TransportError, activeDirectory, partitionIndexes, wellFormedInvitation, readCredential, declaredHandle, create, shapeDeclaredAct, signedIntent, signedLogReader, type Fetch, type Session, type CreationOffer, type Signing, type Transport } from "@generalbusiness/dap-client";
 import { CAPABILITY_CODE as REPLAY_CAPABILITY_CODE } from "@generalbusiness/dap-derive";
 import { UNPUBLISHED_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { SourceError, httpSource, render, verify as replay, type HistorySource } from "@generalbusiness/dap-replay";
@@ -53,7 +53,12 @@ import { statusReport } from "./status-report.ts";
 import { archiveRemote, archiveValue } from "./archive-remote.ts";
 import { storedSigner, newStoredSigner } from "./store-signer.ts";
 
+import { Verification, type VerifyOptions } from "./verification.ts";
+export { VERIFY_LIMITS, type VerifyLimits, type VerifyOptions } from "./verification.ts";
+
 export interface Context {
+  /** One verification command's total read work and incremental progress. */
+  verify?: VerifyOptions;
   /** An explicit runtime port with persistent request custody. The browser
    * command surface has no MCP server or Node dependency. */
   applicationCommand?: (name: "install_application" | "application_installation", args: Record<string, unknown>) => Promise<Outcome>;
@@ -617,6 +622,7 @@ export function acts(ctx: Context, named?: string): Promise<Outcome> {
  */
 export function act(ctx: Context, kind: string, options: { on?: string; target?: number; set?: readonly string[]; value?: readonly string[] } = {}): Promise<Outcome> {
   return run(async () => {
+    if (options.target !== undefined && (!Number.isSafeInteger(options.target) || options.target < 0)) return usage("--target must be a nonnegative item number; a member handle is not accepted here. Nothing was signed or sent.");
     const config = await configOf(ctx);
     // A value beside the intent, for a field that names one by its digest, such as the bytes of a definition that `activate` or
     // `open-issue` names: each file's text, as it is. The scope reads it only at a place that its definition states.
@@ -724,37 +730,99 @@ export function show(ctx: Context, named: string): Promise<Outcome> {
  * the platform package's data and rules for a platform definition. It
  * prints the report: what it checked, and what it took on trust.
  */
-/**
- * A source whose reads go with the caller's session, and a read that the session is refused (`forbidden`) goes again as a signed
- * read by the caller's key. Every scope of the room and the register accept a session of the room's membership (the planner's
- * decision ca8ad1cf), so the fallback serves a scope of another room or register that the caller's key signed an entry of.
- */
-function sessionFirst(session: HistorySource, signed: HistorySource): HistorySource {
-  return {
-    page: async (scope, from, allow) => { const got = await session.page(scope, from, allow); return !got.ok && got.reason === "forbidden" ? signed.page(scope, from, allow) : got; },
-    retained: async (scope, kind, digest, allow, domain) => { const got = await session.retained(scope, kind, digest, allow, domain); return !got.ok && got.reason === "forbidden" ? signed.retained(scope, kind, digest, allow, domain) : got; },
-  };
-}
-
 /** The same capability instances and hold numbers as the serving runtime. */
 export { REPLAY_CAPABILITY_CODE };
 
+interface SessionDeniedDependency { neededFact: FactRef; at: FactRef; from: 0; through: 0; line: string }
+/** A permission finding needs the verifier's exact missing fact, its actual
+ * Register creation-result context and a final Session HTTP403 at that page.
+ * Other absent/unavailable histories retain their original result labels.
+ */
+function sessionDeniedDependency(report: import("@generalbusiness/dap-contract").Report, results: ReadonlyMap<string, FactRef>, denied: ReadonlySet<string>): SessionDeniedDependency | null {
+  if (report.mode !== "replay" || report.result !== "missing-dependency" || !report.at || report.dependencies.missing.length !== 1) return null;
+  const neededFact = report.dependencies.missing[0]!;
+  if (neededFact.at.kind !== "directory" || neededFact.seq !== 0 || !denied.has(`${neededFact.at.scope}:0`)) return null;
+  const named = results.get(canonicalize(report.at));
+  if (!named || canonicalize(named) !== canonicalize(neededFact)) return null;
+  return { neededFact, at: report.at, from: 0, through: 0, line: `not proven: needs ${neededFact.at.scope} entries 0 to 0, not readable by this session` };
+}
+
 /** The replay of one scope's history over the read routes: with the caller's session first, then by signed reads. */
-async function replayOf(ctx: Context, config: Config, reader: string | null, scope: ScopeId) {
+async function replayOf(ctx: Context, config: Config, scope: ScopeId, budget: Verification) {
+  budget.at("replay", scope, 0); budget.historyRead();
+  const managed = await budget.wait(() => managedReadsOf(ctx, config));
+  const signer = await budget.wait(() => signerOf(ctx, config));
   const options = ctx.fetch ? { fetch: ctx.fetch } : {};
-  const signed = httpSource(config.service, { ...options, reader: signedLogReader(await signerOf(ctx, config), readSigning(ctx)) });
-  const source = reader === null ? signed : sessionFirst(httpSource(config.service, { ...options, reader }), signed);
-  return replay(source, { mode: "replay", scope, platform, sourceName: ARCHIVE_REPLAY_CODE.sourceName, receiverIdentity: ARCHIVE_REPLAY_CODE.receiverIdentity, grants: "proven", capabilities: REPLAY_CAPABILITY_CODE, owners: REPLAY_CAPABILITY_CODE });
+  const signed = httpSource(config.service, { ...options, reader: signedLogReader(signer, readSigning(ctx)) });
+  const sourceFor = (reader: string | null, observe?: (status: number) => void) => reader === null ? signed : httpSource(config.service, { ...options, reader, ...(observe ? { fetch: async (url: string, init?: Parameters<Fetch>[1]) => {
+    const response = await (ctx.fetch ?? globalThis.fetch as unknown as Fetch)(url, init);
+    observe(response.status); return response;
+  } } : {}) });
+  const denied = new Set<string>(), results = new Map<string, FactRef>();
+  const source: HistorySource = {
+    page: async (named, from, allow) => {
+      budget.at("replay", named, from); budget.historyRead();
+      let usedSession = false, sessionDenied = false;
+      let got = await budget.wait(() => managed.read(async reader => {
+        usedSession = reader !== null;
+        let status = 0;
+        const result = await sourceFor(reader, code => { status = code; }).page(named, from, allow);
+        sessionDenied = reader?.startsWith("Session ") === true && status === 403 && !result.ok && result.reason === "forbidden";
+        return result;
+      }));
+      if (sessionDenied && !got.ok && got.reason === "forbidden") denied.add(`${named}:${from}`);
+      if (!got.ok && got.reason === "forbidden" && usedSession) got = await budget.wait(() => signed.page(named, from, allow));
+      if (got.ok) {
+        budget.entries(got.page.entries.length);
+        if (got.page.scope.kind === "register") for (const stored of got.page.entries) {
+          budget.check();
+          // Keep only result metadata from actual journal pages. Retained
+          // copies never substitute for the missing admission-proof page.
+          let entry: unknown;
+          try { entry = parseStrict(stored.bytes); } catch { continue; }
+          if (!isEntry(entry) || entry.at.scope !== named || entry.seq !== stored.seq) continue;
+          const input = entry.input;
+          if (input.type !== "delivery" || input.message.class !== "result" || input.message.outcome !== "applied"
+            || input.from.at.kind !== "directory" || input.from.seq !== 0 || canonicalize(input.message.of.from.at) !== canonicalize(entry.at)) continue;
+          const at = factRefOf(entry);
+          if (at.hash === stored.hash) results.set(canonicalize(at), input.from);
+        }
+      }
+      return got;
+    },
+    retained: async (named, kind, digest, allow, domain) => {
+      budget.at("replay", named);
+      let usedSession = false;
+      let got = await budget.wait(() => managed.read(reader => { usedSession = reader !== null; return sourceFor(reader).retained(named, kind, digest, allow, domain); }));
+      if (!got.ok && got.reason === "forbidden" && usedSession) got = await budget.wait(() => signed.retained(named, kind, digest, allow, domain));
+      return got;
+    },
+  };
+  const verification = await budget.wait(() => replay(source, { mode: "replay", scope, limits: budget.remaining(), platform, sourceName: ARCHIVE_REPLAY_CODE.sourceName, receiverIdentity: ARCHIVE_REPLAY_CODE.receiverIdentity, grants: "proven", capabilities: REPLAY_CAPABILITY_CODE, owners: REPLAY_CAPABILITY_CODE }));
+  return { ...verification, notProven: sessionDeniedDependency(verification.report, results, denied) };
+}
+
+/** The derived context reaches session probes/retries as well as replay HTTP. */
+function verificationContext(ctx: Context, budget: Verification): Context {
+  const send = ctx.fetch ?? globalThis.fetch as unknown as Fetch;
+  return { ...ctx, fetch: budget.fetch(send) };
 }
 
 export function verifyScopeCommand(ctx: Context, named: string | undefined, options: { all?: boolean } = {}): Promise<Outcome> {
   if (options.all) return named === undefined ? verifyAll(ctx) : Promise.resolve(usage("verify --all takes no scope: it verifies every scope of the room."));
   return run(async () => {
-    const config = await configOf(ctx);
-    const scope = scopeNamed(config, named);
-    const { report, why } = await replayOf(ctx, config, await readerOf(ctx, config), scope);
-    const lines = render(report, why).split("\n").filter((line) => line.length > 0);
-    return report.result === "consistent" ? done(...lines) : failed(...lines);
+    const budget = new Verification(ctx.verify);
+    try {
+      const reading = verificationContext(ctx, budget);
+      const config = await budget.wait(() => configOf(reading));
+      const scope = scopeNamed(config, named);
+      budget.at("replay", scope); budget.progress();
+      const { report, why, notProven } = await replayOf(reading, config, scope, budget);
+      budget.check();
+      const lines = render(report, notProven ? `Register creation result ${notProven.at.at.scope}:${notProven.at.seq}.` : why).split("\n").filter((line) => line.length > 0);
+      if (notProven) lines[0] = `Result: ${notProven.line}.`;
+      return report.result === "consistent" ? done(...lines) : failed(...lines);
+    } finally { budget.close(); }
   });
 }
 
@@ -763,25 +831,30 @@ export function verifyScopeCommand(ctx: Context, named: string | undefined, opti
  * the order of their histories. A scope is found by the creation that its creator's entry sends; the register's other creations
  * are other rooms', and are not followed.
  */
-async function roomScopes(ctx: Context, config: Config, reader: string | null): Promise<{ kind: string; scope: ScopeId }[]> {
+async function roomScopes(ctx: Context, config: Config, budget: Verification): Promise<{ kind: string; scope: ScopeId }[]> {
   const pageLimit = ctx.historyPages ?? 1000;
   if (!Number.isSafeInteger(pageLimit) || pageLimit < 1) return stopCommand(usage("The room history page limit must be a positive integer."));
   const directory = config.repository!.directory.scope;
-  const D = await handleOf(ctx, config, directory, reader);
-  const register = ((await summaryOf(D)).items.find((item) => item.type === "repository")?.refs["register"] as ScopeRef | undefined)?.scope;
+  budget.at("discovery", directory); budget.progress();
+  const D = await budget.wait(() => handleOf(ctx, config, directory));
+  const register = ((await budget.wait(() => summaryOf(D))).items.find((item) => item.type === "repository")?.refs["register"] as ScopeRef | undefined)?.scope;
   const matched = [...(register ? [{ kind: "register", scope: register }] : []), { kind: "directory", scope: directory }];
+  const seen = new Set(matched.map(row => row.scope));
   // From the directory on: each scope found is read in turn, and what its history creates is added at the end.
   for (let i = matched.length - 1; i < matched.length; i++) {
-    const handle = await handleOf(ctx, config, matched[i]!.scope, reader);
+    budget.at("discovery", matched[i]!.scope); budget.progress();
+    const handle = await budget.wait(() => handleOf(ctx, config, matched[i]!.scope));
     for (let cursor: string | undefined, pages = 0; pages < pageLimit; pages++) {
-      const page = await handle.history(cursor);
+      budget.at("discovery", handle.scope, cursor ?? null); budget.historyRead();
+      const page = await budget.wait(() => handle.history(cursor));
+      if (page.ok) budget.entries(page.value.length);
       if (!page.ok) return stopCommand(failed(`Cannot read the history of ${handle.scope}: ${page.reason}.`));
       for (const { entry } of page.value) {
         for (const send of entry.sends) {
           if (!("creator" in send.to)) continue;
           const seed = send.to as Seed;
           const scope = scopeIdOf(seed);
-          if (!matched.some((f) => f.scope === scope)) matched.push({ kind: seed.kind, scope });
+          if (!seen.has(scope)) { seen.add(scope); matched.push({ kind: seed.kind, scope }); }
         }
       }
       if (page.next === undefined) break;
@@ -799,37 +872,48 @@ async function roomScopes(ctx: Context, config: Config, reader: string | null): 
  */
 function verifyAll(ctx: Context): Promise<Outcome> {
   return run(async () => {
-    const config = await configOf(ctx);
-    if (!config.repository) return usage("No repository is known here. Run: dap create <name>, or dap join <link>.");
-    const reader = await readerOf(ctx, config);
-    const lines: string[] = [];
-    let first: string | null = null;
-    const scopes = await roomScopes(ctx, config, reader);
-    for (const { kind, scope } of scopes) {
-      try {
-        const { report, why } = await replayOf(ctx, config, reader, scope);
-        lines.push(`${kind} ${scope}, entry ${report.target.seq}: ${report.result}.`);
-        if (report.result !== "consistent") first ??= `First finding: ${kind} ${scope} is ${report.result}${why ? `: ${why}` : ""}.`;
-        if (kind === "destination" && report.result === "consistent") {
-          try {
-            const cleanup = await observeCleanup(await handleOf(ctx, config, scope, reader), report.target, ctx.historyPages ?? 1000);
-            lines.push(...cleanup.lines);
-            first ??= cleanup.finding;
-          } catch (error) {
-            if (!(error instanceof SourceError) && !(error instanceof TransportError)) throw error;
-            const finding = `Cleanup status not read: destination ${scope}: ${error.message}.`;
-            lines.push(finding); first ??= finding;
+    const budget = new Verification(ctx.verify);
+    try {
+      const reading = verificationContext(ctx, budget);
+      const config = await budget.wait(() => configOf(reading));
+      if (!config.repository) return usage("No repository is known here. Run: dap create <name>, or dap join <link>.");
+      budget.at("session", config.repository.membership.scope); budget.progress();
+      await budget.wait(async () => { await (await managedReadsOf(reading, config)).session(); });
+      const lines: string[] = [];
+      let first: string | null = null;
+      const scopes = await roomScopes(reading, config, budget);
+      for (const { kind, scope } of scopes) {
+        try {
+          budget.at("replay", scope); budget.progress();
+          const { report, why, notProven } = await replayOf(reading, config, scope, budget);
+          budget.at("replay", scope); budget.progress(true);
+          lines.push(`${kind} ${scope}, entry ${report.target.seq}: ${notProven?.line ?? report.result}.`);
+          if (notProven) lines.push(`Proof dependency: Register creation result ${notProven.at.at.scope}:${notProven.at.seq}.`);
+          if (report.result !== "consistent") first ??= notProven ? `First finding: ${kind} ${scope}: ${notProven.line}.` : `First finding: ${kind} ${scope} is ${report.result}${why ? `: ${why}` : ""}.`;
+          if (kind === "destination" && report.result === "consistent") {
+            try {
+              budget.at("cleanup", scope); budget.progress();
+              const handle = await budget.wait(() => handleOf(reading, config, scope));
+              const cleanup = await budget.wait(() => observeCleanup(handle, report.target, ctx.historyPages ?? 1000));
+              lines.push(...cleanup.lines);
+              first ??= cleanup.finding;
+            } catch (error) {
+              if (!(error instanceof SourceError) && !(error instanceof TransportError)) throw error;
+              const finding = `Cleanup status not read: destination ${scope}: ${error.message}.`;
+              lines.push(finding); first ??= finding;
+            }
+          } else if (kind === "destination") {
+            lines.push(`Cleanup status not read: destination ${scope}: ${notProven?.line ?? `historical replay is ${report.result}`}; no verified cleanup snapshot.`);
           }
-        } else if (kind === "destination") {
-          lines.push(`Cleanup status not read: destination ${scope}: historical replay is ${report.result}; no verified cleanup snapshot.`);
+        } catch (error) {
+          if (!(error instanceof SourceError)) throw error;
+          lines.push(`${kind} ${scope}: not read.`);
+          first ??= `First finding: ${kind} ${scope}: ${error.message}.`;
         }
-      } catch (error) {
-        if (!(error instanceof SourceError)) throw error;
-        lines.push(`${kind} ${scope}: not read.`);
-        first ??= `First finding: ${kind} ${scope}: ${error.message}.`;
       }
-    }
-    return first === null ? done(...lines, `All consistent: ${scopes.length} scopes.`) : failed(...lines, first);
+      budget.check();
+      return first === null ? done(...lines, `All consistent: ${scopes.length} scopes.`) : failed(...lines, first);
+    } finally { budget.close(); }
   });
 }
 
@@ -935,12 +1019,22 @@ export function clone(ctx: Context, directory: string | undefined, options: { ho
     const seq = proof.receipt.fact.seq;
     // The outcome of its `mint-read`, which the host's answer writes: read with the caller's session, which the destination now accepts.
     const operation = proof.operation;
-    const reader = await readerOf(ctx, config) ?? stopCommand(failed(`Signed read-token at ${scope}:${seq}, but no read session is given here, and only a session reads the token.`));
+    const observe = async <T>(work: () => Promise<T>): Promise<T> => {
+      try { return await work(); } catch (error) {
+        if (error instanceof Stop) return stopCommand(failed(`Accepted read-token: ${scope}:${seq} (${operation}).`, ...error.outcome.lines,
+          `Inspect dap show ${scope}:${seq} and dap log destination before another read-token request. No credential was retrieved and nothing was cloned; no automatic mint retry was made.`));
+        throw error;
+      }
+    };
     const send = ctx.fetch ?? (globalThis as { fetch?: Fetch }).fetch!;
     let D: ScopeHandle | null = null;
     let openingChecked = false;
-    const waited = await waitOutcome(operation, seq + 1, async (next, signal) => {
-      D ??= await handleOf({ ...ctx, fetch: outcomeFetch(send, signal) }, config, scope, reader);
+    const waited = await observe(() => waitOutcome(operation, seq + 1, async (next, signal) => {
+      if (!D) {
+        const reading = { ...ctx, fetch: outcomeFetch(send, signal) };
+        const reads = requiredReadsOf(reading, config.service, config.repository!.membership, await signerOf(reading, config), () => !signal.aborted);
+        D = new ScopeHandle(reads.transport, scope);
+      }
       if (!openingChecked) {
         const opening = await D.entry(seq);
         if (!opening.ok || !readTokenOpening(opening.value, proof)) return stopCommand(failed(`Cannot confirm the exact accepted read-token act and its mint-read opening at ${scope}:${seq}; inspect dap show ${scope}:${seq} and dap log destination. No credential was retrieved and nothing was cloned.`));
@@ -949,7 +1043,7 @@ export function clone(ctx: Context, directory: string | undefined, options: { ho
       const got = await D.entry(next);
       if (got.ok && (!readTokenEntry(got.value, proof.to, next) || (got.value.entry.input.type === "outcome" && got.value.entry.input.operation === operation && !readTokenOutcome(got.value, next, proof)))) return stopCommand(failed(`The entry at ${scope}:${next} does not match this destination's recorded mint-read (${operation}); inspect dap log destination. No credential was retrieved and nothing was cloned.`));
       return got;
-    }, (signal) => ctx.pause ? ctx.pause([scope]) : pauseOutcome(signal), ctx.tries ?? 120, ctx.cloneWait, (error) => error instanceof Stop);
+    }, (signal) => ctx.pause ? ctx.pause([scope]) : pauseOutcome(signal), ctx.tries ?? 120, ctx.cloneWait, (error) => error instanceof Stop));
     if (!waited.ok) return failed(...outcomeWaitLines(scope, seq, operation, waited));
     const outcome = waited.outcome;
     const next = waited.next;
@@ -957,7 +1051,15 @@ export function clone(ctx: Context, directory: string | undefined, options: { ho
     if (outcome.result === "refused") return failed(`The host refused the read-token mint at ${scope}:${seq} (outcome ${scope}:${next - 1}). No credential was retrieved and nothing was cloned.`);
     const handle = (outcome.evidence.body as { token?: unknown }).token;
     if (typeof handle !== "string") return failed(`The outcome at ${scope}:${next - 1} names no token.`);
-    // The token, once. The route answers it to this session's key only, and then no more.
+    // The observation owner ends with the wait. Check a fresh owner's session
+    // through a repeatable membership read before the one-time credential GET.
+    const reader = await observe(async () => {
+      const credentialReads = requiredReadsOf(ctx, config.service, config.repository!.membership, await signerOf(ctx, config));
+      const membership = await new ScopeHandle(credentialReads.transport, config.repository!.membership.scope).summary();
+      if (!membership.ok) return stopCommand(failed(`Cannot check the read session before retrieving the token: ${membership.reason}.`));
+      return (await credentialReads.session()).reader();
+    });
+    // Never retry this GET: even a lost reply may have consumed the token.
     const answer = await readCredential(config.service, scope, reader, handle, ctx.fetch ? { fetch: ctx.fetch } : {});
     if (!answer.ok) return failed(`Cannot read the read token ${handle}: ${answer.reason}.`);
     const value = answer.value;
@@ -1365,8 +1467,12 @@ async function merging(ctx: Context, config: Config, lane: ScopeId, reader: stri
     ended = observed;
   } catch (error) {
     // Never print arbitrary exception messages: transports/sources may carry
-    // private data. Only known read codes and phase/error kinds are shown.
-    if (error instanceof Stop) return unknown("wait-exhausted");
+    // private data. Show only trusted command outcomes and known read codes.
+    if (error instanceof Stop) {
+      if (error.kind === "wait-exhausted") return unknown("wait-exhausted");
+      const stopped = unknown("read-stopped");
+      return { ...stopped, lines: [stopped.lines[0]!, ...error.outcome.lines, stopped.lines[1]!] };
+    }
     if (error instanceof TransportError) return unknown("transport-error");
     if (error instanceof SourceError) return unknown(typeof error.reason === "string" && Object.hasOwn(READ_REFUSALS, error.reason) ? `source-error:${error.reason}` : "source-error");
     return unknown("observation-error");
@@ -1538,7 +1644,7 @@ export function status(ctx: Context, named?: string, request?: string): Promise<
     if (!config.repository) return usage("No room is known here. Run dap create or dap join first.");
     let session: Session | null;
     try { session = await sessionOf(ctx, config); }
-    catch { return failed("Status unknown: no session answer."); }
+    catch (error) { if (error instanceof Stop) throw error; return failed("Status unknown: no session answer."); }
     if (!session) return failed("Status unknown: a current room session is unavailable.");
     const repository = config.repository;
     const scopes = named === undefined ? [
@@ -1548,7 +1654,7 @@ export function status(ctx: Context, named?: string, request?: string): Promise<
       ...(repository.inbox ? [{ kind: "inbox", scope: repository.inbox }] : []),
     ] : [{ kind: named, scope: scopeNamed(config, named) }];
     const admin = session.claims.reads.includes("incidents") && session.claims.reads.includes("waiting");
-    return done(...await statusReport(httpTransport(config.service, ctx.fetch ? { fetch: ctx.fetch } : {}), session.reader(), scopes, admin, request, named === undefined));
+    return done(...await statusReport((await managedReadsOf(ctx, config)).transport, session.reader(), scopes, admin, request, named === undefined));
   });
 }
 

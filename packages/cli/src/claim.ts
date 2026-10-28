@@ -1,10 +1,12 @@
 /** Room creation and exact retained claim recovery, shared with the browser. */
-import type { Digest, Entry, FactRef, Item, KeyId, PlatformDefinition, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, intentDigest, isDigest, isFactRef, isIncarnation, isScopeId, parseStrict, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { readFields } from "@generalbusiness/dap-derive";
+import type { ActType, Digest, Entry, FactRef, Item, KeyId, PlatformDefinition, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
+import { canonicalize, factRefOf, intentDigest, isDigest, isFactRef, isReceipt, isSignedIntentShape, textDigest, verifySignedIntent, isIncarnation, isScopeId, parseStrict, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, TransportError, creationOffer, isCreationOffer, isCurrentCreationOffer, signedIntent, signedReads, type CreationOffer } from "@generalbusiness/dap-client";
 import { DIRECTORY_OF, SIBLINGS_OF, platform } from "@generalbusiness/dap-platform";
 import type { Context, Outcome } from "./commands.ts";
-import type { ClaimStep, PendingClaim, Repository } from "./store.ts";
+import type { ClaimStep, Config, PendingClaim, Repository } from "./store.ts";
 import { expectedOf, type DefinitionShape } from "./browser-helpers.ts";
 import { newStoredSigner } from "./store-signer.ts";
 import { validStep, accepted, active, configOf, createdBy, done, failed, handleOf, readSigning, run, signerOf, signing, stopCommand, summaryOf, transportOf, usage, waitFor } from "./command-support.ts";
@@ -12,6 +14,39 @@ import { validStep, accepted, active, configOf, createdBy, done, failed, handleO
 
 /** Saved envelopes are checked against their actual caller and destination,
  * never re-signed from metadata. An accepted marker belongs to that scope. */
+
+const RETAINED_OPEN_REGISTERS = new Set<PlatformDefinition>(["platform:register@5", "platform:register@17", "platform:register@18", "platform:register@19", "platform:register@20", "platform:register@21"]);
+/** Local revision selector from retained configured-service install custody.
+ * These exact native pins open singleton item 0 at revision 1 and never
+ * change it. This is neither a Summary nor proof of history or authority.
+ * The fresh signed found is still judged by the actual Register.
+ */
+function retainedRegisterSelector(config: Config, register: ScopeRef, key: KeyId): { definition: PlatformDefinition; expected: { register: 1 } } | null {
+  try {
+    const plan = config.plan;
+    if (!plan || !RETAINED_OPEN_REGISTERS.has(plan.definition) || !DIRECTORY_OF[plan.definition] || config.key !== "operator"
+      || plan.service !== config.service || !isSignedIntentShape(plan.founding) || !verifySignedIntent(plan.founding)) return null;
+    const intent = plan.founding.intent, definition = platform(plan.definition);
+    if (!definition || definition.data.name !== "platform:register" || intent.actor !== key || intent.kind !== "install" || intent.to !== null || intent.on !== null
+      || Object.keys(intent.expected).length !== 0 || intent.fields["policy"] !== "open") return null;
+    // These closed pins retain ordinary text/list/enum install fields;
+    // PlatformAct's wider type also allows marks, which these fields omit.
+    const shaped = readFields(definition.data.acts["install"]!.fields as ActType["fields"], intent.fields, PROPOSED_BOUNDS);
+    if (!shaped.ok || canonicalize(shaped.fields) !== canonicalize(intent.fields)) return null;
+    if (plan.definition === "platform:register@21" && intent.fields["host"] === "none" && intent.fields["namespace"] !== "") return null;
+    const seed: Seed = { v: 1, kind: "register", definition: plan.definition, creator: null, cause: intentDigest(intent), ordinal: 0 };
+    if (scopeIdOf(seed) !== plan.register || plan.register !== register.scope || register.kind !== "register" || !isIncarnation(register.inc)) return null;
+    const attempted = textDigest(canonicalize({ service: plan.service, operator: intent.actor, founding: plan.founding, definition: plan.definition, register: plan.register }));
+    if (plan.attempted !== attempted) return null;
+    const acknowledged = plan.acknowledged;
+    if (!acknowledged || acknowledged.status !== "service-acknowledged" || acknowledged.service !== plan.service || !isReceipt(acknowledged.receipt)) return null;
+    const receipt = acknowledged.receipt;
+    if (receipt.epoch !== 0 || receipt.definition !== plan.definition || receipt.intent !== intentDigest(intent) || receipt.fact.seq !== 0
+      || canonicalize(receipt.fact.at) !== canonicalize(register)) return null;
+    // Original install expiry is provenance, never a deadline refresh.
+    return { definition: plan.definition, expected: { register: 1 } };
+  } catch { return null; } // Insufficient legacy custody keeps the existing read path.
+}
 
 function validRepository(repository: Repository, directory: Seed): boolean {
   try {
@@ -48,10 +83,11 @@ async function recordedStep(handle: ScopeHandle, seq: number, at: ScopeRef, key:
  * rules scope and the destination. Then the creator takes the seat and the
  * first key in membership, and so becomes its first admin.
  *
- * Every read here is a signed read by the creator key, which is the
- * operator key: the register's summary, where that key signed `install`;
- * then the directory that the claim caused, and the scopes that the
- * directory caused; then membership, where the key has signed `seat`.
+ * Verified retained install custody can select the immutable register
+ * revision without an aged summary read; this grants no authority. Other
+ * non-offer configurations keep the actual signed register-summary path.
+ * Child reads remain signed reads by the creator key: the directory and
+ * its children follow this claim, then membership records the key's seat.
  *
  * **Resume.** Keep the exact signed native `found`, `seat` and `first-key`
  * intents before sending each one, then keep its accepted fact. An uncertain delivery retries that same
@@ -120,11 +156,14 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
       const handle = options.handle ?? "@founder";
       let definition: Digest | PlatformDefinition;
       let items: readonly Item[];
+      const retained = offered ? null : retainedRegisterSelector(config, register, signer.key);
       if (offered) {
         definition = offered.definition;
         // Revision selector only: never present this projection as a Summary,
         // an authenticated roster or authority for the native `found` judgment.
         items = [{ id: offered.registerItem.id, revision: offered.registerItem.revision, type: "register", state: "open", opened: null, parties: {}, refs: {}, attributed: [], values: { host: offered.registerItem.host, namespace: offered.registerItem.namespace, policy: "open", ...(offered.v === 1 ? { purpose: "demo-start" } : {}) } }];
+      } else if (retained) {
+        definition = retained.definition; items = [];
       } else {
         const registered = await summaryOf(R);
         if (canonicalize(registered.scope) !== canonicalize(register)) return failed("The register read does not match the saved register reference; nothing was submitted.");
@@ -134,7 +173,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
       registerDefinition = definition;
       const shape = platform(definition)!.data as unknown as DefinitionShape;
       const fields = { branch: options.branch ?? "main", "founderHandle": handle, recoveryKey: recovery };
-      const signed = await signedIntent(signer, { to: register, kind: "found", fields, expected: expectedOf(shape.acts["found"]!, items, null, fields) }, signing(ctx));
+      const signed = await signedIntent(signer, { to: register, kind: "found", fields, expected: retained?.expected ?? expectedOf(shape.acts["found"]!, items, null, fields) }, signing(ctx));
       pending = { register: register.scope, intent: intentDigest(signed.intent), handle, "found": { signed } };
       await ctx.store.save({ ...base, claim: pending });
     }

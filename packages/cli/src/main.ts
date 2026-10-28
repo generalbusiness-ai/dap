@@ -35,7 +35,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     process.stderr.write(`${error.message}\n`);
     return 2;
   }
-  const ctx: Context = { store: fileStore(home), git: nodeGit(), read };
+  const ctx: Context = { store: fileStore(home), git: nodeGit(), read, verify: { progress: line => { process.stderr.write(`${line}\n`); } } };
   ctx.applicationCommand = applicationCommands(ctx, mcpCustodyStore(join(home, "private", "mcp-custody")), undefined, process.env["APPLICATION_TRUST"]);
   // The MCP server runs until its input ends; its own output is the protocol, so it prints only on failure.
   const outcome = argv[0] === "scope-index" ? await scopeIndexCommand(ctx, argv.slice(1)) : argv[0] === "pack" ? await packCommand(ctx.store, argv) : argv[0] === "mcp" ? await mcp(ctx, home, argv.slice(1)) : await command(ctx, argv);
