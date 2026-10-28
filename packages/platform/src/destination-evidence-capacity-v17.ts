@@ -1,7 +1,9 @@
 /** Native funding identities are known before the published job exists.
  * A null job/owner is reserved capacity, never a fabricated future fact. */
 import type { Digest, FactRef, FieldValue } from "@generalbusiness/dap-contract";
-import { canonicalize, evidenceBindingDigest, isFactRef, isRecord, isScopeRef, parseStrict, same, textDigest, utf8, type EvidenceBinding, type ScopedRulesPosition } from "@generalbusiness/dap-bytes";
+import { canonicalize, isFactRef, isRecord, isScopeRef, parseStrict, same, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import type { ScopedRulesPosition } from "@generalbusiness/dap-contract";
+import { evidenceBindingDigest, type EvidenceBinding } from "./evidence.ts";
 import type { Item, RuleEffect, RuleGiven, StateView } from "@generalbusiness/dap-derive";
 import { readEvidenceBatchV17, readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
 import { bindEvidenceHoldPendingV17, clearEvidenceHoldPendingV17, EVIDENCE_HOLD_PENDING_V17, newEvidenceHoldV17, readEvidenceHoldKeyV17, readEvidenceHoldPendingV17,

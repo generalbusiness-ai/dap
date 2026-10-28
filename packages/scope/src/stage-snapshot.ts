@@ -2,8 +2,8 @@
 import type { FactRef, KeyId, ScopeRef, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalBytes, canonicalize, entryHash, isFactRef, isRecord, isScopeRef, timeMs, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { isEntryOf } from "@generalbusiness/dap-derive";
-import { destinationBranch, destinationEvidenceAdmissionCurrent, destinationEvidenceJob, readRulesPolicyReplyV17 } from "@generalbusiness/dap-platform";
-import { readOwnedCheckoutSnapshot, STAGE_SNAPSHOT_BOUNDS, verifyOwnedCheckoutSnapshot, type StageSnapshotReply } from "@generalbusiness/dap-git";
+import { destinationBranch, destinationEvidenceAdmissionCurrent, destinationEvidenceJob, readRulesPolicyReplyV17, type StageSnapshotReply } from "@generalbusiness/dap-platform";
+import { readOwnedCheckoutSnapshot, STAGE_SNAPSHOT_BOUNDS, verifyOwnedCheckoutSnapshot } from "@generalbusiness/dap-git";
 import type { DestinationHostOptions, DestinationRepository } from "./destination-host.ts";
 import type { OutsideGiven } from "./given.ts";
 import type { Sealed } from "./store.ts";

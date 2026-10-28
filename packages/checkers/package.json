@@ -17,6 +17,7 @@
     "@generalbusiness/dap-bytes": "0.1.0-dev.1",
     "@generalbusiness/dap-contract": "0.1.0-dev.1",
     "@generalbusiness/dap-git": "0.1.0-dev.1",
+    "@generalbusiness/dap-platform": "0.1.0-dev.1",
     "tsx": "4.21.0"
   },
   "devDependencies": {

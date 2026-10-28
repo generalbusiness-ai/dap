@@ -32,7 +32,8 @@
 
 import { DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Base64Url, FieldValue, Intent, KeyId, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
-import { b64url, canonicalBytes, domainBytes, evidenceBindingDigest, parseStrictBytes, timeOf } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalBytes, domainBytes, parseStrictBytes, timeOf } from "@generalbusiness/dap-bytes";
+import { evidenceBindingDigest } from "@generalbusiness/dap-platform";
 import type { Job } from "./job.ts";
 import { detailsDigest, type Details, type Outcome } from "./outcome.ts";
 

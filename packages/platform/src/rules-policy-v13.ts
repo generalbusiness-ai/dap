@@ -1,6 +1,7 @@
 /** Q13 complete evidence policy. Historical Q11 bytes and decisions stay exact. */
-import type { Digest, MemberRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isKeyId, isMemberRef, isRecord, same, utf8, wellFormed, type CheckSource, type CheckStage, type ServiceMark } from "@generalbusiness/dap-bytes";
+import type { Digest, MemberRef, ServiceMark } from "@generalbusiness/dap-contract";
+import { canonicalize, isKeyId, isMemberRef, isRecord, same, utf8, wellFormed } from "@generalbusiness/dap-bytes";
+import type { CheckSource, CheckStage } from "./evidence.ts";
 import { valueDigest } from "@generalbusiness/dap-derive";
 import { firstExtentsV11, judgeExtentsV11, readRulesPolicyV11, rulesPolicyPatternsV11 } from "./rules-policy-v11.ts";
 import type { ExtentV11, RulesCheckV11, RulesPolicyRefusalV11, RulesPolicyV11 } from "./rules-policy-v11.ts";

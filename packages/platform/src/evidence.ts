@@ -1,16 +1,11 @@
 /** Closed, owned successor check bindings. Facts are proved by their native readers. */
-import type { Digest, FactRef, KeyId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalBytes } from "./canonical.ts";
-import { digestBytes } from "./hash.ts";
-import { isKeyId } from "./ids.ts";
-import { isFactRef, isMemberRef, isScopeRef } from "./records.ts";
+import type { Digest, FactRef, MemberRef, ScopeRef, ScopedRulesPosition, Sealed, ServiceMark } from "@generalbusiness/dap-contract";
+import { canonicalBytes, digestBytes, isKeyId, isFactRef, isMemberRef, isScopeRef } from "@generalbusiness/dap-bytes";
+import type { OwnedCheckoutSnapshot } from "@generalbusiness/dap-git";
 
 /** Who supplies a check result, and when its job runs. Omitted legacy fields keep member/landing meaning. */
 export type CheckSource = "member" | "room";
 export type CheckStage = "work" | "landing" | "published";
-export interface ServiceMark { checker: MemberRef; key: KeyId }
-/** A native position under one exact Rules incarnation. This is not a fact hash. */
-export interface ScopedRulesPosition { rules: ScopeRef; seq: number }
 export type CheckSubject =
   | { kind: "landing"; publication: FactRef; manifest: FactRef }
   | { kind: "work"; source: FactRef }
@@ -27,6 +22,17 @@ export interface EvidenceBinding {
   auditOf: FactRef | null;
   subject: CheckSubject;
 }
+
+/** Successor admission proof, separate from a live legacy reservation. */
+export interface StageSnapshot extends OwnedCheckoutSnapshot {
+  v: 1;
+  destination: ScopeRef;
+  job: Sealed;
+  admission: Sealed;
+  binding: EvidenceBinding;
+  sources: readonly Sealed[];
+}
+export type StageSnapshotReply = StageSnapshot | { refused: "stage-origin-mismatch" | "wrong-source" } | null;
 
 export const EVIDENCE_BINDING_DOMAIN = "artroom-check-binding-1";
 

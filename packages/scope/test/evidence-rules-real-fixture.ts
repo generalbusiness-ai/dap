@@ -2,7 +2,7 @@ import { expect } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Answer, Digest, FactRef, Intent, MemberRef, OperationId, Read, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, digestBytes, evidenceBindingDigest, factRefOf, intentDigest, isDigest, isHead, isRecord, isScopeRef, isSeed, readEvidenceBinding, same, scopeIdOf, signIntent, timeOf, utf8, type EvidenceBinding } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isDigest, isHead, isRecord, isScopeRef, isSeed, same, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { CAPABILITY_CODE, localRetainedPlan, outcomeValueDomains, ownersOf, validateDefinition, valueDigest, type StateView } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
@@ -11,7 +11,7 @@ import { invitationIssueFields, invitationRedemptionFields } from "@generalbusin
 import { configurationDigest, type Configuration, type Notice, type Scopes, type Variable } from "../../checkers/src/index.ts";
 import { idOf, isObjectId, parseCommit } from "@generalbusiness/dap-git";
 import { keys, type Actor } from "@generalbusiness/dap-derive/testing";
-import { platform as nativePlatform, RULES_CERTIFICATE_KIND, RULES_PATTERNS, RULES_TREE_PROOF } from "@generalbusiness/dap-platform";
+import { platform as nativePlatform, RULES_CERTIFICATE_KIND, RULES_PATTERNS, RULES_TREE_PROOF, evidenceBindingDigest, readEvidenceBinding, type EvidenceBinding } from "@generalbusiness/dap-platform";
 import { EVIDENCE_RULES_COHORT } from "../../platform/src/evidence-cohort.ts";
 import { rulesPolicyCheckersV13, rulesPolicyProposalV13, RULES_EXTENTS_VALUE_V13, type RulesPolicyV13 } from "../../platform/src/rules-policy-v13.ts";
 import { readEvidenceWireV17 } from "../../platform/src/evidence-wire-v17.ts";
@@ -172,15 +172,15 @@ export async function evidenceRulesObservation(room: EvidenceRoom) {
   if (Object.keys(answer).sort().join() !== "content,definition,head,of,revision,subject" || answer['subject'] !== "rules" || answer['definition'] !== "platform:rules@13"
     || !isScopeRef(answer['of']) || !same(answer['of'], await room.Q.at()) || !isHead(answer['head']) || typeof answer['revision'] !== "number"
     || !Number.isSafeInteger(answer['revision']) || answer['revision'] < 0 || answer['revision'] > answer['head'].seq || !isRecord(content)
-    || Object.keys(content).sort().join() !== "approvals,asked,checks,extents,labels,ownerMayReview,singleControllerException" || content['asked'] !== "rules"
+    || Object.keys(content).sort().join() !== "approvals,asked,checks,extents,labels,ownerMayReview,roomService,serviceGeneration,singleControllerException" || content['asked'] !== "rules"
     || raw['values'].length !== 1 || !isRecord(kept) || Object.keys(kept).sort().join() !== "bytes,domain" || kept['domain'] !== RULES_EXTENTS_VALUE_V13.domain)
-    throw Error("Actual unchanged Rules observation grammar required");
+    throw Error("Actual revision21 Rules observation grammar required");
   const decoded = readEvidenceWireV17(kept['bytes'], RULES_EXTENTS_VALUE_V13.max), envelope = decoded.ok ? decoded.value : null;
-  if (!isRecord(envelope) || Object.keys(envelope).sort().join() !== "certificate,configured,policy,proposal,serviceGeneration"
+  if (!isRecord(envelope) || Object.keys(envelope).sort().join() !== "certificate,configured,policy,proposal"
     || envelope['configured'] !== false || envelope['policy'] !== null || envelope['proposal'] !== null || envelope['certificate'] !== null
-    || valueDigest(RULES_EXTENTS_VALUE_V13.domain, envelope) !== content['extents'] || !isRecord(envelope['serviceGeneration']))
+    || valueDigest(RULES_EXTENTS_VALUE_V13.domain, envelope) !== content['extents'] || content['roomService'] !== null || !isRecord(content['serviceGeneration']))
     throw Error("Authenticated explicit unconfigured extents-3 envelope required");
-  const generation = envelope['serviceGeneration'];
+  const generation = content['serviceGeneration'];
   if (Object.keys(generation).sort().join() !== "rules,seq" || !isScopeRef(generation['rules']) || !same(generation['rules'], answer['of'])
     || generation['seq'] !== 0)
     throw Error("Scoped retained service generation required");

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { FactRef, KeyId } from "@generalbusiness/dap-contract";
-import type { EvidenceBinding } from "@generalbusiness/dap-bytes";
+import type { EvidenceBinding } from "../src/evidence.ts";
 import { canonicalize, keyIdOf } from "@generalbusiness/dap-bytes";
 import { d, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { evidenceProgressCohortV17, type EvidenceJobRecordV17 } from "../src/destination-evidence-v17.ts";

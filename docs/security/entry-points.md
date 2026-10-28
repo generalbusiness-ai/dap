@@ -214,8 +214,9 @@ body and the successor `{signed, stage: true}` body at the same membership gate.
 The hint selects the proof format and grants no authority. The successor requires
 the actual Native17 admission, full job identity, current checker key and source.
 Room jobs also read fresh Rules13 observations before Git access and before the
-answer. The host authenticates the bounded canonical retained extents value
-against that observation's digest; the generic observation grammar is unchanged.
+answer. RulesContent revision 21 carries the service mark and scoped generation.
+Earlier definitions retain their exact observation grammar. The host also
+authenticates the bounded canonical policy value against the extents digest.
 The full Rules reference, current service mark and generation, and check
 name, configuration and checker must match the admitted binding. Member jobs do
 not depend on the room service mark.
@@ -692,7 +693,7 @@ Gate owners: [address.ts](../../packages/bytes/src/address.ts),
 [destination-host.ts](../../packages/scope/src/destination-host.ts),
 [stage-snapshot.ts](../../packages/scope/src/stage-snapshot.ts),
 [stage-origin.ts](../../packages/checkers/src/stage-origin.ts),
-[evidence.ts](../../packages/bytes/src/evidence.ts),
+[evidence.ts](../../packages/platform/src/evidence.ts),
 [checkout-snapshot.ts](../../packages/git/src/checkout-snapshot.ts),
 [hosted.ts](../../packages/mcp/src/hosted.ts),
 [hosted-tools.ts](../../packages/mcp/src/hosted-tools.ts),

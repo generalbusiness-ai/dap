@@ -61,13 +61,24 @@ test("no platform package depends on the lanes package or imports from it", () =
 // runs the verifier with the platform's rules; the page, which reads a platform definition's acts as the command line does; and the
 // MCP server, which derives the act tools of the platform's scopes from those acts.
 const clientApplicationUsers = new Set(["packages/client/src/answers.ts", "packages/client/src/application-install.ts", "packages/client/src/application-json.ts", "packages/client/src/application-package.ts", "packages/client/src/application-projection.ts", "packages/client/src/application-types.ts", "packages/client/src/application-uri.ts", "packages/client/src/binding.ts", "packages/client/src/handle.ts", "packages/client/src/http.ts", "packages/client/src/signer.ts", "packages/client/test/application-projection.test.ts", "packages/client/package.json"]);
+const checkerPlatformUsers = new Set(["packages/checkers/package.json", "packages/checkers/src/container-records.ts", "packages/checkers/src/job.ts", "packages/checkers/src/outcome.ts", "packages/checkers/src/service.ts", "packages/checkers/src/signing.ts", "packages/checkers/src/stage-origin.ts", "packages/checkers/src/store.ts", "packages/checkers/test/stage-identity.test.ts", "packages/checkers/test/support/stage-service.ts", "packages/checkers/test/support/evidence-container-bridge.mjs"]);
+const platformConsumerAllowed = file => clientApplicationUsers.has(file) || checkerPlatformUsers.has(file) || /^packages\/(platform|scope|replay|lanes|cli|page|mcp)\//.test(packagePath(file));
 test("the platform package depends only on contract, bytes, derive and package graph, and only its runtime consumers and exact client application wrappers name it", () => {
   assert.ok(files.includes("packages/platform/package.json"), "the platform package was listed");
   const source = (f) => packagePath(f).startsWith("packages/") && !f.endsWith(".md");
   const inside = files.filter((f) => source(f) && packagePath(f).startsWith("packages/platform/"));
   assert.deepEqual(inside.filter((f) => /(?:artroom|dap)-(scope|replay|client|lanes)/.test(text(f))), []);
-  const named = files.filter((f) => source(f) && !clientApplicationUsers.has(f) && !/^packages\/(platform|scope|replay|lanes|cli|page|mcp)\//.test(packagePath(f)));
+  const named = files.filter((f) => source(f) && !platformConsumerAllowed(f));
   assert.deepEqual(named.filter((f) => /(?:artroom|dap)-platform/.test(text(f))), []);
+});
+
+test("the exact checker codec consumers do not permit a Git-to-Platform cycle or another checker import", () => {
+  const git = "packages/git/src/checkout-snapshot.ts", extra = "packages/checkers/src/runner.ts";
+  for (const file of [git, extra]) {
+    const mutated = text(file) + '\nimport "@generalbusiness/dap-platform";\n';
+    assert.ok(/(?:artroom|dap)-platform/.test(mutated));
+    assert.equal(platformConsumerAllowed(file), false, `${file} must remain outside the exact Platform consumer boundary`);
+  }
 });
 
 // The git package is the one place that touches a Git repository or a Git host (I3 plan, section 3.1). It depends only on contract and
@@ -84,6 +95,16 @@ const applicationGitUsers = new Set(["packages/mcp/package.json", "packages/mcp/
 // witnesses combine real Git archives with offline Replay; Git itself stays
 // below Replay and imports none of it, including from its own tests.
 const rulesProofGitUsers = new Set(["packages/platform/package.json", "packages/platform/src/rules-policy-tree.ts", "packages/platform/src/destination-evidence-v17.ts"]);
+const checkoutTypeEdge = (file, body, span) => {
+  if (file !== "packages/platform/src/evidence.ts" || span.value !== "@generalbusiness/dap-git") return false;
+  const start = body.lastIndexOf("\n", span.start) + 1, end = body.indexOf("\n", span.end);
+  return body.slice(start, end < 0 ? body.length : end).trim() === 'import type { OwnedCheckoutSnapshot } from "@generalbusiness/dap-git";';
+};
+const evidenceGitTypeOnly = (file, body = text(file)) => {
+  if (file !== "packages/platform/src/evidence.ts") return false;
+  const references = moduleSpecifierSpans(body).filter(span => /dap-git|(?:^|\/)git\//.test(span.value));
+  return references.length === 1 && checkoutTypeEdge(file, body, references[0]);
+};
 const replayGitUsers = new Set(["packages/replay/src/git.ts", "packages/replay/test/archive-git.test.ts", "packages/replay/test/archive-git-fixture.ts", "packages/replay/package.json",
   "packages/replay/test/archive-git-v2-convert.test.ts", "packages/replay/test/archive-git-v2-layout.test.ts", "packages/replay/test/archive-git-v2-reader.test.ts",
   "packages/replay/test/archive-anchor-ranges.test.ts"]);
@@ -92,7 +113,7 @@ test("Git keeps its lower-layer dependencies; Replay names it only at its exact 
   const source = (f) => packagePath(f).startsWith("packages/") && !f.endsWith(".md");
   const inside = files.filter((f) => source(f) && packagePath(f).startsWith("packages/git/"));
   assert.deepEqual(inside.filter((f) => /(?:artroom|dap)-(derive|platform|scope|replay|client|lanes|checkers)/.test(text(f))), []);
-  const named = files.filter((f) => source(f) && !replayGitUsers.has(f) && !applicationGitUsers.has(f) && !rulesProofGitUsers.has(f) && !/^packages\/(git|scope|checkers)\/|^packages\/platform\/test\//.test(packagePath(f)));
+  const named = files.filter((f) => source(f) && !replayGitUsers.has(f) && !applicationGitUsers.has(f) && !rulesProofGitUsers.has(f) && !evidenceGitTypeOnly(f) && !/^packages\/(git|scope|checkers)\/|^packages\/platform\/test\//.test(packagePath(f)));
   assert.deepEqual(named.filter((f) => /dap-git/.test(text(f))), []);
   const replay = JSON.parse(text("packages/replay/package.json"));
   assert.equal(replay.dependencies?.["@generalbusiness/dap-git"], undefined);
@@ -104,8 +125,14 @@ test("rules tree proofs use only the exact pure Git parser boundary", () => {
   const allowed = (file, specifier) => ["packages/platform/src/rules-policy-tree.ts", "packages/platform/src/destination-evidence-v17.ts"].includes(file)
     && specifier === "@generalbusiness/dap-git/tree-proof";
   for (const file of files.filter(f => /^packages\/platform\/src\/.*\.ts$/.test(f))) {
-    for (const { value } of moduleSpecifierSpans(text(file))) if (/dap-git|(?:^|\/)git\//.test(value)) assert.equal(allowed(file, value), true, `${file}: ${value}`);
+    const body = text(file);
+    for (const span of moduleSpecifierSpans(body)) if (/dap-git|(?:^|\/)git\//.test(span.value)) assert.equal(allowed(file, span.value) || checkoutTypeEdge(file, body, span), true, `${file}: ${span.value}`);
   }
+  const bindingFile = "packages/platform/src/evidence.ts", bindingSource = text(bindingFile);
+  assert.equal(evidenceGitTypeOnly(bindingFile, bindingSource), true);
+  const runtimeImport = bindingSource.replace('import type { OwnedCheckoutSnapshot }', 'import { OwnedCheckoutSnapshot }');
+  assert.notEqual(runtimeImport, bindingSource, "The control changes the actual type import");
+  assert.equal(evidenceGitTypeOnly(bindingFile, runtimeImport), false, "A runtime Git barrel import stays forbidden");
   const finite = new Map([
     ["packages/git/src/tree-proof.ts", ["./reader.ts", "./pure-names.ts"]],
     ["packages/git/src/reader.ts", ["./ascii.ts", "@generalbusiness/dap-bytes", "@noble/hashes/legacy.js", "./pure-names.ts"]],
@@ -160,11 +187,12 @@ test("archive Node exceptions are exact and preserve portable and Git dependency
 // against a real lane and a job-bound snapshot. Its test-only container bridge
 // shares that service boundary. The exact evidence Native helper composes
 // real authority with the separate service. No production source reaches it.
-test("the checkers package depends only on contract, bytes and git, and no package names it", () => {
+test("the checkers package uses Platform only at its exact evidence boundaries and no package names the service", () => {
   assert.ok(files.includes("packages/checkers/package.json"), "the checkers package was listed");
   const source = (f) => packagePath(f).startsWith("packages/") && !f.endsWith(".md");
   const inside = files.filter((f) => source(f) && packagePath(f).startsWith("packages/checkers/"));
-  assert.deepEqual(inside.filter((f) => /(?:artroom|dap)-(derive|platform|scope|replay|client|lanes)/.test(text(f))), []);
+  assert.deepEqual(inside.filter((f) => /(?:artroom|dap)-(derive|scope|replay|client|lanes)/.test(text(f))), []);
+  assert.deepEqual(inside.filter((f) => /(?:artroom|dap)-platform/.test(text(f))).sort(), [...checkerPlatformUsers].sort());
   const named = files.filter((f) => source(f) && !packagePath(f).startsWith("packages/checkers/"));
   assert.deepEqual(named.filter((f) => /dap-checkers/.test(text(f))), []);
   const reaches = files.filter((f) => source(f) && !packagePath(f).startsWith("packages/checkers/") && /(?:[.\/]\/|packages\/)checkers\//.test(text(f)));

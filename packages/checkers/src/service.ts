@@ -65,8 +65,9 @@
  */
 
 import type { ReservationSnapshot, Answer, Digest, PlatformDefinition, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, evidenceBindingDigest, isRecord, parseStrict, timeMs, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { verifyOwnedCheckoutSnapshot, type StageSnapshot } from "@generalbusiness/dap-git";
+import { b64url, canonicalize, isRecord, parseStrict, timeMs, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { evidenceBindingDigest, type StageSnapshot } from "@generalbusiness/dap-platform";
+import { verifyOwnedCheckoutSnapshot } from "@generalbusiness/dap-git";
 import { readConfiguration, type Configuration } from "./configuration.ts";
 import { verifyReservationObjects } from "./reservation-snapshot.ts";
 import { manifestOf, originOf, type Job, type NotAJob, type Notice } from "./job.ts";

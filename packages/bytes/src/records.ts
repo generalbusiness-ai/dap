@@ -214,7 +214,14 @@ const furtherObservation = variant("subject", {
       // Revision 19 (row I3-36): under a rules definition whose data states the value, the record also holds `singleControllerException`.
       // Revision 20 (row I3-43): and `extents`, a digest, under one whose data states that slot. Which of the two a definition states
       // is not known here: derive's `contentStates` makes that check, with the data of the observation's `definition`.
-      rules: recordShape({ asked: any, approvals: isLocalId, ownerMayReview: flag, checks: listOf(recordShape({ name: wellFormedText, configuration: isDigest, required: flag, checker: isMemberId })), labels: listOf(wellFormedText) }, { singleControllerException: flag, extents: isDigest }),
+      // Revision 21 (ruling 1bc4f7fd, docs/kernel.md section 7): `roomService` and `serviceGeneration` state what a judge may know
+      // of the Rules scope's admin-published mark and native-selected scoped position. The exactness check requires both only
+      // when the definition declares `roomServiceChanged`; earlier definitions have neither. Retained extents cannot prove the position.
+      rules: recordShape({ asked: any, approvals: isLocalId, ownerMayReview: flag, checks: listOf(recordShape({ name: wellFormedText, configuration: isDigest, required: flag, checker: isMemberId })), labels: listOf(wellFormedText) }, {
+        singleControllerException: flag, extents: isDigest,
+        roomService: orNull(recordShape({ checker: memberRef, key: isKeyId })),
+        serviceGeneration: recordShape({ rules: scopeRef, seq: isLocalId }),
+      }),
       definitions: recordShape({ asked: any, active: listOf(recordShape({ digest: isDigest, name: wellFormedText })) }),
     }),
   }),

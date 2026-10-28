@@ -1,7 +1,8 @@
 /** G17 new-work funding and serial, post-write published checks.
  * A self request opens each holder. Outcomes open only nonholder cursors. */
 import type { Digest, FactRef, FieldValue, PlatformData } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, evidenceBindingDigest, isFactRef, isRecord, same } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, isFactRef, isRecord, same } from "@generalbusiness/dap-bytes";
+import { evidenceBindingDigest } from "./evidence.ts";
 import { operationOpening, type Item, type Operation, type OutcomeGives, type Own, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView } from "@generalbusiness/dap-derive";
 import { claimEvidenceBatchJobV17, obligationChecksV17, readEvidenceBatchV17, readEvidenceBatchWireV17, evidenceBatchWireV17, selectEvidenceBatchV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
 import { certifiedPublicationStateWireV17, CERTIFIED_PUBLICATION_TEXT_BYTES_V17, evidenceCarryingBudgetV17, type CertifiedPublicationStateV17 } from "./destination-budget-v17.ts";

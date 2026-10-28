@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
-import type { FactRef, KeyId, MemberObservation, Observation, RulesObservation } from "@generalbusiness/dap-contract";
-import { canonicalize, type EvidenceBinding, type ScopedRulesPosition, type ServiceMark } from "@generalbusiness/dap-bytes";
+import type { FactRef, KeyId, MemberObservation, Observation, RulesObservation, ScopedRulesPosition, ServiceMark } from "@generalbusiness/dap-contract";
+import { canonicalize } from "@generalbusiness/dap-bytes";
+import type { EvidenceBinding } from "../src/evidence.ts";
 import { keys, otherLane, d, t } from "@generalbusiness/dap-derive/testing";
 import { valueDigest } from "@generalbusiness/dap-derive";
 import { keyObserved, MEMBERSHIP, RULES } from "./support-destination.ts";
@@ -106,16 +107,16 @@ test("unavailable Rules retains a typed null observed generation instead of inve
 type RulesContent = Extract<RulesObservation["content"], { asked: "rules" }>;
 function observedPolicy(complete: RulesPolicyV13) {
   const proposed = rulesPolicyProposalV13(complete); if (!proposed.ok) throw Error("Scripted complete policy is invalid");
-  const envelope = { configured: true, policy: proposed.policy, proposal: proposed.digest, certificate, serviceGeneration: generation(2) };
+  const envelope = { configured: true, policy: proposed.policy, proposal: proposed.digest, certificate };
   const content: RulesContent = { asked: "rules", approvals: complete.approvals, ownerMayReview: complete.ownerMayReview,
     checks: complete.checks.map(({ name, configuration, required, checker }) => ({ name, configuration, required, checker: checker.member })),
     labels: [...complete.labels], singleControllerException: complete.singleControllerException === true,
-    extents: valueDigest("artroom-rules-extents-3", envelope) };
+    extents: valueDigest("artroom-rules-extents-3", envelope), roomService: complete.roomService, serviceGeneration: generation(2) };
   const observed: RulesObservation & { content: RulesContent } = { subject: "rules", of: RULES, head: { seq: 6, hash: d("d") }, revision: 5, definition: "platform:rules@13", at: t(10), content };
   return { observed, envelope, input: { rules: RULES, destination, extents: envelope } };
 }
 
-test("Q13 reads its complete retained policy and generation against the unchanged Rules projection", () => {
+test("Q13 reads complete retained policy against authenticated revision21 Rules service fields", () => {
   const rich: RulesCheckV13 = { ...roomCheck, reuse: false, stage: "published", holds: true };
   const scripted = observedPolicy(policy([rich])), read = readRulesPolicyObservationV17(scripted.observed, scripted.input, t(10));
   expect(read).toMatchObject({ ok: true, view: { policy: { checks: [{ source: "room", stage: "published", holds: true, reuse: false }], roomService: mark }, serviceGeneration: generation(2) } });
@@ -127,15 +128,12 @@ test("Q13 reads its complete retained policy and generation against the unchange
   expect(readRulesPolicyObservationV17(changedSummary, scripted.input, t(10))).toEqual({ ok: false, reason: "evidence-invalid" });
   const withEnvelope = (envelope: unknown) => readRulesPolicyObservationV17({ ...scripted.observed,
     content: { ...scripted.observed.content, extents: valueDigest("artroom-rules-extents-3", envelope) } }, { ...scripted.input, extents: envelope }, t(10));
-  const { serviceGeneration: _generation, ...missingGeneration } = scripted.envelope;
-  expect(withEnvelope(missingGeneration)).toEqual({ ok: false, reason: "evidence-invalid" });
-  for (const serviceGeneration of [generation(6), generation(0), { ...generation(2), rules: { ...RULES, inc: MEMBERSHIP.inc } }]) {
-    expect(withEnvelope({ ...scripted.envelope, serviceGeneration })).toEqual({ ok: false, reason: "evidence-invalid" });
+  expect(withEnvelope({ ...scripted.envelope, serviceGeneration: generation(2) })).toEqual({ ok: false, reason: "evidence-invalid" });
+  const { serviceGeneration: _generation, ...missingGeneration } = scripted.observed.content;
+  expect(readRulesPolicyObservationV17({ ...scripted.observed, content: missingGeneration }, scripted.input, t(10))).toEqual({ ok: false, reason: "evidence-invalid" });
+  for (const serviceGeneration of [generation(6), generation(0), { ...generation(2), rules: { ...RULES, inc: MEMBERSHIP.inc } }, { ...generation(2), seq: -0 }]) {
+    expect(readRulesPolicyObservationV17({ ...scripted.observed, content: { ...scripted.observed.content, serviceGeneration } }, scripted.input, t(10))).toEqual({ ok: false, reason: "evidence-invalid" });
   }
-  // Negative zero has no canonical digest. Pass the malformed input directly;
-  // never manufacture an impossible authenticated canonical envelope for it.
-  expect(readRulesPolicyObservationV17(scripted.observed, { ...scripted.input,
-    extents: { ...scripted.envelope, serviceGeneration: { ...generation(2), seq: -0 } } }, t(10))).toEqual({ ok: false, reason: "evidence-invalid" });
   expect(readRulesPolicyObservationV17({ ...scripted.observed, definition: "platform:rules@12" }, scripted.input, t(10))).toEqual({ ok: false, reason: "evidence-invalid" });
   expect(readRulesPolicyObservationV17(scripted.observed, scripted.input, t(20.001))).toEqual({ ok: false, reason: "evidence-invalid" });
   expect(readRulesPolicyObservationV17(scripted.observed, scripted.input, t(9))).toEqual({ ok: false, reason: "evidence-invalid" });
@@ -148,11 +146,11 @@ test("a fresh Q13 host reply authenticates its exact retained domain, canonical 
   const scripted = observedPolicy(policy([roomCheck])), { at: _at, ...answer } = scripted.observed;
   const value = { domain: "artroom-rules-extents-3", bytes: canonicalize(scripted.envelope) }, reply = { answer, values: [value] };
   expect(readRulesPolicyReplyV17(reply, RULES, destination, t(10))).toEqual(readRulesPolicyObservationV17(scripted.observed, scripted.input, t(10)));
-  expect(Object.hasOwn(answer.content, "roomService")).toBe(false);
-  expect(Object.hasOwn(answer.content, "serviceGeneration")).toBe(false);
+  expect(answer.content.roomService).toEqual(mark);
+  expect(answer.content.serviceGeneration).toEqual(generation(2));
   for (const malformed of [answer, { answer, values: [] }, { answer, values: [value, value] }, { answer, values: [{ ...value, domain: "artroom-rules-extents-2" }] },
     { answer, values: [{ ...value, bytes: " " + value.bytes }] }, { answer, values: [{ ...value, bytes: "{" }] },
-    { answer, values: [{ ...value, bytes: " ".repeat(262_145) }] }, { answer: { ...answer, content: { ...answer.content, roomService: mark } }, values: [value] },
+    { answer, values: [{ ...value, bytes: " ".repeat(262_145) }] }, { answer: { ...answer, content: { ...answer.content, roomService: rotated } }, values: [value] },
     { answer: { ...answer, content: { ...answer.content, extents: d("f") } }, values: [value] }]) {
     expect(readRulesPolicyReplyV17(malformed, RULES, destination, t(10))).toEqual({ ok: false, reason: "evidence-invalid" });
   }

@@ -20,7 +20,7 @@ function retainedPolicy(state: StateView): Record<string, unknown> {
   if (!answer || answer.content.asked !== "rules" || values.length !== 1) throw Error("The actual Q13 answer must name exactly one retained policy");
   const value = values[0]!, envelope = parseStrict(value.bytes);
   if (!isRecord(envelope)) throw Error("The retained policy must be a record");
-  expect(Object.keys(envelope).sort()).toEqual(["certificate", "configured", "policy", "proposal", "serviceGeneration"]);
+  expect(Object.keys(envelope).sort()).toEqual(["certificate", "configured", "policy", "proposal"]);
   expect(value.domain).toBe(RULES_EXTENTS_VALUE_V13.domain);
   expect(utf8(value.bytes).length).toBeLessThanOrEqual(RULES_EXTENTS_VALUE_V13.max);
   expect(canonicalize(envelope)).toBe(value.bytes);
@@ -28,15 +28,19 @@ function retainedPolicy(state: StateView): Record<string, unknown> {
   return envelope;
 }
 
-test("Q13 retains scoped service metadata beside the unchanged Rules projection and preserves its observation ceiling", () => {
+test("Q13 observes scoped service metadata under revision21 and preserves earlier observation grammars", () => {
   const answer = rulesAnswerV13(state, { of: rules, asked: "rules" });
   expect(answer?.content.asked).toBe("rules");
   if (!answer || answer.content.asked !== "rules") throw Error("Missing Rules answer");
-  expect(Object.hasOwn(answer.content, "roomService")).toBe(false);
-  expect(Object.hasOwn(answer.content, "serviceGeneration")).toBe(false);
-  expect(retainedPolicy(state)).toMatchObject({ configured: false, policy: null, serviceGeneration: { rules, seq: 0 } });
+  expect(answer.content.roomService).toBeNull();
+  expect(answer.content.serviceGeneration).toEqual({ rules, seq: 0 });
+  expect(retainedPolicy(state)).toMatchObject({ configured: false, policy: null });
+  expect(Object.hasOwn(retainedPolicy(state), "serviceGeneration")).toBe(false);
   expect(contentChecked({ ...answer, at: "2026-10-28T00:00:00Z" }, contentStates(rulesScopeV13))).toBe(true);
-  expect(contentChecked({ ...answer, at: "2026-10-28T00:00:00Z" }, contentStates(rulesScopeV12))).toBe(true);
+  expect(contentChecked({ ...answer, at: "2026-10-28T00:00:00Z" }, contentStates(rulesScopeV12))).toBe(false);
+  const { roomService: _mark, serviceGeneration: _generation, ...oldContent } = answer.content;
+  expect(contentChecked({ ...answer, content: oldContent, at: "2026-10-28T00:00:00Z" }, contentStates(rulesScopeV12))).toBe(true);
+  expect(contentChecked({ ...answer, content: oldContent, at: "2026-10-28T00:00:00Z" }, contentStates(rulesScopeV13))).toBe(false);
   const longChecker = { ...checker, member: `@${"a".repeat(255)}` as const };
   const policy = { approvals: 1, ownerMayReview: false, roomService: { checker: longChecker, key: `key_${"A".repeat(43)}` },
     checks: Array.from({ length: 32 }, (_, n) => ({ name: "\0".repeat(127) + String.fromCharCode(n), configuration: digest, required: true, checker: longChecker })),
@@ -50,7 +54,7 @@ test("Q13 retains scoped service metadata beside the unchanged Rules projection 
       policy: canonicalize(parsed.policy), proposal: parsed.digest, certificate: { request: fact, certificate: { ...fact, seq: 2 }, proof: digest, commit: "a".repeat(40) } } }] }) } as unknown as StateView;
   const oldProjection = { asked: "rules", approvals: policy.approvals, ownerMayReview: policy.ownerMayReview,
     checks: policy.checks.map(({ name, configuration, required, checker }) => ({ name, configuration, required, checker: checker.member })),
-    labels: policy.labels, singleControllerException: false, extents: digest };
+    labels: policy.labels, singleControllerException: false, extents: digest, roomService: policy.roomService, serviceGeneration: { rules, seq: 8 } };
   const largeAnswer = rulesAnswerV13(huge, { of: rules, asked: "rules" });
   expect(largeAnswer === null).toBe(utf8(canonicalize(oldProjection)).length > RULES_CONTENT_BYTES_V13);
   if (largeAnswer) expect(utf8(canonicalize(largeAnswer.content)).length).toBeLessThanOrEqual(RULES_CONTENT_BYTES_V13);
@@ -63,7 +67,8 @@ test("Q13 retains scoped service metadata beside the unchanged Rules projection 
   const observed = rulesAnswerV13(later, { of: rules, asked: "rules" });
   expect(observed?.revision).toBe(10);
   expect(observed?.content.asked).toBe("rules");
-  expect(retainedPolicy(later)).toMatchObject({ configured: true, policy: { roomService: null }, serviceGeneration: { rules, seq: 7 } });
+  expect(observed?.content.asked === "rules" && observed.content.serviceGeneration).toEqual({ rules, seq: 7 });
+  expect(retainedPolicy(later)).toMatchObject({ configured: true, policy: { roomService: null } });
   const objectFallback = { ...later, page: () => ({ items: later.page("rules", ["current"], null, 1).items.map(row => ({ ...row, values: { ...row.values, policy: withdrawn.policy } })) }) } as unknown as StateView;
   expect(rulesAnswerV13(objectFallback, { of: rules, asked: "rules" })).toBeNull();
 });

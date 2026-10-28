@@ -1,6 +1,5 @@
 /** Public immutable checkout data, independent of a live reservation or credential. */
-import type { ScopeRef, Sealed } from "@generalbusiness/dap-contract";
-import { isRecord, type EvidenceBinding } from "@generalbusiness/dap-bytes";
+import { isRecord } from "@generalbusiness/dap-bytes";
 import { isObjectId } from "./names.ts";
 import { idOf, READ_BOUNDS, Reader } from "./reader.ts";
 
@@ -10,17 +9,6 @@ export interface OwnedCheckoutSnapshot {
   tree: string;
   objects: readonly { id: string; type: "blob" | "tree" | "commit"; data: Uint8Array }[];
 }
-
-/** Actual successor admission and source facts. Never label this as an old reservation proof. */
-export interface StageSnapshot extends OwnedCheckoutSnapshot {
-  v: 1;
-  destination: ScopeRef;
-  job: Sealed;
-  admission: Sealed;
-  binding: EvidenceBinding;
-  sources: readonly Sealed[];
-}
-export type StageSnapshotReply = StageSnapshot | { refused: "stage-origin-mismatch" | "wrong-source" } | null;
 
 export const STAGE_SNAPSHOT_BOUNDS = { proofBytes: 262_144, objectBytes: 16 * 1024 * 1024, objects: 4096 } as const;
 

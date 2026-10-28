@@ -319,10 +319,14 @@ Only an admin can change that pair. Destination observes current Rules and
 Membership when it admits and counts a result. Rotation refuses unfinished
 room jobs under the earlier generation. Member jobs retain their separate
 member authority.
-The generic Rules observation grammar stays unchanged. Its existing retained
-extents value carries the successor policy and service generation under a
-dedicated domain. Native and host readers verify those exact bounded bytes.
-The dedicated bytes evidence API owns the successor binding types and codec.
+Rules observation revision 21 carries the nullable service mark and its
+scoped generation exactly when the pinned Rules data declares
+`roomServiceChanged`. Earlier definitions retain their exact observation
+shape. The retained extents value carries the policy and certificate;
+the authenticated observation supplies the service position. Platform owns
+the job binding types and codec; the kernel retains only the two types that
+the observation needs. This addition follows the review rule in
+[Kernel boundary, section 7](kernel.md#7-rule-for-adding-to-the-kernel).
 
 A lane queues an evidence request before Destination decides it. A selected
 `evidence-admit` outcome opens the admitted job and records its immutable

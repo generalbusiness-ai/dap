@@ -1,6 +1,7 @@
 /** Pure G17 hold order and incident state. Authority and native atomicity belong to the caller. */
 import type { Digest, FactRef, HoldersObservation, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import type { CheckSource, ScopedRulesPosition } from "@generalbusiness/dap-bytes";
+import type { ScopedRulesPosition } from "@generalbusiness/dap-contract";
+import type { CheckSource } from "./evidence.ts";
 import { canonicalize, digestBytes, isDigest, isFactRef, isMemberRef, isRecord, isScopeRef, parseStrict, same, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import { EVIDENCE_LIMITS_V17, evidencePositionV17 } from "./evidence-index-v17.ts";
 

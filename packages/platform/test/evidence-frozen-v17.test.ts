@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import type { FactRef } from "@generalbusiness/dap-contract";
-import type { EvidenceBinding, ServiceMark } from "@generalbusiness/dap-bytes";
+import type { ServiceMark } from "@generalbusiness/dap-contract";
+import type { EvidenceBinding } from "../src/evidence.ts";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { d, keys, otherLane } from "@generalbusiness/dap-derive/testing";
 import { evidenceFrozenBatchMatchesV17 } from "../src/destination-evidence-v17.ts";

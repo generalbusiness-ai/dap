@@ -243,6 +243,18 @@ A head adds to the kernel when it does any of these:
   inside `packages/derive` or `packages/replay`.
 
 The checker checks this rule on every head that touches these packages.
+
+Rules observation record revision 21 is permitted by ruling `1bc4f7fd`
+under this section. Its nullable `roomService` and scoped
+`serviceGeneration` occur exactly when the pinned Rules data declares
+`roomServiceChanged`. Earlier definitions retain their exact records.
+The observation is the kernel form for what a judge may know of Rules;
+its native-selected position belongs to that authenticated record. A
+retained policy value alone cannot establish the position. Contract keeps
+only the two type-only interfaces needed by the record. The job binding
+vocabulary and its codec belong to platform. This addition changes no
+timed form, fold or replay rule and closes no K item. The exact-head review
+must assess this reason and the definition-specific record checks.
 A head that removes a kernel promise also needs this review.
 
 Request `30c7c3ec` makes two file/export additions under this rule, while

@@ -167,7 +167,7 @@ export interface McpEnv extends Env { REGISTRIES: DurableObjectNamespace; AGENTS
 interface Remote {
   observed?(method: ObservedMethod, args: unknown[], identity: OperationalIdentity, httpPublic?: boolean): Promise<{ value: unknown; turn: boolean }>;
   reservationSnapshot(asked: SignedIntent): Promise<import("@generalbusiness/dap-contract").ReservationSnapshot | { refused: "reservation-stage-missing" | "reservation-stage-mismatch" } | null>;
-  stageSnapshot(asked: SignedIntent): Promise<import("@generalbusiness/dap-git").StageSnapshotReply>;
+  stageSnapshot(asked: SignedIntent): Promise<import("@generalbusiness/dap-platform").StageSnapshotReply>;
   create(creation: SignedIntent, definition: DeclaredDefinition | Digest | PlatformDefinition, definitions?: readonly DeclaredDefinition[], beside?: Beside): Promise<Created>;
   submit(signed: SignedIntent, grants: readonly Grant[], beside?: Beside, address?: string | null): Promise<Answer>;
   prepare(signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer>;
@@ -197,7 +197,7 @@ const MISSING = { ok: false, reason: "not-found" } as const;
 interface StreamExchange { body: ReadableStream<Uint8Array>; close(): Promise<void> }
 export interface Api extends ScopeApi {
   reservationSnapshot(scope: string, asked: SignedIntent): Promise<import("@generalbusiness/dap-contract").ReservationSnapshot | { refused: "reservation-stage-missing" | "reservation-stage-mismatch" } | null>;
-  stageSnapshot(scope: string, asked: SignedIntent): Promise<import("@generalbusiness/dap-git").StageSnapshotReply>;
+  stageSnapshot(scope: string, asked: SignedIntent): Promise<import("@generalbusiness/dap-platform").StageSnapshotReply>;
   session(scope: string, asked: unknown): Promise<SessionIssueAnswer>;
   /** The body is the reader's side of the stream (`relay`): cancelling it releases the scope's subscription at once. */
   stream(scope: string, reader: unknown): Promise<ReadableStream<Uint8Array> | StreamRefusal | typeof MISSING>;

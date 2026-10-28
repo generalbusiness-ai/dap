@@ -1,6 +1,7 @@
 /** G17-only bounded evidence records. No history, storage, or authority is read here. */
 import type { Bounds, Digest, FactRef, KeyId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, isDigest, isFactRef, isKeyId, isMemberRef, isRecord, isScopeRef, parseStrict, readEvidenceBinding, same, utf8, wellFormed, type CheckSource, type CheckStage, type EvidenceBinding } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, isDigest, isFactRef, isKeyId, isMemberRef, isRecord, isScopeRef, parseStrict, same, utf8, wellFormed } from "@generalbusiness/dap-bytes";
+import { readEvidenceBinding, type CheckSource, type CheckStage, type EvidenceBinding } from "./evidence.ts";
 import { amountMath, naturalAmount, NOTHING, type Amount } from "@generalbusiness/dap-derive";
 
 export const EVIDENCE_LIMITS_V17 = { keys: 2048, candidates: 8, keyBytes: 32768, holds: 512, policyGenerations: 512, incidents: 8192, triagers: 32 } as const;

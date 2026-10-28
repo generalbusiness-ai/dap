@@ -120,7 +120,7 @@ export type LateAnswers = (operation: OperationId, attempt: number, answer: Effe
 export interface Outside {
   snapshot?(asked: import("@generalbusiness/dap-contract").SignedIntent): Promise<import("@generalbusiness/dap-contract").ReservationSnapshot | { refused: "reservation-stage-missing" | "reservation-stage-mismatch" } | null>;
   /** Successor stage proof; the signed job and native admission own access. */
-  stageSnapshot?(asked: import("@generalbusiness/dap-contract").SignedIntent): Promise<import("@generalbusiness/dap-git").StageSnapshotReply>;
+  stageSnapshot?(asked: import("@generalbusiness/dap-contract").SignedIntent): Promise<import("@generalbusiness/dap-platform").StageSnapshotReply>;
   accepts(owner: CapabilityName | PlatformDefinition, kind: string): boolean;
   send(request: EffectRequest): Promise<EffectAnswer | null>;
   late?(deliver: LateAnswers): void;

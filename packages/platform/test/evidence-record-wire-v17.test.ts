@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import type { FactRef } from "@generalbusiness/dap-contract";
-import { canonicalize, evidenceBindingDigest, isFieldValue, type EvidenceBinding } from "@generalbusiness/dap-bytes";
+import { canonicalize, isFieldValue } from "@generalbusiness/dap-bytes";
+import { evidenceBindingDigest, type EvidenceBinding } from "../src/evidence.ts";
 import { d, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { RuleFault, type RuleGiven } from "@generalbusiness/dap-derive";
 import { evidenceDestinationRulesV17, evidenceJobRecordWireV17, evidenceRecordEffectV17, readEvidenceJobRecordV17, readEvidenceJobRecordWireV17, readEvidenceServiceWireV17,

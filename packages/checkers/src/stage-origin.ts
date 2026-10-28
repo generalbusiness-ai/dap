@@ -1,7 +1,8 @@
 /** Successor job origin: an actual G17 admission, never a synthetic legacy manifest. */
 import type { Digest, Effect, FactRef, KeyId, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalBytes, canonicalize, entryHash, evidenceBindingDigest, isDigest, isEntry, isFactRef, isRecord, parseStrict, readEvidenceBinding, timeMs, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { isObjectId, readOwnedCheckoutSnapshot, STAGE_SNAPSHOT_BOUNDS, type StageSnapshot, type StageSnapshotReply } from "@generalbusiness/dap-git";
+import { canonicalBytes, canonicalize, entryHash, isDigest, isEntry, isFactRef, isRecord, parseStrict, timeMs, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { evidenceBindingDigest, readEvidenceBinding, type StageSnapshot, type StageSnapshotReply } from "@generalbusiness/dap-platform";
+import { isObjectId, readOwnedCheckoutSnapshot, STAGE_SNAPSHOT_BOUNDS } from "@generalbusiness/dap-git";
 import type { Job, Notice, Origin, OriginRead } from "./job.ts";
 
 const same = (a: unknown, b: unknown): boolean => canonicalize(a) === canonicalize(b);

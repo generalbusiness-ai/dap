@@ -1,7 +1,8 @@
 /** G17 native job records. Every full native fact below is resolved only
  * after its entry was sealed. Indexes contain live and decided anchors. */
-import type { Digest, Entry, FactRef, FieldValue, KeyId, Observation, PlatformData, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, evidenceBindingDigest, isDigest, isFactRef, isHead, isKeyId, isRecord, isScopeRef, parseStrict, readEvidenceBinding, same as equalCanonical, textDigest, timeMs, unb64url, utf8, type EvidenceBinding, type ScopedRulesPosition } from "@generalbusiness/dap-bytes";
+import type { Digest, Entry, FactRef, FieldValue, KeyId, Observation, PlatformData, ScopedRulesPosition, Timestamp } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, isDigest, isFactRef, isHead, isKeyId, isRecord, isScopeRef, parseStrict, same as equalCanonical, textDigest, timeMs, unb64url, utf8 } from "@generalbusiness/dap-bytes";
+import { evidenceBindingDigest, readEvidenceBinding, type EvidenceBinding } from "./evidence.ts";
 import { idOf, isObjectId, parseCommit } from "@generalbusiness/dap-git/tree-proof";
 import { isEntryOf, RuleFault, type Item, type Operation, type Own, type Opening, type OutcomeGives, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { readEvidenceDecisionV17 } from "./evidence-decision-v17.ts";

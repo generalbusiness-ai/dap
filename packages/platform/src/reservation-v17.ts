@@ -2,8 +2,9 @@
  * passed native canonical/domain/member bounds and sibling authentication.
  * This module checks correspondence and policy; it neither fetches nor
  * authenticates an observation or a certificate supplied by a caller. */
-import type { Digest, FactRef, Head, MemberObservation, Observation, RulesObservation, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, utf8, isDigest, isFactRef, isHead, isRecord, isScopeRef, parseStrict, same, timeMs, type EvidenceBinding, type ScopedRulesPosition } from "@generalbusiness/dap-bytes";
+import type { Digest, FactRef, Head, MemberObservation, Observation, RulesObservation, ScopedRulesPosition, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
+import { canonicalize, utf8, isDigest, isFactRef, isHead, isRecord, isScopeRef, parseStrict, same, timeMs } from "@generalbusiness/dap-bytes";
+import type { EvidenceBinding } from "./evidence.ts";
 import { byteOrder, valueDigest } from "@generalbusiness/dap-derive";
 import { classify } from "./extents.ts";
 import { fileSound, judgeReservation, judgeReservationWithStanding, reservationCheckStatus, type Reservation, type ReservationAsked, type ReservationRead, type ReservationStanding, type ReservationWithStanding, type Statement } from "./reservation.ts";
@@ -88,13 +89,13 @@ export function readRulesPolicyObservationV17(observed: RulesObservation | null,
   const at = timeMs(observed.at), now = timeMs(time);
   if (at === null || now === null || now < at || now - at > 10000) return invalid();
   const envelope = input.extents;
-  if (!isRecord(envelope) || !exact(envelope, ["configured", "policy", "proposal", "certificate", "serviceGeneration"]) || typeof envelope["configured"] !== "boolean" || !envelopeFits(envelope)) return invalid();
+  if (!isRecord(envelope) || !exact(envelope, ["configured", "policy", "proposal", "certificate"]) || typeof envelope["configured"] !== "boolean" || !envelopeFits(envelope)) return invalid();
   const outer = observed.content;
-  if (!exact(outer, ["asked", "approvals", "ownerMayReview", "checks", "labels", "singleControllerException", "extents"]) || !isDigest(outer.extents)) return invalid();
+  if (!exact(outer, ["asked", "approvals", "ownerMayReview", "checks", "labels", "singleControllerException", "extents", "roomService", "serviceGeneration"]) || !isDigest(outer.extents)) return invalid();
   // Values are native byte-admitted before this call. Even the unconfigured
   // envelope must be the one this authenticated observation actually names.
   if (valueDigest(EXTENTS_DOMAIN, envelope) !== outer.extents) return invalid();
-  const generation = envelope["serviceGeneration"];
+  const generation = outer.serviceGeneration;
   if (!isRecord(generation) || !exact(generation, ["rules", "seq"]) || !isScopeRef(generation["rules"]) || !same(generation["rules"], observed.of)
     || typeof generation["seq"] !== "number" || !Number.isSafeInteger(generation["seq"]) || Object.is(generation["seq"], -0)
     || generation["seq"] < 0 || generation["seq"] > observed.revision) return invalid();
@@ -106,7 +107,7 @@ export function readRulesPolicyObservationV17(observed: RulesObservation | null,
   if (outer.approvals !== policy.approvals || outer.ownerMayReview !== policy.ownerMayReview || !same(outer.labels, policy.labels)
     || outer.singleControllerException !== (policy.singleControllerException === true)
     || !same(outer.checks, policy.checks.map(({ name, configuration, required, checker }) => ({ name, configuration, required, checker: checker.member })))
-    || policy.roomService !== null && generation["seq"] === 0) return invalid();
+    || !same(outer.roomService, policy.roomService) || policy.roomService !== null && generation["seq"] === 0) return invalid();
   const certificate = envelope["certificate"];
   if (!isRecord(certificate) || !exact(certificate, ["request", "certificate", "proof", "commit"])
     || !isFactRef(certificate["request"]) || !isFactRef(certificate["certificate"]) || !isDigest(certificate["proof"])
@@ -135,9 +136,14 @@ export function readRulesPolicyReplyV17(reply: unknown, rules: ScopeRef, destina
     if (!isRecord(envelope) || canonicalize(envelope) !== retained["bytes"] || valueDigest(EXTENTS_DOMAIN, envelope) !== answer["content"]["extents"]) return invalid();
     const proposed = rulesPolicyProposalV13(envelope["policy"]);
     if (!proposed.ok) return invalid();
-    const policy = proposed.policy, content = { asked: "rules" as const, approvals: policy.approvals, ownerMayReview: policy.ownerMayReview,
+    const policy = proposed.policy, generation = answer["content"]["serviceGeneration"];
+    if (!isRecord(generation) || !exact(generation, ["rules", "seq"]) || !isScopeRef(generation["rules"]) || !same(generation["rules"], answer["of"])
+      || typeof generation["seq"] !== "number" || !Number.isSafeInteger(generation["seq"]) || Object.is(generation["seq"], -0)
+      || generation["seq"] < 0 || generation["seq"] > answer["revision"]) return invalid();
+    const content = { asked: "rules" as const, approvals: policy.approvals, ownerMayReview: policy.ownerMayReview,
       checks: policy.checks.map(({ name, configuration, required, checker }) => ({ name, configuration, required, checker: checker.member })), labels: policy.labels,
-      singleControllerException: policy.singleControllerException === true, extents: answer["content"]["extents"] };
+      singleControllerException: policy.singleControllerException === true, extents: answer["content"]["extents"], roomService: policy.roomService,
+      serviceGeneration: { rules: generation["rules"], seq: generation["seq"] } };
     if (!same(answer["content"], content)) return invalid();
     const observed: RulesObservation = { subject: "rules", of: answer["of"], head: answer["head"], revision: answer["revision"], definition: "platform:rules@13", content, at: time };
     return readRulesPolicyObservationV17(observed, { rules, destination, extents: envelope }, time);

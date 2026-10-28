@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { randomBytes } from "node:crypto";
 import { containerRunner } from "@generalbusiness/dap-checkers/node";
-import { evidenceBindingDigest, readEvidenceBinding } from "@generalbusiness/dap-bytes";
+import { evidenceBindingDigest, readEvidenceBinding } from "@generalbusiness/dap-platform";
 import { RunIdentityRefusal } from "../../src/index.ts";
 
 const REQUEST_BYTES = 24 * 1024 * 1024, OBJECT_BYTES = 16 * 1024 * 1024;

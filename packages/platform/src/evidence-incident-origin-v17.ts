@@ -2,7 +2,8 @@
  * This is no history search and never promotes another delivery-created lane. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FactRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, deliveryCauseDigest, evidenceBindingDigest, intentDigest, isDigest, isFactRef, isMemberRef, isRecord, isSeed, messageDigest, readEvidenceBinding, same, scopeIdOf, seedDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, deliveryCauseDigest, intentDigest, isDigest, isFactRef, isMemberRef, isRecord, isSeed, messageDigest, same, scopeIdOf, seedDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { evidenceBindingDigest, readEvidenceBinding } from "./evidence.ts";
 import { isEntryOf, sentBy, type Fetched } from "@generalbusiness/dap-derive";
 import { EVIDENCE_LANE_PINS } from "./evidence-lane-pins.generated.ts";
 import { EVIDENCE_RULES_COHORT as C } from "./evidence-cohort.ts";

@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FactRef, type HoldersObservation, type Item, type ObservationUse } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, evidenceBindingDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash } from "@generalbusiness/dap-bytes";
+import { evidenceBindingDigest } from "../src/evidence.ts";
 import { RuleFault, type Operation, type RuleGiven } from "@generalbusiness/dap-derive";
 import { d, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { evidenceDestinationRulesV17, evidenceJobRecordWireV17, evidenceNoticeOpeningV17, readEvidenceJobRecordWireV17, type EvidenceJobRecordV17 } from "../src/destination-evidence-v17.ts";

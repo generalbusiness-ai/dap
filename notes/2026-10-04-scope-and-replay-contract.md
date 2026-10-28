@@ -13839,6 +13839,9 @@ type RulesContent =
 // also holds `singleControllerException: boolean` ("The declaration of the single-controller exception", below).
 // Revision 20: and `extents: Digest`, under a rules definition whose data states that slot
 // ("The extents, in an observation of the rules", below).
+// Rules observation record revision 21: `roomService: ServiceMark | null` and
+// `serviceGeneration: ScopedRulesPosition`, exactly when the rules data declares
+// the `roomServiceChanged` reference ("The room service, in an observation", below).
 ```
 
 The two members that revision 15 marks in this listing are the authority
@@ -14907,6 +14910,32 @@ of the entry that holds it.
   the member is present exactly when the data of the observation's
   `definition` states the value, and absent otherwise. The same holds
   for `extents`. Row I3-43.
+
+**The room service, in an observation. Rules observation record revision
+21.** Ruling `1bc4f7fd` of 28 October 2026 permits this addition under
+[Kernel boundary, section 7](../docs/kernel.md#7-rule-for-adding-to-the-kernel).
+
+- A `RulesContent` asked as `rules` carries `roomService` and
+  `serviceGeneration` exactly when the pinned definition's data declares
+  the `roomServiceChanged` reference. Both members are absent otherwise,
+  including for Rules 12 and earlier. The record check is exact per
+  definition, as for revisions 19 and 20 above.
+- `ServiceMark` is `{ checker: MemberRef; key: KeyId }`.
+  `roomService` is that mark or null. `ScopedRulesPosition` is
+  `{ rules: ScopeRef; seq: number }`; its scope is the exact Rules
+  incarnation, and its sequence is a nonnegative safe integer. The
+  native reader selects the last mark-change position. An unchanged
+  mark keeps that position; withdrawal and reinstatement each change it.
+- The observation is the kernel form for what another scope's judge
+  may know of Rules. Its authenticated native position cannot be
+  established by a retained extents value alone. The policy and its
+  certificate remain retained values; they supply no separate mark or
+  position authority.
+- Contract keeps these two type-only interfaces. Check source, stage,
+  subject and job binding vocabulary, and the binding codec, live in
+  platform. This addition changes no timed form, fold or replay rule,
+  and closes no kernel item. The head's review must check the reason
+  under kernel section 7 and the exact historical record shapes.
 
 **The first read of a scope names no incarnation. New in revision 20**
 (I3 delta EY7; the authority note's section 12.1, "Where the rules scope

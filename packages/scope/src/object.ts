@@ -939,7 +939,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     try { return await this.#outside.snapshot?.(asked) ?? null; } catch { return null; }
   }
   /** Internal signed successor read; unsupported profiles return no proof. */
-  async stageSnapshot(asked: SignedIntent): Promise<import("@generalbusiness/dap-git").StageSnapshotReply> {
+  async stageSnapshot(asked: SignedIntent): Promise<import("@generalbusiness/dap-platform").StageSnapshotReply> {
     this.#first();
     try { return await this.#outside.stageSnapshot?.(asked) ?? null; } catch { return null; }
   }

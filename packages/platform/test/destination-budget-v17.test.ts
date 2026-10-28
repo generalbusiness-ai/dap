@@ -20,10 +20,10 @@ function record(label = "wire"): CertifiedPublicationStateV17 {
     ] });
   if (!proposed.ok) throw Error("The scripted policy is invalid");
   const certificate = { request: fact(1, destination), certificate: fact(2, destination), proof: d("b"), commit: "a".repeat(40) };
-  const envelope = { configured: true, policy: proposed.policy, proposal: proposed.digest, certificate, serviceGeneration: { rules, seq: 0 } };
+  const envelope = { configured: true, policy: proposed.policy, proposal: proposed.digest, certificate };
   const observation: RulesObservation = { subject: "rules", of: rules, head: { seq: 3, hash: d("c") }, revision: 3, definition: "platform:rules@13", at: t(0),
     content: { asked: "rules", approvals: 1, ownerMayReview: false, checks: [], labels: [label], singleControllerException: false,
-      extents: valueDigest("artroom-rules-extents-3", envelope) } };
+      extents: valueDigest("artroom-rules-extents-3", envelope), roomService: null, serviceGeneration: { rules, seq: 0 } } };
   return { policy: { observation, input: { rules, destination, extents: envelope }, touched: ["source"], required: [], tree: "a".repeat(40), manifest: fact(4) }, generations: [] };
 }
 function capture(value: CertifiedPublicationStateV17): Entry {

@@ -27,7 +27,8 @@
  */
 
 import type { ReservationSnapshot, FactRef, SignedIntent } from "@generalbusiness/dap-contract";
-import { readOwnedCheckoutSnapshot, STAGE_SNAPSHOT_BOUNDS, type StageSnapshot } from "@generalbusiness/dap-git";
+import { readOwnedCheckoutSnapshot, STAGE_SNAPSHOT_BOUNDS } from "@generalbusiness/dap-git";
+import type { StageSnapshot } from "@generalbusiness/dap-platform";
 import { b64url, unb64url, canonicalize } from "@generalbusiness/dap-bytes";
 import type { Details, Outcome } from "./outcome.ts";
 

@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Bounds, type FactRef } from "@generalbusiness/dap-contract";
-import { canonicalize, type CheckStage, type EvidenceBinding } from "@generalbusiness/dap-bytes";
+import { canonicalize } from "@generalbusiness/dap-bytes";
+import type { CheckStage, EvidenceBinding } from "../src/evidence.ts";
 import { keys, otherLane, d, t } from "@generalbusiness/dap-derive/testing";
 import type { RuleGiven } from "@generalbusiness/dap-derive";
 import type { EvidenceJobRecordV17 } from "../src/destination-evidence-v17.ts";
