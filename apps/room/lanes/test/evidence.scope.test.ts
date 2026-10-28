@@ -4,7 +4,7 @@
 import { expect, test } from "vitest";
 import type { EvidenceBinding, FieldValue } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, evidenceBindingDigest, isSeed, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
-import { idOf } from "@generalbusiness/dap-git";
+import { idOf } from "@generalbusiness/dap-git/tree-proof";
 import { evidenceGraph } from "./support/evidence-graph.ts";
 import { Peer, capable, net, onCode, paul, rita, una, vic } from "./support/graph.ts";
 
@@ -40,7 +40,7 @@ TEST work
   expect((await lane.entries()).some(entry => entry.effects.some(effect => effect.effect === "open" && effect.type === "report"))).toBe(false);
   expect((await lane.state()).records("hold@1", "pin", { states: ["held"] }).some(pin => pin.values["admitted"] === staged.seq)).toBe(true);
   expect(host.asked).toContain("stage");
-  net.hold = envelope => envelope.to.scope === g.graph.destination.at.scope;
+  net.hold = envelope => "scope" in envelope.to && envelope.to.scope === g.graph.destination.at.scope;
   const binding = bindingOf(g, paul.member, { kind: "work", source: staged }), digest = evidenceBindingDigest(binding);
   const job = (await lane.did(una, "request-work-check", { fields: { source: staged, name: "work", configuration: textDigest("TEST work config"), checker: paul.member,
     commitProof: canonicalize({ v: 1, id: workCommit, data: b64url(commitBytes) }), binding: canonicalize(binding), bindingDigest: digest } })).fact;
@@ -121,7 +121,7 @@ test("a merged change accepts only its configured native peer's published job an
   expect(incidents).toHaveLength(1);
   const incident = incidents[0]!, entry = await lane.entry(incident.id), send = entry.sends.find(item => isSeed(item.to));
   expect(send && isSeed(send.to)).toBe(true);
-  if (!send || !isSeed(send.to)) return expect.fail("An actual incident create envelope is required");
+  if (!send || !isSeed(send.to) || send.message.class !== "request" || send.message.type !== "create") return expect.fail("An actual incident create envelope is required");
   expect(send.to.creator).toEqual(lane.at); expect(send.to.definition).toBe(g.valid(g.issue).digest);
   expect((send.message.body as { fields: Record<string, FieldValue> }).fields).not.toHaveProperty("opener");
   // Duplicate delivery is the same native source pair. A second notification
@@ -130,7 +130,7 @@ test("a merged change accepts only its configured native peer's published job an
   const again = g.graph.destination.sends(lane.at, notice.message, "platform:destination@17:evidence-result");
   expect(await lane.stub.deliver(again)).toMatchObject({ answer: "refused", name: "incident-exists" });
   expect((await lane.state()).page("incident", ["creating", "created", "refused", "conflict", "unknown"], null, 8192).items).toHaveLength(1);
-  net.hold = envelope => envelope.to.scope === g.graph.destination.at.scope;
+  net.hold = envelope => "scope" in envelope.to && envelope.to.scope === g.graph.destination.at.scope;
   const child = await g.graph.created(lane, incident.id, g.issue, g.valid(g.issue), send.n);
   expect(child.name).toBe(scopeIdOf(send.to));
   expect(await child.item(0)).toMatchObject({ state: "open", values: { kind: "published-failure", publishedCommit: oid("c") }, refs: { parent: lane.at }, parties: { requester: null, triagers: [rita.member] } });

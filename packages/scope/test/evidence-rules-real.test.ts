@@ -1,7 +1,8 @@
 import { expect, inject, test } from "vitest";
 import { runDurableObjectAlarm } from "cloudflare:test";
 import type { EvidenceBinding, Observation } from "@generalbusiness/dap-contract";
-import { canonicalize, evidenceBindingDigest, factRefOf, isRecord, isSeed, readEvidenceBinding, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, evidenceBindingDigest, factRefOf, isDigest, isRecord, isSeed, readEvidenceBinding, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { isObjectId } from "@generalbusiness/dap-git";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { EVIDENCE_RULES_COHORT } from "../../platform/src/evidence-cohort.ts";
 import { claimEvidenceWork, configureEvidenceRules, enrolEvidenceKey, evidenceCertificate, evidenceChecker, evidenceNativeRoom,
@@ -245,6 +246,8 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
     const reserved = (await hardeningItems(room.G, "publication")).find(item => canonicalize(item.refs['operation']) === canonicalize(change.operation));
     expect(reserved).toMatchObject({ state: "reserved" });
     if (!reserved) throw Error("Actual reservation required");
+    const reservedTree = reserved.values['tree'];
+    if (!isObjectId(reservedTree)) throw Error("Actual reservation tree required");
     const opening = (await hardeningSealed(room.G)).find(row => row.entry.seq === reserved.id);
     if (!opening) throw Error("Actual sealed reservation opening required");
     const observed = await observedRules(room);
@@ -272,11 +275,13 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
       const job = factRefOf(await evidenceEntry(change.lane, audit.id));
       const binding = readEvidenceBinding(JSON.parse(audit.values['binding']));
       expect(binding).toMatchObject({ source: "room", auditOf: memberJob });
-      return { audit, job, binding };
+      const bindingDigest = audit.values['bindingDigest'];
+      if (!isDigest(bindingDigest)) throw Error("Actual automatic audit binding digest required");
+      return { audit, job, binding, bindingDigest };
     };
     const first = await request(binding), oldAudit = await auditFor(first.memberJob);
     const oldResultSeq = await change.lane.did(setup.service.actor, "check", { fields: { job: oldAudit.job.seq, jobFact: oldAudit.job,
-      tree: reserved.values['tree'], configuration: setup.configurationDigest, bindingDigest: oldAudit.audit.values['bindingDigest'], outcome: "passed" },
+      tree: reservedTree, configuration: setup.configurationDigest, bindingDigest: oldAudit.bindingDigest, outcome: "passed" },
       expected: await change.lane.expected({ job: oldAudit.job.seq, manifest: change.manifest.seq }) });
     const oldResult = factRefOf(await evidenceEntry(change.lane, oldResultSeq));
     await room.pause(room.nodes);
@@ -290,25 +295,27 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
     const retryOperation = factRefOf(await evidenceEntry(change.lane, retrySeq));
     await room.pause(room.nodes);
     const retry = (await hardeningItems(room.G, "publication")).find(item => canonicalize(item.refs['operation']) === canonicalize(retryOperation));
-    expect(retry).toMatchObject({ state: "reserved", values: { tree: reserved.values['tree'] } });
+    expect(retry).toMatchObject({ state: "reserved", values: { tree: reservedTree } });
     if (!retry) throw Error("Actual same-tree retry reservation required");
+    const retryTree = retry.values['tree'];
+    if (!isObjectId(retryTree)) throw Error("Actual retry reservation tree required");
     const retryPublication = factRefOf(await evidenceEntry(room.G, retry.id));
     const retryBinding: EvidenceBinding = { ...binding, subject: { kind: "landing", publication: retryPublication, manifest: change.manifest } };
     const { jobSeq, memberJob, bindingDigest } = await request(retryBinding, first.jobSeq);
     const freshAudit = await auditFor(memberJob);
     expect(freshAudit.job).not.toEqual(oldAudit.job);
     expect(freshAudit.binding?.subject).toEqual(retryBinding.subject);
-    expect(await evidenceRecord(room, freshAudit.job)).toMatchObject({ state: "admitted", countedJob: null, result: null, tree: reserved.values['tree'] });
+    expect(await evidenceRecord(room, freshAudit.job)).toMatchObject({ state: "admitted", countedJob: null, result: null, tree: reservedTree });
     expect(await evidenceRecord(room, oldAudit.job)).toMatchObject({ state: "passed", result: oldResult });
     const memberResultSeq = await change.lane.did(setup.service.actor, "check", { fields: { job: jobSeq, jobFact: memberJob,
-      tree: retry.values['tree'], configuration: setup.configurationDigest, bindingDigest, outcome: "passed" }, expected: await change.lane.expected({ job: jobSeq, manifest: change.manifest.seq }) });
+      tree: retryTree, configuration: setup.configurationDigest, bindingDigest, outcome: "passed" }, expected: await change.lane.expected({ job: jobSeq, manifest: change.manifest.seq }) });
     const memberResult = factRefOf(await evidenceEntry(change.lane, memberResultSeq));
     await room.pause(room.nodes);
     expect(room.host.stand.refs.get("refs/heads/main")).toBe(before);
     const audit = freshAudit.audit, auditJob = freshAudit.job;
     expect(auditJob).not.toEqual(memberJob);
     const auditResultSeq = await change.lane.did(setup.service.actor, "check", { fields: { job: audit.id, jobFact: auditJob,
-      tree: retry.values['tree'], configuration: setup.configurationDigest, bindingDigest: audit.values['bindingDigest'], outcome: "failed" }, expected: await change.lane.expected({ job: audit.id, manifest: change.manifest.seq }) });
+      tree: retryTree, configuration: setup.configurationDigest, bindingDigest: freshAudit.bindingDigest, outcome: "failed" }, expected: await change.lane.expected({ job: audit.id, manifest: change.manifest.seq }) });
     const auditResult = factRefOf(await evidenceEntry(change.lane, auditResultSeq));
     await room.pause(room.nodes);
     const refused = (await hardeningItems(room.G, "publication")).find(item => item.id === retry.id);

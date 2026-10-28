@@ -20,7 +20,7 @@ function physicalRunner(settings: EvidenceRunnerSettings): Runner {
     const response = await fetch(new URL(kind, url), { method: "POST", headers: { "content-type": "application/json", "x-evidence-test": settings.nonce },
       body: wire, redirect: "manual", signal: AbortSignal.timeout(210_000) });
     if (![200, 409].includes(response.status) || !response.body) throw Error("TEST evidence bridge did not complete");
-    const reader = response.body.getReader(), decoder = new TextDecoder("utf-8", { fatal: true });
+    const reader = response.body.getReader(), decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: false });
     let size = 0, text = "";
     try {
       for (;;) { const chunk = await reader.read(); if (chunk.done) break; size += chunk.value.length;

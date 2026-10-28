@@ -634,9 +634,9 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     // The parent Directory genesis is already its ordinary source origin.
     if (origin && pinned.named === EVIDENCE_INCIDENT_PINS_V17.destination) {
       if (!Number.isSafeInteger(seq) || seq < 0) return null;
-      const actual = this.#store.stored(seq), position = actual && evidenceIncidentAdmissionPositionV17(actual.entry);
+      const own = ownOf(this.#store), actual = own(seq), position = actual && evidenceIncidentAdmissionPositionV17(actual.entry);
       if (typeof position === "number") {
-        const admitted = this.#store.stored(position), at = this.#store.scope()?.at;
+        const admitted = own(position), at = this.#store.scope()?.at;
         if (!admitted || !at) return null;
         proof = [...proof, { fact: { at, seq: position, hash: admitted.hash }, entry: admitted.entry, under: "platform:destination" }];
       }
@@ -647,21 +647,22 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const application = origin && proof[0]?.entry.input.type === "genesis" && (creatorInput?.type === "act" && creatorInput.signed.intent.kind === "establish-application"
       || creatorInput?.type === "delivery" && creatorInput.message.class === "request" && creatorInput.message.type === "tell"
         && isRecord(creatorInput.message.body) && creatorInput.message.body["message"] === "application-create");
-    const incident = pinned.named === EVIDENCE_INCIDENT_PINS_V17.issue && creatorInput?.type === "delivery"
+    const incidentBody = creatorInput?.type === "delivery"
       && creatorInput.message.class === "request" && creatorInput.message.type === "tell" && isRecord(creatorInput.message.body)
-      && creatorInput.message.body["message"] === "published-check-failure";
-    if (incident && proof[1] && creatorInput?.type === "delivery" && isRecord(creatorInput.message.body)) {
+      && creatorInput.message.body["message"] === "published-check-failure" ? creatorInput.message.body : null;
+    const incidentFields = incidentBody && isRecord(incidentBody["fields"]) ? incidentBody["fields"] : null;
+    if (pinned.named === EVIDENCE_INCIDENT_PINS_V17.issue && proof[1] && creatorInput?.type === "delivery" && incidentFields) {
       try {
         const creator = proof[1];
         if (creator.fact.at.kind !== "lane" || creator.fact.at.scope === this.#name || creatorInput.from.at.kind !== "destination"
           || creatorInput.from.at.scope === this.#name || creatorInput.from.at.scope === creator.fact.at.scope) return null;
         const parent = await within(() => this.#resolver.read(creator.fact, this.#fetchSeconds, true), this.#fetchSeconds);
         if (parent === LATE || parent === null || !("entry" in parent) || parent.under !== "change" || !isEntryOf(parent.entry, creator.fact)
-          || !parent.origin || parent.origin.length !== 3 || !isRecord(creatorInput.message.body["fields"])) return null;
+          || !parent.origin || parent.origin.length !== 3) return null;
         const nativeFact = creatorInput.from, native = await within(() => this.#resolver.read(nativeFact, this.#fetchSeconds, true), this.#fetchSeconds);
         if (native === LATE || native === null || !("entry" in native) || native.under !== "platform:destination" || !isEntryOf(native.entry, nativeFact)
           || !native.origin || native.origin.length !== 3) return null;
-        const jobFact = creatorInput.message.body["fields"]["job"];
+        const jobFact = incidentFields["job"];
         if (!isFactRef(jobFact) || canonicalize(jobFact.at) !== canonicalize(creator.fact.at)) return null;
         const job = await within(() => this.#resolver.read(jobFact, this.#fetchSeconds), this.#fetchSeconds);
         if (job === LATE || job === null || !("entry" in job) || job.under !== "change" || !isEntryOf(job.entry, jobFact)) return null;
@@ -925,7 +926,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   /** Internal namespace read of one retained work-source item's current state. */
   async workSourceState(fact: import("@generalbusiness/dap-contract").FactRef): Promise<string | null> {
     this.#first();
-    const scope = this.#store.scope(), sealed = this.#store.stored(fact.seq);
+    const scope = this.#store.scope(), sealed = ownOf(this.#store)(fact.seq);
     if (!scope || !sealed || fact.at.kind !== scope.at.kind || fact.at.scope !== scope.at.scope
       || fact.at.inc !== scope.at.inc || sealed.hash !== fact.hash) return null;
     const item = this.#store.item(fact.seq);
