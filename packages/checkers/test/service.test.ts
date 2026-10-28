@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, hex, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { CheckerService, Outcomes, REPORT_BOUNDS, configurationDigest, detailsDigest, environmentDigest, judge, readConfiguration, readReport, type Configuration, type Delivered, type JobRecord, type Notice, type RunReport } from "../src/index.ts";
+import { CheckerService, Outcomes, REPORT_BOUNDS, RunIdentityRefusal, configurationDigest, detailsDigest, environmentDigest, judge, readConfiguration, readReport, type Configuration, type Delivered, type Job, type JobRecord, type Notice, type RunReport } from "../src/index.ts";
 import { Lane, MemoryDurable, ScriptedRunner, T0, configuration, digest, lane, newKey, otherLane, refusedFor, report, world } from "./support.ts";
 
 /**
@@ -25,6 +25,49 @@ function made(w = world()) {
 }
 
 describe("the checker service (authority note, section 3.11; I3 plan, T35). The lane, the rules scope, the storage and the runner are stand-ins", () => {
+  test("a lost runner reply recovers its exact durable end, or waits for that same run without launching again", async () => {
+    const completed = made(), original = completed.runner.run.bind(completed.runner);
+    completed.runner.run = async ask => { await original(ask); throw Error("PRIVATE lost reply must not be logged"); };
+    expect(await completed.deliver()).toBe("check passed, admitted, ran");
+    expect(completed.runner.asked).toHaveLength(1);
+    expect(completed.runner.looked).toEqual([completed.runner.asked[0]!.run]);
+    expect(await completed.deliver()).toBe("nothing: closed");
+    expect(completed.log).toEqual(["run lost"]);
+
+    const running = made();
+    running.runner.run = async ask => {
+      running.runner.asked.push(ask); running.runner.records.set(ask.run, "running");
+      throw Error("PRIVATE lost running reply");
+    };
+    expect(await running.deliver()).toBe("waiting");
+    expect(await running.deliver()).toBe("waiting");
+    expect(running.scopes.submitted).toHaveLength(0);
+    const ask = running.runner.asked[0]!;
+    running.runner.records.set(ask.run, report());
+    expect(await running.deliver()).toBe("check passed, admitted");
+    expect(running.runner.asked).toHaveLength(1);
+    expect(running.runner.looked).toEqual([ask.run, ask.run, ask.run]);
+
+    const refused = made();
+    refused.runner.run = async request => { refused.runner.asked.push(request); throw new RunIdentityRefusal(); };
+    // An unrelated old pass is available by this colliding run name. A
+    // definite identity refusal must not recover or sign it for this job.
+    refused.runner.find = async run => { refused.runner.looked.push(run); return report(); };
+    expect(await refused.deliver()).toBe("check-error run-lost, admitted, ran");
+    expect(refused.runner.looked).toEqual([]);
+    expect(refused.runner.asked).toHaveLength(1);
+
+    const later = made();
+    await new Outcomes(later.durable).start(later.w.fact, "another-request", null);
+    later.runner.find = async (run: string, expectedJob?: Job) => {
+      later.runner.looked.push(run);
+      if (!expectedJob) return report(); // The old unsafe bare lookup would release this pass.
+      expect(expectedJob.fact).toEqual(later.w.fact); expect(expectedJob.tree).toBe(later.w.tree);
+      throw new RunIdentityRefusal();
+    };
+    expect(await later.deliver()).toBe("check-error run-lost, admitted");
+    expect(later.runner.asked).toHaveLength(0);
+  });
   test("the service reads the job's entry from the lane before any run, and an entry that only looks like a job is not run: nothing is started, kept or signed for it", async () => {
     // What is read, and in which order, before the one run: the job's entry, the lane's definition, the rules scope's item for it, the manifest's entry; then the configuration and the read token.
     const ok = made();

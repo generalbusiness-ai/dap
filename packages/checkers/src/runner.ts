@@ -130,12 +130,16 @@ export interface CheckoutObjectsAsk {
   objects: readonly { id: string; type: "blob" | "tree" | "commit"; data: Uint8Array }[];
 }
 
+/** Trusted filesystem boundary for a remote container. It must require a
+ * private owned parent and exclusively create the nonexistent leaf. */
+export interface CheckoutDirectory { createPrivate(dir: string): Promise<string> }
+
 /**
  * A Node/container checkout from the reservation's verified object overlay.
  * Validation and byte copying finish before any directory or object is written.
  * The reader currently supports SHA-1 only; SHA-256 receives its named refusal.
  */
-export async function checkoutObjects(git: GitProgram, ask: CheckoutObjectsAsk, bounds: ReadBounds = READ_BOUNDS): Promise<Checkout> {
+export async function checkoutObjects(git: GitProgram, ask: CheckoutObjectsAsk, bounds: ReadBounds = READ_BOUNDS, directory?: CheckoutDirectory): Promise<Checkout> {
   const no = (reason: CheckoutReason): Checkout => ({ confirmed: false, reason });
   if (!isDirectory(ask.dir)) return no("bad-directory");
   try {
@@ -184,15 +188,20 @@ export async function checkoutObjects(git: GitProgram, ask: CheckoutObjectsAsk, 
     // Node is used only at this private checkout boundary. Resolve the parent
     // once, require ownership and privacy, and create the leaf exclusively:
     // an existing repository, file or symlink is never initialized or changed.
-    const fs = await import("node:fs/promises");
-    const path = await import("node:path");
     let dir: string;
     try {
-      const parent = await fs.realpath(path.dirname(ask.dir));
-      const stat = await fs.stat(parent);
-      if (!stat.isDirectory() || (stat.mode & 0o077) !== 0 || (process.getuid && stat.uid !== process.getuid())) return no("bad-directory");
-      dir = path.join(parent, path.basename(ask.dir));
-      await fs.mkdir(dir, { mode: 0o700 });
+      if (directory) {
+        dir = await directory.createPrivate(ask.dir);
+        if (dir !== ask.dir || !isDirectory(dir)) return no("bad-directory");
+      } else {
+        const fs = await import("node:fs/promises");
+        const path = await import("node:path");
+        const parent = await fs.realpath(path.dirname(ask.dir));
+        const stat = await fs.stat(parent);
+        if (!stat.isDirectory() || (stat.mode & 0o077) !== 0 || (process.getuid && stat.uid !== process.getuid())) return no("bad-directory");
+        dir = path.join(parent, path.basename(ask.dir));
+        await fs.mkdir(dir, { mode: 0o700 });
+      }
     } catch {
       return no("bad-directory");
     }

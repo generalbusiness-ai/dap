@@ -300,9 +300,19 @@ says how each host keeps and revokes its tokens. A Git commit does not
 itself become a dap act, and a recorded act does not itself prove that a
 Git write finished.
 
-The checker package supplies runner and signer interfaces. An interface
-is not a deployed sandbox. `platform:task@1` is not supplied at this base.
-Real lane hold and Git-read host adapters are not built.
+The checker package's platform-neutral entry supplies runner and signer
+interfaces. Its separate Node entry supplies a real nerdctl runner with a
+fresh container per job. The untrusted job has no external network; an
+immutable loopback relay passes its Git reads to the existing host-owned
+read-only Gateway. The signing key, token, control records and host files
+stay outside the job. Image, environment, resource enforcement and exact
+checkout are checked before configured steps count. Private durable run
+records recover a terminal result without starting a replacement.
+[Run a checker in a container](../packages/checkers/README.md) states the
+supported engine, image requirements and operator custody wiring. Source
+code alone is not a deployment or a hosted check result.
+`platform:task@1` is not supplied at this base. Real lane hold and Git-read
+host adapters are not built.
 
 ## Source and acceptance
 

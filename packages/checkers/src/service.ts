@@ -116,8 +116,14 @@ export interface RunAsk { run: string; job: Job; configuration: Configuration }
 export interface Runner {
   /** Start one runner for the run, and resolve with what it returned at its end. The value is data: `judge` reads it. Rejects, or never resolves, when the runner or this call is lost. */
   run(ask: RunAsk): Promise<unknown>;
-  /** The runner's own record of a run that this delivery did not start: `running`, what the run returned at its end, or null when no record of it can be found. */
-  find(run: string): Promise<unknown | null>;
+  /** The runner's own record: `running`, its end, or null. When expectedJob
+   * is supplied, refuse another request's run before returning its report. */
+  find(run: string, expectedJob?: Job): Promise<unknown | null>;
+}
+
+/** A run name belongs to another request. Recovery must not reuse its report. */
+export class RunIdentityRefusal extends Error {
+  constructor() { super("The checker run belongs to another request; its result was not reused."); }
 }
 
 export interface ServiceOptions {
@@ -221,11 +227,15 @@ export class CheckerService {
       if (this.#flying.has(flightOf(job))) return { did: "waiting" };
       let matched: unknown;
       try {
-        matched = await this.#o.runner.find(record.run);
-      } catch {
-        // The runner's record could not be read now. That is not "no record": nothing is concluded.
-        this.#log("find", "unreadable");
-        return { did: "waiting" };
+        matched = await this.#o.runner.find(record.run, job);
+      } catch (error) {
+        if (error instanceof RunIdentityRefusal) {
+          this.#log("find", "identity-refused"); matched = null;
+        } else {
+          // The runner's record could not be read now. That is not "no record": nothing is concluded.
+          this.#log("find", "unreadable");
+          return { did: "waiting" };
+        }
       }
       if (matched === RUNNING) return { did: "waiting" };
       // The run's end as its own record has it, or no record at all: `run-lost`. No second run in either case.
@@ -265,10 +275,20 @@ export class CheckerService {
         try {
           // 5. The one run of this job.
           report = await this.#o.runner.run({ run, job, configuration });
-        } catch {
-          // Not the error: a runner's text is data, and may repeat anything. The run's end was not found.
-          this.#log("run", "lost");
-          report = null;
+        } catch (error) {
+          // A lost reply is not a missing execution record. Look up this
+          // exact run once; recovery never calls run a second time.
+          if (error instanceof RunIdentityRefusal) {
+            this.#log("run", "identity-refused"); report = null;
+          } else {
+            this.#log("run", "lost");
+            try { report = await this.#o.runner.find(run, job); }
+            catch (finding) {
+              if (finding instanceof RunIdentityRefusal) { this.#log("find", "identity-refused"); report = null; }
+              else { this.#log("find", "unreadable"); return { did: "waiting" }; }
+            }
+          }
+          if (report === RUNNING) return { did: "waiting" };
         }
       } else if (token !== null) this.#log("job-read", answered === "refused" || answered === "unavailable" || answered === "mismatch" ? answered : "no-answer");
     }

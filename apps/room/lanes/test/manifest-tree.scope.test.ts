@@ -34,6 +34,7 @@ import { Outcomes } from "../../../../packages/checkers/src/store.ts";
 import { MemoryDurable } from "../../../../packages/checkers/test/support.ts";
 
 import { room as legacyRoom, rita as legacyCreator } from "./support/room.ts";
+import { containerTestRunner, type ContainerRunnerTest } from "./support/container-runner.ts";
 
 const SERVICE = "https://scopes.test";
 const reader = "a test reader";
@@ -121,9 +122,9 @@ test("dap edit uses a one-element reservation tree as the real checker service o
   const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
   onTestFinished(owner.close);
   const wired = new Set<ScopeId>();
-  try { await story(ownHost(), wired, false, false, false, true, false, undefined, false, false, undefined, undefined, false, task.meta); }
+  try { await story(ownHost(), wired, false, false, false, true, false, undefined, false, false, undefined, undefined, false, task.meta, false, inject("j3Runner") ?? undefined); }
   finally { owner.close(); net.hold = null; for (const name of wired) platformOutside.delete(name); }
-}, 120_000);
+}, inject("j3Runner") ? 420_000 : 120_000);
 // CLI category formatting/pre-send routing lives at the cheaper HTTP boundary
 // in lanes/test/cli-proposal-outcomes.test.ts; keep actual acceptance and lost reply.
 test.each(["reply", "accepted"] as const)("manifest edit --closes retains its recorded proposal when linking is %s (real scopes; transport fault, host and scheduler STAND-INs)", async (linkFault) => {
@@ -214,7 +215,7 @@ test("a valid custom required rules input is activated natively but stops the fi
   try { await story(ownHost(), wired, false, false, false, false, false, undefined, false, false, undefined, "custom-required"); }
   finally { owner.close(); net.hold = null; for (const name of wired) platformOutside.delete(name); }
 }, 120_000);
-async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknownStageOnly = false, unknownDeleteOnly = false, oneFileOnly = false, refusePushOnly = false, linkFault?: "summary" | "request" | "reply" | "unavailable" | "accepted", exhaustCleanup: false | "ref" | "token" | "token-unknown" = false, unknownMintOnly = false, nonemptyProfile?: "production" | "demo", proposalFault?: "source-reply" | "source-unavailable" | "source-refused" | "source-mismatch" | "manifest-reply" | "rules-read" | "custom-required", receiptRecoveryOnly = false, checkpointMeta?: object, newestCreation = false): Promise<void> {
+async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknownStageOnly = false, unknownDeleteOnly = false, oneFileOnly = false, refusePushOnly = false, linkFault?: "summary" | "request" | "reply" | "unavailable" | "accepted", exhaustCleanup: false | "ref" | "token" | "token-unknown" = false, unknownMintOnly = false, nonemptyProfile?: "production" | "demo", proposalFault?: "source-reply" | "source-unavailable" | "source-refused" | "source-mismatch" | "manifest-reply" | "rules-read" | "custom-required", receiptRecoveryOnly = false, checkpointMeta?: object, newestCreation = false, containerTest?: ContainerRunnerTest): Promise<void> {
   const activeChange = nonemptyProfile === "production" ? change3 : changeDemo3;
   const fetch = ((url: string, init?: RequestInit) => routed(url, init)) as unknown as Fetch;
   const now = () => timeMs(net.clock.now)!;
@@ -522,7 +523,7 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   const invitation = ok(await run(creator, "invite", "@check", "--role", "checker")).lines[1]!.split(": ")[1]!;
   ok(await run(checker, "join", invitation));
   const checkMember = { membership: repository.membership, member: "@check" };
-  const checkConfig = { name: "text", image: `sha256:${"7".repeat(64)}`, environment: [], steps: [["check", "text"]], judged: { passed: { status: 0, line: "ok" }, failed: { status: 1, line: "bad" } }, limits: { seconds: 60, outputBytes: 65536 } };
+  const checkConfig = { name: "text", image: containerTest?.image ?? `sha256:${"7".repeat(64)}`, environment: containerTest?.environment ?? [], steps: containerTest ? [["/bin/sh", "-c", 'if [ "$(cat one.md)" = "# One" ]; then printf "ok\\n"; else printf "bad\\n"; exit 1; fi']] : [["check", "text"]], judged: { passed: { status: 0, line: "ok" }, failed: { status: 1, line: "bad" } }, limits: { seconds: 60, outputBytes: 65536 } };
   files["config.json"] = utf8(canonicalize(checkConfig));
   const configuration = valueDigest(CONFIGURATION_DOMAIN, checkConfig);
   ok(await run(creator, "act", "keep-configuration", "--on", "rules", "--set", `digest=${configuration}`, "--set", "name=text", "--value", "config.json"));
@@ -736,7 +737,7 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   const job = Number(/entry \S+:(\d+),/.exec(requested.lines[0]!)![1]);
   await pause([lane, repository.destination]);
   expect((await L.item(job)).values["tree"]).toBe(manifest.values["tree"]);
-  if (!oneFileOnly) {
+  if (!oneFileOnly || containerTest) {
     const badTree = await run(checker, "act", "check", "--on", lane, "--set", `job=${job}`, "--set", `tree=${"e".repeat(40)}`, "--set", `configuration=${configuration}`, "--set", "outcome=passed");
     expect([badTree.code, badTree.lines[0], host.refs.get("refs/heads/main")]).toEqual([1, expect.stringContaining("not-this-job"), first]);
   }
@@ -773,9 +774,11 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
       standing: async (_scope, id, kind) => { const items = (await L.summary()).value.items; const item = items.find((item) => item.id === id); return item ? { state: item.state, expected: expectedOf(changeDemo3.acts[kind] as unknown as ActShape, items, null, { job: id }) } : null; },
       submit: async (_scope, signed) => { if (loseSubmit) { loseSubmit = false; throw new Error("reply unavailable"); } return L.stub.submit(signed, []); },
     },
-    // Runner boundary STAND-IN here; actual object checkout is tested in checkers/runner.test.ts.
-    runner: { find: async () => null, run: async (ask) => { runs++; expect(ask.job.snapshot?.tree).toBe(manifest.values["tree"]); expect(ask.job.snapshot?.sources).toHaveLength(oneFileOnly ? 1 : 2); return { started: true, image: checkConfig.image, environment: [], checkout: true, steps: [{ status: 0, line: "ok" }], end: "complete" }; } },
+    // Default Runner is a STAND-IN. Only the explicit J3 owning driver supplies
+    // the real Node/container port; no daemon-dependent gate pass is implied.
+    runner: containerTest ? containerTestRunner(containerTest) : { find: async () => null, run: async (ask) => { runs++; expect(ask.job.snapshot?.tree).toBe(manifest.values["tree"]); expect(ask.job.snapshot?.sources).toHaveLength(oneFileOnly ? 1 : 2); return { started: true, image: checkConfig.image, environment: [], checkout: true, steps: [{ status: 0, line: "ok" }], end: "complete" }; } },
   };
+  if (containerTest) { const realRun = serviceOptions.runner.run.bind(serviceOptions.runner); serviceOptions.runner = { find: (run, expectedJob) => containerTestRunner(containerTest).find(run, expectedJob), run: async ask => { runs++; return realRun(ask); } }; }
   const service = new CheckerService(serviceOptions);
   const jobFact = factRefOf(jobEntry.entry);
   const readAsk = await signJobRead({ key: checkerKey, sign: (bytes) => sign(checkerSecret, bytes) }, { lane: await L.at(), fact: jobFact }, { now: now(), nonce: crypto.getRandomValues(new Uint8Array(16)) });
@@ -787,8 +790,9 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
     expect(snapshot.sources[0]!.entry.input).toMatchObject({ type: "act", signed: { intent: { kind: "propose-file", fields: { path: "one.md", digest: digestBytes(files["one.md"]!) } } } });
     expect(originOf({ lane: await L.at(), job: jobFact, name: "text", tree: manifest.values["tree"] as string }, { entry: jobEntry, pinned: definitionDigest(changeDemo3), activated: { name: "change", state: "active" }, manifest: manifestEntry, reservation: snapshot })).toMatchObject({ job: { tree: manifest.values["tree"], commit: manifest.values["integration"] } });
     loseSubmit = false;
+    if (containerTest) expect(await service.deliver({ lane: await L.at(), job: jobFact, name: "text", tree: "e".repeat(40) })).toEqual({ did: "nothing", why: "not-as-given" });
     expect(await service.deliver({ lane: await L.at(), job: jobFact, name: "text", tree: manifest.values["tree"] as string })).toEqual({ did: "submitted", outcome: { act: "check", outcome: "passed" }, ran: true, lane: "admitted" });
-    expect([runs, prepares, snapshots]).toEqual([1, 0, 1]);
+    expect([runs, prepares, snapshots]).toEqual([1, 0, containerTest ? 2 : 1]);
     await pause([lane, repository.destination]);
     if (checkpointMeta) Object.assign(checkpointMeta, { publicationCheckpoint: await publicationCheckpoint(G) });
     const published = host.refs.get("refs/heads/main")!;
@@ -797,6 +801,35 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
     const git = readerOf(host); const commit = await git.commit(published);
     expect(commit.tree).toBe(manifest.values["tree"]);
     expect((await git.tree(commit.tree)).map((row) => new TextDecoder().decode(row.name))).toEqual(["README.md", "one.md"]);
+    if (containerTest) {
+      // A second actual proposal uses the same configuration and real Runner.
+      // Its failed container check must never publish its reservation tree.
+      files["one.md"] = utf8("# Failing\n");
+      const failedProposal = ok(await run(creator, "edit", "one.md", "--file", "one.md"));
+      const failedMatch = /as change (sc_\S+), version (\d+)\./.exec(failedProposal.lines[0]!)!;
+      const failedLane = new Platform(failedMatch[1] as ScopeId), failedVersion = Number(failedMatch[2]);
+      const failedManifest = await failedLane.item(failedVersion);
+      const failedRequest = ok(await run(creator, "act", "request-check", "--on", failedLane.name, "--set", `manifest=${failedVersion}`, "--set", "name=text", "--set", `configuration=${configuration}`));
+      const failedJob = Number(/entry \S+:(\d+),/.exec(failedRequest.lines[0]!)![1]);
+      await pause([failedLane.name, repository.destination]);
+      const failedOpenings = await failedLane.sealed();
+      const failedService = new CheckerService({ ...serviceOptions, outcomes: new Outcomes(new MemoryDurable()), scopes: { ...serviceOptions.scopes,
+        entry: async (scope, seq) => (seq === failedJob || seq === failedVersion) && canonicalize(scope) === canonicalize(failedOpenings[seq]?.entry.at) ? structuredClone(failedOpenings[seq] ?? null) : null,
+        standing: async (_scope, id, kind) => { const items = (await failedLane.summary()).value.items, item = items.find(item => item.id === id); return item ? { state: item.state, expected: expectedOf(changeDemo3.acts[kind] as unknown as ActShape, items, null, { job: id }) } : null; },
+        submit: (_scope, signed) => failedLane.stub.submit(signed, []),
+      } });
+      const failedFact = factRefOf(failedOpenings[failedJob]!.entry);
+      expect(await failedService.deliver({ lane: await failedLane.at(), job: failedFact, name: "text", tree: failedManifest.values["tree"] as string })).toEqual({ did: "submitted", outcome: { act: "check", outcome: "failed" }, ran: true, lane: "admitted" });
+      await pause([failedLane.name, repository.destination]);
+      expect((await failedLane.item(failedJob)).state).toBe("failed");
+      expect(host.refs.get("refs/heads/main")).toBe(published);
+      expect((await failedLane.entries()).some(entry => entry.effects.some(effect => effect.effect === "value" && effect.slot === "reason" && effect.value === "required-check-failed"))).toBe(true);
+      expect(host.refs.has(failedManifest.values["reservationRef"] as string)).toBe(false);
+      expect(runs).toBe(2);
+      const proof = { qualification: "Actual Node production container Runner, CheckerService, native reservation/check/required-check publication; Git host, scheduler, origin-port activation/config adapter and service durability are TEST stand-ins. No deployed checker/provider claim.", image: containerTest.image, passedTree: manifest.values["tree"], failedTree: failedManifest.values["tree"], pass: "passed", fail: "failed", wrongTree: "not-this-job", runs };
+      Object.assign(checkpointMeta ?? {}, { j3Container: proof });
+      console.info("TEST-j3-native", JSON.stringify(proof));
+    }
     return;
   }
   // The signed job-read route obeys the destination's retained history floor,
