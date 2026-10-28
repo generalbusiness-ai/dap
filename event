@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at vitest.projects.mjs","body":{"commit":"06e4d33fe17937610891f29b5d1513b9e224edea","path":"vitest.projects.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:078677f7c97c7052720a0bf2e87a7e630cf9ea37","text":"Merge retired a covered predecessor; the successor is at packages/checkers/test/container-origin.test.ts."}
