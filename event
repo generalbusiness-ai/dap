@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a03b9107e2d835fae0ac8b4e59270517959e8c58","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-28-h1-followup.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a0ab49d6142d5279b3b6f0e38b8201dc772035e4","text":"Merge retired a covered predecessor; the successor is at scripts/celld-smoke.test.mjs."}
