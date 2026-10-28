@@ -20,7 +20,8 @@
  *    and read only when the bytes hash to it (`configuration.ts`).
  *    Otherwise no run: `check-error`, `configuration-unavailable`.
  * 4. *The read origin.* Manifest-list jobs use their signed, job-bound
- *    reservation snapshot and its verified overlay. They need no minted
+ *    reservation snapshot and its verified overlay. Successor jobs use their
+ *    actual native stage admission and immutable overlay. Neither needs a minted
  *    read token. Legacy jobs ask the lane for `job-read`, using the retained
  *    signed request. The minted token's plaintext goes only to the runner's
  *    gateway. With no token, a legacy runner cannot start.
@@ -64,10 +65,12 @@
  */
 
 import type { ReservationSnapshot, Answer, Digest, PlatformDefinition, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, isRecord } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, evidenceBindingDigest, isRecord, parseStrict, timeMs, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { verifyOwnedCheckoutSnapshot, type StageSnapshot } from "@generalbusiness/dap-git";
 import { readConfiguration, type Configuration } from "./configuration.ts";
 import { verifyReservationObjects } from "./reservation-snapshot.ts";
 import { manifestOf, originOf, type Job, type NotAJob, type Notice } from "./job.ts";
+import { stageOriginOf, type EvidenceDefinitions, type StageSnapshotRead } from "./stage-origin.ts";
 import { judge, provenanceOf, readReport, type Details, type Outcome } from "./outcome.ts";
 import { JOB_READ, signJobRead, signResult, type ResultSigner } from "./signing.ts";
 import type { JobRecord, Outcomes } from "./store.ts";
@@ -82,6 +85,8 @@ import type { JobRecord, Outcomes } from "./store.ts";
  * one member"; I3 deltas, entry EW15). No notice and no lane names it.
  */
 export interface Scopes {
+  /** The successor's actual native admission and immutable objects, through the same signed job-read boundary. */
+  stageSnapshot?: StageSnapshotRead;
   reservationSnapshot?(lane: ScopeRef, signed: SignedIntent): Promise<ReservationSnapshot | { refused: "reservation-stage-missing" | "reservation-stage-mismatch" } | null>;
   /** The lane's entry at that position, with the hash that the lane serves for it. Null: the lane has none. */
   entry(lane: ScopeRef, seq: number): Promise<Sealed | null>;
@@ -110,8 +115,8 @@ export interface RunAsk { run: string; job: Job; configuration: Configuration }
 /**
  * The runner's side: one container for one run, started from the
  * configuration's image with exactly the configuration's variables, with no
- * network but its gateway (`sandbox.ts`). No adapter for a real runner is
- * here (plan question Q8). Test support has a stand-in.
+ * network but its gateway (`sandbox.ts`). The separate Node entry supplies
+ * the production container adapter; test support retains its labelled stand-in.
  */
 export interface Runner {
   /** Start one runner for the run, and resolve with what it returned at its end. The value is data: `judge` reads it. Rejects, or never resolves, when the runner or this call is lost. */
@@ -127,6 +132,8 @@ export class RunIdentityRefusal extends Error {
 }
 
 export interface ServiceOptions {
+  /** Exact commissioned successor lane digests; absent keeps legacy origins only. */
+  evidenceDefinitions?: EvidenceDefinitions;
   signer: ResultSigner;
   scopes: Scopes;
   runner: Runner;
@@ -172,6 +179,7 @@ export class CheckerService {
   async deliver(notice: Notice): Promise<Delivered> {
     // 1. The origin read: the service's own reads, and nothing of the notice but what to read.
     let job: Job;
+    let stageSnapshot: StageSnapshot | undefined;
     // A notice that is not in form names nothing to read.
     const form = originOf(notice, { entry: null, pinned: null, activated: null, manifest: null });
     if ("not" in form && form.not === "bad-notice") return { did: "nothing", why: "bad-notice" };
@@ -181,21 +189,55 @@ export class CheckerService {
       const at = manifestOf(entry, notice.job);
       const pinned = await scopes.pinned(notice.lane);
       const activated = typeof pinned === "string" && pinned.startsWith("sha256:") ? await scopes.activated(pinned as Digest) : null;
-      const manifest = at === null ? null : await scopes.entry(notice.lane, at);
-      const listManifest = manifest?.entry.input.type === "act" && Array.isArray(manifest.entry.input.signed.intent.fields["files"]);
-      const previous = listManifest ? await this.#o.outcomes.get(notice.job) : null;
-      if (previous?.state === "admitted" || previous?.state === "superseded") return { did: "nothing", why: "closed" };
-      let reservation: ReservationSnapshot | null = previous?.reservation ?? null;
-      if (listManifest && !reservation && scopes.reservationSnapshot) {
+      const successor = entry?.entry.effects.some(effect => effect.effect === "value" && effect.item === notice.job.seq && effect.slot === "binding") ?? false;
+      if (successor) {
+        const previous = await this.#o.outcomes.get(notice.job);
+        if (previous?.state === "admitted" || previous?.state === "superseded") return { did: "nothing", why: "closed" };
+        if (previous && !previous.stageSnapshot) return { did: "nothing", why: "stage-origin-mismatch" };
+        // The exact stored signature goes first, as in legacy recovery. An
+        // accepted historical receipt does not need a new admission or signer.
+        if (previous?.state === "kept" && previous.outcome && previous.signed && previous.stageSnapshot && verifySignedIntent(previous.signed)) {
+          const cached = stageOriginOf(notice, { entry, pinned, activated }, previous.stageSnapshot, previous.signed.intent.actor, this.#o.evidenceDefinitions);
+          const fields = previous.signed.intent.fields;
+          if ("job" in cached && cached.job.evidence && previous.signed.intent.kind === previous.outcome.act
+            && (previous.outcome.act === "check" ? fields["outcome"] === previous.outcome.outcome : fields["reason"] === previous.outcome.reason)
+            && canonicalize(previous.signed.intent.to) === canonicalize(notice.lane)
+            && canonicalize(fields["jobFact"]) === canonicalize(notice.job) && fields["tree"] === cached.job.tree && fields["configuration"] === cached.job.configuration
+            && fields["bindingDigest"] === evidenceBindingDigest(cached.job.evidence) && (await scopes.submit(notice.lane, previous.signed)).answer === "accepted") {
+            await this.#o.outcomes.close(notice.job, "admitted");
+            return { did: "submitted", outcome: previous.outcome, ran: false, lane: "admitted" };
+          }
+        }
+        if (!scopes.stageSnapshot) return { did: "nothing", why: "stage-origin-mismatch" };
         const asked = await signJobRead(this.#o.signer, { lane: notice.lane, fact: notice.job }, this.#signing());
-        const answer = await scopes.reservationSnapshot(notice.lane, asked);
-        if (answer && "refused" in answer) return { did: "nothing", why: answer.refused };
-        reservation = answer;
+        const answer = await scopes.stageSnapshot(notice.lane, asked);
+        if (!answer) return { did: "nothing", why: "stage-origin-mismatch" };
+        if ("refused" in answer) return { did: "nothing", why: answer.refused };
+        const origin = stageOriginOf(notice, { entry, pinned, activated }, answer, this.#o.signer.key, this.#o.evidenceDefinitions);
+        if ("not" in origin) return { did: "nothing", why: origin.not };
+        if (!origin.job.overlay || !await verifyOwnedCheckoutSnapshot(origin.job.overlay)) return { did: "nothing", why: "stage-origin-mismatch" };
+        if (previous?.stageSnapshot && stageIdentity(previous.stageSnapshot) !== stageIdentity(answer)) return { did: "nothing", why: "stage-origin-mismatch" };
+        job = origin.job;
+        const proof = { v: answer.v, destination: answer.destination, job: answer.job, admission: answer.admission, binding: answer.binding,
+          sources: answer.sources, base: answer.base, commit: answer.commit, tree: answer.tree };
+        stageSnapshot = { ...(parseStrict(canonicalize(proof)) as Omit<StageSnapshot, "objects">), objects: origin.job.overlay.objects };
+      } else {
+        const manifest = at === null ? null : await scopes.entry(notice.lane, at);
+        const listManifest = manifest?.entry.input.type === "act" && Array.isArray(manifest.entry.input.signed.intent.fields["files"]);
+        const previous = listManifest ? await this.#o.outcomes.get(notice.job) : null;
+        if (previous?.state === "admitted" || previous?.state === "superseded") return { did: "nothing", why: "closed" };
+        let reservation: ReservationSnapshot | null = previous?.reservation ?? null;
+        if (listManifest && !reservation && scopes.reservationSnapshot) {
+          const asked = await signJobRead(this.#o.signer, { lane: notice.lane, fact: notice.job }, this.#signing());
+          const answer = await scopes.reservationSnapshot(notice.lane, asked);
+          if (answer && "refused" in answer) return { did: "nothing", why: answer.refused };
+          reservation = answer;
+        }
+        if (listManifest && (!reservation || !await verifyReservationObjects(reservation))) return { did: "nothing", why: "no-manifest" };
+        const origin = originOf(notice, { ...(reservation ? { reservation } : {}), entry, pinned, activated, manifest });
+        if ("not" in origin) return { did: "nothing", why: origin.not };
+        job = origin.job;
       }
-      if (listManifest && (!reservation || !await verifyReservationObjects(reservation))) return { did: "nothing", why: "no-manifest" };
-      const origin = originOf(notice, { ...(reservation ? { reservation } : {}), entry, pinned, activated, manifest });
-      if ("not" in origin) return { did: "nothing", why: origin.not };
-      job = origin.job;
     } catch {
       this.#log("origin", "unreadable");
       return { did: "nothing", why: "unreadable" };
@@ -205,9 +247,13 @@ export class CheckerService {
     const { outcomes } = this.#o;
     let record = await outcomes.get(job.fact);
     if (record === null) {
+      // A native waiting deadline permits late settlement of an existing
+      // fenced run; it does not commission a fresh execution after expiry.
+      if (job.evidence && this.#o.clock() >= timeMs(job.deadline)!) return { did: "nothing", why: "job-deadline-passed" };
       const run = b64url(this.#o.random(16));
       const asked = await signJobRead(this.#o.signer, job, this.#signing());
-      if (await outcomes.start(job.fact, run, asked, job.snapshot)) {
+      if (job.evidence && this.#o.clock() >= timeMs(job.deadline)!) return { did: "nothing", why: "job-deadline-passed" };
+      if (await outcomes.start(job.fact, run, asked, job.snapshot, stageSnapshot)) {
         // Nothing waits between the write that made the record and this mark.
         const key = flightOf(job);
         this.#flying.add(key);
@@ -257,6 +303,7 @@ export class CheckerService {
   /** Steps 3 to 9, for the delivery that made the job's record. */
   async #first(job: Job, run: string, asked: SignedIntent): Promise<Delivered> {
     const configuration = await this.#configuration(job);
+    if (job.evidence && !await this.#currentStage(job, (await this.#o.outcomes.get(job.fact))?.stageSnapshot)) return { did: "waiting" };
     let report: unknown = null;
     let ran = false;
     if (configuration !== null) {
@@ -264,13 +311,13 @@ export class CheckerService {
       // Without the required legacy token no runner starts, leaving `run-lost`.
       let token: Answer | null = null;
       try {
-        token = job.snapshot ? null : await this.#o.scopes.prepare(job.lane, asked, JOB_READ.capability, JOB_READ.step);
+        token = job.overlay || job.snapshot ? null : await this.#o.scopes.prepare(job.lane, asked, JOB_READ.capability, JOB_READ.step);
       } catch {
         this.#log("job-read", "no-answer");
       }
       // The lane's answer is read as data: a value that is no answer is no token, and the log holds one of four fixed words.
       const answered = isRecord(token) ? token["answer"] : null;
-      if (job.snapshot || answered === "accepted") {
+      if ((job.overlay || job.snapshot || answered === "accepted") && (!job.evidence || this.#o.clock() < timeMs(job.deadline)!)) {
         ran = true;
         try {
           // 5. The one run of this job.
@@ -320,11 +367,13 @@ export class CheckerService {
     const done = (lane: "admitted" | "kept" | "superseded"): Delivered => ({ did: "submitted", outcome: record.outcome!, ran, lane });
     if (record.state !== "kept") return done(record.state);
     try {
+      if (job.evidence && !await this.#currentStage(job, record.stageSnapshot)) return done("kept");
       // The exact bytes that were submitted before, first: a lane that admitted them answers with their receipt and writes nothing.
       if (record.signed !== null && (await scopes.submit(job.lane, record.signed)).answer === "accepted") return (await outcomes.close(job.fact, "admitted"), done("admitted"));
       const standing = await scopes.standing(job.lane, job.fact.seq, record.outcome.act);
       if (standing === null) return done("kept");
       if (standing.state === "superseded") return (await outcomes.close(job.fact, "superseded"), done("superseded"));
+      if (job.evidence && !await this.#currentStage(job, record.stageSnapshot)) return done("kept");
       const signed = await signResult(this.#o.signer, job, record.outcome, record.details, standing.expected, this.#signing());
       // Noted before it is sent, so that a lost answer is asked again with the same bytes.
       if (!(await outcomes.signed(job.fact, signed))) return done("kept");
@@ -336,6 +385,24 @@ export class CheckerService {
     }
     return done("kept");
   }
+
+  /** After execution awaits, re-read the same admission with this actual signer; never rotate/re-sign an old fence. */
+  async #currentStage(job: Job, saved: StageSnapshot | undefined): Promise<boolean> {
+    const { scopes } = this.#o;
+    if (!saved || !scopes.stageSnapshot) return false;
+    const entry = await scopes.entry(job.lane, job.fact.seq), pinned = await scopes.pinned(job.lane);
+    const activated = typeof pinned === "string" && pinned.startsWith("sha256:") ? await scopes.activated(pinned as Digest) : null;
+    const asked = await signJobRead(this.#o.signer, job, this.#signing());
+    const answer = await scopes.stageSnapshot(job.lane, asked);
+    if (!answer || "refused" in answer || stageIdentity(answer) !== stageIdentity(saved)) return false;
+    const origin = stageOriginOf({ lane: job.lane, job: job.fact, name: job.name, tree: job.tree }, { entry, pinned, activated }, answer, this.#o.signer.key, this.#o.evidenceDefinitions);
+    return "job" in origin && canonicalize({ ...origin.job, overlay: null }) === canonicalize({ ...job, overlay: null });
+  }
 }
+
+const stageIdentity = (snapshot: StageSnapshot): string => canonicalize({ binding: snapshot.binding, destination: snapshot.destination,
+  job: { at: snapshot.job.entry.at, seq: snapshot.job.entry.seq, hash: snapshot.job.hash },
+  admission: { at: snapshot.admission.entry.at, seq: snapshot.admission.entry.seq, hash: snapshot.admission.hash },
+  commit: snapshot.commit, tree: snapshot.tree, base: snapshot.base });
 
 export type { JobRecord };

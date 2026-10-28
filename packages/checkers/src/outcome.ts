@@ -22,8 +22,8 @@
  * word. The words here are this package's (I3 deltas, entry EW14).
  */
 
-import type { Digest, FactRef } from "@generalbusiness/dap-contract";
-import { canonicalBytes, digestBytes, isDigest, utf8, wellFormed } from "@generalbusiness/dap-bytes";
+import type { Digest, EvidenceBinding, FactRef } from "@generalbusiness/dap-contract";
+import { canonicalBytes, digestBytes, evidenceBindingDigest, isDigest, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import { environmentDigest, exactly, type Configuration, type Variable } from "./configuration.ts";
 
 /** The reasons of a `check-error` that names no step. */
@@ -74,6 +74,8 @@ export interface RunProvenance {
   steps: readonly { name: string; status: number | null }[];
   /** The checker service's record of this run. */
   run: string;
+  /** Present only for successor jobs. Historical details retain their old bytes. */
+  bindingDigest?: Digest;
 }
 
 /** The details of a result: the record of what ran, and nothing else (I3 deltas, entry EW13). The `check` intent signs their digest. */
@@ -209,13 +211,13 @@ export function judge(configuration: Configuration, given: unknown): Outcome {
  * has a digest there, and its table has the case "No resolved value" (I3
  * deltas, entry EW13).
  */
-export function provenanceOf(job: { fact: FactRef; tree: string; configuration: Digest }, configuration: Configuration, report: unknown, run: string): RunProvenance {
+export function provenanceOf(job: { fact: FactRef; tree: string; configuration: Digest; evidence?: EvidenceBinding }, configuration: Configuration, report: unknown, run: string): RunProvenance {
   const read = readReport(report);
   return {
     job: job.fact, tree: job.tree, configuration: job.configuration,
     image: { declared: configuration.image, resolved: read?.image ?? null },
     environment: environmentDigest(read?.started ? read.environment : []),
     steps: configuration.steps.map((_, k) => ({ name: String(k + 1), status: read?.steps[k]?.status ?? null })),
-    run,
+    run, ...(job.evidence ? { bindingDigest: evidenceBindingDigest(job.evidence) } : {}),
   };
 }

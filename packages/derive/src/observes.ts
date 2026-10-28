@@ -80,15 +80,17 @@ export interface Needed {
  * What a rules definition states of the two members that an observation of
  * the rules holds only under such a definition (section 16.1, "Two fixed
  * records, in one type"; row I3-43): the value `singleControllerException`
- * and the slot `extents`, of its item `rules`.
+ * and the slot `extents`, of its item `rules`. The successor's local
+ * `roomServiceChanged` reference declares both service content members.
  */
-export interface ContentStates { singleControllerException: boolean; extents: boolean }
+export interface ContentStates { singleControllerException: boolean; extents: boolean; roomService?: boolean; serviceGeneration?: boolean }
 
 /** What the data of a rules definition states of the two members. */
 export function contentStates(data: Pick<PlatformData, "items">): ContentStates {
   const rules = own(data.items, "rules");
   const states = (name: string): boolean => rules !== undefined && own(rules.values, name) !== undefined;
-  return { singleControllerException: states("singleControllerException"), extents: states("extents") };
+  const service = rules !== undefined && own(rules.refs, "roomServiceChanged") !== undefined;
+  return { singleControllerException: states("singleControllerException"), extents: states("extents"), ...(service ? { roomService: true, serviceGeneration: true } : {}) };
 }
 
 /**
@@ -101,7 +103,8 @@ export function contentStates(data: Pick<PlatformData, "items">): ContentStates 
 export function contentChecked(o: RulesObservation, states: ContentStates | null | undefined): boolean {
   if (!states) return false;
   if (o.content.asked !== "rules") return true;
-  return ("extents" in o.content) === states.extents && ("singleControllerException" in o.content) === states.singleControllerException;
+  return ("extents" in o.content) === states.extents && ("singleControllerException" in o.content) === states.singleControllerException
+    && ("roomService" in o.content) === (states.roomService === true) && ("serviceGeneration" in o.content) === (states.serviceGeneration === true);
 }
 
 /** The digests of the values that an observation names, which are kept apart from the entry (section 16.1, "The extents, in an observation of the rules"). */

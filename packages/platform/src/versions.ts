@@ -25,10 +25,10 @@ export const isOf = (named: unknown, name: string): named is PlatformDefinition 
 export const isStandingDestination = (named: unknown): named is "platform:destination@5" | "platform:destination@6" => named === "platform:destination@5" || named === "platform:destination@6";
 
 /** Exact destination pins that use the native staged publication protocol. */
-export const usesStagedPublicationProtocol = (named: unknown): boolean => named === "platform:destination@3" || named === "platform:destination@4" || named === "platform:destination@5" || named === "platform:destination@6" || named === "platform:destination@7" || named === "platform:destination@8" || named === "platform:destination@13" || named === "platform:destination@14" || named === "platform:destination@15" || named === "platform:destination@16";
+export const usesStagedPublicationProtocol = (named: unknown): boolean => named === "platform:destination@3" || named === "platform:destination@4" || named === "platform:destination@5" || named === "platform:destination@6" || named === "platform:destination@7" || named === "platform:destination@8" || named === "platform:destination@13" || named === "platform:destination@14" || named === "platform:destination@15" || named === "platform:destination@16" || named === "platform:destination@17";
 
 /** Exact destination pins that use the native automatic file publication protocol. */
-export const usesFilePublicationProtocol = (named: unknown): boolean => named === "platform:destination@4" || named === "platform:destination@5" || named === "platform:destination@6" || named === "platform:destination@7" || named === "platform:destination@8" || named === "platform:destination@13" || named === "platform:destination@14" || named === "platform:destination@15" || named === "platform:destination@16";
+export const usesFilePublicationProtocol = (named: unknown): boolean => named === "platform:destination@4" || named === "platform:destination@5" || named === "platform:destination@6" || named === "platform:destination@7" || named === "platform:destination@8" || named === "platform:destination@13" || named === "platform:destination@14" || named === "platform:destination@15" || named === "platform:destination@16" || named === "platform:destination@17";
 
 /** The version of a platform definition: the number after its `@`. */
 export const versionOf = (named: PlatformDefinition): number => Number(named.slice(named.lastIndexOf("@") + 1));

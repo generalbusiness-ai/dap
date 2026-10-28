@@ -119,6 +119,8 @@ export type LateAnswers = (operation: OperationId, attempt: number, answer: Effe
  */
 export interface Outside {
   snapshot?(asked: import("@generalbusiness/dap-contract").SignedIntent): Promise<import("@generalbusiness/dap-contract").ReservationSnapshot | { refused: "reservation-stage-missing" | "reservation-stage-mismatch" } | null>;
+  /** Successor stage proof; the signed job and native admission own access. */
+  stageSnapshot?(asked: import("@generalbusiness/dap-contract").SignedIntent): Promise<import("@generalbusiness/dap-git").StageSnapshotReply>;
   accepts(owner: CapabilityName | PlatformDefinition, kind: string): boolean;
   send(request: EffectRequest): Promise<EffectAnswer | null>;
   late?(deliver: LateAnswers): void;
@@ -307,7 +309,7 @@ export class Operations {
       const read = await within(() => this.#resolver.read(asked.from, this.#bounds.fetchSeconds, true), this.#bounds.fetchSeconds);
       if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, asked.from)) return false;
       return asked.mode === "application"
-        ? (operation.owner === "platform:destination@7" || operation.owner === "platform:destination@8" || operation.owner === "platform:destination@13" || operation.owner === "platform:destination@14" || operation.owner === "platform:destination@15" ? this.#definitions?.platform(operation.owner)?.applicationPublicationOrigin : applicationPublicationOrigin)?.(asked.from, asked.directory, asked.destination, read.origin ?? []) === true
+        ? (operation.owner === "platform:destination@7" || operation.owner === "platform:destination@8" || operation.owner === "platform:destination@13" || operation.owner === "platform:destination@14" || operation.owner === "platform:destination@15" || operation.owner === "platform:destination@17" ? this.#definitions?.platform(operation.owner)?.applicationPublicationOrigin : applicationPublicationOrigin)?.(asked.from, asked.directory, asked.destination, read.origin ?? []) === true
         : read.under === "change" && publishingLaneOrigin(asked.from, asked.directory, asked.destination, read.origin ?? []);
     } catch { return false; }
   }

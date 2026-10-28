@@ -39,7 +39,7 @@ const projects = [
       project("scope", "packages/scope", "vitest.worker.config.ts", 1, ["../../apps/room/lanes/test/**/*.scope.test.ts", "../cli/test/**/*.scope.test.ts", "../../apps/room/page/test/**/*.scope.test.ts", "../mcp/test/**/*.scope.test.ts"], {
         // The page's recorder for its screenshots runs only when asked: `PAGE_RECORD=1` (apps/room/page/test/screens.mjs). So does
         // the demo runner's recorder for its captures: `DEMO_RECORD=1` (scripts/demo-captures.ts --recorded).
-        provide: { j3Runner: null, pageRecord: process.env["PAGE_RECORD"] === "1", demoRecord: process.env["DEMO_RECORD"] === "1" },
+        provide: { j3Runner: null, evidenceRunner: null, pageRecord: process.env["PAGE_RECORD"] === "1", demoRecord: process.env["DEMO_RECORD"] === "1" },
       }),
       project("scope-lending", "packages/scope", "vitest.lending.config.ts", 2),
       project("scope-denial", "packages/scope", "vitest.denial.config.ts", 3),

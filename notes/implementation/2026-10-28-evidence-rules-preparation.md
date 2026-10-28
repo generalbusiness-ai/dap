@@ -1,8 +1,8 @@
-# Evidence rules: preparation before source changes
+# Evidence rules: preparation and implementation evidence
 
-Status: preparation for review. This note records the before-source
-choices required by the first-slice request. It claims no implementation,
-passing check, landing, deployment or completion of that request.
+Status: Source implementation in progress. This note retains the
+before-source choices required by the first-slice request. Checks, review,
+landing and deployment remain owed.
 
 Base: Main `06e4d33fe17937610891f29b5d1513b9e224edea`, after J3.
 Branch: `request/evidence-rules-20261028`.
@@ -19,10 +19,9 @@ stale bases without an override. No renewed ruling is required.
 
 J3 landed as `06e4d33f` after exact-head approval `c9bd8822`.
 Receipt `ceba0366` and independent landing check `3c884798` confirm it.
-The preparation branch is rebased onto that Main; only this note differs.
-The production Runner is now the base for this slice.
-The earlier scratch proposal memo remains unchanged. This note makes no
-native or checker-service source change.
+The preparation branch is rebased onto that Main. The production Runner
+is the base for this slice. Source changes now implement the selected
+boundary below; the earlier scratch proposals remain historical.
 
 ## Rules owns the service mark
 
@@ -314,22 +313,121 @@ The answered question was retired as `2fccf06d`. The ruling remains
 effective; its stale metadata follows the already answered earlier basis.
 No marking-time exchange is added.
 
-## Design update and remaining work
+## Source implementation checkpoint
 
-The eventual implementation head must replace the open-question sentence
-at `notes/2026-10-16-evidence-rules-design.md:109-112`. It must state Rules
-ownership, admin publication, native scoped generation, member observation
-at marking, exact key eligibility at use, Destination's observed fence,
-and the J3 external signer binding. Update the matching dependency-table
-row too, so it no longer says ownership and rotation are undecided.
+The shared contract, Rules successor, lane successors, checker service and
+host stage-read path now have Source implementations. They are not yet
+validated. Root freezes and commits every source owner before any project
+import, parser, generator, compiler or test runs. The selected cohort is
+Register 22, Directory 21, Membership 8, Rules 13, Destination 17 and Inbox 1.
 
-New result-index and hold growth need explicit native bounds and capacity
-accounting before successor pins are generated. Preserve old accepted
-facts without treating them as current standing. Never reconstruct a full
-fact from partial metadata, add unsupported foreign-proof obligations, or
-use retained bytes as a replacement authority source.
+The queue entry and admitted job are separate. Initial `check-fence` or
+`work-check-fence` delivery opens an evidence-request. Its acknowledgement
+means queued only. A selected `evidence-admit` outcome opens the admitted
+nonholder evidence-job at the outcome's own sequence. For work jobs, the request remains
+the complete funded lifetime account for result, notice and late settlement.
+Landing and published jobs use nonholder evidence slots and their exact
+pre-existing batch account. Messages carry the recorded merge operation;
+Native proves that it belongs to the admitted job and publication.
+No settling outcome opens a new holder or transfers unfunded reservations.
 
-This document changes only preparation prose. No checks were run under the
-writing-only scope. The implementation still owes its owning checks, all
-listed witnesses, one ordinary gate before review, and independent review
-of the exact head. Deployment follows review under the owner's standing authorization.
+A fresh audit names two facts with distinct meanings. `binding.auditOf`
+names the actual counted Member job, which may belong to another lane.
+`forJob` names the current logical Member request, including a reused alias.
+Pairing uses the latter so cancellation and retry require a fresh audit.
+The audit still compares the same tree, stage and configuration.
+
+Published setup uses bounded Native self-requests. Each actual new-work
+delivery opens one funded batch account of eight lifetime job slots. A
+publication needs at most four accounts, selected from its complete
+landing, audit and published obligations. A settling outcome opens no
+holder. The publication cannot write until all needed accounts and exact
+hold, policy-generation and incident identities are funded. Unknown setup
+remains visible and cannot grant permission to write.
+
+A published-plan is a nonholder cursor. Only an actual written receipt,
+including a proven recovered write, can start it. Later outcomes emit one
+bounded descriptor at a time, after the written fact exists. The actual
+batch accounts fund complete job, incident and hold closures before the
+irreversible write and stay available while that work remains unresolved.
+Running published checks alone do not hold the branch slot.
+
+Readiness requires both complete batch accounts and a confirmed stage. The
+last funding delivery or the later stage outcome emits the same authenticated
+committed update, once. It never depends on network delivery order.
+
+`evidence-progress` separates result retention from final publication work,
+so the carrying entry keeps the 16-effect limit. It reads the actual sealed
+admission or result, observes current Rules and all required result keys,
+and then updates the publication. A prior accepted result does not itself
+assert fresh authority.
+
+The recovered write path keeps the old read outcome's receipt opening. An
+authenticated self-request opens the nonholder published-plan through a
+bounded effect mark. It draws on the actual batch account and names the
+already recorded written fact. No outcome opens a holder.
+
+A deadline atomically records the actual timeout and reasoned hold. A funded
+notice operation separately obtains current triagers. Timeout ends waiting;
+it does not release budget needed for an eligible late result or prove a
+physical runner stopped. The service cannot start a first run after its
+deadline. A persisted run may finish under fresh current authority.
+
+The performer can explicitly abandon a staged work source with a nonempty
+reason and `issue.work` authority. That releases its pin, while unresolved
+jobs keep their actual state. A fresh stage snapshot refuses a released
+source. Kept unsigned outcomes remain retained if a fresh source read is
+unavailable; an original signed retry sends identical bytes. Native rules
+independently judge eligible late results.
+
+The design now states Rules ownership, native scoped generation, observed
+rotation, and the triagers' nested incident exchange. The implementation
+still owes owning checks, all 19 Decisions witnesses, the explicit actual
+J3 marked-room case, one ordinary gate and independent exact-head review.
+No test result or deployment is claimed at this Source checkpoint.
+
+## Decision needed: atomic native timeout
+
+Static Source review found a contract gap before the first project run.
+`packages/contract/src/platform.ts` states that a timed rule holds no mark.
+`packages/derive/src/validate/effects.ts` refuses every timed code effect
+with `timed-partial`. `validate/timed.ts` also requires a literal transition
+out of the timed states. The current draft has those literal transitions,
+but its code effect remains unsupported. It is not a valid whole Native
+implementation and cannot satisfy this request yet.
+
+The commissioned timeout needs one atomic record of the actual timeout,
+its reasoned holds and the funded notice task. Literal effects on the timed
+job alone cannot update a different hold owner. Delaying those effects to
+a later outcome would leave an admission window unless the authoritative
+hold view also changes. The existing timed `opens` extension supports only
+fixed reservation cleanup kinds and does not supply this projection.
+
+The recommended decision is a narrowly versioned Native timed projection
+for actual Destination 17. It must have all of these properties:
+
+- Only the exact Native catalog and applied genesis select it. Declared
+  definitions and historical Native versions retain the existing ban.
+- The declared literal transition still leaves the timed states. The
+  projection is synchronous and bounded by its declared effects and
+  pre-funded operation closure. It cannot fetch, observe or send messages.
+- The timed journal entry atomically retains the timeout cause, exact-key
+  hold changes and notice opening. The notice separately reads triagers.
+- Validation, derivation, fold, replay, lifetime custody and all five
+  capacity dimensions use the same finite declaration. No allowance rises.
+- A narrow witness must place a landing on each side of the timeout
+  boundary and prove there is no partially effective hold. Negative controls
+  must preserve the historical and declared timed-mark refusal.
+
+This requires work in the neutral contract and derivation layers, beyond
+the assigned new Rules, lane and Destination versions. Root requests an
+explicit planner disposition before implementing that extension. An
+alternative is a redesigned authoritative timeout-marker/hold view using
+existing literal effects and a bounded pending-job index. That changes the
+selected hold storage and admission proof and needs its own concrete ruling.
+Merely moving hold updates to an asynchronous notice is insufficient.
+
+All current implementation Source is retained for review. The unaffected
+bytes, Git, checker, policy and lane components can be checked after a
+committed freeze while this decision is pending. No whole implementation,
+Native authority scenario, gate, review or deployment is claimed.

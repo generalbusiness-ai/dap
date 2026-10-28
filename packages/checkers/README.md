@@ -101,6 +101,30 @@ before acknowledging origin closure. The supervisor requires that durable
 acknowledgement before a legacy run's result is eligible. An uncooperative
 callback whose cleanup cannot be confirmed leaves a lost run.
 
+Successor evidence jobs use `Job.overlay`, a separate immutable checkout
+overlay backed by an actual Destination 17 admission. It is not a legacy
+`ReservationSnapshot`. The service selects the exact commissioned Issue and
+Change digests through optional trusted `evidenceDefinitions`; absent or
+wrong pins cannot fall back to an unbound successor job. `Scopes.stageSnapshot`
+reads the actual admitted job, subject facts and immutable objects with the
+external signer's existing signed job-read intent. The HTTP adapter uses
+`{signed, stage: true}` on the existing reservation-snapshot route; the hint
+selects routing and supplies no authority.
+
+The stage proof has a 256 KiB canonical ceiling. Its overlay allows at most
+4,096 unique objects and 16 MiB of decoded bytes, with the existing per-object
+limits. These are transport bounds, not native capacity allowances. Work
+staging separately proves at most 32 KiB of actual commit bytes through a
+48 KiB canonical proof. Published jobs read their recorded commit after
+publication and reservation cleanup without recreating a reservation ref.
+
+The service retains the same admission and object proof with its one run.
+Fresh execution cannot start after the native waiting deadline. An existing
+fenced run can recover and settle late under current source and key standing;
+a room-service generation change still invalidates its old fence. A lost
+accepted result reply retries only the original stored signed bytes. It
+creates no replacement run or signature and does not assert new authority.
+
 ## What one job can do
 
 Each job gets a fresh container with `--network=none`, a read-only root

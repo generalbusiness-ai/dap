@@ -70,7 +70,7 @@ const { presentsSignedRead } = load(readSource("packages/scope/src/signed-reads.
 const adminReads = strings(declaration(readSource("packages/scope/src/sessions.ts"), "ADMIN_READS"));
 const readGate = name => adminReads.includes(name) ? "admin" : signedReads.includes(name) ? "self-signed" : "session";
 const gates = {
-  create: "creation", submit: "membership", prepare: "membership", settle: "self-signed", session: "membership", reservationSnapshot: "membership",
+  create: "creation", submit: "membership", prepare: "membership", settle: "self-signed", session: "membership", reservationSnapshot: "membership", stageSnapshot: "membership",
   // Census is signed only by the pinned register's standing founding-install
   // signer. It is not an ordinary member/session read; its whole owner is sealed.
   census: "self-signed",
@@ -78,7 +78,7 @@ const gates = {
   incidents: readGate("incidents"), requests: readGate("requests"), waiting: readGate("waiting"),
 };
 
-async function scopeRows(text) {
+export async function scopeRows(text, snapshotDispatches = []) {
   const routeText = declaration(text, "routedRequest");
   // All literal equivalence classes of the current segment matcher, plus
   // absent and unconstrained values. Source seals below guard this grammar.
@@ -170,27 +170,34 @@ async function scopeRows(text) {
   for (const { path, parts } of candidates) {
     for (const method of methodsIn(routeText)) {
       const query = path.endsWith("/query-items") ? "?q=e30" : path.endsWith("/application-projection") ? "?p=e30" : "";
-      const request = new Request(`https://inventory.invalid${path}${query}`, { method, headers: { authorization: parts === null ? "Signed census-witness" : "Session witness", "cf-connecting-ip": "198.51.100.7" }, ...(method === "POST" ? { body: "{}" } : {}) });
-      censusDispatched = false;
-      censusAdmissions = 0;
-      try {
-        const response = await routedRequest(request, binding, { SCOPE_INDEX: censusIndex }, censusAddress);
-        if (censusDispatched) {
-          assert.equal(censusAdmissions, 1, "The census admission seam is invoked exactly once");
-          assert.equal(response.status, 200, "The actual census helper returns the dispatched page");
-          dispatched("census");
+      // Only this body-dispatched route needs two input classes. Other paths
+      // retain their existing single matcher exercise.
+      const bodies = method === "POST" && parts?.[3] === "reservation-snapshot" ? ["{}", '{"stage":true}'] : ["{}"];
+      for (const requestBody of bodies) {
+        const request = new Request(`https://inventory.invalid${path}${query}`, { method, headers: { authorization: parts === null ? "Signed census-witness" : "Session witness", "cf-connecting-ip": "198.51.100.7" }, ...(method === "POST" ? { body: requestBody } : {}) });
+        censusDispatched = false;
+        censusAdmissions = 0;
+        try {
+          const response = await routedRequest(request, binding, { SCOPE_INDEX: censusIndex }, censusAddress);
+          if (censusDispatched) {
+            assert.equal(censusAdmissions, 1, "The census admission seam is invoked exactly once");
+            assert.equal(response.status, 200, "The actual census helper returns the dispatched page");
+            dispatched("census");
+          }
         }
-      }
-      catch (error) {
-        if (!error?.dispatch) throw error;
-        const operation = error.dispatch;
-        assert.ok(Object.hasOwn(gates, operation), `Unclassified dispatch: ${operation}`);
-        // Normalize only unconstrained arguments. Literal matcher choices,
-        // such as waiting's two lists, stay distinct.
-        const parameters = { items: ["type"], entry: ["seq"], outboxItem: ["duty"], retained: ["kind", "digest"], credential: ["handle"] };
-        const normalized = parts === null ? path : "/" + parts.filter(part => part !== undefined).map((part, index) => index === 2 ? ":scope" : index >= 4 && parameters[operation] ? ":" + parameters[operation][index - 4] : part).join("/");
-        const route = row(method, normalized, gates[operation]);
-        result.set(route.route, route);
+        catch (error) {
+          if (!error?.dispatch) throw error;
+          const operation = error.dispatch;
+          assert.ok(Object.hasOwn(gates, operation), `Unclassified dispatch: ${operation}`);
+          // Normalize only unconstrained arguments. Literal matcher choices,
+          // such as waiting's two lists, stay distinct.
+          const parameters = { items: ["type"], entry: ["seq"], outboxItem: ["duty"], retained: ["kind", "digest"], credential: ["handle"] };
+          const normalized = parts === null ? path : "/" + parts.filter(part => part !== undefined).map((part, index) => index === 2 ? ":scope" : index >= 4 && parameters[operation] ? ":" + parameters[operation][index - 4] : part).join("/");
+          const route = row(method, normalized, gates[operation]);
+          if (operation === "reservationSnapshot" || operation === "stageSnapshot") snapshotDispatches.push({ ...route, operation, body: requestBody });
+          if (result.has(route.route)) assert.equal(result.get(route.route).gate, route.gate, "Every body format of one route retains its gate class");
+          result.set(route.route, route);
+        }
       }
     }
   }

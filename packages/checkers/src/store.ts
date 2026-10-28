@@ -27,6 +27,7 @@
  */
 
 import type { ReservationSnapshot, FactRef, SignedIntent } from "@generalbusiness/dap-contract";
+import { readOwnedCheckoutSnapshot, STAGE_SNAPSHOT_BOUNDS, type StageSnapshot } from "@generalbusiness/dap-git";
 import { b64url, unb64url, canonicalize } from "@generalbusiness/dap-bytes";
 import type { Details, Outcome } from "./outcome.ts";
 
@@ -61,11 +62,16 @@ export interface JobRecord {
   /** The last signed result that was submitted. The same bytes are sent first on a later submit: a lane that admitted them answers with their receipt. */
   signed: SignedIntent | null;
   reservation?: ReservationSnapshot;
+  /** The actual successor admission and immutable execution bytes, bound to this same job/run. */
+  stageSnapshot?: StageSnapshot;
 }
 
 const jobStorageKey = (job: FactRef): string => `job/${job.at.scope}/${job.at.inc}/${job.seq}/${job.hash}`;
 
-const recordBytes = (record: JobRecord): string => canonicalize(record.reservation ? { ...record, reservation: { ...record.reservation, objects: record.reservation.objects.map((object) => ({ ...object, data: b64url(object.data) })) } } : record);
+const recordBytes = (record: JobRecord): string => canonicalize({ ...record,
+  ...(record.reservation ? { reservation: { ...record.reservation, objects: record.reservation.objects.map(object => ({ ...object, data: b64url(object.data) })) } } : {}),
+  ...(record.stageSnapshot ? { stageSnapshot: { ...record.stageSnapshot, objects: record.stageSnapshot.objects.map(object => ({ ...object, data: b64url(object.data) })) } } : {}),
+});
 
 export class Outcomes {
   readonly #durable: Durable;
@@ -76,9 +82,9 @@ export class Outcomes {
    * made it, and it alone may start a runner. False: a record exists, or
    * the write did not create one, and this delivery starts no runner.
    */
-  start(job: FactRef, run: string, asked: SignedIntent | null, reservation?: ReservationSnapshot): Promise<boolean> {
-    const record: JobRecord = { job, state: "started", run, asked, outcome: null, details: null, signed: null, ...(reservation ? { reservation } : {}) };
-    return this.#durable.create(jobStorageKey(job), canonicalize(reservation ? { ...record, reservation: { ...reservation, objects: reservation.objects.map((object) => ({ ...object, data: b64url(object.data) })) } } : record));
+  start(job: FactRef, run: string, asked: SignedIntent | null, reservation?: ReservationSnapshot, stageSnapshot?: StageSnapshot): Promise<boolean> {
+    const record: JobRecord = { job, state: "started", run, asked, outcome: null, details: null, signed: null, ...(reservation ? { reservation } : {}), ...(stageSnapshot ? { stageSnapshot } : {}) };
+    return this.#durable.create(jobStorageKey(job), recordBytes(record));
   }
 
   async get(job: FactRef): Promise<JobRecord | null> {
@@ -86,6 +92,23 @@ export class Outcomes {
     if (kept === null) return null;
     const record = JSON.parse(kept) as JobRecord;
     if (record.reservation) record.reservation = { ...record.reservation, objects: record.reservation.objects.map((object) => ({ ...object, data: typeof object.data === "string" ? unb64url(object.data)! : object.data })) };
+    if (record.stageSnapshot) {
+      const stage = record.stageSnapshot;
+      if (!Array.isArray(stage.objects) || stage.objects.length > STAGE_SNAPSHOT_BOUNDS.objects) throw new Error("Invalid retained stage snapshot.");
+      let bytes = 0;
+      const objects = stage.objects.map(object => {
+        const raw: unknown = object.data;
+        if (typeof raw !== "string" || raw.length > 4 * Math.ceil(STAGE_SNAPSHOT_BOUNDS.objectBytes / 3)) throw new Error("Invalid retained stage snapshot.");
+        bytes += Math.floor(raw.length * 3 / 4);
+        if (bytes > STAGE_SNAPSHOT_BOUNDS.objectBytes) throw new Error("Invalid retained stage snapshot.");
+        const data = unb64url(raw);
+        if (!data) throw new Error("Invalid retained stage snapshot.");
+        return { ...object, data };
+      });
+      const overlay = readOwnedCheckoutSnapshot({ commit: stage.commit, tree: stage.tree, base: stage.base, objects });
+      if (!overlay) throw new Error("Invalid retained stage snapshot.");
+      record.stageSnapshot = { ...stage, ...overlay };
+    }
     return record;
   }
 

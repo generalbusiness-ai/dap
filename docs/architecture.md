@@ -312,6 +312,37 @@ records recover a terminal result without starting a replacement.
 [Run a checker in a container](../packages/checkers/README.md) states the
 supported engine, image requirements and operator custody wiring. Source
 code alone is not a deployment or a hosted check result.
+The opt-in evidence cohort (Register 22, Directory 21, Rules 13 and
+Destination 17, with Membership 8) adds source and stage admission. Rules
+owns the nullable room-service member/key pair and its native generation.
+Only an admin can change that pair. Destination observes current Rules and
+Membership when it admits and counts a result. Rotation refuses unfinished
+room jobs under the earlier generation. Member jobs retain their separate
+member authority.
+
+A lane queues an evidence request before Destination decides it. A selected
+`evidence-admit` outcome opens the admitted job and records its immutable
+subject, exact commit/tree/base and source facts. Reuse uses a bounded index
+of admitted results. Disagreement permanently disables reuse for that key
+while allowing fresh jobs. Audits run fresh for the current logical request
+and name the actual member job whose result they compare.
+
+Destination records published-check holds in the same transaction that
+orders later admissions. Passes clear only the exact hold key at the same
+or a later publication. Transitions and overrides have distinct recorded
+causes. A failed published job asks its Change lane to create a nested
+incident Issue, addressed to current active `issue.triage` holders. Unknown
+creation remains pending under the original request.
+
+The signed job-read route can return a bounded `StageSnapshot` for this
+cohort. The host reads immutable Git objects at the admitted commit, checks
+their closure and exact triple, and rechecks source authority after reads.
+The checker validates the recorded Native admission before handing its
+object overlay to the J3 runner. The host supplies bytes; Native rules own
+admission. Timeout ends waiting but does not prove that a physical run
+stopped. A persisted run may finish late under current authority. A service
+cannot launch a first run after its deadline.
+
 `platform:task@1` is not supplied at this base. Real lane hold and Git-read
 host adapters are not built.
 

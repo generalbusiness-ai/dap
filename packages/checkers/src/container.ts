@@ -67,7 +67,7 @@ export function containerRunner(options: ContainerRunnerOptions): Runner {
     // Copy and validate before the first wait, including every snapshot byte.
     const encoded = encodeAsk(given), ask = decodeAsk(encoded), askDigest = digest(encoded);
     const createdAt = Date.now();
-    const claim: RunClaim = { v: 1, run: ask.run, askDigest, command, execCommand, image: ask.configuration.image, needsOrigin: !ask.job.snapshot, container: containerName(ask.run),
+    const claim: RunClaim = { v: 1, run: ask.run, askDigest, command, execCommand, image: ask.configuration.image, needsOrigin: !ask.job.overlay && !ask.job.snapshot, container: containerName(ask.run),
       createdAt, finishBy: createdAt + (ask.configuration.limits.seconds + GRACE_SECONDS) * 1000 };
     const claimBytes = canonicalize(claim);
     if (Buffer.byteLength(claimBytes) > CLAIM_BYTES) throw new RunIdentityRefusal();
@@ -92,7 +92,7 @@ export function containerRunner(options: ContainerRunnerOptions): Runner {
     const setup = new AbortController();
     const deadline = setTimeout(() => setup.abort(), Math.max(1, claim.finishBy - Date.now()));
     try {
-      if (!ask.job.snapshot) {
+      if (!ask.job.overlay && !ask.job.snapshot) {
         if (!originFor) { await writeTerminal(dir, claim, null); return null; }
         origin = await Promise.race([originFor(ask, setup.signal).then(value => {
           if (setup.signal.aborted) { void value.close().catch(() => undefined); throw unavailable(); }

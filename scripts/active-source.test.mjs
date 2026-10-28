@@ -46,7 +46,7 @@ test("no active source or configuration file reaches into spikes/parked/, and sp
 // and full lane definitions, under the same rule.
 test("no platform package depends on the lanes package or imports from it", () => {
   assert.ok(files.includes("apps/room/lanes/package.json"), "the lanes package was listed");
-  const pageTests = (f) => /^packages\/(page|mcp)\/test\//.test(packagePath(f)) || f === "apps/room/page/package.json" || f === "packages/mcp/package.json";
+  const pageTests = (f) => /^packages\/(page|mcp)\/test\//.test(packagePath(f)) || f === "apps/room/page/package.json" || f === "packages/mcp/package.json" || f === "packages/scope/test/evidence-rules-real-fixture.ts";
   const platform = files.filter((f) => packagePath(f).startsWith("packages/") && !packagePath(f).startsWith("packages/lanes/") && !pageTests(f) && !f.endsWith(".md"));
   assert.deepEqual(platform.filter((f) => /(?:artroom|dap)-lanes|[.\/]\/lanes\//.test(text(f))), []);
   const page = JSON.parse(text("apps/room/page/package.json") || "{}");
@@ -83,7 +83,7 @@ const applicationGitUsers = new Set(["packages/mcp/package.json", "packages/mcp/
 // Replay's Node and integration test boundaries may depend on Git. The v2
 // witnesses combine real Git archives with offline Replay; Git itself stays
 // below Replay and imports none of it, including from its own tests.
-const rulesProofGitUsers = new Set(["packages/platform/package.json", "packages/platform/src/rules-policy-tree.ts"]);
+const rulesProofGitUsers = new Set(["packages/platform/package.json", "packages/platform/src/rules-policy-tree.ts", "packages/platform/src/destination-evidence-v17.ts"]);
 const replayGitUsers = new Set(["packages/replay/src/git.ts", "packages/replay/test/archive-git.test.ts", "packages/replay/test/archive-git-fixture.ts", "packages/replay/package.json",
   "packages/replay/test/archive-git-v2-convert.test.ts", "packages/replay/test/archive-git-v2-layout.test.ts", "packages/replay/test/archive-git-v2-reader.test.ts",
   "packages/replay/test/archive-anchor-ranges.test.ts"]);
@@ -157,7 +157,8 @@ test("archive Node exceptions are exact and preserve portable and Git dependency
 // depends only on contract, bytes and git. No package names it. The lanes' scenario of a check reads its origin read and its signer
 // by path, in a test. The manifest scenario also runs the actual checker service
 // against a real lane and a job-bound snapshot. Its test-only container bridge
-// shares that service boundary. No production source reaches it.
+// shares that service boundary. The exact evidence Native helper composes
+// real authority with the separate service. No production source reaches it.
 test("the checkers package depends only on contract, bytes and git, and no package names it", () => {
   assert.ok(files.includes("packages/checkers/package.json"), "the checkers package was listed");
   const source = (f) => packagePath(f).startsWith("packages/") && !f.endsWith(".md");
@@ -166,7 +167,7 @@ test("the checkers package depends only on contract, bytes and git, and no packa
   const named = files.filter((f) => source(f) && !packagePath(f).startsWith("packages/checkers/"));
   assert.deepEqual(named.filter((f) => /dap-checkers/.test(text(f))), []);
   const reaches = files.filter((f) => source(f) && !packagePath(f).startsWith("packages/checkers/") && /(?:[.\/]\/|packages\/)checkers\//.test(text(f)));
-  assert.deepEqual(reaches, ["apps/room/lanes/test/checks.scope.test.ts", "apps/room/lanes/test/manifest-tree.scope.test.ts", "apps/room/lanes/test/support/container-runner.ts"]);
+  assert.deepEqual(reaches, ["apps/room/lanes/test/checks.scope.test.ts", "apps/room/lanes/test/manifest-tree.scope.test.ts", "apps/room/lanes/test/support/container-runner.ts", "packages/scope/test/evidence-rules-real-fixture.ts", "packages/scope/test/evidence-runner-case.ts"]);
 });
 
 // The MCP server derives every tool from definitions as data (plan 031): its source imports the contract, the bytes, the client,

@@ -11,14 +11,15 @@ async function supervise(dir: string): Promise<void> {
   const bytes = await readPrivate(join(dir, "ask.json"), INPUT_BYTES);
   if (bytes === null) throw Error("Checker supervisor input missing");
   const ask = decodeAsk(bytes), claim = await claimOf(dir, ask.run);
-  if (!claim || claim.askDigest !== digest(bytes) || claim.image !== ask.configuration.image || claim.needsOrigin !== !ask.job.snapshot || claim.container !== containerName(ask.run)) throw Error("Checker supervisor input differs");
+  const immutable = ask.job.overlay ?? ask.job.snapshot;
+  if (!claim || claim.askDigest !== digest(bytes) || claim.image !== ask.configuration.image || claim.needsOrigin !== !immutable || claim.container !== containerName(ask.run)) throw Error("Checker supervisor input differs");
   // A supervisor entry is one-shot too. A duplicate child, or an operator
   // restarting this entry, never creates another execution for the record.
   await writePrivate(join(dir, "supervisor.json"), canonicalize({ v: 1, run: claim.run, askDigest: claim.askDigest, pid: process.pid }));
   const launchBytes = await readPrivate(join(dir, "launch.json"), 16 * 1024);
   if (launchBytes === null) throw Error("Checker supervisor origin missing");
   const launch = JSON.parse(launchBytes) as RunLaunch;
-  if (launch.v !== 1 || (!ask.job.snapshot && (!launch.origin || typeof launch.origin.socket !== "string" || typeof launch.origin.repository !== "string"))) throw Error("Checker supervisor origin differs");
+  if (launch.v !== 1 || (!immutable && (!launch.origin || typeof launch.origin.socket !== "string" || typeof launch.origin.repository !== "string"))) throw Error("Checker supervisor origin differs");
   const engine = createContainerEngine({ argvPrefix: claim.command, execCommand: claim.execCommand, image: claim.image });
   const abort = new AbortController();
   const stop = () => abort.abort();
@@ -26,7 +27,7 @@ async function supervise(dir: string): Promise<void> {
   const timer = setTimeout(stop, Math.max(1, claim.finishBy - Date.now()));
   let report: RunReport | null = null;
   let container: ContainerRun | null = null;
-  const gateway = launch.origin && !ask.job.snapshot ? originClient(launch.origin.socket, abort.signal) : null;
+  const gateway = launch.origin && !immutable ? originClient(launch.origin.socket, abort.signal) : null;
   try {
     const origin = launch.origin && gateway ? { repository: launch.origin.repository, forward: gateway.forward } : undefined;
     container = await engine.create(ask, origin, abort.signal);

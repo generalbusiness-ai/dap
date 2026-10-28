@@ -62,7 +62,7 @@ import { DurableObject, RpcTarget, WorkerEntrypoint } from "cloudflare:workers";
 import { CONTROL_BODY_BYTES, HostedAgent, HostedRegistry, controlOf, hostedMcpTools, type HostedMcpSettings, type AgentPorts, type ControlAnswer, type RegistryPorts } from "@generalbusiness/dap-mcp";
 import { PROPOSED_BOUNDS, ITEM_QUERY_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
 import type { FactRef, Entry, ItemQueryRead, ItemQueryRefusal, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxId, Grant, LogPage, PlatformDefinition, Read, ReadRefusal, RetainedInput, ScopeApi, ScopeId, ScopeKind, Seed, SessionRefusal, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, parseStrict, readItemQueryReply, utf8, definitionDigest, intentDigest, isPlatformDefinition, isScopeId, positionOf, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { b64url, entryHash, isEntry, same, parseStrict, readItemQueryReply, utf8, definitionDigest, intentDigest, isPlatformDefinition, isScopeId, positionOf, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { isObject, type Item } from "@generalbusiness/dap-derive";
 import { creationKind, type Created } from "./core.ts";
 import { repositorySessionMembership, fixedMembership, repositoryAuthority } from "./authority.ts";
@@ -167,6 +167,7 @@ export interface McpEnv extends Env { REGISTRIES: DurableObjectNamespace; AGENTS
 interface Remote {
   observed?(method: ObservedMethod, args: unknown[], identity: OperationalIdentity, httpPublic?: boolean): Promise<{ value: unknown; turn: boolean }>;
   reservationSnapshot(asked: SignedIntent): Promise<import("@generalbusiness/dap-contract").ReservationSnapshot | { refused: "reservation-stage-missing" | "reservation-stage-mismatch" } | null>;
+  stageSnapshot(asked: SignedIntent): Promise<import("@generalbusiness/dap-git").StageSnapshotReply>;
   create(creation: SignedIntent, definition: DeclaredDefinition | Digest | PlatformDefinition, definitions?: readonly DeclaredDefinition[], beside?: Beside): Promise<Created>;
   submit(signed: SignedIntent, grants: readonly Grant[], beside?: Beside, address?: string | null): Promise<Answer>;
   prepare(signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer>;
@@ -196,6 +197,7 @@ const MISSING = { ok: false, reason: "not-found" } as const;
 interface StreamExchange { body: ReadableStream<Uint8Array>; close(): Promise<void> }
 export interface Api extends ScopeApi {
   reservationSnapshot(scope: string, asked: SignedIntent): Promise<import("@generalbusiness/dap-contract").ReservationSnapshot | { refused: "reservation-stage-missing" | "reservation-stage-mismatch" } | null>;
+  stageSnapshot(scope: string, asked: SignedIntent): Promise<import("@generalbusiness/dap-git").StageSnapshotReply>;
   session(scope: string, asked: unknown): Promise<SessionIssueAnswer>;
   /** The body is the reader's side of the stream (`relay`): cancelling it releases the scope's subscription at once. */
   stream(scope: string, reader: unknown): Promise<ReadableStream<Uint8Array> | StreamRefusal | typeof MISSING>;
@@ -326,6 +328,7 @@ export function api(binding: Binding, address: string | null = null, creationAdm
     async incidents(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly Incident[]>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.incidents(reader, cursor)) ?? MISSING; },
     async waiting(scope: string, reader: unknown, list: "diagnosed" | "unanswered", cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.waiting(reader, list, cursor)) ?? MISSING; },
     async reservationSnapshot(scope: string, asked: SignedIntent) { return (await at(scope)?.reservationSnapshot(asked)) ?? null; },
+    async stageSnapshot(scope: string, asked: SignedIntent) { return (await at(scope)?.stageSnapshot(asked)) ?? null; },
     async credential(scope: string, reader: unknown, handle: string): Promise<Read<ReadCredential>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.credential(reader, handle)) ?? MISSING; },
     async requests(scope: string, reader: unknown, request?: string, trace?: string, cursor?: string) { const limited = await readGate(reader); if (limited) return limited; return requestQuery(request, trace, cursor) ? (await at(scope)?.requests(reader, request, trace, cursor)) ?? MISSING : MISSING; },
   };
@@ -464,9 +467,15 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
     const beside = { ...("texts" in given ? { texts: given["texts"] } : {}), ...("presented" in given ? { presented: given["presented"] } : {}), ...("values" in given ? { values: given["values"] } : {}) } as Beside;
     if (scope === undefined) return answered(await scopes.create(given["creation"] as SignedIntent, given["definition"] as DeclaredDefinition, (given["definitions"] ?? []) as DeclaredDefinition[], beside), 201);
     if (what === "reservation-snapshot") {
-      const snapshot = await scopes.reservationSnapshot(scope, given["signed"] as SignedIntent);
+      // The hint selects a proof format; only the signed job/native owner authorizes it.
+      const snapshot = given["stage"] === true
+        ? await scopes.stageSnapshot(scope, given["signed"] as SignedIntent)
+        : await scopes.reservationSnapshot(scope, given["signed"] as SignedIntent);
       if (snapshot && "refused" in snapshot) return new Response(JSON.stringify(snapshot), { status: 409, headers: { "content-type": "application/json", "cache-control": "no-store" } });
-      return new Response(JSON.stringify(snapshot ? { ...snapshot, objects: snapshot.objects.map((object) => ({ ...object, data: b64url(object.data) })) } : { error: "forbidden" }), { status: snapshot ? 200 : 403, headers: { "content-type": "application/json", "cache-control": "no-store" } });
+      const payload = JSON.stringify(snapshot ? { ...snapshot, objects: snapshot.objects.map((object) => ({ ...object, data: b64url(object.data) })) } : { error: "forbidden" });
+      // The new owner already bounds proof and object bytes; retain a whole-wire ceiling too.
+      if (given["stage"] === true && utf8(payload).length > 24 * 1024 * 1024) return json(503, { error: "stage-origin-unavailable" });
+      return new Response(payload, { status: snapshot ? 200 : 403, headers: { "content-type": "application/json", "cache-control": "no-store" } });
     }
     if (what === "acts") return answered(await scopes.submit(scope, given["signed"] as SignedIntent, (given["grants"] ?? []) as Grant[], beside), 200);
     if (what === "sessions") {
@@ -534,7 +543,7 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
     return NO_OUTSIDE;
   };
   const selected = (owner: Parameters<Outside["accepts"]>[0], kind: string): Outside => {
-    if ((owner === "platform:rules@5" || owner === "platform:rules@6" || owner === "platform:rules@7" || owner === "platform:rules@8" || owner === "platform:rules@9" || owner === "platform:rules@10" || owner === "platform:rules@11" || owner === "platform:rules@12") && ["fetch-application", "admit-application"].includes(kind)) return wiring("application", [env.APPLICATION_CONTENT, env.APPLICATION_TRUST], () => applicationHostOutside(env, PROPOSED_BOUNDS, fetch));
+    if ((owner === "platform:rules@5" || owner === "platform:rules@6" || owner === "platform:rules@7" || owner === "platform:rules@8" || owner === "platform:rules@9" || owner === "platform:rules@10" || owner === "platform:rules@11" || owner === "platform:rules@12" || owner === "platform:rules@13") && ["fetch-application", "admit-application"].includes(kind)) return wiring("application", [env.APPLICATION_CONTENT, env.APPLICATION_TRUST], () => applicationHostOutside(env, PROPOSED_BOUNDS, fetch));
     // Share the bridge's exact owner policy; host-none install notices do
     // not depend on selecting a repository host.
     if (announcement.accepts(owner, kind)) return announcement;
@@ -542,6 +551,7 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
   };
   return {
     snapshot: (asked) => pick().snapshot?.(asked) ?? Promise.resolve(null),
+    stageSnapshot: (asked) => pick().stageSnapshot?.(asked) ?? Promise.resolve(null),
     accepts: (owner, kind) => selected(owner, kind).accepts(owner, kind),
     send: (request) => selected(request.owner, request.kind).send(request),
     judged: (at, sealed) => pick().judged?.(at, sealed),
@@ -593,6 +603,26 @@ export function sessionWiring(sessions: () => Sessions | null, binding?: Binding
  */
 export function snapshotReaderOf(binding: Binding): import("./destination-host.ts").SnapshotReader {
   return {
+    rules: async (rules) => {
+      const peer = binding.get(binding.idFromName(rules.scope)) as { observe(ask: unknown): Promise<unknown> };
+      const read = await peer.observe({ of: rules, asked: "rules" });
+      // Rules observations also carry retained value bytes for Native readers.
+      // This host callback consumes the authenticated projection alone.
+      return isObject(read) && Object.keys(read).sort().join() === "answer,values" && Array.isArray(read["values"])
+        ? read["answer"] : read;
+    },
+    sourceState: async (fact) => {
+      const peer = binding.get(binding.idFromName(fact.at.scope)) as { workSourceState(fact: FactRef): Promise<string | null> };
+      return peer.workSourceState(fact);
+    },
+    source: async (fact) => {
+      const peer = binding.get(binding.idFromName(fact.at.scope)) as { source(seq: number): Promise<{ bytes: string | null; under: string } | null> };
+      const read = await peer.source(fact.seq);
+      if (!read?.bytes || utf8(read.bytes).length > PROPOSED_BOUNDS.entryBytes) return null;
+      const entry = parseStrict(read.bytes) as unknown as Entry;
+      if (!isEntry(entry) || !same(entry.at, fact.at) || entry.seq !== fact.seq || entryHash(entry) !== fact.hash) return null;
+      return { entry, hash: fact.hash };
+    },
     job: async (fact) => {
       const peer = binding.get(binding.idFromName(fact.at.scope)) as { source(seq: number): Promise<{ bytes: string | null; under: string } | null>; summary(reader: unknown): Promise<unknown>; jobState(fact: FactRef): Promise<{ state: string; decidedBy: FactRef | null } | null> };
       const read = await peer.source(fact.seq);

@@ -19,10 +19,11 @@ import { archivedPosition } from "@generalbusiness/dap-derive";
  * read of a membership scope.
  */
 
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Archived, Digest, Entry, FactRef, ObservationRequest, ObservedScope, RoutingRefusal, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, textDigest, isDigest, isFactRef, isKeyId, isMemberId, isPlatformDefinition, isScopeId, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { isEntryOf, isObject, isScopeRef, type Delivered, type Fetched, type ScopeState } from "@generalbusiness/dap-derive";
-import { INSTALL_DEFINITION_BYTES, isOf, platform, sourceName } from "@generalbusiness/dap-platform";
+import { INSTALL_DEFINITION_BYTES, isOf, platform, sourceName, EVIDENCE_INCIDENT_PINS_V17 } from "@generalbusiness/dap-platform";
 import type { Membership } from "./authority.ts";
 import type { Pinned } from "./core.ts";
 import type { Definitions, Delivery, Resolver, SentTexts, Transport } from "./ports.ts";
@@ -288,12 +289,15 @@ export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proof
         try {
           const proof: Fetched[] = [];
           if (origin && answer.origin) {
-            if (!Array.isArray(answer.origin) || answer.origin.length > 3) return { absent: true };
+            if (!Array.isArray(answer.origin) || answer.origin.length > 3 && answer.origin.length !== 9) return { absent: true };
             for (const row of answer.origin) {
+              if (answer.origin.length === 9 && (typeof row.bytes !== "string" || row.bytes.length > PROPOSED_BOUNDS.entryBytes || utf8(row.bytes).length > PROPOSED_BOUNDS.entryBytes)) return { absent: true };
               const entry = parseStrict(row.bytes) as Entry;
               if (!isEntryOf(entry, row.fact) || typeof row.under !== "string") return { absent: true };
               proof.push({ fact: row.fact, entry, under: row.under });
             }
+            if (proof.length === 9 && (answer.under !== "issue" || canonicalize(proof[0]!.fact.at) !== canonicalize(answer.at)
+              || sourceName(EVIDENCE_INCIDENT_PINS_V17.issue, "issue", proof) !== "issue")) return { absent: true };
           }
           return { entry: parseStrict(answer.bytes) as Entry, under: answer.under, ...(origin ? { origin: proof } : {}) };
         } catch {

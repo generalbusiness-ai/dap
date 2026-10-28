@@ -1,3 +1,8 @@
+import { EVIDENCE_RULES_COHORT as ERC } from "./evidence-cohort.ts";
+import { evidenceRulesRegister, evidenceRulesDirectory, evidenceRulesDirectoryRules } from "./evidence-cohort-data.ts";
+import { rulesScopeV13, rulesScopeRulesV13, rulesAnswerV13, rulesObservedValuesV13 } from "./rules-scope-v13.ts";
+import { destinationV17, destinationRulesV17, evidenceFloorReferencesV17 } from "./destination-v17.ts";
+import { evidenceRulesPublicationOrigin } from "./publishing-provenance.ts";
 /** Native registry source; independent of generated declaration bytes. */
 import { platformFloorReferences } from "./floor.ts";
 import { TRUSTED_APPLICATION_COHORT, installDefinitionText } from "./application-install-wire.ts";
@@ -107,6 +112,10 @@ export interface Platform {
  * cannot run.
  */
 const VERSION_DATA: Readonly<Record<string, Platform>> = {
+  [ERC.register]: { data: evidenceRulesRegister, rules: registerRules },
+  [ERC.directory]: { data: evidenceRulesDirectory, rules: evidenceRulesDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
+  [ERC.rules]: { data: rulesScopeV13, rules: rulesScopeRulesV13, hostPreparationKinds: ["fetch-application"], declaredText: (state, digest) => installDefinitionText(state, digest, "definition"), observed: rulesAnswerV13, observedValues: rulesObservedValuesV13, revised: PUBLISH, membership: rulesMembership },
+  [ERC.destination]: { data: destinationV17, rules: destinationRulesV17, floorReferences: evidenceFloorReferencesV17, membership: destinationMembership, rulesScope: destinationRulesScope, applicationPublicationOrigin: evidenceRulesPublicationOrigin },
   [UNPUBLISHED_COHORT.register]: { data: unpublishedRegister, rules: unpublishedRegisterRules },
   [UNPUBLISHED_COHORT.directory]: { data: unpublishedDirectory, rules: unpublishedDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
   [UNPUBLISHED_COHORT.destination]: { data: unpublishedDestination, rules: unpublishedDestinationRules, membership: unpublishedDestinationMembership, rulesScope: unpublishedDestinationRulesScope, applicationPublicationOrigin: unpublishedApplicationPublicationOrigin },
@@ -186,7 +195,7 @@ const VERSION_DATA: Readonly<Record<string, Platform>> = {
 };
 
 /** Stable native code objects with the same source policy for runtime and replay. */
-export const VERSIONS: Readonly<Record<string, Platform>> = Object.fromEntries(Object.entries(VERSION_DATA).map(([named, code]) => [named, { ...code, sourceName, receiverIdentity: PARTITION_IDENTITY_POLICY, floorReferences: platformFloorReferences }]));
+export const VERSIONS: Readonly<Record<string, Platform>> = Object.fromEntries(Object.entries(VERSION_DATA).map(([named, code]) => [named, { ...code, sourceName, receiverIdentity: PARTITION_IDENTITY_POLICY, floorReferences: code.floorReferences ?? platformFloorReferences }]));
 
 /**
  * The definition that a platform name and version pin (the contract's

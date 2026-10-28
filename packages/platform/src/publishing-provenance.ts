@@ -1,3 +1,5 @@
+import { EVIDENCE_LANE_PINS } from "./evidence-lane-pins.generated.ts";
+import { evidenceIncidentOriginV17 } from "./evidence-incident-origin-v17.ts";
 /** Native identities are established by immutable creation facts, not declared names. */
 import { same } from "@generalbusiness/dap-bytes";
 import type { Digest, FactRef, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
@@ -9,10 +11,12 @@ export const PUBLISHING_LANE_DIGESTS = [
   "sha256:d86c64ae0a570165660a6eb4d75153b8c2f59c9cdaec2ecc789e2c38524a17a2",
   "sha256:85cec888905722a8dd051b3eb3388a1b674d82500f1df80044b298d12a285930",
   "sha256:4945948396a0417aabc5bc66520036d39d179d131aaade1428da55ee96ed7b77",
+  EVIDENCE_LANE_PINS.change,
 ] as const satisfies readonly Digest[];
 export const ISSUE_LANE_DIGESTS = [
   "sha256:325cb4f33da9deb1a31d85ba0f1456068d4d9d08009978b779aed70cb08e00ad",
   "sha256:82a938c8f54ddcac7974ca688ebea7d51c35d2aa70f4e3729965e9f915bc464e",
+  EVIDENCE_LANE_PINS.issue,
 ] as const satisfies readonly Digest[];
 
 
@@ -41,6 +45,7 @@ function nativeOrigin(named: Digest, name: "change" | "issue", facts: readonly F
   if (!isFactRef(born.source)) return false;
   const creator = facts.find(copy => same(copy.fact, born.source));
   if (!creator) return null;
+  if (name === "issue" && named === EVIDENCE_LANE_PINS.issue && creator.entry.input.type === "delivery") return evidenceIncidentOriginV17(named, facts, genesis.fact.at);
   if (!isEntryOf(creator.entry, creator.fact) || creator.entry.input.type !== "act") return false;
   const childIssue = name === "issue" && creator.under === "issue";
   if (!childIssue && creator.under !== "platform:directory") return false;
@@ -237,4 +242,9 @@ export function hardenedCertifiedRulesPublicationOrigin(from: FactRef, directory
 /** Exact unpublished family; a refused delivery still verifies its sender. */
 export function unpublishedApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
   return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@20", rules: "platform:rules@10", destination: "platform:destination@16", membership: "platform:membership@8", deviceCommand: true });
+}
+
+/** Exact evidence family; admission still validates its recorded source chain. */
+export function evidenceRulesPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
+  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@21", rules: "platform:rules@13", destination: "platform:destination@17", membership: "platform:membership@8", deviceCommand: true });
 }

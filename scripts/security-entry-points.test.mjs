@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { assertInventory, documentedInventory, servedInventory, sourceSeal, namedSourceSeals, roomHttpEntry, sandboxInventory, workerEntrypoints } from "./security-entry-points.mjs";
+import { assertInventory, documentedInventory, servedInventory, sourceSeal, namedSourceSeals, roomHttpEntry, sandboxInventory, workerEntrypoints, scopeRows } from "./security-entry-points.mjs";
 
 // Every runtime declaration is selected. $module retains ordered imports,
 // exports, declaration identities, and module execution. Each expected hash has
@@ -315,6 +315,19 @@ test("every served Worker route/method has exactly its reviewed gate-class row",
   for (const owners of [pendingArchiveSeals, seals, pendingR8Seals]) {
     for (const [file, expected] of Object.entries(owners)) assertOwner(file, expected);
   }
+});
+
+test("snapshot body formats dispatch both actual membership-gated owners at the same route", async () => {
+  // Structural object stand-ins exercise the real matcher, without asserting
+  // a valid signature, Native admission, Rules authority or object closure.
+  const dispatches = [];
+  const routes = await scopeRows(sourceOf("packages/scope/src/worker.ts"), dispatches);
+  const route = "POST /v1/scopes/:scope/reservation-snapshot";
+  assert.deepEqual(dispatches, [
+    { route, gate: "membership", operation: "reservationSnapshot", body: "{}" },
+    { route, gate: "membership", operation: "stageSnapshot", body: '{"stage":true}' },
+  ]);
+  assert.deepEqual(routes.filter(row => row.route === route), [{ route, gate: "membership" }]);
 });
 
 test("a real matcher change fails the inventory bijection with the page unchanged", async () => {

@@ -21,6 +21,9 @@ import { validateDefinition } from "@generalbusiness/dap-derive";
 import { change } from "../src/change.ts";
 import { DIGESTS, LANE_FORMS } from "../src/digests.ts";
 import { issue } from "../src/issue.ts";
+import { issueEvidence4 } from "../src/issue4.ts";
+import { changeEvidence4 } from "../src/change4.ts";
+import { EVIDENCE_DIGESTS } from "../src/digests4.ts";
 
 const target = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..", "docs", "lanes-reference.md");
 
@@ -115,12 +118,13 @@ function section(name, definition) {
 
 /** The whole file, as text. */
 export function reference() {
-  const lanes = { issue, change };
+  const lanes = { issue, change, "issue-evidence4": issueEvidence4, "change-evidence4": changeEvidence4(EVIDENCE_DIGESTS.issue) };
+  const digests = { ...DIGESTS, "issue-evidence4": EVIDENCE_DIGESTS.issue, "change-evidence4": EVIDENCE_DIGESTS.change };
   return [
     "# Lane reference",
-    "This file is generated. Do not edit it. `apps/room/lanes/scripts/reference.mjs` writes it from the two lane\ndefinitions in `apps/room/lanes/src`. [lanes.md](lanes.md) says how to read a row.",
+    "This file is generated. Do not edit it. `apps/room/lanes/scripts/reference.mjs` writes it from the lane\ndefinitions in `apps/room/lanes/src`. [lanes.md](lanes.md) says how to read a row.",
     "The stamp: the definitions this file was generated from, by their pinned digests.",
-    table(["Definition", "Digest", "Canonical bytes"], Object.entries(lanes).map(([name, definition]) => [code(name), code(DIGESTS[name]), String(Buffer.byteLength(canonicalize(definition)))])),
+    table(["Definition", "Digest", "Canonical bytes"], Object.entries(lanes).map(([name, definition]) => [code(name), code(digests[name]), String(Buffer.byteLength(canonicalize(definition)))])),
     `The rows were written from Lane forms and browser flow, revision ${LANE_FORMS.revision}, at ${code(LANE_FORMS.commit)}.`,
     [
       "How to read the tables:",

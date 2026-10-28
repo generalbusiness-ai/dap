@@ -1,8 +1,9 @@
 # Evidence rules for landing
 
 Status: current. Request `5648d0ab`, planner promise `b7496f05`.
-Draft 3. It is approved (`ba4184d0`) and landed at `d09cc918`. This note
-is a design. It commissions no implementation. Its first slice is not built.
+Draft 3 was approved (`ba4184d0`) and landed at `d09cc918`. The first slice
+is commissioned by `a53e1464`. The 28 October rulings settle service-key
+rotation and the published-failure incident exchange.
 
 ## The problem
 
@@ -64,8 +65,7 @@ state that the fields depend on, listed in
 - The role table gives `change.check` to the `checker` role only
   (`packages/platform/src/membership.ts:107`, and the role's first list at
   line 152). The checker service has its own key. It signs a digest of the
-  record of what ran (`packages/checkers/src/outcome.ts:66-81`). It has no
-  production adapter yet.
+  record of what ran (`packages/checkers/src/outcome.ts:66-81`). J3 supplies its production container runner.
 - In the current change lane, required checks run on the destination's
   reservation tree, and the destination refuses with
   `required-check-timeout` when their deadline passes
@@ -107,9 +107,13 @@ afterwards:
 
 The room refuses a result whose signer does not match the check's source,
 with `wrong-source`. Only an admin can mark a checker key as the room's
-own service, and one key at a time holds that mark. Which scope holds the
-mark, and how a rotation of that key takes effect for jobs already
-running, is still open. For `outside`, who owns a check-run operation and
+own service, and one key at a time holds that mark. The nullable mark is
+part of the complete Rules policy. A native scoped generation changes only
+when the member/key pair changes. A fresh Rules observation of withdrawal
+or rotation refuses unfinished room jobs under the old generation with
+`wrong-source`. Accepted historical results remain subject to current key
+eligibility. Member jobs keep their separate member authority. For
+`outside`, who owns a check-run operation and
 what the room trusts in its answer is also open. A check with no `source`,
 as every check has today, reads as `member`. So existing rooms keep their
 meaning. A report's claims stay claims. They never meet a check.
@@ -197,14 +201,16 @@ configuration, not of the room.
 
 | `stage` | Runs on | If it fails |
 |---|---|---|
-| `work` | A report's tree, before the performer reports | The requester can refuse the report. A `work` check never meets an extent's checks. |
+| `work` | An actual staged work-source commit, before the performer reports |  The requester can refuse the report. A `work` check never meets an extent's checks. |
 | `landing` (the default) | The reservation tree, as every check does today | The publication is refused. |
-| `published` | The published commit, after the destination's receipt | The landing stands. The lane opens a new intent for the maintainers that names the landing and the failed result. |
+| `published` | The published commit, after the destination's receipt | The landing stands. The Change lane creates one nested incident Issue addressed to active `issue.triage` holders. It names the publication, job and actual failure cause. |
 
 A `published` check cannot undo a landing. A rollback is a separate act
 that someone must authorize. Opening an intent automatically after a
-failed `published` check is new. The intent tells the maintainers. It does
-not hold anything.
+failed `published` check uses the existing Directory creation exchange.
+The incident has a system origin, with no invented human requester or
+signing key. Its closure cannot release a Destination hold. Unknown
+creation keeps the original request pending.
 
 ### Holds
 
@@ -303,10 +309,10 @@ sit.
 
 | Part | Needs | State |
 |---|---|---|
-| `room` and `member` sources | New versions of the rules data, the change lane and the destination, which admit a result by its source (`wrong-source`) | Open. Rule values already change by publishing, but these versions do not exist. Where the admin's mark of the room's service key is held, and how its rotation takes effect, is not decided. |
+| `room` and `member` sources | New versions of the rules data, the change lane and the destination, which admit a result by its source (`wrong-source`) | The first slice supplies explicit Rules 13, Destination 17 and successor lane definitions. Rules owns the complete mark; its native generation invalidates unfinished room jobs on observed rotation (ruling `ed818781`). |
 | `reuse` | The same versions, with an index of decided results by key and a mark that disables reuse for a key | Open |
 | `work` and `landing` stages | The same versions | Open |
-| `room` source in production, and audits at `every: 1` | A production adapter for the checker service | Open. Decision 4 puts it in the first slice. |
+| `room` source in production, and audits at `every: 1` | A production adapter for the checker service | J3 supplies the production adapter; the first slice binds it to actual marked-room admission. |
 | Audits with `every` above 1 | Independent randomness committed after the result, and an attempt identity that cancel and retry cannot change | Open. Not in the first slice. |
 | `published` stage and holds | Hold state, its release exchange and the transition act in the destination's new version, and one more message from the destination to the lane | Partly met. Platform scopes already send to the lane. The hold state is new. |
 | Holding landings while a `published` check is still running | A mode of `holds` that blocks admissions until the check's result is recorded | Open. Not in the first slice. |

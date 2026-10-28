@@ -214,7 +214,11 @@ const furtherObservation = variant("subject", {
       // Revision 19 (row I3-36): under a rules definition whose data states the value, the record also holds `singleControllerException`.
       // Revision 20 (row I3-43): and `extents`, a digest, under one whose data states that slot. Which of the two a definition states
       // is not known here: derive's `contentStates` makes that check, with the data of the observation's `definition`.
-      rules: recordShape({ asked: any, approvals: isLocalId, ownerMayReview: flag, checks: listOf(recordShape({ name: wellFormedText, configuration: isDigest, required: flag, checker: isMemberId })), labels: listOf(wellFormedText) }, { singleControllerException: flag, extents: isDigest }),
+      rules: recordShape({ asked: any, approvals: isLocalId, ownerMayReview: flag, checks: listOf(recordShape({ name: wellFormedText, configuration: isDigest, required: flag, checker: isMemberId })), labels: listOf(wellFormedText) }, {
+        singleControllerException: flag, extents: isDigest,
+        roomService: orNull(recordShape({ checker: memberRef, key: isKeyId })),
+        serviceGeneration: recordShape({ rules: scopeRef, seq: isLocalId }),
+      }),
       definitions: recordShape({ asked: any, active: listOf(recordShape({ digest: isDigest, name: wellFormedText })) }),
     }),
   }),
