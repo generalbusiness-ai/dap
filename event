@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:48f0c5861e0eb0df74810074269930c3b370b6d2","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/unpublished-register.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:49227f5bc5987c075000f8fd7ca99830ea4736cc","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.lending.jsonc."}
