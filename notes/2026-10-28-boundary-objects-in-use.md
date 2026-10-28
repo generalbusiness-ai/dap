@@ -3,10 +3,8 @@
 Status: current. A proposal to the planner, 28 October 2026, against
 main `a78e0981`. Nothing here is built, and this note changes no landed
 document. It replaces an earlier draft, references, notes and
-ratifications, which was reviewed and never landed. That draft started
-from acts the record could define. This note starts from what the cases
-pass between people and agents and asks what interface works there.
-Section 9 gives the smallest mechanism that needs.
+ratifications, which was reviewed and never landed, and it keeps that
+draft's mechanism in its smallest form in section 9.
 
 ## 1. Scene
 
@@ -31,14 +29,9 @@ point at.
 
 dap's fold is the strongly structured side: items, states, acts and
 rules that every member runs alike. The cases show that the fold is
-where the parties' work ends, not where it starts. This note looks at
-the start. Section 3 walks five cases at the level of what is on the
-table and who touches it. Section 4 lists what the other cases pass
-between parties. Section 5 names the interfaces that work at those
-boundaries. Sections 6 to 8 say what the record must hold so that an
-agent can build such an interface on demand from raw materials, how
-structure enters later, and what this changes in the current direction.
-Section 9 gives the smallest mechanism that those sections need.
+where the parties' work ends, not where it starts. The start is a thing
+on a table that an agent built for one party, and the mechanism follows
+from how the parties use it.
 
 ## 2. Terms
 
@@ -58,6 +51,12 @@ Section 9 gives the smallest mechanism that those sections need.
 - **View**: an interface built over a pile, readings and marks for one
   party. It is the strongly structured side of a boundary object, and an
   agent can build it on demand.
+- **Own room**: a room whose members are one party and its agents. The
+  catalogue's groups 3 and 5 give each party one.
+- **Shared room**: a room whose members include two or more parties.
+- **Crosses**: a thing crosses when a party writes it into a room that
+  another party reads. Being read is not being bound. Only a ratification
+  binds.
 - **Fold**: the record's items, states and rules, which every member
   runs alike.
 
@@ -98,8 +97,9 @@ coverage document.
 The patient's agent reads the bill and the statement into one table.
 Each row is one charge on the bill, and each cell says which page it
 came from. Three charges match nothing on the statement, and one matches
-at a different amount. The patient reads the table as what they owe and why. They mark
-the three unmatched charges and the one mismatch: ask about these. The
+at a different amount. The patient reads the table as what they owe and
+why. They mark the three unmatched charges and the one mismatch: ask
+about these. The
 agent drafts one question that quotes those four charges by page and
 code.
 The patient approves that exact text, and nothing else. A portal receipt
@@ -189,6 +189,7 @@ the parties and the part of its use that the fold does not take.
 | 08 assistance | A checklist with the evidence found for each item | Each household member's choice of what to disclose |
 | 09 lease | The offer, the cost of moving, and maintenance evidence | Two tenants' different readings |
 | 11, 13, 14 charges and fees | A receipt or fee entry beside the transaction or the terms passage | The holder's recognition, or not |
+| 12 subscription | The account's charges beside who at home uses it, and the exact instruction to cancel | One person's wish to keep it |
 | 15 deposit | Each deduction beside the move-in and move-out photos for that room | Each tenant's claim per deduction |
 | 16 repair | A timeline of reports, visits, "job complete" and recurrence | The tenant's reading that it is not fixed |
 | 17 retrofit | Proposals beside usage data, with the assessor's assumptions shown | The owner's and occupant's different weights |
@@ -196,6 +197,7 @@ the parties and the part of its use that the fold does not take.
 | 22 possessions | An inventory with photos, each row's destination and who decided | Siblings' disagreement per row |
 | 23 moving out | A handover checklist by date, with condition reports | Two residents' observations of one room |
 | 24 trip | An itinerary with each traveller's constraints | Each traveller's private budget |
+| 25 family budget | Estimates beside what each person might contribute | Each person's reason for their amount, and "we agreed" as a claim until each confirms |
 | 26 bulk order | An allocation table with the minimum-order progress | Each household's maximum, before it is a commitment |
 | 27, 28 claim, accident | A bundle of photos, inventory and receipts; three timelines kept apart | Accept part and dispute the rest, item by item |
 | 29 renovation | Quote versions side by side, the drawing, marked-up photos | Unclear items marked, an adviser's challenge |
@@ -209,25 +211,28 @@ the parties and the part of its use that the fold does not take.
 | 40 school plan | Observations from home and classroom, and the plan | A specialist's private notes |
 | 42 community budget | Proposal versions and budget options | Members' priorities, private reasons |
 | 43 investigation | Findings with contradictions left standing | A critic's confidence, which is not a veto |
-| 44, 45, 46, 50 counting, lending, grow, calendar | Turns, a shelf, readings and alerts, posts | Little. These fit the fold now |
+| 44, 45, 46 counting, lending, grow | Turns, a shelf, readings and alerts | Little. These fit the fold now |
+| 50 calendar | Posts on a schedule, each at an exact revision | A reviewer's comment on a draft |
 | 47 learning | The plan, chosen submissions, feedback owed | Private practice |
 | 48, 49, 51 prospects, bid, market | Notes with sources, a requirement matrix from the request, leads and needs | The reading of the request into rows, unclear rows |
 
 Three things stand out. Almost every thing between parties is a reading
 of a pile, lined up or grouped, and not a document and not an act. Each
 party keeps marks against it in their own words, and the marks are what
-the parties actually exchange. And the four cases that fit the fold now
-are the four that were built, which says what the fold is good at and
-not that the others need more fold.
+the parties actually exchange. And three of the four cases marked built,
+counting, lending and grow, fit the fold almost whole. The fourth, code
+review, is this workroom's, and section 3.1 shows what it leaves
+outside. That says what the fold is good at, and not that the other
+cases need more fold.
 
 ## 5. Interfaces that work at the boundary
 
 In each of the five cases, the person had one thing on the table that
 they could work in: a table, a list, a grid, a chart, a text with
 remarks. Across the whole catalogue those things come in seven shapes.
-This section tells each shape through the case where it appeared, in
-three parts: what the person sees and does, what the agent did to make
-it, and what goes across to the other party.
+Each shape below appears through the case it came from: what the person
+sees and does, what the agent did to make it, and what goes across to
+the other party.
 
 **A table that matches one document against another.** The patient's
 bill lists fourteen charges, each with a code and an amount. The
@@ -239,15 +244,18 @@ figures from. Three rows have no insurer's amount. One row has two
 amounts that differ. The patient reads the table as what they owe and
 marks those four rows: ask about these. The agent writes one question
 that quotes the four charges by code and page. The patient approves that
-text, and that text is what goes to the billing office. Nothing else in
-the table goes anywhere. When the office's letter comes back, the agent
-adds its explanation to each of the four rows, and the patient decides
-row by row.
+text, and that text is what goes to the billing office. The table lives
+in the patient's own room, and nothing else in it goes anywhere. The
+billing office is outside every room, so the question leaves by the
+portal and the receipt comes back as a document. When the office's
+letter comes back, the agent adds its explanation to each of the four
+rows, and the patient decides row by row.
 
 The same shape serves the two garages' estimates (case 07), the
 pharmacies' prices (02), the lenders' offers (04), a renewal beside
 other quotes (05 and 06), a receipt beside the bank's transactions (11),
-a fee beside the clause in the terms that allows it (13), a freelancer's
+a fee beside the clause in the terms that allows it (13), a
+subscription's charges beside who at home uses it (12), a freelancer's
 agreed scope beside their invoice (38), and a buyer's request broken into
 requirements with one answer each (49). In every one of them the person
 marks rows, the agent cites a source for every figure, and what crosses
@@ -261,11 +269,15 @@ Neither party writes in the other's column, and the record never
 decides between them. What makes it one list for both is that both
 columns hang on the same nine rows, and each row names the same photos
 by their hashes. The contractor's agent can sort the rows by trade, and
-the owner's by room, and it is still one list. What crosses is the rows,
-by those hashes. A column never crosses, because it is one party's own
-reading. The same shape serves each deduction beside the move-in and
-move-out photos (15), the inventory of a parent's possessions (22), the
-handover checklist (23), the bulk order's allocation (26), the claim
+the owner's by room, and it is still one list. The rows cross: both
+parties read them in the shared room, by those hashes. A column crosses
+only when its owner writes it into the shared room, and the record never
+merges it with the other's. The owner's private remark on a row, "the
+specialist thinks this one is ours", stays in the owner's own room. The
+same shape serves each deduction beside the move-in and move-out photos
+(15), the inventory of a parent's possessions (22), the handover
+checklist (23), the family budget where each contributor's amount is a
+column of their own (25), the bulk order's allocation (26), the claim
 bundle (27), and the assistance checklist where each household member
 decides what to disclose (08).
 
@@ -278,7 +290,8 @@ which of their own preferences the grid may show. A sibling turns a
 maybe into a commitment by saying so against the cell. The paid carer's
 hours appear as cells, and the terms behind them do not. What crosses is
 a confirmed cell, with who confirmed it. The reason a slot is wanted, a
-child's details and the carer's terms never cross. The same shape serves
+child's details and the carer's terms never cross. Each stays in the own
+room of the party who holds it. The same shape serves
 a booked room (33), the childcare gap (21), and the plan of benches in
 the grow room.
 
@@ -330,12 +343,15 @@ the rows cut from a long list. Second, every figure, row and remark can
 be traced to who made it: a document, the agent that read it, or the
 person who marked it. Third, what a party may not read appears as
 unreadable, never as absent. A list that hides a column for one reader
-does not tell that reader the column is empty.
+does not tell that reader the column is empty, and a view that draws on
+a party's own room tells another reader that a source is in a room they
+do not read.
 
 No package can declare these views in advance. The table for the bill
 depends on which bill and which statement arrived. The grid for the rota
 depends on who wrote and what they said. So an agent builds the view on
-demand, for one party, from what is on the table that day. A package can
+demand, for one party, in that party's own room, from what is on the
+table that day. A package can
 keep a view once the parties want it every time. Until then the host's
 job is to show the agent's view, let the person work in it, and let the
 person share it.
@@ -343,8 +359,8 @@ person share it.
 ## 6. What the record holds so that an agent can build them
 
 Take the bill table again and ask what the agent needed from the record
-to build it, and what it needs to put back. Five things, and the first
-three have designs already.
+to build it, and what it needs to put back. Six things. The first three
+and the last have designs already.
 
 **The documents themselves.** The agent needed the bill and the
 insurer's statement, unchanged, with where each came from. The
@@ -384,11 +400,22 @@ quotes four rows by page and code. Approvals, submissions and
 acceptances name such texts, and the record keeps them as detached texts
 today.
 
-That is all: documents, readings, marks, recipes and exact texts. The
-workroom record is already made of the first and the second, by count. A
-reference to a thing at a version and free text resting on it are nine
-statements in ten. The cases ask for the same two things with a shape
-and a place: a reading that is a table, and a remark that sits on a row.
+**The party's own room.** The patient's table, their marks and the
+letter's alignment live in the patient's own room, which they share with
+their agent and nobody else. When the other party is a member of a
+shared room, as the contractor is, the owner's pile, readings and
+private marks stay in the owner's own room, and the owner writes into
+the shared room what the contractor is meant to read: the nine rows,
+the photos they cite, the owner's column. That is what crosses. The
+catalogue's group 3 already keeps each party's private part in a room
+of its own, and group 5 starts every case in one person's own room.
+
+That is all: documents, readings, marks, recipes, exact texts and a room
+of one's own. The workroom record is already made of the first and the
+second, by count. A reference to a thing at a version and free text
+resting on it are six statements in seven. The cases ask for the same
+two things with a shape and a place: a reading that is a table, and a
+remark that sits on a row.
 
 ## 7. How structure enters later
 
@@ -401,13 +428,14 @@ the row cited. The list does not change. It gains a third column that a
 rule keeps. A kept recipe becomes a package's view by the path the
 composed-views note already gives.
 
-A reading, a mark and a ratification are the three things that a rule
-or a projection reads in every case above, and section 9 gives them as
-three acts. Nothing else gets a kind of its own until a case shows a
-rule that must read it. The order in every case of section 4 is the
-same: the documents first, then readings, marks and an exact text, and
-an act under rules last. The four cases that fit the fold now are the
-ones whose parties had agreed the rules before dap existed.
+A note, which is a reading or a mark, a ratification and a closing are
+the three things that a rule or a projection reads in every case above,
+and section 9 gives them as the three acts of the commons. Nothing else
+gets a kind of its own until a case shows a rule that must read it. The
+order in every case of section 4 is the same: the documents first, then
+readings, marks and an exact text, and an act under rules last. The four
+built cases took that last step first, and section 3.1 shows what one of
+them leaves outside.
 
 ## 8. What this changes
 
@@ -433,14 +461,13 @@ Five changes point it at the boundary.
 
 After that, the matter package of the file-first direction starts from
 documents and a view, not from item types. The capture and retained
-files slices gain places inside a document. Section 9 gives the smallest
-mechanism that these five changes need.
+files slices gain places inside a document.
 
 ## 9. Minimal mechanism
 
-This section gives the smallest set of mechanical parts that sections 5
-to 8 need. It replaces the earlier draft's four acts and per-member
-presentations with one value shape, three acts and one rule.
+Sections 5 to 8 need one value shape, three acts, one rule and one room
+shape. They replace the earlier draft's four acts and per-member
+presentations.
 
 **A place inside a document.** A reference to a retained document is its
 digest. A locator is that digest with a place: a page number, a region
@@ -456,12 +483,13 @@ pinned in every creation cohort beside the directory, membership, rules
 and destination definitions, gives every room three comment acts. They
 have no guards and no effects: the entry is the fact. One grant,
 `commons.write`, is given to every member role when the room is created,
-and the room's membership can narrow it later. Lists hold at most 16.
+and the room's membership can narrow it later. The `about` list holds at
+most 16 entries.
 
 | Act | Fields | What it is |
 |---|---|---|
 | `note` | `text`: detached, at most 64 KiB, prose or data. `about`: a list of locators, of facts of kind `note`, `ratify` or `close` under the commons, and of entries of any other definition. `replaces`: a `note` fact, optional. | A reading, when the text is data and `about` names the documents read. A mark, when `about` names one row or region of a reading and the text is short. A brief, when it replaces the signer's earlier note. A re-cut, when it replaces a reading and names the same locators. |
-| `ratify` | `of`: a `note` fact. `text`: optional, at most 1,024 bytes. | One party's signature on another party's words. It is the only act that makes a note bind its signer. |
+| `ratify` | `of`: a `note` fact. `for`: a fact reference to the opening entry of one item, optional. `text`: optional, at most 1,024 bytes. | One party's signature on another party's words. It is the only act that binds its signer to those words. With `for`, it is consent to enter one party slot of one item. |
 | `close` | `about`: as on `note`. `outcome`: text, at most 64 bytes. `text`: detached, optional. | One party's statement that its own part of a matter is closed, in its own word. It ends no item. |
 
 The commons gains no kinds and holds no enumerations. A reading that is
@@ -470,36 +498,72 @@ commons verifies no locator and merges nothing. A reference needs no act
 of its own: the retained document is the reference, and the locator says
 where in it.
 
+**The commons in a party's own room.** The commons is created with every
+room, including a room of one party. A party's pile, readings and
+private marks live in the party's own room until the party writes them
+into a shared room. A reading in the shared room cites the same hashes,
+so a document retained in both rooms is one document. Every member of a
+room reads every scope in it, so the own room is the only private side,
+and it needs nothing new: the catalogue's group 3 rooms are own rooms.
+
+**Rooms created before the commons.** A pin in the creation cohorts
+reaches only rooms created after it. A room created before has no
+commons scope, and a package that declares the commons endpoint is
+refused there at install with `commons-missing`. Such a room gains the
+commons only by succession to a new scope, under the
+[definition succession](2026-10-22-definition-succession.md) note,
+which is designed and not built. BO1 creates new rooms for its
+witnesses, and the hosted rooms keep their pins until then.
+
 **How a package binds a party.** A package that takes a row from a view
 declares a connection to the commons as an `outside` endpoint, in the
 form of the [application packages](2026-10-18-application-packages-and-builder-room.md)
 note, and any of its acts can carry `about`, so that an item cites the
 hashes the row cited. A party slot in its item types carries a `consent`
-rule with one of three values. `signer`, the default: only the act's
-signer enters the slot. `ratified`: a member enters the slot only on
-their own ratification of the terms. The act presents a `note` fact as
-`terms` and a `ratify` fact as `consent`, and the validator proves
-guards that the ratification is of that note, that its signer is the
-member written, and that the note's text digest equals the act's own
-`terms` field. `declared`: the package writes the slot without the
-member's signature, and the install screen lists every such slot with
-the acts that write it. A slot with no `consent` and an effect that
-writes it is refused `consent-unstated`. A presented ratification is
-used once, as the certified-rules hardening uses a certificate once, and
-a second presentation is refused `consent-consumed`. Reading a presented
-entry's signer needs one new part in the contract, `signer`, beside
-`kind`, `intent` and `time`.
+rule with one of three values.
+
+- `signer`, the default. Only the act's signer enters the slot.
+- `ratified`. A member enters the slot only on their own ratification of
+  the terms, given for that item. One act opens the item and fills the
+  proposer's slot as signer. The other party then writes `ratify` of the
+  terms note, with `for` naming the item, in the shared room. A later
+  act fills the ratified slot. It presents the `note` fact as `terms`
+  and the `ratify` fact as `consent`, and the validator proves four
+  guards: the ratification's `of` is the terms note, or `consent-terms`;
+  its `for` is this item, or `consent-item`; its signer is the member
+  written, or `consent-signer`; and the terms note's text digest equals
+  the act's own `terms` field. An act that presents no ratification is
+  refused `consent-missing`.
+- `declared`. The package writes the slot without the member's
+  signature, and the install screen lists every such slot with the acts
+  that write it.
+
+A slot with no `consent` and an effect that writes it is refused
+`consent-unstated`. The marker that spends a ratification is the slot
+itself. The slot holds the member and the ratification's reference,
+written in the same entry as the act, so a second presentation finds
+the slot filled and is refused `consent-consumed`. A ratification whose
+`for` names one item fills a slot of no other item, so no member can
+spend it on another act. The state is one reference in each filled
+slot, bounded by the slot's `max`, and no guard scans history. The
+certified-rules hardening keeps one increasing marker for each
+Destination for the same reason. Reading a presented entry's signer
+needs one new part in the contract, `signer`, beside `kind`, `intent`,
+`on` and `time`.
 
 **A recipe for a view.** The composed-views design keeps a chart's
 declaration as a `view` item in the Rules scope, with `keep-view`,
 `share-view` and `drop-view`. The same item keeps the recipes of section
-5. A recipe's sources are locators and `note` facts named by hash, as
-well as a package's projections, and its kind is one of `table`, `list`,
-`grid`, `timeline`, `compare`, `image` or `brief`. The host draws it in
-the person's AI app and in the browser. A mark made in a view is a
-`note` act placed by locator, which the host's server signs as it signs
-any act from a view. Two parties' recipes that name the same hashes are
-recipes for one thing, and the host says so.
+5. A recipe's sources are locators and `note` facts named by hash and by
+room, as well as a package's projections, and its kind is one of
+`table`, `list`, `grid`, `timeline`, `compare`, `image` or `brief`. The
+host mounts a recipe for a member over the rooms that member reads. A
+source in a room the member does not read appears as unreadable, with
+the room named and nothing else shown. The host draws the view in the
+person's AI app and in the browser. A mark made in a view is a `note`
+act placed by locator, in the room the member chooses, which the host's
+server signs as it signs any act from a view. Two parties' recipes that
+name the same hashes are recipes for one thing, and the host says so.
 
 **Item ends and party closings.** An item's final state ends the item
 and never a party's part of the matter. A package does not declare a
@@ -512,9 +576,9 @@ acts, and a closing ends no item.
 
 | Witness | Scenario | Passes when |
 |---|---|---|
-| W1 | **The bill table.** A member's agent retains two documents and writes a `note` whose text is a table and whose `about` names pages of both. The member writes four marks against rows of it. The agent writes an exact text that quotes four locators. | Every act is recorded with its signer. A projection of either document lists the reading, the marks and the exact text, each with its author, and nothing of the member's is attributed to the agent. |
-| W2 | **One list, two recipes.** Member A keeps a recipe of kind `list` over nine notes that cite photos. Member B keeps a recipe over the same hashes, sorted differently. A and B each write a mark on row six. | Both recipes mount and the host names them as recipes for one thing. Row six shows two marks with two authors, and neither replaces the other. |
-| W3 | **Consent before binding.** A package with a `ratified` slot is installed. B signs its act five times: with no ratification, with B's own ratification of the terms, with A's ratification of another note, with A's ratification of the terms, and again with that same ratification. | The first three are refused with the reasons the guards name. The fourth takes effect and its item cites the row's hashes. The fifth is refused `consent-consumed`. |
+| W1 | **The bill table.** In a member's own room, the member's agent retains two documents and writes a `note` whose text is a table and whose `about` names pages of both. The member writes four marks against rows of it. The agent writes an exact text that quotes four locators. | Every act is recorded with its signer. A projection of either document lists the reading, the marks and the exact text, each with its author, and nothing of the member's is attributed to the agent. |
+| W2 | **One list, two recipes.** A and B share a room that holds nine notes citing photos. A keeps a recipe of kind `list` over them in the shared room and writes a private mark on row six in A's own room. B keeps a recipe over the same hashes in B's own room, sorted differently, and writes a mark on row six in the shared room. | Both recipes mount for their keepers, and the host names them as recipes for one thing. For B, A's recipe shows A's private mark as unreadable, with A's room named. Row six in the shared room shows B's mark with B as its author, and A's private mark appears to A alone. |
+| W3 | **Consent before binding.** A package with a `ratified` slot `owner` is installed in the shared room. B opens an item from row six and enters its `contractor` slot as signer. A writes `ratify` of B's terms note with `for` naming the item. B then presents a ratification to write A into `owner` six times: none, B's own ratification of the terms, A's ratification of another note, A's ratification whose `for` names another item, A's ratification of the terms for this item, and that same ratification again. | The first four are refused `consent-missing`, `consent-signer`, `consent-terms` and `consent-item`. The fifth takes effect, the slot holds A and the ratification, and the item cites the row's hashes. The sixth is refused `consent-consumed`. |
 | W4 | **Close without agreement.** C's package item ends `decided`. A writes `close` with outcome `disputed` about it. B writes `close` with outcome `done`. | All three stand. A projection shows the matter closed for A and B in their own words and C's item ended, and none of the three changed another. |
 
 **What changes where.** The slices change these with their code. This
@@ -522,8 +586,10 @@ head changes nothing.
 
 | Where | Today | After |
 |---|---|---|
-| `packages/contract/src/definition.ts` | No locator value. `EntryPart` has no signer. `ItemType.parties` is `SlotRule & { list, max, author }`. | A `locator` value. `EntryPart` gains `"signer"`. Party slots gain `consent?: "signer" \| "ratified" \| "declared"`. `PlatformDefinition` gains `commons`. |
-| [kernel page](../docs/kernel.md), K1, and each Worker's `PLATFORM_CREATION_PINS` | 73 pinned versions. | 74, with `platform:commons@1` in every creation cohort. |
+| `packages/contract/src/definition.ts` | No locator value. `EntryPart` has no signer. `ItemType.parties` is `SlotRule & { list, max, author }`. | A `locator` value. `EntryPart` gains `"signer"`. Party slots gain `consent?: "signer" \| "ratified" \| "declared"`. |
+| `packages/contract/src/scope.ts` | `PlatformDefinition` names eight platform parts. | It gains `commons`. |
+| [kernel page](../docs/kernel.md), K1, and `platform/src/native-catalog.ts` | The catalog pins 76 versions. | 77, with `platform:commons@1`. |
+| `scope/src/creation-versions.ts` and each Worker's `PLATFORM_CREATION_PINS` | The newest cohort has no commons. Each Worker's setting lists six historical pins. | The newest cohort gains `platform:commons@1`. The setting does not change. |
 | [capture](2026-10-21-capture-with-source.md) and retained files | A reference is a digest and a source. | A reference can carry a locator. |
 | [chat-composed views](2026-10-20-chat-composed-views.md) | Five chart kinds over a package's projections. No acts in a view. | Seven more kinds. Sources by hash. A mark from a view is a `note`. |
 | The host's generic interface and sessions | Shows a room's items. | Shows notes, marks, closings and recipes, in the browser and over MCP. |
@@ -534,8 +600,9 @@ head changes nothing.
 filed by this note.
 
 - **BO1. Locators and the commons.** The locator value, the three acts,
-  `platform:commons@1` pinned in the three Workers' creation cohorts and
-  shown by the generic interface. Witness W1.
+  `platform:commons@1` in the newest creation cohort and in the catalog,
+  `commons-missing` at install in an older room, and the commons shown
+  by the generic interface. Witness W1, in a new room.
 - **BO2. Recipes over hashes.** The `view` item with document and note
   sources, the seven kinds, and marks that write back. Witness W2. After
   declared views reach the generic server and the hosted endpoint.
