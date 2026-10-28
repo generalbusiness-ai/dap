@@ -1,5 +1,5 @@
 /**
- * Typechecked only; no test runs it. The Worker's service entrypoint and the
+ * Typechecked only; no test runs it. The test Worker's binding and the
  * client's transport agree on one declared interface, the contract's
  * `ScopeApi`. This file stops compiling if either side drifts from it: an
  * operation added to one and not the other, or a parameter or an answer of
@@ -9,7 +9,7 @@
 import type { WorkerEntrypoint } from "cloudflare:workers";
 import type { ScopeApi } from "@generalbusiness/dap-contract";
 import type { ServiceBinding, Transport } from "@generalbusiness/dap-client";
-import type { ScopeService } from "../src/worker.ts";
+import type { NetService } from "./worker.ts";
 
 type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
 
@@ -17,10 +17,10 @@ type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
 export const transportIsTheInterface: Same<Transport, ScopeApi> = true;
 
 /** The entrypoint has every operation of the interface, with its parameters and its answer. */
-export const serviceHasTheInterface = (service: ScopeService): ScopeApi => service;
+export const serviceHasTheInterface = (service: NetService): ScopeApi => service;
 
 /** So a binding to the entrypoint is what the client's binding transport takes. */
-export const bindingIsTheService = (service: ScopeService): ServiceBinding => service;
+export const bindingIsTheService = (service: NetService): ServiceBinding => service;
 
 /** And the entrypoint has no operation the interface lacks: every member it adds to a Worker entrypoint is one of the interface's. */
-export const serviceAddsNothing: Same<Exclude<keyof ScopeService, keyof ScopeApi | keyof WorkerEntrypoint>, never> = true;
+export const serviceAddsNothing: Same<Exclude<keyof NetService, keyof ScopeApi | keyof WorkerEntrypoint>, never> = true;

@@ -315,7 +315,52 @@ export async function sandboxInventory({ sandboxSource = readSource("apps/sandbo
   return rows;
 }
 
-function sandboxBindings() {
+/** The production module uses direct declaration exports and an object default.
+ * Refuse other export forms rather than silently omit another RPC entrypoint. */
+export function workerEntrypoints(source = readSource(scopeFile)) {
+  const body = parse(source).body, imports = new Set(), bases = new Set(), classes = new Map(), exported = [];
+  for (const node of body) {
+    if (node.type === "ImportDeclaration" && node.importKind !== "type") {
+      for (const specifier of node.specifiers) {
+        if (specifier.importKind === "type") continue;
+        imports.add(specifier.local.name);
+        if (node.source.value === "cloudflare:workers") {
+          assert.equal(specifier.type, "ImportSpecifier", "Worker entry inventory: unsupported platform import");
+          if (specifier.imported.name === "WorkerEntrypoint") bases.add(specifier.local.name);
+        }
+      }
+    }
+    assert.notEqual(node.type, "ExportAllDeclaration", "Worker entry inventory: unsupported export");
+    if (node.type === "ExportDefaultDeclaration") {
+      assert.equal(node.declaration.type, "ObjectExpression", "Worker entry inventory: unsupported default export");
+    }
+    if (node.type === "ExportNamedDeclaration") {
+      assert.ok(!node.source && node.declaration && !node.specifiers.length, "Worker entry inventory: unsupported named export");
+      assert.ok(["ClassDeclaration", "FunctionDeclaration", "TSInterfaceDeclaration", "TSTypeAliasDeclaration"].includes(node.declaration.type),
+        "Worker entry inventory: unsupported exported declaration");
+    }
+    const declaration = node.declaration ?? node;
+    if (declaration.type !== "ClassDeclaration") continue;
+    assert.ok(declaration.id?.type === "Identifier" && !classes.has(declaration.id.name), "Worker entry inventory: ambiguous class");
+    assert.ok(!declaration.superClass || declaration.superClass.type === "Identifier", "Worker entry inventory: unsupported class base");
+    classes.set(declaration.id.name, declaration.superClass?.name ?? null);
+    if (node.type === "ExportNamedDeclaration") exported.push(declaration.id.name);
+  }
+  assert.equal(bases.size, 1, "Worker entry inventory: exact platform base required");
+  const inherits = (name, seen = new Set()) => {
+    assert.ok(!seen.has(name), "Worker entry inventory: cyclic class base");
+    seen.add(name);
+    const base = classes.get(name);
+    if (base === null) return false;
+    if (bases.has(base)) return true;
+    if (classes.has(base)) return inherits(base, seen);
+    assert.ok(imports.has(base), "Worker entry inventory: unsupported indirect class base");
+    return false;
+  };
+  return exported.filter(name => inherits(name));
+}
+
+function sandboxBindings(scopeSource) {
   const config = jsonc("apps/sandbox/wrangler.jsonc");
   assert.equal(config.main, "worker.ts");
   assert.equal(config.name, "dap-application-sandbox");
@@ -329,7 +374,7 @@ function sandboxBindings() {
   ]);
   // No HTTP dispatcher can reach these methods directly. Seal the complete
   // owner in addition to checking its finite named RPC surface.
-  const service = parse(readSource(scopeFile)).body.map(node => node.declaration ?? node).find(node => node.id?.name === "ApplicationScreenService");
+  const service = parse(scopeSource).body.map(node => node.declaration ?? node).find(node => node.id?.name === "ApplicationScreenService");
   assert.ok(service, "Named sandbox RPC entry");
   assert.deepEqual(service.body.body.map(node => node.key.type === "PrivateIdentifier" ? "#" + node.key.name : node.key.name), ["screenHost", "#gateway", "screen", "nativeStream", "native"]);
   return config.name;
@@ -337,6 +382,7 @@ function sandboxBindings() {
 
 function jsonc(file) { return JSON.parse(readSource(file).replace(/^\s*\/\/.*$/gm, "")); }
 export async function servedInventory({ scopeSource = readSource(scopeFile), applicationSource = readSource("packages/scope/src/applications/route.ts"), hostedSettings = { MCP_ENABLED: "true" } } = {}) {
+  assert.deepEqual(workerEntrypoints(scopeSource), ["ApplicationScreenService"], "Production WorkerEntrypoint exports");
   const scope = await scopeRows(scopeSource);
   const page = readSource("apps/room/page/route.ts"), pagePaths = [];
   walk(parse(declaration(page, "page")), node => { if (node.type === "SwitchCase" && typeof node.test?.value === "string") pagePaths.push(node.test.value); });
@@ -363,7 +409,7 @@ export async function servedInventory({ scopeSource = readSource(scopeFile), app
     assert.equal(roomHttpEntry(`apps/room/${entry}`), "apps/room/fetch.ts");
     result.set(config.name, [...publicRows, ...scope, ...(bindings.includes("REGISTRIES") && bindings.includes("AGENTS") ? hostedRows : [])]);
   }
-  result.set(sandboxBindings(), await sandboxInventory({ nativeRows: scope }));
+  result.set(sandboxBindings(scopeSource), await sandboxInventory({ nativeRows: scope }));
   const simulator = jsonc("examples/grow/wrangler.jsonc");
   assert.equal(simulator.main, "simulator-worker.ts");
   const hostSource = declaration(readSource("examples/grow/simulator-host.ts"), "simulatorHost");

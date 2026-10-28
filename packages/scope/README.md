@@ -44,7 +44,7 @@ what a judge drafts, in one storage transaction for each entry.
 | `authority` | `observing(config)`: the authority port over reads of a membership scope. The read is made before the turn, is counted by run and number, and is kept only in memory: at most one observation for each key, and a revoked answer for the run. `Membership` is the port that reads a membership scope; further reads also reach the recorded rules scope. `repositoryAuthority(config)`: the authority of the deployed class. A membership scope judges its own acts on its own head, and every other scope reads the membership scope that it records, with `observing`. A scope that records none reads nothing. |
 | `namespace` | `namespace(binding)`: the production `Resolver`, `Transport`, `Definitions` and `SentTexts`, each one RPC call on the object a scope ID names. `membershipIn(binding)`: observation reads of membership and rules scopes, which the objects answer as `observe`. `routed`: the resolver of a name, which refuses a wrong address before any judgment. `sourced`: the answer to a read of one entry. `declaredBy`: the answer to a read of one retained declaration. `sentText`: the answer to a read of one detached text that a send of this scope names. |
 | `object` | `ScopeObject`: the Durable Object class. It wires the store, the ports, the core, receiving, the dispatcher and the reads, and exposes them over RPC: `found`, `submit`, `settle`, `checkpoint`, the reads, `deliver`, `source`, `declared`, `text`, `dispatch` and `effect`. Its `alarm()` runs the alarm's turn, then a dispatch pass, then a pass of the operations driver. With no transport, which is its default, nothing is dispatched. With the outside port of `production()`, which sends nothing, nothing is sent outside the service. |
-| `worker` (its own entry, `@generalbusiness/dap-scope/worker`) | `route(request, binding)`: the HTTP routes. `ScopeService`: the same operations over a service binding; it implements the contract's `ScopeApi`, which a client's transport also is. `DeployedScope`: the object class with the namespace as its resolver, its transport and its source of declarations, with `repositoryAuthority` as its authority and read sessions as its readers port. `api(binding)`: what both call. The default export is the deployed Worker. |
+| `worker` (its own entry, `@generalbusiness/dap-scope/worker`) | `route(request, binding)`: the HTTP routes. `DeployedScope`: the object class with the namespace as its resolver, its transport and its source of declarations, with `repositoryAuthority` as its authority and read sessions as its readers port. `api(binding)`: the in-process API used by the HTTP routes and hosted callers. `ApplicationScreenService`: the named binding used only by the application sandbox. The default export is the deployed Worker. |
 
 `@generalbusiness/dap-scope/testing` is for tests only: a test
 authority, which is a stand-in that reads no membership scope and calls
@@ -400,8 +400,8 @@ The source entry's bytes are retained with the entry that used them.
 
 ## Routes
 
-`route` serves these, and `ScopeService` has one method for each. A body is
-the contract's own answer.
+`route` serves these over HTTP through `api(binding)`. A body is the
+contract's own answer.
 
 | Route | Answer | Status |
 |---|---|---|

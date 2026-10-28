@@ -18,9 +18,9 @@ declare namespace Cloudflare {
     /** The hosted MCP endpoint's namespaces, over PLATFORM (test/worker.ts). */
     REGISTRIES: DurableObjectNamespace;
     AGENTS: DurableObjectNamespace;
-    /** The test worker's own `NetService` entrypoint, as a service binding. A test reads it as the `Api` of `src/worker.ts`. */
+    /** The test Worker's NetService binding forwards the production ScopeApi. */
     API: Fetcher;
-    /** The same production ScopeService over the PLATFORM namespace. */
+    /** The test PlatformService binding forwards ScopeApi over PLATFORM. */
     PLATFORM_API: Fetcher;
     /** Separate entrypoint used only by the parentless admission witness. */
     CREATION_API: Fetcher;

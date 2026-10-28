@@ -14,13 +14,10 @@ import { health } from "./health.ts";
  * deployment, addressed by scope, over the one scope namespace.
  *
  * - `api(binding)`: every operation, as a call on the object a scope ID
- *   names. `route` and `ScopeService` are both this and nothing more.
+ *   names. The HTTP route and hosted in-process callers use this API.
  * - `route(request, binding)`: the same operations over HTTP, JSON in and
  *   JSON out. A body is the contract's own answer; the status code says the
  *   same thing in HTTP's terms.
- * - `ScopeService`: the same operations over a service binding, for a
- *   client in another Worker. It implements the contract's `ScopeApi`,
- *   which a client's transport also is.
  * - `DeployedScope`: the scope's object class as it is deployed, with the
  *   namespace as its resolver, its transport and its source of
  *   declarations. Its authority is the production authority of a
@@ -201,7 +198,7 @@ export interface Api extends ScopeApi {
   session(scope: string, asked: unknown): Promise<SessionAnswer>;
   /** The body is the reader's side of the stream (`relay`): cancelling it releases the scope's subscription at once. */
   stream(scope: string, reader: unknown): Promise<ReadableStream<Uint8Array> | StreamRefusal | typeof MISSING>;
-  /** Internal route ownership, not a ScopeService or public HTTP operation. */
+  /** Internal route ownership, not a public HTTP operation. */
   streamExchange(scope: string, reader: unknown): Promise<StreamExchange | StreamRefusal | typeof MISSING>;
   incidents(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly Incident[]>>;
   waiting(scope: string, reader: unknown, list: "diagnosed" | "unanswered", cursor?: Cursor): Promise<Read<readonly OutboxItem[]>>;
@@ -621,13 +618,6 @@ export class DeployedScope<E extends Env = Env> extends ScopeObject<E> {
   }
 }
 
-/**
- * The same operations over a service binding: the contract's `ScopeApi`, and
- * nothing more. The contract's interface has no operation for a session, a
- * stream or the operator's lists, so a caller over the binding has none of
- * them, and presents a session it got over the HTTP route as its reader
- * (I3 deltas, entry ES9).
- */
 /** Bound only to the sandbox Worker. No HTTP route reaches these methods.
  * The room's existing native parsers/gates still judge the forwarded request. */
 class ApplicationStreamLifetime extends RpcTarget {
@@ -682,25 +672,6 @@ export class ApplicationScreenService<E extends Env = Env> extends WorkerEntrypo
     if (credentialInUrl(new URL(request.url))) return json(400, { error: "credential-in-url" });
     return isSite(request) ? site(request, { ...this.env, SCOPES: indexedScopes(this.env.SCOPES, this.env) }) : route(request, indexedScopes(this.env.SCOPES, this.env), this.env);
   }
-}
-
-export class ScopeService<E extends Env = Env> extends WorkerEntrypoint<E> implements ScopeApi {
-  /** The one scope namespace. */
-  protected scopes(): Binding { return indexedScopes(this.env.SCOPES, this.env); }
-  create(creation: SignedIntent, definition: DeclaredDefinition | Digest | PlatformDefinition, definitions: readonly DeclaredDefinition[] = [], beside: Beside = {}): Promise<Created> { return api(this.scopes(), null, this.env).create(creation, definition, definitions, beside); }
-  submit(scope: string, signed: SignedIntent, grants: readonly Grant[], beside: Beside = {}): Promise<Answer> { return api(this.scopes(), null, this.env).submit(scope, signed, grants, beside); }
-  prepare(scope: string, signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer> { return api(this.scopes(), null, this.env).prepare(scope, signed, grants, capability, step); }
-  settle(scope: string, signed: SignedIntent): Promise<Settlement> { return api(this.scopes(), null, this.env).settle(scope, signed); }
-  summary(scope: string, reader: unknown): Promise<Read<Summary>> { return api(this.scopes(), null, this.env).summary(scope, reader); }
-  items(scope: string, reader: unknown, type: string, cursor?: Cursor): Promise<Read<readonly Item[]>> { return api(this.scopes(), null, this.env).items(scope, reader, type, cursor); }
-  queryItems(scope: string, reader: unknown, encoded: string): Promise<ItemQueryRead> { return api(this.scopes(), null, this.env).queryItems(scope, reader, encoded); }
-  applicationProjection(scope: string, reader: unknown, encoded: string): Promise<string> { return api(this.scopes(), null, this.env).applicationProjection(scope, reader, encoded); }
-  history(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly Sealed[]>> { return api(this.scopes(), null, this.env).history(scope, reader, cursor); }
-  entry(scope: string, reader: unknown, seq: number): Promise<Read<Sealed>> { return api(this.scopes(), null, this.env).entry(scope, reader, seq); }
-  outbox(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { return api(this.scopes(), null, this.env).outbox(scope, reader, cursor); }
-  outboxItem(scope: string, reader: unknown, outboxId: OutboxId): Promise<Read<OutboxItem>> { return api(this.scopes(), null, this.env).outboxItem(scope, reader, outboxId); }
-  log(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<LogPage>> { return api(this.scopes(), null, this.env).log(scope, reader, cursor); }
-  retained(scope: string, reader: unknown, kind: RetainedInput["kind"], digest: Digest, domain?: string): Promise<Read<RetainedInput>> { return api(this.scopes(), null, this.env).retained(scope, reader, kind, digest, domain); }
 }
 
 /** Generic Scope, Site and MCP dispatch. Application pages and demo offers belong to apps/room. */

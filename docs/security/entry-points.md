@@ -84,8 +84,8 @@ Generated named tools additionally require fresh standing and tool selection
 checks, then the actual target's membership check when called. A remembered tool name
 does not preserve an expired grant or authorize another target.
 
-The parentless serving policy is also passed through `ScopeService.create`
-and the hosted agent's in-process scope fetch. In closed deployed mode,
+The parentless serving policy is also passed through the in-process
+`api(binding).create` and the hosted agent's scope fetch. In closed deployed mode,
 child creation additionally passes a whole-lineage serving check before
 the child's raw namespace `idFromName` or `get`: the configured register's
 applied genesis selects one of the two reviewed exact cohorts, and every
@@ -170,8 +170,9 @@ address per hour; signed reads count 240 per key and 600 per address per minute.
 A valid signature proves custody for accounting, not native authority. Invalid
 signatures charge no claimed key. Every eligible request is counted once before
 index/target lookup or protected proof work; native checks still run fresh.
-Actual outer edge fetch supplies the platform address out-of-band. ScopeService
-and hosted in-process fetch supply null and ignore synthetic forwarded headers.
+Actual outer edge fetch supplies the platform address out-of-band.
+In-process API calls and hosted fetch supply null and ignore synthetic
+forwarded headers.
 The table holds at most 8192 windows, removes only expired entries and refuses
 new identities at capacity. Churn cannot evict a live address counter. Actual
 object restart/eviction resets memory; this is not durable global accounting.
@@ -649,4 +650,4 @@ Gate owners: [public-origin.ts](../../packages/scope/src/public-origin.ts),
 [catalogue.ts](../../packages/mcp/src/catalogue.ts), and
 [inventory.ts](../../packages/mcp/src/inventory.ts).
 
-The sandbox stream-only named RPC returns the ordinary response plus a close capability for that exact already-authorized subscription. The capability accepts no target or stream ID. Gateway cancellation waits, within the existing transport window, for its idempotent release acknowledgement before completion; RPC stub disposal is separate and is not an acknowledgement. No public HTTP route, header or general ScopeService operation is added.
+The sandbox stream-only named RPC returns the ordinary response plus a close capability for that exact already-authorized subscription. The capability accepts no target or stream ID. Gateway cancellation waits, within the existing transport window, for its idempotent release acknowledgement before completion; RPC stub disposal is separate and is not an acknowledgement. No public HTTP route or header is added. The only named production RPC entrypoint is `ApplicationScreenService`, bound to the sandbox Worker.

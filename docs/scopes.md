@@ -764,8 +764,10 @@ No observation or value changes the signed intent.
 **Settlement** answers one question: did this exact signed intent take effect? `settle` returns its receipt or `not-found`. It writes nothing.
 
 The contract's `ScopeApi` is all of these as one interface. The Worker
-serves it twice: over HTTP (`route`, with the routes listed in the scope
-package's guide) and over a service binding (`ScopeService`).
+serves it over HTTP through `route`, with the routes listed in the scope
+package's guide. Hosted callers use the in-process `api(binding)`. The
+application sandbox has a separate named binding for its screen and native
+requests.
 
 Who may read is decided by a port, `Readers`. In a deployment that port
 is a read session: a token that a membership scope issues to a device key
