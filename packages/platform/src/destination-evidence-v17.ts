@@ -623,7 +623,7 @@ function serviceEffect(given: RuleGiven, view: ReservationPolicyViewV17 | null):
   const value = view && { mark: view.policy.roomService, generation: view.serviceGeneration };
   if (value && !ledger) throw new RuleFault("The commissioned evidence ledger is unavailable");
   const stored = ledger?.values["service"], current = readEvidenceServiceWireV17(stored);
-  if (stored !== undefined && !current) throw new RuleFault("The current evidence service record is unavailable");
+  if (stored !== undefined && stored !== null && !current) throw new RuleFault("The current evidence service record is unavailable");
   return ledger && value && !same(current, value)
     ? [{ effect: "value", item: ledger.id, slot: "service", value: evidenceWireV17(value, EVIDENCE_SERVICE_BYTES_V17) }] : [];
 }
@@ -965,7 +965,7 @@ function hydrateTimeout(given: RuleGiven, row: { item: Item; record: EvidenceJob
  * triager answer never clears it or spends another held notice count. */
 export function evidenceNoticeOpeningV17(given: RuleGiven, item: Item, record: EvidenceJobRecordV17): Pick<OutcomeGives, "effects" | "opens"> {
   const marked = item.values["noticeOpenedAt"];
-  if (marked !== undefined) {
+  if (marked !== undefined && marked !== null) {
     const opened = natural(marked) ? given.own(marked)?.entry : null;
     const matches = opened?.effects.filter(effect => effect.effect === "operation" && effect.owner === "platform:destination@17"
       && effect.kind === EVIDENCE_NOTICE_V17 && effect.for === record.holder) ?? [];

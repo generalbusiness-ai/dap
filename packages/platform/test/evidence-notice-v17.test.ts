@@ -36,7 +36,7 @@ function record(): EvidenceJobRecordV17 {
 }
 function item(value: EvidenceJobRecordV17, marked = false): Item {
   return { id: 20, type: "evidence-job", state: "job-timedout", revision: 40, opened: d("e"), parties: {}, refs: { timeoutDecision: 30 },
-    values: { record: evidenceJobRecordWireV17(value), ...(marked ? { noticeOpenedAt: 40 } : {}) }, attributed: [] };
+    values: { record: evidenceJobRecordWireV17(value), noticeOpenedAt: marked ? 40 : null }, attributed: [] };
 }
 function opening(value: EvidenceJobRecordV17): Entry {
   return { v: 1, at: destination, seq: 40, prev: d("f"), time: t(19), clamped: false, epoch: 0,
@@ -66,6 +66,7 @@ const holders = (count = 1): HoldersObservation => ({ subject: "holders", of: ke
 
 test("a funded timeout opens one notice; its verified original marker never opens a replacement, even after unknown", () => {
   const value = record(), initial = item(value), marked = item(value, true), before = canonicalize(value);
+  expect(initial.values["noticeOpenedAt"]).toBeNull();
   expect(evidenceNoticeOpeningV17(given(initial, value), initial, value)).toEqual({ effects: [{ effect: "value", item: 20, slot: "noticeOpenedAt", value: 50 }],
     opens: [{ owner: "platform:destination@17", kind: "evidence-notice", attempts: 1, for: 7 }] });
   expect(evidenceNoticeOpeningV17(given(marked, value), marked, value)).toEqual({ effects: [], opens: [] });
@@ -75,6 +76,10 @@ test("a funded timeout opens one notice; its verified original marker never open
 
 test("an invalid original marker refuses rather than spending another held notice", () => {
   const value = record(), marked = item(value, true), actual = opening(value);
+  for (const marker of [false, "40", -1, {}]) {
+    const malformed = { ...marked, values: { ...marked.values, noticeOpenedAt: marker } };
+    expect(() => evidenceNoticeOpeningV17(given(malformed, value), malformed, value)).toThrow(RuleFault);
+  }
   expect(() => evidenceNoticeOpeningV17(given(marked, value, null), marked, value)).toThrow(RuleFault);
   const wrong = { ...actual, effects: actual.effects.filter(effect => effect.effect !== "value") };
   expect(() => evidenceNoticeOpeningV17(given(marked, value, wrong), marked, value)).toThrow(RuleFault);

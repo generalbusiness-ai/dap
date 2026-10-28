@@ -14,6 +14,7 @@ export const EVIDENCE_LEDGER_ITEM_V17: PlatformData["items"][string] = {
 };
 const fault = (): never => { throw new RuleFault("The singleton evidence ledger is unavailable"); };
 const natural = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
+const empty = (value: unknown): boolean => value === null || value === undefined;
 function singleton(state: LedgerState, type: string, states: readonly string[]): Item | null {
   const page = state.page(type, states, null, 2);
   if (page.more || page.items.length > 1) return fault();
@@ -32,8 +33,8 @@ export function evidenceLedgerOfV17(state: LedgerState): Item | null {
     if (!own) return current || ledger ? fault() : null;
     if (own.at.kind !== "destination" || !current) return fault();
     const reference = current?.refs["evidenceLedger"];
-    if (reference === undefined) {
-      if (ledger || current && (Object.hasOwn(current.values, "rulesCertificateRequest") || Object.hasOwn(current.values, "rulesCertificateDeclined"))) return fault();
+    if (empty(reference)) {
+      if (ledger || !empty(current.values["rulesCertificateRequest"]) || !empty(current.values["rulesCertificateDeclined"])) return fault();
       return null;
     }
     if (!current || current.state !== "ready" || !ledger) return fault();

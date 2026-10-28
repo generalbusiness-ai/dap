@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type FactRef, type ScopeRef } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type FactRef, type ItemType, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
-import { RuleFault, type Item, type RuleGiven, type StateView } from "@generalbusiness/dap-derive";
+import { newItem, RuleFault, type Item, type RuleGiven, type StateView } from "@generalbusiness/dap-derive";
 import { d, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { EVIDENCE_LEDGER_ITEM_V17, evidenceLedgerInitializationV17, evidenceLedgerOfV17 } from "../src/evidence-ledger-v17.ts";
 
@@ -38,6 +38,32 @@ test("before the first certificate absence is null; initialization emits one led
   ]);
   expect(EVIDENCE_LEDGER_ITEM_V17).toMatchObject({ many: false, max: 1, states: { ready: { final: false } },
     values: { counts: { fixed: false, required: true }, service: { fixed: false, required: false } } });
+});
+
+test("the real newItem initializer's null optional slots are empty only before any certificate or ledger", () => {
+  // SCRIPTED declared slot projection, using the maintained initializer.
+  // This is not a validated Native definition or an admitted certificate.
+  const declared: ItemType = { many: false, max: 1, initial: "ready", states: { ready: { final: false } }, parties: {},
+    refs: { evidenceLedger: { fixed: false, required: false, to: { type: "item", of: "evidence-ledger" } } },
+    values: {
+      rulesCertificateRequest: { fixed: false, required: false, of: { type: "text", max: 128 } },
+      rulesCertificateDeclined: { fixed: false, required: false, of: { type: "text", max: 128 } },
+    } };
+  const current = newItem({ effect: "open", item: 0, type: "branch", state: "ready" }, declared, d("c"));
+  expect(current.refs["evidenceLedger"]).toBeNull();
+  expect(current.values).toEqual({ rulesCertificateRequest: null, rulesCertificateDeclined: null });
+  const view = state([current]);
+  expect(evidenceLedgerOfV17(view)).toBeNull();
+  expect(evidenceLedgerInitializationV17(given(view, current))).toEqual([
+    { effect: "open", item: 50, type: "evidence-ledger", state: "ready" },
+    { effect: "value", item: 50, slot: "counts", value: zero },
+    { effect: "ref", item: 0, slot: "evidenceLedger", to: 50 },
+  ]);
+  for (const slot of ["rulesCertificateRequest", "rulesCertificateDeclined"]) {
+    const certified = { ...current, values: { ...current.values, [slot]: "actual nonempty scripted certificate value" } };
+    expect(() => evidenceLedgerOfV17(state([certified]))).toThrow(RuleFault);
+  }
+  expect(() => evidenceLedgerOfV17(state([current, ledger()]))).toThrow(RuleFault);
 });
 
 test("the post-entry singleton is reused without a second item or a reset of used counters", () => {
