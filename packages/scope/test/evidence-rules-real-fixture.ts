@@ -17,7 +17,7 @@ import { EVIDENCE_RULES_COHORT } from "../../platform/src/evidence-cohort.ts";
 import { rulesPolicyCheckersV13, rulesPolicyProposalV13, RULES_EXTENTS_VALUE_V13, type RulesPolicyV13 } from "../../platform/src/rules-policy-v13.ts";
 import { readEvidenceWireV17 } from "../../platform/src/evidence-wire-v17.ts";
 import { readRulesPolicyReplyV17 } from "../../platform/src/reservation-v17.ts";
-import { currentEvidenceRecordV17, evidenceEffectiveHoldV17, readEvidenceJobRecordWireV17 } from "../../platform/src/destination-evidence-v17.ts";
+import { currentEvidenceRecordV17, destinationEvidencePending, evidenceEffectiveHoldV17, readEvidenceJobRecordWireV17 } from "../../platform/src/destination-evidence-v17.ts";
 import { readEvidenceCapacityWireV17 } from "../../platform/src/destination-evidence-capacity-v17.ts";
 import { evidenceLedgerOfV17 } from "../../platform/src/evidence-ledger-v17.ts";
 import { issueEvidence4 } from "../../../apps/room/lanes/src/issue4.ts";
@@ -109,6 +109,17 @@ export async function evidenceNativeRoom() {
           const race = request.owner === EVIDENCE_RULES_COHORT.destination && ["judge", "evidence-result"].includes(request.kind) ? control.race : null;
           if (race) race.requests.push(request);
           const answer = await (request.kind === RULES_CERTIFICATE_KIND && actual.accepts(request.owner, request.kind) ? certificate.send(request) : actual.send(request));
+          if (request.kind === 'evidence-admit') {
+            const operation = given.state.operation(request.operation), item = given.state.item(Number(request.operation.split(':')[0]));
+            const record = item ? readEvidenceJobRecordWireV17(item.values['record']) : null;
+            let pending: boolean | null = null;
+            try { pending = operation ? destinationEvidencePending(given.state, given.own, operation) !== null : false; } catch { /* Diagnostic only; preserve the actual host answer. */ }
+            console.log('TEST-evidence-admit-host-boundary', { operation: request.operation, hasAnswer: answer !== null, result: answer?.result ?? null,
+              most: operation?.most ?? null, for: operation?.for ?? null, selected: operation?.selected ?? null,
+              recordType: item?.type ?? null, recordItemState: item?.state ?? null, parsedRecord: record !== null,
+              recordState: record?.state ?? null, recordHolder: record?.holder ?? null,
+              pending });
+          }
           if (race && request.kind === race.heldKind) { race.answer = answer; race.gate.hold.entered(); await race.gate.hold.release; }
           return answer;
         },
