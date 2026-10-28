@@ -79,7 +79,13 @@ test("every counted evidence outcome declares one marked request rather than an 
 });
 
 test("the admitted-job selector reads the maintained numeric local fact normal form and rejects a mismatching arriving reference", () => {
-  const source = fixture(), admission = factRefOf(source.admission), types = destinationV17.acts["evidence-recover-timeout"]!.fields;
+  const source = fixture(), admission = factRefOf(source.admission), declared = destinationV17.acts["evidence-recover-timeout"]!.fields;
+  const admissionType = declared["admission"], operationType = declared["operation"];
+  if (Object.keys(declared).length !== 2 || admissionType?.type !== "fact" || operationType?.type !== "fact")
+    throw Error("The actual recovery schema must contain exactly its two declared fact fields");
+  // These actual declarations contain no Native code/value field. Narrow
+  // them before exercising the shared ordinary fact-normalization reader.
+  const types = { admission: admissionType, operation: operationType };
   const read = readFields(types, { admission }, PROPOSED_BOUNDS);
   if (!read.ok) throw Error("The actual declared admission field must fit");
   const normal = readFacts(source.state, types, read.fields, [], { at, own: source.own });

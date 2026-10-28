@@ -97,7 +97,7 @@ test("published written callbacks and the separate plan dispatch fit before push
     const entry = { ...variant.entry, uses: Array.from({ length: PROPOSED_BOUNDS.usesPerEntry }, (_, n) => ({
       fact: { ...fact(n, destination), seq: Number.MAX_SAFE_INTEGER - n }, content: d("f"),
     })) };
-    expect(isEntry(entry)).toBe(true);
+    expect(isEntry(entry), `${variant.name} complete entry`).toBe(true);
     // Independently materialize the full canonical uses array rather than
     // repeating the forecast's size multiplication and comma arithmetic.
     const fullWidthUses = entry.uses.map(use => ({ ...use, fact: { ...use.fact, seq: Number.MAX_SAFE_INTEGER } }));
@@ -109,7 +109,9 @@ test("published written callbacks and the separate plan dispatch fit before push
   const read = measured.variants.find(variant => variant.name === "read")!;
   expect(read.effects).toBe(4);
   expect(read.observed).toBe(observationBytes("rules", PROPOSED_BOUNDS) + 9 * observationBytes("key", PROPOSED_BOUNDS)
-    + 65 * observationBytes("member", PROPOSED_BOUNDS) + observationBytes("holders", PROPOSED_BOUNDS, 1) + 75);
+    + 65 * observationBytes("member", PROPOSED_BOUNDS) + observationBytes("holders", PROPOSED_BOUNDS, 1) + 75
+    + utf8(canonicalize({ ...read.entry.input, observed: [] })).length - utf8(canonicalize(read.entry.input)).length);
+  for (const variant of measured.variants) expect(Object.hasOwn(variant.entry.input, "observed")).toBe(false);
   const dispatch = measured.variants.find(variant => variant.name === "evidence-plan")!;
   expect(dispatch.effects).toBe(1);
   expect(dispatch.entry.sends).toHaveLength(1);

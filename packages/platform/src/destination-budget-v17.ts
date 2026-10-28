@@ -132,7 +132,7 @@ export function certifiedWrittenPlanBudgetV17(bounds: Bounds) {
   const opening = (k: number, kind: string, attempts: number) => operationOpening(k, { owner: 'platform:destination@17', kind, attempts, for: MAX });
   const input = (kind: string, body: import('@generalbusiness/dap-contract').FieldValue): Entry['input'] => ({
     type: 'outcome', operation: OPERATION, attempt: MAX, owner: 'platform:destination@17', kind, result: 'confirmed',
-    evidence: { basis: 'own-answer', body }, observed: [],
+    evidence: { basis: 'own-answer', body },
   });
   const shell = (kind: string, body: import('@generalbusiness/dap-contract').FieldValue, effects: Effect[], sends: Entry['sends']): Entry => ({
     v: 1, at: SCOPE, seq: MAX, prev: HASH, time: TIME, clamped: false, epoch: 0,
@@ -153,12 +153,18 @@ export function certifiedWrittenPlanBudgetV17(bounds: Bounds) {
       message: { class: 'request', type: 'tell', body: { message: 'evidence-plan-open', fields: {
         publication: FACT, operation: FACT, receipt: FACT, written: FACT, manifest: FACT,
       } } } }]), observed: 0 },
-  ].map(variant => ({ ...variant,
-    // Empty uses[] syntax is already present. No array proportional to a
-    // caller-supplied bound is allocated merely to compute its exact size.
-    entryBytes: bytes(variant.entry) + uses * bytes(USE) + Math.max(0, uses - 1) + variant.observed,
-    effects: variant.entry.effects.length,
-  }));
+  ].map(variant => {
+    // An observed property is only valid with nonempty rows. The bare shell
+    // omits it; quote its syntax separately from the full admitted cohort.
+    const observed = variant.observed === 0 ? 0 : variant.observed
+      + bytes({ ...variant.entry.input, observed: [] }) - bytes(variant.entry.input);
+    return { ...variant, observed,
+      // Empty uses[] syntax is already present. No array proportional to a
+      // caller-supplied bound is allocated merely to compute its exact size.
+      entryBytes: bytes(variant.entry) + uses * bytes(USE) + Math.max(0, uses - 1) + observed,
+      effects: variant.entry.effects.length,
+    };
+  });
   return { admitted: variants.every(variant => variant.entryBytes <= bounds.entryBytes
       && variant.effects <= Math.min(16, bounds.derivedEffects) && variant.entry.sends.length <= bounds.sendsPerEntry),
     entryBytes: Math.max(...variants.map(variant => variant.entryBytes)), effects: Math.max(...variants.map(variant => variant.effects)), variants };

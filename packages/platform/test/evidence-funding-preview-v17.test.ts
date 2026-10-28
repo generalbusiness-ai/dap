@@ -104,7 +104,7 @@ function fundingPreview(options: { checks?: number; productionReady?: boolean; s
     const dispatch = configured["evidence-funding-ready-v17"];
     if (dispatch?.place !== "send" || at.input.type !== "delivery" || at.input.message.class !== "request") throw Error("The actual serial batch dispatcher is required");
     const request = dispatch.run(at), requests = request ? [{ n: 0, ...request }] : [];
-    const born = seal(at.resolved.self, { ...at.input, decision: "applied" }, [{ ...implicit, item: at.resolved.self }, ...emitted],
+    const born = seal(at.resolved.self, { ...at.input, message: at.input.message, decision: "applied" }, [{ ...implicit, item: at.resolved.self }, ...emitted],
       [...requests, { n: requests.length, to: at.input.from.at, message: { class: "result", of: { from: at.input.from, n: at.input.n }, outcome: "applied" } }]);
     history.set(at.resolved.self, born);
     state.putItem({ id: at.resolved.self, type: "evidence-batch", state: "funded", revision: at.resolved.self, opened: born.hash, parties: {}, refs: { operation, lane: operation.at }, values, attributed: [] });
