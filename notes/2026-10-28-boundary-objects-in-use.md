@@ -46,7 +46,7 @@ structure enters later, and what this changes in the current direction.
 - **Pile**: the documents a party brings in unchanged, each with where it
   came from. Bills, photos, estimates, letters, meter readings,
   transcripts, a file at a commit.
-- **Reading**: what an agent or a person makes of a document. The lines
+- **Reading**: what an agent or a person makes of a document. The charges
   parsed from a bill, nine items grouped from photos, a timeline from
   alerts. A reading is the reader's own statement, never the document's.
 - **Mark**: a party's remark or choice against one row, region or moment
@@ -91,20 +91,22 @@ re-reads.
 
 ### 3.2 A medical bill, case 01
 
-The pile: a bill of fourteen lines with procedure codes, the insurer's
-statement of eleven lines with allowed amounts, and a coverage document.
+The pile: a bill of fourteen charges with procedure codes, the
+insurer's statement of the amounts it allowed for eleven of them, and a
+coverage document.
 The patient's agent reads the bill and the statement into one table.
-Each row is a bill line, and each cell says which page it came from.
-Three bill lines match no statement line, and one matches at a different
-amount. The patient reads the table as what they owe and why. They mark
-the three unmatched lines and the one mismatch: ask about these. The
-agent drafts one question that quotes those four lines by page and code.
+Each row is one charge on the bill, and each cell says which page it
+came from. Three charges match nothing on the statement, and one matches
+at a different amount. The patient reads the table as what they owe and why. They mark
+the three unmatched charges and the one mismatch: ask about these. The
+agent drafts one question that quotes those four charges by page and
+code.
 The patient approves that exact text, and nothing else. A portal receipt
 comes back as a document.
 
-Billing staff read the same four lines as how the charge was built. A
-letter comes back, and it is a document, not their act. The agent lines
-the letter's explanation up against the four rows. The patient accepts
+Billing staff read the same four charges as how each was built. A
+letter comes back, and it is a document, not their act. The agent sets
+the letter's explanation against the four rows. The patient accepts
 the explanation for two rows, disputes one, and the fourth waits for an
 adjustment the letter promised. The patient closes their own part with
 the dispute kept.
@@ -114,7 +116,7 @@ the receipt, the patient's closing. What does not: the table, the four
 marks, the alignment of the letter against the rows, and the four
 different outcomes that one letter produced. The table is the boundary
 object. The patient and the billing office read it in different
-categories, and it stays the same four lines by page and code.
+categories, and it stays the same four charges by page and code.
 
 ### 3.3 A snag list, case 30
 
@@ -157,7 +159,7 @@ grid as remarks. The rota is re-cut every week and the old one stays.
 ### 3.5 An electricity bill, case 10
 
 The pile: four bills with their periods, three meter photos with their
-times, and the account's tariff. The agent lines up the billed units
+times, and the account's tariff. The agent sets the billed units
 against the readings on one time axis, with each photo as a point and
 each bill as a span. One span has no reading inside it, and the chart
 says so. One resident marks a week: "nobody was home". Another marks
@@ -179,10 +181,10 @@ the parties and the part of its use that the fold does not take.
 | Case | The thing between parties | What stays outside the fold |
 |---|---|---|
 | 02 prescriptions | A price table from several pharmacies with each price's conditions | Missing assumptions, marked by the patient |
-| 03 groceries | A proposed basket beside receipts | Each person's exclusions against a line |
+| 03 groceries | A proposed basket beside receipts | Each person's exclusions against a basket item |
 | 04 card debt | Balances from statements, and plan versions | Which plan the household can bear, a remark per version |
 | 05, 06 insurance, internet | The renewal or offer beside other quotes, with dates on one axis | The gap in cover, the household's split reading |
-| 07 car repair | Two itemised estimates aligned line by line, with a specialist's opinion per line | Which lines the driver questions |
+| 07 car repair | Two itemised estimates matched item by item, with a specialist's opinion on each | Which items the driver questions |
 | 08 assistance | A checklist with the evidence found for each item | Each household member's choice of what to disclose |
 | 09 lease | The offer, the cost of moving, and maintenance evidence | Two tenants' different readings |
 | 11, 13, 14 charges and fees | A receipt or fee entry beside the transaction or the terms passage | The holder's recognition, or not |
@@ -194,15 +196,15 @@ the parties and the part of its use that the fold does not take.
 | 23 moving out | A handover checklist by date, with condition reports | Two residents' observations of one room |
 | 24 trip | An itinerary with each traveller's constraints | Each traveller's private budget |
 | 26 bulk order | An allocation table with the minimum-order progress | Each household's maximum, before it is a commitment |
-| 27, 28 claim, accident | A bundle of photos, inventory and receipts; three timelines kept apart | Accept part and dispute the rest, line by line |
+| 27, 28 claim, accident | A bundle of photos, inventory and receipts; three timelines kept apart | Accept part and dispute the rest, item by item |
 | 29 renovation | Quote versions side by side, the drawing, marked-up photos | Unclear items marked, an adviser's challenge |
 | 31, 32 car, guitar | A listing, documents, an inspection report with limits | A buyer's conditions, private until offered |
 | 33, 21 booking, childcare | A grid of slots, with purpose or the child's details kept out | Why a slot is wanted |
-| 34 code review | A candidate at a base, findings against lines | Exploration, chatter, a reviewer's doubt short of a finding |
+| 34 code review | A candidate at a base, findings against the code | Exploration, chatter, a reviewer's doubt short of a finding |
 | 35 release | Build identity, checks and a rollout plan | Risk as the owner weighs it |
 | 36 incident | A timeline of alerts and observations, hypotheses beside it | The disputed root cause |
 | 37, 39, 41 award, hiring, review | Requirements or criteria beside each offer, application or manuscript | An assessor's private reasoning |
-| 38 invoice | Scope lines, evidence of work, and invoice lines, aligned | The disputed balance named by both |
+| 38 invoice | The agreed scope, evidence of work and the invoice, matched item by item | The disputed balance named by both |
 | 40 school plan | Observations from home and classroom, and the plan | A specialist's private notes |
 | 42 community budget | Proposal versions and budget options | Members' priorities, private reasons |
 | 43 investigation | Findings with contradictions left standing | A critic's confidence, which is not a veto |
