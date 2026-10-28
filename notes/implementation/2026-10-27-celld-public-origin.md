@@ -40,8 +40,15 @@ Source seals cover the changed gate owners and the shared origin accessor.
 
 ## Evidence
 
-Draft checkpoint: no tests or runtime checks have run. This section will record actual
-terminal results before review. The final evidence will be sealed under
+The first source checkpoint was `e44e38f0`, tree `4a2eafa4`. Scope and MCP
+typechecks passed. The focused Node run had 16 passes and four inventory
+failures: its extracted MCP matcher lacked the new pure helper. The extractor
+now loads the actual helper and distinguishes the private gateway from public
+named RPC methods. These are structural harness repairs. The first version
+probe returned celld 0.6.3, so that executable was rejected. The pinned 0.6.2
+release was obtained separately in scratch with a successful attestation
+command. All attempts remain separate; no failed result is called a pass.
+This section will record the final terminal results before review. The final evidence will be sealed under
 `/Users/hughpyle/play/artroom-evidence/2026-10-27-celld-public-origin`.
 The first draft inventory generator failed before parsing because a flat
 symlink view could not resolve native dependencies. Its failed output is
