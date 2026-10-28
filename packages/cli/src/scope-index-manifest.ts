@@ -2,6 +2,7 @@
 import type { Digest, ScopeRef, Seed, Sealed, Read } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, isDigest, isRecord, isScopeRef, isSeed, isSealed, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, platform } from "@generalbusiness/dap-platform";
+import { Stop } from "./command-support.ts";
 
 export const INDEX_INVENTORY_BOUNDS = Object.freeze({ scopes: 4096, pages: 4096, pagesPerScope: 1000, bytes: 16 * 1024 * 1024 });
 export interface IndexScope { readonly at: ScopeRef; readonly genesis: Digest }
@@ -150,7 +151,10 @@ export async function verifyIndexManifest(manifest: IndexManifest, reads: IndexR
       catch { mismatch++; rows.push({ at: row.at, result: "mismatch", reason: "genesis-identity" }); continue; }
       if (actual.genesis !== row.genesis) { mismatch++; rows.push({ at: row.at, result: "mismatch", reason: "genesis-hash" }); continue; }
       verified++; rows.push({ at: row.at, result: "verified" });
-    } catch { unavailable++; rows.push({ at: row.at, result: "unavailable", reason: "read-failed" }); }
+    } catch (error) {
+      if (error instanceof Stop) throw error;
+      unavailable++; rows.push({ at: row.at, result: "unavailable", reason: "read-failed" });
+    }
   }
   return { listed: manifest.scopes.length, verified, unavailable, mismatch, rows };
 }
@@ -186,7 +190,10 @@ export async function indexManifestVersions(manifest: IndexManifest, reads: Inde
       observed.add(definition);
       rows.push({ at: row.at, result: lineage.has(definition) ? "verified" : "unsupported", definition,
         ...(lineage.has(definition) ? {} : { reason: "unsupported-creation-family" }) });
-    } catch { rows.push({ at: row.at, result: "unavailable", reason: "read-failed" }); }
+    } catch (error) {
+      if (error instanceof Stop) throw error;
+      rows.push({ at: row.at, result: "unavailable", reason: "read-failed" });
+    }
   }
   const ready = rows.every(row => row.result === "verified");
   return {

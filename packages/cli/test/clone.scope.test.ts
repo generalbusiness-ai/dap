@@ -181,6 +181,112 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
     expect(git.runs).toEqual([{ args: ["--version"], env: {} }]);
     expect(await lifetime.wait(() => una.store.config())).toEqual(saved);
 
+    // These fetch refusals and the lost reply below are SCRIPTED boundaries.
+    // The scopes, signed read-token, session issuance, outcome and one-time
+    // credential route still run through the existing Native fixture.
+    const readTokenActs = async () => (await G.entries()).filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "read-token").length;
+    {
+      const beforeActs = await readTokenActs(), beforeMints = service.minted.length;
+      let observing = false, rejectedReader: string | null = null, sessionPosts = 0, credentialGets = 0, membershipDenials = 0;
+      const entryAttempts: string[] = [];
+      const staleObservation: Fetch = async (url, init) => {
+        const path = new URL(url).pathname, authorization = init?.headers?.["authorization"];
+        const entry = path.startsWith(`/v1/scopes/${G.name}/entries/`);
+        if (observing && path.endsWith("/sessions") && init?.method === "POST") sessionPosts++;
+        if (path.includes("/credential/")) credentialGets++;
+        if (observing && entry) {
+          expect(authorization).toMatch(/^Session /);
+          entryAttempts.push(path);
+          if (rejectedReader === null) {
+            rejectedReader = authorization!;
+            // Native tokens contain claims, not the issuance operation. Move
+            // the owned clock so the replacement has a different end time.
+            lifetime.advance(1000);
+          }
+        }
+        if (rejectedReader !== null && authorization === rejectedReader
+          && (entry || path === `/v1/scopes/${repository.membership.scope}`)) {
+          if (!entry) membershipDenials++;
+          return Response.json({ ok: false, reason: "forbidden" }, { status: 403 });
+        }
+        const response = await fetch(url, init);
+        if (path === `/v1/scopes/${G.name}/acts` && init?.method === "POST") observing = true;
+        return response;
+      };
+      git.runs.length = 0;
+      const renewed = ok(await run({ ...rita, fetch: staleObservation }, "clone", "renewed-observation"));
+      expect([sessionPosts, membershipDenials, credentialGets]).toEqual([1, 1, 1]);
+      expect(entryAttempts.length).toBeGreaterThanOrEqual(3);
+      expect(entryAttempts[1]).toBe(entryAttempts[0]);
+      expect([await readTokenActs(), service.minted.length]).toEqual([beforeActs + 1, beforeMints + 1]);
+      expect(git.runs.map(row => row.args)).toEqual([["--version"], ["clone", "--", remoteUrl, "renewed-observation"]]);
+      expect(renewed.lines.join("\n")).not.toContain(service.minted.at(-1)!);
+    }
+    {
+      const beforeActs = await readTokenActs(), beforeMints = service.minted.length;
+      let preflight = false, rejectedReader: string | null = null, operation: string | null = null, sessionPosts = 0, credentialGets = 0, membershipDenials = 0;
+      const limitedPreflight: Fetch = async (url, init) => {
+        const path = new URL(url).pathname, authorization = init?.headers?.["authorization"];
+        if (path.includes("/credential/")) credentialGets++;
+        if (preflight && path.endsWith("/sessions") && init?.method === "POST") {
+          sessionPosts++;
+          return Response.json({ ok: false, reason: "rate-limited" }, { status: 429, headers: { "retry-after": "17" } });
+        }
+        if (preflight && path === `/v1/scopes/${repository.membership.scope}` && authorization === rejectedReader) {
+          membershipDenials++;
+          return Response.json({ ok: false, reason: "forbidden" }, { status: 403 });
+        }
+        const response = await fetch(url, init);
+        if (path === `/v1/scopes/${G.name}/acts` && init?.method === "POST") {
+          const accepted = await (response as unknown as Response).clone().json() as { answer: string; receipt: { fact: { seq: number } } };
+          expect(accepted.answer).toBe("accepted"); operation = `${accepted.receipt.fact.seq}:0`;
+        }
+        if (!preflight && path.startsWith(`/v1/scopes/${G.name}/entries/`) && response.status === 200) {
+          // routed() returns a real Response behind the smaller Fetch port.
+          // Inspect a copy of the actual outcome without consuming its reply.
+          const copy = await (response as unknown as Response).clone().json() as { ok: boolean; value?: { entry?: { input?: { type?: string; kind?: string; operation?: string } } } };
+          if (copy.ok && copy.value?.entry?.input?.type === "outcome" && copy.value.entry.input.kind === "mint-read" && copy.value.entry.input.operation === operation) {
+            expect(authorization).toMatch(/^Session /);
+            preflight = true; rejectedReader = authorization!; lifetime.advance(1000);
+          }
+        }
+        return response;
+      };
+      git.runs.length = 0;
+      const limited = await run({ ...rita, fetch: limitedPreflight }, "clone", "limited-preflight");
+      expect(limited.code).toBe(1);
+      expect(limited.lines[0]).toMatch(new RegExp(`^Accepted read-token: ${G.name}:\\d+ \\(${operation}\\)\\.$`));
+      expect(limited.lines.join("\n")).toContain("rate-limited");
+      expect(limited.lines.join("\n")).toContain("17 seconds");
+      expect(limited.lines.at(-1)).toContain("before another read-token request");
+      expect([preflight, sessionPosts, membershipDenials, credentialGets]).toEqual([true, 1, 2, 0]);
+      expect([await readTokenActs(), service.minted.length]).toEqual([beforeActs + 1, beforeMints + 1]);
+      expect(git.runs).toEqual([{ args: ["--version"], env: {} }]);
+      expect(limited.lines.join("\n")).not.toContain(service.minted.at(-1)!);
+    }
+    {
+      const beforeActs = await readTokenActs(), beforeMints = service.minted.length;
+      let credentialGets = 0, consumedReplies = 0;
+      const lostCredential: Fetch = async (url, init) => {
+        const credential = new URL(url).pathname.includes("/credential/");
+        if (credential) credentialGets++;
+        const response = await fetch(url, init);
+        if (!credential) return response;
+        expect(response.status).toBe(200); consumedReplies++;
+        await response.body?.getReader().cancel();
+        throw Error("SCRIPTED lost one-time credential reply");
+      };
+      git.runs.length = 0;
+      const unknown = await run({ ...rita, fetch: lostCredential }, "clone", "lost-credential");
+      expect(unknown.code).toBe(1);
+      expect(unknown.lines.join("\n")).toContain("one-time credential may have been consumed");
+      expect(unknown.lines.join("\n")).not.toContain("SCRIPTED lost");
+      expect([credentialGets, consumedReplies]).toEqual([1, 1]);
+      expect([await readTokenActs(), service.minted.length]).toEqual([beforeActs + 1, beforeMints + 1]);
+      expect(git.runs).toEqual([{ args: ["--version"], env: {} }]);
+      expect(unknown.lines.join("\n")).not.toContain(service.minted.at(-1)!);
+    }
+
   } finally {
     lifetime.unOutside(G.name);
     lifetime.unWire(R.name);

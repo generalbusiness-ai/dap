@@ -15,7 +15,7 @@ export const usage = (...lines: string[]): Outcome => ({ code: 2, lines });
 
 /** A command that cannot go on: it ends with this outcome. */
 export class Stop extends Error {
-  constructor(readonly outcome: Outcome) { super(outcome.lines.join(" ")); }
+  constructor(readonly outcome: Outcome, readonly kind?: "wait-exhausted") { super(outcome.lines.join(" ")); }
 }
 export const stopCommand = (outcome: Outcome): never => { throw new Stop(outcome); };
 
@@ -59,8 +59,10 @@ export async function readTransportOf(ctx: Context, config: Config, reader?: str
     // The session request already used the configured signing identity. Check
     // current custody without deriving a filesystem signer that is not used.
     // Capability stores own their namespace and must never fall back to seeds.
+    let custodyKey: KeyId | undefined;
     if (ctx.store.signer) {
-      if (await ctx.store.signer(config.key) == null) stopCommand(failed(`The key ${config.key} is missing from the config directory; nothing was signed.`));
+      const held = await ctx.store.signer(config.key) ?? stopCommand(failed(`The key ${config.key} is missing from the config directory; nothing was signed.`));
+      custodyKey = held.key;
     } else {
       const held = await ctx.store.secret(config.key);
       if (held === null) stopCommand(failed(`The key ${config.key} is missing from the config directory; nothing was signed.`));
@@ -69,8 +71,7 @@ export async function readTransportOf(ctx: Context, config: Config, reader?: str
     const known = connections.get(ctx)?.get(connectionKey(config));
     if (known) {
       const manager = await known;
-      const signer = await storedSigner(ctx.store, config.key);
-      if (signer?.key === manager.key && manager.recognizes(reader)) return manager.transport;
+      if ((custodyKey === undefined || custodyKey === manager.key) && manager.recognizes(reader)) return manager.transport;
     }
     return transport;
   }
@@ -82,6 +83,7 @@ export interface ManagedReads {
   session(): Promise<Session | null>;
   read<T extends { ok: boolean; reason?: string }>(perform: (reader: string | null) => Promise<T>): Promise<T>;
 }
+export interface RequiredReads extends Omit<ManagedReads, "session"> { session(): Promise<Session> }
 interface Connection extends ManagedReads { readonly key: KeyId; recognizes(reader: string): boolean }
 const connections = new WeakMap<Context, Map<string, Promise<Connection>>>();
 const connectionKey = (config: Config): string => canonicalize([config.service, config.key, config.repository?.membership ?? null]);
@@ -95,11 +97,18 @@ function sessionRefused(error: SessionRefused): never {
   return stopCommand(failed(`Read session refused: ${error.reason}.${window}`));
 }
 
+function checkReadOwner(current?: () => boolean): void {
+  if (current?.() === false) stopCommand(failed("The read session owner ended; its result was not used."));
+}
 /** Issue under this invocation's signer, fetch and clock. No Config is needed. */
-async function issueReadSession(ctx: Context, service: string, membership: ScopeRef, signer: Signer, renewal: boolean): Promise<Session> {
+async function issueReadSession(ctx: Context, service: string, membership: ScopeRef, signer: Signer, renewal: boolean, current?: () => boolean): Promise<Session> {
+  checkReadOwner(current);
   const now = () => ctx.now?.() ?? Date.now();
   const asked = await signerSessionRequest(membership, signer, timeOf(Math.floor(now() / 1000) * 1000 + 60_000), b64url(fresh(16)));
+  checkReadOwner(current);
   const answer = await requestSession(service, membership.scope, asked, ctx.fetch ? { fetch: ctx.fetch } : {});
+  // This check precedes the cache owner's publication of the issued result.
+  checkReadOwner(current);
   if (!answer.ok) throw new SessionRefused(answer.reason, answer.retryAfterSeconds, renewal);
   if (timeMs(answer.session.claims.ends)! - now() <= 30_000)
     stopCommand(failed("The issued read session has no 30-second refresh margin on this clock. Check device/service clock alignment; server authority was not inferred."));
@@ -109,15 +118,15 @@ async function issueReadSession(ctx: Context, service: string, membership: Scope
 /** Required custody reads may use a retained signer outside Config. Cache only
  * its exact service/membership/key credential; never select Signed authority. */
 export async function requiredSessionOf(ctx: Context, service: string, membership: ScopeRef, signer: Signer): Promise<Session> {
-  try {
-    const held = await cachedReadSession(ctx.store, { service, membership, key: signer.key }, () => ctx.now?.() ?? Date.now(),
-      renewal => issueReadSession(ctx, service, membership, signer, renewal));
-    return held?.session ?? stopCommand(failed("No required read session was issued."));
-  } catch (error) {
-    if (error instanceof SessionRefused) sessionRefused(error);
-    if (error instanceof ReadSessionCacheError) stopCommand(failed(error.message));
-    throw error;
-  }
+  return requiredReadsOf(ctx, service, membership, signer).session();
+}
+
+/** One owned signer lifetime: keep this flow local and finish its read wrappers
+ * before wiping an owned seed. No connection is registered across invocations. */
+export function requiredReadsOf(ctx: Context, service: string, membership: ScopeRef, signer: Signer, current?: () => boolean): RequiredReads {
+  const connection = makeConnection(ctx, service, membership, signer, true, current);
+  return { transport: connection.transport, read: connection.read,
+    session: async () => await connection.session() ?? stopCommand(failed("No required read session was issued.")) };
 }
 
 /** A connection belongs to this Context's fetch/clock. Only issuance, not
@@ -128,35 +137,47 @@ export async function managedReadsOf(ctx: Context, config: Config): Promise<Mana
   if (!known) { known = new Map(); connections.set(ctx, known); }
   const prior = known.get(key);
   if (prior && (await prior).key === signer.key) return prior;
-  const made = Promise.resolve(makeConnection(ctx, config, signer));
+  const made = Promise.resolve(makeConnection(ctx, config.service, config.repository?.membership, signer));
   known.set(key, made);
   return made;
 }
-function makeConnection(ctx: Context, config: Config, signer: Signer): Connection {
-  const base = httpTransport(config.service, ctx.fetch ? { fetch: ctx.fetch } : {});
-  const signed = signedReads(base, signer, readSigning(ctx));
-  const membership = config.repository?.membership, readers = new Set<string>();
+function makeConnection(ctx: Context, service: string, membership: ScopeRef | undefined, signer: Signer, required = false, current?: () => boolean): Connection {
+  if (current) {
+    const send = ctx.fetch ?? (globalThis as { fetch?: Context["fetch"] }).fetch;
+    if (send) ctx = { ...ctx, fetch: async (url, init) => { checkReadOwner(current); return send(url, init); } };
+  }
+  const owned = async <T>(work: () => Promise<T>): Promise<T> => {
+    checkReadOwner(current);
+    try { const result = await work(); checkReadOwner(current); return result; }
+    catch (error) { checkReadOwner(current); throw error; }
+  };
+  const base = httpTransport(service, ctx.fetch ? { fetch: ctx.fetch } : {});
+  const signed = required ? base : signedReads(base, signer, readSigning(ctx));
+  const readers = new Set<string>();
   const used = new WeakSet<CachedReadSession>();
   let selected: CachedReadSession | null | undefined;
   let hadSession = false;
   const now = () => ctx.now?.() ?? Date.now();
   const load = async (renewal = false): Promise<CachedReadSession | null> => {
+    checkReadOwner(current);
     if (!membership) return null;
     if (selected === null && !renewal) return null;
     if (selected && timeMs(selected.session.claims.ends)! - now() > 30_000) return selected;
     if (renewal) hadSession = true;
-    const pending = cachedReadSession(ctx.store, { service: config.service, membership, key: signer.key }, now, async cachedRenewal => {
+    const pending = cachedReadSession(ctx.store, { service, membership, key: signer.key }, now, async cachedRenewal => {
       if (cachedRenewal) hadSession = true;
-      return issueReadSession(ctx, config.service, membership, signer, hadSession);
+      return issueReadSession(ctx, service, membership, signer, hadSession, current);
     });
     try {
       selected = await pending;
+      checkReadOwner(current);
       if (selected) { hadSession = true; readers.add(selected.session.reader()); }
       return selected;
     } catch (error) {
+      checkReadOwner(current);
       if (error instanceof SessionRefused) {
         if (error.renewal) hadSession = true;
-        if (hadSession || error.reason === "rate-limited") sessionRefused(error);
+        if (required || hadSession || error.reason === "rate-limited") sessionRefused(error);
         // Established initial selection: no session can mean Signed reads.
         // A failed renewal never enters this bootstrap path.
         selected = null; return null;
@@ -166,28 +187,29 @@ function makeConnection(ctx: Context, config: Config, signer: Signer): Connectio
     }
   };
   const read = async <T extends { ok: boolean; reason?: string }>(perform: (reader: string | null) => Promise<T>): Promise<T> => {
-    const held = await load();
-    const result = await perform(held?.session.reader() ?? null);
+    const held = await owned(() => load());
+    if (required && !held) stopCommand(failed("No required read session was issued."));
+    const result = await owned(() => perform(held?.session.reader() ?? null));
     if (result.ok) { if (held) used.add(held); return result; }
     if (result.reason !== "forbidden" || !held || !(held.reused || used.has(held)) || !membership) return result;
     // All issued roles can read their own membership summary. A valid token
     // denied another target must not mint a new session for every denial.
-    const probe = await base.summary(membership.scope, held.session.reader());
+    const probe = await owned(() => base.summary(membership.scope, held.session.reader()));
     if (probe.ok) return result;
     if (probe.reason !== "forbidden") stopCommand(failed(`Read session check refused: ${probe.reason}.`));
-    try { await held.discard(); } catch (error) {
+    try { await owned(() => held.discard()); } catch (error) {
       if (error instanceof ReadSessionCacheError) stopCommand(failed(error.message));
       throw error;
     }
     if (selected === held) selected = undefined;
-    const next = await load(true) ?? stopCommand(failed("No renewed read session was issued."));
+    const next = await owned(() => load(true)) ?? stopCommand(failed("No renewed read session was issued."));
     // Exactly one retry; even another forbidden result is returned as-is.
-    const retried = await perform(next.session.reader());
+    const retried = await owned(() => perform(next.session.reader()));
     if (retried.ok) used.add(next);
     return retried;
   };
   const dispatch = <T extends { ok: boolean; reason?: string }>(given: unknown, perform: (reader: unknown) => Promise<T>): Promise<T> =>
-    given === undefined || typeof given === "string" && readers.has(given) ? read(perform) : perform(given);
+    required || given === undefined || typeof given === "string" && readers.has(given) ? read(perform) : perform(given);
   const transport: Transport & OperationalApi = {
     create: (...args) => base.create(...args), submit: (...args) => base.submit(...args),
     prepare: (...args) => base.prepare(...args), settle: (...args) => base.settle(...args),
@@ -213,7 +235,7 @@ function makeConnection(ctx: Context, config: Config, signer: Signer): Connectio
     // A later adapter call may follow seat/first-key acceptance in this same
     // Context. Reselect initial no-session authority here, never per read page.
     if (selected === null && !hadSession) selected = undefined;
-    return (await load())?.session ?? null;
+    return (await owned(() => load()))?.session ?? null;
   }, read };
 }
 
@@ -232,8 +254,12 @@ export async function readerOf(ctx: Context, config: Config): Promise<string | n
  * root of the scope's cause chain, within the window of an intent.
  */
 export async function handleOf(ctx: Context, config: Config, scope: ScopeId, reader?: string | null): Promise<ScopeHandle> {
+  if (reader === undefined) {
+    const managed = await managedReadsOf(ctx, config);
+    return new ScopeHandle(managed.transport, scope, (await managed.session())?.reader() ?? null);
+  }
   const transport = await readTransportOf(ctx, config, reader);
-  return new ScopeHandle(transport, scope, reader === undefined ? await readerOf(ctx, config) : reader);
+  return new ScopeHandle(transport, scope, reader);
 }
 
 export async function summaryOf(handle: ScopeHandle): Promise<Summary> {
@@ -274,7 +300,7 @@ export async function waitFor<T>(ctx: Context, waiting: () => readonly ScopeId[]
     if (got !== null) return got;
     await (ctx.pause ?? (() => new Promise<void>((resolve) => { setTimeout(resolve, 1000); })))(waiting());
   }
-  return stopCommand(failed(`Gave up waiting for ${what} after ${tries} reads. What was asked may still take effect; ${then}`));
+  throw new Stop(failed(`Gave up waiting for ${what} after ${tries} reads. What was asked may still take effect; ${then}`), "wait-exhausted");
 }
 
 /** The scope's summary once it is `active`: created and confirmed. */

@@ -1,6 +1,6 @@
 import { customRequiredChangeData } from "./support/definition-corpus-data.ts";
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type DeclaredDefinition, type OutboxId, type Entry, type FactRef, type Item, type Receipt, type ScopeRef, type Seed, type SignedIntent, type Summary } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type DeclaredDefinition, type OutboxId, type Entry, type FactRef, type Item, type Receipt, type ScopeRef, type Seed, type SignedIntent, type SignedSessionRequest, type Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, entryHash, factRefOf, intentDigest, newIncarnation, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { changeDemo3 } from "../src/index.ts";
 import { validateDefinition } from "@generalbusiness/dap-derive";
@@ -13,7 +13,7 @@ import { command, memoryStore, type Context } from "../../../../packages/cli/src
 // its definition/effects; no room, provider, scheduler or replay runs here.
 // Native accepted and post-admission lost-answer counterparts stay in
 // lanes/test/manifest-tree.scope.test.ts.
-type Category = "link-summary" | "link-request" | "link-unavailable" | "source-unavailable" | "source-refused" | "source-mismatch" | "rules-read" | "custom-required" | "local-pause" | "merge-final-read" | "merge-read-error";
+type Category = "link-summary" | "link-request" | "link-unavailable" | "source-unavailable" | "source-refused" | "source-mismatch" | "rules-read" | "custom-required" | "local-pause" | "merge-final-read" | "merge-read-error" | "merge-session-limit";
 const TIME = "2026-10-09T12:00:00Z";
 const PRIVATE = "TEST private transport payload";
 const CONTENT = "# TEST private source content\n";
@@ -42,11 +42,19 @@ async function fixture(category: Category, declared: DeclaredDefinition = change
   const entries = new Map<string, Entry[]>();
   const accepted: { kind: string; path?: string; fact: FactRef; signed: SignedIntent }[] = [];
   const posted: SignedIntent[] = [];
-  let lane: ScopeRef | null = null, sources = 0, mergeSummaryReads = 0;
+  let lane: ScopeRef | null = null, sources = 0, mergeSummaryReads = 0, sessionRequests = 0;
   const read = (value: unknown) => Response.json({ ok: true, at: { seq: 0, hash: textDigest("scripted head") }, complete: true, value });
   const fetch: NonNullable<Context["fetch"]> = async (url, init) => {
     const [, , , scope, what, arg] = new URL(url).pathname.split("/");
-    if (what === "sessions") return Response.json({ ok: false, reason: "sessions-unavailable" });
+    if (what === "sessions") {
+      if (category !== "merge-session-limit") return Response.json({ ok: false, reason: "sessions-unavailable" });
+      sessionRequests++;
+      if (accepted.some(row => row.kind === "merge")) return Response.json({ ok: false, reason: "rate-limited" }, { status: 429, headers: { "retry-after": "75" } });
+      const asked = JSON.parse(init!.body!) as SignedSessionRequest;
+      return Response.json({ ok: true, token: "TEST-proposal-session", session: { v: 1, deployment: "SCRIPTED", membership: asked.request.to, member: "@rita", key: asked.request.actor, reads: ["summary", "entry", "history", "log", "retained"], ends: asked.request.notAfter } });
+    }
+    if (category === "merge-session-limit" && accepted.some(row => row.kind === "merge") && init?.headers?.["authorization"]?.startsWith("Session ")
+      && (what === "entries" || scope === M.scope)) return Response.json({ ok: false, reason: "forbidden" }, { status: 403 });
     if (what === "retained") return read({ kind: "definition", digest: pin, bytes: declaration });
     if (what === "entries") {
       const entry = entries.get(scope!)?.find(e => e.seq === Number(arg));
@@ -103,7 +111,7 @@ async function fixture(category: Category, declared: DeclaredDefinition = change
     return Response.json({ answer: "accepted", receipt });
   };
   const context: Context = { store, fetch, now: () => Date.parse(TIME), tries: 1, pause: async () => { if (category === "local-pause") throw new Error(PRIVATE); }, read: async () => utf8(CONTENT), git: { run: async () => 0, files: async () => ({ ok: true, tip: BASE, files: [{ path: "one.md", bytes: utf8(CONTENT) }, { path: "docs/two.md", bytes: utf8("# Second source\n") }] }) } };
-  return { context, accepted, posted, mergeSummaryReads: () => mergeSummaryReads };
+  return { context, accepted, posted, mergeSummaryReads: () => mergeSummaryReads, sessionRequests: () => sessionRequests };
 }
 
 // Invariant: after a known frozen proposal, read/pre-send/unknown-link categories
@@ -145,13 +153,13 @@ test("a local callback failure retains known opening/rules locators without expo
   expect(result.lines.join("\n")).not.toContain(PRIVATE);
 });
 
-test.each(["merge-final-read", "merge-read-error"] as const)("an accepted merge keeps the protected reservation observation after %s (HTTP STAND-IN)", async category => {
+test.each(["merge-final-read", "merge-read-error", "merge-session-limit"] as const)("an accepted merge keeps the protected reservation observation after %s (HTTP STAND-IN)", async category => {
   const f = await fixture(category);
   const result = await command(f.context, ["propose", "partial"]);
   const merged = f.accepted.find(a => a.kind === "merge");
   expect(merged, result.lines.join("\n")).toBeDefined();
   expect(f.posted.filter(s => s.intent.kind === "merge")).toHaveLength(1);
-  expect(f.mergeSummaryReads()).toBe(1);
+  expect(f.mergeSummaryReads()).toBe(category === "merge-session-limit" ? 0 : 1);
   if (category === "merge-final-read") {
     expect(result.code).toBe(0);
     expect(result.lines).toContain(`Reserved: merge ${merged!.fact.at.scope}:${merged!.fact.seq}, tree ${"b".repeat(40)}. Required checks must pass before publication.`);
@@ -159,6 +167,13 @@ test.each(["merge-final-read", "merge-read-error"] as const)("an accepted merge 
     expect(result.code).toBe(1);
     expect(result.lines).toContain(`Accepted merge: ${merged!.fact.at.scope}:${merged!.fact.seq}, version ${f.accepted.find(a => a.kind === "propose-manifest")!.fact.seq}, fact ${canonicalize(merged!.fact)}.`);
     expect(result.lines.at(-1)).toContain("do not resubmit this merge");
+    if (category === "merge-session-limit") {
+      expect(result.lines.join("\n")).toContain("rate-limited");
+      expect(result.lines.join("\n")).toContain("75 seconds");
+      expect(result.lines.join("\n")).not.toContain("wait-exhausted");
+      expect(result.lines.join("\n")).not.toContain("TEST-proposal-session");
+      expect(f.sessionRequests()).toBe(2);
+    }
   }
   expect(result.lines.join("\n")).not.toContain(PRIVATE);
 });

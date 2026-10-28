@@ -1,7 +1,7 @@
 import { describe, expectedOf, heldActs, LINK, linkOf, valueOf, type ActShape, type DefinitionShape, type Link, type Standing } from "./browser-helpers.ts";
 export { describe, expectedOf, heldActs, LINK, linkOf, valueOf, type ActShape, type DefinitionShape, type Link, type Standing } from "./browser-helpers.ts";
 export { claim, checkClaim } from "./claim.ts";
-import { Stop, validStep, managedReadsOf, sessionOf, accepted, active, answered, configOf, createdBy, done, failed, fresh, handleOf, readSigning, readTransportOf, readerOf, run, signerOf, signing, stopCommand, summaryOf, transportOf, usage, waitFor } from "./command-support.ts";
+import { Stop, validStep, managedReadsOf, requiredReadsOf, sessionOf, accepted, active, answered, configOf, createdBy, done, failed, fresh, handleOf, readSigning, readTransportOf, readerOf, run, signerOf, signing, stopCommand, summaryOf, transportOf, usage, waitFor } from "./command-support.ts";
 import { ARCHIVE_REPLAY_CODE, INVITATION_KEY_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
 import { invitationIssueFields, invitationRedemptionFields, isInvitationMembership } from "@generalbusiness/dap-client";
 import { applicationList } from "./application-list.ts";
@@ -1019,12 +1019,22 @@ export function clone(ctx: Context, directory: string | undefined, options: { ho
     const seq = proof.receipt.fact.seq;
     // The outcome of its `mint-read`, which the host's answer writes: read with the caller's session, which the destination now accepts.
     const operation = proof.operation;
-    const reader = await readerOf(ctx, config) ?? stopCommand(failed(`Signed read-token at ${scope}:${seq}, but no read session is given here, and only a session reads the token.`));
+    const observe = async <T>(work: () => Promise<T>): Promise<T> => {
+      try { return await work(); } catch (error) {
+        if (error instanceof Stop) return stopCommand(failed(`Accepted read-token: ${scope}:${seq} (${operation}).`, ...error.outcome.lines,
+          `Inspect dap show ${scope}:${seq} and dap log destination before another read-token request. No credential was retrieved and nothing was cloned; no automatic mint retry was made.`));
+        throw error;
+      }
+    };
     const send = ctx.fetch ?? (globalThis as { fetch?: Fetch }).fetch!;
     let D: ScopeHandle | null = null;
     let openingChecked = false;
-    const waited = await waitOutcome(operation, seq + 1, async (next, signal) => {
-      D ??= await handleOf({ ...ctx, fetch: outcomeFetch(send, signal) }, config, scope, reader);
+    const waited = await observe(() => waitOutcome(operation, seq + 1, async (next, signal) => {
+      if (!D) {
+        const reading = { ...ctx, fetch: outcomeFetch(send, signal) };
+        const reads = requiredReadsOf(reading, config.service, config.repository!.membership, await signerOf(reading, config), () => !signal.aborted);
+        D = new ScopeHandle(reads.transport, scope);
+      }
       if (!openingChecked) {
         const opening = await D.entry(seq);
         if (!opening.ok || !readTokenOpening(opening.value, proof)) return stopCommand(failed(`Cannot confirm the exact accepted read-token act and its mint-read opening at ${scope}:${seq}; inspect dap show ${scope}:${seq} and dap log destination. No credential was retrieved and nothing was cloned.`));
@@ -1033,7 +1043,7 @@ export function clone(ctx: Context, directory: string | undefined, options: { ho
       const got = await D.entry(next);
       if (got.ok && (!readTokenEntry(got.value, proof.to, next) || (got.value.entry.input.type === "outcome" && got.value.entry.input.operation === operation && !readTokenOutcome(got.value, next, proof)))) return stopCommand(failed(`The entry at ${scope}:${next} does not match this destination's recorded mint-read (${operation}); inspect dap log destination. No credential was retrieved and nothing was cloned.`));
       return got;
-    }, (signal) => ctx.pause ? ctx.pause([scope]) : pauseOutcome(signal), ctx.tries ?? 120, ctx.cloneWait, (error) => error instanceof Stop);
+    }, (signal) => ctx.pause ? ctx.pause([scope]) : pauseOutcome(signal), ctx.tries ?? 120, ctx.cloneWait, (error) => error instanceof Stop));
     if (!waited.ok) return failed(...outcomeWaitLines(scope, seq, operation, waited));
     const outcome = waited.outcome;
     const next = waited.next;
@@ -1041,7 +1051,15 @@ export function clone(ctx: Context, directory: string | undefined, options: { ho
     if (outcome.result === "refused") return failed(`The host refused the read-token mint at ${scope}:${seq} (outcome ${scope}:${next - 1}). No credential was retrieved and nothing was cloned.`);
     const handle = (outcome.evidence.body as { token?: unknown }).token;
     if (typeof handle !== "string") return failed(`The outcome at ${scope}:${next - 1} names no token.`);
-    // The token, once. The route answers it to this session's key only, and then no more.
+    // The observation owner ends with the wait. Check a fresh owner's session
+    // through a repeatable membership read before the one-time credential GET.
+    const reader = await observe(async () => {
+      const credentialReads = requiredReadsOf(ctx, config.service, config.repository!.membership, await signerOf(ctx, config));
+      const membership = await new ScopeHandle(credentialReads.transport, config.repository!.membership.scope).summary();
+      if (!membership.ok) return stopCommand(failed(`Cannot check the read session before retrieving the token: ${membership.reason}.`));
+      return (await credentialReads.session()).reader();
+    });
+    // Never retry this GET: even a lost reply may have consumed the token.
     const answer = await readCredential(config.service, scope, reader, handle, ctx.fetch ? { fetch: ctx.fetch } : {});
     if (!answer.ok) return failed(`Cannot read the read token ${handle}: ${answer.reason}.`);
     const value = answer.value;
@@ -1449,8 +1467,12 @@ async function merging(ctx: Context, config: Config, lane: ScopeId, reader: stri
     ended = observed;
   } catch (error) {
     // Never print arbitrary exception messages: transports/sources may carry
-    // private data. Only known read codes and phase/error kinds are shown.
-    if (error instanceof Stop) return unknown("wait-exhausted");
+    // private data. Show only trusted command outcomes and known read codes.
+    if (error instanceof Stop) {
+      if (error.kind === "wait-exhausted") return unknown("wait-exhausted");
+      const stopped = unknown("read-stopped");
+      return { ...stopped, lines: [stopped.lines[0]!, ...error.outcome.lines, stopped.lines[1]!] };
+    }
     if (error instanceof TransportError) return unknown("transport-error");
     if (error instanceof SourceError) return unknown(typeof error.reason === "string" && Object.hasOwn(READ_REFUSALS, error.reason) ? `source-error:${error.reason}` : "source-error");
     return unknown("observation-error");

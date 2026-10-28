@@ -22,6 +22,7 @@ test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platfor
   const receipts = new Map<string, Receipt>(), sent: SignedIntent[] = [];
   let wrongDirectory = false, wrongDirectoryPin = false, sessionRequests = 0, crossReads = 0;
   let lose: "add-member" | "enrol" | null = "add-member", loseSettle = false;
+  let tokenVersion = 29, deniedReads = 0, replacementEntryReads = 0, rateSessions = false, rateRequests = 0;
   const liveItems = (): Item[] => Object.entries(m.definition.declared.items).flatMap(([type, item]) => m.state.page(type, Object.keys(item.states).filter(s => !item.states[s]!.final), null, 100).items).map((item): Item => {
     if (item.type === "roster") return { ...item, refs: { ...item.refs, directory } }; // SCRIPTED directory creator projection.
     return item; // M2 never writes member.refs.inbox (EM9).
@@ -30,12 +31,13 @@ test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platfor
   const fetch: Fetch = async (url, init) => {
     const path = new URL(url).pathname;
     if (path.endsWith("/sessions")) {
+      if (rateSessions) { rateRequests++; return Response.json({ ok: false, reason: "rate-limited" }, { status: 429, headers: { "retry-after": "17" } }); }
       const asked = JSON.parse(init!.body!).request;
       const activeKey = liveItems().find(item => item.type === "key" && item.state === "active" && item.values["id"] === asked.actor);
       const member = activeKey && liveItems().find(item => item.type === "member" && item.id === activeKey.refs["member"]);
       if (!member) return reply({ ok: false, reason: "unauthorized" });
       sessionRequests++;
-      return reply({ ok: true, token: b64url(new Uint8Array(32).fill(29)), session: { v: 1, deployment: "SCRIPTED session", membership: m.at, member: member.values["handle"], key: asked.actor, reads: ["summary", "entry"], ends: asked.notAfter } });
+      return reply({ ok: true, token: b64url(new Uint8Array(32).fill(tokenVersion)), session: { v: 1, deployment: "SCRIPTED session", membership: m.at, member: member.values["handle"], key: asked.actor, reads: ["summary", "entry"], ends: asked.notAfter } });
     }
     if (path.endsWith("/acts")) {
       const signed = (JSON.parse(init!.body!) as { signed: SignedIntent }).signed;
@@ -58,6 +60,13 @@ test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platfor
       const signed = (JSON.parse(init!.body!) as { signed: SignedIntent }).signed, receipt = receipts.get(intentDigest(signed.intent));
       return reply(receipt ? { ok: true, at: m.head, value: receipt, complete: true } : { ok: false, reason: "not-found" });
     }
+    // SCRIPTED token rotation, including the own-membership validity probe.
+    // Mutation routes above remain single dispatch and never enter this retry.
+    const authorization = init?.headers?.["authorization"];
+    if (authorization === `Session ${b64url(new Uint8Array(32).fill(29))}` && tokenVersion !== 29) {
+      deniedReads++; return Response.json({ ok: false, reason: "forbidden" }, { status: 403 });
+    }
+    if (tokenVersion !== 29 && path.includes("/entries/") && authorization === `Session ${b64url(new Uint8Array(32).fill(tokenVersion))}`) replacementEntryReads++;
     const agent = liveItems().find(item => item.type === "member" && item.values["kind"] === "agent");
     const source = agent && m.entries[agent.id]!.entry, birth = source?.sends.find(send => "creator" in send.to && send.to.kind === "inbox");
     if (birth && "creator" in birth.to && url.includes(scopeIdOf(birth.to))) {
@@ -140,6 +149,18 @@ test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platfor
   // Observe the actual submit boundary, not just an unchanged model head.
   const completedConfig = (await issuer.config())!, completedPointer = completedConfig.invitationIssue!;
   const completedBytes = (await issuer.private(completedPointer.request))!;
+  if (named === MEMBERSHIP) {
+    const beforeRotation = { sessions: sessionRequests, sent: sent.length, entries: replacementEntryReads, denied: deniedReads };
+    tokenVersion = 30;
+    const checked = await issueInvitation(ctx, input, { mode: "check", operation, privateRequests: [...requests] });
+    expect(checked.state).toBe("verified");
+    expect([sessionRequests - beforeRotation.sessions, deniedReads - beforeRotation.denied]).toEqual([1, 2]);
+    expect(replacementEntryReads).toBeGreaterThan(beforeRotation.entries);
+    expect(sent.length).toBe(beforeRotation.sent);
+    expect(canonicalize(sent[0])).toBe(originalBeforeCheck);
+    expect(await issuer.config()).toEqual(completedConfig);
+    expect(await issuer.private(completedPointer.request)).toEqual(completedBytes);
+  }
   const guardedCheck = async (raw: string) => {
     let submits = 0;
     const altered: Store = { ...issuer,
@@ -189,6 +210,20 @@ test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platfor
   const before = sent.length; loseSettle = true;
   expect((await enrolAgentKey(receiving, link, { mode: "check" })).code).toBe(1);
   expect(sent.length).toBe(before); loseSettle = false;
+  if (named === MEMBERSHIP) {
+    const configBeforeRate = canonicalize(await receiver.config()), custodyBeforeRate = (await receiver.private(kept.join!.request))!;
+    const sentBeforeRate = sent.length, requestsBeforeRate = rateRequests;
+    rateSessions = true;
+    const limited = await enrolAgentKey(receiving, link, { mode: "check" });
+    rateSessions = false;
+    expect(limited.code).toBe(1);
+    expect(limited.lines.join("\n")).toContain("rate-limited");
+    expect(limited.lines.join("\n")).toContain("17 seconds");
+    expect(limited.lines.join("\n")).not.toContain("unavailable or unverified");
+    expect([sent.length, rateRequests - requestsBeforeRate]).toEqual([sentBeforeRate, 1]);
+    expect(canonicalize(await receiver.config())).toBe(configBeforeRate);
+    expect(await receiver.private(kept.join!.request)).toEqual(custodyBeforeRate);
+  }
   wrongDirectory = true;
   expect((await enrolAgentKey(receiving, link)).code).toBe(1);
   expect((await receiver.config())!.repository).toBeUndefined();

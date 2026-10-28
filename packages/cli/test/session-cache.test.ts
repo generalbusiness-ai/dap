@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import type { ScopeRef, SignedSessionRequest } from "@generalbusiness/dap-contract";
 import { base32, canonicalize, keyIdOfSecret, newIncarnation, signIntent, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { secretSigner, type Fetch } from "@generalbusiness/dap-client";
-import { handleOf, managedReadsOf, readerOf, requiredSessionOf, run, sessionOf, Stop } from "../src/command-support.ts";
+import { handleOf, managedReadsOf, readerOf, requiredReadsOf, requiredSessionOf, run, sessionOf, Stop } from "../src/command-support.ts";
 import { memoryStore, type Config } from "../src/store.ts";
 
 const START = Date.parse("2099-01-01T00:00:00Z"), SECRET = new Uint8Array(32).fill(17);
@@ -183,4 +183,56 @@ test("required custody sessions reuse an arbitrary supplied signer across fresh 
   f.state.refused = { reason: "unauthorized" };
   await expect(requiredSessionOf(f.context(), f.config.service, M, signer)).rejects.toBeInstanceOf(Stop);
   expect(JSON.stringify([sessions, await f.store.config(), limited])).not.toContain("TEST-private-cache");
+});
+
+test("temporary required reads renew a rotated cached credential once without Signed fallback or mutation retries and preserve renewal rate limits", async () => {
+  const f = await fixture(), signer = secretSigner(new Uint8Array(32).fill(24));
+  f.store.signer = async () => { throw new Error("Config custody must not be consulted"); };
+  f.store.secret = async () => { throw new Error("No seed may be exported"); };
+  const first = requiredReadsOf(f.context(), f.config.service, M, signer);
+  const signed = signIntent({ v: 1, to: M, actor: signer.key, kind: "TEST", on: null, expected: {}, fields: {}, idempotencyKey: "TEST-required-once", notAfter: timeOf(START + 60_000) }, new Uint8Array(32).fill(24));
+  expect((await first.transport.submit(M.scope, signed, [])).answer).toBe("refused");
+  expect([f.state.mutations, f.state.issued]).toEqual([1, 0]);
+  const original = await first.session();
+  f.state.invalid.add(original.reader());
+  let currentFetches = 0;
+  const ctx = { ...f.context(), fetch: (async (url, init) => { currentFetches++; return f.fetch(url, init); }) as Fetch };
+  const flow = requiredReadsOf(ctx, f.config.service, M, signer);
+  expect((await flow.transport.summary(TARGET.scope, null)).ok).toBe(true);
+  expect([f.state.issued, f.state.probes, f.state.reads, currentFetches]).toEqual([2, 1, 2, 4]);
+  f.state.denyAll = true;
+  expect(await flow.transport.summary(TARGET.scope, original.reader())).toEqual({ ok: false, reason: "forbidden" });
+  expect([f.state.issued, f.state.probes, f.state.reads]).toEqual([3, 2, 4]);
+  f.state.refused = { reason: "rate-limited", retry: "17" };
+  const limited = await run(async () => {
+    await requiredReadsOf(ctx, f.config.service, M, signer).transport.summary(TARGET.scope, undefined);
+    return { code: 0, lines: [] };
+  });
+  expect(limited.code).toBe(1);
+  expect(limited.lines.join(" ")).toContain("rate-limited"); expect(limited.lines.join(" ")).toContain("17 seconds");
+  expect([f.state.issued, f.state.probes, f.state.reads, f.state.mutations]).toEqual([4, 3, 5, 1]);
+  expect(f.state.headerKinds).not.toContain("signed");
+  expect(JSON.stringify([flow, limited])).not.toContain("TEST-private-cache");
+});
+
+test("an ended temporary read owner discards late session issuance before cache publication or a target read", async () => {
+  const f = await fixture(), signer = secretSigner(new Uint8Array(32).fill(25));
+  let current = true, entered!: () => void, release!: () => void;
+  const queued = new Promise<void>(resolve => { entered = resolve; });
+  const completion = new Promise<void>(resolve => { release = resolve; });
+  // This supplied transport deliberately finishes independently of abort.
+  const fetch: Fetch = async (url, init) => {
+    const response = await f.fetch(url, init);
+    if (url.endsWith("/sessions")) { entered(); await completion; }
+    return response;
+  };
+  const flow = requiredReadsOf({ ...f.context(), fetch }, f.config.service, M, signer, () => current);
+  const outcome = run(async () => { await flow.transport.summary(TARGET.scope, undefined); return { code: 0, lines: [] }; });
+  await queued;
+  current = false; release();
+  expect(await outcome).toEqual({ code: 1, lines: ["The read session owner ended; its result was not used."] });
+  expect([f.state.issued, f.state.reads, f.state.probes]).toEqual([1, 0, 0]);
+  expect(await f.store.sessionCache!.read()).toBeNull();
+  await expect(flow.session()).rejects.toBeInstanceOf(Stop);
+  expect(f.state.issued).toBe(1);
 });
