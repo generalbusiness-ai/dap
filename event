@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e91516e8a1a1d364c0cabc7b6e387ef83aac5db6","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/support/container-runner.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:efcd17c189ab83bf3e232cc6f01bd7a20ca7e619","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/vitest.scope.config.ts."}
