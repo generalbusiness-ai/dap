@@ -171,42 +171,53 @@ test("absent, malformed or contradictory configuration disables effects, and abs
       expect(gitHubOutside(f.given, state.storage.sql, settings, transport)).toBe(NO_OUTSIDE);
     }
     expect(calls).toBe(0);
-    // The demo opt-in binds the real native demo pin AND this runtime identity.
-    // The original register remains bound when demo configuration is unusable.
+    // Retired demo settings grant no additional GitHub authority roots.
+    // The ordinary configured register stays bound independently of them.
     const demo=registerFixture("TEST demo adapter",DEMO_REGISTER), demoRequest=demo.claim();
     const deployment="TEST authorized demo deployment";
     const demoConfig={v:1,origin:"https://artroom-rehearsal.inguz.workers.dev",deployment,register:demo.register.at,definition:DEMO_REGISTER};
     const opted={...env,DEPLOYMENT:deployment,DEMO_START_CONFIG:canonicalize(demoConfig)};
-    const enabled=gitHubOutside(demo.given,state.storage.sql,opted,transport);
-    expect(enabled.accepts(DEMO_REGISTER,"create-repository")).toBe(true);
-    const unrelated=gitHubOutside(demo.given,state.storage.sql,{...opted,DEPLOYMENT:"TEST unrelated deployment"},transport);
+    const retiredOutside=gitHubOutside(demo.given,state.storage.sql,opted,transport);
+    expect(retiredOutside.accepts(DEMO_REGISTER,"create-repository")).toBe(false);
+    expect(await retiredOutside.send(demoRequest)).toBeNull();
+    const unrelatedSettings = { ...opted, DEPLOYMENT: "TEST unrelated deployment" };
+    const unrelated=gitHubOutside(demo.given,state.storage.sql,unrelatedSettings,transport);
     expect(unrelated.accepts(DEMO_REGISTER,"create-repository")).toBe(false);
     expect(await unrelated.send(demoRequest)).toBeNull();
-    expect(gitHubOutside(f.given,state.storage.sql,{...opted,DEPLOYMENT:"TEST unrelated deployment"},transport).accepts(REGISTER,"create-repository")).toBe(true);
+    expect(gitHubOutside(f.given,state.storage.sql,unrelatedSettings,transport).accepts(REGISTER,"create-repository")).toBe(true);
     const changedInc={...demoConfig,register:{...demo.register.at,inc:newIncarnation(new Uint8Array(16).fill(11))}};
-    expect(gitHubOutside(demo.given,state.storage.sql,{...opted,DEMO_START_CONFIG:canonicalize(changedInc)},transport).accepts(DEMO_REGISTER,"create-repository")).toBe(false);
+    const changedIncSettings = { ...opted, DEMO_START_CONFIG: canonicalize(changedInc) };
+    expect(gitHubOutside(demo.given,state.storage.sql,changedIncSettings,transport).accepts(DEMO_REGISTER,"create-repository")).toBe(false);
     const fresh=registerFixture("TEST fresh WebDemo adapter",WEB_DEMO_REGISTER);
+    const freshRequest = fresh.claim();
     const v2={...demoConfig,v:2,register:fresh.register.at,definition:WEB_DEMO_REGISTER,legacy:{register:demo.register.at,definition:DEMO_REGISTER}};
     const twoRoots={...env,DEPLOYMENT:deployment,DEMO_START_CONFIG:canonicalize(v2)};
-    expect(gitHubOutside(fresh.given,state.storage.sql,twoRoots,transport).accepts(WEB_DEMO_REGISTER,"create-repository")).toBe(true);
-    expect(gitHubOutside(demo.given,state.storage.sql,twoRoots,transport).accepts(DEMO_REGISTER,"create-repository")).toBe(true);
+    const refusedFresh = gitHubOutside(fresh.given,state.storage.sql,twoRoots,transport);
+    expect(refusedFresh.accepts(WEB_DEMO_REGISTER,"create-repository")).toBe(false);
+    expect(await refusedFresh.send(freshRequest)).toBeNull();
+    const refusedLegacy = gitHubOutside(demo.given,state.storage.sql,twoRoots,transport);
+    expect(refusedLegacy.accepts(DEMO_REGISTER,"create-repository")).toBe(false);
+    expect(await refusedLegacy.send(demoRequest)).toBeNull();
     expect(gitHubOutside(f.given,state.storage.sql,twoRoots,transport).accepts(REGISTER,"create-repository")).toBe(true);
     const unlisted=registerFixture("TEST unlisted WebDemo adapter",WEB_DEMO_REGISTER);
     expect(gitHubOutside(unlisted.given,state.storage.sql,twoRoots,transport).accepts(WEB_DEMO_REGISTER,"create-repository")).toBe(false);
     expect(gitHubOutside(fresh.given,state.storage.sql,twoRoots,transport).accepts(DEMO_REGISTER,"create-repository")).toBe(false);
     const wrongFresh={...v2,register:{...fresh.register.at,inc:newIncarnation(new Uint8Array(16).fill(12))}};
-    expect(gitHubOutside(fresh.given,state.storage.sql,{...twoRoots,DEMO_START_CONFIG:canonicalize(wrongFresh)},transport).accepts(WEB_DEMO_REGISTER,"create-repository")).toBe(false);
+    const wrongFreshSettings = { ...twoRoots, DEMO_START_CONFIG: canonicalize(wrongFresh) };
+    expect(gitHubOutside(fresh.given,state.storage.sql,wrongFreshSettings,transport).accepts(WEB_DEMO_REGISTER,"create-repository")).toBe(false);
     const wrongLegacy={...v2,legacy:{...v2.legacy,register:{...demo.register.at,inc:newIncarnation(new Uint8Array(16).fill(13))}}};
-    expect(gitHubOutside(demo.given,state.storage.sql,{...twoRoots,DEMO_START_CONFIG:canonicalize(wrongLegacy)},transport).accepts(DEMO_REGISTER,"create-repository")).toBe(false);
-    // The deployed same-object router must reread demo settings as well as
-    // GITHUB_*; no removed root may retain the earlier provider authority.
-    const live: GitHubBindings = { ...twoRoots };
+    const wrongLegacySettings = { ...twoRoots, DEMO_START_CONFIG: canonicalize(wrongLegacy) };
+    expect(gitHubOutside(demo.given,state.storage.sql,wrongLegacySettings,transport).accepts(DEMO_REGISTER,"create-repository")).toBe(false);
+    // The deployed same-object router must never restore retired roots when
+    // old demo settings change; its ordinary configured root remains usable.
+    const live: GitHubBindings & { DEPLOYMENT?: string; DEMO_START_CONFIG?: string } = { ...twoRoots };
     const cachedFresh = outsideOf(fresh.given, state.storage.sql, live, transport);
     const cachedLegacy = outsideOf(demo.given, state.storage.sql, live, transport);
     const cachedOriginal = outsideOf(f.given, state.storage.sql, live, transport);
-    const freshRequest = fresh.claim();
-    expect(cachedFresh.accepts(WEB_DEMO_REGISTER, "create-repository")).toBe(true);
-    expect(cachedLegacy.accepts(DEMO_REGISTER, "create-repository")).toBe(true);
+    expect(cachedFresh.accepts(WEB_DEMO_REGISTER, "create-repository")).toBe(false);
+    expect(cachedLegacy.accepts(DEMO_REGISTER, "create-repository")).toBe(false);
+    expect(await cachedFresh.send(freshRequest)).toBeNull();
+    expect(await cachedLegacy.send(demoRequest)).toBeNull();
     live.DEPLOYMENT = "TEST unrelated deployment";
     expect(cachedFresh.accepts(WEB_DEMO_REGISTER, "create-repository")).toBe(false);
     expect(await cachedFresh.send(freshRequest)).toBeNull();
@@ -214,18 +225,18 @@ test("absent, malformed or contradictory configuration disables effects, and abs
     expect(await cachedLegacy.send(demoRequest)).toBeNull();
     expect(cachedOriginal.accepts(REGISTER, "create-repository")).toBe(true);
     live.DEPLOYMENT = deployment;
-    expect(cachedFresh.accepts(WEB_DEMO_REGISTER, "create-repository")).toBe(true);
+    expect(cachedFresh.accepts(WEB_DEMO_REGISTER, "create-repository")).toBe(false);
     delete live.DEMO_START_CONFIG;
     expect(cachedFresh.accepts(WEB_DEMO_REGISTER, "create-repository")).toBe(false);
     expect(await cachedFresh.send(freshRequest)).toBeNull();
     expect(cachedLegacy.accepts(DEMO_REGISTER, "create-repository")).toBe(false);
     expect(await cachedLegacy.send(demoRequest)).toBeNull();
     live.DEMO_START_CONFIG = canonicalize(v2);
-    expect(cachedFresh.accepts(WEB_DEMO_REGISTER, "create-repository")).toBe(true);
-    expect(cachedLegacy.accepts(DEMO_REGISTER, "create-repository")).toBe(true);
+    expect(cachedFresh.accepts(WEB_DEMO_REGISTER, "create-repository")).toBe(false);
+    expect(cachedLegacy.accepts(DEMO_REGISTER, "create-repository")).toBe(false);
     const { legacy: _legacy, ...currentOnly } = v2;
     live.DEMO_START_CONFIG = canonicalize(currentOnly);
-    expect(cachedFresh.accepts(WEB_DEMO_REGISTER, "create-repository")).toBe(true);
+    expect(cachedFresh.accepts(WEB_DEMO_REGISTER, "create-repository")).toBe(false);
     expect(cachedLegacy.accepts(DEMO_REGISTER, "create-repository")).toBe(false);
     expect(await cachedLegacy.send(demoRequest)).toBeNull();
     expect(cachedOriginal.accepts(REGISTER, "create-repository")).toBe(true);

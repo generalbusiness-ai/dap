@@ -97,7 +97,7 @@ async function run() {
   const backendPort = await unusedPort(), counters = { requests: 0, forwarded: 0, backendErrors: 0 };
   owned.check(); failureMetadata.stage = "proxy-setup";
   const configuration = JSON.parse(await readFile(join(ROOT, "apps/room/celld/wrangler.json"), "utf8"));
-  must(configuration.name === "artroom-scope", "Maintain celld script identity");
+  must(configuration.name === "dap-celld-local", "Maintain celld script identity");
   const productionEntry = join(ROOT, "apps/room/worker.ts");
   const shim = `export * from ${JSON.stringify(productionEntry)};\nexport { default } from ${JSON.stringify(productionEntry)};\n`;
   await writeFile(join(directory, "worker.ts"), shim, { mode: 0o600, flag: "wx" });

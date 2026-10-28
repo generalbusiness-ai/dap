@@ -6,10 +6,11 @@ import { join } from "node:path";
 import { configOf } from "./security-settings.mjs";
 import { contextForCelldSmoke, runCelldSmoke, smokeSettings } from "./celld-smoke.mjs";
 
-test("local project preserves native object identities and migration history without a host, public package store or committed session secret", async () => {
+test("local project keeps a distinct deployment identity, native migrations and pinned workflow actions without committed secrets", async () => {
   const local = JSON.parse(await readFile(new URL("../apps/room/celld/wrangler.json", import.meta.url), "utf8"));
   const deployed = configOf(await readFile(new URL("../apps/room/wrangler.jsonc", import.meta.url), "utf8"), "apps/room/wrangler.jsonc");
-  assert.equal(local.name, deployed.name);
+  assert.equal(local.name, "dap-celld-local");
+  assert.notEqual(local.name, deployed.name);
   assert.deepEqual(local.durable_objects, deployed.durable_objects);
   assert.deepEqual(local.migrations, deployed.migrations);
   assert.deepEqual(Object.keys(local).sort(), ["compatibility_date", "compatibility_flags", "durable_objects", "main", "migrations", "name", "vars"]);
@@ -18,6 +19,14 @@ test("local project preserves native object identities and migration history wit
   assert.equal(Object.hasOwn(local.vars, "REGISTER_SCOPE"), false);
   assert.equal(await readFile(new URL("../apps/room/celld/worker.ts", import.meta.url), "utf8"), 'export * from "../worker.ts";\nexport { default } from "../worker.ts";\n');
   assert.match(await readFile(new URL("../apps/room/celld/celld.version", import.meta.url), "utf8"), /^v[0-9]+\.[0-9]+\.[0-9]+\n$/);
+  const workflow = await readFile(new URL("../.github/workflows/celld-smoke.yml", import.meta.url), "utf8");
+  const actions = [...workflow.matchAll(/^\s*(?:-\s+)?uses:\s*(.+)$/gm)].map(line => {
+    const pin = /^([A-Za-z0-9_.-]+\/[A-Za-z0-9_./-]+)@([0-9a-f]{40})\s+# v([1-9][0-9]*)$/.exec(line[1].trim());
+    assert.ok(pin, "Every workflow action uses a full commit hash and trailing # vN comment");
+    return { name: pin[1], major: pin[3] };
+  });
+  for (const name of ["actions/checkout", "actions/setup-node"])
+    assert.ok(actions.some(action => action.name === name && action.major === "6"), `${name} keeps its reviewed v6 major`);
 });
 
 test("smoke planning retains the actual native host-none install offline and exposes only its public identity", async () => {

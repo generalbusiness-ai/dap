@@ -130,7 +130,7 @@ parser, failure behavior, health visibility, and other readers.
 | `ARTIFACTS` | binding | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `ARTIFACTS_CONFIG` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `ARTIFACTS_NAMESPACE` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
-| `DEMO_START_CONFIG` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `DEMO_START_CONFIG` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`apps/room/demo-creation.ts`](../../apps/room/demo-creation.ts) |
 | `DEPLOYMENT` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `GITHUB_APP_CONFIG` | text | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `GITHUB_APP_PRIVATE_KEY` | secret | `artroom-scope`, `dap-demo`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
@@ -175,7 +175,7 @@ parser, failure behavior, health visibility, and other readers.
       "kind": "worker"
     },
     {
-      "name": "artroom-scope",
+      "name": "dap-celld-local",
       "config": "apps/room/celld/wrangler.json",
       "entry": "apps/room/celld/worker.ts",
       "kind": "worker"
@@ -233,6 +233,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -249,7 +250,6 @@ parser, failure behavior, health visibility, and other readers.
         "apps/room/demo-creation.ts",
         "packages/scope/src/applications/route.ts",
         "packages/scope/src/scope-index.ts",
-        "packages/scope/src/github-wiring.ts",
         "packages/scope/src/creation-versions.ts"
       ],
       "parser": "readDeployment: nonempty string of at most 128 UTF-8 bytes; shared by sessions, creation, demo, screens and metrics.",
@@ -260,6 +260,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -278,6 +279,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -297,6 +299,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -325,6 +328,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -346,6 +350,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -368,6 +373,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -389,6 +395,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -409,6 +416,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -429,6 +437,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -449,6 +458,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -469,6 +479,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -489,6 +500,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -509,6 +521,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -528,6 +541,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -552,6 +566,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -573,6 +588,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -591,6 +607,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -609,6 +626,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -627,6 +645,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -645,6 +664,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -665,6 +685,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -685,6 +706,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -704,6 +726,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -712,19 +735,18 @@ parser, failure behavior, health visibility, and other readers.
       "kind": "text",
       "status": "read",
       "readers": [
-        "packages/scope/src/worker.ts",
         "apps/room/demo-creation.ts",
-        "packages/scope/src/github-wiring.ts",
         "apps/room/fetch.ts"
       ],
-      "parser": "demoCreationConfig/legacyGitHubDemoConfig bind the supported exact version, origin, deployment, register/cohort and host context. The Page route exposes only a boolean for setting presence; the offer route retains its full parser and authority checks.",
+      "parser": "demoCreationConfig accepts closed wire version 3 and binds its explicit canonical origin, deployment, full Register17 reference and Artifacts adapter register/namespace. Its checked native context and public offer are version 2. The effective request origin must match; forwarded headers supply no identity. The Page route exposes only a boolean for setting presence.",
       "missing": "Demo creation route unavailable. Page Start shows the CLI instruction and makes no creation-offer request.",
-      "invalid": "Invalid config refuses demo creation; no loose config fallback.",
+      "invalid": "Invalid config or origin mismatch returns 404 before namespace lookup. Legacy versions 1 and 2 return no offer, including for an exact retained-reference query; no fallback.",
       "health": "Not reported separately."
     },
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -744,6 +766,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -764,6 +787,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -782,6 +806,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -800,6 +825,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -818,6 +844,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"
@@ -971,6 +998,7 @@ parser, failure behavior, health visibility, and other readers.
     {
       "deployments": [
         "artroom-scope",
+        "dap-celld-local",
         "dap-demo",
         "dap-lending",
         "dap-grow"

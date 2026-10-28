@@ -43,13 +43,32 @@ test("Register17 offer exposes only its configured Artifacts register and admits
     for (const valid of ["a".repeat(128), "界".repeat(42) + "aa"]) expect(demoCreationConfig(canonicalize({ ...config, deployment: valid }), valid, bindings)).not.toBeNull();
     expect(first.headers.get("cache-control")).toBe("no-store");
     expect([first.status,offer]).toEqual([200,{v:2,origin,register:at,definition:ARCHIVE_DEVICE_APPLICATION_COHORT.register,at:{seq:0,hash:(await lifetime.wait(()=>register.summary())).at.hash},registerItem:{id:0,revision:1,state:"open",host:"artifacts",namespace:"dap-demo",policy:"open"}}]);
+    // The same actual Register17 projection follows an explicit second
+    // HTTPS identity; the former fixed public origin grants nothing by itself.
+    const otherOrigin = "https://offer.test";
+    const otherBindings = { ...bindings, DEMO_START_CONFIG: canonicalize({ ...config, origin: otherOrigin }) };
+    const otherOffer = await lifetime.wait(() => demoCreationRoute(new Request(otherOrigin + "/v1/demo/creation-offer"), otherBindings));
+    expect([otherOffer.status, await otherOffer.json()]).toEqual([200, { ...offer, origin: otherOrigin }]);
     // Rewritten Requests expose only the Worker boundary, not a real proxy.
     const internal = "http://celld.internal:8787/v1/demo/creation-offer";
     const proxyOffer = await lifetime.wait(() => demoCreationRoute(new Request(internal, { headers: { host: "different-host.example" } }), { ...bindings, PUBLIC_ORIGIN: origin }));
     expect([proxyOffer.status, await proxyOffer.json()]).toEqual([200, offer]);
+    const otherProxyOffer = await lifetime.wait(() => demoCreationRoute(new Request(internal, { headers: { host: "another-host.example" } }), { ...otherBindings, PUBLIC_ORIGIN: otherOrigin }));
+    expect([otherProxyOffer.status, await otherProxyOffer.json()]).toEqual([200, { ...offer, origin: otherOrigin }]);
+
     const beforeOriginRefusal = { ...lookups };
     for (const settings of [bindings, { ...bindings, PUBLIC_ORIGIN: origin + "/" }]) {
       const response = await lifetime.wait(() => demoCreationRoute(new Request(internal, { headers: { forwarded: "proto=https;host=dap-demo.inguz.workers.dev", "x-forwarded-proto": "https", "x-forwarded-host": "dap-demo.inguz.workers.dev" } }), settings));
+      expect([response.status, await response.json()]).toEqual([404, { error: "not-found" }]);
+    }
+    // Wrong public identity, malformed explicit identity and forwarding alone
+    // all close before any namespace lookup, even with valid native state.
+    for (const [address, settings, headers] of [
+      [origin + "/v1/demo/creation-offer", otherBindings, {}],
+      [internal, { ...otherBindings, PUBLIC_ORIGIN: otherOrigin + "/" }, {}],
+      [internal, otherBindings, { forwarded: "proto=https;host=offer.test", "x-forwarded-proto": "https", "x-forwarded-host": "offer.test" }],
+    ] as const) {
+      const response = await lifetime.wait(() => demoCreationRoute(new Request(address, { headers }), settings));
       expect([response.status, await response.json()]).toEqual([404, { error: "not-found" }]);
     }
     expect(lookups).toEqual(beforeOriginRefusal);
@@ -67,7 +86,8 @@ test("Register17 offer exposes only its configured Artifacts register and admits
     const oldAt=await lifetime.wait(()=>old.at());
     const forbidden=await signedIntent(newcomer,{to:oldAt,kind:"found",expected:{register:1},fields:{branch:"main","founderHandle":"@newcomer",recoveryKey:installer.key}},{now:lifetime.now()});
     expect(await lifetime.wait(()=>old.stub.submit(forbidden,[]))).toMatchObject({answer:"refused",reason:"unauthorized"});
-    // Retained old-origin preflight stays exact; no old root is a fresh offer.
+    // Actual old registers still exist, but neither a fresh request nor an
+    // exact retained reference can revive the retired server decoder.
     const retiredOrigin = "https://artroom-scope.inguz.workers.dev";
     const retiredCalls = { idFromName: 0, get: 0 };
     const retiredScopes = { idFromName(name: string) { retiredCalls.idFromName++; return env.PLATFORM.idFromName(name); },
@@ -93,11 +113,8 @@ test("Register17 offer exposes only its configured Artifacts register and admits
       for (const selected of definition === DEMO_REGISTER ? [legacyAt] : [legacyAt, retained7!]) {
         const beforeSelected = { ...retiredCalls };
         const response = await lifetime.wait(() => demoCreationRoute(new Request(`${retiredOrigin}/v1/demo/creation-offer?register=${selected.scope}&inc=${selected.inc}`), retired));
-        const projected = await response.json() as DemoCreationOffer;
-        expect([response.status, projected.v, projected.register, projected.definition]).toEqual([200, 1, selected,
-          selected.scope === retained7!.scope ? DEMO_REGISTER : WEB_DEMO_REGISTER]);
-        expect(projected.registerItem).toMatchObject({ purpose: DEMO_PURPOSE, host: "github.com", namespace: "generalbusiness-ai" });
-        expect(retiredCalls).toEqual({ idFromName: beforeSelected.idFromName + 1, get: beforeSelected.get + 1 });
+        expect([response.status, await response.json()]).toEqual([404, { error: "not-found" }]);
+        expect(retiredCalls).toEqual(beforeSelected);
       }
       const beforeWrong = { ...retiredCalls };
       expect((await lifetime.wait(() => demoCreationRoute(new Request(`${retiredOrigin}/v1/demo/creation-offer?register=${legacyAt.scope}&inc=${newIncarnation(new Uint8Array(16).fill(12))}`), retired))).status).toBe(404);
@@ -122,7 +139,14 @@ test("Register17 offer exposes only its configured Artifacts register and admits
     for(const query of [`?register=${secondAt.scope}&inc=${secondAt.inc}`,`?register=${at.scope}&inc=${newIncarnation(new Uint8Array(16).fill(12))}`,`?register=${at.scope}&inc=${at.inc}&register=${secondAt.scope}`,`?register=${at.scope}`,`?register=${at.scope}&inc=${at.inc}&scope=${at.scope}`]) expect((await lifetime.wait(()=>demoCreationRoute(new Request(origin+"/v1/demo/creation-offer"+query),bindings))).status).toBe(404);
     expect(lookups).toEqual(unchanged); // request ref mismatches refuse before lookup
     expect(demoCreationConfig(canonicalize({...config,legacy:{register:secondAt,definition:DEMO_REGISTER}}),deployment,bindings)).toBeNull();
-    expect(demoCreationConfig(canonicalize({...config,origin:"https://foreign.invalid"}),deployment,bindings)).toBeNull();
+    expect(demoCreationConfig(canonicalize({...config,origin:"https://foreign.invalid"}),deployment,bindings)).toMatchObject({ current: { origin: "https://foreign.invalid" } });
+    const { origin: _origin, ...withoutOrigin } = config;
+    for (const invalidConfig of [withoutOrigin, { ...config, origin: otherOrigin + "/path" }]) {
+      const settings = { ...bindings, DEMO_START_CONFIG: canonicalize(invalidConfig) };
+      expect(demoCreationConfig(settings.DEMO_START_CONFIG, deployment, settings)).toBeNull();
+      expect((await lifetime.wait(() => demoCreationRoute(new Request(origin + "/v1/demo/creation-offer"), settings))).status).toBe(404);
+    }
+    expect(lookups).toEqual(unchanged);
     expect(demoCreationConfig(canonicalize(config),deployment,{...bindings,ARTIFACTS_NAMESPACE:"wrong"})).toBeNull();
     let calls=0;
     lifetime.outside(register.name,()=>({accepts:()=>true,send:async()=>{calls++;return null;}}));

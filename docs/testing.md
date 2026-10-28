@@ -735,16 +735,19 @@ separately against an explicit pinned executable and actual production Worker.
 It owns its test TLS proxy, private configuration, client custody and process
 closure. Its local result establishes no deployment, backup or fleet recovery.
 See [Run the local Worker](celld.md).
+Pin every GitHub Actions `uses:` reference to a full 40-character commit hash
+with a trailing `# vN` major-version comment.
 
 ## Settings inventory
 
 `node --test scripts/security-settings.test.mjs` checks the static inventory in
 [Worker settings and bindings](security/settings.md). The checker follows
 tracked relative and workspace runtime imports from each configured Worker
-entry, including the local celld JSON configuration. Only an exact tracked
-two-export shim can share another entry’s permanent Worker name. Its physical
-entry and full runtime closure remain checked. It compares configured names and supported environment reads with the
-inventory, and refuses unsupported environment syntax or forwarding rather
+entry, including the separate `dap-celld-local` configuration. Each permanent
+Worker name binds its literal physical entry; re-exports do not merge deployment
+identities. Its full runtime import closure remains checked. It compares
+configured names and supported environment reads with the inventory, and
+refuses unsupported environment syntax or forwarding rather
 than silently omitting it. The tests compare the displayed lookup with the
 canonical inventory rows and require undocumented source reads and configured
 bindings to fail.

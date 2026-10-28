@@ -1,5 +1,5 @@
 {
-  "name": "artroom-scope",
+  "name": "dap-celld-local",
   "main": "worker.ts",
   "compatibility_date": "2026-08-15",
   "compatibility_flags": ["nodejs_compat"],
