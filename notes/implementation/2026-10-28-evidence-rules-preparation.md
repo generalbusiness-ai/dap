@@ -4,7 +4,7 @@ Status: preparation for review. This note records the before-source
 choices required by the first-slice request. It claims no implementation,
 passing check, landing, deployment or completion of that request.
 
-Base: Main `0881c1bca1df31a9fdb4ae72947cbbedf1b3ec51`.
+Base: Main `06e4d33fe17937610891f29b5d1513b9e224edea`, after J3.
 Branch: `request/evidence-rules-20261028`.
 
 Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a53e146477354f07cf6ff657e93b36d411d846c8
@@ -17,8 +17,10 @@ ruling remains effective. Its stale metadata follows retirement of the
 answered question, not withdrawal of the decision. The workroom permits
 stale bases without an override. No renewed ruling is required.
 
-J3 is awaiting independent review at `33b8f95b`. It is not yet
-landed or accepted. Building this slice with or after J3 remains authorized.
+J3 landed as `06e4d33f` after exact-head approval `c9bd8822`.
+Receipt `ceba0366` and independent landing check `3c884798` confirm it.
+The preparation branch is rebased onto that Main; only this note differs.
+The production Runner is now the base for this slice.
 The earlier scratch proposal memo remains unchanged. This note makes no
 native or checker-service source change.
 
