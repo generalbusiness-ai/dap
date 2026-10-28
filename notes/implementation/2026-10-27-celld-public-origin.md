@@ -78,7 +78,19 @@ backend connection failures during bounded startup/readiness polling, not a
 claim of zero errors. The whole driver took 8.640s wall and 5.008s child CPU.
 The output digest is
 `b3d307b6154508d0b1bfcef7ead909525d33e1f6fe3ce9c485050460fea3297a`.
-This section will record the final gate terminal before review. The final evidence will be sealed under
+The one final gate at `ef2f4bea`, tree `14aee9aa`, closed with exit1 after
+1147.440s wall and 2325.972s child CPU. All stages ran: Node73 passed,
+Counting55 passed, plain2892 passed and1 skipped, Native821 passed,1 failed
+and2 skipped. Reporting had no interruption, collection error or contradictory
+record. The sole failure was this new health fixture’s genesis assertion.
+Its fixed START+60s deadline could expire after earlier shared-clock advances.
+Only that test file and this explanation change: the same60s deadline now
+uses `timeOf(life.now() + 60_000)`. All original cases, assertions and test
+timeouts remain. Production, configuration, dependencies, imported code and
+shared helpers remain exactly the gate source. The test is not imported by
+other source files. Under `docs/testing.md`’s limited follow-up rule, the
+compiler context and whole owning health file will run; no stages were
+unreached. The gate remains failed. The checker must assess this exception. The final evidence will be sealed under
 `/Users/hughpyle/play/artroom-evidence/2026-10-27-celld-public-origin`.
 The first draft inventory generator failed before parsing because a flat
 symlink view could not resolve native dependencies. Its failed output is

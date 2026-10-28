@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { SELF, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { b64url, digestBytes, intentDigest, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, digestBytes, intentDigest, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 import { health, HealthProbe } from "../src/health.ts";
 import { LATE } from "../src/turn.ts";
@@ -28,7 +28,7 @@ test("host-none health probes its actual active Native Register without reposito
   const life = nativeFixtureLifetime(beginSessionFixture({ secret, sessions: true, inspector: reader }));
   const intent = { v: 1, to: null, actor: rita.key, kind: "install", on: null, expected: {},
     fields: { host: "none", namespace: "", policy: "keys", founders: [rita.key] },
-    idempotencyKey: crypto.randomUUID(), notAfter: at(60) } as const;
+    idempotencyKey: crypto.randomUUID(), notAfter: timeOf(life.now() + 60_000) } as const;
   const node = life.platform(scopeIdOf({ v: 1, kind: "register", definition: UNPUBLISHED_COHORT.register, creator: null, cause: intentDigest(intent), ordinal: 0 }));
   expect(await life.wait(() => node.stub.create(signIntent(intent, rita.secret), UNPUBLISHED_COHORT.register))).toMatchObject({ answer: "accepted" });
   const before = await life.wait(() => node.entries());
