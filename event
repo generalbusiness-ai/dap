@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:67e15e306c1ce8f5cfba76f410ce449ef0b2e9d4","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/github-wiring.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6aeb4f0d23bd2709b995ff16cf6c29c648773252","text":"Merge retired a covered predecessor; the successor is at .github/workflows/celld-smoke.yml."}
