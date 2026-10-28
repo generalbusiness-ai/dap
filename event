@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5ac0fbf86fa29b54cdc1b214f0a7333721b8a726","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/act-target.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5b4920914d7c004280891c13002d498f9c8214fc","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-28-cli-load.manifest.json."}
