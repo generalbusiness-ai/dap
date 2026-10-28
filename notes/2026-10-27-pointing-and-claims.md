@@ -18,28 +18,38 @@ a drawing, a bill and a photograph. To the owner the drawing is the
 kitchen they want, to the contractor a scope to price, to the insurer
 evidence of a date. Star and Griesemer called such things boundary
 objects: one identity across several working worlds and a different
-meaning in each. The parties need to agree only on which thing is meant.
-Licklider said the same of any two people at a whiteboard: they
-externalize their models so they can be sure they are talking about the
-same thing.
+meaning in each. They are weakly structured in common use and strongly
+structured in the use each world makes of them. The parties need to
+agree only on which thing is meant. Licklider said the same of any two
+people at a whiteboard: they externalize their models so they can be
+sure they are talking about the same thing.
+
+Bowker and Star later said what this asks of a shared record. It must
+keep a stable set of such objects, so that each world can take from the
+record the things it needs in its own form. Where one world's categories
+are instead made everyone's, the object is a standard, and the other
+worlds work around it.
 
 Today a room gets its structure from an application's definitions. They
 name the parties, say who decides and say when a matter ends, for every
 member, from the moment they are installed. That is dap's strong part:
 every member runs the same rules and gets the same verdict. It is also
-where a room overreaches. The catalogue's rule is that an application's
-structure is entered only through a claim of agreement by the parties it
-binds, or through an authority that one party already holds. No landed
-mechanism enforces it, and no room has a place for the work that comes
-before any application: a file dropped in, a remark about it, two
+where a room overreaches, because a room has only that side. The
+catalogue's rule is that an application's structure is entered only
+through a claim of agreement by the parties it binds, or through an
+authority that one party already holds. No landed mechanism enforces it,
+and no room has a place for the weakly structured side, the work that
+comes before any application: a file dropped in, a remark about it, two
 parties settling on words.
 
 This note gives every room that place, and it is small. Four acts that
 need no application: reference a thing, write a note, ratify someone
-else's note, close your own part. A package then binds a member only by
-presenting that member's own ratification of the terms. Each member
-keeps a page that says how they read the room. And an item's final state
-ends the item, never a party's part of the matter. Section 2 shows where
+else's note, close your own part. They are the common side, and they
+stay weakly structured. A package then binds a member only by presenting
+that member's own ratification of the terms, and it is the strong side,
+for the parties who adopt it. Each member keeps a page that says how
+they read the room. And an item's final state ends the item, never a
+party's part of the matter. Section 2 shows where
 these four come from. Section 3 defines them. Section 4 shows how they
 compose into structure, with the renovation case walked as entries.
 Sections 5 and 6 cover pages and closings. Sections 7 to 9 give the
@@ -84,9 +94,10 @@ in the projection and is not counted.
 
 Six things follow.
 
-- **Reference dominates.** Seven statements in ten point at a file at an
-  exact commit. Requests and reports rest mostly on those pointers. Every
-  structured act in the record stands on references to concrete things.
+- **Reference dominates.** Seven statements in ten reference a file at
+  an exact commit. Requests and reports rest mostly on those references.
+  Every structured act in the record stands on references to concrete
+  things.
 - **Free text carries the rest.** Asserts are the second most common act
   and the longest after reports. They hold declines, findings, status
   and disagreement, and only 21 of 7,877 are declines by their own
@@ -111,15 +122,21 @@ Suchman's 1994 objection to the language-action perspective was that
 asking people to classify their utterances by speech act imposes a
 discipline the work does not want. This record says she was right about
 the categories nobody reads and wrong about the loop the fold reads.
-People and agents classify where classification pays. So the test for an
-act in the common part of a room is not whether its kind is meaningful.
-It is whether a rule or a projection reads it. Four pass that test.
+People and agents classify where classification pays. Bowker and Star
+found the same across a century of classification at work: a category
+lives where something reads it out, not where it is coded in, and a
+form stays usable only while the text that fits no category has a
+protected place on it. The asserts above are that place, and nobody
+narrowed it. So the test for an act in the common part of a room is not
+whether its kind is meaningful. It is whether a rule or a projection
+reads it. Four pass that test, and free text keeps its place beside
+them.
 
 ## 3. Four acts
 
 - **Party**: a member of the room, acting for one working world.
-- **Reference**: a signed pointer to a thing, by a label and locators. It
-  is the identity the parties share. It carries no meaning.
+- **Reference**: a signed name for a thing, with a label and locators.
+  It is the identity the parties share. It carries no meaning.
 - **Note**: signed free text that cites references and other notes. It
   is one party's reading. The record never reconciles two notes.
 - **Ratification**: one party's signature on another party's note. It is
@@ -158,14 +175,25 @@ reads the citation and a person reads the words.
 
 What the commons does not do:
 
-- It verifies no locator. A digest in a reference is a pointer, not a
-  retained input. The capture scope retains documents, and a capture act
+- It verifies no locator. A digest in a reference names a document and
+  retains nothing. The capture scope retains documents, and a capture act
   names a reference through `about` (section 8).
 - It merges and decides nothing. No act of the commons changes an item
   of another definition, and no guard of the commons reads one.
 - It hides nothing. Every member reads the commons scope. A private part
   of a matter is a room of its own, as group 3 of the catalogue
   describes.
+- It gains no kinds and holds no enumerations. A closing's outcome is
+  the party's own word, and a reading is a note's own text. An act that
+  every party must read the same way is a standard, and a standard lives
+  in a package that the parties install together, as the fold's typed
+  loop does. A note that cites a package's item through `entries` is the
+  record's place for what the item could not say, where today that goes
+  into chat and is lost.
+
+A reference is a name, not a classification. It records the thing and
+leaves every reading to a note, so that a party can read the thing again
+later under categories that did not exist when it was referenced.
 
 ## 4. How the acts compose into structure
 
@@ -231,6 +259,16 @@ This is the catalogue's rule made mechanical. An act's `grant` field is
 the second route, an authority one party already holds, and it is
 unchanged.
 
+Bowker and Star end with three demands on any scheme that several worlds
+share: protect its zones of ambiguity, keep every voice retrievable, and
+show who it excludes. The commons meets them by construction. Notes and
+outcomes are free text that no rule narrows. Every note is signed and
+never reconciled, a page keeps the chain of pages it replaced, and a
+ratification keeps whose words the signer agreed to. The install screen
+lists every `declared` slot, and a slot with no `consent` is refused, so
+the members a package writes in unasked are visible before it is
+installed.
+
 ## 5. Each member's page
 
 A page is a note that replaces the member's previous page. The host
@@ -239,7 +277,14 @@ the model context of their sessions, and it is what the record shows
 first when anyone asks what that member is doing. It is the person's own
 words in the record, signed by them, where today they are an agent's
 report. It is temporary, revised often, and its design matters, as the
-catalogue's one-page summary for a healthcare encounter says.
+catalogue's one-page summary for a healthcare encounter says. It is a
+plan in Suchman's sense, a weak resource for action: it orients the work
+and predicts none of it. Appleton's case about agents is that the
+interface between a person and an agent is thin, a line of text each
+way, that the agent should carry the labour of making it thicker, and
+that the plan is the shared thing the two point at. The page is that
+thing in the record, and a presentation is the thicker layer on the
+member's side.
 
 A page can name a `presentation`, the digest of a presentation package
 for a semantic id, in the form of the self-contained applications note
@@ -251,7 +296,8 @@ checks admission on each use. Otherwise the session uses the room's
 A presentation package holds only projections, `ui://` resources and act
 descriptions, and the owner's can call an act "variation" where the
 contractor's calls it "change order". The act, its guards and its
-effects are the same entry either way. A member can compose a
+effects are the same entry either way: one object that adapts to each
+side. A member can compose a
 presentation in chat ([chat-composed views](2026-10-20-chat-composed-views.md))
 and name it on their page.
 
@@ -267,7 +313,11 @@ final state with its description.
 So a projection that shows a matter as closed reads the parties'
 closings, not an item state. And a closing ends no item: the insurer's
 item can end as `decided` while the owner's closing says `disputed`, and
-both stand.
+both stand. Bowker and Star describe how a thing and its record converge
+until the record is read as the thing, and how, when the category then
+breaks, the earlier readings leave no trace. An item's final state read
+as the matter's end is that convergence. A closing in the party's own
+word keeps the trace.
 
 ## 7. Witnesses
 
@@ -339,4 +389,10 @@ Winograd and Flores, Understanding Computers and Cognition (1986), and
 Flores, Graves, Hartfield and Winograd, "Computer Systems and the Design
 of Organizational Interaction" (1988). The objection is Suchman, "Do
 Categories Have Politics?" (1994), with Winograd's reply, "Categories,
-Disciplines, and Social Coordination" (1994). Nothing else was run.
+Disciplines, and Social Coordination" (1994). Weakly and strongly
+structured, standards against boundary objects, the protected place for
+what fits no category, convergence and the three demands are Bowker and
+Star's, Sorting Things Out (1999), chapters 4, 7, 9 and 10. The plan as
+a weak resource is Suchman's, Plans and Situated Actions (1987). Thin
+and thick interfaces, and objects that adapt to both sides, are
+Appleton's, "Planning with Agents" (2026). Nothing else was run.
