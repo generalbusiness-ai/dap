@@ -10,13 +10,14 @@ Branch: `request/evidence-rules-20261028`.
 Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a53e146477354f07cf6ff657e93b36d411d846c8
 Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a891555c470d4693e466b9c5240b5ed35a95b388
 Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ed8187819e92ad401315e78a5a7f0a6c6073509f
+Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f73805e41fb84d460ea391b66a2c6ab23568f15b
 
 The full request and ruling were read through gitseq as builder. The
 ruling remains effective. Its stale metadata follows retirement of the
 answered question, not withdrawal of the decision. The workroom permits
 stale bases without an override. No renewed ruling is required.
 
-J3's code is separately committed and under validation. It is not yet
+J3 is awaiting independent review at `33b8f95b`. It is not yet
 landed or accepted. Building this slice with or after J3 remains authorized.
 The earlier scratch proposal memo remains unchanged. This note makes no
 native or checker-service source change.
@@ -166,12 +167,12 @@ transition checks strengthen those boundaries without replacing them.
 | 9 | Another source is ineligible for reuse. | The same eligibility predicate and table. Current signer eligibility remains required. |
 | 10 | Eligible pass/fail disagreement disables reuse for that key; a fresh run still lands. | The same bounded result index, followed by one explicit fresh native job. No history sweep or fictional deciding fact. |
 | 11 | Published checks refuse reuse. | The bounded successor policy case. |
-| 12 | Published failure opens the maintainers' intent and, with holds, blocks the next affected extent. | One native room sequence with real lane/Rules/Destination and recorded publication identity. |
+| 12 | Published failure opens the triagers' intent and, with holds, blocks the next affected extent. | One native room sequence with real lane/Rules/Destination and recorded publication identity. |
 | 13 | A late earlier-publication pass does not clear a later hold. | The same native sequence; pure hold-order cases cover the selected key. |
 | 14 | Another configuration or rules generation does not clear a hold. | Exact hold-key judgment cases; a real authorized transition names the old hold and new generation and is not shown as pass. |
 | 15 | Failure/admission ordering is atomic: before refuses that admission; after affects the next. | Destination transaction/journal order with explicit gates, not sleeps. |
 | 16 | Duplicate/reordered failure notices preserve the hold. | Reuse the same admitted job/publication facts and dispatcher gates. |
-| 17 | Closing the maintainers' intent, or another intent, clears no hold. | Follow actual intent closure and read Destination's retained hold. |
+| 17 | Closing the triagers' intent, or another intent, clears no hold. | Follow actual intent closure and read Destination's retained hold. |
 | 18 | A published timeout does not clear a hold. | Native deadline/turn plus the pure hold judgment table; no elapsed-time guess or fabricated pass. |
 | 19 | Authorized override clears as override, never as pass. | Actual Destination act, role checks and recorded release reason. |
 
@@ -180,6 +181,39 @@ actual job/publication binding, idempotence by recorded facts and native
 creation authority. It is distinct from the extra marking-time proof
 exchange that the ruling excludes. No deployment health claim follows
 from any of these checks.
+
+### The published-failure incident has its authority ruling
+
+Ruling `f73805e4` answers the incident question. The recipients are the
+complete bounded active holders of `issue.triage`, called triagers in data
+and UI. This uses the existing holders observation, not a new literal
+admin or maintainer roster. The implementation head updates the design's
+stage table and following sentence to use that meaning.
+
+The incident is a declared nested successor of the Change that landed.
+The existing Directory-rooted creation closure and index row give it its
+authority and number. Its system origin records the exact sibling
+Destination, admitted published job, publication, and native failure
+decision. No human requester or automatic signing key is fabricated.
+Ordinary edit-own gives nobody special authority over a system origin.
+
+There is one incident state per job, including jobs without `holds`.
+Pending delivery resends only its original envelope. An unknown creation
+does not start a replacement. Unknown, empty, or over-bound triagers leave
+visible pending or refused state; failure and hold state remain owned by
+Destination and atomic with admissions.
+
+A reasoned hold and an incident's cause are distinct. With `holds: true`,
+timeout, error, unknown check outcome, or unavailable observation sets a
+hold with its actual reason. An incident requires a recorded native
+decision for the admitted published job and actual publication. It keeps
+the real deciding result or error cause; it never invents a failed result
+fact. Unknown incident creation preserves that decision and its original
+create envelope. It does not turn an unknown check into a signed failure.
+
+The answered question was retired as `2fccf06d`. The ruling remains
+effective; its stale metadata follows the already answered earlier basis.
+No marking-time exchange is added.
 
 ## Design update and remaining work
 
