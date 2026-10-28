@@ -172,9 +172,9 @@ after each round.
 
 First census, 19:36, from the deployed Workers: grow 11 of 11 scopes
 verified and ready; lending 8 of 8; demo 6 verified and 5 unavailable
-(not founded by the operator). The test Worker's first room: register at cohort 21
-under host `none`, six scopes consistent, refusals `no-repository` and
-`host-unknown` as designed.
+(not founded by the operator). The test Worker's first room: register
+at cohort 21 under host `none`, six scopes consistent, refusals
+`no-repository` and `host-unknown` as designed.
 
 ## Cost-of-change review
 
@@ -198,9 +198,10 @@ would have cut it, and whether to revisit.
 - Two retirements (`c7c51714`, `a78e0981`). Cost: the second head
   waited five hours and nineteen minutes between its approval at 00:43
   and its landing at 06:02, because the approval needed the
-  requester's ratification and the builder's sandbox refused the merge; one observation made after the head froze
-  became a separate follow-up head, refiled twice because a landing
-  retires the note the follow-up rested on. Alternative: approvals and
+  requester's ratification and the builder's sandbox refused the merge;
+  one observation made after the head froze became a separate
+  follow-up head, refiled twice because a landing retires the note the
+  follow-up rested on. Alternative: approvals and
   follow-ups rest on the request and the promise, never on an
   implementation note, and a ratified approval lets either party land.
   Revisit: yes, in the workroom rules; no code.
