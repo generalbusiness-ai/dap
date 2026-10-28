@@ -28,7 +28,7 @@ const namedOwners = {
     "packages/scope/src/worker.ts:projectionResponse": "e17f1f4aa800bc06b4f8d065f77e8a594c2738c77873a52671fa7f1b22bf249b",
     "packages/scope/src/worker.ts:route": "8e41a02f0a9d01c802beea51c095d82f3720ca0d3d5dc178213f5de2a8ccde63",
     "packages/scope/src/worker.ts:routedRequest": "4ef253e62f36ddbf69b3bedcf593de3023ed072ee6ca6bfa435390dd1d7858dd",
-    "packages/scope/src/worker.ts:outsideOf": "4a0e7abc473f7a648b7e51c5f53de7385867f1cdd5a65e4be05ab319f0d52b0f",
+    "packages/scope/src/worker.ts:outsideOf": "4fa58b0db28f1b7479f2c788ef76186915176b1d538b945f4cbf39add61bf3b7",
     "packages/scope/src/worker.ts:sessionWiring": "cb8f4d0e2b06854a3fbf080e5b4ce72e4182060b60f27cc7fb7f5ed6ac8779c5",
     "packages/scope/src/worker.ts:snapshotReaderOf": "2b6810718421650701eb1edfa9b100ceefef11a1fdcb18603fccf4e6830ea9e2",
     "packages/scope/src/worker.ts:DeployedScope": "0714da9436f9fd5a4c70169986ba9f056046490903dc6072b7d2a28adb28b5ef",
@@ -181,7 +181,9 @@ const seals = {
   "packages/platform/src/versions.ts": "1fb0e4097d7579dea212b1b0a0016925a9b3ae609191a229b3a1f6a0d7a60252", // Closed native publication protocol policy; actual maintained parser output.
   "apps/room/worker.ts": "aba04e12dc206f0be6bda4a8edeac64569e0edd44b7a87772595d7db40bb8b67",
   "apps/room/fetch.ts": "0b1713cce239011343ffdad8c3ec94491509ff5b63a782cdf0d8ff215fd7d76c", // R2 owning AST value adopted on the reviewed branch.
-  "apps/room/demo-creation.ts": "e491eeeef5084bf5a1c0b8a8d8ce48106cb88591986b06c5db74f5ae994b007f",
+  "apps/room/demo-creation.ts": "91d9ac8a8fa37e3c99c117be7d99dc2d9e370efeacd70f8f49a00a4062bcd67c",
+  "packages/scope/src/demo-creation.ts": "a3db32b06d66dc08dc5c585514a02ed60929d3bcc05d0be9d433affea17fefe7", // Reviewed current demo projection or ordinary GitHub authority owner.
+  "packages/scope/src/github-wiring.ts": "9d635552e6bb9d48cd2f9b82269d626dd6544de37e125536985941e9ca1efa42", // Reviewed current demo projection or ordinary GitHub authority owner.
   "apps/room/page/route.ts": "8eccc79a8a3e3cd8b33c38c65374db5d01583b5e9afd76384fc2133bae4cb475",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
   "packages/scope/src/worker.ts": namedOwners["packages/scope/src/worker.ts"],
