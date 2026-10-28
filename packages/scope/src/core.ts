@@ -642,7 +642,6 @@ export class Scope {
       asks: (view, clock) => prepareRules(view, definition, { act: signed, context: { ...context(view, clock), prepared: [] } }),
       judge: (view, clock, prepared) => {
         const judged: ActJudgment = judgeAct(view, definition, signed, { ...context(view, clock), prepared });
-        if (intent.kind === "publish") console.info("TEST evidence publish judgment", { result: judged.result, ...("reason" in judged ? { reason: judged.reason } : {}), ...("detail" in judged ? { detail: judged.detail } : {}) });
         switch (judged.result) {
           case "write": {
             const head = view.scope()!.head;
@@ -662,10 +661,7 @@ export class Scope {
                 return { answer: "accepted", receipt: receiptOf(sealed, named) };
               },
               // An entry over the size bound, or a grant that is not canonical values, is never written.
-              unfit: (why) => {
-                if (intent.kind === "publish") console.info("TEST evidence publish unfit", { why });
-                return { answer: "refused", reason: why === "size" ? "bad-field" : "unauthorized", judgedAt: head };
-              },
+              unfit: (why) => ({ answer: "refused", reason: why === "size" ? "bad-field" : "unauthorized", judgedAt: head }),
               // Section 9.2: an act is refused when the pending work it would admit, with that already admitted, has no room to settle.
               full: (_head, bound) => ({ answer: "refused", reason: "scope-full", judgedAt: head, ...(definition.declared.capacity ? { name: bound } : {}) }),
             };

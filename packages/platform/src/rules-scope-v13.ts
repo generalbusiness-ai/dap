@@ -36,7 +36,7 @@ function oldMark(state:Pick<StateView,'page'>):ServiceMark|null {
 }
 function generation(state:Pick<StateView,'page'>):number|null {
   const held=rulesOf(state)?.refs['roomServiceChanged'];
-  return held===undefined||held===null?0:typeof held==='number'&&Number.isSafeInteger(held)&&held>=1?held:null;
+  return held===undefined||held===null?0:typeof held==='number'&&Number.isSafeInteger(held)&&held>=1&&held<=1_000_000_000?held:null;
 }
 function content(policy:Pick<RulesPolicyV13,'approvals'|'ownerMayReview'|'checks'|'labels'|'singleControllerException'|'roomService'>,envelope:unknown,rules:ScopeRef,seq:number) {
   return {asked:'rules' as const,approvals:policy.approvals,ownerMayReview:policy.ownerMayReview,
@@ -87,7 +87,9 @@ const checksType={type:'list' as const,max:32,of:{type:'record' as const,of:{
   source:{type:'enum' as const,of:['member','room'],required:false},reuse:{type:'bool' as const,required:false},stage:{type:'enum' as const,of:['work','landing','published'],required:false},
   audit:{type:'record' as const,required:false,of:{check:{type:'text' as const,max:128,required:true},every:{type:'int' as const,min:1,max:1,required:true}}},holds:{type:'bool' as const,required:false}}}};
 export const rulesScopeV13:PlatformData={...archiveDeviceRulesScope,
-  items:{...archiveDeviceRulesScope.items,rules:{...oldRules,refs:{...oldRules.refs,roomServiceChanged:{fixed:false,required:false,to:{type:'fact',kind:['publish'],under:'platform:rules'}}},values:{...oldRules.values,
+  // A native effect cannot name its not-yet-sealed entry by full fact. This
+  // reference holds its local position; the Rules answer supplies the full scope.
+  items:{...archiveDeviceRulesScope.items,rules:{...oldRules,refs:{...oldRules.refs,roomServiceChanged:{fixed:false,required:false,to:{type:'int',min:1,max:1_000_000_000}}},values:{...oldRules.values,
     checks:{...oldRules.values['checks']!,of:checksType},
     ownerMayReview:ownerSlot,extents:{fixed:false,required:false,of:extentsType},configured:{fixed:false,required:true,of:{type:'bool'},default:false},
     policy:{fixed:false,required:false,of:{type:'code',code:'q13-complete-policy',row:'R7'}},

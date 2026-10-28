@@ -3,7 +3,7 @@ import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Answer, Digest, FactRef, Intent, MemberRef, OperationId, Read, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isDigest, isHead, isRecord, isScopeRef, isSeed, same, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { atHand, CAPABILITY_CODE, localRetainedPlan, outcomeValueDomains, ownersOf, placesOf, placeWithoutValue, readFields, validateDefinition, valueDigest, type StateView } from "@generalbusiness/dap-derive";
+import { CAPABILITY_CODE, localRetainedPlan, outcomeValueDomains, ownersOf, validateDefinition, valueDigest, type StateView } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { View } from "../../replay/src/view.ts";
@@ -212,19 +212,10 @@ export async function publishEvidenceRulesCertificate(room: EvidenceRoom, policy
   const proposed = rulesPolicyProposalV13(policy);
   if (!proposed.ok) throw Error("Strict policy required");
   const { D, M, Q, G } = room;
-  const fields: Record<string, unknown> = JSON.parse(canonicalize({ ...proposed.policy, roomService: canonicalize(proposed.policy.roomService), checkers: rulesPolicyCheckersV13(proposed.policy), proposal: proposed.digest, proof, certificateRequest: request, certificate,
-    directoryBirth: factRefOf((await D.entries())[0]!), destinationBirth: factRefOf((await G.entries())[0]!), membershipBirth: factRefOf((await M.entries())[0]!) }));
-  const values = [canonicalize(proposed.policy), proofBytes], native = nativePlatform(EVIDENCE_RULES_COHORT.rules);
-  if (!native) throw Error('Actual Q13 native profile required');
-  const checked = validateDefinition(native.data, PROPOSED_BOUNDS, RULE_PROFILES, { platform: true, outcomeValues: outcomeValueDomains(native.data, native.rules) });
-  if (!checked.ok) throw Error('The actual Q13 publish data must validate');
-  const publish = checked.definition.declared.acts['publish'];
-  if (!publish) throw Error('Actual Q13 publish act required');
-  const read = readFields(publish.fields, fields, PROPOSED_BOUNDS);
-  if (!read.ok) throw Error(`TEST actual Q13 publish readFields: ${read.detail}`);
-  const places = placesOf(publish.fields, read.fields), missing = placeWithoutValue(atHand(undefined, values.slice(0, places.length), places));
-  expect(missing, canonicalize({ phase: 'TEST actual Q13 named values', missing, places, bytes: values.map(value => utf8(value).length) })).toBeNull();
-  return Q.stub.submit(await Q.intent(actor, "publish", { on: 0, expected: await Q.expected({ on: 0 }), fields }), [], { values });
+  return Q.stub.submit(await Q.intent(actor, "publish", { on: 0, expected: await Q.expected({ on: 0 }),
+    fields: JSON.parse(canonicalize({ ...proposed.policy, roomService: canonicalize(proposed.policy.roomService), checkers: rulesPolicyCheckersV13(proposed.policy), proposal: proposed.digest, proof, certificateRequest: request, certificate,
+      directoryBirth: factRefOf((await D.entries())[0]!), destinationBirth: factRefOf((await G.entries())[0]!), membershipBirth: factRefOf((await M.entries())[0]!) })) }), [],
+    { values: [canonicalize(proposed.policy), proofBytes] });
 }
 export async function configureEvidenceRules(room: EvidenceRoom, policy: RulesPolicyV13) {
   const request = await openEvidenceRulesCertificate(room, policy); await room.pause(room.nodes);

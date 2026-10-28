@@ -1,11 +1,12 @@
 import { expect, test } from "vitest";
-import type { Digest, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import type { RuleGiven, StateView } from "@generalbusiness/dap-derive";
-import { contentChecked, contentStates, valueDigest } from "@generalbusiness/dap-derive";
+import { PROPOSED_BOUNDS, type Digest, type Item, type MemberRef, type PlatformData, type ScopeRef } from "@generalbusiness/dap-contract";
+import type { Judging, RuleGiven, StateView } from "@generalbusiness/dap-derive";
+import { contentChecked, contentStates, deriveEffects, valueDigest } from "@generalbusiness/dap-derive";
 import { canonicalize, isRecord, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { rulesScopeV12 } from "../src/rules-scope-v12.ts";
 import { rulesAnswerV13, rulesObservedValuesV13, rulesScopeRulesV13, rulesScopeV13 } from "../src/rules-scope-v13.ts";
 import { firstExtentsV13, rulesPolicyProposalV13, RULES_CONTENT_BYTES_V13, RULES_EXTENTS_VALUE_V13 } from "../src/rules-policy-v13.ts";
+import { checkedPlatformData } from "./fixtures.ts";
 
 // Folded state and membership observations are explicit stand-ins. No certificate or native turn runs here.
 const rules: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "rules" };
@@ -14,6 +15,38 @@ const checker: MemberRef = { membership, member: "@checker" };
 const digest = `sha256:${"1".repeat(64)}` as Digest;
 const item = { id: 0, refs: {}, values: { configured: false, membership: membership.scope, approvals: 1, ownerMayReview: false } };
 const state = { page: () => ({ items: [item] }), incarnations: () => [membership.inc], scope: () => ({ status: "active", at: rules, head: { seq: 0, hash: digest } }) } as unknown as StateView;
+
+test("a native service-generation effect holds its real local position, without fabricating a self fact", () => {
+  const definition = checkedPlatformData(rulesScopeV13);
+  const row: Item = { ...item, type: "rules", state: "current", revision: 0, opened: digest, parties: {}, attributed: [] };
+  // Explicit boundary stand-in: it emits the same native self reference as
+  // q13-publish-policy, without claiming a certificate or publication was judged.
+  // The real cohort test separately proves mark changes and unchanged generations.
+  const at = (self: number, data: PlatformData = rulesScopeV13): ReturnType<typeof deriveEffects> => {
+    const judging: Judging = {
+      view: state, definition: data === rulesScopeV13 ? definition : checkedPlatformData(data), bounds: PROPOSED_BOUNDS,
+      clock: { reading: "2026-10-28T00:00:00Z", asOf: "2026-10-28T00:00:00Z", behind: false },
+      scope: { at: rules, creator: null }, self, kind: "publish", fields: {}, fieldTypes: {}, subjects: new Map([["on", row]]),
+      signer: null, facts: new Map(), prepared: [], used: [],
+      judged: { type: "diagnosis", of: { seq: 0, n: 0 }, attempts: [] },
+      platform: { named: "platform:rules@13", rules: { "q13-publish-policy": { place: "effect", most: 1,
+        run: given => [{ effect: "ref", item: row.id, slot: "roomServiceChanged", to: given.resolved.self }] } } },
+    };
+    return deriveEffects(judging, judging.definition.declared.acts["publish"]!.effects.slice(0, 1), [], null);
+  };
+  for (const self of [1, 7, 1_000_000_000]) {
+    const result = at(self);
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw Error("The bounded native position must fit its declared reference");
+    expect(result.effects).toEqual([{ effect: "ref", item: 0, slot: "roomServiceChanged", to: self }]);
+    expect(result.working.get("on")?.refs["roomServiceChanged"]).toBe(self);
+  }
+  for (const self of [0, 1_000_000_001]) expect(at(self)).toMatchObject({ ok: false, reason: "bad-field" });
+  const rulesItem = rulesScopeV13.items["rules"]!;
+  const fullFact: PlatformData = { ...rulesScopeV13, items: { ...rulesScopeV13.items, rules: { ...rulesItem, refs: { ...rulesItem.refs,
+    roomServiceChanged: { fixed: false, required: false, to: { type: "fact", kind: ["publish"], under: "platform:rules" } } } } } };
+  expect(at(7, fullFact)).toMatchObject({ ok: false, reason: "bad-field" });
+});
 
 function retainedPolicy(state: StateView): Record<string, unknown> {
   const answer = rulesAnswerV13(state, { of: rules, asked: "rules" }), values = rulesObservedValuesV13(state, { of: rules, asked: "rules" });
