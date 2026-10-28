@@ -814,7 +814,21 @@ function evidenceAdmission(given: RuleGiven, operation: Operation): OutcomeGives
   if (given.input.type === "outcome" && given.input.result === "unknown") {
     return { effects: [...effects, evidenceRecordEffectV17(original.item.id, { ...record, reason: "admission-unknown" })], sends: [], opens: [] };
   }
-  if (given.input.type !== "outcome" || given.input.result !== "confirmed" || given.resolved.outcome?.selected !== true || !view) return refuse("evidence-unavailable");
+  if (given.input.type !== "outcome" || given.input.result !== "confirmed" || given.resolved.outcome?.selected !== true || !view) {
+    // TEMPORARY bounded diagnostic; exact original bytes retained for removal.
+    const observation = given.observed({ asked: "rules" })?.observation;
+    const rulesObservation = observation && "subject" in observation && observation.subject === "rules" && observation.content.asked === "rules" ? observation : null;
+    const extents = rulesObservation?.content.extents
+      ? given.value(RULES_EXTENTS_VALUE_V13.domain, rulesObservation.content.extents, RULES_EXTENTS_VALUE_V13.max) : undefined;
+    const decoded = rulesObservation ? readRulesPolicyObservationV17(rulesObservation,
+      { rules: rulesObservation.of, destination: given.resolved.at, extents }, given.time) : null;
+    console.log("EVIDENCE_ADMISSION_CONTEXT_13", JSON.stringify({ result: given.input.type === "outcome" ? given.input.result : null,
+      selectedResolved: given.resolved.outcome !== undefined, selected: given.resolved.outcome?.selected ?? null,
+      view: view !== null, rulesScope: destinationRulesScope(given.state) !== null, rulesObservation: rulesObservation !== null,
+      domainNamed: rulesObservation?.content.extents !== undefined, domainValue: extents !== undefined,
+      decoder: decoded === null ? "absent" : decoded.ok ? "ok" : decoded.reason }));
+    return refuse("evidence-unavailable");
+  }
   if (timeMs(record.deadline)! <= timeMs(given.time)!) return refuse("check-timeout");
   const check = view.policy.checks.find(check => check.name === record.name && check.configuration === record.configuration);
   if (!check) return refuse("not-this-check");
