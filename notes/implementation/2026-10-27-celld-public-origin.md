@@ -62,6 +62,13 @@ creation. Its first driver diagnostic named only the stage. The driver now
 retains the actual HTTP status and a closed refusal vocabulary on failure,
 without response bodies, invitations or bearers. No original custody is
 reused and no runtime pass is inferred.
+The bounded diagnostic attempt also stopped before a control response.
+Private custody inspection found both agent-issuance receipts and no verified
+link, so the stage label did not establish an HTTP refusal. The driver now
+checks the exact retained issuance for child readiness, with at most eight
+read-only Checks. It sends neither a replacement act nor Continue. A verified
+private handoff releases only its own completed config pointer, preserving all
+opaque snapshots. Diagnostics distinguish invitation state from HTTP status.
 This section will record the final terminal results before review. The final evidence will be sealed under
 `/Users/hughpyle/play/artroom-evidence/2026-10-27-celld-public-origin`.
 The first draft inventory generator failed before parsing because a flat

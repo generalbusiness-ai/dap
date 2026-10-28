@@ -226,9 +226,52 @@ async function run() {
     const membership = config.repository.membership;
     const fresh = async label => {
       owned.check();
-      const result = await issueInvitation(context, { kind: "agent-key", handle: `@proxy-${label}`, hours: 1, controller: { membership, member: "@owner" } }, { privateRequests: [], mode: "new", operation: randomUUID() });
+      const operation = randomUUID(), privateRequests = [];
+      // Capture the complete original opaque snapshot chain as the real
+      // store publishes it. Checks use these exact names, operation and
+      // input; they never prepare replacement acts or use mode:continue.
+      const issuanceContext = { ...context, store: { ...context.store, keepPrivate: async (name, value) => {
+        must(/^i-[0-9a-f]{30}$/.test(name) && privateRequests.length < 16 && !privateRequests.includes(name), "Unexpected owned invitation snapshot");
+        await context.store.keepPrivate(name, value);
+        privateRequests.push(name);
+      } } };
+      const input = { kind: "agent-key", handle: `@proxy-${label}`, hours: 1, controller: { membership, member: "@owner" } };
+      const options = { privateRequests, mode: "new", operation, current: () => !interrupted };
+      let result = await issueInvitation(issuanceContext, input, options), checks = 0;
+      const describe = () => {
+        const states = ["prepared", "unknown", "refused", "verified"];
+        const reasons = new Map([
+          ["The current native invitation could not be verified.", "invitation-not-verifiable"],
+          ["The native directory and repository siblings could not be verified.", "repository-not-verifiable"],
+          ["The native agent inbox creation could not be verified.", "inbox-not-verifiable"],
+          ["The original agent opening is retained.", "member-outcome-unknown"],
+          ["The original invitation is retained.", "invitation-outcome-unknown"],
+        ]);
+        failureMetadata.lastInvitation = { state: states.includes(result.state) ? result.state : "invalid-result", checks,
+          reason: reasons.get(result.reason) ?? null, inboxNotVerifiable: result.reason === "The native agent inbox creation could not be verified.", snapshotCount: privateRequests.length };
+      };
+      describe();
+      // An accepted member act does not promise that its separate Inbox
+      // create/result/confirm handshake has finished. Bounded explicit
+      // Checks read the original facts and child; they submit no new act.
+      const until = performance.now() + 10_000;
+      while (result.state === "unknown" && checks < 8 && performance.now() < until) {
+        owned.check();
+        await delay(100);
+        owned.check(); checks++;
+        result = await issueInvitation(issuanceContext, input, { ...options, mode: "check", privateRequests: [...privateRequests] });
+        describe();
+      }
       must(result.state === "verified" && typeof result.link === "string", "Actual fresh agent invitation required");
-      return JSON.stringify({ link: result.link });
+      const body = JSON.stringify({ link: result.link }); // Private verified handoff, never output.
+      const held = await context.store.config();
+      must(held?.invitationIssue?.operation === operation && held.invitationIssue.request === privateRequests.at(-1), "Owned verified invitation pointer changed");
+      // Same finished-pointer release as invitePerson.finish. Every opaque
+      // original snapshot stays in Store.private for exact later inspection.
+      const { invitationIssue: _finished, ...released } = held;
+      owned.check(); await context.store.save(released);
+      must(bytes.canonicalize(await context.store.config()) === bytes.canonicalize(released), "Owned invitation release did not persist");
+      return body;
     };
     const control = async (action, agent, body, service = base, headers = {}) => {
       owned.check();
@@ -236,10 +279,11 @@ async function run() {
       const signed = bytes.signControl(request, secret);
       const path = action === "create" ? "/mcp/agents" : `/mcp/agents/${agent}${action === "bearer" ? "/bearer" : ""}`;
       const response = await transport(base + path, { method: action === "retire" ? "DELETE" : "POST", headers: { "content-type": "application/json", ...headers, authorization: `Control ${bytes.b64url(bytes.utf8(bytes.canonicalize(request)))}.${signed.sig}` }, body });
+      failureMetadata.lastControl = { status: response.status, error: null, rule: null, jsonParsed: false };
       const value = await readJson(response);
       // A closed diagnostic vocabulary exposes no body, bearer or invitation.
       const known = ["agent", "archived", "control", "custody", "enrol", "enrolling", "full", "link", "op", "rate-limited", "refused", "retired", "unauthorized", "unresolved", "bad-request", "forbidden", "method-not-allowed", "not-found", "too-large", "unavailable", "agent-key-invitation", "binding", "body", "control-budget", "entry", "fingerprint", "key-not-active", "membership", "notAfter", "read-back", "service", "signature", "stale", "header"];
-      failureMetadata.lastControl = { status: response.status, error: known.includes(value?.error) ? value.error : null, rule: known.includes(value?.rule) ? value.rule : null };
+      failureMetadata.lastControl = { status: response.status, error: known.includes(value?.error) ? value.error : null, rule: known.includes(value?.rule) ? value.rule : null, jsonParsed: true };
       return { status: response.status, value };
     };
     failureMetadata.stage = "configured-create";
