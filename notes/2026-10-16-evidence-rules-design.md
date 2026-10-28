@@ -227,7 +227,12 @@ The hold also records the failed job and the published commit.
 
 **When a hold takes effect.** A `published` check that is still running
 does not block later landings. Recording a failure and setting its hold
-are one update of the destination's state. The destination orders that
+are one update of the destination's state. A timeout is recorded by the
+job's own timed entry and judged as a hold at every later admission from
+the hold index's bounded pending jobs. The timed entry changes only its job;
+it opens no operation and sends nothing. This follows ruling
+`git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c20152ef7919ec4b03c7647a6b734aadc1cec7dd`.
+The destination orders that
 update with its admissions, so every admission that it decides after the
 update sees the hold, and none decided before it does. A hold has no
 effect on a publication that was already admitted. While a hold stands,

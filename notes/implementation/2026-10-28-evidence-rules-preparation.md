@@ -2,8 +2,9 @@
 
 Status: Implementation and component validation in progress. This note
 retains the before-source choices required by the first-slice request.
-The atomic timeout contract decision, Native acceptance, gate, review,
-landing and deployment remain owed. Component results appear below.
+The existing-form timeout implementation, shared transport scope
+clarification, Native acceptance, gate, review, landing and deployment
+remain owed. Component results appear below.
 
 Base: Main `06e4d33fe17937610891f29b5d1513b9e224edea`, after J3.
 Branch: `request/evidence-rules-20261028`.
@@ -12,6 +13,7 @@ Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a53e1464773
 Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a891555c470d4693e466b9c5240b5ed35a95b388
 Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ed8187819e92ad401315e78a5a7f0a6c6073509f
 Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f73805e41fb84d460ea391b66a2c6ab23568f15b
+Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c20152ef7919ec4b03c7647a6b734aadc1cec7dd
 
 The full request and ruling were read through gitseq as builder. The
 ruling remains effective. Its stale metadata follows retirement of the
@@ -368,9 +370,11 @@ authenticated self-request opens the nonholder published-plan through a
 bounded effect mark. It draws on the actual batch account and names the
 already recorded written fact. No outcome opens a holder.
 
-A deadline must atomically record the actual timeout and reasoned hold; the
-contract gap below currently prevents that implementation. A funded notice
-operation separately obtains current triagers. Timeout ends waiting;
+A deadline records the actual timeout on its own job. Every later admission
+judges that state through the exact-key pending-job index. A subsequent
+entry or explicit recovery act opens the funded incident notice; until then
+the timed-out job visibly owes it. The notice obtains current triagers.
+Timeout ends waiting;
 it does not release budget needed for an eligible late result or prove a
 physical runner stopped. The service cannot start a first run after its
 deadline. A persisted run may finish under fresh current authority.
@@ -388,51 +392,47 @@ still owes owning checks, all 19 Decisions witnesses, the explicit actual
 J3 marked-room case, one ordinary gate and independent exact-head review.
 No test result or deployment is claimed at this Source checkpoint.
 
-## Decision needed: atomic native timeout
+## Adopted timeout design
 
-Static Source review found a contract gap before the first project run.
-`packages/contract/src/platform.ts` states that a timed rule holds no mark.
-`packages/derive/src/validate/effects.ts` refuses every timed code effect
-with `timed-partial`. `validate/timed.ts` also requires a literal transition
-out of the timed states. The current draft has those literal transitions,
-but its code effect remains unsupported. It is not a valid whole Native
-implementation and cannot satisfy this request yet.
+Static review before the first run found the draft timed code effect
+unsupported: the contract holds no mark there, and derivation refuses it
+with `timed-partial`. Root filed question `1a97e9d5`; planner ruling
+`c20152ef` rejected a new timed projection port and chose existing forms.
+The original port proposal was not implemented. The draft's unsupported
+mark remains until this replacement is complete; no whole validity claim
+follows the component checks.
 
-The commissioned timeout needs one atomic record of the actual timeout,
-its reasoned holds and the funded notice task. Literal effects on the timed
-job alone cannot update a different hold owner. Delaying those effects to
-a later outcome would leave an admission window unless the authoritative
-hold view also changes. The existing timed `opens` extension supports only
-fixed reservation cleanup kinds and does not supply this projection.
+The selected design has these boundaries:
 
-The recommended decision is a narrowly versioned Native timed projection
-for actual Destination 17. It must have all of these properties:
+- The timed job alone transitions, sets its reason and records its own
+  deciding reference from self. The entry opens no operation and sends
+  nothing. Its recorded sequence is the actual timeout cause.
+- A bounded pending-job list in the exact-key hold index is reserved before
+  publication and bound at admission. A running job does not hold; its
+  timed-out state holds from that entry. Admission reads the row and the
+  named jobs, so there is no deferred hold-update window or history scan.
+- Exact-key passes advance cleared-through by publication order. Earlier
+  late passes, other keys, duplicate notices and incident closure cannot
+  clear a later hold. Transition and override are distinct reasoned acts.
+- Result, clearing pass, transition or override may remove a pending job.
+  The timed entry never edits another item. Full lists refuse before work;
+  their bytes and extra effects stay inside the existing finite allowances.
+- A timed-out job with no incident is visibly pending. A subsequent Native
+  entry that reads it, or an authorized triager or actual publication
+  performer's recovery act, opens its already-funded incident notice.
+  Recovery does not create a new cause, clear a hold or invent a failed run.
 
-- Only the exact Native catalog and applied genesis select it. Declared
-  definitions and historical Native versions retain the existing ban.
-- The declared literal transition still leaves the timed states. The
-  projection is synchronous and bounded by its declared effects and
-  pre-funded operation closure. It cannot fetch, observe or send messages.
-- The timed journal entry atomically retains the timeout cause, exact-key
-  hold changes and notice opening. The notice separately reads triagers.
-- Validation, derivation, fold, replay, lifetime custody and all five
-  capacity dimensions use the same finite declaration. No allowance rises.
-- A narrow witness must place a landing on each side of the timeout
-  boundary and prove there is no partially effective hold. Negative controls
-  must preserve the historical and declared timed-mark refusal.
+The implementation owes real landings on both sides of the timed boundary,
+Runtime/Replay equality, preserved historical and declared `timed-partial`
+controls, a full pending-list refusal and the hold case table for Decisions
+13, 14, 16, 17 and 18. No kernel timeout extension is authorized.
 
-This requires work in the neutral contract and derivation layers, beyond
-the assigned new Rules, lane and Destination versions. Root requests an
-explicit planner disposition before implementing that extension. An
-alternative is a redesigned authoritative timeout-marker/hold view using
-existing literal effects and a bounded pending-job index. That changes the
-selected hold storage and admission proof and needs its own concrete ruling.
-Merely moving hold updates to an asynchronous notice is insufficient.
-
-All current implementation Source is retained for review. The unaffected
-bytes, Git, checker, policy and lane components can be checked after a
-committed freeze while this decision is pending. No whole implementation,
-Native authority scenario, gate, review or deployment is claimed.
+Ruling point 1 also excludes kernel package changes. Question `2356b681`
+asks how that applies to the draft's pre-existing shared binding types and
+Rules observation members. Root recommends preserving the old observation
+grammar and carrying new service metadata in the existing authenticated
+retained extents value. No transport rewrite is claimed while that scope
+clarification is pending. Independent Native timeout design continues.
 
 ## First component checks and record-wire correction
 

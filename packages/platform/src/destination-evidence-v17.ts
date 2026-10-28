@@ -15,7 +15,7 @@ import { branchOf, destinationRulesScope, destinationStageConfirmedV17 } from ".
 import { EVIDENCE_LIMITS_V17, assessEvidenceV17, evidenceKeyDigestV17, newEvidenceIndexV17, readEvidenceCountsV17, readEvidenceIndexV17, releaseEvidenceCandidateV17, reserveEvidenceCandidateV17, reserveEvidenceCountsV17, settleEvidenceCandidateV17, type EvidenceCandidateV17, type EvidenceCountsV17, type EvidenceIndexRecordV17 } from "./evidence-index-v17.ts";
 import { decideEvidenceIncidentV17, evidenceHoldActiveV17, evidenceTriagersV17, failEvidenceHoldV17, newEvidenceHoldV17, passEvidenceHoldV17, readEvidenceHoldKeyV17, readEvidenceHoldV17, readEvidenceIncidentV17, releaseEvidenceHoldV17, reserveEvidenceIncidentV17, type EvidenceFailureV17, type EvidenceHoldKeyV17, type EvidenceHoldRecordV17, type EvidenceIncidentV17 } from "./evidence-holds-v17.ts";
 import { evidenceSourceV17, judgeListEligibilityV17, judgeReservationV17, readRulesPolicyObservationV17, type ReservationPolicyViewV17 } from "./reservation-v17.ts";
-import { RULES_EXTENTS_VALUE_V13, checkHoldsV13, checkReuseV13, checkSourceV13, readRulesPolicyV13, readServiceMarkV13, type RulesCheckV13 } from "./rules-policy-v13.ts";
+import { RULES_EXTENTS_VALUE_V13, checkHoldsV13, checkReuseV13, checkSourceV13, checkStageV13, readRulesPolicyV13, readServiceMarkV13, type RulesCheckV13 } from "./rules-policy-v13.ts";
 import { certifiedPublicationStateV17, certifiedPublicationStateWireV17, certifiedPublicationWireV17, CERTIFIED_PUBLICATION_TEXT_BYTES_V17, certifiedReservationBudgetV17, evidenceCarryingBudgetV17, type CertifiedGenerationV17 } from "./destination-budget-v17.ts";
 import { evidenceWireV17, readEvidenceWireV17 } from "./evidence-wire-v17.ts";
 import type { DestinationSuccessorV17 } from "./destination.ts";
@@ -602,11 +602,51 @@ function auditRequest(given: RuleGiven, record: EvidenceJobRecordV17, view: Rese
   const operation = record.binding.subject.kind === "landing" ? given.state.item(record.binding.subject.publication.seq)?.refs["operation"] : null;
   if (!isFactRef(operation)) throw Error("An automatic audit lost its publication operation");
   const binding: EvidenceBinding = { ...copy(record.binding), checker: target.checker, source: "room", auditOf: record.countedJob ?? record.job };
+  if (!frozenEvidenceBatch(given, binding, target.name, target.configuration)) throw Error("An automatic audit lost its frozen funded descriptor");
   return { to: record.job.at, message: { class: "request", type: "tell", body: { message: "admit-audit-check", fields: {
     manifest: record.binding.subject.kind === "landing" ? record.binding.subject.manifest : null,
     name: target.name, configuration: target.configuration, tree: record.tree, commit: record.commit, base: record.base,
     checker: target.checker, operation, auditOf: binding.auditOf, forJob: record.job, binding: canonicalize(binding), bindingDigest: evidenceBindingDigest(binding),
   } } } };
+}
+/** Semantic correspondence only. The Native wrapper below proves the
+ * retained capture and funded account; current Q13 authority is separate. */
+export function evidenceFrozenBatchMatchesV17(binding: EvidenceBinding, name: string, configuration: Digest, value: EvidenceBatchRecordV17): boolean {
+  const batch = readEvidenceBatchV17(value);
+  if (!batch || binding.subject.kind === "work" || !same(binding.subject.publication, batch.publication)
+    || !same(binding.policyGeneration, { rules: batch.policy.rules, seq: batch.policy.revision })
+    || !same(binding.serviceGeneration, batch.policy.serviceGeneration) || !same(binding.roomService, batch.policy.policy.roomService)) return false;
+  const descriptor = batch.checks.find(check => check.name === name);
+  return !!descriptor && descriptor.configuration === configuration && checkSourceV13(descriptor) === binding.source
+    && checkStageV13(descriptor) === binding.stage && binding.subject.kind === binding.stage && same(descriptor.checker, binding.checker);
+}
+function frozenEvidenceBatch(given: RuleGiven, binding: EvidenceBinding, name: string, configuration: Digest, holder?: number, job?: FactRef): EvidenceBatchRecordV17 | null {
+  if (binding.subject.kind === "work") return null;
+  const subject = binding.subject, publication = given.state.item(subject.publication.seq), opening = local(given, subject.publication);
+  const operation = publication?.refs["operation"];
+  if (!opening || !publication || publication.type !== "publication" || !isFactRef(operation)
+    || !same(publication.refs["manifest"], subject.manifest)) return null;
+  const ids = given.state.lookup("evidence-batch", "operation", canonicalize(operation), 5);
+  if (!ids?.length || ids.length > 4) return null;
+  const rows = ids.map(id => ({ item: given.state.item(id), batch: readEvidenceBatchWireV17(given.state.item(id)?.values["batch"]) }))
+    .sort((left, right) => (left.batch?.ordinal ?? -1) - (right.batch?.ordinal ?? -1));
+  const first = rows[0]!.batch;
+  if (!first || rows.length !== first.total || rows.some((row, ordinal) => !row.item || row.item.type !== "evidence-batch" || !row.batch
+    || row.batch.ordinal !== ordinal || row.batch.total !== rows.length || !same(row.batch.publication, subject.publication)
+    || !same(row.batch.operation, operation) || !same(row.batch.capture, first.capture) || !same(row.batch.policy, first.policy) || !same(row.batch.touched, first.touched))) return null;
+  const selected = rows.find(row => (holder === undefined || row.item!.id === holder) && (!job || row.batch!.jobs.some(row => same(row.job, job) && row.name === name))
+    && evidenceFrozenBatchMatchesV17(binding, name, configuration, row.batch!));
+  if (!selected?.batch) return null;
+  const capture = local(given, selected.batch.capture), born = given.own(selected.item!.id)?.entry;
+  const captured = capture && certifiedPublicationStateWireV17(effectValue(capture, "passes", publication.id), given.resolved.bounds);
+  const current = certifiedPublicationStateWireV17(publication.values["passes"], given.resolved.bounds);
+  const view = captured && readRulesPolicyObservationV17(captured.policy.observation, captured.policy.input, captured.policy.observation.at);
+  return capture?.input.type === "outcome" && capture.input.owner === "platform:destination@17" && ["judge", "read"].includes(capture.input.kind)
+    && capture.input.result === "confirmed" && capture.effects.some(effect => effect.effect === "state" && effect.item === publication.id && effect.state === "reserved")
+    && born?.input.type === "delivery" && same(born.input.from, selected.batch.capture)
+    && born.effects.some(effect => effect.effect === "open" && effect.item === born.seq && effect.type === "evidence-batch")
+    && captured && current && same(current.policy, captured.policy) && same(captured.policy.manifest, subject.manifest)
+    && same(captured.policy.touched, selected.batch.touched) && view?.ok && same(view.view, selected.batch.policy) ? selected.batch : null;
 }
 function evidenceAdmission(given: RuleGiven, operation: Operation): OutcomeGives {
   if (operation.for === undefined) throw Error("Evidence admission has no funded job");
@@ -631,6 +671,7 @@ function evidenceAdmission(given: RuleGiven, operation: Operation): OutcomeGives
   if (timeMs(record.deadline)! <= timeMs(given.time)!) return refuse("check-timeout");
   const check = view.policy.checks.find(check => check.name === record.name && check.configuration === record.configuration);
   if (!check) return refuse("not-this-check");
+  if (record.binding.subject.kind !== "work" && !frozenEvidenceBatch(given, record.binding, record.name, record.configuration, record.holder, record.job)) return refuse("wrong-source");
   const memberUse = given.observed({ member: record.binding.checker.member })?.observation;
   const key = record.binding.source === "room" ? keyObservation(given, view.policy.roomService?.key ?? null) : null;
   const source = evidenceSourceV17(record.binding, check, view, key, given.time, true, memberUse && "subject" in memberUse && memberUse.subject === "member" ? memberUse : null);

@@ -80,7 +80,7 @@ TEST work
     commitProof: canonicalize({ v: 1, id: workCommit, data: b64url(commitBytes) }), binding: canonicalize(binding), bindingDigest: digest } })).toBe("guard-failed: work-released");
 });
 
-test("a merged change accepts only its configured native peer's published job and retains one incident create without a human requester; typed refusals and same-envelope child diagnostics remain visible (SCRIPTED remote peers)", { timeout: 30_000 }, async () => {
+test("a merged change accepts only its configured native peer's published job and retains one incident create without a human requester; typed refusals and the unproven child origin remain visible (SCRIPTED remote peers)", { timeout: 30_000 }, async ({ task }) => {
   const g = await evidenceGraph(); net.capability = capable;
   const lane = await g.open("open-change"); net.hold = () => true;
   const configuration = textDigest("TEST published config");
@@ -146,17 +146,29 @@ test("a merged change accepts only its configured native peer's published job an
   // One bounded retry of the actual retained create, through the maintained
   // namespace transport. A previously held send may not yet be due in the
   // outbox; this does not mint a new cause, seed, signature or Native proof.
-  const retried = await namespace(env.NET).transport.send({ to: send.to, from: await lane.fact(incident.id), n: send.n, message: send.message });
+  const wire = namespace(env.NET), incidentFact = await lane.fact(incident.id);
+  const parentSource = await wire.resolver.read(incidentFact, net.bounds.fetchSeconds, true);
+  const retried = await wire.transport.send({ to: send.to, from: incidentFact, n: send.n, message: send.message });
   const activation = await transport.summary(childName, reader), first = await transport.entry(childName, reader, 0);
   const born = first.ok && first.value.entry.input.type === "genesis" ? first.value.entry.input : null;
   const result = first.ok ? first.value.entry.sends.find(item => item.message.class === "result")?.message : null;
-  console.info("TEST-declared-incident-creation-diagnostic-v1", {
+  const measured = {
     qualification: "SCRIPTED remote peers; one actual retained create delivery and bounded reads, no Native G17 admission or positive child-origin proof",
-    child: childName, source: await lane.fact(incident.id), ordinal: send.n, delivery: retried,
+    child: childName, source: incidentFact, ordinal: send.n, delivery: retried,
+    parentUnder: parentSource && "entry" in parentSource ? parentSource.under : null,
     activation: activation.ok ? { status: activation.value.status, definition: activation.value.definition } : { reason: activation.reason },
     genesis: born ? { decision: born.decision, kind: born.kind, reason: result?.class === "result" ? result.reason ?? null : null } : first.ok ? { type: first.value.entry.input.type } : { reason: first.reason },
     incidentState: (await lane.item(incident.id)).state, clockUnchanged: net.clock.now === clock,
-  });
+  };
+  Object.assign(task.meta, { evidenceIncidentCreation: measured });
+  const measurement = `TEST-declared-incident-creation-v1 ${JSON.stringify(measured)}`;
+  // This custom office is not a native Directory. Its honest source label
+  // cannot satisfy Issue4's incident fact guard under the reserved change
+  // identity. Pin the actual refusal, rather than accepting an unread child.
+  expect(measured.parentUnder, measurement).toBe("declared:change");
+  expect(retried, measurement).toMatchObject({ answer: "recorded" });
+  expect(measured.activation, measurement).toEqual({ status: "refused", definition: g.valid(g.issue).digest });
+  expect(measured.genesis, measurement).toEqual({ decision: "refused", kind: "file", reason: { code: "guard-failed", name: "not-this-incident" } });
   expect(net.clock.now).toBe(clock);
   expect((await lane.entry(incident.id)).sends.find(item => item.n === send.n)).toEqual(send);
   // Actual child acceptance, attention and close behavior are commissioned

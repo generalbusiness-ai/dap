@@ -1,9 +1,9 @@
 import { expect } from "vitest";
-import type { Answer, Digest, EvidenceBinding, FactRef, Intent, MemberRef, RulesObservation, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Answer, Digest, EvidenceBinding, FactRef, Intent, MemberRef, OperationId, Read, RulesObservation, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, digestBytes, evidenceBindingDigest, factRefOf, intentDigest, isDigest, isRecord, isSeed, readEvidenceBinding, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/dap-client";
 import { configurationDigest, type Configuration, type Notice, type Scopes, type Variable } from "../../checkers/src/index.ts";
-import { idOf, parseCommit } from "@generalbusiness/dap-git";
+import { idOf, isObjectId, parseCommit } from "@generalbusiness/dap-git";
 import { keys, type Actor } from "@generalbusiness/dap-derive/testing";
 import { RULES_CERTIFICATE_KIND, RULES_PATTERNS, RULES_TREE_PROOF } from "@generalbusiness/dap-platform";
 import { EVIDENCE_RULES_COHORT } from "../../platform/src/evidence-cohort.ts";
@@ -11,7 +11,9 @@ import { rulesPolicyCheckersV13, rulesPolicyProposalV13, type RulesPolicyV13 } f
 import { readEvidenceJobRecordWireV17 } from "../../platform/src/destination-evidence-v17.ts";
 import { issueEvidence4 } from "../../../apps/room/lanes/src/issue4.ts";
 import { changeEvidence4 } from "../../../apps/room/lanes/src/change4.ts";
-import { hardeningItems, hardeningSealed } from "./certified-rules-hardening-fixture.ts";
+import { certificateGate, hardeningItems, hardeningSealed } from "./certified-rules-hardening-fixture.ts";
+import type { EffectRequest } from "../src/operations.ts";
+import type { OperationStatus } from "../src/store.ts";
 import { DestinationHost, type DestinationProvider } from "../src/destination-host.ts";
 import { CredentialStore } from "../src/credential-store.ts";
 import { readRulesTree } from "../src/rules-tree-provider.ts";
@@ -34,7 +36,7 @@ export async function evidenceNativeRoom() {
     gitRequests.push({ method: request.method, path: new URL(request.url).pathname });
     return fetch(request);
   };
-  const control: { heldRead: { entered(): void; release: Promise<void> } | null } = { heldRead: null };
+  const control: { heldRead: { entered(): void; release: Promise<void> } | null; race: EvidenceOutcomeRace | null } = { heldRead: null, race: null };
   const forbidden = async (): Promise<never> => { throw Error("TEST certificate provider cannot perform another operation"); };
   const certificateProvider: DestinationProvider = {
     format: forbidden, mint: forbidden, revoke: forbidden, ref: forbidden, objects: forbidden, send: forbidden, inspect: forbidden, mintRead: forbidden,
@@ -87,8 +89,21 @@ export async function evidenceNativeRoom() {
       const actual = host.outside(given, sql, bindings);
       const certificate = new DestinationHost(given, { host: host.host, namespace: host.namespace, provider: certificateProvider,
         custody: new CredentialStore(sql, () => given.scope()?.at ?? null) });
-      return { ...actual, send: request => request.kind === RULES_CERTIFICATE_KIND && actual.accepts(request.owner, request.kind)
-        ? certificate.send(request) : actual.send(request) };
+      return { ...actual,
+        accepts: (owner, kind) => actual.accepts(owner, kind) && !(owner === EVIDENCE_RULES_COHORT.destination && control.race?.parked && ["judge", "evidence-result"].includes(kind)),
+        send: async request => {
+          const race = request.owner === EVIDENCE_RULES_COHORT.destination && ["judge", "evidence-result"].includes(request.kind) ? control.race : null;
+          if (race) race.requests.push(request);
+          const answer = await (request.kind === RULES_CERTIFICATE_KIND && actual.accepts(request.owner, request.kind) ? certificate.send(request) : actual.send(request));
+          if (race && request.kind === race.heldKind) { race.answer = answer; race.gate.hold.entered(); await race.gate.hold.release; }
+          return answer;
+        },
+        judged: (at, sealed) => {
+          actual.judged?.(at, sealed);
+          const race = control.race, request = race?.requests.find(request => request.operation === at.operation && request.attempt === at.attempt);
+          if (race && request && request.kind !== race.heldKind) race.decided(sealed);
+        },
+      };
     });
     await G.restart(); await pause(nodes);
     const seat = await M.did(rita, "seat", { expected: await M.expected({ roster: 0 }) });
@@ -97,6 +112,39 @@ export async function evidenceNativeRoom() {
   } catch (error) { life.release(); throw error; }
 }
 export type EvidenceRoom = Awaited<ReturnType<typeof evidenceNativeRoom>>;
+
+interface EvidenceOutcomeRace {
+  heldKind: "judge" | "evidence-result"; parked: boolean; gate: ReturnType<typeof certificateGate>;
+  requests: EffectRequest[]; answer: Awaited<ReturnType<DestinationHost['send']>> | undefined; decided(sealed: Sealed | null): void;
+}
+/** TEST scheduling only: two genuine operations must be ready before either
+ * is accepted, then one unchanged real host answer waits for the other's seal. */
+export function evidenceOutcomeRace(room: EvidenceRoom, heldKind: EvidenceOutcomeRace['heldKind']) {
+  if (room.control.race) throw Error("Only one exact outcome race may own this room");
+  const gate = certificateGate();
+  let decided!: (sealed: Sealed | null) => void;
+  const other = new Promise<Sealed | null>(resolve => { decided = resolve; });
+  const race: EvidenceOutcomeRace = { heldKind, parked: true, gate, requests: [], answer: undefined, decided };
+  room.control.race = race; room.life.cleanup(gate.release);
+  return { entered: gate.entered, other, release: gate.release, enable: () => { race.parked = false; },
+    run: () => (room.G.stub as NativeReadPort).effect(),
+    operation: (kind: EvidenceOutcomeRace['heldKind']) => {
+      const request = race.requests.find(request => request.kind === kind);
+      if (!request) throw Error("Actual raced native request required");
+      return request.operation;
+    },
+    close: () => { gate.release(); room.control.race = null; },
+    assertSent: async () => {
+      expect(race.requests.map(request => request.kind).sort()).toEqual(["evidence-result", "judge"]);
+      expect(race.answer).not.toBeNull(); expect(race.answer).not.toBeUndefined();
+      for (const request of race.requests) {
+        const read = await (room.G.stub as NativeReadPort).operation(reader, request.operation);
+        if (!read.ok) throw Error("Actual native operation row required");
+        expect(read.value.operation.id).toBe(request.operation);
+        expect(read.value.sends.some(send => send.attempt === request.attempt && send.sent !== null && send.sent === request.sentAt)).toBe(true);
+      }
+    } };
+}
 
 /** Native observations carry their retained values beside the answer. */
 export async function evidenceRulesObservation(room: EvidenceRoom) {
@@ -194,6 +242,8 @@ export async function evidenceChecker(room: EvidenceRoom, actor: Actor = keys.pa
 type NativeReadPort = Platform['stub'] & {
   prepare(signed: SignedIntent, grants: readonly [], capability: string, step: string): Promise<Answer>;
   stageSnapshot(signed: SignedIntent): ReturnType<NonNullable<Scopes['stageSnapshot']>>;
+  operation(reader: unknown, operation: OperationId): Promise<Read<OperationStatus>>;
+  effect(): Promise<number>;
 };
 
 export function evidenceScopes(room: EvidenceRoom): Scopes {
@@ -353,6 +403,23 @@ export async function preparePublishedEvidence(room: EvidenceRoom) {
 }
 export type PreparedPublishedEvidence = Awaited<ReturnType<typeof preparePublishedEvidence>>;
 
+/** A required landing descriptor lets the native destination decide reuse
+ * before it can publish. Outcomes below remain actual signed member claims. */
+export async function prepareLandingEvidence(room: EvidenceRoom): Promise<PreparedPublishedEvidence> {
+  const definitions = await evidenceDefinitions(room), service = await evidenceChecker(room);
+  const configuration: Configuration = { name: "landing", image: `sha256:${"5".repeat(64)}`, environment: [], steps: [["/bin/true"]],
+    judged: { passed: { status: 0, line: "ok" }, failed: { status: 1, line: "bad" } }, limits: { seconds: 60, outputBytes: 65536 } };
+  const digest = configurationDigest(configuration);
+  expect(await room.Q.stub.submit(await room.Q.intent(rita, "keep-configuration", { fields: { digest, name: configuration.name } }), [], { values: [canonicalize(configuration)] }))
+    .toMatchObject({ answer: "accepted" });
+  const ordinary = evidenceRulesPolicy({ checker: service.member, key: service.actor.key }, [{ name: configuration.name, configuration: digest,
+    required: true, checker: service.member, source: "member", stage: "landing", reuse: true }]);
+  const policy: RulesPolicyV13 = { ...ordinary, approvals: 0, allowZeroApprovals: true, extents: ordinary.extents.map(extent => extent.name === "rules" ? extent
+    : { ...extent, approvals: 0, allowZeroApprovals: true, checks: [configuration.name] }) };
+  await configureEvidenceRules(room, policy);
+  return { definitions, service, configuration, configurationDigest: digest, policy, paths: ["evidence.md"] };
+}
+
 /** Publish an actual successor generation, optionally with different kept configuration bytes. */
 export async function revisePublishedEvidence(room: EvidenceRoom, setup: PreparedPublishedEvidence, revision: { label: string; image?: Digest }) {
   const configuration = { ...setup.configuration, ...(revision.image ? { image: revision.image } : {}) }, digest = configurationDigest(configuration);
@@ -435,3 +502,41 @@ export async function claimPublishedEvidence(room: EvidenceRoom, setup: Prepared
 }
 export type EvidencePublication = Awaited<ReturnType<typeof publishEvidenceFile>>;
 export type PublishedEvidenceJob = Awaited<ReturnType<EvidencePublication['job']>>;
+
+export async function requestLandingEvidence(room: EvidenceRoom, setup: PreparedPublishedEvidence, publication: EvidencePublication, reuse: boolean) {
+  const reserved = (await hardeningItems(room.G, "publication")).find(item => canonicalize(item.refs['operation']) === canonicalize(publication.operation));
+  if (!reserved || reserved.state !== "reserved" || !isObjectId(reserved.values['tree'])) throw Error("Actual landing reservation tree required");
+  const tree = reserved.values['tree'], observed = await evidenceRulesObservation(room), rules = (await hardeningItems(publication.lane, "rules"))[0];
+  if (!rules) throw Error("Actual lane Rules copy required");
+  const binding: EvidenceBinding = { v: 1, source: "member", stage: "landing", checker: setup.service.member,
+    policyGeneration: { rules: await room.Q.at(), seq: observed.revision }, roomService: observed.content.roomService ?? null,
+    serviceGeneration: observed.serviceGeneration, auditOf: null,
+    subject: { kind: "landing", publication: factRefOf(await evidenceEntry(room.G, reserved.id)), manifest: publication.manifest } };
+  const bindingDigest = evidenceBindingDigest(binding), seq = await publication.lane.did(rita, "request-check", { fields: {
+    manifest: publication.manifest.seq, name: setup.configuration.name, configuration: setup.configurationDigest, checker: setup.service.member,
+    binding: canonicalize(binding), bindingDigest, reuse }, expected: await publication.lane.expected({ manifest: publication.manifest.seq, proposal: 0, rules: rules.id }) });
+  const job = factRefOf(await evidenceEntry(publication.lane, seq));
+  await room.pause(room.nodes);
+  return { job, binding, bindingDigest, tree, record: () => evidenceRecord(room, job) };
+}
+export type LandingEvidenceJob = Awaited<ReturnType<typeof requestLandingEvidence>>;
+
+export async function claimLandingEvidence(room: EvidenceRoom, setup: PreparedPublishedEvidence, publication: EvidencePublication, job: LandingEvidenceJob, outcome: "passed" | "failed") {
+  const seq = await publication.lane.did(setup.service.actor, "check", { fields: { job: job.job.seq, jobFact: job.job, tree: job.tree,
+    configuration: setup.configurationDigest, bindingDigest: job.bindingDigest, outcome },
+    expected: await publication.lane.expected({ job: job.job.seq, manifest: publication.manifest.seq }) });
+  const result = factRefOf(await evidenceEntry(publication.lane, seq));
+  await room.pause(room.nodes);
+  return result;
+}
+
+/** Exact retained native send, for transport reordering without inventing a peer or outcome. */
+export async function evidenceFailureNotice(room: EvidenceRoom, job: FactRef) {
+  for (const { entry } of await hardeningSealed(room.G)) {
+    const send = entry.sends.find(send => canonicalize(send.to) === canonicalize(job.at) && send.message.class === "request" && send.message.type === "tell"
+      && isRecord(send.message.body) && send.message.body['message'] === "published-check-failure" && isRecord(send.message.body['fields'])
+      && canonicalize(send.message.body['fields']['job']) === canonicalize(job));
+    if (send) return { from: factRefOf(entry), n: send.n, to: job.at, message: send.message };
+  }
+  throw Error("Actual native failure notice required");
+}

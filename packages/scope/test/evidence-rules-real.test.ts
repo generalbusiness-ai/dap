@@ -7,7 +7,8 @@ import { keys } from "@generalbusiness/dap-derive/testing";
 import { EVIDENCE_RULES_COHORT } from "../../platform/src/evidence-cohort.ts";
 import { claimEvidenceWork, configureEvidenceRules, enrolEvidenceKey, evidenceCertificate, evidenceChecker, evidenceNativeRoom,
   evidenceEntry, evidenceRecord, evidenceRulesObservation, evidenceRulesPolicy, prepareEvidenceWork, publishEvidenceRulesCertificate, requestEvidenceWork } from "./evidence-rules-real-fixture.ts";
-import { claimPublishedEvidence, prepareAuditEvidence, preparePublishedEvidence, publishEvidenceFile, revisePublishedEvidence } from "./evidence-rules-real-fixture.ts";
+import { claimLandingEvidence, claimPublishedEvidence, evidenceFailureNotice, evidenceOutcomeRace, prepareAuditEvidence, prepareLandingEvidence,
+  preparePublishedEvidence, publishEvidenceFile, requestLandingEvidence, revisePublishedEvidence, type LandingEvidenceJob } from "./evidence-rules-real-fixture.ts";
 import { runEvidenceContainerCase } from "./evidence-runner-case.ts";
 import { hardeningItems, hardeningSealed } from "./certified-rules-hardening-fixture.ts";
 import { readEvidenceJobRecordWireV17, readEvidenceServiceWireV17 } from "../../platform/src/destination-evidence-v17.ts";
@@ -100,6 +101,54 @@ test("real admitted member work reuses its actual earlier pass, disables reuse o
   } finally { room.life.release(); }
 });
 
+test("actual landing reuse follows the tree key and a fresh passed job still publishes after disagreement disables reuse", { timeout: 240_000 }, async () => {
+  const room = await evidenceNativeRoom();
+  try {
+    const setup = await prepareLandingEvidence(room);
+    const published = async (job: LandingEvidenceJob) => {
+      const actual = await job.record();
+      if (job.binding.subject.kind !== "landing") throw Error("Actual landing subject required");
+      const subject = job.binding.subject;
+      if (!isObjectId(actual.commit)) throw Error("Actual published landing commit required");
+      const publication = (await hardeningItems(room.G, "publication")).find(item => item.id === subject.publication.seq);
+      expect(publication?.values).toMatchObject({ tree: job.tree, integration: actual.commit });
+      expect((await hardeningItems(room.G, "receipt")).some(item => item.state === "written" && item.values['commit'] === actual.commit
+        && (item.refs['publication'] === subject.publication.seq || item.values['publication'] === subject.publication.seq))).toBe(true);
+      expect(room.host.stand.refs.get("refs/heads/main")).toBe(actual.commit);
+      return actual.commit;
+    };
+    const first = await publishEvidenceFile(room, setup, "TEST tree T"), firstJob = await requestLandingEvidence(room, setup, first, false);
+    const firstResult = await claimLandingEvidence(room, setup, first, firstJob, "passed");
+    expect(await firstJob.record()).toMatchObject({ state: "passed", result: firstResult });
+    await published(firstJob);
+    const equal = await publishEvidenceFile(room, setup, "TEST tree T"), equalJob = await requestLandingEvidence(room, setup, equal, true);
+    expect(equalJob.tree).toBe(firstJob.tree);
+    expect(await equalJob.record()).toMatchObject({ state: "reused", countedJob: firstJob.job, result: firstResult });
+    expect(await hardeningItems(equal.lane, "result")).toHaveLength(0);
+    await published(equalJob);
+    const different = await publishEvidenceFile(room, setup, "TEST tree U"), differentJob = await requestLandingEvidence(room, setup, different, true);
+    expect(differentJob.tree).not.toBe(firstJob.tree);
+    expect(await differentJob.record()).toMatchObject({ state: "admitted", countedJob: null, result: null });
+    await claimLandingEvidence(room, setup, different, differentJob, "passed");
+    const beforeFailure = await published(differentJob);
+    const conflict = await publishEvidenceFile(room, setup, "TEST tree T"), conflictJob = await requestLandingEvidence(room, setup, conflict, false);
+    expect(conflictJob.tree).toBe(firstJob.tree);
+    const failed = await claimLandingEvidence(room, setup, conflict, conflictJob, "failed");
+    expect(await conflictJob.record()).toMatchObject({ state: "failed", result: failed });
+    expect(room.host.stand.refs.get("refs/heads/main")).toBe(beforeFailure);
+    const retry = await publishEvidenceFile(room, setup, "TEST tree T"), refused = await requestLandingEvidence(room, setup, retry, true);
+    expect(refused.tree).toBe(firstJob.tree);
+    expect(await refused.record()).toMatchObject({ state: "refused", reason: "check-disagrees" });
+    const fresh = await requestLandingEvidence(room, setup, retry, false);
+    expect(await fresh.record()).toMatchObject({ state: "admitted", countedJob: null });
+    const freshResult = await claimLandingEvidence(room, setup, retry, fresh, "passed");
+    expect(await fresh.record()).toMatchObject({ state: "passed", result: freshResult });
+    expect(await published(fresh)).not.toBe(beforeFailure);
+    expect(await firstJob.record()).toMatchObject({ result: firstResult });
+    expect(await conflictJob.record()).toMatchObject({ result: failed });
+  } finally { room.life.release(); }
+});
+
 test("observed room-key rotation refuses both keys for the frozen real work job and only an explicit new admission can count", { timeout: 120_000 }, async () => {
   const room = await evidenceNativeRoom();
   try {
@@ -141,6 +190,7 @@ test("real published holds survive newer counted passes and clear only through d
   const room = await evidenceNativeRoom();
   try {
     const setup = await preparePublishedEvidence(room);
+    const older = await publishEvidenceFile(room, setup, "Older published failure notice"), olderJob = await older.job();
     const first = await publishEvidenceFile(room, setup, "First published check"), firstJob = await first.job();
     const second = await publishEvidenceFile(room, setup, "Second published check"), secondJob = await second.job();
     const third = await publishEvidenceFile(room, setup, "Third published check"), thirdJob = await third.job();
@@ -157,11 +207,24 @@ test("real published holds survive newer counted passes and clear only through d
     // Restore this descriptor before its late outcome; each result is
     // independently counted under a fresh current Rules observation.
     await configureEvidenceRules(room, newGeneration.policy);
+    const olderScope = await older.lane.at();
+    room.life.setHold(envelope => "scope" in envelope.to && envelope.to.scope === olderScope.scope
+      && envelope.message.class === "request" && envelope.message.type === "tell" && isRecord(envelope.message.body)
+      && envelope.message.body['message'] === "published-check-failure");
+    await claimPublishedEvidence(room, setup, older, olderJob, "failed");
+    const olderNotice = await evidenceFailureNotice(room, olderJob.job);
+    expect(await hardeningItems(older.lane, "incident")).toHaveLength(0);
     const failed = await claimPublishedEvidence(room, setup, second, secondJob, "failed");
     const holds = async () => (await hardeningItems(room.G, "evidence-job")).flatMap(item => readEvidenceJobRecordWireV17(item.values['record'])?.holds ?? []);
     const held = (await holds()).find(hold => hold.key.extent === "other" && evidenceHoldActiveV17(hold));
     if (!held) throw Error("Actual active native extent hold required");
     expect(held.failure).toMatchObject({ job: secondJob.job, result: failed, kind: "failed" });
+    const unchangedActiveHold = async () => {
+      const actual = (await holds()).find(hold => canonicalize(hold.key) === canonicalize(held.key));
+      expect(actual?.key).toEqual(held.key); expect(actual?.failure).toEqual(held.failure);
+      if (!actual) throw Error("Actual exact hold key required");
+      expect(evidenceHoldActiveV17(actual)).toBe(true);
+    };
     expect(fourthJob.binding.policyGeneration).not.toEqual(secondJob.binding.policyGeneration);
     expect(fourthJob.record.configuration).toBe(secondJob.record.configuration);
     await claimPublishedEvidence(room, newGeneration, fourth, fourthJob, "passed");
@@ -203,6 +266,13 @@ test("real published holds survive newer counted passes and clear only through d
     await second.lane.stub.deliver({ from: factRefOf(noticeEntry), n: notice.n, to: await second.lane.at(), message: notice.message });
     await room.pause(room.nodes);
     expect(await hardeningItems(second.lane, "incident")).toHaveLength(1);
+    await unchangedActiveHold();
+    // First deliver the genuine older notice only after the newer failure.
+    // Its exact source pair comes from the retained G17 send above.
+    room.life.setHold(() => false);
+    await older.lane.stub.deliver(olderNotice); await room.pause(room.nodes);
+    expect(await hardeningItems(older.lane, "incident")).toHaveLength(1);
+    await unchangedActiveHold();
     expect(await child.act(rita, "close-own", { on: 0, expected: await child.expected({ on: 0 }) })).toMatchObject({ answer: "refused", reason: "guard-failed" });
     await child.did(rita, "close-any", { on: 0, expected: await child.expected({ on: 0 }) });
     expect((await holds()).some(hold => hold.key.extent === "other" && evidenceHoldActiveV17(hold))).toBe(true);
@@ -246,6 +316,62 @@ test("real published holds survive newer counted passes and clear only through d
     expect(released?.release).toMatchObject({ kind: "override", reason: "TEST explicit triager override" });
     expect(released && evidenceHoldActiveV17(released)).toBe(false);
   } finally { room.life.release(); }
+});
+
+test("the real failure and reservation outcomes serialize atomically in both admitted-before-failure and failure-before-admission schedules", { timeout: 240_000 }, async () => {
+  for (const heldKind of ["judge", "evidence-result"] as const) {
+    const room = await evidenceNativeRoom();
+    let race: ReturnType<typeof evidenceOutcomeRace> | null = null, driver: Promise<number> | null = null;
+    try {
+      const setup = await preparePublishedEvidence(room), initial = await publishEvidenceFile(room, setup, "TEST race initial"), initialJob = await initial.job();
+      race = evidenceOutcomeRace(room, heldKind);
+      const next = await publishEvidenceFile(room, setup, "TEST racing publication");
+      const failed = await claimPublishedEvidence(room, setup, initial, initialJob, "failed");
+      const failureHold = async () => (await hardeningItems(room.G, "evidence-job")).flatMap(item => readEvidenceJobRecordWireV17(item.values['record'])?.holds ?? [])
+        .some(hold => hold.key.extent === "other" && hold.failure !== null && canonicalize(hold.failure.job) === canonicalize(initialJob.job)
+          && canonicalize(hold.failure.result) === canonicalize(failed) && evidenceHoldActiveV17(hold));
+      race.enable(); driver = race.run();
+      await race.entered; await race.assertSent();
+      const other = await race.other;
+      if (!other || other.entry.input.type !== "outcome") throw Error("Actual other native outcome seal required");
+      const current = (await hardeningItems(room.G, "publication")).find(item => canonicalize(item.refs['operation']) === canonicalize(next.operation));
+      if (heldKind === "judge") {
+        expect(await evidenceRecord(room, initialJob.job)).toMatchObject({ state: "failed", result: failed });
+        expect(await failureHold()).toBe(true);
+      } else {
+        expect(current?.state).toBe("reserved");
+        expect(await evidenceRecord(room, initialJob.job)).toMatchObject({ state: "admitted", result: null });
+        expect(await failureHold()).toBe(false);
+      }
+      race.release(); await driver; driver = null;
+      await room.pause(room.nodes);
+      const history = (await hardeningSealed(room.G)).map(row => row.entry), judgeOperation = race.operation("judge"), failureOperation = race.operation("evidence-result");
+      const judges = history.filter(entry => entry.input.type === "outcome" && entry.input.operation === judgeOperation && entry.input.result === "confirmed");
+      const failures = history.filter(entry => entry.input.type === "outcome" && entry.input.operation === failureOperation && entry.input.result === "confirmed");
+      expect(judges).toHaveLength(1); expect(failures).toHaveLength(1);
+      expect(await evidenceRecord(room, initialJob.job)).toMatchObject({ state: "failed", result: failed });
+      expect(await failureHold()).toBe(true);
+      const publication = (await hardeningItems(room.G, "publication")).find(item => canonicalize(item.refs['operation']) === canonicalize(next.operation));
+      if (heldKind === "judge") {
+        expect(failures[0]!.seq).toBeLessThan(judges[0]!.seq);
+        expect(publication).toMatchObject({ state: "not-reserved", values: { reason: "extent-regressed" } });
+        expect(room.host.stand.refs.get("refs/heads/main")).toBe(initialJob.record.commit);
+      } else {
+        expect(judges[0]!.seq).toBeLessThan(failures[0]!.seq);
+        if (!publication || !isObjectId(publication.values['integration'])) throw Error("Actual admitted integration commit required");
+        expect(room.host.stand.refs.get("refs/heads/main")).toBe(publication.values['integration']);
+        expect((await hardeningItems(room.G, "receipt")).some(item => item.state === "written" && item.values['commit'] === publication.values['integration'])).toBe(true);
+      }
+      race.close();
+      const following = await publishEvidenceFile(room, setup, "TEST following held extent");
+      expect((await hardeningItems(room.G, "publication")).find(item => canonicalize(item.refs['operation']) === canonicalize(following.operation)))
+        .toMatchObject({ state: "not-reserved", values: { reason: "extent-regressed" } });
+    } finally {
+      race?.release();
+      try { if (driver) await driver; await room.pause(room.nodes); }
+      finally { race?.close(); room.life.release(); }
+    }
+  }
 });
 
 test("a cancelled same-tree landing needs a fresh room audit and disagreeing results refuse its actual retry", { timeout: 180_000 }, async () => {
