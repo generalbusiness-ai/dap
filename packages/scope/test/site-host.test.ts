@@ -1,7 +1,9 @@
 import { expect, test } from "vitest";
-import { canonicalize } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import type { Seed } from "@generalbusiness/dap-contract";
+import { UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 import { otherLane } from "@generalbusiness/dap-derive/testing";
-import { readerOf, type Room, type SiteEnv } from "../src/site/host.ts";
+import { readerOf, roomOf, type Room, type SiteEnv } from "../src/site/host.ts";
 import type { Binding } from "../src/namespace.ts";
 
 const ACCOUNT = { id: 17, login: "demo-owner", type: "Organization" } as const;
@@ -13,6 +15,24 @@ const environment = (publicReads: boolean): SiteEnv => ({ SCOPES: {} as Binding,
 const repository = () => ({ id: 71, name: "demo", owner: ACCOUNT, private: false, full_name: "demo-owner/demo", html_url: "https://github.com/demo-owner/demo", clone_url: "https://github.com/demo-owner/demo.git" });
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { "content-type": "application/json" } });
 const packet = (value: string) => `${(new TextEncoder().encode(value).length + 4).toString(16).padStart(4, "0")}${value}`;
+
+test("scripted Site metadata distinguishes the exact unpublished birth from older missing or malformed repository fields", async () => {
+  // This is a parser boundary, not a native birth/authority witness. The
+  // integrated host-none story separately reads genuine Native source bytes.
+  const creator = { ...otherLane, kind: "register" as const };
+  const seed: Seed = { v: 1, kind: "directory", definition: UNPUBLISHED_COHORT.directory, creator, cause: digestBytes(utf8("TEST unpublished site metadata")), ordinal: 0 };
+  const read = async (selected: Seed, fields: Record<string, unknown>, wrongAt = false) => {
+    const directory = scopeIdOf(selected), at = { ...otherLane, scope: directory, kind: "directory" as const };
+    const bytes = canonicalize({ at: wrongAt ? otherLane : at, input: { type: "genesis", decision: "applied", seed: selected, inc: at.inc,
+      message: { class: "request", type: "create", body: { fields } } } });
+    const scopes: Binding<string> = { idFromName: value => value, get: () => ({ siteRoom: async () => ({ at, under: "TEST-scripted", bytes }) }) };
+    return roomOf(scopes, directory);
+  };
+  expect(await read(seed, { branch: "main" })).toEqual({ register: creator.scope, repository: null, branch: "main" });
+  expect(await read({ ...seed, definition: "platform:directory@3" }, { branch: "main" })).toBeNull();
+  expect(await read(seed, { branch: "main", repository: null })).toBeNull();
+  expect(await read(seed, { branch: "main" }, true)).toBeNull();
+});
 
 // Invariant: Site acquisition requires the recorded stable repository ID
 // under the configured account before exposing a Git source, independently

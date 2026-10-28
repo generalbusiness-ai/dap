@@ -84,6 +84,23 @@ test("health configuration, selector and request admission have closed answers w
   expect(calls).toBe(0);
   const good = await health(request(), { ...base, ARTIFACTS_CONFIG: artifacts(name) }, new HealthProbe());
   expect([good?.status, await good!.json()]).toEqual([200, { deployment: settings.DEPLOYMENT, version, sessions: "ok", register: "ready", wiring: { artifacts: { state: "wired" }, github: { state: "wired" } } }]);
+  // The explicit Register owns the bounded metadata probe independently of
+  // any provider. The RPC below remains the same labelled readiness stand-in.
+  const selected: string[] = [];
+  const registerOnly = { SESSION_SECRET: settings.SESSION_SECRET, DEPLOYMENT: settings.DEPLOYMENT, REGISTER_SCOPE: name,
+    SCOPES: { idFromName: (value: string) => { selected.push(value); return value; }, get: () => ({ readiness: async () => "ready" }) } };
+  const independent = await health(request(), registerOnly, new HealthProbe());
+  expect([independent?.status, (await independent!.json<{ register: string }>()).register]).toEqual([200, "ready"]);
+  expect(selected.splice(0)).toEqual([name]);
+  // An older hosted room may have a different GitHub Register; provider
+  // readiness is still evaluated, but does not replace the explicit probe.
+  expect((await health(request(), { ...base, ...registerOnly, GITHUB_APP_CONFIG: github(other) }, new HealthProbe()))?.status).toBe(200);
+  expect(selected.splice(0)).toEqual([name]);
+  for (const changed of [{ REGISTER_SCOPE: ` ${name}` }, { ARTIFACTS_CONFIG: "{}" }, { ARTIFACTS_CONFIG: artifacts(other) }]) {
+    const response = await health(request(), { ...registerOnly, ...changed }, new HealthProbe());
+    expect([response?.status, (await response!.json<{ register: string }>()).register]).toEqual([503, "unavailable"]);
+  }
+  expect(selected).toEqual([]);
   // A ready native register does not hide unusable configured host wiring.
   const secret = "R9 private optional secret with spaces";
   for (const [changed, host, reason] of [

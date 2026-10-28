@@ -3,7 +3,7 @@
 import { expect } from "vitest";
 import type { Intent, OperationId, PlatformDefinition, Seed, SessionClaims } from "@generalbusiness/dap-contract";
 import { intentDigest, scopeIdOf, seedDigest, signIntent } from "@generalbusiness/dap-bytes";
-import { DEMO_PURPOSE, DIRECTORY_OF, REGISTER, repositoryName } from "@generalbusiness/dap-platform";
+import { DEMO_PURPOSE, DIRECTORY_OF, REGISTER, UNPUBLISHED_COHORT, repositoryName } from "@generalbusiness/dap-platform";
 import { sessionsOf } from "../../src/sessions.ts";
 import { soon } from "../net.ts";
 import { outsideOf } from "../outside.ts";
@@ -31,7 +31,7 @@ export async function sessionRoom(registerPin: PlatformDefinition = REGISTER, ar
 export async function sessionRepository(life: ReturnType<typeof nativeFixtureLifetime>, registerPin: PlatformDefinition = REGISTER, archive?: "journal", target?: SessionRepositoryHost) {
     const directoryPin = DIRECTORY_OF[registerPin]; if (!directoryPin) return expect.fail("no exact cohort");
     const demo = registerPin === "platform:register@7" || registerPin === "platform:register@8";
-    const install: Intent = { v: 1, to: null, actor: rita.key, kind: "install", on: null, expected: {}, fields: { host: target?.host ?? "git.example", namespace: target?.namespace ?? "bounded-reference", ...(demo ? { policy: "open", purpose: DEMO_PURPOSE } : { policy: "keys", "founders": [rita.key] }) }, idempotencyKey: crypto.randomUUID(), notAfter: soon(60) };
+    const install: Intent = { v: 1, to: null, actor: rita.key, kind: "install", on: null, expected: {}, fields: { host: target?.host ?? (registerPin === UNPUBLISHED_COHORT.register ? "github.com" : "git.example"), namespace: target?.namespace ?? "bounded-reference", ...(demo ? { policy: "open", purpose: DEMO_PURPOSE } : { policy: "keys", "founders": [rita.key] }) }, idempotencyKey: crypto.randomUUID(), notAfter: soon(60) };
     const R = life.platform(scopeIdOf({ v: 1, kind: "register", definition: registerPin, creator: null, cause: intentDigest(install), ordinal: 0 }));
     const host = outsideOf(R.name); life.wire(R.name, () => ({ outside: host }));
     expect(await life.wait(() => R.stub.create(signIntent(install, rita.secret), registerPin))).toMatchObject({ answer: "accepted" });

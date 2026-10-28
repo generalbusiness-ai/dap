@@ -17,7 +17,7 @@ const written = (stub: DurableObjectStub) => runInDurableObject(stub, async (_in
 }));
 
 test("census admits the native founding install signer and denies member Signed, Session, wrong pin and missing readers without active-object writes", async () => {
-  const f = await scopeCensusFixture({ members: true });
+  const f = await scopeCensusFixture({ members: true, registerOnly: true });
   try {
     const session = await f.memberSession();
     const admitted = await f.request(await f.reading());
@@ -90,7 +90,7 @@ test("census binds trusted native row identity, preserves modes and absence, and
     expect(await unsupported.json()).toEqual({ error: "unsupported" });
     f.settings.SCOPE_INDEX_MODE = "enforce";
     const absent = await f.life.wait(async () => route(new Request(`${f.service}/v1/scope-index/census?cursor=&limit=100`,
-      { headers: { authorization: await f.reading() } }), env.PLATFORM, { ARTIFACTS_CONFIG: f.settings.ARTIFACTS_CONFIG }));
+      { headers: { authorization: await f.reading() } }), env.PLATFORM, { REGISTER_SCOPE: f.settings.REGISTER_SCOPE }));
     expect(absent.status).toBe(404);
     expect(await absent.json()).toEqual({ error: "absent" });
   } finally { f.life.release(); }

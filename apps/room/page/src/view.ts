@@ -131,7 +131,7 @@ export function changeScreen(room: Room, change: ChangeView, last: Answer | null
   const requiredReviews = applicable.filter((extent) => extent.approvals > 0);
   const currentJobs = change.jobs.filter((job) => job.manifest === current?.id);
   const version = current ? section("Files", current.file ? h("div", {},
-    h("div", { class: "filebar" }, h("code", { class: "filename" }, current.file.path), published && editPath(current.file.path) !== null ? h("a", { href: siteAddress(room, current.file.path), class: "button" }, "Open latest page") : null),
+    h("div", { class: "filebar" }, h("code", { class: "filename" }, current.file.path), room.publication !== "unpublished" && published && editPath(current.file.path) !== null ? h("a", { href: siteAddress(room, current.file.path), class: "button" }, "Open latest page") : null),
     editPath(current.file.path) === null ? h("p", { class: "muted" }, "Choose a file path inside this room.") : current.file.content !== null && current.file.content !== undefined ? h("details", { class: "source-preview" },
       h("summary", {}, "Preview source"),
       h("p", { class: "version-label" }, `Version ${current.id} · ${current.file.path}`),

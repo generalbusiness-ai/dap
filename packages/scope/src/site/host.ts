@@ -16,8 +16,8 @@
  */
 import { isRecord } from "@generalbusiness/dap-bytes";
 import type { Entry, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, isScopeId, parseStrict } from "@generalbusiness/dap-bytes";
-import { isOf } from "@generalbusiness/dap-platform";
+import { canonicalize, isScopeId, isScopeRef, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
+import { isOf, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 import { READ_BOUNDS, type GitSource } from "@generalbusiness/dap-git";
 import { githubRepository, type GitHubAccount } from "@generalbusiness/dap-git/github";
 import { requireGitHubRepositoryIdentity } from "../github-host.ts";
@@ -40,6 +40,7 @@ export interface Room {
   /** The published branch's name, without `refs/heads/`. */
   branch: string;
 }
+export interface UnpublishedRoom { register: ScopeId; repository: null; branch: string }
 
 /** Read the room's confirmed destination and its publication, never provider refs. */
 export async function publicationOf(scopes: Binding, directory: string, room: Room): Promise<Publication | null> {
@@ -125,7 +126,7 @@ const recordOrNull = (value: unknown): Record<string, unknown> | null => isRecor
  * such scope, no directory, a genesis that was refused, or a record out of
  * form. A source that cannot answer rejects.
  */
-export async function roomOf(scopes: Binding, directory: string): Promise<Room | null> {
+export async function roomOf(scopes: Binding, directory: string): Promise<Room | UnpublishedRoom | null> {
   if (!isScopeId(directory)) return null;
   const object = scopes.get(scopes.idFromName(directory)) as { siteRoom(): Promise<Sourced | null> };
   const sourced = await object.siteRoom();
@@ -136,6 +137,10 @@ export async function roomOf(scopes: Binding, directory: string): Promise<Room |
   const fields = recordOrNull(recordOrNull(input.message?.body)?.["fields"]);
   const repository = recordOrNull(fields?.["repository"]);
   const branch = fields?.["branch"];
+  if (input.seed.definition === UNPUBLISHED_COHORT.directory && fields && !Object.hasOwn(fields, "repository")
+    && typeof branch === "string" && input.seed.kind === "directory" && scopeIdOf(input.seed) === directory
+    && isScopeRef(entry.at) && canonicalize(entry.at) === canonicalize(sourced.at) && input.inc === sourced.at.inc
+    && isScopeRef(input.seed.creator) && input.seed.creator.kind === "register") return { register: input.seed.creator.scope, repository: null, branch };
   if (!repository || typeof branch !== "string") return null;
   const { host, namespace, name, id } = repository;
   if (Object.keys(repository).length !== 4 || typeof host !== "string" || typeof namespace !== "string" || typeof name !== "string" || typeof id !== "string") return null;

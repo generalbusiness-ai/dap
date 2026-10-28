@@ -233,3 +233,8 @@ export function archiveCertifiedRulesPublicationOrigin(from: FactRef, directory:
 export function hardenedCertifiedRulesPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
   return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@19", rules: "platform:rules@12", destination: "platform:destination@15", membership: "platform:membership@8", deviceCommand: true });
 }
+
+/** Exact unpublished family; a refused delivery still verifies its sender. */
+export function unpublishedApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
+  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@20", rules: "platform:rules@10", destination: "platform:destination@16", membership: "platform:membership@8", deviceCommand: true });
+}

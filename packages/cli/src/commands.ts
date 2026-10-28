@@ -38,7 +38,7 @@ import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type EffectForm,
 import { READ_REFUSALS, readItemQuery, b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isReceipt, isSignedIntentShape, isFactRef, isScopeId, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, ShapeError, TransportError, activeDirectory, partitionIndexes, wellFormedInvitation, readCredential, declaredHandle, create, httpTransport, shapeDeclaredAct, signedIntent, signedLogReader, type Fetch, type Session, type CreationOffer, type Signing, type Transport } from "@generalbusiness/dap-client";
 import { CAPABILITY_CODE as REPLAY_CAPABILITY_CODE } from "@generalbusiness/dap-derive";
-import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
+import { UNPUBLISHED_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { SourceError, httpSource, render, verify as replay, type HistorySource } from "@generalbusiness/dap-replay";
 import { enrolAgentKey } from "./invitations.ts";
 import { AGENT_KEY_LINK } from "@generalbusiness/dap-client";
@@ -184,11 +184,12 @@ const laneActive = async (handle: ScopeHandle, opened: string): Promise<Summary 
 
 // ---------------------------------------------------------------- the commands
 
-/** Explicit selection only; omission retains the installed default cohort. */
-export type InstallCohort = "file-publication" | "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-device-application" | "archive-device-publication" | "archive-certified-rules" | "hardened-certified-rules" | "archive-declared-application" | "invitation-key";
+/** Named creation families; host none selects the unpublished family. */
+export type InstallCohort = "unpublished" | "file-publication" | "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-device-application" | "archive-device-publication" | "archive-certified-rules" | "hardened-certified-rules" | "archive-declared-application" | "invitation-key";
 export type RegisterPolicy = "keys" | "open";
 export interface InstallOptions { host?: string; namespace?: string; cohort?: InstallCohort; registerPolicy?: RegisterPolicy }
 const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
+  unpublished: UNPUBLISHED_COHORT.register,
   "invitation-key": INVITATION_KEY_COHORT.register,
   "file-publication": "platform:register@3",
   application: APPLICATION_COHORT.register,
@@ -205,9 +206,10 @@ const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
 };
 /** New plans only. Historical selectors remain in INSTALL_COHORTS for retained custody.
  * The owning test pins these register versions to Scope's CREATION_COHORTS. */
-export const CREATION_INSTALL_COHORTS = ["application", "archive-device-application", "archive-device-publication", "archive-certified-rules", "hardened-certified-rules"] as const satisfies readonly InstallCohort[];
+export const CREATION_INSTALL_COHORTS = ["unpublished", "application", "archive-device-application", "archive-device-publication", "archive-certified-rules", "hardened-certified-rules"] as const satisfies readonly InstallCohort[];
 function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === undefined) return undefined;
+  if (cohort === "unpublished") return INSTALL_COHORTS.unpublished;
   if (cohort === "file-publication") return INSTALL_COHORTS["file-publication"];
   if (cohort === "invitation-key") return INSTALL_COHORTS["invitation-key"];
   if (cohort === "application-publication") return INSTALL_COHORTS["application-publication"];
@@ -224,12 +226,18 @@ function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   return stopCommand(usage("--cohort needs one current creation family or the historical family of a retained plan; nothing was signed or sent."));
 }
 /** Public creation is an explicit fixed cohort, independent of future defaults. */
-function installSelection(options: Pick<InstallOptions, "cohort" | "registerPolicy">): PlatformDefinition | undefined {
+function installSelection(options: InstallOptions, retained = false): PlatformDefinition | undefined {
+  if (!retained && options.host === undefined) return stopCommand(usage("--host is required: none, artifacts or github.com; nothing was signed or sent."));
+  if (options.host !== undefined && !["none", "artifacts", "github.com"].includes(options.host)) return stopCommand(usage("Refused: host-unknown. Choose --host none, artifacts or github.com; nothing was signed or sent."));
   if (options.registerPolicy !== undefined && options.registerPolicy !== "keys" && options.registerPolicy !== "open") {
     return stopCommand(usage("--register-policy takes exactly keys or open; nothing was signed or sent."));
   }
   const selected = selectedRegister(options.cohort);
-  if (options.registerPolicy !== "open") return selected;
+  if (options.host === "none") {
+    if (selected !== undefined && selected !== UNPUBLISHED_COHORT.register) return stopCommand(usage("--host none requires the unpublished cohort; nothing was signed or sent."));
+    return UNPUBLISHED_COHORT.register;
+  }
+  if (options.registerPolicy !== "open" || selected === UNPUBLISHED_COHORT.register) return selected;
   if (selected !== undefined && selected !== ARCHIVE_DEVICE_APPLICATION_COHORT.register) {
     return stopCommand(usage("--register-policy open requires the archive-device-application cohort; nothing was signed or sent."));
   }
@@ -248,6 +256,7 @@ const selectedPlan = (plan: PlannedInstall): boolean => {
 export function install(ctx: Context, service: string, options: InstallOptions = {}): Promise<Outcome> {
   return run(async () => {
     const selected = installSelection(options);
+    if (options.host === "none") options = { ...options, namespace: "" };
     const before = await ctx.store.config();
     if (before?.register) return usage(`This config directory has a register already: ${before.register.scope}.`);
     if (selected) {
@@ -269,7 +278,7 @@ async function installing(ctx: Context, options: Pick<InstallOptions, "host" | "
   const signer = ctx.store.signer && !ctx.store.newSigner
     ? (await storedSigner(ctx.store, "operator")) ?? stopCommand(failed("The operator signing key is unavailable; nothing was signed or sent."))
     : await newStoredSigner(ctx.store, "operator");
-  const fields = { host: options.host ?? "github.com", namespace: options.namespace ?? "artroom", policy: options.registerPolicy ?? "keys", "founders": [signer.key] };
+  const fields = { host: options.host!, namespace: options.host === "none" ? "" : options.namespace ?? "artroom", policy: options.registerPolicy ?? "keys", "founders": [signer.key] };
   return { signed: await signedIntent(signer, { to: null, kind: "install", fields }, at), key: signer.key };
 }
 
@@ -353,7 +362,8 @@ function plannedLines(plan: PlannedInstall): Outcome {
   const { host, namespace } = plan["founding"].intent.fields;
   return done(
     `Planned: register ${plan.register}, under ${plan.definition}, on host ${String(host)}, namespace ${String(namespace)}. The seed's time is ${plan["founding"].intent.notAfter}.`,
-    `Set registerScope to ${plan.register} in the Worker's host setting, then run dap install --planned before ${plan["founding"].intent.notAfter}.`,
+    `Set REGISTER_SCOPE to ${plan.register} in the Worker's settings, then run dap install --planned before ${plan["founding"].intent.notAfter}.`,
+    ...(host === "none" ? ["No publication or journal archive: entries stay in the service within its bounds. The operator must back up the service."] : []),
   );
 }
 
@@ -366,6 +376,7 @@ function plannedLines(plan: PlannedInstall): Outcome {
 export function planInstall(ctx: Context, service: string, options: InstallOptions = {}): Promise<Outcome> {
   return run(async () => {
     const selected = installSelection(options);
+    if (options.host === "none") options = { ...options, namespace: "" };
     const before = await ctx.store.config();
     if (before?.register) return usage(`This config directory has a register already: ${before.register.scope}.`);
     if (selected) return plannedLines(await cohortPlan(ctx, service, options, before, selected));
@@ -377,7 +388,7 @@ export function planInstall(ctx: Context, service: string, options: InstallOptio
     const { host, namespace } = signed.intent.fields as { host: string; namespace: string };
     return done(
       `Planned: register ${register}, under ${NEW_REGISTER}, on host ${host}, namespace ${namespace}. The seed's time is ${signed.intent.notAfter}.`,
-      `Set registerScope to ${register} in the Worker's host setting, then run dap install --planned before ${signed.intent.notAfter}.`,
+      `Set REGISTER_SCOPE to ${register} in the Worker's settings, then run dap install --planned before ${signed.intent.notAfter}.`,
     );
   });
 }
@@ -393,10 +404,11 @@ export function installPlanned(ctx: Context, options: Pick<InstallOptions, "coho
   return run(() => executePlannedInstall(ctx, options.cohort, undefined, options.registerPolicy));
 }
 async function executePlannedInstall(ctx: Context, cohort?: InstallCohort, expected?: PlannedInstall, registerPolicy?: RegisterPolicy): Promise<Outcome> {
-  const selected = installSelection({ ...(cohort === undefined ? {} : { cohort }), ...(registerPolicy === undefined ? {} : { registerPolicy }) });
+  let selected = installSelection({ ...(cohort === undefined ? {} : { cohort }), ...(registerPolicy === undefined ? {} : { registerPolicy }) }, true);
   const before = await ctx.store.config();
   if (before?.register) return usage(`This config directory has a register already: ${before.register.scope}.`);
   const kept = before?.plan ?? stopCommand(usage("No install is planned here. Run: dap install --plan <base-url>."));
+  if (cohort === undefined && kept.definition === UNPUBLISHED_COHORT.register) selected = UNPUBLISHED_COHORT.register;
   if (kept.definition === COUNTING_COHORT.register) return failed("Refused: retired-cohort. Choose a currently admitted cohort for a new room. The old plan is kept; nothing was sent.");
   if (selected && kept.definition !== selected) return failed("Refused: plan-mismatch. The selected cohort conflicts with the original install plan. Nothing was sent; the plan is kept.");
   if (registerPolicy !== undefined && (!isSignedIntentShape(kept["founding"]) || kept["founding"].intent.fields["policy"] !== registerPolicy)) return failed("Refused: plan-mismatch. The register policy conflicts with the original install plan. Nothing was sent; the plan is kept.");
@@ -848,7 +860,7 @@ const remoteLine = (config: Config, repository: Recorded): string =>
  * genesis names. A caller with no session, or one that is refused, reads again by a signed read of the caller's key, which the
  * destination answers where the key's claim caused it, within the intent window.
  */
-async function destinationOf(ctx: Context, config: Config): Promise<{ summary: Summary; reader: string | null; repository: Recorded }> {
+async function destinationStateOf(ctx: Context, config: Config): Promise<{ summary: Summary; reader: string | null; repository: Recorded | null }> {
   const scope = config.repository?.destination ?? stopCommand(usage("No repository is known here. Run: dap create <name>, or dap join <link>."));
   const reader = await readerOf(ctx, config);
   let read = await (await handleOf(ctx, config, scope, reader)).summary();
@@ -857,15 +869,23 @@ async function destinationOf(ctx: Context, config: Config): Promise<{ summary: S
   if (read.value.scope.scope !== scope || read.value.scope.kind !== "destination" || !knownPlatform(read.value.definition, "platform:destination")) return stopCommand(failed(`${scope} is no supported destination.`));
   const branch = read.value.items.find((item) => item.type === "branch");
   const repository = branch?.values["repository"] as Recorded | undefined;
+  if (read.complete && read.next === undefined && read.value.status === "active" && read.value.definition === UNPUBLISHED_COHORT.destination && branch?.state === "unpublished" && branch.values["repository"] == null && branch.values["head"] == null && branch.values["token"] == null) return { summary: read.value, reader, repository: null };
   if (!branch || !repository || typeof repository.host !== "string" || typeof repository.name !== "string" || typeof repository.namespace !== "string" || typeof repository.id !== "string") return stopCommand(failed(`The destination ${scope} records no repository.`));
   return { summary: read.value, reader, repository };
+}
+
+async function destinationOf(ctx: Context, config: Config): Promise<{ summary: Summary; reader: string | null; repository: Recorded }> {
+  const state = await destinationStateOf(ctx, config);
+  if (state.repository === null) return stopCommand(failed("Refused: no-repository. This room is unpublished."));
+  return { ...state, repository: state.repository };
 }
 
 /** `dap remote`: the repository's host, namespace, name and remote URL, as the destination's branch item records them. */
 export function remote(ctx: Context): Promise<Outcome> {
   return run(async () => {
     const config = await configOf(ctx);
-    const { repository } = await destinationOf(ctx, config);
+    const { repository } = await destinationStateOf(ctx, config);
+    if (repository === null) return done("Mode: unpublished", "no-repository: this room has no publication.");
     return done(`Host: ${repository.host}`, `Namespace: ${repository.namespace}`, `Name: ${repository.name}`, `Remote URL: ${remoteLine(config, repository)}`);
   });
 }
@@ -892,11 +912,12 @@ const headerEnv = (value: string): Record<string, string> => ({ GIT_CONFIG_COUNT
 export function clone(ctx: Context, directory: string | undefined, options: { hours?: number; archive?: boolean } = {}): Promise<Outcome> {
   return run(async () => {
     if (options.archive && !directory) return usage("clone --archive needs an explicit directory.");
-    if (options.archive && !ctx.git?.archiveRun) return failed("Archive clone needs the hardened Git runner. No read token was requested.");
+
     const hours = options.hours ?? 1;
     if (!Number.isSafeInteger(hours) || hours < READ_TOKEN_HOURS.min || hours > READ_TOKEN_HOURS.max) return usage(`--hours is a whole number from ${READ_TOKEN_HOURS.min} to ${READ_TOKEN_HOURS.max}.`);
     const config = await configOf(ctx);
     const { summary, repository } = await destinationOf(ctx, config);
+    if (options.archive && !ctx.git?.archiveRun) return failed("Archive clone needs the hardened Git runner. No read token was requested.");
     const args = (url: string) => ["clone", "--", url, ...(directory === undefined ? [] : [directory])];
     if (!ctx.git || (await ctx.git.run(["--version"], {})) === null) {
       const url = remoteOf(config, repository) ?? `https://<service host>/git/${repository.namespace}/${repository.name}.git`;
@@ -1087,10 +1108,11 @@ function supportsEdit(declared: DeclaredDefinition, path: string, content: strin
 export function edit(ctx: Context, path: string, options: { file?: string; title?: string; closes?: string } = {}): Promise<Outcome> {
   return run(async () => {
     if (options.file === undefined) return usage("edit needs --file <local file>: the bytes to write at the path.");
+    const config = await configOf(ctx);
+    const destination = await destinationOf(ctx, config);
     const bytes = await fileOf(ctx, options.file);
     if (bytes.length > EDIT_BYTES) return usage(`${options.file} has ${bytes.length} bytes; a change carries at most ${EDIT_BYTES}.`);
     const content = textOf(bytes, options.file);
-    const config = await configOf(ctx);
     const repository = config.repository ?? stopCommand(usage("No repository is known here. Run: dap create <name>, or dap join <link>."));
     const signer = await signerOf(ctx, config);
     const reader = await readerOf(ctx, config);
@@ -1098,7 +1120,6 @@ export function edit(ctx: Context, path: string, options: { file?: string; title
     const closes = options.closes === undefined ? null : await issueNamed(ctx, config, reader, options.closes);
     const change = await activeDefinition(ctx, config, reader, "change");
     if (change.declared.acts["propose-file"]?.on !== "source" && !supportsEdit(change.declared, path, content, bytes)) return failed(`Unsupported edit: the active change definition ${change.digest} does not support this command's ask-rules, one-file manifest and merge inputs and effects. No change was opened.`);
-    const destination = await destinationOf(ctx, config);
     if (supportsManifestListDestination(destination.summary.definition) && change.declared.acts["propose-file"]?.on === "source") {
       const base = destination.summary.items.find((item) => item.type === "branch")?.values["head"];
       if (typeof base !== "string") return failed("Cannot edit: no-published-head.");
@@ -1157,9 +1178,9 @@ export function edit(ctx: Context, path: string, options: { file?: string; title
 /** Propose the supported changed UTF-8 files of a local branch. */
 export function propose(ctx: Context, branch: string, options: { title?: string } = {}): Promise<Outcome> {
   return run(async () => {
-    if (!ctx.git?.files) return failed("Cannot propose: git-unavailable.");
     const config = await configOf(ctx);
     const destination = await destinationOf(ctx, config);
+    if (!ctx.git?.files) return failed("Cannot propose: git-unavailable.");
     if (!supportsManifestListDestination(destination.summary.definition)) return failed("Cannot propose: version-mismatch. This room has no manifest-list destination.");
     const base = destination.summary.items.find((item) => item.type === "branch")?.values["head"];
     if (typeof base !== "string") return failed("Cannot propose: no-published-head.");
@@ -1279,6 +1300,7 @@ async function proposingFiles(ctx: Context, config: Config, base: string, files:
 export function merge(ctx: Context, named: string, options: { closes?: string } = {}): Promise<Outcome> {
   return run(async () => {
     const config = await configOf(ctx);
+    await destinationOf(ctx, config);
     const lane = scopeNamed(config, named);
     const reader = await readerOf(ctx, config);
     const read = await (await handleOf(ctx, config, lane, reader)).definition();

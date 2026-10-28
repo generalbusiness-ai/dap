@@ -121,7 +121,9 @@ async function scopeRows(text) {
   let censusAdmissions = 0;
   const { scopeIndexCensusRoute } = load(readSource("packages/scope/src/scope-index-census.ts"), ["refused", "statuses", "response", "scopeIndexCensusRoute"], {
     URL, Response, SCOPE_INDEX_NAME,
-    artifactsRegisterScope: () => scope,
+    // Pin-selector stand-in; the shared setting parser is exercised by its
+    // owning admission tests, not this structural route model.
+    readRegisterScope: () => ({ kind: "pinned", scope }),
     // Authority stand-in: no signature or founding-install proof is checked
     // here. The actual helper still owns its path, method, query and reply checks.
     requestOf: reader => reader === "Signed census-witness" ? {} : null,

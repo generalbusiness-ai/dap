@@ -46,3 +46,17 @@ test("status stops at the page bound, rejects nonprogress and head drift and nev
   const moved = await statusReport(f.http, "Session fixture", [{ kind: "membership", scope: at.scope }], false, undefined, false);
   expect(moved.join("\n")).toContain("outbox: unknown;");
 });
+
+// Mode is an exact new-pin observation, not an inference from absent old data.
+test("status reports an unpublished destination and actual zero waiting counts without guessing the mode of old pins", async () => {
+  const f = fixture();
+  const destination = { ...at, kind: "destination" as const };
+  const value: Summary = { ...(summary.ok ? summary.value : expect.fail("SCRIPTED summary must be readable")), scope: destination, definition: "platform:destination@16", items: [{ id: 0, type: "branch", state: "unpublished", revision: 0, opened: null, parties: {}, refs: {}, attributed: [], values: { repository: null, head: null, token: null } }] };
+  f.http.summary = async () => ({ ok: true, at: head, complete: true, value });
+  f.http.outbox = async () => page([]);
+  const lines = await statusReport(f.http, "Session fixture", [{ kind: "destination", scope: at.scope }], true, undefined, false);
+  expect(lines).toContain("  publication: unpublished; no-repository.");
+  expect(lines.join("\n")).toContain("waiting unanswered: 0");
+  f.http.summary = async () => ({ ok: true, at: head, complete: true, value: { ...value, definition: "platform:destination@15" } });
+  expect((await statusReport(f.http, "Session fixture", [{ kind: "destination", scope: at.scope }], true, undefined, false)).join("\n")).not.toContain("publication: unpublished");
+});

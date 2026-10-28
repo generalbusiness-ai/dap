@@ -77,7 +77,7 @@ import type { OutboxItem, Sealed } from "./store.ts";
 import type { ReadCredential } from "./destination-host.ts";
 import { gitHubOutside, type GitHubBindings } from "./github-wiring.ts";
 import { within } from "./turn.ts";
-import { ARTIFACTS_HOST, artifactsOutside, artifactsReadiness, artifactsRegisterScope, type ArtifactsBindings } from "./artifacts-wiring.ts";
+import { ARTIFACTS_HOST, artifactsOutside, artifactsReadiness, type ArtifactsBindings } from "./artifacts-wiring.ts";
 import { recordedHost } from "./host-wiring.ts";
 import { NO_OUTSIDE, type Outside } from "./operations.ts";
 import type { NativeItemQuery } from "./item-queries.ts";
@@ -91,7 +91,8 @@ import { requestQuery, type RequestPage } from "./request-index.ts";
 import { measuredRequest, OBSERVED_METHODS, operational, operationPlace, unknownTurnMark, type MetricEnvironment, type OperationalIdentity, type ObservedMethod } from "./operational.ts";
 import type { MetricPoint } from "./metrics.ts";
 import { readPlatformCreationPolicy, injectedPlatformCreationPolicy, permitsNewPlatformScope } from "./creation-versions.ts";
-import { admitsParentlessCreation, type CreationAdmission } from "./creation-admission.ts";
+import { parentlessCreationAdmission, type CreationAdmission } from "./creation-admission.ts";
+import { readRegisterScope } from "./register-setting.ts";
 import { indexedScopes, scopeIndex, ScopeIndexRows, type ScopeIndexEnvironment, type ScopeRegistration } from "./scope-index.ts";
 import { ScopeIndexCensus, scopeIndexCensusRoute } from "./scope-index-census.ts";
 import { admitServing, boundedParentlessIntent, ServingAdmission, type ServingEnvironment, type ServingRequest } from "./serving-admission.ts";
@@ -113,7 +114,7 @@ export class ScopeIndex extends DurableObject<Env> {
   readonly #serving = new ServingAdmission(this.env);
   readonly #census = new ScopeIndexCensus({
     sql: this.ctx.storage.sql,
-    register: () => artifactsRegisterScope(this.env.ARTIFACTS_CONFIG),
+    register: () => { const register = readRegisterScope(this.env); return register.kind === "pinned" ? register.scope : null; },
     mode: () => this.env.SCOPE_INDEX_MODE,
     proof: async (fact, maxBytes, milliseconds) => {
       const target = this.env.SCOPES.get(this.env.SCOPES.idFromName(fact.at.scope)) as unknown as {
@@ -281,7 +282,9 @@ export function api(binding: Binding, address: string | null = null, creationAdm
         const names = typeof definition === "string" ? definition : definitionDigest(definition);
         // Under the register's platform definition the scope is the creation register, of the kind `register` (I3 delta EP2).
         const seed: Seed = { v: 1, kind: creationKind(names), definition: names, creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
-        if (!admitsParentlessCreation(creationAdmission, creation, seed)) return { answer: "refused", reason: "unauthorized" };
+        const admission = parentlessCreationAdmission(creationAdmission, creation, seed);
+        if (!admission.ok) return admission.reason === "misconfigured" || admission.reason === "host-unavailable"
+          ? { answer: "unavailable", reason: admission.reason } : { answer: "refused", reason: admission.reason };
         name = scopeIdOf(seed);
         if (creationPolicy !== undefined && isPlatformDefinition(names) && !permitsNewPlatformScope(creationPolicy, names)) {
           // A fixed-index hit permits the native target lookup only.
@@ -343,6 +346,7 @@ function answered(answer: Created | Answer, accepted: number): Response {
 
 const READ_STATUS: Record<ReadRefusal, number> = {
   "rate-limited": 429,
+  "no-repository": 404,
   archived: 410,
   "not-found": 404, "wrong-incarnation": 409, forbidden: 403, "scope-provisional": 409, "unsupported-definition": 501, "history-unavailable": 503, "too-large": 413, unavailable: 503,
   "sessions-unavailable": 503, "clock-behind": 503,
@@ -527,9 +531,11 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
     if (host === ARTIFACTS_HOST && env.ARTIFACTS_CONFIG) return wiring(host, [env.ARTIFACTS_CONFIG, env.ARTIFACTS_NAMESPACE, env.ARTIFACTS], () => artifactsOutside(given, sql, env, fetch, snapshotReader));
     return NO_OUTSIDE;
   };
-  const selected = (owner: string, kind: string): Outside => {
+  const selected = (owner: Parameters<Outside["accepts"]>[0], kind: string): Outside => {
     if ((owner === "platform:rules@5" || owner === "platform:rules@6" || owner === "platform:rules@7" || owner === "platform:rules@8" || owner === "platform:rules@9" || owner === "platform:rules@10" || owner === "platform:rules@11" || owner === "platform:rules@12") && ["fetch-application", "admit-application"].includes(kind)) return wiring("application", [env.APPLICATION_CONTENT, env.APPLICATION_TRUST], () => applicationHostOutside(env, PROPOSED_BOUNDS, fetch));
-    if ((owner === "platform:directory@11" || owner === "platform:directory@12" || owner === "platform:directory@13" || owner === "platform:directory@14" || owner === "platform:directory@15" || owner === "platform:directory@16" || owner === "platform:directory@17" || owner === "platform:directory@18" || owner === "platform:directory@19") && kind === "announce-application") return announcement;
+    // Share the bridge's exact owner policy; host-none install notices do
+    // not depend on selecting a repository host.
+    if (announcement.accepts(owner, kind)) return announcement;
     return pick();
   };
   return {

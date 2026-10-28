@@ -18,6 +18,10 @@ import type { FactRef, Grant, Digest, PlatformDefinition } from "./scope.ts";
 import type { SignedIntent } from "./intent.ts";
 import type { Cursor, OutboxItem, Item, LogPage, Read, RetainedInput, Sealed, Settlement, Summary } from "./read.ts";
 
+/** Deployment admission can stop creation before addressing its native object.
+ * These extra reasons are creation answers, not native act judgments. */
+export type CreationUnavailableReason = UnavailableReason | "misconfigured" | "host-unavailable";
+
 /**
  * How a creation is answered (section 7.1). `accepted`: the genesis entry is
  * sealed, now or by an earlier call with the same intent, and its act
@@ -27,7 +31,7 @@ import type { Cursor, OutboxItem, Item, LogPage, Read, RetainedInput, Sealed, Se
 export type Created =
   | { answer: "accepted"; receipt: Receipt }
   | { answer: "refused"; reason: RefusalReason | DeliveryRefusal | "unsupported-definition"; name?: ScopeBoundName }
-  | { answer: "unavailable"; reason: UnavailableReason };
+  | { answer: "unavailable"; reason: CreationUnavailableReason };
 
 /**
  * What travels beside a signed intent, and is not signed (sections 6.2 and

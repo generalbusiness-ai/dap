@@ -92,6 +92,7 @@ export const READ_NOTES: Readonly<Record<ReadRefusal, Said>> = {
   "sessions-unavailable": { sentence: "the scope accepts no session now", next: "Try later; signed reads still work where your key signed." },
   "clock-behind": { sentence: "the scope's clock reads earlier than its last entry", next: "Try later." },
   "rate-limited": { sentence: "the signed-read serving window is at its limit; native authority was not judged", next: "Wait for the serving window, then make a fresh signed read. This does not revoke your key or grants." },
+  "no-repository": { sentence: "the room has no repository", next: "Use the room's local acts and records; repository credentials are unavailable in this room." },
 };
 
 const at = (head: Head): string => `judged at head ${head.seq}`;

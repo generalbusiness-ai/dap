@@ -2,7 +2,7 @@
 import { natural } from "@generalbusiness/dap-bytes";
 import { SCOPE_BOUNDS } from "@generalbusiness/dap-contract";
 import { isScopeId, utf8 } from "@generalbusiness/dap-bytes";
-import type { MismatchReason, ReadRefusal, RefusalReason, SessionRefusal, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { CreationUnavailableReason, MismatchReason, ReadRefusal, RefusalReason, SessionRefusal } from "@generalbusiness/dap-contract";
 
 /** Cloudflare Analytics Engine: 250 data points per invocation (2026-10-16). */
 export const METRIC_POINTS = 250;
@@ -17,7 +17,7 @@ export const STEPS = ["retained-replies", "owner", "judged"] as const;
 export const EVENTS = ["outside-call-failed", "outside-replies-failed", "outside-recovery-failed"] as const;
 export const METRIC_PLACES = ["create", "acts", "preparations", "rpc:create", "rpc:acts", "rpc:preparations", "settle", "summary", "items", "query-items", "application-projection", "reservation-snapshot", "operations", "history", "entries", "outbox", "outboxItem", "log", "retained", "sessions", "stream", "incidents", "waiting", "credential", "site", "page", "health", "requests", "alarm", "dispatch", "metrics", "mixed", "other", ...STEPS] as const;
 // An exhaustive union makes a new contract reason an explicit schema decision.
-const REASONS: Record<RefusalReason | UnavailableReason | MismatchReason | ReadRefusal | SessionRefusal, true> = {
+const REASONS: Record<RefusalReason | CreationUnavailableReason | MismatchReason | ReadRefusal | SessionRefusal, true> = {
   "archived": true, "floor-receipt": true, "floor-ahead": true, "floor-back": true, "floor-step": true, "floor-recent": true, "floor-keep": true, "floor-kept": true,
   "wrong-pin": true, "application-revoked": true,
   "revision-moved": true, alias: true, "duplicate-relation": true, "required-unset": true, "scope-full": true,
@@ -28,6 +28,7 @@ const REASONS: Record<RefusalReason | UnavailableReason | MismatchReason | ReadR
   "scope-provisional": true, "guard-incomplete": true, "authority-unavailable": true, unavailable: true,
   "rate-limited": true, "idempotency-mismatch": true, "not-found": true, "wrong-incarnation": true, forbidden: true,
   "history-unavailable": true, "too-large": true, "sessions-unavailable": true, "bad-request": true, replayed: true,
+  "no-repository": true, misconfigured: true, "host-unavailable": true,
 };
 const INCIDENTS = ["outcome-conflict", "ref-mismatch", "incarnation-conflict", "pin-confirm-no-pin", "unpin-never-admitted", "token-unowned", "branch-moved", "bad-input", "sent-again"];
 const reasons = new Set([...Object.keys(REASONS), ...SCOPE_BOUNDS, ...EVENTS, ...INCIDENTS, "2xx", "3xx", "4xx", "5xx", "aggregated", "summary", "none"]);

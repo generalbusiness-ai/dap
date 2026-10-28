@@ -13,9 +13,10 @@ import { at, definition, creation, rita } from "./fixtures-native.ts";
 // while direct RPC cannot balance HTTP counts; correlation stays operational.
 test("HTTP and direct RPC retain distinct native turn places and HTTP correlation reaches only the sidecar", async () => {
   // DEPLOYMENT names the metric stream; this local fixture intentionally creates
-  // a made-up scope through the explicit test-only opening.
-  const points: MetricPoint[] = [], settings = { SCOPE_INDEX: env.SCOPE_INDEX, DEPLOYMENT: "metrics-http-test", ALLOW_OPEN_CREATION: "true", METRICS: { writeDataPoint: (p: MetricPoint) => points.push(structuredClone(p)) } };
+  // a made-up scope through the explicit test-only opening. Its syntactically
+  // valid Register setting is fixture admission, not a native Register proof.
   const { signed, name } = creation(), object = env.SCOPES.get(env.SCOPES.idFromName(name));
+  const points: MetricPoint[] = [], settings = { SCOPE_INDEX: env.SCOPE_INDEX, DEPLOYMENT: "metrics-http-test", REGISTER_SCOPE: name, ALLOW_OPEN_CREATION: "true", METRICS: { writeDataPoint: (p: MetricPoint) => points.push(structuredClone(p)) } };
   metricBindings.set(object.id.toString(), settings);
   const trace = "abcdef0123456789abcdef0123456789";
   const response = await route(new Request("https://scope.test/v1/scopes", { method: "POST", headers: { traceparent: `00-${trace}-1234567890abcdef-ff`, tracestate: "vendor=private", "dap-request-id": "caller-controlled" }, body: JSON.stringify({ creation: signed, definition: definition.declared }) }), env.SCOPES, settings);

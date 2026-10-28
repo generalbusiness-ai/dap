@@ -451,7 +451,7 @@ function shell(destination: Destination, room: Room | null, ...content: HTMLElem
   const kept = settings();
   const directory = room.directory;
   const local = kept ? labelFor(kept.label, { directory, membership: room.membership }, kept.register)?.text : undefined;
-  const name = room.name;
+  const name = room.publication === "unpublished" ? "No publication" : room.name;
   const account = room.me.handle;
   const shellContext = JSON.stringify([location.origin, directory, room.membership, room.key]);
   const roomSwitch = () => name ? h("details", { class: "shell-disclosure room-disclosure" },
@@ -461,7 +461,7 @@ function shell(destination: Destination, room: Room | null, ...content: HTMLElem
     h("summary", { class: "account", "aria-label": `Account: ${account}`, "data-focus-key": controlKey(shellContext, "account-connection") }, h("span", { class: "avatar", "aria-hidden": "true" }, account.replace(/^@+/, "").slice(0, 1).toUpperCase()), h("span", { class: "account-label" }, account)),
     h("div", { class: "shell-disclosure-content" }, whoLine(room), h("a", { href: "#/join" }, "Change connection")));
   const navigation = (mobile = false) => h("nav", { class: mobile ? "navigation mobile-nav" : "navigation", "aria-label": "Room" },
-    ([ ["issues", "Issues", "#/"], ["changes", "Changes", "#/?kind=change"], ["rules", "Rules", "#/rules"] ] as const).map(([kind, label, href]) => h("a", { class: "nav-item", href, "data-focus-key": controlKey(shellContext, `nav:${kind}`), ...(destination === kind ? { "aria-current": "page" } : {}) }, label)), h("a", { class: "nav-item", href: siteAddress(room, ""), title: "Latest published pages" }, "Pages"));
+    ([ ["issues", "Issues", "#/"], ["changes", "Changes", "#/?kind=change"], ["rules", "Rules", "#/rules"] ] as const).map(([kind, label, href]) => h("a", { class: "nav-item", href, "data-focus-key": controlKey(shellContext, `nav:${kind}`), ...(destination === kind ? { "aria-current": "page" } : {}) }, label)), room.publication === "unpublished" ? null : h("a", { class: "nav-item", href: siteAddress(room, ""), title: "Latest published pages" }, "Pages"));
   const skip = h("a", { class: "skip", href: "#page-main" }, "Skip to content");
   skip.addEventListener("click", event => { event.preventDefault(); document.getElementById("page-main")?.focus(); });
   const create = () => { const button = h("button", { class: "nav-item", type: "button", "data-focus-key": controlKey(shellContext, "create-room") }, "Create room"); button.addEventListener("click", () => { if (offer) claimDialog(room, offer.kept, offer.configured, button); }); return button; };
@@ -652,6 +652,13 @@ function startScreen(): HTMLElement {
     } catch { blocked = true; name.setAttribute("disabled", ""); submit.setAttribute("disabled", ""); check.setAttribute("disabled", ""); tell("Original Start custody is unavailable. Nothing will be replaced.", true); }
   };
   restore();
+  // A retained original keeps its read/check/explicit-continue custody path.
+  // Fresh Start depends on a server-rendered capability, never a discovery probe.
+  if (!original && !blocked && document.documentElement?.getAttribute("data-demo-start") !== "true") return h("main", { class: "screen entry-screen entry-start" },
+    h("a", { class: "entry-back", href: "#/join" }, "‹", "Back"), heading,
+    h("p", { class: "entry-intro" }, "Create a room with the CLI on this service."),
+    h("pre", {}, "dap install --plan " + location.origin + " --host none\n# Configure REGISTER_SCOPE with the planned register ID.\ndap install --planned\ndap create <name>"),
+    h("p", {}, "Then join with the room configuration and your key. Nothing was requested or created by this page."));
   const moved = location.origin === "https://artroom-scope.inguz.workers.dev" ? h("section", { class: "entry-moved" },
     h("p", {}, "Create new rooms on dap-demo. Existing rooms and saved creation requests stay on this service."),
     h("a", { href: "https://dap-demo.inguz.workers.dev/page/#/start" }, "Start a new room on dap-demo")) : null;
@@ -795,7 +802,7 @@ function connectionScreen(path: "join" | "invitation" | "config", connected: Roo
   const current = () => drawing === capturedDraw && location.hash === capturedRoute && settingsContext(settings() ?? { place: null, publicKey: "" }) === capturedContext;
   const back = () => h("a", { class: "entry-back", href: "#/join" }, h("span", { "aria-hidden": "true" }, "‹"), "Back");
   if (path === "join") return h("main", { class: "screen entry-screen" },
-    connected ? h("a", { class: "entry-back", href: "#/" }, h("span", { "aria-hidden": "true" }, "‹"), `Back to ${connected.name}`) : null,
+    connected ? h("a", { class: "entry-back", href: "#/" }, h("span", { "aria-hidden": "true" }, "‹"), connected.name ? `Back to ${connected.name}` : "Back to room") : null,
     h("h1", {}, connected ? "Join another room" : "Join or create a room"),
     ignoredSavedAddress ? h("p", { class: "entry-answer" }, "The saved connection address is ignored. Your room and key are kept. Use a connection below; this page reads only its own service.") : null,
     h("div", { class: "entry-choices" },

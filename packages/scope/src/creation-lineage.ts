@@ -8,8 +8,8 @@ import { canonicalize, definitionDigest, intentDigest, isDigest, isPlatformDefin
 import { creates, isObject, isScopeRef, same, sentBy, validateDefinition, type Delivered } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { applicationJson } from "@generalbusiness/dap-platform/application";
-import { APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
-import { artifactsRegisterScope } from "./artifacts-wiring.ts";
+import { APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
+import { readRegisterScope } from "./register-setting.ts";
 import type { CreationAdmission } from "./creation-admission.ts";
 import { readNativeBirth, type NativeBirth } from "./native-birth.ts";
 import type { Binding, Peer } from "./namespace.ts";
@@ -18,7 +18,7 @@ import { proofEntry, type ProofBody } from "./proof-bytes.ts";
 export const CREATION_LINEAGE_BOUNDS = Object.freeze({ bodies: 16, bytes: 1024 * 1024, attempts: 64, visits: 512, milliseconds: 10_000 });
 /** Exact code-supported creation families, each bound to its configured
  * register and native creator proofs. This is not a deployment inventory. */
-export const CREATION_COHORTS = [ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT] as const;
+export const CREATION_COHORTS = [ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, UNPUBLISHED_COHORT] as const;
 type Cohort = typeof CREATION_COHORTS[number];
 type Pin = Digest | PlatformDefinition;
 interface Edge { child: Seed; from: FactRef; n: number; message: Delivered["message"]; source: Entry; creator: NativeBirth }
@@ -108,9 +108,10 @@ export async function admitChildCreation(binding: Binding, settings: CreationAdm
         active(); // lookup permission only, never proof of an existing genesis
       }
       if (settings.DEPLOYMENT !== undefined && readDeployment(settings.DEPLOYMENT) === null) return unavailable();
+      const register = readRegisterScope(settings);
+      if (register.kind === "misconfigured" || settings.DEPLOYMENT !== undefined && register.kind === "absent") return unavailable();
       if (settings.DEPLOYMENT === undefined || settings.ALLOW_OPEN_CREATION === "true") return admitted(owned);
-      const register = artifactsRegisterScope(settings.ARTIFACTS_CONFIG);
-      if (!register) return unavailable();
+      if (register.kind !== "pinned") return unavailable();
       const edges: Edge[] = [], seen = new Set<string>();
       let child = owned.to as Seed, from = owned.from, n = owned.n, message = owned.message, expectedContent: Digest | undefined;
       let cohort: Cohort | undefined;
@@ -127,7 +128,7 @@ export async function admitChildCreation(binding: Binding, settings: CreationAdm
         const genesis = creatorEntry.input;
         if (genesis.seed.creator === null) {
           cohort = CREATION_COHORTS.find(candidate => candidate.register === creator.named);
-          if (!cohort || from.at.scope !== register || from.at.kind !== "register" || genesis.seed.kind !== "register"
+          if (!cohort || from.at.scope !== register.scope || from.at.kind !== "register" || genesis.seed.kind !== "register"
             || genesis.source !== null || genesis.n !== null || genesis.message !== null || genesis.seed.ordinal !== 0
             || !genesis.founding || !isSignedIntentShape(genesis.founding) || !verifySignedIntent(genesis.founding)
             || genesis.founding.intent.kind !== "install" || genesis.founding.intent.to !== null || genesis.founding.intent.on !== null

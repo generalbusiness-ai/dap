@@ -16,7 +16,7 @@ test("install keeps its operator key owner-only under the config directory, refu
   const store = fileStore(dir);
   // A service that refuses every creation: what it answers is not the point here, only what the command keeps and prints.
   const fetch: Fetch = async () => new Response(JSON.stringify({ answer: "refused", reason: "unauthorized" }), { status: 403 }) as never;
-  const outcome = await command({ store, fetch }, ["install", "https://service.test"]);
+  const outcome = await command({ store, fetch }, ["install", "https://service.test", "--host", "github.com"]);
   expect(outcome).toEqual({ code: 1, lines: ["Refused: unauthorized. The request was refused."] });
 
   const path = join(dir, "keys", "operator.key");
@@ -26,7 +26,7 @@ test("install keeps its operator key owner-only under the config directory, refu
   await expect(store.keep("operator", new Uint8Array(32))).rejects.toThrow(/exists already; it is not replaced/);
   expect(await store.secret("operator")).toEqual(secret);
   // A second install reuses the kept key: the same intent's actor, and the secret is in no line.
-  const again = await command({ store, fetch }, ["install", "https://service.test"]);
+  const again = await command({ store, fetch }, ["install", "https://service.test", "--host", "github.com"]);
   expect(again.lines.join("\n")).not.toContain(b64url(secret));
 
   // Two actual filesystem writers have each completed a private temporary

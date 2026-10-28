@@ -115,3 +115,38 @@ test("remote reads the recorded repository; missing Git and the pinned @1 withou
     expect(result.lines.join(" ")).not.toMatch(/was accepted|Read token:|Nothing was written/);
   }
 });
+
+// Scripted summaries distinguish the exact unpublished pin from malformed old
+// metadata. Reads may sign authorization; no repository act may be signed/sent.
+test("unpublished remote names its mode and repository commands stop before Git, local input or act submission", async () => {
+  const store = memoryStore();
+  await store.keep("operator", new Uint8Array(32).fill(74));
+  const at = { scope: `sc_${"a".repeat(52)}` as const, kind: "destination" as const, inc: newIncarnation(new Uint8Array(16).fill(8)) };
+  const membership = { ...at, kind: "membership" as const };
+  await store.save({ v: 1, service: "https://unpublished.test", key: "operator", repository: { directory: { ...at, kind: "directory" }, membership, rules: at.scope, destination: at.scope } });
+  let definition = "platform:destination@16", state = "unpublished";
+  const calls: string[] = [];
+  const git = vi.fn(async () => 0), files = vi.fn(), read = vi.fn();
+  const fetch: Fetch = async (url) => {
+    calls.push(new URL(url).pathname);
+    if (url.endsWith("/sessions")) return Response.json({ ok: false, reason: "sessions-unavailable" });
+    return Response.json({ ok: true, at: { seq: 0, hash: `sha256:${"a".repeat(64)}` }, complete: true,
+      value: { scope: at, status: "active", definition, time: "2026-10-07T12:00:00Z", counts: [],
+        items: [{ id: 0, type: "branch", state, revision: 0, opened: null, parties: {}, refs: {}, attributed: [], values: { repository: null, head: null, token: null } }] } });
+  };
+  const ctx = { store, fetch, now: () => Date.parse("2026-10-07T12:00:00Z"), git: { run: git, files }, read };
+  expect(await command(ctx, ["remote"])).toEqual({ code: 0, lines: ["Mode: unpublished", "no-repository: this room has no publication."] });
+  for (const args of [["clone", "here"], ["clone", "here", "--archive"], ["edit", "a.txt", "--file", "local.txt"], ["propose", "topic"], ["merge", at.scope]]) {
+    expect(await command(ctx, args)).toEqual({ code: 1, lines: ["Refused: no-repository. This room is unpublished."] });
+  }
+  expect(git).not.toHaveBeenCalled(); expect(files).not.toHaveBeenCalled(); expect(read).not.toHaveBeenCalled();
+  expect(calls.every(path => path.endsWith("/sessions") || path === `/v1/scopes/${at.scope}`)).toBe(true);
+  for (const bad of ["platform:destination@1", "platform:destination@15"]) {
+    definition = bad;
+    const reply = await command(ctx, ["remote"]);
+    expect(reply.code).toBe(1); expect(reply.lines.join(" ")).toContain("records no repository");
+    expect(reply.lines.join(" ")).not.toContain("Mode: unpublished");
+  }
+  definition = "platform:destination@16"; state = "ready";
+  expect((await command(ctx, ["remote"])).lines.join(" ")).toContain("records no repository");
+});

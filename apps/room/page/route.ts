@@ -37,7 +37,7 @@ export const isPage = (request: Request): boolean => {
 };
 
 /** The page route's answer. A refusal is plain text: the reason, a colon and a sentence. */
-export function page(request: Request): Response {
+export function page(request: Request, demoStart = false): Response {
   const url = new URL(request.url);
   if (request.method !== "GET" && request.method !== "HEAD") {
     return new Response("method-not-allowed: the page is read with GET.\n", { status: 405, headers: { "content-type": "text/plain; charset=utf-8", allow: "GET, HEAD" } });
@@ -45,7 +45,7 @@ export function page(request: Request): Response {
   const body = (text: string) => (request.method === "HEAD" ? null : text);
   switch (url.pathname) {
     case "/page": return new Response(null, { status: 301, headers: { location: "/page/" } });
-    case "/page/": return new Response(body(PAGE_HTML), { status: 200, headers: headers("text/html; charset=utf-8") });
+    case "/page/": return new Response(body(demoStart ? PAGE_HTML.replace('data-demo-start="false"', 'data-demo-start="true"') : PAGE_HTML), { status: 200, headers: headers("text/html; charset=utf-8") });
     case "/page/page.js": return new Response(body(PAGE_JS), { status: 200, headers: headers("text/javascript; charset=utf-8") });
     default: return new Response("not-found: the page has no such file.\n", { status: 404, headers: { "content-type": "text/plain; charset=utf-8", "x-content-type-options": "nosniff" } });
   }

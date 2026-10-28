@@ -16,6 +16,10 @@ test("the Worker serves the page at /page/: its HTML and script under a same-ori
 
   const html = await get("/page/");
   expect([html.status, html.headers.get("content-type"), await html.text()]).toEqual([200, "text/html; charset=utf-8", PAGE_HTML]);
+  expect(html.headers.get("cache-control")).toBe("no-cache");
+  expect(PAGE_HTML).toContain('data-demo-start="false"');
+  const enabled = await worker.fetch(new Request("https://scopes.test/page/"), { SCOPES: env.PLATFORM, SCOPE_INDEX: env.SCOPE_INDEX, DEMO_START_CONFIG: "TEST configured capability" } as Env);
+  expect(await enabled.text()).toBe(PAGE_HTML.replace('data-demo-start="false"', 'data-demo-start="true"'));
   expect(PAGE_HTML).toContain('<script type="module" src="page.js"></script>');
   const policy = html.headers.get("content-security-policy") ?? "";
   expect(policy.split("; ")).toEqual(expect.arrayContaining(["default-src 'none'", "script-src 'self'", "connect-src 'self'", "font-src 'self'", "frame-ancestors 'none'"]));

@@ -2,6 +2,7 @@
 import { freeze } from "@generalbusiness/dap-bytes";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { isScopeRef, same, type Page, type StateView } from "@generalbusiness/dap-derive";
+import { UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 import { recordedMembership, repositorySessionBirth } from "./authority.ts";
 import type { Clock } from "./ports.ts";
 import { ReadPreparation, type PreparedRead } from "./read-preparation.ts";
@@ -39,10 +40,15 @@ export function preparedSessionRefusal(config: { sessions(): Sessions | null; cl
 function referenceView(frame: PreparedRead): StateView {
   const pages = new Map<string, Page>();
   const methods = {
-    scope: () => frame.view.scope(), incarnations: (scope: Parameters<StateView["incarnations"]>[0]) => frame.view.incarnations(scope),
+    // Reuse the captured scope so G16's extra state seek fits the same budget.
+    // The caller still revalidates the full frame after any peer read.
+    scope: () => frame.pinned.named === UNPUBLISHED_COHORT.destination ? frame.scope : frame.view.scope(),
+    incarnations: (scope: Parameters<StateView["incarnations"]>[0]) => frame.view.incarnations(scope),
     page(type: string, states: readonly string[], after: number | null, limit: number): Page {
       if (!Array.isArray(states) || after !== null || limit !== 1 || !(
         (type === "branch" && states.length === 2 && states[0] === "empty" && states[1] === "ready")
+        || (frame.pinned.named === UNPUBLISHED_COHORT.destination && type === "branch" && states.length === 3
+          && states[0] === "unpublished" && states[1] === "empty" && states[2] === "ready")
         || (type === "rules" && states.length === 1 && states[0] === "current")
         || (type === "repository" && states.length === 1 && states[0] === "open"))) return frame.budget.stop();
       const cached = pages.get(type);

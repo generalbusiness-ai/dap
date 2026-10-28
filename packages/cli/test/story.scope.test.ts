@@ -78,7 +78,7 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
   const run = async (who: Context, ...argv: string[]): Promise<Outcome> => lifetime.wait(() => command(who, argv));
 
   // install: the register, by an `install` intent of a new operator key, which is the one creator key.
-  const installed = await run(rita, "install", SERVICE, "--host", "git.example", "--namespace", "artroom");
+  const installed = await run(rita, "install", SERVICE, "--host", "github.com", "--namespace", "artroom");
   expect(installed.code, installed.lines.join("\n")).toBe(0);
   const R = node((await rita.store.config())!.register!.scope);
   expect(installed.lines).toEqual([`Installed: register ${R.name}, under platform:register@18.`, expect.stringMatching(/^The operator key key_\S+ is kept in the config directory, readable only by you\. It is the one creator key\.$/)]);
@@ -211,7 +211,7 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
   lifetime.advance(16 * 60_000);
   const destinationLog = await run(rita, "log", "destination");
   expect([destinationLog.code, destinationLog.lines.filter((line) => /  outcome; /.test(line)).length, destinationLog.lines.at(-1)], destinationLog.lines.join("\n")).toEqual([0, 6, "8 entries in all."]);
-  expect(await run(rita, "remote")).toEqual({ code: 0, lines: ["Host: git.example", "Namespace: artroom", `Name: ${recorded.values.repository!.name}`, "Remote URL: not known for the host git.example"] });
+  expect(await run(rita, "remote")).toEqual({ code: 0, lines: ["Host: github.com", "Namespace: artroom", `Name: ${recorded.values.repository!.name}`, `Remote URL: https://github.com/artroom/${recorded.values.repository!.name}.git`] });
 
   // Over the live read surface, with rita's session, each of the six histories replays consistent: the register whole, since her
   // claim is on it, and every other scope by the membership reference it records, the destination after its publication.
@@ -269,7 +269,7 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
 
   // What stays forbidden: a key of another register, which signed nothing in this one and holds no session of this repository.
   const vic: Context = { store: memoryStore(), fetch, now, pause };
-  expect((await run(vic, "install", SERVICE, "--host", "git.example", "--namespace", "elsewhere")).code).toBe(0);
+  expect((await run(vic, "install", SERVICE, "--host", "github.com", "--namespace", "elsewhere")).code).toBe(0);
   expect(await run(vic, "log", R.name)).toEqual({ code: 1, lines: [`Cannot read the history of ${R.name}: forbidden.`] });
   // A history whose first page cannot be read has no report: the command prints why, and exits non-zero.
   const unread = await run(vic, "verify", R.name);
