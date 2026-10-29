@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a29ed642062a9f52b9d5966cbc4d9b233bb3129f","text":"Merge retired a covered predecessor; the successor is at .claude-plugin/plugin.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a6c8128b7dbbc7040ab8dd8af14fe7b53c969449","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/application-examples.test.ts."}
