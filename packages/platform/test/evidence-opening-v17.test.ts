@@ -146,7 +146,7 @@ test("a funded bound delivery can open its counted operation but cannot open eve
   expect(take()).toBe("unavailable");
   expect(scope.head).toEqual(before);
   scope.script.after = () => opened(0, "step", 1, holder);
-  expect(take()).toBe("written");
+  expect(take()).toBe("write");
   expect(scope.last.effects.some(effect => effect.effect === "open")).toBe(false);
   const operation = scope.state.operation(`${scope.last.seq}:0`);
   expect(operation?.for).toBe(holder);
