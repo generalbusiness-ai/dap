@@ -165,7 +165,9 @@ class MacPorts:
         status, body = aws_request(prefix, "GET", "nodes/" + node + ".json")
         require(status == 200, "node record unavailable")
         value = json.loads(body)
-        return isinstance(value, dict) and value.get("draining") is False
+        return (isinstance(value, dict) and value.get("node") == node
+                and isinstance(value.get("load"), dict)
+                and value["load"].get("draining") is False)
 
     def bootout(self, label, timeout, uid, known=None):
         state, pid = self.job(label)

@@ -370,9 +370,33 @@ sudo apps/room/celld/mac/install.sh \
 
 The installer refuses an occupied prefix or service label. It keeps data
 when a partial start fails. The runtime waits for the filer fsync rule and
-a successful store PUT before serving. A 60-second lease and a 70-second
-restart delay govern celld. Each service has a 60-second stop allowance.
+a successful store PUT before serving. Celld starts when its job loads and
+restarts after an unsuccessful exit. A normal exit leaves it stopped so
+preserve shutdown can finish. Its lease lasts 60 seconds. Its 70-second
+launch throttle limits launch frequency. Each service has a 60-second
+stop allowance.
 Caddy allows 10 seconds for active connections during its stop.
+
+Check the application firewall entry for the configured Caddy executable.
+Allow incoming connections to that exact path. If the existing entry
+permits it but LAN HTTPS times out, refresh that entry and check HTTPS
+again. Keep the firewall enabled.
+
+Use the configured absolute Caddy path in these commands:
+
+```sh
+/usr/libexec/ApplicationFirewall/socketfilterfw \
+  --getappblocked /absolute/path/to/caddy
+```
+
+If that entry needs a refresh, run:
+
+```sh
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw \
+  --add /absolute/path/to/caddy
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw \
+  --unblockapp /absolute/path/to/caddy
+```
 
 ### Certificate and trust
 
@@ -453,6 +477,7 @@ runtime completion signal and a node record no longer marked draining.
 It waits for celld's process to close before stopping the store. An unknown
 result exits nonzero and retains the full prefix and node name. Keep those
 and restart the same installation to recover.
+An exit status of zero alone does not prove preserve preparation.
 
 Restart the owned services in order, then verify the room:
 

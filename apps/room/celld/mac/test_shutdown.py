@@ -82,6 +82,25 @@ class ScriptedPorts:
 
 
 class ShutdownControls(unittest.TestCase):
+    def test_scripted_node_read_matches_identity_and_nested_drain_state(self):
+        # Authenticated store answers are scripted; no live node is observed.
+        prefix, node = Path("/TEST-installation"), "TEST-node"
+        for body, expected in (
+                ({"node": node, "expires_ms": 123, "load": {"draining": False}}, True),
+                ({"node": "other-node", "load": {"draining": False}}, False),
+                ({"load": {"draining": False}}, False),
+                ({"node": node, "draining": False}, False),
+                ({"node": node, "draining": False, "load": {"draining": True}}, False),
+                ({"node": node, "load": []}, False),
+                ({"node": node, "load": {}}, False),
+                ([], False)):
+            with self.subTest(body=body), patch("shutdown.aws_request", return_value=(200, json.dumps(body).encode())) as request:
+                self.assertIs(MacPorts().node_ready(prefix, node), expected)
+                request.assert_called_once_with(prefix, "GET", "nodes/" + node + ".json")
+        with patch("shutdown.aws_request", return_value=(403, b"")):
+            with self.assertRaises(Refusal):
+                MacPorts().node_ready(prefix, node)
+
     def test_scripted_disabled_readback_accepts_both_formats_but_refuses_ambiguity(self):
         # Actual-format and legacy output are scripted; no launchd call runs.
         label = LABELS["celld"]
