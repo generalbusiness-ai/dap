@@ -137,8 +137,9 @@ test("a conflicting FIRST reconnect head cannot be hidden by an offered newer sn
 test("empty EOF is unavailable directly and releases its reader once",async()=>{
  const body=stream(),stop=new AbortController(),first=headLines(body.body,stop.signal).next();
  body.end();
- await expect(first).rejects.toBeInstanceOf(HeadStreamUnavailable);
- await expect(first).rejects.toMatchObject({name:"HeadStreamUnavailable",reason:"stream-ended-before-head"});
+ let failure:unknown;try{await first;}catch(error){failure=error;}
+ expect(failure).toBeInstanceOf(HeadStreamUnavailable);
+ expect(failure).toMatchObject({name:"HeadStreamUnavailable",reason:"stream-ended-before-head"});
  expect(body.cancelled).toBe(1);
 });
 
