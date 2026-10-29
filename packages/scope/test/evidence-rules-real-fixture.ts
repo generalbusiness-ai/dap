@@ -210,6 +210,27 @@ export async function evidenceItems(node: Platform, type: string): Promise<reado
 }
 const hardeningItems = evidenceItems;
 
+/** Read the actual singleton intent and its opening, independent of summary projection. */
+export async function evidenceIntentRoot(room: EvidenceRoom, node: Platform): Promise<Item> {
+  const before = (await node.summary()).at;
+  return room.life.wait(() => runInDurableObject(node.object, (_instance, state) => {
+    const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+    expect(store.scope()?.head).toEqual(before);
+    const birth = ownOf(store)(0)?.entry.input;
+    const context = canonicalize({ status: store.scope()?.status ?? null, birth: birth?.type ?? null,
+      decision: birth?.type === 'genesis' ? birth.decision : null, reason: birth && 'reason' in birth ? birth.reason : null });
+    expect(store.scope()?.status, context).toBe('active');
+    expect(birth, context).toMatchObject({ type: 'genesis', decision: 'applied' });
+    const page = store.page('intent', ['open', 'closed'], null, 2);
+    expect(page.more, context).toBe(false); expect(page.items, context).toHaveLength(1);
+    const root = page.items[0];
+    if (!root) throw Error('Actual singleton Issue intent required');
+    expect(ownOf(store)(root.id)?.entry.effects).toContainEqual({ effect: 'open', item: root.id, type: 'intent', state: 'open' });
+    expect(store.scope()?.head).toEqual(before);
+    return root;
+  }));
+}
+
 /** Failure-only context from actual reads. Never print signed fields,
  * provider bodies or record payloads; preserve bounds and incomplete pages. */
 export async function evidenceNativeDiagnostic(nodes: readonly Platform[]) {
@@ -626,7 +647,7 @@ export async function evidenceNativeState(room: EvidenceRoom, replay = false) {
   }));
   if (replay) {
     const source = httpSource('https://scopes.test', { reader, fetch: (url, init) => room.life.wait(() => routed(url, init)) });
-    const checked = await room.life.wait(() => verify(source, { mode: 'replay', platform: nativePlatform, grants: 'proven', scope: room.G.name, head: before }));
+    const checked = await room.life.wait(() => verify(source, { mode: 'replay', platform: nativePlatform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: 'proven', scope: room.G.name, head: before }));
     expect([checked.report.result, checked.why, checked.report.target]).toEqual(['consistent', null, { at: await room.G.at(), ...before }]);
     expect(checked.report.coverage).toContainEqual({ scope: await room.G.at(), from: 0, through: before.seq });
   }

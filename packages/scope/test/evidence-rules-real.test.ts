@@ -1,13 +1,13 @@
 import { expect, inject, test } from "vitest";
 import { runDurableObjectAlarm } from "cloudflare:test";
 import type { Observation } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, isDigest, isRecord, isSeed, scopeIdOf, timeMs } from "@generalbusiness/dap-bytes";
+import { canonicalize, factRefOf, isDigest, isFactRef, isRecord, isSeed, scopeIdOf, timeMs } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest, readEvidenceBinding, type EvidenceBinding } from "@generalbusiness/dap-platform";
 import { isObjectId } from "@generalbusiness/dap-git";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { EVIDENCE_RULES_COHORT } from "../../platform/src/evidence-cohort.ts";
 import { claimEvidenceWork, configureEvidenceRules, enrolEvidenceKey, evidenceCertificate, evidenceChecker, evidenceNativeRoom,
-  evidenceEntry, evidenceItems as hardeningItems, evidenceNativeDiagnostic, evidenceNativeState, evidenceRecord, evidenceRulesObservation, evidenceRulesPolicy, prepareEvidenceWork, publishEvidenceRulesCertificate, requestEvidenceWork } from "./evidence-rules-real-fixture.ts";
+  evidenceEntry, evidenceIntentRoot, evidenceItems as hardeningItems, evidenceNativeDiagnostic, evidenceNativeState, evidenceRecord, evidenceRulesObservation, evidenceRulesPolicy, prepareEvidenceWork, publishEvidenceRulesCertificate, requestEvidenceWork } from "./evidence-rules-real-fixture.ts";
 import { claimLandingEvidence, claimPublishedEvidence, evidenceFailureNotice, evidenceOutcomeRace, prepareAuditEvidence, prepareLandingEvidence,
   preparePublishedEvidence, publishEvidenceFile, requestLandingEvidence, revisePublishedEvidence, type LandingEvidenceJob } from "./evidence-rules-real-fixture.ts";
 import { runEvidenceContainerCase } from "./evidence-runner-case.ts";
@@ -168,10 +168,33 @@ test("actual landing reuse follows the tree key and a fresh passed job still pub
     const failed = await claimLandingEvidence(room, setup, conflict, conflictJob, "failed");
     expect(await conflictJob.record()).toMatchObject({ state: "failed", result: failed });
     expect(room.host.stand.refs.get("refs/heads/main")).toBe(beforeFailure);
-    const retry = await publishEvidenceFile(room, setup, "TEST tree T"), refused = await requestLandingEvidence(room, setup, retry, true);
+    const retry = await publishEvidenceFile(room, setup, "TEST tree T");
+    const retryPublication = (await hardeningItems(room.G, 'publication')).find(item => canonicalize(item.refs['operation']) === canonicalize(retry.operation));
+    if (!retryPublication) throw Error('Actual retry publication required');
+    const refused = await requestLandingEvidence(room, setup, retry, true);
     expect(refused.tree).toBe(firstJob.tree);
-    expect(await refused.record()).toMatchObject({ state: "refused", reason: "check-disagrees" });
+    const refusedJob = (await hardeningItems(retry.lane, 'job')).find(item => item.id === refused.job.seq);
+    expect(refusedJob).toMatchObject({ state: 'fence-refused', values: { reason: 'check-disagrees' } });
+    const nativeDecision = refusedJob?.refs['nativeDecision'];
+    if (!isFactRef(nativeDecision)) throw Error('Actual Native refusal decision reference required');
+    expect(nativeDecision.at).toEqual(await room.G.at());
+    const refusedEntry = await evidenceEntry(room.G, nativeDecision.seq);
+    expect(factRefOf(refusedEntry)).toEqual(nativeDecision);
+    expect(refusedEntry.input).toMatchObject({ type: 'outcome', owner: EVIDENCE_RULES_COHORT.destination, kind: 'evidence-admit', result: 'confirmed' });
+    const decisions = refusedEntry.sends.filter(send => canonicalize(send.to) === canonicalize(refused.job.at)
+      && send.message.class === 'request' && send.message.type === 'tell' && isRecord(send.message.body)
+      && send.message.body['message'] === 'check-decision' && isRecord(send.message.body['fields'])
+      && canonicalize(send.message.body['fields']['job']) === canonicalize(refused.job));
+    expect(decisions).toHaveLength(1);
+    expect(decisions[0]?.message).toMatchObject({ class: 'request', type: 'tell', body: { message: 'check-decision',
+      fields: { job: refused.job, status: 'refused', reason: 'check-disagrees', decision: { self: true } } } });
+    expect((await evidenceNativeState(room)).jobs.some(row => canonicalize(row.raw.job) === canonicalize(refused.job))).toBe(false);
+    expect(await hardeningItems(retry.lane, 'result')).toHaveLength(0);
+    expect((await hardeningItems(room.G, 'publication')).find(item => item.id === retryPublication.id))
+      .toMatchObject({ state: 'reserved', refs: { operation: retry.operation }, values: { tree: refused.tree } });
+    expect(room.host.stand.refs.get('refs/heads/main')).toBe(beforeFailure);
     const fresh = await requestLandingEvidence(room, setup, retry, false);
+    expect(fresh.job).not.toEqual(refused.job);
     expect(await fresh.record()).toMatchObject({ state: "admitted", countedJob: null });
     const freshResult = await claimLandingEvidence(room, setup, retry, fresh, "passed");
     expect(await fresh.record()).toMatchObject({ state: "passed", result: freshResult });
@@ -329,13 +352,14 @@ test("real published holds survive newer counted passes and clear only through d
     const ordinaryCreated = await room.D.created(ordinaryOpening.receipt.fact.seq), ordinary = room.life.platform(ordinaryCreated.name);
     room.nodes.push(ordinary); await room.pause(room.nodes);
     expect((await ordinary.summary()).value.definition).toBe(setup.definitions.issue);
-    expect(await ordinary.item(0)).toMatchObject({ state: 'open', values: { kind: 'ordinary' },
+    const ordinaryRoot = await evidenceIntentRoot(room, ordinary);
+    expect(ordinaryRoot).toMatchObject({ state: 'open', values: { kind: 'ordinary' },
       parties: { requester: { membership: await room.M.at(), member: '@rita' } } });
-    const ordinaryClosed = await ordinary.act(rita, 'close-own', { on: 0, expected: await ordinary.expected({ on: 0 }) });
+    const ordinaryClosed = await ordinary.act(rita, 'close-own', { on: ordinaryRoot.id, expected: { on: ordinaryRoot.revision } });
     expect(ordinaryClosed, canonicalize(ordinaryClosed)).toMatchObject({ answer: 'accepted' });
     if (ordinaryClosed.answer !== 'accepted') throw Error('Actual requester closure of the unrelated intent required');
     await room.pause(room.nodes);
-    expect((await hardeningItems(ordinary, 'intent')).find(item => item.id === 0)).toMatchObject({ state: 'closed', refs: { closedBy: ordinaryClosed.receipt.fact.seq } });
+    expect(await evidenceIntentRoot(room, ordinary)).toMatchObject({ id: ordinaryRoot.id, state: 'closed', refs: { closedBy: ordinaryClosed.receipt.fact.seq } });
     await unchangedActiveHold();
     expect(await child.act(rita, "close-own", { on: 0, expected: await child.expected({ on: 0 }) })).toMatchObject({ answer: "refused", reason: "guard-failed" });
     await child.did(rita, "close-any", { on: 0, expected: await child.expected({ on: 0 }) });

@@ -352,7 +352,7 @@ test("SCRIPTED receipt-first and fund-first schedules open one original plan, an
     expect(planned.draft.effects.filter(effect => effect.effect === "value" && effect.slot === "plan")).toEqual([{ effect: "value", item: self, slot: "plan", value: evidenceWireV17({
       v: 1, publication: { at: fixture.captureFact.at, seq: 2, hash: fixture.history.get(2)!.hash },
       receipt: { at: fixture.captureFact.at, seq: receipt.position, hash: fixture.history.get(receipt.position)!.hash }, written: proof.written.seq,
-      operation: fixture.state.item(2)!.refs["operation"], base: "c".repeat(40), cursor: 0, total: 2,
+      operation: fixture.state.item(2)!.refs["operation"], base: "c".repeat(40), cursor: 0, total: 9,
     }, 196_608) }]);
     const stamps = planned.draft.effects.filter(effect => effect.effect === "value" && effect.slot === "batch");
     expect(stamps).toHaveLength(2);
