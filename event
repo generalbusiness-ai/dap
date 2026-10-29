@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dce86b49bd4e4fe36b4fe3687b94122b2e863900","text":"Merge retired a covered predecessor; the successor is at scripts/check-doc-links.test.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f0bf7e11c4841c02f1d8c865d09c6ee6269dfb7d","text":"Merge retired a covered predecessor; the successor is at docs/public-sdk-release.md."}
