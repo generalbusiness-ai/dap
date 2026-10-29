@@ -540,6 +540,16 @@ function evidenceComplete(given: RuleGiven, publication: Item, passes: readonly 
   const snapshot = certifiedPublicationStateWireV17(publication.values["passes"], given.resolved.bounds)?.policy;
   if (!snapshot) return false;
   if (!snapshot.required.length) return true;
+  // Staging exposes the tree so that required jobs can be requested. It
+  // never opens push for a nonempty required set, and declares no fresh
+  // Rules/key rows. Actual progress remains the completion authority.
+  if (given.input.type === "outcome" && given.input.kind === "reservation-stage") return false;
+  // Missing or failed proof rows cannot complete any publication. Reject
+  // them before asking a form for observations it has no reason to supply.
+  if (!snapshot.required.every(check => {
+    const rows = passes.filter(row => row.name === check.name);
+    return rows.length === 1 && rows[0]!.passed;
+  })) return false;
   const view = evidencePolicyV17(given);
   if (!view || view.revision !== snapshot.observation.revision || !same(view.rules, snapshot.input.rules)) return false;
   return snapshot.required.every(check => {

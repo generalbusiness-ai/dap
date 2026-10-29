@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FactRef, type Incarnation, type RulesObservation } from "@generalbusiness/dap-contract";
 import { canonicalize, isEntry, isFieldValue, signIntent, utf8 } from "@generalbusiness/dap-bytes";
-import { observationBytes, valueDigest, type RuleGiven } from "@generalbusiness/dap-derive";
+import { observationBytes, valueDigest, type Item, type RuleGiven } from "@generalbusiness/dap-derive";
 import { d, grantOf, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
-import { evidencePolicyV17 } from "../src/destination-evidence-v17.ts";
+import { evidenceDestinationProfileV17, evidencePolicyV17 } from "../src/destination-evidence-v17.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
 import { rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
 import { CERTIFIED_PUBLICATION_TEXT_BYTES_V17, certifiedCaptureBudgetV17, certifiedPublicationBudgetV17, certifiedPublicationStateV17,
@@ -138,4 +138,33 @@ test("the Native policy reader accepts an unfixed RecordedRef and rejects a diff
   expect(read([keys.una.member.membership.inc])).toBeNull();
   expect(read([], { ...policy.observation, of: { ...rules, scope: keys.una.member.membership.scope } })).toBeNull();
   expect(read([rules.inc, keys.una.member.membership.inc])).toBeNull();
+});
+
+
+test("staging with required jobs never reads completion observations, while actual progress still requires them", () => {
+  // SCRIPTED policy/carrying row, exercising the production successor hook.
+  // No key standing, Native admission or actual publication is simulated.
+  const empty = record(), prior = empty.policy.input.extents as Record<string, unknown>;
+  const check = { name: "unit", configuration: d("b"), required: true, checker: keys.una.member, stage: "landing" as const };
+  const proposed = rulesPolicyProposalV13({ ...(prior["policy"] as Record<string, unknown>), checks: [check] });
+  if (!proposed.ok) throw Error("The scripted required policy is invalid");
+  const envelope = { ...prior, policy: proposed.policy, proposal: proposed.digest };
+  if (empty.policy.observation.content.asked !== "rules") throw Error("The scripted observation must ask Rules");
+  const captured: CertifiedPublicationStateV17 = { policy: { ...empty.policy, required: [check],
+    input: { ...empty.policy.input, extents: envelope }, observation: { ...empty.policy.observation,
+      content: { ...empty.policy.observation.content, checks: [{ name: check.name, configuration: check.configuration, required: check.required, checker: check.checker.member }],
+        extents: valueDigest("artroom-rules-extents-3", envelope) } } }, generations: [] };
+  const publication = (value: CertifiedPublicationStateV17) => ({ id: 4, type: "publication", values: {
+    passes: certifiedPublicationWireV17(value, PROPOSED_BOUNDS),
+  } }) as unknown as Item;
+  const given = (kind: string) => ({ input: { ...capture(captured).input, kind }, resolved: { bounds: PROPOSED_BOUNDS },
+    observed: () => { throw Error("Fresh completion observations remain required"); },
+  }) as unknown as RuleGiven;
+  const complete = evidenceDestinationProfileV17.complete;
+  expect(complete(given("reservation-stage"), publication(captured), [])).toBe(false);
+  const passed = [{ name: check.name, job: fact(8), passed: true }];
+  expect(complete(given("reservation-stage"), publication(captured), passed)).toBe(false);
+  expect(complete(given("evidence-progress"), publication(captured), [])).toBe(false);
+  expect(() => complete(given("evidence-progress"), publication(captured), passed)).toThrow("Fresh completion observations remain required");
+  expect(complete(given("reservation-stage"), publication(empty), [])).toBe(true);
 });

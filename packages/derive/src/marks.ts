@@ -462,7 +462,12 @@ export function unjudged<T>(judge: () => T): T | { result: "unavailable"; reason
   try {
     return judge();
   } catch (error) {
-    if (error instanceof RuleFault) return { result: "unavailable", reason: "unavailable" };
+    if (error instanceof RuleFault) {
+      // TEMPORARY bounded Source diagnostic; restore the retained original.
+      console.log("EVIDENCE_RULEFAULT_CONTEXT_15", JSON.stringify({ message: error.message.slice(0, 1024),
+        frames: (error.stack ?? "").split("\n").slice(1, 7).map(frame => frame.trim().slice(0, 320)) }));
+      return { result: "unavailable", reason: "unavailable" };
+    }
     throw error;
   }
 }
