@@ -32,6 +32,53 @@ function provider(clock: () => number) {
     counts: () => ({ mints, infos, revokes }), hold: (next: typeof pending) => { pending = next; }, remote: (value: string) => { reported = value; } };
 }
 
+async function siteRpcWithin<T>(work: Promise<T>, phase: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([work, new Promise<never>((_resolve, reject) => {
+      timer = setTimeout(() => reject(Error(`Site RPC ${phase} did not finish within 5 seconds`)), 5_000);
+    })]);
+  } finally { if (timer !== undefined) clearTimeout(timer); }
+}
+
+/** Hold one info answer after the real owner has reserved and scheduled.
+ * The scripted wrong remote proves failure before any token mint enters. */
+function heldInfoProvider() {
+  const entered = gate<void>(), resume = gate<void>(), joined = gate<void>();
+  let armed = false, used = false, closed = false, active = 0, lateCalls = 0, mints = 0;
+  const operation = async <T>(run: () => T | Promise<T>): Promise<T> => {
+    if (closed) { lateCalls++; throw Error("Site test provider is closed"); }
+    active++;
+    try { return await run(); } finally { active--; }
+  };
+  const binding: ArtifactsNamespace = {
+    get: async () => operation(() => ({
+      info: async () => operation(async () => {
+        if (!armed) return { remote: `https://${configuration.host}/git/${configuration.namespace}/${repository.name}.git` };
+        armed = false; used = true; entered.release();
+        try { await resume.promise; return { remote: "https://foreign.invalid/replaced" }; }
+        finally { joined.release(); }
+      }),
+      createToken: async () => operation(() => {
+        mints++;
+        return { scope: "read", plaintext: `held-provider-${mints}`, expiresAt: new Date(Date.now() + 120_000).toISOString() };
+      }),
+      revokeToken: async () => operation(() => true),
+    })),
+    create: async () => operation(() => { throw Error("Site cannot create a repository"); }),
+    delete: async () => operation(() => false),
+  };
+  return {
+    settings: { ARTIFACTS: binding, ARTIFACTS_CONFIG: canonicalize(configuration) } satisfies ArtifactsBindings,
+    hold: () => { if (armed || used) throw Error("Site info hold already used"); armed = true; },
+    entered: entered.promise,
+    release: () => resume.release(),
+    join: async () => { if (used) await siteRpcWithin(joined.promise, "provider join"); },
+    close: () => { if (active !== 0) throw Error("Site provider still active"); closed = true; },
+    counts: () => ({ active, lateCalls, mints }),
+  };
+}
+
 // A real scope supplies actual SQLite; no scope authority is used by these
 // private rows. The controlled clock and provider are labelled stand-ins.
 test("private Site custody shares one mint, preserves actual expiry and refuses stale generations after a bounded interrupted hold", async () => {
@@ -176,6 +223,71 @@ test("Site reuse keeps config and remote checks fresh and holds malformed or amb
     expect((await lost.acquire(alarmKey)).ok).toBe(true);
     expect(p.counts().mints).toBe(minted + 1);
   });
+});
+
+// A known failure removes only its reservation. The last row must also
+// release its alarm; a surviving future row must keep its earlier wake.
+test.each([
+  { name: "actual fixed-owner Site RPC clears its last alarm after a joined pre-mint failure", keepReady: false },
+  { name: "actual fixed-owner Site RPC preserves a future row's earlier alarm and generation after a joined pre-mint failure", keepReady: true },
+])("$name", async ({ keepReady }) => {
+  const p = heldInfoProvider(), object = () => env.SCOPE_INDEX.get(env.SCOPE_INDEX.idFromName(SCOPE_INDEX_NAME));
+  const snapshot = () => siteRpcWithin(runInDurableObject(object(), async (_instance, state) => ({
+    rows: state.storage.sql.exec("SELECT key,generation,state,ends,plaintext IS NOT NULL AS hasPlaintext FROM private_site_token ORDER BY key").toArray(),
+    alarm: await state.storage.getAlarm(),
+  })), "metadata snapshot");
+  // Strip successful token material before an answer can enter a test diff.
+  const call = async (asked: SiteTokenRequest) => {
+    const answer = await (object() as unknown as SiteTokenPort).acquireSiteRead(asked);
+    return answer.ok ? { ok: true, ends: answer.ends } : answer;
+  };
+  let pending: ReturnType<typeof call> | undefined;
+  siteTokenTestSettings.set(SCOPE_INDEX_NAME, p.settings);
+  try {
+    expect(await siteRpcWithin(runInDurableObject(object(), (_instance, state) => state.storage.getAlarm()), "initial alarm")).toBeNull();
+    let retained: Awaited<ReturnType<typeof snapshot>> | undefined;
+    if (keepReady) {
+      expect((await siteRpcWithin(call(request()), "ready token")).ok).toBe(true);
+      retained = await snapshot();
+      expect(retained.rows).toHaveLength(1);
+      expect(retained.rows[0]).toMatchObject({ state: "ready", hasPlaintext: 1 });
+      expect(retained.alarm).toBe(retained.rows[0]!["ends"]);
+      expect(Number(retained.alarm)).toBeGreaterThan(Date.now());
+    }
+    p.hold();
+    pending = call(request("refs/heads/fail-before-mint"));
+    void pending.catch(() => {}); // The bounded join below retains any RPC rejection.
+    await siteRpcWithin(p.entered, "held info entry");
+    const held = await snapshot();
+    const reservations = held.rows.filter(row => row["state"] === "reserved");
+    expect(held.rows).toHaveLength(keepReady ? 2 : 1);
+    expect(reservations).toHaveLength(1);
+    expect(reservations[0]).toMatchObject({ hasPlaintext: 0 });
+    expect(Number(reservations[0]!["ends"])).toBeGreaterThan(Date.now());
+    expect(p.counts()).toEqual({ active: 1, lateCalls: 0, mints: keepReady ? 1 : 0 });
+    if (retained) {
+      expect(held.rows.filter(row => row["state"] === "ready")).toEqual(retained.rows);
+      expect(Number(reservations[0]!["ends"])).toBeGreaterThan(Number(retained.alarm));
+      expect(held.alarm).toBe(retained.alarm);
+    } else expect(held.alarm).toBe(reservations[0]!["ends"]);
+
+    p.release();
+    expect(await siteRpcWithin(pending, "failed RPC join")).toEqual({ ok: false, reason: "provider", step: "info" });
+    await p.join();
+    p.close(); // No provider writer remains before the final storage read.
+    expect(p.counts()).toEqual({ active: 0, lateCalls: 0, mints: keepReady ? 1 : 0 });
+    const settled = await snapshot();
+    expect(settled.rows).toEqual(retained?.rows ?? []);
+    expect(settled.alarm).toBe(retained?.alarm ?? null);
+    expect(p.counts()).toEqual({ active: 0, lateCalls: 0, mints: keepReady ? 1 : 0 });
+  } finally {
+    p.release();
+    try {
+      if (pending) await siteRpcWithin(pending, "cleanup RPC join");
+      await p.join();
+      p.close();
+    } finally { siteTokenTestSettings.delete(SCOPE_INDEX_NAME); }
+  }
 });
 
 test("actual fixed-owner Site RPC survives eviction, retains earlier alarms and erases ended plaintext without another read", async () => {
