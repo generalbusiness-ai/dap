@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b301f2d475646a4496388f8bfd551d77a1f46237","text":"Merge retired a covered predecessor; the successor is at packages/platform/test/evidence-funding-preview-v17.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b396f5a652942a9765dd2dd3a0bfaa75bf704ef4","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/operations.ts."}
