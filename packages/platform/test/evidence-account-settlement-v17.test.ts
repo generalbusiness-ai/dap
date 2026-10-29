@@ -1,18 +1,18 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, isEntry, utf8 } from "@generalbusiness/dap-bytes";
-import { View, type Item, type Operation } from "@generalbusiness/dap-derive";
+import { MemoryState, type Item, type Operation } from "@generalbusiness/dap-derive";
 import { d, otherLane } from "@generalbusiness/dap-derive/testing";
 import { EVIDENCE_ACCOUNT_SETTLE_V17, evidenceAccountLedgerClosedV17, evidenceSettlementBudgetV17 } from "../src/evidence-account-settlement-v17.ts";
 
-// SCRIPTED folded rows in the maintained View. This controls the exact
+// SCRIPTED folded rows in the maintained MemoryState. This controls the exact
 // ledger predicate, not Native admission, signed results or provider drain.
 const holder: Item = { id: 7, type: "evidence-batch", state: "funded", revision: 7, opened: d("a"), parties: {}, refs: {}, values: {}, attributed: [] };
 const settlement: Operation = { id: "7:0", owner: "platform:destination@17", kind: EVIDENCE_ACCOUNT_SETTLE_V17,
   for: holder.id, most: 1, selected: null, attempts: [{ attempt: 1, opened: 7, outcomes: [] }] };
 const result = (status: "confirmed" | "refused" | "unknown"): Operation => ({ ...settlement, id: "8:0", kind: "evidence-result",
   attempts: [{ attempt: 1, opened: 8, outcomes: [{ seq: 9, result: status, evidence: d("b"), selected: null }] }] });
-function state() { const view = new View(); view.putItem(holder); view.putOperation(settlement); return view; }
+function state() { const view = new MemoryState(); view.putItem(holder); view.putOperation(settlement); return view; }
 
 test("unknown or unopened peer work keeps the original account reserved; decisive ledger answers may close", () => {
   const view = state();

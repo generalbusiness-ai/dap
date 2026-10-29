@@ -22,7 +22,7 @@ function fixture(terminal: Terminal = "cleaned", throughReceipt = false) {
       receipt: { code: "receipt", row: "TEST", attempts: 1, most: { effects: 2, operations: [] } } } };
   const data = publicationSettlementDataV17(base), definition = checkedPlatformData(data), ledger = new Ledger(definition, "platform:destination");
   const baseRules: Rules = {
-    begin: { place: "effect", most: 2, run: given => operationOpening(0, { owner: OWNER, kind: "judge", attempts: 1, for: given.resolved.self }) },
+    begin: { place: "effect", most: 2, run: given => operationOpening(0, { owner: OWNER, kind: "judge", attempts: 1, for: given.resolved.self }).filter(effect => effect.effect === "operation" || effect.effect === "attempt") },
     judge: { place: "outcome", rules: { selects: false, read: false, retries: () => false, most: { effects: 3, requests: 0, operations: 1 },
       derives: (given, operation): OutcomeGives => throughReceipt ? { effects: [
         { effect: "state", item: operation.for!, state: "published" }, { effect: "open", item: given.resolved.self, type: "receipt", state: "owed" },
@@ -46,6 +46,8 @@ function fixture(terminal: Terminal = "cleaned", throughReceipt = false) {
   const offer = (operation: typeof finish, result: "confirmed" | "refused" | "unknown", evidence: Evidence) => {
     const judged = settleOutcome(ledger.state, definition, { type: "outcome", operation: operation.id, attempt: 1, result, evidence },
       { clock: clockOf(ledger.state, ledger.now), bounds: PROPOSED_BOUNDS, own: ledger.own, platform });
+    expect(judged.result).toBe("write");
+    if (judged.result !== "write") throw Error("The scripted cleanup outcome must write");
     ledger.seal(written(judged));
   };
   offer(finish, "confirmed", { basis: "own-answer", body: {} });

@@ -72,7 +72,7 @@ function fundingPreview(options: { checks?: number; productionReady?: boolean; s
     "reservation-stage": { place: "outcome", rules: { selects: true, read: false, retries: () => false, most: { effects: 0, requests: 0, operations: 0 },
       derives: () => ({ effects: [], sends: [], opens: [] }) } } };
   const readyUpdates: RuleRequest[] = [];
-  const configured = fundingRules(base, { capacityAnchor: () => [], accountOpening: holder => operationOpening(0, { owner: "platform:destination@17", kind: "evidence-account-settle", attempts: 1, for: holder }),
+  const configured = fundingRules(base, { capacityAnchor: () => [], accountOpening: holder => operationOpening(0, { owner: "platform:destination@17", kind: "evidence-account-settle", attempts: 1, for: holder }).filter(effect => effect.effect === "operation" || effect.effect === "attempt"),
     // SCRIPTED capacity admission: a refusal gives no replacement holder.
     fundCapacity: (_given, batch) => batch.ordinal === options.refuseCapacityOrdinal ? null : { effects: [], capacity, policyKey: d("f") }, capacityValid: value => value === capacity,
     jobState: () => null, readyUpdate: (given, publication, accounts) => {

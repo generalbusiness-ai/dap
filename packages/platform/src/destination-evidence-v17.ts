@@ -486,7 +486,7 @@ export function evidenceDestinationDataV17(base: PlatformData): PlatformData {
       guards: [{ code: "evidence-recovery-authority-v17", row: "E3" }, { code: "evidence-recovery-ready-v17", row: "E3" }],
       effects: [{ code: "evidence-recovery-v17", row: "E3", most: { effects: 5, operations: [EVIDENCE_NOTICE_V17] } }], sends: [], attention: [] } },
     receives: { ...base.receives, "check-fence": fence(false), "work-check-fence": fence(true), checked: checked(false), "work-checked": checked(true) },
-    outcomes: { ...base.outcomes,
+    outcomes: { ...Object.fromEntries(Object.entries(base.outcomes).filter(([kind]) => kind !== "check-judge")),
       [EVIDENCE_ADMIT_V17]: { code: "evidence-admit-v17", row: "E1", attempts: 1, origin: "rule", send: { code: "evidence-admit-send-v17", row: "E1", once: true, result: {} }, most: { effects: 16, operations: [EVIDENCE_PROGRESS_V17], opens: "evidence-job" }, observes: [
         { of: "rules", window: 10, use: "once", without: "wait", retains: [RULES_EXTENTS_VALUE_V13] },
         { of: "member", from: "rule", max: 1, window: 10, use: "once", without: "wait" },
