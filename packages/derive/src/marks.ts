@@ -462,10 +462,7 @@ export function unjudged<T>(judge: () => T): T | { result: "unavailable"; reason
   try {
     return judge();
   } catch (error) {
-    if (error instanceof RuleFault) {
-      console.log("EVIDENCE_RULEFAULT_CONTEXT_13", error.message.slice(0, 1024));
-      return { result: "unavailable", reason: "unavailable" };
-    }
+    if (error instanceof RuleFault) return { result: "unavailable", reason: "unavailable" };
     throw error;
   }
 }

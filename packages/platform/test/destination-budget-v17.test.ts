@@ -1,8 +1,9 @@
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Entry, type FactRef, type RulesObservation } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Entry, type FactRef, type Incarnation, type RulesObservation } from "@generalbusiness/dap-contract";
 import { canonicalize, isEntry, isFieldValue, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { observationBytes, valueDigest, type RuleGiven } from "@generalbusiness/dap-derive";
 import { d, grantOf, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
+import { evidencePolicyV17 } from "../src/destination-evidence-v17.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
 import { rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
 import { CERTIFIED_PUBLICATION_TEXT_BYTES_V17, certifiedCaptureBudgetV17, certifiedPublicationBudgetV17, certifiedPublicationStateV17,
@@ -119,4 +120,22 @@ test("published written callbacks and the separate plan dispatch fit before push
   expect(certifiedWrittenPlanBudgetV17({ ...PROPOSED_BOUNDS, entryBytes: measured.entryBytes - 1 }).admitted).toBe(false);
   expect(certifiedWrittenPlanBudgetV17({ ...PROPOSED_BOUNDS, derivedEffects: 10 }).admitted).toBe(false);
   expect(certifiedWrittenPlanBudgetV17({ ...PROPOSED_BOUNDS, sendsPerEntry: 0 }).admitted).toBe(false);
+});
+
+
+test("the Native policy reader accepts an unfixed RecordedRef and rejects a different pinned Rules incarnation", () => {
+  // SCRIPTED authenticated observation/value ports isolate the production
+  // reader's recorded-reference comparison; no Native authority is invented.
+  const policy = record().policy;
+  const read = (fixed: readonly Incarnation[], observation = policy.observation) => evidencePolicyV17({
+    time: t(0), resolved: { at: destination },
+    state: { page: () => ({ items: [{ refs: {}, values: { rules: rules.scope } }] }), incarnations: () => fixed },
+    observed: () => ({ observation }), value: () => policy.input.extents,
+  } as unknown as RuleGiven);
+  expect(read([])).toMatchObject({ rules, revision: policy.observation.revision });
+  expect(read([rules.inc])).toMatchObject({ rules, revision: policy.observation.revision });
+  expect(keys.una.member.membership.inc).not.toBe(rules.inc);
+  expect(read([keys.una.member.membership.inc])).toBeNull();
+  expect(read([], { ...policy.observation, of: { ...rules, scope: keys.una.member.membership.scope } })).toBeNull();
+  expect(read([rules.inc, keys.una.member.membership.inc])).toBeNull();
 });

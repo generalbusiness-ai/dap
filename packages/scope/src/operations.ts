@@ -720,9 +720,6 @@ export class Operations {
       asks: () => [],
       judge: (view, clock) => {
         const judged = settleOutcome(view, definition, input, context(clock));
-        if (input.owner === "platform:destination@17" && ["evidence-admit", "evidence-funding", "reservation-stage"].includes(input.kind))
-          console.log("EVIDENCE_SETTLEMENT_CONTEXT_13", JSON.stringify({ kind: input.kind, result: input.result, judged: judged.result,
-            reason: judged.result === "unavailable" ? judged.reason ?? null : null, missing: judged.result === "unavailable" && judged.missing !== undefined }));
         // Section 16.1, "In the commit": a subject of the commit's list with no observation at hand stops the commit. The scope
         // reads what is missing, and the turn starts again. The outcome stays offered.
         stop(judged.result === "unavailable" ? judged.missing : undefined);

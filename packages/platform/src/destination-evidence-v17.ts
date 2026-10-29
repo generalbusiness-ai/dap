@@ -4,7 +4,7 @@ import type { Digest, Entry, FactRef, FieldValue, KeyId, Observation, PlatformDa
 import { canonicalize, entryHash, isDigest, isFactRef, isHead, isKeyId, isRecord, isScopeRef, parseStrict, same as equalCanonical, textDigest, timeMs, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest, readEvidenceBinding, type EvidenceBinding } from "./evidence.ts";
 import { idOf, isObjectId, parseCommit } from "@generalbusiness/dap-git/tree-proof";
-import { isEntryOf, RuleFault, type Item, type Operation, type Own, type Opening, type OutcomeGives, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView, type ValidDefinition } from "@generalbusiness/dap-derive";
+import { isEntryOf, observedOf, RuleFault, type Item, type Operation, type Own, type Opening, type OutcomeGives, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { readEvidenceDecisionV17 } from "./evidence-decision-v17.ts";
 import { evidenceFutureEntriesV17 } from "./evidence-forecast-v17.ts";
 import { readEvidenceBatchV17, readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
@@ -226,7 +226,7 @@ export function destinationEvidenceAdmissionCurrent(state: StateView, own: Own, 
 export function evidencePolicyV17(given: RuleGiven): ReservationPolicyViewV17 | null {
   const observation = given.observed({ asked: "rules" })?.observation, rules = destinationRulesScope(given.state);
   if (!rules || !observation || !("subject" in observation) || observation.subject !== "rules" || observation.content.asked !== "rules"
-    || observation.of.scope !== rules.scope || "inc" in rules && observation.of.inc !== rules.inc || !observation.content.extents) return null;
+    || !observedOf(observation.of, rules) || !observation.content.extents) return null;
   const extents = given.value(RULES_EXTENTS_VALUE_V13.domain, observation.content.extents, RULES_EXTENTS_VALUE_V13.max);
   const read = readRulesPolicyObservationV17(observation, { rules: observation.of, destination: given.resolved.at, extents }, given.time);
   return read.ok ? read.view : null;
@@ -814,21 +814,7 @@ function evidenceAdmission(given: RuleGiven, operation: Operation): OutcomeGives
   if (given.input.type === "outcome" && given.input.result === "unknown") {
     return { effects: [...effects, evidenceRecordEffectV17(original.item.id, { ...record, reason: "admission-unknown" })], sends: [], opens: [] };
   }
-  if (given.input.type !== "outcome" || given.input.result !== "confirmed" || given.resolved.outcome?.selected !== true || !view) {
-    // TEMPORARY bounded diagnostic; exact original bytes retained for removal.
-    const observation = given.observed({ asked: "rules" })?.observation;
-    const rulesObservation = observation && "subject" in observation && observation.subject === "rules" && observation.content.asked === "rules" ? observation : null;
-    const extents = rulesObservation?.content.extents
-      ? given.value(RULES_EXTENTS_VALUE_V13.domain, rulesObservation.content.extents, RULES_EXTENTS_VALUE_V13.max) : undefined;
-    const decoded = rulesObservation ? readRulesPolicyObservationV17(rulesObservation,
-      { rules: rulesObservation.of, destination: given.resolved.at, extents }, given.time) : null;
-    console.log("EVIDENCE_ADMISSION_CONTEXT_13", JSON.stringify({ result: given.input.type === "outcome" ? given.input.result : null,
-      selectedResolved: given.resolved.outcome !== undefined, selected: given.resolved.outcome?.selected ?? null,
-      view: view !== null, rulesScope: destinationRulesScope(given.state) !== null, rulesObservation: rulesObservation !== null,
-      domainNamed: rulesObservation?.content.extents !== undefined, domainValue: extents !== undefined,
-      decoder: decoded === null ? "absent" : decoded.ok ? "ok" : decoded.reason }));
-    return refuse("evidence-unavailable");
-  }
+  if (given.input.type !== "outcome" || given.input.result !== "confirmed" || given.resolved.outcome?.selected !== true || !view) return refuse("evidence-unavailable");
   if (timeMs(record.deadline)! <= timeMs(given.time)!) return refuse("check-timeout");
   const check = view.policy.checks.find(check => check.name === record.name && check.configuration === record.configuration);
   if (!check) return refuse("not-this-check");

@@ -233,6 +233,10 @@ Selected receipts, without summing overlapping runs:
   `sha256:439af34d88a076581b51cb833eea276799f3fa7d9d75e5e1cf274792e1c28eb3`.
 - `opening-correspondence-owning-1` passed ten cases/three files at
   `7ab618f024`; its Platform compiler exited 0.
+- At `2241e2f5ad`, both Platform and Scope compilers passed.
+  `written-plan-owning-2` passed 23 tests in four files, and
+  `counted-send-security-inventory-1` passed ten Node cases. Only the two
+  independently reviewed host seals changed.
 - `native-live-items-prefix-6` at `0599da9ea8` passed N1 but exited 1:
   N2 failed, six skipped. No passing file is claimed.
 - `native-work-landing-prefix-7` at `c94a00f526` reached actual stage/check
