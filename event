@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f0bf7e11c4841c02f1d8c865d09c6ee6269dfb7d","text":"Merge retired a covered predecessor; the successor is at docs/public-sdk-release.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f3afaca0a0c17ddad532a3bd63da41b7d8c0ecee","text":"Merge retired a covered predecessor; the successor is at .codex-plugin/plugin.json."}
