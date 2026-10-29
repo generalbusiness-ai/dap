@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2858fab956957393c6f4490c4dd06bf66f193749","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/archive-binding-wire.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2879dc449ceae8c138056b6824e8247c09ec6023","text":"Merge retired a covered predecessor; the successor is at packages/checkers/src/signing.ts."}
