@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6f742d615618368272441a169f9faeca4c7a863d","text":"Merge retired a covered predecessor; the successor is at packages/checkers/src/container.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7037018ec929d89dfb62363ec51f556ac04d46fa","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-28-evidence-rules-preparation.md."}
