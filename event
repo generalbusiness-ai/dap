@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:54c9e7ef85a302b1f143613d08f5985d8d33390e","text":"Merge retired a covered predecessor; the successor is at scripts/test.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:550616d576e2df5a5322ae7ea0dc2b1ff4952a70","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/mac/templates/fsync.txt."}
