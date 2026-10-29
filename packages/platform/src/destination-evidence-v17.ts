@@ -453,7 +453,7 @@ export function evidenceDestinationDataV17(base: PlatformData): PlatformData {
     also: { job: admittedJob, ...(work ? { request: { item: "evidence-request", index: "job", key: "job", code: "evidence-holder-v17", row: "E2" } } : { publication: publicationBinding }) },
     fields: { admission: { type: "fact", kind: ["platform:destination@17:evidence-admit"], under: "platform:destination", required: true },
       job: work ? FACT_ISSUE_JOB : FACT_CHANGE_JOB, ...(!work ? { operation: { type: "fact" as const, kind: ["merge"], under: "change", required: true } } : {}),
-      result: { type: "fact", kind: ["check", "check-error"], under: work ? "issue" : "change", required: true }, bindingDigest: { code: "evidence-result-source-v17", row: "E2", required: true } },
+      result: { type: "fact", kind: ["check", "check-error"], under: work ? "issue" : "change", required: true }, bindingDigest: { type: "code", code: "evidence-result-source-v17", row: "E2", required: true } },
     bound: { of: work ? "also.request" : "also.publication", where: [{ equals: { a: { sender: true }, b: { slot: "lane", of: work ? "also.request" : "also.publication" } } }] },
     guards: [{ code: "evidence-result-bound-v17", row: "E2" }], effects: [{ code: "evidence-result-open-v17", row: "E2", most: { effects: 2, operations: [EVIDENCE_RESULT_V17] } }], sends: [], attention: [] });
   return { ...base, items: { ...base.items,

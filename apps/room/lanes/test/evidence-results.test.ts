@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FieldValue } from "@generalbusiness/dap-contract";
 import { definitionDigest, entryHash, factRefOf, signIntent } from "@generalbusiness/dap-bytes";
 import { clockOf, deriveEffects, judgeGuards, MemoryState, newItem, validateDefinition, type Item, type Judging } from "@generalbusiness/dap-derive";
-import { d, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
+import { d, directory, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { issueEvidence4 } from "../src/issue4.ts";
 import { changeEvidence4 } from "../src/change4.ts";
 
@@ -12,7 +12,7 @@ test("signed successor results stay provisional; only the exact Native counted r
   for (const declared of [issueEvidence4, changeEvidence4(definitionDigest(issueEvidence4))]) {
     const checked = validateDefinition(declared, PROPOSED_BOUNDS);
     if (!checked.ok) throw Error(JSON.stringify(checked.problems));
-    const definition = checked.definition, destination = { ...otherLane, kind: "destination" as const };
+    const definition = checked.definition, destination = { ...directory, kind: "destination" as const };
     const birth: Entry = { v: 1, at: otherLane, seq: 10, prev: d("a"), time: t(0), clamped: false, epoch: 0,
       input: { type: "act", signed: signIntent({ v: 1, to: otherLane, actor: keys.una.key,
         kind: declared.name === "issue" ? "request-work-check" : "request-check", on: null, expected: {}, fields: {},
@@ -40,14 +40,15 @@ test("signed successor results stay provisional; only the exact Native counted r
         signed: signIntent({ v: 1, to: otherLane, actor: keys.una.key, kind, on: null, expected: { job: 1 },
           fields: { ...fields, jobFact: job }, idempotencyKey: "SCRIPTED-provisional-result", notAfter: t(60) }, keys.una.secret), authority: [], presented: {} },
         effects: provisional.effects, sends: [] };
-      const resultFact = factRefOf(result), notice = declared.receives["check-decision"]!;
+      const notice = declared.receives["check-decision"]!;
       const native: Entry = { ...birth, at: destination, seq: 30, input: { type: "outcome", owner: "platform:destination@17", kind: "evidence-result",
         operation: "25:0", attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: { job } } }, effects: [], sends: [] };
       const source = { fact: factRefOf(native), entry: native, under: "platform:destination" };
       const noticeFields: Record<string, FieldValue> = { status: "decided", job: 10, result: 20, decision: source.fact,
         reason: "counted", frozenGeneration: "null", observedGeneration: "null" };
-      const notified: Judging = { ...judging, self: 31, signer: null, sender: destination, source, fields: noticeFields, fieldTypes: notice.fields };
-      expect(judgeGuards(notified, notice.guards).result).toBe("pass");
+      const notified: Judging = { ...judging, kind: "check-decision", self: 31, signer: null, sender: destination, source, fields: noticeFields, fieldTypes: notice.fields };
+      const guards = judgeGuards(notified, notice.guards);
+      expect(guards.result, JSON.stringify({ lane: declared.name, initial, outcome, guard: guards.at, form: notice.guards[guards.at] })).toBe("pass");
       const counted = deriveEffects(notified, notice.effects, [], null);
       if (!counted.ok) throw Error(JSON.stringify(counted));
       expect(counted.working.get("also.job")).toMatchObject({ state: outcome === "error" ? "errored" : outcome, refs: { decidedBy: 20 } });
