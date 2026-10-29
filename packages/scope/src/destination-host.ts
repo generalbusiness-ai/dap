@@ -7,9 +7,9 @@
  * inspection of those objects. For its push it builds the same objects again, with
  * the time of the entry that reserved it, and sends them with the base's closure.
  * Every provider sends them the same way. */
-import type { ReservationSnapshot, SignedIntent, Entry, FactRef, FieldValue, KeyId, OperationId, RetainedInput, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, b64url, entryHash, isOperationId, isFactRef, verifySignedIntent, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
-import { isEntryOf, valueDigest, type Item, type Operation } from "@generalbusiness/dap-derive";
+import type { ReservationSnapshot, SignedIntent, Entry, FactRef, FactUse, FieldValue, KeyId, OperationId, RetainedInput, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
+import { canonicalize, b64url, entryHash, isEntry, isOperationId, isFactRef, rawRetainedJSON, verifySignedIntent, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { isEntryOf, valueDigest, type Item, type Operation, type Own } from "@generalbusiness/dap-derive";
 import { isStandingDestination, publicationStandingRecord, certifiedPublicationState, certifiedPublicationStateV15, usesFilePublicationProtocol, usesStagedPublicationProtocol } from "@generalbusiness/dap-platform";
 import { DESTINATION_KINDS, READ_TOKEN_HOURS, destinationBranch, destinationMint, destinationRead, destinationReceipt, destinationRevokedMint, destinationSends, destinationStatement, destinationTarget, destinationWrite, editObjects, editTree, manifestCommit, editPath, fileOf, sourcesOf, manifestFiles, fileSound, firstHeadCommit, initialCommitOf, isOf, isRecordedJudgeEvidence, revokedToken, filePublicationCause, filePublicationCurrent, filePublicationCommit, type DestinationObject, type EditFile, type ObjectFormat, type RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
 import { GitRefusal, READ_BOUNDS, Reader, type GitSource } from "@generalbusiness/dap-git";
@@ -89,9 +89,20 @@ const answer = (result: EffectAnswer["result"], body: unknown, basis: "own-answe
 export class DestinationHost implements Outside {
   readonly #given: OutsideGiven;
   readonly #options: DestinationHostOptions;
+  readonly #evidenceOwn: Own;
   #replyCursor: CredentialPosition | null = null;
   #revokeCursor: RevocationPosition | null = null;
-  constructor(given: OutsideGiven, options: DestinationHostOptions) { this.#given = given; this.#options = options; }
+  constructor(given: OutsideGiven, options: DestinationHostOptions) {
+    this.#given = given; this.#options = options;
+    // The outside port exposes retained bytes separately from own history.
+    // Reconstruct only an already retained entry, with Core's hash/parser checks.
+    this.#evidenceOwn = Object.assign((seq: number) => given.own(seq), {
+      retained: (use: FactUse) => {
+        const held = given.retained("entry", use.content), entry = held && rawRetainedJSON(use.content, held.bytes);
+        return isEntry(entry) ? entry : null;
+      },
+    });
+  }
 
   /** Successor source/stage proof; distinct from a live legacy reservation snapshot. */
   stageSnapshot(asked: SignedIntent) { return readStageSnapshot(this.#given, this.#options, asked); }
@@ -167,9 +178,9 @@ export class DestinationHost implements Outside {
           return pending ? answer("confirmed", { plan: pending.plan }) : null;
         }
         const pending = operation.kind === "evidence-admit"
-          ? this.#given.bounds ? destinationEvidencePending(this.#given.state, this.#given.own, operation, this.#given.bounds) : null
+          ? this.#given.bounds ? destinationEvidencePending(this.#given.state, this.#evidenceOwn, operation, this.#given.bounds) : null
           : operation.kind === "evidence-result"
-            ? destinationEvidenceResultPending(this.#given.state, this.#given.own, operation)
+            ? destinationEvidenceResultPending(this.#given.state, this.#evidenceOwn, operation)
             : operation.kind === "evidence-audit"
               ? destinationEvidenceAuditPending(this.#given.state, this.#given.own, operation)
               : operation.kind === "evidence-progress"

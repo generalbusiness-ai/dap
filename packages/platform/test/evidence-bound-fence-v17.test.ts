@@ -150,7 +150,7 @@ test("a retained batch claim must agree with current immutable funding and the e
   const missingBirth = boundary(); missingBirth.history.delete(5); expect(missingBirth.read()).toBeNull();
   const missingGenesis = boundary(); missingGenesis.history.delete(0); expect(missingGenesis.read()).toBeNull();
   const wrongOperation = boundary();
-  wrongOperation.changeFence(entry => ({ ...entry, input: entry.input.type === "delivery" && entry.input.message.class === "request"
+  wrongOperation.changeFence(entry => ({ ...entry, input: entry.input.type === "delivery" && "decision" in entry.input && entry.input.message.class === "request"
     ? { ...entry.input, message: { ...entry.input.message, body: { message: "check-fence", fields: { job: { self: true }, operation: { ...wrongOperation.claimed.operation, hash: d("f") }, name: "compile" } } } }
     : entry.input }));
   expect(wrongOperation.read()).toBeNull();

@@ -1,6 +1,6 @@
 /** Pure wire/ownership tests. Binding and job DTOs are stand-ins, not native admission proof. */
 import { expect, test } from "vitest";
-import { canonicalize, entryHash, isEntry, isRecord, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, isEntry, isRecord, newIncarnation, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest, rulesPolicyProposalV13, type EvidenceBatchRecordV17, type EvidenceBinding } from "@generalbusiness/dap-platform";
 import { verifyOwnedCheckoutSnapshot } from "@generalbusiness/dap-git";
 import { decodeAsk, encodeAsk, encodeJob } from "../src/container-records.ts";
@@ -85,7 +85,8 @@ test("successor admission reads bounded canonical record text with nullable sema
 });
 
 test.each(["landing", "published"] as const)("%s origin proves the applied bound fence and actual funded batch, with no slot-opening fallback", stage => {
-  const fixture = boundStageFixture(stage), differentKey = newKey().signer.key;
+  const fixture = boundStageFixture(stage), differentKey = newKey().signer.key, differentIncarnation = newIncarnation(new Uint8Array(16).fill(7));
+  expect(differentIncarnation).not.toBe(fixture.snapshot.destination.inc);
   const origin = (snapshot: typeof fixture.snapshot) => stageOriginOf(fixture.notice,
     { entry: snapshot.job, pinned: fixture.definitions.change, activated: { name: "change", state: "active" } }, snapshot, fixture.key.signer.key, fixture.definitions);
   expect(origin(fixture.snapshot)).toHaveProperty("job");
@@ -121,8 +122,8 @@ test.each(["landing", "published"] as const)("%s origin proves the applied bound
   };
   // Rehash changed scripted sources and their exact retained fact list, so
   // these controls reach proof correspondence rather than stale-byte rejection.
-  const reseal = (snapshot: typeof fixture.snapshot) => {
-    for (const source of snapshot.sources) { expect(isEntry(source.entry)).toBe(true); source.hash = entryHash(source.entry); }
+  const reseal = (snapshot: typeof fixture.snapshot, label: string) => {
+    for (const source of snapshot.sources) { expect(isEntry(source.entry), `${label}: scripted source ${source.entry.seq}`).toBe(true); source.hash = entryHash(source.entry); }
     const row = snapshot.admission.entry.effects.find(effect => effect.effect === "value" && effect.slot === "record");
     if (row?.effect !== "value" || typeof row.value !== "string") throw Error("The scripted admission record must be present");
     const record = JSON.parse(row.value);
@@ -130,14 +131,14 @@ test.each(["landing", "published"] as const)("%s origin proves the applied bound
     row.value = canonicalize(record); snapshot.admission.hash = entryHash(snapshot.admission.entry);
   };
   const cases: readonly [string, (snapshot: typeof fixture.snapshot) => void][] = [
-    ["forbidden evidence-slot opening", snapshot => { source(snapshot, 9).entry.effects.push({ effect: "open", item: 9, type: "evidence-slot", state: "pending" }); }],
+    ["forbidden evidence-slot opening", snapshot => { const entry = source(snapshot, 9).entry; entry.effects = [...entry.effects, { effect: "open", item: 9, type: "evidence-slot", state: "pending" }]; }],
     ["wrong holder", snapshot => { batchEffect(snapshot).item = 7; }],
     ["wrong admission ordinal", snapshot => { const input = snapshot.admission.entry.input; if (input.type === "outcome") input.operation = "9:1"; }],
     ["self holder is not the existing batch", snapshot => { const row = source(snapshot, 9).entry.effects.find(effect => effect.effect === "operation"); if (row?.effect === "operation") row.for = "self"; }],
     ["wrong operation kind", snapshot => { const row = source(snapshot, 9).entry.effects.find(effect => effect.effect === "operation"); if (row?.effect === "operation") row.kind = "evidence-result"; }],
     ["wrong attempt opening", snapshot => { const row = source(snapshot, 9).entry.effects.find(effect => effect.effect === "attempt"); if (row?.effect === "attempt") row.attempt = 2; }],
     ["missing batch birth", snapshot => { snapshot.sources = snapshot.sources.filter(source => source.entry.seq !== 6); }],
-    ["foreign batch incarnation", snapshot => { source(snapshot, 6).entry.at = { ...snapshot.destination, inc: `in_${"b".repeat(26)}` }; }],
+    ["foreign batch incarnation", snapshot => { source(snapshot, 6).entry.at = { ...snapshot.destination, inc: differentIncarnation }; }],
     ["unapplied batch birth", snapshot => { const input = source(snapshot, 6).entry.input; if (input.type === "delivery" && "decision" in input) input.decision = "refused"; }],
     ["wrong batch birth message", snapshot => { const input = source(snapshot, 6).entry.input;
       if (input.type !== "delivery" || input.message.class !== "request" || !isRecord(input.message.body)) throw Error("The scripted birth request is required");
@@ -157,7 +158,7 @@ test.each(["landing", "published"] as const)("%s origin proves the applied bound
     ["unrelated batch capture", snapshot => changeBatch(snapshot, batch => { batch.capture.hash = digest("e"); }, 6)],
     ["wrong frozen policy generation", snapshot => { for (const seq of [6, 9]) changeBatch(snapshot, batch => { batch.policy.revision = 2; batch.policy.head.seq = 2; }, seq); }],
     ["wrong full Rules incarnation", snapshot => { for (const seq of [6, 9]) changeBatch(snapshot, batch => {
-      const rules = { ...batch.policy.rules, inc: `in_${"b".repeat(26)}` as const };
+      const rules = { ...batch.policy.rules, inc: differentIncarnation };
       batch.policy.rules = rules; batch.policy.serviceGeneration.rules = rules;
     }, seq); }],
     ["wrong frozen service generation", snapshot => { for (const seq of [6, 9]) changeBatch(snapshot, batch => { batch.policy.serviceGeneration.seq = 0; }, seq); }],
@@ -169,7 +170,7 @@ test.each(["landing", "published"] as const)("%s origin proves the applied bound
     ["wrong descriptor checker", snapshot => changePolicy(snapshot, batch => { batch.checks[0]!.checker.member = "@other"; batch.policy.policy.checks[0]!.checker.member = "@other"; })],
   ];
   for (const [label, mutate] of cases) {
-    const snapshot = structuredClone(fixture.snapshot); mutate(snapshot); reseal(snapshot);
+    const snapshot = structuredClone(fixture.snapshot); mutate(snapshot); reseal(snapshot, label);
     expect(origin(snapshot), label).toEqual({ not: "stage-origin-mismatch" });
   }
 });

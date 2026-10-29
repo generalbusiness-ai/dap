@@ -1,10 +1,10 @@
 /** G17 native job records. Every full native fact below is resolved only
  * after its entry was sealed. Indexes contain live and decided anchors. */
-import type { Bounds, Digest, Entry, FactRef, FieldValue, KeyId, Observation, PlatformData, ScopedRulesPosition, Timestamp } from "@generalbusiness/dap-contract";
+import type { ActType, Bounds, Digest, Entry, FactRef, FieldValue, KeyId, Observation, PlatformData, ScopedRulesPosition, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, isDigest, isFactRef, isHead, isKeyId, isRecord, isScopeRef, parseStrict, same as equalCanonical, textDigest, timeMs, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest, readEvidenceBinding, type EvidenceBinding } from "./evidence.ts";
 import { idOf, isObjectId, parseCommit } from "@generalbusiness/dap-git/tree-proof";
-import { isEntryOf, observedOf, RuleFault, type Item, type Operation, type Own, type Opening, type OutcomeGives, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView, type ValidDefinition } from "@generalbusiness/dap-derive";
+import { isEntryOf, messageFields, observedOf, sentBy, useOf, RuleFault, type Item, type Operation, type Own, type Opening, type OutcomeGives, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { readEvidenceDecisionV17 } from "./evidence-decision-v17.ts";
 import { evidenceFutureEntriesV17 } from "./evidence-forecast-v17.ts";
 import { readEvidenceBatchV17, readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
@@ -157,13 +157,8 @@ export function destinationEvidencePending(state: StateView, own: Own, operation
     ? { job: copy(record.job) } : null;
 }
 export function destinationEvidenceResultPending(state: StateView, own: Own, operation: Operation): { job: FactRef } | null {
-  if (operation.owner !== "platform:destination@17" || operation.kind !== EVIDENCE_RESULT_V17 || operation.most !== 1 || operation.for === undefined) return null;
-  const id = operationRecordId(state, own, operation), item = id === null ? null : state.item(id), record = item && readEvidenceJobRecordWireV17(item.values["record"]), opened = own(Number(operation.id.split(":")[0]));
-  const input = opened?.entry.input, body = input?.type === "delivery" && input.message.class === "request" ? input.message.body : null;
-  const fields = isRecord(body) && ["checked", "work-checked"].includes(String(body["message"])) && isRecord(body["fields"]) ? body["fields"] : null;
-  return record && record.holder === operation.for && record.admittedAt !== null && fields && same(fields["job"], record.job) && isFactRef(fields["result"])
-    && evidenceOperationOpeningV17(opened!.entry, operation)
-    ? { job: copy(record.job) } : null;
+  const fields = evidenceResultMessageFieldsV17(state, own, operation);
+  return fields && isFactRef(fields["job"]) ? { job: copy(fields["job"]) } : null;
 }
 export function destinationEvidenceNoticePending(state: StateView, own: Own, operation: Operation): { job: FactRef } | null {
   if (operation.owner !== "platform:destination@17" || operation.kind !== EVIDENCE_NOTICE_V17 || operation.most !== 1 || operation.for === undefined) return null;
@@ -658,9 +653,9 @@ function operationRecordId(state: StateView, own: Own, operation: Operation): nu
   const opened = own(Number(operation.id.split(":")[0]))?.entry;
   if (!opened) return null;
   if (operation.kind === EVIDENCE_ADMIT_V17 || operation.kind === EVIDENCE_AUDIT_V17) return opened.seq;
-  if (operation.kind === EVIDENCE_RESULT_V17 && opened.input.type === "delivery" && opened.input.message.class === "request" && isRecord(opened.input.message.body)) {
-    const fields = opened.input.message.body["fields"];
-    return isRecord(fields) && isFactRef(fields["admission"]) && same(fields["admission"].at, opened.at) ? fields["admission"].seq : null;
+  if (operation.kind === EVIDENCE_RESULT_V17) {
+    const fields = evidenceResultMessageFieldsV17(state, own, operation);
+    return fields && isFactRef(fields["admission"]) ? fields["admission"].seq : null;
   }
   if (operation.kind === EVIDENCE_NOTICE_V17) {
     const marked = opened.effects.filter(effect => effect.effect === "value" && effect.slot === "noticeOpenedAt" && effect.value === opened.seq);
@@ -981,12 +976,44 @@ const openedEffectsV17 = (kind: string, item: number): RuleEffect[] => [
   { effect: "operation", k: 0, owner: "platform:destination@17", kind, attempts: 1, for: item },
   { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null },
 ];
+const resultFactFieldsV17 = (work: boolean): ActType["fields"] => ({
+  admission: { type: "fact", kind: ["platform:destination@17:evidence-admit"], under: "platform:destination", required: true },
+  job: work ? FACT_ISSUE_JOB : FACT_CHANGE_JOB,
+  result: { type: "fact", kind: ["check", "check-error"], under: work ? "issue" : "change", required: true },
+  ...(work ? {} : { operation: { type: "fact", kind: ["merge"], under: "change", required: true } }),
+});
+/** The sealed message keeps SelfMark. Normalize only its declared fact
+ * fields, then bind that original envelope to its actual admitted job.
+ * Current verdict eligibility remains the Native result rule's decision. */
+export function evidenceResultMessageFieldsV17(state: StateView, own: Own, operation: Operation): Record<string, unknown> | null {
+  if (operation.owner !== "platform:destination@17" || operation.kind !== EVIDENCE_RESULT_V17 || operation.most !== 1 || operation.for === undefined
+    || !same(state.operation(operation.id), operation)) return null;
+  const at = state.scope()?.at, opened = own(Number(operation.id.split(":")[0])), entry = opened?.entry, input = entry?.input;
+  if (!at || !opened || !entry || !same(entry.at, at) || entryHash(entry) !== opened.hash || !evidenceOperationOpeningV17(entry, operation)
+    || input?.type !== "delivery" || !("decision" in input) || input.decision !== "applied" || input.message.class !== "request" || input.message.type !== "tell"
+    || !isRecord(input.message.body) || !["checked", "work-checked"].includes(String(input.message.body["message"]))
+    || !isRecord(input.message.body["fields"])) return null;
+  const fields = messageFields(input.message.body["fields"], input.from, resultFactFieldsV17(input.message.body["message"] === "work-checked"));
+  if (!fields || Object.keys(fields).some(name => !["admission", "job", "result", "bindingDigest", "operation"].includes(name))
+    || !isFactRef(fields["admission"]) || !same(fields["admission"].at, at) || !isFactRef(fields["job"])
+    || !isFactRef(fields["result"]) || !same(fields["result"], input.from) || !same(fields["job"].at, input.from.at)) return null;
+  const copies = entry.uses.filter(use => same(use.fact, fields["result"]));
+  if (copies.length !== 1 || !own.retained) return null;
+  const result = own.retained(copies[0]!);
+  if (!result || !isEntryOf(result, fields["result"]) || !same(useOf(fields["result"], result), copies[0])
+    || !sentBy(result, { to: at, from: input.from, n: input.n, message: input.message })) return null;
+  const item = state.item(fields["admission"].seq), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
+  const admitted = record && destinationEvidenceJob(state, own, record.job);
+  if (!item || item.type !== "evidence-job" || !record || !admitted || record.holder !== operation.for
+    || !same(fields["admission"], admitted.admission) || !same(fields["job"], record.job) || fields["bindingDigest"] !== record.bindingDigest
+    || input.message.body["message"] !== (record.binding.stage === "work" ? "work-checked" : "checked")) return null;
+  const subject = record.binding.subject;
+  if (subject.kind === "work") return Object.hasOwn(fields, "operation") ? null : fields;
+  const publication = state.item(subject.publication.seq), publicationOperation = publication?.refs["operation"];
+  return isFactRef(fields["operation"]) && isFactRef(publicationOperation) && same(fields["operation"], publicationOperation) ? fields : null;
+}
 function resultFields(given: RuleGiven, operation: Operation): Record<string, unknown> | null {
-  const entry = given.own(Number(operation.id.split(":")[0]))?.entry;
-  const input = entry?.input;
-  return input?.type === "delivery" && input.message.class === "request" && isRecord(input.message.body)
-    && ["checked", "work-checked"].includes(String(input.message.body["message"])) && isRecord(input.message.body["fields"])
-    ? input.message.body["fields"] : null;
+  return evidenceResultMessageFieldsV17(given.state, given.own, operation);
 }
 function resultBound(given: RuleGiven): { item: Item; record: EvidenceJobRecordV17 } | null {
   const item = given.resolved.subjects.get("also.job"), record = item && readEvidenceJobRecordWireV17(item.values["record"]);

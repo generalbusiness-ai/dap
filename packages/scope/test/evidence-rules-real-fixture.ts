@@ -755,10 +755,13 @@ export async function requestLandingEvidence(room: EvidenceRoom, setup: Prepared
 export type LandingEvidenceJob = Awaited<ReturnType<typeof requestLandingEvidence>>;
 
 export async function claimLandingEvidence(room: EvidenceRoom, setup: PreparedPublishedEvidence, publication: EvidencePublication, job: LandingEvidenceJob, outcome: "passed" | "failed") {
-  const seq = await publication.lane.did(setup.service.actor, "check", { fields: { job: job.job.seq, jobFact: job.job, tree: job.tree,
+  const claimed = await publication.lane.act(setup.service.actor, "check", { fields: { job: job.job.seq, jobFact: job.job, tree: job.tree,
     configuration: setup.configurationDigest, bindingDigest: job.bindingDigest, outcome },
     expected: await publication.lane.expected({ job: job.job.seq, manifest: publication.manifest.seq }) });
-  const result = factRefOf(await evidenceEntry(publication.lane, seq));
+  try { expect(claimed).toMatchObject({ answer: 'accepted' }); }
+  catch { expect(claimed, await evidenceNativeDiagnostic([publication.lane, room.G])).toMatchObject({ answer: 'accepted' }); }
+  if (claimed.answer !== 'accepted') throw Error('Actual accepted landing result claim required');
+  const result = factRefOf(await evidenceEntry(publication.lane, claimed.receipt.fact.seq));
   await room.pause(room.nodes);
   return result;
 }

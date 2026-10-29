@@ -135,7 +135,13 @@ test("a funded bound delivery can open its counted operation but cannot open eve
   const message = { class: "request", type: "tell", body: { message: "follow", fields: { job: holder } } } as const;
   const source = forged(otherLane, 999, { type: "checkpoint", through: 0, state: scope.entries[0]!.hash }, [{ n: 0, to: scope.at, message }]);
   const arrival = { from: factRefOf(source.entry), n: 0, to: scope.at, message };
-  const take = () => scope.commit(judgeDelivery(scope.state, scope.definition, arrival, { ...arriving(scope, arrival, source), platform: scope.rules }));
+  const take = () => {
+    const judged = judgeDelivery(scope.state, scope.definition, arrival, { ...arriving(scope, arrival, source), platform: scope.rules });
+    // Ledger.seal supplies the actual retained source via foldOptions;
+    // Works.commit's extra trial fold has no bound-delivery source context.
+    if (judged.result === "write") scope.seal(judged.draft);
+    return judged.result;
+  };
   scope.script.after = given => [{ effect: "open", item: given.resolved.self, type: "evidence-job", state: "job" }];
   expect(take()).toBe("unavailable");
   expect(scope.head).toEqual(before);
@@ -144,5 +150,6 @@ test("a funded bound delivery can open its counted operation but cannot open eve
   expect(scope.last.effects.some(effect => effect.effect === "open")).toBe(false);
   const operation = scope.state.operation(`${scope.last.seq}:0`);
   expect(operation?.for).toBe(holder);
+  expect(scope.replay().operation(`${scope.last.seq}:0`)?.for).toBe(holder);
   expect(scope.last.sends).toHaveLength(1);
 });

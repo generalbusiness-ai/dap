@@ -1,10 +1,10 @@
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Entry, type FactRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, signIntent } from "@generalbusiness/dap-bytes";
+import { PROPOSED_BOUNDS, type Entry, type FactRef, type FieldValue } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, factRefOf, isEntry, signIntent } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest } from "../src/evidence.ts";
-import { readFacts, readFields, RuleFault, type Item, type Operation, type RuleGiven, type StateView } from "@generalbusiness/dap-derive";
+import { readFacts, readFields, useOf, RuleFault, type Item, type Operation, type RuleGiven, type StateView } from "@generalbusiness/dap-derive";
 import { d, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
-import { destinationEvidenceAuditPending, evidenceAuditOpeningV17, evidenceDestinationRulesV17,
+import { destinationEvidenceAuditPending, destinationEvidenceResultPending, evidenceAuditOpeningV17, evidenceDestinationRulesV17, evidenceResultMessageFieldsV17,
   evidenceJobKeyV17, evidenceJobRecordWireV17, type EvidenceJobRecordV17 } from "../src/destination-evidence-v17.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
 import { rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
@@ -101,4 +101,59 @@ test("the admitted-job selector reads the maintained numeric local fact normal f
   const wrong = { ...signed, intent: { ...signed.intent, fields: { admission: { ...admission, hash: d("f") } } } };
   expect(selector.run({ ...given, input: { type: "act", signed: wrong, grant: null, presented: {} } }, "evidence-job")).toBeNull();
   expect(selector.run({ ...given, resolved: { ...given.resolved, fields: { admission: 21 } } }, "evidence-job")).toBeNull();
+});
+
+
+function resultBoundary(work: boolean, patch: Record<string, FieldValue> = {}) {
+  const prior = fixture();
+  const binding = work ? { ...prior.record.binding, stage: "work" as const, subject: { kind: "work" as const, source: fact(3) } } : prior.record.binding;
+  const record = { ...prior.record, binding, bindingDigest: evidenceBindingDigest(binding) };
+  const admission: Entry = { ...prior.admission, effects: prior.admission.effects.map(effect => effect.effect === "value" && effect.slot === "record"
+    ? { ...effect, value: evidenceJobRecordWireV17(record) } : effect) };
+  const admitted = factRefOf(admission), merge = fact(8);
+  const message = { class: "request" as const, type: "tell" as const, body: { message: work ? "work-checked" : "checked", fields: {
+    admission: admitted, job: record.job, result: { self: true }, bindingDigest: record.bindingDigest, ...(work ? {} : { operation: merge }), ...patch,
+  } } };
+  // SCRIPTED Native admission and state ports; the actual signed result
+  // retains the same SelfMark send shape as the maintained lane definition.
+  const result: Entry = { v: 1, at: record.job.at, seq: 40, prev: d("e"), time: t(0), clamped: false, epoch: 0, uses: [], prepared: [],
+    input: { type: "act", signed: signIntent({ v: 1, to: record.job.at, actor: keys.una.key, kind: "check", on: null, expected: { job: record.job.seq },
+      fields: { job: record.job.seq, jobFact: record.job, tree: record.tree!, configuration: record.configuration, bindingDigest: record.bindingDigest, outcome: "passed" },
+      idempotencyKey: "SCRIPTED-result-self", notAfter: t(60) }, keys.una.secret), authority: [], presented: {} },
+    effects: [{ effect: "state", item: record.job.seq, state: "passed" }], sends: [{ n: 0, to: at, message }] };
+  const resultFact = factRefOf(result), receipt: Entry = { v: 1, at, seq: 50, prev: entryHash(admission), time: t(0), clamped: false, epoch: 0,
+    input: { type: "delivery", from: resultFact, n: 0, message, decision: "applied" }, uses: [useOf(resultFact, result)], prepared: [], sends: [], effects: [
+      { effect: "operation", k: 0, owner: "platform:destination@17", kind: "evidence-result", attempts: 1, for: record.holder },
+      { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null },
+    ] };
+  if (!isEntry(admission) || !isEntry(result) || !isEntry(receipt)) throw Error("The scripted proof must retain actual wire shapes");
+  const operation: Operation = { id: "50:0", owner: "platform:destination@17", kind: "evidence-result", most: 1, for: record.holder, selected: null,
+    attempts: [{ attempt: 1, opened: 50, outcomes: [] }] };
+  const item: Item = { ...prior.item, opened: entryHash(admission), values: { ...prior.item.values, record: evidenceJobRecordWireV17(record) } };
+  const state = { ...prior.state, scope: () => ({ at }), item: (id: number) => id === 20 ? item : id === 1 ? { id: 1, type: "publication", refs: { operation: merge } } : null,
+    operation: (id: string) => id === operation.id ? operation : null } as unknown as StateView;
+  const own = Object.assign((seq: number) => seq === 20 ? { entry: admission, hash: entryHash(admission) }
+    : seq === 50 ? { entry: receipt, hash: entryHash(receipt) } : prior.own(seq), { retained: () => result });
+  return { record, admitted, result, resultFact, receipt, state, own, operation };
+}
+
+test("host and outcome result readers normalize the original SelfMark through its actual retained send", () => {
+  // No fake RuleGiven: both public readers consume sealed messages, their
+  // retained source entry and the real declared-fact normalization path.
+  for (const work of [true, false]) {
+    const proof = resultBoundary(work), before = canonicalize(proof.receipt);
+    expect(evidenceResultMessageFieldsV17(proof.state, proof.own, proof.operation)).toMatchObject({
+      admission: proof.admitted, job: proof.record.job, result: proof.resultFact, bindingDigest: proof.record.bindingDigest,
+    });
+    expect(destinationEvidenceResultPending(proof.state, proof.own, proof.operation)).toEqual({ job: proof.record.job });
+    expect(canonicalize(proof.receipt)).toBe(before);
+    const invalid: Record<string, FieldValue>[] = [{ result: { self: true, extra: true } }, { result: proof.record.job }, { job: { self: true } },
+      { admission: { self: true } }, { bindingDigest: { self: true } }, ...(work ? [{ operation: fact(8) }] : [{ operation: { self: true } }])];
+    for (const patch of invalid) {
+      const wrong = resultBoundary(work, patch);
+      expect(destinationEvidenceResultPending(wrong.state, wrong.own, wrong.operation)).toBeNull();
+    }
+    expect(destinationEvidenceResultPending(proof.state, Object.assign(proof.own.bind(null), { retained: () => null }), proof.operation)).toBeNull();
+    expect(destinationEvidenceResultPending(proof.state, proof.own, { ...proof.operation, for: proof.operation.for! + 1 })).toBeNull();
+  }
 });
