@@ -146,7 +146,9 @@ export class ScopeIndex extends DurableObject<Env> {
         const actual = await this.ctx.storage.getAlarm();
         if (revision !== this.#siteAlarmRevision) continue;
         const next = this.#siteTokens.wake();
-        if (next !== null && (actual === null || actual > next)) await this.ctx.storage.setAlarm(next);
+        if (next === null) {
+          if (actual !== null) await this.ctx.storage.deleteAlarm();
+        } else if (actual === null || actual > next) await this.ctx.storage.setAlarm(next);
       } while (revision !== this.#siteAlarmRevision);
     })();
     try { await this.#siteAlarm; } finally { this.#siteAlarm = null; }
