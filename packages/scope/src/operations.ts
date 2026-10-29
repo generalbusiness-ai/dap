@@ -602,20 +602,8 @@ export class Operations {
   async #offer(row: Sending, input: Outcome, now: number): Promise<void> {
     const { operation, attempt } = row;
     const key = attemptKey(operation, attempt);
-    // TEMPORARY bounded diagnostic around this original send's settlement.
-    const record = async (candidate: Outcome): Promise<OutcomeRecorded> => {
-      try { return await this.#record(candidate); }
-      catch (failure) {
-        const retained = this.#store.operation(operation);
-        if (retained?.owner === "platform:destination@17") console.log("EVIDENCE_RECORD_ERROR_CONTEXT_15", JSON.stringify({
-          name: failure instanceof Error ? failure.name.slice(0, 64) : typeof failure,
-          message: failure instanceof Error ? failure.message.slice(0, 1024) : "non-Error failure",
-        }));
-        throw failure;
-      }
-    };
-    let recorded = await record(input);
-    if (recorded.recorded === "refused" && input.result !== "unknown") recorded = await record({ ...this.#unknown(operation, attempt), retain: undefined });
+    let recorded = await this.#record(input);
+    if (recorded.recorded === "refused" && input.result !== "unknown") recorded = await this.#record({ ...this.#unknown(operation, attempt), retain: undefined });
     if (recorded.recorded === "unavailable") {
       if (input.result !== "unknown") this.#held.set(key, input);
       return this.#store.postpone(operation, attempt, now + this.#bounds.drainRetrySeconds * 1000);

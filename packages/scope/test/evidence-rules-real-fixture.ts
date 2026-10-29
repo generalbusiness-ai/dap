@@ -3,7 +3,7 @@ import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Answer, Digest, FactRef, Intent, MemberRef, OperationId, Read, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isDigest, isHead, isRecord, isScopeRef, isSeed, same, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { ANCESTRY_BOUNDS, CAPABILITY_CODE, ledgerOf, localRetainedPlan, outcomeValueDomains, ownersOf, snapshotInput, stagedRefName, validateDefinition, valueDigest, walk, type Item, type StateView } from "@generalbusiness/dap-derive";
+import { ANCESTRY_BOUNDS, CAPABILITY_CODE, countedEntries, holding, ledgerOf, localRetainedPlan, outcomeValueDomains, ownersOf, reserved, snapshotInput, stagedRefName, validateDefinition, valueDigest, walk, type Item, type StateView } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { View } from "../../replay/src/view.ts";
@@ -532,6 +532,50 @@ async function assertEvidenceWorkAdmission(room: EvidenceRoom, lane: Platform, j
   expect(item.refs['admission']).toEqual(factRefOf(admission));
 }
 
+/** Failure-only capacity read at one actual Native head. All emitted rows
+ * are bounded metadata; no record, evidence or signed field is returned. */
+async function evidenceNativeCapacity(room: EvidenceRoom) {
+  const before = (await room.G.summary()).at;
+  return room.life.wait(() => runInDurableObject(room.G.object, (_instance, state) => {
+    const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+    const own = ownOf(store), head = store.scope()?.head, native = nativePlatform(EVIDENCE_RULES_COHORT.destination);
+    if (!head || !same(head, before) || !native) throw Error('Actual unchanged G17 head required for capacity context');
+    const checked = validateDefinition(native.data, PROPOSED_BOUNDS, RULE_PROFILES, { platform: true, outcomeValues: outcomeValueDomains(native.data, native.rules) });
+    if (!checked.ok || !checked.definition.reserving) throw Error('Actual validated Native reservation data required');
+    const definition = checked.definition, r = checked.definition.reserving, last = own(head.seq);
+    if (!last) throw Error('Actual capacity head entry required');
+    const owners = ownersOf(definition, { named: EVIDENCE_RULES_COHORT.destination, rules: native.rules }, CAPABILITY_CODE);
+    const one = Object.fromEntries(Object.entries(r.kinds).filter(([, kind]) => kind.held).map(([name, kind]) => [name, kind.whole]));
+    const operation = (row: import('@generalbusiness/dap-derive').Operation) => ({ id: row.id, owner: row.owner, kind: row.kind, most: row.most,
+      for: row.for ?? null, selected: row.selected, attemptCount: row.attempts.length, attemptsComplete: row.attempts.length <= 4,
+      attempts: row.attempts.slice(-4).map(attempt => ({ attempt: attempt.attempt, outcomeCount: attempt.outcomes.length, outcomesComplete: attempt.outcomes.length <= 2, outcomes: attempt.outcomes.slice(-2) })) });
+    const holders = store.holders(), items: { id: number; type: string; state: string; holderSettled: boolean }[] = [];
+    let itemCount = 0;
+    for (const [type, data] of Object.entries(native.data.items)) {
+      const states = Object.keys(data.states);
+      itemCount += states.reduce((sum, state) => sum + store.count(type, state), 0);
+      if (items.length < 64) items.push(...store.page(type, states, null, 64 - items.length).items.map(item => ({ id: item.id, type: item.type, state: item.state, holderSettled: store.holderSettled(item.id) })));
+    }
+    const pending = store.operations(null, 32, true), outstanding = store.outstanding();
+    const result = { head, used: { entries: countedEntries(store), bytes: store.logicalBytes(), ...store.keyCounts() },
+      reserved: reserved(store, definition, last.entry.input, owners),
+      outstanding: { ...outstanding, outcomes: outstanding.outcomes.slice(0, 32), outcomeKinds: outstanding.outcomes.length, outcomesComplete: outstanding.outcomes.length <= 32 },
+      fixtureLimits: { entries: PROPOSED_BOUNDS.scopeEntries, bytes: PROPOSED_BOUNDS.scopeBytes, items: PROPOSED_BOUNDS.scopeItems, records: PROPOSED_BOUNDS.scopeRecords, requests: PROPOSED_BOUNDS.scopeRequests },
+      costs: { one, req: r.req, itm: r.itm, dec: r.dec }, items: { total: itemCount, complete: items.length === itemCount, shown: items },
+      holders: { total: holders.length, complete: holders.length <= 32, shown: holders.slice(0, 32).map(holder => {
+        const item = store.item(holder.item), accounts = store.accountsOf(holder.item), operations = store.operationsFor(holder.item);
+        return { id: holder.item, type: item?.type ?? null, state: item?.state ?? null, settled: store.holderSettled(holder.item), remaining: holder.held,
+          reserved: holding(holder.held, { one, req: r.req, itm: r.itm, dec: r.dec, checked: true }),
+          accounts: { total: accounts.length, complete: accounts.length <= 16, shown: accounts.slice(0, 16).map(account => {
+            const request = store.request(account.seq, account.n);
+            return { seq: account.seq, n: account.n, available: request !== null, result: request?.result ?? null, diagnosis: request?.diagnosis ?? null };
+          }) }, operations: { total: operations.length, complete: operations.length <= 16, shown: operations.slice(0, 16).map(operation) } };
+      }) }, pendingOperations: { complete: !pending.more, shown: pending.operations.map(row => ({ ...operation(row.operation), state: row.state, sends: row.sends })) } };
+    expect(store.scope()?.head).toEqual(before);
+    return result;
+  }));
+}
+
 /** Read the recorded SQLite state, then interpret its bounded native index.
  * Optional Replay uses the unchanged verifier and View at this exact head. */
 export async function evidenceNativeState(room: EvidenceRoom, replay = false) {
@@ -740,7 +784,7 @@ export type PublishedEvidenceJob = Awaited<ReturnType<EvidencePublication['job']
 export async function requestLandingEvidence(room: EvidenceRoom, setup: PreparedPublishedEvidence, publication: EvidencePublication, reuse: boolean) {
   const reserved = (await hardeningItems(room.G, "publication")).find(item => canonicalize(item.refs['operation']) === canonicalize(publication.operation));
   if (!reserved || reserved.state !== "reserved" || !isObjectId(reserved.values['tree']))
-    throw Error(`Actual landing reservation tree required; Native context: ${await evidenceNativeDiagnostic([publication.lane, room.G])}`);
+    throw Error(`Actual landing reservation tree required; Native context: ${await evidenceNativeDiagnostic([publication.lane, room.G])}; Native capacity: ${canonicalize(await evidenceNativeCapacity(room))}`);
   const tree = reserved.values['tree'], observed = await evidenceRulesObservation(room), rules = (await hardeningItems(publication.lane, "rules"))[0];
   if (!rules) throw Error("Actual lane Rules copy required");
   const binding: EvidenceBinding = { v: 1, source: "member", stage: "landing", checker: setup.service.member,
