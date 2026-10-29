@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:380acfe44bf5bc45745ef5442f7b83184807ec54","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/mac/templates/caddy.plist."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4ee9ad4a5af9b44b5b870b21af833dc0ab2d73d4","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/mac/kit.py."}
