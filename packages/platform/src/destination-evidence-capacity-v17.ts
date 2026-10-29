@@ -11,7 +11,7 @@ import { bindEvidenceHoldPendingV17, clearEvidenceHoldPendingV17, EVIDENCE_HOLD_
 import { readEvidenceCountsV17, reserveEvidenceCountsV17 } from "./evidence-index-v17.ts";
 import { checkHoldsV13, checkSourceV13, checkStageV13, type RulesCheckV13, type RulesPolicyV13 } from "./rules-policy-v13.ts";
 import { evidenceLedgerOfV17 } from "./evidence-ledger-v17.ts";
-import { evidenceCarryingBudgetV17 } from "./destination-budget-v17.ts";
+import { certifiedBoundFenceBudgetV17, evidenceCarryingBudgetV17 } from "./destination-budget-v17.ts";
 import { evidenceFutureEntriesV17 } from "./evidence-forecast-v17.ts";
 import type { EvidenceJobRecordV17 } from "./destination-evidence-v17.ts";
 import { evidenceWireV17, readEvidenceWireV17 } from "./evidence-wire-v17.ts";
@@ -112,7 +112,7 @@ function publishedForecast(given: RuleGiven, batch: EvidenceBatchRecordV17, capa
         subject: { kind: "published", publication: batch.publication, receipt: nativeFact, written: nativeFact, manifest } };
       const record: EvidenceJobRecordV17 = { v: 1, job, name: check.name, configuration: check.configuration, binding,
         bindingDigest: evidenceBindingDigest(binding), state: "admitted", admittedAt: MAX, commit: object, tree: object, base: object,
-        sourceFacts: [batch.publication, nativeFact, nativeFact, manifest, nativeFact, nativeFact, nativeFact], commitProof: null, policy: batch.policy,
+        sourceFacts: [batch.publication, nativeFact, nativeFact, manifest, nativeFact, nativeFact, nativeFact, nativeFact], commitProof: null, policy: batch.policy,
         reuseOwner: null, reuse: null, holdOwner: keys.length ? owner : null, holds: owner === MAX ? keys.map(key => newEvidenceHoldV17(key)!) : [],
         policyOwner: capacity.owner, incident: { job, cause: null, state: "reserved", creation: null, child: null, reason: null }, result: null, signer: null,
         decidedAt: null, reason: null, observedGeneration: batch.policy.serviceGeneration, funded: { reuse: false, holds: keys.length > 0 && owner === MAX, policy: false, incident: true },
@@ -134,8 +134,7 @@ function publishedForecast(given: RuleGiven, batch: EvidenceBatchRecordV17, capa
         value: evidenceCapacityWireV17(maximumCapacity(anchor, batch.publication.at, batch.operation.at, batch.policy.policy)) }] : [];
       if (!evidenceFutureEntriesV17(given, { item: MAX, record }, related, () => null, settlement).admitted) return false;
       const value = (item: number, slot: string, field: FieldValue | null): RuleEffect => ({ effect: "value", item, slot, value: field });
-      const admission: RuleEffect[] = [{ effect: "state", item: MAX - 2, state: "waiting" }, value(MAX - 2, "record", evidenceWireV17({ ...record, state: "pending" }, 196608)),
-        { effect: "open", item: MAX, type: "evidence-job", state: "job" },
+      const admission: RuleEffect[] = [{ effect: "open", item: MAX, type: "evidence-job", state: "job" },
         ...(keys.length && owner === MAX ? [{ effect: "state" as const, item: MAX, state: "hold-anchor" }] : []),
         { effect: "ref", item: MAX, slot: "lane", to: job.at },
         ...["jobKey", "reuseKey", "holdKey", "policyKey"].map(slot => value(MAX, slot, HASH)), value(MAX, "deadline", time), value(MAX, "record", evidenceWireV17(record, 196608)),
@@ -198,6 +197,8 @@ export function evidenceFundCapacityV17(given: RuleGiven, batch: EvidenceBatchRe
   const futureAnchor = futureCapacity(anchor), futureLocal = futureCapacity(capacity);
   const longest = [...batch.checks].sort((a, b) => utf8(canonicalize(b.name)).length - utf8(canonicalize(a.name)).length)[0];
   if (!longest) return null;
+  const publication = given.state.item(batch.publication.seq), manifest = publication?.refs["manifest"];
+  if (!isFactRef(manifest) || !certifiedBoundFenceBudgetV17(given.resolved.bounds, batch, manifest).admitted) return null;
   const futureBatch = { ...batch, planAt: Number.MAX_SAFE_INTEGER, jobs: Array.from({ length: 8 }, () => ({ name: longest.name,
     job: { at: batch.operation.at, seq: Number.MAX_SAFE_INTEGER, hash: `sha256:${"f".repeat(64)}` } })) };
   const futureEffects: RuleEffect[] = [

@@ -2,12 +2,16 @@
 import { describe, expect, it } from "vitest";
 import { evidenceHoldExtentNamesV17 } from "../src/destination-evidence-capacity-v17.ts";
 import type { RulesPolicyV13 } from "../src/rules-policy-v13.ts";
-import type { FactRef } from "@generalbusiness/dap-contract";
+import type { Entry, FactRef } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { canonicalize, isEntry, isFactRef, isRecord, utf8 } from "@generalbusiness/dap-bytes";
+import { evidenceBindingDigest, type EvidenceBinding } from "../src/evidence.ts";
+import { EVIDENCE_BINDING_TEXT_V17, readBindingTextV17 } from "../src/destination-evidence-v17.ts";
 import { d, keys, otherLane } from "@generalbusiness/dap-derive/testing";
 import type { Item, RuleGiven } from "@generalbusiness/dap-derive";
 import { evidenceFundCapacityV17, evidencePendingCapacityForecastV17, readEvidenceCapacityWireV17 } from "../src/destination-evidence-capacity-v17.ts";
 import type { EvidenceBatchRecordV17 } from "../src/evidence-batch-v17.ts";
+import { certifiedBoundFenceBudgetV17 } from "../src/destination-budget-v17.ts";
 import { evidenceBatchWireV17 } from "../src/evidence-batch-v17.ts";
 import { rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
@@ -72,8 +76,45 @@ describe("exact pre-publication capacity identities", () => {
     const source = batch(10, ["code"]), given = scripted(100);
     const at = (derivedEffects: number): RuleGiven => ({ ...given, resolved: { ...given.resolved,
       bounds: { ...given.resolved.bounds, derivedEffects } } });
-    expect(evidenceFundCapacityV17(at(14), source)).not.toBeNull();
-    expect(evidenceFundCapacityV17(at(13), source)).toBeNull();
+    expect(evidenceFundCapacityV17(at(12), source)).not.toBeNull();
+    expect(evidenceFundCapacityV17(at(11), source)).toBeNull();
+  });
+  it("prefunds the no-item bound fence with all future claims, fact uses and its implicit reply", () => {
+    const source = batch(10, ["code"]), quote = certifiedBoundFenceBudgetV17(PROPOSED_BOUNDS, source, fact(5));
+    expect(quote).toMatchObject({ admitted: true, effects: 3 });
+    expect(certifiedBoundFenceBudgetV17({ ...PROPOSED_BOUNDS, entryBytes: quote.entryBytes }, source, fact(5)).admitted).toBe(true);
+    expect(certifiedBoundFenceBudgetV17({ ...PROPOSED_BOUNDS, entryBytes: quote.entryBytes - 1 }, source, fact(5)).admitted).toBe(false);
+    expect(certifiedBoundFenceBudgetV17({ ...PROPOSED_BOUNDS, derivedEffects: 2 }, source, fact(5)).admitted).toBe(false);
+    expect(certifiedBoundFenceBudgetV17({ ...PROPOSED_BOUNDS, usesPerEntry: 3 }, source, fact(5)).admitted).toBe(false);
+    expect(certifiedBoundFenceBudgetV17({ ...PROPOSED_BOUNDS, sendsPerEntry: 0 }, source, fact(5)).admitted).toBe(false);
+  });
+  it("quotes a full job fact and independently serialized maximum escaped closed binding, even when policy-ineligible", () => {
+    const source = batch(10, ["code"]), quote = certifiedBoundFenceBudgetV17(PROPOSED_BOUNDS, source, fact(5));
+    const binding = (slashes: number): EvidenceBinding => ({ v: 1, source: "member", stage: "published", checker: keys.una.member,
+      policyGeneration: { rules: RULES, seq: 0 }, serviceGeneration: { rules: RULES, seq: 0 }, auditOf: null,
+      roomService: { checker: { ...keys.una.member, member: `@m${"\\".repeat(slashes)}` }, key: keys.una.key },
+      subject: { kind: "published", publication: source.publication, manifest: fact(5), receipt: fact(6, destination), written: fact(7, destination) } });
+    // A backslash takes exactly two bytes inside canonical binding JSON.
+    // Fill the closed text cap, then serialize it again as a real Entry
+    // field rather than repeating the production carrier-size formula.
+    const padding = Math.floor((EVIDENCE_BINDING_TEXT_V17 - utf8(canonicalize(binding(0))).length) / 2);
+    const closed = binding(padding), text = canonicalize(closed), digest = evidenceBindingDigest(closed);
+    expect(utf8(text).length).toBeGreaterThanOrEqual(EVIDENCE_BINDING_TEXT_V17 - 1);
+    expect(readBindingTextV17(text, digest)).toEqual(closed);
+    expect(utf8(canonicalize(text)).length).toBeGreaterThan(utf8(text).length + 1000);
+    expect(quote.bindingCarrierBytes).toBe(2 * EVIDENCE_BINDING_TEXT_V17 + 2);
+    const shell = quote.variants[0]!, input = shell.input;
+    if (input.type !== "delivery" || !("decision" in input) || input.decision !== "applied" || input.message.class !== "request"
+      || input.message.type !== "tell" || !isRecord(input.message.body) || !isRecord(input.message.body["fields"])) throw Error("A bound fence forecast must retain its full wire shape");
+    const fields: Record<string, unknown> = { ...input.message.body["fields"], binding: text, bindingDigest: digest };
+    expect(isFactRef(fields["job"])).toBe(true);
+    const entry: Entry = { ...shell, uses: Array.from({ length: 5 }, (_, n) => ({ fact: { ...fact(Number.MAX_SAFE_INTEGER - n, destination), hash: d("f") }, content: d("f") })),
+      input: { ...input, message: { class: "request", type: "tell", body: { message: "check-fence", fields } } } };
+    expect(isEntry(entry)).toBe(true);
+    const full = utf8(canonicalize(entry)).length;
+    const marked = { ...entry, input: { ...entry.input, message: { class: "request", type: "tell", body: { message: "check-fence", fields: { ...fields, job: { self: true } } } } } };
+    expect(full).toBeGreaterThan(utf8(canonicalize(marked)).length);
+    expect(full).toBeLessThanOrEqual(quote.entryBytes);
   });
   it("refuses a selected holds obligation with no associated or touched extent before funding", () => {
     expect(evidenceFundCapacityV17(scripted(100), batch(10, []))).toBeNull();

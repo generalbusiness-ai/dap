@@ -1,11 +1,11 @@
 import { expect, test } from "vitest";
 import type { Entry } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/dap-bytes";
-import type { Operation, RuleEffect } from "@generalbusiness/dap-derive";
+import { canonicalize, factRefOf } from "@generalbusiness/dap-bytes";
+import { judgeDelivery, type Operation, type RuleEffect } from "@generalbusiness/dap-derive";
 import { evidenceJobOpeningV17 } from "../src/destination-evidence-v17.ts";
 import { destinationV17 } from "../src/destination-v17.ts";
 import { newEvidenceIndexV17 } from "../src/evidence-index-v17.ts";
-import { d, otherLane } from "@generalbusiness/dap-derive/testing";
+import { arriving, d, forged, otherLane } from "@generalbusiness/dap-derive/testing";
 import { evidenceOperationOpeningV17 } from "../src/evidence-opening-v17.ts";
 // The maintained reservation witness is not in dap-derive/testing's public
 // exports. Reuse that narrow test fixture, without importing kernel internals.
@@ -111,4 +111,38 @@ test("an admitted anchor opens the real initial state before its projection thro
   ]);
   expect(scope.state.item(scope.last.seq)?.state).toBe("reuse-anchor");
   expect(scope.replay().item(scope.last.seq)?.state).toBe("reuse-anchor");
+});
+
+
+test("a funded bound delivery can open its counted operation but cannot open even a nonholder item", () => {
+  // SCRIPTED lane/holder; actual delivery, reservation ledger, judge and
+  // fold enforce section17a. No G17 source authority is claimed here.
+  const checked = changed(works, data => {
+    data.items["job"].refs["lane"] = { fixed: true, required: true, to: { type: "scope", kind: "lane" } };
+    data.items["job"].holds.items = 1;
+    data.items["job"].holds.decisions = { follow: 1 };
+    data.items["evidence-job"] = { many: true, max: 10, initial: "job", states: { job: { final: false } }, parties: {}, refs: {}, values: {} };
+    data.receives["follow"] = { message: "follow", class: "tell", from: { kind: "lane" }, opens: null,
+      also: { job: { item: "job", by: "job" } }, fields: { job: { type: "item", of: "job", required: true } },
+      bound: { of: "also.job", where: [{ equals: { a: { sender: true }, b: { slot: "lane", of: "also.job" } } }] },
+      guards: [], effects: [{ code: "after", row: "P16", most: { effects: 2, opens: "evidence-job", operations: ["step"] } }], sends: [], attention: [] };
+  });
+  if (!checked.ok) throw Error("The scripted bound boundary must validate");
+  const scope = new Works(checked.definition);
+  scope.script.begin = given => [{ effect: "ref", item: given.resolved.self, slot: "lane", to: otherLane }, ...opened(0, "step", 1, given.resolved.self)];
+  expect(scope.start()).toBe("written");
+  const holder = scope.last.seq, before = scope.head;
+  const message = { class: "request", type: "tell", body: { message: "follow", fields: { job: holder } } } as const;
+  const source = forged(otherLane, 999, { type: "checkpoint", through: 0, state: scope.entries[0]!.hash }, [{ n: 0, to: scope.at, message }]);
+  const arrival = { from: factRefOf(source.entry), n: 0, to: scope.at, message };
+  const take = () => scope.commit(judgeDelivery(scope.state, scope.definition, arrival, { ...arriving(scope, arrival, source), platform: scope.rules }));
+  scope.script.after = given => [{ effect: "open", item: given.resolved.self, type: "evidence-job", state: "job" }];
+  expect(take()).toBe("unavailable");
+  expect(scope.head).toEqual(before);
+  scope.script.after = () => opened(0, "step", 1, holder);
+  expect(take()).toBe("written");
+  expect(scope.last.effects.some(effect => effect.effect === "open")).toBe(false);
+  const operation = scope.state.operation(`${scope.last.seq}:0`);
+  expect(operation?.for).toBe(holder);
+  expect(scope.last.sends).toHaveLength(1);
 });

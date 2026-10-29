@@ -17,8 +17,13 @@ Counted native outcomes now use one declared send. Separate funded
 `evidence-funding`, `evidence-audit` and `evidence-plan` operations serialize
 at most four batches; no global send cap widens. First current progress
 opens audit once via ninth job value `auditOpenedAt` (null means empty).
-The shared sealed-opening helper resolves actual self. This split is still
-in flight; complete Native funding/acceptance remains unproved.
+The shared sealed-opening helper resolves actual self. Bound landing and
+published fences claim an existing funded batch and open its admission
+operation. They open no item. The native reader reconstructs the pending
+record from the exact sealed fence, batch birth and original job; admission
+still judges current authority. Checker verifies the same provenance. The
+carrying quote covers five full fact uses and maximum canonical binding
+text. Complete Native funding/acceptance remains unproved.
 
 Base: Main `06e4d33fe17937610891f29b5d1513b9e224edea`, after J3.
 Branch: `request/evidence-rules-20261028`.

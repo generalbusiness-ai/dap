@@ -122,3 +122,4 @@ export type { RulesCertificateDeclinedV17, RulesCertificateProvenanceV17 } from 
 export { destinationPublishedChecksPending, destinationEvidenceFundingPending, destinationEvidencePlanPending } from "./destination-evidence-funding-v17.ts";
 export { destinationEvidenceAuditPending } from "./destination-evidence-v17.ts";
 export { evidenceIncidentAdmissionPositionV17, EVIDENCE_INCIDENT_PINS_V17 } from "./evidence-incident-origin-v17.ts";
+export { readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";

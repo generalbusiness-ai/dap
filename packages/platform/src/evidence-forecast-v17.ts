@@ -166,7 +166,7 @@ export function evidenceFutureEntriesV17(given: RuleGiven, current: Row, owners:
     const updated = [current.item, ...(related !== null && related !== current.item ? [related] : [])];
     const rowEffects = updated.flatMap(id => [codeEffect(id, "record", completed.get(id)!, 196608), { effect: "state" as const, item: id, state: "reuse-anchor-timedout" }]);
     const result = [...rowEffects, codeEffect(MAX, "service", service(main, bounds.memberBytes), 16384), valueEffect(current.item, "deadline", null),
-      { effect: "state" as const, item: main.requestAt, state: "settled" }, ...settlement];
+      ...(main.binding.stage === "work" ? [{ effect: "state" as const, item: main.requestAt, state: "settled" }] : []), ...settlement];
     const base = { v: 1, at: given.resolved.at, seq: MAX, prev: HASH, time: TIME, clamped: false, epoch: 0, prepared: [],
       // Typed origins retain at most five named facts. Already observed
       // provenance can be larger and is never dropped from the quote.

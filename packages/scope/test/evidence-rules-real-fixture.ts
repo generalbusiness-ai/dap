@@ -485,6 +485,7 @@ export async function prepareEvidenceWork(room: EvidenceRoom, options: EvidenceW
   const requested = (await hardeningItems(lane, 'job')).find(item => item.id === job), expected = { state: "requested", values: { tree, base, commit, reason: "admitted" } };
   try { expect(requested).toMatchObject(expected); }
   catch { expect(requested, await evidenceNativeDiagnostic([lane, room.G])).toMatchObject(expected); }
+  await assertEvidenceWorkAdmission(room, lane, jobFact);
   const notice: Notice = { lane: await lane.at(), job: jobFact, name: configuration.name, tree };
   const record = async () => {
     const rows = await hardeningItems(room.G, "evidence-job");
@@ -511,6 +512,19 @@ export async function evidenceRecord(room: EvidenceRoom, job: FactRef) {
     .find(record => record && canonicalize(record.job) === canonicalize(job));
   if (!found) throw Error("Actual G17 admitted or refused record required");
   return found;
+}
+
+/** The lane must retain the exact actual Native admission it will echo in
+ * a signed result, including when admission aliases an earlier counted pass. */
+async function assertEvidenceWorkAdmission(room: EvidenceRoom, lane: Platform, job: FactRef) {
+  const item = (await hardeningItems(lane, 'job')).find(item => item.id === job.seq);
+  if (!item) throw Error('Actual work job required before checking its admission reference');
+  if (item.values['reason'] !== 'admitted' && item.values['reason'] !== 'reused') return;
+  const record = await evidenceRecord(room, job);
+  if (record.admittedAt === null) throw Error('Actual Native admission position required for an admitted or reused work job');
+  const admission = await evidenceEntry(room.G, record.admittedAt);
+  expect(admission.input).toMatchObject({ type: 'outcome', owner: EVIDENCE_RULES_COHORT.destination, kind: 'evidence-admit', result: 'confirmed' });
+  expect(item.refs['admission']).toEqual(factRefOf(admission));
 }
 
 /** Read the recorded SQLite state, then interpret its bounded native index.
@@ -579,6 +593,7 @@ export async function requestEvidenceWork(room: EvidenceRoom, prepared: Prepared
     commitProof: prepared.commitProof, reuse: options.reuse === true }, expected: await prepared.lane.expected({ source: prepared.stagedSource.seq }) });
   const job = factRefOf(await evidenceEntry(prepared.lane, seq));
   await room.pause(room.nodes);
+  await assertEvidenceWorkAdmission(room, prepared.lane, job);
   return { job, binding, bindingDigest, record: () => evidenceRecord(room, job) };
 }
 

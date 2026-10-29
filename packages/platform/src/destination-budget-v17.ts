@@ -5,6 +5,7 @@ import { canonicalize, isDigest, isFactRef, isKeyId, isMemberRef, isRecord, memb
 import { amountMath, naturalAmount, NOTHING, observationBytes, operationOpening, type Opening, type OperationRules, type RuleEffect, type RuleGiven, type RuleRequest } from '@generalbusiness/dap-derive';
 import { isObjectId } from './reservation.ts';
 import { readRulesPolicyObservationV17, requiredChecksV17, type ReservationPolicyInputV17 } from './reservation-v17.ts';
+import type { EvidenceBatchRecordV17 } from './evidence-batch-v17.ts';
 import type { RulesCheckV13 } from './rules-policy-v13.ts';
 import { RULES_POLICY_VALUE_V13 } from './rules-policy-v13.ts';
 import { RULES_TREE_PROOF } from './rules-policy-tree.ts';
@@ -168,6 +169,42 @@ export function certifiedWrittenPlanBudgetV17(bounds: Bounds) {
   return { admitted: variants.every(variant => variant.entryBytes <= bounds.entryBytes
       && variant.effects <= Math.min(16, bounds.derivedEffects) && variant.entry.sends.length <= bounds.sendsPerEntry),
     entryBytes: Math.max(...variants.map(variant => variant.entryBytes)), effects: Math.max(...variants.map(variant => variant.effects)), variants };
+}
+
+/** A funded check-fence is a bound delivery: one existing batch claim,
+ * one admitted operation and the implicit reply, never an item opening.
+ * Only the five declared fact fields can add foreign FactUse rows. */
+export function certifiedBoundFenceBudgetV17(bounds: Bounds, batch: EvidenceBatchRecordV17, manifest: FactRef) {
+  const bindingCarrierBytes = 2 * 16384 + 2;
+  try {
+    const longest = [...batch.checks].sort((a, b) => bytes(b.name) - bytes(a.name))[0];
+    if (!longest) return { admitted: false, entryBytes: 0, effects: 0, bindingCarrierBytes, variants: [] };
+    const job = { ...FACT, at: batch.operation.at };
+    const futureBatch = { ...batch, planAt: MAX, jobs: Array.from({ length: 8 }, (_, n) => ({ name: longest.name, job: { ...job, seq: MAX - n } })) };
+    const effects: Effect[] = [{ effect: 'value', item: MAX, slot: 'batch', value: evidenceWireV17(futureBatch, 196608) },
+      ...operationOpening(0, { owner: 'platform:destination@17', kind: 'evidence-admit', attempts: 1, for: MAX })];
+    let entryBytes = 0, admitted = true;
+    const variants: Entry[] = [];
+    for (const check of batch.checks) {
+      const input: Entry['input'] = { type: 'delivery', from: job, n: MAX, decision: 'applied', message: { class: 'request', type: 'tell', body: {
+        message: 'check-fence', fields: { operation: batch.operation, manifest: { ...job, at: manifest.at }, job, name: check.name,
+          earlier: job, reuse: false, forJob: job, binding: null, bindingDigest: HASH },
+      } } };
+      const entry: Entry = { v: 1, at: SCOPE, seq: MAX, prev: HASH, time: TIME, clamped: false, epoch: 0, prepared: [], uses: [], input, effects,
+        sends: [{ n: MAX, to: batch.operation.at, message: { class: 'result', of: { from: job, n: MAX }, outcome: 'applied' } }] };
+      variants.push(entry);
+      // Only canonical JSON text passes readBindingTextV17's 16 KiB guard.
+      // Such text contains no unescaped control characters. Its containing
+      // JSON string can at most double its UTF8 bytes (quotes/backslashes),
+      // plus the two surrounding quotes. This covers closed wrong-policy
+      // bindings as well as eligible ones, before either is admitted.
+      const size = bytes(entry) - bytes(null) + bindingCarrierBytes + 5 * bytes(USE) + 4;
+      entryBytes = Math.max(entryBytes, size);
+      if (size > bounds.entryBytes || bounds.usesPerEntry < 5 || effects.length > Math.min(16, bounds.derivedEffects)
+        || bounds.sendsPerEntry < 1) admitted = false;
+    }
+    return { admitted, entryBytes, effects: effects.length, bindingCarrierBytes, variants };
+  } catch { return { admitted: false, entryBytes: 0, effects: 0, bindingCarrierBytes, variants: [] }; }
 }
 
 /** Maximum native envelopes without the passes value. Foreign signed

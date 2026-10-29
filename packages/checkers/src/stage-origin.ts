@@ -1,7 +1,7 @@
 /** Successor job origin: an actual G17 admission, never a synthetic legacy manifest. */
 import type { Digest, Effect, FactRef, KeyId, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalBytes, canonicalize, entryHash, isDigest, isEntry, isFactRef, isRecord, parseStrict, timeMs, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { evidenceBindingDigest, readEvidenceBinding, type StageSnapshot, type StageSnapshotReply } from "@generalbusiness/dap-platform";
+import { canonicalBytes, canonicalize, entryHash, isDigest, isEntry, isFactRef, isLocalId, isOperationId, isRecord, parseStrict, timeMs, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { evidenceBindingDigest, readEvidenceBinding, readEvidenceBatchWireV17, type EvidenceBatchRecordV17, type EvidenceBinding, type StageSnapshot, type StageSnapshotReply } from "@generalbusiness/dap-platform";
 import { isObjectId, readOwnedCheckoutSnapshot, STAGE_SNAPSHOT_BOUNDS } from "@generalbusiness/dap-git";
 import type { Job, Notice, Origin, OriginRead } from "./job.ts";
 
@@ -24,6 +24,48 @@ const sent = (source: Sealed, target: Sealed): boolean => {
   if (input.type !== "delivery" || !same(factOf(source), input.from)) return false;
   return source.entry.sends.some(send => send.n === input.n && same(send.to, target.entry.at) && same(send.message, input.message));
 };
+function admissionOpening(source: Sealed, admission: Sealed, holder: number): boolean {
+  const input = admission.entry.input;
+  if (input.type !== "outcome" || !isOperationId(input.operation)) return false;
+  const [seq, k] = input.operation.split(":").map(Number);
+  const openings = source.entry.effects.filter(effect => effect.effect === "operation" && effect.owner === "platform:destination@17" && effect.kind === "evidence-admit");
+  if (seq !== source.entry.seq || openings.length !== 1 || openings[0]!.effect !== "operation") return false;
+  const opened = openings[0]!;
+  const attempts = source.entry.effects.filter(effect => effect.effect === "attempt"
+    && (typeof effect.operation === "string" ? effect.operation === input.operation : effect.operation.k === k));
+  return opened.k === k && opened.attempts === 1 && (opened.for === "self" ? source.entry.seq : opened.for) === holder
+    && attempts.length === 1 && attempts[0]!.effect === "attempt" && attempts[0]!.attempt === 1 && attempts[0]!.result === "opened" && attempts[0]!.selected === null;
+}
+const immutableBatch = (batch: EvidenceBatchRecordV17) => ({ publication: batch.publication, operation: batch.operation, capture: batch.capture,
+  ordinal: batch.ordinal, total: batch.total, touched: batch.touched, checks: batch.checks, policy: batch.policy });
+/** The applied bound fence claims one already funded batch; it opens no item. */
+function boundFence(source: Sealed, admission: Sealed, sources: ReadonlyMap<string, Sealed>, holder: number, binding: EvidenceBinding,
+  job: FactRef, name: string, configuration: Digest): boolean {
+  if (binding.subject.kind === "work" || source.entry.effects.some(effect => effect.effect === "open") || !admissionOpening(source, admission, holder)) return false;
+  const writes = source.entry.effects.filter(effect => effect.effect === "value" && effect.slot === "batch");
+  if (writes.length !== 1 || writes[0]!.effect !== "value" || writes[0]!.item !== holder) return false;
+  const claimed = readEvidenceBatchWireV17(writes[0]!.value);
+  const births = [...sources.values()].filter(entry => same(entry.entry.at, source.entry.at) && entry.entry.seq === holder);
+  const birth = births.length === 1 ? births[0] : null;
+  if (!claimed || !birth || holder >= source.entry.seq || birth.entry.effects.filter(effect => effect.effect === "open").length !== 1
+    || !birth.entry.effects.some(effect => effect.effect === "open" && effect.item === holder && effect.type === "evidence-batch" && effect.state === "funded")) return false;
+  const original = readEvidenceBatchWireV17(value(birth.entry.effects, holder, "batch"));
+  const input = birth.entry.input;
+  if (!original || input.type !== "delivery" || !("decision" in input) || input.decision !== "applied" || !same(input.from.at, birth.entry.at)
+    || input.message.class !== "request" || input.message.type !== "tell" || !isRecord(input.message.body)
+    || Object.keys(input.message.body).sort().join() !== "fields,message" || input.message.body["message"] !== "evidence-fund"
+    || !same(input.message.body["fields"], { publication: original.publication, operation: original.operation, capture: original.capture, ordinal: original.ordinal })) return false;
+  const rows = claimed.jobs.filter(row => same(row.job, job) && row.name === name);
+  if (original.jobs.length !== 0 || !same(immutableBatch(original), immutableBatch(claimed)) || rows.length !== 1
+    || !same(claimed.jobs.at(-1), { job, name }) || !same(claimed.publication, binding.subject.publication)
+    || !same(binding.policyGeneration, { rules: claimed.policy.rules, seq: claimed.policy.revision })
+    || !same(binding.serviceGeneration, claimed.policy.serviceGeneration) || !same(binding.roomService, claimed.policy.policy.roomService)) return false;
+  const descriptor = claimed.checks.find(check => check.name === name), publication = sources.get(canonicalize(binding.subject.publication));
+  const operations = publication?.entry.effects.filter(effect => effect.effect === "ref" && effect.item === publication.entry.seq && effect.slot === "operation") ?? [];
+  return !!descriptor && descriptor.configuration === configuration && (descriptor.source ?? "member") === binding.source
+    && (descriptor.stage ?? "landing") === binding.stage && same(descriptor.checker, binding.checker)
+    && operations.length === 1 && operations[0]!.effect === "ref" && same(operations[0]!.to, claimed.operation);
+}
 /** Cohort-selected identities supplied by the service's trusted configuration, never by a notice. */
 export interface EvidenceDefinitions { issue: Digest; change: Digest }
 
@@ -47,7 +89,8 @@ export function stageOriginOf(notice: Notice, read: Pick<OriginRead, "entry" | "
     const input = admitted.input;
     if (input.type !== "outcome" || input.owner !== "platform:destination@17" || input.kind !== "evidence-admit" || input.attempt !== 1 || input.result !== "confirmed"
       || input.evidence.basis !== "own-answer" || !isRecord(input.evidence.body) || Object.keys(input.evidence.body).join() !== "job" || !same(input.evidence.body["job"], notice.job)
-      || !admitted.effects.some(effect => effect.effect === "attempt" && effect.selected === true)) return no();
+      || !admitted.effects.some(effect => effect.effect === "attempt" && effect.operation === input.operation && effect.attempt === 1
+        && effect.result === "confirmed" && effect.selected === true)) return no();
     if (admitted.effects.filter(effect => effect.effect === "open").length !== 1 || !admitted.effects.some(effect => effect.effect === "open" && effect.item === admitted.seq && effect.type === "evidence-job")) return no();
     const records = admitted.effects.filter(effect => effect.effect === "value" && effect.item === admitted.seq && effect.slot === "record");
     const effect = records.length === 1 ? records[0] : null;
@@ -59,11 +102,11 @@ export function stageOriginOf(notice: Notice, read: Pick<OriginRead, "entry" | "
     if (sources.size !== sourceEntries.length || record["sourceFacts"].length !== sources.size || record["sourceFacts"].some(fact => !sources.has(canonicalize(fact)))) return no();
     const genesis = sourceEntries.find(source => source.entry.at.kind === "destination" && same(source.entry.at, snapshot.destination) && source.entry.input.type === "genesis");
     if (!genesis || genesis.entry.input.type !== "genesis" || genesis.entry.input.seed.definition !== "platform:destination@17") return no();
-    const pendingRows = sourceEntries.filter(source => same(source.entry.at, snapshot.destination) && sent(snapshot.job, source)
-      && source.entry.effects.some(effect => effect.effect === "open" && effect.item === source.entry.seq && effect.type === (binding.stage === "work" ? "evidence-request" : "evidence-slot")));
+    const pendingRows = sourceEntries.filter(source => same(source.entry.at, snapshot.destination) && sent(snapshot.job, source));
     const pending = pendingRows.length === 1 ? pendingRows[0] : null;
     if (!pending || pending.entry.input.type !== "delivery" || pending.entry.input.message.class !== "request" || !("decision" in pending.entry.input) || pending.entry.input.decision !== "applied" || !sent(snapshot.job, pending)
-      || !isRecord(pending.entry.input.message.body) || !["check-fence", "work-check-fence"].includes(pending.entry.input.message.body["message"] as string)) return no();
+      || pending.entry.input.message.type !== "tell" || !isRecord(pending.entry.input.message.body)
+      || pending.entry.input.message.body["message"] !== (binding.stage === "work" ? "work-check-fence" : "check-fence")) return no();
     const jobInput = jobEntry.input;
     if (jobInput.type === "act") {
       const expected = binding.stage === "work" ? "request-work-check" : "request-check";
@@ -83,6 +126,12 @@ export function stageOriginOf(notice: Notice, read: Pick<OriginRead, "entry" | "
       || value(jobEntry.effects, jobEntry.seq, "commit") !== snapshot.commit
       || (binding.stage === "work" ? tree !== undefined && tree !== snapshot.tree : tree !== snapshot.tree)
       || (binding.stage === "work" ? value(jobEntry.effects, jobEntry.seq, "base") !== undefined && value(jobEntry.effects, jobEntry.seq, "base") !== snapshot.base : value(jobEntry.effects, jobEntry.seq, "base") !== snapshot.base)) return no();
+    const holder = record["holder"];
+    if (!isLocalId(holder) || (binding.stage === "work"
+      ? holder !== pending.entry.seq || pending.entry.effects.filter(effect => effect.effect === "open").length !== 1
+        || !pending.entry.effects.some(effect => effect.effect === "open" && effect.item === holder && effect.type === "evidence-request")
+        || !admissionOpening(pending, snapshot.admission, holder)
+      : !boundFence(pending, snapshot.admission, sources, holder, binding, notice.job, name, configuration))) return no();
     const checkers = jobEntry.effects.filter(effect => effect.effect === "party" && effect.item === jobEntry.seq && effect.slot === "checker");
     const checker = checkers.length === 1 ? checkers[0] : null;
     if (!checker || checker.effect !== "party" || !same(checker.member, binding.checker)) return no();

@@ -167,7 +167,7 @@ export class DestinationHost implements Outside {
           return pending ? answer("confirmed", { plan: pending.plan }) : null;
         }
         const pending = operation.kind === "evidence-admit"
-          ? destinationEvidencePending(this.#given.state, this.#given.own, operation)
+          ? this.#given.bounds ? destinationEvidencePending(this.#given.state, this.#given.own, operation, this.#given.bounds) : null
           : operation.kind === "evidence-result"
             ? destinationEvidenceResultPending(this.#given.state, this.#given.own, operation)
             : operation.kind === "evidence-audit"
