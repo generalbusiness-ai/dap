@@ -6,10 +6,10 @@ import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { containerName, createContainerEngine } from "./container-engine.ts";
-import { acknowledgeOrigin, CLAIM_BYTES, claimOf, decodeAsk, digest, encodeAsk, encodeJob, GRACE_SECONDS, INPUT_BYTES, privateRoot, readPrivate, runDirectory, startedOf, syncDirectory, terminalOf, writePrivate, writeTerminal, type RunClaim, type RunLaunch } from "./container-records.ts";
+import { acknowledgeOrigin, CLAIM_BYTES, claimOf, decodeAsk, digest, encodeAsk, encodeJob, GRACE_SECONDS, INPUT_BYTES, InvalidRunRecord, privateRoot, readPrivate, runDirectory, startedOf, syncDirectory, terminalOf, writePrivate, writeTerminal, type RunClaim, type RunLaunch } from "./container-records.ts";
 import { serveOrigin, type ContainerRunnerOrigin } from "./container-origin.ts";
 import type { RunAsk, Runner } from "./service.ts";
-import { RunIdentityRefusal } from "./service.ts";
+import { ClaimTooLargeRefusal, RECOVERY_GRACE_SECONDS, RunIdentityRefusal, RunRecordCorruption } from "./service.ts";
 
 export type { ContainerRunnerOrigin };
 export interface ContainerRunnerOptions {
@@ -33,7 +33,7 @@ const prefix = (value: readonly string[]): string[] => {
 export function containerRunner(options: ContainerRunnerOptions): Runner {
   const command = prefix(options.command), execCommand = prefix(options.execCommand), rootOption = options.root, originFor = options.originFor;
   const engine = (claim: RunClaim) => createContainerEngine({ argvPrefix: claim.command, execCommand: claim.execCommand, image: claim.image });
-  const locate = async (run: string) => {
+  const directoryOf = async (run: string) => {
     if (!validRun(run)) throw unavailable();
     let root: string;
     try { root = await privateRoot(rootOption, false); }
@@ -41,27 +41,63 @@ export function containerRunner(options: ContainerRunnerOptions): Runner {
     const dir = runDirectory(root, run);
     try { await privateRoot(dir, false); }
     catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return null; throw error; }
+    return dir;
+  };
+  const locate = async (run: string) => {
+    const dir = await directoryOf(run);
+    if (!dir) return null;
     const claim = await claimOf(dir, run);
-    if (!claim || claim.container !== containerName(run)) throw unavailable();
+    if (!claim) throw new InvalidRunRecord(join(dir, "claim.json"));
+    if (claim.container !== containerName(run)) throw new InvalidRunRecord(join(dir, "claim.json"));
     return { dir, claim };
   };
-  const find: Runner["find"] = async (run, expectedJob) => {
-    const found = await locate(run);
-    if (!found) return null;
-    if (expectedJob) {
-      const bytes = await readPrivate(join(found.dir, "ask.json"), INPUT_BYTES);
-      if (!bytes || digest(bytes) !== found.claim.askDigest) throw unavailable();
-      const recorded = JSON.parse(bytes) as { job: unknown };
-      if (canonicalize(recorded.job) !== encodeJob(expectedJob)) throw new RunIdentityRefusal();
+  const find: Runner["find"] = async (run, expectedJob, recovery) => {
+    const now = recovery?.now ?? Date.now(), graceSeconds = recovery?.graceSeconds ?? RECOVERY_GRACE_SECONDS;
+    if (!Number.isFinite(now) || !Number.isSafeInteger(graceSeconds) || graceSeconds < 0 || graceSeconds > 86_400) throw unavailable();
+    const dir = await directoryOf(run);
+    if (!dir) return null;
+    // Birth is stable when a paused creator later fills the directory. Files'
+    // mtimes do not extend grace. Filesystems without birth time use dir mtime.
+    const stat = await fs.lstat(dir), birth = stat.birthtimeMs;
+    if (!stat.isDirectory() || stat.isSymbolicLink() || process.getuid && stat.uid !== process.getuid() || (stat.mode & 0o077) !== 0) throw unavailable();
+    const createdAt = birth === undefined || birth === 0 ? stat.mtimeMs : birth;
+    if (!Number.isFinite(createdAt) || createdAt < 0) throw unavailable();
+    const withinGrace = now <= createdAt + graceSeconds * 1000;
+    try {
+      const claimPath = join(dir, "claim.json");
+      let claim: RunClaim | null;
+      // The commissioned missing/unreadable-claim policy applies even to
+      // read errors, once this owned directory's age has been established.
+      try { claim = await claimOf(dir, run); }
+      catch { throw new InvalidRunRecord(claimPath); }
+      if (!claim || claim.container !== containerName(run)) throw new InvalidRunRecord(claimPath);
+      if (expectedJob) {
+        const askPath = join(dir, "ask.json"), bytes = await readPrivate(askPath, INPUT_BYTES);
+        if (bytes === null || digest(bytes) !== claim.askDigest) throw new InvalidRunRecord(askPath);
+        let recorded: RunAsk;
+        try { recorded = decodeAsk(bytes); } catch { throw new InvalidRunRecord(askPath); }
+        if (recorded.run !== run || recorded.configuration.image !== claim.image) throw new InvalidRunRecord(askPath);
+        if (encodeJob(recorded.job) !== encodeJob(expectedJob)) {
+          if (withinGrace) return "running";
+          throw new RunIdentityRefusal(askPath);
+        }
+      }
+      const terminal = await terminalOf(dir, claim);
+      if (terminal) return terminal.report;
+      // Validate retained start bytes before consulting the engine. A corrupt
+      // record remains diagnosable even when its engine cannot be reached.
+      const started = await startedOf(dir, claim);
+      const state = await engine(claim).inspect(run);
+      if (state && started && state.id !== started.id) throw new InvalidRunRecord(join(dir, "started.json"));
+      if (state?.running || now <= claim.finishBy) return "running";
+      // This is a lost judgment, not proof that a paused original creator or
+      // supervisor stopped. Keep every fence byte and never replace execution.
+      return null;
+    } catch (error) {
+      if (!(error instanceof InvalidRunRecord)) throw error;
+      if (withinGrace) return "running";
+      throw new RunRecordCorruption(error.path);
     }
-    const terminal = await terminalOf(found.dir, found.claim);
-    if (terminal) return terminal.report;
-    const state = await engine(found.claim).inspect(run);
-    const started = await startedOf(found.dir, found.claim);
-    if (state && started && state.id !== started.id) throw unavailable();
-    if (state?.running || Date.now() <= found.claim.finishBy) return "running";
-    // A missing end is not a pass or proof of physical cancellation.
-    return null;
   };
   const run: Runner["run"] = async given => {
     // Copy and validate before the first wait, including every snapshot byte.
@@ -70,7 +106,7 @@ export function containerRunner(options: ContainerRunnerOptions): Runner {
     const claim: RunClaim = { v: 1, run: ask.run, askDigest, command, execCommand, image: ask.configuration.image, needsOrigin: !ask.job.overlay && !ask.job.snapshot, container: containerName(ask.run),
       createdAt, finishBy: createdAt + (ask.configuration.limits.seconds + GRACE_SECONDS) * 1000 };
     const claimBytes = canonicalize(claim);
-    if (Buffer.byteLength(claimBytes) > CLAIM_BYTES) throw new RunIdentityRefusal();
+    if (Buffer.byteLength(claimBytes) > CLAIM_BYTES) throw new ClaimTooLargeRefusal();
     const root = await privateRoot(rootOption), dir = runDirectory(root, ask.run);
     let created = false;
     try { await fs.mkdir(dir, { mode: 0o700 }); created = true; await syncDirectory(root); }

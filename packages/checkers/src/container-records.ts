@@ -3,7 +3,7 @@ import { constants } from "node:fs";
 import * as fs from "node:fs/promises";
 import { createHash, randomUUID } from "node:crypto";
 import { dirname, isAbsolute, join } from "node:path";
-import { b64url, canonicalize, isDigest, isFactRef, isScopeRef, unb64url } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, isDigest, isFactRef, isRecord, isScopeRef, unb64url } from "@generalbusiness/dap-bytes";
 import { readEvidenceBinding } from "@generalbusiness/dap-platform";
 import type { Digest } from "@generalbusiness/dap-contract";
 import { isObjectId, readOwnedCheckoutSnapshot, STAGE_SNAPSHOT_BOUNDS } from "@generalbusiness/dap-git";
@@ -19,6 +19,18 @@ export const CLAIM_BYTES = 16 * 1024;
 export const GRACE_SECONDS = 120;
 export const digest = (bytes: string | Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
 const refused = (): Error => new Error("The private checker execution record is unavailable or differs; no replacement run was started.");
+
+/** A defect in retained bytes. Recovery may also classify an unreadable
+ * claim after verifying its owned directory age; other I/O stays unavailable. */
+export class InvalidRunRecord extends Error {
+  constructor(readonly path: string) { super("The private checker execution record is corrupt."); }
+}
+const invalidRecord = (path: string): never => { throw new InvalidRunRecord(path); };
+const parsedRecord = (path: string, bytes: string): Record<string, unknown> => {
+  let value: unknown;
+  try { value = JSON.parse(bytes); } catch { return invalidRecord(path); }
+  return isRecord(value) ? value : invalidRecord(path);
+};
 
 /** Bound the input before canonical allocation; copy every value before awaiting. */
 function encodeInput(given: unknown): string {
@@ -149,10 +161,18 @@ export const runDirectory = (root: string, run: string): string => join(root, di
 export async function readPrivate(path: string, bound: number): Promise<string | null> {
   let file: fs.FileHandle;
   try { file = await fs.open(path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK); }
-  catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return null; throw refused(); }
+  catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === "ENOENT") return null;
+    if (code === "ELOOP") return invalidRecord(path);
+    throw refused();
+  }
   try {
-    const stat = await file.stat(); owner(stat);
-    if (!stat.isFile() || stat.size > bound) throw refused();
+    const stat = await file.stat();
+    // An unreadable operation is transient; a successfully read unsafe file
+    // or oversized record is a permanent defect in the retained artifact.
+    try { owner(stat); } catch { return invalidRecord(path); }
+    if (!stat.isFile() || stat.size > bound) return invalidRecord(path);
     const bytes = Buffer.alloc(stat.size + 1);
     let length = 0;
     while (length < bytes.length) {
@@ -161,7 +181,8 @@ export async function readPrivate(path: string, bound: number): Promise<string |
       length += got.bytesRead;
     }
     if (length !== stat.size) throw refused();
-    return new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(0, length));
+    try { return new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(0, length)); }
+    catch { return invalidRecord(path); }
   } finally { await file.close(); }
 }
 export async function writePrivate(path: string, value: string): Promise<void> {
@@ -178,27 +199,28 @@ export async function syncDirectory(path: string): Promise<void> {
   try { await directory.sync(); } finally { await directory.close(); }
 }
 export async function claimOf(dir: string, run: string): Promise<RunClaim | null> {
-  const bytes = await readPrivate(join(dir, "claim.json"), CLAIM_BYTES);
+  const path = join(dir, "claim.json"), bytes = await readPrivate(path, CLAIM_BYTES);
   if (bytes === null) return null;
-  const claim = JSON.parse(bytes) as RunClaim;
-  if (claim.v !== 1 || claim.run !== run || !/^[a-f0-9]{64}$/.test(claim.askDigest) || !Array.isArray(claim.command)
+  const claim = parsedRecord(path, bytes);
+  if (claim.v !== 1 || claim.run !== run || typeof claim.askDigest !== "string" || !/^[a-f0-9]{64}$/.test(claim.askDigest) || !Array.isArray(claim.command)
     || !claim.command.length || claim.command.length > 32 || claim.command.some(x => typeof x !== "string" || !x || x.length > 4096 || x.includes("\0"))
     || !Array.isArray(claim.execCommand) || !claim.execCommand.length || claim.execCommand.length > 32
     || claim.execCommand.some(x => typeof x !== "string" || !x || x.length > 4096 || x.includes("\0"))
-    || !isDigest(claim.image) || typeof claim.needsOrigin !== "boolean" || typeof claim.container !== "string" || !Number.isSafeInteger(claim.createdAt) || !Number.isSafeInteger(claim.finishBy)
-    || claim.finishBy <= claim.createdAt || claim.finishBy - claim.createdAt > (86_400 + GRACE_SECONDS) * 1000) throw refused();
-  return claim;
+    || !isDigest(claim.image) || typeof claim.needsOrigin !== "boolean" || typeof claim.container !== "string" || typeof claim.createdAt !== "number" || !Number.isSafeInteger(claim.createdAt) || typeof claim.finishBy !== "number" || !Number.isSafeInteger(claim.finishBy)
+    || claim.finishBy <= claim.createdAt || claim.finishBy - claim.createdAt > (86_400 + GRACE_SECONDS) * 1000) return invalidRecord(path);
+  return claim as unknown as RunClaim;
 }
 export async function terminalOf(dir: string, claim: RunClaim): Promise<{ report: RunReport | null } | null> {
-  const bytes = await readPrivate(join(dir, "terminal.json"), REPORT_BYTES);
+  const path = join(dir, "terminal.json"), bytes = await readPrivate(path, REPORT_BYTES);
   if (bytes === null) return null;
-  const result = JSON.parse(bytes) as RunTerminal;
+  const result = parsedRecord(path, bytes);
   const report = result.report === null ? null : readReport(result.report);
-  if (result.v !== 1 || result.run !== claim.run || result.askDigest !== claim.askDigest || result.report !== null && !report) throw refused();
+  if (result.v !== 1 || result.run !== claim.run || result.askDigest !== claim.askDigest || result.report !== null && !report) return invalidRecord(path);
   if (report) {
     const started = await startedOf(dir, claim);
-    if (!started || report.image !== started.image || canonicalize(report.environment) !== canonicalize(started.environment)) throw refused();
-    if (claim.needsOrigin && report.end !== "lost" && !await originClosedOf(dir, claim)) throw refused();
+    if (!started) return invalidRecord(join(dir, "started.json"));
+    if (report.image !== started.image || canonicalize(report.environment) !== canonicalize(started.environment)) return invalidRecord(path);
+    if (claim.needsOrigin && report.end !== "lost" && !await originClosedOf(dir, claim)) return invalidRecord(join(dir, "origin-closed.json"));
   }
   // A concurrent reader can observe the hard link before its writer's
   // directory sync finishes. It confirms that sync itself before release.
@@ -206,21 +228,21 @@ export async function terminalOf(dir: string, claim: RunClaim): Promise<{ report
   return { report };
 }
 export async function startedOf(dir: string, claim: RunClaim): Promise<RunStarted | null> {
-  const bytes = await readPrivate(join(dir, "started.json"), 128 * 1024);
+  const path = join(dir, "started.json"), bytes = await readPrivate(path, 128 * 1024);
   if (bytes === null) return null;
-  const started = JSON.parse(bytes) as RunStarted;
+  const started = parsedRecord(path, bytes);
   const report = readReport({ started: true, image: started.image, environment: started.environment, checkout: false, steps: [], end: "lost" });
-  if (started.v !== 1 || started.run !== claim.run || started.askDigest !== claim.askDigest || !/^[a-f0-9]{64}$/.test(started.id)
-    || started.image !== claim.image || !report) throw refused();
-  return started;
+  if (started.v !== 1 || started.run !== claim.run || started.askDigest !== claim.askDigest || typeof started.id !== "string" || !/^[a-f0-9]{64}$/.test(started.id)
+    || started.image !== claim.image || !report) return invalidRecord(path);
+  return started as unknown as RunStarted;
 }
 export const writeTerminal = (dir: string, claim: RunClaim, report: RunReport | null): Promise<void> =>
   writePrivate(join(dir, "terminal.json"), canonicalize({ v: 1, run: claim.run, askDigest: claim.askDigest, report } satisfies RunTerminal));
 
 export async function originClosedOf(dir: string, claim: RunClaim): Promise<boolean> {
-  const bytes = await readPrivate(join(dir, "origin-closed.json"), 4096);
+  const path = join(dir, "origin-closed.json"), bytes = await readPrivate(path, 4096);
   if (bytes === null) return false;
-  if (bytes !== canonicalize({ v: 1, run: claim.run, askDigest: claim.askDigest })) throw refused();
+  if (bytes !== canonicalize({ v: 1, run: claim.run, askDigest: claim.askDigest })) return invalidRecord(path);
   await syncDirectory(dir); return true;
 }
 export const acknowledgeOrigin = (dir: string, claim: RunClaim): Promise<void> =>

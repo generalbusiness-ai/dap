@@ -73,7 +73,7 @@ export async function containerAcceptance(settings, directory) {
     const alreadyOpened = origins;
     const otherJob = { ...passed.request.job, tree: baseTree };
     await assert.rejects(containerRunner(options).run({ ...passed.request, job: otherJob }), RunIdentityRefusal);
-    await assert.rejects(containerRunner(options).find(passed.request.run, otherJob), RunIdentityRefusal);
+    await assert.rejects(containerRunner(options).find(passed.request.run, otherJob, { now: Date.now(), graceSeconds: 0 }), RunIdentityRefusal);
     assert.equal(origins, alreadyOpened, "a mismatched reuse of one run never opens another origin");
     assert.deepEqual(await containerRunner(options).find(passed.request.run, passed.request.job), passed.report);
     const privateDirectories = await readdir(root);
@@ -84,7 +84,7 @@ export async function containerAcceptance(settings, directory) {
     for (const name of await readdir(join(root, privateDirectories[0]))) {
       const metadata = await lstat(join(root, privateDirectories[0], name)); assert(metadata.isFile() && !metadata.isSymbolicLink()); assert.equal(metadata.mode & 0o777, 0o600);
     }
-    const failed = await run("real-failure", configuration([["/bin/sh", "-c", 'printf "bad\\n"; exit 1']]));
+    const failed = await run("real-failure", configuration([["/bin/sh", "-c", 'printf "bad\\n" >&2; exit 1']]));
     assert.deepEqual(failed.outcome, { act: "check", outcome: "failed" });
     const nonzero = await run("exact-nonzero-status", { ...configuration([["/bin/sh", "-c", 'printf "ok\\n"; exit 17']]), judged: { passed: { status: 17, line: "ok" }, failed: { status: 1, line: "bad" } } });
     assert.deepEqual(nonzero.report.steps, [{ status: 17, line: "ok" }], "the actual exec process preserves a nonzero status beyond one");

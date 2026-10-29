@@ -3,18 +3,30 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { expect, test } from "vitest";
 import { containerRunner } from "../src/node.ts";
-import { originOf, RunIdentityRefusal } from "../src/index.ts";
-import { digest, world } from "./support.ts";
+import { ClaimTooLargeRefusal, CheckerService, Outcomes, type ServiceOptions } from "../src/index.ts";
+import { Lane, MemoryDurable, T0, newKey, world } from "./support.ts";
 
 // This refusal precedes a run fence and any process/container launch.
-test("an oversized trusted command prefix cannot create an unreadable execution claim", async () => {
+test("an oversized claim has its own refusal name and ends run-lost before any execution fence", async () => {
   const parent = mkdtempSync(join(tmpdir(), "checker-claim-")), root = join(parent, "absent");
   try {
-    const w = world(), origin = originOf(w.notice, { entry: w.job, pinned: digest("a"), activated: { name: "change", state: "active" }, manifest: w.manifest });
-    if ("not" in origin) return expect.fail("The explicit stand-in origin must be a job");
+    const w = world();
     const runner = containerRunner({ root, execCommand: ["/usr/bin/false"], command: ["/usr/bin/false", ...Array.from({ length: 31 }, () => "x".repeat(4096))] });
-    const refusal = await runner.run({ run: "oversized-claim", job: origin.job, configuration: w.config }).then(() => null, error => error);
-    expect(refusal).toBeInstanceOf(RunIdentityRefusal);
+    let refusal: unknown, finds = 0;
+    const run = runner.run.bind(runner), find = runner.find.bind(runner);
+    runner.run = async ask => { try { return await run(ask); } catch (error) { refusal = error; throw error; } };
+    runner.find = (...args) => { finds++; return find(...args); };
+    const logs: Parameters<NonNullable<ServiceOptions["log"]>>[0][] = [];
+    const scopes = new Lane(w), outcomes = new Outcomes(new MemoryDurable());
+    const service = new CheckerService({ signer: newKey().signer, scopes, runner, outcomes,
+      clock: () => T0, random: length => new Uint8Array(length).fill(7), log: event => logs.push(event) });
+    const delivered = await service.deliver(w.notice);
+    expect(refusal).toBeInstanceOf(ClaimTooLargeRefusal);
+    expect((refusal as Error).message).toContain("claim-too-large");
+    expect(delivered).toMatchObject({ did: "submitted", outcome: { act: "check-error", reason: "run-lost" } });
+    expect(logs).toEqual([{ step: "run", event: "claim-too-large" }]);
+    expect(finds).toBe(0);
     expect(existsSync(root)).toBe(false);
+    expect((await outcomes.get(w.fact))?.state).toBe("admitted");
   } finally { rmSync(parent, { recursive: true, force: true }); }
 });

@@ -309,6 +309,19 @@ read-only Gateway. The signing key, token, control records and host files
 stay outside the job. Image, environment, resource enforcement and exact
 checkout are checked before configured steps count. Private durable run
 records recover a terminal result without starting a replacement.
+The service's `recoveryGraceSeconds` defaults to 120. It passes the recovery
+clock and grace to the runner. Missing or corrupt private records wait inside
+that bound. After the bound, an unreadable claim or a corrupt record produces
+`run-lost` and the fixed `record-corrupt` diagnostic with its private path.
+If the runner cannot establish the directory's ownership and age, it still
+waits. A readable claim with unavailable engine state also waits. The service
+keeps its job record,
+and the runner keeps its run directory. Neither recovery nor a lost decision
+starts a replacement or proves physical cancellation.
+The supported ctr profile launches configured steps through the immutable
+helper. It combines the program's output streams and preserves its exit status. The helper leaves launch failures on its own stderr, so they cannot
+supply a completed check result. Trusted Git reads keep their separate stream
+and fixed environment checks.
 [Run a checker in a container](../packages/checkers/README.md) states the
 supported engine, image requirements and operator custody wiring. Source
 code alone is not a deployment or a hosted check result.

@@ -7,10 +7,12 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"io"
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"sync"
@@ -21,6 +23,50 @@ import (
 
 const frameBytes = 512 * 1024
 const requestBytes = 256 * 1024
+
+// Successful exec replaces this helper, preserving the job's process status.
+// Its setup failure restores the separate diagnostic descriptor instead.
+func runStep(argv []string) int {
+	failed := func() int {
+		io.WriteString(os.Stderr, "artroom checker step setup failed\n")
+		return 125
+	}
+	if len(argv) == 0 {
+		return failed()
+	}
+	program, err := exec.LookPath(argv[0])
+	// The untrusted job owns its configured PATH, including a relative entry.
+	// This does not change the trusted tool launcher's fixed environment below.
+	if err != nil && !errors.Is(err, exec.ErrDot) {
+		return failed()
+	}
+	saved, err := syscall.Dup(2)
+	if err != nil {
+		return failed()
+	}
+	syscall.CloseOnExec(saved)
+	if syscall.Dup2(1, 2) != nil {
+		syscall.Close(saved)
+		return failed()
+	}
+	// Lookup does not prove exec: an actual loader/exec failure returns here.
+	syscall.Exec(program, argv, os.Environ())
+	if syscall.Dup2(saved, 2) != nil {
+		syscall.Write(saved, []byte("artroom checker step setup failed\n"))
+		syscall.Close(saved)
+		return 125
+	}
+	syscall.Close(saved)
+	return failed()
+}
+
+func jobStep() {
+	if os.Geteuid() != 65532 {
+		io.WriteString(os.Stderr, "artroom checker step setup failed\n")
+		os.Exit(125)
+	}
+	os.Exit(runStep(os.Args[2:]))
+}
 
 // A separately exec'd static process, never a PID1/stdin RPC. Dynamic loader
 // variables must be absent before the first trusted Git/id/mkdir instruction.
@@ -75,6 +121,10 @@ type frame struct {
 }
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "step" {
+		jobStep()
+		return
+	}
 	if len(os.Args) > 1 && os.Args[1] == "exec" {
 		trustedExec()
 		return

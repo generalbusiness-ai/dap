@@ -523,7 +523,7 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   const invitation = ok(await run(creator, "invite", "@check", "--role", "checker")).lines[1]!.split(": ")[1]!;
   ok(await run(checker, "join", invitation));
   const checkMember = { membership: repository.membership, member: "@check" };
-  const checkConfig = { name: "text", image: containerTest?.image ?? `sha256:${"7".repeat(64)}`, environment: containerTest?.environment ?? [], steps: containerTest ? [["/bin/sh", "-c", 'if [ "$(cat one.md)" = "# One" ]; then printf "ok\\n"; else printf "bad\\n"; exit 1; fi']] : [["check", "text"]], judged: { passed: { status: 0, line: "ok" }, failed: { status: 1, line: "bad" } }, limits: { seconds: 60, outputBytes: 65536 } };
+  const checkConfig = { name: "text", image: containerTest?.image ?? `sha256:${"7".repeat(64)}`, environment: containerTest?.environment ?? [], steps: containerTest ? [["/bin/sh", "-c", 'if [ "$(cat one.md)" = "# One" ]; then printf "ok\\n"; else printf "bad\\n" >&2; exit 1; fi']] : [["check", "text"]], judged: { passed: { status: 0, line: "ok" }, failed: { status: 1, line: "bad" } }, limits: { seconds: 60, outputBytes: 65536 } };
   files["config.json"] = utf8(canonicalize(checkConfig));
   const configuration = valueDigest(CONFIGURATION_DOMAIN, checkConfig);
   ok(await run(creator, "act", "keep-configuration", "--on", "rules", "--set", `digest=${configuration}`, "--set", "name=text", "--value", "config.json"));
@@ -826,7 +826,7 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
       expect((await failedLane.entries()).some(entry => entry.effects.some(effect => effect.effect === "value" && effect.slot === "reason" && effect.value === "required-check-failed"))).toBe(true);
       expect(host.refs.has(failedManifest.values["reservationRef"] as string)).toBe(false);
       expect(runs).toBe(2);
-      const proof = { qualification: "Actual Node production container Runner, CheckerService, native reservation/check/required-check publication; Git host, scheduler, origin-port activation/config adapter and service durability are TEST stand-ins. No deployed checker/provider claim.", image: containerTest.image, passedTree: manifest.values["tree"], failedTree: failedManifest.values["tree"], pass: "passed", fail: "failed", wrongTree: "not-this-job", runs };
+      const proof = { qualification: "Actual Node production container Runner, CheckerService, native reservation/check/required-check publication; Git host, scheduler, origin-port activation/config adapter and service durability are TEST stand-ins. No deployed checker/provider claim.", image: containerTest.image, passedTree: manifest.values["tree"], failedTree: failedManifest.values["tree"], pass: "passed", fail: "failed", failingOutput: "stderr", wrongTree: "not-this-job", runs };
       Object.assign(checkpointMeta ?? {}, { j3Container: proof });
       console.info("TEST-j3-native", JSON.stringify(proof));
     }
