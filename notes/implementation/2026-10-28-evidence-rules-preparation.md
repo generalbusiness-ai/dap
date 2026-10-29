@@ -190,8 +190,18 @@ N4 uses separate pre-rotation jobs for first-deciding claims.
 
 ## Results
 
-External open collection: `/Users/hughpyle/play/artroom-evidence/2026-10-28-evidence-rules`.
-Final manifest binds retained attempts/streams/hashes, including failures.
+External collection: `/Users/hughpyle/play/artroom-evidence/2026-10-28-evidence-rules`.
+Manifest `evidence/2026-10-28-evidence-rules.manifest.json` binds every retained
+file, including all 214 attempts (132 exit 0, 82 exit 1), source snapshots and
+closure metadata. The stdlib audit finds no missing files, integrity issues or
+collector timeouts. Its row points directly to `finalization/audit-terminal.json`
+for argv, cwd and both stream hashes. Audit counts precede closure metadata;
+the final index includes it. Retain the sealed directory at least 30 days after
+landing; removal needs a planner act naming the manifest.
+Seal verified after chmod/readback: 27,220 files, 973,595,305 bytes.
+Root SHA256SUMS: `4eec5e38f4710cb8c4c62a3e3ed1d2e07a3cd5917de764244c477a0e8cff8996`.
+Manifest SHA-256: `f3e3c6cfb6536d3085f35e2815d987addde2fbfb9e501647f3f83e988f4903a1`.
+The complete 4,756,047-byte manifest exceeds soft 40KB guidance; this note does not.
 Generation `bc601`, pin commit `335733`: G17
 `sha256:3d93f5ce32815c5b7038a2cbfb753889dd99638e995cd33e9066411cb74c0deb`;
 historical76pins/40texts exact. Physical
@@ -228,8 +238,12 @@ measurement; typecheck11.644s overlaps Native start. Physical receipts remain se
 
 Regeneration uses `node packages/mcp/scripts/views.mjs` and
 `npm run build --workspace @generalbusiness/dap-page`. The original capture
-`generated-browser-assets-1` called those builders directly. The final
-reproduction receipt will bind their output hashes to the committed modules.
+`generated-browser-assets-1` called those builders directly. At documentation checkpoint `f5031122a9`, `final-document-reproduction-followup-1`
+runs both commands and reproduces the committed bytes (exit 0):
+MCP SHA-256 `56f2c2bf161b111028aed641b957aec51822b24636549c9fc54fc9b660dbe6ad`;
+Page `994fb121a9e83287229d88cc7a3951dd0199252dd6ee39580d352e27b88998ef`.
+Commit-message, link, citation and note checks pass. Citations: 1,813 resolved,
+12,843 unresolved, zero broken; this is not proof of normative conformance.
 
 ### Command receipts
 
@@ -315,6 +329,7 @@ per attempt; failed/overlapping runs are not summed.
 | evidence-lane-validation-1 | f33bae9e65 | 1 | d4395b0aa15b1fd3394dfd94ad882fec42b6241d04c5adbd6c20c0b82f8376ca |
 | evidence-lane-validation-2 | 73c49b9724 | 0 | d18452cffe375f5d3de0efcb8d90876522b04c10a639f6cf5298ff768a6da018 |
 | evidence-reference-generation-1 | 712db468be | 0 | 8df46d1d96c72df0033437e3e126173460987cc600adcbe8d3a5fb557544483e |
+| final-document-reproduction-followup-1 | f5031122a9 | 0 | 8eca6892237627920a55cfb6fdb2db958a806c74e07a1396c3b0d73205c222f3 |
 | final-host-environment-1 | 3713cff17e | 0 | d1b84443fa6b1651e15cf2635381c26ff7c3cd117d405a10723a5f62db4ee06f |
 | forecast-type-repair-3 | 73c49b9724 | 0 | 5bed72e66b0d3c41de9527faf1fcf886cfc7b5458212233c0374e170c084a4f2 |
 | frozen-capture-owning-1 | e27d769ae9 | 0 | ee54b158ae8ac856c7f62a083c5657d5d05ea90073c40e149ca82ec62947e14f |
@@ -452,6 +467,8 @@ per attempt; failed/overlapping runs are not summed.
 | written-plan-platform-types-2 | 2241e2f5ad | 0 | 8e1906f22f3ac7a95ff9fe28fb85bb3e0cdc12b3ff75f3f416de9d1c010998f3 |
 | written-plan-scope-types-1 | 0f2af80fd7 | 0 | fb2b1b20daea8ec6bdc1bf8b7eceb9b3703b9e4ffe7530b18d9218bb23d34976 |
 | written-plan-scope-types-2 | 2241e2f5ad | 0 | fb2b1b20daea8ec6bdc1bf8b7eceb9b3703b9e4ffe7530b18d9218bb23d34976 |
+| finalization/audit-terminal.json | retained data | 0 | 10557bcec6d1471ceb42769d51edb52d9b3827c79b07242673d04bb0853bfdff |
+
 
 ## Open acceptance and limits
 
