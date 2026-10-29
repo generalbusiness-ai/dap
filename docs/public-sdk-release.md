@@ -1,26 +1,23 @@
 # Produce the public SDK
 
 The active eight-package plan contains contract, bytes, derive,
-package-graph, git, platform, client and replay. Request `cd31231e` adds
-Git’s two pure subpaths so platform can declare its actual dependency.
-The updated producer and checker
-have not run at this source delivery. No new staged release, public package
-or consumer acceptance is claimed. The tools build and inspect JavaScript
-and declarations; they do not publish, install application packages,
-configure accounts or deploy a service. Recorded six-package outcomes below
+package-graph, git, platform, client and replay. Git’s two pure subpaths
+provide platform’s checkout and tree proof types. The tools build and
+inspect JavaScript and declarations. They do not publish, install application
+packages, configure accounts or deploy a service. Recorded six-package outcomes below
 remain historical evidence.
 
 The six-package amendment is request `fecf7160fd4a8c4b9219d7713a11036ff48db85e`,
 promise `ffae23e0f56d0a17d773264588f98940f04cd963`. It follows the public
 verifier handoff reported in `008c3cfd35443d23c44ad13a64af867282aee2c8`.
-Its source, capture, producer, checker, browser bundle and gate outcomes are
-unrun at this source delivery. Frozen four-package attempts remain separate.
+Its source, capture, producer, checker, browser bundle and gate outcomes
+were unrun at that delivery. Frozen four-package attempts remain separate.
 
 The source-authoring request is `23e6d5e8e2773f11c2271f86d3c1cbf019dd5cf0`,
 promise `a01fe0506ee046908c7a9d97c18df388223c02a0`, under public-release
 request `7b31f843fac3bcc5f64b0b5caaad72f1f8191082`. Writing the code alone
-establishes no successful build or public consumer. All new checks remain
-unrun at this delivery.
+establishes no successful build or public consumer. Those checks were
+unrun at that delivery.
 
 Run only after the exact producer source and tool view are reviewed and its
 execution is released. Use a clean checkout and a fresh absolute staging
