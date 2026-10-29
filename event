@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f30210407a05864b052c3f0e43f74b5a5010db02","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/evidence-lane-pins.generated.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f51eaf29e574e23e601e01284aaf5c32570cdaef","text":"Merge retired a covered predecessor; the successor is at packages/checkers/src/stage-origin.ts."}
