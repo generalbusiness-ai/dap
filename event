@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9cce4e732302953824ed818638dc06c6554dc19d","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/definitions.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9cfdc22d8dc04e2fd14c46482e9ddf6bf0793a75","text":"Merge retired a covered predecessor; the successor is at package-lock.json."}
