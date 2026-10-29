@@ -147,6 +147,13 @@ unknown dispatch. An authenticated landing fence waits on its original
 pending carrier delivery only when its selected carrier is absent. An
 available selected carrier can proceed within the actual contiguous prefix;
 all published-plan dispatch still requires the complete original set.
+The counted plan operation opens the nonholder cursor in its own outcome.
+A bound delivery cannot open any item, even a nonholder; the failed Native
+published-job run exposed the earlier self-delivery attempt. The cursor's
+base comes from the actual publication birth's retained manifest proof.
+Failed required landing and audit progress clear the branch's `slot` value,
+matching G17's inherited slot migration. A reference effect there was invalid
+and left the genuine failed job's progress pending.
 The 16-effect evidence-admission allowance is unchanged. Inherited push
 and deciding-read budgets keep their own accounting: the ordinary Data
 changes, callback operations and ledger attempt are distinct terms. A

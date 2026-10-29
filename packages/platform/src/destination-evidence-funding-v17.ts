@@ -1,9 +1,9 @@
 /** G17 new-work funding and serial, post-write published checks.
  * A self request opens each holder. Outcomes open only nonholder cursors. */
 import type { Bounds, Digest, Entry, FactRef, FieldValue, PlatformData, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isDigest, isFactRef, isOperationId, isRecord, same, timeMs } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, isDigest, isEntry, isFactRef, isOperationId, isRecord, same, timeMs } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest } from "./evidence.ts";
-import { operationOpening, operationSettled, RuleFault, type Item, type Opening, type Operation, type OutcomeGives, type Own, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView } from "@generalbusiness/dap-derive";
+import { operationSettled, RuleFault, type Item, type Opening, type Operation, type OutcomeGives, type Own, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView } from "@generalbusiness/dap-derive";
 import { claimEvidenceBatchJobV17, obligationChecksV17, readEvidenceBatchV17, readEvidenceBatchWireV17, evidenceBatchWireV17, selectEvidenceBatchV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
 import { certifiedPublicationStateWireV17, certifiedWrittenPlanBudgetV17, CERTIFIED_PUBLICATION_TEXT_BYTES_V17, evidenceCarryingBudgetV17, type CertifiedPublicationStateV17 } from "./destination-budget-v17.ts";
 import { readRulesPolicyObservationV17 } from "./reservation-v17.ts";
@@ -86,7 +86,12 @@ function captured(own: Own, at: ScopeRef, publication: Item, snapshot: Certified
 export function evidenceFundingCaptureV17(given: RuleGiven, publication: Item, snapshot: CertifiedPublicationStateV17): Opening | null {
   const selected = captured(given.own, given.resolved.at, publication, snapshot);
   if (!selected) throw Error("The captured funding policy is unavailable");
-  if (selected.checks.some(check => checkStageV13(check) === "published") && !certifiedWrittenPlanBudgetV17(given.resolved.bounds).admitted)
+  // Forecast identity widths only: this future capture hash is never stored
+  // or used as proof. The actual self-delivery binds its sealed capture.
+  const forecast: EvidenceBatchRecordV17 = { v: 1, publication: selected.ref, operation: selected.operation,
+    capture: { at: given.resolved.at, seq: Number.MAX_SAFE_INTEGER, hash: `sha256:${"f".repeat(64)}` }, ordinal: 0, total: Math.ceil(selected.checks.length / 8),
+    touched: selected.touched, checks: selected.checks.slice(0, 8), policy: selected.view, jobs: [], planAt: null };
+  if (selected.checks.some(check => checkStageV13(check) === "published") && !certifiedWrittenPlanBudgetV17(given.resolved.bounds, forecast).admitted)
     throw Error("The published check plan exceeds its future carrying entry");
   return selected.checks.length ? { owner: "platform:destination@17", kind: EVIDENCE_FUNDING_V17, attempts: 1, for: publication.id } : null;
 }
@@ -320,10 +325,9 @@ function fundingProposal(given: RuleGiven): EvidenceBatchRecordV17 | null {
   const selected = captureAt(given.state, given.own, capture, given.resolved.bounds);
   if (!selected || !carrierPublication(given.state, given.own, selected.ref) || !same(publication, selected.ref)
     || !same(operation, selected.operation) || ordinal >= selected.total) return null;
-  if (selected.checks.some(check => checkStageV13(check) === "published") && !certifiedWrittenPlanBudgetV17(given.resolved.bounds).admitted) return null;
   const batch = readEvidenceBatchV17({ v: 1, publication, operation, capture, ordinal, total: selected.total,
     touched: selected.touched, checks: selected.checks.slice(ordinal * 8, ordinal * 8 + 8), policy: selected.view, jobs: [], planAt: null });
-  if (!batch) return null;
+  if (!batch || selected.checks.some(check => checkStageV13(check) === "published") && !certifiedWrittenPlanBudgetV17(given.resolved.bounds, batch).admitted) return null;
   const preview: Entry = { v: 1, at: given.resolved.at, seq: given.resolved.self, prev: null, time: given.time, clamped: false, epoch: 0,
     input: { ...given.input, message: given.input.message, decision: "applied" }, uses: [], prepared: [], effects: [{ effect: "open", item: given.resolved.self, type: "evidence-batch", state: "funded" },
       { effect: "value", item: given.resolved.self, slot: "batch", value: evidenceBatchWireV17(batch) }], sends: [] };
@@ -410,7 +414,8 @@ function appendWrittenPlan(given: RuleGiven, result: OutcomeGives): OutcomeGives
       effects.push({ effect: "value", item: receipt.id, slot: "evidenceWrittenAt", value: given.resolved.self });
   }
   const plan = writtenPlan(given, result);
-  if (plan && !certifiedWrittenPlanBudgetV17(given.resolved.bounds).admitted) throw Error("The published check plan exceeds its future carrying entry");
+  const batch = plan && batchValue(given.state.item(plan.holder)!);
+  if (plan && (!batch || !certifiedWrittenPlanBudgetV17(given.resolved.bounds, batch).admitted)) throw Error("The published check plan exceeds its future carrying entry");
   return plan ? { ...result,
     effects: [...effects, { effect: "value", item: plan.holder, slot: "planOpenedAt", value: given.resolved.self }],
     opens: [...result.opens, { owner: "platform:destination@17", kind: EVIDENCE_PLAN_V17, attempts: 1, for: plan.holder }] } : { ...result, effects };
@@ -451,48 +456,34 @@ function planOpening(state: StateView, own: Own, operation: Operation) {
 export function destinationEvidencePlanPending(state: StateView, own: Own, operation: Operation): { written: FactRef } | null {
   try { const source = planOpening(state, own, operation); return source ? { written: source.written } : null; } catch { return null; }
 }
-function planProposal(given: RuleGiven): { plan: PublishedPlanV17; accounts: NonNullable<ReturnType<typeof completeRows>>; holder: number } | null {
-  if (given.input.type !== "delivery" || given.input.message.class !== "request" || given.input.message.type !== "tell" || !same(given.input.from.at, given.resolved.at)) return null;
-  const p = localFact(given, "publication"), operation = localFact(given, "operation"), r = localFact(given, "receipt"), w = localFact(given, "written"), m = localFact(given, "manifest");
-  if (!p || !operation || !r || !w || !m) return null;
-  if (!same(p.at, given.resolved.at) || !same(r.at, given.resolved.at) || !same(w.at, given.resolved.at)) return null;
-  const item = given.state.item(p.seq), receiptItem = given.state.item(r.seq), source = given.own(given.input.from.seq), writtenEntry = given.own(w.seq), birth = given.own(0);
-  if (!item || item.type !== "publication" || !receiptItem || receiptItem.type !== "receipt" || receiptItem.state !== "written"
-    || !same(item.refs["operation"], operation) || !same(item.refs["manifest"], m) || (receiptItem.refs["publication"] ?? receiptItem.values["publication"]) !== item.id
-    || receiptItem.values["commit"] !== item.values["integration"] || !same(factOf(given.own, given.resolved.at, p.seq), p) || !same(factOf(given.own, given.resolved.at, r.seq), r)
-    || !source || !same(factOf(given.own, given.resolved.at, source.entry.seq), given.input.from) || source.entry.input.type !== "outcome" || source.entry.input.owner !== "platform:destination@17"
-    || source.entry.input.kind !== EVIDENCE_PLAN_V17 || source.entry.input.result !== "confirmed" || source.entry.input.evidence.basis !== "own-answer"
-    || !isRecord(source.entry.input.evidence.body) || Object.keys(source.entry.input.evidence.body).join() !== "written" || !same(source.entry.input.evidence.body["written"], w)
-    || !writtenEntry || !same(factOf(given.own, given.resolved.at, w.seq), w) || writtenEntry.entry.input.type !== "outcome" || writtenEntry.entry.input.owner !== "platform:destination@17"
-    || !["receipt", "read"].includes(writtenEntry.entry.input.kind) || writtenEntry.entry.input.result !== "confirmed"
-    || !writtenEntry.entry.effects.some(effect => effect.effect === "state" && effect.item === r.seq && effect.state === "written")
-    || !birth || birth.entry.input.type !== "genesis" || birth.entry.input.seed.definition !== "platform:destination@17") return null;
-  const retained = source.entry.sends.find(send => send.n === (given.input.type === "delivery" ? given.input.n : -1));
-  if (!retained || !same(retained.to, given.resolved.at) || !same(retained.message, given.input.message) || retained.message.class !== "request" || retained.message.type !== "tell" || !isRecord(retained.message.body)
-    || retained.message.body["message"] !== "evidence-plan-open" || !isRecord(retained.message.body["fields"])) return null;
-  const fields = retained.message.body["fields"];
-  if (Object.keys(fields).sort().join() !== "manifest,operation,publication,receipt,written" || !same(fields["publication"], p) || !same(fields["receipt"], r)
-    || !same(fields["operation"], operation) || !same(fields["manifest"], m) || !same(fields["written"], w)) return null;
-  const accounts = completeRows(given.state, item), rows = publishedRows(given.state, item), holder = given.resolved.subjects.get("also.batch");
-  if (!accounts || !rows?.length || accounts.some(row => row.record.planAt !== null || !evidenceFundedBatchV17(given.state, given.own, row.item, given.resolved.bounds))
-    || !holder || holder.id !== accounts[0]!.item.id) return null;
-  const original = given.state.operation(source.entry.input.operation), opening = original && planOpening(given.state, given.own, original);
-  if (!original || !opening || original.for !== holder.id || !same(opening.written, w) || !same(opening.receipt, r)) return null;
-  const manifestEntry = given.uses.find(use => same(use.fact, m))?.entry, base = manifestEntry?.input.type === "act" ? manifestEntry.input.signed.intent.fields["base"] : null;
-  if (!isObjectId(base)) return null;
-  return { plan: { v: 1, publication: p, receipt: r, written: w.seq, operation: operation as FactRef, base, cursor: 0, total: rows.length }, accounts, holder: holder.id };
+/** The original reserve already fetched this exact manifest. Read that
+ * retained fact through its immutable local birth use, without a new port
+ * or a caller-provided base. The birth remains held by the plan's floor. */
+function publishedBase(given: RuleGiven, publication: FactRef, manifest: FactRef): string {
+  const birth = given.own(publication.seq), uses = birth?.entry.uses.filter(use => same(use.fact, manifest)) ?? [];
+  const source = uses.length === 1 ? given.own.retained?.(uses[0]!) : null;
+  if (!birth || !same(factOf(given.own, given.resolved.at, publication.seq), publication) || !source || !isEntry(source)
+    || !same(source.at, manifest.at) || source.seq !== manifest.seq || entryHash(source) !== manifest.hash
+    || source.input.type !== "act" || !["propose-manifest", "propose-file"].includes(source.input.signed.intent.kind)
+    || !isObjectId(source.input.signed.intent.fields["base"])) throw new RuleFault("The published plan's retained manifest is unavailable");
+  return source.input.signed.intent.fields["base"];
 }
-function planEffects(given: RuleGiven, value: NonNullable<ReturnType<typeof planProposal>>): readonly RuleEffect[] {
+function planOutcome(given: RuleGiven, operation: Operation): OutcomeGives {
+  if (given.input.type !== "outcome" || given.input.result !== "confirmed") return { effects: [], opens: [], sends: [] };
+  const source = planOpening(given.state, given.own, operation);
+  const accounts = source && completeRows(given.state, source.publication), rows = source && publishedRows(given.state, source.publication);
+  if (!source || !accounts || !rows?.length || operation.for !== accounts[0]!.item.id
+    || accounts.some(row => !evidenceFundedBatchV17(given.state, given.own, row.item, given.resolved.bounds)))
+    throw new RuleFault("The original published plan carriers are unavailable");
+  if (accounts.some(row => row.record.planAt !== null)) return { effects: [], opens: [], sends: [] };
+  const plan: PublishedPlanV17 = { v: 1, publication: source.batch.publication, receipt: source.receipt, written: source.written.seq,
+    operation: source.batch.operation, base: publishedBase(given, source.batch.publication, source.manifest), cursor: 0, total: rows.length };
   const effects: RuleEffect[] = [{ effect: "open", item: given.resolved.self, type: "published-plan", state: "pending" },
-    { effect: "value", item: given.resolved.self, slot: "plan", value: planWire(value.plan) },
-    ...value.accounts.map(row => ({ effect: "value" as const, item: row.item.id, slot: "batch", value: evidenceBatchWireV17({ ...row.record, planAt: given.resolved.self }) }))];
-  const firstPublished = value.accounts.find(row => row.record.checks.some(check => checkStageV13(check) === "published"));
-  if (!firstPublished) throw Error("The published plan has no check account");
-  for (const effect of operationOpening(0, { owner: "platform:destination@17", kind: PUBLISHED_CHECKS_V17, attempts: 1, for: firstPublished.item.id })) {
-    if (effect.effect !== "operation" && effect.effect !== "attempt") throw Error("An operation opening returned an unsupported effect");
-    effects.push(effect);
-  }
-  return effects;
+    { effect: "value", item: given.resolved.self, slot: "plan", value: planWire(plan) },
+    ...accounts.map(row => ({ effect: "value" as const, item: row.item.id, slot: "batch", value: evidenceBatchWireV17({ ...row.record, planAt: given.resolved.self }) }))];
+  const opens: Opening[] = [{ owner: "platform:destination@17", kind: PUBLISHED_CHECKS_V17, attempts: 1, for: rows[0]!.item.id }];
+  if (!evidenceCarryingBudgetV17(given, effects, opens, [], []).admitted) throw new RuleFault("The published plan carrying entry is unavailable");
+  return { effects, opens, sends: [] };
 }
 export function fundingData(base: PlatformData): PlatformData {
   const receives = { ...base.receives };
@@ -508,14 +499,6 @@ export function fundingData(base: PlatformData): PlatformData {
     fields: { publication: { type: "fact", kind: ["reserve"], under: "platform:destination", required: true }, operation: { type: "fact", kind: ["merge"], under: "change", required: true },
       capture: { type: "fact", kind: ["platform:destination@17:judge", "platform:destination@17:read"], under: "platform:destination", required: true }, ordinal: { type: "int", min: 0, max: 3, required: true } },
     guards: [{ code: "evidence-fund-v17", row: "E5" }], effects: [{ code: "evidence-fund-open-v17", row: "E5", most: { effects: 16, operations: [EVIDENCE_PLAN_V17] } }], sends: [{ code: "evidence-funding-ready-v17", row: "E5", result: {} }], attention: [] };
-  receives["evidence-plan-open"] = { message: "evidence-plan-open", class: "tell", from: { kind: "destination", under: "platform:destination" }, opens: null,
-    also: { batch: { item: "evidence-batch", index: "operation", key: "operation", code: "evidence-plan-batch-v17", row: "E5" } },
-    bound: { of: "also.batch", where: [{ equals: { a: { field: "operation" }, b: { slot: "operation", of: "also.batch" } } }] },
-    fields: { publication: { type: "fact", kind: ["reserve"], under: "platform:destination", required: true }, operation: { type: "fact", kind: ["merge"], under: "change", required: true },
-      receipt: { type: "fact", kind: ["platform:destination@17:push", "platform:destination@17:read"], under: "platform:destination", required: true },
-      written: { type: "fact", kind: ["platform:destination@17:receipt", "platform:destination@17:read"], under: "platform:destination", required: true },
-      manifest: { type: "fact", kind: ["propose-manifest", "propose-file"], under: "change", required: true } },
-    guards: [{ code: "evidence-plan-v17", row: "E5" }], effects: [{ code: "evidence-plan-open-v17", row: "E5", most: { effects: 8, opens: "published-plan", operations: [PUBLISHED_CHECKS_V17] } }], sends: [], attention: [] };
   const outcomes = { ...base.outcomes };
   if (outcomes["reservation-stage"]) outcomes["reservation-stage"] = { ...outcomes["reservation-stage"]!, most: { ...outcomes["reservation-stage"]!.most, effects: 16 } };
   for (const name of ["judge", "push", "read", "receipt"]) {
@@ -530,7 +513,7 @@ export function fundingData(base: PlatformData): PlatformData {
     publication: { ...publication, holds: { ...publication.holds!, operations: { ...publication.holds?.operations, [EVIDENCE_FUNDING_V17]: 1 }, decisions: publicationDecisions, requests: (publication.holds?.requests ?? 0) + 5 } },
     "evidence-batch": { many: true, max: 8192, initial: "funded", states: { funded: { final: false } }, parties: {},
       refs: { operation: { fixed: true, required: true, to: { type: "fact", kind: ["merge"], under: "change" } }, lane: { fixed: true, required: true, to: { type: "scope", kind: "lane" } } },
-      indexes: ["operation", "policyKey"], holds: { operations: { "evidence-admit": 8, "evidence-result": 8, "evidence-notice": 8, "evidence-progress": 16, "evidence-audit": 8, [EVIDENCE_PLAN_V17]: 1, "published-checks": 8 }, requests: 59, items: 25, decisions: { "check-fence": 8, checked: 8, "evidence-plan-open": 1 } },
+      indexes: ["operation", "policyKey"], holds: { operations: { "evidence-admit": 8, "evidence-result": 8, "evidence-notice": 8, "evidence-progress": 16, "evidence-audit": 8, [EVIDENCE_PLAN_V17]: 1, "published-checks": 8 }, requests: 58, items: 25, decisions: { "check-fence": 8, checked: 8 } },
       values: { batch: { fixed: false, required: true, of: { type: "code", code: "evidence-batch-record-v17", row: "E5" } },
         capacity: { fixed: false, required: true, of: { type: "code", code: "evidence-capacity-anchor-v17", row: "E5" } }, policyKey: { fixed: true, required: true, of: { type: "digest" } },
         planOpenedAt: { fixed: false, required: false, of: { type: "int", min: 0, max: Number.MAX_SAFE_INTEGER } } } },
@@ -538,7 +521,7 @@ export function fundingData(base: PlatformData): PlatformData {
       values: { plan: { fixed: false, required: true, of: { type: "code", code: "evidence-published-plan-v17", row: "E5" } } } },
   }, outcomes: { ...outcomes,
     [EVIDENCE_FUNDING_V17]: { code: "evidence-funding-outcome-v17", row: "E5", attempts: 1, origin: "rule", most: { effects: 0, operations: [] }, send: { code: "evidence-funding-dispatch-v17", row: "E5", once: true, result: {} } },
-    [EVIDENCE_PLAN_V17]: { code: "evidence-plan-outcome-v17", row: "E5", attempts: 1, origin: "rule", most: { effects: 0, operations: [] }, send: { code: "evidence-plan-dispatch-v17", row: "E5", once: true, result: {} } },
+    [EVIDENCE_PLAN_V17]: { code: "evidence-plan-outcome-v17", row: "E5", attempts: 1, origin: "rule", most: { effects: 5, opens: "published-plan", operations: [PUBLISHED_CHECKS_V17] } },
     [PUBLISHED_CHECKS_V17]: { code: "evidence-published-checks-v17", row: "E5", attempts: 1, origin: "rule", most: { effects: 2, operations: [PUBLISHED_CHECKS_V17] }, send: { code: "evidence-published-dispatch-v17", row: "E5", once: true, result: {} } } } };
 }
 export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
@@ -605,19 +588,6 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
   } };
   next["evidence-batch-record-v17"] = { place: "type", run: (_given, value) => readEvidenceBatchWireV17(value) !== null };
   next["evidence-published-plan-v17"] = { place: "type", run: (_given, value) => readPlanWire(value) !== null };
-  next["evidence-plan-batch-v17"] = { place: "also", bind: items => {
-    const rows = items.map(item => ({ id: item.id, record: batchValue(item) })).sort((a, b) => (a.record?.ordinal ?? -1) - (b.record?.ordinal ?? -1));
-    if (!rows.length || rows.some((row, n) => !row.record || row.record.ordinal !== n || row.record.total !== rows.length)) return null;
-    return rows[0]?.id ?? null;
-  } };
-  next["evidence-plan-v17"] = { place: "guard", refusals: ["published-plan-unavailable"], run: given => {
-    const value = planProposal(given);
-    return value && evidenceCarryingBudgetV17(given, planEffects(given, value), [], [], []).admitted ? { holds: true } : { holds: false, name: "published-plan-unavailable" };
-  } };
-  next["evidence-plan-open-v17"] = { place: "effect", most: 8, run: given => {
-    const value = planProposal(given); if (!value) throw Error("A published plan lost its recorded written source");
-    return planEffects(given, value);
-  } };
   next["evidence-batch-select-v17"] = { place: "also", bind: (items, fields) => {
     const job = fields["job"], name = fields["name"];
     if (!isFactRef(job)) return null;
@@ -683,21 +653,13 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
     return source ? fundRequest(given.resolved.at, { publication: source.ref, operation: source.operation, capture: source.capture }, 0) : null;
   } };
   next["evidence-plan-outcome-v17"] = { place: "outcome", rules: { selects: false, read: false, retries: () => false,
-    most: { effects: 0, requests: 1, operations: 0 }, origin: (_given, operation) => Number(operation.id.split(":")[0]), unknown: () => ({}),
+    most: { effects: 8, requests: 0, operations: 1 }, origin: (_given, operation) => Number(operation.id.split(":")[0]), unknown: () => ({}),
     wellFormed: (result, evidence, given) => {
       if (result !== "confirmed") return isRecord(evidence.body) && Object.keys(evidence.body).length === 0;
       const operation = given.input.type === "outcome" ? given.state.operation(given.input.operation) : null;
       const pending = operation && destinationEvidencePlanPending(given.state, given.own, operation);
       return evidence.basis === "own-answer" && isRecord(evidence.body) && Object.keys(evidence.body).join() === "written" && !!pending && same(evidence.body["written"], pending.written);
-    }, derives: () => ({ effects: [], sends: [], opens: [] }) } };
-  next["evidence-plan-dispatch-v17"] = { place: "send", run: given => {
-    if (given.input.type !== "outcome" || given.input.result !== "confirmed") return null;
-    const operation = given.state.operation(given.input.operation), source = operation && planOpening(given.state, given.own, operation);
-    if (!source || !evidenceFundedBatchV17(given.state, given.own, given.state.item(operation!.for!)!, given.resolved.bounds)) return null;
-    return { to: given.resolved.at, message: { class: "request", type: "tell", body: { message: "evidence-plan-open", fields: {
-      publication: source.batch.publication, operation: source.batch.operation, receipt: source.receipt, written: source.written, manifest: source.manifest,
-    } } } };
-  } };
+    }, derives: (given, operation) => planOutcome(given, operation) } };
   const published = (given: RuleGiven, operation: Operation): OutcomeGives => {
     const current = planFor(given.state, given.own, operation);
     if (!current || given.input.type !== "outcome" || given.input.result !== "confirmed") return { effects: [], sends: [], opens: [] };
@@ -769,8 +731,12 @@ export function* evidenceFundingFloorReferencesV17(snapshot: StateSnapshot, own:
       const plan = readPlanWire(item.values["plan"]); if (!plan) throw Error("A retained published plan is malformed");
       positions.add(item.id); fact(plan.publication); fact(plan.receipt); positions.add(plan.written);
       const opened = own(item.id)?.entry;
-      if (!opened || opened.input.type !== "delivery" || opened.input.message.class !== "request") throw Error("A published plan has no actual dispatch source");
-      fact(opened.input.from);
+      const written = own(plan.written);
+      if (!written || !opened || opened.input.type !== "outcome" || opened.input.owner !== "platform:destination@17" || opened.input.kind !== EVIDENCE_PLAN_V17
+        || opened.input.result !== "confirmed" || !isOperationId(opened.input.operation) || opened.input.evidence.basis !== "own-answer"
+        || !isRecord(opened.input.evidence.body) || Object.keys(opened.input.evidence.body).join() !== "written"
+        || !same(opened.input.evidence.body["written"], { at, seq: plan.written, hash: written.hash })) throw Error("A published plan has no actual outcome source");
+      positions.add(Number(opened.input.operation.split(":")[0]));
     }
   }
   for (const seq of positions) {

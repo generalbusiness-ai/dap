@@ -5,7 +5,7 @@ import { canonicalize, isDigest, isFactRef, isKeyId, isMemberRef, isRecord, memb
 import { amountMath, naturalAmount, NOTHING, observationBytes, operationOpening, type Opening, type OperationRules, type RuleEffect, type RuleGiven, type RuleRequest } from '@generalbusiness/dap-derive';
 import { isObjectId } from './reservation.ts';
 import { readRulesPolicyObservationV17, requiredChecksV17, type ReservationPolicyInputV17 } from './reservation-v17.ts';
-import type { EvidenceBatchRecordV17 } from './evidence-batch-v17.ts';
+import { EVIDENCE_BATCH_JOBS_V17, EVIDENCE_BATCH_ACCOUNTS_V17, evidenceBatchWireV17, obligationChecksV17, readEvidenceBatchV17, type EvidenceBatchRecordV17 } from './evidence-batch-v17.ts';
 import type { RulesCheckV13 } from './rules-policy-v13.ts';
 import { RULES_POLICY_VALUE_V13 } from './rules-policy-v13.ts';
 import { RULES_TREE_PROOF } from './rules-policy-tree.ts';
@@ -123,10 +123,25 @@ const requestResult = { n: MAX, to: SCOPE, message: { class: 'result', of: { fro
 
 /** Reachable written-receipt closures, quoted before any published work.
  * These are forecast shells, never recorded facts. Receipt's token cleanup
- * and staged-ref cleanup are independent of the separate plan dispatch.
+ * and staged-ref cleanup are independent of the direct plan outcome.
  * Each shell carries the full allowed FactUse count; full foreign entries
  * remain in holder custody, rather than being copied into the Entry. */
-export function certifiedWrittenPlanBudgetV17(bounds: Bounds) {
+export function certifiedWrittenPlanBudgetV17(bounds: Bounds, captured: EvidenceBatchRecordV17) {
+  try {
+  const batch = readEvidenceBatchV17(captured), selected = batch && obligationChecksV17(batch.policy.policy, batch.touched);
+  if (!batch || !selected?.ok || !selected.checks.some(check => check.stage === 'published')) return { admitted: false, entryBytes: 0, effects: 0, variants: [] };
+  const total = Math.ceil(selected.checks.length / EVIDENCE_BATCH_JOBS_V17);
+  if (total < 1 || total > EVIDENCE_BATCH_ACCOUNTS_V17 || total !== batch.total) return { admitted: false, entryBytes: 0, effects: 0, variants: [] };
+  const futureBatches = Array.from({ length: total }, (_, ordinal) => {
+    const checks = selected.checks.slice(ordinal * EVIDENCE_BATCH_JOBS_V17, (ordinal + 1) * EVIDENCE_BATCH_JOBS_V17);
+    const longest = [...checks].sort((a, b) => bytes(b.name) - bytes(a.name))[0]!;
+    return { ...batch, ordinal, checks, planAt: MAX, jobs: Array.from({ length: EVIDENCE_BATCH_JOBS_V17 }, (_, n) => ({
+      name: checks[n]?.name ?? longest.name, job: { at: batch.operation.at, seq: MAX - n, hash: HASH },
+    })) };
+  });
+  const planValue = evidenceWireV17({ v: 1, publication: batch.publication, operation: batch.operation,
+    receipt: { ...FACT, at: batch.publication.at }, written: MAX, base: 'f'.repeat(64), cursor: 0,
+    total: selected.checks.filter(check => check.stage === 'published').length }, 196608);
   const uses = bounds.usesPerEntry;
   if (!Number.isSafeInteger(uses) || uses < 0) return { admitted: false, entryBytes: 0, effects: 0, variants: [] };
   const attempt: Effect = { effect: 'attempt', operation: OPERATION, attempt: MAX, result: 'confirmed', selected: false };
@@ -179,10 +194,12 @@ export function certifiedWrittenPlanBudgetV17(bounds: Bounds) {
       // Read declares the complete Rules/member/key/holder cohort, including
       // the property, array and row separators even on this receipt branch.
       observed: readObserved, ownerEffects: 17, ordinaryEffects: 16 },
-    { name: 'evidence-plan', entry: shell('evidence-plan', { written: FACT }, [], [{ n: MAX, to: SCOPE,
-      message: { class: 'request', type: 'tell', body: { message: 'evidence-plan-open', fields: {
-        publication: FACT, operation: FACT, receipt: FACT, written: FACT, manifest: FACT,
-      } } } }]), observed: 0, ownerEffects: 0, ordinaryEffects: 0 },
+    { name: 'evidence-plan', entry: shell('evidence-plan', { written: FACT }, [
+      { effect: 'open', item: MAX, type: 'published-plan', state: 'pending' },
+      { effect: 'value', item: MAX, slot: 'plan', value: planValue },
+      ...futureBatches.map((row, n): Effect => ({ effect: 'value', item: MAX - n - 1, slot: 'batch', value: evidenceBatchWireV17(row) })),
+      ...opening(0, 'published-checks', 1),
+    ], []), observed: 0, ownerEffects: 8, ordinaryEffects: 5 },
   ].map(variant => {
     // An observed property is only valid with nonempty rows. The bare shell
     // omits it; quote its syntax separately from the full admitted cohort.
@@ -200,6 +217,7 @@ export function certifiedWrittenPlanBudgetV17(bounds: Bounds) {
       && variant.entry.effects.filter(effect => !['attempt', 'operation', 'open'].includes(effect.effect)).length <= variant.ordinaryEffects
       && variant.entry.sends.length <= bounds.sendsPerEntry),
     entryBytes: Math.max(...variants.map(variant => variant.entryBytes)), effects: Math.max(...variants.map(variant => variant.effects)), variants };
+  } catch { return { admitted: false, entryBytes: 0, effects: 0, variants: [] }; }
 }
 
 /** A funded check-fence is a bound delivery: one existing batch claim,

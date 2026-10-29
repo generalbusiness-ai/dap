@@ -4,6 +4,7 @@ import { canonicalize, isEntry, isFieldValue, signIntent, utf8 } from "@generalb
 import { observationBytes, valueDigest, type Item, type RuleGiven } from "@generalbusiness/dap-derive";
 import { d, grantOf, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { evidenceDestinationProfileV17, evidencePolicyV17 } from "../src/destination-evidence-v17.ts";
+import { evidenceBatchWireV17, readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "../src/evidence-batch-v17.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
 import { rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
 import { CERTIFIED_PUBLICATION_TEXT_BYTES_V17, certifiedCaptureBudgetV17, certifiedPublicationBudgetV17, certifiedPublicationStateV17,
@@ -88,10 +89,22 @@ test("carrying act input uses its actual grant authority and presented facts, wi
 });
 
 
-test("published written callbacks and the separate plan dispatch fit before push, with full carrying syntax", () => {
+function planBatch(label = "wire"): EvidenceBatchRecordV17 {
+  const policy = rulesPolicyProposalV13({ approvals: 1, ownerMayReview: false, roomService: null, labels: [label],
+    checks: Array.from({ length: 32 }, (_, n) => ({ name: `p${String(n).padStart(2, "0")}`, configuration: d("b"), required: true, checker: keys.una.member, stage: "published" })),
+    extents: [{ name: "rules", patterns: [...RULES_PATTERNS], approvals: 1, approver: "change.review", checks: [], class: "authority" },
+      { name: "source", patterns: [], approvals: 1, approver: "change.review", checks: [], class: "content" }] });
+  if (!policy.ok) throw Error("The SCRIPTED full published policy must decode");
+  return { v: 1, publication: fact(10, destination), operation: fact(8), capture: fact(20, destination), ordinal: 0, total: 4,
+    touched: ["source"], checks: policy.policy.checks.slice(0, 8), jobs: [], planAt: null,
+    policy: { rules, head: { seq: 3, hash: d("c") }, revision: 3, proposal: policy.digest, policy: policy.policy,
+      certificate: { request: fact(1, destination), certificate: fact(2, destination), proof: d("b"), commit: "a".repeat(40) }, serviceGeneration: { rules, seq: 0 } } };
+}
+
+test("published written callbacks and the direct plan outcome fit their frozen-record forecasts", () => {
   // SCRIPTED maximum future entries. Native receipt/read dispatch and
   // original capture authority are exercised by the separate real journey.
-  const measured = certifiedWrittenPlanBudgetV17(PROPOSED_BOUNDS);
+  const batch = planBatch(), measured = certifiedWrittenPlanBudgetV17(PROPOSED_BOUNDS, batch);
   expect(measured.admitted).toBe(true);
   expect(measured.effects).toBe(18);
   for (const variant of measured.variants) {
@@ -123,12 +136,22 @@ test("published written callbacks and the separate plan dispatch fit before push
     + utf8(canonicalize({ ...read.entry.input, observed: [] })).length - utf8(canonicalize(read.entry.input)).length);
   for (const variant of measured.variants) expect(Object.hasOwn(variant.entry.input, "observed")).toBe(false);
   const dispatch = measured.variants.find(variant => variant.name === "evidence-plan")!;
-  expect(dispatch.effects).toBe(1);
-  expect(dispatch.entry.sends).toHaveLength(1);
-  expect(certifiedWrittenPlanBudgetV17({ ...PROPOSED_BOUNDS, entryBytes: measured.entryBytes }).admitted).toBe(true);
-  expect(certifiedWrittenPlanBudgetV17({ ...PROPOSED_BOUNDS, entryBytes: measured.entryBytes - 1 }).admitted).toBe(false);
-  expect(certifiedWrittenPlanBudgetV17({ ...PROPOSED_BOUNDS, derivedEffects: 10 }).admitted).toBe(false);
-  expect(certifiedWrittenPlanBudgetV17({ ...PROPOSED_BOUNDS, sendsPerEntry: 0 }).admitted).toBe(false);
+  expect(dispatch.effects).toBe(9);
+  expect(dispatch.entry.sends).toEqual([]);
+  expect(dispatch.entry.effects.filter(effect => effect.effect === "open")).toEqual([{ effect: "open", item: Number.MAX_SAFE_INTEGER, type: "published-plan", state: "pending" }]);
+  const rewritten = dispatch.entry.effects.flatMap(effect => effect.effect === "value" && effect.slot === "batch" ? [readEvidenceBatchWireV17(effect.value)] : []);
+  expect(rewritten).toHaveLength(4);
+  for (const [ordinal, record] of rewritten.entries()) {
+    expect(record?.ordinal).toBe(ordinal); expect(record?.planAt).toBe(Number.MAX_SAFE_INTEGER); expect(record?.jobs).toHaveLength(8);
+    expect(record?.policy).toEqual(batch.policy);
+  }
+  const escaped = certifiedWrittenPlanBudgetV17(PROPOSED_BOUNDS, planBatch("\\".repeat(16))).variants.find(variant => variant.name === "evidence-plan")!;
+  expect(escaped.entryBytes).toBeGreaterThan(dispatch.entryBytes);
+  expect(evidenceBatchWireV17(batch)).toContain('"planAt":null');
+  expect(certifiedWrittenPlanBudgetV17({ ...PROPOSED_BOUNDS, entryBytes: measured.entryBytes }, batch).admitted).toBe(true);
+  expect(certifiedWrittenPlanBudgetV17({ ...PROPOSED_BOUNDS, entryBytes: measured.entryBytes - 1 }, batch).admitted).toBe(false);
+  expect(certifiedWrittenPlanBudgetV17({ ...PROPOSED_BOUNDS, derivedEffects: 10 }, batch).admitted).toBe(false);
+  expect(certifiedWrittenPlanBudgetV17({ ...PROPOSED_BOUNDS, sendsPerEntry: 0 }, batch).admitted).toBe(false);
 });
 
 

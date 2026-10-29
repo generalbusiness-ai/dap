@@ -1035,7 +1035,7 @@ function landingEffects(given: RuleGiven, record: EvidenceJobRecordV17): Outcome
     const branch = branchOf(given.state); if (!branch) throw Error("The publication branch is unavailable");
     return { effects: [{ effect: "state", item: publication.id, state: "cleanup-aborted" },
       { effect: "value", item: publication.id, slot: "reason", value: isAudit ? "audit-disagrees" : "required-check-failed" },
-      { effect: "ref", item: branch.id, slot: "slot", to: null }], sends: [], opens: [
+      { effect: "value", item: branch.id, slot: "slot", value: null }], sends: [], opens: [
         { owner: "platform:destination@17", kind: "reservation-delete", attempts: 3, for: publication.id }, openingV17("mint", publication.id),
       ] };
   }
