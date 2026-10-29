@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:66602c4ce321ae3f334e3a670b9900b7ddffe434","text":"Merge retired a covered predecessor; the successor is at packages/checkers/README.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6d5c6ae51effccde0ae8d67657d46f5ccac6dad3","text":"Merge retired a covered predecessor; the successor is at packages/checkers/runner/relay.go."}
