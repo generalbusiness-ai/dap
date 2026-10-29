@@ -24,9 +24,10 @@ import { legacySettingsKey, pageKeyStore } from "./browser-key-store.ts";
 import { migratePageOperations } from "./page-key-migration.ts";
 import { connectInvitation, originalConnection, creatorConnectionFiles, type CreatorBinding } from "./connection-custody.ts";
 import { originalStart, startRoom, type StartedRoom } from "./start-custody.ts";
-import type { Answer, FieldValue, MemberRef, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, isKeyId, isScopeRef, unb64url } from "@generalbusiness/dap-bytes";
-import { act, actAssociation, actsOn, issueCreation, fieldValue, listLanes, loadChange, loadIssue, loadRules, roomInitialization, initializationStillCurrent, openRoom, placeOf, sessionKey, siteAddress, type Acted, type Place, type Room, type Session } from "./data.ts";
+import type { Answer, FieldValue, Head, MemberRef, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
+import { b64url, canonicalize, isKeyId, isScopeId, isScopeRef, unb64url } from "@generalbusiness/dap-bytes";
+import { act, actAssociation, actsOn, issueCreation, fieldValue, listLanes, loadChange, loadIssue, loadRules, pageObservationSource, roomInitialization, initializationStillCurrent, openRoom, placeOf, sessionKey, siteAddress, type Acted, type Place, type Room, type Session } from "./data.ts";
+import { PageObservation, pollingInterval } from "./page-observation.ts";
 import { bindDisclosures, openDialog, releaseDialog } from "./popups.ts";
 import { actsPanel, answerLine, nonacceptedAnswerText, changeScreen, failureScreen, h, icon, whoLine, issueScreen, roomScreen, rulesScreen } from "./view.ts";
 import { initializationMessage, RoomOpening, ScopeSending, changeActions, issueActions, roomContext, routeOf, type Destination } from "./shell.ts";
@@ -45,10 +46,11 @@ const KEPT = "artroom-page";
 // This owner covers rendering, workbench submissions/source loads and native
 // creation-follow reads. Entry enrollment/connection and clipboard handlers
 // are not a whole-page shutdown contract.
-const workbenchWork = new WorkbenchWork(() => { drawing++; cancelCreationFollow(); });
+const pageObservation = new PageObservation();
+const workbenchWork = new WorkbenchWork(() => { drawing++; cancelCreationFollow(); pageObservation.cancel(); });
 export const workbenchLifecycle = {
-  idle: () => workbenchWork.idle(),
-  retire: () => workbenchWork.retire(),
+  idle: async () => { await workbenchWork.idle(); await pageObservation.idle(); await workbenchWork.idle(); },
+  retire: async () => { await Promise.all([workbenchWork.retire(), pageObservation.retire()]); },
 };
 function startWorkbench(start: () => Promise<void>): Promise<void> {
   if (!workbenchWork.active) return Promise.resolve();
@@ -66,7 +68,7 @@ let connectionBusy = false;
 /** What this browser keeps: the room (no secret of it) and the key. */
 interface LocalLabel { text: string; place: Place; register?: ScopeRef }
 interface ClaimSelection { operation: string; place: Place; register: ScopeRef; origin: string; key: string }
-interface Settings { place: Place | null; publicKey: string; register?: ScopeRef; label?: LocalLabel; claimSelection?: ClaimSelection }
+interface Settings { place: Place | null; publicKey: string; register?: ScopeRef; label?: LocalLabel; claimSelection?: ClaimSelection; pollIntervalMs?: number }
 const privateKeys = pageKeyStore();
 const signers = new Map<string, Signer>();
 function labelFor(value: unknown, place: Place | null, register?: ScopeRef): LocalLabel | undefined {
@@ -91,7 +93,10 @@ function settings(): Settings | null {
     const label = labelFor(kept.label, place, register);
     const selected = kept.claimSelection;
     const claimSelection = selected && typeof selected.operation === "string" && selected.operation.length > 0 && selected.origin === location.origin && selected.key === kept.publicKey && labelFor({ text: "selection", place: selected.place, register: selected.register }, place, register) ? selected : undefined;
-    return { place, publicKey: kept.publicKey, ...(register ? { register } : {}), ...(label ? { label } : {}), ...(claimSelection ? { claimSelection } : {}) };
+    let pollIntervalMs: number | undefined;
+    try { pollIntervalMs = kept.pollIntervalMs === undefined ? undefined : pollingInterval(kept.pollIntervalMs); }
+    catch { /* A bad optional interval must not hide the saved connection. */ }
+    return { place, publicKey: kept.publicKey, ...(pollIntervalMs === undefined ? {} : { pollIntervalMs }), ...(register ? { register } : {}), ...(label ? { label } : {}), ...(claimSelection ? { claimSelection } : {}) };
   } catch {
     return null;
   }
@@ -189,6 +194,25 @@ interface WorkbenchDialog {
 }
 let workbenchDialog: WorkbenchDialog | null = null;
 const settingsContext = (kept: Settings): string => JSON.stringify([location.origin, kept.place, kept.publicKey, kept.register ?? null]);
+let observationContext: string | null = null;
+let pollingLine: string | null = null;
+let pollingNode: HTMLElement | null = null;
+function pollingStatus(line: string | null): void {
+  pollingLine = line;
+  if (!pollingNode) return;
+  pollingNode.replaceChildren(line ?? "");
+  if (line) pollingNode.removeAttribute("hidden"); else pollingNode.setAttribute("hidden", "");
+}
+const observationKey = (kept: Settings) => JSON.stringify([settingsContext(kept), location.hash, pollingInterval(kept.pollIntervalMs)]);
+function observeView(kept: Settings, room: Room, scope: ScopeId, head?: Head, ref?: ScopeRef): void {
+  if (!isScopeId(scope)) return;
+  const context = observationKey(kept);
+  observationContext = context;
+  pageObservation.bind({ key: JSON.stringify([context, ref ?? scope]), interval: pollingInterval(kept.pollIntervalMs), ...(head ? { head } : {}),
+    current: () => workbenchWork.active && observationKey(settings() ?? { place: null, publicKey: "" }) === context,
+    load: signal => pageObservationSource(room, scope, signal),
+    changed: () => startWorkbench(() => draw()), polling: pollingStatus });
+}
 let claimOffer: { kept: Settings; configured: ClaimRegister } | undefined;
 function unknownRequest(kind: string): HTMLElement {
   return h("p", { class: "muted" }, `The ${kind} request may have been recorded. Checking status only reads the scope; a changed head does not settle this request. This page does not retain the exact signed request for automatic recovery. Keep this session open and inspect the original request before recovery; do not send a replacement.`);
@@ -896,6 +920,7 @@ async function drawWorkbench(focus: boolean): Promise<void> {
   try { await prepareSettings(); }
   catch (error) {
     if (currentDraw === drawing) {
+      pageObservation.cancel(); observationContext = null;
       root().setAttribute("data-entry", "true");
       root().replaceChildren(...entryShell(h("main", { class: "screen entry-screen" }, h("h1", {}, "Browser key unavailable"), h("p", { class: "entry-intro" }, "Private key storage did not complete. The original connection is retained. Close other tabs or restore browser storage, then reload."))));
     }
@@ -911,6 +936,7 @@ async function drawWorkbench(focus: boolean): Promise<void> {
   if (workbenchDialog && (workbenchDialog.route !== location.hash || workbenchDialog.binding !== settingsContext(settings() ?? { place: null, publicKey: "" }))) closeWorkbench(false);
   const route = routeOf(location.hash);
   const kept = settings();
+  if (!kept || observationContext !== observationKey(kept)) { pageObservation.cancel(); observationContext = null; }
   const publish = showFor(currentDraw, focus);
   let selectedRoom: Room | null = null;
   const originalContext = kept ? settingsContext(kept) : null;
@@ -960,7 +986,10 @@ async function drawWorkbench(focus: boolean): Promise<void> {
     let initialization = await roomInitialization(room);
     if (!viewCurrent()) return;
     let notice = initializationMessage(initialization.state);
-    const showRoom = (...content: HTMLElement[]) => show(...shell(destination, room, ...(notice ? [h("p", { class: "answer room-initialization", role: "status" }, notice)] : []), ...content));
+    const showRoom = (...content: HTMLElement[]) => {
+      pollingNode = h("p", { class: "muted", role: "status", "data-page-polling": "", ...(pollingLine ? {} : { hidden: "" }) }, pollingLine ?? "");
+      show(...shell(destination, room, pollingNode, ...(notice ? [h("p", { class: "answer room-initialization", role: "status" }, notice)] : []), ...content));
+    };
     const presentationCurrent = async (): Promise<boolean> => {
       if (initialization.state === "not-initialized" && !await initializationStillCurrent(loaded, initialization)) {
         initialization = { state: "unknown", reason: "The room changed or could not be read before showing this view." }; notice = null;
@@ -997,6 +1026,7 @@ async function drawWorkbench(focus: boolean): Promise<void> {
         }
         return represented;
       } });
+      observeView(kept, loaded, issue.scope, issue.head, issue.ref);
       return showRoom(inspectedScreen(screen, panel, association, "Issue record"));
     }
     if (destination === "changes" && scope) {
@@ -1054,6 +1084,7 @@ async function drawWorkbench(focus: boolean): Promise<void> {
         }
         return represented;
       } });
+      observeView(kept, loaded, change.scope, change.head, change.ref);
       return showRoom(inspectedScreen(screen, panel, association, "Change record"));
     }
     if (destination === "rules") {
@@ -1070,6 +1101,7 @@ async function drawWorkbench(focus: boolean): Promise<void> {
       const options: PanelOptions = { offered, ...(editable ? { represented: ["publish"], customForm: (send, blocked, draftKey) => rulesEditor(rules, send, { blocked, draftKey }) } : {}) };
       const screen = rulesScreen(room, rules, editable);
       const panel = await panelFor(room, room.rules, {}, options);
+      observeView(kept, loaded, room.rules, rules.head);
       return showRoom(inspectedScreen(screen, panel, actAssociation(room, room.rules), "Rules record"));
     }
     const kind = destination === "changes" ? "change" : "issue";
@@ -1102,6 +1134,7 @@ async function drawWorkbench(focus: boolean): Promise<void> {
       check.addEventListener("click", () => { if (currentDraw !== drawing || settingsContext(settings() ?? { place: null, publicKey: "" }) !== originalContext || location.hash !== capturedListRoute) return; void startWorkbench(() => followCreatedIssue(loaded, original, () => currentDraw === drawing && settingsContext(settings() ?? { place: null, publicKey: "" }) === originalContext && location.hash === capturedListRoute)); });
       screen.append(h("p", {}, check));
     }
+    observeView(kept, loaded, room.directory, undefined, room.directoryIndex?.scope);
     return showRoom(inspectedScreen(screen, panel, actAssociation(room, room.directory), "Room record"));
   } catch (error) {
     // Match the original service/room/member, even if opening this view failed.
@@ -1118,5 +1151,5 @@ async function drawWorkbench(focus: boolean): Promise<void> {
   }
 }
 
-window.addEventListener("hashchange", () => { if (!workbenchWork.active) return; cancelCreationFollow(); void startWorkbench(() => draw(true)); });
+window.addEventListener("hashchange", () => { if (!workbenchWork.active) return; cancelCreationFollow(); pageObservation.cancel(); observationContext = null; void startWorkbench(() => draw(true)); });
 void startWorkbench(() => draw());

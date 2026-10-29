@@ -22,6 +22,7 @@ async function fixture(joined=true) {
   const head={seq:1,hash:textDigest("FAKE head")};let held:Awaited<ReturnType<CommandStore["load"]>>=null,posts=0,settles=0,saves=0,clears=0;
   let metadata="trusted",reply:"refused"|"lost"="refused",failPhase:DispatchPhase|undefined,failAfterWrite=false,settleAccepted=false,entry:Entry|undefined,receipt:Receipt|undefined,race:"before-post"|"before-reply"|undefined;
   const snapshots:NonNullable<Awaited<ReturnType<CommandStore["load"]>>>[]=[];
+  const observations:{status:string;view?:unknown}[]=[];
   let queue=Promise.resolve();const lock={run:<T>(work:()=>Promise<T>):Promise<T>=>{const run=queue.then(work);queue=run.then(()=>undefined,()=>undefined);return run;}};
   const commands:CommandStore={load:async()=>held,save:async value=>{if(value.journal&&activeAttempt(value.journal).phase===failPhase)throw new Error("FAKE journal commit failure");held=structuredClone(value);snapshots.push(structuredClone(value));saves++;if(failAfterWrite){failAfterWrite=false;throw new Error("FAKE write succeeded but acknowledgement failed");}if(race==="before-post"&&held.journal&&activeAttempt(held.journal).phase==="inflight")held={...held,journal:markActive(held.journal,"unknown")};},clear:async()=>{held=null;clears++;}};
   const fake:Fetch=async(url,init)=>{
@@ -43,11 +44,21 @@ async function fixture(joined=true) {
   const connect=async()=>{
     const gateway=nativeGateway(identity,secretSigner(secret),{application:{scope,directory:ref("directory"),item:7,definition},current:()=>true,lock,voiceStore:{load:async()=>null,save:async()=>{throw new Error("unused fake voice");},clear:async()=>{}},commandStore:commands,fetch:fake,headFetch:stream,
       actFetch:async(url,init)=>{assert.equal(init.redirect,"error");const response=await fake(url,{...init,signal:init.signal as never});return{status:metadata==="wrong-status"?200:response.status,body:response.body,headers:new Headers({"content-type":metadata==="wrong-media"?"text/html":"application/json"}),url:metadata==="wrong-url"?url+"/different":url,redirected:metadata==="redirected"};}});
-    try{await new Promise<void>((resolve,reject)=>gateway.observe(state=>{if(state.status==="current")resolve();else if(["error","forbidden","unsupported","unavailable","expired"].includes(state.status))reject(new Error(`Fake gateway setup ${state.status}: ${"reason"in state?state.reason:""}`));}));}
+    try{await new Promise<void>((resolve,reject)=>gateway.observe((state,view)=>{observations.push({status:state.status,view});if(state.status==="current")resolve();else if(["error","forbidden","unsupported","unavailable","expired"].includes(state.status))reject(new Error(`Fake gateway setup ${state.status}: ${"reason"in state?state.reason:""}`));}));}
     catch(error){gateway.dispose();throw error;}return gateway;
   };
-  return{identity,gateway:await connect(),connect,counters:()=>({posts,settles,saves,clears}),retained:()=>held?canonicalize(held):null,record:()=>held,snapshots,mode:(value:string)=>{metadata=value;},lose:()=>{reply="lost";},fail:(phase?:DispatchPhase)=>{failPhase=phase;},writeThenFail:()=>{failAfterWrite=true;},race:(value:"before-post"|"before-reply")=>{race=value;},acceptSettlement:()=>{settleAccepted=true;},restore:(record:NonNullable<typeof held>)=>{held=structuredClone(record);},corrupt:(change:(record:NonNullable<typeof held>)=>NonNullable<typeof held>)=>{assert.ok(held,"corruption needs actual retained custody");held=change(held);},legacy:()=>{if(held)held={kind:held.kind,envelope:held.envelope};}};
+  return{identity,gateway:await connect(),connect,observations,counters:()=>({posts,settles,saves,clears}),retained:()=>held?canonicalize(held):null,record:()=>held,snapshots,mode:(value:string)=>{metadata=value;},lose:()=>{reply="lost";},fail:(phase?:DispatchPhase)=>{failPhase=phase;},writeThenFail:()=>{failAfterWrite=true;},race:(value:"before-post"|"before-reply")=>{race=value;},acceptSettlement:()=>{settleAccepted=true;},restore:(record:NonNullable<typeof held>)=>{held=structuredClone(record);},corrupt:(change:(record:NonNullable<typeof held>)=>NonNullable<typeof held>)=>{assert.ok(held,"corruption needs actual retained custody");held=change(held);},legacy:()=>{if(held)held={kind:held.kind,envelope:held.envelope};}};
 }
+
+test("FAKE valid SDK stream waits for a current Counter projection without forwarding transport readiness",async()=>{
+  const f=await fixture();try{
+    assert.deepEqual(f.observations.map(state=>state.status),["connecting","refreshing","current"]);
+    assert.equal(f.observations[0]?.view,undefined);assert.equal(f.observations[1]?.view,undefined);
+    const current=f.observations[2]?.view as {board?:{state?:string;lastNumber?:number}}|undefined;
+    assert.equal(current?.board?.state,"paused");assert.equal(current?.board?.lastNumber,0);
+    assert.deepEqual(f.counters(),{posts:0,settles:0,saves:0,clears:0});
+  }finally{f.gateway.dispose();}
+});
 
 test("FAKE correlated trusted first refusal commits judgment before terminal control custody clears",async()=>{
   const f=await fixture();try{

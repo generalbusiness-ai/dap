@@ -37,9 +37,9 @@ import { invitationRedemptionFields, isInvitationMembership } from "@generalbusi
  */
 
 import type { Answer, DeclaredDefinition, Digest, Entry, FactRef, FieldValue, Head, Item, KeyId, MemberRef, ScopeId, ScopeRef, Summary, Read, SignedIntent, Receipt, OutboxId } from "@generalbusiness/dap-contract";
-import { LATE, b64url, byteOrder, canonicalize, definitionDigest, entryHash, intentDigest, isFactRef, isMemberRef, isScopeId, isSeed, scopeIdOf, isScopeRef as fullScopeRef, takeBytes, textDigest, timeMs, timeOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { LATE, b64url, byteOrder, canonicalize, definitionDigest, entryHash, intentDigest, isFactRef, isMemberRef, isScopeId, isSeed, scopeIdOf, isScopeRef as fullScopeRef, takeBytes, textDigest, timeMs, timeOf, verifySignedIntent, type Expiry } from "@generalbusiness/dap-bytes";
 import {
-  ScopeHandle, activeDirectory, collectItemQuery, partitionIndexes, declaredHandle, httpTransport, requestSession, secretSigner, signerSessionRequest, shapeDeclaredAct, signedIntent, signedReads, type Fetch, type Session as ReadSession, type Signer, type Signing, type Transport,
+  ScopeHandle, activeDirectory, collectItemQuery, partitionIndexes, completeSummary, declaredHandle, httpTransport, openHttpHeadStream, requestSession, secretSigner, signerSessionRequest, shapeDeclaredAct, signedIntent, signedReads, type Fetch, type Session as ReadSession, type Signer, type Signing, type Transport,
 } from "@generalbusiness/dap-client";
 import { LINK, describe, expectedOf, heldActs, linkOf, valueOf, type ActShape, type DefinitionShape, type Standing } from "@generalbusiness/dap-cli/browser";
 import { ARCHIVE_DEVICE_PUBLICATION_COHORT, DEFINITION_DOMAIN, ROLE_LISTS, fileSound, firstExtents, isExtents, platform, type Role } from "@generalbusiness/dap-platform";
@@ -47,6 +47,7 @@ import type { Extent as PolicyExtent } from "@generalbusiness/dap-platform";
 import { Q11_READ_ONLY, rulesSummaryV11 } from "./rules-summary-v11.ts";
 import { knownLIST1 } from "./source-support.ts";
 import { currentStanding, reviewCandidates } from "./membership-projection.ts";
+import type { PageObservationSource } from "./page-observation.ts";
 
 /** Who is reading and signing, and where. `fetch` and `now` replace the runtime's, as a test does. */
 export type Session = {
@@ -121,6 +122,55 @@ async function summaryOf(handle: ScopeHandle): Promise<{ summary: Summary; at: H
   if (!read.ok) throw new Unreadable(`Cannot read ${handle.scope}: ${read.reason}.`);
   if (!read.complete || read.next !== undefined) throw new Unreadable(`Cannot read ${handle.scope}: incomplete summary.`);
   return { summary: read.value, at: read.at };
+}
+
+/** The selected scope's actual complete summary binds observation identity.
+ * These reads never update an Acted record or confirm a mutation. */
+export async function pageObservationSource(room: Room, scope: ScopeId, signal: AbortSignal): Promise<PageObservationSource> {
+  let expected: ReadSession["claims"] | undefined;
+  const matches = (reader: ReadSession | null): boolean => !!reader && (!expected || reader.claims.deployment === expected.deployment
+    && reader.claims.member === expected.member && reader.claims.key === expected.key
+    && canonicalize(reader.claims.membership) === canonicalize(expected.membership));
+  const ownedRoom = (expiry: Expiry, reader = room.reader): Room => {
+    const send = room.session.fetch ?? globalThis.fetch;
+    const session: Session = { ...room.session, fetch: (url, init) => send(url, { ...init, signal: expiry as never }) };
+    return { ...room, session, reader };
+  };
+  const read = async (expiry: Expiry, reader?: ReadSession) => {
+    const owned = ownedRoom(expiry, reader ?? room.reader);
+    if (!reader) await fresh(owned);
+    if (expected && !matches(owned.reader))
+      throw new Unreadable("The update session names another connection.");
+    const got = completeSummary(await handleOf(owned, scope).summary());
+    if (expiry.aborted || !got.ok || !got.complete || got.next !== undefined || !fullScopeRef(got.value.scope) || got.value.scope.scope !== scope)
+      throw new Unreadable("The complete update summary could not be read.");
+    if (!reader) { room.reader = owned.reader; room.unsessioned = owned.unsessioned; }
+    return got;
+  };
+  const first = await read(signal), session = room.reader;
+  if (!session || !room.me || session.claims.member !== room.me.handle) throw new Unreadable("A current read session is required for live updates.");
+  // The Page trusts its own serving HTTPS origin, including its accepted native
+  // session response. This captures that service's deployment once; it is not
+  // an independent deployment assertion. Renewals must match this fixed value.
+  expected = session.claims;
+  return {
+    initial: first.value,
+    poll: async expiry => (await read(expiry)).value,
+    options: {
+      context: { origin: room.session.service, scope: first.value.scope, definition: first.value.definition,
+        membership: room.membership, member: session.claims.member, key: room.key, deployment: session.claims.deployment },
+      seconds: 10,
+      now: () => nowOf(room.session),
+      authenticate: async expiry => {
+        const owned = ownedRoom(expiry); await fresh(owned);
+        if (expiry.aborted || !owned.reader) return { ok: false, reason: "unavailable" };
+        if (matches(owned.reader)) { room.reader = owned.reader; room.unsessioned = owned.unsessioned; }
+        return { ok: true, session: owned.reader };
+      },
+      snapshot: (reader, expiry) => read(expiry, reader),
+      open: (reader, expiry) => openHttpHeadStream(room.session.service, first.value.scope, reader, expiry),
+    },
+  };
 }
 
 /** Refresh only the existing complete authenticated roster. Session renewal is
