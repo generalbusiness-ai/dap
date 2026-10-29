@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9e12caf69dcfe3b69ddb7864569bacc76f4eeb2e","text":"Replaced by the review request for exact head 3a6e4af0d67b37aac2aac5ce59454c51b2409fad; any review promised on this request is released, and a verdict filed against it would bind to nothing."}
+{"kind":"promise","text":"Review the page stream fallback at exact head 33540f977a4bc5d7ef00569f2b7d9ca9e665a2c9 under request 5874b15d, reading the implementation note 4d3a60cc first, and file a verdict with Architecture, Security and Simplification conclusions."}
