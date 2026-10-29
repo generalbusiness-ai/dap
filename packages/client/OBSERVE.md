@@ -65,6 +65,8 @@ not an independent deployment assertion. During a transient outage, the
 Page polls complete authenticated summary heads every five seconds by
 default. Its retained `pollIntervalMs` setting accepts 1,000 to 60,000
 milliseconds. A valid stream notice stops those polls.
+An invalid stored interval uses the default without hiding or replacing the
+saved connection.
 
 `current()` must remain true only for the application's captured context;
 call `cancel()` immediately when it changes. Checks after awaits and before
