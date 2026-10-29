@@ -42,14 +42,15 @@ not as `run-lost`.
 
 ## Story: the first self-hosted room service on a Mac
 
-An operator can now run the room service on a Mac mini. The kit adds
-launchd units for the Worker and the celld store, a `down` command that
-stops them in order, a script that mints an 825-day EC certificate for
-the local origin, and a section "Run on a Mac" in the self-host guide.
-Five witnesses run the kit end to end, including a shutdown that
-preserves the store on the same node and recovers entry by entry. The
-celld pin moves to v0.6.3. The builder holds an account with sudo on the
-mini, so the next slice runs the kit on the real machine.
+An operator can now run the room service on a Mac mini. The kit
+installs three LaunchDaemons: SeaweedFS as the store, celld as the
+runtime that serves the room Worker, and Caddy for HTTPS. A `down`
+command stops celld before the store, a script mints an 825-day EC
+certificate for the local origin, and a section "Run on a Mac" in the
+self-host guide walks through the install. Five witnesses ran the kit
+end to end on the mini itself. One of them stops the service with
+`down`, restarts it, and reads every journal back entry by entry. The
+celld pin moves to v0.6.3.
 
 The next slice is in progress: on celld 0.6.3 the entry stream route
 answers and ends at once, because RPC streams cannot cross isolate
@@ -87,7 +88,8 @@ commons package, a consent rule on party slots, and recipes over
 hashes. A walk through the use cases showed that one act carries every
 case: a note, with text and an `about` list, plus a fragment string on
 a reference. A view is a note. A party binds by the act it signs. A
-closing is a note about the item's opening entry, and no item closes.
+closing is a note about the item's opening entry. An item's final state
+ends the item and never ends a party's part of the matter.
 The recut landed at 16:48 with that mechanism and nothing else. Its
 five slices are refiled: the fragment and the commons, views as notes,
 parties by their own signature, the matter view, and views as code in
@@ -159,11 +161,14 @@ would have cut it, and whether to revisit.
   shutdown witness. The review left four points: the restart order
   after `down`, no upgrade path, a unit that leaves celld stopped after
   any clean exit, and an unauthenticated shutdown route on loopback.
-  Alternative: none for the kit. Revisit: yes, the four points go into
-  the next self-host slice.
+  The condition that the older validation daemons are gone was met by
+  an absence check, with no record of who removed them. Absence is
+  enough for a clean install. Alternative: none for the kit. Revisit:
+  yes, the four points and the removal record go into the next
+  self-host slice.
 - Boundary-objects note (`8659af46`, `25930f62`). Cost: the first
   version landed with four mechanisms and four filed slices; the recut
-  twenty hours later kept one act and a fragment, retired the four
+  about 21 hours later kept one act and a fragment, retired the four
   slices and refiled five. Alternative: walk the cases before landing
   the first version. Revisit: no; the recut is the design, and the
   method is now the rule for design notes.
@@ -191,18 +196,15 @@ would have cut it, and whether to revisit.
 - A landing subject stays under 100 code points, then a blank line,
   then the paragraph (`5253552d`).
 
-## Filed
+## Filed in this sprint
 
 | Request | Owner | Work |
 |---|---|---|
-| `a53e1464` | builder | evidence-rules first slice; landed |
 | `25b40ad2` | builder | checker recovery follow-up; landed |
-| `addbe5b4` | builder | readability pass; landed |
 | `cd31231e` | builder | public SDK release closure; landed |
 | `cbcadd7f` | builder | Mac mini host kit; landed |
 | `bc4aa093` | planner | boundary-objects note recut; landed |
 | `5874b15d` | builder | page stream fallback; promised |
-| `c9d4e517` | builder | DX-A1 authoring skill; promised |
 | `41f77a01` | builder | BO1 the fragment and the commons |
 | `c4ccdba6` | builder | BO2 views as notes |
 | `bac8cd04` | builder | BO3 parties by their own signature |
@@ -224,9 +226,11 @@ would have cut it, and whether to revisit.
   landing, the self-host filings, and the release closure.
 - The whole-scope capacity item was not filed; it waits for the
   measured ceilings.
-- The shared checkout was dirtied twice by an unreviewed package
-  install from a process outside the workroom, at 11:00 and 16:32. The
-  planner restored it both times; the owner is not identified.
+- The shared checkout was dirtied three times by an unreviewed package
+  install, at 11:00, 11:27, and 16:32. The planner restored it each
+  time; the owner is not identified. At 16:15 a checker helper script
+  overwrote the celld pin for about a minute; the checker restored the
+  file and reported it in its landing check.
 - No Room A plan pass was captured; no new entries arrived.
 
 ## Commitments for the sprint ending 30 October, 17:00
