@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:25cb5bb83eb5c017197d61f6a5a25c8231403ead","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/evidence-holds-v17.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:267d7ce75f118d9df8d68f1e329b71ccac7a4917","text":"Merge retired a covered predecessor; the successor is at packages/checkers/src/signing.ts."}
