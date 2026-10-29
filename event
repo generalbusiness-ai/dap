@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8574c8f0d87e86886626de4df44d4ab2d7de9817","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/evidence-bound-fence-v17.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:86c9e953bb29da8cd3551e7a47f3e911d8c81df2","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/github-wiring.ts."}
