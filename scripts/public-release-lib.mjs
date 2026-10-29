@@ -2,7 +2,7 @@
 import { createHash } from "node:crypto";
 import { moduleSpecifierSpans } from "./public-release-modules.mjs";
 import { execFileSync } from "node:child_process";
-import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, lstatSync, mkdirSync, opendirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -79,6 +79,64 @@ export function copyFileVerified(source, target) {
   if (digest(readFileSync(target)) !== digest(bytes)) refusal("copy-mismatch");
   return { bytes: bytes.length, sha256: digest(bytes) };
 }
+/** One canonical authoring tree, carried only by the platform package. */
+export function skillAssetRoots(spec) {
+  const roots = spec.skillAssets ?? [];
+  if (JSON.stringify(roots) !== JSON.stringify(spec.dir === "platform" ? ["skills/dap-application"] : [])) refusal("skill-asset-plan");
+  return roots;
+}
+export function skillAssetsOf(source, spec) {
+  const roots = skillAssetRoots(spec); if (!roots.length) return null;
+  const files = []; let scanned = 0, total = 0;
+  const visit = (path, depth) => {
+    if (depth > 8 || ++scanned > 256 || path.length > 256 || !/^[A-Za-z0-9._/-]+$/.test(path)) refusal("skill-asset-bound");
+    const file = join(source, path), stat = lstatSync(file);
+    if (stat.isSymbolicLink() || realpathSync(file) !== file) refusal("nonregular-skill-asset");
+    if (stat.isDirectory()) {
+      const directory = opendirSync(file);
+      try { for (let entry; (entry = directory.readSync()) !== null;) visit(`${path}/${entry.name}`, depth + 1); }
+      finally { directory.closeSync(); }
+    } else {
+      if (!stat.isFile() || files.length >= 128 || stat.size > 1024 * 1024 || total + stat.size > 8 * 1024 * 1024) refusal("skill-asset-bound");
+      total += stat.size;
+      files.push({ path, bytes: stat.size, mode: stat.mode & 0o7777, sha256: digest(readFileSync(file)) });
+    }
+  };
+  for (const path of roots) visit(path, 0);
+  files.sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
+  const tracked = execFileSync("git", ["ls-tree", "-rz", "HEAD", "--", ...roots], { cwd: source, encoding: "utf8", timeout: 10_000, maxBuffer: 64 * 1024 }).split("\0").filter(Boolean).map(row => {
+    const match = /^(100644|100755) blob ([a-f0-9]{40})\t(.+)$/.exec(row);
+    if (!match) refusal("nonregular-skill-asset");
+    return { path: match[3], mode: match[1] === "100755" ? 0o755 : 0o644, blob: match[2] };
+  });
+  if (!files.some(file => file.path === "skills/dap-application/SKILL.md") || JSON.stringify(files.map(file => file.path)) !== JSON.stringify(tracked.map(file => file.path).sort())) refusal("skill-asset-set");
+  for (const file of files) {
+    const committed = tracked.find(row => row.path === file.path);
+    const bytes = execFileSync("git", ["cat-file", "blob", committed.blob], { cwd: source, timeout: 10_000, maxBuffer: 1024 * 1024 + 1 });
+    if (file.mode !== committed.mode || file.bytes !== bytes.length || file.sha256 !== digest(bytes)) refusal("skill-asset-changed");
+  }
+  return { files, sha256: digest(JSON.stringify(files)) };
+}
+export function copySkillAssets(source, stage, spec) {
+  const assets = skillAssetsOf(source, spec); if (!assets) return null;
+  for (const row of assets.files) {
+    copyFileVerified(join(source, row.path), join(stage, row.path));
+    chmodSync(join(stage, row.path), row.mode);
+  }
+  return assets;
+}
+/** Inspect actual regular-file permissions and bytes without extracting an archive. */
+export function verifySkillArchive(tarball, assets) {
+  if (!assets) return;
+  const listing = execFileSync("/usr/bin/tar", ["-tvzf", tarball], { encoding: "utf8", timeout: 30_000, maxBuffer: 4 * 1024 * 1024 }).trimEnd().split("\n");
+  for (const row of assets.files) {
+    const lines = listing.filter(line => line.endsWith(` package/${row.path}`));
+    const permissions = "-" + [..."rwxrwxrwx"].map((letter, bit) => row.mode & (1 << (8 - bit)) ? letter : "-").join("");
+    if (lines.length !== 1 || !lines[0].startsWith(permissions + " ")) refusal("skill-archive-mode");
+    const bytes = execFileSync("/usr/bin/tar", ["-xOzf", tarball, `package/${row.path}`], { timeout: 30_000, maxBuffer: 1024 * 1024 + 1 });
+    if (bytes.length !== row.bytes || digest(bytes) !== row.sha256) refusal("skill-archive-content");
+  }
+}
 export function copiedDependency(sourceRoot, outputRoot, name, expected, lock) {
   const physical = realpathSync(join(sourceRoot, "node_modules", name));
   const manifest = json(join(physical, "package.json"));
@@ -114,7 +172,7 @@ export function publishManifest(spec, source, selected) {
     repository: { type: "git", url: "git+https://github.com/generalbusiness-ai/dap.git", directory: `packages/${spec.dir}` }, homepage: "https://dap.generalbusiness.ai/",
     exports: Object.fromEntries(Object.entries(spec.exports).map(([key, path]) => [key, path.endsWith(".d.ts")
       ? { types: `./dist/${path}` } : { types: `./dist/${path}.d.ts`, default: `./dist/${path}.js` }])),
-    files: ["dist", "README.md", "LICENSE", "NOTICE"], publishConfig: { access: "public" },
+    files: ["dist", ...(skillAssetRoots(spec).length ? ["skills"] : []), "README.md", "LICENSE", "NOTICE"], publishConfig: { access: "public" },
     ...(Object.keys(spec.dependencies).length ? { dependencies: Object.fromEntries(Object.entries(spec.dependencies).map(([name, pin]) => [name, pin === "coordinated" ? selected : pin])) } : {}),
   };
 }
@@ -154,13 +212,19 @@ export function rewriteDeclarationRefs(stage) {
   }
   return changes;
 }
-export function outputClosure(stage, spec, selected) {
+export function outputClosure(stage, spec, selected, assets = null) {
   const expected = json(join(stage, "package.json"));
   if (expected.name !== nameOf(spec.dir) || expected.version !== selected || expected.type !== "module") refusal("stage-manifest");
+  const roots = skillAssetRoots(spec);
+  if (roots.length && (!assets?.files.length || digest(JSON.stringify(assets.files)) !== assets.sha256)) refusal("missing-skill-assets");
+  if (!roots.length && assets !== null) refusal("unplanned-skill-assets");
   const rows = inventory(stage);
+  const copied = rows.filter(row => roots.some(root => row.path.startsWith(root + "/"))).map(row => ({ path: row.path, bytes: row.bytes, mode: lstatSync(join(stage, row.path)).mode & 0o7777, sha256: row.sha256 })).sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
+  if (assets && JSON.stringify(copied) !== JSON.stringify(assets.files)) refusal("skill-output-mismatch");
   for (const row of rows) {
     if (spec.dir === "git" && row.path.startsWith("dist/") && !PUBLIC_GIT_OUTPUTS.has(row.path)) refusal("excluded-output");
     if (spec.dir === "replay" && /^dist\/src\/(?:bin|git)\.(?:js|d\.ts)$/.test(row.path)) refusal("excluded-output");
+    if (assets?.files.some(file => file.path === row.path)) continue;
     if (!["package.json", "README.md", "LICENSE", "NOTICE"].includes(row.path) && (!row.path.startsWith("dist/") || !/\.(?:js|d\.ts)$/.test(row.path))) refusal("unplanned-output");
     if (row.path.startsWith("dist/test/") && !(spec.dir === "derive" && PUBLIC_TESTING_OUTPUTS.has(row.path))) refusal("unplanned-testing-output");
     if (!row.path.startsWith("dist/") || !/\.(?:js|d\.ts)$/.test(row.path)) continue;

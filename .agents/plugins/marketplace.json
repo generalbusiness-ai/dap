@@ -1,0 +1,12 @@
+{
+  "name": "dap",
+  "interface": { "displayName": "dap application authoring" },
+  "plugins": [
+    {
+      "name": "dap-application",
+      "source": { "source": "local", "path": "./" },
+      "policy": { "installation": "AVAILABLE", "authentication": "ON_USE" },
+      "category": "Developer Tools"
+    }
+  ]
+}

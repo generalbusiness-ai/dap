@@ -17,6 +17,7 @@ const nodeFiles = [
   'scripts/check-kernel-boundary.test.mjs',
   'scripts/cloudflare-pool-compat.test.mjs',
   'scripts/check-shared-helpers.test.mjs',
+  'scripts/check-doc-links.test.mjs',
   'scripts/check-notes.test.mjs',
   'apps/counter/scripts/node-witness.test.mjs',
   'scripts/deploy-check.test.mjs',

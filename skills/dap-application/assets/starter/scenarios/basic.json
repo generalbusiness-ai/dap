@@ -1,0 +1,210 @@
+{
+  "v": 1,
+  "name": "starter-notes",
+  "time": "2026-01-01T12:00:00Z",
+  "actors": {
+    "alice": {
+      "seed": "0101010101010101010101010101010101010101010101010101010101010101",
+      "member": "@alice",
+      "actions": [
+        "notes.write"
+      ]
+    },
+    "bob": {
+      "seed": "0202020202020202020202020202020202020202020202020202020202020202",
+      "member": "@bob",
+      "actions": [
+        "notes.write"
+      ]
+    },
+    "visitor": {
+      "seed": "0303030303030303030303030303030303030303030303030303030303030303",
+      "member": "@visitor",
+      "actions": []
+    }
+  },
+  "founding": {
+    "actor": "alice",
+    "fields": {
+      "title": "Shared notes"
+    }
+  },
+  "steps": [
+    {
+      "projection": {
+        "name": "state",
+        "sources": {
+          "board": [
+            {
+              "id": 0,
+              "state": "open",
+              "fields": {
+                "title": "Shared notes",
+                "ready": false
+              }
+            }
+          ],
+          "notes": []
+        },
+        "at": {
+          "seq": 0
+        }
+      }
+    },
+    {
+      "act": {
+        "actor": "alice",
+        "kind": "add",
+        "fields": {
+          "text": ""
+        }
+      },
+      "expect": {
+        "answer": "refused",
+        "reason": "guard-failed",
+        "name": "empty-note"
+      }
+    },
+    {
+      "act": {
+        "actor": "alice",
+        "kind": "add",
+        "fields": {
+          "text": "Review the draft"
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      },
+      "save": "first"
+    },
+    {
+      "act": {
+        "actor": "bob",
+        "kind": "finish",
+        "on": {
+          "$position": "first"
+        },
+        "expected": {
+          "on": {
+            "$revision": {
+              "$position": "first"
+            }
+          }
+        }
+      },
+      "expect": {
+        "answer": "refused",
+        "reason": "guard-failed",
+        "name": "not-your-note"
+      }
+    },
+    {
+      "act": {
+        "actor": "alice",
+        "kind": "finish",
+        "on": {
+          "$position": "first"
+        },
+        "expected": {
+          "on": {
+            "$revision": {
+              "$position": "first"
+            }
+          }
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "assert": {
+        "item": {
+          "$position": "first"
+        },
+        "state": "done",
+        "parties": {
+          "author": {
+            "$member": "alice"
+          }
+        },
+        "values": {
+          "text": "Review the draft",
+          "until": null
+        }
+      }
+    },
+    {
+      "act": {
+        "actor": "alice",
+        "kind": "add",
+        "fields": {
+          "text": "Check the deadline"
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      },
+      "save": "second"
+    },
+    {
+      "advance": "2026-01-01T12:01:00Z"
+    },
+    {
+      "assert": {
+        "item": {
+          "$position": "second"
+        },
+        "state": "expired",
+        "values": {
+          "text": "Check the deadline",
+          "until": null
+        }
+      }
+    },
+    {
+      "act": {
+        "actor": "visitor",
+        "kind": "add",
+        "fields": {
+          "text": "No write grant"
+        }
+      },
+      "expect": {
+        "answer": "refused",
+        "reason": "unauthorized"
+      }
+    },
+    {
+      "projection": {
+        "name": "state",
+        "sources": {
+          "notes": [
+            {
+              "id": {
+                "$position": "first"
+              },
+              "state": "done",
+              "fields": {
+                "text": "Review the draft"
+              }
+            },
+            {
+              "id": {
+                "$position": "second"
+              },
+              "state": "expired",
+              "fields": {
+                "text": "Check the deadline"
+              }
+            }
+          ]
+        },
+        "at": {
+          "seq": 4
+        }
+      }
+    }
+  ]
+}

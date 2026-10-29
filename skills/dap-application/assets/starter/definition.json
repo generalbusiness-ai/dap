@@ -1,0 +1,275 @@
+{
+  "format": "artroom-definition-1",
+  "name": "notes",
+  "profile": {
+    "name": "restricted",
+    "version": 1
+  },
+  "capabilities": [],
+  "genesis": "establish",
+  "items": {
+    "board": {
+      "many": false,
+      "max": 1,
+      "states": {
+        "open": {
+          "final": false
+        }
+      },
+      "initial": "open",
+      "parties": {},
+      "refs": {},
+      "values": {
+        "title": {
+          "fixed": true,
+          "required": true,
+          "of": {
+            "type": "text",
+            "max": 80
+          }
+        },
+        "ready": {
+          "fixed": false,
+          "required": true,
+          "of": {
+            "type": "bool"
+          },
+          "default": false
+        }
+      }
+    },
+    "note": {
+      "many": true,
+      "max": 16,
+      "states": {
+        "open": {
+          "final": false
+        },
+        "done": {
+          "final": true
+        },
+        "expired": {
+          "final": true
+        }
+      },
+      "initial": "open",
+      "parties": {
+        "author": {
+          "fixed": true,
+          "required": true,
+          "list": false,
+          "author": true
+        }
+      },
+      "refs": {},
+      "values": {
+        "text": {
+          "fixed": true,
+          "required": true,
+          "of": {
+            "type": "text",
+            "max": 280
+          }
+        },
+        "until": {
+          "fixed": false,
+          "required": false,
+          "of": {
+            "type": "time"
+          }
+        }
+      }
+    }
+  },
+  "acts": {
+    "establish": {
+      "step": "open",
+      "on": "board",
+      "grant": "notes.write",
+      "fields": {
+        "title": {
+          "type": "text",
+          "max": 80,
+          "required": true
+        }
+      },
+      "also": {},
+      "guards": [],
+      "effects": [
+        {
+          "value": {
+            "slot": "title",
+            "from": {
+              "field": "title"
+            }
+          }
+        }
+      ],
+      "sends": [
+        {
+          "create": {
+            "kind": "lane",
+            "definition": "sha256:f04f307c3b70b436202c86f5d160aad6ee7d5dd1fe695b3d5719eac4a2b3af44",
+            "fields": {
+              "target": {
+                "scope": true
+              }
+            },
+            "result": {
+              "refused": [],
+              "undelivered": [],
+              "conflict": []
+            }
+          }
+        }
+      ],
+      "attention": []
+    },
+    "add": {
+      "step": "open",
+      "on": "note",
+      "grant": "notes.write",
+      "fields": {
+        "text": {
+          "type": "text",
+          "max": 280,
+          "required": true
+        }
+      },
+      "also": {},
+      "guards": [
+        {
+          "rule": "nonempty-text",
+          "reason": "empty-note"
+        }
+      ],
+      "effects": [
+        {
+          "party": {
+            "slot": "author",
+            "from": {
+              "signer": true
+            }
+          }
+        },
+        {
+          "value": {
+            "slot": "text",
+            "from": {
+              "field": "text"
+            }
+          }
+        },
+        {
+          "value": {
+            "slot": "until",
+            "from": {
+              "time": {
+                "plusSeconds": 60
+              }
+            }
+          }
+        }
+      ],
+      "sends": [],
+      "attention": []
+    },
+    "finish": {
+      "step": "transition",
+      "on": "note",
+      "grant": "notes.write",
+      "fields": {},
+      "also": {},
+      "guards": [
+        {
+          "state": [
+            "open"
+          ]
+        },
+        {
+          "signer": [
+            "author"
+          ],
+          "reason": "not-your-note"
+        }
+      ],
+      "effects": [
+        {
+          "state": "done"
+        },
+        {
+          "value": {
+            "slot": "until",
+            "from": null
+          }
+        }
+      ],
+      "sends": [],
+      "attention": []
+    }
+  },
+  "receives": {
+    "ready": {
+      "message": "ready",
+      "class": "tell",
+      "from": {
+        "kind": "lane",
+        "under": "note-signal",
+        "pin": "sha256:f04f307c3b70b436202c86f5d160aad6ee7d5dd1fe695b3d5719eac4a2b3af44"
+      },
+      "fields": {},
+      "opens": null,
+      "also": {
+        "board": {
+          "item": "board",
+          "one": true
+        }
+      },
+      "guards": [
+        {
+          "of": "also.board",
+          "state": [
+            "open"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "of": "also.board",
+          "value": {
+            "slot": "ready",
+            "from": {
+              "const": true
+            }
+          }
+        }
+      ],
+      "sends": [],
+      "attention": []
+    }
+  },
+  "timed": {
+    "expire": {
+      "on": "note",
+      "states": [
+        "open"
+      ],
+      "deadline": "until",
+      "effects": [
+        {
+          "state": "expired"
+        },
+        {
+          "value": {
+            "slot": "until",
+            "from": null
+          }
+        }
+      ],
+      "attention": []
+    }
+  },
+  "rules": {
+    "nonempty-text": "$length(fields.text) > 0"
+  }
+}

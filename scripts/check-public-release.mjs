@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, join, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
-import { PLAN, ROOT, PUBLIC_GIT_INPUTS, PUBLIC_TESTING_INPUTS, args, childEnv, compile, compilerTool, contained, digest, inventory, json, nameOf, outputClosure, productionInputs, publishManifest, references, refusal, sourceIdentity, writeJson } from "./public-release-lib.mjs";
+import { PLAN, ROOT, PUBLIC_GIT_INPUTS, PUBLIC_TESTING_INPUTS, args, childEnv, compile, compilerTool, contained, digest, inventory, json, nameOf, outputClosure, productionInputs, publishManifest, references, refusal, skillAssetsOf, sourceIdentity, verifySkillArchive, writeJson } from "./public-release-lib.mjs";
 
 /** esbuild 0.28.1's parser inserts its already-resolved helper import. Only
  * this exact edge of the pinned copied JSONata input is synthetic metadata.
@@ -25,16 +25,21 @@ export function check(manifestFile, captureFile, captureSha256, browserTool, bro
   const producerPaths = ["scripts/public-release.mjs", "scripts/public-release-lib.mjs", "scripts/public-release-modules.mjs", "scripts/public-release.json", "scripts/check-public-release.mjs"];
   if (JSON.stringify(release.producerInputs?.map(input => input.path)) !== JSON.stringify(producerPaths)) refusal("producer-input-set");
   for (const input of release.producerInputs) if (digest(readFileSync(join(ROOT, input.path))) !== input.sha256) refusal("producer-input-integrity");
+  const skillTrees = PLAN.packages.map(spec => skillAssetsOf(ROOT, spec));
+  const skillInputs = skillTrees.flatMap(tree => tree?.files ?? []);
   for (const input of release.inputs) {
+    const skill = skillInputs.find(row => row.path === input.path);
     const excludedGitInput = input.path.startsWith("packages/git/src/") && !PUBLIC_GIT_INPUTS.some(path => input.path === `packages/git/${path}`);
-    if ((!/^(?:LICENSE|NOTICE|packages\/(?:contract|package-graph|bytes|client|derive|git|platform|replay)\/(?:src\/[^\n]+\.ts|package\.json|README\.md))$/.test(input.path) && !PUBLIC_TESTING_INPUTS.includes(input.path)) || excludedGitInput || /^packages\/replay\/src\/(?:bin|git)\.ts$/.test(input.path) || !contained(output, realpathSync(input.copy))) refusal("input-path");
+    if ((!/^(?:LICENSE|NOTICE|packages\/(?:contract|package-graph|bytes|client|derive|git|platform|replay)\/(?:src\/[^\n]+\.ts|package\.json|README\.md))$/.test(input.path) && !PUBLIC_TESTING_INPUTS.includes(input.path) && !skill) || excludedGitInput || /^packages\/replay\/src\/(?:bin|git)\.ts$/.test(input.path) || !contained(output, realpathSync(input.copy))) refusal("input-path");
     if (digest(readFileSync(join(ROOT, input.path))) !== input.sha256 || digest(readFileSync(input.copy)) !== input.sha256) refusal("input-integrity");
-    if (/\.ts$/.test(input.path)) {
+    if (skill && (input.copy !== join(output, "packages/platform", skill.path) || input.bytes !== skill.bytes || input.mode !== skill.mode || lstatSync(input.copy).isSymbolicLink() || (lstatSync(input.copy).mode & 0o7777) !== skill.mode)) refusal("skill-input-integrity");
+    if (input.path.startsWith("packages/") && /\.ts$/.test(input.path)) {
       const [, dir, ...parts] = input.path.split("/");
       const compiledInput = join(output, "inputs", dir, ...parts);
       if (!readFileSync(compiledInput).equals(readFileSync(input.copy))) refusal("renamed-input-integrity");
     }
   }
+  if (JSON.stringify(release.inputs.filter(input => skillInputs.some(row => row.path === input.path)).map(input => input.path).sort()) !== JSON.stringify(skillInputs.map(row => row.path))) refusal("skill-input-set");
   const expectedExcluded = [];
   for (const spec of PLAN.packages) {
     const tracked = execFileSync("git", ["ls-files", "-z", `packages/${spec.dir}/src`, ...(spec.dir === "derive" ? PUBLIC_TESTING_INPUTS : [])], { cwd: ROOT, encoding: "utf8" }).split("\0").filter(Boolean);
@@ -63,13 +68,16 @@ export function check(manifestFile, captureFile, captureSha256, browserTool, bro
     if (packed.name !== nameOf(spec.dir) || packed.version !== release.version || realpathSync(join(namespace, packed.name.split("/")[1])) !== realpathSync(stage)) refusal("compiled-stage-binding");
     const expected = publishManifest(spec, json(join(ROOT, `packages/${spec.dir}/package.json`)), release.version);
     if (JSON.stringify(json(join(stage, "package.json"))) !== JSON.stringify(expected) || JSON.stringify(packed.manifest) !== JSON.stringify(expected)) refusal("publish-manifest");
-    const files = outputClosure(stage, spec, release.version);
+    const skillAssets = skillTrees[i];
+    if (JSON.stringify(packed.skillAssets ?? null) !== JSON.stringify(skillAssets)) refusal("skill-assets-integrity");
+    const files = outputClosure(stage, spec, release.version, skillAssets);
     if (JSON.stringify(files) !== JSON.stringify(packed.files) || !/^[a-z0-9._-]+\.tgz$/.test(packed.tarball)) refusal("stage-inventory");
     const tarball = join(output, "tarballs", packed.tarball), bytes = readFileSync(tarball);
     if (bytes.length !== packed.bytes || digest(bytes) !== packed.sha256 || `sha512-${Buffer.from(digest(bytes, "sha512"), "hex").toString("base64")}` !== packed.integrity) refusal("tarball-integrity");
     const names = execFileSync("/usr/bin/tar", ["-tzf", tarball], { encoding: "utf8" }).trim().split("\n");
     if (JSON.stringify(names.slice().sort()) !== JSON.stringify(files.map(row => `package/${row.path}`).sort())) refusal("tarball-files");
     for (const row of files) if (digest(execFileSync("/usr/bin/tar", ["-xOzf", tarball, `package/${row.path}`])) !== row.sha256) refusal("tarball-content");
+    verifySkillArchive(tarball, skillAssets);
   }
   // The fixture's private host type must erase without changing its public ABI.
   const fixtureJs = readFileSync(join(output, "packages/derive/dist/test/fixtures.js"), "utf8");

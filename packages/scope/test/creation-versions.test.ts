@@ -4,7 +4,7 @@
 import { env, evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { Intent, PlatformDefinition, Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, parseStrict, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
+import { canonicalize, intentDigest, isSignedIntentShape, parseStrict, scopeIdOf, signIntent, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
 import { readPlatformCreationPolicy, injectedPlatformCreationPolicy, permitsNewPlatformScope } from "../src/creation-versions.ts";
@@ -16,10 +16,19 @@ import { creationVersionSettings } from "./worker.ts";
 
 const legacy = "platform:register@2";
 const newest = ARCHIVE_DEVICE_PUBLICATION_COHORT.register;
-const install = () => signIntent({ v: 1, to: null, actor: keys.paul.key, kind: "install", on: null, expected: {},
+const install = (now?: number) => signIntent({ v: 1, to: null, actor: keys.paul.key, kind: "install", on: null, expected: {},
   fields: { host: "git.example", namespace: "versions", policy: "keys", founders: [keys.rita.key] },
-  idempotencyKey: crypto.randomUUID(), notAfter: new Date(Date.now() + 60_000).toISOString() } satisfies Intent, keys.paul.secret);
+  idempotencyKey: crypto.randomUUID(), notAfter: timeOf((now ?? Date.now()) + 60_000) } satisfies Intent, keys.paul.secret);
 const seedOf = (signed: ReturnType<typeof install>, definition: PlatformDefinition): Seed => ({ v: 1, kind: "register", definition, creator: null, cause: intentDigest(signed.intent), ordinal: 0 });
+
+test("install fixture is a valid signed intent at an exact-second deadline", () => {
+  // Control only the request's timestamp input. The deployed clock is unchanged.
+  const now = Math.floor(Date.now() / 1000) * 1000, signed = install(now);
+  expect(isSignedIntentShape(signed)).toBe(true);
+  expect(timeMs(signed.intent.notAfter)).toBe(now + 60_000);
+  const noncanonical = signIntent({ ...signed.intent, notAfter: new Date(now + 60_000).toISOString() }, keys.paul.secret);
+  expect(isSignedIntentShape(noncanonical)).toBe(false);
+});
 
 test("creation policy owns bounded known pins; absent and explicit undefined default, invalid configuration closes", () => {
   // The unpublished family is an additional admitted baseline, not a change
@@ -152,7 +161,7 @@ test("old live deployed genesis needs sealed applied integrity for repeats while
     expect(await native.create(signed, legacy)).toEqual(original);
     const found = signIntent({ v: 1, to: at, actor: keys.rita.key, kind: "found", on: null, expected: { register: 1 },
       fields: { branch: "main", founderHandle: "@rita", recoveryKey: keys.sam.key }, idempotencyKey: crypto.randomUUID(),
-      notAfter: new Date(Date.now() + 60_000).toISOString() } satisfies Intent, keys.rita.secret);
+      notAfter: timeOf(Date.now() + 60_000) } satisfies Intent, keys.rita.secret);
     expect(await native.submit(found, [])).toMatchObject({ answer: "accepted", receipt: { definition: legacy, fact: { at, seq: 1 } } });
     const old = parseStrict(stored);
     expect((await native.source(0))?.bytes).toBe(canonicalize(old));

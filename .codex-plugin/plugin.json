@@ -1,0 +1,9 @@
+{
+  "name": "dap-application",
+  "version": "0.1.0",
+  "description": "Write and check declared dap applications with Codex.",
+  "author": { "name": "General Business" },
+  "repository": "https://github.com/generalbusiness-ai/artroom",
+  "license": "Apache-2.0",
+  "skills": "./skills/"
+}

@@ -1,14 +1,55 @@
 // One coherent reproduction and closure/rewrite witness; no compiler/SDK loading.
 import assert from "node:assert/strict";
+import { chmodSync, lstatSync, mkdtempSync, mkdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { PLAN, PUBLIC_GIT_INPUTS, PUBLIC_TESTING_INPUTS, nameOf, copyFileVerified, outputClosure, productionInputs, publishManifest, references, rewriteDeclarationRefs } from "./public-release-lib.mjs";
+import { PLAN, PUBLIC_GIT_INPUTS, PUBLIC_TESTING_INPUTS, nameOf, copyFileVerified, copySkillAssets, digest, outputClosure, productionInputs, publishManifest, references, rewriteDeclarationRefs, skillAssetsOf, verifySkillArchive } from "./public-release-lib.mjs";
 import { browserRuntimeEdge } from "./check-public-release.mjs";
 
 const root = new URL("../", import.meta.url);
+test("the platform skill carries committed bytes and modes into its external stage and actual archive", () => {
+  // A disposable local Git repository and a code-free stage exercise only
+  // the asset boundary. No SDK compilation, package installation or publication.
+  const directory = realpathSync(mkdtempSync(join(tmpdir(), "dap-skill-carrier-")));
+  const source = join(directory, "source"), stage = join(directory, "package"), archive = join(directory, "skill.tgz");
+  const spec = { dir: "platform", skillAssets: ["skills/dap-application"], exports: {}, dependencies: {} };
+  const git = (...args) => execFileSync("git", ["-c", "core.hooksPath=/dev/null", "-c", "commit.gpgsign=false", "-c", "user.name=Asset fixture", "-c", "user.email=fixture@example.invalid", ...args], { cwd: source, stdio: "pipe", timeout: 10_000 });
+  const skill = "skills/dap-application/SKILL.md", script = "skills/dap-application/assets/check.sh";
+  const original = "# Local fixture\n", executable = "# Never executed\n";
+  const pack = () => execFileSync("/usr/bin/tar", ["-czf", archive, "-C", directory, "package/skills"], { timeout: 10_000 });
+  try {
+    mkdirSync(join(source, "skills/dap-application/assets"), { recursive: true }); mkdirSync(stage);
+    writeFileSync(join(source, skill), original); chmodSync(join(source, skill), 0o644);
+    writeFileSync(join(source, script), executable); chmodSync(join(source, script), 0o755);
+    git("init", "--quiet"); git("add", "."); git("commit", "--quiet", "--no-gpg-sign", "-m", "Record fixture assets");
+    let assets;
+    const mask = process.umask(0o077);
+    try { assets = copySkillAssets(source, stage, spec); } finally { process.umask(mask); }
+    assert.equal(readFileSync(join(stage, skill), "utf8"), original);
+    assert.equal(lstatSync(join(stage, skill)).mode & 0o777, 0o644);
+    assert.equal(lstatSync(join(stage, script)).mode & 0o777, 0o755);
+    writeFileSync(join(stage, "package.json"), JSON.stringify({ name: "@generalbusiness/dap-platform", version: "0.1.0-dev.2", type: "module", exports: {} }));
+    assert.equal(outputClosure(stage, spec, "0.1.0-dev.2", assets).length, 3);
+    pack(); verifySkillArchive(archive, assets);
+    chmodSync(join(stage, skill), 0o600); pack();
+    assert.throws(() => verifySkillArchive(archive, assets), /skill-archive-mode/);
+    assert.throws(() => outputClosure(stage, spec, "0.1.0-dev.2", assets), /skill-output-mismatch/);
+    chmodSync(join(stage, skill), 0o644); writeFileSync(join(stage, skill), "Changed archive bytes\n"); pack();
+    assert.throws(() => verifySkillArchive(archive, assets), /skill-archive-content/);
+    rmSync(join(stage, skill)); symlinkSync("assets/check.sh", join(stage, skill)); pack();
+    assert.throws(() => verifySkillArchive(archive, assets), /skill-archive-mode/);
+    writeFileSync(join(source, skill), "Changed source\n");
+    assert.throws(() => skillAssetsOf(source, spec), /skill-asset-changed/); writeFileSync(join(source, skill), original);
+    chmodSync(join(source, skill), 0o600); assert.throws(() => skillAssetsOf(source, spec), /skill-asset-changed/); chmodSync(join(source, skill), 0o644);
+    const extra = join(source, "skills/dap-application/untracked.json"); writeFileSync(extra, "{}\n");
+    assert.throws(() => skillAssetsOf(source, spec), /skill-asset-set/); rmSync(extra);
+    symlinkSync("assets/check.sh", extra); assert.throws(() => skillAssetsOf(source, spec), /nonregular-skill-asset/); rmSync(extra);
+    rmSync(join(source, skill)); assert.throws(() => skillAssetsOf(source, spec), /skill-asset-set/);
+  } finally { rmSync(directory, { recursive: true, force: true }); }
+});
+
 test("SDK module references preserve genuine imports and rewrite declarations without treating capability data as modules", () => {
   // Workspace names are already the public names; no publication alias is needed.
   for (const dir of ["contract", "package-graph", "derive", "lanes", "page", "platform", "cli", "bytes", "client", "replay", "scope", "git", "checkers"]) {
@@ -91,15 +132,22 @@ test("SDK module references preserve genuine imports and rewrite declarations wi
     mkdirSync(join(applicationStage, "dist/src"), { recursive: true });
     const platformManifest = JSON.parse(readFileSync(new URL("packages/platform/package.json", root), "utf8"));
     writeFileSync(join(applicationStage, "package.json"), JSON.stringify(publishManifest(platformSpec, platformManifest, "0.1.0-dev.2")));
+    // A made-up skill isolates code-export closure; the separate asset witness
+    // above checks actual committed bytes, modes, copying and archive content.
+    const skillPath = "skills/dap-application/SKILL.md", skillBytes = "# Made-up authoring fixture\n";
+    mkdirSync(join(applicationStage, "skills/dap-application"), { recursive: true });
+    writeFileSync(join(applicationStage, skillPath), skillBytes); chmodSync(join(applicationStage, skillPath), 0o644);
+    const skillFiles = [{ path: skillPath, bytes: Buffer.byteLength(skillBytes), mode: 0o644, sha256: digest(skillBytes) }];
+    const skillAssets = { files: skillFiles, sha256: digest(JSON.stringify(skillFiles)) };
     for (const name of Object.values(platformSpec.exports).map(path => path.slice("src/".length))) {
       mkdirSync(join(applicationStage, "dist/src", name, ".."), { recursive: true });
       for (const extension of ["js", "d.ts"]) writeFileSync(join(applicationStage, `dist/src/${name}.${extension}`), name.endsWith("application-v2") ? "export { fieldAssignable } from '@generalbusiness/dap-package-graph';\n" : "export {};\n");
     }
-    assert.equal(outputClosure(applicationStage, platformSpec, "0.1.0-dev.2").length, 1 + Object.keys(platformSpec.exports).length * 2);
+    assert.equal(outputClosure(applicationStage, platformSpec, "0.1.0-dev.2", skillAssets).length, 2 + Object.keys(platformSpec.exports).length * 2);
     const withoutGraph = { ...platformSpec, dependencies: Object.fromEntries(Object.entries(platformSpec.dependencies).filter(([name]) => name !== "@generalbusiness/dap-package-graph")) };
-    assert.throws(() => outputClosure(applicationStage, withoutGraph, "0.1.0-dev.2"), /bare-output-closure/);
+    assert.throws(() => outputClosure(applicationStage, withoutGraph, "0.1.0-dev.2", skillAssets), /bare-output-closure/);
     rmSync(join(applicationStage, "dist/src/application-codec/application-v2.js"));
-    assert.throws(() => outputClosure(applicationStage, platformSpec, "0.1.0-dev.2"), /missing-export/);
+    assert.throws(() => outputClosure(applicationStage, platformSpec, "0.1.0-dev.2", skillAssets), /missing-export/);
     const jsonataInput = "/owned/node_modules/jsonata/jsonata.js";
     const synthetic = { path: "<runtime>", kind: "import-statement", external: true };
     assert.equal(browserRuntimeEdge(jsonataInput, synthetic, jsonataInput), true);
@@ -187,6 +235,7 @@ test("SDK published manifests match the actual supported workspace manifests", (
   assert.equal(published.homepage, "https://dap.generalbusiness.ai/");
   assert.deepEqual(Object.keys(published.exports), [".", "./membership-actions", "./application", "./application-v2", "./package-validation"]);
   assert.equal(published.exports["./application-install"], undefined);
+  assert.deepEqual(published.files, ["dist", "skills", "README.md", "LICENSE", "NOTICE"]);
   assert.deepEqual(platform.excludedSourceExports, { "./testing": "./test/support.ts", "./application-install": "./src/application-install.ts" });
   assert.throws(() => publishManifest({ ...platform, excludedSourceExports: { "./testing": "./test/support.ts" } }, platformManifest, "0.1.0-dev.2"), /source-export-exclusions/);
   assert.throws(() => publishManifest(platform, { ...platformManifest, exports: { ...platformManifest.exports, "./application-install": "./src/index.ts" } }, "0.1.0-dev.2"), /unsupported-source-export/);

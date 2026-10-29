@@ -1,0 +1,7 @@
+{
+  "name": "dap",
+  "owner": { "name": "General Business" },
+  "plugins": [
+    { "name": "dap-application", "source": "./", "description": "Declared dap application authoring for Claude Code." }
+  ]
+}
