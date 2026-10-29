@@ -8,8 +8,9 @@ import contextlib
 import io
 import json
 import tempfile
+from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from kit import LABELS, Refusal
 from shutdown import MacPorts, ProcessIdentity, log_completion, log_cursor, main, stop
@@ -81,6 +82,30 @@ class ScriptedPorts:
 
 
 class ShutdownControls(unittest.TestCase):
+    def test_scripted_disabled_readback_accepts_both_formats_but_refuses_ambiguity(self):
+        # Actual-format and legacy output are scripted; no launchd call runs.
+        label = LABELS["celld"]
+        entry = b'"' + label.encode() + b'" => '
+        for output, status, accepted in (
+                (b"disabled services = {\n\t" + entry + b"disabled\n}\n", 0, True),
+                (entry + b"true\n", 0, True),
+                (entry + b"enabled\n", 0, False),
+                (entry + b"false\n", 0, False),
+                (b'"another.service" => disabled\n', 0, False),
+                (entry + b"true\n" + entry + b"true\n", 0, False),
+                (entry + b"disabled\n" + entry + b"false\n", 0, False),
+                (entry.replace(b".", b"x") + b"disabled\n", 0, False),
+                (entry + b"disabled trailing-text\n", 0, False),
+                (entry + b"disabled\n", 1, False)):
+            with self.subTest(output=output, status=status), patch.object(MacPorts, "command", side_effect=[
+                    SimpleNamespace(returncode=0), SimpleNamespace(returncode=status, stdout=output)]) as command:
+                if accepted:
+                    MacPorts().disable(label)
+                else:
+                    with self.assertRaises(Refusal):
+                        MacPorts().disable(label)
+                self.assertEqual(command.call_args_list, [call("disable", "system/" + label), call("print-disabled", "system")])
+
     def record(self, directory):
         prefix = Path(directory)
         (prefix / "logs").mkdir()

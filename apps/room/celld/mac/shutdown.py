@@ -145,7 +145,10 @@ class MacPorts:
     def disable(self, label):
         require(self.command("disable", "system/" + label).returncode == 0, "cannot disable supervisor")
         result = self.command("print-disabled", "system")
-        require(result.returncode == 0 and re.search(rb'"' + re.escape(label.encode()) + rb'"\s*=>\s*true', result.stdout), "disabled state unavailable")
+        entries = re.findall(rb'(?m)^[ \t]*"' + re.escape(label.encode()) + rb'"([^\r\n]*)\r?$', result.stdout)
+        require(result.returncode == 0 and len(entries) == 1
+                and re.fullmatch(rb'[ \t]*=>[ \t]*(?:true|disabled)[ \t]*', entries[0]) is not None,
+                "disabled state unavailable")
 
     def preserve(self, url):
         require(url == "http://127.0.0.1:28901", "operator address differs")
