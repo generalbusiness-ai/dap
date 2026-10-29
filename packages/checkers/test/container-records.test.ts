@@ -7,7 +7,7 @@ import { ClaimTooLargeRefusal, CheckerService, Outcomes, type ServiceOptions } f
 import { Lane, MemoryDurable, T0, newKey, world } from "./support.ts";
 
 // This refusal precedes a run fence and any process/container launch.
-test("an oversized claim has its own refusal name and ends run-lost before any execution fence", async () => {
+test("an oversized claim has its own refusal name and signed claim-too-large outcome before any execution fence", async () => {
   const parent = mkdtempSync(join(tmpdir(), "checker-claim-")), root = join(parent, "absent");
   try {
     const w = world();
@@ -23,7 +23,8 @@ test("an oversized claim has its own refusal name and ends run-lost before any e
     const delivered = await service.deliver(w.notice);
     expect(refusal).toBeInstanceOf(ClaimTooLargeRefusal);
     expect((refusal as Error).message).toContain("claim-too-large");
-    expect(delivered).toMatchObject({ did: "submitted", outcome: { act: "check-error", reason: "run-lost" } });
+    expect(delivered).toMatchObject({ did: "submitted", outcome: { act: "check-error", reason: "claim-too-large" } });
+    expect(scopes.submitted.at(-1)?.intent.fields["reason"]).toBe("claim-too-large");
     expect(logs).toEqual([{ step: "run", event: "claim-too-large" }]);
     expect(finds).toBe(0);
     expect(existsSync(root)).toBe(false);

@@ -72,7 +72,7 @@ import { readConfiguration, type Configuration } from "./configuration.ts";
 import { verifyReservationObjects } from "./reservation-snapshot.ts";
 import { manifestOf, originOf, type Job, type NotAJob, type Notice } from "./job.ts";
 import { stageOriginOf, type EvidenceDefinitions, type StageSnapshotRead } from "./stage-origin.ts";
-import { judge, provenanceOf, readReport, type Details, type Outcome } from "./outcome.ts";
+import { judge, provenanceOf, readReport, type Details, type ErrorReason, type Outcome } from "./outcome.ts";
 import { JOB_READ, signJobRead, signResult, type ResultSigner } from "./signing.ts";
 import type { JobRecord, Outcomes } from "./store.ts";
 
@@ -197,18 +197,18 @@ export class CheckerService {
 
   #log(step: string, event: string): void { this.#o.log?.({ step, event }); }
   #recovery(): RunnerRecovery { return { now: this.#o.clock(), graceSeconds: this.#recoveryGraceSeconds }; }
-  #runnerRefusal(error: unknown, step: string): boolean {
+  #runnerRefusal(error: unknown, step: string): ErrorReason | null {
     if (error instanceof RunRecordCorruption) {
       this.#o.log?.({ step, event: "record-corrupt", path: error.path });
-      return true;
+      return "run-lost";
     }
-    if (error instanceof ClaimTooLargeRefusal) { this.#log(step, "claim-too-large"); return true; }
+    if (error instanceof ClaimTooLargeRefusal) { this.#log(step, "claim-too-large"); return "claim-too-large"; }
     if (error instanceof RunIdentityRefusal) {
       if (error.path === undefined) this.#log(step, "identity-refused");
       else this.#o.log?.({ step, event: "record-corrupt", path: error.path });
-      return true;
+      return "run-lost";
     }
-    return false;
+    return null;
   }
   #signing() { return { now: this.#o.clock(), nonce: this.#o.random(16) }; }
 
@@ -308,12 +308,13 @@ export class CheckerService {
     if (record.state === "started") {
       // The delivery that made the record is at work in this process: its run has not ended, or has not begun.
       if (this.#flying.has(flightOf(job))) return { did: "waiting" };
-      let matched: unknown;
+      let matched: unknown, refusal: ErrorReason | undefined;
       try {
         matched = await this.#o.runner.find(record.run, job, this.#recovery());
       } catch (error) {
-        if (this.#runnerRefusal(error, "find")) {
-          matched = null;
+        const reason = this.#runnerRefusal(error, "find");
+        if (reason !== null) {
+          matched = null; refusal = reason;
         } else {
           // The runner's record could not be read now. That is not "no record": nothing is concluded.
           this.#log("find", "unreadable");
@@ -322,7 +323,7 @@ export class CheckerService {
       }
       if (matched === RUNNING) return { did: "waiting" };
       // The run's end as its own record has it, or no record at all: `run-lost`. No second run in either case.
-      await this.#conclude(job, record.run, await this.#configuration(job), matched);
+      await this.#conclude(job, record.run, await this.#configuration(job), matched, refusal);
     }
     return this.#submit(job, false);
   }
@@ -342,6 +343,7 @@ export class CheckerService {
     const configuration = await this.#configuration(job);
     if (job.evidence && !await this.#currentStage(job, (await this.#o.outcomes.get(job.fact))?.stageSnapshot)) return { did: "waiting" };
     let report: unknown = null;
+    let refusal: ErrorReason | undefined;
     let ran = false;
     if (configuration !== null) {
       // 4. Legacy runs require the read token; snapshot runs use their verified overlay.
@@ -362,13 +364,15 @@ export class CheckerService {
         } catch (error) {
           // A lost reply is not a missing execution record. Look up this
           // exact run once; recovery never calls run a second time.
-          if (this.#runnerRefusal(error, "run")) {
-            report = null;
+          const reason = this.#runnerRefusal(error, "run");
+          if (reason !== null) {
+            report = null; refusal = reason;
           } else {
             this.#log("run", "lost");
             try { report = await this.#o.runner.find(run, job, this.#recovery()); }
             catch (finding) {
-              if (this.#runnerRefusal(finding, "find")) { report = null; }
+              const recovered = this.#runnerRefusal(finding, "find");
+              if (recovered !== null) { report = null; refusal = recovered; }
               else { this.#log("find", "unreadable"); return { did: "waiting" }; }
             }
           }
@@ -376,7 +380,7 @@ export class CheckerService {
         }
       } else if (token !== null) this.#log("job-read", answered === "refused" || answered === "unavailable" || answered === "mismatch" ? answered : "no-answer");
     }
-    await this.#conclude(job, run, configuration, report);
+    await this.#conclude(job, run, configuration, report, refusal);
     return this.#submit(job, ran);
   }
 
@@ -388,10 +392,12 @@ export class CheckerService {
    * nothing of it. So nothing that a runner returned can fail between the record of the run and the kept outcome, at the run's own
    * delivery or at a later one that finds the same report: the outcome is kept and signed, and no second run starts.
    */
-  async #conclude(job: Job, run: string, configuration: Configuration | null, report: unknown): Promise<void> {
+  async #conclude(job: Job, run: string, configuration: Configuration | null, report: unknown, refusal?: ErrorReason): Promise<void> {
     const lost = report === null || report === undefined;
     const read = lost ? null : readReport(report);
-    const outcome: Outcome = configuration === null ? { act: "check-error", reason: "configuration-unavailable" } : lost ? { act: "check-error", reason: "run-lost" } : judge(configuration, read);
+    const outcome: Outcome = refusal !== undefined ? { act: "check-error", reason: refusal }
+      : configuration === null ? { act: "check-error", reason: "configuration-unavailable" }
+      : lost ? { act: "check-error", reason: "run-lost" } : judge(configuration, read);
     const details: Details | null = configuration === null ? null : { provenance: provenanceOf(job, configuration, read, run) };
     await this.#o.outcomes.keep(job.fact, outcome, details);
   }

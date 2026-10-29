@@ -84,9 +84,9 @@ If replacement fails, the helper restores its original stderr and writes a
 fixed setup diagnostic. The helper reserves that stderr for setup errors. An
 abnormal close, status `255`, or a nonzero status with helper stderr leaves
 the run lost. The adapter cannot distinguish those cases from transport or
-ctr setup failure. Profiles that keep the job's streams separate also leave a nonzero
-status with stderr lost. A nonzero status with empty helper stderr remains
-judgeable.
+ctr setup failure. Profiles that keep the job's streams separate also leave
+a nonzero status with stderr lost. A nonzero status with empty helper stderr
+remains judgeable.
 
 Give this runner and the external `ResultSigner` to `CheckerService`.
 The service authenticates the job and configuration before calling
@@ -190,7 +190,9 @@ read failures for other record files and engine failures with a valid claim
 also leave recovery waiting.
 
 A new execution claim above 16 KiB raises `ClaimTooLargeRefusal`. The service
-logs `claim-too-large`. `RunIdentityRefusal` identifies an identity mismatch.
+logs `claim-too-large` and signs `check-error` with that reason. The runner
+creates no execution record. `RunIdentityRefusal` identifies an identity
+mismatch.
 
 Recovery can return the same terminal report or report that the run still
 runs. It never starts a replacement. Keep run directories and execution
