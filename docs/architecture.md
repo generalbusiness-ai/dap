@@ -345,7 +345,10 @@ an account ends. A funded local self-delivery identifies the holder's
 settlement before its literal final transition. Pending operations and
 request accounts keep their reachable reservations. Neither TIME nor an
 unknown answer releases that room. The Git host supplies no settlement
-authority or provider fallback.
+authority or provider fallback. Settlement identity fields authenticate the
+actual local source before binding can draw a held decision; a later guard
+checks current closure. The funding geometry is a structural ceiling, not a
+guarantee that every policy fits capacity or the generic binding selector.
 
 Destination records published-check holds in the same transaction that
 orders later admissions. Passes clear only the exact hold key at the same

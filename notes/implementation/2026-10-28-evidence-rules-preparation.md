@@ -204,6 +204,13 @@ explicit withdrawal must remain available. Atomic all-account capacity
 admission is not claimed. New setup and settlement work must appear in the
 compiled declarations and each account's complete reservation.
 
+The generic binding selector still reads at most eight rows per index key
+(`packages/derive/src/binding.ts`). A sixteen-account scripted funding chain
+proves its structural geometry, not a complete Native 32-check journey.
+Scope capacity can refuse earlier; no kernel selector bound changes here.
+Settlement code-field validation authenticates the actual self-source before
+binding may draw a decision. Its later guard checks current terminal work.
+
 ## Decisions witness map
 
 This is a static coverage map, not a Native pass list. Exact case-title
@@ -217,6 +224,7 @@ keys N1–N8 refer to `packages/scope/test/evidence-rules-real.test.ts`:
 - **N6** `literal native TIME holds at its own head, replays unchanged, and recovers one funded incident within the pending bound`
 - **N7** `the real failure and reservation outcomes serialize atomically in both admitted-before-failure and failure-before-admission schedules`
 - **N8** `a cancelled same-tree landing needs a fresh room audit and disagreeing results refuse its actual retry`
+- **N9** `partial native funding remains unready and withdraws before the original next-account retry releases its prefix` (additional capacity witness; unrun).
 
 Pure owners below are in `packages/platform/test/`:
 

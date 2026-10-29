@@ -23,7 +23,7 @@ export function evidenceSettlementBudgetV17(bounds: Bounds) {
   for (const work of [true, false]) {
     const message = { class: "request", type: "tell", body: { message: work ? "evidence-work-settle" : "evidence-batch-settle",
       fields: { holder: fact, [work ? "job" : "operation"]: fact } } } as const;
-    const frame = { v: 1 as const, at, seq: max, prev: hash, time: "9999-12-31T23:59:59.999Z", clamped: false, epoch: 0,
+    const frame = { v: 1 as const, at, seq: max, prev: hash, time: "9999-12-31T23:59:59.999Z", clamped: false, epoch: 0 as const,
       uses: [], prepared: [] };
     variants.push({ ...frame, input: { type: "outcome", owner: "platform:destination@17", kind: EVIDENCE_ACCOUNT_SETTLE_V17, operation, attempt: 1,
       result: "refused", evidence: { basis: "own-answer", body: { holder: fact } } },
@@ -34,7 +34,7 @@ export function evidenceSettlementBudgetV17(bounds: Bounds) {
   }
   for (const terminal of ["cleaned", "aborted", "not-reserved"]) {
     const message = { class: "request", type: "tell", body: { message: `publication-settle-${terminal}`, fields: { publication: max, closing: fact } } } as const;
-    const frame = { v: 1 as const, at, seq: max, prev: hash, time: "9999-12-31T23:59:59.999Z", clamped: false, epoch: 0, uses: [], prepared: [] };
+    const frame = { v: 1 as const, at, seq: max, prev: hash, time: "9999-12-31T23:59:59.999Z", clamped: false, epoch: 0 as const, uses: [], prepared: [] };
     variants.push({ ...frame, input: { type: "outcome", owner: "platform:destination@17", kind: "publication-settle", operation, attempt: 1,
       result: "refused", evidence: { basis: "own-answer", body: { closing: fact } } },
       effects: [{ effect: "attempt", operation, attempt: 1, result: "refused", selected: null }], sends: [{ n: max, to: at, message }] });
@@ -99,10 +99,11 @@ function request(state: StateView, own: Own, operation: Operation, hooks: Eviden
   return { to: scope.at, message: { class: "request", type: "tell", body: { message: work ? "evidence-work-settle" : "evidence-batch-settle",
     fields: { holder: held.fact, [work ? "job" : "operation"]: identity } } } };
 }
-function receiver(given: RuleGiven, hooks: EvidenceAccountSettlementHooksV17): boolean {
+function receiver(given: RuleGiven, hooks: EvidenceAccountSettlementHooksV17, candidate?: Item, mutable = true): boolean {
   if (given.input.type !== "delivery" || given.input.message.class !== "request" || given.input.message.type !== "tell"
     || !same(given.input.from.at, given.resolved.at)) return false;
-  const source = given.own(given.input.from.seq), holder = given.resolved.subjects.get("also.holder");
+  const n = given.input.n;
+  const source = given.own(given.input.from.seq), holder = candidate ?? given.resolved.subjects.get("also.holder");
   if (!source || source.hash !== given.input.from.hash || entryHash(source.entry) !== source.hash || !holder
     || source.entry.input.type !== "outcome" || source.entry.input.owner !== "platform:destination@17"
     || source.entry.input.kind !== EVIDENCE_ACCOUNT_SETTLE_V17 || source.entry.input.result !== "refused" || source.entry.input.attempt !== 1
@@ -114,13 +115,13 @@ function receiver(given: RuleGiven, hooks: EvidenceAccountSettlementHooksV17): b
       && outcome.evidence === digest)
     || held.holder.id !== holder.id || !isRecord(source.entry.input.evidence.body)
     || Object.keys(source.entry.input.evidence.body).join() !== "holder" || !same(source.entry.input.evidence.body["holder"], held.fact)) return false;
-  const sent = source.entry.sends.filter(send => send.n === given.input.n);
+  const sent = source.entry.sends.filter(send => send.n === n);
   if (sent.length !== 1 || !same(sent[0]!.to, given.resolved.at) || !same(sent[0]!.message, given.input.message)
     || !isRecord(given.input.message.body) || !isRecord(given.input.message.body["fields"])) return false;
   const fields = given.input.message.body["fields"], work = holder.type === "evidence-request", key = work ? "job" : "operation";
   if (Object.keys(fields).sort().join() !== ["holder", key].sort().join() || !same(fields["holder"], held.fact)
     || !same(fields[key], work ? holder.values["job"] : holder.refs["operation"])) return false;
-  return proof(given.state, given.own, operation, hooks, { seq: source.entry.seq, n: given.input.n }) !== null;
+  return !mutable || proof(given.state, given.own, operation, hooks, { seq: source.entry.seq, n: given.input.n }) !== null;
 }
 export function evidenceAccountSettlementDataV17(base: PlatformData): PlatformData {
   const receives = { ...base.receives }, items = { ...base.items };
@@ -133,11 +134,11 @@ export function evidenceAccountSettlementDataV17(base: PlatformData): PlatformDa
       decisions: { ...item.holds.decisions, [message]: 1 } } };
     receives[message] = { message, class: "tell", from: { kind: "destination", under: "platform:destination" }, opens: null,
       also: { holder: { item: type, index: key, key, code: "evidence-settlement-holder-v17", row: "E5" } },
-      fields: { holder: { type: "fact", kind: [work ? "work-check-fence" : "evidence-fund"], under: "platform:destination", required: true },
+      fields: { holder: { type: "code", code: "evidence-settlement-holder-field-v17", row: "E5", required: true },
         [key]: { type: "fact", kind: [work ? "request-work-check" : "merge"], under: work ? "issue" : "change", required: true } },
-      bound: { of: "also.holder", where: [{ equals: { a: { sender: true }, b: { scope: true } } }] },
+      bound: { of: "also.holder", where: [{ equals: { a: { field: key }, b: { slot: key, of: "also.holder" } } }] },
       settles: { of: "also.holder", in: work ? ["pending", "waiting"] : ["funded"] },
-      guards: [{ code: "evidence-settlement-proof-v17", row: "E5" }], effects: [{ state: work ? "settled" : "closed", of: "also.holder" }], sends: [], attention: [] };
+      guards: [{ state: work ? ["pending", "waiting"] : ["funded"], of: "also.holder" }, { code: "evidence-settlement-proof-v17", row: "E5" }], effects: [{ state: work ? "settled" : "closed", of: "also.holder" }], sends: [], attention: [] };
   }
   return { ...base, items, receives, outcomes: { ...base.outcomes, [EVIDENCE_ACCOUNT_SETTLE_V17]: {
     code: "evidence-settlement-outcome-v17", row: "E5", attempts: 1, origin: "rule", most: { effects: 0, operations: [] },
@@ -145,11 +146,17 @@ export function evidenceAccountSettlementDataV17(base: PlatformData): PlatformDa
 }
 export function evidenceAccountSettlementRulesV17(base: Rules, hooks: EvidenceAccountSettlementHooksV17): Rules {
   return { ...base,
+    // This check runs before binding, so an unrelated sender cannot spend
+    // the account's one settlement decision by provoking a later refusal.
+    "evidence-settlement-holder-field-v17": { place: "type", run: (given, value) => {
+      if (!isFactRef(value) || !same(value.at, given.resolved.at)) return false;
+      const holder = given.state.item(value.seq);
+      return !!holder && accountType(holder) && holder.opened === value.hash && receiver(given, hooks, holder, false);
+    } },
     "evidence-settlement-holder-v17": { place: "also", bind: (items, fields) => {
       const raw = fields["holder"], id = typeof raw === "number" && Number.isSafeInteger(raw) && raw >= 0 ? raw : isFactRef(raw) ? raw.seq : null;
       if (id === null || items.length > 16) return null;
-      const held = items.filter(item => item.id === id && accountType(item));
-      return held.length === 1 && (!isFactRef(raw) || held[0]!.opened === raw.hash) ? id : null;
+      return items.filter(item => item.id === id).length === 1 ? id : null;
     } },
     "evidence-settlement-proof-v17": { place: "guard", refusals: ["account-not-closed"], run: given => receiver(given, hooks) ? { holds: true } : { holds: false, name: "account-not-closed" } },
     "evidence-settlement-outcome-v17": { place: "outcome", rules: { selects: false, read: false, retries: () => false,

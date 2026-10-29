@@ -86,12 +86,17 @@ test.each(["cleaned", "aborted", "not-reserved"] as const)("%s releases only aft
 
 test("a self-addressed made-up source cannot consume the real holder's final settlement", () => {
   const f = fixture(), closing = destinationPublicationSettlementPendingV17(f.ledger.state, f.ledger.own, f.operation)!.closing;
+  const before = JSON.stringify(f.ledger.state.holder(f.holder));
   const request = { n: 0, to: f.ledger.at, message: { class: "request", type: "tell", body: { message: "publication-settle-cleaned", fields: { publication: f.holder, closing } } } } as const;
   // Invalid input is made up explicitly. It is not a recorded Native send.
   const source = { ...forged(f.ledger.at, 90, { type: "checkpoint", through: 0, state: d("e") }, [request]), under: "platform:destination" };
   const delivered = { ...request, from: factRefOf(source.entry) };
   const judged = judgeDelivery(f.ledger.state, f.definition, delivered, { ...arriving(f.ledger, delivered, source), platform: { named: OWNER, rules: f.rules } });
-  expect(written(judged).input).toMatchObject({ type: "delivery", decision: "refused", reason: { code: "guard-failed", name: "publication-settlement-unavailable" } });
+  const draft = written(judged);
+  expect(draft.input).toMatchObject({ type: "delivery", decision: "refused", reason: { code: "bad-field" } });
+  expect(draft.bound).toBeUndefined();
+  f.ledger.seal(draft);
+  expect(JSON.stringify(f.ledger.state.holder(f.holder))).toBe(before);
   expect(f.ledger.item(f.holder).state).toBe("closing-cleaned");
   expect(f.ledger.state.holderSettled(f.holder)).toBe(false);
 });

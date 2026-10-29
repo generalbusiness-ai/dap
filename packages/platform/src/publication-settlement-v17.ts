@@ -2,7 +2,7 @@
  * outcome's final-looking state or a timeout. Historical data stays exact. */
 import type { FactRef, PlatformData } from "@generalbusiness/dap-contract";
 import { entryHash, isEntry, isOperationId, isRecord, same } from "@generalbusiness/dap-bytes";
-import { evidenceDigest, operationOpening, operationSettled, RuleFault, type Item, type Operation, type OutcomeGives, type Own, type RuleEffect, type RuleGiven, type Rules, type StateView } from "@generalbusiness/dap-derive";
+import { evidenceDigest, operationOpening, operationSettled, RuleFault, type Item, type Operation, type OutcomeGives, type Own, type PlatformRule, type RuleEffect, type RuleGiven, type Rules, type StateView } from "@generalbusiness/dap-derive";
 import { evidenceOperationOpeningV17 } from "./evidence-opening-v17.ts";
 import { readFor, targetOf } from "./destination.ts";
 
@@ -61,14 +61,21 @@ function producerFor(state: StateView, own: Own, operation: Operation, publicati
     && (effect.effect === "ref" ? effect.to === publication.id : effect.value === publication.id));
   return opens.length === 1 && links.length === 1;
 }
-function opening(state: StateView, own: Own, operation: Operation): { item: Item; closing: FactRef; terminal: Terminal } | null {
+function opening(state: StateView, own: Own, operation: Operation, current = true): { item: Item; closing: FactRef; terminal: Terminal } | null {
   if (!nativeScope(state, own) || !isOperationId(operation.id) || operation.owner !== OWNER || operation.kind !== PUBLICATION_SETTLE_V17
     || operation.most !== 1 || operation.for === undefined || !same(state.operation(operation.id), operation)) return null;
-  const item = state.item(operation.for), terminal = item && terminalOf(item.state), source = own(Number(operation.id.split(":")[0]));
+  const item = state.item(operation.for), source = own(Number(operation.id.split(":")[0]));
   const at = state.scope()!.at, closing = source && factAt(own, at, source.entry.seq), birth = item && factAt(own, at, item.id);
-  if (!item || item.type !== "publication" || !terminal || !source || !closing || !birth || item.opened !== birth.hash
+  if (!item || item.type !== "publication" || !source || !closing || !birth || item.opened !== birth.hash
     || !evidenceOperationOpeningV17(source.entry, operation)) return null;
-  const rows = source.entry.effects.filter(effect => effect.effect === "state" && effect.item === item.id && effect.state === closingState(terminal));
+  const ordinal = Number(operation.id.split(":")[1]);
+  const attempts = source.entry.effects.filter(effect => effect.effect === "attempt" && typeof effect.operation === "object"
+    && effect.operation.k === ordinal && effect.attempt === 1 && effect.result === "opened" && effect.selected === null);
+  if (attempts.length !== 1) return null;
+  const rows = source.entry.effects.filter((effect): effect is Extract<RuleEffect, { effect: "state" }> => effect.effect === "state"
+    && effect.item === item.id && terminalOf(effect.state) !== null);
+  const terminal = rows.length === 1 ? terminalOf(rows[0]!.state) : null;
+  if (!terminal || current && item.state !== closingState(terminal)) return null;
   const input = source.entry.input;
   if (input.type === "outcome") {
     const original = state.operation(input.operation);
@@ -104,15 +111,16 @@ export function publicationSettlementDataV17(base: PlatformData): PlatformData {
   const publication = base.items["publication"];
   if (!publication?.holds || base.outcomes[PUBLICATION_SETTLE_V17]) throw Error("Publication settlement is installed exactly once on a holder");
   const states = { ...publication.states }, decisions = { ...publication.holds.decisions }, receives = { ...base.receives };
-  const kinds = [...PRODUCERS.filter(kind => base.outcomes[kind]).map(kind => `${OWNER}:${kind}`), "withdraw"];
   for (const terminal of TERMINALS) {
     if (states[terminal]?.final !== true) throw Error("The intended publication terminal must remain final");
     const closing = closingState(terminal), message = messageOf(terminal);
     states[closing] = { final: false }; decisions[message] = 1;
     receives[message] = { message, class: "tell", from: { kind: "destination", under: "platform:destination" }, opens: null,
-      fields: { publication: { type: "item", of: "publication", required: true }, closing: { type: "fact", kind: kinds, under: "platform:destination", required: true } },
+      fields: { publication: { type: "item", of: "publication", required: true }, closing: { type: "code", code: "publication-settlement-source-type-v17", row: "E5", required: true } },
       also: { publication: { item: "publication", by: "publication" } },
-      bound: { of: "also.publication", where: [{ equals: { a: { sender: true }, b: { scope: true } } }] },
+      // Check 7 authenticates the whole self-source before this exact item
+      // selection can draw its one held decision. No caller-supplied scope.
+      bound: { of: "also.publication", where: [] },
       settles: { of: "also.publication", in: [closing] },
       guards: [{ of: "also.publication", state: [closing] }, { code: "publication-settlement-source-v17", row: "E5" }],
       effects: [{ of: "also.publication", state: terminal }], sends: [], attention: [] };
@@ -135,28 +143,36 @@ export function publicationSettlementDataV17(base: PlatformData): PlatformData {
     operations: { ...publication.holds.operations, [PUBLICATION_SETTLE_V17]: 1 }, requests: (publication.holds.requests ?? 0) + 1, decisions } } }, receives, outcomes };
 }
 
-function receiver(given: RuleGiven): boolean {
+function sourceProof(given: RuleGiven): { item: Item; operation: Operation; closing: FactRef; terminal: Terminal; seq: number; n: number } | null {
   const input = given.input;
   if (input.type !== "delivery" || input.message.class !== "request" || input.message.type !== "tell" || !exact(input.message.body, ["message", "fields"])
-    || !same(input.from.at, given.resolved.at)) return false;
+    || !same(input.from.at, given.resolved.at)) return null;
   const source = given.own(input.from.seq), entry = source?.entry, arrived = input.message.body["fields"];
   if (!source || !entry || !same(factAt(given.own, given.resolved.at, input.from.seq), input.from) || entry.input.type !== "outcome"
     || entry.input.owner !== OWNER || entry.input.kind !== PUBLICATION_SETTLE_V17 || entry.input.attempt !== 1 || entry.input.result !== "refused"
-    || entry.input.evidence.basis !== "own-answer" || !exact(entry.input.evidence.body, ["closing"]) || !exact(arrived, ["publication", "closing"])) return false;
-  const operation = given.state.operation(entry.input.operation), found = operation && opening(given.state, given.own, operation);
+    || entry.input.evidence.basis !== "own-answer" || !exact(entry.input.evidence.body, ["closing"]) || !exact(arrived, ["publication", "closing"])) return null;
+  const operation = given.state.operation(entry.input.operation), found = operation && opening(given.state, given.own, operation, false);
   const evidence = evidenceDigest(entry.input.evidence);
   if (!operation || !found || !same(entry.input.evidence.body["closing"], found.closing) || !same(arrived["closing"], found.closing)
-    || arrived["publication"] !== found.item.id || given.resolved.subjects.get("also.publication")?.id !== found.item.id
-    || !(given.resolved.fields["closing"] === found.closing.seq || same(given.resolved.fields["closing"], found.closing))
+    || arrived["publication"] !== found.item.id || given.resolved.fields["publication"] !== found.item.id
+    || !same(given.resolved.fields["closing"], found.closing)
     || input.message.body["message"] !== messageOf(found.terminal)
-    || !operation.attempts.some(attempt => attempt.attempt === 1 && attempt.outcomes.some(outcome => outcome.seq === entry.seq && outcome.result === "refused"
+    || operation.attempts.length !== 1 || operation.attempts[0]!.attempt !== 1 || operation.attempts[0]!.opened !== found.closing.seq
+    || !operation.attempts[0]!.outcomes.some(outcome => outcome.seq === entry.seq && outcome.result === "refused"
       && outcome.evidence === evidence))
-    || !entry.sends.some(send => send.n === input.n && same(send.to, given.resolved.at) && same(send.message, input.message))) return false;
-  return quiet(given.state, found.item.id, operation.id, { seq: entry.seq, n: input.n });
+    return null;
+  const sends = entry.sends.filter(send => send.n === input.n);
+  if (sends.length !== 1 || !same(sends[0]!.to, given.resolved.at) || !same(sends[0]!.message, input.message)) return null;
+  return { ...found, operation, seq: entry.seq, n: input.n };
+}
+function receiver(given: RuleGiven): boolean {
+  const found = sourceProof(given);
+  return !!found && found.item.state === closingState(found.terminal) && given.resolved.subjects.get("also.publication")?.id === found.item.id
+    && quiet(given.state, found.item.id, found.operation.id, { seq: found.seq, n: found.n });
 }
 /** Install outermost, after the successor funding and evidence rules. */
 export function publicationSettlementRulesV17(base: Rules, data: PlatformData): Rules {
-  const rules: Rules = { ...base };
+  const rules: Record<string, PlatformRule> = { ...base };
   for (const kind of PRODUCERS) {
     const mark = data.outcomes[kind], rule = mark && base[mark.code];
     if (!mark) continue;
@@ -165,10 +181,15 @@ export function publicationSettlementRulesV17(base: Rules, data: PlatformData): 
       derives: (given, operation, selected) => publicationSettlementProjectionV17(given, rule.rules.derives!(given, operation, selected)) } };
   }
   const withdraw = base["withdraw-unpublished"];
-  if (withdraw?.place === "effect") rules["withdraw-unpublished"] = { ...withdraw, most: withdraw.most + 2, run: given => {
+  if (withdraw?.place === "effect") rules["withdraw-unpublished"] = { ...withdraw, most: withdraw.most + 2, run: (given: RuleGiven) => {
     const effects = withdraw.run(given), projected = publicationSettlementProjectionV17(given, { effects, sends: [], opens: [] });
     const ordinal = effects.filter(effect => effect.effect === "operation").length;
-    return [...projected.effects, ...projected.opens.flatMap((open, n) => operationOpening(ordinal + n, open))];
+    const opened = projected.opens.flatMap((open, n) => operationOpening(ordinal + n, open));
+    return [...projected.effects, ...opened.filter((effect): effect is Extract<RuleEffect, { effect: "operation" | "attempt" }> => effect.effect === "operation" || effect.effect === "attempt")];
+  } };
+  rules["publication-settlement-source-type-v17"] = { place: "type", run: (given: RuleGiven, value) => {
+    const found = sourceProof(given);
+    return !!found && same(value, found.closing);
   } };
   rules["publication-settlement-source-v17"] = { place: "guard", refusals: ["publication-settlement-unavailable"],
     run: given => receiver(given) ? { holds: true } : { holds: false, name: "publication-settlement-unavailable" } };
