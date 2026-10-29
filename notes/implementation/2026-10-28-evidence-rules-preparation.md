@@ -193,8 +193,12 @@ plan, operations, and request accounts permit release. Its generation record
 must remain available for later publications and late results.
 
 No scope bound, recorded historical declaration, or TIME rule changes.
-The exact profiles, setup entries, settlement producers, and full prospective
-cost remain design checks before implementation and acceptance.
+The selected profile uses one nominal two-slot account type and at most
+sixteen serial accounts for 32 obligations. This avoids ambiguous handler
+routing between holder types. Full future forecasts must reject policies
+that cannot fit the unchanged capacity, carrying-entry, or Checker proof
+limits before work. New setup and settlement costs remain subject to those
+quotes and acceptance checks.
 
 ## Decisions witness map
 
