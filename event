@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7e23902be7cfeb5c630148014b9ed6dfc01a45c9","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/mac/caddy.sh."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:825f140b356911f58043b99b62fa00a5baf6cc7d","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/mac/uninstall.sh."}
