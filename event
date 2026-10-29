@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:65ea41777c19b07166e6f64e8620681b09e31535","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/evidence-batch-v17.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6716f89af64a6285456222ddf8e90afbb10ea3ca","text":"Merge retired a covered predecessor; the successor is at vitest.projects.mjs."}
