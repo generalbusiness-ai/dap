@@ -7,7 +7,7 @@ import { isObjectId } from "@generalbusiness/dap-git";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { EVIDENCE_RULES_COHORT } from "../../platform/src/evidence-cohort.ts";
 import { claimEvidenceWork, configureEvidenceRules, enrolEvidenceKey, evidenceCertificate, evidenceChecker, evidenceNativeRoom,
-  evidenceEntry, evidenceItems as hardeningItems, evidenceNativeState, evidenceRecord, evidenceRulesObservation, evidenceRulesPolicy, prepareEvidenceWork, publishEvidenceRulesCertificate, requestEvidenceWork } from "./evidence-rules-real-fixture.ts";
+  evidenceEntry, evidenceItems as hardeningItems, evidenceNativeDiagnostic, evidenceNativeState, evidenceRecord, evidenceRulesObservation, evidenceRulesPolicy, prepareEvidenceWork, publishEvidenceRulesCertificate, requestEvidenceWork } from "./evidence-rules-real-fixture.ts";
 import { claimLandingEvidence, claimPublishedEvidence, evidenceFailureNotice, evidenceOutcomeRace, prepareAuditEvidence, prepareLandingEvidence,
   preparePublishedEvidence, publishEvidenceFile, requestLandingEvidence, revisePublishedEvidence, type LandingEvidenceJob } from "./evidence-rules-real-fixture.ts";
 import { runEvidenceContainerCase } from "./evidence-runner-case.ts";
@@ -91,7 +91,9 @@ test("real admitted member work reuses its actual earlier pass, disables reuse o
   try {
     const work = await prepareEvidenceWork(room, { source: "member" });
     const result = await claimEvidenceWork(room, work, work, "passed");
-    expect(await work.record()).toMatchObject({ state: "passed", result, signer: work.service.actor.key });
+    const counted = await work.record(), expected = { state: "passed", result, signer: work.service.actor.key };
+    try { expect(counted).toMatchObject(expected); }
+    catch { expect(counted, await evidenceNativeDiagnostic([work.lane, room.G])).toMatchObject(expected); }
     const reused = await requestEvidenceWork(room, work, { reuse: true });
     expect(await reused.record()).toMatchObject({ state: "reused", countedJob: work.job, result });
     // Omitted source defaults to member, so this harmless policy revision

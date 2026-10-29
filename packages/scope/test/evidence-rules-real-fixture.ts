@@ -212,7 +212,7 @@ const hardeningItems = evidenceItems;
 
 /** Failure-only context from actual reads. Never print signed fields,
  * provider bodies or record payloads; preserve bounds and incomplete pages. */
-async function evidenceNativeDiagnostic(nodes: readonly Platform[]) {
+export async function evidenceNativeDiagnostic(nodes: readonly Platform[]) {
   const text = (value: unknown) => typeof value === 'string' ? value.length <= 512 ? value : { prefix: value.slice(0, 512), characters: value.length } : value === null || typeof value === 'boolean' || typeof value === 'number' ? value : null;
   const message = (value: import('@generalbusiness/dap-contract').Message) => ({ class: value.class,
     type: 'type' in value ? value.type : null, outcome: value.class === 'result' ? value.outcome : null,
