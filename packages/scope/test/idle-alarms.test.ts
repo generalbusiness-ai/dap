@@ -18,9 +18,19 @@ import { drainScheduledFixture, nativeFixtureLifetime } from "./support/native-f
 import { StartupOwner } from "./support/serving-startup.ts";
 
 test("a confirmed native host-none room stays unarmed across reads and eviction; one real invitation deadline arms only Membership until its timed end", async () => {
+  // Remap only this case's logical index name to a fresh real native owner.
+  // Forward every other namespace method; no RPC answer or storage is replaced.
+  // This measures the room's own index, not the deployed fixed-name owner.
+  const indexName = `idle-room-${crypto.randomUUID()}`;
+  const indexId = env.SCOPE_INDEX.idFromName(indexName);
+  const indexBinding = new Proxy(env.SCOPE_INDEX, { get(target, key) {
+    if (key === "idFromName") return (name: string) => name === SCOPE_INDEX_NAME ? indexId : target.idFromName(name);
+    const value = Reflect.get(target, key, target);
+    return typeof value === "function" ? value.bind(target) : value;
+  } });
   // Reuse the callback owner, including its finite join-before-release hook.
   // An incomplete join retains ownership and fails; a timeout is no cancellation.
-  const owner = new StartupOwner(env.SCOPE_INDEX);
+  const owner = new StartupOwner(indexBinding);
   const life = nativeFixtureLifetime(beginSessionFixture({
     secret: "TEST idle room session secret longer than 32 bytes", sessions: true, inspector: reader,
   }), { required: false, finish: "external" });
@@ -112,10 +122,10 @@ test("a confirmed native host-none room stays unarmed across reads and eviction;
     }));
   };
   type Snapshot = Awaited<ReturnType<typeof snapshot>>;
-  const index = env.SCOPE_INDEX.get(env.SCOPE_INDEX.idFromName(SCOPE_INDEX_NAME));
+  const index = indexBinding.get(indexBinding.idFromName(SCOPE_INDEX_NAME));
   const indexSnapshot = () => wait(() => runInDurableObject(index, async (_instance, state) => {
     const exists = state.storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='private_site_token'").toArray().length === 1;
-    return { owner: SCOPE_INDEX_NAME, siteRows: exists ? state.storage.sql.exec<{ n: number }>("SELECT count(*) AS n FROM private_site_token").one().n : 0,
+    return { logicalOwner: SCOPE_INDEX_NAME, owner: state.id.name, siteRows: exists ? state.storage.sql.exec<{ n: number }>("SELECT count(*) AS n FROM private_site_token").one().n : 0,
       siteWake: exists ? state.storage.sql.exec<{ next: number | null }>("SELECT min(ends) AS next FROM private_site_token").one().next : null,
       alarm: await state.storage.getAlarm() };
   }));
@@ -133,9 +143,9 @@ test("a confirmed native host-none room stays unarmed across reads and eviction;
     const result: Snapshot[] = [];
     for (const node of nodes()) result.push(await snapshot(node));
     await owner.quiesce();
-    const fixed = await indexSnapshot();
-    expect(fixed).toEqual({ owner: SCOPE_INDEX_NAME, siteRows: 0, siteWake: null, alarm: null });
-    console.info("idle-alarm-metadata", { phase, calls, ownedCallbacks: 0, journals: result, index: fixed });
+    const roomIndex = await indexSnapshot();
+    expect(roomIndex).toEqual({ logicalOwner: SCOPE_INDEX_NAME, owner: indexName, siteRows: 0, siteWake: null, alarm: null });
+    console.info("idle-alarm-metadata", { phase, calls, ownedCallbacks: 0, journals: result, index: roomIndex });
     return result;
   };
   const settled = async (creationRetries = false): Promise<void> => {

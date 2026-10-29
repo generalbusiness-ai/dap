@@ -44,8 +44,9 @@ interface DispatchCounts { attempted: number; acknowledged: number; diagnosed: n
  * Clearing one cause preserves the others; an empty list clears the platform alarm.
  *
  * The alarm is always the earliest remaining wake (authority note, section 5.4,
- * rule 7). Only the driver's continuation is held in memory: it disappears
- * with the work that the process held.
+ * rule 7). This class holds the driver's continuation in memory; it disappears
+ * with the work that the process held. The archive callback can also supply
+ * its owner's in-memory retry fallback.
  */
 export class Wakes {
   readonly #store: Store;
