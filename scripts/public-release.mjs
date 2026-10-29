@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ROOT, PLAN, PUBLIC_TESTING_INPUTS, args, childEnv, compilerTool, compile, contained, copiedDependency, copyFileVerified, digest, json, outputClosure, productionInputs, publishManifest, references, refusal, rewriteDeclarationRefs, sourceIdentity, version, writeJson } from "./public-release-lib.mjs";
+import { ROOT, PLAN, PUBLIC_TESTING_INPUTS, args, childEnv, compilerTool, compile, contained, copiedDependency, copyFileVerified, copySkillAssets, digest, json, outputClosure, productionInputs, publishManifest, references, refusal, rewriteDeclarationRefs, skillAssetsOf, sourceIdentity, verifySkillArchive, version, writeJson } from "./public-release-lib.mjs";
 
 export function produce(options) {
   const source = realpathSync(options.source), selected = version(options.version);
@@ -78,7 +78,9 @@ export function produce(options) {
     compiled.push({ package: manifest.name, configSha256: digest(readFileSync(config)), files: compile(tool, config, input, allowed, join(input, "compiler.log")) });
     if (spec.dir === "bytes") copyFileVerified(join(input, "src/web.d.ts"), join(stage, "dist/src/web.d.ts"));
     const declarationRewrites = rewriteDeclarationRefs(stage);
-    const stageFiles = outputClosure(stage, spec, selected);
+    const skillAssets = copySkillAssets(source, stage, spec);
+    if (skillAssets) for (const row of skillAssets.files) inputs.push({ ...row, copy: join(stage, row.path) });
+    const stageFiles = outputClosure(stage, spec, selected, skillAssets);
     // Install only this completed compiled stage into the next input's ancestry.
     symlinkSync(stage, join(output, "node_modules", manifest.name), "dir");
     const packed = JSON.parse(execFileSync(process.execPath, [npmCli, "pack", "--offline", "--ignore-scripts", "--json", `--userconfig=${npmUser}`, `--globalconfig=${npmGlobal}`, `--cache=${join(output, "npm-cache")}`, `--pack-destination=${join(output, "tarballs")}`], { cwd: stage, env: childEnv(join(output, "tmp")), encoding: "utf8" }));
@@ -86,11 +88,13 @@ export function produce(options) {
     const tarball = join(output, "tarballs", packed[0].filename), data = readFileSync(tarball);
     const integrity = `sha512-${Buffer.from(digest(data, "sha512"), "hex").toString("base64")}`;
     if (integrity !== packed[0].integrity || data.length !== packed[0].size) refusal("pack-integrity");
-    packages.push({ name: manifest.name, dir: spec.dir, version: selected, manifest, declarationRewrites, files: stageFiles, packedFiles: packed[0].files, tarball: packed[0].filename, bytes: data.length, sha256: digest(data), integrity });
+    verifySkillArchive(tarball, skillAssets);
+    packages.push({ name: manifest.name, dir: spec.dir, version: selected, manifest, declarationRewrites, ...(skillAssets ? { skillAssets } : {}), files: stageFiles, packedFiles: packed[0].files, tarball: packed[0].filename, bytes: data.length, sha256: digest(data), integrity });
   }
   sourceIdentity(source, options.head);
   if ([...inputs, ...excludedInputs].some(input => digest(readFileSync(join(source, input.path))) !== input.sha256 || digest(readFileSync(input.copy)) !== input.sha256)) refusal("input-changed");
-  for (const input of inputs.filter(input => /\.ts$/.test(input.path))) {
+  for (const spec of PLAN.packages) if (JSON.stringify(skillAssetsOf(source, spec)) !== JSON.stringify(packages.find(pkg => pkg.dir === spec.dir).skillAssets ?? null)) refusal("skill-assets-changed");
+  for (const input of inputs.filter(input => input.path.startsWith("packages/") && /\.ts$/.test(input.path))) {
     const [, dir, ...parts] = input.path.split("/");
     if (!readFileSync(join(output, "inputs", dir, ...parts)).equals(readFileSync(input.copy))) refusal("renamed-input-changed");
   }

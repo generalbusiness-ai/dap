@@ -40,8 +40,10 @@ to a module rather than hiding those dependencies in mutable global state.
   only to offer a control. The native act must enforce the same rule.
 - Keep outside-effect outcomes separate from requested targets and sensor
   reports. A recorded request does not prove an outside effect happened.
-- Put required approvals and checks in the room's rules. A proposed change
-  still needs those judgments before the destination can publish it.
+- Put a change-lane merge's required approvals and checks in the room's
+  rules. Direct `publish-file` bypasses those review rules. Control that
+  path through definition activation, application creation, and the
+  destination's proof of the sender.
 
 ## Keep the definition valid
 
@@ -68,7 +70,9 @@ Use the target's guard and send bounds. The provisional defaults allow
 allows one fan-out over a type whose `max` is at most 32. An unfinished
 bounded scan yields `unavailable`; it does not prove a guard false.
 
-Detached text uses `detached: true` and retains its bytes beside the intent.
+Detached text uses `detached: true` and travels beside the signed intent.
+The scope retains its bytes separately. The intent, entry, and effects
+hold its digest.
 Guards, rule expressions, index sends, and sends to non-lane scopes cannot
 read that text. The validator refuses those reads as `redactable-read`.
 Retain identity or decision facts separately when a rule needs them after
@@ -195,6 +199,45 @@ For package v2, include `connections`, `rights`, `exercises`, `order`,
 `groups`, `derivation`, and `parameters`. Use explicit empty arrays or
 objects where appropriate. A definition path must already appear in
 `definitions`. Packing resolves those paths to exact digests.
+
+An external scope slot still needs an endpoint declaration. For the
+Lending definition stored as `definition.json`, replace an empty
+`connections` array with:
+
+```json
+[
+	{ "from": "definition.json", "item": "library", "slot": "destination", "to": "outside" }
+]
+```
+
+Use the actual path listed in `definitions`. This binds the package port;
+it supplies neither a concrete destination reference nor permission to
+publish. Omission yields `unbound-endpoint` for the slot and its sends.
+
+A scenario must also supply every required founding field. A scope
+reference has `scope`, `inc`, and `kind`. It is neither a definition digest
+nor a record with an `id` field. For a local scenario with a declared
+`staff` actor and external effects disabled, the founding value can use
+this public TEST reference:
+
+```json
+{
+	"actor": "staff",
+	"fields": {
+		"opener": {
+			"$member": "staff"
+		},
+		"destination": {
+			"scope": "sc_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+			"inc": "in_aaaaaaaaaaaaaaaaaaaaaaaaaa",
+			"kind": "destination"
+		}
+	}
+}
+```
+
+The reference is a local stand-in, not a created destination or a delivery
+witness. For live work, use the actual destination's full reference.
 
 Run `dap check <source-root> [--config <relative-file>]` after generation.
 Fix reported refusals. Investigate warnings such as `unowned-bound` rather
