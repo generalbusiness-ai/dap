@@ -1,8 +1,9 @@
 # Evidence rules: preparation and implementation evidence
 
-Status: In progress. Component checks and the first real cohort scenario
-have recorded passes. Other Native scenarios, marked-room physical J3,
-gate, review, landing and deployment remain owed.
+Status: In progress. Native N2 passes at `ba17bcedf7`; the first N3
+publication writes its receipt and cleans up. Its next reservation fails
+capacity admission. Remaining Native scenarios, physical J3, gate, review,
+landing and deployment remain owed.
 
 ## What changed
 
@@ -157,6 +158,43 @@ Timeout invents no failed-result fact. Missing triagers remain visible;
 late results do not replace the incident cause. Closing intent clears no
 hold. This commissioned failure exchange is distinct from marking-time
 proof exchange.
+
+### Measured funding repair, before further source
+
+Run `native-current-capacity-20` at `d5ed79283d` ends with the second
+reservation absent. At actual Destination head 36, SQLite reports 196,027
+used bytes and 737,148,928 reserved bytes. No operation or request remains
+pending. The ready branch reserves 80,740,352 bytes, the cleaned publication
+320,077,824, and its funded batch 335,544,320. Other allowances contribute
+786,432 bytes. Current usage fits 1 GiB. The next reservation does not.
+
+Whole-scope accounting releases unused holder counts only after an
+identified settlement. Inherited cleanup reaches final `cleaned` through
+an outcome, which cannot declare that settlement. Work request holders have
+the same problem. G17 also inherits 32 `check-judge` counts although its
+handlers now open `evidence-result` instead. Those unused counts reserve
+150,994,944 bytes per publication. Removing them alone cannot fund the next
+complete batch.
+
+The repair uses the existing contract. A funded self-delivery declares
+settlement and makes the literal final transition after actual terminal
+work. Outcomes keep the holder nonfinal until that delivery. Pending
+operations and request accounts retain their reachable reservations. TIME,
+unknown answers, and notices alone release nothing.
+
+Batch budgets also need smaller units: a full initial eight-job batch
+reserves 374,079,488 bytes. Three such batches exceed 1 GiB before the
+branch or journal. Select a bounded holder profile from the actual frozen
+obligations, and quote its complete future work before capture. Keep all
+32 possible obligations and the three pending slots per exact key. Move
+shared mutable generation capacity into a nonholder anchor created by
+actual setup. A batch may settle only when its own jobs, dispatches, notices,
+plan, operations, and request accounts permit release. Its generation record
+must remain available for later publications and late results.
+
+No scope bound, recorded historical declaration, or TIME rule changes.
+The exact profiles, setup entries, settlement producers, and full prospective
+cost remain design checks before implementation and acceptance.
 
 ## Decisions witness map
 
