@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:86cdabdb3a51ba2a0560e4cf6e5bbac886311f5a","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/evidence-index-v17.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:870a2baa30c00a444c3dffec8ef25925a085d046","text":"Merge retired a covered predecessor; the successor is at packages/checkers/test/support/stage-service.ts."}
