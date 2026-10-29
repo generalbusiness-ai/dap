@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9596911573bc3fdd80a5c47a7cfe6c269f0a5d7c","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-16-evidence-rules-design.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9633152cab7defb0e56501a5fb6cdadcba2e1af6","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/views/generated.ts."}
