@@ -38,18 +38,14 @@ import { outboxCorrelation, metric } from "./operational.ts";
 interface DispatchCounts { attempted: number; acknowledged: number; diagnosed: number }
 
 /**
- * One alarm for three wakes (section 5.2): the earliest deadline, which the
- * turn asks for through `deadline`; the next dispatch, which is read from
- * the outbox; and the next attempt of an outside operation that the
- * operations driver has to look at (`operations.ts`), which is read from its
- * rows. The deadline is kept in storage, so any wake can be set again
- * without another being lost, also after a restart. The alarm is always the
- * earliest of them, so a stored wake-up is never replaced by a later one
- * (authority note, section 5.4, rule 7).
+ * One alarm combines timed deadlines, outbox dispatch, outside-operation
+ * attempts, in-memory driver work, signer maintenance, archives and credential
+ * expiry. Each persistent owner supplies its retained wake after a restart.
+ * Clearing one cause preserves the others; an empty list clears the platform alarm.
  *
- * The driver has one more wake that is in no row: for work it holds in
- * memory only. It is kept here in memory, so no other wake replaces it, and
- * it is gone with the process, as that work is.
+ * The alarm is always the earliest remaining wake (authority note, section 5.4,
+ * rule 7). Only the driver's continuation is held in memory: it disappears
+ * with the work that the process held.
  */
 export class Wakes {
   readonly #store: Store;
