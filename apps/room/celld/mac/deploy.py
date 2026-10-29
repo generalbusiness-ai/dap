@@ -12,6 +12,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import xml.etree.ElementTree as ET
 
 from kit import (Refusal, absolute, aws_request, configuration, private_credentials,
                  read_installation, read_json, regular, require)
@@ -129,6 +130,29 @@ def run_deployment(argv, env, directory):
             "deployment failed; retain private project logs")
 
 
+def ensure_bucket(prefix):
+    """Create the fixed bucket, or verify the same authenticated owner."""
+    status, body = aws_request(prefix, "PUT", "")
+    if 200 <= status < 300:
+        return
+    require(status == 409, "fleet bucket initialization failed")
+    try:
+        text = body.decode("utf-8")
+        require("<!DOCTYPE" not in text.upper() and "<!ENTITY" not in text.upper(),
+                "fleet bucket initialization failed")
+        error = ET.fromstring(text)
+    except (UnicodeDecodeError, ET.ParseError):
+        raise Refusal("fleet bucket initialization failed") from None
+    namespace = "{http://s3.amazonaws.com/doc/2006-03-01/}" if error.tag.startswith("{") else ""
+    codes = [child for child in error if child.tag.rsplit("}", 1)[-1] == "Code"]
+    require(error.tag == namespace + "Error" and len(codes) == 1
+            and codes[0].tag == namespace + "Code" and not codes[0].attrib
+            and len(codes[0]) == 0 and codes[0].text == "BucketAlreadyOwnedByYou",
+            "fleet bucket initialization failed")
+    status, _ = aws_request(prefix, "HEAD", "")
+    require(200 <= status < 300, "fleet bucket ownership read failed")
+
+
 def deploy(prefix, project, esbuild):
     record = read_installation(prefix)
     require(os.getuid() == record["uid"] and os.getuid() != 0, "deploy as the service user")
@@ -147,8 +171,7 @@ def deploy(prefix, project, esbuild):
             and any(v in (pin, pin[1:]) for v in version.stdout.decode().split()), "runtime does not match pin")
     # The installer owns a new store directory. PUT creates or opens its own
     # fixed bucket; it does not clear an existing bucket or change node data.
-    status, _ = aws_request(prefix, "PUT", "")
-    require(200 <= status < 300, "fleet bucket initialization failed")
+    ensure_bucket(prefix)
     run_deployment([config["celld"], "deploy", str(project), "--bucket", "s3://" + record["bucket"],
                     "--endpoint", record["endpoint"], "--region", "us-east-1", "--json"], env, project)
     return {"version": 1, "deploymentCommandSucceeded": True,

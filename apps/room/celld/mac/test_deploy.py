@@ -12,6 +12,31 @@ from kit import Refusal
 
 
 class DeploymentSafety(unittest.TestCase):
+    def test_scripted_bucket_creation_or_verified_existing_ownership(self):
+        # Scripted S3 replies show this adapter's decision, not a real store.
+        prefix = Path("/TEST-owned-installation")
+        owned = b"<Error><Code>BucketAlreadyOwnedByYou</Code><Message>TEST</Message></Error>"
+        with patch.object(deploy, "aws_request", return_value=(200, b"")) as request:
+            deploy.ensure_bucket(prefix)
+            self.assertEqual(request.call_args_list, [unittest.mock.call(prefix, "PUT", "")])
+        with patch.object(deploy, "aws_request", side_effect=[(409, owned), (200, b"")]) as request:
+            deploy.ensure_bucket(prefix)
+            self.assertEqual(request.call_args_list, [unittest.mock.call(prefix, "PUT", ""), unittest.mock.call(prefix, "HEAD", "")])
+        for status, body in (
+                (409, owned.replace(b"BucketAlreadyOwnedByYou", b"BucketAlreadyExists")),
+                (409, b"<Error><Code>BucketAlreadyOwnedByYou"),
+                (409, b"<Other><Code>BucketAlreadyOwnedByYou</Code></Other>"),
+                (409, b'<!DOCTYPE Error [<!ENTITY code "BucketAlreadyOwnedByYou">]><Error><Code>&code;</Code></Error>'),
+                (500, owned)):
+            with self.subTest(status=status, body=body), patch.object(deploy, "aws_request", side_effect=[(status, body), (200, b"")]) as request:
+                with self.assertRaises(Refusal):
+                    deploy.ensure_bucket(prefix)
+                self.assertEqual(request.call_args_list, [unittest.mock.call(prefix, "PUT", "")])
+        with patch.object(deploy, "aws_request", side_effect=[(409, owned), (403, b"")]) as request:
+            with self.assertRaises(Refusal):
+                deploy.ensure_bucket(prefix)
+            self.assertEqual(request.call_args_list, [unittest.mock.call(prefix, "PUT", ""), unittest.mock.call(prefix, "HEAD", "")])
+
     def project(self, root):
         project = root / "project"
         project.mkdir(mode=0o700)
