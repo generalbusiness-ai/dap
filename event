@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at .agents/plugins/marketplace.json","body":{"commit":"901a7fa447cfd57659ca9158982df028052a2673","path":".agents/plugins/marketplace.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at .claude-plugin/marketplace.json","body":{"commit":"901a7fa447cfd57659ca9158982df028052a2673","path":".claude-plugin/marketplace.json"}}
