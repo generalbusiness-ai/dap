@@ -51,7 +51,7 @@ function absent(method: unknown): unknown {
   if (method === "create") return { answer: "refused", reason: "source-unverified" };
   if (method === "submit" || method === "prepare") return { answer: "unavailable", reason: "unavailable" };
   if (method === "deliver") return { answer: "routing", reason: "not-found" };
-  if (["source", "proofSource", "nativeBirth", "creationDeclaration", "declared", "text", "observe", "sessionReference", "siteRoom", "siteDestination", "sitePublication", "sitePublishedCommit", "applicationRoom", "applicationRoomBytes", "applicationInstallation", "applicationProjectionDeclarationBytes", "demoCreationOffer", "jobState", "reservationSnapshot"].includes(method as string)) return null;
+  if (["source", "proofSource", "nativeBirth", "creationDeclaration", "declared", "text", "observe", "sessionReference", "siteRoom", "siteDestination", "sitePublication", "sitePublishedCommit", "applicationRoom", "applicationRoomBytes", "applicationInstallation", "applicationProjectionDeclarationBytes", "demoCreationOffer", "jobState", "workSourceState", "reservationSnapshot", "stageSnapshot"].includes(method as string)) return null;
   return { ok: false, reason: "not-found" };
 }
 

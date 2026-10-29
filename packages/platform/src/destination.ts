@@ -1319,7 +1319,24 @@ interface CertifiedReservationSnapshot {
   tree: string;
   manifest: FactRef;
 }
-const hardened = (given: RuleGiven): boolean => pinnedBy(given) === "platform:destination@15";
+/** Optional pure policy port. Only the explicit G17 factory attaches it. */
+export interface DestinationSuccessorV17 {
+  readPolicy: typeof readRulesPolicyObservationV15;
+  judge(asked: Parameters<typeof judgeReservationV15>[0], given: RuleGiven): ReturnType<typeof judgeReservationV15>;
+  list: typeof judgeListEligibilityV15;
+  publication: typeof certifiedPublicationStateV15;
+  publicationWire: typeof certifiedPublicationStateV15;
+  encodePublication(value: unknown, bounds: RuleGiven["resolved"]["bounds"]): FieldValue;
+  budget: typeof certifiedReservationBudgetV15;
+  complete(given: RuleGiven, publication: Item, passes: readonly CertifiedGeneration[]): boolean;
+  checked(given: RuleGiven, publication: Item, fields: Readonly<Record<string, unknown>>, current: boolean): { name: string; proof: CertifiedCheckProof } | null;
+  blocks(given: RuleGiven, paths: readonly string[]): boolean;
+  blocked?(given: RuleGiven, paths: readonly string[], carrier: { effects: readonly RuleEffect[]; opens: readonly Opening[]; sends: readonly RuleRequest[] }): { effects: readonly RuleEffect[]; opens: readonly Opening[] };
+}
+const SUCCESSOR_V17 = Symbol("Destination G17 policy");
+type SuccessorGiven = RuleGiven & { readonly [SUCCESSOR_V17]?: DestinationSuccessorV17 };
+const successorOf = (given: RuleGiven): DestinationSuccessorV17 | undefined => (given as SuccessorGiven)[SUCCESSOR_V17];
+const hardened = (given: RuleGiven): boolean => pinnedBy(given) === "platform:destination@15" || successorOf(given) !== undefined;
 const certified = (given: RuleGiven): boolean => pinnedBy(given) === "platform:destination@14" || hardened(given);
 const equal14 = (a: unknown, b: unknown): boolean => {
   try { return canonicalize(a) === canonicalize(b); } catch { return false; }
@@ -1331,7 +1348,7 @@ function policyInput14(given: RuleGiven): ReservationPolicyInputV14 | null {
     || !rules || !scope || !observedOf(seen.of, rules)) return null;
   // Current rows already passed native observation guards. The first retained
   // answer fixes the recorded incarnation; an existing pin must still match.
-  const extents = given.value("artroom-rules-extents-2", seen.content.extents, 262144);
+  const extents = given.value(successorOf(given) ? "artroom-rules-extents-3" : "artroom-rules-extents-2", seen.content.extents, 262144);
   return { rules: seen.of, destination: scope.at, extents };
 }
 export function certifiedReservationSnapshot(value: unknown): CertifiedReservationSnapshot | null {
@@ -1386,7 +1403,8 @@ export function certifiedPublicationState(value: unknown): CertifiedPublicationS
     return policy && certifiedCheckGenerations(generations) ? { policy, generations } : null;
   } catch { return null; }
 }
-const certifiedRecord = (given: RuleGiven, value: unknown) => hardened(given) ? certifiedPublicationStateV15(value, given.resolved.bounds) : certifiedPublicationState(value);
+const certifiedRecord = (given: RuleGiven, value: unknown, semantic = false) => (semantic ? successorOf(given)?.publication : successorOf(given)?.publicationWire)?.(value, given.resolved.bounds)
+  ?? (successorOf(given) ? null : hardened(given) ? certifiedPublicationStateV15(value, given.resolved.bounds) : certifiedPublicationState(value));
 function captured14(given: RuleGiven, publication: Item): CertifiedReservationSnapshot | null {
   const snapshot = certifiedRecord(given, publication.values["passes"])?.policy;
   return snapshot && isFactRef(publication.refs["manifest"]) && Array.isArray(publication.values["requiredChecks"])
@@ -1396,6 +1414,7 @@ function captured14(given: RuleGiven, publication: Item): CertifiedReservationSn
 /** The one checker proof shared by delivery admission and current-key outcome.
  * uses are admitted native facts; comparison uses full facts, not hash alone. */
 function checked14(given: RuleGiven, publication: Item, fields: Readonly<Record<string, unknown>>, current: boolean): { name: string; proof: CertifiedCheckProof } | null {
+  if (successorOf(given)) return successorOf(given)!.checked(given, publication, fields, current);
   const snapshot = captured14(given, publication), jobFact = fields["job"], resultFact = fields["result"];
   if (!snapshot || !isFactRef(jobFact) || !isFactRef(resultFact) || !equal14(jobFact.at, snapshot.manifest.at) || !equal14(resultFact.at, snapshot.manifest.at)) return null;
   const job = given.uses.find(use => equal14(use.fact, jobFact))?.entry, result = given.uses.find(use => equal14(use.fact, resultFact))?.entry;
@@ -1426,6 +1445,7 @@ function checked14(given: RuleGiven, publication: Item, fields: Readonly<Record<
 /** Missing capture is never an empty set. A persisted passed flag counts only
  * with its own accepted check-judge effect and exact current generation. */
 function complete14(given: RuleGiven, publication: Item, passes: readonly CertifiedGeneration[]): boolean {
+  if (successorOf(given)) return successorOf(given)!.complete(given, publication, passes);
   const snapshot = captured14(given, publication);
   if (!snapshot || !certifiedCheckGenerations(passes)) return false;
   return snapshot.required.every(descriptor => {
@@ -1515,7 +1535,7 @@ function reservationRead(given: RuleGiven, publication: Item, statement: Stateme
   return {
     merger: keyOf(merge.input.signed.intent.actor), rules,
     sound: lane.sound !== false,
-    extents: certified(given) ? (() => { const input = policyInput14(given); const decoded = input && (hardened(given) ? readRulesPolicyObservationV15 : readRulesPolicyObservationV14)(rules, input, given.time); return decoded && decoded.ok ? decoded.view.policy.extents : null; })() : rules?.content.asked === "rules" && rules.content.extents ? (() => { const list = given.value("artroom-rules-extents-1", rules.content.extents!, 262144); if (!isExtents(list)) throw new Error("the rules observation names no list of extents"); return list; })() : null,
+    extents: certified(given) ? (() => { const input = policyInput14(given); const decoded = input && (successorOf(given)?.readPolicy ?? (hardened(given) ? readRulesPolicyObservationV15 : readRulesPolicyObservationV14))(rules, input, given.time); return decoded && decoded.ok ? decoded.view.policy.extents : null; })() : rules?.content.asked === "rules" && rules.content.extents ? (() => { const list = given.value("artroom-rules-extents-1", rules.content.extents!, 262144); if (!isExtents(list)) throw new Error("the rules observation names no list of extents"); return list; })() : null,
     singleControllerException: rules?.content.asked === "rules" && rules.content.singleControllerException === true,
     manifest: { ...lane.manifest, reports },
     controllersOfAuthors: lane.manifest.authors.flatMap((member) => { const seen = given.observed({ member })?.observation; return seen && "subject" in seen && seen.subject === "member" && seen.controller !== null ? [seen.controller] : []; }),
@@ -1649,10 +1669,11 @@ const judgeDecides = (reads: Reads, list = false): Decides => (given) => {
   let standing: ReservationStanding | null = null;
   let eligibility14: Extract<ListEligibilityV14, { eligible: true }> | null = null;
   const decide = (asked: ReservationAsked) => {
-    if ((input.owner === "platform:destination@14" || input.owner === "platform:destination@15") && asked.read !== null) {
+    if ((input.owner === "platform:destination@14" || input.owner === "platform:destination@15" || successorOf(given)) && asked.read !== null) {
       const policy = policyInput14(given);
       if (!policy) return { reserved: false as const, reason: "evidence-invalid" };
-      return (hardened(given) ? judgeReservationV15 : judgeReservationV14)({ ...asked, policy });
+      const successor = successorOf(given);
+      return successor ? successor.judge({ ...asked, policy }, given) : (hardened(given) ? judgeReservationV15 : judgeReservationV14)({ ...asked, policy });
     }
     if (!isStandingDestination(input.owner)) return judgeReservation(asked);
     const detailed = judgeReservationWithStanding(asked);
@@ -1679,7 +1700,7 @@ const judgeDecides = (reads: Reads, list = false): Decides => (given) => {
         const commit = manifestCommit(formatOf(evidence.tree)!, resolved.at.scope, time, evidence.tree!, read.manifest.base, statement.operation);
         read = { ...read, manifest: { ...read.manifest, integration: commit.id, tree: evidence.tree } };
         if (certified(given)) {
-          const policy = policyInput14(given), result = policy ? (hardened(given) ? judgeListEligibilityV15 : judgeListEligibilityV14)({ ...asked, read, policy }) : { eligible: false as const, reason: "evidence-invalid" };
+          const policy = policyInput14(given), result = policy ? (successorOf(given)?.list ?? (hardened(given) ? judgeListEligibilityV15 : judgeListEligibilityV14))({ ...asked, read, policy }) : { eligible: false as const, reason: "evidence-invalid" };
           if (result.eligible === true) { eligibility14 = result; judged = { reserved: true, integration: result.integration, reason: result.reason }; }
           else judged = result.eligible === null ? { reserved: null } : { reserved: false, reason: result.reason };
         } else {
@@ -1691,13 +1712,21 @@ const judgeDecides = (reads: Reads, list = false): Decides => (given) => {
     } else judged = decide({ ...asked, read });
   }
   if (judged.reserved === null) throw new Error("what observed and uses say of this reservation is not at hand");
+  let blockedPaths: readonly string[] | null = null;
+  if (judged.reserved && evidence.changes && !("over" in evidence.changes) && successorOf(given)?.blocks(given, evidence.changes.paths)) {
+    judged = { reserved: false, reason: "extent-regressed" };
+    blockedPaths = evidence.changes.paths;
+  }
   const rules = read?.rules?.revision ?? null;
   if (!judged.reserved) {
     const next = andNext(given, state, { judging: true, ended: publication.id }, true);
+    const effects: RuleEffect[] = [{ effect: "state", item: publication.id, state: "not-reserved" }, { effect: "value", item: publication.id, slot: "reason", value: judged.reason }, ...next.effects];
+    const update: Update = { publication, state: "not-reserved", outcome: "refused", reason: judged.reason, rules };
+    const blocked = blockedPaths ? successorOf(given)?.blocked?.(given, blockedPaths, { effects, opens: next.opens, sends: [updateRequest(given, update)] }) : undefined;
     return {
-      effects: [{ effect: "state", item: publication.id, state: "not-reserved" }, { effect: "value", item: publication.id, slot: "reason", value: judged.reason }, ...next.effects],
-      opens: next.opens,
-      update: { publication, state: "not-reserved", outcome: "refused", reason: judged.reason, rules },
+      effects: [...effects, ...(blocked?.effects ?? [])],
+      opens: [...next.opens, ...(blocked?.opens ?? [])],
+      update,
     };
   }
   let standingRecord: PublicationStandingRecord | null = null;
@@ -1721,7 +1750,7 @@ const judgeDecides = (reads: Reads, list = false): Decides => (given) => {
     const selected = eligibility14 as Extract<ListEligibilityV14, { eligible: true }> | null, policy = policyInput14(given);
     if (!selected || !policy || !read?.rules || !evidence.changes || "over" in evidence.changes) throw Error("G14 configured list snapshot required");
     const touched = classify(selected.view.policy.extents, evidence.changes.paths, evidence.changes.links, evidence.changes.unreadable).touched.map(row => row.extent);
-    captured = certifiedRecord(given, { policy: { observation: read.rules, input: policy, touched, required: selected.required, tree: evidence.tree, manifest: statement.manifest }, generations: [] });
+    captured = certifiedRecord(given, { policy: { observation: read.rules, input: policy, touched, required: selected.required, tree: evidence.tree, manifest: statement.manifest }, generations: [] }, true);
     if (!captured) {
       if (!hardened(given)) throw Error("G14 captured policy exceeds native bound");
       const next = andNext(given, state, { judging: true, ended: publication.id }, true);
@@ -1731,7 +1760,7 @@ const judgeDecides = (reads: Reads, list = false): Decides => (given) => {
   }
   const decided: Decided = {
     effects: [
-      ...(captured ? [{ effect: "value", item: publication.id, slot: "passes", value: captured as unknown as FieldValue } as const,
+      ...(captured ? [{ effect: "value", item: publication.id, slot: "passes", value: successorOf(given) ? successorOf(given)!.encodePublication(captured, given.resolved.bounds) : captured as unknown as FieldValue } as const,
         { effect: "value", item: publication.id, slot: "requiredChecks", value: requiredChecks } as const] : []),
       { effect: "state", item: publication.id, state: "reserved" }, { effect: "ref", item: branch.id, slot: "slot", to: publication.id }, { effect: "ref", item: branch.id, slot: "judging", to: null },
       { effect: "value", item: publication.id, slot: "integration", value: judged.integration }, { effect: "value", item: publication.id, slot: "reservedAt", value: resolved.self },
@@ -1745,7 +1774,7 @@ const judgeDecides = (reads: Reads, list = false): Decides => (given) => {
   if (hardened(given) && captured) {
     const origin = own(publication.id);
     if (!origin) throw Error("The certified reservation origin is unavailable");
-    if (!certifiedReservationBudgetV15(given, captured, { effects: decided.effects, opens: decided.opens, sends: [], uses: origin.entry.uses }).admitted) {
+    if (!(successorOf(given)?.budget ?? certifiedReservationBudgetV15)(given, captured, { effects: decided.effects, opens: decided.opens, sends: [], uses: origin.entry.uses }).admitted) {
       const next = andNext(given, state, { judging: true, ended: publication.id }, true);
       return { effects: [{ effect: "state", item: publication.id, state: "not-reserved" }, { effect: "value", item: publication.id, slot: "reason", value: "evidence-too-large" }, ...next.effects],
         opens: next.opens, update: { publication, state: "not-reserved", outcome: "refused", reason: "evidence-too-large", rules } };
@@ -2396,6 +2425,8 @@ const stagedOwn = (given: Pick<RuleGiven, "state" | "own">, publication: Item, b
   }
   return false;
 };
+/** The G17 successor uses the same actual staging proof before opening push. */
+export const destinationStageConfirmedV17 = stagedOwn;
 const stageMayRemain = (given: Pick<RuleGiven, "state" | "own">, publication: Item, before: number): boolean => {
   for (const seq of positions(given.own, publication.values["reservedAt"] as number, before)) {
     for (const operation of openedIn(given.state, seq)) {
@@ -2477,9 +2508,9 @@ const generations = (publication: Item, given: RuleGiven): CheckGeneration[] => 
  * their original evaluator and the D1 wrapper without a shape change. */
 function generationValue(publication: Item, given: RuleGiven, rows: readonly CheckGeneration[]): FieldValue {
   if (!certified(given)) return rows as unknown as FieldValue;
-  const policy = captured14(given, publication), record = policy ? certifiedRecord(given, { policy, generations: rows }) : null;
+  const policy = captured14(given, publication), record = policy ? certifiedRecord(given, { policy, generations: rows }, true) : null;
   if (!record) throw new Error("G14 updated policy and generations exceed the native bound");
-  return record as unknown as FieldValue;
+  return successorOf(given) ? successorOf(given)!.encodePublication(record, given.resolved.bounds) : record as unknown as FieldValue;
 }
 const resultGeneration = (given: RuleGiven, publication: Item): boolean => {
   const job = given.uses.find((use) => use.entry.input.type === "act" && use.entry.input.signed.intent.kind === "request-check");
@@ -3096,3 +3127,34 @@ export const destinationRules5: Rules = (() => {
  * its source policy is selected separately by this exact @6 catalog pin. */
 export const destination6: PlatformData = { ...destination5 };
 export const destinationRules6: Rules = destinationRules5;
+
+/** Each call owns its immutable adapter. Historical exports never receive
+ * this port, and no module-level registry or native given is changed. */
+export function destinationRulesForV17(profile: DestinationSuccessorV17): Rules {
+  const given = (value: RuleGiven): RuleGiven => {
+    if (pinnedBy(value) !== "platform:destination@17") throw Error("The evidence policy requires Destination 17");
+    return { ...value, [SUCCESSOR_V17]: profile } as SuccessorGiven;
+  };
+  const wrap = (rule: PlatformRule): PlatformRule => {
+    switch (rule.place) {
+      case "grant": return { ...rule, run: (value: RuleGiven) => rule.run(given(value)) };
+      case "also": return "bind" in rule ? rule : { ...rule, run: (value: RuleGiven, type: string) => rule.run(given(value), type) };
+      case "type": return { ...rule, run: (value, field, of) => rule.run(given(value), field, of) };
+      case "guard": return { ...rule, run: (value: RuleGiven) => rule.run(given(value)) };
+      case "effect": return { ...rule, run: (value: RuleGiven) => rule.run(given(value)) };
+      case "send": return { ...rule, run: (value: RuleGiven) => rule.run(given(value)) };
+      case "outcome": {
+        const rules = rule.rules;
+        return { ...rule, rules: { ...rules,
+          retries: (result, operation, value) => rules.retries(result, operation, given(value)),
+          ...(rules.holds ? { holds: (value: RuleGiven, operation: Operation) => rules.holds!(given(value), operation) } : {}),
+          ...(rules.wellFormed ? { wellFormed: (result: "confirmed" | "refused" | "unknown", evidence: import("@generalbusiness/dap-contract").Evidence, value: RuleGiven) => rules.wellFormed!(result, evidence, given(value)) } : {}),
+          ...(rules.derives ? { derives: (value: RuleGiven, operation: Operation, selected: boolean | null) => rules.derives!(given(value), operation, selected) } : {}),
+          ...(rules.origin ? { origin: (value: RuleGiven, operation: Operation) => rules.origin!(given(value), operation) } : {}),
+          ...(rules.subjects ? { subjects: (value: RuleGiven, operation: Operation, row: number, first: import("@generalbusiness/dap-derive").FirstStep | null) => rules.subjects!(given(value), operation, row, first) } : {}),
+        } };
+      }
+    }
+  };
+  return Object.fromEntries(Object.entries(destinationRules4).map(([name, rule]) => [name, wrap(rule)]));
+}

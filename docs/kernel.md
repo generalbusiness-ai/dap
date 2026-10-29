@@ -109,12 +109,14 @@ scoped continuations as separate results.
 - **K1. Platform rules are code that replay needs.** A platform scope pins
   `platform:<name>@<n>`. Replay derives it only with code that its caller
   supplies (`replay/src/verify.ts:1031-1055`), and its report says that no
-  digest names those rules (`verify.ts:252-258`). The catalog pins 76
+  digest names those rules (`verify.ts:252-258`). The catalog pins 80
   versions (`platform/src/native-catalog.ts`, one row each): 62
   when this page landed, three more from the versioned publication family
   (`c8a3fb24`), four from the certified rules family (`6852f78d`) and four
   from its hardening (`33690b69`), and three from the unpublished cohort
-  (`register@21`, `directory@20` and `destination@16`). Passing takes one
+  (`register@21`, `directory@20` and `destination@16`), and four from the
+  opt-in evidence cohort (`register@22`, `directory@21`, `rules@13` and
+  `destination@17`). Passing takes one
   of three things: pin
   each version's rules by digest and archive the code;
   move the shipped versions into a frozen part of the kernel; or replace
@@ -243,6 +245,18 @@ A head adds to the kernel when it does any of these:
   inside `packages/derive` or `packages/replay`.
 
 The checker checks this rule on every head that touches these packages.
+
+Rules observation record revision 21 is permitted by ruling `1bc4f7fd`
+under this section. Its nullable `roomService` and scoped
+`serviceGeneration` occur exactly when the pinned Rules data declares
+`roomServiceChanged`. Earlier definitions retain their exact records.
+The observation is the kernel form for what a judge may know of Rules;
+its native-selected position belongs to that authenticated record. A
+retained policy value alone cannot establish the position. Contract keeps
+only the two type-only interfaces needed by the record. The job binding
+vocabulary and its codec belong to platform. This addition changes no
+timed form, fold or replay rule and closes no K item. The exact-head review
+must assess this reason and the definition-specific record checks.
 A head that removes a kernel promise also needs this review.
 
 Request `30c7c3ec` makes two file/export additions under this rule, while

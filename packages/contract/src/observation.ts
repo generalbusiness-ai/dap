@@ -8,6 +8,7 @@
  */
 
 import type { Head } from "./result.ts";
+import type { ScopedRulesPosition, ServiceMark } from "./evidence.ts";
 import type { Digest, KeyId, MemberId, PlatformDefinition, ScopeFilter, ScopeRef, Timestamp } from "./scope.ts";
 
 /** The scope's run: random, chosen when its process starts and held in memory (section 16.1). */
@@ -82,7 +83,9 @@ export type RulesContent =
       checks: readonly { name: string; configuration: Digest; required: boolean; checker: MemberId }[];
       labels: readonly string[];
       singleControllerException?: boolean;
-      extents?: Digest }
+      extents?: Digest;
+      roomService?: ServiceMark | null;
+      serviceGeneration?: ScopedRulesPosition }
   | { asked: "definitions"; active: readonly { digest: Digest; name: string }[] };
 
 /** An observation of the rules scope (section 16.1). It stands only in the member `observed` of an input. */

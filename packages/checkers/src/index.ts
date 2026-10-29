@@ -20,6 +20,8 @@ export { CONFIGURATION_BYTES, CONFIGURATION_DOMAIN, configurationDigest, environ
 export type { Configuration, Judged, Variable } from "./configuration.ts";
 export { CHANGE, manifestOf, originOf } from "./job.ts";
 export type { Job, NotAJob, Notice, Origin, OriginRead } from "./job.ts";
+export { stageOriginOf } from "./stage-origin.ts";
+export type { EvidenceDefinitions, StageSnapshotRead } from "./stage-origin.ts";
 export { ERRORS, REPORT_BOUNDS, detailsDigest, isRunReport, judge, provenanceOf, readReport } from "./outcome.ts";
 export type { Details, ErrorReason, Outcome, RunProvenance, RunReport, StepReport } from "./outcome.ts";
 export { Outcomes } from "./store.ts";

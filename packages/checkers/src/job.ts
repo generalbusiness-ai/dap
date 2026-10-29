@@ -1,5 +1,5 @@
 /**
- * The origin read (authority note, section 3.11, "Origin" and "How a job
+ * The legacy origin read (authority note, section 3.11, "Origin" and "How a job
  * reaches the checker"). A job is the `request-check` entry of a change
  * lane. The checker service learns of one by a notice, or by reading the
  * lane's jobs. Either is bookkeeping, and **nothing that a notice carries is
@@ -30,12 +30,14 @@
  * The sixth check of the note, that the configuration bytes hash to the
  * digest in the job, is `readConfiguration` (`configuration.ts`). It is
  * made after this one, and its failure is signed: `check-error`,
- * `configuration-unavailable`.
+ * `configuration-unavailable`. Successor evidence bindings instead require
+ * the actual native admission checked by `stage-origin.ts`.
  */
 
 import type { ReservationSnapshot, Digest, Effect, FactRef, PlatformDefinition, ScopeRef, Sealed, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, utf8, entryHash, isDigest, isEntry, isFactRef, isLocalId, isScopeRef, timeMs, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { idOf, READ_BOUNDS, parseCommit, isObjectId, type ObjectId } from "@generalbusiness/dap-git";
+import type { EvidenceBinding } from "@generalbusiness/dap-platform";
+import { idOf, READ_BOUNDS, parseCommit, isObjectId, type ObjectId, type OwnedCheckoutSnapshot } from "@generalbusiness/dap-git";
 
 /** The name that the rules scope holds an activated `change` definition under (section 3.11: "a `change` definition"). */
 export const CHANGE = "change";
@@ -78,12 +80,16 @@ export interface Job {
   commit: ObjectId;
   base: ObjectId;
   snapshot?: ReservationSnapshot;
+  /** Successor source/stage fence, proved by the actual native admission. */
+  evidence?: EvidenceBinding;
+  /** Immutable execution bytes; this is not an old reservation proof. */
+  overlay?: OwnedCheckoutSnapshot;
   ref?: string;
   remote?: string;
 }
 
 export type NotAJob =
-  | "bad-notice" | "no-entry" | "not-this-entry" | "not-a-request-check" | "not-a-change-lane" | "not-activated" | "not-as-given" | "no-manifest" | "reservation-stage-missing" | "reservation-stage-mismatch";
+  | "bad-notice" | "no-entry" | "not-this-entry" | "not-a-request-check" | "not-a-change-lane" | "not-activated" | "not-as-given" | "no-manifest" | "reservation-stage-missing" | "reservation-stage-mismatch" | "stage-origin-mismatch" | "wrong-source" | "job-deadline-passed";
 
 export type Origin = { job: Job } | { not: NotAJob };
 
@@ -103,6 +109,8 @@ export function originOf(notice: Notice, read: OriginRead): Origin {
   if (read.entry === null) return { not: "no-entry" };
   const entry = ownEntry(read.entry, lane, fact.seq);
   if (!entry || read.entry.hash !== fact.hash) return { not: "not-this-entry" };
+  // A successor binding is never interpreted as an unbound legacy job.
+  if (entry.effects.some(effect => effect.effect === "value" && effect.item === fact.seq && effect.slot === "binding")) return { not: "stage-origin-mismatch" };
   const input = entry.input;
   if (input.type !== "act" || !verifySignedIntent(input.signed) || input.signed.intent.kind !== REQUEST_CHECK || input.signed.intent.to === null || !sameScope(input.signed.intent.to, lane) || !opens(entry.effects, fact.seq, "job")) return { not: "not-a-request-check" };
   if (!isDigest(read.pinned)) return { not: "not-a-change-lane" };

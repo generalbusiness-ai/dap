@@ -1,8 +1,9 @@
 # Evidence rules for landing
 
 Status: current. Request `5648d0ab`, planner promise `b7496f05`.
-Draft 3. It is approved (`ba4184d0`) and landed at `d09cc918`. This note
-is a design. It commissions no implementation. Its first slice is not built.
+Draft 3 was approved (`ba4184d0`) and landed at `d09cc918`. The first slice
+is commissioned by `a53e1464`. The 28 October rulings settle service-key
+rotation and the published-failure incident exchange.
 
 ## The problem
 
@@ -64,8 +65,7 @@ state that the fields depend on, listed in
 - The role table gives `change.check` to the `checker` role only
   (`packages/platform/src/membership.ts:107`, and the role's first list at
   line 152). The checker service has its own key. It signs a digest of the
-  record of what ran (`packages/checkers/src/outcome.ts:66-81`). It has no
-  production adapter yet.
+  record of what ran (`packages/checkers/src/outcome.ts:66-81`). J3 supplies its production container runner.
 - In the current change lane, required checks run on the destination's
   reservation tree, and the destination refuses with
   `required-check-timeout` when their deadline passes
@@ -107,9 +107,13 @@ afterwards:
 
 The room refuses a result whose signer does not match the check's source,
 with `wrong-source`. Only an admin can mark a checker key as the room's
-own service, and one key at a time holds that mark. Which scope holds the
-mark, and how a rotation of that key takes effect for jobs already
-running, is still open. For `outside`, who owns a check-run operation and
+own service, and one key at a time holds that mark. The nullable mark is
+part of the complete Rules policy. A native scoped generation changes only
+when the member/key pair changes. A fresh Rules observation of withdrawal
+or rotation refuses unfinished room jobs under the old generation with
+`wrong-source`. Accepted historical results remain subject to current key
+eligibility. Member jobs keep their separate member authority. For
+`outside`, who owns a check-run operation and
 what the room trusts in its answer is also open. A check with no `source`,
 as every check has today, reads as `member`. So existing rooms keep their
 meaning. A report's claims stay claims. They never meet a check.
@@ -197,14 +201,16 @@ configuration, not of the room.
 
 | `stage` | Runs on | If it fails |
 |---|---|---|
-| `work` | A report's tree, before the performer reports | The requester can refuse the report. A `work` check never meets an extent's checks. |
+| `work` | An actual staged work-source commit, before the performer reports |  The requester can refuse the report. A `work` check never meets an extent's checks. |
 | `landing` (the default) | The reservation tree, as every check does today | The publication is refused. |
-| `published` | The published commit, after the destination's receipt | The landing stands. The lane opens a new intent for the maintainers that names the landing and the failed result. |
+| `published` | The published commit, after the destination's receipt | The landing stands. The Change lane creates one nested incident Issue addressed to active `issue.triage` holders. It names the publication, job and actual failure cause. |
 
 A `published` check cannot undo a landing. A rollback is a separate act
 that someone must authorize. Opening an intent automatically after a
-failed `published` check is new. The intent tells the maintainers. It does
-not hold anything.
+failed `published` check uses the existing Directory creation exchange.
+The incident has a system origin, with no invented human requester or
+signing key. Its closure cannot release a Destination hold. Unknown
+creation keeps the original request pending.
 
 ### Holds
 
@@ -221,7 +227,12 @@ The hold also records the failed job and the published commit.
 
 **When a hold takes effect.** A `published` check that is still running
 does not block later landings. Recording a failure and setting its hold
-are one update of the destination's state. The destination orders that
+are one update of the destination's state. A timeout is recorded by the
+job's own timed entry and judged as a hold at every later admission from
+the hold index's bounded pending jobs. The timed entry changes only its job;
+it opens no operation and sends nothing. This follows ruling
+`git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c20152ef7919ec4b03c7647a6b734aadc1cec7dd`.
+The destination orders that
 update with its admissions, so every admission that it decides after the
 update sees the hold, and none decided before it does. A hold has no
 effect on a publication that was already admitted. While a hold stands,
@@ -303,12 +314,12 @@ sit.
 
 | Part | Needs | State |
 |---|---|---|
-| `room` and `member` sources | New versions of the rules data, the change lane and the destination, which admit a result by its source (`wrong-source`) | Open. Rule values already change by publishing, but these versions do not exist. Where the admin's mark of the room's service key is held, and how its rotation takes effect, is not decided. |
-| `reuse` | The same versions, with an index of decided results by key and a mark that disables reuse for a key | Open |
-| `work` and `landing` stages | The same versions | Open |
-| `room` source in production, and audits at `every: 1` | A production adapter for the checker service | Open. Decision 4 puts it in the first slice. |
+| `room` and `member` sources | New versions of the rules data, the change lane and the destination, which admit a result by its source (`wrong-source`) | The first slice supplies an opt-in cohort with Register 22, Directory 21, Rules 13, Destination 17, Issue 4, and Change 4. Membership 8 and Inbox 1 stay unchanged. Rules owns the complete mark. Its native generation invalidates unfinished room jobs on observed rotation (ruling `ed818781`). |
+| `reuse` | The same versions, with an index of decided results by key and a mark that disables reuse for a key | The first slice implements reuse through an index of decided results by key. Disagreement disables reuse for that key. Disagreement does not prevent a fresh run. |
+| `work` and `landing` stages | The same versions | The first slice implements both stages with jobs bound to their stage. A work result cannot satisfy a landing check. |
+| `room` source in production, and audits at `every: 1` | A production adapter for the checker service | J3 supplies the production adapter; the first slice binds it to actual marked-room admission. |
 | Audits with `every` above 1 | Independent randomness committed after the result, and an attempt identity that cancel and retry cannot change | Open. Not in the first slice. |
-| `published` stage and holds | Hold state, its release exchange and the transition act in the destination's new version, and one more message from the destination to the lane | Partly met. Platform scopes already send to the lane. The hold state is new. |
+| `published` stage and holds | Hold state, its release exchange and the transition act in the destination's new version, and one more message from the destination to the lane | The first slice implements checks after the publication receipt, holds by extent, and their release. A failed published check opens a nested incident Issue through the Change lane. |
 | Holding landings while a `published` check is still running | A mode of `holds` that blocks admissions until the check's result is recorded | Open. Not in the first slice. |
 | `outside` source | An operation form for a check run, its owner, and what the room trusts in its answer. Only `hold@1` and `git-read@1` exist. | Open |
 | Health checks after a deployment | The deployment contract of the [forge design](2026-10-15-unified-forge-design.md#48-execution-evidence-and-external-outcomes) | Open |

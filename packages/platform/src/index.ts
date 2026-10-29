@@ -105,3 +105,21 @@ export { rulesCertificateEvidenceValues } from "./destination-v14.ts";
 export { rulesScopeV12, rulesScopeRulesV12, rulesAnswerV12, rulesObservedValuesV12 } from "./rules-scope-v12.ts";
 export { rulesCertificateFamilyV15, rulesCertificateOpeningV15, rulesPublishedCertificateV15, rulesCertificateDeclineV15, rulesCertificateInterveningFactV15, readRulesCertificateDeclinedV15, RULES_CERTIFICATE_DECLINED_V15_MAX, type RulesCertificateDeclinedV15 } from "./rules-certificate-v15.ts";
 export { certifiedPublicationStateV15, certifiedReservationSnapshotV15, certifiedPublicationBudgetV15, certifiedCaptureBudgetV15, certifiedFutureEnvelopeBytesV15, type CertifiedPublicationStateV15, type CertifiedReservationSnapshotV15, type CertifiedGenerationV15 } from "./destination-budget-v15.ts";
+
+/** Explicit opt-in evidence cohort; global NEWEST remains unchanged. */
+export { EVIDENCE_RULES_COHORT } from "./evidence-cohort.ts";
+export { evidenceRulesRegister, evidenceRulesDirectory, evidenceRulesDirectoryRules } from "./evidence-cohort-data.ts";
+export { rulesScopeV13, rulesScopeRulesV13, rulesAnswerV13, rulesObservedValuesV13 } from "./rules-scope-v13.ts";
+export { RULES_POLICY_VALUE_V13, RULES_EXTENTS_VALUE_V13, RULES_POLICY_V13_DOMAIN, readRulesPolicyV13, rulesPolicyProposalV13, rulesPolicyPatternsV13, rulesPolicyCheckersV13 } from "./rules-policy-v13.ts";
+export type { RulesCheckV13, RulesPolicyV13 } from "./rules-policy-v13.ts";
+export { readRulesPolicyReplyV17 } from "./reservation-v17.ts";
+export * from "./evidence.ts";
+export { destinationV17, destinationRulesV17, destinationEvidenceJob, destinationEvidenceAdmissionCurrent, destinationEvidencePending, destinationEvidenceResultPending, destinationEvidenceNoticePending, destinationEvidenceProgressPending, evidenceFloorReferencesV17, WORK_COMMIT_PROOF_V17, EVIDENCE_ADMIT_V17 } from "./destination-v17.ts";
+export type { EvidenceJobAdmissionV17 } from "./destination-v17.ts";
+export { rulesCertificateFamilyV17, rulesCertificateOpeningV17, rulesPublishedCertificateV17, rulesCertificateDeclineV17, rulesCertificateInterveningFactV17, readRulesCertificateDeclinedV17, RULES_CERTIFICATE_DECLINED_V17_MAX } from "./rules-certificate-v17.ts";
+export type { RulesCertificateDeclinedV17, RulesCertificateProvenanceV17 } from "./rules-certificate-v17.ts";
+
+export { destinationPublishedChecksPending, destinationEvidenceFundingPending, destinationEvidencePlanPending } from "./destination-evidence-funding-v17.ts";
+export { destinationEvidenceAuditPending } from "./destination-evidence-v17.ts";
+export { evidenceIncidentAdmissionPositionV17, EVIDENCE_INCIDENT_PINS_V17 } from "./evidence-incident-origin-v17.ts";
+export { readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";

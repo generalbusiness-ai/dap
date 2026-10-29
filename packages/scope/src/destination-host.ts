@@ -7,20 +7,22 @@
  * inspection of those objects. For its push it builds the same objects again, with
  * the time of the entry that reserved it, and sends them with the base's closure.
  * Every provider sends them the same way. */
-import type { ReservationSnapshot, SignedIntent, Entry, FactRef, FieldValue, KeyId, OperationId, RetainedInput, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, b64url, entryHash, isOperationId, isFactRef, verifySignedIntent, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
-import { isEntryOf, valueDigest, type Item, type Operation } from "@generalbusiness/dap-derive";
+import type { ReservationSnapshot, SignedIntent, Entry, FactRef, FactUse, FieldValue, KeyId, OperationId, RetainedInput, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
+import { canonicalize, b64url, entryHash, isEntry, isOperationId, isFactRef, rawRetainedJSON, verifySignedIntent, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { isEntryOf, valueDigest, type Item, type Operation, type Own } from "@generalbusiness/dap-derive";
 import { isStandingDestination, publicationStandingRecord, certifiedPublicationState, certifiedPublicationStateV15, usesFilePublicationProtocol, usesStagedPublicationProtocol } from "@generalbusiness/dap-platform";
 import { DESTINATION_KINDS, READ_TOKEN_HOURS, destinationBranch, destinationMint, destinationRead, destinationReceipt, destinationRevokedMint, destinationSends, destinationStatement, destinationTarget, destinationWrite, editObjects, editTree, manifestCommit, editPath, fileOf, sourcesOf, manifestFiles, fileSound, firstHeadCommit, initialCommitOf, isOf, isRecordedJudgeEvidence, revokedToken, filePublicationCause, filePublicationCurrent, filePublicationCommit, type DestinationObject, type EditFile, type ObjectFormat, type RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
 import { GitRefusal, READ_BOUNDS, Reader, type GitSource } from "@generalbusiness/dap-git";
 import { RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, rulesCertificateOpening, rulesCertificateBranchMatches, rulesPolicyProposalV11, rulesPolicyPatternsV11, RULES_TREE_PROOF, RULES_TREE_BOUNDS, verifyRulesTree, type RulesTreeBinding } from "@generalbusiness/dap-platform";
 import { rulesCertificateOpeningV15, rulesCertificateDeclineV15 } from "@generalbusiness/dap-platform";
+import { rulesCertificateOpeningV17, rulesCertificateDeclineV17, RULES_POLICY_VALUE_V13, rulesPolicyProposalV13, destinationEvidencePending, destinationEvidenceResultPending, destinationEvidenceNoticePending, destinationEvidenceProgressPending, destinationPublishedChecksPending, destinationEvidenceFundingPending, destinationEvidenceAuditPending, destinationEvidencePlanPending } from "@generalbusiness/dap-platform";
 import type { RulesTreeRequest, RulesTreeObjects } from "./rules-tree-provider.ts";
 import type { CredentialPosition, CredentialStore, RevocationPosition } from "./credential-store.ts";
 import type { OutsideGiven } from "./given.ts";
 import type { EffectAnswer, EffectRequest, Outside } from "./operations.ts";
 import type { Sealed } from "./store.ts";
 import { inspectGit } from "./github-host.ts";
+import { readStageSnapshot } from "./stage-snapshot.ts";
 
 export interface DestinationRepository { host: string; namespace: string; name: string; id: string }
 export interface DestinationBinding { scope: ScopeRef; mint: OperationId; attempt: number; write: OperationId; writeAttempt: number; ref: string }
@@ -55,6 +57,12 @@ export interface ReadCredential { token: string; ends: string; remote: string }
 export interface SnapshotReader {
   job(fact: FactRef): Promise<{ entry: Entry; under: string; state: string; decidedBy?: FactRef | null } | null>;
   key(membership: string, key: KeyId): Promise<unknown>;
+  /** Actual authenticated immutable source entry, including foreign source facts. */
+  source?(fact: FactRef): Promise<Sealed | null>;
+  /** Exact current declared source item, not a scan or a replacement for its immutable fact. */
+  sourceState?(fact: FactRef): Promise<string | null>;
+  /** Fresh authenticated Rules observation; required only for room stage reads. */
+  rules?(rules: ScopeRef): Promise<unknown>;
 }
 export interface DestinationHostOptions { snapshotReader?: SnapshotReader; host: string; namespace: string; provider: DestinationProvider; custody: Pick<CredentialStore, "put" | "putRead" | "reply" | "live" | "read" | "judged" | "revoked" | "pending" | "expectRevoke" | "revocations" | "held" | "take"> }
 
@@ -81,14 +89,28 @@ const answer = (result: EffectAnswer["result"], body: unknown, basis: "own-answe
 export class DestinationHost implements Outside {
   readonly #given: OutsideGiven;
   readonly #options: DestinationHostOptions;
+  readonly #evidenceOwn: Own;
   #replyCursor: CredentialPosition | null = null;
   #revokeCursor: RevocationPosition | null = null;
-  constructor(given: OutsideGiven, options: DestinationHostOptions) { this.#given = given; this.#options = options; }
+  constructor(given: OutsideGiven, options: DestinationHostOptions) {
+    this.#given = given; this.#options = options;
+    // The outside port exposes retained bytes separately from own history.
+    // Reconstruct only an already retained entry, with Core's hash/parser checks.
+    this.#evidenceOwn = Object.assign((seq: number) => given.own(seq), {
+      retained: (use: FactUse) => {
+        const held = given.retained("entry", use.content), entry = held && rawRetainedJSON(use.content, held.bytes);
+        return isEntry(entry) ? entry : null;
+      },
+    });
+  }
 
-  accepts(owner: string, kind: string): boolean { return (owner === "platform:destination@14" || owner === "platform:destination@15") && kind === RULES_CERTIFICATE_KIND || usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && ([...Object.values(DESTINATION_KINDS), "check-judge", "reservation-stage", "reservation-delete"] as string[]).includes(kind); }
+  /** Successor source/stage proof; distinct from a live legacy reservation snapshot. */
+  stageSnapshot(asked: SignedIntent) { return readStageSnapshot(this.#given, this.#options, asked); }
+
+  accepts(owner: string, kind: string): boolean { return (owner === "platform:destination@14" || owner === "platform:destination@15" || owner === "platform:destination@17") && kind === RULES_CERTIFICATE_KIND || owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(kind) || usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && ([...Object.values(DESTINATION_KINDS), "check-judge", "reservation-stage", "reservation-delete"] as string[]).includes(kind); }
   /** Repeating these reads never repeats a host mutation. The driver keeps the same attempt. */
   readonly recovery = {
-    accepts: (owner: string, kind: string): boolean => usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && [DESTINATION_KINDS.judge, DESTINATION_KINDS.read, DESTINATION_KINDS.adoptRead, "check-judge"].includes(kind as "judge" | "read" | "adopt-read" | "check-judge"),
+    accepts: (owner: string, kind: string): boolean => owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(kind) || usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && [DESTINATION_KINDS.judge, DESTINATION_KINDS.read, DESTINATION_KINDS.adoptRead, "check-judge"].includes(kind as "judge" | "read" | "adopt-read" | "check-judge"),
     read: (request: EffectRequest): Promise<EffectAnswer | null> => this.recovery.accepts(request.owner, request.kind) ? this.send(request) : Promise.resolve(null),
   };
 
@@ -141,7 +163,32 @@ export class DestinationHost implements Outside {
       const context = this.#bound(request);
       if (!context) return null;
       const { operation, repository, ref } = context;
-      if ((operation.owner === "platform:destination@14" || operation.owner === "platform:destination@15") && operation.kind === RULES_CERTIFICATE_KIND) {
+      if (operation.owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(operation.kind)) {
+        if (request.attempt !== 1) return null;
+        if (operation.kind === "evidence-funding") {
+          const pending = destinationEvidenceFundingPending(this.#given.state, this.#given.own, operation);
+          return pending ? answer("confirmed", { capture: pending.capture }) : null;
+        }
+        if (operation.kind === "evidence-plan") {
+          const pending = destinationEvidencePlanPending(this.#given.state, this.#given.own, operation);
+          return pending ? answer("confirmed", { written: pending.written }) : null;
+        }
+        if (operation.kind === "published-checks") {
+          const pending = destinationPublishedChecksPending(this.#given.state, this.#given.own, operation);
+          return pending ? answer("confirmed", { plan: pending.plan }) : null;
+        }
+        const pending = operation.kind === "evidence-admit"
+          ? this.#given.bounds ? destinationEvidencePending(this.#given.state, this.#evidenceOwn, operation, this.#given.bounds) : null
+          : operation.kind === "evidence-result"
+            ? destinationEvidenceResultPending(this.#given.state, this.#evidenceOwn, operation)
+            : operation.kind === "evidence-audit"
+              ? destinationEvidenceAuditPending(this.#given.state, this.#given.own, operation)
+              : operation.kind === "evidence-progress"
+                ? destinationEvidenceProgressPending(this.#given.state, this.#given.own, operation)
+                : destinationEvidenceNoticePending(this.#given.state, this.#given.own, operation);
+        return pending ? answer("confirmed", { job: pending.job }) : null;
+      }
+      if ((operation.owner === "platform:destination@14" || operation.owner === "platform:destination@15" || operation.owner === "platform:destination@17") && operation.kind === RULES_CERTIFICATE_KIND) {
         return await this.#certifyRulesTree(request, operation, repository, ref);
       }
       if (operation.kind === "check-judge") {
@@ -214,8 +261,10 @@ export class DestinationHost implements Outside {
    * freshness claim. The policy copy stays private across the provider await. */
   async #certifyRulesTree(request: EffectRequest, operation: Operation, repository: DestinationRepository, ref: string): Promise<EffectAnswer | null> {
     if (request.attempt !== 1) return null;
-    const hardened = operation.owner === "platform:destination@15";
-    const readOpening = hardened ? rulesCertificateOpeningV15 : rulesCertificateOpening;
+    const evidenceProfile = operation.owner === "platform:destination@17";
+    const hardened = evidenceProfile || operation.owner === "platform:destination@15";
+    const readOpening = evidenceProfile ? rulesCertificateOpeningV17 : hardened ? rulesCertificateOpeningV15 : rulesCertificateOpening;
+    const policyValue = evidenceProfile ? RULES_POLICY_VALUE_V13 : RULES_POLICY_VALUE_V11;
     const opening = readOpening(this.#given.own, operation, request.scope);
     if (!opening) return null;
     const { binding, started } = opening;
@@ -230,16 +279,16 @@ export class DestinationHost implements Outside {
       if (!hardened) return null;
       const scope = this.#given.scope();
       if (!scope || scope.status !== "active" || !sameScope(scope.at, request.scope)) return null;
-      const body = rulesCertificateDeclineV15(this.#given.own, request.scope, scope.head, started);
+      const body = (evidenceProfile ? rulesCertificateDeclineV17 : rulesCertificateDeclineV15)(this.#given.own, request.scope, scope.head, started);
       return body ? answer("refused", body) : null;
     };
     if (canonicalize(repository) !== canonicalize(binding.repository) || ref !== binding.ref) return null;
     if (!current(binding)) return declined();
-    const retained = this.#given.retained("value", binding.proposal, RULES_POLICY_VALUE_V11.domain);
-    if (!retained || retained.kind !== "value" || retained.domain !== RULES_POLICY_VALUE_V11.domain || retained.digest !== binding.proposal
-      || typeof retained.bytes !== "string" || retained.bytes.length > RULES_POLICY_VALUE_V11.max
-      || utf8(retained.bytes).length > RULES_POLICY_VALUE_V11.max) return null;
-    const proposal = rulesPolicyProposalV11(parseStrict(retained.bytes));
+    const retained = this.#given.retained("value", binding.proposal, policyValue.domain);
+    if (!retained || retained.kind !== "value" || retained.domain !== policyValue.domain || retained.digest !== binding.proposal
+      || typeof retained.bytes !== "string" || retained.bytes.length > policyValue.max
+      || utf8(retained.bytes).length > policyValue.max) return null;
+    const proposal = (evidenceProfile ? rulesPolicyProposalV13 : rulesPolicyProposalV11)(parseStrict(retained.bytes));
     if (!proposal.ok || proposal.digest !== binding.proposal || canonicalize(proposal.policy) !== retained.bytes) return null;
     const policyBytes = retained.bytes;
     const read = this.#options.provider.rulesTree;
@@ -284,7 +333,7 @@ export class DestinationHost implements Outside {
     const proofDigest = valueDigest(RULES_TREE_PROOF.domain, proof);
     if (!verifyRulesTree(proofBytes, proofDigest, binding, rulesPolicyPatternsV11(proposal.policy)).ok) return answer("refused", {});
     return { ...answer("confirmed", { proposal: binding.proposal, proof: proofDigest, started }), retain: [
-      { kind: "value", domain: RULES_POLICY_VALUE_V11.domain, digest: binding.proposal, bytes: policyBytes },
+      { kind: "value", domain: policyValue.domain, digest: binding.proposal, bytes: policyBytes },
       { kind: "value", domain: RULES_TREE_PROOF.domain, digest: proofDigest, bytes: proofBytes },
     ] };
   }

@@ -303,7 +303,9 @@ export function createContainerEngine(options: ContainerEngineOptions): Containe
       const confirm = async (job: Job): Promise<Checkout> => {
         if (job.commit !== ask.job.commit || job.tree !== ask.job.tree || job.base !== ask.job.base) return error("job");
         if (checked) return checked;
-        if (job.snapshot) checked = await checkoutObjects(git, { dir: WORK, commit: job.commit, tree: job.tree, base: job.base, objects: job.snapshot.objects }, READ_BOUNDS, { createPrivate: async dir => {
+        const overlay = job.overlay ?? job.snapshot;
+        if (overlay && (overlay.commit !== job.commit || overlay.tree !== job.tree || overlay.base !== job.base)) return error("job");
+        if (overlay) checked = await checkoutObjects(git, { dir: WORK, commit: job.commit, tree: job.tree, base: job.base, objects: overlay.objects }, READ_BOUNDS, { createPrivate: async dir => {
           if (dir !== WORK) return error("isolation");
           const result = await execute(["/bin/mkdir", "-m", "0700", "--", dir], remaining(), 4096, true, undefined, {});
           if (result.code !== 0) return error("isolation"); return dir;

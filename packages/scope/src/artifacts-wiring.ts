@@ -119,8 +119,15 @@ export function artifactsOutside(given: OutsideGiven, sql: Pick<Sql, "exec">, en
     // repeated read is not free of mutation.
     return {
       accepts, send,
-      recovery: { accepts: (owner, kind) => kind === "check-judge" && accepts(owner, kind), read: (request) => request.kind === "check-judge" && accepts(request.owner, request.kind) ? destination.send(request) : Promise.resolve(null) },
+      recovery: {
+        accepts: (owner, kind) => accepts(owner, kind) && (kind === "check-judge"
+          || owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(kind)),
+        read: request => accepts(request.owner, request.kind) && (request.kind === "check-judge"
+          || request.owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(request.kind))
+          ? destination.recovery.read(request) : Promise.resolve(null),
+      },
       snapshot: (asked) => bound(given.genesis()?.seed.definition ?? "") ? destination.snapshot(asked) : Promise.resolve(null),
+      stageSnapshot: (asked) => bound(given.genesis()?.seed.definition ?? "") ? destination.stageSnapshot(asked) : Promise.resolve(null),
       judged: (at, sealed) => destination.judged(at, sealed),
       replies: (limit) => bound(given.genesis()?.seed.definition ?? "") ? destination.replies(limit) : { answers: [], more: false },
       credential: (handle, key) => bound(given.genesis()?.seed.definition ?? "") ? destination.credential(handle, key) : null,

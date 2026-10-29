@@ -21,3 +21,8 @@ export type { LaneDefinition } from "./shared.ts";
 
 /** Both declarations, as a creator supplies them in `definitions`, so that a directory which names their digests in a `create` retains their bytes. */
 export const definitions: readonly DeclaredDefinition[] = [issue, change];
+
+/** Explicit evidence-rules profile. Existing definitions retain their pins. */
+export { issueEvidence4 } from "./issue4.ts";
+export { changeEvidence4 } from "./change4.ts";
+export { EVIDENCE_DIGESTS } from "./digests4.ts";

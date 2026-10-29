@@ -312,6 +312,76 @@ records recover a terminal result without starting a replacement.
 [Run a checker in a container](../packages/checkers/README.md) states the
 supported engine, image requirements and operator custody wiring. Source
 code alone is not a deployment or a hosted check result.
+The opt-in evidence cohort adds source and stage admission through Register
+22, Directory 21, Rules 13, Destination 17, Issue 4 and Change 4. Membership
+8 and Inbox 1 remain unchanged. Rules
+owns the nullable room-service member/key pair and its native generation.
+Only an admin can change that pair. Destination observes current Rules and
+Membership when it admits and counts a result. Rotation refuses unfinished
+room jobs under the earlier generation. Member jobs retain their separate
+member authority.
+Rules observation revision 21 carries the nullable service mark and its
+scoped generation exactly when the pinned Rules data declares
+`roomServiceChanged`. Earlier definitions retain their exact observation
+shape. The retained extents value carries the policy and certificate;
+the authenticated observation supplies the service position. Platform owns
+the job binding types and codec; the kernel retains only the two types that
+the observation needs. This addition follows the review rule in
+[Kernel boundary, section 7](kernel.md#7-rule-for-adding-to-the-kernel).
+
+A lane queues an evidence request before Destination decides it. A selected
+`evidence-admit` outcome opens the admitted job and records its immutable
+subject, exact commit, tree, base and source facts.
+
+In Issue 4 and Change 4, a checker act records a signed result claim. The
+claim leaves the job pending. Destination verifies that claim before it
+selects a bound holder or draws its funded result duty. For a room job,
+this check requires the frozen marked key. A second key of the same
+checker member cannot spend that duty. Member-source jobs keep their
+current member-key eligibility rules.
+
+Destination checks current source authority when it counts the result.
+Only its authenticated counted notice settles the lane job. The notice
+names the exact result fact, binding and outcome. A claim refused before
+binding leaves the funded duty and pending job available for the marked
+key. No new kernel operand, field, slot or wider bound supports this flow.
+
+Reuse uses a bounded index of admitted results. Disagreement permanently disables reuse for that key
+while allowing fresh jobs. Audits run fresh for the current logical request
+and name the actual member job whose result they compare.
+
+Destination 17 keeps legacy admission: the runtime limits global entries,
+not global bytes, items, records, or requests. Per-entry limits and the
+definition's count guards still apply. Whole-scope capacity adoption is a
+separate design item after measured deployment ceilings.
+
+NEW WORK carriers keep the counted operations and bound decisions needed
+by checks that finish after a publication becomes final. They serve the
+published, audit, result, and incident paths. They make no byte-admission
+guarantee. Full carrier setup does not gate Git publication. Actual written
+receipt proof and exact original carrier identities govern the later plan;
+count availability must be proved before opening check work.
+
+Destination records published-check holds in the same transaction that
+orders later admissions. Passes clear only the exact hold key at the same
+or a later publication. Transitions and overrides have distinct recorded
+causes. A failed published job asks its Change lane to create a nested
+incident Issue, addressed to current active `issue.triage` holders. Unknown
+creation remains pending under the original request.
+A timeout changes only its job through literal timed effects. Admissions
+judge that state through a bounded, pre-funded pending-job index, so the hold
+is effective at the timed entry. A later entry or authorized recovery act
+opens its owed notice; until then the timed-out job visibly owes an incident.
+
+The signed job-read route can return a bounded `StageSnapshot` for this
+cohort. The host reads immutable Git objects at the admitted commit, checks
+their closure and exact triple, and rechecks source authority after reads.
+The checker validates the recorded Native admission before handing its
+object overlay to the J3 runner. The host supplies bytes; Native rules own
+admission. Timeout ends waiting but does not prove that a physical run
+stopped. A persisted run may finish late under current authority. A service
+cannot launch a first run after its deadline.
+
 `platform:task@1` is not supplied at this base. Real lane hold and Git-read
 host adapters are not built.
 

@@ -4,8 +4,9 @@ import * as fs from "node:fs/promises";
 import { createHash, randomUUID } from "node:crypto";
 import { dirname, isAbsolute, join } from "node:path";
 import { b64url, canonicalize, isDigest, isFactRef, isScopeRef, unb64url } from "@generalbusiness/dap-bytes";
+import { readEvidenceBinding } from "@generalbusiness/dap-platform";
 import type { Digest } from "@generalbusiness/dap-contract";
-import { isObjectId } from "@generalbusiness/dap-git";
+import { isObjectId, readOwnedCheckoutSnapshot, STAGE_SNAPSHOT_BOUNDS } from "@generalbusiness/dap-git";
 import { readConfiguration } from "./configuration.ts";
 import type { Variable } from "./configuration.ts";
 import { readReport, type RunReport } from "./outcome.ts";
@@ -66,7 +67,14 @@ function encodeInput(given: unknown): string {
   return encoded;
 }
 export function encodeAsk(given: RunAsk): string {
-  const encoded = encodeInput(given); decodeAsk(encoded); return encoded;
+  let owned = given;
+  if (given.job.overlay) {
+    if (given.job.snapshot) throw refused();
+    const overlay = readOwnedCheckoutSnapshot(given.job.overlay);
+    if (!overlay) throw refused();
+    owned = { ...given, job: { ...given.job, overlay } };
+  }
+  const encoded = encodeInput(owned); decodeAsk(encoded); return encoded;
 }
 export const encodeJob = (job: Job): string => encodeInput(job);
 
@@ -76,7 +84,8 @@ export function decodeAsk(bytes: string): RunAsk {
   if (!ask || typeof ask.run !== "string" || !/^[A-Za-z0-9_.-]{1,128}$/.test(ask.run) || !ask.job
     || !isScopeRef(ask.job.lane) || !isFactRef(ask.job.fact) || canonicalize(ask.job.lane) !== canonicalize(ask.job.fact.at)
     || !isObjectId(ask.job.commit) || !isObjectId(ask.job.tree) || !isObjectId(ask.job.base)
-    || !readConfiguration(canonicalize(ask.configuration), ask.job.configuration) || ask.configuration.name !== ask.job.name) throw refused();
+    || !readConfiguration(canonicalize(ask.configuration), ask.job.configuration)
+    || ask.job.evidence === undefined && ask.configuration.name !== ask.job.name) throw refused();
   if (ask.job.snapshot) {
     if (ask.job.snapshot.commit !== ask.job.commit || ask.job.snapshot.tree !== ask.job.tree || ask.job.snapshot.base !== ask.job.base
       || !Array.isArray(ask.job.snapshot.objects)) throw refused();
@@ -85,6 +94,26 @@ export function decodeAsk(bytes: string): RunAsk {
       if (!data) throw refused();
       return { ...object, data };
     }) };
+  }
+  if (ask.job.evidence !== undefined) {
+    const evidence = readEvidenceBinding(ask.job.evidence);
+    if (!evidence) throw refused();
+    ask.job.evidence = evidence;
+  }
+  if (ask.job.overlay) {
+    if (ask.job.snapshot || !Array.isArray(ask.job.overlay.objects) || ask.job.overlay.objects.length > STAGE_SNAPSHOT_BOUNDS.objects) throw refused();
+    let bytes = 0;
+    const overlay = readOwnedCheckoutSnapshot({ ...ask.job.overlay, objects: ask.job.overlay.objects.map(object => {
+      const raw: unknown = object.data;
+      if (typeof raw !== "string" || raw.length > 4 * Math.ceil(STAGE_SNAPSHOT_BOUNDS.objectBytes / 3)) throw refused();
+      bytes += Math.floor(raw.length * 3 / 4);
+      if (bytes > STAGE_SNAPSHOT_BOUNDS.objectBytes) throw refused();
+      const data = unb64url(raw);
+      if (!data) throw refused();
+      return { ...object, data };
+    }) });
+    if (!overlay || overlay.commit !== ask.job.commit || overlay.tree !== ask.job.tree || overlay.base !== ask.job.base) throw refused();
+    ask.job.overlay = overlay;
   }
   return ask;
 }

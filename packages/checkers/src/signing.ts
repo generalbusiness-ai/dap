@@ -33,6 +33,7 @@
 import { DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Base64Url, FieldValue, Intent, KeyId, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
 import { b64url, canonicalBytes, domainBytes, parseStrictBytes, timeOf } from "@generalbusiness/dap-bytes";
+import { evidenceBindingDigest } from "@generalbusiness/dap-platform";
 import type { Job } from "./job.ts";
 import { detailsDigest, type Details, type Outcome } from "./outcome.ts";
 
@@ -73,6 +74,7 @@ async function signed(signer: ResultSigner, asked: Pick<Intent, "to" | "kind" | 
 export function signResult(signer: ResultSigner, job: Job, outcome: Outcome, details: Details | null, expected: Record<string, number>, signing: Signing): Promise<SignedIntent> {
   const fields: Record<string, FieldValue> = {
     job: job.fact.seq, tree: job.tree, configuration: job.configuration,
+    ...(job.evidence ? { jobFact: job.fact, bindingDigest: evidenceBindingDigest(job.evidence) } : {}),
     ...(outcome.act === "check" ? { outcome: outcome.outcome } : { reason: outcome.reason }),
     ...(details === null ? {} : { details: detailsDigest(details) }),
   };

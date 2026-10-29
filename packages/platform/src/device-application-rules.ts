@@ -1,3 +1,4 @@
+import { EVIDENCE_RULES_COHORT as ERC } from "./evidence-cohort.ts";
 /** Explicit device-command package proof under Rules9. Older pins keep their proofs. */
 import type { DeclaredDefinition, FieldValue, MemberObservation, PlatformData } from "@generalbusiness/dap-contract";
 import { DEVICE_COMMAND } from "@generalbusiness/dap-contract";
@@ -18,7 +19,7 @@ import { DEVICE_GENESIS_BYTES, DEVICE_GRANT_BYTES } from "./device-application-w
 import { APPLICATION_SEMANTIC_VALUE2, APPLICATION_RELEASE_VALUE2 } from "./application-install-v2.ts";
 const archiveInstall = (given: RuleGiven): boolean => {
   const pin = pinnedBy(given);
-  return pin === ARCHIVE_DEVICE_APPLICATION_COHORT.rules || pin === ARCHIVE_CERTIFIED_RULES_COHORT.rules || pin === HARDENED_CERTIFIED_RULES_COHORT.rules;
+  return pin === ARCHIVE_DEVICE_APPLICATION_COHORT.rules || pin === ARCHIVE_CERTIFIED_RULES_COHORT.rules || pin === HARDENED_CERTIFIED_RULES_COHORT.rules || pin === ERC.rules;
 };
 const install = applicationInstallRulesScope.acts["install-application"]!;
 export const deviceApplicationRulesScope: PlatformData = {

@@ -35,10 +35,10 @@ import { demoCreationOffer, type DemoCreationConfig } from "./demo-creation.ts";
 import { DurableObject } from "cloudflare:workers";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Answer, Beside, Bounds, Cursor, DeclaredDefinition, Digest, OutboxId, Entry, Grant, Input, LogPage, OperationId, PlatformDefinition, Read, RetainedInput, Seed, ScopeId, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, isRecord, isPlatformDefinition, isSeed, isSignedIntentShape, intentDigest, digestBytes, isHead, isScopeId, isScopeRef, parseStrict, retainedReadArgument, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, isFactRef, isRecord, isPlatformDefinition, isSeed, isSignedIntentShape, intentDigest, digestBytes, isHead, isScopeId, isScopeRef, parseStrict, retainedReadArgument, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { isEntryOf, timeMs, timeOf, type Item } from "@generalbusiness/dap-derive";
-import { sourceName } from "@generalbusiness/dap-platform";
-import type { Delivered, StateView } from "@generalbusiness/dap-derive";
+import { sourceName, evidenceIncidentAdmissionPositionV17, EVIDENCE_INCIDENT_PINS_V17 } from "@generalbusiness/dap-platform";
+import type { Delivered, Fetched, StateView } from "@generalbusiness/dap-derive";
 import { Scope, creationKind, ownOf, type Checkpointed, type Created } from "./core.ts";
 import { Deliveries } from "./delivery.ts";
 import { declaredBy, observedAt, routed, sentText, sourced, sourceOrigin, type Sourced } from "./namespace.ts";
@@ -630,12 +630,52 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     if (!pinned) return null;
     let proof = sourceOrigin(this.#store, pinned);
     const name = pinned.definition?.declared.name;
+    // A G17 incident source carries only its one actual local admission.
+    // The parent Directory genesis is already its ordinary source origin.
+    if (origin && pinned.named === EVIDENCE_INCIDENT_PINS_V17.destination) {
+      if (!Number.isSafeInteger(seq) || seq < 0) return null;
+      const own = ownOf(this.#store), actual = own(seq), position = actual && evidenceIncidentAdmissionPositionV17(actual.entry);
+      if (typeof position === "number") {
+        const admitted = own(position), at = this.#store.scope()?.at;
+        if (!admitted || !at) return null;
+        proof = [...proof, { fact: { at, seq: position, hash: admitted.hash }, entry: admitted.entry, under: "platform:destination" }];
+      }
+    }
     // A retained historical name is not authority. Authenticate the creator
     // through its current native pin before exposing a reserved lane identity.
     const creatorInput = proof[1]?.entry.input;
     const application = origin && proof[0]?.entry.input.type === "genesis" && (creatorInput?.type === "act" && creatorInput.signed.intent.kind === "establish-application"
       || creatorInput?.type === "delivery" && creatorInput.message.class === "request" && creatorInput.message.type === "tell"
         && isRecord(creatorInput.message.body) && creatorInput.message.body["message"] === "application-create");
+    const incidentBody = creatorInput?.type === "delivery"
+      && creatorInput.message.class === "request" && creatorInput.message.type === "tell" && isRecord(creatorInput.message.body)
+      && creatorInput.message.body["message"] === "published-check-failure" ? creatorInput.message.body : null;
+    const incidentFields = incidentBody && isRecord(incidentBody["fields"]) ? incidentBody["fields"] : null;
+    if (pinned.named === EVIDENCE_INCIDENT_PINS_V17.issue && proof[1] && creatorInput?.type === "delivery" && incidentFields) {
+      try {
+        const creator = proof[1];
+        if (creator.fact.at.kind !== "lane" || creator.fact.at.scope === this.#name || creatorInput.from.at.kind !== "destination"
+          || creatorInput.from.at.scope === this.#name || creatorInput.from.at.scope === creator.fact.at.scope) return null;
+        const parent = await within(() => this.#resolver.read(creator.fact, this.#fetchSeconds, true), this.#fetchSeconds);
+        if (parent === LATE || parent === null || !("entry" in parent) || parent.under !== "change" || !isEntryOf(parent.entry, creator.fact)
+          || !parent.origin || parent.origin.length !== 3) return null;
+        const nativeFact = creatorInput.from, native = await within(() => this.#resolver.read(nativeFact, this.#fetchSeconds, true), this.#fetchSeconds);
+        if (native === LATE || native === null || !("entry" in native) || native.under !== "platform:destination" || !isEntryOf(native.entry, nativeFact)
+          || !native.origin || native.origin.length !== 3) return null;
+        const jobFact = incidentFields["job"];
+        if (!isFactRef(jobFact) || canonicalize(jobFact.at) !== canonicalize(creator.fact.at)) return null;
+        const job = await within(() => this.#resolver.read(jobFact, this.#fetchSeconds), this.#fetchSeconds);
+        if (job === LATE || job === null || !("entry" in job) || job.under !== "change" || !isEntryOf(job.entry, jobFact)) return null;
+        const fixed: Fetched[] = [proof[0]!, { ...creator, under: parent.under }, ...parent.origin, { fact: nativeFact, entry: native.entry, under: native.under }];
+        for (const copy of native.origin) {
+          if (fixed.some(existing => canonicalize(existing.fact) === canonicalize(copy.fact))) continue;
+          fixed.push(copy);
+        }
+        fixed.push({ fact: jobFact, entry: job.entry, under: job.under });
+        if (fixed.length !== 9) return null;
+        return sourced(this.#store, pinned, seq, origin, fixed);
+      } catch { return null; }
+    }
     if (name !== undefined && (sourceName(pinned.named, name) === null || application) && proof[1]) {
       const creator = proof[1];
       if (creator.fact.at.scope === this.#name) return null;
@@ -643,6 +683,11 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
         const read = await within(() => this.#resolver.read(creator.fact, this.#fetchSeconds, true), this.#fetchSeconds);
         if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, creator.fact)) return null;
         proof = [proof[0]!, { ...creator, under: read.under }];
+        if (pinned.named === EVIDENCE_INCIDENT_PINS_V17.change && creatorInput?.type === "act" && creatorInput.signed.intent.kind === "open-pr") {
+          const directory = read.origin?.find(copy => copy.fact.seq === 0 && canonicalize(copy.fact.at) === canonicalize(creator.fact.at));
+          if (!directory || !isEntryOf(directory.entry, directory.fact) || directory.entry.input.type !== "genesis") return null;
+          proof = [...proof, directory];
+        }
         if (read.under === "issue" || application) {
           const parent = read.origin?.find(copy => copy.fact.seq === 0 && canonicalize(copy.fact.at) === canonicalize(creator.fact.at));
           if (!parent || !isEntryOf(parent.entry, parent.fact) || parent.entry.input.type !== "genesis") return null;
@@ -878,10 +923,25 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const entry = typeof deciding === "number" ? this.#store.stored(deciding) : null;
     return item?.type === "job" ? { state: item.state, decidedBy: entry ? { at: scope.at, seq: deciding as number, hash: entry.hash } : null } : null;
   }
+  /** Internal namespace read of one retained work-source item's current state. */
+  async workSourceState(fact: import("@generalbusiness/dap-contract").FactRef): Promise<string | null> {
+    this.#first();
+    const scope = this.#store.scope(), sealed = ownOf(this.#store)(fact.seq);
+    if (!scope || !sealed || fact.at.kind !== scope.at.kind || fact.at.scope !== scope.at.scope
+      || fact.at.inc !== scope.at.inc || sealed.hash !== fact.hash) return null;
+    const item = this.#store.item(fact.seq);
+    return item?.type === "work-source" && sealed.entry.effects.some(effect => effect.effect === "open"
+      && effect.item === fact.seq && effect.type === "work-source") ? item.state : null;
+  }
   /** Authenticated by the signed job-read request and current configured checker. */
   async reservationSnapshot(asked: SignedIntent): Promise<import("@generalbusiness/dap-contract").ReservationSnapshot | { refused: "reservation-stage-missing" | "reservation-stage-mismatch" } | null> {
     this.#first();
     try { return await this.#outside.snapshot?.(asked) ?? null; } catch { return null; }
+  }
+  /** Internal signed successor read; unsupported profiles return no proof. */
+  async stageSnapshot(asked: SignedIntent): Promise<import("@generalbusiness/dap-platform").StageSnapshotReply> {
+    this.#first();
+    try { return await this.#outside.stageSnapshot?.(asked) ?? null; } catch { return null; }
   }
 
   /**
