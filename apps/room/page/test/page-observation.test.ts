@@ -18,11 +18,11 @@ const gate = <T = void>() => { let resolve!: (value: T) => void; const promise =
 const drain = async () => { for (let n = 0; n < 40; n++) await Promise.resolve(); };
 const closed = () => new ReadableStream<Uint8Array>({ start(controller) { controller.close(); } });
 
-test.each([
+for (const { setting, storedInterval, interval } of [
   { setting: "valid interval", storedInterval: 1_000, interval: 1_000 },
   { setting: "out-of-range interval", storedInterval: 60_001, interval: 5_000 },
   { setting: "string interval", storedInterval: "5000", interval: 5_000 },
-])("Main keeps its saved connection with $setting, renders a later comment after empty EOF, and retires polling", ({ storedInterval, interval }, { onTestFinished }) => workbenchFixtures.run(onTestFinished, async fixture => {
+]) test(`Main keeps its saved connection with ${setting}, renders a later comment after empty EOF, and retires polling`, ({ onTestFinished }) => workbenchFixtures.run(onTestFinished, async fixture => {
   vi.resetModules(); vi.useFakeTimers();
   let seq = 0, polls = 0, loads = 0;
   const heldBackoff = gate(); fixture.release(() => heldBackoff.resolve());
