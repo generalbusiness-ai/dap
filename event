@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:07e215cf8bf86e055aca5a66407d754a8b67d839","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/evidence-decision-v17.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:08961f0ecda1e92a23a6e9db017326e5a96e13f6","text":"Merge retired a covered predecessor; the successor is at docs/security/entry-points.md."}
