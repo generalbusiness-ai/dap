@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8cb6d6c1f1ff8869aa9e6ae51f132478734424f9","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-16-evidence-rules-design.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8e13b5d70812b76995dfe290489f75244f7d784f","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/device-application-rules.ts."}
