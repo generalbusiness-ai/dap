@@ -1,0 +1,12 @@
+{
+  "user": "operator",
+  "prefix": "/Library/dap-host",
+  "celld": "/Users/operator/bin/celld",
+  "weed": "/Users/operator/bin/weed",
+  "caddy": "/Users/operator/bin/caddy",
+  "node": "mac-one",
+  "volumeMax": 8,
+  "hosts": ["room.local", "127.0.0.1"],
+  "certificate": "/Users/operator/dap-tls/cert.pem",
+  "privateKey": "/Users/operator/dap-tls/key.pem"
+}

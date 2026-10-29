@@ -3,6 +3,8 @@
 Deploy dap on your own Cloudflare account, create a room, and give another
 device an invitation. The scope Worker serves both the API and the room page.
 
+For one Mac, follow [Run on a Mac](#run-on-a-mac).
+
 **Measured run:** on 13 October 2026, a fresh deployment produced an invitation
 in 31.235 seconds and accepted a guest in 35.481 seconds from the start of the
 clone. Login was already complete, and an operator helper entered the
@@ -291,3 +293,229 @@ and original requests were retained with the evidence rather than deleted.
 If you deployed a homepage Worker, run pinned Wrangler `delete` from
 `homepage/` with its disposable configuration. Remove the private
 `DAP_HOME` directory when you no longer need its keys or original requests.
+
+## Run on a Mac
+
+The [Mac host kit](../apps/room/celld/mac/) runs SeaweedFS, celld, and Caddy
+as LaunchDaemons under one user. The room has no Git host. Its journals
+stay in the local store. Keep the installation prefix, including its store
+and celld working directory, when you stop or remove the services.
+
+### Prerequisites
+
+You need administrator access, Git, Node 26, Python 3.9 or later, and the
+checkout's locked dependencies. `/usr/bin/python3` must work. The system
+curl must support `--aws-sigv4`. Put executable binaries outside the
+checkout: the celld release in
+[`celld.version`](../apps/room/celld/celld.version), SeaweedFS 4.51, and
+Caddy 2.11.7. Verify their release provenance before use. The installer
+checks the actual celld version against the maintained pin.
+
+```sh
+npm ci
+/usr/bin/python3 --version
+/usr/bin/curl -q --help all | grep aws-sigv4
+```
+
+Use the Mac's existing DNS name and address. Replace `mac-name.local`,
+`192.0.2.10`, and `operator` below with that name, address, and service user.
+The service user owns the private keys, credentials, logs, and data.
+The installer owns its code and configuration as root.
+Run the non-sudo commands below as the configured service user, including
+certificate creation, credential creation, project preparation, and deployment.
+That user may also be your administrator account.
+
+### Install
+
+Create a private directory for a new certificate and key:
+
+```sh
+umask 077
+mkdir "$HOME/dap-tls"
+apps/room/celld/mac/certificate.sh \
+  --cert "$HOME/dap-tls/cert.pem" --key "$HOME/dap-tls/key.pem" \
+  --name mac-name.local --name localhost \
+  --ip 192.0.2.10 --ip 127.0.0.1 --days 825
+```
+
+The command refuses existing outputs. Keep the resulting key with mode
+`0600`. Create a new private credential file for this local store:
+
+```sh
+umask 077
+python3 - <<'PY'
+import json, pathlib, secrets
+path = pathlib.Path.home() / ".dap-mac-aws.json"
+with path.open("x") as output:
+    json.dump({"AWS_ACCESS_KEY_ID": secrets.token_hex(16),
+               "AWS_SECRET_ACCESS_KEY": secrets.token_hex(32)}, output)
+    output.write("\n")
+path.chmod(0o600)
+PY
+cp apps/room/celld/mac/templates/config.example.json "$HOME/dap-host.json"
+```
+
+Edit `dap-host.json`: set the user, absolute binary paths, certificate and
+key paths, DNS names, and addresses. Give the node a stable name. Choose
+an explicit volume maximum. Keep a new prefix under a root-owned parent,
+such as `/Library/dap-host`; let the installer create that prefix.
+Binary paths must name actual executable files. The installer refuses a
+symlink in a binary path or any parent directory. Resolve Homebrew links
+or copy the verified executables into a directory without symlinks.
+
+```sh
+sudo apps/room/celld/mac/install.sh \
+  --config "$HOME/dap-host.json" --credentials "$HOME/.dap-mac-aws.json"
+```
+
+The installer refuses an occupied prefix or service label. It keeps data
+when a partial start fails. The runtime waits for the filer fsync rule and
+a successful store PUT before serving. Celld starts when its job loads and
+restarts after an unsuccessful exit. A normal exit leaves it stopped so
+preserve shutdown can finish. Its lease lasts 60 seconds. Its 70-second
+launch throttle limits launch frequency. Each service has a 60-second
+stop allowance.
+Caddy allows 10 seconds for active connections during its stop.
+
+Check the application firewall entry for the configured Caddy executable.
+Allow incoming connections to that exact path. If the existing entry
+permits it but LAN HTTPS times out, refresh that entry and check HTTPS
+again. Keep the firewall enabled.
+
+Use the configured absolute Caddy path in these commands:
+
+```sh
+/usr/libexec/ApplicationFirewall/socketfilterfw \
+  --getappblocked /absolute/path/to/caddy
+```
+
+If that entry needs a refresh, run:
+
+```sh
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw \
+  --add /absolute/path/to/caddy
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw \
+  --unblockapp /absolute/path/to/caddy
+```
+
+### Certificate and trust
+
+The generated self-signed endpoint certificate uses EC P-256, `serverAuth`,
+`CA:FALSE`, and the names and addresses you supplied as SANs. Its key usage
+allows digital signatures, not certificate signing. Its lifetime cannot
+exceed 825 days.
+Check its fingerprint before trusting it on another device:
+
+```sh
+openssl x509 -in "$HOME/dap-tls/cert.pem" -noout -fingerprint -sha256
+```
+
+For command-line access, supply the certificate to that command: use curl's
+`--cacert` or prefix the Node command with `NODE_EXTRA_CA_CERTS`, as below.
+
+For a macOS browser that needs a local trust override, add `cert.pem` to
+the login keychain in Keychain Access. Open **Trust** and set only
+**Secure Sockets Layer (SSL)** to **Always Trust**. Leave the other trust
+policies at **Use System Defaults**. This setting serves HTTPS access to
+the certificate's names. Remove the keychain entry when you retire the host.
+
+The synthetic macOS custom-anchor, Node TLS, and system curl checks accept
+the endpoint and reject a different host's certificate signed with its key.
+Real browser trust, Firefox, and iOS remain unverified.
+
+For a user-supplied certificate, set `certificate` and `privateKey` to its
+absolute PEM paths. The certificate must cover every configured name.
+The service user must own the key with mode `0600`. Follow the issuer's
+trust procedure.
+
+A tunnel needs the exact public HTTPS origin in `PUBLIC_ORIGIN`. Keep the
+store and runtime listeners on loopback. Verify the tunnel's client-address
+handling and trust before using it; the Mac witness covers the direct
+Caddy path.
+
+### Create the first room
+
+Keep the client home and private project in persistent private directories.
+Plan only when you can finish deployment and installation within its
+14-minute deadline:
+
+```sh
+export DAP_HOME="$HOME/dap-client"
+export BASE=https://mac-name.local
+mkdir -m 700 "$DAP_HOME"
+NODE_EXTRA_CA_CERTS="$HOME/dap-tls/cert.pem" \
+  PHASE=plan node scripts/celld-smoke.mjs
+node apps/room/celld/mac/prepare-project.mjs \
+  --origin "$BASE" --home "$DAP_HOME" --out "$HOME/dap-project"
+python3 apps/room/celld/mac/deploy.py \
+  --prefix /Library/dap-host --project "$HOME/dap-project" \
+  --esbuild "$PWD/node_modules/.bin/esbuild"
+curl --cacert "$HOME/dap-tls/cert.pem" "$BASE/health"
+```
+
+The prepared project keeps the production Worker and its maintained
+bindings. Its session secret stays in private configuration. Deployment
+creates the installation's fleet bucket and uploads the Worker. Run as
+the service user. Keep the project and its private deployment logs after
+any failure or uncertain result.
+
+Wait for `"sessions":"ok"` in the health response. The register becomes
+ready after installation. Then finish the original plan:
+
+```sh
+NODE_EXTRA_CA_CERTS="$HOME/dap-tls/cert.pem" \
+  PHASE=run node scripts/celld-smoke.mjs
+```
+
+The room check installs the retained plan, creates a room, joins a separate
+member, verifies seven journals, and checks readiness. It refuses a second
+run after a started attempt. Keep the original home to inspect uncertainty.
+Use the [CLI commands](cli.md) from that home for later work and invitations.
+Supply `NODE_EXTRA_CA_CERTS` to each command that connects to the host.
+
+### Maintain the host
+
+Stop through the installed procedure:
+
+```sh
+sudo /Library/dap-host/bin/down --prefix /Library/dap-host
+```
+
+The procedure requests a same-node preserve shutdown. It checks a fresh
+runtime completion signal and a node record no longer marked draining.
+It waits for celld's process to close before stopping the store. An unknown
+result exits nonzero and retains the full prefix and node name. Keep those
+and restart the same installation to recover.
+An exit status of zero alone does not prove preserve preparation.
+If celld closure is unproved, the store stays running. If closure is proved
+but preparation is unproved, the store may stop and all data stays in place.
+
+Restart the owned services in order, then verify the room:
+
+```sh
+for service in seaweedfs celld caddy; do
+  sudo launchctl enable "system/org.generalbusiness.dap.$service"
+  sudo launchctl bootstrap system \
+    "/Library/LaunchDaemons/org.generalbusiness.dap.$service.plist"
+done
+NODE_EXTRA_CA_CERTS="$HOME/dap-tls/cert.pem" \
+  node packages/cli/bin/dap.js verify --all
+```
+
+FileVault requires the disk to unlock at boot. An authenticated restart
+authorizes the next boot:
+
+```sh
+sudo fdesetup authrestart
+```
+
+### Stop and remove
+
+```sh
+sudo /Library/dap-host/bin/down --prefix /Library/dap-host
+sudo apps/room/celld/mac/uninstall.sh --prefix /Library/dap-host
+```
+
+Uninstall requires all three jobs to be absent. It removes only the owned,
+unchanged LaunchDaemon files. It retains the prefix, journals, runtime
+working directory, private configuration, and node name.

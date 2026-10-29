@@ -1,0 +1,3 @@
+lock
+fs.configure -locationPrefix=/buckets/celld-fleet/ -fsync=true -apply
+unlock
