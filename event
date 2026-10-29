@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1881e85b7f1c516c45abd93a9af3f962a87c1c88","text":"Merge retired a covered predecessor; the successor is at packages/checkers/test/container-streams.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1b56953bde2f8871b1b2f98a324c6cf53a8fa3a5","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-28-j3-runner.md."}
