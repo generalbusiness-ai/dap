@@ -2,7 +2,7 @@
  * These functions prove descriptor/slot correspondence, never Native
  * authority, publication state, or five-dimensional capacity. */
 import type { FactRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isFactRef, isHead, isRecord, isScopeRef, parseStrict, same, utf8 } from "@generalbusiness/dap-bytes";
+import { natural, canonicalize, isDigest, isFactRef, isHead, isRecord, isScopeRef, parseStrict, same, utf8 } from "@generalbusiness/dap-bytes";
 import { byteOrder } from "@generalbusiness/dap-derive";
 import { isObjectId } from "./reservation.ts";
 import { requiredChecksV17, type ReservationPolicyViewV17 } from "./reservation-v17.ts";
@@ -31,7 +31,6 @@ export function evidenceBatchWireV17(value: EvidenceBatchRecordV17): string {
 const exact = (value: unknown, keys: readonly string[]): value is Record<string, unknown> => isRecord(value)
   && [Object.prototype, null].includes(Object.getPrototypeOf(value) as object | null) && Reflect.ownKeys(value).length === keys.length
   && keys.every(key => { const field = Object.getOwnPropertyDescriptor(value, key); return !!field?.enumerable && Object.hasOwn(field, "value"); });
-const natural = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
 const list = (value: unknown, max: number): value is unknown[] => Array.isArray(value) && value.length <= max
   && Reflect.ownKeys(value).length === value.length + 1 && Array.from({ length: value.length }, (_, n) => Object.getOwnPropertyDescriptor(value, String(n)))
     .every(field => !!field?.enumerable && Object.hasOwn(field, "value"));

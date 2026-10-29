@@ -1,11 +1,10 @@
 /** Successor job origin: an actual G17 admission, never a synthetic legacy manifest. */
 import type { Digest, Effect, FactRef, KeyId, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalBytes, canonicalize, entryHash, isDigest, isEntry, isFactRef, isLocalId, isOperationId, isRecord, parseStrict, timeMs, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { canonicalBytes, canonicalize, entryHash, isDigest, isEntry, isFactRef, isLocalId, isOperationId, isRecord, parseStrict, same, timeMs, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest, readEvidenceBinding, readEvidenceBatchWireV17, type EvidenceBatchRecordV17, type EvidenceBinding, type StageSnapshot, type StageSnapshotReply } from "@generalbusiness/dap-platform";
 import { isObjectId, readOwnedCheckoutSnapshot, STAGE_SNAPSHOT_BOUNDS } from "@generalbusiness/dap-git";
 import type { Job, Notice, Origin, OriginRead } from "./job.ts";
 
-const same = (a: unknown, b: unknown): boolean => canonicalize(a) === canonicalize(b);
 const factOf = (sealed: Sealed): FactRef => ({ at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash });
 const value = (effects: readonly Effect[], item: number, slot: string): unknown => {
   const rows = effects.filter(effect => effect.effect === "value" && effect.item === item && effect.slot === slot);

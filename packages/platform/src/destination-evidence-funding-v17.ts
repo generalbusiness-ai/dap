@@ -1,7 +1,7 @@
 /** G17 new-work funding and serial, post-write published checks.
  * A self request opens each holder. Outcomes open only nonholder cursors. */
 import type { Bounds, Digest, Entry, FactRef, FieldValue, PlatformData, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isDigest, isEntry, isFactRef, isOperationId, isRecord, same, timeMs } from "@generalbusiness/dap-bytes";
+import { natural, canonicalize, entryHash, isDigest, isEntry, isFactRef, isOperationId, isRecord, same, timeMs } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest } from "./evidence.ts";
 import { operationSettled, RuleFault, type Item, type Opening, type Operation, type OutcomeGives, type Own, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView } from "@generalbusiness/dap-derive";
 import { claimEvidenceBatchJobV17, obligationChecksV17, readEvidenceBatchV17, readEvidenceBatchWireV17, evidenceBatchWireV17, selectEvidenceBatchV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
@@ -22,7 +22,6 @@ export interface FundingHooksV17 {
   jobState(state: StateView, job: FactRef): { state: string; admittedAt: number | null } | null;
 }
 const owned = <T>(value: T): T => JSON.parse(canonicalize(value)) as T;
-const natural = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) >= 0 && !Object.is(value, -0);
 const factOf = (own: Own, at: FactRef["at"], seq: number): FactRef | null => {
   const sealed = own(seq);
   return sealed && same(sealed.entry.at, at) && sealed.entry.seq === seq && entryHash(sealed.entry) === sealed.hash ? { at, seq, hash: sealed.hash } : null;

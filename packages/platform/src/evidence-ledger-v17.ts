@@ -1,7 +1,7 @@
 /** G17's one nonfinal counter/service anchor. Only the first certificate
  * opens it. Missing or corrupt persisted state never becomes zero counts. */
 import type { PlatformData } from "@generalbusiness/dap-contract";
-import { isFactRef, same } from "@generalbusiness/dap-bytes";
+import { natural, isFactRef, same } from "@generalbusiness/dap-bytes";
 import { RuleFault, type Item, type RuleEffect, type RuleGiven, type StateView } from "@generalbusiness/dap-derive";
 import { readEvidenceCountsV17 } from "./evidence-index-v17.ts";
 
@@ -13,7 +13,6 @@ export const EVIDENCE_LEDGER_ITEM_V17: PlatformData["items"][string] = {
   },
 };
 const fault = (): never => { throw new RuleFault("The singleton evidence ledger is unavailable"); };
-const natural = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
 const empty = (value: unknown): boolean => value === null || value === undefined;
 function singleton(state: LedgerState, type: string, states: readonly string[]): Item | null {
   const page = state.page(type, states, null, 2);

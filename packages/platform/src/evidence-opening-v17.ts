@@ -1,10 +1,9 @@
 /** Correspondence with an actual sealed opening. Journal/hash/source
  * authority belongs to the caller; this creates no self or future fact. */
 import type { Entry } from "@generalbusiness/dap-contract";
-import { isEntry, isOperationId } from "@generalbusiness/dap-bytes";
+import { natural, isEntry, isOperationId } from "@generalbusiness/dap-bytes";
 import type { Operation } from "@generalbusiness/dap-derive";
 
-const natural = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
 export function evidenceOperationOpeningV17(entry: Entry, operation: Operation): boolean {
   try {
     if (!isEntry(entry) || !natural(entry.seq) || !isOperationId(operation.id) || !natural(operation.most) || operation.most < 1) return false;

@@ -1,7 +1,7 @@
 /** G17 native job records. Every full native fact below is resolved only
  * after its entry was sealed. Indexes contain live and decided anchors. */
 import type { ActType, Bounds, Digest, Entry, FactRef, FieldValue, KeyId, Observation, PlatformData, ScopedRulesPosition, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isDigest, isFactRef, isHead, isKeyId, isRecord, isScopeRef, parseStrict, same as equalCanonical, textDigest, timeMs, unb64url, utf8 } from "@generalbusiness/dap-bytes";
+import { natural, canonicalize, entryHash, isDigest, isFactRef, isHead, isKeyId, isRecord, isScopeRef, parseStrict, same as equalCanonical, textDigest, timeMs, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest, readEvidenceBinding, type EvidenceBinding } from "./evidence.ts";
 import { idOf, isObjectId, parseCommit } from "@generalbusiness/dap-git/tree-proof";
 import { isEntryOf, messageFields, observedOf, sentBy, useOf, RuleFault, type Item, type Operation, type Own, type Opening, type OutcomeGives, type RuleEffect, type RuleGiven, type RuleRequest, type Rules, type StateSnapshot, type StateView, type ValidDefinition } from "@generalbusiness/dap-derive";
@@ -38,8 +38,7 @@ export const EVIDENCE_RECORD_BYTES_V17 = 196608;
 export const EVIDENCE_SERVICE_BYTES_V17 = 16384;
 const exact = (value: unknown, names: readonly string[]): value is Record<string, unknown> => isRecord(value)
   && Object.keys(value).length === names.length && names.every(name => Object.hasOwn(value, name));
-const natural = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
-const same = (left: unknown, right: unknown): boolean => left !== undefined && right !== undefined && equalCanonical(left, right);
+const sameDefined = (left: unknown, right: unknown): boolean => left !== undefined && right !== undefined && equalCanonical(left, right);
 const copy = <T>(value: T): T => parseStrict(canonicalize(value)) as T;
 export const evidenceJobKeyV17 = (job: FactRef): Digest => textDigest(canonicalize({ domain: "artroom-evidence-job-1", job }));
 export const evidenceUnusedKeyV17 = (job: FactRef, index: string): Digest => textDigest(canonicalize({ domain: "artroom-evidence-unused-1", index, job }));
@@ -91,7 +90,7 @@ export function readEvidenceJobRecordV17(value: unknown): EvidenceJobRecordV17 |
     const binding = readEvidenceBinding(value["binding"]);
     if (!binding || evidenceBindingDigest(binding) !== value["bindingDigest"] || utf8(canonicalize(value)).length > EVIDENCE_RECORD_BYTES_V17) return null;
     const keys = [...value["covered"], ...value["holds"].map(hold => (hold as EvidenceHoldRecordV17).key)] as EvidenceHoldKeyV17[];
-    if (keys.some(key => binding.stage !== "published" || !same(key.generation, binding.policyGeneration) || key.name !== value["name"]
+    if (keys.some(key => binding.stage !== "published" || !sameDefined(key.generation, binding.policyGeneration) || key.name !== value["name"]
       || key.configuration !== value["configuration"] || key.source !== binding.source)
       || new Set(value["covered"].map(canonicalize)).size !== value["covered"].length
       || new Set(value["holds"].map(hold => canonicalize((hold as EvidenceHoldRecordV17).key))).size !== value["holds"].length) return null;
@@ -104,7 +103,7 @@ export function readEvidenceJobRecordV17(value: unknown): EvidenceJobRecordV17 |
       || !isDigest(policy["proposal"]) || !readRulesPolicyV13(policy["policy"]).ok
       || !exact(policy["certificate"], ["request", "certificate", "proof", "commit"]) || !isFactRef(policy["certificate"]["request"]) || !isFactRef(policy["certificate"]["certificate"])
       || !isDigest(policy["certificate"]["proof"]) || !isObjectId(policy["certificate"]["commit"])
-      || !exact(policy["serviceGeneration"], ["rules", "seq"]) || !same(policy["serviceGeneration"]["rules"], policy["rules"])
+      || !exact(policy["serviceGeneration"], ["rules", "seq"]) || !sameDefined(policy["serviceGeneration"]["rules"], policy["rules"])
       || !natural(policy["serviceGeneration"]["seq"]) || policy["serviceGeneration"]["seq"] > policy["revision"])) return null;
     return copy({ ...value, binding } as unknown as EvidenceJobRecordV17);
   } catch { return null; }
@@ -129,7 +128,7 @@ export function evidenceRowV17(state: StateView, job: FactRef): { item: Item; re
   const found = state.lookup("evidence-job", "jobKey", canonicalize(evidenceJobKeyV17(job)), 2);
   if (!found || found.length !== 1) return null;
   const item = state.item(found[0]!), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
-  return item && item.type === "evidence-job" && record && same(record.job, job) ? { item, record: currentEvidenceRecordV17(item, record) } : null;
+  return item && item.type === "evidence-job" && record && sameDefined(record.job, job) ? { item, record: currentEvidenceRecordV17(item, record) } : null;
 }
 /** Literal TIMED changes the job alone. The immutable admission record is
  * decoded first; this current-state view is never substituted in its proof. */
@@ -190,8 +189,8 @@ function auditOpening(state: StateView, own: Own, operation: Operation): Evidenc
   return record && ["admitted", "reused"].includes(record.state) && record.admittedAt === id && record.holder === operation.for
     && record.binding.stage === "landing" && record.binding.source === "member" && record.binding.auditOf === null && record.policy
     && item?.type === "evidence-job" && item.values["auditOpenedAt"] === entry.seq
-    && exact(entry.input.evidence.body, ["job"]) && same(entry.input.evidence.body["job"], record.job)
-    && admitted && admission && same(admitted.admission, { at: admission.entry.at, seq: admission.entry.seq, hash: admission.hash }) ? record : null;
+    && exact(entry.input.evidence.body, ["job"]) && sameDefined(entry.input.evidence.body["job"], record.job)
+    && admitted && admission && sameDefined(admitted.admission, { at: admission.entry.at, seq: admission.entry.seq, hash: admission.hash }) ? record : null;
 }
 export function destinationEvidenceAuditPending(state: StateView, own: Own, operation: Operation): { job: FactRef } | null {
   const record = auditOpening(state, own, operation);
@@ -209,17 +208,17 @@ export function destinationEvidenceJob(state: StateView, own: Own, job: FactRef)
     || sealed.entry.input.kind !== EVIDENCE_ADMIT_V17 || sealed.entry.input.attempt !== 1 || sealed.entry.input.result !== "confirmed"
     || !sealed.entry.effects.some(effect => effect.effect === "attempt" && effect.selected === true)
     || row.item.id !== sealed.entry.seq || !sealed.entry.effects.some(effect => effect.effect === "open" && effect.item === sealed.entry.seq && effect.type === "evidence-job")
-    || !sealed.entry.effects.some(effect => effect.effect === "value" && effect.item === row.item.id && effect.slot === "record" && same(readEvidenceJobRecordWireV17(effect.value)?.job, job))) return null;
+    || !sealed.entry.effects.some(effect => effect.effect === "value" && effect.item === row.item.id && effect.slot === "record" && sameDefined(readEvidenceJobRecordWireV17(effect.value)?.job, job))) return null;
   return copy({ job, binding: record.binding, bindingDigest: record.bindingDigest, commit: record.commit, tree: record.tree, base: record.base,
     sourceFacts: record.sourceFacts, admission: { at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash } });
 }
 export function destinationEvidenceAdmissionCurrent(state: StateView, own: Own, admitted: EvidenceJobAdmissionV17, signerKey: KeyId): boolean {
   const actual = destinationEvidenceJob(state, own, admitted.job), row = evidenceRowV17(state, admitted.job);
-  if (!actual || !row || !same(actual, admitted) || !["admitted", "timeout", "unknown"].includes(row.record.state)) return false;
+  if (!actual || !row || !sameDefined(actual, admitted) || !["admitted", "timeout", "unknown"].includes(row.record.state)) return false;
   if (admitted.binding.source === "member") return true; // The host separately proves this key's current configured member standing.
   const current = readEvidenceServiceWireV17(evidenceLedgerOfV17(state)?.values["service"]);
-  return current !== null && same(current.generation, admitted.binding.serviceGeneration)
-    && same(current.mark, admitted.binding.roomService) && admitted.binding.roomService?.key === signerKey;
+  return current !== null && sameDefined(current.generation, admitted.binding.serviceGeneration)
+    && sameDefined(current.mark, admitted.binding.roomService) && admitted.binding.roomService?.key === signerKey;
 }
 export function evidencePolicyV17(given: RuleGiven): ReservationPolicyViewV17 | null {
   const observation = given.observed({ asked: "rules" })?.observation, rules = destinationRulesScope(given.state);
@@ -254,9 +253,9 @@ function literalTimeoutCause(state: StateView, own: Own, row: { item: Item; reco
   const scope = state.scope(), sealed = own(position), input = sealed?.entry.input;
   const subject = record.binding.subject;
   if (!scope || subject.kind !== "published" || !record.commit || record.admittedAt !== item.id || item.values["timeoutReason"] !== "check-timeout"
-    || !sealed || entryHash(sealed.entry) !== sealed.hash || !same(sealed.entry.at, scope.at) || input?.type !== "timed" || input.item !== item.id
+    || !sealed || entryHash(sealed.entry) !== sealed.hash || !sameDefined(sealed.entry.at, scope.at) || input?.type !== "timed" || input.item !== item.id
     || !["evidence-job-deadline", "evidence-reuse-deadline", "evidence-hold-deadline"].includes(input.rule) || input.due !== record.deadline
-    || isFactRef(reference) && !same(reference, { at: scope.at, seq: position, hash: sealed.hash })
+    || isFactRef(reference) && !sameDefined(reference, { at: scope.at, seq: position, hash: sealed.hash })
     || !sealed.entry.effects.some(effect => effect.effect === "state" && effect.item === item.id && effect.state.endsWith("-timedout"))
     || !sealed.entry.effects.some(effect => effect.effect === "value" && effect.item === item.id && effect.slot === "timeoutReason" && effect.value === "check-timeout")
     || !sealed.entry.effects.some(effect => effect.effect === "ref" && effect.item === item.id && effect.slot === "timeoutDecision" && effect.to === position)
@@ -268,12 +267,12 @@ function literalTimeoutCause(state: StateView, own: Own, row: { item: Item; reco
 export function evidenceEffectiveHoldV17(state: StateView, own: Own, owner: Item, hold: EvidenceHoldRecordV17) {
   const record = readEvidenceJobRecordWireV17(owner.values["record"]), capacity = record?.policyOwner === null || record?.policyOwner === undefined ? null
     : readEvidenceCapacityWireV17(state.item(record.policyOwner)?.values["capacity"]);
-  const indexed = capacity?.holds?.find(row => same(row.key, hold.key) && row.owner === owner.id);
-  if (!record || !capacity || !indexed || !same(capacity.generation, hold.key.generation)) return { ok: false as const, reason: "assessment-unavailable" as const };
+  const indexed = capacity?.holds?.find(row => sameDefined(row.key, hold.key) && row.owner === owner.id);
+  if (!record || !capacity || !indexed || !sameDefined(capacity.generation, hold.key.generation)) return { ok: false as const, reason: "assessment-unavailable" as const };
   return effectiveEvidenceHoldV17(hold, indexed.pending, slot => {
     const row = slot.job === null ? null : evidenceRowV17(state, slot.job), subject = row?.record.binding.subject;
-    if (!row || row.item.id !== slot.admittedAt || subject?.kind !== "published" || !same(subject.publication, slot.publication)
-      || row.record.policyOwner !== capacity.owner || !row.record.covered.some(key => same(key, hold.key))) return "unavailable";
+    if (!row || row.item.id !== slot.admittedAt || subject?.kind !== "published" || !sameDefined(subject.publication, slot.publication)
+      || row.record.policyOwner !== capacity.owner || !row.record.covered.some(key => sameDefined(key, hold.key))) return "unavailable";
     return row.item.state.endsWith("-timedout") || row.record.state === "timeout" ? literalTimeoutCause(state, own, row) : null;
   });
 }
@@ -299,11 +298,11 @@ function firstEvidenceBlock(given: RuleGiven, paths: readonly string[]): Evidenc
 export const evidenceBlocksV17 = (given: RuleGiven, paths: readonly string[]): boolean => firstEvidenceBlock(given, paths) !== null;
 
 const foreign = (given: RuleGiven, fact: FactRef): Entry | null => {
-  const copy = given.uses.find(copy => same(copy.fact, fact));
+  const copy = given.uses.find(copy => sameDefined(copy.fact, fact));
   return copy && isEntryOf(copy.entry, fact) ? copy.entry : null;
 };
 const local = (given: RuleGiven, fact: FactRef): Entry | null => {
-  const sealed = same(fact.at, given.resolved.at) ? given.own(fact.seq) : null;
+  const sealed = sameDefined(fact.at, given.resolved.at) ? given.own(fact.seq) : null;
   return sealed && sealed.hash === fact.hash && isEntryOf(sealed.entry, fact) ? sealed.entry : null;
 };
 /** readFacts normalizes an authenticated local Fact field to its position.
@@ -311,12 +310,12 @@ const local = (given: RuleGiven, fact: FactRef): Entry | null => {
  * agree; an arbitrary numeric slot is never interpreted as authority. */
 function localFactField(given: RuleGiven, name: string): FactRef | null {
   const resolved = given.resolved.fields[name];
-  if (isFactRef(resolved) && !same(resolved.at, given.resolved.at)) return null;
+  if (isFactRef(resolved) && !sameDefined(resolved.at, given.resolved.at)) return null;
   const fields = given.input.type === "act" ? given.input.signed.intent.fields
     : given.input.type === "delivery" && given.input.message.class === "request" && isRecord(given.input.message.body)
       && isRecord(given.input.message.body["fields"]) ? given.input.message.body["fields"] : null;
   const stated = fields?.[name];
-  if (!isFactRef(stated) || !same(stated.at, given.resolved.at) || !(natural(resolved) && resolved === stated.seq || isFactRef(resolved) && same(resolved, stated))) return null;
+  if (!isFactRef(stated) || !sameDefined(stated.at, given.resolved.at) || !(natural(resolved) && resolved === stated.seq || isFactRef(resolved) && sameDefined(resolved, stated))) return null;
   const sealed = given.own(stated.seq);
   return sealed && sealed.hash === stated.hash && isEntryOf(sealed.entry, stated) ? copy(stated) : null;
 }
@@ -330,7 +329,7 @@ const effectRef = (entry: Entry, slot: string, item = entry.seq): unknown => {
 };
 const refIs = (entry: Entry, slot: string, fact: FactRef): boolean => {
   const value = effectRef(entry, slot);
-  return isFactRef(value) ? same(value, fact) : value === fact.seq && same(entry.at, fact.at);
+  return isFactRef(value) ? sameDefined(value, fact) : value === fact.seq && sameDefined(entry.at, fact.at);
 };
 interface EvidenceProposalSourceV17 {
   at: FactRef["at"]; seq: number; holder: number; from: FactRef;
@@ -340,21 +339,21 @@ interface EvidenceProposalSourceV17 {
  * sealed bound-fence reconstruction. Neither path invents a pending item. */
 function proposedRecord(source: EvidenceProposalSourceV17): EvidenceJobRecordV17 | null {
   const job = source.fields["job"], binding = readBindingTextV17(source.fields["binding"], source.fields["bindingDigest"]);
-  if (!isFactRef(job) || !same(source.from, job) || !binding || typeof source.fields["name"] !== "string") return null;
+  if (!isFactRef(job) || !sameDefined(source.from, job) || !binding || typeof source.fields["name"] !== "string") return null;
   const entry = source.entry;
   if (!entry || !entry.effects.some(effect => effect.effect === "open" && effect.item === job.seq && effect.type === "job")
     || effectValue(entry, "name") !== source.fields["name"] || effectValue(entry, "binding") !== source.fields["binding"]
     || effectValue(entry, "bindingDigest") !== source.fields["bindingDigest"] || effectValue(entry, "stage") !== binding.stage
-    || !same(effectRef(entry, "destination"), source.at)) return null;
+    || !sameDefined(effectRef(entry, "destination"), source.at)) return null;
   const checkers = entry.effects.filter(effect => effect.effect === "party" && effect.item === job.seq && effect.slot === "checker");
-  if (checkers.length !== 1 || checkers[0]!.effect !== "party" || !same(checkers[0]!.member, binding.checker)) return null;
+  if (checkers.length !== 1 || checkers[0]!.effect !== "party" || !sameDefined(checkers[0]!.member, binding.checker)) return null;
   if (binding.subject.kind === "work" ? !refIs(entry, "workSource", binding.subject.source) : !refIs(entry, "manifest", binding.subject.manifest)) return null;
   const configuration = effectValue(entry, "configuration"), deadline = effectValue(entry, "deadline");
   if (!isDigest(configuration) || timeMs(deadline) === null) return null;
   if (entry.input.type === "act") {
-    if (!["request-check", "request-work-check"].includes(entry.input.signed.intent.kind) || !same(entry.input.signed.intent.to, job.at)
+    if (!["request-check", "request-work-check"].includes(entry.input.signed.intent.kind) || !sameDefined(entry.input.signed.intent.to, job.at)
       || binding.stage === "published" || binding.auditOf !== null || effectValue(entry, "stage") !== binding.stage) return null;
-  } else if (entry.input.type !== "delivery" || entry.input.message.class !== "request" || !same(entry.input.from.at, source.at)
+  } else if (entry.input.type !== "delivery" || entry.input.message.class !== "request" || !sameDefined(entry.input.from.at, source.at)
     || !isRecord(entry.input.message.body) || entry.input.message.body["message"] !== (binding.auditOf ? "admit-audit-check" : "admit-published-check")
     || binding.auditOf === null && binding.stage !== "published" || binding.auditOf !== null && binding.stage !== "landing") return null;
   const sourceFacts: FactRef[] = binding.subject.kind === "work" ? [binding.subject.source]
@@ -380,9 +379,9 @@ function proposed(given: RuleGiven): EvidenceJobRecordV17 | null {
   const job = given.resolved.fields["job"], binding = readBindingTextV17(given.resolved.fields["binding"], given.resolved.fields["bindingDigest"]);
   const entry = isFactRef(job) ? foreign(given, job) : null, birth = given.own(0);
   const holder = binding?.stage === "work" ? given.resolved.self : given.resolved.subjects.get("also.batch")?.id;
-  if (!entry || !birth || !binding || holder === undefined || !same(birth.entry.at, given.resolved.at) || entryHash(birth.entry) !== birth.hash) return null;
+  if (!entry || !birth || !binding || holder === undefined || !sameDefined(birth.entry.at, given.resolved.at) || entryHash(birth.entry) !== birth.hash) return null;
   const batch = binding.stage === "work" ? null : given.own(holder);
-  if (binding.stage !== "work" && (!batch || !same(batch.entry.at, given.resolved.at) || entryHash(batch.entry) !== batch.hash)) return null;
+  if (binding.stage !== "work" && (!batch || !sameDefined(batch.entry.at, given.resolved.at) || entryHash(batch.entry) !== batch.hash)) return null;
   return proposedRecord({ at: given.resolved.at, seq: given.resolved.self, holder, from: given.input.from, fields: given.resolved.fields, entry,
     birth: { at: given.resolved.at, seq: 0, hash: birth.hash }, ...(batch ? { batchFact: { at: given.resolved.at, seq: holder, hash: batch.hash } } : {}) });
 }
@@ -401,12 +400,12 @@ export function evidenceSubjectV17(given: RuleGiven, record: EvidenceJobRecordV1
   const subject = record.binding.subject;
   if (subject.kind === "work") {
     const source = foreign(given, subject.source), job = foreign(given, record.job);
-    if (!source || source.input.type !== "act" || source.input.signed.intent.kind !== "stage-work" || !same(source.at, record.job.at)
+    if (!source || source.input.type !== "act" || source.input.signed.intent.kind !== "stage-work" || !sameDefined(source.at, record.job.at)
       || !source.effects.some(effect => effect.effect === "open" && effect.item === source.seq && effect.type === "work-source")) return null;
     const fields = source.input.signed.intent.fields, commit = fields["commit"];
     const pin = source.effects.filter(effect => effect.effect === "record" && effect.capability === "hold@1" && effect.kind === "pin" && effect.state === "held");
     if (!isObjectId(commit) || pin.length !== 1 || pin[0]!.effect !== "record" || pin[0]!.values["admitted"] !== source.seq || pin[0]!.values["commit"] !== commit
-      || !same(pin[0]!.key[0], source.at) || !source.input.authority.some(grant => grant.actions.includes("issue.work"))) return null;
+      || !sameDefined(pin[0]!.key[0], source.at) || !source.input.authority.some(grant => grant.actions.includes("issue.work"))) return null;
     const proofText = job?.input.type === "act" ? job.input.signed.intent.fields["commitProof"] : null;
     if (typeof proofText !== "string" || proofText.length > WORK_COMMIT_PROOF_V17.max || utf8(proofText).length > WORK_COMMIT_PROOF_V17.max) return null;
     try {
@@ -415,8 +414,8 @@ export function evidenceSubjectV17(given: RuleGiven, record: EvidenceJobRecordV1
     } catch { return null; }
   }
   const opening = local(given, subject.publication), publication = given.state.item(subject.publication.seq), manifest = foreign(given, subject.manifest);
-  if (!opening || !publication || publication.type !== "publication" || !manifest || !same(publication.refs["manifest"], subject.manifest)
-    || !same(publication.refs["lane"], record.job.at) || manifest.input.type !== "act") return null;
+  if (!opening || !publication || publication.type !== "publication" || !manifest || !sameDefined(publication.refs["manifest"], subject.manifest)
+    || !sameDefined(publication.refs["lane"], record.job.at) || manifest.input.type !== "act") return null;
   const commit = publication.values["integration"], tree = publication.values["tree"], base = manifest.input.signed.intent.fields["base"];
   if (!isObjectId(commit) || !isObjectId(tree) || !isObjectId(base) || record.commit !== commit || record.tree !== tree || record.base !== base) return null;
   if (subject.kind === "landing") return publication.state === "reserved" ? { commit, tree, base, proof: null } : null;
@@ -515,7 +514,7 @@ function evidenceRelease(given: RuleGiven): { item: Item; record: EvidenceJobRec
   const extent = given.resolved.fields["extent"], index = record.holds.findIndex(hold => hold.key.extent === extent);
   if (index < 0) return null;
   const effective = evidenceEffectiveHoldV17(given.state, given.own, item, record.holds[index]!);
-  if (!effective.ok || !effective.active || !effective.cause || !same(given.resolved.fields["job"], effective.cause.job)) return null;
+  if (!effective.ok || !effective.active || !effective.cause || !sameDefined(given.resolved.fields["job"], effective.cause.job)) return null;
   const materialized = failEvidenceHoldV17(record.holds[index]!, effective.cause);
   if (!materialized.ok) return null;
   const hold = materialized.record, through = effective.cause.order;
@@ -526,7 +525,7 @@ function evidenceRelease(given: RuleGiven): { item: Item; record: EvidenceJobRec
     if (!view || typeof text !== "string") return null;
     try {
       const parsed = parseStrict(text); next = { rules: view.rules, seq: view.revision };
-      if (canonicalize(parsed) !== text || !same(parsed, next) || same(hold.key.generation, next)) return null;
+      if (canonicalize(parsed) !== text || !sameDefined(parsed, next) || sameDefined(hold.key.generation, next)) return null;
     } catch { return null; }
   }
   const released = releaseEvidenceHoldV17(hold, transition ? { kind: "transition", decidedAt: given.resolved.self, through, reason: given.resolved.fields["reason"], next: next! }
@@ -545,19 +544,19 @@ function nativeDecided(given: RuleGiven, record: EvidenceJobRecordV17): boolean 
   return !!sealed && entryHash(sealed.entry) === sealed.hash && sealed.entry.input.type === "outcome"
     && sealed.entry.input.owner === "platform:destination@17" && sealed.entry.input.kind === EVIDENCE_RESULT_V17
     && sealed.entry.effects.some(effect => effect.effect === "value" && effect.slot === "record"
-      && same(readEvidenceJobRecordWireV17(effect.value)?.job, record.job) && same(readEvidenceJobRecordWireV17(effect.value)?.result, record.result));
+      && sameDefined(readEvidenceJobRecordWireV17(effect.value)?.job, record.job) && sameDefined(readEvidenceJobRecordWireV17(effect.value)?.result, record.result));
 }
 function acceptedCandidate(given: RuleGiven, candidate: EvidenceCandidateV17, check: RulesCheckV13, view: ReservationPolicyViewV17): boolean {
   const row = evidenceRowV17(given.state, candidate.job), key = given.observed({ key: candidate.key })?.observation;
   return !!row && nativeDecided(given, row.record) && row.record.admittedAt === candidate.admission && row.record.decidedAt === candidate.decidedBy
-    && same(row.record.result, candidate.result) && row.record.signer === candidate.key && row.record.state === candidate.outcome
+    && sameDefined(row.record.result, candidate.result) && row.record.signer === candidate.key && row.record.state === candidate.outcome
     && row.record.name === check.name && row.record.configuration === check.configuration
     && evidenceSourceV17(candidate.binding, check, view, key && !("subject" in key) ? key : null, given.time, false, null, false).ok;
 }
 function projectedLogicalJob(given: RuleGiven, publication: number, selected: { job: FactRef; proof?: { decided: number } }): FactRef | null {
   const accepted = selected.proof ? given.own(selected.proof.decided)?.entry : null;
   const alias = accepted?.effects.flatMap(effect => effect.effect === "value" && effect.slot === "record" ? [readEvidenceJobRecordWireV17(effect.value)] : [])
-    .find(value => value?.state === "reused" && same(value.countedJob, selected.job) && value.binding.subject.kind === "landing" && value.binding.subject.publication.seq === publication);
+    .find(value => value?.state === "reused" && sameDefined(value.countedJob, selected.job) && value.binding.subject.kind === "landing" && value.binding.subject.publication.seq === publication);
   return alias?.job ?? null;
 }
 function evidenceComplete(given: RuleGiven, publication: Item, passes: readonly { name: string; job: FactRef; passed: boolean; proof?: { decided: number } }[]): boolean {
@@ -575,7 +574,7 @@ function evidenceComplete(given: RuleGiven, publication: Item, passes: readonly 
     return rows.length === 1 && rows[0]!.passed;
   })) return false;
   const view = evidencePolicyV17(given);
-  if (!view || view.revision !== snapshot.observation.revision || !same(view.rules, snapshot.input.rules)) return false;
+  if (!view || view.revision !== snapshot.observation.revision || !sameDefined(view.rules, snapshot.input.rules)) return false;
   return snapshot.required.every(check => {
     const rows = passes.filter(row => row.name === check.name), selected = rows[0];
     if (rows.length !== 1 || !selected?.passed) return false;
@@ -592,7 +591,7 @@ function evidenceComplete(given: RuleGiven, publication: Item, passes: readonly 
       const currentPolicy = readRulesPolicyV13((snapshot.input.extents as Record<string, unknown>)["policy"]);
       const target = currentPolicy.ok ? currentPolicy.policy.checks.find(target => target.name === check.audit!.check) : null;
       if (!target || !paired || paired.name !== target.name || paired.configuration !== target.configuration || paired.state !== "passed" || paired.binding.source !== "room"
-        || !same(paired.binding.auditOf, record.job) || !same(paired.forJob, logical) || paired.tree !== record.tree || paired.configuration !== record.configuration || !nativeDecided(given, paired)) return false;
+        || !sameDefined(paired.binding.auditOf, record.job) || !sameDefined(paired.forJob, logical) || paired.tree !== record.tree || paired.configuration !== record.configuration || !nativeDecided(given, paired)) return false;
       if (!paired.signer || !evidenceSourceV17(paired.binding, target, view, keyObservation(given, paired.signer), given.time, false, null, false).ok) return false;
     }
     return true;
@@ -617,7 +616,7 @@ export const evidenceDestinationProfileV17: DestinationSuccessorV17 = {
     const job = fields["job"], result = fields["result"];
     if (!isFactRef(job) || !isFactRef(result)) return null;
     const record = evidenceRowV17(given.state, job)?.record, snapshot = certifiedPublicationStateWireV17(publication.values["passes"], given.resolved.bounds)?.policy;
-    if (!record || !snapshot || record.state !== "passed" || !nativeDecided(given, record) || !same(record.result, result) || !record.signer
+    if (!record || !snapshot || record.state !== "passed" || !nativeDecided(given, record) || !sameDefined(record.result, result) || !record.signer
       || record.tree !== snapshot.tree || record.binding.stage !== "landing") return null;
     return { name: record.name, proof: { result, key: record.signer, decided: record.decidedAt!, configuration: record.configuration,
       checker: record.binding.checker, tree: record.tree, proposal: (snapshot.input.extents as Record<string, unknown>)["proposal"] as string } };
@@ -694,9 +693,9 @@ const keyObservation = (given: RuleGiven, key: KeyId | null): Observation | null
   return observed && !("subject" in observed) ? observed : null;
 };
 function candidateBytes(given: RuleGiven, bucket: EvidenceIndexRecordV17, next: EvidenceJobRecordV17): number {
-  const rows = bucket.candidates.map(copy), pending = [...bucket.pending.filter(job => !same(job, next.job)), next.job];
+  const rows = bucket.candidates.map(copy), pending = [...bucket.pending.filter(job => !sameDefined(job, next.job)), next.job];
   for (const job of pending) {
-    const record = same(job, next.job) ? next : evidenceRowV17(given.state, job)?.record;
+    const record = sameDefined(job, next.job) ? next : evidenceRowV17(given.state, job)?.record;
     if (!record) throw Error("A candidate reservation lost its admitted job");
     rows.push({ job, keyDigest: evidenceKeyDigestV17(bucket.key), admission: Number.MAX_SAFE_INTEGER, result: { at: job.at, seq: Number.MAX_SAFE_INTEGER, hash: `sha256:${"f".repeat(64)}` },
       decidedBy: Number.MAX_SAFE_INTEGER, key: `key_${"A".repeat(43)}`, checker: record.binding.checker, binding: record.binding, outcome: "failed" });
@@ -716,7 +715,7 @@ function serviceEffect(given: RuleGiven, view: ReservationPolicyViewV17 | null):
   if (value && !ledger) throw new RuleFault("The commissioned evidence ledger is unavailable");
   const stored = ledger?.values["service"], current = readEvidenceServiceWireV17(stored);
   if (stored !== undefined && stored !== null && !current) throw new RuleFault("The current evidence service record is unavailable");
-  return ledger && value && !same(current, value)
+  return ledger && value && !sameDefined(current, value)
     ? [{ effect: "value", item: ledger.id, slot: "service", value: evidenceWireV17(value, EVIDENCE_SERVICE_BYTES_V17) }] : [];
 }
 /** A delayed frozen published obligation can be refused by current
@@ -736,10 +735,10 @@ function publishedRefusal(given: RuleGiven, request: Item, proposed: EvidenceJob
     ...(request.type === "evidence-request" ? [{ effect: "state" as const, item: request.id, state: "settled" }] : [])];
   if (spent.keys.length) {
     const owner = spent.holdOwner === given.resolved.self ? record : copy(readRow(given, spent.holdOwner).record);
-    owner.holds = [...owner.holds, ...spent.keys.filter(key => !owner.holds.some(hold => same(hold.key, key))).map(key => newEvidenceHoldV17(key)!)];
+    owner.holds = [...owner.holds, ...spent.keys.filter(key => !owner.holds.some(hold => sameDefined(hold.key, key))).map(key => newEvidenceHoldV17(key)!)];
     owner.policyOwner = spent.policyOwner; owner.funded.holds = true;
     owner.holds = owner.holds.map(hold => {
-      if (!record.covered.some(key => same(key, hold.key))) return hold;
+      if (!record.covered.some(key => sameDefined(key, hold.key))) return hold;
       const held = failEvidenceHoldV17(hold, { job: record.job, publication: subject.publication, commit: triple.commit,
         order: { publication: subject.publication.seq, job: given.resolved.self }, decidedAt: given.resolved.self,
         kind: "observation-unavailable", reason, result: null });
@@ -798,7 +797,7 @@ export function evidenceAuditOpeningV17(given: RuleGiven, item: Item, record: Ev
     const effect = effects.length === 1 ? effects[0] : null;
     const operation = source && effect?.effect === "operation" ? given.state.operation(`${source.seq}:${effect.k}`) : null;
     const admitted = operation && auditOpening(given.state, given.own, operation);
-    if (!admitted || !same(admitted.job, record.job)) throw new RuleFault("The original audit dispatch is unavailable");
+    if (!admitted || !sameDefined(admitted.job, record.job)) throw new RuleFault("The original audit dispatch is unavailable");
     return { effects: [], opens: [] };
   }
   return { effects: [{ effect: "value", item: item.id, slot: "auditOpenedAt", value: given.resolved.self }],
@@ -808,28 +807,28 @@ export function evidenceAuditOpeningV17(given: RuleGiven, item: Item, record: Ev
  * retained capture and funded account; current Q13 authority is separate. */
 export function evidenceFrozenBatchMatchesV17(binding: EvidenceBinding, name: string, configuration: Digest, value: EvidenceBatchRecordV17): boolean {
   const batch = readEvidenceBatchV17(value);
-  if (!batch || binding.subject.kind === "work" || !same(binding.subject.publication, batch.publication)
-    || !same(binding.policyGeneration, { rules: batch.policy.rules, seq: batch.policy.revision })
-    || !same(binding.serviceGeneration, batch.policy.serviceGeneration) || !same(binding.roomService, batch.policy.policy.roomService)) return false;
+  if (!batch || binding.subject.kind === "work" || !sameDefined(binding.subject.publication, batch.publication)
+    || !sameDefined(binding.policyGeneration, { rules: batch.policy.rules, seq: batch.policy.revision })
+    || !sameDefined(binding.serviceGeneration, batch.policy.serviceGeneration) || !sameDefined(binding.roomService, batch.policy.policy.roomService)) return false;
   const descriptor = batch.checks.find(check => check.name === name);
   return !!descriptor && descriptor.configuration === configuration && checkSourceV13(descriptor) === binding.source
-    && checkStageV13(descriptor) === binding.stage && binding.subject.kind === binding.stage && same(descriptor.checker, binding.checker);
+    && checkStageV13(descriptor) === binding.stage && binding.subject.kind === binding.stage && sameDefined(descriptor.checker, binding.checker);
 }
 export function evidenceFrozenBatchV17(given: RuleGiven, binding: EvidenceBinding, name: string, configuration: Digest, holder?: number, job?: FactRef): EvidenceBatchRecordV17 | null {
   if (binding.subject.kind === "work") return null;
   const subject = binding.subject, publication = given.state.item(subject.publication.seq), opening = local(given, subject.publication);
   const operation = publication?.refs["operation"];
   if (!opening || !publication || publication.type !== "publication" || !isFactRef(operation)
-    || !same(publication.refs["manifest"], subject.manifest)) return null;
+    || !sameDefined(publication.refs["manifest"], subject.manifest)) return null;
   const ids = given.state.lookup("evidence-batch", "operation", canonicalize(operation), 5);
   if (!ids?.length || ids.length > 4) return null;
   const rows = ids.map(id => ({ item: given.state.item(id), batch: readEvidenceBatchWireV17(given.state.item(id)?.values["batch"]) }))
     .sort((left, right) => (left.batch?.ordinal ?? -1) - (right.batch?.ordinal ?? -1));
   const first = rows[0]!.batch;
   if (!first || first.total < 1 || first.total > 4 || rows.length > first.total || rows.some((row, ordinal) => !row.item || row.item.type !== "evidence-batch" || !row.batch
-    || row.batch.ordinal !== ordinal || row.batch.total !== first.total || !same(row.batch.publication, subject.publication)
-    || !same(row.batch.operation, operation) || !same(row.batch.capture, first.capture) || !same(row.batch.policy, first.policy) || !same(row.batch.touched, first.touched))) return null;
-  const selected = rows.find(row => (holder === undefined || row.item!.id === holder) && (!job || row.batch!.jobs.some(row => same(row.job, job) && row.name === name))
+    || row.batch.ordinal !== ordinal || row.batch.total !== first.total || !sameDefined(row.batch.publication, subject.publication)
+    || !sameDefined(row.batch.operation, operation) || !sameDefined(row.batch.capture, first.capture) || !sameDefined(row.batch.policy, first.policy) || !sameDefined(row.batch.touched, first.touched))) return null;
+  const selected = rows.find(row => (holder === undefined || row.item!.id === holder) && (!job || row.batch!.jobs.some(row => sameDefined(row.job, job) && row.name === name))
     && evidenceFrozenBatchMatchesV17(binding, name, configuration, row.batch!));
   if (!selected?.batch) return null;
   const capture = local(given, selected.batch.capture), funded = evidenceFundedBatchV17(given.state, given.own, selected.item!, given.resolved.bounds);
@@ -838,9 +837,9 @@ export function evidenceFrozenBatchV17(given: RuleGiven, binding: EvidenceBindin
   const view = captured && readRulesPolicyObservationV17(captured.policy.observation, captured.policy.input, captured.policy.observation.at);
   return capture?.input.type === "outcome" && capture.input.owner === "platform:destination@17" && ["judge", "read"].includes(capture.input.kind)
     && capture.input.result === "confirmed" && capture.effects.some(effect => effect.effect === "state" && effect.item === publication.id && effect.state === "reserved")
-    && funded && same(funded, selected.batch)
-    && captured && current && same(current.policy, captured.policy) && same(captured.policy.manifest, subject.manifest)
-    && same(captured.policy.touched, selected.batch.touched) && view?.ok && same(view.view, selected.batch.policy) ? selected.batch : null;
+    && funded && sameDefined(funded, selected.batch)
+    && captured && current && sameDefined(current.policy, captured.policy) && sameDefined(captured.policy.manifest, subject.manifest)
+    && sameDefined(captured.policy.touched, selected.batch.touched) && view?.ok && sameDefined(view.view, selected.batch.policy) ? selected.batch : null;
 }
 function evidenceAdmission(given: RuleGiven, operation: Operation): OutcomeGives {
   if (operation.for === undefined) throw Error("Evidence admission has no funded job");
@@ -881,7 +880,7 @@ function evidenceAdmission(given: RuleGiven, operation: Operation): OutcomeGives
     const parent = logical && view.policy.checks.find(check => check.name === logical.name);
     if (!member || !parent?.audit || parent.audit.check !== check.name || parent.audit.every !== 1 || member.binding.source !== "member"
       || record.binding.source !== "room" || record.binding.stage !== "landing" || member.tree !== triple.tree || member.configuration !== record.configuration
-      || !logical || !same(record.binding.auditOf, member.job) || !same(logical.binding.subject, record.binding.subject)
+      || !logical || !sameDefined(record.binding.auditOf, member.job) || !sameDefined(logical.binding.subject, record.binding.subject)
       || !["admitted", "reused", "timeout", "unknown", "passed", "failed"].includes(logical.state) || record.reuseRequested
       || evidenceOwnerV17(given.state, "policyKey", evidenceAuditKeyV17(logical.job)) !== null) return refuse("audit-invalid");
   }
@@ -935,7 +934,7 @@ function evidenceAdmission(given: RuleGiven, operation: Operation): OutcomeGives
     if (checkHoldsV13(check)) {
       if (record.holdOwner === null || record.policyOwner === null) return refuse("evidence-invalid");
       const owner = working(record.holdOwner);
-      owner.record.holds = [...owner.record.holds, ...reserved.keys.filter(key => !owner.record.holds.some(hold => same(hold.key, key))).map(key => newEvidenceHoldV17(key)!)];
+      owner.record.holds = [...owner.record.holds, ...reserved.keys.filter(key => !owner.record.holds.some(hold => sameDefined(hold.key, key))).map(key => newEvidenceHoldV17(key)!)];
       owner.record.funded.holds = true;
       owner.record.policyOwner = reserved.policyOwner; updates.set(owner.id, owner.record);
     }
@@ -950,15 +949,15 @@ function evidenceAdmission(given: RuleGiven, operation: Operation): OutcomeGives
   if (record.state === "admitted") effects.push({ effect: "value", item: admittedItem, slot: "deadline", value: record.deadline });
   for (const [id, next] of updates) {
     if (!readEvidenceJobRecordV17(next)) return refuse("evidence-too-large");
-    if (id !== admittedItem && same(readEvidenceJobRecordWireV17(given.state.item(id)?.values["record"]), next)) continue;
+    if (id !== admittedItem && sameDefined(readEvidenceJobRecordWireV17(given.state.item(id)?.values["record"]), next)) continue;
     effects.push(evidenceRecordEffectV17(id, next), ...(id === admittedItem || given.state.item(id)?.state === evidenceRecordState(next, id) ? [] : [{ effect: "state" as const, item: id, state: evidenceRecordState(next, id) }]));
   }
   const ledger = evidenceLedgerOfV17(given.state); if (!ledger) return refuse("evidence-invalid");
-  if (!same(counts, capacity.counts)) effects.push({ effect: "value", item: ledger.id, slot: "counts", value: capacity.counts as unknown as FieldValue });
+  if (!sameDefined(counts, capacity.counts)) effects.push({ effect: "value", item: ledger.id, slot: "counts", value: capacity.counts as unknown as FieldValue });
   const sends = [decisionRequest(record, record.state === "reused" ? "reused" : "admitted")], audit = auditRequest(given, record, view);
   const progress = landingNeedsProgress(given, record) || audit ? [openingV17(EVIDENCE_PROGRESS_V17, record.holder)] : [];
   const forecast = record.state === "reused" ? { admitted: true } : evidenceFutureEntriesV17(given, { item: admittedItem, record }, [...updates].map(([item, record]) => ({ item, record })),
-    job => same(job, record.job) ? record : evidenceRowV17(given.state, job)?.record ?? null,
+    job => sameDefined(job, record.job) ? record : evidenceRowV17(given.state, job)?.record ?? null,
     record.covered.length && record.policyOwner !== null ? evidencePendingCapacityForecastV17(given, record.policyOwner, record.job.at) : []);
   if (!forecast.admitted || !evidenceCarryingBudgetV17(given, effects, progress, sends, []).admitted
     || audit && !evidenceAuditBudgetV17(given, record.job, audit)) return refuse("evidence-too-large");
@@ -987,30 +986,30 @@ const resultFactFieldsV17 = (work: boolean): ActType["fields"] => ({
  * Current verdict eligibility remains the Native result rule's decision. */
 export function evidenceResultMessageFieldsV17(state: StateView, own: Own, operation: Operation): Record<string, unknown> | null {
   if (operation.owner !== "platform:destination@17" || operation.kind !== EVIDENCE_RESULT_V17 || operation.most !== 1 || operation.for === undefined
-    || !same(state.operation(operation.id), operation)) return null;
+    || !sameDefined(state.operation(operation.id), operation)) return null;
   const at = state.scope()?.at, opened = own(Number(operation.id.split(":")[0])), entry = opened?.entry, input = entry?.input;
-  if (!at || !opened || !entry || !same(entry.at, at) || entryHash(entry) !== opened.hash || !evidenceOperationOpeningV17(entry, operation)
+  if (!at || !opened || !entry || !sameDefined(entry.at, at) || entryHash(entry) !== opened.hash || !evidenceOperationOpeningV17(entry, operation)
     || input?.type !== "delivery" || !("decision" in input) || input.decision !== "applied" || input.message.class !== "request" || input.message.type !== "tell"
     || !isRecord(input.message.body) || !["checked", "work-checked"].includes(String(input.message.body["message"]))
     || !isRecord(input.message.body["fields"])) return null;
   const fields = messageFields(input.message.body["fields"], input.from, resultFactFieldsV17(input.message.body["message"] === "work-checked"));
   if (!fields || Object.keys(fields).some(name => !["admission", "job", "result", "bindingDigest", "operation"].includes(name))
-    || !isFactRef(fields["admission"]) || !same(fields["admission"].at, at) || !isFactRef(fields["job"])
-    || !isFactRef(fields["result"]) || !same(fields["result"], input.from) || !same(fields["job"].at, input.from.at)) return null;
-  const copies = entry.uses.filter(use => same(use.fact, fields["result"]));
+    || !isFactRef(fields["admission"]) || !sameDefined(fields["admission"].at, at) || !isFactRef(fields["job"])
+    || !isFactRef(fields["result"]) || !sameDefined(fields["result"], input.from) || !sameDefined(fields["job"].at, input.from.at)) return null;
+  const copies = entry.uses.filter(use => sameDefined(use.fact, fields["result"]));
   if (copies.length !== 1 || !own.retained) return null;
   const result = own.retained(copies[0]!);
-  if (!result || !isEntryOf(result, fields["result"]) || !same(useOf(fields["result"], result), copies[0])
+  if (!result || !isEntryOf(result, fields["result"]) || !sameDefined(useOf(fields["result"], result), copies[0])
     || !sentBy(result, { to: at, from: input.from, n: input.n, message: input.message })) return null;
   const item = state.item(fields["admission"].seq), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
   const admitted = record && destinationEvidenceJob(state, own, record.job);
   if (!item || item.type !== "evidence-job" || !record || !admitted || record.holder !== operation.for
-    || !same(fields["admission"], admitted.admission) || !same(fields["job"], record.job) || fields["bindingDigest"] !== record.bindingDigest
+    || !sameDefined(fields["admission"], admitted.admission) || !sameDefined(fields["job"], record.job) || fields["bindingDigest"] !== record.bindingDigest
     || input.message.body["message"] !== (record.binding.stage === "work" ? "work-checked" : "checked")) return null;
   const subject = record.binding.subject;
   if (subject.kind === "work") return Object.hasOwn(fields, "operation") ? null : fields;
   const publication = state.item(subject.publication.seq), publicationOperation = publication?.refs["operation"];
-  return isFactRef(fields["operation"]) && isFactRef(publicationOperation) && same(fields["operation"], publicationOperation) ? fields : null;
+  return isFactRef(fields["operation"]) && isFactRef(publicationOperation) && sameDefined(fields["operation"], publicationOperation) ? fields : null;
 }
 function resultFields(given: RuleGiven, operation: Operation): Record<string, unknown> | null {
   return evidenceResultMessageFieldsV17(given.state, given.own, operation);
@@ -1018,10 +1017,10 @@ function resultFields(given: RuleGiven, operation: Operation): Record<string, un
 function resultBound(given: RuleGiven): { item: Item; record: EvidenceJobRecordV17 } | null {
   const item = given.resolved.subjects.get("also.job"), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
   const admission = record && destinationEvidenceJob(given.state, given.own, record.job);
-  return item && record && admission && given.input.type === "delivery" && same(given.input.from.at, record.job.at)
-    && same(localFactField(given, "admission"), admission.admission) && same(given.resolved.fields["job"], record.job)
+  return item && record && admission && given.input.type === "delivery" && sameDefined(given.input.from.at, record.job.at)
+    && sameDefined(localFactField(given, "admission"), admission.admission) && sameDefined(given.resolved.fields["job"], record.job)
     && given.resolved.fields["bindingDigest"] === record.bindingDigest && isFactRef(given.resolved.fields["result"])
-    && same(given.resolved.fields["result"], given.input.from) && ["admitted", "timeout", "unknown"].includes(record.state)
+    && sameDefined(given.resolved.fields["result"], given.input.from) && ["admitted", "timeout", "unknown"].includes(record.state)
     ? { item, record } : null;
 }
 function landingEffects(given: RuleGiven, record: EvidenceJobRecordV17): OutcomeGives {
@@ -1080,7 +1079,7 @@ function publishedDecision(given: RuleGiven, record: EvidenceJobRecordV17, outco
   if (record.holdOwner !== null && (outcome !== "passed" || eligiblePass)) {
     const owner = updates.get(record.holdOwner) ?? copy(readRow(given, record.holdOwner).record);
     owner.holds = owner.holds.map(hold => {
-      if (!record.covered.some(key => same(key, hold.key))) return hold;
+      if (!record.covered.some(key => sameDefined(key, hold.key))) return hold;
       const next = outcome === "passed" && record.result ? passEvidenceHoldV17(hold, hold.key, { kind: "pass", decidedAt: given.resolved.self,
         through: order, job: record.job, publication: subject.publication, result: record.result }, true) : failEvidenceHoldV17(hold, failure);
       if (!next.ok) throw Error("A funded evidence hold decision is inconsistent");
@@ -1108,10 +1107,10 @@ function hydrateTimeout(given: RuleGiven, row: { item: Item; record: EvidenceJob
   if (record.holdOwner !== null) {
     const owner = updates.get(record.holdOwner) ?? copy(readRow(given, record.holdOwner).record);
     owner.holds = owner.holds.map(hold => {
-      if (!record.covered.some(key => same(key, hold.key))) return hold;
+      if (!record.covered.some(key => sameDefined(key, hold.key))) return hold;
       // A later normal entry may already have refined this same timeout
       // to an observation/result reason. Retain that newer hold history.
-      if (hold.failure && same(hold.failure.job, cause.job) && same(hold.failure.publication, cause.publication)
+      if (hold.failure && sameDefined(hold.failure.job, cause.job) && sameDefined(hold.failure.publication, cause.publication)
         && hold.failure.decidedAt >= cause.decidedAt) return hold;
       const next = failEvidenceHoldV17(hold, cause);
       if (!next.ok) throw new RuleFault("The admitted timeout hold is unavailable");
@@ -1142,7 +1141,7 @@ function recoverIncident(given: RuleGiven, row: { item: Item; record: EvidenceJo
   const record = copy(row.record), updates = new Map<number, EvidenceJobRecordV17>([[row.item.id, record]]);
   hydrateTimeout(given, row, record, updates);
   const opening = evidenceNoticeOpeningV17(given, row.item, record);
-  const effects = [...updates].filter(([id, value]) => !same(readEvidenceJobRecordWireV17(given.state.item(id)?.values["record"]), value))
+  const effects = [...updates].filter(([id, value]) => !sameDefined(readEvidenceJobRecordWireV17(given.state.item(id)?.values["record"]), value))
     .map(([id, value]) => evidenceRecordEffectV17(id, value));
   effects.push(...opening.effects);
   if ((effects.length || opening.opens.length) && !evidenceCarryingBudgetV17(given, [...(carrier?.effects ?? []), ...effects],
@@ -1156,24 +1155,24 @@ function evidenceBlockedRecovery(given: RuleGiven, paths: readonly string[], car
 function recoveryRow(given: RuleGiven): { item: Item; record: EvidenceJobRecordV17 } | null {
   const item = given.resolved.subjects.get("also.job"), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
   const admission = record && destinationEvidenceJob(given.state, given.own, record.job);
-  return item && item.type === "evidence-job" && record && admission && same(admission.admission, localFactField(given, "admission"))
+  return item && item.type === "evidence-job" && record && admission && sameDefined(admission.admission, localFactField(given, "admission"))
     ? { item, record: currentEvidenceRecordV17(item, record) } : null;
 }
 function recoveryAuthority(given: RuleGiven): boolean {
   if (given.input.type !== "act") return false;
   const grant = given.input.grant, observation = grant?.fresh.observation, now = timeMs(given.time), at = observation ? timeMs(observation.at) : null;
   if (!grant || !observation || "subject" in observation || now === null || at === null || now < at || now - at > 10000
-    || grant.key !== given.input.signed.intent.actor || observation.key !== grant.key || !same(grant.subject, { membership: observation.of, member: observation.member })
+    || grant.key !== given.input.signed.intent.actor || observation.key !== grant.key || !sameDefined(grant.subject, { membership: observation.of, member: observation.member })
     || observation.keyState !== "active" || observation.memberState !== "active" || observation.controllerActive === false
     || !observation.actions.includes("destination.read-token") || !grant.actions.includes("destination.read-token")) return false;
   if (grant.actions.includes("issue.triage") && observation.actions.includes("issue.triage")) return true;
   const row = recoveryRow(given), subject = row?.record.binding.subject, operation = subject?.kind === "published"
     ? given.state.item(subject.publication.seq)?.refs["operation"] : null;
   const supplied = given.resolved.fields["operation"];
-  const merge = isFactRef(operation) && same(operation, supplied) ? foreign(given, operation) : null;
+  const merge = isFactRef(operation) && sameDefined(operation, supplied) ? foreign(given, operation) : null;
   if (merge?.input.type !== "act" || merge.input.signed.intent.kind !== "merge" || merge.input.authority.length !== 1) return false;
   const accepted = merge.input.authority[0]!;
-  return accepted.key === merge.input.signed.intent.actor && same(accepted.subject, grant.subject);
+  return accepted.key === merge.input.signed.intent.actor && sameDefined(accepted.subject, grant.subject);
 }
 function evidenceResult(given: RuleGiven, operation: Operation): OutcomeGives {
   if (operation.for === undefined) throw Error("An evidence result has no funded job");
@@ -1189,8 +1188,8 @@ function evidenceResult(given: RuleGiven, operation: Operation): OutcomeGives {
     return { effects: [...serviceEffect(given, view), ...[...updates].map(([id, record]) => evidenceRecordEffectV17(id, record)), ...notice.effects],
       sends: [decisionRequest(held, reason, "result")], opens: notice.opens };
   };
-  if (!fields || !isFactRef(fields["result"]) || !same(fields["job"], record.job)) return refuse("evidence-invalid");
-  const actual = given.uses.find(use => same(use.fact, fields["result"])), admission = destinationEvidenceJob(given.state, given.own, record.job);
+  if (!fields || !isFactRef(fields["result"]) || !sameDefined(fields["job"], record.job)) return refuse("evidence-invalid");
+  const actual = given.uses.find(use => sameDefined(use.fact, fields["result"])), admission = destinationEvidenceJob(given.state, given.own, record.job);
   if (!actual || !admission) return refuse("evidence-unavailable");
   const decision = readEvidenceDecisionV17({ entry: actual.entry, hash: actual.fact.hash }, { job: record.job, admission: admission.admission,
     bindingDigest: record.bindingDigest, tree: record.tree!, configuration: record.configuration });
@@ -1212,20 +1211,20 @@ function evidenceResult(given: RuleGiven, operation: Operation): OutcomeGives {
     if (!owner.reuse) throw Error("A funded candidate index is unavailable");
     const candidate: EvidenceCandidateV17 = { job: record.job, keyDigest: evidenceKeyDigestV17(owner.reuse.key), admission: record.admittedAt!,
       result: decision.result, decidedBy: given.resolved.self, key: decision.key, checker: record.binding.checker, binding: record.binding, outcome: decision.outcome === "passed" ? "passed" : "failed" };
-    const next = decision.outcome === "error" ? releaseEvidenceCandidateV17(owner.reuse, record.job) : settleEvidenceCandidateV17(owner.reuse, candidate, candidate => same(candidate.job, record.job)
+    const next = decision.outcome === "error" ? releaseEvidenceCandidateV17(owner.reuse, record.job) : settleEvidenceCandidateV17(owner.reuse, candidate, candidate => sameDefined(candidate.job, record.job)
       ? evidenceSourceV17(candidate.binding, check!, view, keyObservation(given, candidate.key), given.time, false, null, false).ok
       : acceptedCandidate(given, candidate, check!, view!));
     if (!next.ok) throw Error("A reserved candidate cannot be settled"); owner.reuse = next.record; updates.set(record.reuseOwner, owner);
   }
   publishedDecision(given, record, decision.outcome, record.reason ?? decision.outcome, updates,
-    same(record.binding.policyGeneration, { rules: view!.rules, seq: view!.revision }));
+    sameDefined(record.binding.policyGeneration, { rules: view!.rules, seq: view!.revision }));
   const sends = [decisionRequest(record, "counted", "result")];
   const notice = evidenceNoticeOpeningV17(given, row.item, record);
   const progress = [...(landingNeedsProgress(given, record) ? [openingV17(EVIDENCE_PROGRESS_V17, record.holder)] : []), ...notice.opens];
   const effects: RuleEffect[] = [...serviceEffect(given, view), { effect: "value", item: row.item.id, slot: "deadline", value: null },
     ...(record.binding.stage === "work" ? [{ effect: "state" as const, item: record.requestAt, state: "settled" }] : []), ...notice.effects];
   if (record.binding.subject.kind === "published" && record.covered.length && record.policyOwner !== null) effects.push(...evidenceSettlePendingCapacityV17(given,
-    record.policyOwner, record.covered, record.job, decision.outcome === "passed" && same(record.binding.policyGeneration, { rules: view!.rules, seq: view!.revision }) ? record.binding.subject.publication.seq : null));
+    record.policyOwner, record.covered, record.job, decision.outcome === "passed" && sameDefined(record.binding.policyGeneration, { rules: view!.rules, seq: view!.revision }) ? record.binding.subject.publication.seq : null));
   for (const [id, next] of updates) {
     effects.push(evidenceRecordEffectV17(id, next));
     if (given.state.item(id)?.state !== evidenceRecordState(next, id)) effects.push({ effect: "state", item: id, state: evidenceRecordState(next, id) });
@@ -1251,8 +1250,8 @@ export function evidenceProgressCohortV17(required: readonly Pick<RulesCheckV13,
   const replaces = required.some(check => check.name === current.name);
   const applies = replaces || current.binding.auditOf !== null && current.forJob !== null && required.some(check => {
     const selected = generations.find(row => row.name === check.name);
-    return !!check.audit && !!selected && same(alias(selected) ?? selected.job, current.forJob)
-      && same(audit(current.forJob!)?.job, current.job);
+    return !!check.audit && !!selected && sameDefined(alias(selected) ?? selected.job, current.forJob)
+      && sameDefined(audit(current.forJob!)?.job, current.job);
   });
   if (!applies) return { applies: false, keys: [] };
   // Failed/error progress aborts before reading retained generations. The
@@ -1328,7 +1327,7 @@ export function evidenceDestinationRulesV17(base: Rules): Rules {
       if (result !== "confirmed") return kind !== "notice" && exact(answer.body, []);
       if (answer.basis !== "own-answer" || !exact(answer.body, ["job"]) || given.input.type !== "outcome") return false;
       const operation = given.state.operation(given.input.operation), row = operation ? operationRow(given, operation) : null;
-      return !!row && same(answer.body["job"], row.record.job);
+      return !!row && sameDefined(answer.body["job"], row.record.job);
     },
     subjects: (given, operation, row, first) => {
       const record = operationRow(given, operation).record;
@@ -1373,11 +1372,11 @@ export function evidenceDestinationRulesV17(base: Rules): Rules {
       const record = proposed(given); if (!record) return { holds: false, name: "not-this-check" };
       if (record.binding.subject.kind !== "work") {
         const publication = given.resolved.subjects.get("also.publication");
-        if (!publication || publication.id !== record.binding.subject.publication.seq || !same(publication.refs["operation"], given.resolved.fields["operation"])) return { holds: false, name: "not-this-check" };
+        if (!publication || publication.id !== record.binding.subject.publication.seq || !sameDefined(publication.refs["operation"], given.resolved.fields["operation"])) return { holds: false, name: "not-this-check" };
       }
       const batch = record.binding.stage === "work" ? null : readEvidenceBatchWireV17(given.resolved.subjects.get("also.batch")?.values["batch"]);
       const pending = record.binding.stage === "work" ? given.state.lookup("evidence-request", "job", canonicalize(record.job), 1)
-        : batch ? batch.jobs.filter(row => same(row.job.at, record.job.at) && row.job.seq === record.job.seq).map(() => 0) : null;
+        : batch ? batch.jobs.filter(row => sameDefined(row.job.at, record.job.at) && row.job.seq === record.job.seq).map(() => 0) : null;
       return pending && pending.length === 0 && !evidenceRowV17(given.state, record.job) ? { holds: true } : { holds: false, name: "already-admitted" };
     } },
     "evidence-holder-v17": { place: "also", bind: items => items.length === 1 ? items[0]!.id : null },
@@ -1388,7 +1387,7 @@ export function evidenceDestinationRulesV17(base: Rules): Rules {
       if (!ids || ids.length > 1) throw new RuleFault("The publication operation index is unavailable");
       if (!ids.length) return null;
       const item = given.state.item(ids[0]!);
-      if (!item || item.type !== "publication" || !same(item.refs["operation"], operation)) throw new RuleFault("The indexed publication is unavailable");
+      if (!item || item.type !== "publication" || !sameDefined(item.refs["operation"], operation)) throw new RuleFault("The indexed publication is unavailable");
       return item.id;
     } },
     "evidence-admitted-job-v17": { place: "also", run: (given: RuleGiven) => {
@@ -1397,7 +1396,7 @@ export function evidenceDestinationRulesV17(base: Rules): Rules {
       const item = given.state.item(fact.seq), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
       if (!item || item.type !== "evidence-job" || !record) return null;
       const actual = destinationEvidenceJob(given.state, given.own, record.job);
-      return actual && same(actual.admission, fact) ? item.id : null;
+      return actual && sameDefined(actual.admission, fact) ? item.id : null;
     } },
     "evidence-open-v17": { place: "effect", most: 5, run: given => {
       const record = proposed(given); if (!record) throw Error("An admitted evidence fence lost its job");
@@ -1428,7 +1427,7 @@ export function evidenceDestinationRulesV17(base: Rules): Rules {
         if (result !== "confirmed") return exact(evidence.body, []);
         const operation = given.input.type === "outcome" ? given.state.operation(given.input.operation) : null;
         const pending = operation && destinationEvidenceAuditPending(given.state, given.own, operation);
-        return evidence.basis === "own-answer" && exact(evidence.body, ["job"]) && !!pending && same(evidence.body["job"], pending.job);
+        return evidence.basis === "own-answer" && exact(evidence.body, ["job"]) && !!pending && sameDefined(evidence.body["job"], pending.job);
       }, derives: (given, operation) => { const result = evidenceAudit(given, operation); single(result); return { ...result, sends: [] }; },
     } },
     "evidence-audit-send-v17": { place: "send", run: given => {
@@ -1449,7 +1448,7 @@ export function* evidenceFloorReferencesV17(snapshot: StateSnapshot, _definition
   const scope = snapshot.scope; if (!scope) return;
   const positions = new Set<number>();
   const position = (value: number | null) => { if (value !== null && natural(value)) positions.add(value); };
-  const fact = (value: FactRef | null) => { if (value && same(value.at, scope.at)) position(value.seq); };
+  const fact = (value: FactRef | null) => { if (value && sameDefined(value.at, scope.at)) position(value.seq); };
   for (const item of snapshot.items) {
     if (item.type === "branch") {
       const declined = readRulesCertificateDeclinedV17(item.values["rulesCertificateDeclined"]);
@@ -1495,7 +1494,7 @@ export function* evidenceFloorReferencesV17(snapshot: StateSnapshot, _definition
   }
   for (const seq of positions) {
     const sealed = own(seq);
-    if (!sealed || sealed.entry.seq !== seq || !same(sealed.entry.at, scope.at) || entryHash(sealed.entry) !== sealed.hash) throw Error("Evidence floor source is unavailable");
+    if (!sealed || sealed.entry.seq !== seq || !sameDefined(sealed.entry.at, scope.at) || entryHash(sealed.entry) !== sealed.hash) throw Error("Evidence floor source is unavailable");
     yield seq;
   }
 }

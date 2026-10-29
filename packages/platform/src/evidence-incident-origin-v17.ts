@@ -2,7 +2,7 @@
  * This is no history search and never promotes another delivery-created lane. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, FactRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, deliveryCauseDigest, intentDigest, isDigest, isFactRef, isMemberRef, isRecord, isSeed, messageDigest, same, scopeIdOf, seedDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { natural, canonicalize, deliveryCauseDigest, intentDigest, isDigest, isFactRef, isMemberRef, isRecord, isSeed, messageDigest, same, scopeIdOf, seedDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest, readEvidenceBinding } from "./evidence.ts";
 import { isEntryOf, sentBy, type Fetched } from "@generalbusiness/dap-derive";
 import { EVIDENCE_LANE_PINS } from "./evidence-lane-pins.generated.ts";
@@ -12,7 +12,6 @@ import { readEvidenceWireV17 } from "./evidence-wire-v17.ts";
 export const EVIDENCE_INCIDENT_PINS_V17 = Object.freeze({ issue: EVIDENCE_LANE_PINS.issue, change: EVIDENCE_LANE_PINS.change,
   directory: C.directory, destination: C.destination });
 
-const natural = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
 const objectId = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{40}$/.test(value);
 const selfOr = (value: unknown, fact: FactRef): boolean => same(value, fact) || isRecord(value) && Object.keys(value).join() === "self" && value["self"] === true;
 function body(entry: Entry, message: string): Record<string, unknown> | null {

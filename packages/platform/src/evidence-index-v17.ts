@@ -1,6 +1,6 @@
 /** G17-only bounded evidence records. No history, storage, or authority is read here. */
 import type { Bounds, Digest, FactRef, KeyId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, isDigest, isFactRef, isKeyId, isMemberRef, isRecord, isScopeRef, parseStrict, same, utf8, wellFormed } from "@generalbusiness/dap-bytes";
+import { natural, canonicalize, digestBytes, isDigest, isFactRef, isKeyId, isMemberRef, isRecord, isScopeRef, parseStrict, same, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import { readEvidenceBinding, type CheckSource, type CheckStage, type EvidenceBinding } from "./evidence.ts";
 import { amountMath, naturalAmount, NOTHING, type Amount } from "@generalbusiness/dap-derive";
 
@@ -9,7 +9,6 @@ const bytes = (value: unknown): number => utf8(canonicalize(value)).length;
 const exact = (value: unknown, keys: readonly string[]): value is Record<string, unknown> => isRecord(value)
   && [Object.prototype, null].includes(Object.getPrototypeOf(value) as object | null) && Reflect.ownKeys(value).length === keys.length
   && keys.every(key => { const field = Object.getOwnPropertyDescriptor(value, key); return !!field?.enumerable && Object.hasOwn(field, "value"); });
-const natural = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
 const dataArray = (value: unknown, max: number): value is unknown[] => Array.isArray(value) && value.length <= max
   && Reflect.ownKeys(value).length === value.length + 1 && Array.from({ length: value.length }, (_, index) => Object.getOwnPropertyDescriptor(value, String(index)))
     .every(field => !!field?.enumerable && Object.hasOwn(field, "value"));

@@ -1,7 +1,7 @@
 /** Native funding identities are known before the published job exists.
  * A null job/owner is reserved capacity, never a fabricated future fact. */
 import type { Digest, FactRef, FieldValue } from "@generalbusiness/dap-contract";
-import { canonicalize, isFactRef, isRecord, isScopeRef, parseStrict, same, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { natural, canonicalize, isFactRef, isRecord, isScopeRef, parseStrict, same, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import type { ScopedRulesPosition } from "@generalbusiness/dap-contract";
 import { evidenceBindingDigest, type EvidenceBinding } from "./evidence.ts";
 import type { Item, RuleEffect, RuleGiven, StateView } from "@generalbusiness/dap-derive";
@@ -23,7 +23,6 @@ export interface EvidenceCapacityAnchorV17 {
 }
 const exact = (value: unknown, keys: readonly string[]): value is Record<string, unknown> => isRecord(value)
   && Object.keys(value).length === keys.length && keys.every(key => Object.hasOwn(value, key));
-const natural = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
 export const evidenceCapacityPolicyKeyV17 = (generation: ScopedRulesPosition): Digest => textDigest(canonicalize({ domain: "artroom-evidence-capacity-policy-1", generation }));
 export function readEvidenceCapacityAnchorV17(value: unknown): EvidenceCapacityAnchorV17 | null {
   try {
