@@ -93,7 +93,9 @@ function settings(): Settings | null {
     const label = labelFor(kept.label, place, register);
     const selected = kept.claimSelection;
     const claimSelection = selected && typeof selected.operation === "string" && selected.operation.length > 0 && selected.origin === location.origin && selected.key === kept.publicKey && labelFor({ text: "selection", place: selected.place, register: selected.register }, place, register) ? selected : undefined;
-    const pollIntervalMs = kept.pollIntervalMs === undefined ? undefined : pollingInterval(kept.pollIntervalMs);
+    let pollIntervalMs: number | undefined;
+    try { pollIntervalMs = kept.pollIntervalMs === undefined ? undefined : pollingInterval(kept.pollIntervalMs); }
+    catch { /* A bad optional interval must not hide the saved connection. */ }
     return { place, publicKey: kept.publicKey, ...(pollIntervalMs === undefined ? {} : { pollIntervalMs }), ...(register ? { register } : {}), ...(label ? { label } : {}), ...(claimSelection ? { claimSelection } : {}) };
   } catch {
     return null;

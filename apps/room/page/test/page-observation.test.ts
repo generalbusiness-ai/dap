@@ -18,7 +18,11 @@ const gate = <T = void>() => { let resolve!: (value: T) => void; const promise =
 const drain = async () => { for (let n = 0; n < 40; n++) await Promise.resolve(); };
 const closed = () => new ReadableStream<Uint8Array>({ start(controller) { controller.close(); } });
 
-test("Main renders a later comment within two fallback intervals after empty EOF, and retires its polling owner", ({ onTestFinished }) => workbenchFixtures.run(onTestFinished, async fixture => {
+test.each([
+  { setting: "valid interval", storedInterval: 1_000, interval: 1_000 },
+  { setting: "out-of-range interval", storedInterval: 60_001, interval: 5_000 },
+  { setting: "string interval", storedInterval: "5000", interval: 5_000 },
+])("Main keeps its saved connection with $setting, renders a later comment after empty EOF, and retires polling", ({ storedInterval, interval }, { onTestFinished }) => workbenchFixtures.run(onTestFinished, async fixture => {
   vi.resetModules(); vi.useFakeTimers();
   let seq = 0, polls = 0, loads = 0;
   const heldBackoff = gate(); fixture.release(() => heldBackoff.resolve());
@@ -42,10 +46,12 @@ test("Main renders a later comment within two fallback intervals after empty EOF
   const location = { origin: context.origin, hash: `#/issue/${scope.scope}` };
   let redraw!: () => void;
   const room = { session: { service: context.origin, signer: { key, sign: vi.fn() } }, ...place, rules: place.directory, destination: place.directory, key, me: { handle: "@member", role: "member", actions: [] }, reader: session() };
-  vi.doMock("../src/browser-key-store.ts", () => ({ pageKeyStore: () => ({ load: async () => room.session.signer }) }));
+  const loadKey = vi.fn(async (_key: unknown) => room.session.signer), saveSettings = vi.fn(async () => {});
+  const openRoom = vi.fn(async (_session: unknown, _place: unknown) => room);
+  vi.doMock("../src/browser-key-store.ts", () => ({ pageKeyStore: () => ({ load: loadKey, saveSettings }) }));
   vi.doMock("../src/page-key-migration.ts", () => ({ migratePageOperations: async () => {} }));
   vi.doMock("../src/data.ts", async () => ({ ...await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts"),
-    openRoom: async () => room, roomInitialization: async () => ({ state: "configured" }), initializationStillCurrent: async () => true,
+    openRoom, roomInitialization: async () => ({ state: "configured" }), initializationStillCurrent: async () => true,
     actsOn: async () => ({ acts: [], hidden: 0 }),
     loadIssue: async () => ({ scope: scope.scope, ref: scope, definition, head: head(seq), number: 1, title: "Scripted issue", body: null, state: "open", closeReason: null, createdAt: null, modifiedAt: null, requesterRef: null, requester: null, assignees: [], conditions: [], comments: seq ? [{ id: 1, author: "@other", state: "visible", body: "Later participant comment" }] : [] }),
     pageObservationSource: async (): Promise<PageObservationSource> => {
@@ -58,18 +64,27 @@ test("Main renders a later comment within two fallback intervals after empty EOF
   }));
   vi.stubGlobal("document", { title: "", activeElement: null, getElementById: () => root, createElement: (tag: string) => new Element(tag), createElementNS: (_namespace: string, tag: string) => new Element(tag) });
   vi.stubGlobal("location", location);
-  vi.stubGlobal("localStorage", { getItem: () => JSON.stringify({ place, publicKey: key, pollIntervalMs: 1_000 }), setItem: vi.fn() });
+  const originalSettings = JSON.stringify({ place, publicKey: key, pollIntervalMs: storedInterval });
+  const setItem = vi.fn(), getItem = (name: string) => name === "artroom-page" ? originalSettings : null;
+  vi.stubGlobal("localStorage", { getItem, setItem });
   vi.stubGlobal("window", { addEventListener: (_name: string, listener: () => void) => { redraw = listener; } });
   try {
     const main = await fixture.load(() => import("../src/main.ts"));
     await fixture.wait(() => main.workbenchLifecycle.idle()); await drain();
-    expect(root.textContent).toContain("Live updates unavailable. Checking every 1 second.");
+    expect(loadKey).toHaveBeenCalledWith(key);
+    expect(openRoom).toHaveBeenCalledWith({ service: context.origin, signer: room.session.signer }, place);
+    expect(saveSettings).not.toHaveBeenCalled(); expect(setItem).not.toHaveBeenCalled();
+    expect(localStorage.getItem("artroom-page")).toBe(originalSettings);
+    expect(root.textContent).toContain(`Live updates unavailable. Checking every ${interval / 1_000} ${interval === 1_000 ? "second" : "seconds"}.`);
     expect(polls).toBe(0); seq = 1;
-    await vi.advanceTimersByTimeAsync(1_000); await fixture.wait(() => main.workbenchLifecycle.idle());
+    await vi.advanceTimersByTimeAsync(interval - 1); expect(polls).toBe(0);
+    await vi.advanceTimersByTimeAsync(1); await fixture.wait(() => main.workbenchLifecycle.idle());
     expect(root.textContent).toContain("Later participant comment"); expect(polls).toBe(1); expect(loads).toBe(1);
     location.hash = "#/join"; redraw(); await fixture.wait(() => main.workbenchLifecycle.idle());
-    await vi.advanceTimersByTimeAsync(2_000); expect(polls).toBe(1);
-    await main.workbenchLifecycle.retire(); await vi.advanceTimersByTimeAsync(2_000); expect(polls).toBe(1);
+    await vi.advanceTimersByTimeAsync(interval * 2); expect(polls).toBe(1);
+    await main.workbenchLifecycle.retire(); await vi.advanceTimersByTimeAsync(interval * 2); expect(polls).toBe(1);
+    expect(saveSettings).not.toHaveBeenCalled(); expect(setItem).not.toHaveBeenCalled();
+    expect(localStorage.getItem("artroom-page")).toBe(originalSettings);
   } finally {
     await fixture.retire(); vi.useRealTimers(); vi.unstubAllGlobals();
     vi.doUnmock("../src/data.ts"); vi.doUnmock("../src/browser-key-store.ts"); vi.doUnmock("../src/page-key-migration.ts"); vi.resetModules();
