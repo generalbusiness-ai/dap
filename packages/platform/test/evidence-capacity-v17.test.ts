@@ -4,15 +4,14 @@ import { evidenceHoldExtentNamesV17 } from "../src/destination-evidence-capacity
 import type { RulesPolicyV13 } from "../src/rules-policy-v13.ts";
 import type { Entry, FactRef } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, isEntry, isFactRef, isRecord, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, isEntry, isFactRef, isRecord, utf8 } from "@generalbusiness/dap-bytes";
 import { evidenceBindingDigest, type EvidenceBinding } from "../src/evidence.ts";
 import { EVIDENCE_BINDING_TEXT_V17, readBindingTextV17 } from "../src/destination-evidence-v17.ts";
 import { d, keys, otherLane } from "@generalbusiness/dap-derive/testing";
-import type { Item, RuleGiven } from "@generalbusiness/dap-derive";
-import { evidenceFundCapacityV17, evidencePendingCapacityForecastV17, readEvidenceCapacityWireV17 } from "../src/destination-evidence-capacity-v17.ts";
+import { valueDigest, type Item, type RuleGiven } from "@generalbusiness/dap-derive";
+import { evidenceCapacityAnchorOpeningV17, evidenceCapacityPolicyKeyV17, evidenceCapacityPolicyV17, evidenceCapacityWireV17, evidenceFundCapacityV17, evidencePendingCapacityForecastV17, readEvidenceCapacityWireV17 } from "../src/destination-evidence-capacity-v17.ts";
 import type { EvidenceBatchRecordV17 } from "../src/evidence-batch-v17.ts";
-import { certifiedBoundFenceBudgetV17 } from "../src/destination-budget-v17.ts";
-import { evidenceBatchWireV17 } from "../src/evidence-batch-v17.ts";
+import { certifiedBoundFenceBudgetV17, certifiedPublicationWireV17, type CertifiedPublicationStateV17 } from "../src/destination-budget-v17.ts";
 import { rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
 import { RULES_PATTERNS } from "../src/extents.ts";
 import { RULES } from "./support-destination.ts";
@@ -50,34 +49,76 @@ describe("exact pre-publication capacity identities", () => {
       policy: { rules: RULES, head: { seq: 15, hash: d("c") }, revision: 10, proposal: read.digest, policy: read.policy,
         certificate: { request: fact(3, destination), certificate: fact(4, destination), proof: d("d"), commit: "a".repeat(40) }, serviceGeneration: { rules: RULES, seq: 5 } }, jobs: [], planAt: null };
   }
-  function scripted(self: number, counts = { keys: 0, holds: 0, policyGenerations: 0, incidents: 0 }, anchor?: { id: number; capacity: unknown }): RuleGiven {
-    const branch = { id: 0, type: "branch", state: "ready", values: {}, refs: { evidenceLedger: 1 }, parties: {} } as unknown as Item;
-    const ledger = { id: 1, type: "evidence-ledger", state: "ready", values: { counts }, refs: {}, parties: {} } as unknown as Item;
+  function snapshot(source: EvidenceBatchRecordV17): CertifiedPublicationStateV17 {
+    const policy = source.policy, envelope = { configured: true, policy: policy.policy, proposal: policy.proposal, certificate: policy.certificate };
+    return { policy: { observation: { subject: "rules", of: RULES, head: policy.head, revision: policy.revision, definition: "platform:rules@13", at: "2026-10-28T00:00:00.000Z",
+      content: { asked: "rules", approvals: 1, ownerMayReview: false, checks: policy.policy.checks.map(({ name, configuration, required, checker }) => ({ name, configuration, required, checker: checker.member })),
+        labels: [], singleControllerException: false, extents: valueDigest("artroom-rules-extents-3", envelope), roomService: null, serviceGeneration: policy.serviceGeneration } },
+      input: { rules: RULES, destination, extents: envelope }, touched: [...source.touched], required: [], tree: "b".repeat(40), manifest: fact(5) }, generations: [] };
+  }
+  type Anchor = { id: number; capacity: string; policy: string };
+  function initialAnchor(source = batch(10, ["code"])): Anchor {
+    return { id: 2, capacity: evidenceCapacityWireV17({ v: 1, owner: 2, generation: { rules: RULES, seq: source.policy.revision }, holds: [], incidents: [] }),
+      policy: certifiedPublicationWireV17(snapshot(source), PROPOSED_BOUNDS) };
+  }
+  function afterFunding(anchor: Anchor, funded: NonNullable<ReturnType<typeof evidenceFundCapacityV17>>): Anchor {
+    const effect = funded.effects.find(effect => effect.effect === "value" && effect.item === anchor.id && effect.slot === "capacity");
+    if (!effect) return anchor;
+    if (effect.effect !== "value" || typeof effect.value !== "string") throw Error("The scripted generation update must retain canonical text");
+    return { ...anchor, capacity: effect.value };
+  }
+  function scripted(self: number, counts = { keys: 0, holds: 0, policyGenerations: 1, incidents: 0 }, anchor: Anchor | null = initialAnchor()): RuleGiven {
+    const branch: Item = { id: 0, type: "branch", state: "ready", values: {}, refs: { evidenceLedger: 1 }, parties: {}, opened: d("a"), revision: 1, attributed: [] };
+    const ledger: Item = { id: 1, type: "evidence-ledger", state: "ready", values: { counts }, refs: {}, parties: {}, opened: d("a"), revision: 1, attributed: [] };
+    const generation = { rules: RULES, seq: 10 }, policyKey = evidenceCapacityPolicyKeyV17(generation);
+    const capacity: Item | null = anchor ? { id: anchor.id, type: "evidence-capacity", state: "ready", opened: d("a"), revision: anchor.id, parties: {},
+      refs: { capture: fact(11, destination) }, values: { capacity: anchor.capacity, policy: anchor.policy, policyKey }, attributed: [] } : null;
+    const captured: Entry = { v: 1, at: destination, seq: 11, prev: d("a"), time: "2026-10-28T00:00:00.000Z", clamped: false, epoch: 0,
+      input: { type: "outcome", owner: "platform:destination@17", kind: "judge", operation: "10:0", attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: {} } }, uses: [], prepared: [], effects: [], sends: [] };
     return { input: { type: "delivery", from: fact(20, destination), n: 0, message: { class: "request", type: "tell", body: { message: "evidence-fund", fields: {} } } },
       time: "2026-10-28T00:00:00.000Z", uses: [], resolved: { at: destination, self, bounds: PROPOSED_BOUNDS },
-      state: { page: (type: string) => ({ items: type === "branch" ? [branch] : type === "evidence-ledger" ? [ledger] : [], more: false }), lookup: () => anchor ? [anchor.id] : [],
-        item: (id: number) => id === 0 ? branch : id === 1 ? ledger : anchor && id === anchor.id ? { id, values: { capacity: anchor.capacity } }
-          : [10, 30, 40, 50].includes(id) ? { id, type: "publication", refs: { manifest: fact(5) }, values: {} } : null,
+      own: (seq: number) => seq === 11 ? { entry: captured, hash: entryHash(captured) } : null,
+      state: { page: (type: string) => ({ items: type === "branch" ? [branch] : type === "evidence-ledger" ? [ledger] : type === "evidence-capacity" && capacity ? [capacity] : [], more: false }),
+        lookup: (type: string, index: string, key: string) => type === "evidence-capacity" && index === "policyKey" && key === canonicalize(policyKey) && capacity ? [capacity.id] : [],
+        item: (id: number) => id === 0 ? branch : id === 1 ? ledger : capacity && id === capacity.id ? capacity
+          : [10, 30, 40, 50].includes(id) ? { id, type: "publication", refs: { manifest: fact(5) }, values: { reservedAt: id + 1 } } : null,
         scope: () => ({ at: destination, head: { seq: 90, hash: d("a") } }) },
     } as unknown as RuleGiven;
   }
+  it("charges the policy generation when its nonholder anchor opens, before any batch reserves incidents or holds", () => {
+    const source = batch(10, ["code"]), given = scripted(2, { keys: 0, holds: 0, policyGenerations: 0, incidents: 0 }, null);
+    const publication = given.state.item(10);
+    if (!publication) throw Error("The scripted captured publication is required");
+    const effects = evidenceCapacityAnchorOpeningV17(given, publication, snapshot(source));
+    expect(effects).toHaveLength(6);
+    expect(effects.filter(effect => effect.effect === "open")).toEqual([{ effect: "open", item: 2, type: "evidence-capacity", state: "ready" }]);
+    expect(effects.find(effect => effect.effect === "value" && effect.slot === "counts")).toMatchObject({ item: 1,
+      value: { keys: 0, holds: 0, policyGenerations: 1, incidents: 0 } });
+    const value = effects.find(effect => effect.effect === "value" && effect.slot === "capacity");
+    if (value?.effect !== "value") throw Error("The nonholder anchor retains its initial capacity");
+    expect(readEvidenceCapacityWireV17(value.value)).toEqual({ v: 1, owner: 2, generation: { rules: RULES, seq: 10 }, holds: [], incidents: [] });
+    expect(evidenceFundCapacityV17(given, source)).toBeNull(); // The opening must fold before a batch can spend it.
+  });
   it("reserves a hold key once across publications and adds only newly touched keys", () => {
-    const first = evidenceFundCapacityV17(scripted(100), batch(10, ["code"]));
+    const owner = initialAnchor(), first = evidenceFundCapacityV17(scripted(100, undefined, owner), batch(10, ["code"]));
     expect(first).not.toBeNull();
+    expect(readEvidenceCapacityWireV17(first!.capacity)).toMatchObject({ owner: 2, holds: null });
+    const anchor = afterFunding(owner, first!);
     const counts = { keys: 0, holds: 1, policyGenerations: 1, incidents: 1 };
-    const repeated = evidenceFundCapacityV17(scripted(101, counts, { id: 100, capacity: first!.capacity }), batch(30, ["code"]));
+    const repeated = evidenceFundCapacityV17(scripted(101, counts, anchor), batch(30, ["code"]));
     expect(repeated?.effects.find(effect => effect.effect === "value" && effect.slot === "counts")).toMatchObject({ item: 1, value: { ...counts, incidents: 2 } });
-    const expanded = evidenceFundCapacityV17(scripted(102, counts, { id: 100, capacity: first!.capacity }), batch(40, ["code", "docs"]));
+    const expanded = evidenceFundCapacityV17(scripted(102, counts, anchor), batch(40, ["code", "docs"]));
     expect(expanded?.effects.find(effect => effect.effect === "value" && effect.slot === "counts")).toMatchObject({ item: 1, value: { ...counts, holds: 2, incidents: 2 } });
   });
-  it("refuses prefunding below the complete initial-to-anchor admission effect ceiling", () => {
-    // SCRIPTED generation with no existing owner: the production forecast
-    // must cover both this job becoming the anchor and a distinct first owner.
+  it("refuses prefunding one effect below the complete admission with a distinct generation anchor", () => {
+    // The generation already owns its nonholder anchor. The job may own
+    // the hold or follow another job owner. Both require the separate
+    // generation-capacity update and the one automatic attempt record.
     const source = batch(10, ["code"]), given = scripted(100);
     const at = (derivedEffects: number): RuleGiven => ({ ...given, resolved: { ...given.resolved,
       bounds: { ...given.resolved.bounds, derivedEffects } } });
-    expect(evidenceFundCapacityV17(at(12), source)).not.toBeNull();
-    expect(evidenceFundCapacityV17(at(11), source)).toBeNull();
+    expect(evidenceFundCapacityV17(at(13), source)).not.toBeNull();
+    expect(evidenceFundCapacityV17(at(12), source)).toBeNull();
   });
   it("prefunds the no-item bound fence with all future claims, fact uses and its implicit reply", () => {
     const source = batch(10, ["code"]), quote = certifiedBoundFenceBudgetV17(PROPOSED_BOUNDS, source, fact(5));
@@ -120,35 +161,44 @@ describe("exact pre-publication capacity identities", () => {
     expect(evidenceFundCapacityV17(scripted(100), batch(10, []))).toBeNull();
   });
   it("reserves three publication identities before work and refuses a fourth without eviction", () => {
-    const first = evidenceFundCapacityV17(scripted(100), batch(10, ["code"]));
+    let anchor = initialAnchor();
+    const first = evidenceFundCapacityV17(scripted(100, undefined, anchor), batch(10, ["code"]));
     expect(first).not.toBeNull();
-    let capacity = first!.capacity;
+    anchor = afterFunding(anchor, first!);
     for (const [n, seq] of [30, 40].entries()) {
-      const next = evidenceFundCapacityV17(scripted(101 + n, { keys: 0, holds: 1, policyGenerations: 1, incidents: 1 + n }, { id: 100, capacity }), batch(seq, ["code"]));
+      const next = evidenceFundCapacityV17(scripted(101 + n, { keys: 0, holds: 1, policyGenerations: 1, incidents: 1 + n }, anchor), batch(seq, ["code"]));
       expect(next).not.toBeNull();
-      const update = next!.effects.find(effect => effect.effect === "value" && effect.item === 100 && effect.slot === "capacity");
+      const update = next!.effects.find(effect => effect.effect === "value" && effect.item === 2 && effect.slot === "capacity");
       if (!update || update.effect !== "value") throw Error("The scripted shared anchor was not reserved");
-      capacity = update.value!;
+      anchor = afterFunding(anchor, next!);
     }
-    const slots = readEvidenceCapacityWireV17(capacity)!.holds![0]!.pending;
+    const slots = readEvidenceCapacityWireV17(anchor.capacity)!.holds![0]!.pending;
     expect(slots.map(slot => [slot.publication.seq, slot.job, slot.admittedAt])).toEqual([[10, null, null], [30, null, null], [40, null, null]]);
-    const before = JSON.stringify(capacity);
-    expect(evidenceFundCapacityV17(scripted(103, { keys: 0, holds: 1, policyGenerations: 1, incidents: 3 }, { id: 100, capacity }), batch(50, ["code"]))).toBeNull();
-    expect(JSON.stringify(capacity)).toBe(before);
+    const before = JSON.stringify(anchor.capacity);
+    expect(evidenceFundCapacityV17(scripted(103, { keys: 0, holds: 1, policyGenerations: 1, incidents: 3 }, anchor), batch(50, ["code"]))).toBeNull();
+    expect(JSON.stringify(anchor.capacity)).toBe(before);
   });
   it("future carriers quote all frozen potential extent keys and all three bound pointers, beyond the sparse current anchor", () => {
-    const source = batch(10, ["code"]), first = evidenceFundCapacityV17(scripted(100), source);
+    const source = batch(10, ["code"]), owner = initialAnchor(source), first = evidenceFundCapacityV17(scripted(100, undefined, owner), source);
     expect(first).not.toBeNull();
-    const given = scripted(101, { keys: 0, holds: 1, policyGenerations: 1, incidents: 1 }, { id: 100, capacity: first!.capacity });
-    const original = given.state.item.bind(given.state);
-    const future = evidencePendingCapacityForecastV17({ ...given, state: { ...given.state, item: (id: number) => id === 100
-      ? { ...original(id)!, values: { capacity: first!.capacity, batch: evidenceBatchWireV17(source) } } : original(id) } }, 100, otherLane);
+    const anchor = afterFunding(owner, first!), given = scripted(101, { keys: 0, holds: 1, policyGenerations: 1, incidents: 1 }, anchor);
+    const future = evidencePendingCapacityForecastV17(given, 2, otherLane);
     const effect = future[0];
     if (!effect || effect.effect !== "value") throw Error("The actual future carrier helper gave no capacity");
     const decoded = readEvidenceCapacityWireV17(effect.value)!;
-    expect(readEvidenceCapacityWireV17(first!.capacity)!.holds!.map(row => row.key.extent)).toEqual(["code"]);
+    expect(readEvidenceCapacityWireV17(first!.capacity)!.holds).toBeNull();
+    expect(readEvidenceCapacityWireV17(anchor.capacity)!.holds!.map(row => row.key.extent)).toEqual(["code"]);
     expect(decoded.holds!.map(row => row.key.extent).sort()).toEqual(["code", "docs", "rules"]);
     expect(decoded.holds!.every(row => row.pending.length === 3 && row.pending.every(slot => slot.job !== null && slot.admittedAt !== null))).toBe(true);
-    expect(JSON.stringify(effect.value).length).toBeGreaterThan(JSON.stringify(first!.capacity).length);
+    expect(JSON.stringify(effect.value).length).toBeGreaterThan(JSON.stringify(anchor.capacity).length);
+  });
+  it("rejects an anchor with a borrowed owner or a policy generation that its strict policy text does not describe", () => {
+    const source = batch(10, ["code"]), anchor = initialAnchor(source), held = readEvidenceCapacityWireV17(anchor.capacity)!;
+    expect(evidenceCapacityPolicyV17(scripted(100, undefined, anchor).state, 2, PROPOSED_BOUNDS)).toEqual(source.policy.policy);
+    const wrongOwner = { ...anchor, capacity: evidenceCapacityWireV17({ ...held, owner: 100 }) };
+    expect(evidenceFundCapacityV17(scripted(100, undefined, wrongOwner), source)).toBeNull();
+    const wrongGeneration = { ...anchor, capacity: evidenceCapacityWireV17({ ...held, generation: { ...held.generation, seq: 11 } }) };
+    expect(evidenceCapacityPolicyV17(scripted(100, undefined, wrongGeneration).state, 2, PROPOSED_BOUNDS)).toBeNull();
+    expect(evidenceFundCapacityV17(scripted(100, undefined, wrongGeneration), source)).toBeNull();
   });
 });

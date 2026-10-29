@@ -3,7 +3,10 @@ import type { FieldValue, PlatformData } from '@generalbusiness/dap-contract';
 import { canonicalize, isDigest, isFactRef, same, utf8 } from '@generalbusiness/dap-bytes';
 import { type RuleGiven, type Rules, type RuleEffect } from '@generalbusiness/dap-derive';
 import { destination4, destinationRulesForV17 } from './destination.ts';
-import { evidenceDestinationProfileV17, evidenceDestinationDataV17, evidenceDestinationRulesV17, evidenceFundCapacityV17, evidenceCapacityValidV17, evidenceJobStateV17, evidenceReadyUpdateV17 } from './destination-evidence-v17.ts';
+import { evidenceDestinationProfileV17, evidenceDestinationDataV17, evidenceDestinationRulesV17, evidenceFundCapacityV17, evidenceCapacityValidV17, evidenceJobStateV17, evidenceReadyUpdateV17, evidenceAccountTerminalV17 } from './destination-evidence-v17.ts';
+import { evidenceCapacityAnchorOpeningV17 } from './destination-evidence-capacity-v17.ts';
+import { evidenceAccountOpeningV17, evidenceAccountSettlementDataV17, evidenceAccountSettlementRulesV17 } from './evidence-account-settlement-v17.ts';
+import { publicationSettlementDataV17, publicationSettlementRulesV17 } from './publication-settlement-v17.ts';
 import { fundingData, fundingRules } from './destination-evidence-funding-v17.ts';
 import { certifiedPublicationStateWireV17 } from './destination-budget-v17.ts';
 import { RULES_POLICY_VALUE_V13, rulesPolicyProposalV13, rulesPolicyPatternsV13 } from './rules-policy-v13.ts';
@@ -135,10 +138,11 @@ const certifiedDestinationRulesV17:Rules={...baseRules,
   }},
 };
 
-export const destinationV17:PlatformData=fundingData(evidenceDestinationDataV17(certifiedDestinationV17));
-export const destinationRulesV17:Rules=fundingRules(evidenceDestinationRulesV17(certifiedDestinationRulesV17), {
+export const destinationV17:PlatformData=publicationSettlementDataV17(evidenceAccountSettlementDataV17(fundingData(evidenceDestinationDataV17(certifiedDestinationV17))));
+export const destinationRulesV17:Rules=publicationSettlementRulesV17(evidenceAccountSettlementRulesV17(fundingRules(evidenceDestinationRulesV17(certifiedDestinationRulesV17), {
   fundCapacity:evidenceFundCapacityV17,capacityValid:evidenceCapacityValidV17,jobState:evidenceJobStateV17,readyUpdate:evidenceReadyUpdateV17,
-});
+  capacityAnchor:evidenceCapacityAnchorOpeningV17,accountOpening:evidenceAccountOpeningV17,
+}),{terminal:evidenceAccountTerminalV17}),destinationV17);
 export { destinationEvidenceJob,destinationEvidenceAdmissionCurrent,destinationEvidencePending,destinationEvidenceResultPending,destinationEvidenceNoticePending,destinationEvidenceProgressPending,evidenceFloorReferencesV17,WORK_COMMIT_PROOF_V17,EVIDENCE_ADMIT_V17 } from "./destination-evidence-v17.ts";
 export type { EvidenceJobAdmissionV17 } from "./destination-evidence-v17.ts";
 export { readEvidenceJobRecordWireV17, evidenceJobRecordWireV17, readEvidenceServiceWireV17, EVIDENCE_RECORD_BYTES_V17, EVIDENCE_SERVICE_BYTES_V17 } from "./destination-evidence-v17.ts";

@@ -9,8 +9,8 @@ import { requiredChecksV17, type ReservationPolicyViewV17 } from "./reservation-
 import { checkStageV13, rulesPolicyProposalV13, type RulesCheckV13 } from "./rules-policy-v13.ts";
 import { evidenceWireV17, readEvidenceWireV17 } from "./evidence-wire-v17.ts";
 
-export const EVIDENCE_BATCH_JOBS_V17 = 8;
-export const EVIDENCE_BATCH_ACCOUNTS_V17 = 4;
+export const EVIDENCE_BATCH_JOBS_V17 = 2;
+export const EVIDENCE_BATCH_ACCOUNTS_V17 = 16;
 export interface EvidenceBatchRecordV17 {
   v: 1; publication: FactRef; operation: FactRef; capture: FactRef;
   ordinal: number; total: number; touched: readonly string[];

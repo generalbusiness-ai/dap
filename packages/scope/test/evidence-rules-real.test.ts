@@ -7,7 +7,7 @@ import { isObjectId } from "@generalbusiness/dap-git";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { EVIDENCE_RULES_COHORT } from "../../platform/src/evidence-cohort.ts";
 import { claimEvidenceWork, configureEvidenceRules, enrolEvidenceKey, evidenceCertificate, evidenceChecker, evidenceNativeRoom,
-  evidenceEntry, evidenceItems as hardeningItems, evidenceNativeDiagnostic, evidenceNativeState, evidenceRecord, evidenceRulesObservation, evidenceRulesPolicy, prepareEvidenceWork, publishEvidenceRulesCertificate, requestEvidenceWork } from "./evidence-rules-real-fixture.ts";
+  evidenceEntry, evidenceFundingDispatch, evidenceFundingReplies, evidenceItems as hardeningItems, evidenceNativeDiagnostic, evidenceNativeState, evidenceRecord, evidenceRulesObservation, evidenceRulesPolicy, prepareEvidenceWork, publishEvidenceRulesCertificate, requestEvidenceWork } from "./evidence-rules-real-fixture.ts";
 import { claimLandingEvidence, claimPublishedEvidence, evidenceFailureNotice, evidenceOutcomeRace, prepareAuditEvidence, prepareLandingEvidence,
   preparePublishedEvidence, publishEvidenceFile, requestLandingEvidence, revisePublishedEvidence, type LandingEvidenceJob } from "./evidence-rules-real-fixture.ts";
 import { runEvidenceContainerCase } from "./evidence-runner-case.ts";
@@ -428,6 +428,12 @@ test("literal native TIME holds at its own head, replays unchanged, and recovers
     const b = await publishEvidenceFile(room, setup, 'TEST pending B'), bJob = await b.job();
     const c = await publishEvidenceFile(room, setup, 'TEST literal TIME target'), target = await c.job();
     const full = await evidenceNativeState(room), pending = full.capacities.flatMap(row => row.holds ?? []).filter(row => row.key.extent === 'other');
+    expect(full.capacityAnchors).toHaveLength(1);
+    const anchor = full.capacityAnchors[0]!;
+    expect(anchor.capacity.generation).toEqual(target.binding.policyGeneration);
+    expect([aJob.record.policyOwner, bJob.record.policyOwner, target.record.policyOwner]).toEqual([anchor.item.id, anchor.item.id, anchor.item.id]);
+    expect(full.fundingBatches).toHaveLength(3);
+    expect(full.fundingBatches.every(row => row.capacity.owner === anchor.item.id && row.capacity.holds === null)).toBe(true);
     expect(pending).toHaveLength(1); expect(pending[0]!.pending.map(row => row.job)).toEqual([aJob.job, bJob.job, target.job]);
     const fundedBefore = await hardeningItems(room.G, 'evidence-batch');
     expect(fundedBefore).toHaveLength(3);
@@ -454,7 +460,7 @@ test("literal native TIME holds at its own head, replays unchanged, and recovers
       && canonicalize(entry.input.message.body['fields']['operation']) === canonicalize(excess.operation));
     expect(refusedFunding).toHaveLength(1);
     expect(refusedFunding[0]!.input).toMatchObject({ decision: 'refused', reason: { code: 'guard-failed', name: 'evidence-funding-unavailable' } });
-    expect(refusedFunding[0]!.effects.some(effect => effect.effect === 'open' && ['evidence-batch', 'evidence-job'].includes(effect.type))).toBe(false);
+    expect(refusedFunding[0]!.effects.some(effect => effect.effect === 'open' && ['evidence-capacity', 'evidence-batch', 'evidence-job'].includes(effect.type))).toBe(false);
     expect(pushes()).toBe(pushed); expect(room.host.stand.refs.get('refs/heads/main')).toBe(main);
     expect(await hardeningItems(excess.lane, 'job')).toHaveLength(0);
     expect((await evidenceNativeState(room)).capacities.flatMap(row => row.holds ?? []).find(row => row.key.extent === 'other')?.pending).toEqual(pending[0]!.pending);
@@ -698,6 +704,72 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
     expect(room.host.stand.refs.get("refs/heads/main")).toBe(before);
     expect(await evidenceRecord(room, memberJob)).toMatchObject({ result: memberResult });
     expect(await evidenceRecord(room, auditJob)).toMatchObject({ result: auditResult });
+  } finally { room.life.release(); }
+});
+
+test('partial native funding remains unready and withdraws before the original next-account retry releases its prefix', { timeout: 240_000 }, async () => {
+  const room = await evidenceNativeRoom();
+  try {
+    const setup = await preparePublishedEvidence(room, { names: Array.from({ length: 32 }, (_, n) => `published-${String(n).padStart(2, '0')}`), holds: false });
+    const replies = await evidenceFundingReplies(room), main = room.host.stand.refs.get('refs/heads/main');
+    const pushes = () => room.gitRequests.filter(row => row.method === 'POST' && row.path.endsWith('/git-receive-pack')).length;
+    const beforePushes = pushes(), change = await publishEvidenceFile(room, setup, 'Partial funding under the unchanged byte bound');
+    const partial = await evidenceNativeState(room), prefix = partial.fundingBatches
+      .filter(row => canonicalize(row.batch.operation) === canonicalize(change.operation)).sort((a, b) => a.batch.ordinal - b.batch.ordinal);
+    expect(prefix.length).toBeGreaterThan(0); expect(prefix.length).toBeLessThan(16);
+    expect(prefix.map(row => row.batch.ordinal)).toEqual(Array.from({ length: prefix.length }, (_, n) => n));
+    for (const row of prefix) {
+      expect(row.batch.total).toBe(16); expect(row.batch.checks).toHaveLength(2); expect(row.batch.jobs).toHaveLength(0);
+      expect(row.batch.checks.every(check => check.holds === false)).toBe(true);
+      expect(row.item.values['ready']).toBe(false); expect(row.holder).not.toBeNull(); expect(row.holderSettled).toBe(false);
+    }
+    const publication = (await hardeningItems(room.G, 'publication')).find(item => canonicalize(item.refs['operation']) === canonicalize(change.operation));
+    expect(publication).toMatchObject({ state: 'reserved' });
+    expect(await hardeningItems(change.lane, 'job')).toHaveLength(0);
+    expect(pushes()).toBe(beforePushes); expect(room.host.stand.refs.get('refs/heads/main')).toBe(main);
+    expect(replies.overflow()).toBe(false);
+    const original = replies.rows.find(row => row.answer?.answer === 'retry' && row.answer.reason === 'scope-full');
+    if (!original || original.ordinal === null) throw Error(`Actual next-account capacity refusal required: ${await evidenceNativeDiagnostic([room.G])}`);
+    expect(original.answer).toMatchObject({ answer: 'retry', reason: 'scope-full', name: 'scopeBytes' });
+    expect(original.ordinal).toBe(prefix.length);
+    const source = await evidenceEntry(room.G, original.from.seq), send = source.sends.find(row => row.n === original.n);
+    if (!send || !isRecord(send.message) || send.message.class !== 'request' || send.message.type !== 'tell'
+      || !isRecord(send.message.body) || !isRecord(send.message.body['fields'])) throw Error('Actual original next-fund send required');
+    expect(send.message.body['message']).toBe('evidence-fund');
+    expect(send.message.body['fields']).toMatchObject({ operation: change.operation, ordinal: original.ordinal });
+    const waiting = await evidenceFundingDispatch(room, original);
+    expect(waiting.outbox).toMatchObject({ acknowledged: null, result: null, diagnosis: null });
+    expect(waiting.outbox?.attempts).toHaveLength(1); expect(waiting.outbox?.attempts[0]?.answer).toBe('retry');
+    await change.lane.did(rita, 'cancel-merge', { on: change.operation.seq, expected: await change.lane.expected({ on: change.operation.seq, proposal: 0 }) });
+    await room.pause(room.nodes);
+    const withdrawn = (await hardeningItems(room.G, 'publication')).find(item => item.id === publication?.id);
+    expect(['aborted', 'cleanup-aborted', 'cleanup-deleted', 'cleaned', 'closing-aborted', 'closing-cleaned', 'closing-not-reserved']).toContain(withdrawn?.state);
+    const retry = await evidenceFundingDispatch(room, original);
+    expect(retry.outbox).toMatchObject({ acknowledged: null, result: null, diagnosis: null });
+    if (retry.next === null || retry.next <= room.life.now()) throw Error('Actual future dispatch retry boundary required');
+    expect(retry.duePageComplete).toBe(true); expect(retry.dueIncludesOriginal).toBe(true);
+    room.life.advance(retry.next - room.life.now());
+    await room.G.stub.dispatch(); await room.pause(room.nodes);
+    expect(replies.overflow()).toBe(false);
+    const attempts = replies.rows.filter(row => canonicalize(row.from) === canonicalize(original.from) && row.n === original.n);
+    expect(attempts).toHaveLength(2); expect(attempts.map(row => row.ordinal)).toEqual([original.ordinal, original.ordinal]);
+    const acknowledged = attempts[1]!.answer;
+    expect(acknowledged).toMatchObject({ answer: 'recorded' });
+    if (!acknowledged || acknowledged.answer !== 'recorded') throw Error('Actual refusal acknowledgement required');
+    const refusal = await evidenceEntry(room.G, acknowledged.fact.seq);
+    expect(refusal.input).toMatchObject({ type: 'delivery', from: original.from, n: original.n, decision: 'refused',
+      reason: { code: 'guard-failed', name: 'evidence-funding-unavailable' }, message: send.message });
+    expect(refusal.effects.some(effect => effect.effect === 'open' && ['evidence-capacity', 'evidence-batch', 'evidence-job'].includes(effect.type))).toBe(false);
+    const settledSend = await evidenceFundingDispatch(room, original);
+    expect(settledSend.outbox).toMatchObject({ acknowledged: acknowledged.fact, result: { clause: 'refused' } });
+    const settled = await evidenceNativeState(room), closed = settled.fundingBatches.filter(row => prefix.some(prior => prior.item.id === row.item.id));
+    expect(closed).toHaveLength(prefix.length); expect(settled.fundingBatches).toHaveLength(prefix.length);
+    for (const row of closed) {
+      expect(row.item.state).toBe('closed'); expect(row.holder).toBeNull(); expect(row.holderSettled).toBe(true);
+      expect(row.batch.jobs).toHaveLength(0); expect(row.item.values['ready']).toBe(false);
+    }
+    expect(pushes()).toBe(beforePushes); expect(room.host.stand.refs.get('refs/heads/main')).toBe(main);
+    expect(await hardeningItems(change.lane, 'job')).toHaveLength(0);
   } finally { room.life.release(); }
 });
 

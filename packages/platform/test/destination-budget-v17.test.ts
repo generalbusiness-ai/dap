@@ -93,7 +93,7 @@ test("published written callbacks and the separate plan dispatch fit before push
   // original capture authority are exercised by the separate real journey.
   const measured = certifiedWrittenPlanBudgetV17(PROPOSED_BOUNDS);
   expect(measured.admitted).toBe(true);
-  expect(measured.effects).toBe(11);
+  expect(measured.effects).toBe(13);
   for (const variant of measured.variants) {
     const entry = { ...variant.entry, uses: Array.from({ length: PROPOSED_BOUNDS.usesPerEntry }, (_, n) => ({
       fact: { ...fact(n, destination), seq: Number.MAX_SAFE_INTEGER - n }, content: d("f"),
@@ -106,9 +106,9 @@ test("published written callbacks and the separate plan dispatch fit before push
   }
   const receipt = measured.variants.find(variant => variant.name === "receipt")!;
   expect(receipt.entry.effects.filter(effect => effect.effect === "operation").map(effect => effect.kind))
-    .toEqual(["revoke", "reservation-delete", "mint", "evidence-plan"]);
+    .toEqual(["revoke", "reservation-delete", "mint", "evidence-plan", "publication-settle"]);
   const read = measured.variants.find(variant => variant.name === "read")!;
-  expect(read.effects).toBe(4);
+  expect(read.effects).toBe(6);
   expect(read.observed).toBe(observationBytes("rules", PROPOSED_BOUNDS) + 9 * observationBytes("key", PROPOSED_BOUNDS)
     + 65 * observationBytes("member", PROPOSED_BOUNDS) + observationBytes("holders", PROPOSED_BOUNDS, 1) + 75
     + utf8(canonicalize({ ...read.entry.input, observed: [] })).length - utf8(canonicalize(read.entry.input)).length);

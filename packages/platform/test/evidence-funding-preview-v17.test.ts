@@ -3,10 +3,10 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Bounds, type Effect, type Entry, type FactRef, type Input, type RulesObservation, type Sealed } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, isEntry, isRecord } from "@generalbusiness/dap-bytes";
-import { MemoryState, clockOf, outcomeOf, ownersOf, validateDefinition, valueDigest, type RuleEffect, type RuleGiven, type RuleRequest, type Rules } from "@generalbusiness/dap-derive";
+import { MemoryState, clockOf, operationOpening, outcomeOf, ownersOf, validateDefinition, valueDigest, type RuleEffect, type RuleGiven, type RuleRequest, type Rules } from "@generalbusiness/dap-derive";
 import { d, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { certifiedPublicationWireV17, certifiedWrittenPlanBudgetV17, evidenceCarryingBudgetV17, type CertifiedPublicationStateV17 } from "../src/destination-budget-v17.ts";
-import { EVIDENCE_FUNDING_V17, destinationEvidenceFundingPending, evidenceFundedBatchV17, evidenceFundingCaptureV17, evidenceFundingCompleteV17, evidenceFundingReadyV17, fundingRules } from "../src/destination-evidence-funding-v17.ts";
+import { EVIDENCE_FUNDING_V17, destinationEvidenceFundingPending, destinationPublishedChecksPending, evidenceFundedBatchV17, evidenceFundingCaptureV17, evidenceFundingCompleteV17, evidenceFundingReadyV17, fundingRules } from "../src/destination-evidence-funding-v17.ts";
 import { evidenceReadyUpdateV17 } from "../src/destination-evidence-v17.ts";
 import { evidenceBatchWireV17, readEvidenceBatchWireV17 } from "../src/evidence-batch-v17.ts";
 import { destinationV17 } from "../src/destination-v17.ts";
@@ -15,11 +15,11 @@ import { RULES_PATTERNS } from "../src/extents.ts";
 import { rulesPolicyProposalV13 } from "../src/rules-policy-v13.ts";
 import { requiredChecksV17 } from "../src/reservation-v17.ts";
 
-function fundingPreview(options: { checks?: number; productionReady?: boolean; stageFirst?: boolean; stage?: "landing" | "published" } = {}) {
+function fundingPreview(options: { checks?: number; productionReady?: boolean; stageFirst?: boolean; stage?: "landing" | "published"; landingChecks?: number; refuseCapacityOrdinal?: number } = {}) {
   const destination = { ...otherLane, kind: "destination" as const }, rules = { ...otherLane, kind: "rules" as const };
   const fact = (seq: number, at = otherLane): FactRef => ({ at, seq, hash: d("a") });
   const proposed = rulesPolicyProposalV13({ approvals: 1, ownerMayReview: false, roomService: null, labels: ['TEST\\"'],
-    checks: Array.from({ length: options.checks ?? 1 }, (_, n) => ({ name: `published${n}`, configuration: d("b"), required: true, checker: keys.una.member, stage: options.stage ?? "published" })),
+    checks: Array.from({ length: options.checks ?? 1 }, (_, n) => ({ name: `published${n}`, configuration: d("b"), required: true, checker: keys.una.member, stage: n < (options.landingChecks ?? 0) ? "landing" : options.stage ?? "published" })),
     extents: [
       { name: "rules", patterns: [...RULES_PATTERNS], approvals: 1, approver: "change.review", checks: [], class: "authority" },
       { name: "source", patterns: [], approvals: 1, approver: "change.review", checks: [], class: "content" },
@@ -71,8 +71,15 @@ function fundingPreview(options: { checks?: number; productionReady?: boolean; s
     "publication-update": { place: "send", run: () => baseUpdate },
     "reservation-stage": { place: "outcome", rules: { selects: true, read: false, retries: () => false, most: { effects: 0, requests: 0, operations: 0 },
       derives: () => ({ effects: [], sends: [], opens: [] }) } } };
-  const configured = fundingRules(base, { fundCapacity: () => ({ effects: [], capacity, policyKey: d("f") }), capacityValid: value => value === capacity,
-    jobState: () => null, readyUpdate: options.productionReady ? evidenceReadyUpdateV17 : () => null });
+  const readyUpdates: RuleRequest[] = [];
+  const configured = fundingRules(base, { capacityAnchor: () => [], accountOpening: holder => operationOpening(0, { owner: "platform:destination@17", kind: "evidence-account-settle", attempts: 1, for: holder }),
+    // SCRIPTED capacity admission: a refusal gives no replacement holder.
+    fundCapacity: (_given, batch) => batch.ordinal === options.refuseCapacityOrdinal ? null : { effects: [], capacity, policyKey: d("f") }, capacityValid: value => value === capacity,
+    jobState: () => null, readyUpdate: (given, publication, accounts) => {
+      const request = options.productionReady ? evidenceReadyUpdateV17(given, publication, accounts) : null;
+      if (request) readyUpdates.push(request);
+      return request;
+    } });
   const guard = configured["evidence-fund-v17"], effects = configured["evidence-fund-open-v17"];
   if (guard?.place !== "guard" || effects?.place !== "effect") throw Error("The actual funding guard and effect are required");
   const self = 6;
@@ -81,7 +88,7 @@ function fundingPreview(options: { checks?: number; productionReady?: boolean; s
   const fundingGiven: RuleGiven = { state, own, time: t(0), uses: [], observed: () => null, value: () => undefined, placed: () => undefined,
     input: { type: "outcome", owner: "platform:destination@17", kind: EVIDENCE_FUNDING_V17, operation: "3:1", attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: { capture: captureFact } } },
     resolved: { at: destination, self: 5, fields: {}, subjects: new Map(), signer: null, bounds: PROPOSED_BOUNDS } };
-  const first = fundingSend.run(fundingGiven);
+  const first = (options.checks ?? 1) > 0 ? fundingSend.run(fundingGiven) : null;
   const dispatchEntry = seal(5, { type: "outcome", owner: "platform:destination@17", kind: EVIDENCE_FUNDING_V17, operation: "3:1", attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: { capture: captureFact } } }, [],
     first ? [{ n: 0, ...first }] : []);
   history.set(5, dispatchEntry);
@@ -119,7 +126,7 @@ function fundingPreview(options: { checks?: number; productionReady?: boolean; s
       state.putItem({ ...item, values: { ...item.values, ready: effect.value } });
     }
   };
-  return { given, guard, effects, implicit, capacity, state, configured, baseUpdate, batch, stamp, history, own, captureFact, fundingGiven, snapshot };
+  return { given, guard, effects, implicit, capacity, state, configured, baseUpdate, batch, stamp, history, own, captureFact, fundingGiven, snapshot, readyUpdates, seal };
 }
 
 test("the actual funding preview includes its implicit batch open at exact byte and effect edges without emitting it twice", () => {
@@ -157,7 +164,7 @@ test("published obligations refuse before capture or new work when the future wr
 });
 
 test("stage-first funding stamps the actual ordinal-zero account when the final account has another item", () => {
-  const fixture = fundingPreview({ checks: 9, productionReady: true, stageFirst: true });
+  const fixture = fundingPreview({ checks: 3, productionReady: true, stageFirst: true });
   const send = fixture.configured["evidence-funding-ready-v17"];
   if (send?.place !== "send") throw Error("The actual funding send is required");
   const first = fixture.given(), firstEffects = fixture.effects.run(first);
@@ -181,6 +188,91 @@ test("stage-first funding stamps the actual ordinal-zero account when the final 
   if (!record) throw Error("The actual encoded ordinal-zero account is required");
   fixture.state.putItem({ ...zero, values: { ...zero.values, batch: evidenceBatchWireV17({ ...record, publication: { ...record.publication, hash: d("e") } }) } });
   expect(evidenceFundingReadyV17(fixture.state, publication)).toBe(false);
+});
+
+test("a SCRIPTED second-account capacity refusal retains the first holder and the original unready publication", () => {
+  const fixture = fundingPreview({ checks: 3, productionReady: true, stageFirst: true, refuseCapacityOrdinal: 1 });
+  const first = fixture.given();
+  expect(fixture.guard.run(first)).toEqual({ holds: true });
+  fixture.batch(first, fixture.effects.run(first));
+  const holder = canonicalize(fixture.state.item(first.resolved.self)), original = canonicalize(fixture.state.operation("3:1"));
+  const second = fixture.given({}, 1), pending = canonicalize(second.input), source = fixture.history.get(first.resolved.self)!;
+  expect(fixture.guard.run(second)).toEqual({ holds: false, name: "evidence-funding-unavailable" });
+  expect(() => fixture.effects.run(second)).toThrow("capacity proof");
+  expect(fixture.state.item(second.resolved.self)).toBeNull();
+  expect(fixture.state.count("evidence-batch", "funded")).toBe(1);
+  const publication = fixture.state.item(2)!;
+  expect(publication.state).toBe("reserved");
+  expect(evidenceFundingCompleteV17(fixture.state, publication)).toBe(false);
+  expect(evidenceFundingReadyV17(fixture.state, publication)).toBe(false);
+  const update = fixture.configured["publication-update"];
+  if (update?.place !== "send") throw Error("The actual readiness release guard is required");
+  expect(update.run(second)).toBeNull();
+  expect(fixture.readyUpdates).toEqual([]);
+  expect(source.entry.effects.some(effect => effect.effect === "operation" && effect.kind === "push")).toBe(false);
+  expect(source.entry.sends.filter(send => send.message.class === "request")).toHaveLength(1);
+  expect(source.entry.sends[0]).toMatchObject({ message: { body: { message: "evidence-fund", fields: { ordinal: 1, capture: fixture.captureFact } } } });
+  expect(canonicalize(second.input)).toBe(pending);
+  expect(canonicalize(fixture.state.operation("3:1"))).toBe(original);
+  expect(canonicalize(fixture.state.item(first.resolved.self))).toBe(holder);
+});
+
+test("a SCRIPTED closed landing account retains its funding proof while the funded published account continues its original plan", () => {
+  const fixture = fundingPreview({ checks: 3, landingChecks: 2 });
+  for (let ordinal = 0; ordinal < 2; ordinal++) {
+    const given = fixture.given({}, ordinal);
+    expect(fixture.guard.run(given)).toEqual({ holds: true });
+    fixture.batch(given, fixture.effects.run(given));
+  }
+  const publication = fixture.state.item(2)!, first = fixture.state.item(6)!, later = fixture.state.item(7)!;
+  const record = readEvidenceBatchWireV17(later.values["batch"]);
+  if (!record) throw Error("The published account must retain its original funding record");
+  const at = fixture.captureFact.at, publicationFact: FactRef = { at, seq: 2, hash: fixture.history.get(2)!.hash }, manifest = fixture.snapshot.policy.manifest;
+  // SCRIPTED accepted receipt, plan dispatch and plan delivery. Real hashes,
+  // retained original plan bytes and actual published callbacks remain in use.
+  const receipt = fixture.seal(38, { type: "outcome", owner: "platform:destination@17", kind: "push", operation: "3:2", attempt: 1,
+    result: "confirmed", evidence: { basis: "own-answer", body: {} } }, []);
+  const receiptFact: FactRef = { at, seq: 38, hash: receipt.hash };
+  const written = fixture.seal(39, { type: "outcome", owner: "platform:destination@17", kind: "receipt", operation: "38:0", attempt: 1,
+    result: "confirmed", evidence: { basis: "own-answer", body: { send: "accepted", seen: "a".repeat(40) } } },
+    [{ effect: "state", item: 38, state: "written" }, ...operationOpening(0, { owner: "platform:destination@17", kind: "evidence-plan", attempts: 1, for: 6 })]);
+  const writtenFact: FactRef = { at, seq: 39, hash: written.hash };
+  const message = { class: "request" as const, type: "tell" as const, body: { message: "evidence-plan-open", fields: {
+    publication: publicationFact, operation: record.operation, receipt: receiptFact, written: writtenFact, manifest,
+  } } };
+  const dispatch = fixture.seal(40, { type: "outcome", owner: "platform:destination@17", kind: "evidence-plan", operation: "39:0", attempt: 1,
+    result: "confirmed", evidence: { basis: "own-answer", body: { written: writtenFact } } }, [], [{ n: 0, to: at, message }]);
+  const plan = { v: 1, publication: publicationFact, operation: record.operation, receipt: receiptFact, written: 39, base: "f".repeat(40), cursor: 0, total: 1 };
+  const planned = { ...record, planAt: 41 };
+  const birth = fixture.seal(41, { type: "delivery", from: { at, seq: 40, hash: dispatch.hash }, n: 0, message, decision: "applied" },
+    [{ effect: "open", item: 41, type: "published-plan", state: "pending" }, { effect: "value", item: 41, slot: "plan", value: canonicalize(plan) },
+      { effect: "value", item: 7, slot: "batch", value: evidenceBatchWireV17(planned) },
+      ...operationOpening(0, { owner: "platform:destination@17", kind: "published-checks", attempts: 1, for: 7 })]);
+  for (const sealed of [receipt, written, dispatch, birth]) fixture.history.set(sealed.entry.seq, sealed);
+  fixture.state.setScope({ ...fixture.state.scope()!, head: { seq: 41, hash: birth.hash } });
+  fixture.state.putItem({ id: 38, type: "receipt", state: "written", opened: receipt.hash, revision: 39, parties: {}, refs: { publication: 2 },
+    values: { commit: "a".repeat(40) }, attributed: [] });
+  fixture.state.putItem({ id: 41, type: "published-plan", state: "pending", opened: birth.hash, revision: 41, parties: {}, refs: {}, values: { plan: canonicalize(plan) }, attributed: [] });
+  fixture.state.putItem({ ...publication, state: "cleaned", refs: { ...publication.refs, manifest } });
+  fixture.state.putItem({ ...later, values: { ...later.values, batch: evidenceBatchWireV17(planned) } });
+  fixture.state.putItem({ ...first, state: "closed" });
+  fixture.state.addCount("evidence-batch", "funded", -1); fixture.state.addCount("evidence-batch", "closed", 1);
+  const operation = { id: "41:0" as const, owner: "platform:destination@17" as const, kind: "published-checks", most: 1, for: 7, selected: null,
+    attempts: [{ attempt: 1, opened: 41, outcomes: [] }] };
+  fixture.state.putOperation(operation);
+  const closed = canonicalize(fixture.state.item(6));
+  expect(evidenceFundedBatchV17(fixture.state, fixture.own, fixture.state.item(6)!, PROPOSED_BOUNDS)?.ordinal).toBe(0);
+  expect(evidenceFundingCompleteV17(fixture.state, fixture.state.item(2)!)).toBe(true);
+  expect(destinationPublishedChecksPending(fixture.state, fixture.own, operation)).toEqual({ plan: { at, seq: 41, hash: birth.hash } });
+  const rule = fixture.configured["evidence-published-checks-v17"], send = fixture.configured["evidence-published-dispatch-v17"];
+  if (rule?.place !== "outcome" || !rule.rules.derives || send?.place !== "send") throw Error("The actual published plan rules are required");
+  const given: RuleGiven = { ...fixture.given(), input: { type: "outcome", owner: operation.owner, kind: operation.kind, operation: operation.id,
+    attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: { plan: { at, seq: 41, hash: birth.hash } } } }, resolved: { ...fixture.given().resolved, self: 42 } };
+  const continuation = rule.rules.derives(given, operation, null);
+  expect(continuation.effects).toContainEqual({ effect: "state", item: 41, state: "complete" });
+  expect(continuation.effects.some(effect => "item" in effect && effect.item === 6)).toBe(false);
+  expect(send.run(given)).toMatchObject({ message: { body: { message: "admit-published-check", fields: { name: "published2" } } } });
+  expect(canonicalize(fixture.state.item(6))).toBe(closed);
 });
 
 test("a newly opening batch zero can carry readiness, while fund-first stage completion stamps that same retained marker once", () => {
@@ -220,7 +312,7 @@ test("zero obligations preserve the base stage update without inventing a fundin
   expect(destinationV17.items["evidence-batch"]!.values["ready"]).toMatchObject({ of: { type: "bool" }, default: false });
 });
 
-test("one counted initial send retains the original capture and proves a serial chain of at most four accounts", () => {
+test("one counted initial send retains the original capture and proves all sixteen two-slot accounts", () => {
   const fixture = fundingPreview({ checks: 32 }), pending = fixture.state.operation("3:1")!;
   expect(destinationEvidenceFundingPending(fixture.state, fixture.own, pending)).toEqual({ capture: fixture.captureFact });
   const outcome = fixture.configured["evidence-funding-outcome-v17"], send = fixture.configured["evidence-funding-dispatch-v17"];
@@ -228,7 +320,7 @@ test("one counted initial send retains the original capture and proves a serial 
   expect(outcome.rules.derives(fixture.fundingGiven, pending, false).sends).toEqual([]);
   expect(send.run(fixture.fundingGiven)).toMatchObject({ message: { body: { fields: { ordinal: 0, capture: fixture.captureFact } } } });
   expect(destinationV17.outcomes[EVIDENCE_FUNDING_V17]!.send).toMatchObject({ once: true, code: "evidence-funding-dispatch-v17" });
-  for (let ordinal = 0; ordinal < 4; ordinal++) {
+  for (let ordinal = 0; ordinal < 16; ordinal++) {
     const context = fixture.given({}, ordinal);
     expect(context.resolved.fields["capture"]).toBe(fixture.captureFact.seq);
     expect(context.resolved.fields["publication"]).toBe(2);
@@ -237,7 +329,7 @@ test("one counted initial send retains the original capture and proves a serial 
     const current = fixture.state.item(context.resolved.self)!;
     expect(evidenceFundedBatchV17(fixture.state, fixture.own, current, PROPOSED_BOUNDS)?.ordinal).toBe(ordinal);
   }
-  expect(fixture.state.count("evidence-batch", "funded")).toBe(4);
+  expect(fixture.state.count("evidence-batch", "funded")).toBe(16);
   expect(evidenceFundingCompleteV17(fixture.state, fixture.state.item(2)!)).toBe(true);
 });
 

@@ -1,5 +1,6 @@
 import { expect } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
+import { env } from "cloudflare:workers";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Answer, Digest, FactRef, Intent, MemberRef, OperationId, Read, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isDigest, isHead, isRecord, isScopeRef, isSeed, same, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
@@ -18,13 +19,16 @@ import { rulesPolicyCheckersV13, rulesPolicyProposalV13, RULES_EXTENTS_VALUE_V13
 import { readEvidenceWireV17 } from "../../platform/src/evidence-wire-v17.ts";
 import { readRulesPolicyReplyV17 } from "../../platform/src/reservation-v17.ts";
 import { currentEvidenceRecordV17, evidenceEffectiveHoldV17, readEvidenceJobRecordWireV17 } from "../../platform/src/destination-evidence-v17.ts";
-import { readEvidenceCapacityWireV17 } from "../../platform/src/destination-evidence-capacity-v17.ts";
+import { evidenceCapacityPolicyKeyV17, readEvidenceCapacityWireV17 } from "../../platform/src/destination-evidence-capacity-v17.ts";
+import { readEvidenceBatchWireV17 } from "../../platform/src/evidence-batch-v17.ts";
 import { evidenceLedgerOfV17 } from "../../platform/src/evidence-ledger-v17.ts";
 import { issueEvidence4 } from "../../../apps/room/lanes/src/issue4.ts";
 import { changeEvidence4 } from "../../../apps/room/lanes/src/change4.ts";
 import { certificateGate, hardeningItems as finalEvidenceItems, hardeningSealed } from "./certified-rules-hardening-fixture.ts";
 import type { EffectRequest, Outside } from "../src/operations.ts";
 import type { OutsideGiven } from "../src/given.ts";
+import type { Delivery } from "../src/ports.ts";
+import { namespace } from "../src/namespace.ts";
 import type { OperationStatus } from "../src/store.ts";
 import { DestinationHost, type DestinationProvider } from "../src/destination-host.ts";
 import { CredentialStore } from "../src/credential-store.ts";
@@ -126,6 +130,38 @@ export async function evidenceNativeRoom() {
   } catch (error) { life.release(); throw error; }
 }
 export type EvidenceRoom = Awaited<ReturnType<typeof evidenceNativeRoom>>;
+
+/** Observe actual funding replies without changing the namespace transport,
+ * its answer, or the dispatcher's retry ownership. */
+export async function evidenceFundingReplies(room: EvidenceRoom) {
+  const transport = namespace(env.PLATFORM).transport;
+  const rows: { from: FactRef; n: number; ordinal: number | null; answer: Delivery | null }[] = [];
+  let overflow = false;
+  room.life.wire(room.G.name, () => ({ transport: { send: async envelope => {
+    const answer = await transport.send(envelope), message = envelope.message;
+    if (message.class === 'request' && message.type === 'tell' && isRecord(message.body) && message.body['message'] === 'evidence-fund') {
+      const ordinal = isRecord(message.body['fields']) ? message.body['fields']['ordinal'] : null;
+      if (rows.length === 64) overflow = true;
+      else rows.push({ from: envelope.from, n: envelope.n, ordinal: typeof ordinal === 'number' && Number.isSafeInteger(ordinal) ? ordinal : null, answer });
+    }
+    return answer;
+  } } }));
+  await room.G.restart();
+  return { rows, overflow: () => overflow };
+}
+
+/** Read one original send and prove its actual next dispatch boundary. */
+export async function evidenceFundingDispatch(room: EvidenceRoom, source: { from: FactRef; n: number }) {
+  const before = (await room.G.summary()).at;
+  return room.life.wait(() => runInDurableObject(room.G.object, (_instance, state) => {
+    const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+    const sealed = ownOf(store)(source.from.seq), next = store.nextDispatch(), outgoing = next === null ? [] : store.outgoing(next, 32);
+    if (!sealed || !same(factRefOf(sealed.entry), source.from)) throw Error('Actual original funding send required');
+    expect(store.scope()?.head).toEqual(before);
+    return { head: before, outbox: store.outboxItem(source.from.seq, source.n), next,
+      dueIncludesOriginal: outgoing.some(row => row.seq === source.from.seq && row.n === source.n), duePageComplete: outgoing.length < 32 };
+  }));
+}
 
 interface EvidenceOutcomeRace {
   heldKind: "judge" | "evidence-result"; parked: boolean; gate: ReturnType<typeof certificateGate>;
@@ -591,8 +627,23 @@ export async function evidenceNativeState(room: EvidenceRoom, replay = false) {
         if (!raw) throw Error('Actual native job wire required');
         return { item, raw, current: currentEvidenceRecordV17(item, raw) };
       });
+      const capacityAnchors = items.filter(item => item.type === 'evidence-capacity').map(item => {
+        const capacity = readEvidenceCapacityWireV17(item.values['capacity']);
+        if (!capacity || capacity.owner !== item.id || capacity.holds === null || item.state !== 'ready'
+          || item.values['policyKey'] !== evidenceCapacityPolicyKeyV17(capacity.generation) || view.holder(item.id) !== null)
+          throw Error('Actual nonholder generation capacity anchor required');
+        return { item, capacity };
+      });
+      const fundingBatches = items.filter(item => item.type === 'evidence-batch').map(item => {
+        const batch = readEvidenceBatchWireV17(item.values['batch']), capacity = readEvidenceCapacityWireV17(item.values['capacity']);
+        const anchor = capacity && capacityAnchors.find(row => row.item.id === capacity.owner);
+        if (!batch || !capacity || capacity.holds !== null || !anchor || !same(capacity.generation, anchor.capacity.generation)
+          || !same(capacity.generation, { rules: batch.policy.rules, seq: batch.policy.revision }))
+          throw Error('Actual batch capacity must name its generation anchor');
+        return { item, batch, capacity, holder: view.holder(item.id), holderSettled: view.holderSettled(item.id) };
+      });
       return { ledger: evidenceLedgerOfV17(view), jobs, holds: jobs.flatMap(({ item, raw }) => raw.holds.map(hold => ({ owner: item.id, hold, effective: evidenceEffectiveHoldV17(view, own, item, hold) }))),
-        capacities: items.flatMap(item => { const capacity = readEvidenceCapacityWireV17(item.values['capacity']); return capacity ? [capacity] : []; }) };
+        capacityAnchors, fundingBatches, capacities: capacityAnchors.map(row => row.capacity) };
     };
     const runtime = project(store);
     if (replay) {
@@ -665,17 +716,18 @@ export async function enrolEvidenceKey(room: EvidenceRoom, service: PreparedEvid
   await room.pause(room.nodes);
 }
 
-export async function preparePublishedEvidence(room: EvidenceRoom) {
+export async function preparePublishedEvidence(room: EvidenceRoom, options: { names?: readonly string[]; holds?: boolean } = {}) {
+  const names = options.names ?? ['published'];
   const definitions = await evidenceDefinitions(room), service = await evidenceChecker(room);
   const configuration: Configuration = { name: "published", image: `sha256:${"2".repeat(64)}`, environment: [], steps: [["/bin/true"]],
     judged: { passed: { status: 0, line: "ok" }, failed: { status: 1, line: "bad" } }, limits: { seconds: 60, outputBytes: 65536 } };
   const digest = configurationDigest(configuration);
   expect(await room.Q.stub.submit(await room.Q.intent(rita, "keep-configuration", { fields: { digest, name: configuration.name } }), [], { values: [canonicalize(configuration)] }))
     .toMatchObject({ answer: "accepted" });
-  const ordinary = evidenceRulesPolicy({ checker: service.member, key: service.actor.key }, [{ name: configuration.name, configuration: digest, required: false,
-    checker: service.member, source: "member", stage: "published", holds: true }]);
+  const ordinary = evidenceRulesPolicy({ checker: service.member, key: service.actor.key }, names.map(name => ({ name, configuration: digest, required: false,
+    checker: service.member, source: "member" as const, stage: "published" as const, holds: options.holds ?? true })));
   const policy: RulesPolicyV13 = { ...ordinary, approvals: 0, allowZeroApprovals: true, extents: ordinary.extents.map(extent => extent.name === "rules" ? extent
-    : { ...extent, approvals: 0, allowZeroApprovals: true, checks: [configuration.name] }) };
+    : { ...extent, approvals: 0, allowZeroApprovals: true, checks: [...names] }) };
   await configureEvidenceRules(room, policy);
   return { definitions, service, configuration, configurationDigest: digest, policy, paths: ["README.md", "evidence.md"] };
 }
