@@ -250,15 +250,6 @@ describe("destination outside adapter; scripted host, platform judgments in memo
       for (const request of forged) expect(await f.host.send(request)).toBeNull();
       const elsewhere = new DestinationHost(f.given, { ...f.options, namespace: "another" });
       expect(await elsewhere.send(request)).toBeNull();
-      // Local settlement has no provider authority, even if offered directly.
-      // Its actual Native ready/beforeSend proof is exercised in the cohort.
-      for (const kind of ["evidence-account-settle", "publication-settle"]) {
-        expect(f.host.accepts("platform:destination@17", kind)).toBe(true);
-        expect(f.host.accepts("platform:destination@16", kind)).toBe(false);
-        expect(f.host.recovery.accepts("platform:destination@17", kind)).toBe(false);
-        expect(await f.host.send({ ...request, owner: "platform:destination@17", kind })).toBeNull();
-        expect(await f.host.recovery.read({ ...request, owner: "platform:destination@17", kind })).toBeNull();
-      }
       expect(f.provider.calls).toEqual([]);
       f.custody.put({ id: "wrong-operation", mint: operation(f.branch, "first-head"), attempt: 1, ends: t(60), plaintext: "private-invalid" });
       expect(f.host.replies(1)).toEqual({ answers: [], more: false });

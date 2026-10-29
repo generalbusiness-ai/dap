@@ -1,9 +1,10 @@
 # Evidence rules: preparation and implementation evidence
 
-Status: In progress. Native N2 passes at `ba17bcedf7`; the first N3
-publication writes its receipt and cleans up. Its next reservation fails
-capacity admission. Remaining Native scenarios, physical J3, gate, review,
-landing and deployment remain owed.
+Status: In progress. Native N2 passed at `ba17bcedf7`; the first N3
+publication wrote its receipt. Ruling `393b3b99` removes the unintended
+whole-scope opt-in and the byte-only repair. Legacy scheduling changes,
+remaining Native scenarios, physical J3, gate, review, landing, and deployment
+remain owed.
 
 ## What changed
 
@@ -41,6 +42,7 @@ Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ed8187819e9
 Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f73805e41fb84d460ea391b66a2c6ab23568f15b
 Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c20152ef7919ec4b03c7647a6b734aadc1cec7dd
 Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1bc4f7fdc0f8bd2a31b54d04b74ccbb91228dbd4
+Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:393b3b99f469df1df80b676ec1da7b29dcce7cce
 
 Retirement of answered questions did not withdraw the rulings. Their stale
 metadata requires no renewed authority. J3 landed at `06e4d33f` after
@@ -130,17 +132,31 @@ landing. Published checks and audit targets are always fresh. Audits match
 tree, stage and configuration. `auditOf` names actual counted Member job;
 `forJob` names this logical request, preserving fresh audits after retry.
 
-Before push, native accounts fund bounded lifetime job slots with actual
-capture/operation/ordinal and hold/policy/incident identities. The measured
-repair below replaces the original four eight-slot accounts. Settling outcomes open no holder. Complete funding and staging
-produce one readiness update in either order. Zero obligations need no
-account. Only actual written receipt proof, including recovery, starts
-the nonholder published plan.
+At most four eight-slot NEW WORK carriers hold the counted operations and
+bound decisions that can arrive after a publication becomes final. Outcomes
+cannot take holders; bound fences open no item. Those carriers serve the
+ruled published, audit, result, and incident paths, not a byte-admission
+guarantee. They retain exact capture/operation/ordinal and count identities.
+Only actual written receipt proof starts the nonholder published plan.
+Carrier setup and receipt writing may finish in either order; full carrier
+setup is not a prerequisite to Git publication. A fixed receipt publication
+index finds the genuine receipt without scanning the journal. A separate
+written-entry position names its actual state change; item revision remains
+a counter. The original plan-opening marker prevents duplicate queued or
+unknown dispatch. An authenticated landing fence waits on its original
+pending carrier delivery only when its selected carrier is absent. An
+available selected carrier can proceed within the actual contiguous prefix;
+all published-plan dispatch still requires the complete original set.
+The 16-effect evidence-admission allowance is unchanged. Inherited push
+and deciding-read budgets keep their own accounting: the ordinary Data
+changes, callback operations and ledger attempt are distinct terms. A
+universal 16-effect check after a real push would reject valid queued
+publications, so this correction does not add that check.
 
 Limits: 2,048 keys, eight candidates/key, 32,768 canonical bytes/key,
 512 holds, 512 policy generations, 8,192 incidents, three pending slots/key,
 32 complete triagers. No truncation/eviction hides full/unknown state.
-Full future forecasts and used-plus-reserved limits independently apply.
+Per-entry carrying limits still apply. Global admission counts entries only.
 First certificate opens its reserved singleton ledger; repeats add no credit.
 
 Holds bind check/source/stage/configuration/generation/extent. Publication
@@ -159,57 +175,57 @@ late results do not replace the incident cause. Closing intent clears no
 hold. This commissioned failure exchange is distinct from marking-time
 proof exchange.
 
-### Measured funding repair, before further source
+### Legacy admission after the measured capacity ruling
 
-Run `native-current-capacity-20` at `d5ed79283d` ends with the second
-reservation absent. At actual Destination head 36, SQLite reports 196,027
-used bytes and 737,148,928 reserved bytes. No operation or request remains
-pending. The ready branch reserves 80,740,352 bytes, the cleaned publication
-320,077,824, and its funded batch 335,544,320. Other allowances contribute
-786,432 bytes. Current usage fits 1 GiB. The next reservation does not.
+Destination 17 keeps legacy admission because whole-scope adoption belongs
+to a separate design item after R4 measures the deployment ceilings.
+Ruling `393b3b99`, answering question `346de78c`, preserves the earlier
+rulings and directs this correction. The question is retired; the slice's
+promise remains active.
 
-Whole-scope accounting releases unused holder counts only after an
-identified settlement. Inherited cleanup reaches final `cleaned` through
-an outcome, which cannot declare that settlement. Work request holders have
-the same problem. G17 also inherits 32 `check-judge` counts although its
-handlers now open `evidence-result` instead. Those unused counts reserve
-150,994,944 bytes per publication. Removing them alone cannot fund the next
-complete batch.
+The first draft opted in although the request did not require it. Its
+`native-current-capacity-20` run at `d5ed79283d` stored 196,027 bytes and
+reserved 737,148,928 at actual Destination head 36; the next reservation
+could not fit. A subsequent delivery-settlement design increased static
+closure costs globally. These are compiled declarations, not runtime
+usage or simultaneous-allocation measurements:
 
-The repair uses the existing contract. A funded self-delivery declares
-settlement and makes the literal final transition after actual terminal
-work. Outcomes keep the holder nonfinal until that delivery. Pending
-operations and request accounts retain their reachable reservations. TIME,
-unknown answers, and notices alone release nothing.
+| Destination 15 at Main `8659af46` | Entries | Bytes |
+|---|---:|---:|
+| Publication | 1,831 | 549,978,112 |
+| Branch | 588 | 154,140,672 |
+| File publication | 676 | 177,209,344 |
 
-Batch budgets also need smaller units: a full initial eight-job batch
-reserves 374,079,488 bytes. Three such batches exceed 1 GiB before the
-branch or journal. Select a bounded holder profile from the actual frozen
-obligations, and quote its complete future work before capture. Keep all
-32 possible obligations and the three pending slots per exact key. Move
-shared mutable generation capacity into a nonholder anchor created by
-actual setup. A batch may settle only when its own jobs, dispatches, notices,
-plan, operations, and request accounts permit release. Its generation record
-must remain available for later publications and late results.
+| Destination 17 discarded draft at `41215939d5` | Entries | Bytes |
+|---|---:|---:|
+| Publication | 1,290 | 940,048,384 |
+| Branch | 628 | 459,276,288 |
+| File publication | 713 | 524,550,144 |
+| Evidence request | 91 | 64,487,424 |
 
-No scope bound, recorded historical declaration, or TIME rule changes.
-The selected profile uses one nominal two-slot account type and at most
-sixteen serial accounts for 32 obligations. This avoids ambiguous handler
-routing between holder types. Full future carrying-entry and Checker proof forecasts keep their limits.
-The existing Native API exposes neither the runtime byte total nor compiled
-reservation amounts, so it cannot truthfully admit all future accounts in
-one calculation. The runtime applies its exact used-plus-reserved check to
-each actual new-work account. A partial set stays unready and cannot push;
-explicit withdrawal must remain available. Atomic all-account capacity
-admission is not claimed. New setup and settlement work must appear in the
-compiled declarations and each account's complete reservation.
+The second table is captured in `account-lifecycle-compiled-ledger-3`.
+The first table comes from the ruling; a local capture remains owed.
+A delivery's retained source increases the largest pending-state amount,
+which the compiler multiplies by coded-effect ceilings. Outcome-time
+release would not reduce that initial admission term.
 
-The generic binding selector still reads at most eight rows per index key
-(`packages/derive/src/binding.ts`). A sixteen-account scripted funding chain
-proves its structural geometry, not a complete Native 32-check journey.
-Scope capacity can refuse earlier; no kernel selector bound changes here.
-Settlement code-field validation authenticates the actual self-source before
-binding may draw a decision. Its later guard checks current terminal work.
+The draft's byte-only settlement chains, two-slot/sixteen-account profile,
+full-set-before-push requirement, and N9 byte witness are removed. The
+unvalidated final wire-cache draft and discarded source are retained under
+`operator-inputs/discarded-byte-prototype-20261029`. No kernel extension,
+new signer, global bound increase, or TIME pruning follows from this work.
+
+Legacy admission enforces the 100,000-entry ceiling; items, records,
+requests, and bytes have no global runtime ceiling for this Destination.
+Per-entry limits and definition-specific counts still apply. Holders,
+decisions, and bound requests reserve owed entries. The design's exact
+count guards refuse check work before opening a job; a full list need not
+prevent Git publication. Unknown and TIME remain pending under the ruled
+index semantics. The five-concurrent-job Native witness remains owed.
+
+Planner owns the follow-up "Destination adopts whole-scope capacity"
+after R4's measured ceilings, with a separate contract design request if
+outcome settlement is wanted.
 
 ## Decisions witness map
 
@@ -224,7 +240,6 @@ keys N1–N8 refer to `packages/scope/test/evidence-rules-real.test.ts`:
 - **N6** `literal native TIME holds at its own head, replays unchanged, and recovers one funded incident within the pending bound`
 - **N7** `the real failure and reservation outcomes serialize atomically in both admitted-before-failure and failure-before-admission schedules`
 - **N8** `a cancelled same-tree landing needs a fresh room audit and disagreeing results refuse its actual retry`
-- **N9** `partial native funding remains unready and withdraws before the original next-account retry releases its prefix` (additional capacity witness; unrun).
 
 Pure owners below are in `packages/platform/test/`:
 
@@ -259,7 +274,7 @@ All 19 Decisions retain an owning assertion:
 15. Atomic failure/admission order: N7 gates both journal schedules.
 16. Duplicate/reordered failure preserves hold: N5/P5, original notices.
 17. Closing incident/other intent clears nothing: N5 closes incident;
-    unrelated intent closure remains unexercised in its current body.
+    N5 also closes an ordinary unrelated requester Issue.
 18. Published timeout cannot clear: N5/N6 and pure hold/TIME cases;
     own-head state, replay and pre-recovery refusal stay separate.
 19. Override clears as override: N5/P6 retain reason, key and release kind.
@@ -272,45 +287,21 @@ policy unchanged to isolate order. Both need owning acceptance. Decisions
 
 The durable provisional collection is
 `/Users/hughpyle/play/artroom-evidence/2026-10-28-evidence-rules`.
-At the 23:27 UTC copy it held 11,937 files and 297,527,306 bytes. It remains
-open and unsealed; those are copy-time counts, not final manifest totals.
-Receipts/snapshots/streams bind each run; earlier passes are not current.
+The latest provisional copy remains open and unsealed. Final counts and
+hashes belong to the sealed manifest. Receipts, source snapshots and streams
+bind each run; earlier passes do not establish acceptance of the correction.
 
-Selected receipts, without summing overlapping runs:
+The retained attempts include failed dependency, wire, binding, compiler,
+capacity and Native runs. The discarded byte-only profile and its partly
+unvalidated optimizer are history, not final implementation or performance
+evidence. Native N2 passed at an earlier head; N3 reached a real written
+publication before byte admission blocked its next reservation. Current
+legacy Source still needs its own acceptance. No package was installed.
 
-- Whole lane validation/source compilation passed at `73c49b9724`.
-  Ruled policy passed 37 tests/eight files at `1e1b495731`; timed/wire/funding
-  selection passed 26/three at `cd12e5f634`.
-- At `52f4fd60bc`, observation tests passed 11, checker stage tests seven,
-  and Platform compiler/active-source check exited 0. Other compiler passes
-  retain their own heads, not a latest-head all-context claim.
-- Security inventory passed ten Node cases at `2f0af7000b`. Later comparison
-  records 80 identities/43 declarations with all 76 historical pins and
-  40 historical texts exact. Q13 is
-  `sha256:d7baafb3501bdc1682f7c671fb43ad0fd82aab2b541d9b01f7893914ab73d5cd`;
-  D21 is
-  `sha256:439af34d88a076581b51cb833eea276799f3fa7d9d75e5e1cf274792e1c28eb3`.
-- `opening-correspondence-owning-1` passed ten cases/three files at
-  `7ab618f024`; its Platform compiler exited 0.
-- At `2241e2f5ad`, both Platform and Scope compilers passed.
-  `written-plan-owning-2` passed 23 tests in four files, and
-  `counted-send-security-inventory-1` passed ten Node cases. Only the two
-  independently reviewed host seals changed.
-- `native-live-items-prefix-6` at `0599da9ea8` passed N1 but exited 1:
-  N2 failed, six skipped. No passing file is claimed.
-- `native-work-landing-prefix-7` at `c94a00f526` reached actual stage/check
-  provenance with explicit TEST hold-provider/TokenDriver wiring. Both
-  selected cases failed; six skipped. Complete acceptance remains open.
-
-Failed generation/dependency links, incarnation, nullable record wire,
-parser, fact binding, type checks and timed code attempts remain retained.
-No package was installed. The isolated socket rerun changed no product.
-The first full Native attempt failed eight setups; the `52f4` prefix failed
-Q13 publish with `bad-field`. N1's later pass supersedes only its measured
-prefix. Declared scenarios use actual lane/SQLite with scripted remote
-peers. Their retained incident-boundary pass asserts truthful unproven
-child origin, not real Native creation; its earlier quiet diagnostic pass
-retained no measurement. Positive child acceptance belongs to N5.
+The scenarios use actual lane journals and SQLite through their stated
+boundaries. TEST host and token-provider wiring, manually signed Member
+claims, and pure hook fixtures keep their stated limits. Positive physical
+Runner evidence belongs to the separate marked-room witness.
 
 ### Final evidence table placeholder
 

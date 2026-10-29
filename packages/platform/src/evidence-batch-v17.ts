@@ -9,8 +9,8 @@ import { requiredChecksV17, type ReservationPolicyViewV17 } from "./reservation-
 import { checkStageV13, rulesPolicyProposalV13, type RulesCheckV13 } from "./rules-policy-v13.ts";
 import { evidenceWireV17, readEvidenceWireV17 } from "./evidence-wire-v17.ts";
 
-export const EVIDENCE_BATCH_JOBS_V17 = 2;
-export const EVIDENCE_BATCH_ACCOUNTS_V17 = 16;
+export const EVIDENCE_BATCH_JOBS_V17 = 8;
+export const EVIDENCE_BATCH_ACCOUNTS_V17 = 4;
 export interface EvidenceBatchRecordV17 {
   v: 1; publication: FactRef; operation: FactRef; capture: FactRef;
   ordinal: number; total: number; touched: readonly string[];
@@ -136,7 +136,7 @@ export function selectEvidenceBatchV17(values: readonly EvidenceBatchRecordV17[]
   const records = values.map(readEvidenceBatchV17);
   if (records.some(record => record === null)) return { ok: false, reason: "batch-invalid" };
   const rows = (records as EvidenceBatchRecordV17[]).sort((a, b) => a.ordinal - b.ordinal), first = rows[0]!;
-  if (rows.length !== first.total || rows.some((row, ordinal) => row.ordinal !== ordinal || row.total !== first.total
+  if (rows.length > first.total || rows.some((row, ordinal) => row.ordinal !== ordinal || row.total !== first.total
     || !same(row.publication, first.publication) || !same(row.operation, first.operation) || !same(row.capture, first.capture)
     || !same(row.policy, first.policy) || !same(row.touched, first.touched))) return { ok: false, reason: "batch-invalid" };
   const allJobs = rows.flatMap(row => row.jobs);

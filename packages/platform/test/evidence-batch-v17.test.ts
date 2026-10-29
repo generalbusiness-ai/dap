@@ -30,7 +30,7 @@ function batches(policy: ReservationPolicyViewV17, touched: readonly string[] = 
   if (!obligations.ok) throw Error("The scripted obligations are invalid");
   const total = Math.ceil(obligations.checks.length / EVIDENCE_BATCH_JOBS_V17);
   return Array.from({ length: total }, (_, ordinal) => ({ v: 1, publication: fact(10, destination), operation: fact(8), capture: fact(20, destination),
-    ordinal, total, touched: [...touched], checks: obligations.checks.slice(ordinal * EVIDENCE_BATCH_JOBS_V17, (ordinal + 1) * EVIDENCE_BATCH_JOBS_V17), policy, jobs: [], planAt: 30 + ordinal }));
+    ordinal, total, touched: [...touched], checks: obligations.checks.slice(ordinal * 8, (ordinal + 1) * 8), policy, jobs: [], planAt: 30 + ordinal }));
 }
 const claim = (record: EvidenceBatchRecordV17, seq: number, name: string): EvidenceBatchRecordV17 => {
   const result = claimEvidenceBatchJobV17(record, fact(seq), name);
@@ -53,46 +53,51 @@ test("publication obligations include global/touched landing and published check
   expect(obligationChecksV17(policy.policy, ["source", "source"])).toEqual({ ok: false });
 });
 
-test("all32 descriptors partition into sixteen deterministic two-slot accounts, without losing full policy", () => {
+test("all32 descriptors partition into four deterministic eight-slot accounts, without losing full policy", () => {
   const records = batches(view(Array.from({ length: 32 }, (_, n) => check(`c${String(n).padStart(2, "0")}`))));
-  expect(records).toHaveLength(16);
+  expect(records).toHaveLength(4);
   for (const [ordinal, record] of records.entries()) {
     expect(readEvidenceBatchV17(record)).not.toBeNull();
-    expect(record.checks).toHaveLength(2);
+    expect(record.checks).toHaveLength(8);
     expect(record.policy.policy.checks).toHaveLength(32);
     expect(record.ordinal).toBe(ordinal);
   }
   expect(records.flatMap(row => row.checks.map(descriptor => descriptor.name))).toEqual(records[0]!.policy.policy.checks.map(row => row.name));
-  expect(readEvidenceBatchV17({ ...records[0], total: 17 })).toBeNull();
-  expect(readEvidenceBatchV17({ ...records[0], ordinal: 16 })).toBeNull();
-  expect(readEvidenceBatchV17({ ...records[0], checks: records[0]!.policy.policy.checks.slice(0, 3) })).toBeNull();
 });
 
-test("a single descriptor can use its one spare slot and then refuses further fresh jobs", () => {
-  let record = batches(view([check("a")]))[0]!;
+test("fresh repeats use spare slots while preserving a slot for every unclaimed descriptor", () => {
+  let record = batches(view([check("a"), check("b"), check("c")]))[0]!;
   record = claim(record, 40, "a");
-  record = claim(record, 41, "a");
-  expect(record.jobs).toHaveLength(2);
-  expect(claimEvidenceBatchJobV17(record, fact(42), "a")).toEqual({ ok: false, reason: "batch-full" });
+  for (let seq = 41; seq <= 45; seq++) record = claim(record, seq, "a");
+  expect(record.jobs).toHaveLength(6);
+  expect(claimEvidenceBatchJobV17(record, fact(46), "a")).toEqual({ ok: false, reason: "batch-full" });
+  record = claim(claim(record, 47, "b"), 48, "c");
+  expect(record.jobs).toHaveLength(8);
+  expect(claimEvidenceBatchJobV17(record, fact(49), "a")).toEqual({ ok: false, reason: "batch-full" });
   expect(claimEvidenceBatchJobV17(record, fact(40), "a")).toEqual({ ok: true, record });
   expect(claimEvidenceBatchJobV17(record, fact(40), "b")).toEqual({ ok: false, reason: "batch-invalid" });
   expect(claimEvidenceBatchJobV17(record, { ...fact(40), hash: d("f") }, "a")).toEqual({ ok: false, reason: "batch-invalid" });
 });
 
-test("a two-descriptor account cannot spend the other descriptor's reserved slot on a repeated check", () => {
-  const record = claim(batches(view([check("c0"), check("c1")]))[0]!, 40, "c0");
+test("a full eight-descriptor account cannot spend another descriptor's reserved slot on a repeated check", () => {
+  const record = claim(batches(view(Array.from({ length: 8 }, (_, n) => check(`c${n}`))))[0]!, 40, "c0");
   expect(claimEvidenceBatchJobV17(record, fact(41), "c0")).toEqual({ ok: false, reason: "batch-full" });
   expect(claimEvidenceBatchJobV17(record, fact(41), "c1").ok).toBe(true);
 });
 
-test("selection proves complete consistent accounts, exact descriptor ownership and unique existing job", () => {
-  const records = batches(view(Array.from({ length: 3 }, (_, n) => check(`c${n}`))));
-  const selected = selectEvidenceBatchV17([...records].reverse(), fact(40), "c2");
+test("selection checks a contiguous prefix, exact descriptor ownership and unique existing job", () => {
+  const records = batches(view(Array.from({ length: 9 }, (_, n) => check(`c${n}`))));
+  const selected = selectEvidenceBatchV17([...records].reverse(), fact(40), "c8");
   expect(selected.ok && selected.record.ordinal).toBe(1);
-  records[1] = claim(records[1]!, 40, "c2");
+  records[1] = claim(records[1]!, 40, "c8");
   expect(selectEvidenceBatchV17(records, fact(40))).toEqual({ ok: true, record: records[1] });
   expect(selectEvidenceBatchV17(records, fact(40), "c0")).toEqual({ ok: false, reason: "batch-invalid" });
-  expect(selectEvidenceBatchV17([records[0]!], fact(41), "c0")).toEqual({ ok: false, reason: "batch-invalid" });
+  expect(selectEvidenceBatchV17([records[0]!], fact(41), "c0")).toEqual({ ok: true, record: records[0] });
+  expect(selectEvidenceBatchV17([records[0]!], fact(41), "c8")).toEqual({ ok: false, reason: "batch-invalid" });
+  expect(selectEvidenceBatchV17([records[1]!], fact(41), "c8")).toEqual({ ok: false, reason: "batch-invalid" });
+  expect(selectEvidenceBatchV17([records[0]!, { ...records[1]!, capture: { ...records[1]!.capture, hash: d("f") } }], fact(41), "c8")).toEqual({ ok: false, reason: "batch-invalid" });
+  const different = batches(view(Array.from({ length: 9 }, (_, n) => check(`c${n}`, n === 0 ? { configuration: d("e") } : {}))));
+  expect(selectEvidenceBatchV17([records[0]!, different[1]!], fact(41), "c8")).toEqual({ ok: false, reason: "batch-invalid" });
   expect(selectEvidenceBatchV17([records[0]!, records[0]!], fact(41), "c0")).toEqual({ ok: false, reason: "batch-invalid" });
   expect(selectEvidenceBatchV17([claim(records[0]!, 40, "c0"), records[1]!], fact(40))).toEqual({ ok: false, reason: "batch-invalid" });
 });

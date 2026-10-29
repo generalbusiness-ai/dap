@@ -1,18 +1,17 @@
 /** Native funding identities are known before the published job exists.
  * A null job/owner is reserved capacity, never a fabricated future fact. */
-import type { Bounds, Digest, FactRef, FieldValue, PlatformData } from "@generalbusiness/dap-contract";
+import type { Digest, FactRef, FieldValue } from "@generalbusiness/dap-contract";
 import { canonicalize, isFactRef, isRecord, isScopeRef, parseStrict, same, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import type { ScopedRulesPosition } from "@generalbusiness/dap-contract";
 import { evidenceBindingDigest, type EvidenceBinding } from "./evidence.ts";
 import type { Item, RuleEffect, RuleGiven, StateView } from "@generalbusiness/dap-derive";
-import { EVIDENCE_BATCH_JOBS_V17, readEvidenceBatchV17, readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
+import { readEvidenceBatchV17, readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
 import { bindEvidenceHoldPendingV17, clearEvidenceHoldPendingV17, EVIDENCE_HOLD_PENDING_V17, newEvidenceHoldV17, readEvidenceHoldKeyV17, readEvidenceHoldPendingV17,
   removeEvidenceHoldPendingV17, reserveEvidenceHoldPendingV17, withdrawEvidenceHoldPendingV17, type EvidenceHoldKeyV17, type EvidenceHoldPendingV17 } from "./evidence-holds-v17.ts";
-import { EVIDENCE_LIMITS_V17, readEvidenceCountsV17, reserveEvidenceCountsV17 } from "./evidence-index-v17.ts";
+import { readEvidenceCountsV17, reserveEvidenceCountsV17 } from "./evidence-index-v17.ts";
 import { checkHoldsV13, checkSourceV13, checkStageV13, type RulesCheckV13, type RulesPolicyV13 } from "./rules-policy-v13.ts";
 import { evidenceLedgerOfV17 } from "./evidence-ledger-v17.ts";
-import { readRulesPolicyObservationV17 } from "./reservation-v17.ts";
-import { certifiedBoundFenceBudgetV17, certifiedPublicationStateWireV17, evidenceCarryingBudgetV17, type CertifiedPublicationStateV17 } from "./destination-budget-v17.ts";
+import { certifiedBoundFenceBudgetV17, evidenceCarryingBudgetV17 } from "./destination-budget-v17.ts";
 import { evidenceFutureEntriesV17 } from "./evidence-forecast-v17.ts";
 import type { EvidenceJobRecordV17 } from "./destination-evidence-v17.ts";
 import { evidenceWireV17, readEvidenceWireV17 } from "./evidence-wire-v17.ts";
@@ -49,27 +48,6 @@ export function evidenceCapacityWireV17(value: EvidenceCapacityAnchorV17): strin
   return evidenceWireV17(value, 196608);
 }
 export const evidenceCapacityValidV17 = (value: unknown): boolean => readEvidenceCapacityWireV17(value) !== null;
-/** Generation state outlives a publication's finite execution account. */
-export const EVIDENCE_CAPACITY_ITEM_V17: PlatformData["items"][string] = {
-  many: true, max: 512, initial: "ready", states: { ready: { final: false } }, parties: {},
-  refs: { capture: { fixed: true, required: true, to: { type: "fact", kind: ["platform:destination@17:judge", "platform:destination@17:read"], under: "platform:destination" } } },
-  indexes: ["policyKey"], values: {
-    capacity: { fixed: false, required: true, of: { type: "code", code: "evidence-capacity-anchor-v17", row: "E5" } },
-    policy: { fixed: true, required: true, of: { type: "code", code: "certified-publication-state-v17", row: "R7" } },
-    policyKey: { fixed: true, required: true, of: { type: "digest" } },
-  },
-};
-export function evidenceCapacityPolicyV17(state: StateView, owner: number, bounds: Bounds): RulesPolicyV13 | null {
-  const item = state.item(owner), capacity = readEvidenceCapacityWireV17(item?.values["capacity"]);
-  const snapshot = item && certifiedPublicationStateWireV17(item.values["policy"], bounds);
-  return item?.type === "evidence-capacity" && item.state === "ready" && capacity?.owner === owner && capacity.holds !== null && snapshot
-    && same(capacity.generation, { rules: snapshot.policy.observation.of, seq: snapshot.policy.observation.revision })
-    ? snapshotPolicy(snapshot) : null;
-}
-function snapshotPolicy(snapshot: CertifiedPublicationStateV17): RulesPolicyV13 | null {
-  const read = readRulesPolicyObservationV17(snapshot.policy.observation, snapshot.policy.input, snapshot.policy.observation.at);
-  return read.ok ? read.view.policy : null;
-}
 function maximumCapacity(value: EvidenceCapacityAnchorV17, publicationAt: FactRef["at"], jobAt: FactRef["at"], policy: RulesPolicyV13): EvidenceCapacityAnchorV17 {
   const max = Number.MAX_SAFE_INTEGER, hash = `sha256:${"f".repeat(64)}` as const;
   const keys = [...(value.holds ?? []).map(row => row.key)];
@@ -86,65 +64,17 @@ function maximumCapacity(value: EvidenceCapacityAnchorV17, publicationAt: FactRe
     incidents: value.incidents.map((row, n) => ({ ...row, job: { at: jobAt, seq: max - n, hash } })) };
 }
 export function evidencePendingCapacityForecastV17(given: RuleGiven, owner: number, jobAt: FactRef["at"]): readonly RuleEffect[] {
-  const item = given.state.item(owner), capacity = readEvidenceCapacityWireV17(item?.values["capacity"]), policy = evidenceCapacityPolicyV17(given.state, owner, given.resolved.bounds);
-  if (!capacity || !capacity.holds || !policy) throw Error("The future pending capacity record is unavailable");
-  return [{ effect: "value", item: owner, slot: "capacity", value: evidenceCapacityWireV17(maximumCapacity(capacity, given.resolved.at, jobAt, policy)) }];
+  const item = given.state.item(owner), capacity = readEvidenceCapacityWireV17(item?.values["capacity"]), batch = readEvidenceBatchWireV17(item?.values["batch"]);
+  if (!capacity || !capacity.holds || !batch) throw Error("The future pending capacity record is unavailable");
+  return [{ effect: "value", item: owner, slot: "capacity", value: evidenceCapacityWireV17(maximumCapacity(capacity, given.resolved.at, jobAt, batch.policy.policy)) }];
 }
 function policyAnchor(state: StateView, generation: ScopedRulesPosition): { item: Item; capacity: EvidenceCapacityAnchorV17 } | null {
-  const ids = state.lookup("evidence-capacity", "policyKey", canonicalize(evidenceCapacityPolicyKeyV17(generation)), 2);
+  const ids = state.lookup("evidence-batch", "policyKey", canonicalize(evidenceCapacityPolicyKeyV17(generation)), 2);
   if (!ids || ids.length > 1) throw Error("Evidence generation capacity index is unavailable");
   if (!ids.length) return null;
   const item = state.item(ids[0]!), capacity = item && readEvidenceCapacityWireV17(item.values["capacity"]);
-  if (!item || item.type !== "evidence-capacity" || item.state !== "ready" || item.values["policyKey"] !== evidenceCapacityPolicyKeyV17(generation)
-    || !capacity || capacity.owner !== item.id || capacity.holds === null || !same(capacity.generation, generation)) throw Error("Evidence generation capacity anchor is malformed");
+  if (!item || !capacity || capacity.owner !== item.id || capacity.holds === null || !same(capacity.generation, generation)) throw Error("Evidence generation capacity anchor is malformed");
   return { item, capacity };
-}
-function capacityAnchorEffects(given: RuleGiven, snapshot: CertifiedPublicationStateV17, capture: FactRef, owner: number): RuleEffect[] {
-  const generation = { rules: snapshot.policy.observation.of, seq: snapshot.policy.observation.revision };
-  const ledger = evidenceLedgerOfV17(given.state), counts = ledger && readEvidenceCountsV17(ledger.values["counts"]);
-  if (!ledger || !counts || !snapshotPolicy(snapshot)) throw Error("The captured generation capacity is unavailable");
-  const next = reserveEvidenceCountsV17(counts, { keys: 0, holds: 0, policyGenerations: 1, incidents: 0 });
-  if (!next.ok) throw Error("The generation capacity index is full");
-  const capacity: EvidenceCapacityAnchorV17 = { v: 1, owner, generation, holds: [], incidents: [] };
-  return [{ effect: "open", item: owner, type: "evidence-capacity", state: "ready" },
-    { effect: "value", item: owner, slot: "capacity", value: evidenceCapacityWireV17(capacity) },
-    { effect: "value", item: owner, slot: "policy", value: evidenceWireV17(snapshot, 262144) },
-    { effect: "value", item: owner, slot: "policyKey", value: evidenceCapacityPolicyKeyV17(generation) },
-    { effect: "ref", item: owner, slot: "capture", to: capture },
-    { effect: "value", item: ledger.id, slot: "counts", value: next.counts as unknown as FieldValue }];
-}
-/** Called at the one actual funding outcome, before any batch birth. */
-export function evidenceCapacityAnchorOpeningV17(given: RuleGiven, publication: Item, snapshot: CertifiedPublicationStateV17): readonly RuleEffect[] {
-  const generation = { rules: snapshot.policy.observation.of, seq: snapshot.policy.observation.revision }, existing = policyAnchor(given.state, generation);
-  const policy = snapshotPolicy(snapshot);
-  if (!policy) throw Error("The captured policy is unavailable");
-  if (existing) {
-    if (!same(evidenceCapacityPolicyV17(given.state, existing.item.id, given.resolved.bounds), policy)) throw Error("The generation policy changed");
-    return [];
-  }
-  const position = publication.values["reservedAt"];
-  if (!natural(position)) throw Error("The actual policy capture is unavailable");
-  const source = given.own(position);
-  if (!source || !same(source.entry.at, given.resolved.at) || source.entry.seq !== position)
-    throw Error("The actual policy capture is unavailable");
-  return capacityAnchorEffects(given, snapshot, { at: given.resolved.at, seq: position, hash: source.hash }, given.resolved.self);
-}
-/** A complete future funding carrier, measured before capture/push. The
- * maximum positions below are geometry only and never persisted facts. */
-export function evidenceCapacityAnchorBudgetV17(given: RuleGiven, publication: Item, snapshot: CertifiedPublicationStateV17) {
-  try {
-    const max = Number.MAX_SAFE_INTEGER, fact: FactRef = { at: given.resolved.at, seq: max, hash: `sha256:${"f".repeat(64)}` };
-    const generation = { rules: snapshot.policy.observation.of, seq: snapshot.policy.observation.revision }, existing = policyAnchor(given.state, generation);
-    const effects = existing ? [] : capacityAnchorEffects(given, snapshot, fact, max).map(effect => effect.effect === "value" && effect.slot === "counts"
-      ? { ...effect, value: { keys: EVIDENCE_LIMITS_V17.keys, holds: EVIDENCE_LIMITS_V17.holds, policyGenerations: EVIDENCE_LIMITS_V17.policyGenerations, incidents: EVIDENCE_LIMITS_V17.incidents } } : effect);
-    const operation = publication.refs["operation"];
-    if (!isFactRef(operation)) return { admitted: false };
-    const request = { to: given.resolved.at, message: { class: "request", type: "tell", body: { message: "evidence-fund", fields: {
-      publication: fact, operation, capture: fact, ordinal: 0 } } } } as const;
-    const future = { ...given, input: { type: "outcome", owner: "platform:destination@17", kind: "evidence-funding", operation: `${max}:0`, attempt: 1,
-      result: "confirmed", evidence: { basis: "own-answer", body: { capture: fact } } } } as unknown as RuleGiven;
-    return evidenceCarryingBudgetV17(future, effects, [], [request], []);
-  } catch { return { admitted: false }; }
 }
 export function evidenceHoldExtentNamesV17(check: Pick<RulesCheckV13, "name" | "required">,
   extents: RulesPolicyV13["extents"], touched: readonly string[]): readonly string[] {
@@ -230,8 +160,7 @@ export function evidenceFundCapacityV17(given: RuleGiven, batch: EvidenceBatchRe
   const ledger = evidenceLedgerOfV17(given.state); if (!ledger) return null;
   const counts = readEvidenceCountsV17(ledger.values["counts"]); if (!counts) return null;
   const generation = { rules: batch.policy.rules, seq: batch.policy.revision }, existing = policyAnchor(given.state, generation);
-  if (!existing || !same(evidenceCapacityPolicyV17(given.state, existing.item.id, given.resolved.bounds), batch.policy.policy)) return null;
-  const held = [...existing.capacity.holds!], requested = expectedHolds(batch);
+  const held = [...existing?.capacity.holds ?? []], requested = expectedHolds(batch);
   if (batch.checks.some(check => checkStageV13(check) === "published" && checkHoldsV13(check) && !requested.some(key => key.name === check.name))) return null;
   let added = 0;
   for (const key of requested) {
@@ -253,10 +182,12 @@ export function evidenceFundCapacityV17(given: RuleGiven, batch: EvidenceBatchRe
     held[index] = { ...held[index]!, pending: reserved.pending };
   }
   const incidents = batch.checks.filter(check => checkStageV13(check) === "published").map(check => ({ name: check.name, job: null }));
-  const next = reserveEvidenceCountsV17(counts, { keys: 0, holds: added, policyGenerations: 0, incidents: incidents.length });
+  const ownsPolicy = !existing && requested.length > 0;
+  const next = reserveEvidenceCountsV17(counts, { keys: 0, holds: added, policyGenerations: ownsPolicy ? 1 : 0, incidents: incidents.length });
   if (!next.ok) return null;
-  const capacity: EvidenceCapacityAnchorV17 = { v: 1, owner: existing.item.id, generation, holds: null, incidents };
-  const anchor = { ...existing.capacity, holds: held };
+  const capacity: EvidenceCapacityAnchorV17 = { v: 1, owner: existing?.item.id ?? given.resolved.self, generation,
+    holds: existing ? null : held, incidents };
+  const anchor = existing ? { ...existing.capacity, holds: held } : capacity;
   if (!readEvidenceCapacityAnchorV17(capacity) || !readEvidenceCapacityAnchorV17(anchor)) return null;
   const effects: RuleEffect[] = same(counts, next.counts) ? [] : [{ effect: "value", item: ledger.id, slot: "counts", value: next.counts as unknown as FieldValue }];
   if (existing && !same(existing.capacity, anchor)) effects.push({ effect: "value", item: existing.item.id, slot: "capacity", value: evidenceCapacityWireV17(anchor) });
@@ -268,7 +199,7 @@ export function evidenceFundCapacityV17(given: RuleGiven, batch: EvidenceBatchRe
   if (!longest) return null;
   const publication = given.state.item(batch.publication.seq), manifest = publication?.refs["manifest"];
   if (!isFactRef(manifest) || !certifiedBoundFenceBudgetV17(given.resolved.bounds, batch, manifest).admitted) return null;
-  const futureBatch = { ...batch, planAt: Number.MAX_SAFE_INTEGER, jobs: Array.from({ length: EVIDENCE_BATCH_JOBS_V17 }, () => ({ name: longest.name,
+  const futureBatch = { ...batch, planAt: Number.MAX_SAFE_INTEGER, jobs: Array.from({ length: 8 }, () => ({ name: longest.name,
     job: { at: batch.operation.at, seq: Number.MAX_SAFE_INTEGER, hash: `sha256:${"f".repeat(64)}` } })) };
   const futureEffects: RuleEffect[] = [
     { effect: "value", item: given.resolved.self, slot: "batch", value: evidenceWireV17(futureBatch, 196608) },
@@ -279,11 +210,11 @@ export function evidenceFundCapacityV17(given: RuleGiven, batch: EvidenceBatchRe
     || utf8(canonicalize(futureBatch)).length > 196608 || !evidenceCarryingBudgetV17(given, futureEffects, [], [], []).admitted
     || !publishedForecast(given, batch, capacity, anchor)) return null;
   return { effects, capacity: evidenceCapacityWireV17(capacity),
-    policyKey: textDigest(canonicalize({ domain: "artroom-evidence-capacity-unused-1", publication: batch.publication, ordinal: batch.ordinal })) };
+    policyKey: ownsPolicy ? evidenceCapacityPolicyKeyV17(generation) : textDigest(canonicalize({ domain: "artroom-evidence-capacity-unused-1", publication: batch.publication, ordinal: batch.ordinal })) };
   } catch { return null; }
 }
 /** Binds one pre-funded identity to the actual admitted job. Counts do not
- * change here: every published descriptor was charged before the write. */
+ * change here: every published descriptor was charged before job work. */
 export function evidenceSpendPublishedCapacityV17(given: RuleGiven, holder: number, binding: EvidenceBinding, name: string, configuration: Digest,
   job: FactRef, admitted = true): { policyOwner: number; holdOwner: number; keys: readonly EvidenceHoldKeyV17[]; effects: RuleEffect[] } | null {
   if (binding.stage !== "published") return null;

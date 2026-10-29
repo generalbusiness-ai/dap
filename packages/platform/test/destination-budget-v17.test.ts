@@ -93,7 +93,7 @@ test("published written callbacks and the separate plan dispatch fit before push
   // original capture authority are exercised by the separate real journey.
   const measured = certifiedWrittenPlanBudgetV17(PROPOSED_BOUNDS);
   expect(measured.admitted).toBe(true);
-  expect(measured.effects).toBe(13);
+  expect(measured.effects).toBe(18);
   for (const variant of measured.variants) {
     const entry = { ...variant.entry, uses: Array.from({ length: PROPOSED_BOUNDS.usesPerEntry }, (_, n) => ({
       fact: { ...fact(n, destination), seq: Number.MAX_SAFE_INTEGER - n }, content: d("f"),
@@ -104,9 +104,18 @@ test("published written callbacks and the separate plan dispatch fit before push
     const fullWidthUses = entry.uses.map(use => ({ ...use, fact: { ...use.fact, seq: Number.MAX_SAFE_INTEGER } }));
     expect(variant.entryBytes).toBe(utf8(canonicalize({ ...entry, uses: fullWidthUses })).length + variant.observed);
   }
+  const push = measured.variants.find(variant => variant.name === "push")!;
+  expect(push.effects).toBe(18);
+  expect(push.ownerEffects).toBe(20);
+  expect(push.effects - 1).toBeLessThanOrEqual(push.ownerEffects);
+  expect(push.entry.effects).toContainEqual({ effect: "value", item: Number.MAX_SAFE_INTEGER, slot: "publicationKey", value: Number.MAX_SAFE_INTEGER - 2 });
+  const recovered = measured.variants.find(variant => variant.name === "read-publish")!;
+  expect(recovered.entry.effects).toContainEqual({ effect: "value", item: Number.MAX_SAFE_INTEGER, slot: "publicationKey", value: Number.MAX_SAFE_INTEGER - 2 });
   const receipt = measured.variants.find(variant => variant.name === "receipt")!;
+  expect(receipt.effects).toBe(13);
+  expect(receipt.entry.effects).toContainEqual({ effect: "value", item: Number.MAX_SAFE_INTEGER, slot: "planOpenedAt", value: Number.MAX_SAFE_INTEGER });
   expect(receipt.entry.effects.filter(effect => effect.effect === "operation").map(effect => effect.kind))
-    .toEqual(["revoke", "reservation-delete", "mint", "evidence-plan", "publication-settle"]);
+    .toEqual(["revoke", "reservation-delete", "mint", "evidence-plan"]);
   const read = measured.variants.find(variant => variant.name === "read")!;
   expect(read.effects).toBe(6);
   expect(read.observed).toBe(observationBytes("rules", PROPOSED_BOUNDS) + 9 * observationBytes("key", PROPOSED_BOUNDS)

@@ -107,7 +107,7 @@ export class DestinationHost implements Outside {
   /** Successor source/stage proof; distinct from a live legacy reservation snapshot. */
   stageSnapshot(asked: SignedIntent) { return readStageSnapshot(this.#given, this.#options, asked); }
 
-  accepts(owner: string, kind: string): boolean { return owner === "platform:destination@17" && ["evidence-account-settle", "publication-settle"].includes(kind) || (owner === "platform:destination@14" || owner === "platform:destination@15" || owner === "platform:destination@17") && kind === RULES_CERTIFICATE_KIND || owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(kind) || usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && ([...Object.values(DESTINATION_KINDS), "check-judge", "reservation-stage", "reservation-delete"] as string[]).includes(kind); }
+  accepts(owner: string, kind: string): boolean { return (owner === "platform:destination@14" || owner === "platform:destination@15" || owner === "platform:destination@17") && kind === RULES_CERTIFICATE_KIND || owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(kind) || usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && ([...Object.values(DESTINATION_KINDS), "check-judge", "reservation-stage", "reservation-delete"] as string[]).includes(kind); }
   /** Repeating these reads never repeats a host mutation. The driver keeps the same attempt. */
   readonly recovery = {
     accepts: (owner: string, kind: string): boolean => owner === "platform:destination@17" && ["evidence-admit", "evidence-result", "evidence-notice", "evidence-progress", "published-checks", "evidence-funding", "evidence-audit", "evidence-plan"].includes(kind) || usesFilePublicationProtocol(owner) && kind === "file-judge" || isOf(owner, OWNER) && [DESTINATION_KINDS.judge, DESTINATION_KINDS.read, DESTINATION_KINDS.adoptRead, "check-judge"].includes(kind as "judge" | "read" | "adopt-read" | "check-judge"),
@@ -159,9 +159,6 @@ export class DestinationHost implements Outside {
   }
 
   async send(request: EffectRequest): Promise<EffectAnswer | null> {
-    // These kinds settle through the Native owner's ready/beforeSend proof.
-    // They have no outside request or safe-read recovery.
-    if (request.owner === "platform:destination@17" && ["evidence-account-settle", "publication-settle"].includes(request.kind)) return null;
     try {
       const context = this.#bound(request);
       if (!context) return null;

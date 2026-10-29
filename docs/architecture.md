@@ -335,20 +335,17 @@ of admitted results. Disagreement permanently disables reuse for that key
 while allowing fresh jobs. Audits run fresh for the current logical request
 and name the actual member job whose result they compare.
 
-Destination funds evidence before push through bounded serial accounts.
-Each account holds two job slots; at most sixteen accounts cover the
-policy's 32 possible obligations. Future carrying-entry and Checker proof
-forecasts keep their limits. The runtime checks used plus reserved capacity
-when each account opens; a partial set cannot push. Generation
-capacity lives in a nonholder record so later results can update it after
-an account ends. A funded local self-delivery identifies the holder's
-settlement before its literal final transition. Pending operations and
-request accounts keep their reachable reservations. Neither TIME nor an
-unknown answer releases that room. The Git host supplies no settlement
-authority or provider fallback. Settlement identity fields authenticate the
-actual local source before binding can draw a held decision; a later guard
-checks current closure. The funding geometry is a structural ceiling, not a
-guarantee that every policy fits capacity or the generic binding selector.
+Destination 17 keeps legacy admission: the runtime limits global entries,
+not global bytes, items, records, or requests. Per-entry limits and the
+definition's count guards still apply. Whole-scope capacity adoption is a
+separate design item after measured deployment ceilings.
+
+NEW WORK carriers keep the counted operations and bound decisions needed
+by checks that finish after a publication becomes final. They serve the
+published, audit, result, and incident paths. They make no byte-admission
+guarantee. Full carrier setup does not gate Git publication. Actual written
+receipt proof and exact original carrier identities govern the later plan;
+count availability must be proved before opening check work.
 
 Destination records published-check holds in the same transaction that
 orders later admissions. Passes clear only the exact hold key at the same

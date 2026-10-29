@@ -5,7 +5,7 @@ import { canonicalize, isDigest, isFactRef, isKeyId, isMemberRef, isRecord, memb
 import { amountMath, naturalAmount, NOTHING, observationBytes, operationOpening, type Opening, type OperationRules, type RuleEffect, type RuleGiven, type RuleRequest } from '@generalbusiness/dap-derive';
 import { isObjectId } from './reservation.ts';
 import { readRulesPolicyObservationV17, requiredChecksV17, type ReservationPolicyInputV17 } from './reservation-v17.ts';
-import { EVIDENCE_BATCH_JOBS_V17, type EvidenceBatchRecordV17 } from './evidence-batch-v17.ts';
+import type { EvidenceBatchRecordV17 } from './evidence-batch-v17.ts';
 import type { RulesCheckV13 } from './rules-policy-v13.ts';
 import { RULES_POLICY_VALUE_V13 } from './rules-policy-v13.ts';
 import { RULES_TREE_PROOF } from './rules-policy-tree.ts';
@@ -140,21 +140,49 @@ export function certifiedWrittenPlanBudgetV17(bounds: Bounds) {
     input: input(kind, body), uses: [], prepared: [], effects: [attempt, ...effects], sends,
   });
   const written: Effect = { effect: 'state', item: MAX, state: 'written' };
+  const receiptBirth: Effect[] = [
+    { effect: 'state', item: MAX - 2, state: 'published' },
+    { effect: 'value', item: MAX - 1, slot: 'slot', value: null },
+    { effect: 'value', item: MAX - 1, slot: 'head', value: 'f'.repeat(64) },
+    { effect: 'open', item: MAX, type: 'receipt', state: 'owed' },
+    { effect: 'value', item: MAX, slot: 'publication', value: MAX - 2 },
+    { effect: 'value', item: MAX, slot: 'commit', value: 'f'.repeat(64) },
+    { effect: 'value', item: MAX, slot: 'publicationKey', value: MAX - 2 },
+  ];
+  const published: Entry['sends'] = [{ n: MAX, to: SCOPE, message: { class: 'request', type: 'relate', body: {
+    name: 'publication', item: FACT, state: 'published', detail: { operation: FACT, outcome: 'published', commit: 'f'.repeat(64) },
+  } } }];
+  const readObserved = observationBytes('rules', bounds) + 9 * observationBytes('key', bounds)
+    + 65 * observationBytes('member', bounds) + observationBytes('holders', bounds, 1) + 75;
   const variants = [
+    // Complete crowded receipt births retain the inherited producer
+    // allowances. The ledger excludes its automatic attempt from Most;
+    // c201's16-effect admission allowance is not a global push ceiling.
+    { name: 'push', entry: shell('push', { send: 'accepted', seen: 'f'.repeat(64) }, [
+      { effect: 'value', item: MAX - 2, slot: 'token', value: null }, ...receiptBirth,
+      { effect: 'value', item: MAX - 1, slot: 'judging', value: MAX - 3 },
+      ...opening(0, 'revoke', 3), ...opening(1, 'receipt', 3), ...opening(2, 'mint', 1), ...opening(3, 'judge', 1),
+    ], published), observed: 0, ownerEffects: 20, ordinaryEffects: 20 },
+    { name: 'read-publish', entry: shell('read', { seen: 'f'.repeat(64) }, [
+      ...receiptBirth, { effect: 'value', item: MAX - 1, slot: 'judging', value: MAX - 3 },
+      ...opening(0, 'receipt', 3), ...opening(1, 'mint', 1), ...opening(2, 'judge', 1),
+    ], published), observed: readObserved, ownerEffects: 17, ordinaryEffects: 16 },
     { name: 'receipt', entry: shell('receipt', { send: 'accepted', seen: 'f'.repeat(64) }, [
       { effect: 'value', item: MAX, slot: 'token', value: null }, written,
+      { effect: 'value', item: MAX, slot: 'evidenceWrittenAt', value: MAX },
+      { effect: 'value', item: MAX, slot: 'planOpenedAt', value: MAX },
       ...opening(0, 'revoke', 3), ...opening(1, 'reservation-delete', 3), ...opening(2, 'mint', 1), ...opening(3, 'evidence-plan', 1),
-      ...opening(4, 'publication-settle', 1),
-    ], []), observed: 0 },
-    { name: 'read', entry: shell('read', { seen: 'f'.repeat(64) }, [written, ...opening(0, 'evidence-plan', 1), ...opening(1, 'publication-settle', 1)], []),
+    ], []), observed: 0, ownerEffects: 13, ordinaryEffects: 16 },
+    { name: 'read', entry: shell('read', { seen: 'f'.repeat(64) }, [written,
+      { effect: 'value', item: MAX, slot: 'evidenceWrittenAt', value: MAX },
+      { effect: 'value', item: MAX, slot: 'planOpenedAt', value: MAX }, ...opening(0, 'evidence-plan', 1)], []),
       // Read declares the complete Rules/member/key/holder cohort, including
       // the property, array and row separators even on this receipt branch.
-      observed: observationBytes('rules', bounds) + 9 * observationBytes('key', bounds)
-        + 65 * observationBytes('member', bounds) + observationBytes('holders', bounds, 1) + 75 },
+      observed: readObserved, ownerEffects: 17, ordinaryEffects: 16 },
     { name: 'evidence-plan', entry: shell('evidence-plan', { written: FACT }, [], [{ n: MAX, to: SCOPE,
       message: { class: 'request', type: 'tell', body: { message: 'evidence-plan-open', fields: {
         publication: FACT, operation: FACT, receipt: FACT, written: FACT, manifest: FACT,
-      } } } }]), observed: 0 },
+      } } } }]), observed: 0, ownerEffects: 0, ordinaryEffects: 0 },
   ].map(variant => {
     // An observed property is only valid with nonempty rows. The bare shell
     // omits it; quote its syntax separately from the full admitted cohort.
@@ -168,7 +196,9 @@ export function certifiedWrittenPlanBudgetV17(bounds: Bounds) {
     };
   });
   return { admitted: variants.every(variant => variant.entryBytes <= bounds.entryBytes
-      && variant.effects <= Math.min(16, bounds.derivedEffects) && variant.entry.sends.length <= bounds.sendsPerEntry),
+      && variant.effects <= bounds.derivedEffects && variant.effects - 1 <= variant.ownerEffects
+      && variant.entry.effects.filter(effect => !['attempt', 'operation', 'open'].includes(effect.effect)).length <= variant.ordinaryEffects
+      && variant.entry.sends.length <= bounds.sendsPerEntry),
     entryBytes: Math.max(...variants.map(variant => variant.entryBytes)), effects: Math.max(...variants.map(variant => variant.effects)), variants };
 }
 
@@ -181,7 +211,7 @@ export function certifiedBoundFenceBudgetV17(bounds: Bounds, batch: EvidenceBatc
     const longest = [...batch.checks].sort((a, b) => bytes(b.name) - bytes(a.name))[0];
     if (!longest) return { admitted: false, entryBytes: 0, effects: 0, bindingCarrierBytes, variants: [] };
     const job = { ...FACT, at: batch.operation.at };
-    const futureBatch = { ...batch, planAt: MAX, jobs: Array.from({ length: EVIDENCE_BATCH_JOBS_V17 }, (_, n) => ({ name: longest.name, job: { ...job, seq: MAX - n } })) };
+    const futureBatch = { ...batch, planAt: MAX, jobs: Array.from({ length: 8 }, (_, n) => ({ name: longest.name, job: { ...job, seq: MAX - n } })) };
     const effects: Effect[] = [{ effect: 'value', item: MAX, slot: 'batch', value: evidenceWireV17(futureBatch, 196608) },
       ...operationOpening(0, { owner: 'platform:destination@17', kind: 'evidence-admit', attempts: 1, for: MAX })];
     let entryBytes = 0, admitted = true;
