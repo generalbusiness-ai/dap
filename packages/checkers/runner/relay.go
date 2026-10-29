@@ -45,13 +45,13 @@ func runStep(argv []string) int {
 		return failed()
 	}
 	syscall.CloseOnExec(saved)
-	if syscall.Dup2(1, 2) != nil {
+	if dupDescriptor(1, 2) != nil {
 		syscall.Close(saved)
 		return failed()
 	}
 	// Lookup does not prove exec: an actual loader/exec failure returns here.
 	syscall.Exec(program, argv, os.Environ())
-	if syscall.Dup2(saved, 2) != nil {
+	if dupDescriptor(saved, 2) != nil {
 		syscall.Write(saved, []byte("artroom checker step setup failed\n"))
 		syscall.Close(saved)
 		return 125
