@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:99592f70b7e5e3533aff3ae3c8a5911ce1cb05e8","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/versions.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:99e404dd0330b4a17248c30de8324d1d0f5ce596","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/destination-evidence-capacity-v17.ts."}
