@@ -1,10 +1,12 @@
 # Boundary objects in use: what the cases pass between parties
 
-Status: current. A proposal to the planner, 28 October 2026, against
-main `a78e0981`. Nothing here is built, and this note changes no landed
-document. It replaces an earlier draft, references, notes and
-ratifications, which was reviewed and never landed, and it keeps that
-draft's mechanism in its smallest form in section 9.
+Status: current. A proposal to the planner, 28 October 2026, revised 29
+October 2026 against main `41da9810`. Nothing here is built, and this
+note changes no landed document. It replaces an earlier draft,
+references, notes and ratifications, which was reviewed and never
+landed. The revision cuts section 9 to one value, three acts, one word
+on party slots and one convention, after a review of the first version
+against the malleable-software essays named under Source.
 
 ## 1. Scene
 
@@ -21,7 +23,8 @@ structured where the parties share it and strongly structured where each
 party uses it. Bowker and Star added what a shared record owes it: a
 stable set of such objects that each party can pull from in their own
 form, and no category that one party fixes for all, because that is a
-standard, and the others work around it. Appleton says the same of
+standard, and the others work around it.
+[Appleton](https://maggieappleton.com/planning-agents) says the same of
 agents from the other side. The interface between a person and an agent
 is thin, a line of text each way. The agent should carry the labour of
 making it thicker, and the thick interface is the shared thing the two
@@ -55,8 +58,8 @@ from how the parties use it.
   catalogue's groups 3 and 5 give each party one.
 - **Shared room**: a room whose members include two or more parties.
 - **Crosses**: a thing crosses when a party writes it into a room that
-  another party reads. Being read is not being bound. Only a ratification
-  binds.
+  another party reads. Being read is not being bound. Only the party's
+  own signature binds: a ratification, or a package act the party signs.
 - **Fold**: the record's items, states and rules, which every member
   runs alike.
 
@@ -351,10 +354,22 @@ No package can declare these views in advance. The table for the bill
 depends on which bill and which statement arrived. The grid for the rota
 depends on who wrote and what they said. So an agent builds the view on
 demand, for one party, in that party's own room, from what is on the
-table that day. A package can
-keep a view once the parties want it every time. Until then the host's
-job is to show the agent's view, let the person work in it, and let the
-person share it.
+table that day.
+
+Between that first view and a package there are two more steps, and each
+step asks a little more of the person than the last. First, the agent
+builds the view and the person works in it. Second, the person changes
+the view's recipe: sorts it, adds a column, or adds a column that the
+host computes, such as "fixed" where both parties' columns say so. The
+recipe is a short text that the person can read, and the agent drafts
+it. Third, the agent writes a custom view as code, the host runs that
+code in its sandbox over the same sources, and the person can edit the
+code. Fourth, a package keeps the view once the parties want it every
+time, with rules that read the marks. MacLean's rule for tailorable
+systems is that each step up in power costs a small step in skill, and
+these four steps keep to it. A view made in a room also gains what a
+view pasted into a chat does not. The record keeps it, signs it, shares
+it with the room and offers it to the next recipe.
 
 ## 6. What the record holds so that an agent can build them
 
@@ -388,12 +403,16 @@ for one.
 
 **The view's recipe, kept and shared.** For the owner to show the snag
 list to the contractor, the record keeps a recipe: which photos and
-which reading it draws from, named by hash, and what shape to draw. The
-[chat-composed views](2026-10-20-chat-composed-views.md) design keeps
-such a recipe for a chart. For the two parties, the identity of the list
-is the set of hashes the recipe names. Its shape is each party's own, so
-the contractor's agent re-cuts the owner's list by trade from the same
-hashes, and both know they are looking at one list.
+which reading it draws from, named by hash, and what shape to draw. A
+recipe is a short text, so the record keeps it the way it keeps a
+reading: as a note whose text is the recipe and whose sources are what
+the note is about. The [chat-composed
+views](2026-10-20-chat-composed-views.md) design keeps such a recipe for
+a chart as an item of its own, and this note keeps it as a note. For the
+two parties, the identity of the list is the set of hashes the recipe
+names. Its shape is each party's own, so the contractor's agent re-cuts
+the owner's list by trade from the same hashes, and both know they are
+looking at one list.
 
 **The exact text.** The one question is a text pinned by its hash that
 quotes four rows by page and code. Approvals, submissions and
@@ -439,44 +458,61 @@ them leaves outside.
 
 ## 8. What this changes
 
-dap has one way today for an agent to build an interface while it
-works: the composed views of the chat-composed views note. A chat model
-writes a small recipe, the host checks it, and the host draws a chart of
-a package's data in the person's AI app. It is the right instrument, and
+dap has one way today for an agent to build an interface while it works:
+the composed views of the chat-composed views note. A chat model writes
+a small recipe, the host checks it, and the host draws a chart of a
+package's data in the person's AI app. It is the right instrument, and
 it draws the wrong things. It reads only what a package has declared, so
 it can draw the grow room's moisture and cannot draw the patient's bill.
-Five changes point it at the boundary.
+Six changes point it at the boundary.
 
+- A recipe is a note. The composed-views design keeps a recipe as a
+  `view` item with three acts of its own. A note already holds a text
+  and names its sources, so the `view` item and its acts go, and the
+  host reads recipes from notes. Keeping a recipe is writing the note.
+  Sharing it is writing the note into the shared room. Reusing it in
+  another room is a note there that names it.
 - A recipe can read documents, readings, marks and journal rows, not
-  only a package's items.
-- The seven shapes of section 5 join its five kinds of chart.
+  only a package's items, and it names each source by hash.
+- A recipe can compute a column from its sources, in the expression
+  profile the host already compiles filters to, and the person can edit
+  the recipe's text in the generic interface. A computed column reads
+  notes and writes nothing.
+- The shapes of section 5 join the five kinds of chart as four kinds: a
+  table, which also draws a list and a grid, a timeline, a comparison of
+  two versions, and an image with regions. A brief is a note shown as
+  prose, which is how the host shows any note. A fifth kind, a custom
+  view that the host runs as code in its sandbox, comes after the four.
 - The person's marks go from the view into the record, signed by the
-  person and placed on a row. Today a composed view has no acts, and a
+  person and placed by locator. Today a composed view has no acts, and a
   tap on a mark only opens a card.
-- A recipe names its sources by hash, so that two parties' views of one
-  thing are known to be of one thing.
 - The host shows the view where the person is: in their AI app through
   the hosted endpoint, and in the browser, by the path the views
   prototype and the sandbox domain already give.
 
 After that, the matter package of the file-first direction starts from
-documents and a view, not from item types. The capture and retained
+documents and a view, not from item types, and it carries only what
+rules must read: a party slot and a closing. The capture and retained
 files slices gain places inside a document.
 
 ## 9. Minimal mechanism
 
-Sections 5 to 8 need one value shape, three acts, one rule and one room
-shape. They replace the earlier draft's four acts and per-member
-presentations.
+Sections 5 to 8 need one value, three acts, one word on party slots and
+one convention. The first version of this section, landed on 28 October,
+also had a `view` item with three acts and a `ratified` consent with
+four guards. This revision removes both, and says why under each
+heading.
 
-**A place inside a document.** A reference to a retained document is its
-digest. A locator is that digest with a place: a page number, a region
-of a page or a photo as four integers, a row number of a table, a time
-range of a recording in milliseconds, or an entry range of a journal as
-`{ scope, from, to }`. A locator is a value, not an act. It appears
-wherever a reference appears: in a note's `about`, in a recipe's
-sources, and in an exact text's quotations. The capture and retained
-files designs gain the locator and nothing else.
+**A place inside a document or a reading.** A locator is a base and a
+place. The base is the digest of a retained document or the fact
+reference of a note. The place is a page number, a region of a page or a
+photo as four integers, a row number of a table, a time range of a
+recording in milliseconds, or an entry range of a journal as
+`{ scope, from, to }`. A note's fact never changes, so a row number into
+it never drifts. A locator is a value, not an act. It appears wherever a
+reference appears: in a note's `about`, in a recipe's sources, and in an
+exact text's quotations. The capture and retained files designs gain the
+locator and nothing else.
 
 **Three acts in every room.** A native definition, `platform:commons@1`,
 pinned in every creation cohort beside the directory, membership, rules
@@ -488,15 +524,28 @@ most 16 entries.
 
 | Act | Fields | What it is |
 |---|---|---|
-| `note` | `text`: detached, at most 64 KiB, prose or data. `about`: a list of locators, of facts of kind `note`, `ratify` or `close` under the commons, and of entries of any other definition. `replaces`: a `note` fact, optional. | A reading, when the text is data and `about` names the documents read. A mark, when `about` names one row or region of a reading and the text is short. A brief, when it replaces the signer's earlier note. A re-cut, when it replaces a reading and names the same locators. |
-| `ratify` | `of`: a `note` fact. `for`: a fact reference to the opening entry of one item, optional. `text`: optional, at most 1,024 bytes. | One party's signature on another party's words. It is the only act that binds its signer to those words. With `for`, it is consent to enter one party slot of one item. |
+| `note` | `text`: detached, at most 64 KiB, prose or data. `about`: a list of locators, of facts of kind `note`, `ratify` or `close` under the commons, and of entries of any other definition, in any room the signer reads. `replaces`: a `note` fact, optional. | A reading, when the text is data and `about` names the documents read. A mark, when `about` names one row or region and the text is short. A recipe, when the text is a view's declaration and `about` names its sources. A brief, when it replaces the signer's earlier note. A re-cut, when it replaces a reading and names the same locators. |
+| `ratify` | `of`: a `note` fact. `text`: optional, at most 1,024 bytes. | One party's signature on another party's words. It is the only commons act that binds its signer to those words. |
 | `close` | `about`: as on `note`. `outcome`: text, at most 64 bytes. `text`: detached, optional. | One party's statement that its own part of a matter is closed, in its own word. It ends no item. |
 
 The commons gains no kinds and holds no enumerations. A reading that is
-a table is still a note, and an outcome is still the party's word. The
-commons verifies no locator and merges nothing. A reference needs no act
-of its own: the retained document is the reference, and the locator says
-where in it.
+a table is still a note, a recipe is still a note, and an outcome is
+still the party's word. The commons verifies no locator and merges
+nothing. A reference needs no act of its own: the retained document is
+the reference, and the locator says where in it. `close` stays an act
+rather than a note because a projection reads one bit from it, that the
+party's part is over, and a note cannot carry that bit without a reading
+of its text.
+
+**Rows are named by what they cite.** A reading that is a table carries,
+in each row, the locators that the row came from. A mark on a row names
+those locators, and names the reading's fact as well when it matters
+which reading the mark was made against. A re-cut by the other party
+that cites the same locators shows the same marks on the same rows,
+because the host matches rows by their citations and never by their
+position. A row that cites nothing, such as an empty cell of the rota,
+is named by the reading's fact and its row number. This is a convention
+the host keeps, not a rule the kernel checks.
 
 **The commons in a party's own room.** The commons is created with every
 room, including a room of one party. A party's pile, readings and
@@ -509,61 +558,65 @@ and it needs nothing new: the catalogue's group 3 rooms are own rooms.
 **Rooms created before the commons.** A pin in the creation cohorts
 reaches only rooms created after it. A room created before has no
 commons scope, and a package that declares the commons endpoint is
-refused there at install with `commons-missing`. Such a room gains the
-commons only by succession to a new scope, under the
-[definition succession](2026-10-22-definition-succession.md) note,
-which is designed and not built. BO1 creates new rooms for its
-witnesses, and the hosted rooms keep their pins until then.
+refused there at install. If the install already refuses an absent
+connection target by name, that name serves. Otherwise the refusal is
+`commons-missing`. Such a room gains the commons only by succession to a
+new scope, under the [definition
+succession](2026-10-22-definition-succession.md) note, which is designed
+and not built. BO1 creates new rooms for its witnesses, and the hosted
+rooms keep their pins until then.
 
 **How a package binds a party.** A package that takes a row from a view
 declares a connection to the commons as an `outside` endpoint, in the
-form of the [application packages](2026-10-18-application-packages-and-builder-room.md)
-note, and any of its acts can carry `about`, so that an item cites the
-hashes the row cited. A party slot in its item types carries a `consent`
-rule with one of three values.
+form of the [application
+packages](2026-10-18-application-packages-and-builder-room.md) note, and
+any of its acts can carry `about`, so that an item cites the hashes the
+row cited. A party enters a party slot of an item by signing the
+package's act that writes the slot, and that act names the terms, a
+`note` fact, in a field. The record then holds the party's signature on
+an entry that names the words by fact, which is what a ratification is.
+A party slot in an item type carries a `consent` rule with one of two
+values.
 
 - `signer`, the default. Only the act's signer enters the slot.
-- `ratified`. A member enters the slot only on their own ratification of
-  the terms, given for that item. One act opens the item and fills the
-  proposer's slot as signer. The other party then writes `ratify` of the
-  terms note, with `for` naming the item, in the shared room. A later
-  act fills the ratified slot. It presents the `note` fact as `terms`
-  and the `ratify` fact as `consent`, and the validator proves four
-  guards: the ratification's `of` is the terms note, or `consent-terms`;
-  its `for` is this item, or `consent-item`; its signer is the member
-  written, or `consent-signer`; and the terms note's text digest equals
-  the act's own `terms` field. An act that presents no ratification is
-  refused `consent-missing`.
 - `declared`. The package writes the slot without the member's
   signature, and the install screen lists every such slot with the acts
   that write it.
 
-A slot with no `consent` and an effect that writes it is refused
-`consent-unstated`. The marker that spends a ratification is the slot
-itself. The slot holds the member and the ratification's reference,
-written in the same entry as the act, so a second presentation finds
-the slot filled and is refused `consent-consumed`. A ratification whose
-`for` names one item fills a slot of no other item, so no member can
-spend it on another act. The state is one reference in each filled
-slot, bounded by the slot's `max`, and no guard scans history. The
-certified-rules hardening keeps one increasing marker for each
-Destination for the same reason. Reading a presented entry's signer
-needs one new part in the contract, `signer`, beside `kind`, `intent`,
-`on` and `time`.
+A slot with no `consent` and an effect that writes a member other than
+the signer is refused `consent-unstated`, by the package check and at
+install. The first version of this section had a third value,
+`ratified`, under which another member presented the party's commons
+ratification, and the validator proved four guards and spent the
+ratification. It is gone. The ratification in that design could only
+follow the item's opening, so the party can as well sign the package's
+act, and the act names the terms by fact as the ratification did.
+Reading a presented entry's signer, the marker that spent a
+ratification, the `signer` entry part and five refusal names go with it.
 
-**A recipe for a view.** The composed-views design keeps a chart's
-declaration as a `view` item in the Rules scope, with `keep-view`,
-`share-view` and `drop-view`. The same item keeps the recipes of section
-5. A recipe's sources are locators and `note` facts named by hash and by
-room, as well as a package's projections, and its kind is one of
-`table`, `list`, `grid`, `timeline`, `compare`, `image` or `brief`. The
-host mounts a recipe for a member over the rooms that member reads. A
-source in a room the member does not read appears as unreadable, with
-the room named and nothing else shown. The host draws the view in the
-person's AI app and in the browser. A mark made in a view is a `note`
-act placed by locator, in the room the member chooses, which the host's
-server signs as it signs any act from a view. Two parties' recipes that
-name the same hashes are recipes for one thing, and the host says so.
+**A recipe for a view.** A recipe is a note whose text is a declaration
+of at most 8 KiB, in the form the composed-views note gives, and whose
+`about` names its sources: locators, `note` facts by fact reference, and
+a package's projections. The declaration's kind is one of `table`,
+`timeline`, `compare` or `image`, or one of the five chart kinds. A
+declaration can define a column as an expression over its sources, in
+the `restricted@1` profile the view session compiles filters to. An
+expression reads notes and writes nothing. The host lists a room's
+recipes from its notes, and the newest note in a `replaces` chain is the
+current one. The host mounts a recipe for a member over the rooms that
+member reads. A source in a room the member does not read appears as
+unreadable, with the room named and nothing else shown. A recipe in a
+shared room names a private note by its fact reference and never by the
+digest of its text, so that the other party cannot confirm a short
+private mark by hashing guesses. The host draws the view in the person's
+AI app and in the browser. The person edits the recipe's text in the
+generic interface, and the edit is a new note that replaces the old. A
+mark made in a view is a `note` act placed by locator, in the room the
+member chooses, which the host's server signs as it signs any act from a
+view. Two parties' recipes that name the same hashes are recipes for one
+thing, and the host says so. A later host step adds a kind `custom`,
+whose declaration carries code that the host runs in the sandbox domain
+over the same sources, with the same way to write a mark.
 
 **Item ends and party closings.** An item's final state ends the item
 and never a party's part of the matter. A package does not declare a
@@ -577,8 +630,8 @@ acts, and a closing ends no item.
 | Witness | Scenario | Passes when |
 |---|---|---|
 | W1 | **The bill table.** In a member's own room, the member's agent retains two documents and writes a `note` whose text is a table and whose `about` names pages of both. The member writes four marks against rows of it. The agent writes an exact text that quotes four locators. | Every act is recorded with its signer. A projection of either document lists the reading, the marks and the exact text, each with its author, and nothing of the member's is attributed to the agent. |
-| W2 | **One list, two recipes.** A and B share a room that holds nine notes citing photos. A keeps a recipe of kind `list` over them in the shared room and writes a private mark on row six in A's own room. B keeps a recipe over the same hashes in B's own room, sorted differently, and writes a mark on row six in the shared room. | Both recipes mount for their keepers, and the host names them as recipes for one thing. For B, A's recipe shows A's private mark as unreadable, with A's room named. Row six in the shared room shows B's mark with B as its author, and A's private mark appears to A alone. |
-| W3 | **Consent before binding.** A package with a `ratified` slot `owner` is installed in the shared room. B opens an item from row six and enters its `contractor` slot as signer. A writes `ratify` of B's terms note with `for` naming the item. B then presents a ratification to write A into `owner` six times: none, B's own ratification of the terms, A's ratification of another note, A's ratification whose `for` names another item, A's ratification of the terms for this item, and that same ratification again. | The first four are refused `consent-missing`, `consent-signer`, `consent-terms` and `consent-item`. The fifth takes effect, the slot holds A and the ratification, and the item cites the row's hashes. The sixth is refused `consent-consumed`. |
+| W2 | **One list, two recipes.** A and B share a room that holds nine notes citing photos. A writes a recipe note of kind `table` over them in the shared room and writes a private mark on row six in A's own room. B writes a recipe note over the same hashes in B's own room, sorted differently, with a column computed from both parties' marks, and writes a mark on row six in the shared room. | Both recipes mount for their keepers, and the host names them as recipes for one thing. For B, A's recipe shows A's private mark as unreadable, with A's room named. Row six in the shared room shows B's mark with B as its author, and A's private mark appears to A alone. B's computed column reads B's mark and the shared marks only. |
+| W3 | **Consent before binding.** A package with a party slot `owner` under `consent: signer` is installed in the shared room. B opens an item from row six, enters its `contractor` slot as signer, and the act names B's terms note. A signs the package's `accept` act, which names the same terms note and writes A into `owner`. B then signs an act that writes A into `owner` of a second item. A second package, whose effect writes `owner` from a field with no `consent` on the slot, is offered for install. | A's act takes effect, the slot holds A, the entry names the terms by fact, and the item cites the row's hashes. B's act is refused by the slot's `signer` rule. The second package is refused `consent-unstated`. |
 | W4 | **Close without agreement.** C's package item ends `decided`. A writes `close` with outcome `disputed` about it. B writes `close` with outcome `done`. | All three stand. A projection shows the matter closed for A and B in their own words and C's item ended, and none of the three changed another. |
 
 **What changes where.** The slices change these with their code. This
@@ -586,34 +639,39 @@ head changes nothing.
 
 | Where | Today | After |
 |---|---|---|
-| `packages/contract/src/definition.ts` | No locator value. `EntryPart` has no signer. `ItemType.parties` is `SlotRule & { list, max, author }`. | A `locator` value. `EntryPart` gains `"signer"`. Party slots gain `consent?: "signer" \| "ratified" \| "declared"`. |
+| `packages/contract/src/definition.ts` | No locator value. `ItemType.parties` is `SlotRule & { list, max, author }`. | A `locator` value. Party slots gain `consent?: "signer" \| "declared"`. |
 | `packages/contract/src/scope.ts` | `PlatformDefinition` names eight platform parts. | It gains `commons`. |
 | [kernel page](../docs/kernel.md), K1, and `platform/src/native-catalog.ts` | The catalog pins 76 versions. | 77, with `platform:commons@1`. |
 | `scope/src/creation-versions.ts` and each Worker's `PLATFORM_CREATION_PINS` | The newest cohort has no commons. Each Worker's setting lists six historical pins. | The newest cohort gains `platform:commons@1`. The setting does not change. |
 | [capture](2026-10-21-capture-with-source.md) and retained files | A reference is a digest and a source. | A reference can carry a locator. |
-| [chat-composed views](2026-10-20-chat-composed-views.md) | Five chart kinds over a package's projections. No acts in a view. | Seven more kinds. Sources by hash. A mark from a view is a `note`. |
-| The host's generic interface and sessions | Shows a room's items. | Shows notes, marks, closings and recipes, in the browser and over MCP. |
-| [write an application](../docs/write-an-application.md) and [roadmap](../docs/roadmap.md) | Declare the item types first. No roadmap row. | Cite locators first, declare `consent` on each party slot, final states end items. One roadmap row. |
+| [chat-composed views](2026-10-20-chat-composed-views.md) | Five chart kinds over a package's projections, kept as a `view` item with three acts. No acts in a view. | Four more kinds. A recipe kept as a note. Sources by hash. Computed columns. A mark from a view is a `note`. |
+| The host's generic interface and sessions | Shows a room's items. | Shows notes, marks, closings and recipes, and lets a member edit a recipe, in the browser and over MCP. |
+| [write an application](../docs/write-an-application.md) and [roadmap](../docs/roadmap.md) | Declare the item types first. No roadmap row. | Cite locators first, declare `consent` on each party slot that an effect writes, final states end items. One roadmap row. |
 | [use cases](../docs/use-cases.md), "Pointing at things, and claims of agreement" and "Three kinds of statement" | "Pointing" and "a claim of agreement" as a signed act by several. | A reading, a mark and a ratification, with a link to this note. |
 
-**Slices.** Each is a request to the builder, in this order. None is
-filed by this note.
+**Slices.** Each is a request to the builder, in this order. The four
+requests filed on 28 October, BO1 `f34cec9f`, BO2 `13f354c0`, BO3
+`5fafd151` and BO4 `df9b925b`, describe the first version of this
+section. The planner replaces them when this revision lands.
 
-- **BO1. Locators and the commons.** The locator value, the three acts,
-  `platform:commons@1` in the newest creation cohort and in the catalog,
-  `commons-missing` at install in an older room, and the commons shown
-  by the generic interface. Witness W1, in a new room.
-- **BO2. Recipes over hashes.** The `view` item with document and note
-  sources, the seven kinds, and marks that write back. Witness W2. After
+- **BO1. Locators and the commons.** The locator value with both bases,
+  the three acts, `platform:commons@1` in the newest creation cohort and
+  in the catalog, the refusal at install in an older room, and the
+  commons shown by the generic interface. Witness W1, in a new room.
+- **BO2. Recipes as notes.** The host lists, mounts and draws recipes
+  from notes, the four kinds, computed columns, recipe editing in the
+  generic interface, and marks that write back. Witness W2. After
   declared views reach the generic server and the hosted endpoint.
-- **BO3. Consent on party slots.** The rule, the `signer` part, the
-  validator's checks, consumption, the install screen's list of
-  `declared` slots, and the first `ratified` slot in a package, the snag
-  list. Witness W3.
+- **BO3. Consent on party slots.** The `consent` word, the
+  `consent-unstated` refusal, the install screen's list of `declared`
+  slots, and the first two-party item in a package, the snag list.
+  Witness W3.
 - **BO4. Closings and the matter projection.** Closings in the room's
   views, the matter projection, and the four witnesses in `dap check`.
   Witness W4, and the renovation exit test with the matter package of
   the file-first direction.
+- **BO5. Custom views.** The kind `custom`, run in the sandbox domain
+  over a recipe's sources, with the same mark path. After BO2.
 
 ## Source
 
@@ -635,3 +693,14 @@ Things Out (1999), chapters 9 and 10. Thin and thick interfaces, the
 agent's translation labour and the plan as the shared thing to point at
 are Appleton's, "Planning with Agents" (2026), with Suchman's plan as a
 weak resource (1987).
+The revision of 29 October follows a review of the first version against
+Ink & Switch's "Malleable software: restoring user agency in a world of
+locked-down apps" (Litt, Horowitz, van Hardenberg and Matthews, 2025),
+with the gentle slope of MacLean and others (1990) as that essay
+presents it, "Potluck: dynamic documents as personal software" (Litt,
+Schoening, Shen and Sonnentag, 2022), and Webstrates (Klokmose and
+others, 2015, with the project's overview). The four steps of section 5
+are the gentle slope. A computed column that writes nothing is Potluck's
+annotation layer. A recipe named by hash and reused by reference is
+Webstrates' tool shared by reference and Potluck's reusable search. One
+set of hashes under two recipes is Webstrates' asymmetric collaboration.
