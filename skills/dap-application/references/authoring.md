@@ -195,6 +195,10 @@ definition. `when` conditions and viewer filters supply no authority.
 Surface views declare no acts. Use a card, carousel, or record for native
 controls.
 
+In each item projection source, list `states` in strictly increasing
+lexical order, without duplicates. Canonical object-key sorting does not
+reorder arrays.
+
 For package v2, include `connections`, `rights`, `exercises`, `order`,
 `groups`, `derivation`, and `parameters`. Use explicit empty arrays or
 objects where appropriate. A definition path must already appear in
