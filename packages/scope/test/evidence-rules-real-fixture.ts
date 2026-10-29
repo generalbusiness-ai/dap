@@ -756,7 +756,9 @@ export async function publishEvidenceFile(room: EvidenceRoom, setup: PreparedPub
   return { lane, manifest: factRefOf(await evidenceEntry(lane, manifest)), operation, base,
     job: async () => {
       const jobs = (await hardeningItems(lane, "job")).filter(item => item.values['stage'] === "published");
-      expect(jobs).toHaveLength(1);
+      const failure = jobs.length === 1 ? undefined
+        : `Actual automatic published job required; Native context: ${await evidenceNativeDiagnostic([lane, room.G])}; Native capacity: ${canonicalize(await evidenceNativeCapacity(room))}`;
+      expect(jobs, failure).toHaveLength(1);
       const held = jobs[0]!;
       expect(held).toMatchObject({ state: "requested", values: { reason: "admitted" } });
       const sealed = (await hardeningSealed(lane)).find(row => row.entry.seq === held.id);
