@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9573c692e73bba0028a5f558af0de6725ebdc282","text":"Merge retired a covered predecessor; the successor is at packages/platform/test/evidence-decision-v17.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9596911573bc3fdd80a5c47a7cfe6c269f0a5d7c","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-16-evidence-rules-design.md."}
