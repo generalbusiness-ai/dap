@@ -326,13 +326,32 @@ test("one counted initial send retains the original capture and proves all sixte
     const context = fixture.given({}, ordinal);
     expect(context.resolved.fields["capture"]).toBe(fixture.captureFact.seq);
     expect(context.resolved.fields["publication"]).toBe(2);
-    expect(fixture.guard.run(context)).toEqual({ holds: true });
+    if (ordinal === 15) {
+      // Count one full funded() invocation, including proposal and every
+      // previous row. Independent callbacks keep independent proof maps.
+      let reads = 0;
+      expect(fixture.guard.run({ ...context, own: seq => { reads++; return fixture.own(seq); } })).toEqual({ holds: true });
+      expect(reads).toBeGreaterThanOrEqual(16);
+      expect(reads).toBeLessThanOrEqual(8 * 16);
+    } else expect(fixture.guard.run(context)).toEqual({ holds: true });
     const emitted = fixture.effects.run(context); fixture.batch(context, emitted);
     const current = fixture.state.item(context.resolved.self)!;
     expect(evidenceFundedBatchV17(fixture.state, fixture.own, current, PROPOSED_BOUNDS)?.ordinal).toBe(ordinal);
   }
   expect(fixture.state.count("evidence-batch", "funded")).toBe(16);
   expect(evidenceFundingCompleteV17(fixture.state, fixture.state.item(2)!)).toBe(true);
+  // SCRIPTED adversarial retained-source ports. Each public call must
+  // reprove its ancestors rather than reuse an earlier invocation's result.
+  const last = fixture.state.item(21)!, ancestor = fixture.history.get(6)!;
+  fixture.history.delete(6);
+  expect(evidenceFundedBatchV17(fixture.state, fixture.own, last, PROPOSED_BOUNDS)).toBeNull();
+  const changed: Entry = { ...ancestor.entry, sends: [] };
+  fixture.history.set(6, { ...ancestor, entry: changed });
+  expect(evidenceFundedBatchV17(fixture.state, fixture.own, last, PROPOSED_BOUNDS)).toBeNull();
+  fixture.history.set(6, { entry: changed, hash: entryHash(changed) });
+  expect(evidenceFundedBatchV17(fixture.state, fixture.own, last, PROPOSED_BOUNDS)).toBeNull();
+  fixture.history.set(6, ancestor);
+  expect(evidenceFundedBatchV17(fixture.state, fixture.own, last, PROPOSED_BOUNDS)?.ordinal).toBe(15);
 });
 
 test("the maintained owner and ledger settle the actual funding marked send, while the old zero-request ceiling leaves it unavailable", () => {

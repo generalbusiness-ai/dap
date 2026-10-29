@@ -114,12 +114,28 @@ function captureSource(state: StateView, own: Own, capture: FactRef) {
     || !isRecord(raw.value["policy"]) || !same(raw.value["policy"], current.value["policy"])) return null;
   return { at, item, write: write!, entry: source.entry };
 }
-function captureAt(state: StateView, own: Own, capture: FactRef, bounds: Bounds) {
+function readCaptureAt(state: StateView, own: Own, capture: FactRef, bounds: Bounds) {
   const source = captureSource(state, own, capture);
   if (!source) return null;
   const snapshot = source.write.effect === "value" ? certifiedPublicationStateWireV17(source.write.value, bounds) : null;
   const selected = snapshot && captured(own, source.at, source.item, snapshot);
   return selected?.checks.length ? { ...selected, capture, snapshot: snapshot!, source: source.entry, total: Math.ceil(selected.checks.length / EVIDENCE_BATCH_JOBS_V17) } : null;
+}
+interface FundingProofContext {
+  captures: Map<string, ReturnType<typeof readCaptureAt>>;
+  births: Map<string, EvidenceBatchRecordV17>;
+}
+/** One immutable judge invocation owns these bounded proof results. A new
+ * public read or callback always starts with empty maps. */
+const fundingProofContext = (): FundingProofContext => ({ captures: new Map(), births: new Map() });
+function captureAt(state: StateView, own: Own, capture: FactRef, bounds: Bounds, proof = fundingProofContext()) {
+  const at = state.scope()?.at;
+  if (!at || !same(at, capture.at)) return null;
+  const key = canonicalize({ at, capture });
+  if (proof.captures.has(key)) return proof.captures.get(key)!;
+  const selected = readCaptureAt(state, own, capture, bounds);
+  proof.captures.set(key, selected);
+  return selected;
 }
 function fundingOpening(entry: Entry, id: string, publication: number, kind = EVIDENCE_FUNDING_V17): boolean {
   if (!isOperationId(id)) return false;
@@ -145,7 +161,7 @@ function fundRequest(at: ScopeRef, batch: Pick<EvidenceBatchRecordV17, "publicat
 }
 const immutableBatch = (batch: EvidenceBatchRecordV17) => ({ publication: batch.publication, operation: batch.operation, capture: batch.capture,
   ordinal: batch.ordinal, total: batch.total, touched: batch.touched, checks: batch.checks, policy: batch.policy });
-function batchAt(state: StateView, own: Own, entry: Entry, bounds: Bounds, depth: number): EvidenceBatchRecordV17 | null {
+function batchAt(state: StateView, own: Own, entry: Entry, bounds: Bounds, depth: number, proof: FundingProofContext, birth?: FactRef): EvidenceBatchRecordV17 | null {
   const at = state.scope()?.at, input = entry.input;
   if (!at || depth >= EVIDENCE_BATCH_ACCOUNTS_V17 || input.type !== "delivery" || input.message.class !== "request" || input.message.type !== "tell"
     || !("decision" in input) || input.decision !== "applied" || !same(input.from.at, at) || !isRecord(input.message.body) || input.message.body["message"] !== "evidence-fund"
@@ -153,7 +169,12 @@ function batchAt(state: StateView, own: Own, entry: Entry, bounds: Bounds, depth
   const fields = input.message.body["fields"], { publication, operation, capture, ordinal } = fields;
   if (Object.keys(fields).sort().join() !== "capture,operation,ordinal,publication" || !isFactRef(publication) || !isFactRef(operation)
     || !isFactRef(capture) || !natural(ordinal) || ordinal >= EVIDENCE_BATCH_ACCOUNTS_V17 || depth + ordinal >= EVIDENCE_BATCH_ACCOUNTS_V17) return null;
-  const selected = captureAt(state, own, capture, bounds), sender = own(input.from.seq);
+  // Depth and ordinal checks precede reuse. Only exact sealed births enter
+  // the map; a proposed future delivery never becomes a retained fact.
+  if (birth && (!same(birth.at, at) || !same(entry.at, birth.at) || entry.seq !== birth.seq || entryHash(entry) !== birth.hash)) return null;
+  const key = birth ? canonicalize(birth) : null;
+  if (key !== null && proof.births.has(key)) return proof.births.get(key)!;
+  const selected = captureAt(state, own, capture, bounds, proof), sender = own(input.from.seq);
   if (!selected || !same(selected.ref, publication) || !same(selected.operation, operation) || ordinal >= selected.total
     || !sender || !same(factOf(own, at, input.from.seq), input.from)) return null;
   const sent = sender.entry.sends.find(send => send.n === input.n);
@@ -164,7 +185,7 @@ function batchAt(state: StateView, own: Own, entry: Entry, bounds: Bounds, depth
       || origin.evidence.basis !== "own-answer" || !isRecord(origin.evidence.body) || Object.keys(origin.evidence.body).join() !== "capture"
       || !same(origin.evidence.body["capture"], capture) || !fundingOpening(selected.source, origin.operation, publication.seq)) return null;
   } else {
-    const previous = batchAt(state, own, sender.entry, bounds, depth + 1), retained = state.item(sender.entry.seq);
+    const previous = batchAt(state, own, sender.entry, bounds, depth + 1, proof, input.from), retained = state.item(sender.entry.seq);
     const row = retained && batchValue(retained);
     if (!previous || previous.ordinal !== ordinal - 1 || !same(previous.capture, capture) || !same(previous.publication, publication)
       || !same(previous.operation, operation) || !retained || retained.type !== "evidence-batch" || !["funded", "closed"].includes(retained.state)
@@ -177,26 +198,31 @@ function batchAt(state: StateView, own: Own, entry: Entry, bounds: Bounds, depth
   const batch = readEvidenceBatchWireV17(writes[0]!.value);
   const expected = readEvidenceBatchV17({ v: 1, publication, operation, capture, ordinal, total: selected.total,
     touched: selected.touched, checks: selected.checks.slice(ordinal * EVIDENCE_BATCH_JOBS_V17, (ordinal + 1) * EVIDENCE_BATCH_JOBS_V17), policy: selected.view, jobs: [], planAt: null });
-  return batch && expected && same(batch, expected) ? batch : null;
+  if (!batch || !expected || !same(batch, expected)) return null;
+  if (key !== null) proof.births.set(key, batch);
+  return batch;
 }
 /** Current mutable job/plan fields never replace the original funding proof.
  * At most sixteen actual deliveries are followed, always ordinal-1. */
 export function evidenceFundedBatchV17(state: StateView, own: Own, item: Item, bounds: Bounds): EvidenceBatchRecordV17 | null {
+  return fundedBatch(state, own, item, bounds, fundingProofContext());
+}
+function fundedBatch(state: StateView, own: Own, item: Item, bounds: Bounds, proof: FundingProofContext): EvidenceBatchRecordV17 | null {
   try {
     const actual = state.item(item.id), entry = own(item.id), batch = batchValue(item), at = state.scope()?.at;
     if (!actual || !same(actual, item) || item.type !== "evidence-batch" || !["funded", "closed"].includes(item.state) || !entry || !at
       || !same(factOf(own, at, item.id), { at, seq: item.id, hash: item.opened }) || !batch) return null;
-    const initial = batchAt(state, own, entry.entry, bounds, 0);
+    const initial = batchAt(state, own, entry.entry, bounds, 0, proof, { at, seq: item.id, hash: entry.hash });
     return initial && same(immutableBatch(batch), immutableBatch(initial)) ? batch : null;
   } catch { return null; }
 }
-function fundingProposal(given: RuleGiven): EvidenceBatchRecordV17 | null {
+function fundingProposal(given: RuleGiven, proof = fundingProofContext()): EvidenceBatchRecordV17 | null {
   if (given.input.type !== "delivery" || given.input.message.class !== "request" || given.input.message.type !== "tell") return null;
   // Preview the one implicit open and actual stored initial record. No
   // future hash is needed to prove the already sealed incoming send.
   const publication = localFact(given, "publication"), operation = localFact(given, "operation"), capture = localFact(given, "capture"), ordinal = given.resolved.fields["ordinal"];
   if (!publication || !operation || !capture || !natural(ordinal)) return null;
-  const selected = captureAt(given.state, given.own, capture, given.resolved.bounds);
+  const selected = captureAt(given.state, given.own, capture, given.resolved.bounds, proof);
   if (!selected || given.state.item(selected.ref.seq)?.state !== "reserved" || !same(publication, selected.ref)
     || !same(operation, selected.operation) || ordinal >= selected.total) return null;
   if (selected.checks.some(check => checkStageV13(check) === "published") && !certifiedWrittenPlanBudgetV17(given.resolved.bounds).admitted) return null;
@@ -206,7 +232,7 @@ function fundingProposal(given: RuleGiven): EvidenceBatchRecordV17 | null {
   const preview: Entry = { v: 1, at: given.resolved.at, seq: given.resolved.self, prev: null, time: given.time, clamped: false, epoch: 0,
     input: { ...given.input, message: given.input.message, decision: "applied" }, uses: [], prepared: [], effects: [{ effect: "open", item: given.resolved.self, type: "evidence-batch", state: "funded" },
       { effect: "value", item: given.resolved.self, slot: "batch", value: evidenceBatchWireV17(batch) }], sends: [] };
-  return batchAt(given.state, given.own, preview, given.resolved.bounds, 0);
+  return batchAt(given.state, given.own, preview, given.resolved.bounds, 0, proof);
 }
 interface PublishedPlanV17 { v: 1; publication: FactRef; receipt: FactRef; written: number; operation: FactRef; base: string; cursor: number; total: number }
 function readPlan(value: unknown): PublishedPlanV17 | null {
@@ -304,6 +330,7 @@ export function destinationEvidencePlanPending(state: StateView, own: Own, opera
   try { const source = planOpening(state, own, operation); return source ? { written: source.written } : null; } catch { return null; }
 }
 function planProposal(given: RuleGiven): { plan: PublishedPlanV17; accounts: NonNullable<ReturnType<typeof completeRows>>; holder: number } | null {
+  const proof = fundingProofContext();
   if (given.input.type !== "delivery" || given.input.message.class !== "request" || given.input.message.type !== "tell" || !same(given.input.from.at, given.resolved.at)) return null;
   const p = localFact(given, "publication"), operation = localFact(given, "operation"), r = localFact(given, "receipt"), w = localFact(given, "written"), m = localFact(given, "manifest");
   if (!p || !operation || !r || !w || !m) return null;
@@ -326,7 +353,7 @@ function planProposal(given: RuleGiven): { plan: PublishedPlanV17; accounts: Non
   if (Object.keys(fields).sort().join() !== "manifest,operation,publication,receipt,written" || !same(fields["publication"], p) || !same(fields["receipt"], r)
     || !same(fields["operation"], operation) || !same(fields["manifest"], m) || !same(fields["written"], w)) return null;
   const accounts = completeRows(given.state, item), rows = publishedRows(given.state, item), holder = given.resolved.subjects.get("also.batch");
-  if (!accounts || !rows?.length || accounts.some(row => row.record.planAt !== null || !evidenceFundedBatchV17(given.state, given.own, row.item, given.resolved.bounds))
+  if (!accounts || !rows?.length || accounts.some(row => row.record.planAt !== null || !fundedBatch(given.state, given.own, row.item, given.resolved.bounds, proof))
     || !holder || holder.state !== "funded" || holder.id !== accounts[0]!.item.id || !fundingOpening(writtenEntry.entry, source.entry.input.operation, holder.id, EVIDENCE_PLAN_V17)) return null;
   const manifestEntry = given.uses.find(use => same(use.fact, m))?.entry, base = manifestEntry?.input.type === "act" ? manifestEntry.input.signed.intent.fields["base"] : null;
   if (!isObjectId(base)) return null;
@@ -414,11 +441,11 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
   const dispatch = (given: RuleGiven, batch: EvidenceBatchRecordV17): RuleRequest | null => batch.ordinal + 1 < batch.total
     ? fundRequest(given.resolved.at, batch, batch.ordinal + 1) : ready(given, batch)?.request ?? null;
   const funded = (given: RuleGiven) => {
-    const batch = fundingProposal(given);
+    const proof = fundingProofContext(), batch = fundingProposal(given, proof);
     if (!batch) return null;
     const rows = batches(given.state, batch.operation);
     if (!rows || rows.some(row => row.record.ordinal === batch.ordinal || !same(row.record.capture, batch.capture)
-      || !evidenceFundedBatchV17(given.state, given.own, row.item, given.resolved.bounds))) return null;
+      || !fundedBatch(given.state, given.own, row.item, given.resolved.bounds, proof))) return null;
     const capacity = hooks.fundCapacity(given, batch);
     if (!capacity || !hooks.capacityValid(capacity.capacity)) return null;
     const effects: RuleEffect[] = [...capacity.effects,
