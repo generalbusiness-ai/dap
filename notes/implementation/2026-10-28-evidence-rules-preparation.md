@@ -16,7 +16,7 @@ binds actual stage facts to J3's existing Runner and external signer.
 
 Counted native outcomes now use one declared send. Separate funded
 `evidence-funding`, `evidence-audit` and `evidence-plan` operations serialize
-at most four batches; no global send cap widens. First current progress
+bounded accounts; no global send cap widens. First current progress
 opens audit once via ninth job value `auditOpenedAt` (null means empty).
 The shared sealed-opening helper resolves actual self. Bound landing and
 published fences claim an existing funded batch and open its admission
@@ -130,9 +130,9 @@ landing. Published checks and audit targets are always fresh. Audits match
 tree, stage and configuration. `auditOf` names actual counted Member job;
 `forJob` names this logical request, preserving fresh audits after retry.
 
-Before push, at most four native accounts fund eight lifetime job slots
-each, with actual capture/operation/ordinal and hold/policy/incident
-identities. Settling outcomes open no holder. Complete funding and staging
+Before push, native accounts fund bounded lifetime job slots with actual
+capture/operation/ordinal and hold/policy/incident identities. The measured
+repair below replaces the original four eight-slot accounts. Settling outcomes open no holder. Complete funding and staging
 produce one readiness update in either order. Zero obligations need no
 account. Only actual written receipt proof, including recovery, starts
 the nonholder published plan.
@@ -195,10 +195,14 @@ must remain available for later publications and late results.
 No scope bound, recorded historical declaration, or TIME rule changes.
 The selected profile uses one nominal two-slot account type and at most
 sixteen serial accounts for 32 obligations. This avoids ambiguous handler
-routing between holder types. Full future forecasts must reject policies
-that cannot fit the unchanged capacity, carrying-entry, or Checker proof
-limits before work. New setup and settlement costs remain subject to those
-quotes and acceptance checks.
+routing between holder types. Full future carrying-entry and Checker proof forecasts keep their limits.
+The existing Native API exposes neither the runtime byte total nor compiled
+reservation amounts, so it cannot truthfully admit all future accounts in
+one calculation. The runtime applies its exact used-plus-reserved check to
+each actual new-work account. A partial set stays unready and cannot push;
+explicit withdrawal must remain available. Atomic all-account capacity
+admission is not claimed. New setup and settlement work must appear in the
+compiled declarations and each account's complete reservation.
 
 ## Decisions witness map
 

@@ -335,6 +335,18 @@ of admitted results. Disagreement permanently disables reuse for that key
 while allowing fresh jobs. Audits run fresh for the current logical request
 and name the actual member job whose result they compare.
 
+Destination funds evidence before push through bounded serial accounts.
+Each account holds two job slots; at most sixteen accounts cover the
+policy's 32 possible obligations. Future carrying-entry and Checker proof
+forecasts keep their limits. The runtime checks used plus reserved capacity
+when each account opens; a partial set cannot push. Generation
+capacity lives in a nonholder record so later results can update it after
+an account ends. A funded local self-delivery identifies the holder's
+settlement before its literal final transition. Pending operations and
+request accounts keep their reachable reservations. Neither TIME nor an
+unknown answer releases that room. The Git host supplies no settlement
+authority or provider fallback.
+
 Destination records published-check holds in the same transaction that
 orders later admissions. Passes clear only the exact hold key at the same
 or a later publication. Transitions and overrides have distinct recorded
