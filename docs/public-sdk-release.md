@@ -52,6 +52,14 @@ in excluded evidence, outside compiler ancestry. The output and declaration
 checks reject any other Git module, including Node and host transports.
 The internal `Reader` implementation has no public package export.
 
+The platform package also carries the canonical `skills/dap-application`
+tree. The producer copies its committed bytes and file modes into the external
+platform stage and lists `skills` in the package files. The release manifest
+records each asset and the tree digest. The checker compares the source, stage
+and actual archive. This asset mapping preserves the eight-package plan and
+its code export and dependency guards. Repository plugin installation remains
+the primary skill installation path.
+
 The command is `dap`. `artroom` remains an alias. All workspace package names
 use `@generalbusiness/dap-*`, including bytes, client and replay. The existing
 seven SDK names and their exports are unchanged; git is the eighth name. The `artroom-replay` command,

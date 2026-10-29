@@ -133,7 +133,7 @@ test("SDK module references preserve genuine imports and rewrite declarations wi
     const platformManifest = JSON.parse(readFileSync(new URL("packages/platform/package.json", root), "utf8"));
     writeFileSync(join(applicationStage, "package.json"), JSON.stringify(publishManifest(platformSpec, platformManifest, "0.1.0-dev.2")));
     // A made-up skill isolates code-export closure; the separate asset witness
-    // below checks actual committed bytes, modes, copying and archive content.
+    // above checks actual committed bytes, modes, copying and archive content.
     const skillPath = "skills/dap-application/SKILL.md", skillBytes = "# Made-up authoring fixture\n";
     mkdirSync(join(applicationStage, "skills/dap-application"), { recursive: true });
     writeFileSync(join(applicationStage, skillPath), skillBytes); chmodSync(join(applicationStage, skillPath), 0o644);
