@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:89b95ba482a11704c48a2e5be24c9e262a0ed595","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-29-j3-recovery.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8adadf991fd0e7601eabd00ed88a5035c224235b","text":"Merge retired a covered predecessor; the successor is at packages/checkers/runner/relay_dup_linux.go."}
