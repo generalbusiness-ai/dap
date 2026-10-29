@@ -1,0 +1,98 @@
+{
+  "commit": "f77e454a84fca21e22eec7fe6d7eed16d7cf08e1",
+  "originalDirectory": "spikes/typed-surface",
+  "retainedDirectory": "spikes/typed-surface-before",
+  "qualification": "Exact historical source bytes, retained for reproducible before/after measurements. Historical report paths and timings describe the original spike, not a new run.",
+  "files": [
+    {
+      "path": "spikes/typed-surface/REPORT.md",
+      "bytes": 12211,
+      "sha256": "610e9459b48d641d46c0b304ddf03e21ad0c2abf0ec290be45ef167271453268",
+      "gitBlob": "113833bd7ab306402b2229f273898d055e534020"
+    },
+    {
+      "path": "spikes/typed-surface/commitments.ts",
+      "bytes": 9492,
+      "sha256": "683ece561658c34883c2abb1693f2f2de379783790244cc53b853048391fbe42",
+      "gitBlob": "8b466bd27ee3f8f9498ee84c944b0622a41956ba"
+    },
+    {
+      "path": "spikes/typed-surface/grow-forms.ts",
+      "bytes": 21784,
+      "sha256": "3ef5f4f4fc22b30637d398a6a75cbcedc13b8c2d0ca979daab2e22f13e332ebb",
+      "gitBlob": "277edc944c670a77e9e7679174794fbbc48491f6"
+    },
+    {
+      "path": "spikes/typed-surface/grow-room.ts",
+      "bytes": 10136,
+      "sha256": "055a0bbd82e52e5094bb095297e7e1b808d6140ab2cd6463b49f214cd685c8d0",
+      "gitBlob": "53b13ca27c98f4885ad28a3136307f02d4ba0881"
+    },
+    {
+      "path": "spikes/typed-surface/grow-site.ts",
+      "bytes": 2534,
+      "sha256": "ae3b6057da5011ca4c7491574a58845457315bb6302a1521d42a42476f646ac3",
+      "gitBlob": "8f5664af26274108201a0a9a63ce3900c9096074"
+    },
+    {
+      "path": "spikes/typed-surface/lanes.ts",
+      "bytes": 16946,
+      "sha256": "d9974555b36985ffc97f9c02fcdc4eee02a8bb0d09763214a87996e2c47264b0",
+      "gitBlob": "c1cdabf93a4a65502245f7ce11f2ad162d7212e1"
+    },
+    {
+      "path": "spikes/typed-surface/lending-package.ts",
+      "bytes": 1912,
+      "sha256": "a39d35f27f2936549a09ae361a3d0858d5efd8bb7d0544962314974aa915c021",
+      "gitBlob": "ffb747545afd2d38c791a6eb32d88f1d7480a358"
+    },
+    {
+      "path": "spikes/typed-surface/lending-story.ts",
+      "bytes": 2130,
+      "sha256": "18e336c740ccf886172c6c6c79c1e0f4f2b06f4ea39dbd2ea8076ebd958a143d",
+      "gitBlob": "6514a3d2a600815737c0c13fc18f3f02f08e7b1e"
+    },
+    {
+      "path": "spikes/typed-surface/lending.ts",
+      "bytes": 3988,
+      "sha256": "04a693c8f3fba628e8d32d7874add07e66d7405b98a8007858b67f58762b0900",
+      "gitBlob": "a3922db840f534c56252b217f357416b342fa7cc"
+    },
+    {
+      "path": "spikes/typed-surface/lib.ts",
+      "bytes": 38822,
+      "sha256": "da3ca2abec1168c5c5a743187ea7ee275c70a8e938957b2c021fa54b6fe3680c",
+      "gitBlob": "d7f6df46c44b28aab33df7ec05b5de6755f20d0d"
+    },
+    {
+      "path": "spikes/typed-surface/package.ts",
+      "bytes": 9075,
+      "sha256": "7f60d11ee1a9756c886f09e2cafc4673da534591f6a1f2c31ed067a95b40c23d",
+      "gitBlob": "1caf6067afe082cf97cddd8339bae0e82281eeea"
+    },
+    {
+      "path": "spikes/typed-surface/story.ts",
+      "bytes": 9074,
+      "sha256": "559a574f32855cba1bb9dee7650c0ef4f6b96e71797ca4d8320d5ae9ad4bbd71",
+      "gitBlob": "039f8d515d48e86bb9971fd58802ea3e544d16e0"
+    },
+    {
+      "path": "spikes/typed-surface/surface.test.ts",
+      "bytes": 7186,
+      "sha256": "2c2a641160407b56009c709082c0d42d6b8cca06e35a347072e98c6e9275a265",
+      "gitBlob": "da5c545ee2403805ab93f18389a8e5f73bff584a"
+    },
+    {
+      "path": "spikes/typed-surface/tsconfig.json",
+      "bytes": 1164,
+      "sha256": "2fd0414b6390b1de20286d12db2498c7d5bee4dac625404424fd24c3ae9f87f7",
+      "gitBlob": "99aec3add8390784e838a0927e7dde1c0dac6ccb"
+    },
+    {
+      "path": "spikes/typed-surface/vitest.config.ts",
+      "bytes": 1386,
+      "sha256": "4e3539d0a4eaf099d843e719a8d5a23bed6878a15f3c94bcae47e7ec190054ae",
+      "gitBlob": "446c918cf5c8407d5e4d5427165d86e70dda9b87"
+    }
+  ]
+}
