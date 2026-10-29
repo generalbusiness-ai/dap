@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fa1e2d6a8082ccdc9cee6541d60e4e04cbe8fec7","text":"Merge retired a covered predecessor; the successor is at skills/dap-application/assets/starter/index.html."}
+{"kind":"promise","text":"Implement the next ordered idle-alarm request after the DX-A1 landing. Trace every wake owner, run the bounded native quiescent-room and single-timer witnesses, and repair any confirmed orphan alarm without suppressing legitimate wakes.","body":{"branch":"request/idle-scope-alarms-20261029"}}
