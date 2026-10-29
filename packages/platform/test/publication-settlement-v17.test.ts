@@ -9,6 +9,14 @@ import { destinationPublicationSettlementPendingV17, PUBLICATION_SETTLE_V17, pub
 
 const OWNER = "platform:destination@17" satisfies PlatformDefinition;
 type Terminal = "cleaned" | "aborted" | "not-reserved";
+/** The production turn and replay supply their pinned rules to the fold.
+ * Keep that same port while retaining the maintained Ledger implementation. */
+class SettlementLedger extends Ledger {
+  pinnedRules: PlatformRules | undefined;
+  override get foldOptions() {
+    return { ...super.foldOptions, platform: this.pinnedRules };
+  }
+}
 /** A SCRIPTED genesis and provider finish stand for authority and cleanup.
  * Actual maintained outcome/delivery judges, fold and release run afterward. */
 function fixture(terminal: Terminal = "cleaned", throughReceipt = false) {
@@ -20,7 +28,7 @@ function fixture(terminal: Terminal = "cleaned", throughReceipt = false) {
     receives: { ...works.receives, start: { ...works.receives["start"]!, opens: "publication", effects: [{ code: "begin", row: "TEST", most: { effects: 2, operations: ["judge"] } }] } },
     outcomes: { ...works.outcomes, judge: { code: "judge", row: "TEST", attempts: 1, most: { effects: 3, opens: "receipt", operations: ["receipt"] } },
       receipt: { code: "receipt", row: "TEST", attempts: 1, most: { effects: 2, operations: [] } } } };
-  const data = publicationSettlementDataV17(base), definition = checkedPlatformData(data), ledger = new Ledger(definition, "platform:destination");
+  const data = publicationSettlementDataV17(base), definition = checkedPlatformData(data), ledger = new SettlementLedger(definition, "platform:destination");
   const baseRules: Rules = {
     begin: { place: "effect", most: 2, run: given => operationOpening(0, { owner: OWNER, kind: "judge", attempts: 1, for: given.resolved.self }).filter(effect => effect.effect === "operation" || effect.effect === "attempt") },
     judge: { place: "outcome", rules: { selects: false, read: false, retries: () => false, most: { effects: 3, requests: 0, operations: 1 },
@@ -34,6 +42,7 @@ function fixture(terminal: Terminal = "cleaned", throughReceipt = false) {
         { effect: "state", item: operation.for!, state: terminal }], opens: [], sends: [] }) } },
   };
   const rules = publicationSettlementRulesV17(baseRules, data), platform: PlatformRules = { named: OWNER, rules }, at = { ...otherLane, kind: "destination" as const };
+  ledger.pinnedRules = platform;
   ledger.fold({ v: 1, at, seq: 0, prev: null, time: t(0), clamped: false, epoch: 0,
     input: { type: "genesis", seed: { v: 1, kind: "destination", definition: OWNER, creator: null, cause: d("c"), ordinal: 0 },
       inc: at.inc, kind: "establish", founding: null, source: null, n: null, message: null, decision: "applied" }, uses: [], prepared: [],
@@ -46,7 +55,7 @@ function fixture(terminal: Terminal = "cleaned", throughReceipt = false) {
   const offer = (operation: typeof finish, result: "confirmed" | "refused" | "unknown", evidence: Evidence) => {
     const judged = settleOutcome(ledger.state, definition, { type: "outcome", operation: operation.id, attempt: 1, result, evidence },
       { clock: clockOf(ledger.state, ledger.now), bounds: PROPOSED_BOUNDS, own: ledger.own, platform });
-    expect(judged.result).toBe("write");
+    expect(judged.result, judged.result === "write" ? undefined : JSON.stringify(judged).slice(0, 2048)).toBe("write");
     if (judged.result !== "write") throw Error("The scripted cleanup outcome must write");
     ledger.seal(written(judged));
   };

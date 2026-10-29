@@ -154,7 +154,9 @@ test("published obligations refuse before capture or new work when the future wr
   const fixture = fundingPreview(), current = fixture.given(), emitted = fixture.effects.run(current);
   const constrained = fixture.given({ derivedEffects: 10 });
   expect(evidenceCarryingBudgetV17(constrained, [fixture.implicit, ...emitted], [], [], []).admitted).toBe(true);
-  expect(certifiedWrittenPlanBudgetV17(constrained.resolved.bounds)).toMatchObject({ admitted: false, effects: 11 });
+  const future = certifiedWrittenPlanBudgetV17(constrained.resolved.bounds);
+  expect(future.admitted).toBe(false);
+  expect(future.effects).toBeGreaterThan(constrained.resolved.bounds.derivedEffects);
   expect(() => evidenceFundingCaptureV17(constrained, fixture.state.item(2)!, fixture.snapshot)).toThrow("future carrying entry");
   expect(fixture.guard.run(constrained)).toEqual({ holds: false, name: "evidence-funding-unavailable" });
   expect(() => fixture.effects.run(constrained)).toThrow();

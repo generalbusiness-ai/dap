@@ -51,7 +51,7 @@ describe("exact pre-publication capacity identities", () => {
   }
   function snapshot(source: EvidenceBatchRecordV17): CertifiedPublicationStateV17 {
     const policy = source.policy, envelope = { configured: true, policy: policy.policy, proposal: policy.proposal, certificate: policy.certificate };
-    return { policy: { observation: { subject: "rules", of: RULES, head: policy.head, revision: policy.revision, definition: "platform:rules@13", at: "2026-10-28T00:00:00.000Z",
+    return { policy: { observation: { subject: "rules", of: RULES, head: policy.head, revision: policy.revision, definition: "platform:rules@13", at: "2026-10-28T00:00:00Z",
       content: { asked: "rules", approvals: 1, ownerMayReview: false, checks: policy.policy.checks.map(({ name, configuration, required, checker }) => ({ name, configuration, required, checker: checker.member })),
         labels: [], singleControllerException: false, extents: valueDigest("artroom-rules-extents-3", envelope), roomService: null, serviceGeneration: policy.serviceGeneration } },
       input: { rules: RULES, destination, extents: envelope }, touched: [...source.touched], required: [], tree: "b".repeat(40), manifest: fact(5) }, generations: [] };
@@ -73,10 +73,10 @@ describe("exact pre-publication capacity identities", () => {
     const generation = { rules: RULES, seq: 10 }, policyKey = evidenceCapacityPolicyKeyV17(generation);
     const capacity: Item | null = anchor ? { id: anchor.id, type: "evidence-capacity", state: "ready", opened: d("a"), revision: anchor.id, parties: {},
       refs: { capture: fact(11, destination) }, values: { capacity: anchor.capacity, policy: anchor.policy, policyKey }, attributed: [] } : null;
-    const captured: Entry = { v: 1, at: destination, seq: 11, prev: d("a"), time: "2026-10-28T00:00:00.000Z", clamped: false, epoch: 0,
+    const captured: Entry = { v: 1, at: destination, seq: 11, prev: d("a"), time: "2026-10-28T00:00:00Z", clamped: false, epoch: 0,
       input: { type: "outcome", owner: "platform:destination@17", kind: "judge", operation: "10:0", attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: {} } }, uses: [], prepared: [], effects: [], sends: [] };
     return { input: { type: "delivery", from: fact(20, destination), n: 0, message: { class: "request", type: "tell", body: { message: "evidence-fund", fields: {} } } },
-      time: "2026-10-28T00:00:00.000Z", uses: [], resolved: { at: destination, self, bounds: PROPOSED_BOUNDS },
+      time: "2026-10-28T00:00:00Z", uses: [], resolved: { at: destination, self, bounds: PROPOSED_BOUNDS },
       own: (seq: number) => seq === 11 ? { entry: captured, hash: entryHash(captured) } : null,
       state: { page: (type: string) => ({ items: type === "branch" ? [branch] : type === "evidence-ledger" ? [ledger] : type === "evidence-capacity" && capacity ? [capacity] : [], more: false }),
         lookup: (type: string, index: string, key: string) => type === "evidence-capacity" && index === "policyKey" && key === canonicalize(policyKey) && capacity ? [capacity.id] : [],
