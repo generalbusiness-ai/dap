@@ -1,0 +1,79 @@
+{
+  "format": "artroom-definition-1",
+  "name": "note-signal",
+  "profile": {
+    "name": "restricted",
+    "version": 1
+  },
+  "capabilities": [],
+  "genesis": "establish",
+  "items": {
+    "connection": {
+      "many": false,
+      "max": 1,
+      "states": {
+        "ready": {
+          "final": false
+        }
+      },
+      "initial": "ready",
+      "parties": {},
+      "refs": {
+        "target": {
+          "fixed": true,
+          "required": true,
+          "to": {
+            "type": "scope",
+            "kind": "lane"
+          }
+        }
+      },
+      "values": {}
+    }
+  },
+  "acts": {
+    "establish": {
+      "step": "open",
+      "on": "connection",
+      "grant": "signal.establish",
+      "fields": {
+        "target": {
+          "type": "scope",
+          "kind": "lane",
+          "required": true
+        }
+      },
+      "also": {},
+      "guards": [],
+      "effects": [
+        {
+          "ref": {
+            "slot": "target",
+            "from": {
+              "field": "target"
+            }
+          }
+        }
+      ],
+      "sends": [
+        {
+          "tell": {
+            "to": {
+              "slot": "target"
+            },
+            "message": "ready",
+            "fields": {},
+            "result": {
+              "refused": [],
+              "undelivered": []
+            }
+          }
+        }
+      ],
+      "attention": []
+    }
+  },
+  "receives": {},
+  "timed": {},
+  "rules": {}
+}

@@ -1,0 +1,195 @@
+{
+  "v": 2,
+  "name": "test.example.notes",
+  "version": "0.1.0",
+  "entry": "definition.json",
+  "definitions": [
+    "definition.json",
+    "signal.json"
+  ],
+  "host": {
+    "execution": "recorded-do",
+    "profiles": [
+      "restricted@1"
+    ]
+  },
+  "capabilities": [],
+  "projections": {
+    "state": {
+      "v": 1,
+      "definition": "definition.json",
+      "revision": "revision",
+      "sources": {
+        "board": {
+          "item": "board",
+          "read": "many",
+          "states": [
+            "open"
+          ],
+          "limit": 1,
+          "fields": {
+            "title": {
+              "from": {
+                "kind": "value",
+                "name": "title"
+              },
+              "of": {
+                "type": "text",
+                "max": 80
+              },
+              "nullable": false
+            },
+            "ready": {
+              "from": {
+                "kind": "value",
+                "name": "ready"
+              },
+              "of": {
+                "type": "bool"
+              },
+              "nullable": false
+            }
+          }
+        },
+        "notes": {
+          "item": "note",
+          "read": "many",
+          "states": [
+            "done",
+            "expired",
+            "open"
+          ],
+          "limit": 16,
+          "fields": {
+            "text": {
+              "from": {
+                "kind": "value",
+                "name": "text"
+              },
+              "of": {
+                "type": "text",
+                "max": 280
+              },
+              "nullable": false
+            },
+            "until": {
+              "from": {
+                "kind": "value",
+                "name": "until"
+              },
+              "of": {
+                "type": "time"
+              },
+              "nullable": true
+            },
+            "author": {
+              "from": {
+                "kind": "party",
+                "name": "author"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": false
+            }
+          }
+        }
+      }
+    },
+    "signal": {
+      "v": 1,
+      "definition": "signal.json",
+      "revision": "revision",
+      "sources": {
+        "connection": {
+          "item": "connection",
+          "read": "many",
+          "states": [
+            "ready"
+          ],
+          "limit": 1,
+          "fields": {
+            "target": {
+              "from": {
+                "kind": "ref",
+                "name": "target"
+              },
+              "of": {
+                "type": "scope",
+                "kind": "lane"
+              },
+              "nullable": false
+            }
+          }
+        }
+      }
+    }
+  },
+  "roles": {
+    "admin": [
+      "notes.write",
+      "signal.establish"
+    ],
+    "member": [
+      "notes.write"
+    ]
+  },
+  "predecessor": null,
+  "presentation": {
+    "entry": "index.html",
+    "assets": [
+      {
+        "path": "index.html",
+        "file": "index.html",
+        "mediaType": "text/html"
+      }
+    ],
+    "descriptions": {},
+    "resources": {},
+    "views": {
+      "notes": {
+        "kind": "carousel",
+        "projection": "state",
+        "item": "notes",
+        "revision": "revision",
+        "actor": "author",
+        "summary": null,
+        "acts": [],
+        "waiting": {},
+        "refresh": 5000,
+        "display": "inline",
+        "back": null,
+        "title": "text",
+        "facts": [
+          "state",
+          "until"
+        ],
+        "context": "Note {id}: {state}",
+        "fallback": "Note {id}"
+      }
+    }
+  },
+  "scenarios": [
+    "scenarios/basic.json"
+  ],
+  "connections": [
+    {
+      "from": "signal.json",
+      "item": "connection",
+      "slot": "target",
+      "to": "definition.json"
+    }
+  ],
+  "rights": {},
+  "exercises": [],
+  "groups": [],
+  "order": [
+    {
+      "definition": "definition.json",
+      "handler": "ready",
+      "by": "any"
+    }
+  ],
+  "derivation": {},
+  "parameters": {}
+}

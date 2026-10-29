@@ -1,10 +1,12 @@
 #!/usr/bin/env node
-// Check the relative links of every Markdown file in the repository.
+// Check relative links and canonical repository links in every Markdown file.
 //
 // A link fails when its target file does not exist, or when it names a
-// heading anchor that the target Markdown file does not have. Links with a
-// scheme (https:, mailto:) and absolute paths are not relative and are not
-// checked. Fenced code and inline code are not read.
+// heading anchor that the target Markdown file does not have. Canonical
+// GitHub blob/main links for this repository resolve against this checkout,
+// so the skill's installed links stay checked without a network request.
+// Other links with a scheme and absolute paths are not checked. Fenced code
+// and inline code are not read.
 //
 // Skipped: node_modules, .git, and every test/ directory, whose Markdown
 // files are fixtures. notes/ (with notes/plans/) and spikes/parked/ are history and keep
@@ -27,6 +29,7 @@ const history = args.includes("--history");
 const selfTest = args.includes("--self-test");
 const root = resolve(args.find((arg) => !arg.startsWith("--")) ?? new URL("..", import.meta.url).pathname);
 const skipAnywhere = new Set(["node_modules", ".git", "test"]);
+const canonicalRepository = "https://github.com/generalbusiness-ai/artroom/blob/main/";
 
 function* markdown(dir) {
 	for (const name of readdirSync(dir)) {
@@ -129,12 +132,17 @@ for (const file of markdown(root)) {
 			...[...line.matchAll(/^\s*\[[^\]]+\]:\s*<?(\S+?)>?(?:\s+"[^"]*")?\s*$/g)].map((m) => m[1]),
 		];
 		for (const target of targets) {
-			if (/^[a-z][a-z0-9+.-]*:/i.test(target) || target.startsWith("/")) continue;
+			const canonical = target.startsWith(canonicalRepository);
+			if (!canonical && (/^[a-z][a-z0-9+.-]*:/i.test(target) || target.startsWith("/"))) continue;
 			checked++;
-			const [pathPart, anchor] = target.split("#", 2);
+			const [pathPart, anchor] = (canonical ? target.slice(canonicalRepository.length) : target).split("#", 2);
 			const decoded = decodeURIComponent(pathPart);
-			const path = decoded === "" ? file : resolve(dirname(file), decoded);
 			const where = `${relative(root, file)}:${index + 1}`;
+			if (canonical && (!decoded || decoded.startsWith("/") || decoded.includes("\\") || decoded.includes("?") || decoded.split("/").includes(".."))) {
+				failures.push(`${where}: invalid canonical repository path ${target}`);
+				continue;
+			}
+			const path = decoded === "" ? file : resolve(canonical ? root : dirname(file), decoded);
 			if (!existsSync(path)) {
 				failures.push(`${where}: no file ${target}`);
 				continue;
@@ -147,5 +155,5 @@ for (const file of markdown(root)) {
 }
 
 for (const failure of failures) console.log(failure);
-console.log(`${checked} relative links checked, ${failures.length} broken.`);
+console.log(`${checked} local links checked, ${failures.length} broken.`);
 process.exitCode = failures.length === 0 ? 0 : 1;

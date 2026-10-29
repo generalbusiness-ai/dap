@@ -11,8 +11,18 @@ import { LENDING_DEFINITION } from "../../../examples/lending/pin.ts";
 import { prepareApplicationDirectory, readApplicationScenario } from "../src/application-files.ts";
 import { runApplicationScenario } from "../src/application-scenarios.ts";
 import { prepareGrowCheck } from "../../../examples/grow/prepare-check.ts";
+import { checkCommand } from "../src/application-command.ts";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
+test("the bundled authoring starter passes actual dap check with its declarations, view and scenario", async () => {
+  const result = await checkCommand(["check", "skills/dap-application/assets/starter"], root);
+  expect(result.code, result.lines.join("\n")).toBe(0);
+  expect(result.lines).toContain("Native definitions: 2 validated.");
+  expect(result.lines).toContain("Scenario starter-notes: 11 steps passed; native replay consistent through 4.");
+  expect(result.lines).toContain("Declared projection checks: 2 passed at native journal heads.");
+  expect(result.lines).toContain("Local external effects are disabled; this check does not admit a package or audit screen code.");
+});
+
 test("maintained Counter and Lending packages bind their current browser definition and own all screen resources", async () => {
   for (const [config, pin, steps, through] of [
     ["apps/counter/dap.application.json", COUNTING_COMMITMENTS_DEFINITION, 18, 10],
