@@ -206,7 +206,7 @@ const seals = {
   "packages/scope/src/health.ts": "3d31d6c6d6413294cfe14d46430d357fb65a7949423642b642b139abefcdbdc8",
   "packages/scope/src/site/route.ts": "f4bbcdd1f53220ccce1337ec011e0c662f199f979513ca38ea891bda7add6ee8",
   "packages/scope/src/site/host.ts": "bfcdb093e430467da019b5994d034c2341c8b137dd14aacc97ac9d5e4222e332", // Private Site token custody; actual maintained parser output.
-  "packages/scope/src/site/token-reuse.ts": "6868a52935ee8c42e1d38a9216f62e768781c8d18c36f5f8705c2052fb12567d", // Private Site token custody; actual maintained parser output.
+  "packages/scope/src/site/token-reuse.ts": "ac9268b1d7718d40ee266d274fea29cb65a30f51a1a36985411e42d2eb71a540", // Reviewed pre-mint generation cleanup rescheduling; custody checks unchanged.
   "packages/scope/src/site/window.ts": "a5f64febfd69c17c682dc8bf1aa464378a3609d73d9ef0112c16fd79892aea54", // Bounded site-read window; actual maintained parser output.
   "packages/scope/src/applications/route.ts": "1a052942a992a9c9f13cd46205d1dcec5f6577814f9dcfb18362f00ec16f4c1f", // Actual union parser value adopted by root.
   "packages/scope/src/item-query-wire.ts": "8206b9a6531ca30cae1bc49cc249eea08c70a658305f41b3ebea6eda042055a8",
