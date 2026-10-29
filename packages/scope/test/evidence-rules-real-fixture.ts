@@ -243,7 +243,12 @@ export async function evidenceNativeDiagnostic(nodes: readonly Platform[]) {
         sends: entry.sends.slice(0, 8).map(send => ({ n: send.n, ...message(send.message) })), sendCount: entry.sends.length });
     }
     const pending = await (node.stub as NativeReadPort).operations(reader, undefined, true);
+    const outbox = await node.stub.outbox(reader);
     observed.push({ scope: await node.at(), head: summary.at, afterHead: (await node.summary()).at, summaryComplete: summary.complete, history,
+      outbox: outbox.ok ? { at: outbox.at, complete: outbox.complete, next: outbox.next ?? null, pageCount: outbox.value.length,
+        shown: outbox.value.slice(-8).map(row => ({ id: row.outboxId, to: row.to, class: row.class, held: row.held,
+          attemptCount: row.attempts.length, attempts: row.attempts.slice(-4), acknowledged: row.acknowledged,
+          result: row.result, diagnosis: row.diagnosis })) } : { refused: outbox.reason },
       pending: pending.ok ? { at: pending.at, complete: pending.complete, next: pending.next ?? null, pageCount: pending.value.length,
         shown: pending.value.slice(0, 8).map(row => ({ id: row.operation.id, owner: row.operation.owner, kind: row.operation.kind,
           state: row.state, sends: row.sends, attempts: row.operation.attempts })) } : { refused: pending.reason } });

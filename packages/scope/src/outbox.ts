@@ -177,6 +177,15 @@ export class Dispatcher {
     const scope = store.scope()!;
     const envelope = { to: send.to, from: { at: scope.at, seq, hash: send.hash }, n, message: send.message };
     const answer = await within(() => this.#transport.send(envelope), this.#bounds.dispatchSeconds);
+    if (send.message.class === 'request' && send.message.type === 'tell' && typeof send.message.body === 'object'
+      && send.message.body !== null && 'message' in send.message.body && send.message.body.message === 'reserve') {
+      const reply = answer === LATE || answer === null ? null : answer;
+      const scalar = (value: unknown) => typeof value === 'string' ? value.slice(0, 200) : typeof value === 'number' || typeof value === 'boolean' ? value : null;
+      console.log('TEMP-reserve-dispatch-reply', { scope: scope.at, to: send.to, outbox: `${seq}.${n}`, late: answer === LATE, absent: answer === null,
+        answer: reply?.answer ?? null, reason: reply && 'reason' in reply ? scalar(reply.reason) : null,
+        name: reply && 'name' in reply ? scalar(reply.name) : null, code: reply && 'code' in reply ? scalar(reply.code) : null,
+        hasMissing: reply !== null && 'missing' in reply, hasAt: reply !== null && 'at' in reply });
+    }
     // No answer in time, or none at all: the record stays as it was written.
     if (answer === LATE || answer === null) return;
     if (answer.answer === "recorded") {
