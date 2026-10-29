@@ -303,7 +303,7 @@ and celld working directory, when you stop or remove the services.
 
 ### Prerequisites
 
-Use an administrator account, Git, Node 26, Python 3.9 or later, and the
+You need administrator access, Git, Node 26, Python 3.9 or later, and the
 checkout's locked dependencies. `/usr/bin/python3` must work. The system
 curl must support `--aws-sigv4`. Put executable binaries outside the
 checkout: the celld release in
@@ -321,6 +321,9 @@ Use the Mac's existing DNS name and address. Replace `mac-name.local`,
 `192.0.2.10`, and `operator` below with that name, address, and service user.
 The service user owns the private keys, credentials, logs, and data.
 The installer owns its code and configuration as root.
+Run the non-sudo commands below as the configured service user, including
+certificate creation, credential creation, project preparation, and deployment.
+That user may also be your administrator account.
 
 ### Install
 
@@ -356,6 +359,9 @@ Edit `dap-host.json`: set the user, absolute binary paths, certificate and
 key paths, DNS names, and addresses. Give the node a stable name. Choose
 an explicit volume maximum. Keep a new prefix under a root-owned parent,
 such as `/Library/dap-host`; let the installer create that prefix.
+Binary paths must name actual executable files. The installer refuses a
+symlink in a binary path or any parent directory. Resolve Homebrew links
+or copy the verified executables into a directory without symlinks.
 
 ```sh
 sudo apps/room/celld/mac/install.sh \

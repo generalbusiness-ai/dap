@@ -2,7 +2,7 @@
 """Prepare a same-node restart, then stop the store after celld closes."""
 import argparse
 import ctypes
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import errno
 import http.client
 import json
@@ -23,7 +23,8 @@ UNAVAILABLE = (Refusal, OSError, ValueError, subprocess.SubprocessError, http.cl
 @dataclass(frozen=True)
 class ProcessIdentity:
     pid: int
-    uid: int
+    # UID authorizes the initial owner; a UID change does not end a lifetime.
+    uid: int = field(compare=False)
     seconds: int
     microseconds: int
 

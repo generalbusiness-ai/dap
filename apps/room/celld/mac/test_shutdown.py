@@ -138,15 +138,17 @@ class ShutdownControls(unittest.TestCase):
 
     def test_scripted_label_absence_does_not_complete_while_its_process_remains_alive(self):
         class NamespaceGoneProcessLive(MacPorts):
-            def __init__(self):
+            def __init__(self, changed_uid):
                 self.removed = False
                 self.time = 0
+                self.changed_uid = changed_uid
 
             def job(self, label):
                 return ("absent", None) if self.removed else ("loaded", 789)
 
             def identity(self, pid):
-                return ProcessIdentity(789, 501, 1000, 654321)
+                uid = 502 if self.removed and self.changed_uid else 501
+                return ProcessIdentity(789, uid, 1000, 654321)
 
             def command(self, *args):
                 self.removed = True
@@ -158,11 +160,13 @@ class ShutdownControls(unittest.TestCase):
                 self.time += seconds
 
         # The real bootout procedure runs against these supervisor/process stand-ins.
-        ports = NamespaceGoneProcessLive()
-        with self.assertRaisesRegex(Refusal, "process closure unavailable"):
-            ports.bootout(LABELS["seaweedfs"], 1, 501)
-        self.assertTrue(ports.removed)
-        self.assertEqual(ports.time, 1)
+        for changed_uid in (False, True):
+            with self.subTest(changed_uid=changed_uid):
+                ports = NamespaceGoneProcessLive(changed_uid)
+                with self.assertRaisesRegex(Refusal, "process closure unavailable"):
+                    ports.bootout(LABELS["seaweedfs"], 1, 501)
+                self.assertTrue(ports.removed)
+                self.assertEqual(ports.time, 1)
 
     def test_real_log_cursor_rejects_old_partial_rotated_or_adverse_completion(self):
         with tempfile.TemporaryDirectory(dir="/private/tmp") as directory:

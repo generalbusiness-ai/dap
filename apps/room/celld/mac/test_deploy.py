@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import deploy
 from kit import Refusal
@@ -55,6 +56,30 @@ class DeploymentSafety(unittest.TestCase):
             result = json.loads((attempt / "result.json").read_text())
             self.assertEqual(result["exit"], 7)
             self.assertTrue(result["ownedProcessGroupClosed"])
+
+    def test_scripted_cleanup_error_retains_an_unproved_group_without_provider_details(self):
+        class ScriptedProcess:
+            pid = 12345
+            returncode = 7
+
+            def wait(self, timeout):
+                return self.returncode
+
+        with tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
+            project = self.project(Path(scratch))
+            # No child or signal is real in this failure control.
+            private_detail = "TEST-ONLY-private-cleanup-detail"
+            with patch.object(deploy.subprocess, "Popen", return_value=ScriptedProcess()), \
+                    patch.object(deploy.os, "killpg", side_effect=PermissionError(private_detail)):
+                with self.assertRaises(PermissionError):
+                    deploy.run_deployment(["TEST-provider"], {}, project)
+            attempt = next(project.glob("deployment-*"))
+            receipt = (attempt / "result.json").read_text()
+            result = json.loads(receipt)
+            self.assertFalse(result["ownedProcessGroupClosed"])
+            self.assertEqual(result["cleanupFailure"], "PermissionError")
+            self.assertNotIn(private_detail, receipt)
+            self.assertEqual(result["exit"], 7)
 
 
 if __name__ == "__main__":

@@ -66,7 +66,8 @@ def run_deployment(argv, env, directory):
         outputs.append(os.fdopen(fd, "wb"))
     process = None
     timed_out = False
-    group_closed = True
+    group_closed = None
+    cleanup_failure = None
 
     def group_exists():
         try:
@@ -75,39 +76,48 @@ def run_deployment(argv, env, directory):
         except ProcessLookupError:
             return False
 
+    def close_group():
+        # The group also owns a compiler that may outlive its parent.
+        try:
+            os.killpg(process.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            os.killpg(process.pid, signal.SIGKILL)
+            process.wait(timeout=5)
+        for action in (None, signal.SIGKILL):
+            if action is not None and group_exists():
+                os.killpg(process.pid, action)
+            until = time.monotonic() + 5
+            while group_exists() and time.monotonic() < until:
+                time.sleep(0.05)
+            if not group_exists():
+                break
+        return not group_exists()
+
     try:
         process = subprocess.Popen(argv, cwd=directory, env=env, stdin=subprocess.DEVNULL,
                                    stdout=outputs[0], stderr=outputs[1], start_new_session=True)
+        group_closed = False
         try:
             process.wait(timeout=180)
         except subprocess.TimeoutExpired:
             timed_out = True
         finally:
-            # The group also owns a compiler that may outlive its parent.
             try:
-                os.killpg(process.pid, signal.SIGTERM)
-            except ProcessLookupError:
-                pass
-            try:
-                process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                os.killpg(process.pid, signal.SIGKILL)
-                process.wait(timeout=5)
-            for action in (None, signal.SIGKILL):
-                if action is not None and group_exists():
-                    os.killpg(process.pid, action)
-                until = time.monotonic() + 5
-                while group_exists() and time.monotonic() < until:
-                    time.sleep(0.05)
-                if not group_exists():
-                    break
-            group_closed = not group_exists()
+                group_closed = close_group()
+            except BaseException as error:
+                cleanup_failure = type(error).__name__
+                raise
     finally:
         for output in outputs:
             output.close()
         receipt = {"qualification": "Private deployment logs; not application readiness or journal evidence",
                    "exit": process.returncode if process is not None else None, "timeout": timed_out,
                    "ownedProcessGroupClosed": group_closed,
+                   "cleanupFailure": cleanup_failure,
                    "outputs": [{"path": name, "bytes": (attempt / name).stat().st_size,
                                 "sha256": hashlib.sha256((attempt / name).read_bytes()).hexdigest()}
                                for name in ("stdout.log", "stderr.log")]}
