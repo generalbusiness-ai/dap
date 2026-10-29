@@ -166,12 +166,12 @@ test("the actual binding field waits only for the exact unexpired source whose o
   const rule = destinationRulesV17["evidence-fence-binding-v17"];
   if (rule?.place !== "type") throw Error("The actual bound-fence field rule is required");
   const text = canonicalize(fixture.binding);
-  expect(() => rule.run(given, text)).toThrow(RuleFault);
-  expect(rule.run({ ...given, time: t(60) }, text)).toBe(true);
-  expect(rule.run({ ...given, input: { type: "delivery", from: { ...jobFact, hash: d("f") }, n: 0, message } }, text)).toBe(true);
+  expect(() => rule.run(given, text, { field: "binding" })).toThrow(RuleFault);
+  expect(rule.run({ ...given, time: t(60) }, text, { field: "binding" })).toBe(true);
+  expect(rule.run({ ...given, input: { type: "delivery", from: { ...jobFact, hash: d("f") }, n: 0, message } }, text, { field: "binding" })).toBe(true);
   const request = fixture.state.request(5, 0)!;
   fixture.state.putRequest({ ...request, result: { seq: 7, clause: "refused" } });
-  expect(rule.run(given, text)).toBe(true);
+  expect(rule.run(given, text, { field: "binding" })).toBe(true);
   expect(fixture.state.item(11)).toBeNull();
 });
 

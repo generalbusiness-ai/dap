@@ -204,7 +204,13 @@ usage or simultaneous-allocation measurements:
 | Evidence request | 91 | 64,487,424 |
 
 The second table is captured in `account-lifecycle-compiled-ledger-3`.
-The first table comes from the ruling; a local capture remains owed.
+The first table is locally confirmed by `legacy-admission-baseline-1` at
+`8fe7d39a2e`: D15's actual digest equals its registered historical pin,
+and its entries and bytes match with and without a forced opt-in. The
+forced rows are comparison-only clones. The same capture validates current
+G17 with no capacity declaration; its publication owes 1,832 entries,
+branch 628 and original eight-slot batch 1,210. These are declarations,
+not a concurrent runtime measurement.
 A delivery's retained source increases the largest pending-state amount,
 which the compiler multiplies by coded-effect ceilings. Outcome-time
 release would not reduce that initial admission term.

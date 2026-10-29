@@ -121,7 +121,7 @@ function fundingPreview(options: { checks?: number; stageFirst?: boolean; stage?
     apply(at.resolved.self, emitted);
     state.setScope({ ...state.scope()!, head: { seq: born.entry.seq, hash: born.hash } });
   };
-  const apply = (seq: number, emitted: readonly RuleEffect[]) => {
+  const apply = (seq: number, emitted: readonly Effect[]) => {
     const touched = new Set<number>();
     for (const effect of emitted) if (effect.effect === "value" || effect.effect === "state") {
       const item = state.item(effect.item); if (!item) throw Error("A scripted effect must name its retained item");
@@ -183,7 +183,7 @@ test("published obligations refuse before capture or new work when the future wr
 });
 
 test("SCRIPTED inherited stage updates and push permissions do not wait for the complete funding set", () => {
-  for (const [checks, count] of [[0, 0], [9, 0], [9, 1]]) {
+  for (const [checks, count] of [[0, 0], [9, 0], [9, 1]] as const) {
     const fixture = fundingPreview({ checks, stageFirst: true });
     if (count) { const given = fixture.given(); fixture.batch(given, fixture.effects.run(given)); }
     expect(evidenceFundingCompleteV17(fixture.state, fixture.state.item(2)!)).toBe(checks === 0);
