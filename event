@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6716f89af64a6285456222ddf8e90afbb10ea3ca","text":"Merge retired a covered predecessor; the successor is at vitest.projects.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6729cf7b4886db20b85cbd9cc0ee5168c12ce134","text":"Merge retired a covered predecessor; the successor is at scripts/active-source.test.mjs."}
