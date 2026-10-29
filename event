@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7037018ec929d89dfb62363ec51f556ac04d46fa","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-28-evidence-rules-preparation.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:722ee7b73ab69da4bd096cff9f8dde19f8870efc","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/application-install-reader.ts."}
