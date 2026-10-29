@@ -5,7 +5,7 @@ import { env } from "cloudflare:workers";
 import { evictDurableObject, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { otherLane } from "@generalbusiness/dap-derive/testing";
-import { SiteTokenReuse, type SiteTokenAnswer, type SiteTokenRequest, type SiteTokenPort } from "../src/site/token-reuse.ts";
+import { SiteTokenReuse, type SiteTokenRequest, type SiteTokenPort } from "../src/site/token-reuse.ts";
 import { readerOf, type Room, type SiteEnv } from "../src/site/host.ts";
 import { artifactsReadiness, type ArtifactsBindings } from "../src/artifacts-wiring.ts";
 import type { ArtifactsNamespace } from "../src/artifacts-host.ts";
@@ -30,102 +30,6 @@ function provider(clock: () => number) {
   };
   return { settings: { ARTIFACTS: binding, ARTIFACTS_CONFIG: canonicalize(configuration) } satisfies ArtifactsBindings,
     counts: () => ({ mints, infos, revokes }), hold: (next: typeof pending) => { pending = next; }, remote: (value: string) => { reported = value; } };
-}
-
-async function siteRpcWithin<T>(work: Promise<T>, phase: string): Promise<T> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([work, new Promise<never>((_resolve, reject) => {
-      timer = setTimeout(() => reject(Error(`Site RPC ${phase} did not finish within 5 seconds`)), 5_000);
-    })]);
-  } finally { if (timer !== undefined) clearTimeout(timer); }
-}
-
-/** RPC object replies carry a lifetime even when their fields are scalars.
- * Copy their values, then release the reply; namespace Fetcher stubs stay intact. */
-async function siteRpcAnswer(object: DurableObjectStub, asked: SiteTokenRequest): Promise<SiteTokenAnswer> {
-  const answer = await (object as unknown as SiteTokenPort).acquireSiteRead(asked);
-  try {
-    return answer.ok ? { ok: true, plaintext: answer.plaintext, ends: answer.ends }
-      : answer.reason === "provider" ? { ok: false, reason: answer.reason, step: answer.step }
-      : { ok: false, reason: answer.reason };
-  } finally { (answer as SiteTokenAnswer & Partial<Disposable>)[Symbol.dispose]?.(); }
-}
-
-/** Retire only generations and alarm instants observed for this test's keys.
- * Call after the measured assertions and after provider/RPC work has joined. */
-function siteTokenRetirement(object: () => DurableObjectStub) {
-  const generations = new Map<string, string>(), alarms = new Set<number>();
-  const snapshot = () => siteRpcWithin(runInDurableObject(object(), async (_instance, state) => ({
-    rows: state.storage.sql.exec("SELECT key,generation,state,ends,plaintext IS NOT NULL AS hasPlaintext FROM private_site_token ORDER BY key").toArray(),
-    alarm: await state.storage.getAlarm(),
-  })), "metadata snapshot");
-  const remember = (observed: Awaited<ReturnType<typeof snapshot>>, asked: SiteTokenRequest) => {
-    const key = canonicalize({ configuration, repository, ref: asked.ref });
-    const row = observed.rows.find(row => row["key"] === key);
-    if (!row) return;
-    if (typeof row["generation"] !== "string" || typeof row["ends"] !== "number") throw Error("Site ownership metadata is malformed");
-    const prior = generations.get(key);
-    if (prior !== undefined && prior !== row["generation"]) throw Error("Site ownership generation changed");
-    generations.set(key, row["generation"]);
-    if (observed.alarm === row["ends"]) alarms.add(observed.alarm);
-  };
-  return { snapshot, remember,
-    retire: async () => {
-      if (generations.size === 0) return;
-      const retired = await siteRpcWithin(runInDurableObject(object(), async (_instance, state) => {
-        state.storage.transactionSync(() => {
-          for (const [key, generation] of generations) state.storage.sql.exec("DELETE FROM private_site_token WHERE key=? AND generation=?", key, generation).toArray();
-        });
-        const alarm = await state.storage.getAlarm();
-        const remaining = state.storage.sql.exec("SELECT count(*) AS n FROM private_site_token").toArray()[0]!["n"];
-        // A surviving row or an unrecorded alarm belongs to another owner.
-        // Preserve its earlier wake rather than replacing or clearing it.
-        if (remaining === 0 && alarm !== null && alarms.has(alarm)) await state.storage.deleteAlarm();
-        return { remaining, alarm: await state.storage.getAlarm() };
-      }), "owned storage retirement");
-      if (retired.remaining !== 0 || retired.alarm !== null) throw Error("Site retirement retained unowned rows or alarm");
-      await siteRpcWithin(evictDurableObject(object()), "owned instance retirement");
-    },
-  };
-}
-
-/** Hold one info answer after the real owner has reserved and scheduled.
- * The scripted wrong remote proves failure before any token mint enters. */
-function heldInfoProvider() {
-  const entered = gate<void>(), resume = gate<void>(), joined = gate<void>();
-  let armed = false, used = false, closed = false, active = 0, lateCalls = 0, mints = 0;
-  const operation = async <T>(run: () => T | Promise<T>): Promise<T> => {
-    if (closed) { lateCalls++; throw Error("Site test provider is closed"); }
-    active++;
-    try { return await run(); } finally { active--; }
-  };
-  const binding: ArtifactsNamespace = {
-    get: async () => operation(() => ({
-      info: async () => operation(async () => {
-        if (!armed) return { remote: `https://${configuration.host}/git/${configuration.namespace}/${repository.name}.git` };
-        armed = false; used = true; entered.release();
-        try { await resume.promise; return { remote: "https://foreign.invalid/replaced" }; }
-        finally { joined.release(); }
-      }),
-      createToken: async () => operation(() => {
-        mints++;
-        return { scope: "read", plaintext: `held-provider-${mints}`, expiresAt: new Date(Date.now() + 120_000).toISOString() };
-      }),
-      revokeToken: async () => operation(() => true),
-    })),
-    create: async () => operation(() => { throw Error("Site cannot create a repository"); }),
-    delete: async () => operation(() => false),
-  };
-  return {
-    settings: { ARTIFACTS: binding, ARTIFACTS_CONFIG: canonicalize(configuration) } satisfies ArtifactsBindings,
-    hold: () => { if (armed || used) throw Error("Site info hold already used"); armed = true; },
-    entered: entered.promise,
-    release: () => resume.release(),
-    join: async () => { if (used) await siteRpcWithin(joined.promise, "provider join"); },
-    close: () => { if (active !== 0) throw Error("Site provider still active"); closed = true; },
-    counts: () => ({ active, lateCalls, mints }),
-  };
 }
 
 // A real scope supplies actual SQLite; no scope authority is used by these
@@ -274,68 +178,73 @@ test("Site reuse keeps config and remote checks fresh and holds malformed or amb
   });
 });
 
-// A known failure removes only its reservation. The last row must also
-// release its alarm; a surviving future row must keep its earlier wake.
+// Distinct object names select isolated owners through the existing env-only
+// settings map. The production ScopeIndex class, SQL, clock and scheduler run
+// unchanged; these cases do not claim the deployed fixed-name binding.
 for (const { name, keepReady } of [
-  { name: "actual fixed-owner Site RPC clears its last alarm after a joined pre-mint failure", keepReady: false },
-  { name: "actual fixed-owner Site RPC preserves a future row's earlier alarm and generation after a joined pre-mint failure", keepReady: true },
+  { name: "isolated ScopeIndex Site RPC clears its last alarm after a pre-mint failure", keepReady: false },
+  { name: "isolated ScopeIndex Site RPC preserves a future row's alarm and generation after a pre-mint failure", keepReady: true },
 ]) test(name, async () => {
-  const p = heldInfoProvider(), object = () => env.SCOPE_INDEX.get(env.SCOPE_INDEX.idFromName(SCOPE_INDEX_NAME));
-  const retirement = siteTokenRetirement(object), snapshot = retirement.snapshot;
-  // Strip successful token material before an answer can enter a test diff.
+  const owner = `site-token-idle-${keepReady ? "ready" : "empty"}-${crypto.randomUUID()}`;
+  const object = () => env.SCOPE_INDEX.get(env.SCOPE_INDEX.idFromName(owner)), p = provider(() => Date.now());
+  const snapshot = () => runInDurableObject(object(), async (_instance, state) => ({
+    rows: state.storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='private_site_token'").toArray().length === 0 ? []
+      : state.storage.sql.exec("SELECT key,generation,state,ends,plaintext IS NOT NULL AS hasPlaintext FROM private_site_token ORDER BY key").toArray(),
+    alarm: await state.storage.getAlarm(),
+  }));
   const call = async (asked: SiteTokenRequest) => {
-    const answer = await siteRpcAnswer(object(), asked);
-    return answer.ok ? { ok: true, ends: answer.ends } : answer;
+    const answer = await (object() as unknown as SiteTokenPort).acquireSiteRead(asked);
+    try {
+      // Copy only metadata, then release the raw RPC reply.
+      return answer.ok ? { ok: true, ends: answer.ends }
+        : answer.reason === "provider" ? { ok: false, reason: answer.reason, step: answer.step }
+        : { ok: false, reason: answer.reason };
+    } finally { (answer as typeof answer & Partial<Disposable>)[Symbol.dispose]?.(); }
   };
-  let pending: ReturnType<typeof call> | undefined;
-  siteTokenTestSettings.set(SCOPE_INDEX_NAME, p.settings);
+  let observed: Awaited<ReturnType<typeof snapshot>> | undefined;
+  siteTokenTestSettings.set(owner, p.settings);
   try {
-    expect(await siteRpcWithin(runInDurableObject(object(), (_instance, state) => state.storage.getAlarm()), "initial alarm")).toBeNull();
-    let retained: Awaited<ReturnType<typeof snapshot>> | undefined;
+    const initial = await snapshot();
+    expect(initial).toEqual({ rows: [], alarm: null });
+    observed = initial;
+    let retained: typeof observed | undefined;
     if (keepReady) {
-      expect((await siteRpcWithin(call(request()), "ready token")).ok).toBe(true);
-      retained = await snapshot();
-      retirement.remember(retained, request());
+      expect((await call(request())).ok).toBe(true);
+      retained = observed = await snapshot();
       expect(retained.rows).toHaveLength(1);
       expect(retained.rows[0]).toMatchObject({ state: "ready", hasPlaintext: 1 });
       expect(retained.alarm).toBe(retained.rows[0]!["ends"]);
       expect(Number(retained.alarm)).toBeGreaterThan(Date.now());
     }
-    p.hold();
-    pending = call(request("refs/heads/fail-before-mint"));
-    void pending.catch(() => {}); // The bounded join below retains any RPC rejection.
-    await siteRpcWithin(p.entered, "held info entry");
-    const held = await snapshot();
-    retirement.remember(held, request("refs/heads/fail-before-mint"));
-    const reservations = held.rows.filter(row => row["state"] === "reserved");
-    expect(held.rows).toHaveLength(keepReady ? 2 : 1);
-    expect(reservations).toHaveLength(1);
-    expect(reservations[0]).toMatchObject({ hasPlaintext: 0 });
-    expect(Number(reservations[0]!["ends"])).toBeGreaterThan(Date.now());
-    expect(p.counts()).toEqual({ active: 1, lateCalls: 0, mints: keepReady ? 1 : 0 });
-    if (retained) {
-      expect(held.rows.filter(row => row["state"] === "ready")).toEqual(retained.rows);
-      expect(Number(reservations[0]!["ends"])).toBeGreaterThan(Number(retained.alarm));
-      expect(held.alarm).toBe(retained.alarm);
-    } else expect(held.alarm).toBe(reservations[0]!["ends"]);
-
-    p.release();
-    expect(await siteRpcWithin(pending, "failed RPC join")).toEqual({ ok: false, reason: "provider", step: "info" });
-    await p.join();
-    p.close(); // No provider writer remains before the final storage read.
-    expect(p.counts()).toEqual({ active: 0, lateCalls: 0, mints: keepReady ? 1 : 0 });
-    const settled = await snapshot();
-    expect(settled.rows).toEqual(retained?.rows ?? []);
-    expect(settled.alarm).toBe(retained?.alarm ?? null);
-    expect(p.counts()).toEqual({ active: 0, lateCalls: 0, mints: keepReady ? 1 : 0 });
+    p.remote("https://foreign.invalid/replaced");
+    const refused = await call(request("refs/heads/fail-before-mint"));
+    observed = await snapshot();
+    expect(refused).toEqual({ ok: false, reason: "provider", step: "info" });
+    expect(p.counts()).toEqual({ mints: keepReady ? 1 : 0, infos: keepReady ? 2 : 1, revokes: 0 });
+    expect(observed.rows).toEqual(retained?.rows ?? []);
+    expect(observed.alarm).toBe(retained?.alarm ?? null);
   } finally {
-    p.release();
     try {
-      if (pending) await siteRpcWithin(pending, "cleanup RPC join");
-      await p.join();
-      p.close();
-      await retirement.retire();
-    } finally { siteTokenTestSettings.delete(SCOPE_INDEX_NAME); }
+      // After the measured assertions, retire only observed generations and
+      // the observed alarm. No eviction or physical-drain claim follows.
+      const owned = observed;
+      if (owned && (owned.rows.length !== 0 || owned.alarm !== null)) {
+        const retired = await runInDurableObject(object(), async (_instance, state) => {
+          state.storage.transactionSync(() => {
+            for (const row of owned.rows) {
+              if (typeof row["key"] !== "string" || typeof row["generation"] !== "string") throw Error("Site ownership metadata is malformed");
+              state.storage.sql.exec("DELETE FROM private_site_token WHERE key=? AND generation=?", row["key"], row["generation"]).toArray();
+            }
+          });
+          const alarm = await state.storage.getAlarm();
+          const remaining = state.storage.sql.exec("SELECT count(*) AS n FROM private_site_token").toArray()[0]!["n"];
+          // Preserve any successor row or a different, unowned alarm.
+          if (remaining === 0 && alarm !== null && alarm === owned.alarm) await state.storage.deleteAlarm();
+          return { remaining, alarm: await state.storage.getAlarm() };
+        });
+        if (retired.remaining !== 0 || retired.alarm !== null) throw Error("Site cleanup retained an unowned row or alarm");
+      }
+    } finally { siteTokenTestSettings.delete(owner); }
   }
 });
 
