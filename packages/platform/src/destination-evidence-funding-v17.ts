@@ -546,7 +546,7 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
     }
   }
   next["evidence-funding-outcome-v17"] = { place: "outcome", rules: { selects: false, read: false, retries: () => false,
-    most: { effects: 0, requests: 0, operations: 0 }, origin: (_given, operation) => Number(operation.id.split(":")[0]), unknown: () => ({}),
+    most: { effects: 0, requests: 1, operations: 0 }, origin: (_given, operation) => Number(operation.id.split(":")[0]), unknown: () => ({}),
     wellFormed: (result, evidence, given) => {
       if (result !== "confirmed") return isRecord(evidence.body) && Object.keys(evidence.body).length === 0;
       const operation = given.input.type === "outcome" ? given.state.operation(given.input.operation) : null;
@@ -560,7 +560,7 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
     return source ? fundRequest(given.resolved.at, { publication: source.ref, operation: source.operation, capture: source.capture }, 0) : null;
   } };
   next["evidence-plan-outcome-v17"] = { place: "outcome", rules: { selects: false, read: false, retries: () => false,
-    most: { effects: 0, requests: 0, operations: 0 }, origin: (_given, operation) => Number(operation.id.split(":")[0]), unknown: () => ({}),
+    most: { effects: 0, requests: 1, operations: 0 }, origin: (_given, operation) => Number(operation.id.split(":")[0]), unknown: () => ({}),
     wellFormed: (result, evidence, given) => {
       if (result !== "confirmed") return isRecord(evidence.body) && Object.keys(evidence.body).length === 0;
       const operation = given.input.type === "outcome" ? given.state.operation(given.input.operation) : null;
@@ -594,7 +594,7 @@ export function fundingRules(base: Rules, hooks: FundingHooksV17): Rules {
       } } } }], opens: following ? [{ owner: "platform:destination@17", kind: PUBLISHED_CHECKS_V17, attempts: 1, for: following.item.id }] : [] };
   };
   next["evidence-published-checks-v17"] = { place: "outcome", rules: { selects: false, read: false, retries: () => false,
-    most: { effects: 2, requests: 0, operations: 1 }, origin: (_given, operation) => Number(operation.id.split(":")[0]), unknown: () => ({}),
+    most: { effects: 3, requests: 1, operations: 1 }, origin: (_given, operation) => Number(operation.id.split(":")[0]), unknown: () => ({}),
     wellFormed: (result, evidence, given) => {
       if (result !== "confirmed") return isRecord(evidence.body) && Object.keys(evidence.body).length === 0;
       const operation = given.input.type === "outcome" ? given.state.operation(given.input.operation) : null;

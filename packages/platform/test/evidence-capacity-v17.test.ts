@@ -66,6 +66,15 @@ describe("exact pre-publication capacity identities", () => {
     const expanded = evidenceFundCapacityV17(scripted(102, counts, { id: 100, capacity: first!.capacity }), batch(40, ["code", "docs"]));
     expect(expanded?.effects.find(effect => effect.effect === "value" && effect.slot === "counts")).toMatchObject({ item: 1, value: { ...counts, holds: 2, incidents: 2 } });
   });
+  it("refuses prefunding below the complete initial-to-anchor admission effect ceiling", () => {
+    // SCRIPTED generation with no existing owner: the production forecast
+    // must cover both this job becoming the anchor and a distinct first owner.
+    const source = batch(10, ["code"]), given = scripted(100);
+    const at = (derivedEffects: number): RuleGiven => ({ ...given, resolved: { ...given.resolved,
+      bounds: { ...given.resolved.bounds, derivedEffects } } });
+    expect(evidenceFundCapacityV17(at(14), source)).not.toBeNull();
+    expect(evidenceFundCapacityV17(at(13), source)).toBeNull();
+  });
   it("refuses a selected holds obligation with no associated or touched extent before funding", () => {
     expect(evidenceFundCapacityV17(scripted(100), batch(10, []))).toBeNull();
   });

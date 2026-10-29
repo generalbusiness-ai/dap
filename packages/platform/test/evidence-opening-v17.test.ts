@@ -2,10 +2,14 @@ import { expect, test } from "vitest";
 import type { Entry } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import type { Operation, RuleEffect } from "@generalbusiness/dap-derive";
+import { evidenceJobOpeningV17 } from "../src/destination-evidence-v17.ts";
+import { destinationV17 } from "../src/destination-v17.ts";
+import { newEvidenceIndexV17 } from "../src/evidence-index-v17.ts";
+import { d, otherLane } from "@generalbusiness/dap-derive/testing";
 import { evidenceOperationOpeningV17 } from "../src/evidence-opening-v17.ts";
 // The maintained reservation witness is not in dap-derive/testing's public
 // exports. Reuse that narrow test fixture, without importing kernel internals.
-import { OWNER, TELL, Works, opened, worksDefinition } from "../../derive/test/fixtures-holds.ts";
+import { OWNER, TELL, Works, changed, opened, works, worksDefinition } from "../../derive/test/fixtures-holds.ts";
 
 function selfOpening() {
   // SCRIPTED marked rule and incoming source; the maintained judge, seal
@@ -76,4 +80,35 @@ test("a counted outcome's own request is refused, while its actual marked send s
   const settled = scope.state.operation(operation.id);
   expect(settled?.for).toBe(operation.for);
   expect(settled?.attempts[0]?.outcomes).toHaveLength(1);
+});
+
+
+test("an admitted anchor opens the real initial state before its projection through the maintained outcome judge", () => {
+  // SCRIPTED holder/provider and proof-free item use the exact G17 state
+  // grammar. The real judge/seal/fold enforce initialization, not admission.
+  const declared = destinationV17.items["evidence-job"]!;
+  const checked = changed(works, data => {
+    data.items["evidence-job"] = { many: true, max: 10, initial: declared.initial, states: declared.states, parties: {}, refs: {}, values: {} };
+    data.items["job"].holds.items = 1;
+    data.outcomes["step"].most = { ...data.outcomes["step"].most, effects: 1, opens: "evidence-job" };
+  });
+  if (!checked.ok) throw Error("The scripted initialization boundary must validate");
+  const scope = new Works(checked.definition);
+  scope.script.begin = ({ resolved }) => opened(0, "step", 1, resolved.self);
+  expect(scope.start()).toBe("written");
+  const operation = scope.opened()[0]!, before = scope.head;
+  const index = newEvidenceIndexV17({ room: otherLane, tree: "a".repeat(40), name: "unit", configuration: d("b"), source: "member", stage: "work" });
+  if (!index) throw Error("The scripted candidate index must fit");
+  const record = { state: "admitted" as const, funded: { holds: false, policy: false, reuse: true, incident: false }, reuse: index, incident: null, noticeAt: null };
+  scope.script.derives = (_kind, given) => ({ effects: [{ effect: "open", item: given.resolved.self, type: "evidence-job", state: "reuse-anchor" }], sends: [], opens: [] });
+  expect(scope.outcome(operation, 1, "confirmed")).toBe("unavailable");
+  expect(scope.head).toEqual(before);
+  scope.script.derives = (_kind, given) => ({ effects: evidenceJobOpeningV17(given.resolved.self, record), sends: [], opens: [] });
+  expect(scope.outcome(operation, 1, "confirmed")).toBe("written");
+  expect(scope.last.effects.filter(effect => effect.effect === "open" || effect.effect === "state")).toEqual([
+    { effect: "open", item: scope.last.seq, type: "evidence-job", state: declared.initial },
+    { effect: "state", item: scope.last.seq, state: "reuse-anchor" },
+  ]);
+  expect(scope.state.item(scope.last.seq)?.state).toBe("reuse-anchor");
+  expect(scope.replay().item(scope.last.seq)?.state).toBe("reuse-anchor");
 });

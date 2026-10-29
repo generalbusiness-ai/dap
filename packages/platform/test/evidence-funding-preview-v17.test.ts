@@ -3,7 +3,7 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Bounds, type Effect, type Entry, type FactRef, type Input, type RulesObservation, type Sealed } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, isEntry, isRecord } from "@generalbusiness/dap-bytes";
-import { MemoryState, valueDigest, type RuleEffect, type RuleGiven, type RuleRequest, type Rules } from "@generalbusiness/dap-derive";
+import { MemoryState, clockOf, outcomeOf, ownersOf, validateDefinition, valueDigest, type RuleEffect, type RuleGiven, type RuleRequest, type Rules } from "@generalbusiness/dap-derive";
 import { d, keys, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { certifiedPublicationWireV17, certifiedWrittenPlanBudgetV17, evidenceCarryingBudgetV17, type CertifiedPublicationStateV17 } from "../src/destination-budget-v17.ts";
 import { EVIDENCE_FUNDING_V17, destinationEvidenceFundingPending, evidenceFundedBatchV17, evidenceFundingCaptureV17, evidenceFundingCompleteV17, evidenceFundingReadyV17, fundingRules } from "../src/destination-evidence-funding-v17.ts";
@@ -239,6 +239,37 @@ test("one counted initial send retains the original capture and proves a serial 
   }
   expect(fixture.state.count("evidence-batch", "funded")).toBe(4);
   expect(evidenceFundingCompleteV17(fixture.state, fixture.state.item(2)!)).toBe(true);
+});
+
+test("the maintained owner and ledger settle the actual funding marked send, while the old zero-request ceiling leaves it unavailable", () => {
+  // SCRIPTED retained capture and state, with the real G17 declaration,
+  // actual funding rules and maintained combined marked-send settlement.
+  const fixture = fundingPreview(), pending = fixture.state.operation("3:1");
+  if (!pending) throw Error("The captured funding operation is required");
+  fixture.state.putOperation({ ...pending, attempts: [{ attempt: 1, opened: 3, outcomes: [] }] });
+  const validated = validateDefinition(destinationV17, PROPOSED_BOUNDS, undefined, { platform: true });
+  if (!validated.ok) throw Error("The real G17 declaration must validate");
+  const rule = fixture.configured["evidence-funding-outcome-v17"];
+  if (rule?.place !== "outcome" || !rule.rules.most) throw Error("The funding rule needs its complete local ceiling");
+  const settle = (rules: Rules, capture = fixture.captureFact) => outcomeOf(fixture.state, validated.definition,
+    { type: "outcome", operation: pending.id, attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: { capture } } },
+    ownersOf(validated.definition, { named: "platform:destination@17", rules }, null,
+      { clock: clockOf(fixture.state, t(0)), bounds: PROPOSED_BOUNDS, own: fixture.own, ran: { clock: false } }));
+  const legacy: Rules = { ...fixture.configured, "evidence-funding-outcome-v17": { ...rule,
+    rules: { ...rule.rules, most: { ...rule.rules.most, requests: 0 } } } };
+  expect(settle(legacy)).toEqual({ result: "unavailable", reason: "unavailable" });
+  const settled = settle(fixture.configured);
+  expect(settled.result).toBe("write");
+  if (settled.result !== "write") throw Error("A correctly counted funding answer must write");
+  expect(settled.draft.sends).toEqual([{ n: 0, to: fixture.captureFact.at,
+    message: { class: "request", type: "tell", body: { message: "evidence-fund", fields: {
+      publication: { at: fixture.captureFact.at, seq: 2, hash: fixture.history.get(2)!.hash },
+      operation: fixture.state.item(2)!.refs["operation"], capture: fixture.captureFact, ordinal: 0,
+    } } } }]);
+  expect(settled.draft.effects).toEqual([{ effect: "attempt", operation: pending.id, attempt: 1, result: "confirmed", selected: null }]);
+  expect(settle(fixture.configured, { ...fixture.captureFact, hash: d("e") })).toMatchObject({ result: "refused", reason: "bad-input" });
+  // Derivation itself never mutates or settles the retained operation.
+  expect(fixture.state.operation(pending.id)?.attempts[0]?.outcomes).toEqual([]);
 });
 
 test("new funding binds actual local normal forms and refuses after withdrawal, while existing proof permits legitimate mutable fields", () => {

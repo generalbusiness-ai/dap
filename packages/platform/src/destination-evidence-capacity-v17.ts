@@ -102,47 +102,53 @@ function publishedForecast(given: RuleGiven, batch: EvidenceBatchRecordV17, capa
     const owners = new Set((anchor.holds ?? []).filter(row => row.key.name === check.name && row.key.configuration === check.configuration && row.key.source === checkSourceV13(check))
       .flatMap(row => row.owner === null ? [] : [row.owner]));
     if (owners.size > 1) return false;
-    const owner = keys.length ? [...owners][0] ?? MAX - 1 : MAX;
-    const binding: EvidenceBinding = { v: 1, source: checkSourceV13(check), stage: "published", checker: check.checker,
-      policyGeneration: capacity.generation, roomService: batch.policy.policy.roomService, serviceGeneration: batch.policy.serviceGeneration, auditOf: null,
-      subject: { kind: "published", publication: batch.publication, receipt: nativeFact, written: nativeFact, manifest } };
-    const record: EvidenceJobRecordV17 = { v: 1, job, name: check.name, configuration: check.configuration, binding,
-      bindingDigest: evidenceBindingDigest(binding), state: "admitted", admittedAt: MAX, commit: object, tree: object, base: object,
-      sourceFacts: [batch.publication, nativeFact, nativeFact, manifest, nativeFact, nativeFact, nativeFact], commitProof: null, policy: batch.policy,
-      reuseOwner: null, reuse: null, holdOwner: keys.length ? owner : null, holds: [],
-      policyOwner: capacity.owner, incident: { job, cause: null, state: "reserved", creation: null, child: null, reason: null }, result: null, signer: null,
-      decidedAt: null, reason: null, observedGeneration: batch.policy.serviceGeneration, funded: { reuse: false, holds: keys.length > 0 && owner === MAX, policy: false, incident: true },
-      countedJob: null, reuseRequested: false, deadline: time, forJob: null, noticeAt: null, holder: MAX - 3, requestAt: MAX - 2, covered: keys };
-    const related: { item: number; record: EvidenceJobRecordV17 }[] = [];
-    if (keys.length) {
-      const stored = given.state.item(owner)?.values["record"], decoded = stored === undefined ? null : readEvidenceWireV17(stored, 196608);
-      const old = decoded?.ok ? decoded.value : undefined;
-      // An outstanding reservation can acquire another job owner before
-      // this job arrives. Quote that distinct owner even while its pointer
-      // is still null, rather than assuming this job will own the anchor.
-      const priorKeys = (maximumAnchor.holds ?? []).filter(row => row.key.name === check.name && row.key.configuration === check.configuration && row.key.source === checkSourceV13(check)).map(row => row.key);
-      if (stored !== undefined && !decoded?.ok || old !== undefined && (!isRecord(old) || !Array.isArray(old["holds"]))) return false;
-      const held = old === undefined ? { ...record, job: { ...job, seq: MAX - 4 }, holds: priorKeys.map(key => newEvidenceHoldV17(key)!) } : old as unknown as EvidenceJobRecordV17;
-      const next = { ...held, holds: [...held.holds, ...keys.filter(key => !held.holds.some(row => same(row.key, key))).map(key => newEvidenceHoldV17(key)!)] };
-      related.push({ item: owner, record: next });
+    // Before any owner exists, either this admission becomes the anchor
+    // or another admitted job takes it first. Both funded geometries must
+    // fit; neither future owner is recorded as an actual fact here.
+    const ownerVariants = keys.length && !owners.size ? [MAX, MAX - 1] : [keys.length ? [...owners][0]! : MAX];
+    for (const owner of ownerVariants) {
+      const binding: EvidenceBinding = { v: 1, source: checkSourceV13(check), stage: "published", checker: check.checker,
+        policyGeneration: capacity.generation, roomService: batch.policy.policy.roomService, serviceGeneration: batch.policy.serviceGeneration, auditOf: null,
+        subject: { kind: "published", publication: batch.publication, receipt: nativeFact, written: nativeFact, manifest } };
+      const record: EvidenceJobRecordV17 = { v: 1, job, name: check.name, configuration: check.configuration, binding,
+        bindingDigest: evidenceBindingDigest(binding), state: "admitted", admittedAt: MAX, commit: object, tree: object, base: object,
+        sourceFacts: [batch.publication, nativeFact, nativeFact, manifest, nativeFact, nativeFact, nativeFact], commitProof: null, policy: batch.policy,
+        reuseOwner: null, reuse: null, holdOwner: keys.length ? owner : null, holds: owner === MAX ? keys.map(key => newEvidenceHoldV17(key)!) : [],
+        policyOwner: capacity.owner, incident: { job, cause: null, state: "reserved", creation: null, child: null, reason: null }, result: null, signer: null,
+        decidedAt: null, reason: null, observedGeneration: batch.policy.serviceGeneration, funded: { reuse: false, holds: keys.length > 0 && owner === MAX, policy: false, incident: true },
+        countedJob: null, reuseRequested: false, deadline: time, forJob: null, noticeAt: null, holder: MAX - 3, requestAt: MAX - 2, covered: keys };
+      const related: { item: number; record: EvidenceJobRecordV17 }[] = [];
+      if (keys.length && owner !== MAX) {
+        const stored = given.state.item(owner)?.values["record"], decoded = stored === undefined ? null : readEvidenceWireV17(stored, 196608);
+        const old = decoded?.ok ? decoded.value : undefined;
+        // An outstanding reservation can acquire another job owner before
+        // this job arrives. Quote that distinct owner even while its pointer
+        // is still null, rather than assuming this job will own the anchor.
+        const priorKeys = (maximumAnchor.holds ?? []).filter(row => row.key.name === check.name && row.key.configuration === check.configuration && row.key.source === checkSourceV13(check)).map(row => row.key);
+        if (stored !== undefined && !decoded?.ok || old !== undefined && (!isRecord(old) || !Array.isArray(old["holds"]))) return false;
+        const held = old === undefined ? { ...record, job: { ...job, seq: MAX - 4 }, funded: { ...record.funded, holds: true }, holds: priorKeys.map(key => newEvidenceHoldV17(key)!) } : old as unknown as EvidenceJobRecordV17;
+        const next = { ...held, holds: [...held.holds, ...keys.filter(key => !held.holds.some(row => same(row.key, key))).map(key => newEvidenceHoldV17(key)!)] };
+        related.push({ item: owner, record: next });
+      }
+      const settlement: RuleEffect[] = keys.length ? [{ effect: "value", item: capacity.owner, slot: "capacity",
+        value: evidenceCapacityWireV17(maximumCapacity(anchor, batch.publication.at, batch.operation.at, batch.policy.policy)) }] : [];
+      if (!evidenceFutureEntriesV17(given, { item: MAX, record }, related, () => null, settlement).admitted) return false;
+      const value = (item: number, slot: string, field: FieldValue | null): RuleEffect => ({ effect: "value", item, slot, value: field });
+      const admission: RuleEffect[] = [{ effect: "state", item: MAX - 2, state: "waiting" }, value(MAX - 2, "record", evidenceWireV17({ ...record, state: "pending" }, 196608)),
+        { effect: "open", item: MAX, type: "evidence-job", state: "job" },
+        ...(keys.length && owner === MAX ? [{ effect: "state" as const, item: MAX, state: "hold-anchor" }] : []),
+        { effect: "ref", item: MAX, slot: "lane", to: job.at },
+        ...["jobKey", "reuseKey", "holdKey", "policyKey"].map(slot => value(MAX, slot, HASH)), value(MAX, "deadline", time), value(MAX, "record", evidenceWireV17(record, 196608)),
+        ...related.map(row => value(row.item, "record", evidenceWireV17(row.record, 196608))), value(MAX - 3, "capacity", evidenceWireV17({ ...capacity, incidents: capacity.incidents.map(row => ({ ...row, job })) }, 196608)),
+        ...(capacity.owner === given.resolved.self ? [] : [value(capacity.owner, "capacity", evidenceWireV17({ ...anchor, holds: anchor.holds?.map(row => ({ ...row, owner: MAX - 1 })) ?? null }, 196608))]),
+        value(Number.MAX_SAFE_INTEGER, "service", evidenceWireV17({ mark: binding.roomService, generation: binding.serviceGeneration }, 16384)),
+      ];
+      const future = { ...given, input: { type: "outcome", owner: "platform:destination@17", kind: "evidence-admit", operation: `${MAX}:0`, attempt: 1,
+        result: "confirmed", evidence: { basis: "own-answer", body: { job } } } } as unknown as RuleGiven;
+      const decision = { to: job.at, message: { class: "request", type: "tell", body: { message: "check-decision", fields: { job, decision: { self: true },
+        reason: "admitted", status: "admitted", frozenGeneration: canonicalize(binding.serviceGeneration), observedGeneration: canonicalize(binding.serviceGeneration), commit: object, tree: object, base: object } } } } as const;
+      if (!evidenceCarryingBudgetV17(future, admission, [], [decision], []).admitted) return false;
     }
-    const settlement: RuleEffect[] = keys.length ? [{ effect: "value", item: capacity.owner, slot: "capacity",
-      value: evidenceCapacityWireV17(maximumCapacity(anchor, batch.publication.at, batch.operation.at, batch.policy.policy)) }] : [];
-    if (!evidenceFutureEntriesV17(given, { item: MAX, record }, related, () => null, settlement).admitted) return false;
-    const value = (item: number, slot: string, field: FieldValue | null): RuleEffect => ({ effect: "value", item, slot, value: field });
-    const admission: RuleEffect[] = [{ effect: "state", item: MAX - 2, state: "waiting" }, value(MAX - 2, "record", evidenceWireV17({ ...record, state: "pending" }, 196608)),
-      { effect: "open", item: MAX, type: "evidence-job", state: keys.length && owner === MAX ? "hold-anchor" : "job" },
-      { effect: "ref", item: MAX, slot: "lane", to: job.at },
-      ...["jobKey", "reuseKey", "holdKey", "policyKey"].map(slot => value(MAX, slot, HASH)), value(MAX, "deadline", time), value(MAX, "record", evidenceWireV17(record, 196608)),
-      ...related.map(row => value(row.item, "record", evidenceWireV17(row.record, 196608))), value(MAX - 3, "capacity", evidenceWireV17({ ...capacity, incidents: capacity.incidents.map(row => ({ ...row, job })) }, 196608)),
-      ...(capacity.owner === given.resolved.self ? [] : [value(capacity.owner, "capacity", evidenceWireV17({ ...anchor, holds: anchor.holds?.map(row => ({ ...row, owner: MAX - 1 })) ?? null }, 196608))]),
-      value(Number.MAX_SAFE_INTEGER, "service", evidenceWireV17({ mark: binding.roomService, generation: binding.serviceGeneration }, 16384)),
-    ];
-    const future = { ...given, input: { type: "outcome", owner: "platform:destination@17", kind: "evidence-admit", operation: `${MAX}:0`, attempt: 1,
-      result: "confirmed", evidence: { basis: "own-answer", body: { job } } } } as unknown as RuleGiven;
-    const decision = { to: job.at, message: { class: "request", type: "tell", body: { message: "check-decision", fields: { job, decision: { self: true },
-      reason: "admitted", status: "admitted", frozenGeneration: canonicalize(binding.serviceGeneration), observedGeneration: canonicalize(binding.serviceGeneration), commit: object, tree: object, base: object } } } } as const;
-    if (!evidenceCarryingBudgetV17(future, admission, [], [decision], []).admitted) return false;
   }
   return true;
   } catch { return false; }

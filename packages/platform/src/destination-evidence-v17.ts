@@ -646,12 +646,20 @@ const operationRow = (given: RuleGiven, operation: Operation) => {
   if (id === null) throw Error("The evidence operation lost its exact source");
   return readRow(given, id);
 };
-function evidenceRecordState(record: EvidenceJobRecordV17, _item: number): string {
+type EvidenceJobProjectionV17 = Pick<EvidenceJobRecordV17, "state" | "funded" | "reuse" | "incident" | "noticeAt">;
+function evidenceRecordState(record: EvidenceJobProjectionV17, _item: number): string {
   if (record.funded.holds || record.funded.policy) return record.state === "timeout" ? "hold-anchor-timedout" : "hold-anchor";
   if (record.reuse !== null) return record.state === "timeout" ? "reuse-anchor-timedout" : "reuse-anchor";
   if (record.state === "timeout") return "job-timedout";
   if (record.incident?.cause && record.noticeAt === null) return "incident-pending";
   return ["passed", "failed", "error", "refused", "reused"].includes(record.state) ? "decided" : "job";
+}
+/** Native outcomes open the declared initial state before projecting the
+ * admitted anchor/final state. Both records draw on the actual entry quote. */
+export function evidenceJobOpeningV17(item: number, record: EvidenceJobProjectionV17): RuleEffect[] {
+  const state = evidenceRecordState(record, item);
+  return [{ effect: "open", item, type: "evidence-job", state: "job" },
+    ...(state === "job" ? [] : [{ effect: "state" as const, item, state }])];
 }
 const keyObservation = (given: RuleGiven, key: KeyId | null): Observation | null => {
   const observed = key && given.observed({ key })?.observation;
@@ -711,7 +719,7 @@ function publishedRefusal(given: RuleGiven, request: Item, proposed: EvidenceJob
     if (spent.holdOwner === given.resolved.self) Object.assign(record, owner);
     else effects.push(evidenceRecordEffectV17(spent.holdOwner, owner));
   }
-  effects.push({ effect: "open", item: given.resolved.self, type: "evidence-job", state: evidenceRecordState(record, given.resolved.self) },
+  effects.push(...evidenceJobOpeningV17(given.resolved.self, record),
     { effect: "ref", item: given.resolved.self, slot: "lane", to: record.job.at }, evidenceRecordEffectV17(given.resolved.self, record));
   for (const [slot, value] of Object.entries({ jobKey: evidenceJobKeyV17(record.job), reuseKey: evidenceUnusedKeyV17(record.job, "reuse"),
     holdKey: spent.holdOwner === given.resolved.self && spent.keys.length ? evidenceHoldOwnerKeyV17(record.binding, record.name, record.configuration) : evidenceUnusedKeyV17(record.job, "hold"),
@@ -905,7 +913,7 @@ function evidenceAdmission(given: RuleGiven, operation: Operation): OutcomeGives
   const capacity = reserveEvidenceCountsV17(counts, increments); if (!capacity.ok) return refuse(capacity.reason);
   effects.push({ effect: "state", item: original.item.id, state: record.state === "reused" ? "settled" : "waiting" },
     evidenceRecordEffectV17(original.item.id, { ...original.record, admittedAt: admittedItem }),
-    { effect: "open", item: admittedItem, type: "evidence-job", state: evidenceRecordState(record, admittedItem) },
+    ...evidenceJobOpeningV17(admittedItem, record),
     { effect: "ref", item: admittedItem, slot: "lane", to: record.job.at });
   for (const [slot, digest] of Object.entries(opened.indexes)) effects.push({ effect: "value", item: admittedItem, slot, value: digest });
   if (record.state === "admitted") effects.push({ effect: "value", item: admittedItem, slot: "deadline", value: record.deadline });
