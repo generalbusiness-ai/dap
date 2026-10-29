@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-10-28-boundary-objects-in-use.md","body":{"commit":"25930f62e1aac9f7d2fd04ff6bbfedd2bc7cdd89","path":"notes/2026-10-28-boundary-objects-in-use.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:36b814a7f961b1d5874762695a36fe8d74497eae","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-28-boundary-objects-in-use.md."}
