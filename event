@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/client/test/observe.test.ts","body":{"commit":"b98968e50fe7c588862dc85deaff1e61516943fb","path":"packages/client/test/observe.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:03cffdb71383f1033c6e738fc994dc3a0259bc49","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/client.ts."}
