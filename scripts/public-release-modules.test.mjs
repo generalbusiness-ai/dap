@@ -1,10 +1,11 @@
 // One coherent reproduction and closure/rewrite witness; no compiler/SDK loading.
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { PLAN, PUBLIC_TESTING_INPUTS, nameOf, copyFileVerified, outputClosure, productionInputs, publishManifest, references, rewriteDeclarationRefs } from "./public-release-lib.mjs";
+import { PLAN, PUBLIC_GIT_INPUTS, PUBLIC_TESTING_INPUTS, nameOf, copyFileVerified, outputClosure, productionInputs, publishManifest, references, rewriteDeclarationRefs } from "./public-release-lib.mjs";
 import { browserRuntimeEdge } from "./check-public-release.mjs";
 
 const root = new URL("../", import.meta.url);
@@ -15,7 +16,7 @@ test("SDK module references preserve genuine imports and rewrite declarations wi
     const manifest = JSON.parse(readFileSync(new URL(`${workspace}/package.json`, root), "utf8"));
     assert.equal(manifest.name, `@generalbusiness/dap-${dir}`);
   }
-  assert.deepEqual(PLAN.packages.map(spec => nameOf(spec.dir)), ["@generalbusiness/dap-contract", "@generalbusiness/dap-bytes", "@generalbusiness/dap-derive", "@generalbusiness/dap-package-graph", "@generalbusiness/dap-platform", "@generalbusiness/dap-client", "@generalbusiness/dap-replay"]);
+  assert.deepEqual(PLAN.packages.map(spec => nameOf(spec.dir)), ["@generalbusiness/dap-contract", "@generalbusiness/dap-bytes", "@generalbusiness/dap-derive", "@generalbusiness/dap-package-graph", "@generalbusiness/dap-git", "@generalbusiness/dap-platform", "@generalbusiness/dap-client", "@generalbusiness/dap-replay"]);
   // Small manifest fixture isolates naming from the separate compatibility obligation.
   const namingSpec = { dir: "bytes", exports: { ".": "src/index" }, dependencies: {} };
   const namingInput = { name: "@generalbusiness/dap-bytes", type: "module", license: "Apache-2.0", exports: { ".": "./src/index.ts" } };
@@ -107,10 +108,67 @@ test("SDK module references preserve genuine imports and rewrite declarations wi
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+test("Git publishes only two subpaths and their pure five-module closure", () => {
+  const spec = PLAN.packages.find(spec => spec.dir === "git");
+  const source = JSON.parse(readFileSync(new URL("packages/git/package.json", root), "utf8"));
+  const manifest = publishManifest(spec, source, "0.1.0-dev.2");
+  assert.deepEqual(Object.keys(manifest.exports), ["./tree-proof", "./checkout-types"]);
+  assert.equal(manifest.exports["."], undefined);
+  assert.deepEqual(manifest.dependencies, { "@generalbusiness/dap-bytes": "0.1.0-dev.2", "@generalbusiness/dap-contract": "0.1.0-dev.2", "@noble/hashes": "2.4.0" });
+  assert.throws(() => publishManifest({ ...spec, exports: { ...spec.exports, ".": "src/index" } }, source, "0.1.0-dev.2"), /git-public-exports/);
+  assert.throws(() => publishManifest({ ...spec, excludedSourceExports: {} }, source, "0.1.0-dev.2"), /source-export-exclusions/);
+  const tracked = execFileSync("git", ["ls-files", "-z", "packages/git/src"], { cwd: root, encoding: "utf8" }).split("\0").filter(Boolean);
+  const selected = productionInputs(spec, tracked);
+  assert.deepEqual(selected.names, [
+    "packages/git/src/ascii.ts",
+    "packages/git/src/checkout-types.ts",
+    "packages/git/src/pure-names.ts",
+    "packages/git/src/reader.ts",
+    "packages/git/src/tree-proof.ts",
+  ]);
+  assert.ok(selected.omitted.includes("packages/git/src/node.ts"));
+  assert.ok(selected.omitted.includes("packages/git/src/gateway.ts"));
+  assert.equal(selected.names.length + selected.omitted.length, tracked.length);
+  assert.throws(() => productionInputs({ ...spec, includedInputs: [...spec.includedInputs, "src/node.ts"] }, tracked), /source-input-inclusions/);
+  assert.throws(() => productionInputs(spec, tracked.filter(path => !path.endsWith("/ascii.ts"))), /missing-included-source/);
+  for (const name of selected.names) {
+    const file = new URL(name, root);
+    for (const ref of references(readFileSync(file, "utf8"))) {
+      if (ref.startsWith(".")) assert.ok(selected.names.some(path => new URL(path, root).href === new URL(ref, file).href), `${name}: ${ref}`);
+      else assert.ok(["@generalbusiness/dap-bytes", "@noble/hashes/legacy.js"].includes(ref), `${name}: ${ref}`);
+    }
+  }
+  // Scripted emitted modules isolate archive scope and declaration guards;
+  // only a later actual compiler/pack run can establish a usable archive.
+  const stage = mkdtempSync(join(tmpdir(), "artroom-sdk-git-closure-"));
+  try {
+    mkdirSync(join(stage, "dist/src"), { recursive: true });
+    writeFileSync(join(stage, "package.json"), JSON.stringify(manifest));
+    for (const path of PUBLIC_GIT_INPUTS) for (const extension of ["js", "d.ts"]) {
+      writeFileSync(join(stage, `dist/${path.replace(/\.ts$/, `.${extension}`)}`), "export {};\n");
+    }
+    assert.equal(outputClosure(stage, spec, "0.1.0-dev.2").length, 11);
+    for (const extension of ["js", "d.ts"]) {
+      const file = join(stage, `dist/src/gateway.${extension}`);
+      writeFileSync(file, "export {};\n");
+      assert.throws(() => outputClosure(stage, spec, "0.1.0-dev.2"), /excluded-output/);
+      rmSync(file);
+    }
+    for (const extension of ["js", "d.ts"]) {
+      const file = join(stage, `dist/src/tree-proof.${extension}`);
+      writeFileSync(file, 'export * from "./gateway.js";\n');
+      assert.throws(() => outputClosure(stage, spec, "0.1.0-dev.2"), /relative-output-closure/);
+      writeFileSync(file, 'import "node:fs";\n');
+      assert.throws(() => outputClosure(stage, spec, "0.1.0-dev.2"), /bare-output-closure/);
+      writeFileSync(file, "export {};\n");
+    }
+  } finally { rmSync(stage, { recursive: true, force: true }); }
+});
+
 // This existing compatibility obligation can fail independently of lexical/copy checks.
 // Preserve actual workspace manifests and expected compatibility; do not project a plan.
 test("SDK published manifests match the actual supported workspace manifests", () => {
-  // The seven-package plan preserves the actual public closure.
+  // The eight-package plan preserves the actual public closure.
   for (const spec of PLAN.packages) {
     const manifest = JSON.parse(readFileSync(new URL(`packages/${spec.dir}/package.json`, root), "utf8"));
     const published = publishManifest(spec, manifest, "0.1.0-dev.2");
@@ -135,7 +193,7 @@ test("SDK published manifests match the actual supported workspace manifests", (
   assert.deepEqual(published.exports["./membership-actions"], { types: "./dist/src/membership-actions.d.ts", default: "./dist/src/membership-actions.js" });
   assert.deepEqual(published.exports["./package-validation"], { types: "./dist/src/validate-package.d.ts", default: "./dist/src/validate-package.js" });
   assert.throws(() => publishManifest(platform, { ...platformManifest, exports: { ...platformManifest.exports, "./package-validation": "./src/index.ts" } }, "0.1.0-dev.2"), /unsupported-source-export/);
-  assert.deepEqual(published.dependencies, { "@generalbusiness/dap-bytes": "0.1.0-dev.2", "@generalbusiness/dap-contract": "0.1.0-dev.2", "@generalbusiness/dap-derive": "0.1.0-dev.2", "@generalbusiness/dap-package-graph": "0.1.0-dev.2" });
+  assert.deepEqual(published.dependencies, { "@generalbusiness/dap-bytes": "0.1.0-dev.2", "@generalbusiness/dap-contract": "0.1.0-dev.2", "@generalbusiness/dap-derive": "0.1.0-dev.2", "@generalbusiness/dap-package-graph": "0.1.0-dev.2", "@generalbusiness/dap-git": "0.1.0-dev.2" });
   const bytes = PLAN.packages.find(spec => spec.dir === "bytes");
   const bytesManifest = JSON.parse(readFileSync(new URL("packages/bytes/package.json", root), "utf8"));
   const publicBytes = publishManifest(bytes, bytesManifest, "0.1.0-dev.2");

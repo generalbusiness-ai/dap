@@ -1,4 +1,4 @@
-// Seven portable SDK packages only. No package loading or external service calls here.
+// Eight portable SDK packages only. No package loading or external service calls here.
 import { createHash } from "node:crypto";
 import { moduleSpecifierSpans } from "./public-release-modules.mjs";
 import { execFileSync } from "node:child_process";
@@ -17,6 +17,18 @@ export const PUBLIC_TESTING_INPUTS = Object.freeze([
 ]);
 const PUBLIC_TESTING_OUTPUTS = new Set(PUBLIC_TESTING_INPUTS.flatMap(input =>
   [".js", ".d.ts"].map(extension => input.replace(/^packages\/derive\//, "dist/").replace(/\.ts$/, extension))));
+// Exact pure closure of the two public Git subpaths; no repository/host adapter.
+export const PUBLIC_GIT_INPUTS = Object.freeze([
+  "src/ascii.ts", "src/checkout-types.ts", "src/pure-names.ts", "src/reader.ts", "src/tree-proof.ts",
+]);
+const PUBLIC_GIT_OUTPUTS = new Set(PUBLIC_GIT_INPUTS.flatMap(input =>
+  [".js", ".d.ts"].map(extension => `dist/${input.replace(/\.ts$/, extension)}`)));
+const GIT_SOURCE_EXPORTS = Object.freeze({
+  ".": "./src/index.ts", "./node": "./src/node.ts", "./http": "./src/http.ts", "./github": "./src/github.ts",
+  "./http-read": "./src/http-read.ts", "./archive-policy": "./src/archive-policy.ts",
+  "./journal-reader": "./src/journal-reader.ts", "./journal-local": "./src/journal-local.ts",
+  "./journal": "./src/journal.ts", "./application": "./src/application.ts",
+});
 export const nameOf = (dir) => `@generalbusiness/dap-${dir}`;
 export const digest = (bytes, algorithm = "sha256") => createHash(algorithm).update(bytes).digest("hex");
 export const refusal = (code) => { throw new Error(code); };
@@ -80,7 +92,8 @@ export function copiedDependency(sourceRoot, outputRoot, name, expected, lock) {
 }
 export function publishManifest(spec, source, selected) {
   const excluded = spec.excludedSourceExports ?? {};
-  if (JSON.stringify(excluded) !== JSON.stringify(spec.dir === "platform" ? { "./testing": "./test/support.ts", "./application-install": "./src/application-install.ts" } : spec.dir === "replay" ? { "./git": "./src/git.ts" } : {})) refusal("source-export-exclusions");
+  if (JSON.stringify(excluded) !== JSON.stringify(spec.dir === "platform" ? { "./testing": "./test/support.ts", "./application-install": "./src/application-install.ts" } : spec.dir === "replay" ? { "./git": "./src/git.ts" } : spec.dir === "git" ? GIT_SOURCE_EXPORTS : {})) refusal("source-export-exclusions");
+  if (spec.dir === "git" && JSON.stringify(spec.exports) !== JSON.stringify({ "./tree-proof": "src/tree-proof", "./checkout-types": "src/checkout-types" })) refusal("git-public-exports");
   const excludedDependencies = spec.excludedSourceDependencies ?? {};
   if (JSON.stringify(excludedDependencies) !== JSON.stringify(spec.dir === "replay" ? { "@generalbusiness/dap-platform": "coordinated" } : {})) refusal("source-dependency-exclusions");
   for (const name of Object.keys(excludedDependencies)) if (source.dependencies?.[name] !== source.version) refusal("source-only-dependency-pin");
@@ -105,10 +118,17 @@ export function publishManifest(spec, source, selected) {
     ...(Object.keys(spec.dependencies).length ? { dependencies: Object.fromEntries(Object.entries(spec.dependencies).map(([name, pin]) => [name, pin === "coordinated" ? selected : pin])) } : {}),
   };
 }
-/** Exactly the repository's Node command and clone composition are omitted. */
+/** Omit the exact Replay adapters and everything outside Git's pure closure. */
 export function productionInputs(spec, tracked) {
   const excluded = spec.excludedInputs ?? [];
   if (JSON.stringify(excluded) !== JSON.stringify(spec.dir === "replay" ? ["src/bin.ts", "src/git.ts"] : [])) refusal("source-input-exclusions");
+  const included = spec.includedInputs ?? [];
+  if (JSON.stringify(included) !== JSON.stringify(spec.dir === "git" ? PUBLIC_GIT_INPUTS : [])) refusal("source-input-inclusions");
+  if (spec.dir === "git") {
+    const names = PUBLIC_GIT_INPUTS.map(path => `packages/git/${path}`);
+    if (names.some(path => !tracked.includes(path))) refusal("missing-included-source");
+    return { names: tracked.filter(path => names.includes(path)), omitted: tracked.filter(path => !names.includes(path)) };
+  }
   const omitted = excluded.map(path => `packages/${spec.dir}/${path}`);
   if (omitted.some(path => !tracked.includes(path))) refusal("missing-excluded-source");
   return { names: tracked.filter(path => !omitted.includes(path)), omitted };
@@ -139,6 +159,7 @@ export function outputClosure(stage, spec, selected) {
   if (expected.name !== nameOf(spec.dir) || expected.version !== selected || expected.type !== "module") refusal("stage-manifest");
   const rows = inventory(stage);
   for (const row of rows) {
+    if (spec.dir === "git" && row.path.startsWith("dist/") && !PUBLIC_GIT_OUTPUTS.has(row.path)) refusal("excluded-output");
     if (spec.dir === "replay" && /^dist\/src\/(?:bin|git)\.(?:js|d\.ts)$/.test(row.path)) refusal("excluded-output");
     if (!["package.json", "README.md", "LICENSE", "NOTICE"].includes(row.path) && (!row.path.startsWith("dist/") || !/\.(?:js|d\.ts)$/.test(row.path))) refusal("unplanned-output");
     if (row.path.startsWith("dist/test/") && !(spec.dir === "derive" && PUBLIC_TESTING_OUTPUTS.has(row.path))) refusal("unplanned-testing-output");
