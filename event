@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d8a4c02cbda876c0acf2988108bcc69a6e95e681","text":"Merge retired a covered predecessor; the successor is at docs/lanes-reference.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dae4c4e414067612fd419983c38db3d3c15a7ab0","text":"Merge retired a covered predecessor; the successor is at packages/checkers/test/stage-identity.test.ts."}
