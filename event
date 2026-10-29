@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:94c56873e98c25d68d9937c98cb091e2f2b6f52c","text":"Merge retired a covered predecessor; the successor is at packages/checkers/src/store.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9509eb05387f986535ba4a676de070e187bf3a45","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/scripts/pin.mjs."}
