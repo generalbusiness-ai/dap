@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:590919f517d55edf5dba577149802a376b756087","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/evidence-cohort.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5a9efa1b6965530660f19475860dc956879adf04","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/directory.ts."}
