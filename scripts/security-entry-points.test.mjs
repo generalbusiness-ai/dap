@@ -180,7 +180,7 @@ const seals = {
   "packages/platform/src/reservation-v17.ts": "e00aa0f08f9b3b1f4aca5e794436367ab550dcd1966c5258f1e96e42ab97a856", // Reviewed retained-policy decoder; actual maintained parser output.
   "packages/platform/src/evidence.ts": "e3f0fa91c32d848b5bec7dc9ac047d4cc72815ddce70365ad8fade6884a7354b", // Reviewed platform binding codec under ruling 1bc4f7fd; actual maintained parser output.
   "packages/git/src/checkout-snapshot.ts": "82f53717d419b70fe208801b6d0bf2fc0c947ac2beffb27b2e2d01898f48ee25", // Detached object identity and closure bounds; imports do not seal this implementation.
-  "packages/checkers/src/stage-origin.ts": "b2ae5e1dc4f78f60171605b201040907fa92bebc68ba38eb74058457e9f494d9", // Actual Native admission and causal proof verifier.
+  "packages/checkers/src/stage-origin.ts": "9d837cfdae32da0053a73b2ef7953cdff9c05a83db80f44d6fa000cddfddc8c8", // Actual Native admission and causal proof verifier.
   "packages/scope/src/stage-snapshot.ts": "7144d41c54a2b33f887b150b52b7a62a4a150c00f5af3739ce2b4264b4f58176", // Signed stage read and current Rules, key and work-source gates.
   "packages/bytes/src/address.ts": "d6d2fc3f86f50318c6a88b21649daef212f40c4d46b942033d27b3853902ccd2", // Canonical local full-address and routable /64 counter keys; actual maintained output.
   "packages/bytes/src/index.ts": "8ef5b10b548cf682eabcd3057c2ee4f86e4d14dad870da2ab41997a8dd9fcb02", // Bind the shared address-key export to its reviewed owner.
@@ -226,7 +226,7 @@ const seals = {
   "packages/scope/src/session-preparation.ts": "44b7bf3227e638fa2cc9e49e61162d903b4d915102069ab7848511f102b9ccf1",
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
   "packages/scope/src/applications/projection.ts": "f7d3bb45d448ec654a89f875697f865e1e89baeb5d7529e0db0859bd855b009f",
-  "packages/scope/src/destination-host.ts": "e03e0a14ecd7f7e10d5466e1ffd557b91ec6ea454e883e2cbb4387728b981d60",
+  "packages/scope/src/destination-host.ts": "24f6534acb01cc409fc3950fdfb35b350337fee649065db2948d48e8906fa685",
   "packages/mcp/src/hosted.ts": "c78bce660a4927fd05a5856e9d19f7b93d8737659ce58c4dc50842f39ee0db9a",
   "packages/mcp/src/hosted-tools.ts": "5bb4dd74b12896bb8f5f5cb366f25bd31af849c2690d0e3ab5d81eb277f94a47", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": namedOwners["packages/mcp/src/service.ts"],
