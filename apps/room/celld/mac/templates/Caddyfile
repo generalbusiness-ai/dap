@@ -1,0 +1,11 @@
+{
+	default_sni @PRIMARY_HOST@
+	grace_period 10s
+}
+
+@HOSTS@ {
+	tls @CERTIFICATE@ @PRIVATE_KEY@
+	reverse_proxy 127.0.0.1:28900 {
+		header_up CF-Connecting-IP {remote_host}
+	}
+}

@@ -7,6 +7,9 @@ separate from the deployed `artroom-scope` configuration. It keeps the four
 Durable Object bindings and all three migration tags from the room configuration.
 It has no Git host, application content bucket or committed secret.
 
+For persistent services and HTTPS on one Mac, use
+[Run on a Mac](self-host.md#run-on-a-mac).
+
 1. Obtain the release named in
    [`celld.version`](../apps/room/celld/celld.version). Verify its GitHub
    release attestation. Put the executable outside the checkout.
@@ -45,7 +48,7 @@ uncertain operation or replace it with a fresh plan.
 
 The local runtime keeps state in `.celld/dev` across restarts. Do not use
 `--clean` on state you need. These flags and private variable files follow
-the [pinned celld documentation](https://github.com/denoland/celld/blob/v0.6.2/docs/README.md#develop-an-application-locally).
+the [pinned celld documentation](https://github.com/denoland/celld/blob/v0.6.3/docs/README.md#develop-an-application-locally).
 This local exercise establishes no backup or fleet recovery.
 
 ## Exercise service identity behind a proxy

@@ -752,6 +752,16 @@ See [Run the local Worker](celld.md).
 Pin every GitHub Actions `uses:` reference to a full 40-character commit hash
 with a trailing `# vN` major-version comment.
 
+The fixed Node stage also runs `scripts/mac-host-kit.test.mjs` once. Run it
+alone with `node --test scripts/mac-host-kit.test.mjs`. On Darwin, its one
+owner case runs the two Node files in `apps/room/celld/mac/test/` and the
+Python modules `test_install`, `test_shutdown`, and `test_deploy` with system
+Python. Each child has a 60-second timeout and a 2 MiB output bound. Child
+Node and Python counts remain separate from that parent case. Outside
+Darwin, the owner skips both children. These offline tests use scratch
+files and scripted service ports. They start no host services and prove no
+installed-host, shutdown, or deployment outcome.
+
 ## Settings inventory
 
 `node --test scripts/security-settings.test.mjs` checks the static inventory in
