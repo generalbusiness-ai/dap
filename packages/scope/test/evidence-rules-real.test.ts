@@ -389,7 +389,8 @@ test("real published holds survive newer counted passes and clear only through d
     const administrator = await room.M.stub.observe({ of: await room.M.at(), key: rita.key }) as Observation;
     await room.M.did(rita, "set-actions", { on: 0, expected: await room.M.expected({ on: 0 }), fields: {
       role: "admin", actions: administrator.actions.filter(action => action !== "issue.triage") } });
-    room.life.advance(1_801_000); await runDurableObjectAlarm(room.G.object); await room.pause(room.nodes);
+    room.life.advance(1_801_000);
+    await runDurableObjectAlarm(room.G.object); await runDurableObjectAlarm(third.lane.object); await room.pause(room.nodes);
     const timedView = (await evidenceNativeState(room)).jobs.find(row => canonicalize(row.raw.job) === canonicalize(thirdJob.job));
     if (!timedView || timedView.raw.admittedAt === null) throw Error('Actual literal timed job required');
     expect(timedView.raw.state).toBe('admitted');
