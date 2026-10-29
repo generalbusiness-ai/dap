@@ -9,7 +9,7 @@
  *   2. Quantifiers over one range form: none, some, count, sameSet; and over
  *      one list form: each, has, distinct.
  *   3. Conditions that wrap any form the same way: when, anyOf, ifPresent,
- *      refuse.
+ *      require.
  *   4. Messages with one shape: tell, create, relate, index.
  *   5. Handlers written like acts: receive mirrors open and transition.
  *   6. One value flows down: the definition's literal types feed the client,
@@ -23,7 +23,36 @@ import type {
   EntryPart, FieldType, FieldValue, Guard, ItemType, Notify, Operand, Part, PlatformDefinition, Range, ReceiveType, ResultClauses, ScopeKind,
   SendForm, SendSource, Settles, Source, Subject, TimedRule, Where,
 } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { definitionDigest } from "@generalbusiness/dap-bytes";
+import { validateDefinition } from "@generalbusiness/dap-derive";
+import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
+
+const ACT_NAME: unique symbol = Symbol("act name");
+const INLINE_RULE: unique symbol = Symbol("inline rule");
+const DECLARATIONS: unique symbol = Symbol("definition declarations");
+declare const GRANT: unique symbol;
+declare const REASON: unique symbol;
+export type GrantRef<N extends string = string> = N & { readonly [GRANT]: true };
+export type ReasonRef<N extends string = string> = N & { readonly [REASON]: true };
+type Vocabulary<T extends string> = Readonly<Record<string, T>>;
+type MissingGrants<G extends Vocabulary<GrantRef>, R extends Record<string, readonly GrantRef[]>> = Exclude<G[keyof G], R[keyof R][number]>;
+type GrantNames<T> = T extends GrantRef<infer N> ? N : never;
+type RoleCoverage<G extends Vocabulary<GrantRef>, R extends Record<string, readonly GrantRef[]>> =
+  [MissingGrants<G, R>] extends [never] ? unknown : { readonly missingGrants: GrantNames<MissingGrants<G, R>> };
+
+/** Declare the grants that this definition's acts may require. */
+export const grants = <const G extends Record<string, string>>(names: G): { readonly [K in keyof G]: GrantRef<G[K]> } => ({ ...names }) as never;
+/** Declare the refusal names that this definition's guards may report. */
+export const reasons = <const R extends Record<string, string>>(names: R): { readonly [K in keyof R]: ReasonRef<R[K]> } => ({ ...names }) as never;
+/** Every declared grant must belong to at least one role. The returned role data is unchanged. */
+export function roles<const G extends Vocabulary<GrantRef>, const R extends Record<string, readonly NoInfer<G[keyof G]>[]>>(
+  declared: G, assigned: R & RoleCoverage<NoInfer<G>, NoInfer<R>>,
+): R {
+  const held = new Set<string>(Object.values(assigned).flat());
+  for (const grant of Object.values(declared)) if (!held.has(grant)) throw new Error(`no role holds ${grant}`);
+  return assigned;
+}
 
 // ================================================================ field types
 
@@ -37,13 +66,23 @@ export const member = { type: "member" } as const;
 export const digest = { type: "digest" } as const;
 export const commit = { type: "commit" } as const;
 export const tree = { type: "tree" } as const;
-export const itemOf = <const T extends string>(of: T) => ({ type: "item", of }) as const;
+export function itemOf<const I extends ItemDef | string>(item: I): { readonly type: "item"; readonly of: I extends ItemDef ? I["name"] : I } {
+  return { type: "item", of: typeof item === "string" ? item : item.name } as never;
+}
 export const scope = <const K extends ScopeKind>(kind: K) => ({ type: "scope", kind }) as const;
 export const enumOf = <const V extends readonly string[]>(...of: V) => ({ type: "enum", of }) as const;
 export const list = <const E extends FieldType, const M extends number>(of: E, max: M) => ({ type: "list", of, max }) as const;
 export const record = <const M extends Record<string, FieldType & { required: boolean }>>(of: M) => ({ type: "record", of }) as const;
 /** An entry of one of `kinds`, under a definition named `under`. */
-export const fact = <const U extends string, const K extends readonly string[]>(under: U, ...kinds: K) => ({ type: "fact", kind: kinds, under }) as const;
+export type NamedAct<U extends string = string, K extends string = string> = ActType & { readonly [ACT_NAME]: { readonly under: U; readonly kind: K } };
+export function fact<const A extends NamedAct>(act: A): { readonly type: "fact"; readonly kind: readonly [A[typeof ACT_NAME]["kind"]]; readonly under: A[typeof ACT_NAME]["under"] };
+export function fact<const U extends string, const K extends readonly string[]>(under: U, ...kinds: K): { readonly type: "fact"; readonly kind: K; readonly under: U };
+export function fact(under: string | NamedAct, ...kinds: readonly string[]) {
+  if (typeof under === "string") return { type: "fact", kind: kinds, under } as const;
+  const name = under[ACT_NAME];
+  if (!name) throw new Error("fact(act) needs an act returned by define; use fact(under, kind) for a forward reference");
+  return { type: "fact", kind: [name.kind], under: name.under } as const;
+}
 
 /** An act's or a handler's fields: each type, whether the intent must carry it, and a default. */
 export type Fields = Record<string, FieldType & { required: boolean; default?: FieldValue }>;
@@ -144,12 +183,21 @@ export const now = plusSeconds(0);
 /** The entry being written, as a reference's source. */
 export const self = "self" as const;
 
+/** Primitive literals are constants; null reads the absence of a value. Record literals use constant() to avoid operand-shaped ambiguity. */
+export type Readable = Operand | string | number | boolean | null;
+const operand = (input: Readable): Operand => input === null ? nothing : typeof input === "object" ? input : constant(input);
+
 // ================================================================ pattern 1: subjects
 
 /**
  * One subject: the act's item, an `also` item, the item a range scans, or
  * the item a handler opens. Reads, predicates, verbs and notices are its
  * methods, and every slot and state name is checked against its declaration.
+ */
+/**
+ * @pattern 1 Subjects
+ * Subjects expose only their declared slots and states. take copies same-name fields in the order given.
+ * @example effects: [...on.take(f, "label", "description")]
  */
 export interface Of<I extends ItemDef> {
   readonly item: I;
@@ -167,8 +215,9 @@ export interface Of<I extends ItemDef> {
   before(slot: Values<I>): Guard;
   after(slot: Values<I>): Guard;
   /** `equals` and `differs` read this subject: an operand with no subject of its own is one of its slots. */
-  equals(a: Operand, b: Operand): Guard;
-  differs(a: Operand, b: Operand): Guard;
+  equals(a: Readable, b: Readable): Guard;
+  differs(a: Readable, b: Readable): Guard;
+  take<const F extends Record<string, Operand>>(fields: F, ...names: readonly (Slots<I> & keyof F & string)[]): readonly EffectForm[];
   /** Every item a list slot (or an act field of that name) names is in one of `states`. */
   every(list: string, ...states: readonly string[]): Guard;
   // verbs
@@ -207,8 +256,16 @@ function of<I extends ItemDef>(item: I, subject?: Subject): Of<I> {
     unset: (slot) => g({ unset: slot }),
     before: (slot) => g({ before: { slot } }),
     after: (slot) => g({ after: { slot } }),
-    equals: (a, b) => g({ equals: { a, b } }),
-    differs: (a, b) => g({ differs: { a, b } }),
+    equals: (a, b) => g({ equals: { a: operand(a), b: operand(b) } }),
+    differs: (a, b) => g({ differs: { a: operand(a), b: operand(b) } }),
+    take: (fields, ...names) => names.map((slot) => {
+      const from = fields[slot];
+      if (!from) throw new Error(`${item.name}.take: no field ${slot}`);
+      if (Object.hasOwn(item.type.parties, slot)) return e({ party: { slot, from } });
+      if (Object.hasOwn(item.type.values, slot)) return e({ value: { slot, from } });
+      if (Object.hasOwn(item.type.refs, slot)) return e({ ref: { slot, from } });
+      throw new Error(`${item.name}.take: no slot ${slot}`);
+    }),
     every: (list, ...states) => g({ every: { list, states } }),
     to: (state) => e({ state }),
     party: (slot, from) => e({ party: { slot, from } }),
@@ -226,6 +283,8 @@ function of<I extends ItemDef>(item: I, subject?: Subject): Of<I> {
     authors: (slot) => ({ subject: named(), slot }),
   };
 }
+/** A typed subject for a helper outside an act body. Act bodies already receive on and also. */
+export const subject = of;
 
 // ================================================================ pattern 2: quantifiers
 
@@ -236,7 +295,16 @@ export function range<I extends ItemDef>(item: I, states?: readonly States<I>[],
     ...(more.where ? { where: more.where(of(item)) } : {}), ...(more.except ? { except: more.except } : {}),
   };
 }
-export const none = (items: Range): Guard => ({ none: items });
+/**
+ * @pattern 2 Quantifiers
+ * none scans one item type; its callback reads that scanned item's slots. Use range for except or count bounds.
+ * @example none(hold, ["held"], h => [equals(h.slot("under"), also.commitment.id)])
+ */
+export function none(items: Range): Guard;
+export function none<I extends ItemDef>(item: I, states?: readonly States<I>[], where?: (it: Of<I>) => readonly Where[]): Guard;
+export function none(item: ItemDef | Range, states?: readonly string[], where?: (it: Of<ItemDef>) => readonly Where[]): Guard {
+  return { none: "name" in item ? range(item, states, where ? { where } : {}) : item };
+}
 export const some = (items: Range): Guard => ({ some: items });
 export const count = (items: Range, bounds: { min?: number | Operand; max?: number | Operand }): Guard => ({ count: { ...items, ...bounds } });
 /** The list's elements, keyed, are the same set as the range's items; `match` pairs an element with its item. */
@@ -285,9 +353,18 @@ export const authorsFrom = (list: Operand): AuthorSource => ({ list });
 
 // ================================================================ plain guards
 
-export const equals = (a: Operand, b: Operand) => ({ equals: { a, b } }) as const;
-export const differs = (a: Operand, b: Operand) => ({ differs: { a, b } }) as const;
-export const rule = (name: string): Guard => ({ rule: name });
+export const equals = (a: Readable, b: Readable) => ({ equals: { a: operand(a), b: operand(b) } }) as const;
+export const differs = (a: Readable, b: Readable) => ({ differs: { a: operand(a), b: operand(b) } }) as const;
+/** An inline expression is hoisted by define. Repeated names must have the same expression. */
+export function rule(name: string, expression?: string): Guard {
+  const guard: Guard = { rule: name };
+  if (expression !== undefined) Object.defineProperty(guard, INLINE_RULE, { value: expression, enumerable: false });
+  return guard;
+}
+function keepInline<F extends object>(from: object, into: F): F {
+  if (INLINE_RULE in from) Object.defineProperty(into, INLINE_RULE, { value: from[INLINE_RULE], enumerable: false });
+  return into;
+}
 /** The fact an operand names (a field, a presented fact or a bound element) is fetched and verified. */
 export const isFact = (o: Operand): Guard => ({ fact: o as { field: string } | { presented: string } | { element: string } });
 /** A capability's code runs `action` for the act, with no subject. */
@@ -301,18 +378,28 @@ export const slotsOf = (items: Range, slot: string): CapabilityArg => ({ items, 
 
 // ================================================================ pattern 3: conditions
 
+/**
+ * @pattern 3 Conditions
+ * Conditions state when a form applies. require names the refusal when its guard fails.
+ * @example require(on.in("open"), why.notOpen)
+ */
 /** Apply a form only when every guard of `if` holds, or when not every guard of `unless` holds. */
-export const when = <F extends object>(form: F, condition: { if?: readonly Guard[]; unless?: readonly Guard[] }) => ({ ...form, ...condition });
+export const when = <F extends object>(form: F, condition: { if?: readonly Guard[]; unless?: readonly Guard[] }) => keepInline(form, { ...form, ...condition });
 /** At least one alternative holds, every guard of it. */
 export const anyOf = (...alternatives: readonly (readonly Guard[])[]): Guard => ({ anyOf: alternatives });
 /** The guard passes when the field or fact it names is absent. */
-export const ifPresent = (guard: Guard): Guard => ({ ...guard, ifPresent: true });
+export const ifPresent = (guard: Guard): Guard => keepInline(guard, { ...guard, ifPresent: true });
 /** Name the refusal when the guard fails; the judgment is unchanged. */
-export const refuse = (reason: string, guard: Guard): Guard => ({ ...guard, reason });
+export const require = (condition: Guard, reason: ReasonRef): Guard => keepInline(condition, { ...condition, reason });
 
 // ================================================================ pattern 4: messages
 
 type Clauses = ResultClauses;
+/**
+ * @pattern 4 Messages
+ * tell, create, relate and index return the declared message data. Result clauses describe later answers.
+ * @example tell({ to: also.library.slot("destination"), message: "publish-file", fields: { path: f.page, content: f.content } })
+ */
 export const tell = (send: { to: Operand; message: string; fields: Record<string, SendSource>; if?: readonly Guard[]; result?: Clauses }): SendForm =>
   ({ tell: { to: send.to as { slot: string; of?: Subject }, message: send.message, ...(send.if ? { if: send.if } : {}), fields: send.fields, result: send.result ?? {} } });
 export const create = (send: { kind: ScopeKind; definition: Digest | PlatformDefinition | "self"; fields: Record<string, SendSource>; result?: Clauses }): SendForm =>
@@ -324,10 +411,33 @@ export const index = (fields: Record<string, SendSource>): SendForm => ({ index:
 // ================================================================ acts, and pattern 5: handlers written like acts
 
 export const one = <I extends ItemDef>(item: I) => ({ item, rule: { item: item.name, one: true } as const });
-export const by = <I extends ItemDef>(item: I, field: string) => ({ item, rule: { item: item.name, by: field } as const });
+/** Bind through this field, or a same-name required item field when none is declared explicitly. */
+export function by<I extends ItemDef>(item: I): { item: I; rule: { item: I["name"]; by: I["name"] } };
+export function by<I extends ItemDef, const F extends string>(item: I, field: F): { item: I; rule: { item: I["name"]; by: F } };
+export function by<I extends ItemDef>(item: I, field = item.name) { return { item, rule: { item: item.name, by: field } }; }
 /** The item that a reference slot of another subject names. */
-export const via = <I extends ItemDef>(item: I, subject: Subject, slot: string) => ({ item, rule: { item: item.name, via: { slot, of: subject } } as const });
+export function via<I extends ItemDef, S extends ItemDef>(item: I, source: Of<S>, slot: Refs<S>): { item: I; rule: { item: I["name"]; via: { slot: Refs<S>; of: Subject } } };
+export function via<I extends ItemDef>(item: I, source: Subject, slot: string): { item: I; rule: { item: I["name"]; via: { slot: string; of: Subject } } };
+export function via<I extends ItemDef>(item: I, source: Subject | Of<ItemDef>, slot: string) {
+  if (typeof source !== "string" && !Object.hasOwn(source.item.type.refs, slot)) throw new Error(`${source.item.name} has no reference slot ${slot}`);
+  return { item, rule: { item: item.name, via: { slot, of: typeof source === "string" ? source : source.subject ?? "on" } } };
+}
 export type AlsoSpec = Record<string, { item: ItemDef; rule: AlsoRule }>;
+type SiblingRefs<AL extends AlsoSpec> = { readonly [K in keyof AL & string]: Of<AL[K]["item"]> };
+/** Bind the seed subjects first, then use their typed references to bind dependent siblings. */
+export function siblings<const S extends AlsoSpec, const A extends AlsoSpec>(seed: S, add: (subjects: SiblingRefs<S>) => A): S & A {
+  const subjects = Object.fromEntries(Object.entries(seed).map(([name, binding]) => [name, of(binding.item, `also.${name}`)])) as SiblingRefs<S>;
+  const additions = add(subjects);
+  for (const name of Object.keys(additions)) if (Object.hasOwn(seed, name)) throw new Error(`sibling ${name} is already bound`);
+  return { ...seed, ...additions };
+}
+type BoundFields<AL extends AlsoSpec> = {
+  [K in keyof AL as AL[K]["rule"] extends { by: infer F extends string } ? F : never]: {
+    readonly type: "item"; readonly of: AL[K]["item"]["name"]; readonly required: true;
+  }
+};
+type EffectiveFields<F extends Fields, AL extends AlsoSpec> = Omit<BoundFields<AL>, keyof F> & F;
+type AlsoInput<I extends ItemDef | null, AL extends AlsoSpec> = AL | ((on: OnOf<I>) => AL);
 type Presents = Record<string, { kind: readonly string[]; under: string; required: boolean }>;
 /** A fact presented beside the intent. */
 export const presented = <const U extends string, const K extends readonly string[]>(under: U, kinds: K, req = true) => ({ kind: kinds, under, required: req }) as const;
@@ -342,7 +452,7 @@ export interface Ctx<I extends ItemDef | null, F extends Fields, AL extends Also
 /** The `f` of a context over `F`: one `{ field }` operand per declared field. */
 export type FieldRefs<F extends Fields> = Ctx<null, F, {}, {}>["f"];
 export interface Body { guards?: readonly Guard[]; effects?: readonly EffectForm[]; sends?: readonly SendForm[]; attention?: readonly Notify[]; settles?: Settles }
-type ActSpec<F extends Fields, AL extends AlsoSpec, P extends Presents> = { fields?: F; also?: AL; presents?: P };
+type ActSpec<I extends ItemDef | null, F extends Fields, AL extends AlsoSpec, P extends Presents> = { fields?: F; also?: AlsoInput<I, AL>; presents?: P };
 
 function context<I extends ItemDef | null, F extends Fields, AL extends AlsoSpec, P extends Presents>(on: I, fields: F, also: AL, presents: P): Ctx<I, F, AL, P> {
   return {
@@ -353,11 +463,17 @@ function context<I extends ItemDef | null, F extends Fields, AL extends AlsoSpec
   } as unknown as Ctx<I, F, AL, P>;
 }
 const rules = (also: AlsoSpec) => Object.fromEntries(Object.entries(also).map(([k, a]) => [k, a.rule]));
+function inferredFields<F extends Fields, AL extends AlsoSpec>(fields: F, also: AL): EffectiveFields<F, AL> {
+  const inferred: Fields = {};
+  for (const binding of Object.values(also)) if ("by" in binding.rule) inferred[binding.rule.by] = required(itemOf(binding.item));
+  return { ...inferred, ...fields } as EffectiveFields<F, AL>;
+}
 
 function act<S extends ActType["step"], I extends ItemDef | null, const F extends Fields, const AL extends AlsoSpec, const P extends Presents>(
-  step: S, on: I, grant: string, spec: ActSpec<F, AL, P>, body?: (ctx: Ctx<I, F, AL, P>) => Body,
+  step: S, on: I, grant: GrantRef, spec: ActSpec<I, F, AL, P>, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body,
 ) {
-  const fields = (spec.fields ?? {}) as F, also = (spec.also ?? {}) as AL, presents = (spec.presents ?? {}) as P;
+  const also = (typeof spec.also === "function" ? spec.also(on === null ? undefined as OnOf<I> : of(on, "on") as OnOf<I>) : spec.also ?? {}) as AL;
+  const fields = inferredFields((spec.fields ?? {}) as F, also), presents = (spec.presents ?? {}) as P;
   const b = body?.(context(on, fields, also, presents)) ?? {};
   return {
     step, on: (on === null ? null : on.name) as I extends ItemDef ? I["name"] : null, grant,
@@ -365,9 +481,9 @@ function act<S extends ActType["step"], I extends ItemDef | null, const F extend
     guards: b.guards ?? [], effects: b.effects ?? [], sends: b.sends ?? [], attention: b.attention ?? [], ...(b.settles ? { settles: b.settles } : {}),
   };
 }
-export const open = <I extends ItemDef, const F extends Fields = {}, const AL extends AlsoSpec = {}, const P extends Presents = {}>(on: I, grant: string, spec: ActSpec<F, AL, P> = {}, body?: (ctx: Ctx<I, F, AL, P>) => Body) => act("open", on, grant, spec, body);
-export const transition = <I extends ItemDef, const F extends Fields = {}, const AL extends AlsoSpec = {}, const P extends Presents = {}>(on: I, grant: string, spec: ActSpec<F, AL, P> = {}, body?: (ctx: Ctx<I, F, AL, P>) => Body) => act("transition", on, grant, spec, body);
-export const comment = <I extends ItemDef | null, const F extends Fields = {}, const AL extends AlsoSpec = {}, const P extends Presents = {}>(on: I, grant: string, spec: ActSpec<F, AL, P> = {}, body?: (ctx: Ctx<I, F, AL, P>) => Body) => act("comment", on, grant, spec, body);
+export const open = <I extends ItemDef, const F extends Fields = {}, const AL extends AlsoSpec = {}, const P extends Presents = {}>(on: I, grant: GrantRef, spec: ActSpec<I, F, AL, P> = {}, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body) => act("open", on, grant, spec, body);
+export const transition = <I extends ItemDef, const F extends Fields = {}, const AL extends AlsoSpec = {}, const P extends Presents = {}>(on: I, grant: GrantRef, spec: ActSpec<I, F, AL, P> = {}, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body) => act("transition", on, grant, spec, body);
+export const comment = <I extends ItemDef | null, const F extends Fields = {}, const AL extends AlsoSpec = {}, const P extends Presents = {}>(on: I, grant: GrantRef, spec: ActSpec<I, F, AL, P> = {}, body?: (ctx: Ctx<I, EffectiveFields<F, AL>, AL, P>) => Body) => act("comment", on, grant, spec, body);
 
 /** What a handler's body may name, beyond an act's: the envelope's sender, and parts of the verified source entry. */
 export interface HandlerCtx<I extends ItemDef | null, F extends Fields, AL extends AlsoSpec> extends Ctx<I, F, AL, {}> {
@@ -376,12 +492,18 @@ export interface HandlerCtx<I extends ItemDef | null, F extends Fields, AL exten
 }
 export interface HandlerBody extends Body { settles?: Settles }
 type Late = ReceiveType["late"];
-/** A handler: what a delivered message of one class and name does. Written like an act: its subjects are the item it opens and its `also` items. */
+/**
+ * @pattern 5 Handlers
+ * A handler uses the same subjects, fields and body as an act, with the verified source and sender added.
+ * @example receive({ message: "report", class: "tell", from: { kind: "lane", under: "device" }, fields, also }, ({ f, also }) => ({ effects: [...also.device.take(f, "reported")] }))
+ */
 export function receive<I extends ItemDef | null = null, const F extends Fields = {}, const AL extends AlsoSpec = {}>(
-  spec: { message: string; class: ReceiveType["class"]; from: ReceiveType["from"]; fields?: F; opens?: I; also?: AL; copies?: number; late?: Late; order?: ReceiveType["order"] },
-  body?: (ctx: HandlerCtx<I, F, AL>) => HandlerBody,
+  spec: { message: string; class: ReceiveType["class"]; from: ReceiveType["from"]; fields?: F; opens?: I; also?: AlsoInput<I, AL>; copies?: number; late?: Late; order?: ReceiveType["order"] },
+  body?: (ctx: HandlerCtx<I, EffectiveFields<F, AL>, AL>) => HandlerBody,
 ): ReceiveType {
-  const fields = (spec.fields ?? {}) as F, also = (spec.also ?? {}) as AL, opens = (spec.opens ?? null) as I;
+  const opens = (spec.opens ?? null) as I;
+  const also = (typeof spec.also === "function" ? spec.also(opens === null ? undefined as OnOf<I> : of(opens, "on") as OnOf<I>) : spec.also ?? {}) as AL;
+  const fields = inferredFields((spec.fields ?? {}) as F, also);
   const b = body?.({ ...context(opens, fields, also, {}), sender, source }) ?? {};
   return {
     message: spec.message, class: spec.class, from: spec.from, fields, opens: opens === null ? null : (opens as ItemDef).name,
@@ -401,18 +523,79 @@ export function timed<I extends ItemDef>(on: I, spec: { states: readonly States<
 // ================================================================ the definition
 
 type ItemsOf<L extends readonly ItemDef[]> = { [I in L[number] as I["name"]]: I["type"] };
+type NamedActs<N extends string, A extends Record<string, ActType>> = { [K in keyof A & string]: A[K] & NamedAct<N, K> };
+interface Declarations { grants?: readonly string[]; reasons?: readonly string[]; diagnostics: readonly Diagnostic[] }
+type DeclaredMetadata = { readonly [DECLARATIONS]?: Declarations };
 
+type GuardVisitor = (guard: Guard, path: string) => void;
+/** Traverse declared guard positions only. Operands, including constant records, are data. */
+function visitGuards(guards: readonly Guard[] | undefined, path: string, visit: GuardVisitor): void {
+  guards?.forEach((guard, i) => {
+    const at = `${path}[${i}]`;
+    visit(guard, at);
+    if ("anyOf" in guard) guard.anyOf.forEach((alternative, n) => visitGuards(alternative, `${at}.anyOf[${n}]`, visit));
+    if ("each" in guard) visitGuards(guard.each.guards, `${at}.each.guards`, visit);
+    if ("has" in guard) visitGuards(guard.has.guards, `${at}.has.guards`, visit);
+  });
+}
+function visitConditions(condition: { if?: readonly Guard[]; unless?: readonly Guard[] }, path: string, visit: GuardVisitor): void {
+  visitGuards(condition.if, `${path}.if`, visit);
+  visitGuards(condition.unless, `${path}.unless`, visit);
+}
+function visitEffects(effects: readonly EffectForm[] | undefined, path: string, visit: GuardVisitor): void {
+  effects?.forEach((effect, i) => visitConditions(effect, `${path}[${i}]`, visit));
+}
+function visitBody(row: Body, path: string, visit: GuardVisitor): void {
+  visitGuards(row.guards, `${path}.guards`, visit);
+  visitEffects(row.effects, `${path}.effects`, visit);
+  row.attention?.forEach((notice, i) => visitConditions(notice.notify, `${path}.attention[${i}].notify`, visit));
+  row.sends?.forEach((send, i) => {
+    const at = `${path}.sends[${i}]`;
+    if ("tell" in send) visitConditions(send.tell, `${at}.tell`, visit);
+    if ("relate" in send) visitConditions(send.relate, `${at}.relate`, visit);
+    const result = "tell" in send ? send.tell.result : "relate" in send ? send.relate.result : "create" in send ? send.create.result : undefined;
+    const kind = "tell" in send ? "tell" : "relate" in send ? "relate" : "create";
+    if (result) for (const [outcome, effects] of Object.entries(result)) visitEffects(effects, `${at}.${kind}.result.${outcome}`, visit);
+  });
+}
+function visitDefinitionGuards(definition: Pick<DeclaredDefinition, "acts" | "receives" | "timed">, visit: GuardVisitor): void {
+  for (const family of ["acts", "receives", "timed"] as const) {
+    for (const [name, row] of Object.entries(definition[family])) visitBody(row, `${family}.${name}`, visit);
+  }
+}
+
+/**
+ * @pattern 6 Definitions and modules
+ * Modules are functions of explicit dependencies. define composes their values; compile validates and canonicalizes the whole definition.
+ * @example const work = workForms(ROOM, { zone, device, alert }, vocabulary);
+ */
 export function define<const N extends string, const L extends readonly ItemDef[], const A extends Record<string, ActType>, const G extends keyof A & string>(spec: {
   name: N; genesis: G; items: L; acts: A;
   receives?: Record<string, ReceiveType>; timed?: Record<string, TimedRule>; rules?: Record<string, string>;
   capabilities?: DeclaredDefinition["capabilities"]; level?: DurabilityLevel; capacity?: CapacityVersion;
+  grants?: Vocabulary<GrantRef>; reasons?: Vocabulary<ReasonRef>;
 }) {
-  return {
+  const hoisted = { ...(spec.rules ?? {}) };
+  const diagnostics: Diagnostic[] = [];
+  visitDefinitionGuards({ acts: spec.acts, receives: spec.receives ?? {}, timed: spec.timed ?? {} }, (guard, path) => {
+    const expression = INLINE_RULE in guard ? guard[INLINE_RULE] : undefined;
+    if (typeof expression !== "string" || !("rule" in guard)) return;
+    const name = guard.rule;
+    if (Object.hasOwn(hoisted, name) && hoisted[name] !== expression) diagnostics.push(diagnostic("findings", path, guard, `rule ${name} has different expressions`));
+    else hoisted[name] = expression;
+  });
+  const named = Object.fromEntries(Object.entries(spec.acts).map(([kind, act]) => [kind, Object.defineProperty({ ...act }, ACT_NAME, { value: { under: spec.name, kind }, enumerable: false })])) as NamedActs<N, A>;
+  const definition = {
     format: "artroom-definition-1", ...(spec.level ? { level: spec.level } : {}), ...(spec.capacity ? { capacity: spec.capacity } : {}),
     name: spec.name, profile: { name: "restricted", version: 1 }, capabilities: spec.capabilities ?? [], genesis: spec.genesis,
     items: Object.fromEntries(spec.items.map((i) => [i.name, i.type])) as ItemsOf<L>,
-    acts: spec.acts, receives: spec.receives ?? {}, timed: spec.timed ?? {}, rules: spec.rules ?? {},
+    acts: named, receives: spec.receives ?? {}, timed: spec.timed ?? {}, rules: hoisted,
   } as const;
+  Object.defineProperty(definition, DECLARATIONS, { value: {
+    ...(spec.grants ? { grants: Object.values(spec.grants) } : {}),
+    ...(spec.reasons ? { reasons: Object.values(spec.reasons) } : {}), diagnostics,
+  } satisfies Declarations, enumerable: false });
+  return definition;
 }
 
 /** The forms of several items and acts that one module contributes, to spread into `define`. */
@@ -422,28 +605,68 @@ export interface Forms<L extends readonly ItemDef[] = readonly ItemDef[], A exte
 
 // ================================================================ compile
 
-export interface Finding { act: string; rule: string; names: string; message: string }
+export interface Finding { act: string; rule: string; names: string; message: string; form: string }
 /** A rule's direct `fields.<name>` and `.values.<name>` references name a field of the act or a value slot of an item it names. */
 export function findings(definition: DeclaredDefinition): Finding[] {
   const found: Finding[] = [];
   for (const [kind, a] of Object.entries(definition.acts)) {
     const items = [a.on, ...Object.values(a.also).map((r) => r.item)].filter((n): n is string => n !== null);
     const values = new Set(items.flatMap((n) => Object.keys(definition.items[n]?.values ?? {})));
-    for (const g of a.guards) {
-      if (!("rule" in g)) continue;
-      const expression = definition.rules[g.rule];
-      if (expression === undefined) { found.push({ act: kind, rule: g.rule, names: "", message: "names no rule" }); continue; }
+    visitBody(a, `acts.${kind}`, (g, form) => {
+      if (!("rule" in g)) return;
+      const rule = g.rule;
+      const expression = definition.rules[rule];
+      if (expression === undefined) { found.push({ act: kind, rule, names: "", message: "names no rule", form }); return; }
       const fields = [...expression.matchAll(/\bfields\.([A-Za-z_][\w]*)/g)].map((m) => m[1]!).filter((n) => !Object.hasOwn(a.fields, n));
       const slots = [...expression.matchAll(/\.values\.([A-Za-z_][\w]*)/g)].map((m) => m[1]!).filter((n) => !values.has(n));
-      if (fields.length) found.push({ act: kind, rule: g.rule, names: fields.join(", "), message: "reads a field the act does not declare" });
-      if (slots.length) found.push({ act: kind, rule: g.rule, names: slots.join(", "), message: "reads a value slot none of the act's items declares" });
-    }
+      if (fields.length) found.push({ act: kind, rule, names: fields.join(", "), message: "reads a field the act does not declare", form });
+      if (slots.length) found.push({ act: kind, rule, names: slots.join(", "), message: "reads a value slot none of the act's items declares", form });
+    });
   }
   return found;
 }
-export function compile<D extends DeclaredDefinition>(definition: D): { definition: D; digest: Digest; findings: Finding[] } {
+export interface Diagnostic { stage: "findings" | "validator"; act: string | null; form: string; offending: unknown; message: string; code?: string }
+function diagnostic(stage: Diagnostic["stage"], form: string, offending: unknown, message: string, code?: string): Diagnostic {
+  return { stage, act: /^acts\.([^.[\]]+)/.exec(form)?.[1] ?? null, form, offending, message, ...(code ? { code } : {}) };
+}
+function valueAt(value: unknown, path: string): unknown {
+  let current = value;
+  for (const key of path.replace(/\[(\d+)\]/g, ".$1").split(".").filter(Boolean)) {
+    if (typeof current !== "object" || current === null) return undefined;
+    current = (current as Record<string, unknown>)[key];
+  }
+  return current;
+}
+/** Compilation failures retain the exact form and data that failed; no compiled definition is returned. */
+export class CompileError extends Error {
+  constructor(readonly diagnostics: readonly Diagnostic[]) {
+    super(diagnostics.map((d) => `${d.act ? `act ${d.act}: ` : ""}${d.form}: ${d.message}\n${JSON.stringify(d.offending)}`).join("\n"));
+    this.name = "CompileError";
+  }
+}
+/** Validate the full definition. A row slice must first be overlaid on its complete pinned definition. */
+export function compile<D extends DeclaredDefinition>(definition: D) {
+  const declarations = (definition as D & DeclaredMetadata)[DECLARATIONS];
   const canonical = normalize(definition);
-  return { definition: canonical, digest: definitionDigest(canonical), findings: findings(canonical) };
+  const found = findings(canonical);
+  const diagnostics: Diagnostic[] = [...(declarations?.diagnostics ?? []), ...found.map((f) => diagnostic("findings", f.form, valueAt(canonical, f.form), `${f.rule}: ${f.message}${f.names ? `: ${f.names}` : ""}`))];
+  for (const [kind, act] of Object.entries(canonical.acts)) {
+    if (declarations?.grants && !declarations.grants.includes(act.grant)) diagnostics.push(diagnostic("findings", `acts.${kind}.grant`, act.grant, "grant is not declared"));
+  }
+  const refusals: Record<string, string[]> = {};
+  visitDefinitionGuards(canonical, (guard, path) => {
+    if (typeof guard.reason !== "string") return;
+    const act = /^acts\.([^.[\]]+)/.exec(path)?.[1];
+    if (act) { const list = refusals[act] ??= []; if (!list.includes(guard.reason)) list.push(guard.reason); }
+    if (declarations?.reasons && !declarations.reasons.includes(guard.reason)) diagnostics.push(diagnostic("findings", path, guard, "refusal reason is not declared"));
+  });
+  const validation = validateDefinition(canonical, PROPOSED_BOUNDS, RULE_PROFILES);
+  if (!validation.ok) for (const problem of validation.problems) {
+    const form = /^(?:acts|receives|timed)\.[^.]+\.(?:guards|effects|sends|attention)\[\d+\]/.exec(problem.path)?.[0] ?? problem.path;
+    diagnostics.push(diagnostic("validator", form, valueAt(canonical, form), problem.message, problem.code));
+  }
+  if (diagnostics.length) throw new CompileError(diagnostics);
+  return { definition: canonical, digest: definitionDigest(canonical), findings: found, validation, refusals };
 }
 
 // ================================================================ one spelling
@@ -529,13 +752,17 @@ export function normalize<D extends DeclaredDefinition>(definition: D): D {
     if (isObj(s["index"])) return { index: { fields: mapValues(s["index"]["fields"] as J, src) } };
     return s;
   };
-  const rowN = <R extends J>(row: R): R => ({
-    ...row,
-    ...(Array.isArray(row["guards"]) ? { guards: row["guards"].map(guardN) } : {}),
-    ...(Array.isArray(row["effects"]) ? { effects: row["effects"].map(effectN) } : {}),
-    ...(Array.isArray(row["sends"]) ? { sends: row["sends"].map(sendN) } : {}),
-    ...(Array.isArray(row["attention"]) ? { attention: row["attention"].map(noticeN) } : {}),
-  });
+  const rowN = <R extends J>(row: R): R => {
+    const normalized = {
+      ...row,
+      ...(Array.isArray(row["guards"]) ? { guards: row["guards"].map(guardN) } : {}),
+      ...(Array.isArray(row["effects"]) ? { effects: row["effects"].map(effectN) } : {}),
+      ...(Array.isArray(row["sends"]) ? { sends: row["sends"].map(sendN) } : {}),
+      ...(Array.isArray(row["attention"]) ? { attention: row["attention"].map(noticeN) } : {}),
+    };
+    if (ACT_NAME in row) Object.defineProperty(normalized, ACT_NAME, { value: row[ACT_NAME], enumerable: false });
+    return normalized;
+  };
   return {
     ...definition,
     acts: mapValues(definition.acts as unknown as Record<string, J>, rowN), receives: mapValues(definition.receives as unknown as Record<string, J>, rowN), timed: mapValues(definition.timed as unknown as Record<string, J>, rowN),

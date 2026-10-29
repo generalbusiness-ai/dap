@@ -3,7 +3,6 @@
   "compilerOptions": {
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "noPropertyAccessFromIndexSignature": false,
     "types": ["node"],
     "paths": {
       "@generalbusiness/dap-contract": ["../../packages/contract/src/index.ts"],

@@ -84,14 +84,21 @@ test("the grow site compiles to the exact pinned definition, given the room's pi
 
 import { readFileSync } from "node:fs";
 import { acts as laneActs, items as laneItems, receives as laneReceives } from "./lanes.ts";
-import { define } from "./lib.ts";
 
 const change = JSON.parse(readFileSync(new URL("../../apps/room/lanes/definitions/change.json", import.meta.url), "utf8")) as typeof lendingData;
 
-test("a slice of the change lane compiles to the pinned rows in canonical spelling", () => {
-  const slice = define({ name: "change", genesis: "accept", items: laneItems, acts: laneActs, receives: laneReceives, capabilities: [{ name: "hold", version: 1 }, { name: "git-read", version: 1 }] });
-  const definition = compile(slice).definition as typeof lendingData;
+test("the rewritten change-lane rows preserve the complete pinned definition in canonical spelling", () => {
+  // The witness rewrites a slice, so validate it in the complete pinned
+  // definition rather than inventing a partial genesis or skipping checks.
+  const complete = {
+    ...change,
+    items: { ...change.items, ...Object.fromEntries(laneItems.map((item) => [item.name, item.type])) },
+    acts: { ...change.acts, ...laneActs },
+    receives: { ...change.receives, ...laneReceives },
+  };
+  const definition = compile(complete).definition as typeof lendingData;
   const canonical = normalize(change);
+  expect(definition).toEqual(canonical);
   for (const name of Object.keys(laneItems.reduce((o, i) => ({ ...o, [i.name]: 1 }), {}))) expect(definition.items[name], name).toEqual(change.items[name]);
   for (const name of Object.keys(laneActs)) expect(definition.acts[name], name).toEqual(canonical.acts[name]);
   for (const name of Object.keys(laneReceives)) expect(definition.receives[name], name).toEqual(canonical.receives[name]);
