@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:54a059dc480cdc103395d254e2860b68ea39f53b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-29-dxa1-authoring.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5660106dd37eedd59b00292f30d5f76b48fe3919","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/creation-versions.test.ts."}
