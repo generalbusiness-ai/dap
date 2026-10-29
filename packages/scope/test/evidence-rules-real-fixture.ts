@@ -216,9 +216,19 @@ export async function evidenceIntentRoot(room: EvidenceRoom, node: Platform): Pr
   return room.life.wait(() => runInDurableObject(node.object, (_instance, state) => {
     const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
     expect(store.scope()?.head).toEqual(before);
-    const birth = ownOf(store)(0)?.entry.input;
+    const entry = ownOf(store)(0)?.entry, birth = entry?.input;
+    const text = (value: unknown) => typeof value === 'string' ? value.slice(0, 512) : null;
+    const results = entry?.sends.flatMap(send => {
+      const message = send.message;
+      if (message.class !== 'result' || birth?.type !== 'genesis' || !same(message.of.from, birth.source) || message.of.n !== birth.n) return [];
+      const reason: unknown = message.reason;
+      return [{ n: send.n, to: send.to, class: message.class, from: message.of.from, sourceN: message.of.n, outcome: message.outcome,
+        reason: isRecord(reason) ? { code: text(reason['code']), name: text(reason['name']), detail: text(reason['detail']) } : null }];
+    }) ?? [];
     const context = canonicalize({ status: store.scope()?.status ?? null, birth: birth?.type ?? null,
-      decision: birth?.type === 'genesis' ? birth.decision : null, reason: birth && 'reason' in birth ? birth.reason : null });
+      decision: birth?.type === 'genesis' ? birth.decision : null,
+      seed: birth?.type === 'genesis' ? birth.seed : null, source: birth?.type === 'genesis' ? birth.source : null, sourceN: birth?.type === 'genesis' ? birth.n : null,
+      results: results.slice(0, 8), resultCount: results.length, resultsComplete: results.length <= 8 });
     expect(store.scope()?.status, context).toBe('active');
     expect(birth, context).toMatchObject({ type: 'genesis', decision: 'applied' });
     const page = store.page('intent', ['open', 'closed'], null, 2);

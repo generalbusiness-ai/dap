@@ -523,12 +523,14 @@ test("literal native TIME holds at its own head, replays unchanged, and recovers
       expected: await room.G.expected({ on: 0 }) })).toMatchObject({ answer: 'refused', reason: 'guard-failed', name: 'evidence-recovery-authority' });
     const checker = await room.M.stub.observe({ of: await room.M.at(), key: setup.service.actor.key }) as Observation;
     await room.M.did(rita, 'set-actions', { on: 0, fields: { role: 'checker', actions: [...checker.actions, 'issue.triage'] }, expected: await room.M.expected({ on: 0 }) });
+    await room.G.restart();
     const triagerRecovery = await room.G.did(setup.service.actor, 'evidence-recover-timeout', { on: 0, fields: { admission: admissionFact }, expected: await room.G.expected({ on: 0 }) });
     const triagerEntry = await evidenceEntry(room.G, triagerRecovery);
     if (triagerEntry.input.type !== 'act') throw Error('Actual authorized triager act required');
     expect(triagerEntry.input.authority[0]?.actions).toContain('issue.triage');
     const administrator = await room.M.stub.observe({ of: await room.M.at(), key: rita.key }) as Observation;
     await room.M.did(rita, 'set-actions', { on: 0, fields: { role: 'admin', actions: administrator.actions.filter(action => action !== 'issue.triage') }, expected: await room.M.expected({ on: 0 }) });
+    await room.G.restart();
     const performerRecovery = await room.G.did(rita, 'evidence-recover-timeout', { on: 0, fields: { admission: admissionFact, operation: c.operation }, expected: await room.G.expected({ on: 0 }) });
     const performerEntry = await evidenceEntry(room.G, performerRecovery);
     if (performerEntry.input.type !== 'act') throw Error('Actual original performer act required');
