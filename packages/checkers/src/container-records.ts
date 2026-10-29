@@ -199,28 +199,28 @@ export async function syncDirectory(path: string): Promise<void> {
   try { await directory.sync(); } finally { await directory.close(); }
 }
 export async function claimOf(dir: string, run: string): Promise<RunClaim | null> {
-  const path = join(dir, "claim.json"), bytes = await readPrivate(path, CLAIM_BYTES);
+  const path = join(dir, "claim["json"]"), bytes = await readPrivate(path, CLAIM_BYTES);
   if (bytes === null) return null;
   const claim = parsedRecord(path, bytes);
-  if (claim.v !== 1 || claim.run !== run || typeof claim.askDigest !== "string" || !/^[a-f0-9]{64}$/.test(claim.askDigest) || !Array.isArray(claim.command)
-    || !claim.command.length || claim.command.length > 32 || claim.command.some(x => typeof x !== "string" || !x || x.length > 4096 || x.includes("\0"))
-    || !Array.isArray(claim.execCommand) || !claim.execCommand.length || claim.execCommand.length > 32
-    || claim.execCommand.some(x => typeof x !== "string" || !x || x.length > 4096 || x.includes("\0"))
-    || !isDigest(claim.image) || typeof claim.needsOrigin !== "boolean" || typeof claim.container !== "string" || typeof claim.createdAt !== "number" || !Number.isSafeInteger(claim.createdAt) || typeof claim.finishBy !== "number" || !Number.isSafeInteger(claim.finishBy)
-    || claim.finishBy <= claim.createdAt || claim.finishBy - claim.createdAt > (86_400 + GRACE_SECONDS) * 1000) return invalidRecord(path);
+  if (claim["v"] !== 1 || claim["run"] !== run || typeof claim["askDigest"] !== "string" || !/^[a-f0-9]{64}$/.test(claim["askDigest"]) || !Array.isArray(claim["command"])
+    || !claim["command"].length || claim["command"].length > 32 || claim["command"].some(x => typeof x !== "string" || !x || x.length > 4096 || x.includes("\0"))
+    || !Array.isArray(claim["execCommand"]) || !claim["execCommand"].length || claim["execCommand"].length > 32
+    || claim["execCommand"].some(x => typeof x !== "string" || !x || x.length > 4096 || x.includes("\0"))
+    || !isDigest(claim["image"]) || typeof claim["needsOrigin"] !== "boolean" || typeof claim["container"] !== "string" || typeof claim["createdAt"] !== "number" || !Number.isSafeInteger(claim["createdAt"]) || typeof claim["finishBy"] !== "number" || !Number.isSafeInteger(claim["finishBy"])
+    || claim["finishBy"] <= claim["createdAt"] || claim["finishBy"] - claim["createdAt"] > (86_400 + GRACE_SECONDS) * 1000) return invalidRecord(path);
   return claim as unknown as RunClaim;
 }
 export async function terminalOf(dir: string, claim: RunClaim): Promise<{ report: RunReport | null } | null> {
   const path = join(dir, "terminal.json"), bytes = await readPrivate(path, REPORT_BYTES);
   if (bytes === null) return null;
   const result = parsedRecord(path, bytes);
-  const report = result.report === null ? null : readReport(result.report);
-  if (result.v !== 1 || result.run !== claim.run || result.askDigest !== claim.askDigest || result.report !== null && !report) return invalidRecord(path);
+  const report = result["report"] === null ? null : readReport(result["report"]);
+  if (result["v"] !== 1 || result["run"] !== claim["run"] || result["askDigest"] !== claim["askDigest"] || result["report"] !== null && !report) return invalidRecord(path);
   if (report) {
     const started = await startedOf(dir, claim);
-    if (!started) return invalidRecord(join(dir, "started.json"));
-    if (report.image !== started.image || canonicalize(report.environment) !== canonicalize(started.environment)) return invalidRecord(path);
-    if (claim.needsOrigin && report.end !== "lost" && !await originClosedOf(dir, claim)) return invalidRecord(join(dir, "origin-closed.json"));
+    if (!started) return invalidRecord(join(dir, "started["json"]"));
+    if (report.image !== started["image"] || canonicalize(report.environment) !== canonicalize(started["environment"])) return invalidRecord(path);
+    if (claim["needsOrigin"] && report.end !== "lost" && !await originClosedOf(dir, claim)) return invalidRecord(join(dir, "origin-closed.json"));
   }
   // A concurrent reader can observe the hard link before its writer's
   // directory sync finishes. It confirms that sync itself before release.
@@ -228,12 +228,12 @@ export async function terminalOf(dir: string, claim: RunClaim): Promise<{ report
   return { report };
 }
 export async function startedOf(dir: string, claim: RunClaim): Promise<RunStarted | null> {
-  const path = join(dir, "started.json"), bytes = await readPrivate(path, 128 * 1024);
+  const path = join(dir, "started["json"]"), bytes = await readPrivate(path, 128 * 1024);
   if (bytes === null) return null;
   const started = parsedRecord(path, bytes);
-  const report = readReport({ started: true, image: started.image, environment: started.environment, checkout: false, steps: [], end: "lost" });
-  if (started.v !== 1 || started.run !== claim.run || started.askDigest !== claim.askDigest || typeof started.id !== "string" || !/^[a-f0-9]{64}$/.test(started.id)
-    || started.image !== claim.image || !report) return invalidRecord(path);
+  const report = readReport({ started: true, image: started["image"], environment: started["environment"], checkout: false, steps: [], end: "lost" });
+  if (started["v"] !== 1 || started["run"] !== claim["run"] || started["askDigest"] !== claim["askDigest"] || typeof started["id"] !== "string" || !/^[a-f0-9]{64}$/.test(started["id"])
+    || started["image"] !== claim["image"] || !report) return invalidRecord(path);
   return started as unknown as RunStarted;
 }
 export const writeTerminal = (dir: string, claim: RunClaim, report: RunReport | null): Promise<void> =>
