@@ -180,8 +180,8 @@ const seals = {
   "packages/platform/src/reservation-v17.ts": "e00aa0f08f9b3b1f4aca5e794436367ab550dcd1966c5258f1e96e42ab97a856", // Reviewed retained-policy decoder; actual maintained parser output.
   "packages/platform/src/evidence.ts": "e3f0fa91c32d848b5bec7dc9ac047d4cc72815ddce70365ad8fade6884a7354b", // Reviewed platform binding codec under ruling 1bc4f7fd; actual maintained parser output.
   "packages/git/src/checkout-snapshot.ts": "82f53717d419b70fe208801b6d0bf2fc0c947ac2beffb27b2e2d01898f48ee25", // Detached object identity and closure bounds; imports do not seal this implementation.
-  "packages/checkers/src/stage-origin.ts": "9d837cfdae32da0053a73b2ef7953cdff9c05a83db80f44d6fa000cddfddc8c8", // Actual Native admission and causal proof verifier.
-  "packages/scope/src/stage-snapshot.ts": "7144d41c54a2b33f887b150b52b7a62a4a150c00f5af3739ce2b4264b4f58176", // Signed stage read and current Rules, key and work-source gates.
+  "packages/checkers/src/stage-origin.ts": "f8ca858b23eaf0441cad60ded741cc96cdf3b68ee01bd275f4ce525eba5cfa1e", // Actual Native admission and causal proof verifier.
+  "packages/scope/src/stage-snapshot.ts": "6c0cd626b2b58bb578f58160264c25fbcd5f67c2ad0ba39aeab4725c5a55dff9", // Signed stage read and current Rules, key and work-source gates.
   "packages/bytes/src/address.ts": "d6d2fc3f86f50318c6a88b21649daef212f40c4d46b942033d27b3853902ccd2", // Canonical local full-address and routable /64 counter keys; actual maintained output.
   "packages/bytes/src/index.ts": "8ef5b10b548cf682eabcd3057c2ee4f86e4d14dad870da2ab41997a8dd9fcb02", // Bind the shared address-key export to its reviewed owner.
   "apps/room/celld/worker.ts": "d1bc465525bd0af046fa0703464f14aeaaee8286b88415dfec3b9e03869fb644", // H1 reviewed production entry or public-origin gate owner.
