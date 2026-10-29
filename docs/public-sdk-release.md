@@ -1,8 +1,9 @@
 # Produce the public SDK
 
-This is the active seven-package producer boundary: contract, package-graph,
-bytes, client, derive, platform and replay. Planner approved this seven-package
-policy. The updated producer and checker
+The active eight-package plan contains contract, bytes, derive,
+package-graph, git, platform, client and replay. Request `cd31231e` adds
+Git’s two pure subpaths so platform can declare its actual dependency.
+The updated producer and checker
 have not run at this source delivery. No new staged release, public package
 or consumer acceptance is claimed. The tools build and inspect JavaScript
 and declarations; they do not publish, install application packages,
@@ -34,27 +35,40 @@ node scripts/public-release.mjs --source /absolute/clean/checkout --head <full-c
 node scripts/check-public-release.mjs --manifest /private/tmp/fresh-sdk-stage/release-manifest.json --native-capture /private/tmp/reviewed-native-capture.json --native-capture-sha256 <reviewed-SHA256> --esbuild /absolute/pinned-native-esbuild/bin/esbuild --esbuild-sha256 <reviewed-SHA256>
 ```
 
-The seven SDK packages, in build order, are
-`@generalbusiness/dap-contract`, `@generalbusiness/dap-package-graph`,
-`@generalbusiness/dap-bytes`,
-`@generalbusiness/dap-client`, `@generalbusiness/dap-derive`,
-`@generalbusiness/dap-platform`, and `@generalbusiness/dap-replay`, all at
+The eight SDK packages, in build order, are
+`@generalbusiness/dap-contract`, `@generalbusiness/dap-bytes`,
+`@generalbusiness/dap-derive`, `@generalbusiness/dap-package-graph`,
+`@generalbusiness/dap-git`, `@generalbusiness/dap-platform`,
+`@generalbusiness/dap-client`, and `@generalbusiness/dap-replay`, all at
 `0.1.0-dev.2`.
+
+Git publishes exactly `./tree-proof` and `./checkout-types`, with no root
+export. Platform uses the pure object parsers at runtime, and its public
+`StageSnapshot` extends `OwnedCheckoutSnapshot`. Git’s coordinated bytes
+and contract dependencies precede it; its hash dependency stays pinned to
+`@noble/hashes` 2.4.0.
+
+Those two subpaths require five unchanged pure source files: `tree-proof.ts`,
+`checkout-types.ts`, `reader.ts`, `ascii.ts`, and `pure-names.ts`. The exact
+source allowlist admits those files only. All other tracked Git inputs stay
+in excluded evidence, outside compiler ancestry. The output and declaration
+checks reject any other Git module, including Node and host transports.
+The internal `Reader` implementation has no public package export.
 
 The command is `dap`. `artroom` remains an alias. All workspace package names
 use `@generalbusiness/dap-*`, including bytes, client and replay. The existing
-six SDK names are unchanged; package-graph is the seventh name. The `artroom-replay` command,
+seven SDK names and their exports are unchanged; git is the eighth name. The `artroom-replay` command,
 `ARTROOM_HOME`, `refs/artroom/`, protocol names and Worker names are unchanged.
 
 The producer keeps exact original and compiler-input copies of each tracked
 SDK input. Package names need no publication mapping. Staged manifests use
-the seven planned names and coordinated dependencies at the selected version,
+the eight planned names and coordinated dependencies at the selected version,
 plus the dap repository and homepage. The checker verifies both copies
 against the original bytes. The public export and dependency allowlists
-are exact and reject unknown additions. The release plan includes the existing
-bytes `./application` and `./application-v2` and client `./application` source
-exports in the public map. Bytes and derive depend on the coordinated
-package-graph stage; package-graph depends on contract. Every coordinated
+are exact and reject unknown additions. The release plan preserves platform’s
+`./application` and `./application-v2` and client’s `./application` exports.
+Platform depends on the coordinated package-graph and Git stages.
+Package-graph depends on contract and derive. Every coordinated
 source dependency must equal its source package version before it is mapped
 to the selected release version. The source-only install exclusion does not establish fresh
 producer or consumer acceptance.
@@ -73,7 +87,7 @@ its file set and input hashes must match that preflight. Consumer `noEmit`
 checks keep their single pass. The checkout's HEAD, clean state and copied bytes are
 checked again before the release manifest is sealed.
 
-Build order is contract, package-graph, bytes, client, derive, platform, replay. TypeScript 7.0.2 emits ES2022
+Build order follows the eight-package list above. TypeScript 7.0.2 emits ES2022
 ESM plus declarations without maps. Relative JavaScript extensions are
 rewritten by the compiler. Relative declaration module specifiers are
 converted to `.js` where needed and checked against real `.d.ts` files in
@@ -212,7 +226,7 @@ The release owner assembles and verifies source/artifacts. A separately
 verified namespace administrator/publisher controls publication. A deployed
 operator controls the HTTPS URL, version, bindings, migration and real
 membership/definition/read provisioning. GitHub App authority does not
-establish npm publishing rights. Publishing the seven packages is not atomic;
+establish npm publishing rights. Publishing the eight packages is not atomic;
 complete the set and verify all public versions/integrities before calling
 it an available coordinated release.
 
@@ -234,18 +248,20 @@ fidelity remain separately owned and open. Browser cross-origin access is
 not established by packaging. This producer adds no CORS, grant, hosting,
 onboarding or universal durable-outbox protocol.
 
-## Seven-package closure checks
+## Eight-package closure checks
 
 The actual-manifest witness remains positive for every planned package. It
-checks the graph contract dependency, bytes application subpaths, client
+checks the graph dependencies, platform application subpaths, client
 application subpath, coordinated graph dependencies and Replay's exact
 source-only platform omission. Unknown exports or dependencies and changed
-excluded paths or pins still refuse. Only Replay bin/git inputs and outputs
-are excluded; bytes v2 source remains in the production closure.
+excluded paths or pins still refuse. Replay bin/git inputs and outputs remain excluded. Git admits only the five
+pure implementation files listed above; both public subpaths must exist.
+The owning witness checks actual source references and rejects a host module
+in either JavaScript or declarations. It does not compile or pack the SDK.
 
 The producer already compiles packages in plan order and admits only completed
 predecessor stages. Its generic loop needs no alternate resolver or source
-alias. The checker adds package-graph to its finite input set and requires it
+alias. The checker includes Git in its finite input set and requires package-graph
 in the real compiled browser closure. Its compiled journey exercises graph
 field inclusion in both directions and resolves the bytes application codecs
 and client compatibility export. NodeNext and Bundler type contexts use the

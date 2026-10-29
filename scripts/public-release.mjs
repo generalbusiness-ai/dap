@@ -65,7 +65,7 @@ export function produce(options) {
     // Build inputs have their own module marker, never an inherited workspace manifest.
     writeJson(join(input, "package.json"), { private: true, type: "module" });
     const files = names.map(name => join(input, name.slice(`packages/${spec.dir}/`.length)));
-    if (["client", "derive", "platform", "replay"].includes(spec.dir)) files.push(join(output, "packages/bytes/dist/src/web.d.ts"));
+    if (["client", "derive", "git", "platform", "replay"].includes(spec.dir)) files.push(join(output, "packages/bytes/dist/src/web.d.ts"));
     const config = join(input, "tsconfig.build.json");
     writeJson(config, { compilerOptions: {
       target: "ES2022", module: "ESNext", moduleResolution: "Bundler", lib: ["ES2022", "ESNext.Disposable"],

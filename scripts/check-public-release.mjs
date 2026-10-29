@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, join, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
-import { PLAN, ROOT, PUBLIC_TESTING_INPUTS, args, childEnv, compile, compilerTool, contained, digest, inventory, json, nameOf, outputClosure, productionInputs, publishManifest, references, refusal, sourceIdentity, writeJson } from "./public-release-lib.mjs";
+import { PLAN, ROOT, PUBLIC_GIT_INPUTS, PUBLIC_TESTING_INPUTS, args, childEnv, compile, compilerTool, contained, digest, inventory, json, nameOf, outputClosure, productionInputs, publishManifest, references, refusal, sourceIdentity, writeJson } from "./public-release-lib.mjs";
 
 /** esbuild 0.28.1's parser inserts its already-resolved helper import. Only
  * this exact edge of the pinned copied JSONata input is synthetic metadata.
@@ -26,7 +26,8 @@ export function check(manifestFile, captureFile, captureSha256, browserTool, bro
   if (JSON.stringify(release.producerInputs?.map(input => input.path)) !== JSON.stringify(producerPaths)) refusal("producer-input-set");
   for (const input of release.producerInputs) if (digest(readFileSync(join(ROOT, input.path))) !== input.sha256) refusal("producer-input-integrity");
   for (const input of release.inputs) {
-    if ((!/^(?:LICENSE|NOTICE|packages\/(?:contract|package-graph|bytes|client|derive|platform|replay)\/(?:src\/[^\n]+\.ts|package\.json|README\.md))$/.test(input.path) && !PUBLIC_TESTING_INPUTS.includes(input.path)) || /^packages\/replay\/src\/(?:bin|git)\.ts$/.test(input.path) || !contained(output, realpathSync(input.copy))) refusal("input-path");
+    const excludedGitInput = input.path.startsWith("packages/git/src/") && !PUBLIC_GIT_INPUTS.some(path => input.path === `packages/git/${path}`);
+    if ((!/^(?:LICENSE|NOTICE|packages\/(?:contract|package-graph|bytes|client|derive|git|platform|replay)\/(?:src\/[^\n]+\.ts|package\.json|README\.md))$/.test(input.path) && !PUBLIC_TESTING_INPUTS.includes(input.path)) || excludedGitInput || /^packages\/replay\/src\/(?:bin|git)\.ts$/.test(input.path) || !contained(output, realpathSync(input.copy))) refusal("input-path");
     if (digest(readFileSync(join(ROOT, input.path))) !== input.sha256 || digest(readFileSync(input.copy)) !== input.sha256) refusal("input-integrity");
     if (/\.ts$/.test(input.path)) {
       const [, dir, ...parts] = input.path.split("/");
