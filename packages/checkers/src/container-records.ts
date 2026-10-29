@@ -199,7 +199,7 @@ export async function syncDirectory(path: string): Promise<void> {
   try { await directory.sync(); } finally { await directory.close(); }
 }
 export async function claimOf(dir: string, run: string): Promise<RunClaim | null> {
-  const path = join(dir, "claim["json"]"), bytes = await readPrivate(path, CLAIM_BYTES);
+  const path = join(dir, "claim.json"), bytes = await readPrivate(path, CLAIM_BYTES);
   if (bytes === null) return null;
   const claim = parsedRecord(path, bytes);
   if (claim["v"] !== 1 || claim["run"] !== run || typeof claim["askDigest"] !== "string" || !/^[a-f0-9]{64}$/.test(claim["askDigest"]) || !Array.isArray(claim["command"])
@@ -218,7 +218,7 @@ export async function terminalOf(dir: string, claim: RunClaim): Promise<{ report
   if (result["v"] !== 1 || result["run"] !== claim["run"] || result["askDigest"] !== claim["askDigest"] || result["report"] !== null && !report) return invalidRecord(path);
   if (report) {
     const started = await startedOf(dir, claim);
-    if (!started) return invalidRecord(join(dir, "started["json"]"));
+    if (!started) return invalidRecord(join(dir, "started.json"));
     if (report.image !== started["image"] || canonicalize(report.environment) !== canonicalize(started["environment"])) return invalidRecord(path);
     if (claim["needsOrigin"] && report.end !== "lost" && !await originClosedOf(dir, claim)) return invalidRecord(join(dir, "origin-closed.json"));
   }
@@ -228,7 +228,7 @@ export async function terminalOf(dir: string, claim: RunClaim): Promise<{ report
   return { report };
 }
 export async function startedOf(dir: string, claim: RunClaim): Promise<RunStarted | null> {
-  const path = join(dir, "started["json"]"), bytes = await readPrivate(path, 128 * 1024);
+  const path = join(dir, "started.json"), bytes = await readPrivate(path, 128 * 1024);
   if (bytes === null) return null;
   const started = parsedRecord(path, bytes);
   const report = readReport({ started: true, image: started["image"], environment: started["environment"], checkout: false, steps: [], end: "lost" });
