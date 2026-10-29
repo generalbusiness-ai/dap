@@ -9,6 +9,21 @@ result. It does not imply that the gate runs before object activation or all
 other work. For `none`, the work and state columns cover the whole request.
 Refusals and unsupported methods are not additional routes.
 
+The route table covers HTTP dispatch. The Durable Object binding also has
+internal namespace methods, including `jobState`, `workSourceState` and
+`stageSnapshot`. The first two read retained local job or work-source
+state. The last checks a signed job-read request before returning a stage
+snapshot. They are separate methods, not additional HTTP routes.
+
+For a member-source stage snapshot, an ineligible signing key can trigger
+the initial job lookup and up to 32 source-fact reads before the current
+key check refuses it. Those reads return no snapshot to that caller. Room
+jobs reject a key that differs from the frozen marked key before those
+source reads. Both paths check current eligibility again around provider
+reads. A captured job-read signature can be replayed during its bounded
+15-minute window; the older snapshot route has the same exposure.
+
+
 The fixed `archive-row-diagnostic-v1` line reports bounded stored archive
 state and the platform alarm once per object activation, through existing
 ingress before recovery. It adds no RPC, HTTP, member, MCP or operator caller.

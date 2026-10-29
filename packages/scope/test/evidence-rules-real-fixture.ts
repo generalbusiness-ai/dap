@@ -2,7 +2,7 @@ import { expect } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Answer, Digest, FactRef, Intent, MemberRef, OperationId, Read, ScopeRef, Sealed, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isDigest, isHead, isRecord, isScopeRef, isSeed, same, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isDigest, isFactRef, isHead, isRecord, isScopeRef, isSeed, same, scopeIdOf, signIntent, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ANCESTRY_BOUNDS, CAPABILITY_CODE, countedEntries, holding, ledgerOf, localRetainedPlan, outcomeValueDomains, ownersOf, reserved, snapshotInput, stagedRefName, validateDefinition, valueDigest, walk, type Item, type StateView } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
@@ -209,6 +209,70 @@ export async function evidenceItems(node: Platform, type: string): Promise<reado
   return items;
 }
 const hardeningItems = evidenceItems;
+
+/** The actual admitted holder's remaining duty and operations, without payloads. */
+export async function evidenceHeldDuty(room: EvidenceRoom, job: FactRef) {
+  const record = await evidenceRecord(room, job), before = (await room.G.summary()).at;
+  if (record.admittedAt === null) throw Error('Actual admission required for held duty');
+  const admission = record.admittedAt;
+  return room.life.wait(() => runInDurableObject(room.G.object, (_instance, state) => {
+    const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+    expect(store.scope()?.head).toEqual(before);
+    const current = readEvidenceJobRecordWireV17(store.item(admission)?.values['record']);
+    if (!current || !same(current.job, job) || current.holder !== record.holder) throw Error('Actual unchanged admitted holder required');
+    const operations = store.operationsFor(current.holder);
+    const duty = { remaining: store.holder(current.holder), operationCount: operations.length, complete: operations.length <= 64,
+      operations: operations.slice(0, 64).map(operation => ({ id: operation.id, owner: operation.owner, kind: operation.kind, for: operation.for ?? null,
+        most: operation.most, selected: operation.selected, attemptCount: operation.attempts.length })) };
+    expect(duty.remaining).not.toBeNull(); expect(duty.complete).toBe(true);
+    expect(store.scope()?.head).toEqual(before);
+    return duty;
+  }));
+}
+
+/** A bad frozen room key refuses before selecting a holder or opening work. */
+export async function assertNativePrebindingRefusal(room: EvidenceRoom, lane: Platform, result: FactRef) {
+  const source = await evidenceEntry(lane, result.seq);
+  expect(factRefOf(source)).toEqual(result);
+  const deliveries = (await hardeningSealed(room.G)).filter(({ entry }) => entry.input.type === 'delivery' && same(entry.input.from, result));
+  expect(deliveries).toHaveLength(1);
+  const entry = deliveries[0]?.entry;
+  if (!entry || entry.input.type !== 'delivery') throw Error('Actual pre-binding Native delivery required');
+  const input = entry.input;
+  expect(input).toMatchObject({ decision: 'refused', reason: { code: 'bad-field' } });
+  const sent = source.sends.find(send => send.n === input.n);
+  expect(sent?.to).toEqual(await room.G.at());
+  expect(sent?.message).toMatchObject({ class: 'request', type: 'tell' });
+  expect(input.message).toEqual(sent?.message);
+  expect(entry.effects.some(effect => effect.effect === 'operation')).toBe(false);
+  expect(entry.sends).toEqual(expect.arrayContaining([expect.objectContaining({ to: result.at, message: { class: 'result', of: { from: result, n: input.n },
+    outcome: 'refused', reason: { code: 'bad-field' } } })]));
+  expect(entry.sends.some(send => send.message.class === 'request')).toBe(false);
+}
+
+/** A counted job changes only through the actual Native decision delivery. */
+export async function assertNativeCountedEvidence(room: EvidenceRoom, lane: Platform, job: FactRef, result: FactRef, state: 'passed' | 'failed' | 'errored') {
+  const held = (await hardeningItems(lane, 'job')).find(item => item.id === job.seq);
+  expect(held).toMatchObject({ state, refs: { decidedBy: result.seq } });
+  const decision = held?.refs['nativeDecision'];
+  if (!isFactRef(decision)) throw Error('Actual counted Native decision reference required');
+  expect(decision.at).toEqual(await room.G.at());
+  const native = await evidenceEntry(room.G, decision.seq);
+  expect(factRefOf(native)).toEqual(decision);
+  expect(native.input).toMatchObject({ type: 'outcome', owner: EVIDENCE_RULES_COHORT.destination, kind: 'evidence-result', result: 'confirmed' });
+  const sends = native.sends.filter(send => same(send.to, job.at) && send.message.class === 'request' && send.message.type === 'tell'
+    && isRecord(send.message.body) && send.message.body['message'] === 'check-decision' && isRecord(send.message.body['fields'])
+    && same(send.message.body['fields']['job'], job) && same(send.message.body['fields']['result'], result));
+  expect(sends).toHaveLength(1);
+  expect(sends[0]?.message).toMatchObject({ class: 'request', type: 'tell', body: { message: 'check-decision',
+    fields: { job, result, status: 'decided', reason: 'counted', decision: { self: true } } } });
+  const deliveries = (await hardeningSealed(lane)).filter(({ entry }) => entry.input.type === 'delivery'
+    && same(entry.input.from, decision) && entry.input.n === sends[0]?.n);
+  expect(deliveries).toHaveLength(1);
+  expect(deliveries[0]?.entry.input).toMatchObject({ type: 'delivery', decision: 'applied' });
+  expect(deliveries[0]?.entry.effects).toContainEqual({ effect: 'state', item: job.seq, state });
+  expect(deliveries[0]?.entry.effects).toContainEqual({ effect: 'ref', item: job.seq, slot: 'decidedBy', to: result.seq });
+}
 
 /** Read the actual singleton intent and its opening, independent of summary projection. */
 export async function evidenceIntentRoot(room: EvidenceRoom, node: Platform): Promise<Item> {

@@ -16,10 +16,12 @@ const bindingOf = (g: Awaited<ReturnType<typeof evidenceGraph>>, checker: Eviden
   v: 1, source: "member", stage: subject.kind, checker,
   policyGeneration: { rules: g.graph.rules.at, seq: 1 }, roomService: null, serviceGeneration: { rules: g.graph.rules.at, seq: 0 }, auditOf: null, subject,
 });
-const decision = async (g: Awaited<ReturnType<typeof evidenceGraph>>, lane: Awaited<ReturnType<typeof g.open>>, job: Awaited<ReturnType<typeof lane.fact>>, reason: string, triple: Record<string, string> = {}) => {
+const decision = async (g: Awaited<ReturnType<typeof evidenceGraph>>, lane: Awaited<ReturnType<typeof g.open>>, job: Awaited<ReturnType<typeof lane.fact>>, reason: string,
+  proof: { commit?: string; tree?: string; base?: string; result?: Awaited<ReturnType<typeof lane.fact>> } = {}) => {
+  if (reason === "counted" && !proof.result) throw Error("A scripted counted notice requires the actual signed result fact");
   const envelope = g.graph.destination.sends(lane.at, { class: "request", type: "tell", body: { message: "check-decision", fields: {
-    job, decision: { self: true }, status: reason === "admitted" ? "admitted" : reason === "wrong-source" ? "refused" : "decided", reason, frozenGeneration: "null", observedGeneration: "null", ...triple,
-  } } }, "platform:destination@17:evidence-admit");
+    job, decision: { self: true }, status: reason === "admitted" ? "admitted" : reason === "wrong-source" ? "refused" : "decided", reason, frozenGeneration: "null", observedGeneration: "null", ...proof,
+  } } }, reason === "counted" ? "platform:destination@17:evidence-result" : "platform:destination@17:evidence-admit");
   expect(await lane.stub.deliver(envelope)).toMatchObject({ answer: "recorded" });
 };
 
@@ -54,8 +56,11 @@ TEST work
   await decision(g, lane, job, "admitted", { commit: workCommit, tree: oid("d"), base: oid("b") });
   expect(await lane.asks(paul, "check", { fields: { ...result, bindingDigest: textDigest("different binding") } })).toBe("guard-failed: not-this-job");
   const actualResult = (await lane.did(paul, "check", { fields: result })).fact;
+  expect((await lane.item(job.seq)).state).toBe("requested");
+  expect((await lane.item(job.seq)).refs["decidedBy"] ?? null).toBeNull();
   expect(await lane.asks(una, "release-work", { on: staged.seq })).toBe("guard-failed: work-check-pending");
-  await decision(g, lane, job, "counted");
+  await decision(g, lane, job, "counted", { result: actualResult });
+  expect(await lane.item(job.seq)).toMatchObject({ state: "passed", refs: { decidedBy: actualResult.seq } });
   const alias = (await lane.did(una, "request-work-check", { fields: { source: staged, reuse: true, name: "work", configuration: textDigest("TEST work config"), checker: paul.member,
     commitProof: canonicalize({ v: 1, id: workCommit, data: b64url(commitBytes) }), binding: canonicalize(binding), bindingDigest: digest } })).fact;
   const reused = g.graph.destination.sends(lane.at, { class: "request", type: "tell", body: { message: "check-decision", fields: {
@@ -64,6 +69,16 @@ TEST work
   expect(await lane.stub.deliver(reused)).toMatchObject({ answer: "recorded" });
   expect(await lane.item(alias.seq)).toMatchObject({ state: "reused", refs: { countedJob: job.seq, countedResult: actualResult.seq } });
   expect((await lane.entries()).filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "check")).toHaveLength(1);
+  const errorJob = (await lane.did(una, "request-work-check", { fields: { source: staged, name: "work", configuration: textDigest("TEST work config"), checker: paul.member,
+    commitProof: canonicalize({ v: 1, id: workCommit, data: b64url(commitBytes) }), binding: canonicalize(binding), bindingDigest: digest } })).fact;
+  await decision(g, lane, errorJob, "admitted", { commit: workCommit, tree: oid("d"), base: oid("b") });
+  const errorResult = (await lane.did(paul, "check-error", { fields: { job: errorJob.seq, jobFact: errorJob, tree: oid("d"),
+    configuration: textDigest("TEST work config"), bindingDigest: digest, reason: "TEST runner could not finish" } })).fact;
+  expect((await lane.item(errorJob.seq)).state).toBe("requested");
+  expect((await lane.item(errorJob.seq)).refs["decidedBy"] ?? null).toBeNull();
+  expect(await lane.asks(una, "release-work", { on: staged.seq })).toBe("guard-failed: work-check-pending");
+  await decision(g, lane, errorJob, "counted", { result: errorResult });
+  expect(await lane.item(errorJob.seq)).toMatchObject({ state: "errored", refs: { decidedBy: errorResult.seq } });
   const secondBytes = utf8(new TextDecoder().decode(commitBytes).replace("TEST work", "TEST abandoned work")), secondCommit = idOf("commit", secondBytes);
   const secondSource = (await lane.stagedDid(una, "stage-work", { fields: { ...fields, commit: secondCommit } })).fact;
   const secondBinding = bindingOf(g, paul.member, { kind: "work", source: secondSource });
@@ -119,9 +134,11 @@ test("a merged change accepts only its configured native peer's published job an
   const jobs = (await lane.state()).page("job", ["queued"], null, 64).items;
   expect(jobs).toHaveLength(1); const job = await lane.fact(jobs[0]!.id);
   await decision(g, lane, job, "admitted", { commit: oid("c"), tree: oid("d"), base: oid("b") });
-  await lane.did(paul, "check", { fields: { job: job.seq, jobFact: job, tree: oid("d"), configuration, bindingDigest: digest, outcome: "failed" } });
-  await decision(g, lane, job, "counted");
-  expect((await lane.item(job.seq)).state).toBe("failed");
+  const actualResult = (await lane.did(paul, "check", { fields: { job: job.seq, jobFact: job, tree: oid("d"), configuration, bindingDigest: digest, outcome: "failed" } })).fact;
+  expect((await lane.item(job.seq)).state).toBe("requested");
+  expect((await lane.item(job.seq)).refs["decidedBy"] ?? null).toBeNull();
+  await decision(g, lane, job, "counted", { result: actualResult });
+  expect(await lane.item(job.seq)).toMatchObject({ state: "failed", refs: { decidedBy: actualResult.seq } });
   const notice = g.graph.destination.sends(lane.at, { class: "request", type: "tell", body: { message: "published-check-failure", fields: {
     job, publication, manifest, decision: { self: true }, cause: "TEST actual published failure", triagers: [rita.member], policyGeneration: canonicalize(binding.policyGeneration),
   } } }, "platform:destination@17:evidence-result");

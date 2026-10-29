@@ -1,4 +1,4 @@
-/** Read the first deciding successor-lane result, not a runner's answer.
+/** Read a provisional successor-lane result, not a runner's answer.
  * Admission independently proves the retained job and its commit/tree/base;
  * current signing authority is checked by the Native source guard. */
 import type { Digest, Effect, FactRef, KeyId, Sealed } from "@generalbusiness/dap-contract";
@@ -7,6 +7,8 @@ import { entryHash, isDigest, isEntry, isFactRef, isRecord, same, utf8, verifySi
 export interface EvidenceDecisionExpectedV17 {
   job: FactRef; admission: FactRef; bindingDigest: Digest;
   tree: string; configuration: Digest;
+  /** Frozen Room key checked before a held receiver decision is selected. */
+  resultKey?: KeyId;
 }
 export interface EvidenceDecisionV17 {
   result: FactRef; key: KeyId; outcome: "passed" | "failed" | "error"; reason: string | null;
@@ -23,7 +25,7 @@ export function readEvidenceDecisionV17(sealed: Sealed, expected: EvidenceDecisi
     if (!same(entry.at, expected.job.at) || entry.seq <= expected.job.seq || entry.input.type !== "act") return null;
     const signed = entry.input.signed, intent = signed.intent;
     if (!verifySignedIntent(signed) || !same(intent.to, expected.job.at) || intent.on !== null
-      || !["check", "check-error"].includes(intent.kind)) return null;
+      || !["check", "check-error"].includes(intent.kind) || expected.resultKey !== undefined && intent.actor !== expected.resultKey) return null;
     const fields = intent.fields, error = intent.kind === "check-error";
     const required = ["job", "jobFact", "tree", "configuration", "bindingDigest", error ? "reason" : "outcome"];
     if (!required.every(key => Object.hasOwn(fields, key)) || Object.keys(fields).some(key => ![...required, "details"].includes(key))
@@ -34,10 +36,9 @@ export function readEvidenceDecisionV17(sealed: Sealed, expected: EvidenceDecisi
     const reason = error ? fields["reason"] : null;
     if (outcome !== "passed" && outcome !== "failed" && outcome !== "error") return null;
     if (error && (typeof reason !== "string" || reason.length > 4096 || utf8(reason).length > 4096)) return null;
-    const states = entry.effects.filter(effect => effect.effect === "state" && effect.item === expected.job.seq);
-    const decisions = entry.effects.filter(effect => effect.effect === "ref" && effect.item === expected.job.seq && effect.slot === "decidedBy");
-    if (states.length !== 1 || states[0]!.effect !== "state" || states[0]!.state !== (error ? "errored" : outcome)
-      || decisions.length !== 1 || decisions[0]!.effect !== "ref" || decisions[0]!.to !== entry.seq) return null;
+    // Only Native admission of the result may decide the job. The signed
+    // lane act records a result; it must leave every admitted job slot alone.
+    if (entry.effects.some(effect => "item" in effect && effect.item === expected.job.seq)) return null;
     // These rows distinguish a recorded result from an unrelated act that
     // happens to carry the same signed fields. Each relevant slot is unique.
     const one = (predicate: (effect: Effect) => boolean) => entry.effects.filter(predicate).length === 1;

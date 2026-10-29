@@ -312,8 +312,9 @@ records recover a terminal result without starting a replacement.
 [Run a checker in a container](../packages/checkers/README.md) states the
 supported engine, image requirements and operator custody wiring. Source
 code alone is not a deployment or a hosted check result.
-The opt-in evidence cohort (Register 22, Directory 21, Rules 13 and
-Destination 17, with Membership 8) adds source and stage admission. Rules
+The opt-in evidence cohort adds source and stage admission through Register
+22, Directory 21, Rules 13, Destination 17, Issue 4 and Change 4. Membership
+8 and Inbox 1 remain unchanged. Rules
 owns the nullable room-service member/key pair and its native generation.
 Only an admin can change that pair. Destination observes current Rules and
 Membership when it admits and counts a result. Rotation refuses unfinished
@@ -330,8 +331,22 @@ the observation needs. This addition follows the review rule in
 
 A lane queues an evidence request before Destination decides it. A selected
 `evidence-admit` outcome opens the admitted job and records its immutable
-subject, exact commit/tree/base and source facts. Reuse uses a bounded index
-of admitted results. Disagreement permanently disables reuse for that key
+subject, exact commit, tree, base and source facts.
+
+In Issue 4 and Change 4, a checker act records a signed result claim. The
+claim leaves the job pending. Destination verifies that claim before it
+selects a bound holder or draws its funded result duty. For a room job,
+this check requires the frozen marked key. A second key of the same
+checker member cannot spend that duty. Member-source jobs keep their
+current member-key eligibility rules.
+
+Destination checks current source authority when it counts the result.
+Only its authenticated counted notice settles the lane job. The notice
+names the exact result fact, binding and outcome. A claim refused before
+binding leaves the funded duty and pending job available for the marked
+key. No new kernel operand, field, slot or wider bound supports this flow.
+
+Reuse uses a bounded index of admitted results. Disagreement permanently disables reuse for that key
 while allowing fresh jobs. Audits run fresh for the current logical request
 and name the actual member job whose result they compare.
 

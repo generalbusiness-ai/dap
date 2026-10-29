@@ -314,12 +314,12 @@ sit.
 
 | Part | Needs | State |
 |---|---|---|
-| `room` and `member` sources | New versions of the rules data, the change lane and the destination, which admit a result by its source (`wrong-source`) | The first slice supplies explicit Rules 13, Destination 17 and successor lane definitions. Rules owns the complete mark; its native generation invalidates unfinished room jobs on observed rotation (ruling `ed818781`). |
-| `reuse` | The same versions, with an index of decided results by key and a mark that disables reuse for a key | Open |
-| `work` and `landing` stages | The same versions | Open |
+| `room` and `member` sources | New versions of the rules data, the change lane and the destination, which admit a result by its source (`wrong-source`) | The first slice supplies an opt-in cohort with Register 22, Directory 21, Rules 13, Destination 17, Issue 4, and Change 4. Membership 8 and Inbox 1 stay unchanged. Rules owns the complete mark. Its native generation invalidates unfinished room jobs on observed rotation (ruling `ed818781`). |
+| `reuse` | The same versions, with an index of decided results by key and a mark that disables reuse for a key | The first slice implements reuse through an index of decided results by key. Disagreement disables reuse for that key. Disagreement does not prevent a fresh run. |
+| `work` and `landing` stages | The same versions | The first slice implements both stages with jobs bound to their stage. A work result cannot satisfy a landing check. |
 | `room` source in production, and audits at `every: 1` | A production adapter for the checker service | J3 supplies the production adapter; the first slice binds it to actual marked-room admission. |
 | Audits with `every` above 1 | Independent randomness committed after the result, and an attempt identity that cancel and retry cannot change | Open. Not in the first slice. |
-| `published` stage and holds | Hold state, its release exchange and the transition act in the destination's new version, and one more message from the destination to the lane | Partly met. Platform scopes already send to the lane. The hold state is new. |
+| `published` stage and holds | Hold state, its release exchange and the transition act in the destination's new version, and one more message from the destination to the lane | The first slice implements checks after the publication receipt, holds by extent, and their release. A failed published check opens a nested incident Issue through the Change lane. |
 | Holding landings while a `published` check is still running | A mode of `holds` that blocks admissions until the check's result is recorded | Open. Not in the first slice. |
 | `outside` source | An operation form for a check run, its owner, and what the room trusts in its answer. Only `hold@1` and `git-read@1` exist. | Open |
 | Health checks after a deployment | The deployment contract of the [forge design](2026-10-15-unified-forge-design.md#48-execution-evidence-and-external-outcomes) | Open |

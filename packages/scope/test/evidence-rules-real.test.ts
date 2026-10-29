@@ -6,7 +6,7 @@ import { evidenceBindingDigest, readEvidenceBinding, type EvidenceBinding } from
 import { isObjectId } from "@generalbusiness/dap-git";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { EVIDENCE_RULES_COHORT } from "../../platform/src/evidence-cohort.ts";
-import { claimEvidenceWork, configureEvidenceRules, enrolEvidenceKey, evidenceCertificate, evidenceChecker, evidenceNativeRoom,
+import { assertNativeCountedEvidence, assertNativePrebindingRefusal, claimEvidenceWork, configureEvidenceRules, enrolEvidenceKey, evidenceCertificate, evidenceChecker, evidenceHeldDuty, evidenceNativeRoom,
   evidenceEntry, evidenceIntentRoot, evidenceItems as hardeningItems, evidenceNativeDiagnostic, evidenceNativeState, evidenceRecord, evidenceRulesObservation, evidenceRulesPolicy, prepareEvidenceWork, publishEvidenceRulesCertificate, requestEvidenceWork } from "./evidence-rules-real-fixture.ts";
 import { claimLandingEvidence, claimPublishedEvidence, evidenceFailureNotice, evidenceOutcomeRace, prepareAuditEvidence, prepareLandingEvidence,
   preparePublishedEvidence, publishEvidenceFile, requestLandingEvidence, revisePublishedEvidence, type LandingEvidenceJob } from "./evidence-rules-real-fixture.ts";
@@ -209,20 +209,50 @@ test("observed room-key rotation refuses both keys for the frozen real work job 
   try {
     const work = await prepareEvidenceWork(room);
     await enrolEvidenceKey(room, work.service, keys.vic);
+    expect(await room.M.stub.observe({ of: await room.M.at(), key: keys.vic.key })).toMatchObject({
+      of: await room.M.at(), key: keys.vic.key, keyState: 'active', memberState: 'active', member: work.service.member.member });
     const oldKeyJob = await requestEvidenceWork(room, work), newKeyJob = await requestEvidenceWork(room, work);
     expect(await oldKeyJob.record()).toMatchObject({ state: 'admitted', result: null, binding: work.binding });
     expect(await newKeyJob.record()).toMatchObject({ state: 'admitted', result: null, binding: work.binding });
-    const decidingClaim = async (result: typeof work.job, job: typeof work.job) => {
+    const provisionalClaim = async (result: typeof work.job, job: typeof work.job, actor: typeof work.service.actor.key) => {
       const entry = await evidenceEntry(work.lane, result.seq);
-      expect(entry.effects).toContainEqual({ effect: 'state', item: job.seq, state: 'passed' });
-      expect(entry.effects).toContainEqual({ effect: 'ref', item: job.seq, slot: 'decidedBy', to: result.seq });
+      expect(factRefOf(entry)).toEqual(result);
+      expect(entry.input).toMatchObject({ type: 'act', signed: { intent: { kind: 'check', actor, fields: { job: job.seq, jobFact: job } } } });
+      expect(entry.effects).toContainEqual({ effect: 'open', item: result.seq, type: 'result', state: 'recorded' });
+      expect(entry.effects.some(effect => 'item' in effect && effect.item === job.seq
+        && (effect.effect === 'state' || effect.effect === 'ref' && effect.slot === 'decidedBy'))).toBe(false);
     };
-    // Vic is a current checker key of the same member, but the room mark is
-    // still Paul. The actual member-signed claim remains visible, uncounted.
-    const memberClaim = await claimEvidenceWork(room, work, work, "passed", keys.vic);
-    await decidingClaim(memberClaim, work.job);
-    expect(await work.record()).toMatchObject({ state: "admitted", reason: "wrong-source", result: null });
-    expect((await hardeningItems(work.lane, "result")).some(item => item.id === memberClaim.seq)).toBe(true);
+    const wrongSourceClaim = async (result: typeof work.job, job: typeof work.job, decision: unknown) => {
+      if (!isFactRef(decision)) throw Error('Actual wrong-source Native decision required');
+      expect(decision.at).toEqual(await room.G.at());
+      const entry = await evidenceEntry(room.G, decision.seq);
+      expect(factRefOf(entry)).toEqual(decision);
+      expect(entry.input).toMatchObject({ type: 'outcome', owner: EVIDENCE_RULES_COHORT.destination, kind: 'evidence-result', result: 'confirmed' });
+      if (entry.input.type !== 'outcome') throw Error('Actual Native result outcome required');
+      expect((await evidenceEntry(room.G, Number(entry.input.operation.split(':')[0]))).input)
+        .toMatchObject({ type: 'delivery', from: result, decision: 'applied', message: { class: 'request', type: 'tell', body: { message: 'work-checked' } } });
+      expect(entry.sends).toEqual(expect.arrayContaining([expect.objectContaining({ to: job.at, message: { class: 'request', type: 'tell', body: {
+        message: 'check-decision', fields: expect.objectContaining({ job, status: 'decided', reason: 'wrong-source', decision: { self: true } }),
+      } } })]));
+      const held = await work.lane.item(job.seq);
+      expect(held.state).toBe('requested'); expect(held.refs['decidedBy'] ?? null).toBeNull();
+    };
+    // Vic's two real claims remain visible, but cannot spend Paul's one
+    // held result duty or alter the actual admitted job.
+    const beforeClaim = await work.lane.item(work.job.seq), beforeRecord = await work.record(), duty = await evidenceHeldDuty(room, work.job);
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const memberClaim = await claimEvidenceWork(room, work, work, 'passed', keys.vic);
+      await provisionalClaim(memberClaim, work.job, keys.vic.key);
+      await assertNativePrebindingRefusal(room, work.lane, memberClaim);
+      expect(await work.lane.item(work.job.seq)).toEqual(beforeClaim);
+      expect(await work.record()).toEqual(beforeRecord);
+      expect(await evidenceHeldDuty(room, work.job)).toEqual(duty);
+      expect((await hardeningItems(work.lane, 'result')).some(item => item.id === memberClaim.seq)).toBe(true);
+    }
+    const markedResult = await claimEvidenceWork(room, work, work, 'passed');
+    await provisionalClaim(markedResult, work.job, work.service.actor.key);
+    expect(await work.record()).toMatchObject({ state: 'passed', signer: work.service.actor.key, result: markedResult });
+    await assertNativeCountedEvidence(room, work.lane, work.job, markedResult, 'passed');
     const rotatedPolicy = { ...work.policy, roomService: { checker: work.service.member, key: keys.vic.key } };
     await configureEvidenceRules(room, rotatedPolicy);
     const current = await observedRules(room);
@@ -236,15 +266,19 @@ test("observed room-key rotation refuses both keys for the frozen real work job 
     expect(room.gitRequests).toHaveLength(readsBefore);
     expect(await work.lane.item(oldKeyJob.job.seq)).toMatchObject({ state: 'requested' });
     const old = await claimEvidenceWork(room, work, oldKeyJob, "passed");
-    await decidingClaim(old, oldKeyJob.job);
+    await provisionalClaim(old, oldKeyJob.job, work.service.actor.key);
+    await wrongSourceClaim(old, oldKeyJob.job, (await work.lane.item(oldKeyJob.job.seq)).refs['nativeDecision']);
     expect(await oldKeyJob.record()).toMatchObject({ state: "admitted", reason: "wrong-source", result: null,
       binding: { serviceGeneration: work.binding.serviceGeneration }, observedGeneration: current.serviceGeneration });
     expect(await work.lane.item(newKeyJob.job.seq)).toMatchObject({ state: 'requested' });
+    const frozenBefore = await newKeyJob.record(), newKeyDuty = await evidenceHeldDuty(room, newKeyJob.job), frozenLane = await work.lane.item(newKeyJob.job.seq);
     const newer = await claimEvidenceWork(room, work, newKeyJob, "passed", keys.vic);
-    await decidingClaim(newer, newKeyJob.job);
+    await provisionalClaim(newer, newKeyJob.job, keys.vic.key);
+    await assertNativePrebindingRefusal(room, work.lane, newer);
     const frozen = await newKeyJob.record();
-    expect(frozen).toMatchObject({ state: 'admitted', reason: 'wrong-source', result: null,
-      binding: { serviceGeneration: work.binding.serviceGeneration }, observedGeneration: current.serviceGeneration });
+    expect(frozen).toEqual(frozenBefore);
+    expect(await work.lane.item(newKeyJob.job.seq)).toEqual(frozenLane);
+    expect(await evidenceHeldDuty(room, newKeyJob.job)).toEqual(newKeyDuty);
     const visible = await hardeningItems(work.lane, 'result');
     expect(visible.some(item => item.id === old.seq)).toBe(true);
     expect(visible.some(item => item.id === newer.seq)).toBe(true);
@@ -253,8 +287,9 @@ test("observed room-key rotation refuses both keys for the frozen real work job 
     const explicit = await requestEvidenceWork(room, work, { binding });
     expect(await explicit.record()).toMatchObject({ state: "admitted", binding });
     const result = await claimEvidenceWork(room, work, explicit, "passed", keys.vic);
-    await decidingClaim(result, explicit.job);
+    await provisionalClaim(result, explicit.job, keys.vic.key);
     expect(await evidenceRecord(room, explicit.job)).toMatchObject({ state: "passed", signer: keys.vic.key, result });
+    await assertNativeCountedEvidence(room, work.lane, explicit.job, result, 'passed');
   } finally { room.life.release(); }
 });
 
@@ -632,6 +667,9 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
   const room = await evidenceNativeRoom();
   try {
     const setup = await prepareAuditEvidence(room), before = room.host.stand.refs.get("refs/heads/main");
+    await enrolEvidenceKey(room, setup.service, keys.vic);
+    expect(await room.M.stub.observe({ of: await room.M.at(), key: keys.vic.key })).toMatchObject({
+      of: await room.M.at(), key: keys.vic.key, keyState: 'active', memberState: 'active', member: setup.service.member.member });
     const change = await publishEvidenceFile(room, setup, "Audited actual reservation");
     const reserved = (await hardeningItems(room.G, "publication")).find(item => canonicalize(item.refs['operation']) === canonicalize(change.operation));
     expect(reserved).toMatchObject({ state: "reserved" });
@@ -670,12 +708,29 @@ test("a cancelled same-tree landing needs a fresh room audit and disagreeing res
       return { audit, job, binding, bindingDigest };
     };
     const first = await request(binding), oldAudit = await auditFor(first.memberJob);
+    const beforeAudit = await change.lane.item(oldAudit.job.seq), auditRecord = await evidenceRecord(room, oldAudit.job), auditDuty = await evidenceHeldDuty(room, oldAudit.job);
+    const unmarkedError = await change.lane.did(keys.vic, 'check-error', { fields: { job: oldAudit.job.seq, jobFact: oldAudit.job,
+      tree: reservedTree, configuration: setup.configurationDigest, bindingDigest: oldAudit.bindingDigest, reason: 'TEST unmarked same-member key' },
+      expected: await change.lane.expected({ job: oldAudit.job.seq, manifest: change.manifest.seq }) });
+    const unmarkedEntry = await evidenceEntry(change.lane, unmarkedError), unmarkedResult = factRefOf(unmarkedEntry);
+    expect(unmarkedEntry.input).toMatchObject({ type: 'act', signed: { intent: { kind: 'check-error', actor: keys.vic.key, fields: { jobFact: oldAudit.job } } } });
+    expect(unmarkedEntry.effects).toContainEqual({ effect: 'open', item: unmarkedError, type: 'result', state: 'recorded' });
+    expect(unmarkedEntry.effects.some(effect => 'item' in effect && effect.item === oldAudit.job.seq
+      && (effect.effect === 'state' || effect.effect === 'ref' && effect.slot === 'decidedBy'))).toBe(false);
+    await room.pause(room.nodes);
+    const waitingAudit = await change.lane.item(oldAudit.job.seq);
+    expect(waitingAudit.state).toBe('requested'); expect(waitingAudit.refs['decidedBy'] ?? null).toBeNull();
+    await assertNativePrebindingRefusal(room, change.lane, unmarkedResult);
+    expect(waitingAudit).toEqual(beforeAudit);
+    expect(await evidenceRecord(room, oldAudit.job)).toEqual(auditRecord);
+    expect(await evidenceHeldDuty(room, oldAudit.job)).toEqual(auditDuty);
     const oldResultSeq = await change.lane.did(setup.service.actor, "check", { fields: { job: oldAudit.job.seq, jobFact: oldAudit.job,
       tree: reservedTree, configuration: setup.configurationDigest, bindingDigest: oldAudit.bindingDigest, outcome: "passed" },
       expected: await change.lane.expected({ job: oldAudit.job.seq, manifest: change.manifest.seq }) });
     const oldResult = factRefOf(await evidenceEntry(change.lane, oldResultSeq));
     await room.pause(room.nodes);
     expect(await evidenceRecord(room, oldAudit.job)).toMatchObject({ state: "passed", result: oldResult });
+    await assertNativeCountedEvidence(room, change.lane, oldAudit.job, oldResult, 'passed');
     expect(room.host.stand.refs.get("refs/heads/main")).toBe(before);
     await change.lane.did(rita, "cancel-merge", { on: change.operation.seq, expected: await change.lane.expected({ on: change.operation.seq, proposal: 0 }) });
     await room.pause(room.nodes);

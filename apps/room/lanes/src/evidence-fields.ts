@@ -48,11 +48,11 @@ export function evidenceJobs(next: DeclaredDefinition): void {
       { value: { slot: "outcome", from: failed ? { const: "error" } : { field: "outcome" } } },
       { value: { slot: "tree", from: { field: "tree" } } }, { value: { slot: "details", from: { field: "details" } } },
       { value: { slot: "bindingDigest", from: { field: "bindingDigest" } } },
-      { ref: { slot: "decidedBy", from: "self" }, of: "also.job", if: [{ state: ["requested", "timed-out"], of: "also.job" }] },
     ];
-    if (failed) effects.push({ value: { slot: "reason", from: { field: "reason" } } }, { state: "errored", of: "also.job", if: [{ state: ["requested", "timed-out"], of: "also.job" }] });
-    else for (const outcome of ["passed", "failed"]) effects.push({ state: outcome, of: "also.job", if: [{ state: ["requested", "timed-out"], of: "also.job" }, { equals: { a: { field: "outcome" }, b: { const: outcome } } }] });
-    next.acts[kind] = { step: "open", on: "result", grant: "change.check", settles: { of: "also.job", in: ["requested", "timed-out"] },
+    // A signed result is provisional until Destination accepts its current
+    // source key. A second key of the same member cannot settle this job.
+    if (failed) effects.push({ value: { slot: "reason", from: { field: "reason" } } });
+    next.acts[kind] = { step: "open", on: "result", grant: "change.check",
       also: { job: { item: "job", by: "job" }, ...(name === "change" ? { manifest: { item: "manifest" as const, via: { slot: "manifest", of: "also.job" as const } } } : {}) }, fields: {
         job: { type: "item", of: "job", required: true }, jobFact: { ...jobFact(name), required: true },
         tree: { type: "tree", required: true }, configuration: { type: "digest", required: true }, bindingDigest: { type: "digest", required: true },
@@ -66,6 +66,7 @@ export function evidenceJobs(next: DeclaredDefinition): void {
       ], effects, sends: [{ tell: { to: { slot: "destination", of: "also.job" }, message: name === "issue" ? "work-checked" : "checked", fields: { ...(name === "change" ? { operation: { slot: "operation", of: "also.manifest" as const } } : {}), admission: { slot: "admission", of: "also.job" }, result: "self", job: { item: "also.job" }, bindingDigest: { slot: "bindingDigest", of: "also.job" } }, result: {} } }], attention: [] };
   }
   next.receives["check-decision"] = { message: "check-decision", class: "tell", from: { kind: "destination", under: "platform:destination" }, opens: null,
+    settles: { of: "also.job", in: ["requested", "timed-out"] },
     also: { job: { item: "job", by: "job" } }, fields: { status: { type: "enum", of: ["admitted", "reused", "refused", "decided"], required: true }, countedJob: { ...jobFact(name), required: false }, job: { ...jobFact(name), required: true }, result: { ...resultFact(name), required: false },
       decision: { ...nativeFact, required: true }, reason: { type: "text", max: 128, required: true }, frozenGeneration: { ...GENERATION_TEXT, required: true }, observedGeneration: { ...GENERATION_TEXT, required: true }, commit: { type: "commit", required: false }, tree: { type: "tree", required: false }, base: { type: "commit", required: false } },
     guards: [{ equals: { a: { sender: true }, b: { slot: "destination", of: "also.job" } }, reason: "not-the-destination" },
@@ -82,12 +83,30 @@ export function evidenceJobs(next: DeclaredDefinition): void {
           { equals: { a: { field: "result", part: { field: "job" } }, b: { field: "countedJob", part: "seq" } } }],
         [{ differs: { a: { field: "status" }, b: { const: "reused" } } }, { equals: { a: { field: "result", part: { field: "job" } }, b: { item: "also.job" } }, ifPresent: true }],
       ], reason: "not-this-job" },
+      { anyOf: [
+        [{ differs: { a: { field: "reason" }, b: { const: "counted" } } }],
+        [{ equals: { a: { field: "status" }, b: { const: "decided" } } },
+          { equals: { a: { source: "kind" }, b: { const: "platform:destination@17:evidence-result" } } },
+          { fact: { field: "result" } },
+          { equals: { a: { field: "result", part: { field: "jobFact" } }, b: { field: "job" } } },
+          { equals: { a: { field: "result", part: { opened: "bindingDigest" } }, b: { slot: "bindingDigest", of: "also.job" } } },
+          { equals: { a: { field: "result", part: { opened: "tree" } }, b: { slot: "tree", of: "also.job" } } }],
+      ], reason: "not-this-counted-result" },
       ...(name === "issue" ? [{ anyOf: [
         [{ differs: { a: { field: "status" }, b: { const: "admitted" } } }, { differs: { a: { field: "status" }, b: { const: "reused" } } }],
         [{ equals: { a: { field: "commit" }, b: { slot: "commit", of: "also.job" } } }, { differs: { a: { field: "tree" }, b: { none: true } } }, { differs: { a: { field: "base" }, b: { none: true } } }],
       ], reason: "not-this-work" } as Guard] : ["commit", "tree", "base"].map(field => ({ equals: { a: { field }, b: { slot: field, of: "also.job" } }, ifPresent: true, reason: "not-this-job" } as Guard))),
     ],
     effects: [
+      { ref: { slot: "decidedBy", from: { field: "result" } }, of: "also.job", if: [
+        { state: ["requested", "timed-out"], of: "also.job" }, { equals: { a: { field: "status" }, b: { const: "decided" } } },
+        { equals: { a: { field: "reason" }, b: { const: "counted" } } },
+      ] },
+      ...(["passed", "failed", "error"] as const).map(outcome => ({ state: outcome === "error" ? "errored" : outcome, of: "also.job", if: [
+        { state: ["requested", "timed-out"], of: "also.job" }, { equals: { a: { field: "status" }, b: { const: "decided" } } },
+        { equals: { a: { field: "reason" }, b: { const: "counted" } } },
+        { equals: { a: { field: "result", part: { opened: "outcome" } }, b: { const: outcome } } },
+      ] } as EffectForm)),
       ...(name === "issue" ? ["tree", "base"].map(slot => ({ value: { slot, from: { field: slot } }, of: "also.job", if: [{ state: ["queued"], of: "also.job" }, { anyOf: [[{ equals: { a: { field: "status" }, b: { const: "admitted" } } }], [{ equals: { a: { field: "status" }, b: { const: "reused" } } }]] }] } as EffectForm)) : []),
       { state: "requested", of: "also.job", if: [{ state: ["queued"], of: "also.job" }, { equals: { a: { field: "status" }, b: { const: "admitted" } } }] },
       { state: "fence-refused", of: "also.job", if: [{ state: ["queued"], of: "also.job" }, { equals: { a: { field: "status" }, b: { const: "refused" } } }] },

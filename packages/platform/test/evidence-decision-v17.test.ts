@@ -25,8 +25,6 @@ function decision(kind: "passed" | "failed" | "error" = "passed", work = false):
       { effect: "value", item: 20, slot: "outcome", value: kind },
       { effect: "value", item: 20, slot: "tree", value: expected.tree },
       { effect: "value", item: 20, slot: "bindingDigest", value: expected.bindingDigest },
-      { effect: "ref", item: 10, slot: "decidedBy", to: 20 },
-      { effect: "state", item: 10, state: error ? "errored" : kind },
       ...(error ? [{ effect: "value" as const, item: 20, slot: "reason", value: "tool unavailable" }] : []),
     ], sends: [{ n: 0, to: admission.at, message: { class: "request", type: "tell", body: { message: work ? "work-checked" : "checked",
       fields: { admission, job, result: { self: true }, bindingDigest: expected.bindingDigest } } } }] };
@@ -36,7 +34,7 @@ const changedIntent = (entry: Entry, change: (intent: Intent) => Intent): Entry 
   return { ...entry, input: { ...entry.input, signed: signIntent(change(entry.input.signed.intent), keys.una.secret) } };
 };
 
-test("reads the actual deciding pass, failure and checker error without relabeling its cause", () => {
+test("reads a provisional signed pass, failure and checker error without changing the admitted job or relabeling its cause", () => {
   for (const outcome of ["passed", "failed", "error"] as const) for (const work of [false, true]) {
     const actual = seal(decision(outcome, work));
     expect(readEvidenceDecisionV17(actual, expected)).toEqual({ result: { at: otherLane, seq: 20, hash: actual.hash },
@@ -44,15 +42,26 @@ test("reads the actual deciding pass, failure and checker error without relabeli
   }
 });
 
-test("later history-only answers and duplicate or mismatching deciding rows cannot replace the first decision", () => {
+test("a result that directly mutates its job cannot claim Native settlement authority", () => {
   const entry = decision();
-  for (const effects of [
-    entry.effects.filter(effect => !(effect.effect === "state" && effect.item === 10)),
-    entry.effects.filter(effect => !(effect.effect === "ref" && effect.slot === "decidedBy")),
-    [...entry.effects, { effect: "state" as const, item: 10, state: "passed" }],
-    entry.effects.map(effect => effect.effect === "ref" && effect.slot === "decidedBy" ? { ...effect, to: 19 } : effect),
-    entry.effects.map(effect => effect.effect === "state" && effect.item === 10 ? { ...effect, state: "failed" } : effect),
-  ]) expect(readEvidenceDecisionV17(seal({ ...entry, effects }), expected)).toBeNull();
+  for (const effect of [
+    { effect: "state" as const, item: 10, state: "passed" },
+    { effect: "ref" as const, item: 10, slot: "decidedBy", to: 20 },
+    { effect: "value" as const, item: 10, slot: "reason", value: "counted" },
+  ]) expect(readEvidenceDecisionV17(seal({ ...entry, effects: [...entry.effects, effect] }), expected)).toBeNull();
+  // Different authentic keys can submit provisional history. Current source
+  // eligibility and first accepted result are decisions of the Native owner.
+  const second = changedIntent(entry, intent => ({ ...intent, idempotencyKey: "another-provisional-result" }));
+  expect(readEvidenceDecisionV17(seal(second), expected)?.outcome).toBe("passed");
+});
+
+test("the pre-binding Room key gate rejects repeated second-key results without narrowing Member-source keys", () => {
+  const first = decision(), secondKey = keys.vic;
+  if (first.input.type !== "act") throw Error("The scripted result is an act");
+  const second = { ...first, input: { ...first.input, signed: signIntent({ ...first.input.signed.intent, actor: secondKey.key }, secondKey.secret) } };
+  for (const entry of [second, second]) expect(readEvidenceDecisionV17(seal(entry), { ...expected, resultKey: keys.una.key })).toBeNull();
+  expect(readEvidenceDecisionV17(seal(first), { ...expected, resultKey: keys.una.key })?.key).toBe(keys.una.key);
+  expect(readEvidenceDecisionV17(seal(second), expected)?.key).toBe(secondKey.key);
 });
 
 test("signature, sealed bytes and every frozen result field must identify the admitted job", () => {

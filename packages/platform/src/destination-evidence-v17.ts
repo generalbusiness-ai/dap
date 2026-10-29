@@ -453,7 +453,7 @@ export function evidenceDestinationDataV17(base: PlatformData): PlatformData {
     also: { job: admittedJob, ...(work ? { request: { item: "evidence-request", index: "job", key: "job", code: "evidence-holder-v17", row: "E2" } } : { publication: publicationBinding }) },
     fields: { admission: { type: "fact", kind: ["platform:destination@17:evidence-admit"], under: "platform:destination", required: true },
       job: work ? FACT_ISSUE_JOB : FACT_CHANGE_JOB, ...(!work ? { operation: { type: "fact" as const, kind: ["merge"], under: "change", required: true } } : {}),
-      result: { type: "fact", kind: ["check", "check-error"], under: work ? "issue" : "change", required: true }, bindingDigest: { type: "digest", required: true } },
+      result: { type: "fact", kind: ["check", "check-error"], under: work ? "issue" : "change", required: true }, bindingDigest: { code: "evidence-result-source-v17", row: "E2", required: true } },
     bound: { of: work ? "also.request" : "also.publication", where: [{ equals: { a: { sender: true }, b: { slot: "lane", of: work ? "also.request" : "also.publication" } } }] },
     guards: [{ code: "evidence-result-bound-v17", row: "E2" }], effects: [{ code: "evidence-result-open-v17", row: "E2", most: { effects: 2, operations: [EVIDENCE_RESULT_V17] } }], sends: [], attention: [] });
   return { ...base, items: { ...base.items,
@@ -1014,6 +1014,26 @@ export function evidenceResultMessageFieldsV17(state: StateView, own: Own, opera
 function resultFields(given: RuleGiven, operation: Operation): Record<string, unknown> | null {
   return evidenceResultMessageFieldsV17(given.state, given.own, operation);
 }
+/** Check 7 runs before bound selection: an unmarked Room key must not
+ * consume the one funded result operation or its receiver decision. Current
+ * source/key eligibility is still judged by the result outcome's fresh rows. */
+function resultSource(given: RuleGiven, value: unknown): boolean {
+  const input = given.input, fields = given.resolved.fields;
+  if (!isDigest(value) || input.type !== "delivery" || input.message.class !== "request" || input.message.type !== "tell"
+    || !isRecord(input.message.body) || !["checked", "work-checked"].includes(String(input.message.body["message"]))
+    || !isFactRef(fields["result"]) || !sameDefined(fields["result"], input.from) || !isFactRef(fields["job"])) return false;
+  const admission = localFactField(given, "admission"), item = admission && given.state.item(admission.seq);
+  const record = item && readEvidenceJobRecordWireV17(item.values["record"]);
+  const admitted = record && destinationEvidenceJob(given.state, given.own, record.job), source = foreign(given, input.from);
+  if (!record || !admitted || !sameDefined(admitted.admission, admission) || !sameDefined(fields["job"], record.job)
+    || value !== record.bindingDigest || !["admitted", "timeout", "unknown"].includes(record.state)
+    || input.message.body["message"] !== (record.binding.stage === "work" ? "work-checked" : "checked")
+    || !source || !sentBy(source, { to: given.resolved.at, from: input.from, n: input.n, message: input.message })) return false;
+  const key = record.binding.source === "room" ? record.binding.roomService?.key : undefined;
+  if (record.binding.source === "room" && !key) return false;
+  return readEvidenceDecisionV17({ entry: source, hash: input.from.hash }, { job: record.job, admission: admitted.admission,
+    bindingDigest: record.bindingDigest, tree: record.tree!, configuration: record.configuration, ...(key ? { resultKey: key } : {}) }) !== null;
+}
 function resultBound(given: RuleGiven): { item: Item; record: EvidenceJobRecordV17 } | null {
   const item = given.resolved.subjects.get("also.job"), record = item && readEvidenceJobRecordWireV17(item.values["record"]);
   const admission = record && destinationEvidenceJob(given.state, given.own, record.job);
@@ -1365,6 +1385,7 @@ export function evidenceDestinationRulesV17(base: Rules): Rules {
   } });
   return { ...base,
     "evidence-capacity-anchor-v17": { place: "type", run: (_given, value) => evidenceCapacityValidV17(value) },
+    "evidence-result-source-v17": { place: "type", run: resultSource },
     "evidence-record-v17": { place: "type", run: (_given, value) => readEvidenceJobRecordWireV17(value) !== null },
     "evidence-counts-v17": { place: "type", run: (_given, value) => readEvidenceCountsV17(value) !== null },
     "evidence-service-v17": { place: "type", run: (_given, value) => readEvidenceServiceWireV17(value) !== null },

@@ -1,134 +1,93 @@
 # Evidence rules: implementation evidence
 
-## What changed
+## Scope and current status
 
-R22/D21/Q13/G17 and Issue/Change 4 add evidence choices; M8/I1 remain.
-Historical definitions/pins/signed bytes/defaults/creation policy stay exact.
-Base: Main `06e4d33fe17937610891f29b5d1513b9e224edea`; branch
-`request/evidence-rules-20261028`. [Policy and Decisions](../2026-10-16-evidence-rules-design.md).
+Register 22, Directory 21, Rules 13, Destination 17, Issue 4 and Change 4 add
+evidence choices. Membership 8 and Inbox 1 remain. Historical definitions,
+pins, signed bytes, defaults and creation policy remain exact. Work started
+from Main `06e4d33fe1` and merged Main `8659af4656` on
+`request/evidence-rules-20261028`.
 
-## Decisions and reasons
+Review `8b1165f8f6` found that an unmarked key can strand a room-source job.
+Issue 4 and Change 4 now keep all claims provisional until an authenticated
+Destination notice counts them. Native checks the signed result and `checked.bindingDigest` against the
+frozen room-service key before binding or drawing a holder. An unmarked claim cannot draw the owed result duty. Member-source jobs retain their current key eligibility. The repair adds no kernel feature, field, slot or wider
+limit. N4, N8 and Gate 4 remain pending. The [design] and [architecture] retain
+the protocol.
 
-Pre-source service-mark choices: `0ff2027f3505f53d8264d4f90ab65f4bbcf812d7`.
-Governing rulings survive answered-question retirements:
+## Governing decisions
 
-Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a53e146477354f07cf6ff657e93b36d411d846c8
-Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a891555c470d4693e466b9c5240b5ed35a95b388
-Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ed8187819e92ad401315e78a5a7f0a6c6073509f
-Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f73805e41fb84d460ea391b66a2c6ab23568f15b
-Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c20152ef7919ec4b03c7647a6b734aadc1cec7dd
-Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1bc4f7fdc0f8bd2a31b54d04b74ccbb91228dbd4
-Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:393b3b99f469df1df80b676ec1da7b29dcce7cce
+Commit `0ff2027f3505f53d8264d4f90ab65f4bbcf812d7` records the service-mark
+choices before source changes. Eight acts govern the slice:
 
-Rests-On: git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:31962e1fb3206272c21017beeef9208b71234235
+- The request commissions the slice.
+  `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a53e146477354f07cf6ff657e93b36d411d846c8`
+- The promise commits the builder.
+  `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a891555c470d4693e466b9c5240b5ed35a95b388`
+- The mark ruling settles authority and rotation.
+  `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ed8187819e92ad401315e78a5a7f0a6c6073509f`
+- The incident ruling selects triagers.
+  `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f73805e41fb84d460ea391b66a2c6ab23568f15b`
+- The TIME ruling forbids a new timed port.
+  `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c20152ef7919ec4b03c7647a6b734aadc1cec7dd`
+- The kernel ruling permits observation revision 21.
+  `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1bc4f7fdc0f8bd2a31b54d04b74ccbb91228dbd4`
+- The admission ruling retains legacy limits.
+  `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:393b3b99f469df1df80b676ec1da7b29dcce7cce`
+- The validation ruling requires a full gate before a documentation tail.
+  `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:31962e1fb3206272c21017beeef9208b71234235`
 
-`31962e1f` requires a full gate at `3713` or later and permits a later docs-only
-tail. Builder retired the answered question in `a2ee567b`. Gate3 passed at `3713`; later changes are documentation only.
+## Authority and behavior
 
-### Mark and kernel
+The service mark starts null. Only an active admin can mark or withdraw an
+active checker. Custom publish permission cannot. Admission and judgment
+require the exact key and current eligibility. External `CheckerService` keeps
+`ResultSigner.key` outside the job and container. This slice selects no service
+key.
 
-Rules starts with null `{checker: MemberRef, key: KeyId}`. Only an active admin
-marks/withdraws an active checker; custom publish permission alone cannot.
-Admission/judgment prove current exact-key member/role/action/controller/lifetime/
-clock eligibility. Mark binds external `CheckerService` `ResultSigner.key`, outside
-job/container; settings/URLs/images/claimed keys cannot substitute. No key is selected.
+The generation identifies the last mark change in that Rules incarnation. An
+unchanged pair keeps it. Withdrawal and reinstatement change it. Effects use
+actual positions and bytes, never future self hashes. Observed rotation freezes
+both keys out of an old job. Fresh admission can proceed. Unavailable
+observation yields null. Reinstatement can permit reuse of earlier facts
+without reviving frozen jobs.
 
-Generation is last change in exact Rules incarnation: unchanged pair keeps it,
-withdrawal/reinstatement changes it. Effects retain positions; full facts use actual
-bytes, never future self hashes. Observed rotation freezes both keys out of the
-old job even after reinstatement; fresh explicit admission proceeds. Unavailable
-observation means null. Prior results remain facts; reuse tests current eligibility.
-Lane retention need not count; `wrong-source` keeps frozen/observed generations.
+Rules observation revision 21 exposes `roomService` and `serviceGeneration`
+only with declared `roomServiceChanged`. The contract adds only types. [Kernel
+section 7][kernel] permits the observation because extents cannot prove foreign
+mark positions. The platform owns bindings and the `artroom-check-binding-1`
+codec. The ruling rejects bytes-layer and envelope-only solutions. Historical
+kernel behavior remains exact.
 
-`1bc4f7fd` permits RulesContent rev21 under [Kernel boundary §7](../../docs/kernel.md#7-rule-for-adding-to-the-kernel):
-Derive/bytes require `roomService`/`serviceGeneration` exactly with declared
-`roomServiceChanged`; Q12 and earlier omit them. Contract adds type-only
-`ServiceMark`/`ScopedRulesPosition`; section 16.1/records comment name rev21 beside
-19/20. No kernel item closes. Extents cannot prove foreign mark position; observation
-must. Platform owns `EvidenceBinding`, source/stage/subject and
-`artroom-check-binding-1`; kernel imports none. Bytes supplies canonical bytes/
-digests/refs. Bytes-layer/envelope-only proposals yield to this ruling; no actor-key
-operand/marking-time proof or historical grammar/fold/replay/custody change follows.
+Bindings retain genuine subjects and admissions. The [architecture] describes
+defaults, stages, reuse and audit pairing.
 
-### Stages and TIME
+TIME changes only literal job state, reason and deciding reference. It sends
+nothing and performs no operations. Destination 1 through 16 retain their
+timers. Later entries or recovery fund notice. Timeout proves neither drain nor
+released capacity. Fresh authority can admit authentic late results.
 
-Defaults: Member source, landing stage, no reuse/holds, audit `every: 1`.
-Binding v1 carries checker/source/stage, policy/service generations, nullable
-mark/auditOf and genuine subjects: staged Issue; landing publication/manifest;
-published receipt opening/written facts. Jobs retain Git IDs; digest covers
-canonical `{domain: "artroom-check-binding-1", binding}` and results bind actual job/admission.
+Four original eight-slot NEW WORK carriers fund decisions after final outcomes.
+Outcomes cannot acquire holders. The counted plan opens its nonholder cursor
+directly from the publication birth's retained manifest proof. Carriers
+guarantee no byte capacity. Failed required landing and audit outcomes clear
+the branch's `slot` value.
 
-Opaque records require bounded canonical UTF-8, no object fallback; forecasts
-count escapes. ACK means queued; `evidence-admit` opens at actual seq. Work keeps
-performer/terms/ancestry/pin and signed-proof tree (32KiB decoded/48KiB text).
-Reasoned abandonment releases only the pin; fresh snapshots refuse it, while
-retained outcomes/identical retries/eligible late results survive. Checker keeps
-admission/source facts and rechecks authority before launch/sign. Published reads
-use immutable confirmed Git objects, no revived refs or invented signatures.
+The full plan returns six effects, including one open. The six effects and an operation pair require RuleMost 8. The automatic attempt makes nine full
+effects. Push retains Data 20 and RuleMost 20. Its deciding read retains
+RuleMost 17. Crowded push derives 17 effects and 18 full effects within 20.
+Evidence admission retains 16. No universal 16-effect guard applies after
+writes.
 
-`c20152ef`/`1bc4f7fd` reject a new timed port after `timed-partial`. TIME changes
-only literal job state/reason/self deciding ref, no sends/operations. Destination
-1–16 timers stay exact. Bounded pending-job reads make TIME hold at its own head,
-without deferred cross-item writes. Later entry/authorized recovery funds notice.
-Timeout proves no drain/capacity release; fresh authority can admit authentic late results.
+Marking-time proof exchange remains separate.
 
-### Reuse, carriers and holds
+## Legacy admission
 
-Reuse keys are room/tree/name/configuration/source/stage. One predicate compares
-passes/failures; disagreement disables reuse permanently, not fresh landing.
-Aliases name prior actual job/result, never new runs/signatures. Work cannot
-satisfy landing. Published checks/audit targets always run fresh, matching tree,
-stage and configuration. `auditOf` names counted Member job; `forJob` names logical
-request, preserving parent reuse and fresh retry audits.
+The admission ruling preserves legacy admission. Pending state and coded-effect
+ceilings determine initial cost. Later release cannot reduce it. These compiled
+declarations measure neither runtime use nor simultaneous allocation.
 
-One send per counted outcome. Funded `evidence-funding`, `evidence-audit` and
-`evidence-plan` serialize accounts; ninth job value `auditOpenedAt` opens audit
-once (null empty). Sealed openings resolve actual self. Bound fences claim a
-funded batch and open admission, not items. Reader/Checker prove fence, batch
-birth and original job; admission checks current authority. Quote covers five
-full fact uses and maximum canonical binding text.
-
-Original four eight-slot NEW WORK carriers fund post-final operations/decisions,
-with exact capture/operation/ordinal/count identities. Outcomes cannot take
-holders. Carriers provide no byte guarantee. Setup/receipt can finish in either
-order; publication need not wait. Written receipt proof, fixed receipt index,
-separate written-entry position and original opening marker prevent invented
-facts/duplicate queued or unknown dispatch; revision remains a counter. Landing
-waits on original delivery only when selected carrier is absent; otherwise its
-contiguous prefix suffices. Published dispatch needs the complete original set.
-Counted plan outcome opens the nonholder cursor directly; bound delivery opens
-no item. Base uses publication birth's retained manifest proof. Failed required
-landing/audit clears branch `slot` as value, fixing stranded genuine progress.
-
-For all four carriers, the plan returns six effects: one open and five ordinary
-effects. The operation pair makes RuleMost 8; the automatic attempt makes nine
-full. Inherited push keeps Data/RuleMost 20 and deciding-read keeps RuleMost 17.
-A crowded push derives 17 effects, 18 full, within 20. Evidence admission keeps
-16; no universal 16-effect guard rejects writes under the inherited budgets.
-Bounds: 2,048 keys, eight candidates per key, 32,768 canonical bytes per key,
-512 holds, 512 policy generations, 8,192 incidents, three pending slots per key
-and 32 triagers. Full lists refuse without truncation or eviction. Per-entry
-limits remain; repeated certificates add no reservation credit.
-
-Holds bind check/source/stage/configuration/generation/extent. Publication/job
-order governs clearing; failure/admission serialize atomically. Running does
-not hold. Only current eligible exact-key same/later-publication pass clears;
-timeout/error/unknown cannot. Other config/generation needs transition/override.
-`f73805e4` selects complete active `issue.triage` holders. Landed Change creates
-one nested system Issue via Directory closure with genuine Destination/job/
-publication/decision, no invented requester/key or edit-own privilege. Unknown
-keeps original envelope; timeout invents no failed result. Missing triagers stay
-visible; late results preserve cause; closing clears nothing. Marking-time proof
-exchange remains separate.
-
-### Legacy admission
-
-`393b3b99` answers retired `346de78c`: keep legacy admission/active promise.
-Whole-scope adoption waits for R4/design. Retained pending state × coded-effect
-ceilings sets initial admission; later release cannot reduce it. Tables describe
-compiled declarations, not runtime use/simultaneous allocation.
-
-| Destination 15 at Main `8659af46` | Entries | Bytes |
+| Destination 15 at Main `8659af4656` | Entries | Bytes |
 |---|---:|---:|
 | Publication | 1,831 | 549,978,112 |
 | Branch | 588 | 154,140,672 |
@@ -141,115 +100,111 @@ compiled declarations, not runtime use/simultaneous allocation.
 | File publication | 713 | 524,550,144 |
 | Evidence request | 91 | 64,487,424 |
 
-Captures: `account-lifecycle-compiled-ledger-3` for discarded G17;
-`legacy-admission-baseline-1` at `8fe7d39a2e` confirms D15 digest and equal entry/
-byte totals, not records, with/without forced opt-in (comparison-only clones).
-`direct-plan-compiled-ledger-1` at `7e`: batch1,209entries/371,982,336bytes/25items/
-58requests, also compiled. Original failing prototype receipts remain below.
+`account-lifecycle-compiled-ledger-3` captures the discarded draft. At
+`8fe7d39a2e`, `legacy-admission-baseline-1` confirms the Destination 15 digest.
+Comparison clones have equal entry and byte totals with and without forced
+opt-in. Record totals need not match. At `7e3556cde2`,
+`direct-plan-compiled-ledger-1` reports 1,209 compiled entries, 371,982,336
+bytes, 25 items and 58 requests.
 
-Removed byte-only chains/two-slot-sixteen-account profile/full-set-before-push/N9.
-Discarded source/unvalidated wire-cache: `operator-inputs/discarded-byte-prototype-20261029`.
-The legacy ruling adds no kernel extension, signer, global bound increase or
-TIME pruning. Legacy caps 100,000 entries; it has no global item/record/request/byte
-ceiling. Per-entry/definition limits and reserved owed entries remain. Count
-guards refuse checks before job creation; full lists need not stop Git publication.
-Unknown and TIME remain pending.
-N5 proves five concurrent published jobs at `26315118`. Planner owns adoption
-after R4 and separate outcome-settlement design.
+The slice removes byte-only chains, the two-slot sixteen-account profile, the
+full-set-before-push requirement and N9. Legacy admission keeps its
+100,000-entry ceiling and no global byte ceiling. N5 passes five concurrent
+published jobs at `26315118ce`. The planner owns adoption after R4 and separate
+settlement design. The collection retains the prototype.
 
 ## Witnesses
 
-N1–N8: `packages/scope/test/evidence-rules-real.test.ts`. Title keys:
-N1 `scoped mark`; N2 `member work`; N3 `landing reuse`;
-N4 `observed room-key`; N5 `real published holds`; N6 `native TIME`;
-N7 `the real failure`; N8 `a cancelled same-tree`.
-Pure files in `packages/platform/test/`: P1/P2 `rules-policy-v13.test.ts`,
-P3/P4 `evidence-index-v17.test.ts`, P5/P6 `evidence-holds-v17.test.ts`.
+N1 through N8 use `packages/scope/test/evidence-rules-real.test.ts`. Title
+prefixes are `scoped mark`, `member work`, `landing reuse`, `observed
+room-key`, `real published holds`, `native TIME`, `the real failure` and `a
+cancelled same-tree`, respectively. Pure tests live in
+`packages/platform/test/`. P1 and P2 use `rules-policy-v13.test.ts`. P3 and P4
+use `evidence-index-v17.test.ts`. P5 and P6 use `evidence-holds-v17.test.ts`.
 
-1. Member source cannot satisfy room source: N4/`reservation-v17.test.ts`; lane retains claim.
-2. Default Member: N2/P1; old pins exact.
-3. Audit disagreement refuses: N8, both results/head.
-4. Wrong audit configuration refuses: P2.
-5. `every: 2` refuses: P2.
-6. Cancelled equal-tree retry: N8 fresh audit/distinct Room+Member jobs.
-7. Audit target cannot reuse: P2; parent reuse/alias pairing: `evidence-progress-v17.test.ts`.
-8. Equal-tree reuse: N3/N2 prior work.
-9. Wrong reuse source refuses: N2/P3.
-10. Conflict disables reuse; fresh landing remains possible: N2/N3/P4.
-11. Published reuse refuses: P2, pure only.
-12. Published failure opens an incident and blocks landing: N5.
-13. Earlier pass cannot clear newer hold: unchanged-policy N7/P5.
-14. Other config/generation cannot clear: N5/P6; transition is not a pass.
-15. Atomic failure/admission: N7 both orders.
-16. Duplicate/reordered failure preserves hold: N5/P5.
-17. Closing clears nothing: N5 incident/unrelated Issue.
-18. Published timeout cannot clear: N5/N6/pure hold/TIME, own-head/replay/pre-recovery refusal.
-19. Override stays override: N5/P6 reason/key/release kind.
+1. N4 and `reservation-v17.test.ts` refuse Member results for room source. The
+   lane can retain the claim.
+2. N2 and P1 preserve the Member default and exact old pins.
+3. N8 refuses audit disagreement after both results reach the head.
+4. P2 refuses another audit configuration.
+5. P2 refuses `every: 2`.
+6. N8 gives a cancelled equal-tree retry a fresh audit and distinct Room and
+   Member jobs.
+7. P2 prevents audit-target reuse. `evidence-progress-v17.test.ts` checks
+   parent reuse and alias pairing.
+8. N3 and N2 reuse actual earlier equal-tree work.
+9. N2 and P3 refuse reuse from another source.
+10. N2, N3 and P4 disable conflicting reuse but allow fresh landing.
+11. P2 refuses published reuse. This witness is pure only.
+12. N5 opens an incident after published failure and blocks the next landing.
+13. N7 and P5 keep policy unchanged and prevent an earlier pass from clearing a
+    newer hold.
+14. N5 and P6 prevent another configuration or generation from clearing a hold.
+    Transition does not count as a pass.
+15. N7 checks both orders of atomic failure and admission.
+16. N5 and P5 preserve the original hold after duplicate or reordered failure.
+17. N5 shows that closing the incident or an unrelated Issue clears nothing.
+18. N5, N6 and pure hold tests preserve holds after timeout. They check TIME at
+    its own head, replay and refusal before recovery.
+19. N5 and P6 preserve override reason, key and release kind.
 
-N4 uses separate pre-rotation jobs for first-deciding claims.
+N4 uses separate jobs admitted before rotation for first deciding claims. These
+witnesses predate the new unmarked-key finding and do not prove its repair.
 
-## Results
+## Historical results and custody
 
-External collection: `/Users/hughpyle/play/artroom-evidence/2026-10-28-evidence-rules`.
-Manifest `evidence/2026-10-28-evidence-rules.manifest.json` binds every retained
-file, including all 214 attempts (132 exit 0, 82 exit 1), source snapshots and
-closure metadata. The stdlib audit finds no missing files, integrity issues or
-collector timeouts. Its row points directly to `finalization/audit-terminal.json`
-for argv, cwd and both stream hashes. Audit counts precede closure metadata;
-the final index includes it. Retain the sealed directory at least 30 days after
-landing; removal needs a planner act naming the manifest.
-Seal verified after chmod/readback: 27,220 files, 973,595,305 bytes.
-Root SHA256SUMS: `4eec5e38f4710cb8c4c62a3e3ed1d2e07a3cd5917de764244c477a0e8cff8996`.
-Manifest SHA-256: `f3e3c6cfb6536d3085f35e2815d987addde2fbfb9e501647f3f83e988f4903a1`.
-The complete 4,756,047-byte manifest exceeds soft 40KB guidance; this note does not.
-Generation `bc601`, pin commit `335733`: G17
-`sha256:3d93f5ce32815c5b7038a2cbfb753889dd99638e995cd33e9066411cb74c0deb`;
-historical76pins/40texts exact. Physical
-`physical-marked-room-2` at `dcd80f3d769f57a36879f83e793d122fb9fb485c`
-passes exactly one run, joined/cleaned.
+The sealed collection lives at
+`/Users/hughpyle/play/artroom-evidence/2026-10-28-evidence-rules`. The
+[manifest] binds all files and 214 attempts: 132 exit zero and 82 exit one. The
+audit found no missing files, integrity problems or collector timeouts. The
+index includes closure metadata.
 
-Gate1 failed helpers, fixed by `09ed`/`dcd`. Gate2 at `dcd`: preflight/types/
-Node78/Counting55 pass; Plain315/319files,3,086pass/4fail/1skip; Native UNREACHED.
-This slice registers Rules13 with its service-mark rules, so the unsupported
-version sentinel must become Rules14. The pure retained-proof subpath now exposes
-existing `isObjectId` from `pure-names.ts` for object-ID validation; the old
-four-export whitelist omitted it. Both original behavioral cases remain.
-MCP and Page dependencies changed while their checked-in generated modules stayed old.
-`6f85107d4b` fixes assertions; `3713cff17e` runs official builders.
-Four whole owning files pass14tests and root typecheck passes at
-`3713cff17e7dfb6fead8b6daa284a12d06fba545`, tree
-`5a5d1c113c0e9d6661e77676f954274316076d10`.
+The seal records 27,220 files and 973,595,305 bytes. Retain it at least 30 days
+after landing. Removal needs a planner act naming the manifest. The
+4,756,047-byte manifest exceeds soft 40 KB guidance. The sealed primary stays
+untouched.
 
-At that checkpoint `gate-unreached-native-followup-1`:239files pass/1skip,
-836tests pass/2skip,0unhandled,exit0; all eight evidence cases pass. Skips are
-opt-in demo/Page recorders. Wall777.839s,host child CPU1,569.936s,guest unavailable:
-one command, not summed focused runs. The four-file follow-up includes production outputs. Under `31962e1f`,
-`ordinary-gate-3` passes at the same code checkpoint: Node 78, Counting 55,
-plain 3,090 passed/one skipped, Native 836 passed/two skipped, all preflight and
-compiler checks passed. Wall 937.607s; host child CPU 1,990.726s. Gate1 and Gate2
-remain failed rows. Gate timing has 66 unknown/suite observations and partial
-Scope timing; terminal phase evidence is complete with no contradictory records.
-Page grows219,279bytes(~23%);MCP296bytes. Freshness/types prove no browser speed.
-Independent review, landing and rollout have their own workroom acts.
+Generation at `bc601d74dc` produced the Destination 17 pin committed at
+`3357332021`. All 76 historical pins and 40 texts remain exact.
+`physical-marked-room-2` at `dcd80f3d76` passes exactly one physical run,
+joined and cleaned. It remains separate from Native tests.
 
-`final-host-environment-1`:Mac17,7/18CPU/64GiB/macOS27.2arm64. Installed deps and
-prior focused runs, not controlled cache/load. Load lacks throughout-run
-measurement; typecheck11.644s overlaps Native start. Physical receipts remain separate.
+The first gate failed in helpers, fixed by `09ed5daf83` and `dcd80f3d76`. The
+second at `dcd80f3d76` passed preflight, types, Node 78 and Counting 55. Plain
+passed 315 of 319 files, with 3,086 passing tests, four failures and one skip.
+It did not reach Native.
 
-Regeneration uses `node packages/mcp/scripts/views.mjs` and
-`npm run build --workspace @generalbusiness/dap-page`. The original capture
-`generated-browser-assets-1` called those builders directly. At documentation checkpoint `f5031122a9`, `final-document-reproduction-followup-1`
-runs both commands and reproduces the committed bytes (exit 0):
-MCP SHA-256 `56f2c2bf161b111028aed641b957aec51822b24636549c9fc54fc9b660dbe6ad`;
-Page `994fb121a9e83287229d88cc7a3951dd0199252dd6ee39580d352e27b88998ef`.
-Commit-message, link, citation and note checks pass. Citations: 1,813 resolved,
-12,843 unresolved, zero broken; this is not proof of normative conformance.
+Rules 13 registration moved the unsupported sentinel to Rules 14. The
+retained-proof export whitelist needed existing `isObjectId`. Both behavioral
+cases remain. Changed dependencies required fresh MCP and Page modules. Commit
+`6f85107d4b` fixed assertions, and `3713cff17e` regenerated outputs. Four files
+passed 14 tests and root types at tree `5a5d1c113c`.
 
-### Command receipts
+At `3713cff17e`, `gate-unreached-native-followup-1` passed 239 files with one
+skip, and 836 tests with two skips. All eight evidence cases passed with zero
+unhandled errors. The skips are opt-in demo and Page recorders.
 
-Labels name `<label>/command.json` (argv/cwd/timeout/full checkpoint) and
-`<label>/receipt.json` (streams/wall/host CPU); manifest indexes both. Counts remain
-per attempt; failed/overlapping runs are not summed.
+The third full gate, `ordinary-gate-3`, passed at `3713cff17e`. Preflight,
+compilers, Node 78 and Counting 55 passed. Plain passed 3,090 tests with one
+skip. Native passed 836 with two skips. The first two attempts remain failed.
+Detailed Scope timing remains partial. These passes predate the security
+repair.
+
+`final-host-environment-1` identifies Mac17,7, 18 CPUs, 64 GiB and macOS 27.2
+on arm64. Dependencies were installed, and focused runs had occurred. Cache and
+load were uncontrolled. A typecheck overlapped the separate Native follow-up,
+not the third gate.
+
+Builders are `node packages/mcp/scripts/views.mjs` and `npm run build
+--workspace @generalbusiness/dap-page`. At `f5031122a9`,
+`final-document-reproduction-followup-1` repeated `generated-browser-assets-1`
+and reproduced committed bytes with exit zero. The manifest retains both output
+hashes. Freshness does not prove browser performance.
+
+## Command receipts
+
+Receipts record commands, checkpoints, streams and timing. Counts describe
+individual attempts without summing failed or overlapping runs.
 
 | Check / command record | Checkpoint | Exit/timeout | stdout SHA-256 |
 |---|---|---|---|
@@ -470,9 +425,13 @@ per attempt; failed/overlapping runs are not summed.
 | finalization/audit-terminal.json | retained data | 0 | 10557bcec6d1471ceb42769d51edb52d9b3827c79b07242673d04bb0853bfdff |
 
 
-## Open acceptance and limits
+## Remaining acceptance
 
-`31962e1f` owns validation; `a53e1464` owns review/landing. TEST hosts/providers/
-hooks bound journal/SQLite claims; manual acts do not prove Runner execution.
-Seals detect change, not correctness. No hosted/drain/provider/backup/device/CI
-success follows. User authorized deployments; planner owns rollout.
+Review and landing need their own acts. The planner owns rollout. TEST hosts
+bound journal and SQLite claims. Manual acts do not prove Runner execution.
+Seals detect change, not correctness.
+
+[design]: ../2026-10-16-evidence-rules-design.md
+[architecture]: ../../docs/architecture.md
+[kernel]: ../../docs/kernel.md#7-rule-for-adding-to-the-kernel
+[manifest]: evidence/2026-10-28-evidence-rules.manifest.json
