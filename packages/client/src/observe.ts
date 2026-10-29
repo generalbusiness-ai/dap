@@ -3,7 +3,7 @@ import { same } from "@generalbusiness/dap-bytes";
 import type { Digest, Head, KeyId, MemberId, PlatformDefinition, Read, ScopeRef, SessionRefusal, Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, isHead, isScopeRef, timeMs, timeOf, type Expiry } from "@generalbusiness/dap-bytes";
 import type { Session } from "./session.ts";
-import { headLines, observationOrigin, type HeadBodyResult } from "./head-stream.ts";
+import { HeadStreamUnavailable, headLines, observationOrigin, type HeadBodyResult } from "./head-stream.ts";
 
 export interface ObservationContext { origin: string; scope: ScopeRef; definition: Digest | PlatformDefinition; membership: ScopeRef; member: MemberId; key: KeyId; deployment: string }
 /** Adapter result from actual complete authenticated reads, not a new native wire/proof. */
@@ -11,6 +11,8 @@ export interface CompleteSnapshot<T> { scope: ScopeRef; definition: Digest | Pla
 export type ObservationState<T> =
   | { status: "connecting" | "refreshing" | "reconnecting"; retained?: CompleteSnapshot<T> }
   | { status: "current"; snapshot: CompleteSnapshot<T> }
+  | { status: "fallback"; reason: string; retained?: CompleteSnapshot<T> }
+  | { status: "streaming"; retained?: CompleteSnapshot<T> }
   | { status: "retained"; snapshot: CompleteSnapshot<T>; reason: "newer-notice" | "older-snapshot" | "subscription-ended" }
   | { status: "unavailable" | "forbidden" | "expired" | "unsupported" | "error"; reason: string; retained?: CompleteSnapshot<T> }
   | { status: "cancelled" };
@@ -45,6 +47,13 @@ async function bounded<T>(run:(signal:Expiry)=>Promise<T>, parent:Expiry, second
   finally{parent.removeEventListener("abort",stopped);if(timeout!==undefined)clearTimeout(timeout);}
 }
 function delay(milliseconds:number,signal:Expiry):Promise<void>{return new Promise((resolve,reject)=>{let timer:ReturnType<typeof setTimeout>|undefined;const stop=()=>{if(timer!==undefined)clearTimeout(timer);signal.removeEventListener("abort",stop);reject(new Stopped());};signal.addEventListener("abort",stop);if(signal.aborted)return stop();timer=setTimeout(()=>{signal.removeEventListener("abort",stop);resolve();},milliseconds);});}
+/** Backoff belongs to the observation lifetime, not the timeout of an individual read. */
+async function reconnectWait(run:(signal:Expiry)=>Promise<void>,signal:Expiry):Promise<void>{
+  let stop!:()=>void;const aborted=new Promise<never>((_resolve,reject)=>{stop=()=>reject(new Stopped());});
+  signal.addEventListener("abort",stop);
+  try{if(signal.aborted)throw new Stopped();await Promise.race([run(signal),aborted]);}
+  finally{signal.removeEventListener("abort",stop);}
+}
 
 export function observeScope<T>(options:ObservationOptions<T>):Observation{
   const context=JSON.parse(canonicalize(options.context)) as ObservationContext;
@@ -59,9 +68,10 @@ export function observeScope<T>(options:ObservationOptions<T>):Observation{
   const check=(at:number)=>{if(!usable()||at!==generation)throw new Stopped();};
   function cancel(){if(cancelled)return;cancelled=true;generation++;lifetime.abort();attempt?.abort();if(options.current())options.emit({status:"cancelled"});}
   const done=(async()=>{
-    let failures=0;
+    let failures=0;let outage=false;
+    const fallback=(reason:string)=>{if(!outage){outage=true;emit({status:"fallback",reason,...retained()});}};
     while(usable()){
-      const at=++generation;attempt=new AbortController();const active=attempt;let renewal:ReturnType<typeof setTimeout>|undefined;let openedBody:HeadBodyResult|undefined;let readerOwned=false;let streamAlive=true;let streamEnd!:()=>void;
+      const at=++generation;attempt=new AbortController();const active=attempt;let renewal:ReturnType<typeof setTimeout>|undefined;let renewalExpired=false;let openedBody:HeadBodyResult|undefined;let readerOwned=false;let streamAlive=true;let streamEnd!:()=>void;
       const connectionEnded=new Promise<void>(resolve=>{streamEnd=resolve;});
       const lifeAbort=()=>active.abort();lifetime.signal.addEventListener("abort",lifeAbort);
       try{
@@ -71,14 +81,14 @@ export function observeScope<T>(options:ObservationOptions<T>):Observation{
         const session=auth.session;
         if(session.claims.deployment!==context.deployment||!same(session.claims.membership,context.membership)||session.claims.member!==context.member||session.claims.key!==context.key||!session.claims.reads.includes("summary"))throw new ObservationFailure("error","session-context-mismatch");
         const ends=timeMs(session.claims.ends);if(ends===null||session.endedBy(timeOf(now())))throw new ObservationFailure("expired","session-expired");
-        renewal=setTimeout(()=>{active.abort();streamEnd();},Math.max(1,ends-now()));
+        renewal=setTimeout(()=>{renewalExpired=true;active.abort();streamEnd();},Math.max(1,ends-now()));
         const opened=await bounded(signal=>options.open(session,signal),active.signal,seconds,value=>{if(value.ok){try{void value.body.getReader().cancel().catch(()=>undefined);}catch{/* Late body's upstream may refuse disposal. */}}});openedBody=opened;check(at);
         if(!opened.ok)throw new ObservationFailure(opened.reason==="forbidden"?"forbidden":opened.reason==="unsupported"?"unsupported":"unavailable",opened.reason);
         const lines=headLines(opened.body,active.signal);latest=undefined;
         readerOwned=true;const first=await bounded(()=>lines.next(),active.signal,seconds);check(at);
         if(first.done)throw new ObservationFailure("unavailable","stream-ended-before-head");
         if(last&&first.value.seq===last.at.seq&&first.value.hash!==last.at.hash)throw new ObservationFailure("error","head-hash-conflict");
-        latest=first.value;
+        latest=first.value;failures=0;outage=false;emit({status:"streaming",...retained()});check(at);
         let streamFailure:ObservationFailure|undefined;
         const pump=(async()=>{try{for await(const notice of lines){check(at);if(latest&&notice.seq===latest.seq&&notice.hash!==latest.hash||last&&notice.seq===last.at.seq&&notice.hash!==last.at.hash)throw new ObservationFailure("error","head-hash-conflict");if(!latest||notice.seq>latest.seq){latest=notice;refreshAgain?.();}}}catch(error){if(!(error instanceof Stopped)&&!active.signal.aborted)streamFailure=error instanceof ObservationFailure?error:new ObservationFailure("error","malformed-head-stream");}finally{streamAlive=false;active.abort();streamEnd();}})();
         const refresh=async()=>{
@@ -109,12 +119,12 @@ export function observeScope<T>(options:ObservationOptions<T>):Observation{
         });}};
         refreshAgain();await connectionEnded;active.abort();await pump;await pending;refreshAgain=undefined;
         if(streamFailure)throw streamFailure;if(refreshFailure)throw refreshFailure;
-        check(at);failures++;emit({status:"reconnecting",...retained()});
+        check(at);fallback(renewalExpired?"session-expired":"stream-ended");failures++;emit({status:"reconnecting",...retained()});
       }catch(error){
-        if(error instanceof Stopped){if(!usable())break;failures++;}
-        else{const failure=error instanceof ObservationFailure?error:new ObservationFailure("unavailable","observation-transport-failed");emit({status:failure.status,reason:failure.reason,...retained()});if(["forbidden","unsupported","error"].includes(failure.status))break;failures++;}
+        if(error instanceof Stopped){if(!usable())break;fallback(renewalExpired?"session-expired":"stream-interrupted");failures++;}
+        else{const failure=error instanceof ObservationFailure?error:error instanceof HeadStreamUnavailable?new ObservationFailure("unavailable",error.reason):new ObservationFailure("unavailable","observation-transport-failed");if(failure.status==="unavailable"||failure.status==="expired")fallback(failure.reason);emit({status:failure.status,reason:failure.reason,...retained()});if(["forbidden","unsupported","error"].includes(failure.status))break;failures++;}
       }finally{active.abort();if(openedBody?.ok&&!readerOwned) { try { void openedBody.body.getReader().cancel().catch(()=>undefined); } catch { /* Iterator owns a locked native body and observes active.abort. */ } }if(renewal!==undefined)clearTimeout(renewal);lifetime.signal.removeEventListener("abort",lifeAbort);refreshAgain=undefined;}
-      if(usable()){try{await bounded(signal=>options.reconnectDelay?.(failures,signal)??delay(Math.min(5000,500*2**Math.min(failures-1,4)),signal),lifetime.signal,seconds);}catch{break;}}
+      if(usable()){try{await reconnectWait(signal=>options.reconnectDelay?.(failures,signal)??delay(Math.min(30000,1000*2**Math.min(failures-1,5)),signal),lifetime.signal);}catch{break;}}
     }
     if(!options.current()&&!cancelled)cancel();
   })();

@@ -2,7 +2,7 @@ import { afterEach, expect, test, vi } from "vitest";
 import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { base32, keyIdOfSecret, timeOf, utf8, type ByteStream } from "@generalbusiness/dap-bytes";
 import { Session } from "../src/session.ts";
-import { headLines, openHttpHeadStream } from "../src/head-stream.ts";
+import { HeadStreamUnavailable, headLines, openHttpHeadStream } from "../src/head-stream.ts";
 import { observeScope, type CompleteSnapshot, type ObservationState } from "../src/observe.ts";
 const gate=<T=void>()=>{let resolve!:(value:T)=>void;const promise=new Promise<T>(r=>{resolve=r;});return{promise,resolve};};
 const scope={scope:`sc_${base32(new Uint8Array(32))}`,inc:`in_${base32(new Uint8Array(16))}`,kind:"lane"} as ScopeRef;
@@ -132,4 +132,57 @@ test("a conflicting FIRST reconnect head cannot be hidden by an offered newer sn
  await drain();first.notice(1);await initial.promise;first.end();await reopened.promise;
  second.send(utf8(JSON.stringify({at:{seq:5,hash:"sha256:"+"9".repeat(64)}})+"\n"));await drain();
  expect(reads).toBe(1);await observer.done;expect(states.filter(state=>state.status==="current")).toHaveLength(1);expect(states.at(-1)).toEqual({status:"error",reason:"head-hash-conflict",retained:snapshot(5)});expect(second.cancelled).toBe(1);
+});
+
+test("empty EOF is unavailable directly and releases its reader once",async()=>{
+ const body=stream(),stop=new AbortController(),first=headLines(body.body,stop.signal).next();
+ body.end();
+ await expect(first).rejects.toBeInstanceOf(HeadStreamUnavailable);
+ await expect(first).rejects.toMatchObject({name:"HeadStreamUnavailable",reason:"stream-ended-before-head"});
+ expect(body.cancelled).toBe(1);
+});
+
+test("an outage signals fallback once until a same-head notice recovers before its snapshot, and ignored reconnect cancellation cannot hang",async()=>{
+ const first=stream(),recovered=stream(),initial=gate(),rereading=gate(),openedRecovery=gate();
+ const waits=[gate(),gate(),gate()],release=[gate(),gate(),gate()];
+ const states:ObservationState<number>[]=[];let opens=0,reads=0,retries=0;
+ const empty={getReader:()=>({read:async()=>({done:true}),cancel:async()=>{}})} as ByteStream;
+ const observer=observeScope<number>({context,current:()=>true,authenticate:async()=>({ok:true,session:session()}),
+  open:async()=>{opens++;if(opens===3)openedRecovery.resolve();return{ok:true,body:opens===1?first.body:opens===2?empty:recovered.body};},
+  snapshot:async()=>{reads++;if(reads===2){rereading.resolve();return new Promise(()=>{});}const value=snapshot(5);return{ok:true,at:value.at,value,complete:true};},
+  reconnectDelay:async()=>{const index=retries++;waits[index]!.resolve();await release[index]!.promise;},
+  emit:state=>{states.push(state);if(state.status==="current")initial.resolve();},
+ });
+ await drain();first.notice(5);await initial.promise;first.end();await waits[0]!.promise;
+ expect(states.filter(s=>s.status==="fallback")).toEqual([{status:"fallback",reason:"stream-ended",retained:snapshot(5)}]);
+ release[0]!.resolve();await waits[1]!.promise;
+ expect(opens).toBe(2);expect(states.filter(s=>s.status==="fallback")).toHaveLength(1);
+ release[1]!.resolve();await openedRecovery.promise;await drain();recovered.notice(5);await rereading.promise;
+ expect(states.filter(s=>s.status==="streaming")).toEqual([{status:"streaming"},{status:"streaming",retained:snapshot(5)}]);
+ expect(states.filter(s=>s.status==="current")).toHaveLength(1);
+ recovered.end();await waits[2]!.promise;
+ expect(states.filter(s=>s.status==="fallback")).toHaveLength(2);
+ observer.cancel();await observer.done;
+ expect(states.at(-1)).toEqual({status:"cancelled"});
+});
+
+test("default reconnect backs off from one to thirty seconds independently of read timeout and resets after a valid notice",async()=>{
+ vi.useFakeTimers();
+ const live=stream(),states:ObservationState<number>[]=[];let opens=0,finished=false;
+ const empty={getReader:()=>({read:async()=>({done:true}),cancel:async()=>{}})} as ByteStream;
+ const observer=observeScope({context,current:()=>true,seconds:0.01,authenticate:async()=>({ok:true,session:session()}),
+  open:async()=>({ok:true,body:++opens===8?live.body:empty}),
+  snapshot:async()=>{const value=snapshot(1);return{ok:true,at:value.at,value,complete:true};},emit:state=>states.push(state),
+ });
+ void observer.done.then(()=>{finished=true;});await drain();
+ expect(opens).toBe(1);
+ for(const wait of [1000,2000,4000,8000,16000,30000,30000]){
+  const before=opens;await vi.advanceTimersByTimeAsync(wait-1);expect(opens).toBe(before);expect(finished).toBe(false);
+  await vi.advanceTimersByTimeAsync(1);expect(opens).toBe(before+1);
+ }
+ expect(states.filter(s=>s.status==="fallback")).toEqual([{status:"fallback",reason:"stream-ended-before-head"}]);
+ live.notice(1);await drain();expect(states.some(s=>s.status==="streaming")).toBe(true);
+ live.end();await drain();await vi.advanceTimersByTimeAsync(999);expect(opens).toBe(8);
+ await vi.advanceTimersByTimeAsync(1);expect(opens).toBe(9);
+ observer.cancel();await observer.done;expect(vi.getTimerCount()).toBe(0);
 });
