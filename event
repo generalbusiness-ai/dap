@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:604c7af6e3b1f8fc4d3bb2f7ee1c951370ee790b","text":"Merge retired a covered predecessor; the successor is at skills/dap-application/assets/starter/dap.application.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:69035d2d4d45a99cc3eebf784e7dd9332ba16700","text":"Merge retired a covered predecessor; the successor is at scripts/public-release.mjs."}
