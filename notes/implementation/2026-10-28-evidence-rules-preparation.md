@@ -435,6 +435,7 @@ overlapping runs are not summed.
 | prior/written-plan-scope-types-2 | 2241e2f5ad | 0 | fb2b1b20daea8ec6bdc1bf8b7eceb9b3703b9e4ffe7530b18d9218bb23d34976 |
 | repair-compiled-ledger-1 | 00834f19a9 | 0 | e61d05e1594c2ba2d0dc7a469e5f5807f89910e38d8d57ae12ca5e823b4feb3a |
 | repair-failed-owning-followup-2 | 00834f19a9 | 0 | b3bcbabdb6590ffeeeb179f2d2b0574d03bbd3e988b9c3e0b9c97c5385127662 |
+| repair-final-document-reproduction-1 | ede0777f03 | 0 | 3901350cd0efcd2a596c9138b382f6744319e9f3845488aaa9f32dbf1e9acbff |
 | repair-generated-cohort-1 | 256707b929 | 0 | 9ba246c8a01a112aa1dd7f00474941cafec7b4ca70a978f3aca62c27fa08d3cb |
 | repair-historical-pin-baseline-1 | 00834f19a9 | 1 | e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 |
 | repair-historical-pin-baseline-2 | 00834f19a9 | 0 | e4dd6033bdffbf5601b45ec761f9c6b9b26f28375118907f2d12e5806b347c45 |
@@ -449,6 +450,7 @@ overlapping runs are not summed.
 | repair-root-types-1 | d36dece1a5 | 1 | 7a7f0ce45c4aec4344804b8301d1212576c8c0b91f563aabfe92ca15215a0fa6 |
 | repair-root-types-2 | 00834f19a9 | 0 | 62170bbe0cd055cff4699debd9470a886c0f98f328e7c9517d899c021a3788d0 |
 | prior/finalization/audit-terminal.json | retained data | 0 | 10557bcec6d1471ceb42769d51edb52d9b3827c79b07242673d04bb0853bfdff |
+| finalization/audit-terminal.json | retained data | 0 | 755eaebe4536904065a715b973b825edcb21da3e24f49956071958c7e01881f8 |
 
 ## Remaining acceptance
 
