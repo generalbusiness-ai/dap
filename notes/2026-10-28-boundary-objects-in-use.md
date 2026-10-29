@@ -90,19 +90,16 @@ re-reads.
 
 ### 3.2 A medical bill, case 01
 
-The pile: a bill of fourteen charges with procedure codes, the
-insurer's statement of the amounts it allowed for eleven of them, and a
-coverage document.
-The patient's agent reads the bill and the statement into one table.
-Each row is one charge on the bill, and each cell says which page it
-came from. Three charges match nothing on the statement, and one matches
-at a different amount. The patient reads the table as what they owe and
-why. They mark the three unmatched charges and the one mismatch: ask
-about these. The
-agent drafts one question that quotes those four charges by page and
-code.
-The patient approves that exact text, and nothing else. A portal receipt
-comes back as a document.
+The pile: a bill of fourteen charges with procedure codes, the insurer's
+statement of the amounts it allowed for eleven of them, and a coverage
+document. The patient's agent reads the bill and the statement into one
+table. Each row is one charge on the bill, and each cell says which page
+it came from. Three charges match nothing on the statement, and one
+matches at a different amount. The patient reads the table as what they
+owe and why. They mark the three unmatched charges and the one mismatch:
+ask about these. The agent drafts one question that quotes those four
+charges by page and code. The patient approves that exact text, and
+nothing else. A portal receipt comes back as a document.
 
 Billing staff read the same four charges as how each was built. A
 letter comes back, and it is a document, not their act. The agent sets
@@ -499,18 +496,19 @@ gain the fragment.
 ## 9. Minimal mechanism
 
 Sections 5 to 8 need two things in the record: a fragment on a
-reference, and one act. The rule that shapes them is the one the Web
-learned from Xanadu: one-way references, one relation, no types, and
-every meaning read from the content by the reader, never kept by the
-record.
+reference, and one act. One rule shapes both: one-way references, one
+relation, no types, and every meaning read from the content by the
+reader, never kept by the record.
 
 **A fragment on a reference.** A reference to a retained document is its
 digest, and a reference to an entry is its fact reference. Either may
-carry a fragment: a string after the reference, in the form of the W3C
-Media Fragments URI, such as `page=3`, `xywh=120,80,300,200`, `t=90,120`
-or `row=7`. The record stores the string and checks nothing. The media
-type of the referenced thing says what the fragment means, and a reader
-that does not know the media type ignores it. A note's fact never
+carry a fragment: a string after the reference, whose meaning the media
+type of the referenced thing defines, as RFC 3986 says of a fragment in
+a URI. The record stores the string and checks nothing, and a reader
+that does not know the media type ignores it. The forms the cases need
+are registered already: `t=90,120` and `xywh=120,80,300,200` for audio,
+video and images under the W3C Media Fragments URI, `page=3` for PDF
+under RFC 8118, and `row=7` for CSV under RFC 7111. A note's fact never
 changes, so a fragment into a note never drifts. The capture and
 retained files designs gain the fragment and nothing else.
 
@@ -539,21 +537,24 @@ reads these. The record does not.
 | a row of a reading | data | the places the row came from |
 | a mark | a short remark or a choice | a row, a note, or a document with a fragment |
 | a drawing | strokes | a photo or a page with a fragment |
-| a brief | prose | nothing, or the matter |
+| a brief | prose | nothing, or the terms note |
 | a view | a declaration, or code | its sources |
 | a revision | the same media type as an earlier note by the same signer | that note |
 | an agreement | prose or one glyph | another party's words |
-| a closing | one word | the matter |
+| a closing | one word | the item's opening entry, or the terms note |
 
 **Threads, revisions and current are readings.** A note by the same
-signer, in the same media type, about an earlier note is a revision, and
-a view shows the newest as current. A note in another media type about a
-note is a comment on it. A note by another signer about a note is that
-party's own statement, and two parties' statements about one row stand
-side by side. A thread is the host drawing the graph of what is about
-what. When the reading is wrong, for instance two tables by one agent
-that are alternatives and not a revision, the text says so and a view
-shows both. The record keeps no `replaces`, no thread and no current.
+signer, in the same media type, about an earlier note is a revision when
+the text is data or a declaration, and a view shows the newest as
+current. A prose note about one's own prose note is a follow-up, as it
+is in chat, unless its text says that it is a revision. A note in
+another media type about a note is a comment on it. A note by another
+signer about a note is that party's own statement, and two parties'
+statements about one row stand side by side. A thread is the host
+drawing the graph of what is about what. When the reading is wrong, for
+instance two tables by one agent that are alternatives and not a
+revision, the text says so and a view shows both. The record keeps no
+`replaces`, no thread and no current.
 
 **Identity at the grain of pointing.** A reading that the parties will
 work row by row, such as the snag list, is written as one note per row,
@@ -562,9 +563,7 @@ Each row then has a fact of its own, a mark names it, and a re-cut by
 the other party is a new list note about the same row notes. A reading
 that is read at a glance is one note, and a mark on a row of it carries
 a fragment. The record allows both, and the agent chooses by what will
-be pointed at. Block-based document tools make the same choice by giving
-every block an identity, and a database in such a tool is a view over
-blocks.
+be pointed at.
 
 **The commons in a party's own room.** The commons is created with every
 room, including a room of one party. A party's pile, readings and
@@ -577,21 +576,20 @@ and it needs nothing new: the catalogue's group 3 rooms are own rooms.
 **Rooms created before the commons.** A pin in the creation cohorts
 reaches only rooms created after it. A room created before has no
 commons scope, and a package that declares the commons endpoint is
-refused there at install. If the install already refuses an absent
-connection target by name, that name serves. Otherwise the refusal is
-`commons-missing`. Such a room gains the commons only by succession to a
-new scope, under the [definition
+refused there at install with `commons-missing`. Such a room gains the
+commons only by succession to a new scope, under the [definition
 succession](2026-10-22-definition-succession.md) note, which is designed
 and not built. BO1 creates new rooms for its witnesses, and the hosted
 rooms keep their pins until then.
 
 **How a package binds a party.** In the commons nothing binds. A glyph
-about another party's terms note is that party's statement that they
-agree, and the parties read it as such, which is how agreement is given
-in chat today. When a rule must read agreement, the agreement is an act
-of a package, as this workroom's own `ratify` is an act of a package
-with rules. A package that takes a row from a view declares a connection
-to the commons as an `outside` endpoint, in the form of the [application
+about another party's terms note is that party's statement about those
+terms, which is how agreement is given in chat today. The host names the
+glyphs it reads as agreement, and a view shows every other glyph as a
+reaction. When a rule must read agreement, the agreement is an act of a
+package, as this workroom's own `ratify` is an act of a package with
+rules. A package that takes a row from a view declares a connection to
+the commons as an `outside` endpoint, in the form of the [application
 packages](2026-10-18-application-packages-and-builder-room.md) note, and
 its acts carry reference fields, so that an item cites the notes and
 documents the row cited.
@@ -635,18 +633,22 @@ so. The kinds a view can take are the host's, not the record's.
 **Item ends and party closings.** An item's final state ends the item
 and never a party's part of the matter. A package does not declare a
 final state whose description says that the matter is closed. A party's
-closing is their note about the matter, in their own word, and the
-matter view shows each party's last word beside the item's state.
+closing is their note, in their own word, about the thing they are
+closing: the opening entry of the package item when there is one, and
+otherwise the terms note or the reading the parties worked. The matter
+view shows, for a package item, each party's last word about the item's
+opening entry beside the item's state.
 
-**Witnesses.** The host runs the first two with no package installed.
-`dap check` runs all four for a package that connects to the commons.
+**Witnesses.** The host runs W1, W2 and W5 with no package installed.
+`dap check` runs W1 to W4 for a package that connects to the commons.
 
 | Witness | Scenario | Passes when |
 |---|---|---|
 | W1 | **The bill table.** In a member's own room, the member's agent retains two documents and writes fourteen row notes, each about a page of the bill and a page of the statement, and one note that lists them as a table. The member writes four marks, each about one row note. The agent retains the question as a document and writes a note about it and the four row notes. | Every act is recorded with its signer. The host's table view shows the fourteen rows with their pages. A view of either document lists the rows, the marks and the question, each with its author, and nothing of the member's is attributed to the agent. |
-| W2 | **One list, two views.** A and B share a room that holds nine row notes about photos. A writes a view note about them in the shared room and a private mark about row six in A's own room. B writes a view note about the same nine in B's own room, sorted differently, with a column computed from both parties' marks, and writes a mark about row six in the shared room. | Both views mount for their keepers, and the host names them as views of one thing. For B, A's view shows A's private mark as unreadable, with A's room named. Row six in the shared room shows B's mark with B as its author, and A's private mark appears to A alone. B's computed column reads B's mark and the shared marks only. |
+| W2 | **One list, two views.** A and B share a room that holds nine row notes about photos. A writes a view note about them in the shared room and a private mark about row six in A's own room. B writes a view note about the same nine in B's own room, sorted differently, with a column computed from both parties' marks. In B's view, B taps row six and writes a mark. B's view then offers a note in A's own room. | Both views mount for their keepers, and the host names them as views of one thing. For B, A's view shows A's private mark as unreadable, with A's room named. The host shows B the exact mark act before signing it, signs it on B's action alone, and the shared room then shows the mark on row six with B as its author. A's private mark appears to A alone. B's computed column reads B's mark and the shared marks only. The note in A's own room is refused, because B reads no scope there, and the view shows the refusal. |
 | W3 | **Consent before binding.** A package whose `owner` slot is written only by an effect `from: { signer: true }` is installed in the shared room. B opens an item from row six and enters its `contractor` slot the same way, and the act names B's terms note. A writes a glyph about B's terms note in the shared room. A signs the package's `accept` act, which names the same terms note and writes the signer into `owner`. B signs `accept` on a second item. A second package, whose effect writes `owner` from a field, is offered for install. | A's glyph stands as a note and fills no slot. A's act takes effect, `owner` holds A, the entry names the terms note, and the item cites the row note. B's act writes B, and not A, into `owner` of the second item, and no act of B's can write A. The install screen for the second package lists `owner` as a slot the package fills from a field, with the act that writes it. |
-| W4 | **Close without agreement.** C's package item ends `decided`. A writes a note `disputed` about the matter. B writes a note `done` about it. | All three stand. The matter view shows A's and B's last words and C's item ended, and none of the three changed another. |
+| W4 | **Close without agreement.** C's package item ends `decided`. A writes a note `disputed` about the item's opening entry. B writes a note `done` about it. | All three stand. The matter view shows A's and B's last words beside C's ended item, and none of the three changed another. |
+| W5 | **A view as code.** W2 again, with B's view written as code and run in the sandbox domain. | The same outcomes as W2. The code view reaches nothing but the sources its `about` names, and every act it writes is shown by the host and signed on B's action alone. |
 
 **What changes where.** The slices change these with their code. This
 head changes nothing.
@@ -674,8 +676,9 @@ section. The planner replaces them when this revision lands.
   interface's thread and table over notes. Witness W1, in a new room.
 - **BO2. Views as notes.** The host's built-in views over notes,
   declarations with computed columns, view editing in the generic
-  interface, and views that write acts the member signs. Witness W2.
-  After declared views reach the generic server and the hosted endpoint.
+  interface, and views that write acts the member signs. Witness W2,
+  with the mark written from the view. After declared views reach the
+  generic server and the hosted endpoint.
 - **BO3. Parties by their own signature.** The install screen's list of
   party slots a package fills from a field or another slot, with the
   acts that write them, and the first two-party item in a package, the
@@ -686,7 +689,8 @@ section. The planner replaces them when this revision lands.
   renovation exit test with the matter package of the file-first
   direction.
 - **BO5. Views as code.** A view whose text is code, run in the sandbox
-  domain over its sources, with the same way to write an act. After BO2.
+  domain over its sources, with the same way to write an act. Witness
+  W5. After BO2.
 
 ## Source
 
@@ -726,6 +730,7 @@ Nelson's Xanadu as the warning. The steps of section 5 are the gentle
 slope. A computed column that writes nothing is Potluck's annotation
 layer. A view named by reference and reused by reference is Webstrates'
 tool shared by reference. One set of references under two views is
-Webstrates' asymmetric collaboration. The fragment on a reference is the
-W3C Media Fragments URI, read by the media type and ignored by the
-record.
+Webstrates' asymmetric collaboration. The fragment on a reference
+follows RFC 3986, where the media type defines the fragment's meaning,
+with the W3C Media Fragments URI for `t` and `xywh`, RFC 8118 for `page`
+in PDF and RFC 7111 for `row` in CSV.
