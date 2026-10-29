@@ -72,7 +72,7 @@ import { readConfiguration, type Configuration } from "./configuration.ts";
 import { verifyReservationObjects } from "./reservation-snapshot.ts";
 import { manifestOf, originOf, type Job, type NotAJob, type Notice } from "./job.ts";
 import { stageOriginOf, type EvidenceDefinitions, type StageSnapshotRead } from "./stage-origin.ts";
-import { judge, provenanceOf, readReport, type Details, type Outcome } from "./outcome.ts";
+import { judge, provenanceOf, readReport, type Details, type ErrorReason, type Outcome } from "./outcome.ts";
 import { JOB_READ, signJobRead, signResult, type ResultSigner } from "./signing.ts";
 import type { JobRecord, Outcomes } from "./store.ts";
 
@@ -113,6 +113,10 @@ export interface Scopes {
  */
 export interface RunAsk { run: string; job: Job; configuration: Configuration }
 
+/** Host-clock recovery policy. A terminal loss never starts another run. */
+export interface RunnerRecovery { now: number; graceSeconds: number }
+export const RECOVERY_GRACE_SECONDS = 120;
+
 /**
  * The runner's side: one container for one run, started from the
  * configuration's image with exactly the configuration's variables, with no
@@ -124,12 +128,22 @@ export interface Runner {
   run(ask: RunAsk): Promise<unknown>;
   /** The runner's own record: `running`, its end, or null. When expectedJob
    * is supplied, refuse another request's run before returning its report. */
-  find(run: string, expectedJob?: Job): Promise<unknown | null>;
+  find(run: string, expectedJob?: Job, recovery?: RunnerRecovery): Promise<unknown | null>;
 }
 
 /** A run name belongs to another request. Recovery must not reuse its report. */
 export class RunIdentityRefusal extends Error {
-  constructor() { super("The checker run belongs to another request; its result was not reused."); }
+  constructor(readonly path?: string) { super("The checker run belongs to another request; its result was not reused."); }
+}
+
+/** A retained private record cannot identify a judgeable execution. */
+export class RunRecordCorruption extends Error {
+  constructor(readonly path: string) { super("record-corrupt: the retained checker record cannot be judged."); }
+}
+
+/** The trusted command prefix cannot fit in the private execution claim. */
+export class ClaimTooLargeRefusal extends Error {
+  constructor() { super("claim-too-large: the checker execution claim exceeds 16 KiB."); }
 }
 
 export interface ServiceOptions {
@@ -143,8 +157,10 @@ export interface ServiceOptions {
   clock: () => number;
   /** Random bytes, for a run's name and an intent's idempotency key. */
   random: (length: number) => Uint8Array;
-  /** Told each step that failed, by fixed words only. Never an error's text, an output or a credential. */
-  log?: (event: { step: string; event: string }) => void;
+  /** Seconds to wait for an incomplete private record. Default: 120. */
+  recoveryGraceSeconds?: number;
+  /** Fixed diagnostics. Only record-corrupt includes its private host path. */
+  log?: (event: { step: string; event: string; path?: string }) => void;
 }
 
 /** What one delivery did. */
@@ -162,6 +178,7 @@ const flightOf = (job: Job): string => `${job.fact.at.scope}/${job.fact.at.inc}/
 
 export class CheckerService {
   readonly #o: ServiceOptions;
+  readonly #recoveryGraceSeconds: number;
   /**
    * The jobs whose one run this process started and has not concluded, by
    * the job's fact. In memory only. A delivery that finds its job here
@@ -171,9 +188,28 @@ export class CheckerService {
    * record says what became of it.
    */
   readonly #flying = new Set<string>();
-  constructor(options: ServiceOptions) { this.#o = options; }
+  constructor(options: ServiceOptions) {
+    const grace = options.recoveryGraceSeconds ?? RECOVERY_GRACE_SECONDS;
+    if (!Number.isSafeInteger(grace) || grace < 0 || grace > 86_400) throw new RangeError("recoveryGraceSeconds must be an integer from 0 to 86400.");
+    this.#o = options;
+    this.#recoveryGraceSeconds = grace;
+  }
 
   #log(step: string, event: string): void { this.#o.log?.({ step, event }); }
+  #recovery(): RunnerRecovery { return { now: this.#o.clock(), graceSeconds: this.#recoveryGraceSeconds }; }
+  #runnerRefusal(error: unknown, step: string): ErrorReason | null {
+    if (error instanceof RunRecordCorruption) {
+      this.#o.log?.({ step, event: "record-corrupt", path: error.path });
+      return "run-lost";
+    }
+    if (error instanceof ClaimTooLargeRefusal) { this.#log(step, "claim-too-large"); return "claim-too-large"; }
+    if (error instanceof RunIdentityRefusal) {
+      if (error.path === undefined) this.#log(step, "identity-refused");
+      else this.#o.log?.({ step, event: "record-corrupt", path: error.path });
+      return "run-lost";
+    }
+    return null;
+  }
   #signing() { return { now: this.#o.clock(), nonce: this.#o.random(16) }; }
 
   /** One notice of one job. It never rejects for what a scope, a runner or a notice did: each failure is a fixed word in the log. */
@@ -272,12 +308,13 @@ export class CheckerService {
     if (record.state === "started") {
       // The delivery that made the record is at work in this process: its run has not ended, or has not begun.
       if (this.#flying.has(flightOf(job))) return { did: "waiting" };
-      let matched: unknown;
+      let matched: unknown, refusal: ErrorReason | undefined;
       try {
-        matched = await this.#o.runner.find(record.run, job);
+        matched = await this.#o.runner.find(record.run, job, this.#recovery());
       } catch (error) {
-        if (error instanceof RunIdentityRefusal) {
-          this.#log("find", "identity-refused"); matched = null;
+        const reason = this.#runnerRefusal(error, "find");
+        if (reason !== null) {
+          matched = null; refusal = reason;
         } else {
           // The runner's record could not be read now. That is not "no record": nothing is concluded.
           this.#log("find", "unreadable");
@@ -286,7 +323,7 @@ export class CheckerService {
       }
       if (matched === RUNNING) return { did: "waiting" };
       // The run's end as its own record has it, or no record at all: `run-lost`. No second run in either case.
-      await this.#conclude(job, record.run, await this.#configuration(job), matched);
+      await this.#conclude(job, record.run, await this.#configuration(job), matched, refusal);
     }
     return this.#submit(job, false);
   }
@@ -306,6 +343,7 @@ export class CheckerService {
     const configuration = await this.#configuration(job);
     if (job.evidence && !await this.#currentStage(job, (await this.#o.outcomes.get(job.fact))?.stageSnapshot)) return { did: "waiting" };
     let report: unknown = null;
+    let refusal: ErrorReason | undefined;
     let ran = false;
     if (configuration !== null) {
       // 4. Legacy runs require the read token; snapshot runs use their verified overlay.
@@ -326,13 +364,15 @@ export class CheckerService {
         } catch (error) {
           // A lost reply is not a missing execution record. Look up this
           // exact run once; recovery never calls run a second time.
-          if (error instanceof RunIdentityRefusal) {
-            this.#log("run", "identity-refused"); report = null;
+          const reason = this.#runnerRefusal(error, "run");
+          if (reason !== null) {
+            report = null; refusal = reason;
           } else {
             this.#log("run", "lost");
-            try { report = await this.#o.runner.find(run, job); }
+            try { report = await this.#o.runner.find(run, job, this.#recovery()); }
             catch (finding) {
-              if (finding instanceof RunIdentityRefusal) { this.#log("find", "identity-refused"); report = null; }
+              const recovered = this.#runnerRefusal(finding, "find");
+              if (recovered !== null) { report = null; refusal = recovered; }
               else { this.#log("find", "unreadable"); return { did: "waiting" }; }
             }
           }
@@ -340,7 +380,7 @@ export class CheckerService {
         }
       } else if (token !== null) this.#log("job-read", answered === "refused" || answered === "unavailable" || answered === "mismatch" ? answered : "no-answer");
     }
-    await this.#conclude(job, run, configuration, report);
+    await this.#conclude(job, run, configuration, report, refusal);
     return this.#submit(job, ran);
   }
 
@@ -352,10 +392,12 @@ export class CheckerService {
    * nothing of it. So nothing that a runner returned can fail between the record of the run and the kept outcome, at the run's own
    * delivery or at a later one that finds the same report: the outcome is kept and signed, and no second run starts.
    */
-  async #conclude(job: Job, run: string, configuration: Configuration | null, report: unknown): Promise<void> {
+  async #conclude(job: Job, run: string, configuration: Configuration | null, report: unknown, refusal?: ErrorReason): Promise<void> {
     const lost = report === null || report === undefined;
     const read = lost ? null : readReport(report);
-    const outcome: Outcome = configuration === null ? { act: "check-error", reason: "configuration-unavailable" } : lost ? { act: "check-error", reason: "run-lost" } : judge(configuration, read);
+    const outcome: Outcome = refusal !== undefined ? { act: "check-error", reason: refusal }
+      : configuration === null ? { act: "check-error", reason: "configuration-unavailable" }
+      : lost ? { act: "check-error", reason: "run-lost" } : judge(configuration, read);
     const details: Details | null = configuration === null ? null : { provenance: provenanceOf(job, configuration, read, run) };
     await this.#o.outcomes.keep(job.fact, outcome, details);
   }

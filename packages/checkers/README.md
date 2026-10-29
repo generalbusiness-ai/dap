@@ -2,8 +2,8 @@
 
 The platform-neutral entry exports `CheckerService`, `Runner`, checkout,
 judgment and signing. The separate `@generalbusiness/dap-checkers/node`
-entry exports `containerRunner` and `gatewayOrigin`. It starts real containers through nerdctl;
-it does not deploy a checker service or configure a Worker.
+entry exports `containerRunner` and `gatewayOrigin`. It starts real containers
+through nerdctl. It does not deploy a checker service or configure a Worker.
 
 Use Node 26 and launch the host with `node --import tsx`. The adapter
 resolves its pinned `tsx` 4.21.0 loader beside the package when it starts
@@ -61,7 +61,8 @@ Set `containerdSocket` and `containerdNamespace` to the actual engine's
 socket and namespace. Create `privateFifoDirectory` in the guest with mode
 `0700`, owned by the operator who runs ctr. The adapter appends the task's
 measured container ID and execution arguments. It retains both prefixes
-only in its private execution claim, outside `Job` and the container environment.
+only in its private execution claim, outside `Job` and the container
+environment.
 
 For the Lima instance used in development, the lifecycle prefix is:
 
@@ -71,12 +72,21 @@ For the Lima instance used in development, the lifecycle prefix is:
 
 Use the same Lima prefix before `ctr` and its complete address, namespace
 and tasks exec arguments. The FIFO directory is inside that guest.
-The adapter judges the last stdout line. Both stdout and stderr count
-toward the output limit. An abnormal close, status `255`, or a nonzero
-status with any stderr leaves the run lost because the adapter cannot
-distinguish that result from a transport or ctr setup failure. A nonzero
-status with empty stderr remains judgeable. For a check that needs stderr
-in its judgment, combine the job's streams in its configured shell command.
+The supported `ctr tasks exec` profile runs configured steps through the
+immutable relay's `step` subcommand. The helper connects the program's stderr
+to stdout, then replaces itself with the configured argument vector. The
+program runs as UID `65532`, with exactly the declared environment and
+working directory. The helper introduces no shell. Both streams count toward
+the output limit. The adapter judges the last line of the combined output,
+so a failing check can retain its stderr reason.
+
+If replacement fails, the helper restores its original stderr and writes a
+fixed setup diagnostic. The helper reserves that stderr for setup errors. An
+abnormal close, status `255`, or a nonzero status with helper stderr leaves
+the run lost. The adapter cannot distinguish those cases from transport or
+ctr setup failure. Profiles that keep the job's streams separate also leave
+a nonzero status with stderr lost. A nonzero status with empty helper stderr
+remains judgeable.
 
 Give this runner and the external `ResultSigner` to `CheckerService`.
 The service authenticates the job and configuration before calling
@@ -158,23 +168,45 @@ the same identifier and different input is refused. A detached host
 supervisor owns the execution and persists its terminal report after
 cleanup.
 
-`find(run)` only reads the retained record and engine state. It can return
-the same terminal report, `running`, or a truthful lost/unreadable result.
-It never starts a replacement. A crash between the service's durable
-start and the runner's execution may remain `run-lost`: the contract is
-at most one execution, not guaranteed execution. Keep the terminal record
-after removing the container.
+The service supplies the authenticated job and its recovery policy to
+`Runner.find(run, expectedJob, recovery)`. The policy carries the service
+clock and `ServiceOptions.recoveryGraceSeconds`. The grace defaults to 120
+seconds and accepts an integer from 0 through 86,400. That default lets the
+original creator publish private records before recovery classifies a
+permanent record fault.
 
-The service supplies the authenticated job to `find(run, expectedJob)` on
-every recovery lookup. A different job is refused before releasing a
-retained report; the refusal cannot recover another job's passing result.
+The container adapter measures age from the owned run directory's
+`birthtimeMs`. If the filesystem supplies no birth time, the adapter uses the
+directory's `mtimeMs`. Once the adapter verifies the owned directory and its
+age, any claim read failure follows the grace policy. Inside the grace
+period, recovery waits. Afterward, a missing or unreadable claim ends recovery
+as `run-lost`, including read failures such as `EIO` and `EACCES`.
+
+Corrupt, oversized, malformed or wrong-job records also follow the grace
+policy. After the grace period, the service ends recovery as `run-lost` and
+logs `record-corrupt` with the private record path. Unavailable root,
+owned-directory or finite-age metadata leaves recovery waiting. Temporary
+read failures for other record files and engine failures with a valid claim
+also leave recovery waiting.
+
+A new execution claim above 16 KiB raises `ClaimTooLargeRefusal`. The service
+logs `claim-too-large` and signs `check-error` with that reason. The runner
+creates no execution record. `RunIdentityRefusal` identifies an identity
+mismatch.
+
+Recovery can return the same terminal report or report that the run still
+runs. It never starts a replacement. Keep run directories and execution
+fences permanently, including after container cleanup. Recovery never
+deletes, resets or replaces them. A lost outcome does not prove physical
+cancellation. An original creator that paused before publishing its claim
+can still resume after recovery ends the job. A retry needs a new job.
 
 ## Verify a real adapter
 
 The ordinary suite keeps its labelled stand-ins and does not claim that
 a container ran. The explicit acceptance driver requires a public manual
-configuration with exactly `command`, `execCommand`, `image`, `environment` and
-`canaryPort`. Its image additionally contains the test-only Go probe at
+configuration with exactly `command`, `execCommand`, `image`, `environment`
+and `canaryPort`. Its image additionally contains the test-only Go probe at
 `/j3-test-probe`.
 
 ```sh
@@ -188,5 +220,6 @@ adapter and then supplies a bounded test bridge to the existing Native
 reservation scenario. That scenario retains its test host, scheduler,
 rules and configuration boundaries; the runner is real in this mode.
 An unavailable runtime or missing image fails this explicit command.
-It is not a skipped trusted pass. Follow [the testing guide](../../docs/testing.md)
-for focused checks and the final ordinary gate.
+It is not a skipped trusted pass. Follow
+[the testing guide](../../docs/testing.md) for focused checks and the final
+ordinary gate.

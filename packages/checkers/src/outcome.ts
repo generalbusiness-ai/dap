@@ -30,7 +30,7 @@ import { environmentDigest, exactly, type Configuration, type Variable } from ".
 /** The reasons of a `check-error` that names no step. */
 export const ERRORS = [
   "configuration-unavailable", "image-mismatch", "image-unresolved", "run-lost",     // the note's words
-  "environment-mismatch", "checkout-unconfirmed", "runner-not-started", "runner-lost", "limits-passed", "report-malformed", "judgment-unreadable",
+  "environment-mismatch", "checkout-unconfirmed", "runner-not-started", "runner-lost", "limits-passed", "claim-too-large", "report-malformed", "judgment-unreadable",
 ] as const;
 export type ErrorReason = (typeof ERRORS)[number] | `step-failed:${number}`;
 

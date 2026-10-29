@@ -59,7 +59,7 @@ function variables(value: unknown): Variable[] {
 }
 
 /** Bounded output ownership, not execFile's potentially gigabyte buffer. */
-async function command(prefix: readonly string[], args: readonly string[], options: { milliseconds: number; bytes: number; capture?: boolean; stdin?: Uint8Array; signal?: AbortSignal }): Promise<ExecResult & { bytes: number; stderrBytes: number; line: string | null; limited: boolean }> {
+export async function containerCommand(prefix: readonly string[], args: readonly string[], options: { milliseconds: number; bytes: number; capture?: boolean; stdin?: Uint8Array; signal?: AbortSignal }): Promise<ExecResult & { bytes: number; stderrBytes: number; line: string | null; limited: boolean }> {
   if (options.signal?.aborted) return error("stopped");
   return new Promise((resolve, reject) => {
     const child = spawn(prefix[0]!, [...prefix.slice(1), ...args], { env: { PATH: process.env["PATH"] ?? "/usr/bin:/bin", HOME: process.env["HOME"] ?? "/nonexistent" }, stdio: "pipe" });
@@ -100,6 +100,11 @@ async function command(prefix: readonly string[], args: readonly string[], optio
   });
 }
 
+/** Internal exec boundary: setup/transport stderr cannot supply job judgment. */
+export function requireContainerExit(result: { code: number; stderrBytes: number }): void {
+  if (result.code < 0 || result.code === 255 || result.code !== 0 && result.stderrBytes > 0) return error("engine");
+}
+
 function single(bytes: Uint8Array): RecordValue {
   try { const parsed: unknown = JSON.parse(text.decode(bytes)); if (Array.isArray(parsed) && parsed.length === 1) return record(parsed[0]); } catch { /* Fixed refusal. */ }
   return error("engine");
@@ -122,7 +127,7 @@ export function createContainerEngine(options: ContainerEngineOptions): Containe
   const memory = options.memoryBytes ?? 512 * 1024 * 1024, work = options.workBytes ?? 128 * 1024 * 1024, pids = options.pids ?? 64;
   if (![memory, work, pids].every(v => Number.isSafeInteger(v) && v > 0) || memory > 4 * 1024 ** 3 || work > memory || pids > 256) return error("configuration");
   const cli = async (args: string[], signal?: AbortSignal): Promise<Uint8Array> => {
-    const result = await command(prefix, args, { milliseconds: 30_000, bytes: 1024 * 1024, capture: true, ...(signal ? { signal } : {}) });
+    const result = await containerCommand(prefix, args, { milliseconds: 30_000, bytes: 1024 * 1024, capture: true, ...(signal ? { signal } : {}) });
     if (result.code !== 0 || result.timedOut || result.limited) return error("engine");
     return result.stdout;
   };
@@ -277,13 +282,13 @@ export function createContainerEngine(options: ContainerEngineOptions): Containe
       const execute = async (argv: readonly string[], milliseconds: number, bytes: number, capture: boolean, input?: Uint8Array, gitEnv?: Readonly<Record<string, string>>) => {
         const toolEnv = gitEnv ? [`PATH=${TOOL_PATH}`, ...Object.entries(gitEnv).map(([key, value]) => `${key}=${value}`)] : [];
         const program = argv[0] === "git" ? "/usr/bin/git" : argv[0];
-        ensure(); const result = await command(execCommand, ["--exec-id", randomUUID(), "--user", "65532:65532", "--cwd", gitEnv ? "/work" : WORK, id,
-          ...(gitEnv ? [RELAY, "exec", String(toolEnv.length), ...toolEnv, "--", program!, ...argv.slice(1)] : argv)],
+        ensure(); const result = await containerCommand(execCommand, ["--exec-id", randomUUID(), "--user", "65532:65532", "--cwd", gitEnv ? "/work" : WORK, id,
+          ...(gitEnv ? [RELAY, "exec", String(toolEnv.length), ...toolEnv, "--", program!, ...argv.slice(1)] : [RELAY, "step", ...argv])],
           { milliseconds: Math.min(milliseconds, remaining()), bytes, capture, ...(input ? { stdin: input } : {}), ...(signal ? { signal } : {}) });
         if (result.timedOut || result.limited) { expired = true; end(); return result; } ensure();
-        // ctr setup errors share stderr with jobs; SSH also reserves 255.
-        // Neither is authority for a completed process judgment.
-        if (result.code < 0 || result.code === 255 || result.code !== 0 && result.stderrBytes > 0) { end(); return error("engine"); }
+        // The immutable step helper combines only successfully spawned job
+        // streams. Remaining stderr is setup/transport output; 255 is reserved.
+        try { requireContainerExit(result); } catch (cause) { end(); throw cause; }
         return result;
       };
       const identity = await execute(["/usr/bin/id", "-u"], remaining(), 4096, true, undefined, {});
