@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c2db23dc135cef8afe3272fa613f03556e998312","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-29-h3-mac-host.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ccc3f6c58aabaf7d7cae69dfbfe494d3e36bb283","text":"Merge retired a covered predecessor; the successor is at scripts/mac-host-kit.test.mjs."}
