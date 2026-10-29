@@ -758,9 +758,9 @@ owner case runs the two Node files in `apps/room/celld/mac/test/` and the
 Python modules `test_install`, `test_shutdown`, and `test_deploy` with system
 Python. Each child has a 60-second timeout and a 2 MiB output bound. Child
 Node and Python counts remain separate from that parent case. Outside
-Darwin, the owner skips both children. These offline tests use scratch
-files and scripted service ports. They start no host services and prove no
-installed-host, shutdown, or deployment outcome.
+Darwin, the owner skips both children. These offline tests use scratch files,
+synthetic loopback TLS, and scripted service ports. They start no host
+services and prove no installed-host, shutdown, or deployment outcome.
 
 ## Settings inventory
 

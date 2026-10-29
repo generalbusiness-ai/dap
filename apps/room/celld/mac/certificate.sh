@@ -126,8 +126,8 @@ if [[ ${#common_name} -gt 64 ]]; then common_name='dap local TLS'; fi
 {
   printf '[req]\nprompt = no\ndistinguished_name = subject\nx509_extensions = server\n'
   printf '[subject]\nCN = %s\n' "$common_name"
-  printf '[server]\nbasicConstraints = critical,CA:TRUE\n'
-  printf 'keyUsage = critical,digitalSignature,keyCertSign,cRLSign\n'
+  printf '[server]\nbasicConstraints = critical,CA:FALSE\n'
+  printf 'keyUsage = critical,digitalSignature\n'
   printf 'extendedKeyUsage = serverAuth\nsubjectAltName = @names\n[names]\n'
   n=0; for name in "${names[@]}"; do n=$((n + 1)); printf 'DNS.%s = %s\n' "$n" "$name"; done
   n=0; for address in "${addresses[@]}"; do n=$((n + 1)); printf 'IP.%s = %s\n' "$n" "$address"; done

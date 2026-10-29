@@ -400,20 +400,27 @@ sudo /usr/libexec/ApplicationFirewall/socketfilterfw \
 
 ### Certificate and trust
 
-The generated certificate uses EC P-256, `serverAuth`, and the names and
-addresses you supplied as SANs. Its lifetime cannot exceed 825 days.
+The generated self-signed endpoint certificate uses EC P-256, `serverAuth`,
+`CA:FALSE`, and the names and addresses you supplied as SANs. Its key usage
+allows digital signatures, not certificate signing. Its lifetime cannot
+exceed 825 days.
 Check its fingerprint before trusting it on another device:
 
 ```sh
 openssl x509 -in "$HOME/dap-tls/cert.pem" -noout -fingerprint -sha256
 ```
 
-On macOS, open `cert.pem` in Keychain Access and add it to the login
-keychain. Open the certificate's **Trust** section and set **When using
-this certificate** to **Always Trust**. Node uses the certificate through
-`NODE_EXTRA_CA_CERTS` in the commands below.
+For command-line access, supply the certificate to that command: use curl's
+`--cacert` or prefix the Node command with `NODE_EXTRA_CA_CERTS`, as below.
 
-Trust coverage uses a macOS custom-anchor check and browser bypass flags.
+For a macOS browser that needs a local trust override, add `cert.pem` to
+the login keychain in Keychain Access. Open **Trust** and set only
+**Secure Sockets Layer (SSL)** to **Always Trust**. Leave the other trust
+policies at **Use System Defaults**. This setting serves HTTPS access to
+the certificate's names. Remove the keychain entry when you retire the host.
+
+The synthetic macOS custom-anchor, Node TLS, and system curl checks accept
+the endpoint and reject a different host's certificate signed with its key.
 Real browser trust, Firefox, and iOS remain unverified.
 
 For a user-supplied certificate, set `certificate` and `privateKey` to its
@@ -434,10 +441,10 @@ Plan only when you can finish deployment and installation within its
 
 ```sh
 export DAP_HOME="$HOME/dap-client"
-export NODE_EXTRA_CA_CERTS="$HOME/dap-tls/cert.pem"
 export BASE=https://mac-name.local
 mkdir -m 700 "$DAP_HOME"
-PHASE=plan node scripts/celld-smoke.mjs
+NODE_EXTRA_CA_CERTS="$HOME/dap-tls/cert.pem" \
+  PHASE=plan node scripts/celld-smoke.mjs
 node apps/room/celld/mac/prepare-project.mjs \
   --origin "$BASE" --home "$DAP_HOME" --out "$HOME/dap-project"
 python3 apps/room/celld/mac/deploy.py \
@@ -456,13 +463,15 @@ Wait for `"sessions":"ok"` in the health response. The register becomes
 ready after installation. Then finish the original plan:
 
 ```sh
-PHASE=run node scripts/celld-smoke.mjs
+NODE_EXTRA_CA_CERTS="$HOME/dap-tls/cert.pem" \
+  PHASE=run node scripts/celld-smoke.mjs
 ```
 
 The room check installs the retained plan, creates a room, joins a separate
 member, verifies seven journals, and checks readiness. It refuses a second
 run after a started attempt. Keep the original home to inspect uncertainty.
 Use the [CLI commands](cli.md) from that home for later work and invitations.
+Supply `NODE_EXTRA_CA_CERTS` to each command that connects to the host.
 
 ### Maintain the host
 
@@ -478,6 +487,8 @@ It waits for celld's process to close before stopping the store. An unknown
 result exits nonzero and retains the full prefix and node name. Keep those
 and restart the same installation to recover.
 An exit status of zero alone does not prove preserve preparation.
+If celld closure is unproved, the store stays running. If closure is proved
+but preparation is unproved, the store may stop and all data stays in place.
 
 Restart the owned services in order, then verify the room:
 
@@ -487,7 +498,8 @@ for service in seaweedfs celld caddy; do
   sudo launchctl bootstrap system \
     "/Library/LaunchDaemons/org.generalbusiness.dap.$service.plist"
 done
-node packages/cli/bin/dap.js verify --all
+NODE_EXTRA_CA_CERTS="$HOME/dap-tls/cert.pem" \
+  node packages/cli/bin/dap.js verify --all
 ```
 
 FileVault requires the disk to unlock at boot. An authenticated restart
