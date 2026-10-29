@@ -346,7 +346,7 @@ test("real published holds survive newer counted passes and clear only through d
     expect(await hardeningItems(older.lane, "incident")).toHaveLength(1);
     await unchangedActiveHold();
     const ordinaryOpening = await room.D.stub.submit(await room.D.intent(rita, 'open-issue', { expected: await room.D.expected({ repository: 0 }),
-      fields: { definition: setup.definitions.issue, title: 'Unrelated ordinary intent', conditions: [] } }), [], { values: [setup.definitions.issueBytes] });
+      fields: { definition: setup.definitions.issue, title: 'Unrelated ordinary intent', conditions: ['Complete the unrelated ordinary task'] } }), [], { values: [setup.definitions.issueBytes] });
     expect(ordinaryOpening, canonicalize(ordinaryOpening)).toMatchObject({ answer: 'accepted' });
     if (ordinaryOpening.answer !== 'accepted') throw Error('Actual unrelated ordinary Issue creation required');
     const ordinaryCreated = await room.D.created(ordinaryOpening.receipt.fact.seq), ordinary = room.life.platform(ordinaryCreated.name);
