@@ -216,7 +216,7 @@ export class SqliteStore implements Store {
     return count;
   }
   fixedAffected(seq: number, hash: Digest): readonly FixedRow[] {
-    return this.#all("SELECT s.item,s.slot,s.type,s.state,s.raw,s.key FROM fixed_dependency d JOIN fixed_slot s ON s.item=d.item AND s.slot=d.slot WHERE d.seq=? AND d.hash=? ORDER BY s.item,s.slot", seq, hash)
+    return this.#all("SELECT s.item,s.slot,s.type,s.state,s.raw,s.key FROM fixed_dependency d JOIN fixed_slot s ON s.item=d.item AND s.slot=d.slot WHERE d.seq=? AND d.hash=? ORDER BY d.item,d.slot", seq, hash)
       .map(row => ({ item: row["item"] as number, slot: row["slot"] as string, type: row["type"] as string, state: row["state"] as string, raw: rowJson<unknown>(row["raw"]), key: row["key"] as string }));
   }
   #fixedDelta(type: string, slot: string, state: string, raw: string, key: string, by: 1 | -1): void {
