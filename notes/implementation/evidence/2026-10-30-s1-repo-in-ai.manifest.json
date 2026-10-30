@@ -1,0 +1,131 @@
+{
+  "v": 1,
+  "scope": "S1 local source verification only; hosted acceptance pending",
+  "request": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:449c58c7f7b76f25c5575bbb9f30403f7e0d3960",
+  "promise": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8a90580e1d205fe7790871c11fc1012b4ec9794b",
+  "testedSource": {
+    "commit": "517cd817bf46a7149df8208f052d545833449b2a",
+    "tree": "2a2f83c8f8057009f577015f026d93bc140795bd"
+  },
+  "root": "/Users/hughpyle/play/artroom-evidence/2026-10-30-s1-repo-in-ai-local",
+  "rootInventory": {
+    "path": "SHA256SUMS",
+    "sha256": "359552361336274fa58c81b9573df08b7538068263a34c8fce07fdab0feb0f6f",
+    "files": 1501,
+    "bytes": 94135371,
+    "physicalMode": "owner read-only; directories owner read/traverse only"
+  },
+  "files": [
+    {
+      "path": "producer/gate-s1-3/receipt.json",
+      "bytes": 1488,
+      "sha256": "3e841d0fcd99471e610c1b32601ed0fb5a4ece90ddcd5316888cd5a51ba3ca55"
+    },
+    {
+      "path": "producer/gate-s1-3/stdout.log",
+      "bytes": 6315,
+      "sha256": "ca7eefc8bc373d8de3ae2ae5cfea1cb214106e238e938ac80bccfdc63586ba47"
+    },
+    {
+      "path": "gate-inner-3/test-evidence/stages.json",
+      "bytes": 969,
+      "sha256": "b869b3e1591db4f4c937fb21c42fbb98fd22eb91a2753681d748ff0afa63cde9"
+    },
+    {
+      "path": "producer/native-owners-2/receipt.json",
+      "bytes": 1696,
+      "sha256": "8ac2b28b2ae939b317036f620ef4b6fefdc859e2070b784447b38e700d0dae99"
+    },
+    {
+      "path": "producer/plain-owners-1/receipt.json",
+      "bytes": 2038,
+      "sha256": "de97c40d3102eceba7dc8d4da9eaaa289e1991603cbf30474e24227f9ef8896d"
+    },
+    {
+      "path": "producer/types-cli-2/receipt.json",
+      "bytes": 1536,
+      "sha256": "104350efa035e8be60bfa0f9aed0387d32e2e1be127df00c92d5e32d9cd25b56"
+    },
+    {
+      "path": "producer/types-moved-example-1/receipt.json",
+      "bytes": 1545,
+      "sha256": "8f338f4a81e7cdb352a721ff612b18a675126e0e3241bc8f2dc981604c982afc"
+    },
+    {
+      "path": "producer/layout-guards-1/receipt.json",
+      "bytes": 1615,
+      "sha256": "d6e2568b44eaa44221c21ec2178ff01e379f75d512ea239f8d586b3c880521c5"
+    },
+    {
+      "path": "producer/example-project-1/receipt.json",
+      "bytes": 1593,
+      "sha256": "f1ac40b8f969e6729f8ebd303954b7c294276e2c287c901c782225b45185bf0a"
+    },
+    {
+      "path": "producer/moved-node-owners-1/receipt.json",
+      "bytes": 1565,
+      "sha256": "d92eda391bcf25994e2bd70f533b696edcb480c42e1a9547de06f3f8cbb887e9"
+    },
+    {
+      "path": "producer/security-owner-2/receipt.json",
+      "bytes": 1524,
+      "sha256": "23a6207d799bfcb6b7e6df1126f2b1a0837409bbbdccae18bc41082b9a734b02"
+    },
+    {
+      "path": "producer/page-asset-owner-1/receipt.json",
+      "bytes": 1637,
+      "sha256": "96c54cf8015cbd963dc1951dfea464c1439a5786edf20dd9667c723f95db61ba"
+    },
+    {
+      "path": "browser-owner/result.json",
+      "bytes": 1117,
+      "sha256": "e5ab6f4f4d36cdc03ff40d3cd8151bb5ac88c85aa7186e559d4ae26157b73aa8"
+    },
+    {
+      "path": "browser-owner/desktop.png",
+      "bytes": 32885,
+      "sha256": "0377ee9c28922b6d5a507064d419b45a71bbd720cbbc392650fbf6152fd360fe"
+    },
+    {
+      "path": "browser-owner/mobile.png",
+      "bytes": 28891,
+      "sha256": "fd5af3719efdc4d3895fb7b4da2a6698910d8479b92e5f3c80cf4222e59eef69"
+    },
+    {
+      "path": "browser-owner/saved-format-warning.png",
+      "bytes": 37481,
+      "sha256": "aee61f8965c1588afb82b0a9eb488feea778766441bd5ffb10d4d2d63a136c2a"
+    },
+    {
+      "path": "page-generation/receipt.json",
+      "bytes": 2099,
+      "sha256": "b9dabd5b393d6f46ef0f15e36146fff704291e084c1baf7fcb71c49ffbc7cbf8"
+    },
+    {
+      "path": "operator-inputs/approval-scope.json",
+      "bytes": 3931,
+      "sha256": "e469ef5314822faba769bd73bcc30f551dee2c3bccaf0ec52cefb4912d933982"
+    },
+    {
+      "path": "operator-inputs/scratch-input.json",
+      "bytes": 635,
+      "sha256": "bcaff6825ec713054edac1201afcf2b523487b05fde3e5c11a7dfdba712c82a5"
+    },
+    {
+      "path": "producer/public-health-only-1/receipt.json",
+      "bytes": 1577,
+      "sha256": "f0ebb4f05bcbef3d5dbb5c5e88aafa5bf5df70e62bab4220f9e6e1f3af94d179"
+    },
+    {
+      "path": "producer/public-health-only-1/stdout.log",
+      "bytes": 241,
+      "sha256": "8a9cd5a5864a71003fe899ce922307ddcd2855feeb0b3401a4b1e68c7c60dcca"
+    },
+    {
+      "path": "retention/LOCAL-FINALIZATION.json",
+      "bytes": 1096,
+      "sha256": "b57bc618e1a2d0efa411c20e2fae54224d504190bc294185c7decdcd4353b565"
+    }
+  ],
+  "qualification": "Selected citations plus the complete checksum inventory. Historical producer failures and mixed checkpoints remain unchanged in the root. The provisional marker is its original copy receipt; LOCAL-FINALIZATION describes the later local seal. No hosted S1 process started, so this is not a scratch or real-room witness. The requested external-operation approval is pending."
+}
