@@ -208,9 +208,15 @@ export class Reads {
     if (!("scope" in open)) return open;
     if ((read === "summary" || read === "items") && !open.pinned.definition) return no("unsupported-definition");
     if (read === "history" && open.limit && "key" in open.limit && !open.limit.scoped && !this.#signed?.chains?.has(open.limit.key, open.limit.since)) return no("forbidden");
-    if (read === "entry" && open.limit) {
-      const row = this.#store.stored(Number(arg));
-      if (row ? !this.#mine(open.limit, row) : "key" in open.limit && !open.limit.scoped) return no("forbidden");
+    if (read === "entry") {
+      // The plain read exposes this archive pointer after the same request
+      // authentication. Return it directly, never a head or a future wait.
+      const archived = archivedPosition(this.#store, Number(arg));
+      if (archived) return { ok: false, reason: "archived", archived };
+      if (open.limit) {
+        const row = this.#store.stored(Number(arg));
+        if (row ? !this.#mine(open.limit, row) : "key" in open.limit && !open.limit.scoped) return no("forbidden");
+      }
     }
     return { ok: true, at: open.scope.head, value: { at: open.scope.at, ...open.scope.head }, complete: true };
   }

@@ -221,7 +221,7 @@ const seals = {
   "packages/derive/src/genesis.ts": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843",
   "packages/derive/src/judge.ts": "65a10677dd4da355e9edac490979cacf6911cfa1aa37020c41516f5c53ad94fb",
   "packages/scope/src/sessions.ts": "4ef554909c1612dbcdd43f074d5844779e046f0af41c615d100c98b4d754054d",
-  "packages/scope/src/reads.ts": "6b368507460bf60d0bca433beaab67d30f3927fd69fc4dfb25c54705a6617b4e",
+  "packages/scope/src/reads.ts": "1fbb2ae6de2566c33c5dc6e19bd8ef7660a30cab6707a12c02508d650085a2cb",
   "packages/scope/src/signed-reads.ts": "3204207ea73dc48cdc40727bbde7f8b734675975fd78694a501b0116cf0abfe2", // Census wire name; its separate fixed-index predicate grants no ordinary scope read.
   "packages/scope/src/limits.ts": "dfab21444a03339291f51f500941dc1b0d23926fa01fb173e7cd7cc91983f099", // R12 verified-key join failure window.
   "packages/scope/src/serving-limits.ts": "3a9f410f926f1e3711b78a750dd7dfb055f418fa9904be55ccb3f8cea869a987", // New bounded memory-only counter, no live eviction.
@@ -234,7 +234,7 @@ const seals = {
   "packages/scope/src/workspace-host.ts": "fc194d9584dc30b7e24d635534a83a6218c3ca9f7a625bf48540a5c28de87271", // Reviewed SQL custody, setup revocation and full refs for recorded branch names.
   "packages/scope/src/workspace-lineage.ts": "e504accd924593ea2aed7f6180ed2e00112ef4f1c7455ab1594f12d3784f6573", // Reviewed bounded authenticated Register, Directory and Destination creation lineage.
   "packages/scope/src/native-birth.ts": "ab9ecd331850e5f183fafaee07145c64adadb3ad904ea95bcc4ddf569da6ad6f", // Reviewed bounded genesis decoding and exact indexed scope and kind discovery.
-  "packages/mcp/src/hosted.ts": "5af90b0073ea335cac7f324db97500e3dc2b0cac11b0115109e548bd23546f6d",
+  "packages/mcp/src/hosted.ts": "408713d777ced9eb3ea9d0c8e590071e08be433c58d35bd9e04ed094439b66b7",
   "packages/mcp/src/hosted-tools.ts": "5bb4dd74b12896bb8f5f5cb366f25bd31af849c2690d0e3ab5d81eb277f94a47", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": namedOwners["packages/mcp/src/service.ts"],
   "packages/mcp/src/catalogue.ts": "194dd82a6d3f188909485c4c1b9db33aee671b06fb46840e92fc0b8df2a79726", // Reviewed R5 admission owner; actual maintained parser output.

@@ -8,12 +8,12 @@ import { canonicalize, readMinimumParameter, isSeed, scopeIdOf, textDigest } fro
 import { encodeApplicationProjectionQuery, readApplicationProjectionReply } from "@generalbusiness/dap-platform/application-v2";
 import { DOMAINS, ITEM_QUERY_BOUNDS, PROPOSED_BOUNDS, type ApplicationProjectionQuery, type FactRef, type ScopeRef } from "@generalbusiness/dap-contract";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
-import { requestSession, sessionRequest, ScopeHandle, httpTransport, bindingTransport, secretSigner, signedApplicationInstall, ApplicationPackageError, type ServiceBinding } from "@generalbusiness/dap-client";
+import { requestSession, sessionRequest, ScopeHandle, httpTransport, bindingTransport, secretSigner, signedReader, signedApplicationInstall, ApplicationPackageError, type ServiceBinding } from "@generalbusiness/dap-client";
 import { McpService, memoryStore as custodyStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { applicationCounterFactTimePacket2, applicationWorkerBindings, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture } from "./fixtures-native.ts";
-import { rita, routed } from "./repository.ts";
+import { rita, vic, routed } from "./repository.ts";
 import { soon, net } from "./net.ts";
 import { Scope, type Checkpointed } from "../src/core.ts";
 import { production } from "../src/ports.ts";
@@ -368,6 +368,14 @@ test("native installed projection reads exact journal state and survives R2 dele
     const minimum = { at: receipt.fact.at, head: { seq: receipt.fact.seq, hash: receipt.fact.hash } };
     expect(await life.owner.required(() => handle.followReceipt(receipt))).toEqual({ ok: false, reason: "archived", archived });
     expect(await life.owner.required(() => handle.entry(receipt.fact.seq, minimum))).toEqual({ ok: false, reason: "archived", archived });
+    // The actual signed original is now outside the causal intent window,
+    // and SQL no longer holds its payload. A fresh signed entry request must
+    // keep the plain archived answer, including through followReceipt.
+    const causal = new ScopeHandle(http, app.name, await signedReader(secretSigner(rita.secret), app.name, "entry", String(receipt.fact.seq), { now: life.now }));
+    const causalPlain = await life.owner.required(() => causal.entry(receipt.fact.seq));
+    expect(causalPlain).toEqual({ ok: false, reason: "archived", archived });
+    expect(await life.owner.required(() => causal.followReceipt(receipt))).toEqual(causalPlain);
+    expect(await life.owner.required(() => causal.entry(receipt.fact.seq, minimum))).toEqual(causalPlain);
     const wrongBelow = { ...minimum, head: { ...minimum.head, hash: textDigest("TEST unavailable archived bytes") } };
     expect(await life.owner.required(() => handle.summary(wrongBelow))).toMatchObject({ ok: true });
     expect(await life.owner.required(() => http.summary(app.name, null, wrongBelow))).toEqual({ ok: false, reason: "forbidden" });
@@ -375,6 +383,16 @@ test("native installed projection reads exact journal state and survives R2 dele
     const boundary = await life.owner.required(() => handle.entry(position));
     expect(boundary.ok).toBe(true);
     if (!boundary.ok) throw Error("The real floor position must remain in the live tail.");
+    // A stranger can read only the same plain archive pointer. Naming a
+    // future minimum must neither start a wait nor reveal behind.current.
+    // An actual retained row keeps its causal refusal before any wait.
+    const stranger = new ScopeHandle(http, app.name, await signedReader(secretSigner(vic.secret), app.name, "entry", String(receipt.fact.seq), { now: life.now }));
+    const strangerPlain = await life.owner.required(() => stranger.entry(receipt.fact.seq));
+    expect(strangerPlain).toEqual(causalPlain);
+    const future = { at: receipt.fact.at, head: boundary.at.seq + 1000 };
+    expect(await life.owner.required(() => stranger.entry(receipt.fact.seq, future))).toEqual(strangerPlain);
+    const retainedStranger = await signedReader(secretSigner(vic.secret), app.name, "entry", String(position), { now: life.now });
+    expect(await life.owner.required(() => http.entry(app.name, retainedStranger, position, future))).toEqual({ ok: false, reason: "forbidden" });
     expect(await life.owner.required(() => handle.summary({ at: receipt.fact.at, head: { seq: position, hash: textDigest("TEST wrong retained floor hash") } }))).toEqual({ ok: false, reason: "unavailable" });
     const beforeFloorRefresh = viewRequests.length;
     const floorRefreshed = await life.wait(() => views.call("view_read", { view: "floor", cut: 1, refresh: true }));
