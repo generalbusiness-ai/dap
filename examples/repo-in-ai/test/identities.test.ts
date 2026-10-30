@@ -3,17 +3,20 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, test, vi } from "vitest";
 import { b64url, canonicalize, entryHash, intentDigest, newIncarnation, scopeIdOf, textDigest, timeMs, utf8 } from "@generalbusiness/dap-bytes";
-import type { Entry, Item, OutboxId, Receipt, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Entry, Item, OutboxId, Receipt, SignedIntent, Summary } from "@generalbusiness/dap-contract";
 import type { Fetch } from "@generalbusiness/dap-client";
 import { memoryStore } from "../../../packages/cli/src/store.ts";
 import type { PendingInvitationIssue, Store } from "../../../packages/cli/src/store.ts";
 import { storedSigner } from "../../../packages/cli/src/store-signer.ts";
 import { IdentityRefusal, enrollIdentity, initializeOwner, retainedInvitationRequests } from "../identities.ts";
 import { durableCliStore } from "../custody.ts";
-import { bindPlan, identityHome, retain, type SetupPlan } from "../plan.ts";
+import { bindPlan, identityHome, retain, type Identity, type SetupPlan } from "../plan.ts";
 import { failureDiagnostic, newDiagnostics, type EnrollmentDiagnostic } from "../diagnostics.ts";
 import { main } from "../setup.ts";
 import { Roster, rita } from "../../../packages/platform/test/support.ts";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT as cohort } from "@generalbusiness/dap-platform";
+import { witnessMembers } from "../members.ts";
+import type { Session } from "../session.ts";
 
 // Local custody only. No native, HTTP or provider judgment runs in this file.
 const operation = "11111111-1111-4111-8111-111111111111";
@@ -108,7 +111,7 @@ async function enrollmentFixture() {
     return Response.json({ ok: true, at: roster.head, complete: true, value: { scope: roster.at, status: "active", definition: "platform:membership@8", time: roster.now, items: live(), counts: Object.entries(roster.definition.declared.items).flatMap(([type, item]) => Object.keys(item.states).map(state => [type, state, roster.state.count(type, state)])) } });
   };
   const ctx = { store: owner, fetch: fetcher, now: () => timeMs(roster.now)! };
-  return { home, setup, owner, ctx, fetcher, sent, traces,
+  return { home, setup, owner, ctx, fetcher, sent, traces, roster, live, repository,
     failSummary: (value: boolean) => { refuseSummary = value; }, stopDispatch: () => { stopAtDispatch = true; },
     permitUnknownSession: () => { unknownSession = true; },
     beforeDispatch: (callback: (signed: SignedIntent) => Promise<void>) => { beforeDispatch = callback; },
@@ -116,6 +119,59 @@ async function enrollmentFixture() {
     close: () => rmSync(home, { recursive: true, force: true }),
   };
 }
+
+// Actual M8 judgments and maintained key-enrollment engines; the room's
+// Directory/Rules/Destination read context is an explicit summary stand-in.
+// No Native Worker, provider or hosted membership is claimed by this owner.
+test("member readback accepts the judged person device key and exact controlled agent and checker keys, while refusing a cross-bound active key", async () => {
+  const f = await enrollmentFixture();
+  try {
+    expect((await f.enroll("agent-a", "new")).code).toBe(0);
+    expect((await f.enroll("agent-b", "new")).code).toBe(0);
+    expect((await enrollIdentity(f.ctx, identityHome(f.setup, "checker"), "checker", f.setup.handles.checker, "new", { recoveryPlan: f.setup })).code).toBe(0);
+    const refs = { directory: f.repository.directory, membership: f.roster.at,
+      rules: { ...f.repository.directory, kind: "rules" as const }, destination: { ...f.repository.directory, kind: "destination" as const } };
+    const repository: Item = { id: 0, type: "repository", state: "open", revision: 1, opened: textDigest("SCRIPTED room context"), attributed: [], values: {}, parties: {}, refs: {
+      membership: refs.membership, rules: refs.rules, destination: refs.destination,
+    } };
+    let crossBound = false;
+    const read: Session["read"] = async target => {
+      if (canonicalize(target) === canonicalize(refs.membership)) {
+        const items = f.live(), owner = items.find(item => item.type === "member" && item.values["handle"] === f.setup.handles.owner)!;
+        const agent = items.find(item => item.type === "member" && item.values["handle"] === f.setup.handles["agent-a"])!;
+        return { scope: refs.membership, definition: "platform:membership@8", status: "active", time: f.roster.now, counts: [],
+          items: items.map(item => crossBound && item.type === "key" && item.refs["member"] === owner.id ? { ...item, refs: { ...item.refs, member: agent.id } } : item) };
+      }
+      const contexts: readonly Summary[] = [
+        { scope: refs.directory, definition: cohort.directory, status: "active", time: f.roster.now, counts: [], items: [repository] },
+        { scope: refs.rules, definition: cohort.rules, status: "active", time: f.roster.now, counts: [], items: [] },
+        { scope: refs.destination, definition: cohort.destination, status: "active", time: f.roster.now, counts: [], items: [] },
+      ];
+      const context = contexts.find(value => canonicalize(value.scope) === canonicalize(target));
+      if (!context) throw Error("Unexpected test room reference.");
+      return context;
+    };
+    const unused = async (): Promise<never> => { throw Error("Member readback must not submit, prepare, resolve, or use credentials."); };
+    const sessions = {} as Record<Identity, Session>;
+    for (const identity of ["owner", "agent-a", "agent-b", "checker"] as const) {
+      sessions[identity] = { ctx: { store: durableCliStore(identityHome(f.setup, identity)) }, read,
+        intent: unused, resolve: unused, call: unused, request: unused, submitPrepared: unused, accepted: unused };
+    }
+    const controller = { membership: f.roster.at, member: f.setup.handles.owner };
+    expect(f.live().filter(item => item.type === "key" && item.state === "active").map(item => item.values["kind"])).toEqual(["device", "agent", "agent", "checker"]);
+    // A refused readback cannot satisfy the required four-member witness.
+    expect(await witnessMembers(sessions).catch(() => null)).toEqual([
+      { identity: "owner", handle: f.setup.handles.owner, kind: "person", role: "admin", controller: null },
+      { identity: "agent-a", handle: f.setup.handles["agent-a"], kind: "agent", role: "agent", controller },
+      { identity: "agent-b", handle: f.setup.handles["agent-b"], kind: "agent", role: "agent", controller },
+      { identity: "checker", handle: f.setup.handles.checker, kind: "checker", role: "checker", controller: null },
+    ]);
+    // Deliberately corrupt only the read boundary's key-to-member projection;
+    // the actual judged roster and stored signer bytes remain unchanged.
+    crossBound = true;
+    await expect(witnessMembers(sessions)).rejects.toThrow("Membership does not show the required kind, role, controller and active key.");
+  } finally { f.close(); }
+});
 
 test("plan-only Continue keeps its operation and makes the actual first root durable before dispatch; Check does not start it", async () => {
   const f = await enrollmentFixture();

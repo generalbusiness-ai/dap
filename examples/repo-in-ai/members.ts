@@ -21,12 +21,13 @@ export async function witnessMembers(sessions: Record<Identity, Session>): Promi
     const members = summary.items.filter(item => item.type === "member" && item.state === "active" && item.values["handle"] === config.handle);
     const kind = identity === "owner" ? "person" : identity === "checker" ? "checker" : "agent";
     const role = identity === "owner" ? "admin" : kind;
+    const keyKind = kind === "person" ? "device" : kind;
     const member = members[0];
     const expected = { membership: refs.membership, member: config.handle };
     const keys = summary.items.filter(item => item.type === "key" && item.state === "active" && item.values["id"] === signer?.key);
     if (!signer || members.length !== 1 || !member || member.values["kind"] !== kind || member.values["role"] !== role
       || !isMemberRef(member.parties["member"]) || canonicalize(member.parties["member"]) !== canonicalize(expected)
-      || keys.length !== 1 || keys[0]!.refs["member"] !== member.id || keys[0]!.values["kind"] !== kind
+      || keys.length !== 1 || keys[0]!.refs["member"] !== member.id || keys[0]!.values["kind"] !== keyKind
       || (kind === "agent" ? canonicalize(member.parties["controller"]) !== canonicalize(controller) : member.parties["controller"] !== null)) throw new Error("Membership does not show the required kind, role, controller and active key.");
     witnesses.push({ identity, handle: config.handle, kind, role, controller: kind === "agent" ? controller : null });
   }
