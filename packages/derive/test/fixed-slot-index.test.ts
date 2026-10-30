@@ -18,12 +18,12 @@ test("fixed field and constant equalities complete beyond guardScan while the pa
     scope.did(rita, "pass", on(scope, ids[0]!));
     const page = fixed ? vi.spyOn(scope.state, "page").mockImplementation(() => { throw Error("eligible fixed count scanned items"); }) : null;
     try {
-      const probe = (kind: string, fields = {}) => scope.judge(scope.intent(rita, kind, { ...on(scope, 0), fields }), { bounds: stopped });
+      const probe = (kind: string, fields = {}, also: Record<string, number> = {}) => scope.judge(scope.intent(rita, kind, { ...on(scope, 0, also), fields }), { bounds: stopped });
       if (fixed) {
         expect(probe("unique-constant").result).toBe("write");
         expect(probe("unique-field", { needle: "unused" }).result).toBe("write");
         expect(probe("unique-field", { needle: "last" })).toMatchObject({ result: "refused", reason: "guard-failed", name: "handle-in-use" });
-        expect(probe("except-field", { needle: "held", job: ids[0]! }).result).toBe("write");
+        expect(probe("except-field", { needle: "held", job: ids[0]! }, { job: ids[0]! }).result).toBe("write");
       } else {
         expect(probe("unique-constant")).toMatchObject({ result: "unavailable", reason: "guard-incomplete" });
         expect(probe("unique-field", { needle: "unused" })).toMatchObject({ result: "unavailable", reason: "guard-incomplete" });

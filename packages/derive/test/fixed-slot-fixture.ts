@@ -13,7 +13,7 @@ export function structuralFloorHistory(final = false) {
   const reference = scope.fact(1);
   const item = scope.did(rita, "request", { fields: { name: "record", stamp: reference } }).seq;
   if (final) scope.did(rita, "pass", on(scope, item));
-  while (scope.head.seq < 102) scope.did(rita, "tick", on(scope, 0));
+  while (scope.head.seq < 102) scope.did(rita, "tick", { on: 0 });
   scope.now = t(1200);
   const before = scope.head.seq;
   const input = { type: "floor" as const, floor: 2, keep: [], receipt: { commit: "a".repeat(40), through: scope.head } };
