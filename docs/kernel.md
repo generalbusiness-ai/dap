@@ -253,14 +253,27 @@ kernel: a replaceable host adapter can supply an answer, but cannot decide
 what that answer means. The adapter, authenticated repository discovery and
 private credential custody remain services in `scope` and `git`.
 
+The addition declares `hold@2` in `contract` and adds four exports in
+`derive`. Each belongs in the kernel because it determines how runtime and
+replay interpret the same recorded definition and entries:
+
+- `HOLD_V2` names the separate `hold@2` record and operation owner.
+- `holdCapabilityV2` supplies that version's derivation rules, including
+  head and fork outcomes.
+- `workspaceOwner` selects the family from the declared version. A caller
+  or host cannot choose another family for the same definition.
+- `hasAnyWorkspace` checks that the selected family has a listed hold guard
+  or effect. Declaring a version alone does not enable workspace steps.
+
 The first hosted staging observation is `29f6d5bc`. Its preparation opened
 stage and mint operations, with no outcome in the observation window.
 The registered-only census did not establish the complete legacy absence
 required to extend `hold@1`, so `hold@2` has separate head and fork rules.
 The old version retains its rules, maxima and record meanings. Both use the
-existing forms, item states and operation ledger; this adds no capability
-name, scope kind, entry form, byte domain or K item. Existing lane pins and
-native evidence identities remain fixed. New J4 lane pins select version 2
+existing forms, item states and operation ledger. The bare capability name
+remains `hold`. This adds no scope kind, entry form, byte domain or K item.
+Existing lane pins and native evidence identities remain fixed. New J4
+lane pins select version 2
 explicitly and grant no archive policy permission.
 
 Exact-head review must check owner dispatch, closure and effect bounds,

@@ -22,14 +22,16 @@ and bytes; the workspace service then verifies the full returned reference,
 genesis and creation lineage. It uses no legacy source fallback and grants
 no read session or caller-selected repository authority.
 
-The existing credential route also accepts an explicitly pinned `hold@2`
-lane. Its membership gate remains in place. Private custody checks the
+The existing credential route also accepts a lane whose declared definition
+includes `hold@2`. Its membership gate remains in place. Private custody checks the
 preparing key, actual holder, current instance, epoch, expiry and selected
 fork before a one-time handoff. Historical hold profiles and the route's
-gate class stay unchanged. The source owners for this discovery, wiring
-and custody branch were reviewed before adopting their actual maintained
-parser seals. The first J4 gate failed on the old seals; its targeted
-follow-up remains separate from that failed run.
+gate class stay unchanged. The entry-point check seals the discovery and
+wiring owners, `workspace-host.ts` for custody, `workspace-lineage.ts` for
+creation lineage, and `native-birth.ts` for birth decoding. Their seal values
+come from the maintained parser after source review. The first J4 gate
+failed on the old seals; its targeted follow-up remains separate from that
+failed run. The three workspace owner seals were added after checker review.
 
 For a member-source stage snapshot, an ineligible signing key can trigger
 the initial job lookup and up to 32 source-fact reads before the current
