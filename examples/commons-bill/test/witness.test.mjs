@@ -13,7 +13,7 @@ const { secretSigner } = await load("@generalbusiness/dap-client");
 const { McpService, identityId } = await load("@generalbusiness/dap-mcp");
 const { StandIn, SERVICE } = await load(new URL("../../../packages/mcp/test/support/standin.ts", import.meta.url).href);
 const { durableCustody, flushFile } = await load(new URL("../custody.ts", import.meta.url).href);
-const { inputOf, requestNote, WitnessRefusal } = await load(new URL("../witness.ts", import.meta.url).href);
+const { inputOf, requestNote, runWitness, WitnessRefusal } = await load(new URL("../witness.ts", import.meta.url).href);
 const { FIXTURE_DIGEST } = await load(new URL("../documents.ts", import.meta.url).href);
 const NOW = Date.parse("2099-01-01T00:00:00Z");
 
@@ -83,11 +83,11 @@ test("a lost accepted reply settles read-only across reopen without replacing or
 });
 
 
-test("W1 accepts its Commons deployment input and rejects the Demo deployment before operator execution", () => {
+function witnessInput() {
   const member = secretSigner(new Uint8Array(32).fill(79));
   const agent = secretSigner(new Uint8Array(32).fill(80));
   const peer = new StandIn(member.key, "member", ["commons.write"]);
-  const input = { v: 1, service: "https://dap-commons.inguz.workers.dev",
+  return { v: 1, service: "https://dap-commons.inguz.workers.dev",
     source: { head: "a".repeat(40), tree: "b".repeat(40) },
     deployment: { name: "dap-commons", version: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" },
     room: { register: peer.add("register", "platform:register@23"), directory: peer.directory,
@@ -96,9 +96,32 @@ test("W1 accepts its Commons deployment input and rejects the Demo deployment be
     member: { key: member.key, handle: "@member" }, agent: { key: agent.key, handle: "@agent" },
     fixture: FIXTURE_DIGEST,
   };
+}
+
+test("W1 accepts its Commons deployment input and rejects the Demo deployment before operator execution", () => {
+  const input = witnessInput();
   // This closed synthetic input invokes only the pure input boundary.
   // It opens no operator home and makes no HTTP request or native claim.
   assert.deepEqual(inputOf(input), input);
   assert.throws(() => inputOf({ ...input, deployment: { ...input.deployment, name: "dap-demo" } }),
     error => error instanceof WitnessRefusal && error.reason === "input-deployment");
+});
+
+
+test("W1 forbids automatic redirects and rejects a redirected reply before body or custody access", async () => {
+  const input = witnessInput();
+  let requests = 0, bodyReads = 0, homesRead = 0;
+  const homes = new Proxy({}, { get() { homesRead++; throw Error("SCRIPTED custody access must not occur"); } });
+  const fetch = async (url, init) => {
+    requests++;
+    assert.equal(url, input.service + "/health");
+    assert.equal(init.redirect, "error", "The actual fetch must forbid a redirect before any automatic hop");
+    return { status: 200, redirected: true, url: "https://foreign.invalid/redirected",
+      body: { getReader() { bodyReads++; throw Error("SCRIPTED redirected body must remain unread"); } } };
+  };
+  await assert.rejects(runWitness(input, homes, "preflight", "check", fetch),
+    error => error instanceof WitnessRefusal && error.reason === "redirected-response");
+  assert.equal(requests, 1);
+  assert.equal(bodyReads, 0);
+  assert.equal(homesRead, 0);
 });

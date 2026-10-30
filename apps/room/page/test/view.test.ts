@@ -246,3 +246,24 @@ test("Commons renders source lines and the member's marks without attributing th
   expect(person.textContent).toContain("@person"); expect(person.textContent).not.toContain("@agent");
   expect(rendered.all("a").every(link => link.getAttribute("href")?.startsWith("#/commons"))).toBe(true);
 });
+
+test("Commons prototype-named columns leave other rows missing and retain the note form slot", () => {
+  vi.stubGlobal("document", document);
+  const scope = { scope: scopeIdOf({ v: 1, kind: "commons", definition: "platform:commons@1", creator: null, cause: textDigest("SCRIPTED prototype columns"), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(15)), kind: "commons" as const };
+  const notes: CommonsNote[] = ['{"toString":"literal","constructor":7}', '{"charge":25}'].map((text, n) => ({
+    fact: { at: scope, seq: n + 1, hash: textDigest(`SCRIPTED prototype note ${n + 1}`) },
+    author: null, key: "key_" + "A".repeat(43) as CommonsNote["key"], time: "2030-01-01T00:00:00Z",
+    textDigest: textDigest(text), text, media: "application/json", about: [],
+  }));
+  let rendered: Element | undefined;
+  expect(() => { rendered = commonsScreen({ scope, head: { seq: 2, hash: notes[1]!.fact.hash }, notes, complete: true, unreadable: [] }) as unknown as Element; }).not.toThrow();
+  const table = rendered!.all("table")[0]!, headers = table.all("th").map(cell => cell.textContent), rows = table.all("tbody")[0]!.all("tr");
+  const column = (name: string) => {
+    expect(headers).toContain(name);
+    return rows.map(row => row.all("td")[headers.indexOf(name)]!.textContent);
+  };
+  expect(column("toString")).toEqual(["literal", "Not supplied"]);
+  expect(column("constructor")).toEqual(["7", "Not supplied"]);
+  expect(column("charge")).toEqual(["Not supplied", "25"]);
+  expect(rendered!.all("section").some(section => section.attributes["data-action-slot"] === "note" && section.attributes["aria-label"] === "Write a note")).toBe(true);
+});

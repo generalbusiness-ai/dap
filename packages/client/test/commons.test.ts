@@ -86,3 +86,27 @@ test("a complete flag cannot conceal a missing middle history entry", async () =
   expect(view.complete).toBe(false);
   expect(view.unreadable.join(" ")).toContain("history has a gap");
 });
+
+test("a Commons history window cannot retreat from or contradict its observed summary head", async () => {
+  const fixture = await reading(), genesis = fixture.entries[0]!;
+  const olderHead: Head = { seq: genesis.entry.seq, hash: genesis.hash };
+  const rolledBack = { ...fixture.handle, history: async () => ({ ok: true, at: olderHead, value: [genesis], complete: true }) } as unknown as ScopeHandle;
+  const oldView = await loadCommons(rolledBack, fixture.scope);
+  expect(oldView).toMatchObject({ head: fixture.head, complete: false, notes: [], unreadable: ["The history head precedes or conflicts with the summary head."] });
+  expect(fixture.textCalls()).toBe(0);
+
+  // A second internally closing chain has the same final position but a
+  // different last-entry time/hash. Its signed note stays unchanged.
+  const last = fixture.entries.at(-1)!, conflictingEntry: Entry = { ...last.entry, time: timeOf(Date.parse(last.entry.time) + 1000) };
+  const conflicting = { entry: conflictingEntry, hash: entryHash(conflictingEntry) };
+  const conflictingHead: Head = { seq: conflictingEntry.seq, hash: conflicting.hash };
+  expect(conflictingHead.hash).not.toBe(fixture.head.hash);
+  const forked = { ...fixture.handle, history: async () => ({ ok: true, at: conflictingHead, value: [...fixture.entries.slice(0, -1), conflicting], complete: true }) } as unknown as ScopeHandle;
+  const forkView = await loadCommons(forked, fixture.scope);
+  expect(forkView).toMatchObject({ head: fixture.head, complete: false, notes: [], unreadable: ["The history head precedes or conflicts with the summary head."] });
+  expect(fixture.textCalls()).toBe(0);
+
+  const advancing = { ...fixture.handle, summary: async () => ({ ok: true, at: olderHead, value: fixture.summary, complete: true }) } as unknown as ScopeHandle;
+  const current = await loadCommons(advancing, fixture.scope);
+  expect([current.head, current.complete, current.notes.length, current.unreadable]).toEqual([fixture.head, true, 23, []]);
+});

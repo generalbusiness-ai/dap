@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { env } from "cloudflare:workers";
 import type { FieldValue, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { factRefOf, isSeed, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { sessionRequest } from "@generalbusiness/dap-client";
@@ -7,6 +8,7 @@ import type { SessionIssueAnswer } from "../src/sessions.ts";
 import { rita } from "./repository.ts";
 import { soon } from "./net.ts";
 import { reader } from "./support.ts";
+import { site } from "../src/site/route.ts";
 import { sessionRoom, dispatchFixture, drainScheduledFixture } from "./fixtures-native.ts";
 
 // Actual native Register23, Directory22, Membership9, Rules14, Destination16
@@ -25,6 +27,19 @@ test("new-room Commons notes preserve opaque citations and signer identity; nati
     await dispatchFixture([R, D, ...children, Q], life.wait);
     expect((await Q.summary()).value).toMatchObject({ definition: C.commons, status: "active" });
     expect((await D.item(0)).refs["commons"]).toEqual(await Q.at());
+    const destination = children[2]!;
+    const beforeSite = [(await D.summary()).at, (await destination.summary()).at];
+    let providerCalls = 0;
+    for (const accept of ["text/plain", "text/html"]) {
+      const response = await life.wait(() => site(new Request(`https://scopes.test/site/${D.name}/HEAD/note.md`, { headers: { accept } }),
+        { SCOPES: env.PLATFORM, SCOPE_INDEX: env.SCOPE_INDEX }, async () => {
+          providerCalls++; return expect.fail("A real host-none Commons room must not fetch a repository.");
+        }, `fixture:${D.name}`));
+      expect([response.status, response.headers.get("content-type"), response.headers.get("cache-control"), await response.text()])
+        .toEqual([404, "text/plain; charset=utf-8", "no-store", "no-repository"]);
+    }
+    expect(providerCalls).toBe(0);
+    expect([(await D.summary()).at, (await destination.summary()).at]).toEqual(beforeSite);
     expect(await (D.stub as unknown as { applicationRoom(): Promise<unknown> }).applicationRoom()).toEqual({ directory: await D.at(), rules: (await D.item(0)).refs["rules"] as ScopeRef });
     const commons = await Q.item(0);
     expect(commons.refs["directory"]).toEqual(await D.at());

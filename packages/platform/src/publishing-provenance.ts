@@ -241,9 +241,12 @@ export function hardenedCertifiedRulesPublicationOrigin(from: FactRef, directory
   return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@19", rules: "platform:rules@12", destination: "platform:destination@15", membership: "platform:membership@8", deviceCommand: true });
 }
 
-/** Exact unpublished family; a refused delivery still verifies its sender. */
+/** Destination16 admits each complete factory family, never mixed pins.
+ * A refused host-none delivery still verifies its exact native sender. */
 export function unpublishedApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
-  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@20", rules: "platform:rules@10", destination: "platform:destination@16", membership: "platform:membership@8", deviceCommand: true });
+  const historical = installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@20", rules: "platform:rules@10", destination: "platform:destination@16", membership: "platform:membership@8", deviceCommand: true });
+  if (historical !== false) return historical;
+  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@22", rules: "platform:rules@14", destination: "platform:destination@16", membership: "platform:membership@9", deviceCommand: true });
 }
 
 /** Exact evidence family; admission still validates its recorded source chain. */

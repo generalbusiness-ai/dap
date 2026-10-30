@@ -191,7 +191,10 @@ export async function runWitness(input: Input, homes: Record<Actor, string>, ste
     need(!closed && !controller.signal.aborted && ++calls <= 128 && new URL(url).origin === input.service, "request-bound");
     const send = supplied ?? globalThis.fetch as unknown as Fetch;
     const signal = init?.signal ? AbortSignal.any([controller.signal, init.signal as AbortSignal]) : controller.signal;
-    return send(url, { ...init, signal: signal as never });
+    const request = { ...init, redirect: "error" as const, signal: signal as never };
+    const reply = await send(url, request);
+    need(!("redirected" in reply) || reply.redirected === false, "redirected-response");
+    return reply;
   };
   try {
     const health = await fetch(input.service + "/health");

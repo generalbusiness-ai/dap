@@ -46,7 +46,7 @@ export function commonsScreen(view: CommonsView, selected: ReferenceValue | null
     rows.length ? h("div", { class: "table-scroll" }, h("table", { class: "record-table" },
       h("thead", {}, h("tr", {}, ["Note", "Author", "Sources", ...columns].map(column => h("th", { scope: "col" }, column)))),
       h("tbody", {}, rows.map(({ note, data: values }) => h("tr", {},
-        h("td", {}, h("a", { href: commonsLink({ entry: note.fact }) }, String(note.fact.seq))), h("td", {}, author(view, note)), h("td", {}, references(note)), ...columns.map(column => h("td", {}, cell(values[column])))))))) : h("p", {}, "No readable JSON object notes in this window."));
+        h("td", {}, h("a", { href: commonsLink({ entry: note.fact }) }, String(note.fact.seq))), h("td", {}, author(view, note)), h("td", {}, references(note)), ...columns.map(column => h("td", {}, cell(Object.hasOwn(values, column) ? values[column] : undefined)))))))) : h("p", {}, "No readable JSON object notes in this window."));
   return h("main", { class: "screen", id: "page-main", tabindex: "-1" }, h("h1", {}, "Commons"),
     selected ? h("section", {}, h("p", {}, referenceText(selected)), h("p", {}, "This reading includes notes about the selected source and notes about those notes."), h("a", { href: "#/commons" }, "All notes")) : null,
     selected && "document" in selected ? h("section", { "aria-label": "Retained document" }, h("h2", {}, "Retained text document"),

@@ -235,13 +235,28 @@ notes landed (`25e1248e` and `5cd53dcf`).
 Nothing new enters the kernel without a review that cites this page and
 says why the part cannot be a platform service or an application.
 
-Request `41f77a01` and rulings `7a2beda6` and `33f95e72` add the `commons` scope kind and
-platform name, and the `reference` field type. A note's text bound, media
-text bound, reference shapes and list bound determine whether runtime
-and replay accept the same entry. Those checks belong in the contract.
-A service cannot decide what a recorded entry means, and a package
-cannot supply a commons that must exist before any package is installed.
-Its `note` act has no guards, effects or operations.
+Request `41f77a01` and rulings `7a2beda6` and `33f95e72` add the `commons`
+scope kind and platform name, and the `reference` field type. A note's
+text bound, media text bound, reference shapes, and list bound determine
+whether runtime and replay accept the same entry. Those checks belong in
+the contract. A service cannot decide what a recorded entry means. A
+package cannot supply a Commons that must exist before any package is
+installed. Its `note` act has no guards, effects or operations.
+
+`ReferenceValue`, in `packages/contract/src/definition.ts`, gives the
+runtime, replay, and clients a shared type for document and entry
+references.
+`isReference`, in `packages/bytes/src/field-value.ts`, checks that closed
+shape and the fragment's UTF-8 byte bound. These exports define which
+values a recorded field accepts. A host service cannot replace those
+shared checks or decide their meaning after the entry exists.
+
+`INVITATION_KEY_MEMBERSHIPS`, in `packages/contract/src/invitation.ts`, adds
+the exact pin `platform:membership@9`. That version keeps the private
+invitation proof protocol. Clients use this shared list to choose the
+redemption fields for the exact native version. A host service or
+application cannot choose a different credential form for that pin.
+The addition recognizes the version; it grants no invitation authority.
 
 A `reference` contains exactly one document digest or entry `FactRef`,
 with an optional bounded fragment string. The kernel checks its shape
@@ -249,9 +264,9 @@ and byte bounds. It neither resolves its target nor interprets its
 fragment. The reference creates no `FactUse`, supplies no authority and
 changes no closed `FactRef` form. Typed, binding entry references remain
 the `fact` field type. Media interpretation, source reads, threads and
-tables belong to the host. This addition closes no K item. Exact-head
-review must assess these boundaries and the versioned creation cohort
-under this section.
+tables belong to the host. This addition closes no K item. Review must
+assess these boundaries and the versioned creation cohort at the exact
+head under this section.
 
 A head adds to the kernel when it does any of these:
 

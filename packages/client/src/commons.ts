@@ -65,6 +65,9 @@ export async function loadCommons(handle: ScopeHandle, scope: ScopeRef, options:
     let read: Awaited<ReturnType<ScopeHandle["history"]>>;
     try { read = await handle.history(cursor); } catch { view.unreadable.push("The history reply is unavailable."); break; }
     if (!read.ok) { view.unreadable.push(`The history read refused: ${read.reason}.`); break; }
+    if (read.at.seq < initial.at.seq || read.at.seq === initial.at.seq && read.at.hash !== initial.at.hash) {
+      view.unreadable.push("The history head precedes or conflicts with the summary head."); break;
+    }
     firstHead ??= read.at; view.head = firstHead;
     if (!same(firstHead, read.at)) { view.unreadable.push("The history changed during this window. Read it again."); break; }
     for (const sealed of read.value) {
