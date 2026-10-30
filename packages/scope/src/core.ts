@@ -387,7 +387,7 @@ export class Scope {
       this.#store.cover(definition.indexes);
       // Sealing a genesis can resolve its pin after append but before fold.
       // That fold builds its first rows; only an existing view needs rebuild.
-      if (this.#store.scope() !== null) this.#store.ensureFixed(definition, ownOf(this.#store));
+      if (this.#store.scope() !== null) this.#store.ensureFixed(definition);
     }
     return (this.#pinned = { named, definition, platform: supplied?.platform ?? null });
   }

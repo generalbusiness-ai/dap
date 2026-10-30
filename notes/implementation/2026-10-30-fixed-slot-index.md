@@ -4,10 +4,12 @@
 
 This note records request `121a8913bcbe0d65ce1e61643e16fa6b8e36c83d`
 and promise `fcbad7a64c74f9c6fcb5c32883b3f955d73a3ce1`.
-It describes current frozen source I below. The 36 closed captures include
-failures as well as successful witnesses. The first full gate failed. The
-second full gate passed at source I. The retained evidence preserves each
-actual result. Checker review determines acceptance.
+The first review covered source I and the 36 closed captures below, including
+failures. Gate 1 failed and gate 2 passed at source I. Checker report
+`9b6930b04f7b8ad4ec6e7d4ec881e2e6fab1c755` requested two production fixes:
+head-bound readiness and native reconstruction without entry-body parsing.
+Those repairs await their own focused checks and full gate. The prior retained
+evidence preserves each actual result. Checker review determines acceptance.
 
 A fixed-slot equality guard now obtains complete counts from derived state.
 A room can admit a fresh member beyond the scan bound and refuse an existing
@@ -37,9 +39,12 @@ is absent, guards use raw counts. This work does not promise correct indexed
 answers for an arbitrary partial Own reader or a reader from a future head.
 
 The in-memory state and SQLite store implement the same counts. SQLite marks
-an index ready only for its definition and full scope identity: scope,
-incarnation and kind. The marker contains no head sequence or hash. Legacy
-initialization rebuilds current rows and held hash metadata in one transaction.
+an index ready only for its definition, full scope identity and exact head
+sequence and hash. A marker from an earlier head cannot cover writes made
+after rollback to a version without this index. Native legacy initialization
+reads journal sequence/hash columns in batches and current items of types
+with fixed slots, without parsing held entry bodies. It rebuilds the derived
+rows in one transaction. The unused generic payload-reader rebuild was removed.
 The old item-slot index, even with the right row count, cannot prove readiness.
 A failed rebuild rolls back. Derived index tables do not change the checkpoint
 or its state digest.

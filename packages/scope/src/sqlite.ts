@@ -15,11 +15,11 @@
 
 import { ACCEPTED_KEY_OVERHEAD_BYTES } from "@generalbusiness/dap-contract";
 import type { JournalFloor } from "@generalbusiness/dap-contract";
-import type { CapabilityName, Digest, Entry, FactRef, FieldValue, Held, Incarnation, KeyId, OperationId, ScopeId, ScopeKind, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
+import type { CapabilityName, Digest, Entry, FactRef, FieldValue, Head, Held, Incarnation, KeyId, OperationId, ScopeId, ScopeKind, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import { RETAINED_BYTE_DOMAINS, canonicalize, isDigest, isScopeRef, parseStrict } from "@generalbusiness/dap-bytes";
-import { AmountError, NOTHING, naturalAmount, isObject, MemoryState, byteOrder, operationId, operationStanding, pendingOf, rebuildFixed, slotOf, timeMs } from "@generalbusiness/dap-derive";
-import type { Accepted, Account, Decided, FixedDependency, FixedMode, FixedRow, HeldCreation, Holder, Item, ObservedHead, Operation, Outstanding, Own, OwnRequest, Page, PreparedStep, RangeIndex, RecordState, RecordsWhere, Relation, ScopeState, SourceOrder, StateSnapshot, ValidDefinition } from "@generalbusiness/dap-derive";
+import { RETAINED_BYTE_DOMAINS, canonicalize, isDigest, isHead, isScopeRef, parseStrict } from "@generalbusiness/dap-bytes";
+import { AmountError, NOTHING, naturalAmount, isObject, MemoryState, byteOrder, fixedRowsOf, heldPositions, operationId, operationStanding, pendingOf, slotOf, timeMs } from "@generalbusiness/dap-derive";
+import type { Accepted, Account, Decided, FixedDependency, FixedMode, FixedRow, HeldCreation, Holder, Item, ObservedHead, Operation, Outstanding, OwnRequest, Page, PreparedStep, RangeIndex, RecordState, RecordsWhere, Relation, ScopeState, SourceOrder, StateSnapshot, ValidDefinition } from "@generalbusiness/dap-derive";
 import type { Dispatched, OutboxItem, OperationStatus, Outgoing, Retained, Sending, Store, Stored } from "./store.ts";
 import { ARCHIVE_PIN_KEY, archivePinBytes } from "./archive-pin.ts";
 import { LocalSigners, SIGNER_INDEX_BOUNDS } from "./local-signers.ts";
@@ -177,24 +177,70 @@ export class SqliteStore implements Store {
 
   /** Complete legacy initialization uses current items, never missing old slot
    * rows as an empty index. Only SQL holds rollback-sensitive derived state. */
-  ensureFixed(definition: ValidDefinition, own: Own): void {
+  ensureFixed(definition: ValidDefinition): void {
     const scope = this.scope();
     if (!scope) throw new Error("fixed index initialization requires a scope");
-    if (this.fixedReady(definition.digest, scope.at)) return;
+    if (!isScopeRef(scope.at) || !isHead(scope.head)) throw new Error("fixed index scope metadata is invalid");
+    if (this.fixedReady(definition.digest, scope.at, scope.head)) return;
     this.transaction(() => {
       this.#run("DELETE FROM fixed_control");
       this.#run("DELETE FROM fixed_dependency");
       this.#run("DELETE FROM fixed_count");
       this.#run("DELETE FROM fixed_slot");
-      rebuildFixed(this, definition, scope.at, own);
+      const types = Object.entries(definition.declared.items).filter(([, type]) =>
+        [type.parties, type.refs, type.values].some(slots => Object.values(slots).some(rule => rule.fixed)));
+      if (types.length) {
+        // Entry hashes alone determine local structural-reference equality.
+        // Do not load or parse journal payloads, even for a large legacy scope.
+        const hashes = new Map<number, Digest>();
+        let after = -1;
+        for (;;) {
+          const rows = this.#all("SELECT seq,hash FROM entry WHERE seq>? ORDER BY seq LIMIT ?", after, 1024);
+          for (const row of rows) {
+            const seq = row["seq"], hash = row["hash"];
+            if (typeof seq !== "number" || !Number.isSafeInteger(seq) || seq <= after || seq > scope.head.seq || !isDigest(hash)) throw new Error("fixed index held metadata is invalid");
+            hashes.set(seq, hash); after = seq;
+          }
+          if (rows.length < 1024) break;
+        }
+        let held = 0, previous = -1;
+        for (const seq of heldPositions(this)) {
+          if (!Number.isSafeInteger(seq) || seq <= previous || !hashes.has(seq)) throw new Error("fixed index held metadata is incomplete");
+          held++; previous = seq;
+        }
+        if (held !== hashes.size || hashes.get(scope.head.seq) !== scope.head.hash) throw new Error("fixed index held metadata disagrees with the scope head or floor");
+        // The existing type/state index pages only authoritative items which
+        // declare a fixed slot, including their retained final states.
+        for (const [type, declared] of types) for (const state of Object.keys(declared.states)) {
+          let itemAfter = -1;
+          for (;;) {
+            const rows = this.#all("SELECT id,record FROM item WHERE type=? AND state=? AND id>? ORDER BY id LIMIT ?", type, state, itemAfter, 1024);
+            for (const row of rows) {
+              const item = rowJson<Item>(row["record"]);
+              if (typeof row["id"] !== "number" || !Number.isSafeInteger(row["id"]) || row["id"] <= itemAfter || item.id !== row["id"] || item.type !== type || item.state !== state) throw new Error("fixed index item metadata is invalid");
+              for (const write of fixedRowsOf(definition, item, scope.at, seq => hashes.get(seq) ?? null)) this.putFixed(write.row, write.dependencies);
+              itemAfter = item.id;
+            }
+            if (rows.length < 1024) break;
+          }
+        }
+      }
+      this.finishFixed(definition.digest, scope.at, scope.head);
     });
   }
 
-  fixedReady(definition: Digest, at: ScopeRef): boolean {
-    return this.#one("SELECT value FROM fixed_control WHERE id=1")?.["value"] === canonicalize({ v: 1, definition, at });
+  fixedReady(definition: Digest, at: ScopeRef, head: Head): boolean {
+    const text = this.#one("SELECT CASE WHEN octet_length(value)<=4096 THEN value ELSE NULL END AS value FROM fixed_control WHERE id=1")?.["value"];
+    if (typeof text !== "string") return false;
+    try {
+      const marker: unknown = parseStrict(text);
+      return isObject(marker) && Object.keys(marker).length === 4 && marker["v"] === 2
+        && marker["definition"] === definition && isScopeRef(marker["at"]) && canonicalize(marker["at"]) === canonicalize(at)
+        && isHead(marker["head"]) && canonicalize(marker["head"]) === canonicalize(head);
+    } catch { return false; }
   }
-  finishFixed(definition: Digest, at: ScopeRef): void {
-    this.#run("INSERT INTO fixed_control (id,value) VALUES (1,?) ON CONFLICT(id) DO UPDATE SET value=excluded.value", canonicalize({ v: 1, definition, at }));
+  finishFixed(definition: Digest, at: ScopeRef, head: Head): void {
+    this.#run("INSERT INTO fixed_control (id,value) VALUES (1,?) ON CONFLICT(id) DO UPDATE SET value=excluded.value", canonicalize({ v: 2, definition, at, head }));
   }
   fixedHash(seq: number): Digest | null {
     const row = this.#one("SELECT hash FROM entry WHERE seq=?", seq);

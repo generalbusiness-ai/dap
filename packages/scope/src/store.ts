@@ -11,7 +11,7 @@
  */
 
 import type { Digest, Dispatched, OutboxItem, Entry, FactRef, Message, OperationId, RetainedInput, ScopeRef, Sealed, Seed, Timestamp } from "@generalbusiness/dap-contract";
-import type { Operation, Own, RangeIndex, StateWriter, ValidDefinition } from "@generalbusiness/dap-derive";
+import type { Operation, RangeIndex, StateWriter, ValidDefinition } from "@generalbusiness/dap-derive";
 
 export type { Dispatched, OutboxItem, Sealed };
 
@@ -64,8 +64,8 @@ export interface Store extends StateWriter {
   transaction<T>(work: () => T): T;
   /** The slots a `where` index must cover, as the validator derived them (section 6.5). Set once the definition is known. */
   cover(indexes: readonly RangeIndex[]): void;
-  /** Rebuild legacy fixed-slot counts from current items and held history before judging. A ready view needs no rebuild. */
-  ensureFixed(definition: ValidDefinition, own: Own): void;
+  /** Rebuild legacy fixed-slot counts from current items and held hash metadata before judging. Readiness names the exact scope head. */
+  ensureFixed(definition: ValidDefinition): void;
   /** Canonical journal and retained payload bytes, once per byte domain/digest; no folded state or bookkeeping. */
   logicalBytes(): number;
 

@@ -6692,8 +6692,10 @@ field list. If an append or a journal floor changes which local fact
 bodies are held, the affected keys change in that same transaction.
 Retained final items participate in those changes too. A scope that
 already holds items rebuilds complete coverage before this rule can
-serve a judgment. A historical view and replay rebuild the same counts
-at the same head; index rows add nothing to checkpoint bytes.
+serve a judgment. Readiness names the definition, full scope identity and
+exact head sequence and hash; an earlier marker cannot cover later writes
+made by a version without this index. A historical view and replay rebuild
+the same counts at the same head; index rows add nothing to checkpoint bytes.
 
 Every other `where` keeps the bounded page scan, including an equality
 on a slot that is not fixed and a conjunction of several clauses. The

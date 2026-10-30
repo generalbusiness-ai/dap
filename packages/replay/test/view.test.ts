@@ -16,6 +16,10 @@ test("historical fixed counts rekey a retained final record at its floor without
     view.fold(history.definition, entry, hash, { own: history.scope.own });
   for (const seq of [history.floor, history.before, history.item, 1, history.floor, 0, history.before]) {
     const state = view.at(seq).state, opened = seq >= history.item, final = seq > history.item, pruned = seq >= history.floor;
+    const sealed = history.scope.entries[seq]!;
+    expect(state.fixedReady(history.definition.digest, sealed.entry.at, { seq, hash: sealed.hash })).toBe(true);
+    expect(state.fixedReady(history.definition.digest, sealed.entry.at, { seq: seq + 1, hash: sealed.hash })).toBe(false);
+    expect(state.fixedReady(history.definition.digest, sealed.entry.at, { seq, hash: d("another head") })).toBe(false);
     expect(state.fixedCount("job", "stamp", "1", ["passed"], "normalized"))
       .toBe(final && !pruned ? 1 : 0);
     expect(state.fixedCount("job", "stamp", canonicalize(history.reference), ["passed"], "normalized"))

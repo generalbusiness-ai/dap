@@ -230,7 +230,7 @@ export interface StateView {
   fixedAffected(seq: number, hash: Digest): readonly FixedRow[];
   /** Hash metadata only, with the same floor availability as the held journal. */
   fixedHash(seq: number): Digest | null;
-  fixedReady(definition: Digest, at: ScopeRef): boolean;
+  fixedReady(definition: Digest, at: ScopeRef, head: Head): boolean;
   /** Absent until the first floor; no-floor views keep their previous bytes. */
   floor?(): JournalFloor | null;
   /** Native stores may count held rows without loading floor proof bodies. */
@@ -340,7 +340,7 @@ export interface StateView {
 export interface StateWriter extends StateView {
   putFixed(row: FixedRow, dependencies: readonly FixedDependency[]): void;
   putFixedHash(seq: number, hash: Digest): void;
-  finishFixed(definition: Digest, at: ScopeRef): void;
+  finishFixed(definition: Digest, at: ScopeRef, head: Head): void;
   putFloor?(floor: JournalFloor): void;
   settleHolder(item: number): void;
   putItemDuties(item: number, duties: readonly ItemDuty[]): void;
@@ -407,8 +407,8 @@ export class MemoryState implements StateWriter {
   readonly #fixedRowDependencies = new Map<string, readonly string[]>();
   readonly #fixedHashes = new Map<number, Digest>();
   #fixedReady: string | null = null;
-  fixedReady(definition: Digest, at: ScopeRef): boolean { return this.#fixedReady === key(definition, at.scope, at.inc, at.kind); }
-  finishFixed(definition: Digest, at: ScopeRef): void { this.#fixedReady = key(definition, at.scope, at.inc, at.kind); }
+  fixedReady(definition: Digest, at: ScopeRef, head: Head): boolean { return this.#fixedReady === key(definition, at.scope, at.inc, at.kind, head.seq, head.hash); }
+  finishFixed(definition: Digest, at: ScopeRef, head: Head): void { this.#fixedReady = key(definition, at.scope, at.inc, at.kind, head.seq, head.hash); }
   fixedHash(seq: number): Digest | null {
     const floor = this.#floor;
     return floor && seq < floor.floor && !floor.kept.includes(seq) ? null : this.#fixedHashes.get(seq) ?? null;

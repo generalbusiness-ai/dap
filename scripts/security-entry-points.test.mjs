@@ -171,7 +171,7 @@ const namedOwners = {
     "packages/scope/src/core.ts:heldBy": "a66b415809db685c99cc8961ba592bd8bdcb8bda8f2f4ea1e73fe71c4b052fd1",
     "packages/scope/src/core.ts:told": "bc25d088d5c51694f6e3a813f11f2875144c7a3bdfaa8d124063dc1f65e2fe67",
     "packages/scope/src/core.ts:Observes": "9a0e37bc23db915ebdfd3ec4eef21172918f50fc3e19de840d2b03746efc3710",
-    "packages/scope/src/core.ts:Scope": "ec482ac5c8fd5aa302225f71d3e76349c49c1d72f6455fe495dc5a65a248e02d", // Rebuild existing views before caching the pin; a genesis fold builds its first rows.
+    "packages/scope/src/core.ts:Scope": "e578408e0a585561db69e4bf15984c311d74bc5baf95c3ac95f4bde6fd8ca51f", // Native initialization reads held hash metadata directly; a genesis fold builds its first rows.
   },
 };
 

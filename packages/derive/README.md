@@ -79,8 +79,12 @@ and checkpoint bytes contain none of its rows.
 The view keeps raw counts for judgments without an `Own` reader. With
 `Own`, it uses normalized counts and the held hashes of that view. This
 hash metadata contains no journal bodies. `fixedRowsOf` derives an item's
-absolute rows, `rekeyFixed` updates affected rows, and `rebuildFixed`
-reconstructs complete coverage from current items and held history.
+absolute rows and `rekeyFixed` updates affected rows. Native initialization
+reconstructs complete coverage from current items and held history. Readiness
+is bound to the definition, full scope identity and exact head sequence
+and hash. The native initializer reads journal sequence and hash columns
+in batches, without parsing held entry bodies. A marker left by an older
+head cannot skip reconstruction after a rollback and roll-forward.
 
 ## The validator's modules
 

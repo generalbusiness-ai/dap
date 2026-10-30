@@ -2,13 +2,11 @@
  * local hash metadata. Raw counts preserve judges which have no Own reader. */
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
-import type { Own } from "./fields.ts";
 import { isLocalFact } from "./fields.ts";
-import { heldPositions } from "./floor.ts";
 import { normalValue, slotOf, type HashOf } from "./operand.ts";
 import type { FixedDependency, FixedRow, Item, StateWriter } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
-import { isFactRef, isObject, own, same } from "./values.ts";
+import { isFactRef, isObject, own } from "./values.ts";
 
 export { normalValue, type HashOf } from "./operand.ts";
 export interface FixedWrite { row: FixedRow; dependencies: readonly FixedDependency[] }
@@ -36,21 +34,6 @@ export function fixedRowsOf(definition: ValidDefinition, item: Item, at: ScopeRe
     const raw = slotOf(item, slot), value = fixedValueOf(raw, at, hashOf);
     return [{ row: { type: item.type, slot, item: item.id, state: item.state, raw, key: value.key }, dependencies: value.dependencies }];
   }));
-}
-
-/** The owner clears stale derived fixed tables before this synchronous
- * reconstruction. Missing held history cannot install a complete marker. */
-export function rebuildFixed(writer: StateWriter, definition: ValidDefinition, at: ScopeRef, history: Own): void {
-  const scope = writer.scope();
-  if (!scope || !same(scope.at, at)) throw new Error("fixed equality rebuild names another scope");
-  const items = writer.all().items;
-  for (const seq of heldPositions(writer)) {
-    const held = history(seq);
-    if (!held || held.entry.seq !== seq || !same(held.entry.at, at)) throw new Error("fixed equality rebuild lacks held hash metadata");
-    writer.putFixedHash(seq, held.hash);
-  }
-  for (const item of items) for (const write of fixedRowsOf(definition, item, at, seq => writer.fixedHash(seq))) writer.putFixed(write.row, write.dependencies);
-  writer.finishFixed(definition.digest, at);
 }
 
 /** Re-key each affected item/slot once, through the absolute writer so a

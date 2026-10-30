@@ -290,5 +290,5 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
 
   const genesis = scope?.genesis ?? { hash, source: input.type === "genesis" ? input.source : null, n: input.type === "genesis" ? input.n : null };
   writer.setScope({ at: entry.at, creator: scope ? scope.creator : input.type === "genesis" ? input.seed.creator : null, status, head: { seq: entry.seq, hash }, time: entry.time, genesis, held });
-  writer.finishFixed(definition.digest, entry.at);
+  writer.finishFixed(definition.digest, entry.at, { seq: entry.seq, hash });
 }
