@@ -41,7 +41,7 @@ export interface ArtifactsNamespace {
   delete(name: string): Promise<unknown>;
 }
 
-/** Private custody of a creation's write token whose revocation did not confirm. Nonsecret handle in, plaintext held privately. */
+/** Private custody of a repository or workspace setup token until its revocation confirms. Nonsecret handle in, plaintext held privately. */
 export interface CreationCustody {
   hold(handle: string, name: string, plaintext: string): void;
   take(handle: string): { name: string; plaintext: string } | null;
@@ -134,11 +134,13 @@ export class ArtifactsProvider implements RegisterProvider, DestinationProvider 
     const revoked = await this.#revoke(repository.name, id);
     return revoked === null ? null : { revoked };
   }
-  /** A creation answer is confirmed only after exact seed initialization and
-   * actual revocation of the binding's initial write credential. */
+  /** A fork answer is confirmed only after exact seed initialization and
+   * durable custody of its initial write token. The native setup token
+   * record owes the existing revoke operation; this adapter never retries. */
   async workspaceFork(repository: DestinationRepository, name: string, commit: string, branch: string, allowed: () => boolean): Promise<unknown> {
     this.#remote(repository);
-    if (!repositoryName(name) || !allowed()) return null;
+    const custody = this.#options.creation;
+    if (!repositoryName(name) || !allowed() || !custody) return null;
     const parent = await this.#options.binding.get(repository.name);
     if (own(await parent.info(), "remote") !== this.#remote(repository) || !allowed() || typeof parent.fork !== "function") return null;
     let created: unknown;
@@ -150,7 +152,9 @@ export class ArtifactsProvider implements RegisterProvider, DestinationProvider 
     const credential = `workspace:${name}`;
     let initialized = false;
     try {
-      this.#options.creation?.hold(credential, name, plaintext);
+      custody.hold(credential, name, plaintext);
+      const stored = custody.take(credential);
+      if (stored?.name !== name || stored.plaintext !== plaintext) return null;
       if (own(created, "remote") !== this.#remote(fork)) return null;
       const ref = `refs/heads/${branch}`;
       const current = await new Reader(this.workspaceSource(fork, plaintext), this.#bounds).ref(ref);
@@ -165,10 +169,10 @@ export class ArtifactsProvider implements RegisterProvider, DestinationProvider 
           && answer.reported !== null && ["created", "updated"].includes(answer.reported)
           && await new Reader(this.workspaceSource(fork, plaintext), this.#bounds).ref(ref) === commit;
       }
-    } finally {
-      const revoked = await this.#revoke(name, plaintext);
-      if (revoked === true) this.#options.creation?.revoked(credential);
-      else initialized = false;
+    } catch {
+      // A request may have created the fork. Its deterministic native setup
+      // record stays minting; retain private custody and report no answer.
+      return null;
     }
     return initialized ? { id: name, name } : null;
   }

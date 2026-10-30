@@ -1,6 +1,6 @@
 /** Production workspace operations for the explicit hold@2 family. */
 import type { FactRef, FieldValue, KeyId, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isFactRef, isLocalId, isRecord, same, timeMs } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, isFactRef, isLocalId, isOperationId, isRecord, same, timeMs } from "@generalbusiness/dap-bytes";
 import { ANCESTRY_BOUNDS, ledgerOf, snapshotInput, stagedRefName, walk, type RecordState } from "@generalbusiness/dap-derive";
 import { TokenDriver, branchRef, isObjectId, type LiveToken, type MintAsk, type RevokeAsk } from "@generalbusiness/dap-git";
 import type { DestinationRepository, ReadCredential } from "./destination-host.ts";
@@ -59,6 +59,10 @@ export class WorkspaceHost implements Outside {
     for (const [number, pending] of this.#minting) if (pending.mint === operation) this.#minting.delete(number);
   }
   #scope(): string { return canonicalize(this.#given.scope()!.at); }
+  #forkName(hold: number, opening: number, attempt: number): string {
+    const at = this.#given.scope()!.at;
+    return `h-${at.scope.slice(3, 35)}-${at.inc.slice(3)}-${hold}-${opening}-${attempt}`;
+  }
   #record(kind: string, key: number): RecordState | null { return this.#given.state.record(OWNER, kind, [key]); }
   #records(kind: string, member: string, value: FieldValue): readonly RecordState[] { return this.#given.state.records(OWNER, kind, { member, value }); }
   #held(hold: number, instance?: string): { ends: number | null } | null {
@@ -121,6 +125,21 @@ export class WorkspaceHost implements Outside {
   async #revoke(ask: RevokeAsk) {
     const record = this.#record("token", ask.token), lineage = await this.#lineage();
     if (!lineage || record?.state !== "revoking" || record.values["id"] !== ask.id || record.values["revocation"] !== ask.operation) return { revoked: false } as const;
+    if (record.values["purpose"] === "setup") {
+      const hold = record.values["hold"], mint = record.values["mint"], attempt = record.values["attempt"];
+      if (!isLocalId(hold) || !isOperationId(mint) || record.values["operation"] !== mint
+        || !isLocalId(attempt) || attempt < 1) return { revoked: false } as const;
+      const [seq, ordinal] = mint.split(":").map(Number);
+      if (!isLocalId(seq) || !isLocalId(ordinal)) return { revoked: false } as const;
+      const opening = this.#given.own(seq)?.entry;
+      const fork = opening?.effects.find(effect => effect.effect === "operation" && effect.owner === OWNER && effect.kind === "fork" && effect.k === ordinal);
+      if (fork?.effect !== "operation" || attempt > fork.attempts || ask.id !== `workspace:${this.#forkName(hold, seq, attempt)}`) return { revoked: false } as const;
+      // Setup custody belongs to this immutable attempt, even after the
+      // hold ends or another fork is selected. The journal owns all retries.
+      const reply = await this.#provider.revokeCredential(ask.id) as { revoked: boolean; credential: string } | null;
+      if (!reply) throw Error("workspace-setup-revoke-unavailable");
+      return { revoked: reply.revoked };
+    }
     const hold = isLocalId(record.values["hold"]) ? record.values["hold"] : this.#record("root", record.values["root"] as number)?.values["hold"];
     const fork = isLocalId(hold) ? this.#record("fork", hold) : null;
     const name = fork?.values["name"], id = fork?.values["id"];
@@ -172,7 +191,7 @@ export class WorkspaceHost implements Outside {
         if (!fork || !isLocalId(fork.key[0]) || fork.state !== "creating" || !isRecord(seed) || !isObjectId(seed["commit"])) return null;
         // 97 bytes at the largest safe positions. The full incarnation keeps
         // two lives of one lane from sharing a provider-attempt name.
-        const hold = fork.key[0], name = `h-${request.scope.scope.slice(3, 35)}-${request.scope.inc.slice(3)}-${hold}-${request.origin.entry.seq}-${request.attempt}`;
+        const hold = fork.key[0], name = this.#forkName(hold, request.origin.entry.seq, request.attempt);
         const reply = await this.#provider.workspaceFork(lineage.repository, name, seed["commit"], lineage.branch, () => this.#held(hold) !== null);
         return isRecord(reply) && reply["created"] === false ? answer("own-answer", {}, "refused") : isRecord(reply) && typeof reply["id"] === "string" && typeof reply["name"] === "string" ? answer("own-answer", { id: reply["id"], name: reply["name"] }) : null;
       }

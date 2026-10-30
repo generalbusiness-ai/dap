@@ -339,33 +339,55 @@ test("scripted Artifacts rules tree reads isolate objects and revoke their read 
 });
 
 // Scripted binding and smart HTTP, without a native judgment or real host.
-// A confirmed fork answer requires the exact seed and actual token revocation.
-test("workspace fork uses one binding call, binds its seed and namespace, and retains an unrevoked creation credential privately", async () => {
+// Initialization confirms a fork only with exact private custody. The
+// journal's setup token, not this method, owns the later revoke operation.
+test("workspace fork uses one binding call, binds its seed and namespace, and retains setup custody for the journal-owned revoke", async () => {
   const s = service(), commit = "1".repeat(40);
   let name = "h-scripted-4-2-1";
-  let forks = 0, wrongRemote = false;
+  let forks = 0, wrongRemote = false, refuseFork = false;
   const get = s.ns.get;
   s.ns.get = async repository => ({ ...await get(repository), fork: async (asked, options) => {
     forks++; expect(repository).toBe("repo-1"); expect(asked).toBe(name);
     expect(options).toEqual({ defaultBranchOnly: true, readOnly: false });
+    if (refuseFork) throw refused("INVALID_INPUT");
     return { name, remote: wrongRemote ? "https://other.invalid/repo.git" : `https://${SERVICE}/git/${NAMESPACE}/${name}.git`, token: "fork-initial-plaintext" };
   } });
   const p = provider(s, async () => uploadAdvertisement({ "refs/heads/main": commit }));
   expect(await p.workspaceFork(repository, name, commit, "main", () => true)).toEqual({ id: name, name });
   expect(forks).toBe(1);
-  expect(s.calls).toContain(`revokeToken ${name} fork-initial-plaintext`);
+  expect(s.calls.some(call => call.startsWith("revokeToken")), "fork initialization must not make an unowned revoke request").toBe(false);
+  expect(s.held.get(`workspace:${name}`)).toEqual({ name, plaintext: "fork-initial-plaintext" });
+
+  // One failed journal-owned revoke retains the same custody. A later
+  // separately judged operation may confirm; the host never retries itself.
+  s.script.revoke = () => { throw new Error("connection reset"); };
+  expect(await p.revokeCredential(`workspace:${name}`)).toBeNull();
+  expect(s.calls.filter(call => call.startsWith("revokeToken"))).toEqual([`revokeToken ${name} fork-initial-plaintext`]);
+  expect(s.held.get(`workspace:${name}`)?.plaintext).toBe("fork-initial-plaintext");
+  s.script.revoke = () => true;
+  expect(await p.revokeCredential(`workspace:${name}`)).toEqual({ revoked: true, credential: `workspace:${name}` });
   expect(s.held.get(`workspace:${name}`)?.plaintext).toBeNull();
+  expect(forks).toBe(1);
+
   const before = s.calls.length;
   expect(await p.workspaceFork({ ...repository, namespace: "other" }, name, commit, "main", () => true).then(() => "ok", () => "refused")).toBe("refused");
   expect(s.calls).toHaveLength(before);
-  s.script.revoke = () => false;
-  name = "h-scripted-4-2-2";
-  expect(await p.workspaceFork(repository, name, commit, "main", () => true)).toBeNull();
+  name = "h-scripted-4-2-2"; refuseFork = true;
+  expect(await p.workspaceFork(repository, name, commit, "main", () => true)).toEqual({ created: false });
   expect(forks).toBe(2);
-  expect(s.held.get(`workspace:${name}`)?.plaintext).toBe("fork-initial-plaintext");
-  name = "h-scripted-4-2-3"; wrongRemote = true;
-  s.script.revoke = () => true;
+  expect(s.held.has(`workspace:${name}`), "a refused attempt issued no setup credential").toBe(false);
+
+  // A created fork with an untrusted remote remains unknown, with its
+  // exact plaintext and deterministic native handle retained privately.
+  name = "h-scripted-4-2-3"; refuseFork = false; wrongRemote = true;
   expect(await p.workspaceFork(repository, name, commit, "main", () => true)).toBeNull();
-  expect(s.calls).toContain(`revokeToken ${name} fork-initial-plaintext`);
-  expect(s.held.get(`workspace:${name}`)?.plaintext).toBeNull();
+  expect(s.calls).not.toContain(`revokeToken ${name} fork-initial-plaintext`);
+  expect(s.held.get(`workspace:${name}`)).toEqual({ name, plaintext: "fork-initial-plaintext" });
+
+  const noCustody = new ArtifactsProvider({ binding: s.ns, host: "artifacts", namespace: NAMESPACE, service: SERVICE,
+    maxBytes: 1024 * 1024, credentialHandle: async () => "unused" });
+  const beforeUnowned = s.calls.length;
+  expect(await noCustody.workspaceFork(repository, "h-without-custody", commit, "main", () => true)).toBeNull();
+  expect(s.calls).toHaveLength(beforeUnowned);
+  expect(forks).toBe(3);
 });

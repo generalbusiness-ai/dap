@@ -32,6 +32,9 @@ creation lineage, and `native-birth.ts` for birth decoding. Their seal values
 come from the maintained parser after source review. The first J4 gate
 failed on the old seals; its targeted follow-up remains separate from that
 failed run. The three workspace owner seals were added after checker review.
+Fork setup credentials remain private under their exact original attempt
+handles. Their token records owe revocation through the existing operation
+ledger; the provider adapter makes no independent retry.
 
 For a member-source stage snapshot, an ineligible signing key can trigger
 the initial job lookup and up to 32 source-fact reads before the current

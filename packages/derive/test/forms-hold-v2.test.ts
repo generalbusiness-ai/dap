@@ -61,6 +61,8 @@ class Workspace extends Scope {
 
 const opened = (entry: Entry) => entry.effects.filter(e => e.effect === "operation");
 const records = (entry: Entry) => entry.effects.filter(e => e.effect === "record");
+const setup = (s: Workspace, operation: OperationId, attempt: number) => s.state.records(HOLD_V2, "token", { member: "operation", value: operation })
+  .find(token => token.values["purpose"] === "setup" && token.values["attempt"] === attempt)!;
 
 test("hold@1 keeps its original opening bytes and unavailable head/fork outcomes beside explicit hold@2", () => {
   const s = new Workspace(1);
@@ -79,26 +81,44 @@ test("hold@2 fixes a confirmed head then selects the actual first eligible fork;
   const s = new Workspace(2, true);
   expect(s.item(s.hold).state).toBe("leased");
   const creation = s.creation();
+  const first = setup(s, creation, 1);
+  expect(first).toMatchObject({ key: [1], state: "minting", values: { purpose: "setup", hold: s.hold, operation: creation, attempt: 1, mint: creation,
+    id: `workspace:h-${s.at.scope.slice(3, 35)}-${s.at.inc.slice(3)}-${s.hold}-${creation.split(":")[0]}-1`, ends: null, revocation: null } });
   expect(s.fork().values["seed"]).toEqual({ commit: COMMIT, from: "destination-head", fact: null, under: s.commitment });
   expect(opened(s.last)).toMatchObject([{ owner: HOLD_V2, kind: "fork", attempts: 3 }]);
   s.answered(creation, "unknown", {}, 1);
+  expect(setup(s, creation, 1)).toEqual(first);
+  expect(setup(s, creation, 2).state).toBe("minting");
   expect(s.state.operation(creation)?.attempts.map(a => a.attempt)).toEqual([1, 2]);
   s.answered(creation, "unknown", {}, 2);
   expect(s.state.operation(creation)?.attempts.map(a => a.attempt)).toEqual([1, 2, 3]);
   s.answered(creation, "confirmed", { id: "selected-id", name: "selected-name" }, 3);
+  const selectedRevoke = operationId(s.last.seq, 0);
+  expect(setup(s, creation, 3)).toMatchObject({ state: "revoking", values: { revocation: selectedRevoke } });
+  expect(s.state.operation(selectedRevoke)).toMatchObject({ owner: HOLD_V2, kind: "revoke" });
   expect(s.fork()).toMatchObject({ state: "selected", values: { id: "selected-id", name: "selected-name" } });
   expect(s.state.operation(creation)?.selected).toBe(3);
+
+  // Two unresolved setup tokens cannot consume the workspace-token bound.
+  s.prepare("instance", { hold: s.hold, task: s.at, instance: "test-workspace" });
+  const workspace = s.prepare("token", { hold: s.hold, instance: "test-workspace" });
+  s.answered(operationId(workspace.seq, 0), "refused");
 
   // Revision 18 and section 5.1: an old unknown attempt's own answer does
   // not replace the selected fork. Its immutable outcome binds cleanup.
   const selected = s.fork();
   const late = s.answered(creation, "confirmed", { id: "late-id", name: "late-name" }, 2);
   expect(s.fork()).toEqual(selected);
-  expect(records(late)).toEqual([]);
+  const lateSetup = setup(s, creation, 2);
+  expect(lateSetup).toMatchObject({ state: "revoking", values: { revocation: operationId(late.seq, 1) } });
+  expect(records(late)).toEqual([{ effect: "record", capability: HOLD_V2, kind: "token", key: lateSetup.key, state: "revoking", values: lateSetup.values }]);
   expect(late.effects).toEqual([
     { effect: "attempt", operation: creation, attempt: 2, result: "confirmed", selected: false },
+    ...records(late),
     { effect: "operation", k: 0, owner: HOLD_V2, kind: "deletion", attempts: 3 },
     { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null },
+    { effect: "operation", k: 1, owner: HOLD_V2, kind: "revoke", attempts: 3 },
+    { effect: "attempt", operation: { k: 1 }, attempt: 1, result: "opened", selected: null },
   ]);
   expect(late.input).toMatchObject({ type: "outcome", owner: HOLD_V2, kind: "fork", operation: creation, attempt: 2,
     evidence: { basis: "own-answer", body: { id: "late-id", name: "late-name" } } });
@@ -114,9 +134,14 @@ test("hold@2 fixes a confirmed head then selects the actual first eligible fork;
   expect(final.state).toBe("deleted");
   const later = s.answered(creation, "confirmed", { id: "latest-id", name: "latest-name" }, 1);
   expect(s.fork()).toEqual(final);
-  expect(records(later)).toEqual([]);
-  expect(opened(later)).toMatchObject([{ owner: HOLD_V2, kind: "deletion", attempts: 3 }]);
+  expect(records(later)).toMatchObject([{ capability: HOLD_V2, kind: "token", state: "revoking" }]);
+  expect(opened(later)).toMatchObject([{ owner: HOLD_V2, kind: "deletion", attempts: 3 }, { owner: HOLD_V2, kind: "revoke", attempts: 3 }]);
   s.answered(operationId(later.seq, 0), "confirmed");
+  expect(s.fork()).toEqual(final);
+  s.answered(selectedRevoke, "unknown");
+  expect(setup(s, creation, 3).state).toBe("revoking");
+  s.answered(selectedRevoke, "confirmed", {}, 2);
+  expect(setup(s, creation, 3).state).toBe("ended");
   expect(s.fork()).toEqual(final);
   expect(s.replay().all()).toEqual(s.state.all());
 });
@@ -142,7 +167,7 @@ test("hold@2 distinguishes no head and a closed or changed holder without openin
   s.answered(operation, "confirmed", { id: "unused-id", name: "unused-name" });
   expect(s.fork().state).toBe("creating");
   expect(s.state.operation(operation)?.selected).toBeNull();
-  expect(opened(s.last)).toMatchObject([{ kind: "deletion" }]);
+  expect(opened(s.last)).toMatchObject([{ kind: "deletion" }, { kind: "revoke" }]);
 });
 
 test("hold@2 never fails an unresolved creation and fails only after all bounded attempts are refused", () => {
@@ -151,6 +176,8 @@ test("hold@2 never fails an unresolved creation and fails only after all bounded
   for (const attempt of [1, 2, 3]) refused.answered(creation, "refused", {}, attempt);
   expect(refused.fork().state).toBe("failed");
   expect(refused.state.operation(creation)?.attempts).toHaveLength(3);
+  for (const attempt of [1, 2, 3]) expect(setup(refused, creation, attempt).state).toBe("ended");
+  expect(refused.state.all().operations.some(operation => operation.owner === HOLD_V2 && operation.kind === "revoke")).toBe(false);
   const unresolved = new Workspace();
   const pending = unresolved.creation();
   unresolved.answered(pending, "unknown", {}, 1);

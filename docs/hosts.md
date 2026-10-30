@@ -154,7 +154,17 @@ Register and Destination births before choosing a repository. A caller
 cannot select another namespace or repository. Each eligible hold gets its
 own fork, named for the lane incarnation, hold, opening and attempt. A lost
 creation answer stays unknown; another attempt uses a different name. The
-initial creation credential is revoked before a fork answer is confirmed.
+initial creation credential stays in private custody under that attempt's
+nonsecret handle. Each fork attempt has a `hold@2` token record with purpose
+`setup`. A confirmed fork answer opens its revoke operation in the same
+outcome. Only a confirmed revoke ends the token and clears its plaintext;
+an unknown revoke leaves the token `revoking` and the operation open.
+The host makes no retry of its own. A refused fork attempt issued no
+credential and ends its setup record. An unknown fork answer preserves the
+record as `minting`, including its exact handle, until its own answer arrives.
+Thus each setup credential the fork adapter issues has a recorded cleanup
+obligation. This uses the existing token and revoke forms, with no private
+outbox or separate operation owner.
 
 The holder prepares an instance and a workspace token with the existing
 `hold@2:instance` and `hold@2:token` steps. The existing credential route
@@ -176,6 +186,8 @@ concern workspaces, GitHub workspaces, automatic fork deletion at hold end,
 and unknown-fork sweeps remain outside J4. The existing explicit `retire`
 step deletes a selected fork when its guards permit it. A late confirmed
 unselected fork answer opens deletion for that answer's exact ID and name.
+The same outcome opens the setup credential's revoke. Setup revocation does
+not delay the hold's end or the fork's deletion.
 New J4 profiles grant no archive or optional evidence-host permission.
 
 ## What is not built
@@ -191,5 +203,6 @@ New J4 profiles grant no archive or optional evidence-host permission.
   describes the wider lifecycle; the earlier observed fork cost is in
   [the measurement note](../notes/implementation/2026-10-13-fork-cost-measurement.md).
 - A sweep for a repository whose creation answer was lost. Its outcome
-  stays unknown, the next attempt uses a new name, and the earlier
-  repository and its write token are not cleaned up.
+  stays unknown and the next attempt uses a new name. A fork's setup-token
+  record stays `minting` until that attempt's own answer arrives; elapsed
+  time, a restart or another fork cannot settle it.

@@ -50,7 +50,9 @@ class WorkspaceStandIn extends Host {
   }
 }
 
-test("J4 native room: two agent holds select separate forks, keep lane-kind instances, revoke one hold and publish the other's prepared manifest through Destination12 (STAND-IN: provider and credentials)", async () => {
+// The shared room fixture invites person members with role agent. This
+// scenario does not establish controlled agent kind; that live check is pending.
+test("J4 native room: two agent-role holders select separate forks, keep lane-kind instances, revoke one hold and publish the other's prepared manifest through Destination12 (STAND-IN: provider and credentials)", async () => {
   const started = performance.now();
   const stage = (name: string) => console.info("j4-native-stage", name, performance.now() - started);
   stage("setup");
@@ -105,8 +107,13 @@ test("J4 native room: two agent holds select separate forks, keep lane-kind inst
   expect(await C.item(chosen)).toMatchObject({ state: "held", values: { epoch: 1 } });
   expect((await C.state()).record("hold@2", "instance", [first, "j4-a"])?.state).toBe("past");
   expect((await C.state()).record("hold@2", "fork", [chosen])).toEqual(selectedBefore);
-  expect((await C.state()).records("hold@2", "token", { member: "hold", value: first })).toMatchObject([{ state: "ended" }]);
-  expect((await C.entries()).some(entry => entry.input.type === "outcome" && entry.input.owner === "hold@2" && entry.input.kind === "revoke" && entry.input.result === "confirmed")).toBe(true);
+  const workspaceTokens = (await C.state()).records("hold@2", "token", { member: "hold", value: first })
+    .filter(token => token.values["purpose"] === "workspace");
+  expect(workspaceTokens).toMatchObject([{ state: "ended" }]);
+  const revocation = workspaceTokens[0]!.values["revocation"];
+  expect(typeof revocation).toBe("string");
+  expect((await C.entries()).some(entry => entry.input.type === "outcome" && entry.input.owner === "hold@2" && entry.input.kind === "revoke"
+    && entry.input.operation === revocation && entry.input.result === "confirmed")).toBe(true);
   stage("manifest");
   const manifestIntent = await C.signed(vic, "propose-manifest", { fields: { hold: chosen, instance: "j4-b", base: r.firstHead, integration: oid("c"), tree: oid("3"), complete: true, selected: [], decisions: [] } });
   expect(await C.stub.prepare(manifestIntent.signed, [], "hold@2", "stage")).toMatchObject({ answer: "accepted" });

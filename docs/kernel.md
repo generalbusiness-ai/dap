@@ -273,8 +273,24 @@ The old version retains its rules, maxima and record meanings. Both use the
 existing forms, item states and operation ledger. The bare capability name
 remains `hold`. This adds no scope kind, entry form, byte domain or K item.
 Existing lane pins and native evidence identities remain fixed. New J4
-lane pins select version 2
-explicitly and grant no archive policy permission.
+lane pins select version 2 explicitly and grant no archive policy permission.
+
+Ruling `e7962aa7` adds the `setup` purpose to the existing token record for
+each version 2 fork attempt. Its handle names that exact attempt; plaintext
+stays in private host custody. A confirmed fork answer moves the token
+directly from `minting` to `revoking` and opens the existing revoke operation
+in the same outcome. A refusal ends that attempt's token; an unknown answer
+leaves it `minting`. A late confirmed unselected answer owes both its fork
+deletion and its setup-token revoke. These two added effects belong in the
+kernel because runtime and replay must derive the same cleanup obligations.
+
+The fork rule reserves 12 entries: six for deletion and six for revocation.
+The head rule reserves 78: two possible outcomes for each of three fork
+attempts, each with its outcome entry and 12 cleanup entries. Its maximum
+is four effects and one operation; the fork rule's is five effects and two
+operations. The creating-fork record reserves 78 for version 2. Version 1
+keeps its existing reserve of 42. Setup tokens do not consume the holder's
+workspace-token allowance or block the hold's end or fork retirement.
 
 Exact-head review must check owner dispatch, closure and effect bounds,
 first selection at the actual held state and epoch 1, late unselected

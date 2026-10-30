@@ -522,6 +522,7 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
     if (!scope || !hasWorkspace(definition)) return [];
     const made: Recorded[] = [];
     const opens: Opening[] = [];
+    let setupCount = 0;
     for (const effect of holds) {
       const before = holdOf(view, definition, effect.item);
       if (effect.change === "open") {
@@ -529,6 +530,7 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
         const seed = seedOf(view, scope.at, isLocalId(under) ? under : null);
         const head = seed.commit === null;
         made.push({ kind: "fork", key: [effect.item], state: "creating", values: { seed, operation: operationId(self, k + opens.length), id: null, name: null, ...(v2 ? { heldState: (working(effect.item) ?? before?.item)?.state, holdType: (working(effect.item) ?? before?.item)?.type } : {}) } });
+        if (v2 && !head) made.push(setupToken(view, effect.item, operationId(self, k + opens.length), 1, setupCount++));
         opens.push({ owner: HOLD, kind: head ? HOLD_KINDS.head : HOLD_KINDS.fork, attempts: head ? HOLD_ATTEMPTS.head : HOLD_ATTEMPTS.fork });
       } else if (effect.change === "end" || (before !== null && effect.epoch > before.epoch)) {
         const instance = currentInstance(view, effect.item);
@@ -590,6 +592,16 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
       made: purposes.map((purpose, i) => ({ kind: "token", key: [nextNumber(view, "token") + numbered + i], state: "minting", values: { purpose, root, operation, attempt, mint: operationId(self, k + i), id: null, ends: null, revocation: null } })),
       opens: purposes.map(() => MINT),
     };
+  }
+
+  /** The fork attempt owns its setup credential before the provider call.
+   * Its handle names the same exact attempt as the host's private custody. */
+  function setupToken(view: StateView, hold: number, operation: OperationId, attempt: number, numbered = 0): Recorded {
+    const scope = view.scope()!.at;
+    const name = `h-${scope.scope.slice(3, 35)}-${scope.inc.slice(3)}-${hold}-${operation.split(":")[0]}-${attempt}`;
+    return { kind: "token", key: [nextNumber(view, "token") + numbered], state: "minting", values: {
+      purpose: "setup", hold, operation, attempt, mint: operation, id: `workspace:${name}`, ends: null, revocation: null,
+    } };
   }
 
   /**
@@ -703,7 +715,9 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
     if (holdRecord(given.view, "fork", [asked.hold])?.state !== "selected") return { refused: failed("the hold's fork is not selected") };
     // Section 5.7, "The judges refuse at the bound". This step is the one opening that raises the count, so the entry that ends the
     // hold never holds more than the bound allows (scope contract, section 6.1, "An entry that cannot be refused").
-    if (records(given.view, "token", ["minting", "live"], "hold", asked.hold).length >= options.tokensPerHold) return { refused: refusal("tokens-full") };
+    // Setup tokens have their own bounded fork attempts and immediate revoke
+    // opening; they are not workspace grants and never become live.
+    if (records(given.view, "token", ["minting", "live"], "hold", asked.hold).filter(token => !v2 || token.values["purpose"] !== "setup").length >= options.tokensPerHold) return { refused: refusal("tokens-full") };
     return {
       records: [{ kind: "token", key: [nextNumber(given.view, "token")], state: "minting", values: { purpose: "workspace", hold: asked.hold, instance: asked.instance, mint: operationId(given.self, 0), id: null, ends: null, revocation: null } }],
       opens: [{ owner: HOLD, kind: HOLD_KINDS.mint, attempts: HOLD_ATTEMPTS.mint }],
@@ -750,7 +764,8 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
     const hold = holdOf(view, definition, asked.fork);
     const fork = holdRecord(view, "fork", [asked.fork]);
     if (!hold || hold.held || fork?.state !== "selected") return no;
-    if (records(view, "token", ["minting", "live", "revoking"], "hold", asked.fork).length > 0 || currentInstance(view, asked.fork) !== null) return no;
+    // Setup revocation remains owed independently of the fork's deletion.
+    if (records(view, "token", ["minting", "live", "revoking"], "hold", asked.fork).some(token => !v2 || token.values["purpose"] !== "setup") || currentInstance(view, asked.fork) !== null) return no;
     if (records(view, "root", ["creating"], "hold", asked.fork).length > 0 || records(view, "receiver-pin", ["standing"], "hold", asked.fork).length > 0) return no;
     return { records: [moved(fork, "deleting", { deletion: operationId(self, 0) })], opens: [{ owner: HOLD, kind: HOLD_KINDS.deletion, attempts: HOLD_ATTEMPTS.deletion }] };
   }
@@ -928,9 +943,10 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
       selects: false, read: false, retries: () => true,
       wellFormed: (result, evidence) => basis("own-answer")(result, evidence)
         && (result !== "confirmed" || headAnswer(evidence.body)),
-      // One fork opening: 3 attempts, each first/late outcome plus deletion.
-      closure: 2 * HOLD_ATTEMPTS.fork * (1 + 2 * HOLD_ATTEMPTS.deletion),
-      most: { effects: 3, requests: 0, operations: 1 },
+      // One fork opening: 3 attempts, each first/late outcome plus its
+      // setup revocation and unselected-fork deletion: 6 * (1 + 6 + 6).
+      closure: 2 * HOLD_ATTEMPTS.fork * (1 + REVOKED + 2 * HOLD_ATTEMPTS.deletion),
+      most: { effects: 4, requests: 0, operations: 1 },
       derives: (view, operation, outcome, _selected, at) => {
         const fork = forking(view, operation);
         if (!fork || fork.state !== "creating" || outcome.result !== "confirmed") return NOTHING;
@@ -941,40 +957,53 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
         const commit = (outcome.evidence.body as { commit: string | null }).commit;
         if (commit === null) return recorded([moved(fork, "failed", { reason: "no-head" })]);
         const seed = fork.values["seed"] as Record<string, unknown>;
+        const forkOperation = operationId(next(view), 0);
         return recorded([moved(fork, "creating", {
-          seed: { ...seed, commit }, operation: operationId(next(view), 0),
-        })], [{ owner: HOLD, kind: HOLD_KINDS.fork, attempts: HOLD_ATTEMPTS.fork }]);
+          seed: { ...seed, commit }, operation: forkOperation,
+        }), setupToken(view, fork.key[0] as number, forkOperation, 1)], [{ owner: HOLD, kind: HOLD_KINDS.fork, attempts: HOLD_ATTEMPTS.fork }]);
       },
     },
     [HOLD_KINDS.fork]: {
       selects: true, read: false, retries: () => true,
-      wellFormed: (result, evidence) => basis("own-answer")(result, evidence)
-        && (result !== "confirmed" || forkAnswer(evidence.body)),
+      wellFormed: (result, evidence, view, outcome) => basis("own-answer")(result, evidence)
+        && (result !== "confirmed" || forkAnswer(evidence.body)
+          && records(view, "token", ["minting"], "operation", outcome.operation)
+            .filter(token => token.values["purpose"] === "setup" && token.values["attempt"] === outcome.attempt).length === 1),
       holds: (view, operation) => {
         const fork = forking(view, operation);
         return fork?.state === "creating" && eligible(view, fork);
       },
       // Section 5.1 and revision 18: each known unselected creation owes its
-      // own ID's deletion. No hold end, expiry or sweep opens this operation.
-      closure: 2 * HOLD_ATTEMPTS.deletion,
-      most: { effects: 2, requests: 0, operations: 1 },
+      // own ID's deletion and its setup token's revocation. No hold end,
+      // expiry or sweep opens these operations.
+      closure: REVOKED + 2 * HOLD_ATTEMPTS.deletion,
+      most: { effects: 5, requests: 0, operations: 2 },
       derives: (view, operation, outcome, selected, at) => {
         const fork = forking(view, operation);
         if (!fork) return NOTHING;
+        const setup = records(view, "token", ["minting"], "operation", operation.id)
+          .find(token => token.values["purpose"] === "setup" && token.values["attempt"] === outcome.attempt);
         if (outcome.result === "confirmed") {
           const answer = outcome.evidence.body as { id: string; name: string };
-          if (selected === true) return recorded([moved(fork, "selected", answer)]);
+          const made: Recorded[] = selected === true ? [moved(fork, "selected", answer)] : [];
+          const opens: Opening[] = selected === true ? [] : [{ owner: HOLD, kind: HOLD_KINDS.deletion, attempts: HOLD_ATTEMPTS.deletion }];
+          if (setup) {
+            made.push(moved(setup, "revoking", { revocation: operationId(next(view), opens.length) }));
+            opens.push(REVOKE);
+          }
           // The immutable origin input carries this cleanup's exact id/name.
           // The ledger records selected:false and the matching opening here.
           // No final or selected fork record changes, even after retirement.
-          return recorded([], [{ owner: HOLD, kind: HOLD_KINDS.deletion, attempts: HOLD_ATTEMPTS.deletion }]);
+          return recorded(made, opens);
         }
+        const made: Recorded[] = outcome.result === "refused" && setup ? [moved(setup, "ended")] : [];
+        if (at.opens !== null) made.push(setupToken(view, fork.key[0] as number, operation.id, at.opens));
         if (fork.state === "creating" && outcome.result === "refused" && at.opens === null
           && operation.attempts.every(attempt => attempt.attempt === outcome.attempt
             ? true : attempt.outcomes.at(-1)?.result === "refused")) {
-          return recorded([moved(fork, "failed")]);
+          made.push(moved(fork, "failed"));
         }
-        return NOTHING;
+        return recorded(made);
       },
     },
   };
@@ -997,7 +1026,7 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
    * | `root`, `creating` | 3 | The pin that follows. The check is in the closure of `stage`. |
    * | `root`, `retiring` | 1 | The read that shows the ref absent. |
    * | `token`, `live` | 6 | Its revocation, with at most 3 attempts. While `minting`, the closure of its mint holds the same. |
-   * | `fork`, `creating` | 42 | The creation, with at most 3 attempts, and for each a revocation and a deletion with at most 3. |
+   * | `fork`, `creating` | v1: 42; v2: 78 | Three creation attempts, with each outcome's declared cleanup closure. |
    * | `fork`, `selected` | 6 | Its deletion. |
    */
   function holdReserves(view: StateView, definition: ValidDefinition): number {
@@ -1006,7 +1035,7 @@ function holdOwner(HOLD: CapabilityName, v2: boolean) {
     const count = (kind: string, ...states: string[]) => states.reduce((n, state) => n + view.recordCount(HOLD, kind, state), 0);
     const licenses = records(view, "receiver-pin", ["standing"]).reduce((n, pin) => n + Math.max(0, LICENSE_BOUND - (pin.values["decided"] as number)), 0);
     return 3 * count("pin", "provisional", "held") + licenses + 3 * count("root", "creating") + count("root", "retiring")
-      + 2 * HOLD_ATTEMPTS.revoke * count("token", "live") + (2 * HOLD_ATTEMPTS.fork * (1 + 2 * HOLD_ATTEMPTS.revoke)) * count("fork", "creating") + 2 * HOLD_ATTEMPTS.deletion * count("fork", "selected");
+      + 2 * HOLD_ATTEMPTS.revoke * count("token", "live") + (2 * HOLD_ATTEMPTS.fork * (1 + 2 * HOLD_ATTEMPTS.revoke + (v2 ? 2 * HOLD_ATTEMPTS.deletion : 0))) * count("fork", "creating") + 2 * HOLD_ATTEMPTS.deletion * count("fork", "selected");
   }
 
   function holdReservations(view: StateView, definition: ValidDefinition): Amount {
