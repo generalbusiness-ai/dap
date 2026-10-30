@@ -15,10 +15,10 @@ import { bare, cleanup, commitText, put, setRef } from "../../git/test/support/r
 vi.mock("../src/command-support.ts", () => ({ requiredReadsOf: () => ({ session: async () => ({ reader: () => "Session SCRIPTED-workspace" }) }) }));
 afterAll(cleanup);
 const NOW = Date.parse("2030-01-01T00:00:00Z"), TOKEN = "SCRIPTED-private-workspace-token";
-const ref = (kind: string): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: "platform:membership@8", creator: null, cause: textDigest("SCRIPTED workspace " + kind), ordinal: 0 }), kind, inc: newIncarnation(new Uint8Array(16).fill(9)) });
+const ref = (kind: "membership" | "directory" | "lane"): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: "platform:membership@8", creator: null, cause: textDigest("SCRIPTED workspace " + kind), ordinal: 0 }), kind, inc: newIncarnation(new Uint8Array(16).fill(9)) });
 
 async function sessionFixture(reply: () => Response) {
-  const store = memoryStore(), membership = ref("membership"), directory = ref("directory"), lane = ref("change");
+  const store = memoryStore(), membership = ref("membership"), directory = ref("directory"), lane = ref("lane");
   const writes: unknown[] = [];
   const keep = store.keepPrivate;
   store.keepPrivate = async (name, bytes) => { await keep(name, bytes); writes.push(JSON.parse(new TextDecoder().decode(bytes))); };
@@ -38,7 +38,7 @@ async function sessionFixture(reply: () => Response) {
       expect(same(target, lane)).toBe(true);
       return { scope: lane, status: "active", definition: textDigest("SCRIPTED definition"), time: timeOf(NOW), items: [], counts: [] } satisfies Summary;
     },
-    call: unused, request: unused, resolve: unused, submitPrepared: unused, accepted: unused,
+    intent: unused, call: unused, request: unused, resolve: unused, submitPrepared: unused, accepted: unused,
   };
   return { session, lane, writes, gets: () => gets };
 }

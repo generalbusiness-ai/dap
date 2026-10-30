@@ -12,6 +12,7 @@ export async function witnessMembers(sessions: Record<Identity, Session>): Promi
   const ownerConfig = await owner.ctx.store.config();
   if (!ownerConfig?.handle) throw new Error("The owner handle is missing.");
   const controller = { membership: refs.membership, member: ownerConfig.handle };
+  if (!isMemberRef(controller)) throw new Error("The owner membership reference is invalid.");
   const witnesses: MemberWitness[] = [];
   for (const identity of ["owner", "agent-a", "agent-b", "checker"] as const) {
     const session = sessions[identity], config = await session.ctx.store.config();

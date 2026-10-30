@@ -28,7 +28,7 @@ export async function seedLane(owner: Session): Promise<ScopeRef> {
   const summary = await owner.resolve(scopeIdOf(seed), J4_DIGESTS.change);
   const genesisRead = (await owner.call("step", { scope: summary.scope.scope, seq: 0 })).result;
   const genesis = genesisRead.structuredContent["entry"];
-  if (genesisRead.isError || !isEntry(genesis) || genesis.input.type !== "genesis" || !equal(genesis.input.seed, seed)
+  if (genesisRead.isError || !isEntry(genesis) || genesis.input.type !== "genesis" || genesis.input.n === null || genesis.input.message === null || !equal(genesis.input.seed, seed)
     || !equal(genesis.input.source, opened.fact) || !equal(genesis.at, summary.scope)
     || !sentBy(opening, { from: opened.fact, n: genesis.input.n, to: seed, message: genesis.input.message })) throw new Error("The Change genesis does not match its retained directory creation.");
   await retain(owner.ctx.store, "s1-seed-lane", summary.scope);

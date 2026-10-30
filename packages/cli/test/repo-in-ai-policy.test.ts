@@ -17,8 +17,7 @@ describe("repo-in-ai setup policy", () => {
     expect(next.checker).toEqual(original.checker);
     expect(appendedActions(next)).toEqual(next);
     expect(preservesActions(original, { ...next, checker: ["change.check"] })).toBe(false);
-    const unsafe = structuredClone(summary);
-    unsafe.items[0]!.values["agentActions"] = ["change.review"];
+    const unsafe = { ...summary, items: [{ ...summary.items[0]!, values: { ...summary.items[0]!.values, agentActions: ["change.review"] } }] };
     expect(() => roleActions(unsafe)).toThrow("person-only");
   });
 

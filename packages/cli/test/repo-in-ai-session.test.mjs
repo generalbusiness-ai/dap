@@ -87,7 +87,8 @@ test("the actual session retains a lost act, Check sends no mutation, and explic
   const first = await (await f.open()).request("new", "act", args, binding);
   assert.equal(first.result.isError, true);
   assert.equal(first.result.structuredContent.error, "transport");
-  assert.equal(first.result.structuredContent.submitted, true);
+  assert.match(first.result.structuredContent.message, /the outcome is unknown\./);
+  assert.match(first.result.structuredContent.message, /The envelope is under custody\./);
   assert.equal(f.script.loseNextAct, false, "The intended lost-reply injection must actually run after custody assertions");
   assert.equal(f.mutations.length, 1);
   const original = f.original(), retained = await f.record(f.peer.rules, key);

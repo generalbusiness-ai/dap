@@ -85,7 +85,7 @@ async function journal(store: Store, prefix: string): Promise<PrivatePointer[]> 
   for (let n = 0; n < LIMIT; n++) {
     const value = await readPrivate(store, pointerName(prefix, n));
     if (value === null) { gap = true; continue; }
-    if (gap || !closed(value, ["request", "digest"]) || typeof value["request"] !== "string" || !isDigest(value["digest"])) refuse("private-journal-invalid");
+    if (gap || !closed(value, ["request", "digest"]) || typeof value["request"] !== "string" || !isDigest(value["digest"])) return refuse("private-journal-invalid");
     identifier(value["request"]); rows.push(value as unknown as PrivatePointer);
   }
   return rows;
@@ -103,7 +103,7 @@ async function pointed(store: Store, pointer: PrivatePointer): Promise<Record<st
   const raw = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
   if (textDigest(raw) !== pointer.digest) refuse("private-original-digest");
   const value = decodePrivate(bytes);
-  if (!isRecord(value)) refuse("private-original-invalid");
+  if (!isRecord(value)) return refuse("private-original-invalid");
   return value;
 }
 
@@ -186,7 +186,7 @@ export async function createRoom(ctx: Context, name: string, mode: IdentityMode)
   if (mode !== "new") {
     const complete = await readPrivate(ctx.store, COMPLETE);
     if (config.repository) {
-      if (!isRecord(complete) || !same(complete["identity"], identity) || !same(complete["repository"], config.repository) || !isRecord(complete["claim"])) refuse("completed-claim-missing");
+      if (!isRecord(complete) || !same(complete["identity"], identity) || !same(complete["repository"], config.repository) || !isRecord(complete["claim"])) return refuse("completed-claim-missing");
       const { repository: _room, ...before } = config;
       current = { ...before, claim: complete["claim"] as unknown as PendingClaim };
     } else {

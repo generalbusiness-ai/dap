@@ -15,7 +15,6 @@ export class SeedGitFailure extends Error {
 }
 const require = (value: unknown, reason: SeedGitFailure["reason"]): void => { if (!value) throw new SeedGitFailure(reason); };
 const utf8 = new TextEncoder();
-const strict = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 
 function localDirectory(path: string): string {
   try {

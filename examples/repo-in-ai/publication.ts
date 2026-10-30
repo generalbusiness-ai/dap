@@ -155,8 +155,9 @@ export async function publicationPhase(owner: Session, agent: Session, reviewer:
     const staged = await requiredDone(owner, "manifest-stage"), state = await laneState(owner, lane);
     if (!staged.intent) throw new Error("The staged intent digest is unavailable.");
     const pin = state.memory.record("hold@2", "pin", [lane, staged.intent]);
+    const root = pin?.values["root"];
     const checks = state.memory.records("hold@2", "check", { states: ["recorded"], member: "intent", value: staged.intent });
-    if (pin?.state !== "provisional" || checks.length !== 1 || state.memory.record("hold@2", "root", [pin.values["root"]!])?.state !== "live") throw new Error("The actual stage/check outcome is not ready. Read this phase again.");
+    if (pin?.state !== "provisional" || checks.length !== 1 || typeof root !== "number" || state.memory.record("hold@2", "root", [root])?.state !== "live") throw new Error("The actual stage/check outcome is not ready. Read this phase again.");
     return observed(owner, phase);
   }
   if (phase === "manifest") {
