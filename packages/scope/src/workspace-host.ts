@@ -184,7 +184,7 @@ export class WorkspaceHost implements Outside {
       const fork = this.#records("fork", "operation", request.operation)[0];
       if (request.kind === "head") {
         if (!fork || fork.state !== "creating" || !isLocalId(fork.key[0]) || !this.#held(fork.key[0])) return null;
-        return answer("own-answer", { commit: await this.#provider.ref(lineage.repository, branchRef(lineage.branch, "workspace branch")) });
+        return answer("own-answer", { commit: await this.#provider.ref(lineage.repository, branchRef(`refs/heads/${lineage.branch}`, "workspace branch")) });
       }
       if (request.kind === "fork") {
         const seed = fork?.values["seed"];
@@ -247,7 +247,7 @@ export class WorkspaceHost implements Outside {
   async #check(root: RecordState, lineage: WorkspaceRepository): Promise<EffectAnswer | null> {
     // The provider supplies immutable commit objects and one exact ref snapshot.
     const commit = root.values["commit"] as string, number = root.key[0] as number;
-    const head = await this.#provider.ref(lineage.repository, branchRef(lineage.branch, "workspace branch"));
+    const head = await this.#provider.ref(lineage.repository, branchRef(`refs/heads/${lineage.branch}`, "workspace branch"));
     if (!head) return null;
     const minted = await this.#provider.workspaceMint(lineage.repository, "read", 120) as { minted: boolean; id: string; plaintext: string };
     if (!minted.minted) return null;
