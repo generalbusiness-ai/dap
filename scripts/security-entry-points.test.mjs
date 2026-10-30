@@ -279,8 +279,8 @@ const pendingR8Seals = {
   "packages/cli/src/read-session-cache.ts": "12a5cf131a166001f66672bc3c4b6daf70070645255c61db7b93f18b6fbb83b7", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/verification.ts": "3fb0f354c0d00dd1d21cf293e11dfc81738b9de4e8f5eb43ac9fd918dc9db557", // Reviewed unique-entry ledger, source conflicts and owner retirement; actual maintained output.
   "packages/cli/src/files.ts": "7d0d64f352787e5d30ea03265fb5137a17a1eef61e97454e5408959297ca1d5c", // Reviewed CLI session or verification boundary; actual maintained parser output.
-  "packages/cli/src/store.ts": "e452f4b9087d3d4d1dcfb90766e83e0805699598739157ee51bf07a68266d377", // Reviewed CLI session or verification boundary; actual maintained parser output.
-  "packages/cli/src/line.ts": "029e530d325e9ca0a47859a306a30884151401e26ce59d40e6768dfd4912b4c4", // Reviewed CLI session or verification boundary; actual maintained parser output.
+  "packages/cli/src/store.ts": "e898ad1cc94a215860361f466d3efc33722aefb09eb723a6b1e94baca76e8f02", // Reviewed separate checker-enrol custody tag.
+  "packages/cli/src/line.ts": "34dcace7c68d4799d09723f34557e4227ce3ec8e7ac01554ddeb3ddf199f0f10", // Reviewed explicit checker-key join dispatch and check mode.
   "packages/cli/src/invitations.ts": "66ae41d4c9c126a17c5757b26f12d5da36ed254f8675138a14c0ac74682a3b05", // Reviewed exact Membership8 checker tag, role and original custody.
   "packages/cli/src/scope-index-applications-command.ts": "e72f729f4232f674d0e132c865e4d7c359ac567a21e97b4e7b905342379d33b7", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/scope-index-manifest.ts": "da24a4005531491586b09cbe793175a5cf1d2ccf9f1e637b364b89121c1c2c52", // Preserve trusted session refusal outcomes; actual maintained parser output.
