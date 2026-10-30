@@ -107,7 +107,7 @@ function adapter(f: Fixture, sql: Pick<Sql, "exec">) {
 
 async function mint(f: Fixture, host: WorkspaceHost, purpose: "workspace" | "fork-read" | "staging" = "workspace") {
   const operation = "10:0" as const;
-  const values: Record<string, FieldValue> = { purpose, mint: operation, id: null, ends: null, revocation: null,
+  const values: Record<string, FieldValue | null> = { purpose, mint: operation, id: null, ends: null, revocation: null,
     ...(purpose === "workspace" ? { hold: HOLD, instance: INSTANCE } : { root: 1, operation: "6:0", attempt: 1 }) };
   const record: RecordState = { capability: "hold@2", kind: "token", key: [TOKEN], state: "minting", seq: 10, values };
   f.state.putRecord(record);
