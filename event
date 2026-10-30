@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f100f18b27e1df18f643761c18a9c6630f30e6d7","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-30-fixed-slot-index.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f64455609d329e4f60ebbbca29ae4ea662e5b66a","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/object.ts."}
