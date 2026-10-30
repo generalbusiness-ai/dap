@@ -246,6 +246,23 @@ A head adds to the kernel when it does any of these:
 
 The checker checks this rule on every head that touches these packages.
 
+Request `1c124ebf` adds a qualified minimum head to five existing reads:
+summary, items, history, entry, and application projection. The contract
+defines `ReadMinimum`, the `behind` refusal with its authenticated current
+position, and the one-second wait bound. The bytes package admits the closed
+record and its bounded canonical `atLeast` parameter. These shared wire
+rules belong in the kernel because HTTP, service bindings, and clients must
+agree on the scope incarnation and head they name. A platform application
+cannot define the meaning of an existing read's response.
+
+The wait itself stays in Scope. It holds ephemeral arrival callbacks outside
+turns and storage transactions, checks existing read authority at each wake,
+and removes its timer and callback when the read finishes. A minimum grants
+no read permission and creates no journal entry or durable alarm. A full
+head also requires the retained hash at that sequence. Missing or different
+hashes return `unavailable`. A timeout returns `behind` only after authority
+checks succeed. This adds no platform kind or application vocabulary.
+
 Request `0c3091fa` adds the existing hold capability's second version under
 ruling `adb1a6ed`. A confirmed head or fork outcome changes the records that
 runtime and replay derive. Those rules belong beside the ledger in the

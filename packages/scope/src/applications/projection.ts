@@ -1,6 +1,6 @@
 /** Session-only native projection at one captured journal head. The owner
  * authenticates before metadata peers, has one deadline and never retries. */
-import { APPLICATION_PROJECTION_WIRE_BOUNDS as B, type ApplicationProjectionRefusal, type ScopeId } from "@generalbusiness/dap-contract";
+import { APPLICATION_PROJECTION_WIRE_BOUNDS as B, type ApplicationProjectionRefusal, type ReadMinimum, type ScopeId } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isRecord, isScopeRef, parseStrict } from "@generalbusiness/dap-bytes";
 import { applicationJson } from "@generalbusiness/dap-platform/application";
 import { timeMs } from "@generalbusiness/dap-derive";
@@ -9,14 +9,15 @@ import { ItemQueryBudget } from "../item-query-budget.ts";
 import { PreparationFlights, type PreparationRun } from "../preparation-flight.ts";
 import { preparedSessionRefusal, type QueryVisibility, type SessionPreparation } from "../session-preparation.ts";
 import { authenticateSession, type Sessions } from "../sessions.ts";
+import type { ReadWaitRefusal } from "../read-wait.ts";
 import type { Clock } from "../ports.ts";
 import type { Sql } from "../sqlite.ts";
 import { APPLICATION_DECLARATION_BYTES, type ApplicationDeclarationSource } from "./projection-source.ts";
 import { applicationProjectionData } from "./projection-data.ts";
 import type { NativeBirthSource } from "../native-birth.ts";
 import { projectionScopeOwned } from "./projection-ownership.ts";
-export type NativeApplicationProjection = { ok: true; serialized: string } | { ok: false; reason: ApplicationProjectionRefusal };
-const no = (reason: ApplicationProjectionRefusal): NativeApplicationProjection => ({ ok: false, reason });
+export type NativeApplicationProjection = { ok: true; serialized: string } | import("@generalbusiness/dap-contract").BehindRead | { ok: false; reason: Exclude<ApplicationProjectionRefusal, "behind"> };
+const no = (reason: Exclude<ApplicationProjectionRefusal, "behind">): NativeApplicationProjection => ({ ok: false, reason });
 export interface ApplicationProjectionConfig {
   name: ScopeId | null;
   sql: Pick<Sql, "exec">;
@@ -26,11 +27,26 @@ export interface ApplicationProjectionConfig {
   flights: PreparationFlights;
   source: ApplicationDeclarationSource | null;
   births?: NativeBirthSource | null;
+  minimum?: (reader: unknown, minimum: ReadMinimum, active: () => boolean) => Promise<ReadWaitRefusal | null>;
 }
 export class ApplicationProjections {
   constructor(readonly config: ApplicationProjectionConfig) {}
-  read(encoded: unknown, reader: unknown): Promise<NativeApplicationProjection> {
-    return this.config.flights.run(run => this.#run(encoded, reader, run)).then(result => result ?? no("unavailable"));
+  read(encoded: unknown, reader: unknown, atLeast?: ReadMinimum): Promise<NativeApplicationProjection> {
+    return this.config.flights.run(async run => {
+      if (atLeast !== undefined) {
+        // Validate the query and session before the target/head admission.
+        const query = readApplicationProjectionQuery(encoded);
+        if (!query || !this.config.name || query.scope.scope !== this.config.name) return no("invalid-query");
+        if (typeof reader !== "string" || reader.length > B.sessionChars || reader.startsWith("Signed ")) return no("forbidden");
+        if (!this.config.minimum) return no("unavailable");
+        const waited = await this.config.minimum(reader, atLeast, run.active);
+        if (waited) {
+          if (waited.reason === "behind") return waited;
+          return no(["forbidden", "sessions-unavailable", "clock-behind", "wrong-incarnation"].includes(waited.reason) ? waited.reason as "forbidden" | "sessions-unavailable" | "clock-behind" | "wrong-incarnation" : "unavailable");
+        }
+      }
+      return this.#run(encoded, reader, run);
+    }).then(result => result ?? no("unavailable"));
   }
   async #run(encoded: unknown, reader: unknown, run: PreparationRun): Promise<NativeApplicationProjection> {
     const c = this.config, query = readApplicationProjectionQuery(encoded);
@@ -77,7 +93,7 @@ export class ApplicationProjections {
       if (!frame.current() || !run.active()) return no("unavailable");
       const denied = guard(); if (denied !== null) return no(denied);
       const projected = applicationProjectionData(c.sql, frame, projection, query.items, run.active);
-      if (!projected.ok) return no(projected.reason);
+      if (!projected.ok) return no(projected.reason === "behind" ? "unavailable" : projected.reason);
       const serialized = applicationJson({ ok: true, query: applicationProjectionQueryDigest(query), value: projected.value }, B.resultBytes);
       if (!run.active() || !preparation.available || !frame.current() || !run.active()) return no("unavailable");
       // LAST authority check: no storage, support callback, await or write follows.

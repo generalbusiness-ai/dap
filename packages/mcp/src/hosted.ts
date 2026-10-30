@@ -547,7 +547,7 @@ export class HostedAgent {
     // Admitted: the entry holds the exact envelope, the key reads back active, and only then is the bearer minted.
     const fact = kept.answer.receipt.fact;
     service.reads.forget(M.scope);
-    const entry = await service.reads.read(M, (t, r) => t.entry(M.scope, r, fact.seq));
+    const entry = await service.reads.read(M, (t, r) => t.entry(M.scope, r, fact.seq, { at: fact.at, head: { seq: fact.seq, hash: fact.hash } }));
     if (!entry.ok) return answer(503, { error: "unresolved", op, rule: "read-back" });
     const input = entry.value.entry.input;
     if (entry.value.hash !== fact.hash || input.type !== "act" || canonicalize(input.signed) !== canonicalize(kept.record.envelope.signed)) return answer(409, { error: "enrol", rule: "entry" });

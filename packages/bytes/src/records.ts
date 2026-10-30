@@ -31,7 +31,7 @@
  */
 
 import type {
-  Attempt, Dispatched, OutboxItem, Effect, Entry, Evidence, FactRef, FactUse, FieldValue, Grant, Head, Input, Intent, Item, LogPage, MemberRef, Message, ObservationUse, Party, Prepared, Read, ReadRefusal, Receipt, RefusalReason,
+  Attempt, BehindRead, Dispatched, OutboxItem, Effect, Entry, Evidence, FactRef, FactUse, FieldValue, Grant, Head, Input, Intent, Item, LogPage, MemberRef, Message, ObservationUse, Party, Prepared, Read, ReadRefusal, Receipt, RefusalReason,
   RetainedInput, ScopeRef, Sealed, Seed, Send, SignedIntent, Status, Summary,
 } from "@generalbusiness/dap-contract";
 import { MAX_DEPTH, wellFormed } from "./canonical.ts";
@@ -77,6 +77,7 @@ export const REFUSAL_REASONS: Record<RefusalReason, true> = {
   "unknown-message": true, "wrong-pin": true, "unsupported-definition": true, "application-revoked": true, "bad-input": true, late: true,
 };
 export const READ_REFUSALS: Record<ReadRefusal, true> = {
+  behind: true,
   archived: true,
   "not-found": true, "wrong-incarnation": true, forbidden: true, "scope-provisional": true, "unsupported-definition": true, "history-unavailable": true, "too-large": true, unavailable: true,
   "sessions-unavailable": true, "clock-behind": true, "rate-limited": true, "no-repository": true,
@@ -316,12 +317,16 @@ export const isRetainedInput = (v: unknown): v is RetainedInput => {
   return (kind === "value") === (domain !== undefined) && domain !== "";
 };
 
+const behindRead = recordShape({ ok: is(false), reason: is("behind"), current: factRef });
+/** A timed-out minimum read names its actual current sealed position. */
+export const isBehindRead = (v: unknown): v is BehindRead => behindRead(v);
+
 /** A read (section 9.1): a value of the route's shape at a stated head, or a refusal the contract names, with the reference it may carry. */
 export const isRead = <T>(value: (v: unknown) => v is T) => {
   const archived = recordShape({ ok: is(false), reason: is("archived"), archived: recordShape({ floor: isLocalId, commit: (v) => typeof v === "string" && /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(v), through: head }) }, { next: wellFormedText, fact: factRef });
   const unread = recordShape({ ok: is(false), reason: among(READ_REFUSALS) }, { detail: (v) => scopeRef(v) || factRef(v) });
   const read = recordShape({ ok: is(true), at: head, value, complete: flag }, { next: (v) => typeof v === "string" });
-  return (v: unknown): v is Read<T> => archived(v) || (unread(v) && isRecord(v) && v["reason"] !== "archived") || read(v);
+  return (v: unknown): v is Read<T> => archived(v) || isBehindRead(v) || (unread(v) && isRecord(v) && v["reason"] !== "archived" && v["reason"] !== "behind") || read(v);
 };
 /** A list of such records, as a paged read returns. */
 export const isListOf = <T>(each: (v: unknown) => v is T) => (v: unknown): v is readonly T[] => Array.isArray(v) && v.every(each);

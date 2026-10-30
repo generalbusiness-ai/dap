@@ -21,8 +21,8 @@
  */
 
 import { ITEM_QUERY_BOUNDS, ITEM_QUERY_WIRE_BOUNDS, APPLICATION_PROJECTION_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
-import type { ItemQuery, ScopeApi, ApplicationProjectionQuery } from "@generalbusiness/dap-contract";
-import { LATE, takeBytes, within, readItemQueryParameter, readItemQueryReply, type ByteStream } from "@generalbusiness/dap-bytes";
+import type { ReadMinimum, ItemQuery, ScopeApi, ApplicationProjectionQuery } from "@generalbusiness/dap-contract";
+import { readMinimum, encodeReadMinimumParameter, LATE, takeBytes, within, readItemQueryParameter, readItemQueryReply, type ByteStream } from "@generalbusiness/dap-bytes";
 import { readApplicationProjectionQuery, readApplicationProjectionReply } from "@generalbusiness/dap-platform/application-v2";
 import { ANSWERS } from "./answers.ts";
 import { OPERATIONAL_ANSWERS, type OperationalApi } from "./operational.ts";
@@ -103,6 +103,13 @@ export function httpTransport(service: string, options: { fetch?: Fetch; bytes?:
     if (!sound()) throw failed(`the reply, status ${got.status}, is not an answer of ${op}`);
     return answer as Answered<K>;
   }
+  const minimumPath = (path: string, minimum: ReadMinimum | undefined, scope: string): string => {
+    if (minimum === undefined) return path;
+    const checked = readMinimum(minimum);
+    const encoded = checked?.at.scope === scope ? encodeReadMinimumParameter(checked) : null;
+    if (!encoded) throw new TransportError("invalid read minimum");
+    return `${path}${path.includes("?") ? "&" : "?"}atLeast=${encoded}`;
+  };
   const page = (cursor: string | undefined): string => (cursor === undefined ? "" : `?cursor=${part(cursor)}`);
 
   return {
@@ -111,20 +118,20 @@ export function httpTransport(service: string, options: { fetch?: Fetch; bytes?:
     submit: (scope, signed, grants, beside = {}) => call("submit", `/${part(scope)}/acts`, null, { signed, grants, ...beside }),
     prepare: (scope, signed, grants, capability, step) => call("prepare", `/${part(scope)}/preparations`, null, { signed, grants, capability, step }),
     settle: (scope, signed) => call("settle", `/${part(scope)}/settle`, null, { signed }),
-    summary: (scope, reader) => call("summary", `/${part(scope)}`, reader),
-    items: (scope, reader, type, cursor) => call("items", `/${part(scope)}/items/${part(type)}${page(cursor)}`, reader),
+    summary: (scope, reader, minimum) => call("summary", minimumPath(`/${part(scope)}`, minimum, scope), reader),
+    items: (scope, reader, type, cursor, minimum) => call("items", minimumPath(`/${part(scope)}/items/${part(type)}${page(cursor)}`, minimum, scope), reader),
     queryItems: (scope, reader, encoded) => {
       const query = readItemQueryParameter(encoded);
       if (!query || query.scope.scope !== scope || encoded.length > ITEM_QUERY_WIRE_BOUNDS.encodedChars) throw new TransportError("invalid bounded item query");
       return call("queryItems", `/${part(scope)}/query-items?q=${encoded}`, reader, undefined, query);
     },
-    applicationProjection: (scope, reader, encoded) => {
+    applicationProjection: (scope, reader, encoded, minimum) => {
       const query = readApplicationProjectionQuery(encoded);
       if (!query || query.scope.scope !== scope) throw new TransportError("invalid bounded application projection");
-      return call("applicationProjection", `/${part(scope)}/application-projection?p=${encoded}`, reader, undefined, query);
+      return call("applicationProjection", minimumPath(`/${part(scope)}/application-projection?p=${encoded}`, minimum, scope), reader, undefined, query);
     },
-    history: (scope, reader, cursor) => call("history", `/${part(scope)}/history${page(cursor)}`, reader),
-    entry: (scope, reader, seq) => call("entry", `/${part(scope)}/entries/${seq}`, reader),
+    history: (scope, reader, cursor, minimum) => call("history", minimumPath(`/${part(scope)}/history${page(cursor)}`, minimum, scope), reader),
+    entry: (scope, reader, seq, minimum) => call("entry", minimumPath(`/${part(scope)}/entries/${seq}`, minimum, scope), reader),
     outbox: (scope, reader, cursor) => call("outbox", `/${part(scope)}/outbox${page(cursor)}`, reader),
     incidents: (scope, reader, cursor) => call("incidents", `/${part(scope)}/incidents${page(cursor)}`, reader),
     waiting: (scope, reader, list, cursor) => {

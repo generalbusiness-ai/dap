@@ -80,6 +80,7 @@ export const UNAVAILABLE_NOTES: Readonly<Record<UnavailableReason, string>> = {
 export const MISMATCH_NOTES: Readonly<Record<MismatchReason, string>> = { "idempotency-mismatch": "the key is on another intent" };
 
 export const READ_NOTES: Readonly<Record<ReadRefusal, Said>> = {
+  behind: { sentence: "the scope has not reached the requested journal position", next: "Keep the accepted receipt. This read submitted no act." },
   archived: { sentence: "the entry is below the retained journal floor", next: "Read the verified archive clone named by the floor receipt; resume the live log at its floor." },
   "not-found": { sentence: "no such scope, entry or value is readable", next: "Check the ID; call room for the scopes of the room." },
   "wrong-incarnation": { sentence: "the scope has another incarnation than the one named", next: "Call room; use the scope's current reference." },

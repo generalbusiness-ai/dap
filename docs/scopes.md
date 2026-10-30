@@ -756,6 +756,27 @@ a cursor `next` when there is more; or a refusal with a reason.
 | `log` | A page of the journal as stored: each entry's canonical bytes. For a verifier. |
 | `retained` | One retained input, by kind and digest: a definition, a foreign entry, a rule's input, a detached text until it is redacted, or a value in its byte domain. |
 
+The `summary`, `items`, `history`, `entry`, and `applicationProjection`
+reads accept an optional trailing `ReadMinimum`: `{ at: ScopeRef, head }`.
+The head is a nonnegative sequence number or `{ seq, hash }`. The full
+scope reference qualifies the sequence by scope, kind, and incarnation.
+`ScopeHandle` also accepts a receipt and uses its exact fact as the minimum.
+
+The HTTP form is one `atLeast` parameter containing unpadded base64url of
+canonical JSON, with at most 512 decoded bytes. For application projection,
+`atLeast` stays separate from the hashed projection query. A malformed
+parameter or a different route scope returns HTTP 400 before a read.
+
+A minimum grants no access. The read checks its existing authority before
+waiting and again after an arrival or timeout. It waits at most one second
+for the named head, then performs the normal read. A full head also requires
+the retained hash at that sequence. A missing or different hash returns
+`unavailable`; another incarnation returns `wrong-incarnation`. If the
+scope remains behind, an authorized reader receives
+`{ ok: false, reason: "behind", current: FactRef }` with HTTP 503.
+The wait writes no entry or durable alarm. An abandoned transport request
+may retain its callback until an arrival or the bounded deadline.
+
 Platform data declares further observations on acts, outcome kinds and
 result clauses. The runtime reads those subjects before the turn; an
 outcome can name them from its origin's retained entries, then name a

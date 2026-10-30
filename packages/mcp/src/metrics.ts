@@ -11,7 +11,7 @@ const TOOLS = new Set(["list", "room", "inspect", "create", "join", "prepare", "
 const PHASES = new Set(["prepared", "sent", "unknown", "accepted", "archived", "refused", "mismatch", "settled"]);
 const STEP_PHASES = new Set(["prepared", "sent", "unknown", "answered"]);
 const NATIVE: Record<RefusalReason | UnavailableReason | MismatchReason | ReadRefusal | SessionRefusal, true> = {
-  "archived": true, "floor-receipt": true, "floor-ahead": true, "floor-back": true, "floor-step": true, "floor-recent": true, "floor-keep": true, "floor-kept": true,
+  behind: true, "archived": true, "floor-receipt": true, "floor-ahead": true, "floor-back": true, "floor-step": true, "floor-recent": true, "floor-keep": true, "floor-kept": true,
   "wrong-pin": true, "application-revoked": true,
   late: true,
   "revision-moved": true, alias: true, "duplicate-relation": true, "required-unset": true, "scope-full": true,

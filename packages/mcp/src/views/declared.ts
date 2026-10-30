@@ -1,6 +1,6 @@
 /** The generic host interpreter for a verified declared presentation. It
  * runs no package code. Its ports are native reads, not application adapters. */
-import type { ApplicationProjectionData, ApplicationProjectionQuery, ApplicationProjectionRead, ApplicationProjectionRow, Digest, FieldValue, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
+import type { ReadMinimum, ApplicationProjectionData, ApplicationProjectionQuery, ApplicationProjectionRead, ApplicationProjectionRow, Digest, FieldValue, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { applicationItemSnapshot } from "@generalbusiness/dap-client";
 import { canonicalize, isLocalId, isMemberRef, parseStrict, unb64url } from "@generalbusiness/dap-bytes";
 import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
@@ -26,7 +26,7 @@ export interface DeclaredViewPort {
   now?(): number;
   /** The current active native install, read under the configured membership. */
   installation(): Promise<ApplicationInstallation | null>;
-  projection(query: ApplicationProjectionQuery): Promise<ApplicationProjectionRead>;
+  projection(query: ApplicationProjectionQuery, minimum?: ReadMinimum): Promise<ApplicationProjectionRead>;
   /** Current native role actions. Unknown standing returns no actions. */
   actions(): Promise<readonly string[]>;
   /** Authenticated bounded display reads only; never native authority. */
@@ -87,18 +87,18 @@ export class DeclaredViewSource implements ViewSource {
     return { screen, resource: view.resource, html: new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes),
       opens: view.opens, refresh: view.refresh, display: view.display, back: view.back, backScope };
   }
-  async #projection(selection: ApplicationProjectionQuery) {
-    const reply = await this.port.projection(selection);
+  async #projection(selection: ApplicationProjectionQuery, minimum?: ReadMinimum) {
+    const reply = await this.port.projection(selection, minimum?.at.scope === selection.scope.scope ? minimum : undefined);
     if (!reply.ok) throw new ViewError(reply.reason === "stale" ? "stale" : "unavailable", `The declared projection refused: ${reply.reason}.`);
     const projection = this.packet.package.semantic.projections[selection.projection]!;
     if (reply.value.projection !== applicationProjectionId(projection) || canonicalize(reply.value.scope) !== canonicalize(selection.scope)) throw new ViewError("unavailable", "The read does not name this declared projection and scope.");
     return reply;
   }
-  async #read(query: ViewQuery) {
+  async #read(query: ViewQuery, minimum?: ReadMinimum) {
     const view = this.#view(query), install = await this.port.installation();
     if (!install || canonicalize(install.ids) !== canonicalize(this.packet.ids) || install.definition !== this.packet.package.semantic.entry) throw new ViewError("unavailable", "The exact declared package is not active in this installation.");
     const selection: ApplicationProjectionQuery = { v: 1, scope: query.scope ?? install.scope, directory: install.directory, install: install.item, projection: view.projection, items: query.items ?? {} };
-    const reply = await this.#projection(selection);
+    const reply = await this.#projection(selection, minimum);
     const projection = this.packet.package.semantic.projections[view.projection]!;
     const nativeRows = reply.value.sources[view.item];
     if (!nativeRows) throw new ViewError("unavailable", "The read omitted the declared item source.");
@@ -180,8 +180,8 @@ export class DeclaredViewSource implements ViewSource {
     }
     return { label: series.label, scale: series.scale, unit: series.unit, window, samples, fallback };
   }
-  async read(query: ViewQuery): Promise<Projection> {
-    const { view, root, scope, definition, reply, rows, routed, points, unknown } = await this.#read(query);
+  async read(query: ViewQuery, _access?: Parameters<ViewSource["read"]>[1], minimum?: ReadMinimum): Promise<Projection> {
+    const { view, root, scope, definition, reply, rows, routed, points, unknown } = await this.#read(query, minimum);
     const declaration = this.packet.package.semantic.projections[view.projection]!;
     const backScope = this.#backScope(view, scope, root), surface = this.#surface(query.screen, view, backScope);
     const navigation = view.back ? { back: { screen: view.back, scope: backScope } } : {};

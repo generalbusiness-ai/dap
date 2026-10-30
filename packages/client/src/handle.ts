@@ -15,10 +15,10 @@
  */
 
 import type {
-  Archived, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxItem, OutboxId, Entry, Created, Grant, Head, Item, PlatformDefinition, Read, ReadRefusal, Receipt, ScopeApi, ScopeId, Sealed, Settlement,
+  Archived, BehindRead, ReadMinimum, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxItem, OutboxId, Entry, Created, Grant, Head, Item, PlatformDefinition, Read, ReadRefusal, Receipt, ScopeApi, ScopeId, Sealed, Settlement,
   SignedIntent, Summary, ItemQuery, ItemQueryRead, ApplicationProjectionQuery, ApplicationProjectionRead,
 } from "@generalbusiness/dap-contract";
-import { definitionDigest, entryHash, encodeItemQueryParameter, readItemQueryParameter, itemQueryReadFor, within, LATE, isDigest, parseStrict, textDigest } from "@generalbusiness/dap-bytes";
+import { readMinimum, isReceipt, definitionDigest, entryHash, encodeItemQueryParameter, readItemQueryParameter, itemQueryReadFor, within, LATE, isDigest, parseStrict, textDigest } from "@generalbusiness/dap-bytes";
 import { encodeApplicationProjectionQuery, readApplicationProjectionQuery, readApplicationProjectionReplyText } from "@generalbusiness/dap-platform/application-v2";
 
 /** How a handle reaches a scope service: the contract's `ScopeApi`. `http.ts` and `binding.ts` each make one. */
@@ -37,7 +37,15 @@ export class TransportError extends Error {
  * position. `hash-mismatch`: its bytes do not hash to the receipt's fact. In
  * each case the receipt is not of this history.
  */
-export type Followed = { ok: true; at: Head; entry: Entry } | { ok: false; reason: "archived"; archived: Archived } | { ok: false; reason: Exclude<ReadRefusal, "archived"> | "hash-mismatch" | "reference-mismatch" };
+export type Followed = BehindRead | { ok: true; at: Head; entry: Entry } | { ok: false; reason: "archived"; archived: Archived } | { ok: false; reason: Exclude<ReadRefusal, "archived" | "behind"> | "hash-mismatch" | "reference-mismatch" };
+
+/** A receipt keeps its full scope incarnation and exact entry hash. */
+function minimum(value?: ReadMinimum | Receipt): ReadMinimum | undefined {
+  if (value === undefined) return undefined;
+  const checked = readMinimum(isReceipt(value) ? { at: value.fact.at, head: { seq: value.fact.seq, hash: value.fact.hash } } : value);
+  if (!checked) throw new TransportError("invalid read minimum");
+  return checked;
+}
 
 export class ScopeHandle {
   readonly scope: ScopeId;
@@ -64,9 +72,9 @@ export class ScopeHandle {
 
   // The reads of section 9.1. Each is a statement about `at`; a page with `next` is read on with that cursor.
 
-  summary(): Promise<Read<Summary>> { return this.#transport.summary(this.scope, this.#reader); }
+  summary(atLeast?: ReadMinimum | Receipt): Promise<Read<Summary>> { return this.#transport.summary(this.scope, this.#reader, minimum(atLeast)); }
   /** A page of the retained final items of one type. */
-  items(type: string, cursor?: Cursor): Promise<Read<readonly Item[]>> { return this.#transport.items(this.scope, this.#reader, type, cursor); }
+  items(type: string, cursor?: Cursor, atLeast?: ReadMinimum | Receipt): Promise<Read<readonly Item[]>> { return this.#transport.items(this.scope, this.#reader, type, cursor, minimum(atLeast)); }
   /** One bounded page. `complete` covers only this selection's suffix at `at`. */
   async queryItems(query: ItemQuery): Promise<ItemQueryRead> {
     const encoded = encodeItemQueryParameter(query), checked = readItemQueryParameter(encoded);
@@ -81,11 +89,11 @@ export class ScopeHandle {
     return result;
   }
   /** One complete declared projection at one journal head. Requires a read session. */
-  async applicationProjection(query: ApplicationProjectionQuery): Promise<ApplicationProjectionRead> {
+  async applicationProjection(query: ApplicationProjectionQuery, atLeast?: ReadMinimum | Receipt): Promise<ApplicationProjectionRead> {
     const encoded = encodeApplicationProjectionQuery(query), checked = readApplicationProjectionQuery(encoded);
     if (!checked || checked.scope.scope !== this.scope) throw new TransportError("invalid bounded application projection");
     const result = await within(10, async signal => {
-      const text = await this.#transport.applicationProjection(this.scope, this.#reader, encoded!);
+      const text = await this.#transport.applicationProjection(this.scope, this.#reader, encoded!, minimum(atLeast));
       if (signal.aborted) return LATE;
       const reply = readApplicationProjectionReplyText(text, checked);
       if (!reply) throw new TransportError("the reply does not match the bounded application projection");
@@ -94,8 +102,8 @@ export class ScopeHandle {
     if (result === LATE) throw new TransportError("no whole application projection within 10 seconds; coverage is incomplete");
     return result;
   }
-  history(cursor?: Cursor): Promise<Read<readonly Sealed[]>> { return this.#transport.history(this.scope, this.#reader, cursor); }
-  entry(seq: number): Promise<Read<Sealed>> { return this.#transport.entry(this.scope, this.#reader, seq); }
+  history(cursor?: Cursor, atLeast?: ReadMinimum | Receipt): Promise<Read<readonly Sealed[]>> { return this.#transport.history(this.scope, this.#reader, cursor, minimum(atLeast)); }
+  entry(seq: number, atLeast?: ReadMinimum | Receipt): Promise<Read<Sealed>> { return this.#transport.entry(this.scope, this.#reader, seq, minimum(atLeast)); }
   outbox(cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { return this.#transport.outbox(this.scope, this.#reader, cursor); }
 
   /**
@@ -127,8 +135,8 @@ export class ScopeHandle {
   async followReceipt(receipt: Receipt): Promise<Followed> {
     const { at, seq, hash } = receipt.fact;
     if (at.scope !== this.scope) return { ok: false, reason: "not-found" };
-    const read = await this.entry(seq);
-    if (!read.ok) return read.reason === "archived" ? { ok: false, reason: "archived", archived: read.archived } : { ok: false, reason: read.reason };
+    const read = await this.entry(seq, { at, head: { seq, hash } });
+    if (!read.ok) return read.reason === "behind" ? read : read.reason === "archived" ? { ok: false, reason: "archived", archived: read.archived } : { ok: false, reason: read.reason };
     const entry = read.value.entry;
     if (entry.at?.scope !== at.scope || entry.at.kind !== at.kind || entry.seq !== seq) return { ok: false, reason: "reference-mismatch" };
     if (entry.at.inc !== at.inc) return { ok: false, reason: "wrong-incarnation" };

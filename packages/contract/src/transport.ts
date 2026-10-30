@@ -16,7 +16,7 @@ import type { DeclaredDefinition } from "./definition.ts";
 import type { OutboxId, Receipt } from "./entry.ts";
 import type { FactRef, Grant, Digest, PlatformDefinition } from "./scope.ts";
 import type { SignedIntent } from "./intent.ts";
-import type { Cursor, OutboxItem, Item, LogPage, Read, RetainedInput, Sealed, Settlement, Summary } from "./read.ts";
+import type { Cursor, OutboxItem, Item, LogPage, Read, ReadMinimum, RetainedInput, Sealed, Settlement, Summary } from "./read.ts";
 
 /** Deployment admission can stop creation before addressing its native object.
  * These extra reasons are creation answers, not native act judgments. */
@@ -74,16 +74,16 @@ export interface ScopeApi {
   /** The receipt of an accepted act, for its exact signed intent (section 4.2). */
   settle(scope: string, signed: SignedIntent): Promise<Settlement>;
 
-  summary(scope: string, reader: unknown): Promise<Read<Summary>>;
+  summary(scope: string, reader: unknown, atLeast?: ReadMinimum): Promise<Read<Summary>>;
   /** A page of the retained final items of one type. */
-  items(scope: string, reader: unknown, type: string, cursor?: Cursor): Promise<Read<readonly Item[]>>;
+  items(scope: string, reader: unknown, type: string, cursor?: Cursor, atLeast?: ReadMinimum): Promise<Read<readonly Item[]>>;
   /** One bounded selection page. The encoded query is decoded only by its scope owner. */
   queryItems(scope: string, reader: unknown, encoded: string): Promise<ItemQueryRead>;
   /** Session-only declared projection. The canonical JSON reply stays a
    * primitive across RPC; consumers check it against the encoded request. */
-  applicationProjection(scope: string, reader: unknown, encoded: string): Promise<string>;
-  history(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly Sealed[]>>;
-  entry(scope: string, reader: unknown, seq: number): Promise<Read<Sealed>>;
+  applicationProjection(scope: string, reader: unknown, encoded: string, atLeast?: ReadMinimum): Promise<string>;
+  history(scope: string, reader: unknown, cursor?: Cursor, atLeast?: ReadMinimum): Promise<Read<readonly Sealed[]>>;
+  entry(scope: string, reader: unknown, seq: number, atLeast?: ReadMinimum): Promise<Read<Sealed>>;
   outbox(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly OutboxItem[]>>;
   /** The outbox status of one send. */
   outboxItem(scope: string, reader: unknown, outboxId: OutboxId): Promise<Read<OutboxItem>>;

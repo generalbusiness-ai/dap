@@ -1,3 +1,5 @@
+import { readMinimum } from "@generalbusiness/dap-bytes";
+import { ReadWait, type ReadWaitRefusal } from "./read-wait.ts";
 import { offerFloor } from "./floor-writer.ts";
 import { applicationRoom, applicationInstallation, applicationProjectionDeclaration, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 /**
@@ -34,7 +36,7 @@ import { permitsNewPlatformScope, type PlatformCreationPolicy } from "./creation
 import { demoCreationOffer, type DemoCreationConfig } from "./demo-creation.ts";
 import { DurableObject } from "cloudflare:workers";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Answer, Beside, Bounds, Cursor, DeclaredDefinition, Digest, OutboxId, Entry, Grant, Input, LogPage, OperationId, PlatformDefinition, Read, RetainedInput, Seed, ScopeId, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Answer, Beside, Bounds, Cursor, DeclaredDefinition, Digest, OutboxId, Entry, Grant, Input, LogPage, OperationId, PlatformDefinition, Read, ReadMinimum, RetainedInput, Seed, ScopeId, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, isFactRef, isRecord, isPlatformDefinition, isSeed, isSignedIntentShape, intentDigest, digestBytes, isHead, isScopeId, isScopeRef, parseStrict, retainedReadArgument, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { isEntryOf, timeMs, timeOf, type Item } from "@generalbusiness/dap-derive";
 import { sourceName, evidenceIncidentAdmissionPositionV17, EVIDENCE_INCIDENT_PINS_V17 } from "@generalbusiness/dap-platform";
@@ -148,6 +150,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   readonly #sessionPreparation: SessionPreparation;
   readonly #scope: Scope;
   readonly #reads: Reads;
+  readonly #readWait: ReadWait;
   readonly #deliveries: Deliveries;
   readonly #dispatcher: Dispatcher | null;
   readonly #operations: Operations;
@@ -192,6 +195,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const spacing = (attempt: number) => (attempt < 2 ? 0 : Math.min(bounds.dispatchRetrySeconds * 2 ** Math.min(attempt - 2, 30), bounds.dispatchRetryMaxSeconds) * 1000);
     this.#readSql = { exec: (query, ...bindings) => ctx.storage.sql.exec(query, ...bindings) };
     this.#queryFlights = new PreparationFlights(wiring.queryTimer);
+    this.#readWait = new ReadWait(bounds.readWaitMilliseconds, wiring.queryTimer);
     const store = new SqliteStore({
       ...this.#readSql,
       transaction: (closure) => ctx.storage.transactionSync(closure),
@@ -294,6 +298,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     // of an outside operation write their entries in no caller's request, and nothing guarantees an alarm after the last of them.
     this.#scope.turns.measureWith(() => this.#context("dispatch"));
     this.#scope.turns.onSealed(() => {
+      this.#readWait.sealed();
       this.#operations.committed();
       if (this.#archive) {
         this.#archive.committed();
@@ -319,7 +324,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       sessionPreparation: this.#sessionPreparation, localSigners: store.localSigners, proofs: ports.proofs ?? null,
       sessions: this.#sessions, clock: this.#clock, window: bounds.intentLifetimeSeconds, flights: this.#queryFlights });
     this.#applicationProjections = new ApplicationProjections({ name: this.#name, sql: this.#readSql, sessions: this.#sessions,
-      clock: this.#clock, sessionPreparation: this.#sessionPreparation, flights: this.#queryFlights, source: wiring.applicationDeclarationSource ?? null, births: ports.births ?? null });
+      clock: this.#clock, sessionPreparation: this.#sessionPreparation, flights: this.#queryFlights, minimum: (reader, minimum, active) => this.#projectionMinimum(reader, minimum, active), source: wiring.applicationDeclarationSource ?? null, births: ports.births ?? null });
     // The session requests that this scope has answered, each until its `notAfter`: one more table that is no part of the store.
     this.#requests = new SessionRequests({ exec: (query, ...bindings) => ctx.storage.sql.exec(query, ...bindings) });
     // The constructor owns this activation observation. Its synchronous SQL
@@ -708,7 +713,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   queryItems(encoded: unknown, reader: unknown) { return this.#itemQueries.read(encoded, reader); }
   /** Namespace-only host capability; intentionally absent from HTTP routing. */
   archiveItem(ask: ArchiveHostItemAsk) { return this.#archiveItem(ask); }
-  applicationProjection(encoded: unknown, reader: unknown) { return this.#applicationProjections.read(encoded, reader); }
+  applicationProjection(encoded: unknown, reader: unknown, atLeast?: ReadMinimum) { return this.#applicationProjections.read(encoded, reader, atLeast); }
   /** Admission of identifiers precedes authority and storage work. */
   async requests(reader: unknown, request?: string, trace?: string, cursor?: string) {
     const query = requestQuery(request, trace, cursor);
@@ -913,10 +918,30 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     if (!presentsSignedRead(reader)) await this.#readers.prepare?.(reader, read);
   }
 
-  async summary(reader: unknown): Promise<Read<Summary>> { return this.#invoke("summary", async () => { this.#first(); await this.#prepared(reader, "summary"); await this.#rooted(reader, "summary", "summary"); return this.#reads.summary(reader); }); }
-  async items(reader: unknown, type: string, cursor?: Cursor): Promise<Read<readonly Item[]>> { return this.#invoke("items", async () => { this.#first(); await this.#prepared(reader, "items"); return this.#reads.items(reader, type, cursor); }); }
-  async history(reader: unknown, cursor?: Cursor): Promise<Read<readonly Sealed[]>> { return this.#invoke("history", async () => { this.#first(); await this.#prepared(reader, "history"); await this.#rooted(reader, "history", cursor ?? "0"); return this.#reads.history(reader, cursor); }); }
-  async entry(reader: unknown, seq: number): Promise<Read<Sealed>> { return this.#invoke("entries", async () => { this.#first(); await this.#prepared(reader, "entry"); await this.#rooted(reader, "entry", String(seq)); return this.#reads.entry(reader, seq); }); }
+  /** The minimum never grants authority. Each wake and timeout asks Reads
+   * again, and the final read repeats its own checks on the current clock. */
+  #minimum(reader: unknown, read: "summary" | "items" | "history" | "entry", arg: string | undefined, value: unknown, active?: () => boolean): Promise<ReadWaitRefusal | null> {
+    const minimum = readMinimum(value);
+    if (!minimum || minimum.at.scope !== this.#name) return Promise.resolve({ ok: false, reason: "unavailable" });
+    return this.#readWait.until(minimum, () => this.#reads.minimum(reader, read, arg), seq => this.#store.stored(seq)?.hash ?? null, active);
+  }
+  async #projectionMinimum(reader: unknown, value: unknown, active: () => boolean): Promise<ReadWaitRefusal | null> {
+    const minimum = readMinimum(value);
+    if (!minimum || minimum.at.scope !== this.#name) return { ok: false, reason: "unavailable" };
+    await this.#prepared(reader, "summary");
+    await this.#prepared(reader, "items");
+    if (!active()) return { ok: false, reason: "unavailable" };
+    // Projection's existing initial policy admits summary OR items. Its
+    // exact visibility/history and final session guards still follow.
+    return this.#readWait.until(minimum, () => {
+      const summary = this.#reads.minimum(reader, "summary", "summary");
+      return summary.ok ? summary : this.#reads.minimum(reader, "items");
+    }, seq => this.#store.stored(seq)?.hash ?? null, active);
+  }
+  async summary(reader: unknown, atLeast?: ReadMinimum): Promise<Read<Summary>> { return this.#invoke("summary", async () => { this.#first(); await this.#prepared(reader, "summary"); await this.#rooted(reader, "summary", "summary"); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "summary", "summary", atLeast); return waiting ?? this.#reads.summary(reader); }); }
+  async items(reader: unknown, type: string, cursor?: Cursor, atLeast?: ReadMinimum): Promise<Read<readonly Item[]>> { return this.#invoke("items", async () => { this.#first(); await this.#prepared(reader, "items"); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "items", undefined, atLeast); return waiting ?? this.#reads.items(reader, type, cursor); }); }
+  async history(reader: unknown, cursor?: Cursor, atLeast?: ReadMinimum): Promise<Read<readonly Sealed[]>> { return this.#invoke("history", async () => { this.#first(); await this.#prepared(reader, "history"); await this.#rooted(reader, "history", cursor ?? "0"); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "history", cursor ?? "0", atLeast); return waiting ?? this.#reads.history(reader, cursor); }); }
+  async entry(reader: unknown, seq: number, atLeast?: ReadMinimum): Promise<Read<Sealed>> { return this.#invoke("entries", async () => { this.#first(); await this.#prepared(reader, "entry"); await this.#rooted(reader, "entry", String(seq)); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "entry", String(seq), atLeast); return waiting ?? this.#reads.entry(reader, seq); }); }
   async outbox(reader: unknown, cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { return this.#invoke("outbox", async () => { this.#first(); await this.#prepared(reader, "outbox"); return this.#reads.outbox(reader, cursor); }); }
   async outboxItem(reader: unknown, outboxId: OutboxId): Promise<Read<OutboxItem>> { return this.#invoke("outboxItem", async () => { this.#first(); await this.#prepared(reader, "outbox"); return this.#reads.outboxItem(reader, outboxId); }); }
   async operations(reader: unknown, cursor?: Cursor, open = false): Promise<Read<readonly OperationStatus[]>> { return this.#invoke("operations", async () => { this.#first(); await this.#prepared(reader, "operations"); return this.#reads.operations(reader, cursor, open); }); }

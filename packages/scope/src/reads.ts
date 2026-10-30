@@ -31,7 +31,7 @@ import { usesStagedPublicationProtocol } from "@generalbusiness/dap-platform";
  */
 
 import { DOMAINS, ENTRY_READ_BYTES, HISTORY_PAGE_BYTES, HISTORY_PAGE_ENTRIES, OUTBOX_PAGE_ITEMS, RETAINED_INPUT_BYTES, RETAINED_ITEMS_PAGE } from "@generalbusiness/dap-contract";
-import type { Cursor, Digest, OutboxId, Entry, FieldValue, KeyId, LogPage, OperationId, Read, ReadRefusal as ContractReadRefusal, RetainedInput, Summary } from "@generalbusiness/dap-contract";
+import type { Cursor, Digest, FactRef, OutboxId, Entry, FieldValue, KeyId, LogPage, OperationId, Read, ReadRefusal as ContractReadRefusal, RetainedInput, Summary } from "@generalbusiness/dap-contract";
 import { isDigest, isOutboxId, isOperationId, isSeed, positionOf, retainedReadArgument, timeMs } from "@generalbusiness/dap-bytes";
 import { bound, byteOrder, creationFields, evidenceValues, inputTexts, namedBy, own, placesOf, retainsOf, same, type Item, type Owners, type ScopeState, type ValidDefinition } from "@generalbusiness/dap-derive";
 import type { Pinned } from "./core.ts";
@@ -45,7 +45,7 @@ import type { OutboxItem, OperationStatus, Sealed, Store, Stored } from "./store
 export const READABLE: readonly RetainedInput["kind"][] = ["definition", "entry", "rule", "text", "snapshot", "value"];
 
 /** The bound of each read. The defaults are the contract's table, and for a retained input the history page's byte bound. */
-type ReadRefusal = Exclude<ContractReadRefusal, "archived">;
+type ReadRefusal = Exclude<ContractReadRefusal, "archived" | "behind">;
 
 export interface ReadBounds { retainedItems: number; historyEntries: number; historyBytes: number; entryBytes: number; outboxItems: number; retainedBytes: number }
 export const READ_BOUNDS: ReadBounds = {
@@ -199,6 +199,20 @@ export class Reads {
     const open = this.#open(reader, read, arg);
     if (!("scope" in open)) return open;
     return open.pinned.definition ? { ...open, definition: open.pinned.definition } : no("unsupported-definition");
+  }
+
+  /** Authorization for a head barrier, without materializing its read body.
+   * Causal signed readers keep the same history/entry restrictions. */
+  minimum(reader: unknown, read: "summary" | "items" | "history" | "entry", arg?: string): Read<FactRef> {
+    const open = this.#open(reader, read, arg);
+    if (!("scope" in open)) return open;
+    if ((read === "summary" || read === "items") && !open.pinned.definition) return no("unsupported-definition");
+    if (read === "history" && open.limit && "key" in open.limit && !open.limit.scoped && !this.#signed?.chains?.has(open.limit.key, open.limit.since)) return no("forbidden");
+    if (read === "entry" && open.limit) {
+      const row = this.#store.stored(Number(arg));
+      if (row ? !this.#mine(open.limit, row) : "key" in open.limit && !open.limit.scoped) return no("forbidden");
+    }
+    return { ok: true, at: open.scope.head, value: { at: open.scope.at, ...open.scope.head }, complete: true };
   }
 
   /** One response. Each type's `max` bounds its live items, and the definition bounds the counts. */

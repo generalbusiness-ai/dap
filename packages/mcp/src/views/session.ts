@@ -1,5 +1,5 @@
 import { canonicalize, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
-import type { ScopeRef } from "@generalbusiness/dap-contract";
+import type { Receipt, ScopeRef } from "@generalbusiness/dap-contract";
 import { validKey } from "../custody.ts";
 import { decodeViewParameters } from "@generalbusiness/dap-platform/application-v2";
 import { capturedExpected, shapeAt } from "../shape.ts";
@@ -17,6 +17,7 @@ interface Instance {
   cut: number;
   projection: Projection;
   receipt?: string;
+  readReceipt?: Receipt;
   busy: boolean;
   dispatches: Map<string, Promise<CallResult>>;
   pending: Map<string, Card["actions"][number]>;
@@ -89,7 +90,7 @@ function checked(projection: Projection, query: ViewQuery): Projection {
 export class ViewSessions {
   readonly #instances = new Map<string, Instance>();
   readonly #current = new Map<ViewKind, string>();
-  constructor(readonly source: ViewSource, readonly access: Parameters<ViewSource["read"]>[1], readonly perform: (kind: string, args: Record<string, unknown>, admit: () => void | Promise<void>) => Promise<CallResult>, readonly settle: (args: Record<string, unknown>) => Promise<CallResult>) {}
+  constructor(readonly source: ViewSource, readonly access: Parameters<ViewSource["read"]>[1], readonly perform: (kind: string, args: Record<string, unknown>, admit: () => void | Promise<void>) => Promise<CallResult>, readonly settle: (args: Record<string, unknown>) => Promise<CallResult>, readonly receiptOf: (result: CallResult) => Receipt | null = () => null) {}
   #instance(key: string): Instance {
     const instance = this.#instances.get(key);
     if (!instance) throw new ViewError("absent", "This view is no longer retained. Open it again; no act was sent.");
@@ -180,7 +181,8 @@ export class ViewSessions {
       instance.busy = true;
       try {
         const reading: ViewQuery = { ...query, ...(this.source.declared && move.refresh === true && move.position === undefined && move.page === undefined ? { refresh: true as const } : {}) };
-        const projection = checked(structuredClone(await this.source.read(reading, this.access)), query);
+        const fact = instance.readReceipt?.fact;
+        const projection = checked(structuredClone(await this.source.read(reading, this.access, fact ? { at: fact.at, head: { seq: fact.seq, hash: fact.hash } } : undefined)), query);
         this.#admit(instance, cut ?? -1);
         if (projection.card) {
           const pending = instance.pending.get(this.#itemKey(projection.card));
@@ -272,6 +274,8 @@ export class ViewSessions {
       const result = await dispatch;
       const answer = result.structuredContent;
       instance.receipt = receiptLine(card, result);
+      const receipt = this.receiptOf(result);
+      if (answer["answer"] === "accepted" && receipt) instance.readReceipt = structuredClone(receipt);
       const itemKey = this.#itemKey(card);
       if (answer["answer"] === "unknown" || answer["answer"] === "unavailable" || answer["error"] === "custody" || answer["error"] === "transport") {
         const original = { id: `check-${cut}`, label: "Check original request", purpose: "check-original" as const, kind: "", args: { target: args["target"] ?? args["scope"], idempotencyKey: args["idempotencyKey"] } };

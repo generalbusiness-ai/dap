@@ -4,9 +4,9 @@
  * provider, deployed host, arbitrary package containment or browser runs. */
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { canonicalize, isSeed, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, readMinimumParameter, isSeed, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { encodeApplicationProjectionQuery, readApplicationProjectionReply } from "@generalbusiness/dap-platform/application-v2";
-import { DOMAINS, ITEM_QUERY_BOUNDS, PROPOSED_BOUNDS, type ApplicationProjectionQuery, type ScopeRef } from "@generalbusiness/dap-contract";
+import { DOMAINS, ITEM_QUERY_BOUNDS, PROPOSED_BOUNDS, type ApplicationProjectionQuery, type FactRef, type ScopeRef } from "@generalbusiness/dap-contract";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
 import { requestSession, sessionRequest, ScopeHandle, httpTransport, bindingTransport, secretSigner, signedApplicationInstall, ApplicationPackageError, type ServiceBinding } from "@generalbusiness/dap-client";
 import { McpService, memoryStore as custodyStore, type ServerPort } from "@generalbusiness/dap-mcp";
@@ -252,8 +252,9 @@ test("native installed projection reads exact journal state and survives R2 dele
     expect(updated.value.value.at).not.toEqual(first.value.value.at);
     expect((await life.wait(() => A.entries())).filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "install-application")).toHaveLength(1);
     let viewSignatures = 0;
+    const viewRequests: string[] = [];
     const signer = secretSigner(rita.secret);
-    const views = new McpService({ ...port, custody: custodyStore(), declaredViews: { bytes: packet.bytes, release: packet.ids.release, item: job },
+    const views = new McpService({ ...port, fetch: (url, init) => { viewRequests.push(url); return port.fetch!(url, init); }, custody: custodyStore(), declaredViews: { bytes: packet.bytes, release: packet.ids.release, item: job },
       signer: { key: signer.key, sign: bytes => { if (new TextDecoder().decode(bytes).startsWith(`${DOMAINS.intent}\n`)) viewSignatures++; return signer.sign(bytes); } },
     });
     expect((await life.wait(() => views.call("view_board", { view: "paused" }))).isError).toBe(false);
@@ -293,7 +294,22 @@ test("native installed projection reads exact journal state and survives R2 dele
     expect((await life.wait(() => views.call("view_act", { view: "stale", cut: 1, action: "pause" }))).structuredContent).toMatchObject({ error: "view", reason: "stale" });
     expect(viewSignatures).toBe(0);
     await start(); await open("current");
-    expect((await life.wait(() => views.call("view_act", { view: "current", cut: 1, action: "pause" }))).structuredContent).toMatchObject({ result: { structuredContent: { answer: "accepted" } } });
+    const acted = await life.wait(() => views.call("view_act", { view: "current", cut: 1, action: "pause" }));
+    expect(acted.structuredContent).toMatchObject({ result: { structuredContent: { answer: "accepted" } } });
+    const fact = (acted.structuredContent["result"] as { structuredContent: { fact: FactRef } }).structuredContent.fact;
+    const beforeRefresh = viewRequests.length;
+    const refreshed = await life.wait(() => views.call("view_read", { view: "current", cut: 1, refresh: true }));
+    expect(refreshed.isError, JSON.stringify(refreshed.structuredContent)).toBe(false);
+    expect(refreshed.structuredContent).toMatchObject({ display: { card: { title: "paused" } } });
+    const appReads = viewRequests.slice(beforeRefresh).map(url => new URL(url)).filter(url => url.pathname.startsWith(`/v1/scopes/${app.name}`));
+    // The shared MCP host refreshes its actual declared card with one
+    // projection read, carrying its internally retained complete receipt.
+    expect(appReads).toHaveLength(1);
+    expect(appReads[0]!.pathname).toBe(`/v1/scopes/${app.name}/application-projection`);
+    expect(readMinimumParameter(appReads[0]!.searchParams.get("atLeast"))).toEqual({ at: fact.at, head: { seq: fact.seq, hash: fact.hash } });
+    const displayed = refreshed.structuredContent["display"] as { card: { declared: { data: { at: { seq: number } } } } };
+    expect(displayed.card.declared.data.at.seq).toBeGreaterThanOrEqual(fact.seq);
+    expect(JSON.stringify(refreshed)).not.toContain("readReceipt");
     expect(viewSignatures).toBe(1);
     await start(); await open("role-loss");
     const roster = await life.wait(() => M.item(0)), actions = roster.values["adminActions"] as readonly string[];

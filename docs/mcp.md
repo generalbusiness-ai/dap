@@ -378,7 +378,7 @@ slot-full type-full entry-too-large send-unresolved unknown-message
 unsupported-definition bad-input dependency-unavailable busy clock-behind
 scope-provisional guard-incomplete authority-unavailable unavailable
 rate-limited idempotency-mismatch not-found wrong-incarnation forbidden
-history-unavailable too-large sessions-unavailable bad-request replayed
+history-unavailable too-large sessions-unavailable bad-request replayed behind
 ```
 
 The server reasons are `exception`, `shape`, `stale-descriptor`, `restart`,

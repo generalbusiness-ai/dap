@@ -194,6 +194,7 @@ export class McpService {
   readonly #metrics: McpMetrics;
   readonly #fetch: Fetch | undefined;
   readonly #tools: readonly string[] | null;
+  readonly #readReceipts = new WeakMap<CallResult, Receipt>();
   #snapshot: Snapshot | null = null;
   #stale = false;
   /** At most 64 recent hints per cache: next entry or page cursor. Eviction
@@ -227,7 +228,7 @@ export class McpService {
     const declared = port.declaredViews ? new DeclaredViewSource(port.declaredViews.bytes, port.declaredViews.release, {
       now,
       installation: () => this.#declaredInstallation(item!),
-      projection: async query => this.#reads.projection((await this.#applicationRoom()).membership, query),
+      projection: async (query, minimum) => this.#reads.projection((await this.#applicationRoom()).membership, query, minimum),
       members: scope => readMembershipDisplay(this.#reads, scope),
       viewer: async () => {
         const room = await this.#applicationRoom(), session = await this.#reads.session(room.membership);
@@ -245,7 +246,7 @@ export class McpService {
     }) : null;
     const source = declared ?? port.views;
     this.resources = new ViewResources(port.presentation ?? source?.presentation ?? PRESENTATION);
-    const views = source ? new ViewSessions(source, { call: (name, args) => this.call(name, args) }, (kind, args, admit) => this.#viewPerform(kind, args, admit), (args) => this.call("settle", args)) : null;
+    const views = source ? new ViewSessions(source, { call: (name, args) => this.call(name, args) }, (kind, args, admit) => this.#viewPerform(kind, args, admit), (args) => this.call("settle", args), result => this.#readReceipts.get(result) ?? null) : null;
     this.#generic = { ...this.#genericTools(), ...(views ? viewTools(views, source?.screens) : {}) };
   }
 
@@ -568,7 +569,9 @@ export class McpService {
       if (summary.scope.kind === "membership") this.#reads.forget(summary.scope.scope);
       void this.check();
     }
-    return ok(this.#answerOf(kept.answer, { scope, kind, tool, retained: kept.retained, said, phase: kept.record.phase }));
+    const result = ok(this.#answerOf(kept.answer, { scope, kind, tool, retained: kept.retained, said, phase: kept.record.phase }));
+    if (kept.answer.answer === "accepted") this.#readReceipts.set(result, kept.answer.receipt);
+    return result;
   }
 
   #answerOf(answer: Answer, at: { scope: string; kind: string; tool: string; retained: boolean; said: { sentence: string; next: string }; phase: string }): Record<string, unknown> {
@@ -902,11 +905,13 @@ export class McpService {
       : answer === "refused" ? `The act under key ${String(key)} was refused; the refusal is kept.`
       : answer === "mismatch" ? `The key ${String(key)} is on another intent of your key at that scope.`
       : `The outcome under key ${String(key)} is unknown: the scope gave no receipt for the exact envelope. The record stays unknown.`;
-    return ok({ answer, phase: record.phase, sentence, next: answer === "unknown" ? "Call the same tool again with the same idempotencyKey: it resends the same envelope." : "Nothing more is needed.",
+    const result = ok({ answer, phase: record.phase, sentence, next: answer === "unknown" ? "Call the same tool again with the same idempotencyKey: it resends the same envelope." : "Nothing more is needed.",
       ...(archived ? { ...archivedAnswer(archived.archived, archived.fact), archived: archived.archived, ...(archived.fact ? { fact: archived.fact } : {}) } : {}),
       ...(receipt ? { fact: receipt.fact, outboxIds: receipt.sends } : {}), outcomes: record.count, attempt: record.attempt,
       last: last ? { at: last.at, ...(last.archivedSettlement ? { answer: "archived", archived: last.archivedSettlement.archived, ...(last.archivedSettlement.fact ? { fact: last.archivedSettlement.fact } : {}) } : projectAnswer(last.answer)) } : null,
       steps, ...(nextStep !== null ? { cursor: cursorOf({ i: nextStep }), more: `Steps ${fromStep + 1} to ${nextStep} of ${allSteps.length}; call settle with cursor for the rest.` } : {}) });
+    if (receipt) this.#readReceipts.set(result, receipt);
+    return result;
   }
 
   async #membershipRef(given: unknown): Promise<ScopeRef | null> {
@@ -1058,7 +1063,7 @@ export class McpService {
     if (kept.answer.answer !== "accepted") return ok({ ...projectAnswer(kept.answer), retained: kept.retained, phase: kept.record.phase });
     const receipt = kept.answer.receipt;
     if (!isReceipt(receipt) || receipt.definition !== pin || receipt.intent !== intentDigest(kept.record.envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(room.rules)) return failed({ error: "target", what: "the install acknowledgement does not match the retained native request" });
-    const read = await this.#reads.read(room.membership, (t, r) => t.entry(room.rules.scope, r, receipt.fact.seq));
+    const read = await this.#reads.read(room.membership, (t, r) => t.entry(room.rules.scope, r, receipt.fact.seq, { at: receipt.fact.at, head: { seq: receipt.fact.seq, hash: receipt.fact.hash } }));
     if (!read.ok || !read.complete || read.next !== undefined || read.value.hash !== receipt.fact.hash || entryHash(read.value.entry) !== receipt.fact.hash
       || canonicalize(read.value.entry.at) !== canonicalize(room.rules) || read.value.entry.seq !== receipt.fact.seq || read.value.entry.input.type !== "act"
       || canonicalize(read.value.entry.input.signed) !== canonicalize(kept.record.envelope.signed)) return failed({ error: "target", what: "the install receipt's native entry is unavailable or does not hold the exact retained request" });
@@ -1114,7 +1119,7 @@ export class McpService {
     // The admitted entry, read as the member the join made: it must hold the exact request kept, and it names the inbox.
     this.#reads.forget(M.scope);
     const fact = kept.answer.receipt.fact;
-    const entry = await this.#reads.read(M, (t, r) => t.entry(M.scope, r, fact.seq));
+    const entry = await this.#reads.read(M, (t, r) => t.entry(M.scope, r, fact.seq, { at: fact.at, head: { seq: fact.seq, hash: fact.hash } }));
     if (!entry.ok) return failed({ error: "read", scope: M.scope, reason: entry.reason });
     const input = entry.value.entry.input;
     if (entry.value.hash !== fact.hash || input.type !== "act" || canonicalize(input.signed) !== canonicalize(kept.record.envelope.signed)) {

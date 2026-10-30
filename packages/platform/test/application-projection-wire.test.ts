@@ -43,6 +43,12 @@ test("canonical replies require the exact request binding and native row identit
   const row = value.value.sources["alert"]![0]!;
   expect(readApplicationProjectionReply(utf8(canonicalize({ ...value, value: { ...value.value, sources: { alert: [{ ...row, revision: "3" }] } } })))).toBeNull();
   expect(readApplicationProjectionReply(utf8(canonicalize({ ok: false, reason: "forbidden" })), query())).toEqual({ ok: false, reason: "forbidden" });
+  const behind = { ok: false, reason: "behind", current: { at: scope, seq: 11, hash: textDigest("PUBLIC TEST current head") } };
+  expect(readApplicationProjectionReply(utf8(canonicalize(behind)), query())).toEqual(behind);
+  expect(readApplicationProjectionReply(utf8(canonicalize(behind)), { ...query(), scope: { ...scope, kind: "task" } })).toBeNull();
+  expect(readApplicationProjectionReply(utf8(canonicalize({ ok: false, reason: "behind" })), query())).toBeNull();
+  expect(readApplicationProjectionReply(utf8(canonicalize({ ...behind, reason: "unavailable" })), query())).toBeNull();
+  expect(readApplicationProjectionReply(utf8(canonicalize({ ok: false, reason: "wrong-incarnation" })), query())).toEqual({ ok: false, reason: "wrong-incarnation" });
   expect(readApplicationProjectionReply(utf8(canonicalize({ ok: false, reason: "unknown" })))).toBeNull();
   expect(readApplicationProjectionReply(new Uint8Array(B.resultBytes + 1))).toBeNull();
 });
