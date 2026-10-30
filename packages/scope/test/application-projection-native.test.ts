@@ -15,7 +15,7 @@ import { outsideOf as hostOutside } from "../src/worker.ts";
 import { applicationCounterFactTimePacket2, applicationWorkerBindings, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture } from "./fixtures-native.ts";
 import { rita, routed } from "./repository.ts";
 import { soon, net } from "./net.ts";
-import { Scope } from "../src/core.ts";
+import { Scope, type Checkpointed } from "../src/core.ts";
 import { production } from "../src/ports.ts";
 import { ReadPreparation } from "../src/read-preparation.ts";
 import { SessionPreparation } from "../src/session-preparation.ts";
@@ -28,6 +28,7 @@ import { authenticateSession, mintSession, readerOf, type Sessions } from "../sr
 import { create } from "./support.ts";
 import { ItemQueryBudget } from "../src/item-query-budget.ts";
 import { applicationProjectionFactSigners } from "../src/applications/projection-fact-signers.ts";
+import { archiveSql } from "./support/archive.ts";
 
 // Invariant: all 100 exact local fact references fit native SQLite's binding
 // limit, without entry bodies or more than the existing source allowance.
@@ -321,5 +322,68 @@ test("native installed projection reads exact journal state and survives R2 dele
     await open("role-restored");
     expect((await life.wait(() => views.call("view_act", { view: "role-restored", cut: 1, action: "pause" }))).structuredContent).toMatchObject({ result: { structuredContent: { answer: "accepted" } } });
     expect(viewSignatures).toBe(2);
+
+    // A real judged floor deletes this accepted card action's old payload.
+    // The archive commit is an explicit TEST receipt, not provider custody
+    // or evidence that the alarm writer ran. Every tail row is native.
+    await start(); await open("floor");
+    const floorActed = await life.wait(() => views.call("view_act", { view: "floor", cut: 1, action: "pause" }));
+    expect(floorActed.structuredContent).toMatchObject({ result: { structuredContent: { answer: "accepted" } } });
+    const floorFact = (floorActed.structuredContent["result"] as { structuredContent: { fact: FactRef } }).structuredContent.fact;
+    const original = (await life.wait(() => app.entries())).find(entry => entry.seq === floorFact.seq);
+    if (!original || original.input.type !== "act") throw Error("The accepted card receipt must name its recorded signed original.");
+    const signed = original.input.signed;
+    const settled = await life.owner.required(() => http.settle(app.name, signed));
+    expect(settled).toMatchObject({ ok: true, value: { fact: floorFact } });
+    if (!settled.ok) throw Error("The original card action must settle before its payload is floored.");
+    const receipt = settled.value, position = receipt.fact.seq + 1;
+    // Supersede the old local-signer anchor without changing this card's
+    // retained receipt. The later native pause leaves the actual board paused.
+    await start();
+    const currentBoard = (await life.wait(() => app.summary())).value.items.find(item => item.id === board.id)!;
+    await life.wait(() => app.did(rita, "pause", { on: board.id, expected: { on: currentBoard.revision } }));
+    for (let n = 0; n < 100; n++) {
+      expect(await life.wait(() => (app.object as unknown as { checkpoint(): Promise<Checkpointed> }).checkpoint())).toMatchObject({ answer: "written" });
+    }
+    life.advance(PROPOSED_BOUNDS.intentLifetimeSeconds * 1000 + 1);
+    const floor = await life.wait(() => runInDurableObject(app.object, async (_instance, state) => {
+      const store = new SqliteStore(archiveSql(state)), anchors = store.localSigners.floorAnchors(position);
+      expect(anchors).not.toBeNull();
+      const keep = [...new Set(anchors!.filter(seq => seq < position))].sort((a, b) => a - b);
+      const through = store.scope()!.head;
+      const written = await new Scope(app.name, store, { ...production(), clock: net.clock }, PROPOSED_BOUNDS).floor({
+        type: "floor", floor: position, receipt: { commit: "d".repeat(40), through }, keep,
+      });
+      expect(written).toMatchObject({ answer: "written" });
+      expect(store.floor()?.floor).toBe(position);
+      expect(store.stored(receipt.fact.seq)).toBeNull();
+      return store.floor()!;
+    }));
+    await life.wait(() => app.restart());
+    const fresh = await life.owner.required(() => requestSession("https://scopes.test", M.name,
+      sessionRequest(membership, rita.secret, soon(60), crypto.randomUUID()), { fetch: routed }));
+    if (!fresh.ok) throw Error("The same active native member must obtain a fresh session after the fixture clock advances.");
+    const handle = new ScopeHandle(http, app.name, fresh.session.reader());
+    const archived = { floor: floor.floor, commit: floor.receipt.commit, through: floor.receipt.through };
+    const minimum = { at: receipt.fact.at, head: { seq: receipt.fact.seq, hash: receipt.fact.hash } };
+    expect(await life.owner.required(() => handle.followReceipt(receipt))).toEqual({ ok: false, reason: "archived", archived });
+    expect(await life.owner.required(() => handle.entry(receipt.fact.seq, minimum))).toEqual({ ok: false, reason: "archived", archived });
+    const wrongBelow = { ...minimum, head: { ...minimum.head, hash: textDigest("TEST unavailable archived bytes") } };
+    expect(await life.owner.required(() => handle.summary(wrongBelow))).toMatchObject({ ok: true });
+    expect(await life.owner.required(() => http.summary(app.name, null, wrongBelow))).toEqual({ ok: false, reason: "forbidden" });
+    // The actual retained row at the floor remains an exact hash boundary.
+    const boundary = await life.owner.required(() => handle.entry(position));
+    expect(boundary.ok).toBe(true);
+    if (!boundary.ok) throw Error("The real floor position must remain in the live tail.");
+    expect(await life.owner.required(() => handle.summary({ at: receipt.fact.at, head: { seq: position, hash: textDigest("TEST wrong retained floor hash") } }))).toEqual({ ok: false, reason: "unavailable" });
+    const beforeFloorRefresh = viewRequests.length;
+    const floorRefreshed = await life.wait(() => views.call("view_read", { view: "floor", cut: 1, refresh: true }));
+    expect(floorRefreshed.isError, JSON.stringify(floorRefreshed.structuredContent)).toBe(false);
+    expect(floorRefreshed.structuredContent).toMatchObject({ display: { card: { title: "paused" } } });
+    const floorReads = viewRequests.slice(beforeFloorRefresh).map(url => new URL(url)).filter(url => url.pathname.startsWith(`/v1/scopes/${app.name}`));
+    expect(floorReads).toHaveLength(1);
+    expect(floorReads[0]!.pathname).toBe(`/v1/scopes/${app.name}/application-projection`);
+    expect(readMinimumParameter(floorReads[0]!.searchParams.get("atLeast"))).toEqual(minimum);
+    expect(viewSignatures).toBe(3);
   } finally { await env.APPLICATION_CONTENT.delete(f.key); life.release(); }
 }, 30_000);

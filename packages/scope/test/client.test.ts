@@ -38,13 +38,11 @@ test.each(transports)("a scope handle over %s: an act returns its receipt; the e
   expect((await scope.summary())).toMatchObject({ ok: true, at: { seq: 1, hash: receipt.fact.hash } });
 
   expect(await scope.followReceipt(receipt)).toMatchObject({ ok: true, entry: { seq: 1, input: { type: "act", signed } } });
-  // The native full-head minimum refuses a different hash before returning
-  // an entry. The plain client intent owner still checks post-read hashes.
-  expect(await scope.followReceipt({ ...receipt, fact: { ...receipt.fact, hash: answer.receipt.fact.hash } })).toEqual({ ok: false, reason: "unavailable" });
-  // Another incarnation has its named refusal; another kind is an invalid
-  // minimum for this read and exposes no entry or actual head.
+  // The handle computes the entry hash and keeps its named receipt refusal.
+  expect(await scope.followReceipt({ ...receipt, fact: { ...receipt.fact, hash: answer.receipt.fact.hash } })).toEqual({ ok: false, reason: "hash-mismatch" });
+  // Receipt identity checks preserve the original named refusals.
   const elsewhere = (over: object) => scope.followReceipt({ ...receipt, fact: { ...receipt.fact, at: { ...at, ...over } } });
-  expect([await elsewhere({ inc: newIncarnation(new Uint8Array(16).fill(7)) }), await elsewhere({ kind: "lane" })]).toEqual([{ ok: false, reason: "wrong-incarnation" }, { ok: false, reason: "unavailable" }]);
+  expect([await elsewhere({ inc: newIncarnation(new Uint8Array(16).fill(7)) }), await elsewhere({ kind: "lane" })]).toEqual([{ ok: false, reason: "wrong-incarnation" }, { ok: false, reason: "reference-mismatch" }]);
   expect(await scope.followOutbox(receipt.sends[0]!)).toMatchObject({ ok: true, value: { outboxId: "1.0", class: "request", held: false, result: null } });
   net.hold = null;
 });

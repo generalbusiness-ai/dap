@@ -1,7 +1,8 @@
 import { expect, test } from "vitest";
 import type { ScopeRef, SignedSessionRequest } from "@generalbusiness/dap-contract";
-import { base32, canonicalize, keyIdOfSecret, newIncarnation, signIntent, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { secretSigner, type Fetch } from "@generalbusiness/dap-client";
+import { base32, canonicalize, keyIdOfSecret, newIncarnation, readMinimumParameter, signIntent, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { encodeApplicationProjectionQuery } from "@generalbusiness/dap-platform/application-v2";
+import { ScopeHandle, secretSigner, type Fetch } from "@generalbusiness/dap-client";
 import { handleOf, managedReadsOf, readerOf, requiredReadsOf, requiredSessionOf, run, sessionOf, Stop } from "../src/command-support.ts";
 import { memoryStore, type Config } from "../src/store.ts";
 
@@ -53,6 +54,34 @@ test("private session reuse spans fresh Contexts, shares one in-flight issuance 
   const stopped = await run(async () => { await sessionOf({ ...skewed.context(), now: () => START + 600_000 }, skewed.config); return { code: 0, lines: [] }; });
   expect([stopped.code, skewed.state.issued]).toEqual([1, 1]);
   expect(stopped.lines.join(" ")).toContain("clock alignment"); expect(await skewed.store.sessionCache!.read()).toBeNull();
+});
+
+test("CLI managed session reads carry all five minimum positions instead of returning older state", async () => {
+  const f = await fixture(), calls: URL[] = [];
+  const minimum = { at: TARGET, head: { seq: 8, hash: HEAD.hash } };
+  const behind = { ok: false, reason: "behind", current: { at: TARGET, ...HEAD } };
+  const fetch: Fetch = async (url, init) => {
+    if (new URL(url).pathname.endsWith("/sessions")) return f.fetch(url, init);
+    expect(init?.headers?.["authorization"]).toBe("Session TEST-private-cache-1");
+    calls.push(new URL(url));
+    return { status: 503, body: new Response(canonicalize(behind)).body };
+  };
+  const connection = await managedReadsOf({ ...f.context(), fetch }, f.config);
+  const session = await connection.session();
+  expect(session?.reader()).toBe("Session TEST-private-cache-1");
+  const handle = new ScopeHandle(connection.transport, TARGET.scope, session!.reader());
+  expect(await handle.summary(minimum)).toEqual(behind);
+  expect(await handle.items("note", "4", minimum)).toEqual(behind);
+  expect(await handle.history("3", minimum)).toEqual(behind);
+  expect(await handle.entry(8, minimum)).toEqual(behind);
+  const query = { v: 1 as const, scope: TARGET, directory: { ...M, kind: "directory" as const }, install: 1, projection: "board", items: {} };
+  expect(await handle.applicationProjection(query, minimum)).toEqual(behind);
+  expect(calls).toHaveLength(5);
+  expect(calls.map(url => readMinimumParameter(url.searchParams.get("atLeast")))).toEqual(Array(5).fill(minimum));
+  expect(calls[1]!.searchParams.get("cursor")).toBe("4");
+  expect(calls[2]!.searchParams.get("cursor")).toBe("3");
+  expect(calls[4]!.searchParams.get("p")).toBe(encodeApplicationProjectionQuery(query));
+  expect(f.state.issued).toBe(1);
 });
 
 test("cache identity includes exact service, signing key and membership incarnation; rejected bytes are discarded even if issuance fails", async () => {

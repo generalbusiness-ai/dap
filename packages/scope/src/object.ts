@@ -923,7 +923,10 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   #minimum(reader: unknown, read: "summary" | "items" | "history" | "entry", arg: string | undefined, value: unknown, active?: () => boolean): Promise<ReadWaitRefusal | null> {
     const minimum = readMinimum(value);
     if (!minimum || minimum.at.scope !== this.#name) return Promise.resolve({ ok: false, reason: "unavailable" });
-    return this.#readWait.until(minimum, () => this.#reads.minimum(reader, read, arg), seq => this.#store.stored(seq)?.hash ?? null, active);
+    return this.#readWait.until(minimum, async () => {
+      if (arg !== undefined) await this.#rooted(reader, read, arg);
+      return this.#reads.minimum(reader, read, arg);
+    }, seq => this.#store.stored(seq)?.hash ?? null, active, () => this.#store.floor()?.floor ?? 0);
   }
   async #projectionMinimum(reader: unknown, value: unknown, active: () => boolean): Promise<ReadWaitRefusal | null> {
     const minimum = readMinimum(value);
@@ -936,12 +939,12 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     return this.#readWait.until(minimum, () => {
       const summary = this.#reads.minimum(reader, "summary", "summary");
       return summary.ok ? summary : this.#reads.minimum(reader, "items");
-    }, seq => this.#store.stored(seq)?.hash ?? null, active);
+    }, seq => this.#store.stored(seq)?.hash ?? null, active, () => this.#store.floor()?.floor ?? 0);
   }
-  async summary(reader: unknown, atLeast?: ReadMinimum): Promise<Read<Summary>> { return this.#invoke("summary", async () => { this.#first(); await this.#prepared(reader, "summary"); await this.#rooted(reader, "summary", "summary"); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "summary", "summary", atLeast); return waiting ?? this.#reads.summary(reader); }); }
+  async summary(reader: unknown, atLeast?: ReadMinimum): Promise<Read<Summary>> { return this.#invoke("summary", async () => { this.#first(); await this.#prepared(reader, "summary"); if (atLeast === undefined) await this.#rooted(reader, "summary", "summary"); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "summary", "summary", atLeast); return waiting ?? this.#reads.summary(reader); }); }
   async items(reader: unknown, type: string, cursor?: Cursor, atLeast?: ReadMinimum): Promise<Read<readonly Item[]>> { return this.#invoke("items", async () => { this.#first(); await this.#prepared(reader, "items"); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "items", undefined, atLeast); return waiting ?? this.#reads.items(reader, type, cursor); }); }
-  async history(reader: unknown, cursor?: Cursor, atLeast?: ReadMinimum): Promise<Read<readonly Sealed[]>> { return this.#invoke("history", async () => { this.#first(); await this.#prepared(reader, "history"); await this.#rooted(reader, "history", cursor ?? "0"); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "history", cursor ?? "0", atLeast); return waiting ?? this.#reads.history(reader, cursor); }); }
-  async entry(reader: unknown, seq: number, atLeast?: ReadMinimum): Promise<Read<Sealed>> { return this.#invoke("entries", async () => { this.#first(); await this.#prepared(reader, "entry"); await this.#rooted(reader, "entry", String(seq)); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "entry", String(seq), atLeast); return waiting ?? this.#reads.entry(reader, seq); }); }
+  async history(reader: unknown, cursor?: Cursor, atLeast?: ReadMinimum): Promise<Read<readonly Sealed[]>> { return this.#invoke("history", async () => { this.#first(); await this.#prepared(reader, "history"); if (atLeast === undefined) await this.#rooted(reader, "history", cursor ?? "0"); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "history", cursor ?? "0", atLeast); return waiting ?? this.#reads.history(reader, cursor); }); }
+  async entry(reader: unknown, seq: number, atLeast?: ReadMinimum): Promise<Read<Sealed>> { return this.#invoke("entries", async () => { this.#first(); await this.#prepared(reader, "entry"); if (atLeast === undefined) await this.#rooted(reader, "entry", String(seq)); const waiting = atLeast === undefined ? null : await this.#minimum(reader, "entry", String(seq), atLeast); return waiting ?? this.#reads.entry(reader, seq); }); }
   async outbox(reader: unknown, cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { return this.#invoke("outbox", async () => { this.#first(); await this.#prepared(reader, "outbox"); return this.#reads.outbox(reader, cursor); }); }
   async outboxItem(reader: unknown, outboxId: OutboxId): Promise<Read<OutboxItem>> { return this.#invoke("outboxItem", async () => { this.#first(); await this.#prepared(reader, "outbox"); return this.#reads.outboxItem(reader, outboxId); }); }
   async operations(reader: unknown, cursor?: Cursor, open = false): Promise<Read<readonly OperationStatus[]>> { return this.#invoke("operations", async () => { this.#first(); await this.#prepared(reader, "operations"); return this.#reads.operations(reader, cursor, open); }); }

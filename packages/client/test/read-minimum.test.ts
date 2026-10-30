@@ -1,7 +1,8 @@
 /** Transport stand-ins own request shape and dispatch count only. */
 import { expect, test } from "vitest";
-import type { ReadMinimum, ApplicationProjectionQuery, BehindRead, Receipt, ScopeRef, SignedRead } from "@generalbusiness/dap-contract";
-import { canonicalize, parseStrict, readMinimumParameter, unb64url, verifySignedRead } from "@generalbusiness/dap-bytes";
+import type { ReadMinimum, ApplicationProjectionQuery, BehindRead, Entry, Receipt, ScopeRef, SignedRead } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, parseStrict, readMinimumParameter, unb64url, verifySignedRead } from "@generalbusiness/dap-bytes";
+import { applicationProjectionQueryDigest } from "@generalbusiness/dap-platform/application-v2";
 import { ScopeHandle, bindingTransport, httpTransport, secretSigner, signedReads, TransportError, type Fetch, type ServiceBinding } from "../src/index.ts";
 const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
 const fact = { at, seq: 8, hash: `sha256:${"b".repeat(64)}` as const };
@@ -54,11 +55,68 @@ test("binding and signed-read adapters forward the barrier while preserving sign
   expect(calls[4]![1]).toBe("Session fixture");
 });
 
-test("followReceipt performs one exact minimum-qualified entry read and returns behind without retry", async () => {
+test("followReceipt performs one sequence-qualified entry read and returns behind without fallback", async () => {
   const calls: unknown[][] = [];
   const t = bindingTransport({ entry: async (...args: unknown[]) => { calls.push(args); return behind; } } as unknown as ServiceBinding);
   expect(await new ScopeHandle(t, at.scope).followReceipt(receipt)).toEqual(behind);
-  expect(calls).toEqual([[at.scope, null, fact.seq, minimum]]);
+  expect(calls).toEqual([[at.scope, null, fact.seq, { at, head: fact.seq }]]);
+});
+
+const entry: Entry = { v: 1, at, seq: fact.seq, prev: fact.hash, time: "2026-10-30T17:00:00Z", clamped: false,
+  epoch: 0, input: { type: "checkpoint", through: fact.seq - 1, state: fact.hash }, uses: [], prepared: [], effects: [], sends: [] };
+const exact: Receipt = { ...receipt, fact: { ...fact, hash: entryHash(entry) } };
+const sealed = { entry, hash: exact.fact.hash };
+
+test("HTTP and binding follow one normal receipt read and use only one unavailable fallback for exact identity checks", async () => {
+  for (const mode of ["http", "binding"] as const) {
+    const calls: (ReadMinimum | undefined)[] = [];
+    let stale = false;
+    const reply = (required?: ReadMinimum) => {
+      calls.push(required);
+      if (required && required.at.kind !== at.kind) return { ok: false, reason: "unavailable" };
+      return { ok: true, at: { seq: stale ? fact.seq - 1 : fact.seq, hash: exact.fact.hash }, value: sealed, complete: true };
+    };
+    const transport = mode === "http" ? httpTransport("https://scopes.test", { fetch: async url => {
+      const value = new URL(url).searchParams.get("atLeast"), required = value === null ? undefined : readMinimumParameter(value)!;
+      return { status: 200, body: new Response(canonicalize(reply(required))).body };
+    } }) : bindingTransport({ entry: async (_scope: string, _reader: unknown, _seq: number, required?: ReadMinimum) => reply(required) } as unknown as ServiceBinding);
+    const handle = new ScopeHandle(transport, at.scope, "Session fixture");
+    expect(await handle.followReceipt(exact)).toMatchObject({ ok: true, entry });
+    expect(calls.splice(0)).toEqual([{ at, head: fact.seq }]);
+    expect(await handle.followReceipt(receipt)).toEqual({ ok: false, reason: "hash-mismatch" });
+    expect(calls.splice(0)).toEqual([{ at, head: fact.seq }]);
+    const other = { ...at, kind: "rules" as const }, wrong = { ...exact, fact: { ...exact.fact, at: other } };
+    expect(await handle.followReceipt(wrong)).toEqual({ ok: false, reason: "reference-mismatch" });
+    expect(calls.splice(0)).toEqual([{ at: other, head: fact.seq }, undefined]);
+    stale = true;
+    expect(await handle.followReceipt(wrong)).toEqual({ ok: false, reason: "unavailable" });
+    expect(calls).toEqual([{ at: other, head: fact.seq }, undefined]);
+  }
+});
+
+test("a handle rejects stale successful HTTP and binding replies for every minimum-qualified read", async () => {
+  const head = { seq: fact.seq - 1, hash: fact.hash };
+  const summary = { scope: at, status: "active", definition: receipt.definition, time: entry.time, items: [], counts: [] };
+  const read = (value: unknown) => ({ ok: true, at: head, value, complete: true });
+  const projection = canonicalize({ ok: true, query: applicationProjectionQueryDigest(query), value: {
+    v: 1, scope: at, projection: receipt.definition, at: head, sources: { board: [] },
+  } });
+  const rpc = bindingTransport({ summary: async () => read(summary), items: async () => read([]),
+    history: async () => read([sealed]), entry: async () => read(sealed), applicationProjection: async () => projection,
+  } as unknown as ServiceBinding);
+  const http = httpTransport("https://scopes.test", { fetch: async url => {
+    const path = new URL(url).pathname;
+    const body = path.endsWith("/application-projection") ? projection : canonicalize(read(
+      path.includes("/entries/") ? sealed : path.endsWith("/history") ? [sealed] : path.includes("/items/") ? [] : summary));
+    return { status: 200, body: new Response(body).body };
+  } });
+  for (const transport of [http, rpc]) {
+    const handle = new ScopeHandle(transport, at.scope, "Session fixture");
+    for (const perform of [() => handle.summary(receipt), () => handle.items("note", undefined, receipt),
+      () => handle.history(undefined, receipt), () => handle.entry(fact.seq, receipt), () => handle.applicationProjection(query, receipt)])
+      await expect(perform()).rejects.toThrow("the reply does not reach the read minimum");
+    expect(await handle.summary()).toMatchObject({ ok: true, at: head });
+  }
 });
 
 test("malformed or foreign-scope minima fail before HTTP or binding dispatch", async () => {

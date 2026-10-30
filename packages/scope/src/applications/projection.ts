@@ -6,7 +6,7 @@ import { applicationJson } from "@generalbusiness/dap-platform/application";
 import { timeMs } from "@generalbusiness/dap-derive";
 import { applicationProjectionQueryDigest, ApplicationProjectionError, bindApplicationProjection, isApplicationJournalSource, readApplicationProjectionQuery } from "@generalbusiness/dap-platform/application-v2";
 import { ItemQueryBudget } from "../item-query-budget.ts";
-import { PreparationFlights, type PreparationRun } from "../preparation-flight.ts";
+import { PreparationFlights, PREPARATION_MILLISECONDS, type PreparationRun } from "../preparation-flight.ts";
 import { preparedSessionRefusal, type QueryVisibility, type SessionPreparation } from "../session-preparation.ts";
 import { authenticateSession, type Sessions } from "../sessions.ts";
 import type { ReadWaitRefusal } from "../read-wait.ts";
@@ -31,22 +31,26 @@ export interface ApplicationProjectionConfig {
 }
 export class ApplicationProjections {
   constructor(readonly config: ApplicationProjectionConfig) {}
-  read(encoded: unknown, reader: unknown, atLeast?: ReadMinimum): Promise<NativeApplicationProjection> {
-    return this.config.flights.run(async run => {
-      if (atLeast !== undefined) {
-        // Validate the query and session before the target/head admission.
-        const query = readApplicationProjectionQuery(encoded);
-        if (!query || !this.config.name || query.scope.scope !== this.config.name) return no("invalid-query");
-        if (typeof reader !== "string" || reader.length > B.sessionChars || reader.startsWith("Signed ")) return no("forbidden");
-        if (!this.config.minimum) return no("unavailable");
-        const waited = await this.config.minimum(reader, atLeast, run.active);
-        if (waited) {
-          if (waited.reason === "behind") return waited;
-          return no(["forbidden", "sessions-unavailable", "clock-behind", "wrong-incarnation"].includes(waited.reason) ? waited.reason as "forbidden" | "sessions-unavailable" | "clock-behind" | "wrong-incarnation" : "unavailable");
-        }
+  async read(encoded: unknown, reader: unknown, atLeast?: ReadMinimum): Promise<NativeApplicationProjection> {
+    let ends: number | undefined;
+    if (atLeast !== undefined) {
+      // A head wait owns no shared query flight. Keep the original overall
+      // completion deadline when the projection later acquires that flight.
+      const deadline = this.config.flights.clock.now() + PREPARATION_MILLISECONDS;
+      if (!Number.isFinite(deadline)) return no("unavailable");
+      ends = deadline;
+      const active = () => this.config.flights.clock.now() < deadline;
+      const query = readApplicationProjectionQuery(encoded);
+      if (!query || !this.config.name || query.scope.scope !== this.config.name) return no("invalid-query");
+      if (typeof reader !== "string" || reader.length > B.sessionChars || reader.startsWith("Signed ")) return no("forbidden");
+      if (!this.config.minimum) return no("unavailable");
+      const waited = await this.config.minimum(reader, atLeast, active);
+      if (waited) {
+        if (waited.reason === "behind") return waited;
+        return no(["forbidden", "sessions-unavailable", "clock-behind", "wrong-incarnation"].includes(waited.reason) ? waited.reason as "forbidden" | "sessions-unavailable" | "clock-behind" | "wrong-incarnation" : "unavailable");
       }
-      return this.#run(encoded, reader, run);
-    }).then(result => result ?? no("unavailable"));
+    }
+    return this.config.flights.run(run => this.#run(encoded, reader, run), ends).then(result => result ?? no("unavailable"));
   }
   async #run(encoded: unknown, reader: unknown, run: PreparationRun): Promise<NativeApplicationProjection> {
     const c = this.config, query = readApplicationProjectionQuery(encoded);

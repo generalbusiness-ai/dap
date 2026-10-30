@@ -9,7 +9,7 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 const namedOwners = {
   "packages/scope/src/object.ts": {
     "packages/scope/src/object.ts:$module": "9b6259ef11cdb715af6384bdcfdeb6fd56dba41bfd7060996ec263e920d2499c",
-    "packages/scope/src/object.ts:ScopeObject": "ceb76582ba0a52e9654233859a2c5da4e231da6789dd8078316c6e6d4a6aff92", // J4: bounded birth discovery and the exact hold@2 credential branch.
+    "packages/scope/src/object.ts:ScopeObject": "9138b8574b7cd4b1485240c239099bb0ec3e7917ee8fe3717efcfd31d0aa5c62", // J4: bounded birth discovery and the exact hold@2 credential branch.
   },
   "packages/scope/src/worker.ts": {
     "packages/scope/src/worker.ts:$module": "1cc661c3257b26a1aea825fc16566764a8aba2870711a5aaf1877c7d1e6ed2a2",
@@ -180,7 +180,7 @@ const namedOwners = {
 // Reviewed matcher/gate owners. These are change tripwires, not runtime proof.
 const seals = {
   "packages/bytes/src/read-minimum.ts": "5ead3e9579b2805c525bae5d1ad3bd6883c0a18f0022a202c01eea91a181939c", // DX-A2 reviewed minimum admission and wait owner; actual maintained AST value.
-  "packages/scope/src/read-wait.ts": "51e0f477e7cdfb16373b08cc57a906875729ce1dbade7d942cde3dafb3cb1046", // DX-A2 reviewed minimum admission and wait owner; actual maintained AST value.
+  "packages/scope/src/read-wait.ts": "0bf31ae0c52975c9e91b22dfac278c03ab04c575b88941c3a6480433fd79e2cb", // DX-A2 reviewed minimum admission and wait owner; actual maintained AST value.
   "packages/platform/src/reservation-v17.ts": "e00aa0f08f9b3b1f4aca5e794436367ab550dcd1966c5258f1e96e42ab97a856", // Reviewed retained-policy decoder; actual maintained parser output.
   "packages/platform/src/evidence.ts": "e3f0fa91c32d848b5bec7dc9ac047d4cc72815ddce70365ad8fade6884a7354b", // Reviewed platform binding codec under ruling 1bc4f7fd; actual maintained parser output.
   "packages/git/src/checkout-snapshot.ts": "82f53717d419b70fe208801b6d0bf2fc0c947ac2beffb27b2e2d01898f48ee25", // Detached object identity and closure bounds; imports do not seal this implementation.
@@ -229,7 +229,7 @@ const seals = {
   "packages/bytes/src/records.ts": "c1de770ab85f6f328166076ae3829289cab8b43ff0e8686820d89afe3719d7b8", // R11 named serving refusal; actual maintained parser output.
   "packages/scope/src/session-preparation.ts": "44b7bf3227e638fa2cc9e49e61162d903b4d915102069ab7848511f102b9ccf1",
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
-  "packages/scope/src/applications/projection.ts": "7396bb0179de746dac8890ea064c7e5396d2961b8bc6f01a32952c88aabb4cc6",
+  "packages/scope/src/applications/projection.ts": "8576f78bb68850421ca7843e6fd0e4ecfb18f136009b82296097feca603f5484",
   "packages/scope/src/destination-host.ts": "e272abc7502b17f171944632ab2da10c23ab2bb58018404ec43b57379eb5d3eb",
   "packages/scope/src/workspace-host.ts": "fc194d9584dc30b7e24d635534a83a6218c3ca9f7a625bf48540a5c28de87271", // Reviewed SQL custody, setup revocation and full refs for recorded branch names.
   "packages/scope/src/workspace-lineage.ts": "e504accd924593ea2aed7f6180ed2e00112ef4f1c7455ab1594f12d3784f6573", // Reviewed bounded authenticated Register, Directory and Destination creation lineage.
@@ -275,7 +275,7 @@ const pendingR8Seals = {
   "packages/cli/src/commands.ts": namedOwners["packages/cli/src/commands.ts"],
   "packages/cli/src/browser-helpers.ts": "7e5f139e800efad56f08799f4e34700f2fde7c76de33422a2eb69d03de4f03fa", // Moved description, expectation and value helpers; actual maintained parser output.
   "packages/cli/src/claim.ts": "26858433403847e4857951909bd48ca1153d92dc28595081c093141db550773a", // Moved claim verification and retained custody; actual maintained parser output.
-  "packages/cli/src/command-support.ts": "3d8bb5498e66827db4f74943f90b441b614340663dc30be2a9d17efec9d1817e", // Moved shared read, session and signing support; actual maintained parser output.
+  "packages/cli/src/command-support.ts": "5b761fe1d625a9428b474c7a73f9d6fe8c0279ddfcdd9fbdfbd53f2e7f68a68f", // Moved shared read, session and signing support; actual maintained parser output.
   "packages/cli/src/read-session-cache.ts": "12a5cf131a166001f66672bc3c4b6daf70070645255c61db7b93f18b6fbb83b7", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/verification.ts": "3fb0f354c0d00dd1d21cf293e11dfc81738b9de4e8f5eb43ac9fd918dc9db557", // Reviewed unique-entry ledger, source conflicts and owner retirement; actual maintained output.
   "packages/cli/src/files.ts": "7d0d64f352787e5d30ea03265fb5137a17a1eef61e97454e5408959297ca1d5c", // Reviewed CLI session or verification boundary; actual maintained parser output.

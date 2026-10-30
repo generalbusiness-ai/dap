@@ -6,14 +6,19 @@
 import { expect, test } from "vitest";
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
-import type { ReadMinimum } from "@generalbusiness/dap-contract";
-import { encodeReadMinimumParameter, newIncarnation, textDigest } from "@generalbusiness/dap-bytes";
+import { PROPOSED_BOUNDS, type ApplicationProjectionQuery, type ItemQuery, type ReadMinimum } from "@generalbusiness/dap-contract";
+import { encodeReadMinimumParameter, encodeItemQueryParameter, isScopeRef, newIncarnation, textDigest, timeMs } from "@generalbusiness/dap-bytes";
 import { ScopeObject, type Wiring } from "../src/object.ts";
 import { api, route, sessionWiring } from "../src/worker.ts";
 import { mintSession, readerOf } from "../src/sessions.ts";
-import { controls, testPorts } from "../src/testing.ts";
+import { controls, netPorts, testPorts } from "../src/testing.ts";
 import { create, reader, sessionRoom, type Lane } from "./fixtures-native.ts";
-import { net } from "./net.ts";
+import { desk, net, settle, ticket } from "./net.ts";
+import { namespace } from "../src/namespace.ts";
+import { encodeApplicationProjectionQuery } from "@generalbusiness/dap-platform/application-v2";
+import { secretSigner, signedReader } from "@generalbusiness/dap-client";
+import { rita, vic } from "./repository.ts";
+import type { Actor } from "@generalbusiness/dap-derive/testing";
 
 const deferred = () => { let resolve!: () => void; const promise = new Promise<void>(done => { resolve = done; }); return { promise, resolve }; };
 class Timer {
@@ -121,5 +126,98 @@ test("native HTTP and in-process reads share the minimum while malformed HTTP mi
   for (const query of ["atLeast=bad", `atLeast=${encoded}&atLeast=${encoded}`]) {
     const invalid = await route(new Request(`${url}?${query}`), env.SCOPES);
     expect([invalid.status, await invalid.json()]).toEqual([400, { error: "bad-request" }]);
+  }
+});
+
+
+// Real native Rules storage/session preparation and shared item-query flight.
+// The projection selection is deliberately uninstalled: its metadata is not
+// reached while waiting for a future head. No installed application is claimed.
+test("a future projection minimum leaves the shared flight available to a concurrent native item query", async () => {
+  const f = await sessionRoom();
+  try {
+    const child = f.children[1]!;
+    await f.life.wait(() => runInDurableObject(child.object, async (_instance, state) => {
+      const armed = deferred();
+      class ProjectionTimer extends Timer {
+        override after(ms: number, work: () => void) {
+          const cancel = super.after(ms, work);
+          if (ms === 1000) armed.resolve();
+          return cancel;
+        }
+      }
+      const timer = new ProjectionTimer(), c = controls(child.name); c.clock = net.clock;
+      class WaitScope extends ScopeObject {
+        protected override wiring(): Wiring { return { ports: testPorts(c), ...sessionWiring(() => f.sessions, env.PLATFORM), bounds: { ...c.bounds, readWaitMilliseconds: 1000 }, queryTimer: timer }; }
+      }
+      const object = new WaitScope(state, {}), token = readerOf(mintSession(f.sessions, { ...f.claims, reads: ["summary", "items"] }));
+      const before = await object.summary(token);
+      expect(before.ok).toBe(true);
+      const query: ApplicationProjectionQuery = { v: 1, scope: f.rules, directory: f.directory, install: 0, projection: "board", items: {} };
+      let projectionFinished = false;
+      const projection = object.applicationProjection(encodeApplicationProjectionQuery(query), token, { at: f.rules, head: 9999 }).then(result => { projectionFinished = true; return result; });
+      await armed.promise;
+      const selection: ItemQuery = { v: 1, scope: f.rules, type: "rules", states: ["current"], ids: null, limit: 100, cursor: null };
+      const items = await object.queryItems(encodeItemQueryParameter(selection)!, token);
+      expect(items).toMatchObject({ ok: true });
+      expect(projectionFinished).toBe(false);
+      timer.advance(1000);
+      expect(await projection).toEqual({ ok: false, reason: "behind", current: { at: f.rules, ...(before.ok ? before.at : {}) } });
+      expect(await object.summary(token)).toEqual(before);
+      expect(timer.tasks.size).toBe(0);
+    }));
+  } finally { f.life.release(); }
+});
+
+// Actual signed parent/child creation and link delivery on native SQLite.
+// Generic fixture definitions, grants, namespace transport and clock are TEST
+// ports. No entry, chain root, signature or readable result is fabricated.
+test("causal signed history and entry readers see a native delivery sealed during their minimum wait", async () => {
+  const parent = await desk(), source = await ticket(parent, "source"), target = await ticket(parent, "target");
+  const targetRef = await target.at(), before = await target.summary(), seq = before.at.seq + 1;
+  const previousHold = net.hold;
+  const hold: NonNullable<typeof net.hold> = envelope =>
+    (isScopeRef(envelope.to) && envelope.to.scope === targetRef.scope && envelope.to.inc === targetRef.inc && envelope.to.kind === targetRef.kind)
+      || (previousHold?.(envelope) ?? false);
+  net.hold = hold;
+  try {
+    // The real background dispatcher must not beat the waiting readers.
+    const linked = await source.did(rita, "link", { fields: { target: targetRef, about: 0 } });
+    const envelope = await source.envelope(linked.fact.seq);
+    expect((await target.summary()).at).toEqual(before.at);
+    await runInDurableObject(target.object, async (_instance, state) => {
+      const timer = new Timer(), peers = namespace(env.NET);
+      class WaitScope extends ScopeObject {
+        protected override wiring(): Wiring {
+          return { ports: { ...netPorts(net, peers.transport, peers.resolver), definitions: peers.definitions, births: peers.births, proofs: peers.proofs }, bounds: { ...PROPOSED_BOUNDS, readWaitMilliseconds: 1000 }, queryTimer: timer };
+        }
+      }
+      const object = new WaitScope(state, {});
+      const header = (who: Actor, read: "history" | "entry", arg: string) => signedReader(secretSigner(who.secret), target.name, read, arg, { now: () => timeMs(net.clock.now)! });
+      const minimum = { at: targetRef, head: seq };
+      // A valid stranger still gets no head and opens no wait.
+      expect(await object.history(await header(vic, "history", "0"), undefined, minimum)).toEqual({ ok: false, reason: "forbidden" });
+      expect(timer.started).toBe(0);
+      const [historyReader, entryReader] = await Promise.all([header(rita, "history", "0"), header(rita, "entry", String(seq))]);
+      const history = object.history(historyReader, undefined, minimum);
+      const entry = object.entry(entryReader, seq, minimum);
+      await Promise.race([
+        timer.armed(2),
+        history.then(result => expect.fail(`History completed before both waits armed: ${JSON.stringify(result)}`)),
+        entry.then(result => expect.fail(`Entry completed before both waits armed: ${JSON.stringify(result)}`)),
+      ]);
+      const delivered = await object.deliver(envelope);
+      expect(delivered).toMatchObject({ answer: "recorded", fact: { at: targetRef, seq } });
+      const [page, one] = await Promise.all([history, entry]);
+      expect(page).toMatchObject({ ok: true, at: { seq } });
+      expect(one).toMatchObject({ ok: true, at: { seq }, value: { entry: { seq, input: { type: "delivery", from: linked.fact } } } });
+      if (!page.ok || !one.ok) return expect.fail("The same waiting signed readers must see their causal delivery without a second request.");
+      expect(page.value.some(row => row.entry.seq === seq && row.hash === one.value.hash)).toBe(true);
+      expect(one.value.entry.input.type).not.toBe("act");
+      expect(timer.tasks.size).toBe(0);
+    });
+  } finally {
+    if (net.hold === hold) net.hold = previousHold;
+    await settle(source, target);
   }
 });

@@ -47,6 +47,18 @@ function minimum(value?: ReadMinimum | Receipt): ReadMinimum | undefined {
   return checked;
 }
 
+/** A transport cannot silently strip a minimum and return older state. */
+function reached(at: Head, required?: ReadMinimum): void {
+  if (!required) return;
+  const seq = typeof required.head === "number" ? required.head : required.head.seq;
+  if (at.seq < seq || typeof required.head !== "number" && at.seq === seq && at.hash !== required.head.hash)
+    throw new TransportError("the reply does not reach the read minimum");
+}
+function checkedRead<T>(reply: Read<T>, required?: ReadMinimum): Read<T> {
+  if (reply.ok) reached(reply.at, required);
+  return reply;
+}
+
 export class ScopeHandle {
   readonly scope: ScopeId;
   readonly #transport: Transport;
@@ -72,9 +84,15 @@ export class ScopeHandle {
 
   // The reads of section 9.1. Each is a statement about `at`; a page with `next` is read on with that cursor.
 
-  summary(atLeast?: ReadMinimum | Receipt): Promise<Read<Summary>> { return this.#transport.summary(this.scope, this.#reader, minimum(atLeast)); }
+  async summary(atLeast?: ReadMinimum | Receipt): Promise<Read<Summary>> {
+    const required = minimum(atLeast);
+    return checkedRead(await this.#transport.summary(this.scope, this.#reader, required), required);
+  }
   /** A page of the retained final items of one type. */
-  items(type: string, cursor?: Cursor, atLeast?: ReadMinimum | Receipt): Promise<Read<readonly Item[]>> { return this.#transport.items(this.scope, this.#reader, type, cursor, minimum(atLeast)); }
+  async items(type: string, cursor?: Cursor, atLeast?: ReadMinimum | Receipt): Promise<Read<readonly Item[]>> {
+    const required = minimum(atLeast);
+    return checkedRead(await this.#transport.items(this.scope, this.#reader, type, cursor, required), required);
+  }
   /** One bounded page. `complete` covers only this selection's suffix at `at`. */
   async queryItems(query: ItemQuery): Promise<ItemQueryRead> {
     const encoded = encodeItemQueryParameter(query), checked = readItemQueryParameter(encoded);
@@ -92,18 +110,26 @@ export class ScopeHandle {
   async applicationProjection(query: ApplicationProjectionQuery, atLeast?: ReadMinimum | Receipt): Promise<ApplicationProjectionRead> {
     const encoded = encodeApplicationProjectionQuery(query), checked = readApplicationProjectionQuery(encoded);
     if (!checked || checked.scope.scope !== this.scope) throw new TransportError("invalid bounded application projection");
+    const required = minimum(atLeast);
     const result = await within(10, async signal => {
-      const text = await this.#transport.applicationProjection(this.scope, this.#reader, encoded!, minimum(atLeast));
+      const text = await this.#transport.applicationProjection(this.scope, this.#reader, encoded!, required);
       if (signal.aborted) return LATE;
       const reply = readApplicationProjectionReplyText(text, checked);
       if (!reply) throw new TransportError("the reply does not match the bounded application projection");
+      if (reply.ok) reached(reply.value.at, required);
       return reply;
     });
     if (result === LATE) throw new TransportError("no whole application projection within 10 seconds; coverage is incomplete");
     return result;
   }
-  history(cursor?: Cursor, atLeast?: ReadMinimum | Receipt): Promise<Read<readonly Sealed[]>> { return this.#transport.history(this.scope, this.#reader, cursor, minimum(atLeast)); }
-  entry(seq: number, atLeast?: ReadMinimum | Receipt): Promise<Read<Sealed>> { return this.#transport.entry(this.scope, this.#reader, seq, minimum(atLeast)); }
+  async history(cursor?: Cursor, atLeast?: ReadMinimum | Receipt): Promise<Read<readonly Sealed[]>> {
+    const required = minimum(atLeast);
+    return checkedRead(await this.#transport.history(this.scope, this.#reader, cursor, required), required);
+  }
+  async entry(seq: number, atLeast?: ReadMinimum | Receipt): Promise<Read<Sealed>> {
+    const required = minimum(atLeast);
+    return checkedRead(await this.#transport.entry(this.scope, this.#reader, seq, required), required);
+  }
   outbox(cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { return this.#transport.outbox(this.scope, this.#reader, cursor); }
 
   /**
@@ -135,7 +161,15 @@ export class ScopeHandle {
   async followReceipt(receipt: Receipt): Promise<Followed> {
     const { at, seq, hash } = receipt.fact;
     if (at.scope !== this.scope) return { ok: false, reason: "not-found" };
-    const read = await this.entry(seq, { at, head: { seq, hash } });
+    // Keep the full identity/hash checks here, rather than making a permanent
+    // receipt mismatch look like a temporary barrier refusal.
+    let read = await this.entry(seq, { at, head: seq });
+    if (!read.ok && read.reason === "unavailable") {
+      // One ordinary read can diagnose a wrong kind refused by the barrier.
+      // This is neither polling nor an automatic retry of an act.
+      read = await this.entry(seq);
+      if (read.ok && read.at.seq < seq) return { ok: false, reason: "unavailable" };
+    }
     if (!read.ok) return read.reason === "behind" ? read : read.reason === "archived" ? { ok: false, reason: "archived", archived: read.archived } : { ok: false, reason: read.reason };
     const entry = read.value.entry;
     if (entry.at?.scope !== at.scope || entry.at.kind !== at.kind || entry.seq !== seq) return { ok: false, reason: "reference-mismatch" };

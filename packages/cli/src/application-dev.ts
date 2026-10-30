@@ -5,7 +5,7 @@ import { watch, type FSWatcher } from "node:fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { resolve } from "node:path";
 import type { Answer, Beside, Read, ReadRefusal, RetainedInput } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isRecord, isSignedIntentShape, parseStrictBytes, timeOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, isDigest, isRecord, isSignedIntentShape, parseStrictBytes, readMinimumParameter, timeOf } from "@generalbusiness/dap-bytes";
 import { secretSigner } from "@generalbusiness/dap-client";
 import { prepareApplicationDirectory, readApplicationScenario } from "./application-files.ts";
 import { openApplicationScenario, type ApplicationDevelopmentSession } from "./application-scenarios.ts";
@@ -115,6 +115,14 @@ export async function startApplicationDevelopment(directory: string, options: { 
         answer(response, await live.session.scope.submit(given["signed"], beside)); return;
       }
       if (request.method === "GET") {
+        if (url.searchParams.has("atLeast")) {
+          const minima = url.searchParams.getAll("atLeast");
+          if (minima.length !== 1 || !readMinimumParameter(minima[0])) json(response, 400, { error: "invalid-read-minimum" });
+          // This serialized local fixture has no arrival wait. Refuse the
+          // requested barrier explicitly instead of returning older state.
+          else read(response, { ok: false, reason: "unavailable" });
+          return;
+        }
         if (tail.length === 1 && tail[0] === "") { read(response, reads.summary(null)); return; }
         if (tail.length === 1 && tail[0] === "history") { read(response, reads.history(null, cursor)); return; }
         if (tail.length === 2 && tail[0] === "items") { read(response, reads.items(null, tail[1]!, cursor)); return; }

@@ -13,33 +13,46 @@ export class ReadWait {
     for (const wake of waiting) wake();
   }
   /** Authentication supplies each position, including the timeout position. */
-  async until(minimum: ReadMinimum, position: () => Read<FactRef>, hash: (seq: number) => Digest | null, active: () => boolean = () => true): Promise<ReadWaitRefusal | null> {
+  async until(minimum: ReadMinimum, position: () => Read<FactRef> | Promise<Read<FactRef>>, hash: (seq: number) => Digest | null, active: () => boolean = () => true, floor: () => number = () => 0): Promise<ReadWaitRefusal | null> {
     if (!Number.isFinite(this.milliseconds) || this.milliseconds <= 0) return { ok: false, reason: "unavailable" };
-    let expired = false, started = false, cancelTimer = () => {}, wake: (() => void) | null = null;
+    let expired = false, started = false, cancelTimer = () => {}, wake: (() => void) | null = null, signal: (() => void) | null = null;
+    const startTimer = () => {
+      if (started) return;
+      started = true;
+      cancelTimer = this.clock.after(this.milliseconds, () => { expired = true; signal?.(); });
+    };
     try {
       for (;;) {
         if (!active()) return { ok: false, reason: "unavailable" };
-        // Registration precedes the synchronous authorization/position check.
+        // Registration precedes chain refresh and the authority/position check.
         // A seal before registration is seen here; one after it wakes this read.
-        const arrived = new Promise<void>(resolve => { wake = resolve; });
+        let arrivedDuringCheck = false;
+        const arrived = new Promise<void>(resolve => { signal = resolve; wake = () => { arrivedDuringCheck = true; resolve(); }; });
         this.#arrivals.add(wake!);
-        const read = position();
+        const read = await position();
+        if (!active()) return { ok: false, reason: "unavailable" };
         if (!read.ok) return read;
         const current = read.value;
         if (minimum.at.scope !== current.at.scope || minimum.at.kind !== current.at.kind) return { ok: false, reason: "unavailable" };
         if (minimum.at.inc !== current.at.inc) return { ok: false, reason: "wrong-incarnation" };
+        // A seal during asynchronous chain preparation needs another fresh
+        // preparation before its position can authorize the final read.
+        if (arrivedDuringCheck) {
+          if (expired) return { ok: false, reason: "unavailable" };
+          startTimer(); // Repeated seals cannot postpone the original wait.
+          this.#arrivals.delete(wake!); wake = null; signal = null; continue;
+        }
         const seq = typeof minimum.head === "number" ? minimum.head : minimum.head.seq;
         if (current.seq >= seq) {
-          if (typeof minimum.head !== "number" && (seq === current.seq ? current.hash : hash(seq)) !== minimum.head.hash) return { ok: false, reason: "unavailable" };
+          // Below the real floor this is ordering only, after authority and
+          // exact target checks. The final entry read still answers archived.
+          if (typeof minimum.head !== "number" && seq >= floor() && (seq === current.seq ? current.hash : hash(seq)) !== minimum.head.hash) return { ok: false, reason: "unavailable" };
           return null;
         }
         if (expired) return { ok: false, reason: "behind", current };
-        if (!started) {
-          started = true;
-          cancelTimer = this.clock.after(this.milliseconds, () => { expired = true; wake?.(); });
-        }
+        startTimer();
         await arrived;
-        this.#arrivals.delete(wake!); wake = null;
+        this.#arrivals.delete(wake!); wake = null; signal = null;
       }
     } finally {
       cancelTimer();

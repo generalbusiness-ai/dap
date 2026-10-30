@@ -38,3 +38,20 @@ test("initial synchronous validation and final synchronous preparation consume t
     await microtasks(); expect(clock.tasks.size).toBe(0);
   }
 });
+
+
+test("an earlier projection completion deadline cannot restart or extend the shared flight window", async () => {
+  const clock = new Timer(), flights = new PreparationFlights(clock), ends = B;
+  clock.value = 1000; // A prior minimum wait has already consumed this time.
+  const gate = deferred<string>(), reached = deferred<void>();
+  const pending = flights.run(async run => {
+    expect(run.ends).toBe(ends); expect(run.remaining()).toBe(B - 1000);
+    reached.resolve(); return gate.promise;
+  }, ends);
+  await reached.promise; clock.advance(B - 1000);
+  expect(await pending).toBeNull();
+  expect(await flights.run(async () => "must retain pending ownership")).toBeNull();
+  gate.resolve("late result"); await microtasks();
+  expect(await flights.run(async run => run.remaining() === B ? "fresh" : null)).toBe("fresh");
+  await microtasks(); expect(clock.tasks.size).toBe(0);
+});
