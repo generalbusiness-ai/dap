@@ -7,27 +7,32 @@ heads landed on `main`: the 29 October report, the page polling
 fallback, the application authoring skill, the idle-alarm repair, the
 fixed-slot equality counts, the room proof reuse, and the J4 workspace
 holds. The three room Workers were deployed five times, once after each
-head that changed Worker code, and run the 11:08 landing. The live J4
-acceptance witness then started against that deployment and reached the
-end of its inspection phase. The cost-of-change review is below.
+head that changed Worker code, and now run the 11:08 landing. The live
+J4 acceptance witness then started against that deployment and reached
+the end of its inspection phase. The cost-of-change review is below.
 
 ## Story: a change proposed from a workspace
 
-A member can now open an Issue, take a Change on it, and work in a
-workspace that the room provisions. The hold rules have a second
-version. A hold of version 2 records the workspace it opened, the
-credential it issued for setup, and the revocation of that credential
-when setup ends. The Artifacts adapter provisions the workspace and
-reads it back. Holds of version 1 and the existing lane pins keep their
-meanings, so rooms created before today behave as they did.
+The source for a member to open an Issue, take a Change on it, and work
+in a workspace that the room provisions is landed and deployed. The hold
+rules have a second version. A hold of version 2 records the workspace
+it opened, the credential it issued for setup, and the revocation of
+that credential when setup ends. The Artifacts adapter provisions the
+workspace and reads it back. A local scenario with two holders and
+stand-ins for the provider, the credential and Git shows the rules.
+Whether a member can do this on the deployment is what the live witness
+below will show; no real fork exists yet. Holds of version 1 and the
+existing lane pins keep their meanings, so rooms created before today
+behave as they did.
 
-Review found three gaps before landing. The custody of each issued
-credential had no witness, so tests now follow every credential from
-issue to revocation. Three security seals name the boundaries that the
-workspace adapter may not cross. The setup credential had no cleanup
-obligation, so a hold now revokes it as a token record with purpose
-setup, and the existing revoke path handles it. The head landed at
-11:08 and was deployed to all three Workers at 11:31.
+Review found gaps before landing. The credential route had no custody
+tests, so tests now cover its refusals and lifetime caps and the setup
+credential's revocation, against a stand-in provider. Three security
+seals pin the parsed form of three source files, so that a change to
+any of them trips the entry-point check. The setup credential had no
+cleanup obligation, so a hold now revokes it as a token record with
+purpose setup, and the existing revoke path handles it. The head landed
+at 11:08 and was deployed to all three Workers at 11:31.
 
 The live witness against the deployed room then began. An operator
 packet runs each phase as one command with a collector that records the
@@ -109,16 +114,17 @@ open; this repair does not explain that load.
 
 The repo-in-ai MVP's first slice creates and seeds a room for a software
 team. Its scratch run began: the owner and the room exist and four
-identities are enrolled, one person and three agents. The members read
-stopped twice on helper defects, first a key-kind check that expected a
-person key where the owner holds a device key, then three reads issued
-together on one session whose serial guard refuses concurrent calls.
-Both repairs are small, both passed their gates, and the members and
-check phases then closed cleanly. The review of the two repairs is
-filed as a bounded child; the whole slice still needs its remaining
-witnesses and a full review before landing. The second and third slices
-are filed: MCP Apps plumbing on the landed card kit, and questions with
-requested approvers, people only.
+identities are enrolled, one person, two agents and one checker. The
+members read stopped twice on helper defects, first a key-kind check
+that expected a person key where the owner holds a device key, then
+three reads issued together on one session whose serial guard refuses
+concurrent calls. Both repairs are small, the helper's own tests pass,
+and the members and check phases then closed cleanly. The full gate at
+the final head that carries both repairs is still owed. The review of
+the two repairs is filed as a bounded child; the whole slice still
+needs its remaining witnesses and a full review before landing. The
+second and third slices are filed: MCP Apps plumbing on the landed card
+kit, and questions with requested approvers, people only.
 
 ## What landed
 
@@ -156,12 +162,12 @@ For each notable landing: the cost incurred, the alternative that
 would have cut it, and whether to revisit.
 
 - J4 workspace holds (`5dc9765f`). Cost: one head of 57 paths and 17
-  commits; a failed full gate at F on a test teardown, and a
-  single-file repair accepted under the test-file exception; three
-  review items that each needed a ruling; a merge subject of 356
+  commits; failed full gates at C and F and a failed continuation at E,
+  then a review with five items, one of which needed a ruling, and a
+  new full gate at the landed source; a merge subject of 356
   characters against the 100-code-point rule. Then four operator
   packets for the live witness, three of which halted on their own
-  defects before any phase ran. Alternative: a live-witness harness
+  defects before any mutation. Alternative: a live-witness harness
   that reads the real room's lineage and binds a dedicated source
   checkout from the start, kept across slices, instead of a packet
   written per phase. Revisit: yes; the harness becomes the J5 input,
@@ -206,7 +212,9 @@ would have cut it, and whether to revisit.
 - A room proof has many roots; one command-local verifier serves
   `dap verify --all` (`8e0c4ff6`).
 - A read that asks for a head strictly below the journal floor is
-  satisfied for ordering only; at or above the floor it waits
+  satisfied for ordering only; at or above the floor a full minimum
+  needs the exact retained hash, and a wrong or missing hash answers
+  `unavailable`. A head not yet reached waits, at any position
   (`366b3989`).
 - The Commons cohort's register runs on a fourth Worker, `dap-commons`;
   the three existing registers stay as they are (`e611ae0e`).
