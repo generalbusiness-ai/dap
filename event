@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5f5e260b8b2ba82f5e1fd3ba21f181894260376f","text":"Merge retired a covered predecessor; the successor is at docs/kernel.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:61b2be4995c9b8af8c93e450b3f57f68ba5314d5","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/fixed-slot-fixture.ts."}
