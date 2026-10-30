@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:46eb90acb13433e13d9f4eb6ea7ba08ae8096577","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-29-idle-alarms.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:50e37bad184d0a066556e6294198a086dcb1bf28","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/site-token-reuse.test.ts."}
