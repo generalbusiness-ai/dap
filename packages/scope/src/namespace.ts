@@ -20,7 +20,7 @@ import { archivedPosition } from "@generalbusiness/dap-derive";
  */
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Archived, Digest, Entry, FactRef, ObservationRequest, ObservedScope, RoutingRefusal, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Archived, Digest, Entry, FactRef, ObservationRequest, ObservedScope, RoutingRefusal, ScopeId, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, textDigest, isDigest, isFactRef, isKeyId, isMemberId, isPlatformDefinition, isScopeId, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { isEntryOf, isObject, isScopeRef, type Delivered, type Fetched, type ScopeState } from "@generalbusiness/dap-derive";
 import { INSTALL_DEFINITION_BYTES, isOf, platform, sourceName, EVIDENCE_INCIDENT_PINS_V17 } from "@generalbusiness/dap-platform";
@@ -30,7 +30,7 @@ import type { Definitions, Delivery, Resolver, SentTexts, Transport } from "./po
 import { EXACT_PROOF_RECEIVER_BOUNDS, PROOF_BYTE_BOUNDS, type ProofBody, type ProofSource } from "./proof-bytes.ts";
 import type { Store } from "./store.ts";
 import { encodeSessionReference, sessionReferenceRequest, SESSION_REFERENCE_BOUNDS, type SessionReferenceSource } from "./session-reference.ts";
-import { readNativeBirth, type NativeBirth, type NativeBirthSource } from "./native-birth.ts";
+import { readNativeBirth, type NativeBirth, type NativeBirthSource, type NativeBirthNameSource } from "./native-birth.ts";
 import { operational, type OperationalIdentity } from "./operational.ts";
 
 /** What the object at a name answers to a read of one of its entries. `bytes` null: it has no entry at that sequence number. */
@@ -44,6 +44,7 @@ export interface Peer {
   proofSource?(fact: FactRef, maxBytes: number, milliseconds?: number): Promise<ProofBody | null>;
   /** Raw checked birth only; never a producer-selected privileged identity. */
   nativeBirth?(at: ScopeRef, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null>;
+  nativeBirthByName?(name: ScopeId, kind: ScopeKind, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null>;
   /** Bounded immutable declaration bytes, only from an authenticated native Directory. */
   creationDeclaration?(at: ScopeRef, digest: Digest, maxBytes: number, milliseconds: number): Promise<string | null>;
   /** Optional bounded native directory witness; never fall back to summary. */
@@ -250,9 +251,20 @@ export function observedAt(store: Store, pinned: Pinned | null, asked: unknown):
  * namespace binding. A call that fails is no answer: the entry cannot be
  * read now, or the attempt is unanswered.
  */
-export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proofs: ProofSource; births: NativeBirthSource; transport: Transport; definitions: Definitions; texts: SentTexts } {
+export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proofs: ProofSource; births: NativeBirthSource; birthNames: NativeBirthNameSource; transport: Transport; definitions: Definitions; texts: SentTexts } {
   const peer = (name: ScopeId): Peer => binding.get(binding.idFromName(name)) as Peer;
   return {
+    birthNames: {
+      async read(name, kind, milliseconds, maxBytes = PROOF_BYTE_BOUNDS.body) {
+        if (!isScopeId(name) || !["directory", "destination", "register"].includes(kind) || !Number.isSafeInteger(milliseconds) || milliseconds <= 0 || milliseconds > EXACT_PROOF_RECEIVER_BOUNDS.milliseconds || !Number.isSafeInteger(maxBytes) || maxBytes <= 0 || maxBytes > PROOF_BYTE_BOUNDS.body) return null;
+        try {
+          const source = peer(name);
+          const got = typeof source.nativeBirthByName === "function" ? await source.nativeBirthByName(name, kind, milliseconds, maxBytes) : null;
+          const at = got?.proof?.fact?.at;
+          return isScopeRef(at) && at.scope === name && at.kind === kind ? readNativeBirth(got, at, maxBytes) : null;
+        } catch { return null; }
+      },
+    },
     proofs: {
       async read(fact, maxBytes, milliseconds) {
         if (!isFactRef(fact) || !Number.isSafeInteger(maxBytes) || maxBytes <= 0

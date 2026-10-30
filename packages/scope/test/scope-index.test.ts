@@ -51,6 +51,10 @@ test("unknown foreign facts, site and application lookups and hosted registry re
   expect(await ports.resolver.read(fact, 1)).toEqual({ absent: true });
   expect(await ports.proofs.read(fact, 1024, 1000)).toBeNull();
   expect(await ports.births.read(atRef, 1000, 1024)).toBeNull();
+  expect(await ports.birthNames.read(atRef.scope, "directory", 1000, 1024)).toBeNull();
+  const legacyBirths = namespace(indexedScopes(targets, { ...settings, SCOPE_INDEX_MODE: "register" })).birthNames;
+  expect(await legacyBirths.read(atRef.scope, "destination", 1000, 1024)).toBeNull();
+  expect(targetCalls).toBe(0);
   expect(await ports.definitions.read(fact.hash, atRef)).toEqual({ ok: false, reason: "absent" });
   expect(await ports.texts.read(fact, fact.hash)).toEqual({ ok: false, reason: "absent" });
   expect(await membershipIn(gated).observe({ of: atRef, key: rita.key }, 1)).toBeNull();

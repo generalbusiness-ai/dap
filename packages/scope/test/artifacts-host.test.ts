@@ -337,3 +337,35 @@ test("scripted Artifacts rules tree reads isolate objects and revoke their read 
   expect(() => p.rulesTree(repository, { commit: "a".repeat(64), maxCanonicalBytes: 262144 })).toThrow();
   expect(s.calls).toEqual([]);
 });
+
+// Scripted binding and smart HTTP, without a native judgment or real host.
+// A confirmed fork answer requires the exact seed and actual token revocation.
+test("workspace fork uses one binding call, binds its seed and namespace, and retains an unrevoked creation credential privately", async () => {
+  const s = service(), commit = "1".repeat(40);
+  let name = "h-scripted-4-2-1";
+  let forks = 0, wrongRemote = false;
+  const get = s.ns.get;
+  s.ns.get = async repository => ({ ...await get(repository), fork: async (asked, options) => {
+    forks++; expect(repository).toBe("repo-1"); expect(asked).toBe(name);
+    expect(options).toEqual({ defaultBranchOnly: true, readOnly: false });
+    return { name, remote: wrongRemote ? "https://other.invalid/repo.git" : `https://${SERVICE}/git/${NAMESPACE}/${name}.git`, token: "fork-initial-plaintext" };
+  } });
+  const p = provider(s, async () => uploadAdvertisement({ "refs/heads/main": commit }));
+  expect(await p.workspaceFork(repository, name, commit, "main", () => true)).toEqual({ id: name, name });
+  expect(forks).toBe(1);
+  expect(s.calls).toContain(`revokeToken ${name} fork-initial-plaintext`);
+  expect(s.held.get(`workspace:${name}`)?.plaintext).toBeNull();
+  const before = s.calls.length;
+  expect(await p.workspaceFork({ ...repository, namespace: "other" }, name, commit, "main", () => true).then(() => "ok", () => "refused")).toBe("refused");
+  expect(s.calls).toHaveLength(before);
+  s.script.revoke = () => false;
+  name = "h-scripted-4-2-2";
+  expect(await p.workspaceFork(repository, name, commit, "main", () => true)).toBeNull();
+  expect(forks).toBe(2);
+  expect(s.held.get(`workspace:${name}`)?.plaintext).toBe("fork-initial-plaintext");
+  name = "h-scripted-4-2-3"; wrongRemote = true;
+  s.script.revoke = () => true;
+  expect(await p.workspaceFork(repository, name, commit, "main", () => true)).toBeNull();
+  expect(s.calls).toContain(`revokeToken ${name} fork-initial-plaintext`);
+  expect(s.held.get(`workspace:${name}`)?.plaintext).toBeNull();
+});

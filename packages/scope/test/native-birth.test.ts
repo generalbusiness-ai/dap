@@ -7,7 +7,7 @@ import { readNativeBirth, type NativeBirth } from "../src/native-birth.ts";
 import { namespace } from "../src/namespace.ts";
 import { controls } from "../src/testing.ts";
 import { at, definition, create, rita, type Remote } from "./fixtures-native.ts";
-type Peer = Remote & { nativeBirth(at: unknown, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null> };
+type Peer = Remote & { nativeBirth(at: unknown, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null>; nativeBirthByName(name: unknown, kind: unknown, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null> };
 
 // Actual native register genesis, preparation, code pin and SQLite. Clock/key
 // fixtures are the existing test ports. No new partition factory is claimed.
@@ -27,6 +27,12 @@ test("native raw birth reads the exact accepted pin without an activation turn, 
   expect(Object.keys(birth!).sort()).toEqual(["declarationName", "named", "native", "proof", "v"]);
   const via = await namespace(env.SCOPES).births.read(ref, 10000);
   expect(via).toEqual(birth);
+  expect(await peer.nativeBirthByName(ref.scope, "register", 10000)).toEqual(birth);
+  expect(await namespace(env.SCOPES).birthNames.read(ref.scope, "register", 10000)).toEqual(birth);
+  expect(await peer.nativeBirthByName(ref.scope, "directory", 10000)).toBeNull();
+  expect(await peer.nativeBirthByName(`sc_${"z".repeat(52)}`, "register", 10000)).toBeNull();
+  expect(await peer.nativeBirthByName(ref.scope, "register", 10000, 1)).toBeNull();
+  expect(await peer.nativeBirthByName(ref.scope, "register", 0)).toBeNull();
   expect(await peer.nativeBirth({ ...ref, inc: newIncarnation(new Uint8Array(16).fill(9)) }, 10000)).toBeNull();
   expect(await peer.nativeBirth(ref, 10000, 1)).toBeNull();
   expect(await peer.nativeBirth(ref, 0)).toBeNull(); expect(await peer.nativeBirth(ref, 10001)).toBeNull();

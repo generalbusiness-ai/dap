@@ -26,6 +26,7 @@ contract package's types. Its tests and scripts also use `bytes`,
 | `issue`, `change` | The two definitions. Each is a value of the contract's `DeclaredDefinition`, written `as const`, so a client's declared handle is typed from its rows. |
 | `DIGESTS` | The pinned definition digest of each. |
 | `issueDemo`, `changeDemo`, `DEMO_DIGESTS` | The demo profile and its pinned digests. |
+| `issueJ4`, `changeJ4`, `J4_DIGESTS` | The explicit workspace profile with version 2 holds. |
 | `LANE_FORMS` | The revision and the commit of the lane forms that the rows were written from. |
 | `definitions` | Both declarations as a list. A creator supplies it as the `definitions` of a creation, so that a directory which names the two digests in `create` sends retains their bytes for its children. |
 | `LaneDefinition` | The type each value is checked against. |
@@ -67,6 +68,28 @@ node apps/room/lanes/scripts/reference.mjs
 not the ones `pin.mjs` writes. If the validator refuses a row as the lane
 forms state it, do not change the row to pass. Record the refusal and
 return it to the owner of the lane forms.
+
+## Workspace profile
+
+`issueJ4` and `changeJ4` keep the demo profile's rows and definition names.
+They select `hold@2` and retain `git-read@1`. The Issue profile also keeps
+the full Issue definition's `release-hold` row so a holder can end a hold
+explicitly. The Change profile accepts foreign `hold@2:check` facts in its
+manifest reference and presentation. Its publication rows remain the demo
+profile's rows for the existing Destination version 12 path.
+
+Creation and Rules activation must select `J4_DIGESTS` explicitly. These
+exports change neither the default definitions nor the evidence profile
+for Destination version 17. Older profiles keep their pinned bytes.
+
+Generate only the workspace profile with:
+
+```sh
+node apps/room/lanes/scripts/pin.mjs --j4
+```
+
+This mode writes `definitions/issue-j4.json`, `definitions/change-j4.json`
+and `src/digests-j4.ts`. It leaves all older generated files unchanged.
 
 ## What runs, and what does not
 

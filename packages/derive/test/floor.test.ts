@@ -4,7 +4,8 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Entry, JournalFloor, ScopeRef } from "@generalbusiness/dap-contract";
 import { chooseFloor, countedEntries, judgeFloor, MemoryState, stateKept, type Own, type PlatformRules } from "../src/index.ts";
-import { d, directory, notesDefinition, t } from "./fixtures.ts";
+import { d, directory, notesDefinition, t, variant } from "./fixtures.ts";
+import { stagingData } from "./definition-corpus/staging-data.ts";
 
 const hash = (seq: number) => `sha256:${seq.toString(16).padStart(64, "0")}` as const;
 const at: ScopeRef = directory;
@@ -59,4 +60,21 @@ test("floor derivation fails closed when a currently held payload root is missin
   expect(masked).toBe(true);
   // An explicit keep is a payload obligation, unlike an archived item ID.
   expect(stateKept(state.all(), notesDefinition, 100, [1], complete)).toBeNull();
+});
+
+test("a live workspace root keeps its payload under the exact pinned hold version until retired", () => {
+  // Minimal folded metadata for the policy boundary; no archive writer or
+  // provider runs. The real validator accepts each workspace declaration.
+  for (const version of [1, 2] as const) {
+    const definition = variant(stagingData(), draft => {
+      draft.capabilities = draft.capabilities.map((capability: { name: string; version: number }) => capability.name === "hold" ? { ...capability, version } : capability);
+    });
+    const state = new MemoryState(); state.setScope(metadata(150));
+    const root = { capability: `hold@${version}` as const, kind: "root", key: [1], state: "live", values: {}, seq: 12 };
+    state.putRecord(root);
+    expect(stateKept(state.all(), definition, 50, [], own)).toEqual([0, 12]);
+    expect(stateKept(state.all(), definition, 50, [], seq => seq === 12 ? null : own(seq))).toBeNull();
+    state.putRecord({ ...root, state: "retired" });
+    expect(stateKept(state.all(), definition, 50, [], own)).toEqual([0]);
+  }
 });

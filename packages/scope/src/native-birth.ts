@@ -1,6 +1,6 @@
 /** Bounded raw birth metadata. This supplies no derived identity or read grant. */
-import type { Digest, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { isDigest, isFactRef, isPlatformDefinition, isScopeRef, scopeIdOf, utf8, wellFormed } from "@generalbusiness/dap-bytes";
+import type { Digest, PlatformDefinition, ScopeId, ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
+import { isDigest, isFactRef, isPlatformDefinition, isScopeId, isScopeKind, isScopeRef, scopeIdOf, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import { same } from "@generalbusiness/dap-derive";
 import { PreparationBudget } from "./preparation-budget.ts";
 import type { ReadPreparation } from "./read-preparation.ts";
@@ -14,6 +14,7 @@ export interface NativeBirth {
   native: boolean;
 }
 export interface NativeBirthSource { read(at: ScopeRef, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null> }
+export interface NativeBirthNameSource { read(name: ScopeId, kind: ScopeKind, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null> }
 /** Admit the closed wire view before parsing its entry bytes. Native execution
  * still relies on the trusted one-namespace sender, as exact proof reads do. */
 export function readNativeBirth(value: unknown, at: ScopeRef, maxBytes: number = PROOF_BYTE_BOUNDS.body): NativeBirth | null {
@@ -39,4 +40,15 @@ export function nativeBirth(preparation: ReadPreparation, at: unknown, budget: P
   const name = captured.pinned.definition.declared.name;
   if (typeof name !== "string" || name.length > 256 || utf8(name).length > 256) return null;
   return { v: 1, proof: captured.birth, named: captured.pinned.named, declarationName: name, native: captured.pinned.platform !== null };
+}
+
+/** Internal discovery of an indexed object's incarnation. The caller must
+ * still authenticate the returned genesis and its creation lineage. */
+export function nativeBirthByName(preparation: ReadPreparation, name: unknown, kind: unknown, budget: PreparationBudget = new PreparationBudget(), maxBytes: number = PROOF_BYTE_BOUNDS.body): NativeBirth | null {
+  if (!isScopeId(name) || !isScopeKind(kind) || !Number.isSafeInteger(maxBytes) || maxBytes <= 0 || maxBytes > PROOF_BYTE_BOUNDS.body) return null;
+  const captured = preparation.birth(budget, maxBytes);
+  if (!captured || captured.scope.at.scope !== name || captured.scope.at.kind !== kind || !captured.pinned.definition || !budget.available) return null;
+  const declarationName = captured.pinned.definition.declared.name;
+  if (typeof declarationName !== "string" || !wellFormed(declarationName) || utf8(declarationName).length > 256) return null;
+  return { v: 1, proof: captured.birth, named: captured.pinned.named, declarationName, native: captured.pinned.platform !== null };
 }

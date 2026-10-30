@@ -352,6 +352,11 @@ signed. Older digest-only state resumes only when the retained creation
 and enrollment records prove the exact signed steps; otherwise it stops
 without a new submission.
 
+Continuing still needs current read authority: if creation stopped before
+the creator's seat and first key were recorded, the original founding key
+may no longer be recent enough for a Membership read after the signed-read
+window. A saved claim alone does not extend that authority.
+
 `--again` deliberately replaces the pending claim with a new signed
 `found`. Each `found` that takes effect creates a repository, so an earlier
 unknown claim may still produce another repository. Use this option only

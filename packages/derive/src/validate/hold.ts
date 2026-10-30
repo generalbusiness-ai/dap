@@ -58,7 +58,7 @@ export function holdEffect(d: Defining, x: unknown, p: string, s: Type, sk: stri
   const r = rec(x, p, ["do"], ["extent"]);
   if (!r) return null;
   const what = r["do"];
-  if (!d.holds) bad("capability", p, "the definition does not list hold@1");
+  if (!d.holds) bad("capability", p, "the definition does not list a supported hold version");
   // Section 4.1: a hold is opened by an `open` act whose primary item is the hold. Any other opening would be a second item.
   // A handler has no signer to be the holder: `receives` refuses, as `hold`, a handler that opens a hold type or has `hold: open`.
   if (what === "open") { if (!nascent) bad("one-item", p, "a hold is opened only as the primary item of an open act"); }

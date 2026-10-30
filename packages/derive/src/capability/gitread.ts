@@ -33,7 +33,7 @@
 import type { CapabilityName, Digest, Evidence, FactRef, FieldValue, Intent, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { isDigest, isFactRef, isLocalId, isRecord, timeMs } from "@generalbusiness/dap-bytes";
 import type { Capabilities, CapabilityGiven, Maximum, Recorded } from "../capability.ts";
-import { isLocalFact, type Own } from "../fields.ts";
+import { isEntryOf, isLocalFact, type Own } from "../fields.ts";
 import { WINDOWS, type Window } from "../grant.ts";
 import { operationId, ownerReservations, type Opening, type OperationRules, type OutcomeDerived, type OutcomeInput, type Owners } from "../ledger.ts";
 import { amountMath, NOTHING as NO_AMOUNT } from "../held.ts";
@@ -42,7 +42,7 @@ import type { Item, Operation, RecordState, StateView } from "../state.ts";
 import type { ValidDefinition } from "../validate/index.ts";
 import { own as slotOf, same } from "../values.ts";
 import { foreignOn, isAncestryCheck, snapshotOf, snapshotRead, type AncestryCheck, type OwnRoot, type PriorCheck } from "./ancestry.ts";
-import { HOLD } from "./hold.ts";
+import { workspaceOwner } from "./workspace.ts";
 
 export const GIT_READ: CapabilityName = "git-read@1";
 
@@ -61,11 +61,11 @@ export const GIT_READ: CapabilityName = "git-read@1";
  * `own` reads this scope's sealed entries, for the hash of each prior
  * check's entry. `before`: only entries earlier than that position count.
  */
-export function ledgerOf(view: StateView, own: Own | undefined, at: ScopeRef, under: unknown, before: number): { roots: OwnRoot[]; checks: PriorCheck[] } {
-  const roots = view.records(HOLD, "root", { member: "under", value: under }).map((r) => ({ number: r.key[0] as number, commit: r.values["commit"] as string, state: r.state }));
-  const checks = view.records(HOLD, "check", { states: ["recorded"] }).flatMap((check): PriorCheck[] => {
+export function ledgerOf(view: StateView, own: Own | undefined, at: ScopeRef, under: unknown, before: number, owner: "hold@1" | "hold@2" = "hold@1"): { roots: OwnRoot[]; checks: PriorCheck[] } {
+  const roots = view.records(owner, "root", { member: "under", value: under }).map((r) => ({ number: r.key[0] as number, commit: r.values["commit"] as string, state: r.state }));
+  const checks = view.records(owner, "check", { states: ["recorded"] }).flatMap((check): PriorCheck[] => {
     const consumer = check.values["consumer"];
-    const pin = view.record(HOLD, "pin", [consumer as FieldValue, check.values["intent"] as FieldValue]);
+    const pin = view.record(owner, "pin", [consumer as FieldValue, check.values["intent"] as FieldValue]);
     const record = check.values["record"];
     const admitted = pin?.values["admitted"];
     const seq = same(consumer, at) ? admitted : admitted === null || admitted === undefined ? null : check.seq;
@@ -78,17 +78,24 @@ export function ledgerOf(view: StateView, own: Own | undefined, at: ScopeRef, un
 
 /** The `check` record that the guard reads: this scope's own, for this intent, or the one that a presented check entry carries. */
 function checked(args: Readonly<Record<string, unknown>>, given: CapabilityGiven): { state: string; values: Readonly<Record<string, unknown>>; local: { pin: RecordState; root: RecordState } | null } | null {
+  const owner = workspaceOwner(given.definition) ?? "hold@1";
   const presented = args["pin"];
   if (presented !== null && presented !== undefined) {
     // Section 16.3: another lane's check entry, presented beside the intent and retained in `uses`. The record is what that one
     // sealed entry recorded, and not the record's present state.
-    const carried = isFactRef(presented) ? (given.facts.get(presented.hash)?.entry.effects ?? []).filter((e) => e.effect === "record" && e.capability === HOLD && e.kind === "check") : [];
+    const fetched = isFactRef(presented) ? given.facts.get(presented.hash) : undefined;
+    // The v2 profile consumes only the exact authenticated check outcome.
+    // Its owner is source evidence; a bare record kind or caller label is not.
+    // The original v1 path retains its existing acceptance rule.
+    if (owner === "hold@2" && (!isFactRef(presented) || !fetched || !same(fetched.fact, presented) || !isEntryOf(fetched.entry, presented)
+      || fetched.entry.input.type !== "outcome" || fetched.entry.input.owner !== owner || fetched.entry.input.kind !== "check" || fetched.entry.input.result !== "confirmed")) return null;
+    const carried = (fetched?.entry.effects ?? []).filter((e) => e.effect === "record" && e.capability === owner && e.kind === "check");
     const only = carried.length === 1 ? carried[0]! : null;
     return only && only.effect === "record" ? { state: only.state, values: only.values, local: null } : null;
   }
-  const pin = isDigest(given.intent) ? given.view.record(HOLD, "pin", [given.scope.at, given.intent]) : null;
-  const root = pin ? given.view.record(HOLD, "root", [pin.values["root"] as number]) : null;
-  const check = pin && root ? given.view.record(HOLD, "check", [given.intent as Digest, root.key[0]!]) : null;
+  const pin = isDigest(given.intent) ? given.view.record(owner, "pin", [given.scope.at, given.intent]) : null;
+  const root = pin ? given.view.record(owner, "root", [pin.values["root"] as number]) : null;
+  const check = pin && root ? given.view.record(owner, "check", [given.intent as Digest, root.key[0]!]) : null;
   return pin && root && check ? { state: check.state, values: check.values, local: { pin, root } } : null;
 }
 
@@ -122,7 +129,7 @@ function selectedInput(given: CapabilityGiven, fact: FactRef, under: unknown): b
 function fits(record: AncestryCheck, { pin, root }: { pin: RecordState; root: RecordState }, given: CapabilityGiven): boolean {
   // Guard 2: the root is the one that the entry relies on, and it is `live`.
   if (record.root.number !== root.key[0] || pin.values["root"] !== root.key[0] || root.state !== "live") return false;
-  const { roots, checks } = ledgerOf(given.view, given.own, given.scope.at, root.values["under"], given.self);
+  const { roots, checks } = ledgerOf(given.view, given.own, given.scope.at, root.values["under"], given.self, workspaceOwner(given.definition) ?? "hold@1");
   const prior = (commit: string, fact: FactRef): PriorCheck | undefined => checks.find((c) => c.commit === commit && same(c.checked, fact));
   // Guard 3: sorted at this commit, the staged refs of the snapshot on the commit give the same `foreign`, and the basis stands.
   // The snapshot's bytes are a retained input of this scope, stored before the check entry that names their digest (section 16.4).
@@ -452,6 +459,8 @@ export function capabilitiesOf<T extends Capabilities>(first: T, ...others: read
   const stepped = parts.flatMap((p) => stepsOf(p) ?? []);
   const stepOf = (capability: CapabilityName, step: string): Steps => stepped.find((p) => p.implements(capability, step)) ?? stepped[0]!;
   const owning = parts.flatMap((p) => (typeof (p as unknown as Partial<Owners>).rules === "function" ? [p as unknown as Owners] : []));
+  const listedPart = (capability: CapabilityName, member: "workspace" | "bound") =>
+    parts.find(p => p[member] && p.implements({ capability, form: "listed", name: capability }));
   return {
     ...first,
     // The declared maxima of every part. A part that declares none leaves the whole value with none, and nothing is counted.
@@ -459,6 +468,18 @@ export function capabilitiesOf<T extends Capabilities>(first: T, ...others: read
     implements: ((...args: unknown[]) => asked.some((implemented) => implemented(...args))) as T["implements"],
     guard: (capability, guard, args, given) => by(capability, "guard", guard).guard(capability, guard, args, given),
     effect: (capability, effect, args, given) => by(capability, "effect", effect).effect(capability, effect, args, given),
+    ...(parts.some(p => p.workspace) ? {
+      workspace: ((view, definition, self, k, holds, working) => {
+        const owner = workspaceOwner(definition);
+        const part = (owner === null ? undefined : listedPart(owner, "workspace")) ?? first;
+        return part?.workspace?.(view, definition, self, k, holds, working) ?? [];
+      }) satisfies NonNullable<Capabilities["workspace"]>,
+    } : {}),
+    ...(parts.some(p => p.bound) ? {
+      bound: ((capability, view, at, from, fields) =>
+        (listedPart(capability, "bound") ?? first).bound?.(capability, view, at, from, fields) ?? null
+      ) satisfies NonNullable<Capabilities["bound"]>,
+    } : {}),
     ...(parts.some(p => p.deriveEffect) ? {
       deriveEffect: ((capability, effect, args, given) => {
         const part = by(capability, "effect", effect);

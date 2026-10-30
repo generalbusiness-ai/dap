@@ -26,3 +26,7 @@ export const definitions: readonly DeclaredDefinition[] = [issue, change];
 export { issueEvidence4 } from "./issue4.ts";
 export { changeEvidence4 } from "./change4.ts";
 export { EVIDENCE_DIGESTS } from "./digests4.ts";
+
+/** Explicit workspace profile; creation and activation select these pins. */
+export { issueJ4, changeJ4 } from "./j4.ts";
+export { J4_DIGESTS } from "./digests-j4.ts";

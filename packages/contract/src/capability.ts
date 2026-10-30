@@ -68,35 +68,40 @@ export interface Capability {
   itemSlots?: Readonly<Record<string, "value" | "ref">>;
 }
 
+/** Both hold versions share the same declared forms. Their outcome rules
+ * are separate versioned code; the original version keeps its meaning. */
+const HOLD_DECLARATION = {
+  records: {
+    root: { states: ["creating", "live", "retiring", "retired"], final: ["retired"] },
+    pin: { states: ["provisional", "held", "released"], final: ["released"] },
+    check: { states: ["recorded", "too-large"], final: ["recorded", "too-large"] },
+    "receiver-pin": { states: ["standing", "released"], final: ["released"] },
+    // The authority note's, section 5.7: the three records beyond the item form. The contract leaves them to it (section 6.11).
+    fork: { states: ["creating", "selected", "deleting", "deleted", "failed"], final: ["deleted", "failed"] },
+    token: { states: ["minting", "live", "revoking", "ended"], final: ["ended"] },
+    instance: { states: ["current", "past"], final: ["past"] },
+  },
+  guards: {
+    staged: { with: ["commit", "under", "pin"], refusals: ["not-staged"] },
+    pin: { with: ["consumer", "intent", "commit"], refusals: ["no-pin", "pin-mismatch", "never-admitted"] },
+    license: { with: ["export", "from", "checkpoint", "hold", "instance"], refusals: ["export-not-authorized", "target-not-held", "target-fixed"] },
+    settled: { with: ["export", "from", "final", "by"], refusals: ["export-not-authorized", "not-final"] },
+  },
+  effects: {
+    "pin-hold": { with: [["commit"], ["consumer", "intent", "manifest"]] },
+    "pin-release": { with: [["commit"], ["consumer", "intent", "manifest", "by"]] },
+    license: { with: [["export", "from", "checkpoint", "hold", "instance", "k"]] },
+    settle: { with: [["export", "by"]] },
+  },
+  // `instance`, `token`, `retire` and `retry` are the authority note's, section 5.7. Each is asked of the lane that owns the hold or the ledger.
+  steps: { stage: { foreign: true }, check: { foreign: true }, instance: { foreign: false }, token: { foreign: false }, retire: { foreign: false }, retry: { foreign: false } },
+  reserved: [{ record: "receiver-pin", while: "standing", request: { class: "tell", message: "export-license", number: "k" }, bound: 3, count: "decided" }],
+} as const satisfies Capability;
+
 /** What `hold@1` and `git-read@1` declare (section 6.11). The item form of `hold@1`, with its `hold` effect, is section 6.8. */
 export const CAPABILITIES = {
-  "hold@1": {
-    records: {
-      root: { states: ["creating", "live", "retiring", "retired"], final: ["retired"] },
-      pin: { states: ["provisional", "held", "released"], final: ["released"] },
-      check: { states: ["recorded", "too-large"], final: ["recorded", "too-large"] },
-      "receiver-pin": { states: ["standing", "released"], final: ["released"] },
-      // The authority note's, section 5.7: the three records beyond the item form. The contract leaves them to it (section 6.11).
-      fork: { states: ["creating", "selected", "deleting", "deleted", "failed"], final: ["deleted", "failed"] },
-      token: { states: ["minting", "live", "revoking", "ended"], final: ["ended"] },
-      instance: { states: ["current", "past"], final: ["past"] },
-    },
-    guards: {
-      staged: { with: ["commit", "under", "pin"], refusals: ["not-staged"] },
-      pin: { with: ["consumer", "intent", "commit"], refusals: ["no-pin", "pin-mismatch", "never-admitted"] },
-      license: { with: ["export", "from", "checkpoint", "hold", "instance"], refusals: ["export-not-authorized", "target-not-held", "target-fixed"] },
-      settled: { with: ["export", "from", "final", "by"], refusals: ["export-not-authorized", "not-final"] },
-    },
-    effects: {
-      "pin-hold": { with: [["commit"], ["consumer", "intent", "manifest"]] },
-      "pin-release": { with: [["commit"], ["consumer", "intent", "manifest", "by"]] },
-      license: { with: [["export", "from", "checkpoint", "hold", "instance", "k"]] },
-      settle: { with: [["export", "by"]] },
-    },
-    // `instance`, `token`, `retire` and `retry` are the authority note's, section 5.7. Each is asked of the lane that owns the hold or the ledger.
-    steps: { stage: { foreign: true }, check: { foreign: true }, instance: { foreign: false }, token: { foreign: false }, retire: { foreign: false }, retry: { foreign: false } },
-    reserved: [{ record: "receiver-pin", while: "standing", request: { class: "tell", message: "export-license", number: "k" }, bound: 3, count: "decided" }],
-  },
+  "hold@1": HOLD_DECLARATION,
+  "hold@2": HOLD_DECLARATION,
   "git-read@1": {
     // The authority note's, sections 3.11 and 5.7: a job's read token is a record "of the same form" as the `token` of `hold@1`, in
     // the change lane, and belongs to this capability. The snapshot repository of a filtered check has no record here: the note

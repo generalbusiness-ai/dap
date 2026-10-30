@@ -76,7 +76,8 @@ import type { ReadCredential } from "./destination-host.ts";
 import { gitHubOutside, type GitHubBindings } from "./github-wiring.ts";
 import type { DemoCreationBindings } from "./demo-creation.ts";
 import { within } from "./turn.ts";
-import { ARTIFACTS_HOST, artifactsOutside, artifactsReadiness, type ArtifactsBindings } from "./artifacts-wiring.ts";
+import { ARTIFACTS_HOST, artifactsOutside, artifactsWorkspaceOutside, artifactsReadiness, type ArtifactsBindings } from "./artifacts-wiring.ts";
+import type { WorkspaceSources } from "./workspace-lineage.ts";
 import { recordedHost } from "./host-wiring.ts";
 import { NO_OUTSIDE, type Outside } from "./operations.ts";
 import type { NativeItemQuery } from "./item-queries.ts";
@@ -526,7 +527,7 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
  * or that records none, gets `NO_OUTSIDE`. Each wiring still checks its own
  * authority.
  */
-export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, env: GitHubBindings & ArtifactsBindings & ApplicationBindings, fetch?: (request: Request) => Promise<Response>, snapshotReader?: import("./destination-host.ts").SnapshotReader): Outside {
+export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, env: GitHubBindings & ArtifactsBindings & ApplicationBindings, fetch?: (request: Request) => Promise<Response>, snapshotReader?: import("./destination-host.ts").SnapshotReader, workspaceSources?: WorkspaceSources): Outside {
   // The settings are read from the environment at every call, and a host's wiring is made again only when one of its values
   // changed. So a setting that appears in this object's life takes effect at its next call, with no restart.
   const wired = new Map<string, { values: readonly unknown[]; outside: Outside }>();
@@ -538,6 +539,13 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
     return outside;
   };
   const announcement = applicationAnnouncementOutside(given);
+  let workspaceLate: Parameters<NonNullable<Outside["late"]>>[0] | null = null;
+  const workspace = (): Outside => {
+    if (given.scope()?.at.kind !== "lane" || !given.definition?.()?.declared.capabilities?.some(capability => capability.name === "hold" && capability.version === 2)) return NO_OUTSIDE;
+    const outside = wiring("artifacts-workspace", [env.ARTIFACTS_CONFIG, env.ARTIFACTS_NAMESPACE, env.ARTIFACTS], () => artifactsWorkspaceOutside(given, sql, env, workspaceSources, fetch));
+    if (workspaceLate) outside.late?.(workspaceLate);
+    return outside;
+  };
   const pick = (): Outside => {
     const host = recordedHost(given);
     if (host === "github.com" && env.GITHUB_APP_CONFIG) return wiring(host, [env.GITHUB_APP_CONFIG, env.GITHUB_APP_PRIVATE_KEY, env.GITHUB_CREATION_TOKEN, env.GITHUB_READ_TOKEN, env.GITHUB_CLEANUP_TOKENS], () => gitHubOutside(given, sql, env, fetch, snapshotReader));
@@ -545,6 +553,7 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
     return NO_OUTSIDE;
   };
   const selected = (owner: Parameters<Outside["accepts"]>[0], kind: string): Outside => {
+    if (owner === "hold@2") return workspace();
     if ((owner === "platform:rules@5" || owner === "platform:rules@6" || owner === "platform:rules@7" || owner === "platform:rules@8" || owner === "platform:rules@9" || owner === "platform:rules@10" || owner === "platform:rules@11" || owner === "platform:rules@12" || owner === "platform:rules@13") && ["fetch-application", "admit-application"].includes(kind)) return wiring("application", [env.APPLICATION_CONTENT, env.APPLICATION_TRUST], () => applicationHostOutside(env, PROPOSED_BOUNDS, fetch));
     // Share the bridge's exact owner policy; host-none install notices do
     // not depend on selecting a repository host.
@@ -555,8 +564,10 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
     snapshot: (asked) => pick().snapshot?.(asked) ?? Promise.resolve(null),
     stageSnapshot: (asked) => pick().stageSnapshot?.(asked) ?? Promise.resolve(null),
     accepts: (owner, kind) => selected(owner, kind).accepts(owner, kind),
+    ready: request => selected(request.owner, request.kind).ready?.(request) ?? true,
     send: (request) => selected(request.owner, request.kind).send(request),
-    judged: (at, sealed) => pick().judged?.(at, sealed),
+    late: deliver => { workspaceLate = deliver; wired.get("artifacts-workspace")?.outside.late?.(deliver); },
+    judged: (at, sealed) => (given.definition?.()?.declared.capabilities?.some(capability => capability.name === "hold" && capability.version === 2) ? workspace() : pick()).judged?.(at, sealed),
     hostPreparation: {
       accepts: (owner, kind) => selected(owner, kind).hostPreparation?.accepts(owner, kind) ?? false,
       resume: request => selected(request.owner, request.kind).hostPreparation?.resume(request) ?? Promise.resolve(null),
@@ -566,7 +577,7 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
       read: (request) => selected(request.owner, request.kind).recovery?.read(request) ?? Promise.resolve(null),
     },
     replies: (limit) => pick().replies?.(limit) ?? { answers: [], more: false },
-    credential: (handle, key) => pick().credential?.(handle, key) ?? null,
+    credential: (handle, key) => (given.definition?.()?.declared.capabilities?.some(capability => capability.name === "hold" && capability.version === 2) ? workspace() : pick()).credential?.(handle, key) ?? null,
   };
 }
 
@@ -645,7 +656,10 @@ export class DeployedScope<E extends Env = Env> extends ScopeObject<E> {
       applicationTrust: () => this.env.APPLICATION_TRUST,
       authority: (given) => repositoryAuthority({ ...given, reader: membershipIn(this.scopes()) }),
       // Wired whether or not a host is configured now: `outsideOf` reads the settings at each call, and with neither it sends nothing.
-      outside: (given: OutsideGiven) => outsideOf(given, this.ctx.storage.sql, this.env, undefined, snapshotReaderOf(this.scopes())),
+      outside: (given: OutsideGiven) => {
+        const scopes = this.scopes(), proofs = namespace(scopes);
+        return outsideOf(given, this.ctx.storage.sql, this.env, undefined, snapshotReaderOf(scopes), { births: proofs.birthNames, proofs: proofs.proofs });
+      },
       ...sessionWiring(() => sessionsOf(this.env.SESSION_SECRET, this.env.DEPLOYMENT), this.scopes()),
     };
   }

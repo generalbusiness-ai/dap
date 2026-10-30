@@ -167,3 +167,26 @@ describe("the token ledger's driver (authority note, sections 5.3, 5.4 and 5.7).
     expect([answers, log, JSON.stringify([answers, log]).includes(leaked)]).toEqual([[{ result: "confirmed", evidence: { basis: "own-answer", body: { token: "tok-1", ends: host.ends } } }, null, null], ["mint no-answer", "revoke no-answer"], false]);
   });
 });
+
+// Scripted host and sealed entries. This witnesses exact owner retention at
+// the adapter boundary, including a reply delivered to a new driver life.
+test("hold@2 late mint keeps its originating owner and cannot hand custody through a hold@1 outcome", async () => {
+  const first = made();
+  const request = minting("7:1");
+  request.owner = "hold@2";
+  request.origin.entry.effects = request.origin.entry.effects.map(effect => effect.effect === "record" ? { ...effect, capability: "hold@2" } : effect);
+  first.host.faults.set("mint 1", { fault: "lose-reply" });
+  expect(await first.driver.send(request)).toBeNull();
+  const lost = first.host.reply.get("mint 1")!;
+  expect(lost.ask).toMatchObject({ owner: "hold@2" });
+  const next = made();
+  expect(await next.driver.answered(lost.ask, lost.reply)).toBe("offered");
+  const live = token("live", { ...staging, mint: "7:1", id: "tok-1", ends: first.host.ends, revocation: null });
+  const wrong = outcome("7:1", "confirmed", [{ ...live, capability: "hold@2" } as Effect]);
+  next.driver.judged(of("7:1"), wrong);
+  expect(next.vault.held).toEqual([]);
+  expect(await next.driver.answered(lost.ask, lost.reply)).toBe("offered");
+  next.driver.judged(of("7:1"), { ...wrong, entry: { ...wrong.entry, input: { ...wrong.entry.input, owner: "hold@2" } as Input } });
+  expect(next.vault.held).toMatchObject([{ owner: "hold@2", token: 1, id: "tok-1", state: "live" }]);
+  expect(JSON.stringify(next.late)).not.toContain(first.host.tokens.get("tok-1")!.plaintext);
+});

@@ -5,7 +5,7 @@
  * this format; a stricter interpretation needs its own authorized version.
  */
 
-import { hasWorkspace } from "../capability/workspace.ts";
+import { hasAnyWorkspace, workspaceOwner } from "../capability/workspace.ts";
 import type { Bounds, DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { isObject, own } from "../values.ts";
@@ -112,8 +112,8 @@ export function validateFormat1(input: unknown, bounds: Bounds, profiles: Readon
   // Native workspace staging can open hold@1/check, whose retained ancestry
   // snapshot has no producer byte ceiling. The read limit is not a writer
   // maximum. Item-form holds alone cannot create the required instance.
-  if (d.wholeCapacity && d.holdTypes.size > 0 && hasWorkspace({ declared: input as DeclaredDefinition, underived: d.underived })) {
-    bad("reserve-unbounded", "capacity", "hold@1/check ancestry-snapshot producer has no finite canonical-byte ceiling");
+  if (d.wholeCapacity && d.holdTypes.size > 0 && hasAnyWorkspace({ declared: input as DeclaredDefinition, underived: d.underived })) {
+    bad("reserve-unbounded", "capacity", `${workspaceOwner({ declared: input as DeclaredDefinition })}/check ancestry-snapshot producer has no finite canonical-byte ceiling`);
   }
   // Section 6.4, "`settles` by a mark": no written effect sets a mark but to `true`. Section 17.2a: each key of `decisions` is the
   // message of a handler that states `bound`, whose `of` names that item type.
