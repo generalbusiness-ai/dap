@@ -1,152 +1,257 @@
-# Reads that wait for a minimum head
+# Minimum-head reads: review repairs
 
-Validation uses the third full gate and its limited test-only follow-ups.
-That gate failed in one Native test file. The complete file and affected
-compiler pass at the direct-child repair, with production code unchanged.
-Exact-head review must assess the single-file exception in docs/testing.md.
+DX-A2 remains under request `1c124ebf0f204a06e9f0f0de33c3b88c4dd296bb`, promise
+`28df5171acd1320942be751570e7a2b044a541e1`, and parent
+`2888b81e7472b5c097c8bc676794ee0170949978` in workroom
+`git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3`. The source base is
+`5dc9765fdc6fb6896b736127801944c46ee288f9`.
 
-Request:
-`git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1c124ebf0f204a06e9f0f0de33c3b88c4dd296bb`
-
-Promise:
-`git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:28df5171acd1320942be751570e7a2b044a541e1`
-
-Parent request:
-`git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2888b81e7472b5c097c8bc676794ee0170949978`
+**The fourth repair gate passed.** It closed naturally at clean source
+`713487e04d8e119ce036ac817e04504e24f6b315`, tree
+`f2dc10bd111a5f7ab31a30085ec8b38f8dd22bf6`, with unchanged source and
+complete output capture. Three original and three earlier repair gates
+remain failed. This report claims no review approval, landing or hosted result.
 
 ## What changed
 
-The four existing journal reads and the existing application projection
-accept the same optional `ReadMinimum`: `{at: ScopeRef, head: number | Head}`.
-The exact scope reference supplies the incarnation. A full head adds the
-recorded hash. Existing callers can omit the minimum.
+The five existing reads accept optional `{at: ScopeRef, head: number | Head}`:
+summary, items, history, entry and application projection. Clients may supply
+a receipt. HTTP carries one canonical base64url `atLeast` parameter, bounded
+to 512 decoded bytes and 683 encoded characters. Head and FactRef stay closed.
+Malformed or duplicate HTTP input, or a different URL scope, returns 400.
+An authorized kind mismatch returns unavailable; another incarnation returns
+wrong-incarnation. Neither exposes a head. The bounded RPC record follows
+the same authority rules without a new wire reason.
 
-HTTP carries one bounded canonical base64url `atLeast` query parameter.
-The bytes codec rejects malformed, duplicate, oversized, or noncanonical
-input. In-process calls use the same closed record. Summary, items, history,
-entry, and application projection all forward the minimum to Scope.
+`ReadWait` registers before checking position and wakes after a committed
+seal. It waits outside the turn and transaction, refreshes authority, and
+releases its callback and timer in finally. Its wait timer uses
+`Bounds.readWaitMilliseconds = 1000`. An authorized timeout returns behind
+with the current FactRef; HTTP maps that answer to 503. No journal record,
+alarm, subscription or rate policy enters the wait. Controlled-clock cases
+prove behavior, not deployed one-second latency or physical drain.
 
-Scope answers immediately when it has reached a valid minimum. Otherwise,
-`ReadWait` waits for the existing post-seal notification outside the turn
-and storage transaction. The single `Bounds.readWaitMilliseconds` value is
-1,000 milliseconds. A timeout returns
-`{ok:false, reason:"behind", current:FactRef}` and HTTP status 503.
-Authorization runs before any head disclosure and again after a wake.
-A different incarnation returns `wrong-incarnation`. A mismatched or missing
-retained hash returns `unavailable`, even after the journal advances.
-The read releases its callback and timer when it finishes.
+The card retains its accepted receipt and sends it on its next existing
+application-projection request. Hosted enrolment qualifies its existing entry
+read-back. Neither adds a summary barrier or polling loop. Native definitions
+and historical pins stay unchanged. Maintained generation supplies Page
+assets and MCP resource bytes; generated equality checks prove no browser or
+provider behavior.
 
-Client handles accept a receipt on all five reads. `followReceipt` passes
-that receipt's exact scope, incarnation, sequence, and hash to one entry
-read. It preserves the existing entry-reference and computed-hash checks.
-The method still makes one entry read; it now qualifies that read with
-the complete receipt position.
+## Six checker repairs and the floor decision
 
-The two commissioned receipt consumers are:
+Checker `0924ce2ed5c619b8cc0845f65b87e2686dac7e3b` requested six changes at
+`aa20f0fe0e01e380e49497a64371958e1147e574`, tree
+`07baa6da9ad7c183f2cf1342bf6490336f62f627`. Its findings came from source,
+not runtime reproduction. The new cases and captures below stay distinct.
 
-- `packages/mcp/src/views/session.ts`: `ViewSessions` retains the accepted
-  receipt privately. Its next declared-card refresh passes the complete
-  minimum through the declared view source.
-- `packages/mcp/src/service.ts` and `packages/mcp/src/reads.ts`: the shared
-  hosted MCP implementation forwards that minimum to the existing
-  `applicationProjection` request. `packages/mcp/src/hosted.ts` also adds
-  the complete minimum to its existing enrolment entry read-back. No summary
-  barrier or polling request precedes the card projection.
+1. **Preserve archived answers.** Ruling
+   `366b3989097cc70edf291bb97e019c7a866c0607` adopts ordering only for a full
+   minimum strictly below the real journal floor. After authority, exact
+   ScopeRef/incarnation checks and reaching the position, entry keeps its
+   existing archived metadata: floor, commit and through position. Summary,
+   items, history and projection answer normally. No archived bytes or
+   supplied historical hash are verified. At or above the floor, a missing
+   or different retained hash remains unavailable. No archive dereference,
+   authority or wire field is added. Below the floor the minimum orders;
+   it does not verify.
+2. **Keep a waiting projection out of the shared flight.** The wait now
+   precedes PreparationFlights admission, so it cannot occupy the item-query
+   slot. The original ten-second projection deadline includes time already
+   spent waiting. A narrow earlier deadline only shortens that window.
+   The existing flight still owns late unresolved work until it settles.
+3. **Refresh causal roots.** Signed history and entry reads refresh the
+   existing bounded chain proof on admission and after each wake. A seal
+   during asynchronous refresh causes another refresh, not a stale read.
+   The first authorized racing refresh starts the same wait timer. An
+   expired or unauthorized reader gets its named refusal before any head.
+   A deadline race with uncertain chain coverage fails unavailable.
+4. **Keep receipt refusals.** followReceipt sends a qualified sequence
+   minimum, then checks the returned full reference and computed entry hash.
+   It retains hash-mismatch, reference-mismatch and the hosted 409 enrolment
+   refusal. Only unavailable permits one ordinary entry read with the same
+   target and reader. Other refusals pass through; no retry loop is added.
+   A successful reply whose head is below the receipt cannot succeed.
+5. **Stop dropped or stale minima.** All five handle reads own their input
+   before dispatch and reject successful replies below it. An equal full
+   head must also match its hash; a later head alone cannot prove a historical
+   hash. CLI session wrappers forward and own all five arguments before
+   asynchronous session work. The serialized local development host refuses
+   a valid minimum with unavailable and rejects malformed/duplicate wire
+   input with 400. It adds no local arrival wait.
+6. **Complete kernel section 7.** It names the new
+   `packages/bytes/src/read-minimum.ts` owner and readMinimum, isReadMinimum,
+   encodeReadMinimumParameter, readMinimumParameter and
+   READ_MINIMUM_WIRE_BOUNDS; isBehindRead; the five ScopeApi arguments; and
+   wrong-incarnation/behind in APPLICATION_PROJECTION_REFUSALS. These are
+   shared read contracts: all applications use the same existing reads and
+   cannot redefine their wire, result guard or refusal shape. They introduce
+   no application vocabulary. The client README
+   states the bounded receipt fallback and local-development limit.
 
-The Page imports the changed handle and transport. The maintained Page
-build updated only `apps/room/page/assets.ts`: 1,207,559 bytes, SHA256
-`2e2b9f5378499a8c6e50bfbf0763d57d83442833928c910247c3a4ad86b4b7fa`.
-Native definitions and their historical pins do not change.
+The floor ruling also withdraws the old single-file exception and requires
+a new full gate. A separate waiter-count cap remains deferred to the planner's
+observability design. The one-second timer bounds a wait; it does not bound
+concurrent waiter count. No cap or new rate policy is claimed here.
 
-## Decisions and reasons
+## Actual witnesses and failures
 
-The planner adopted the fifth, application-projection read in:
-`git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:261004b145918f976ed32e509187876ca0da7c93`
+The sealed old report keeps three failed gates: CLI status typing at
+`6c2ad821`, stale generated resources at `091c0781`, and receipt hash and
+kind expectations at `240c963f`. The `ce3aadfc` follow-ups passed but did
+not preserve public refusals. Checker review rejected that exception.
+The table preserves all 44 original invocation rows.
 
-The builder recorded the concrete wire and timeout choices in:
-`git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dc7be8f4a30c01e7790aac8f7e3aae3acd8bb051`
+The client test compiler first rejects an invalid wrong-kind literal; a
+valid rules kind fixes that fixture. Plain first reports 32 passes and two
+failures: missing projection source and an explicit null reader selecting
+Signed rather than the scripted Session. A valid empty board source and
+issued session preserve the assertions; both whole owners then pass 18.
 
-[Kernel section 7](../../docs/kernel.md#7-rule-for-adding-to-the-kernel)
-records why the shared read contract belongs in the kernel. HTTP,
-in-process services, and clients must agree on the named incarnation,
-minimum, and refusal. An application definition cannot redefine an existing
-read response. Scope owns the ephemeral wait mechanism. No platform kind,
-capability, new rate policy, subscription limit, journal record, durable
-alarm, or polling protocol enters this change. The one-second bound stays
-below the existing ten-second projection and thirty-second HTTP deadlines.
+The first Native selection reports 16 passes and one timeout in the causal
+reader case. Background delivery could beat the waiting readers. The fixture
+now holds only the exact target delivery, signs both readers first, waits for
+both timers, delivers the real envelope, then restores the prior dispatcher
+and settles owned work in finally. The same six-case owner passes. This is a
+fixture scheduling correction, not a passing result manufactured from the
+timeout or a new production change.
 
-Registration precedes the synchronous authorized position check. A seal
-before registration appears in that check. A seal after registration wakes
-the waiting reader. The callback signals arrival after a seal and lets the
-read check authority again. The implementation does not wait inside
-`Turns.run` or a storage transaction. The barrier itself writes nothing.
-Existing independent startup or recovery work retains its own behavior.
+The projection-wait case uses a real native Rules object and session. While
+its controlled one-second wait stays pending, an actual item query succeeds.
+The causal case uses real parent/child creation, a signed link and typed
+native delivery. The original waiting history and entry replies see that
+new causal entry; an unrelated signer is forbidden before waiting. Generic
+definitions, grants, clock and timer are labelled test inputs. Journals,
+signatures, causal traversal, turns and SQLite remain real.
 
-Root reviewed fourteen changed source-seal values and added whole-file
-coverage for `read-wait.ts` and `read-minimum.ts`. Caller seals alone do not
-cover these new implementation bodies. The source selectors and existing
-route model stay unchanged. `I/root-adoption.json` records the exact
-adoption. The whole structural inventory owner later passed ten tests with its
-selected source pins unchanged. That owner does not establish Native
-authorization or replace gate evidence.
+The installed-card owner retains its pause receipt, writes later native
+acts and checkpoints, advances its clock, and runs Core.floor on real SQL.
+Its test-authored archive commit proves no provider custody or alarm writer.
+After payload deletion and eviction, a new session reads actual archived
+metadata and the card refresh carries the old receipt. A wrong retained
+floor hash stays unavailable; unauthenticated access stays forbidden. The
+combined two-file selection passes eight cases.
 
-## Evidence
+The floor control distinguishes archived from unavailable: its baseline
+passes, its mutant reports one pass and one failure, and exact bytes return.
+It stops before card refresh, so proves no refresh mutation result. Its
+temporary JSON reports are absent. All 9,132 diagnostic bytes are in stderr,
+with empty stdout; the old proposal's stdout caption stays historical.
+The old full-head control stays separate. Neither is a sweep or hosted proof.
 
-The initial focused checks ran on evolving, uncommitted source based on
-commit `5dc9765fdc6fb6896b736127801944c46ee288f9`, tree
-`39c0bfaa8a48bfb3544a18c82e1873ddbafe76aa`. That base does not identify the
-changed source. Their partial source pin files and command receipts record
-only their actual boundaries.
+The first three repair receipts keep an obsolete BO1 two-fixture caption.
+capture-qualification-correction.json names them. Actual before/after
+inventories, dirty status and hashes govern those aa20-based bytes; no
+receipt or source guard changed. Head/tree alone do not identify them.
 
-The third gate ran at `240c963fe50e8f695cd3d7b667bdacef57890673`, tree
-`ada6e6d1720b8917bbab162bb14491846cfabe57`. Final validation uses its
-direct child `ce3aadfc3ab07dfa78c27856c590b192bd0d4d6d`, tree
-`5a39c03be60feb3abf22f2ca73b049c93102bd34`. Only
-`packages/scope/test/client.test.ts` differs between those two source trees.
-Every other tracked blob and mode matches, including production code,
-configuration, dependencies, shared helpers, and imported code. The test
-has no module importer. The remaining literal filename mentions belong to
-provenance-alias data and a comment. The scratch source proof records that
-bounded read-only check. The reporting change adds only this note and its citation manifest after
-validation. Source and tests remain unchanged.
+Generation changes only assets.ts and ignored dist JavaScript; four
+generated cases pass. AST readback fails on bare keys, then v2 passes on
+qualified keys. Baseline comparison supports four adopted seal changes;
+inventory passes ten. The v1 metadata-lock copy stays an input. No new
+flight owner or semantic digest becomes a seal or file hash. Seals grant
+no runtime authority.
 
-The sealed evidence directory is:
-`/Users/hughpyle/play/artroom-evidence/2026-10-30-dxa2-minimum-head`.
-The [citation manifest](evidence/2026-10-30-dxa2-minimum-head.manifest.json)
-binds the command records, outputs, and derivations below.
-Its complete readback inventory contains 576 files and 85,415,337 bytes.
-`SHA256SUMS` has SHA256
+The first repair gate at `1c5a6fba` passes Kernel, then fails Node:
+79 pass and active-source rejects the client fixture's Platform import.
+Counting, Plain and Native stay unreached. A one-shot maintained query
+digest calculation, with fixed public input and tsx cache disabled, replaces
+only that test import. Its value, template and patch remain retained. No
+algorithm or allowlist changes. The client test compiler, seven client
+cases and twelve active-source Node cases then pass separately.
+
+The second repair gate at `b678ecba` passes Kernel and Node 80, then fails
+Counting with 55 passes and one failure; Plain and Native stay unreached.
+The fake accepted-history entry and receipt named sequence 2 but its read
+reported head 1. The minimum guard correctly returned unknown. Changing
+only those two fake head fields to 2 leaves production and allowlists
+unchanged. The Counter compiler and all 56 Counting cases pass separately
+on that dirty fixture repair.
+
+Root commits clean source `887f411cbf857d1dc3e3e733de6ee8e17d497350`, tree
+`85096fbf5a41e499b28f29eb6f2e4b251d44144b`. The third repair gate fails:
+Kernel, Node 80, Counting 56 and Plain 3,156 with one skip pass. Native
+reports 865 passes, one failure and two skips across all three projects.
+The Lending story receives nothing-sent instead of unknown after discarding
+its preceding look result. The output does not establish the no-send cause.
+
+A one-file diagnostic retains that look and donation result only through
+fixed reason labels, post counts and custody-presence booleans. It preserves
+every call, assertion and deadline. Its compiler and whole Lending owner
+pass separately. That pass supplies no missing observation of the earlier
+failure and proves no repaired race.
+
+Source inspection finds avoidable contention in the historical projection
+stand-in: parallel library and thing queries share one native query flight,
+which may refuse an overlapping task as unavailable. The helper now awaits
+the original queries in order, then constructs the same response map. It
+preserves history ordering, strict source/head validation and the two-attempt
+limit. Its compiler and whole Lending owner pass once. No production,
+authority, assertion, deadline or pin changes. The original cause remains
+unconfirmed. This shared-helper change requires a new full gate.
+
+Gate command walls are 84.707218, 93.139510 and 1,225.857183 seconds;
+their capture host child CPUs are 153.316810, 164.599937 and 2,611.798288
+seconds. Command-only and enclosing runner costs remain distinct in the
+receipts. Gate 3's runner reports Darwin 27.2.0, arm64, 18 logical CPUs and
+start load averages 4.993652, 4.701660 and 4.187988. Cache and shared-host
+load are uncontrolled; this is no cold-cache benchmark. No VM CPU is
+measured.
+
+The fourth gate passes Kernel, Node 80, Counting 56, Plain 3,156 with one
+skip, and Native 866 with two skips. All five stages pass, reportErrors is
+empty, and four terminal ledgers are complete. Scope timing remains partial:
+246 modules observed, 72 unknown or suite observations overall, zero
+contradictory records. Those timing gaps are not inferred test failures.
+Command wall is 1,253.580465 seconds, capture wall 1,253.746091, capture host
+CPU 2,678.112164 and command CPU 2,677.929155. Enclosing runner wall is
+1,254.820106 and host CPU 2,681.111010. No VM CPU is measured. Its Darwin
+27.2.0 arm64 host has 18 logical CPUs; start loads are 4.101563, 4.330566 and
+5.434570. Cache and shared-host load remain uncontrolled.
+
+## Evidence table and custody
+
+The old unit is actually sealed at
+`/Users/hughpyle/play/artroom-evidence/2026-10-30-dxa2-minimum-head`:
+576 files, 85,415,337 bytes, root SHA256SUMS
 `64725902b21744c166ff1da6cc06fbeacb7038a0ff9ebd212d23f07fec81a450`.
-The copy removed write permission after the last write and read every file
-back. Keep it for at least 30 days after landing. Later removal requires
-a planner act naming the manifest. These citation prefixes are relative
-to that directory:
+Its old note and manifest remain unchanged. The sealed new home is
+`/Users/hughpyle/play/artroom-evidence/2026-10-30-dxa2-review-repairs`.
+The compact manifest records current custody and binds the aliases below.
+E means that home; E/prior-evidence keeps the complete old namespace.
 
-- `W` = `focused/contract`.
-- `C` = `focused/client`.
-- `S` = `focused/scope`.
-- `M` = `controls/full-head`.
-- `P` = `generation/page`.
-- `I` = `operator-inputs/seal-adoption`.
-- `G` = `captures`.
-- `R` = `generation/mcp-resources`.
-- `N` = `focused/inventory`.
+W, C, S, M, P, I, G, R and N preserve the original table labels. Their retained
+roots are E/prior-evidence/focused/contract, focused/client,
+focused/scope, controls/full-head, generation/page, operator-inputs/seal-adoption,
+captures, generation/mcp-resources and focused/inventory respectively;
+every suffix in that list expands under E/prior-evidence.
+RR means E/repair-checks; FR E/floor-checks; FC E/floor-control;
+A1 E/generation-v1/captures; A2 E/generation-v2/captures;
+Q E/fixed-query-calculation; BF E/client-boundary-checks; CF E/counting-fixture-checks;
+NG1, NG2 and NG3 mean E/new-failed-gate-1, E/new-failed-gate-2 and
+E/new-failed-gate-3. NG4 means E/gate-captures. LD and LS mean
+E/lending-diagnostic-checks and E/lending-serial-checks. The compact manifest
+now binds these aliases.
 
-Every table row identifies its retained receipt and actual command record.
-Commands below abbreviate the unchanged executable prefixes as follows:
-`V` means `node node_modules/vitest/vitest.mjs`; `T` means
-`node node_modules/typescript/bin/tsc`. A package-local cwd instead uses the
-literal `../../node_modules/` path recorded in that row's command JSON.
-`$WT` is the original worktree path. Command aliases `$M` and `$I`
-retain `/private/tmp/artroom-dxa2-minimum-head-control-20261030-v1` and
-`/private/tmp/artroom-dxa2-seal-adoption-20261030-v1` respectively. The
-citation prefixes name retained copies; command arguments keep original paths.
-The command record, whose SHA is in operator-inputs/note-draft-v5/observations.json, remains authoritative.
-All digests below use SHA256. `out` identifies stdout. `err` appears only
-for nonempty stderr. Empty stderr has SHA256
+V expands to node node_modules/vitest/vitest.mjs and T to
+node node_modules/typescript/bin/tsc. Package-local original commands retain
+their ../../node_modules prefix. $WT is the original
+`/Users/hughpyle/play/artroom/.builder-worktrees/dx-a2-minimum-head-20261030`.
+$M is `/private/tmp/artroom-dxa2-minimum-head-control-20261030-v1`; $I is
+`/private/tmp/artroom-dxa2-seal-adoption-20261030-v1`. $RR, $FR, $FC, $A1, $A2 and $QF in commands mean the original public
+scratch roots named in draft derivation, not the new retained paths.
+$LD and $LS in commands name the original public Lending capture roots.
+Command records, receipts and streams govern each row. Cwd stays unknown
+where no record names it. I/main, I/extra and N/owner use their root receipts.
+No command is rerun to derive this table.
+
+Output digests are SHA256. out means stdout; err means nonempty stderr.
+Omitted empty stderr still exists with SHA256
 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
-A table row's label locates its receipt in that prefix. `I/main` and
-`I/extra` use `main-receipt.json` and `extra-receipt.json` at the root. `N/owner` uses its root receipt.json.
+Receipt walls are rounded to six decimals; per-command host CPU and source
+guards remain in the receipts. Concurrent case sums are not wall time or CPU.
+S1's separate gate shared this host from about 20:05. No private S1 evidence
+was read and no timing cause follows from that overlap. Logical deadlines
+exclude guards and cleanup and prove no physical descendant or VM drain.
 
 | Check and receipt | Actual command | Exit | Output digest | Receipt digest | Wall seconds |
 | --- | --- | ---: | --- | --- | ---: |
@@ -194,179 +299,81 @@ A table row's label locates its receipt in that prefix. `I/main` and
 | G/gate-dxa2-3 | `npm run gate` | 1 | out `cd2d9aeec5b528f578d5e648a857f5bcc0b481660d5f036e13196af5c2ea8ac0` | `3b367c396bbb683c3982eb54f0a70a58efaf8ab0da8513513a9b426b927b57ab` | 1334.847241 |
 | G/followup-scope-types-1 | `T -p packages/scope/tsconfig.test.json` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `92a3913ceb1852174a04492d21f76f5f0408fdf83c38d43b15d12cdd8fe32192` | 0.914732 |
 | G/followup-native-client-1 | `V run --project scope $WT/packages/scope/test/client.test.ts --reporter=verbose` | 0 | out `ee36dcfe01853358b2a12c0ebf6b5f5fee0020bd948bfdcf46fd92a748bd846c` | `84b251243fea9a23d325f1bcd522b1e3c0ff9ab65f7b88418d51352034eb8548` | 5.667915 |
+| RR/cli-native-types | `T -p packages/cli/tsconfig.scope.json --noEmit` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `e52e19f8ce9903a66a73eb253aaa2dfc15eb1b0ac25c05d425cf8e0c37d19a4a` | 0.455468 |
+| RR/cli-test-types | `T -p packages/cli/tsconfig.test.json --noEmit` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `d5713a46e311e947300cea8821f7f43ddad6f8cb6c19790acd82d02b1d08bd93` | 0.398552 |
+| RR/cli-test-types-2 | `T -p packages/cli/tsconfig.test.json --noEmit` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `d3eba8444fc800bbc66d97d8fe18f057b9dda6c4bf777ea90ee3cced9baf41a4` | 0.398424 |
+| RR/cli-types | `T -p packages/cli/tsconfig.json --noEmit` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `25a7d926c46740375f7641c683c9d590941f974cab6dfa44b8d74314596f4559` | 0.315844 |
+| RR/client-test-types | `T -p packages/client/tsconfig.test.json --noEmit` | 1 | out `2b0bbf81cef78d95a7c580829b907cfcbcc97f5239b8aec9b0b96adaf1ab6e47` | `d18bc09939c5203881c2b768c5449817e9a50d1c11b759744c7bd9868a98a72a` | 0.141491 |
+| RR/client-test-types-2 | `T -p packages/client/tsconfig.test.json --noEmit` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `48414ecdf0d974314b77444b63ddf33cb8a249f1395f7f0a25bb6d0f4b2620cd` | 0.141038 |
+| RR/client-test-types-3 | `T -p packages/client/tsconfig.test.json --noEmit` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `a5540c6b013282607bf9f711bdab440cc75272d6f7e65a8a0a2fab945a5de094` | 0.142049 |
+| RR/client-types | `T -p packages/client/tsconfig.json --noEmit` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `9d08594bf060cc0f060b0b91859ce76d5fa916b5b27eecb53c23b92f6fd392f3` | 0.153653 |
+| RR/compatibility | `node scripts/cloudflare-pool-compat.mjs` | 0 | out `fb74376ef270118964e9337b343314714c1a7d1dce7328b646b9bae15ad54ffc` | `d5c0d643a0a7c7eb72db7247c6fcdea6675c425cdc7f6dedf9f27f0b28bac001` | 0.085411 |
+| RR/native-owners | `V run --project scope packages/scope/test/read-minimum.test.ts packages/scope/test/preparation-flight.test.ts packages/scope/test/application-projection-native.test.ts packages/scope/test/item-query-lifetime.test.ts packages/scope/test/client.test.ts --reporter=verbose --reporter=json --outputFile.json=$RR/native-owners/report.json` | 1 | out `c7be0ac68793b1d46bfc7a2183670c20748860cf57382892d07aca3971411143`; err `c1c42aead32b377aabb0778ce41b8ec8177b5ffa0272e573639011402f25401e` | `5c495bc2b0aa3cc0b8a9b50454763019e0f4742e44aa43cb76b1b2a214738568` | 36.231829 |
+| RR/native-read-minimum-2 | `V run --project scope packages/scope/test/read-minimum.test.ts --reporter=verbose --reporter=json --outputFile.json=$RR/native-read-minimum-2/report.json` | 0 | out `f9889fda119b0fb9bf5f42f96258b46ced7fb955fbbd9714c70b98853279f785` | `142133a56bcbea546a81d2abdf7de41a43b2f66f6d2373d328dbc5268b4ea4a9` | 5.074523 |
+| RR/plain-owners | `V run --project client --project cli packages/client/test/read-minimum.test.ts packages/client/test/intent.test.ts packages/client/test/application-projection.test.ts packages/cli/test/session-cache.test.ts packages/cli/test/application-dev.test.ts --reporter=verbose --reporter=json --outputFile.json=$RR/plain-owners/report.json` | 1 | out `88c72b6ec85724cb70e721646260b34a2fc3904275d4e385d5c9f8ef57ea6242`; err `58d58732bdf3a66e23005e89cb5ca9c97a0f6224dd2c9dca887782d5f8c3e1c0` | `53392fd895d56b830b777fc0e2b722b58d9d0030538307246ca864d05c2744de` | 2.804688 |
+| RR/plain-repaired-2 | `V run --project client --project cli packages/client/test/read-minimum.test.ts packages/cli/test/session-cache.test.ts --reporter=verbose --reporter=json --outputFile.json=$RR/plain-repaired-2/report.json` | 0 | out `3be35a80dfbf06785820e6b821ea1e2eb1e601ea1947eeb5d730a2472a3aad50` | `dd06243e43964e06b273cf89fea71d88cf16d7829db0ad3b8c9ee1688a1af2a3` | 1.096278 |
+| RR/scope-test-types | `T -p packages/scope/tsconfig.test.json --noEmit` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `8bb7c82147e2a29b6b0dc225ad92d855ba994f9586671b833ee422fb9970a2dd` | 0.734451 |
+| RR/scope-test-types-2 | `T -p packages/scope/tsconfig.test.json --noEmit` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `ddc767b7892ab7c9a8ec0f744ee9ce48d44905571803051e20c6d8f43aabb4fa` | 0.731108 |
+| RR/scope-types | `T -p packages/scope/tsconfig.json --noEmit` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `2c434c5eae9352520870ce79f9e7ade4e616819416e726f37b14ba820e35ce43` | 0.353923 |
+| FR/native-owners | `V run --project scope packages/scope/test/read-minimum.test.ts packages/scope/test/application-projection-native.test.ts --reporter=verbose --reporter=json --outputFile.json=$FR/native-owners/report.json` | 0 | out `6c2a2bec52f0de562ef1f9cd53b1b0da15711f43e812f361cbfae9a349f8567e` | `4efc10de6dc9d5335b8bc70a0fb23d0c7dbddfdba2227832131a64bdaae924d3` | 8.846382 |
+| FR/scope-test-types | `T -p packages/scope/tsconfig.test.json --noEmit` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `f0a43c6e34b528965042192904564bc95d847f7faeed86e7309de0b280355aaf` | 0.761282 |
+| FR/scope-types | `T -p packages/scope/tsconfig.json --noEmit` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `d45bd5db46e2099f66b36e006ed890829865fa132b8fde1e5f006c3d676131fc` | 0.394797 |
+| FC/maintained-control | `node scripts/control.mjs packages/scope/src/read-wait.ts 'if (typeof minimum.head !== "number" && seq >= floor() && (seq === current.seq ? current.hash : hash(seq)) !== minimum.head.hash) return { ok: false, reason: "unavailable" };' 'if (typeof minimum.head !== "number" && (seq === current.seq ? current.hash : hash(seq)) !== minimum.head.hash) return { ok: false, reason: "unavailable" };' --expect 'native installed projection reads exact journal state and survives R2 deletion and eviction' -- packages/scope test/application-projection-native.test.ts` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`; err `d208dbc79756ffa62b658944704ca6426a9e990740aa7eff81d5202374e2f235` | `deab5bba094439646649d98eb858b243ce22557963a49892f56e13daf59910d6` | 16.696802 |
+| A1/ast-readback | `node $A1/read-seals.mjs` | 1 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`; err `b7968e55f0d1de98ef1aab3beff51ba0946dc50f72019ca6703e260e26299891` | `b45d39ce751f800fa2963d61231924ea9eb40f26653931a2db9573dfaeb73044` | 0.139491 |
+| A1/generated-owners | `V run --project page --project mcp apps/room/page/test/assets.test.ts packages/mcp/test/view-resources.test.ts --reporter=verbose` | 0 | out `429e4657899035e342fcc6c576cb6195f2acdd99e848d91a3583beeeb1db452f` | `e5644d534a36a943a66306d48fc9d00a732fab12809039a8da0de9ba3063a68a` | 1.519913 |
+| A1/page-generate | `node apps/room/page/scripts/assets.mjs` | 0 | out `b2bf94e3ea65eb0580ec6a4f9394ff674f32fa7e95af28ed7cd35ae3dd87a791` | `75271f33a2733e96ced80cecf0527ffdbc20316dc7377e56aa757db2d38a9454` | 0.159886 |
+| A1/security-owner | `node --test scripts/security-entry-points.test.mjs` | 0 | out `be5c943faf135c059e91a59f7045d8cbef7c3130490152f936d661e3e614e989` | `c7bf2498e0ca66c3d2a122cf02ae586b463889566597b6cf4d9ddfb0de892ddd` | 2.721717 |
+| A2/ast-readback-qualified-2 | `node $A2/read-seals.mjs` | 0 | out `86f7922e33cd55c5a86b2235fea95d713b9f0bcb3116ad098ae11b668b6dc6cc`; err `2e40b5684315324a49f9ab9487a07853d3361ac2fae4404d89a3003e36dff3e3` | `608b67b420e6b034599e179852c2b2c2ef3d80f0b439d9f03a2c3498f880720f` | 0.140241 |
+| NG1/gate-1 | `npm run gate` | 1 | out `18e999e75562ef028eb372fa2e9493e8bb9372f6ca5ee4e220ff7337623f6d67` | `993d5e60bb9a8847604e6ca0065e60e7cae94fa8f56426aa940f789f4c1b2ce0` | 84.707218 |
+| Q/fixed-query-digest | `env TSX_DISABLE_CACHE=1 node --import $WT/node_modules/tsx/dist/loader.mjs $QF/calculate.mjs` | 0 | out `01ae6fcb64121c367ecac2f1cefa5fa9ac99ce3d434d2eadd6a459aeab690267`; err `2db021491c36eafa80a7dee80e4d63ca54ef6c2cb7ccf4d4ab4364f001e29e52` | `b24652b04517e609d3b922fba2cc7798f79cb2f546eee7619959d91c0840e1dd` | 0.216702 |
+| BF/client-test-types | `T -p packages/client/tsconfig.test.json --noEmit` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `16fddc5284a282e8959cb8e9886a5185ce8a7a91abe58748ee184c626fed13b3` | 0.193109 |
+| BF/client-read-minimum | `V run --project client packages/client/test/read-minimum.test.ts` | 0 | out `707937af770fbb46316a3066cdc2472560af3ee1d3a4d8c7a5e9ea800b221a49` | `ef8e71259d63ee2b9dd130347f2188cb2c1f4b3b6324fe6bfa90245dab73e6e1` | 1.110031 |
+| BF/active-source-owner | `node --test scripts/active-source.test.mjs` | 0 | out `587e0be48f7421fe61a37eca53770e933718f94d228d43cb9279b08ddf02023c` | `1ede17c292b9695eff8390711e538e34faa8764da4acd98aafdb465f03ebdd09` | 4.955294 |
+| NG2/gate-1 | `npm run gate` | 1 | out `bae3390024f6104e0ee981124ed3f32dce57881b3bb9b9df6cba2f09da8e5fe3` | `cd4a1909e8684eeffb28ca3be416a14aaae62bd605e270b4191124a9e2bacf40` | 93.139510 |
+| CF/counter-types | `T -p apps/counter/tsconfig.json --noEmit` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `85903e87395e7b0888ea681979ca853b9f794d509154db98fde1ae4b9877997e` | 0.203664 |
+| CF/counting-owner | `node apps/counter/scripts/test-browser.mjs` | 0 | out `40e96f6aa49f9d2ea1f7fa4ceda52843bcbc54d4c47e7d037c2bc28d6fe1a429` | `4ec5580cebd6ee190f68daf0f224f73735b09c4998cd69491f4123f2729132da` | 2.201397 |
+| NG3/gate-1 | `npm run gate` | 1 | out `a34ed8edceea3e40067d1acab387c2e9436990448b06836cf9bf61be04de2e63` | `cb2122cbdb3f7d933b85c21ec89cdfb6407ab1d437c00c7ba2bae606d5e02c9a` | 1225.857183 |
+| LD/lending-owner | `V run --project scope-lending packages/scope/test/lending.test.ts --reporter=verbose --reporter=json --outputFile.json=$LD/lending-owner/report.json` | 0 | out `cd82059cf2ad833a3de5235400b986246e6e60ed8e6fb9ba28e9b7107ad7f5d7` | `9f4fd9eeb963c012cab7fbf63a09a2decf1006d99b0dd3dceb12f377dfa42d50` | 8.192564 |
+| LD/scope-test-types | `T -p packages/scope/tsconfig.test.json --noEmit` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `c7563505856d24d6eb60b37058f9452587c40873af666dff01c5e0e704c7b07b` | 0.861521 |
+| LS/lending-owner | `V run --project scope-lending packages/scope/test/lending.test.ts --reporter=verbose --reporter=json --outputFile.json=$LS/lending-owner/report.json` | 0 | out `1b35d5871506057150f72717022bbdddcbe48e3c11f3256649b8eca221799901` | `702c61b25325d2e0cbd86d07697f497f8cd6b724d20a9779f0e1dd2c41b8c919` | 8.376282 |
+| LS/scope-test-types | `T -p packages/scope/tsconfig.test.json --noEmit` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `29ffe9e371da3e77067f2207efa0fe03f5a308ae011868a28716d6b8e2f7801b` | 0.878712 |
+| NG4/gate-1 | `npm run gate` | 0 | out `e08d94bbc1827690ae817d5e33df8a52a305db141c75c9399aed174c76d4191d` | `bcda2dbc86314165e4a40a04471b7077c2a0fb457f68cbd728908a4d08ac2d57` | 1253.580465 |
 
-Counts come from each command's actual public terminal summary. They count
-that invocation, including repeated development coverage. They are not a
-sum of distinct cases in the final candidate. The final targeted selections
-include five wire cases, seven client read cases, four client projection
-cases, sixteen compact-card cases, four Native minimum-read cases, two
-Native projection cases, twenty local Native MCP cases, and one Page asset
-case. The later generated-resource owner passed three cases, and the final
-whole Native client file passed two cases. These counts remain separate
-from every gate. Earlier selections and all failed attempts remain above.
+## Open work and limits
 
-The six development failures remain evidence. Bytes typechecking first
-failed while the full-head parser lacked explicit narrowing. MCP production
-types first lacked `behind` in two closed refusal maps. Scope and MCP test
-types exposed the same ReadPreparation union access. The client test
-compiler rejected an incomplete binding stand-in cast. The first Native
-minimum owner could not bind localhost inside the sandbox and ran no case.
-The narrower corrections and authorized local follow-up appear separately.
-The intentional mutant remains a separate expected nonzero row. It is not
-a development failure hidden by a passing command. The three failed gates add
-three further nonzero rows, whose causes follow.
+Exact-head review remains open after the passing fourth repair gate. The
+three original and three earlier repair gates remain failed. No single-file
+exception substitutes for the new gate after the shared-helper change.
 
-The first ordinary gate ran at commit
-`6c2ad82178d1c716ea66b57718fd0916a2d5c333`, tree
-`f5d4bb07240b9de8d2b82699faead37b183b7c9a`. Its actual receipt reports
-exit 1, process closed, and unchanged source. The dependency check and
-prechecks reached typechecking, which found the CLI development server's
-closed `READ_STATUS` map missing `behind`. Kernel, Node, counting, Plain,
-and Native suites stayed unreached. This is a failed gate, not partial
-suite coverage. Root added only `behind:503` to that map. The separate
-`C/types-cli-gate-repair-1` process then passed all three CLI compiler
-contexts. Root committed that CLI repair as checkpoint
-`091c078144545b3b4c628d00969ebbe7ecc9004a`, tree
-`d327d7ea7acea110b075e9b9b06bb7f5d657a7b0`, for the second gate.
+The waiter-count cap stays deferred under ruling 366b3989. Clock, namespace,
+grants, Git peer and archive receipt stand-ins retain their stated limits.
+Local Native authority and SQL prove no hosted deployment, provider archive
+custody, remote cancellation or physical drain. Public retention excludes
+operator homes, credentials and live signed request bodies.
 
+Retention proposal v3 preserves the 1,244-file, 230,710,913-byte closed
+baseline across 36 roots, including the old sealed unit and all 928 prior
+rows. Its ledger lists 30 focused commands, five generation commands and
+three failed repair gates once each. The table preserves all 82 earlier
+closed rows and adds the actual final gate. These are invocations, not
+unique coverage. Final selection separately counts the new gate and source.
 
-The second gate closed exit 1 at that checkpoint. Its receipt reports clean,
-unchanged source. Kernel, Node, and counting completed; Plain reported
-3,152 passed, one failed, and one skipped. Native stayed unreached. The one
-failure was `packages/mcp/test/view-resources.test.ts`, in the comparison
-that rebuilds the four production resource documents. Changes in the shared
-bytes import closure had left `packages/mcp/src/views/generated.ts` stale.
-The failed gate remains failed. Its earlier phase coverage does not make it
-a successful gate or supply any Native result.
+The actual inner roots for failed repair gates 1, 2 and 3 are
+`tmp.OI5t1lvlNW`, `tmp.Ef17noH7ux` and `tmp.AY8GVUIVtq`, below the
+recorded macOS temporary directory. Their complete logs and stage ledgers
+stay separate from their outer collector records. The proposed Counting
+roots name failed gate 2's `artroom-counting-node-RPCGAx`,
+the focused follow-up's `artroom-counting-node-hmFwqX`, and failed gate 3's
+`artroom-counting-node-eQhi98`. Each has four bundles, source.json and its
+metafile. Source hashes, not these short labels, govern retention.
 
-The maintained `node packages/mcp/scripts/views.mjs` generator then updated
-only that generated module: 178,065 to 178,273 bytes, SHA256
-`56f2c2bf161b111028aed641b957aec51822b24636549c9fc54fc9b660dbe6ad`
-to `4cd584ef69b61407c83cd59649e5eb7d250373a4415e961bc8c4c714eb884728`.
-The whole view-resources owner passed three tests. MCP production and browser
-compiler contexts each exited 0. `R/source-before.json` and
-`R/source-after.json` retain the generated bytes and source status. Root
-committed this generation as repair checkpoint `240c963f` for gate 3.
-The note derives these records without rerunning their commands.
+The retained final report records preparation before selection, copy and
+seal. It remains unchanged in the sealed root. This documentation update
+records actual custody through the compact manifest, which binds the
+durable full inventory and verifier. The final gate's actual outer capture,
+inner `tmp.v8X2M7X1Rb` and Counting source `artroom-counting-node-KhIWb0`
+remain separately bound. This update changes no check result or source pin.
 
-
-The third gate closed exit 1 at `240c963f`. Its receipt reports complete
-capture, process closure, no timeout, clean post-status, and unchanged
-source bytes. Kernel, Node, counting, and Plain passed. Node reported 80
-passes, counting 56 passes, and Plain 3,153 passes with one skip. Native
-reported 861 passes, two failures, and two skips across 248 files: 246
-passed, one failed, and one skipped. Its module observations include 246
-Scope modules, one Scope Lending module, and one Scope Denial module.
-All five stages and all three Native projects ran. No stage remained
-unreached. The aggregate Native result remains failed and partial, as the
-maintained report records it.
-
-Both failed Native cases belong to `packages/scope/test/client.test.ts`:
-the HTTP fetch route and service-binding versions of the same receipt
-witness. The test expected local `hash-mismatch` and `reference-mismatch`
-findings after an entry read. The adopted full-head barrier now refuses a
-wrong hash or scope kind earlier with `unavailable`, before returning an
-entry. The tests still require `wrong-incarnation` for another incarnation.
-The existing Plain assertion in `packages/client/test/intent.test.ts`
-retains the post-read computed-hash check and passed in gate 3.
-
-Commit `ce3aadfc` changes only those two expectations and their comments in
-the single failing test file. It retains both transport cases, their
-remaining assertions, fixture, and deadline. The complete Git comparison
-shows no production, configuration, dependency, shared-helper, or imported
-code change. The whole Native file then passed two cases, and the Scope
-test compiler exited 0, each once at the exact final validation checkpoint.
-Both collector receipts report complete closure, no timeout, clean source,
-and exact unchanged Git blobs for all 43 task-changed tracked snapshots.
-The relevant compiler context is `packages/scope/tsconfig.test.json`.
-
-[The single-file follow-up rule](../../docs/testing.md#follow-up-after-a-gate)
-permits the checker to assess this bounded test-only repair with the failed
-run and owning follow-ups together. Since gate 3 reached every stage, it
-left no unrun stage to execute. Root did not run another full gate or repeat
-unrelated suites. These two follow-ups do not turn gate 3 into a pass and
-leave the original failed result unchanged. Exact-head review must decide
-whether this evidence satisfies that exception.
-
-The four-case Native minimum owner uses the real ScopeObject, journal,
-turn, SQLite, and Native Worker runtime. Its timer and first readers are
-explicit test ports. Four concurrent minimum reads wait while the same
-scope accepts an actual write. The timeout case advances the controlled
-clock by 1,000 milliseconds and checks the exact `behind.current`, stable
-summary and alarm, and timer release. A separate case uses production
-session readers over an actually created room and expires the session
-before the timeout can expose metadata. HTTP and in-process cases share
-the minimum and reject malformed HTTP parameters without a head reply.
-This proves ordering and authorization under a controlled clock, not a
-one-second deployed latency measurement or process-drain guarantee.
-
-The Native projection owner uses an actual installed declared application.
-It submits the card's accepted `pause` act and refreshes through the shared
-MCP view code. The retained request list must contain exactly one matching
-application-projection HTTP request. That request carries the accepted
-receipt's full minimum, and the returned projection reaches its sequence.
-The display becomes `paused`. Stale shape and role-loss checks remain.
-This is a local Native test-host witness, not a deployed hosted observation.
-The twenty-case local Native MCP selection retains its deliberate scripted
-reset messages as well as its actual passing terminal. No claim of live
-provider behavior or deployed MCP service follows from that run.
-
-The client and compact-card Plain cases use labelled transport or view
-stand-ins. They check exact minima, signatures' existing selectors,
-read-refusal metadata, and request count. Their results do not establish
-Native authority by themselves.
-
-The one omission control removes only full-head hash verification from
-`ReadWait.until`. Its unchanged selected Native test passes once on the
-baseline and fails once on the mutant: the forged full head returns success
-instead of the required `unavailable`. The other three cases skip because
-the command selects one title. The control proves the hash guard, not the
-arrival wake. `M/result.json` records `distinguishes`. `M/restoration.json`
-records the original mode and exact restored source SHA256
-`f9fdd74dcb22c7812ab5605c9a36bf6cbe5b1c37e119efd7d7d90f84d969f966`.
-The test stays byte-identical at SHA256
-`0829797424d6660f5c60e3746bfd6b578e73c2473cd96be3006bf924021b7472`.
-The retained read-only derivation also compared both hashes to the current
-worktree. It did not run the control again.
-
-Page generation changed only `assets.ts`; its owner changed no source.
-The compatibility preparation overlapped Root's authorized Scope control
-and observed `read-wait.ts` change. The Page build and asset owner each
-observed no unrelated source movement. Page does not import Scope.
-The Page context records shared host load from BO1's separate gate and
-unknown OS cache. These are functional checks, not performance comparisons.
-
-The 44 retained receipts sum to 1659.907647 seconds of command wall
-time. This sum includes all three failed gates, earlier failed checks,
-both control bodies, and the limited follow-ups. Only 20 receipts measure
-host child CPU; their sum is 3321.640210 seconds. The remaining
-24 receipts leave CPU unknown. The 25 receipts with UTC endpoints
-span 4490.375428 seconds, including gaps and overlap. Receipts without
-endpoint timestamps do not enter that partial window.
-
-Gate 3 command wall is 1,334.847241 seconds and command host child CPU is
-2,810.629618 seconds. Its collector wall is 1,334.998829 seconds and outer
-host child CPU is 2,810.788125 seconds. The Scope compiler follow-up records
-0.914732 command-wall seconds and 4.223748 command-CPU seconds. The Native
-file records 5.667915 command-wall seconds and 7.113061 command-CPU seconds.
-Their collector wall and CPU remain separate in the actual receipts.
-These values exclude guest CPU, which the collector leaves unknown. The authoring session observed Darwin arm64, Node v26.13.0, and npm
-11.20.0; hardware model and core count remain unobserved. Shared
-host load and warm dependency caches do not establish an isolated-machine,
-cold-cache, or product latency benchmark. Module and case duration sums
-can overlap and are not wall or CPU totals. `operator-inputs/note-draft-v5/observations.json` records
-the exact receipt and digest inputs for each calculation.
-
-## Open limits
-
-- Request `1c124ebf` requires exact-head checker assessment of the failed
-  third gate and its single-file test-only follow-ups. The failed gate and
-  successful follow-ups remain separate in the manifest.
-- The request adds an authorized read minimum. Subscription, cancellation,
-  cross-scope reads, deployment, and a new rate policy stay outside its
-  scope. An abandoned transport can retain its callback until arrival or
-  the bounded deadline. Local witnesses prove no hosted provider outcome.
-- Historical records retain their source, failed outcomes, and partial
-  reporting qualifications. Guest CPU and 24 command CPU observations remain
-  unknown. The retained observation index states each count and timing's
-  source; overlapping duration sums do not measure elapsed edit time.
+Keep the final evidence at least 30 days after landing. Later removal needs
+a planner act naming its manifest. This draft claims no acceptance or parent
+closure. The old sealed report and its three failed gates remain unchanged.
