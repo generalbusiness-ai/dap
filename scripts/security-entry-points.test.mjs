@@ -9,7 +9,7 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 const namedOwners = {
   "packages/scope/src/object.ts": {
     "packages/scope/src/object.ts:$module": "54cd1a42de7dc10191191a46a03326ee8c7ecd5ee3afed596bdace1e37fc5d00",
-    "packages/scope/src/object.ts:ScopeObject": "8e2375aec4e47670150a9695ef8b93d78430a8f2c03ac21071c123a0ce3879a6",
+    "packages/scope/src/object.ts:ScopeObject": "02c6a3144960cca0a801630a5e75021d3f1b2dca0c24a4400fac74600c82e842", // Read-only fixed-index methods on the existing outside-state facade.
   },
   "packages/scope/src/worker.ts": {
     "packages/scope/src/worker.ts:$module": "ea5fa597ed7ca5c673dad1c33a3763d1356b673f090c6646c2d15cdb09fe40e8",
@@ -171,7 +171,7 @@ const namedOwners = {
     "packages/scope/src/core.ts:heldBy": "a66b415809db685c99cc8961ba592bd8bdcb8bda8f2f4ea1e73fe71c4b052fd1",
     "packages/scope/src/core.ts:told": "bc25d088d5c51694f6e3a813f11f2875144c7a3bdfaa8d124063dc1f65e2fe67",
     "packages/scope/src/core.ts:Observes": "9a0e37bc23db915ebdfd3ec4eef21172918f50fc3e19de840d2b03746efc3710",
-    "packages/scope/src/core.ts:Scope": "b164bec378884e160c480c5aec7075281ca4dda931bf511f53bc69680a58a3d6",
+    "packages/scope/src/core.ts:Scope": "58441357a9b75900debcc38a3d55c6248c803966ab22f959eb148e43f0877309", // Complete legacy fixed-index initialization before caching the pinned definition.
   },
 };
 

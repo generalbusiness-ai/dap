@@ -383,7 +383,10 @@ export class Scope {
     const supplied = isPlatformDefinition(named) ? this.platform(named) : null;
     const kept = isDigest(named) ? this.#store.retained("definition", named) : null;
     const definition = supplied ? supplied.definition : kept ? this.validate(kept.bytes) : null;
-    if (definition) this.#store.cover(definition.indexes);
+    if (definition) {
+      this.#store.cover(definition.indexes);
+      this.#store.ensureFixed(definition, ownOf(this.#store));
+    }
     return (this.#pinned = { named, definition, platform: supplied?.platform ?? null });
   }
 

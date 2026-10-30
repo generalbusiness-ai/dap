@@ -66,6 +66,15 @@ The scope handles one input at a time. Each is a turn:
 If another input moved the head during the turn, nothing is written and
 the turn starts again. A judgment is always about one head.
 
+The folded view keeps exact equality counts for every item slot declared
+`fixed: true`. A range guard with one equality between such a slot and a
+field or constant uses those counts across its named states. It needs no
+scan, so the number of retained members does not exhaust `guardScan` for
+a handle uniqueness check. Other predicates keep the bounded scan. The
+runtime maintains these derived counts in the sealing transaction, and
+replay rebuilds them from the journal. Neither path trusts an index sent
+by another scope.
+
 ## Entries and receipts are the record
 
 An entry records exactly one input and what followed from it: the effects

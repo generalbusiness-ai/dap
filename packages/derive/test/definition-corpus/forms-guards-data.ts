@@ -15,7 +15,7 @@ export const jobs: DeclaredDefinition = {
       many: false, max: 1, states: { open: { final: false } }, initial: "open", parties: { owner: { fixed: true, required: true, list: false, author: false } }, refs: {},
       values: { required: { ...slot, of: { type: "list", of: text, max: 8 } }, approvals: { ...slot, of: count }, spare: { ...slot, of: count } },
     },
-    job: { many: true, max: 16, states: { requested: { final: false }, passed: { final: true }, failed: { final: true } }, initial: "requested", parties: {}, refs: {}, values: { name: { fixed: true, required: true, of: text } } },
+    job: { many: true, max: 16, states: { requested: { final: false }, passed: { final: true }, failed: { final: true } }, initial: "requested", parties: {}, refs: {}, values: { name: { fixed: false, required: true, of: text } } },
   },
   acts: {
     start: act({ step: "open", on: "board", grant: "start", fields: { opener: { type: "member", required: true } }, effects: [{ party: { slot: "owner", from: { field: "opener" } } }] }),

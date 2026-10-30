@@ -246,6 +246,18 @@ A head adds to the kernel when it does any of these:
 
 The checker checks this rule on every head that touches these packages.
 
+Request `121a8913` places the fixed-slot equality index in derive's view
+and fold. A range guard's complete count determines whether an input is
+judged, refused or left `guard-incomplete`. Runtime and replay must derive
+that decision from the same state and equality rule. A platform service
+cannot supply the count without becoming an additional authority over the
+record. The index covers any declared fixed slot and names no platform
+definition or application field. It adds no entry form, reference kind,
+definition format, capability or K item. Its rows are derived storage and
+do not change checkpoint bytes. Exact-head review must assess the complete
+counts, equality through journal floors, reconstruction and transaction
+ownership under this section.
+
 Rules observation record revision 21 is permitted by ruling `1bc4f7fd`
 under this section. Its nullable `roomService` and scoped
 `serviceGeneration` occur exactly when the pinned Rules data declares

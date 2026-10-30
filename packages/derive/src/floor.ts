@@ -130,8 +130,8 @@ export function stateKept(snapshot: StateSnapshot, definition: ValidDefinition, 
 
 /** Size evidence retains its proving position. Later proofs never bind an
  * earlier deciding entry, even when replay still has the complete clone. */
-export function nextFloorState(view: StateView, definition: ValidDefinition, input: FloorInput, ownEntry: Own, platform?: import("./marks.ts").PlatformRules): JournalFloor {
-  const kept = stateKept(view.all(), definition, input.floor, input.keep, ownEntry, platform);
+export function nextFloorState(view: StateView, definition: ValidDefinition, input: FloorInput, ownEntry: Own, platform?: import("./marks.ts").PlatformRules, snapshot: StateSnapshot = view.all()): JournalFloor {
+  const kept = stateKept(snapshot, definition, input.floor, input.keep, ownEntry, platform);
   if (kept === null) throw new Error("a floor requires every held payload root");
   const keptSet = new Set(kept);
   const candidates: SizeProof[] = [...(view.floor?.()?.sizeProofs ?? [])];

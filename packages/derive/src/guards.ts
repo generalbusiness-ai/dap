@@ -6,13 +6,13 @@
  */
 
 import type { Bounds, Entry, FactRef, FieldType, FieldValue, Guard, MemberRef, Operand, Prepared, Range, Reason, ScopeRef, Subject, UnavailableReason, Digest } from "@generalbusiness/dap-contract";
-import { canonicalBytes, digestBytes } from "@generalbusiness/dap-bytes";
+import { canonicalBytes, canonicalize, digestBytes } from "@generalbusiness/dap-bytes";
 import type { Signer } from "./attribution.ts";
 import { capabilityGuard, type Capabilities } from "./capability.ts";
 import type { Own, Snapshots } from "./fields.ts";
 import { all, excepted, listGuard, scan, typeOfElement } from "./lists.ts";
 import { guardByRule, markOf, type AtHand, type Declined, type JudgedInput, type PlatformRules } from "./marks.ts";
-import { equal, kindOf, operand, slotOf } from "./operand.ts";
+import { equal, kindOf, normalValue, operand, slotOf } from "./operand.ts";
 import type { Item, Party, ScopeState, StateView } from "./state.ts";
 import { timeMs, type Clock } from "./time.ts";
 import type { ValidDefinition } from "./validate/index.ts";
@@ -80,8 +80,9 @@ export const members = (party: Party | undefined): readonly MemberRef[] => (part
 
 /**
  * A range guard (section 6.5). With no `where` it is answered from the exact
- * counts. With a `where` it reads pages of the indexed set, up to the work
- * limit. `decide` is the contract's table: a result that witnesses complete
+ * counts. One fixed-slot equality against a field or constant also uses
+ * exact counts; every other `where` reads pages up to the work limit.
+ * `decide` is the contract's table: a result that witnesses complete
  * is returned as soon as it is completed; every other result needs the whole
  * set, and without it the guard is not judged.
  */
@@ -98,6 +99,21 @@ function range(j: Judging, form: "some" | "none" | "count", r: Range & { min?: n
     // The counts are exact. The items of the `except` subjects that they count are left out.
     const left = excepted(j, r).filter((i) => i.type === r.type && r.states.includes(i.state)).length;
     return decide([...new Set(r.states)].reduce((n, s) => n + j.view.count(r.type, s), 0) - left, true)!;
+  }
+  const [where] = r.where!;
+  if (r.where!.length === 1 && where && "equals" in where) {
+    const pair = where.equals;
+    for (const [slot, value] of [[pair.a, pair.b], [pair.b, pair.a]] as const) {
+      if (!("slot" in slot) || slot.of !== undefined || slot.part !== undefined || (!("field" in value) && !("const" in value)) || ("part" in value && value.part !== undefined)) continue;
+      const type = own(j.definition.declared.items, r.type);
+      const declared = own(type?.parties, slot.slot) ?? own(type?.refs, slot.slot) ?? own(type?.values, slot.slot);
+      if (!declared?.fixed) continue;
+      const mode = j.own ? "normalized" : "raw";
+      const wanted = operand(j, value, null);
+      const key = canonicalize(normalValue(wanted, j.scope.at, seq => j.own?.(seq)?.hash ?? null));
+      const left = excepted(j, r).filter(item => item.type === r.type && r.states.includes(item.state) && equal(j, slotOf(item, slot.slot), wanted)).length;
+      return decide(j.view.fixedCount(r.type, slot.slot, key, r.states, mode) - left, true)!;
+    }
   }
   let matched = 0;
   let decided: GuardResult | null = null;

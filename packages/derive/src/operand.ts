@@ -248,11 +248,19 @@ export function operand(j: Judging, o: Operand, item: Item | null): unknown {
  * `readFacts` gave it to a field or a slot. Null equals null and nothing
  * else.
  */
-export function equal(j: Judging, a: unknown, b: unknown): boolean {
+export type HashOf = (seq: number) => import("@generalbusiness/dap-contract").Digest | null;
+
+/** Equality's normal form, using only the local hashes available to its reader. */
+export function normalValue(value: unknown, at: Pick<ScopeRef, "scope" | "inc">, hashOf: HashOf): unknown {
   const normal = (v: unknown): unknown => {
     if (Array.isArray(v)) return v.map(normal);
-    if (isFactRef(v)) return isLocalFact(v, j.scope.at) && j.own?.(v.seq)?.hash === v.hash ? v.seq : v;
+    if (isFactRef(v)) return isLocalFact(v, at) && hashOf(v.seq) === v.hash ? v.seq : v;
     return isObject(v) ? Object.fromEntries(Object.entries(v).map(([name, member]) => [name, normal(member)])) : v;
   };
-  return same(normal(a), normal(b));
+  return normal(value);
+}
+
+export function equal(j: Judging, a: unknown, b: unknown): boolean {
+  const hashOf: HashOf = (seq) => j.own?.(seq)?.hash ?? null;
+  return same(normalValue(a, j.scope.at, hashOf), normalValue(b, j.scope.at, hashOf));
 }

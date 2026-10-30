@@ -18,8 +18,8 @@ import type { JournalFloor } from "@generalbusiness/dap-contract";
 import type { CapabilityName, Digest, Entry, FactRef, FieldValue, Held, Incarnation, KeyId, OperationId, ScopeId, ScopeKind, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { RETAINED_BYTE_DOMAINS, canonicalize, isDigest, isScopeRef, parseStrict } from "@generalbusiness/dap-bytes";
-import { AmountError, NOTHING, naturalAmount, isObject, MemoryState, byteOrder, operationId, operationStanding, pendingOf, slotOf, timeMs } from "@generalbusiness/dap-derive";
-import type { Accepted, Account, Decided, HeldCreation, Holder, Item, ObservedHead, Operation, Outstanding, OwnRequest, Page, PreparedStep, RangeIndex, RecordState, RecordsWhere, Relation, ScopeState, SourceOrder, StateSnapshot } from "@generalbusiness/dap-derive";
+import { AmountError, NOTHING, naturalAmount, isObject, MemoryState, byteOrder, operationId, operationStanding, pendingOf, rebuildFixed, slotOf, timeMs } from "@generalbusiness/dap-derive";
+import type { Accepted, Account, Decided, FixedDependency, FixedMode, FixedRow, HeldCreation, Holder, Item, ObservedHead, Operation, Outstanding, Own, OwnRequest, Page, PreparedStep, RangeIndex, RecordState, RecordsWhere, Relation, ScopeState, SourceOrder, StateSnapshot, ValidDefinition } from "@generalbusiness/dap-derive";
 import type { Dispatched, OutboxItem, OperationStatus, Outgoing, Retained, Sending, Store, Stored } from "./store.ts";
 import { ARCHIVE_PIN_KEY, archivePinBytes } from "./archive-pin.ts";
 import { LocalSigners, SIGNER_INDEX_BOUNDS } from "./local-signers.ts";
@@ -95,6 +95,11 @@ CREATE INDEX IF NOT EXISTS item_by_state ON item (type, state, id);
 CREATE TABLE IF NOT EXISTS item_count (type TEXT NOT NULL, state TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (type, state)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS item_slot (id INTEGER NOT NULL, slot TEXT NOT NULL, type TEXT NOT NULL, state TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (id, slot)) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS item_by_slot ON item_slot (type, slot, value, state, id);
+CREATE TABLE IF NOT EXISTS fixed_slot (item INTEGER NOT NULL, slot TEXT NOT NULL, type TEXT NOT NULL, state TEXT NOT NULL, raw TEXT NOT NULL, key TEXT NOT NULL, PRIMARY KEY (item,slot)) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS fixed_count (type TEXT NOT NULL, slot TEXT NOT NULL, mode TEXT NOT NULL CHECK (mode IN ('raw','normalized')), key TEXT NOT NULL, state TEXT NOT NULL, n INTEGER NOT NULL CHECK (typeof(n)='integer' AND n>=0), PRIMARY KEY (type,slot,mode,key,state)) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS fixed_dependency (seq INTEGER NOT NULL, hash TEXT NOT NULL, item INTEGER NOT NULL, slot TEXT NOT NULL, PRIMARY KEY (seq,hash,item,slot)) WITHOUT ROWID;
+CREATE INDEX IF NOT EXISTS fixed_dependency_by_item ON fixed_dependency (item,slot);
+CREATE TABLE IF NOT EXISTS fixed_control (id INTEGER PRIMARY KEY CHECK (id=1), value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS outbox (seq INTEGER NOT NULL, n INTEGER NOT NULL, target TEXT NOT NULL, class TEXT NOT NULL, message TEXT NOT NULL, held INTEGER NOT NULL DEFAULT 0,
   attempts TEXT NOT NULL DEFAULT '[]', next INTEGER NOT NULL, ack TEXT, request TEXT, result TEXT, diagnosis TEXT, hash TEXT, PRIMARY KEY (seq, n)) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS outbox_due ON outbox (next, seq, n) WHERE held = 0 AND ack IS NULL AND result IS NULL AND diagnosis IS NULL;
@@ -168,6 +173,70 @@ export class SqliteStore implements Store {
     const covered = new Map<string, string[]>();
     for (const { type, slots } of indexes) covered.set(type, [...new Set([...(covered.get(type) ?? []), ...slots])]);
     this.#covered = covered;
+  }
+
+  /** Complete legacy initialization uses current items, never missing old slot
+   * rows as an empty index. Only SQL holds rollback-sensitive derived state. */
+  ensureFixed(definition: ValidDefinition, own: Own): void {
+    const scope = this.scope();
+    if (!scope) throw new Error("fixed index initialization requires a scope");
+    if (this.fixedReady(definition.digest, scope.at)) return;
+    this.transaction(() => {
+      this.#run("DELETE FROM fixed_control");
+      this.#run("DELETE FROM fixed_dependency");
+      this.#run("DELETE FROM fixed_count");
+      this.#run("DELETE FROM fixed_slot");
+      rebuildFixed(this, definition, scope.at, own);
+    });
+  }
+
+  fixedReady(definition: Digest, at: ScopeRef): boolean {
+    return this.#one("SELECT value FROM fixed_control WHERE id=1")?.["value"] === canonicalize({ v: 1, definition, at });
+  }
+  finishFixed(definition: Digest, at: ScopeRef): void {
+    this.#run("INSERT INTO fixed_control (id,value) VALUES (1,?) ON CONFLICT(id) DO UPDATE SET value=excluded.value", canonicalize({ v: 1, definition, at }));
+  }
+  fixedHash(seq: number): Digest | null {
+    const row = this.#one("SELECT hash FROM entry WHERE seq=?", seq);
+    if (!row) return null;
+    if (!isDigest(row["hash"])) throw new Error("fixed index held entry has an invalid hash");
+    return row["hash"];
+  }
+  /** Native append already owns the actual held hash; no second history copy. */
+  putFixedHash(seq: number, hash: Digest): void {
+    if (this.fixedHash(seq) !== hash) throw new Error("fixed index hash disagrees with the held entry");
+  }
+  fixedCount(type: string, slot: string, key: string, states: readonly string[], mode: FixedMode): number {
+    let count = 0;
+    for (const state of new Set(states)) {
+      const n = this.#one("SELECT n FROM fixed_count WHERE type=? AND slot=? AND mode=? AND key=? AND state=?", type, slot, mode, key, state)?.["n"] ?? 0;
+      if (typeof n !== "number" || !Number.isSafeInteger(n) || n < 0 || !Number.isSafeInteger(count + n)) throw new Error("fixed index count is invalid");
+      count += n;
+    }
+    return count;
+  }
+  fixedAffected(seq: number, hash: Digest): readonly FixedRow[] {
+    return this.#all("SELECT s.item,s.slot,s.type,s.state,s.raw,s.key FROM fixed_dependency d JOIN fixed_slot s ON s.item=d.item AND s.slot=d.slot WHERE d.seq=? AND d.hash=? ORDER BY s.item,s.slot", seq, hash)
+      .map(row => ({ item: row["item"] as number, slot: row["slot"] as string, type: row["type"] as string, state: row["state"] as string, raw: rowJson<unknown>(row["raw"]), key: row["key"] as string }));
+  }
+  #fixedDelta(type: string, slot: string, state: string, raw: string, key: string, by: 1 | -1): void {
+    for (const [mode, value] of [["raw", raw], ["normalized", key]] as const) {
+      const previous = this.#one("SELECT n FROM fixed_count WHERE type=? AND slot=? AND mode=? AND key=? AND state=?", type, slot, mode, value, state)?.["n"] ?? 0;
+      if (typeof previous !== "number" || !Number.isSafeInteger(previous) || previous < 0 || !Number.isSafeInteger(previous + by) || previous + by < 0) throw new Error("fixed index count update is invalid");
+      if (previous + by === 0) this.#run("DELETE FROM fixed_count WHERE type=? AND slot=? AND mode=? AND key=? AND state=?", type, slot, mode, value, state);
+      else this.#run("INSERT INTO fixed_count (type,slot,mode,key,state,n) VALUES (?,?,?,?,?,?) ON CONFLICT(type,slot,mode,key,state) DO UPDATE SET n=excluded.n", type, slot, mode, value, state, previous + by);
+    }
+  }
+  /** Absolute row replacement, within the caller's sealing/rebuild transaction. */
+  putFixed(row: FixedRow, dependencies: readonly FixedDependency[]): void {
+    const raw = canonicalize(row.raw);
+    const old = this.#one("SELECT type,state,raw,key FROM fixed_slot WHERE item=? AND slot=?", row.item, row.slot);
+    if (old && old["type"] === row.type && old["state"] === row.state && old["raw"] === raw && old["key"] === row.key) return;
+    if (old) this.#fixedDelta(old["type"] as string, row.slot, old["state"] as string, old["raw"] as string, old["key"] as string, -1);
+    this.#fixedDelta(row.type, row.slot, row.state, raw, row.key, 1);
+    this.#run("INSERT INTO fixed_slot (item,slot,type,state,raw,key) VALUES (?,?,?,?,?,?) ON CONFLICT(item,slot) DO UPDATE SET type=excluded.type,state=excluded.state,raw=excluded.raw,key=excluded.key", row.item, row.slot, row.type, row.state, raw, row.key);
+    this.#run("DELETE FROM fixed_dependency WHERE item=? AND slot=?", row.item, row.slot);
+    for (const dependency of dependencies) this.#run("INSERT OR IGNORE INTO fixed_dependency (seq,hash,item,slot) VALUES (?,?,?,?)", dependency.seq, dependency.hash, row.item, row.slot);
   }
 
   /** Index control never loads arbitrary legacy scope metadata. */
