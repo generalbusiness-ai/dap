@@ -145,6 +145,10 @@ The explicit J4 lane profiles use `hold@2` on Cloudflare Artifacts.
 Existing profiles keep `hold@1` and their recorded behavior; deploying the
 adapter does not migrate them.
 
+The Page imports the capability rules. After changing them, regenerate its
+served module with `npm run build --workspace @generalbusiness/dap-page`;
+the Page asset test checks that committed module against the maintained build.
+
 The service authenticates the lane's actual Directory creation and its
 Register and Destination births before choosing a repository. A caller
 cannot select another namespace or repository. Each eligible hold gets its
