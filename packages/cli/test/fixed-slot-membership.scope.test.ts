@@ -15,7 +15,7 @@ import { reader } from "../../scope/test/support.ts";
 import { beginSessionFixture } from "../../scope/test/session-settings.ts";
 import { driveFixture, nativeFixtureLifetime } from "../../scope/test/support/native-fixture-lifetime.ts";
 import { StartupOwner } from "../../scope/test/support/serving-startup.ts";
-import { command, memoryStore, VERIFY_LIMITS, type Context, type Outcome, type VerifyLimits } from "../src/index.ts";
+import { command, memoryStore, VERIFY_LIMITS, type Context, type Outcome } from "../src/index.ts";
 
 const SERVICE = "https://fixed-slot.test";
 const MEMBER_COUNT = 2000;
@@ -24,16 +24,16 @@ const CALLBACK_BATCH = 128;
 const MAX_CALLBACKS = 131_072;
 const MAX_ACTIONS = 1_000_000;
 const WHOLE_MILLISECONDS = 1_800_000;
-// Ruling 841661d0: the three default verifications are acceptance. One --all
-// measurement reports completion or its honest boundary under explicit limits.
-const MEASUREMENT_LIMITS: VerifyLimits = { milliseconds: 120_000, bytes: 268_435_456, requests: 100_000, entries: 100_000 };
+// Rulings 8e0c4ff6/2a308f5d: keep the three standalone default replays and
+// require one complete default multi-root --all. The old explicit-budget
+// measurement remains prior-head evidence; this case never repeats it.
 
 const ok = (answer: Outcome): Outcome => {
   expect(answer.code, answer.lines.join("\n")).toBe(0);
   return answer;
 };
 
-test("a real 2000-member room keeps handle uniqueness and default replay; one bounded whole-room replay measures its boundary", async context => {
+test("a real 2000-member room keeps handle uniqueness and verifies every actual scope under shipped defaults", async context => {
   const previousClock = net.clock, clock = new ScriptedClock(timeOf(Date.now()));
   const indexId = env.SCOPE_INDEX.idFromName(`fixed-slot-room-${crypto.randomUUID()}`);
   const indexBinding = new Proxy(env.SCOPE_INDEX, { get(target, property) {
@@ -148,20 +148,23 @@ test("a real 2000-member room keeps handle uniqueness and default replay; one bo
   type HTTPObservation = { method: string; path: string; cursor: string | null; status: number; resolvedBy: 200 | null };
   const httpObservations: HTTPObservation[] = [], unresolvedHTTP = new Map<string, HTTPObservation[]>();
   const measurementRequests = new Set<Promise<Awaited<ReturnType<Fetch>>>>();
+  const wireCounts = { attempts: 0, responses: 0, receivedResponseBytes: 0 };
   const fetch: Fetch = (url, init) => {
     const observed = measuring;
-    if (observed && measurementRequests.size === 128) throw Error("Whole-room measurement pending request bound exceeded");
+    if (observed) wireCounts.attempts++;
+    if (observed && measurementRequests.size === 128) throw Error("Whole-room default verification pending request bound exceeded");
     const task = (async () => {
       const { redirect: _redirect, credentials: _credentials, ...wire } = init as typeof init & { redirect?: string; credentials?: string };
       const response = await wait(() => route(new Request(url, { ...wire, redirect: "manual" }), env.PLATFORM,
         { ...(register ? { REGISTER_SCOPE: register } : {}), SCOPE_INDEX: indexBinding, DEPLOYMENT: TEST_DEPLOYMENT }));
       if (observed) {
+        wireCounts.responses++;
         const parsed = new URL(url), method = (init?.method ?? "GET").toUpperCase(), path = parsed.pathname, cursor = parsed.searchParams.get("cursor");
         if (path.length > 2048 || method.length > 8 || cursor !== null && !/^\d{1,16}$/.test(cursor))
-          throw Error("Whole-room measurement encountered an unexpected public request key");
+          throw Error("Whole-room default verification encountered an unexpected public request key");
         const key = JSON.stringify([method, path, cursor]);
         if (response.status >= 400) {
-          if (httpObservations.length === 4096) throw Error("Whole-room measurement HTTP observation bound exceeded");
+          if (httpObservations.length === 4096) throw Error("Whole-room default verification HTTP observation bound exceeded");
           const observation: HTTPObservation = { method, path, cursor, status: response.status, resolvedBy: null };
           httpObservations.push(observation);
           const pending = unresolvedHTTP.get(key) ?? [];
@@ -179,8 +182,18 @@ test("a real 2000-member room keeps handle uniqueness and default replay; one bo
       }
       if (membership && init?.method === "POST" && new URL(url).pathname === `/v1/scopes/${membership}/acts`)
         lastAct = { status: response.status, body: await response.clone().json() };
-      // Keep native body/status; Workerd does not implement Node redirect:error.
-      return { status: response.status, body: response.body };
+      // Count actual response bytes forwarded through Fetch, including refused
+      // replies. No headers/request bodies or secret plaintext are retained.
+      // Workerd does not implement Node redirect:error.
+      const body = observed && response.body ? response.body.pipeThrough(new TransformStream<Uint8Array, Uint8Array>({
+        transform(chunk, controller) {
+          if (!(chunk instanceof Uint8Array) || !Number.isSafeInteger(wireCounts.receivedResponseBytes + chunk.byteLength))
+            throw Error("Whole-room response byte counter is invalid");
+          wireCounts.receivedResponseBytes += chunk.byteLength;
+          controller.enqueue(chunk);
+        },
+      })) : response.body;
+      return { status: response.status, body };
     })();
     if (observed) {
       measurementRequests.add(task);
@@ -272,13 +285,19 @@ test("a real 2000-member room keeps handle uniqueness and default replay; one bo
         acceptance.push({ scope, outcome });
       }
       let progressCount = 0, lastProgress: string | null = null, discoveryCompleted = false;
-      sessionHistories.clear(); // Measure actual reads from this --all call only.
+      const lastProgressByPhase: Record<string, string> = {};
+      sessionHistories.clear(); // Observe actual reads from this --all call only.
       measuring = true;
-      const measured = await command({ ...admin, verify: { limits: MEASUREMENT_LIMITS, progress: line => {
-        if (++progressCount > 20_000) throw Error("Whole-room measurement progress bound exceeded");
+      const beganVerification = performance.now();
+      // progress observes the run; omitting limits is the shipped-default path.
+      const measured = await command({ ...admin, verify: { progress: line => {
+        if (++progressCount > 20_000) throw Error("Whole-room default verification progress bound exceeded");
         lastProgress = line;
+        const phase = /^Verify (session|discovery|replay|cleanup):/.exec(line)?.[1];
+        if (phase) lastProgressByPhase[phase] = line;
         if (line.startsWith("Verify replay:")) discoveryCompleted = true;
-      } } }, ["verify", "--all"]); // Exactly once; no replacement measurement.
+      } } }, ["verify", "--all"]); // Exactly once; no raised-limit retry.
+      const commandElapsedMilliseconds = performance.now() - beganVerification;
       measuring = false;
       // A logical budget stop may precede an owned response. Join the actual
       // request frontier before classifying recovered versus unresolved HTTP.
@@ -286,47 +305,49 @@ test("a real 2000-member room keeps handle uniqueness and default replay; one bo
         for (let round = 0; measurementRequests.size && round < 64; round++) await Promise.allSettled([...measurementRequests]);
         return measurementRequests.size === 0;
       });
-      if (retired === LATE || !retired) throw Error("Whole-room measurement responses remain unjoined; ownership retained");
+      if (retired === LATE || !retired) throw Error("Whole-room default verification responses remain unjoined; ownership retained");
+      const callerElapsedThroughRequestJoinMilliseconds = performance.now() - beganVerification;
       const unresolved = [...unresolvedHTTP.values()].flat();
-      const measurement = { limits: MEASUREMENT_LIMITS, outcome: measured, progressCount, lastProgress,
+      const reports = measured.lines.filter(line => /^[a-z]+ sc_[a-z2-7]+, entry \d+: consistent\.$/.test(line));
+      const reportedScopes = reports.map(line => line.split(" ")[1]!.replace(/,$/, ""));
+      const sharedProofHeaders = measured.lines.filter(line => line.startsWith("Shared room proof:"));
+      const sharedCoverage = measured.lines.filter(line => line.startsWith("Shared coverage:"));
+      if (measured.code === 0) discoveryCompleted = true;
+      const measurement = { limits: VERIFY_LIMITS, limitsOverridden: false, outcome: measured, progressCount, lastProgress, lastProgressByPhase,
+        actualScopes: [...tracked.keys()].sort(), consistentScopes: reportedScopes,
+        consistentReportsReturned: reports.length, sharedProofHeaders: sharedProofHeaders.length, sharedCoverageRecords: sharedCoverage.length,
         discovery: discoveryCompleted ? "completed" : "not established",
         observedInboxSessionHistories: [...inboxes].filter(name => sessionHistories.has(name)).length,
-        httpObservations, unresolvedHTTP: unresolved };
+        wire: { ...wireCounts }, commandElapsedMilliseconds, callerElapsedThroughRequestJoinMilliseconds,
+        httpObservations, unresolvedHTTP: unresolved,
+        qualification: "One actual default verify --all. Wire counters observe Fetch attempts, replies and response body bytes forwarded, excluding headers/request bytes; last progress per phase is not a final phase counter. Caller performance.now timing is independent of the TEST scripted clock and is not CPU or physical celld time. Prior explicit-budget measurement remains historical evidence, not this run." };
       const retained = JSON.stringify(measurement);
-      if (retained.length > 2_000_000) throw Error("Whole-room measurement public output bound exceeded");
+      if (retained.length > 2_000_000) throw Error("Whole-room default verification public output bound exceeded");
       // JSON preserves the actual Outcome without inspect's array truncation.
       // These are CLI reports/counters, never request bodies or credentials.
-      console.info("fixed-slot-room-measurement-v1", retained);
-      Object.assign(context.task.meta, { fixedSlotRoomMeasurement: measurement });
-      expect(unresolved, "Whole-room budget exhaustion must not hide an unresolved HTTP refusal").toEqual([]);
-      const reports = measured.lines.filter(line => /^[a-z]+ sc_[a-z2-7]+, entry \d+: consistent\.$/.test(line));
-      let boundary: string | null = null;
-      if (measured.code === 0) {
-        expect(reports).toHaveLength(tracked.size);
-        expect(new Set(reports.map(line => line.split(" ")[1]!.replace(/,$/, "")))).toEqual(new Set(tracked.keys()));
-        expect(measured.lines.at(-1)).toBe(`All consistent: ${tracked.size} scopes.`);
-        discoveryCompleted = true;
-      } else {
-        expect(measured.code).toBe(1);
-        expect(measured.lines).toHaveLength(1);
-        boundary = measured.lines[0]!;
-        const stopped = /^Stopped at (session|discovery|replay|cleanup), scope (configuration|sc_[a-z2-7]+), input cursor (null|"[^"]*"|\d+): verification (time|bytes|requests|entries) limit; (\d+) elapsed ms, (\d+) received bytes, (\d+) HTTP attempts, (\d+) history entries\. The whole room was not verified\.$/.exec(boundary);
-        expect(stopped, "A mismatch, authority refusal or non-budget failure is not a measurement boundary").not.toBeNull();
-        if (!stopped) throw Error("Whole-room measurement failed without an actual budget boundary");
-        expect(stopped[2] === "configuration" || [...tracked.keys()].some(scope => scope === stopped[2])).toBe(true);
-        expect(stopped.slice(5).map(Number).every(value => Number.isSafeInteger(value) && value >= 0)).toBe(true);
+      console.info("room-proof-reuse-default-v1", retained);
+      Object.assign(context.task.meta, { roomProofReuseDefault: measurement });
+      expect(unresolved, "Whole-room verification must not hide an unresolved HTTP refusal").toEqual([]);
+      ok(measured);
+      expect(sharedProofHeaders).toHaveLength(1);
+      expect(sharedCoverage.length).toBeGreaterThan(0);
+      const requestedRoots = new Set<string>(tracked.keys());
+      for (const line of sharedCoverage) {
+        const root = /; proving root (sc_[a-z2-7]+)\.$/.exec(line)?.[1];
+        expect(root !== undefined && requestedRoots.has(root), "Shared coverage must name an actual requested root").toBe(true);
       }
-      if (discoveryCompleted) expect([...inboxes].filter(name => !sessionHistories.has(name))).toEqual([]);
+      expect(reports).toHaveLength(tracked.size);
+      expect(new Set(reportedScopes)).toEqual(new Set(tracked.keys()));
+      expect(measured.lines.at(-1)).toBe(`All consistent: ${tracked.size} scopes.`);
+      expect([...inboxes].filter(name => !sessionHistories.has(name))).toEqual([]);
       // Join the entire set inside the whole-work budget first.
       // finish still performs its own full batched pass and joins arrivals;
       // this does not assume its independent 7.5 s cap has been measured.
       await joinAll();
       Object.assign(context.task.meta, { fixedSlotMembership: { membersBeforeFresh: MEMBER_COUNT, membersAfterFresh: MEMBER_COUNT + 1,
         actualScopes: tracked.size, actualAddMemberActs: addActs, shippedVerificationLimits: VERIFY_LIMITS, acceptance,
-        wholeRoomMeasurement: { limits: MEASUREMENT_LIMITS, outcome: measured, progressCount, lastProgress, boundary,
-          discovery: discoveryCompleted ? "completed" : "not established", observedInboxSessionHistories: [...inboxes].filter(name => sessionHistories.has(name)).length,
-          consistentReportsReturned: reports.length, coverage: measured.code === 0 ? "all actual scopes consistent" : "unknown beyond observations; unreturned partial reports do not prove coverage" },
-        qualification: "Real Native room/authority/Inbox creation, SQLite restart and three default CLI replays. One explicit-budget whole-room replay is measurement only; TEST clock/local custody/setup reader/finite scheduler. No default --all completion claim, physical celld, load or cancellation/drain claim." } });
+        wholeRoomVerification: measurement,
+        qualification: "Real Native room/authority/Inbox creation, SQLite restart and three standalone default CLI replays plus one default multi-root whole-room replay. TEST clock/local custody/setup reader/finite scheduler. No physical celld, load or cancellation/drain claim." } });
     }), new Promise<never>((_resolve, reject) => {
       timer = setTimeout(() => reject(Error("Fixed-slot witness lifetime exceeded; in-flight Native work is not cancelled")), WHOLE_MILLISECONDS);
     })]);

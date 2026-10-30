@@ -2,8 +2,9 @@ import { expect, test, vi } from "vitest";
 import type { Entry, Read, ScopeRef, Seed, Sealed, Summary } from "@generalbusiness/dap-contract";
 import { entryHash, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
 import { memoryStore, type Context, type Outcome } from "@generalbusiness/dap-cli";
+import { TRUSTS, platformCode } from "@generalbusiness/dap-replay";
 import { DEMO_DIGESTS, MANIFEST_DIGESTS } from "../src/index.ts";
-import { prepareConcurrentAndMerge, staleReproposal, type CapturedValues } from "../../../../scripts/demo/rehearse.ts";
+import { judgedRoomProof, prepareConcurrentAndMerge, staleReproposal, type CapturedValues } from "../../../../scripts/demo/rehearse.ts";
 
 // Runner boundary STAND-IN: commands, read sessions, entries and summaries
 // below are scripted. Production composite code still judges exact results,
@@ -48,6 +49,55 @@ function entryRead(entry: Entry): Read<Sealed> {
 function summary(scope: ScopeRef, type: string, values: Summary["items"][number]["values"] = {}): Read<Summary> {
   return { ok: true, at: { seq: 1, hash: textDigest("scripted summary") }, complete: true, value: { scope, definition: DEMO_DIGESTS.change, status: "active", time: TIME, counts: [], items: [{ id: 0, type, state: "open", revision: 1, opened: null, values, refs: {}, parties: {}, attributed: [] }] } };
 }
+
+test("the rehearsal requires shared proof provenance before accepting the original scope summaries", () => {
+  // Output correspondence only: these lines do not stand for a replay or
+  // native authority. The four demo.scope journeys exercise the actual CLI.
+  const digest = textDigest("scripted shared text");
+  const span = (scope: ScopeRef, from: number, through: number, root: ScopeRef) => `Shared coverage: ${scope.scope}, incarnation ${scope.inc}, kind ${scope.kind}, entries ${from} to ${through}; proving root ${root.scope}.`;
+  const checked = `Shared checked text: ${digest}; source ${D.scope}, incarnation ${D.inc}, kind ${D.kind}; proving root ${D.scope}; consumers ${M.scope}, ${G.scope}.`;
+  const prefix = [
+    "Shared room proof: 3 roots; 4 verified dependencies; 0 anchored dependencies; 0 missing dependencies.",
+    span(D, 0, 1, D), span(D, 2, 3, M), span(M, 0, 1, D), span(G, 0, 2, G), checked,
+    ...[TRUSTS.clock, TRUSTS.head, TRUSTS.bounds, platformCode("platform:directory@3")].map(trust => `Shared trust: ${trust}.`),
+  ];
+  const suffix = [
+    `directory ${D.scope}, entry 3: consistent.`, `membership ${M.scope}, entry 1: consistent.`, `destination ${G.scope}, entry 2: consistent.`,
+    `Cleanup status: destination ${G.scope}, entry 2: no reservation is recorded as cleanup-owed.`, "All consistent: 3 scopes.",
+  ];
+  const expected = { code: 0, lines: [
+    "directory {directory}, entry <seq>: consistent.", "membership {membership}, entry <seq>: consistent.", "destination {destination}, entry <seq>: consistent.",
+    "Cleanup status: destination {destination}, entry <seq>: no reservation is recorded as cleanup-owed.", "All consistent: 3 scopes.",
+  ] };
+  const values = { directory: D.scope, membership: M.scope, destination: G.scope, seq: "before" };
+  const valid = [...prefix, ...suffix];
+  const captured = { ...values };
+  expect(judgedRoomProof(expected, { code: 0, lines: valid }, captured)).toBeNull();
+  expect(captured.seq).toBe("2");
+  const replaced = (index: number, line: string) => valid.map((original, at) => at === index ? line : original);
+  const faults: [string, string[]][] = [
+    ["missing shared proof", suffix],
+    ["wrong root count", replaced(0, prefix[0]!.replace("3 roots", "2 roots"))],
+    ["missing target coverage", valid.filter(line => line !== prefix[4])],
+    ["coverage gap", replaced(2, span(D, 3, 3, M))],
+    ["foreign proving root", replaced(2, span(D, 2, 3, R))],
+    ["conflicting incarnation", replaced(2, span({ ...D, inc: newIncarnation(new Uint8Array(16).fill(6)) }, 2, 3, M))],
+    ["text source mismatch", replaced(5, checked.replace(`incarnation ${D.inc}`, `incarnation ${newIncarnation(new Uint8Array(16).fill(6))}`))],
+    ["uncovered text consumer", replaced(5, checked.replace(`consumers ${M.scope}, ${G.scope}`, `consumers ${R.scope}`))],
+    ["undeclared replay trust", replaced(6, "Shared trust: all outside outcomes independently verified.")],
+    ["missing replay trust", valid.filter(line => line !== `Shared trust: ${TRUSTS.head}.`)],
+    ["unknown shared metadata", [...prefix, "Shared future metadata: accepted.", ...suffix]],
+    ["wrong original scope order", [...prefix, suffix[1]!, suffix[0]!, ...suffix.slice(2)]],
+    ["missing cleanup", valid.filter(line => !line.startsWith("Cleanup status:"))],
+    ["wrong original summary", [...valid.slice(0, -1), "All consistent: 4 scopes."]],
+  ];
+  for (const [name, lines] of faults) {
+    const unchanged = { ...values };
+    expect(judgedRoomProof(expected, { code: 0, lines }, unchanged), name).not.toBeNull();
+    expect(unchanged, `failed ${name} must not publish suffix captures`).toEqual(values);
+  }
+  expect(judgedRoomProof(expected, { code: 1, lines: valid }, { ...values })).not.toBeNull();
+});
 
 test("scripted preparation answers stop the composite before the next mutation, while the valid journey admits the loser before the winner", async () => {
   // A small journey ledger covers unknown command, malformed provenance and

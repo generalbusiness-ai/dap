@@ -11,11 +11,12 @@
  * one, and nothing else that it prints holds a secret (a read token is never printed by `dap clone`; a key is printed by its ID).
  */
 
-import { b64url, digestBytes, entryHash, canonicalize, intentDigest, isPlatformDefinition, isReceipt, isScopeId, isScopeRef, isSignedIntentShape, keyIdOfSecret, platformName, scopeIdOf, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import { b64url, digestBytes, entryHash, canonicalize, intentDigest, isDigest, isPlatformDefinition, isReceipt, isScopeId, isScopeRef, isSignedIntentShape, keyIdOfSecret, platformName, scopeIdOf, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest, signedReads } from "@generalbusiness/dap-client";
 import { command, type Context, type Outcome } from "@generalbusiness/dap-cli";
 import { DEMO_DIGESTS, MANIFEST_DIGESTS, changeDemo, changeDemo3, issueDemo } from "@generalbusiness/dap-lanes";
 import { ARCHIVE_DEVICE_PUBLICATION_COHORT, firstExtents, platform } from "@generalbusiness/dap-platform";
+import { TRUSTS, platformCode } from "@generalbusiness/dap-replay";
 
 /** The three people of the script, each with a fresh config directory. Hardware identity is not verified. */
 export type Person = "founder" | "member" | "maintainer";
@@ -93,7 +94,7 @@ export interface Taken {
   seconds: number;
   /** Only the stale merge command, excluding the fresh proposal and publication. */
   staleRefusal?: StaleRefusalTiming;
-  expected: { code: number; lines: string[] };
+  expected: { code: number; lines: string[]; sharedProof?: string };
   match: boolean;
   /** Why the shot does not match, or null. */
   why: string | null;
@@ -132,6 +133,7 @@ interface Shot {
   /** The command as typed: a `dap` command line, `git ...`, or `GET <url>`. */
   typed(v: CapturedValues): string[];
   expect: { code: number; lines: (v: CapturedValues) => string[] };
+  sharedProof?: true;
   /** After the shot ends: what the stage does that no command prints. */
   after?(v: CapturedValues, stage: Stage): Promise<string>;
 }
@@ -304,6 +306,7 @@ function shots(stage: Stage): Shot[] {
     {
       title: "The verifier, every scope", scene: "12", who: "member",
       typed: () => ["dap", "verify", "--all"],
+      sharedProof: true,
       expect: { code: 0, lines: (v) => [
         ...[["register", "register"], ["directory", "directory"], ["membership", "membership"], ["rules", "rules"], ["destination", "destination"], ["lane", "issue"], ["lane", "published"], ["lane", "controlled"], ["lane", "stale"], ["lane", "reproposed"], ["lane", "refused"], ["inbox", "founderInbox"], ["inbox", "memberInbox"], ["inbox", "maintainerInbox"]]
           .flatMap(([kind, name]) => [`${kind} {${name}}, entry <seq>: consistent.`, ...(kind === "destination" && ["platform:register@3", ARCHIVE_DEVICE_PUBLICATION_COHORT.register].includes(v["registerDefinition"] ?? "") ? ["Cleanup status: destination {destination}, entry <seq>: no reservation is recorded as cleanup-owed."] : [])]),
@@ -428,6 +431,67 @@ export function judged(expected: { code: number; lines: readonly string[] }, out
     if (!matched) return `line ${i + 1} is not "${expected.lines[i]}"`;
     Object.assign(kept, matched.groups ?? {});
   }
+  Object.assign(v, kept);
+  return null;
+}
+
+const SHARED_PROOF_EXPECTATION = "One shared room proof, with no anchors or missing dependencies; complete coverage through every scope's reported head; valid text provenance and declared replay trust, followed by these exact scope summaries.";
+
+/** Check the CLI's disclosure against the room summaries, without replaying its proof again. */
+export function judgedRoomProof(expected: { code: number; lines: readonly string[] }, outcome: Outcome, v: CapturedValues): string | null {
+  const start = outcome.lines.length - expected.lines.length;
+  const kept = { ...v };
+  const suffix = outcome.lines.slice(Math.max(0, start));
+  const mismatch = judged(expected, { ...outcome, lines: suffix }, kept);
+  if (mismatch !== null) return mismatch;
+  const integer = (value: string) => /^(?:0|[1-9][0-9]*)$/.test(value) && Number.isSafeInteger(Number(value));
+  const targets = new Map<string, { kind: string; head: number }>();
+  for (const line of suffix) {
+    const row = /^(\S+) (\S+), entry (\d+): consistent\.$/.exec(line);
+    if (!row) continue;
+    if (!isScopeId(row[2]) || !integer(row[3]!) || targets.has(row[2])) return "shared proof: invalid or duplicate scope summary";
+    targets.set(row[2], { kind: row[1]!, head: Number(row[3]) });
+  }
+  const prefix = outcome.lines.slice(0, Math.max(0, start));
+  const header = /^Shared room proof: (\d+) roots; (\d+) verified dependencies; 0 anchored dependencies; 0 missing dependencies\.$/.exec(prefix[0] ?? "");
+  if (!header || targets.size === 0 || !integer(header[1]!) || !integer(header[2]!) || Number(header[1]) !== targets.size) return "shared proof: missing or invalid room header";
+  const coverage = new Map<string, { inc: string; kind: string; through: number; roots: Set<string> }>();
+  const texts = new Set<string>(), trusts = new Set<string>();
+  const allowedTrusts = new Set<string>(Object.values(TRUSTS).filter(trust => ![TRUSTS.judgments, TRUSTS.facts, TRUSTS.anchors, TRUSTS.redacted, TRUSTS.omitted].some(excluded => excluded === trust)));
+  let section = 0;
+  for (const line of prefix.slice(1)) {
+    const span = /^Shared coverage: (\S+), incarnation (\S+), kind (\S+), entries (\d+) to (\d+); proving root (\S+)\.$/.exec(line);
+    if (span) {
+      const [, scope, inc, kind, from, through, root] = span;
+      const prior = coverage.get(scope!);
+      if (section !== 0 || !isScopeRef({ scope, inc, kind }) || !integer(from!) || !integer(through!) || Number(from) > Number(through)
+        || !targets.has(root!) || Number(from) !== (prior ? prior.through + 1 : 0)
+        || (prior && (prior.inc !== inc || prior.kind !== kind)) || (targets.has(scope!) && (targets.get(scope!)!.kind !== kind || Number(through) > targets.get(scope!)!.head))) return "shared proof: invalid coverage provenance";
+      const roots = prior?.roots ?? new Set<string>(); roots.add(root!);
+      coverage.set(scope!, { inc: inc!, kind: kind!, through: Number(through), roots });
+      continue;
+    }
+    const text = /^Shared checked text: (\S+); source (\S+), incarnation (\S+), kind (\S+); proving root (\S+); consumers (.+)\.$/.exec(line);
+    if (text) {
+      const [, digest, scope, inc, kind, root, consumers] = text;
+      const source = coverage.get(scope!);
+      const users = consumers === "none" ? [] : consumers!.split(", ");
+      if (section > 1 || !isDigest(digest) || texts.has(digest) || !source || source.inc !== inc || source.kind !== kind || !source.roots.has(root!)
+        || users.length === 0 || new Set(users).size !== users.length || users.some(user => !coverage.has(user))) return "shared proof: invalid checked text provenance";
+      section = 1; texts.add(digest);
+      continue;
+    }
+    if (line.startsWith("Shared trust: ") && line.endsWith(".")) {
+      const trust = line.slice("Shared trust: ".length, -1);
+      const named = /^platform-code: that the rules this replay ran for (\S+) are the rules of that name and version$/.exec(trust)?.[1];
+      if (trusts.has(trust) || (!allowedTrusts.has(trust) && !(isPlatformDefinition(named) && platform(named) !== null && trust === platformCode(named)))) return "shared proof: invalid replay trust";
+      section = 2; trusts.add(trust);
+      continue;
+    }
+    return "shared proof: unexpected or incomplete disclosure";
+  }
+  if ([...targets].some(([id, target]) => coverage.get(id)?.through !== target.head)
+    || ![TRUSTS.clock, TRUSTS.head, TRUSTS.bounds].every(trust => trusts.has(trust))) return "shared proof: missing coverage or replay trust";
   Object.assign(v, kept);
   return null;
 }
@@ -564,7 +628,7 @@ export async function rehearse(stage: Stage): Promise<Rehearsal> {
   const list = shots(stage);
   let identityStop: string | null = null;
   for (const [i, shot] of list.entries()) {
-    const expected = { code: shot.expect.code, lines: shot.expect.lines(v) };
+    const expected = { code: shot.expect.code, lines: shot.expect.lines(v), ...(shot.sharedProof ? { sharedProof: SHARED_PROOF_EXPECTATION } : {}) };
     const base = { n: i + 1, title: shot.title, scene: shot.scene, who: `${shot.who} (${HANDLES[shot.who]})`, expected };
     let words: string[];
     try {
@@ -591,7 +655,7 @@ export async function rehearse(stage: Stage): Promise<Rehearsal> {
     else if (words[0] === "prepare-branch") outcome = stage.prepareBranch ? await stage.prepareBranch(words[1]!, branchFiles(words[1]!)) : { code: 1, lines: ["No local Git branch preparation is configured."] };
     else if (words[0] === "git") outcome = await stage.log(words[2]!);
     else outcome = await command(await personOf(shot.who), words.slice(1));
-    let why = judged(expected, outcome, v);
+    let why = shot.sharedProof ? judgedRoomProof(expected, outcome, v) : judged(expected, outcome, v);
     if (i === 0 || i === 1) {
       const key = why === null ? await plannedOperator(await personOf(shot.who), stage, v["register"]!, v["registerDefinition"]!, i === 1) : null;
       if (key === null || (v["operatorKey"] !== undefined && v["operatorKey"] !== key)) {
@@ -673,7 +737,7 @@ export function transcript(rehearsal: Rehearsal, heading: { service: string; hos
     "",
     "| Shot | Expected | Observed | Match |",
     "|---|---|---|---|",
-    ...rehearsal.shots.map((shot) => `| ${shot.n}. ${shot.title} | exit ${shot.expected.code}<br>${cell(shot.expected.lines)} | ${shot.code >= 0 ? `exit ${shot.code}<br>${cell(shot.lines)}` : "not run"} | ${shot.match ? "yes" : "no"} |`),
+    ...rehearsal.shots.map((shot) => `| ${shot.n}. ${shot.title} | exit ${shot.expected.code}<br>${cell([...(shot.expected.sharedProof ? [shot.expected.sharedProof] : []), ...shot.expected.lines])} | ${shot.code >= 0 ? `exit ${shot.code}<br>${cell(shot.lines)}` : "not run"} | ${shot.match ? "yes" : "no"} |`),
     "",
   );
   return out.join("\n");

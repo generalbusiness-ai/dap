@@ -1,6 +1,7 @@
 import { describe, expect, test, onTestFinished } from "vitest";
-import type { ScopeId } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, scopeIdOf, textDigest, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import type { ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
+import { b64url, canonicalize, isDigest, isPlatformDefinition, isScopeRef, scopeIdOf, textDigest, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { TRUSTS, platformCode } from "@generalbusiness/dap-replay";
 import type { Fetch } from "@generalbusiness/dap-client";
 import { firstExtents } from "@generalbusiness/dap-platform";
 import { net } from "@generalbusiness/dap-scope/testing";
@@ -182,7 +183,13 @@ async function story(at: Stand, wired: Set<ScopeId>): Promise<void> {
   // read routes with the caller's session, the lanes with the capability code; one line each, and the last line says all are consistent.
   const verified = await run(una, "verify", "--all");
   expect(verified.code, verified.lines.join("\n")).toBe(0);
-  const lines = verified.lines.slice(0, -1).filter((line) => !line.startsWith("Cleanup status:"));
+  const boundary = verified.lines.findIndex((line) => !line.startsWith("Shared "));
+  expect(boundary).toBeGreaterThan(1);
+  const shared = verified.lines.slice(0, boundary);
+  const header = /^Shared room proof: 12 roots; (\d+) verified dependencies; 0 anchored dependencies; 0 missing dependencies\.$/.exec(shared[0]!);
+  expect(header).not.toBeNull();
+  expect(Number(header![1])).toBeGreaterThan(0);
+  const lines = verified.lines.slice(boundary, -1).filter((line) => !line.startsWith("Cleanup status:"));
   const cleanup = verified.lines.filter((line) => line.startsWith("Cleanup status:"));
   expect(cleanup).toEqual([expect.stringMatching(new RegExp(`^Cleanup status: destination ${repository.destination}, entry \\d+: no reservation is recorded as cleanup-owed\\.$`))]);
   const kinds = lines.map((line) => line.split(" ")[0]);
@@ -190,6 +197,48 @@ async function story(at: Stand, wired: Set<ScopeId>): Promise<void> {
   for (const line of lines) expect(line).toMatch(/^[a-z]+ sc_[a-z2-7]+, entry \d+: consistent\.$/);
   expect(lines.filter((line) => line.includes(I.name) || line.includes(J.name) || line.includes(lane[1]!) || line.includes(lane2))).toHaveLength(4);
   expect(verified.lines.at(-1)).toBe("All consistent: 12 scopes.");
+  // Bind the shared proof to this room's actual identities and checked heads,
+  // rather than dropping every line with a new output prefix.
+  const roots = new Map<string, { at: ScopeRef; head: number }>(), codeTrusts = new Set<string>();
+  for (const line of lines) {
+    const scope = line.split(" ")[1]!.replace(/,$/, "") as ScopeId;
+    const summary = await new Platform(scope).summary();
+    expect(Number(/, entry (\d+):/.exec(line)![1])).toBe(summary.at.seq);
+    roots.set(scope, { at: summary.value.scope, head: summary.at.seq });
+    if (isPlatformDefinition(summary.value.definition)) codeTrusts.add(`Shared trust: ${platformCode(summary.value.definition)}.`);
+  }
+  expect(new Set(roots.keys())).toEqual(wired);
+  const allowedTrusts = new Set([
+    TRUSTS.clock, TRUSTS.head, TRUSTS.sources, TRUSTS.minted, TRUSTS.held, TRUSTS.delivered,
+    TRUSTS.observed, TRUSTS.attempts, TRUSTS.outcomes, TRUSTS.dispatched, TRUSTS.staged, TRUSTS.bounds,
+  ].map(trust => `Shared trust: ${trust}.`).concat([...codeTrusts]));
+  const coverage = new Map<string, { from: number; through: number }[]>();
+  for (const line of shared.slice(1)) {
+    if (line.startsWith("Shared trust:")) { expect(allowedTrusts.has(line), line).toBe(true); continue; }
+    const covered = /^Shared coverage: (sc_[^,]+), incarnation (in_[^,]+), kind ([a-z]+), entries (\d+) to (\d+); proving root (sc_[^.]+)\.$/.exec(line);
+    const text = /^Shared checked text: ([^;]+); source (sc_[^,]+), incarnation (in_[^,]+), kind ([a-z]+); proving root (sc_[^;]+); consumers (.+)\.$/.exec(line);
+    expect(covered !== null || text !== null, line).toBe(true);
+    if (covered) {
+      const [, scope, inc, kind, from, through, root] = covered;
+      expect(isScopeRef({ scope, inc, kind }) && roots.has(scope!) && roots.has(root!)).toBe(true);
+      expect({ scope, inc, kind }).toEqual(roots.get(scope!)!.at);
+      const ranges = coverage.get(scope!) ?? [];
+      ranges.push({ from: Number(from), through: Number(through) }); coverage.set(scope!, ranges);
+    } else if (text) {
+      const [, digest, scope, inc, kind, root, consumers] = text;
+      expect(isDigest(digest) && isScopeRef({ scope, inc, kind }) && roots.has(scope!) && roots.has(root!)).toBe(true);
+      expect({ scope, inc, kind }).toEqual(roots.get(scope!)!.at);
+      for (const consumer of consumers!.split(", ")) expect(roots.has(consumer)).toBe(true);
+    }
+  }
+  expect(new Set(coverage.keys())).toEqual(new Set(roots.keys()));
+  for (const [scope, ranges] of coverage) {
+    ranges.sort((a, b) => a.from - b.from);
+    let next = 0;
+    for (const range of ranges) { expect(range.from).toBe(next); expect(range.through).toBeGreaterThanOrEqual(range.from); next = range.through + 1; }
+    expect(next).toBe(roots.get(scope)!.head + 1);
+  }
+  for (const trust of [`Shared trust: ${TRUSTS.clock}.`, `Shared trust: ${TRUSTS.bounds}.`, ...codeTrusts]) expect(shared).toContain(trust);
   // Read/transport boundary STAND-IN after one real accepted proposal.
   // Every mutation still reaches the real Worker; only the subsequent
   // linking summary read is lost. The original --closes positive flow above

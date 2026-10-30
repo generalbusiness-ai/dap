@@ -83,7 +83,7 @@ async function broadContext(wide: ReturnType<typeof broadRegister>, discovery: "
   const { R, children, memory } = wide, D = children[0]!;
   const store = memoryStore(); await store.keep("device", rita.secret);
   await store.save({ v: 1, service: "https://service.test", key: "device", repository: { directory: D.at, membership: { ...D.at, kind: "membership" }, rules: D.at.scope, destination: D.at.scope } });
-  const logs = new Set<ScopeId>(), histories: ScopeId[] = [];
+  const logs = new Set<ScopeId>(), histories: ScopeId[] = [], logPages = new Map<string, number>();
   let elapsed = 0;
   const fetch: Fetch = async (url, init) => {
     const address = new URL(url), parts = address.pathname.split("/").map(decodeURIComponent), scope = parts[3] as ScopeId;
@@ -105,6 +105,8 @@ async function broadContext(wide: ReturnType<typeof broadRegister>, discovery: "
     }
     if (parts[4] === "log") {
       logs.add(scope);
+      const page = `${scope}:${address.searchParams.get("cursor") ?? "0"}`;
+      logPages.set(page, (logPages.get(page) ?? 0) + 1);
       if (refusal && scope === D.at.scope) return Response.json({ ok: false, reason: refusal }, { status: refusal === "forbidden" ? 403 : 503 });
       const got = await memory.page(scope, Number(address.searchParams.get("cursor") ?? 0), { entries: 32, bytes: 4 * 1024 * 1024 });
       return Response.json(got.ok ? { ok: true, at: got.page.head, complete: got.page.next === null, value: { scope: got.page.scope, entries: got.page.entries }, ...(got.page.next === null ? {} : { next: String(got.page.next) }) } : got);
@@ -115,7 +117,7 @@ async function broadContext(wide: ReturnType<typeof broadRegister>, discovery: "
     }
     throw Error(`Unexpected SCRIPTED read: ${address.pathname}`);
   };
-  return { ctx: { store, fetch, now: () => timeMs(R.now)!, verify: { progress: (line: string) => progress.push(line), ...(discovery === "wide" ? { limits: { milliseconds: 100_000 }, monotonicNow: () => elapsed } : {}) } }, logs, histories };
+  return { ctx: { store, fetch, now: () => timeMs(R.now)!, verify: { progress: (line: string) => progress.push(line), ...(discovery === "wide" ? { limits: { milliseconds: 100_000 }, monotonicNow: () => elapsed } : {}) } }, logs, histories, logPages };
 }
 
 test("verify --all discovers more than 64 scopes and reports the exact elapsed-budget stop after progress", async () => {
@@ -134,11 +136,16 @@ test("verify --all discovers more than 64 scopes and reports the exact elapsed-b
 
 test("verify --all replays a Register with 65 sibling dependencies under CLI work budgets rather than replay's default 64 scopes", async () => {
   const wide = broadRegister(), progress: string[] = [];
-  const { ctx, logs } = await broadContext(wide, "empty", progress);
+  const { ctx, logs, logPages } = await broadContext(wide, "empty", progress);
   const outcome = await command(ctx, ["verify", "--all"]);
   expect(outcome.code, outcome.lines.join("\n")).toBe(0);
   expect(outcome.lines).toContain(`register ${wide.R.at.scope}, entry ${wide.R.head.seq}: consistent.`);
   expect(logs).toEqual(new Set([wide.R.at.scope, ...wide.children.map(child => child.at.scope)]));
+  // Following the Directory root must reuse the Register proof and its
+  // other 64 children. A requested-root head refresh may reread Directory 0.
+  for (const child of wide.children.slice(1)) expect(logPages.get(`${child.at.scope}:0`)).toBe(1);
+  expect(outcome.lines.filter(line => line.startsWith("Shared room proof:"))).toHaveLength(1);
+  expect(outcome.lines).toContain(`Shared coverage: ${wide.R.at.scope}, incarnation ${wide.R.at.inc}, kind register, entries 0 to ${wide.R.head.seq}; proving root ${wide.R.at.scope}.`);
   // Only two top-level targets were selected by the SCRIPTED discovery;
   // the 65 sibling proofs are actual judged journal dependencies, not 65 targets.
   expect(outcome.lines.at(-1)).toBe("All consistent: 2 scopes.");

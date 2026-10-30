@@ -25,6 +25,12 @@ The library runs under Node and under Workers.
 | `cli` | `main(argv, io)`: the command, with no process state. `src/bin.ts` runs it under Node. |
 | `archive` | Portable `archiveSource(port)` and `verifyArchive(source, options)`. The trusted read port owns bounded object parsing and I/O; the wrapper preserves the native verifier's report and qualifies archive provenance. |
 
+The `verify` module also exports `roomVerification(source, options)` for one
+in-memory room proof. Its `checkTarget({ scope, head? })` follows a root and
+returns a provisional token. `finish()` returns final per-scope summaries
+and one shared coverage and trust record. `close()` releases the owner and
+prevents later publication. No provisional token is a final result.
+
 ## Two modes
 
 **Integrity** checks, for the target scope only:
@@ -187,6 +193,17 @@ replayed; an anchor trusts only the exact entry it names.
 Each scope is checked once, as far as the highest entry any reference
 needs. Two scopes may use each other at different positions.
 
+A room proof uses one command-local verifier with the requested scopes as
+roots at depth 0. Foreign depth is the least distance from a root actually
+followed. A prefix or content proven once may serve later targets under
+the same source, incarnation, hash, semantic, code and trust options;
+discovery alone proves nothing. The final room result gives one union of
+coverage and trusts, including the root that proved each shared prefix and
+checked content used to settle another target's detached text, followed by
+per-scope summaries. Expected heads, causal-prefix checks and contradiction
+invalidation still apply. Proofs stay in memory for that command only.
+Standalone `verify` retains its single-target behavior.
+
 ## What the caller must give
 
 The target scope's ID, always. And, if the caller has one, a known head: a
@@ -223,7 +240,7 @@ reply arrives, before anything in it is kept.
 | `bytes` | Raw bytes of the source's replies, as read: pages and retained inputs | 256 MiB | The reply that would pass it is cancelled and not taken in. `incomplete`, with the coverage so far. |
 | `entries` | Entries checked, over all scopes | 100,000 | `incomplete`. |
 | `scopes` | Scopes whose history is read | 64 | `incomplete`. |
-| `depth` | Foreign facts followed in a chain from the target, also while owed texts are settled | 16 | `incomplete`. |
+| `depth` | Foreign facts followed in a chain from the nearest root, also while owed texts are settled | 16 | `incomplete`. |
 | One page | Raw reply bytes, and entries | 4 MiB (`PAGE_REPLY_BYTES`); 200 (`PAGE_ENTRIES`) | The page is not taken in. The history cannot be read past it: `incomplete` for the target, `missing-dependency` for a source. |
 | One retained input | Raw reply bytes | 4 MiB (`RETAINED_REPLY_BYTES`) | It is not taken in: `incomplete`, as a retained input that is missing. |
 | One read | Seconds | 30 (`READ_SECONDS`) | The request is aborted, and the reader starts no read and keeps no chunk after that. A `fetch` that ignores the abort signal may keep its own buffers and its connection. A read error: `verify` rejects with `SourceError`, and there is no report. |
