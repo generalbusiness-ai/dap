@@ -9,7 +9,7 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 const namedOwners = {
   "packages/scope/src/object.ts": {
     "packages/scope/src/object.ts:$module": "b13c0ec0476fbbf1155d85eeaecedf1f9917cb9063078955cfe11712bd15015d",
-    "packages/scope/src/object.ts:ScopeObject": "77b9efb0f836cc70849d76d29aaccce4edef78700759e4744c00ed4d884467bf", // J4: bounded birth discovery and the exact hold@2 credential branch.
+    "packages/scope/src/object.ts:ScopeObject": "5124f9d26ff6cbe46a9cf67d808166e25c6f13726399de5dffae9f3c01a1bcb2", // J4: bounded birth discovery and the exact hold@2 credential branch.
   },
   "packages/scope/src/worker.ts": {
     "packages/scope/src/worker.ts:$module": "4d100a3676c4e9c5848d9c178f9431b8151ada92a14cf83e148ca03205f1e2a2",
@@ -179,6 +179,7 @@ const namedOwners = {
 
 // Reviewed matcher/gate owners. These are change tripwires, not runtime proof.
 const seals = {
+  "packages/scope/src/authority.ts": "4a6c8dcf833c52c2448a4e6171916f81abb431c23fb1f5f89a64d6dff18005e4", // Reviewed Commons cohort authority recognition; maintained whole-AST value.
   "packages/platform/src/reservation-v17.ts": "e00aa0f08f9b3b1f4aca5e794436367ab550dcd1966c5258f1e96e42ab97a856", // Reviewed retained-policy decoder; actual maintained parser output.
   "packages/platform/src/evidence.ts": "e3f0fa91c32d848b5bec7dc9ac047d4cc72815ddce70365ad8fade6884a7354b", // Reviewed platform binding codec under ruling 1bc4f7fd; actual maintained parser output.
   "packages/git/src/checkout-snapshot.ts": "82f53717d419b70fe208801b6d0bf2fc0c947ac2beffb27b2e2d01898f48ee25", // Detached object identity and closure bounds; imports do not seal this implementation.

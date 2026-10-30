@@ -1,6 +1,8 @@
 /** Scripted HTTP reads and acceptance expose MCP discovery, shaping and
  * custody. These tests prove no native membership or Commons judgment. */
-import { expect, test, vi } from "vitest";
+import { expect, test } from "vitest";
+import { createHash } from "node:crypto";
+import { deflateSync } from "node:zlib";
 import { b64url, factRefOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { packApplication } from "@generalbusiness/dap-client";
 import { COMMONS_COHORT, TRUSTED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
@@ -11,13 +13,44 @@ import { fixedSigner } from "./fixtures.ts";
 import { StandIn, SERVICE } from "./support/standin.ts";
 import { packageDeclaration } from "../../client/test/definition-corpus-data.ts";
 
-// Only the public Git blob boundary is scripted. Package parsing, release
-// signatures, MCP dispatch, signed envelopes and custody remain real.
-const git = vi.hoisted(() => ({ bytes: new Uint8Array() as Uint8Array, reads: 0 }));
-vi.mock("@generalbusiness/dap-git/application", async original => ({
-  ...await original<typeof import("@generalbusiness/dap-git/application")>(),
-  readApplicationGitBlob: async () => { git.reads++; return git.bytes; },
-}));
+// Scripted public smart-HTTP replies carry independently framed SHA-1
+// objects and zlib packs. The maintained reader decodes and verifies them;
+// package parsing, release signatures, MCP dispatch and custody stay real.
+function packagePeer(bytes: Uint8Array) {
+  const objects = new Map<string, { kind: number; data: Buffer }>();
+  const add = (type: string, kind: number, data: Uint8Array) => {
+    const id = createHash("sha1").update(`${type} ${data.length}\0`).update(data).digest("hex");
+    objects.set(id, { kind, data: Buffer.from(data) }); return id;
+  };
+  const blob = add("blob", 3, bytes);
+  const tree = add("tree", 2, Buffer.concat([Buffer.from("100644 application.dap.json\0"), Buffer.from(blob, "hex")]));
+  const commit = add("commit", 1, Buffer.from(`tree ${tree}\nauthor TEST <test@example.invalid> 0 +0000\ncommitter TEST <test@example.invalid> 0 +0000\n\nTEST package\n`));
+  const pkt = (text: string) => { const body = Buffer.from(text); return Buffer.concat([Buffer.from((body.length + 4).toString(16).padStart(4, "0")), body]); };
+  let reads = 0;
+  return { uri: `git+https://packages.test/apps.git/@${commit}/application.dap.json`, get reads() { return reads; },
+    fetch: async (request: Request): Promise<Response> => {
+      expect(request.headers.get("authorization")).toBeNull();
+      expect(request.headers.get("cookie")).toBeNull();
+      expect(request.redirect).toBe("manual");
+      if (request.method === "GET") {
+        expect(request.url).toBe("https://packages.test/apps.git/info/refs?service=git-upload-pack");
+        return new Response(Buffer.concat([pkt("# service=git-upload-pack\n"), Buffer.from("0000"), pkt(`${commit} HEAD\0shallow filter allow-reachable-sha1-in-want object-format=sha1\n`), Buffer.from("0000")]), { headers: { "content-type": "application/x-git-upload-pack-advertisement" } });
+      }
+      expect(request.method).toBe("POST"); expect(request.url).toBe("https://packages.test/apps.git/git-upload-pack");
+      const body = await request.text(), wanted = /want ([0-9a-f]{40}) shallow filter\n/.exec(body)?.[1];
+      expect(body).toContain("deepen 1\n"); expect(body).toContain("filter tree:0\n"); expect(body).not.toContain("have ");
+      expect(wanted).toBeDefined(); const object = objects.get(wanted!)!; expect(object).toBeDefined();
+      const header = Buffer.alloc(12); header.write("PACK"); header.writeUInt32BE(2, 4); header.writeUInt32BE(1, 8);
+      let size = Math.floor(object.data.length / 16);
+      const objectHeader = [(object.kind << 4) | (object.data.length & 15) | (size ? 128 : 0)];
+      while (size) { const part = size & 127; size = Math.floor(size / 128); objectHeader.push(part | (size ? 128 : 0)); }
+      const content = Buffer.concat([header, Buffer.from(objectHeader), deflateSync(object.data)]);
+      const pack = Buffer.concat([content, createHash("sha1").update(content).digest()]);
+      if (wanted === blob) reads++;
+      return new Response(Buffer.concat([...(wanted === commit ? [pkt(`shallow ${commit}\n`)] : []), Buffer.from("0000"), pkt("NAK\n"), pack]), { headers: { "content-type": "application/x-git-upload-pack-result" } });
+    },
+  };
+}
 
 const now = () => Date.parse("2099-01-01T00:00:00Z");
 function fixture(withCommons = true) {
@@ -86,14 +119,14 @@ test("a package requiring Commons stops with host commons-missing before any ins
     v: 1, entry: declaration.id, definitions: [declaration], host: { execution: "recorded-do", profiles: ["restricted@1"], requires: ["commons"] },
     projections: {}, capabilities: [], roles: { member: ["app.edit"], admin: ["app.found", "app.edit"] }, predecessor: null,
   }, presentation: { v: 1, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: b64url(utf8("<p>Commons consumer</p>")) }], descriptions: {} } }, signer);
-  git.bytes = packet.bytes; git.reads = 0;
+  const git = packagePeer(packet.bytes);
   peer.scopes.get(peer.directory.scope)!.definition = TRUSTED_APPLICATION_COHORT.directory;
   peer.scopes.get(peer.rules.scope)!.definition = TRUSTED_APPLICATION_COHORT.rules;
   const signed: string[] = [];
   const service = new McpService({ service: SERVICE, signer: { key: signer.key, sign: async bytes => { signed.push(new TextDecoder().decode(bytes)); return signer.sign(bytes); } }, fetch: peer.fetch, now,
     config: { read: async () => peer.config(), addRoot: async () => {} }, custody: memoryStore(),
-    applicationTrust: JSON.stringify([{ release: packet.ids.release, publisher: signer.key, host: "packages.test" }]) });
-  const args = { uri: `git+https://packages.test/apps.git/@${"c".repeat(40)}/application.dap.json`, release: packet.ids.release, roles: [], values: {}, idempotencyKey: "required-commons" };
+    applicationFetch: git.fetch, applicationTrust: JSON.stringify([{ release: packet.ids.release, publisher: signer.key, host: "packages.test" }]) });
+  const args = { uri: git.uri, release: packet.ids.release, roles: [], values: {}, idempotencyKey: "required-commons" };
   const refused = await service.call("install_application", args);
   expect(refused.structuredContent["error"]).toBe("commons-missing");
   expect(refused.structuredContent["next"]).toContain("not a recorded native refusal");
@@ -119,16 +152,16 @@ test("Commons cohort installation uses the declared device proof and exact Membe
   const packet = await packApplication2({ name: "test.commons-device", version: "1", semantic: {
     ...semantic, host: { ...semantic.host, requires: ["commons"] },
   }, presentation }, signer);
-  git.bytes = packet.bytes; git.reads = 0;
+  const git = packagePeer(packet.bytes);
   peer.scopes.get(peer.directory.scope)!.definition = COMMONS_COHORT.directory;
   peer.scopes.get(peer.rules.scope)!.definition = COMMONS_COHORT.rules;
   peer.scopes.get(peer.membership.scope)!.definition = COMMONS_COHORT.membership;
   const signed: string[] = [], custody = memoryStore();
   const service = new McpService({ service: SERVICE, signer: { key: signer.key, sign: async bytes => { signed.push(new TextDecoder().decode(bytes)); return signer.sign(bytes); } }, fetch: peer.fetch, now,
     config: { read: async () => peer.config(), addRoot: async () => {} }, custody,
-    applicationTrust: JSON.stringify([{ release: packet.ids.release, publisher: signer.key, host: "packages.test" }]) });
+    applicationFetch: git.fetch, applicationTrust: JSON.stringify([{ release: packet.ids.release, publisher: signer.key, host: "packages.test" }]) });
   const owner = { membership: peer.membership, member: "@agent" };
-  const args = { uri: `git+https://packages.test/apps.git/@${"c".repeat(40)}/application.dap.json`, release: packet.ids.release, roles: [], values: {}, idempotencyKey: "commons-device" };
+  const args = { uri: git.uri, release: packet.ids.release, roles: [], values: {}, idempotencyKey: "commons-device" };
   expect((await service.call("install_application", args)).structuredContent["error"]).toBe("shape");
   expect(git.reads).toBe(0);
   expect((await service.call("install_application", { ...args, owner })).structuredContent["answer"]).toBe("accepted");
