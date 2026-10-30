@@ -1,6 +1,8 @@
 /** One command's read-only verification work, including authentication and cleanup. */
-import type { ScopeId } from "@generalbusiness/dap-contract";
+import type { Digest, Entry, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import type { Fetch } from "@generalbusiness/dap-client";
+import { canonicalize, entryHash, isDigest, isEntry, isRecord, isScopeRef, isSealed, natural, parseStrict } from "@generalbusiness/dap-bytes";
+import { hashOfBytes } from "@generalbusiness/dap-replay";
 import { failed, stopCommand, usage } from "./command-support.ts";
 
 export interface VerifyLimits { milliseconds: number; bytes: number; requests: number; entries: number }
@@ -31,6 +33,8 @@ export class Verification {
   #bytes = 0;
   #requests = 0;
   #entries = 0;
+  readonly #entryHashes = new Map<string, Digest>();
+  readonly #entryScopes = new Map<ScopeId, string>();
   #completed = 0;
   constructor(options: VerifyOptions = {}) {
     this.limits = { ...VERIFY_LIMITS, ...options.limits };
@@ -65,6 +69,47 @@ export class Verification {
   }
   entries(count: number): void {
     this.check(); if (count > this.limits.entries - this.#entries) this.#stop("entries"); else this.#entries += count; this.check();
+  }
+  #invalidEntry(): never {
+    this.#stop("cancelled");
+    return stopCommand(failed("Cannot verify history: an entry's content, hash or scope frame conflicts with its source. The whole room was not verified."));
+  }
+  #entry(scope: ScopeId, entry: Entry, hash: Digest): void {
+    this.check();
+    if (entry.at.scope !== scope) this.#invalidEntry();
+    const frame = canonicalize(entry.at), knownFrame = this.#entryScopes.get(scope);
+    if (knownFrame !== undefined && knownFrame !== frame) this.#invalidEntry();
+    const position = canonicalize([scope, entry.at.inc, entry.seq]), knownHash = this.#entryHashes.get(position);
+    if (knownHash !== undefined) {
+      if (knownHash !== hash) this.#invalidEntry();
+      return;
+    }
+    // A duplicate is allowed at the exact ceiling. A new identity is charged
+    // before either map retains it. Neither map holds entry bodies or proof.
+    this.entries(1);
+    this.#entryScopes.set(scope, frame); this.#entryHashes.set(position, hash);
+  }
+  /** Account for decoded discovery content, without proving its history. */
+  sealedEntry(scope: ScopeId, value: unknown): void {
+    this.check();
+    if (!isSealed(value)) this.#invalidEntry();
+    let hash: Digest;
+    try { hash = entryHash(value.entry); } catch { this.#invalidEntry(); }
+    if (hash !== value.hash) this.#invalidEntry();
+    this.#entry(scope, value.entry, hash);
+  }
+  /** Stored identity uses original bytes, never a canonicalized replacement. */
+  storedEntry(scope: ScopeId, at: ScopeRef, value: unknown): void {
+    this.check();
+    if (!isScopeRef(at) || at.scope !== scope || !isRecord(value)
+      || Object.keys(value).length !== 3 || !natural(value["seq"]) || !isDigest(value["hash"]) || typeof value["bytes"] !== "string") this.#invalidEntry();
+    const hash = hashOfBytes(value["bytes"]);
+    if (hash !== value["hash"]) this.#invalidEntry();
+    let entry: unknown;
+    try { entry = parseStrict(value["bytes"]); } catch { this.#invalidEntry(); }
+    if (canonicalize(entry) !== value["bytes"] || !isEntry(entry)
+      || entry.seq !== value["seq"] || canonicalize(entry.at) !== canonicalize(at)) this.#invalidEntry();
+    this.#entry(scope, entry, hash);
   }
   historyRead(): void {
     this.check(); if (this.#entries === this.limits.entries) this.#stop("entries");
@@ -116,5 +161,5 @@ export class Verification {
       return new Proxy(response, { get: (target, property) => property === "body" ? wrapped : Reflect.get(target, property, target) });
     };
   }
-  close(): void { clearTimeout(this.#timer); this.#options.signal?.removeEventListener("abort", this.#cancel); this.#closed = true; }
+  close(): void { clearTimeout(this.#timer); this.#options.signal?.removeEventListener("abort", this.#cancel); this.#closed = true; this.#entryHashes.clear(); this.#entryScopes.clear(); }
 }
