@@ -2,7 +2,6 @@
 import { expect, test } from "vitest";
 import type { ReadMinimum, ApplicationProjectionQuery, BehindRead, Entry, Receipt, ScopeRef, SignedRead } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, parseStrict, readMinimumParameter, unb64url, verifySignedRead } from "@generalbusiness/dap-bytes";
-import { applicationProjectionQueryDigest } from "@generalbusiness/dap-platform/application-v2";
 import { ScopeHandle, bindingTransport, httpTransport, secretSigner, signedReads, TransportError, type Fetch, type ServiceBinding } from "../src/index.ts";
 const at: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
 const fact = { at, seq: 8, hash: `sha256:${"b".repeat(64)}` as const };
@@ -98,7 +97,8 @@ test("a handle rejects stale successful HTTP and binding replies for every minim
   const head = { seq: fact.seq - 1, hash: fact.hash };
   const summary = { scope: at, status: "active", definition: receipt.definition, time: entry.time, items: [], counts: [] };
   const read = (value: unknown) => ({ ok: true, at: head, value, complete: true });
-  const projection = canonicalize({ ok: true, query: applicationProjectionQueryDigest(query), value: {
+  // Opaque fixed-query fixture. This case tests the minimum, not query decoding.
+  const projection = canonicalize({ ok: true, query: "sha256:060ec77d945819227dc577afd077967aef64e8405ac686555061ada9ae09987d", value: {
     v: 1, scope: at, projection: receipt.definition, at: head, sources: { board: [] },
   } });
   const rpc = bindingTransport({ summary: async () => read(summary), items: async () => read([]),
