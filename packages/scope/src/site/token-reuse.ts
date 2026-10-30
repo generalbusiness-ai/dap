@@ -164,7 +164,14 @@ export class SiteTokenReuse {
       finally {
         // Before createToken entered there is no ambiguous provider effect.
         // Release only our reservation, never a successor or a ready token.
-        if (!mintEntered) this.#sql.exec("DELETE FROM private_site_token WHERE key=? AND generation=? AND state='reserved'", key, generation).toArray();
+        if (!mintEntered) {
+          this.#sql.exec("DELETE FROM private_site_token WHERE key=? AND generation=? AND state='reserved'", key, generation).toArray();
+          try { await flight.deadline.wait(this.#schedule()); }
+          catch {
+            // Keep the original answer if cleanup fails or times out.
+            // A timed-out schedule may still finish in the owner's revision loop.
+          }
+        }
         flight.done = true;
         if (flight.waiters === 0) flight.deadline.close();
         if (this.#flights.get(key) === flight) this.#flights.delete(key);

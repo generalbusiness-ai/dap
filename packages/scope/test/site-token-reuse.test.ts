@@ -178,6 +178,76 @@ test("Site reuse keeps config and remote checks fresh and holds malformed or amb
   });
 });
 
+// Distinct object names select isolated owners through the existing env-only
+// settings map. The production ScopeIndex class, SQL, clock and scheduler run
+// unchanged; these cases do not claim the deployed fixed-name binding.
+for (const { name, keepReady } of [
+  { name: "isolated ScopeIndex Site RPC clears its last alarm after a pre-mint failure", keepReady: false },
+  { name: "isolated ScopeIndex Site RPC preserves a future row's alarm and generation after a pre-mint failure", keepReady: true },
+]) test(name, async () => {
+  const owner = `site-token-idle-${keepReady ? "ready" : "empty"}-${crypto.randomUUID()}`;
+  const object = () => env.SCOPE_INDEX.get(env.SCOPE_INDEX.idFromName(owner)), p = provider(() => Date.now());
+  const snapshot = () => runInDurableObject(object(), async (_instance, state) => ({
+    rows: state.storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='private_site_token'").toArray().length === 0 ? []
+      : state.storage.sql.exec("SELECT key,generation,state,ends,plaintext IS NOT NULL AS hasPlaintext FROM private_site_token ORDER BY key").toArray(),
+    alarm: await state.storage.getAlarm(),
+  }));
+  const call = async (asked: SiteTokenRequest) => {
+    const answer = await (object() as unknown as SiteTokenPort).acquireSiteRead(asked);
+    try {
+      // Copy only metadata, then release the raw RPC reply.
+      return answer.ok ? { ok: true, ends: answer.ends }
+        : answer.reason === "provider" ? { ok: false, reason: answer.reason, step: answer.step }
+        : { ok: false, reason: answer.reason };
+    } finally { (answer as typeof answer & Partial<Disposable>)[Symbol.dispose]?.(); }
+  };
+  let observed: Awaited<ReturnType<typeof snapshot>> | undefined;
+  siteTokenTestSettings.set(owner, p.settings);
+  try {
+    const initial = await snapshot();
+    expect(initial).toEqual({ rows: [], alarm: null });
+    observed = initial;
+    let retained: typeof observed | undefined;
+    if (keepReady) {
+      expect((await call(request())).ok).toBe(true);
+      retained = observed = await snapshot();
+      expect(retained.rows).toHaveLength(1);
+      expect(retained.rows[0]).toMatchObject({ state: "ready", hasPlaintext: 1 });
+      expect(retained.alarm).toBe(retained.rows[0]!["ends"]);
+      expect(Number(retained.alarm)).toBeGreaterThan(Date.now());
+    }
+    p.remote("https://foreign.invalid/replaced");
+    const refused = await call(request("refs/heads/fail-before-mint"));
+    observed = await snapshot();
+    expect(refused).toEqual({ ok: false, reason: "provider", step: "info" });
+    expect(p.counts()).toEqual({ mints: keepReady ? 1 : 0, infos: keepReady ? 2 : 1, revokes: 0 });
+    expect(observed.rows).toEqual(retained?.rows ?? []);
+    expect(observed.alarm).toBe(retained?.alarm ?? null);
+  } finally {
+    try {
+      // After the measured assertions, retire only observed generations and
+      // the observed alarm. No eviction or physical-drain claim follows.
+      const owned = observed;
+      if (owned && (owned.rows.length !== 0 || owned.alarm !== null)) {
+        const retired = await runInDurableObject(object(), async (_instance, state) => {
+          state.storage.transactionSync(() => {
+            for (const row of owned.rows) {
+              if (typeof row["key"] !== "string" || typeof row["generation"] !== "string") throw Error("Site ownership metadata is malformed");
+              state.storage.sql.exec("DELETE FROM private_site_token WHERE key=? AND generation=?", row["key"], row["generation"]).toArray();
+            }
+          });
+          const alarm = await state.storage.getAlarm();
+          const remaining = state.storage.sql.exec("SELECT count(*) AS n FROM private_site_token").toArray()[0]!["n"];
+          // Preserve any successor row or a different, unowned alarm.
+          if (remaining === 0 && alarm !== null && alarm === owned.alarm) await state.storage.deleteAlarm();
+          return { remaining, alarm: await state.storage.getAlarm() };
+        });
+        if (retired.remaining !== 0 || retired.alarm !== null) throw Error("Site cleanup retained an unowned row or alarm");
+      }
+    } finally { siteTokenTestSettings.delete(owner); }
+  }
+});
+
 test("actual fixed-owner Site RPC survives eviction, retains earlier alarms and erases ended plaintext without another read", async () => {
   const p = provider(() => Date.now()), object = () => env.SCOPE_INDEX.get(env.SCOPE_INDEX.idFromName(SCOPE_INDEX_NAME));
   siteTokenTestSettings.set(SCOPE_INDEX_NAME, p.settings);
