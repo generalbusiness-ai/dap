@@ -99,7 +99,8 @@ four enrolled identities, and continues one closed phase at a time. S2
 kit that landed at `6e309b6b`. S3 (`7951d998`) is filed: questions with
 requested approvers, people only, as a declared successor of the issue
 lane. S4, S5 and S6 are filed when the slice before each is promised. S7
-is replaced by J3. S8 and S9 follow J1.
+is replaced by J3. S8 and S9 come later in the order, after J1 and the
+typed-definition items.
 
 **J1. Signed requests that survive a reload or a device switch.**
 Today, an ordinary page act keeps no copy of its signed request. After an
@@ -264,12 +265,16 @@ people-only loop. The decisions, and where each lands:
 2. A `finding` item joins the change lane: file, range, class, severity,
    confidence, failure scenario, source and version, tree; open, resolved
    or irrelevant. A merge guard refuses on open findings from a required
-   source. Data only. Lands as its own slice at J3's position, after the
-   grow room's G4.
+   source. Data only. The survey note placed it at J3's position; J3 has
+   since landed, and the slice is not yet filed or in the order act
+   `a249511f`. It goes after S6 and before J1, so that the exit test's
+   merge guard can refuse on open findings; the planner files it when S6
+   is promised.
 3. The agent wake is part of J5 and lands before the exit test (section
    2b, J5).
 4. The membership version that makes roles data: trusted authors, and
-   reviewer agents recorded apart from approval. Filed as a design now;
+   reviewer agents recorded apart from approval. Its design is to be
+   filed, before the roles-as-viewpoints amendment (section 2c); it is
    built after the exit test measures (section 2e).
 5. The exit test measures human approvals per change, wait on a person,
    and reverts; one tier-0 extent; revert as a link kind (section 2d).
@@ -346,7 +351,9 @@ from now.
   running the exit test on this project's own development, self-hosted.
 - Section 2e adds the items that follow the exit test's measurements.
 - Section 2f records the five decisions of the 26 October re-cut and
-  where each lands.
+  where each lands; the finding slice's place is set after S6, and the
+  membership version's design is to be filed.
+- Section 3 names the agent wake in the row for attention.
 - Section 4 records the views-design gate as open, and J3 and J4 as
   landed.
 - Section 5 adds the order, the J4 acceptance sequence, and the done
