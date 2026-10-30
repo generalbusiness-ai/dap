@@ -8,8 +8,9 @@ The first review covered source I and the 36 closed captures below, including
 failures. Gate 1 failed and gate 2 passed at source I. Checker report
 `9b6930b04f7b8ad4ec6e7d4ec881e2e6fab1c755` requested two production fixes:
 head-bound readiness and native reconstruction without entry-body parsing.
-Those repairs await their own focused checks and full gate. The prior retained
-evidence preserves each actual result. Checker review determines acceptance.
+Source J implements those repairs. Eight focused captures and a new full gate
+passed at J. The prior evidence preserves each actual
+result. Checker review determines acceptance.
 
 A fixed-slot equality guard now obtains complete counts from derived state.
 A room can admit a fresh member beyond the scan bound and refuse an existing
@@ -49,6 +50,27 @@ The old item-slot index, even with the right row count, cannot prove readiness.
 A failed rebuild rolls back. Derived index tables do not change the checkpoint
 or its state digest.
 
+Source J addresses both checker findings. The head check rejects a formerly
+ready marker after a base writer advances the scope and items. The native
+rollforward witness confirms that rebuilding restores the duplicate refusal.
+
+The new native fixture holds 34,000 journal rows with 63,364,507 payload bytes
+and 2,000 current items. Rebuilding returns 34,000 metadata rows in 34 batches.
+It records 28,563 SQL queries, 43,911 rows read, 13,007 rows written and
+2,795,208 returned text bytes. The caller round trip is 98 milliseconds,
+including the constructor, instrumentation and reply. It excludes setup
+and full snapshot assertions. The runtime clock reports 91 milliseconds but
+may freeze or round during synchronous work. That reading is not host wall
+time or CPU. Component CPU is unknown.
+
+This is a direct SQLite fixture that bypasses admission, grants and the item
+ceiling. It does not prove Room A admission or a worst-case maintenance bound.
+All six native cases pass. The readiness control selects one case: its baseline
+passes, while removing the head comparison produces an ordinary AssertionError
+at `fixed-index.test.ts:149`. The duplicate guard returns pass instead of fail.
+The mutant has one failed and four skipped cases. The tool restores the source
+and the capture confirms the clean checkpoint. Its baseline JSON is not retained.
+
 The first native run exposed a real initialization error. `Core.pinned` can run
 after genesis append but before the first ScopeState fold. Source E skips legacy
 rebuilding when that state does not yet exist. The normal genesis fold creates
@@ -66,26 +88,21 @@ The existing forms tests and definition corpus passed in `derive-owning-2`,
 although two new fixture cases still failed there. Source D corrects those
 fixture expectations and passes the three focused cases.
 
-The first full gate passed the kernel, Node, Counting and plain stages.
-Native finished with 843 passed, one failed and two skipped cases. The sole
-failure came from the existing directory partition index fixture. It folded
-a scripted entry without first appending that entry to the native journal.
-The new hash check correctly found no matching held entry. Source G adds the
-scripted append outside the counted fold boundary. It keeps the measured
-fold limits and all assertions intact.
+Gate 1 passed the kernel, Node, Counting and plain stages, then failed the
+existing native directory partition case. Its scripted fold had no preceding
+journal append, so the hash check found no matching held entry. Source G adds
+the append outside the counted fold, preserving all limits and assertions.
 
-The first follow-up could not start tests because localhost listen returned
-EPERM. The next run reached the real case and failed its unchanged query-plan
-assertion. Source H adds assertion diagnostics only. Those diagnostics show
-`USE TEMP B-TREE FOR ORDER BY` in `fixedAffected`.
+The first follow-up failed before tests on localhost listen EPERM. The next
+failed its unchanged query-plan assertion. Source H adds diagnostics only,
+showing `USE TEMP B-TREE FOR ORDER BY` in `fixedAffected`.
 
-Source I changes that query from `ORDER BY s.item,s.slot` to
-`ORDER BY d.item,d.slot`. The join equates those keys. The dependency primary
-key `(seq,hash,item,slot)` supplies the same order after the query fixes
-`seq` and `hash`, so SQLite needs no temporary sort. The scope compiler and
-all four cases in the two owning native files pass. No assertion or deadline
-was weakened. This production repair required a new full gate. The note
-claims no single-file follow-up exception. Gate 2 passed at source I.
+Source I changes `ORDER BY s.item,s.slot` to `ORDER BY d.item,d.slot`.
+The join equates the keys. With `seq` and `hash` fixed, dependency primary key
+`(seq,hash,item,slot)` supplies the same order without a temporary sort. The
+scope compiler and all four cases in two native files pass. No assertion or
+deadline was weakened. This production repair required a full gate, not a
+single-file exception. Gate 2 passed at source I.
 
 The architecture, contract and derive documentation describe complete counts,
 reconstruction and floor behavior. Kernel section 7 explains why this belongs
@@ -132,9 +149,10 @@ unknown beyond these observations.
 ## Evidence
 
 The source base is `4c3330720f8738172da8e6cf34128d8def8d991d`, tree
-`22a9e44bc29ba6d176d3ce841952bab70b27472d`. The frozen diff changes
-26 files with 1,021 insertions and 29 deletions. Table source letters name
-these exact checkpoints and trees:
+`22a9e44bc29ba6d176d3ce841952bab70b27472d`. Source I changed
+26 files with 1,021 insertions and 29 deletions. Source J changes 26 files
+with 1,195 insertions and 31 deletions, excluding this note and its manifest.
+Table source letters name these exact checkpoints and trees:
 
 - A: `4eae958d63e83549fec57d7bfe77ac434141275e`, tree `f6e05717d037a895fae74e994f6db5eddc143c2f`.
 - B: `a0e5cef533078c3f3e047f233eb8ec02b13ff9e0`, tree `8fd1fbbdd48d051fc5bb9dce6594805dcf3084e6`.
@@ -145,31 +163,36 @@ these exact checkpoints and trees:
 - G: `510121a82dc52ad44c241a5b88a22ec0af33db6d`, tree `fea7f1bdbf9c12b78db995cdf4e579b849409d93`.
 - H: `8ee46c84a99f001bb7e2ff13ed757b0aeac1be1b`, tree `46a583b6ac4872b0ae81e792038b21c6250e2bd2`.
 - I: `fe9fefb9e02a600a36b615fb25e7eac83b68ad2b`, tree `943ec3b780772ad016e4ccdae5f566de7770a608`.
+- J: `73528f2d5e0fafaf9a441eb682bbb9f6b12c1698`, tree `cb97eefcddff8c5e15ced326680f583e703330aa`.
 
-The retained evidence root is
+Original 36-capture evidence root:
 `/Users/hughpyle/play/artroom-evidence/2026-10-30-fixed-slot-index`.
-Each table row cites six files under its label: `command.json`, `process.json`,
-`receipt.json`, `source-index.json`, `stdout.log` and `stderr.log`.
-The root index also covers retained source snapshots and extra reports.
-Commands ran from
+Each original label contains `command.json`, `process.json`, `receipt.json`,
+`source-index.json`, `stdout.log` and `stderr.log`. The root index also covers
+source snapshots and extra reports. Commands ran from
 `/Users/hughpyle/play/artroom/.builder-worktrees/fixed-slot-index-20261029`.
-The command column reproduces the recorded argument vector as shell syntax.
-Control commands contain literal replacement strings.
+The table gives original argv as shell syntax, including control replacements.
 
-The two exit numbers mean command status, then capture status. Each closed
-capture reports complete output, a closed process, no timeout, a clean source
-tree and unchanged source bytes after the command. Wall time includes the
-capture's post-command source guards. CPU means recorded host child CPU,
-not guest CPU or a load measurement. All costs use seconds.
+Exit numbers mean command status, then capture status. Each closed capture
+has complete output, a closed process, no timeout and unchanged source bytes
+in a clean tree. Costs use seconds. Wall time includes post-command source
+guards. CPU means host child CPU, not guest CPU or load.
 
-Each stream cell gives its byte count and SHA-256. `E` means zero bytes with
-SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
-The receipt digest identifies the exact `receipt.json` bytes. Each directory
-also retains `command.json` and the source index. The retained collector source is `finalization/fixed-slot-index-collector.py`,
-SHA-256 `59642e19607baa881f46edd6112b8c523d760e8b3c935da09eb74c6f5eb3e3e7`.
-It bounds local retention to 40,000 files, 2 GiB total, 128 MiB of source
-snapshots and 128 MiB for each outer stream. The command timeout appears
-in each row. The pool compatibility row records preparation, not a test.
+Stream cells give bytes and SHA-256. `E` means zero bytes with SHA-256
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+Receipt digests bind exact `receipt.json` bytes. Collector source
+`finalization/fixed-slot-index-collector.py` has SHA-256
+`59642e19607baa881f46edd6112b8c523d760e8b3c935da09eb74c6f5eb3e3e7`.
+Its bounds are 40,000 files, 2 GiB total, 128 MiB of source snapshots and
+128 MiB per outer stream. Each row gives its timeout. Pool compatibility is
+preparation, not a test.
+
+The nine source J rows use the repair evidence root
+`/Users/hughpyle/play/artroom-evidence/2026-10-30-fixed-slot-index-repair-v2`,
+separate from the original root. Their command records pin collector SHA-256
+`f791a622126e9c371f2cfdc8e03e405bf2a8dedad286c322b569605c3bdcd5b0`.
+They record the same file and stream bounds. The original audit and retention
+facts below cover only the original 36 captures.
 
 | Capture and source | Actual command | Outcome; command, capture exits; timeout | Wall; host CPU | Stdout bytes and SHA-256 | Stderr bytes and SHA-256 | Receipt SHA-256 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -209,92 +232,125 @@ in each row. The pool compatibility row records preparation, not a test.
 | `scope-types-6`; I | `npm run typecheck --workspace @generalbusiness/dap-scope` | PASS: compiler context; 0, 0; 600 s | 1.416064291; 6.247039 | 147; `fb2b1b20daea8ec6bdc1bf8b7eceb9b3703b9e4ffe7530b18d9218bb23d34976` | E | `eb5c6d20cce20d5dd8f6201abaafb978366a056abb497e2f9121f3ca2430443e` |
 | `native-fixed-index-3`; I | `npx --no-install vitest run --project scope --reporter=default --reporter=json --outputFile=/private/tmp/artroom-fixed-slot-index-evidence-20261030/native-fixed-index-3/report.json packages/scope/test/fixed-index.test.ts packages/scope/test/directory-partition-index.test.ts` | PASS: all 4 native cases in 2 files; directory plan case and 3 fixed index cases; 0, 0; 600 s | 5.038041958; 8.104072 | 4506; `c097a4ae35e62a90e810a7f7f32481a395fda3c0ba0aaf48edb427f08fe3a657` | E | `7970f82aed8d86a4270b9218540e01f4f9252aedc9ff154f049b7e4ede9a227c` |
 | `gate-2`; I | `npm run gate` | PASS: kernel, Node 80, Counting 56, plain 3115 passed with 1 skipped, native 844 passed with 2 skipped; 0, 0; 7200 s | 1064.656494208; 2264.714802 | 6249; `77906504570708ccb6e0d9d96371f6946d90018c6c4e8b8ba425d3ed0b8f50ff` | E | `a7b12c696e7626c35dfe6aafb70a285332477ebe45eba8066ee225bd38d447a8` |
+| `scope-types-repair-1`; J | `npm run typecheck --workspace @generalbusiness/dap-scope` | PASS: compiler context; 0, 0; 600 s | 1.798474000; 6.998624 | 147; `fb2b1b20daea8ec6bdc1bf8b7eceb9b3703b9e4ffe7530b18d9218bb23d34976` | E | `782297f38c1b843e41a24507f2b40a72a2ee3bf9be6ab3a48ed9d47255d76e5d` |
+| `security-entry-points-repair-1`; J | `node --test scripts/security-entry-points.test.mjs` | PASS: all 10 Node inventory cases; 0, 0; 600 s | 2.912175167; 3.723147 | 1302; `ce8e40c742c6990c73348b64f6bec2d99c9286a7a7069dd5ef70dea9c5caf3c3` | E | `dc9742beeaf98c3850d9b8bc9053d94ecb4e58c64df75407cd5f65c98bca1827` |
+| `derive-fixed-repair-1`; J | `npx --no-install vitest run --project derive --reporter=default --reporter=json --outputFile=/private/tmp/artroom-fixed-slot-index-repair-evidence-20261030/derive-fixed-repair-1/report.json packages/derive/test/fixed-slot-index.test.ts` | PASS: all 3 fixed index cases; 0, 0; 600 s | 1.759332750; 2.279419 | 438; `9900ab17025f6fb0764e54e77012f3899f1e4a0f1d21ec64065833ec3a4f1e9b` | E | `05a33fa1722ef8037fcfbbdbf4e44bcedd2d93cc388455239b9cc4a5048f7701` |
+| `replay-view-repair-1`; J | `npx --no-install vitest run --project replay --reporter=default --reporter=json --outputFile=/private/tmp/artroom-fixed-slot-index-repair-evidence-20261030/replay-view-repair-1/report.json packages/replay/test/view.test.ts` | PASS: all 4 historical view cases; 0, 0; 600 s | 1.857807542; 2.399143 | 425; `6e5945baf9d72c1fff2a54d43f8e79a46e4a8f690344876343176c4938e306ba` | E | `117649f099dfc317f36a0dfc2d1487fb3403a47c39748181e1ea1158edcf226b` |
+| `replay-types-repair-1`; J | `npm run typecheck --workspace @generalbusiness/dap-replay` | PASS: compiler context; 0, 0; 600 s | 1.174663750; 3.660198 | 135; `bfa936e6ac3350bc231de0d8a02765e43afc255bf7b9ea23aa4213cb09752357` | E | `376f77a2cf2afc3f3a5bb3e07b71292fe7fad9c2bf03ab319b96fb5ad91d6971` |
+| `derive-types-repair-1`; J | `npm run typecheck --workspace @generalbusiness/dap-derive` | PASS: compiler context; 0, 0; 600 s | 0.975088833; 3.132350 | 106; `9c0d241243af93b4407c0403ed23829f628c596c3d1f35cfbf03a16817e14beb` | E | `9168a6c9b9e295597b7c4ef1e14051d3d559dcae6b2eb5cca4de7036e6f1925d` |
+| `native-fixed-repair-1`; J | `npx --no-install vitest run --project scope --reporter=default --reporter=json --outputFile=/private/tmp/artroom-fixed-slot-index-repair-evidence-20261030/native-fixed-repair-1/report.json packages/scope/test/fixed-index.test.ts packages/scope/test/directory-partition-index.test.ts` | PASS: all 6 native cases in 2 files; includes rollforward and metadata rebuild; 0, 0; 600 s | 10.525058834; 12.733821 | 7200; `739ea6200bf9bac2e0add392e3263f8684a436ad55843cd140e653978c1334c6` | E | `075c95050d659a1700912695fda5e424fc70b569b3286d792bd9b22d8ad34bf0` |
+| `control-ready-head-repair-1`; J | `node scripts/control.mjs packages/scope/src/sqlite.ts 'canonicalize(marker["head"]) === canonicalize(head)' true --expect 'rollforward rebuilds' -- packages/scope test/fixed-index.test.ts -t 'rollforward rebuilds'` | DISTINGUISHES: baseline 1 passed; mutant 1 ordinary AssertionError, 4 skipped at line 149; restored; 0, 0; 600 s | 9.857396667; 12.557046 | E | 4059; `7c89b8943e511f49a815daf15caa21571faec47d5168886a47f40ed5d989ed4f` | `c1cc1481957c00184663c68a8ff91efd16f38574e8257416740da417c5a968f0` |
+| `gate-repair-1`; J | `npm run gate` | PASS: kernel, Node 80, Counting 56, plain 3115 passed with 1 skipped, native 846 passed with 2 skipped; 0, 0; 7200 s | 1087.367091334; 2308.904787 | 6250; `ba63d884a806774313b479f63e37d8195bc0a7df474fa4d0702f5775bffc420b` | E | `a35995e70878bb7c3ace1cc5fe89c97d7cd62262d36873d859c3d5dd69631b3b` |
 
-The two controls run the three-case owning file before and after one narrow
-change. Disabling fixed-index dispatch changes an expected write to unavailable
-at `fixed-slot-index.test.ts:23`. Omitting floor dependency rekeying leaves a
-count of one where line 56 expects zero. Both mutants fail with ordinary
-AssertionError results. Each control restores its source bytes, and its capture
-confirms the original clean checkpoint afterward. Neither failure comes from
-an import or setup error. The standard control tool retains its baseline count
-summary and full mutant output. It does not retain the baseline internal JSON.
+The original two controls restore the clean source checkpoint. Mutants produce ordinary
+AssertionError: write becomes unavailable at `fixed-slot-index.test.ts:23`, or
+line 56 counts one instead of zero. Neither fails on import or setup. The tool
+retains baseline counts and full mutant output, not baseline internal JSON.
 
-The room capture reports 184.973967708 seconds wall time and 197.349515 seconds
-of host child CPU. Its machine snapshot at 00:46:53.332894 UTC falls between
-capture start at 00:46:50.103620 and finish at 00:49:55.078332. The host was
-Darwin arm64, Mac17,7, with 18 logical CPUs and 64 GiB of memory. Node was
-v26.13.0 and npm was 11.20.0. The single load snapshot was 1.43, 1.28, 1.30.
-It does not describe continuous load, cache warmth or other concurrent work.
-The retained source is `operator-inputs/machine-room-1.json`.
+`operator-inputs/machine-room-1.json` records a snapshot at 00:46:53.332894 UTC
+within the room capture, 00:46:50.103620 to 00:49:55.078332. The host was
+Darwin arm64, Mac17,7, with 18 logical CPUs, 64 GiB of memory, Node v26.13.0
+and npm 11.20.0. Load was 1.43, 1.28, 1.30. This single snapshot does not
+establish continuous load, cache warmth or other concurrent work.
 
-Gate 2 completed at source I with all five test stages passed. It records
-80 Node cases, 56 Counting cases, 3,115 plain cases passed with one skipped,
-and 844 native cases passed with two skipped. All terminal evidence is
-complete. The native observer covers 241 scope modules only partially.
-It records 72 unknown or suite observations and no contradictions. Those
-observations do not establish callback completeness.
+Gate 2 and the repair gate each have complete terminal evidence for all five
+stages. Each scope observer partially covers 241 modules, with 72 unknown or
+suite observations and no contradictions. This does not prove callback
+completeness.
 
-Gate 2 ran from 01:18:28.078458 to 01:36:12.736089 UTC. The host observation
-in `operator-inputs/machine-gate-2.json` at 01:20:23.547835 records Darwin
-arm64, Node v26.13.0 and npm 11.20.0. Its sysctl reads were denied. The
-separate `operator-inputs/machine-gate-2-sysctl.json` observation at
-01:20:40.142538 succeeds. It records Mac17,7, 18 logical CPUs, 64 GiB of
-memory and load 4.44, 2.88, 2.59. Both observations fall within the gate.
-They do not establish continuous load, per-command load or cache warmth.
+Gate 2 ran from 01:18:28.078458 to 01:36:12.736089 UTC.
+`operator-inputs/machine-gate-2.json` at 01:20:23.547835 records the same
+Darwin architecture and tool versions, but sysctl reads were denied.
+`operator-inputs/machine-gate-2-sysctl.json` at 01:20:40.142538 confirms the
+same hardware and records load 4.44, 2.88, 2.59. Both observations fall within
+the gate. Neither establishes continuous load, per-command load or cache warmth.
 
-Gate 1's separate observation in `operator-inputs/machine-gate-1.json` at
-01:01:55.056308 UTC records the same host and tool versions, with load
-3.75, 3.34, 2.48. The other table rows have no per-command load or cache
-observation; those conditions remain unknown.
+`operator-inputs/machine-gate-1.json` at 01:01:55.056308 UTC records the same
+host and tools, with load 3.75, 3.34, 2.48. Other rows have no per-command
+load or cache observation. Gate 1 ran `npm ci`. Gate 2 and the repair gate skipped installation
+after verifying the dependency view against the package-lock stamp. These
+observations do not establish why the gate timings differ.
 
-Gate 1 ran `npm ci`. Gate 2 skipped installation because the dependency view
-already matched the verified package-lock stamp. Neither the install difference
-nor the host snapshots establish why the two gate timings differ.
+The original 36 captures sum to 2,620.196451661 seconds elapsed and
+5,344.236107 seconds of host child CPU, within 00:40:04.170037 to
+01:36:12.736089 UTC. The nine repair captures add 1,118.227088877 seconds
+elapsed and 2,356.388535 seconds host CPU, within 02:20:43.872928 to
+02:39:54.706811 UTC. All 45 total 3,738.423540538 seconds elapsed and
+7,700.624642 seconds host CPU. Their combined window is 00:40:04.170037 to
+02:39:54.706811 UTC. These sums include post-guards and exclude setup,
+inspection and retention outside captures. Parallel elapsed sums are not one
+pipeline or editing-session wall time.
 
-The 36 captured validation commands sum to 2,620.196451661 seconds of
-elapsed time and 5,344.236107 seconds of host child CPU. Commands ran in
-parallel, so the elapsed sum is not one pipeline or editing-session wall
-time. It includes capture post-guards. Setup, source inspections and retention
-outside those captures are excluded. The command window runs from
-00:40:04.170037 to 01:36:12.736089 UTC.
-
-The focused room's complete outcomes and metadata remain in
-`native-membership-room-1/report.json`. The original gate logs are
-`operator-inputs/gate-detail-gate-1/test.log` and
-`operator-inputs/gate-detail-gate-2/test.log`. Their five-stage ledgers are
+The focused room outcomes and metadata are in
+`native-membership-room-1/report.json`. Both original gates retain whole original
+temporary output. Logs are `operator-inputs/gate-detail-gate-1/test.log` and
+`operator-inputs/gate-detail-gate-2/test.log`, with five-stage ledgers at
 `operator-inputs/gate-detail-gate-1/test-evidence/stages.json` and
 `operator-inputs/gate-detail-gate-2/test-evidence/stages.json`.
+Copy records `operator-inputs/gate-detail-gate-1-copy-record.json` and
+`operator-inputs/gate-detail-gate-2-copy-record.json` bind original paths,
+byte and mode inventories, internal observer streams and the absence of an
+enabled external progress binding. Retention proves neither callback coverage
+nor physical drain.
 
-Both gates retain their whole original temporary output. The copy records
-`operator-inputs/gate-detail-gate-1-copy-record.json` and
-`operator-inputs/gate-detail-gate-2-copy-record.json` bind actual original
-paths, byte and mode inventories, internal observer streams and the explicit
-absence of an enabled external progress binding. This supplies no callback
-coverage or physical-drain claim.
-
-The six original generated Counting files for each gate are bound by
+Each gate retains six original generated Counting files. Copy records
 `operator-inputs/counting-generated-gate-1-copy-record.json` and
-`operator-inputs/counting-generated-gate-2-copy-record.json`, with their own
-indices at `operator-inputs/counting-generated-gate-1/SHA256SUMS` and
-`operator-inputs/counting-generated-gate-2/SHA256SUMS`. Their original
-source/output paths and metafiles remain unchanged. These are generated
-Node witnesses.
+`operator-inputs/counting-generated-gate-2-copy-record.json` bind them.
+Indices are `operator-inputs/counting-generated-gate-1/SHA256SUMS` and
+`operator-inputs/counting-generated-gate-2/SHA256SUMS`. Original source and
+output paths and metafiles remain unchanged. These are generated Node witnesses.
 
-`operator-inputs/source-preparations-copy-record.json` preserves initial
-locked dependency setup, AST source inspections and a retrospective system
-SQLite source probe. They are qualified operator inputs, not frozen project
-acceptance captures. The native diagnostic and owning tests supply the SQL
-plan evidence. `operator-inputs/retention-callers-copy-record.json` binds the
-four closed retention callers.
+`operator-inputs/source-preparations-copy-record.json` binds initial locked
+dependency setup, AST inspections and a retrospective system SQLite probe.
+These operator inputs are not frozen project acceptance captures. Native
+diagnostics and owning tests supply SQL plan evidence.
+`operator-inputs/retention-callers-copy-record.json` binds four closed callers.
 
-The standard-library audit in `finalization/receipt-audit.json` validates all
-36 captures, including failures, with no missing, integrity or closure issue.
-It runs no project code. The manifest binds every cited file and the complete
-`operator-inputs` and `finalization` units by their own indices. The root
-`SHA256SUMS` covers every retained file. Finalization removes all write bits
-and verifies every retained byte and mode again. Keep the evidence read-only
-for at least 30 days after landing. Removal requires a planner act naming
-this manifest.
+The standard-library audit `finalization/receipt-audit.json` finds no missing,
+integrity or closure issue in all 36 captures, including failures. It runs no
+project code. The original manifest binds those citations and the complete indexed
+`operator-inputs` and `finalization` units. Its root `SHA256SUMS` covers every
+retained file in that evidence root. Finalization removes write bits and rechecks all bytes and modes.
+Keep evidence read-only for at least 30 days after landing. Removal requires a
+planner act naming this manifest.
+
+In the repair gate, the 2,000-member room case passed in 217,194 milliseconds.
+Its whole-room measurement hit the byte boundary after 104,396 milliseconds:
+268,437,957 bytes, 30,076 HTTP attempts and 58,379 entries. Discovery completed
+and observed all 2,001 Inbox Session histories. This is not whole-room verification.
+The rebuild callback round trip was 134 milliseconds, separate from the focused
+98-millisecond observation. Its runtime clock read 104 milliseconds with the
+same freeze and rounding qualification. Component CPU remains unknown. The
+fixture sizes and SQL counts match the focused observation.
+
+`operator-inputs/machine-gate-repair-1.json` at 02:23:09.992231 UTC records
+the same Mac17,7, 18 logical CPUs, 64 GiB, Node v26.13.0 and npm 11.20.0,
+with load 3.84, 2.82, 2.30. It falls within the repair gate, not a continuous
+load or cache observation.
+
+Repair copy records `operator-inputs/gate-detail-gate-repair-1-copy-record.json`
+and `operator-inputs/counting-generated-gate-repair-1-copy-record.json` confirm
+copies with original modes. Gate detail contains 27 files and 49,078,032 bytes,
+including `operator-inputs/gate-detail-gate-repair-1/test.log`. Counting contains
+six generated files and 1,020,130 bytes plus its index,
+`operator-inputs/counting-generated-gate-repair-1/SHA256SUMS`. Both units are retained under the repair root.
+
+The first evidence prepare failed on a helper variable collision; its caller
+and partial copy are preserved. It did not change the gate result. The
+corrected attempt uses a fresh root; see
+`operator-inputs/evidence-prepare-failure/failure.json`.
+
+Focused native outcomes are in `native-fixed-repair-1/report.json`; the repair
+stage ledger is `operator-inputs/gate-detail-gate-repair-1/test-evidence/stages.json`.
+The repair root's `finalization/receipt-audit.json` checks all nine repair
+captures. The original audit still covers only its 36 captures. The current
+manifest keeps repair fields at top and the complete prior manifest under
+`priorEvidence`, preserving its 247 cited files and two indexed units. Each
+root retains its own complete `SHA256SUMS`. Finalization verifies the new
+root's bytes, modes and citations before and after removing write bits. Keep
+all retained evidence read-only for at least 30 days after landing; removal requires a
+planner act naming the manifest. All citations remain listed even when the
+manifest exceeds the 40 KiB advisory size; this note's 40 KiB bound is enforced.
 
 ## Limits and remaining work
 
@@ -318,15 +374,13 @@ The native index tests include an explicitly seeded migration fixture. They
 also exercise a genuinely judged opening that rolls back at scope-full and
 a fixture-judged floor whose append, fold, payload deletion and eviction run
 through native SQLite. Scripted authority, archive receipts and seeded rows
-do not prove native archive admission. The three passing cases cover the
+do not prove native archive admission. Those original three cases cover the
 stated index invariants, not every deployment lifecycle.
 
-Index lookups avoid scanning matching items for this admitted predicate.
-Legacy initialization still reads current items and held hashes. Rekeying
-still visits affected dependencies. This work has not measured their worst
-case and makes no constant-cost claim. It raises no scan or verification
-limit. It does not claim a deployment, a CPU reduction or complete whole-room
-verification.
+The admitted predicate avoids item scans. Legacy rebuilds read current items
+and held hashes. Rekeying visits affected dependencies. Worst-case costs remain
+unmeasured, with no constant-cost claim. This work raises no scan or verification
+limit and claims no deployment, CPU reduction or complete room verification.
 
 The open limits remain with load findings request
 `a6847815c845145adddca1476342e52b6a8baf82`: deployed CPU, production load
@@ -337,10 +391,14 @@ across scopes within one `verify --all` run. It calls for unchanged defaults
 and a complete 2,000-member verification witness. That work remains separate
 from this bounded measurement. This note does not borrow its future result.
 
-Gate 2 passed at source I. The original gate 1 failure remains recorded
-above. The evidence checkpoint is source I and tree
-`943ec3b780772ad016e4ccdae5f566de7770a608`. The review head adds only this
+The first review used source I and tree
+`943ec3b780772ad016e4ccdae5f566de7770a608`. Its review head added only this
 note and `notes/implementation/evidence/2026-10-30-fixed-slot-index.manifest.json`.
-Source and tests remain unchanged after the passing gate; the documentation
-follow-up rule in `docs/testing.md` applies. Checker review determines
-acceptance separately from evidence integrity and retention.
+Source and tests stayed unchanged between gate 2 and that review, under the
+documentation follow-up rule in `docs/testing.md`. The later production repairs
+are source J. The old audit and manifest do not cover their captures. Checker
+review determines acceptance separately from evidence integrity and retention.
+
+The repair gate passed at source J. The final review head adds only this note
+and its manifest after that gate. Source and tests are unchanged; the
+documentation follow-up rule in `docs/testing.md` applies.
