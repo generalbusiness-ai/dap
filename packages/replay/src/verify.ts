@@ -225,6 +225,36 @@ export interface Verification {
   unusedPublishedAnchors?: readonly { readonly scope: ScopeId; readonly commit: string; readonly fact: FactRef; readonly from: number; readonly through: number; readonly legacy?: true }[];
 }
 
+const ROOT_TOKEN: unique symbol = Symbol("room verification root");
+/** Provisional only: a later root may supply or contradict shared evidence. */
+export interface PendingRoot {
+  readonly token: { readonly [ROOT_TOKEN]: true };
+  readonly requested: ScopeId;
+  readonly final: false;
+}
+export type RoomRootResult = {
+  readonly requested: ScopeId; readonly target: FactRef; readonly mode: Report["mode"];
+  readonly result: Report["result"]; readonly why: string | null;
+  readonly at?: FactRef; readonly name?: MismatchName; readonly missing: readonly FactRef[];
+} | { readonly requested: ScopeId; readonly result: "not-read"; readonly why: string; readonly reason: string | null };
+/** One command-local proof. Coverage segments name the root that proved them. */
+export interface FinishedRoom {
+  readonly roots: readonly RoomRootResult[];
+  readonly coverage: readonly (Report["coverage"][number] & { readonly root: ScopeId })[];
+  readonly trusts: Report["trusts"];
+  readonly anchors: Report["anchors"];
+  readonly dependencies: Report["dependencies"];
+  readonly redacted: Report["redacted"];
+  readonly texts: readonly { readonly digest: Digest; readonly source: ScopeRef; readonly root: ScopeId; readonly consumers: readonly ScopeId[] }[];
+  readonly omittedTexts?: Report["omittedTexts"];
+  readonly incompleteBytes?: Report["incompleteBytes"];
+}
+export interface RoomVerification {
+  checkTarget(target: { scope: ScopeId; head?: Head }): Promise<PendingRoot>;
+  finish(): Promise<FinishedRoom>;
+  close(): void;
+}
+
 /**
  * The target's history could not be read at all, so there is nothing to
  * report on. When the source said why, the message ends `cannot be read:`
@@ -360,6 +390,13 @@ interface Run {
   revised: { kind: string; at: number[] } | null;
   /** Section 16.4: the bytes of each snapshot of staged refs that a checked outcome entry names, by digest, each checked against its digest. */
   snapshots: Map<Digest, string>;
+  /** A failed step may have mutated the fold; repair only from checked bytes. */
+  failed?: boolean;
+}
+
+interface RoomRoot {
+  requested: ScopeId; expected: Head | null; run: Run | null; head: Head | null;
+  stop: Stop | null; unread: SourceError | null;
 }
 
 /**
@@ -414,8 +451,8 @@ class Verifier {
   readonly #textBounds = new Map<ScopeId, Map<Digest, { seq: number; max: number }[]>>();
   readonly #source: HistorySource;
   readonly #mode: Report["mode"];
-  readonly #target: ScopeId;
-  readonly #expected: Head | null;
+  #target: ScopeId;
+  #expected: Head | null;
   readonly #anchors: readonly Anchor[];
   readonly #publications: ReadonlyMap<ScopeId, PublishedAnchorPolicy> | undefined;
   readonly #consulted = new Map<ScopeId, Map<PublishedAnchorPolicy["ranges"][number], Set<FactRef>>>();
@@ -434,6 +471,7 @@ class Verifier {
   readonly #coded = new Set<PlatformDefinition>();
   /** The foreign facts proven, by scope, position and hash: by replay of their source, or by an anchor. */
   readonly #proven = new Map<string, "replayed" | "anchored">();
+  readonly #proofFacts = new Map<string, FactRef>();
   /** Canonical body counts may also be explicit omission trust. A decoded
    * field size is known only from actual content, never from that count. */
   readonly #knownTexts = new Map<Digest, { bytes: number; size: number | null; omitted?: true }>();
@@ -458,10 +496,39 @@ class Verifier {
   readonly #tally: Tally;
   #entries = 0;
   #bytes = 0;
+  readonly #room: boolean;
+  #closed = false;
+  #terminal: Stop | null = null;
+  #version = 0;
+  readonly #roomRoots: RoomRoot[] = [];
+  readonly #followedRoots = new Set<ScopeId>();
+  readonly #links = new Map<ScopeId, Set<ScopeId>>();
+  readonly #viaRoot = new Map<ScopeId, ScopeId>();
+  readonly #segments = new Map<ScopeId, { from: number; through: number; root: ScopeId }[]>();
+  readonly #blocked = new Map<ScopeId, { from: number; stop: Stop }>();
+  readonly #entryKeys = new Set<string>();
+  readonly #retainedCache = new Map<string, RetainedInput>();
+  readonly #textOrigins = new Map<Digest, { root: ScopeId; fact: FactRef }>();
+  readonly #sharedTexts = new Map<Digest, Set<ScopeId>>();
+  readonly #missingAtBirth = new Set<string>();
+  readonly #successful = new Set<string>();
 
-  constructor(source: HistorySource, options: Options, tally: Tally = { folds: 0, values: 0, states: 0, runs: 0, owed: 0 }) {
+  constructor(source: HistorySource, options: Options, tally: Tally = { folds: 0, values: 0, states: 0, runs: 0, owed: 0 }, room = false) {
+    this.#room = room;
     this.#tally = tally;
-    this.#source = source;
+    // A successful body is immutable input within this owner. Cached replies
+    // cost no invented wire bytes; every actual source call is still charged.
+    const retained: HistorySource["retained"] = async (scope, kind, digest, allow, domain) => {
+      this.#live();
+      const key = canonicalize([scope, kind, domain ?? null, digest]), cached = this.#retainedCache.get(key);
+      if (cached) return { ok: true, input: cached, bytes: 0 };
+      const got = await source.retained(scope, kind, digest, allow, domain);
+      this.#live();
+      return got;
+    };
+    this.#source = room ? { page: async (...args) => { this.#live(); const got = await source.page(...args); this.#live(); return got; }, retained,
+      ...(source.omittedText ? { omittedText: async (...args: Parameters<NonNullable<HistorySource["omittedText"]>>) => { this.#live(); const got = await source.omittedText!(...args); this.#live(); return got; } } : {}),
+      ...(source.floorReceipt ? { floorReceipt: async (...args: Parameters<NonNullable<HistorySource["floorReceipt"]>>) => { this.#live(); const got = await source.floorReceipt!(...args); this.#live(); return got; } } : {}) } : source;
     this.#mode = options.mode;
     this.#target = options.scope;
     this.#expected = options.head ?? null;
@@ -478,15 +545,226 @@ class Verifier {
     this.#grants = options.grants ?? "proven";
   }
 
+  #live(): void { if (this.#closed) throw new Error("room verification is closed"); }
+  #trust(trust: Trust): void { this.#live(); this.#trusts.add(trust); }
+
+  close(): void {
+    this.#closed = true;
+    this.#runs.clear(); this.#proven.clear(); this.#proofFacts.clear(); this.#values.clear();
+    this.#retainedCache.clear(); this.#knownTexts.clear(); this.#textBounds.clear();
+    this.#needs.clear(); this.#links.clear(); this.#segments.clear(); this.#roomRoots.length = 0;
+    this.#viaRoot.clear();
+    this.#entryKeys.clear(); this.#blocked.clear(); this.#followedRoots.clear();
+    this.#textOrigins.clear(); this.#sharedTexts.clear(); this.#successful.clear(); this.#missingAtBirth.clear();
+    this.#textCounts.clear(); this.#omittedTexts.clear(); this.#consulted.clear(); this.#coded.clear(); this.#trusts.clear();
+    this.#anchored.length = 0; this.#redacted.length = 0; this.#unwalked.length = 0; this.#checking.length = 0;
+  }
+
+  /** New roots lower distances only along edges the proof actually followed. */
+  #lowerDepths(start: ScopeId, root = false): void {
+    const queue = [start], first = this.#runs.get(start);
+    if (root && first) { first.depth = 0; this.#viaRoot.set(start, start); }
+    for (let i = 0; i < queue.length; i++) {
+      const run = this.#runs.get(queue[i]!); if (!run) continue;
+      for (const id of this.#links.get(run.id) ?? []) {
+        const child = this.#runs.get(id);
+        if (child && (child.depth > run.depth + 1 || child.depth === run.depth + 1 && !this.#viaRoot.has(id))) {
+          child.depth = run.depth + 1; this.#viaRoot.set(id, this.#viaRoot.get(run.id) ?? run.id); queue.push(id);
+        }
+      }
+    }
+  }
+
+  async checkRoomTarget(asked: { scope: ScopeId; head?: Head }): Promise<void> {
+    this.#live();
+    const root: RoomRoot = { requested: asked.scope, expected: asked.head ?? null, run: null, head: null, stop: null, unread: null };
+    this.#roomRoots.push(root);
+    this.#target = root.requested; this.#expected = root.expected;
+    try {
+      if (this.#terminal) throw this.#terminal;
+      const cached = this.#runs.get(root.requested);
+      if (cached) { root.run = cached; root.head = { ...cached.head }; }
+      const opened = cached ? await this.#refresh(cached) : await this.#open(root.requested);
+      this.#live();
+      if (typeof opened === "string") throw new SourceError(`the history of ${root.requested} cannot be read: ${opened}`, opened);
+      root.run = opened; root.head = { ...opened.head };
+      if (!this.#followedRoots.has(root.requested)) { this.#followedRoots.add(root.requested); this.#version++; }
+      this.#lowerDepths(root.requested, true);
+      this.#trust("clock");
+      if (this.#mode === "integrity") { this.#trust("judgments"); this.#trust("facts"); } else this.#trust("bounds");
+      if (!root.expected) this.#trust("head");
+      await this.#completeRoot(root);
+    } catch (error) {
+      this.#live();
+      if (error instanceof SourceError) root.unread = error;
+      else if (error instanceof Stop) root.stop = error;
+      else throw error;
+    }
+  }
+
+  async #completeRoot(root: RoomRoot): Promise<void> {
+    const run = root.run!, head = root.head!;
+    this.#target = root.requested; this.#expected = root.expected;
+    if (root.expected && root.expected.seq > head.seq) throw new Stop("mismatch", `the history ends at entry ${head.seq} and does not reach the expected head, entry ${root.expected.seq}`, { at: run.at ?? run.said, ...head });
+    try { await this.#advance(run, head.seq, 0); }
+    catch (error) { if (!(error instanceof Gap)) throw error; throw new Stop("incomplete", `the history could not be read through its head, entry ${head.seq}: ${error.reason}`); }
+    this.#live();
+    if (run.sealed[head.seq]?.hash !== head.hash) throw new Stop("mismatch", "the head the source states is not the hash of its last entry", { at: run.at ?? run.said, ...head });
+    if (root.expected && run.sealed[root.expected.seq]?.hash !== root.expected.hash) throw new Stop("mismatch", `the history forks from the expected head: entry ${root.expected.seq} has another hash than ${root.expected.hash}`, { at: run.at!, seq: root.expected.seq, hash: run.sealed[root.expected.seq]!.hash });
+    root.stop = null;
+  }
+
+  /** Refresh a requested target, never a dependency cache hit. */
+  async #refresh(run: Run): Promise<Run | string> {
+    const got = await this.#page(run.id, 0);
+    if (!got.ok) return got.reason;
+    const page = got.page;
+    const conflict = (why: string, seq = 0): never => {
+      const stop = new Stop("mismatch", why, { at: run.at ?? run.said, seq, hash: run.sealed[seq]?.hash ?? run.head.hash });
+      this.#blocked.set(run.id, { from: seq, stop }); this.#invalidateCoverage(run.id, seq); throw stop;
+    };
+    if (!sameScope(page.scope, run.at ?? run.said)) conflict("the requested scope's refreshed page names another scope, incarnation or kind");
+    if (page.head.seq < run.head.seq || page.head.seq < run.sealed.length - 1) conflict("the requested scope's served head retreated below its earlier head");
+    if (page.entries.length > PAGE_ENTRIES || page.entries.some((stored, i) => stored.seq !== i)) conflict("the requested scope's refreshed page is not the entries from the genesis in order");
+    if (page.next === null ? page.entries.at(-1)?.seq !== page.head.seq : page.next !== page.entries.length || page.next > page.head.seq) conflict("the refreshed page's continuation leaves a gap before its stated head");
+    for (const stored of page.entries) {
+      if (hashOfBytes(stored.bytes) !== stored.hash) conflict("the refreshed entry bytes do not hash to the stated hash", stored.seq);
+      const known = run.sealed[stored.seq], pending = run.read.get(stored.seq);
+      if (known && (known.hash !== stored.hash || canonicalize(known.entry) !== stored.bytes) || pending && (pending.hash !== stored.hash || pending.bytes !== stored.bytes)) conflict("the refreshed page contradicts an earlier entry at the same position", stored.seq);
+    }
+    if (page.head.seq === run.head.seq && page.head.hash !== run.head.hash) conflict("the requested scope's served head changed hash at the same position");
+    const frontier = Math.max(run.next ?? run.head.seq + 1, page.next ?? page.head.seq + 1);
+    for (const stored of page.entries) if (stored.seq >= run.sealed.length) run.read.set(stored.seq, { ...stored });
+    run.next = frontier <= page.head.seq ? frontier : null;
+    run.head = { ...page.head };
+    return run;
+  }
+
+  /** A failed mutable fold never supplies the next attempt's state. Recheck
+   * only the already sealed prefix from held bytes and checked inputs. */
+  async #repair(run: Run): Promise<void> {
+    const sealed = [...run.sealed], pending = new Map(run.read), next = run.next, depth = run.depth;
+    for (const copy of sealed) pending.set(copy.entry.seq, { seq: copy.entry.seq, hash: copy.hash, bytes: canonicalize(copy.entry) });
+    const clean = this.#newRun(run.id, run.said, run.head);
+    Object.assign(run, clean, { read: pending, next, depth, failed: false });
+    if (sealed.length) await this.#advance(run, sealed.length - 1, depth);
+  }
+
+  #recoverRoomDebts(): void {
+    for (const run of this.#runs.values()) for (const digest of run.owed.keys()) {
+      if (!this.#recoverableText(run, digest) || typeof this.#knownTexts.get(digest)?.size !== "number") continue;
+      run.owed.delete(digest);
+      if (this.#textOrigin(digest)?.fact.at.scope !== run.id) {
+        const users = this.#sharedTexts.get(digest) ?? new Set<ScopeId>(); users.add(run.id); this.#sharedTexts.set(digest, users);
+      }
+    }
+  }
+
+  async #settleRoom(): Promise<Map<ScopeId, { from: number; stop: Stop }>> {
+    const findings = new Map<ScopeId, Stop>();
+    let version: number;
+    do {
+      version = this.#version; this.#recoverRoomDebts();
+      // Give every owing scope's actual suffix a chance to supply another's
+      // content before declaring the first insertion-ordered debt missing.
+      for (const run of this.#runs.values()) {
+        if (!run.owed.size || this.#terminal) continue;
+        this.#target = this.#viaRoot.get(run.id) ?? this.#segments.get(run.id)?.[0]?.root ?? this.#target; this.#expected = null;
+        try { await this.#advance(run, run.head.seq, run.depth); findings.delete(run.id); }
+        catch (error) {
+          if (error instanceof Stop) findings.set(run.id, error);
+          else if (error instanceof SourceError || error instanceof Gap) findings.set(run.id, new Stop("incomplete", error.message || (error instanceof Gap ? error.reason : "the source could not be read")));
+          else throw error;
+        }
+        this.#live(); this.#recoverRoomDebts();
+      }
+    } while (version !== this.#version);
+    const problems = new Map(this.#blocked);
+    for (const run of this.#runs.values()) {
+      const owed = run.owed.entries().next().value;
+      if (owed && !problems.has(run.id)) problems.set(run.id, { from: owed[1].seq,
+        stop: findings.get(run.id) ?? new Stop("incomplete", `a retained input is missing: the detached text ${owed[0]}, which no later entry of ${run.id} redacts`, owed[1]) });
+    }
+    return problems;
+  }
+
+  async finishRoom(): Promise<FinishedRoom> {
+    this.#live();
+    // Depth promotion or another root's checked content may discharge a
+    // provisional stop. Rechecks cannot increase the unique-entry count.
+    let version: number;
+    do {
+      version = this.#version;
+      for (const root of this.#roomRoots) {
+        if (!root.run || root.unread || this.#terminal || root.stop && !["incomplete", "missing-dependency"].includes(root.stop.result)) continue;
+        try { await this.#completeRoot(root); }
+        catch (error) {
+          this.#live();
+          if (error instanceof Stop) root.stop = error;
+          else if (error instanceof SourceError) root.unread = error;
+          else throw error;
+        }
+      }
+    } while (version !== this.#version);
+    const problems = await this.#settleRoom();
+    this.#live();
+    // Single-target recovery stops at its first contradiction. The union
+    // must retract every independent contradiction before any final row.
+    for (;;) {
+      try { this.#recoverHistoricalBytes(); break; }
+      catch (error) {
+        if (!(error instanceof Stop)) throw error;
+        if (!error.at) throw error;
+        problems.set(error.at.at.scope, { from: error.at.seq, stop: error });
+      }
+    }
+    for (const [id, problem] of this.#blocked) problems.set(id, problem);
+    for (const at of this.#unwalked) if (!problems.has(at.at.scope)) problems.set(at.at.scope, { from: at.seq, stop: new Stop("incomplete", "the walk of the ancestry record was not derived: this replay reads no commit", at) });
+    for (const span of this.#byteSpans()) if (!problems.has(span.scope.scope)) {
+      const run = this.#runs.get(span.scope.scope)!, copy = run.sealed[span.from]!;
+      problems.set(run.id, { from: span.from, stop: new Stop("incomplete", span.reason, { at: run.at!, seq: span.from, hash: copy.hash }) });
+    }
+    const queue = [...problems.keys()];
+    for (let i = 0; i < queue.length; i++) {
+      const id = queue[i]!, problem = problems.get(id)!;
+      for (const edge of this.#needs.get(id)?.values() ?? []) {
+        if (edge.seq < problem.from || edge.user.seq >= (problems.get(edge.user.at.scope)?.from ?? Infinity)) continue;
+        problems.set(edge.user.at.scope, { from: edge.user.seq, stop: problem.stop }); queue.push(edge.user.at.scope);
+      }
+    }
+    const roots: RoomRootResult[] = this.#roomRoots.map(root => {
+      if (root.unread || !root.run || !root.head) return { requested: root.requested, result: "not-read", why: root.unread?.message ?? root.stop?.why ?? "the target was not read", reason: root.unread?.reason ?? null };
+      const problem = problems.get(root.requested);
+      const stop = problem && problem.from <= root.head.seq ? problem.stop : root.stop ?? (root.run.sealed.length <= root.head.seq ? this.#terminal ?? new Stop("incomplete", "the requested prefix is not covered") : null);
+      return { requested: root.requested, target: { at: root.run.at ?? root.run.said, ...root.head }, mode: this.#mode, result: stop?.result ?? "consistent", why: stop?.why ?? null,
+        ...(stop?.at ? { at: stop.at } : {}), ...(stop ? nameOf(stop) : {}), missing: stop?.missing ? [stop.missing] : [] };
+    });
+    const target = this.#roomRoots.find(root => root.run)?.run;
+    const report = target ? this.#report(target, null).report : null;
+    const missing = new Map<string, FactRef>();
+    for (const root of roots) if (root.result !== "not-read") for (const fact of root.missing) missing.set(canonicalize(fact), fact);
+    const coverage = [...this.#segments].flatMap(([id, rows]) => {
+      const run = this.#runs.get(id)!;
+      return rows.filter(row => row.from < run.sealed.length).map(row => ({ scope: run.at!, ...row, through: Math.min(row.through, run.sealed.length - 1) }));
+    });
+    const texts = [...this.#sharedTexts].flatMap(([digest, users]) => {
+      const origin = this.#textOrigin(digest);
+      return origin ? [{ digest, source: origin.fact.at, root: origin.root, consumers: [...users] }] : [];
+    });
+    this.#live();
+    return { roots, coverage, trusts: report?.trusts ?? [], anchors: report?.anchors ?? [], dependencies: { verified: report?.dependencies.verified ?? 0, anchored: report?.dependencies.anchored ?? 0, missing: [...missing.values()] },
+      redacted: report?.redacted ?? [], texts, ...(report?.omittedTexts ? { omittedTexts: report.omittedTexts } : {}), ...(report?.incompleteBytes ? { incompleteBytes: report.incompleteBytes } : {}) };
+  }
+
   async run(): Promise<Verification> {
     // A limit that stops the first read of the target leaves nothing to report on: it is a read error, like a target that cannot be read.
     const target = await this.#open(this.#target).catch((error: unknown) => {
       throw error instanceof Stop ? new SourceError(`the history of ${this.#target} was not read: ${error.why}`) : error;
     });
     if (typeof target === "string") throw new SourceError(`the history of ${this.#target} cannot be read: ${target}`, target);
-    this.#trusts.add("clock");
-    if (this.#mode === "integrity") { this.#trusts.add("judgments"); this.#trusts.add("facts"); } else this.#trusts.add("bounds");
-    if (!this.#expected) this.#trusts.add("head");
+    this.#trust("clock");
+    if (this.#mode === "integrity") { this.#trust("judgments"); this.#trust("facts"); } else this.#trust("bounds");
+    if (!this.#expected) this.#trust("head");
 
     let stop: Stop | null = null;
     try {
@@ -524,11 +802,15 @@ class Verifier {
     return this.#report(target, stop);
   }
 
-  #depend(source: ScopeId, seq: number, user: FactRef): void {
+  #depend(source: ScopeId, seq: number, user: FactRef, followed = false): void {
     if (source === user.at.scope) return;
     const edges = this.#needs.get(source) ?? new Map<string, { seq: number; user: FactRef }>();
     edges.set(`${user.at.scope}:${user.seq}:${seq}`, { seq, user });
     this.#needs.set(source, edges);
+    if (this.#room && followed) {
+      const links = this.#links.get(user.at.scope) ?? new Set<ScopeId>();
+      links.add(source); this.#links.set(user.at.scope, links); this.#lowerDepths(user.at.scope);
+    }
   }
 
   /** Retract a disproved prefix and every checked entry that depended on it.
@@ -549,7 +831,9 @@ class Verifier {
       }
     }
     for (const [id, run] of this.#runs) {
+      const previous = run.sealed.length;
       run.sealed.length = Math.min(run.sealed.length, cut.get(id)!);
+      if (this.#room && run.sealed.length < previous) run.failed = true;
       for (const [digest, limits] of this.#textBounds.get(id) ?? []) {
         while (limits.length > 0 && limits.at(-1)!.seq >= run.sealed.length) limits.pop();
         if (limits.length === 0) this.#textBounds.get(id)!.delete(digest);
@@ -558,9 +842,16 @@ class Verifier {
       for (const { entry } of run.sealed) for (const effect of entry.effects) if (effect.effect === "redact") for (const digest of effect.texts) run.redactions.set(digest, entry.seq);
     }
     for (const [key, how] of this.#proven) {
-      const [id, position] = key.split(":", 2);
-      if (how === "replayed" && Number(position) >= (cut.get(id as ScopeId) ?? Infinity)) this.#proven.delete(key);
+      const fact = this.#proofFacts.get(key)!;
+      if (how === "replayed" && fact.seq >= (cut.get(fact.at.scope) ?? Infinity)) { this.#proven.delete(key); this.#proofFacts.delete(key); }
     }
+    if (this.#room) this.#values.clear();
+  }
+
+  #textOrigin(digest: Digest): { root: ScopeId; fact: FactRef } | undefined {
+    // The canonical body's digest proves content even if its using entry
+    // later retracts. This origin describes a read, never entry admission.
+    return this.#textOrigins.get(digest);
   }
 
   #recoverableText(run: Run, digest: Digest): boolean {
@@ -569,7 +860,7 @@ class Verifier {
     // The opt-in birth rule establishes original presence independently of
     // an alias. Older optional births retain their presence ambiguity: an
     // alias proves content, never that the body came beside that birth.
-    return !!run.definition?.declared.capacity || !(birth?.type === "genesis" && birth.founding !== null && birth.decision === "refused" && run.unknownByteTexts.get(digest) === 0);
+    return !!run.definition?.declared.capacity || !(birth?.type === "genesis" && birth.founding !== null && birth.decision === "refused" && (run.unknownByteTexts.get(digest) === 0 || this.#missingAtBirth.has(canonicalize([run.id, digest]))));
   }
 
   #textBound(run: Run, digest: Digest, before: number, view: StateView = run.state): number {
@@ -639,7 +930,9 @@ class Verifier {
         const found = failure as { seq: number; why: string }, sealed = run.sealed[found.seq]!;
         const at = { at: run.at!, seq: found.seq, hash: sealed.hash };
         this.#invalidateCoverage(run.id, found.seq);
-        throw new Stop("mismatch", found.why, at);
+        const stop = new Stop("mismatch", found.why, at);
+        if (this.#room) this.#blocked.set(run.id, { from: found.seq, stop });
+        throw stop;
       }
     }
   }
@@ -717,13 +1010,19 @@ class Verifier {
 
   /** Start on a scope: its first page. A text: the source holds no such history, or it cannot be read, and why. */
   async #open(id: ScopeId): Promise<Run | string> {
-    if (this.#runs.size >= this.#limits.scopes) throw new Stop("incomplete", `the limit of ${this.#limits.scopes} scopes was reached`);
+    if (this.#runs.size >= this.#limits.scopes) { const stop = new Stop("incomplete", `the limit of ${this.#limits.scopes} scopes was reached`); if (this.#room) this.#terminal = stop; throw stop; }
     const got = await this.#page(id, 0);
+    this.#live();
     if (!got.ok) return got.reason;
-    const run: Run = { id, said: got.page.scope, head: got.page.head, at: null, named: null, definition: null, platform: null, state: new MemoryState(), sealed: [], foldInputs: new Map(), retainedEntries: new Map(), read: new Map(), next: 0, busy: false, depth: Number.POSITIVE_INFINITY, owed: new Map(), bytes: new ByteUsage(), unknownByteTexts: new Map(), byteIntervals: [], redactions: new Map(), byteHeads: new Map(), textJudgments: new Map(), reads: new Map(), runs: { seen: new Set(), last: null }, observed: undefined, viewed: null, membership: undefined, rulesScope: undefined, revised: null, snapshots: new Map() };
+    if (this.#room && got.page.scope.scope !== id) throw new Stop("mismatch", "the requested scope's page names another scope");
+    const run = this.#newRun(id, got.page.scope, got.page.head);
     if (!this.#take(run, 0, got.page.entries, got.page.next)) return "the source's first page is not the entries from the genesis in order";
     this.#runs.set(id, run);
     return run;
+  }
+
+  #newRun(id: ScopeId, said: ScopeRef, head: Head): Run {
+    return { id, said: this.#room ? { ...said } : said, head: this.#room ? { ...head } : head, at: null, named: null, definition: null, platform: null, state: new MemoryState(), sealed: [], foldInputs: new Map(), retainedEntries: new Map(), read: new Map(), next: 0, busy: false, depth: Number.POSITIVE_INFINITY, owed: new Map(), bytes: new ByteUsage(), unknownByteTexts: new Map(), byteIntervals: [], redactions: new Map(), byteHeads: new Map(), textJudgments: new Map(), reads: new Map(), runs: { seen: new Set(), last: null }, observed: undefined, viewed: null, membership: undefined, rulesScope: undefined, revised: null, snapshots: new Map() };
   }
 
   /**
@@ -744,13 +1043,14 @@ class Verifier {
   /** What every failed read meets first: a deadline is a read error, and a reply past what was left of the byte limit is the limit reached. */
   #unread(reason: string, limited: boolean, what: string): void {
     if (reason === "timeout") throw new SourceError(`${what} was not read within the deadline`);
-    if (reason === "too-large" && limited) throw new Stop("incomplete", `the limit of ${this.#limits.bytes} bytes was reached`);
+    if (reason === "too-large" && limited) { const stop = new Stop("incomplete", `the limit of ${this.#limits.bytes} bytes was reached`); if (this.#room) this.#terminal = stop; throw stop; }
   }
 
   /** Keep a page's entries until they are checked. A page is the entries from `from` on, in order and no others; any other page is not kept. */
   #take(run: Run, from: number, entries: readonly Stored[], next: number | null): boolean {
     if (entries.length > PAGE_ENTRIES || entries.some((stored, i) => stored.seq !== from + i)) return false;
-    for (const stored of entries) run.read.set(stored.seq, stored);
+    if (this.#room && (next === null ? entries.at(-1)?.seq !== run.head.seq : next !== from + entries.length || next > run.head.seq)) return false;
+    for (const stored of entries) run.read.set(stored.seq, this.#room ? { ...stored } : stored);
     run.next = next;
     return true;
   }
@@ -762,6 +1062,10 @@ class Verifier {
       const from = run.next;
       const got = await this.#page(run.id, from);
       if (!got.ok) throw new Gap(`entry ${seq} of ${run.id} could not be read: ${got.reason}`);
+      if (this.#room) {
+        if (!sameScope(got.page.scope, run.at ?? run.said) || got.page.head.seq < run.head.seq || got.page.head.seq === run.head.seq && got.page.head.hash !== run.head.hash) throw new Stop("mismatch", "a later source page contradicts its scope identity or served head");
+        if (got.page.head.seq > run.head.seq) run.head = { ...got.page.head };
+      }
       // A page that holds nothing, or does not lead on, would be read for ever.
       if (got.page.entries.length === 0 || (got.page.next !== null && got.page.next <= from)) throw new Gap(`the source holds no entry ${seq} of ${run.id}`);
       if (!this.#take(run, from, got.page.entries, got.page.next)) throw new Gap(`the source's page of ${run.id} from entry ${from} is not those entries in order`);
@@ -779,17 +1083,42 @@ class Verifier {
   }
 
   #retainBytes(run: Run, key: Pick<RetainedInput, "kind" | "digest" | "domain">, size: number | null, seq: number, payload?: string): void {
+    this.#live();
     const text = key.kind === "text" || key.kind === "value" && key.domain === DOMAINS.text;
     const before = text && run.bytes.unknownText(key.digest);
     run.bytes.retain(key, size);
     if (!text) return;
     if (payload !== undefined) {
       const value = domainRetainedJSON(DOMAINS.text, key.digest, payload, { canonical: true });
-      if (value !== undefined) this.#knownTexts.set(key.digest, { bytes: utf8(payload).length, size: typeof value === "string" ? utf8(value).length : null });
+      if (value !== undefined) this.#learnText(run, key.digest, payload, value);
     }
     const after = run.bytes.unknownText(key.digest);
     if (!before && after) run.unknownByteTexts.set(key.digest, seq);
     if (before && !after) this.#endUnknownBytes(run, key.digest, seq - 1);
+  }
+
+  #learnText(run: Run, digest: Digest, payload: string, value: unknown): void {
+    this.#live();
+    const known = { bytes: utf8(payload).length, size: typeof value === "string" ? utf8(value).length : null };
+    if (this.#room && this.#knownTexts.get(digest)?.size !== known.size) this.#version++;
+    this.#knownTexts.set(digest, known);
+    if (this.#room && known.size !== null) {
+      const at = this.#checking.at(-1);
+      if (at?.at.scope === run.id && !this.#textOrigins.has(digest)) this.#textOrigins.set(digest, { root: this.#target, fact: structuredClone(at) });
+    }
+  }
+
+  /** Cache only canonical digest-checked input, after the actual reply charge.
+   * Schema/semantic admission remains the consuming judge's responsibility. */
+  #keepInput(run: Run, key: Pick<RetainedInput, "kind" | "digest" | "domain">, input: RetainedInput): void {
+    if (!this.#room) return;
+    this.#live();
+    if (input.kind !== key.kind || input.digest !== key.digest || input.domain !== key.domain || utf8(input.bytes).length > RETAINED_REPLY_BYTES) return;
+    const domain = key.kind === "value" ? key.domain : key.kind === "definition" ? DOMAINS.definition : key.kind === "text" ? DOMAINS.text : key.kind === "snapshot" ? DOMAINS.snapshot : null;
+    const value = domain ? domainRetainedJSON(domain, key.digest, input.bytes, { canonical: true }) : rawRetainedJSON(key.digest, input.bytes);
+    if (value === undefined || canonicalize(value) !== input.bytes) return;
+    this.#retainedCache.set(canonicalize([run.id, key.kind, key.domain ?? null, key.digest]), structuredClone(input));
+    if (domain === DOMAINS.text && typeof value === "string") this.#learnText(run, key.digest, input.bytes, value);
   }
 
   #textCount(digest: Digest, bytes: number, where: FactRef): void {
@@ -810,6 +1139,7 @@ class Verifier {
       throw new Stop("incomplete", `a retained input is missing: ${what}, ${digest} (${got.reason})`, at);
     }
     this.#count(got.bytes);
+    this.#keepInput(run, key, got.input);
     if (this.#source.omittedText && kind === "value" && domain === DOMAINS.text && typeof domainRetainedJSON(DOMAINS.text, digest, got.input.bytes) === "string") this.#textCount(digest, utf8(got.input.bytes).length, at);
     if (run.definition === null || run.definition.declared.capacity) this.#retainBytes(run, key, utf8(got.input.bytes).length, at.seq, got.input.bytes);
     return got.input;
@@ -826,6 +1156,7 @@ class Verifier {
     const { key } = textDependency(origin, digest);
     const got = await this.#source.retained(run.id, key.kind, key.digest, { bytes: Math.min(left, RETAINED_REPLY_BYTES) });
     if (!got.ok) {
+      if (this.#room && origin.at.seq === 0) this.#missingAtBirth.add(canonicalize([run.id, digest]));
       this.#unread(got.reason, left < RETAINED_REPLY_BYTES, `a retained input of ${run.id}`);
       const omitted = await this.#source.omittedText?.(run.id, digest, { bytes: Math.min(left, 1024) });
       if (omitted?.ok) {
@@ -839,7 +1170,7 @@ class Verifier {
         this.#textCount(digest, row.bytes, origin.at);
         const keyName = canonicalize([run.id, digest]);
         this.#omittedTexts.set(keyName, { digest, bytes: row.bytes, first: { ...first, at: { ...first.at } } });
-        this.#trusts.add("omitted");
+        this.#trust("omitted");
         if (!this.#knownTexts.has(digest)) this.#knownTexts.set(digest, { bytes: row.bytes, size: null, omitted: true });
         if (run.definition?.declared.capacity) this.#retainBytes(run, key, row.bytes, origin.at.seq);
         // The canonical body count does not reveal a decoded field size.
@@ -851,6 +1182,7 @@ class Verifier {
     this.#count(got.bytes);
     const text = domainRetainedJSON(DOMAINS.text, digest, got.input.bytes);
     if (typeof text !== "string") return null;
+    this.#keepInput(run, key, got.input);
     if (this.#source.omittedText) this.#textCount(digest, utf8(got.input.bytes).length, origin.at);
     if (run.definition?.declared.capacity) this.#retainBytes(run, key, utf8(got.input.bytes).length, origin.at.seq, got.input.bytes);
     return utf8(text).length;
@@ -895,8 +1227,10 @@ class Verifier {
   }
 
   #count(bytes: number): void {
+    this.#live();
+    if (this.#room && !natural(bytes)) throw new Stop("mismatch", "a source reply has an invalid byte count");
     this.#bytes += bytes;
-    if (this.#bytes > this.#limits.bytes) throw new Stop("incomplete", `the limit of ${this.#limits.bytes} bytes was reached`);
+    if (this.#bytes > this.#limits.bytes) { const stop = new Stop("incomplete", `the limit of ${this.#limits.bytes} bytes was reached`); if (this.#room) this.#terminal = stop; throw stop; }
   }
 
   // ---------------------------------------------------------------- one scope, in order
@@ -908,15 +1242,21 @@ class Verifier {
    * checked against that entry's bytes before its content is read.
    */
   async #advance(run: Run, through: number, depth: number, expect?: { hash: Digest; user: FactRef }): Promise<void> {
+    this.#live();
     const user = this.#checking.at(-1);
-    if (user) this.#depend(run.id, through, user);
+    if (user) this.#depend(run.id, through, user, true);
     run.depth = Math.min(run.depth, depth);
+    if (this.#room && !this.#viaRoot.has(run.id)) this.#viaRoot.set(run.id, this.#target);
+    const blocked = this.#blocked.get(run.id);
+    if (blocked && through >= blocked.from) throw blocked.stop;
+    if (this.#room && run.failed) await this.#repair(run);
+    this.#live();
     if (through < run.sealed.length) return;
     // A fact names a sealed entry, so no entry can need one that is sealed after it (section 3).
     if (run.busy) throw new Stop("mismatch", `a reference names entry ${through} of ${run.id}, which is not sealed before the entry that uses it`, expect?.user ?? null);
     run.busy = true;
     try {
-      while (run.sealed.length <= through) await this.#step(run, depth, run.sealed.length === through ? expect : undefined);
+      while (run.sealed.length <= through) await this.#step(run, this.#room ? run.depth : depth, run.sealed.length === through ? expect : undefined);
     } finally {
       run.busy = false;
     }
@@ -924,9 +1264,33 @@ class Verifier {
 
   async #step(run: Run, depth: number, expect?: { hash: Digest; user: FactRef }): Promise<void> {
     const seq = run.sealed.length;
-    if (this.#entries >= this.#limits.entries) throw new Stop("incomplete", `the limit of ${this.#limits.entries} entries was reached`);
+    try { await this.#stepOnce(run, depth, expect); }
+    catch (error) {
+      this.#live();
+      if (this.#room) {
+        run.failed = true;
+        if (error instanceof Stop && error.result === "mismatch" && (!error.at || error.at.at.scope === run.id)) {
+          this.#blocked.set(run.id, { from: seq, stop: error });
+          this.#invalidateCoverage(run.id, seq);
+        }
+      }
+      throw error;
+    }
+  }
+
+  async #stepOnce(run: Run, depth: number, expect?: { hash: Digest; user: FactRef }): Promise<void> {
+    const seq = run.sealed.length;
+    if (!this.#room && this.#entries >= this.#limits.entries) throw new Stop("incomplete", `the limit of ${this.#limits.entries} entries was reached`);
     const stored = await this.#stored(run, seq);
-    this.#entries++;
+    this.#live();
+    if (this.#room) {
+      run.read.set(seq, stored);
+      const key = canonicalize([run.id, run.said.inc, seq, hashOfBytes(stored.bytes)]);
+      if (!this.#entryKeys.has(key)) {
+        if (this.#entries >= this.#limits.entries) { const stop = new Stop("incomplete", `the limit of ${this.#limits.entries} entries was reached`); this.#terminal = stop; throw stop; }
+        this.#entries++; this.#entryKeys.add(key);
+      }
+    } else this.#entries++;
 
     // The bytes and the hash, before anything in them is read (section 9.4).
     const hash = hashOfBytes(stored.bytes);
@@ -973,7 +1337,7 @@ class Verifier {
     }
     if (!before && entry.clamped) throw mismatch("a genesis is not clamped");
     // A known head: the history must have that entry there (section 9.5, equivocation).
-    if (run.id === this.#target && this.#expected?.seq === seq && this.#expected.hash !== hash) throw mismatch(`the history forks from the expected head: entry ${seq} has another hash than ${this.#expected.hash}`);
+    if (!this.#room && run.id === this.#target && this.#expected?.seq === seq && this.#expected.hash !== hash) throw mismatch(`the history forks from the expected head: entry ${seq} has another hash than ${this.#expected.hash}`);
 
     // The actors' signatures.
     if (input.type === "act" && !verifySignedIntent(input.signed)) throw mismatch("the act's signature is not its actor's over its intent");
@@ -998,15 +1362,29 @@ class Verifier {
       try {
         await this.#replay(run, entry, hash, stored.bytes, where, depth);
       } catch (error) {
+        this.#live();
         if (error instanceof Stop || error instanceof Gap || error instanceof SourceError) throw error;
-        // The evidence failed before applyEntry could change any count or
-        // this entry could enter verified coverage. No suffix crosses it.
+        // The entry enters no verified coverage. A room run also quarantines
+        // its mutable state when a check after applyEntry throws.
         if (isUnprovenDecisionBinding(error)) throw new Stop("incomplete", error.message, where);
         // A judge or the fold could not take the entry at all.
         throw mismatch(`the entry cannot be derived again: ${error instanceof Error ? error.message : String(error)}`);
       } finally { this.#checking.pop(); }
     }
+    this.#live();
     run.sealed.push({ entry, hash });
+    if (this.#room) {
+      run.read.delete(seq);
+      const key = canonicalize(where);
+      if (!this.#successful.has(key)) { this.#successful.add(key); this.#version++; }
+      const segments = this.#segments.get(run.id) ?? [];
+      const last = segments.at(-1);
+      if (!last || last.through < seq) {
+        if (last?.root === this.#target && last.through === seq - 1) last.through = seq;
+        else segments.push({ from: seq, through: seq, root: this.#target });
+        this.#segments.set(run.id, segments);
+      }
+    }
     if (run.definition?.declared.capacity) {
       const known = this.#textBounds.get(run.id) ?? new Map<Digest, { seq: number; max: number }[]>();
       for (const [digest, max] of checkedTextBounds(run.definition, entry.input)) {
@@ -1054,6 +1432,7 @@ class Verifier {
    */
   #code(run: Run, named: PlatformDefinition, where: FactRef): ValidDefinition {
     const supplied = this.#platform?.(named) ?? null;
+    this.#live();
     if (!supplied) throw new Stop("unsupported-definition", `the scope pins ${named}, which this replay has no code for`, where);
     let checked: ReturnType<typeof validateDefinition> | null = null;
     try {
@@ -1117,21 +1496,34 @@ class Verifier {
   }
 
   async #prove(fact: FactRef, user: FactRef, depth: number): Promise<"replayed" | "anchored"> {
-    const key = `${fact.at.scope}:${fact.seq}:${fact.hash}`;
+    this.#live();
+    const key = this.#room ? canonicalize(fact) : `${fact.at.scope}:${fact.seq}:${fact.hash}`;
     const known = this.#proven.get(key);
     const run = this.#runs.get(fact.at.scope);
-    if (known && (known === "anchored" ? this.#anchor(fact, user) : run?.at && sameScope(run.at, fact.at))) {
-      if (known === "replayed") this.#depend(fact.at.scope, fact.seq, user);
+    if (known && (known === "anchored" ? this.#anchor(fact, user) : run?.at && sameScope(run.at, fact.at) && (!this.#room || run.sealed[fact.seq]?.hash === fact.hash))) {
+      if (known === "replayed") this.#depend(fact.at.scope, fact.seq, user, true);
+      if (this.#room && known === "replayed" && run?.failed) await this.#advance(run, fact.seq, run.depth);
+      this.#live();
       return known;
+    }
+    if (this.#room && run?.at && sameScope(run.at, fact.at) && run.sealed[fact.seq]?.hash === fact.hash) {
+      this.#depend(fact.at.scope, fact.seq, user, true);
+      // A sound immutable prefix can be reused after a suffix failure, but
+      // no state interpretation may read the failed mutable fold.
+      if (run.failed) await this.#advance(run, fact.seq, run.depth);
+      this.#live();
+      this.#proven.set(key, "replayed"); this.#proofFacts.set(key, fact); this.#trust("sources"); return "replayed";
     }
 
     if (this.#anchor(fact, user)) {
       this.#proven.set(key, "anchored");
+      this.#proofFacts.set(key, fact);
       this.#anchored.push(fact);
-      this.#trusts.add("anchors");
+      this.#trust("anchors");
       return "anchored";
     }
     this.#depend(fact.at.scope, fact.seq, user);
+    if (this.#room) depth = Math.min(depth, this.#runs.get(user.at.scope)?.depth ?? depth);
     if (depth >= this.#limits.depth) throw new Stop("incomplete", `the limit of ${this.#limits.depth} on the depth of foreign facts was reached`, user);
     const opened = run ?? await this.#open(fact.at.scope);
     const source = typeof opened === "string" ? null : opened;
@@ -1146,6 +1538,7 @@ class Verifier {
       if (conflict) throw new Stop("mismatch", `the caller's anchor for entry ${fact.seq} of ${fact.at.scope} names hash ${conflict.hash}, but the required reference names ${fact.hash}`, user);
       throw new Stop("missing-dependency", `the history of the source scope ${fact.at.scope} cannot be read, and no anchor names its entry ${fact.seq}`, user, fact);
     }
+    this.#live();
     try {
       await this.#advance(source, fact.seq, depth + 1, { hash: fact.hash, user });
     } catch (error) {
@@ -1154,8 +1547,10 @@ class Verifier {
     }
     if (!sameScope(source.at!, fact.at)) throw new Stop("mismatch", `the reference names ${named(fact.at)}, ${fact.at.kind}; the source scope's genesis is ${named(source.at!)}, ${source.at!.kind}: a wrong incarnation or kind`, user);
     if (source.sealed[fact.seq]!.hash !== fact.hash) throw new Stop("mismatch", `the reference names another entry than the source scope has at that position: entry ${fact.seq} of ${fact.at.scope}`, user);
+    this.#live();
     this.#proven.set(key, "replayed");
-    this.#trusts.add("sources");
+    this.#proofFacts.set(key, fact);
+    this.#trust("sources");
     return "replayed";
   }
 
@@ -1167,6 +1562,7 @@ class Verifier {
    * view's log, and no entry is folded again for it (`View`).
    */
   #viewAt(source: Run, seq: number): StateView {
+    this.#live();
     const view = source.viewed ?? (source.viewed = new View());
     while (view.through < seq) {
       const next = source.sealed[view.through + 1]!;
@@ -1195,6 +1591,7 @@ class Verifier {
 
   /** After an entry is checked: it is the latest entry that retains each of its reads. */
   #retains(run: Run, entry: Entry, hash: Digest, uses: readonly ObservationUse[]): void {
+    this.#live();
     for (const use of uses) run.reads.set(`${use.read.run}:${use.read.n}`, { entry: { seq: entry.seq, hash }, time: entry.time, observation: use.observation as Observation });
   }
 
@@ -1232,6 +1629,7 @@ class Verifier {
     } else {
       const fact: FactRef = { at: o.of, seq: o.head.seq, hash: o.head.hash };
       if (await this.#prove(fact, where, depth) === "anchored") return;
+      this.#live();
       const source = this.#runs.get(o.of.scope)!;
       if (!source.observed) throw unanswered();
       // The head is proved: the source has that incarnation, and that hash at that position. So the key names one state and one question.
@@ -1247,7 +1645,7 @@ class Verifier {
           if (derived["revision"] !== last) throw mismatch(`the state of ${o.of.scope} at its entry ${o.head.seq} gives the revision ${String(derived["revision"])}, and the last entry of the kind ${source.revised.kind} at or before it is at ${last}`);
         }
         this.#tally.values++;
-        this.#values.set(key, derived);
+        this.#live(); this.#values.set(key, derived);
       }
     }
     if (!isObject(derived) || canonicalize({ ...derived, at: o.at }) !== canonicalize(o)) throw mismatch(`the retained observation is not what the history of ${o.of.scope} gives ${"key" in asked ? "that key" : "member" in asked ? "that member" : "holders" in asked ? "the holders of that action" : "the rules"} at its entry ${o.head.seq}`);
@@ -1274,7 +1672,7 @@ class Verifier {
     const mismatch = (why: string): Stop => new Stop("mismatch", why, where);
     const use: unknown = grant.fresh;
     if (use === null && this.#grants === "as-recorded") {
-      this.#trusts.add("authority");
+      this.#trust("authority");
       return;
     }
     if (!isObservationUse(use) || "subject" in use.observation) throw mismatch("the recorded grant holds no freshness proof of a key's standing: it is no grant");
@@ -1295,7 +1693,7 @@ class Verifier {
       throw mismatch(`${name ? `${name}: ` : ""}derived again on the entry's time, the retained observation does not give the grant: ${judged.failed}`);
     }
     await this.#standing(run, entry, o, where, depth);
-    this.#trusts.add("observed");
+    this.#trust("observed");
   }
 
   /**
@@ -1355,7 +1753,7 @@ class Verifier {
         if (held !== null && head.seq < held) throw mismatch(`observation-older: the entry retains an observation of ${head.subject} from a lower head than an earlier entry retains`);
       }
       await this.#standing(run, entry, o, where, depth);
-      this.#trusts.add("observed");
+      this.#trust("observed");
     }
   }
 
@@ -1388,6 +1786,7 @@ class Verifier {
         this.#count(got.bytes);
         if (domainRetainedJSON(domain, digest, got.input.bytes) !== undefined) {
           matched = got.input.bytes;
+          this.#keepInput(run, key, got.input);
           if (run.definition?.declared.capacity) this.#retainBytes(run, key, utf8(got.input.bytes).length, where.seq, got.input.bytes);
         }
         if (matched !== null) break;
@@ -1433,7 +1832,7 @@ class Verifier {
       throw new Stop("mismatch", `${name ? `${name}: ` : ""}derived again on the entry's time, a retained observation serves no row of the entry's form: ${why}`, where);
     }
     for (const use of recorded) await this.#standing(run, entry, use.observation, where, depth);
-    if (recorded.length > 0 || (settled && [...settled.status.values()].includes("absent"))) this.#trusts.add("observed");
+    if (recorded.length > 0 || (settled && [...settled.status.values()].includes("absent"))) this.#trust("observed");
   }
 
   /**
@@ -1464,7 +1863,7 @@ class Verifier {
     if (!record) return;
     const pairs = snapshotRead(record.snapshot.digest, run.snapshots.get(record.snapshot.digest)!);
     if (pairs && pairs.length !== record.snapshot.count) throw new Stop("mismatch", `the ancestry record states ${record.snapshot.count} staged refs, and the snapshot that it names holds ${pairs.length}`, where);
-    this.#trusts.add("staged");
+    this.#trust("staged");
     this.#unwalked.push(where);
   }
 
@@ -1505,7 +1904,12 @@ class Verifier {
    * replay has checked the pin and this exact frame. Anchors alone supply no
    * code or birth authority. A sealed prefix remains usable during recursion. */
   async #identityFrame(at: ScopeRef, where: FactRef, depth: number, from?: FactRef): Promise<IdentityFrame | null> {
-    if (depth >= this.#limits.depth) throw new Stop("incomplete", "the identity proof reached the foreign-depth limit", where);
+    const cached = this.#runs.get(at.scope);
+    if (this.#room) {
+      this.#depend(at.scope, from?.seq ?? 0, where);
+      depth = Math.min(depth, this.#runs.get(where.at.scope)?.depth ?? depth);
+    }
+    if (depth >= this.#limits.depth && !(this.#room && cached?.at && sameScope(cached.at, at) && cached.sealed[from?.seq ?? 0])) throw new Stop("incomplete", "the identity proof reached the foreign-depth limit", where);
     const opened = this.#runs.get(at.scope) ?? await this.#open(at.scope);
     if (typeof opened === "string") return null;
     await this.#advance(opened, from?.seq ?? 0, depth + 1, from ? { hash: from.hash, user: where } : undefined);
@@ -1572,6 +1976,7 @@ class Verifier {
     const input = entry.input;
     const state = run.state;
     const definition = run.definition ?? (run.definition = await this.#pin(run, where, input.type));
+    this.#live();
     const bounds = this.#bounds;
     // Opt-in birth requires the complete native child-declaration closure.
     // Its retained bytes therefore belong to genesis, even when a later
@@ -1730,7 +2135,7 @@ class Verifier {
     };
     switch (input.type) {
       case "genesis": {
-        this.#trusts.add("minted");
+        this.#trust("minted");
         if (input["founding"]) {
           const asked = { name: run.id, inc: input.inc, seed: input.seed, creation: input["founding"] };
           judgeText = (view, texts) => judgeGenesis(view, definition, asked, { ...reading, texts, source: null });
@@ -1738,7 +2143,7 @@ class Verifier {
         }
         else {
           if (!input.source || input.n === null || !input.message) throw mismatch("a genesis has a signed creation intent or a request from its creator");
-          this.#trusts.add("held");
+          this.#trust("held");
           const source = copyOf(input.source);
           const asked = { name: run.id, inc: input.inc, to: input.seed, from: input.source, n: input.n, message: input.message };
           judgeText = (view, texts) => judgeGenesis(view, definition, asked, { ...reading, texts, source: source && { entry: source.entry, under: source.under } });
@@ -1784,7 +2189,7 @@ class Verifier {
         if (actRows) await this.#byRows(run, entry, judged, actRows.observed, where, depth);
         break;
       case "delivery": {
-        this.#trusts.add("delivered");
+        this.#trust("delivered");
         const source = copyOf(input.from);
         // The address is the one the sender wrote: the source entry's send at that ordinal.
         const to = source?.entry.sends.find((send) => send.n === input.n)?.to;
@@ -1823,7 +2228,7 @@ class Verifier {
         break;
       }
       case "diagnosis":
-        this.#trusts.add("attempts");
+        this.#trust("attempts");
         judged = judgeDiagnosis(state, definition, { of: input.of, attempts: input.attempts }, { ...reading, prepared: [], origin: sealed(input.of.seq) });
         break;
       case "timed":
@@ -1847,7 +2252,7 @@ class Verifier {
         } catch { /* a request that the rules cannot read names no action, and the judge refuses it */ }
         const scopeGrant = preparationScopeGrant(definition, capability, step);
         if (needs) await this.#granted(run, entry, grant, { key: input.signed.intent.actor, ...needs, ...(scopeGrant ? { scopeGrant: true } : {}) }, where, depth);
-        this.#trusts.add("dispatched");
+        this.#trust("dispatched");
         judged = judgePreparation(state, definition, { signed: input.signed, capability, step }, {
           clock, bounds, steps, own: reading.own, membership: fixedIn(run, input),
           granted: (wanted) => (needs !== null && (wanted.scopeGrant === true) === scopeGrant && wanted.action === needs.action && wanted.window.seconds === needs.window.seconds && wanted.window.once === needs.window.once ? { result: "granted", grant } : { result: "unavailable" }),
@@ -1871,7 +2276,7 @@ class Verifier {
         if (publication && publication.mode === "application") await this.#applicationOrigin(publication.from, publication.directory, publication.destination, where, depth, identity?.mode === "partition-v1" ? identity.evidence : undefined);
         else if (publication && identity?.mode === "partition-v1") await this.#applicationOrigin(publication.from, publication.directory, publication.destination, where, depth, identity.evidence, "change");
         if (valueOwner?.values !== undefined && valueOwner.valueDomains === undefined) throw new Stop("unsupported-definition", "the outcome owner has a value reader but no static domain declaration for this pinned version and kind", where);
-        this.#trusts.add("outcomes");
+        this.#trust("outcomes");
         await this.#snapshots(run, input, owners, owner, kind, where);
         // Sections 4.1 and 16.1, "Replay": each observation that the outcome retains, of the ten-second kind, is derived again. The
         // judge is given the recorded ones and the retained copy of each entry in `uses`, as a rule of the outcome reads them, and
@@ -1916,7 +2321,7 @@ class Verifier {
       if (canonicalize(derived[part]) !== canonicalize(entry[part])) throw mismatch(`the recorded ${part} are not the ones derived again`);
     }
     if (canonicalize(derived) !== bytes) throw mismatch("the recorded entry is not the one derived again");
-    if (definition.declared.capacity && judgeText && unknown.length > 0) {
+    if ((this.#room || definition.declared.capacity) && judgeText && unknown.length > 0) {
       const again = judgeText;
       run.textJudgments.set(entry.seq, { digests: unknown, again: view => {
         const recovered = (digest: Digest) => {
@@ -1929,6 +2334,7 @@ class Verifier {
     }
     const foldedWith: DrawOptions = { ...foldInputs, values: judged.draft.values?.map(value => value.bytes) };
     const previousPositions = input.type === "floor" ? [...heldPositions(state, input.floor)] : [];
+    this.#live();
     applyEntry(state, definition, entry, hash, foldedWith);
     if (input.type === "floor") for (const seq of previousPositions) if (archivedPosition(state, seq)) {
       run.bytes.dropJournal(seq);
@@ -1962,7 +2368,7 @@ class Verifier {
       this.#tally.owed += effect.texts.length;
       if (effect.texts.filter((text) => run.owed.delete(text)).length === 0) continue;
       this.#redacted.push({ tombstone: where, item: effect.item, slot: effect.slot });
-      this.#trusts.add("redacted");
+      this.#trust("redacted");
     }
   }
 }
@@ -1978,3 +2384,52 @@ export function verifyHistory(source: HistorySource, options: Options, tally?: T
 }
 
 export { verifyHistory as verify };
+
+/** One source/options-bound multi-root proof. No provisional result is a
+ * report; finish validates the actual union once before publishing it. */
+export function roomVerification(source: HistorySource, options: Omit<Options, "scope" | "head">): RoomVerification {
+  const fixed: Omit<Options, "scope" | "head"> = { ...options,
+    ...(options.anchors ? { anchors: structuredClone([...options.anchors]) } : {}),
+    ...(options.publishedAnchorPolicies ? { publishedAnchorPolicies: new Map([...options.publishedAnchorPolicies].map(([id, policy]) => [id, structuredClone(policy)])) } : {}),
+    ...(options.bounds ? { bounds: structuredClone(options.bounds) } : {}),
+    limits: { ...LIMITS, ...options.limits },
+  };
+  const bound: HistorySource = { page: source.page.bind(source), retained: source.retained.bind(source),
+    ...(source.omittedText ? { omittedText: source.omittedText.bind(source) } : {}),
+    ...(source.floorReceipt ? { floorReceipt: source.floorReceipt.bind(source) } : {}) };
+  let phase: "open" | "finishing" | "closed" = "open", engine: Verifier | null = null;
+  let queued: Promise<unknown> = Promise.resolve(), finished: Promise<FinishedRoom> | null = null;
+  const live = () => { if (phase === "closed") throw new Error("room verification is closed"); };
+  const enqueue = <T>(work: () => Promise<T>): Promise<T> => {
+    const result = queued.then(() => { live(); return work(); });
+    queued = result.then(() => undefined, () => undefined);
+    return result;
+  };
+  const freeze = <T>(value: T): T => {
+    if (typeof value === "object" && value !== null) { for (const child of Object.values(value)) freeze(child); Object.freeze(value); }
+    return value;
+  };
+  return {
+    checkTarget(target) {
+      if (phase !== "open") return Promise.reject(new Error(`room verification is ${phase}`));
+      const asked = structuredClone(target);
+      return enqueue(async () => {
+        const owner = engine ?? (engine = new Verifier(bound, { ...fixed, scope: asked.scope }, undefined, true));
+        await owner.checkRoomTarget(asked); live();
+        return Object.freeze({ token: Object.freeze({ [ROOT_TOKEN]: true as const }), requested: asked.scope, final: false as const });
+      });
+    },
+    finish() {
+      if (phase === "closed") return Promise.reject(new Error("room verification is closed"));
+      if (finished) return finished;
+      phase = "finishing";
+      finished = enqueue(async () => {
+        const result: FinishedRoom = engine ? await engine.finishRoom() : { roots: [], coverage: [], trusts: [], anchors: [], dependencies: { verified: 0, anchored: 0, missing: [] }, redacted: [], texts: [] };
+        live();
+        return freeze(structuredClone(result));
+      });
+      return finished;
+    },
+    close() { if (phase === "closed") return; phase = "closed"; engine?.close(); engine = null; finished = null; },
+  };
+}

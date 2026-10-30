@@ -28,6 +28,7 @@ export class Verification {
   readonly #timer: ReturnType<typeof setTimeout>;
   readonly #cancel: () => void;
   #closed = false;
+  #invalidSource = false;
   #reason: Reason | null = null;
   #where: { phase: Phase; scope: string; cursor: string | number | null } = { phase: "session", scope: "configuration", cursor: null };
   #bytes = 0;
@@ -55,6 +56,7 @@ export class Verification {
     this.#reason = reason; this.#abort.abort(); this.#finish();
   }
   check(): void {
+    if (this.#invalidSource) stopCommand(failed("Cannot verify history: an entry's content, hash or scope frame conflicts with its source. The whole room was not verified."));
     if (this.#reason === null && this.#now() - this.#began >= this.limits.milliseconds) this.#stop("time");
     if (this.#closed && this.#reason === null) this.#stop("cancelled");
     if (this.#reason !== null) stopCommand(failed(`Stopped at ${this.#where.phase}, scope ${this.#where.scope}, input cursor ${JSON.stringify(this.#where.cursor)}: verification ${this.#reason === "cancelled" ? "cancelled" : this.#reason + " limit"}; ${Math.max(0, Math.floor(this.#now() - this.#began))} elapsed ms, ${this.#bytes} received bytes, ${this.#requests} HTTP attempts, ${this.#entries} history entries. The whole room was not verified.`));
@@ -71,6 +73,7 @@ export class Verification {
     this.check(); if (count > this.limits.entries - this.#entries) this.#stop("entries"); else this.#entries += count; this.check();
   }
   #invalidEntry(): never {
+    this.#invalidSource = true;
     this.#stop("cancelled");
     return stopCommand(failed("Cannot verify history: an entry's content, hash or scope frame conflicts with its source. The whole room was not verified."));
   }
@@ -111,8 +114,8 @@ export class Verification {
       || entry.seq !== value["seq"] || canonicalize(entry.at) !== canonicalize(at)) this.#invalidEntry();
     this.#entry(scope, entry, hash);
   }
-  historyRead(): void {
-    this.check(); if (this.#entries === this.limits.entries) this.#stop("entries");
+  historyRead(accounting: "count" | "unique" = "count"): void {
+    this.check(); if (accounting === "count" && this.#entries === this.limits.entries) this.#stop("entries");
     if (this.#bytes === this.limits.bytes) this.#stop("bytes"); this.check();
   }
   remaining(): { bytes: number; entries: number; scopes: number } {

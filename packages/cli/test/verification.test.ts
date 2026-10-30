@@ -71,9 +71,12 @@ test("discovery and log copies count once at the entry ceiling while each delive
     const log = (await fetch("https://test.invalid/log")).body!.getReader();
     expect((await log.read()).value?.byteLength).toBe(3);
     await log.cancel();
-    budget.storedEntry(at.scope, at, stored(first));
-    budget.sealedEntry(at.scope, sealed(first));
+    expect(() => {
+      budget.storedEntry(at.scope, at, stored(first));
+      budget.sealedEntry(at.scope, sealed(first));
+    }, "Known copies remain admissible at the exact entry ceiling").not.toThrow();
     expect(budget.remaining().entries).toBe(0);
+    budget.historyRead("unique"); // A bounded read can still contain only known identities.
     budget.progress();
     expect(progress).toEqual([expect.stringContaining("6 received bytes; 2 HTTP attempts;")]);
     expect(() => budget.sealedEntry(at.scope, sealed(entry(1)))).toThrow(/verification entries limit; .*1 history entries/);
@@ -83,7 +86,7 @@ test("discovery and log copies count once at the entry ceiling while each delive
   finally { nextCommand.close(); }
 });
 
-test("duplicate accounting never hides malformed bytes, a conflicting hash or a different source frame", () => {
+test("duplicate accounting never hides malformed bytes, a conflicting hash or a different source frame", async () => {
   const first = entry(0), changed = { ...first, time: "2099-01-02T00:00:00Z" };
   const noncanonical = canonicalize(first) + "\n";
   const otherIncarnation = { ...at, inc: newIncarnation(new Uint8Array(16).fill(2)) };
@@ -100,8 +103,8 @@ test("duplicate accounting never hides malformed bytes, a conflicting hash or a 
     const budget = new Verification({ limits: { entries: 1 }, monotonicNow: () => 0 });
     try {
       budget.sealedEntry(at.scope, sealed(first));
-      expect(() => reply(budget)).toThrow(/entry's content, hash or scope frame conflicts/);
-      expect(() => budget.sealedEntry(at.scope, sealed(first))).toThrow(/verification cancelled/);
+      await expect(budget.wait(async () => reply(budget))).rejects.toThrow(/entry's content, hash or scope frame conflicts/);
+      expect(() => budget.sealedEntry(at.scope, sealed(first))).toThrow(/entry's content, hash or scope frame conflicts/);
     } finally { budget.close(); }
   }
   const retired = new Verification({ monotonicNow: () => 0 });

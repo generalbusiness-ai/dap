@@ -9952,22 +9952,24 @@ and DR10). The paragraph above names a limit on depth and does not say
 what it counts. The builder decided it for the I2 source, and it is
 stated here.
 
-- *Depth.* The target is at depth 0. The depth of any other scope is the
-  least number of foreign facts on a chain from the target to it, among
+- *Depth.* Each root of the proof is at depth 0. A standalone replay has
+  one root, its target. A room proof has the requested scopes as its roots.
+  The depth of any other scope is the least number of foreign facts on a
+  chain from any root to it, among
   the chains that the traversal followed. A source that an entry of a
   scope at depth d uses is at depth d + 1, or less when a shorter chain
   reaches it.
 - *The limit.* A fact whose source would lie past the limit is not
   followed. The result is `incomplete`, named at the entry that used the
   fact. An anchored fact is not followed, and adds no depth.
-- *Two phases.* A traversal first replays the target, and each source as
+- *Two phases.* A traversal first replays its roots, and each source as
   far as a reference needs. It then settles the texts that are owed
   (section 9.3, point DJ10): a scope that owes a text is read on to its
   head, because its tombstone may be later than the entry that a
   reference needed.
 - *The count goes through the settlement.* A scope is read on at the
   depth at which the traversal reached it. A fact that one of its later
-  entries uses is one step further from the target, and the limit
+  entries uses is one step further from the nearest root, and the limit
   applies there as in the first phase. A limit on depth, on scopes, on
   entries or on bytes that is reached in the settlement gives
   `incomplete`. It never leaves the result `consistent`.
@@ -9984,6 +9986,16 @@ stated here.
   `consistent`. Witness 18.37.
 
 The number is R4's. The I2 source's default of 16 is a temporary value.
+
+**One room proof.** Within one command, a prefix or content already proven
+under a root may serve every later target that needs it. The proof binds
+the source, incarnation, entry hash, and semantic, code and trust options.
+Discovery alone proves nothing. Expected heads, causal-prefix checks and
+contradiction invalidation still apply. The command reports one union of
+coverage and trusts, names the root under which each shared prefix was
+proven, and gives final per-scope summaries. Checked content that settles
+another target's detached text is included in that union. No proof is
+kept after the command. Standalone replay keeps its single-target result.
 
 **What a check can rest on, and what each reads. New in revision 12.**
 The commission asks that trust, a known head, an anchor and a whole
