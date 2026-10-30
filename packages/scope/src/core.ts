@@ -383,7 +383,12 @@ export class Scope {
     const supplied = isPlatformDefinition(named) ? this.platform(named) : null;
     const kept = isDigest(named) ? this.#store.retained("definition", named) : null;
     const definition = supplied ? supplied.definition : kept ? this.validate(kept.bytes) : null;
-    if (definition) this.#store.cover(definition.indexes);
+    if (definition) {
+      this.#store.cover(definition.indexes);
+      // Sealing a genesis can resolve its pin after append but before fold.
+      // That fold builds its first rows; only an existing view needs rebuild.
+      if (this.#store.scope() !== null) this.#store.ensureFixed(definition);
+    }
     return (this.#pinned = { named, definition, platform: supplied?.platform ?? null });
   }
 

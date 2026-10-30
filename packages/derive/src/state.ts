@@ -220,7 +220,17 @@ export function stateDigest(snapshot: StateSnapshot): Digest {
   return digestBytes(canonicalBytes(snapshot));
 }
 
+export type FixedMode = "raw" | "normalized";
+export interface FixedDependency { seq: number; hash: Digest }
+/** Derived equality row; raw preserves the value needed after local hash availability changes. */
+export interface FixedRow { type: string; slot: string; item: number; state: string; raw: unknown; key: string }
+
 export interface StateView {
+  fixedCount(type: string, slot: string, key: string, states: readonly string[], mode: FixedMode): number;
+  fixedAffected(seq: number, hash: Digest): readonly FixedRow[];
+  /** Hash metadata only, with the same floor availability as the held journal. */
+  fixedHash(seq: number): Digest | null;
+  fixedReady(definition: Digest, at: ScopeRef, head: Head): boolean;
   /** Absent until the first floor; no-floor views keep their previous bytes. */
   floor?(): JournalFloor | null;
   /** Native stores may count held rows without loading floor proof bodies. */
@@ -328,6 +338,9 @@ export interface StateView {
 
 /** The changes an entry makes. Only the fold calls these. */
 export interface StateWriter extends StateView {
+  putFixed(row: FixedRow, dependencies: readonly FixedDependency[]): void;
+  putFixedHash(seq: number, hash: Digest): void;
+  finishFixed(definition: Digest, at: ScopeRef, head: Head): void;
   putFloor?(floor: JournalFloor): void;
   settleHolder(item: number): void;
   putItemDuties(item: number, duties: readonly ItemDuty[]): void;
@@ -382,7 +395,58 @@ function firstAbove(ids: readonly number[], after: number): number {
 export class MemoryState implements StateWriter {
   #floor: JournalFloor | null = null;
   floor(): JournalFloor | null { return this.#floor; }
-  putFloor(floor: JournalFloor): void { this.#floor = floor; }
+  putFloor(floor: JournalFloor): void {
+    this.#floor = floor;
+    const kept = new Set(floor.kept);
+    for (const seq of this.#fixedHashes.keys()) if (seq < floor.floor && !kept.has(seq)) this.#fixedHashes.delete(seq);
+  }
+  readonly #fixedRows = new Map<string, FixedRow>();
+  readonly #fixedRaw = new Map<string, string>();
+  readonly #fixedCounts = new Map<string, number>();
+  readonly #fixedDependencies = new Map<string, Set<string>>();
+  readonly #fixedRowDependencies = new Map<string, readonly string[]>();
+  readonly #fixedHashes = new Map<number, Digest>();
+  #fixedReady: string | null = null;
+  fixedReady(definition: Digest, at: ScopeRef, head: Head): boolean { return this.#fixedReady === key(definition, at.scope, at.inc, at.kind, head.seq, head.hash); }
+  finishFixed(definition: Digest, at: ScopeRef, head: Head): void { this.#fixedReady = key(definition, at.scope, at.inc, at.kind, head.seq, head.hash); }
+  fixedHash(seq: number): Digest | null {
+    const floor = this.#floor;
+    return floor && seq < floor.floor && !floor.kept.includes(seq) ? null : this.#fixedHashes.get(seq) ?? null;
+  }
+  putFixedHash(seq: number, hash: Digest): void {
+    const floor = this.#floor;
+    if (!floor || seq >= floor.floor || floor.kept.includes(seq)) this.#fixedHashes.set(seq, hash);
+  }
+  fixedCount(type: string, slot: string, value: string, states: readonly string[], mode: FixedMode): number {
+    return [...new Set(states)].reduce((n, state) => n + (this.#fixedCounts.get(key(mode, type, slot, value, state)) ?? 0), 0);
+  }
+  fixedAffected(seq: number, hash: Digest): readonly FixedRow[] {
+    return [...(this.#fixedDependencies.get(key(seq, hash)) ?? [])].map(id => this.#fixedRows.get(id)!);
+  }
+  putFixed(row: FixedRow, dependencies: readonly FixedDependency[]): void {
+    const id = key(row.type, row.slot, row.item), previous = this.#fixedRows.get(id), raw = canonicalize(row.raw);
+    const change = (held: FixedRow, rawKey: string, by: number) => {
+      for (const [mode, value] of [["raw", rawKey], ["normalized", held.key]] as const) {
+        const at = key(mode, held.type, held.slot, value, held.state), n = (this.#fixedCounts.get(at) ?? 0) + by;
+        if (n < 0) throw new Error("fixed equality count became negative");
+        if (n === 0) this.#fixedCounts.delete(at); else this.#fixedCounts.set(at, n);
+      }
+    };
+    if (previous) change(previous, this.#fixedRaw.get(id)!, -1);
+    for (const dependency of this.#fixedRowDependencies.get(id) ?? []) {
+      const rows = this.#fixedDependencies.get(dependency)!;
+      rows.delete(id);
+      if (rows.size === 0) this.#fixedDependencies.delete(dependency);
+    }
+    this.#fixedRows.set(id, { ...row }); this.#fixedRaw.set(id, raw);
+    const keys = [...new Set(dependencies.map(dependency => key(dependency.seq, dependency.hash)))];
+    this.#fixedRowDependencies.set(id, keys);
+    for (const dependency of keys) {
+      const rows = this.#fixedDependencies.get(dependency) ?? new Set<string>();
+      rows.add(id); this.#fixedDependencies.set(dependency, rows);
+    }
+    change(row, raw, 1);
+  }
   #scope: ScopeState | null = null;
   readonly #items = new Map<number, Item>();
   /**

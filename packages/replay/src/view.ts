@@ -79,6 +79,9 @@ export class View extends MemoryState {
   }
 
   override putFloor(...given: Put<"putFloor">) { super.putFloor(...given); this.#keep("floor", [], (state) => state.putFloor(...given)); }
+  override putFixedHash(...given: Put<"putFixedHash">) { super.putFixedHash(...given); this.#keep("fixed-hash", [given[0]], (state) => state.putFixedHash(...given)); }
+  override putFixed(...given: Put<"putFixed">) { super.putFixed(...given); this.#keep("fixed", [given[0].item, given[0].slot], (state) => state.putFixed(...given)); }
+  override finishFixed(...given: Put<"finishFixed">) { super.finishFixed(...given); this.#keep("fixed-ready", [], (state) => state.finishFixed(...given)); }
   override setScope(...given: Put<"setScope">) { super.setScope(...given); this.#keep("scope", [], (state) => state.setScope(...given)); }
   override putItem(...given: Put<"putItem">) { super.putItem(...given); this.#keep("item", [given[0].id], (state) => state.putItem(...given)); }
   override settleHolder(...given: Put<"settleHolder">) { super.settleHolder(...given); this.#keep("settled-holder", [given[0]], (state) => state.settleHolder(...given)); }

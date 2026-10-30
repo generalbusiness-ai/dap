@@ -6633,9 +6633,10 @@ it is not judged.
   retried.
 
 **What completes a guard with a `where`. New in revision 11** (I1
-delta 88; the I1 delivery note, section 7). I1 writes an index on the
-slots that a `where` names, and no guard reads it yet: a guard with a
-`where` reads pages. Three kinds of evidence may complete such a
+delta 88; the I1 delivery note, section 7). I1 wrote an index on the
+slots that a `where` names but answered every `where` by reading pages.
+The fixed-slot rule below states which guards now use exact counts.
+Three kinds of evidence may complete such a
 guard, and no other.
 
 1. *Every page.* Each page of the items of that type in the listed
@@ -6666,11 +6667,39 @@ guard, and no other.
 
 An exact count comes from the first kind, or from the second when
 every clause of the `where` is one that the index answers. An index
-is derived storage. It is in no dimension of section 17.1, and a
-verifier never reads it: a verifier derives the guard over the folded
-state (section 9.3). An index that is written and never read is
+is derived storage. It is in no dimension of section 17.1. A verifier
+rebuilds the index from the folded state; it never trusts an index
+supplied by the runtime (section 9.3). An index that is written and never read is
 unused storage. No judgment rests on it, so it makes no judgment
 wrong.
+
+**Fixed-slot equality counts. Decided by request `121a8913`.** The
+derived view keeps an equality index for every slot declared
+`fixed: true`, including party, reference and value slots. It includes
+live items and retained final items. Each entry maintains the index in
+the same transaction as its item and state changes.
+
+A range guard uses this index when its `where` has exactly one
+`equals` clause between a fixed slot of the range's subject type and
+a field or a constant. Either operand order is admitted. It reads the
+exact count across the distinct named states and excludes each matching
+`except` subject once. This is complete evidence for `some`, `none` and
+`count`. It reads no item pages and uses none of `guardScan`.
+
+The keys preserve the existing equality rule, including local facts in
+normal form and the distinction between an empty slot and an empty
+field list. If an append or a journal floor changes which local fact
+bodies are held, the affected keys change in that same transaction.
+Retained final items participate in those changes too. A scope that
+already holds items rebuilds complete coverage before this rule can
+serve a judgment. Readiness names the definition, full scope identity and
+exact head sequence and hash; an earlier marker cannot cover later writes
+made by a version without this index. A historical view and replay rebuild
+the same counts at the same head; index rows add nothing to checkpoint bytes.
+
+Every other `where` keeps the bounded page scan, including an equality
+on a slot that is not fixed and a conjunction of several clauses. The
+index does not raise a scan limit or make an unfinished scan complete.
 
 Until R4 gives the bound on retained final items and on the work of one
 guard, this contract does not claim that a guard over final states

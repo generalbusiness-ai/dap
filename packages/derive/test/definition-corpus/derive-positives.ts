@@ -4,6 +4,7 @@ import { deviceFormDefinitions } from "./forms-device-variants.ts";
 import { holdFormDefinitions } from "./forms-hold-variants.ts";
 import { operandAdditionalDefinitions } from "./forms-operand-variants.ts";
 import { guardAdditionalDefinitions } from "./forms-guards-variants.ts";
+import { fixedSlotData } from "./fixed-slot-data.ts";
 import { sendAdditionalDefinitions } from "./forms-sends-additional.ts";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { capabilityStagingData, capabilityStepFactChange } from "./capability-staging-data.ts";
@@ -41,6 +42,7 @@ export const derivePositiveDefinitions: readonly DefinitionCorpusRow[] = [
   ...holdFormDefinitions,
   ...operandAdditionalDefinitions,
   ...guardAdditionalDefinitions,
+  ...[true, false].map(fixed => ({ name: `derive/fixed-slot/${fixed ? "fixed" : "mutable"}`, origins: ["packages/derive/test/fixed-slot-index.test.ts#fixed field and constant equalities complete beyond guardScan while the paired mutable guard remains incomplete"], declaration: () => fixedSlotData(fixed), bounds: PROPOSED_BOUNDS })),
   ...sendAdditionalDefinitions,
   ...handlerFormCases().filter(([, , code]) => code === null).map(([name, declaration]) => ({ name: `derive/handlers/${name}`,
     origins: [`packages/derive/test/forms-handlers.test.ts#validator:${name}`], declaration, bounds: PROPOSED_BOUNDS })),

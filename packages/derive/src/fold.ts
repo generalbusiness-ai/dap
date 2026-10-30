@@ -16,6 +16,7 @@ import { intentDigest, seedDigest } from "@generalbusiness/dap-bytes";
 import { UNDER, historyOf } from "./attribution.ts";
 import { drawsOf, released, type DrawOptions } from "./draws.ts";
 import { indexRows } from "./binding.ts";
+import { fixedRowsOf, rekeyFixed } from "./fixed-index.ts";
 import { changeItem, newItem, signerOf } from "./item-effects.ts";
 export { changeItem, newItem, signerOf, HOLDER, type ItemEffect } from "./item-effects.ts";
 import { attemptedBy, openedBy, operationId } from "./ledger.ts";
@@ -26,7 +27,7 @@ import { checkStandingEntry, StandingError } from "./standing.ts";
 import { updateItemDuties } from "./item-duties.ts";
 import { requestReservation } from "./request-duties.ts";
 import { itemSettledBy, itemSettlementBinding } from "./handlers.ts";
-import { nextFloorState } from "./floor.ts";
+import { heldPositions, nextFloorState } from "./floor.ts";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 
 /** An entry that this state cannot take: out of sequence, or with an effect on nothing. */
@@ -266,11 +267,28 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
     if (held !== null && !same(held, kept)) writer.putHolder(item, kept);
   }
 
+  // The pre-entry bindings and draws above keep their original Own context.
+  // The index now describes the post-entry held history even when the fold's
+  // caller supplied no payload reader (a supported in-memory fold).
+  writer.putFixedHash(entry.seq, hash);
+  rekeyFixed(writer, entry.at, [{ seq: entry.seq, hash }], seq => writer.fixedHash(seq));
+  for (const id of now.keys()) for (const write of fixedRowsOf(definition, writer.item(id)!, entry.at, seq => writer.fixedHash(seq))) writer.putFixed(write.row, write.dependencies);
+
   if (input.type === "floor") {
     if (!writer.putFloor || !options.own) throw new FoldError("a floor requires the held journal and floor state writer");
-    writer.putFloor(nextFloorState(writer, definition, input, options.own, options.platform));
+    const snapshot = writer.all();
+    const floor = nextFloorState(writer, definition, input, options.own, options.platform, snapshot);
+    const kept = new Set(floor.kept), removed: { seq: number; hash: Digest }[] = [];
+    for (const seq of heldPositions(writer, floor.floor)) {
+      if (kept.has(seq)) continue;
+      const hash = writer.fixedHash(seq);
+      if (hash !== null) removed.push({ seq, hash });
+    }
+    rekeyFixed(writer, entry.at, removed, seq => seq < floor.floor && !kept.has(seq) ? null : writer.fixedHash(seq));
+    writer.putFloor(floor);
   }
 
   const genesis = scope?.genesis ?? { hash, source: input.type === "genesis" ? input.source : null, n: input.type === "genesis" ? input.n : null };
   writer.setScope({ at: entry.at, creator: scope ? scope.creator : input.type === "genesis" ? input.seed.creator : null, status, head: { seq: entry.seq, hash }, time: entry.time, genesis, held });
+  writer.finishFixed(definition.digest, entry.at, { seq: entry.seq, hash });
 }

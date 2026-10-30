@@ -4,8 +4,32 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { checkpointOf, judgeCheckpoint, judgeDiagnosis, validateDefinition, type StateView } from "@generalbusiness/dap-derive";
 import { d, created, keys, on, otherLane, valid } from "@generalbusiness/dap-derive/testing";
+import { structuralFloorHistory } from "../../derive/test/fixed-slot-fixture.ts";
 import { View } from "../src/view.ts";
 import { MemorySource, verify } from "../src/index.ts";
+
+test("historical fixed counts rekey a retained final record at its floor without changing earlier heads", () => {
+  // Fixture creator, grants and archive receipt are scripted. The floor
+  // judgment, fold and historical View are real in-memory implementations.
+  const history = structuralFloorHistory(true), view = new View();
+  for (const { entry, hash } of history.scope.entries)
+    view.fold(history.definition, entry, hash, { own: history.scope.own });
+  for (const seq of [history.floor, history.before, history.item, 1, history.floor, 0, history.before]) {
+    const state = view.at(seq).state, opened = seq >= history.item, final = seq > history.item, pruned = seq >= history.floor;
+    const sealed = history.scope.entries[seq]!;
+    expect(state.fixedReady(history.definition.digest, sealed.entry.at, { seq, hash: sealed.hash })).toBe(true);
+    expect(state.fixedReady(history.definition.digest, sealed.entry.at, { seq: seq + 1, hash: sealed.hash })).toBe(false);
+    expect(state.fixedReady(history.definition.digest, sealed.entry.at, { seq, hash: d("another head") })).toBe(false);
+    expect(state.fixedCount("job", "stamp", "1", ["passed"], "normalized"))
+      .toBe(final && !pruned ? 1 : 0);
+    expect(state.fixedCount("job", "stamp", canonicalize(history.reference), ["passed"], "normalized"))
+      .toBe(final && pruned ? 1 : 0);
+    expect(state.fixedCount("job", "stamp", canonicalize(history.reference), ["passed"], "raw"))
+      .toBe(final ? 1 : 0);
+    expect(state.fixedHash(1)).toBe(seq >= 1 && !pruned ? history.reference.hash : null);
+    if (opened) expect(state.item(history.item)!.values["stamp"]).toEqual(history.reference);
+  }
+});
 
 // Made-up platform data, with no marked rules. The fixture's test authority
 // stands in for membership. Its genesis and acts are judged in memory;
@@ -60,7 +84,7 @@ test("historical item duties contain only their head's admitted tasks, preserve 
   for (const seq of [1, 3, 2, 4, 0, 1]) expect(view.at(seq).state.all()).toEqual(history.replay(seq + 1).all());
 });
 
-test("historical declared indexes return exactly the live and final items of their head, in any order, and incomplete indexes answer no lookup", () => {
+test("historical declared indexes and fixed-slot counts retain their own head's live and final items, in any order", () => {
   // Invariant: the historical StateView has the same complete declared
   // indexes as the fold at that head, including final items and no future rows.
   const definition = valid(validateDefinition(data, PROPOSED_BOUNDS, undefined, { platform: true }));
@@ -102,9 +126,26 @@ test("historical declared indexes return exactly the live and final items of the
     [4, [[first, second], [third], [first, second, third], [first], [], null, [[first, "done"], [second, "live"], [third, "live"]]]],
     [5, [[first, second], [third], [first, second, third], [first], [], null, [[first, "done"], [second, "done"], [third, "live"]]]],
   ]);
+  // Fixed counts are separate from the declared binding indexes. `other`
+  // is fixed but has no declared index. Repeated states count only once.
+  const fixed = (state: StateView, mode: "raw" | "normalized") => [
+    state.fixedCount("row", "key", canonicalize(x), ["live"], mode),
+    state.fixedCount("row", "key", canonicalize(x), ["done"], mode),
+    state.fixedCount("row", "key", canonicalize(x), ["live", "done", "live"], mode),
+    state.fixedCount("row", "category", canonicalize(category), ["live", "done"], mode),
+    state.fixedCount("row", "other", canonicalize(x), ["live", "done"], mode),
+  ];
+  const expectedFixed = new Map([
+    [-1, [0, 0, 0, 0, 0]], [0, [0, 0, 0, 0, 0]],
+    [1, [1, 0, 1, 1, 1]], [2, [2, 0, 2, 2, 2]],
+    [3, [1, 1, 2, 2, 2]], [4, [1, 1, 2, 3, 2]],
+    [5, [0, 2, 2, 3, 2]],
+  ]);
   for (const seq of [5, 2, 2, 4, 0, -1, 1, 1, 3, 5]) {
     const got = view.at(seq);
     expect(contents(got.state), `head ${seq}`).toEqual(expected.get(seq));
+    for (const mode of ["raw", "normalized"] as const)
+      expect(fixed(got.state, mode), `fixed counts at head ${seq}, ${mode}`).toEqual(expectedFixed.get(seq));
     expect(contents(got.state), `fold through head ${seq}`).toEqual(contents(history.replay(seq + 1)));
     expect(view.at(seq).built).toBe(false);
     expect(absent.at(seq).state.lookup("row", "key", canonicalize(x), 9)).toEqual(seq < 1 ? [] : null);

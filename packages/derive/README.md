@@ -55,6 +55,37 @@ The package has two entry points:
 | `capability/hold` | The code of `hold@1` over its records, by section 6.11 of the contract and sections 4.2, 5.7 and 6.2 of the authority note. `hasWorkspace(definition)`, `stagedSource`, `holdCapability(options)`, `workspaceEffects`, `boundLicense`, `licenseRefused`, `holdReserves`. Its two options are numbers that the proof plan owns: the most tokens of one hold, with the floor 2, and the retention of a root. It declares the most that each of its effects, steps and outcome rules derives in one entry (`maxima`), and `counted`, of `capability`, adds them into each entry of a definition. The production ports of the scope package hold it. |
 | `capability/ancestry`, `capability/gitread` | The ancestry walk, `walk`, and the guard `ancestry` of `git-read@1`, `gitRead(options)`, by section 16.4 of the contract and section 6.2 of the authority note. The same module has the step `job-read` of `git-read@1` (authority note, sections 3.11 and 5.7): the checker's signed request for a job's read token, the `token` record that it makes, and the rules of that token's mint and revocation. `capabilitiesOf` makes one value of the code of several capability versions: their forms, their steps and the rules of their operations. |
 
+## Fixed-slot range guards
+
+The folded view indexes every item slot declared `fixed: true`, including
+party, reference and value slots in retained final items. A range guard
+whose `where` is one `equals` between a fixed slot of its subject type
+and a field or constant reads the exact count across its named states.
+Each matching `except` subject is excluded once. Either operand order
+works. This path reads no item pages and uses none of `guardScan`.
+
+Every other predicate keeps the bounded scan. In particular, a mutable
+slot and a conjunction of equality clauses do not qualify. An unfinished
+scan still answers `guard-incomplete` when no witness decides it.
+
+Index keys use the same equality rule as a scan. Item changes, appends
+and journal floors maintain the counts in the fold's transaction. A local
+fact's key can change when its body becomes available or is pruned, even
+when the slot is fixed. Updating those keys costs the affected retained
+values; that work is not bounded by `guardScan`. Reconstruction completes
+before a view serves an indexed guard. Replay rebuilds the same index,
+and checkpoint bytes contain none of its rows.
+
+The view keeps raw counts for judgments without an `Own` reader. With
+`Own`, it uses normalized counts and the held hashes of that view. This
+hash metadata contains no journal bodies. `fixedRowsOf` derives an item's
+absolute rows and `rekeyFixed` updates affected rows. Native initialization
+reconstructs complete coverage from current items and held history. Readiness
+is bound to the definition, full scope identity and exact head sequence
+and hash. The native initializer reads journal sequence and hash columns
+in batches, without parsing held entry bodies. A marker left by an older
+head cannot skip reconstruction after a rollback and roll-forward.
+
 ## The validator's modules
 
 `validate` is a directory, `src/validate/`. Its `index.ts` reads a

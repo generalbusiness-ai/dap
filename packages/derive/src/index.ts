@@ -1,5 +1,6 @@
 export * from "./validate/index.ts";
 export * from "./state.ts";
+export * from "./fixed-index.ts";
 export * from "./fold.ts";
 export * from "./time.ts";
 export * from "./values.ts";

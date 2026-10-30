@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type Item, type Seed } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, factRefOf, newIncarnation, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, entryHash, factRefOf, newIncarnation, scopeIdOf, seedDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { applyEntry, PROFILES, validateDefinition, type RuleGiven } from "@generalbusiness/dap-derive";
 import { directoryPartition1, directoryPartitionRules1, partitionGeneration, partitionLane, partitionNumber, PARTITION_COHORT } from "../../platform/src/directory-partitions.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
@@ -58,7 +58,11 @@ test("directory partition point reads stay bounded beside 3000 unrelated lane ro
     const beforeFold = { queries: queries.length, rowsRead, rowsWritten, plans: plans.length };
     const head = counted.scope()!;
     const update: Entry = { ...source, at: head.at, seq: head.head.seq + 1, prev: head.head.hash, input, uses: [], effects, sends: [] };
-    applyEntry(counted, checked.definition, update, entryHash(update));
+    // SCRIPTED journal append, outside the counted fold boundary, just as
+    // the runtime stores a sealed entry before deriving its state.
+    const bytes = canonicalize(update), hash = entryHash(update);
+    store.append(update, hash, bytes, utf8(bytes).length);
+    applyEntry(counted, checked.definition, update, hash);
     measuring = false;
     const updateFoldStats = { queries: queries.slice(beforeFold.queries), rowsRead: rowsRead - beforeFold.rowsRead, rowsWritten: rowsWritten - beforeFold.rowsWritten, plans: plans.slice(beforeFold.plans) };
     const updated = store.item(3100);
@@ -86,7 +90,8 @@ test("directory partition point reads stay bounded beside 3000 unrelated lane ro
   expect(got.updateRuleStats.rowsRead).toBeLessThanOrEqual(24); expect(got.updateRuleStats.rowsWritten).toBe(0);
   expect(got.updateFoldStats.queries.length).toBeLessThanOrEqual(64);
   expect(got.updateFoldStats.rowsRead).toBeLessThanOrEqual(128); expect(got.updateFoldStats.rowsWritten).toBeLessThanOrEqual(32);
-  expect([...got.updateRuleStats.plans, ...got.updateFoldStats.plans].every(plan => !/SCAN|TEMP/i.test(plan))).toBe(true);
+  expect([...got.updateRuleStats.plans, ...got.updateFoldStats.plans].every(plan => !/SCAN|TEMP/i.test(plan)),
+    JSON.stringify({ rule: got.updateRuleStats, fold: got.updateFoldStats })).toBe(true);
   expect(got.unavailable).toEqual({ holds: null, reason: "dependency-unavailable" });
   expect(got.missing).toBeNull(); expect(got.incompleteQueries).toHaveLength(4); expect(got.additionalRows).toBeLessThanOrEqual(8);
 });
