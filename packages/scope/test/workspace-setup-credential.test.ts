@@ -13,7 +13,7 @@ import { CAPABILITY_CODE, ScopeObject, type EffectRequest, type Wiring } from ".
 import type { NativeBirth } from "../src/native-birth.ts";
 import { production } from "../src/ports.ts";
 import { controls, testPorts } from "../src/testing.ts";
-import type { WorkspaceSources } from "../src/workspace-lineage.ts";
+import { workspaceRepository, type WorkspaceSources } from "../src/workspace-lineage.ts";
 import { reader, START } from "./fixtures-native.ts";
 import { staged } from "./hosted.ts";
 
@@ -118,6 +118,7 @@ async function fixture(mode: Mode) {
   const refused = Object.assign(new Error("SCRIPTED provider refusal"), { code: "INVALID_INPUT", numericCode: 10000 });
   const lateFork = pending<unknown>(), lateRevoke = pending<boolean>();
   const calls = { forks: [] as string[], revokes: [] as string[], deletes: [] as string[] };
+  const bindingCalls = { get: 0, info: 0, createToken: 0 };
   const requests: EffectRequest[] = [];
   const answers: Array<{ kind: string; operation: OperationId; attempt: number; result: string }> = [];
   let gitReads = 0;
@@ -125,9 +126,9 @@ async function fixture(mode: Mode) {
   const remote = (name: string) => `https://${SERVICE}/git/${NAMESPACE}/${name}.git`;
   const created = (name: string) => ({ name, remote: remote(name), token: `SETUP-${name}` });
   const binding: ArtifactsNamespace = {
-    async get(name) { return {
-      async info() { return { name, remote: remote(name) }; },
-      async createToken(scope, _seconds) { return { id: "read-stand-in", scope, plaintext: "READ-stand-in", expiresAt: timeOf(timeMs(c.clock.now)! + 120_000) }; },
+    async get(name) { bindingCalls.get++; return {
+      async info() { bindingCalls.info++; return { name, remote: remote(name) }; },
+      async createToken(scope, _seconds) { bindingCalls.createToken++; return { id: "read-stand-in", scope, plaintext: "READ-stand-in", expiresAt: timeOf(timeMs(c.clock.now)! + 120_000) }; },
       async revokeToken(token) {
         if (!token.startsWith("SETUP-")) return true;
         calls.revokes.push(name);
@@ -203,6 +204,16 @@ async function fixture(mode: Mode) {
     const counts = state.storage.sql.exec("SELECT COUNT(*) AS rows,SUM(CASE WHEN plaintext IS NOT NULL THEN 1 ELSE 0 END) AS held FROM private_creation_credential WHERE scope=?", canonicalize(scope.at)).toArray()[0];
     return {
       state: scope.status, head: scope.head.seq, callbacks: scheduled.length,
+      clock: given.clock.read(), scopeTime: scope.time,
+      holds: given.state.records(OWNER, "fork", {}).map(record => {
+        const number = record.key[0], item = typeof number === "number" ? given!.state.item(number) : null;
+        const definition = given!.definition?.(), type = item ? definition?.declared.items[item.type] : null;
+        const timer = item ? Object.values(definition?.declared.timed ?? {}).find(rule => rule.on === item.type && rule.effects.some(effect => "hold" in effect && effect.hold.do === "end")) : null;
+        const deadline = item && timer ? item.values[timer.deadline] : null;
+        return { number, type: item?.type ?? null, state: item?.state ?? null, epoch: item?.values["epoch"] ?? null,
+          initial: type?.initial ?? null, recognizedType: item ? definition?.holdTypes.includes(item.type) ?? false : false,
+          deadlineField: timer?.deadline ?? null, deadline: typeof deadline === "string" ? deadline : null };
+      }),
       workspaceForms: given.definition?.()?.underived.filter(form => form.capability === OWNER).map(form => ({ form: form.form, name: form.name })) ?? [],
       journal: entries.slice(-12).map(entry => ({ seq: entry.seq, type: entry.input.type,
         kind: "kind" in entry.input ? entry.input.kind : null, result: "result" in entry.input ? entry.input.result : null,
@@ -213,7 +224,7 @@ async function fixture(mode: Mode) {
       operations: opened.map(id => { const operation = given!.state.operation(id); return { id, kind: operation?.kind ?? null, selected: operation?.selected ?? null,
         attempts: operation?.attempts.map(attempt => ({ number: attempt.attempt, results: attempt.outcomes.map(outcome => outcome.result) })) ?? [] }; }),
       requests: requests.map(request => ({ kind: request.kind, operation: request.operation, attempt: request.attempt })), answers,
-      calls: { forks: calls.forks.length, revokes: calls.revokes.length, deletes: calls.deletes.length, gitReads },
+      calls: { ...bindingCalls, forks: calls.forks.length, revokes: calls.revokes.length, deletes: calls.deletes.length, gitReads },
       custody: { rows: counts?.["rows"] ?? 0, held: counts?.["held"] ?? 0 }, lineageReads: lineage.readMetadata(),
     };
   });
@@ -223,8 +234,8 @@ async function fixture(mode: Mode) {
       await life.wait(() => surface.effect()); const value = await read();
       if (ready(value)) return value;
     }
-    try { console.info("workspace-setup-failure", await diagnostic()); }
-    catch { console.info("workspace-setup-failure", { state: "diagnostic-unavailable" }); }
+    try { console.info("workspace-setup-failure", JSON.stringify(await diagnostic())); }
+    catch { console.info("workspace-setup-failure", JSON.stringify({ state: "diagnostic-unavailable" })); }
     throw new Error("Native setup witness exceeded its finite observation bound");
   };
   const releaseFork = () => { if (firstForkName && !lateForkReleased) { lateForkReleased = true; lateFork.resolve(created(firstForkName)); } };
@@ -282,6 +293,17 @@ async function fixture(mode: Mode) {
     const awaitIntent = (who: typeof keys.rita, kind: string, fields: SignedIntent["intent"]["fields"], on: number | null, expected: Record<string, number>) => signIntent({ v: 1, to: at, actor: who.key, kind, on, fields, expected, idempotencyKey: crypto.randomUUID(), notAfter: timeOf(timeMs(c.clock.now)! + 60_000) }, who.secret);
     const commitment = await submit(keys.rita, "offer", { intent: 0 }, null, { intent: 1 });
     await submit(keys.rita, "assign", { performer: keys.una.member }, commitment, { on: 1 });
+    // One labelled fixture check before any workspace operation: the actual
+    // production parser makes at most five immutable scripted lineage reads.
+    // It performs no provider request and changes no native cleanup record.
+    const preflight = await inside(async () => {
+      if (!given) throw new Error("Native outside factory was not constructed");
+      const before = lineage.readMetadata().count;
+      const repository = await workspaceRepository(given, lineage.sources, lineage.register.scope, "artifacts", NAMESPACE);
+      return { recognized: repository !== null, reads: lineage.readMetadata().count - before, readCeiling: 5, trace: lineage.readMetadata().last.slice(-5) };
+    });
+    console.info("workspace-setup-lineage-preflight", JSON.stringify(preflight));
+    expect(preflight.recognized, "scripted lineage must satisfy production workspaceRepository before take-hold").toBe(true);
     await submit(keys.una, "take-hold", { commitment }, null, { commitment: 2 });
     return { life, surface, snapshot, until, calls, requests, releaseFork, releaseRevoke: () => lateRevoke.resolve(true), close };
   } catch (error) {
