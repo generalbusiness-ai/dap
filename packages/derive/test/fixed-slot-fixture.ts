@@ -1,8 +1,11 @@
 /** Actual in-memory judge/fold; fixture grants, creator and archive receipt
  * are stand-ins. No native archive or physical deletion claim follows. */
-import { archivedPosition, clockOf, judgeFloor, PROPOSED_BOUNDS, validateDefinition, type Own } from "../src/index.ts";
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { archivedPosition, clockOf, judgeFloor, validateDefinition, type Own } from "../src/index.ts";
 import { fixedSlotData } from "./definition-corpus/fixed-slot-data.ts";
-import { on, rita, Scope, t, valid } from "./fixtures.ts";
+import { on, keys, Scope, t, valid } from "./fixtures.ts";
+
+const { rita } = keys;
 
 export function structuralFloorHistory(final = false) {
   const definition = valid(validateDefinition(fixedSlotData(), PROPOSED_BOUNDS));

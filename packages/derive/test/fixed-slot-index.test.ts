@@ -1,13 +1,15 @@
 /** Real validator, judges and fold in memory. Membership grants and the
  * fixture creator/archive receipt are stand-ins, not host evidence. */
 import { expect, test, vi } from "vitest";
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
-import { applyEntry, judgeAct, MemoryState, PROPOSED_BOUNDS, validateDefinition } from "../src/index.ts";
-import { on, rita, Scope, valid } from "./fixtures.ts";
+import { applyEntry, judgeAct, MemoryState, validateDefinition } from "../src/index.ts";
+import { on, keys, Scope, valid } from "./fixtures.ts";
 import { fixedSlotData } from "./definition-corpus/fixed-slot-data.ts";
 import { structuralFloorHistory } from "./fixed-slot-fixture.ts";
 
 const stopped = { ...PROPOSED_BOUNDS, guardScan: 3, guardPage: 2 };
+const { rita } = keys;
 
 test("fixed field and constant equalities complete beyond guardScan while the paired mutable guard remains incomplete", () => {
   for (const fixed of [true, false]) {
