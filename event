@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8407b9d0c17d5acb3459e9535309cba55cbd2682","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/derive-positives.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:86de903888ceffec99e2a3994d6475bba41cd623","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/fold.ts."}
