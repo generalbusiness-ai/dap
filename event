@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:854c5cfad7b38d5efbc9da261175f7f6dd9eb96d","text":"Replaced by the review request for exact head f2ae898058587c87b573e7408c4700dbd1ec211a; any review promised on this request is released, and a verdict filed against it would bind to nothing."}
+{"kind":"promise","text":"Checker promise: short diff review of the fixed-slot index recut at head f2ae898058587c87b573e7408c4700dbd1ec211a against items 1 and 2 of 9b6930b0."}
