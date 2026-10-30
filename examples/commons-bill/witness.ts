@@ -35,7 +35,7 @@ export function inputOf(value: unknown): Input {
   const url = new URL(input.service);
   need(input.v === 1 && url.protocol === "https:" && url.origin === input.service && input.fixture === FIXTURE_DIGEST, "input-service-or-fixture");
   need(closed(input.source, ["head", "tree"]) && /^[a-f0-9]{40}$/.test(input.source.head) && /^[a-f0-9]{40}$/.test(input.source.tree), "input-source");
-  need(closed(input.deployment, ["name", "version"]) && input.deployment.name === "dap-demo" && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(input.deployment.version), "input-deployment");
+  need(closed(input.deployment, ["name", "version"]) && input.deployment.name === "dap-commons" && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(input.deployment.version), "input-deployment");
   need(closed(input.room, KINDS) && KINDS.every(kind => isScopeRef(input.room[kind]) && input.room[kind].kind === kind), "input-room");
   for (const name of ["member", "agent"] as const) need(closed(input[name], ["key", "handle"]) && isKeyId(input[name].key) && /^@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(input[name].handle), "input-actor");
   need(input.member.key !== input.agent.key && input.member.handle !== input.agent.handle, "distinct-actors");

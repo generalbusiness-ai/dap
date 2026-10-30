@@ -41,7 +41,7 @@ The input has exactly these members:
 - `v`: 1.
 - `service`: the exact HTTPS origin.
 - `source`: the reviewed `head` and `tree`, each a full Git SHA1.
-- `deployment`: the expected `name` (`dap-demo`) and Worker `version`.
+- `deployment`: the expected `name` (`dap-commons`) and Worker `version`.
 - `room`: the full references named `register`, `directory`, `membership`,
   `rules`, `destination` and `commons`. Each includes scope, kind and
   incarnation.

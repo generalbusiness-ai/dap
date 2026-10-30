@@ -13,7 +13,8 @@ const { secretSigner } = await load("@generalbusiness/dap-client");
 const { McpService, identityId } = await load("@generalbusiness/dap-mcp");
 const { StandIn, SERVICE } = await load(new URL("../../../packages/mcp/test/support/standin.ts", import.meta.url).href);
 const { durableCustody, flushFile } = await load(new URL("../custody.ts", import.meta.url).href);
-const { requestNote } = await load(new URL("../witness.ts", import.meta.url).href);
+const { inputOf, requestNote, WitnessRefusal } = await load(new URL("../witness.ts", import.meta.url).href);
+const { FIXTURE_DIGEST } = await load(new URL("../documents.ts", import.meta.url).href);
 const NOW = Date.parse("2099-01-01T00:00:00Z");
 
 function fixture(t) {
@@ -79,4 +80,25 @@ test("a lost accepted reply settles read-only across reopen without replacing or
   assert.equal((await requestNote(f.open(), f.identity, f.note, "continue")).state, "accepted");
   assert.equal(f.wires.length, 1);
   assert.equal(canonicalize((await f.store.read(identityId(f.identity))).envelope), original);
+});
+
+
+test("W1 accepts its Commons deployment input and rejects the Demo deployment before operator execution", () => {
+  const member = secretSigner(new Uint8Array(32).fill(79));
+  const agent = secretSigner(new Uint8Array(32).fill(80));
+  const peer = new StandIn(member.key, "member", ["commons.write"]);
+  const input = { v: 1, service: "https://dap-commons.inguz.workers.dev",
+    source: { head: "a".repeat(40), tree: "b".repeat(40) },
+    deployment: { name: "dap-commons", version: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" },
+    room: { register: peer.add("register", "platform:register@23"), directory: peer.directory,
+      membership: peer.membership, rules: peer.rules, destination: peer.destination,
+      commons: peer.add("commons", "platform:commons@1") },
+    member: { key: member.key, handle: "@member" }, agent: { key: agent.key, handle: "@agent" },
+    fixture: FIXTURE_DIGEST,
+  };
+  // This closed synthetic input invokes only the pure input boundary.
+  // It opens no operator home and makes no HTTP request or native claim.
+  assert.deepEqual(inputOf(input), input);
+  assert.throws(() => inputOf({ ...input, deployment: { ...input.deployment, name: "dap-demo" } }),
+    error => error instanceof WitnessRefusal && error.reason === "input-deployment");
 });
