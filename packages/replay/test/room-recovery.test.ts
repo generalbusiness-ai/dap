@@ -5,8 +5,8 @@ import { clockOf, judgeGenesis, validateDefinition, valueDigest } from "@general
 import { Ledger, T0, created, keys, notesDefinition, on, t, valid, variant } from "@generalbusiness/dap-derive/testing";
 import { capacityLargeTextAgain, recoveredChild, recoveredText } from "../../derive/test/definition-corpus/replay-mutations-data.ts";
 import { replayRecoveredAlias } from "../../derive/test/definition-corpus/replay-literals-data.ts";
-import { MemorySource, roomVerification, TRUSTS, type HistorySource } from "../src/index.ts";
-import { served } from "./world.ts";
+import { MemorySource, roomVerification, TRUSTS, verify, type HistorySource } from "../src/index.ts";
+import { rewrite, served } from "./world.ts";
 
 // Scripted in-memory judges, folds and histories, with fixture grants taken
 // as recorded. These cases claim no runtime admission or native authority.
@@ -155,5 +155,64 @@ test("a post-fold capacity failure cannot poison a repeated root or a later use 
       expect("at" in root && root.at).toEqual(history.fact(2));
     }
     expect(finished.coverage.filter(span => span.scope.scope === history.at.scope).map(span => span.through)).toEqual([1]);
+  } finally { room.close(); }
+});
+
+test("an earlier missing text remains a problem below a later blocked entry", async () => {
+  const digest = textDigest("missing before the used fact");
+  const source = created(variant(notesDefinition.declared, recoveredText(1000)), {}, "earlier-text-debt");
+  // Two real in-memory judgments name the absent body. Its original debt
+  // is at 1; the consumer uses 2, before settlement encounters the bad 3.
+  for (let n = 0; n < 2; n++) expect(source.act(keys.rita, "write", {
+    ...on(source, 0), fields: { body: digest },
+  }, { texts: () => null }).result).toBe("write");
+  source.did(keys.rita, "add-note");
+  const consumer = created(variant(notesDefinition.declared, recoveredChild), {}, "between-debt-and-block");
+  vouch(consumer, source, 2);
+  const all = [source, consumer], broken = served(source, all);
+  // A rehashed source specimen keeps the chain and signature intact but
+  // removes the opening that its actual add-note judgment must derive.
+  rewrite(broken, 3, entry => { entry.effects = []; });
+  const memory = new MemorySource([broken, served(consumer, all)], 1);
+  const standalone = await verify(memory, { mode: "replay", scope: consumer.at.scope, grants: "as-recorded" });
+  expect(standalone.report.result).toBe("mismatch");
+  expect(standalone.report.at?.seq).toBe(3);
+  const room = roomVerification(memory, { mode: "replay", grants: "as-recorded" });
+  try {
+    await room.checkTarget({ scope: consumer.at.scope });
+    const finished = await room.finish();
+    const result = finished.roots[0]!;
+    expect(result.result,
+      "The earlier missing text must propagate through the fact used before the later block").toBe("mismatch");
+    expect("at" in result && result.at).toEqual({ ...source.fact(3), hash: broken.entries[3]!.hash });
+    expect(finished.incompleteBytes).toContainEqual({ scope: source.at, from: 1, through: 2, reason: "retained text unavailable" });
+  } finally { room.close(); }
+});
+
+test("a source without capacity still owes its missing text when another root holds the body", async () => {
+  const body = "shared legacy text", digest = textDigest(body);
+  const legacy = created(notesDefinition, {}, "legacy-missing-body");
+  expect(legacy.act(keys.rita, "write", { ...on(legacy, 0), fields: { body: digest } }, { texts: () => null }).result).toBe("write");
+  const consumer = created(variant(notesDefinition.declared, recoveredChild), {}, "legacy-body-consumer");
+  vouch(consumer, legacy, 1);
+  const supplier = created(variant(notesDefinition.declared, recoveredText(40)), {}, "checked-shared-body");
+  expect(supplier.act(keys.rita, "write", { ...on(supplier, 0), fields: { body: digest } }, { texts: () => utf8(body).length }).result).toBe("write");
+  const all = [legacy, consumer, supplier], supplied = served(supplier, all);
+  supplied.retained.push({ kind: "text", digest, bytes: canonicalize(body) });
+  const memory = new MemorySource([served(legacy, all), served(consumer, all), supplied], 1);
+  const standalone = await verify(memory, { mode: "replay", scope: consumer.at.scope, grants: "as-recorded" });
+  expect(standalone.report.result).toBe("incomplete");
+  expect(standalone.report.at).toEqual(legacy.fact(1));
+  const room = roomVerification(memory, { mode: "replay", grants: "as-recorded" });
+  try {
+    await room.checkTarget({ scope: consumer.at.scope });
+    await room.checkTarget({ scope: supplier.at.scope });
+    const finished = await room.finish();
+    const result = finished.roots[0]!;
+    expect(result.result,
+      "Checked content in another root cannot settle a source without capacity").toBe("incomplete");
+    expect(finished.roots[1]!.result).toBe("consistent");
+    expect("at" in result && result.at).toEqual(legacy.fact(1));
+    expect(finished.trusts).not.toContain(TRUSTS.redacted);
   } finally { room.close(); }
 });

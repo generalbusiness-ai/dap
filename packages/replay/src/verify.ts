@@ -398,6 +398,7 @@ interface RoomRoot {
   requested: ScopeId; expected: Head | null; run: Run | null; head: Head | null;
   stop: Stop | null; unread: SourceError | null;
 }
+interface RoomProblem { from: number; stop: Stop }
 
 /**
  * The membership reference that a scope records (authority note, section
@@ -505,7 +506,7 @@ class Verifier {
   readonly #links = new Map<ScopeId, Set<ScopeId>>();
   readonly #viaRoot = new Map<ScopeId, ScopeId>();
   readonly #segments = new Map<ScopeId, { from: number; through: number; root: ScopeId }[]>();
-  readonly #blocked = new Map<ScopeId, { from: number; stop: Stop }>();
+  readonly #blocked = new Map<ScopeId, RoomProblem>();
   readonly #entryKeys = new Set<string>();
   readonly #retainedCache = new Map<string, RetainedInput>();
   readonly #textOrigins = new Map<Digest, { root: ScopeId; fact: FactRef }>();
@@ -621,7 +622,7 @@ class Verifier {
     const page = got.page;
     const conflict = (why: string, seq = 0): never => {
       const stop = new Stop("mismatch", why, { at: run.at ?? run.said, seq, hash: run.sealed[seq]?.hash ?? run.head.hash });
-      this.#blocked.set(run.id, { from: seq, stop }); this.#invalidateCoverage(run.id, seq); throw stop;
+      this.#recordProblem(this.#blocked, run.id, { from: seq, stop }); this.#invalidateCoverage(run.id, seq); throw stop;
     };
     if (!sameScope(page.scope, run.at ?? run.said)) conflict("the requested scope's refreshed page names another scope, incarnation or kind");
     if (page.head.seq < run.head.seq || page.head.seq < run.sealed.length - 1) conflict("the requested scope's served head retreated below its earlier head");
@@ -650,9 +651,15 @@ class Verifier {
     if (sealed.length) await this.#advance(run, sealed.length - 1, depth);
   }
 
+  /** Section 9.3 permits recovered content to settle a debt only for a
+   * definition with capacity, in a standalone or a room proof alike. */
+  #canRecoverDebt(run: Run, digest: Digest): boolean {
+    return !!run.definition?.declared.capacity && this.#recoverableText(run, digest) && typeof this.#knownTexts.get(digest)?.size === "number";
+  }
+
   #recoverRoomDebts(): void {
     for (const run of this.#runs.values()) for (const digest of run.owed.keys()) {
-      if (!this.#recoverableText(run, digest) || typeof this.#knownTexts.get(digest)?.size !== "number") continue;
+      if (!this.#canRecoverDebt(run, digest)) continue;
       run.owed.delete(digest);
       if (this.#textOrigin(digest)?.fact.at.scope !== run.id) {
         const users = this.#sharedTexts.get(digest) ?? new Set<ScopeId>(); users.add(run.id); this.#sharedTexts.set(digest, users);
@@ -660,7 +667,16 @@ class Verifier {
     }
   }
 
-  async #settleRoom(): Promise<Map<ScopeId, { from: number; stop: Stop }>> {
+  /** An earlier problem affects every user at or after that position; a
+   * later finding must never narrow that dependency frontier. */
+  #recordProblem(problems: Map<ScopeId, RoomProblem>, id: ScopeId, problem: RoomProblem): boolean {
+    const current = problems.get(id);
+    if (current && problem.from >= current.from) return false;
+    problems.set(id, problem);
+    return true;
+  }
+
+  async #settleRoom(): Promise<Map<ScopeId, RoomProblem>> {
     const findings = new Map<ScopeId, Stop>();
     let version: number;
     do {
@@ -682,7 +698,7 @@ class Verifier {
     const problems = new Map(this.#blocked);
     for (const run of this.#runs.values()) {
       const owed = run.owed.entries().next().value;
-      if (owed && !problems.has(run.id)) problems.set(run.id, { from: owed[1].seq,
+      if (owed) this.#recordProblem(problems, run.id, { from: owed[1].seq,
         stop: findings.get(run.id) ?? new Stop("incomplete", `a retained input is missing: the detached text ${owed[0]}, which no later entry of ${run.id} redacts`, owed[1]) });
     }
     return problems;
@@ -715,21 +731,21 @@ class Verifier {
       catch (error) {
         if (!(error instanceof Stop)) throw error;
         if (!error.at) throw error;
-        problems.set(error.at.at.scope, { from: error.at.seq, stop: error });
+        this.#recordProblem(problems, error.at.at.scope, { from: error.at.seq, stop: error });
       }
     }
-    for (const [id, problem] of this.#blocked) problems.set(id, problem);
-    for (const at of this.#unwalked) if (!problems.has(at.at.scope)) problems.set(at.at.scope, { from: at.seq, stop: new Stop("incomplete", "the walk of the ancestry record was not derived: this replay reads no commit", at) });
-    for (const span of this.#byteSpans()) if (!problems.has(span.scope.scope)) {
+    for (const [id, problem] of this.#blocked) this.#recordProblem(problems, id, problem);
+    for (const at of this.#unwalked) this.#recordProblem(problems, at.at.scope, { from: at.seq, stop: new Stop("incomplete", "the walk of the ancestry record was not derived: this replay reads no commit", at) });
+    for (const span of this.#byteSpans()) {
       const run = this.#runs.get(span.scope.scope)!, copy = run.sealed[span.from]!;
-      problems.set(run.id, { from: span.from, stop: new Stop("incomplete", span.reason, { at: run.at!, seq: span.from, hash: copy.hash }) });
+      this.#recordProblem(problems, run.id, { from: span.from, stop: new Stop("incomplete", span.reason, { at: run.at!, seq: span.from, hash: copy.hash }) });
     }
     const queue = [...problems.keys()];
     for (let i = 0; i < queue.length; i++) {
       const id = queue[i]!, problem = problems.get(id)!;
       for (const edge of this.#needs.get(id)?.values() ?? []) {
-        if (edge.seq < problem.from || edge.user.seq >= (problems.get(edge.user.at.scope)?.from ?? Infinity)) continue;
-        problems.set(edge.user.at.scope, { from: edge.user.seq, stop: problem.stop }); queue.push(edge.user.at.scope);
+        if (edge.seq < problem.from) continue;
+        if (this.#recordProblem(problems, edge.user.at.scope, { from: edge.user.seq, stop: problem.stop })) queue.push(edge.user.at.scope);
       }
     }
     const roots: RoomRootResult[] = this.#roomRoots.map(root => {
@@ -931,7 +947,7 @@ class Verifier {
         const at = { at: run.at!, seq: found.seq, hash: sealed.hash };
         this.#invalidateCoverage(run.id, found.seq);
         const stop = new Stop("mismatch", found.why, at);
-        if (this.#room) this.#blocked.set(run.id, { from: found.seq, stop });
+        if (this.#room) this.#recordProblem(this.#blocked, run.id, { from: found.seq, stop });
         throw stop;
       }
     }
@@ -1212,8 +1228,7 @@ class Verifier {
   async #settle(): Promise<void> {
     const owing = () => [...this.#runs.values()].find((run) => run.owed.size > 0);
     const recover = (run: Run) => {
-      if (!run.definition?.declared.capacity) return;
-      for (const digest of run.owed.keys()) if (this.#recoverableText(run, digest) && typeof this.#knownTexts.get(digest)?.size === "number") run.owed.delete(digest);
+      for (const digest of run.owed.keys()) if (this.#canRecoverDebt(run, digest)) run.owed.delete(digest);
     };
     for (let run = owing(); run; run = owing()) {
       recover(run);
@@ -1273,7 +1288,7 @@ class Verifier {
       if (this.#room) {
         run.failed = true;
         if (error instanceof Stop && error.result === "mismatch" && (!error.at || error.at.at.scope === run.id)) {
-          this.#blocked.set(run.id, { from: seq, stop: error });
+          this.#recordProblem(this.#blocked, run.id, { from: seq, stop: error });
           this.#invalidateCoverage(run.id, seq);
         }
       }
