@@ -11,12 +11,13 @@ import { tsImport } from "tsx/esm/api";
 const load = source => tsImport(source, import.meta.url);
 const { canonicalize, factRefOf, intentDigest, newIncarnation, verifySignedIntent } = await load("@generalbusiness/dap-bytes");
 const { secretSigner } = await load("@generalbusiness/dap-client");
-const { firstExtents } = await load("@generalbusiness/dap-platform");
+const { firstExtents, ARCHIVE_DEVICE_APPLICATION_COHORT: setupCohort } = await load("@generalbusiness/dap-platform");
 const { identityId } = await load("@generalbusiness/dap-mcp");
 const { StandIn, SERVICE } = await load(new URL("../../../packages/mcp/test/support/standin.ts", import.meta.url).href);
 const { changeJ4 } = await load(new URL("../../../apps/room/lanes/src/j4.ts", import.meta.url).href);
 const { durableCliStore, durableRequestStore } = await load(new URL("../custody.ts", import.meta.url).href);
 const { openSession, SessionRefusal } = await load(new URL("../session.ts", import.meta.url).href);
+const { roomRefs } = await load(new URL("../workflow.ts", import.meta.url).href);
 const NOW = Date.parse("2099-01-01T00:00:00Z");
 
 function json(body) {
@@ -161,4 +162,47 @@ test("manifest preparation keeps the actual signed act on disk and explicit subm
   assert.deepEqual((await reopened.accepted(key)).signed, record.envelope.signed);
   assert.equal(await reopened.intent(key), keptIntent);
   assert.deepEqual(f.original(), original);
+});
+
+// Scripted room summaries are not Native authority. Session serialization,
+// signed read-session requests, response decoding and private proof writes
+// below are the actual maintained implementations.
+test("room discovery reads every pinned sibling through one actual session and retains its exact private read proofs", { timeout: 30_000 }, async t => {
+  const f = await fixture(t), store = durableCliStore(f.home);
+  f.peer.membership = f.peer.add("membership", setupCohort.membership);
+  f.peer.rules = f.peer.add("rules", setupCohort.rules);
+  f.peer.destination = f.peer.add("destination", setupCohort.destination);
+  const refs = { membership: f.peer.membership, rules: f.peer.rules, destination: f.peer.destination };
+  f.peer.directory = f.peer.add("directory", setupCohort.directory, [{
+    id: 0, type: "repository", state: "open", revision: 0, opened: null,
+    parties: {}, attributed: [], values: {}, refs,
+  }]);
+  await store.save({ v: 1, key: "session-test", ...f.peer.config() });
+  const expected = { directory: f.peer.directory, ...refs }, opened = await f.open();
+  const pendingReads = [];
+  // Observe the actual promises only to drain a failed discovery before
+  // fixture cleanup. This neither queues calls nor replaces the busy guard.
+  const tracked = { ...opened, read(target) {
+    const pending = opened.read(target); pendingReads.push(pending); return pending;
+  } };
+  const observed = await roomRefs(tracked).catch(() => null);
+  await Promise.allSettled(pendingReads);
+  assert.deepEqual(observed, expected, "All four pinned scopes must be readable through the actual Session");
+  assert.deepEqual(JSON.parse(new TextDecoder().decode(await store.private("s1-room-refs"))), expected);
+  const names = readdirSync(join(f.home, "private")).filter(name => name.startsWith("s1r-") && name.endsWith(".data"));
+  assert.equal(names.length, 4, "Each actual Session.read must retain its private proof");
+  const proofs = await Promise.all(names.map(async name => {
+    assert.equal(statSync(join(f.home, "private", name)).mode & 0o777, 0o600);
+    const proof = JSON.parse(new TextDecoder().decode(await store.private(name.slice(0, -5))));
+    assert.equal(proof.v, 1); assert.equal(proof.read.ok, true); assert.equal(proof.read.complete, true);
+    assert.deepEqual(proof.read.value.scope, proof.target);
+    return canonicalize(proof.target);
+  }));
+  assert.deepEqual(proofs.sort(), Object.values(expected).map(canonicalize).sort());
+  const kept = names.map(name => readFileSync(join(f.home, "private", name)));
+  assert.deepEqual(await roomRefs(await f.open()), expected, "Reopening must read back the same immutable proofs");
+  assert.deepEqual(names.map(name => readFileSync(join(f.home, "private", name))), kept);
+  assert.equal(f.mutations.length, 0);
+  assert.ok(f.calls.filter(call => call.method === "POST").every(call => call.path.endsWith("/sessions")));
+  assert.equal(readdirSync(join(f.home, "private")).filter(name => name.startsWith("s1o-")).length, 0);
 });

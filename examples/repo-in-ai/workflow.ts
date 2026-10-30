@@ -21,7 +21,7 @@ export async function roomRefs(session: Session): Promise<RoomRefs> {
   const row = directory.items.find(item => item.type === "repository" && item.state === "open");
   const membership = row?.refs["membership"], rules = row?.refs["rules"], destination = row?.refs["destination"];
   if (!isScopeRef(membership) || !equal(membership, repository.membership) || !isScopeRef(rules) || rules.scope !== repository.rules || !isScopeRef(destination) || destination.scope !== repository.destination) throw new Error("The configured sibling references do not match the directory.");
-  const siblings = await Promise.all([session.read(membership), session.read(rules), session.read(destination)]);
+  const siblings = [await session.read(membership), await session.read(rules), await session.read(destination)];
   if (siblings[0]!.definition !== cohort.membership || siblings[1]!.definition !== cohort.rules || siblings[2]!.definition !== cohort.destination) throw new Error("The room's actual sibling pins differ from the setup cohort.");
   const refs = { directory: directory.scope, membership, rules, destination };
   await retain(session.ctx.store, "s1-room-refs", refs);
