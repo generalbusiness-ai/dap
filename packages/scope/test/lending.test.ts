@@ -215,6 +215,8 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
       "The historical fixture needs a complete authenticated history page.",
       "The historical projection stand-in received another binding.",
       "Expected a journal source.",
+      "application-projection-invalid", "application-projection-limit", "application-projection-binding",
+      "application-projection-incomplete", "application-projection-stale", "application-projection-unavailable",
     ]);
     const browser = (who: Actor, handle: `@${string}`, lose: { reply: boolean } = { reply: false }, readFetch: Fetch = fetch, current: () => boolean = () => true) => {
       let slot: string | null = null, posts = 0;
@@ -279,8 +281,30 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
 
     // A lost reply. The donation took effect, the browser does not know, and it keeps the original.
     const lossy = { reply: true }, hers = browser(passerby, "@passerby", lossy), lost = hers.open();
-    await lost.look();
-    expect(await lost.act("donate", { name: "Sieve", description: "Fine mesh." })).toMatchObject({ status: "unknown" });
+    const lostView = await lost.look();
+    const beforeLostAct = { posts: hers.posts(), kept: hers.kept() !== null };
+    const lostDonation = await lost.act("donate", { name: "Sieve", description: "Fine mesh." });
+    // Fixed presentation labels only: do not print custody, envelopes, tokens,
+    // complete projections or arbitrary transport exception messages.
+    const knownLostReasons = new Set([
+      "The list is not current yet. Nothing was sent.",
+      "An earlier request is kept. Check it first.",
+      "The request could not be signed and kept. Nothing was sent.",
+      "The library could not be read.", "The library could not be read: unavailable.",
+      "The library could not be read: forbidden.", "The library could not be read: sessions-unavailable.",
+      "The library could not be read: clock-behind.", "The library could not be read: too-large.",
+      "The library could not be read: wrong-incarnation.",
+      "The projection is behind the list.", "A newer read replaced this one.",
+      ...["sessions-unavailable", "bad-request", "not-found", "misaddressed", "clock-behind", "expired", "unauthorized", "replayed", "rate-limited"]
+        .map(reason => `The room refused a read session: ${reason}.`),
+      ...knownProjectionErrors,
+    ]);
+    const fixedReason = (value: unknown): string => typeof value === "string" && knownLostReasons.has(value) ? value : "other";
+    const lostDiagnostic = { look: { status: lostView.status, reason: "reason" in lostView ? fixedReason(lostView.reason) : null,
+      libraryPresent: lostView.status === "current" ? lostView.view.library !== null : null },
+      beforeAct: beforeLostAct, afterAct: { posts: hers.posts(), kept: hers.kept() !== null },
+      act: { status: lostDonation.status, reason: "reason" in lostDonation ? fixedReason(lostDonation.reason) : null }, projectionErrors: hers.projectionErrors() };
+    expect(lostDonation, JSON.stringify(lostDiagnostic)).toMatchObject({ status: "unknown" });
     expect([hers.posts(), await countThings()]).toEqual([1, 4]);
     expect(await lost.pending()).toMatchObject({ kind: "donate", name: "Sieve", unsent: false });
     const retainedDonation = JSON.parse(hers.kept()!) as Kept;
