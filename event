@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-entry-points.test.mjs","body":{"commit":"4c3330720f8738172da8e6cf34128d8def8d991d","path":"scripts/security-entry-points.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:085587569cb13bab4138a9e78fe4c0154a6da5af","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/site/token-reuse.ts."}
