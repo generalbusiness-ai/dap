@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/plans/032-2026-10-17-journey-as-acceptance-target.md","body":{"commit":"5068dab458fb1d5c58f3521703ba1311883b348e","path":"notes/plans/032-2026-10-17-journey-as-acceptance-target.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:32f0b2ba9f494274f06e199b7c3f0522374689fc","text":"Merge retired a covered predecessor; the successor is at notes/plans/032-2026-10-17-journey-as-acceptance-target.md."}
