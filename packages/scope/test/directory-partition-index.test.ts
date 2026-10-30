@@ -90,7 +90,8 @@ test("directory partition point reads stay bounded beside 3000 unrelated lane ro
   expect(got.updateRuleStats.rowsRead).toBeLessThanOrEqual(24); expect(got.updateRuleStats.rowsWritten).toBe(0);
   expect(got.updateFoldStats.queries.length).toBeLessThanOrEqual(64);
   expect(got.updateFoldStats.rowsRead).toBeLessThanOrEqual(128); expect(got.updateFoldStats.rowsWritten).toBeLessThanOrEqual(32);
-  expect([...got.updateRuleStats.plans, ...got.updateFoldStats.plans].every(plan => !/SCAN|TEMP/i.test(plan))).toBe(true);
+  expect([...got.updateRuleStats.plans, ...got.updateFoldStats.plans].every(plan => !/SCAN|TEMP/i.test(plan)),
+    JSON.stringify({ rule: got.updateRuleStats, fold: got.updateFoldStats })).toBe(true);
   expect(got.unavailable).toEqual({ holds: null, reason: "dependency-unavailable" });
   expect(got.missing).toBeNull(); expect(got.incompleteQueries).toHaveLength(4); expect(got.additionalRows).toBeLessThanOrEqual(8);
 });
