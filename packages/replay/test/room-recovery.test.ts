@@ -69,21 +69,37 @@ test("room finalization retracts both independent roots contradicted by later re
 test("room settlement extends an already-open owing dependency before declaring another root's text missing", async () => {
   const body = "recovered through the other dependency", other = "its own later recovered body";
   const x = textDigest(body), y = textDigest(other);
-  const definition = variant(notesDefinition.declared, data => {
-    recoveredText(1000)(data);
-    data.acts.retain = structuredClone(replayRecoveredAlias().acts["retain"]!);
+  const a = created(variant(notesDefinition.declared, recoveredText(1000)), {}, "owed-a");
+  // Value-domain fields belong to supplied platform code, not declarations.
+  const data = replayRecoveredAlias();
+  recoveredText(1000)(data);
+  const definition = valid(validateDefinition(data, PROPOSED_BOUNDS, undefined, { platform: true }));
+  const b = new Ledger(definition), platform = { named: NAMED, rules: {} };
+  const creation = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {}, fields: {}, idempotencyKey: "owing-supplier-b", notAfter: t(60) }, keys.rita.secret);
+  const seed: Seed = { v: 1, kind: "directory", definition: NAMED, creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
+  const genesis = judgeGenesis(b.state, definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(3)), seed, creation }, {
+    clock: clockOf(b.state, T0), bounds: PROPOSED_BOUNDS, source: null, facts: [], prepared: [], platform,
   });
-  const a = created(definition, {}, "owed-a"), b = created(definition, {}, "owing-supplier-b");
+  if (genesis.result !== "write") throw new Error(`the supplier fixture must create: ${JSON.stringify(genesis)}`);
+  b.seal(genesis.draft);
   expect(a.act(keys.rita, "write", { ...on(a, 0), fields: { body: x } }, { texts: () => null }).result).toBe("write");
-  expect(b.act(keys.rita, "write", { ...on(b, 0), fields: { body: y } }, { texts: () => null }).result).toBe("write");
+  expect(b.act(keys.rita, "write", { ...on(b, 0), fields: { body: y } }, { platform, texts: () => null }).result).toBe("write");
   for (const [digest, value] of [[x, body], [y, other]] as const) {
-    expect(b.act(keys.rita, "retain", { ...on(b, 0), fields: { proof: digest } }, { values: [canonicalize(value)] }).result).toBe("write");
+    expect(b.act(keys.rita, "retain", { ...on(b, 0), fields: { proof: digest } }, { platform, values: [canonicalize(value)] }).result).toBe("write");
   }
-  const consumer = created(variant(notesDefinition.declared, recoveredChild), {}, "owing-consumer");
+  const consumer = created(variant(notesDefinition.declared, declaration => {
+    recoveredChild(declaration);
+    declaration.acts["vouch-supplier"] = structuredClone(declaration.acts.vouch);
+    declaration.acts["vouch-supplier"].presents.proof.under = "platform:task";
+  }), {}, "owing-consumer");
   vouch(consumer, a, 1);
-  vouch(consumer, b, 1);
+  const fact = b.fact(1);
+  expect(consumer.act(keys.rita, "vouch-supplier", { ...on(consumer, 0), fields: {} }, {
+    presented: { proof: fact }, facts: [{ fact, entry: b.entries[1]!.entry, under: "platform:task" }],
+  }).result).toBe("write");
   const independent = created(notesDefinition, {}, "unrelated-root"), all = [a, b, consumer, independent];
   const supplier = served(b, all);
+  supplier.retained = supplier.retained.filter(input => input.kind !== "definition");
   for (const [digest, value] of [[x, body], [y, other]] as const) {
     supplier.retained.push({ kind: "value", domain: DOMAINS.text, digest, bytes: canonicalize(value) });
   }
@@ -96,7 +112,9 @@ test("room settlement extends an already-open owing dependency before declaring 
       return memory.retained(...args);
     },
   };
-  const room = roomVerification(source, { mode: "replay", grants: "as-recorded" });
+  const room = roomVerification(source, {
+    mode: "replay", grants: "as-recorded", platform: name => name === NAMED ? { data, rules: {} } : null,
+  });
   try {
     await room.checkTarget({ scope: consumer.at.scope });
     await room.checkTarget({ scope: independent.at.scope });
@@ -106,6 +124,8 @@ test("room settlement extends an already-open owing dependency before declaring 
       [consumer.at.scope, "consistent"], [independent.at.scope, "consistent"],
     ]);
     expect(contentReads).toEqual([x, y]);
+    expect(finished.texts).toContainEqual({ digest: x, source: b.at, root: consumer.at.scope,
+      consumers: expect.arrayContaining([a.at.scope]) });
     expect(Math.max(...finished.coverage.filter(span => span.scope.scope === b.at.scope).map(span => span.through))).toBe(3);
     expect(finished.incompleteBytes).toBeUndefined();
     expect(finished.trusts).not.toContain(TRUSTS.redacted);
