@@ -8,7 +8,7 @@ import { b64url, canonicalize, entryHash, intentDigest, newIncarnation, scopeIdO
 import { agentKeyInvitationOf, encodeAgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
 import { MEMBERSHIP } from "@generalbusiness/dap-platform";
 import { Roster, rita } from "../../../packages/platform/test/support.ts";
-import { command, enrolAgentKey, issueInvitation, linkOf, memoryStore, type Context, type Config, type Store } from "../src/index.ts";
+import { command, enrolAgentKey, enrolCheckerKey, issueCheckerInvitation, issueInvitation, linkOf, memoryStore, type Context, type Config, type Store } from "../src/index.ts";
 
 // Real SDK/envelopes/followReceipt/CLI Store and pinned membership rules in memory.
 // Scripted HTTP/session authority/read pages/inbox confirmation; no native session,
@@ -314,4 +314,47 @@ test("kept invitation issuance reports the actual session rate window before tar
   expect(outcome.lines.join("\n")).not.toContain("forbidden");
   expect(outcome.lines.join("\n")).not.toContain("Bearer ");
   expect([sessions, targetReads]).toEqual([1, 0]);
+});
+
+// Pure dispatch/custody boundaries. These cases do not prove Native admission.
+test("checker issuance has a closed separate input; old person/agent issuance never accepts checker mode", async () => {
+  let reads = 0;
+  const store: Store = { ...memoryStore(), config: async () => { reads++; throw Error("CONFIG TRIPWIRE: reject malformed input first"); } };
+  const context: Context = { store };
+  const options = { mode: "new" as const, operation: "30000000-0000-4000-8000-000000000002", privateRequests: [] };
+  for (const input of [
+    { handle: "@checker", hours: 1, role: "checker" },
+    { handle: "@checker", hours: 1, controller: { member: "@rita" } },
+    { handle: "@checker", hours: 1, kind: "checker-key" },
+    { handle: "@checker", hours: 0 },
+  ]) await expect(issueCheckerInvitation(context, input as Parameters<typeof issueCheckerInvitation>[1], options)).rejects.toThrow("original invitation custody");
+  await expect(issueInvitation(context, { kind: "checker-key", handle: "@checker", hours: 1 } as unknown as Parameters<typeof issueInvitation>[1], options)).rejects.toThrow("original invitation custody");
+  expect(reads).toBe(0);
+});
+
+test("checker receivers reject other tags before creating custody, and retained checker issuance cannot adopt a historical membership pin", async () => {
+  const store = memoryStore();
+  let calls = 0;
+  const context: Context = { store, fetch: async () => { calls++; throw Error("REQUEST TRIPWIRE: invalid original precedes I/O"); } };
+  for (const text of ["artroom-agent-key:invalid", "artroom-invite:invalid"]) expect((await enrolCheckerKey(context, text)).code).toBe(1);
+  expect(await store.config()).toBeNull();
+  const model = new Roster("platform:membership@7").seated(), directory = { ...model.office.at, kind: "directory" as const };
+  const repository = { directory, membership: model.at, rules: directory.scope, destination: directory.scope };
+  const operation = "30000000-0000-4000-8000-000000000003", request = "i-" + "3".repeat(30);
+  const input = { handle: "@checker", hours: 1 };
+  const raw = canonicalize({ v: 1, operation, input: { ...input, kind: "checker-key" }, service: "https://checker.test", repository, actor: rita.key, secret: b64url(new Uint8Array(32).fill(17)), ends: "2030-01-01T00:00:00Z", definition: "platform:membership@7" });
+  await store.keep("issuer", rita.secret);
+  await store.keepPrivate(request, utf8(raw));
+  await store.save({ v: 1, service: "https://checker.test", key: "issuer", repository, invitationIssue: { operation, request, digest: textDigest(raw), membership: model.at, actor: rita.key } });
+  await expect(issueCheckerInvitation(context, input, { mode: "continue", operation, privateRequests: [request] })).rejects.toThrow("original invitation custody");
+  // A well-shaped current checker original also cannot enter the legacy
+  // person/agent invite dispatcher. This is a local custody stand-in only.
+  const current = canonicalize({ ...JSON.parse(raw), definition: "platform:membership@8" });
+  const currentRequest = "i-" + "4".repeat(30);
+  await store.keepPrivate(currentRequest, utf8(current));
+  const config = (await store.config())!;
+  await store.save({ ...config, invitationIssue: { ...config.invitationIssue!, request: currentRequest, digest: textDigest(current) } });
+  const refusedPersonDispatch = await command(context, ["invite", "--check"]);
+  expect(refusedPersonDispatch).toEqual({ code: 1, lines: ["A checker invitation is retained. Resume it through issueCheckerInvitation; nothing was signed or sent."] });
+  expect(calls).toBe(0);
 });

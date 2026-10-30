@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type { Digest, Item, OperationId, Read } from "@generalbusiness/dap-contract";
+import type { Digest, Item, OperationId, Read, Receipt, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
 import { repositoryName } from "@generalbusiness/dap-platform";
@@ -10,7 +10,7 @@ import { artifactsOutside } from "../../scope/src/artifacts-wiring.ts";
 import type { Outside } from "../../scope/src/index.ts";
 import { routed, type Platform } from "../../scope/test/repository.ts";
 import { outsideOf } from "../../scope/test/outside.ts";
-import { command, memoryStore, type Context, type Git, type Outcome } from "../src/index.ts";
+import { cloneRetained, command, memoryStore, type Context, type Git, type Outcome } from "../src/index.ts";
 
 const SERVICE = "https://scopes.test";
 const reader = "a test reader";
@@ -285,6 +285,54 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
       expect([await readTokenActs(), service.minted.length]).toEqual([beforeActs + 1, beforeMints + 1]);
       expect(git.runs).toEqual([{ args: ["--version"], env: {} }]);
       expect(unknown.lines.join("\n")).not.toContain(service.minted.at(-1)!);
+    }
+
+    // Retain an actual accepted Native act. The retained entrypoint must use
+    // this original, rather than signing/submitting another read-token act.
+    // Git and the provider remain the stand-ins described above.
+    {
+      const originals: { signed: SignedIntent; receipt: Receipt }[] = [];
+      const retaining: Fetch = async (url, init) => {
+        const response = await fetch(url, init);
+        if (new URL(url).pathname === `/v1/scopes/${G.name}/acts` && init?.method === "POST") {
+          const sent = JSON.parse(init.body!) as { signed: SignedIntent };
+          const answer = await (response as unknown as Response).clone().json() as { answer: string; receipt: Receipt };
+          expect(answer.answer).toBe("accepted");
+          originals.push({ signed: sent.signed, receipt: answer.receipt });
+        }
+        return response;
+      };
+      ok(await run({ ...rita, fetch: retaining }, "act", "read-token", "--on", "destination", "--target", "0", "--set", "hours=1"));
+      expect(originals).toHaveLength(1);
+      const original = originals[0]!, originalBytes = canonicalize(original), beforeActs = await readTokenActs();
+      let actPosts = 0, credentialGets = 0;
+      const consuming: Fetch = async (url, init) => {
+        const path = new URL(url).pathname;
+        if (path === `/v1/scopes/${G.name}/acts` && init?.method === "POST") actPosts++;
+        if (path.includes("/credential/")) credentialGets++;
+        return fetch(url, init);
+      };
+      git.runs.length = 0;
+      for (const result of [
+        await lifetime.wait(() => cloneRetained({ ...una, fetch: consuming }, "foreign-signer", original)),
+        await lifetime.wait(() => cloneRetained({ ...rita, fetch: consuming }, "wrong-hours", original, { hours: 2 })),
+        await lifetime.wait(() => cloneRetained({ ...rita, fetch: consuming }, "foreign-receipt", { signed: original.signed, receipt: { ...original.receipt, definition: "platform:destination@1" } })),
+      ]) {
+        expect(result.code).toBe(1);
+        expect(result.lines.join(" ")).toContain("No credential was retrieved and nothing was cloned");
+      }
+      expect([actPosts, credentialGets, await readTokenActs()]).toEqual([0, 0, beforeActs]);
+      expect(git.runs.every(row => canonicalize(row.args) === canonicalize(["--version"]))).toBe(true);
+      git.runs.length = 0;
+      const retainedClone = ok(await lifetime.wait(() => cloneRetained({ ...rita, fetch: consuming }, "retained-copy", original)));
+      expect([actPosts, credentialGets, await readTokenActs()]).toEqual([0, 1, beforeActs]);
+      expect(canonicalize(original)).toBe(originalBytes);
+      expect(git.runs).toEqual([
+        { args: ["--version"], env: {} },
+        { args: ["clone", "--", remoteUrl, "retained-copy"], env: { GIT_CONFIG_COUNT: "1", GIT_CONFIG_KEY_0: "http.extraHeader", GIT_CONFIG_VALUE_0: `Authorization: Bearer ${service.minted.at(-1)!}` } },
+      ]);
+      expect(retainedClone.lines.at(-1)).toBe("Cloned into retained-copy.");
+      expect(retainedClone.lines.join("\n")).not.toContain(service.minted.at(-1)!);
     }
 
   } finally {

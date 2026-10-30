@@ -5,8 +5,8 @@
 
 import { parseStrict } from "@generalbusiness/dap-bytes";
 import { applicationInstallation, installApplication } from "./application-install.ts";
-import { enrolAgentKey, invitePerson } from "./invitations.ts";
-import { AGENT_KEY_LINK } from "@generalbusiness/dap-client";
+import { enrolAgentKey, enrolCheckerKey, invitePerson } from "./invitations.ts";
+import { AGENT_KEY_LINK, CHECKER_KEY_LINK } from "@generalbusiness/dap-client";
 import { act, acts, apps, claim, clone, edit, install, installPlanned, invite, issueAssign, issueClose, issueComment, issueOpen, issues, items, join, log, merge, planInstall, propose, remote, show, status, verify, CREATION_INSTALL_COHORTS, type Context, type InstallCohort, type RegisterPolicy, type Outcome } from "./commands.ts";
 
 export const USAGE = [
@@ -25,7 +25,7 @@ export const USAGE = [
   "  dap create <name> [--handle @you] [--branch main] [--again]",
   "  dap invite <@member> --role <role> [--hours 24] [--keep]",
   "  dap invite --check | --continue",
-  "  dap join <link> [--check for an agent-key invitation]",
+  "  dap join <link> [--check for an agent-key or checker-key invitation]",
   "  dap acts [<scope>]",
   "  dap act <kind> --on <scope> [--target <item>] [--set name=value ...] [--value <file> ...]",
   "  dap log <scope> [--limit n]",
@@ -127,7 +127,7 @@ export async function command(ctx: Context, argv: readonly string[]): Promise<Ou
       if (flag("keep") !== undefined && flag("acts") !== undefined) return { code: 2, lines: ["invite --keep takes no --acts: a role's actions are the roster's.", USAGE] };
       if (flag("keep") !== undefined) return first === undefined ? needs("a member's handle") : invitePerson(ctx, first, { mode: "new", ...(flag("role") ? { role: flag("role")! } : {}), ...(flag("hours") ? { hours: number("hours")! } : {}) });
       return first === undefined ? needs("a member's handle") : invite(ctx, first, { ...(flag("role") ? { role: flag("role")! } : {}), ...(flag("acts") !== undefined ? { acts: flag("acts")! } : {}), ...(flag("hours") ? { hours: number("hours")! } : {}) });
-    case "join": return first === undefined ? needs("a link") : flag("check") !== undefined ? first.startsWith(AGENT_KEY_LINK) ? enrolAgentKey(ctx, first, { mode: "check" }) : needs("an explicitly tagged agent-key invitation for --check") : join(ctx, first);
+    case "join": return first === undefined ? needs("a link") : flag("check") !== undefined ? first.startsWith(AGENT_KEY_LINK) ? enrolAgentKey(ctx, first, { mode: "check" }) : first.startsWith(CHECKER_KEY_LINK) ? enrolCheckerKey(ctx, first, { mode: "check" }) : needs("an explicitly tagged agent-key invitation for --check") : join(ctx, first);
     case "acts": return acts(ctx, first);
     case "act":
       if (flag("target") !== undefined && (!/^(0|[1-9][0-9]*)$/.test(flag("target")!) || !Number.isSafeInteger(number("target")))) return { code: 2, lines: ["--target must be a nonnegative item number; a member handle is not accepted here. Nothing was signed or sent."] };

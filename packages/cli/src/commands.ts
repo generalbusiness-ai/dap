@@ -34,14 +34,14 @@ import { applicationList } from "./application-list.ts";
  * | `issue`, `issues` | `open` is the directory's `open-issue`; `comment`, `assign` and `close` are the issue lane's own acts. `issues` lists each issue as its lane has it. |
  */
 
-import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type EffectForm, type Entry, type FactRef, type FieldValue, type Item, type KeyId, type PlatformDefinition, type ScopeId, type ScopeRef, type Seed, type SignedIntent, type Summary } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type EffectForm, type Entry, type FactRef, type FieldValue, type Item, type KeyId, type PlatformDefinition, type Receipt, type ScopeId, type ScopeRef, type Seed, type SignedIntent, type Summary } from "@generalbusiness/dap-contract";
 import { READ_REFUSALS, readItemQuery, b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isReceipt, isSignedIntentShape, isFactRef, isEntry, isScopeId, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, ShapeError, TransportError, activeDirectory, partitionIndexes, wellFormedInvitation, readCredential, declaredHandle, create, shapeDeclaredAct, signedIntent, signedLogReader, type Fetch, type Session, type CreationOffer, type Signing, type Transport } from "@generalbusiness/dap-client";
 import { CAPABILITY_CODE as REPLAY_CAPABILITY_CODE } from "@generalbusiness/dap-derive";
 import { UNPUBLISHED_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { SourceError, httpSource, render, roomVerification, verify as replay, type FinishedRoom, type HistorySource } from "@generalbusiness/dap-replay";
-import { enrolAgentKey } from "./invitations.ts";
-import { AGENT_KEY_LINK } from "@generalbusiness/dap-client";
+import { enrolAgentKey, enrolCheckerKey } from "./invitations.ts";
+import { AGENT_KEY_LINK, CHECKER_KEY_LINK } from "@generalbusiness/dap-client";
 const NEW_REGISTER = NEWEST["platform:register"]!;
 
 import type { Config, PendingJoin, PlannedInstall, Store } from "./store.ts";
@@ -513,11 +513,13 @@ export function invite(ctx: Context, member: string, options: { role?: string; a
 /** `dap join <link>` resumes the exact enrollment kept before delivery. */
 export function join(ctx: Context, text: string): Promise<Outcome> {
   if (text.startsWith(AGENT_KEY_LINK)) return enrolAgentKey(ctx, text);
+  if (text.startsWith(CHECKER_KEY_LINK)) return enrolCheckerKey(ctx, text);
   return run(async () => {
     const link = linkOf(text) ?? stopCommand(usage("That is not an invitation link from dap invite."));
     if (!wellFormedInvitation(link)) return usage("That invitation link has invalid repository references.");
     const before = await ctx.store.config();
     if (before?.join?.kind === "enrol") return failed("An original agent enrollment is retained; a person invitation cannot replace it.");
+    if (before?.join?.kind === "checker-enrol") return failed("An original checker enrollment is retained; a person invitation cannot replace it.");
     if (before?.repository) return usage(`This config directory has a repository already: directory ${before.repository.directory.scope}.`);
     if (before && !before.join) return usage("This config directory is set up already; use another config directory to join.");
     const linkDigest = textDigest(canonicalize(link));
@@ -1026,6 +1028,21 @@ const headerEnv = (value: string): Record<string, string> => ({ GIT_CONFIG_COUNT
  *    namespace into that clone with the same token, still only in memory.
  */
 export function clone(ctx: Context, directory: string | undefined, options: { hours?: number; archive?: boolean } = {}): Promise<Outcome> {
+  return cloneUsing(ctx, directory, options);
+}
+
+/** Consume an already accepted read-token request without signing or submitting
+ * another act. The caller owns an exclusive one-time consumption marker before
+ * calling this function, including when a credential or Git reply is lost. */
+export function cloneRetained(ctx: Context, directory: string | undefined, retained: { signed: SignedIntent; receipt: Receipt }, options: { hours?: number; archive?: boolean } = {}): Promise<Outcome> {
+  if (!retained || !isSignedIntentShape(retained.signed) || !isReceipt(retained.receipt)) return Promise.resolve(failed("The retained read-token request or receipt is malformed. No credential was retrieved and nothing was cloned."));
+  // Hold the caller's exact original across reads and asynchronous signing
+  // ports; never replace its expected revision or deadline with fresh ones.
+  const original = parseStrict(canonicalize({ signed: retained.signed, receipt: retained.receipt })) as { signed: SignedIntent; receipt: Receipt };
+  return cloneUsing(ctx, directory, options, original);
+}
+
+function cloneUsing(ctx: Context, directory: string | undefined, options: { hours?: number; archive?: boolean }, retained?: { signed: SignedIntent; receipt: Receipt }): Promise<Outcome> {
   return run(async () => {
     if (options.archive && !directory) return usage("clone --archive needs an explicit directory.");
 
@@ -1037,6 +1054,7 @@ export function clone(ctx: Context, directory: string | undefined, options: { ho
     const args = (url: string) => ["clone", "--", url, ...(directory === undefined ? [] : [directory])];
     if (!ctx.git || (await ctx.git.run(["--version"], {})) === null) {
       const url = remoteOf(config, repository) ?? `https://<service host>/git/${repository.namespace}/${repository.name}.git`;
+      if (retained) return failed("git is not installed here. The retained read-token request remains accepted; no credential was retrieved and nothing was cloned.");
       return failed("git is not installed here, so nothing was signed. With git installed, run dap clone again; it runs:", `git -c http.extraHeader="Authorization: ${repository.host === "github.com" ? "Basic <x-access-token:read token, base64>" : "Bearer <read token>"}" ${args(url).join(" ")}`);
     }
     if (!platform(summary.definition as PlatformDefinition)?.data.acts["read-token"]) return failed(`The destination definition ${summary.definition} does not support read-token. An explicitly versioned destination and membership integration is required.`);
@@ -1044,8 +1062,12 @@ export function clone(ctx: Context, directory: string | undefined, options: { ho
     const scope = summary.scope.scope;
     const signer = await signerOf(ctx, config);
     const branch = summary.items.find((item) => item.type === "branch")!;
-    const signed = await signedIntent(signer, { to: summary.scope, kind: "read-token", on: branch.id, fields: { hours }, expected: { on: branch.revision } }, signing(ctx));
-    const receipt = accepted(await (await handleOf(ctx, config, scope, null)).submit(signed), scope, "Read token").receipt;
+    if (retained && (retained.signed.intent.actor !== signer.key || retained.signed.intent.on !== branch.id
+      || canonicalize(retained.signed.intent.fields) !== canonicalize({ hours })
+      || Object.keys(retained.signed.intent.expected).length !== 1 || !Object.hasOwn(retained.signed.intent.expected, "on")
+      || !Number.isSafeInteger(retained.signed.intent.expected["on"]) || retained.signed.intent.expected["on"]! < 0)) return failed("The retained read-token request does not match this signer, branch and requested hours. No credential was retrieved and nothing was cloned.");
+    const signed = retained?.signed ?? await signedIntent(signer, { to: summary.scope, kind: "read-token", on: branch.id, fields: { hours }, expected: { on: branch.revision } }, signing(ctx));
+    const receipt = retained?.receipt ?? accepted(await (await handleOf(ctx, config, scope, null)).submit(signed), scope, "Read token").receipt;
     const proof = readTokenReceipt(receipt, summary, signed);
     if (!proof) return failed(`The accepted reply does not match this destination, definition and exact read-token request. It may still have been recorded at ${scope}; inspect dap log destination. No credential was retrieved and nothing was cloned.`);
     const seq = proof.receipt.fact.seq;

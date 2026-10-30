@@ -1,11 +1,11 @@
 import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/dap-client";
 import { UNPUBLISHED_COHORT, INVITATION_KEY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
-/** Retained invitation creation and explicitly tagged true-agent enrollment.
+/** Retained invitation creation and explicitly tagged agent and checker enrollment.
  * Store.private holds secrets/envelopes; public config holds only exact pointers.
  * Callers serialize one Store and fence their captured Page context. */
-import type { Answer, Entry, FactRef, MemberRef, Receipt, SignedIntent, Summary, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Answer, Entry, FactRef, FieldValue, MemberRef, Receipt, SignedIntent, Summary, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, entryHash, factRefOf, intentDigest, isMemberRef, isScopeRef, isScopeId, isRecord, isHead, isKeyId, REFUSAL_REASONS, unb64url, timeMs, isReceipt, isSignedIntentShape, keyIdOfSecret, parseStrict, scopeIdOf, textDigest, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { agentKeyInvitationOf, encodeAgentKeyInvitation, httpTransport, isAgentKeyMembership, ScopeHandle, secretSigner, signedIntent, type AgentKeyMembership, type Signer } from "@generalbusiness/dap-client";
+import { agentKeyInvitationOf, encodeAgentKeyInvitation, checkerKeyInvitationOf, encodeCheckerKeyInvitation, CHECKER_KEY_MEMBERSHIP, httpTransport, isAgentKeyMembership, ScopeHandle, secretSigner, signedIntent, type AgentKeyMembership, type Signer } from "@generalbusiness/dap-client";
 import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, DEMO_REGISTER, DIRECTORY_OF, WEB_DEMO_COHORT, isHandle, platform } from "@generalbusiness/dap-platform";
 import { expectedOf, LINK, linkOf, type DefinitionShape, type Link } from "./browser-helpers.ts";
 import type { Context, Outcome } from "./commands.ts";
@@ -15,8 +15,17 @@ import type { Config, PendingInvitationIssue, Repository } from "./store.ts";
 export interface InvitationIssueInput { kind: "person" | "agent-key"; handle: string; hours: number; role?: "member" | "maintainer" | "admin"; controller?: MemberRef }
 export interface InvitationIssueOptions { privateRequests: readonly string[]; reservedRequest?: string; mode: "new" | "check" | "continue"; operation: string; current?: () => boolean }
 export interface InvitationIssueResult { operation: string; kind: "person" | "agent-key"; handle: string; state: "prepared" | "unknown" | "refused" | "verified"; reason?: string; /** Private handoff, never put into a public status log. */ link?: string }
+/** Separate API: browser person/agent inputs and results do not widen. */
+export interface CheckerInvitationIssueInput { handle: string; hours: number; role?: never; controller?: never }
+export interface CheckerInvitationIssueResult extends Omit<InvitationIssueResult, "kind"> { kind: "checker-key" }
+type IssuedInput = InvitationIssueInput | (CheckerInvitationIssueInput & { kind: "checker-key" });
+type IssuedResult = Omit<InvitationIssueResult, "kind"> & { kind: IssuedInput["kind"] };
+const checkerIssueInput = (value: unknown): value is CheckerInvitationIssueInput => closed(value, ["handle", "hours"]) && isHandle(value["handle"]) && utf8(value["handle"]).length <= 256 && typeof value["hours"] === "number" && Number.isFinite(value["hours"]) && value["hours"] > 0;
+const issuedInput = (value: unknown): value is IssuedInput => isInvitationIssueInput(value) || closed(value, ["kind", "handle", "hours"]) && value["kind"] === "checker-key" && checkerIssueInput({ handle: value["handle"], hours: value["hours"] });
+const memberFields = (input: IssuedInput): Record<string, FieldValue> => input.kind === "checker-key" ? { handle: input.handle, kind: "checker" } : { handle: input.handle, kind: "agent", controller: input.controller! };
+
 interface Stage { signed: SignedIntent; attempted: boolean; receipt?: Receipt; refused?: Extract<Answer, { answer: "refused" }> }
-interface Issue { previous?: { request: string; digest: import("@generalbusiness/dap-contract").Digest }; v: 1; operation: string; input: InvitationIssueInput; service: string; repository: Repository; actor: string; secret: string; ends: string; /** The membership's pinned definition, read at issuance; a retained row without it is a membership@2 row. */ definition?: AgentKeyMembership; member?: Stage; invitation?: Stage; link?: string }
+interface Issue { previous?: { request: string; digest: import("@generalbusiness/dap-contract").Digest }; v: 1; operation: string; input: IssuedInput; service: string; repository: Repository; actor: string; secret: string; ends: string; /** The membership's pinned definition, read at issuance; a retained row without it is a membership@2 row. */ definition?: AgentKeyMembership; member?: Stage; invitation?: Stage; link?: string }
 const sameOptional = (a: unknown, b: unknown) => a === undefined || b === undefined ? a === b : canonicalize(a) === canonicalize(b);
 const blocked = () => new Error("The original invitation custody or context is unavailable. Nothing was replaced.");
 const privateName = (prefix: "i" | "a" | "k") => prefix + "-" + crypto.randomUUID().replace(/-/g, "").slice(0, 30);
@@ -92,7 +101,8 @@ function issueValid(value: unknown): value is Issue {
     if (!closed(value, ["v", "operation", "input", "service", "repository", "actor", "secret", "ends"], ["member", "invitation", "link", "previous", "definition"])) return false;
     const row = value as unknown as Issue;
     if (row.definition !== undefined && !isAgentKeyMembership(row.definition)) return false;
-    if (row.v !== 1 || !uuid(row.operation) || !isInvitationIssueInput(row.input) || typeof row.secret !== "string" || typeof row.ends !== "string" || timeMs(row.ends) === null || !isKeyId(row.actor) || !repositoryValid(row.repository) || typeof row.service !== "string") return false;
+    if (row.input?.kind === "checker-key" && row.definition !== CHECKER_KEY_MEMBERSHIP) return false;
+    if (row.v !== 1 || !uuid(row.operation) || !issuedInput(row.input) || typeof row.secret !== "string" || typeof row.ends !== "string" || timeMs(row.ends) === null || !isKeyId(row.actor) || !repositoryValid(row.repository) || typeof row.service !== "string") return false;
     if (row.previous && (!closed(row.previous, ["request", "digest"]) || typeof row.previous.request !== "string" || !/^i-[0-9a-f]{30}$/.test(row.previous.request) || !/^sha256:[0-9a-f]{64}$/.test(row.previous.digest))) return false;
     const secret = unb64url(row.secret);
     if (!secret || secret.length !== 32 || b64url(secret) !== row.secret) return false;
@@ -100,11 +110,11 @@ function issueValid(value: unknown): value is Issue {
     if (!Url) return false;
     const origin = new Url(row.service);
     if (origin.origin !== row.service || !["https:", "http:"].includes(origin.protocol) || origin.username || origin.password || origin.search || origin.hash || row.input.controller && !sameOptional(row.input.controller.membership, row.repository.membership)) return false;
-    if (row.member && (!stageValid(row.member, row, "add-member") || !sameOptional(row.member.signed.intent.fields, { handle: row.input.handle, kind: "agent", controller: row.input.controller }))) return false;
+    if (row.member && (row.input.kind === "person" || !stageValid(row.member, row, "add-member") || !sameOptional(row.member.signed.intent.fields, memberFields(row.input)))) return false;
     const invited = row.invitation;
     if (invited) {
-      if (row.input.kind === "agent-key" && !row.member?.receipt) return false;
-      const fields = row.input.kind === "person" ? { handle: row.input.handle, role: row.input.role, ...invitationIssueFields(pinOf(row), row.secret), inviteEnds: row.ends } : { member: row.member!.receipt!.fact.seq, kind: "agent", ...invitationIssueFields(pinOf(row), row.secret), inviteEnds: row.ends };
+      if (row.input.kind !== "person" && !row.member?.receipt) return false;
+      const fields = row.input.kind === "person" ? { handle: row.input.handle, role: row.input.role, ...invitationIssueFields(pinOf(row), row.secret), inviteEnds: row.ends } : { member: row.member!.receipt!.fact.seq, kind: row.input.kind === "checker-key" ? "checker" : "agent", ...invitationIssueFields(pinOf(row), row.secret), inviteEnds: row.ends };
       if (!stageValid(invited, row, row.input.kind === "person" ? "invite-member" : "invite-key") || !sameOptional(invited.signed.intent.fields, fields)) return false;
     }
     if (row.link !== undefined) {
@@ -114,8 +124,8 @@ function issueValid(value: unknown): value is Issue {
         const parsed = linkOf(row.link);
         if (!parsed || !sameOptional(parsed, { v: 1, service: row.service, repository, invitation: row.invitation.receipt.fact.seq, secret: row.secret, handle: row.input.handle, definition: pinOf(row) })) return false;
       } else {
-        const parsed = agentKeyInvitationOf(row.link);
-        if (!parsed || !row.member?.receipt || parsed.definition !== pinOf(row) || parsed.service !== row.service || !sameOptional(parsed.repository, repository) || parsed.handle !== row.input.handle || !sameOptional(parsed.controller, row.input.controller) || !sameOptional(parsed.member, row.member.receipt.fact) || !sameOptional(parsed.invitation, row.invitation.receipt.fact) || parsed.secret !== row.secret) return false;
+        const parsed = row.input.kind === "checker-key" ? checkerKeyInvitationOf(row.link) : agentKeyInvitationOf(row.link);
+        if (!parsed || parsed.kind !== row.input.kind || !row.member?.receipt || parsed.definition !== pinOf(row) || parsed.service !== row.service || !sameOptional(parsed.repository, repository) || parsed.handle !== row.input.handle || (row.input.kind === "agent-key" && (parsed.kind !== "agent-key" || !sameOptional(parsed.controller, row.input.controller))) || !sameOptional(parsed.member, row.member.receipt.fact) || !sameOptional(parsed.invitation, row.invitation.receipt.fact) || parsed.secret !== row.secret) return false;
       }
     }
     return row.input.kind !== "person" || row.member === undefined;
@@ -131,7 +141,7 @@ function successor(before: Issue, after: Issue): boolean {
   }
   return true;
 }
-async function snapshotChain(ctx: Context, config: Config, input: InvitationIssueInput, actor: import("@generalbusiness/dap-contract").KeyId, options: InvitationIssueOptions): Promise<{ row: Issue; pointer: PendingInvitationIssue } | null> {
+async function snapshotChain(ctx: Context, config: Config, input: IssuedInput, actor: import("@generalbusiness/dap-contract").KeyId, options: InvitationIssueOptions): Promise<{ row: Issue; pointer: PendingInvitationIssue } | null> {
   if (!Array.isArray(options.privateRequests) || new Set(options.privateRequests).size !== options.privateRequests.length) throw blocked();
   const rows = new Map<string, { row: Issue; digest: import("@generalbusiness/dap-contract").Digest }>();
   for (const request of options.privateRequests) {
@@ -187,7 +197,23 @@ async function inboxOfOpening(reads: InvitationReads, opening: Entry, membership
 /** No output exposes a signing key. The optional link is a private invitation. */
 export async function issueInvitation(ctx: Context, input: InvitationIssueInput, options: InvitationIssueOptions): Promise<InvitationIssueResult> {
   check(options);
-  if (!uuid(options.operation) || !isInvitationIssueInput(input)) throw blocked();
+  if (!isInvitationIssueInput(input)) throw blocked();
+  const result = await issueRetainedInvitation(ctx, input, options);
+  if (result.kind === "checker-key") throw blocked();
+  return { ...result, kind: result.kind };
+}
+/** Checker issuance has its own closed input and tag. It cannot call person
+ * invitation issuance or reinterpret an agent's controller-bound original. */
+export async function issueCheckerInvitation(ctx: Context, input: CheckerInvitationIssueInput, options: InvitationIssueOptions): Promise<CheckerInvitationIssueResult> {
+  check(options);
+  if (!checkerIssueInput(input)) throw blocked();
+  const result = await issueRetainedInvitation(ctx, { kind: "checker-key", handle: input.handle, hours: input.hours }, options);
+  if (result.kind !== "checker-key") throw blocked();
+  return { ...result, kind: "checker-key" };
+}
+async function issueRetainedInvitation(ctx: Context, input: IssuedInput, options: InvitationIssueOptions): Promise<IssuedResult> {
+  check(options);
+  if (!uuid(options.operation) || !issuedInput(input)) throw blocked();
   let config = await wait(options, () => ctx.store.config());
   if (!config?.repository || config.claim || config.join || config.plan && !config.register) throw blocked();
   // Retain the old owned-copy/wipe lifetime for seed stores. Capability
@@ -220,9 +246,10 @@ export async function issueInvitation(ctx: Context, input: InvitationIssueInput,
       if (options.mode !== "new") throw blocked();
       // The membership's exact pin is read once and kept with the retained issuance: every later read and receipt is held to it.
       const pinned = await wait(options, async () => pinnedSummary(await membershipHandle(), config!.repository!.membership));
+      if (input.kind === "checker-key" && pinned.definition !== CHECKER_KEY_MEMBERSHIP) throw blocked();
       row = { v: 1, operation: options.operation, input: structuredClone(input), service: config.service, repository: structuredClone(config.repository), actor, secret: b64url(crypto.getRandomValues(new Uint8Array(32))), ends: timeOf(Math.floor(now(ctx) / 1000) * 1000 + input.hours * 3600_000), definition: pinned.definition };
     }
-    const status = (state: InvitationIssueResult["state"], reason?: string): InvitationIssueResult => ({ operation: row.operation, kind: row.input.kind, handle: row.input.handle, state, ...(reason ? { reason } : {}) });
+    const status = (state: InvitationIssueResult["state"], reason?: string): IssuedResult => ({ operation: row.operation, kind: row.input.kind, handle: row.input.handle, state, ...(reason ? { reason } : {}) });
     const persist = async (): Promise<void> => {
       if (!issueValid(row)) throw blocked();
       const before = await wait(options, () => ctx.store.config());
@@ -246,7 +273,7 @@ export async function issueInvitation(ctx: Context, input: InvitationIssueInput,
       const activeKey = member && s.items.find(i => i.type === "key" && i.state === "active" && i.refs["member"] === member.id && i.values["id"] === actor);
       const roster = s.items.find(i => i.type === "roster" && i.state === "open");
       const role = member?.values["role"], actions = typeof role === "string" ? roster?.values[role + "Actions"] : null;
-      if (!activeKey || !member || member.values["kind"] !== "person" || !Array.isArray(actions) || !actions.includes("membership.invite") || row.input.kind === "agent-key" && (!actions.includes("membership.manage") || !sameOptional(row.input.controller, member.parties["member"]))) throw blocked();
+      if (!activeKey || !member || member.values["kind"] !== "person" || !Array.isArray(actions) || !actions.includes("membership.invite") || row.input.kind !== "person" && (!actions.includes("membership.manage") || row.input.kind === "agent-key" && !sameOptional(row.input.controller, member.parties["member"]))) throw blocked();
       const signed = await wait(options, () => signedIntent(key, { to: row.repository.membership, kind, fields, expected: expectedOf(shape.acts[kind]!, s.items, null, fields) }, { now: now(ctx) }));
       return { signed, attempted: false };
     };
@@ -269,17 +296,17 @@ export async function issueInvitation(ctx: Context, input: InvitationIssueInput,
       if (!await wait(options, async () => follow(await membershipHandle(), stage.signed, answer.receipt, pin))) return "unknown";
       stage.receipt = answer.receipt; await persist(); return "verified";
     };
-    if (row.input.kind === "agent-key") {
+    if (row.input.kind !== "person") {
       if (!row.member) {
-        if (options.mode === "check") return status("prepared", "Continue explicitly to prepare the original agent opening.");
-        row.member = await prepare("add-member", { handle: row.input.handle, kind: "agent", controller: row.input.controller! }); await persist();
+        if (options.mode === "check") return status("prepared", `Continue explicitly to prepare the original ${row.input.kind === "checker-key" ? "checker" : "agent"} opening.`);
+        row.member = await prepare("add-member", memberFields(row.input)); await persist();
       }
       const result = await advance(row.member);
-      if (result !== "verified") return status(result, result === "refused" ? `Native refusal: ${row.member.refused!.reason}${row.member.refused!.name ? " (" + row.member.refused!.name + ")" : ""}. The original agent opening is retained.` : "The original agent opening is retained.");
+      if (result !== "verified") return status(result, result === "refused" ? `Native refusal: ${row.member.refused!.reason}${row.member.refused!.name ? " (" + row.member.refused!.name + ")" : ""}. The original ${row.input.kind === "checker-key" ? "checker" : "agent"} opening is retained.` : `The original ${row.input.kind === "checker-key" ? "checker" : "agent"} opening is retained.`);
     }
     if (!row.invitation) {
       if (options.mode === "check") return status("prepared", "Continue explicitly to prepare the original invitation.");
-      const fields = row.input.kind === "person" ? { handle: row.input.handle, role: row.input.role!, ...invitationIssueFields(pinOf(row), row.secret), inviteEnds: row.ends } : { member: row.member!.receipt!.fact.seq, kind: "agent", ...invitationIssueFields(pinOf(row), row.secret), inviteEnds: row.ends };
+      const fields = row.input.kind === "person" ? { handle: row.input.handle, role: row.input.role!, ...invitationIssueFields(pinOf(row), row.secret), inviteEnds: row.ends } : { member: row.member!.receipt!.fact.seq, kind: row.input.kind === "checker-key" ? "checker" : "agent", ...invitationIssueFields(pinOf(row), row.secret), inviteEnds: row.ends };
       row.invitation = await prepare(row.input.kind === "person" ? "invite-member" : "invite-key", fields); await persist();
     }
     const result = await advance(row.invitation);
@@ -297,12 +324,20 @@ export async function issueInvitation(ctx: Context, input: InvitationIssueInput,
       link = LINK + b64url(utf8(JSON.stringify(person)));
     } else {
       const member = s.items.find(i => i.type === "member" && i.id === row.member!.receipt!.fact.seq), roster = s.items.find(i => i.type === "roster" && i.state === "open");
-      const controller = s.items.find(item => item.type === "member" && item.state === "active" && item.values["kind"] === "person" && sameOptional(item.parties["member"], row.input.controller));
-      if (!controller || !s.items.some(item => item.type === "key" && item.state === "active" && item.refs["member"] === controller.id) || !member || member.state !== "active" || member.values["kind"] !== "agent" || member.values["role"] !== "agent" || member.values["handle"] !== row.input.handle || !sameOptional(member.parties["controller"], row.input.controller) || invited.values["kind"] !== "agent" || invited.refs["member"] !== member.id || !isMemberRef(member.parties["member"]) || !roster) return status("unknown");
+      const nativeKind = row.input.kind === "checker-key" ? "checker" : "agent";
+      const controller = row.input.kind === "agent-key" ? s.items.find(item => item.type === "member" && item.state === "active" && item.values["kind"] === "person" && sameOptional(item.parties["member"], row.input.controller)) : null;
+      const identity = row.input.kind === "agent-key"
+        ? controller && s.items.some(item => item.type === "key" && item.state === "active" && item.refs["member"] === controller.id) && sameOptional(member?.parties["controller"], row.input.controller)
+        : member && member.parties["controller"] === null;
+      if (!identity || !member || member.state !== "active" || member.values["kind"] !== nativeKind || member.values["role"] !== nativeKind || member.values["handle"] !== row.input.handle || invited.values["kind"] !== nativeKind || invited.refs["member"] !== member.id || !isMemberRef(member.parties["member"]) || !roster) return status("unknown");
       const owner = member.parties["member"];
       const opening = await wait(options, async () => follow(await membershipHandle(), row.member!.signed, row.member!.receipt!, pin));
-      if (!opening || !await wait(options, () => inboxOfOpening(reads!, opening, row.repository.membership, owner))) return status("unknown", "The native agent inbox creation could not be verified.");
-      link = encodeAgentKeyInvitation({ v: 1, kind: "agent-key", service: row.service, repository, definition: pin, handle: row.input.handle, controller: row.input.controller!, member: row.member!.receipt!.fact, invitation: receipt.fact, secret: row.secret, expected: { on: roster.revision, member: member.revision } });
+      if (!opening || !await wait(options, () => inboxOfOpening(reads!, opening, row.repository.membership, owner))) return status("unknown", `The native ${nativeKind} inbox creation could not be verified.`);
+      const handoff = { v: 1 as const, service: row.service, repository, definition: pin, handle: row.input.handle, member: row.member!.receipt!.fact, invitation: receipt.fact, secret: row.secret, expected: { on: roster.revision, member: member.revision } };
+      if (row.input.kind === "checker-key") {
+        if (pin !== CHECKER_KEY_MEMBERSHIP) throw blocked();
+        link = encodeCheckerKeyInvitation({ ...handoff, kind: "checker-key", definition: pin });
+      } else link = encodeAgentKeyInvitation({ ...handoff, kind: "agent-key", controller: row.input.controller! });
     }
     if (!row.link) { row.link = link; await persist(); }
     return { ...status("verified"), link: row.link };
@@ -310,14 +345,21 @@ export async function issueInvitation(ctx: Context, input: InvitationIssueInput,
 }
 
 /** Separate receiver; a tagged key invitation never runs native person join. */
-export async function enrolAgentKey(ctx: Context, text: string, options: { mode?: "continue" | "check" } = {}): Promise<Outcome> {
+export function enrolAgentKey(ctx: Context, text: string, options: { mode?: "continue" | "check" } = {}): Promise<Outcome> {
+  return enrolKey(ctx, text, options, "agent");
+}
+export function enrolCheckerKey(ctx: Context, text: string, options: { mode?: "continue" | "check" } = {}): Promise<Outcome> {
+  return enrolKey(ctx, text, options, "checker");
+}
+async function enrolKey(ctx: Context, text: string, options: { mode?: "continue" | "check" }, nativeKind: "agent" | "checker"): Promise<Outcome> {
+  const checker = nativeKind === "checker", retainedKind = checker ? "checker-enrol" : "enrol";
   // This receiver retains a raw-key/envelope pair in filesystem custody.
   // Capability stores require a separate supported receiver; never bypass
   // their signing namespace by reading or creating a seed here.
-  if (ctx.store.signer) return { code: 1, lines: ["Agent-key enrollment in this command requires filesystem key custody. No signing key was read or created and nothing was submitted."] };
-  const bad = (): Outcome => ({ code: 1, lines: ["The original agent enrollment is unavailable or unverified. Nothing was replaced."] });
+  if (ctx.store.signer) return { code: 1, lines: [`${checker ? "Checker" : "Agent"}-key enrollment in this command requires filesystem key custody. No signing key was read or created and nothing was submitted.`] };
+  const bad = (): Outcome => ({ code: 1, lines: [`The original ${nativeKind} enrollment is unavailable or unverified. Nothing was replaced.`] });
   try {
-    const link = agentKeyInvitationOf(text);
+    const link = checker ? checkerKeyInvitationOf(text) : agentKeyInvitationOf(text);
     if (!link) return bad();
     let config = await ctx.store.config();
     let heldConfig = config;
@@ -328,8 +370,8 @@ export async function enrolAgentKey(ctx: Context, text: string, options: { mode?
       heldConfig = next;
     };
     const digest = textDigest(canonicalize(link)), pending = config?.join;
-    if (pending && (pending.kind !== "enrol" || pending.link !== digest || config!.service !== link.service || !sameOptional(pending.repository, link.repository) || pending.handle !== link.handle) || config && !pending) return bad();
-    if (pending?.refused) return { code: 1, lines: [`The original agent enrollment was refused: ${pending.refused.reason}. Nothing was replaced.`] };
+    if (pending && (pending.kind !== retainedKind || pending.link !== digest || config!.service !== link.service || !sameOptional(pending.repository, link.repository) || pending.handle !== link.handle) || config && !pending) return bad();
+    if (pending?.refused) return { code: 1, lines: [`The original ${nativeKind} enrollment was refused: ${pending.refused.reason}. Nothing was replaced.`] };
     if (options.mode === "check" && !pending) return bad();
     let own: Uint8Array | null = null;
     const tag = digest.slice("sha256:".length, "sha256:".length + 30), keyName = "k-" + tag, requestName = "a-" + tag;
@@ -376,7 +418,7 @@ export async function enrolAgentKey(ctx: Context, text: string, options: { mode?
           const readback = await ctx.store.private(requestName);
           if (!readback || new TextDecoder().decode(readback) !== raw) return bad();
         }
-        config = { ...config!, join: { kind: "enrol", request: requestName, intent: intentDigest(signed.intent), link: digest, repository: link.repository, handle: link.handle } };
+        config = { ...config!, join: { kind: retainedKind, request: requestName, intent: intentDigest(signed.intent), link: digest, repository: link.repository, handle: link.handle } };
         // Validate the original before restoring its public pointer.
         if (!verifySignedIntent(signed) || signed.intent.actor !== keyIdOfSecret(key) || signed.intent.kind !== "enrol" || signed.intent.on !== 0 || !sameOptional(signed.intent.to, link.repository.membership) || !sameOptional(signed.intent.fields, invitationRedemptionFields(link.definition, link.repository.membership, link.invitation.seq, keyIdOfSecret(key), link.secret)) || !sameOptional(signed.intent.expected, link.expected)) return bad();
         await save(config);
@@ -395,9 +437,9 @@ export async function enrolAgentKey(ctx: Context, text: string, options: { mode?
           config = { ...config!, join: { ...config!.join!, refused: answer } };
           await save(config);
           if (!sameOptional(await ctx.store.config(), config)) return bad();
-          return { code: 1, lines: [`Agent enrollment refused: ${answer.reason}. The exact original remains retained.`] };
+          return { code: 1, lines: [`${checker ? "Checker" : "Agent"} enrollment refused: ${answer.reason}. The exact original remains retained.`] };
         }
-        if (answer.answer !== "accepted") return { code: 1, lines: ["The original agent enrollment remains unknown. Check it or Continue explicitly."] };
+        if (answer.answer !== "accepted") return { code: 1, lines: [`The original ${nativeKind} enrollment remains unknown. Check it or Continue explicitly.`] };
         receipt = answer.receipt;
       }
       const reads = await readerFor(ctx, link.service, link.repository.membership, key);
@@ -413,10 +455,14 @@ export async function enrolAgentKey(ctx: Context, text: string, options: { mode?
       const s = await summary(M, link.repository.membership, link.definition);
       if (!memberEntry || !invitationEntry || memberEntry.input.type !== "act" || invitationEntry.input.type !== "act") return bad();
       const opened = memberEntry.input.signed.intent, invited = invitationEntry.input.signed.intent;
-      if (opened.kind !== "add-member" || !sameOptional(opened.fields, { handle: link.handle, kind: "agent", controller: link.controller }) || invited.kind !== "invite-key" || !sameOptional(invited.fields, { member: link.member.seq, kind: "agent", ...invitationIssueFields(link.definition, link.secret), inviteEnds: invited.fields["inviteEnds"] })) return bad();
+      const openingFields = link.kind === "agent-key" ? { handle: link.handle, kind: "agent", controller: link.controller } : { handle: link.handle, kind: "checker" };
+      if (opened.kind !== "add-member" || !sameOptional(opened.fields, openingFields) || invited.kind !== "invite-key" || !sameOptional(invited.fields, { member: link.member.seq, kind: nativeKind, ...invitationIssueFields(link.definition, link.secret), inviteEnds: invited.fields["inviteEnds"] })) return bad();
       const member = s.items.find(i => i.type === "member" && i.id === link.member.seq), activeKey = s.items.find(i => i.type === "key" && i.id === link.invitation.seq);
-      const controller = s.items.find(item => item.type === "member" && item.state === "active" && item.values["kind"] === "person" && sameOptional(item.parties["member"], link.controller));
-      if (!controller || !s.items.some(item => item.type === "key" && item.state === "active" && item.refs["member"] === controller.id) || !member || member.state !== "active" || member.values["handle"] !== link.handle || member.values["kind"] !== "agent" || member.values["role"] !== "agent" || !sameOptional(member.parties["controller"], link.controller) || !activeKey || activeKey.state !== "active" || activeKey.values["kind"] !== "agent" || activeKey.values["id"] !== keyIdOfSecret(key) || activeKey.refs["member"] !== member.id || !isMemberRef(member.parties["member"])) return bad();
+      const controller = link.kind === "agent-key" ? s.items.find(item => item.type === "member" && item.state === "active" && item.values["kind"] === "person" && sameOptional(item.parties["member"], link.controller)) : null;
+      const identity = link.kind === "agent-key"
+        ? controller && s.items.some(item => item.type === "key" && item.state === "active" && item.refs["member"] === controller.id) && sameOptional(member?.parties["controller"], link.controller)
+        : member && member.parties["controller"] === null;
+      if (!identity || !member || member.state !== "active" || member.values["handle"] !== link.handle || member.values["kind"] !== nativeKind || member.values["role"] !== nativeKind || !activeKey || activeKey.state !== "active" || activeKey.values["kind"] !== nativeKind || activeKey.values["id"] !== keyIdOfSecret(key) || activeKey.refs["member"] !== member.id || !isMemberRef(member.parties["member"])) return bad();
       const observed = await boundDirectory(reads, link.repository, s, link.definition);
       if (!observed) return bad();
       const inbox = await inboxOfOpening(reads, memberEntry, link.repository.membership, member.parties["member"]);
@@ -424,15 +470,15 @@ export async function enrolAgentKey(ctx: Context, text: string, options: { mode?
       config = { ...config!, repository: { ...observed, inbox: inbox.scope }, handle: link.handle };
       await save(config);
       if (!sameOptional(await ctx.store.config(), config)) return bad();
-      return { code: 0, lines: [`Enrolled independent agent ${link.handle}. Native agent and controller bindings verified.`] };
+      return { code: 0, lines: [checker ? `Enrolled independent checker ${link.handle}. Native checker bindings verified.` : `Enrolled independent agent ${link.handle}. Native agent and controller bindings verified.`] };
     } finally { key.fill(0); }
   } catch (error) { return error instanceof Stop ? error.outcome : bad(); }
 }
 
 /** The retained person issuance a configuration points at: its private snapshots, root first, its input and its operation. */
-async function retainedIssue(ctx: Context, pointer: PendingInvitationIssue): Promise<{ names: string[]; input: InvitationIssueInput; operation: string } | null> {
+async function retainedIssue(ctx: Context, pointer: PendingInvitationIssue): Promise<{ names: string[]; input: IssuedInput; operation: string } | null> {
   const names: string[] = [];
-  let request: string | undefined = pointer.request, input: InvitationIssueInput | null = null;
+  let request: string | undefined = pointer.request, input: IssuedInput | null = null;
   while (request !== undefined) {
     // Sixteen is more than the seven snapshots the engine writes for the longest issuance, so a lawful chain is always readable.
     if (names.includes(request) || names.length >= 16) return null;
@@ -470,6 +516,7 @@ export async function invitePerson(ctx: Context, member: string | undefined, opt
     if (!config?.repository) return say(2, "No repository is known here. Run: dap create <name>.");
     const retained = config.invitationIssue ? await retainedIssue(ctx, config.invitationIssue) : null;
     if (config.invitationIssue && !retained) return say(1, "The retained invitation's private record is unavailable. Nothing was signed or sent.");
+    if (retained?.input.kind === "checker-key") return say(1, "A checker invitation is retained. Resume it through issueCheckerInvitation; nothing was signed or sent.");
     if (options.mode !== "new") {
       if (!retained) return say(2, "No invitation is retained here.");
       return await finish(await issueInvitation(ctx, retained.input, { privateRequests: retained.names, mode: options.mode, operation: retained.operation }));

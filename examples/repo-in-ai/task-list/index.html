@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>Task list</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="module" src="app.mjs"></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">A little room for your day</p>
+        <h1>Task list</h1>
+        <p>Add a task, then check it off when you finish.</p>
+      </header>
+
+      <form id="add-task">
+        <label for="task-title">New task</label>
+        <div class="add-row">
+          <input id="task-title" name="title" type="text" required
+            autocomplete="off" aria-describedby="task-help">
+          <button type="submit">Add task</button>
+        </div>
+        <p id="task-help" class="hint">Your tasks stay in this browser.</p>
+      </form>
+
+      <section aria-labelledby="list-heading">
+        <div class="list-heading">
+          <h2 id="list-heading">Your tasks</h2>
+          <p id="task-count"></p>
+        </div>
+        <p id="empty-list" class="empty">Your list is empty. Add your first task above.</p>
+        <ul id="tasks" aria-label="Tasks" role="list"></ul>
+      </section>
+      <p id="status" role="status" aria-live="polite"></p>
+      <noscript>This task list needs JavaScript to add and complete tasks.</noscript>
+    </main>
+  </body>
+</html>

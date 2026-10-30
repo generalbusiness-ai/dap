@@ -16,13 +16,13 @@ import { retainHistoricalInstallPlan } from "./support/historical-install-plan.t
 import { describe, expect, test } from "vitest";
 import type { Digest, Item, OperationId, Read, Receipt, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, keyIdOfSecret, scopeIdOf, timeOf } from "@generalbusiness/dap-bytes";
-import { AGENT_KEY_LINK, agentKeyInvitationOf, encodeAgentKeyInvitation, requestSession, sessionRequest, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
+import { AGENT_KEY_LINK, CHECKER_KEY_LINK, checkerKeyInvitationOf, agentKeyInvitationOf, encodeAgentKeyInvitation, requestSession, sessionRequest, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
 import { APPLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, repositoryName } from "@generalbusiness/dap-platform";
 import { beginSessionFixture } from "../../scope/test/session-settings.ts";
 import { Platform, routed } from "../../scope/test/repository.ts";
 import { outsideOf } from "../../scope/test/outside.ts";
 import { dispatchFixture, effectFixture, nativeFixtureLifetime } from "../../scope/test/support/native-fixture-lifetime.ts";
-import { command, enrolAgentKey, issueInvitation, linkOf, memoryStore, type Config, type Context, type Outcome, type Store } from "../src/index.ts";
+import { command, enrolAgentKey, enrolCheckerKey, issueCheckerInvitation, issueInvitation, linkOf, memoryStore, type Config, type Context, type Outcome, type Store } from "../src/index.ts";
 
 const SERVICE = "https://scopes.test";
 /** The test's own reader, which the command never presents. */
@@ -39,7 +39,7 @@ describe("tagged agent-key enrolment on the trusted application and historical a
     const lifetime=nativeFixtureLifetime(owner);
     try{await story(lifetime,"declared-application");}finally{lifetime.release();}
   },60_000);
-  test.each(["archive-application", "archive-declared-application", "archive-device-application"] as const)("%s: native Membership8 issues private person and agent invitations and enrolls both through its exact directory", async cohort => {
+  test.each(["archive-application", "archive-declared-application", "archive-device-application"] as const)("%s: native Membership8 issues private person and agent invitations; the device cohort also enrolls an independent checker", async cohort => {
     const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
     const lifetime = nativeFixtureLifetime(owner);
     try { await story(lifetime, cohort); } finally { lifetime.release(); }
@@ -207,6 +207,50 @@ async function story(lifetime: Lifetime, selected?: SelectedCohort): Promise<voi
     }
     const agentLink = await link(admin,room.membership,"@declared-agent","@rita");
     await enrol(room,person(),agentLink,"@declared-agent",pins.membership);
+    if (selected === "archive-device-application") {
+      // Genuine Membership8 checker, not a person invitation or controller-bound
+      // agent. The existing HTTP/scheduler/host qualifications above still apply.
+      const issued = await lifetime.wait(() => issueCheckerInvitation({ ...admin, store: issuanceStore(admin) }, { handle: "@checker", hours: 1 }, { privateRequests: [], mode: "new", operation: crypto.randomUUID() }));
+      expect([issued.state, issued.kind, issued.reason]).toEqual(["verified", "checker-key", undefined]);
+      const text = issued.link!, decoded = checkerKeyInvitationOf(text)!;
+      expect([text.startsWith(CHECKER_KEY_LINK), decoded.definition, Object.hasOwn(decoded, "controller"), agentKeyInvitationOf(text), linkOf(text)]).toEqual([true, pins.membership, false, null, null]);
+      const checker = person();
+      await withoutActSubmission(async () => {
+        expect((await enrolAgentKey(checker, text)).code).toBe(1);
+        expect((await enrolCheckerKey(checker, agentLink)).code).toBe(1);
+        expect((await run(checker, "join", text, "--check")).code).toBe(1);
+        expect(await checker.store.config()).toBeNull();
+      });
+      let loseCheckerReply = true;
+      const lossy: Context = { ...checker, fetch: async (url, init) => {
+        const response = await fetch(url, init);
+        if (new URL(url).pathname.endsWith("/acts") && loseCheckerReply) { loseCheckerReply = false; throw Error("SCRIPTED lost accepted checker enrol response"); }
+        return response;
+      } };
+      expect((await run(lossy, "join", text)).code).toBe(1);
+      const original = await retained(checker), kept = (await checker.store.config())!;
+      expect([kept.join?.kind, original.intent.kind, original.intent.fields["secret"], typeof original.intent.fields["proof"]]).toEqual(["checker-enrol", "enrol", undefined, "string"]);
+      await withoutActSubmission(async () => {
+        expect((await run(checker, "join", agentLink)).code).toBe(1);
+        const checked = await run(checker, "join", text, "--check");
+        expect(checked, checked.lines.join("\n")).toEqual({ code: 0, lines: ["Enrolled independent checker @checker. Native checker bindings verified."] });
+      });
+      expect(await retained(checker)).toEqual(original);
+      const final = (await checker.store.config())!, items = (await room.M.summary()).value.items;
+      const member = items.find(item => item.type === "member" && item.values["handle"] === "@checker")!;
+      const activeKey = items.find(item => item.type === "key" && item.refs["member"] === member.id)!;
+      expect([member.state, member.values["kind"], member.values["role"], member.parties["controller"], member.parties["member"]]).toEqual(["active", "checker", "checker", null, { membership: room.membership, member: "@checker" }]);
+      expect([activeKey.state, activeKey.values["kind"], activeKey.values["id"]]).toEqual(["active", "checker", keyIdOfSecret((await checker.store.secret(final.key))!)]);
+      const settled = await lifetime.wait(() => (room.M.stub as unknown as { settle(signed: SignedIntent): Promise<{ ok: true; value: Receipt } | { ok: false }> }).settle(original));
+      expect(settled.ok && settled.value.definition).toBe(pins.membership);
+      expect(settled.ok && settled.value.fact).toEqual(final.join!.accepted);
+      expect((await node(final.repository!.inbox!).summary()).value.status).toBe("active");
+      const entries = await room.M.entries();
+      expect(JSON.stringify(entries)).not.toContain(decoded.secret);
+      const acts = await run(checker, "acts", "membership");
+      expect(acts.code, acts.lines.join("\n")).toBe(0);
+      expect(acts.lines[0]).toContain("@checker (checker):");
+    }
     if (selected !== "declared-application") {
       const issued = await lifetime.wait(() => issueInvitation({ ...admin, store: issuanceStore(admin) }, { kind: "person", handle: "@tender", role: "member", hours: 1 }, { privateRequests: [], mode: "new", operation: crypto.randomUUID() }));
       expect([issued.state, issued.kind, issued.reason]).toEqual(["verified", "person", undefined]);
