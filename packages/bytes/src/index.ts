@@ -17,5 +17,5 @@ export * from "./retained-key.ts";
 export * from "./retained-json.ts";
 export * from "./address.ts";
 
-export { fitsFieldType, memberFits } from "./field-value.ts";
+export { fitsFieldType, memberFits, isReference } from "./field-value.ts";
 export type { Signer } from "./signer.ts";

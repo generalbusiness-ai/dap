@@ -1,3 +1,4 @@
+import { commonsLink, commonsSelection } from "../src/commons.ts";
 import { expect, test } from "vitest";
 import { digestBytes, newIncarnation, scopeIdOf } from "@generalbusiness/dap-bytes";
 import type { MemberRef } from "@generalbusiness/dap-contract";
@@ -30,6 +31,11 @@ test("navigation keeps lane identity and separates the room's Issues and Changes
   expect(routeOf("#/change/sc_exact?kind=issue")).toEqual({ destination: "changes", scope: "sc_exact" });
   expect(routeOf("#/issue/sc_other")).toEqual({ destination: "issues", scope: "sc_other" });
   expect(routeOf("#/rules")).toEqual({ destination: "rules", scope: null });
+  const reference = { document: digestBytes(new Uint8Array([8])), fragment: "opaque/?#" };
+  const route = routeOf(commonsLink(reference));
+  expect(route.destination).toBe("commons");
+  expect(commonsSelection(route.scope)).toEqual(reference);
+
   expect(routeOf("#/start")).toEqual({ destination: "start", scope: null });
   expect(routeOf("#/join")).toEqual({ destination: "join", scope: null });
   expect(routeOf("#/invitation")).toEqual({ destination: "invitation", scope: null });

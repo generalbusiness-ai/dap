@@ -1,3 +1,4 @@
+import { commonsAuthorLabels, loadCommons, type CommonsView } from "@generalbusiness/dap-client";
 import { stringOrNull as text } from "@generalbusiness/dap-bytes";
 import { isRecord as record } from "@generalbusiness/dap-bytes";
 import { invitationRedemptionFields, isInvitationMembership } from "@generalbusiness/dap-client";
@@ -42,7 +43,7 @@ import {
   ScopeHandle, activeDirectory, collectItemQuery, partitionIndexes, completeSummary, declaredHandle, httpTransport, openHttpHeadStream, requestSession, secretSigner, signerSessionRequest, shapeDeclaredAct, signedIntent, signedReads, type Fetch, type Session as ReadSession, type Signer, type Signing, type Transport,
 } from "@generalbusiness/dap-client";
 import { LINK, describe, expectedOf, heldActs, linkOf, valueOf, type ActShape, type DefinitionShape, type Standing } from "@generalbusiness/dap-cli/browser";
-import { ARCHIVE_DEVICE_PUBLICATION_COHORT, DEFINITION_DOMAIN, ROLE_LISTS, fileSound, firstExtents, isExtents, platform, type Role } from "@generalbusiness/dap-platform";
+import { COMMONS_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, DEFINITION_DOMAIN, ROLE_LISTS, fileSound, firstExtents, isExtents, platform, type Role } from "@generalbusiness/dap-platform";
 import type { Extent as PolicyExtent } from "@generalbusiness/dap-platform";
 import { Q11_READ_ONLY, rulesSummaryV11 } from "./rules-summary-v11.ts";
 import { knownLIST1 } from "./source-support.ts";
@@ -77,6 +78,8 @@ export interface Room {
   membership: ScopeRef;
   rules: ScopeId;
   destination: ScopeId;
+  /** Exact optional sibling; older rooms have no Commons. */
+  commons?: ScopeRef;
   /** The repository name already recorded by the directory; no claimed display name is inferred. */
   name?: string;
   /** Missing publication is recognized only from the exact unpublished directory. */
@@ -343,8 +346,11 @@ export async function openRoom(session: Session, place: Place): Promise<Room> {
   if (M.scope !== place.membership.scope || M.inc !== place.membership.inc) throw new Unreadable(`The directory ${place.directory} names another membership scope than ${place.membership.scope}.`);
   room.rules = rules;
   room.destination = destination;
+  const commons = repository.refs["commons"];
+  if (fullScopeRef(commons) && commons.kind === "commons") room.commons = commons;
+  else if (commons !== undefined && commons !== null) throw new Unreadable("The directory has an invalid Commons reference.");
   const recordedRepository = repository.values["repository"];
-  if (summary.definition === "platform:directory@20" && summary.status === "active" && repository.state === "open" && recordedRepository == null) room.publication = "unpublished";
+  if ((summary.definition === "platform:directory@20" || summary.definition === COMMONS_COHORT.directory) && summary.status === "active" && repository.state === "open" && recordedRepository == null) room.publication = "unpublished";
   else if (recordedRepository && typeof recordedRepository === "object" && !Array.isArray(recordedRepository) && ["host", "namespace", "name", "id"].every(field => field in recordedRepository && typeof (recordedRepository as Record<string, unknown>)[field] === "string")) room.publication = "repository";
   else throw new Unreadable(`The directory ${place.directory} records no valid publication metadata.`);
   if (recordedRepository && typeof recordedRepository === "object" && !Array.isArray(recordedRepository) && "name" in recordedRepository && typeof recordedRepository["name"] === "string") room.name = recordedRepository["name"];
@@ -1107,6 +1113,7 @@ export async function act(room: Room, scope: ScopeId, kind: string, asked: { on?
   if (scope === room.directory && OPENING_ACTS.has(kind)) scope = await openingScope(room);
   const handle = handleOf(room, scope);
   const { summary, at: before } = await summaryOf(handle);
+  if (room.commons?.scope === scope && canonicalize(summary.scope) !== canonicalize(room.commons)) throw new Unreadable("The Commons incarnation changed. Reopen this room; nothing was signed.");
   if (isCertifiedRules(summary.definition)) throw new Unreadable(Q11_READ_ONLY);
   const { shape, declared } = await shapeOf(room, handle, summary);
   const declaration = shape.acts[kind];
@@ -1142,4 +1149,16 @@ export async function act(room: Room, scope: ScopeId, kind: string, asked: { on?
   try { result.after = (await summaryOf(handle)).at; result.observation = null; }
   catch (error) { result.observation = error instanceof Unreadable ? error.message : "The observation refresh failed."; }
   return result;
+}
+
+/** Notes live in their entries, not in folded comment items. */
+export async function loadCommonsView(room: Room, options: { cursor?: string } = {}): Promise<CommonsView> {
+  if (!room.commons) throw new Unreadable("No Commons reference is available in this room.");
+  await fresh(room);
+  const view = await loadCommons(handleOf(room, room.commons.scope), room.commons, options);
+  try {
+    const { summary } = await summaryOf(handleOf(room, room.membership.scope));
+    if (canonicalize(summary.scope) === canonicalize(room.membership)) view.authorLabels = commonsAuthorLabels(view, summary);
+  } catch { /* Exact immutable author references remain visible without labels. */ }
+  return view;
 }

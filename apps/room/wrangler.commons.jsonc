@@ -1,0 +1,84 @@
+// Planner provisions this separate Worker and its Artifacts namespace.
+// Planner binds the three unplanned register fields from the retained plan.
+// Invalid register pins keep creation closed.
+// SESSION_SECRET stays in the planner-owned secret store.
+{
+  "name": "dap-commons",
+  "main": "worker.commons.ts",
+  "compatibility_date": "2026-08-15",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "vars": {
+    "SCOPE_INDEX_MODE": "enforce",
+    "PLATFORM_CREATION_PINS": "[\"platform:register@23\",\"platform:directory@22\",\"platform:membership@9\",\"platform:rules@14\",\"platform:destination@16\",\"platform:inbox@1\",\"platform:commons@1\"]",
+    "ARTIFACTS_NAMESPACE": "dap-commons",
+    "REGISTER_SCOPE": "unplanned",
+    "ARTIFACTS_CONFIG": "{\"registerScope\":\"unplanned\",\"namespace\":\"dap-commons\",\"host\":\"6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net\",\"maxBytes\":10485760,\"credentialIdentity\":\"adapter-attempt\"}",
+    "DEMO_START_CONFIG": "{\"v\":3,\"origin\":\"https://dap-commons.inguz.workers.dev\",\"deployment\":\"dap-commons\",\"register\":\"unplanned\",\"definition\":\"platform:register@23\"}",
+    "APPLICATION_SCREEN_HOSTS": "[]",
+    "APPLICATION_TRUST": "[]",
+    "SERVING_CREATION_KEY_PER_HOUR": "10",
+    "SERVING_CREATION_ADDRESS_PER_HOUR": "30",
+    "SERVING_READ_KEY_PER_MINUTE": "240",
+    "SERVING_READ_ADDRESS_PER_MINUTE": "600",
+    "DEPLOYMENT": "dap-commons",
+    "PUBLIC_ORIGIN": "https://dap-commons.inguz.workers.dev"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": false
+    }
+  },
+  "analytics_engine_datasets": [
+    {
+      "binding": "METRICS",
+      "dataset": "artroom_metrics_v1"
+    }
+  ],
+  "version_metadata": {
+    "binding": "VERSION_METADATA"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SCOPES",
+        "class_name": "DeployedScope"
+      },
+      {
+        "name": "SCOPE_INDEX",
+        "class_name": "ScopeIndex"
+      },
+      {
+        "name": "REGISTRIES",
+        "class_name": "McpRegistry"
+      },
+      {
+        "name": "AGENTS",
+        "class_name": "McpAgent"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "DeployedScope",
+        "ScopeIndex",
+        "McpRegistry",
+        "McpAgent"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "binding": "ARTIFACTS",
+      "namespace": "dap-commons",
+      "remote": true
+    }
+  ]
+}

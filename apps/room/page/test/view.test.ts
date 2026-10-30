@@ -1,3 +1,6 @@
+import { commonsScreen } from "../src/commons.ts";
+import type { CommonsView, CommonsNote } from "@generalbusiness/dap-client";
+import { canonicalize, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { afterEach, expect, test, vi } from "vitest";
 import type { Answer } from "@generalbusiness/dap-contract";
 import type { ChangeView, Room } from "../src/data.ts";
@@ -219,4 +222,27 @@ test("an empty change list explains the first recorded source once in its list c
     expect(changed.textContent).not.toContain(text);
     expect(changed.all("a").some(link => link.textContent === "How to propose a change")).toBe(false);
   } finally { vi.unstubAllGlobals(); }
+});
+
+// A DOM/reading stand-in. Native signatures and the bounded actual journal
+// reader have separate owners; no binary document or hosted proof is claimed.
+test("Commons renders source lines and the member's marks without attributing them to the agent, and keeps content literal", () => {
+  vi.stubGlobal("document", document);
+  const scope = { scope: scopeIdOf({ v: 1, kind: "commons", definition: "platform:commons@1", creator: null, cause: textDigest("SCRIPTED Commons UI"), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(14)), kind: "commons" as const };
+  const membership = { ...scope, kind: "membership" as const }, documentDigest = textDigest("<script>carrier</script>");
+  const fact = (seq: number) => ({ at: scope, seq, hash: textDigest(`SCRIPTED note ${seq}`) });
+  const note = (seq: number, body: string, person = "@agent"): CommonsNote => ({ fact: fact(seq), author: { membership, member: person as `@${string}` }, key: "key_" + "A".repeat(43) as CommonsNote["key"], time: "2030-01-01T00:00:00Z", textDigest: textDigest(body), text: body, media: "application/json", about: [{ document: documentDigest, fragment: "line=2,3" }] });
+  const rows = Array.from({ length: 14 }, (_, n) => note(n + 2, JSON.stringify({ charge: n + 1, amount: n + 20 })));
+  const mark = { ...note(16, "Ask about this", "@person"), media: "text/plain", about: [{ entry: rows[0]!.fact }] };
+  const carrier = { ...note(1, "<script>carrier</script>"), media: "text/plain", about: [] };
+  const view: CommonsView = { scope, head: { seq: 16, hash: fact(16).hash }, notes: [carrier, ...rows, mark], next: "200", authorLabels: { [canonicalize(rows[0]!.author)]: { handle: "@agent", kind: "agent" }, [canonicalize(mark.author)]: { handle: "@person", kind: "person" } }, complete: false, unreadable: ["Later notes are unreadable."] };
+  const rendered = commonsScreen(view, { document: documentDigest }) as unknown as Element;
+  expect(rendered.textContent).toContain("line=2,3"); expect(rendered.textContent).toContain("@person (person)"); expect(rendered.textContent).toContain("@agent (agent)");
+  expect(rendered.textContent).toContain("Next history window"); expect(rendered.textContent).toContain("Incomplete reading"); expect(rendered.textContent).toContain("Later notes are unreadable.");
+  expect(rendered.textContent).toContain("<script>carrier</script>"); expect(rendered.all("script")).toHaveLength(0);
+  const table = rendered.all("table")[0]!;
+  expect(table.all("tbody")[0]!.all("tr")).toHaveLength(14);
+  const person = rendered.all("article").find(article => article.textContent.includes("Ask about this"))!;
+  expect(person.textContent).toContain("@person"); expect(person.textContent).not.toContain("@agent");
+  expect(rendered.all("a").every(link => link.getAttribute("href")?.startsWith("#/commons"))).toBe(true);
 });

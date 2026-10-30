@@ -138,6 +138,15 @@ construction of the other byte domains (`packages/bytes/src/domains.ts:13-24`),
 with the raw bytes in place of canonical JSON. `size` is the number of bytes.
 `media` is one media type, at most 255 bytes.
 
+A citation to this file can name a place within it through the separate
+`reference` field form: `{ document: digest, fragment: "page=3" }`.
+The fragment sits outside the file's digest, size and media metadata.
+It neither changes the file's identity nor retains its bytes. The reader
+interprets the fragment according to the file's media type. The record
+checks only the reference shape and its configured fragment byte bound.
+This citation form does not implement the file field or keeper designed
+here.
+
 **Slot.** An effect copies the whole file reference into a slot of type
 `file`. A reader of the item then knows the size and media type without a
 keeper call.

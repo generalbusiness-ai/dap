@@ -8,7 +8,7 @@
  */
 
 import type { FactRef, FieldValue, Item, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { isDigest, isFactRef, isMemberRef, isRecord, isScopeRef, textDigest, timeMs, utf8, wellFormed } from "@generalbusiness/dap-bytes";
+import { isDigest, isFactRef, isMemberRef, isRecord, isReference, isScopeRef, textDigest, timeMs, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import type { ActLike, FieldLike } from "./describe.ts";
 import { clip } from "./errors.ts";
 
@@ -65,6 +65,7 @@ function shaped(type: FieldLike, value: unknown, path: string, at: Shaping): Fie
       return isMemberRef(value) ? value as unknown as FieldValue : not("is not a member: give @handle, or { membership, member }");
     }
     case "item": return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : not("is not a local item ID");
+    case "reference": return isReference(value, Number(type["fragment"])) ? value as FieldValue : not("is not a document or entry reference with a bounded optional fragment");
     case "fact": return isFactRef(value) ? value as FactRef as unknown as FieldValue : not("is not a fact: { at, seq, hash }");
     case "scope": return isScopeRef(value) && value.kind === type["kind"] ? value as unknown as FieldValue : not(`is not a reference to a ${String(type["kind"])} scope: { scope, inc, kind }`);
     case "digest": return isDigest(value) ? value : not("is not a digest: sha256: and 64 hex characters");

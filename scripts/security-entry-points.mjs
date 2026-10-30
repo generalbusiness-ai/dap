@@ -252,7 +252,7 @@ async function hostedInventory(source, settings) {
 
 // Exact reviewed deployment composition; never resolve arbitrary re-exports.
 export function roomHttpEntry(file, source = readSource) {
-  const hops = file === "apps/room/worker.grow.ts"
+  const hops = ["apps/room/worker.grow.ts", "apps/room/worker.commons.ts"].includes(file)
     ? [[file, "./worker.ts"], ["apps/room/worker.ts", "./fetch.ts"]]
     : file === "apps/room/worker.ts" ? [[file, "./fetch.ts"]] : null;
   assert.ok(hops, "Unreviewed room Worker entry");
@@ -408,6 +408,7 @@ export async function servedInventory({ scopeSource = readSource(scopeFile), app
   for (const [file, entry] of [
     ["apps/room/wrangler.jsonc", "worker.ts"],
     ["apps/room/wrangler.demo.jsonc", "worker.ts"],
+    ["apps/room/wrangler.commons.jsonc", "worker.commons.ts"],
     ["apps/room/wrangler.grow.jsonc", "worker.grow.ts"],
     ["apps/room/wrangler.lending.jsonc", "worker.ts"],
   ]) {
@@ -441,7 +442,7 @@ export function documentedInventory(text) {
   const tables = new Map();
   let table;
   for (const line of text.split("\n")) {
-    const heading = /^## (artroom-scope|dap-demo|dap-grow|dap-lending|dap-grow-simulator|dap-home|dap-application-sandbox)$/.exec(line);
+    const heading = /^## (artroom-scope|dap-demo|dap-commons|dap-grow|dap-lending|dap-grow-simulator|dap-home|dap-application-sandbox)$/.exec(line);
     if (heading) { table = []; assert.ok(!tables.has(heading[1]), "Duplicate Worker table"); tables.set(heading[1], table); }
     if (!line.startsWith("| `")) continue;
     const cells = line.split("|").slice(1, -1).map(cell => cell.trim());

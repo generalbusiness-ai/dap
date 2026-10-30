@@ -554,7 +554,7 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
   };
   const selected = (owner: Parameters<Outside["accepts"]>[0], kind: string): Outside => {
     if (owner === "hold@2") return workspace();
-    if ((owner === "platform:rules@5" || owner === "platform:rules@6" || owner === "platform:rules@7" || owner === "platform:rules@8" || owner === "platform:rules@9" || owner === "platform:rules@10" || owner === "platform:rules@11" || owner === "platform:rules@12" || owner === "platform:rules@13") && ["fetch-application", "admit-application"].includes(kind)) return wiring("application", [env.APPLICATION_CONTENT, env.APPLICATION_TRUST], () => applicationHostOutside(env, PROPOSED_BOUNDS, fetch));
+    if ((owner === "platform:rules@5" || owner === "platform:rules@6" || owner === "platform:rules@7" || owner === "platform:rules@8" || owner === "platform:rules@9" || owner === "platform:rules@10" || owner === "platform:rules@11" || owner === "platform:rules@12" || owner === "platform:rules@13" || owner === "platform:rules@14") && ["fetch-application", "admit-application"].includes(kind)) return wiring("application", [env.APPLICATION_CONTENT, env.APPLICATION_TRUST], () => applicationHostOutside(env, PROPOSED_BOUNDS, fetch));
     // Share the bridge's exact owner policy; host-none install notices do
     // not depend on selecting a repository host.
     if (announcement.accepts(owner, kind)) return announcement;

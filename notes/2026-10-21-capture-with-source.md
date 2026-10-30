@@ -112,6 +112,14 @@ references. A fact field lists its kinds under one definition
 (`packages/contract/src/definition.ts:71`), so both name the three kinds
 under the capture package's definition.
 
+To point within a version, a note can use the separate `reference` field
+form: `{ entry: fact, fragment: "row=7" }`. The fragment sits beside the
+whole fact reference and never inside it. The reader interprets it from
+the referenced content's media type. This citation binds no fact and
+does not replace the typed references that capture's guards read.
+References to a retained document use `{ document: digest, fragment }`
+in the same way. These forms do not implement Capture or Retained Files.
+
 ## 3. What a guard can conclude
 
 A capture is always the capturer's act. Its signer is the member who

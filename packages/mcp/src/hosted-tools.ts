@@ -1,6 +1,6 @@
 /** Deployment policy for hosted MCP only. Local services omit this policy. */
 export interface HostedMcpSettings { MCP_ENABLED?: string; MCP_TOOL_ADDITIONS?: string }
-export const GENERIC_TOOL_NAMES = ["room", "inspect", "create", "join", "install_application", "application_installation", "prepare", "items", "steps", "step", "record", "sends", "text", "wait", "settle", "credential", "actions", "act"] as const;
+export const GENERIC_TOOL_NAMES = ["room", "commons", "inspect", "create", "join", "install_application", "application_installation", "prepare", "items", "steps", "step", "record", "sends", "text", "wait", "settle", "credential", "actions", "act"] as const;
 export const HOSTED_TOOL_OMISSIONS: readonly string[] = ["create", "install_application", "credential", "prepare", "join", "record", "step", "text"];
 
 /** Malformed settings close the endpoint; there is no runtime fallback. */

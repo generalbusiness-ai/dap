@@ -36,7 +36,7 @@ import type { Digest, Entry, Input, KeyId, Observation, ObservationRequest, Obse
 import { canonicalize, hex, isObservationUse, isRecord, parseStrict } from "@generalbusiness/dap-bytes";
 import { WINDOWS, contentChecked, contentStates, fixedBy, highestHead, isScopeRef, judgeGrant, membershipOf, namedBy, observationOf, observedName, observedOf, prefer, revoked, same, subjectName, valueDigest, type Clock as Reading, type ContentStates, type GrantJudgment, type Needed, type RecordedRef, type Retains, type StateView, type ValueRead } from "@generalbusiness/dap-derive";
 import { isPlatformDefinition } from "@generalbusiness/dap-bytes";
-import { SIBLINGS_OF, UNPUBLISHED_COHORT, destinationBranch, unpublishedDestinationBranch, platform, standingOf } from "@generalbusiness/dap-platform";
+import { COMMONS_COHORT, SIBLINGS_OF, UNPUBLISHED_COHORT, destinationBranch, unpublishedDestinationBranch, platform, standingOf } from "@generalbusiness/dap-platform";
 import type { Asked, Authority, Clock, Further, Random, Standing } from "./ports.ts";
 import type { SessionReading } from "./sessions.ts";
 
@@ -401,12 +401,13 @@ export function repositorySessionBirth(config: Pick<Repository, "genesis" | "sta
   const genesis = config.genesis();
   const state = config.state;
   // The directory/child cohort is the exact supported catalog, never a name alias or newest fallback.
-  const definitions = Object.keys(SIBLINGS_OF).filter((named) => platform(named) && (scope.kind === "destination" || scope.kind === "rules") && SIBLINGS_OF[named]![scope.kind] === genesis?.seed.definition);
+  const definitions = scope.kind === "commons" && genesis?.seed.definition === COMMONS_COHORT.commons ? [COMMONS_COHORT.directory]
+    : Object.keys(SIBLINGS_OF).filter((named) => platform(named) && (scope.kind === "destination" || scope.kind === "rules") && SIBLINGS_OF[named]![scope.kind] === genesis?.seed.definition);
   if (!definitions.length || !state || !same(state.scope()?.at, scope) || genesis?.decision !== "applied" || genesis.seed.kind !== scope.kind) return null;
   const directory = genesis.seed.creator;
   const item = scope.kind === "destination"
     ? (genesis.seed.definition === UNPUBLISHED_COHORT.destination ? unpublishedDestinationBranch(state) : destinationBranch(state))
-    : state.page("rules", ["current"], null, 1).items[0];
+    : state.page(scope.kind === "commons" ? "commons" : "rules", [scope.kind === "commons" ? "open" : "current"], null, 1).items[0];
   const held = item?.refs["directory"];
   const membership = recorded === undefined ? recordedMembership(config, scope) : recorded;
   return directory?.kind === "directory" && isScopeRef(held) && same(held, directory) && genesis.source?.seq === 0 && same(genesis.source.at, directory) && genesis.message?.class === "request" && genesis.message.type === "create" && membership?.kind === "membership" ? { directory, membership, definitions } : null;
@@ -430,7 +431,7 @@ export function repositorySessionMembership(config: Pick<Repository, "genesis" |
         const refs = repositories[0]["refs"];
         const reference: unknown = isRecord(refs) ? refs["membership"] : null;
         const target: unknown = isRecord(refs) ? refs[scope.kind] : null;
-        if (scope.kind === "rules" && (!isScopeRef(target) || !same(target, scope))) return null;
+        if ((scope.kind === "rules" || scope.kind === "commons") && (!isScopeRef(target) || !same(target, scope))) return null;
         const after = repositorySessionBirth(config, scope);
         return isScopeRef(reference) && reference.kind === "membership" && after && same(after.directory, birth.directory) && reference.scope === after.membership.scope && (after.membership.inc === null || after.membership.inc === reference.inc) ? reference : null;
       } catch { return null; }

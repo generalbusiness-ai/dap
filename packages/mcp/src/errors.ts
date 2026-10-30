@@ -164,6 +164,7 @@ export function clip(value: unknown, chars: number = FRAGMENT_CHARS): string {
  * sentence is made; a finding's `what` that quotes a caller's value clips it where it is written.
  */
 export type Finding =
+  | { error: "commons-missing" }
   | { error: "shape"; field: string; what: string; declared: string }
   | { error: "stale-descriptor"; scope: string; runs: string; tool: string | null }
   | { error: "restart" }
@@ -182,6 +183,7 @@ export type Finding =
 
 export function finding(f: Finding): Said & { error: string } {
   switch (f.error) {
+    case "commons-missing": return { error: f.error, sentence: "Before signing, the host reports commons-missing: this package requires Commons and the room has none. Nothing was submitted.", next: "Choose a room with Commons. This host finding is not a recorded native refusal." };
     case "shape": return { error: f.error, sentence: `Before signing, the server found field ${clip(f.field, PATH_CHARS)} ${f.what}; declared: ${f.declared}. Nothing was sent.`, next: "Correct the field and call again with the same idempotencyKey." };
     case "stale-descriptor": return { error: f.error, sentence: `Before signing, the server found that ${clip(f.scope)} runs ${clip(f.runs)}, which this tool does not serve. Nothing was sent.${f.tool ? ` The tool for that target is ${f.tool}.` : " No listed tool serves it for your standing."}`, next: "List tools again; call the named tool." };
     case "restart": return { error: f.error, sentence: "The tool list changed; list again from the start.", next: "Call tools/list without a cursor." };

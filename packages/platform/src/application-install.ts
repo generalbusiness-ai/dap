@@ -95,7 +95,7 @@ function proof(given: RuleGiven): ApplicationReleaseProof | null {
   const signed = given.value(APPLICATION_RELEASE_VALUE.domain, fields["release"], APPLICATION_RELEASE_VALUE.max);
   if (semantic === undefined || signed === undefined) return null;
   const result = readApplicationReleaseProof(semantic, signed, fields["release"], { bytes: APPLICATION_SEMANTIC_VALUE.max + APPLICATION_RELEASE_VALUE.max });
-  if (result.ids.semantic !== fields["semantic"] || result.semantic.capabilities.length || (!archiveInstall(given) && result.semantic.host.requires !== undefined) || result.semantic.host.profiles.some(profile => profile !== "restricted@1")) throw Error("unsupported install proof");
+  if (result.ids.semantic !== fields["semantic"] || result.semantic.capabilities.length || (!archiveInstall(given) && result.semantic.host.requires !== undefined) || result.semantic.host.requires?.includes("commons") === true || result.semantic.host.profiles.some(profile => profile !== "restricted@1")) throw Error("unsupported install proof");
   for (let index = 0; index < result.semantic.definitions.length; index++) {
     const part = result.semantic.definitions[index]!;
     if (utf8(part.bytes).length > INSTALL_DEFINITION_BYTES || fields[`definitionText${index}`] !== textDigest(part.bytes)) throw Error("exact native declaration text required");

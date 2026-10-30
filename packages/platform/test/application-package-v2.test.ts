@@ -102,13 +102,19 @@ test("v2 signs explicit composition, refuses ambiguous references and keeps late
   }
 });
 
-test("a signed host requirement names archive explicitly and refuses unknown or ambiguous requirements", async () => {
+test("signed host requirements bind archive and commons and refuse unknown or ambiguous requirements", async () => {
   const original = await packApplication2(input(), signer);
   const requested: ApplicationPackageInput2 = { ...input(), semantic: { ...input().semantic, host: { ...input().semantic.host, requires: ["archive"] } } };
   const required = await packApplication2(requested, signer);
   expect(required.ids.semantic).not.toBe(original.ids.semantic);
   expect(readApplicationPackage2(required.bytes, required.ids.release).package.semantic.host.requires).toEqual(["archive"]);
-  for (const requires of [[], ["unknown"], ["archive", "archive"], "archive", null]) {
+  for (const requires of [["commons"], ["archive", "commons"]] as const) {
+    const commons = await packApplication2({ ...input(), semantic: { ...input().semantic, host: { ...input().semantic.host, requires } } }, signer);
+    expect(commons.ids.semantic).not.toBe(original.ids.semantic);
+    expect(commons.ids.semantic).not.toBe(required.ids.semantic);
+    expect(readApplicationPackage2(commons.bytes, commons.ids.release).package.semantic.host.requires).toEqual(requires);
+  }
+  for (const requires of [[], ["unknown"], ["archive", "archive"], ["commons", "commons"], ["archive", "commons", "unknown"], "archive", null]) {
     const bad: ApplicationPackageInput2 = input(); Reflect.set(bad.semantic.host, "requires", requires);
     await expect(packApplication2(bad, signer)).rejects.toThrow("application-package-invalid");
   }

@@ -9,7 +9,7 @@
     "apps/room/page"
   ],
   "scripts": {
-    "typecheck": "npm run typecheck --workspaces --if-present && tsc -p scripts/tsconfig.json && tsc -p apps/counter/tsconfig.json && tsc -p examples/lending/tsconfig.json && tsc -p examples/lending/browser/tsconfig.json && tsc -p apps/counter/browser/tsconfig.json && tsc -p examples/grow/tsconfig.json && tsc -p apps/sandbox/tsconfig.json",
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc -p scripts/tsconfig.json && tsc -p apps/counter/tsconfig.json && tsc -p examples/lending/tsconfig.json && tsc -p examples/lending/browser/tsconfig.json && tsc -p apps/counter/browser/tsconfig.json && tsc -p examples/grow/tsconfig.json && tsc -p apps/sandbox/tsconfig.json && tsc -p examples/commons-bill/tsconfig.json",
     "pretest": "node scripts/cloudflare-pool-compat.mjs",
     "test": "node scripts/test.mjs",
     "pretest:changed": "node scripts/cloudflare-pool-compat.mjs",

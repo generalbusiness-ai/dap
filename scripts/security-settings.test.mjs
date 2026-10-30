@@ -81,6 +81,9 @@ test("the real Worker source inventory rejects an undocumented setting read", ()
     name: "dap-celld-local", config: "apps/room/celld/wrangler.json", entry: celld, kind: "worker",
   });
   assert.equal(original.deployments, deployments.length, "the real JSON configuration participates in coverage");
+  assert.deepEqual(deployments.find(row => row.config === "apps/room/wrangler.commons.jsonc"), {
+    name: "dap-commons", config: "apps/room/wrangler.commons.jsonc", entry: "apps/room/worker.commons.ts", kind: "worker",
+  });
   const conflicting = readSettingsDocument(page);
   conflicting.deployments.find(row => row.config === "apps/room/celld/wrangler.json").name = "artroom-scope";
   const conflictingDocument = page.replace(/```dap-settings-inventory\s*\n[\s\S]*?\n```/, `\`\`\`dap-settings-inventory\n${JSON.stringify(conflicting)}\n\`\`\``);

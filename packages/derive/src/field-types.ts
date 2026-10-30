@@ -13,6 +13,7 @@ export function fieldAssignable(from: FieldType, to: FieldType): boolean {
     case "item": return to.type === "item" && from.of === to.of;
     case "scope": return to.type === "scope" && from.kind === to.kind;
     case "fact": return to.type === "fact" && from.kind.every((k) => to.kind.includes(k)) && from.under === to.under;
+    case "reference": return to.type === "reference" && from.fragment <= to.fragment;
     case "list": return to.type === "list" && from.max <= to.max && fieldAssignable(from.of, to.of);
     case "record": {
       if (to.type !== "record") return false;
