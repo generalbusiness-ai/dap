@@ -1,223 +1,147 @@
-# Minimum-head reads: review repairs
+# DX-A2: preserve archived causal replies and hosted enrollment conflicts
 
-DX-A2 remains under request `1c124ebf0f204a06e9f0f0de33c3b88c4dd296bb`, promise
+Request `1c124ebf0f204a06e9f0f0de33c3b88c4dd296bb`, promise
 `28df5171acd1320942be751570e7a2b044a541e1`, and parent
-`2888b81e7472b5c097c8bc676794ee0170949978` in workroom
-`git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3`. The source base is
-`5dc9765fdc6fb6896b736127801944c46ee288f9`.
+`2888b81e7472b5c097c8bc676794ee0170949978` track DX-A2. The historical source
+base is Main `5dc9765fdc6fb6896b736127801944c46ee288f9`. The current production
+checkpoint is `ba8953140c4465cd213af37dad97306150802613`, tree
+`0170d16bc65bfa190759ef66889c8f1d04380f73`, parent
+`7424aafc8ef80ec0287d6941bd42e388a98482a9`.
 
-**The fourth repair gate passed.** It closed naturally at clean source
-`713487e04d8e119ce036ac817e04504e24f6b315`, tree
-`f2dc10bd111a5f7ab31a30085ec8b38f8dd22bf6`, with unchanged source and
-complete output capture. Three original and three earlier repair gates
-remain failed. This report claims no review approval, landing or hosted result.
+Checker `18f90534cbd8c6b319d13ec2fd600d64056d1c7e` requests two final repairs.
+Both source repairs have focused evidence. Gate 6 passes at the current
+checkpoint. Gate 5 fails under the outer restriction described below. The
+fourth repair gate stays a pass for its older source. All seven earlier gate
+failures stay failed. Exact-source review remains open.
 
-## What changed
+## What changed and why
 
-The five existing reads accept optional `{at: ScopeRef, head: number | Head}`:
-summary, items, history, entry and application projection. Clients may supply
-a receipt. HTTP carries one canonical base64url `atLeast` parameter, bounded
-to 512 decoded bytes and 683 encoded characters. Head and FactRef stay closed.
-Malformed or duplicate HTTP input, or a different URL scope, returns 400.
-An authorized kind mismatch returns unavailable; another incarnation returns
-wrong-incarnation. Neither exposes a head. The bounded RPC record follows
-the same authority rules without a new wire reason.
+The five existing reads accept optional minimum `{at: ScopeRef, head: number | Head}`.
+HTTP uses one canonical base64url atLeast value, bounded to 512 decoded bytes
+and 683 encoded characters. Head and FactRef remain closed. Malformed or
+duplicate input or a different URL scope returns 400. Authorization precedes
+any head; wrong incarnation and unauthorized requests expose none. The existing
+one-second wait sits outside the turn, transaction and projection flight. It
+wakes on committed seals, refreshes causal authority, and releases its timer.
+The card reuses its accepted receipt in its existing projection request. No
+summary barrier, polling loop, native definition or new rate policy appears.
 
-`ReadWait` registers before checking position and wakes after a committed
-seal. It waits outside the turn and transaction, refreshes authority, and
-releases its callback and timer in finally. Its wait timer uses
-`Bounds.readWaitMilliseconds = 1000`. An authorized timeout returns behind
-with the current FactRef; HTTP maps that answer to 503. No journal record,
-alarm, subscription or rate policy enters the wait. Controlled-clock cases
-prove behavior, not deployed one-second latency or physical drain.
+Ruling `366b3989097cc70edf291bb97e019c7a866c0607` keeps ordering-only semantics
+for a full minimum strictly below a real floor. At or above it, a missing or
+wrong retained hash stays unavailable. The earlier repairs also keep causal
+refreshes, public followReceipt mismatch refusals, one ordinary unavailable
+fallback, all five client and CLI arguments, development-host refusal, and
+kernel section 7 contracts. The single-file exception remains withdrawn. A
+separate waiter-count cap remains deferred.
 
-The card retains its accepted receipt and sends it on its next existing
-application-projection request. Hosted enrolment qualifies its existing entry
-read-back. Neither adds a summary barrier or polling loop. Native definitions
-and historical pins stay unchanged. Maintained generation supplies Page
-assets and MCP resource bytes; generated equality checks prove no browser or
-provider behavior.
+The first final repair makes an authenticated entry read below the real floor
+return its existing archive pointer directly. It does not wait or expose a
+current head, including when a stranger supplies a future minimum. This keeps
+plain entry behavior after the same request authentication without admitting
+strangers to behind.current. No archived payload or supplied historical hash
+is verified, and no new read authority or wire field appears.
 
-## Six checker repairs and the floor decision
+The installed projection owner uses real Scope turns and SQLite, old signed
+causal input, elapsed intent time and an actual floor. Both whole-file cases
+pass. The controlled floor, archive receipt, clock, definition and provider
+qualifications remain as before. The new control restores the bad refusal;
+its ordinary assertion distinguishes archived from forbidden and exact bytes
+return. It is local Native evidence, not provider archive custody.
 
-Checker `0924ce2ed5c619b8cc0845f65b87e2686dac7e3b` requested six changes at
-`aa20f0fe0e01e380e49497a64371958e1147e574`, tree
-`07baa6da9ad7c183f2cf1342bf6490336f62f627`. Its findings came from source,
-not runtime reproduction. The new cases and captures below stay distinct.
+Hosted enrollment now sends a qualified sequence minimum, as followReceipt
+does. Its own retained hash and complete signed-input comparisons still return
+409. A full minimum previously stopped a wrong receipt hash in the barrier and
+turned the permanent conflict into 503. The ordering read now reaches the
+existing comparison. Neither authentication nor bearer issuance changes.
 
-1. **Preserve archived answers.** Ruling
-   `366b3989097cc70edf291bb97e019c7a866c0607` adopts ordering only for a full
-   minimum strictly below the real journal floor. After authority, exact
-   ScopeRef/incarnation checks and reaching the position, entry keeps its
-   existing archived metadata: floor, commit and through position. Summary,
-   items, history and projection answer normally. No archived bytes or
-   supplied historical hash are verified. At or above the floor, a missing
-   or different retained hash remains unavailable. No archive dereference,
-   authority or wire field is added. Below the floor the minimum orders;
-   it does not verify.
-2. **Keep a waiting projection out of the shared flight.** The wait now
-   precedes PreparationFlights admission, so it cannot occupy the item-query
-   slot. The original ten-second projection deadline includes time already
-   spent waiting. A narrow earlier deadline only shortens that window.
-   The existing flight still owns late unresolved work until it settles.
-3. **Refresh causal roots.** Signed history and entry reads refresh the
-   existing bounded chain proof on admission and after each wake. A seal
-   during asynchronous refresh causes another refresh, not a stale read.
-   The first authorized racing refresh starts the same wait timer. An
-   expired or unauthorized reader gets its named refusal before any head.
-   A deadline race with uncertain chain coverage fails unavailable.
-4. **Keep receipt refusals.** followReceipt sends a qualified sequence
-   minimum, then checks the returned full reference and computed entry hash.
-   It retains hash-mismatch, reference-mismatch and the hosted 409 enrolment
-   refusal. Only unavailable permits one ordinary entry read with the same
-   target and reader. Other refusals pass through; no retry loop is added.
-   A successful reply whose head is below the receipt cannot succeed.
-5. **Stop dropped or stale minima.** All five handle reads own their input
-   before dispatch and reject successful replies below it. An equal full
-   head must also match its hash; a later head alone cannot prove a historical
-   hash. CLI session wrappers forward and own all five arguments before
-   asynchronous session work. The serialized local development host refuses
-   a valid minimum with unavailable and rejects malformed/duplicate wire
-   input with 400. It adds no local arrival wait.
-6. **Complete kernel section 7.** It names the new
-   `packages/bytes/src/read-minimum.ts` owner and readMinimum, isReadMinimum,
-   encodeReadMinimumParameter, readMinimumParameter and
-   READ_MINIMUM_WIRE_BOUNDS; isBehindRead; the five ScopeApi arguments; and
-   wrong-incarnation/behind in APPLICATION_PROJECTION_REFUSALS. These are
-   shared read contracts: all applications use the same existing reads and
-   cannot redefine their wire, result guard or refusal shape. They introduce
-   no application vocabulary. The client README
-   states the bounded receipt fallback and local-development limit.
+The new three-case owner uses real HostedAgent, SQLite, custody, signing and
+HTTP decoders. Its peer and retained-hash barrier are explicit in-memory wire
+stand-ins using the maintained minimum codec. It proves classification and
+custody, not Native admission, waits, floors or registry authority. The hash
+case alters only the accepted receipt hash; the entry stays honest. The signed
+input case keeps row and receipt hashes equal and changes only retained signed
+bytes. Both return 409 without a bearer. Honest readback returns 201. Reopening
+and repeating preserves the accepted original and dispatch count 1. The control
+reverts only the full minimum and distinguishes 409 from 503 by an ordinary
+status assertion. It does not merely assert an argument shape.
 
-The floor ruling also withdraws the old single-file exception and requires
-a new full gate. A separate waiter-count cap remains deferred to the planner's
-observability design. The one-second timer bounds a wait; it does not bound
-concurrent waiter count. No cap or new rate policy is claimed here.
+## Actual failures and follow-ups
 
-## Actual witnesses and failures
+The initial MCP test compiler fails because two fixture submit calls omit the
+required grants argument. Explicit empty arrays fix that type error. The first
+owner run then fails all three cases at an incorrect custody-digest expectation.
+The HostedAgent helper reports a different documented digest domain from
+intentDigest; correcting that expected value preserves the original signature,
+receipt and status assertions. The final owner passes all three. Both earlier
+failed captures stay separate. Four final compiler contexts pass: Scope and MCP,
+each production and test. The Native projection owner passes two cases.
 
-The sealed old report keeps three failed gates: CLI status typing at
-`6c2ad821`, stale generated resources at `091c0781`, and receipt hash and
-kind expectations at `240c963f`. The `ce3aadfc` follow-ups passed but did
-not preserve public refusals. Checker review rejected that exception.
-The table preserves all 44 original invocation rows.
+The first AST producer cannot load: the partial 7424 baseline omits a top-level
+public source read. V2 runs the same maintained producer bytes against the full
+exact Git 7424 export. It confirms the baseline seals, then reports new semantic
+seals 1fbb2ae6de25
+for Scope reads and 408713d777ce
+for HostedAgent. Root adopts those two values. They are AST observations, not
+file hashes or Native authority. Only the two named baseline sources, matching
+producer bytes, helper and qualification join RAW; the 112-MB baseline export
+is reconstructible from 7424 and is excluded. No node_modules tree is retained.
 
-The client test compiler first rejects an invalid wrong-kind literal; a
-valid rules kind fixes that fixture. Plain first reports 32 passes and two
-failures: missing projection source and an explicit null reader selecting
-Signed rather than the scripted Session. A valid empty board source and
-issued session preserve the assertions; both whole owners then pass 18.
+The first security owner has nine passes and one failure before adoption.
+The next child has ten passes but capture exit 1 because a concurrent control
+changes hosted.ts. That source-unstable capture is not a pass. A later
+quiescent owner has ten passes with unchanged source. No assertion or deadline
+changes to conceal either earlier result.
 
-The first Native selection reports 16 passes and one timeout in the causal
-reader case. Background delivery could beat the waiting readers. The fixture
-now holds only the exact target delivery, signs both readers first, waits for
-both timers, delivers the real envelope, then restores the prior dispatcher
-and settles owned work in finally. The same six-case owner passes. This is a
-fixture scheduling correction, not a passing result manufactured from the
-timeout or a new production change.
+Gate 5 closes with child and capture exits 1 after Kernel. Node has 78 passes and two failures; Counting,
+Plain and Native stages are unreached. Root reports the outer tool used default
+restricted execution. The actual Mac child reports listen EPERM on 127.0.0.1,
+and the owned Counting listener case times out. Every actual inner report is
+retained separately from its outer receipt. Source is unchanged and output
+capture complete, but the gate remains failed. The next runner changes only
+the RAW path; Root must request escalated outer execution. Tests, deadlines,
+source guards, locked dependencies and default TMPDIR stay unchanged.
 
-The projection-wait case uses a real native Rules object and session. While
-its controlled one-second wait stays pending, an actual item query succeeds.
-The causal case uses real parent/child creation, a signed link and typed
-native delivery. The original waiting history and entry replies see that
-new causal entry; an unrelated signer is forbidden before waiting. Generic
-definitions, grants, clock and timer are labelled test inputs. Journals,
-signatures, causal traversal, turns and SQLite remain real.
+Gate 6 closes with command and capture exits 0 at ba8953140c. Node passes 80,
+Counting passes 56, Plain passes 3,159 with one skip, and Native passes 866 with
+two skips. All five stages pass and all four terminal ledgers are complete.
+Source and output capture remain complete, with zero dropped bytes. Root
+reports escalated outer execution. Wall time is 1,137.567301 seconds and host
+child CPU is 2,424.405295 seconds. Collector wall is 1,137.697504 seconds.
+The runner observes Darwin 27.2 arm64, 18 logical CPUs, and starting loads
+2.024, 2.417, and 2.316. Cache state is uncontrolled and guest CPU is unknown.
+Scope timing remains partial, with 72 unknown or suite observations and no
+contradictory records. Concurrent duration sums do not measure wall time or CPU.
 
-The installed-card owner retains its pause receipt, writes later native
-acts and checkpoints, advances its clock, and runs Core.floor on real SQL.
-Its test-authored archive commit proves no provider custody or alarm writer.
-After payload deletion and eviction, a new session reads actual archived
-metadata and the card refresh carries the old receipt. A wrong retained
-floor hash stays unavailable; unauthenticated access stays forbidden. The
-combined two-file selection passes eight cases.
+The predecessor retains the three original and three earlier repair gate
+failures, all fixture/control attempts, and the fourth repair gate's historical
+pass. The original Lending no-send cause remains unconfirmed; later diagnosis
+and serial stand-in reads do not retroactively prove it. Both earlier controls,
+Native/provider/clock stand-ins, partial timing, unknown cwd and guest CPU
+qualifications remain attached to their retained records. No hosted outcome or
+physical descendant drain follows.
 
-The floor control distinguishes archived from unavailable: its baseline
-passes, its mutant reports one pass and one failure, and exact bytes return.
-It stops before card refresh, so proves no refresh mutation result. Its
-temporary JSON reports are absent. All 9,132 diagnostic bytes are in stderr,
-with empty stdout; the old proposal's stdout caption stays historical.
-The old full-head control stays separate. Neither is a sweep or hosted proof.
+## Evidence custody
 
-The first three repair receipts keep an obsolete BO1 two-fixture caption.
-capture-qualification-correction.json names them. Actual before/after
-inventories, dirty status and hashes govern those aa20-based bytes; no
-receipt or source guard changed. Head/tree alone do not identify them.
+The sealed successor is
+`/Users/hughpyle/play/artroom-evidence/2026-10-30-dxa2-final-two-repairs`:
+1,836 files and 384,281,554 bytes. It preserves the complete predecessor:
+1,378 files and 289,443,970 bytes, including its earlier 576-file unit.
+E below means the successor's prior-evidence subtree. That independent copy
+keeps every nested historical prefix. The table preserves all 83 old rows,
+then the 16 focused invocations, failed Gate 5, and actual Gate 6. All 101 rows
+remain byte-exact from the sealed raw note.
 
-Generation changes only assets.ts and ignored dist JavaScript; four
-generated cases pass. AST readback fails on bare keys, then v2 passes on
-qualified keys. Baseline comparison supports four adopted seal changes;
-inventory passes ten. The v1 metadata-lock copy stays an input. No new
-flight owner or semantic digest becomes a seal or file hash. Seals grant
-no runtime authority.
+Root ran the reviewed v3 prepare, seal, and cite operations with exits 0.
+Root independently checked all selected bytes, modes, 105 complete unit
+inventories, and predecessor preservation, then checked the sealed leaves,
+manifest, and readback. These are retention metadata operations with no formal
+collector receipts, not additional project checks. The committed manifest
+embeds Root's readback report and binds the adopted note separately from the
+unchanged 39,773-byte raw note. Full raw inventories stay outside the checkout.
 
-The first repair gate at `1c5a6fba` passes Kernel, then fails Node:
-79 pass and active-source rejects the client fixture's Platform import.
-Counting, Plain and Native stay unreached. A one-shot maintained query
-digest calculation, with fixed public input and tsx cache disabled, replaces
-only that test import. Its value, template and patch remain retained. No
-algorithm or allowlist changes. The client test compiler, seven client
-cases and twelve active-source Node cases then pass separately.
-
-The second repair gate at `b678ecba` passes Kernel and Node 80, then fails
-Counting with 55 passes and one failure; Plain and Native stay unreached.
-The fake accepted-history entry and receipt named sequence 2 but its read
-reported head 1. The minimum guard correctly returned unknown. Changing
-only those two fake head fields to 2 leaves production and allowlists
-unchanged. The Counter compiler and all 56 Counting cases pass separately
-on that dirty fixture repair.
-
-Root commits clean source `887f411cbf857d1dc3e3e733de6ee8e17d497350`, tree
-`85096fbf5a41e499b28f29eb6f2e4b251d44144b`. The third repair gate fails:
-Kernel, Node 80, Counting 56 and Plain 3,156 with one skip pass. Native
-reports 865 passes, one failure and two skips across all three projects.
-The Lending story receives nothing-sent instead of unknown after discarding
-its preceding look result. The output does not establish the no-send cause.
-
-A one-file diagnostic retains that look and donation result only through
-fixed reason labels, post counts and custody-presence booleans. It preserves
-every call, assertion and deadline. Its compiler and whole Lending owner
-pass separately. That pass supplies no missing observation of the earlier
-failure and proves no repaired race.
-
-Source inspection finds avoidable contention in the historical projection
-stand-in: parallel library and thing queries share one native query flight,
-which may refuse an overlapping task as unavailable. The helper now awaits
-the original queries in order, then constructs the same response map. It
-preserves history ordering, strict source/head validation and the two-attempt
-limit. Its compiler and whole Lending owner pass once. No production,
-authority, assertion, deadline or pin changes. The original cause remains
-unconfirmed. This shared-helper change requires a new full gate.
-
-Gate command walls are 84.707218, 93.139510 and 1,225.857183 seconds;
-their capture host child CPUs are 153.316810, 164.599937 and 2,611.798288
-seconds. Command-only and enclosing runner costs remain distinct in the
-receipts. Gate 3's runner reports Darwin 27.2.0, arm64, 18 logical CPUs and
-start load averages 4.993652, 4.701660 and 4.187988. Cache and shared-host
-load are uncontrolled; this is no cold-cache benchmark. No VM CPU is
-measured.
-
-The fourth gate passes Kernel, Node 80, Counting 56, Plain 3,156 with one
-skip, and Native 866 with two skips. All five stages pass, reportErrors is
-empty, and four terminal ledgers are complete. Scope timing remains partial:
-246 modules observed, 72 unknown or suite observations overall, zero
-contradictory records. Those timing gaps are not inferred test failures.
-Command wall is 1,253.580465 seconds, capture wall 1,253.746091, capture host
-CPU 2,678.112164 and command CPU 2,677.929155. Enclosing runner wall is
-1,254.820106 and host CPU 2,681.111010. No VM CPU is measured. Its Darwin
-27.2.0 arm64 host has 18 logical CPUs; start loads are 4.101563, 4.330566 and
-5.434570. Cache and shared-host load remain uncontrolled.
-
-## Evidence table and custody
-
-The old unit is actually sealed at
-`/Users/hughpyle/play/artroom-evidence/2026-10-30-dxa2-minimum-head`:
-576 files, 85,415,337 bytes, root SHA256SUMS
-`64725902b21744c166ff1da6cc06fbeacb7038a0ff9ebd212d23f07fec81a450`.
-Its old note and manifest remain unchanged. The sealed new home is
-`/Users/hughpyle/play/artroom-evidence/2026-10-30-dxa2-review-repairs`.
-The compact manifest records current custody and binds the aliases below.
-E means that home; E/prior-evidence keeps the complete old namespace.
+Static inspection found v2 reading a nonexistent receipt cwd field. V3 checks
+the command cwd and the separate runner cwd. V2 never ran, so no failed
+adapter execution is claimed. Its source and metadata remain unchanged.
 
 W, C, S, M, P, I, G, R and N preserve the original table labels. Their retained
 roots are E/prior-evidence/focused/contract, focused/client,
@@ -229,8 +153,8 @@ A1 E/generation-v1/captures; A2 E/generation-v2/captures;
 Q E/fixed-query-calculation; BF E/client-boundary-checks; CF E/counting-fixture-checks;
 NG1, NG2 and NG3 mean E/new-failed-gate-1, E/new-failed-gate-2 and
 E/new-failed-gate-3. NG4 means E/gate-captures. LD and LS mean
-E/lending-diagnostic-checks and E/lending-serial-checks. The compact manifest
-now binds these aliases.
+E/lending-diagnostic-checks and E/lending-serial-checks. The prior compact manifest retains these definitions; the successor binds
+them without flattening historical prefixes.
 
 V expands to node node_modules/vitest/vitest.mjs and T to
 node node_modules/typescript/bin/tsc. Package-local original commands retain
@@ -252,6 +176,13 @@ guards remain in the receipts. Concurrent case sums are not wall time or CPU.
 S1's separate gate shared this host from about 20:05. No private S1 evidence
 was read and no timing cause follows from that overlap. Logical deadlines
 exclude guards and cleanup and prove no physical descendant or VM drain.
+
+F means final-two-checks under the proposed successor. Each new command.json
+retains exact argv and cwd; the outcome follows it in the command cell. The
+index binds complete receipts, streams and before/after source snapshots.
+G5 means gate5/outer, with its actual inner retained as gate5/inner. Current
+row counts are invocations, not unique coverage. The later gate outcome and
+all later pins remain unknown until a separate closed Root handoff.
 
 | Check and receipt | Actual command | Exit | Output digest | Receipt digest | Wall seconds |
 | --- | --- | ---: | --- | --- | ---: |
@@ -338,42 +269,41 @@ exclude guards and cleanup and prove no physical descendant or VM drain.
 | LS/lending-owner | `V run --project scope-lending packages/scope/test/lending.test.ts --reporter=verbose --reporter=json --outputFile.json=$LS/lending-owner/report.json` | 0 | out `1b35d5871506057150f72717022bbdddcbe48e3c11f3256649b8eca221799901` | `702c61b25325d2e0cbd86d07697f497f8cd6b724d20a9779f0e1dd2c41b8c919` | 8.376282 |
 | LS/scope-test-types | `T -p packages/scope/tsconfig.test.json --noEmit` | 0 | out `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `29ffe9e371da3e77067f2207efa0fe03f5a308ae011868a28716d6b8e2f7801b` | 0.878712 |
 | NG4/gate-1 | `npm run gate` | 0 | out `e08d94bbc1827690ae817d5e33df8a52a305db141c75c9399aed174c76d4191d` | `bcda2dbc86314165e4a40a04471b7077c2a0fb457f68cbd728908a4d08ac2d57` | 1253.580465 |
+| F/ast-readback | `command.json`. Producer failed: partial baseline lacked a public dependency; no AST result. | 1 | out EMPTY; err `442cd4bbdc1a21a3a68b617384c24eb79deb01c1f829bab7e488c6ab4100be0d` | `901f59bb4fc5ac9224845fbf04000b6232c0f2fddf50d3ee0ea749650bd6a91e` | 0.316642 |
+| F/ast-readback-full-baseline | `command.json`. Maintained AST producer passed on the exact full Git baseline. | 0 | out `6ffa7e4352a733b6e79b7737a3b024ba7f478edd3e1cc134aca73e9b7ca48064`; err `0464a3c5e0c2c9951f82ec1c8fffa1929d3c68df36366be12b7a65cc53391335` | `1f7ffe79b25dfb11abc6c3c781ad4bb7bdd2d06a20031c4c8c68569b18d6cc28` | 0.142465 |
+| F/causal-archive-control | `command.json`. Distinguishes: real Native archived versus forbidden assertion; restored. | 0 | out EMPTY; err `c9348040ef0c983d9c16f25a71c95e14c5623cdce79c9b24f2d3cdaab229b90e` | `07a7cde6d8244c9ce756c2f2aea056fbccf36fab0b89274f7f335351ec7599de` | 15.848003 |
+| F/hosted-readback-owner | `command.json`. Three cases failed at the wrong custody-digest expectation. | 1 | out `50ece14c6bfb84741f365246fa8642306f7f0acc3c7ceec9af9c0ec7e560d89d`; err `1fe96183b733184e4172ae50bf6dad2d648ae4008fef8f12be8f07dddc1bd606` | `b353fc380f3a7c2104287040cd3acbabd02d781c1f9081a52c1d83808291c1a2` | 3.292399 |
+| F/hosted-readback-owner-after-digest | `command.json`. All three hosted SQLite/transport cases passed. | 0 | out `c703ec3cad950b82a2a2074875c8423cb19628fe0ccadaac946ca5419b0c95c6`; err EMPTY | `78c32d21978d1b7f12157a22a3dbef749d415b1013bee553422a59561abdb851` | 4.217808 |
+| F/hosted-sequence-control | `command.json`. Distinguishes: ordinary assertion 409 versus 503; exact source restored. | 0 | out EMPTY; err `763c7a9359a606151c875775f0f3a16c594aa50d3d84346d6db865a760f6b5a8` | `c298e13159489181dc5ac46a88c93b9b26099005679f0b57d204a90e3502c5f3` | 2.499377 |
+| F/mcp-test-types | `command.json`. Compiler failed TS2554: two submit calls omitted grants arguments. | 1 | out `f7d2db9806a65ab03b77b2bfc6373629d32a6f4f8727db6b8952fbc3bf56304d`; err EMPTY | `ecf17b6946485138ec3517b6dcef468afe8885adb73339cf69c954334f9955ba` | 0.655754 |
+| F/mcp-test-types-after-args | `command.json`. Compiler passed after adding the two empty grants arrays. | 0 | out EMPTY; err EMPTY | `c48c96f4d6927b6bfc2eb5e485878c83832155ec0f445440e968534357322a9a` | 0.824164 |
+| F/mcp-test-types-after-digest | `command.json`. Final MCP test compiler passed. | 0 | out EMPTY; err EMPTY | `60d94ef8fec1e00a07ed946bc8d8a4b412f09158cb1e1b921e4382aebb3598bf` | 1.184561 |
+| F/mcp-types | `command.json`. MCP production compiler passed. | 0 | out EMPTY; err EMPTY | `b5fb68955f0208f798b7fac297d8f99a78f6976769cb261e1eeebc8134ab1bf5` | 0.461317 |
+| F/native-projection-owner | `command.json`. The complete two-case Native projection owner passed. | 0 | out `20fccef96c97c6529eea62288c63696c0da36426f01bb2ba03d28e0749fd2f9e`; err EMPTY | `6a63bb199df2c603da196daded6bf448e06bc732660518bac966ada93d21ca8c` | 8.667982 |
+| F/scope-test-types | `command.json`. Scope test compiler passed. | 0 | out EMPTY; err EMPTY | `395ff459a3a6f0f0aec1e5ef0bd455e23dbe4f717a62a43e22a52778827eb949` | 0.977513 |
+| F/scope-types | `command.json`. Scope production compiler passed. | 0 | out EMPTY; err EMPTY | `28b0f718a927ab63fa785345778c2c33425c9969c075b25bc781733fb168489b` | 0.591611 |
+| F/security-owner | `command.json`. Inventory failed: nine passed and one failed before seal adoption. | 1 | out `7daea2b5af47c0fec0d1e83cd3c2060a0e6a95358a3b5ce330364947bd23b7e5`; err EMPTY | `c71b3ecd069fddaa0f4dcd9e1deaa060ded02bfc9e785af03a9da6127fb0c143` | 2.581740 |
+| F/security-owner-after-seals | `command.json`. Child had ten passes; capture failed source closure during a control overlap. Not a pass. | child 0, capture 1 | out `77ee3862d4558bdfec61aac99926a548be6308713f5100b65dd665e568865159`; err EMPTY | `eb5e8ebcbf8b87975e83282b69c9917fbe8476d32e8c3ae34bc1c125d4c46f81` | 2.624434 |
+| F/security-owner-quiescent | `command.json`. Ten inventory cases passed with unchanged source. | 0 | out `481255e9630d4574d23d9b8a0212dee6b2ebd13979e70ffffd1a361b8ea3ed15`; err EMPTY | `3cb76a31767b3887b2d321f58a1786deaf41744d269ea429b456eab9f803961c` | 2.601919 |
+| G5/gate-1 | `command.json`. Failed after Kernel: Node 78 passed and 2 failed; later stages unreached. | 1 | out `6cc5256f7a4afabd5f34f2f47638e761dcfba62da917f0d1731e1ec9be15b700` | `8fe2f769c7fad0c1e71935cbf0aa42632674bc3ccbb58415bf9760f3ce16bf18` | 78.250892 |
+| G6/gate-1 | `command.json`. Pass: Node 80; Counting 56; Plain 3159 with 1 skip; Native 866 with 2 skips; all terminal ledgers complete. | 0 | out `94d00db968d06057bd5129ede9e76c067e397aac86ab3bca695ebdadd0b4db20`; err EMPTY | `44f21cb3cb2fedc9ce78516a36b6105b01b69a84044a8d0283667e6194d3e1c9` | 1137.567301 |
 
 ## Open work and limits
 
-Exact-head review remains open after the passing fourth repair gate. The
-three original and three earlier repair gates remain failed. No single-file
-exception substitutes for the new gate after the shared-helper change.
+Exact-source review remains open under request 1c124ebf. Gate 6 passes at the
+exact committed checkpoint. The sealed unit binds every actual inner leaf and
+the explicit Counting footer and source pins. Failed Gate 5 remains failed.
+The source-unstable Node capture cannot satisfy a clean-source guard.
 
-The waiter-count cap stays deferred under ruling 366b3989. Clock, namespace,
-grants, Git peer and archive receipt stand-ins retain their stated limits.
-Local Native authority and SQL prove no hosted deployment, provider archive
-custody, remote cancellation or physical drain. Public retention excludes
-operator homes, credentials and live signed request bodies.
+The waiter cap stays with the planner under ruling 366b3989. Existing clocks,
+namespace, grants, Git peers and archive receipts retain their stated stand-in
+limits. The causal entry fix supplies no current-head oracle or extra authority.
+The hosted fixture supplies no Native admission or deployed enrollment proof.
+No provider archive custody, remote cancellation, physical drain, hosted result,
+landing approval, or parent closure is claimed. Public evidence excludes private
+homes, keys, invitations, tokens and live signed request bodies.
 
-Retention proposal v3 preserves the 1,244-file, 230,710,913-byte closed
-baseline across 36 roots, including the old sealed unit and all 928 prior
-rows. Its ledger lists 30 focused commands, five generation commands and
-three failed repair gates once each. The table preserves all 82 earlier
-closed rows and adds the actual final gate. These are invocations, not
-unique coverage. Final selection separately counts the new gate and source.
-
-The actual inner roots for failed repair gates 1, 2 and 3 are
-`tmp.OI5t1lvlNW`, `tmp.Ef17noH7ux` and `tmp.AY8GVUIVtq`, below the
-recorded macOS temporary directory. Their complete logs and stage ledgers
-stay separate from their outer collector records. The proposed Counting
-roots name failed gate 2's `artroom-counting-node-RPCGAx`,
-the focused follow-up's `artroom-counting-node-hmFwqX`, and failed gate 3's
-`artroom-counting-node-eQhi98`. Each has four bundles, source.json and its
-metafile. Source hashes, not these short labels, govern retention.
-
-The retained final report records preparation before selection, copy and
-seal. It remains unchanged in the sealed root. This documentation update
-records actual custody through the compact manifest, which binds the
-durable full inventory and verifier. The final gate's actual outer capture,
-inner `tmp.v8X2M7X1Rb` and Counting source `artroom-counting-node-KhIWb0`
-remain separately bound. This update changes no check result or source pin.
-
-Keep the final evidence at least 30 days after landing. Later removal needs
-a planner act naming its manifest. This draft claims no acceptance or parent
-closure. The old sealed report and its three failed gates remain unchanged.
+Keep predecessor and successor evidence at least 30 days after landing. Later
+removal needs a planner act naming the manifests. The compact manifest binds
+every cited output and each complete runner unit once through its inventory
+proof. Its separate adopted-note binding avoids a raw-note seal hash cycle.
