@@ -7,6 +7,7 @@ import { lanePhase } from "./lane.ts";
 import { witnessMembers } from "./members.ts";
 import { publicationPhase } from "./publication.ts";
 import { durableCliStore } from "./custody.ts";
+import { newDiagnostics, type Diagnostics, type EnrollmentDiagnostic } from "./diagnostics.ts";
 
 export const setupPhases = [
   "owner", "create", "enrol-a", "enrol-b", "enrol-checker", "members",
@@ -24,7 +25,7 @@ async function session(plan: SetupPlan, identity: Identity): Promise<Session> {
   return opened;
 }
 
-export async function runPhase(plan: SetupPlan, phase: SetupPhase, mode: SessionMode): Promise<PhaseResult> {
+export async function runPhase(plan: SetupPlan, phase: SetupPhase, mode: SessionMode, observe?: (value: EnrollmentDiagnostic) => void): Promise<PhaseResult> {
   if (phase === "owner") {
     const existing = durableCliStore(identityHome(plan, "owner"));
     if (await existing.config()) {
@@ -46,7 +47,7 @@ export async function runPhase(plan: SetupPlan, phase: SetupPhase, mode: Session
     if (outcome.code !== 0) throw new Error("Room creation is unresolved. Check the retained original.");
   } else if (phase === "enrol-a" || phase === "enrol-b" || phase === "enrol-checker") {
     const identity = phase === "enrol-a" ? "agent-a" : phase === "enrol-b" ? "agent-b" : "checker";
-    const outcome = await enrollIdentity(owner.ctx, identityHome(plan, identity), identity === "checker" ? "checker" : "agent", plan.handles[identity], mode);
+    const outcome = await enrollIdentity(owner.ctx, identityHome(plan, identity), identity === "checker" ? "checker" : "agent", plan.handles[identity], mode, { recoveryPlan: plan, ...(observe ? { observe } : {}) });
     if (outcome.code !== 0) throw new Error("Identity enrollment is unresolved. Check the retained original.");
     await session(plan, identity);
   } else if (phase === "members") {
@@ -61,30 +62,38 @@ export async function runPhase(plan: SetupPlan, phase: SetupPhase, mode: Session
 }
 
 export async function main(argv: readonly string[]): Promise<number> {
-  let input: string | undefined, phase: string | undefined, mode: SessionMode = "new";
+  let input: string | undefined, phase: string | undefined, diagnosticsPath: string | undefined, mode: SessionMode = "new";
   for (let i = 0; i < argv.length; i++) {
     const name = argv[i], value = argv[++i];
     if (name === "--input") input = value;
     else if (name === "--phase") phase = value;
+    else if (name === "--diagnostics") diagnosticsPath = value;
     else if (name === "--mode" && (value === "new" || value === "check" || value === "continue")) mode = value;
-    else { process.stderr.write("Use --input <file> --phase <phase> --mode new|check|continue.\n"); return 2; }
+    else { process.stderr.write("Use --input <file> --phase <phase> --mode new|check|continue --diagnostics <NEW-directory>.\n"); return 2; }
   }
-  if (!input || !phase || phase !== "all" && !setupPhases.includes(phase as SetupPhase) || phase === "all" && mode !== "new") {
-    process.stderr.write("Choose one setup phase: " + setupPhases.join(", ") + ".\n");
+  if (!input || !diagnosticsPath || !phase || phase !== "all" && !setupPhases.includes(phase as SetupPhase) || phase === "all" && mode !== "new") {
+    process.stderr.write("Supply --input, --diagnostics <NEW-directory>, and one setup phase: " + setupPhases.join(", ") + ".\n");
     return 2;
   }
+  let diagnostics: Diagnostics | null = null, enrollment: EnrollmentDiagnostic | null = null;
   try {
     const plan = readPlan(input);
+    diagnostics = newDiagnostics(diagnosticsPath, plan.home);
     await checkDeployment(plan);
     for (const selected of phase === "all" ? setupPhases : [phase as SetupPhase]) {
       phase = selected;
-      const result = await runPhase(plan, selected, mode);
+      enrollment = null;
+      const result = await runPhase(plan, selected, mode, value => { enrollment = value; });
       // Explicit public projection. The private SDK result and links never enter stdout.
       process.stdout.write(JSON.stringify({ phase: result.phase, status: result.status, ...(result.fact ? { fact: result.fact } : {}) }) + "\n");
     }
+    diagnostics.finish({ phase, mode, exitCode: 0, enrollment }, "");
     return 0;
   } catch {
-    process.stderr.write("Setup stopped at " + phase + ". Private originals and receipts remain in the selected identity homes. Use check on this phase; use continue only for the same retained original.\n");
+    const stderr = "Setup stopped at " + phase + ". Private originals and receipts remain in the selected identity homes. Use check on this phase; use continue only for the same retained original.\n";
+    try { diagnostics?.finish({ phase, mode, exitCode: 1, enrollment }, stderr); }
+    catch { process.stderr.write("Safe diagnostics could not be retained; preserve the partial metadata unit.\n"); }
+    process.stderr.write(stderr);
     return 1;
   }
 }

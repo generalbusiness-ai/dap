@@ -49,7 +49,7 @@ identity home for the real room.
 From the checkout root, run:
 
 ```sh
-node examples/repo-in-ai/setup.mjs --input /absolute/path/to/s1-input.json --phase all --mode new
+node examples/repo-in-ai/setup.mjs --input /absolute/path/to/s1-input.json --phase all --mode new --diagnostics /absolute/public/NEW-start-diagnostics
 ```
 
 This is the one setup script. It runs creation through first-key in one
@@ -61,12 +61,22 @@ Invitation links, signing material, credentials and full SDK answers stay
 in the private identity homes. Do not copy those files into the workroom,
 a source commit, a review comment or a public evidence bundle.
 
+Every invocation requires a new absolute diagnostics directory outside the
+private homes. The script creates it exclusively with owner-only modes.
+It flushes and reads back the helper's exit status and exact safe stderr
+line before exit. Enrollment metadata records only a fixed stage, coded
+cause, read method/category and HTTP status when known. It records no
+response body, header, key, link, signed original, stack or arbitrary
+exception message. The outer command receipt still owns actual process
+status and loader stderr. Preserve a partial diagnostics unit on I/O
+failure; never reuse it or write into sealed evidence.
+
 The script stops when a native delivery or outside outcome is unresolved.
 For an outside operation that is still pending, rerun its read phase. For
 an uncertain write, first check the exact phase named by the stop:
 
 ```sh
-node examples/repo-in-ai/setup.mjs --input /absolute/path/to/s1-input.json --phase manifest-stage --mode check
+node examples/repo-in-ai/setup.mjs --input /absolute/path/to/s1-input.json --phase manifest-stage --mode check --diagnostics /absolute/public/NEW-check-diagnostics
 ```
 
 `check` signs and submits no new act or preparation. Native settlement may
@@ -74,7 +84,7 @@ use a read-only HTTP POST. If that original still needs delivery, explicitly
 continue that phase:
 
 ```sh
-node examples/repo-in-ai/setup.mjs --input /absolute/path/to/s1-input.json --phase manifest-stage --mode continue
+node examples/repo-in-ai/setup.mjs --input /absolute/path/to/s1-input.json --phase manifest-stage --mode continue --diagnostics /absolute/public/NEW-continue-diagnostics
 ```
 
 `continue` uses the same retained envelope and deadline. It never replaces
@@ -82,6 +92,23 @@ a missing key or original. A missing original, changed scope incarnation,
 or uncertain one-time credential handoff stops recovery. A consumed clone
 credential is not fetched again, and a replacement token is not minted.
 Keep the private custody for diagnosis; do not delete it to restart a phase.
+
+Ruling `ee25224c` permits one narrower identity startup case. If the same
+identity plan survived before any issuance root existed, explicit Continue
+may create that first root through the maintained CLI engine. The helper
+checks the exact global plan, identity-plan digest, operation, home, actor
+and inputs; empty receiver custody; no owner invitation pointer; and no
+orphan or conflicting issuance file. It recognizes old issuance files only
+through completed fixed receivers' exact handoffs and hash-checked chains.
+It samples at most 512 directory leaves and three chains of at most
+16 files each, with 64 KiB decoded per private original, the corresponding
+base64url file bound, and 4 MiB of unique encoded metadata per invocation.
+The first-root row must match the same actor, inputs and repository before
+any pointer or private original is published. These local samples are
+not an atomic filesystem snapshot or native authority. Any uncertainty
+stops. Check stays read-only and reports the missing original; it never
+enters this first-root branch. Existing signatures, keys, secrets and
+deadlines never change.
 
 After resolving the stopped phase, run `all` in `new` mode again. Completed
 phases use their retained receipts. The script does not create another room

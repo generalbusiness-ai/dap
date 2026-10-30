@@ -10,6 +10,8 @@ import type { Config, Context, Outcome, PendingClaim, PendingInvitationIssue, St
 import { nodeGit } from "../../packages/cli/src/git.ts";
 import { newStoredSigner, storedSigner } from "../../packages/cli/src/store-signer.ts";
 import { durableCliStore } from "./custody.ts";
+import { diagnosticFetch, failureDiagnostic, type EnrollmentDiagnostic } from "./diagnostics.ts";
+import { identityHome, type SetupPlan } from "./plan.ts";
 
 export type IdentityMode = "new" | "check" | "continue";
 export type EnrollmentKind = "agent" | "checker";
@@ -23,6 +25,7 @@ interface IdentityPlan {
 interface Handoff { v: 1; plan: string; link: string; pointer: PendingInvitationIssue }
 interface PrivatePointer { request: string; digest: ReturnType<typeof textDigest> }
 const LIMIT = 16, MAX_PRIVATE_BYTES = 64 * 1024;
+const MAX_ENCODED_PRIVATE_BYTES = Math.ceil(MAX_PRIVATE_BYTES / 3) * 4 + 1, MAX_PROOF_BYTES = 4 * 1024 * 1024;
 const OWNER_INPUT = "s1-owner-input", OWNER_KEY = "s1-owner-key";
 const ROOM = "s1-room", COMPLETE = "s1-room-complete";
 const PLAN = "s1-identity", HANDOFF = "s1-handoff", STARTED = "s1-receiver-started";
@@ -39,6 +42,26 @@ const closed = (value: unknown, names: readonly string[]): value is Record<strin
 const identifier = (name: string) => {
   if (!/^[a-z][a-z0-9-]{0,31}$/.test(name)) refuse("invalid-private-name");
 };
+
+/** Preflight only; inherited Store.private still decodes the maintained format.
+ * These bounded local samples do not claim an atomic filesystem snapshot. */
+function boundPrivate(home: string, name: string, seen: Map<string, number>): void {
+  identifier(name);
+  const path = join(home, "private", name + ".data"), root = parse(path).root;
+  let current = root;
+  const parts = path.slice(root.length).split("/").filter(Boolean);
+  for (let n = 0; n < parts.length; n++) {
+    current = join(current, parts[n]!);
+    let info;
+    try { info = lstatSync(current); }
+    catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return; throw error; }
+    if (info.isSymbolicLink() || (n < parts.length - 1 ? !info.isDirectory() : !info.isFile() || info.nlink !== 1 || info.uid !== process.getuid!() || (info.mode & 0o077) !== 0 || info.size > MAX_ENCODED_PRIVATE_BYTES)) refuse("plan-only-bound");
+    if (n === parts.length - 1) {
+      seen.set(path, Math.max(seen.get(path) ?? 0, info.size));
+      if ([...seen.values()].reduce((total, bytes) => total + bytes, 0) > MAX_PROOF_BYTES) refuse("plan-only-bound");
+    }
+  }
+}
 
 function privateHome(home: string, fresh: boolean): void {
   if (!isAbsolute(home) || resolve(home) !== home || home === parse(home).root) refuse("invalid-home");
@@ -219,21 +242,117 @@ function decodedHandoff(plan: IdentityPlan, handoff: Handoff): string {
   return textDigest(canonicalize(link));
 }
 
+/** Local custody ownership only. It supplies no native grant or authority. */
+async function planOnly(ownerCtx: Context, receiver: Store, plan: IdentityPlan, setup: SetupPlan | undefined, seen: Map<string, number>): Promise<void> {
+  if (!setup) return refuse("plan-only-binding");
+  boundPrivate(identityHome(setup, "owner"), "repo-in-ai-plan", seen);
+  if (!same(await readPrivate(ownerCtx.store, "repo-in-ai-plan"), setup)
+    || !(["agent-a", "agent-b", "checker"] as const).some(name => identityHome(setup, name) === plan.receiverHome
+      && setup.handles[name] === plan.handle && (name === "checker" ? "checker" : "agent") === plan.kind)) refuse("plan-only-binding");
+  const ownerHome = identityHome(setup, "owner");
+  privateHome(ownerHome, false);
+  const owner = await ownerCtx.store.config();
+  if (!owner || owner.invitationIssue || !same(await storeAt(ownerHome).config(), owner)) refuse("plan-only-owner-conflict");
+  const entries = (directory: string, missing = false): string[] => {
+    if (missing) {
+      try { lstatSync(directory); }
+      catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return []; throw error; }
+    }
+    privateHome(directory, false);
+    const names = readdirSync(directory);
+    if (names.length > 512) refuse("plan-only-bound");
+    for (const name of names) {
+      const info = lstatSync(join(directory, name));
+      if (info.isSymbolicLink() || !info.isFile() && !info.isDirectory()) refuse("plan-only-orphan");
+      if (name.startsWith("i-") && (!info.isFile() || info.nlink !== 1 || info.size > MAX_ENCODED_PRIVATE_BYTES)) refuse("plan-only-orphan");
+    }
+    return names;
+  };
+  const receiverRoot = entries(plan.receiverHome);
+  if (receiverRoot.some(name => name !== "private" && name !== "keys") || await receiver.config()
+    || entries(join(plan.receiverHome, "keys"), true).length !== 0
+    || !same(entries(join(plan.receiverHome, "private")).sort(), [PLAN + ".data"])) refuse("plan-only-receiver-conflict");
+  const originals = entries(join(ownerHome, "private")).filter(name => name.startsWith("i-"));
+  for (const name of originals) {
+    if (!/^i-[0-9a-f]{30}\.data$/.test(name)) refuse("plan-only-orphan");
+    boundPrivate(ownerHome, name.slice(0, -5), seen);
+  }
+  const owned = new Set<string>();
+  for (const name of ["agent-a", "agent-b", "checker"] as const) {
+    const home = identityHome(setup, name);
+    if (home === plan.receiverHome) continue;
+    const phase = name === "checker" ? "enrol-checker" : name === "agent-a" ? "enrol-a" : "enrol-b";
+    boundPrivate(ownerHome, "s1-done-" + phase, seen);
+    const done = await readPrivate(ownerCtx.store, "s1-done-" + phase);
+    if (done === null) continue;
+    if (!closed(done, ["phase", "status"]) || done["phase"] !== phase || done["status"] !== "observed") refuse("plan-only-prior-proof");
+    privateHome(home, false);
+    entries(join(home, "private"));
+    boundPrivate(home, PLAN, seen); boundPrivate(home, HANDOFF, seen);
+    const peer = storeAt(home), prior = await readPrivate(peer, PLAN), handoff = await readPrivate(peer, HANDOFF) as Handoff | null;
+    if (!isRecord(prior) || typeof prior["operation"] !== "string" || prior["operation"] === plan.operation
+      || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(prior["operation"]) || !handoff) return refuse("plan-only-prior-proof");
+    const candidate = { ...await ownerPlan(ownerCtx, home, name === "checker" ? "checker" : "agent", setup.handles[name]), operation: prior["operation"] };
+    if (textDigest(canonicalize(prior)) !== textDigest(canonicalize(candidate))) refuse("plan-only-prior-proof");
+    const held = prior as unknown as IdentityPlan;
+    decodedHandoff(held, handoff);
+    const chain = await retainedInvitationRequests(ownerCtx.store, handoff.pointer);
+    const leaf = await pointed(ownerCtx.store, handoff.pointer);
+    const decoded = held.kind === "agent" ? agentKeyInvitationOf(handoff.link) : checkerKeyInvitationOf(handoff.link);
+    const member = leaf["member"], invitation = leaf["invitation"];
+    const input = held.kind === "agent" ? { kind: "agent-key", handle: held.handle, hours: held.hours, controller: held.controller } : { kind: "checker-key", handle: held.handle, hours: held.hours };
+    if (!decoded || leaf["link"] !== handoff.link || leaf["operation"] !== held.operation || leaf["actor"] !== held.actor || leaf["service"] !== held.service
+      || !same(leaf["repository"], held.repository) || !same(leaf["input"], input) || leaf["secret"] !== decoded.secret
+      || !isRecord(member) || !isRecord(member["receipt"]) || !same(member["receipt"]["fact"], decoded.member)
+      || !isRecord(invitation) || !isRecord(invitation["receipt"]) || !same(invitation["receipt"]["fact"], decoded.invitation)) refuse("plan-only-prior-proof");
+    for (const request of chain) {
+      if (owned.has(request)) refuse("plan-only-owner-conflict");
+      owned.add(request);
+    }
+  }
+  // <=512 leaves, <=16 originals per chain, <=64KiB decoded per original;
+  // all unique encoded metadata reads share the explicit 4MiB ceiling.
+  // Unaccounted files are rejected by name, never opened as credentials.
+  for (const name of originals) if (!/^i-[0-9a-f]{30}\.data$/.test(name) || !owned.delete(name.slice(0, -5))) refuse("plan-only-orphan");
+  if (owned.size || (await ownerCtx.store.config())?.invitationIssue) refuse("plan-only-owner-conflict");
+  boundPrivate(plan.receiverHome, PLAN, seen);
+  if (textDigest(canonicalize(await readPrivate(receiver, PLAN))) !== textDigest(canonicalize(plan))) refuse("identity-plan-digest-changed");
+}
+
+export interface EnrollmentOptions { recoveryPlan?: SetupPlan; observe?: (value: EnrollmentDiagnostic) => void }
+
+export async function enrollIdentity(ownerCtx: Context, receiverHome: string, kind: EnrollmentKind, handle: string, mode: IdentityMode, options: EnrollmentOptions = {}): Promise<Outcome> {
+  let diagnostic: EnrollmentDiagnostic = { stage: "identity" };
+  const report = (next: EnrollmentDiagnostic): void => { diagnostic = { ...next, ...(next.read || diagnostic.read ? { read: next.read ?? diagnostic.read! } : {}) }; options.observe?.(diagnostic); };
+  try {
+    const config = await ownerCtx.store.config();
+    const ctx = config?.repository ? { ...ownerCtx, fetch: diagnosticFetch(ownerCtx.fetch ?? ((url, init) => fetch(url, init)), config.repository.membership,
+      read => report({ ...diagnostic, read })) } : ownerCtx;
+    return await enrollment(ctx, receiverHome, kind, handle, mode, options.recoveryPlan, report);
+  } catch (error) {
+    report(failureDiagnostic(error, diagnostic, error instanceof IdentityRefusal ? error.reason : undefined));
+    throw error;
+  }
+}
+
 /** Complete one retained invitation and its receiver, without returning its
  * private handoff. A check delegates only read-only native settlement. */
-export async function enrollIdentity(ownerCtx: Context, receiverHome: string, kind: EnrollmentKind, handle: string, mode: IdentityMode): Promise<Outcome> {
+async function enrollment(ownerCtx: Context, receiverHome: string, kind: EnrollmentKind, handle: string, mode: IdentityMode, setup: SetupPlan | undefined, report: (value: EnrollmentDiagnostic) => void): Promise<Outcome> {
   modeOf(mode); privateHome(receiverHome, mode === "new");
   const receiver = storeAt(receiverHome), core = await ownerPlan(ownerCtx, receiverHome, kind, handle);
+  const boundedReads = new Map<string, number>();
   let plan: IdentityPlan;
   if (mode === "new") {
     if ((await ownerCtx.store.config())?.invitationIssue) return refuse("another-invitation-pending");
     plan = { ...core, operation: crypto.randomUUID() };
     await keep(receiver, PLAN, plan);
   } else {
+    if (mode === "continue") boundPrivate(receiverHome, PLAN, boundedReads);
     const retained = await readPrivate(receiver, PLAN);
     if (!isRecord(retained) || typeof retained["operation"] !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(retained["operation"])) return refuse("identity-plan-missing");
     const { operation, ...original } = retained;
     if (!same(original, core)) refuse("identity-plan-changed");
+    if (textDigest(canonicalize(retained)) !== textDigest(canonicalize({ ...core, operation }))) refuse("identity-plan-digest-changed");
     plan = retained as unknown as IdentityPlan;
   }
   let handoff = await readPrivate(receiver, HANDOFF) as Handoff | null;
@@ -241,23 +360,39 @@ export async function enrollIdentity(ownerCtx: Context, receiverHome: string, ki
     const snapshots = await journal(receiver, "s1-issue"), latest = snapshots.at(-1);
     let requests: string[] = [];
     if (latest) requests = await retainedInvitationRequests(ownerCtx.store, { ...latest, operation: plan.operation });
-    else if (mode !== "new") return refuse("original-invitation-missing");
+    let firstRoot = false;
+    if (!latest && mode !== "new") {
+      if (mode === "check") { report({ stage: "plan-only-check" }); return refuse("original-invitation-missing"); }
+      report({ stage: "plan-only-proof" });
+      await planOnly(ownerCtx, receiver, plan, setup, boundedReads);
+      firstRoot = true;
+    }
     const issueStore: Store = { ...ownerCtx.store, keepPrivate: async (request, bytes) => {
       if (!/^i-[0-9a-f]{30}$/.test(request) || bytes.length > MAX_PRIVATE_BYTES) refuse("invitation-private-bound");
       const raw = new TextDecoder("utf-8", { fatal: true }).decode(bytes), row = decodePrivate(bytes);
-      if (!isRecord(row) || row["operation"] !== plan.operation) refuse("invitation-operation-changed");
+      const input = kind === "agent" ? { kind: "agent-key", handle, hours: plan.hours, controller: plan.controller } : { kind: "checker-key", handle, hours: plan.hours };
+      if (!isRecord(row) || row["operation"] !== plan.operation || row["actor"] !== plan.actor || row["service"] !== plan.service
+        || !same(row["repository"], plan.repository) || !same(row["input"], input)) refuse("invitation-operation-changed");
+      if (firstRoot) {
+        await planOnly(ownerCtx, receiver, plan, setup, boundedReads);
+        report({ stage: "invitation-root-retaining" });
+        firstRoot = false;
+      }
       // Record the exact intended original before its file or Config write.
       await appendPointer(receiver, "s1-issue", { request, digest: textDigest(raw) });
       await ownerCtx.store.keepPrivate(request, bytes);
+      report({ stage: "invitation-root-retained" });
     } };
     const issuing = await ownerCtx.store.config();
     // The engine accepts an orphan root only by its exact reserved name.
     // A missing pointer for a longer chain does not authorize restoration.
     const reserved = !issuing?.invitationIssue && requests.length === 1 ? requests[0] : undefined;
-    const options = { operation: plan.operation, mode, privateRequests: requests, ...(reserved ? { reservedRequest: reserved } : {}) };
+    const options = { operation: plan.operation, mode: firstRoot ? "new" as const : mode, privateRequests: requests, ...(reserved ? { reservedRequest: reserved } : {}) };
+    report({ stage: firstRoot || mode === "new" ? "invitation-pre-root" : "invitation-resume" });
     const result = kind === "agent"
       ? await issueInvitation({ ...ownerCtx, store: issueStore }, { kind: "agent-key", handle, hours: 1, controller: plan.controller! }, options)
       : await issueCheckerInvitation({ ...ownerCtx, store: issueStore }, { handle, hours: 1 }, options);
+    report({ stage: "invitation-result", cause: result.state });
     if (result.state !== "verified" || !result.link) return { code: 1, lines: [`The original ${kind} invitation is ${result.state}. Check it or Continue explicitly; no replacement follows.`] };
     const pointer = (await ownerCtx.store.config())?.invitationIssue;
     if (!pointer || pointer.operation !== plan.operation || pointer.actor !== plan.actor || !same(pointer.membership, plan.repository.membership)) return refuse("invitation-pointer-changed");
@@ -287,6 +422,7 @@ export async function enrollIdentity(ownerCtx: Context, receiverHome: string, ki
     } else if (!same(started, binding) || !key || envelope === null) refuse("original-receiver-missing");
   }
   const ctx = { ...ownerCtx, store: receiver };
+  report({ stage: "receiver" });
   return kind === "agent" ? enrolAgentKey(ctx, handoff.link, { mode: mode === "check" ? "check" : "continue" })
     : enrolCheckerKey(ctx, handoff.link, { mode: mode === "check" ? "check" : "continue" });
 }
