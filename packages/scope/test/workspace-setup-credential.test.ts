@@ -1,6 +1,6 @@
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import type { Answer, Entry, FactRef, Grant, OperationId, Read, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Answer, Entry, FactRef, Grant, OperationId, Read, ScopeRef, Seed, SendForm, SignedIntent } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, entryHash, factRefOf, intentDigest, newIncarnation, platformName, scopeIdOf, seedDigest, signIntent, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import type { RecordState } from "@generalbusiness/dap-derive";
@@ -81,7 +81,12 @@ function ancestors(definition: ReturnType<typeof variant>) {
 async function fixture(mode: Mode) {
   const owner = beginSessionFixture({ secret: null, sessions: false, inspector: null });
   const life = nativeFixtureLifetime(owner, { required: false, finish: "external" });
-  const definition = variant(staged.declared, draft => { draft.capabilities.find((cap: { name: string }) => cap.name === "hold").version = 2; });
+  const definition = variant(staged.declared, draft => {
+    draft.capabilities.find((cap: { name: string }) => cap.name === "hold").version = 2;
+    // This witness creates no link child. Its unrelated placeholder declaration
+    // must not enter the native genesis dependency closure.
+    draft.acts.link.sends = draft.acts.link.sends.filter((send: SendForm) => !("create" in send));
+  });
   const lineage = ancestors(definition), node = life.platform(scopeIdOf(lineage.laneSeed));
   let surface = node.object as unknown as Surface;
   const c = controls(node.name, START), defaults = production();
@@ -113,7 +118,7 @@ async function fixture(mode: Mode) {
   };
   life.wire(node.name, () => ({ clock: net.clock, authority: testPorts(c).authority!, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE,
     definitions: { ...defaults.definitions, read: async (digest, holder) => digest === definition.digest ? { ok: true, bytes: canonicalize(definition.declared) } : defaults.definitions.read(digest, holder) } }));
-  life.peer(entryHash(lineage.opening), { entry: lineage.opening, under: "platform:directory@16" });
+  life.peer(entryHash(lineage.opening), { entry: lineage.opening, under: "platform:directory" });
   life.outside(node.name, (actual, sql) => {
     given = actual;
     const outside = artifactsWorkspaceOutside(actual, sql, {
@@ -154,7 +159,8 @@ async function fixture(mode: Mode) {
   const releaseFork = () => { if (firstForkName && !lateForkReleased) { lateForkReleased = true; lateFork.resolve(created(firstForkName)); } };
   const close = async () => { releaseFork(); lateRevoke.resolve(true); await drainScheduledFixture(() => life.platforms(), life.wait); life.release(); };
   try {
-    expect(await life.wait(() => surface.deliver({ to: lineage.laneSeed, from: factRefOf(lineage.opening), n: 0, message: lineage.laneMessage }))).toMatchObject({ answer: "recorded" });
+    const genesis = await life.wait(() => surface.deliver({ to: lineage.laneSeed, from: factRefOf(lineage.opening), n: 0, message: lineage.laneMessage }));
+    expect(genesis, `native fixture genesis reply: ${JSON.stringify(genesis)}`).toMatchObject({ answer: "recorded" });
     await drainScheduledFixture(() => life.platforms(), life.wait);
     // The real factory chooses the workspace path after the native genesis.
     await node.restart();
