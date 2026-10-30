@@ -1,10 +1,11 @@
 /** Bounded reading and folding of the seed lane's native capability records. */
 import type { ScopeRef, Sealed } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, isSealed } from "@generalbusiness/dap-bytes";
-import { applyEntry, isEntryOf, MemoryState, validateDefinition } from "@generalbusiness/dap-derive";
+import { canonicalize, entryHash, isDigest, isEntry, isRecord, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
+import { applyEntry, MemoryState, validateDefinition } from "@generalbusiness/dap-derive";
 import { changeJ4 } from "../../apps/room/lanes/src/j4.ts";
 import { J4_DIGESTS } from "../../apps/room/lanes/src/digests-j4.ts";
+import { hashOfBytes } from "@generalbusiness/dap-replay";
 import type { Session } from "./session.ts";
 
 export async function laneState(session: Session, ref: ScopeRef): Promise<{ memory: MemoryState; entries: readonly Sealed[] }> {
@@ -20,9 +21,19 @@ export async function laneState(session: Session, ref: ScopeRef): Promise<{ memo
     if (head === undefined) head = body["head"];
     else if (canonicalize(head) !== canonicalize(body["head"])) throw new Error("The native lane head moved during its read. Read it again before proceeding.");
     for (const value of body["entries"]) {
-      if (!isSealed(value) || entries.length >= 512 || !isEntryOf(value.entry, { at: ref, seq: entries.length, hash: value.hash }) || value.entry.prev !== previous) throw new Error("The native lane journal is incomplete or misbound.");
-      applyEntry(memory, checked.definition, value.entry, value.hash);
-      entries.push(value); previous = value.hash;
+      if (entries.length >= 512 || !isRecord(value) || Object.keys(value).sort().join(",") !== "bytes,hash,seq"
+        || value["seq"] !== entries.length || !isDigest(value["hash"]) || typeof value["bytes"] !== "string") throw new Error("The native lane journal is incomplete or misbound.");
+      const bytes = value["bytes"], hash = value["hash"];
+      if (bytes.length > PROPOSED_BOUNDS.entryBytes || utf8(bytes).length > PROPOSED_BOUNDS.entryBytes
+        || hashOfBytes(bytes) !== hash) throw new Error("The native lane journal is incomplete or misbound.");
+      let entry: unknown;
+      try { entry = parseStrict(bytes); }
+      catch { throw new Error("The native lane journal is incomplete or misbound."); }
+      if (!isEntry(entry) || canonicalize(entry) !== bytes || entryHash(entry) !== hash
+        || entry.seq !== value["seq"] || canonicalize(entry.at) !== canonicalize(ref)
+        || entry.prev !== previous) throw new Error("The native lane journal is incomplete or misbound.");
+      applyEntry(memory, checked.definition, entry, hash);
+      entries.push({ entry, hash }); previous = hash;
     }
     const next = body["cursor"];
     if (next === undefined) {

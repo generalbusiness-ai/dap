@@ -9,7 +9,7 @@ import { tsImport } from "tsx/esm/api";
 // StandIn scripts HTTP summaries, standing and decisions; it judges nothing.
 // These are local custody/transport witnesses, not Worker or Native authority.
 const load = source => tsImport(source, import.meta.url);
-const { canonicalize, factRefOf, intentDigest, newIncarnation, verifySignedIntent } = await load("@generalbusiness/dap-bytes");
+const { canonicalize, entryHash, factRefOf, intentDigest, isLogPage, newIncarnation, textDigest, verifySignedIntent } = await load("@generalbusiness/dap-bytes");
 const { secretSigner } = await load("@generalbusiness/dap-client");
 const { firstExtents, ARCHIVE_DEVICE_APPLICATION_COHORT: setupCohort } = await load("@generalbusiness/dap-platform");
 const { identityId } = await load("@generalbusiness/dap-mcp");
@@ -18,6 +18,8 @@ const { changeJ4 } = await load(new URL("../../../apps/room/lanes/src/j4.ts", im
 const { durableCliStore, durableRequestStore } = await load(new URL("../custody.ts", import.meta.url).href);
 const { openSession, SessionRefusal } = await load(new URL("../session.ts", import.meta.url).href);
 const { roomRefs } = await load(new URL("../workflow.ts", import.meta.url).href);
+const { laneState } = await load(new URL("../journal.ts", import.meta.url).href);
+const { hashOfBytes } = await load("@generalbusiness/dap-replay");
 const NOW = Date.parse("2099-01-01T00:00:00Z");
 
 function json(body) {
@@ -205,4 +207,77 @@ test("room discovery reads every pinned sibling through one actual session and r
   assert.equal(f.mutations.length, 0);
   assert.ok(f.calls.filter(call => call.method === "POST").every(call => call.path.endsWith("/sessions")));
   assert.equal(readdirSync(join(f.home, "private")).filter(name => name.startsWith("s1o-")).length, 0);
+});
+
+
+// The existing StandIn emits the actual LogPage wire representation. Entries
+// and authority remain scripted; real Session, transport decoding, MCP record,
+// private file retention and the local fold run below. No Native/provider act.
+async function journalFixture(t, rewrite) {
+  const f = await fixture(t), lane = f.peer.lane(changeJ4), scope = f.peer.scopes.get(lane.scope);
+  f.peer.append(scope, { type: "timed", item: 0, rule: "SCRIPTED-empty-journal-step", due: scope.entries[0].entry.time });
+  if (rewrite) {
+    const fetch = f.peer.fetch;
+    f.peer.fetch = async (url, init) => {
+      const response = await fetch(url, init);
+      if ((init?.method ?? "GET") !== "GET" || !new URL(url).pathname.endsWith("/log")) return response;
+      const wire = await new Response(response.body).json();
+      return json(rewrite(wire));
+    };
+  }
+  return { ...f, lane, scope };
+}
+function recordPage(result) {
+  assert.equal(result.isError, false, "The actual MCP record call must return a decoded log page");
+  const body = result.structuredContent;
+  assert.equal(isLogPage({ scope: body.scope, definition: body.definition, entries: body.entries }), true,
+    "The scripted reply must pass the maintained LogPage codec before journal checks");
+  return body;
+}
+
+test("laneState decodes actual Session/MCP record Stored bytes and folds the exact complete chain", { timeout: 30_000 }, async t => {
+  const f = await journalFixture(t), opened = await f.open();
+  const body = recordPage((await opened.call("record", { scope: f.lane.scope })).result);
+  assert.equal(body.entries.length, 2);
+  assert.deepEqual(Object.keys(body.entries[0]).sort(), ["bytes", "hash", "seq"]);
+  assert.equal(body.entries[0].bytes, canonicalize(f.scope.entries[0].entry));
+  assert.equal(body.entries[0].hash, entryHash(f.scope.entries[0].entry));
+  let folded;
+  await assert.doesNotReject(async () => { folded = await laneState(opened, f.lane); },
+    "The maintained Stored wire entries must decode and fold instead of being mistaken for Sealed objects");
+  assert.deepEqual(folded.entries, f.scope.entries);
+  assert.deepEqual(folded.memory.scope().at, f.lane);
+  assert.deepEqual(folded.memory.scope().head, f.peer.head(f.scope));
+  assert.equal(f.mutations.length, 0);
+  assert.ok(f.calls.filter(call => call.method === "POST").every(call => call.path.endsWith("/sessions")));
+});
+
+test("laneState refuses malformed, noncanonical, hash-substituted, misbound and incomplete Stored logs after the real codec", { timeout: 30_000 }, async t => {
+  const variants = [
+    ["malformed bytes with their actual hash", wire => {
+      wire.value.entries[0].bytes = "{"; wire.value.entries[0].hash = hashOfBytes("{"); return wire;
+    }, "incomplete or misbound"],
+    ["noncanonical bytes with their actual hash", wire => {
+      const bytes = JSON.stringify(JSON.parse(wire.value.entries[0].bytes), null, 2);
+      wire.value.entries[0].bytes = bytes; wire.value.entries[0].hash = hashOfBytes(bytes); return wire;
+    }, "incomplete or misbound"],
+    ["substituted hash", wire => {
+      wire.value.entries[0].hash = textDigest("SCRIPTED substituted entry hash"); return wire;
+    }, "incomplete or misbound"],
+    ["another incarnation with matching canonical bytes and hash", wire => {
+      const entry = JSON.parse(wire.value.entries[0].bytes);
+      entry.at.inc = newIncarnation(new Uint8Array(16).fill(99));
+      wire.value.entries[0].bytes = canonicalize(entry); wire.value.entries[0].hash = entryHash(entry); return wire;
+    }, "incomplete or misbound"],
+    ["internally intact prefix below advertised head", wire => {
+      wire.value.entries.pop(); return wire;
+    }, "does not reach its advertised head"],
+  ];
+  for (const [label, rewrite, message] of variants) {
+    const f = await journalFixture(t, rewrite), opened = await f.open();
+    recordPage((await opened.call("record", { scope: f.lane.scope })).result);
+    await assert.rejects(laneState(opened, f.lane), error => error instanceof Error && error.message.includes(message), label);
+    assert.equal(f.mutations.length, 0, label);
+    assert.ok(f.calls.filter(call => call.method === "POST").every(call => call.path.endsWith("/sessions")), label);
+  }
 });
