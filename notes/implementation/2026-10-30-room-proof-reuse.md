@@ -1,322 +1,161 @@
-# Reuse proofs within one room verification
+# Room proof reuse: repaired source and gate
 
-## What changes
+## Change and required repair
 
-This note records request
-`7c0e8181a4edc7c45a00f5b4cc3815e98a61f890` and promise
-`310185bf8291b7c7d4a373d845a449b6bc374e9a`. Twenty-five formal child
-captures are closed. Default native room verification passes at D. Gate 1
-fails at D, its isolated follow-up fails at E, and gate 2 fails at F. The G
-output-contract repair passes its focused retry after a failed sandbox launch.
-Gate 3 passes at exact source G. The accompanying manifest binds the retained
-evidence. Exact-head review and landing remain under the request. Three marked
-operator rows describe source work.
+Request `7c0e8181a4edc7c45a00f5b4cc3815e98a61f890` and promise
+`310185bf8291b7c7d4a373d845a449b6bc374e9a` define this work.
 
-The child changes `dap verify --all` from separate target traversals to one
-proof shared by the requested scopes. A Membership prefix proved for one
-Inbox can serve later Inboxes. Proofs stay in memory for the command and are
-never written. Shipped defaults remain 300,000 milliseconds, 268,435,456
-received bytes, 100,000 HTTP attempts and 100,000 distinct history entries.
-The default room run now reports every actual scope consistent at D.
+Review `068203072c8269e730f3c0ddf140fc078e518630` requests changes at
+H `57fb198836c1b9a083c1cc855a8b2e4e2b0a17f7`, tree
+`e6323467c3bcf6c26bc2db2434b64eb89c5cf43a`.
+It confirms the default room witness and G's pass.
+It finds two settlement defects.
 
-The task diff starts at landed parent `5c6ea9bb8c25135605bcbe28d2426d54234e40b3`,
-tree `bb685f2b991ec1bfafe52e869e6af047a099c1aa`. The fixed-slot index
-and native rebuild repairs are inherited work, not child results. Collector
-base `2d6811db8ca88f58ddb60e5cfe197679fbd0ce15` predates the later
-parent repair. Snapshots relative to it also include parent repairs. It is
-capture provenance, not the base for this child's final diff.
+A later block can mask earlier debt, ancestry gaps or incomplete byte spans.
+H drops B's debt at 5 after a block at 20.
+A consumer using entry 10 can wrongly report consistent.
+
+H also wrongly recovers missing text without declared capacity or redaction.
+Another checked scope supplies the body, even with one requested root.
+I `013617423309d63006f8fb062e58b5cd099bdcbf`, tree
+`b50883592d50e1e63097a0d703ebe55804ca0bd1`, repairs both defects.
+Only verify.ts and the new room-recovery.test.ts change from H.
+`#recordProblem` retains each scope's earliest problem.
+Shared `#canRecoverDebt` preserves the standalone capacity, binding and numeric
+text-size rule.
+Main replay tests and the original three recovery cases stay unchanged.
+Two new cases compare standalone and room results.
+G's gate pass remains historical. Gate 4 now passes at repaired source I.
+
+`dap verify --all` shares checked Membership prefixes with later Inbox proofs.
+It retains proof only in command-local memory.
+Defaults remain 300,000 milliseconds, 268,435,456 received bytes,
+100,000 HTTP attempts and 100,000 distinct history entries.
+
+Diff base is `5c6ea9bb8c25135605bcbe28d2426d54234e40b3`,
+tree `bb685f2b991ec1bfafe52e869e6af047a099c1aa`.
+The parent owns the index and native rebuild repairs.
+Collector base `2d6811db8ca88f58ddb60e5cfe197679fbd0ce15` predates later
+parent repairs. Relative snapshots include them without establishing child credit.
 
 ## Decisions
 
-Ruling `8e0c4ff6053fedf38be34b6a8dfeb8c2e743b39a` adopts a joint room
-proof. Requested scopes are roots at depth zero. Foreign depth is the least
-distance along a chain actually followed from any root. A later root can
-shorten that distance and discharge a provisional depth stop. This is not
-fresh isolated traversal equivalence for every target. Standalone
-`verify(source, options)` keeps its single-target semantics.
+Ruling `8e0c4ff6053fedf38be34b6a8dfeb8c2e743b39a` defines a joint room proof.
+Requested roots start at depth zero.
+Foreign depth follows the shortest observed root chain, including later roots.
+Standalone `verify(source, options)` retains single-target semantics.
+Contract section 9.4 and the replay README define this distinction.
 
-The current replay source adds `roomVerification`. `checkTarget` returns a
-provisional token. `finish` settles outstanding content, resolves contradictions
-and publishes final per-scope summaries with one union of coverage and trusts.
-Each shared prefix names its proving root. The CLI rejects missing or reordered
-requested roots before declaring every scope consistent. Contract section 9.4
-and the replay README describe these semantics.
+`roomVerification` owns shared work under fixed source and semantic, code and
+trust options.
+`checkTarget` returns provisional tokens.
+`finish` returns summaries and the coverage and trust union.
+Prefixes name their proving roots.
+The CLI checks the requested root set and order.
+Proof binds scope, incarnation, kind, sequence and hash.
+Replayed facts stay distinct from anchored facts.
 
-One owner binds the source and semantic, code and trust options. Reused facts
-bind the exact scope, incarnation and entry hash. Replayed and anchored facts
-stay distinct. Discovery supplies accounting and target names, not proof.
-Digest-checked retained bytes establish content only. The consuming judge still
-checks schema and admission. Another root's checked content can settle a
-detached-text debt. The union names its source, proving root and consumers.
-That does not prove the body accompanied a birth or authorized an entry.
+Discovery identifies targets and charges work, not history proof.
+Digest-checked content still needs schema and admission judgment.
+Content proves neither birth presence nor authority.
+Recovery must retain binding and capacity rules.
+Roots refresh heads and check expected heads and causal prefixes.
+Contradictions retract dependent coverage.
+Reuse rebuilds failed mutable folds from checked bytes.
+Old witnesses cover these boundaries, not the settlement counterexamples.
 
-A requested root refreshes its source head even when its prefix is cached.
-Expected-head, scope-frame and causal-prefix checks remain. Contradictions
-retract coverage and dependent proofs. A failed mutable fold is quarantined.
-Reusing a sound earlier prefix rebuilds state from checked bytes. The closed focused captures
-below exercise these checks. The D native case also completes its normal
-room proof under shipped defaults.
+CLI deduplication checks hashes, canonical bytes, sequence and source frame.
+Known copies remain readable at the ceiling.
+New identities incur charges before retention.
+Accounting stores identities alone.
+Replay counts unique checked entries across reuse and rebuilding.
+Every HTTP attempt and response chunk still costs budget, including repeats
+and refusals.
+Cache hits make no source read and erase no original charge.
+Session access and Signed fallback share the command owner.
 
-The CLI's `Verification` owner counts discovery and log copies of an entry
-once. It checks hashes, canonical stored bytes, sequences and source frames
-before accepting duplicates. Known copies remain readable at the exact entry
-ceiling. A new identity is charged before entering the maps. Conflicting
-content or frames stop the command. Accounting retains identities, not bodies
-or proof. Replay separately counts distinct checked identities across reuse
-and repairs.
+The owner serializes checks and finalization.
+Close clears proof and fences publication; CLI closes owners in `finally`.
+Ignored aborts prevent any physical cancellation or global drain claim.
 
-Every actual HTTP attempt and received response chunk still costs budget,
-including repeated deliveries and refused replies. A retained-input cache hit
-makes no source read and invents no wire charge. It preserves the original
-read's cost. Session access and maintained Signed fallback use the outer
-command owner. Standalone verification keeps its own traversal and counting.
+Replay fixtures use scripted judgments with as-recorded authority, not native
+admission. The TEST fixture creates actual Inboxes with signed native adds.
+It keeps three standalone default CLI replays.
+Default `verify --all` must report every tracked scope without raised limits
+or a boundary outcome.
+Scripted clocks, custody, setup reads and bounded callback scheduling qualify
+workerd evidence. They prove no physical celld load.
 
-The owner serializes root checks and finalization. Close clears proof state
-and fences active or queued publication. The CLI closes both owners in
-`finally`. Neither close nor a budget stop proves an ignored abort, pending
-source promise or underlying HTTP body drained. There is no physical
-cancellation claim.
+## Evidence
 
-New replay tests cover the entry ceiling, cached expected heads,
-refreshed contradictions, depth promotion, option snapshots and close during
-a pending read. Recovery cases cover independent contradictions, content from
-an owing dependency and a post-fold failure beside a sound prefix. They use
-judged and scripted in-memory histories with grants taken as recorded, not
-native authority. Their actual results and fixture follow-up appear below.
-Existing replay tests remain unchanged in the inspected child diff.
+This table retains 30 closed formal captures, prior control H and four operator
+records.
+Control H denotes source 80749894, not documentation head H57fb.
 
-The revised native fixture keeps real TEST room creation, directly signed
-native membership adds, actual Inbox creation and three standalone default
-CLI replays. It replaces the bounded measurement with exactly one default
-`verify --all`. It requires one shared proof header, actual proving roots and
-one consistent report per tracked scope. The reported set must equal every
-actual scope, including every Inbox. No raised-limit retry or boundary outcome
-can satisfy this new witness.
+OLD means sealed root
+`/Users/hughpyle/play/artroom-evidence/2026-10-30-room-proof-reuse`.
+Old formal label L binds OLD/L/command.json and its original argv.
+REPAIR means the repaired evidence root
+`/Users/hughpyle/play/artroom-evidence/2026-10-30-room-proof-reuse-repair`.
+Original commands retain producer path
+`/private/tmp/artroom-room-proof-reuse-repair-evidence-20261030`.
+I rows bind REPAIR/L/command.json.
+The repair Page row binds REPAIR/operator-inputs/page-build-1/command.json.
+The full OLD collection also resides at REPAIR/
+`operator-inputs/prior-evidence/original`.
+Git H's note and manifest reside beside `original/` as
+`parent-note.md` and `parent-manifest.json`.
+The original OLD root remains unchanged.
 
-The fixture records Fetch attempts, responses and forwarded response-body
-bytes, excluding headers and request bytes. `performance.now` measures command
-time and time through a bounded response-frontier join. Last progress per
-phase is not a final counter. The TEST clock, local custody, setup reader and
-finite callback scheduler remain fixture qualifications. This workerd
-witness proves no physical celld load or global drain. Its D result appears below.
+Historical H uses `operator-inputs/historical-control/native-membership-room-1`.
+Page generation uses `operator-inputs/page-build-1`.
+AST records use
+`operator-inputs/support/artroom-proof-reuse-page-ast-20261030-1`.
+Its normalized subdirectory holds the normalized receipt.
 
-## Actual evidence
-
-The first four child captures used accounting checkpoint A:
+The first four formal captures use A:
 `0c25f48974f3fe6d261c6007c7fec282d0334345`, tree
-`3e80d97f8466c651edc3c5a50f4a1d4d849b82a2`. That change was rebased
-as `a2d2b9f580d65b437c1990eb93ad64a5de22d874`, committed tree
-`06a3537798d7d800353dde054702ee35ac6c5f5f`. This was HEAD while the
-child source was dirty at the first outline. It was not a frozen proof-reuse
-checkpoint. Original receipts keep A's identity. Later closed captures use
-these checkpoints:
+`3e80d97f8466c651edc3c5a50f4a1d4d849b82a2`.
+That accounting change rebased to
+`a2d2b9f580d65b437c1990eb93ad64a5de22d874`, tree
+`06a3537798d7d800353dde054702ee35ac6c5f5f`.
+Receipts retain A. Other source points are:
 
-- B: `30d93abda6726efa9934b937450d67c47e325825`, tree
+- B `30d93abda6726efa9934b937450d67c47e325825`, tree
   `371269bdfb9a4d79331b2420574247cd78114ce9`.
-- C: `ecaf5ba543860b521affc034d2ef9557969b45f0`, tree
+- C `ecaf5ba543860b521affc034d2ef9557969b45f0`, tree
   `b731f2fbf08f937f2fbc8663083710839e5b8f97`.
-- D: `bc19531f9b04e5ebca30224e20e7b0de3590934b`, tree
+- D `bc19531f9b04e5ebca30224e20e7b0de3590934b`, tree
   `366a6b80211dda327aea30d7f94ca1100b6566b4`.
-- E: `89112028e33b26f6118b7018f1a35a7e8ffd51ed`, tree
+- E `89112028e33b26f6118b7018f1a35a7e8ffd51ed`, tree
   `87367381f3c9e21bea4cba8ddbdc6f8411e4b1db`.
-- F: `582d3ec6a2879d2d4dbbe44ff829a6e29fb0a450`, tree
+- F `582d3ec6a2879d2d4dbbe44ff829a6e29fb0a450`, tree
   `e8b2d65f32204893e99ad94a5001f21d764d785c`.
-- G: `f2fb7384de05bb6712c9a57c2adc218bf9cea56c`, tree
+- G `f2fb7384de05bb6712c9a57c2adc218bf9cea56c`, tree
   `e46bcbe49bbb899556d038526f203e44e13290b1`.
 
-Child records now reside in
-`/Users/hughpyle/play/artroom-evidence/2026-10-30-room-proof-reuse`.
-Each formal label names `command.json`, `receipt.json`, `stdout.log` and
-`stderr.log`. Ordinary test captures also retain `report.json`. The retained
-copy is indexed by its root `SHA256SUMS`. Table argv and working-directory records keep their original
-execution paths. Their collector SHA-256 is
+Collector SHA-256 is
 `aa00314ac292a521909e25123788d48d000eb6f3ff150c8541448dd013e1810b`.
 Bounds are 40,000 files, 2 GiB total, 128 MiB of snapshots and 128 MiB per
-outer stream. Formal commands allow 600 seconds except the controls and two
-output-repair launches (1,200), the native room (2,100), and closed gates
-and the unreached-stage follow-up (7,200). Operator limits remain in their
-separate records.
+outer stream. Ordinary commands allow 600 seconds.
+Controls and output-repair launches allow 1,200 seconds.
+The native room allows 2,100 seconds.
+Gates and the unreached-stage follow-up allow 7,200 seconds.
 
-Historical row H is the observed parent run accepted by ruling
-`2a308f5d82ff7f269264236d27512edfea7d350b`. Its source is
-`80749894575b50e51c7128f3fa54d10c6749a372`, tree
-`d351bcf0c35522adcc3a45b139f9dc3f8ad4aa80`, now retained under
-`operator-inputs/historical-control/native-membership-room-1` in the new root.
-It was not rerun, rewritten or relabeled as a default-time run.
-
-That observed run overrides time to 120,000 milliseconds. It stops at the
-shipped byte bound during replay of membership scope
-`sc_hngd6u6lodg73szmvz3z24jecjomuchh6xdvtulri25ofgcezaca`, cursor `"200"`:
-83,684 milliseconds, 268,437,957 received bytes, 30,076 HTTP attempts and 58,379
-history entries. Discovery completed and read all 2,001 Inbox Session histories.
-The time override did not bind. The ruling accepts it as the prior-head
-control without another run. Inner CLI Outcome.code is 1, while Vitest and
-the capture exit 0. No consistent partial reports were returned. It proves
-no complete room coverage.
-
-At B, the CLI compiler passes but replay's portable TypeScript context cannot
-resolve `structuredClone`. C fixes that portability problem. Both compiler
-contexts then pass. The combined owning run at C passes 21 cases and fails one
-before it can test room settlement: the made-up fixture declares an illegal
-`acts.retain.fields.proof.value` field.
-
-D repairs only that fixture by using a platform fixture and adding a provenance
-check. It preserves every case and assertion. The replay compiler and all three
-recovery-file cases pass at D. The failed C run remains a failure. This focused
-follow-up is not a new complete owning run or a gate result.
-
-The first entry-accounting control selects the hybrid CLI package's Node-runner
-path. It returns INCONCLUSIVE with zero passing baseline tests. The helper retains
-only the summary, not the underlying baseline error, so this note names no
-exception or test behavior behind that failed selection. The corrected root
-selector names the CLI Vitest project. Four baseline cases pass. Its mutant
-has two passed and two failed cases, and the helper qualifies one named
-ordinary AssertionError about duplicate entries at the ceiling.
-
-The cached-head control passes its one selected baseline. Removing the expected
-head comparison produces an ordinary AssertionError at line 44: the second
-root says consistent where mismatch is required. The mutant has one failed
-and nine skipped cases. Both distinguishing controls restore the source, and
-all control captures confirm unchanged clean source afterward. The standard
-helper retains baseline counts and mutant output, not baseline internal JSON.
-
-The D native case completes one default `verify --all` in 38.754 seconds of
-caller `performance.now` time, including the bounded request-frontier join.
-All 2,006 actual scopes report consistent, with all 2,001 Inbox Session
-histories observed. Limits are unchanged. During that command, the wire
-observer records 12,076 attempts, 12,076 responses and 79,088,240 forwarded
-response-body bytes, excluding headers and request bytes. No HTTP refusal or
-unresolved HTTP refusal is recorded. This is not a global body-drain claim.
-The outer capture, including setup, takes 140.151371542 seconds and
-151.006290 seconds of host child CPU.
-
-The actual report returns one shared proof header and 4,011 coverage segments.
-Partitioning those intervals by scope, incarnation and kind gives 2,006 groups
-and 8,019 reported positions. Sorted segments are contiguous and nonoverlapping
-within each group. This derives a summary from the returned report. It is not
-an independent scope census or a new successful-entry budget counter. The
-complete outcome and metadata remain in `native-room-default-1/report.json`.
-
-Gate 1 passes the kernel stage, then fails two Node cases in
-`scripts/security-entry-points.test.mjs`. Its 78 other Node cases pass.
-Counting, plain and native stages remain unreached. The failure names
-unselected runtime declarations. Maintained parser readback in
-`operator-inputs/cli-seals-readback.json` identifies new CLI helpers
-`replaySource` and `sharedProofLines`. It returns 79 records: two new, five
-changed old records and 72 unchanged. The whole verification-owner seal is
-`3fb0f354c0d00dd1d21cf293e11dfc81738b9de4e8f5eb43ac9fd918dc9db557`.
-E changes only inventory metadata in that test file, with eight additions and
-six removals. Case code, assertions, controls and validator tail stay byte
-identical. All ten owning Node cases then pass.
-
-The isolated E follow-up runs the unreached stages. Counting passes 56 cases.
-Plain passes 3,129, fails one and skips one. Native remains unreached. The
-sole failure finds the generated Page module stale by eight bytes. This
-follow-up does not turn the original failed gate into a pass.
-
-The maintained `npm run build --workspace @generalbusiness/dap-page` exits 0
-as source generation. Only `apps/room/page/assets.ts` changes among tracked
-files. `operator-inputs/page-build-1/receipt.json` binds the old 1,187,769-byte
-module, SHA-256
-`ecc1fbe483283d0a1485d7fb28ba38ffea727d1e58ae123f6e77e9bd10b06d3b`,
-and the new 1,187,777-byte module, SHA-256
-`553d0303a89d30dc57b526691075bdff9dde7c89c8d6414e15b6f988e8a636ad`.
-The latter exactly matches the failed test's expected bytes. Decoded HTML
-stays identical, SHA-256
-`f8bb00e0998e3d12b66f5c7334a7450566e1258bed6e37a53acf213a4299d23d`.
-The source trace reaches replay through the CLI browser entry, command-support
-and SourceError. At F the asset's owning case passes. No other production
-runtime source changes between D and F. A generated production asset still
-requires a new full gate, so the single-file follow-up exception cannot cover F.
-
-Two read-only Node parser processes exit 0. The retained operator readback is
-`operator-inputs/support/artroom-proof-reuse-page-ast-20261030-1/READBACK.md`. The first
-path-aligned comparison shifts after one extra top-level declaration group.
-After explicitly splitting top-level declaration groups while preserving
-order, the comparison has 11,412 Identifier.name differences and two
-Property.shorthand flag differences, with no other compared AST changes.
-The raw 1,736 non-Identifier mismatches compare shifted paths; they are not
-a count of semantic edits. The comparison excludes positional and comment metadata.
-It resolves no lexical bindings and proves no alpha-equivalence or browser
-behavior. Both payloads contain the same two Symbol calls and no new room
-root-token call. No application payload was evaluated and no browser ran.
-Build and parser work are clearly marked operator rows in the same table,
-outside formal validation totals. Their zero exits do not supply runtime
-acceptance. The Page build records CPU. Both AST receipts leave CPU unknown.
-
-Ruling `ad166a42b89cc8fd6ef5ad10a98c02cfeaed2bbb`, read through Gitseq,
-retains `control-unique-entry-1` as INCONCLUSIVE with cause RunnerMisSelect.
-The hybrid script handed a Vitest file to Node. The underlying baseline
-exception remains unknown. The ruling accepts the explicit Vitest control
-`control-unique-entry-2`. It queues the helper repair outside 7c0: in the next
-head touching the helper or testing guide, or after J4 if none comes earlier.
-Historical H retains its separate observed-boundary role under ruling
-`2a308f5d82ff7f269264236d27512edfea7d350b` and its original time override.
-
-Gate 2 passes kernel, Node 80, Counting 56 and plain 3,130 cases, with one
-plain skip. Native records 841 passed, five failed and two skipped cases:
-two files fail, 240 pass and one is skipped. Four demo cases expect the old
-output shape. The issues story parses Shared lines as scope kinds. The gate
-remains failed, with complete unclipped capture and clean source at F.
-
-G changes three paths for this output contract. The issues story checks a
-12-root union, actual scope identities and coverage through each reported head.
-It preserves the original 12-scope order, cleanup, final summary and callback
-settlement assertions. The maintained rehearsal adds `judgedRoomProof` to
-check prefix correspondence against the original room-summary suffixes.
-It checks contiguous coverage, proving roots, checked-text provenance and
-replay trusts. It stages CapturedValues and publishes them only after the
-prefix and suffix pass. The transcript states the prefix rule. Existing
-suffix templates remain unchanged.
-
-The rehearsal-stops witness adds a positive case and fourteen malformed-prefix
-or suffix probes, including a check that failed parses publish no captured
-values. Old cases stay unchanged. All existing replay tests remain byte
-unchanged. These are output-correspondence checks, not a second replay engine.
-The native journeys still use stand-ins for the Git host, git and scheduler.
-They prove no live provider, browser or deployment behavior.
-
-Both G compiler contexts pass. The first owning launch fails before tests
-because the sandbox refuses listening on 127.0.0.1 with EPERM. Its underlying
-stderr is retained. Retrying the same frozen G source passes nine cases with
-one existing skip across three files, in 27.601504833 seconds elapsed and
-35.473587 seconds host child CPU. This focused result does not repair the
-failed gate 2. Gate 3 then passes at the same G. The unused v2 acceptance
-adapter never executed.
-
-Gate 3 passes kernel, Node 80, Counting 56 and plain 3,131 cases, with one
-plain skip. Native passes 846 cases with two skipped: 242 files pass and one
-is skipped. The stage ledger records all five stages passed with no report
-errors. Native's final observer record says passed with zero unhandled errors.
-The scope observer's partial label, with 241 observed modules, includes the
-skipped optional screenshot-recording module. It does not imply a failed phase
-or establish callback completeness. The summary records 72 unknown or suite
-observations and no contradictions.
-
-`gate-3/stdout.log` binds the original closed temp root `tmp.UfU4zMrMiF`.
-Retained `operator-inputs/gate-detail-gate-3/test-evidence/stages.json` and
-`operator-inputs/gate-detail-gate-3/test-evidence/native.jsonl` supply the
-phase and end records. Gate 3 has complete output, no timeout and unchanged
-clean source G. Dependency installation was skipped against the verified lock
-stamp.
-
-Operator row `page-build-1` uses retained `operator-inputs/page-build-1`.
-AST rows use retained
-`operator-inputs/support/artroom-proof-reuse-page-ast-20261030-1`, with the
-second receipt under `normalized`. Each keeps its original argv and working
-directory.
-Operator rows have an actual process exit, with no formal capture exit field.
-Their elapsed times and stream hashes come from those receipts. AST CPU is
-unknown. None of these rows enters the 25-capture formal cost sum.
-
-The table preserves actual argv and paths. Formal exits mean command, then
-capture. Costs use seconds. Formal costs include post-guards and CPU means
-host child CPU, not guest CPU. Each formal capture closes without timeout or
-stream loss at its unchanged clean checkpoint. Operator rows show their own
-process exit and timing. Stream cells give bytes and SHA-256. `E` means zero
-bytes with SHA-256
+Formal exit pairs give command status then capture status.
+Formal elapsed times include post-guards.
+CPU means host child CPU, not guest CPU.
+Old captures had no timeout or output loss.
+Checkpoints stayed clean and unchanged.
+Operator rows have one process exit and establish no runtime acceptance.
+AST CPU remains unknown.
+Stream cells give bytes and SHA-256.
+E means zero bytes with SHA-256
 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
-Receipt digests identify exact bytes, not a future manifest.
+Receipt hashes identify exact receipt bytes.
+I's collector SHA-256 is
+`5dd6f59ac1478e0bf7ff291531fffb8046d4a784355ac7f37127be49e5b7334d`.
+It keeps the stated bounds and command ceilings. Page generation allows 300 seconds.
 
 | Capture and source | Actual command | Outcome and exits | Wall; host CPU | Stdout bytes and SHA-256 | Stderr bytes and SHA-256 | Receipt SHA-256 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -349,83 +188,253 @@ Receipt digests identify exact bytes, not a future manifest.
 | `page-build-1`; OPERATOR, E source generation | `npm run build --workspace @generalbusiness/dap-page` | OPERATOR: generated asset; exit 0; no formal capture exit | 0.325675083; 0.200452 | 212; `216bbd36e9c6308f647551161897e544d41528552e5102961b229a71d9a3a230` | E | `af15776b969ac6bcb3fdb75d8c05ec45c89ac0c14759c73cecdce1f4bb231843` |
 | `page-ast-1`; OPERATOR, before/after asset inputs | `node /private/tmp/artroom-proof-reuse-page-ast-20261030-1/analyze.mjs` | OPERATOR: syntax readback only; exit 0; no formal capture exit | 0.484762915992178; unknown | 1921; `b1f4c86549a3f39032558d7bc088f20279c69b5de70a33203922a7772b962e6e` | E | `4ed85173409f9db912bbf8bbdff03417b2d697407ea18dca155794d390be6485` |
 | `page-ast-normalized-1`; OPERATOR, before/after asset inputs | `node /private/tmp/artroom-proof-reuse-page-ast-20261030-1/analyze-v2.mjs` | OPERATOR: syntax readback only; exit 0; no formal capture exit | 0.5005387919954956; unknown | 1845; `613d200bb5fea526c3a26136fd2fc92d257064b8e59c24f9b89212a11e96420d` | E | `807e6f702ec89e70fe2c5d5fc3a7c189c692ffe9c068208e6225c2ad540765e4` |
+| `repair-replay-types-1`; I | `npm run typecheck --workspace @generalbusiness/dap-replay` | PASS: replay compiler; 0, 0 | 0.963040375; 3.272341 | 135; `bfa936e6ac3350bc231de0d8a02765e43afc255bf7b9ea23aa4213cb09752357` | E | `1647c2b8c4b245f13cdcf93d9d95cfcf246a63c6fb94a780e94f73959cbee8f7` |
+| `repair-replay-owning-1`; I | `npx --no-install vitest run --project replay --reporter=default --reporter=json --outputFile=/private/tmp/artroom-room-proof-reuse-repair-evidence-20261030/repair-replay-owning-1/report.json packages/replay/test/room-recovery.test.ts packages/replay/test/room-verification.test.ts` | PASS: 15 cases, 5 recovery and 10 verification; 0, 0 | 1.376109834; 2.315834 | 499; `4aea15604d72c13899abbff0b6b1a391e30f28eeddbda79e5fec1f8f26a7764c` | E | `f17ee1c5d07f1ce0da0c48202e923998a918c0e3d439305359d3e501d5cc0e7d` |
+| `control-earliest-problem-1`; I | `node scripts/control.mjs packages/replay/src/verify.ts 'if (current && problem.from >= current.from) return false;' 'if (current) return false;' --expect 'an earlier missing text remains a problem below a later blocked entry' -- . --project replay packages/replay/test/room-recovery.test.ts -t 'an earlier missing text remains a problem below a later blocked entry'` | DISTINGUISHES: baseline 1 passed; mutant 1 ordinary AssertionError, 4 skipped; restored; 0, 0 | 2.380608875; 3.295264 | E | 2593; `83e5728a22394b8267aef245c7a9f0049b1301eb490aa12bc68c3bcccfb21db3` | `bcc56219741c893dbdc8a2d9fc6cec97419f025cb224874d3aebb31783a54f71` |
+| `control-capacity-recovery-1`; I | `node scripts/control.mjs packages/replay/src/verify.ts '!!run.definition?.declared.capacity &&' '' --expect 'a source without capacity still owes its missing text when another root holds the body' -- . --project replay packages/replay/test/room-recovery.test.ts -t 'a source without capacity still owes its missing text when another root holds the body'` | DISTINGUISHES: baseline 1 passed; mutant 1 ordinary AssertionError, 4 skipped; restored; 0, 0 | 2.387116042; 3.308623 | E | 2586; `b47f983f0af4d3e1280e92c1813ec2f471e3a3a4e685947518a39bfe2e167f90` | `86508bb3861f41b58688c064225c7655c84cfdfee5fad8eec721db64193b0262` |
+| Repair `page-build-1`; OPERATOR, I source generation | `npm run build --workspace @generalbusiness/dap-page` | OPERATOR: byte-identical asset; exit 0; no formal capture exit | 0.294253500; 0.222346 | 212; `216bbd36e9c6308f647551161897e544d41528552e5102961b229a71d9a3a230` | E | `80a44564f31d393a85fe4bc801231facf5e4bfb699e17b60fe0c271bcbca3229` |
+| `gate-4`; I | `npm run gate` | PASS: kernel, Node 80, Counting 56, plain 3133 passed with 1 skipped, native 846 passed with 2 skipped; 0, 0 | 1028.178343334; 2176.538951 | 6219; `b83f98707db30244d9e58cc8c242b4e4753e64d4d70a0d4b5d95cc08eee79877` | E | `fc1141fd92e3a68a6c2bf64fafc69c2d29432bf640407c47c94fc7877a0307d1` |
 
-The first four formal captures total 4.581454583 seconds elapsed and 10.144295
-seconds host CPU. The first 14 total 18.616403041 seconds elapsed and
-42.065289 seconds host CPU. The first 19 total 313.739578875 seconds elapsed
-and 593.109472 seconds host CPU. Adding failed gate 2 brings 20 to
-1,583.835399208 seconds elapsed and 3,268.612236 seconds host CPU. The first
-24 total 1,614.763025707 seconds elapsed and 3,313.359821 seconds host CPU.
-All 25 closed formal captures now total 2631.437000291 seconds elapsed and
-5468.288183 seconds host CPU, within 03:21:10.726878 to 05:15:27.760093 UTC.
-These sums include failures, INCONCLUSIVE and post-guards. They exclude the
-three operator rows, other source work, inspection and note writing. They are
-not one pipeline. No cache or isolated-load claim follows. AST CPU is unknown.
+The old 25 formal captures total 2,631.437000291 seconds elapsed and
+5,468.288183 seconds host child CPU.
+Their UTC window spans 03:21:10.726878 to 05:15:27.760093.
+Sums include failures and INCONCLUSIVE.
+They exclude H, operators, source work, inspection and drafting.
+Parallel elapsed sums are not pipeline wall time.
 
-`operator-inputs/machine-native-room-1.json` records Darwin arm64, Node v26.13.0,
-npm 11.20.0 and load 1.518, 1.625, 1.579 at 04:01:32.634342 UTC, rounded
-to three decimals. Its initial sysctl hardware read was refused.
-`operator-inputs/machine-native-room-1-hardware.json` records the separate
-successful read at 04:01:49.177510: Mac17,7, 18 CPUs and 64 GiB. These are
-host observations, not project results or per-command load monitoring. Cache
-state remains unknown. They imply no native callback or physical celld CPU
-attribution. They do not themselves establish a room outcome.
+The five I captures add 1,035.285218460 seconds elapsed and 2,188.731013 seconds
+host child CPU. Their UTC window is 05:42:54.619474 to 06:02:21.868296.
+The combined 30 formal captures total 3,666.722218751 seconds elapsed
+and 7,657.019196 seconds host child CPU.
+Their UTC window starts at 03:21:10.726878.
+These sums exclude historical H and all operators.
 
-Additional operator snapshots are `operator-inputs/machine-gate-1.json` at
-04:05:53.486399 UTC, load 1.459, 1.755, 1.661;
-`operator-inputs/machine-unreached-stages-1.json` at 04:17:45.101776,
-load 2.217, 1.932, 1.792; and `operator-inputs/machine-gate-2.json` at
-04:29:23.437567, load 1.614, 1.875, 1.913. Loads round to three decimals.
-Each is one observation before its named invocation. Cache state remains
-unknown, without a controlled reset or per-stage monitoring. The gate 2
-snapshot itself supplies no gate result. Its closed outcome is recorded above.
+The earliest-problem mutant returns consistent instead of mismatch at line 186.
+The capacity mutant returns consistent instead of incomplete at line 213.
+Both ordinary assertions distinguish their named invariants.
+Both controls retain full mutant output and baseline counts.
+They restore exact source and clean checkpoints.
 
-`operator-inputs/machine-gate-3.json` records one observation before gate 3 at
-04:58:24.258077 UTC, load 1.608, 1.903, 2.367 rounded to three decimals.
-Hardware and tool versions remain in the earlier snapshots. Cache state is
-unknown, without a controlled reset. This is not continuous load monitoring
-or a gate result.
+Repair Page generation changes no tracked file.
+It reproduces the 1,187,777-byte asset with unchanged 553d0303 SHA-256 below.
+No extra asset commit follows.
 
-The historical control's snapshot at 00:46:53.332894 UTC is now retained at
-`operator-inputs/historical-control/parent-machine-room-1.json`. It records
-Darwin arm64, Mac17,7, 18 logical CPUs, 64 GiB, Node v26.13.0, npm 11.20.0
-and load 1.43, 1.28, 1.30. It is one old-run snapshot, not a cache observation
-or a machine record for the child captures.
+Gate 4 passes all five stages at I after the settlement repairs.
+It retains complete output without timeout or dropped bytes.
+Its source remains clean and unchanged.
+Installation skips against the verified package-lock dependency view.
+The scope observer reports 241 modules with a partial label.
+It records 72 unknown or suite observations and no contradictions.
+All terminal records are complete.
+Partial module observation does not imply complete callback coverage.
+REPAIR's `gate-4/stdout.log` binds temp
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.wX7mb3wACP`.
+The original whole gate output is retained under REPAIR/
+`operator-inputs/gate-detail-gate-4`.
+Its six Counting build outputs and mapping provenance remain unchanged under
+`operator-inputs/counting-generated-gate-4`.
 
-Normal preparation copied the reviewed evidence to the durable root.
-`finalization/receipt-audit.json` records 25 complete captures with no integrity
-or closure issues. The control tool's INCONCLUSIVE exit 2 remains an inconclusive
-test result in a completed capture. The audit adds no project test or acceptance.
-The accompanying manifest records the collection and its retention rule.
+### Failures and follow-ups
 
-The manifest is `notes/implementation/evidence/2026-10-30-room-proof-reuse.manifest.json`.
-It names source checkpoint G and the durable root. Each formal table row cites
-its six core leaves: command, process, receipt, source index and both streams.
-Retained Vitest reports and the historical control's core leaves, report,
-original index and parent metadata are explicit extra citations. Complete
-`operator-inputs` and `finalization` units are bound by their own indices.
-The root index covers every retained file. Original execution paths in argv,
-source maps and receipts remain unchanged after copying.
+C fixes B's portable `structuredClone` failure.
+C's owning run rejects illegal fixture field `acts.retain.fields.proof.value`.
+D adopts a platform fixture with provenance checks.
+It preserves every case and assertion.
 
-The operator unit includes the three complete gate outputs, each original
-Counting output with its source mapping, the copied historical control and
-public source-generation and parser support. Preparation and audit establish
-copy and receipt integrity; they add no project test. The root index is the
-last evidence write. Finalization removes write bits and verifies the full
-index and manifest by readback. Retain this read-only root for at least 30 days
-after landing. Later removal requires a planner act naming this manifest.
+The hybrid helper selects Node for a Vitest file in the inconclusive control.
+It retains no underlying baseline error or exception type.
+Ruling `ad166a42b89cc8fd6ef5ad10a98c02cfeaed2bbb` records RunnerMisSelect.
+It accepts the corrected explicit Vitest control.
+The cached-head mutant wrongly accepts a mismatch at line 44.
+Controls restore source and clean checkpoints.
+The helper retains baseline counts, not internal JSON.
 
-## Open limits and owning requests
+Gate 1 fails the inventory in `scripts/security-entry-points.test.mjs`.
+It lacks selections for `replaySource` and `sharedProofLines`.
+`operator-inputs/cli-seals-readback.json` has 79 records:
+two new, five changed and 72 unchanged.
+The whole verification-owner seal is
+`3fb0f354c0d00dd1d21cf293e11dfc81738b9de4e8f5eb43ac9fd918dc9db557`.
+E changes only test metadata, with eight additions and six removals.
+Case code, assertions, controls and validator tail remain byte identical.
+E's follow-up finds a Page module stale by eight bytes.
 
-Request `7c0e8181a4edc7c45a00f5b4cc3815e98a61f890` owns exact-head review
-and landing. Gate 3 passes at G. Existing replay tests remain byte unchanged.
-The final head adds only this note and its manifest to G; source and tests
-remain unchanged under `docs/testing.md`. The Gitseq report supplies both tree
-hashes for that documentation-only follow-up. No additional gate is required.
-Checker acceptance and landing remain separate recorded acts.
+The Page build changes only tracked `apps/room/page/assets.ts`.
+`operator-inputs/page-build-1/receipt.json` binds both versions.
+The old module has 1,187,769 bytes and SHA-256
+`ecc1fbe483283d0a1485d7fb28ba38ffea727d1e58ae123f6e77e9bd10b06d3b`.
+The new module has 1,187,777 bytes and SHA-256
+`553d0303a89d30dc57b526691075bdff9dde7c89c8d6414e15b6f988e8a636ad`.
+It matches the failed case's expected bytes.
+Decoded HTML keeps SHA-256
+`f8bb00e0998e3d12b66f5c7334a7450566e1258bed6e37a53acf213a4299d23d`.
+The source path runs from CLI browser code through command-support and
+SourceError to replay.
+D to F changes no other production runtime source.
+Generated production source requires a full gate.
+The single-file exception cannot cover F.
 
-Load findings request `a6847815c845145adddca1476342e52b6a8baf82` retains
-the deployed CPU and production-load questions. The TEST timing is one local
-observation, not a controlled speed comparison or a worst-case memory or runtime
-bound. It does not explain the deployed CPU finding. Parent index results remain in
-their own note. The historical row serves only the accepted boundary control.
+AST readback: `operator-inputs/support/artroom-proof-reuse-page-ast-20261030-1/READBACK.md`.
+An extra declaration group shifts the first comparison's paths.
+Its 1,736 raw non-Identifier differences are not semantic-edit counts.
+The second comparison splits only top-level declaration groups in order.
+It finds 11,412 Identifier.name differences and two Property.shorthand changes.
+It finds no other compared AST changes.
+It excludes positions, comments, binding resolution and alpha-equivalence.
+Both payloads keep two Symbol calls and omit the new room root-token call.
+No payload executes. Syntax comparison proves no runtime or browser equivalence.
+
+Gate 2 exposes four old demo output expectations and an issues parser
+that treats Shared lines as scope kinds. G repairs three paths.
+Issues checks the actual 12-root identities and heads.
+It retains order, cleanup, summary and callback assertions.
+Rehearsal's `judgedRoomProof` checks prefix and suffix before committing values.
+The transcript declares the prefix rule with unchanged suffix templates.
+Stops adds one positive and fourteen malformed or suffix probes.
+Failures publish no values. Old cases and replay files remain byte identical.
+
+G's first owning launch fails before tests on localhost listen EPERM.
+The capture retains its underlying stderr.
+Git, host and scheduler stand-ins prove no live provider, browser or deployment.
+Gate 2 stays failed.
+The unused v2 acceptance adapter never executes.
+
+Gate 3 passes at G. Native ends with zero unhandled errors.
+Its observer reports 241 modules and a partial label.
+The optional screenshot-recording module is skipped.
+The summary has 72 unknown or suite observations and no contradictions.
+This proves no callback completeness.
+`gate-3/stdout.log` binds temp `tmp.UfU4zMrMiF`.
+`operator-inputs/gate-detail-gate-3/test-evidence/stages.json` records stages.
+`operator-inputs/gate-detail-gate-3/test-evidence/native.jsonl` records the end.
+Installation skips against the verified lock stamp.
+
+### Current native result and historical observations
+
+Gate 4's room case passes at I.
+REPAIR's six-file `operator-inputs/native-room-gate4-readback` unit retains its
+metadata extraction, not an independent replay or test.
+Its `summary.json` reports all 2,006 actual scopes consistent with exact scope-set
+equality and all 2,001 Inbox Session histories.
+Shipped limits remain unchanged.
+Caller time through the bounded request join is 45,877 milliseconds.
+The command reports the same elapsed value.
+The observer records 12,076 attempts and responses and forwards 79,088,240
+response-body bytes. Forwarding may include prefetch.
+It reports no unresolved HTTP refusal.
+One shared-proof header precedes 4,011 coverage records.
+These are reported metadata, not an independent census or successful-entry
+budget counter. They prove no physical drain or guest CPU.
+The unit's `readback-receipt.json` binds argv, inputs and output hashes.
+Its SHA-256 is
+`3c9c17fdb32d5bae0069945bc21952aa568f166139ba32c578f6168106d3e9a4`.
+The external metadata caller is outside this table and its cost sums.
+The following D result remains historical.
+
+D's default room witness observes all 2,001 Inbox Session histories.
+Caller `performance.now` measures 38.754 seconds through the bounded request join.
+The observer records 12,076 attempts and responses and forwards
+79,088,240 response-body bytes.
+It excludes headers and request bytes.
+It records no unresolved HTTP refusal during the command.
+The bounded actual response-frontier join passes.
+This proves no global body drain.
+Gate 3 repeats the room case successfully at G.
+
+`native-room-default-1/report.json` retains the outcome.
+Its header precedes 4,011 segments in 2,006 scope, incarnation and kind groups.
+They cover 8,019 reported positions contiguously without overlap per group.
+This is neither a budget counter nor an independent census.
+Phase progress supplies no final counter.
+
+Ruling `2a308f5d82ff7f269264236d27512edfea7d350b` accepts historical control H.
+Its source is `80749894575b50e51c7128f3fa54d10c6749a372`, tree
+`d351bcf0c35522adcc3a45b139f9dc3f8ad4aa80`.
+Its 120,000-millisecond override does not bind.
+It stops at the shipped byte boundary.
+The replay Membership scope is
+`sc_hngd6u6lodg73szmvz3z24jecjomuchh6xdvtulri25ofgcezaca`, cursor `"200"`.
+Counters are 83,684 milliseconds, 268,437,957 received bytes,
+30,076 HTTP attempts and 58,379 history entries.
+Discovery completes all 2,001 Inbox Session histories.
+It returns no consistent partial reports and proves no complete room coverage.
+The ruling requires no rerun or relabeling.
+
+### Host observations and historical custody
+
+`operator-inputs/machine-native-room-1.json` records Darwin arm64 at
+04:01:32.634342 UTC, Node v26.13.0 and npm 11.20.0.
+Load rounds to 1.518, 1.625, 1.579; sysctl initially fails.
+`operator-inputs/machine-native-room-1-hardware.json` succeeds at 04:01:49.177510.
+It records Mac17,7, 18 CPUs and 64 GiB.
+Subsequent snapshots retain that hardware and tool context:
+
+- `operator-inputs/machine-gate-1.json`: 04:05:53.486399 UTC;
+  load 1.459, 1.755, 1.661.
+- `operator-inputs/machine-unreached-stages-1.json`: 04:17:45.101776 UTC;
+  load 2.217, 1.932, 1.792.
+- `operator-inputs/machine-gate-2.json`: 04:29:23.437567 UTC;
+  load 1.614, 1.875, 1.913.
+- `operator-inputs/machine-gate-3.json`: 04:58:24.258077 UTC;
+  load 1.608, 1.903, 2.367.
+
+Each is one pre-run observation, not continuous or per-stage monitoring.
+The repair snapshot `operator-inputs/machine-gate-4.json` observes load
+1.482, 1.817, 2.064 at 05:45:09.887997 UTC before gate 4.
+It supplies no new hardware measurement or continuous monitoring.
+Cache state stays unknown; no controlled reset supports a cold-cache claim.
+They attribute no CPU to native callbacks or physical celld.
+`operator-inputs/historical-control/parent-machine-room-1.json` describes H,
+not child conditions.
+At 00:46:53.332894 UTC it records Darwin arm64, Mac17,7, 18 logical CPUs,
+64 GiB, Node v26.13.0, npm 11.20.0 and load 1.43, 1.28, 1.30.
+
+Historical manifest: Git H's version of
+`notes/implementation/evidence/2026-10-30-room-proof-reuse.manifest.json`,
+retained as REPAIR/operator-inputs/prior-evidence/parent-manifest.json.
+Its 24,352 committed bytes have SHA-256
+`9c5056e4f2c4bad2419f5a89eb4b2670f896a28d90be3fc2740fb3deb784b3e1`.
+It binds G, 168 citations, 876 files and 190,614,202 bytes.
+OLD's root `SHA256SUMS` covers the other 875 files.
+Its SHA-256 is
+`d2caa18f62eadb19c5fe52b89e4e409cd43a9c3660aa102e0345e41c79b7358f`.
+Indexed `operator-inputs` and `finalization` retain whole gates, original Counting
+outputs and mappings, H and source support. Original paths stay unchanged.
+`finalization/receipt-audit.json` records 25 complete captures without
+integrity or closure issues.
+The helper's INCONCLUSIVE tool outcome is a complete capture.
+Audit adds no runtime acceptance.
+The finalizer writes the index last, removes write bits and checks readback.
+Review confirms custody, not sound settlement.
+Retention lasts at least 30 days after landing.
+Removal needs a planner act naming the manifest.
+
+## Limits and owning requests
+
+Request 7c0 owns the repairs and next exact-head review.
+The compiler, 15 owning cases, both controls and full gate 4 pass at I.
+The final review remains pending.
+This replacement keeps one note and one manifest.
+The current manifest binds I, gate 4 and the repaired evidence root.
+Its `priorEvidence.manifest` preserves all historical 168 citations unchanged.
+The full 876-file old collection is also copied with exact file bytes and modes.
+The 882-file prior-evidence unit includes its index and Git H metadata.
+REPAIR/finalization/receipt-audit.json verifies all five repaired captures.
+It records no incomplete captures, integrity issues, unclosed processes or timeouts.
+The root index covers all retained files.
+Finalization removes write bits and verifies every hash, mode and member again.
+Both roots remain read-only for at least 30 days after repaired landing.
+Removal requires a planner act naming the current manifest.
+Custody checks add no runtime or review acceptance.
+G to H uses the document-only exception in `docs/testing.md`.
+Production repair cannot inherit it or advance approval.
+The review also identifies missing origin rows for some shared texts and repeated
+prefix rebuilding under the time limit. These nonblocking limits remain.
+
+Ruling ad166a42 assigns helper repair outside 7c0 to the next relevant head
+or a separate head after J4. RunnerMisSelect names no baseline exception.
+
+Load findings request `a6847815c845145adddca1476342e52b6a8baf82` owns deployed CPU
+and production-load questions.
+TEST timing proves no controlled speedup, worst-case bound or deployed CPU cause.
+The parent owns index results. H supplies only the accepted boundary control.
