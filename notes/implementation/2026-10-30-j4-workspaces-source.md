@@ -3,351 +3,386 @@
 ## What changed
 
 Request `0c3091fa54f38d3709dcb7a741d6754c420ad10c` and promise
-`710449ccd016033f1a6b40da348060ad7fe64c4a` own this work.
-Source C is `40230449b25f3f8ad970de33c9d184c4013b182a`, tree
-`6942d426f2acaee8cdbfc2471708a368a0999b52`.
-Its diff from BASE S, `31780874d5b1e3f6e5e817e75e6eb7e55765c956`, tree
-`b12bc5501a24f0f947a7070ee4c71aef3edeeb6c`, changes 49 paths with
-2,597 additions and 940 removals. The adopted index pins those committed bytes.
+`710449ccd016033f1a6b40da348060ad7fe64c4a` own this work. J4 adds explicit hold
+version 2, new Issue and Change profiles, and an Artifacts workspace adapter.
+Existing lane pins and hold version 1 retain their meanings.
 
-C implements the explicit `hold@2` family, J4 lane profiles and Cloudflare Artifacts
-workspace adapter. Historical `hold@1` lanes retain their rules.
-It migrates no earlier room and enrolls no archive or G17 host.
-The production source/doc checkpoint F is
-`9d775412bae3eba9b7350a3c4b2daba76e735e08`, tree
-`43a4c7587c44d3c0ec51a9508d8d4c6dc9270eb0`.
-Its diff from S changes 52 paths, with 2,626 additions and 949 removals plus
-the generated Page module. C's kernel and adapter source remain unchanged;
-follow-ups adopt reviewed seals, regenerate Page output and explain both.
-The C source gate, E unreached-stage follow-up and F full gate all remain
-failed. The unchanged-F diagnostic also retains an uncaught teardown error.
-The isolated R repair passes its compiler and owner. Ruling 458166da accepts
-those follow-ups with the failed F gate under the isolated-test exception.
-Exact-head source-readiness review remains pending; live J4 acceptance
-remains open after source landing and deployment.
+Checker report `8eba6b83351f7a41d9a56e38079c43df6447717c` requested custody
+tests, three security seals, a setup-credential cleanup obligation, clearer
+kernel documentation, and a smaller evidence manifest. The current source
+implements the cleanup under ruling `e7962aa7693d19410b7554503633e850e4b9c3cd`.
+The native cleanup file and its revoke control now pass at
+`17c14b118ecf3274109727882908bb0b09a69383`, tree
+`58526e56594dc5b1aaa736d2df5df94fd142aafb`. The final repair gate passes with
+complete 0/0 capture. Earlier failed gates, the unclean diagnostic, and the
+isolated repair keep their separate results. Exact-head review and landing
+remain pending.
+
+The table uses these historical source labels:
+
+| Label | Commit | Tree |
+| --- | --- | --- |
+| Baseline S | `31780874d5b1e3f6e5e817e75e6eb7e55765c956` | `b12bc5501a24f0f947a7070ee4c71aef3edeeb6c` |
+| Implementation C | `40230449b25f3f8ad970de33c9d184c4013b182a` | `6942d426f2acaee8cdbfc2471708a368a0999b52` |
+| Seal follow-up E | `e9da1ba8579989a5f0193deb94fc1dd37fbace6b` | `26f2dd8bd35ba28a40fbe3ff62fe3f67b905c97c` |
+| Page output A | `63400786c6ff064957151b35b311883669a6fe9e` | `da672c657e6c31eacb75b67e73cdeec3306ff281` |
+| Full gate F | `9d775412bae3eba9b7350a3c4b2daba76e735e08` | `43a4c7587c44d3c0ec51a9508d8d4c6dc9270eb0` |
+| Isolated test repair R | `80a742bdb052fca2bca4ec12917d1961f6e19b53` | `7d5f461e16e1d34acdc6aa5a90a74395657cfc2a` |
 
 ## Implemented behavior and decisions
 
-### Versioned kernel rules
+### Versioned rules and setup cleanup
 
-`packages/contract/src/capability.ts` declares the second hold version with the
-existing forms and record states. `hold.ts` builds separate owner families.
-Public helpers retain the v1 owner. V2 adds head and fork outcomes.
-Workspace, reservation, retention and ancestry select the exact declared family.
-Unsupported versions acquire no workspace authority.
+The contract declares `hold@2`. Derive keeps separate owner families and
+exports `HOLD_V2`, `holdCapabilityV2`, `workspaceOwner`, and `hasAnyWorkspace`.
+The first two name and implement version 2. The selectors require a declared
+family and listed hold guard or effect. Unsupported versions supply no
+workspace authority. V2 carried checks require a full authenticated FactRef of
+a confirmed `hold@2:check` outcome. Runtime and replay share these rules.
 
-A confirmed v2 head answer binds a commit to the fork seed while the actual
-hold remains held at epoch 1. A null head fails with no-head. A closed hold
-fails with hold-closed. Fork answers carry only bounded ID/name metadata.
-The ledger selects the first eligible creation. A later confirmed unselected
-answer opens deletion for that immutable answer's exact ID/name. It changes
-no selected or final fork record, including after retirement.
-Hold end still advances the epoch, makes an instance past and opens revocation
-for live tokens. It does not automatically delete the fork or sweep unknown
-creations. Existing explicit retirement retains its guards.
+A confirmed head records the seed commit and opens fork while the actual hold
+is held at epoch 1. A null head gives `no-head`; a closed hold gives
+`hold-closed`. The first eligible fork answer selects its bounded ID and name.
+A late confirmed unselected answer opens deletion for that immutable answer's
+exact ID and name, without changing a selected or final fork record. Unknown
+fork answers remain unknown. Hold end advances the epoch, makes the instance
+past, and opens revocation for live workspace credentials.
 
-The head rule declares at most three effects and one operation, with closure
-42. Fork declares at most two effects and one operation, with closure six.
-These are maxima, not observed attempts. V1 retains its rule set and maxima.
-Both versions use existing forms, states and the operation ledger.
+The cleanup repair gives each version 2 fork attempt a token record with
+purpose `setup`. Its deterministic `workspace:<attempt-name>` handle binds the
+same operation and attempt as the host's private custody. The record starts
+`minting` before the provider call. A confirmed fork answer moves it directly
+to `revoking` and opens the existing revoke operation in that same outcome.
+This applies to selected and unselected answers. A refusal ends the setup
+record and leaves no issued credential in custody. An unknown answer preserves
+the minting record and handle. A late confirmed unselected answer owes both
+deletion and revocation.
 
-V2 carried ancestry checks require the complete authenticated FactRef and an
-entry of that exact scope, incarnation, sequence and hash. The source entry
-must be a confirmed `hold@2:check` outcome. A record kind or caller owner label
-alone supplies no authority. The original v1 carried-check branch remains.
+Only a confirmed revoke ends that token and deletes the held plaintext. An
+unknown revoke leaves the token revoking and its operation open. The host
+starts no retry or private outbox. Setup cleanup does not delay hold end or
+explicit fork retirement, and setup records do not consume the holder's
+workspace-token allowance. This statement covers fork setup credentials. It
+does not recast every temporary read token minted by the Artifacts helper as
+journal-owned or commission that separate convention.
 
-`docs/kernel.md` records the placement rationale under ruling adb1a6ed:
-confirmed head/fork answers change the records that runtime and replay derive.
-The kernel owns their meaning. The replaceable host supplies answers, not
-judgments. Repository discovery, provider requests and credential custody
-remain services in Scope/Git. This adds no capability name, scope kind, entry
-form or byte domain, closes no K item, and grants no archive policy permission.
-The registered-only census did not meet the condition for extending v1 in place.
+The new head rule declares four effects, one operation, and closure 78. The
+fork rule declares five effects, two operations, and closure 12. The
+creating-fork reserve is 78 for version 2 and remains 42 for version 1. These
+are declared maxima, not observed attempt counts. Historical tests before this
+repair exercised the earlier version 2 maxima of three effects and closure 42
+for head, and two effects and closure six for fork.
 
-### Explicit profiles and readiness
+`docs/kernel.md` section 7 names the additions and bounds. The kernel owns
+record meaning. Scope and Git supply answers, discovery, and custody. The
+registered-only census could not justify changing version 1 in place. This adds
+no bare capability name, scope kind, entry form, byte domain, or K item, and
+grants no archive policy permission.
 
-`issueJ4` and `changeJ4` retain the demo definitions' names and rows but select
-`hold@2` with `git-read@1`. Issue also keeps explicit release-hold. Change
-accepts v2 check facts for its manifest. Its publication path remains the
-Destination12 path. Creation and Rules activation must choose J4_DIGESTS
-explicitly. Defaults, older pins and the Destination17 evidence profile stay
-outside this enrollment.
+### Profiles, lineage, and custody
 
-The maintained `pin.mjs --j4` mode writes only the two new definitions and
-J4 digest module. Its actual generation reports 23,228 and 43,130 canonical
-bytes. Issue digest is
-`sha256:ff901d2e6d25794b1f3719e6786e3c5e73004f1009297dce5f72684b36ac2cc7`;
-Change digest is
-`sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7`.
-Generation is not a runtime test.
+`issueJ4` and `changeJ4` keep the demo definition names but explicitly select
+`hold@2` and `git-read@1`. Issue includes release-hold. Change accepts the
+matching foreign Issue check and publishes through unchanged Destination12.
+Activation and creation must choose `J4_DIGESTS`; defaults and old pins do not
+migrate. `pin.mjs --j4` writes only the two new definitions and digest module.
+Its recorded generation produced 23,228 and 43,130 canonical bytes:
 
-The service adds `Outside.ready` before the driver's durable sent mark.
-The workspace implementation parks dependent mints until the selected fork,
-held state and current instance are available. An unavailable dependency leaves
-that attempt recorded and unsent until a committed change permits reconsideration.
-The hook performs no provider I/O or native judgment. It changes no outcome
-rule or kernel eligibility. Existing Outside implementations default to ready.
+- Issue: `sha256:ff901d2e6d25794b1f3719e6786e3c5e73004f1009297dce5f72684b36ac2cc7`.
+- Change: `sha256:e6c55417a6d686f34ee05eaa477f0dd6918c997268deb43ae735a2f1d0d3bfb7`.
 
-### Authenticated lineage and private custody
+`Outside.ready` runs before the durable sent mark. Missing target state parks
+dependent mints as recorded and unsent until a later commit permits
+reconsideration. The hook performs no provider I/O or native judgment.
 
-`workspace-lineage.ts` authenticates the lane's own applied genesis, its
-Directory creation send, Register birth and found claim, and Destination birth.
-It checks exact scope/incarnation/source/send bindings and the pinned sibling
-cohort. It obtains repository host, namespace and branch from that lineage,
-not caller repository fields or mutable summaries. It uses at most five bounded
-immutable reads under a five-second monotonic budget and existing proof-byte
-bounds. Internal birth-by-name discovery supplies raw checked genesis metadata;
-the caller still authenticates lineage. It grants no actor read authority.
+`workspace-lineage.ts` authenticates the lane genesis, Directory send, Register
+birth and found claim, and Destination birth. It binds exact scope,
+incarnation, source, send, and sibling pins. Repository host, namespace, and
+branch come from these records rather than caller fields. Discovery uses at
+most five bounded immutable reads under a five-second monotonic budget.
+Internal birth discovery grants no actor read authority.
 
-`WorkspaceHost` accepts only explicit hold@2 operations on eligible lane pins.
-It verifies the opening entry's hash and exact operation identity before sending.
-A fork name includes lane incarnation, hold, opening and attempt, so a lost
-answer can remain unknown without reusing another attempt's name.
-Artifacts fork confirmation requires the exact seed commit on the branch and
-confirmed revocation of the binding's initial creation credential.
-Object closure reads use bounded count/bytes. Failure to prove revocation keeps
-the answer unconfirmed; it does not invent cleanup success.
+The service accepts declared hold version 2, not just the two J4 digests, and
+verifies the immutable opening. Fork names include lane incarnation, hold,
+opening, and attempt. The adapter confirms the seed commit and keeps setup
+plaintext for the journal-owned revoke. Partial initialization stays unknown.
 
-The host mints purpose-bound tokens for the selected fork or internal staged
-ref. It rechecks hold/instance eligibility and caps token lifetime by purpose
-and remaining hold time. Plaintext enters private SQL custody only after the
-judged live mint. It never enters a journal. The existing credential route
-checks the preparing actor and current held instance, returns only a workspace
-credential for the selected fork, and clears that plaintext before return.
-It does not deliver a room write credential to the performer.
-Expired or ineligible custody is not returned. Confirmed provider revocation
-settles the existing revoke operation; unknown revocation is not called complete.
+Workspace tokens request at most 900 seconds. Fork-read and staging tokens
+request at most 120 seconds. Remaining hold time can shorten those requests.
+The provider returns the recorded expiry. Private SQL custody accepts a judged
+live mint and never journals plaintext. Credential handoff requires the
+preparing key, actual holder, current held instance, and selected fork with
+matching ID and name. It clears plaintext before its one-time return. Expired
+or ineligible custody is not returned. Unknown provider revocation is not
+completion.
 
-Stage reads the selected fork with a scoped read credential and copies its
-bounded closure to the room staged ref using an internal write credential.
-It confirms by reading that exact ref. Check uses a bounded staged-ref snapshot
-and maintained ancestry walker. Publication keeps the Destination's existing
-checks and push path. Child-concern workspaces, GitHub workspace hosting,
-automatic fork deletion and unknown-fork sweeps remain outside J4.
-No current result establishes actual provider token enforcement or connectivity.
+Stage copies the selected fork's bounded closure into the room staged ref with
+separate scoped read and internal write credentials, then confirms that exact
+ref. Publication retains the Destination's checks and push path. The performer
+receives no room write credential. Child-concern and GitHub workspaces,
+automatic deletion at hold end, and unknown-fork sweeping remain outside J4.
+
+### Closed repair captures and the production branch fix
+
+The producer `/private/tmp/artroom-j4-review-repair-evidence-20261030` retains
+25 closed focused captures across the original index and supplement. Each keeps
+its command, source index, streams, receipt, and clean guards. Paired controls
+pass only when ordinary assertions distinguish the controlled change and source
+is restored. They do not pass the changed source.
+
+At `53a7f211b83ebdf406c0deba3674a3dc33d77841`, scope-pool preparation closes
+0/0 and security-owner-1 passes ten cases. The first credential test compiler
+fails because its fixture assigns null where FieldValue excludes it. At
+`9a23e92b7a5a0e00f9e83c892ba765a7de825852`, the corrected compiler passes and
+workspace-credential-owner-1 passes all three cases against the real
+WorkspaceHost and SQL custody. The preparing-key control's unchanged baseline
+passes three. Removing the checks causes the named wrong-key assertion to fail
+while the other two pass, and the control restores source. The wrapper
+therefore closes 0/0. This is no provider-enforcement proof.
+
+At cleanup source `497b1604825b2196f562b6a592f4f09323b2d5f8`, the Scope test
+compiler passes, the security owner passes ten, the derive file passes five,
+and the three host files pass nine cases. These runs precede the later
+production branch fix. The native test compiler passes at its five recorded
+checkpoints. It neither executes tests nor generates Page output.
+
+Native cleanup owners 1 through 5 all fail three cases and remain failed. Owner
+1 observes retry rather than the expected recorded answer. Owner 2 observes an
+unavailable offer. Owners 3 through 5 exceed the finite observation bound. The
+intervening fixture and diagnostic changes do not turn those captures into
+passes.
+
+Owner 5 exposes a production defect: the authenticated branch is stored as
+main, but WorkspaceHost passes that bare name to branchRef, which requires
+refs/heads/main. The fix at `17c14b118ecf3274109727882908bb0b09a69383` adds the
+prefix at both head and check reads and updates its security seal. The three
+tests stay unchanged. Native owner 6 then passes all three with clean source
+guards. Its receipt SHA-256 is
+`f6a7dd5dcc96fe40b6885ed6784c593dad36d3a3214909fb7584f281f0170b2e`. This is a
+host fix, not a relaxation of the witness or a native rule change.
+
+The lane genesis, acts, outcomes, ledger, and SQL are native. Ancestors,
+authority, clock, provider, and Git packets are stand-ins. This proves no real
+Membership, Directory, provider, or physical drain. Its three cases show an
+open native revoke with held plaintext after an unanswered provider revoke,
+later confirmed cleanup, a refused attempt with no custody, and late unselected
+confirmation owing both deletion and revoke.
+
+The revoke control at that same source first passes the unchanged three cases.
+Removing the setup revoke opening then causes two ordinary invariant assertions
+to fail: the orphan setup credential has no native revocation operation, and
+the late unselected answer opens deletion without revoke. The refusal case
+still passes. The control restores the source and closes 0/0. Final Scope test
+compilation and the ten-case security owner also pass at that exact head.
+Neither compiler run generates Page output.
+
+Page generation runs separately at `5dc988c853123edfb1cc5f38c402241231ebd044`
+through `npm run build --workspace @generalbusiness/dap-page`. Its receipt
+records exit 0, direct-child closure, group absence, and only assets.ts
+changing. The output grows from 1,204,952 to 1,205,748 bytes, with SHA-256
+`310205a14477933b9b69bb32a6e28d20147421e12760cece9c018eba6833174d`. The gate
+retains it at `r/gate-final-repair-1/source/apps/room/page/assets.ts`. At
+`fa529b41ca9d531b7168ea6ed8d7a8bad8926f96`, its owning asset case passes. The
+later WorkspaceHost-only branch fix does not enter the Page bundle. The passing
+final gate includes the committed asset's owner.
+
+The provider dry-info run observes only existing room-b information in dap-demo
+through Wrangler 4.147.0. The managed Wrangler dev child exits 143 during
+SIGTERM cleanup; both outer and channel commands exit 0. Group absence and
+natural pipe closure are observed. Only the public receipt and channel-result
+projection enter the evidence. The run creates no fork or token, writes or
+deploys nothing, and proves no live J4 completion, new Native authority, or
+physical drain. Private streams and custody stay out.
 
 ## Historical observations and debug qualifications
 
-The fixture-bound judge baseline and its earlier inconclusive fork setup remain
-separate in the table. Census reports only 11/11/8 registered rows, not a full
-legacy negative. Health version IDs do not authenticate Git source.
+The first pure judge attempt includes an inconclusive fork setup. The corrected
+judge case passes separately. Census observed only 11, 11, and eight registered
+rows, without a complete legacy negative. Health version IDs do not
+authenticate Git source.
 
-The old room's accepted founding at sequence 7 survives its early wait and
-later pre-seat Membership refusal. The sixteen-minute legacy Register test
-is not that exact Membership witness. No universal packet-impossibility claim
-follows. Planner's fresh-room create, activate and readbacks close 0 in one
-session. Native namespace dap-demo corrects the old nominal artroom-demo field.
-Deployed Git source remains planner-attested; Register@17 is an inferred inverse
-pin, not an independently authenticated Register definition in that observation.
+The original room's accepted sequence-7 founding survives its early wait and
+later pre-seat Membership refusal. The sixteen-minute legacy Register test is
+not that exact Membership case and proves no universal packet impossibility.
+The planner's fresh-room create, activation, and readbacks close 0 in one
+session. Its actual namespace is dap-demo, correcting the old artroom-demo
+designation. Deployed source is planner-attested. Register17 is an inferred
+inverse pin in that observation, not an independently authenticated Register
+definition.
 
-The actual offline generator reproduces observed commit
+The offline generator reproduces observed commit
 `29c702da13a1805b22a04adeee2a19db411cc9ed` and tree
-`c9c0383248ddfdd0289bc101bd0206d1c3d88deb` with DERIVED provenance.
-Its input is the unchanged public head projection. The sequence-10 founding
-claim is projected, not an independently settled acknowledgement. No provider
-object/ref read follows from that derivation.
+`c9c0383248ddfdd0289bc101bd0206d1c3d88deb`. This is DERIVED provenance from the
+unchanged public head projection. Its sequence-10 claim is projected, not
+independently settled. It establishes no provider object or ref read.
 
-The first hosted preparation at S fulfills first-witness ordering.
-Its actual lane is
+The baseline hosted staging witness satisfies the required ordering before
+extension. Its actual lane is
 `sc_5q66w72ggsq5sp73p5vghop57h6utz4cgg75niey2kff252bho7q`, incarnation
-`in_e4zs4j3vyuvb3unek7o627jyga`. The instance at sequence 5 has epoch 1 and
-uses its lane ScopeRef as the Task stand-in under ruling 70d1c9ab. No native
-Task or export is claimed. A future real Task requires a new instance and a
-past transition, not rewritten old records.
-Stage preparation at sequence 6 establishes root 1. Stage operation 6:0 has
-attempt bound three; mints 6:1 and 6:2 each have bound one. These are not actual
-attempt counts. No outcome appears through head 6 in the bounded window.
-The staging outcome remains pending. Joined logical Fetch/body tasks establish
-no provider send, refusal, unsent status, physical cancellation or drain.
+`in_e4zs4j3vyuvb3unek7o627jyga`. The sequence-5 instance has epoch 1 and uses
+that lane ScopeRef as the Task stand-in under ruling 70d1c9ab. It claims no
+native Task or export. A future Task needs a new instance and a past
+transition, rather than rewriting these records.
 
-The new debug runs preserve separate failures and passes. D01 has eight passes
-and one failed draft-effect expectation; the draft used local operation {k:0}
-where the fixture expected its numbered string. D02 passes five cases.
-D03 has two passes and one failed foreign-fact fixture assertion; D04 passes
-three cases. Their recorded production snapshots stay unchanged between each
-pair while the named test bytes change. This does not relabel the first runs.
+The sequence-6 preparation establishes root 1. Stage operation 6:0 has an
+attempt bound of three. Mints 6:1 and 6:2 each have a bound of one. These are
+bounds rather than actual counts. No outcome appears through head 6 in the
+observation window. Stage remains pending. Joined logical Fetch and body tasks
+prove no provider send, refusal, unsent status, physical cancellation, or
+drain.
 
-D12 fails during localhost listen setup; D13 later passes the two readiness
-cases. D33 first reports integration type errors and D28 a missing held field
-in the lineage fixture. Later compiler records pass. All intermediate records
-remain in the table and index, including repeated compiler passes.
-Native v1 (D37) fails setup with EPERM and no case summary. V2 (D38) reaches
-one failed Rules-policy assertion. V3 (D39) passes one complete native scenario
-after the fixture supplies explicit first extents. Its real Scope/Membership/
-Rules/Destination ledger and authority checks cover two agent holds, distinct
-selected forks, lane-kind instances, one confirmed revoke and the other's
-manifest publication through Destination12. Provider replies, credentials and
-Git walking remain labelled stand-ins. This is no live adapter enforcement test.
+The table keeps every debug failure and later pass. D01 uses local {k:0} where
+the fixture expects a numbered string; D02 passes separately. D03's
+foreign-fact assertion fails before D04 passes. Each pair keeps unchanged
+production bytes while its test changes. D12 fails on localhost EPERM before
+D13 passes. D28 and D33 retain their type errors despite later compiler passes.
 
-Gate-source-1 at C completes with exit/capture 1/1 and clean unchanged source.
-All prechecks, full typecheck and kernel stage pass. Node observes 80 cases:
-78 pass and two fail in security-entry-points.test.mjs on the shared Scope
-object module seal. Expected seal is
-`54cd1a42de7dc10191191a46a03326ee8c7ecd5ee3afed596bdace1e37fc5d00`;
-actual is `b13c0ec0476fbbf1155d85eeaecedf1f9917cb9063078955cfe11712bd15015d`.
-Counting, plain and native stages remain unreached.
-Seal checkpoint E is `e9da1ba8579989a5f0193deb94fc1dd37fbace6b`, tree
-`26f2dd8bd35ba28a40fbe3ff62fe3f67b905c97c`.
-It adopts the reviewed owner seals in the failing test file and explanatory
-security documentation. Its whole security owner passes 10/10.
-This does not turn the original C gate into a pass.
+Native debug D37 fails setup with EPERM and no case summary. D38 fails its
+Rules-policy assertion. D39 passes after the fixture supplies first extents.
+Its real Scope, Membership, Rules, and Destination records cover two holds,
+distinct selected forks, lane-kind instances, revoke, and chosen-manifest
+publication. The fixture uses person members with role agent. This establishes
+no controlled agent-kind proof. Provider replies, credentials, and Git walking
+are stand-ins, so this is no live adapter enforcement result.
 
-The separate unreached-stage follow-up at E fails. Counting passes 56 cases.
-Plain passes 3,144, fails one and skips one across 329 files; Native remains
-unreached. Only the Page asset case fails: the committed 1,187,777-byte module
-has SHA-256 553d0303a89d30dc57b526691075bdff9dde7c89c8d6414e15b6f988e8a636ad,
-while the maintained build expects 1,204,952 bytes with SHA-256
-`a859bd6bf1af271585fb17179e3f182a53a25c9a88bd0d2dc5db8cb9653c3b67`.
-The Page bundle imports the updated capability code, so its served module needs
-regeneration after this change.
+The gate at implementation C closes 1/1 with clean unchanged source. Prechecks,
+typecheck, and kernel pass. Node reports 78 passes and two security-seal
+failures. The expected parser seal is
+`54cd1a42de7dc10191191a46a03326ee8c7ecd5ee3afed596bdace1e37fc5d00`; the actual
+seal is `b13c0ec0476fbbf1155d85eeaecedf1f9917cb9063078955cfe11712bd15015d`.
+Counting, Plain, and Native remain unreached. The seal follow-up at E passes
+its security owner ten cases. The original gate stays failed.
 
-The maintained build at F03 exits 0 and changes only apps/room/page/assets.ts.
-It produces exactly the expected bytes. That production output is committed at
-A `63400786c6ff064957151b35b311883669a6fe9e`, tree
-`da672c657e6c31eacb75b67e73cdeec3306ff281`.
-At A, the asset owner passes its one case and the full typecheck passes.
-Ruling 1d0ffcab requires a new full gate: generated production output is outside
-the isolated-test exception. These partial passes supply no aggregate gate pass.
+The separate continuation at E also closes 1/1. Counting passes 56 cases. Plain
+reports 3,144 passes, one failure, and one skip across 329 files. Native
+remains unreached. Only the Page asset assertion fails. Its committed module
+has 1,187,777 bytes and SHA-256
+`553d0303a89d30dc57b526691075bdff9dde7c89c8d6414e15b6f988e8a636ad`. The
+maintained build expects 1,204,952 bytes and SHA-256
+`a859bd6bf1af271585fb17179e3f182a53a25c9a88bd0d2dc5db8cb9653c3b67`. The Page
+imports capability code, so this source change requires regeneration.
 
-At F, page-regeneration-final-1 reproduces the committed output with clean
-unchanged source guards. It is a source-generation capture, not a gate.
-Gate-final-1 at F now completes with exit/capture 1/1, clean unchanged source,
-no timeout and no dropped bytes. It takes 1,298.392491500 seconds elapsed and
-2,666.825785 seconds host child CPU. Installation skips against the verified
-lock stamp. All prechecks, typecheck, kernel, Node 80 and Counting 56 pass.
-Plain reports 3,145 passes and one skip.
-Native reports 244 passed files and one skipped file, with 853 passed cases
-and two skipped cases. One unhandled RPC `EnvironmentTeardownError` closes
-resolve while pending, so Native fails and its terminal evidence is partial.
-Vitest attributes the error to the time join-version.scope.test.ts was running;
-that attribution does not establish that the file itself threw or caused it.
-No aggregate pass follows from the case counts.
+The recorded F03 build runs `npm run build --workspace
+@generalbusiness/dap-page`. It exits 0 and changes only assets.ts, producing
+those expected bytes. The output lands at checkpoint A, where the asset owner
+and full compiler pass. Ruling `1d0ffcab14471eaffb59da72baaff2b0cc298094`
+requires a new full gate because generated production output falls outside the
+isolated-test exception. The later page-regeneration-final-1 capture at F
+reproduces the committed output under clean source guards. Generation alone is
+no gate pass.
 
-The unchanged-F page-join-teardown-diagnostic-1 closes 0/0 and prints two passed
-cases. Its stdout then prints the same uncaught RPC teardown error after the
-Vitest summary. Zero exit is not a clean diagnostic result.
-It is triage evidence, not a successful repair or a passing gate follow-up.
-The later R records below remain separate from this unclean diagnostic.
+The full gate at F closes 1/1 with clean unchanged guards, no timeout, and no
+dropped bytes. The table retains its wall and host CPU measurements.
+Installation skips against the verified lock stamp. Prechecks, typecheck,
+kernel, Node 80, and Counting 56 pass. Plain reports 3,145 passes and one skip.
+Native reports 244 passed files and one skipped file, with 853 passed cases and
+two skipped cases. An unhandled RPC EnvironmentTeardownError closes resolve
+while pending. Native therefore fails and its terminal evidence is partial.
+Vitest's attribution to join-version.scope.test.ts does not prove that file
+caused or threw the error. Case counts establish no aggregate gate pass.
 
-R is `80a742bdb052fca2bca4ec12917d1961f6e19b53`, tree
-`7d5f461e16e1d34acdc6aa5a90a74395657cfc2a`.
-Only apps/room/page/test/join-version.scope.test.ts changes from F to R.
-Its immutable Git diff has 3,854 bytes and SHA-256
-`3b7634c3649444ee78e4f5a4df728ef3aac03a7bcb99bc40e6ce21357230686f`.
-The repaired test has 6,193 bytes and SHA-256
-`a97916c1e3fd3923de8ac87125f6d1c81e8d3a7ed3ec9c0a3e2c38f9b11dfb60`.
-The fixture captures external lifetime ownership, discovers the actual Inbox
-seeds from Membership history, and uses the existing bounded scheduled-callback
-join before releasing ownership. Failed setup or join retains ownership.
-The two cases, original assertions and deadlines stay intact. Imported helper
-code, production, configuration, dependencies and shared fixtures stay unchanged;
-the test adds imports of existing helpers. No other test imports this file.
-Independent exact-diff review reports PASS; that is source review, not runtime
-acceptance or proof of the original error's precise cause.
+The unchanged-F diagnostic closes 0/0 and prints two passed cases, then the
+same uncaught teardown error. Its zero exit does not make it a clean result or
+successful repair. Its row remains separate from the later repair.
 
-At R, the changed Page scope compiler and whole two-case owner both close 0/0
-with clean source guards. Neither captured stream contains the teardown error;
-the owner's stderr is empty. These are passing own follow-ups only.
-F's full gate remains failed, and every stage had reached its end.
+Only apps/room/page/test/join-version.scope.test.ts changes from F to R. The
+adopted index records a computed immutable Git diff of 3,854 bytes, with
+SHA-256 `3b7634c3649444ee78e4f5a4df728ef3aac03a7bcb99bc40e6ce21357230686f`.
+This cites computed metadata, not a retained diff file. The repaired test has
+6,193 bytes and SHA-256
+`a97916c1e3fd3923de8ac87125f6d1c81e8d3a7ed3ec9c0a3e2c38f9b11dfb60`. Its two
+cases, assertions, and deadlines stay intact. Production, dependencies,
+configuration, and shared fixtures do not change. No other test imports it.
+Independent exact-diff review reports PASS as source review, not runtime proof.
 
-The test restored its fixture settings through synchronous life.release()
-without joining scheduled callbacks, and the two created Inboxes were absent
-from its tracked handles; the captured run then reported a pending Vitest
-resolve RPC at teardown. Production uses neither this test-owned lifetime nor
-Vitest's module resolver, and Membership/Inbox code is unchanged.
-The exact callback that triggered the RPC error remains unknown.
-The source comparison and clean R owner streams support this bounded repair;
-they establish no physical drain.
+The test had restored settings through synchronous life.release() without
+joining scheduled callbacks, and omitted the two created Inboxes from its
+tracked handles. The repair uses external lifetime ownership, discovers those
+actual Inboxes from Membership history, and joins bounded callbacks before
+release. Failed setup or join keeps ownership. Production uses neither this
+test-owned lifetime nor Vitest's resolver. The precise callback that triggered
+the RPC error remains unknown.
 
-Ruling `458166daf08ebd3d36d56c81604ffd182329bc0d` resolves question da1ba9e4.
-Root read it in full and retired that question in
-`1b9abf04d6af1f149a5618fd58b25754d4a2da02`.
-The docs/testing.md isolated failing-test exception applies. The checker reads
-failed gate F with the separately passing R compiler and whole-owner records.
-No further full gate or stage runs for this repair; no stage was unreached.
-The ruling reads condition 1 of `1d0ffcab14471eaffb59da72baaff2b0cc298094` as
-including this maintained exception. The Page production regeneration had
-required a new gate; R changes only the isolated failing test.
-Review must use R or a later documents-only commit. Any source change beyond
-this test repair requires a new full gate. This disposition resolves test scope,
-not exact-head review, evidence closure or live J4 acceptance.
-
-The closed runner unit `operator-inputs/gate-final-1-runner` retains 27 leaves,
-50,920,138 bytes. Its binding SHA-256 is
-`4429821baaa6f0fd6860ef0a26015085a83576748fe3e7595199617f75b2a4a3`.
-The adopted index checks the retained copies against that binding; this draft
-reopens no original runner temp directory. Retention adds no test result,
-physical drain proof, final RAW seal or hosted acceptance.
+At R, the compiler and whole two-case file close 0/0 with clean source guards.
+Neither stream contains the teardown error, and stderr is empty. The clean
+follow-ups support this bounded repair, not physical drain or a retroactive
+full-gate pass. Ruling `458166daf08ebd3d36d56c81604ffd182329bc0d` accepts that
+isolated repair with the failed F gate. It requires no further gate for that
+test-only change. The new checker-requested production repair falls outside
+that exception and needs another full gate.
 
 ## Evidence
 
-RAW is the retained public evidence root
-`/Users/hughpyle/play/artroom-evidence/2026-10-30-j4-workspaces-source`.
-P resolves to RAW/producer. W remains the original execution checkout,
-`/Users/hughpyle/play/artroom/.builder-worktrees/j4-workspace-holds-20261030`;
-W is not evidence storage. For formal label L, C(L) resolves to
-P/L/command.json, which preserves the original execution command.
-The first 23 rows use S; gate-source-1 uses C. Later formal rows name E, A, F or R.
-F03 is the intentional generator operation at base E, not a clean-source test.
-Their deadlines, elapsed/host CPU, both streams and receipts retain the compact
-scaffold's full digest cells. The command display is an index, not an invocation.
-Program aliases resolve to selected public copies under P/operator-inputs.
-J1 is baseline-judge-source; J2 is baseline-judge-source-v2.
-CTX(v) is scratch-context-source-v plus v, for v = 2, 3 or 4.
-PROBE(1) is staging-probe-source-v3/prior-v1/probe.mjs.
-PROBE(2) and PROBE(3) are staging-probe-source-v2/probe.mjs and
-staging-probe-source-v3/probe.mjs. TREE(1) is
-candidate-tree-source/derive-candidate-tree.mjs. TREE(2) and TREE(3) use
-candidate-tree-source-v2 and candidate-tree-source-v3 with that same filename.
-Each unit's source-binding.json pins its copied programs and source inputs.
-These aliases identify evidence copies, not commands to execute.
-JUDGE, CENSUS, HEALTH, CHECK, AST, GENERATE and HOST name their recorded
-Vitest, CLI census, curl health, Node syntax, Python AST, offline generator and
-hosted phase commands. C(L) retains every original argument and environment
-assignment. No private path from those records was followed for this draft.
+The new repair collection is
+`/Users/hughpyle/play/artroom-evidence/2026-10-30-j4-review-repair`.
+The sealed historical collection is
+`/Users/hughpyle/play/artroom-evidence/2026-10-30-j4-workspaces-source`. It has
+1,471 files and 98,061,085 bytes. Its existing root SHA256SUMS has 196,996
+bytes and SHA-256
+`375a2d0078400d4c418c817f741ee08712b0238001fe945e7be04742911fc936`. No
+historical subdirectory has its own listed SHA256SUMS. The new collection binds
+this old root once and keeps it unchanged.
 
-I is RAW/adopted/public-input-index.json: 158,115 bytes, SHA-256
-`e5db0688911d458ae56727528fffc0867475d8f398728422a8848d1aca06b657`.
-Its retentionMapping maps sixteen public roots to RAW aliases. The complete
-explicit selection is retained as RAW/packaging-plan.json; the committed
-manifest, not a matching root alone, names every selected file.
-It preserves all original path fields. Resolve retained payloads through that
-mapping after restart. Original argv, cwd and source paths remain historical
-metadata; they do not require the execution checkout or scratch programs.
-Within a D or F03 row, I denotes its indexed record; I.argv/cwd are original.
-I.stdout, I.stderr and I.output resolve to outputs[stdout.log],
-outputs[stderr.log] and outputs[output.log]. I.record pins the original receipt
-or result. These objects retain full paths, bytes and SHA-256 without truncation.
-U means an unrecorded deadline. The index pins C's 49, F's 52 and R's 53 files.
-It preserves the F-to-R one-file diff binding.
-Its ten follow-up records preserve exact commands, guards, streams and receipts.
-Its runnerRetention section indexes the 27 copied runner leaves and binding.
-It is an adoption index, not a final manifest or validator result.
+The copy plan selects 317 old files, 4,034,704 bytes. Source verification in
+`n/citation-readback.json` checks their sizes, hashes, nonlink status, and
+read-only modes. It created no copies or seal. Package verification checks the
+destinations in the separate repair collection.
 
-D01–D40 are mutable debug or source-generation observations, not checks at a
-clean final checkpoint. Selected-source guards apply only where recorded.
-Receipt HEAD/tree can be S while uncommitted source differs.
-Missing guard, closure or CPU stays unknown. Native v1–v3 and pin generation
-retain merged output. D40 is source generation, not acceptance.
+Ruling `4e199bd8cf50191b892fc2372afb13d1d5f0aa05` requires cited file rows and
+one binding for each whole cited collection. The copy map preserves original
+relative paths, sizes, and hashes. Internal index dependencies are not
+automatically direct citations. The old adopted note stays historical.
 
-Formal exit pairs give command/capture status; debug rows give one actual exit.
-E means zero bytes with SHA-256
-`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
-Formal elapsedSeconds includes post-run guards; hostChildCpuSeconds includes
-collector Git children, not unknown guest CPU. Debug timing uses each record's
-own fields. Four early judge debug CPUs and adapter debug CPUs are unrecorded.
-No sum here is one observed pipeline wall time. Machine/load/cache remain
-unrecorded in these inputs; they establish no controlled performance result.
+The adopted index is `adopted/public-input-index.json`, 158,115 bytes, SHA-256
+`e5db0688911d458ae56727528fffc0867475d8f398728422a8848d1aca06b657`. It maps
+sixteen original public roots and pins source snapshots, ten follow-ups, and
+Page repair metadata. Its runner binding covers 27 copied files and 50,920,138
+bytes, with digest
+`4429821baaa6f0fd6860ef0a26015085a83576748fe3e7595199617f75b2a4a3`. This is
+retained evidence, not another run or physical-drain proof.
 
-Formal collector pin is
-`3de7e83a5376d9d7897d911f4373949d1be1e82bc62cf0981074424d83e52bed`.
-Its bounds are 40,000 files, 2 GiB total, 128 MiB snapshots and 128 MiB per stream.
-Health adds 4/8-second connection/transfer bounds and a 65,536-byte HTTPS response
-limit with no redirects. The judge config has one worker and ten-second cases.
-Hosted inner bounds are 180 seconds after setup, 96 requests, 1 MiB per response,
-8 MiB total, 8,192 chunks, sixteen history pages, 512 entries and twelve polls.
-Eight-second abort requests and a five-second logical join prove no physical drain.
-Debug deadlines are unrecorded here. Gate's outer ceiling is 7,200 seconds.
+The final index is `n/index.json`, 37,748 bytes, SHA-256
+`241a0a10a9e291d6857f184f5146301887f6919a48a15545e440bd2a498b35cb`. It binds
+closed captures, gate evidence, reviewed programs, Page generation, provider
+metadata, and host observations. It excludes this note and the new seal. Base
+and focused supplements are `n/focused-base.json` and
+`n/focused-supplement.json`. The final note is `n/note.md`. `n/old-map.json`
+resolves the 317 historical aliases to original paths.
+
+All 74 attempt rows below remain unchanged. Their compact keys locate files:
+
+- RAW means the old root. P means its producer directory. W names the old
+  execution checkout, not evidence storage. C(L) means the producer capture's
+  command.json for label L, with every original argument and environment.
+- I means the adopted index. In a debug row, I.argv, I.stdout, I.stderr,
+  I.output, and I.record locate that record's command, streams, and receipt.
+  U means an unrecorded deadline. E in a stream cell means zero bytes with
+  SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+  Source checkpoint E has a separate meaning fixed by its column.
+- Program keys J1, J2, CTX(n), PROBE(n), and TREE(n) resolve through the
+  index's retentionMapping.programAliases. Each row supplies the exact
+  retained program path and source binding. The citation inventory and copy
+  map preserve that resolution without following original scratch paths.
+
+Each program unit retains its source binding. JUDGE, CENSUS, HEALTH, CHECK,
+AST, GENERATE, and HOST identify the recorded command kinds. The first 23
+formal rows use the baseline. D01–D40 are mutable debug or generation runs, not
+clean final-head checks. F03 intentionally generates source. Only each run's
+recorded guards apply. Unknown CPU, closure, or source state remains unknown.
+No total of these timings describes one measured pipeline.
+
+Formal exit pairs give command then capture exit. Debug rows give one exit.
+Formal wall time includes post-guards and host CPU includes collector Git
+children, not unknown guest CPU. The inputs establish no controlled load or
+cache result. The collector's SHA-256 is
+`3de7e83a5376d9d7897d911f4373949d1be1e82bc62cf0981074424d83e52bed`. Its limits
+are 40,000 files, 2 GiB total, and 128 MiB for snapshots and each stream. The
+historical gate timeout is 7,200 seconds. Health bounds are four-second
+connect, eight-second transfer, 65,536 response bytes, and no redirects. Judge
+uses one worker and ten-second cases. Hosted staging bounds are 180 seconds, 96
+requests, 1 MiB per response, 8 MiB total, 8,192 chunks, sixteen pages, 512
+entries, and twelve polls. Its eight-second abort and five-second logical join
+prove no physical drain. U marks unknown deadlines.
 
 | Capture or debug ID | Command record/index | Outcome; exits | Deadline s | Wall; host CPU s | Stdout or merged reference | Stderr reference | Receipt digest or indexed record |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -426,43 +461,71 @@ Debug deadlines are unrecorded here. Gate's outer ceiling is 7,200 seconds.
 | `page-join-types-followup-1`; R | tsc Page scope; C(L) | PASS 0/0; changed Page scope compiler | 180 | 0.525856500; 2.417195 | E | E | `88fcc43df72d65d04d9113b3d07d33b5708a0366dcd2139324fdf961640c023c` |
 | `page-join-owner-followup-1`; R | Vitest native join-version; C(L) | PASS 0/0; whole owner 2 cases; no captured teardown error | 180 | 5.264865166; 6.801055 | 260; `373a283edaf20b933cf7ad168951f7ae29fcc82eae8f50101ed3f4e5b7d2ee6a` | E | `74d0d56960a27801782824ccc0846bdcad12a0a9ce456cadc9e39183db16e814` |
 
+## Final repair gate
+
+The full gate at `17c14b118ecf3274109727882908bb0b09a69383`, tree
+`58526e56594dc5b1aaa736d2df5df94fd142aafb`, passes with complete 0/0 capture
+and clean unchanged source guards. Stdout contains 6,377 bytes, stderr is
+empty, and neither stream drops bytes. There is no timeout or unhandled
+teardown error. All prechecks exit 0. The old 326,560-byte manifest still
+produces one advisory; the citation-only recut addresses its form. Kernel
+passes. Node passes 80 cases, Counting 56, Plain 3,145 with one skip, and
+Native 859 with two skips. Plain has 329 passed files. Native has 246 passed
+files and one skipped file. No stage remains unreached.
+
+`r/gate-final-repair-1/command.json`, `source-index.json`, `receipt.json`,
+`stdout.log`, and `stderr.log` retain the actual outer capture. The inner stage
+record is `g/test-evidence/stages.json`, and `g/test.log` retains the terminal
+counts. The index binds all 27 inner files, totalling 50,890,135 bytes. Its
+receipt has SHA-256
+`e67f0aa72a10e70b06a0f2ecfcdedb93a599f9cfef60a3f722b2caf4882d84f0`.
+
+Elapsed time is 1,045.522246917 seconds. Collector wall time is 1,045.667600208
+seconds. Host child CPU is 2,214.762076 seconds, including 2,214.623919
+command-only seconds. Guest CPU is unknown. Timing retains 72 unknown or suite
+observations, zero contradictory records, and partial Scope timing. The pass
+establishes no complete timing or physical drain.
+
+The host is Mac17,7, 18 physical CPUs, 64 GiB RAM, macOS 27.2 arm64, Node
+26.13.0, and npm 11.20.0. Load 3.41, 3.19, and 2.35 was observed at 14:29:46
+UTC during the gate. Initial sandbox sysctl probes were refused; the elevated
+follow-up succeeded. Earlier focused tests mean caches were not cold. Exact
+cache state remains unknown. The index binds both host observations. This is
+cost context, not a controlled benchmark.
+
 ## Open limits and owning request
 
-Ruling `241248a9df92998e89fa57e6a50bfab6c3a5c854`, acknowledged by retirement
-`0d7d2b99e64fa604a6e4155f847fcdc650d16d34`, separates source landing from live J4.
-It requires source-readiness review and landing first. The original request
-`0c3091fa54f38d3709dcb7a741d6754c420ad10c` and promise
-`710449ccd016033f1a6b40da348060ad7fe64c4a` close on that landing under workroom
-rules. Their closure records source landing, not completed live J4 acceptance.
-Planner then deploys all three Workers from landed Main and files the live
-witness as a separate report. No unlanded candidate rehearsal deployment is
-part of that sequence. A live defect becomes a child request.
+Ruling `241248a9df92998e89fa57e6a50bfab6c3a5c854` requires source review and
+landing before the planner deploys all three Workers from landed Main and runs
+live J4. Request `0c3091fa54f38d3709dcb7a741d6754c420ad10c` and promise
+`710449ccd016033f1a6b40da348060ad7fe64c4a` close on source landing under
+workroom rules. Their closure does not establish live acceptance. A live defect
+becomes a child request.
 
-Exact-head source-readiness review remains pending.
-Test scope is resolved by ruling 458166da. C and F gates and E continuation
-remain failed. R's compiler and whole owner pass their own bounds and supply
-the isolated follow-up that the checker assesses with failed F.
-The first hosted ordering requirement is fulfilled; the S preparation has no
-observed outcome. Live J4 still requires two holders pushing to separate real
-forks, actual token refusal after hold end, and publication from the chosen
-fork after deployment. Local provider stand-ins do not prove those conditions.
-Archive/G17 enrollment, child-concern/GitHub workspaces, automatic deletion and
-unknown-fork sweeping remain outside scope.
+The full gate and focused native cleanup, control, compiler, and security
+checks pass at the branch fix. Page generation and its owner pass at their
+recorded earlier checkpoints. Replacement exact-head review remains pending.
+Earlier failed native attempts and gates keep their original results.
 
-The checker must assess the exact review head. That head changes only this
-note and its evidence manifest from R; the review request records both tree
-hashes. Source and tests remain R's. Live J4 remains open for its separate
-post-landing deployment and report under ruling 241248a9.
+Live J4 requires two holders pushing to separate real forks, an old token
+refused after hold end, and publication from the chosen fork. The local
+scenario uses person members with role agent and provider, credential, and Git
+stand-ins. It establishes no controlled agent-kind proof. The lane remains the
+Task stand-in. The baseline preparation still has no observed outcome.
 
-Public evidence is copied with the retained packager, checked against its
-complete byte/hash inventory, and made read-only after the last write.
-RAW/SHA256SUMS covers all retained payloads except itself; the committed
-manifest also covers SHA256SUMS:
-`notes/implementation/evidence/2026-10-30-j4-workspaces-source.manifest.json`.
-The manifest names F for the full gate. Each command retains its actual
-checkpoint, including BASE preparation and R's isolated follow-ups. Copying
-changes no outcome. Earlier drafts and inspections remain in RAW/adopted/history.
-Keep the directory read-only for at least 30 days after landing. Later removal
-requires a planner act naming the manifest. Private vaults, operator homes,
-keys, sessions, plaintext credentials and original hosted request bodies are
-withheld. Metadata paths grant no permission to follow or copy their contents.
+Ruling `e7962aa7693d19410b7554503633e850e4b9c3cd` assigns setup cleanup to hold
+version 2's existing token and revoke rules. Its live timeout control applies
+only if the provider offers a way to force it. Otherwise the scope witness
+supplies that control and the final note must say so. No live provider fault
+injection has occurred in this draft. The ruling commissions no change to the
+separate temporary read-token helper convention.
+
+Keep both evidence collections read-only after their last writes, for at least
+30 days after landing. Later removal needs a planner act naming the manifest.
+Private homes, vaults, keys, sessions, credentials, and original hosted request
+bodies stay outside public retention. Historical metadata paths grant no
+permission to follow or copy them. After successful package readback, the
+selected files reside in the new retained collection. The old collection stays
+unchanged. The separately committed citation manifest supplies actual counts,
+bytes, seal digests, and the tested checkpoint. The reporting Source records
+the documentation-only review delta. The manifest lives outside the retained root.
