@@ -1,7 +1,7 @@
 /** Private setup plan and immutable phase receipts. No invitation is public output. */
 import { lstatSync, readFileSync } from "node:fs";
 import { isAbsolute, join, resolve } from "node:path";
-import { canonicalize, isScopeRef, parseStrict, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, isScopeRef, parseStrict, same, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import type { Store } from "../../packages/cli/src/store.ts";
 import { isHandle } from "@generalbusiness/dap-platform";
@@ -18,7 +18,6 @@ export interface SetupPlan {
   handles: { owner: string; "agent-a": string; "agent-b": string; checker: string };
 }
 export type Identity = keyof SetupPlan["handles"];
-const same = (a: unknown, b: unknown) => canonicalize(a) === canonicalize(b);
 const closed = (x: unknown, fields: readonly string[]): x is Record<string, unknown> => x !== null && typeof x === "object" && !Array.isArray(x) && Object.keys(x).length === fields.length && fields.every(field => Object.hasOwn(x, field));
 const label = (x: unknown): x is string => typeof x === "string" && /^[a-z][a-z0-9-]{0,47}$/.test(x);
 
