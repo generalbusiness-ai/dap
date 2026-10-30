@@ -42,7 +42,7 @@ const namedOwners = {
     "packages/scope/src/worker.ts:McpAgent": "a36d308c7bd5a575e6784a307fb3b404eb2187d39da8a93294eea2217b765c8f",
   },
   "packages/cli/src/commands.ts": {
-    "packages/cli/src/commands.ts:$module": "f01145b2807692fd13b82de9222af26a5a27bc042eabf8175f4c505609ec8093",
+    "packages/cli/src/commands.ts:$module": "d0e9c1974b74531dae6bf452c60e31bf26eb29a3450cb9de088463ff00f13e1b", // Reviewed room-proof import and both helper declarations.
     "packages/cli/src/commands.ts:NEW_REGISTER": "f828e83eeb39a37566e323156efb63274fc43b1d6b9e95b38fbf0cdbba327fbf",
     "packages/cli/src/commands.ts:short": "62f9d565f48fc73fc6b282a941d6d37a48055c6c32f2ef88f21b22ead55f6e57",
     "packages/cli/src/commands.ts:scopeIndexAccess": "b54a6859075907491f4c19313b149572acd5b3bd94c492d61fb342601759c299",
@@ -79,12 +79,14 @@ const namedOwners = {
     "packages/cli/src/commands.ts:entryLine": "61bf6dce3240a56b1a4d0286b713cb5cfce96d1f933c03b89182e71ff8cf7846",
     "packages/cli/src/commands.ts:log": "3ef9c27f7f2f22e7f2531f7e4d0cc859af988009fb92e3e79b13261a45943aeb",
     "packages/cli/src/commands.ts:show": "e5008fae01934cb48b95ed52c0f9108c9f2f8799ef8072e61b80f1abe2823fc9",
-    "packages/cli/src/commands.ts:sessionDeniedDependency": "7ae8c948cf2c7f3a75f1428273c9d10ec4487d42eb21cd7ad1d153cca53a2f90",
-    "packages/cli/src/commands.ts:replayOf": "6373a96397d59b0d86e7bae907354f310eab097dda08eb239db585699ef002cb",
+    "packages/cli/src/commands.ts:sessionDeniedDependency": "72ee1a12a97166f54168dc35ab2bbb59a0c51f172d1a3c7dbf7d4ef3f1d187b7", // Narrow final-summary input retains the exact permission evidence.
+    "packages/cli/src/commands.ts:replaySource": "e2b4cc945442035616ec92e9ab07f44170a5f3014f3444feb49582e46d831064", // One authenticated source, with separate count and unique accounting paths.
+    "packages/cli/src/commands.ts:replayOf": "a75355cce1d2c514be8cfb52ef6050d5334d70698ee90b64b0c33e354f1849eb", // Standalone traversal and its count budget remain isolated.
     "packages/cli/src/commands.ts:verificationContext": "bc38c07b7cbcbaa2118086aaf05068fc05d2cd90b1994edc81968e48788c41b6",
     "packages/cli/src/commands.ts:verifyScopeCommand": "4dd727df2ca467fbf11c1d3bd3219dc74ed2a0a12bdd1045f9e8879d0508b598",
-    "packages/cli/src/commands.ts:roomScopes": "926803aafcc62c997771ecc71315e810fbde87705955e725d3da7555589f7a44",
-    "packages/cli/src/commands.ts:verifyAll": "6beb947558d6b835c1bda9401866b24d34b13562bf3509fed68e838b0662ede8",
+    "packages/cli/src/commands.ts:roomScopes": "c128a0c451a22e0cee69335e6ca7d72a0417bfd0699bf5d22bb051edcc6b3fda", // Discovery validates actual entry identities without granting proof.
+    "packages/cli/src/commands.ts:sharedProofLines": "a458a3312582fbbbb9adc7a36c9fb7d15d52aa4706f9f5fafd512bab8c2986cd", // One union disclosure, with prefix and checked-content provenance.
+    "packages/cli/src/commands.ts:verifyAll": "6219ce89a2d1f4734c71d15956ea5694bfca6561fda3b7e654e35d6eca898e3b", // Final summaries follow union validation; cleanup uses the checked target.
     "packages/cli/src/commands.ts:OWN_HOST": "d8049ba56c1494f7f9ab575b4ccdbe4ea8192229bb9d2a280bbb4528e1c5784a",
     "packages/cli/src/commands.ts:remoteOf": "57afba6cdd6f9169d7366eb5641f61a52a420f55ba723bff6922bfc6332496a9",
     "packages/cli/src/commands.ts:remoteLine": "1eb8d789b8f70e63d8b28176c5b5f923eeae5065c26a17487274295b2803d354",
@@ -270,7 +272,7 @@ const pendingR8Seals = {
   "packages/cli/src/claim.ts": "26858433403847e4857951909bd48ca1153d92dc28595081c093141db550773a", // Moved claim verification and retained custody; actual maintained parser output.
   "packages/cli/src/command-support.ts": "3d8bb5498e66827db4f74943f90b441b614340663dc30be2a9d17efec9d1817e", // Moved shared read, session and signing support; actual maintained parser output.
   "packages/cli/src/read-session-cache.ts": "12a5cf131a166001f66672bc3c4b6daf70070645255c61db7b93f18b6fbb83b7", // Reviewed CLI session or verification boundary; actual maintained parser output.
-  "packages/cli/src/verification.ts": "51042fd79fae343e7369ca49bae9351f2672fe868e9e3b934aa5c7fbb1c01219", // Reviewed CLI session or verification boundary; actual maintained parser output.
+  "packages/cli/src/verification.ts": "3fb0f354c0d00dd1d21cf293e11dfc81738b9de4e8f5eb43ac9fd918dc9db557", // Reviewed unique-entry ledger, source conflicts and owner retirement; actual maintained output.
   "packages/cli/src/files.ts": "7d0d64f352787e5d30ea03265fb5137a17a1eef61e97454e5408959297ca1d5c", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/store.ts": "e452f4b9087d3d4d1dcfb90766e83e0805699598739157ee51bf07a68266d377", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/line.ts": "029e530d325e9ca0a47859a306a30884151401e26ce59d40e6768dfd4912b4c4", // Reviewed CLI session or verification boundary; actual maintained parser output.
