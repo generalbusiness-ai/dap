@@ -1,0 +1,119 @@
+{
+  "qualification": "Documentation review head: prose and one index under docs/, two notes, one anchor change in the room ledger, one link in a design note. The gate, both documentation checks, the six MCP test files that read docs/mcp.md, the two security documentation tests, the lane reference test, the kernel boundary check and three scratch scans ran once at the checkpoint commit. The final head adds this manifest and the evidence table in the review record and changes no page. No acceptance is inferred from sealing.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review",
+  "base": {
+    "commit": "5dc9765fdc6fb6896b736127801944c46ee288f9",
+    "tree": "39c0bfaa8a48bfb3544a18c82e1873ddbafe76aa"
+  },
+  "checkpoint": {
+    "commit": "d10d153078cd2a7c42c0a2bc0304ecfc0b19141f",
+    "tree": "8ca875e20e6376865cb03f67e70eaecd1bec3623"
+  },
+  "gate": {
+    "command": "npm run gate",
+    "exitCode": 0,
+    "log": "gate.log",
+    "rawLogs": "gate-logs",
+    "commit": "d10d153078cd2a7c42c0a2bc0304ecfc0b19141f",
+    "tree": "8ca875e20e6376865cb03f67e70eaecd1bec3623"
+  },
+  "fileCount": 17,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 4148,
+      "sha256": "ca2903b068474844e1fad17de739940248e8bd7d237fa6a2f8fd06c0acf98a26"
+    },
+    {
+      "path": "HEAD.txt",
+      "bytes": 94,
+      "sha256": "2a4a90fc987676d8effd2b7747a79444d6e74cdd86b430933131a45e9372002e"
+    },
+    {
+      "path": "commit-messages.log",
+      "bytes": 45,
+      "sha256": "b4c2ce0b98997179c70461f42789c754b31ad0cd6cb06b877ea698065669be73"
+    },
+    {
+      "path": "doc-links.log",
+      "bytes": 42,
+      "sha256": "777cc4b59d48da8ef84a768d94fce263aaf35f285fb6edd8942f28a5b719ad7d"
+    },
+    {
+      "path": "gate.log",
+      "bytes": 6286,
+      "sha256": "f6d5dc6a3bec2fad59555a53a299f93f8f123ce8d57be8cdba06dfe7d4cafc42"
+    },
+    {
+      "path": "kernel-boundary.log",
+      "bytes": 60,
+      "sha256": "f7ae5d7815f1e7c2c379c5ea1db70b7da25590e4b3570216f4cc07a8fc871298"
+    },
+    {
+      "path": "lanes-definitions-test.log",
+      "bytes": 259,
+      "sha256": "74934135e4605dbe56507a76a63f6ce458dd3cef65302106324a5cc8238015f6"
+    },
+    {
+      "path": "linkcheck.py",
+      "bytes": 1320,
+      "sha256": "7f0f5956db9e1d5297d95aa31bac298f5a0664527ec2fc2d0480dd570a631941"
+    },
+    {
+      "path": "markprobe.mjs",
+      "bytes": 766,
+      "sha256": "9e15aaac824d21fb2a900e077465646145d00be62bdda8da3609e5f1f897f4b1"
+    },
+    {
+      "path": "mcp-doc-tests.log",
+      "bytes": 2811,
+      "sha256": "47d8ad77b9c61b830b28fcd3db609e328f26d9ef0386b9165f0653a130de8b06"
+    },
+    {
+      "path": "platform-mark-probe.log",
+      "bytes": 46,
+      "sha256": "233aef7670a3c2f50e3084986b9d1b6478e002cafaa44e610a9d63f9aa55412f"
+    },
+    {
+      "path": "residue-scan.log",
+      "bytes": 6805,
+      "sha256": "9c1febee2ff92fe9903746e7a597b51c50a7bec33a3a26810540c3b220257333"
+    },
+    {
+      "path": "residue.py",
+      "bytes": 1179,
+      "sha256": "9608db8c18fea8ba42fcb1071a091a978ceff22f3c523f791f88ceca02615bd4"
+    },
+    {
+      "path": "scratch-linkcheck.log",
+      "bytes": 137,
+      "sha256": "7c6c603156f94058b1bee1245e0ef6dc8361aa335c4df1a78e304503d93b5cf7"
+    },
+    {
+      "path": "section-citations.log",
+      "bytes": 1559909,
+      "sha256": "8735a91c6eb2aca3b9d4dd0edc0d05520d64453d8dd8692283986563253cff27"
+    },
+    {
+      "path": "security-entry-points-test.log",
+      "bytes": 1308,
+      "sha256": "e0363672671b55023ce9b9fd7cfdaad6b026bb062581db7e0e0af7167bfc17e0"
+    },
+    {
+      "path": "security-settings-test.log",
+      "bytes": 428,
+      "sha256": "8a52e2221b6735022cd3b3325ed62a68e221edc3c9586b559597e780fd38d82e"
+    }
+  ],
+  "directoryCount": 1,
+  "directories": [
+    {
+      "path": "gate-logs",
+      "fileCount": 29,
+      "totalBytes": 50920305,
+      "sha256Sums": "24d1d9fbb1efd265ecdcdafcdd732c62c72af4572a09aa9e5dc818a85bec8fa7"
+    }
+  ],
+  "retention": "Directory and files are read-only; retain for at least 30 days after landing.",
+  "withheld": "No raw environment, secret, token or request body was captured."
+}

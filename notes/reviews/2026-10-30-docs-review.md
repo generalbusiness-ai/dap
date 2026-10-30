@@ -204,31 +204,44 @@ removed text, 16,862 words, is in
 
 ## 5. Checks run
 
-Run from the worktree at this head on 30 October 2026, each once.
+Each check ran once from the worktree at checkpoint commit
+`d10d153078cd2a7c42c0a2bc0304ecfc0b19141f` (tree `8ca875e2`) on 30 October
+2026. The final head adds the evidence manifest and this table and changes
+no page. Raw output is in the read-only folder
+`/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review/`, with a
+`SHA256SUMS` file and the gate's own 29 log files under `gate-logs/`. The
+head commits
+[the manifest](../implementation/evidence/2026-10-30-docs-review.manifest.json),
+which lists each file's bytes and digest.
 
-- `node scripts/check-doc-links.mjs`: 951 local links checked, 0 broken.
-- A scratch resolver over every relative link and anchor under `docs/`:
-  826 links. It does not parse `<a id>` anchors. The two it reported,
-  `scopes.md#composition` and `kernel.md#k1`, exist as such anchors, and
-  the repository checker accepts them.
-- Vitest, the six MCP test files that read `docs/mcp.md` (`describe`,
-  `inventory`, `recipes.scope`, `counter.scope`, `lending.scope`,
-  `hosted.scope`): 39 tests passed.
-- `node scripts/security-settings.test.mjs`: 3 of 3 passed.
-- `node scripts/security-entry-points.test.mjs`: 10 of 10 passed.
-- `apps/room/lanes/test/definitions.test.ts`: 4 of 4 passed. The lane
-  reference did not change.
-- `node scripts/check-kernel-boundary.mjs`: 126 production sources,
-  0 refusals. The approved-libraries table in `kernel.md` is what it reads.
-- A scan of every prose line under `docs/`, outside tables and code,
-  for semicolons joining clauses, dashes, "admission" for an act, process
-  roles and bare hashes: none remain. "Admission" appears only in code
-  paths, and "checker" only as the product noun.
-- One probe with Node: a platform mark in a declared definition's
-  effects is refused with code `shape` at the mark's path, as the
-  definition-author table says.
-- The gate ran at the committed head. The review request names its
-  result.
+What the logs show. The gate passed. The link checker resolved 951 local
+links with none broken. The section-citation check found none broken. The
+six MCP test files passed 39 tests. The settings test passed 3 of 3, the
+entry-point test 10 of 10, and the lane reference test 4 of 4; the lane
+reference did not change. The kernel boundary check read 126 production
+sources with 0 refusals. The residue scan of every prose line under
+`docs/`, outside tables and code, found no semicolon joining clauses, no
+dash, no "admission" for an act and no bare hash; its log lists the lines
+where "admission" is a code path and "checker" is the product noun. The
+scratch resolver checked 826 links and anchors; the two `<a id>` anchors
+it does not parse, `scopes.md#composition` and `kernel.md#k1`, exist. The
+probe refused a platform mark in a declared definition's effects with code
+`shape` at `acts.establish.effects.2`, as the definition-author table says.
+
+| Check | Command | Exit | Output SHA-256 |
+|---|---|---|---|
+| gate | `npm run gate` | 0 | `f6d5dc6a3bec2fad59555a53a299f93f8f123ce8d57be8cdba06dfe7d4cafc42` |
+| documentation links | `node scripts/check-doc-links.mjs` | 0 | `777cc4b59d48da8ef84a768d94fce263aaf35f285fb6edd8942f28a5b719ad7d` |
+| section citations | `node scripts/check-section-citations.mjs` | 0 | `8735a91c6eb2aca3b9d4dd0edc0d05520d64453d8dd8692283986563253cff27` |
+| commit messages | `node scripts/check-commit-messages.mjs origin/main HEAD` | 0 | `b4c2ce0b98997179c70461f42789c754b31ad0cd6cb06b877ea698065669be73` |
+| MCP page tests | `npx vitest run` on the six `packages/mcp/test` files that read `docs/mcp.md` | 0 | `47d8ad77b9c61b830b28fcd3db609e328f26d9ef0386b9165f0653a130de8b06` |
+| settings lookup and inventory | `node scripts/security-settings.test.mjs` | 0 | `8a52e2221b6735022cd3b3325ed62a68e221edc3c9586b559597e780fd38d82e` |
+| entry-point tables | `node scripts/security-entry-points.test.mjs` | 0 | `e0363672671b55023ce9b9fd7cfdaad6b026bb062581db7e0e0af7167bfc17e0` |
+| lane reference | `npx vitest run apps/room/lanes/test/definitions.test.ts` | 0 | `74934135e4605dbe56507a76a63f6ce458dd3cef65302106324a5cc8238015f6` |
+| kernel boundary | `node scripts/check-kernel-boundary.mjs` | 0 | `f7ae5d7815f1e7c2c379c5ea1db70b7da25590e4b3570216f4cc07a8fc871298` |
+| prose residue scan | `python3 -I residue.py .` (script in the folder) | 0 | `9c1febee2ff92fe9903746e7a597b51c50a7bec33a3a26810540c3b220257333` |
+| link and anchor resolver | `python3 -I linkcheck.py .` (script in the folder) | 0 | `7c6c603156f94058b1bee1245e0ef6dc8361aa335c4df1a78e304503d93b5cf7` |
+| platform mark probe | `node markprobe.mjs` (script in the folder) | 0 | `233aef7670a3c2f50e3084986b9d1b6478e002cafaa44e610a9d63f9aa55412f` |
 
 Not run for this revision: the commands on the self-host, deploy, local
 Worker, run-your-app (steps 3 to 8) and demo pages. Each of those pages
