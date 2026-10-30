@@ -1104,7 +1104,7 @@ class Verifier {
     this.#knownTexts.set(digest, known);
     if (this.#room && known.size !== null) {
       const at = this.#checking.at(-1);
-      if (at?.at.scope === run.id && !this.#textOrigins.has(digest)) this.#textOrigins.set(digest, { root: this.#target, fact: structuredClone(at) });
+      if (at?.at.scope === run.id && !this.#textOrigins.has(digest)) this.#textOrigins.set(digest, { root: this.#target, fact: { ...at, at: { ...at.at } } });
     }
   }
 
@@ -1117,7 +1117,10 @@ class Verifier {
     const domain = key.kind === "value" ? key.domain : key.kind === "definition" ? DOMAINS.definition : key.kind === "text" ? DOMAINS.text : key.kind === "snapshot" ? DOMAINS.snapshot : null;
     const value = domain ? domainRetainedJSON(domain, key.digest, input.bytes, { canonical: true }) : rawRetainedJSON(key.digest, input.bytes);
     if (value === undefined || canonicalize(value) !== input.bytes) return;
-    this.#retainedCache.set(canonicalize([run.id, key.kind, key.domain ?? null, key.digest]), structuredClone(input));
+    this.#retainedCache.set(canonicalize([run.id, key.kind, key.domain ?? null, key.digest]), {
+      kind: input.kind, digest: input.digest, bytes: input.bytes,
+      ...(input.under === undefined ? {} : { under: input.under }), ...(input.domain === undefined ? {} : { domain: input.domain }),
+    });
     if (domain === DOMAINS.text && typeof value === "string") this.#learnText(run, key.digest, input.bytes, value);
   }
 
@@ -2389,9 +2392,13 @@ export { verifyHistory as verify };
  * report; finish validates the actual union once before publishing it. */
 export function roomVerification(source: HistorySource, options: Omit<Options, "scope" | "head">): RoomVerification {
   const fixed: Omit<Options, "scope" | "head"> = { ...options,
-    ...(options.anchors ? { anchors: structuredClone([...options.anchors]) } : {}),
-    ...(options.publishedAnchorPolicies ? { publishedAnchorPolicies: new Map([...options.publishedAnchorPolicies].map(([id, policy]) => [id, structuredClone(policy)])) } : {}),
-    ...(options.bounds ? { bounds: structuredClone(options.bounds) } : {}),
+    ...(options.anchors ? { anchors: options.anchors.map(anchor => ({ ...anchor })) } : {}),
+    ...(options.publishedAnchorPolicies ? { publishedAnchorPolicies: new Map([...options.publishedAnchorPolicies].map(([id, policy]) => [id, {
+      scope: policy.scope, commit: policy.commit, ranges: policy.ranges.map(range => ({ from: range.from, through: range.through,
+        anchors: range.anchors.map(fact => ({ ...fact, at: { ...fact.at } })), ...(range.legacy ? { legacy: true as const } : {}),
+      })),
+    }])) } : {}),
+    ...(options.bounds ? { bounds: { ...options.bounds } } : {}),
     limits: { ...LIMITS, ...options.limits },
   };
   const bound: HistorySource = { page: source.page.bind(source), retained: source.retained.bind(source),
@@ -2412,7 +2419,7 @@ export function roomVerification(source: HistorySource, options: Omit<Options, "
   return {
     checkTarget(target) {
       if (phase !== "open") return Promise.reject(new Error(`room verification is ${phase}`));
-      const asked = structuredClone(target);
+      const asked = { scope: target.scope, ...(target.head === undefined ? {} : { head: { ...target.head } }) };
       return enqueue(async () => {
         const owner = engine ?? (engine = new Verifier(bound, { ...fixed, scope: asked.scope }, undefined, true));
         await owner.checkRoomTarget(asked); live();
@@ -2426,7 +2433,9 @@ export function roomVerification(source: HistorySource, options: Omit<Options, "
       finished = enqueue(async () => {
         const result: FinishedRoom = engine ? await engine.finishRoom() : { roots: [], coverage: [], trusts: [], anchors: [], dependencies: { verified: 0, anchored: 0, missing: [] }, redacted: [], texts: [] };
         live();
-        return freeze(structuredClone(result));
+        // This internally constructed result holds only JSON records,
+        // arrays and primitives; providers, callbacks and maps stay private.
+        return freeze(JSON.parse(JSON.stringify(result)) as FinishedRoom);
       });
       return finished;
     },
