@@ -1,11 +1,13 @@
 # Test dap
 
-This page says what a test in this repository is for, where it belongs, how
-to run tests while you work, and what to run before a review. It replaces
-the earlier practice of whole-suite reruns and mutation sweeps, which cost
-hours per review and proved little (request `ecbc722a`).
+You change dap and need to show that the change is right. Name the
+invariant, put its test at the cheapest boundary that shows it, run the
+tests of what you changed while you work, run the gate once before
+review, and file the evidence. The steps come first. The reference after
+them describes the stand-ins, what the gate runs, the evidence rule and
+the inventories.
 
-## What a test is for
+## Write a test that earns its place
 
 A test earns its place when it tells a plausible wrong behaviour from the
 required behaviour, at a real interface or a meaningful internal boundary,
@@ -14,12 +16,12 @@ and so protects something the application relies on.
 A test does not earn its place when it:
 
 - repeats the implementation, or rebuilds the expected value with the same
-  algorithm;
-- checks wiring nothing depends on;
-- exercises a combination no input can reach;
-- repeats, in a slower place, what a cheaper test already shows;
+  algorithm
+- checks wiring nothing depends on
+- exercises a combination no input can reach
+- repeats, in a slower place, what a cheaper test already shows
 - exists so that a count is met: one per field, one per condition, one per
-  line.
+  line
 
 Each witness that the scope contract names, and each row of
 [notes/implementation/2026-10-04-i1-contract-deltas.md](../notes/implementation/2026-10-04-i1-contract-deltas.md)
@@ -32,25 +34,258 @@ that witnesses each one afterwards.
 Before you add a test, name the invariant in one sentence. If a test
 already witnesses it, strengthen that witness instead of adding another.
 
-## Where a test belongs
+Each test's name states its invariant, and the two deltas notes name the
+witness of each decision. The retired
+[test-invariants map](../notes/plans/retired/test-invariants.md) covers
+the earlier model's tests, which are removed.
+
+## Put the test where it belongs
 
 Put each test at the cheapest boundary that can show its property.
 
 | The property is about | Test it |
 |---|---|
 | A pure decision: canonical bytes, a digest, a validator's rule, a judgment, the fold, a bound | as a plain function, in the node tests of `bytes` or `derive`, once |
-| What a scope records, refuses or keeps across a restart; the transaction, the clock, the alarm | against a real scope, in the workerd tests of `scope` |
+| What a scope records, refuses or keeps across a restart, and the transaction, the clock and the alarm | against a real scope, in the workerd tests of `scope` |
 | The order of two things that race | against a real scope, with the test's gate and clock, never with sleeps |
 | What passes between scopes: creation, delivery, a diagnosis | against real scopes in one namespace, in the workerd tests of `scope` |
-| The Worker's routes and the service binding | in workerd, once for each; do not run a whole suite over both |
-| What a verifier reports for a journal | over journals in memory, in `replay`; that replay agrees with the runtime, once, in `scope` |
-| What a client builds, signs and accepts as an answer | as plain functions in `client`; the handle against the real Worker, in `scope` |
+| The Worker's routes and the service binding | in workerd, once for each. Do not run a whole suite over both |
+| What a verifier reports for a journal | over journals in memory, in `replay`. That replay agrees with the runtime: once, in `scope` |
+| What a client builds, signs and accepts as an answer | as plain functions in `client`, and the handle against the real Worker in `scope` |
 | A form of a definition: that the validator accepts or refuses it, and what the judges derive from it | as a plain function in `derive`, on a small made-up definition, in the `forms-*.test.ts` file of its family |
 | That a lane definition is exactly its pinned bytes and digest, meets its bounds, and passes the validator whole | as plain functions in `lanes`, once for both definitions. Do not write a test for one row, one field or one guard of a lane definition. |
 | What only the two real lane definitions can show: several commitments and a hold, a plan's concerns, a manifest and its evidence, links, attention, capacity | against real scopes under the two pinned digests, in a scenario of `apps/room/lanes/test/*.scope.test.ts`, on the one fixture `test/support/graph.ts`. One scenario states one invariant. |
 
 A stand-in proves only the boundary it exposes. A retry, an order of events or a
 restart is shown against the thing that really retries, orders or restarts.
+A test that uses a stand-in says so in its name or its first comment.
+[Stand-ins and what they show](#stand-ins-and-what-they-show) lists each
+one.
+
+## Keep time, size and setup small
+
+- No test waits on the wall clock. Use the test clock, a gate, or an
+  injected delay. A retry rule is about the rule, not about seconds
+  passing.
+- A bound is tested at a small configured limit when the limit is a
+  parameter, and at the real limit once.
+- Tests that only read may share one scope or one fixture per file. Tests
+  that write get their own. The packages share one fixture set, exported by
+  `@generalbusiness/dap-derive/testing`.
+
+The harness's own deadlines are in [Time allowances](#time-allowances).
+
+## Run the tests of what you changed
+
+Run the tests of what you changed while you work, not the repository.
+
+```
+npm run test:changed                 # what you changed and have not committed
+npm run test:changed -- origin/main  # everything that differs from origin/main
+npx vitest run --project scope turn   # one project, files whose name matches
+npm test --workspace @generalbusiness/dap-derive   # one package
+```
+
+`npm run test:changed` runs the root vitest run
+([scripts/test-changed.mjs](../scripts/test-changed.mjs)), which picks the
+test files that import a changed file, in every active package. The last
+lines say what ran.
+
+A change to a root file (`package.json`, the lock file, a root
+`tsconfig`, the root `vitest.config.ts`) runs every test.
+
+A changed file whose name git would quote, such as a name with a space or
+a letter outside ASCII, runs the whole root vitest run, because vitest
+cannot read that name.
+
+The selection follows imports. A test that reads a file without importing
+it, such as a fixture or a document, is not selected when only that file
+changes. The gate runs everything.
+
+`npm test` and `npm run test:changed` first apply the Cloudflare pool
+compatibility backport in `scripts/cloudflare-pool-compat.mjs`. Before
+you call a package's tests or Vitest directly, run
+`node scripts/cloudflare-pool-compat.mjs` from the repository root.
+[The compatibility backport](#the-compatibility-backport) says what it
+changes.
+
+The names on this page match the repository workspace manifests.
+Internal workspace test exports are not part of the public eight-package
+SDK. In particular, `@generalbusiness/dap-platform/testing` is available
+only in this checkout.
+
+### Run a reviewed focused plan
+
+For a frozen candidate with an exact compiler closure and complete static
+case ledger, use `scripts/focused-check.mjs`. Its one invocation runs each
+declared compiler once, then one Vitest body. It does not collect the same
+tests in a separate discovery run or pause between successful phases.
+
+```
+/usr/bin/time -p node scripts/focused-check.mjs reviewed-plan.json ~/play/artroom-evidence/<date>-<head-slug>
+```
+
+The reviewed JSON plan names these inputs, as paths and hashes and never
+secrets:
+
+- the canonical checkout, head and tree
+- every tracked package, script and example input, the read-only
+  documentation fixtures and the root configuration
+- extra external inputs, including the actual pipeline file and body
+  config
+- the lock stamp, the current workspace bindings and the source export
+  aliases
+- the pinned Node, compiler and Vitest tool files
+- each unique compiler config and its working directory
+- the body config, its working directory, and the complete selection of
+  files, projects, pools and full titles
+
+A selected file must have unique full titles within its project. When that static ledger cannot
+identify every case, keep an explicit collection plan instead of guessing.
+The dependency namespace and its Vite state must be owned real directories.
+A symlink to shared `node_modules` or `@generalbusiness` is refused even when
+an individual workspace resolves to the right source.
+
+The driver checks those facts before any tool or application import, at
+each command boundary and after the terminal command. Any refusal, changed
+source, nonzero exit or signal stops the pipeline. Its same-run reporter
+checks complete file/project/pool identity before global setup, then records
+actual case states, errors, skips and unfinished or unrun obligations. It
+uses structured status fields, so a title that contains “failed” is only a title.
+The built-in JSON reporter provides a second count/file/status check in the
+same body invocation. Verbose output and complete raw reports stay in the
+new external evidence directory, and its manifest seals their hashes. Existing
+evidence is never overwritten, and the driver never installs dependencies,
+retries a command or changes an original test deadline.
+`result.json` records verification outcomes. The actual process exit
+decides. A sealing failure exits nonzero and retains partial artifacts
+and, when possible, a fresh sibling failure record without rewriting them.
+
+Time the outer command to include guards, parsing, artifact work and child
+CPU. The driver also retains each command's own wall, user and system time.
+Their sum is a sum of separate commands, not a measured pipeline duration.
+A focused pass protects only its selected boundaries. It does not replace
+the final gate, meaningful controls, manual acceptance or complete review.
+
+### Show that a test distinguishes
+
+When you add or change a guard, show its witness fails without it. Break
+the one line and run the one test file:
+
+```
+node scripts/control.mjs <source file> '<old text>' '<new text>' [--expect '<part of the test name>'] -- <package dir> <test args>
+```
+
+It runs the tests unchanged, which must pass. Then it applies the change,
+runs them again and restores the file. It gives one of three results:
+
+| Result | Exit | Meaning |
+|---|---|---|
+| distinguishes | 0 | a test failed by an assertion with the change applied |
+| survives | 1 | every test still passed: they do not see this fault |
+| inconclusive | 2 | nothing was shown: the tests did not start, did not pass before the change, did not load or compile with it, ran fewer tests than before, had any timeout, or failed only by a thrown error |
+
+A result-checking helper fails with
+`expect.fail`, not with a thrown `Error`, so that a test which fails there
+has failed by an assertion.
+
+Only the first is evidence. With `--expect`, the test you name must be one
+of those that failed by an assertion, or the result is inconclusive. The
+helper prints each failed test and the first line of its failure. Read
+them: the assertion should be the one that states the invariant. The
+helper cannot judge that for you.
+
+There is no mutation sweep. Do not write one mutant per field or per
+condition, and do not run whole suites per mutant. One or two honest
+controls for each invariant you touch are the evidence. If a guard cannot
+change any outcome, because another check always decides first, say which
+check, and consider deleting the guard.
+
+## Run the gate once before a review
+
+Run the gate once, at the head you will send, except for the
+[limited follow-ups below](#follow-up-after-a-gate). Fetch `origin/main`
+first. The gate compares the branch with `git merge-base HEAD origin/main`,
+and the commit-message check fails when that base is unavailable.
+
+```
+npm run gate
+```
+
+`npm run gate -- --ci` reinstalls first. Keep `VITEST_MAX_WORKERS` unset
+for the gate, because that override also replaces the native projects'
+explicit worker limits. [What the gate runs](#what-the-gate-runs) lists
+its steps.
+
+### Write commit messages the gate accepts
+
+A subject has at most 100 Unicode code points. Put detail in the body after
+an empty line. In the subject and body, separate a word of three or more
+Unicode letters from an ASCII hexadecimal run of at least seven
+characters that contains a digit. For example, write `exact b8a4dea1`, not
+`exactb8a4dea1`. Bare maximal hexadecimal tokens and names such as
+`base64url`, `sha256`, and `ed25519` are allowed. Only a terminal block of
+`Name: value` trailer lines, separated from the message by an empty line,
+is exempt. Continuation lines are ordinary body text. Messages are read
+as UTF-8, and an unreadable commit stops the check instead of passing it.
+Landing messages supplied to `gs merge` follow the same bounds.
+
+The standalone checker and its Node tests are:
+
+```
+node scripts/check-commit-messages.mjs <base> HEAD
+node --test scripts/check-commit-messages.test.mjs
+```
+
+### Follow-up after a gate
+
+Do not run the gate again for a commit that changes only documents. Say that
+the source and tests are unchanged, and give the two tree hashes.
+When a gate fails only in a test that reads a document and the repair changes
+only that document, rerun that test file and the steps the gate never reached,
+and report the failed run and follow-up together.
+
+If a gate fails only in one test file, a targeted follow-up can cover an
+isolated repair to that file. Only the failing test file and
+explanatory documentation may change. Production code, configuration outside
+that file, dependencies, shared helpers and imported code must remain unchanged.
+The test file must not be imported by other files.
+
+Run any compiler context whose inputs changed, the whole owning test file,
+and the steps the gate never reached. Retain all original cases, their
+deadlines and their assertions about production behavior.
+Do not replace the failed case with a narrower test or weaken its assertions.
+Keep the failed gate and follow-up outcomes separate. The reviewer assesses
+whether the exact repair and evidence meet these conditions. A passing
+follow-up does not turn the failed gate into a pass.
+
+### File the evidence
+
+1. Write raw run output to a new directory,
+   `~/play/artroom-evidence/<date>-<head-slug>/`, never under `/tmp` or
+   `/private/tmp`.
+2. Write a `SHA256SUMS` file at the top of the directory, then make the
+   directory read-only with `chmod -R a-w`.
+3. Commit one manifest at
+   `notes/implementation/evidence/<date>-<head-slug>.manifest.json`.
+4. Commit one implementation note under `notes/implementation/` whose
+   evidence table cites the manifest's files.
+
+[The implementation note and its evidence](#the-implementation-note-and-its-evidence)
+gives the exact rule.
+
+### Review a change
+
+Review the change, the invariants it touches and their witnesses. Probe
+with a few focused counterexamples of your own. Check the head's evidence
+manifest: every listed file exists at the directory with its size and
+digest, and every digest the note cites is in the manifest. A missing or
+changed file is a changes-requested gap. Cite the manifest's own sha256
+in the report. Run the gate once at the head under review, subject to
+the [limited follow-up exception](#follow-up-after-a-gate).
+Do not rebuild a per-field or per-guard inventory.
+
+## Stand-ins and what they show
 
 The scripted capability of `@generalbusiness/dap-scope/testing` is a
 stand-in for the code of `hold@1` and `git-read@1`. The derive package
@@ -66,8 +301,8 @@ type `job` holds a reservation. They are the made-up data of the
 contract's witnesses 18.47 and 18.49. Every count is made up, and every
 rule is a stand-in that a test scripts. A test that uses one says so. It
 shows where a count is taken, drawn and released, and nothing about a
-count or a rule of a platform definition. The destination now states
-`holds` for its branch and publication types;
+count or a rule of a platform definition. The destination states
+`holds` for its branch and publication types, and
 `packages/platform/test/destination-creates.test.ts` checks their cleanup
 and receipt pending work with the package's real rules.
 
@@ -81,7 +316,7 @@ scope's side of a read, and nothing about membership.
 
 Membership has two stand-ins of its own, in
 `@generalbusiness/dap-platform/testing`. `office` is a made-up
-directory that creates one membership scope: it stands for the real
+directory that creates one membership scope. It stands for the real
 directory and the register. `Roster` is a membership scope in memory
 below such an office. A test that uses one says so. It shows
 membership's rows and its ten rules, which are all the platform
@@ -106,8 +341,9 @@ memory. A creation on scope objects is
 `packages/scope/test/creation-real.test.ts`, in the namespace `PLATFORM`:
 the deployed class, the production authority and the package's own rules,
 with a labelled stand-in for the Git host. The destination has a rule for
-every mark, including `first-head` and `receipt`; its creation no longer needs substitute rules. The real-scope
-creation and publication witness is described below.
+every mark, including `first-head` and `receipt`, so its creation needs
+no substitute rules. The real-scope creation and publication witness
+follows.
 
 The rules scope has four stand-ins, in
 `packages/platform/test/support-rules.ts`. `registrar` is a made-up
@@ -136,7 +372,7 @@ directory that creates one destination scope. `Branch.read` supplies the
 observations and copies of lane entries at hand for a reservation. The
 lane's and register's entries, the observations, and each Git host answer
 are written by hand. `Branch` is a destination scope in memory below that
-bureau; derive's judges write its entries. Every destination mark has its
+bureau, and derive's judges write its entries. Every destination mark has its
 rule in the platform package. No substitute `first-head` or `receipt` rule
 is supplied. `Branch` still replaces the lane reader with a scripted
 `LaneRead`, rather than reading a lane's entries. The package's production
@@ -162,20 +398,20 @@ The publication's holder counts are read from SQLite, including its
 `withdraw` decision before publication and its release on the final item.
 
 The source change lane's manifest, job opening, passed decision and merge
-entries are written by hand and anchored; no real lane accepts them and no checker
-runner runs. The decision uses the accepted checker key and a fresh
+entries are written by hand and anchored. No real lane accepts them, and no
+checker runner runs. The decision uses the accepted checker key and a fresh
 `change.check` grant built from a real membership answer. The test supplies the
 source read metadata and the passed outcome. The Git host is `OutsideDouble`,
-a scripted port whose replies name the package's computed target IDs;
-no host runs. Reads use the test readers except for the separate real
+a scripted port whose replies name the package's computed target IDs.
+No host runs. Reads use the test readers except for the separate real
 read-session witness. All five runtime journals replay `consistent` over
 HTTP, with their authority derived from the membership journal and only the
 four scripted source facts anchored. Publication updates to that scripted
 lane remain pending. This shows the creation and destination's first
 publication through these boundaries. It proves no deployment, production
-host or complete lane journey, and does not close full I3. Full capacity
-checks for items, records, retained bytes and pending requests remain
-request `cc570904`. The current judge checks entries.
+host or complete lane journey. The current judge checks the capacity of
+entries, and not yet of items, records, retained bytes or pending
+requests.
 
 The bound-request tests in `packages/derive/test/forms-binding.test.ts`
 use the real holder ledger: counts are taken and added, a bound deciding
@@ -201,7 +437,7 @@ and nothing about a rule of a destination or of a rules scope.
 scripted rules scope, beside the scripted membership: the test writes
 each answer and the bytes that are said to come beside it, and where the
 scope is said to record that reference. The platform rules scope has its
-own observation answer; this script still replaces it in the generic tests. With either script the reads of
+own observation answer, and this script replaces it in the generic tests. With either script the reads of
 `packages/scope/test/observes.test.ts` are the real ones: before the
 turn, numbered in the run, judged in the commit, and kept by the store.
 One test of that file reads a real membership scope of the namespace
@@ -272,10 +508,10 @@ which calls the service's origin read and its signer as functions.
 command-line story runs its commands, on each host through the production
 wiring of its ports (`artifacts-wiring.ts`, `github-wiring.ts`) over a
 labelled stand-in of `packages/scope/test/hosts.ts`, which keeps refs and
-objects in maps and decodes each pushed pack; the site route reads the
-published file back over the same stand-in. It lives with the lanes,
+objects in maps and decodes each pushed pack. The site route reads the
+published file back over the same stand-in. The test lives with the lanes,
 because it needs a lane definition and no other package may name the
-lanes package; the stand-ins live in the scope package, which may name the
+lanes package. The stand-ins live in the scope package, which may name the
 git package.
 
 `apps/room/lanes/test/manifest-tree.scope.test.ts` exercises the manifest-list
@@ -298,16 +534,16 @@ when its retry is refused, cancel a pre-push reservation, drain its recorded
 deadline, and refuse a final membership read that exceeded its window.
 
 The explicit `scripts/test-j3-runner.mjs` command supplies the production
-Node/container runner to that file's one-file proposal scenario. It requires
+Node container runner to that file's one-file proposal scenario. It requires
 a running nerdctl engine and a pinned image containing the reviewed relay
-and the test probe. It runs an actual passing check, admits its signed result
+and the test probe. It runs an actual passing check, accepts its signed result
 and publishes its exact tree, then keeps a second proposal unpublished after
 an actual failing check under the same configuration. It also checks the
 existing wrong-tree refusals. The host, scheduler, activation and configuration
 ports, and service durability remain labelled stand-ins. Separate direct jobs
 exercise read-only Git access, custody and network isolation, fresh filesystems,
 bounded termination and retained recovery. This command fails when its runtime
-is unavailable; the ordinary gate retains its stand-in runner. Neither mode
+is unavailable. The ordinary gate keeps its stand-in runner. Neither mode
 establishes a deployed checker service. See
 [the runner guide](../packages/checkers/README.md) for the explicit command.
 
@@ -326,31 +562,22 @@ platform scopes, in the namespace `PLATFORM`, as `founding-real` does, and
 its real directory creates lanes under the digests that its real rules
 scope activated. The lane scenarios on it, `wiring.scope.test.ts` and
 `story.scope.test.ts`, use no test authority, no scripted peer and no
-scripted capability: a lane's grants are read from the real membership
+scripted capability. A lane's grants are read from the real membership
 scope, and a merge is judged and published by the real destination. Two
 things are stand-ins, and the fixture labels each: the Git host, which is
-`OutsideDouble` for the destination and `Host` for each lane; and the
+`OutsideDouble` for the destination and `Host` for each lane, and the
 changed set that the host's judge read answers with, which the test states.
 Such a test shows what the lanes and the platform scopes decide from those
 answers, and nothing about a real host, a real tree or a runner.
 
-## Time, size and setup
-
-- No test waits on the wall clock. Use the test clock, a gate, or an
-  injected delay. A retry rule is about the rule, not about seconds
-  passing.
-- A bound is tested at a small configured limit when the limit is a
-  parameter, and at the real limit once.
-- Tests that only read may share one scope or one fixture per file. Tests
-  that write get their own. The packages share one fixture set, exported by
-  `@generalbusiness/dap-derive/testing`.
+## Time allowances
 
 The Native archive fixture joins owned work for at most nine seconds when it
 closes. If close fails while ownership remains, the fixture keeps its clock
 and resources. Later cases skip before allocating another fixture, with the
 reason `Native archive fixture skipped: prior close failed; ownership retained`.
 The original failure still fails the run. Late task completion does not clear
-that failed owner. Ordinary overlap with a healthy owner remains an error.
+that failed owner. Ordinary overlap with a healthy owner is an error.
 
 The functional `scope` project sets a thirty-second framework allowance in
 `packages/scope/vitest.worker.config.ts` for cases without an explicit
@@ -367,136 +594,26 @@ The dedicated `scope-lending` project preserves the same thirty-second
 allowance for its unchanged story. Case-specific limits and modeled
 protocol, read, clock, capacity and latency assertions keep their own bounds.
 Pure Node projects and the separate `scope-denial` project keep their
-existing budgets. This allowance describes the harness and makes no
-product latency or general stability claim. A
-committed budget change needs a new exact-head gate; earlier failed runs
-and their original limits remain evidence.
+existing budgets. This allowance describes the harness, not product
+latency. A committed budget change needs a new gate at the exact head,
+and earlier failed runs and their original limits stay as evidence.
 
-## While you work
-
-At the repository root, `npm test` and `npm run test:changed` first apply the narrow Cloudflare
-pool compatibility backport in `scripts/cloudflare-pool-compat.mjs`. It accepts
-only the pinned 0.22.0 package and complete known bundle hashes. Cache-linked
-views receive a private physical copy; the shared cache is never patched.
-The backport installs the upstream prototype Proxy once per wrapper class,
-keeping native introspection and RPC behavior. It changes no pool settings.
-Before a direct package or Vitest invocation, run this same script from the
-repository root. Unknown package versions or bytes stop preparation.
-
-The names on this page match the repository workspace manifests. Internal
-workspace test exports are not the public six-package SDK. In particular,
-`@generalbusiness/dap-platform/testing` is available only in this checkout.
-
-Run the tests of what you changed, not the repository.
-
-```
-npm run test:changed                 # what you changed and have not committed
-npm run test:changed -- origin/main  # everything that differs from origin/main
-npx vitest run --project scope turn   # one project, files whose name matches
-npm test --workspace @generalbusiness/dap-derive   # one package
-```
-
-`npm run test:changed` runs the root vitest run
-([scripts/test-changed.mjs](../scripts/test-changed.mjs)), which picks the
-test files that import a changed file, in every active package. The last
-lines say what ran.
-
-A change to a root file (`package.json`, the lock file, a root
-`tsconfig`, the root `vitest.config.ts`) runs every test.
-
-A changed file whose name git would quote, such as a name with a space or
-a letter outside ASCII, runs the whole root vitest run, because vitest
-cannot read that name.
-
-The selection follows imports. A test that reads a file without importing
-it, such as a fixture or a document, is not selected when only that file
-changes. The gate runs everything.
-
-### A reviewed focused plan
-
-For a frozen candidate with an exact compiler closure and complete static
-case ledger, use `scripts/focused-check.mjs`. Its one invocation runs each
-declared compiler once, then one Vitest body. It does not collect the same
-tests in a separate discovery run or pause between successful phases.
-
-```
-/usr/bin/time -p node scripts/focused-check.mjs /tmp/reviewed-plan.json /tmp/new-evidence-directory
-```
-
-The reviewed JSON plan names the canonical checkout, head and tree; every
-tracked package/script/example input, read-only documentation fixtures and
-root configuration; extra external
-inputs, including the actual pipeline file and body config; the lock stamp,
-current workspace bindings and source export aliases; pinned Node/compiler/
-Vitest tool files; unique compiler configs and working directories; and the
-body config, working directory and complete file/project/pool/full-title
-selection. It contains paths and hashes, not secrets. A selected file must
-have unique full titles within its project. When that static ledger cannot
-identify every case, keep an explicit collection plan instead of guessing.
-The dependency namespace and its Vite state must be owned real directories;
-a symlink to shared `node_modules` or `@generalbusiness` is refused even when
-an individual workspace resolves to the right source.
-
-The driver checks those facts before any tool or application import, at
-each command boundary and after the terminal command. Any refusal, changed
-source, nonzero exit or signal stops the pipeline. Its same-run reporter
-checks complete file/project/pool identity before global setup, then records
-actual case states, errors, skips and unfinished or unrun obligations. It
-uses structured status fields; a title containing “failed” is only a title.
-The built-in JSON reporter provides a second count/file/status check in the
-same body invocation. Verbose output and complete raw reports stay in the
-new external evidence directory; its manifest seals their hashes. Existing
-evidence is never overwritten, and the driver never installs dependencies,
-retries a command or changes an original test deadline.
-`result.json` records verification outcomes; actual process exit remains
-authoritative. A sealing failure exits nonzero and retains partial artifacts
-and, when possible, a fresh sibling failure record without rewriting them.
-
-Time the outer command to include guards, parsing, artifact work and child
-CPU. The driver also retains each command's own wall, user and system time.
-Their sum is a sum of separate commands, not a measured pipeline duration.
-A focused pass protects only its selected boundaries. It does not replace
-the final gate, meaningful controls, manual acceptance or complete review.
-
-## Before a review
-
-Run the gate once, at the head you will send, except for the
-[limited follow-ups below](#follow-up-after-a-gate).
-
-```
-npm run gate
-```
+## What the gate runs
 
 The gate checks commit messages, shared helpers, section citations and
 documentation links before typechecking. It also runs the Node tests for
 the commit-message and section-citation checkers.
-It uses the same `git merge-base HEAD origin/main` base as whitespace and
-checks every commit in `base..HEAD`, including merges and side history.
-If the base is unavailable, the message check fails. Fetch `origin/main`
-before running the gate.
+Run the gate with Node 22.18 or later in the 22 series, or with Node 23.6
+or later. Those checks import TypeScript directly, and that range is the
+`engines` field of `packages/replay/package.json`.
+It uses the same `git merge-base HEAD origin/main` base as the whitespace
+check, and checks every commit in `base..HEAD`, including merges and side
+history.
 
 After `doc-links`, the `notes` step runs
 `node scripts/check-notes.mjs <base> HEAD` with that same base and prints its
 warning lines. Findings do not fail the gate. Git, base, or decoding errors
 still fail the step.
-
-A subject has at most 100 Unicode code points. Put detail in the body after
-an empty line. In the subject and body, separate a word of three or more
-Unicode letters from an ASCII hexadecimal run of at least seven
-characters that contains a digit. For example, write `exact b8a4dea1`, not
-`exactb8a4dea1`. Bare maximal hexadecimal tokens and names such as
-`base64url`, `sha256`, and `ed25519` are allowed. Only a terminal block of
-`Name: value` trailer lines, separated from the message by an empty line,
-is exempt. Continuation lines are ordinary body text. Messages are read
-as UTF-8; an unreadable commit stops the check rather than passing it.
-Landing messages supplied to `gs merge` follow the same bounds.
-
-The standalone checker and its Node tests are:
-
-```
-node scripts/check-commit-messages.mjs <base> HEAD
-node --test scripts/check-commit-messages.test.mjs
-```
 
 The one-time historical subject audit uses
 `node scripts/check-commit-messages.mjs --subjects-since 2026-10-01T00:00:00-04:00 main`.
@@ -530,14 +647,14 @@ Counting build and generated Node witnesses, the fourteen plain Vitest
 projects, then the three native Vitest projects. Any failed stage stops the
 later stages. The plain phase selects its project data before Vitest
 resolves inherited configs, so an early failure starts no Worker project.
-The two phases share the canonical declarations in `vitest.projects.mjs`;
-the full `vitest.config.ts` remains available for focused commands.
+The two phases share the canonical declarations in `vitest.projects.mjs`.
+The full `vitest.config.ts` stays available for focused commands.
 The compatibility witness uses the guarded actual pool factory and private-copy
-workflow; its plain Node base class is not native authority evidence. The active-source script checks that no
+workflow. Its plain Node base class is not native authority evidence. The active-source script checks that no
 active file imports from `spikes/parked/` or names a removed format, and that no
 platform package depends on the lanes package or imports from it. It prints the head, the tree and
 each step's elapsed and CPU time. It also fails on a whitespace error in
-what the branch changed. `npm run gate -- --ci` reinstalls first.
+what the branch changed.
 
 The fourteen plain projects share one group with at most four active file
 tasks in total. The root `test.maxWorkers: 4` sets this limit in the ordinary gate.
@@ -547,8 +664,7 @@ Each worker reuses its own isolate across files.
 The `scope-lending` group follows with one worker and its own runtime, then
 `scope-denial` with one worker in another runtime. This limits active
 file tasks, not all live workers, child processes or overlapping teardown.
-Keep `VITEST_MAX_WORKERS` unset for the gate: that environment override
-also replaces the native projects' explicit worker limits. The
+The
 `git` project runs the real `git` program, as a client and as a server, on
 local repositories, and one file of the `checkers` project runs it for the
 runner's checkout. Nothing runs twice.
@@ -556,14 +672,15 @@ runner's checkout. Nothing runs twice.
 Both `npm test` and the gate print up to ten slowest observed cases and
 the observed test-and-hook duration sum for each Vitest project. Node and
 Counting have separate case-duration sums. These concurrent duration sums
-are neither elapsed time nor CPU time. Missing durations remain unknown;
-failed or incomplete phases are labelled partial, and stages that never
-started are labelled unreached. Older Node APIs can lack stable case identities:
-all such terminals remain unknown and are excluded from ranking, including
+are neither elapsed time nor CPU time. Missing durations stay unknown.
+Failed or incomplete phases are labelled partial, and stages that never
+started are labelled unreached. Older Node APIs can lack stable case identities.
+All such terminals stay unknown and are excluded from ranking, including
 typed file wrappers the API cannot distinguish. Reporter EOF plus a successful
-stage exit proves stream consumption only, not complete case coverage; it does
-not invent a public test summary. Counting records the generated Node file
-and its validated source mapping. Its result does not prove browser execution.
+stage exit proves stream consumption only, not complete case coverage, and
+the summary invents no public test count. Counting records the generated Node file
+and its validated source mapping. Its result does not show that the
+browser runs it.
 
 The test command prints its evidence directory. Timing observations stay
 separate from the optional callback stream above. A failed pre-test gate
@@ -575,32 +692,23 @@ summary.
 The existing Lending story runs only in `scope-lending`, after `scope`.
 It uses the same real Worker, SQLite, read sessions, story acts, expected
 assertions and deadlines. It needs neither the clone server nor maintained
-application capture setup. Its repeated mixed-project projection failure
-remains masked; a fresh single-file runtime bounds reuse without proving
-the original cause, physical draining or universal cross-file cleanup.
-Both the root and Scope package entrypoints select the story exactly once.
+application capture setup. Both the root and Scope package entrypoints
+select the story exactly once.
 
 The `scope-denial` project then runs the post-sent local-denial witness in
 its own Worker runtime, with the same Worker and real SQLite storage. Both
-the root and Scope package entrypoints include it exactly once; the other
+the root and Scope package entrypoints include it exactly once. The other
 Operations witnesses, including T19's native global abort, stay in `scope`.
-The original denial body and all T19 assertions remain. Their operation
-opening uses one shared helper, not a second fixture implementation.
-
-This isolates the observed T2-to-T19 unsafe-abort interaction in the pinned
-test runtime. It does not fix that native helper bug or prove mixed-cohort
-cleanup or physical draining. Captured frames locate IncomingRequest task
-cancellation through the native abort, but do not identify the actor or
-context. The extra Worker startup costs time and memory; the denial project
-starts no clone fixture or Git server. Current full-gate cost and the approval
-of the exact commit under review remain separate obligations.
+The original denial body and all T19 assertions stay. Their operation
+opening uses one shared helper, not a second fixture implementation. The
+denial project starts no clone fixture or Git server.
 
 The command line's story, `packages/cli/test/*.scope.test.ts`, runs from
 the root inside the `scope` project too, and has no Worker of its own. Its
 commands go over the Worker's HTTP routes for the namespace `PLATFORM`,
-called in the test's isolate; the Git host and the scheduler are labelled
+called in the test's isolate. The Git host and the scheduler are labelled
 stand-ins in the file. Its readers are the real read sessions and signed
-reads, under a session secret that the test generates; the test's own reads
+reads, under a session secret that the test generates. The test's own reads
 of what a scope holds go past them by `platformNet.inspector`, a reader that
 the command never presents. The `cli` project is its Node test of the key files.
 
@@ -619,15 +727,15 @@ The page's story, `apps/room/page/test/story.scope.test.ts`, runs from the
 root inside the `scope` project too. Its room is `apps/room/page/test/support/demo.ts`:
 created by the command line over the Worker's HTTP routes, with the real
 read sessions under a TEST SECRET, and the site route for addresses under
-`/site/`; the Git host (`OwnGit` under the production wiring of Artifacts)
+`/site/`. The Git host (`OwnGit` under the production wiring of Artifacts)
 and the scheduler are labelled stand-ins there. Its reads
 and acts are the page's own data functions. The `page` project is its Node
 tests: the states of a change, and that the scope Worker's page module
 (`apps/room/page/assets.ts`) is the page's build of its source.
 `record.scope.test.ts` is no test of a property: it runs only with
 `PAGE_RECORD=1`, and `apps/room/page/test/screens.mjs` uses what it prints
-to take the page's screenshots in Chromium. That script needs
-`playwright-core` installed outside the checkout; it is not part of the
+to take the page's screenshots in a browser. That script needs
+`playwright-core` installed outside the checkout. It is not part of the
 gate.
 
 The lane scenarios, `apps/room/lanes/test/*.scope.test.ts`, run from
@@ -646,51 +754,44 @@ own operations, `api` of `@generalbusiness/dap-scope/worker`, in the
 test's isolate. A few acts go over the Worker's HTTP routes, where the
 scenario is about a route. The reason is cost: in the workerd pool a call
 through the Worker's entrypoint takes longer the more of them one run has
-made (observed; `notes/implementation/2026-10-05-i2-contract-deltas.md`, entry DK11).
+made (an observation, recorded in
+`notes/implementation/2026-10-05-i2-contract-deltas.md`, entry DK11).
 
 The Node `lanes` project checks the definitions and the scripted CLI proposal
 outcomes in `apps/room/lanes/test/cli-proposal-outcomes.test.ts`. The proposal
-witness has no native judgment or authority; its native counterparts stay in
+witness has no native judgment or authority. Its native counterparts stay in
 `manifest-tree.scope.test.ts`. The four definition tests read the four byte files
 under `apps/room/lanes/definitions`, and `docs/lanes-reference.md`,
-without importing them. So, by the rule above, a change to one of those
-files alone is not selected by `npm run test:changed`; the gate runs it.
+without importing them. So `npm run test:changed` does not select them
+when only one of those files changes, and the gate runs them.
 Two sets of generated files follow the lane definitions:
 `apps/room/lanes/src/digests.ts` with the byte files, written by
 `apps/room/lanes/scripts/pin.mjs`, and `docs/lanes-reference.md`, written
 by `apps/room/lanes/scripts/reference.mjs`. The pins test fails while
 either is stale.
 
-### Follow-up after a gate
+### The compatibility backport
 
-Do not run the gate again for a commit that changes only documents; say that the
-source and tests are unchanged, and give the two tree hashes.
-When a gate fails only in a test that reads a document and the repair changes
-only that document, rerun that test file and the steps the gate never reached,
-and report the failed run and follow-up together.
+`scripts/cloudflare-pool-compat.mjs` accepts only the pinned 0.22.0
+pool package and complete known bundle hashes. Cache-linked views receive
+a private physical copy, and the script never patches the shared cache.
+The backport installs the upstream prototype Proxy once for each wrapper
+class, and keeps native introspection and RPC behavior. It changes no
+pool settings. An unknown package version or unknown bytes stop the
+preparation.
 
-If a gate fails only in one test file, a targeted follow-up can cover an
-isolated repair to that file. Only the failing test file and
-explanatory documentation may change. Production code, configuration outside
-that file, dependencies, shared helpers and imported code must remain unchanged.
-The test file must not be imported by other files.
-
-Run any compiler context whose inputs changed, the whole owning test file,
-and the steps the gate never reached. Retain all original cases, their
-deadlines and their assertions about production behavior.
-Do not replace the failed case with a narrower test or weaken its assertions.
-Keep the failed gate and follow-up outcomes separate. The checker must assess
-whether the exact repair and evidence meet these conditions; a passing follow-up
-does not turn the failed gate into a pass.
-
-### The implementation note and its evidence
+## The implementation note and its evidence
 
 Each landing head carries one implementation note under
-`notes/implementation/`, of at most 40 KB, in this order: what changed;
-the decisions and why; the final evidence as one table with a row per
-check (check, command, exit code, digest of its output); the open limits,
-each with the request that owns it. Say how each timing, count or
-reconstruction was taken.
+`notes/implementation/`, of at most 40 KB, with these parts in this order:
+
+1. What changed.
+2. The decisions and why.
+3. The final evidence, as one table with a row for each check: the
+   check, the command, the exit code and the digest of its output.
+4. The open limits, each with the request that owns it.
+
+Say how each timing, count or reconstruction was taken.
 
 Raw run output stays out of the tree: gate logs, JSON reports, tail
 captures, mutation inventories and results, stdout and stderr. Write it
@@ -698,28 +799,33 @@ to one new directory under the owner's home,
 `~/play/artroom-evidence/<date>-<head-slug>/`, with a `SHA256SUMS` file at
 its top. Make the directory read-only after the last write
 (`chmod -R a-w`) and keep it for at least 30 days after the landing. Do
-not use `/tmp` or `/private/tmp`; a restart clears them. Removing a
-directory later is a planner act that names its manifest.
+not use `/tmp` or `/private/tmp`, because a restart clears them. A
+directory is removed later only by a recorded act that names its
+manifest.
 
 The head commits one manifest at
 `notes/implementation/evidence/<date>-<head-slug>.manifest.json` and
-nothing else under that directory. The manifest holds: a qualification
-line; the absolute directory path; the checkpoint commit and tree the
-evidence was taken at; the file count; and a `files` list with the path,
-bytes and sha256 of every file the note cites. The note's evidence table
+nothing else under that directory. The manifest holds:
+
+- a qualification line
+- the absolute directory path
+- the checkpoint commit and tree at which the evidence was taken
+- the file count
+- a `files` list with the path, bytes and sha256 of every file the note
+  cites
+ The note's evidence table
 names the same checkpoint. Where the reviewed head differs from it, the
 follow-up rule above applies.
 
 A raw file that holds a secret, a token or an unredacted request body
-stays out of the directory as well; the note names it as withheld. Other
+stays out of the directory as well, and the note names it as withheld. Other
 raw output, including room identifiers from hosted tails, may stay.
 
 Design packets commit their sources and at most three key images. Renders
 and screenshot series go in the directory and its manifest.
 
-The rule applies to heads filed after ruling `fcab078d` of 25 October
-2026. Notes, evidence files and manifests already in the tree stay as
-they are. The gate's `notes` step checks the committed base-to-head file
+Notes, evidence files and manifests that were in the tree before
+25 October 2026 stay as they are. The gate's `notes` step checks the committed base-to-head file
 changes. It warns on each added or changed file under
 `notes/implementation/` over 40,960 bytes, and on each added path under
 `notes/implementation/evidence/` whose name does not end in `.manifest.json`.
@@ -748,9 +854,10 @@ They do not start celld. The kept `scripts/test-celld-proxy.mjs` driver runs
 separately against an explicit pinned executable and actual production Worker.
 It owns its test TLS proxy, private configuration, client custody and process
 closure. Its local result establishes no deployment, backup or fleet recovery.
-See [Run the local Worker](celld.md).
-Pin every GitHub Actions `uses:` reference to a full 40-character commit hash
-with a trailing `# vN` major-version comment.
+See [Run the local Worker](celld.md). The same test checks that every
+`uses:` reference in `.github/workflows/celld-smoke.yml` names a full
+40-character commit hash with a trailing `# vN` major-version comment.
+Pin every GitHub Actions reference that way.
 
 The fixed Node stage also runs `scripts/mac-host-kit.test.mjs` once. Run it
 alone with `node --test scripts/mac-host-kit.test.mjs`. On Darwin, its one
@@ -768,8 +875,8 @@ services and prove no installed-host, shutdown, or deployment outcome.
 [Worker settings and bindings](security/settings.md). The checker follows
 tracked relative and workspace runtime imports from each configured Worker
 entry, including the separate `dap-celld-local` configuration. Each permanent
-Worker name binds its literal physical entry; re-exports do not merge deployment
-identities. Its full runtime import closure remains checked. It compares
+Worker name binds its literal physical entry, and re-exports do not merge
+deployment identities. Its full runtime import closure remains checked. It compares
 configured names and supported environment reads with the inventory, and
 refuses unsupported environment syntax or forwarding rather
 than silently omitting it. The tests compare the displayed lookup with the
@@ -782,58 +889,6 @@ runtime failure behavior, deployed settings, provider connectivity, or hosted
 authorization. The root `npm test` command includes this file once in its
 fixed Node stage before Counting and the plain and native Vitest phases.
 
-## Showing that a test distinguishes
-
-When you add or change a guard, show its witness fails without it. Break
-the one line and run the one test file:
-
-```
-node scripts/control.mjs <source file> '<old text>' '<new text>' [--expect '<part of the test name>'] -- <package dir> <test args>
-```
-
-It runs the tests unchanged, which must pass. Then it applies the change,
-runs them again and restores the file. It gives one of three results:
-
-| Result | Exit | Meaning |
-|---|---|---|
-| distinguishes | 0 | a test failed by an assertion with the change applied |
-| survives | 1 | every test still passed: they do not see this fault |
-| inconclusive | 2 | nothing was shown: the tests did not start, did not pass before the change, did not load or compile with it, ran fewer tests than before, had any timeout, or failed only by a thrown error |
-
-A result-checking helper fails with
-`expect.fail`, not with a thrown `Error`, so that a test which fails there
-has failed by an assertion.
-
-Only the first is evidence. With `--expect`, the test you name must be one
-of those that failed by an assertion, or the result is inconclusive. The
-helper prints each failed test and the first line of its failure. Read
-them: the assertion should be the one that states the invariant. The
-helper cannot judge that for you.
-
-There is no mutation sweep. Do not write one mutant per field or per
-condition, and do not run whole suites per mutant. One or two honest
-controls for each invariant you touch are the evidence. If a guard cannot
-change any outcome, because another check always decides first, say which
-check, and consider deleting the guard.
-
-## The invariant map
-
-The retired [test-invariants map](../notes/plans/retired/test-invariants.md)
-covers the earlier model's tests, which are removed. It is the proof plan's
-to replace. Until then each test's name states its invariant, and the two
-deltas notes name the witness of each decision.
-
-## For reviewers
-
-Review the change, the invariants it touches and their witnesses. Probe
-with a few focused counterexamples of your own. Check the head's evidence
-manifest: every listed file exists at the directory with its size and
-digest, and every digest the note cites is in the manifest. A missing or
-changed file is a changes-requested gap. Cite the manifest's own sha256
-in the report. Run the gate once at the
-head under review, subject to the [limited follow-up exception](#follow-up-after-a-gate).
-Do not rebuild a per-field or per-guard inventory.
-
 ## Measuring the cost
 
 `scripts/measure-tests.sh <output directory>` times each step
@@ -843,26 +898,36 @@ which the summed test-file time comes. It fails if a step fails. A sum of
 its steps is a sum of separate runs, not the time of one gate: for that,
 time `npm run gate` itself, which also prints each of its steps.
 
-The cost of the tests is judged by two figures, for the whole gate and for
-one edit taken to review (request `ecbc722a`, as amended by `da68c9a9`):
+Two figures judge the cost of the tests, for the whole gate and for one
+edit taken to review:
 
 - **elapsed**: how long the pipeline takes, which is how long a person
-  waits;
+  waits
 - **CPU**: user and system seconds over every process the pipeline
-  started, which is what the machine spent.
+  started, which is what the machine spent
 
 Other figures help to find where the time is. Say what each one is:
 
 - **summed test-file time**: the test durations in vitest's reports. It
-  leaves out imports and setup;
+  leaves out imports and setup.
 - **printed phase totals**: vitest's import and test totals over all test
-  files. Parallel load inflates them;
+  files. Parallel load inflates them.
 - **single-worker suite time**: `scripts/measure-tests.sh <dir> --serial`
   runs each suite with one worker. Its figure is the elapsed time of the
   whole command in a configuration the gate does not use. Do not call it
   worker time.
 
-A sum of separately timed steps is a sum; say so, and do not present it as
-one observed run.
+A sum of separately timed steps is a sum. Say so, and do not present it
+as one observed run.
 
 State the machine, the load and the cache state with any figure.
+
+## Source
+
+Checked against main `5dc9765f` on 30 October 2026. Sources:
+[`package.json`](../package.json), [`scripts/gate.sh`](../scripts/gate.sh),
+[`scripts/test.mjs`](../scripts/test.mjs),
+[`vitest.projects.mjs`](../vitest.projects.mjs),
+[`scripts/test-changed.mjs`](../scripts/test-changed.mjs),
+[`scripts/control.mjs`](../scripts/control.mjs),
+[`scripts/focused-check.mjs`](../scripts/focused-check.mjs).

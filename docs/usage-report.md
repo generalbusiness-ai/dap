@@ -2,9 +2,8 @@
 
 `scripts/usage-report.mjs` compares one 30-day Analytics Engine aggregate with
 the current checked-in Worker configuration inventory. It reports observed use
-and states what the existing telemetry cannot measure. This is the R14 script
-partial. Parent request `bb763efa` remains open for individual routes, native
-platform versions, and features beyond the current telemetry.
+and states what the existing telemetry cannot measure. Run it before you retire
+a Worker.
 
 Create an operator mapping outside the repository. Start from
 [the TEST example](../scripts/usage-report-mapping.example.json), replace its
@@ -33,12 +32,15 @@ option, or environment fallback. Input must contain a nonempty token of at most
 must end within ten seconds. The total input limit is 4,098 bytes. The script
 does not return the token or raw authenticated response in its report.
 
-Exit 0 means the bounded response was accepted and every selected Worker was
-mapped. Exit 2 refuses input or an unmappable Worker. Exit 1 marks an
-incomplete query or another report failure. If report text would contain the
-credential, the script emits no report and exits 1. An unexpected final output
-failure also exits 1 without printing a fallback that could disclose the
-credential.
+Exit 0 means the script accepted the bounded response and mapped every
+selected Worker. The report can still contain unobservable rows. Exit 2 means
+invalid input or a selected Worker that the mapping does not cover. When some
+selected Workers are mapped, the script queries once and still reports the
+mapping refusals for the others. When none is mapped, it refuses before it
+reads the token or sends a request. Exit 1 means an incomplete query or another
+report failure. If the report text would contain the credential, the script
+prints no report and exits 1. An unexpected failure of the final output also
+exits 1, without a fallback that could disclose the credential.
 
 `--account` is a 32-character lowercase hexadecimal Cloudflare account ID.
 `--mapping` is the absolute path to your mapping. Repeat `--worker` to select
@@ -127,16 +129,8 @@ It does not certify successful routes or accepted native acts.
 `workers[].coverage` states sampling, recorded loss, missing summaries, and the
 unobservable version and feature dimensions. `absenceProven` is always false.
 `query.unassignedGroups` counts groups without a usable mapped deployment
-label. The report includes `mappingSha256` and each Worker's `deploymentCount`;
-it does not echo deployment labels or the mapping path.
-
-Exit 0 means the query produced an accepted report with no selected Worker
-refused for its mapping. That report can still contain unobservable rows. Exit
-1 means the query or report is unavailable or incomplete. Exit 2 means invalid
-input or a selected Worker refused for its mapping. When some selected Workers
-are mapped, the script can query once and still report mapping refusals for
-others. When none is mapped, it refuses before reading the token or making a
-request.
+label. The report includes `mappingSha256` and each Worker's `deploymentCount`.
+It does not echo deployment labels or the mapping path.
 
 The query uses the account's
 `https://api.cloudflare.com/client/v4/accounts/<account>/analytics_engine/sql`
@@ -154,25 +148,20 @@ to detect truncation. Unfamiliar fields, including an explicit failure field,
 make the query unobservable.
 
 Sampling can hide observations and makes weighted totals estimates.
-`metric-dropped` summaries describe losses known to the writer; a missing
+`metric-dropped` summaries describe losses known to the writer. A missing
 summary does not prove loss-free capture. Disabled telemetry, write failures,
 missing historical aliases, and an incomplete window also limit coverage. Read
 the report's coverage and sampling qualifications before comparing Workers or
 deciding what to retire.
 
-The gate performs no live query. Recorded TEST emissions exercise the actual
-metric writer with a scripted sink. Separately labelled scripted SQL API
-responses exercise the report parser and decisions. Neither is evidence that
-hosted SQL ran or that a real account's data has the expected shape. The
-planner's first SQL run exposed the limit-hint mismatch in request
-`686f4ec9328d19f727e7f5e1352d0b550e6c595c`. Its observed envelope shape
-informed a scripted TEST case; no private provider rows were copied. The
-planner subsequently recorded a complete rerun with exit 0, a bounded response,
-and no unassigned groups under R14 (`dbf7e6bd`). That run establishes
-acceptance for its reported window and selected Workers. This script adds no
-telemetry and does not close the parent request's coverage gaps.
+The script adds no telemetry. Individual routes, native platform versions and
+individual features stay unobservable until the metric writer records them.
 
 [analytics-sql-api]:
   https://developers.cloudflare.com/analytics/analytics-engine/sql-api/
 [analytics-response-format]:
   https://developers.cloudflare.com/analytics/analytics-engine/sql-reference/statements/
+
+## Source
+
+Checked against main `5dc9765f` on 30 October 2026. Sources: [usage-report.mjs](../scripts/usage-report.mjs), [usage-report-mapping.schema.json](../scripts/usage-report-mapping.schema.json), [usage-report-mapping.example.json](../scripts/usage-report-mapping.example.json). The commands on this page were not run for this revision.

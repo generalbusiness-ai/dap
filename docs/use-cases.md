@@ -1,30 +1,27 @@
 # Use cases
 
-This page lists 51 situations that dap is meant to serve, and the cases
-that the [dap-spike](https://github.com/generalbusiness-ai/dap-spike)
-swept. They are sorted into six groups by what each one needs from dap.
-You can build the first group today. The [roadmap](roadmap.md) describes
-each missing piece that this page names.
+People build dap applications for shared work in which people and
+agents each sign their own acts and every member can check the record.
+The 51 cases below range from a lending library and a code review to a
+grow room, a bid response and an insurance claim that spans several
+organisations.
 
-The cases are proposals. Four of them exist, and their cards say
-**Built**. No case claims that an institution uses dap, that an outcome is
-fair or lawful, or that anyone saves money.
+Start with [group 1](#1-buildable-today): dap runs everything those cases
+need for the shared record. Each of the other five groups waits for a
+part that the [roadmap](roadmap.md) describes. The groups also list cases
+from the sweep of the [dap-spike](https://github.com/generalbusiness-ai/dap-spike),
+an earlier experiment.
 
-Each card is one telling of its situation. Its cast, who decides what,
+The cases are proposals. Four of them exist, and they say **Built**. No
+case says that an institution uses dap, that an outcome is fair or
+lawful, or that anyone saves money.
+
+Each case is one telling of its situation. Its cast, who decides what,
 and when each part closes are the example that the telling needs. They
 are not requirements that an application must fix in advance.
-[Pointing at things, and claims of agreement](#pointing-at-things-and-claims-of-agreement)
+[Notes about things, and what binds a party](#notes-about-things-and-what-binds-a-party)
 says what an application fixes for everyone and what it leaves to each
 party.
-
-Cases 01 to 10 extend ten examples from a public thread by Jim Prosser
-([opening](https://x.com/jimprosser/status/2108279507660726766),
-[conclusion](https://x.com/jimprosser/status/2108279638007107616)). Each of
-those cards links the post it extends. Cases 01 to 44 come from a draft of
-9 October 2026. Case 45, the lending library, was added later as a demo.
-Cases 46 to 51 come from design notes written between 16 and 20 October
-2026: a grow operation, a learning project, three sales applications
-and a brokered market.
 
 | Group | Cases | What the group needs |
 |---|---|---|
@@ -37,7 +34,7 @@ and a brokered market.
 
 ## What the cases have in common
 
-### Pointing at things, and claims of agreement
+### Notes about things, and what binds a party
 
 The things in these cases are concrete: a wall, a bill, a photograph, a
 car, a candidate for landing. What each thing means differs by party. To
@@ -46,29 +43,38 @@ scope to price. To the insurer it is evidence of a date. The parties do
 not have to agree on what a thing means to work on it together. They
 have to agree only on which thing it is.
 
-So a room needs two kinds of act that no application defines:
+So the design gives every room one act that no application defines:
+`note`. A note has two fields. Its `text` is a detached text with a
+media type. Its `about` lists references to documents and entries, and each reference
+can carry a fragment, such as a page of a PDF or a region of a photo.
+What a note is follows from its media type and from what it is about:
 
-- **Pointing.** Anyone can name a thing and say something about it: here
-  is the wall; this file is the drawing of it; I read the width as
-  4.2 m. Pointing needs nobody's agreement. It opens nothing that another
-  party must answer.
-- **A claim of agreement.** Named parties sign one statement: the owner
-  and the contractor agree to this change at this price. The claim takes
-  effect only when every named party has signed. It fixes the words and
-  the signatures. It does not fix what each party takes the words to
-  mean.
+- A **reading** is a note whose text is data, such as the charges parsed
+  from a bill. It is about the documents it read.
+- A **mark** is a short remark or a choice about one row, one note, or
+  one region of a document. "Ask about this." "Not in scope." "I was
+  home."
+- An **agreement** is a note, often one word or one glyph, about another
+  party's words.
 
-An application's rules are a third thing. They say what counts as a
+In the commons nothing binds. A note is its signer's statement, and a
+member who reads it is not bound by it. A party is bound only by a
+package act that the party signs, and that act names the terms by
+reference. [Boundary objects in use](../notes/2026-10-28-boundary-objects-in-use.md)
+gives the design. dap does not run the `note` act yet, and the
+[roadmap](roadmap.md#what-is-not-yet-built) lists it.
+
+An application's rules are a different thing. They say what counts as a
 proposal, an acceptance or a completion, and what each one changes. The
 rules bind every member of the room the same way, so adopting them is
 itself a recorded act. A case goes wrong when an application fixes a
-thing's meaning before the parties have claimed it. A package that calls
-the claim closed because one of its items reached a final state has
-forced the family's part into the insurer's structure. So this catalogue
-follows one rule: an application's structure is entered only through a
-claim of agreement by the parties it binds, or through an authority that
-one party already holds. The insurer decides its own claim. Nobody
-decides for the family when they are home.
+thing's meaning before the parties have settled it. Suppose a package
+closes the family's matter because the insurer's item reached a final
+state. That package has forced the family's part into the insurer's
+structure. So this catalogue follows one rule: an application binds a
+party only through an act that the party signs, or through an authority
+that one party already holds. The insurer decides its own insurance
+claim. Nobody decides for the family when they are home.
 
 Agreement then has three degrees, each one costlier than the one before:
 
@@ -82,16 +88,16 @@ Agreement then has three degrees, each one costlier than the one before:
    when they differ.
 
 A matter approaches agreement by moving a fact up these degrees, one
-signed act at a time: a document is captured, an agent reads it, a party
-proposes, the other party accepts, and each party closes its own part. A
-fact can move down again. A later report that the appointment was
+signed act at a time: a party captures a document, an agent writes a
+reading of it, one party proposes, the other party accepts, and each
+party closes its own part. A fact can move down again. A later report that the appointment was
 cancelled by phone does not remove the recorded confirmation. It changes
 what each party can rely on, and the screen says so.
 
 ### Many decisions, each with its own owner
 
 A real episode involves several independent decisions. After water
-damages a home, the insurer decides on the claim, a contractor agrees to
+damages a home, the insurer decides on the insurance claim, a contractor agrees to
 a repair, and the family arranges somewhere to stay. One person can follow
 all three. Following them does not give that person any say in them.
 
@@ -115,8 +121,10 @@ different weight. When an agent reads a document, by OCR, transcription
 or summary, its reading is a new statement attributed to the agent. The
 reading does not turn the document into the other party's confirmation.
 
-A person's own statement and a document are pointing. A signed act is a
-claim by one party. A claim of agreement is a signed act by several.
+A person's own statement and an agent's reading are notes. A document
+is kept unchanged and referenced by its digest. An agreement is a note
+about another party's words, and it binds nobody. When a rule must read
+agreement, each party signs a package act that names the terms.
 
 The documents themselves never change. What people conclude from them,
 and where each matter stands, can change.
@@ -157,24 +165,21 @@ show why these limits matter.
 
 ### How long things last, and when you get an answer
 
-Each card describes three kinds of content:
+Each case describes three kinds of content:
 
 - **Live** work keeps no record. Drafts, presence and guesses can vanish
   at any time.
 - The **journal** is the scope's record. It keeps every act in order.
 - **Custody** is a kept copy of the documents themselves, in Git or with
-  another keeper.
+  another keeper. A journal entry that references a document by its hash
+  does not keep the document. Custody needs the bytes, rules about who
+  may read them, and a retention period. Sensitive documents need
+  private custody.
 
-The [roadmap](roadmap.md#durability-levels) distinguishes scope durability
-from the room's archive binding. Execution supports Recorded. Live is
-not built. Sequenced is designed in
-[the sequenced level and the order scope](../notes/2026-10-18-sequenced-level-and-order-scope.md),
-and its first slices have landed. A journal entry that points at a
-document by its hash does not keep the document. Keeping it needs the bytes, rules
-about who may read them, and a retention period. Sensitive documents need
-private custody.
+The roadmap's [durability levels](roadmap.md#durability-levels) say which
+of these dap keeps today.
 
-The answer to an act can promise different things. "Applied for this
+The receipt for an act can promise different things. "Applied for this
 session" promises a local result only. "Recorded" promises that the act is
 in the journal, even if a guard then makes it ineffective. "Recorded and
 applied" promises both. dap
@@ -192,8 +197,8 @@ An application in this catalogue fixes some things for every member and
 leaves the rest to each party. It fixes, for everyone:
 
 - The acts, the guards on them and what they write.
-- Which claim of agreement, or which granted authority, each act needs
-  before it binds a party other than its signer.
+- Which acts bind a party. An act binds its own signer. An act that
+  binds another party needs an authority that the signer already holds.
 - Exact versions of the documents and terms that its guards read.
 - Who can read what.
 - What the end of each of its items means. An item's final state ends
@@ -203,7 +208,7 @@ It leaves to each party:
 
 - Which things the matter is about, and what each thing means to them.
 - Who else takes part. An act names the parties it binds. The rest of
-  the cast is whoever points, says and claims.
+  the cast is whoever writes notes and signs acts in the room.
 - How the record is shown to them, on a screen or to their agent.
 - When their own part is closed, and as what.
 
@@ -238,11 +243,11 @@ Its rules are guards on acts, and membership grants say who may take each
 act. dap runs all of that today. A fact from outside the room enters as a
 participant's signed report.
 
-Every card also describes live work that keeps no record and custody of
+Every case also describes live work that keeps no record and custody of
 documents. Those parts wait for
 [durability levels](roadmap.md#durability-levels) and
 [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody)
-in every group, so the cards below name them only where they matter most.
+in every group, so the cases below name them only where they matter most.
 
 ### 45 A lending library
 
@@ -310,8 +315,8 @@ practice stays in the learner's own chat.
 Proposed in
 [shared learning within your existing AI app](../notes/2026-10-16-learning-in-your-ai-app.md).
 **Also needs:** [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody),
-for recordings; and a person's access to the room from their own AI
-app, which the hosted endpoint's OAuth head covers
+for recordings. It also needs a person's access to the room from their
+own AI app, which needs OAuth on the hosted endpoint
 ([hosted endpoint note](../notes/2026-10-13-hosted-mcp-endpoint.md)).
 
 ### 44 Agents counting with attributed turns and speech
@@ -423,7 +428,7 @@ A lost answer to a fix never means that nothing happened. A second
 attempt follows the first attempt's recovery rule. It does not start as
 a new operation.
 
-**Also needs:** [durability levels](roadmap.md#durability-levels), for presence and hypotheses that keep no record; [outside parties and systems](roadmap.md#outside-parties-and-systems), for a fix that the scope sends.
+**Also needs:** [durability levels](roadmap.md#durability-levels), for presence and hypotheses that keep no record. It also needs [outside parties and systems](roadmap.md#outside-parties-and-systems), for a fix that the scope sends.
 
 ### 03 A grocery budget that respects each person's preferences
 
@@ -568,7 +573,7 @@ outreach, replies, and a proposal the prospect accepts.
 - **Who decides:** the owner signs outreach, records replies and
   proposes. The assistant and a researcher draft and write notes, each
   refused without a source. A prospect who is a member accepts or
-  declines from their own AI app; otherwise the owner records their
+  declines from their own AI app. Otherwise the owner records their
   answer with its source.
 - **When it closes:** the owner closes an account as won, lost or
   dormant. A proposal closes accepted, declined or superseded, and a
@@ -593,7 +598,7 @@ manager, with agents decomposing the request and drafting answers.
   statements. The sales engineer reviews them into the response.
   Pricing and legal approve the price and the terms at exact revisions.
   Management decides go or no-go and submits. The buyer is outside the
-  room; their questions, answers and award enter as the owner's reports
+  room. Their questions, answers and award enter as the owner's reports
   with sources. The intake and drafting agents hold no supply, review
   or approval grant.
 - **When it closes:** an assembly is complete or refused. A submission
@@ -608,7 +613,7 @@ Designed in
 [three sales applications](../notes/2026-10-19-sales-applications-design.md),
 section 6. **Also needs:** [outside parties and systems](roadmap.md#outside-parties-and-systems),
 for the buyer's own acceptance and for the destination's receipt to
-reach the room as its own fact; [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody),
+reach the room as its own fact. It also needs [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody),
 for files. The intake agent as a hosted member waits for
 [hosted agent teams](../notes/2026-10-15-hosted-agent-teams-design.md)
 and runs from the owner's machine until then.
@@ -620,8 +625,8 @@ One or two people publish on a schedule with an agent that drafts.
 - **Who decides:** the owner plans, approves the exact text and
   publishes. A reviewer comments and approves. The writer agent drafts
   and revises, and a revision resets any approval.
-- **When it closes:** a post is admitted, refused with its reason, or
-  retired. Whether the file is on the site is a member's check, shown
+- **When it closes:** a post takes effect, is refused with its reason,
+  or is retired. Whether the file is on the site is a member's check, shown
   with their name.
 - **What the record keeps:** campaigns, posts with their request
   outcomes, and comments. Publication to the site is the repository
@@ -652,7 +657,7 @@ application uses messages between its own scopes, or it declares an
 outside operation. dap-room's own scopes already work by messages.
 "Nearly" refers to the shared record: cases 25, 33 and 51 also keep
 one part in a room of its own, as
-[group 3](#3-separate-rooms-one-authority) describes and their cards
+[group 3](#3-separate-rooms-one-authority) describes and those cases
 say.
 
 ### 33 Booking a room or equipment, with event dependencies
@@ -684,8 +689,8 @@ An agent compares estimates and what each person might contribute.
   person's limit.
 - **When it closes:** each contributor closes their exact amount and
   conditions. The supplier closes the order. Delivery and payment close
-  separately. One person saying "we agreed" stays a claim until the
-  others confirm.
+  separately. One person saying "we agreed" stays that person's
+  statement until the others confirm.
 - **What the record keeps:** versioned commitments, each person's
   maximum and corrections. Custody keeps the accepted quote and receipts
   privately.
@@ -703,7 +708,7 @@ A buyer's agent organises requirements and the seller's documents.
 - **Who decides:** the buyer and their partner set the budget. The seller
   knows the car's history. An inspector supplies a limited report.
   Finance and registration offices run their own processes. An agent
-  cannot turn a seller's claim into an inspection finding.
+  cannot turn a seller's statement into an inspection finding.
 - **When it closes:** buyer and seller close the terms they agree.
   Payment, papers and accepting the car's condition close separately.
   Missing papers or a conflicting report stay open.
@@ -711,7 +716,7 @@ A buyer's agent organises requirements and the seller's documents.
   exact version, and the handover list. Private custody keeps the report,
   the terms, receipts and photos.
 
-**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so the inspection is its own scope that returns a result; [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody), for the report and terms.
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so the inspection is its own scope that returns a result. It also needs [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody), for the report and terms.
 
 ### 35 Approving a release and recording the deployment
 
@@ -766,10 +771,11 @@ Designed in
 [a brokered market as a dap application](../notes/2026-10-20-market-application-design.md).
 **Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes),
 across rooms, so that the market room sends each provider only what
-that provider may read, and each provider's answers return; [outside parties and systems](roadmap.md#outside-parties-and-systems),
-for the buyer's own acceptance; and a person's access to the room from
-their own AI app, which the OAuth work on the hosted endpoint covers
-(request `3f598e55`; [hosted endpoint note](../notes/2026-10-13-hosted-mcp-endpoint.md)).
+that provider may read, and each provider's answers return. It also
+needs [outside parties and systems](roadmap.md#outside-parties-and-systems),
+for the buyer's own acceptance, and a person's access to the room from
+their own AI app, which needs OAuth on the hosted endpoint
+([hosted endpoint note](../notes/2026-10-13-hosted-mcp-endpoint.md)).
 Custody for payment and vetting evidence waits for
 [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody).
 
@@ -868,7 +874,7 @@ A requester's agent drafts requirements and compares quotes.
 separates planning, tender, award, contract and delivery. A published
 award is not the supplier's order or a completed delivery.
 
-**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that each supplier reads only its own offer in its own room, and receives the award's notice; [outside parties and systems](roadmap.md#outside-parties-and-systems), for the supplier's own acceptance. A losing supplier holds the notice and its citation, not the comparison.
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that each supplier reads only its own offer in its own room, and receives the award's notice. It also needs [outside parties and systems](roadmap.md#outside-parties-and-systems), for the supplier's own acceptance. A losing supplier holds the notice and its citation, not the comparison.
 
 ### 39 A job application, offer and onboarding
 
@@ -890,7 +896,7 @@ offer. A recruiter's agent organises the criteria.
 Accounts set up and an actual first day need outside evidence. A dispute
 about a fact stays separate from disagreeing with the decision.
 
-**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that the candidate reads their own application and the assessments stay in the hiring scope; [outside parties and systems](roadmap.md#outside-parties-and-systems), for account setup and the actual start.
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that the candidate reads their own application and the assessments stay in the hiring scope. It also needs [outside parties and systems](roadmap.md#outside-parties-and-systems), for account setup and the actual start.
 
 ### 40 A school support plan and whether it is delivered
 
@@ -901,7 +907,7 @@ questions.
   classroom. A specialist interprets evidence. A school representative
   knows the resources. The
   [Department of Education's team roles](https://sites.ed.gov/idea/regs/b/d/300.321)
-  are one example of these roles. This card does not adopt a legal
+  are one example of these roles. This case does not adopt a legal
   procedure.
 - **When it closes:** a meeting ending is not agreement on a plan, and
   agreement is not support delivered. Dissent or missing support stays
@@ -913,7 +919,7 @@ questions.
 Private notes stay private even when they shaped a proposal. A signed
 plan does not prove the support happened.
 
-**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that a specialist's private notes stay in their own room and the plan receives only what they chose to put forward; [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody), for the official versions.
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that a specialist's private notes stay in their own room and the plan receives only what they chose to put forward. It also needs [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody), for the official versions.
 
 ### 41 A research review and a reproducible result
 
@@ -936,7 +942,7 @@ expert advice from the funding decision. Git can hold code. Restricted
 data needs another keeper. Access for review is not permission to
 publish.
 
-**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that each review is in a room of its own, the editor's room receives it, and the author reads the decision and not the reviewer; [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody), for restricted data.
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that each review is in a room of its own, the editor's room receives it, and the author reads the decision and not the reviewer. It also needs [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody), for restricted data.
 
 ### From the dap-spike's sweep: separate rooms
 
@@ -965,7 +971,7 @@ A member's agent helps write a proposal and its budget options.
 
 - **Who decides:** members have competing priorities. The treasurer knows
   the funds and private reasons about members' standing. A committee
-  applies the admission rules. A steward carries out decisions. Agents
+  applies the membership rules. A steward carries out decisions. Agents
   advise their people. They are not extra votes.
 - **When it closes:** a motion or a membership decision closes only under
   the pinned rules for eligibility, quorum and disclosure. Spending,
@@ -993,9 +999,9 @@ organisations that have not joined. Each needs all three of
 [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody),
 [outside parties and systems](roadmap.md#outside-parties-and-systems) and
 [a personal account across records](roadmap.md#a-personal-account-across-records).
-A note under a card names anything more.
+An **Also needs** line under a case names anything more.
 
-In every card, a summary, a status on a screen or a receipt is not the
+In every case, a summary, a status on a screen or a receipt is not the
 same as the outcome. Each person can close their own part, keep their
 disagreement, and reopen the matter when new evidence arrives.
 
@@ -1380,7 +1386,7 @@ question to the insurer.
   estimates and replies.
 
 Newly found damage opens a new request without rewriting the earlier
-record. Submitting a claim is not having it accepted.
+record. Submitting an insurance claim is not having it accepted.
 
 ### 28 Accident repair and a hire car
 
@@ -1440,14 +1446,14 @@ in the record. A refusal can close the matter with the disagreement kept.
 A private export lets a new helper take over without involving the
 hospital.
 
-### A home claim holds several separate outcomes
+### A home insurance claim holds several separate outcomes
 
 Case 27 covers the insurer's answer, the repair and where the family
 stays. A spoken account, photos and an imported estimate are different
 from the agent's summary of them. The owner's approval applies to the
 exact bundle submitted.
 
-A refused claim, a partly accepted repair and the family's return can all
+A refused insurance claim, a partly accepted repair and the family's return can all
 be true at once. Replacing a contractor changes who is engaged and who
 sees what. It does not change who promised what before. Custody keeps
 the key photos and the exact versions, not just a transcript. Each person
@@ -1483,23 +1489,29 @@ refresh the page or stage a turn out of order to show this.
 
 ## Source
 
-Written from a draft of 9 October 2026, regrouped on 13 October 2026
-against main `d1b845f8`, and revised on 14 October 2026 against main
-`f20df342` for plain language. On 20 October 2026, against main
-`13193f31`, cases 46 to 51 were added from the design notes they cite,
-and the former private-views group was split into groups 3 and 4 by one
-test: whether one party holds the shared decision for the others. The
-grouping is a judgement from reading the documentation and the
-definitions. No case was built or run for this page, except the four
-marked **Built**.
+Checked against main `5dc9765f` on 30 October 2026. Sources:
+[boundary objects in use](../notes/2026-10-28-boundary-objects-in-use.md),
+[the roadmap](roadmap.md), and the design note that each case cites.
 
-The frame of pointing and claims was added on 27 October 2026 against
-main `6f47bf98`. It comes from five sources: Star and Griesemer,
-"Institutional Ecology, 'Translations' and Boundary Objects" (Social
-Studies of Science, 1989); Star, "This is Not a Boundary Object"
-(Science, Technology, & Human Values, 2010); Bowker and Star, Sorting
-Things Out (1999), chapter 9, on boundary infrastructures; Licklider
-and Taylor, "The Computer as a Communication Device" (1968), on
-externalized models; and Maggie Appleton, "Planning with Agents"
-(maggieappleton.com/planning-agents), on thick interfaces between
-people and agents.
+Cases 01 to 10 extend ten examples from a public thread by Jim Prosser
+([opening](https://x.com/jimprosser/status/2108279507660726766),
+[conclusion](https://x.com/jimprosser/status/2108279638007107616)), and
+each of those cases links the post it extends. Cases 01 to 44 come from
+a draft of 9 October 2026. Case 45, the lending library, came later as a
+demo. Cases 46 to 51 come from design notes written between 16 and 20
+October 2026: a grow operation, a learning project, three sales
+applications and a brokered market.
+
+The frame of notes and references draws on five sources:
+
+- Star and Griesemer, "Institutional Ecology, 'Translations' and
+  Boundary Objects" (Social Studies of Science, 1989).
+- Star, "This is Not a Boundary Object" (Science, Technology, & Human
+  Values, 2010).
+- Bowker and Star, Sorting Things Out (1999), chapter 9, on boundary
+  infrastructures.
+- Licklider and Taylor, "The Computer as a Communication Device" (1968),
+  on externalized models.
+- Maggie Appleton, "Planning with Agents"
+  (maggieappleton.com/planning-agents), on thick interfaces between
+  people and agents.

@@ -1,17 +1,14 @@
 # Roadmap
 
-This page says what dap does today, what is not yet built, and which use
-cases need each missing part. It also says what the
-[dap-spike](https://github.com/generalbusiness-ai/dap-spike) contributed:
-the earlier experiment that tested several of these ideas, and recorded
-where they failed.
+dap runs a shared record today, and several parts that the use cases
+need are not built yet. The tables below give each part its state and the
+cases that need it, in order and with no dates. The case numbers refer to
+the [use cases](use-cases.md) catalogue. The last section says what the
+[dap-spike](https://github.com/generalbusiness-ai/dap-spike), an earlier
+experiment, found about several of these ideas.
 
-The page gives states and an order, and no dates. The
-[use cases](use-cases.md) page holds the catalogue that the case numbers
-below refer to.
-
-The [kernel boundary](kernel.md) page says which parts every later design
-must keep stable, and lists the parts that fail its test today.
+The [kernel boundary](kernel.md) says which parts every later design must
+keep stable, and lists the parts that fail its test today.
 
 ## What runs today
 
@@ -26,13 +23,14 @@ must keep stable, and lists the parts that fail its test today.
 | dap-counter, a declared application in which people and agents take turns. | [The Counter source](../apps/counter/README.md), [Build a counter](build-a-counter.md) |
 | dap-library, a declared lending library. Each act that changes a thing also publishes that thing's shelf page through the room's destination. | [The lending library](../examples/lending/README.md), [Build a lending library](build-a-lending-library.md) |
 | Agents act in a room through MCP: a local server over stdio or loopback HTTP, and a hosted endpoint on the scope Worker. | [MCP](mcp.md), [The hosted endpoint](mcp.md#the-hosted-endpoint) |
-| A room created from the served page, with no email; or a whole service run on your own account. | [Run dap in 10 minutes](self-host.md) |
+| A room created from the served page, with no email. A whole service run on your own Cloudflare account. | [Run your own service](self-host.md) |
+| A room Worker run on your own machine with celld, and a kit that installs it as a service on a Mac. | [Run the local Worker](celld.md), [Run on a Mac](self-host.md#run-on-a-mac) |
 | Published repositories served as pages. | [Pages](pages.md) |
 | dap-grow, a declared application of several scopes: a site that creates grow rooms, with operator views, probes from chat, routing, presence and device commands. A simulator runs the hosted demo room. | [The grow runbook](../examples/grow/runbook.md) |
-| Application packages: `dap new`, `dap dev`, `dap check` and `dap pack`; a room installs a trusted package in one act; package views run as cards in an AI app. | [Run your app](run-your-app.md), [Declared application views](application-views.md) |
+| Application packages: `dap new`, `dap dev`, `dap check` and `dap pack`. A room installs a trusted package in one act. Package views run as cards in an AI app. | [Run your app](run-your-app.md), [Declared application views](application-views.md) |
+| Evidence rules for landing, first slice, deployed. A room's rules say who may produce a check's result, when the check runs, and whether a passed result on the same tree counts again. Rooms opt in to it. | [Evidence rules for landing](../notes/2026-10-16-evidence-rules-design.md), [`evidence-cohort.ts`](../packages/platform/src/evidence-cohort.ts) |
 
-Each of those pages states its own evidence and limits. The table in
-[Scopes](scopes.md) under "What runs" is the most exact account.
+Each of those pages states its own evidence and limits.
 
 ### Publication from a fold
 
@@ -40,8 +38,8 @@ When an act takes effect in an application's scope, the same act can say
 "this text is the content of this path", and the room's destination
 commits and publishes that file. The destination checks that the request
 comes from an application of its own room. The lending library uses this
-for its shelf pages. The scope does not check the page's text against
-the record; the journal shows who stated it. The design is
+for its shelf pages. The scope does not check the shelf page's text
+against the record. The journal shows who stated it. The design is
 [the fold publication note](../notes/2026-10-13-fold-publication.md).
 
 Three limits shape everything below:
@@ -50,14 +48,15 @@ Three limits shape everything below:
   bound to a repository, not to a participant's part of it.
 - **A definition is pinned when its scope is created.** A scope does not
   change its rules afterwards. An application is designed to move to a new
-  definition by succession to a new scope; that is not built.
+  definition by succession to a new scope. Succession is not built.
 - **A declared application has no operation of its own on an outside
   system.** It can list the fixed capability forms that the contract
-  declares, `hold@1`, `git-read@1` and `device-command@1`, when their code
-  is supplied. `device-command@1` records a commanded target and the owner's
-  signed answer; it reaches no device. It
-  cannot declare an application-specific operation, and no host adapter
-  for one exists.
+  declares, when their code is supplied: `hold@1` and `hold@2` for a
+  performer's hold and its token, `git-read@1` for a check's read token,
+  and `device-command@1`. `device-command@1` records a commanded target
+  and the owner's signed answer. It reaches no device. An application
+  cannot declare an operation of its own, and no host adapter for one
+  exists.
 
 ## What is not yet built
 
@@ -65,29 +64,31 @@ In order, nearest first.
 
 | Capability | State | Use cases that need it |
 |---|---|---|
-| [An application's own messages between scopes](#an-applications-own-messages-between-scopes) | Runs within one room: the grow site and its rooms; not yet across rooms | 21, 25, 31, 32, 33, 37, 39, 40, 41, 51, and parts of 08, 18, 19, 24 |
-| [Durability levels](#durability-levels) | Recorded is declared; the journal floor's first two slices are built; Live and Sequenced are designed, not built | 36, 44, and the live part of every case |
-| [A fork for each hold](#a-fork-for-each-hold) | Planned; a first measurement ran | 34 |
-| [Offline work and propose from a branch](#offline-work-and-propose-from-a-branch) | Proposing a branch's UTF-8 files is built; offline work is designed, not built; a pack upload protocol is not designed | 34 |
-| [Private views in one record](#private-views-in-one-record) | Not designed in dap; tested in the dap-spike | 42, and the club and the kanban board from the dap-spike's sweep |
-| [Evidence capture and private custody](#evidence-capture-and-private-custody) | Files and capture with a stated source designed, not built; custody narrower than a room not designed | 01, 02, 04 to 19, 23, 24, 27, 28, and the custody part of every case |
+| [The commons `note` act](../notes/2026-10-28-boundary-objects-in-use.md) | Designed. The first slice, a fragment on references and the `note` act, is being built | Every case: readings, marks and agreements between parties |
+| [An application's own messages between scopes](#an-applications-own-messages-between-scopes) | Runs within one room, for the grow site and its rooms. Not yet across rooms | 21, 25, 31, 32, 33, 37, 39, 40, 41, 51, and parts of 08, 18, 19, 24 |
+| [Durability levels](#durability-levels) | Recorded runs. The journal floor's first two slices and the archive binding are built. Live and the Sequenced level are designed, not built | 36, 44, and the live part of every case |
+| [A fork for each hold](#a-fork-for-each-hold) | Planned. A first measurement ran | 34 |
+| [Offline work and propose from a branch](#offline-work-and-propose-from-a-branch) | Proposing a branch's UTF-8 files is built. Offline work is designed, not built. A pack upload protocol is not designed | 34 |
+| [Private views in one record](#private-views-in-one-record) | Not designed in dap. Tested in the dap-spike | 42, and the club and the kanban board from the dap-spike's sweep |
+| [Evidence capture and private custody](#evidence-capture-and-private-custody) | Files and capture with a stated source are designed, not built. Custody narrower than a room is not designed | 01, 02, 04 to 19, 23, 24, 27, 28, and the custody part of every case |
 | [Outside parties and systems](#outside-parties-and-systems) | Runs for Git publication only | 35, 37, 38, 39, 43, and all of group 5 |
 | [A personal account across records](#a-personal-account-across-records) | Not designed | All of group 5 |
-| [Rules that change after creation](#rules-that-change-after-creation) | Succession to a new scope designed, not built; change inside a running scope tested in the dap-spike | 42; a sale that gains packages; a club that changes its policy |
-| [Expressions that compute effects](#expressions-that-compute-effects) | Not designed; a rule can check a proposed value today | Analytic pipelines such as Tailapps; chess and other games with many rules |
-| [Split and join](#split-and-join) | Not designed; a protocol is sketched in the dap-spike | A merger of two records |
-| [An authoring language](#an-authoring-language) | Not designed; one attempt in the dap-spike stopped | Every case, for its author |
-| [Hosted agent teams](../notes/2026-10-21-roles-flow-and-instances.md) | Designed; not built | Every case with agents in a team |
-| [Running dap off Cloudflare](../notes/2026-10-19-self-hosting-on-celld.md) | Designed; not built | Self-hosting |
-| [Sequence and event identifiers](../notes/2026-10-19-record-and-event-identifiers.md) | Designed; not built | Records read outside dap |
-| [Charts composed in chat](../notes/2026-10-20-chat-composed-views.md) | Designed; not built | Every case with measurements |
+| [Rules that change after creation](#rules-that-change-after-creation) | Succession to a new scope is designed, not built. Change inside a running scope was tested in the dap-spike | 42, a sale that gains packages, and a club that changes its policy |
+| [Expressions that compute effects](#expressions-that-compute-effects) | Not designed. A rule can check a proposed value today | Analytic pipelines such as Tailapps, and chess and other games with many rules |
+| [Split and join](#split-and-join) | Not designed. The dap-spike sketches a protocol | A merger of two records |
+| [An authoring language](#an-authoring-language) | Not designed. One attempt in the dap-spike stopped | Every case, for its author |
+| [Hosted agent teams](../notes/2026-10-21-roles-flow-and-instances.md) | Designed, not built | Every case with agents in a team |
+| [OAuth on the hosted MCP endpoint](../notes/plans/031-2026-10-12-generic-mcp-service.md) | Designed, not built. The [hosted endpoint](mcp.md#the-hosted-endpoint) takes a bearer token today | 47, 51, and every person who reaches a room from their own AI app |
+| [Running dap off Cloudflare](../notes/2026-10-19-self-hosting-on-celld.md) | The [local Worker](celld.md) and the [Mac kit](self-host.md#run-on-a-mac) run. The rest of the self-hosting design is not built | Self-hosting |
+| [Sequence and event identifiers](../notes/2026-10-19-record-and-event-identifiers.md) | Designed, not built | Records read outside dap |
+| [Charts composed in chat](../notes/2026-10-20-chat-composed-views.md) | Not built. Superseded by views as notes in [boundary objects in use](../notes/2026-10-28-boundary-objects-in-use.md) | Every case with measurements |
 
 ### An application's own messages between scopes
 
 **What it is.** An application made of several scopes, in which one scope
-owns each shared constraint and the others ask it. Examples: one scope
-owns a budget that two projects spend from; one allocator owns the
-capacity of a building with many rooms; an inspection runs in its own
+owns each shared constraint and the others ask it. For example, one
+scope owns a budget that two projects spend from. One allocator owns the
+capacity of a building with many rooms. An inspection runs in its own
 scope and returns a result to the sale.
 
 **Today.** The mechanism runs: dap-room's register, directory, membership,
@@ -110,7 +111,7 @@ a boundary may go: a right that only one party can exercise needs one
 owner
 ([boundaries and composition](https://github.com/generalbusiness-ai/dap-spike/blob/main/notes/2026-09-14-evolving-spaces-design.md)).
 It also separates three ways to cross a boundary: link to an outside act,
-admit a result from an exact position of another record, and join. The
+accept a result from an exact position of another record, and join. The
 spike ran these in one bounded fixture: an inspection's result is
 imported into the sale from an exact position, and a later fulfilment
 joins the two
@@ -127,28 +128,30 @@ the [market note](../notes/2026-10-20-market-application-design.md) needs.
 **What it is.** A scope's definition declares one of three levels.
 **Live**: no record is kept, and the scope can reset. **Recorded**: the
 scope keeps its journal, as every scope does today. **Sequenced**: scopes
-that share an order use an order scope. An archive is a separate room
-binding; it is no longer a durability level.
+that share an order use an order scope. An archive is not a durability
+level. It is a binding of the room.
 
-**Today.** Execution supports Recorded only. Explicit archive cohorts let
-the Directory bind a journal archive, and a signed package can require
-that binding before installation. Existing cohorts retain their old pins.
-Binding does not establish export. The archive engine runs on the hosted
-`dap-grow` Worker for the demo room; admission and consent for other rooms
-are still outstanding.
+**Today.** Scopes run at Recorded only. A room's directory can bind a
+journal archive, and a signed package can require that binding before it
+installs. Rooms created before the binding keep their old platform
+versions. A binding alone exports nothing. The archive engine runs on the
+hosted `dap-grow` Worker for the demo room. Other rooms cannot yet join
+an archive or consent to one.
 
-**Use cases.** Practice counting that keeps no record (44); presence and
-hypotheses during an incident (36); the drafts and tentative options in
-every card of the catalogue.
+**Use cases.** Practice counting that keeps no record (44), presence and
+hypotheses during an incident (36), and the drafts and tentative options
+in every case of the catalogue.
 
 **State.** The
 [sequenced level note](../notes/2026-10-18-sequenced-level-and-order-scope.md)
-supersedes the earlier Archived level. The room binding and manifest
-requirement are separate from the sequenced runtime and foreign-source
-archive work. The
+replaces the earlier Archived level. Two of its parts are built: the
+`late` form, with which a request handler judges a delivery's age, and
+the archive binding. The Sequenced level itself and the order scope are
+not built. The
 [journal floor note](../notes/2026-10-20-retained-journal-floor.md)
 designs incremental archive passes and a floor below which a scope drops
-archived entries. Its first slices are being built.
+archived entries. Its first two slices, F1 and F2, are built. The third,
+F3, is not.
 
 ### A fork for each hold
 
@@ -161,7 +164,7 @@ fork. The performer never holds a token to the destination.
 
 **State.** [Plan 029](../notes/plans/029-2026-10-11-artifacts-forks.md). A
 first measurement created a fork on Cloudflare Artifacts and committed to
-it; what a fork costs in storage is not yet measured
+it. What a fork costs in storage is not yet measured
 ([the measurement](../notes/implementation/2026-10-13-fork-cost-measurement.md)).
 
 ### Offline work and propose from a branch
@@ -175,8 +178,8 @@ result at once and reconciles it with the record.
 designs a signed local outbox, reconnection and the revision of stale
 drafts. Nothing in it is built. `dap propose` already proposes the
 supported UTF-8 files of a local branch, within its size, path and type
-limits (`packages/cli/src/commands.ts:1578-1665`, landed with
-`a1277d9c`). Proposing any other content needs a pack upload protocol,
+limits (the `propose` function in `packages/cli/src/commands.ts`).
+Proposing any other content needs a pack upload protocol,
 and the note leaves it undesigned.
 
 ### Private views in one record
@@ -212,7 +215,7 @@ It wrote the conditions for failure before it ran.
   verdict on every event that both could see.
 - Privacy held in those two models. Offer amounts stayed between bidder
   and seller.
-- The Club model's original policy for admitting members fails, and that
+- The Club model's original policy for taking in members fails, and that
   result was kept
   ([decision](https://github.com/generalbusiness-ai/dap-spike/blob/main/notes/2026-09-16-club-admission-decision.md)).
   The result is for two models, not three.
@@ -237,7 +240,7 @@ what the party was told and where it stands. It does not let the party
 replay the comparison behind the decision. Membership is the boundary,
 and dap checks it. Private views in one record remain for the
 cases in which the rule binds the group and nobody holds the whole: a
-tally over private standing, an admission rule, a limit over private
+tally over private standing, a membership rule, or a limit over private
 cards.
 
 ### Evidence capture and private custody
@@ -261,7 +264,7 @@ built. Custody narrower than a room is not designed.
 
 **Use cases.** Group 5 of the
 [catalogue](use-cases.md#5-episodes-across-organisations), and the
-custody part of every other card.
+custody part of every other case.
 
 **The dap-spike's contribution.** Its direction note names the three kinds
 of record and lists the account, the capture and the anchor as unfinished
@@ -279,8 +282,8 @@ Git host, with its receipt and pending cleanup. A declared application
 cannot declare its own operation. A fact from outside can enter only as a
 participant's signed report.
 
-**Use cases.** Release and deployment (35); a payment attempt (38); a
-tool executor's work (43); every counterparty in group 5.
+**Use cases.** Release and deployment (35), a payment attempt (38), a
+tool executor's work (43), and every counterparty in group 5.
 
 **The dap-spike's contribution.** Its obligations experiment declared a
 task with a role, a performing act and a deadline. The controls for late,
@@ -412,40 +415,33 @@ refused terms to the wrong readers
 ## What the dap-spike contributed
 
 The dap-spike was a research experiment, not a product. It built three
-small models (a sale with private offers, a room booking with a clock,
-and a club that admits members by vote) on one foundation, and tried to
-break its own claims. Its results, in one table:
+small models on one foundation and tried to break its own claims: a sale
+with private offers, a room booking with a clock, and a club that takes
+in members by vote.
 
-| Question | Result | Report |
+| Question | In the dap-spike | In dap today |
 |---|---|---|
-| Do people with different views of one record agree? | Yes, in the Sale and Booking fixtures that ran | [Visibility](https://github.com/generalbusiness-ai/dap-spike/blob/main/spike/REPORT.md) |
-| Does privacy survive? | Yes, in those two models | The same |
-| Can a record gain a capability part-way through? | Yes, in the fixtures that ran | The same, and [ordering](https://github.com/generalbusiness-ai/dap-spike/blob/main/spike/ORDERING-REPORT.md) |
-| Can an agent write a model within a small repair budget? | No. Sale needed six repairs against a budget of two | [Visibility](https://github.com/generalbusiness-ai/dap-spike/blob/main/spike/REPORT.md) |
-| Does Club's original policy for admitting members hold? | No. The failure was kept | [Decision](https://github.com/generalbusiness-ai/dap-spike/blob/main/notes/2026-09-16-club-admission-decision.md) |
-| Does a declaration layer remove the authoring errors? | Not this one. It stopped with a counterexample | [Stop report](https://github.com/generalbusiness-ai/dap-spike/blob/main/spike/lang/REPORT.md) |
-| Can a task be declared and checked? | Yes for Sale; Club gave a counterexample | [Obligations](https://github.com/generalbusiness-ai/dap-spike/blob/main/spike/T3-OBLIGATIONS-REPORT.md) |
-| Can it run as one process with no outside service? | Yes, in its fixture | [Ordering](https://github.com/generalbusiness-ai/dap-spike/blob/main/spike/ORDERING-REPORT.md) |
-| Can a newcomer understand a record from the screen? | Not measured | |
-
-Where dap stands on each idea:
-
-| Idea in the dap-spike | In dap today |
-|---|---|
-| One signed record in one agreed order, with one writer | Each scope is that |
-| An exact retry returns the first receipt | Runs |
-| A result is read from an exact position of another record and is never read live | Runs, as delivery between scopes |
-| A shared constraint has one owner | The form of composition; no declared application shows it yet |
-| A task with a deadline | Runs, as timed rules and pending work |
-| Different readers of one record | Not built |
-| A package attached to a running record | Not built |
-| Split, join and handover of the writer | Not built |
-| A personal anchor across records | Not built |
+| Do readers with different views of one record agree, and does privacy hold? | Yes, in the Sale and Booking fixtures ([visibility report](https://github.com/generalbusiness-ai/dap-spike/blob/main/spike/REPORT.md)) | Not built |
+| Can a record gain a capability part-way through? | Yes, in the fixtures that ran ([ordering report](https://github.com/generalbusiness-ai/dap-spike/blob/main/spike/ORDERING-REPORT.md)) | Not built |
+| Can an agent write a model within a budget of two repairs? | No. Sale needed six | Not measured |
+| Does Club's original policy for taking in members hold? | No, and the failure was kept ([decision](https://github.com/generalbusiness-ai/dap-spike/blob/main/notes/2026-09-16-club-admission-decision.md)) | Not built |
+| Does a declaration layer remove the authoring errors? | Not this one ([stop report](https://github.com/generalbusiness-ai/dap-spike/blob/main/spike/lang/REPORT.md)) | Not built |
+| Can a task with a deadline be declared and checked? | Yes for Sale. Club gave a counterexample ([obligations report](https://github.com/generalbusiness-ai/dap-spike/blob/main/spike/T3-OBLIGATIONS-REPORT.md)) | Runs, as timed rules and pending work |
+| Is one signed record in one order, with one writer, enough? | Yes, in its fixture | Each scope is that |
+| Does an exact retry return the first receipt? | Yes | Runs |
+| Is a result read from an exact position of another record, never live? | Yes | Runs, as delivery between scopes |
+| Does a shared constraint need one owner? | Yes | The form of composition between scopes |
+| Can records split, join and hand over the writer? | Once, with one trusted writer | Not built |
+| Can one person keep an anchor across records? | Designed, implemented nowhere | Not built |
+| Can it run as one process with no outside service? | Yes, in its fixture | The [local Worker](celld.md) runs on one machine |
+| Can a newcomer understand a record from the screen? | Not measured | Not measured |
 
 ## Source
 
-Written 13 October 2026 against main `d1b845f8` and dap-spike main
-`9d738e2e`, and revised 14 October 2026 against main `f20df342` after
-review. Revised in part on 15, 16, 19, 20 and 21 October; rows that
-those revisions did not change still describe `f20df342`. The states come from reading the documentation, the definitions
-and the spike's reports. Nothing was run for this page.
+Checked against main `5dc9765f` on 30 October 2026. Sources:
+[use cases](use-cases.md), the design notes linked from each row,
+[`capability.ts`](../packages/contract/src/capability.ts),
+[`definition.ts`](../packages/contract/src/definition.ts),
+[`evidence-cohort.ts`](../packages/platform/src/evidence-cohort.ts),
+[`commands.ts`](../packages/cli/src/commands.ts), and dap-spike main
+`9d738e2e`.

@@ -1,477 +1,647 @@
 # The dap command
 
-`dap` is a command-line client for the new model. Each command is a
-thin function over two things: a scope service's base URL and a signing
-key. The command builds and signs intents and reads the service's routes.
-It judges nothing: whether an act takes effect is the scope's decision,
-and the command prints the scope's actual answer category. A refusal exits
-1 with its reason. An unavailable answer does not say whether the act took effect; timed
-entries may already have been written. Inspect the journal before another
-mutation. Recovery needs the original signed envelope; repeating a generic
-command signs a new request.
+`dap` is the command-line client for a dap scope service. Each command
+signs intents with your key and reads the service's routes. The command
+decides nothing. The scope decides whether an act takes effect, and the
+command prints the scope's answer.
 
-The source is `packages/cli`. In this repository it runs as
-`packages/cli/bin/dap.js` under Node 22.0.0 or later, using the CLI's
-installed `tsx` 4.21.0 dependency. The launcher resolves that loader beside
-the package, so it works from another directory and fetches no tool when
-it runs. The launcher is checked on Node 22.0.0 and 26.10.0. Nothing is
-published to a registry. The hosted service for new rooms is
-<https://dap-demo.inguz.workers.dev>, with CLI routes under `/v1/scopes`
-and the hosted MCP endpoint under `/mcp`.
-<https://artroom-scope.inguz.workers.dev> keeps existing rooms only; it is
-not a creation point for new rooms. This source change does not establish
-that the planner has deployed dap-demo or founded its register; follow the
-[dap-demo runbook](../notes/implementation/2026-10-23-dap-demo-part1.md).
+A refusal exits 1 with its reason. An unavailable answer does not say
+whether the act took effect, and timed entries may already exist. Read
+the journal before you send another act. To recover, resend the original
+signed intent. A repeated generic command signs a new intent.
 
-The launcher's Node 22.0 minimum is separate from the repository's test
-runtime. Built-in Node checks import TypeScript directly, as Replay already
-does. For those checks and `npm run gate`, use Node 22.18 or later in the
-22 series, or Node 23.6 or later. This is Replay's existing engine range;
-the launcher continues to use its installed loader. See
-[the testing guide](testing.md) for the gate.
+Exit codes: 0 done. 1 refused, unavailable, not found or not
+consistent. 2 a command line that the command cannot run.
+
+A scope is named by its ID (`sc_...`) or by one of the names that
+`create` and `join` learn: `register`, `directory`, `membership`,
+`rules`, `destination` and `inbox`. An entry is named `<scope>:<seq>`.
+An issue is named by its number, `3` or `#3`, as `dap issues` lists it,
+or by its lane's scope ID.
+
+The source is `packages/cli`. In this repository the command runs as
+`packages/cli/bin/dap.js` under Node 22.0.0 or later. The launcher loads
+the CLI's own installed TypeScript loader from beside the package, so it
+works from any directory and fetches nothing when it runs. No registry
+publishes the package.
+
+The hosted service for new rooms is <https://dap-demo.inguz.workers.dev>.
+Its CLI routes are under `/v1/scopes` and its hosted MCP endpoint is
+`/mcp`. <https://artroom-scope.inguz.workers.dev> serves existing rooms
+only and creates no new room.
 
 ## What it needs
 
-- **A base URL**: the scope Worker's address, given once to `install`
-  (or carried by an invitation link to `join`) and kept in the config.
-- **A key**: an Ed25519 key, which the command makes. It keeps the
-  32-byte secret in `keys/<name>.key` under its config directory:
-  `$DAP_HOME`, with `$ARTROOM_HOME` still accepted as a compatible alias.
-  If both are set, they must resolve to the same directory; otherwise the
-  command refuses before reading configuration. Paths are compared after
-  resolving relative paths against the current working directory; the
-  command does not expand `~`. Empty values are unset.
-  Without either variable, an occupied `$XDG_CONFIG_HOME/artroom` takes
-  precedence, followed by an occupied `~/.config/artroom`. A directory with
-  keys or private pending records counts even without `config.json`. Only
-  when neither legacy directory holds entries does the command use the new
-  `$XDG_CONFIG_HOME/dap` default, or `~/.config/dap` without XDG. An empty
-  new directory cannot hide legacy custody. Nothing is moved or rekeyed.
-  The directory has mode 0700 and each file 0600. A key is never
-  replaced and never printed; only its ID (`key_...`) is printed.
+- **A base URL.** This is the scope Worker's address. You give it once to
+  `install`, or an invitation link carries it to `join`. The command keeps
+  it in the config.
+- **A key.** The command makes an Ed25519 key and keeps its 32-byte
+  secret in `keys/<name>.key` in the config directory. It never replaces
+  or prints a key. It prints only the key's ID (`key_...`).
+- **A config directory.** Set `$DAP_HOME` to choose it. The command still
+  accepts `$ARTROOM_HOME` as an alias. If you set both, they must resolve
+  to the same directory, or the command refuses before it reads the
+  config. The command resolves relative paths against the current
+  directory and does not expand `~`. An empty value counts as unset.
+  Without either variable, the command uses `$XDG_CONFIG_HOME/artroom` or
+  `~/.config/artroom` when that directory holds keys, private pending
+  records or `config.json`. Otherwise it uses `$XDG_CONFIG_HOME/dap`, or
+  `~/.config/dap` without XDG. An empty new directory never hides an
+  occupied old one. The command moves nothing and makes no new key for an
+  old directory. The directory has mode 0700 and each file 0600.
+- **A read session.** Room reads use a session that membership issues.
+  The command keeps the session in a private cache in the config
+  directory, bound to the service, the membership incarnation and your
+  current key. It reuses the session until 30 seconds before its end. The
+  token never appears in public config, JSON output or logs. If a reused
+  session is refused as `forbidden`, the command checks the membership
+  summary once. If that check also refuses the session, the command
+  discards it, asks once for a new one and retries once. A limit on new
+  sessions exits with `rate-limited` and the server's `Retry-After`
+  window, or an unknown window when the server gives none.
 
-A scope is named by its ID (`sc_...`) or by one of the names `claim` or
-`join` learned: `register`, `directory`, `membership`, `rules`,
-`destination`, `inbox`. An entry is named `<scope>:<seq>`. An issue is
-named by its number, `3` or `#3`, as `dap issues` lists it, or by its
-lane's scope ID.
+Without a session, a key reads by signed reads. A signed read covers the
+entries that the key signed, the entries that come from one of those
+within 15 minutes of it (the intent window), and the retained inputs
+those entries carry. A member's session reads the scopes that record the
+membership. At the register, a session reads the whole journal and its
+retained inputs through the room's creation chain. A session grants no
+register summary and no other room's private journal. Journal and log
+pages can be filtered, and a sparse page is not complete replay evidence.
 
-An install receipt does not enable GitHub effects by itself. The deployment
-must configure its GitHub authority and pin the chosen register's scope ID
-beforehand; other registers do not receive that host authority. Full
-authorization to install a register remains unimplemented.
+## Platform commands
 
-## The commands
-
-The examples are from one run of the test in
-`packages/cli/test/story.scope.test.ts`, with long IDs cut short.
-
-**`dap install <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules]`**
-creates the register with an `install` intent, signed by a new operator
-key, which is also the one creator key. The host defaults to `github.com`
-and the namespace to `artroom`. For the demo's host, the hosting's own Git
-service, use `--host artifacts --namespace artroom-demo`;
-[hosts.md](hosts.md) says what each host needs.
+### `dap install`
 
 ```
-Installed: register sc_hinqqbm4....
-The operator key key_baqzbaDy... is kept in the config directory, readable only by you. It is the one founder key.
+dap install <base-url> --host none|artifacts|github.com [--namespace <name>] [--register-policy keys|open] [--cohort unpublished|application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules]
+dap install --plan <base-url> --host none|artifacts|github.com [--namespace <name>] [--register-policy keys|open] [--cohort unpublished|application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules]
+dap install --planned [--register-policy keys|open] [--cohort <saved-cohort>]
+dap install <git+https-uri> --release <release-id> --request <kept-key> [--role <default-role> ...] [--values <genesis-JSON>] [--owner <full-member-JSON>]
 ```
 
-**`dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules]`**
-signs the same `install` intent and creates nothing. A register's ID is a
-function of its seed, and the seed of the intent and the register's
-version alone, so the command prints the ID that the install will create,
-and the seed's time: the intent's `notAfter`, 14 minutes ahead, until
-which it can be created. It keeps the signed intent, the version and the
-ID in the config. This creation intent carries no invitation credential;
-the register's genesis records it and its signature. Only a definitely unsent legacy plan may
-be replaced. A plan with an explicit cohort always retains its
-original envelope, version, register and deadline, including when planning
-is repeated.
+`dap install <base-url>` creates a register with an `install` intent. A
+new operator key signs the intent, and that key is the register's one
+creator key.
+
+- `--host` is required. `none` creates rooms with no publication and no
+  journal archive. `artifacts` publishes to Cloudflare Artifacts, and
+  `github.com` publishes to GitHub. [Configure a Git host](hosts.md) says
+  what each host needs. Another value is refused as `host-unknown`.
+- `--namespace` names the Git host namespace. The default is `artroom`.
+  With `--host none` the namespace is empty. The demo deployment uses
+  `--host artifacts --namespace artroom-demo`.
+- `--register-policy keys`, the default, lets only the install's founder
+  keys create rooms. `open` lets a key outside that list create a room.
+  `open` selects the `archive-device-application` family, or `unpublished`
+  with `--host none`. With any other `--cohort`, `open` is refused.
+- `--cohort` selects a [creation family](#creation-families).
+
+```
+Installed: register sc_hinqqbm4..., under platform:register@18.
+The operator key key_baqzbaDy... is kept in the config directory, readable only by you. It is the one creator key.
+```
+
+An install receipt does not turn on GitHub effects. The deployment must
+configure its GitHub authority and pin the register's scope ID first.
+Other registers do not receive that host authority. Full authorization
+to install a register is not built.
+
+#### Plan the install first
+
+`dap install --plan <base-url>` signs the same `install` intent and
+creates nothing. A register's ID is a function of the intent and the
+register's version, so the command prints the ID that the install will
+create. It also prints the seed's time: the intent's `notAfter`, 14
+minutes ahead, until which the register can be created. The command
+keeps the signed intent, the version and the ID in the config. With
+`--host none` it also says that entries stay in the service and that the
+operator must back up the service.
 
 ```
 Planned: register sc_4kq2v7..., under platform:register@18, on host artifacts, namespace artroom-demo. The seed's time is 2026-10-08T09:14:00Z.
-Set registerScope to sc_4kq2v7... in the Worker's host setting, then run dap install --planned before 2026-10-08T09:14:00Z.
+Set REGISTER_SCOPE to sc_4kq2v7... in the Worker's settings, then run dap install --planned before 2026-10-08T09:14:00Z.
 ```
 
-**`dap install --planned [--register-policy keys|open] [--cohort <saved-cohort>]`** creates the planned register, with the kept
-intent and no other argument. Before anything is sent it checks the plan:
-a plan whose ID is not the one its intent and version make, or whose
-version is not supported by the installed catalog, is refused as
-`plan-mismatch`; a plan whose time is over is refused as `plan-expired`.
-An expired plan that was never attempted sends nothing. A definitely
-unsent legacy plan can be planned again in the same config. A plan with an explicit
-cohort cannot: keep that original config directory unchanged and
-use a separate empty `DAP_HOME` directory for a new plan. Use that same
-new directory for every later command, and configure the host's
-`registerScope` with the new plan's ID before installing. Do not copy over
-or delete the original config or keys.
+`dap install --planned` creates the planned register from the kept
+intent. It takes no base URL, host or namespace, because the plan holds
+them. Before it sends anything, it checks the plan:
 
-For example, set `DAP_HOME` to a new private directory, then run
-`dap install --plan <base-url> --cohort <cohort> --host <host>
---namespace <namespace>`, using `application`, `archive-device-application`,
-`archive-device-publication`, `archive-certified-rules` or `hardened-certified-rules`
-for `<cohort>`. After configuring the new register ID,
-run `dap install --planned --cohort <cohort>` with the same
-`DAP_HOME`. This creates separate custody and a new operator key; it
-does not renew or replace the expired original.
-
-An attempted or acknowledged original must instead be reconciled from its
-original directory with `install --planned`. Expiry does not prove that a request never took effect and does not authorize a replacement. After
-creation, the receipt must match the original planned register, definition
-and intent. Its acceptance is a service acknowledgement; independent
-journal verification remains separate.
+- `plan-mismatch`: the plan's ID is not the one that its intent and
+  version make, the version is not in the installed catalog, or
+  `--cohort` or `--register-policy` conflicts with the plan.
+- `plan-expired`: the plan's time is over and the install was never
+  attempted. Nothing is sent.
+- `retired-cohort`: the plan is for the retired register@6 family.
 
 ```
 Installed: register sc_4kq2v7..., under platform:register@18, as planned.
+Service-acknowledged identity recovery. The original plan and receipt are retained for later history verification.
 ```
 
-[deploy.md](deploy.md) says why and when to plan first.
+A plan with an explicit cohort keeps its original intent, version,
+register and deadline, including when you plan again. To replace an
+expired plan of that kind, keep the original config directory unchanged
+and set `DAP_HOME` to a separate empty directory. Run `dap install --plan`
+there, set `REGISTER_SCOPE` to the new ID, and run every later command
+with that same `DAP_HOME`. This makes a new operator key and separate
+custody. Do not copy or delete the original config or keys. Only a
+legacy plan that was definitely never sent can be planned again in the
+same directory.
 
-### An explicitly selected application room
+Reconcile an attempted or acknowledged plan from its original directory
+with `dap install --planned`. Expiry does not prove that the install
+never took effect, and it does not permit a replacement. The receipt
+must match the planned register, definition and intent. A matching
+receipt is the service's acknowledgement. It is not a journal
+verification. [The order](deploy.md#the-order) in the deploy guide says
+when to plan first.
 
-`--register-policy open` explicitly selects the fixed archive-device-application
-cohort: register@17, directory@16, membership@8, rules@10, destination@12
-and inbox@1. It admits a founding key outside the install's founder list.
-It cannot be combined with another cohort. `--register-policy keys` and
-omission keep the founder-key policy; omission otherwise retains the existing
-cohort/default behavior. Planning signs the policy into the exact retained
-install. `--planned` without a policy reuses it; an explicit conflicting policy
-refuses before submission and keeps the original plan. This open selector
-stays register@17 even if a later task changes the ordinary default.
+#### Creation families
 
-Without an explicit open policy, omitting `--cohort` selects
-`ARCHIVE_DEVICE_PUBLICATION_COHORT`: register@18, directory@17, membership@8,
-rules@10, destination@13 and inbox@1. `--cohort archive-device-publication`
-selects that same cohort explicitly. `--cohort application` selects
-`APPLICATION_COHORT`: register@5, directory@5, membership@4, rules@3,
-destination@2 and inbox@1, each with the `platform:` prefix.
-`--cohort archive-device-application` selects
-`ARCHIVE_DEVICE_APPLICATION_COHORT`: register@17, directory@16,
-membership@8, rules@10, destination@12 and inbox@1. It accepts device-command
-packages with an explicit existing owner, and archive binding at claim or later.
-`--cohort archive-certified-rules` selects `ARCHIVE_CERTIFIED_RULES_COHORT`:
-register@19, directory@18, membership@8, rules@11, destination@14 and inbox@1.
-`--cohort hardened-certified-rules` selects `HARDENED_CERTIFIED_RULES_COHORT`:
-register@20, directory@19, membership@8, rules@12, destination@15 and inbox@1.
-These are the five code-supported creation families. The service's configured
-creation policy still decides whether a particular new register is admitted.
-Unknown or multiple choices, another retained cohort, service, host or
-namespace refuse before signing or sending. Creation defaults and existing
-room pins do not change when an explicit choice is added.
+Each family pins one version of each platform definition. Every name has
+the `platform:` prefix.
 
-New room creation does not currently offer a family that installs ordinary
-application packages such as Counter or Lending. The device families require
-`device-command@1`; the `application` family supports explicit definition
-activation and establishment, rather than the package-install command.
+| `--cohort` | register | directory | membership | rules | destination | inbox |
+|---|---|---|---|---|---|---|
+| `archive-device-publication` (the default) | 18 | 17 | 8 | 10 | 13 | 1 |
+| `unpublished` (selected by `--host none`) | 21 | 20 | 8 | 10 | 16 | 1 |
+| `application` | 5 | 5 | 4 | 3 | 2 | 1 |
+| `archive-device-application` (selected by `--register-policy open`) | 17 | 16 | 8 | 10 | 12 | 1 |
+| `archive-certified-rules` | 19 | 18 | 8 | 11 | 14 | 1 |
+| `hardened-certified-rules` | 20 | 19 | 8 | 12 | 15 | 1 |
 
-### Historical rooms and retained plans
+Without `--cohort`, a host other than `none` selects
+`archive-device-publication`. `--host none` requires the `unpublished`
+family. The service's creation policy still decides whether it accepts a
+new register. An unknown or repeated `--cohort`, or a conflict with a
+retained plan's cohort, service, host or namespace, is refused before
+anything is signed. Adding an explicit choice does not change the
+default or the pins of existing rooms.
 
-The CLI still reads saved plans for `file-publication` (register@3),
-`application-publication` (register@9), `trusted-application` (register@12),
-`declared-application` (register@13), `device-application` (register@16),
-`archive-application` (register@14), `archive-declared-application` (register@15)
-and `invitation-key` (register@10). These names are not offered for fresh plans.
-The retired register@6 cohort remains readable but cannot be installed.
+The device families install `device-command@1` packages with an explicit
+existing owner, and accept an archive binding when the room is created
+or later. No current family installs ordinary application packages such
+as Counter or Lending. The `application` family supports explicit
+definition activation instead, as the next sections describe.
 
-`install --planned` may omit the selection: it uses the saved definition
-and signature. An explicit historical selector must match that retained plan.
-It never upgrades the plan to a newer catalog version. Explicit selection
-of a matching retained plan adds only a local custody marker; its signature,
-register ID and deadline remain the same. Attempted plans always retain
-their original request. An older unmarked, definitely unsent register@3 plan
-can still be replaced by the ordinary default planning path.
+#### Historical families
 
-An existing `application-publication` room uses register@9, directory@8,
-membership@4, rules@3, destination@4 and inbox@1. Its application's acts can
-tell the destination `publish-file`. Directory@8 supplies its own destination
-when the application's genesis declares `destination` with type `scope` and
-kind `destination`; callers cannot include that reserved field in `values`.
-See [Publish a file from an act](write-an-application.md#publish-a-file-from-an-act)
-for the write authority and publication outcomes.
+`dap install --planned` still reads saved plans for these families. A
+new plan cannot select them.
 
-### Create an application by explicit activation
+| Family | Register |
+|---|---|
+| `file-publication` | register@3 |
+| `application-publication` | register@9 |
+| `invitation-key` | register@10 |
+| `trusted-application` | register@12 |
+| `declared-application` | register@13 |
+| `archive-application` | register@14 |
+| `archive-declared-application` | register@15 |
+| `device-application` | register@16 |
+
+`install --planned` without `--cohort` uses the saved definition and
+signature. An explicit historical `--cohort` must match the saved plan,
+and the command never upgrades the plan to a newer version. A matching
+selection adds a local custody marker only. The signature, register ID
+and deadline stay the same. The ordinary planning path can still replace
+an older unmarked register@3 plan that was definitely never sent. The
+retired register@6 family stays readable but cannot be installed.
+
+An existing `application-publication` room uses register@9,
+directory@8, membership@4, rules@3, destination@4 and inbox@1. Its
+application's acts can tell the destination `publish-file`. Directory@8
+supplies its own destination when the application's genesis declares
+`destination` with type `scope` and kind `destination`. A caller cannot
+put that reserved field in `values`.
+[Publish a file from an act](write-an-application.md#publish-a-file-from-an-act)
+describes the write authority and the publication outcomes.
+
+#### An explicitly selected application room
 
 For an application such as Jam, use a separate owner-only `DAP_HOME`
-and a deployed service that supports all six exact application pins:
+and a service that supports all six pins of the `application` family:
 
 ```sh
 dap install --plan <base-url> --cohort application --host <configured-host> --namespace <configured-namespace>
-# Configure that host's registerScope with the printed planned ID.
+# Set REGISTER_SCOPE to the printed planned ID.
 dap install --planned --cohort application
 dap create <label> --handle @operator
 ```
 
-Keep the operator key and pending envelopes in that private directory;
-share public full scope references and actual genesis pins, never keys or
-session headers. An uncertain install retries `--planned`; an unfinished
-claim repeats the same claim without `--again`. Verify the actual directory,
-membership, rules and destination creation and confirmation before using
-the room. The selected bootstrap does not validate, activate or create Jam.
+Keep the operator key and the pending intents in that directory. Share
+full scope references and genesis pins, never keys or session headers.
+After an uncertain install, run `--planned` again. After an unfinished
+`create`, run the same `create` again without `--again`. Before you use
+the room, check that the directory, membership, rules scope and
+destination were created and confirmed. These commands create the room
+only. They do not validate, activate or create the application.
 
-The provisioning owner must next validate the exact application declaration
-with public `validateDefinition` under the deployed bounds, retain its
-canonical bytes and `definitionDigest`, and activate that digest and all
-required declaration dependencies in the actual rules scope. The authorized
-`establish-application` act on directory@5 names that digest, bounded
-canonical genesis `values` and `execution=recorded-do`. Supply declaration
-bytes beside it; the factory supplies the trusted opener and membership.
-Keep the exact signed creation request before submission and reconcile its recorded fact and confirmed child seed after an unknown answer. Do not
-create a second application to replace an uncertain first one.
+To create the application:
 
-Membership must explicitly grant the declaration's domain actions to the
-intended role or agent. Enrollment and a read session alone grant no domain
-act. Respect the deployed grant reuse window after permission changes.
-Provision each verifier reader for the target and every foreign journal it
-needs; a room session may not read another root or membership. Retain the
-actual deployed bounds, exact platform catalog, capability versions and
-parameters with the public configuration. A missing journal or unsupported
-pins remain verification failures. Jam must consume genuine published SDK
-packages; this CLI bootstrap proves no registry, deployment, microphone,
-model, playback or distributed-user acceptance.
+1. Validate the application's declaration with `validateDefinition`
+   under the deployed bounds. Keep its canonical bytes and its
+   `definitionDigest`.
+2. Activate that digest, and every declaration it depends on, in the
+   room's rules scope.
+3. Sign `establish-application` on directory@5 with the digest, the
+   bounded canonical genesis `values` and `execution=recorded-do`. Send
+   the declaration bytes beside the act. The directory supplies the
+   opener and membership.
+4. Keep the exact signed intent before you send it. After an unknown
+   answer, reconcile its recorded fact and confirmed child seed. Do not
+   create a second application to replace an uncertain first one.
+5. Grant the declaration's domain actions to the intended role or agent
+   in membership. Enrollment and a read session grant no domain act.
+   Allow for the deployed grant reuse window after a permission change.
 
-Application bootstrap checks on 2026-10-10: the first focused attempt
-stopped in the CLI source compiler before any case ran. The explicit
-literal lookup repair passed CLI source, CLI test and Scope test compilers,
-both existing CLI custody cases, and the existing native application
-factory case. The normal Page build then refreshed its generated module;
-all other tracked files and the guarded dependency view stayed unchanged.
-The ordinary changed-source gate passed: 1,025 Vitest cases, two original
-optional skips, and the chained Node checks (8 repository cases and 37
-Counting browser cases). These checks establish bootstrap behavior, with
-the witness limitations stated above.
+Give each verifier a reader for the target and for every other journal
+that it needs. A room session cannot read another root or membership.
+Keep the deployed bounds, platform catalog, capability versions and
+parameters with the public configuration. A missing journal or an
+unsupported pin is a verification failure.
 
-The selected-cohort expiry correction was checked on 11 October 2026.
-CLI compilation and both existing custody cases passed for application and
-Counting, using labelled memory stores and a fake configured service. The
-normal Page build passed and reproduced the unchanged generated module.
-An initial tool-hash guard typo stopped before any build; that outcome is
-retained. The native application case was unchanged and was not repeated.
-The corrected Counter parent remains intact. A new ordinary gate and
-an independent review of the code are still required for this follow-up.
+#### Install an application package
 
-**`dap install <git+https-uri> --release <release-id> --request <kept-key> [--role <default-role> ...] [--values <genesis-JSON>] [--owner <full-member-JSON>]`**
-records one application install. Ordinary package v1 requires an existing
-historical `trusted-application` room; ordinary v2 requires an existing
-historical `declared-application` room. Neither family is offered for new
-creation. A device-command package can use the currently admitted
-`archive-device-application`, `archive-device-publication`,
-`archive-certified-rules` or `hardened-certified-rules` family, or an existing
-historical `device-application` room. Device packages require `--owner` as the
-full JSON MemberRef, including its membership scope, incarnation and member
-handle. The native install checks that this member is active in the room
-membership. The signed package declares kinds and one owner requirement;
-it supplies no member identity or authority. The caller needs the native
-`application.install` action. The package must be a regular Git blob at an
-exact commit, and its release and publisher must be listed by the host
-operator. The host fetches and verifies that URI independently.
+`dap install <git+https-uri> --release <release-id> --request <kept-key>`
+records one application install in the room.
 
-The URI has this spelling:
-`git+https://<lowercase-host>/<repository>.git/@<full-commit>/<encoded-tree-path>`.
-Use the expected release printed by `dap pack`; commit the resulting packet
-before installing it. The current public HTTPS reader supports SHA-1 Git
-repositories. SHA-256 commit spelling is retained by the URI codec but is
-unsupported by this transport. Local checks and package signatures use their
-own content identities.
+- An ordinary version 1 package needs an existing historical
+  `trusted-application` room. An ordinary version 2 package needs an
+  existing historical `declared-application` room.
+- A device-command package needs a room of a current device family, or an
+  existing historical `device-application` room. It also needs `--owner`
+  with the full JSON member reference: the membership scope, incarnation
+  and member handle. The install checks that the member is active in the
+  room's membership. The signed package declares the kinds and one owner
+  requirement. It supplies no member identity or authority.
+- A package whose signed host requirements include `archive` needs an
+  archive-capable room: historical `archive-application` for version 1,
+  historical `archive-declared-application` for version 2, or a current
+  device family for a version 2 package with `device-command@1`. The
+  room's directory must have the binding `archive: "journal"`. An admin
+  sets it with `bind-archive`, when the room is created or later. Without
+  the binding the install ends with `archive-unavailable` before it grants
+  roles or creates the application. Send a new install request after you
+  bind. The binding is configuration, not an archive export receipt.
 
-Each `--role` selects that role's defaults from the signed package. The
-roles are `admin`, `maintainer`, `member`, `agent`, and `checker`. Omission
-selects no default grants. Existing grants remain. `--values` is a JSON object
-of application genesis fields; its default is `{}`.
+The caller needs the native `application.install` action. The package
+must be a regular Git blob at an exact commit, and the host operator must
+list its release and publisher. The host fetches and verifies the URI
+itself. The URI has this form:
 
-A package whose signed host requirements include `archive` needs an
-archive-capable room. Ordinary package v1 requires an existing historical
-`archive-application` room; ordinary v2 requires an existing historical
-`archive-declared-application` room. These families are not offered for new
-creation. A v2 package with `device-command@1` can use a currently admitted
-device family and an explicit existing owner. No selection migrates an
-existing room. The package needs the room's
-Directory binding `archive: "journal"`. Without it, installation ends with
-`archive-unavailable` before granting roles or creating the application.
-An admin may set the binding at claim or later with `bind-archive`. Submit
-a new install request after binding; the original request retains its refusal.
-The binding is configuration, not an archive export receipt.
+```
+git+https://<lowercase-host>/<repository>.git/@<full-commit>/<encoded-tree-path>
+```
 
-Choose a request key and keep the exact command. CLI and MCP share persistent
-custody in the config directory's `private/mcp-custody/`. A lost reply is
-uncertain; repeating the original key and arguments uses the retained signed
-envelope. Changing the meaning under that key refuses. The command does not
-renew an expired original or sign a continuation. A definitive native refusal
-requires a new ordinary request if you choose to try again.
+Use the release that `dap pack` prints, and commit the package before you
+install it. The public HTTPS reader supports SHA-1 Git repositories only.
 
-Acceptance records the install request. It does not mean all subordinate
-steps have completed. The output names its item for
-**`dap application <install-item>`**, which reads the recorded pending, active,
-or refused state and phase. An active result includes the exact screen URL.
-A later refusal can leave earlier activation and grants in force. The install
-records no rollback; ordinary authorized acts can change those effects.
+- `--role` selects that role's default grants from the signed package.
+  Give it once for each role: `admin`, `maintainer`, `member`, `agent` or
+  `checker`. Without it, the install grants no defaults. Existing grants
+  stay.
+- `--values` is a JSON object of application genesis fields. The default
+  is `{}`.
+- `--request` is a key that you choose and keep with the exact command.
+  The CLI and MCP share custody in `private/mcp-custody/` in the config
+  directory. After a lost reply, repeat the same key and arguments: the
+  command resends the kept intent. A different meaning under the same key
+  is refused. The command does not renew an expired request. After a
+  definite refusal, send a new request to try again.
 
-The equivalent MCP tools are `install_application` (with `uri`, `release`,
-`roles`, `values`, `idempotencyKey`, and `owner` for device packages) and `application_installation`
-(with `item`). Existing `settle` also reads the retained envelope by its key
-and Rules target.
+The answer records the install request. It does not mean that every step
+has completed. The output names the install item for `dap application`.
+The MCP tools `install_application` and `application_installation` do
+the same work.
 
-**`dap create <name> [--handle @you] [--branch main] [--again]`**
+### `dap application`
 
-The existing `claim` command remains available for retained workflows.
-Both commands use the same creation and recovery code.
+```
+dap application <install-item>
+```
+
+Reads the recorded state and phase of one application install: pending,
+active or refused. An active result includes the exact screen URL. A
+later refusal can leave earlier activations and grants in force. The
+install records no rollback, and ordinary authorized acts can change
+those effects.
+
+### `dap apps`
+
+```
+dap apps [--cursor <cursor>]
+```
+
+Reads one page of at most 25 created applications in the room's
+directory. Each row shows the application's name, definition digest and
+full scope reference. Names come from content-checked retained
+declarations. When a name is unavailable, the row still shows the
+recorded references. Control characters and line separators are escaped,
+and the command counts shortened names. The command reads no
+application scope or journal.
+
+The result states the directory head and the coverage of the selected
+suffix. When more rows remain, it prints the next-page command. Run that
+command yourself: `apps` does not read later pages. A stale cursor is
+refused, so start again with `dap apps`. An application that is still
+being created is not in the list. Read its directory entry before you
+create another one.
+
+### `dap check`
+
+```
+dap check [<directory>] [--config <relative-file>]
+```
+
+Validates a local application source and runs its listed scenarios. The
+directory defaults to `.`, and the config file defaults to
+`dap.application.json`. The command uses public TEST keys only. It reads
+no config directory, uses no operator key and writes no package.
+
+It prints the package's semantic and presentation IDs and the number of
+native definitions validated. For each scenario it prints the steps that
+passed and the journal head that native replay reached. For a version 2
+package it also prints the projected bounds of successful creation paths
+and of live items. It ends with the package's declared capability
+requirements.
+
+- `Package validation refused.`, followed by a table of findings with the
+  columns Definition, Row, Check, Severity, Reason and Message. Exit 1.
+- No scenario is listed in the config. Exit 1.
+- A source or scenario file is missing, inaccessible or a symbolic link.
+  Exit 1.
+
+[Write an application](write-an-application.md) describes the package
+and what the validation checks.
+
+### `dap dev`
+
+```
+dap dev [<directory>] [--config <relative-file>] [--port <loopback-port>] [--scenario <listed-file>]
+```
+
+Starts a development host on `127.0.0.1` for a local application. The
+port defaults to 5173. The host runs one listed scenario, by default the
+first, and keeps its state in memory. The scenario's public TEST actors
+hold the authority, and every read is open.
+
+```
+Development host: http://127.0.0.1:5173/__dap/
+Application preview: http://127.0.0.1:5173/
+Authority: explicit public TEST actors and open fixture reads. State is in memory.
+Clock: starts at the scenario's final time and advances with requests.
+```
+
+The preview serves the application's presentation with live reload. The
+panel at `/__dap/` reads the scope's state and runs replay. The host
+serves the scope's read routes and accepts acts under `/v1/scopes`. It
+rebuilds when a file in the directory changes, except under
+`node_modules` and `.git`. A failed rebuild keeps the previous preview and
+pauses native writes. A changed definition or scenario starts a fresh
+scope. A request from another origin is refused with 403.
+
+Stop the host with Ctrl-C. A command line that the host cannot read exits
+2. A host that cannot start exits 1.
+
+### `dap new`
+
+```
+dap new <directory>
+```
+
+Creates a starter application in a new directory. The directory's name
+has 1 to 32 lowercase letters, digits or hyphens and starts with a
+letter. The starter holds `dap.application.json`, a notes declaration in
+`definition.json`, a scenario in `scenarios/basic.json`, a browser
+starter in `browser/` and a `README.md`. Its logical name is
+`test.example.<directory>`. Choose your own name before you publish.
+
+```
+Application: /home/you/notes
+Next: run dap check in that directory.
+Scenario authority uses public TEST actors. The browser starter joins no room.
+```
+
+The command needs no config directory or key. An existing directory is
+refused with exit 1.
+
+### `dap pack`
+
+```
+dap pack [<directory>] [--config <relative-file>] [--out <file>] [--publisher <existing-key-name>]
+```
+
+Signs the application in the directory as a package. The publisher key is
+`operator` from the config directory, or the key that `--publisher`
+names. The command never makes a key. It writes `application.dap.json` in
+the application directory, or the file that `--out` names, and never
+replaces an existing file.
+
+```
+Package: /home/you/notes/application.dap.json
+Semantic: <id>
+Presentation: <id>
+Release: <id>
+Publisher: <key>
+```
+
+Pass the printed release to `dap install <git+https-uri> --release`.
+Validation refusals print the same findings table as `dap check`.
+
+### `dap create`
+
+```
+dap create <name> [--handle @you] [--branch main] [--again]
+```
+
+Creates a room on the configured register. `dap claim` is an older name
+for the same command.
 
 The command signs the register's recorded `found` act. It waits until the
-directory, membership, the rules scope and the destination are created and
-confirmed. Then it takes the creator's seat, their member item, and first key in
-membership,
-which makes the creator the first admin. `<name>` is a label for this
-output only: the register's `found` act has no name field (see "What it
-does not do yet").
+directory, membership, rules scope and destination are created and
+confirmed. Then it takes the creator's seat, member item and first key in
+membership, which makes the creator the first admin. `<name>` labels the
+output only: the `found` act has no name field.
 
-An operator with a retained planned install can create another room on its
-`open` register after the signed-read window. For supported Register pins
-5, 17, 18, 19, 20 and 21, the command checks the original signed install,
-service acknowledgement and exact Register reference before selecting the
-unchanged singleton revision. It signs a fresh `found`; the Register judges
-that act. This local selector supplies no read authority or journal proof.
-Legacy configuration without that retained proof keeps the existing read
-path and can still need a readable Register summary.
+```
+Created demo: directory sc_hs5f27fz..., membership sc_p6xp2lmd..., rules sc_sfbjwioy..., destination sc_e5xgdizd...; each created and confirmed.
+Definitions: platform:directory@17, platform:membership@8, platform:rules@10, platform:destination@13.
+You are @rita, an admin, on key key_baqzbaDy...; your inbox is sc_u5joavqp....
+```
 
-Before each creation step, the command saves its exact signed envelope:
-`found`, then `seat`, then `first-key`. It saves the recorded fact references as each step completes. These records contain no private signing key.
-A refusal, unavailable reply or lost answer leaves the request pending;
-a later run keeps the same signature and deadline. A marker that the act took effect is checked against the receipt for that exact envelope before reuse.
+Before each step, the command saves the exact signed intent: `found`,
+then `seat`, then `first-key`. As each step completes, it saves the
+recorded fact references. These records hold no private key. A refusal,
+an unavailable reply or a lost answer leaves the request pending.
 
 ```
 Gave up waiting for the directory after 120 reads. What was asked may still take effect; run dap create demo again to go on waiting for this claim, or with --again to sign a new one, which creates a second repository.
 ```
 
-Run `dap create <name>` again to continue the saved claim. The command
-reads or retries the exact saved steps, then waits for their confirmed
-scopes. It checks child identities against the actual directory seed and
-full reference. It does not extend a saved deadline or invent a replacement
-request. `--handle` is ignored on resume: the handle is the one already
-signed. Older digest-only state resumes only when the retained creation
-and enrollment records prove the exact signed steps; otherwise it stops
-without a new submission.
+Run `dap create <name>` again to continue. The command resends or reads
+the saved steps with the same signatures and deadlines, then waits for
+the confirmed scopes. It checks each child's identity against the
+directory's seed and full reference. `--handle` is ignored on resume,
+because the saved intent holds the handle. Older state that kept only a
+digest resumes only when its records prove the exact signed steps.
 
-Continuing still needs current read authority: if creation stopped before
-the creator's seat and first key were recorded, the original founding key
-may no longer be recent enough for a Membership read after the signed-read
-window. A saved claim alone does not extend that authority.
+The creator reads the new scopes by signed reads until the seat and first
+key are recorded, and signed reads last for the 15-minute intent window.
+A creation that takes longer gives up, and a resumed create cannot read
+the directory either. A saved create does not extend that window.
 
-`--again` deliberately replaces the pending claim with a new signed
-`found`. Each `found` that takes effect creates a repository, so an earlier
-unknown claim may still produce another repository. Use this option only
-when deliberately starting another claim. An expired envelope stays saved
-until this explicit replacement.
+`--again` replaces the pending create with a new signed `found`. Each
+`found` that takes effect creates a repository, so an earlier unknown
+create may still produce a second one. An expired intent stays saved
+until you replace it with `--again`.
+
+An operator with a kept planned install can create another room on an
+`open` register after the signed-read window. For register pins 5, 17,
+18, 19, 20 and 21, the command checks the original signed install, the
+service's acknowledgement and the register reference before it signs a
+new `found`. The register decides the act. Legacy config without that
+kept proof reads the register summary instead.
+
+### `dap invite`
 
 ```
-Created demo: directory sc_hs5f27fz..., membership sc_p6xp2lmd..., rules sc_sfbjwioy..., destination sc_e5xgdizd...; each created and confirmed.
-You are @rita, an admin, on key key_baqzbaDy...; your inbox is sc_u5joavqp....
+dap invite <@member> --role <role> [--hours 24] [--keep]
+dap invite --check | --continue
 ```
 
-**`dap invite <@member> --role <role> [--hours 24]`** is
-membership's `invite-member`. It prints a link that holds the
-invitation's number and its private credential. Legacy scopes use a
-one-time secret. Membership@6 uses a 32-byte invitation signing seed;
-join records only its signature over the full membership reference,
-invitation ID and joining key. Pass either link only to that member.
+Signs membership's `invite-member` and prints a link that holds the
+invitation's number and its private credential. The invitation lasts 24
+hours unless `--hours` says otherwise. Older membership versions use a
+one-time secret. Membership@6 and later use a 32-byte invitation signing
+seed: `join` records only its signature over the membership reference,
+the invitation ID and the joining key. Give the link to that member only.
 
 ```
 Invited @una as member: invitation sc_p6xp2lmd...:5, until 2099-01-02T00:00:00Z.
 Link for @una only (it holds the invitation's secret): artroom-invite:eyJ2Ijox...
 ```
 
-With `--keep`, the invitation is kept before it is sent: the command
-makes the secret, signs `invite-member`, and saves both in an owner-only
-private file first. The link names the membership's exact definition,
-for example `platform:membership@4` in a room of the application cohort.
-An unknown answer means the act may still take effect. If the answer is
-lost, run `dap invite --check`, which reads the outcome
-and sends nothing, or `dap invite --continue`, which resumes the exact
-original request. While one kept invitation is unresolved, a new one is
-refused, so a lost answer is never replaced by a second invitation. A
-verified or refused invitation is released, and its link is printed once.
+With `--keep`, the command makes the secret, signs `invite-member` and
+saves both in an owner-only private file before it sends anything. The
+link names the membership's exact definition, such as
+`platform:membership@4` in a room of the `application` family. If the
+answer is lost, run `dap invite --check` to read the outcome without
+sending, or `dap invite --continue` to resend the original request. While
+one kept invitation is unresolved, a new one is refused. A verified or
+refused invitation is released, and its link is printed once.
 
 ```
 Invited @una: the invitation is recorded and verified.
 Link for @una only (it holds the invitation's secret): artroom-invite:eyJ2Ijox...
 ```
 
-**`dap join <artroom-invite:…>`** is membership's person `join`, signed by a new key
-that the command makes and keeps. Before sending, it saves the exact signed
-request in an owner-only `private/<name>.data` file; the invitation secret
-is absent from public config. Under membership@6, it is also absent from
-the signed request and native journal. Existing scopes keep their exact
-legacy protocol and can retain their secret in signed history. It saves the recorded fact and inbox progress
-before waiting for the member's inbox. After a lost reply or an interrupted
-wait, run `dap join` with the original link again. This reuses the same
-key, request and deadline. A request that took effect is confirmed by a read-only settlement, even after its deadline. A missing private request or a different
-link stops the retry; it never signs a replacement automatically.
+`--acts` is refused with exit 2: `invite-member` has no list of acts for
+one member. A role's actions apply to every member of that role.
+
+### `dap join`
+
+```
+dap join <link> [--check for an agent-key invitation]
+```
+
+With an `artroom-invite:` link, signs membership's person `join` with a
+new key that the command makes and keeps. Before it sends, it saves the
+signed request in an owner-only `private/<name>.data` file. The
+invitation secret is not in public config. Under membership@6 and later
+it is not in the signed request or the journal either. Older scopes keep their
+legacy protocol and can keep the secret in signed history.
 
 ```
 Joined as @una on key key_H1bY2Hml....
 Your inbox: sc_zbtu7vax....
 ```
 
-**`dap join <artroom-agent-key:…>`** enrolls a genuine agent key with
-membership's `enrol`. A verified room controller first creates an agent
-member with `add-member`, then invites its key with `invite-key`. The private
-handoff carries that invitation and full native references. It carries no
-signing key. A person invitation with the role `agent` is still a person;
-it cannot substitute for this agent-key protocol.
+After a lost reply or an interrupted wait, run `dap join` again with the
+same link. The command reuses the same key, request and deadline. A
+request that took effect is confirmed by a read, even after its deadline.
+A missing private request or a different link stops the retry. The
+command never signs a replacement on its own.
 
-Use a separate empty owner-only `DAP_HOME` for the receiving agent. The
-command generates and retains an independent key and saves the exact private
-enrollment envelope before delivery. After an unknown answer, use the same
-link with `--check` to settle and follow the original without submitting a
-mutation. Run the same command without `--check` only to Continue explicitly.
-It retains the original signature, idempotency key and deadline.
+With an `artroom-agent-key:` link, enrolls an agent key with membership's
+`enrol`. A room controller first creates an agent member with
+`add-member`, then invites its key with `invite-key`. The link carries
+that invitation and full references, and no signing key. A person
+invitation with the role `agent` is still a person, and it cannot stand
+in for an agent-key invitation.
 
-The command saves a usable connection only after it verifies the recorded enrollment, genuine agent and key kinds, controller, recorded directory
-siblings, and active inbox incarnation. A missing private request, changed
-link, person/agent mismatch or definite native refusal keeps the original;
-it does not generate a replacement key or request. Existing `artroom-invite:`
-links and pending person joins retain their original behavior. Treat either
-invitation link as private.
+Use a separate empty owner-only `DAP_HOME` for the agent. The command
+makes the agent's key and saves the enrollment intent before it sends.
+After an unknown answer, run the same command with `--check` to settle
+and follow the original without sending. Run it without `--check` only to
+continue on purpose, with the original signature, idempotency key and
+deadline. The command saves a usable connection only after it verifies
+the recorded enrollment, the agent and key kinds, the controller, the
+directory's sibling scopes and the active inbox. A missing private
+request, a changed link, a person and agent mismatch or a definite
+refusal keeps the original. Treat both kinds of link as private.
 
-**`dap acts [<scope>]`** lists the acts of the scope's definition
-that the caller's role holds now, with each act's fields. The role and
-its actions are read from membership. An act that a rule decides, such
-as `join`, is always listed. The scope can still refuse an act on its
-guards or its state.
+### `dap acts`
 
 ```
-Acts on sc_hs5f27fz... (platform:directory@1) for @una (member):
+dap acts [<scope>]
+```
+
+Lists the acts of the scope's definition that your role holds now, with
+each act's fields. Membership supplies the role and its actions. An act
+that a rule decides, such as `join`, is always listed. The scope can still
+refuse an act on its guards or its state. A definition has no description
+text, so each line is built from the act's step, item and grant.
+
+```
+Acts on sc_hs5f27fz... (platform:directory@17) for @una (member):
   open-issue: opens a lane; needs issue.open. Fields: definition:digest title:text body?:text conditions:list.
   open-pr: opens a lane; needs change.open. Fields: definition:digest title:text body?:text draft:bool.
   open-task: opens a task; needs task.control. Fields: worker:member controller:member lane:scope.
-Not shown: 1 that need an action your role does not hold.
+Not shown: 3 that need an action your role does not hold.
 ```
 
-**`dap act <kind> --on <scope> [--target <item>] [--set name=value ...]`**
-signs and sends one act. A value is read by its field's type; a list or a
-record is JSON, and `@handle` is a member of this repository. The command
-fills in the current revision of each item the act names, from the
-scope's summary; the scope checks it again.
+### `dap act`
 
-`--target` takes a nonnegative item number. A member handle such as `@m1`
-is refused before signing; member handles in typed field values still resolve.
+```
+dap act <kind> --on <scope> [--target <item>] [--set name=value ...] [--value <file> ...]
+```
+
+Signs and sends one act.
+
+- `--set name=value` gives one field. The command reads each value by its
+  field's type. A list or a record is JSON, and `@handle` is a member of
+  this room. Give `--set` once for each field.
+- `--target` takes a nonnegative item number. A member handle is refused
+  before signing.
+- `--value <file>` sends the file's text beside the intent. Give it once
+  for each file. The scope reads a value only where its definition says,
+  by its digest: the bytes of a definition for the rules scope's
+  `activate`, and for the directory's `open-issue` and `open-pr`.
+
+The command fills in the current revision of each item that the act
+names, from the scope's summary. The scope checks the revisions again.
 
 ```
 Took effect: entry sc_p6xp2lmd...:8, hash sha256:2cd70f9ada97.
 Refused: guard-failed (not-activated), judged at entry sc_hs5f27fz...:4. The request was refused.
 ```
 
-`--value <file>`, given once or more, sends each file's text beside the
-intent as a value. The scope reads a value only at a place that its
-definition states, by its digest: the bytes of a definition for the rules
-scope's `activate` and the directory's `open-issue` and `open-pr`. For
-example, an admin activates the demo profile's change definition with
-`dap act activate --on rules --set digest=<digest> --set name=change
---value apps/room/lanes/definitions/change-demo.json`, whose digest is in
-`apps/room/lanes/src/digests.ts`.
+For example, an admin activates the demo profile's change definition
+with this command. Its digest is in `apps/room/lanes/src/digests.ts`.
 
-**`dap log <scope> [--limit n]`** and **`dap show <entry>`**
-read the journal and one entry over the read routes.
+```sh
+dap act activate --on rules --set digest=<digest> --set name=change --value apps/room/lanes/definitions/change-demo.json
+```
+
+### `dap log`
+
+```
+dap log <scope> [--limit n]
+```
+
+Reads a scope's journal over the read routes.
 
 ```
 sc_p6xp2lmd...:8  2099-01-01T00:00:00Z  act add-member by key_baqzbaDy...; 6 effects, 1 sends
@@ -479,43 +649,49 @@ sc_p6xp2lmd...:9  2099-01-01T00:00:00Z  delivery result from inbox:0; 0 effects,
 10 entries in all.
 ```
 
-**`dap apps [--cursor <cursor>]`** reads one page of at most 25 created
-applications in the selected room's Directory. Each row shows its name,
-definition digest and full scope reference. Names come from content-checked
-retained declarations; unavailable names leave the recorded references
-visible. Control characters and line separators are escaped, and shortened
-names are counted. The command reads no application child or journal.
+### `dap show`
 
-The result states its Directory head and selected-suffix coverage. It
-prints an explicit next-page command when more rows remain. Follow that
-command yourself; it does not scan later pages automatically. A stale
-cursor refuses: start again with `dap apps`. A creating application is
-absent from this list; read its original Directory entry before considering
-another creation.
+```
+dap show <scope>:<seq>
+```
 
-**`dap items <scope> --query <canonical-item-query-JSON>`** reads one
-explicit bounded item selection. The canonical JSON has exactly `cursor`,
-`ids`, `limit`, `scope`, `states`, `type` and `v`; `scope` is the full scope
-reference, `cursor` starts as `null`, and `ids: null` selects all matching
-IDs. States and explicit IDs must be sorted and unique. The SDK's
-`encodeItemQuery` produces this spelling. The command checks the query's
-scope against the selected scope before sending it.
+Reads one entry over the read routes.
 
-This command makes one query, with no per-item detail requests or automatic
-page loop. It prints the head, each item, whether the selected suffix is
-complete, and any next cursor. To continue, put that exact cursor in the
-next query. A refusal exits 1 and says coverage is incomplete. The whole
-reply is limited to 256 KiB and the query wait to 10 seconds. A smaller
-returned prefix is not a complete inventory; a later `row-too-large`
-refusal cannot make it complete.
+### `dap items`
 
-**`dap verify <scope>`** runs the replay verifier over the read
-routes, with the platform package's rules and the code of the two lane
-capabilities, `hold@1` and `git-read@1`, so it replays a lane too. It reads with the caller's
-session. A read refused as `forbidden` goes again as a signed read by the
-caller's key; other refusals do not take that fallback. It prints the verifier's report: the result,
-what it covered, and what it takes on trust. A journal whose first page
-cannot be read has no report; the command prints
+```
+dap items <scope> --query <canonical-item-query-JSON>
+```
+
+Reads one bounded selection of items. The canonical JSON has exactly the
+fields `cursor`, `ids`, `limit`, `scope`, `states`, `type` and `v`.
+`scope` is the full scope reference. `cursor` starts as `null`, and
+`ids: null` selects every matching ID. States and explicit IDs must be
+sorted and unique. The SDK's `encodeItemQuery` writes this form. The
+command checks the query's scope against the selected scope before it
+sends the query.
+
+The command makes one query. It prints the head, each item, whether the
+selected suffix is complete, and any next cursor. To continue, put that
+cursor in the next query. A refusal exits 1 and says that coverage is
+incomplete. The reply is limited to 256 KiB and the wait to 10 seconds.
+A shorter returned prefix is not a complete inventory, and a later
+`row-too-large` refusal cannot make it complete.
+
+### `dap verify`
+
+```
+dap verify <scope>
+dap verify --all
+```
+
+`dap verify <scope>` runs the replay verifier over the read routes, with
+the platform rules and the code of the two lane capabilities, `hold@1`
+and `git-read@1`, so it replays a lane too. It reads with your session. A
+read refused as `forbidden` is sent again as a signed read by your key.
+Other refusals get no second read. The command prints the verifier's
+report: the result, what it covered and what it takes on trust. A journal
+whose first page cannot be read has no report. The command then prints
 `... cannot be read: <reason>` and exits 1.
 
 ```
@@ -523,38 +699,13 @@ Result: consistent, for the mode, target, coverage and trusts stated below.
 Mode: replay. Within the coverage stated below, the history was folded from its genesis, ...
 ```
 
-**`dap verify --all`** runs the same replay for every scope of the
-room: the register, the directory, and every scope that the directory
-created and each of those created (membership, the rules scope, the
-destination, each lane, each inbox), reached by the creations in their
-journals. It prints one line for each scope: its kind, its ID, the entry
-the replay reached and the result. The last line is `All consistent: <n>
+`dap verify --all` replays every scope of the room. It starts at the
+register and the directory and follows the creations in their journals to
+membership, the rules scope, the destination, each lane and each inbox.
+It prints one line for each scope: its kind, its ID, the entry that the
+replay reached and the result. The last line is `All consistent: <n>
 scopes.`, or the first finding, and then the command exits 1. A journal
-that cannot be read is a finding. Discovery, replay dependencies, session
-requests and cleanup share a five-minute, 256 MiB budget, with at most
-100,000 HTTP attempts and 100,000 history entries read. Repeated reads
-count again. The generic replay defaults are unchanged; this command uses
-its finite request allowance instead of the default 64-dependency limit.
-The existing per-read bounds, 1,000-page discovery bound and depth bound
-still apply.
-
-Progress lines go to stderr while the command runs. A budget or cancellation
-stop exits 1 and names the phase, scope and input cursor where it stopped.
-It does not print `All consistent`. A session-request limit is reported as
-`rate-limited`, with its supplied retry window; it is not a replay finding
-of `incomplete` and does not trigger a signed read.
-
-A later room can read the shared Register through its membership session
-but still lack a journal needed to prove an earlier room's creation result.
-Verification then exits 1 and names the dependency as `not proven: needs
-<journal> entries <range>, not readable by this session`. The Register's
-retained copy does not prove that the source admitted the entry. The command
-keeps full replay checks and does not widen access to another room's journal.
-This dependency can also prevent proof of a later room's own creation.
-
-The example below is from
-`apps/room/lanes/test/issues.scope.test.ts`, after two issues were closed by
-two published changes:
+that cannot be read is a finding.
 
 ```
 register sc_3kisrweg..., entry 3: consistent.
@@ -572,13 +723,135 @@ inbox sc_3a6xxtoj..., entry 1: consistent.
 All consistent: 12 scopes.
 ```
 
-**`dap remote`** prints the repository's host, namespace, name and
-remote URL, from the destination's branch item. On GitHub the URL is
-`https://github.com/<namespace>/<name>.git`. On the hosting's own Git
-service it is `https://<host>/git/<namespace>/<name>.git`, where `<host>`
-is the deployment's setting, which no scope records: until a clone has
-learned it, the command marks that part. The examples are from
-`packages/cli/test/clone.scope.test.ts`.
+Discovery, replay dependencies, session requests and cleanup share one
+budget: five minutes, 256 MiB, 100,000 HTTP attempts and 100,000 history
+entries read. Repeated reads count again. `--all` uses this request
+budget in place of the default limit of 64 dependencies. The per-read
+bounds, the 1,000-page discovery bound and the depth bound still apply.
+Progress lines go to standard error. A budget or cancellation stop exits
+1 and names the phase, scope and cursor where it stopped. A session
+limit is reported as `rate-limited` with its retry window. It is not a
+replay finding and does not cause a signed read.
+
+A later room can read the shared register through its membership
+session and still lack a journal that it needs to prove an earlier room's
+creation. Verification then exits 1 with `not proven: needs <journal>
+entries <range>, not readable by this session`. The register's retained
+copy does not prove that the source journal recorded the entry. The
+command does not widen access to another room's journal. The same gap
+can prevent proof of a later room's own creation.
+
+### `dap scope-index`
+
+```
+dap scope-index inventory --out FILE | census --out FILE | sweep --manifest FILE | verify --manifest FILE | versions --manifest FILE | applications --manifest FILE --out FILE
+```
+
+Operator commands for a deployment's scope index. They run under Node
+only. A manifest file is at most 16 MiB, and the command never replaces
+an existing output file.
+
+**`census --out FILE`** lists the registered scopes on the configured
+Worker. Sign with the key that signed the pinned register's founding
+`install`. A member key or a read session cannot run a census. The
+Worker checks its own deployment pin and the register's birth before it
+serves rows. The command signs each page's cursor and uses no session,
+registration, fallback or retry. One run allows at most 30 seconds,
+16 MiB of response bytes and 4,096 rows, with at most 100 rows a page.
+Pagination ends only when a response names no next cursor. These limits
+bound one observation, not an atomic snapshot.
+
+On completion, `FILE` holds the v1 manifest `{v, service, root, scopes}`,
+with each row `{at, genesis}`. It must contain the configured directory's
+full reference. An empty or partial census writes no manifest. A local
+save error can leave the complete file in place, so after an
+`output-unavailable` reason, inspect the path before you choose a new
+one. Every run prints one JSON line with `v`, `outcome`, `rows`, `pages`,
+`startedAt`, `endedAt` and `written`. A failed page also names its input
+`cursor` and a fixed `reason`. The outcomes are `complete`, `empty`,
+`absent`, `unsupported`, `forbidden`, `root-unregistered`, `over-bound`
+and `page-failed`. Only `complete` exits 0. `absent` means that no index
+is configured. `unsupported` means register mode, which serves no census.
+Neither means an empty registered set. A census can miss scopes
+registered during the run whose IDs come before the cursor, and it does
+not list unregistered legacy objects. Later operator key succession is
+not supported.
+
+**`inventory --out FILE`** follows the configured room's recorded
+creations with your session and saves a manifest. It prints
+`Captured <n> listed scopes in FILE.` Reads in register mode can write
+registrations.
+
+**`verify --manifest FILE`** reads each listed scope's genesis entry and
+compares it with the saved genesis hash. It prints a JSON report with
+`listed`, `verified`, `unavailable`, `mismatch` and one row for each
+scope, and exits 0 only when every listed scope verifies. **`sweep
+--manifest FILE`** runs the same check. Reads in register mode can
+register scopes.
+
+**`versions --manifest FILE`** checks each saved genesis and reports its
+definition pin, or `unavailable`, `mismatch` or `unsupported`. It exits 0
+when the report is ready. It changes no setting.
+
+**`applications --manifest FILE --out FILE`** reads the summary of each
+rules scope in the manifest and writes a JSON report of installed
+applications to the `--out` file. It requests at most one membership
+session, for that run only, and retries no read. Scopes of other kinds
+are marked not applicable. The printed line has `status` (`complete` or
+`incomplete`), `applications`, `errors` and `notApplicable`. Any error
+exits 1. A session limit stops the run before any read and reports
+`rate-limited` with `retryAfterSeconds`, or `null` for an unknown window.
+
+### `dap status`
+
+```
+dap status [<scope>] [--request <16-hex-id>]
+```
+
+Reports bounded operational observations through a room session.
+[Status reads](operations.md#status-reads) describes the columns, bounds
+and permissions. The command exits 0 when it produces a report, including
+one with unknown or partial columns, and 1 when it cannot get a room
+session.
+
+### `dap mcp`
+
+```
+dap mcp [--generic | --generic=add] [--tools <definition>,...] [--http 127.0.0.1:<port>] [--scope <scope> --membership <scope>]
+```
+
+Serves the room to an agent host as an MCP server, over standard input
+and output or over loopback HTTP. The server signs with the config
+directory's key. A config directory with no room is served too: the
+server makes a device key, and its `join` tool records the room.
+
+- `--generic` lists the generic tools and the pair `actions` and `act` in
+  place of the act tools. `--generic=add` lists both.
+- `--tools` lists the act tools of the named definitions only.
+- `--http` serves loopback HTTP in place of standard input and output.
+- `--scope` records a standalone scope in the config before the server
+  starts. `--membership` names the scope that its standing is read from:
+  `membership` for the room's own, or a scope ID.
+
+[Connect an agent host](mcp.md#connect-an-agent-host) describes the
+server, its options and its tools.
+
+## Room commands
+
+These commands work on a room's repository, its changes and its issues.
+
+### `dap remote`
+
+```
+dap remote
+```
+
+Prints the repository's host, namespace, name and remote URL, from the
+destination's branch item. On GitHub the URL is
+`https://github.com/<namespace>/<name>.git`. On Cloudflare Artifacts it
+is `https://<host>/git/<namespace>/<name>.git`, where `<host>` is the
+deployment's setting, which no scope records. Until a clone has learned
+it, the command marks that part.
 
 ```
 Host: artifacts
@@ -587,32 +860,39 @@ Name: 5kywbv2y...-1
 Remote URL: https://<service host>/git/artroom-demo/5kywbv2y...-1.git (the service host is the deployment's setting; dap clone prints it whole)
 ```
 
-**`dap clone [<directory>] [--hours 1]`** clones the repository with
-a read token of the caller's own:
+A room created with `--host none` prints `Mode: unpublished` and
+`no-repository: this room has no publication.`
 
-1. If there is no `git` program, it signs nothing and prints the clone
-   command with the token's place marked.
-2. It signs the destination's `read-token` act with `hours` (1 to 24;
-   the default is 1). Every role holds its grant, so any active member
-   may sign it. The destination opens a `mint-read` operation, and the
+### `dap clone`
+
+```
+dap clone [<directory>] [--hours 1] [--archive]
+```
+
+Clones the repository with a read token of your own:
+
+1. If there is no `git` program, the command signs nothing and prints
+   the clone command with the token's place marked.
+2. It signs the destination's `read-token` act with `--hours`, from 1 to
+   24. The default is 1. Every role holds this grant, so any active member
+   can sign it. The destination opens a `mint-read` operation, and the
    host mints a read token for that lifetime. On GitHub the lifetime is
    GitHub's own, one hour.
-3. It waits for the outcome, which names the token by a nonsecret handle
-   and its end. Then it reads the token once, with the caller's read
+3. It waits for the outcome, which names the token by a handle that is
+   not secret, and its end. Then it reads the token once, with your read
    session, from the destination's credential route. No other session can
-   read it, and it cannot be read twice.
-4. It runs `git clone -- <remote> [<directory>]`. The token goes to git
-   as an `Authorization` header, in the configuration `http.extraHeader`,
+   read it, and nobody can read it twice.
+4. It runs `git clone -- <remote> [<directory>]`. The token reaches `git`
+   as an `Authorization` header in the `http.extraHeader` configuration,
    which the command sets in git's environment (`GIT_CONFIG_COUNT`,
-   `GIT_CONFIG_KEY_0`, `GIT_CONFIG_VALUE_0`). That is the same setting as
-   `git -c http.extraHeader=...`, but it is in no argument, so no process
-   list shows it. The token is in no printed line and in no file the
-   command writes, and git does not keep it in the clone's config. The
-   header is `Bearer <token>` on Cloudflare Artifacts, and
-   GitHub's form for an installation token, `Basic` with the user
-   `x-access-token`, on GitHub.
+   `GIT_CONFIG_KEY_0` and `GIT_CONFIG_VALUE_0`). The token is in no
+   argument, no printed line and no file that the command writes, and
+   `git` does not keep it in the clone's config. The header is
+   `Bearer <token>` on Cloudflare Artifacts. On GitHub it is `Basic` with
+   the user `x-access-token`.
 
-It prints the remote URL, and keeps it in the config for `remote`.
+The command prints the remote URL and keeps it in the config for
+`remote`.
 
 ```
 Read token: sc_rh5ctnhi...:2, until 2099-01-01T02:00:00Z.
@@ -620,93 +900,52 @@ Remote URL: https://service.invalid/git/artroom-demo/5kywbv2y...-1.git
 Cloned into here.
 ```
 
-Without git:
+Without `git`:
 
 ```
 git is not installed here, so nothing was signed. With git installed, run dap clone again; it runs:
 git -c http.extraHeader="Authorization: Bearer <read token>" clone -- https://<service host>/git/artroom-demo/5kywbv2y...-1.git here
 ```
 
-The token is for the clone. A later `git fetch` in the clone needs a new
-token; run `dap clone` again for one. A token that is never read ends
-at its end.
+`--archive` needs an explicit directory. After the clone, the command
+fetches `refs/artroom/journal/*` into it with the same token, which stays
+in memory. It then prints `Fetched refs/artroom/journal/* with the same
+read token.` Verify the expected journal set offline before you accept
+the archive. If the fetch fails, the working clone stays and the token is
+not kept.
 
-**`dap propose <branch> [--title <text>]`** submits the committed files
-that differ between the room's published head and a local branch tip. It
-reads committed objects, so uncommitted files and the index remain untouched.
-The room's head must be an ancestor of that tip. The room creates and
-publishes its own commit; the person does not push the branch. After a
-publication, `git pull` reads that room commit.
+The token is for one clone. A later `git fetch` or `git pull` needs a new
+token, and no command gives one to them. Run `dap clone` again. A token
+that nobody reads ends at its end. A room created with `--host none` is
+refused as `no-repository`.
 
-This command requires a manifest-list change definition and a destination
-at version 3. Existing rooms retain their genesis pins. An older room is
-refused with `version-mismatch`; activation alone cannot upgrade its
-native destination. A creator supplies the authored `change3.json` or
-`change-demo3.json` bytes to the rules scope, by their exact digest.
+An active member's session reads the destination before the member's
+first act, also after the creator's signed-read window. The destination
+checks the member's full confirmed membership reference from its recorded
+birth directory before it accepts the session.
 
-The change records one signed `propose-file` source entry per path, then
-one `propose-manifest` that freezes all paths, entry references and byte
-digests on the published base. The destination builds their shared tree
-at reservation and records it before any required check. A check request
-reads that reservation tree; publication waits for every required check's
-authentic pass. The destination stages the recorded integration on the
-canonical host
-under `refs/artroom/reservations/<reservation id>` before it reports the
-reservation to the lane. The checker reads that reservation and fetches
-its exact ref, then checks its integration ID, tree and first parent. A
-missing or mismatched stage gives `reservation-stage-missing` or
-`reservation-stage-mismatch` and starts no run. While a check is owed, the
-command prints the change and
-reserved tree. A published result prints the room's commit. A policy
-refusal prints its name and the merge command to run after approval.
+### `dap edit`
 
-Reservation snapshots currently use the Git reader’s supported SHA-1
-format. The private checkout refuses SHA-256 as
-`unsupported-object-format`; this is a supported-format limit, not a
-claim that SHA-256 checks ran.
+```
+dap edit <path> --file <local file> [--title <text>] [--closes <issue>]
+```
 
-This delivery carries UTF-8 text, including its exact byte order mark and
-NUL bytes. It names refusals for deleted or renamed files, non-UTF-8
-content, an unsupported mode change, more than 64 changed paths, a path
-that cannot be written, and a file over 65,536 bytes. Each source entry
-uses the existing per-entry transport bound. It carries no Git pack.
-A `request-check` first records a queued job. The destination fences that
-check's exact job generation, invalidating any earlier pass, before its
-acknowledgement makes the new job requested and supersedes the old job.
-A retry may be requested while checks are pending. If publication has
-started, the fence is refused as `publication-started`; the old job and
-any unresolved send remain recorded. Delayed results count only for the
-destination's acknowledged generation. Cancellation before a push and the
-recorded check deadline release logical publication availability. A staged
-ref remains a separate cleanup task. Publication moves the branch by its
-recorded compare-and-swap; deletion of the reservation ref and revocation
-of its tokens must settle before the destination’s publication is final.
-Unknown staging or deletion remains recorded and is never inferred from
-a read alone. A staging mismatch that may leave a ref keeps a live
-`cleanup-aborted` task; its branch slot can be reclaimed independently
-of that cleanup. A delete uses the recorded old integration ID and cannot
-remove another writer’s replacement ref. Expiry currently retains `cleanup-aborted`; its explicit
-`resend` cleanup trigger is awaiting the owner’s disposition (`f1b87a0b`).
+Writes one file of the repository through the room. You never write the
+repository yourself: the room decides the change and its destination
+writes it.
 
-Binary content, deletion and rename support remain in the later R5 work.
-The demonstration uses two text files.
-
-**`dap edit <path> --file <local file> [--title <text>]`** writes one
-file of the repository through the room. The person never writes the
-repository: the room judges the change and its destination writes it. The
-examples have the form that `apps/room/lanes/test/edit.scope.test.ts`
-asserts, with IDs cut short; the numbers in them are illustrative.
-
-1. It reads the local file. A file that is no UTF-8 text, or that has more
-   than 65,536 bytes, is not carried: nothing is signed, and it exits 2.
+1. The command reads the local file. A file that is not UTF-8 text, or
+   that has more than 65,536 bytes, is not carried: nothing is signed, and
+   the command exits 2.
 2. It reads the change definition that the rules scope holds active, and
-   its bytes. With none active it signs nothing.
-3. It signs the directory's `open-pr` under that definition, with its bytes
-   beside the act, and waits for the new change lane. The title is
+   its bytes. With none active, it signs nothing.
+3. It signs the directory's `open-pr` under that definition, with its
+   bytes beside the act, and waits for the new change lane. The title is
    `--title`, or `Edit <path>`.
-4. It signs the lane's `ask-rules`, and waits for the rules scope's answer.
-5. It signs `propose-file` on the destination's head: the path, the digest
-   and size of the bytes, and the bytes. This is the change's only version.
+4. It signs the lane's `ask-rules` and waits for the rules scope's answer.
+5. It signs `propose-file` on the destination's head: the path, the
+   digest and size of the bytes, and the bytes. This is the change's only
+   version.
 6. With `--closes <issue>`, it signs the lane's `link-own` to that issue,
    as `dap merge --closes` does.
 7. It merges the change as `dap merge` does.
@@ -718,7 +957,7 @@ Page: https://scopes.test/site/sc_hs5f27fz.../HEAD/README.md
 ```
 
 The rules decide who must approve. A change in an extent that asks no
-approval is published on the merger's own act; a change in the rules
+approval is published on the merger's own act. A change in the rules
 extent, such as `AGENTS.md`, waits for the rules scope's controller:
 
 ```
@@ -726,34 +965,103 @@ Proposed AGENTS.md (31 bytes) as change sc_ab12..., version 6.
 Not published: the merge sc_ab12...:7 is refused, rules-not-met:rules. The change sc_ab12... stays open at version 6. When it may be merged, run: dap merge sc_ab12...
 ```
 
-The controller approves it for that extent with `dap act review-verdict
---on <change> --set manifest=<version> --set verdict=approve --set
-extent=rules`, and a member who holds `change.merge` runs `dap merge`.
-A second `edit` of the same path replaces the file. A path that no
-published tree may hold (an empty, `.`, `..` or `.git` segment, a control
-character, more than 1,024 bytes) is refused by the destination as
-`path-invalid`, and nothing is pushed. A path where the published tree has
-a folder, a symbolic link or a submodule, or a file on the way, is refused
-as `integration-invalid`.
+The controller approves the change for that extent with `dap act
+review-verdict --on <change> --set manifest=<version> --set
+verdict=approve --set extent=rules`. Then a member who holds
+`change.merge` runs `dap merge`.
 
-**`dap merge <change>`** signs `merge` of the change's current version,
-naming the reports it selects, and waits until the merge is published,
-refused or aborted. It needs `change.merge`, which admins and maintainers
-hold. Published: it prints the commit, and for a one-file version the
-page's address. Refused by the lane, it prints the refusal; refused by the
-destination, the reason. Either way the change stays open, and `dap
-merge` may be run again.
+A second `edit` of the same path replaces the file. The destination
+refuses a path that no published tree can hold as `path-invalid`, and
+pushes nothing. Such a path has an empty, `.`, `..` or `.git` segment, a
+control character, or more than 1,024 bytes. A path where the published
+tree has a folder, a symbolic link, a submodule or a file on the way is
+refused as `integration-invalid`. An `edit` carries text only, so it
+cannot write an image or another binary file.
 
-With **`--closes <issue>`**, `merge` first signs the change lane's
-`link-own` to the issue (`how` is `keyword`). The link is a fact of the
-change lane. When the merge is published, the lane tells the issue, and
-the issue closes with the reason `completed`, by its own entry. Only the
-change's author may sign `link-own`; the demo profile has no `link-any`.
-So a member who opens a change can link it, but cannot merge it: members
-do not hold `change.merge`. The member's change waits, linked, and an
-admin or a maintainer merges it. The examples from here on have the form
-that `apps/room/lanes/test/issues.scope.test.ts` asserts, with IDs cut
-short; the numbers and hashes in them are illustrative.
+### `dap propose`
+
+```
+dap propose <branch> [--title <text>]
+```
+
+Submits the committed files that differ between the room's published
+head and a local branch tip. The command reads committed objects, so it
+leaves uncommitted files and the index alone. The room's head must be an
+ancestor of the tip. The room creates and publishes its own commit, and
+you do not push the branch. After a publication, `git pull` reads the
+room's commit.
+
+The command needs a change definition with a manifest list and a
+destination at version 3. Existing rooms keep their genesis pins, so an
+older room is refused with `version-mismatch`. Activation alone cannot
+upgrade its destination. A creator gives the rules scope the bytes of
+`change3.json` or `change-demo3.json` by their exact digest.
+
+The change records one signed `propose-file` entry for each path, then
+one `propose-manifest` that fixes all paths, entry references and byte
+digests on the published base. The destination builds the shared tree at
+reservation and records it before any required check. A check reads that
+reservation tree, and publication waits for every required check's
+authentic pass. The destination stages the integration on the host under
+`refs/artroom/reservations/<reservation id>` before it reports the
+reservation to the lane. The checker fetches that ref and checks its
+integration ID, tree and first parent. A missing or different stage
+gives `reservation-stage-missing` or `reservation-stage-mismatch` and
+starts no run.
+
+While a check is owed, the command prints the change and the reserved
+tree. A published result prints the room's commit. A policy refusal
+prints its name and the merge command to run after approval.
+
+The command carries UTF-8 text, including a byte order mark and NUL
+bytes. It names refusals for a deleted or renamed file, content that is
+not UTF-8, an unsupported mode change, more than 64 changed paths, a path
+that cannot be written, and a file over 65,536 bytes. Each source entry
+uses the per-entry transport bound, and the command carries no Git pack.
+Reservation snapshots use SHA-1, and the private checkout refuses SHA-256
+as `unsupported-object-format`.
+
+A `request-check` first records a queued job. Before the destination
+acknowledges the new job, it fences that check's job generation, which
+cancels any earlier pass, and the new job replaces the old one. You can
+ask for a retry while checks are pending. After publication has started,
+the fence is refused as `publication-started`, and the old job and any
+unresolved send stay recorded. A late result counts only for the
+generation that the destination acknowledged. A cancellation before a
+push, or the recorded check deadline, frees the branch for another
+publication. Cleanup of a staged ref is a separate task.
+
+Publication moves the branch by its recorded compare-and-swap. The
+reservation ref must be deleted, and its tokens revoked, before the
+destination's publication is final. An unknown staging or deletion stays
+recorded, and the destination never infers it from a read. A staging
+mismatch that may leave a ref keeps a live `cleanup-aborted` task, and
+the branch slot can be reclaimed separately. A delete names the recorded
+old integration ID, so it cannot remove another writer's replacement ref.
+Expiry keeps `cleanup-aborted`.
+
+### `dap merge`
+
+```
+dap merge <change> [--closes <issue>]
+```
+
+Signs `merge` of the change's current version, with the reports that it
+selects, and waits until the merge is published, refused or stopped. It
+needs `change.merge`, which admins and maintainers hold, so a member
+cannot merge their own change. A publication prints the commit, and for
+a one-file version the page's address. A refusal by the lane prints the
+refusal, and a refusal by the destination prints its reason. Either way
+the change stays open, and you can run `dap merge` again.
+
+With `--closes <issue>`, the command first signs the change lane's
+`link-own` to the issue, with `how` set to `keyword`. The link is a fact
+of the change lane. When the merge is published, the lane tells the
+issue, and the issue closes with the reason `completed` by its own entry.
+Only the change's author can sign `link-own`, and the demo profile has no
+`link-any`. A member who opens a change can link it but cannot merge it.
+The member's change waits, linked, until an admin or a maintainer merges
+it.
 
 ```
 Proposed guide/start.md (53 bytes) as change sc_q3xk..., version 6.
@@ -762,49 +1070,63 @@ Refused: unauthorized, judged at entry sc_q3xk...:7. The request was refused.
 The change sc_q3xk... waits, at version 6. When it may be merged, run: dap merge sc_q3xk...
 ```
 
-Then, as the admin, `dap merge sc_q3xk...`:
+Then the admin runs `dap merge sc_q3xk...`:
 
 ```
 Published: commit 5d0c1e6b..., by the merge sc_q3xk...:8.
 Page: https://scopes.test/site/sc_hs5f27fz.../HEAD/guide/start.md
 ```
 
-**`dap issue open --title <text> [--body <text>]`** signs the
-directory's `open-issue` under the issue definition that the rules scope
-holds active, with its bytes beside the act, and waits for the issue's
-lane. The body is a detached text: the act holds its digest. The issue's
-one condition is its title, because the lane refuses an issue with no
-condition. The directory numbers issues and changes in one sequence. An
-admin activates the demo profile's issue definition as for the change
-definition: `--set name=issue --value
+### `dap issue`
+
+```
+dap issue open --title <text> [--body <text>]
+dap issue comment <issue> <text>
+dap issue assign <issue> <@member>
+dap issue close <issue>
+```
+
+**`open`** signs the directory's `open-issue` under the issue definition
+that the rules scope holds active, with its bytes beside the act, and
+waits for the issue's lane. The body is a detached text, and the act
+holds its digest. The title is the issue's one condition, because the
+lane refuses an issue with no condition, and the command has no flag for
+other conditions. The directory numbers issues and changes in one
+sequence. An admin activates the demo profile's issue definition as for
+the change definition, with `--set name=issue --value
 apps/room/lanes/definitions/issue-demo.json`.
 
 ```
 Opened issue #1: The handbook has no start page. Its lane is sc_4bbosp5k....
 ```
 
-**`dap issue comment <issue> <text>`** is the issue lane's `comment`.
-Any member may comment.
+**`comment`** is the issue lane's `comment`. Any member can comment.
 
-**`dap issue assign <issue> <@member>`** is the lane's `assign`. It
-sets the assignee, and needs `issue.triage`, which admins and maintainers
-hold. Assignment is optional; no rule of the demo profile needs it.
+**`assign`** is the lane's `assign`. It sets the assignee and needs
+`issue.triage`, which admins and maintainers hold. No rule of the demo
+profile needs an assignee.
 
-**`dap issue close <issue>`** signs `close-own` when the caller opened
-the issue, and `close-any` otherwise, which needs `issue.triage`. The
-reason is `completed`. The demo profile has no rule that lets an assignee
-close an issue. A member who did not open it is refused:
+**`close`** signs `close-own` when you opened the issue, and `close-any`
+otherwise, which needs `issue.triage`. The reason is `completed`. The demo
+profile has no rule that lets an assignee close an issue, so a member who
+did not open it is refused:
 
 ```
 Commented: entry sc_4bbosp5k...:1, hash sha256:3b1f0c2d9e8a.
 Refused: unauthorized, judged at entry sc_yx6ty22i...:1. The request was refused.
 ```
 
-**`dap issues`** lists every issue, oldest first: its number, its
-state and close reason, its title, its assignees and its lane. Each issue
-is read in its own lane. The directory's row for an issue is an index that
-the lane's own acts update, and a merge that closes the issue does not
-update it, so the row can still say `open`.
+### `dap issues`
+
+```
+dap issues
+```
+
+Lists every issue, oldest first: its number, its state and close reason,
+its title, its assignees and its lane. The command reads each issue in
+its own lane. The directory's row for an issue is an index that the
+lane's own acts update. A merge that closes the issue does not update
+that row, so the row can still say `open`.
 
 ```
 #1  closed (completed)  The handbook has no start page; assigned to @una; lane sc_4bbosp5k...
@@ -812,132 +1134,8 @@ update it, so the row can still say `open`.
 2 issues, 0 open.
 ```
 
-Exit codes: 0 done; 1 refused, unavailable, not found or not consistent;
-2 a command line this cannot run.
+The room's browser client is [the page](../apps/room/docs/page.md).
 
-## Scope index observations
+## Source
 
-**`dap scope-index census --out FILE`** lists registered scopes on the
-configured Cloudflare Worker. Use the key that signed its pinned Register's
-founding `install`. A member key or read session cannot run a census. The
-configured Register identifies the intended target; the Worker checks its
-own deployment pin and native birth before serving rows.
-
-The command signs each page's exact cursor. It uses no session, registration,
-fallback or retry. One run allows at most 30 seconds, 16 MiB of response
-bytes and 4,096 rows, with at most 100 rows per page. Pagination ends only
-when the response explicitly names no next cursor, including a full final
-page. These limits bound an observation, not an atomic snapshot.
-
-On completion, `FILE` contains the existing v1 manifest:
-`{v, service, root, scopes}`, with each row `{at, genesis}`. It must contain
-the configured repository Directory's full reference. Publication is
-exclusive: an existing file is not replaced. An empty or partial census
-writes no manifest.
-
-A local save error can leave the complete file present. An
-`output-unavailable` reason gives no publication acknowledgment; inspect
-the output path before choosing a new one.
-
-Every invocation prints one JSON outcome line with `v`, `outcome`, `rows`,
-`pages`, `startedAt`, `endedAt` and `written`. A failed page also names its
-input `cursor` and a fixed `reason`. Outcomes are `complete`, `empty`,
-`absent`, `unsupported`, `forbidden`, `root-unregistered`, `over-bound` and
-`page-failed`. Only `complete` exits successfully. `absent` means no index
-is configured; `unsupported` means register mode, which does
-not serve a census. Neither means an empty registered set.
-
-Registrations during the `startedAt` to `endedAt` window whose IDs precede
-the cursor can be missed. Unregistered legacy objects remain a gap even
-when the census completes. Later operator key succession is not supported.
-
-Run **`dap scope-index versions --manifest FILE`** to check every saved
-genesis and report its actual definition pin, or an explicit unavailable,
-mismatch or unsupported outcome. This retains the existing read authority;
-the census grants no additional entry access. The older
-**`dap scope-index inventory --out FILE`** follows only the configured
-repository's recorded creations and keeps its existing session authority.
-
-## Reads and sessions
-
-**`dap status [<scope>] [--request <16-hex-id>]`** reports bounded
-operational observations through a room session. With no scope it
-starts from the configured room and discovers readable scopes. A scope
-name or ID selects one scope. Each column prints its own native head.
-Lists stop after 20 pages, and discovery stops at 1,000 scopes. Denied,
-unknown and partial results keep those labels. Admin sessions can read
-waiting lists and incidents. Correlation rows are read only with the
-explicit request selector. See [Status reads](operations.md#status-reads)
-for the columns, bounds and permission rules.
-Status exits 0 when it produces a report, including a report with unknown
-or partial columns. Failure to obtain a room session exits 1.
-
-Ordinary room reads keep an issued session in a separate private cache under
-`DAP_HOME`, including its membership reference, key, read permissions and
-end time. It reuses the session until 30 seconds before that end. The cache
-is bound to the exact service, membership incarnation and current signing
-key. Its files are owner-only; the token stays out of public configuration,
-JSON output and logs. Signing keys and retained envelopes keep their
-existing no-overwrite rules.
-
-The operator application listing keeps its separate single-acquisition
-contract: its credential lives only for that invocation, and it retries no
-summary read. A session limit stops the listing before any summary or
-signed fallback. Its JSON reports `rate-limited` and `retryAfterSeconds`,
-or `null` for an unknown window.
-
-A reused session refused as `forbidden` gets one membership-summary check. If
-that check also refuses the credential, the command discards that cached
-session, asks once for a replacement and retries once. A denied target
-under a valid session keeps its `forbidden` result and the existing signed
-fallback. A failed renewal keeps its actual refusal.
-
-The initial no-session path remains available when membership gives none,
-for example when the service has no session secret or the key is not an
-active member's. A later command can ask again after the key becomes eligible;
-an initial refusal is not kept as a successful credential.
-An issuance limit instead exits with `rate-limited`.
-The server's advisory `Retry-After` names the window until the earliest
-outstanding request deadline; it is not a fixed one-minute delay. A server
-that supplies no valid window is reported with an unknown window.
-
-Under a real session a member can read the scopes that record their
-membership. At the register it can read the whole journal and its typed
-retained inputs through the room's claim chain, without the signed-entry
-window. This grants no register summary or another room's private journal. A signed read reads the entries that the
-key signed, the entries that come from one of those within 15 minutes of
-it (the intent window), and the retained inputs those entries carry. Journal and log pages can
-be filtered; a sparse page is not complete replay evidence. Replay still states its actual coverage and foreign-journal trust.
-
-## What it does not do yet
-
-- There is no page. This is the command line only.
-- The documented CLI story is a workerd fixture with real scope rules,
-  authority, signed reads and sessions. Its Git host is a stand-in, and
-  it drives dispatchers in place of deployment alarms. The deployed
-  repository journey still needs its own evidence.
-- `edit` carries a file as UTF-8 text of at most 65,536 bytes: no image
-  or other binary file. See `notes/implementation/2026-10-07-i5-edit-page-delivery.md`,
-  section 3.
-- `issue open` has no flag for an issue's conditions: the title is its one
-  condition. See `notes/implementation/2026-10-07-i5-issues-delivery.md`, section 5.
-- A member cannot merge their own change: `merge` needs `change.merge`.
-- `invite --acts` is refused: membership's `invite-member` has no list of
-  acts for one member.
-- The creator must reach the seat within 15 minutes of the claim: until
-  the seat, the creator reads the new scopes by signed reads only, and
-  those last for the intent window after the claim. A claim whose
-  creation takes longer gives up, and a resumed claim cannot read the
-  directory either. See `notes/implementation/2026-10-07-i5-live-ops-delivery.md`,
-  section 4.
-- An act definition has no description text. The line `acts` prints is
-  made from the act's step, item and grant.
-- An active member's session reads the destination before its first act,
-  including after the creator's signed-read window. The destination checks
-  the full confirmed membership reference from its recorded birth directory
-  before accepting a session, even before its first retained observation. The first `remote` or `clone`
-  need not occur within 15 minutes of the claim. Signed reads without a
-  session retain their window. See the destination-read follow-up in
-  `notes/implementation/2026-10-07-i5-clone-delivery.md`.
-- `git fetch` and `git pull` in a clone have no command that gives them a
-  token.
+Checked against main `5dc9765f` on 30 October 2026. Sources: [line.ts](../packages/cli/src/line.ts), [commands.ts](../packages/cli/src/commands.ts), [application-command.ts](../packages/cli/src/application-command.ts), [application-dev.ts](../packages/cli/src/application-dev.ts), [mcp.ts](../packages/cli/src/mcp.ts), [scope-index-command.ts](../packages/cli/src/scope-index-command.ts). The samples come from the tests in `packages/cli/test` and `apps/room/lanes/test`, with long IDs cut short, except the `dap new`, `dap dev` and `dap pack` samples, which follow the source.

@@ -3,26 +3,28 @@
 For a client or application builder, this page follows a request from the
 meaning the application declares to the receipt the participant keeps.
 
-An **act** is something a scope's definition declares that a participant can sign. The participant signs an **intent** for that act. The scope decides whether the
-request may take effect. This page describes the native scope API in current
-main, not the older parked Room API or an unlanded intent-v2 wire format.
+An **act** is something a scope's definition declares that a participant
+can sign. The participant signs an **intent** for that act. The scope
+decides whether the request takes effect.
 
 ## Choose the exact meaning and subject
 
 A scope pins its definition at its creation. That definition declares each
-act's target item type, fields, required authority, guards, changes and
-messages. A client discovers or reads that actual definition; a familiar act name is not enough to choose its meaning.
+act's target item type, fields, required action, guards, effects and
+messages. Read the definition the scope pins. An act's name alone does not
+tell you its meaning.
 
-The current intent binds the target scope **and incarnation**, signing key, act kind, local item ID, expected item revisions, field values,
-idempotency key and deadline. For example, a verdict must name the actual
-version it reviews. A changed selected version is a new decision for the
-participant, not permission to retarget the existing request silently.
+The intent binds the target scope and its incarnation, the signing key,
+the act kind, the item, the item revisions the signer expects, the field
+values, an idempotency key and a deadline. A verdict names the version it
+reviews. If that version changes, the participant makes a new decision. A
+client never retargets a signed request.
 
 Fields may name exact foreign facts. Detached text travels beside its
-digest; platform fields can require separately supplied values under their
-declared byte domains. A client must supply those bytes according to the
-actual declaration. Hashing a label or substituting the latest head does
-not manufacture the required evidence.
+digest. Platform fields may require values that are supplied separately,
+within their declared byte domains. Supply those bytes as the definition
+declares them. Hashing a label or substituting the latest head does not
+produce the required evidence.
 
 ```mermaid
 flowchart TD
@@ -37,77 +39,76 @@ flowchart TD
   E --> M[Messages and outside work continue separately]
 ```
 
-A participant key need not already be enrolled for every act. Join checks
-the invitation and the fresh signing key; creating a repository uses the
-register's creation policy. These specific rules do not allow ordinary member acts.
+A key need not be enrolled for every act. Join checks the invitation and
+the new signing key. Creating a repository uses the register's creation
+policy. Those two rules allow no ordinary member act.
 
-## Read before committing; judge in the transaction
+## Read before committing, judge in the transaction
 
-The service checks the signed input and reads foreign facts against their
-references. It obtains the authority observation needed for this request.
+The service checks the signed input and reads each foreign fact against
+its reference. It obtains the authority observation the request needs.
 Rules that need evaluation run on a snapshot before the storage commit.
 
-A turn first drains due deadlines in bounded order. It then checks that the
-head has not moved, judges the input on the transaction's clock reading and
-either commits the derived entry or answers without the act taking effect. If
-another input moved the head during preparation, it starts that judgment
-again within its restart budget. A missing authority read is unavailable,
-not permission inferred from the client's view.
+A turn first applies each due deadline, in a bounded order. It then checks
+that the head has not moved, judges the input on the transaction's clock
+reading, and either commits the derived entry or answers without the act
+taking effect. If another input moved the head during preparation, the
+turn starts the judgment again, within its restart budget. A missing
+authority read makes the answer unavailable. It never becomes permission
+inferred from the client's view.
 
-Only the new entry, its retained inputs, sends and folded state share
-that local transaction. Other scopes do not join it. Their messages and
-outside-operation replies become later inputs with their own judgments.
+Only the new entry, its retained inputs, its sends and the folded state
+share that local transaction. Other scopes do not join it. Their messages
+and the replies of outside operations become later inputs with their own
+judgments.
 
 ## Distinguish the four answers
 
 | Answer | Meaning and next step |
 |---|---|
-| `accepted` | The act took effect: the scope recorded it. Keep its receipt and exact request; follow any remaining messages or publication work. |
-| `refused` | This request failed a check at the stated head. Read its reason and any named guard; inspect before deliberately changing the request. |
-| `unavailable` | This reply does not say whether the act took effect. Keep the original request and inspect; due entries, or an earlier entry for this act, can exist despite the reply. |
-| `mismatch` | The actor's idempotency key already belongs to a different intent that took effect. Inspect that record; do not substitute new bytes under the same key. |
+| `accepted` | The act took effect: the scope recorded it. Keep its receipt and the exact intent. Follow any remaining messages or publication work. |
+| `refused` | The request failed a check at the stated head. Read its reason and any named guard. Inspect before you change the request. |
+| `unavailable` | The reply does not say whether the act took effect. Keep the original intent and inspect. Due entries, or an earlier entry for this act, can exist despite the reply. |
+| `mismatch` | The key's idempotency key already belongs to a different intent that took effect. Inspect that record. Do not send new bytes under the same key. |
 
-A transport failure gives no native answer. A lost reply does not mean the
-scope did nothing. The caller needs the same original signed intent to ask
-for settlement or exact replay. When that actor and idempotency key already have an entry, exact replay can return the earlier receipt without a second act taking effect.
-Timed work can still prevent that receipt from being returned on a given
-turn. A read saying “not found” is not universal permission to sign a new
-mutation.
+A read of an entry below a scope's journal floor gets a fifth answer,
+`archived`. It names the floor and the archive commit that covers the
+entry. No act gets that answer.
 
-The native API supports settlement, but a client must actually retain the
-request to use it. Current clients have different custody boundaries: CLI
-Join has its own saved-request journal; generic `act`, `edit` and `merge`
-do not promise a universal durable outbox. Browser memory is not recovery
-after device loss or reload. Follow the documented client path rather than
-assuming platform idempotency supplies missing local records.
+A transport failure gives no answer at all. A lost reply does not mean
+that the scope did nothing. To ask for settlement or an exact replay, the
+caller needs the same original signed intent. When that key and
+idempotency key already have an entry, the exact replay returns the
+earlier receipt, and no second act takes effect. Timed work can still
+prevent that receipt from being returned on a given turn. A read that says
+"not found" is not permission to sign a new act.
+
+Keep the signed intent yourself. The native API can settle a lost reply
+only from the original intent. The command line keeps a saved-request
+journal for `join`. Its `act`, `edit` and `merge` commands do not keep
+one. Browser memory does not survive a reload or the loss of a device.
 
 ## Follow effects to their own outcomes
 
-Attention names members and reasons; it does not confer permission.
-Messages have send outbox IDs and receiver decisions. Outside operations keep
-attempts and confirmed, refused or unknown outcomes. Unknown mutation
-attempts remain pending work; their driver does not re-send the original mutation
-just because its reply was lost.
+Attention names members and reasons. It gives no permission. Messages
+have outbox IDs and receiver decisions. Outside operations keep their
+attempts and their confirmed, refused or unknown outcomes. An attempt
+whose reply was lost stays pending work. The driver does not send the
+original mutation again because its reply was lost.
 
-For a merge, the act opens the workflow when it takes effect. Later destination and
-change records establish publication and Merged. Read those records when
-you need the result, not only the first receipt.
+For a merge, the act opens the workflow when it takes effect. Later
+destination and change entries establish publication and Merged. Read
+those entries when you need the result, not only the first receipt.
 
-Definition versions remain immutable for the scope's lifetime. Historical
-entries are judged with their pinned meaning. The broader declaration-change,
-stale-binding, retirement and name-reuse tutorial remains an explicit manual
-obligation; this page does not assert that a new intent protocol has landed.
+A definition is immutable for the life of its scope. Every entry is
+judged with its pinned meaning.
 
-## Source and acceptance
+## Source
 
-Draft complete explanation, inspected 2026-10-09 against main
-`9d7e4c2777ea8d35441b4a9d79b407cd701065fa`; no tested public release is
-established. Sources: [intent](../../packages/contract/src/intent.ts),
+Checked against main `5dc9765f` on 30 October 2026. Sources:
+[intent](../../packages/contract/src/intent.ts),
 [submission and settlement](../../packages/scope/src/core.ts),
-[turn](../../packages/scope/src/turn.ts),
-[declared field shaping](../../packages/client/src/declared.ts), and
+[the turn](../../packages/scope/src/turn.ts),
+[declared field shaping](../../packages/client/src/declared.ts),
+[the answers](../../packages/contract/src/result.ts), and
 [outside operations](../../packages/scope/src/operations.ts).
-Existing [turn witnesses](../../packages/scope/test/turn.test.ts) show the
-native boundary under their fixture conditions; no new run is claimed.
-Independent review and the complete release acceptance remain in
-[the ledger](../../apps/room/docs/ledger.md).

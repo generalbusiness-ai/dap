@@ -1,28 +1,12 @@
 # Kernel boundary
 
-This page records the kernel classification from request `2ee805c5` and
-its review `3cd820f3`, with the K2, K3 and K11 implementation for request
-`30c7c3ec`. Tools are platform services. The host statement applies to code
-that has no host (sections 1, 3 and 8). Earlier K7, K8 and K9 evidence keeps
-its stated scope.
-
-K2, K3 and K11 are implemented at `fb105fa7`. The structural check, its
-paired control, SDK checks and Page build checks passed. Six maintained
-source-seal results were adopted in seven map slots at `8bfdc37e`, preserving
-the four archive values. All 28 affected compiler roots and all 129 cases
-in 25 whole files passed. The ordinary gate at `8658d109` failed; the
-whole-file and previously unreached checks subsequently passed. The
-[implementation report](../notes/implementation/2026-10-24-kernel-hygiene.md)
-records the outcomes and their limits. K1, K4, K5, K6 and K10 remain open;
-this work does not change their status. No deployment is part of this
-request.
-
 Applications on dap run for a long time, and they change more often than
 they are replaced. That works only if a small part of the system changes
 rarely and everything else can be replaced around it. This page names that
-part, the kernel. It places every package, app and example in one of three classes,
-states the test it applied, and lists the parts that fail the test today.
-It ends with the kernel's promises and the rule for adding to the kernel.
+part, the kernel. It places every package, app and example in one of three
+classes, states the test it applied, and lists the parts that fail the test
+today. It ends with the kernel's promises and the rule for adding to the
+kernel.
 
 ## 1. Classes
 
@@ -58,31 +42,28 @@ is not meant to be kernel, is listed in section 5 with what passing takes.
 
 | Part | Class | Test | Note |
 |---|---|---|---|
-| `packages/contract` | Kernel | — | Entry, act, seed and definition forms. It also names platform and app vocabulary (section 5, K4). |
-| `packages/derive` | Kernel | — | Validator, judges, fold, rule expressions and the code of three capabilities. |
-| `packages/bytes` | Kernel | K3 implemented; codec witnesses passed | Canonical JSON, hashes, signatures and byte domains remain here. Application package, view and projection codecs and their existing witnesses now live in platform. |
-| `packages/package-graph` | Platform service | K2 implemented; owning checks passed | The single field-assignability implementation lives in `derive/field-types`; package validation lives in `platform/package-validation`. Production derivation no longer imports graph. |
+| `packages/contract` | Kernel | Kernel | Entry, act, seed and definition forms. It also names platform and application vocabulary (K4). |
+| `packages/derive` | Kernel | Kernel | Validator, judges, fold, rule expressions and the code of three capabilities. |
+| `packages/bytes` | Kernel | Kernel | Canonical JSON, hashes, signatures and byte domains. Application package, view and projection codecs live in platform (K3). |
+| `packages/package-graph` | Platform service | Passes | Package composition checks. Field assignability lives in `derive/src/field-types.ts`, and package validation in `platform/src/validate-package.ts` (K2). |
 | `packages/platform` | Platform service | Fails | Replay needs its code to derive platform scopes (K1). |
-| `packages/scope` | Platform service: the runtime host | Passes | It holds the runtime's host details (section 8). It re-exports the `hold@1` numbers that judgments use; `derive` chooses them (K7, closed). |
-| `packages/mcp` | Platform service | Passes | The runtime imports it (`scope/src/worker.ts:60`). |
-| `packages/git` | Platform service | Passes | `derive` has its own commit parser for `git-read@1` (`derive/src/capability/ancestry.ts:192-197`). |
+| `packages/scope` | Platform service: the runtime host | Passes | It holds the runtime's host details (section 8). It re-exports `HOLD_VERSION` from `derive` (K7). |
+| `packages/mcp` | Platform service | Passes | The runtime imports it (`packages/scope/src/worker.ts`). |
+| `packages/git` | Platform service | Passes | `derive` has its own commit parser for `git-read@1` (`commitParents` in `derive/src/capability/ancestry.ts`). |
 | `packages/checkers` | Platform service | Passes | A checker signs ordinary intents (`checkers/src/signing.ts`). |
 | `packages/replay` | Platform service (tool): the independent verifier | Passes | It names platform versions and lane names (K6). Its local Git source is a Node adapter (section 8). |
-| `packages/cli` | Platform service (tool) | Passes | It is the only caller that gives replay the platform and capability code (`cli/src/commands.ts:1179-1187` at main `b52ca7e3`). The capability code is `derive`'s one table, with `device-command@1` (K8, closed). |
-| `packages/client` | Platform service (tool): the client library | Passes | — |
-| `apps/counter` | Application | Passes | — |
+| `packages/cli` | Platform service (tool) | Passes | It gives replay the platform code (`ARCHIVE_REPLAY_CODE`) and the capability code (`CAPABILITY_CODE`, `derive`'s one table) in `replayOf`, in `cli/src/commands.ts` (K8). |
+| `packages/client` | Platform service (tool): the client library | Passes | None. |
+| `apps/counter` | Application | Passes | None. |
 | `apps/jam` | Application | Passes | A static page with no scope. |
-| `apps/room` | Application | Passes for the kernel | Its lanes are definitions pinned by digest. It also holds the production entry of the platform Worker (`apps/room/worker.ts:2`, `wrangler.jsonc`), and the kernel names its lane actions (K4, K10). |
-| `examples/grow` | Application | Passes to retire; fails to replace | `contract` fixes the device kinds at fan, heater and vent (`contract/src/device-command.ts:5`, K4). |
-| `examples/lending` | Application | Passes | — |
-| `examples/demo-repo` (retired) | Removed example | K11 implemented | Its two policy files and the active guide command and link are removed. Dated notes and reports remain unchanged. |
+| `apps/room` | Application | Passes for the kernel | Its lanes are definitions pinned by digest. It also holds the production entry of the platform Worker (`apps/room/worker.ts`, `wrangler.jsonc`), and the kernel names its lane actions (K4, K10). |
+| `examples/grow` | Application | Passes to retire, fails to replace | `contract` fixes the device kinds at fan, heater and vent (`DEVICE_COMMAND_KINDS` in `contract/src/device-command.ts`, K4). |
+| `examples/lending` | Application | Passes | None. |
 
-The request that commissioned this page proposed `packages/scope` and
-`packages/replay` as kernel. The test places them outside. The runtime host
-can be replaced by another host with no change to the meaning of an entry
-(section 8), and the verifier is a second caller of `derive`. The
-architecture page's statement that the runtime and the verifier call the
-same functions is what keeps both honest, and it is promise 9 below.
+The runtime host and the verifier are outside the kernel. Another host can
+replace the runtime host with no change to the meaning of an entry
+(section 8), and the verifier is a second caller of `derive`. Promise 9
+keeps both honest: the runtime and the verifier call the same functions.
 
 ## 4. Platform services: definitions or special cases
 
@@ -92,120 +73,46 @@ whether it is one, or a special case that the kernel knows.
 
 | Part | Kind | What the kernel knows about it | What retiring it takes |
 |---|---|---|---|
-| Register, directory, directory partition, membership, rules, destination, inbox, task | Special cases | Their kinds are a closed list (`contract/src/scope.ts:19`), and the kind is in every seed, so in every scope ID. Their `platform:` names (`scope.ts:41`). Parts of their rules: a register opens only by `install` and a directory with no creator only by `found` (`derive/src/genesis.ts:49`, `:132-133`); only membership issues grants (`derive/src/grant.ts:123-129`); a literal `platform:destination@3` (`derive/src/judge.ts:427-429`). Their own rules are code in `packages/platform`. | Their rules as declared forms, or as code pinned by digest (K1), and their kinds out of the closed list. |
-| Issue and change lanes | Definitions pinned by digest | `derive` names their actions: `issue.comment` and `change.comment` (`grant.ts:84`), `work.export` and `change.check` (`grant.ts:53-58`). Replay names the lanes (`replay/src/identity.ts:95-157`). | Move those names into the lane definitions as data (K4, K6). |
-| `hold@1`, `git-read@1`, `device-command@1` | Capability code in the kernel | Closed names (`contract/src/capability.ts:19`), code in `derive/src/capability/`. | A capability is kernel by review (section 7). `device-command@1` also carries the grow device kinds (K4). |
-| Runtime host, MCP service, Git code, checkers, package checks | Services | Nothing, except K2. | Replace the service; entries keep their meaning. |
+| Register, directory, directory partition, membership, rules, destination, inbox, task | Special cases | Their kinds are a closed list (`ScopeKind` in `contract/src/scope.ts`), and the kind is in every seed, so in every scope ID. Their `platform:` names (`PlatformDefinition`, same file). Parts of their rules: a register opens only by `install` and a directory with no creator only by `found` (`genesisJudged` in `derive/src/genesis.ts`). Only membership issues grants (`observationOf` in `derive/src/grant.ts`). Literal destination versions in `judgeTimed` (`derive/src/judge.ts`). Their own rules are code in `packages/platform`. | Their rules as declared forms, or as code pinned by digest (K1), and their kinds out of the closed list. |
+| Issue and change lanes | Definitions pinned by digest | `derive` names their actions: `issue.comment` and `change.comment` (`COMMENTS` in `grant.ts`), `work.export` and `change.check` (`windowOf` in `grant.ts`). Replay names the lanes (`replay/src/identity.ts`). | Move those names into the lane definitions as data (K4, K6). |
+| `hold@1`, `hold@2`, `git-read@1`, `device-command@1` | Capability code in the kernel | Closed names (`CapabilityName` in `contract/src/capability.ts`), code in `derive/src/capability/`. | A capability is kernel by review (section 7). `device-command@1` also carries the grow device kinds (K4). |
+| Runtime host, MCP service, Git code, checkers, package checks | Services | Nothing, except what K2 named. | Replace the service. Entries keep their meaning. |
 
 ## 5. Parts that fail the test today
 
-Each item says what passing takes, and names the request that covers it.
-K4 has no request yet. K7 and K8 are closed. K2, K3 and K11 have the
-implementation described below. The structural check and paired control
-passed, as did all affected compilers and whole-file cases. The
-implementation report records the failed gate at `8658d109` and its
-scoped continuations as separate results.
+Each item names what passing takes, its status, and the work that covers
+it.
 
-- **K1. Platform rules are code that replay needs.** A platform scope pins
-  `platform:<name>@<n>`. Replay derives it only with code that its caller
-  supplies (`replay/src/verify.ts:1031-1055`), and its report says that no
-  digest names those rules (`verify.ts:252-258`). The catalog pins 80
-  versions (`platform/src/native-catalog.ts`, one row each): 62
-  when this page landed, three more from the versioned publication family
-  (`c8a3fb24`), four from the certified rules family (`6852f78d`) and four
-  from its hardening (`33690b69`), and three from the unpublished cohort
-  (`register@21`, `directory@20` and `destination@16`), and four from the
-  opt-in evidence cohort (`register@22`, `directory@21`, `rules@13` and
-  `destination@17`). Passing takes one
-  of three things: pin
-  each version's rules by digest and archive the code;
-  move the shipped versions into a frozen part of the kernel; or replace
-  the marks with declared forms. Design request `50133470` covers K1 and
-  K6.
-- **K2. Package graph leaves the production kernel.** The single
-  field-assignability implementation lives in
-  `derive/src/field-types.ts`, exposed by `dap-derive/field-types`.
-  `package-graph` imports that home. Native package validation lives in
-  `platform/src/validate-package.ts`, exposed by
-  `dap-platform/package-validation`; its 11 existing integration cases
-  now live in platform. Caller bounds, profiles, graph decisions and codec errors stay
-  unchanged. The corpus harness remains in derive. Request `30c7c3ec`
-  covers K2, K3 and K11. The implementation report records the affected
-  checks, failed gate and scoped continuations.
-- **K3. Application codecs leave `bytes`.** All 20 modules now live in `platform/src/application-codec/`, exposed by
-  `dap-platform/application` and `dap-platform/application-v2`.
-  The directory preserves the existing native `platform/src/application.ts`
-  cohort implementation. Eight whole codec tests move to platform with
-  their 32 existing cases and unchanged wire, digest, signature and refusal
-  assertions in the implementation. Bytes has no compatibility re-export of the moved
-  codecs. Test fixtures remain explicit test-only imports. All 32 moved
-  codec cases passed; their evidence covers the registered values and
-  contexts.
-- **K4. Platform and app vocabulary in `contract` and `derive`.** Examples:
-  the closed kind list (`contract/src/scope.ts:19`); the closed capability
-  names (`contract/src/capability.ts:19`); the grow device kinds
-  (`contract/src/device-command.ts:5`); membership versions 6 to 8 in
-  invitations (`contract/src/invitation.ts:3`, `:7`); the rules scope's
-  content in observations (`contract/src/observation.ts:81-86`); lane
-  actions and a literal destination version in `derive` (section 4).
-  Passing takes each name into the definition or capability that owns it,
-  as data.
-- **K5. The grammar exists twice.** `derive/src/validate/` (22 files)
-  checks a definition before use, and the judges read the same forms again
-  when an act is judged: guards (`validate/guards.ts:112-220` and
-  `guards.ts:182-239`), effects (`validate/effects.ts:95-195` and
-  `effects.ts:349-466`), and sends, handlers, timed rules, fields,
-  operands, observations, markers, bindings and capabilities in the same
-  way. Passing takes one grammar table that both read. Request `e949b0df`
-  covers it.
-- **K6. Replay names platform versions and lanes.** For example destination
-  versions 4 to 7 (`replay/src/verify.ts:1740`, `:1817`) and membership 8
-  with register 17 (`replay/src/archive.ts:157-158`). A replacement
-  verifier would have to copy them. Passing takes these names into platform
-  data that the verifier reads. Request `50133470` covers it with K1.
-- **K7. `hold@1` numbers sit outside the capability.** Closed by request
-  `7b19837c` at main `b52ca7e3`. The numbers are now `derive`'s
-  `HOLD_VERSION` (`derive/src/capability/hold.ts:267`). The runtime
-  re-exports them (`scope/src/ports.ts:308`), and the CLI copies no number.
-  Before, the runtime chose them and the CLI copied them by hand.
-- **K8. `dap verify` cannot replay `device-command@1`.** Closed by request
-  `7b19837c` at main `b52ca7e3`. `derive` has one capability table, with
-  `device-command@1` (`derive/src/capability/code.ts:6`). The runtime
-  serves it, and the CLI gives the same table to replay
-  (`cli/src/commands.ts:1186`). Before, the CLI left `device-command@1`
-  out, and replay reported a grow room's scopes `unsupported-definition`.
-- **K9. Bind validation to the definition format.** Replay previously
-  checked each pinned definition with the current validator. A stricter
-  validator could make an old history unsupported. Request `2e714fd7`
-  binds the compatible check set to `artroom-definition-1` (section 7.2).
-  The named corpus, owning checks and paired stricter-check control passed.
-  The exact-head gate and review are still required before K9 closes.
-- **K10. The platform Worker's entry lives in an application.**
-  `apps/room/worker.ts` re-exports the runtime's Worker, and its
-  configuration is the platform's. Passing takes the entry and its
-  configuration into a platform home. Design request `1fcd6692` takes it
-  into its scope.
-- **K11. The dead example is removed.** The two tracked files
-  below `examples/demo-repo` and the command/link in the retired policy-pack guide
-  are deleted. The guide states the removal. Dated notes and reports are
-  unchanged.
+- <a id="k1"></a>**K1. Platform rules are code that replay needs.** A platform scope pins `platform:<name>@<n>`, and replay derives it only with code its caller supplies. The catalog holds 80 versions. Passing takes pinning each version's rules by digest, freezing the shipped versions into the kernel, or replacing the marks with declared forms. Open. Covered by the design note "Platform rules that replay needs".
+- **K2. The package graph leaves the production kernel.** Closed. Covered by "Kernel K2, K3 and K11 as one hygiene item".
+- **K3. Application codecs leave `bytes`.** Closed. Covered by "Kernel K2, K3 and K11 as one hygiene item".
+- **K4. Platform and application vocabulary in `contract` and `derive`.** For example the closed kind list, the closed capability names, the grow device kinds, membership versions in `INVITATION_KEY_MEMBERSHIPS` (`contract/src/invitation.ts`), the rules scope's content in observations (`contract/src/observation.ts`), and lane actions and literal destination versions in `derive`. Passing takes each name into the definition or capability that owns it, as data. Open. No work covers it yet.
+- **K5. The grammar exists twice.** `derive/src/validate/` checks a definition before use, and the judges read the same forms again (for example `guard` in `validate/guards.ts` and `judgeGuard` in `guards.ts`). Passing takes one grammar table that both read. Open. Covered by the design note "One source for the guard grammar".
+- **K6. Replay names platform versions and lanes.** For example destination versions 4 to 7 in the `Verifier` class (`replay/src/verify.ts`), and membership and register versions in `replay/src/archive.ts`. Passing takes these names into platform data that the verifier reads. Open. Covered by the design note "Platform rules that replay needs".
+- **K7. `hold@1` numbers sit outside the capability.** Closed. `HOLD_VERSION` is in `derive/src/capability/hold.ts`. Covered by "An operator command for the archive clone and offline replay".
+- **K8. `dap verify` cannot replay `device-command@1`.** Closed. `CAPABILITY_CODE` in `derive/src/capability/code.ts` is the one table. Covered by "An operator command for the archive clone and offline replay".
+- **K9. Bind validation to the definition format.** Closed, landed on 23 October 2026 (section 7.2). Covered by "Tie the definition validator to the definition format".
+- **K10. The platform Worker's entry lives in an application.** `apps/room/worker.ts` re-exports the runtime's Worker, and its configuration is the platform's. Passing takes the entry and its configuration into a platform home. Open. Covered by the design note "One application layout, discovered by convention, with a scaffold".
+- **K11. The dead example is removed.** Closed. Covered by "Kernel K2, K3 and K11 as one hygiene item".
 
 ## 6. Kernel promises
 
 1. **The record is the interface.** Everything a person, an agent or a
    verifier needs to know about what happened is in the record.
 2. **Every entry form ever written stays replayable by the same derivation
-   code.** Replay refuses no entry kind today (`verify.ts:1680-1850`). K1
-   and K9 are the ways this promise can fail. K8 was one, until it closed.
+   code.** Replay refuses no entry kind today: the `Verifier` class in
+   `replay/src/verify.ts` handles all nine inputs. K1 is the way this
+   promise can still fail.
 3. **The definition schema is versioned.** The format is
-   `artroom-definition-1` (`contract/src/definition.ts:32`). Its optional
-   parts carry their own versions: `level`, `capacity`, `profile` and each
-   capability. K9 binds the compatible validation checks to that format
-   (section 7.2).
+   `artroom-definition-1` (`DeclaredDefinition` in
+   `contract/src/definition.ts`). The optional parts `level` and `capacity`
+   carry their own versions. The required members `profile` and each entry
+   of `capabilities` carry theirs. Section 7.2 binds the validation checks
+   to the format.
 4. **A judgment is about one head.** A scope judges each act against its
    own whole head.
 5. **Delivery is the only channel between scopes.** No guard reads another
-   scope's present state (scope contract, D5-5).
+   scope's present state.
 6. **A refusal carries its reason.** Every refusal names a reason code.
 7. **The sequence is the clock.** The order of a scope's entries is its
    time. A recorded time is evidence of when, not the order.
@@ -213,7 +120,7 @@ scoped continuations as separate results.
    scope's URI, and that URI resolves.
 9. **The runtime and the verifier call the same functions.** Both judge
    and fold with `derive`.
-10. **A scope's definition never changes, and its history is never
+10. **A scope's definition never changes, and its journal is never
    reinterpreted.** An application moves to a new definition only by
    succession: an ordered cutoff entry in the old scope, with no change to
    its application state after it, and a new scope whose genesis names
@@ -222,146 +129,49 @@ scoped continuations as separate results.
    section 1).
 11. **Every change is an act judged in a turn.** Every read is of the
    record at a named position. Every effect on an outside system is a
-   declared capability form whose outcome is its own entry. Any other
-   surface is named in the [one-channel audit](../notes/2026-10-22-one-channel.md),
-   with its limits.
+   declared capability form whose outcome is its own entry. The
+   [one-channel audit](../notes/2026-10-22-one-channel.md) names every
+   other surface, with its limits.
 
-This list grows only by review. Promises 10 and 11 joined it when their
-notes landed (`25e1248e` and `5cd53dcf`).
+This list grows only by review. A change that removes a promise also needs
+the review in section 7.
 
 ## 7. Rule for adding to the kernel
 
 Nothing new enters the kernel without a review that cites this page and
 says why the part cannot be a platform service or an application.
 
-A head adds to the kernel when it does any of these:
+A change adds to the kernel when it does any of these:
 
 - adds a file or an export to `packages/contract`, `packages/derive`, or
-  the kernel part of `packages/bytes`;
+  the kernel part of `packages/bytes`.
 - adds a scope kind, a platform name, a capability name, a field type or a
-  reason code to `packages/contract`;
-- makes a kernel package import a package outside the kernel;
+  reason code to `packages/contract`.
+- makes a kernel package import a package outside the kernel.
 - names a platform definition, a lane, an action or application vocabulary
   inside `packages/derive` or `packages/replay`.
 
-The checker checks this rule on every head that touches these packages.
+Review checks this rule on every change that touches these packages. A part
+belongs in the kernel when runtime and replay must derive the same meaning
+from it. For example, `hold@2` is kernel: a confirmed head or fork outcome
+changes the records that runtime and replay derive, so a replaceable host
+adapter can supply an answer but cannot decide what the answer means.
 
-Request `0c3091fa` adds the existing hold capability's second version under
-ruling `adb1a6ed`. A confirmed head or fork outcome changes the records that
-runtime and replay derive. Those rules belong beside the ledger in the
-kernel: a replaceable host adapter can supply an answer, but cannot decide
-what that answer means. The adapter, authenticated repository discovery and
-private credential custody remain services in `scope` and `git`.
+### Production dependency check
 
-The addition declares `hold@2` in `contract` and adds four exports in
-`derive`. Each belongs in the kernel because it determines how runtime and
-replay interpret the same recorded definition and entries:
+`node scripts/check-kernel-boundary.mjs` parses the production imports,
+exports, `require` calls and dynamic imports of the kernel packages,
+including type-only edges. Only `contract`, `bytes` and `derive` are
+permitted workspace targets. The one machine list is `KERNEL` in that
+script. The script also checks the kernel packages' production, optional
+and peer dependency pins. It refuses what it cannot resolve: unknown
+exports, computed module targets, unresolved paths and unsupported aliases.
+`npm test` runs it before the unit tests.
 
-- `HOLD_V2` names the separate `hold@2` record and operation owner.
-- `holdCapabilityV2` supplies that version's derivation rules, including
-  head and fork outcomes.
-- `workspaceOwner` selects the family from the declared version. A caller
-  or host cannot choose another family for the same definition.
-- `hasAnyWorkspace` checks that the selected family has a listed hold guard
-  or effect. Declaring a version alone does not enable workspace steps.
-
-The first hosted staging observation is `29f6d5bc`. Its preparation opened
-stage and mint operations, with no outcome in the observation window.
-The registered-only census did not establish the complete legacy absence
-required to extend `hold@1`, so `hold@2` has separate head and fork rules.
-The old version retains its rules, maxima and record meanings. Both use the
-existing forms, item states and operation ledger. The bare capability name
-remains `hold`. This adds no scope kind, entry form, byte domain or K item.
-Existing lane pins and native evidence identities remain fixed. New J4
-lane pins select version 2 explicitly and grant no archive policy permission.
-
-Ruling `e7962aa7` adds the `setup` purpose to the existing token record for
-each version 2 fork attempt. Its handle names that exact attempt; plaintext
-stays in private host custody. A confirmed fork answer moves the token
-directly from `minting` to `revoking` and opens the existing revoke operation
-in the same outcome. A refusal ends that attempt's token; an unknown answer
-leaves it `minting`. A late confirmed unselected answer owes both its fork
-deletion and its setup-token revoke. These two added effects belong in the
-kernel because runtime and replay must derive the same cleanup obligations.
-
-The fork rule reserves 12 entries: six for deletion and six for revocation.
-The head rule reserves 78: two possible outcomes for each of three fork
-attempts, each with its outcome entry and 12 cleanup entries. Its maximum
-is four effects and one operation; the fork rule's is five effects and two
-operations. The creating-fork record reserves 78 for version 2. Version 1
-keeps its existing reserve of 42. Setup tokens do not consume the holder's
-workspace-token allowance or block the hold's end or fork retirement.
-
-Exact-head review must check owner dispatch, closure and effect bounds,
-first selection at the actual held state and epoch 1, late unselected
-answers, and replay's ancestry and live-root retention. A late fork answer
-owes deletion only for the ID and name in that immutable answer; it does
-not change a selected or final fork record. Automatic fork deletion at hold
-end and sweeping remain outside this request. This addition closes no K
-item and relies on the filed J4 ruling for its kernel placement.
-
-Request `121a8913` places the fixed-slot equality index in derive's view
-and fold. A range guard's complete count determines whether an input is
-judged, refused or left `guard-incomplete`. Runtime and replay must derive
-that decision from the same state and equality rule. A platform service
-cannot supply the count without becoming an additional authority over the
-record. The index covers any declared fixed slot and names no platform
-definition or application field. It adds no entry form, reference kind,
-definition format, capability or K item. Its rows are derived storage and
-do not change checkpoint bytes. Exact-head review must assess the complete
-counts, equality through journal floors, reconstruction and transaction
-ownership under this section.
-
-Rules observation record revision 21 is permitted by ruling `1bc4f7fd`
-under this section. Its nullable `roomService` and scoped
-`serviceGeneration` occur exactly when the pinned Rules data declares
-`roomServiceChanged`. Earlier definitions retain their exact records.
-The observation is the kernel form for what a judge may know of Rules;
-its native-selected position belongs to that authenticated record. A
-retained policy value alone cannot establish the position. Contract keeps
-only the two type-only interfaces needed by the record. The job binding
-vocabulary and its codec belong to platform. This addition changes no
-timed form, fold or replay rule and closes no K item. The exact-head review
-must assess this reason and the definition-specific record checks.
-A head that removes a kernel promise also needs this review.
-
-Request `30c7c3ec` makes two file/export additions under this rule, while
-adding no new kernel capability:
-
-- `derive/src/field-types.ts` and the `./field-types` export give
-  `fieldAssignable` its home beside the validator that already used and
-  re-exported it. Field assignability is a grammar rule for derivation,
-  so it belongs in the kernel rather than a replaceable platform service.
-- The bytes index now exports the existing `Signer` type from
-  `bytes/src/signer.ts`. That type belongs to the signature domain bytes
-  already owns. It was previously exposed through `bytes/application`;
-  the type-only root export lets the relocated platform codecs use it
-  without keeping application codecs in the kernel.
-
-### Maintained production dependency check
-
-`node scripts/check-kernel-boundary.mjs` parses production imports,
-exports, require calls and dynamic imports, including erased type edges.
-It follows exact workspace exports and relative cross-package paths.
-Only contract, bytes and derive are permitted workspace targets; the one
-machine list is `KERNEL` in that script. Their production dependency,
-optional-dependency and peer-dependency pins are checked as well.
-
-The following marked table is the sole machine-readable approval list for
-external production libraries. Workspace pins must match the actual
-coordinated package versions; external pins must match this table, the
-installed package and the lock. Unknown exports, computed module targets,
-unresolved paths and unsupported package/compiler aliases are refused.
-The resolver models the inherited Bundler mode with package exports. It
-refuses configured `baseUrl`, `rootDirs` and `moduleSuffixes`, other
-resolution modes, and disabled package-export resolution rather than
-assuming those settings resolve the same production source. Loader
-references must use supported direct calls; extracted aliases and computed
-loader names are refused. The `module` loader object may be used only for
-a supported direct `module.require` call; object aliases, destructuring
-and other member chains are refused.
-A new library or changed pin needs review of this page, not a broad prefix
-exception in code.
+The table below is the one machine-readable approval list for external
+production libraries. External pins must match this table, the installed
+package and the lock. A new library or a changed pin needs review of this
+page.
 
 <!-- kernel-approved-libraries -->
 | Package | Exact version |
@@ -372,99 +182,58 @@ exception in code.
 <!-- /kernel-approved-libraries -->
 
 Tests and tooling are outside this production boundary. Production code
-cannot import an excluded test/tool file to evade it. The corpus stays in
-derive as a test harness, with its explicit nonkernel fixtures. The
-ordinary `npm test` path runs the structural check before Vitest and its
-two compact parser/resolver Node witnesses in the existing Node check
-list. The structural check and its two parser and resolver witnesses
-passed at the implementation checkpoint. Three public-release module
-checks also passed. The paired control added a temporary platform import
-to `derive/src/index.ts`. The checker refused it and named that file, and
-the original file was restored. The control is not committed.
-
-The structural check addresses dependency placement, not byte compatibility
-or native authority. The implementation report records these results,
-the passed moved codec witnesses, the failed gate at `8658d109` and its
-scoped continuations separately. The workroom records the exact-head
-review and landing decisions.
-
+cannot import a test or tool file to evade it. The check addresses
+dependency placement, not byte compatibility or native authority.
 
 ### 7.1 Filing while parts fail the test
 
-While any of K1 to K11 (section 5) is open, a design note, a plan or a
-request waits when it adds one of these, unless it names the K item that
-it closes:
+While any K item in section 5 is open, a design note, a plan or a change
+waits when it adds one of these, unless it names the K item that it
+closes:
 
-- a scope kind;
-- a platform definition name;
-- a capability name or form;
-- a tool family: a new group of MCP tools or of CLI commands;
+- a scope kind.
+- a platform definition name.
+- a capability name or form.
+- a tool family: a new group of MCP tools or of CLI commands.
 - a new model of the record: a new entry kind, a new level, a new field
   type, or a new kind of reference between scopes.
 
-A head closes a K item when it does what section 5 says passing takes for
-that item. The checker judges that at the head. A filing that adds a new
-part that fails the test in section 2 waits in every case.
+A change closes a K item when it does what section 5 says passing takes for
+that item. A change that adds a new part that fails the test in section 2
+waits in every case.
 
 These do not wait:
 
 - work that only uses existing forms: applications, packages, views,
-  documents, tests and fixes;
+  documents, tests and fixes.
 - a new version of an existing platform definition. It is not a new name,
-  but its head says that it adds one to K1's count;
-- fixes for the filed security findings, R1 to R16 and D1 to D6. They
-  still follow section 7 and add no K item.
-
-Work filed before this rule took effect (22 October 2026, workroom assert
-`1bd7dde8`) states its kernel placement when it reaches the front of the
-queue. A head that adds to the kernel names the K item that it closes, or
-the planner holds it. Assert `1bd7dde8` records how the rule applies to
-each item filed at that time.
+  but it adds one to K1's count, and the change says so.
+- fixes for filed security findings. They still follow section 7 and add
+  no K item.
 
 ### 7.2 Definition-format validation
 
-Request `2e714fd7` places definition-format validation in the kernel.
-Validation decides whether a pinned declaration can be used to derive its
-history again. A replaceable service cannot change that decision without
-changing the meaning of the record.
+Definition-format validation is kernel. Validation decides whether a
+pinned declaration can be used to derive its journal again. A replaceable
+service cannot change that decision without changing the meaning of the
+record.
 
-The public validator keeps its bounded preamble and dispatches by the
-declaration's `format`. `artroom-definition-1` selects the compatible checks
-in `derive/src/validate/format-1.ts`, including the grammar and shared pure
-semantic helpers that those checks call. Moving a check to another helper
-does not remove it from this compatibility rule. Unknown nonempty string
-formats are refused as `unsupported-definition`, with the actual format in the
-reason. The public API, caller-supplied bounds, profiles and native owner
-options retain their existing roles.
+The public validator dispatches on the declaration's `format`.
+`artroom-definition-1` selects the checks in
+`derive/src/validate/format-1.ts`, with the grammar and the shared helpers
+those checks call. Moving a check to another helper does not remove it from
+this rule. An unknown nonempty format is refused as
+`unsupported-definition`, with the format in the reason.
 
-A stricter check that rejects a previously admitted declaration needs a
-new authorized format or a version of the optional part that owns the
-check. Existing versions remain available for replay. A correction that
-changes admission also needs an explicit compatibility review; calling it
-a bug fix does not settle that question. This work adds no format, scope
-kind, platform name, capability, tool family or record model. Pinned
-declaration bytes, byte domains and digest identities remain unchanged.
-The [definition contract](../notes/2026-10-04-scope-and-replay-contract.md)
-section 6.1 states the binding.
-
-The named corpus registers complete positive declarations from shipped
-applications, examples, fixtures and retained histories, with their
-validation contexts and existing pin witnesses. Valid declarations used
-in refused actions or package graphs remain included. Raw constructors
-defer validation until each named test runs, so the paired stricter-check
-control can fail at a known corpus row rather than during module import.
-The corrected corpus passed 1,217 named declaration rows and its registration
-check. The other 66 owning Node files passed 618 checks, including the format
-and replay boundaries; the full owning typecheck passed. A single paired
-control added a six-character name minimum. The raw `derive/shared/small`
-row passed without that change and failed by its named corpus assertion
-with the change. The exact validator source was restored.
-
-These checks support the registered declarations and contexts, not every
-possible format-1 value or every history-dependent bound. The
-[implementation note](../notes/implementation/2026-10-23-definition-format-validation.md)
-records the original failures, exclusions and evidence limits. The ordinary
-gate at the exact candidate and its review remain separate requirements.
+A stricter check that refuses a declaration the validator used to accept
+needs a new format, or a new version of the optional part that owns the
+check. Existing versions stay available for replay. A correction that
+changes which declarations the validator accepts needs a compatibility
+review, even when it is a bug fix. A named corpus in
+`packages/derive/test/definition-corpus/` holds the shipped declarations,
+and a stricter check fails at a named row. The
+[definition contract](../notes/2026-10-04-scope-and-replay-contract.md),
+section 6.1, states the binding.
 
 ## 8. Second host
 
@@ -472,23 +241,26 @@ The second host ([self-hosting on celld](../notes/2026-10-19-self-hosting-on-cel
 is what keeps host details out of the kernel. A part that only one host can
 run cannot be kernel.
 
-Today the kernel holds no host detail. `packages/contract` and
-`packages/derive` name no host product, host storage or Git host, and
-neither does the portable core of `packages/replay`, the part that judges
-and folds again. Host details sit in host adapters:
+The kernel holds no host detail. `packages/contract` and `packages/derive`
+name no host product, host storage or Git host, and neither does the
+portable core of `packages/replay`, the part that judges and folds again.
+Host details sit in host adapters:
 
 - the runtime, in `packages/scope`: the Durable Object and Worker entry
   (`scope/src/object.ts`, `worker.ts`), the Git host wiring
   (`artifacts-wiring.ts`, `github-wiring.ts`), the content bucket
   (`applications/content.ts`), metrics (`metrics.ts`) and health
-  (`health.ts`);
-- the MCP service (`mcp/src/hosted.ts`);
+  (`health.ts`).
+- the MCP service (`mcp/src/hosted.ts`).
 - replay's local Git source (`replay/src/git.ts` and the command in
-  `replay/src/bin.ts`). It reads a clone through Node's file system
-  (`git.ts:2-5`) and is outside the portable package. It gives replay its
-  input and judges nothing.
+  `replay/src/bin.ts`). It reads a clone through Node's file system and is
+  outside the portable package. It gives replay its input and judges
+  nothing.
 
-The self-hosting note places the runtime's details in the same packages
-(lines 47 to 64). A second host is evidence that the kernel needs no host;
-it is not evidence that every adapter is free of one. The rule in section 7
-keeps the kernel this way.
+A second host shows that the kernel needs no host. It does not show that
+every adapter is free of one. The rule in section 7 keeps the kernel this
+way.
+
+## Source
+
+Checked against main `5dc9765f` on 30 October 2026. Sources: [check-kernel-boundary.mjs](../scripts/check-kernel-boundary.mjs), [scope.ts](../packages/contract/src/scope.ts), [definition.ts](../packages/contract/src/definition.ts), [capability.ts](../packages/contract/src/capability.ts), [native-catalog.ts](../packages/platform/src/native-catalog.ts), [verify.ts](../packages/replay/src/verify.ts), [commands.ts](../packages/cli/src/commands.ts), [code.ts](../packages/derive/src/capability/code.ts).

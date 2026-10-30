@@ -1,12 +1,14 @@
 # What is dap?
 
-A durable action platform for people and agents.
+Structured workrooms for people and agents.
 
 dap is a framework for building collaborative applications for people and
 agents. A scope is an actor that holds an ordered record and judges signed
 acts against its definition, and an application is a set of definitions.
 This page explains what the framework does, the actor model it is built
-on, and the four applications built with it.
+on, and the applications built with it. [Use cases](use-cases.md) lists
+what people build with dap, and [Build a counter](build-a-counter.md)
+builds a first application in 15 minutes.
 
 ## A framework for shared work with a record
 
@@ -19,7 +21,7 @@ the rest: a runtime that judges each request against those definitions,
 a record that keeps every request that took effect, and a verifier that
 derives the same judgments again from the record. The application writes
 no judging code. The guarantee dap offers is the integrity of the record
-and the consistency of the state: every entry is chained to the one before
+and the consistency of the state. Every entry is chained to the one before
 it by hash, and the current state is exactly what the entries fold into.
 
 The participants are people and agents alike. Each one signs requests
@@ -40,8 +42,8 @@ meet, the effects it has on items, and the messages it sends.
 A participant signs an **intent**: a request for one act on one scope,
 with its fields, the item revision the signer expects, and a deadline.
 The scope handles one input at a time. For each, it checks the signer's
-authority, evaluates the act's guards on its current state, and then does
-one of these:
+authority, evaluates the act's guards on its current state, and then
+gives one of four answers:
 
 - The act takes effect. The scope writes one entry, folds it into its
   items, and returns a **receipt** that names the entry by scope, position
@@ -53,6 +55,9 @@ one of these:
   signing anything new.
 - The scope answers `mismatch` when the same key already used the
   intent's idempotency key for a different intent.
+
+[The life of an act](manual/life-of-an-act.md) says what to do after each
+answer.
 
 The current state is the fold of the entries. Nothing else is state. So a
 verifier that has the entries, the definition and the inputs the scope
@@ -89,35 +94,42 @@ pages are in [apps/room/docs](../apps/room/docs), starting with
 [Join a room and publish one text change](../apps/room/docs/first-change.md).
 
 **dap-counter** keeps a shared count. Participants join a board, commit
-to say the next number, and speak it aloud. The scope checks every proposal:
-the full roster, the arithmetic and whose turn it is. The source is in
-[apps/counter](../apps/counter). The tutorial
+to say the next number, and speak it aloud. The scope checks every
+proposal: the full roster, the arithmetic and whose turn it is. The source
+is in [apps/counter](../apps/counter). The tutorial
 [Build a counter](build-a-counter.md) builds a smaller version of its
 definition.
 
 **dap-library** is a lending library for kitchenware and tools. Each
 thing is an item that is available, lent or gone. Members donate,
 borrow and return things. Only staff remove a thing, with a reason in
-their own words, and a thing that is gone stays in the record. The source
-is in [examples/lending](../examples/lending). The tutorial
+their own words, and a thing that is gone stays in the record. Each act
+that changes a thing also publishes the thing's shelf page to the room's
+repository, through the room's destination. The source is in
+[examples/lending](../examples/lending), and its
+[runbook](../examples/lending/runbook.md) records the room that ran the
+whole story and published its pages. The tutorial
 [Build a lending library](build-a-lending-library.md) writes its first
-definition. Its current definition also publishes each thing's page to
-the room's repository. The member interface is deployed in a rehearsal
-room; publication is built and not yet run on a deployed room.
+definition.
 
-**dap-jam** lets musicians improvise together in a room. Its record holds
-themes, interpretations, instrument claims and patterns, and a live layer
-plays the patterns. It lives in its own
-[repository](https://github.com/generalbusiness-ai/artroom-jam), with
-its design in the [jam room note](../notes/2026-10-01-jam-room.md). The
-jam's page is deployed. Recording its musical acts in native dap scopes
-is later work.
+**dap-grow** runs a grow operation as several scopes. A site creates grow
+rooms and receives each room's summary. Each room holds sensor readings,
+probes entered from chat, alerts routed to whoever holds the authority to
+act on them, presence, and commands to devices. A simulator stands in for
+the devices of the hosted demo room. The source is in
+[examples/grow](../examples/grow), with its
+[runbook](../examples/grow/runbook.md).
+
+The [Jam](../apps/jam/README.md), a page in which musicians improvise
+together, runs in the browser without a dap scope. Recording its musical
+acts in scopes is later work, described in the
+[jam room note](../notes/2026-10-01-jam-room.md).
 
 The four show why application vocabulary belongs to the application. A
-sketch that sounds good in the jam is a musical outcome, not a code
-review. A spoken number in the Counter is a fact about a turn, not a
-publication. A returned pot in the library is a change of state, not a
-promise kept.
+spoken number in the Counter is a fact about a turn, not a publication. A
+returned pot in the library is a change of state, not a promise kept. An
+alert in a grow room is a reading sent to the person who may act on it,
+not a review.
 
 ## How you take part today
 
@@ -130,7 +142,8 @@ There is no hosted sign-up. You enter a room in one of two ways:
 
 [The dap command](cli.md) describes invitations and joining from the
 command line. [The page](../apps/room/docs/page.md) describes both paths
-in the room's browser page.
+in the room's browser page. To run a service of your own, read
+[Run your own service](self-host.md).
 
 ## Read the answer before the next step
 
@@ -140,16 +153,13 @@ in the room's browser page.
 - Treat a lost reply as unresolved. Check the record with the original
   signed intent before you sign another.
 
-## Source and acceptance
+## Source
 
-Written against main `d309b6b9`; the dap-library paragraph against main
-`70729eac`. Sources:
+Checked against main `5dc9765f` on 30 October 2026. Sources:
 [the entry and its inputs](../packages/contract/src/entry.ts),
 [the four answers](../packages/contract/src/result.ts),
 [the judges](../packages/derive/src/index.ts),
 [the Counter definition](../apps/counter/definition.ts),
-[the lending definition](../examples/lending/definition.ts), and
-[the jam room design](../notes/2026-10-01-jam-room.md). This page claims
-no run. Independent review and acceptance of this version are owed. The
-[ledger](../apps/room/docs/ledger.md) keeps the review history of the
-earlier version.
+[the lending definition](../examples/lending/definition.ts),
+[the grow runbook](../examples/grow/runbook.md), and
+[the jam room design](../notes/2026-10-01-jam-room.md).

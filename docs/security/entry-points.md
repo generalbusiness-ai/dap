@@ -1,175 +1,140 @@
 # Worker entry points and gates
 
-This reference inventories the Worker entry points named by D1 and the local celld project in this repository.
-It describes source at this revision, not a probe of deployed settings. It closes
-security finding 2.5 in request `6dd06d03`.
+Each table below lists the HTTP routes of one Worker configuration in this
+repository, and of the local celld project. For each route, the table names
+its gate class, the work and the state written before the gate, its bounds,
+and its outbound calls. The tables describe the source, not the settings of
+a deployed Worker. [How the inventory is checked](#how-the-inventory-is-checked)
+says what a test holds the tables to.
+
+## Gate classes
 
 A gate class names the weakest proof that can obtain the route's protected
-result. It does not imply that the gate runs before object activation or all
-other work. For `none`, the work and state columns cover the whole request.
-Refusals and unsupported methods are not additional routes.
-
-The route table covers HTTP dispatch. The Durable Object binding also has
-internal namespace methods, including `jobState`, `workSourceState` and
-`stageSnapshot`. The first two read retained local job or work-source
-state. The last checks a signed job-read request before returning a stage
-snapshot. They are separate methods, not additional HTTP routes.
-
-J4 adds internal `nativeBirthByName` discovery for Directory, Register and
-Destination births. The deployment's indexed namespace checks the exact
-known scope and kind before target lookup. The receiver bounds preparation
-and bytes; the workspace service then verifies the full returned reference,
-genesis and creation lineage. It uses no legacy source fallback and grants
-no read session or caller-selected repository authority.
-
-The existing credential route also accepts a lane whose declared definition
-includes `hold@2`. Its membership gate remains in place. Private custody checks the
-preparing key, actual holder, current instance, epoch, expiry and selected
-fork before a one-time handoff. Historical hold profiles and the route's
-gate class stay unchanged. The entry-point check seals the discovery and
-wiring owners, `workspace-host.ts` for custody, `workspace-lineage.ts` for
-creation lineage, and `native-birth.ts` for birth decoding. Their seal values
-come from the maintained parser after source review. The first J4 gate
-failed on the old seals; its targeted follow-up remains separate from that
-failed run. The three workspace owner seals were added after checker review.
-Fork setup credentials remain private under their exact original attempt
-handles. Their token records owe revocation through the existing operation
-ledger; the provider adapter makes no independent retry.
-
-For a member-source stage snapshot, an ineligible signing key can trigger
-the initial job lookup and up to 32 source-fact reads before the current
-key check refuses it. Those reads return no snapshot to that caller. Room
-jobs reject a key that differs from the frozen marked key before those
-source reads. Both paths check current eligibility again around provider
-reads. A captured job-read signature can be replayed during its bounded
-15-minute window; the older snapshot route has the same exposure.
-
-
-The fixed `archive-row-diagnostic-v1` line reports bounded stored archive
-state and the platform alarm once per object activation, through existing
-ingress before recovery. It adds no RPC, HTTP, member, MCP or operator caller.
-Its internal reader does no recovery or writes. Existing cold constructor
-effects remain; the planner accepted this warm observation boundary. A tail
-is an observation channel, not authority to restart an archive.
+result. It does not say that the gate runs before object activation or
+before all other work. For `none`, the work and state columns cover the
+whole request.
 
 - **none**: no caller identity or membership proof. Publication and package
   trust checks can still restrict the bytes served.
-- **creation**: parentless serving admission followed by the native genesis
-  judgment. Creation, child lineage and census share `readRegisterScope`.
-  `REGISTER_SCOPE` is primary; a valid Artifacts-only pin remains a legacy
-  fallback. Supplied settings must parse and agree. A deployed request
-  needs a pin even when `ALLOW_OPEN_CREATION` is exactly `true`; otherwise
-  it fails closed before object selection. Without that explicit opening,
-  the signed install must name the pinned Register. Authorized new installs
-  also check host availability and the host-none cohort before lookup.
-  Without `DEPLOYMENT`, the local API remains open unless supplied pin
-  settings are malformed or conflicting. These are conditional source
-  behaviors, not attestations of live settings.
+- **creation**: the Worker's parentless serving check
+  (`creation-admission.ts`), then the native genesis judgment. The serving
+  check accepts or refuses the request before it reaches a scope. Creation,
+  child lineage and the census read the register pin through
+  `readRegisterScope`. `REGISTER_SCOPE` is the primary setting, and a valid
+  Artifacts-only pin is a legacy fallback. Supplied settings must parse and
+  agree. A deployed request needs a pin even when `ALLOW_OPEN_CREATION` is
+  exactly `true`. Without a pin, the request fails before object selection.
+  Without that explicit opening, the signed install must name the pinned
+  register. New installs also check host availability and the host-none
+  cohort before lookup. Without `DEPLOYMENT`, the local API stays open
+  unless supplied pin settings are malformed or conflict.
 - **self-signed**: a valid signature, without a current membership grant.
-  Ordinary signed reads additionally need an eligible
-  local or causal signing history. A settlement needs the exact previously
-  accepted signed intent. These restrictions do not establish membership. The six signed-read routes
-  also accept scoped sessions for their ordinary complete reads.
-  The fixed-index census instead requires the pinned Register's founding
-  install key; it accepts no membership session or causal-window substitute.
+  Ordinary signed reads also need an eligible local or causal signing
+  history. A settlement needs the exact signed intent that took effect.
+  These checks do not establish membership. The six signed-read routes also
+  accept scoped sessions for their ordinary complete reads. The census
+  route instead requires the pinned register's founding install key, and
+  accepts no session or causal-window substitute.
 - **membership**: a signature and the operation's observed authority or
-  membership protocol. Join and enrol use the pinned cohort's invitation rules.
-  Snapshot reads require the requested job's current configured checker.
+  membership protocol. Join and enrollment use the pinned cohort's
+  invitation rules. Snapshot reads require the requested job's current
+  configured checker.
 - **session**: an authenticated deployment read session, scoped to its
-  membership and allowed reads. The credential route also binds the holder key.
-- **admin**: a read session whose issued reads include the admin operation,
-  derived from `membership.*` authority.
+  membership and allowed reads. The credential route also binds the holder
+  key.
+- **admin**: a read session whose issued reads include the admin
+  operation, derived from `membership.*` authority.
 - **bearer**: the hosted agent's opaque bearer, compared through its digest.
-- **control**: a signed MCP control request, bound to its action, body, service,
-  deadline, repository, and current member authority.
+- **control**: a signed MCP control request, bound to its action, body,
+  service, deadline, repository, and current member authority.
 
-The census route selects only the fixed index owner. Its signed request
-names the deployment-pinned Register and the exact cursor. After checking
-that request's form and signature, existing address and key windows run
-before the census owner's row lookup or Register proof RPC. The route uses
-the trusted transport address; a forwarded header supplies no identity.
-Counter accounting is memory-only and runs once per request, including
-non-operator attempts. The owner binds
-its stored full Register reference and genesis hash to a bounded exact
-native proof, checks the supported Register pin and applied founding
-`install`, then compares that install's actor with the caller. This adds no
-replay rows or second owner-side charge.
-The read-only proof path starts no recovery or native turn. Existing cold
-object construction can still initialize schema and maintenance state;
-the census adds no index, journal, replay or alarm writes on denial.
+## How to read a row
 
-Hosted MCP requires `MCP_ENABLED` to be exactly `"true"`, as well as both
-committed agent namespaces. `MCP_TOOL_ADDITIONS` can add known generic tool
-names to the hosted default list. If present, it must be a JSON array of unique,
-known names within 1024 characters. Missing opt-in or invalid additions return
-404 before the MCP route reads a body or selects an agent or registry object.
-The shared room request setup described below still runs first.
-
-`PUBLIC_ORIGIN`, when set, supplies the exact service origin for hosted MCP
-creation, application context and redirects, and demo offer checks. Missing
-configuration retains the request URL origin. An invalid explicit value fails
-closed before these routes select their protected objects. Neither forwarded
-headers nor transport Host override it. The shared accessor is a sealed gate
-owner. The local celld shim reexports the same production room entry, bindings
-and migration history. It introduces no route or caller authority.
-
-The hosted default omits `create`, `install_application`, `credential`,
-`prepare`, `join`, `record`, `step`, and `text`. An explicit addition affects
-both listing and direct calls. Local MCP services keep their existing default.
-Generated named tools additionally require fresh standing and tool selection
-checks, then the actual target's membership check when called. A remembered tool name
-does not preserve an expired grant or authorize another target.
-
-The parentless serving policy is also passed through the in-process
-`api(binding).create` and the hosted agent's scope fetch. In closed deployed mode,
-child creation additionally passes a whole-lineage serving check before
-the child's raw namespace `idFromName` or `get`: the configured register's
-applied genesis selects one of the two reviewed exact cohorts, and every
-creator birth and sealed create send is checked back to that root. Every
-ancestor read first requires a fresh fixed-index `has`, even in register
-mode. Missing or archived proof, unavailable declaration custody and a
-spent deadline return `retry/dependency-unavailable` before child activation.
-Malformed or wrong-root creation is refused; no archive or `source()`
-fallback is used. The single attempt allows at most 16 bodies, 1 MiB combined bytes,
-64 source attempts, 512 visits and one monotonic ten-second deadline.
-The receiving scope still makes its ordinary full genesis judgment. This
-does not revalidate existing scopes for ordinary reads or acts against a
-new register pin. The local/test opening is not a deployment recommendation.
+The columns are the route and method, the gate class, the work before the
+gate, the state written before the gate, the bounds, and the outbound
+calls. Refusals and unsupported methods are not additional routes.
 
 `:scope` is a scope ID. Other colon names denote one path segment. `*`
-denotes the matched path family, including paths that the family later refuses.
-The `/site/*` family includes directory redirects, `versions`, and
+denotes the matched path family, including paths that the family later
+refuses. The `/site/*` family includes directory redirects, `versions`, and
 `:directory/:ref/*path`. The `/applications/*` family validates
 `:directory/:item/:presentation/*asset`, including its redirect and
 `_/context`. Brand names come from `apps/room/brand/assets.ts`.
 
 The scope rows use these shared descriptions:
 
-- **Activation**: a well-formed scope ID selects a Durable Object before the
-  gate. Construction can create SQLite tables and indexes, and schedule signer
-  maintenance. It runs no legacy migration quantum in the read itself.
+- **Activation**: a well-formed scope ID selects a Durable Object before
+  the gate. Construction can create SQLite tables and indexes, and schedule
+  signer maintenance. It runs no legacy migration step in the read itself.
 - **Restart retry**: the legacy read methods, sessions, stream, settlement,
   credential, and snapshot call `ScopeObject.#first` before their gate.
-  This can schedule previously sealed parked or reaccepted Operations. Their
-  writes and configured host calls can occur in the background even when the
-  caller's read is refused. This does not authorize a new caller effect.
+  That call can schedule sealed parked or accepted operations again. Their
+  writes and configured host calls can run in the background even when the
+  scope refuses the caller's read. The caller gains no new effect.
 - **Legacy read preparation**: session MAC and membership-reference work,
-  or signed-read verification and a retained causal-chain walk. Some walks
-  reach other scope objects. The checked result is still restricted by the
-  route's read gate. Query and projection use their separate bounded flights.
+  or signed-read verification and a walk of the retained cause chain. Some
+  walks reach other scope objects. The route's read gate still restricts
+  the result. Query and projection use their own bounded flights.
 - **Read bounds**: `READ_BOUNDS` in
   [reads.ts](../../packages/scope/src/reads.ts), with the constants in the
-  contract. Pagination bounds output, not all earlier activation or chain work.
+  contract. Pagination bounds the output, not all earlier activation or
+  chain work.
 - **Turn bounds**: `PROPOSED_BOUNDS` in
-  [bounds.ts](../../packages/contract/src/bounds.ts). Submit reads foreign facts
-  and runs the timed drain before check 9 can refuse authority. Rule expression
-  evaluation follows that check. Public parentless creation and signed reads
-  first use the fixed serving windows below. Joins retain their membership-local
-  failed-address window and also count verified-key failures without an address.
+  [bounds.ts](../../packages/contract/src/bounds.ts). Submit reads foreign
+  facts and runs the timed drain before check 9 can refuse authority. Rule
+  expression evaluation follows that check. Public parentless creation and
+  signed reads first use the serving windows below. Joins keep their
+  membership-local window for failed addresses, and also count failures of
+  verified keys without an address.
+
+Every room request first runs measured-request setup, a limit on URL bytes,
+and refusal of credentials in the URL. Measurement can write operational
+metrics. Scope invocation instrumentation can keep bounded request-index
+control data. The tables describe route work in addition to that setup.
+HTTP POST bodies on the scope API are read as JSON within 1 MiB before
+object dispatch. A verified creation can keep its genesis even when the
+scope refuses its founding act. Credential, session, projection, and query
+answers carry `no-store`.
+
+The three room configurations name [worker.ts](../../apps/room/worker.ts),
+which re-exports the scope classes and takes its default fetch from
+[apps/room/fetch.ts](../../apps/room/fetch.ts). That fetch composes health,
+MCP, application screens, demo offers, sites, the room page, brand files,
+and scope routes. The default export of `packages/scope/src/worker.ts` is
+not the deployed room fetch. The local celld shim re-exports the same
+production room entry, bindings and migration history, and adds no route
+or caller authority.
+
+The Durable Object binding also has internal namespace methods that are not
+HTTP routes: `jobState`, `workSourceState`, `stageSnapshot`,
+`nativeBirthByName` and `archiveItem`. [Route notes](#route-notes)
+describes them.
+
+## Serving windows
+
+The serving check in `serving-admission.ts` counts parentless creation and
+signed reads before index or target lookup and before protected proof work.
+A fixed `ScopeIndex` instance owns the counters, in memory. Creation counts
+10 attempts per verified key and 30 per trusted edge address per hour.
+Signed reads count 240 per key and 600 per address per minute. A valid
+signature proves custody of the key for counting, not native authority. An
+invalid signature charges no claimed key. Native checks still run fresh.
+
+Only the outer edge fetch supplies the platform address. In-process API
+calls and hosted fetch supply none and ignore forwarded headers. The table
+holds at most 8192 windows, removes only expired entries, and refuses new
+identities at capacity. Churn cannot evict a live address counter. An
+object restart or eviction resets memory, so this is not durable global
+accounting. Invalid settings or a missing serving binding fail closed.
+Rate-limited creation and signed reads answer 429. Join keeps its own
+serving status. Session issuance, session reads and internal verified child
+delivery keep their own rules. The three Worker configurations name the
+four nonsecret `SERVING_*` overrides. No public counter, index, admin or
+status route exists.
 
 The join, creation, signed-read and MCP bearer-failure windows use
-[`addressKey`](../../packages/bytes/src/address.ts). Address spellings are
-canonicalized before counting; IPv6 zones do not distinguish clients.
+[`addressKey`](../../packages/bytes/src/address.ts). It canonicalizes
+address spellings before counting. IPv6 zones do not distinguish clients.
 
 | Address form | Counter key |
 |---|---|
@@ -179,129 +144,33 @@ canonicalized before counting; IPv6 zones do not distinguish clients.
 | Other IPv6 | First 64 bits, prefixed `v6:` |
 
 The IPv6 `/64` grouping limits address rotation in routable space. Local
-clients keep separate windows within one subnet. MCP checks the raw address's
-64-character and 64-UTF-8-byte bounds before canonicalization. Missing and
-invalid MCP addresses share one failure window; they do not bypass the limit.
-The [public Site window](#public-site-address-window) keeps its separate policy.
+clients keep separate windows within one subnet. MCP checks the raw
+address's 64-character and 64-UTF-8-byte bounds before canonicalization.
+Missing and invalid MCP addresses share one failure window and do not
+bypass the limit. The [public Site window](#public-site-address-window)
+has its own policy.
 
-Fresh submitted acts also pass deployment admission in
-[applications/act-admission.ts](../../packages/scope/src/applications/act-admission.ts).
-HTTP, service-binding, and direct native calls reach this same Core gate.
-Before a new act reads foreign dependencies, the host identifies its installed
-release from immutable native creation records and checks current
-`APPLICATION_TRUST`. It checks trust again before writing the act. Accepted
-keys retain their receipt and mismatch behavior. Native platform scopes and
-proved unpackaged creations are exempt. Withdrawal returns
-`application-revoked`; incomplete proof returns `dependency-unavailable`.
+## Limits of these tables
 
-The ancestry walk admits at most 18 ancestors, 37 bodies, 16 MiB of body
-bytes, and 36 native RPCs, with a 1 MiB per-body limit. The local birth uses
-the existing preparation allowance. One ten-second flight owns unresolved
-native work; a caller timeout does not release it. Only immutable provenance
-is cached. No package, R2, Git, or provider read belongs to this gate.
-The gate writes no entry. Activation and existing background work keep their
-separate behavior described above.
-
-For preparation requests, [core.ts](../../packages/scope/src/core.ts) verifies
-the signature before starting the turn. [turn.ts](../../packages/scope/src/turn.ts)
-then drains due timed work before
-[judgePreparation](../../packages/derive/src/prepare.ts) makes the final
-capability and grant decision. A refused preparation can therefore follow
-newly sealed timed entries. `ScopeObject.prepare` passes even a refused answer
-through `#sent`, which schedules the driver and Operations dispatch. Those
-background passes can make configured provider calls for sealed work even
-when preparation is refused. The caller's preparation entry still needs its own capability
-and grant checks.
-
-Every room request first runs measured-request setup, URL-byte admission, and
-credential-in-URL refusal. Measurement can write operational metrics; scope
-invocation instrumentation can retain bounded request-index control data.
-A fixed `ScopeIndex` instance also owns a separate memory-only serving action.
-It does not change `has()`, registration or ancestry admission. Parentless
-creation counts bounded attempts at 10 per verified key and 30 per trusted edge
-address per hour; signed reads count 240 per key and 600 per address per minute.
-A valid signature proves custody for accounting, not native authority. Invalid
-signatures charge no claimed key. Every eligible request is counted once before
-index/target lookup or protected proof work; native checks still run fresh.
-Actual outer edge fetch supplies the platform address out-of-band.
-In-process API calls and hosted fetch supply null and ignore synthetic
-forwarded headers.
-The table holds at most 8192 windows, removes only expired entries and refuses
-new identities at capacity. Churn cannot evict a live address counter. Actual
-object restart/eviction resets memory; this is not durable global accounting.
-Invalid settings or missing serving binding fail closed. Rate-limited creation
-and signed reads answer 429; original join serving status remains unchanged.
-Session issuance/session reads and internal verified child delivery keep their
-existing semantics. No public counter/index/admin/status route is added.
-The three Worker configs name the four nonsecret `SERVING_*` overrides; the
-implementation note records bounds, kernel review and the original local
-startup measurements: Page had 10 fixed-owner Signed admissions; hosted MCP
-legacy and modern had 3 and 2. Session dispatch is counted separately. These
-are attributed native fixture observations, not browser DOM, production
-address or throughput measurements; union startup verification is pending.
-
-Tables describe route work in addition to that shared setup. HTTP POST bodies
-on the scope API are read as JSON within 1 MiB before object dispatch. A
-verified creation can retain its genesis even when its founding act is refused. Its
-credential, session, projection, and query answers carry `no-store`.
-
-`POST /v1/scopes/:scope/reservation-snapshot` accepts the legacy `{signed}`
-body and the successor `{signed, stage: true}` body at the same membership gate.
-The hint selects the proof format and grants no authority. The successor requires
-the actual Native17 admission, full job identity, current checker key and source.
-Room jobs also read fresh Rules13 observations before Git access and before the
-answer. RulesContent revision 21 carries the service mark and scoped generation.
-Earlier definitions retain their exact observation grammar. The host also
-authenticates the bounded canonical policy value against the extents digest.
-The full Rules reference, current service mark and generation, and check
-name, configuration and checker must match the admitted binding. Member jobs do
-not depend on the room service mark.
-
-Each stage eligibility read sequence bounds the combined Rules, key and work
-source awaits to ten seconds. The final sequence checks Rules before key and
-source state, then checks current Native admission without another await. A
-released work source refuses a fresh snapshot. Source release neither cancels nor
-drains an existing run. Snapshot reads leave Native authority state unchanged.
-Stage proof bytes are limited to 262144, excluding object bodies. Object bodies
-are limited to 16 MiB combined and 4096 objects, with the existing per-object
-read bounds. The HTTP reply has a separate 24 MiB wire limit. These transport
-limits do not enlarge Native budgets or prove deployed throughput.
-
-With a retained journal floor, the existing read and exact-intent gates still
-apply. Entry, history, log, settlement, and exact accepted-intent retries can
-return the current archive receipt with HTTP 410. History and log cursors below
-the floor resume at the floor; kept entries remain readable. An archived
-foreign source fact instead refuses creation or submission before authority
-observation and the turn. These answers fetch no clone and grant no new authority. Sparse
-retained and causal-chain walks preserve the existing signing and membership
-checks. Floor writes belong to an explicitly configured alarm path and do not
-run as pre-gate read work. There is no public floor route.
-
-Hosted agent enrollment can also return an archived 410 after its existing
-control gate. It preserves the archive location and a fact only when supplied,
-and stops before receipt read-back, standing observation, or bearer issuance.
-An archived custody outcome is terminal: it neither resends the enrollment nor
-confirms acceptance without archive verification. The route's control gate
-class is unchanged.
-
-The three room configurations all name [worker.ts](../../apps/room/worker.ts),
-which re-exports the scope classes and the default fetch from
-[apps/room/fetch.ts](../../apps/room/fetch.ts). That fetch composes health,
-MCP, application screens, demo offers, sites, the room page, brand files, and
-scope routes. The default export in `packages/scope/src/worker.ts` is not
-the deployed room fetch.
+The tables record source reachability with valid required settings. They
+do not say whether a deployed Worker has a setting, whether an optional
+feature is on, or whether a particular public room exists. The pre-gate
+work, state, and outbound columns come from source review. The inventory
+test checks the route, method and gate class of every row against the
+Worker matchers, and checks that every column is present. It does not
+check the column descriptions. Changes to runtime settings also need the
+[settings](settings.md) and deployment review.
 
 ## artroom-scope
 
 Configuration: [apps/room/wrangler.jsonc](../../apps/room/wrangler.jsonc).
 
-Entry: `apps/room/worker.ts` → `apps/room/fetch.ts`. Hosted MCP is reachable
-when both committed namespaces are bound, `MCP_ENABLED` is exactly `"true"`,
-and `MCP_TOOL_ADDITIONS` is absent or valid. Application redirects require
-`APPLICATION_SCREEN_HOSTS`; sandbox rendering additionally requires
-`APPLICATION_TRUST`. Demo offers require `DEMO_START_CONFIG`. Missing or invalid
-settings refuse those families. The table records source reachability with
-valid required settings, not whether a particular public room exists.
+Entry: `apps/room/worker.ts` → `apps/room/fetch.ts`. Hosted MCP is
+reachable when both committed namespaces are bound, `MCP_ENABLED` is
+exactly `"true"`, and `MCP_TOOL_ADDITIONS` is absent or valid. Application
+redirects require `APPLICATION_SCREEN_HOSTS`. Sandbox rendering also
+requires `APPLICATION_TRUST`. Demo offers require `DEMO_START_CONFIG`.
+Missing or invalid settings refuse those families.
 
 | Route and method | Gate class | Work before the gate | State written before the gate | Bounds | Outbound calls |
 |---|---|---|---|---|---|
@@ -348,11 +217,9 @@ Configuration: [apps/room/wrangler.demo.jsonc](../../apps/room/wrangler.demo.jso
 Entry: `apps/room/worker.ts` → `apps/room/fetch.ts`. The committed private
 namespaces include both hosted MCP bindings. Those routes require
 `MCP_ENABLED` exactly `"true"` and an absent or valid `MCP_TOOL_ADDITIONS`.
-The Start offer requires `DEMO_START_CONFIG`, its configured origin and exact
-register root. Application redirects, sandbox rendering and publication
-still require their existing settings and authority checks. This table
-records shared source reachability with valid required settings, not a
-probe of live settings or proof that an optional feature is enabled.
+The Start offer requires `DEMO_START_CONFIG`, its configured origin and the
+exact register root. Application redirects, sandbox rendering and
+publication still require their settings and authority checks.
 
 | Route and method | Gate class | Work before the gate | State written before the gate | Bounds | Outbound calls |
 |---|---|---|---|---|---|
@@ -397,55 +264,52 @@ probe of live settings or proof that an optional feature is enabled.
 Configuration: [apps/room/wrangler.grow.jsonc](../../apps/room/wrangler.grow.jsonc).
 
 Entry: `apps/room/worker.grow.ts` → `apps/room/worker.ts` →
-`apps/room/fetch.ts`. The Grow wrapper forwards the same default HTTP handler.
-Hosted MCP is reachable
-when both committed namespaces are bound, `MCP_ENABLED` is exactly `"true"`,
-and `MCP_TOOL_ADDITIONS` is absent or valid. Application redirects require
-`APPLICATION_SCREEN_HOSTS`; sandbox rendering additionally requires
-`APPLICATION_TRUST`. Demo offers require `DEMO_START_CONFIG`. Missing or invalid
-settings refuse those families. The table records source reachability with
-valid required settings, not whether a particular public room exists.
+`apps/room/fetch.ts`. The Grow wrapper forwards the same default HTTP
+handler. Hosted MCP is reachable when both committed namespaces are bound,
+`MCP_ENABLED` is exactly `"true"`, and `MCP_TOOL_ADDITIONS` is absent or
+valid. Application redirects require `APPLICATION_SCREEN_HOSTS`. Sandbox
+rendering also requires `APPLICATION_TRUST`. Demo offers require
+`DEMO_START_CONFIG`. Missing or invalid settings refuse those families.
 
-The wrapper also supplies explicit archive wiring to its Durable Object class.
-For admitted public journals, object activation and sealed entries schedule
-bounded archive work through the existing alarm. That work can read checked
-births and the admitted directory/destination items, persist retry and Mark
-bookkeeping, mint a short-lived Artifacts write token, send Git objects and
-read back the ref. It uses the existing archive bounds and the original
+The wrapper also gives its Durable Object class explicit archive wiring.
+For public journals that the archive accepts, object activation and sealed
+entries schedule bounded archive work through the existing alarm. That work
+can read checked births and the accepted directory and destination items,
+keep retry and mark bookkeeping, mint a short-lived Artifacts write token,
+send Git objects, and read back the ref. It uses the archive bounds and the
 per-pass allowance. These background effects can follow an activation even
-when the caller's HTTP read is refused; they do not grant the caller archive
-access. Register and Membership journals remain excluded. Generic and lending
-entries do not enable this wiring, and production retained floors remain off.
+when the scope refuses the caller's HTTP read. They give the caller no
+archive access. Register and membership journals are excluded. Generic and
+lending entries do not enable this wiring, and production retained floors
+are off.
 
-Birth proofs, target item replies, pin SQL payloads, migration reply buffers
-and parent-frontier ownership reserve their full read ceiling before I/O. A successful bounded
-receipt settles metadata and proportional input work to received bytes;
-an unavailable or failed read stays charged in full. Operation counts and
-the original deadline do not change. Fixed processing fees and transport
-input-work tariffs retain their existing charges.
+Birth proofs, target item replies, pin SQL payloads, migration reply
+buffers and parent-frontier ownership reserve their full read ceiling
+before I/O. A successful bounded read settles metadata and proportional
+input work to the bytes received. An unavailable or failed read stays
+charged in full. Operation counts and the original deadline do not change.
+Fixed processing fees and transport input-work tariffs keep their charges.
+Migration reply buffers settle against completed bounded POST response
+bytes. GET advertisements keep their separate fixed fee. A transport byte
+count does not certify validation: the archive owner settles only after the
+pack, object type, size and original authority and deadline checks pass.
 
-Migration reply buffers settle against completed bounded POST response bytes.
-GET advertisements keep their separate fixed fee. A transport byte receipt
-does not certify validation: the archive owner settles only after the pack,
-object type, size and original authority/deadline fences have passed.
-
-The pass diagnostic's `reservationCosts.metadataReserved` is metadata
-admitted before refunds. `metadataSettled` is the current charge, including
-outstanding reservations at their full ceilings; `unsettledMetadata` names
-that outstanding subset. `settlementRefusal` is `none`, `invalid-received`
-or `unknown-reservation`. These copied scalars and the observation's net
-site attribution grant no admission or authority.
+The pass diagnostic reports `reservationCosts`. `metadataReserved` is the
+metadata reserved before refunds. `metadataSettled` is the current charge,
+with outstanding reservations at their full ceilings, and
+`unsettledMetadata` names that outstanding part. `settlementRefusal` is
+`none`, `invalid-received` or `unknown-reservation`. These values and the
+observation's net site attribution grant no authority.
 
 The internal `archiveItem` namespace port has no HTTP route. Its raw helper
-accepts trusted host input; the complete target birth walk and admitted binding
-supply its authority boundary. The table below adds no public archive route.
-
-New archive passes publish bounded descriptive replay anchors in their
-existing manifests. These lists do not grant trust. The alarm floor writer
-requires complete confirmed publication coverage before it offers deletion;
-legacy receipts default to uncovered. Pending Marks bind their exact public
-scope identities for retry, including the Directory-checked reference-only
-Rules identity in Room mode. This metadata replaces no source or host check.
+takes trusted host input. The complete target birth walk and the accepted
+binding supply its authority boundary. New archive passes publish bounded
+descriptive replay anchors in their manifests. These lists grant no trust.
+The alarm floor writer requires complete confirmed publication coverage
+before it offers deletion, and legacy receipts count as uncovered. Pending
+marks bind their exact public scope identities for retry, including the
+reference-only Rules identity that the directory checks in room mode. This
+metadata replaces no source or host check.
 
 | Route and method | Gate class | Work before the gate | State written before the gate | Bounds | Outbound calls |
 |---|---|---|---|---|---|
@@ -492,7 +356,8 @@ Configuration: [apps/room/wrangler.lending.jsonc](../../apps/room/wrangler.lendi
 Entry: `apps/room/worker.ts` → `apps/room/fetch.ts`. This configuration
 binds only `SCOPES`. All `/mcp` and `/mcp/*` requests return 404 before
 header or body authentication. Application screens need an uncommitted
-`APPLICATION_CONTENT` binding and trust setting; the committed config has neither.
+`APPLICATION_CONTENT` binding and trust setting. The committed
+configuration has neither.
 
 | Route and method | Gate class | Work before the gate | State written before the gate | Bounds | Outbound calls |
 |---|---|---|---|---|---|
@@ -531,24 +396,34 @@ header or body authentication. Application screens need an uncommitted
 ## dap-application-sandbox
 
 Configuration: [apps/sandbox/wrangler.jsonc](../../apps/sandbox/wrangler.jsonc).
-Entry: `apps/sandbox/worker.ts`. Only exact configured HTTPS installation hosts
-under `*.inguz.space` are reachable; `SCREEN_HOSTS=[]` refuses by default.
-`ROOM`, `GROW` and `LENDING` bind fixed services and the named
-`ApplicationScreenService` entrypoint. Each request checks the complete descriptor
-against `screenHost` before `screen`, `native` or the stream-only `nativeStream`. Those RPC methods have no
-public Room HTTP route. `screen` verifies the room origin and installation path
-before private rendering; `native` repeats the finite gateway matcher before
-ordinary native dispatch. All three native-reading service methods use the
-same fixed indexed namespace as the room routes. Eligible Signed reads retain
-the verified-key serving admission; synthetic service calls have no trusted
-address. Both stream entry paths refuse Signed readers before target lookup.
-They confer no new membership authority.
 
-The native rows below retain their ordinary gate classes. The sandbox cannot
+Entry: `apps/sandbox/worker.ts`. Only exact configured HTTPS installation
+hosts under `*.inguz.space` are reachable. `SCREEN_HOSTS=[]` refuses by
+default. `ROOM`, `GROW` and `LENDING` bind fixed services and the named
+`ApplicationScreenService` entrypoint, which is the only named production
+RPC entrypoint. Each request checks the complete descriptor against
+`screenHost` before `screen`, `native` or the stream-only `nativeStream`.
+Those RPC methods have no public room HTTP route. `screen` verifies the
+room origin and installation path before private rendering. `native`
+repeats the finite gateway matcher before ordinary native dispatch. All
+three native-reading service methods use the same fixed indexed namespace
+as the room routes. Eligible signed reads keep the serving window of the
+verified key. Synthetic service calls have no trusted address. Both stream
+entry paths refuse signed readers before target lookup. They confer no new
+membership authority.
+
+`nativeStream` returns the ordinary response and a close capability for
+that exact, already authorized subscription. The capability accepts no
+target or stream ID. Gateway cancellation waits, within the transport
+window, for the capability's idempotent release acknowledgement before it
+completes. Disposal of the RPC stub is separate and is not an
+acknowledgement. The stream adds no public HTTP route or header.
+
+The native rows below keep their ordinary gate classes. The sandbox cannot
 forward parentless creation, arbitrary upstream URLs or unrelated methods.
-Browser cookies and response Set-Cookie are not forwarded. Native authorization
-headers and signed bodies retain the canonical room origin. A forwarded address
-is Cloudflare edge metadata, not caller identity.
+It does not forward browser cookies or response `Set-Cookie`. Native
+authorization headers and signed bodies keep the canonical room origin. A
+forwarded address is Cloudflare edge metadata, not caller identity.
 
 | Route and method | Gate class | Work before the gate | State written before the gate | Bounds | Outbound calls |
 |---|---|---|---|---|---|
@@ -568,38 +443,24 @@ is Cloudflare edge metadata, not caller identity.
 | `GET /v1/scopes/:scope/entries/:seq` | `self-signed` | Descriptor then ordinary native admission | Ordinary native activation and protocol state only | 128 KiB URL; exact query keys; existing native bounds | Fixed screenHost and native RPC; ordinary authority reads |
 | `GET /v1/scopes/:scope/items/:type` | `session` | Descriptor then ordinary native admission | Ordinary native activation and protocol state only | 128 KiB URL; exact query keys; existing native bounds | Fixed screenHost and native RPC; ordinary authority reads |
 
-This is structural source coverage. The separate R8 branch records adopted
-owner seals, scoped compilation and inventory checks, native binding checks,
-nine local browser custody cases and four rendered Page cases. R12 records
-its own scoped index, serving and startup checks. Those branch outcomes do not
-validate this source union. The union now has its actual adopted owner seals;
-four affected compiler roots and 14 cases across seven whole files passed.
-Its maintained Page build, separate DATA comparison and four rendered Page
-checks also passed. Its original ordinary gate passed hosted startup and
-Page freshness, but failed two MCP documentation-inventory assertions.
-Final review must record the narrow correction and downstream Node stages
-separately. These local outcomes and their original heads are recorded in the
-[union implementation note](../../notes/implementation/2026-10-22-security-union.md).
-Hosted deployment and operator rollout remain separate
-obligations; no hosted isolation claim follows from the local browser cases.
-
 ## dap-grow-simulator
 
 Configuration: [examples/grow/wrangler.jsonc](../../examples/grow/wrangler.jsonc).
 
 Entry: [simulator-worker.ts](../../examples/grow/simulator-worker.ts) →
 `simulatorHost` in [simulator-host.ts](../../examples/grow/simulator-host.ts).
-Its fetch returns 404 for every method and path. `workers_dev` and preview URLs
-are disabled and the config declares no public route. The wildcard below
-records that refusal if invoked through a test or platform transport.
+Its fetch returns 404 for every method and path. `workers_dev` and preview
+URLs are disabled, and the configuration declares no public route. The
+wildcard row records that refusal for a call through a test or platform
+transport.
 
-The separate platform-controlled scheduled event runs each minute. It verifies
-the packet, parses the configured HTTPS origin and principals, checks two
-distinct agent secrets, obtains membership sessions, and runs the tick. It has
-no local durable state. Per tick it allows 96 reads, 48 writes, 256 KiB request
-bytes, 4 MiB reply bytes, and 45 s, with a 5 s SDK deadline per request. Outbound
-HTTP stays on the configured service and allowed scope paths. These cron
-actions are not reachable through fetch.
+A separate platform-controlled scheduled event runs each minute. It
+verifies the packet, parses the configured HTTPS origin and principals,
+checks two distinct agent secrets, obtains membership sessions, and runs
+the tick. It has no local durable state. Each tick allows 96 reads, 48
+writes, 256 KiB of request bytes, 4 MiB of reply bytes, and 45 s, with a
+5 s SDK deadline per request. Outbound HTTP stays on the configured service
+and the allowed scope paths. Fetch cannot reach these scheduled actions.
 
 | Route and method | Gate class | Work before the gate | State written before the gate | Bounds | Outbound calls |
 |---|---|---|---|---|---|
@@ -610,111 +471,294 @@ actions are not reachable through fetch.
 Configuration: [homepage/wrangler.jsonc](../../homepage/wrangler.jsonc).
 
 Entry: Cloudflare static assets from `homepage/assets`, built by
-[homepage/build.mjs](../../homepage/build.mjs). There is no `main` script or
-repository fetch handler. The platform asset adapter handles files, HTML
-trailing-slash redirects, and the configured 404 page. Unknown files return
-404. Other methods have no application action. This row is configuration
-evidence for the platform adapter, not an in-tree runtime witness.
+[homepage/build.mjs](../../homepage/build.mjs). There is no `main` script
+or fetch handler in the repository. The platform asset adapter handles
+files, HTML trailing-slash redirects, and the configured 404 page. Unknown
+files return 404. Other methods have no application action. The row comes
+from the configuration of the platform adapter. No test in the repository
+runs that adapter.
 
 | Route and method | Gate class | Work before the gate | State written before the gate | Bounds | Outbound calls |
 |---|---|---|---|---|---|
 | `GET, HEAD /*` | `none` | Platform asset selection | None | Finite deployed asset set; platform serving limits | None |
 
+## Route notes
+
+These notes give the detail behind rows that a single cell cannot hold.
+
+### Census
+
+`GET /v1/scope-index/census` selects only the fixed index owner. Its signed
+request names the deployment-pinned register and the exact cursor. After
+the request's form and signature pass, the address and key windows run
+before the census owner's row lookup or register proof RPC. The route uses
+the trusted transport address. A forwarded header supplies no identity.
+Counting is in memory and runs once per request, including attempts by
+callers who are not the operator. The owner binds its stored full register
+reference and genesis hash to a bounded exact native proof, checks the
+supported register pin and the applied founding `install`, and then
+compares that install's actor with the caller. The read-only proof path
+starts no recovery or native turn. Cold object construction can still
+initialize schema and maintenance state. On denial, the census writes no
+index, journal, replay or alarm state.
+
+### Hosted MCP
+
+Hosted MCP requires `MCP_ENABLED` to be exactly `"true"`, and both
+committed agent namespaces. `MCP_TOOL_ADDITIONS` can add known generic tool
+names to the hosted default list. If present, it must be a JSON array of
+unique, known names within 1024 characters. A missing opt-in or invalid
+additions return 404 before the MCP route reads a body or selects an agent
+or registry object. The shared room request setup still runs first.
+
+The hosted default omits `create`, `install_application`, `credential`,
+`prepare`, `join`, `record`, `step`, and `text`. An explicit addition
+affects both the listing and direct calls. Local MCP services keep their
+own default. Generated named tools also require fresh standing and tool
+selection checks, then the actual target's membership check when called. A
+remembered tool name does not keep an expired grant or authorize another
+target.
+
+Hosted agent enrollment can return an archived 410 after its control gate.
+The answer keeps the archive location, and a fact only when one is
+supplied. Enrollment then stops before receipt read-back, standing
+observation, or bearer issuance. An archived custody outcome is terminal:
+it neither resends the enrollment nor confirms acceptance without archive
+verification. The route's gate class is unchanged.
+
+### Public origin
+
+`PUBLIC_ORIGIN`, when set, supplies the exact service origin for hosted MCP
+creation, application context and redirects, and demo offer checks. When
+it is unset, the request URL origin applies. An invalid explicit value
+fails before these routes select their protected objects. Neither
+forwarded headers nor the transport `Host` override it. The shared
+accessor is a sealed gate owner.
+
+### Child creation
+
+The parentless serving policy also applies to the in-process
+`api(binding).create` and to the hosted agent's scope fetch. In closed
+deployed mode, child creation also passes a whole-lineage serving check
+before the child's raw namespace `idFromName` or `get`. The configured
+register's applied genesis selects one of the two reviewed exact cohorts,
+and the check follows every creator birth and sealed create send back to
+that root. Every ancestor read first requires a fresh fixed-index `has`,
+even in register mode. Missing or archived proof, unavailable declaration
+custody and a spent deadline return `retry` with `dependency-unavailable`
+before child activation. The check refuses malformed or wrong-root
+creation, and uses no archive or `source()` fallback. One attempt allows at
+most 16 bodies, 1 MiB of combined bytes, 64 source attempts, 512 visits and
+one monotonic ten-second deadline. The receiving scope still makes its full
+genesis judgment. The check does not revalidate existing scopes against a
+new register pin for ordinary reads or acts. Opening creation for local
+and test use is not a deployment recommendation.
+
+### Acts and application trust
+
+Before a fresh act reads foreign dependencies, the host checks it in
+[applications/act-admission.ts](../../packages/scope/src/applications/act-admission.ts).
+HTTP, service-binding and direct native calls reach this same check in the
+core. The host identifies the scope's installed release from immutable
+native creation records and checks the current `APPLICATION_TRUST`. It
+checks trust again before it writes the act. An idempotency key that
+already took effect keeps its receipt and mismatch behavior. Native
+platform scopes and proved unpackaged creations are exempt. A withdrawn
+release returns `application-revoked`, and incomplete proof returns
+`dependency-unavailable`.
+
+The ancestry walk reads at most 18 ancestors, 37 bodies, 16 MiB of body
+bytes, and 36 native RPCs, with a 1 MiB limit per body. The local birth
+uses the existing preparation allowance. One ten-second flight owns
+unresolved native work, and a caller timeout does not release it. Only
+immutable provenance is cached. The check reads no package, R2, Git, or
+provider data, and writes no entry.
+
+### Preparation
+
+For preparation requests, [core.ts](../../packages/scope/src/core.ts)
+verifies the signature before it starts the turn.
+[turn.ts](../../packages/scope/src/turn.ts) then drains due timed work
+before [judgePreparation](../../packages/derive/src/prepare.ts) makes the
+final capability and grant decision. So a refused preparation can follow
+newly sealed timed entries. `ScopeObject.prepare` passes even a refused
+answer through `#sent`, which schedules the driver and the operations
+dispatch. Those background passes can make configured provider calls for
+sealed work when the preparation is refused. The caller's preparation
+entry still needs its own capability and grant checks.
+
+### Reservation snapshot and stage snapshot
+
+`POST /v1/scopes/:scope/reservation-snapshot` accepts the legacy `{signed}`
+body and the successor `{signed, stage: true}` body at the same membership
+gate. The `stage` member selects the proof format and grants no authority.
+The successor requires the job's `admission` entry in a
+`platform:destination@17` scope, the full job identity, the current checker
+key and the source. Room jobs also read fresh `platform:rules@13`
+observations before Git access and before the answer. Revision 21 of the
+Rules observation record carries the service mark and the scoped
+generation. Earlier definitions keep their exact observation grammar. The
+host also authenticates the bounded canonical policy value against the
+extents digest. The full Rules reference, the current service mark and
+generation, and the check name, configuration and checker must match the
+job's binding. Member jobs do not depend on the room service mark.
+
+Each sequence of stage eligibility reads bounds the combined Rules, key and
+work-source waits to ten seconds. The final sequence checks Rules before key
+and source state, then checks the job's current `admission` entry without
+another wait. A released work source refuses a fresh snapshot. Releasing a
+source neither cancels nor drains a run in progress. Snapshot reads leave
+native authority state unchanged. Stage proof bytes are limited to 262144,
+not counting object bodies. Object bodies are limited to 16 MiB combined
+and 4096 objects, with the per-object read bounds. The HTTP reply has a
+separate 24 MiB wire limit. These transport limits do not enlarge native
+budgets.
+
+The internal `stageSnapshot` method checks a signed job-read request before
+it returns a stage snapshot. `jobState` and `workSourceState` read retained
+local job or work-source state. For a member-source stage snapshot, a
+signing key that is not eligible can trigger the initial job lookup and up
+to 32 source-fact reads before the current key check refuses it. Those
+reads return no snapshot to that caller. Room jobs reject a key that
+differs from the frozen marked key before those source reads. Both paths
+check current eligibility again around provider reads. A captured job-read
+signature can be replayed during its 15-minute window. The older snapshot
+route has the same exposure.
+
+### Workspace discovery and credentials
+
+The internal `nativeBirthByName` method discovers directory, register and
+destination births. The deployment's indexed namespace checks the exact
+known scope and kind before target lookup. The receiver bounds preparation
+and bytes. The workspace service then verifies the full returned reference,
+genesis and creation lineage. It uses no legacy source fallback and grants
+no read session or repository authority that a caller selects.
+
+The credential route also accepts a lane whose declared definition includes
+`hold@2`, behind the same membership gate. Private custody checks the
+preparing key, the actual holder, the current instance, the epoch, the
+expiry and the selected fork before a one-time handoff. Fork setup
+credentials stay private under their exact original attempt handles. Their
+token records owe revocation through the existing operation ledger. The
+provider adapter makes no independent retry.
+
+### Archived answers
+
+With a retained journal floor, the read and exact-intent gates still apply.
+Entry, history, log, settlement, and repeated accepted intents can return
+the current archive receipt with HTTP 410. History and log cursors below
+the floor resume at the floor, and kept entries stay readable. An archived
+foreign source fact refuses creation or submission before authority
+observation and the turn. These answers fetch no clone and grant no new
+authority. Sparse retained and causal-chain walks keep their signing and
+membership checks. Floor writes belong to an explicitly configured alarm
+path and do not run as read work before a gate. There is no public floor
+route.
+
+### Archive row diagnostic
+
+The fixed `archive-row-diagnostic-v1` log line reports bounded stored
+archive state and the platform alarm once per object activation, through
+existing ingress before recovery. It adds no RPC, HTTP, member, MCP or
+operator caller. Its internal reader does no recovery and no writes. Cold
+constructor effects remain. A log tail is an observation channel, not
+authority to restart an archive.
+
 ## Unread read-token custody
 
-Only the trusted destination `mint-read` adapter enrolls newly minted member
-read tokens for local plaintext expiry. A durable marker binds the full scope
-and incarnation, token ID, mint operation, attempt and provider-reported end.
-The native alarm processes bounded backfill and due-queue quanta; delivery is
-not an exact-wall-clock guarantee. Taking or dropping plaintext keeps its
-metadata and does not revoke the provider token. Generic write-token plaintext
-stays available for provider revocation, even if its ID resembles a read handle.
+Only the trusted destination `mint-read` adapter enrolls newly minted
+member read tokens for local plaintext expiry. A durable marker binds the
+full scope and incarnation, the token ID, the mint operation, the attempt
+and the end that the provider reported. The native alarm processes bounded
+backfill and due-queue steps, so expiry is not exact to the wall clock.
+Taking or dropping plaintext keeps its metadata and does not revoke the
+provider token. Plaintext of a generic write token stays available for
+provider revocation, even if its ID resembles a read handle.
 
-Planner decision `21a8e35b103dd0280ea711d78d167db0d355cafd` accepts partial
-legacy coverage. An untagged row needs bounded retained current-incarnation
-mint-read, opening and confirmed-outcome proof before enrollment. Rows with
-missing, pruned, oversized, invalid or unproved old-incarnation evidence remain
-retained because no safe retained discriminator separates them from write
-credentials. A held legacy read confirmed after its once-through backfill scan
-also remains retained; confirmation alone does not enroll it. All newly minted
-explicit read tokens are queued. No complete legacy cleanup is claimed.
+Legacy coverage is partial. An untagged row needs bounded retained proof of
+a current-incarnation mint-read, its opening and its confirmed outcome
+before enrollment. Rows with missing, pruned, oversized, invalid or
+unproved old-incarnation evidence stay retained, because no safe retained
+discriminator separates them from write credentials. A held legacy read
+confirmed after its one backfill scan also stays retained. Confirmation
+alone does not enroll it. All newly minted explicit read tokens are queued.
 
-Current [Artifacts minting](../../packages/scope/src/artifacts-host.ts) sends
-the requested read lifetime to the provider and records its returned
-`expiresAt`. Current [GitHub minting](../../packages/scope/src/github-host.ts)
-records the installation token's provider-reported expiry rather than sending
-the requested seconds; the [client](../../packages/git/src/github.ts) requires
-a future expiry within 65 minutes of its clock. These adapter checks do not
-prove deployed provider enforcement or an unknown legacy row's origin or expiry.
-See the [implementation note](../../notes/implementation/2026-10-24-read-token-expiry.md)
-for the bounded maintenance and pending validation limits.
+Current [Artifacts minting](../../packages/scope/src/artifacts-host.ts)
+sends the requested read lifetime to the provider and records the
+`expiresAt` it returns. Current [GitHub minting](../../packages/scope/src/github-host.ts)
+records the installation token's provider-reported expiry and does not send
+the requested seconds. The [client](../../packages/git/src/github.ts)
+requires a future expiry within 65 minutes of its clock. These adapter
+checks do not show what a provider enforces, or the origin or expiry of an
+unknown legacy row.
 
 ## Public Site address window
 
-After method, credential-in-URL and path bounds, every valid `/site` GET
-(including redirects, versions and conditional reads) reserves an address
-attempt at the existing fixed `SCOPE_INDEX` serving object before room,
-publication or provider work. Its separate counter admits 240 attempts per
-fixed 60-second window and retains at most 4096 active keys. Addresses have a
-64 UTF-8-byte bound before RPC serialization and in the owner. Only the outer
-platform fetch forwards Cloudflare's `CF-Connecting-IP`; this relies on the
+After method, credential-in-URL and path bounds, every valid `/site` GET,
+including redirects, versions and conditional reads, reserves an address
+attempt at the fixed `SCOPE_INDEX` serving object before room, publication
+or provider work. Its counter allows 240 attempts per fixed 60-second
+window and keeps at most 4096 active keys. Addresses have a 64 UTF-8-byte
+bound before RPC serialization and in the owner. Only the outer platform
+fetch forwards Cloudflare's `CF-Connecting-IP`, so this relies on the
 platform setting that header. Synthetic and service-binding callers cannot
-select a bucket by putting a header on their supplied Request: without an
-explicit trusted transport address they share one internal missing-address
-bucket. No caller-supplied address grants authority.
+select a bucket by putting a header on their request. Without an explicit
+trusted transport address, they share one internal missing-address bucket.
+No caller-supplied address grants authority.
 
-A full live table refuses a new address; it never evicts an active window.
-Only expired windows are reclaimed. Quota, capacity or invalid address refusal
-answers 429 with `Retry-After: 60` and `Cache-Control: no-store`. A missing or
-unavailable fixed index answers 503 without selecting the room or provider.
-The existing creation and signed-read counters keep their own accounting.
-The single fixed owner shares the window across Worker ingress isolates;
-its counters are memory-only and reset when that owner is evicted or replaced.
-This is a serving bound, not a durable quota or a global network limit.
+A full table refuses a new address and never evicts an active window. Only
+expired windows are reclaimed. A quota, capacity or invalid-address
+refusal answers 429 with `Retry-After: 60` and `Cache-Control: no-store`. A
+missing or unavailable fixed index answers 503 without selecting the room
+or provider. The creation and signed-read counters keep their own
+accounting. The single fixed owner shares the window across Worker ingress
+isolates. Its counters are in memory and reset when that owner is evicted
+or replaced. This is a serving bound, not a durable quota or a global
+network limit.
 
-## Witness and limits
+## How the inventory is checked
 
-Run `node --test scripts/security-entry-points.test.mjs`. The root test command
-also runs it once. The witness derives route names and HTTP methods from the
-actual matcher syntax, not this page. It executes the scope and MCP dispatchers
-with boundary stand-ins, enumerates the scoped matcher's literal path partitions,
-and reads public prefix, equality, switch, and method matchers. Rows must match
-in both directions, including the reviewed operation's gate class. Missing,
-extra, duplicate, or differently gated rows fail.
+Run `node --test scripts/security-entry-points.test.mjs`. The root test
+command also runs it. The test derives route names and HTTP methods from
+the actual matcher syntax, not from this page. It runs the scope and MCP
+dispatchers with boundary stand-ins, enumerates the literal path partitions
+of the scoped matcher, and reads the public prefix, equality, switch, and
+method matchers. Rows must match in both directions, including the gate
+class of the reviewed operation. A missing, extra, duplicate, or
+differently gated row fails.
 
-The hosted matcher uses its real deployment policy with explicit valid opt-in.
-A disabled-policy control removes only hosted rows and fails against this
-unchanged enabled-deployment table. That control proves structural dispatch,
-not a deployed setting or a native grant decision.
+The hosted matcher uses its real deployment policy with valid explicit
+opt-in. A control with the policy disabled removes only the hosted rows and
+fails against the enabled-deployment table. That control shows structural
+dispatch, not a deployed setting or a native grant decision.
 
-The room entry model accepts only the exact generic/lending entry and the
-Grow wrapper’s two-hop default re-export chain. The local celld project adds
-an exact two-export shim to the same room entry. It does not follow arbitrary
-module re-exports. Whole-owner seals separately cover the wrapper and archive
-configuration, target, host-item and provider boundaries.
+The room entry model accepts only the exact generic and lending entry and
+the Grow wrapper's two-hop default re-export chain. The local celld project
+adds an exact two-export shim to the same room entry. The model does not
+follow arbitrary module re-exports. Whole-owner seals separately cover the
+wrapper and the archive configuration, target, host-item and provider
+boundaries.
 
-Source seals guard the finite extraction grammar, deployed composition, and
-reviewed gate owners. A matcher or gate-owner edit fails closed for inventory
-review even when the probe does not model its new syntax. A seal update alone
-is not evidence: check the route partition and gate classification, update
-the table, and review the exact source. Comments and source locations are
-excluded from seals. The in-memory control changes a real matcher while
-leaving this page unchanged and observes a bijection assertion failure.
-The snapshot body witness executes both actual dispatch branches and requires
-one membership-classified route row. It adds no duplicate route for the hint.
-Seals cover their selected source only; imported implementations are not
-covered transitively. The successor stage read, checker origin verifier,
-binding codec and detached checkout verifier each have an explicit owner
-seal. Native version pins and owning tests provide separate evidence for
-the imported policy and admission rules.
+Source seals guard the finite extraction grammar, the deployed
+composition, and the reviewed gate owners. An edit to a matcher or gate
+owner fails the test for inventory review even when the probe does not
+model its new syntax. To update a seal, check the route partition and gate
+classification, update the table, and review the exact source. Seals ignore
+comments and source locations. An in-memory control changes a real matcher
+while it leaves this page unchanged, and the bijection assertion fails. The
+snapshot body test runs both actual dispatch branches and requires one
+membership-classified route row. It adds no duplicate route for the
+`stage` member. Seals cover their selected source only, not the
+implementations it imports. The successor stage read, the checker origin
+verifier, the binding codec, the detached checkout verifier, and the
+workspace owners (`workspace-host.ts`, `workspace-lineage.ts` and
+`native-birth.ts`) each have an explicit owner seal. Native version pins
+and owning tests cover the imported policy rules.
 
-This is structural drift evidence. Stand-ins prove dispatch, not Durable
-Object behavior, authentication, storage bounds, credential custody, outbound
-ordering, or the platform asset adapter. Existing native and pure gate tests
-remain their evidence. The pre-gate work, state, and outbound columns come
-from source review; the witness checks that all columns are present but does
-not prove those descriptions. Changes in runtime settings need the settings
-and deployment review as well.
+The test checks structure. Its stand-ins show dispatch, not Durable Object
+behavior, authentication, storage bounds, credential custody, outbound
+ordering, or the platform asset adapter. Native and pure gate tests cover
+those.
 
 Gate owners: [address.ts](../../packages/bytes/src/address.ts),
 [public-origin.ts](../../packages/scope/src/public-origin.ts),
@@ -737,4 +781,6 @@ Gate owners: [address.ts](../../packages/bytes/src/address.ts),
 [catalogue.ts](../../packages/mcp/src/catalogue.ts), and
 [inventory.ts](../../packages/mcp/src/inventory.ts).
 
-The sandbox stream-only named RPC returns the ordinary response plus a close capability for that exact already-authorized subscription. The capability accepts no target or stream ID. Gateway cancellation waits, within the existing transport window, for its idempotent release acknowledgement before completion; RPC stub disposal is separate and is not an acknowledgement. No public HTTP route or header is added. The only named production RPC entrypoint is `ApplicationScreenService`, bound to the sandbox Worker.
+## Source
+
+Checked against main `5dc9765f` on 30 October 2026. Sources: [apps/room/fetch.ts](../../apps/room/fetch.ts), [packages/scope/src/worker.ts](../../packages/scope/src/worker.ts), [serving-limits.ts](../../packages/scope/src/serving-limits.ts), [site/window.ts](../../packages/scope/src/site/window.ts), [apps/sandbox/worker.ts](../../apps/sandbox/worker.ts), [security-entry-points.test.mjs](../../scripts/security-entry-points.test.mjs).

@@ -1,19 +1,20 @@
 # Write an application
 
 To write a dap application, declare its definitions as data, validate
-them, pin their bytes, and create scopes under them. This page is the
-reference for each step. For the guided path, take a tutorial first,
+them, pin their bytes, and create scopes under them. This page gives each
+step. For the guided path, take a tutorial first,
 [Build a counter](build-a-counter.md) or
 [Build a lending library](build-a-lending-library.md), then
 [Run your app](run-your-app.md), which runs the tutorial's definition in
-a room.
-[The architecture of a dap application](architecture.md) explains what
-the runtime does with one.
+a room. [The architecture of a dap application](architecture.md) explains
+what the runtime does with a definition.
 
 A definition names the items a scope holds, the acts people and agents
 sign, the conditions each act must meet and the changes it records. The
 runtime judges those acts, keeps the record and delivers the messages the
 definition declares. You write no judging code.
+
+## Start from a template
 
 Start from a template and remove what your application does not need:
 
@@ -28,29 +29,6 @@ Start from a template and remove what your application does not need:
   and timed rules.
 
 After you remove rows, validate the whole result.
-
-A definition without `level` uses recorded durability: the runtime commits
-its journal before answering with a receipt. You can declare that requirement
-explicitly with `level: { name: "recorded", version: 1 }`. The explicit member
-changes the definition's bytes and digest. It does not change an existing
-scope's pin. Live and Sequenced levels are not supported yet. Their declarations
-are refused as `unsupported-definition`, without creating a recorded fallback.
-
-An archive is a separate binding of the room. Ordinary package v1 requires
-an existing historical `archive-application` room; ordinary v2 requires an
-existing historical `archive-declared-application` room. These families are
-not offered for new creation. A v2 package with
-`device-command@1` uses `--cohort archive-device-application` and an
-existing owner selected with `--owner`. A signed package can require the
-binding with `host.requires: ["archive"]`. In these cohorts, installation
-ends with `archive-unavailable` when the Directory has no archive binding,
-before adding roles or creating the application. The native claim can set
-`archive: "journal"`; an admin can set it later with `bind-archive`. A new
-install request can then succeed; retrying the original request keeps its
-recorded refusal. A binding does not prove that any journal has been exported.
-Earlier cohorts keep their original pins and refuse the new requirement.
-The archive engine still requires its reviewed policy and host configuration;
-the current engine runs under fixture-only admission.
 
 ## Declare the item types
 
@@ -67,8 +45,8 @@ entry that stated the terms. Its states include `offered`, `accepted` and
 the final state `fulfilled`. A `report` is a separate item, so reporting
 work does not itself say that the requester accepted it.
 
-Read the actual [issue](../apps/room/lanes/src/issue.ts) and
-[change](../apps/room/lanes/src/change.ts) declarations alongside the
+Read the [issue](../apps/room/lanes/src/issue.ts) and
+[change](../apps/room/lanes/src/change.ts) declarations beside the
 [generated row reference](lanes-reference.md). Keep the names your
 application needs and remove the others.
 
@@ -77,8 +55,8 @@ application needs and remove the others.
 Write the acts in `acts`. Each act says whether it opens an item,
 changes an item or comments. It declares the fields the signer supplies,
 the action in `grant` that the signer must be allowed to take, the guards
-that must hold, the effects it writes and
-the messages and notices it sends.
+that must hold, the effects it writes, and the messages and notices it
+sends.
 
 The issue's `accept` act changes a commitment. Its signer supplies a
 `terms` reference and needs `issue.promise`. Its guards require an offered
@@ -88,12 +66,12 @@ the signer its performer. The entry also records notice to the requester.
 
 Then write the handlers in `receives` and the timed rules in `timed`.
 A handler says what a message from another scope changes. A timed rule
-says what changes when a recorded deadline passes. These are events the
+says what changes when a recorded deadline passes. Both are events the
 application declares as part of the same definition.
 
 ## Put each invariant where it lives
 
-Write each invariant as a plain sentence before choosing its form.
+Write each invariant as a plain sentence before you choose its form.
 
 | Invariant | Where it lives |
 |---|---|
@@ -114,10 +92,28 @@ opened by an entry under its owner's rules. See the
 
 A definition is pinned for the life of its scope. Removing an act or
 changing a guard makes a new definition with a new digest. Activating that
-definition lets the directory create new lanes under it; existing lanes
+definition lets the directory create new lanes under it. Existing lanes
 keep the digest they pinned. Room rules, such as required approvals and
-checks, have their own published revisions. See [scopes](scopes.md) and
+checks, have their own published revisions. See [Scopes](scopes.md) and
 [Lanes](../apps/room/docs/lanes.md) for those boundaries.
+
+## Choose the durability level
+
+A definition without `level` uses recorded durability: the runtime
+commits its journal before it answers with a receipt. You can declare
+that requirement explicitly with `level: { name: "recorded", version: 1 }`.
+The explicit member changes the definition's bytes and digest. It does not
+change an existing scope's pin. The Live and Sequenced levels are not
+supported yet. The validator refuses their declarations as
+`unsupported-definition`.
+
+An archive is a binding of the room, not of a definition. A signed
+package can require it with `host.requires: ["archive"]`, and
+installation in a room without the binding ends with
+`archive-unavailable`. An admin binds an archive at the claim or later
+with `bind-archive`. A binding does not prove that any journal has been
+exported. [The dap command](cli.md) lists the room families that can
+bind one.
 
 ## Validate the whole definition
 
@@ -135,13 +131,10 @@ declares rule expressions, pass `RULE_PROFILES` from
 the validator calls for the room's lane definitions and their demo
 profiles, which declare no rule expressions.
 
-The validator imports below use the published SDK names. The lane demo
-definitions remain checkout-only source because the public SDK has no lanes
-package.
-
+The imports below use the published SDK names. The lane demo definitions
+are checkout-only source, because the public SDK has no lanes package.
 From the repository root, with its workspace dependencies installed, this
-command validates both demo profiles. Unlike the standalone Counter tutorial,
-this mixed example requires the checkout for `issueDemo` and `changeDemo`:
+command validates both demo profiles:
 
 ```sh
 node --input-type=module <<'JS'
@@ -160,26 +153,117 @@ for (const definition of [issueDemo, changeDemo]) {
 JS
 ```
 
-This exact checkout command ran with Node.js 26.11.1 at commit
-`fdafc051ae2ddc384c5dea940fe469e677993dec` and exited 0. It uses the
-materialized repository workspace packages, separately from the Counter
-tutorial's public npm install. Its observed output was:
+It prints:
 
 ```
 issue: valid, sha256:82a938c8f54ddcac7974ca688ebea7d51c35d2aa70f4e3729965e9f915bc464e
 change: valid, sha256:d86c64ae0a570165660a6eb4d75153b8c2f59c9cdaec2ecc789e2c38524a17a2
 ```
 
-To validate your own declaration, give the validator that whole value
-and its bounds. Resolve its reported problems before pinning.
-Validation checks the declaration's form. It does not establish that a
-host, an outside adapter or an application journey works.
+To validate your own declaration, give the validator the whole value and
+its bounds. Resolve the reported problems before you pin. Validation
+checks the declaration's form. It does not show that a host, an outside
+adapter or a whole application journey works.
 
-## Validate the package connections
+## Pin the definition's bytes
+
+Pin the canonical JSON of the validated definition and its digest. A
+scope records that digest at genesis. The digest covers the whole value
+in the definition's byte domain, so changing any row changes it.
+
+Keep the declaration, its canonical bytes and its digest together. The
+Counter keeps them in [definition.ts](../apps/counter/definition.ts),
+[definition.json](../apps/counter/definition.json) and
+[pin.ts](../apps/counter/pin.ts), and its test checks that the three
+agree. The room's lane package keeps its declarations in `src`, canonical
+bytes in `definitions` and digests in `src/digests.ts`. Its
+[pin script](../apps/room/lanes/scripts/pin.mjs) writes every lane
+definition and its digest. Its
+[reference script](../apps/room/lanes/scripts/reference.mjs) writes the
+row reference, [lanes-reference.md](lanes-reference.md).
+
+To pin the lane definitions and check the reference, run from the
+repository root:
+
+```sh
+node apps/room/lanes/scripts/pin.mjs
+node apps/room/lanes/scripts/reference.mjs --check
+```
+
+The pin script prints one line per definition, with its digest and the
+size of its canonical bytes. The reference check prints
+`docs/lanes-reference.md is current` when the page matches the
+declarations. After you edit a lane declaration, the pin script writes
+its new bytes and digest. Generate the reference from the same
+declarations before you review them.
+
+## Write scenarios
+
+A scenario states one invariant and shows the acts that reach it. Include
+the refused path that distinguishes the invariant, as well as the path
+that takes effect. For the demo profile, the
+[story scenario](../apps/room/lanes/test/story.scope.test.ts) covers an
+open extent and a controlled extent. The
+[real-room scenarios](../apps/room/lanes/test/wiring.scope.test.ts) cover
+membership, rules and publication together.
+
+Read each scenario's stated boundary. These scenarios run real scopes
+and their rules, with a stand-in host and changed set. They do not run a
+hosted application or a checker runner. A live run is separate evidence.
+[Test dap](testing.md) explains how to choose and run the witnesses for a
+change.
+
+## Create a scope under the definition
+
+A definition takes effect when a scope pins it at genesis. There are two
+paths.
+
+**A lane in an existing room.** The room's rules scope keeps the list of
+active definitions. A member who holds `rules.activate`, an admin by
+default, signs `activate` with the definition's digest and its canonical
+bytes. The room's directory then creates new lanes under it. The command
+reads the `--value` file at the path you give. For the demo profile of
+the change lane, run this from the repository root, where the pin script
+wrote `apps/room/lanes/definitions/change-demo.json`:
+
+```sh
+dap act activate --on rules --set digest=sha256:d86c64ae0a570165660a6eb4d75153b8c2f59c9cdaec2ecc789e2c38524a17a2 --set name=change --value apps/room/lanes/definitions/change-demo.json
+```
+
+Lanes that already exist keep the digest they pinned.
+
+**A new application scope.** [Run your app](run-your-app.md) walks
+through this path with the counter tutorial's definition. A room created
+with `dap install --cohort application` has a directory whose act
+`establish-application` creates one scope under a definition that the
+rules scope has already activated. The act takes the definition's
+digest, the other genesis fields as canonical JSON in `values`, and
+`execution=recorded-do`. The directory supplies the signer as the
+genesis `opener`. The definition and every definition it creates must
+use no capabilities, and the genesis fields may not be facts, items or
+detached texts. Membership must then allow the intended members to take
+the definition's own actions, such as `counting.control`. Enrollment
+alone allows none.
+[The dap command](cli.md#an-explicitly-selected-application-room) lists
+the install and claim commands and the custody each one needs.
+
+The lending library's [runbook](../examples/lending/runbook.md) has the
+commands for this path: `activate`, `establish-application` and
+`set-actions` for each role. Its rehearsal section records them run on a
+deployed service on 14 October 2026, under the library's first
+definition. `--value` sends a file exactly as it is, and the digest
+covers the canonical bytes with no trailing newline. The runbook writes a
+copy without the newline first.
+
+Validation, pins and creation check the declaration and its record. They
+do not show that a host, an outside adapter or a whole application
+journey works. A live run is separate evidence.
+
+## Package several definitions
 
 A version 2 package describes how its definitions fit together. Each
 scope still pins its own whole definition. Package metadata names the
-connections and responsibilities between those definitions; it does not
+connections and responsibilities between those definitions. It does not
 give a member an action or replace a native guard.
 
 The signed semantic value carries seven composition places:
@@ -190,16 +274,17 @@ The signed semantic value carries seven composition places:
 | `rights` | A name and the one definition that owns it. |
 | `exercises` | The act or handler rows that exercise each declared right. |
 | `order` | Each handler's ordering choice: `any` or a declared right. |
-| `groups` | Reserved for sequenced groups; use an empty array in this slice. |
-| `derivation` | Reserved for derived definitions; use an empty object. |
-| `parameters` | Reserved for parameter bindings; use an empty object. |
+| `groups` | Reserved for sequenced groups. Use an empty array. |
+| `derivation` | Reserved for derived definitions. Use an empty object. |
+| `parameters` | Reserved for parameter bindings. Use an empty object. |
 
 In `dap.application.json`, references to definitions are paths already
-listed in `definitions`. Packing resolves them to the captured definitions'
-exact digests. Include all seven composition places in the source file and
-the signed version 2 value, using explicit empty arrays or objects where
-appropriate. Both `packApplication2` and `validatePackage` refuse a missing
-place. Packing never fills in omitted places.
+listed in `definitions`. Packing resolves them to the captured
+definitions' exact digests. Include all seven composition places in the
+source file and the signed version 2 value, with explicit empty arrays or
+objects where a place is reserved. Both `packApplication2` and
+`validatePackage` refuse a missing place. Packing never fills in an
+omitted place.
 
 For example, the [Grow source](../examples/grow/check/dap.application.json)
 connects the Site's child slot to the Room definition:
@@ -237,174 +322,76 @@ and rule profiles you use for whole-definition validation.
 
 The graph checks endpoint writers, port field types, handler reachability,
 result clauses, timed exits for pending work, default-role action coverage,
-declared right ownership and handler order. Automatic send/create cycles
-need a stated state condition. This structural check gives no storm or
-termination bound. Rights and exercises describe the listed rows; they
-do not discover every writer of a business constraint.
+declared right ownership and handler order. Automatic send or create
+cycles need a stated state condition. This structural check gives no
+storm or termination bound. Rights and exercises describe the listed
+rows. They do not discover every writer of a business constraint.
 
 A relation's `copies` counts retained keys over its lifetime. A live item
-maximum alone cannot prove that count: a final item may free a slot for
-another key. The validator refuses an unproved count as `fan-in-unproved`
-and a proved count above `copies` as `fan-in-exceeds-copies`. Grow's three
-retained Room slots prove three senders for its singleton Room item, so
-`copies: 3` passes and `copies: 2` refuses. If each Room instead relates
-two nonfinal items, the required count is six.
+maximum alone cannot prove that count, because a final item may free a
+slot for another key. The validator refuses an unproved count as
+`fan-in-unproved` and a proved count above `copies` as
+`fan-in-exceeds-copies`. Grow's three retained Room slots prove three
+senders for its singleton Room item, so `copies: 3` passes and
+`copies: 2` refuses. If each Room instead relates two nonfinal items, the
+required count is six.
 
 Run `dap check <directory>` to validate a source package and its listed
 local scenarios. `dap pack <directory>` refuses the same composition
-findings before writing a release. Both print findings as rows naming the
-definition, row, check, severity, reason and message. Control characters
-and table separators in names are escaped. A `refusal` stops validation;
-a `warning`, such as `unowned-bound`, is reported on an admitted package.
-Resolve a warning in the application's design or explain why it is safe.
+findings before it writes a release. Both print findings as rows naming
+the definition, row, check, severity, reason and message. A `refusal`
+stops validation. A `warning`, such as `unowned-bound`, is reported on a
+package that passes. Resolve a warning in the application's design or
+explain why it is safe.
 
 Check also reports live item allowances, successful-creation entry and
 item-key ceilings, and any unproved lifetime totals. Creation-path figures
 exclude failures, repeated inputs, timed work and outside scopes. They do
-not promise admission under a scope's retained bounds or measure physical
-memory or provider quotas.
+not promise that a scope's retained bounds accept the application, and
+they measure no physical memory or provider quota.
 
-Groups, group ordering, declared reads, sequenced definitions, row `states`,
-handler `spacing`, timed sends, derivation and parameters refuse with
-`unsupported-form` until their owning slices are implemented. Existing
-native `late` handlers remain available. Package validation here does not
-claim the later install-time activation guard; a local scenario's TEST
+Groups, group ordering, declared reads, sequenced definitions, row
+`states`, handler `spacing`, timed sends, derivation and parameters refuse
+with `unsupported-form` until the slices that own them are implemented.
+Existing native `late` handlers remain available. A local scenario's TEST
 authority is separate from installation, live membership and a provider.
 
-### Consume the existing published Grow release
+## Publish a file from an act
 
-The existing signed [Grow demo](../examples/grow/demo/application.dap.json)
-predates these seven places. Its exact release `71e10ca9` and publisher
-are recorded in [demo-release.ts](../examples/grow/demo-release.ts).
-Consumption uses `readPublishedApplicationPackage2` or
-`readPublishedApplicationReleaseProof2` for verification, installation,
-screens and replay. The earlier shape must have its exact nine semantic
-keys and match that one full release digest and publisher. The reader
-still checks canonical bytes, all hashes, signature, closure, bounds,
-projections and views. It adds no fields to the signed value.
+A room of the `application-publication` family has a destination that
+publishes a file when an application's act asks it to. That family is not
+among the families a new room can be created with today, so a new room
+cannot publish files from an act. The lending library's rehearsal room is
+one that can. [The dap command](cli.md) lists the current families.
 
-This is an explicit shape selection before validation. There is no retry
-after a strict failure, publisher-only exception or caller option to admit
-another earlier-shaped release. Complete composition shapes still pass
-all graph checks. New authoring and `validatePackage` use the strict
-reader and cannot produce or admit the earlier shape. The simulator also
-keeps the published release's exact Site and Room definition pins; other
-releases keep its current-source identity check.
+Declare a genesis field named `destination`, with type `scope` and kind
+`destination`. Keep that reference in a fixed item slot. The directory
+supplies its own recorded destination, including its incarnation. Do not
+include `destination` in the caller's genesis `values`. The factory
+refuses it even when the definition declares no such field.
 
-Retire this bounded consumption path only after a separately reviewed
-replacement release, its trust row and the installed-room upgrade have
-been commissioned. P1 changes no existing signed packet, release identity,
-private publisher key or deployed installation.
+Declare a `tell` to that slot with message `publish-file`, fields `path`
+and `content`, and result clauses for `refused` and `undelivered`. The
+path is at most 1,024 bytes, and the UTF-8 text is at most 65,536 bytes.
+The [lending definition](../examples/lending/definition.ts) shows this
+form. Its guards further restrict paths to the shelf and keep each path
+owned by one thing, including after that thing is gone.
 
-## Pin the definition's bytes
+An application of the room can overwrite any repository path, including
+files in the rules extent. The room's change-review rules do not govern
+`publish-file`. Control remains at activation and creation: a member needs
+`rules.activate` to activate the definition and `application.establish` to
+create its scope. Activate only definitions whose writes you trust. The
+destination proves that its own directory created the sender before it
+pushes the file.
 
-Pin the canonical JSON of the validated definition and its definition
-digest. A scope records that digest at genesis. The digest covers the
-whole value in the definition's byte domain, so changing any row changes
-it.
-
-Keep the declaration, its canonical bytes and its digest together. The
-Counter keeps them in [definition.ts](../apps/counter/definition.ts),
-[definition.json](../apps/counter/definition.json) and
-[pin.ts](../apps/counter/pin.ts), and its test checks that the three
-agree. The room's lane package keeps its declarations in `src`, canonical
-bytes in `definitions` and digests in `src/digests.ts`. Its
-[pin script](../apps/room/lanes/scripts/pin.mjs) writes every lane
-definition and its digest. Its
-[reference script](../apps/room/lanes/scripts/reference.mjs) writes the
-row reference, [lanes-reference.md](lanes-reference.md).
-
-To pin the lane definitions and check the reference, run from the
-repository root:
-
-```sh
-node apps/room/lanes/scripts/pin.mjs
-node apps/room/lanes/scripts/reference.mjs --check
-```
-
-Run on 2026-10-12 at main `d309b6b9`, both exited 0. The pin script
-printed:
-
-```
-issue  sha256:325cb4f33da9deb1a31d85ba0f1456068d4d9d08009978b779aed70cb08e00ad  46160 canonical bytes
-change  sha256:3f0389ba644e6d58e96a352debcc77d01661ffcf349c6db53d0645c2513eae70  59715 canonical bytes
-issue-demo  sha256:82a938c8f54ddcac7974ca688ebea7d51c35d2aa70f4e3729965e9f915bc464e  23024 canonical bytes
-change-demo  sha256:d86c64ae0a570165660a6eb4d75153b8c2f59c9cdaec2ecc789e2c38524a17a2  43130 canonical bytes
-change3  sha256:85cec888905722a8dd051b3eb3388a1b674d82500f1df80044b298d12a285930  55174 canonical bytes
-change-demo3  sha256:4945948396a0417aabc5bc66520036d39d179d131aaade1428da55ee96ed7b77  40241 canonical bytes
-```
-
-The reference check printed:
-
-```
-docs/lanes-reference.md is current
-```
-
-No generated file changed in that run. After you edit a lane declaration,
-the pin script writes its new bytes and digest. Generate the reference
-from the same declarations before you review them.
-
-## Write scenarios
-
-A scenario states one invariant and shows the acts that reach it. Include
-the refused path that distinguishes the invariant, as well as the path
-that takes effect. For the demo profile, the
-[story scenario](../apps/room/lanes/test/story.scope.test.ts) covers an
-open extent and a controlled extent. The
-[real-room scenarios](../apps/room/lanes/test/wiring.scope.test.ts) cover
-membership, rules and publication together.
-
-Read each scenario's stated boundary. These scenarios run real scopes
-and their rules, with a stand-in host and changed set. They do not run a
-hosted application or a checker runner. A live run is separate evidence.
-[Test dap](testing.md) explains how to choose and run the witnesses for a
-change.
-
-## Create a scope under the definition
-
-A definition takes effect when a scope pins it at genesis. Two paths
-exist today. Neither was run for this page.
-
-**A lane in an existing room.** The room's rules scope keeps the list of
-active definitions. A member who holds `rules.activate`, an admin by
-default, signs `activate` with the definition's digest and its canonical
-bytes.
-The room's directory then creates new lanes under it. The command reads
-the `--value` file at the path you give. For the demo profile of the
-change lane, run this from the repository root, where the pin script
-wrote `apps/room/lanes/definitions/change-demo.json`:
-
-```sh
-dap act activate --on rules --set digest=sha256:d86c64ae0a570165660a6eb4d75153b8c2f59c9cdaec2ecc789e2c38524a17a2 --set name=change --value apps/room/lanes/definitions/change-demo.json
-```
-
-Lanes that already exist keep the digest they pinned.
-
-**A new application scope.** [Run your app](run-your-app.md) walks
-through this path with the counter tutorial's definition. A room created with
-`dap install --cohort application` has a directory at version 5. Its act
-`establish-application` creates one scope under a definition that the
-rules scope has already activated. The act takes the definition's
-digest, the other genesis fields as canonical JSON in `values`, and
-`execution=recorded-do`. The directory supplies the signer as the
-genesis `opener`. The definition and every definition it creates must
-use no capabilities, and the genesis fields may not be facts, items or
-detached texts. Membership must then allow the intended members to take the
-definition's own actions, such as `counting.control`. Enrollment alone
-allows none. [The dap command](cli.md#an-explicitly-selected-application-room)
-lists the install and claim commands and the custody each one needs.
-
-The lending library's [runbook](../examples/lending/runbook.md) has the
-commands for this path: `activate`, `establish-application` and
-`set-actions` for each role. Its rehearsal section records them run on a
-deployed service on 14 October 2026, under the library's first
-definition. `--value` sends a file
-exactly as it is, and the digest covers the canonical bytes with no
-trailing newline. The runbook writes a copy without the newline first.
-
-Validation, pins and creation check the declaration and its record. They
-do not establish that a host, an outside adapter or a whole application
-journey works. A live run is separate evidence.
+The act takes effect before the destination pushes. A successful act or
+delivery does not prove that its page is published. Read the destination's
+receipt to connect the sending entry and send ordinal to its commit. For
+the same sender and path, a later source position (entry number, then
+send ordinal) supersedes older unsent work even if it arrives first. An
+unknown push keeps the publication slot and is never resent. Later work
+waits behind it.
 
 ## Declare a device command
 
@@ -414,15 +401,14 @@ A package v2 may require the host's finite `device-command@1` capability:
 {"name":"device-command@1","bounds":{"kinds":["fan","heater","vent"],"owners":1}}
 ```
 
-List kinds in sorted order. The requirement names no owner identity. Install
-in the explicit `device-application` cohort, or
-`archive-device-application` when the room needs archive binding. Choose
-an existing full MemberRef with `--owner`; the native install checks its
-current membership.
-This cohort runs host capability code, never code supplied by the package.
-At most eight package definitions may use the capability. The installed
-root may delegate its grant to one permitted child generation, as Grow's
-Site does for Room.
+List kinds in sorted order. The requirement names no owner identity.
+Install in a device family (`archive-device-application` or
+`archive-device-publication`), and choose an existing full member
+reference with `--owner`. The native install checks that member's current
+membership. This cohort runs host capability code, never code supplied by
+the package. At most eight package definitions may use the capability.
+The installed root may delegate its grant to one permitted child
+generation, as Grow's Site does for Room.
 
 The definition declares device-command version 1. A target-writing effect
 sets target, level and its own targetAt, then opens the bound device's
@@ -431,53 +417,28 @@ outcome and outcomeAt slots. Its owner's `answer` preparation names the
 full command fact and closes it as confirmed, refused or unknown. Each
 open command reserves one answer. A sensor report changes reported fields
 independently. An older answer closes its own command without replacing
-the current outcome; a missing answer leaves outcome empty. Without an
-installed grant, target acts open no command. See the maintained
+the current outcome. A missing answer leaves outcome empty. Without an
+installed grant, target acts open no command. See the
 [Grow device forms](../examples/grow/device.ts).
 
-Local `dap check` scenarios may explicitly name a public TEST actor with
-`deviceOwner` and use `prepare` steps for native answers. This developer
-fixture scripts the parent creation proof and exposes its creation and
-confirmation facts as replay anchors. The child genesis and preparations
-run through Core and SQLite. The report labels this boundary and cites the
-separate native install witness; it proves no production grant or physical
-device action. `$position` resolves a saved accepted receipt's position,
-while `$fact` resolves its full fact. The maintained
-[Grow fault scenario](../examples/grow/check/fault-scenario.json) uses these
-references and checks native command records.
+Local `dap check` scenarios may name a public TEST actor with
+`deviceOwner` and use `prepare` steps for native answers. `$position`
+resolves a saved accepted receipt's position, and `$fact` resolves its
+full fact. The [Grow fault scenario](../examples/grow/check/fault-scenario.json)
+uses these references and checks native command records. The scenario
+proves no production grant or physical device action.
 
-## Publish a file from an act
+## Source
 
-The file-publication factory and destination are available in existing
-historical `application-publication` rooms. This family is not offered for
-new creation. Existing rooms keep their original pins: register@9,
-directory@8, membership@4, rules@3, destination@4 and inbox@1, each with the
-`platform:` prefix.
-
-Declare a genesis field named `destination`, with type `scope` and kind
-`destination`. Keep that reference in a fixed item slot. The directory
-supplies its own recorded destination, including its incarnation. Do not
-include `destination` in the caller's genesis `values`: the factory
-refuses it even when the definition declares no such field.
-
-Declare a `tell` to that slot with message `publish-file`, fields `path`
-and `content`, and result clauses for `refused` and `undelivered`. The
-path is at most 1,024 bytes; the UTF-8 text is at most 65,536 bytes. The
-[Lending definition](../examples/lending/definition.ts) shows this form.
-Its guards further restrict paths to the shelf and keep each path owned
-by one thing, including after that thing is gone.
-
-An application of the room can overwrite any repository path, including
-files in the rules extent. The room's change-review rules do not govern
-`publish-file`. Control remains at activation and creation: a member needs
-`rules.activate` to activate the definition and `application.establish` to
-create its scope. Activate only definitions whose writes you trust.
-The destination proves that its own directory created the sender before
-admitting or pushing its file.
-
-The act takes effect before the destination pushes. A successful act or
-delivery does not prove that its page is published. Read the destination's
-receipt to connect the sending entry and send ordinal to its commit.
-For the same sender and path, a later source position (entry number, then
-send ordinal) supersedes older unsent work even if it arrives first. An unknown push keeps the publication slot
-and is never resent; later work waits behind it.
+Checked against main `5dc9765f` on 30 October 2026. Sources:
+[the definition forms](../packages/contract/src/definition.ts),
+[the validator](../packages/derive/src/validate/index.ts),
+[the package validation](../packages/platform/src/validate-package.ts),
+[the lane pin script](../apps/room/lanes/scripts/pin.mjs),
+[the lending definition](../examples/lending/definition.ts), and
+[the Grow device forms](../examples/grow/device.ts). The validation and
+pin commands on this page ran on 12 October 2026 at main `d309b6b9`, and
+the printed digests are from that run. The scope-creation commands were
+not run for this page. The text about consuming the published Grow
+release that an earlier revision carried is kept in
+[the relocated text of the 30 October review](../notes/implementation/2026-10-30-docs-relocated-text.md).

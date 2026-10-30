@@ -10,10 +10,10 @@ full contract of each part, read [Scopes](scopes.md).
 The diagram shows the intended model. Two parts of it are planned and not
 yet built, and are drawn dashed: writing items to the repository, and the
 archive of the journal in Git. Today a destination scope publishes to the
-repository: a room's merged changes, as "How it is deployed today"
-describes, and files that an application's acts send it, such as the
-lending library's shelf pages. A
-refused act gets a reason and the head at which it was judged.
+repository a room's merged changes, as "How it is deployed today"
+describes, and the files that an application's acts send it, such as the
+lending library's shelf pages. A refused act gets a reason and the head
+at which it was judged.
 
 ## A scope is an actor with one definition
 
@@ -25,14 +25,14 @@ it exists.
 A definition is a JSON value, not code. It declares:
 
 - item types, with their states, initial state and slots for members,
-  references and values;
+  references and values.
 - acts, each with its fields, the action a signer must be allowed to
-  take, its guards, its effects and its sends;
-- handlers for messages from other scopes;
-- timed rules, which apply when a deadline held in an item passes;
+  take, its guards, its effects and its sends.
+- handlers for messages from other scopes.
+- timed rules, which apply when a deadline held in an item passes.
 - rule expressions, which a guard evaluates. A rule expression is written
   in a restricted JSONata. It reads the act's fields and the items the act
-  names, and answers true or false. It cannot write: only declared
+  names, and answers true or false. It cannot write. Only declared
   effects change states and slots.
 
 Because the definition is data, one runtime runs every application. The
@@ -65,6 +65,8 @@ The scope handles one input at a time. Each is a turn:
 
 If another input moved the head during the turn, nothing is written and
 the turn starts again. A judgment is always about one head.
+[The life of an act](manual/life-of-an-act.md) follows one request through
+a turn and names the four answers it can get.
 
 The folded view keeps exact equality counts for every item slot declared
 `fixed: true`. A range guard with one equality between such a slot and a
@@ -79,16 +81,18 @@ by another scope.
 
 An entry records exactly one input and what followed from it: the effects
 on items, the messages it sends, the foreign entries it read, and the
-results of the rule expressions it evaluated. Each entry names the hash of the entry
-before it. There are eight kinds of input: genesis, act, delivery, timed,
-diagnosis, preparation, outcome and checkpoint.
+results of the rule expressions it evaluated. Each entry names the hash of
+the entry before it. There are nine kinds of input: genesis, act,
+delivery, timed, diagnosis, preparation, outcome, checkpoint and floor.
 
 When an act takes effect, the scope returns a **receipt**: the fact
-reference of the entry (scope, position and hash), its effects, and a
-outbox ID for each message it sent. The receipt is built after the entry is
-sealed, so it is not part of the entry's own bytes. A receipt proves what
-this scope recorded. It does not prove that a message took effect in another scope or that a Git host published a commit. Those outcomes are their
-own entries.
+reference of the entry (scope, position and hash), its effects, and an
+outbox ID for each message it sent. The receipt is built after the entry
+is sealed, so it is not part of the entry's own bytes. A receipt proves
+what this scope recorded. It does not prove that a message took effect in
+another scope or that a Git host published a commit. Those outcomes are
+their own entries. [The record](manual/record.md) says what a receipt
+proves and what a consistency report leaves open.
 
 ## Derivation is pure and shared
 
@@ -109,14 +113,11 @@ input under the pinned definition, by the same code that judged it.
 
 Scopes share no storage and no transaction. They work together by
 messages. A send is part of the entry that makes it, so a message exists
-if and only if its entry does. There are four classes:
-
-| Class | Types | Has a result |
-|---|---|---|
-| Request | `create`, `tell`, `relate` | Yes, exactly one |
-| Result | `applied`, `refused` or `superseded` | No |
-| Control | `confirm` | No |
-| Advisory | `index`, `notify` | No |
+if and only if its entry does. There are four classes of message.
+Requests (`create`, `tell` and `relate`) get exactly one result each.
+Results are `applied`, `refused` or `superseded`. The control message is
+`confirm`. The advisory messages are `index` and `notify`.
+[Scopes](scopes.md) gives each form.
 
 Each scope has a dispatcher. It records each attempt before it sends and
 the answer after, and retries with a growing delay. The receiver trusts
@@ -132,9 +133,10 @@ confirms. A room is built this way: the register creates a directory, and
 the directory creates membership, the rules scope and the destination.
 
 The price of this design is that a result in one scope can arrive after
-the caller's act has returned. A merge that has taken effect in a change lane is not yet a publication. The application has to say what it waits for,
-and the client has to follow the later entries. The price is worth
-paying: each scope stays small enough to judge and replay on its own, and
+the caller's act has returned. A merge that has taken effect in a change
+lane is not yet a publication. The application has to say what it waits
+for, and the client has to follow the later entries. The price is worth
+paying. Each scope stays small enough to judge and replay on its own, and
 no scope can change another's record.
 
 ## Authority is an observation, not shared state
@@ -155,40 +157,29 @@ Rules work the same way. The room's destination observes the rules scope
 and records the revision and digest of the rules it judged against. A
 rule change later does not change a judgment already made.
 
-The deployed host also controls whether it accepts new acts from installed
-application releases. Before reading an unknown act's dependencies, it checks
-the release against current `APPLICATION_TRUST`. It repeats that check before
-writing the act. Immutable native creation records identify the installation,
-including declared child scopes. A shared definition digest does not make two
-installations the same release.
-
-Withdrawal returns `application-revoked` without recording an act. This is
-deployment admission, outside the pure judges. Previously accepted keys keep
-their receipts and mismatch behavior. Replay, deliveries, timed inputs, and
-the settlement of existing work continue under their recorded definitions.
-Native platform scopes and proved unpackaged creations have no installed
-release to withdraw. Missing provenance makes admission unavailable.
+The deployed host also decides whether it accepts new acts from installed
+application releases. Before it reads an unknown act's dependencies, it
+checks the release against the current `APPLICATION_TRUST` setting, and
+it repeats that check before it writes the act. A release the operator has
+withdrawn gets `application-revoked`, and no act is recorded. That check
+is deployment policy, outside the pure judges. Keys that were accepted
+earlier keep their receipts. Replay, deliveries, timed inputs and the
+settlement of existing work continue under their recorded definitions.
 
 ## Durability: storage, publication and replay
 
 With publication configured, dap keeps the record in three places, each
 with a different job. A room under a register installed with host `none`
-has no publication; its operator's backup covers the service's record.
+has no publication. Its operator's backup covers the service's record.
 
 **The scope's own storage.** Each scope is one Durable Object. Its
 entries, sends, retained inputs and folded items are written in one
 storage transaction per turn. This is the authority for the scope's
 order. Nothing outside the service holds the journal until a reader
-copies it.
-
-The optional journal archive runs in bounded alarm passes. A pass reserves
-the full ceiling before reading target or source birth proofs, target item
-replies, pin metadata, migration reply buffers or retained parent-frontier
-payloads. A completed,
-checked read releases unused metadata allowance and the matching share of
-byte-based input work. Failed reads keep the full reservation. Calls and
-other operation counts, the original deadline and the finish forecast keep
-their existing bounds; settlement grants no read or publication authority.
+copies it. A room can bind a journal archive, which copies entries out of
+the scope in bounded passes. The
+[journal floor note](../notes/2026-10-20-retained-journal-floor.md)
+describes it.
 
 **Publication to a Git host.** A dap-room destination publishes
 repository content to a Git host: GitHub, or Cloudflare Artifacts. For
@@ -197,23 +188,19 @@ commit with one file, `receipt.json`. The file names the destination's
 entry, the operation and the published commit. Its ref is
 `refs/artroom/receipts/<hash>`, named by the hash of the entry that
 opened the operation. The published repository and its receipts outlive
-the service, and anyone who can clone the repository can read them. This publication covers the
-repository's content and the receipts, not the full journal of every
-scope.
+the service, and anyone who can clone the repository can read them. This
+publication covers the repository's content and the receipts, not the
+full journal of every scope.
 
 Under host `none`, the register creates the directory without opening a
-repository operation. The directory keeps its normal control item and
-child references. Its destination has an `unpublished` branch and an empty
-repository slot, with no first head. Repository-dependent acts and reads
-refuse `no-repository`. A refused publication delivery returns its result
-to the sending scope, so that request becomes final without opening host
-work. A business act that sent it may already have been accepted.
-
-Members, rules, issues, retained content, installed application acts and
-service replay remain available within the existing scope bounds. Package
-installation can still fetch an immutable release independently of the
-register's host. There is no repository receipt or journal archive under
-host `none`; journal entries stay in the scope's own storage.
+repository operation. The destination has an `unpublished` branch and an
+empty repository slot. Acts and reads that need a repository refuse
+`no-repository`. A refused publication delivery returns its result to the
+sending scope, so that request becomes final without opening host work.
+The business act that sent it may already have taken effect. Members,
+rules, issues, retained content, installed application acts and replay
+stay available. There is no repository receipt and no journal archive
+under host `none`.
 
 **Replay as the independent reader.** `@generalbusiness/dap-replay`
 reads a scope's stored bytes through the read API and checks them without
@@ -251,43 +238,8 @@ flowchart TB
   O -->|Later outcome input| P
 ```
 
-The [local celld project](celld.md) reexports the production room Worker
-with the same object bindings and migration history. Hosted MCP calls the
-scope API in process. Behind a proxy, the optional `PUBLIC_ORIGIN` supplies
-service identity independently of transport Host and forwarded headers. This
-changes no journal, native definition or membership authority.
-
-The command line reuses issued read sessions in private device storage.
-Cache identity includes the service, membership incarnation and signing key;
-reuse changes no read grant. Its managed read transport refreshes a rejected
-cached credential once. Verification owns one byte, request, entry and time
-budget across discovery, replay and session work. Session issuance limits
-retain their own server accounting and return an advisory retry window;
-they do not become signed-read retries or replay findings.
-
 Each scope owns a separate order and transaction. Dashed observations are
 checked inputs to a judgment, not shared storage.
-
-The Worker's fixed scope index records registered full references and their
-genesis hashes. Its census is a deployment observation, not native authority.
-Creation, child lineage and census share the host-independent
-`REGISTER_SCOPE` selector. A valid Artifacts configuration remains the
-legacy fallback. When both settings are supplied, their register IDs must
-agree; malformed or conflicting settings close creation before target
-lookup. The register pin supplies identity, not host readiness or authority.
-Only the key that signed the pinned Register's founding `install` can read
-it, through a signed `census` request. The index binds that key to its own
-stored Register row and the Register's checked native birth. Membership
-sessions grant no census access. Existing address and key windows precede
-the census owner's row and proof work, with one charge per request.
-This standing predicate does not extend
-ordinary signed reads' causal windows or follow later operator key changes.
-
-Census pages have an explicit end and at most 100 rows. The CLI saves only
-a complete, nonempty manifest within 4,096 rows. Registrations whose IDs
-precede the current cursor can be missed during pagination; unregistered
-legacy objects are also absent. The unchanged manifest verifier checks each
-saved genesis and reports its actual definition pin or an explicit failure.
 
 | Part | Owns |
 |---|---|
@@ -304,112 +256,26 @@ mutation. A missing reply leaves the outcome unknown and a cleanup task
 open. The driver does not send the same mutation again. Private
 credentials are kept apart from the public journal. Deleting a token's
 plaintext does not prove that the provider revoked the token.
-[Configure a Git host](hosts.md#cloudflare-artifacts-host-artifacts)
-says how each host keeps and revokes its tokens. A Git commit does not
-itself become a dap act, and a recorded act does not itself prove that a
-Git write finished.
+[Configure a Git host](hosts.md) says how each host keeps and revokes its
+tokens. A Git commit does not itself become a dap act, and a recorded act
+does not itself prove that a Git write finished.
 
-The checker package's platform-neutral entry supplies runner and signer
-interfaces. Its separate Node entry supplies a real containerd runner with a
-fresh container per job. Nerdctl manages its lifecycle; ctr preserves each
-process's exact exit status. The untrusted job has no external network; an
-immutable loopback relay passes its Git reads to the existing host-owned
-read-only Gateway. The signing key, token, control records and host files
-stay outside the job. Image, environment, resource enforcement and exact
-checkout are checked before configured steps count. Private durable run
-records recover a terminal result without starting a replacement.
-The service's `recoveryGraceSeconds` defaults to 120. It passes the recovery
-clock and grace to the runner. Missing or corrupt private records wait inside
-that bound. After the bound, an unreadable claim or a corrupt record produces
-`run-lost` and the fixed `record-corrupt` diagnostic with its private path.
-If the runner cannot establish the directory's ownership and age, it still
-waits. A readable claim with unavailable engine state also waits. The service
-keeps its job record,
-and the runner keeps its run directory. Neither recovery nor a lost decision
-starts a replacement or proves physical cancellation.
-The supported ctr profile launches configured steps through the immutable
-helper. It combines the program's output streams and preserves its exit status. The helper leaves launch failures on its own stderr, so they cannot
-supply a completed check result. Trusted Git reads keep their separate stream
-and fixed environment checks.
-[Run a checker in a container](../packages/checkers/README.md) states the
-supported engine, image requirements and operator custody wiring. Source
-code alone is not a deployment or a hosted check result.
-The opt-in evidence cohort adds source and stage admission through Register
-22, Directory 21, Rules 13, Destination 17, Issue 4 and Change 4. Membership
-8 and Inbox 1 remain unchanged. Rules
-owns the nullable room-service member/key pair and its native generation.
-Only an admin can change that pair. Destination observes current Rules and
-Membership when it admits and counts a result. Rotation refuses unfinished
-room jobs under the earlier generation. Member jobs retain their separate
-member authority.
-Rules observation revision 21 carries the nullable service mark and its
-scoped generation exactly when the pinned Rules data declares
-`roomServiceChanged`. Earlier definitions retain their exact observation
-shape. The retained extents value carries the policy and certificate;
-the authenticated observation supplies the service position. Platform owns
-the job binding types and codec; the kernel retains only the two types that
-the observation needs. This addition follows the review rule in
-[Kernel boundary, section 7](kernel.md#7-rule-for-adding-to-the-kernel).
+The same Worker serves the hosted MCP endpoint, which calls the scope API
+in process, and the [local celld project](celld.md) runs the same Worker
+with the same object bindings. The Worker also keeps a fixed index of the
+scopes it has registered, read through a signed `census` request.
+[Worker entry points and gates](security/entry-points.md) lists that
+route with the others. Checks that a room requires of a change run in a
+container that a checker package manages.
+[Run a checker in a container](../packages/checkers/README.md) describes
+it. The room's evidence rules, which decide which check results count
+toward a landing, are the subject of the
+[evidence rules note](../notes/2026-10-16-evidence-rules-design.md) and
+of the lanes' own pages.
 
-A lane queues an evidence request before Destination decides it. A selected
-`evidence-admit` outcome opens the admitted job and records its immutable
-subject, exact commit, tree, base and source facts.
+## Source
 
-In Issue 4 and Change 4, a checker act records a signed result claim. The
-claim leaves the job pending. Destination verifies that claim before it
-selects a bound holder or draws its funded result duty. For a room job,
-this check requires the frozen marked key. A second key of the same
-checker member cannot spend that duty. Member-source jobs keep their
-current member-key eligibility rules.
-
-Destination checks current source authority when it counts the result.
-Only its authenticated counted notice settles the lane job. The notice
-names the exact result fact, binding and outcome. A claim refused before
-binding leaves the funded duty and pending job available for the marked
-key. No new kernel operand, field, slot or wider bound supports this flow.
-
-Reuse uses a bounded index of admitted results. Disagreement permanently disables reuse for that key
-while allowing fresh jobs. Audits run fresh for the current logical request
-and name the actual member job whose result they compare.
-
-Destination 17 keeps legacy admission: the runtime limits global entries,
-not global bytes, items, records, or requests. Per-entry limits and the
-definition's count guards still apply. Whole-scope capacity adoption is a
-separate design item after measured deployment ceilings.
-
-NEW WORK carriers keep the counted operations and bound decisions needed
-by checks that finish after a publication becomes final. They serve the
-published, audit, result, and incident paths. They make no byte-admission
-guarantee. Full carrier setup does not gate Git publication. Actual written
-receipt proof and exact original carrier identities govern the later plan;
-count availability must be proved before opening check work.
-
-Destination records published-check holds in the same transaction that
-orders later admissions. Passes clear only the exact hold key at the same
-or a later publication. Transitions and overrides have distinct recorded
-causes. A failed published job asks its Change lane to create a nested
-incident Issue, addressed to current active `issue.triage` holders. Unknown
-creation remains pending under the original request.
-A timeout changes only its job through literal timed effects. Admissions
-judge that state through a bounded, pre-funded pending-job index, so the hold
-is effective at the timed entry. A later entry or authorized recovery act
-opens its owed notice; until then the timed-out job visibly owes an incident.
-
-The signed job-read route can return a bounded `StageSnapshot` for this
-cohort. The host reads immutable Git objects at the admitted commit, checks
-their closure and exact triple, and rechecks source authority after reads.
-The checker validates the recorded Native admission before handing its
-object overlay to the J3 runner. The host supplies bytes; Native rules own
-admission. Timeout ends waiting but does not prove that a physical run
-stopped. A persisted run may finish late under current authority. A service
-cannot launch a first run after its deadline.
-
-`platform:task@1` is not supplied at this base. Real lane hold and Git-read
-host adapters are not built.
-
-## Source and acceptance
-
-Written against main `d309b6b9`. Sources:
+Checked against main `5dc9765f` on 30 October 2026. Sources:
 [Worker routes](../packages/scope/src/worker.ts),
 [turns](../packages/scope/src/turn.ts),
 [entries](../packages/contract/src/entry.ts),
@@ -418,7 +284,7 @@ Written against main `d309b6b9`. Sources:
 [outside operations](../packages/scope/src/operations.ts),
 [destination objects](../packages/platform/src/destination-objects.ts),
 [replay](../packages/replay/README.md), and
-[platform versions](../packages/platform/src/index.ts). This page claims
-no run. Independent review and acceptance of this version are owed. The
-[ledger](../apps/room/docs/ledger.md) keeps the review history of the
-earlier version.
+[platform versions](../packages/platform/src/index.ts). The text that
+earlier revisions of this page carried about the scope index, the checker
+runner and the evidence cohort is kept in
+[the relocated text of the 30 October review](../notes/implementation/2026-10-30-docs-relocated-text.md).

@@ -1,387 +1,275 @@
 # Produce the public SDK
 
-The active eight-package plan contains contract, bytes, derive,
-package-graph, git, platform, client and replay. Git’s two pure subpaths
-provide platform’s checkout and tree proof types. The tools build and
-inspect JavaScript and declarations. They do not publish, install application
-packages, configure accounts or deploy a service. Recorded six-package outcomes below
-remain historical evidence.
+The public SDK is eight npm packages that let a program outside this
+repository build, sign, shape and replay dap records. Two scripts produce
+it. `scripts/public-release.mjs`, the producer, builds and packs the
+packages into a staging directory. `scripts/check-public-release.mjs`,
+the checker, inspects what the producer staged. Neither script publishes,
+installs application packages, configures accounts or deploys a service.
 
-The six-package amendment is request `fecf7160fd4a8c4b9219d7713a11036ff48db85e`,
-promise `ffae23e0f56d0a17d773264588f98940f04cd963`. It follows the public
-verifier handoff reported in `008c3cfd35443d23c44ad13a64af867282aee2c8`.
-Its source, capture, producer, checker, browser bundle and gate outcomes
-were unrun at that delivery. Frozen four-package attempts remain separate.
+Read [Test dap](testing.md) first. The evidence rule there applies to
+every run on this page.
 
-The source-authoring request is `23e6d5e8e2773f11c2271f86d3c1cbf019dd5cf0`,
-promise `a01fe0506ee046908c7a9d97c18df388223c02a0`, under public-release
-request `7b31f843fac3bcc5f64b0b5caaad72f1f8191082`. Writing the code alone
-establishes no successful build or public consumer. Those checks were
-unrun at that delivery.
+## Versions
 
-Run only after the exact producer source and tool view are reviewed and its
-execution is released. Use a clean checkout and a fresh absolute staging
-path outside it. Its canonical physical parent must already exist; on this
-macOS host `/private/tmp` is canonical, while `/tmp` is a symlink. Tools come from the reviewed existing lock and a prepared
-view; never install a tool in a checkout. The npm CLI argument names the
-actual pinned npm `bin/npm-cli.js`, not a shell wrapper. Supply its exact
-reviewed version. Commands below are execution recipes, not recorded runs.
+The sources in `packages/*/package.json` carry version `0.1.0-dev.1`.
+The producer stamps the version you give it with `--version`, and the
+reviewed release uses `0.1.0-dev.2`. On 30 October 2026, `npm view`
+showed `0.1.0-dev.2` for `@generalbusiness/dap-contract`,
+`@generalbusiness/dap-derive`, `@generalbusiness/dap-bytes`,
+`@generalbusiness/dap-platform`, `@generalbusiness/dap-client` and
+`@generalbusiness/dap-replay`. It found no `@generalbusiness/dap-package-graph`
+or `@generalbusiness/dap-git`.
 
-```
-node scripts/public-release.mjs --source /absolute/clean/checkout --head <full-commit> --version <reviewed-version> --output /private/tmp/fresh-sdk-stage --npm-cli /absolute/npm/bin/npm-cli.js --npm-version <exact-npm-version>
-node scripts/check-public-release.mjs --manifest /private/tmp/fresh-sdk-stage/release-manifest.json --native-capture /private/tmp/reviewed-native-capture.json --native-capture-sha256 <reviewed-SHA256> --esbuild /absolute/pinned-native-esbuild/bin/esbuild --esbuild-sha256 <reviewed-SHA256>
-```
+## Run the producer and the checker
 
-The eight SDK packages, in build order, are
-`@generalbusiness/dap-contract`, `@generalbusiness/dap-bytes`,
-`@generalbusiness/dap-derive`, `@generalbusiness/dap-package-graph`,
-`@generalbusiness/dap-git`, `@generalbusiness/dap-platform`,
-`@generalbusiness/dap-client`, and `@generalbusiness/dap-replay`, all at
-`0.1.0-dev.2`.
+Run the scripts only after a reviewer has approved the exact producer
+source and the tool view, and has released the run.
 
-Git publishes exactly `./tree-proof` and `./checkout-types`, with no root
-export. Platform uses the pure object parsers at runtime, and its public
-`StageSnapshot` extends `OwnedCheckoutSnapshot`. Git’s coordinated bytes
-and contract dependencies precede it; its hash dependency stays pinned to
-`@noble/hashes` 2.4.0.
+1. Make a clean checkout of the reviewed head.
+2. Make a new evidence directory outside the checkout, as
+   [the evidence rule](testing.md#the-implementation-note-and-its-evidence)
+   says: `~/play/artroom-evidence/<date>-<head-slug>/`. Use its absolute,
+   canonical path. The staging directory goes inside it, and must not
+   exist yet.
+3. Prepare the tools from the reviewed lock. Never install a tool in a
+   checkout. For `--npm-cli`, give the pinned npm's own
+   `bin/npm-cli.js`, not a shell wrapper, and give its exact version.
+4. Run the producer:
 
-Those two subpaths require five unchanged pure source files: `tree-proof.ts`,
-`checkout-types.ts`, `reader.ts`, `ascii.ts`, and `pure-names.ts`. The exact
-source allowlist admits those files only. All other tracked Git inputs stay
-in excluded evidence, outside compiler ancestry. The output and declaration
-checks reject any other Git module, including Node and host transports.
-The internal `Reader` implementation has no public package export.
+   ```
+   node scripts/public-release.mjs --source /absolute/clean/checkout --head <full-commit> --version <reviewed-version> --output <evidence-directory>/sdk-stage --npm-cli /absolute/npm/bin/npm-cli.js --npm-version <exact-npm-version>
+   ```
 
-The platform package also carries the canonical `skills/dap-application`
-tree. The producer copies its committed bytes and file modes into the external
-platform stage and lists `skills` in the package files. The release manifest
-records each asset and the tree digest. The checker compares the source, stage
-and actual archive. This asset mapping preserves the eight-package plan and
-its code export and dependency guards. Repository plugin installation remains
-the primary skill installation path.
+   It prints `SDK producer output sealed` and writes
+   `sdk-stage/release-manifest.json`.
+5. Put the reviewed native capture in the evidence directory. See
+   [The native capture](#the-native-capture).
+6. Run the checker with the pinned native esbuild binary:
 
-The command is `dap`. `artroom` remains an alias. All workspace package names
-use `@generalbusiness/dap-*`, including bytes, client and replay. The existing
-seven SDK names and their exports are unchanged; git is the eighth name. The `artroom-replay` command,
-`ARTROOM_HOME`, `refs/artroom/`, protocol names and Worker names are unchanged.
+   ```
+   node scripts/check-public-release.mjs --manifest <evidence-directory>/sdk-stage/release-manifest.json --native-capture <evidence-directory>/native-capture.json --native-capture-sha256 <reviewed-SHA256> --esbuild /absolute/pinned-native-esbuild/bin/esbuild --esbuild-sha256 <reviewed-SHA256>
+   ```
 
-The producer keeps exact original and compiler-input copies of each tracked
-SDK input. Package names need no publication mapping. Staged manifests use
-the eight planned names and coordinated dependencies at the selected version,
-plus the dap repository and homepage. The checker verifies both copies
-against the original bytes. The public export and dependency allowlists
-are exact and reject unknown additions. The release plan preserves platform’s
-`./application` and `./application-v2` and client’s `./application` exports.
-Platform depends on the coordinated package-graph and Git stages.
-Package-graph depends on contract and derive. Every coordinated
-source dependency must equal its source package version before it is mapped
-to the selected release version. The source-only install exclusion does not establish fresh
-producer or consumer acceptance.
+   It prints `Compiled SDK output checked` and writes its result to
+   `sdk-stage/checks/result.json`.
+7. Write `SHA256SUMS`, make the evidence directory read-only, and commit
+   its manifest, as [File the evidence](testing.md#file-the-evidence)
+   says. The checker's result is the proof. Producer output alone is not
+   a pass.
 
-The producer copies tracked inputs to an owned external build root and
-verifies their bytes. Every package compiles from its actual copied source
-ancestry. That root contains copied, pinned third-party dependencies and
-only the preceding completed dap JavaScript/declaration stages. There
-are no source-workspace aliases or dap fallback links. Compiler file
-lists are confined to the owned inputs/stages/dependencies and the exact
-pinned compiler wrapper and native package directories, including the native
-package's standard libraries. No whole-cache root is allowed. Before each
-package emits, a resolution-only `--listFilesOnly --noEmit` pass checks the
-actual canonical input paths and records their hashes. One emission follows;
-its file set and input hashes must match that preflight. Consumer `noEmit`
-checks keep their single pass. The checkout's HEAD, clean state and copied bytes are
-checked again before the release manifest is sealed.
+If a run fails, keep the staging directory and its diagnostics. Fix the
+source and send the new head for review. Do not retry, widen a deadline
+or publish. The next run needs the affected source and compiler checks,
+one build and output check, and one gate at the changed head. Do not
+repeat platform permutations.
 
-Build order follows the eight-package list above. TypeScript 7.0.2 emits ES2022
-ESM plus declarations without maps. Relative JavaScript extensions are
-rewritten by the compiler. Relative declaration module specifiers are
-converted to `.js` where needed and checked against real `.d.ts` files in
-the same stage. The manifest records each such declaration rewrite. Neither
-an extension flag nor a source typecheck proves declaration closure.
+## Publish the packages
 
-Platform publishes its production root and `./membership-actions`.
-The source-only exports `./testing` (`./test/support.ts`) and
-`./application-install` (`./src/application-install.ts`) are accounted for
-and excluded from the published export map. The install rules stay internal
-to the hosting Worker. This exclusion does not omit their production code
-from the compiled platform closure. An unknown source export or a changed
-excluded path still refuses. Replay publishes its existing portable library and pure command
-function. Its Node process wrapper `src/bin.ts` is copied only into an
-excluded evidence directory together with `src/git.ts`, hashed, and omitted
-from compiler ancestry and public output. This release supplies no `artroom-replay` executable. The checker
-compares the complete included source inventory and both exact exclusions.
-Replay alone has a source-only platform dependency, used by its excluded Node
-wrapper. Its exact source-version pin is checked and that dependency is omitted
-from the published Replay manifest. Any unknown dependency, changed pin,
-extra export or changed exclusion refuses. Both packages depend on the
-coordinated contract, bytes and derive stages. Their
-input compilation uses the opt-in bytes/web declaration, as client and derive
-do; it does not inject default consumer globals or broad Node/DOM types.
+Publishing is a separate step with its own authority. The release owner
+assembles and checks the sources and the artifacts. A separately
+verified namespace administrator publishes to npm. A GitHub App's
+authority gives no npm publishing rights. An operator controls each
+deployed service: its HTTPS URL, version, bindings, migration and real
+provisioning.
 
-Exports have `types` before JavaScript `default`. bytes/web remains a
-**types-only, opt-in ambient declaration**, with no exported types or
-runtime module. It is tested separately without Node or DOM ambient types.
-Do not inject it into ordinary consumer defaults. The client's narrow
-WebCrypto declaration is used to compile its input; it is not injected into
-a published consumer's default globals. Normal NodeNext and browser-bundler
-type checks use their own environments, with `skipLibCheck: false`.
+Publishing the eight packages is not atomic. Publish the whole set, and
+check every public version and integrity before you call it a
+coordinated release. A consumer installs the published registry
+packages, with a public lockfile. Producer stages and local tarballs do
+not take their place.
 
-derive/rule supplies `RULE_PROFILES` for the real restricted-rule validator
-and pins jsonata 2.2.2 plus its existing engine fingerprint. The default
-validator profile table does not check rule syntax. Use
+## What the release contains
+
+### Packages
+
+The eight packages, in build order:
+
+1. `@generalbusiness/dap-contract`
+2. `@generalbusiness/dap-bytes`
+3. `@generalbusiness/dap-derive`
+4. `@generalbusiness/dap-package-graph`
+5. `@generalbusiness/dap-git`
+6. `@generalbusiness/dap-platform`
+7. `@generalbusiness/dap-client`
+8. `@generalbusiness/dap-replay`
+
+Every coordinated source dependency must equal its source package's
+version before the producer maps it to the release version. Staged
+manifests carry the eight names, the coordinated dependencies at the
+selected version, and the dap repository and homepage.
+[`scripts/public-release.json`](../scripts/public-release.json) holds the
+plan: each package's exports, excluded source exports and dependencies.
+
+The command is `dap`, and `artroom` stays an alias. The
+`artroom-replay` command, `ARTROOM_HOME`, `refs/artroom/`, protocol
+names and Worker names do not change.
+
+### Exports
+
+The export and dependency lists are exact. An unknown export, an unknown
+dependency, a changed exclusion or a changed pin refuses the release.
+Each export lists `types` before the JavaScript `default`.
+
+| Package | Published exports | Excluded source exports | Coordinated dependencies |
+|---|---|---|---|
+| contract | `.` | | |
+| bytes | `.`, `./web` | | contract |
+| derive | `.`, `./rule`, `./field-types`, `./testing` | | bytes, contract |
+| package-graph | `.` | | contract, derive |
+| git | `./tree-proof`, `./checkout-types`. No root export | `.` and every other subpath | bytes, contract |
+| platform | `.`, `./membership-actions`, `./application`, `./application-v2`, `./package-validation` | `./testing`, `./application-install` | bytes, contract, derive, package-graph, git |
+| client | `.`, `./application` | | bytes, contract, platform |
+| replay | `.` | `./git` | bytes, contract, derive |
+
+The third-party pins are `@noble/curves` and `@noble/hashes` 2.4.0, and
+jsonata 2.2.2.
+
+**Git.** The two subpaths need five unchanged pure source files:
+`tree-proof.ts`, `checkout-types.ts`, `reader.ts`, `ascii.ts` and
+`pure-names.ts`. The source allowlist accepts only those files. Every
+other tracked Git input goes to an excluded evidence directory, outside
+the compiler's inputs. The output and declaration checks refuse any
+other Git module, including Node and host transports. The internal
+`Reader` has no public export. Platform uses the pure object parsers at
+runtime, and its public `StageSnapshot` extends `OwnedCheckoutSnapshot`.
+Git's hash dependency stays pinned to `@noble/hashes` 2.4.0.
+
+**Platform.** The excluded `./application-install` rules stay inside the
+hosting Worker. The exclusion removes them from the export map, not from
+the compiled platform code. Platform also carries the canonical
+`skills/dap-application` tree. The producer copies its committed bytes
+and file modes into the platform stage and lists `skills` in the
+package's files. The release manifest records each file and the tree
+digest. Installing the repository plugin stays the main way to install
+the skill.
+
+**Replay.** The root export holds the portable library and the pure
+command function. The Node process wrapper `src/bin.ts` and `src/git.ts` are
+copied only into an excluded evidence directory, hashed, and kept out of
+the compiler's inputs and the public output. The release has no
+`artroom-replay` executable. Replay's source-only dependency on platform
+serves that wrapper. The checker checks its exact pin and removes it
+from the published manifest.
+
+**bytes/web.** `bytes/web` is a types-only, opt-in ambient declaration,
+with no exported types and no runtime module. Do not add it to a
+consumer's default globals. The client's narrow WebCrypto declaration
+compiles the client's input and is not added to a consumer's globals
+either.
+
+**derive/rule.** `RULE_PROFILES` supplies the restricted-rule validator.
+It pins jsonata 2.2.2 and its engine fingerprint. The default profile
+table does not check rule syntax. Call
 `validateDefinition(value, bounds, RULE_PROFILES)` for declared input,
-without `platform: true`. This local result does not grant authority or
-prove that a deployed runtime supplies every capability, closure input or
-platform rule. No production or protocol semantics change here.
+without `platform: true`. A pass grants no authority and does not show
+that a deployed runtime supplies every capability or platform rule.
 
-derive/testing preserves the existing compiled fixture export. It uses
-fixed keys, manufactured grants and in-memory scopes; it is not a native
-membership or private Worker test SDK. The producer includes only that
-explicit fixture and its production-code closure, not unrelated tests.
-Package README files retain their source history; the release manifest and
-this guide qualify this producer's current boundary. Historical README
-statements are not an assertion of current hosted support.
+**derive/testing.** The release keeps the compiled fixture export. It
+uses fixed keys, made-up grants and scopes in memory. It is not a test
+SDK for native membership or a private Worker. The producer includes
+only that fixture and the production code it needs. The fixture clones a
+`DeclaredDefinition` with the native one-argument `structuredClone`,
+declared privately in its own module, with no polyfill and no global
+type.
 
-Each stage contains its manifest, dist, README, LICENSE and NOTICE. Packing
-is offline with scripts disabled, an owned npm cache and separate empty
-owned user/global npm configuration files. It performs no registry query. The manifest records
-source/tree/lock/tool/input/dependency/file identities, tarball length,
-SHA256 and SHA512 integrity. The checker compares actual tarball contents
-with every staged file. It then runs one coherent real compiled-output
-journey through bytes, signing, client shaping, declaration/rule validation
-and the actual engine, and checks NodeNext, bundler and opt-in ambient
-resolution. It neither loads raw SDK TypeScript nor installs tarballs.
-It records a separate check result; producer output alone is not a pass.
+## What the producer does
 
-The same compiled-output journey now replays a separately reviewed public
-native-history capture with proven grants, a known target head and a foreign
-fact. It compares target identity, full target coverage, verified foreign
-dependencies and trust labels, including exact agreement with the capture's
-retained native report. Missing dependencies and authority, anchor or target-head
-trust must be absent explicitly; consistency alone is not used to infer that.
-Removing the directory source must give the
-exact missing-dependency fact; no anchor or test-authority grant is substituted.
-The capture's original and owned copy are bound to the supplied SHA-256 and
-remain unchanged through the checker. Actual replay reports are kept in its
-result, including coverage, trusts and the negative outcome.
+The producer copies each tracked SDK input into an owned build root
+outside the checkout and keeps an exact original and a compiler-input
+copy. The root holds the copied, pinned third-party dependencies and the
+dap stages already built, and no source-workspace alias or dap fallback
+link. The compiler's file list stays inside those inputs and the pinned
+compiler's own directories.
 
-The capture comes from the existing `creation-real.test.ts` first rules
-publication, before scripted lane facts. Select that whole file alone with
-the existing `DEMO_RECORD=1` flag in the reviewed native capture plan. The
-opt-in block wraps the actual HTTP journal and retained-input source and keeps
-only complete prefixes the successful native replay covered. It emits numbered
-`PUBLIC-SDK-NATIVE-CAPTURE` base64url chunks and a terminal marker, following the
-existing verbose recorder's raw-line framing. Only ASCII is chunked, so native
-UTF-8 characters cannot be damaged at a boundary. The owner extracts only
-that explicitly public channel into a fresh external file and seals its bytes
-with the exact tested source, target and native run proof before checker use.
-The ordinary gate leaves recording off. No private log body becomes public
-because it contains this channel.
+For each package, in order:
 
-The captured directory genesis and summary must match the exact `DIRECTORY`
-pin. A retained entry's `under` states `platformName(DIRECTORY)`, preserving
-the platform prefix and omitting the version; its digest and canonical bytes
-remain exact. The first body attempt's mistaken bare name was retained as a
-capture assertion failure; its positive native replay ran before that failure
-and no capture was emitted.
+1. A resolution-only pass, `--listFilesOnly --noEmit`, records the
+   canonical input paths and their hashes.
+2. TypeScript 7.0.2 emits ES2022 ESM and declarations, without maps. The
+   file set and input hashes must match the first pass.
+3. The producer converts relative declaration module specifiers to `.js`
+   where needed, checks each one against a real `.d.ts` file in the same
+   stage, and records the rewrite in the manifest.
 
-The block rejects the entire capture before any marker if decoded canonical
-entries or retained inputs contain credential fields, or if its text contains
-known fixture secrets or the current session secret/header. It never redacts
-hashed bytes. Public keys and signatures remain. The fixture's real Durable
-Objects, SQLite, platform rules and membership authority are labeled, along
-with the stand-in Git host, clock/transport and test-secret read provisioning.
-This is a recorded local native fixture, not a deployed service or Jam proof.
+The producer and the checker share one reader of module references. It
+finds literal `import`, `export`, type and dynamic module references, and
+does not read strings or comments as module clauses. Declaration
+rewriting changes only those literal offsets. A computed module form is
+refused. `node --test scripts/public-release-modules.test.mjs` runs its
+witness.
 
-After the three strict contexts, the checker uses the supplied physical native
-esbuild 0.28.1 binary and reviewed SHA-256 to bundle the same compiled replay
-journey for the browser. Its bounded metafile must show only the owned journey,
-compiled stages and copied exact dependencies, including actual replay and
-platform code, with no external modules. The binary is checked before and
-after use. This is a real browser closure build; it does not prove browser
-execution, public installation or physical sound.
+Each stage holds its manifest, `dist`, README, LICENSE and NOTICE. The
+producer packs offline, with scripts turned off, an owned npm cache and
+empty owned user and global npm configuration files. It sends no
+registry query. Before it seals the release manifest, it checks the
+checkout's HEAD, its clean state and the copied bytes again. The
+manifest records the source, tree, lock, tool, input, dependency and
+file identities, and each tarball's length and SHA-256 and SHA-512
+integrity.
 
-The first complete six-package stage built and packed all six packages, and
-its checker reached consistent compiled replay, the exact missing-directory
-control, all three strict contexts and the browser build. It then refused
-JSONata's synthetic `<runtime>` input edge. The pinned esbuild 0.28.1 parser
-inserts that already-resolved helper import; this edge is not a module left
-in the output. The successor accepts only its exact path/kind/three-field
-shape on the byte-bound copied JSONata input. Every other external input,
-every external output import and every emitted module reference still
-refuses. The earlier stage and refusal stay immutable; this source delivery
-does not claim a successful successor checker.
+## What the checker does
 
-The public platform catalog must match every selected target and foreign
-genesis pin. Main f722 supports the explicit F1 register5/directory5/membership4
-cohort, not Counting register6/directory6/membership5. If Jam selects later
-versions, publish matching reviewed platform code first. Do not infer a cohort
-from `NEWEST`. Supply the actual `hold@1`/`git-read@1` code as both capabilities
-and owners where needed, with the deployed parameters; absent versions or
-owners remain unsupported. The verifier's mode, coverage, foreign facts,
-redactions, limits, incomplete outcomes and external-world trusts remain intact.
+The checker compares each tarball's contents with every staged file, and
+checks both input copies against the original bytes. It never installs
+the tarballs and never loads raw SDK TypeScript. Then it runs one
+journey through the compiled output: bytes, signing, client shaping,
+declaration and rule validation, the jsonata engine, the testing
+fixture's clone, and a replay of the native capture. It checks the
+types in three strict contexts, NodeNext, Bundler and the opt-in ambient
+declaration, each with `skipLibCheck: false`. Last, it bundles the same
+replay journey for a browser.
 
-Later verification must still include the affected source/compiler checks,
-one build/output check and one changed-head normal gate before independent
-review. Do not repeat platform permutations. On failure retain the owned
-stage and diagnostics, fix source and review the new subject; no implicit
-retry, deadline widening or publication follows.
+### The native capture
 
-The release owner assembles and verifies source/artifacts. A separately
-verified namespace administrator/publisher controls publication. A deployed
-operator controls the HTTPS URL, version, bindings, migration and real
-membership/definition/read provisioning. GitHub App authority does not
-establish npm publishing rights. Publishing the eight packages is not atomic;
-complete the set and verify all public versions/integrities before calling
-it an available coordinated release.
+The capture is a public journal recorded from the first rules
+publication of `packages/scope/test/creation-real.test.ts`, before its
+scripted lane facts. To record it, run that file alone with
+`DEMO_RECORD=1`, under a reviewed capture plan. The test prints numbered
+`PUBLIC-SDK-NATIVE-CAPTURE` base64url chunks and an end marker. Extract
+only that channel into a new file in the evidence directory, and seal
+its bytes with the tested source, the target and the native run before
+the checker reads it. The gate leaves recording off.
 
-Jam and starter consumers must install exact **published registry packages**
-with a public lockfile and use a real deployed URL. Producer stages or local
-tarballs cannot substitute. The later isolated public consumer must prove
-Node loading, strict NodeNext/bundler declarations, browser bundling and
-actual browser execution without repository aliases/private SDK. A single
-provisioned external smoke must preserve independent source/log read
-custody, two-actor conflict, exact durable context-qualified retry and one
-actual supported Jam interaction. C1/IA and C4/I5 keep their own storage
-adapter ownership. The one-singer J0 amendment is effective; no obsolete
-second-singer requirement is introduced here.
+The test refuses the whole capture, before any marker, when a decoded
+entry or retained input holds a credential field, or when the text holds
+a known fixture secret or the session secret. It never redacts hashed
+bytes. The capture's directory genesis and summary must match the exact
+`DIRECTORY` pin. A retained entry's `under` holds
+`platformName(DIRECTORY)`: the platform prefix with no version.
 
-N3's current-model design/adoption, publisher/operator availability, cold
-outsider commands/help/cost, public verifier support, native authorization,
-read custody, durable adapters, browser hosting and local-versus-hosted
-fidelity remain separately owned and open. Browser cross-origin access is
-not established by packaging. This producer adds no CORS, grant, hosting,
-onboarding or universal durable-outbox protocol.
+The checker binds the capture to the SHA-256 you give it. Its replay
+must match the capture's own native report: the target, full coverage of
+the target, the verified foreign dependencies and the trust labels. A
+missing dependency, and trust in an authority, an anchor or a target
+head, must be absent explicitly. A consistent replay alone does not
+imply them. With the directory source removed, the replay must report
+the exact missing dependency, with no anchor or test-authority grant in
+its place. The capture comes from a local fixture with real Durable
+Objects and SQLite and a stand-in Git host. It shows nothing about a
+deployed service.
 
-## Eight-package closure checks
+The public platform catalog must match every target and foreign genesis
+pin that the capture selects. Do not infer platform versions from
+`NEWEST`. Supply the real `hold@1` and `git-read@1` code where the
+journal needs it.
 
-The actual-manifest witness remains positive for every planned package. It
-checks the graph dependencies, platform application subpaths, client
-application subpath, coordinated graph dependencies and Replay's exact
-source-only platform omission. Unknown exports or dependencies and changed
-excluded paths or pins still refuse. Replay bin/git inputs and outputs remain excluded. Git admits only the five
-pure implementation files listed above; both public subpaths must exist.
-The owning witness checks actual source references and rejects a host module
-in either JavaScript or declarations. It does not compile or pack the SDK.
+### The browser bundle
 
-The producer already compiles packages in plan order and admits only completed
-predecessor stages. Its generic loop needs no alternate resolver or source
-alias. The checker includes Git in its finite input set and requires package-graph
-in the real compiled browser closure. Its compiled journey exercises graph
-field inclusion in both directions and resolves the bytes application codecs
-and client compatibility export. NodeNext and Bundler type contexts use the
-same public subpaths. These updated witnesses are unrun at this source delivery.
+The checker checks the esbuild 0.28.1 binary against the SHA-256 you
+give it, before and after use. The bundle's metafile may name only the
+journey, the compiled stages and the copied dependencies, with no
+external module. It accepts one exception: the synthetic `<runtime>`
+input edge that esbuild adds for jsonata's helper import, in its exact
+path, kind and three-field shape. The bundle shows that the browser
+closure builds. It does not run in a browser.
 
-## Module-reference repair
+## Source
 
-Request `0c3828a0ca7b50dda540dc1c9023950c03b72668` rests on dap
-promise `git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4291f1e6caa20c865f5c2c983418c408b9d65895`. The original one-run
-`5e1f` producer failed before compiler/pack; its generic diagnostic did not
-name the specific refusal. Static inspection and the retained lexical
-reproduction locate false module references in quoted `from` capability
-data. The failed attempt and its partial stage remain immutable.
-
-The producer and output checker now share an internal token/span reader.
-It recognizes literal import/export/type/dynamic module references without
-reading data strings or comments as module clauses. Declaration rewriting
-uses only those literal offsets, leaving other bytes unchanged. Unsupported
-computed module forms refuse explicitly. No parser dependency, SDK source,
-manifest, lockfile or compiler ancestry guard changed. This source-specific
-reader is not a JavaScript evaluator or general code-security boundary.
-
-One coherent own Node witness uses the actual capability data, genuine
-module clauses and an owned declaration rewrite/refusal journey:
-
-```
-node --test scripts/public-release-modules.test.mjs
-```
-
-The case, syntax checks, new-head producer and output checker are all
-unrun when that code was delivered. A later guarded `c4bd` attempt passed the
-one reader case, then compiled and packed contract, bytes and client. Derive
-emission failed with `TS2304: Cannot find name 'structuredClone'` in its
-exported testing fixture. Its resolution-only pass was not semantic type
-acceptance. The complete checker was never dispatched; all three packs and
-derive's partial output remain unvalidated local artifacts. Neither failed
-attempt may be retried or reused as a completed release.
-
-## Fixture clone type boundary
-
-Repair request `0da42a1126c471750cec1ccaf3adf17f4c94ee7c` rests on promise
-`git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1694fa7a6b5005d72c3085c1ca037a4a21cc49ec`.
-Planner adopted the module-local boundary in
-`git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5bdb4183391917025edeb8c9b23786e625034360`.
-The existing testing fixture now declares only its native one-argument clone
-of `DeclaredDefinition`, privately inside the same module. It supplies no
-implementation, polyfill or replacement clone semantics. It adds no global
-augmentation or public clone API. Manifests, exports, lock, bytes/web and
-compiler options/ancestry remain unchanged.
-
-The complete checker now inspects actual emitted fixture JavaScript and
-declarations for the existing native call, erased private declaration and
-unchanged exported `variant` signature. Its existing compiled-output journey
-calls the real compiled helper, changes a nested cloned value and checks
-that the original small fixture retains exactly its canonical bytes.
-
-All repaired-head imports, cases, compilers, packing and complete output
-checks were unrun when that code was delivered. A later exact `7695` attempt
-passed the reader case and all four packages' resolution, emission and
-offline packing, and sealed its producer manifest. The checker passed its
-archive and emitted fixture ABI guards, then the compiled journey failed:
-the clone witness narrowed the text slot to 39 while write/edit fields
-still answered 200. The actual validator refused both assignments. The
-journey failed before any of the three strict consumer contexts were
-dispatched.
-
-The successor changes only the witness's nested slot maximum and expected
-value to 201. This preserves assignment from the original 200-byte fields
-and stays inside the declared text bound. The real clone/name mutation and
-original canonical-byte preservation assertions remain. All successor
-checks remain unrun; the frozen failed attempt and its output stay intact.
-A future attempt needs its own exact reviewed source, fresh owned stage
-and release. One changed-head gate and normal independent review are still
-owed before landing; no public publication follows.
-
-## Six-package validation outcome
-
-The checked source is `f1a5a434f595ef37ada7a0cbde518f87d1f430ba`, tree
-`44da261079aba5428721bd1be04fb12a080d3625`. Original gate handle 90198
-completed with exit 0: whitespace, typecheck and tests passed; 1,005 Vitest
-cases passed with the two original recorder skips, followed by eight passing
-Node cases. Install was skipped under the exact existing lock. Whole time was
-89.66 seconds wall and 144.59 seconds CPU on this machine. These figures are
-not a global speedup, physical-drain or deployed acceptance claim.
-
-Earlier native capture attempts remain separate: the first passed the one
-Node case and Scope test compiler, then failed collection on a temporary alias;
-the second refused mismatched temporary config metadata before any phase;
-the third reached consistent native replay, then failed the retained input's
-mistaken bare definition-name assertion without exporting a capture. The
-corrected capture's handle 93455 passed the affected compiler and whole native
-creation case. Its public canonical capture is 96,949 bytes, SHA-256
-`f01d6a82fb57f72bceb8160b9f0bf6f3a8b32a443bbf87a112b044efbd190833`:
-five complete prefixes, 18 entries, 12 retained inputs and 11 verified foreign
-facts, with no anchors, missing dependencies or redactions. The complete
-report retains every clock, source-head, delivery, observation, outside-host,
-bounds and exact platform-code trust. It is a labeled local native fixture.
-
-The first producer stopped at the missing platform README after four packs;
-the second built all six packs but its checker refused the synthetic runtime
-edge after replay, strict contexts and bundling. Both stages remain intact.
-The corrected handle 12018 passed the affected existing Node case, fresh
-six-package producer and complete checker. Compiled replay matches the native
-report exactly; withholding the directory yields its precise missing fact.
-Strict NodeNext, Bundler and opt-in ambient contexts passed. The browser bundle
-contains 118 actual compiled inputs; SHA-256 is
-`c66c72b8c0351396113e8a092442b639247a522c47871d9119d1d9477b8deb6a`.
-The bounded public proof is
-`/private/tmp/artroom-public-sdk-six-stage3-public-proof.json`, SHA-256
-`f931de5d38544a16034e572a10760c5c2df3eec214accac7c43bf96b6cedf328`.
-
-This outcome update changes only this guide; checked code, tests, settings,
-lock and assets remain identical, so no gate is repeated for it. All six
-`0.1.0-dev.2` artifacts remain local staged outputs. Verified npm publication
-authority, six public versions and integrities, a cold public consumer and
-actual Jam provisioning, browser, model, audio, recovery and Cloudflare
-acceptance remain owed. The request for the code closes none of those whole-demo
-obligations.
+Checked against main `5dc9765f` on 30 October 2026. Sources:
+[`public-release.mjs`](../scripts/public-release.mjs),
+[`check-public-release.mjs`](../scripts/check-public-release.mjs),
+[`public-release-modules.test.mjs`](../scripts/public-release-modules.test.mjs),
+[`packages/platform/package.json`](../packages/platform/package.json),
+and `npm view` on 30 October 2026. The commands on this page were not
+run for this revision.

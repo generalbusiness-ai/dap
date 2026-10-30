@@ -1,37 +1,37 @@
 # The MCP service
 
 `dap mcp` serves a room to an agent host over the Model Context
-Protocol (MCP). It is one server for every application the room holds. It
+Protocol (MCP). One server serves every application the room holds. It
 reads the room's definitions as data and derives one tool for each act
-declaration, so an application it has never seen gets its tools the moment
-the room holds it. The server signs with the key of the config directory it
-runs in; nothing it serves grants authority. Each scope judges each act, and
-the server reports that judgment as the scope gave it.
+declaration, so an application it has never seen gets its tools as soon
+as the room holds it. The server signs with the key of the config
+directory it runs in, and nothing it serves grants authority. Each scope
+judges each act, and the server reports that judgment as the scope gave
+it.
 
 The server is the package `packages/mcp` (`@generalbusiness/dap-mcp`).
-For one release, `artroom mcp` runs the same server through the command
-line's `artroom` alias. `DAP_HOME` selects the config directory, with
-`ARTROOM_HOME` retained as a compatible alias. The CLI and MCP server use
-one resolved directory; conflicting variables refuse before either store
-is accessed. [The CLI guide](cli.md) describes new defaults and discovery of
-legacy custody. Plan 031 is its design; the
-delivery note `notes/implementation/2026-10-13-mcp-generic-delivery.md` says what was built
-and what ran.
+`DAP_HOME` selects the config directory, and `ARTROOM_HOME` still works as
+an alias. The CLI and the MCP server use one resolved directory. If the
+two variables conflict, both refuse before they read either store. For one
+release, `artroom mcp` runs the same server through the command line's
+`artroom` alias. [The CLI guide](cli.md) describes the defaults and how
+the CLI finds earlier custody.
 
 ## Connect an agent host
 
 The server runs where the command line runs, with the same config
 directory (`DAP_HOME`, or the legacy `ARTROOM_HOME`). Set the room up first
-with `dap install` and `dap create`; or start the server with an empty config directory
-and call its `join` tool with an invitation link, which records the room
-there as `dap join` does. The link holds the invitation's secret.
-`join`'s own result never repeats it. With membership@6, @7 or @8, the signed join
-holds a proof made with the invitation's private key, bound to that
-membership scope, invitation and joining key; it does not hold the secret.
+with `dap install` and `dap create`. Or start the server with an empty
+config directory and call its `join` tool with an invitation link. `join`
+records the room there, as `dap join` does. The link holds the
+invitation's secret, and `join`'s own result never repeats it. With
+membership@6, @7 or @8, the signed join holds a proof made with the
+invitation's private key. The proof is bound to that membership scope,
+invitation and joining key, and the join does not hold the secret.
 Legacy membership@1, @2, @4 and @5 hold the secret in the signed join.
 A journal read of membership (`step`, `record`) returns that signed input
-to whoever may read the journal. Local custody retains the same envelope;
-see [Custody](#custody) for retention.
+to whoever may read the journal. Local custody keeps the same intent. See
+[Custody](#custody) for how long.
 
 ### Over stdio
 
@@ -43,7 +43,7 @@ dap mcp
 ```
 
 An agent host's configuration names the command and its arguments, for
-example `{"command": "artroom", "args": ["mcp"]}`, with `DAP_HOME` in
+example `{"command": "dap", "args": ["mcp"]}`, with `DAP_HOME` in
 its environment when the config directory is not the default one. Messages
 are one JSON object per line. Diagnostics go to standard error.
 
@@ -53,7 +53,7 @@ are one JSON object per line. Diagnostics go to standard error.
 dap mcp --http 127.0.0.1:8765
 ```
 
-The server binds a loopback address only (`127.0.0.1` or `::1`); it refuses
+The server binds a loopback address only (`127.0.0.1` or `::1`) and refuses
 any other address. It prints its URL and a bearer token once, on standard
 error:
 
@@ -73,19 +73,22 @@ prints it only once. Keep startup standard error out of collected logs
 and pass the token directly to the host's protected Authorization-header
 configuration, if the host supports that private handoff. The CLI has no
 alternate bearer-output option. If the host cannot keep that stream and
-header private, use `dap mcp` over stdio instead: that transport issues no
+header private, use `dap mcp` over stdio instead. That transport issues no
 loopback bearer. Access to the host, process and config directory still
 controls access to the signing key.
 
 The loopback server and the hosted endpoint validate every request the
-same way, through one HTTP layer (`packages/mcp/src/http.ts`); the rules
-are under "The hosted endpoint", below. In short: a 2026-07-28 request
-carries `MCP-Protocol-Version: 2026-07-28` and `Mcp-Method`, and
-`Mcp-Name` on `tools/call`; a 2025-11-25 request names its session; and a
-`GET` or `DELETE` is served only under the 2025-11-25 header, where it
-needs `Mcp-Session-Id` (`400` without it) and a live session (`404`
-otherwise); with no header, or the 2026-07-28 header, it is `405` with
-`Allow: POST`.
+same way, through one HTTP layer (`packages/mcp/src/http.ts`).
+[The two revisions over HTTP](#the-two-revisions-over-http) gives the
+rules. In short:
+
+- A 2026-07-28 request carries `MCP-Protocol-Version: 2026-07-28` and
+  `Mcp-Method`, and `Mcp-Name` on `tools/call`.
+- A 2025-11-25 request names its session.
+- The server serves `GET` and `DELETE` only under the 2025-11-25 header.
+  They need `Mcp-Session-Id` (`400` without it) and a live session (`404`
+  otherwise). With no header, or the 2026-07-28 header, they answer `405`
+  with `Allow: POST`.
 
 ### Options
 
@@ -113,8 +116,8 @@ request.
 A request with a version the server does not serve is answered with error
 `-32022`, whose data names the versions it serves and the one asked.
 
-A notification (a message with no ID) is never answered: over HTTP it gets
-status 202 and no body, and on stdio nothing is written. A method that is
+The server never answers a notification (a message with no ID). Over HTTP
+it gets status 202 and no body. On stdio the server writes nothing. A method that is
 only a request, such as `tools/call`, `initialize` or `tools/list`, sent as
 a notification, is not run and issues no session.
 
@@ -123,9 +126,14 @@ a notification, is not run and issues no session.
 The list has two parts.
 
 - **The generic tools**, the same for every room: `room`, `inspect`,
-  `create`, `join`, `prepare`, `items`, `steps`, `step`, `record`, `sends`, `text`,
-  `wait`, `settle` and `credential`, and in `--generic` and
-  `--generic=add` modes `actions` and `act`.
+  `create`, `join`, `install_application`, `application_installation`,
+  `prepare`, `items`, `steps`, `step`, `record`, `sends`, `text`, `wait`,
+  `settle` and `credential`, and in `--generic` and `--generic=add` modes
+  `actions` and `act`. These are the eighteen names of
+  `GENERIC_TOOL_NAMES` in `packages/mcp/src/hosted-tools.ts`. The hosted
+  endpoint omits `create`, `install_application`, `credential`, `prepare`,
+  `join`, `record`, `step` and `text` by default. `MCP_TOOL_ADDITIONS`
+  adds them back (see [Hosted endpoint settings](#hosted-endpoint-settings)).
 - **The act tools**, one for each act declaration of the definitions the
   room's scopes run, that the caller's role may sign or that a rule
   decides. Their names come from the words table below. A tool is bound to
@@ -142,21 +150,20 @@ the created scope. A lane and an application are both held under the
 directory's membership, so the caller's role there decides their tools.
 `room` lists the applications beside the lanes, with each one's definition
 name, digest, scope and state. `room` reads the directory's live items
-only: an application still being created is listed as `creating`, with no
-scope and no tools; a creation that was refused or conflicted is final,
-leaves the live items, and is not listed. A scope outside the
-repository is added with `--scope`; a configured scope that is also one of
-the directory's applications is held and listed once, as the application.
+only. An application still being created is listed as `creating`, with no
+scope and no tools. A creation that was refused or conflicted is final,
+leaves the live items, and is not listed. Add a scope outside the
+repository with `--scope`. A configured scope that is also one of the
+directory's applications is held and listed once, as the application.
 
 The list is a function of the room, the caller's standing and the launch
 options, never of a connection. The server computes a generation from those
-inputs. A change of the generation (an activation, a role change, a new
-kind of lane, a new application, a scope recorded in the config) is told
-once to each
-subscribed client. An ordinary step, such as a comment, changes no
-generation, and nothing is told. While a client is subscribed, the server
-reads the generation's inputs every 30 seconds; with no subscriber, it
-reads nothing.
+inputs. The server tells each subscribed client once when the generation changes:
+an activation, a role change, a new kind of lane, a new application, or a
+scope recorded in the config. An ordinary act, such as a comment, changes
+no generation, and the server tells nothing. While a client is subscribed,
+the server reads the generation's inputs every 30 seconds. With no
+subscriber, it reads nothing.
 
 A page of `tools/list` is at most 256 KiB, with a cursor to the next page.
 A cursor of an earlier generation is refused, and the client lists again
@@ -172,10 +179,9 @@ fit, the description keeps whole sentences only and names the guards it
 left out, by position and name, with a pointer to `inspect` with
 `describe`, which returns the complete text.
 
-Five worked examples, as `tools/list` sends them. The first three are
-those of plan 031, section 4. The first is for a member of the demo room,
-the third for an admin; the others are for a member who holds the action
-named. The last two are acts of the Counter's definition,
+Five worked examples follow, as `tools/list` sends them. The first is for
+a member of the demo room and the third for an admin. The others are for a
+member who holds the action named. The last two are acts of the Counter's definition,
 `counting-commitments`.
 
 `issue.comment`, the issue lane's `comment`:
@@ -209,7 +215,7 @@ fields under `fields`, so a field named like a control never collides:
 | `target` | The scope: its ID, or for a lane the issue or change number. A tool of a scope the room has once, such as membership, needs none. |
 | `on` | The local ID of the item the act is on, for an act on an existing item. |
 | `idempotencyKey` | Required. 1 to 128 bytes of UTF-8, chosen by the caller. One key is one meaning. |
-| `resubmit` | Send a refused envelope again, deliberately. |
+| `resubmit` | Send a refused intent again, deliberately. |
 | `at` | Optional captured revisions, keyed by exactly the act's bound subjects (`on` and the `also` aliases). Omit it to read current revisions. |
 | `fields` | The act's fields, as the description lists them. A member is `@handle`. |
 | `texts` | Detached texts, when a field gives a text's digest in place of the text. Only for acts with a detached text. |
@@ -221,7 +227,7 @@ and the sends it created, or `refused`, `unavailable` or `mismatch` with a
 sentence that names the scope, the kind, the judged head and, for a named
 guard, the guard's sentence, and a next step.
 
-A field left out is left out of the intent: the scope applies the field's
+A field left out is left out of the intent. The scope applies the field's
 declared default itself. The server reads the revisions of the items the
 act names from the same fields with those defaults applied, and with a
 fact of the target scope read as its entry's position, as the scope reads
@@ -233,33 +239,34 @@ then signs those captured numbers unchanged. The native scope refuses a
 revision that has moved. The server does not silently refresh it. An
 explicit captured set is part of the custody meaning: another set under
 the same key conflicts. A repeated call with the original set returns its
-kept envelope even after the current state moves. Omission preserves the
+kept intent even after the current state moves. Omission preserves the
 existing fresh-read behavior and custody meaning.
 
 An error the server finds itself (a shape, a target, custody, a read) is
 `error`, `message` and `next`. A fragment of what the caller gave, such as
 a target, a field's name, a key or a tool's name, is repeated in the
 message for at most 128 characters, then an ellipsis and its length. The
-whole error result is at most 2 KiB, the smallest tool bound; if the
-message would pass it, only the message is cut, and says so. `error` and
-`next` stay whole: every next step the server writes is bounded. Only if
+whole error result is at most 2 KiB, the smallest tool bound. If the
+message would pass it, only the message is cut, and it says so. `error`
+and `next` stay whole, because every next step the server writes is
+bounded. Only if
 a next step alone passed the bound would it be cut too, with its length.
 
 ### Custody
 
-The server keeps each signed envelope before it sends it, under the
+The server keeps each signed intent before it sends it, under the
 caller's `idempotencyKey`, in the config directory's
 `private/mcp-custody/`, readable only by its owner.
 
 - **Invitation contents and retention.** A join record keeps its exact
   signed input: an invitation proof for membership@6, @7 or @8, or the invitation
   secret for legacy membership@1, @2, @4 and @5. An archived record keeps
-  the same input. The invitation link remains secret in either case;
-  hosts may also retain tool inputs. Neither intent expiry nor archival
-  erases the envelope. Thirty days is an archival threshold, not a
+  the same input. The invitation link stays secret in either case, and
+  hosts may also keep tool inputs. Neither intent expiry nor archival
+  erases the intent. Thirty days is an archival threshold, not a
   maximum retention period, and unresolved records are retained.
 - **A lost reply** leaves the record unknown. The same call with the same
-  key sends the same bytes again; `settle` reads the scope's settlement.
+  key sends the same bytes again. `settle` reads the scope's settlement.
   Neither signs a second intent.
 - **Another meaning under a used key** is refused before anything is
   signed.
@@ -267,25 +274,25 @@ caller's `idempotencyKey`, in the config directory's
   attempt: an answer other than unavailable, or a receipt that settlement
   found. A record that was lost, then unavailable, then settled answers `accepted`.
 - **Terminal records.** `accepted` and `mismatch` records are never sent again, even
-  with `resubmit: true`. A refusal is kept; `resubmit: true` first keeps a
+  with `resubmit: true`. A refusal is kept. `resubmit: true` first keeps a
   new attempt, unresolved, with the refusal as history, and then sends the
-  same envelope. A lost reply to it leaves the record unresolved, and
+  same intent. A lost reply to it leaves the record unresolved, and
   `settle` asks the scope.
-- **Capacity.** At most 256 records may be unresolved at once, admitted
-  under a lease that every process sharing the directory takes, so two
-  processes cannot both admit the 256th. A resubmitted refusal is admitted
-  the same way: it becomes unresolved under the lease, and a full store
-  keeps the refusal as it was. Nothing unresolved is evicted.
+- **Capacity.** At most 256 records may be unresolved at once. A record
+  takes its place under a lease that every process sharing the directory
+  takes, so two processes cannot both take the 256th place. A resubmitted
+  refusal takes a place the same way. It becomes unresolved under the
+  lease, and a full store keeps the refusal as it was. Nothing unresolved is evicted.
 - **Size.** A record is at most 2 MiB. An act whose fields, texts,
   presented facts and values would not fit with room for its outcomes is
   refused as full, for bytes, before it is signed. A record keeps up to 64
-  outcomes inline; older ones, or ones that would push it past 2 MiB, move
+  outcomes inline. Older ones, or ones that would push it past 2 MiB, move
   to a segment file beside it, which keeps every one and is read in bounded
   slices. The decisive outcome is searched inline first, then in the
   segment one slice of 64 at a time, newest first, stopping at the decisive
   outcome or at the start of the current attempt.
 - **Preparation steps** are kept apart from the act. A step keeps its first
-  answer and its latest 63; the answers between them are not kept. The act's
+  answer and its latest 63, and drops the answers between them. The act's
   outcomes are never dropped.
 - **Archives.** A terminal write checks for terminal records older than
   thirty days or beyond the newest 1,024. Eligible records move to archive
@@ -294,14 +301,14 @@ caller's `idempotencyKey`, in the config directory's
   is written whole and renamed into place, then the index, and only then are
   the live records removed. A record whose lock another process holds is
   skipped. This runs on terminal writes, not a timer, so an old terminal
-  file can remain until a later check. Archives remain readable; this
-  store has no automatic age-based deletion of retained envelopes.
+  file can remain until a later check. Archives stay readable. The store
+  never deletes kept intents by age.
   A crash at any point loses no record.
 - **Locks.** A lock or lease is broken only when the process that took it
-  is gone, whatever its time; the passing of an intent's deadline is never
+  is gone, whatever its time. The passing of an intent's deadline is never
   an outcome. One process at a time breaks it, under a reclaim lock, after
-  reading it again; a release removes only the releaser's own holding.
-  A reclaim lock is never broken: if the process holding it died, every
+  reading it again. A release removes only the releaser's own holding.
+  A reclaim lock is never broken. If the process holding it died, every
   call that needs that lock is refused as `locked` until an operator
   removes the reclaim file after all processes using this config directory
   have stopped.
@@ -312,7 +319,7 @@ caller's `idempotencyKey`, in the config directory's
   skips one that is no longer terminal.
   If a recorded PID has been reused by another user's process, a process
   check can return `EPERM` (permission denied). The server treats that as
-  alive and leaves the lock in place; `blockedBy` can return no reclaim
+  alive and leaves the lock in place. `blockedBy` can return no reclaim
   path even when an old file blocks recovery. A deadline or an old file
   time does not establish that the lock is safe to remove.
 
@@ -328,8 +335,8 @@ caller's `idempotencyKey`, in the config directory's
 - **Steps with no act.** `prepare` without `kind` sends a capability step
   that has no act, such as hold@1's instance: the step's own intent, kept
   under custody under the caller's key, with its answers kept as the step's.
-  Such a record is never an act that took effect. A decisive answer is kept, and
-  the same call returns it again without sending; a lost or unavailable
+  Such a record is never an act that took effect. A decisive answer is kept,
+  and the same call returns it again without sending. A lost or unavailable
   answer leaves the record unresolved, and the same call sends the exact
   step again. When every step of the record has a decisive answer, the
   record is `settled`: terminal, archivable, and no longer counted against
@@ -337,108 +344,118 @@ caller's `idempotencyKey`, in the config directory's
 - **Names.** A capability or step name longer than 128 bytes is refused
   whole, before anything is kept or sent.
 
-## Operational metrics
+## Taking part in a Counter
 
-`dap mcp` writes `dap.metric {json}` lines to stderr. Stdout remains the
-stdio protocol. Each JSON record has `schema: "mcp-metrics-v1"` and the
-point's `indexes`, `blobs` and `doubles`. Hosted agent objects write the
-same point map through the existing optional METRICS binding. These
-observations grant no authority and contain no signed input, credential,
-invitation, bearer, scope index or caller-supplied request identity.
+A Counter is an application the room's application factory creates
+(`application.create`, the directory's `establish-application`). The
+agent gets no scope ID and no `--scope`. `room` lists the Counter among
+its applications, with its definition name (`counting-commitments`),
+digest, scope and state. From then on the list holds the Counter's act
+tools.
+`packages/mcp/test/counter.scope.test.ts` runs this recipe on the real
+test Worker in both modes, after an admin has initialized the board, and
+checks the tools called and their count against this table (observed).
+The count covers taking part, from finding the Counter to deactivating.
+It leaves out the room's setup, the board's initialization and the
+story's final readings of the board and the steps. The story's one member
+holds every grant, so the same member starts the board and takes the
+turn. In a room with several members, the controller starts. In
+`--generic` mode the story's second connection shares the first one's key
+and configuration. It is the same member, not a second one.
 
-The point has no index, nine blobs and six doubles:
+| Activity | Default | --generic |
+|---|---|---|
+| Take part in a Counter: find it, participate, activate, start, commit to a number, fulfill it, deactivate | `room`, whose applications name the Counter's scope; `counting-commitments.participate`; `counting-commitments.activate`; `inspect` on the Counter for the board, `counting-commitments.start`; `inspect`, `counting-commitments.commit`; `counting-commitments.fulfill`; `counting-commitments.deactivate`: 9 | `room`; `actions` on the Counter, `act` participate; `act` activate; `inspect`, `act` start; `inspect`, `act` commit; `act` fulfill; `act` deactivate: 10 |
 
-| Blob | Meaning and allowed values |
-|---|---|
-| 1 | `tools-list`, `tool-call`, `custody`, or the terminal `metric-dropped` summary |
-| 2 | The configured public deployment, at most 128 UTF-8 bytes; `local` by default in the CLI; `unknown` for invalid context |
-| 3 | Worker version UUID in lowercase, or `unknown` |
-| 4 | One of the fixed names below; a summary uses `list` |
-| 5 | `ok`, `refused`, `error`, `unavailable`; a summary uses `dropped` |
-| 6 | `none`, an allowed reason below, or a persisted custody phase; a summary uses `summary` |
-| 7 | Server-minted request ID, sixteen lowercase hexadecimal characters, or `none` |
-| 8 | `none`; no caller trace is copied into this map |
-| 9 | Exactly `mcp-metrics-v1` |
+Each further turn is one `inspect`, one `counting-commitments.commit` and
+one `counting-commitments.fulfill` (one `act` each in `--generic` mode).
+When more than one participant is active, the last speaker cannot commit
+next. [The Counter](../apps/counter/README.md) has diagrams of every
+act and who may attempt it.
 
-The fixed names are `list`, `room`, `inspect`, `create`, `join`, `prepare`,
-`items`, `steps`, `step`, `record`, `sends`, `text`, `wait`, `settle`,
-`credential`, `actions`, `act`, `install_application`,
-`application_installation`, and hosted `enrol`. Act tool names derived
-from declarations are outside this first map. Their events are dropped
-and counted as invalid fields; their names are not copied or redacted.
-The tools continue to run normally.
+The commitments Counter (`apps/counter/commitments.ts`, the one the
+target-100 recording runs) grants differently from the Counter above: an
+agent's role needs `counting.participate`, `counting.activity` (which
+authorizes both `activate` and `deactivate`, with no separate
+`counting.activate` or `counting.deactivate` grant), and
+`counting.commit`, `counting.fulfill` and `counting.fail` as its part
+needs. `counting.control` stays with the controller. An agent enrolled by
+an agent-key invitation holds its role's actions as the roster lists them
+for the membership the room is pinned to: membership@2, membership@4 (the
+application cohort) or membership@5 (the Counting cohort). The invitation
+carries that pin, and the server verifies the enrollment against the
+receipt's definition.
 
-The native reason allowlist is:
+## Taking part in the lending library
 
-```
-revision-moved alias duplicate-relation required-unset scope-full
-bad-intent misaddressed expired scope-refused unknown-act bad-field
-no-item final fact-mismatch unauthorized guard-failed capability-refused
-slot-full type-full entry-too-large send-unresolved unknown-message
-unsupported-definition bad-input dependency-unavailable busy clock-behind
-scope-provisional guard-incomplete authority-unavailable unavailable
-rate-limited idempotency-mismatch not-found wrong-incarnation forbidden
-history-unavailable too-large sessions-unavailable bad-request replayed
-```
+The [lending library](../examples/lending) is also an application that
+the room's application factory creates, in a room of the
+`application-publication` cohort. Its definition name is `lending`, so
+its act tools are `lending.donate`, `lending.borrow`, `lending.return`,
+`lending.cancel` and `lending.publish`. The caller's genesis values are
+`{}`. The factory makes the signer the creator and supplies the room's
+destination. A donation opens a thing at the entry that records it, so
+the position of the act's fact is the thing's ID. `borrow`, `return` and
+`cancel` name that ID in `on`.
 
-The server reasons are `exception`, `shape`, `stale-descriptor`, `restart`,
-`transport`, `custody`, `credential`, `target`, `unknown-tool`, `read`,
-`conflicting`, `full`, `locked`, `unreadable`, `terminal` and `unkept`.
-Record phases are `prepared`, `sent`, `unknown`, `accepted`, `refused`,
-`mismatch` and `settled`. Preparation-step phases are `prepared`, `sent`,
-`unknown` and `answered`.
+Every act after `establish` carries `content`, the text of the thing's
+shelf page, and the library tells the destination to publish it. A
+donation also names the page's path in `page`, which must start with
+`shelf/` and end with `.md`. The member interface picks
+`shelf/<16 characters>.md`. The scope does not check the text against the
+thing. An agent that writes the page states it under its own key, and
+the next act on the thing rewrites it. Taking effect is not publication:
+read the destination's receipt to see the commit.
 
-| Kind | Doubles 1 through 6 |
-|---|---|
-| `tools-list` | 1, duration in ms, tools on this page, page bytes, read attempts, generation changed (0 or 1) |
-| `tool-call` | 1, duration in ms, read attempts, native page attempts, whole service result bytes, 0 |
-| `custody` | 1, 0, 0, 0, 0, subject (0 for record, 1 for preparation step); blob 6 is its new persisted phase |
-| `metric-dropped` | 1, loss bitmask, events lost, 0, 0, 0 |
+`packages/mcp/test/lending.scope.test.ts` runs this recipe on the real
+test Worker in both modes, after an admin has activated the definition,
+given the admin role `lending.member` and `lending.staff`, and created
+the library. It checks the tools called and their count against this
+table (observed). The room's setup is not counted, and the test does not
+read the destination.
 
-Numbers are whole values from zero through 2,147,483,647. List bytes count
-the JSON `{ tools, nextCursor? }`; call bytes count the service result
-before wire-specific framing. A generation change means that this listed
-page's generation differs from the service's last listed generation,
-not a count of notifications sent. Read attempts include session requests
-and signed-read fallbacks. Page attempts count item, history, outbox and
-log page requests. Hosted enrolment also counts its own direct authority
-reads. Counts belong to each concurrent operation, not a shared delta.
+| Activity | Default | --generic |
+|---|---|---|
+| Take part in the lending library: find it, donate a thing, borrow it, return it | `room`, whose applications name the library's scope; `lending.donate`; `lending.borrow`; `lending.return`: 4 | `room`; `actions` on the library, `act` donate; `act` borrow; `act` return: 5 |
 
-A custody event follows a successful persisted phase change. An observed
-answer whose write failed emits no completed phase. Record and step
-phases remain distinct. Invalid fields are dropped before a point is
-retained. Loss bits are 1 for budget, 2 for invalid fields and 16 for
-overflow. Each operation retains at most 248 phase events, one completion
-and one summary, within 250 points. Reporters are not awaited; a failed
-write cannot replace a tool result, and a summary cannot prove its own
-presence. The deployment check excludes this map when judging scope
-turn coverage.
+The same test then returns the thing a second time. The answer is
+`refused`, with the reason `guard-failed`, because the thing is no longer
+lent. A refusal is an answer, not a tool error, and the scope writes
+nothing for it.
+
+Who may sign each act is set by the room, not the server. `donate`,
+`borrow`, `return` and `publish` need `lending.member`. `cancel` needs
+`lending.staff`. In the deployed library, the `admin` role holds both
+actions and the `member` role holds `lending.member`. A member's `cancel`
+there is refused as `unauthorized`. Anyone with
+`lending.member` may return a lent thing, not only its borrower. The
+library's [README](../examples/lending/README.md) lists the items and the
+acts.
 
 ## Tool reference
 
 ### Install a trusted application package
 
-New room creation does not currently offer a family that installs ordinary
-application packages such as Counter or Lending. In an existing historical
-`trusted-application` room, `install_application`
-records one native admin request. Its arguments are `uri`, `release`, `roles`,
+New room creation offers no family that installs ordinary application
+packages such as Counter or Lending. In an existing `trusted-application`
+room, `install_application` records one native admin request. Its arguments are `uri`, `release`, `roles`,
 `values`, and `idempotencyKey`. The URI names a regular Git blob at an exact
 commit. `APPLICATION_TRUST` must list that exact release, publisher, and
 canonical Git hostname. An unlisted release, another host, or a malformed
-setting refuses before any package fetch. The policy is checked again when
-custody starts building the envelope. The decoded publisher must match
+setting refuses before any package fetch. The server checks the policy
+again when custody starts building the intent. The decoded publisher must match
 before signing, alongside the existing release and signature checks. The
 bounded HTTPS transport refuses redirects to another source.
 
-Hosted agents receive the Worker's setting. Local `dap mcp` and `dap install` read the same
-setting from their process environment; an absent list admits no install.
-Old two-field rows need an explicit host before deployment. See
-[the deployment guide](deploy.md#trusted-application-screens). Each
-selected role receives only its signed package defaults; omitted roles
+Hosted agents receive the Worker's setting. Local `dap mcp` and
+`dap install` read the same setting from their process environment. With
+no list, nothing installs. Each row needs an explicit host. See
+[Trusted application screens](deploy.md#trusted-application-screens). Each
+selected role receives only its signed package defaults. Omitted roles
 receive no new grants. Existing grants remain.
 
 CLI and MCP share persistent request custody. After a lost reply, use the
-same key and arguments to read or resume the original envelope. Changed
+same key and arguments to read or resume the original intent. Changed
 arguments under that key refuse. A definitive native refusal is final.
 
 Acceptance records the request, not completion. Use
@@ -1459,7 +1476,7 @@ Read one native installation in the configured room, including its recorded phas
 The act tools that `tools/list` sends to an admin of the demo room: the six
 platform scopes on the default cohort, an issue lane under `issue-demo` and
 a change lane under `change-demo`. Each description is as sent. The whole
-list, with every input and output schema, is `docs/mcp-tools.json`; a test
+list, with every input and output schema, is `docs/mcp-tools.json`. A test
 derives it again and compares.
 
 | Tool | Act | Description as sent |
@@ -1525,7 +1542,7 @@ derives it again and compares.
 ### The words table
 
 A tool's name is `<noun>.<verb>`. The table maps a definition's native
-kind to a surface name; a kind it does not map keeps its own name under
+kind to a surface name. A kind it does not map keeps its own name under
 the definition's name, such as `garden.plant`. The table maps names only.
 A table that would give two kinds of one definition the same name is
 refused when the server starts.
@@ -1573,24 +1590,23 @@ refused when the server starts.
 
 Every command of the command line and every action of the page, with the
 tool calls that perform it in each launch mode and the count of calls.
-The public item query, application listing and operational status are not
-yet available through MCP. Their marked gap rows have no execution recipe.
-Rows marked `(local command)` run in Node outside MCP; the marker does not
-imply offline or read-only work. Package commands use local files and their
+MCP has no tool for the public item query, the application listing or
+operational status. Their gap rows have no recipe. Rows marked
+`(local command)` run in Node outside MCP. The marker does not mean that
+the work is offline or read-only. Package commands use local files and their
 stated native scenarios. The scope-index operator uses authenticated native
 reads and can write registrations in register mode. These rows have no MCP
 server recipe.
-The two trusted-application rows are exercised by
-`packages/scope/test/application-install-custody.test.ts` on the new native
-cohort, including CLI-to-MCP original-request recovery and the default and
-generic launch modes. The older room recipes in
-`packages/mcp/test/recipes.scope.test.ts` run the remaining server rows
-on the real test Worker, with complete arguments, in the default and
-`--generic` modes, and check that the tools called are the ones the row
-names, in order, as many times as it counts. In `--generic` mode, `actions`
-is called once per scope within one activity, and its result serves every
+`packages/scope/test/application-install-custody.test.ts` runs the two
+trusted-application rows, with recovery of the original CLI request
+through MCP, in the default and generic launch modes.
+`packages/mcp/test/recipes.scope.test.ts` runs the other server rows on the
+test Worker, with complete arguments, in the default and `--generic`
+modes. It checks that the tools called are the ones the row names, in
+order, as many times as it counts. In `--generic` mode, a recipe calls
+`actions` once per scope within one activity, and its result serves every
 later `act` on that scope. `--generic=add` lists both, so either recipe
-works; the count given is the default recipe's.
+works. The count given is the default recipe's.
 
 | Activity | Default | --generic | --generic=add |
 |---|---|---|---|
@@ -1638,116 +1654,27 @@ works; the count given is the default recipe's.
 | A send's outcome | `sends` on the scope, then `wait` with the outbox ID a receipt named: 2 | `sends`, `wait`: 2 | 2 |
 
 Git steps: `clone` and `propose` use Git outside the server. The server
-returns the remote URL and a one-time credential; the agent's own Git, or
+returns the remote URL and a one-time credential. The agent's own Git, or
 a generic credential helper, uses them. The server runs no Git.
 
 `propose` runs, in the recipe test, in a room of its own under
 `change-demo3`, the manifest-list change definition, with a version 3
 destination: two files, a version that names both, accepted, and a merge
 that the room publishes. The destination builds the tree from the files'
-entries; the agent sends no tree. Under the demo change definition,
+entries. The agent sends no tree. Under the demo change definition,
 `change-demo`, whose `propose-manifest` is the hold workflow's and which
 holds one version only, the same steps end in the lane's refusal of the
-version as `source-shape`; the recipe test asserts that refusal too.
-
-## Taking part in a Counter
-
-A Counter is an application the room's application factory creates
-(`application.create`, the directory's `establish-application`). The
-agent is handed no scope ID and no `--scope`: `room` lists the Counter
-among its applications, with its definition name
-(`counting-commitments`), digest, scope and state, and the list holds the
-Counter's act tools from then on.
-`packages/mcp/test/counter.scope.test.ts` runs this recipe on the real
-test Worker in both modes, after an admin has initialized the board, and
-checks the tools called and their count against this table (observed).
-The count covers taking part, from finding the Counter to deactivating;
-the room's setup, the board's initialization and the story's final
-readings of the board and the steps are not counted. The story's one
-member holds every grant, so the same member starts the board and takes
-the turn; in a room with several members the controller starts. In `--generic` mode the story's second
-connection shares the first one's key and configuration: the same member,
-not a second admitted one.
-
-| Activity | Default | --generic |
-|---|---|---|
-| Take part in a Counter: find it, participate, activate, start, commit to a number, fulfill it, deactivate | `room`, whose applications name the Counter's scope; `counting-commitments.participate`; `counting-commitments.activate`; `inspect` on the Counter for the board, `counting-commitments.start`; `inspect`, `counting-commitments.commit`; `counting-commitments.fulfill`; `counting-commitments.deactivate`: 9 | `room`; `actions` on the Counter, `act` participate; `act` activate; `inspect`, `act` start; `inspect`, `act` commit; `act` fulfill; `act` deactivate: 10 |
-
-Each further turn is one `inspect`, one `counting-commitments.commit` and
-one `counting-commitments.fulfill` (one `act` each in `--generic` mode).
-When more than one participant is active, the last speaker cannot commit
-next. [The Counter](../apps/counter/README.md) has diagrams of every
-act and who may attempt it.
-
-The commitments Counter (`apps/counter/commitments.ts`, the one the
-target-100 recording runs) grants differently from the Counter above: an
-agent's role needs `counting.participate`, `counting.activity` (which
-authorizes both `activate` and `deactivate`; there is no `counting.activate`
-or `counting.deactivate` grant), and `counting.commit`, `counting.fulfill`
-and `counting.fail` as its part needs; `counting.control` stays with the
-controller. An agent enrolled by an agent-key invitation holds its role's
-actions as the roster lists them for the membership the room is pinned to:
-membership@2, membership@4 (the application cohort) or membership@5 (the
-Counting cohort); the invitation carries that pin, and the enrolment is
-verified against the receipt's definition.
-
-## Taking part in the lending library
-
-The [lending library](../examples/lending) is also an application that
-the room's application factory creates, in a room of the
-`application-publication` cohort. Its definition name is `lending`, so
-its act tools are `lending.donate`, `lending.borrow`, `lending.return`,
-`lending.cancel` and `lending.publish`. The caller's genesis values are
-`{}`: the factory makes the signer the creator and supplies the room's
-destination. A donation opens a thing at the entry that records it, so
-the position of the act's fact is the thing's ID. `borrow`, `return` and
-`cancel` name that ID in `on`.
-
-Every act after `establish` carries `content`, the text of the thing's
-shelf page, and the library tells the destination to publish it. A
-donation also names the page's path in `page`, which must start with
-`shelf/` and end with `.md`; the member interface picks
-`shelf/<16 characters>.md`. The scope does not check the text against the
-thing. An agent that writes the page states it under its own key, and
-the next act on the thing rewrites it. Taking effect is not publication:
-read the destination's receipt to see the commit.
-
-`packages/mcp/test/lending.scope.test.ts` runs this recipe on the real
-test Worker in both modes, after an admin has activated the definition,
-given the admin role `lending.member` and `lending.staff`, and created
-the library. It checks the tools called and their count against this
-table (observed). The room's setup is not counted, and the test does not
-read the destination.
-
-| Activity | Default | --generic |
-|---|---|---|
-| Take part in the lending library: find it, donate a thing, borrow it, return it | `room`, whose applications name the library's scope; `lending.donate`; `lending.borrow`; `lending.return`: 4 | `room`; `actions` on the library, `act` donate; `act` borrow; `act` return: 5 |
-
-The same test then returns the thing a second time. The answer is
-`refused`, with the reason `guard-failed`, because the thing is no longer
-lent. A refusal is an answer, not a tool error, and the scope writes
-nothing for it.
-
-Who may sign each act is set by the room, not the server. `donate`,
-`borrow`, `return` and `publish` need `lending.member`; `cancel` needs
-`lending.staff`. In the rehearsal room the `admin` role holds both
-actions and the `member` role holds `lending.member`; there a member's
-`cancel` was refused as `unauthorized`. Anyone with
-`lending.member` may return a lent thing, not only its borrower. The
-library's [README](../examples/lending/README.md) lists the items and the
-acts.
+version as `source-shape`. The recipe test asserts that refusal too.
 
 ## The hosted endpoint
 
 The same service, served from the scope Worker at `POST /mcp`, for an agent
 on a host that cannot run a process. One Durable Object per agent holds the
-agent's key, its bearer, its sessions and its custody, so one agent's
-sessions, subscriptions and custody are kept apart from every other
-agent's by construction; one registry per repository creates agents. The
-design is notes/2026-10-13-hosted-mcp-endpoint.md; this section is what an
-operator and a controller need.
+agent's key, its bearer, its sessions and its custody. Each agent's
+sessions, subscriptions and custody are therefore apart from every other
+agent's. One registry per repository creates agents.
 
-### Hosted admission settings
+### Hosted endpoint settings
 
 The endpoint is off unless `MCP_ENABLED` is exactly `"true"`, both
 `REGISTRIES` and `AGENTS` are bound, and `MCP_TOOL_ADDITIONS` is absent or
@@ -1757,70 +1684,56 @@ addressing either namespace. This applies to the control routes too.
 `MCP_TOOL_ADDITIONS` is an optional JSON array of distinct known generic
 tool names, at most 1,024 characters and 18 names. Unknown names,
 duplicates, a different JSON shape, or an oversized setting close the
-endpoint. The hosted default omits `create`, `install_application`,
-`credential`, `prepare`, `join`, `record`, `step`, and `text`. To enable
-needed tools, name them explicitly, for example `["prepare","text"]`.
-The other accepted names are `room`, `inspect`, `application_installation`,
-`items`, `steps`, `sends`, `wait`, `settle`, `actions`, and `act`. The
-existing service mode still decides whether `actions` and `act` are listed.
-These settings do not change local Node MCP defaults.
+endpoint. The accepted names are the eighteen generic tools listed in
+[What the server lists](#what-the-server-lists). By default the endpoint
+omits `create`, `install_application`, `credential`, `prepare`, `join`,
+`record`, `step` and `text`. To serve one of them, name it in
+`MCP_TOOL_ADDITIONS`, for example `["prepare","text"]`. The service mode
+still decides whether `actions` and `act` are listed. These settings do
+not change the defaults of local `dap mcp`.
 
 A named act call takes a fresh inventory snapshot and applies the same
-selection and standing predicates as `tools/list`. Dispatch also checks
-the actual target's membership: standing on scope A cannot admit the same
-operation on ungranted scope B. This target check also applies to generic
-`act`, `prepare` with a kind, and view actions. Generic
-`install_application` checks the actual target before package resolution or
-custody work. This is an admission check, not an R9 trust-schema change.
-Existing code-granted,
-action-null, and unknown-standing cases keep their admission rules. The
-native scope remains the judge of every admitted act.
+selection and standing rules as `tools/list`. The endpoint also checks the
+membership of the actual target, so standing on scope A cannot carry the
+same operation to scope B, where the caller has no grant. The same target
+check applies to generic `act`, to `prepare` with a kind, and to view
+actions. Generic `install_application` checks the actual target before it
+resolves a package or starts custody work. Code-granted, action-null and
+unknown-standing cases keep their rules. The native scope still judges
+every act.
 
-Before rollout, the planner inventories existing hosted agents and their
-required tools (request `92d54432`), chooses each Worker's opt-in and additions, and deploys
-only after exact-head review. Repository bindings do not establish live
-usage or settings. The explicit deployment choice remains pending. Leaving
-opt-in unset closes existing endpoints. The
-local slice A implementation and validation, including the passing gate,
-are recorded in [the admission note](../notes/implementation/2026-10-24-hosted-mcp-admission.md)
-and its review record. The bounded failure window, authenticated control
-cleanup and their validation, including the passing gate, are recorded in
-[the failure-cleanup note](../notes/implementation/2026-10-24-hosted-mcp-failure-cleanup.md);
-deployment of that follow-up is pending.
-Bearer expiry and secret-free issuance receipts are recorded in
-[the bearer-expiry note](../notes/implementation/2026-10-24-hosted-mcp-bearer-expiry.md).
-That follow-up retains its own gate, review and deployment qualifications;
-A's and B's passing gates do not establish its acceptance. R15 remains
-separate unfinished work.
+If `MCP_ENABLED` is unset on a Worker that served hosted agents, their
+endpoint closes.
 
 ### Routes
 
 | Route | Authorization | What it does |
 |---|---|---|
-| `POST /mcp/agents` | `Control`, action `create` | Creates and enrols an agent. Body: `{ "link": "<artroom-agent-key:…>" }`, the private agent-key invitation described below. A fresh successful issuance answers `201` with `{ agent, key, handle, member, bearer, bearerExpires }`. The plaintext bearer is returned only by that fresh response; replay returns its secret-free receipt |
+| `POST /mcp/agents` | `Control`, action `create` | Creates and enrolls an agent. Body: `{ "link": "<artroom-agent-key:…>" }`, the private agent-key invitation described below. A fresh successful issuance answers `201` with `{ agent, key, handle, member, bearer, bearerExpires }`. The plaintext bearer is returned only by that fresh response; replay returns its secret-free receipt |
 | `POST /mcp/agents/<agent>/bearer` | `Control`, action `bearer` | A new bearer. Every session of the agent ends, every 2025-11-25 stream closes with a final event and every listen completes with its result. A fresh operation renews the bearer lifetime. A replay returns the original secret-free receipt and ends nothing |
-| `DELETE /mcp/agents/<agent>` | `Control`, action `retire` | Retires the bearer; sessions and streams end the same way. A retired agent answers `401` from then on, and no later `bearer` or unfinished `create` revives it. An enrolment still unfinished can be retired |
+| `DELETE /mcp/agents/<agent>` | `Control`, action `retire` | Retires the bearer; sessions and streams end the same way. A retired agent answers `401` from then on, and no later `bearer` or unfinished `create` revives it. An unfinished enrollment can be retired |
 | `POST /mcp` | `Bearer <agent>.<secret>` | One JSON-RPC request or notification, either revision |
 | `GET /mcp` | `Bearer`, `Mcp-Session-Id` | The 2025-11-25 server stream of that session |
 | `DELETE /mcp` | `Bearer`, `Mcp-Session-Id` | Ends that 2025-11-25 session |
 
 ### Creating an agent: the controller's recipe
 
-Enrolment is the membership's own; nothing here grants a permission.
+Enrollment belongs to the membership. Nothing here grants a permission.
 
 1. An admin adds the agent as a member with its controller, an active
    person: `add-member` with `kind: agent`, the handle and `controller`.
 2. An admin invites a key for that member: `invite-key` with the member,
    `kind: agent`, `inviteEnds` and the membership version's invitation
-   field: `inviteKey`, the invitation's public key, for membership@6, @7 or @8;
-   `inviteHash`, the secret's digest, for legacy membership@2, @4 and @5.
+   field. The field is `inviteKey`, the invitation's public key, for
+   membership@6, @7 or @8. It is `inviteHash`, the secret's digest, for
+   legacy membership@2, @4 and @5.
    The CLI does not expose `dap invite --kind agent-key`. The retained
    issuer is `issueInvitation` in the [CLI API](../packages/cli/src/invitations.ts),
    with `kind: "agent-key"`, the full controller reference and an explicit
    private custody store. It keeps both signed requests before submission,
    checks their native results and encodes the private tagged invitation.
-   A controller-owned client must supply that custody; there is no MCP
-   invitation tool implied here. Keep the link's secret private.
+   A client that the controller owns must supply that custody. MCP has no
+   invitation tool. Keep the link's secret private.
 3. The controller (or an admin) signs a **control request** with their own
    member key and sends `create` with the link as the body. The Worker's
    registry checks the signature, that the request is for this service and
@@ -1829,12 +1742,13 @@ Enrolment is the membership's own; nothing here grants a permission.
    from the membership now: an active key of an active member who holds
    `membership.manage` or is the agent's recorded controller. Then it
    records the request under `op` and creates the agent's object.
-4. The agent's object makes its key, keeps the signed `enrol` under
-   custody before sending it, reads the admitted entry back, confirms the
-   key is active, and mints the bearer. The signed `enrol` for membership@6,
-   @7 or @8 holds the invitation proof; legacy @2, @4 and @5 hold its secret.
-   Custody and the admitted journal entry retain those signed fields.
-   Hosted custody archival does not delete them; see its budgets below.
+4. The agent's object makes its key and keeps the signed `enrol` under
+   custody before sending it. When the act takes effect, the object reads
+   the entry back, confirms that the key is active, and mints the bearer.
+   The signed `enrol` for membership@6, @7 or @8 holds the invitation
+   proof. Legacy @2, @4 and @5 hold its secret. Custody and the journal
+   entry keep those signed fields, and hosted custody archival does not
+   delete them (see [Hosted budgets and recovery](#hosted-budgets-and-recovery)).
 5. Give the agent host `https://<service>/mcp` and
    `Authorization: Bearer <agent>.<secret>`.
 
@@ -1842,21 +1756,25 @@ A control request is the canonical JSON of
 `{ v: 1, action, service, membership, agent, actor, body, op, notAfter }`,
 signed by `actor` under the tag `artroom-mcp-control-1`, and presented as
 `Authorization: Control <base64url of the JSON>.<signature>`. `body` is the
-SHA-256 digest of the request body; `agent` is null for `create`; `op` is
+SHA-256 digest of the request body. `agent` is null for `create`. `op` is
 the caller's identity for the operation, 1 to 128 bytes. The same `op` with
 the same request resumes unfinished work or returns its original status
 and stable metadata. A completed bearer issuance replays with
 `bearerShown: true` and its original `bearerExpires`, never `bearer`.
 A later renewal does not change that receipt's expiry. Another request
-under the same `op` is refused `409`; the secret-free receipt is kept seven
-days past the request's `notAfter`, then `409` as stale, and the `op` is
-never reused. Authenticated control operations remove expired receipt
-bodies. A denied agent `bearer` or `retire` control does not perform that cleanup. Refusals are
-fixed bodies naming a rule, never a value: `403` for a
-bad signature, another service, another repository or incarnation, a
-revoked key, an ended member or a signer without authority; `400` for a
-binding that does not match the route, a body digest that differs or a
-deadline out of range; `507` when the object's control budget is full.
+under the same `op` is refused `409`. The secret-free receipt is kept
+seven days past the request's `notAfter`. After that the `op` answers
+`409` as stale and is never reused. Authenticated control operations
+remove expired receipt bodies. A denied agent `bearer` or `retire` control
+does not do that cleanup. A refusal is a fixed body that names a rule,
+never a value:
+
+- `403` for a bad signature, another service, another repository or
+  incarnation, a revoked key, an ended member or a signer without
+  authority.
+- `400` for a binding that does not match the route, a body digest that
+  differs or a deadline out of range.
+- `507` when the object's control budget is full.
 
 ### Bearer lifetime and one-time delivery
 
@@ -1872,38 +1790,32 @@ Plaintext is returned only from the fresh issuance response. Durable
 creation and control answers keep the secret-free receipt, not the token.
 If the first response is lost after issuance commits, repeating the same
 operation returns the already-shown receipt. Use a new signed `bearer`
-operation to obtain a new token; the server cannot recover the old one.
+operation to obtain a new token. The server cannot recover the old one.
 Concurrent duplicate requests can receive at most one plaintext response.
-A reset before issuance commits can still resume the same enrolment and
+A reset before issuance commits can still resume the same enrollment and
 issue once, without creating a second agent or key.
 
-At cutover, an existing bearer without a valid stored expiry fails closed.
-There is no grace period or deadline inferred from activation or an
-unrelated update. The planner must explicitly renew live hosted-agent
-tokens as a deployment step and record that step. A legacy receipt has
-`bearerExpires: null`; it grants no continued token use.
+A bearer with no valid stored expiry fails closed. The endpoint infers no
+grace period or deadline from activation or an unrelated update. To keep
+such an agent, renew its bearer with a signed `bearer` operation. A legacy
+receipt has `bearerExpires: null` and grants no further token use.
 
-The versioned answer-scrubbing migration runs when each agent or registry
-object is constructed. Renewing an agent does not activate its repository's
-registry. A dormant registry can therefore retain an old raw creation
-answer until it is activated. Before claiming complete cleanup, the
-planner must also activate the relevant repository registries through the
-existing control plane, or record that dormant cleanup remains lazy and
-incomplete. This adds no operator enumeration API. New-code requests cannot
-return a stored answer before that object's migration runs.
+The migration that scrubs stored answers runs when each agent or registry
+object is constructed. Renewing an agent does not activate its
+repository's registry. A dormant registry can therefore keep an old raw
+creation answer until something activates it. To clean every registry,
+activate each one through the control routes. The endpoint has no route
+that lists registries. A request cannot return a stored answer before that
+object's migration runs.
 
-After expiry, new requests return `401` at bearer admission, before MCP
-body processing. Existing Origin and address-limiting refusals keep their
+After expiry, new requests return `401` at the bearer check, before the
+endpoint reads the MCP body. Existing Origin and address-limiting refusals keep their
 precedence. Open hosted legacy streams and modern listens close through
 the existing HTTP lifecycle, using bounded timer rechecks while needed.
-There is no 30-day timer or new Durable Object alarm. A call admitted
-before expiry finishes under its original custody and operation fences;
-transport expiry does not cancel native authority work or authorize a new
-attempt. Legacy session idle expiry remains a separate 30-minute rule.
-
-The [R5C note](../notes/implementation/2026-10-24-hosted-mcp-bearer-expiry.md)
-records the implementation and verification status. R15 retirement and
-seed removal remain separate.
+There is no 30-day timer or Durable Object alarm. A call accepted before
+expiry finishes under its original custody and operation fences. Transport
+expiry does not cancel native authority work or authorize a new attempt.
+Legacy session idle expiry is a separate 30-minute rule.
 
 ### The bearer
 
@@ -1918,14 +1830,14 @@ rejected before bearer authentication. At capacity, a new bounded address
 can still authenticate successfully. A failed new address gets `429` if
 expired keys cannot free a slot. Active keys are never evicted to make room.
 
-Revocation is also the membership's: `key.revoke` or `member.remove` by an
-admin makes the key's acts refused everywhere; `retire` only stops the
-hosted service.
+Revocation also belongs to the membership. After an admin's `key.revoke`
+or `member.remove`, every scope refuses the key's acts. `retire` only
+stops the hosted service.
 
 ### The two revisions over HTTP
 
-Exactly `2025-11-25` and `2026-07-28` are served; any other
-`MCP-Protocol-Version` is refused `400` before anything is dispatched, on
+The endpoint serves exactly `2025-11-25` and `2026-07-28`. It refuses any
+other `MCP-Protocol-Version` with `400` before it dispatches anything, on
 every method. The revision is selected before the method is handled: from
 the header when present, else from the request's own content (a `_meta`
 protocol version, or `initialize`) or from the recorded version of the
@@ -1940,60 +1852,142 @@ session the request names. Then:
 | header absent, `Mcp-Session-Id` names a live session | that session's revision | the stream | the session ends |
 | header absent, otherwise | `400` | `405` | `405` |
 
-A batch is refused on every request; a body over 1 MiB is `413`; an
-`Origin` header is `403`. At most 16 sessions per agent (a 17th
-`initialize` is admitted first and then ends the oldest; a refused
-`initialize` ends nothing) and 4 open streams, legacy streams and
-listens together (a 5th is `409`). Every byte bound here counts UTF-8
+The endpoint refuses a batch on every request. A body over 1 MiB answers
+`413`, and an `Origin` header answers `403`. An agent has at most 16
+sessions. A 17th `initialize` is accepted and then ends the oldest
+session, and a refused `initialize` ends nothing. An agent has at most 4
+open streams, counting legacy streams and listens together. A 5th answers
+`409`. Every byte bound here counts UTF-8
 bytes. A legacy HTTP session expires after 30 minutes without a client
 request. The server checks expiry before an authenticated legacy request
-uses or creates a session; it does not run a separate expiry timer. A
-client request that reaches its session, including `GET`, renews the idle
-time; server notifications do not. Expiry removes the stored session,
+uses or creates a session. It runs no separate expiry timer. A client
+request that reaches its session, including `GET`, renews the idle time.
+Server notifications do not. Expiry removes the stored session,
 closes its stream with a final event, and leaves its ID answering `404`.
 Initialize again to obtain a new ID. Origin or bearer refusals and the
 stateless modern revision neither renew nor expire legacy sessions.
 
 A session's activity time survives the object's eviction. A stored row
 from before idle tracking uses its creation time until its next request.
-Its open stream does not survive eviction: when the stream reconnects, a list
-change the client has not listed is told once more.
+Its open stream does not survive eviction. When the stream reconnects, the
+server tells once more of a list change that the client has not listed.
 
-### Budgets and recovery
+### Hosted budgets and recovery
 
 | Budget | Bound | When full |
 |---|---|---|
-| Custody, per agent | 1 GiB | A new act whose completion need (its record up to 2 MiB plus a 512 KiB segment row) cannot be reserved is refused `full` before anything is signed; a resubmit, repeat step or settle that cannot reserve is refused before anything is dispatched; retained answers stay readable |
-| One identity's history | 64 MiB | Further attempts on that identity refuse `full`; its retained answer stays readable |
-| Control, per registry and per agent | 16 MiB, the last 1 MiB for `retire` alone; one aggregate of every persisted row: each operation (4 KiB reserved, its answer charged beyond that), each 2025-11-25 session row (its declared capabilities at most 16 KiB), and the agent's configuration | `create` and `bearer` refuse `507`; a session cannot be issued (`507`, error `-32001`); a root cannot be added; `retire` still succeeds. Were the reserve exhausted too, the admin's `key.revoke` ends the agent's authority in the scope regardless of the hosted objects |
+| Custody, per agent | 1 GiB | A new act whose completion need (its record up to 2 MiB plus a 512 KiB segment row) cannot be reserved is refused `full` before anything is signed. A resubmit, repeat step or settle that cannot reserve is refused before anything is dispatched. Retained answers stay readable. |
+| One identity's history | 64 MiB | Further attempts on that identity refuse `full`. Its retained answer stays readable. |
+| Control, per registry and per agent | 16 MiB, the last 1 MiB for `retire` alone. One total covers every persisted row: each operation (4 KiB reserved, its answer charged beyond that), each 2025-11-25 session row (its declared capabilities at most 16 KiB), and the agent's configuration. | `create` and `bearer` refuse `507`. A session cannot be issued (`507`, error `-32001`). A root cannot be added. `retire` still succeeds. If the reserve is also used up, the admin's `key.revoke` ends the agent's authority in the scope, whatever the hosted objects hold. |
 
-Nothing is deleted: terminal custody records move to an archive table in
-the same object. A storage failure rolls its transaction back and settles
-nothing; the next `settle` writes the receipt. Recovery of a budget-full
-agent is `retire` and a new agent; an `export` control action is owed.
+The endpoint deletes nothing. Terminal custody records move to an archive
+table in the same object. A storage failure rolls its transaction back and
+settles nothing, and the next `settle` writes the receipt. To recover an
+agent whose budget is full, `retire` it and create a new agent. The
+endpoint has no export action.
 
-### Observed figures
+### Hosted framing figures
 
 | Figure | Value | How taken |
 |---|---|---|
-| HTTP framing beyond the CallResult, a 2026-07-28 `tools/call` | 144 bytes: the JSON-RPC envelope with a one-digit id (34) and the modern result's added members (110) | Observed, `packages/mcp/test/hosted.scope.test.ts`, H7 |
+| HTTP framing beyond the CallResult, a 2026-07-28 `tools/call` | 144 bytes: the JSON-RPC envelope with a one-digit id (34) and the modern result's added members (110) | Observed, `packages/mcp/test/hosted.scope.test.ts` |
 | Control request header | about 600 bytes | Reconstruction: the canonical JSON of the nine members, base64url, and a 64-byte signature |
+
+## Operational metrics
+
+`dap mcp` writes `dap.metric {json}` lines to stderr. Stdout remains the
+stdio protocol. Each JSON record has `schema: "mcp-metrics-v1"` and the
+point's `indexes`, `blobs` and `doubles`. Hosted agent objects write the
+same point map through the existing optional METRICS binding. These
+observations grant no authority and contain no signed input, credential,
+invitation, bearer, scope index or caller-supplied request identity.
+
+The point has no index, nine blobs and six doubles:
+
+| Blob | Meaning and allowed values |
+|---|---|
+| 1 | `tools-list`, `tool-call`, `custody`, or the terminal `metric-dropped` summary |
+| 2 | The configured public deployment, at most 128 UTF-8 bytes. `local` by default in the CLI, `unknown` for an invalid context |
+| 3 | Worker version UUID in lowercase, or `unknown` |
+| 4 | One of the fixed names below. A summary uses `list` |
+| 5 | `ok`, `refused`, `error` or `unavailable`. A summary uses `dropped` |
+| 6 | `none`, an allowed reason below, or a persisted custody phase. A summary uses `summary` |
+| 7 | Server-minted request ID, sixteen lowercase hexadecimal characters, or `none` |
+| 8 | `none`. No caller trace is copied into this map |
+| 9 | Exactly `mcp-metrics-v1` |
+
+The fixed names are `list`, `room`, `inspect`, `create`, `join`, `prepare`,
+`items`, `steps`, `step`, `record`, `sends`, `text`, `wait`, `settle`,
+`credential`, `actions`, `act`, `install_application`,
+`application_installation`, and hosted `enrol`. Act tool names derived
+from declarations are outside this first map. Their events are dropped
+and counted as invalid fields. Their names are not copied or redacted.
+The tools continue to run normally.
+
+The native reason allowlist is:
+
+```
+revision-moved alias duplicate-relation required-unset scope-full
+bad-intent misaddressed expired scope-refused unknown-act bad-field
+no-item final fact-mismatch unauthorized guard-failed capability-refused
+slot-full type-full entry-too-large send-unresolved unknown-message
+unsupported-definition bad-input dependency-unavailable busy clock-behind
+scope-provisional guard-incomplete authority-unavailable unavailable
+rate-limited idempotency-mismatch not-found wrong-incarnation forbidden
+history-unavailable too-large sessions-unavailable bad-request replayed
+```
+
+The server reasons are `exception`, `shape`, `stale-descriptor`, `restart`,
+`transport`, `custody`, `credential`, `target`, `unknown-tool`, `read`,
+`conflicting`, `full`, `locked`, `unreadable`, `terminal` and `unkept`.
+Record phases are `prepared`, `sent`, `unknown`, `accepted`, `refused`,
+`mismatch` and `settled`. Preparation-step phases are `prepared`, `sent`,
+`unknown` and `answered`.
+
+| Kind | Doubles 1 through 6 |
+|---|---|
+| `tools-list` | 1, duration in ms, tools on this page, page bytes, read attempts, generation changed (0 or 1) |
+| `tool-call` | 1, duration in ms, read attempts, native page attempts, whole service result bytes, 0 |
+| `custody` | 1, 0, 0, 0, 0, subject (0 for record, 1 for preparation step). Blob 6 is its new persisted phase |
+| `metric-dropped` | 1, loss bitmask, events lost, 0, 0, 0 |
+
+Numbers are whole values from zero through 2,147,483,647. List bytes count
+the JSON `{ tools, nextCursor? }`. Call bytes count the service result
+before wire-specific framing. A generation change means that this listed
+page's generation differs from the service's last listed generation,
+not a count of notifications sent. Read attempts include session requests
+and signed-read fallbacks. Page attempts count item, history, outbox and
+log page requests. Hosted enrollment also counts its own direct authority
+reads. Counts belong to each concurrent operation, not a shared delta.
+
+A custody event follows a successful persisted phase change. An observed
+answer whose write failed emits no completed phase. Record and step
+phases remain distinct. Invalid fields are dropped before a point is
+retained. Loss bits are 1 for budget, 2 for invalid fields and 16 for
+overflow. Each operation retains at most 248 phase events, one completion
+and one summary, within 250 points. The server does not wait for
+reporters. A failed write cannot replace a tool result, and a summary
+cannot prove its own presence. The deployment check excludes this map when judging scope
+turn coverage.
 
 ## Budgets and observed figures
 
-Each figure below is labelled by how it was taken: an observed run of a
+Each figure below is labeled by how it was taken: an observed run of a
 named test, or a sum of a recipe's steps.
 
 ### Whole responses
 
 A tool's bound is for the whole tool result as the service makes it: the
-structured content, the text and `isError` together (plan 031, section 8: 4 KiB for an
-act, `wait`, `settle` and `prepare`; 8 KiB for `room` and a page of
-`inspect`; 64 KiB for `items`, `steps`, `step`, `record`, `sends`, `text`,
-`actions` and the declaration or complete text of `inspect`; 2 KiB for
-`credential`). The text repeats the structured content's JSON only when
-the whole result still fits; otherwise the text says where the result
-is. Pages are sized for the whole result, and a text slice is measured
+structured content, the text and `isError` together:
+
+- 4 KiB for an act, `wait`, `settle` and `prepare`.
+- 8 KiB for `room` and a page of `inspect`.
+- 64 KiB for `items`, `steps`, `step`, `record`, `sends`, `text`,
+  `actions` and the declaration or complete text of `inspect`.
+- 2 KiB for `credential`.
+
+The text repeats the structured content's JSON only when the whole result
+still fits. Otherwise the text says where the result is. Pages are sized for the whole result, and a text slice is measured
 after JSON escaping. Over 2026-07-28 each result also carries
 `resultType` and the server's information in `_meta`: 110 bytes more,
 observed in `wire.test.ts` (the constant `MODERN_RESULT_EXTRA`), which the
@@ -2011,7 +2005,7 @@ or skipped.
 
 The searches of `wait` and `credential` retain at most 64 recent entry-search
 positions and 64 recent final-page positions per server. A lookup keeps its
-position recent; the oldest is evicted at the bound. Each poll or call still
+position recent, and the server evicts the oldest at the bound. Each poll or call still
 reads at most 16 entries, or 4 pages of final items, with no fixed history
 window. An evicted search restarts those bounded reads. These hints hold
 neither an answer nor a credential and grant no authority.
@@ -2020,18 +2014,17 @@ An entry search belongs to its service and immutable opening entry's full
 scope, position and hash, so appending entries does not reset it. A final-page
 position belongs to its service, full scope, observed head and query. A new
 head or query starts at the first page. If the head changes between summary
-and final-item reads, that poll returns no item; a later poll reads again.
+and final-item reads, that poll returns no item. A later poll reads again.
 
 ### Per tool, end to end
 
 Observed run of `packages/mcp/test/budget.test.ts`, on the stand-in scope
 service of the Node tests, which counts every request the server makes. A
-warm call holds a read session; a cold call adds one session request. The
-response bounds are from plan 031, section 8. Response bytes are the whole
-result of the warm call, as the service makes it. The test asserts both calls'
-sizes against the bound. The table retains the historical observed counts and
-response sizes. The last column includes the current fresh-admission read
-bounds for the two named act tools.
+warm call holds a read session, and a cold call adds one session request.
+Response bytes are the whole result of the warm call, as the service makes
+it. The test asserts both calls' sizes against the bound. The read counts
+and response sizes are from an earlier run. The last column gives the
+current read bound of a fresh act for the two act tools.
 
 | Tool | Historical reads, warm | Posts | Cold | Response bytes | Current read bound, warm |
 |---|---|---|---|---|---|
@@ -2054,72 +2047,69 @@ bounds for the two named act tools.
 | `credential`, a second token after the first was read | 3 | 0 | +1 | 362 | 1 |
 | `tools/list` | 3 | 0 | +1 | | 3, + roots and memberships |
 
-Fresh act admission reads Membership, Directory, and Rules on each attempt.
+Each attempt of a fresh act reads Membership, Directory and Rules.
 `issue.comment` then reads its target lane: four reads in this fixture.
 `issue.create` also reads its Directory target and the retained definition
-bytes from Rules: five reads. The budget witness checks those exact routes
+bytes from Rules: five reads. The budget test checks those exact routes
 for both cold and warm calls. These bounds apply to this room with no
-applications or standalone roots. They do not raise the other tools' bounds.
-
-The R5 whole-file validation observed four reads for `issue.comment` and
-five for `issue.create`, with the exact routes checked for both cold and
-warm calls. All 22 runnable cases passed; the existing Darwin reclaimer
-case was skipped. Response sizes in the table remain historical.
+applications or standalone roots. They do not raise the other tools'
+bounds.
 
 `credential` reads the act's entry, then the entries after it until the
 operation's outcome names the token (two here), then the credential route:
-3 reads where plan 031 counts 1.
+3 reads.
 
 The warm counts above are of a room with no applications. An application
 the directory created costs reads the first time the server sees it: one
 summary of its scope for its pin, and its definition's bytes once per
-digest; both are kept, so later calls read nothing more for it. Its row
+digest. The server keeps both, so later calls read nothing more for it. Its row
 comes from the directory summary the list already reads.
 
 Other observed figures from the same run:
 
 - A session that has ended: the next read asks for a new one, +1.
 - A session refused at the membership: one session request, then signed
-  reads; the refusal is remembered for a minute.
+  reads. The server remembers the refusal for a minute.
 - A session the scope refuses on a read: one signed-read fallback for that
   read, so 2 reads.
 - A room with two standalone roots, one under a second membership: `room`
-  warm reads 6 (3, + 2 roots, + 1 for standing on the second membership);
-  cold, 2 session requests.
+  warm reads 6 (3, + 2 roots, + 1 for standing on the second membership).
+  Cold, it makes 2 session requests.
 - A room of 60 lanes, 30 applications and 40 roots: `room` in 6 pages
-  (observed; the test asserts more than one), each within 8 KiB. That
-  case proves the totals and the bound, not that pages agree with each
-  other; a second case does: a continuation inside the roots, after an
+  (observed, and the test asserts more than one), each within 8 KiB. That
+  case shows the totals and the bound, not that pages agree with each
+  other. A second case shows that: a continuation inside the roots, after an
   application appears as `creating`, is created, or is refused, restarts,
   and the walk from the restart returns every root once.
-- 20 prepared steps under one key: `settle` in 4 pages, each within 4 KiB;
-  each `prepare` result at most 1692 bytes.
+- 20 prepared steps under one key: `settle` in 4 pages, each within 4 KiB.
+  Each `prepare` result is at most 1692 bytes.
 - A known tool name called at a root another process added under a second
   membership: served under that membership, with no list call first.
 - A mint's outcome 100 entries after its act: found in 7 `credential`
-  calls; a creation completed 100 entries after its act: found in 7 polls
-  of one `wait`; a final item on the fifth page of final items: found in 2
+  calls. A creation completed 100 entries after its act: found in 7 polls
+  of one `wait`. A final item on the fifth page of final items: found in 2
   polls. No entry was read twice.
 - A 64 KiB live item is served alone and whole on its own `inspect` page.
   A continuation after the head moved restarts at the new head and says so.
 - A 200 KiB retained text is read whole in 4 calls of `text` by offset.
 - With a 2 KiB list page, each descriptor larger than the page is alone on
-  its page (35 of them), and all 71 tools are reachable.
-- 70 resubmissions of one refused envelope: each of the 70 made 4 reads and
+  its page (35 of them), and every tool is reachable.
+- 70 resubmissions of one refused intent: each of the 70 made 4 reads and
   1 post, with no new session. Every attempt checked the same four routes
-  above, and all 70 outcomes remained readable in the R5 validation.
+  above, and all 70 outcomes stayed readable.
 - A subscribed client is told 2 times for an activation and a role change,
   and 0 times for an ordinary head advance. Each watch run reads 3
   summaries.
 
 ### The list, per role
 
-Observed run of `packages/mcp/test/budget.test.ts`, taken in the
-discovery head (request f9ca5f96). Bytes are the
-canonical JSON of each `tools/list` result as sent; every page is asserted
-to be at most 256 KiB. Tokens are counted by gpt-tokenizer 3.4.0 with the
-`o200k_base` encoding, a proxy: an agent host's own tokenizer gives other
-counts.
+Observed run of `packages/mcp/test/budget.test.ts`, taken before the
+server listed `install_application` and `application_installation`. The
+list now has two more generic tools in each row. Bytes are the canonical
+JSON of each `tools/list` result as sent, and the test asserts that every
+page is at most 256 KiB. The token counts are a proxy, counted by
+gpt-tokenizer 3.4.0 with the `o200k_base` encoding. An agent host's own
+tokenizer gives other counts.
 
 | Room and role | Tools | Pages | Bytes | Tokens |
 |---|---|---|---|---|
@@ -2131,7 +2121,7 @@ counts.
 | Demo room, admin, `--generic` | 16 | 1 | 15236 | 3581 |
 
 No cap applies to the whole list. `--tools` shortens it for an agent with
-one job; `--generic` replaces the act tools with the pair.
+one job. `--generic` replaces the act tools with the pair.
 
 ### List changes in the room story
 
@@ -2145,9 +2135,9 @@ An embedding application can supply `ServerPort.views`, a trusted
 `ViewSource` projection adapter. It reads through the MCP service's normal
 authenticated tools. The generic kit then lists four opening tools:
 `view_needs_you`, `view_work`, `view_decision` and `view_change`.
-Their text exposes screen, identity, exact revision and counts. It remains
-useful in a host without MCP Apps. The `view_read` and `view_act` tools
-return card details to the app; the host enforces their app-only visibility.
+Their text shows the screen, identity, exact revision and counts, so it
+stays useful in a host without MCP Apps. The `view_read` and `view_act` tools
+return card details to the app. The host enforces their app-only visibility.
 Native scope authorization still applies to reads and signed acts.
 
 Both wire revisions serve four single-file HTML resources under
@@ -2160,13 +2150,18 @@ paging cursors are bound to the capability profile.
 
 The server retains each display's native action input. The browser sends
 only its view key, display cut and action ID. Duplicate dispatch returns
-its first outcome. Instance and cut are checked again at signing admission,
-after asynchronous reads. A superseded or unknown instance refuses a new
+its first outcome. The server checks the instance and cut again when it
+signs, after its asynchronous reads. A superseded or unknown instance refuses a new
 act. A lost or unavailable outcome offers only its original request check,
-using the retained custody key. Full native responses remain under custody;
-the card receipt shows item, version and outcome.
+using the retained custody key. Full native responses stay under custody.
+The card receipt shows item, version and outcome.
 
 The generic kit supplies the carousel, detail, diff, updates and receipt
-screens. Journey projections, package installation and desktop-host
-registration are separate work. The implementation boundary and fixture
-browser command are in the [card-kit note](../notes/implementation/2026-10-18-compact-card-kit.md).
+screens. It does not include journey projections, package installation or
+desktop-host registration. The
+[card-kit note](../notes/implementation/2026-10-18-compact-card-kit.md)
+gives the command that runs the fixture browser.
+
+## Source
+
+Checked against main `5dc9765f` on 30 October 2026. Sources: [packages/mcp/src](../packages/mcp/src/), [packages/mcp/src/hosted-tools.ts](../packages/mcp/src/hosted-tools.ts), [packages/mcp/src/hosted.ts](../packages/mcp/src/hosted.ts), [packages/mcp/src/http.ts](../packages/mcp/src/http.ts), [packages/mcp/test/inventory.test.ts](../packages/mcp/test/inventory.test.ts), [docs/mcp-tools.json](mcp-tools.json).

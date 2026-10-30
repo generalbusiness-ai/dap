@@ -6,39 +6,33 @@ same definition as a real app: on a service you deploy, in a room that
 says who is allowed to do what, with people who sign from their own
 devices and agents that take part through tools.
 
-**Not yet run: written from the current commands; it will be run and
-recorded when deployments resume.** Only step 2 ran for this page, on
-15 October 2026. The lending library's first definition went through the
-same path on a deployed service on 14 October 2026, as its
+A definition on its own, like the tutorial's, runs in a room of the
+`application` family. You activate the definition in the room's rules and
+ask the room's directory to create the scope. A package, which bundles
+several definitions with their views, is built with `dap new`, `dap check`
+and `dap pack` and installs into a room with `dap install`.
+[The dap command](cli.md) says which room families accept a package
+today. This page takes the first path.
+
+Step 2 of this page ran on 15 October 2026. Steps 3 to 8 have not been
+run end to end for this page. The lending library's first definition went
+through the same path on a deployed service on 14 October 2026, as its
 [runbook](../examples/lending/runbook.md#the-rehearsal-run-14-october-2026)
 records.
 
 ## What you need
 
 You need the `my-counter` directory from the tutorial, a Cloudflare
-account that can deploy Workers, and a checkout of the dap repository;
-[Run dap in 10 minutes](self-host.md) lists the details. On this page,
+account that can deploy Workers, and a checkout of the dap repository.
+[Run your own service](self-host.md) lists the details. On this page,
 `dap` means `node packages/cli/bin/dap.js`, run from the root of the
 checkout. The command is not published to a registry yet.
 
-This guide uses the earlier `application` cohort and its explicit definition
-activation, creation, and role grants. It remains a low-level path for the
-tutorial's definition, which has no browser page.
-
-New room creation does not currently offer a family that installs ordinary
-application packages such as Counter or Lending. For an existing historical
-`trusted-application` room, use the [package install command](cli.md). That path records one admin request and
-serves the package's screen through the generic application route. The
-maintained [Counter](../apps/counter/APPLICATION.md) and
-[Lending](../examples/lending/APPLICATION.md) packages use it. `dap check`,
-`dap dev`, and `dap pack` provide local checks, a development host, and a
-signed packet. The service no longer embeds their app-specific routes.
-
 ## Step 1: Deploy the service
 
-Follow steps 1 to 4 of [Run dap in 10 minutes](self-host.md): clone,
-log in, configure and deploy. Stop before step 5. You now have a
-service at `https://<name>.<subdomain>.workers.dev`.
+Follow [Run your own service](self-host.md) through the deployment of the
+Worker. Stop before you create a room. You now have a service at
+`https://<name>.<subdomain>.workers.dev`.
 
 ## Step 2: Pin the definition
 
@@ -80,31 +74,31 @@ digest: sha256:33b7f840f37aad8f023813eb639ebf42b720f0dc635bfe17b4322522d1f7f942
 ```
 
 Keep `counter.json` exactly as written. Do not open it in an editor that
-adds a newline at the end: one extra byte gives a different digest, and
-the service refuses the file. The commands below use this digest; use
+adds a newline at the end. One extra byte gives a different digest, and
+the service refuses the file. The commands below use this digest. Use
 your own if you changed the definition.
 
 ## Step 3: Create a room for apps
 
 A room holds the members, their roles and the rules. An app needs a room
-of the `application` kind. From the checkout:
+of the `application` family. From the checkout:
 
 ```sh
 export DAP_HOME="$(mktemp -d)"
 dap install --plan https://<name>.<subdomain>.workers.dev --cohort application --host artifacts --namespace dap-my-room
 ```
 
-The plan lasts 14 minutes; finish this step within that time. Do step 6
-of [Run dap in 10 minutes](self-host.md), with two
-changes: add `--cohort application` to `install --planned`, and use
-`create` in place of `claim`:
+The plan lasts 14 minutes. Finish this step within that time. Set the
+Worker's `REGISTER_SCOPE` setting to the planned register ID the command
+prints, as [Run your own service](self-host.md) describes, then install
+the plan and create the room:
 
 ```sh
 dap install --planned --cohort application
 dap create my-room --handle @rita
 ```
 
-You are `@rita`, the room's first admin. Keep `DAP_HOME`: it holds your
+You are `@rita`, the room's first admin. Keep `DAP_HOME`. It holds your
 signing key.
 
 ## Step 4: Turn the definition on
@@ -120,14 +114,14 @@ dap act activate --on rules --set digest=sha256:33b7f840f37aad8f023813eb639ebf42
 
 Ask the room to create the counter from that definition. This signs the
 counter's first act, `start`. The room fills in `opener` with you, so
-you own the board; you give the target:
+you own the board. You give the target:
 
 ```sh
 dap act establish-application --on directory --set definition=sha256:33b7f840f37aad8f023813eb639ebf42b720f0dc635bfe17b4322522d1f7f942 --set 'values={"target":3}' --set execution=recorded-do --value ~/my-counter/counter.json
 ```
 
 `values` must be compact JSON with its keys in order, exactly as shown.
-If the answer is lost, do not run the command again: a second run would
+If the answer is lost, do not run the command again. A second run would
 create a second counter. Read the directory's journal first, with
 `dap log directory`.
 
@@ -141,11 +135,11 @@ dap apps
 Each row shows the name, definition digest and full scope reference.
 Copy the counter's `scope` ID for the commands below, where `$COUNTER`
 stands for that ID. The command reads at most 25 rows per page and says
-whether the selected suffix is complete. Follow its printed
-`dap apps --cursor ...` command explicitly for another page. A cursor is
-bound to that Directory head; if it is stale, run `dap apps` again.
-Only scopes recorded as created are listed. An unfinished creation still
-belongs in `dap log directory`; an absent row is no reason to create again.
+whether the page is complete. For another page, run the printed
+`dap apps --cursor ...` command. A cursor is bound to the directory head
+it was issued at. If it is stale, run `dap apps` again. Only scopes whose
+creation is recorded are listed. An unfinished creation still appears in
+`dap log directory`, and an absent row is no reason to create again.
 
 ## Step 6: Say who may do what
 
@@ -161,7 +155,7 @@ dap act set-actions --on membership --target 0 --set role=member --set 'actions=
 dap act set-actions --on membership --target 0 --set role=admin --set 'actions=[...the admin list..., "counter.play"]'
 ```
 
-A change of actions may not take effect at once: scopes reuse what
+A change of actions may not take effect at once. Scopes reuse what
 membership told them for a short time.
 
 ## Step 7: Invite people
@@ -196,9 +190,9 @@ dap verify $COUNTER
 
 For an agent, run `dap mcp` with the agent's own `DAP_HOME`. Give the
 agent a seat the same way, with an invitation and `dap join`.
-[Creating an agent](mcp.md#creating-an-agent-the-controllers-recipe)
-describes a seat that records who controls the agent. The server reads
-the room and makes one tool for each act your definition declares:
+[Agents through MCP](mcp.md#connect-an-agent-host) describes the
+connection and a seat that records who controls the agent. The server
+reads the room and makes one tool for each act your definition declares:
 `counter.join` and `counter.say`. A call to `counter.say` looks like
 this:
 
@@ -208,13 +202,13 @@ this:
 
 The answer is `accepted` or `refused`, with the same reasons. If the
 answer is lost, make the same call again, with the same
-`idempotencyKey`: the scope does not count it twice.
+`idempotencyKey`. The scope does not count it twice.
 
 ## The lending library
 
 The same steps run the library you wrote in
 [Build a lending library](build-a-lending-library.md). In `pin.ts`,
-import `lending` in place of `counter` and write `lending.json`; the
+import `lending` in place of `counter` and write `lending.json`. The
 digest is
 `sha256:439cd20ea9e0b72294d091d3bdcfe13de8c1f31d5685c40bc7bd2754860784ff`.
 Its only first-act field is `opener`, so `values` is `{}`. Give
@@ -223,7 +217,17 @@ admin only.
 
 ## Where to go next
 
-- [Write an application](write-an-application.md): the reference for
-  definitions, where each kind of rule belongs, and pins.
-- [The dap command](cli.md), [MCP](mcp.md) and
+- [Write an application](write-an-application.md): the steps of writing a
+  definition, where each kind of rule belongs, pins and packages.
+- [The dap command](cli.md), [Agents through MCP](mcp.md) and
   [the ten terms](manual/ten-terms.md): every command, tool and word.
+
+## Source
+
+Checked against main `5dc9765f` on 30 October 2026. Sources:
+[the install cohorts](../packages/cli/src/commands.ts),
+[the application list](../packages/cli/src/application-list.ts),
+[the directory's establish act](../packages/platform/src/directory.ts), and
+[the lending runbook](../examples/lending/runbook.md). Step 2 ran on
+15 October 2026 with the published packages at `0.1.0-dev.2`. The other
+steps were not run for this page.

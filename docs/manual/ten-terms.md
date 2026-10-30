@@ -33,15 +33,15 @@ pins it. The forms are in
 The platform's own scopes, such as the directory and membership, have
 definitions too. A **cohort** is the set of platform definition
 versions that a room is created with, such as `application` or
-`application-publication`. A room keeps its cohort's pins; a newer
+`application-publication`. A room keeps its cohort's pins. A newer
 cohort makes a new room.
 
 ## 3. Item
 
 An **item** is one thing a scope holds, of a type that the definition
 declares: a library's thing, a Counter's board, an issue's commitment.
-An item has a state from its type's list, and slots: parties, which hold
-members; references; and values. A final state is one that no act can
+An item has a state from its type's list, and three kinds of slot:
+parties, which hold members, references, and values. A final state is one that no act can
 leave. Each change to an item raises its revision, and an act names the
 revisions it expects.
 
@@ -66,7 +66,7 @@ An **entry** records one input and what followed from it: its effects on
 items, its sends, the foreign entries it read and the rule expressions it
 evaluated. Each entry names the hash of the one before it. A scope's
 **journal** is its entries in order, numbered from 0, starting with the
-genesis entry. The entry and its eight kinds of input are in
+genesis entry. The entry and its nine kinds of input are in
 [entry.ts](../../packages/contract/src/entry.ts).
 
 The documentation says **record** loosely for everything a scope keeps,
@@ -95,7 +95,7 @@ member's **seat** is their member item there, which holds their handle
 and role. A member signs with keys that membership has **enrolled** for
 them:
 
-- a **device key**, made on each device that joins;
+- a **device key**, made on each device that joins.
 - an **agent key**, enrolled for an agent by an agent-key invitation.
 
 Three other keys have one job each. The **operator key** signs the
@@ -143,7 +143,7 @@ holds for that coverage and those trusts. It is in
   produces are recorded together.
 - **Settle** means completing recorded work according to its definition.
   The definition's pinned `settles` field names the work a form completes.
-  A `settle` API read asks for the receipt of a signed intent; that read
+  A `settle` API read asks for the receipt of a signed intent. That read
   records nothing.
 - **Step** is an act's form in a definition: `open`, `transition` or
   `comment`. Tutorial steps and the MCP tool `steps`, which lists a
@@ -161,12 +161,11 @@ holds for that coverage and those trusts. It is in
 | Definition | A declared state machine. |
 | Create | Making a scope with its genesis entry. |
 
-## Source and acceptance
+## Source
 
-Written against main `5e11ca03` from the types in `packages/contract`,
-the judges in `packages/derive`, and the platform definitions in
-`packages/platform`. This page claims no run. The earlier version of this
-page also defined commitment, hold, plan and concern; they are now on
-[The room's terms](../../apps/room/docs/room-terms.md). The review
-history of earlier versions stays in
-[the ledger](../../apps/room/docs/ledger.md).
+Checked against main `5dc9765f` on 30 October 2026. Sources: the types in
+[packages/contract](../../packages/contract/src), the judges in
+[packages/derive](../../packages/derive/src), and the platform definitions
+in [packages/platform](../../packages/platform/src). The room's own terms,
+commitment, hold, plan and concern, are on
+[The room's terms](../../apps/room/docs/room-terms.md).

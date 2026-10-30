@@ -1,27 +1,20 @@
-# Run dap in 10 minutes
+# Run your own service
 
-Deploy dap on your own Cloudflare account, create a room, and give another
-device an invitation. The scope Worker serves both the API and the room page.
+Deploy the scope Worker on your own Cloudflare account, create a room, and
+invite a person on another device. The scope Worker serves both the API and
+the room page. To run the service on one Mac, follow
+[Run on a Mac](#run-on-a-mac).
 
-For one Mac, follow [Run on a Mac](#run-on-a-mac).
-
-**Measured run:** on 13 October 2026, a fresh deployment produced an invitation
-in 31.235 seconds and accepted a guest in 35.481 seconds from the start of the
-clone. Login was already complete, and an operator helper entered the
-configuration. The guest used an independent browser profile with its own key.
-These times do not measure human typing, login, or a second physical device.
-The [delivery note](../notes/implementation/2026-10-13-self-host-delivery.md) records the exact
-source, commands, results, and remaining cleanup task. Run notes at each step
-identify command variations and steps that were not exercised. The commands
-below use the current application paths; the delivery note retains the
-original run's exact source and commands.
+The project ran this guide on 13 October 2026 with an earlier Worker
+configuration. Nobody has run it again since the bindings changed.
 
 ## Deploy a room
 
 You need Git, Node 26, and a Cloudflare account that supports Workers,
-Durable Objects with SQLite storage, and Cloudflare Artifacts. Use an account
-where you can deploy Workers. The commands use pinned Wrangler 4.147.0;
-no global installation or Wrangler dependency in this checkout is needed.
+Durable Objects with SQLite storage, and Artifacts. You must be able to
+deploy Workers in that account. The commands run the pinned Wrangler
+4.147.0 through `npx`. You do not install Wrangler globally or in the
+checkout.
 
 1. Clone the source and install its locked dependencies.
 
@@ -31,13 +24,10 @@ no global installation or Wrangler dependency in this checkout is needed.
    npm ci
    ```
 
-   **Run note:** `npm ci` passed. The clone used `--no-checkout`, an explicit
-   destination, and a detached checkout of the recorded source commit. The
-   unpinned clone above and optional asset rebuild below were not exercised.
-
-   `npm ci` reports the installed packages. The room assets are committed in
-   `apps/room/page/assets.ts`. If you change the page source, rebuild
-   them with `node apps/room/page/scripts/assets.mjs` before deployment.
+   `npm ci` reports the installed packages. The room page's assets are
+   committed in `apps/room/page/assets.ts`. If you change the page source,
+   rebuild them with `node apps/room/page/scripts/assets.mjs` before you
+   deploy.
 
 2. Log in to Cloudflare from the room application.
 
@@ -48,39 +38,44 @@ no global installation or Wrangler dependency in this checkout is needed.
    cd ../..
    ```
 
-   **Run note:** login was a prerequisite and was not run in the timed sequence.
-   A separate pinned `whoami --account <account-id> --json` check validated the
-   existing OAuth login. The plain `whoami` command above was not exercised.
-
-   Login opens your browser. `whoami` lists your account and its ID.
-   Keep that ID for the Artifacts hostname below.
+   Login opens your browser. `whoami` prints your account and its ID.
+   Keep the ID for the Artifacts hostname in step 6.
 
 3. Choose an unused Worker name and a new Artifacts namespace, such as
-   `dap-my-room`. Edit `apps/room/wrangler.jsonc`: set `name` to that
-   Worker name, set the `artifacts` entry's `namespace` to your namespace,
-   remove the `DEMO_START_CONFIG` line, which belongs to `artroom-scope`,
-   and add the following top-level plain variables with your chosen values.
+   `dap-my-room` for both. Edit `apps/room/wrangler.jsonc` as follows.
 
-   ```json
-   "vars": {
-       "ARTIFACTS_NAMESPACE": "dap-my-room"
-   }
-   ```
+   - Set `name` to your Worker name.
+   - In `vars`, remove the `DEMO_START_CONFIG` line. It belongs to the
+     project's own `artroom-scope` Worker.
+   - In `vars`, set `SCOPE_INDEX_MODE` to `"enforce"`. A new deployment
+     has no older scopes to register.
+   - In `vars`, add `"ARTIFACTS_NAMESPACE": "dap-my-room"`.
+   - In the `artifacts` entry, set `namespace` to `dap-my-room`.
+   - Keep the four Durable Object bindings, `SCOPES`, `SCOPE_INDEX`,
+     `REGISTRIES` and `AGENTS`, and the three migrations, `v1`, `v2` and
+     `v3`, as they are. Deployment creates new Durable Object namespaces
+     for your Worker.
+   - Remove the `r2_buckets` entry. It names `artroom-application-content`,
+     a bucket in the project's account. Without the `APPLICATION_CONTENT`
+     binding, the application screen route answers `503`
+     `application-unavailable` and the Worker installs no application
+     package. A new room needs neither. To serve application screens
+     later, create a private R2 bucket in your account and bind it as
+     `APPLICATION_CONTENT` (see
+     [Trusted application screens](deploy.md#trusted-application-screens)).
+   - In `analytics_engine_datasets`, change `dataset` to a name of your
+     own, such as `dap_my_room_metrics`. To write no metrics, remove the
+     entry. The Worker then skips its metric points.
 
-   **Run note:** the helper entered this configuration for a fresh Worker and
-   namespace after complete inventory checks. Manual configuration entry was
-   not timed. Deployment created the new storage namespace.
-
-   Keep the `SCOPES` binding and the `v1` SQLite migration. Deployment creates
-   a separate Durable Object namespace for the new Worker. The first room's
-   repository creates the Artifacts namespace automatically in your account.
-   You do not need a namespace-create command. See Cloudflare's
+   The first room's repository creates the Artifacts namespace in your
+   account. You do not run a command to create the namespace. See
+   Cloudflare's
    [namespace guide](https://developers.cloudflare.com/artifacts/concepts/namespaces/).
    The entry's `remote: true` makes local Wrangler development use the live
-   Artifacts binding. It is not a second deployment or an access credential.
+   Artifacts binding. It is not a second deployment or a credential.
 
-4. Deploy, then send the deployment identity and a generated session secret
-   directly into Wrangler's stdin.
+4. Deploy, then send the deployment name and a new session secret to
+   Wrangler on standard input.
 
    ```sh
    npm run deploy:scope
@@ -89,227 +84,191 @@ no global installation or Wrangler dependency in this checkout is needed.
    cd ../..
    ```
 
-   **Run note:** `npm run deploy:scope` and pinned `secret bulk` passed.
-   The helper generated the values in memory and sent them through stdin.
-   The shell generator pipeline above was not executed verbatim.
-
    Deployment prints the Worker's `https://<name>.<subdomain>.workers.dev`
-   address and version ID. Secret storage reports success without printing
-   the secret. `DEPLOYMENT` is a nonsecret identity stored through the same
-   stdin operation; it retains that meaning even though Wrangler uses a secret
-   binding. Both bindings are required for sessions.
+   address and version ID. Secret storage reports success and does not
+   print the values. `DEPLOYMENT` is not secret, but Wrangler stores it
+   as a secret binding because it arrives through the same command. The
+   Worker issues no session without both values.
 
-5. Keep this room's signing keys in a new private directory. Substitute the
-   deployed address and your namespace in the plan command.
+5. Keep this room's signing keys in a new private directory. Plan the
+   install with your deployed address and namespace.
 
    ```sh
    export DAP_HOME="$(mktemp -d)"
    node packages/cli/bin/dap.js install --plan https://<name>.<subdomain>.workers.dev --host artifacts --namespace dap-my-room
    ```
 
-   **Run note:** the plan command passed with the deployed address and namespace.
-   The helper created a private key directory. The `mktemp` line above was not
-   exercised.
+   `packages/cli/bin/dap.js` is the `dap` command. The plan prints
+   `Planned: register sc_...` with its definition and its deadline, then
+   `Set REGISTER_SCOPE to sc_...`. It creates nothing. Finish the next
+   step before that deadline, 14 minutes after the plan.
 
-   The source launcher is the `dap` command. The plan prints `Planned: register sc_...`, its definition,
-   and its deadline. It creates nothing. Finish the next two steps before
-   that deadline, 14 minutes after the plan.
-
-6. Add `ARTIFACTS_CONFIG` to the same file's `vars`. Use the register ID
-   printed by the plan, your namespace, and your account's Artifacts hostname.
-   This setting contains no secret.
+6. Add two settings to the same file's `vars`. `REGISTER_SCOPE` pins the
+   register that the Worker accepts. `ARTIFACTS_CONFIG` wires the
+   Artifacts host. Use the register ID from the plan in both, your
+   namespace, and your account's Artifacts hostname. Neither setting
+   holds a secret.
 
    ```json
+   "REGISTER_SCOPE": "sc_<planned-id>",
    "ARTIFACTS_CONFIG": "{\"registerScope\":\"sc_<planned-id>\",\"namespace\":\"dap-my-room\",\"host\":\"<account-id>.artifacts.cloudflare.net\",\"maxBytes\":10485760,\"credentialIdentity\":\"adapter-attempt\"}"
    ```
+
+   The two register IDs must agree. If they differ, the Worker refuses
+   every new register. A Worker without `REGISTER_SCOPE` reads the pin
+   from `ARTIFACTS_CONFIG.registerScope`, which older deployments still
+   use.
+
+   Deploy again, install the planned register, and create the room:
 
    ```sh
    npm run deploy:scope
    node packages/cli/bin/dap.js install --planned
-   node packages/cli/bin/dap.js claim first-room --handle @owner
+   node packages/cli/bin/dap.js create first-room --handle @owner
    ```
 
-   **Run note:** the second deployment, `install --planned`, and
-   `claim first-room --handle @owner` passed on the recorded source. No recovery
-   command was needed. Any later replacement of `claim` with a different command
-   needs its own verification. The original timing does not cover that change.
+   Install prints `Installed: register sc_..., ... as planned.` Create
+   makes the room's Git repository, enrolls you as the owner, and prints
+   the room's directory and membership references. Keep `DAP_HOME` for
+   later commands. If create stops waiting, run the same command again
+   without `--again`. If an install is uncertain, keep its original plan
+   and run `install --planned` again. An expired deadline is no reason to
+   replace an install that the CLI already sent.
 
-   Install prints `Installed: register sc_..., ... as planned.` Claim prints
-   the room's directory and membership references after it creates the Git
-   repository and enrolls the owner. Keep `DAP_HOME` for later commands.
-   If claim gives up waiting, repeat the same command without `--again`.
-   Preserve an uncertain install's original plan and run `install --planned`.
-   An expired deadline does not authorize replacing an attempted request.
-
-7. Invite the person using the second device.
+7. Invite the person who uses the second device.
 
    ```sh
    node packages/cli/bin/dap.js invite @guest --role member
    ```
 
-   **Run note:** the invitation command passed. Native evidence verified the
-   owner's administrator role and the distinct guest key's active membership,
-   including the full membership reference and incarnation. The independent
-   browser-profile join was automated. A physical second-device run remains
-   unrun.
-
    The command prints the invitation ID and an `artroom-invite:...` link.
-   This link holds an invitation secret. Share it privately with that person;
-   do not include it in logs, screenshots, or a delivery note. On the second
-   device, open `https://<name>.<subdomain>.workers.dev/page/`, choose
-   **Invitation link**, and paste it. The page creates that device's key,
-   joins automatically, and opens the room. If enrollment is unresolved,
-   use **Check status** to read
-   the original request. A new device has its own key;
-   do not copy the owner's key to it.
+   The link holds the invitation secret. Send it to that person privately.
+   Keep it out of logs and screenshots. On the second device, the person
+   opens `https://<name>.<subdomain>.workers.dev/page/`, chooses
+   **Invitation link**, and pastes the link. The page makes a key for that
+   device, joins, and opens the room. If enrollment is still pending, use
+   **Check status** to read the original request. Each device has its own
+   key. Do not copy the owner's key to another device.
 
 ## Use GitHub instead
 
-**Run status:** this alternative was not exercised in this rehearsal.
-
-Use `--host github.com --namespace <account-login>` when planning. Configure
-and authorize the GitHub App before installation. Follow the
-[GitHub deployment order](deploy.md#the-order) and the
-[GitHub host requirements](hosts.md#github-host-githubcom).
-GitHub needs separate repository-creation credentials; an Artifacts binding
-needs no external Git credential.
+When you plan the install, use `--host github.com --namespace <account-login>`.
+Configure and authorize the GitHub App before you install. Follow
+[The order](deploy.md#the-order) and the
+[GitHub host requirements](hosts.md#github-host-githubcom). GitHub needs
+its own repository-creation credential. The Artifacts binding needs no
+outside Git credential.
 
 ## Install a maintained application
 
 Counter and Lending are signed application packages. The Worker serves their
-screens through the generic `/applications/<directory>/<install-item>/<presentation>/`
-route. The old `/counting/` and `/lending/` routes are retired.
+screens through the route
+`/applications/<directory>/<install-item>/<presentation>/`.
 
-New room creation does not currently offer a family that installs ordinary
-application packages such as Counter or Lending. These instructions apply
-to an existing historical `trusted-application` room. The room in this
-rehearsal keeps its historical pins; there is no automatic cohort migration. The operator must configure the
-[private application content bucket and exact release trust](deploy.md#trusted-application-screens)
-before an application can be installed.
+New room creation offers no family that installs ordinary application
+packages such as Counter or Lending. These steps apply to an existing
+`trusted-application` room. Before you install an application, configure
+the [private application content bucket and exact release trust](deploy.md#trusted-application-screens).
 
-Check and pack the maintained [Counter](../apps/counter/APPLICATION.md) or
-[Lending](../examples/lending/APPLICATION.md) source. Commit the signed packet
-to an HTTPS Git repository, then use the package-install command in
-[the CLI reference](cli.md). Keep the request key and its original arguments.
-Use `dap application <install-item>` to read pending, active, or refused state.
-Open the screen URL from an active result and enroll each device with its own
-private invitation. Existing membership and application grants still decide
-what that device can do.
+1. Check and pack the [Counter](../apps/counter/APPLICATION.md) or
+   [Lending](../examples/lending/APPLICATION.md) source.
+2. Commit the signed packet to an HTTPS Git repository.
+3. Run the package-install command in the [CLI reference](cli.md). Keep
+   the request key and its original arguments.
+4. Run `dap application <install-item>` to read the pending, active or
+   refused state.
+5. Open the screen URL from the active result. Enroll each device with its
+   own private invitation.
 
-The [14 October Lending runbook](../examples/lending/runbook.md) records the
-earlier application-publication deployment. It is historical acceptance
-evidence, not the setup procedure for the generic package route.
+Membership and application grants still decide what each device can do.
 
 ## Deploy the homepage
 
-Edit `homepage/wrangler.jsonc`: choose a new Worker name and remove `routes`
-for a `workers.dev` address. A custom domain is optional and must be yours.
+Edit `homepage/wrangler.jsonc`: choose a new Worker name, and remove
+`routes` to use a `workers.dev` address. A custom domain is optional and
+must be yours. The homepage's application links point at the project's
+demos. Change them to your own room, library and Counter addresses before
+you build.
 
 ```sh
 npm run build:home
 npm run deploy:home
 ```
 
-**Run note:** both npm commands passed for a separate disposable homepage
-Worker. Ten anonymous readbacks matched the built bytes, MIME types, and cache
-headers, including this guide's homepage link. Custom-domain setup and changes
-to application links were not exercised. This was not the project's existing
-homepage deployment.
-
-The command prints the homepage address. Its application links still point
-at the project's demos; change those links before building to use your own
-room, library and Counter addresses.
+The deploy command prints the homepage address.
 
 ## Remove the test deployment
 
-Delete the exact repository names from your new Artifacts namespace first.
-List their names, then delete each one with the pinned Wrangler CLI:
+Apply these steps only to a test deployment. Do not reuse its configuration
+for a room you keep.
 
-```sh
-cd apps/room
-npx -y wrangler@4.147.0 artifacts repos list --namespace dap-my-room
-npx -y wrangler@4.147.0 artifacts repos delete <repository-name> --namespace dap-my-room
-cd ../..
-```
+1. List the repositories in your Artifacts namespace, then delete each one
+   by its exact name.
 
-**Run note:** a complete API inventory identified the single owned repository.
-Pinned Wrangler deleted it with the added `--force` flag, and a complete API
-inventory then confirmed no repositories remained. All nine observed tokens
-were already revoked, with none active. The CLI list command and interactive
-delete form above were not exercised. A later inventory returned HTTP 403;
-its cause and the namespace's current visibility remain unknown.
+   ```sh
+   cd apps/room
+   npx -y wrangler@4.147.0 artifacts repos list --namespace dap-my-room
+   npx -y wrangler@4.147.0 artifacts repos delete <repository-name> --namespace dap-my-room
+   cd ../..
+   ```
 
-Deleting a Worker does not by itself prove its Durable Object storage was
-removed. For this disposable deployment, create a replacement entry point:
+2. Delete the Durable Object storage. Deleting a Worker alone does not
+   delete it. Write a replacement entry point that exports no Durable
+   Object class:
 
-```sh
-printf '%s\n' 'export default { fetch() { return new Response("Removed", {status: 410}); } };' > apps/room/cleanup-worker.mjs
-```
+   ```sh
+   printf '%s\n' 'export default { fetch() { return new Response("Removed", {status: 410}); } };' > apps/room/cleanup-worker.mjs
+   ```
 
-In `apps/room/wrangler.jsonc`, change `main` to `cleanup-worker.mjs`,
-remove `durable_objects`, and append this migration after `v1`:
+3. In `apps/room/wrangler.jsonc`, change `main` to `cleanup-worker.mjs`,
+   remove `durable_objects`, and append this migration after `v3`:
 
-```json
-{ "tag": "v2-remove-self-host", "deleted_classes": ["DeployedScope"] }
-```
+   ```json
+   { "tag": "v4-remove-self-host", "deleted_classes": ["DeployedScope", "McpRegistry", "McpAgent", "ScopeIndex"] }
+   ```
 
-This replacement exports no Durable Object class. Deploy the deletion
-migration, then delete the Worker:
+   The migration deletes every object of the four classes and their data.
+   See
+   [Cloudflare's delete migration](https://developers.cloudflare.com/durable-objects/reference/durable-object-class-migrations-legacy/#delete-migration).
 
-```sh
-npm run deploy:scope
-cd apps/room
-npx -y wrangler@4.147.0 delete
-cd ../..
-```
+4. Deploy the deletion migration, then delete the Worker:
 
-**Run note:** the helper wrote `selfhost-cleanup-worker.mjs`, removed the unused
-Artifacts binding and plain variables as well as the Durable Object binding,
-and deployed the deletion migration with `npm run deploy:scope`. A complete
-storage inventory confirmed the owned namespace was absent. The shell `printf`
-line and interactive Wrangler `delete` above were not executed verbatim.
-The Worker was removed through Cloudflare's nonforced service-delete API,
-followed by a complete Worker inventory that confirmed its absence.
+   ```sh
+   npm run deploy:scope
+   cd apps/room
+   npx -y wrangler@4.147.0 delete
+   cd ../..
+   ```
 
-The deletion migration removes the class's objects and their data. See
-[Cloudflare's delete migration](https://developers.cloudflare.com/durable-objects/reference/durable-object-class-migrations-legacy/#delete-migration).
-Apply this only to the disposable deployment. Do not reuse its configuration
-for an existing room.
+5. If you deployed a homepage Worker, run the pinned Wrangler `delete`
+   from `homepage/`.
+6. Remove the private `DAP_HOME` directory when you no longer need its
+   keys or original requests.
 
-Pinned Wrangler exposes Artifacts namespace list and get commands but no
-namespace deletion command. Cloudflare's published Artifacts REST reference
-also lists no namespace deletion route
-([Artifacts REST API](https://developers.cloudflare.com/artifacts/api/rest-api/#namespaces)). Removing the repositories leaves a
-namespace that was last confirmed empty after repository deletion. Namespace
-removal is **unsupported and unrun**. A later listing returned HTTP 403, so the
-current namespace state is unknown. A supported Cloudflare operation is still
-needed. The test deployment has not been fully cleaned up.
-
-**Run note:** the disposable homepage Worker was also removed through the
-nonforced service-delete API, and a complete inventory confirmed its absence.
-The homepage CLI deletion below remains unrun. Private keys, browser state,
-and original requests were retained with the evidence rather than deleted.
-
-If you deployed a homepage Worker, run pinned Wrangler `delete` from
-`homepage/` with its disposable configuration. Remove the private
-`DAP_HOME` directory when you no longer need its keys or original requests.
+Wrangler 4.147.0 can list and get Artifacts namespaces but cannot delete
+one. The [Artifacts REST API](https://developers.cloudflare.com/artifacts/api/rest-api/#namespaces)
+lists no namespace deletion route either. After step 1 the namespace is
+empty, and it stays in your account.
 
 ## Run on a Mac
 
-The [Mac host kit](../apps/room/celld/mac/) runs SeaweedFS, celld, and Caddy
-as LaunchDaemons under one user. The room has no Git host. Its journals
-stay in the local store. Keep the installation prefix, including its store
-and celld working directory, when you stop or remove the services.
+The [Mac host kit](../apps/room/celld/mac/) runs SeaweedFS, celld and Caddy
+as LaunchDaemons under one user. The room has no Git host, and its
+journals stay in the local store. Keep the installation prefix, with its
+store and celld working directory, when you stop or remove the services.
 
 ### Prerequisites
 
 You need administrator access, Git, Node 26, Python 3.9 or later, and the
-checkout's locked dependencies. `/usr/bin/python3` must work. The system
-curl must support `--aws-sigv4`. Put executable binaries outside the
-checkout: the celld release in
-[`celld.version`](../apps/room/celld/celld.version), SeaweedFS 4.51, and
-Caddy 2.11.7. Verify their release provenance before use. The installer
-checks the actual celld version against the maintained pin.
+checkout's locked dependencies. `/usr/bin/python3` must work, and the
+system curl must support `--aws-sigv4`. Put these executables outside the
+checkout, and verify where each release came from:
+
+- the celld release named in [`celld.version`](../apps/room/celld/celld.version)
+- SeaweedFS 4.51
+- Caddy 2.11.7
+
+The installer compares the celld version with the pin.
 
 ```sh
 npm ci
@@ -317,127 +276,127 @@ npm ci
 /usr/bin/curl -q --help all | grep aws-sigv4
 ```
 
-Use the Mac's existing DNS name and address. Replace `mac-name.local`,
-`192.0.2.10`, and `operator` below with that name, address, and service user.
-The service user owns the private keys, credentials, logs, and data.
-The installer owns its code and configuration as root.
-Run the non-sudo commands below as the configured service user, including
-certificate creation, credential creation, project preparation, and deployment.
-That user may also be your administrator account.
+In the commands below, replace `mac-name.local`, `192.0.2.10` and
+`operator` with the Mac's DNS name, its address and the service user. The
+service user owns the private keys, credentials, logs and data. The
+installer owns its code and configuration as root. Run every command
+without `sudo` as the service user. The service user can be your
+administrator account.
 
 ### Install
 
-Create a private directory for a new certificate and key:
+1. Create a private directory, and make a certificate and key in it:
 
-```sh
-umask 077
-mkdir "$HOME/dap-tls"
-apps/room/celld/mac/certificate.sh \
-  --cert "$HOME/dap-tls/cert.pem" --key "$HOME/dap-tls/key.pem" \
-  --name mac-name.local --name localhost \
-  --ip 192.0.2.10 --ip 127.0.0.1 --days 825
-```
+   ```sh
+   umask 077
+   mkdir "$HOME/dap-tls"
+   apps/room/celld/mac/certificate.sh \
+     --cert "$HOME/dap-tls/cert.pem" --key "$HOME/dap-tls/key.pem" \
+     --name mac-name.local --name localhost \
+     --ip 192.0.2.10 --ip 127.0.0.1 --days 825
+   ```
 
-The command refuses existing outputs. Keep the resulting key with mode
-`0600`. Create a new private credential file for this local store:
+   The command refuses to overwrite existing files. Keep the key at mode
+   `0600`.
 
-```sh
-umask 077
-python3 - <<'PY'
-import json, pathlib, secrets
-path = pathlib.Path.home() / ".dap-mac-aws.json"
-with path.open("x") as output:
-    json.dump({"AWS_ACCESS_KEY_ID": secrets.token_hex(16),
-               "AWS_SECRET_ACCESS_KEY": secrets.token_hex(32)}, output)
-    output.write("\n")
-path.chmod(0o600)
-PY
-cp apps/room/celld/mac/templates/config.example.json "$HOME/dap-host.json"
-```
+2. Create a private credential file for the local store, and copy the
+   configuration template:
 
-Edit `dap-host.json`: set the user, absolute binary paths, certificate and
-key paths, DNS names, and addresses. Give the node a stable name. Choose
-an explicit volume maximum. Keep a new prefix under a root-owned parent,
-such as `/Library/dap-host`; let the installer create that prefix.
-Binary paths must name actual executable files. The installer refuses a
-symlink in a binary path or any parent directory. Resolve Homebrew links
-or copy the verified executables into a directory without symlinks.
+   ```sh
+   umask 077
+   python3 - <<'PY'
+   import json, pathlib, secrets
+   path = pathlib.Path.home() / ".dap-mac-aws.json"
+   with path.open("x") as output:
+       json.dump({"AWS_ACCESS_KEY_ID": secrets.token_hex(16),
+                  "AWS_SECRET_ACCESS_KEY": secrets.token_hex(32)}, output)
+       output.write("\n")
+   path.chmod(0o600)
+   PY
+   cp apps/room/celld/mac/templates/config.example.json "$HOME/dap-host.json"
+   ```
 
-```sh
-sudo apps/room/celld/mac/install.sh \
-  --config "$HOME/dap-host.json" --credentials "$HOME/.dap-mac-aws.json"
-```
+3. Edit `dap-host.json`. Set the user, the absolute binary paths, the
+   certificate and key paths, the DNS names and the addresses. Give the
+   node a stable name and set an explicit volume maximum. Choose a new
+   prefix under a parent that root owns, such as `/Library/dap-host`, and
+   let the installer create the prefix. Each binary path must name an
+   executable file, with no symlink in the path or its parents. Resolve
+   Homebrew links, or copy the verified executables to a directory without
+   symlinks.
 
-The installer refuses an occupied prefix or service label. It keeps data
-when a partial start fails. The runtime waits for the filer fsync rule and
-a successful store PUT before serving. Celld starts when its job loads and
-restarts after an unsuccessful exit. A normal exit leaves it stopped so
-preserve shutdown can finish. Its lease lasts 60 seconds. Its 70-second
-launch throttle limits launch frequency. Each service has a 60-second
-stop allowance.
-Caddy allows 10 seconds for active connections during its stop.
+4. Run the installer:
 
-Check the application firewall entry for the configured Caddy executable.
-Allow incoming connections to that exact path. If the existing entry
-permits it but LAN HTTPS times out, refresh that entry and check HTTPS
-again. Keep the firewall enabled.
+   ```sh
+   sudo apps/room/celld/mac/install.sh \
+     --config "$HOME/dap-host.json" --credentials "$HOME/.dap-mac-aws.json"
+   ```
 
-Use the configured absolute Caddy path in these commands:
+   The installer refuses a prefix or service label that is in use. If a
+   service fails to start, it keeps the data.
 
-```sh
-/usr/libexec/ApplicationFirewall/socketfilterfw \
-  --getappblocked /absolute/path/to/caddy
-```
+5. In the application firewall, allow incoming connections to the exact
+   Caddy path from `dap-host.json`. Keep the firewall on. Check the entry:
 
-If that entry needs a refresh, run:
+   ```sh
+   /usr/libexec/ApplicationFirewall/socketfilterfw \
+     --getappblocked /absolute/path/to/caddy
+   ```
 
-```sh
-sudo /usr/libexec/ApplicationFirewall/socketfilterfw \
-  --add /absolute/path/to/caddy
-sudo /usr/libexec/ApplicationFirewall/socketfilterfw \
-  --unblockapp /absolute/path/to/caddy
-```
+   If the entry allows Caddy but HTTPS from the LAN times out, refresh the
+   entry:
 
-### Certificate and trust
+   ```sh
+   sudo /usr/libexec/ApplicationFirewall/socketfilterfw \
+     --add /absolute/path/to/caddy
+   sudo /usr/libexec/ApplicationFirewall/socketfilterfw \
+     --unblockapp /absolute/path/to/caddy
+   ```
 
-The generated self-signed endpoint certificate uses EC P-256, `serverAuth`,
-`CA:FALSE`, and the names and addresses you supplied as SANs. Its key usage
-allows digital signatures, not certificate signing. Its lifetime cannot
-exceed 825 days.
-Check its fingerprint before trusting it on another device:
+The services behave as follows:
 
-```sh
-openssl x509 -in "$HOME/dap-tls/cert.pem" -noout -fingerprint -sha256
-```
+- The runtime waits until the store accepts a write before it serves.
+- celld starts when its job loads and restarts after a failed exit. A
+  normal exit leaves it stopped, so a preserve shutdown can finish.
+- celld holds a 60-second lease. Its launch throttle is 70 seconds.
+- Each service has 60 seconds to stop. Caddy gives open connections 10
+  seconds.
 
-For command-line access, supply the certificate to that command: use curl's
-`--cacert` or prefix the Node command with `NODE_EXTRA_CA_CERTS`, as below.
+### Trust the certificate
 
-For a macOS browser that needs a local trust override, add `cert.pem` to
-the login keychain in Keychain Access. Open **Trust** and set only
-**Secure Sockets Layer (SSL)** to **Always Trust**. Leave the other trust
-policies at **Use System Defaults**. This setting serves HTTPS access to
-the certificate's names. Remove the keychain entry when you retire the host.
+The kit's certificate is self-signed. It uses EC P-256, `serverAuth`,
+`CA:FALSE`, and your names and addresses as subject alternative names. Its
+key can sign data but not certificates. Its lifetime is at most 825 days.
 
-The synthetic macOS custom-anchor, Node TLS, and system curl checks accept
-the endpoint and reject a different host's certificate signed with its key.
-Real browser trust, Firefox, and iOS remain unverified.
+1. Before another device trusts the certificate, compare its fingerprint:
 
-For a user-supplied certificate, set `certificate` and `privateKey` to its
-absolute PEM paths. The certificate must cover every configured name.
-The service user must own the key with mode `0600`. Follow the issuer's
-trust procedure.
+   ```sh
+   openssl x509 -in "$HOME/dap-tls/cert.pem" -noout -fingerprint -sha256
+   ```
 
-A tunnel needs the exact public HTTPS origin in `PUBLIC_ORIGIN`. Keep the
-store and runtime listeners on loopback. Verify the tunnel's client-address
-handling and trust before using it; the Mac witness covers the direct
-Caddy path.
+2. For command-line access, give each command the certificate: use curl's
+   `--cacert`, or set `NODE_EXTRA_CA_CERTS` for Node, as the commands
+   below do.
+3. For a browser on a Mac, add `cert.pem` to the login keychain in
+   Keychain Access. Open **Trust**, and set only
+   **Secure Sockets Layer (SSL)** to **Always Trust**. Leave the other
+   policies at **Use System Defaults**. Remove the keychain entry when you
+   retire the host.
+
+To use your own certificate, set `certificate` and `privateKey` to its
+absolute PEM paths. The certificate must cover every configured name. The
+service user must own the key, at mode `0600`. Follow the issuer's trust
+procedure.
+
+To serve through a tunnel, set `PUBLIC_ORIGIN` to the exact public HTTPS
+origin. Keep the store and runtime listeners on loopback. Check how the
+tunnel passes the client address before you rely on it.
 
 ### Create the first room
 
-Keep the client home and private project in persistent private directories.
-Plan only when you can finish deployment and installation within its
-14-minute deadline:
+Keep the client home and the private project in directories that persist.
+Plan only when you can finish deployment and installation within 14
+minutes.
 
 ```sh
 export DAP_HOME="$HOME/dap-client"
@@ -453,44 +412,43 @@ python3 apps/room/celld/mac/deploy.py \
 curl --cacert "$HOME/dap-tls/cert.pem" "$BASE/health"
 ```
 
-The prepared project keeps the production Worker and its maintained
-bindings. Its session secret stays in private configuration. Deployment
-creates the installation's fleet bucket and uploads the Worker. Run as
-the service user. Keep the project and its private deployment logs after
-any failure or uncertain result.
+The plan uses `--host none`. The prepared project keeps the production
+Worker and its bindings, sets `REGISTER_SCOPE` to the planned register, and
+keeps the session secret in private configuration. Deployment creates the
+installation's bucket and uploads the Worker. Run these commands as the
+service user. After a failure or an uncertain result, keep the project and
+its private deployment logs.
 
-Wait for `"sessions":"ok"` in the health response. The register becomes
-ready after installation. Then finish the original plan:
+Wait for `"sessions":"ok"` in the health response. Then finish the plan:
 
 ```sh
 NODE_EXTRA_CA_CERTS="$HOME/dap-tls/cert.pem" \
   PHASE=run node scripts/celld-smoke.mjs
 ```
 
-The room check installs the retained plan, creates a room, joins a separate
-member, verifies seven journals, and checks readiness. It refuses a second
-run after a started attempt. Keep the original home to inspect uncertainty.
-Use the [CLI commands](cli.md) from that home for later work and invitations.
-Supply `NODE_EXTRA_CA_CERTS` to each command that connects to the host.
+The command installs the planned register, creates a room, joins a second
+member, verifies seven journals and checks readiness. It refuses a second
+run after an attempt has started. Keep the original home to inspect an
+uncertain result. Use the [CLI commands](cli.md) from that home for later
+work and invitations, and set `NODE_EXTRA_CA_CERTS` for each command that
+connects to the host.
 
 ### Maintain the host
 
-Stop through the installed procedure:
+Stop the services with the installed procedure:
 
 ```sh
 sudo /Library/dap-host/bin/down --prefix /Library/dap-host
 ```
 
-The procedure requests a same-node preserve shutdown. It checks a fresh
-runtime completion signal and a node record no longer marked draining.
-It waits for celld's process to close before stopping the store. An unknown
-result exits nonzero and retains the full prefix and node name. Keep those
-and restart the same installation to recover.
-An exit status of zero alone does not prove preserve preparation.
-If celld closure is unproved, the store stays running. If closure is proved
-but preparation is unproved, the store may stop and all data stays in place.
+The procedure asks celld for a preserve shutdown on the same node, waits
+for celld to exit, and then stops the store. If the result is unknown, the
+procedure exits nonzero and keeps the full prefix and node name. Restart
+the same installation to recover. An exit status of zero alone does not
+show that the preserve shutdown finished. If celld did not exit, the store
+keeps running. All data stays in place either way.
 
-Restart the owned services in order, then verify the room:
+Restart the services in order, then verify the room:
 
 ```sh
 for service in seaweedfs celld caddy; do
@@ -502,8 +460,8 @@ NODE_EXTRA_CA_CERTS="$HOME/dap-tls/cert.pem" \
   node packages/cli/bin/dap.js verify --all
 ```
 
-FileVault requires the disk to unlock at boot. An authenticated restart
-authorizes the next boot:
+With FileVault on, the disk must unlock at boot. To restart without a
+person at the Mac, authorize the next boot:
 
 ```sh
 sudo fdesetup authrestart
@@ -516,6 +474,12 @@ sudo /Library/dap-host/bin/down --prefix /Library/dap-host
 sudo apps/room/celld/mac/uninstall.sh --prefix /Library/dap-host
 ```
 
-Uninstall requires all three jobs to be absent. It removes only the owned,
-unchanged LaunchDaemon files. It retains the prefix, journals, runtime
-working directory, private configuration, and node name.
+Uninstall needs all three jobs stopped. It removes only the kit's own
+LaunchDaemon files, and only if they are unchanged. It keeps the prefix,
+the journals, the runtime working directory, the private configuration
+and the node name.
+
+## Source
+
+Checked against main `5dc9765f` on 30 October 2026. Sources: [apps/room/wrangler.jsonc](../apps/room/wrangler.jsonc), [packages/scope/src/register-setting.ts](../packages/scope/src/register-setting.ts), [packages/scope/src/applications/route.ts](../packages/scope/src/applications/route.ts), [packages/cli/src/line.ts](../packages/cli/src/line.ts), [apps/room/celld/mac](../apps/room/celld/mac/), [scripts/celld-smoke.mjs](../scripts/celld-smoke.mjs).
+The commands on this page were not run for this revision.

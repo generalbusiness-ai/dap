@@ -1,24 +1,23 @@
 # Worker settings and bindings
 
-For a qualified comparison with recorded route-place telemetry, see
-[Report observed Worker use](../usage-report.md). That script uses an external
-operator mapping and does not prove that a configured route or binding was unused.
+Every Worker setting and binding in the checked-in code and configuration
+files, with its reader, parser and behavior on failure. Deployed values are
+not part of this reference. Secrets appear by name only. Their values never
+belong in a page, a log or a journal. To compare these settings with
+observed use, see [Report observed Worker use](../usage-report.md).
 
-This reference describes the checked-in Worker code and deployment configurations.
-It does not read deployed values, attest a rollout, or test a provider. Secrets
-are named here; their values do not belong in this page, a log, or a journal.
+A **text** setting is operator configuration that code parses. A
+**secret** is credential material from the deployment's secret store. A
+**binding** is a runtime namespace, bucket, dataset, metadata object or
+service. A binding that is present does not show that the remote service or
+credential works.
 
-A **text** setting is operator configuration parsed by code. A **secret** is
-credential material supplied through the deployment secret store. A **binding**
-is a runtime namespace, bucket, dataset, metadata object, or service. Binding
-presence is not proof that a remote service or credential works.
-
-The inventory records conditional reads too. A shared setting can appear for
-a Worker even when its checked-in configuration does not supply it: operator
-settings and secrets can supply it later. Conversely, a type declaration or
-Wrangler declaration alone does not prove that code reads a name. Such an
-entry uses `declared-unused`, with its declaration as the reader reference.
-No table entry authorizes a new setting or changes its parser.
+The inventory also records conditional reads. A shared setting can appear
+for a Worker whose configuration file does not supply it, because the
+operator can set it later. A type declaration or a Wrangler declaration
+alone does not show that code reads a name. Such an entry has the reader
+`declared-unused` and names its declaration. An entry in the table neither
+adds a setting nor changes a parser.
 
 ## Deployment roots
 
@@ -31,99 +30,98 @@ No table entry authorizes a new setting or changes its parser.
 | `dap-grow` | `apps/room/wrangler.grow.jsonc` → `apps/room/worker.grow.ts` |
 | `dap-application-sandbox` | Both `apps/sandbox/wrangler*.jsonc` configurations → `apps/sandbox/worker.ts` |
 | `dap-grow-simulator` | `examples/grow/wrangler.jsonc` → `examples/grow/simulator-worker.ts` |
-| `dap-home`, `artroom-jam` | Assets-only configurations; no Worker `main` |
+| `dap-home`, `artroom-jam` | Assets-only configurations with no Worker `main` |
 
-The room entry reexports the Scope classes and uses `apps/room/fetch.ts` for
-HTTP dispatch. Its named Durable Object and service entrypoints share the
-same configuration closure. Grow adds its explicit archive wrapper. The
-sandbox and scheduled simulator have independent environments; neither
-inherits the room's session secret or namespaces from a TypeScript name.
-The local celld project has its own Worker name and physical entry. Its
-two-export shim imports the production room Worker. The checker follows the
-complete runtime closure and rejects conflicting names for distinct entries.
-Test Wrangler configurations and local build/CLI environment variables are
-not deployed runtime settings in this inventory.
+The room entry reexports the Scope classes and dispatches HTTP through
+`apps/room/fetch.ts`. Its named Durable Object and service entry points
+share one configuration. Grow adds its archive wrapper. The sandbox and the
+scheduled simulator have their own environments. Neither one gets the
+room's session secret or namespaces through a TypeScript name. The local
+celld project has its own Worker name and entry file, and its two-export
+shim imports the production room Worker. The checker follows each Worker's
+complete runtime imports and refuses two entries with one Worker name.
+Test Wrangler configurations and local build and CLI environment variables
+are not deployed settings, so the inventory omits them.
 
 ## Failure and health meanings
 
-**Closed** means the affected feature refuses or stays unavailable. It does
-not mean every malformed runtime binding is safely parsed: a wrongly shaped
-namespace or service can throw at its call boundary. The rows say when that
-is the actual behavior. Optional telemetry uses a best-effort fallback.
+**Closed** means the affected feature refuses or stays unavailable. A
+binding of the wrong shape can still throw where code calls it, and the
+rows say where that happens. Optional telemetry falls back on a best-effort
+basis.
 
-The room health response reports sessions, its selected register probe,
-version metadata, and finite Artifacts/GitHub wiring states. An explicit
-`REGISTER_SCOPE` selects its host-independent probe; malformed or conflicting
-pin settings return unavailable without probing an object. With no explicit
-setting, the existing GitHub/Artifacts selection and ambiguity rules remain. A configured
-host that is off makes health return `503`; absent host configuration is
-separate. Two different configured register roots remain ambiguous. A
-`wired` state proves local syntax and binding checks, not provider
+The room's health response reports sessions, its register probe, version
+metadata, and a state for the Artifacts and GitHub wiring. An explicit
+`REGISTER_SCOPE` selects a probe that does not depend on the host. A
+malformed pin, or two pins that disagree, makes health unavailable without
+probing an object. With no `REGISTER_SCOPE`, health selects the register
+from the GitHub and Artifacts settings, and two different configured
+register roots are ambiguous. A configured host that is off makes health
+return `503`. An absent host configuration does not. A `wired` state means
+that the local syntax and binding checks pass. It does not show provider
 connectivity, GitHub installation authority, valid tokens, package trust,
-MCP enablement, serving capacity, or archive recovery.
+MCP enablement, serving capacity or archive recovery.
 
 Lending's [`wrangler.lending.jsonc`](../../apps/room/wrangler.lending.jsonc)
-adds the nonsecret production binding `VERSION_METADATA`, matching Grow
-and Demo. Wrangler supplies its value on deployment; health reports
-`unknown` when the binding or its valid version id is absent. The planner
-checks the actual Lending `/health` version after deployment.
+binds `VERSION_METADATA`, as Grow and Demo do. Wrangler supplies its value
+on deployment. Health reports `unknown` when the binding or a valid version
+ID is absent.
 
-`SCOPE_INDEX_MODE=register` is a transition: an unknown target may be activated
-so that its own verified applied genesis can register it. `enforce` refuses
-an unknown existing target before target lookup. Checked-in mode, a health
-response, and the existence of index code do not prove backfill completion or
-deployed enforcement. The separate R2 continuation remains open; this page
-makes no unconditional “no object before genesis” claim.
+`SCOPE_INDEX_MODE=register` is a transition mode. A scope that the index
+does not know can still start, so that its own verified genesis registers
+it. `enforce` refuses an unknown existing scope before the Worker looks it
+up. The mode in the file, a health response and the presence of index code
+do not show that the backfill finished or that the deployed Worker
+enforces the index.
 
-The registered-scope census serves only in enforce mode, including the
-default when the mode is absent. Register mode returns `unsupported`;
-a missing index returns `absent`. Creation, child lineage and census use
-`readRegisterScope`: the nonsecret `REGISTER_SCOPE` is primary, with a valid
-Artifacts configuration as a legacy fallback. When both are supplied, their
-register IDs must agree. Supplied malformed or conflicting values fail
-closed. A deployed creation with neither pin remains closed, including the
-explicit local/test opening. No host binding is needed to read the pin.
-The full stored Register row and its checked founding install determine
-the permitted census signing key. Neither a caller-selected root nor a
-membership session supplies that authority. This attests no deployed census.
+The registered-scope census serves only in enforce mode, which is also the
+default when the mode is absent. Register mode answers `unsupported`. A
+missing index answers `absent`. Creation, child lineage and the census read
+the register pin with `readRegisterScope`. The nonsecret `REGISTER_SCOPE` is
+the pin. A valid `ARTIFACTS_CONFIG.registerScope` is the legacy fallback.
+When both are present, their register IDs must agree. A malformed value or
+two values that disagree close these features. On a deployed Worker with
+neither pin, creation stays closed, even with `ALLOW_OPEN_CREATION`. Reading
+the pin needs no host binding. The stored register row and its checked
+founding install decide which key may sign the census. Neither a
+caller-selected root nor a membership session supplies that authority.
 
-`PLATFORM_CREATION_PINS` adds deployment-approved historical pins to the
-hosted publication and unpublished creation cohorts. It does not change existing scopes' pins or admit
-another native lineage family. An index entry permits lookup only; the
-native target must validate an exact existing birth before an excluded
-pin can repeat. [Creation versions](../deploy.md#creation-versions) describes
-the saved-manifest report, register pin and planner rollout steps.
+`PLATFORM_CREATION_PINS` adds earlier platform pins that new scopes may use
+besides the newest publication and unpublished families. It does not change
+the pins of existing scopes or open another native lineage family. An index
+entry allows lookup only. A pin outside the setting can repeat only an
+exact existing birth that the target validates. Health does not read this
+setting, so a `200` response does not show that a given pin can create a
+new scope.
 
-The health response does not inspect this setting. A `200` response does
-not prove that a requested platform pin can create a new scope.
+`APPLICATION_TRUST` controls package installation, screen serving and new
+acts under installed releases. When an operator withdraws a release, the
+Worker refuses new acts on it with `application-revoked`, including its
+declared descendants. Native creation records identify the release. Missing
+provenance answers unavailable. Recovery of accepted keys, replay and
+pending settlement do not consult this setting.
+[Deploy the scope Worker](../deploy.md#trusted-application-screens) gives
+the steps.
 
-`APPLICATION_TRUST` controls package installation, serving, and admission of
-fresh acts under installed releases. Withdrawal refuses new acts with
-`application-revoked`, including declared descendants. Native creation records
-identify the release. Missing provenance returns unavailable. Accepted-key
-recovery, replay, and pending settlement do not consult this admission gate.
-This reference changes no trust schema or provider custody.
-Deployment and secret-setting procedures remain in [Deploy dap](../deploy.md).
-
-`PUBLIC_ORIGIN` supplies service identity behind an HTTP reverse proxy. It
-binds hosted MCP creation, application context and deployment defaults, and
-demo origin checks. An explicit `DEPLOYMENT` still takes precedence over the
-application default. Transport Host need not equal the configured origin.
-No forwarded header supplies identity. The proxy remains responsible for the
-trusted client address. See [Run the local Worker](../celld.md).
+`PUBLIC_ORIGIN` supplies the service's identity behind an HTTP reverse
+proxy. Hosted MCP creation, the application context, deployment defaults
+and the demo origin checks use it. An explicit `DEPLOYMENT` still wins over
+the application default. The transport's Host need not equal the
+configured origin. No forwarded header supplies identity. The proxy must
+supply the trusted client address. See [Run the local Worker](../celld.md).
 
 ## Source-owned inventory
 
-Each row below keys exact Worker names and one exact setting or binding.
-`readers` identifies source owners; `parser`, `missing`, `invalid`, and
-`health` state reviewed semantics. The static checker verifies enumeration
-and source ownership; it does not execute those parsers or prove their
-security behavior. A new read, unsupported environment syntax, or an
-undocumented configuration binding must not silently pass.
+Each row below names exact Worker names and one setting or binding.
+`readers` lists the source files that read it. `parser`, `missing`,
+`invalid` and `health` state what the code does. The static checker
+verifies the list and the readers. It does not run the parsers or test
+their security. A new read, an unsupported way to read the environment, or
+an undocumented configuration binding fails the check.
 
-The lookup is generated from the canonical rows below. **Main reader** is the
-first listed source owner, not its only reader. The full row records the
-parser, failure behavior, health visibility, and other readers.
+The lookup is generated from the rows below. **Main reader** is the first
+reader in the row, not its only reader. The full row holds the parser, the
+failure behavior, health visibility and the other readers.
 
 <!-- dap-settings-lookup:start -->
 | Name | Kind | Workers | Main reader |
@@ -1027,3 +1025,7 @@ parser, failure behavior, health visibility, and other readers.
 }
 ```
 <!-- /security-settings -->
+
+## Source
+
+Checked against main `5dc9765f` on 30 October 2026. Sources: [scripts/security-settings.mjs](../../scripts/security-settings.mjs), [packages/scope/src/register-setting.ts](../../packages/scope/src/register-setting.ts), [packages/scope/src/health.ts](../../packages/scope/src/health.ts), [packages/scope/src/creation-versions.ts](../../packages/scope/src/creation-versions.ts), [packages/scope/src/public-origin.ts](../../packages/scope/src/public-origin.ts).
