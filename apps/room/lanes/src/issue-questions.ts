@@ -114,9 +114,7 @@ issueQuestions.acts["withdraw-approval-request"] = {
   fields: { bodyAt: { ...bodyAt, required: true } },
   guards: [
     { state: ["open"], reason: "request-closed" }, { signer: ["requester"] },
-    { state: ["asked"], of: "also.ask" },
     { equals: { a: { field: "bodyAt" }, b: { slot: "bodyAt" } }, reason: "stale-question" },
-    { equals: { a: { field: "bodyAt" }, b: { slot: "bodyAt", of: "also.ask" } }, reason: "stale-question" },
   ],
   effects: [{ state: "withdrawn" }], sends: [], attention: [],
 };

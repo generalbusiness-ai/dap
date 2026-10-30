@@ -126,6 +126,11 @@ test("current question text needs a requested person's approval and person-role 
     expect((await I.item(agentRequest.seq)).state).toBe("open");
     expect(await I.item(oldPersonRequest.seq)).toMatchObject({ state: "open", refs: { bodyAt: ask.seq } });
     await refused(vic, "approve", { fields: { request: oldPersonRequest.seq, bodyAt: ask, verdict: "approve" } }, "guard-failed", "stale-question");
+    // Withdrawal binds the request's own text, even after the ask moves on.
+    await refused(vic, "withdraw-approval-request", { on: oldPersonRequest.seq, fields: { bodyAt: ask } }, "guard-failed");
+    await refused(rita, "withdraw-approval-request", { on: oldPersonRequest.seq, fields: { bodyAt: revision } }, "guard-failed", "stale-question");
+    await did(rita, "withdraw-approval-request", { on: oldPersonRequest.seq, fields: { bodyAt: ask } });
+    expect(await I.item(oldPersonRequest.seq)).toMatchObject({ state: "withdrawn", refs: { ask: ask.seq, bodyAt: ask.seq } });
     await refused(rita, "decide", { on: ask.seq, fields: { bodyAt: revision } }, "guard-failed", "approval-needed");
     const currentRequest = (await did(rita, "request-approval", { fields: { ask: ask.seq, bodyAt: revision, requested: person } })).fact;
     await refused(una, "approve", { fields: { request: currentRequest.seq, bodyAt: ask, verdict: "approve" } }, "guard-failed", "stale-question");
@@ -148,6 +153,9 @@ test("current question text needs a requested person's approval and person-role 
     await refused(paul, "decide", { on: ask.seq, fields: { bodyAt: finalRevision } }, "unauthorized");
     const decision = (await did(rita, "decide", { on: ask.seq, fields: { bodyAt: finalRevision, comment: "TEST approved for publication." } })).fact;
     expect(await I.item(ask.seq)).toMatchObject({ state: "decided", refs: { decisionAt: decision.seq } });
+    expect((await I.item(agentRequest.seq)).state).toBe("open");
+    await did(rita, "withdraw-approval-request", { on: agentRequest.seq, fields: { bodyAt: ask } });
+    expect(await I.item(agentRequest.seq)).toMatchObject({ state: "withdrawn", refs: { ask: ask.seq, bodyAt: ask.seq } });
 
     const other = (await did(rita, "ask", { fields: { question: "A different question", body: "TEST unrelated text." } })).fact;
     const selfRequest = (await did(rita, "request-approval", { fields: { ask: other.seq, bodyAt: other, requested: owner } })).fact;

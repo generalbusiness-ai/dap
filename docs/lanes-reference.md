@@ -11,7 +11,7 @@ The stamp: the definitions this file was generated from, by their pinned digests
 | `change` | `sha256:3f0389ba644e6d58e96a352debcc77d01661ffcf349c6db53d0645c2513eae70` | 59715 |
 | `issue-evidence4` | `sha256:25a65ff7053c923ec7928c17a5e88a1772d9d476483bd28ee246547ca184be25` | 69834 |
 | `change-evidence4` | `sha256:fe3cfa584ef4beb697ffd43cbd99391626e2b5dcd863f7aee2cdbf4fac3849d1` | 76833 |
-| `issue-questions` | `sha256:13ddcf5de9930f47f06e0098772f74d5a5881cfa305e8085f944defb6c1d51f6` | 52297 |
+| `issue-questions` | `sha256:88e763abc263caf65397ba2d87ba629d90d3f09e472ce646ea744034e6909174` | 52161 |
 
 The original issue and change rows were written from Lane forms and browser flow, revision 14, at `4b3bf5da`. Successor profiles have separate pins.
 
@@ -506,7 +506,7 @@ Name `issue`. Genesis act `file`. Capabilities listed: `hold@1`, `git-read@1`. R
 | `authorize-export` | open on `export` | `work.export` | `hold`: `hold` by the field `hold` | `hold`: item of type `hold`; `to`: member |  | 1, 4, 0, 0 |  |
 | `revise-ask` | transition on `ask` | `issue.comment` | None | `bodyAt`: fact of kind `ask`, `revise-ask` under `issue`; `body`: text, at most 65536 bytes, detached |  | 3, 2, 0, 0 |  |
 | `request-approval` | open on `approval-request` | `issue.comment` | `ask`: `ask` by the field `ask` | `ask`: item of type `ask`; `bodyAt`: fact of kind `ask`, `revise-ask` under `issue`; `requested`: member |  | 4, 4, 0, 1 |  |
-| `withdraw-approval-request` | transition on `approval-request` | `issue.comment` | `ask`: `ask` through the slot `ask` of `on` | `bodyAt`: fact of kind `ask`, `revise-ask` under `issue` |  | 5, 1, 0, 0 |  |
+| `withdraw-approval-request` | transition on `approval-request` | `issue.comment` | `ask`: `ask` through the slot `ask` of `on` | `bodyAt`: fact of kind `ask`, `revise-ask` under `issue` |  | 3, 1, 0, 0 |  |
 | `approve` | open on `approval` | `issue.approve` | `request`: `approval-request` by the field `request`; `ask`: `ask` through the slot `ask` of `also.request` | `request`: item of type `approval-request`; `bodyAt`: fact of kind `ask`, `revise-ask` under `issue`; `verdict`: enum: `approve`, `request-changes`; `comment?`: text, at most 65536 bytes, detached |  | 6, 7, 0, 1 |  |
 | `decide` | transition on `ask` | `issue.decide` | None | `bodyAt`: fact of kind `ask`, `revise-ask` under `issue`; `comment?`: text, at most 4096 bytes |  | 5, 3, 0, 1 |  |
 
