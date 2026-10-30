@@ -60,15 +60,17 @@ function ancestors(definition: ReturnType<typeof variant>) {
   const entries = [genesis(registerSeed, register), claim, bornDirectory, bornDestination, opening];
   const bodies = new Map(entries.map(value => [entryHash(value), { fact: factRefOf(value), bytes: canonicalize(value) }]));
   let reads = 0;
+  const trace: Array<{ kind: string; found: boolean }> = [];
   const count = () => { if (++reads > 256) throw new Error("Scripted lineage read bound exceeded"); };
   const sources: WorkspaceSources = {
     births: { async read(name, kind) {
       count(); const value = entries.find(value => value.at.scope === name && value.at.kind === kind && value.seq === 0);
+      trace.push({ kind, found: value?.input.type === "genesis" });
       if (!value || value.input.type !== "genesis") return null;
       const named = value.input.seed.definition as `platform:${string}@${number}`;
       return { v: 1, proof: bodies.get(entryHash(value))!, named, declarationName: platformName(named as never), native: true } as NativeBirth;
     } },
-    proofs: { async read(fact) { count(); return bodies.get(fact.hash) ?? null; } },
+    proofs: { async read(fact) { count(); const body = bodies.get(fact.hash); trace.push({ kind: "proof", found: body !== undefined }); return body ?? null; } },
   };
   const confirmation = (born: Entry): Entry => {
     const result = born.sends.find(send => send.message.class === "result");
@@ -78,7 +80,7 @@ function ancestors(definition: ReturnType<typeof variant>) {
     // It supplies no fork, token, revoke or other cleanup outcome.
     return entry(directory, 6, { type: "delivery", from: genesis, n: result.n, message: result.message, clause: "applied" }, [], [{ n: 0, to: born.at, message }]);
   };
-  return { register, laneSeed, opening, laneMessage, sources, confirmation };
+  return { register, laneSeed, opening, laneMessage, sources, confirmation, readMetadata: () => ({ count: reads, last: trace.slice(-16) }) };
 }
 
 async function fixture(mode: Mode) {
@@ -91,7 +93,8 @@ async function fixture(mode: Mode) {
   const stub = env.SCOPES.get(env.SCOPES.idFromName(name));
   const c = controls(name, START), defaults = production();
   const scheduled: Promise<unknown>[] = [];
-  let factory: ScopeObject, given: OutsideGiven | null = null;
+  let factory: ScopeObject | undefined, given: OutsideGiven | null = null;
+  let joinFailure: Error | null = null;
   let originalWaitUntil: DurableObjectState["waitUntil"] | null = null, closed = false;
   const inside = <T>(read: (state: DurableObjectState) => T | Promise<T>): Promise<T> => runInDurableObject(stub, (_instance, state) => read(state));
   const life = {
@@ -107,15 +110,17 @@ async function fixture(mode: Mode) {
     },
   };
   const surface: Surface = {
-    deliver: envelope => inside(() => factory.deliver(envelope)),
-    submit: (signed, grants, beside, address) => inside(() => factory.submit(signed, grants, beside, address)),
-    effect: () => inside(() => factory.effect()),
-    operation: (reader, operation) => inside(() => factory.operation(reader, operation)),
+    deliver: envelope => inside(() => factory!.deliver(envelope)),
+    submit: (signed, grants, beside, address) => inside(() => factory!.submit(signed, grants, beside, address)),
+    effect: () => inside(() => factory!.effect()),
+    operation: (reader, operation) => inside(() => factory!.operation(reader, operation)),
   };
   const refused = Object.assign(new Error("SCRIPTED provider refusal"), { code: "INVALID_INPUT", numericCode: 10000 });
   const lateFork = pending<unknown>(), lateRevoke = pending<boolean>();
   const calls = { forks: [] as string[], revokes: [] as string[], deletes: [] as string[] };
   const requests: EffectRequest[] = [];
+  const answers: Array<{ kind: string; operation: OperationId; attempt: number; result: string }> = [];
+  let gitReads = 0;
   let firstForkName: string | null = null, lateForkReleased = false;
   const remote = (name: string) => `https://${SERVICE}/git/${NAMESPACE}/${name}.git`;
   const created = (name: string) => ({ name, remote: remote(name), token: `SETUP-${name}` });
@@ -154,12 +159,18 @@ async function fixture(mode: Mode) {
             ARTIFACTS_CONFIG: JSON.stringify({ registerScope: lineage.register.scope, namespace: NAMESPACE, host: SERVICE, maxBytes: 1024 * 1024, credentialIdentity: "adapter-attempt" }),
             ARTIFACTS_NAMESPACE: NAMESPACE, ARTIFACTS: binding,
           }, async request => {
+            gitReads++;
             expect(request.method).toBe("GET");
             expect(request.url.endsWith("/info/refs?service=git-upload-pack")).toBe(true);
             return advertisement();
           }, undefined, lineage.sources);
           return { accepts: (owner, kind) => outside.accepts(owner, kind), ready: request => outside.ready?.(request) ?? true,
-            send: request => { requests.push(request); if (requests.length > 32) throw new Error("Native provider request bound exceeded"); return outside.send(request); },
+            send: async request => {
+              requests.push(request); if (requests.length > 32) throw new Error("Native provider request bound exceeded");
+              const answer = await outside.send(request);
+              answers.push({ kind: request.kind, operation: request.operation, attempt: request.attempt, result: answer?.result ?? "none" });
+              return answer;
+            },
             late: deliver => outside.late?.(deliver), judged: (request, sealed) => outside.judged?.(request, sealed) };
         },
       };
@@ -180,30 +191,60 @@ async function fixture(mode: Mode) {
     const rows = state.storage.sql.exec("SELECT handle,name,plaintext FROM private_creation_credential WHERE scope=? ORDER BY handle", canonicalize(scope.at)).toArray();
     return { entries: entries as Entry[], tokens, rows };
   });
+  // Failure-only metadata. Never serialize signed fields, evidence bodies,
+  // bearer plaintext, repository bodies or their hashes.
+  const diagnostic = () => inside(state => {
+    if (!given) return { state: "outside-unavailable" };
+    const scope = given.scope();
+    if (!scope || scope.head.seq >= LIMIT) return { state: "journal-unavailable-or-over-bound" };
+    const entries = Array.from({ length: scope.head.seq + 1 }, (_, seq) => given!.own(seq)?.entry).filter((entry): entry is Entry => entry !== undefined);
+    const opened = entries.flatMap(entry => entry.effects.flatMap(effect => effect.effect === "operation" ? [`${entry.seq}:${effect.k}` as OperationId] : []));
+    if (opened.length > 32) return { state: "operation-diagnostic-bound" };
+    const counts = state.storage.sql.exec("SELECT COUNT(*) AS rows,SUM(CASE WHEN plaintext IS NOT NULL THEN 1 ELSE 0 END) AS held FROM private_creation_credential WHERE scope=?", canonicalize(scope.at)).toArray()[0];
+    return {
+      state: scope.status, head: scope.head.seq, callbacks: scheduled.length,
+      workspaceForms: given.definition?.()?.underived.filter(form => form.capability === OWNER).map(form => ({ form: form.form, name: form.name })) ?? [],
+      journal: entries.slice(-12).map(entry => ({ seq: entry.seq, type: entry.input.type,
+        kind: "kind" in entry.input ? entry.input.kind : null, result: "result" in entry.input ? entry.input.result : null,
+        effects: entry.effects.flatMap<{ type: string; kind: string; state: string | null }>(effect => effect.effect === "operation" ? [{ type: "operation", kind: effect.kind, state: null }]
+          : effect.effect === "record" ? [{ type: "record", kind: effect.kind, state: effect.state }] : []) })),
+      tokens: given.state.records(OWNER, "token", {}).map(record => ({ number: record.key[0], state: record.state, purpose: record.values["purpose"], attempt: record.values["attempt"] })),
+      forks: given.state.records(OWNER, "fork", {}).map(record => ({ number: record.key[0], state: record.state })),
+      operations: opened.map(id => { const operation = given!.state.operation(id); return { id, kind: operation?.kind ?? null, selected: operation?.selected ?? null,
+        attempts: operation?.attempts.map(attempt => ({ number: attempt.attempt, results: attempt.outcomes.map(outcome => outcome.result) })) ?? [] }; }),
+      requests: requests.map(request => ({ kind: request.kind, operation: request.operation, attempt: request.attempt })), answers,
+      calls: { forks: calls.forks.length, revokes: calls.revokes.length, deletes: calls.deletes.length, gitReads },
+      custody: { rows: counts?.["rows"] ?? 0, held: counts?.["held"] ?? 0 }, lineageReads: lineage.readMetadata(),
+    };
+  });
   const until = async <T>(read: () => Promise<T>, ready: (value: T) => boolean): Promise<T> => {
     const deadline = Date.now() + 5000;
     for (let pass = 0; pass < 64 && Date.now() < deadline; pass++) {
       await life.wait(() => surface.effect()); const value = await read();
       if (ready(value)) return value;
     }
+    try { console.info("workspace-setup-failure", await diagnostic()); }
+    catch { console.info("workspace-setup-failure", { state: "diagnostic-unavailable" }); }
     throw new Error("Native setup witness exceeded its finite observation bound");
   };
   const releaseFork = () => { if (firstForkName && !lateForkReleased) { lateForkReleased = true; lateFork.resolve(created(firstForkName)); } };
   const joinCallbacks = () => inside(async () => {
+    if (joinFailure) throw joinFailure;
+    const failed = (message: string): never => { joinFailure = new Error(message); throw joinFailure; };
     let callbacks = 0;
     for (let batch = 0; batch < 64; batch++) {
       if (!scheduled.length) return callbacks;
       const current = scheduled.splice(0); callbacks += current.length;
-      if (callbacks > 4096) throw new Error("Native fixture callback bound exceeded");
+      if (callbacks > 4096) failed("Native fixture callback bound exceeded");
       const results = await Promise.allSettled(current);
-      if (results.some(result => result.status === "rejected")) throw new Error("Native fixture callback rejected");
+      if (results.some(result => result.status === "rejected")) failed("Native fixture callback rejected");
     }
-    throw new Error("Native fixture callback round bound exceeded");
+    failed("Native fixture callback round bound exceeded");
   });
   const close = async () => {
     releaseFork(); lateRevoke.resolve(true);
     for (let pass = 0; pass < 64; pass++) {
-      const before = await joinCallbacks(), work = await surface.effect(), after = await joinCallbacks();
+      const before = await joinCallbacks(), work = factory ? await surface.effect() : 0, after = await joinCallbacks();
       if (before === 0 && work === 0 && after === 0) {
         await inside(state => { if (originalWaitUntil) state.waitUntil = originalWaitUntil; });
         closed = true; c.foreign.clear(); return;
@@ -243,7 +284,10 @@ async function fixture(mode: Mode) {
     await submit(keys.rita, "assign", { performer: keys.una.member }, commitment, { on: 1 });
     await submit(keys.una, "take-hold", { commitment }, null, { commitment: 2 });
     return { life, surface, snapshot, until, calls, requests, releaseFork, releaseRevoke: () => lateRevoke.resolve(true), close };
-  } catch (error) { await close(); throw error; }
+  } catch (error) {
+    try { await close(); } catch { /* Failed cleanup retains ownership; preserve the original setup error. */ }
+    throw error;
+  }
 }
 
 const tokenOf = (tokens: readonly RecordState[], attempt = 1) => {
