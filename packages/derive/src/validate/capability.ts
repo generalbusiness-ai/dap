@@ -31,7 +31,7 @@ import { deviceCommandOpen } from "./device-command.ts";
 export interface Underived { path: string; capability: CapabilityName; form: "listed" | "guard" | "effect" | "carried" | "kind"; name: string }
 
 /** The versions whose item form this package derives (section 6.8). Listing one of them alone needs no other code. */
-const ITEM_FORMS: readonly string[] = ["hold@1"];
+const ITEM_FORMS: readonly string[] = ["hold@1", "hold@2"];
 
 /** The capabilities a definition lists (section 6.1): each a version that the contract's tables have, and each name once. */
 export function capabilities(d: Defining, v: unknown): void {
@@ -44,7 +44,7 @@ export function capabilities(d: Defining, v: unknown): void {
     if (typeof o["name"] !== "string" || !Number.isSafeInteger(o["version"]) || !declaredBy(version)) { bad("capability", p, "is not a capability version the contract declares"); return; }
     if (d.capabilities.has(o["name"])) { bad("capability", p, "is listed twice"); return; }
     d.capabilities.set(o["name"], version as CapabilityName);
-    if (version === "hold@1") d.holds = true;
+    if (ITEM_FORMS.includes(version)) d.holds = true;
     if (!ITEM_FORMS.includes(version)) d.underived.push({ path: p, capability: version as CapabilityName, form: "listed", name: version });
   });
 }
@@ -106,7 +106,7 @@ export function capabilityEffect(d: Defining, x: unknown, p: string, ctx: Ctx, o
   const written = entries(r["with"], at(p, "with"), null);
   if (!declared.with.some((allowed) => written.every(([name]) => allowed.includes(name)))) bad("capability", at(p, "with"), `is no set of arguments that the effect ${String(r["do"])} of ${cap.version} takes`);
   const reads = new Map(written.map(([name, arg]) => [name, operand(d, arg, at(at(p, "with"), name), ctx, owner, false)]));
-  if (cap.version === "hold@1" && r["do"] === "license") nativeLicense(d, p, isObject(r["with"]) ? r["with"] : {}, reads, ctx);
+  if (ITEM_FORMS.includes(cap.version) && r["do"] === "license") nativeLicense(d, p, isObject(r["with"]) ? r["with"] : {}, reads, ctx);
   if (cap.version === "device-command@1" && r["do"] === "open") deviceCommandOpen(d, r["with"], at(p, "with"), ctx, owner);
   // Section 6.4: a timed rule's effects are total, and what a capability's effect does is not this package's to show.
   if (ctx.timed) bad("timed-partial", p, "a timed rule has no capability effect");

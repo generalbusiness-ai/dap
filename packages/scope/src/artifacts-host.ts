@@ -14,6 +14,7 @@ import { timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import type { DestinationObject, RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
 import { GitRefusal, READ_BOUNDS, Reader, type GitSource, type ReadBounds } from "@generalbusiness/dap-git";
 import { SmartHttpSource } from "@generalbusiness/dap-git/http-read";
+import { SmartHttpGit } from "@generalbusiness/dap-git/http";
 import type { DestinationBinding, DestinationInspection, DestinationProvider, DestinationRepository } from "./destination-host.ts";
 import { deleteRefOnce, inspectGit, sendOnce, type DestinationRefDeletion } from "./github-host.ts";
 import type { RegisterProvider } from "./register-host.ts";
@@ -22,6 +23,8 @@ import { readRulesTree, rulesTreeRequest, rulesTreeIsolation, type RulesTreeRequ
 
 /** A repository handle of the binding: the parts this port uses. */
 export interface ArtifactsRepository {
+  /** The binding creates one writable fork in this same namespace. */
+  fork?(name: string, options: { defaultBranchOnly: true; readOnly: false }): Promise<unknown>;
   /** `ttl` in seconds. Answers `{ id, plaintext, scope, expiresAt }`. */
   createToken(scope: "read" | "write", ttl: number): Promise<unknown>;
   /** A token's plaintext or its ID. True when revoked. */
@@ -38,7 +41,7 @@ export interface ArtifactsNamespace {
   delete(name: string): Promise<unknown>;
 }
 
-/** Private custody of a creation's write token whose revocation did not confirm. Nonsecret handle in, plaintext held privately. */
+/** Private custody of a repository or workspace setup token until its revocation confirms. Nonsecret handle in, plaintext held privately. */
 export interface CreationCustody {
   hold(handle: string, name: string, plaintext: string): void;
   take(handle: string): { name: string; plaintext: string } | null;
@@ -103,6 +106,88 @@ export class ArtifactsProvider implements RegisterProvider, DestinationProvider 
     if (!repositoryName(options.namespace) || !artifactsService(options.service) || !Number.isSafeInteger(options.maxBytes) || options.maxBytes < 32) bad();
     this.#options = { ...options };
     this.#bounds = { ...(options.bounds ?? READ_BOUNDS) };
+  }
+
+  /** Trusted workspace adapter read with its already judged scoped token.
+   * No token mint occurs here. Each closure has one aggregate byte allowance. */
+  async workspaceObjects(repository: DestinationRepository, commit: string, plaintext: string): Promise<readonly DestinationObject[]> {
+    return this.#workspaceClosure(this.workspaceSource(repository, plaintext), commit);
+  }
+
+  workspaceSource(repository: DestinationRepository, plaintext: string): SmartHttpSource {
+    return new SmartHttpSource({ ...this.#transport(this.#remote(repository)), authorization: `Bearer ${plaintextOf(plaintext)}` });
+  }
+  async workspaceMint(repository: DestinationRepository, scope: "read" | "write", seconds: number, allowed: () => boolean = () => true): Promise<unknown> {
+    const remote = this.#remote(repository);
+    if (!Number.isSafeInteger(seconds) || seconds < 1 || seconds > WRITE_TTL) return bad();
+    const handleOf = await this.#options.binding.get(repository.name);
+    if (own(await handleOf.info(), "remote") !== remote) return bad();
+    if (!allowed()) return { minted: false };
+    let token: unknown;
+    try { token = await handleOf.createToken(scope, seconds); }
+    catch (error) { if (codeOf(error) !== null) return { minted: false }; throw error; }
+    if (own(token, "scope") !== scope) return bad();
+    return { minted: true, id: handle(own(token, "id") as string), ends: endsOf(own(token, "expiresAt")), plaintext: plaintextOf(own(token, "plaintext")) };
+  }
+  async workspaceRevoke(repository: DestinationRepository, id: string): Promise<unknown> {
+    this.#remote(repository); handle(id);
+    const revoked = await this.#revoke(repository.name, id);
+    return revoked === null ? null : { revoked };
+  }
+  /** A fork answer is confirmed only after exact seed initialization and
+   * durable custody of its initial write token. The native setup token
+   * record owes the existing revoke operation; this adapter never retries. */
+  async workspaceFork(repository: DestinationRepository, name: string, commit: string, branch: string, allowed: () => boolean): Promise<unknown> {
+    this.#remote(repository);
+    const custody = this.#options.creation;
+    if (!repositoryName(name) || !allowed() || !custody) return null;
+    const parent = await this.#options.binding.get(repository.name);
+    if (own(await parent.info(), "remote") !== this.#remote(repository) || !allowed() || typeof parent.fork !== "function") return null;
+    let created: unknown;
+    try { created = await parent.fork(name, { defaultBranchOnly: true, readOnly: false }); }
+    catch (error) { return codeOf(error) === null ? null : { created: false }; }
+    const fork = { ...repository, name, id: name };
+    if (own(created, "name") !== name) return null;
+    const plaintext = plaintextOf(own(created, "token"));
+    const credential = `workspace:${name}`;
+    let initialized = false;
+    try {
+      custody.hold(credential, name, plaintext);
+      const stored = custody.take(credential);
+      if (stored?.name !== name || stored.plaintext !== plaintext) return null;
+      if (own(created, "remote") !== this.#remote(fork)) return null;
+      const ref = `refs/heads/${branch}`;
+      const current = await new Reader(this.workspaceSource(fork, plaintext), this.#bounds).ref(ref);
+      if (current === commit) initialized = true;
+      else if (allowed()) {
+        // The source commit may be a held report outside the default branch.
+        const objects = await this.#read(repository, source => this.#workspaceClosure(source, commit));
+        const answer = await new SmartHttpGit({ ...this.#transport(this.#remote(fork)), authorization: `Bearer ${plaintext}` }).send({
+          ref, old: current, new: commit, objects: objects.map(object => ({ id: object.id, type: object.kind, data: object.body })), beforeSend: allowed,
+        });
+        initialized = answer.ran && answer.exit === 0 && !answer.timedOut
+          && answer.reported !== null && ["created", "updated"].includes(answer.reported)
+          && await new Reader(this.workspaceSource(fork, plaintext), this.#bounds).ref(ref) === commit;
+      }
+    } catch {
+      // A request may have created the fork. Its deterministic native setup
+      // record stays minting; retain private custody and report no answer.
+      return null;
+    }
+    return initialized ? { id: name, name } : null;
+  }
+  async #workspaceClosure(source: SmartHttpSource, commit: string): Promise<readonly DestinationObject[]> {
+    const objects = new Map<string, DestinationObject>(); let bytes = 0;
+    const recording: GitSource = { ref: name => source.ref(name), refs: (prefix, limit) => source.refs(prefix, limit), object: async (id, limit) => {
+      const remaining = this.#options.maxBytes - bytes;
+      if (remaining <= 0 || objects.size >= 4096) return bad();
+      const found = await source.object(id, Math.min(limit, remaining));
+      if (found.data === null || found.size > remaining || !["blob", "tree", "commit"].includes(found.type)) return bad();
+      if (!objects.has(id)) { bytes += found.data.length; objects.set(id, { id, kind: found.type as DestinationObject["kind"], body: new Uint8Array(found.data) }); }
+      return found;
+    } };
+    if (!(await new Reader(recording, { ...this.#bounds, closureObjects: 4096 }).closure(commit)).complete) return bad();
+    return [...objects.values()];
   }
 
   /** Host-only archive authority, outside the destination operation ledger.

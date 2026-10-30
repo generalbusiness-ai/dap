@@ -246,6 +246,60 @@ A head adds to the kernel when it does any of these:
 
 The checker checks this rule on every head that touches these packages.
 
+Request `0c3091fa` adds the existing hold capability's second version under
+ruling `adb1a6ed`. A confirmed head or fork outcome changes the records that
+runtime and replay derive. Those rules belong beside the ledger in the
+kernel: a replaceable host adapter can supply an answer, but cannot decide
+what that answer means. The adapter, authenticated repository discovery and
+private credential custody remain services in `scope` and `git`.
+
+The addition declares `hold@2` in `contract` and adds four exports in
+`derive`. Each belongs in the kernel because it determines how runtime and
+replay interpret the same recorded definition and entries:
+
+- `HOLD_V2` names the separate `hold@2` record and operation owner.
+- `holdCapabilityV2` supplies that version's derivation rules, including
+  head and fork outcomes.
+- `workspaceOwner` selects the family from the declared version. A caller
+  or host cannot choose another family for the same definition.
+- `hasAnyWorkspace` checks that the selected family has a listed hold guard
+  or effect. Declaring a version alone does not enable workspace steps.
+
+The first hosted staging observation is `29f6d5bc`. Its preparation opened
+stage and mint operations, with no outcome in the observation window.
+The registered-only census did not establish the complete legacy absence
+required to extend `hold@1`, so `hold@2` has separate head and fork rules.
+The old version retains its rules, maxima and record meanings. Both use the
+existing forms, item states and operation ledger. The bare capability name
+remains `hold`. This adds no scope kind, entry form, byte domain or K item.
+Existing lane pins and native evidence identities remain fixed. New J4
+lane pins select version 2 explicitly and grant no archive policy permission.
+
+Ruling `e7962aa7` adds the `setup` purpose to the existing token record for
+each version 2 fork attempt. Its handle names that exact attempt; plaintext
+stays in private host custody. A confirmed fork answer moves the token
+directly from `minting` to `revoking` and opens the existing revoke operation
+in the same outcome. A refusal ends that attempt's token; an unknown answer
+leaves it `minting`. A late confirmed unselected answer owes both its fork
+deletion and its setup-token revoke. These two added effects belong in the
+kernel because runtime and replay must derive the same cleanup obligations.
+
+The fork rule reserves 12 entries: six for deletion and six for revocation.
+The head rule reserves 78: two possible outcomes for each of three fork
+attempts, each with its outcome entry and 12 cleanup entries. Its maximum
+is four effects and one operation; the fork rule's is five effects and two
+operations. The creating-fork record reserves 78 for version 2. Version 1
+keeps its existing reserve of 42. Setup tokens do not consume the holder's
+workspace-token allowance or block the hold's end or fork retirement.
+
+Exact-head review must check owner dispatch, closure and effect bounds,
+first selection at the actual held state and epoch 1, late unselected
+answers, and replay's ancestry and live-root retention. A late fork answer
+owes deletion only for the ID and name in that immutable answer; it does
+not change a selected or final fork record. Automatic fork deletion at hold
+end and sweeping remain outside this request. This addition closes no K
+item and relies on the filed J4 ruling for its kernel placement.
+
 Request `121a8913` places the fixed-slot equality index in derive's view
 and fold. A range guard's complete count determines whether an input is
 judged, refused or left `guard-incomplete`. Runtime and replay must derive

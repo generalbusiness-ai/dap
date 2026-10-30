@@ -3,19 +3,23 @@
  * scheduler are explicit stand-ins.
  * No deployed invitation or outside provider is used. */
 import { expect, test } from "vitest";
-import { b64url, canonicalize, keyIdOfSecret, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, isSeed, keyIdOfSecret, scopeIdOf, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, INVITATION_KEY_COHORT } from "@generalbusiness/dap-platform";
 import { joinInvitation } from "../src/join-custody.ts";
 import { memoryPageKeys } from "./private-key-fixture.ts";
 import { sessionRoom } from "../../../../packages/scope/test/support/session-room.ts";
-import { rita, routed } from "../../../../packages/scope/test/repository.ts";
+import { drainScheduledFixture, type nativeFixtureLifetime } from "../../../../packages/scope/test/support/native-fixture-lifetime.ts";
+import { rita, routed, type Platform } from "../../../../packages/scope/test/repository.ts";
 
 // Invariant: exact supported invitation pins use their native join fields;
 // unknown versions refuse locally, before the page sends any request.
 test.each([INVITATION_KEY_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT])("page joins a native $membership invitation with a proof and refuses unknown versions", async cohort => {
-  const room = await sessionRoom(cohort.register), { life } = room;
+  let ownedLife: ReturnType<typeof nativeFixtureLifetime> | undefined, ownedMembership: Platform | undefined;
   try {
-    const membership = room.children[0]!, seed = crypto.getRandomValues(new Uint8Array(32));
+    const room = await sessionRoom(cohort.register, undefined, undefined, { finish: "external", capture: value => { ownedLife = value; } });
+    const { life } = room, membership = room.children[0]!;
+    ownedMembership = membership;
+    const seed = crypto.getRandomValues(new Uint8Array(32));
     const seat = await life.wait(() => membership.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => membership.did(rita, "first-key", { fields: { member: seat },
       expected: await membership.expected({ roster: 0, member: seat }) }));
@@ -58,5 +62,22 @@ test.each([INVITATION_KEY_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT])("page join
     }
     expect(canonicalize(history)).not.toContain(secret);
     expect((await life.wait(() => membership.item(invitation))).state).toBe("active");
-  } finally { life.release(); }
+  } finally {
+    const life = ownedLife, membership = ownedMembership;
+    if (life) {
+      if (!membership) throw new Error("Invitation setup incomplete; native fixture ownership retained.");
+      // Seat and join create real Inboxes outside sessionRoom's initial five
+      // handles. Discover their actual seeds before joining callbacks, while
+      // the fixture still owns its settings. A failed join retains ownership.
+      const history = await life.wait(() => membership.entries());
+      if (history.length > 64) throw new Error("Invitation fixture history exceeded its cleanup bound.");
+      const inboxes = new Set(history.flatMap(entry => entry.sends.flatMap(send =>
+        isSeed(send.to) && send.to.kind === "inbox" ? [scopeIdOf(send.to)] : [])));
+      if (inboxes.size > 2) throw new Error("Invitation fixture exceeded its two Inbox births.");
+      const tracked = new Set(life.platforms().map(node => node.name));
+      for (const name of inboxes) if (!tracked.has(name)) life.platform(name);
+      await drainScheduledFixture(() => life.platforms(), life.wait);
+      life.release();
+    }
+  }
 });

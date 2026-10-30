@@ -552,7 +552,7 @@ that are shown beside its intent and are not signed. Each is fetched and
 checked as a fact field is. A `fact` guard and an operand may read it, and
 the entry records it in its input.
 
-**Capability forms.** A definition may list the capabilities `hold@1` and
+**Capability forms.** A definition may list `hold@1` or `hold@2`, and
 `git-read@1`, and may write a `capability` guard, a `capability` effect,
 the part `{ carried }`, and a fact kind such as `hold@1:check`. Two
 kinds of entry have such a kind. A preparation entry has the kind of its
@@ -566,19 +566,27 @@ that the entry carries, with the part `{ carried }`, and check it.
 The validator checks each form against what the listed version declares,
 in the contract package's `CAPABILITIES`. It derives none of them: a definition
 that passes lists each such form in `ValidDefinition.underived`. The derive
-package has the rules of `hold@1` over its records and the guard
+package has the separate versioned hold rules over their own records and the guard
 `ancestry` of `git-read@1`, with the judge of a preparation. The
 production ports hold them, so the production runtime can pin such a
 definition. A runtime that lacks the code of one form creates
 no scope under a definition that uses it,
 and answers `unsupported-definition`. A verifier with no such code answers the same. The
-item form of `hold@1`, with its `hold` effect, needs no such code and
+item form of either hold version, with its `hold` effect, needs no such code and
 runs. A test may use `scriptedCapability`, from
 `@generalbusiness/dap-scope/testing`. It is a stand-in: it answers
 from a table that the test supplies, and shows nothing about a real hold
 or a Git read. The same module has `net.peers`, for scripted peers: entries
 that a test writes by hand in place of a platform scope that is not
 delivered. A scripted peer shows the receiver's side of a delivery only.
+
+The J4 profiles select `hold@2` explicitly. It adds head and fork outcome
+rules while `hold@1` keeps its recorded meaning. Workspace, ancestry and
+reservation readers select the exact family named by the pinned definition;
+they do not alias records between versions. A carried v2 check must be the
+full authenticated fact of a confirmed v2 check outcome. Matching a record
+kind alone supplies no such authority. See [hosts.md](hosts.md#a-fork-for-a-hold)
+for the service adapter and its limits.
 
 ### Validation and bounds
 

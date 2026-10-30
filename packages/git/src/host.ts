@@ -72,6 +72,7 @@ export const TOKEN_OWNER = "hold@1";
 export const READ_TOKEN_OWNER = "git-read@1";
 export const TOKEN_KINDS = { mint: "mint", revoke: "revoke" } as const;
 const OWNERS: readonly string[] = [TOKEN_OWNER, READ_TOKEN_OWNER];
+const WORKSPACE_TOKEN_OWNER = "hold@2";
 
 /**
  * The form of a token's ID at the host, as this package takes one: the form
@@ -91,6 +92,9 @@ export type TokenFor = { hold: number; instance: string } | { root: number; oper
 /** One mint, as the host is asked. Every member is read from the sealed entry that opened the operation. */
 export interface MintAsk {
   scope: ScopeRef; operation: OperationId; attempt: number;
+  /** Exact workspace owner carried with its late answer. Legacy asks retain
+   * their original shape. */
+  owner?: "hold@2";
   /** The token's number in the scope's ledger: the key of its record. */
   token: number;
   /** `workspace`, `fork-read`, `staging` or `check-read`, as the record states it. */
@@ -129,7 +133,7 @@ export interface GitHost {
 }
 
 /** A token that its sealed outcome entry made `live`, with its plaintext: what the gateway's side is handed. */
-export interface LiveToken { scope: ScopeRef; token: number; id: string; ends: Timestamp; purpose: string; for: TokenFor; state: "live"; plaintext: string }
+export interface LiveToken { scope: ScopeRef; token: number; id: string; ends: Timestamp; purpose: string; for: TokenFor; state: "live"; plaintext: string; owner?: "hold@2" }
 
 /** The gateway's side of the handoff (section 5.3, "Held where"). After `take` returns, the driver holds nothing of the plaintext. */
 export interface Custody { take(token: LiveToken): void }
@@ -218,7 +222,7 @@ export class TokenDriver {
    * entries ET4 and EW8).
    */
   accepts(owner: string, kind: string): boolean {
-    return OWNERS.includes(owner) && (kind === TOKEN_KINDS.mint || kind === TOKEN_KINDS.revoke);
+    return (OWNERS.includes(owner) || owner === WORKSPACE_TOKEN_OWNER) && (kind === TOKEN_KINDS.mint || kind === TOKEN_KINDS.revoke);
   }
 
   /** The scope's driver gives the function that takes an answer which arrives by itself, after its request. */
@@ -263,7 +267,7 @@ export class TokenDriver {
    * answers is returned, or null when the reply is no answer.
    */
   async answered(ask: MintAsk | RevokeAsk, reply: MintReply | RevokeReply): Promise<unknown> {
-    const answer = "id" in ask ? (TOKEN_ID.test(ask.id) ? this.#revoking(ask.id, reply) : null) : this.#minting(ask, reply, "job" in ask.for ? READ_TOKEN_OWNER : TOKEN_OWNER);
+    const answer = "id" in ask ? (TOKEN_ID.test(ask.id) ? this.#revoking(ask.id, reply) : null) : this.#minting(ask, reply, ask.owner === WORKSPACE_TOKEN_OWNER ? WORKSPACE_TOKEN_OWNER : "job" in ask.for ? READ_TOKEN_OWNER : TOKEN_OWNER);
     if (answer === null || this.#deliver === null) {
       this.#minted.delete(attemptStorageKey(ask));
       return null;
@@ -283,13 +287,13 @@ export class TokenDriver {
     if (held === undefined) return;
     this.#minted.delete(key);
     const input = sealed?.entry.input;
-    if (!sealed || input?.type !== "outcome" || input.operation !== at.operation || input.attempt !== at.attempt || input.result !== "confirmed") return;
+    if (!sealed || input?.type !== "outcome" || input.operation !== at.operation || input.attempt !== at.attempt || input.result !== "confirmed" || input.owner !== held.owner) return;
     // Section 5.7: only when that entry made the token `live`. An entry that made it `revoking` gives the plaintext to nobody.
     const record = tokenOf(sealed.entry, held.owner, "mint", at.operation);
     const of = record ? forOf(held.owner, record.values) : null;
     if (!record || !of || record.state !== "live" || record.values["id"] !== held.id || timeMs(record.values["ends"]) === null || typeof record.values["purpose"] !== "string") return;
     try {
-      this.#custody.take({ scope: at.scope, token: record.key[0] as number, id: held.id, ends: record.values["ends"] as Timestamp, purpose: record.values["purpose"], for: of, state: "live", plaintext: held.plaintext });
+      this.#custody.take({ scope: at.scope, token: record.key[0] as number, id: held.id, ends: record.values["ends"] as Timestamp, purpose: record.values["purpose"], for: of, state: "live", plaintext: held.plaintext, ...(held.owner === WORKSPACE_TOKEN_OWNER ? { owner: WORKSPACE_TOKEN_OWNER } : {}) });
     } catch {
       // The gateway's side did not take it. The plaintext is dropped here all the same: the token is `live` and nobody can use it.
       this.#log({ step: "handoff", event: "custody-failed" });
@@ -311,7 +315,7 @@ export class TokenDriver {
     const of = record ? forOf(request.owner, record.values) : null;
     if (!record || !of || record.state !== "minting" || typeof record.values["purpose"] !== "string") return null;
     const before = "job" in of ? { before: record.values["before"] as Timestamp } : {};
-    return { scope: request.scope, operation: request.operation, attempt: request.attempt, token: record.key[0] as number, purpose: record.values["purpose"], for: of, ...before };
+    return { scope: request.scope, operation: request.operation, attempt: request.attempt, token: record.key[0] as number, purpose: record.values["purpose"], for: of, ...before, ...(request.owner === WORKSPACE_TOKEN_OWNER ? { owner: WORKSPACE_TOKEN_OWNER } : {}) };
   }
 
   /**

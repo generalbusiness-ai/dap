@@ -11,6 +11,7 @@ import type { StateView, StateSnapshot } from "./state.ts";
 import { timeMs, type Clock } from "./time.ts";
 import { isFactRef, isObject, own, same } from "./values.ts";
 import type { ValidDefinition } from "./validate/index.ts";
+import { workspaceOwner } from "./capability/workspace.ts";
 
 export const FLOOR_STEP = 4096;
 export const FLOOR_KEEP = 1024;
@@ -96,7 +97,8 @@ export function stateKept(snapshot: StateSnapshot, definition: ValidDefinition, 
   // hold.retire reads the live root record's recording time. Other record
   // sequence fields and all ten folded kinds are identities/counters unless
   // a platform's explicit reader hook follows them below.
-  for (const record of snapshot.records ?? []) if (record.capability === "hold@1" && record.kind === "root" && record.state === "live") add(record.seq);
+  const holdOwner = workspaceOwner(definition) ?? "hold@1";
+  for (const record of snapshot.records ?? []) if (record.capability === holdOwner && record.kind === "root" && record.state === "live") add(record.seq);
   for (const prepared of snapshot.prepared ?? []) add(prepared.seq);
   if (heldHistory && platform?.floorReferences) for (const seq of platform.floorReferences(snapshot, definition, heldHistory)) add(seq);
   // Entries in the dense live tail can also have current causal readers.

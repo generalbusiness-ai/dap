@@ -122,6 +122,10 @@ export interface Outside {
   /** Successor stage proof; the signed job and native admission own access. */
   stageSnapshot?(asked: import("@generalbusiness/dap-contract").SignedIntent): Promise<import("@generalbusiness/dap-platform").StageSnapshotReply>;
   accepts(owner: CapabilityName | PlatformDefinition, kind: string): boolean;
+  /** A synchronous serving gate before the sent mark. False parks this
+   * attempt until a committed entry changes its dependencies. It performs
+   * no host I/O or native judgment and changes no outcome rule. */
+  ready?(request: Omit<EffectRequest, "sentAt">): boolean;
   send(request: EffectRequest): Promise<EffectAnswer | null>;
   late?(deliver: LateAnswers): void;
   judged?(at: { scope: ScopeRef; operation: OperationId; attempt: number }, sealed: Sealed | null): void;
@@ -422,9 +426,14 @@ export class Operations {
         continue;
       }
       this.#refused.delete(attemptKey(id, attempt));
+      const unmarked: Omit<EffectRequest, "sentAt"> = { scope: scope.at, operation: id, attempt, owner: operation.owner, kind: operation.kind,
+        origin: { entry: JSON.parse(origin.bytes) as Entry, hash: origin.hash } };
+      let hostReady = true;
+      try { hostReady = this.#outside.ready?.(unmarked) ?? true; }
+      catch { hostReady = false; }
       // The owner's rule on when the request may leave, such as the tokens of an attempt of a staging. Not ready: recorded and not
       // sent, with no wake-up, until a committed entry starts the walk again.
-      if (!await this.#publicationReady(operation) || rules.ready && !rules.ready(store, operation, attempt)) {
+      if (!hostReady || !await this.#publicationReady(operation) || rules.ready && !rules.ready(store, operation, attempt)) {
         if (row.next !== null) store.postpone(id, attempt, null);
         this.#waiting = true;
         continue;
@@ -447,7 +456,7 @@ export class Operations {
       store.markSent(id, attempt, timeOf(now), now + this.#bounds.dispatchSeconds * 1000);
       const marked = store.sending(id, attempt);
       if (!marked || marked.operation !== id || marked.attempt !== attempt || marked.sent === null) throw new Error("original attempt has no durable sent mark");
-      const request: EffectRequest = { scope: scope.at, operation: id, attempt, owner: operation.owner, kind: operation.kind, origin: { entry: JSON.parse(origin.bytes) as Entry, hash: origin.hash }, sentAt: marked.sent };
+      const request: EffectRequest = { ...unmarked, sentAt: marked.sent };
       work.push(() => this.#send(row, request, now));
     }
     await this.#wake(now);

@@ -8,11 +8,11 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 // its own source-ordered line. Root adopts actual parser values after review.
 const namedOwners = {
   "packages/scope/src/object.ts": {
-    "packages/scope/src/object.ts:$module": "54cd1a42de7dc10191191a46a03326ee8c7ecd5ee3afed596bdace1e37fc5d00",
-    "packages/scope/src/object.ts:ScopeObject": "02c6a3144960cca0a801630a5e75021d3f1b2dca0c24a4400fac74600c82e842", // Read-only fixed-index methods on the existing outside-state facade.
+    "packages/scope/src/object.ts:$module": "b13c0ec0476fbbf1155d85eeaecedf1f9917cb9063078955cfe11712bd15015d",
+    "packages/scope/src/object.ts:ScopeObject": "77b9efb0f836cc70849d76d29aaccce4edef78700759e4744c00ed4d884467bf", // J4: bounded birth discovery and the exact hold@2 credential branch.
   },
   "packages/scope/src/worker.ts": {
-    "packages/scope/src/worker.ts:$module": "ea5fa597ed7ca5c673dad1c33a3763d1356b673f090c6646c2d15cdb09fe40e8",
+    "packages/scope/src/worker.ts:$module": "4d100a3676c4e9c5848d9c178f9431b8151ada92a14cf83e148ca03205f1e2a2",
     "packages/scope/src/worker.ts:ScopeIndex": "c427427157118cacbc763f65d5523f598eeb72a0b9a01520f1b088c5bc6dbad5", // Reviewed empty Site wake deletion; route and authority gates unchanged.
     "packages/scope/src/worker.ts:MISSING": "e8958a6cf8d4cd2f412b30c76b38aca2f4523bc2b9df96606ac01059b6d4fb42",
     "packages/scope/src/worker.ts:api": "4cd7bb21bc07be9505a24e36194387cd97bf183ffbd9484c59fc1e06f13bb32e",
@@ -28,10 +28,10 @@ const namedOwners = {
     "packages/scope/src/worker.ts:projectionResponse": "e17f1f4aa800bc06b4f8d065f77e8a594c2738c77873a52671fa7f1b22bf249b",
     "packages/scope/src/worker.ts:route": "8e41a02f0a9d01c802beea51c095d82f3720ca0d3d5dc178213f5de2a8ccde63",
     "packages/scope/src/worker.ts:routedRequest": "51a0718b0fefea0e8508361ba7a48330bcc6740abce56a6ff3694402ae49681c",
-    "packages/scope/src/worker.ts:outsideOf": "5060e5b7730a2c3839ae7e2a4d953ccaca63c78fb7a4fa07e1b63677f8a4216a",
+    "packages/scope/src/worker.ts:outsideOf": "fc6c501cd06d17420fc489ddb330ea2a05838af484d962de1ece2ecc382366e6",
     "packages/scope/src/worker.ts:sessionWiring": "cb8f4d0e2b06854a3fbf080e5b4ce72e4182060b60f27cc7fb7f5ed6ac8779c5",
     "packages/scope/src/worker.ts:snapshotReaderOf": "dac91fd4e800bdcd1a9f7e47bd077b6efd0acd4eb3c70bf63122a12bdb7446b5",
-    "packages/scope/src/worker.ts:DeployedScope": "0714da9436f9fd5a4c70169986ba9f056046490903dc6072b7d2a28adb28b5ef",
+    "packages/scope/src/worker.ts:DeployedScope": "660756384c04ec84a02cd513cf7bc8e00a2542b596bf16a846afcc25bf04020d",
     "packages/scope/src/worker.ts:ApplicationStreamLifetime": "4c82d6b5ea8ae68089f2f80321e3361b6176c9725d0b46481b6f32b6d2093ba3",
     "packages/scope/src/worker.ts:ApplicationScreenService": "d0e151737f0a735c031d7bb134c45d0ce8e87e7ec6d7a03eaf5455acbb92ac25",
     "packages/scope/src/worker.ts:mcpRoute": "1ab549b7363fa9deed65368e72c0a8fbde019972cd0d81321d5cabf00b4cd962",
@@ -197,14 +197,14 @@ const seals = {
   "apps/room/page/route.ts": "8eccc79a8a3e3cd8b33c38c65374db5d01583b5e9afd76384fc2133bae4cb475",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
   "packages/scope/src/worker.ts": namedOwners["packages/scope/src/worker.ts"],
-  "packages/scope/src/scope-index.ts": "340df0f22c82427511da3787fe2e71eaba66b6a59b133c719f212b0bde85a617", // Census port type; existing internal lookup/registration behavior retained.
+  "packages/scope/src/scope-index.ts": "eafe7c6d87ae4ce32f190654b842546ee7cc214aab124c8381490ee629bbfc00", // Exact indexed scope and kind gate before internal native birth discovery.
   "packages/scope/src/register-setting.ts": "c2f1f2a01229e29f627eb061ea551e57139a3512744d25de50195dda93473168", // Shared exact Register selector; actual maintained parser output.
   "packages/scope/src/scope-index-census.ts": "1892fba9c476330693d9b8071bd7b2653d2261bef7e9487fd95018d74aba2769", // Address/key admission precedes owner proof; exact census authority and page guards retained, without duplicate owner charge.
   "packages/scope/src/creation-admission.ts": "f55e56accbf10c2bb77b2cdadc180f12a3af12e486777c39494217fa624acf48", // Reviewed R1 ancestry owner; adopted AST value.
   "packages/scope/src/creation-lineage.ts": "bb7e10ac7c7b769a682282e586cd6fbda6661e724abe89641387600eb0e5c5f8", // Reviewed whole-lineage boundary; adopted AST value.
   "packages/scope/src/creation-versions.ts": "a8f639325611fa080dda267193ac14ec4dfbeb0494c7cd3d86a1c4c93a915d6c", // Reviewed R6 creation-policy parser; actual maintained output.
   "packages/scope/src/creation-declaration.ts": "71b45f8d6f6c799aaff0ab07f8398c36b9f339f04a02a6ef57157efb1958363d", // Bounded immutable native Directory custody, not authority.
-  "packages/scope/src/namespace.ts": "7d8f7fe6a2769391f8e576cbfb8b08969b1fa2bb07c56409d2edf9267e48a672", // Reviewed internal declaration RPC; adopted AST value.
+  "packages/scope/src/namespace.ts": "11ce9daffdb384151dbd1ca9e204e0d062c1d3ff113d482b9980760f8eaad7e7", // Reviewed internal declaration RPC; adopted AST value.
   "packages/scope/src/health.ts": "3d31d6c6d6413294cfe14d46430d357fb65a7949423642b642b139abefcdbdc8",
   "packages/scope/src/site/route.ts": "f4bbcdd1f53220ccce1337ec011e0c662f199f979513ca38ea891bda7add6ee8",
   "packages/scope/src/site/host.ts": "bfcdb093e430467da019b5994d034c2341c8b137dd14aacc97ac9d5e4222e332", // Private Site token custody; actual maintained parser output.
@@ -229,6 +229,9 @@ const seals = {
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
   "packages/scope/src/applications/projection.ts": "f7d3bb45d448ec654a89f875697f865e1e89baeb5d7529e0db0859bd855b009f",
   "packages/scope/src/destination-host.ts": "e272abc7502b17f171944632ab2da10c23ab2bb58018404ec43b57379eb5d3eb",
+  "packages/scope/src/workspace-host.ts": "fc194d9584dc30b7e24d635534a83a6218c3ca9f7a625bf48540a5c28de87271", // Reviewed SQL custody, setup revocation and full refs for recorded branch names.
+  "packages/scope/src/workspace-lineage.ts": "e504accd924593ea2aed7f6180ed2e00112ef4f1c7455ab1594f12d3784f6573", // Reviewed bounded authenticated Register, Directory and Destination creation lineage.
+  "packages/scope/src/native-birth.ts": "ab9ecd331850e5f183fafaee07145c64adadb3ad904ea95bcc4ddf569da6ad6f", // Reviewed bounded genesis decoding and exact indexed scope and kind discovery.
   "packages/mcp/src/hosted.ts": "c78bce660a4927fd05a5856e9d19f7b93d8737659ce58c4dc50842f39ee0db9a",
   "packages/mcp/src/hosted-tools.ts": "5bb4dd74b12896bb8f5f5cb366f25bd31af849c2690d0e3ab5d81eb277f94a47", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": namedOwners["packages/mcp/src/service.ts"],
@@ -262,8 +265,8 @@ const pendingArchiveSeals = {
   "apps/room/archive.ts": "9547f8b9a4a1dd842b6151287a9b15efdf3abed011cb6b12bc191d5e04b78e4d", // Valid source proof settles; source policy and identity checks unchanged.
   "packages/scope/src/archive-host-item.ts": "44fd36bee675f5abc450ffb60b9858d820e20c88461589ecfeff61e36ef0e327",
   "packages/scope/src/archive-host.ts": "ad759aff6f090fab3401d2f75274af294269f7db488ae2d5c56954759cdf754a", // Migration collectors settle only checked POST byte receipts; decoder fees and authority fences unchanged.
-  "packages/scope/src/artifacts-host.ts": "df100e1d2d24bb859af31935b21598cd948e2dec0199d954c34742e33dc38f53",
-  "packages/scope/src/artifacts-wiring.ts": "50c9248563a085a5902a97fbb8c9b350e2864211945f9d2f349cd8ea9c585cb5",
+  "packages/scope/src/artifacts-host.ts": "1622a47d07bc5d7a3e89f9d2b01027c33aa6672ad780a395c0e72c80bc5685d8", // Reviewed durable fork setup custody; the journal owns its later revocation.
+  "packages/scope/src/artifacts-wiring.ts": "84b621543159fd6f0f539a1c59392ce70f56ebee3f7c1fc9544eaee890052027",
 };
 // Actual maintained parser outputs adopted by root; never infer hashes from intent.
 const pendingR8Seals = {

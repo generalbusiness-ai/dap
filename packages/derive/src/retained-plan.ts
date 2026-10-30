@@ -7,7 +7,7 @@ import { isDigest, isFactRef, retainedValueKey } from "@generalbusiness/dap-byte
 
 import type { ValidDefinition } from "./validate/index.ts";
 import type { OperationRules } from "./ledger.ts";
-import { HOLD, HOLD_KINDS } from "./capability/hold.ts";
+import { HOLD, HOLD_V2, HOLD_KINDS, holdEvidenceSnapshots } from "./capability/hold.ts";
 import { isAncestryCheck, type AncestryCheck } from "./capability/ancestry.ts";
 import { isObject } from "./values.ts";
 import { valuePlaces } from "./validate/fields.ts";
@@ -132,10 +132,12 @@ export function outcomeValueDependencies(origin: DependencyOrigin, rules: Operat
 export function outcomeSnapshotDependencies(origin: DependencyOrigin, input: Pick<Extract<Input, { type: "outcome" }>, "owner" | "kind" | "result" | "evidence">, rules: () => OperationRules | null | undefined): { record: AncestryCheck | null; dependencies: readonly RequiredDependency[]; readable: boolean } {
   let readable = true;
   let named: readonly Digest[] = [];
-  try { named = rules()?.retains?.(input.evidence) ?? []; }
+  let selector: OperationRules["retains"] = undefined;
+  try { const owner = rules(); selector = owner?.retains; named = owner?.retains?.(input.evidence) ?? []; }
   catch { readable = false; /* Ordinary replay leaves this evidence to its judge. */ }
   const body: unknown = isObject(input.evidence) ? input.evidence["body"] : null;
-  const candidate = input.owner === HOLD && input.kind === HOLD_KINDS.check && input.result === "confirmed" && isObject(body) ? body["record"] : null;
+  const nativeHold = input.owner === HOLD || input.owner === HOLD_V2 && selector === holdEvidenceSnapshots;
+  const candidate = nativeHold && input.kind === HOLD_KINDS.check && input.result === "confirmed" && isObject(body) ? body["record"] : null;
   const record = isAncestryCheck(candidate) ? candidate : null;
   return { record, readable, dependencies: (record ? [...named, record.snapshot.digest] : named).map(digest => requiredDependency(origin, "outcome-snapshot", { kind: "snapshot", digest })) };
 }

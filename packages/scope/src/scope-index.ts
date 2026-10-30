@@ -51,7 +51,7 @@ function absent(method: unknown): unknown {
   if (method === "create") return { answer: "refused", reason: "source-unverified" };
   if (method === "submit" || method === "prepare") return { answer: "unavailable", reason: "unavailable" };
   if (method === "deliver") return { answer: "routing", reason: "not-found" };
-  if (["source", "proofSource", "nativeBirth", "creationDeclaration", "declared", "text", "observe", "sessionReference", "siteRoom", "siteDestination", "sitePublication", "sitePublishedCommit", "applicationRoom", "applicationRoomBytes", "applicationInstallation", "applicationProjectionDeclarationBytes", "demoCreationOffer", "jobState", "workSourceState", "reservationSnapshot", "stageSnapshot"].includes(method as string)) return null;
+  if (["source", "proofSource", "nativeBirth", "nativeBirthByName", "creationDeclaration", "declared", "text", "observe", "sessionReference", "siteRoom", "siteDestination", "sitePublication", "sitePublishedCommit", "applicationRoom", "applicationRoomBytes", "applicationInstallation", "applicationProjectionDeclarationBytes", "demoCreationOffer", "jobState", "workSourceState", "reservationSnapshot", "stageSnapshot"].includes(method as string)) return null;
   return { ok: false, reason: "not-found" };
 }
 
@@ -130,6 +130,14 @@ export function indexedScopes(binding: Binding, env: ScopeIndexEnvironment): Bin
           if (scopeIdOf(admitted.envelope.to as import("@generalbusiness/dap-contract").Seed) !== name) return missing();
           actualArgs![0] = admitted.envelope;
           creationCurrent = admitted.current;
+        }
+        // Birth-by-name discovery never probes or initializes an unknown
+        // target, including under legacy register-mode admission.
+        if (method === "nativeBirthByName") {
+          const kind = actualArgs?.[1];
+          if (!["directory", "destination", "register"].includes(kind as string)) return missing();
+          try { if (await index.has(name, kind as ScopeKind) !== true) return missing(); }
+          catch { return missing(); }
         }
         let known: boolean;
         try { known = creating ? false : await index.has(name) === true; } catch { return missing(); }

@@ -139,6 +139,57 @@ the token in an `Authorization` header that git reads from its
 environment. `dap remote` prints the repository's remote URL in the
 host's form.
 
+## A fork for a hold
+
+The explicit J4 lane profiles use `hold@2` on Cloudflare Artifacts.
+Existing profiles keep `hold@1` and their recorded behavior; deploying the
+adapter does not migrate them.
+
+The Page imports the capability rules. After changing them, regenerate its
+served module with `npm run build --workspace @generalbusiness/dap-page`;
+the Page asset test checks that committed module against the maintained build.
+
+The service authenticates the lane's actual Directory creation and its
+Register and Destination births before choosing a repository. A caller
+cannot select another namespace or repository. Each eligible hold gets its
+own fork, named for the lane incarnation, hold, opening and attempt. A lost
+creation answer stays unknown; another attempt uses a different name. The
+initial creation credential stays in private custody under that attempt's
+nonsecret handle. Each fork attempt has a `hold@2` token record with purpose
+`setup`. A confirmed fork answer opens its revoke operation in the same
+outcome. Only a confirmed revoke ends the token and clears its plaintext;
+an unknown revoke leaves the token `revoking` and the operation open.
+The host makes no retry of its own. A refused fork attempt issued no
+credential and ends its setup record. An unknown fork answer preserves the
+record as `minting`, including its exact handle, until its own answer arrives.
+Thus each setup credential the fork adapter issues has a recorded cleanup
+obligation. This uses the existing token and revoke forms, with no private
+outbox or separate operation owner.
+
+The holder prepares an instance and a workspace token with the existing
+`hold@2:instance` and `hold@2:token` steps. The existing credential route
+gives the fork write credential once to the preparing key's current session,
+while the hold and instance remain eligible. The token cannot write the
+room repository. Plaintext stays in private custody and never enters a
+journal. Ending the hold opens the existing token revocation operation.
+Only the provider's confirmed answer settles that revocation.
+
+Staging reads the selected fork with a scoped read credential and copies a
+bounded object closure to the room's staged ref with an internal write
+credential. Publication then uses the Destination's existing checks and
+push path. The performer receives no room write credential. An unavailable
+fork leaves dependent mints recorded and unsent; a later committed outcome
+lets the service reconsider the same attempt.
+
+This path supports lanes created directly by the native Directory. Child
+concern workspaces, GitHub workspaces, automatic fork deletion at hold end,
+and unknown-fork sweeps remain outside J4. The existing explicit `retire`
+step deletes a selected fork when its guards permit it. A late confirmed
+unselected fork answer opens deletion for that answer's exact ID and name.
+The same outcome opens the setup credential's revoke. Setup revocation does
+not delay the hold's end or the fork's deletion.
+New J4 profiles grant no archive or optional evidence-host permission.
+
 ## What is not built
 
 - A command that gives `git fetch` or `git pull` a token in an existing
@@ -147,10 +198,11 @@ host's form.
   its end; its plaintext stays in custody until it is read or the read is
   refused at its end.
 - Public repositories on Artifacts.
-- A fork for each hold. Each destination has the one repository. The room
-  records a hold's fork and token operations. The design is plan 029; the
-  measured cost of a fork is in
+- Workspace hosting for historical `hold@1` lanes or for GitHub. The
+  Artifacts successor above is opt-in through new lane pins. Plan 029
+  describes the wider lifecycle; the earlier observed fork cost is in
   [the measurement note](../notes/implementation/2026-10-13-fork-cost-measurement.md).
 - A sweep for a repository whose creation answer was lost. Its outcome
-  stays unknown, the next attempt uses a new name, and the earlier
-  repository and its write token are not cleaned up.
+  stays unknown and the next attempt uses a new name. A fork's setup-token
+  record stays `minting` until that attempt's own answer arrives; elapsed
+  time, a restart or another fork cannot settle it.

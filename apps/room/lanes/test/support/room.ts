@@ -24,7 +24,7 @@ import { canonicalize, factRefOf, intentDigest, keyIdOfSecret, scopeIdOf, seedDi
 import { ScopeHandle, declaredHandle } from "@generalbusiness/dap-client";
 import { validateDefinition, valueDigest, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { keys, type Actor } from "@generalbusiness/dap-derive/testing";
-import { DESTINATION_CHANGED_SET, DIRECTORY, REGISTER, PARTITION_COHORT, destinationReceipt, initialCommitObjects, repositoryName, revokedToken } from "@generalbusiness/dap-platform";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT, DESTINATION_CHANGED_SET, DIRECTORY, REGISTER, PARTITION_COHORT, destinationReceipt, initialCommitObjects, repositoryName, revokedToken } from "@generalbusiness/dap-platform";
 import { targetOf } from "../../../../../packages/platform/src/destination.ts";
 import { SqliteStore, type Transport as NativeTransport } from "../../../../../packages/scope/src/index.ts";
 import { api } from "@generalbusiness/dap-scope/worker";
@@ -48,7 +48,7 @@ export const oid = (c: string) => c.repeat(40);
 export const platformTransport = api(env.PLATFORM, null, { SCOPE_INDEX: env.SCOPE_INDEX });
 
 /** What the destination's outside port is asked, by kind, and what the test answers each kind with. */
-type Driven = "mint" | "first-head" | "receipt" | "revoke" | "push" | "judge";
+type Driven = "mint" | "first-head" | "receipt" | "revoke" | "push" | "judge" | "reservation-stage" | "reservation-delete";
 
 /** The validated form of a lane definition, for derive's fold of its history in `Node`. */
 export function valid(definition: DeclaredDefinition): ValidDefinition {
@@ -69,6 +69,7 @@ export class Room {
   constructor(
     readonly R: Platform, readonly D: Platform, readonly M: Platform, readonly rules: Platform, readonly G: Platform,
     readonly firstHead: string, readonly members: Record<string, number>, readonly root: Platform = D,
+    readonly workspaceCohort = false,
   ) {}
 
   /** A member of the room, as a lane's slot holds one: the real membership scope's reference and the handle. */
@@ -102,6 +103,8 @@ export class Room {
           : kind === "receipt" ? { send: "accepted", seen: destinationReceipt(store, own, targetOf(store, own, operation)!, "sha1").commit }
           : kind === "first-head" ? { send: "accepted", seen: firstHead }
           : kind === "push" ? { send: "accepted", seen: integration }
+          : kind === "reservation-stage" ? { send: "accepted", seen: integration, tree: publication?.values["tree"] }
+          : kind === "reservation-delete" ? { send: "accepted", seen: null }
           : null;
         return { operation: operation.id, attempt: attempt.attempt, body, publication: operation.for ?? null, head };
       }));
@@ -143,7 +146,11 @@ export class Room {
     await this.settle();
     await this.drive("judge");
     await this.settle();
-    for (const kind of ["mint", "push", "mint", "receipt", "revoke"] as const) await this.drive(kind);
+    if (this.workspaceCohort) {
+      for (const kind of ["mint", "reservation-stage", "mint", "push", "mint", "receipt", "revoke", "mint", "reservation-delete", "revoke"] as const) await this.drive(kind);
+    } else {
+      for (const kind of ["mint", "push", "mint", "receipt", "revoke"] as const) await this.drive(kind);
+    }
     await this.settle();
   }
 
@@ -166,7 +173,7 @@ export class Room {
    * `testTransport` installs an explicit test routing boundary before birth;
    * omitted uses the normal Native namespace transport.
    */
-  async lane<const D extends DeclaredDefinition>(who: Actor, kind: "open-issue" | "open-pr", definition: D, digest: string, fields: Record<string, unknown>, bounds?: Bounds, testTransport?: NativeTransport): Promise<Node<D>> {
+  async lane<const D extends DeclaredDefinition>(who: Actor, kind: "open-issue" | "open-pr", definition: D, digest: string, fields: Record<string, unknown>, bounds?: Bounds, testTransport?: NativeTransport, testHost?: Host): Promise<Node<D>> {
     const signed = await this.D.intent(who, kind, { expected: await this.D.expected({ repository: 0 }), fields: { definition: digest, ...fields } as never });
     const seed: Seed = { v: 1, kind: "lane", definition: digest as never, creator: await this.D.at(), cause: intentDigest(signed.intent), ordinal: 0 };
     const name = scopeIdOf(seed);
@@ -174,7 +181,7 @@ export class Room {
     // It changes no deployed default and never rewrites SQLite state.
     if (bounds) net.sized.set(name, bounds);
     // STAND-IN: the lane's Git host, for the attempts that the code of `hold@1` opens. Wired before the object first runs.
-    const host = new Host();
+    const host = testHost ?? new Host();
     this.hosts.set(name, host);
     wired.set(name, () => ({ ...(testTransport ? { transport: testTransport } : {}), outside: { accepts: (owner, kind) => host.accepts(owner, kind), send: (request) => Promise.resolve(host.send(request)) } }));
     this.#lanes.set(name, null as never);
@@ -248,12 +255,12 @@ export async function publicationOf(r: Room, C: { name: string }, merge: number)
  */
 /** Fresh native enrollments; defaults retain all three members in their original order. */
 type RoomMember = "@una" | "@vic" | "@paul";
-export interface RoomSetup { roster?: readonly RoomMember[]; partitioned?: boolean; openPartition?: boolean; rootBounds?: Bounds }
+export interface RoomSetup { roster?: readonly RoomMember[]; partitioned?: boolean; openPartition?: boolean; rootBounds?: Bounds; workspaceCohort?: boolean }
 export async function room(setup: RoomSetup = {}): Promise<Room> {
   net.hold = net.deaf = null;
-  const registerPin = setup.partitioned ? PARTITION_COHORT.register : REGISTER;
-  const directoryPin = setup.partitioned ? PARTITION_COHORT.directory : DIRECTORY;
-  const install: Intent = { v: 1, to: null, actor: paul.key, kind: "install", on: null, expected: {}, fields: { host: "git.example", namespace: "artroom", policy: "keys", "founders": [rita.key] }, idempotencyKey: crypto.randomUUID(), notAfter: soon(60) };
+  const registerPin = setup.workspaceCohort ? ARCHIVE_DEVICE_APPLICATION_COHORT.register : setup.partitioned ? PARTITION_COHORT.register : REGISTER;
+  const directoryPin = setup.workspaceCohort ? ARCHIVE_DEVICE_APPLICATION_COHORT.directory : setup.partitioned ? PARTITION_COHORT.directory : DIRECTORY;
+  const install: Intent = { v: 1, to: null, actor: paul.key, kind: "install", on: null, expected: {}, fields: { host: setup.workspaceCohort ? "artifacts" : "git.example", namespace: "artroom", policy: "keys", "founders": [rita.key] }, idempotencyKey: crypto.randomUUID(), notAfter: soon(60) };
   const R = new Platform(scopeIdOf({ v: 1, kind: "register", definition: registerPin, creator: null, cause: intentDigest(install), ordinal: 0 }));
   // STAND-IN: the Git host of this register.
   const host = outsideOf(R.name);
@@ -267,7 +274,8 @@ export async function room(setup: RoomSetup = {}): Promise<Room> {
   // Explicit native capacity-fixture bound, before root birth. Other scopes
   // retain their own defaults; no deployed configuration is changed.
   if (setup.rootBounds) { net.sized.set(D.name, setup.rootBounds); onTestFinished(() => { net.sized.delete(D.name); }); }
-  host.answer("1:0" as OperationId, 1, { result: "confirmed", evidence: { basis: "own-answer", body: { name: repositoryName(seedDigest(seed), 1), id: "repo-1" } } });
+  const repository = repositoryName(seedDigest(seed), 1);
+  host.answer("1:0" as OperationId, 1, { result: "confirmed", evidence: { basis: "own-answer", body: { name: repository, id: setup.workspaceCohort ? repository : "repo-1" } } });
   const claimed = await R.stub.submit(matched, []);
   if (claimed.answer !== "accepted") throw new Error(`no claim: ${JSON.stringify(claimed)}`);
   while ((await (R.stub as unknown as { effect(): Promise<number> }).effect()) > 0) { /* each pass may make the next one due */ }
@@ -279,7 +287,7 @@ export async function room(setup: RoomSetup = {}): Promise<Room> {
   // The creation commit of `platform:destination@2`: one README that names the repository, the creator's handle and the directory.
   const readme = { name: repositoryName(seedDigest(seed), 1), handle: "@rita", directory: D.name };
   const firstHead = initialCommitObjects("sha1", G.name, (await G.entries())[0]!.time, factRefOf((await R.entries())[1]!), readme).commit;
-  const made = new Room(R, D, M, rules, G, firstHead, {});
+  const made = new Room(R, D, M, rules, G, firstHead, {}, D, setup.workspaceCohort ?? false);
   for (const kind of ["mint", "first-head", "mint", "receipt", "revoke"] as const) await made.drive(kind);
   expect(await G.item(0)).toMatchObject({ state: "ready", values: { head: firstHead } });
 
@@ -294,8 +302,8 @@ export async function room(setup: RoomSetup = {}): Promise<Room> {
     // The explicit M6 cohort records only the invitation public key. The
     // synthetic invitation seed stays in this fixture and signs redemption.
     const invitationSeed = new Uint8Array(32).fill(32 + Object.keys(made.members).length);
-    const invitation = await M.did(rita, "invite-member", { fields: { handle, role: "member", ...(setup.partitioned ? { inviteKey: keyIdOfSecret(invitationSeed) } : { inviteHash: textDigest(secret) }), inviteEnds: soon(3600) } });
-    await M.did(who, "join", { fields: { invitation, ...(setup.partitioned ? { proof: signInvitationProof(invitationSeed, await M.at(), invitation, who.key) } : { secret }) } });
+    const invitation = await M.did(rita, "invite-member", { fields: { handle, role: setup.workspaceCohort ? "agent" : "member", ...(setup.partitioned || setup.workspaceCohort ? { inviteKey: keyIdOfSecret(invitationSeed) } : { inviteHash: textDigest(secret) }), inviteEnds: soon(3600) } });
+    await M.did(who, "join", { fields: { invitation, ...(setup.partitioned || setup.workspaceCohort ? { proof: signInvitationProof(invitationSeed, await M.at(), invitation, who.key) } : { secret }) } });
     made.members[handle] = invitation;
   }
   await made.settle();

@@ -59,7 +59,7 @@ import { ApplicationActAdmission } from "./applications/act-admission.ts";
 import { APPLICATION_DECLARATION_BYTES, type ApplicationDeclarationSource } from "./applications/projection-source.ts";
 import { applicationJson } from "@generalbusiness/dap-platform/application";
 import { ReadPreparation } from "./read-preparation.ts";
-import { nativeBirth } from "./native-birth.ts";
+import { nativeBirth, nativeBirthByName } from "./native-birth.ts";
 import { creationDeclaration } from "./creation-declaration.ts";
 import { PreparationBudget } from "./preparation-budget.ts";
 import { SessionReferences, type SessionReferenceSource } from "./session-reference.ts";
@@ -233,6 +233,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     };
     const outsideGiven: OutsideGiven = {
       ...made, state: outsideState, bounds,
+      definition: () => this.#scope.pinned()?.definition ?? null,
       retained: (...args) => store.retained(...args),
       own: (seq) => {
         const kept = Number.isSafeInteger(seq) && seq >= 0 ? store.stored(seq) : null;
@@ -738,6 +739,15 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const result = nativeBirth(this.#readPreparation, at, new PreparationBudget(undefined, active), maxBytes);
     return active() ? result : null;
   }
+  /** Indexed internal discovery only. No turn, source fallback, or host I/O. */
+  nativeBirthByName(name: unknown, kind: unknown, milliseconds: number, maxBytes?: number) {
+    if (name !== this.#name) return null;
+    const began = this.#queryFlights.clock.now(), ends = began + milliseconds;
+    if (!Number.isSafeInteger(milliseconds) || milliseconds <= 0 || milliseconds > EXACT_PROOF_RECEIVER_BOUNDS.milliseconds || !Number.isFinite(began) || !Number.isFinite(ends)) return null;
+    const active = () => { const now = this.#queryFlights.clock.now(); return now >= began && now < ends; };
+    const result = nativeBirthByName(this.#readPreparation, name, kind, new PreparationBudget(undefined, active), maxBytes);
+    return active() ? result : null;
+  }
   /** Immutable bounded custody only. No #first, turn, driver or authority. */
   creationDeclaration(at: unknown, digest: unknown, maxBytes: number, milliseconds: number): string | null {
     const began = this.#queryFlights.clock.now(), ends = began + milliseconds;
@@ -966,7 +976,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
         && typeof branch.values["name"] === "string" && isScopeId(branch.values["membership"]) && isScopeId(branch.values["rules"])
         && isScopeRef(branch.refs["directory"]) && branch.refs["directory"].kind === "directory") return { ok: false, reason: "no-repository" };
     }
-    const answer = key !== false && typeof handle === "string" && scope?.at.kind === "destination" ? this.#outside.credential?.(handle, key) ?? null : null;
+    const workspace = scope?.at.kind === "lane" && this.#scope.pinned()?.definition?.declared.capabilities?.some(capability => capability.name === "hold" && capability.version === 2) === true;
+    const answer = key !== false && typeof handle === "string" && (scope?.at.kind === "destination" || workspace) ? this.#outside.credential?.(handle, key) ?? null : null;
     return answer && scope ? { ok: true, at: scope.head, value: answer, complete: true } : { ok: false, reason: "forbidden" };
   }
 }

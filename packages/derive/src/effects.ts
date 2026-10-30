@@ -500,7 +500,8 @@ export function deriveEffects(j: Judging, forms: readonly EffectForm[], attentio
     const k = effects.filter((effect) => effect.effect === "operation").length;
     const derived = j.capabilities.workspace(j.view, j.definition, j.self, k, holds, (id) => [...working.values()].find((held) => held.id === id) ?? null);
     // Section 6.1, "In the commit": code that returns more than it declared has a fault, and the input is not judged.
-    const most = j.capabilities.maxima?.filter((m) => m.form === "workspace").reduce((n, m) => n + m.effects, 0);
+    const listed = new Set(j.definition.declared.capabilities.map(c => `${c.name}@${c.version}`));
+    const most = j.capabilities.maxima?.filter((m) => m.form === "workspace" && listed.has(m.capability)).reduce((n, m) => n + m.effects, 0);
     if (most !== undefined && derived.length > holds.length * most) throw new Error(`the workspace of ${holds.length} holds declares at most ${holds.length * most} effects, and it returned ${derived.length}`);
     effects.push(...derived);
     // The count of `counted` holds before an entry is derived. An entry that would still pass the bound is refused, by the

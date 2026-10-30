@@ -18,6 +18,8 @@ import { credentialHandle, exact, hostBound } from "./host-wiring.ts";
 import type { OutsideGiven } from "./given.ts";
 import { NO_OUTSIDE, type EffectRequest, type Outside } from "./operations.ts";
 import { RegisterHost } from "./register-host.ts";
+import { WorkspaceHost } from "./workspace-host.ts";
+import type { WorkspaceSources } from "./workspace-lineage.ts";
 
 /** The host that a register records, at install, for this service. */
 export const ARTIFACTS_HOST = "artifacts";
@@ -132,5 +134,20 @@ export function artifactsOutside(given: OutsideGiven, sql: Pick<Sql, "exec">, en
       replies: (limit) => bound(given.genesis()?.seed.definition ?? "") ? destination.replies(limit) : { answers: [], more: false },
       credential: (handle, key) => bound(given.genesis()?.seed.definition ?? "") ? destination.credential(handle, key) : null,
     };
+  } catch { return NO_OUTSIDE; }
+}
+
+/** A separate explicit capability path. Native host routing stays unchanged. */
+export function artifactsWorkspaceOutside(given: OutsideGiven, sql: Pick<Sql, "exec">, env: ArtifactsBindings, sources: WorkspaceSources | undefined, fetch?: (request: Request) => Promise<Response>): Outside {
+  try {
+    const ready = artifactsReadiness(env);
+    if (!sources || ready.state !== "wired" || given.scope()?.at.kind !== "lane"
+      || !given.definition?.()?.declared.capabilities?.some(capability => capability.name === "hold" && capability.version === 2)) return NO_OUTSIDE;
+    const provider = new ArtifactsProvider({ binding: ready.binding, host: ARTIFACTS_HOST, namespace: ready.config.namespace,
+      service: ready.config.host, maxBytes: ready.config.maxBytes, ...(fetch ? { fetch } : {}),
+      credentialHandle: async () => { throw Error("native-destination-mint-required"); },
+      creation: creationCustody(sql, () => given.scope() ? canonicalize(given.scope()!.at) : null),
+    });
+    return new WorkspaceHost(given, sql, provider, sources, ready.config.registerScope, ready.config.namespace);
   } catch { return NO_OUTSIDE; }
 }

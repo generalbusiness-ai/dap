@@ -44,7 +44,7 @@ export function nativeLicense(d: Defining, path: string, args: Record<string, un
  * validated also selectors give the same local ID as that raw binding. */
 export function nativeReceiver(d: Defining, form: PendingWork, fields: ReadonlyMap<string, FieldType>, also: unknown, cls: unknown, message: string | null, kind: unknown): void {
   if (!d.wholeCapacity || typeof kind !== "string") return;
-  const bound = cls === "tell" && message === "export-license" && d.capabilities.get("hold") === "hold@1";
+  const bound = cls === "tell" && message === "export-license" && (d.capabilities.get("hold") === "hold@1" || d.capabilities.get("hold") === "hold@2");
   if (bound) d.native.decisions.push({ path: form.path, kind });
   for (const task of d.native.tasks.get(form.sets) ?? []) {
     const arg = task.exported;
