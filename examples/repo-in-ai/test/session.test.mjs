@@ -13,10 +13,10 @@ const { canonicalize, factRefOf, intentDigest, newIncarnation, verifySignedInten
 const { secretSigner } = await load("@generalbusiness/dap-client");
 const { firstExtents } = await load("@generalbusiness/dap-platform");
 const { identityId } = await load("@generalbusiness/dap-mcp");
-const { StandIn, SERVICE } = await load(new URL("../../mcp/test/support/standin.ts", import.meta.url).href);
+const { StandIn, SERVICE } = await load(new URL("../../../packages/mcp/test/support/standin.ts", import.meta.url).href);
 const { changeJ4 } = await load(new URL("../../../apps/room/lanes/src/j4.ts", import.meta.url).href);
-const { durableCliStore, durableRequestStore } = await load(new URL("../../../examples/repo-in-ai/custody.ts", import.meta.url).href);
-const { openSession, SessionRefusal } = await load(new URL("../../../examples/repo-in-ai/session.ts", import.meta.url).href);
+const { durableCliStore, durableRequestStore } = await load(new URL("../custody.ts", import.meta.url).href);
+const { openSession, SessionRefusal } = await load(new URL("../session.ts", import.meta.url).href);
 const NOW = Date.parse("2099-01-01T00:00:00Z");
 
 function json(body) {

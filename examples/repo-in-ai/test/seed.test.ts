@@ -4,7 +4,7 @@ import type { FactRef, ScopeId } from "@generalbusiness/dap-contract";
 import { utf8 } from "@generalbusiness/dap-bytes";
 import { Reader, snapshotFiles } from "@generalbusiness/dap-git";
 import { initialCommitObjects, readmeText, type DestinationCommit } from "@generalbusiness/dap-platform";
-import { SEED_LIMITS, SeedRefusal, compareSeedFiles, seedTree, type SeedFile } from "../../../examples/repo-in-ai/seed.ts";
+import { SEED_LIMITS, SeedRefusal, compareSeedFiles, seedTree, type SeedFile } from "../seed.ts";
 
 // Scripted founding facts and an in-memory Git object store. The builders
 // and parsers are real; this is no native room, fresh clone or provider proof.
@@ -14,7 +14,7 @@ const readme = { name: "repo-in-ai-1", handle: "@owner", directory: `sc_${"d".re
 const initial = () => initialCommitObjects("sha1", scope, "2026-10-30T12:00:00Z", claim, readme);
 const file = (path: string, content = "text\n", mode = "100644"): SeedFile => ({ path, mode, bytes: utf8(content) });
 const names = ["app.mjs", "index.html", "model.mjs", "storage.mjs", "styles.css", "test/tasks.test.mjs"];
-const sources = (): SeedFile[] => names.map(path => ({ path, mode: "100644", bytes: readFileSync(new URL(`../../../examples/repo-in-ai/task-list/${path}`, import.meta.url)) }));
+const sources = (): SeedFile[] => names.map(path => ({ path, mode: "100644", bytes: readFileSync(new URL(`../task-list/${path}`, import.meta.url)) }));
 
 test("the seed preserves generator README bytes and every task-list blob, and full comparison detects missing, extra, changed and mode-changed files", async () => {
   const source = sources(), founding = initial(), seed = seedTree(founding, source);

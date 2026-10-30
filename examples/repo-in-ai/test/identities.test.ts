@@ -3,10 +3,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, test } from "vitest";
 import { canonicalize, newIncarnation, scopeIdOf, textDigest, utf8 } from "@generalbusiness/dap-bytes";
-import { memoryStore } from "../src/store.ts";
-import type { PendingInvitationIssue, Store } from "../src/store.ts";
-import { storedSigner } from "../src/store-signer.ts";
-import { IdentityRefusal, initializeOwner, retainedInvitationRequests } from "../../../examples/repo-in-ai/identities.ts";
+import { memoryStore } from "../../../packages/cli/src/store.ts";
+import type { PendingInvitationIssue, Store } from "../../../packages/cli/src/store.ts";
+import { storedSigner } from "../../../packages/cli/src/store-signer.ts";
+import { IdentityRefusal, initializeOwner, retainedInvitationRequests } from "../identities.ts";
 
 // Local custody only. No native, HTTP or provider judgment runs in this file.
 const operation = "11111111-1111-4111-8111-111111111111";

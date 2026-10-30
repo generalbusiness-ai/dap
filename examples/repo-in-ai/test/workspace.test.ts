@@ -2,17 +2,17 @@ import { afterAll, expect, test, vi } from "vitest";
 import { basename } from "node:path";
 import { newIncarnation, same, scopeIdOf, textDigest, timeOf } from "@generalbusiness/dap-bytes";
 import type { ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import type { Session } from "../../../examples/repo-in-ai/session.ts";
-import { pushSeed, retrieveWorkspaceCredential } from "../../../examples/repo-in-ai/workspace.ts";
-import type { SeedCandidate } from "../../../examples/repo-in-ai/git.ts";
-import { memoryStore } from "../src/store.ts";
-import { Host } from "../../git/test/support/host.ts";
-import { bare, cleanup, commitText, put, setRef } from "../../git/test/support/repo.ts";
+import type { Session } from "../session.ts";
+import { pushSeed, retrieveWorkspaceCredential } from "../workspace.ts";
+import type { SeedCandidate } from "../git.ts";
+import { memoryStore } from "../../../packages/cli/src/store.ts";
+import { Host } from "../../../packages/git/test/support/host.ts";
+import { bare, cleanup, commitText, put, setRef } from "../../../packages/git/test/support/repo.ts";
 
 // This replaces only required-session issuance. The actual bounded credential
 // decoder, private markers, Git HTTP clients/Reader and local Git server run.
 // No Native membership, deployment or production provider enforcement is shown.
-vi.mock("../src/command-support.ts", () => ({ requiredReadsOf: () => ({ session: async () => ({ reader: () => "Session SCRIPTED-workspace" }) }) }));
+vi.mock("../../../packages/cli/src/command-support.ts", () => ({ requiredReadsOf: () => ({ session: async () => ({ reader: () => "Session SCRIPTED-workspace" }) }) }));
 afterAll(cleanup);
 const NOW = Date.parse("2030-01-01T00:00:00Z"), TOKEN = "SCRIPTED-private-workspace-token";
 const ref = (kind: "membership" | "directory" | "lane"): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: "platform:membership@8", creator: null, cause: textDigest("SCRIPTED workspace " + kind), ordinal: 0 }), kind, inc: newIncarnation(new Uint8Array(16).fill(9)) });

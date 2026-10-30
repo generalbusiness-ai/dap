@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { Summary } from "@generalbusiness/dap-contract";
-import { ROLE_LISTS } from "../../platform/src/membership-actions.ts";
-import { holdsRulesExtent, isExtents } from "../../platform/src/extents.ts";
-import { appendedActions, preservesActions, roleActions, seedRules, type RoleActions } from "../../../examples/repo-in-ai/policy.ts";
+import { ROLE_LISTS } from "../../../packages/platform/src/membership-actions.ts";
+import { holdsRulesExtent, isExtents } from "../../../packages/platform/src/extents.ts";
+import { appendedActions, preservesActions, roleActions, seedRules, type RoleActions } from "../policy.ts";
 
 describe("repo-in-ai setup policy", () => {
   it("preserves all five original lists while keeping review and merge with people", () => {

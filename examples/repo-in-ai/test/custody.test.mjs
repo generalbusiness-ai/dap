@@ -10,8 +10,8 @@ import { tsImport } from "tsx/esm/api";
 const load = source => tsImport(source, import.meta.url);
 const { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, timeOf } = await load("@generalbusiness/dap-bytes");
 const { secretSigner, signedIntent } = await load("@generalbusiness/dap-client");
-const { Custody, CustodyError, identityId, meaningOf } = await load(new URL("../../mcp/src/custody.ts", import.meta.url).href);
-const { durableRequestStore, flushPrivateFile } = await load(new URL("../../../examples/repo-in-ai/custody.ts", import.meta.url).href);
+const { Custody, CustodyError, identityId, meaningOf } = await load(new URL("../../../packages/mcp/src/custody.ts", import.meta.url).href);
+const { durableRequestStore, flushPrivateFile } = await load(new URL("../custody.ts", import.meta.url).href);
 
 // Real Custody, fileStore and local files; deliver/settle stand in for native
 // HTTP. This proves the pre-send storage boundary, not Native acceptance or

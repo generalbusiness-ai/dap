@@ -8,12 +8,12 @@ import { utf8 } from "@generalbusiness/dap-bytes";
 import { GitProgram } from "@generalbusiness/dap-git";
 import { nodeExec } from "@generalbusiness/dap-git/node";
 import { initialCommitObjects, readmeText } from "@generalbusiness/dap-platform";
-import { SEED_LIMITS, seedTree } from "../../../examples/repo-in-ai/seed.ts";
-import { TASK_LIST_PATHS, SeedGitFailure, buildSeedCandidate, collectCloneFiles, compareClone, loadTaskList } from "../../../examples/repo-in-ai/git.ts";
+import { SEED_LIMITS, seedTree } from "../seed.ts";
+import { TASK_LIST_PATHS, SeedGitFailure, buildSeedCandidate, collectCloneFiles, compareClone, loadTaskList } from "../git.ts";
 
 // Real local Git, with scripted founding facts. No Native creation, provider,
 // credential or hosted clone participates in this owning boundary witness.
-const sourceRoot = fileURLToPath(new URL("../../../examples/repo-in-ai/task-list", import.meta.url));
+const sourceRoot = fileURLToPath(new URL("../task-list", import.meta.url));
 const scope = `sc_${"g".repeat(51)}a` as ScopeId;
 const claim: FactRef = { at: { kind: "register", scope: `sc_${"r".repeat(51)}a`, inc: `in_${"r".repeat(25)}a` }, seq: 7, hash: `sha256:${"1".repeat(64)}` };
 const readme = { name: "repo-in-ai-1", handle: "@owner", directory: `sc_${"d".repeat(51)}a` as ScopeId };
