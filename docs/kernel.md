@@ -268,6 +268,21 @@ tables belong to the host. This addition closes no K item. Review must
 assess these boundaries and the versioned creation cohort at the exact
 head under this section.
 
+The fixed-slot equality index is a known structural reader of reference
+values. In a fixed slot, it walks nested values and records a local
+dependency when an entry `FactRef` names the same full scope reference.
+That dependency lets it refresh equality keys when the local sequence and
+hash metadata become available. It supplies no grant and creates no
+foreign `FactUse`. A Commons note's `about` field is not a fixed slot.
+
+Ruling `f4495460db9e28115ddde40406a2320bc4396a69` keeps reference fields
+in the existing `artroom-definition-1` format. Installation requires an
+explicitly supported native family at Rules 14 or a later version. Older
+Rules reject the field with the named refusal
+`reference-requires-rules14`. Unknown future pins remain closed until
+their family explicitly opts in. The shared field type does not migrate
+an older room's native installation policy.
+
 A head adds to the kernel when it does any of these:
 
 - adds a file or an export to `packages/contract`, `packages/derive`, or

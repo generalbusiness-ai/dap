@@ -54,6 +54,20 @@ test("recording a local or unavailable foreign citation preserves its bytes with
   const entry = s.did(keys.sam, "cite", { fields });
   expect(entry.input.type === "act" && entry.input.signed.intent.fields).toEqual(fields);
   expect([entry.uses, entry.effects, entry.sends]).toEqual([[], [], []]);
+  // One maximal list exercises both target variants at the declaration's
+  // exact fragment bound. Escaped NULs also exercise canonical entry sizing.
+  const maximum: ReferenceValue[] = Array.from({ length: 64 }, (_, index) => {
+    const fragment = "\u0000".repeat(510) + String(index).padStart(2, "0");
+    return index % 2 === 0 ? { document: d("b"), fragment }
+      : { entry: { at: otherLane, seq: 999, hash: d("f") }, fragment };
+  });
+  expect(maximum).toHaveLength(64);
+  expect(maximum.every(value => utf8(value.fragment!).length === 512)).toBe(true);
+  const maximal = s.did(keys.sam, "cite", { fields: { about: maximum } });
+  expect(maximal.input).toMatchObject({ type: "act", authority: [{ key: keys.sam.key }] });
+  expect(utf8(canonicalize(maximal)).length).toBeLessThanOrEqual(PROPOSED_BOUNDS.entryBytes);
+  expect(maximal.input.type === "act" && maximal.input.signed.intent.fields).toEqual({ about: maximum });
+  expect([maximal.uses, maximal.effects, maximal.sends]).toEqual([[], [], []]);
   expect(s.replay().snapshot()).toBe(s.state.snapshot());
   expect(fieldRetention([{ type: "list", of: reference, max: 64 }], PROPOSED_BOUNDS, true)).toEqual({ facts: 0, texts: 0, values: 0 });
   expect(s.act(keys.sam, "cite", { fields: { about: [{ entry: s.fact(0), fragment: "x".repeat(513) }] } })).toMatchObject({ result: "refused", reason: "bad-field" });

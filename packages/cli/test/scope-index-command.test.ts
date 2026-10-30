@@ -7,41 +7,57 @@ import { canonicalize, digestBytes, factRefOf, newIncarnation, scopeIdOf, textDi
 import { captureIndexManifest, INDEX_INVENTORY_BOUNDS, indexManifestVersions, readIndexManifest, verifyIndexManifest, type IndexReads } from "../src/scope-index-manifest.ts";
 import { readIndexFile, saveIndexFile, scopeIndexCommand, type IndexFiles } from "../src/scope-index-command.ts";
 import { memoryStore } from "../src/store.ts";
+import { COMMONS_COHORT } from "@generalbusiness/dap-platform";
 import { Stop } from "../src/command-support.ts";
 
 // Typed HTTP/history STAND-INs. These hashes bind observed bytes and sends;
 // no native judgment, registration or deployment mode is proved here.
-function fixture(ordinals: { root?: number; child?: number; definitions?: { register?: Seed["definition"]; directory?: Seed["definition"]; rules?: Seed["definition"] } } = {}) {
+function fixture(ordinals: { root?: number; child?: number; commons?: true; definitions?: { register?: Seed["definition"]; directory?: Seed["definition"]; rules?: Seed["definition"] } } = {}) {
   const ref = (seed: Seed, n: number): ScopeRef => ({ scope: scopeIdOf(seed), kind: seed.kind, inc: newIncarnation(new Uint8Array(16).fill(n)) });
-  const registerSeed: Seed = { v: 1, kind: "register", definition: ordinals.definitions?.register ?? "platform:register@18", creator: null, cause: textDigest("operator inventory register"), ordinal: 0 };
+  const registerSeed: Seed = { v: 1, kind: "register", definition: ordinals.definitions?.register ?? (ordinals.commons ? COMMONS_COHORT.register : "platform:register@18"), creator: null, cause: textDigest("operator inventory register"), ordinal: 0 };
   const R = ref(registerSeed, 1);
-  const rootSeed: Seed = { ...registerSeed, kind: "directory", definition: ordinals.definitions?.directory ?? "platform:directory@17", creator: R, cause: textDigest("operator inventory root"), ordinal: ordinals.root ?? 0 };
+  const rootSeed: Seed = { ...registerSeed, kind: "directory", definition: ordinals.definitions?.directory ?? (ordinals.commons ? COMMONS_COHORT.directory : "platform:directory@17"), creator: R, cause: textDigest("operator inventory root"), ordinal: ordinals.root ?? 0 };
   const D = ref(rootSeed, 2);
   const otherSeed: Seed = { ...rootSeed, cause: textDigest("another room is not traversed") };
-  const childSeed: Seed = { ...rootSeed, kind: "rules", definition: ordinals.definitions?.rules ?? "platform:rules@10", creator: D, cause: textDigest("operator inventory child"), ordinal: ordinals.child ?? 0 };
+  const childSeed: Seed = { ...rootSeed, kind: "rules", definition: ordinals.definitions?.rules ?? (ordinals.commons ? COMMONS_COHORT.rules : "platform:rules@10"), creator: D, cause: textDigest("operator inventory child"), ordinal: ordinals.child ?? (ordinals.commons ? 1 : 0) };
   const A = ref(childSeed, 3);
   const base = (at: ScopeRef, seed: Seed): Entry => ({ v: 1, at, seq: 0, prev: null, time: "2099-01-01T00:00:00Z", clamped: false, epoch: 0,
     input: { type: "genesis", seed, inc: at.inc, kind: "create", founding: null, source: null, n: null, message: null, decision: "applied" }, uses: [], prepared: [], effects: [], sends: [] });
   const r = base(R, registerSeed);
   r.sends = [rootSeed, otherSeed].map((to, n) => ({ n, to, message: { class: "request", type: "create", body: {} } }));
+  // Commons Directory birth creates Membership, Rules, Destination, Commons in
+  // this order. These remain scripted observations; no native judge runs here.
+  const siblings: Seed[] = ordinals.commons ? [
+    { ...childSeed, kind: "membership", definition: COMMONS_COHORT.membership, ordinal: 0 },
+    childSeed,
+    { ...childSeed, kind: "destination", definition: COMMONS_COHORT.destination, ordinal: 2 },
+    { ...childSeed, kind: "commons", definition: COMMONS_COHORT.commons, ordinal: 3 },
+  ] : [childSeed];
   const d = base(D, rootSeed);
   if (d.input.type !== "genesis") throw Error("fixture genesis");
   d.input = { ...d.input, source: factRefOf(r), n: 0, message: { class: "request", type: "create", body: {} } };
   d.sends = [
     { n: 0, to: R, message: { class: "result", of: { from: factRefOf(r), n: 0 }, outcome: "applied" } },
-    { n: 1, to: childSeed, message: { class: "request", type: "create", body: {} } },
+    ...siblings.map((to, index) => ({ n: index + 1, to, message: { class: "request", type: "create", body: {} } as const })),
   ];
   const a = base(A, childSeed);
   if (a.input.type !== "genesis") throw Error("fixture genesis");
-  a.input = { ...a.input, source: factRefOf(d), n: 1, message: { class: "request", type: "create", body: {} } };
+  a.input = { ...a.input, source: factRefOf(d), n: ordinals.commons ? 2 : 1, message: { class: "request", type: "create", body: {} } };
+  const extras = siblings.flatMap((seed, index) => {
+    if (seed === childSeed) return [];
+    const at = ref(seed, index + 4), entry = base(at, seed);
+    if (entry.input.type !== "genesis") throw Error("fixture genesis");
+    entry.input = { ...entry.input, source: factRefOf(d), n: index + 1, message: { class: "request", type: "create", body: {} } };
+    return [entry];
+  });
   const sealed = (entry: Entry): Sealed => ({ entry, hash: factRefOf(entry).hash });
-  const entries = new Map([r, d, a].map(entry => [entry.at.scope, sealed(entry)]));
+  const entries = new Map([r, d, a, ...extras].map(entry => [entry.at.scope, sealed(entry)]));
   const calls: string[] = [];
   const reads: IndexReads = {
     entry: async (scope, seq) => { calls.push(`entry:${scope}:${seq}`); const value = entries.get(scope)!; return { ok: true, value, at: { seq: 0, hash: value.hash }, complete: true }; },
     history: async scope => { calls.push(`history:${scope}`); const value = entries.get(scope)!; return { ok: true, value: [value], at: { seq: 0, hash: value.hash }, complete: true }; },
   };
-  return { R, D, A, r, d, a, entries, calls, reads, sealed };
+  return { R, D, A, r, d, a, extras, entries, calls, reads, sealed };
 }
 
 // Invariant: capture binds actual full genesis/send facts for only this room;
@@ -199,6 +215,33 @@ test("operator versions binds saved genesis and separates observed catalog pins 
   expect(await indexManifestVersions(manifest, substituted)).toMatchObject({ ready: false, usableCreationCohorts: [], rows: expect.arrayContaining([
     expect.objectContaining({ at: f.R, result: "unavailable" }), expect.objectContaining({ at: f.A, result: "mismatch" }),
   ]) });
+});
+
+// Invariant: a Commons room's actual-shaped creation observations retain the
+// Commons full reference and genesis through the unchanged v1 export format.
+// Missing observations cannot imply Commons cohort coverage. No native lineage
+// admission or global inventory is proved by this scripted source fixture.
+test("Commons inventory discovers and exports closed sibling references before reporting its cohort", async () => {
+  const f = fixture({ commons: true }), service = "https://service.test";
+  const manifest = await captureIndexManifest(service, f.D, f.reads);
+  const q = f.extras.find(entry => entry.at.kind === "commons");
+  if (!q) throw Error("The scripted Commons birth must be observed.");
+  expect(manifest.scopes).toHaveLength(6);
+  expect(new Set(manifest.scopes.map(row => row.at.kind))).toEqual(new Set(["register", "directory", "membership", "rules", "destination", "commons"]));
+  expect(manifest.scopes.find(row => row.at.scope === q.at.scope)).toEqual({ at: q.at, genesis: factRefOf(q).hash });
+  const exported = utf8(`${canonicalize(manifest)}\n`);
+  expect(readIndexManifest(exported, service, f.D)).toEqual(manifest);
+  const wire = JSON.parse(new TextDecoder().decode(exported)) as { scopes: { at: object; genesis: string }[] };
+  expect(Object.keys(wire).sort()).toEqual(["root", "scopes", "service", "v"]);
+  expect(wire.scopes.every(row => Object.keys(row).sort().join(",") === "at,genesis"
+    && Object.keys(row.at).sort().join(",") === "inc,kind,scope")).toBe(true);
+  const versions = await indexManifestVersions(manifest, f.reads);
+  expect(versions).toMatchObject({ ready: true, usableCreationCohorts: ["archive-device-publication", "commons"],
+    observedPins: ["platform:commons@1", "platform:destination@16", "platform:directory@22", "platform:membership@9", "platform:register@23", "platform:rules@14"] });
+  expect(versions.rows.every(row => row.result === "verified")).toBe(true);
+  const partial = { ...manifest, scopes: manifest.scopes.filter(row => row.at.scope !== q.at.scope) };
+  expect(await indexManifestVersions(partial, f.reads)).toMatchObject({ ready: true,
+    usableCreationCohorts: ["archive-device-publication"] });
 });
 
 // Invariant: Node custody never replaces an existing manifest and bounds the

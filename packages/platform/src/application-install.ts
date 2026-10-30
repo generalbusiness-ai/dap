@@ -1,6 +1,7 @@
 /** One signed install records fetch, admission, activation, grants and
  * Directory-owned creation. The opt-in cohort selects this native rules pin;
  * fresh-room CLI selection is still under construction. */
+import { REFERENCE_INSTALL_REFUSAL, ReferenceInstallRefusal, requireReferenceInstall } from "./application-install-reference.ts";
 import type { DeclaredDefinition, Evidence, FieldValue, PlatformData } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isMemberRef, isRecord, isScopeRef, parseStrict, textDigest, utf8 } from "@generalbusiness/dap-bytes";
@@ -101,6 +102,7 @@ function proof(given: RuleGiven): ApplicationReleaseProof | null {
     if (utf8(part.bytes).length > INSTALL_DEFINITION_BYTES || fields[`definitionText${index}`] !== textDigest(part.bytes)) throw Error("exact native declaration text required");
     const value = parseStrict(part.bytes), checked = validateDefinition(value, given.resolved.bounds, RULE_PROFILES);
     if (!checked.ok || checked.definition.digest !== part.id || canonicalize(value) !== part.bytes) throw Error("unsupported native definition");
+    requireReferenceInstall(checked.definition.declared, pinnedBy(given));
   }
   for (let index = result.semantic.definitions.length; index < INSTALL_DEFINITIONS; index++) if (fields[`definitionText${index}`] !== undefined) throw Error("unrelated declaration text");
   return result;
@@ -153,7 +155,7 @@ const invalid = { holds: false, name: "invalid-application-package", code: "bad-
 
 export const applicationInstallRules: Rules = {
   ...rulesScopeRules3,
-  "application-install-proof": { place: "guard", refusals: ["invalid-application-package"], run: (given): ReturnType<GuardRule> => {
+  "application-install-proof": { place: "guard", refusals: ["invalid-application-package", REFERENCE_INSTALL_REFUSAL], run: (given): ReturnType<GuardRule> => {
     try {
       readApplicationReleaseUri(given.resolved.fields["uri"]);
       const result = proof(given); if (!result) return { holds: null, reason: "dependency-unavailable" };
@@ -163,7 +165,9 @@ export const applicationInstallRules: Rules = {
       if (!isRecord(values) || canonicalize(values) !== raw || Object.hasOwn(values, "opener") || Object.hasOwn(values, "destination")) return invalid;
       if (!readInstallAdditions(canonicalize(Object.fromEntries(selected.map(role => [role, result.semantic.roles[role as string]])))) || !initialFields(given, result)) return invalid;
       return { holds: true };
-    } catch { return invalid; }
+    } catch (error) {
+      return error instanceof ReferenceInstallRefusal ? { holds: false, name: REFERENCE_INSTALL_REFUSAL, code: "bad-field" } : invalid;
+    }
   } },
   "application-install-identities": { place: "effect", most: 7, run: given => {
     const checked = proof(given); if (!checked) throw Error("validated install retains its proof");

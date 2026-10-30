@@ -100,6 +100,7 @@ export function semantics(value: unknown, bounds: ApplicationPackageLimits): App
   if (host["execution"] !== "recorded-do") return packageFailure();
   if (Object.hasOwn(host, "requires") && (!Array.isArray(host["requires"]) || host["requires"].length < 1 || host["requires"].length > 2
     || new Set(host["requires"]).size !== host["requires"].length || host["requires"].some(value => value !== "archive" && value !== "commons"))) return packageFailure();
+  if (Object.hasOwn(host, "requires")) ordered(host["requires"] as readonly string[]);
   const profiles = list(host["profiles"], 16).map(profile => packageText(profile, 64, /^[a-z][a-z0-9-]*@[1-9][0-9]*$/)); ordered(profiles);
   if ([...declared.profiles].some(profile => !profiles.includes(profile))) return packageFailure("integrity");
   if (!isRecord(body["projections"]) || Object.keys(body["projections"]).length !== 0) return packageFailure();

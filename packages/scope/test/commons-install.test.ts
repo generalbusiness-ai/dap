@@ -3,8 +3,8 @@
  * No hosted service, provider credentials or deployment runs here. */
 import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
-import type { ScopeRef } from "@generalbusiness/dap-contract";
-import { isSeed, scopeIdOf } from "@generalbusiness/dap-bytes";
+import type { DeclaredDefinition, ScopeRef } from "@generalbusiness/dap-contract";
+import { canonicalize, definitionDigest, isSeed, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, COMMONS_COHORT as C } from "@generalbusiness/dap-platform";
 import { packApplication2 } from "@generalbusiness/dap-platform/application-v2";
 import { secretSigner, signedDeviceApplicationInstall } from "@generalbusiness/dap-client";
@@ -114,3 +114,81 @@ test("Rules10 still refuses a Commons requirement after the shared package codec
     life.release();
   }
 });
+
+
+/** The same supported device package carries a nested reference field under
+ * two actual native Rules pins. HTTP and Git remain explicit TEST providers. */
+async function referencePacket() {
+  const ordinary = await deviceApplicationPacket();
+  const original = parseStrict(ordinary.package.semantic.definitions[0]!.bytes) as DeclaredDefinition;
+  const definition: DeclaredDefinition = { ...original, acts: { ...original.acts, commission: {
+    ...original.acts["commission"]!, fields: { ...original.acts["commission"]!.fields,
+      citations: { type: "list", max: 1, required: false, of: { type: "record", of: {
+        source: { type: "reference", fragment: 512, required: true },
+      } } },
+    },
+  } } };
+  const id = definitionDigest(definition);
+  const { creates: _creates, ...semantic } = ordinary.package.semantic;
+  const { semantic: _semantic, ...presentation } = ordinary.package.presentation;
+  return packApplication2({ name: "test.reference-native", version: "1", semantic: { ...semantic,
+    entry: id, definitions: [{ id, bytes: canonicalize(definition) }],
+    projections: { root: { ...semantic.projections["root"]!, definition: id } },
+  }, presentation }, fixedSigner(81));
+}
+for (const cohort of [ARCHIVE_DEVICE_APPLICATION_COHORT, C]) {
+  test(`native reference installation follows ${cohort.rules}`, async () => {
+    const packet = await referencePacket();
+    const room = await sessionRoom(cohort.register, undefined, cohort.rules === C.rules ? { host: "none", namespace: "" } : undefined);
+    const { life, R, D, children } = room, [M, A, G] = children;
+    if (!M || !A || !G) { life.release(); return expect.fail("Actual native siblings required"); }
+    const nodes = [R, D, ...children];
+    try {
+      expect((await A.summary()).value).toMatchObject({ definition: cohort.rules });
+      if (cohort.rules === C.rules) {
+        const create = (await D.entries())[0]!.sends.find(send => isSeed(send.to) && send.to.kind === "commons");
+        if (!create || !isSeed(create.to)) return expect.fail("Actual Commons creation required");
+        const Q = life.platform(scopeIdOf(create.to)); nodes.push(Q);
+        await dispatchFixture(nodes, life.wait);
+        expect((await D.item(0)).refs["commons"]).toEqual(await Q.at());
+      }
+      const member = await M.did(rita, "seat", { expected: await M.expected({ roster: 0 }) });
+      await M.did(rita, "first-key", { fields: { member }, expected: await M.expected({ roster: 0, member }) });
+      const fetched = await applicationResolverFixture("sha1", undefined, {}, undefined, packet);
+      const peer = applicationHttpPeer(fetched);
+      const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(fetched.trust), env.SCOPE_INDEX);
+      life.applicationTrust(() => bindings.APPLICATION_TRUST);
+      for (const node of [D, A]) {
+        life.outside(node.name, (given, sql) => hostOutside(given, sql, bindings, peer.fetch));
+        await life.wait(() => node.restart());
+      }
+      const before = (await A.summary()).at;
+      const envelope = await signedDeviceApplicationInstall(secretSigner(rita.secret), packet.bytes,
+        { rules: await A.at(), uri: fetched.uri, release: packet.ids.release, roles: ["admin"], values: {},
+          owner: { membership: await M.at(), member: "@rita" } },
+        { now: life.now(), idempotencyKey: `TEST-reference-${cohort.rules}` });
+      const submitted = await A.stub.submit(envelope.signed, [], envelope.beside);
+      if (cohort.rules !== C.rules) {
+        expect(submitted).toMatchObject({ answer: "refused", reason: "bad-field", name: "reference-requires-rules14" });
+        expect((await A.summary()).at).toEqual(before);
+        expect((await A.summary()).value.items.some(item => item.type === "installation")).toBe(false);
+        return;
+      }
+      expect(submitted).toMatchObject({ answer: "accepted" });
+      if (submitted.answer !== "accepted") return expect.fail("Rules14 reference install required");
+      const job = submitted.receipt.fact.seq;
+      await effectFixture([A], life.wait); await dispatchFixture(nodes, life.wait);
+      const create = (await D.entries()).flatMap(entry => entry.sends).find(send => isSeed(send.to) && send.to.kind === "lane");
+      if (!create || !isSeed(create.to)) return expect.fail("Actual reference application creation required");
+      const app = life.platform(scopeIdOf(create.to)); nodes.push(app);
+      await driveFixture(nodes, life.wait);
+      expect(await A.item(job)).toMatchObject({ state: "active", refs: { scope: await app.at() } });
+      expect((await app.summary()).value).toMatchObject({ definition: packet.package.semantic.entry });
+      const device = await app.did(rita, "commission", { fields: { kind: "heater" } });
+      expect(await app.item(device)).toMatchObject({ type: "device", values: { kind: "heater" } });
+    } finally {
+      await drainScheduledFixture(() => life.platforms(), life.wait);
+      life.release();
+    }
+  });
+}

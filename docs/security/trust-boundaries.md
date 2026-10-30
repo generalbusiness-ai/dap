@@ -51,6 +51,41 @@ Its Artifacts namespace is `dap-demo`. It shares dataset `artroom_metrics_v1` wi
 
 `SESSION_SECRET` and `DEPLOYMENT` remain operator-set. The `deployment` member of `DEMO_START_CONFIG` is a separate value; its presence does not prove the live `DEPLOYMENT` binding matches it.
 
+## dap-commons
+
+[`apps/room/wrangler.commons.jsonc`](../../apps/room/wrangler.commons.jsonc)
+uses the separate [Commons entry](../../apps/room/worker.commons.ts) with
+the shared room handlers. Its `SCOPES`, `SCOPE_INDEX`, `REGISTRIES`, and
+`AGENTS` bindings have no cross-Worker `script_name`. Equal class names
+do not share Durable Object storage across these Worker namespaces.
+
+The configuration names the `dap-commons` Artifacts namespace on the same
+Artifacts host as Demo. It declares no application-content R2 bucket and
+shares the `artroom_metrics_v1` dataset with room, Grow, and Demo. Namespace
+names in this file do not prove provider-side IDs or ACLs.
+
+`DEPLOYMENT` is `dap-commons`, and `PUBLIC_ORIGIN` names its workers.dev
+origin. The operator supplies `SESSION_SECRET`. Its custody and uniqueness
+remain separate from those public labels. Read sessions still require the
+deployment, exact Membership reference, allowed read, and expiry checks.
+
+The index mode is `enforce`. The explicit creation family is Register 23,
+Directory 22, Membership 9, Rules 14, Destination 16, Inbox 1, and Commons 1.
+`REGISTER_SCOPE` and `ARTIFACTS_CONFIG.registerScope` remain `unplanned`
+until the planner binds the retained install plan. Those invalid register
+pins keep new creation closed. `ALLOW_OPEN_CREATION` is absent.
+
+`APPLICATION_SCREEN_HOSTS` and `APPLICATION_TRUST` are empty. MCP opt-in
+variables are absent from the checked-in file. Retained operator settings
+and actual hosted routes still require their own evidence.
+
+The checked-in `DEMO_START_CONFIG` is not a Commons provisioning interface.
+The maintained Demo parser recognizes Register 17, not this Register 23
+family. Follow the
+[Commons CLI order](../deploy.md#provision-the-commons-worker) and bind only
+the two operational register fields. This source describes
+no deployment, activation, namespace creation, or hosted W1 result.
+
 ## dap-grow-simulator
 
 [`examples/grow/wrangler.jsonc`](../../examples/grow/wrangler.jsonc) declares a scheduled Worker with no Scope, Artifacts, R2, MCP, or metrics bindings. It has no public workers.dev or preview endpoint, and its [fetch handler](../../examples/grow/simulator-host.ts) returns 404.
@@ -83,10 +118,14 @@ The 21 October security review described room and Grow sharing as finding 3.13, 
 |---|---|
 | Artifacts namespace `artroom-demo` | `artroom-scope`, `dap-grow` |
 | R2 bucket `artroom-application-content` | `artroom-scope`, `dap-grow` |
-| Analytics dataset `artroom_metrics_v1` | `artroom-scope`, `dap-grow`, `dap-demo` |
+| Analytics dataset `artroom_metrics_v1` | `artroom-scope`, `dap-grow`, `dap-demo`, `dap-commons` |
 
 For these resources, different Worker names and code pins are not independent namespace isolation. The Artifacts adapter's pinned register and verified destination birth constrain repository operations. Content digest, publisher, release, and installation checks constrain application delivery. Metrics labels distinguish events. These are checks made by code using shared capabilities.
 
-The Workers' local Durable Object classes and the distinct `dap-demo` and `dap-lending` Artifacts namespaces are different boundaries. The shared-resource finding does not imply that all Worker storage is shared. Conversely, separate Scope or MCP objects do not isolate a shared bucket or Artifacts namespace.
+The Workers' local Durable Object classes and the distinct configured
+`dap-demo`, `dap-lending`, and `dap-commons` Artifacts namespaces are
+different boundaries. The shared-resource finding does not imply that all
+Worker storage is shared. Conversely, separate Scope or MCP objects do not
+isolate a shared bucket or Artifacts namespace.
 
 Secret equality, provider-side ACLs, actual namespace IDs, bucket public-access settings, effective operator variables, and deployed versions require hosted evidence. None is inferred from names or from a locally `wired` health result. Deployment and any namespace separation remain separately authorized operator work.

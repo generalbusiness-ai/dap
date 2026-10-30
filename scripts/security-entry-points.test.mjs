@@ -283,7 +283,7 @@ const pendingR8Seals = {
   "packages/cli/src/line.ts": "91241e4721370394765409d3411fe24f2bfdc81ac11300d44be302c8ab9f0823", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/invitations.ts": "0e164c39c42ce417e16c846af01f79d3c49294d42ab07f8deab9c41515246573", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/scope-index-applications-command.ts": "e72f729f4232f674d0e132c865e4d7c359ac567a21e97b4e7b905342379d33b7", // Reviewed CLI session or verification boundary; actual maintained parser output.
-  "packages/cli/src/scope-index-manifest.ts": "da24a4005531491586b09cbe793175a5cf1d2ccf9f1e637b364b89121c1c2c52", // Preserve trusted session refusal outcomes; actual maintained parser output.
+  "packages/cli/src/scope-index-manifest.ts": "cd53b10bac2a7a772a02897c5aeb9c1a6af9d3e832f829cd0130e86c931ea13c", // Preserve trusted session refusal outcomes; actual maintained parser output.
   "packages/cli/src/status-report.ts": "00e41c40d07337fa5a6eb28ff3fa3df27670a861f718598a8ecc7ad83596b7cf", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/client/src/session.ts": "3e4dfcbab9c9ab8585929b4c75ba01ac86c4e9ea7978f70f6bf3681af15bddb6", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "apps/sandbox/worker.ts": "d354c1740d51e2b83e0b93272384607c609c65386c3fc4b8d977edfb89b6636a",

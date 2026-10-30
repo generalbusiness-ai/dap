@@ -9,6 +9,8 @@ import { rita } from "./repository.ts";
 import { soon } from "./net.ts";
 import { reader } from "./support.ts";
 import { site } from "../src/site/route.ts";
+import { namespace, type Binding } from "../src/namespace.ts";
+import { indexedScopes, type ScopeIndexPort } from "../src/scope-index.ts";
 import { sessionRoom, dispatchFixture, drainScheduledFixture } from "./fixtures-native.ts";
 
 // Actual native Register23, Directory22, Membership9, Rules14, Destination16
@@ -26,6 +28,33 @@ test("new-room Commons notes preserve opaque citations and signer identity; nati
     const Q = life.platform(scopeIdOf(create.to));
     await dispatchFixture([R, D, ...children, Q], life.wait);
     expect((await Q.summary()).value).toMatchObject({ definition: C.commons, status: "active" });
+    // Reuse these actual native histories; only the index transport and the
+    // other configured Register ID are stand-ins. No extra room is created.
+    const known = new Set<string>([R.name, D.name, Q.name]);
+    const index: ScopeIndexPort = {
+      async has(name) { return known.has(name); },
+      async register() { throw Error("Lineage lookup must not register an ancestor."); },
+      async list() { throw Error("Lineage lookup must not request a census."); },
+    };
+    let childLookups = 0;
+    const binding: Binding<string> = {
+      idFromName(name) { if (name === Q.name) childLookups++; return name; },
+      get(name) { return env.PLATFORM.get(env.PLATFORM.idFromName(name)); },
+    };
+    const settings = { DEPLOYMENT: "TEST-commons-lineage", REGISTER_SCOPE: R.name,
+      SCOPE_INDEX: { idFromName: (name: string) => name, get: () => index } };
+    const delivered = { to: create.to, from: factRefOf(birth), n: create.n, message: create.message };
+    const beforeLineage = await Q.entries();
+    expect(await life.wait(() => namespace(indexedScopes(binding, settings)).transport.send(delivered)))
+      .toMatchObject({ answer: "recorded" });
+    expect(childLookups).toBe(1);
+    childLookups = 0;
+    const otherRegister: Seed = { v: 1, kind: "register", definition: C.register, creator: null,
+      cause: textDigest("TEST another configured Register ID; no native birth claimed"), ordinal: 0 };
+    expect(await life.wait(() => namespace(indexedScopes(binding, { ...settings, REGISTER_SCOPE: scopeIdOf(otherRegister) })).transport.send(delivered)))
+      .toEqual({ answer: "routing", reason: "not-found" });
+    expect(childLookups).toBe(0);
+    expect(await Q.entries()).toEqual(beforeLineage);
     expect((await D.item(0)).refs["commons"]).toEqual(await Q.at());
     const destination = children[2]!;
     const beforeSite = [(await D.summary()).at, (await destination.summary()).at];

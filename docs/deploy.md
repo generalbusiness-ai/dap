@@ -293,9 +293,10 @@ The planner owns the separate `dap-commons` Worker at
 `https://dap-commons.inguz.workers.dev`. Its configuration is
 [`apps/room/wrangler.commons.jsonc`](../apps/room/wrangler.commons.jsonc).
 It uses the same Artifacts host as Demo and the separate namespace
-`dap-commons`. The source pins Register23, Directory22, Membership9, Rules14,
-Destination16, Inbox1 and Commons1. The default CLI cohort stays unchanged,
-so both planning and installation select `--cohort commons` explicitly.
+`dap-commons`. The source pins Register 23, Directory 22, Membership 9,
+Rules 14, Destination 16, Inbox 1, and Commons 1. The default CLI cohort
+stays unchanged, so planning and installation select `--cohort commons`
+explicitly.
 
 Use pinned Wrangler from scratch for each reviewed deployment:
 
@@ -316,10 +317,9 @@ After the reviewed head lands, the planner follows [the order](#the-order):
    ```
 
 3. Preserve that exact install plan. Replace `unplanned` with its public
-   register ID in `REGISTER_SCOPE`, `ARTIFACTS_CONFIG.registerScope` and
-   `DEMO_START_CONFIG.register`. Keep the start definition
-   `platform:register@23` and the configured origin. Redeploy the same
-   Commons configuration before submitting the retained plan.
+   register ID in `REGISTER_SCOPE` and `ARTIFACTS_CONFIG.registerScope`.
+   Redeploy the same Commons configuration before submitting the retained
+   plan.
 4. From that same private directory, run:
 
    ```sh
@@ -328,18 +328,18 @@ After the reviewed head lands, the planner follows [the order](#the-order):
 
 5. Record the actual full register reference after installation. Its
    incarnation is unavailable when the plan only names the future scope.
-   Put that full reference in the version 3 start metadata, preserving the
-   planned scope ID. Report it and the actual deployment version under BO1.
-   Land the public configuration binding as a planner follow-up. W1 checks
-   that full reference and exact Register23 definition before creating its
-   room.
+   Report that full reference, the planned scope ID, and the actual
+   deployment version under BO1. Land the two public register bindings as
+   a planner follow-up. W1 checks the full reference and exact Register 23
+   definition before creating its room.
 
-The checked-in `unplanned` values make no register identity claim. The
-start metadata does not revive the retired demo-offer route. Preserve the
-existing Demo, Grow and Lending registers and leave `ALLOW_OPEN_CREATION`
-unset. Commons rooms use this Worker until the separate
+The checked-in `unplanned` register pins make no identity claim. Commons
+provisioning uses the explicit CLI cohort and retained plan. Demo's Start
+metadata does not govern that path or revive the retired demo-offer route.
+Preserve the existing Demo, Grow and Lending registers and leave
+`ALLOW_OPEN_CREATION` unset. Commons rooms use this Worker until the separate
 [register succession design](../notes/2026-10-22-definition-succession.md)
-lands. J4 and S1 continue on Demo's existing Register17.
+lands. J4 and S1 continue on Demo's existing Register 17.
 
 ## The order
 
