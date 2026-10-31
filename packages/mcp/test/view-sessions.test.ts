@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { CallResult } from "../src/service.ts";
 import { ViewSessions } from "../src/views/session.ts";
-import type { LocalReviewCapture, Projection, ViewSource } from "../src/views/types.ts";
+import type { Card, LocalReviewCapture, Projection, ViewSource } from "../src/views/types.ts";
 import { digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { fixedSigner } from "./fixtures.ts";
 import { StandIn, SERVICE } from "./support/standin.ts";
@@ -19,7 +19,7 @@ test("a full view retains original-request checks without admitting another writ
   } }) };
   const sent: Record<string, unknown>[] = [], checked: Record<string, unknown>[] = [];
   const sessions = new ViewSessions(source, { call: async () => { throw new Error("The fixture reads no scope."); } }, async (_kind, args, admit) => {
-    admit(); sent.push(structuredClone(args)); return answer("unavailable");
+    await admit(); sent.push(structuredClone(args)); return answer("unavailable");
   }, async (args) => { checked.push(structuredClone(args)); return answer("accepted"); });
   await sessions.open("bounded", "needs-you");
   let display = sessions.display("bounded");
@@ -155,4 +155,75 @@ test("an agent card needs its controller before it can offer a write", async () 
   expect(refused.card).toBeUndefined();
   await expect(sessions.act("unbound", refused.cut, "apply")).rejects.toMatchObject({ reason: "shape" });
   expect(performed).toEqual([]);
+});
+
+// Invariant: each act of a card signs its own captured revisions. A revision the card did not display retires the card.
+test("an action's own at signs, a card's at fills in for none, and an at the card did not display makes the card unavailable", async () => {
+  const card = (actions: Record<string, unknown>[]): Projection => ({ status: "ready", position: 0, count: 1, fallback: "TEST", card: { identity: { item: "1", kind: "manifest", revision: "2", subject: { scope: "sc_a" }, at: { manifest: 2, proposal: 3, rules: 4 } }, title: "TEST", summary: "TEST", reasons: [], projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST", actions: actions.map(action => ({ label: "TEST", purpose: "act", kind: "k", ...action })) as Card["actions"] } });
+  const signed: unknown[] = [];
+  const session = (projection: Projection) => new ViewSessions({ initialPage: () => "item", read: async () => structuredClone(projection) }, { call: async () => { throw Error("No native tool read."); } }, async (_kind, args, admit) => { await admit(); signed.push(args["at"]); return answer("accepted"); }, async () => answer("accepted"));
+  const good = session(card([{ id: "own", args: { target: "sc_a", at: { manifest: 2, proposal: 3 } } }, { id: "none", args: { target: "sc_a" } }]));
+  await good.open("v", "change");
+  await good.act("v", 0, "own");
+  await good.act("v", 0, "none");
+  expect(signed).toEqual([{ manifest: 2, proposal: 3 }, { manifest: 2, proposal: 3, rules: 4 }]);
+  for (const at of [{ manifest: 9 }, { other: 2 }]) {
+    const bad = session(card([{ id: "own", args: { target: "sc_a", at } }]));
+    await bad.open("v", "change");
+    expect(bad.display("v").status).toBe("unavailable");
+    expect(bad.display("v").card).toBeUndefined();
+  }
+});
+
+// Invariant: reading a diff signs nothing on the read path. Only the card's View diff action reads it, once for one cut.
+test("View diff goes through its port once per cut, keeps the card's two acts, and a failure stays on the item page", async () => {
+  const projection = (): Projection => ({ status: "ready", position: 0, count: 1, fallback: "TEST", card: { identity: { item: "1", kind: "manifest", revision: "2", subject: { scope: "sc_a" }, at: { manifest: 2 } }, title: "TEST", summary: "TEST", body: "TEST body", reasons: [], projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST", diffAvailable: true, diffRead: { target: "sc_d", base: "a", integration: "b" },
+    actions: [{ id: "one", label: "TEST", purpose: "act", kind: "k", args: { target: "sc_a" } }, { id: "two", label: "TEST", purpose: "act", kind: "k", args: { target: "sc_a" } }] } });
+  const reads: unknown[] = []; let fail = true;
+  const sessions = new ViewSessions({ initialPage: () => "item", read: async () => projection() }, { call: async () => { throw Error("No native tool read."); } }, async () => answer("accepted"), async () => answer("accepted"), () => null, { readDiff: async (read, admit) => { await admit(); reads.push(read); return fail ? { content: [], isError: true, structuredContent: { error: "diff", message: "TEST no diff." } } : { content: [], isError: false, structuredContent: { text: "TEST text\ntruncated: TEST\n", truncated: true } }; } });
+  await sessions.open("v", "change");
+  const item = sessions.display("v");
+  expect(item.card!.actions.map(action => action.id)).toEqual(["one", "two"]);
+  expect(item.card).toMatchObject({ diffSigned: true });
+  expect(JSON.stringify(item)).not.toContain("diffRead");
+  await expect(sessions.read("v", item.cut, { page: "diff" })).rejects.toMatchObject({ reason: "shape" });
+  expect(reads).toEqual([]);
+  const failed = await sessions.act("v", item.cut, "view-diff");
+  expect([failed.display.query.page, failed.display.cut, failed.display.receipt]).toEqual(["item", item.cut, "Diff not shown: TEST no diff."]);
+  fail = false;
+  const shown = await sessions.act("v", item.cut, "view-diff");
+  expect([shown.display.query.page, shown.display.card!.body, shown.display.card!.actions]).toEqual(["diff", "TEST text\ntruncated: TEST\n", []]);
+  await expect(sessions.act("v", item.cut, "view-diff")).rejects.toMatchObject({ reason: "stale" });
+  expect(reads).toHaveLength(2);
+  const back = await sessions.read("v", shown.display.cut, { page: "item" });
+  expect(back.card!.actions.map(action => action.id)).toEqual(["one", "two"]);
+  const again = await sessions.read("v", back.cut, { page: "diff" });
+  expect(again.card!.body).toBe("TEST text\ntruncated: TEST\n");
+  expect(reads).toHaveLength(2);
+});
+
+// Invariant: View diff signs nothing while custody holds an earlier act open, and an answer the card cannot hold says the credential is spent.
+test("View diff: a retained card admits nothing while an original is open, and an oversized answer says spent", async () => {
+  let open = false;
+  const source: ViewSource = { checksOriginals: () => true, read: async (query) => ({ status: "ready", position: query.position, count: 1, fallback: "Inspect the item.", card: {
+    identity: { kind: "fixture", item: "1", revision: "0", subject: { scope: "fixture-scope", item: 1 }, at: { on: 0 } },
+    title: "Fixture item", summary: "s".repeat(40 * 1024), actor: { kind: "person", name: "Fixture" }, reasons: [],
+    projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "Inspect the item.", actions: [],
+    diffAvailable: true, diffRead: { target: "destination", base: "a".repeat(40), integration: "b".repeat(40) },
+  } }) };
+  let spends = 0;
+  const views = new ViewSessions(source, { call: async () => answer("read") }, async () => answer("accepted"), async () => answer("accepted"), () => null, {
+    unresolved: async () => open ? { idempotencyKey: "open" } : null,
+    readDiff: async (_read, admit) => { await admit(); spends++; return { content: [], structuredContent: { text: "t".repeat(32 * 1024) }, isError: false }; },
+  });
+  await views.open("v", "change", "subject");
+  const { cut } = await views.read("v");
+  open = true;
+  const held = await views.act("v", cut, "view-diff").then(() => "signed", (error: { reason?: string }) => error.reason);
+  expect([held, spends]).toEqual(["stale", 0]);
+  open = false;
+  const said = await views.act("v", cut, "view-diff").then(({ display }) => display.receipt, (error: unknown) => String(error));
+  expect(spends).toBe(1);
+  expect(said).toContain("The one-time credential is spent.");
+  expect(views.display("v").query.page).not.toBe("diff");
 });

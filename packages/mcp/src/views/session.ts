@@ -2,7 +2,7 @@ import { canonicalize, isHead, isKeyId, isMemberRef, isRecord, isScopeRef, utf8 
 import type { Receipt, ScopeRef } from "@generalbusiness/dap-contract";
 import { validKey } from "../custody.ts";
 import { decodeViewParameters } from "@generalbusiness/dap-platform/application-v2";
-import { capturedExpected, shapeAt } from "../shape.ts";
+import { shapeAt } from "../shape.ts";
 import type { CallResult } from "../service.ts";
 import type { ViewKind } from "./resources.ts";
 import type { Card, CardAction, CardContext, Display, EntryRange, LocalReviewAction, NativeCardAction, PageKind, Projection, ViewQuery, ViewSource } from "./types.ts";
@@ -22,6 +22,16 @@ interface Instance {
   dispatches: Map<string, Promise<CallResult>>;
   pending: Map<string, Card["actions"][number]>;
   inputs: Map<string, { meaning: string; outcome: Promise<InputOpening> }>;
+  /** The text of the last View diff, and the exact version it belongs to. */
+  diff?: { of: string; text: string };
+}
+/** The action ID of View diff. A card's two acts stay free for its native acts. */
+export const VIEW_DIFF = "view-diff";
+export interface ViewPorts {
+  /** Sign one read-token act and read one bounded diff. `admit` runs before the signature. */
+  readDiff?: (read: NonNullable<Card["diffRead"]>, admit: () => void | Promise<void>) => Promise<CallResult>;
+  /** The key of an act sent at this scope with no outcome kept. */
+  unresolved?: (target: string) => Promise<{ idempotencyKey: string } | null>;
 }
 const MAX_INSTANCES = 128;
 const PAGES = new Set<PageKind>(["summary", "item", "diff", "updates"]);
@@ -32,7 +42,9 @@ function receiptLine(card: Card, result: CallResult): string {
   const reason = [answer["reason"], answer["name"]].filter((value): value is string => typeof value === "string").join(", ");
   const uncertain = answer["answer"] === "unknown" || answer["answer"] === "unavailable" || answer["error"] === "transport" || answer["error"] === "custody";
   let outcome: string;
-  if (uncertain) outcome = "outcome unknown; check the original request";
+  const later = typeof answer["checkAfter"] === "string" ? ` after ${answer["checkAfter"]}` : "";
+  if (uncertain) outcome = `outcome unknown; check the original request${later}`;
+  else if (answer["answer"] === "not-found") outcome = "this server keeps no record of it, which does not show that it was not sent";
   else if (answer["answer"] === "accepted") {
     const fact = answer["fact"] as { seq?: unknown } | undefined;
     outcome = `accepted${typeof fact?.seq === "number" ? ` (entry ${fact.seq})` : ""}`;
@@ -89,8 +101,10 @@ function checked(projection: Projection, query: ViewQuery): Projection {
     for (const action of card.actions) {
       if (action.local) { checkedLocal(action, card); continue; }
       const at = shapeAt(action.args["at"]);
-      if (!card.declared) capturedExpected(at, card.identity.at);
-      else if (at === undefined || Object.keys(card.identity.at).some(name => Object.hasOwn(at, name) && at[name] !== card.identity.at[name])) throw new ViewError("unavailable", "A declared act disagrees with the displayed subject revision.");
+      if (!card.declared) {
+        // An act signs revisions of the subjects it binds, each one a revision this card displayed.
+        if (at !== undefined && Object.keys(at).some(name => !Object.hasOwn(card.identity.at, name) || at[name] !== card.identity.at[name])) throw new ViewError("unavailable", "An act disagrees with the displayed revisions.");
+      } else if (at === undefined || Object.keys(card.identity.at).some(name => Object.hasOwn(at, name) && at[name] !== card.identity.at[name])) throw new ViewError("unavailable", "A declared act disagrees with the displayed subject revision.");
     }
     // The kit knows screen contracts and generic act purposes, never lane states or names.
     card.actions = card.actions.filter((action) => {
@@ -111,7 +125,24 @@ function checked(projection: Projection, query: ViewQuery): Projection {
 export class ViewSessions {
   readonly #instances = new Map<string, Instance>();
   readonly #current = new Map<ViewKind, string>();
-  constructor(readonly source: ViewSource, readonly access: Parameters<ViewSource["read"]>[1], readonly perform: (kind: string, args: Record<string, unknown>, admit: () => void | Promise<void>) => Promise<CallResult>, readonly settle: (args: Record<string, unknown>) => Promise<CallResult>, readonly receiptOf: (result: CallResult) => Receipt | null = () => null) {}
+  constructor(readonly source: ViewSource, readonly access: Parameters<ViewSource["read"]>[1], readonly perform: (kind: string, args: Record<string, unknown>, admit: () => void | Promise<void>) => Promise<CallResult>, readonly settle: (args: Record<string, unknown>) => Promise<CallResult>, readonly receiptOf: (result: CallResult) => Receipt | null = () => null, readonly ports: ViewPorts = {}) {}
+  async #openOriginal(card: Card, query: ViewQuery): Promise<{ idempotencyKey: string } | null> {
+    if (card.declared || !this.source.checksOriginals?.(query) || !this.ports.unresolved) return null;
+    return this.ports.unresolved(card.identity.subject.scope);
+  }
+  /** A retained card read before the unknown outcome. It signs nothing while custody holds that outcome open. */
+  async #refuseWhileOpen(card: Card, query: ViewQuery): Promise<void> {
+    if (await this.#openOriginal(card, query)) throw new ViewError("stale", "An earlier act at this scope has no known outcome. Read the card again and check the original request; no new act was sent.");
+  }
+  /** A record of custody outlives this process, and a retained card does not. So each read of the card asks custody again. */
+  async #checkOriginal(projection: Projection, query: ViewQuery): Promise<void> {
+    const card = projection.card;
+    if (!card) return;
+    const open = await this.#openOriginal(card, query);
+    if (!open) return;
+    card.unresolvedOriginal = true;
+    card.actions = [{ id: "check-original", label: "Check original request", purpose: "check-original", kind: "", args: { target: card.identity.subject.scope, idempotencyKey: open.idempotencyKey } }];
+  }
   #instance(key: string): Instance {
     const instance = this.#instances.get(key);
     if (!instance) throw new ViewError("absent", "This view is no longer retained. Open it again; no act was sent.");
@@ -131,11 +162,15 @@ export class ViewSessions {
       return this.opening(old);
     }
     if (this.#instances.size >= MAX_INSTANCES) throw new ViewError("busy", "This connection retains its maximum of 128 views. Start a new connection.");
-    const query: ViewQuery = { screen, position: 0, page: this.source.initialPage?.(screen) ?? "summary", ...(subject === undefined ? {} : { subject }), ...(items === undefined ? {} : { items: structuredClone(items) }), ...(scope === undefined ? {} : { scope: structuredClone(scope) }) };
+    const query: ViewQuery = { screen, position: 0, page: this.source.initialPage?.(screen, subject) ?? "summary", ...(subject === undefined ? {} : { subject }), ...(items === undefined ? {} : { items: structuredClone(items) }), ...(scope === undefined ? {} : { scope: structuredClone(scope) }) };
     const instance: Instance = { key, query, cut: 0, projection: { status: "unavailable", count: 0, position: 0, fallback: "Loading the card." }, busy: true, dispatches: new Map(), pending: new Map(), inputs: new Map() };
     this.#instances.set(key, instance);
     this.#current.set(screen, key);
-    try { instance.projection = checked(structuredClone(await this.source.read(query, this.access)), query); }
+    try {
+      const projection = checked(structuredClone(await this.source.read(query, this.access)), query);
+      await this.#checkOriginal(projection, query);
+      instance.projection = projection;
+    }
     catch { instance.projection = { status: "unavailable", count: 0, position: 0, fallback: "The card could not be read. Retry the read; no act was sent." }; }
     finally { instance.busy = false; }
     return this.opening(instance);
@@ -167,7 +202,7 @@ export class ViewSessions {
       ...(card?.declared ? { note: card.declared.context } : {}),
       ...(instance.receipt ? { receipt: instance.receipt } : {}),
     };
-    const displayedCard: Display["card"] = card ? { ...card, actions: card.actions.map(({ id, label, purpose, parameters }) => ({ id, label, purpose, ...(parameters ? { input: "chat" as const } : {}) })) } : undefined;
+    const displayedCard: Display["card"] = card ? (({ diffRead, ...shown }) => ({ ...shown, ...(diffRead ? { diffSigned: true as const } : {}), actions: card.actions.map(({ id, label, purpose, parameters }) => ({ id, label, purpose, ...(parameters ? { input: "chat" as const } : {}) })) }))(card) : undefined;
     if (displayedCard?.declared?.routed) {
       const { data: _data, ...declared } = displayedCard.declared;
       displayedCard.declared = declared;
@@ -198,13 +233,19 @@ export class ViewSessions {
       const page = move.page ?? instance.query.page;
       if (!finite(position) || !PAGES.has(page)) throw new ViewError("shape", "The card position or page is malformed.");
       if (page === "diff" && !instance.projection.card?.diffAvailable) throw new ViewError("shape", "This card offers no diff.");
+      if (page === "diff" && instance.projection.card?.diffRead && !instance.diff) throw new ViewError("shape", "View diff signs a read request. Use the card's View diff action.");
       const query = { ...instance.query, position, page };
       instance.busy = true;
       try {
         const reading: ViewQuery = { ...query, ...(this.source.declared && move.refresh === true && move.position === undefined && move.page === undefined ? { refresh: true as const } : {}) };
         const fact = instance.readReceipt?.fact;
         const projection = checked(structuredClone(await this.source.read(reading, this.access, fact ? { at: fact.at, head: { seq: fact.seq, hash: fact.hash } } : undefined)), query);
+        if (query.page !== "diff") await this.#checkOriginal(projection, query);
         this.#admit(instance, cut ?? -1);
+        if (projection.card?.diffRead && query.page === "diff") {
+          if (instance.diff?.of !== canonicalize([projection.card.identity, projection.card.diffRead])) throw new ViewError("stale", "The displayed version changed. Read the card again, then use View diff.");
+          projection.card.body = instance.diff.text;
+        }
         if (projection.card) {
           const pending = instance.pending.get(this.#itemKey(projection.card));
           if (pending && query.page !== "diff" && (query.page !== "summary" || projection.card.declared?.kind === "carousel")) {
@@ -224,6 +265,7 @@ export class ViewSessions {
   }
   async act(key: string, cut: number, actionId: string): Promise<{ result: CallResult; display: Display }> {
     const instance = this.#instance(key);
+    if (actionId === VIEW_DIFF) return this.#readDiff(instance, cut);
     const dispatchKey = `${cut}:${actionId}`;
     const action = instance.projection.card?.actions.find((candidate) => candidate.id === actionId);
     if (action?.parameters) throw new ViewError("shape", "Type the declared measurements in chat; this card cannot supply their values.");
@@ -297,6 +339,43 @@ export class ViewSessions {
     finally { instance.busy = false; }
   }
 
+  /** The card's diff page shows the answer. A failure keeps the item page and says why; another View diff signs another request. */
+  async #readDiff(instance: Instance, cut: number): Promise<{ result: CallResult; display: Display }> {
+    this.#admit(instance, cut);
+    if (instance.busy) throw new ViewError("busy", "The card has an operation in progress. Retry its read.");
+    const card = instance.projection.card, read = card?.diffRead;
+    if (!card || !read || !card.diffAvailable || !this.ports.readDiff) throw new ViewError("shape", "This card offers no diff.");
+    if (card.unresolvedOriginal) throw new ViewError("busy", "Check the original request before you read the diff.");
+    instance.busy = true;
+    try {
+      const result = await this.ports.readDiff(structuredClone(read), async () => {
+        this.#admit(instance, cut);
+        await this.#refuseWhileOpen(card, instance.query);
+        this.#admit(instance, cut);
+      });
+      this.#admit(instance, cut);
+      const text = result.structuredContent["text"];
+      if (result.isError || typeof text !== "string") {
+        const message = result.structuredContent["message"], answer = result.structuredContent["answer"];
+        instance.receipt = (`Diff not shown: ${typeof message === "string" ? message : typeof answer === "string" ? `the read request was ${answer}.` : "the read did not finish."}`).slice(0, 512);
+        return { result, display: this.#display(instance) };
+      }
+      const query: ViewQuery = { ...instance.query, page: "diff" };
+      let shown: Projection;
+      try { shown = checked({ ...instance.projection, card: { ...structuredClone(card), body: text } }, query); }
+      catch (error) {
+        if (!(error instanceof ViewError)) throw error;
+        instance.receipt = "Diff not shown: the card cannot hold this answer. The one-time credential is spent.";
+        return { result, display: this.#display(instance) };
+      }
+      instance.diff = { of: canonicalize([card.identity, read]), text };
+      instance.projection = shown;
+      instance.query = query;
+      instance.cut++;
+      return { result, display: this.#display(instance) };
+    } finally { instance.busy = false; }
+  }
+
   async #dispatch(instance: Instance, cut: number, action: CardAction | undefined, dispatchKey: string): Promise<{ result: CallResult; display: Display }> {
     const retained = action?.purpose === "check-original" ? undefined : instance.dispatches.get(dispatchKey);
     if (retained) return { result: await retained, display: this.#display(instance) };
@@ -313,13 +392,16 @@ export class ViewSessions {
     if (action.purpose === "check-original") {
       if (!validKey(args["idempotencyKey"]) || args["target"] === undefined) throw new ViewError("shape", "The original request's target and custody key are unavailable. No successor was signed.");
     } else {
-      if (!card.declared) args["at"] = structuredClone(card.identity.at);
+      // The action's own captured revisions sign; a card that names none signs what it displayed.
+      if (!card.declared && args["at"] === undefined) args["at"] = structuredClone(card.identity.at);
       args["idempotencyKey"] = `view-${crypto.randomUUID()}`;
     }
     instance.busy = true;
-    const dispatch = action.purpose === "check-original" ? this.settle(args) : this.perform(action.kind, args, () => {
+    const dispatch = action.purpose === "check-original" ? this.settle(args) : this.perform(action.kind, args, async () => {
       this.#admit(instance, cut);
-      return this.source.admit?.(instance.query, card, action).then(() => this.#admit(instance, cut));
+      await this.#refuseWhileOpen(card, instance.query);
+      await this.source.admit?.(instance.query, card, action);
+      this.#admit(instance, cut);
     });
     if (action.purpose !== "check-original") instance.dispatches.set(dispatchKey, dispatch);
     try {

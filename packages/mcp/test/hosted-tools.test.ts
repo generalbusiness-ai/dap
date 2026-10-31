@@ -7,7 +7,7 @@ import { TRUSTED_APPLICATION_COHORT, firstExtents } from "@generalbusiness/dap-p
 test("hosted tool settings default closed, admit only known additions, and preserve local generic defaults", async () => {
   for (const settings of [{}, { MCP_ENABLED: "false" }, { MCP_ENABLED: "TRUE" }, ...["null", "{}", '["unknown"]', '["create","create"]', "["].map(MCP_TOOL_ADDITIONS => ({ MCP_ENABLED: "true", MCP_TOOL_ADDITIONS }))]) expect(hostedMcpTools(settings)).toBeNull();
   const policy = hostedMcpTools({ MCP_ENABLED: "true" })!;
-  const omitted = ["create", "install_application", "credential", "prepare", "join", "record", "step", "text"];
+  const omitted = ["create", "install_application", "credential", "diff", "prepare", "join", "record", "step", "text"];
   expect(policy).toContain("room");
   expect(policy).toContain("actions");
   for (const name of omitted) expect(policy).not.toContain(name);

@@ -1,0 +1,195 @@
+/** The Change card: one exact version of a J4 change, read from native records. The card grants nothing; the scope judges each act. */
+import { canonicalize, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
+import type { FieldValue, Item, MemberRef, ReadMinimum, ScopeRef } from "@generalbusiness/dap-contract";
+import { J4_DIGESTS, changeJ4 } from "@generalbusiness/dap-lanes";
+import type { ActLike, Card, CardAction, Projection } from "@generalbusiness/dap-mcp";
+import { captureInput } from "./capture.ts";
+import { sameOptional, Unread, type Collection, type Frame } from "./reads.ts";
+import { questions, type RepoInAi } from "./repo-in-ai.ts";
+
+const LINKED_ISSUES = 4;
+export const changeSubject = (scope: ScopeRef): string => JSON.stringify(scope);
+function selector(subject: string | undefined): ScopeRef {
+  if (!subject || subject.length > 256) throw new Unread("change-selector");
+  const value: unknown = JSON.parse(subject);
+  if (!isScopeRef(value)) throw new Unread("change-selector");
+  return value;
+}
+const idOf = (value: unknown): number | null => typeof value === "number" ? value : value && typeof value === "object" && "seq" in value && typeof value["seq"] === "number" ? value["seq"] : null;
+
+export interface LinkedIssue { scope: ScopeRef; title?: string; conditions?: readonly string[]; decided?: readonly { ask: number; question: string; decidedAt: number | null }[]; unread?: string }
+export interface ChangeContext {
+  scope: ScopeRef; head: Frame["head"]; destination: string; viewer: MemberRef; key: string; actions: readonly string[];
+  proposal: Item; manifest: Item | null; versions: number; rules: Item | null;
+  reviews: Item[]; requests: Item[]; jobs: Item[]; results: Item[]; merges: Item[]; items: Item[];
+  /** The merge items this viewer's key signed, with the request key of each. */
+  mergeKeys: Record<number, string>;
+  linked: LinkedIssue[];
+  /** Lines naming each member the card shows, from the membership it read. */
+  who: (member: unknown) => string;
+}
+
+/** Read one change. One linked issue that does not read says why; the card still shows the change. */
+export async function readChange(app: RepoInAi, scope: ScopeRef, minimum?: ReadMinimum): Promise<{ context: ChangeContext; collection: Collection }> {
+  const { value, collection } = await app.collect(async collection => {
+    const frame = await collection.frame(scope, minimum);
+    if (frame.summary.definition !== J4_DIGESTS.change) throw new Unread("change-profile-unsupported");
+    const live = (type: string) => frame.items.filter(item => item.type === type);
+    const proposal = live("proposal")[0] ?? (await collection.items(frame, "proposal", ["merged"]))[0];
+    if (!proposal) throw new Unread("change-absent");
+    const superseded = await collection.items(frame, "manifest", ["superseded"]);
+    const manifest = live("manifest").find(item => item.state === "current") ?? superseded.at(-1) ?? null;
+    const results = await collection.items(frame, "result", ["recorded"]);
+    const merges = [...live("merge"), ...await collection.items(frame, "merge", ["published", "refused", "aborted"])].sort((a, b) => a.id - b.id);
+    const mergeKeys: Record<number, string> = {};
+    for (const merge of merges.filter(item => item.state === "unknown")) {
+      const input = (await collection.entry(frame, merge.id)).entry.input;
+      if (input.type === "act" && input.signed.intent.kind === "merge" && input.signed.intent.actor === collection.options.signer.key) mergeKeys[merge.id] = input.signed.intent.idempotencyKey;
+    }
+    const linked: LinkedIssue[] = [];
+    for (const link of live("link").filter(item => item.state === "set")) {
+      const ref = link.refs["issue"];
+      if (!isScopeRef(ref)) continue;
+      if (linked.length >= LINKED_ISSUES) { linked.push({ scope: ref, unread: "the card reads at most four linked issues" }); continue; }
+      linked.push(await linkedIssue(collection, ref));
+    }
+    const owner = (member: unknown): string => {
+      if (!isMemberRef(member)) return "an unknown member";
+      const actor = collection.actor(member);
+      if (actor.kind === "person") return `${actor.name} (person)`;
+      if (actor.kind === "unknown") return `${actor.name} (not a current member)`;
+      return `${actor.name} (${actor.kind}${actor.controller ? ` of ${actor.controller}` : ", no controller shown"}; not a person)`;
+    };
+    return { scope, head: frame.head, destination: collection.config.repository!.destination, viewer: collection.viewer, key: collection.options.signer.key, actions: collection.actions,
+      proposal, manifest, versions: live("manifest").length + superseded.length, rules: live("rules")[0] ?? null,
+      reviews: manifest ? live("review").filter(item => idOf(item.refs["manifest"]) === manifest.id) : [], requests: live("review-request"),
+      jobs: manifest ? live("job").filter(item => idOf(item.refs["manifest"]) === manifest.id) : [], results, merges, items: [...frame.items, ...superseded, proposal], mergeKeys, linked, who: owner };
+  }, scope, true);
+  return { context: value, collection };
+}
+
+async function linkedIssue(collection: Collection, ref: ScopeRef): Promise<LinkedIssue> {
+  try {
+    if (!collection.inRoom(ref)) return { scope: ref, unread: "the issue is not listed in this room" };
+    const frame = await collection.frame(ref);
+    const intent = frame.items.find(item => item.type === "intent");
+    const conditions = intent?.values["conditions"];
+    const decided = questions(frame.summary.definition) ? await collection.items(frame, "ask", ["decided"]) : [];
+    return { scope: ref, ...(typeof intent?.values["title"] === "string" ? { title: intent.values["title"] } : {}),
+      conditions: Array.isArray(conditions) ? conditions.filter((text): text is string => typeof text === "string") : [],
+      decided: decided.map(ask => ({ ask: ask.id, question: String(ask.values["question"]), decidedAt: idOf(ask.refs["decisionAt"]) })) };
+  } catch (error) {
+    if (!(error instanceof Unread)) throw error;
+    return { scope: ref, unread: error.reason };
+  }
+}
+
+const countOf = (rules: Item | null): number | null => typeof rules?.values["approvals"] === "number" ? rules.values["approvals"] : null;
+const approvals = (context: ChangeContext) => context.reviews.filter(item => item.state === "submitted" && item.values["verdict"] === "approve");
+const changes = (context: ChangeContext) => context.reviews.filter(item => item.state === "submitted" && item.values["verdict"] === "request-changes");
+const requiredChecks = (rules: Item | null): { name: string }[] => {
+  const checks = rules?.values["checks"];
+  return Array.isArray(checks) ? (checks as { name?: unknown; required?: unknown }[]).filter(check => check.required === true && typeof check.name === "string") as { name: string }[] : [];
+};
+const checkPassed = (context: ChangeContext, name: string) => context.jobs.some(job => job.values["name"] === name && job.state === "passed");
+const activeMerge = (context: ChangeContext) => context.merges.find(item => ["intended", "committed", "unknown"].includes(item.state));
+
+/**
+ * A review counts for the one extent it names, so an approval with no extent counts for nothing where the rules hold extents.
+ * The card's Approve names the first extent of class `content`. An approval for the rules or for deployment files stays outside the card.
+ */
+function approvalExtent(rules: Item | null): string | null {
+  const extents = rules?.values["extents"];
+  if (!Array.isArray(extents)) return null;
+  const named = (extents as { name?: unknown; class?: unknown }[]).find(extent => typeof extent.name === "string" && extent.class === "content");
+  return typeof named?.name === "string" ? named.name : null;
+}
+const act = (kind: string) => changeJ4.acts[kind as keyof typeof changeJ4.acts] as unknown as ActLike;
+function verdict(context: ChangeContext, manifest: Item, value: "approve" | "request-changes"): CardAction {
+  const request = context.requests.find(item => item.state === "open" && sameOptional(item.parties["requested"], context.viewer));
+  const extent = approvalExtent(context.rules);
+  const fields: Record<string, FieldValue> = { manifest: manifest.id, verdict: value, ...(request ? { request: request.id } : {}), ...(value === "approve" && extent ? { extent } : {}) };
+  return { id: value, label: value === "approve" ? "Approve" : "Request changes", purpose: "approve", kind: "review-verdict", args: { ...captureInput(act("review-verdict"), context.items, context.scope, null, fields) } };
+}
+function merging(context: ChangeContext, manifest: Item): CardAction {
+  const selected = manifest.values["selected"];
+  const reports = (Array.isArray(selected) ? selected as { report?: FieldValue }[] : []).flatMap(selection => selection.report === undefined ? [] : [selection.report]);
+  return { id: "merge", label: "Merge", purpose: "act", kind: "merge", args: { ...captureInput(act("merge"), context.items, context.scope, null, { manifest: manifest.id, reports }) } };
+}
+/** At most two acts. Each carries the revisions of the subjects it binds, read with this card. */
+function changeActions(context: ChangeContext): CardAction[] {
+  const { manifest, proposal, rules, actions, viewer } = context;
+  if (!manifest || manifest.state !== "current" || proposal.state !== "open" || activeMerge(context)) return [];
+  const authors = manifest.parties["authors"];
+  const reviewable = actions.includes("change.review") && !(Array.isArray(authors) && authors.some(author => sameOptional(author, viewer)))
+    && !context.reviews.some(item => item.state === "submitted" && sameOptional(item.parties["reviewer"], viewer));
+  const needed = countOf(rules);
+  const ready = manifest.values["complete"] === true && rules?.values["revision"] !== undefined && rules.values["revision"] !== null && needed !== null && approvals(context).length >= needed
+    && changes(context).length === 0 && requiredChecks(rules).every(check => checkPassed(context, check.name));
+  if (ready && actions.includes("change.merge")) return [merging(context, manifest), ...(reviewable ? [verdict(context, manifest, "request-changes")] : [])];
+  return reviewable ? [verdict(context, manifest, "approve"), verdict(context, manifest, "request-changes")] : [];
+}
+
+function bodyOf(context: ChangeContext): string {
+  const { manifest, rules, who } = context, lines: string[] = [];
+  if (!manifest) lines.push("No version yet.");
+  else {
+    lines.push(`Version ${context.versions}, manifest ${manifest.id}${manifest.state === "current" ? "." : ": superseded."}`);
+    lines.push(`Base: ${String(manifest.values["base"])}`);
+    if (typeof manifest.values["integration"] === "string") lines.push(`Integration: ${manifest.values["integration"]}`, ...(typeof manifest.values["tree"] === "string" ? [`Tree: ${manifest.values["tree"]}`] : []));
+    else lines.push(`Integration: none yet. This version holds one file, ${String(manifest.values["path"])}, and the destination writes the commit when it publishes. It has no diff.`);
+  }
+  lines.push("", "Reviews of this version:");
+  if (!context.reviews.length) lines.push("None.");
+  for (const review of context.reviews) lines.push(`${who(review.parties["reviewer"])}: ${String(review.values["verdict"])}.`);
+  lines.push("", "Checks of this version:");
+  const required = requiredChecks(rules).filter(check => !context.jobs.some(job => job.values["name"] === check.name));
+  if (!context.jobs.length && !required.length) lines.push("None.");
+  for (const job of context.jobs) {
+    const result = context.results.filter(item => idOf(item.refs["job"]) === job.id).at(-1);
+    lines.push(`${String(job.values["name"])}: ${job.state}${result ? `, by ${who(result.parties["checker"])}` : ""}.`);
+  }
+  for (const check of required) lines.push(`${check.name}: required, not run.`);
+  lines.push("", "Rules:");
+  const needed = countOf(rules);
+  if (!rules || needed === null || rules.values["revision"] === undefined || rules.values["revision"] === null) lines.push("Not known yet.");
+  else lines.push(`Approvals needed: ${needed}. Given: ${approvals(context).length}. The owner may review: ${rules.values["ownerMayReview"] === true ? "yes" : "no"}. Rules revision: ${String(rules.values["revision"])}.`);
+  const extent = approvalExtent(rules);
+  if (rules && extent) lines.push(`Approve here counts for the ${extent} extent. It does not approve a change to the rules or to deployment files.`);
+  if (context.merges.length) lines.push("", "Merges:");
+  for (const merge of context.merges) {
+    if (merge.state === "unknown") lines.push(`Merge ${merge.id}: unknown. ${who(merge.parties["merger"])} started it. The destination cannot say yet if the push landed. No card can merge until it can.`);
+    else lines.push(`Merge ${merge.id}: ${merge.state}. ${who(merge.parties["merger"])} started it.${typeof merge.values["commit"] === "string" ? ` Commit: ${merge.values["commit"]}.` : ""}${typeof merge.values["reason"] === "string" ? ` Reason: ${merge.values["reason"]}.` : ""}`);
+  }
+  lines.push("", "Linked issues:");
+  if (!context.linked.length) lines.push("None.");
+  for (const issue of context.linked) {
+    if (issue.unread !== undefined) { lines.push(`${issue.scope.scope}: not read (${issue.unread}).`); continue; }
+    lines.push(`${issue.title ?? issue.scope.scope}:`);
+    lines.push(...(issue.conditions?.length ? issue.conditions.map(condition => `Condition: ${condition}`) : ["No conditions."]));
+    for (const decided of issue.decided ?? []) lines.push(`Decided question: ${decided.question}${decided.decidedAt === null ? "" : ` (entry ${decided.decidedAt})`}`);
+  }
+  return lines.join("\n");
+}
+
+export async function changeProjection(app: RepoInAi, subject: string | undefined, minimum?: ReadMinimum): Promise<Projection> {
+  const scope = selector(subject), { context, collection } = await readChange(app, scope, minimum);
+  const { manifest, proposal } = context;
+  const unknown = context.merges.find(item => item.state === "unknown");
+  let actions = changeActions(context);
+  const original = unknown ? context.mergeKeys[unknown.id] : undefined;
+  if (original !== undefined) actions = [{ id: "check-original", label: "Check original request", purpose: "check-original", kind: "", args: { target: scope.scope, idempotencyKey: original } }];
+  const at: Record<string, number> = { ...(manifest ? { manifest: manifest.revision } : {}), proposal: proposal.revision, ...(context.rules ? { rules: context.rules.revision } : {}) };
+  for (const action of actions) if (!action.local) Object.assign(at, action.args["at"] ?? {});
+  const integration = manifest?.values["integration"], base = manifest?.values["base"];
+  const diffable = manifest?.state === "current" && typeof integration === "string" && typeof base === "string";
+  const card: Card = { identity: { item: String((manifest ?? proposal).id), kind: manifest ? "manifest" : "proposal", revision: String((manifest ?? proposal).revision), subject: { scope: scope.scope, item: proposal.id }, at },
+    title: String(proposal.values["title"]), summary: `${typeof proposal.values["number"] === "number" ? `Change ${proposal.values["number"]}` : "Change"}, ${proposal.state}${manifest ? `, version ${context.versions}` : ""}.`,
+    body: bodyOf(context), reasons: [`${J4_DIGESTS.change} acts.review-verdict / acts.merge; the scope decides each act`],
+    projection: collection.points().map(point => ({ scope: point.scope.scope, seq: point.head.seq, hash: point.head.hash })),
+    reviewIntended: [], unavailable: [], waitsOn: [], settles: [], actions, ...(original !== undefined ? { unresolvedOriginal: true } : {}),
+    ...(diffable ? { diffAvailable: true, diffRead: { target: context.destination, base, integration } } : {}),
+    fallback: "Read change for this version's base, integration, reviews, checks, rules and linked issues." };
+  if (utf8(canonicalize(card)).length > 60 * 1024) return { status: "incomplete", position: 0, count: 0, fallback: "This change is too large for its card. It offers no acts here; read change." };
+  return { status: "ready", position: 0, count: 1, card, fallback: card.fallback };
+}

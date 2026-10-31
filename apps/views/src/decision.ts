@@ -1,6 +1,8 @@
 import { canonicalize, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { FieldValue, Item, ScopeRef } from "@generalbusiness/dap-contract";
-import { expectedOf, effectiveFields, ViewError, type ActLike, type Card, type CardAction, type LocalReviewCapture, type ViewSource } from "@generalbusiness/dap-mcp";
+import { ViewError, type ActLike, type Card, type CardAction, type LocalReviewCapture, type ViewSource } from "@generalbusiness/dap-mcp";
+import { captureInput } from "./capture.ts";
+import { changeProjection } from "./change.ts";
 import { RepoInAi, questionDefinition, result, type Context, type Row } from "./repo-in-ai.ts";
 import { sameOptional, Unread } from "./reads.ts";
 import { ReviewStoreError } from "./review-store.ts";
@@ -13,14 +15,12 @@ function selector(subject: string | undefined): { scope: ScopeRef; ask: number }
   return { scope: value[0], ask: value[1] as number };
 }
 const localId = (value: unknown): number | null => typeof value === "number" ? value : value && typeof value === "object" && "seq" in value && typeof value["seq"] === "number" ? value["seq"] : null;
-/** S6 can reuse this capture without replacing native fields or revision keys. */
 export function captureQuestionAction(context: Context, kind: "approve" | "decide", request?: Item, verdict: "approve" | "request-changes" = "approve"): CardAction {
   const definition = questionDefinition(context.definition); if (!definition) throw new Unread("question-profile-unsupported");
   const fields: Record<string, FieldValue> = kind === "approve" ? { request: request!.id, bodyAt: context.bodyAt, verdict } : { bodyAt: context.bodyAt };
   const on = kind === "decide" ? context.ask.id : null, act = definition.acts[kind]! as unknown as ActLike;
-  const at = expectedOf(act, context.items, on, effectiveFields(act, fields, context.scope));
   return { id: kind === "approve" ? verdict : "decide", label: kind === "decide" ? "Decide" : verdict === "approve" ? "Approve" : "Request changes", purpose: "approve", kind,
-    args: { target: context.scope.scope, on, fields, at } };
+    args: { ...captureInput(act, context.items, context.scope, on, fields) } };
 }
 function questionActions(context: Context): CardAction[] {
   if (!context.briefMatches || context.ask.state !== "asked") return [];
@@ -33,7 +33,9 @@ function questionActions(context: Context): CardAction[] {
 }
 export function decisionSource(app: RepoInAi): ViewSource {
   return {
-    initialPage: screen => screen === "change" ? "updates" : "summary",
+    initialPage: (screen, subject) => screen === "change" && subject === undefined ? "updates" : "summary",
+    // A card of one exact subject signs acts; a list of heads or rows signs none.
+    checksOriginals: query => query.subject !== undefined,
     read: async (query, _access, minimum) => {
       try {
         if (query.screen === "decision") {
@@ -47,6 +49,7 @@ export function decisionSource(app: RepoInAi): ViewSource {
           if (utf8(canonicalize(card)).length > 60 * 1024) return { status: "incomplete", position: 0, count: 0, fallback: "Question body exceeds this card's display budget. No approval is offered; read the bounded context." };
           return { status: "ready", position: 0, count: 1, card, fallback: card.fallback };
         }
+        if (query.screen === "change" && query.subject !== undefined) return await changeProjection(app, query.subject, minimum);
         if (minimum !== undefined) return { status: "unavailable", position: 0, count: 0, fallback: "This screen does not support a receipt read minimum." };
         const response = query.screen === "work" ? await app.work() : query.screen === "change" ? await app.since() : await app.needsYou();
         if (response.isError) return { status: "unavailable", position: 0, count: 0, fallback: "This bounded read is unavailable." };
@@ -67,10 +70,12 @@ export function decisionSource(app: RepoInAi): ViewSource {
       } catch (error) {
         if (!(error instanceof Unread) && !(error instanceof SyntaxError)) throw error;
         if (error instanceof Unread && error.reason === "read-minimum-scope") return { status: "unavailable", position: 0, count: 0, fallback: "The receipt minimum does not name this exact Question scope and incarnation." };
-        return { status: "unavailable", position: 0, count: 0, fallback: "The selected Question or bounded read is unavailable." };
+        return { status: "unavailable", position: 0, count: 0, fallback: "The selected subject or bounded read is unavailable." };
       }
     },
-    admit: async (query, card) => {
+    // The revisions the card displayed are signed. A revised Question reaches the scope, and the scope refuses it.
+    admit: async query => {
+      if (query.screen !== "decision") return;
       let context: Context;
       try {
         const selected = selector(query.subject);
@@ -78,7 +83,7 @@ export function decisionSource(app: RepoInAi): ViewSource {
       } catch {
         throw new ViewError("stale", "The selected Question could not be read again. Read the card again; no request was signed.");
       }
-      if (context.ask.revision !== Number(card.identity.revision) || !context.briefMatches) throw new ViewError("stale", "The selected Question changed. Read the card again; no request was signed.");
+      if (!context.briefMatches) throw new ViewError("stale", "The Brief no longer matches this Question. Read the card again; no request was signed.");
     },
     markReviewed: async (capture, { admit }) => {
       try {
