@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 import { digestBytes } from "@generalbusiness/dap-bytes";
 import { McpService, type ConfigPort } from "@generalbusiness/dap-mcp";
 import { fileStore as custodyStore, serveStdio } from "@generalbusiness/dap-mcp/node";
+import { diffWithCredential } from "@generalbusiness/dap-git/diff";
 import { configDir, fileStore } from "../../../packages/cli/src/files.ts";
 import { storedSigner } from "../../../packages/cli/src/store-signer.ts";
 import type { ReadOptions } from "./reads.ts";
@@ -20,7 +21,7 @@ export interface ServiceOptions extends Omit<ReadOptions, "config"> {
 export function createRepoInAiService(options: ServiceOptions): { service: McpService; app: RepoInAi } {
   const app = new RepoInAi({ ...options, config: () => options.config.read(), reviewStore: new ReviewStore(options.home) });
   const service = new McpService({ service: options.service, signer: options.signer, config: options.config,
-    custody: custodyStore(join(options.home, "private", "mcp-custody")), views: decisionSource(app), applicationReads: app.catalogue(), packageBrief: app.brief,
+    custody: custodyStore(join(options.home, "private", "mcp-custody")), views: decisionSource(app), applicationReads: app.catalogue(), packageBrief: app.brief, readDiff: read => diffWithCredential(read),
     ...(options.fetch ? { fetch: options.fetch } : {}), ...(options.now ? { now: options.now } : {}) });
   return { service, app };
 }

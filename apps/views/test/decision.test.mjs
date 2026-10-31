@@ -60,11 +60,11 @@ function fixture(t) {
     config: { read: async () => peer.config(), addRoot: async () => { throw Error('No provisioning.'); } },
     applicationReads: { revision: digestBytes(utf8('TEST explicit empty catalogue')), tools: [] }, fetch: peer.fetch.bind(peer) });
   return { home, peer, state, scope, viewer, signer, ask, context, source, custody, service, actSignatures,
-    revise() { current = { ...context, ask: { ...ask, revision: 3 }, body: 'TEST revised body' }; },
+    revise() { current = { ...context, ask: { ...ask, revision: 3 }, body: 'TEST revised body' }; ask.revision = 3; },
     failRead() { readFailure = true; }, reads() { return questionReads; } };
 }
 
-test('a revised Question or failed admission read returns a stale view through MCP without signing or submitting Approve', { timeout: 30000 }, async t => {
+test('an old card signs the revisions it displayed and shows the scope\'s refusal; a failed admission read stays stale without signing', { timeout: 30000 }, async t => {
   const f = fixture(t), wire = new Wire(f.service), session = newSession(null);
   t.after(() => { wire.endLegacy(session); wire.closeAll(); });
   const send = () => {};
@@ -87,22 +87,25 @@ test('a revised Question or failed admission read returns a stale view through M
     return display;
   };
   const shown = await open('revised');
-  // Paired positive: the same displayed revision is admissible before it changes.
-  await f.source.admit({ screen: 'decision', subject: questionSubject(f.scope, f.ask.id) }, shown.card);
+  // STAND-IN: the peer does not judge. It scripts the refusal that the real scope gives; change-view.scope.test.ts witnesses that one.
+  const expected = [];
+  f.peer.answers.set('approve', signed => { expected.push(signed.intent.expected); return { answer: 'refused', reason: 'revision-moved', judgedAt: f.peer.head(f.state) }; });
   f.revise();
-  const before = f.reads(), stale = await call('view_act', { view: 'revised', cut: shown.cut, action: 'approve' });
-  assert.equal(stale.isError, true);
-  assert.deepEqual({ error: stale.structuredContent.error, reason: stale.structuredContent.reason }, { error: 'view', reason: 'stale' });
-  assert.equal(f.reads(), before + 1, 'Dispatch reaches the real Decision re-read guard');
+  const before = f.reads(), old = await call('view_act', { view: 'revised', cut: shown.cut, action: 'approve' });
+  assert.equal(old.isError, false);
+  assert.deepEqual(expected, [shown.card.identity.at], 'The act carries the displayed revisions, not the revised Question\'s');
+  assert.equal(old.structuredContent.result.structuredContent.answer, 'refused');
+  assert.equal(old.structuredContent.display.receipt.includes('refused (revision-moved'), true);
+  assert.equal(f.reads(), before + 1, 'Dispatch reaches the Decision admission read for the Brief check');
   const repeated = await call('view_act', { view: 'revised', cut: shown.cut, action: 'approve' });
-  assert.equal(repeated.structuredContent.reason, 'stale');
-  assert.equal(f.reads(), before + 1, 'The same cut retains its stale outcome instead of dispatching again');
+  assert.equal(repeated.structuredContent.result.structuredContent.answer, 'refused');
+  assert.equal(expected.length, 1, 'The same cut retains its first outcome instead of dispatching again');
   const later = await open('read-failed'); f.failRead();
   const unavailable = await call('view_act', { view: 'read-failed', cut: later.cut, action: 'approve' });
   assert.equal(unavailable.isError, true);
   assert.equal(unavailable.structuredContent.reason, 'stale');
-  assert.deepEqual(f.actSignatures, [], 'Neither refusal signs a native act');
-  assert.equal(f.peer.requests.some(request => request.startsWith('POST ') && request.endsWith('/acts')), false);
+  assert.deepEqual(f.actSignatures, ['approve'], 'The failed read signs nothing');
+  assert.equal(f.peer.requests.filter(request => request.startsWith('POST ') && request.endsWith('/acts')).length, 1);
   assert.deepEqual(await f.custody.unresolved(), []);
 });
 

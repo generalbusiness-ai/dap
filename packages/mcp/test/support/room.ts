@@ -16,7 +16,9 @@ import { expect } from "vitest";
 import { DOMAINS, type Intent, type ScopeId } from "@generalbusiness/dap-contract";
 import { b64url, keyIdOfSecret, scopeIdOf } from "@generalbusiness/dap-bytes";
 import { secretSigner, type Fetch } from "@generalbusiness/dap-client";
-import { ownHost } from "../../../scope/test/hosts.ts";
+import { diffWithCredential } from "../../../git/src/diff.ts";
+import { ownHost, type OwnGit } from "../../../scope/test/hosts.ts";
+import type { EffectAnswer, EffectRequest } from "@generalbusiness/dap-scope";
 import { type Platform, routed } from "../../../scope/test/repository.ts";
 import { beginSessionFixture } from "../../../scope/test/session-settings.ts";
 import { reader } from "../../../scope/test/support.ts";
@@ -27,7 +29,7 @@ import type { McpMetricOptions } from "../../src/metrics.ts";
 
 export const SERVICE = "https://scopes.test";
 /** The generic tools in --generic=add mode, in the order the list sends them. */
-export const GENERIC = ["room", "commons", "inspect", "create", "join", "install_application", "application_installation", "prepare", "items", "steps", "step", "record", "sends", "text", "wait", "settle", "credential", "actions", "act"];
+export const GENERIC = ["room", "commons", "inspect", "create", "join", "install_application", "application_installation", "prepare", "items", "steps", "step", "record", "sends", "text", "wait", "settle", "credential", "diff", "actions", "act"];
 
 /** What a story calls a person: their key, their configuration, and their MCP service. */
 export interface Agent {
@@ -69,11 +71,22 @@ export interface Room {
   now(): number;
   /** The next request whose path ends with `suffix` reaches the Worker, and its reply is lost: a STAND-IN for a dropped reply. */
   loseNextReply(suffix: string): void;
+  /** STAND-IN for a fault: the next request to a path with this suffix never reaches the scope. */
+  dropNextRequest(suffix: string): void;
   fetch: Fetch;
+  /** The Git host STAND-IN: `OwnGit`, with the repository the destination publishes to. */
+  git: OwnGit;
   done(): void;
 }
 
-export function mcpRoom(external?: { finish: "external"; capture: (life: ReturnType<typeof nativeFixtureLifetime>) => void }): Room {
+export interface RoomOptions {
+  /** Answers each capability operation in place of the default hold@1 STAND-IN. */
+  hold?: Host;
+  /** A STAND-IN for an outside fault: a defined answer replaces the answer of the operation it names. Null holds the reply back. */
+  fault?: (request: EffectRequest) => EffectAnswer | null | undefined;
+}
+
+export function mcpRoom(external?: { finish: "external"; capture: (life: ReturnType<typeof nativeFixtureLifetime>) => void }, options: RoomOptions = {}): Room {
   const secret = b64url(crypto.getRandomValues(new Uint8Array(32)));
   // The fixture's own inspector reader, which no agent presents: a test's native reading of a scope, apart from any MCP read.
   const sessionOwner = beginSessionFixture({ secret, sessions: true, inspector: reader });
@@ -86,7 +99,7 @@ export function mcpRoom(external?: { finish: "external"; capture: (life: ReturnT
   const bindings = () => at.bindings(register!);
   // hold@1's operations (mints, revocations, staged refs, the ancestry read) are answered by the lanes' Host STAND-IN; the
   // register's and the destination's by Artifacts, as wired above.
-  const hold = new Host();
+  const hold = options.hold ?? new Host();
   const wire = (name: ScopeId) => {
     if (external) lifetime.platform(name); // include real child constructions in the owning callback registry
     lifetime.outside(name, (given, sql) => {
@@ -94,7 +107,11 @@ export function mcpRoom(external?: { finish: "external"; capture: (life: ReturnT
       return {
         ...outside,
         accepts: (owner, kind) => hold.accepts(owner, kind) || outside.accepts(owner, kind),
-        send: (request) => (hold.accepts(request.owner, request.kind) ? Promise.resolve(hold.send(request)) : outside.send(request)),
+        send: (request) => {
+          const scripted = options.fault?.(request);
+          if (scripted !== undefined) return Promise.resolve(scripted);
+          return hold.accepts(request.owner, request.kind) ? Promise.resolve(hold.send(request)) : outside.send(request);
+        },
       };
     });
   };
@@ -103,8 +120,9 @@ export function mcpRoom(external?: { finish: "external"; capture: (life: ReturnT
     const nodes = [...known, ...waiting.filter((scope) => !known.some((node) => node.name === scope)).map((scope) => lifetime.platform(scope as ScopeId))];
     await driveFixture(nodes, wait);
   };
-  let lose: string | null = null;
+  let lose: string | null = null, drop: string | null = null;
   const fetch: Fetch = (async (url: string, init?: RequestInit) => {
+    if (drop !== null && new URL(url).pathname.endsWith(drop)) { drop = null; throw new Error("scripted loss of the request"); }
     const response = await lifetime.waitFor(sessionOwner, () => routed(url, init));
     if (lose !== null && new URL(url).pathname.endsWith(lose)) { lose = null; await response.body?.cancel(); throw new Error("scripted loss of the reply"); }
     return response;
@@ -113,7 +131,8 @@ export function mcpRoom(external?: { finish: "external"; capture: (life: ReturnT
     now: () => lifetime.now(),
     know: (scope) => { if (!known.some((node) => node.name === scope)) known.push(lifetime.platform(scope)); },
     loseNextReply: (suffix) => { lose = suffix; },
-    pause, wait, active, fetch, done,
+    dropNextRequest: (suffix) => { drop = suffix; },
+    pause, wait, active, fetch, done, git: at.stand as OwnGit,
     platform: (scope) => lifetime.platform(scope),
     advance: (ms) => lifetime.advance(ms),
     wireRegister: async (scope) => {
@@ -141,6 +160,7 @@ export function mcpRoom(external?: { finish: "external"; capture: (life: ReturnT
         ...(options.listPageBytes ? { listPageBytes: options.listPageBytes } : {}),
         ...(options.metrics ? { metrics: options.metrics } : {}),
         ...(options.views ? { views: options.views } : {}),
+        readDiff: read => diffWithCredential(read, at.stand.fetch),
         now: lifetime.now, pause: (waiting) => pause(waiting),
         every: () => () => {},
         config: {
