@@ -11,7 +11,7 @@ import { storedSigner } from "../../../packages/cli/src/store-signer.ts";
 import { IdentityRefusal, enrollIdentity, initializeOwner, retainedInvitationRequests } from "../identities.ts";
 import { durableCliStore } from "../custody.ts";
 import { bindPlan, identityHome, retain, type Identity, type SetupPlan } from "../plan.ts";
-import { failureDiagnostic, newDiagnostics, type EnrollmentDiagnostic } from "../diagnostics.ts";
+import { failureDiagnostic, invitationCause, newDiagnostics, type EnrollmentDiagnostic } from "../diagnostics.ts";
 import { main } from "../setup.ts";
 import { Roster, rita } from "../../../packages/platform/test/support.ts";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as cohort } from "@generalbusiness/dap-platform";
@@ -62,6 +62,7 @@ async function enrollmentFixture() {
   await bindPlan(owner, setup);
   const receipts = new Map<string, Receipt>(), sent: SignedIntent[] = [], traces: EnrollmentDiagnostic[] = [];
   let refuseSummary = false, stopAtDispatch = false, unknownSession = false, beforeDispatch: ((signed: SignedIntent) => Promise<void>) | null = null;
+  let inboxState: (summaryRead: number) => "active" | "provisional" | "forbidden" | "not-found" = () => "active", inboxSummaryReads = 0;
   const live = (): Item[] => Object.entries(roster.definition.declared.items).flatMap(([type, item]) => roster.state.page(type, Object.keys(item.states).filter(s => !item.states[s]!.final), null, 100).items)
     .map(item => item.type === "roster" ? { ...item, refs: { ...item.refs, directory } } : item);
   const fetcher: Fetch = async (url, init) => {
@@ -99,8 +100,11 @@ async function enrollmentFixture() {
       const at = { scope: scopeIdOf(birth.to), inc: newIncarnation(new Uint8Array(16).fill(member.id + 10)), kind: "inbox" as const };
       const entry: Entry = { v: 1, at, seq: 0, prev: null, time: roster.now, clamped: false, epoch: 0, input: { type: "genesis", seed: birth.to, inc: at.inc, kind: "establish", founding: null, source: roster.fact(member.id), n: birth.n, message: birth.message.class === "request" ? birth.message : null, decision: "applied" }, uses: [], prepared: [], effects: [], sends: [] };
       const head = { seq: 0, hash: entryHash(entry) };
+      const state = inboxState(path.endsWith("/entries/0") ? inboxSummaryReads : inboxSummaryReads++);
+      if (state === "forbidden") return Response.json({ ok: false, reason: "forbidden" }, { status: 403 });
+      if (state === "not-found") return Response.json({ ok: false, reason: "not-found" }, { status: 404 });
       if (path.endsWith("/entries/0")) return Response.json({ ok: true, at: head, value: { entry, hash: head.hash }, complete: true });
-      return Response.json({ ok: true, at: head, value: { scope: at, status: "active", definition: "platform:inbox@1", time: roster.now, counts: [["inbox", "open", 1]], items: [{ id: 0, type: "inbox", state: "open", revision: 1, opened: textDigest("SCRIPTED inbox"), attributed: [], values: {}, parties: { owner: member.parties["member"] }, refs: { membership: roster.at } }] }, complete: true });
+      return Response.json({ ok: true, at: head, value: { scope: at, status: state, definition: "platform:inbox@1", time: roster.now, counts: [["inbox", "open", 1]], items: [{ id: 0, type: "inbox", state: "open", revision: 1, opened: textDigest("SCRIPTED inbox"), attributed: [], values: {}, parties: { owner: member.parties["member"] }, refs: { membership: roster.at } }] }, complete: true });
     }
     if (url.includes(directory.scope)) return Response.json({ ok: true, at: { seq: 0, hash: textDigest("SCRIPTED directory") }, complete: true, value: { scope: directory, status: "active", definition: "platform:directory@16", time: roster.now, counts: [["repository", "open", 1]], items: [{ id: 0, type: "repository", state: "open", revision: 1, opened: textDigest("SCRIPTED repository"), attributed: [], parties: {}, values: {}, refs: { membership: roster.at, rules: { ...directory, kind: "rules" }, destination: { ...directory, kind: "destination" } } }] } });
     if (path.includes("/entries/")) {
@@ -110,10 +114,11 @@ async function enrollmentFixture() {
     if (refuseSummary) return Response.json({ ok: false, reason: "unavailable" }, { status: 503 });
     return Response.json({ ok: true, at: roster.head, complete: true, value: { scope: roster.at, status: "active", definition: "platform:membership@8", time: roster.now, items: live(), counts: Object.entries(roster.definition.declared.items).flatMap(([type, item]) => Object.keys(item.states).map(state => [type, state, roster.state.count(type, state)])) } });
   };
-  const ctx = { store: owner, fetch: fetcher, now: () => timeMs(roster.now)! };
+  const ctx = { store: owner, fetch: fetcher, now: () => timeMs(roster.now)!, pause: async () => {} };
   return { home, setup, owner, ctx, fetcher, sent, traces, roster, live, repository,
     failSummary: (value: boolean) => { refuseSummary = value; }, stopDispatch: () => { stopAtDispatch = true; },
     permitUnknownSession: () => { unknownSession = true; },
+    inbox: (state: typeof inboxState) => { inboxState = state; },
     beforeDispatch: (callback: (signed: SignedIntent) => Promise<void>) => { beforeDispatch = callback; },
     enroll: (name: "agent-a" | "agent-b", mode: "new" | "check" | "continue", handle = setup.handles[name]) => enrollIdentity(ctx, identityHome(setup, name), "agent", handle, mode, { recoveryPlan: setup, observe: value => traces.push(value) }),
     close: () => rmSync(home, { recursive: true, force: true }),
@@ -296,6 +301,90 @@ test("the entry point retains actual pre-root failure status and only safe stder
     expect(failureDiagnostic({ reason: "sessions-unavailable" }, null)).toMatchObject({ nativeReason: "sessions-unavailable" });
     expect(failureDiagnostic({ reason: "SECRET body", outcome: { lines: ["SECRET token"] } }, null)).toEqual({ stage: "identity", cause: "engine-error" });
   } finally { stderr.mockRestore(); vi.unstubAllGlobals(); f.close(); rmSync(publicRoot, { recursive: true, force: true }); }
+});
+
+test("the entry point names a provisional inbox with a fixed word and no private value, signs nothing while it rechecks, and keeps check and continue", async () => {
+  const f = await enrollmentFixture(), publicRoot = realpathSync(mkdtempSync(join(tmpdir(), "artroom-s1-enrol-stop-")));
+  const stderr = vi.spyOn(process.stderr, "write").mockReturnValue(true), stdout = vi.spyOn(process.stdout, "write").mockReturnValue(true);
+  const wait = setTimeout;
+  try {
+    const input = join(publicRoot, "input.json");
+    writeFileSync(input, JSON.stringify(f.setup), { mode: 0o600 });
+    vi.stubGlobal("fetch", f.fetcher);
+    // The recheck's own pause only: the transport's deadlines keep their real values.
+    vi.stubGlobal("setTimeout", ((run: () => void, ms?: number) => wait(run, ms === 1000 ? 0 : ms)) as typeof setTimeout);
+    vi.useFakeTimers({ toFake: ["Date"], now: timeMs(f.roster.now)! });
+    const run = async (mode: "new" | "check" | "continue") => {
+      const directory = join(publicRoot, mode);
+      const code = await main(["--input", input, "--phase", "enrol-a", "--mode", mode, "--diagnostics", directory]);
+      const raw = readFileSync(join(directory, "receipt.json"), "utf8");
+      return { code, raw, enrollment: JSON.parse(raw).enrollment };
+    };
+    f.inbox(() => "provisional");
+    const stopped = await run("new");
+    const ownerHome = identityHome(f.setup, "owner"), rows = readdirSync(join(ownerHome, "private")).filter(name => name.startsWith("i-")).map(name => name.slice(0, -5));
+    const secret = JSON.parse(new TextDecoder().decode((await f.owner.private(rows[0]!))!))["secret"] as string;
+    expect(stopped.raw, "the receipt holds no invitation secret").not.toContain(secret);
+    expect(stopped.raw, "the receipt holds no session token").not.toContain(b64url(new Uint8Array(32).fill(9)));
+    expect(stopped.raw, "the receipt holds no engine reason text").not.toContain("could not be verified");
+    expect([stopped.code, stopped.enrollment]).toEqual([1, { stage: "invitation-result", cause: "inbox-not-confirmed", inboxRechecks: 10, read: { method: "GET", category: "other", status: 200 } }]);
+    expect(f.sent.map(signed => signed.intent.kind), "a recheck signs and submits no act").toEqual(["add-member", "invite-key"]);
+
+
+    f.inbox(() => "active");
+    const checked = await run("check");
+    expect([checked.code, checked.enrollment.stage, checked.enrollment.inboxRechecks]).toEqual([1, "receiver", undefined]);
+    expect(checked.raw, "the receipt holds no invitation link").not.toContain("artroom-agent-key:");
+    const continued = await run("continue");
+    expect([continued.code, continued.enrollment.stage, f.sent.map(signed => signed.intent.kind)]).toEqual([0, "receiver", ["add-member", "invite-key", "enrol"]]);
+  } finally { vi.useRealTimers(); stderr.mockRestore(); stdout.mockRestore(); vi.unstubAllGlobals(); f.close(); rmSync(publicRoot, { recursive: true, force: true }); }
+});
+
+test("a provisional inbox that confirms within the bound completes the enrollment and records the rechecks", async () => {
+  const f = await enrollmentFixture();
+  try {
+    f.inbox(summaryRead => summaryRead < 3 ? "provisional" : "active");
+    expect([(await f.enroll("agent-a", "new")).code, f.sent.map(signed => signed.intent.kind)]).toEqual([0, ["add-member", "invite-key", "enrol"]]);
+    // Each read reports again with the fields it holds, so the test reads the distinct steps.
+    const steps = [...new Set(f.traces.filter(trace => trace.stage === "invitation-result").map(trace => `${trace.cause} ${trace.inboxRechecks ?? 0}`))];
+    expect(steps).toEqual(["inbox-not-confirmed 0", "inbox-not-confirmed 1", "inbox-not-confirmed 2", "verified 3"]);
+    expect(f.traces.at(-1)).toMatchObject({ stage: "receiver", inboxRechecks: 3 });
+  } finally { f.close(); }
+});
+
+test("an inbox read that a recheck cannot pass stops at the bound as inbox-not-readable, and Check itself does not wait", async () => {
+  const f = await enrollmentFixture();
+  try {
+    f.inbox(() => "forbidden");
+    const outcome = await f.enroll("agent-a", "new");
+    expect([outcome.code, f.traces.at(-1)]).toMatchObject([1, { stage: "invitation-result", cause: "inbox-not-readable", inboxRechecks: 10 }]);
+    const before = f.traces.length, checked = await f.enroll("agent-a", "check");
+    expect([checked.code, f.traces.slice(before).filter(trace => trace.stage === "invitation-result").map(trace => [trace.cause, trace.inboxRechecks])]).toEqual([1, [["inbox-not-readable", undefined]]]);
+  } finally { f.close(); }
+});
+
+test("each engine reason selects its fixed word, the two recorded room stops keep their words, and an unlisted reason stays unknown", () => {
+  const answered = { method: "GET", category: "other", status: 200 } as const, inbox = (subject: string) => `The native ${subject} inbox creation could not be verified.`;
+  const unknown = (reason?: string) => ({ state: "unknown" as const, ...(reason ? { reason } : {}) });
+  expect(invitationCause(unknown(inbox("checker")), answered), "the third room's stop at enrol-checker").toBe("inbox-not-confirmed");
+  expect(invitationCause(unknown(inbox("agent")), { ...answered, status: 404 }), "the second room's stop at enrol-a").toBe("inbox-not-readable");
+  expect(invitationCause(unknown(inbox("agent")), { ...answered, category: "membership-summary" }), "a refused read ends on the session's probe").toBe("inbox-not-readable");
+  const words = [
+    ["The original agent opening is retained.", "opening-unresolved"],
+    ["The original checker opening is retained.", "opening-unresolved"],
+    ["The original invitation is retained.", "invitation-act-unresolved"],
+    ["The current native invitation could not be verified.", "invitation-unverified"],
+    ["The native directory and repository siblings could not be verified.", "directory-unverified"],
+    ["A retained private successor awaits explicit Continue. Check restored no pointer and sent nothing.", "successor-pending"],
+  ] as const;
+  expect(words.map(([reason]) => invitationCause(unknown(reason), answered))).toEqual(words.map(([, word]) => word));
+  expect(invitationCause(unknown(), answered), "the engine's bindings stop has no reason text").toBe("binding-unverified");
+  expect(invitationCause(unknown("SECRET private reason"), answered), "an unlisted reason never enters the word").toBe("unknown");
+  expect(invitationCause({ state: "verified" }, answered), "another state keeps its own word").toBe("verified");
+  // The table holds the engine's own texts. A changed text must change here.
+  const engine = readFileSync(new URL("../../../packages/cli/src/invitations.ts", import.meta.url), "utf8");
+  const engineTexts = ["} opening is retained.", "\"The original invitation is retained.\"", "\"The current native invitation could not be verified.\"", "\"The native directory and repository siblings could not be verified.\"", "\"A retained private successor awaits explicit Continue. Check restored no pointer and sent nothing.\"", "} inbox creation could not be verified."];
+  expect(engineTexts.filter(text => !engine.includes(text)), "the engine still holds every text the table reads").toEqual([]);
 });
 
 test("owner continuation restores configuration only with the exact retained inputs and original signer", async () => {

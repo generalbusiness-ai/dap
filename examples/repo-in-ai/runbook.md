@@ -90,7 +90,8 @@ that holds `.config`. The script creates the directory exclusively with
 owner-only modes.
 It flushes and reads back the helper's exit status and exact safe stderr
 line before exit. Enrollment metadata records only a fixed stage, coded
-cause, read method/category and HTTP status when known. It records no
+cause, inbox recheck count, read method/category and HTTP status when known.
+It records no
 response body, header, key, link, signed original, stack or arbitrary
 exception message. The outer command receipt still owns actual process
 status and loader stderr. Preserve a partial diagnostics unit on I/O
@@ -114,9 +115,31 @@ continue that phase:
 node examples/repo-in-ai/setup.mjs --input /absolute/path/to/s1-input.json --phase manifest-stage --mode continue --diagnostics /absolute/public/NEW-continue-diagnostics
 ```
 
-An enrollment can stop at stage `invitation-result` with cause `unknown`
-after its invitation succeeded. Its `check` then stops at stage `receiver`,
-and `continue` completes that enrollment from the retained handoff.
+A new member's inbox stays provisional until its creator's confirmation
+arrives, and the invitation engine accepts only an active inbox. An enrollment
+that reads the inbox too early rechecks it up to 10 times, one second apart.
+A recheck signs and submits nothing. The receipt's `inboxRechecks` holds the
+count, also when the enrollment completes.
+
+If the inbox still fails after the last recheck, the enrollment stops at stage
+`invitation-result`. Its `cause` is one of these fixed words:
+
+| Cause | Condition |
+|---|---|
+| `inbox-not-confirmed` | Both inbox reads answered 200, and the engine refused the inbox. |
+| `inbox-not-readable` | An inbox read was refused. `read` holds the last status. |
+| `opening-unresolved` | The member opening has no verified receipt. |
+| `invitation-act-unresolved` | The invitation act has no verified receipt. |
+| `invitation-unverified` | The membership summary does not show the invitation. |
+| `directory-unverified` | The Directory does not show this room's repository. |
+| `binding-unverified` | The member, role or controller does not match. |
+| `successor-pending` | A retained successor waits for an explicit `continue`. |
+| `unknown` | The engine gave a reason that this script does not list. |
+
+To recover, run `check` on the phase. If the invitation now verifies, `check`
+retains the handoff and stops at stage `receiver`, because `check` never starts
+a receiver. Then run `continue`, which completes the enrollment from the
+retained handoff.
 
 `continue` uses the same retained envelope and deadline. It never replaces
 a missing key or original. A missing original, changed scope incarnation,
