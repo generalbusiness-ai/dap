@@ -235,9 +235,8 @@ test('an accepted Decision receipt floors the next actual app read; an older coh
     receipts.set(answer, accepted); return answer;
   }, async () => { throw Error('No settlement is needed in this composition witness.'); }, answer => receipts.get(answer) ?? null);
   await sessions.open('floor', 'decision', questionSubject(q.state.ref, q.opening.entry.seq));
-  const summary = sessions.display('floor'); assert.equal(summary.status, 'ready'); assert.deepEqual(summary.card.actions, []);
-  const initial = await sessions.read('floor', summary.cut, { page: 'item' });
-  assert.equal(initial.status, 'ready'); assert.equal(initial.card.actions[0].id, 'approve');
+  const summary = sessions.display('floor'); assert.equal(summary.status, 'ready'); assert.deepEqual(summary.card.actions, [], 'Summary pages keep native actions hidden');
+  const initial = await sessions.read('floor', summary.cut, { page: 'item' }); assert.equal(initial.status, 'ready'); assert.equal(initial.card.actions[0].id, 'approve');
   const done = await sessions.act('floor', initial.cut, 'approve'); assert.equal(done.result.structuredContent.answer, 'accepted'); assert.equal(performed, 1);
   const required = { at: accepted.fact.at, head: { seq: accepted.fact.seq, hash: accepted.fact.hash } };
   serveOlder = true;
