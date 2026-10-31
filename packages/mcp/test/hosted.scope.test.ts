@@ -398,8 +398,8 @@ test("a hosted session on the default tools accepts exact terms and releases its
     expect(await wholeText(lane, asked.values["body"] as string)).toBe(body);
     const steps = (await tool("steps", { scope: lane }))["steps"] as { seq: number; kind: string | null }[];
     const approval = await tool("step", { scope: lane, seq: steps.find(row => row.kind === "approve")!.seq });
-    const signed = (approval["entry"] as Entry).input as { signed: { intent: { fields: { comment: string } } } };
-    expect(await wholeText(lane, signed.signed.intent.fields.comment)).toBe(comment);
+    const signed = (approval["entry"] as { input: { signed: { intent: { fields: { comment: string } } } } }).input.signed;
+    expect(await wholeText(lane, signed.intent.fields.comment)).toBe(comment);
 
     // Release: the answer is the decide entry that the question names.
     const block = (await items("block")).find(item => item.state === "blocked")!;
