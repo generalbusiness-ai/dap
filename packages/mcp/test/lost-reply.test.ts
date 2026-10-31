@@ -80,8 +80,8 @@ test("witness 3: with dap mcp killed after sending and before the reply, settle 
   holding = false;
   const second = await start();
   try {
-    const settled = (await second.client.callTool({ name: "settle", arguments: { target: "membership", idempotencyKey: key } })).structuredContent as { answer: string; phase: string; fact: { seq: number } };
-    expect([settled.answer, settled.phase, settled.fact.seq]).toEqual(["accepted", "accepted", recorded[0]]);
+    const settled = (await second.client.callTool({ name: "settle", arguments: { target: "membership", idempotencyKey: key } })).structuredContent as { answer: string; phase: string; fact?: { seq: number } };
+    expect([settled.answer, settled.phase, settled.fact?.seq]).toEqual(["accepted", "accepted", recorded[0]]);
     expect(posted).toHaveLength(1);
     // The same act under the same key returns the kept outcome, and sends nothing.
     const repeated = (await second.client.callTool({ name: "act", arguments: { target: "membership", kind: "set-role", digest: "platform:membership@2", on: 1, fields: { role: "member" }, idempotencyKey: key } })).structuredContent as { answer: string; fact: { seq: number } };
