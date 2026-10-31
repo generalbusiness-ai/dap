@@ -8,7 +8,7 @@ Request `a34e29784853fb30949db3f2d01f5aa9b46f491b` and promise `7b0de57d099ed985
 
 An S1 enrollment that reads a new inbox too early now rechecks it, and a stop names its condition in the receipt.
 
-- **Recheck.** `enrollment` in `examples/repo-in-ai/identities.ts` runs the invitation engine again in check mode, up to 10 times, 1 second apart. A recheck signs and submits nothing. It runs only for the two inbox words below, and only in `new` and `continue` modes.
+- **Recheck.** `enrollment` in `examples/repo-in-ai/identities.ts` runs the invitation engine again in check mode, up to 10 times, 1 second apart. A recheck signs and submits no act. It may open a read session, and it may record a settled stage in the owner's private records. It runs only for the two inbox words below, and only in `new` and `continue` modes.
 - **Fixed words.** `invitationCause` in `examples/repo-in-ai/diagnostics.ts` maps each engine reason to a word at stage `invitation-result`: `inbox-not-confirmed`, `inbox-not-readable`, `opening-unresolved`, `invitation-act-unresolved`, `invitation-unverified`, `directory-unverified`, `binding-unverified`, `successor-pending` or `unknown`. No reason text reaches the receipt.
 - **Receipt.** A new field, `inboxRechecks`, holds the count, also when the enrollment completes.
 - **Runbook.** `examples/repo-in-ai/runbook.md` lists the words and the recovery.
@@ -40,7 +40,7 @@ A new inbox starts `provisional` and turns `active` when its creator's confirmat
 
 ## Evidence
 
-The checkpoint is `d1af219760ae65b15f82182ab83948cb55d6e4c1`, tree `7114e67a`, based on main `c1ff846e`. Raw gate evidence is in `~/play/artroom-evidence/2026-10-31-enrol-stop-gate/`, `SHA256SUMS` `041e2ee69f821a20b1f57e3789b2c4b211b7c7b13727a40a83318767641853b3`. The reviewed head adds this note, its manifest and the one-line change to the S1 note.
+The checkpoint is `d1af219760ae65b15f82182ab83948cb55d6e4c1`, tree `7114e67a`, based on main `c1ff846e`. Raw gate evidence is in `~/play/artroom-evidence/2026-10-31-enrol-stop-gate/`, `SHA256SUMS` `041e2ee69f821a20b1f57e3789b2c4b211b7c7b13727a40a83318767641853b3`. The reviewed head adds this note, its manifest, the one-line change to the S1 note, and one corrected sentence in the runbook. Source and tests do not change after the gate.
 
 The controls and the native probe are in the separate sealed unit `~/play/artroom-evidence/2026-10-31-enrol-stop/`, `SHA256SUMS` `0e7b7f585e16f46e79094b7bdcc403a1f48730d0f6720e8dd9bbb74ef6586385`. They ran at this same source, and 22 of 22 controls distinguish, each with one log.
 
