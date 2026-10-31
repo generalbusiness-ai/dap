@@ -65,6 +65,39 @@ test("origin close stops admission and waits for late forward/body ownership; an
 
 // On Node, a Request's signal follows its source only while the Request is reachable.
 // This keeps the rebuilt upstream Request alive, as a real fetch does, and drops only the caller's.
+test("a client abort during the body read cancels the upstream body after the Request is collected", async () => {
+  setFlagsFromString("--expose-gc");
+  const collect = runInNewContext("gc") as () => void;
+  const returned = gate(), reading = gate(), cancelled = gate();
+  let body!: ReadableStreamDefaultController<Uint8Array>;
+  const origin = await gatewayOrigin({ records: new MemoryRecords(), credential: token => ["authorization", `Bearer ${token}`],
+    upstream: async () => new Response(new ReadableStream<Uint8Array>({
+      start: controller => { body = controller; },
+      pull: () => { reading.resolve(); return new Promise<void>(() => undefined); },
+      cancel: () => { cancelled.resolve(); },
+    }, { highWaterMark: 0 })),
+  }, { attempt: "TEST-origin-mid-read", repository: "https://git.test/repo.git", update: null,
+    token: { id: "TEST-origin-mid-read-token", state: "live", plaintext: "TEST-origin-credential" } });
+  const bridge = await serveOrigin({
+    repository: origin.repository,
+    forward: async request => { const got = await origin.forward(request); returned.resolve(); return got; },
+    close: () => origin.close(),
+  }, async () => undefined);
+  const readAbort = new AbortController();
+  const client = originClient(bridge.socket, readAbort.signal);
+  const pending = client.forward(new Request("https://git.test/repo.git/info/refs?service=git-upload-pack")).catch(error => error);
+  try {
+    await returned.promise; await reading.promise;
+    for (let i = 0; i < 4; i++) { await new Promise(resolve => setImmediate(resolve)); collect(); }
+    readAbort.abort();
+    const outcome = await Promise.race([cancelled.promise.then(() => "cancelled"), new Promise(resolve => setTimeout(() => resolve("still reading"), 2_000))]);
+    expect(outcome).toBe("cancelled");
+  } finally {
+    try { body.close(); } catch { /* the cancel already closed it */ }
+    await pending; await bridge.close();
+  }
+});
+
 test("a forward whose caller dropped the Request still passes the source's abort upstream", async () => {
   setFlagsFromString("--expose-gc");
   const collect = runInNewContext("gc") as () => void;
