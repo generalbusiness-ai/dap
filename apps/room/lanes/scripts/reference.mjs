@@ -28,6 +28,8 @@ import { issueQuestions } from "../src/issue-questions.ts";
 import { QUESTION_DIGESTS } from "../src/digests-questions.ts";
 import { issueQuestionsBrief } from "../src/issue-questions-brief.ts";
 import { QUESTION_BRIEF_DIGESTS } from "../src/digests-questions-brief.ts";
+import { changeFinding } from "../src/change-finding.ts";
+import { FINDING_DIGESTS } from "../src/digests-finding.ts";
 
 const target = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..", "docs", "lanes-reference.md");
 
@@ -122,8 +124,8 @@ function section(name, definition) {
 
 /** The whole file, as text. */
 export function reference() {
-  const lanes = { issue, change, "issue-evidence4": issueEvidence4, "change-evidence4": changeEvidence4(EVIDENCE_DIGESTS.issue), "issue-questions": issueQuestions, "issue-questions-brief": issueQuestionsBrief };
-  const digests = { ...DIGESTS, "issue-evidence4": EVIDENCE_DIGESTS.issue, "change-evidence4": EVIDENCE_DIGESTS.change, "issue-questions": QUESTION_DIGESTS.issue, "issue-questions-brief": QUESTION_BRIEF_DIGESTS.issue };
+  const lanes = { issue, change, "issue-evidence4": issueEvidence4, "change-evidence4": changeEvidence4(EVIDENCE_DIGESTS.issue), "issue-questions": issueQuestions, "issue-questions-brief": issueQuestionsBrief, "change-finding": changeFinding };
+  const digests = { ...DIGESTS, "issue-evidence4": EVIDENCE_DIGESTS.issue, "change-evidence4": EVIDENCE_DIGESTS.change, "issue-questions": QUESTION_DIGESTS.issue, "issue-questions-brief": QUESTION_BRIEF_DIGESTS.issue, "change-finding": FINDING_DIGESTS.change };
   return [
     "# Lane reference",
     "This file is generated. Do not edit it. `apps/room/lanes/scripts/reference.mjs` writes it from the lane\ndefinitions in `apps/room/lanes/src`. [lanes.md](lanes.md) says how to read a row.",
@@ -132,6 +134,7 @@ export function reference() {
     `The original issue and change rows were written from Lane forms and browser flow, revision ${LANE_FORMS.revision}, at ${code(LANE_FORMS.commit)}. Successor profiles have separate pins.`,
     "The opt-in `issue-questions` profile binds approval requests and verdicts to the current question text. Its `issue.approve` and `issue.decide` grants belong on person roles only; activation does not change Membership action lists.",
     "The opt-in `issue-questions-brief` profile also records one fixed Brief digest on each ask. Revision may compare that digest but cannot change it. Approvals still name the question text; they approve neither the Brief nor conditions.",
+    "The opt-in `change-finding` profile adds the item `finding` to the workspace Change rows, with three acts and one guard of `merge`. A source is a row of the rules' `checks`: the row's `name` is the source's name, and its `checker` is the one member who files for that source. A row with `required: true` is a required source, so `merge` also needs a passed job from it. `merge` refuses `finding-open` while a required source has an open finding on any version of the change. A finding adds no `review`, so it counts as no approval. The source may resolve its own finding. A holder of `change.dismiss` may resolve any finding or mark it irrelevant, except on a change that this holder authored.",
     [
       "How to read the tables:",
       "",

@@ -13,12 +13,15 @@ The stamp: the definitions this file was generated from, by their pinned digests
 | `change-evidence4` | `sha256:fe3cfa584ef4beb697ffd43cbd99391626e2b5dcd863f7aee2cdbf4fac3849d1` | 76833 |
 | `issue-questions` | `sha256:88e763abc263caf65397ba2d87ba629d90d3f09e472ce646ea744034e6909174` | 52161 |
 | `issue-questions-brief` | `sha256:04b9f731d50cf2f838525990ab0543d8bc75dfdbf1090a8b971a74c7ca30e2a3` | 52508 |
+| `change-finding` | `sha256:aaf68c3bd82c217312acd7784dfe06bcb7ba6a30a066d0475a7728c62c43a7e7` | 48698 |
 
 The original issue and change rows were written from Lane forms and browser flow, revision 14, at `4b3bf5da`. Successor profiles have separate pins.
 
 The opt-in `issue-questions` profile binds approval requests and verdicts to the current question text. Its `issue.approve` and `issue.decide` grants belong on person roles only; activation does not change Membership action lists.
 
 The opt-in `issue-questions-brief` profile also records one fixed Brief digest on each ask. Revision may compare that digest but cannot change it. Approvals still name the question text; they approve neither the Brief nor conditions.
+
+The opt-in `change-finding` profile adds the item `finding` to the workspace Change rows, with three acts and one guard of `merge`. A source is a row of the rules' `checks`: the row's `name` is the source's name, and its `checker` is the one member who files for that source. A row with `required: true` is a required source, so `merge` also needs a passed job from it. `merge` refuses `finding-open` while a required source has an open finding on any version of the change. A finding adds no `review`, so it counts as no approval. The source may resolve its own finding. A holder of `change.dismiss` may resolve any finding or mark it irrelevant, except on a change that this holder authored.
 
 How to read the tables:
 
@@ -628,4 +631,70 @@ Name `issue`. Genesis act `file`. Capabilities listed: `hold@1`, `git-read@1`. R
 
 | Name | On | In states | Deadline slot | Effects, attention |
 |---|---|---|---|---|
+| `hold-end` | `hold` | `held` | `ends` | 1, 0 |
+
+## `change-finding`
+
+Name `change`. Genesis act `open`. Capabilities listed: `hold@2`, `git-read@1`. Rule expressions: 0.
+
+### Item types of `change-finding`: 15
+
+| Type | How many | States | Slots | Needs |
+|---|---|---|---|---|
+| `proposal` | one | `draft` (initial), `open`, `closed`, **`merged`** | `author`: member (fixed, required); `assignees`: member (list of at most 10); `destination`: scope of kind `destination` (fixed, required); `rulesScope`: scope of kind `rules` (fixed, required); `title`: text, at most 256 bytes (required); `body`: text, at most 65536 bytes, detached; `labels`: list of at most 20, each a text, at most 64 bytes; `number`: int, 1 to 1000000000 |  |
+| `manifest` | many, at most 64 live | `current` (initial), **`superseded`** | `integrator`: member (fixed, required); `authors`: member (fixed, required, list of at most 64); `goal`: fact of kind `file`, `revise` under `issue` (fixed); `plan`: fact of kind `seal-plan` under `issue` (fixed); `staging`: scope of kind `lane` (fixed); `under`: item of type `commitment` (fixed); `pin`: fact of kind `hold@2:check` under `issue` (fixed); `base`: commit (fixed, required); `integration`: commit (fixed); `tree`: tree (fixed); `path`: text, at most 1024 bytes (fixed); `digest`: digest (fixed); `size`: int, 0 to 65536 (fixed); `selected`: list of at most 32, each a record of `accepted` (fact of kind `accept-report` under `issue`), `report` (fact of kind `report` under `issue`) (fixed); `decisions`: list of at most 32, each a fact of kind `resolve-concern` under `issue` (fixed); `complete`: bool (fixed, required) | `hold@2` |
+| `review` | many, at most 256 live | `submitted` (initial), **`superseded`**, **`withdrawn`**, **`dismissed`** | `reviewer`: member (fixed, required); `manifest`: item of type `manifest` (fixed, required); `verdict`: enum: `approve`, `request-changes` (fixed, required); `extent`: text, at most 64 bytes (fixed); `body`: text, at most 65536 bytes, detached; `dismissal`: text, at most 4096 bytes |  |
+| `review-request` | many, at most 64 live | `open` (initial), **`met`**, **`withdrawn`** | `requested`: member (fixed, required); `requester`: member (fixed, required) |  |
+| `job` | many, at most 64 live | `requested` (initial), `passed`, `failed`, `errored`, `timed-out`, **`superseded`** | `asker`: member (fixed, required); `informed`: member (fixed, list of at most 2); `manifest`: item of type `manifest` (fixed, required); `decidedBy`: fact of kind `check`, `check-error`, `timed:job-deadline` under `change`; `name`: text, at most 128 bytes (fixed, required); `tree`: tree (fixed, required); `configuration`: digest (fixed, required); `deadline`: time (fixed, required) |  |
+| `result` | many, at most 512 live | **`recorded`** (initial) | `checker`: member (fixed, required); `job`: item of type `job` (fixed, required); `outcome`: enum: `passed`, `failed`, `error` (fixed, required); `reason`: text, at most 4096 bytes (fixed); `tree`: tree (fixed, required); `details`: digest (fixed) |  |
+| `thread` | many, at most 1000 live | `open` (initial), `resolved` | `opener`: member (fixed, required); `manifest`: item of type `manifest` (fixed, required); `path`: text, at most 4096 bytes (fixed, required); `line`: int, 1 to 1000000000 (fixed); `side`: enum: `base`, `change` (fixed) |  |
+| `comment` | many, at most 5000 live | `visible` (initial), `collapsed`, **`redacted`** | `author`: member (fixed, required); `mentioned`: member (fixed, list of at most 16); `replyTo`: item of type `comment`; `thread`: item of type `thread` (fixed); `body`: text, at most 65536 bytes, detached; `collapseReason`: text, at most 1024 bytes |  |
+| `link` | many, at most 32 live | `set` (initial), `removed` | `linker`: member (fixed, required); `issue`: scope of kind `lane` (fixed, required); `how`: enum: `keyword`, `manual` (fixed, required) |  |
+| `merge` | many, at most 16 live | `intended` (initial), `committed`, `unknown`, **`published`**, **`refused`**, **`aborted`** | `merger`: member (fixed, required); `manifest`: item of type `manifest` (fixed, required); `commit`: commit; `reason`: text, at most 1024 bytes; `withdrawal`: enum: `asked` |  |
+| `rules` | one | `current` (initial) | `source`: fact of kind `publish`, `rules-wanted` under `platform:rules`; `approvals`: int, 0 to 64 (required); `checks`: list of at most 32, each a record of `name` (text, at most 128 bytes), `configuration` (digest), `required` (bool), `checker` (member); `ownerMayReview`: bool (required); `revision`: int, 0 to 1000000000 (required); `extents`: list of at most 8, each a record of `name` (text, at most 64 bytes), `approvals` (int, 0 to 64), `approver` (text, at most 64 bytes), `checks` (list of at most 32, each a text, at most 128 bytes), `class` (enum: `content`, `deployment`, `authority`) |  |
+| `commitment` | many, at most 16 live | `offered` (initial), `accepted`, **`declined`**, **`withdrawn`**, **`cancelled`** | `requester`: member (fixed, required); `offeree`: member (fixed); `performer`: member (author); `successor`: member; `termsAt`: fact of kind `offer` under `change` (fixed, required); `terms`: text, at most 4096 bytes (fixed, required) |  |
+| `hold` | many, at most 16 live | `held` (initial), **`ended`** | `holder`: member (required); `under`: item of type `commitment` (fixed, required); `extent`: text, at most 1024 bytes; `ends`: time (required); `epoch`: int, 1 to 1000000 (required) |  |
+| `export` | many, at most 16 live | `authorized` (initial), **`done`**, **`refused`** | `from`: member (fixed, required); `to`: member (fixed, required); `authorizer`: member (fixed, required); `hold`: item of type `hold` (fixed, required) |  |
+| `finding` | many, at most 256 live | `open` (initial), **`resolved`**, **`irrelevant`** | `reporter`: member (fixed, required); `answeredBy`: member; `version`: fact of kind `propose-manifest` under `change` (fixed, required); `file`: text, at most 1024 bytes (fixed, required); `start`: int, 1 to 1000000000 (fixed, required); `end`: int, 1 to 1000000000 (fixed, required); `class`: text, at most 64 bytes (fixed, required); `severity`: enum: `low`, `medium`, `high`, `critical` (fixed, required); `confidence`: int, 0 to 100 (fixed, required); `scenario`: text, at most 4096 bytes (fixed, required); `source`: text, at most 128 bytes (fixed, required); `sourceVersion`: text, at most 128 bytes (fixed, required); `tree`: tree (fixed, required); `answer`: text, at most 4096 bytes |  |
+
+### Acts of `change-finding`: 23
+
+| Kind | Step | Grant | Other items | Fields | Settles | Guards, effects, sends, attention | Needs |
+|---|---|---|---|---|---|---|---|
+| `open` (genesis) | open on `proposal` | `change.open` | None | `opener`: member; `title`: text, at most 256 bytes; `body?`: text, at most 65536 bytes, detached; `destination`: scope of kind `destination`; `rules`: scope of kind `rules`; `number?`: int, 1 to 1000000000; `draft`: bool |  | 0, 7, 1, 0 |  |
+| `edit-own` | transition on `proposal` | `change.edit-own` | None | `title?`: text, at most 256 bytes; `body?`: text, at most 65536 bytes, detached; `labels?`: list of at most 20, each a text, at most 64 bytes |  | 2, 3, 1, 0 |  |
+| `ready-own` | transition on `proposal` | `change.edit-own` | None | None |  | 2, 1, 1, 0 |  |
+| `close-own` | transition on `proposal` | `change.edit-own` | None | None |  | 3, 1, 1, 0 |  |
+| `ask-rules` | transition on `proposal` | `change.propose` | None | None |  | 0, 0, 1, 0 |  |
+| `propose-manifest` | open on `manifest` | `change.propose` | `proposal`: `proposal` the one item of its type; `previous`: `manifest` by the field `previous`; `hold`: `hold` by the field `hold`; `commitment`: `commitment` through the slot `under` of `also.hold` | `previous?`: item of type `manifest`; `hold?`: item of type `hold`; `lane?`: scope of kind `lane`; `foreignHold?`: int, 0 to 1000000000; `instance`: text, at most 128 bytes; `goal?`: fact of kind `file`, `revise` under `issue`; `plan?`: fact of kind `seal-plan` under `issue`; `selected`: list of at most 32, each a record of `accepted` (fact of kind `accept-report` under `issue`), `report` (fact of kind `report` under `issue`); `decisions`: list of at most 32, each a fact of kind `resolve-concern` under `issue`; `base`: commit; `integration`: commit; `tree`: tree; `complete`: bool. Presented: `pin?`: fact of kind `hold@2:check` under `issue` |  | 24, 16, 2, 0 | `git-read@1`, `hold@2` |
+| `propose-file` | open on `manifest` | `change.propose` | `proposal`: `proposal` the one item of its type | `base`: commit; `path`: text, at most 1024 bytes; `digest`: digest; `size`: int, 0 to 65536; `content`: text, at most 65536 bytes |  | 4, 7, 0, 0 |  |
+| `request-review-own` | open on `review-request` | `change.edit-own` | `proposal`: `proposal` the one item of its type | `requested`: member |  | 2, 2, 0, 1 |  |
+| `review-verdict` | open on `review` | `change.review` | `manifest`: `manifest` by the field `manifest`; `earlier`: `review` by the field `earlier`; `request`: `review-request` by the field `request`; `proposal`: `proposal` the one item of its type | `manifest`: item of type `manifest`; `earlier?`: item of type `review`; `request?`: item of type `review-request`; `verdict`: enum: `approve`, `request-changes`; `body?`: text, at most 65536 bytes, detached; `extent?`: text, at most 64 bytes |  | 9, 7, 0, 1 |  |
+| `request-check` | open on `job` | `change.propose` | `manifest`: `manifest` by the field `manifest`; `proposal`: `proposal` the one item of its type; `earlier`: `job` by the field `earlier`; `rules`: `rules` the one item of its type | `manifest`: item of type `manifest`; `earlier?`: item of type `job`; `name`: text, at most 128 bytes; `configuration`: digest |  | 7, 8, 0, 0 |  |
+| `check` | open on `result` | `change.check` | `job`: `job` by the field `job`; `rules`: `rules` the one item of its type; `proposal`: `proposal` the one item of its type | `job`: item of type `job`; `tree`: tree; `configuration`: digest; `outcome`: enum: `passed`, `failed`; `details?`: digest | `also.job` in `requested`, `timed-out` | 4, 8, 0, 1 |  |
+| `comment` | open on `comment` | `change.comment` | None | `body`: text, at most 65536 bytes, detached; `replyTo?`: item of type `comment`; `thread?`: item of type `thread`; `mentions?`: list of at most 16, each a member |  | 0, 5, 0, 1 |  |
+| `link-own` | open on `link` | `change.edit-own` | `proposal`: `proposal` the one item of its type | `issue`: scope of kind `lane`; `how`: enum: `keyword`, `manual` |  | 4, 3, 1, 0 |  |
+| `merge` | open on `merge` | `change.merge` | `proposal`: `proposal` the one item of its type; `manifest`: `manifest` by the field `manifest`; `rules`: `rules` the one item of its type | `manifest`: item of type `manifest`; `reports`: list of at most 32, each a fact of kind `report` under `issue` |  | 11, 2, 1, 0 |  |
+| `cancel-merge` | transition on `merge` | `change.merge` | `proposal`: `proposal` the one item of its type | None |  | 2, 1, 1, 0 |  |
+| `offer` | open on `commitment` | `change.request` | `proposal`: `proposal` the one item of its type | `offeree?`: member; `terms`: text, at most 4096 bytes |  | 1, 4, 0, 1 |  |
+| `accept` | transition on `commitment` | `change.promise` | None | `terms`: fact of kind `offer` under `change` |  | 3, 2, 0, 1 |  |
+| `take-hold` | open on `hold` | `change.work` | `commitment`: `commitment` by the field `commitment`; `proposal`: `proposal` the one item of its type | `commitment`: item of type `commitment`; `extent?`: text, at most 1024 bytes |  | 4, 4, 0, 0 |  |
+| `release-hold` | transition on `hold` | `change.work` | None | None |  | 2, 1, 0, 0 |  |
+| `file-finding` | open on `finding` | `change.check` | `proposal`: `proposal` the one item of its type; `rules`: `rules` the one item of its type | `version`: fact of kind `propose-manifest` under `change`; `file`: text, at most 1024 bytes; `start`: int, 1 to 1000000000; `end`: int, 1 to 1000000000; `class`: text, at most 64 bytes; `severity`: enum: `low`, `medium`, `high`, `critical`; `confidence`: int, 0 to 100; `scenario`: text, at most 4096 bytes; `source`: text, at most 128 bytes; `sourceVersion`: text, at most 128 bytes; `tree`: tree |  | 6, 12, 0, 0 |  |
+| `resolve-finding-own` | transition on `finding` | `change.check` | None | `answer`: text, at most 4096 bytes |  | 2, 3, 0, 0 |  |
+| `resolve-finding-any` | transition on `finding` | `change.dismiss` | `proposal`: `proposal` the one item of its type; `manifest`: `manifest` through the slot `version` of `on` | `answer`: text, at most 4096 bytes |  | 3, 3, 0, 0 |  |
+| `mark-finding-irrelevant` | transition on `finding` | `change.dismiss` | `proposal`: `proposal` the one item of its type; `manifest`: `manifest` through the slot `version` of `on` | `answer`: text, at most 4096 bytes |  | 3, 3, 0, 0 |  |
+
+### Handlers of `change-finding`: 2
+
+| Name | Class and message | From | Opens | Copies | Other items | Fields | Settles | Guards, effects, sends, attention | Needs |
+|---|---|---|---|---|---|---|---|---|---|
+| `rules` | relate `rules` | `rules` under `platform:rules` | `rules` | 1 | `proposal`: `proposal` the one item of its type | `approvals`: int, 0 to 64; `checks?`: list of at most 32, each a record of `name` (text, at most 128 bytes), `configuration` (digest), `required` (bool), `checker` (member); `ownerMayReview`: bool; `labels?`: list of at most 32, each a text, at most 64 bytes; `singleControllerException?`: bool; `extents?`: list of at most 8, each a record of `name` (text, at most 64 bytes), `approvals` (int, 0 to 64), `approver` (text, at most 64 bytes), `checks` (list of at most 32, each a text, at most 128 bytes), `class` (enum: `content`, `deployment`, `authority`) |  | 1, 6, 0, 0 |  |
+| `publication` | relate `publication` | `destination` under `platform:destination` | Nothing | 16 | `merge`: `merge` by the field `operation`; `proposal`: `proposal` the one item of its type; `manifest`: `manifest` through the slot `manifest` of `also.merge` | `operation`: fact of kind `merge` under `change`; `outcome`: enum: `committed`, `unknown`, `published`, `refused`, `aborted`; `commit?`: commit; `reason?`: text, at most 1024 bytes; `rules?`: int, 0 to 1000000000 | `also.merge` in `intended`, `committed`, `unknown` | 2, 9, 3, 0 | `hold@2` |
+
+### Timed rules of `change-finding`: 2
+
+| Name | On | In states | Deadline slot | Effects, attention |
+|---|---|---|---|---|
+| `job-deadline` | `job` | `requested` | `deadline` | 2, 1 |
 | `hold-end` | `hold` | `held` | `ends` | 1, 0 |
