@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a24ef01e87302a799c9a957ba2a34923470d13d7","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/store.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a28211a9d6a82ec85da79cc4f049d1905077df1c","text":"Merge retired a covered predecessor; the successor is at examples/repo-in-ai/vitest.config.ts."}
