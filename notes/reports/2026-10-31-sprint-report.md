@@ -7,8 +7,9 @@ heads landed on `main`. One scratch room on a deployed Worker was
 created and seeded, worked in a provisioned fork, had an agent's review
 refused, took the owner's review, merged, published, and matched a fresh
 clone. The script that does this has not landed, so a person cannot run
-it from `main` yet. The J4 live witness reached the end of its setup phase on the real provider. The three room
-Workers were deployed once. The cost-of-change review is below.
+it from `main` yet. The J4 live witness reached the end of its setup
+phase on the real provider. The three room Workers were deployed once.
+The cost-of-change review is below.
 
 ## Story: the first complete repo-in-AI room
 
