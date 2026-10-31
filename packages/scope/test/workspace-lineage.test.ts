@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import type { Entry, FactRef, ScopeId, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, factRefOf, intentDigest, newIncarnation, platformName, scopeIdOf, seedDigest, signIntent, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, entryHash, factRefOf, intentDigest, newIncarnation, platformName, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { MemoryState } from "@generalbusiness/dap-derive";
 import { keys, variant } from "@generalbusiness/dap-derive/testing";
 import type { OutsideGiven } from "../src/given.ts";
@@ -10,13 +10,14 @@ import { create } from "./fixtures-native.ts";
 import type { NativeBirth } from "../src/native-birth.ts";
 import { workspaceRepository, type WorkspaceSources } from "../src/workspace-lineage.ts";
 import { staged } from "./hosted.ts";
+import { workspaceAncestors } from "./support/workspace-ancestors.ts";
 import type { Diagnosis } from "../src/diag.ts";
 import type { MetricPoint } from "../src/metrics.ts";
 import { measured, operationContext } from "../src/operational.ts";
 
-// Sealed-entry and trusted native-reader STAND-INS. These entries did not pass
-// a native creation judge. This witnesses adapter lineage parsing and bounds,
-// not independent proof authentication, publication, or a real Git host.
+// Register, Directory and Destination entries pass their actual creation and
+// outcome judges in memory. Lane creation and trusted proof readers remain
+// STAND-INS. This proves parsing, not independent proof authentication or Git.
 function fixture(laneIncarnation = 4) {
   const definition = variant(staged.declared, draft => { draft.capabilities.find((cap: { name: string }) => cap.name === "hold").version = 2; });
   const time = "2026-10-30T10:00:00Z", hash = digestBytes(utf8("fixture"));
@@ -25,24 +26,15 @@ function fixture(laneIncarnation = 4) {
   const sealed = (at: ScopeRef, seq: number, input: Entry["input"], effects: Entry["effects"] = [], sends: Entry["sends"] = []): Entry => ({ v: 1, at, seq, prev: seq === 0 ? null : hash, time, clamped: false, epoch: 0, input, uses: [], prepared: [], effects, sends });
   const genesis = (s: Seed, at: ScopeRef, source: FactRef | null = null, n: number | null = null, message: Extract<Entry["input"], { type: "genesis" }>["message"] = null, sends: Entry["sends"] = []): Entry => sealed(at, 0, { type: "genesis", seed: s, inc: at.inc, kind: "establish", founding: null, source, n, message, decision: "applied" }, [], sends);
   const signed = (at: ScopeRef, kind: string, fields: SignedIntent["intent"]["fields"]): SignedIntent => signIntent({ v: 1, to: at, actor: keys.rita.key, kind, on: null, fields, expected: {}, idempotencyKey: kind, notAfter: "2026-10-30T10:10:00Z" }, keys.rita.secret);
-  const registerSeed = seed("register", "platform:register@17", null), register = ref(registerSeed, 1);
-  const found = signed(register, "found", { founderHandle: "@rita", branch: "main" });
-  const directorySeed = seed("directory", "platform:directory@16", register, intentDigest(found.intent)), directory = ref(directorySeed, 2);
-  const repository = { host: "artifacts", namespace: "actual-room-space", name: "room-1", id: "room-1" };
-  const dirMessage = { class: "request", type: "create", body: { fields: { repository, claim: { self: true } } } } as const;
-  const claim = sealed(register, 1, { type: "act", signed: found, authority: [], presented: {} }, [{ effect: "value", item: 1, slot: "seed", value: seedDigest(directorySeed) }], [{ n: 0, to: directorySeed, message: dirMessage }]);
-  const claimFact = factRefOf(claim);
-  const destinationSeed = seed("destination", "platform:destination@12", directory, hash, 2), destination = ref(destinationSeed, 3);
-  const destMessage = { class: "request", type: "create", body: { fields: { repository, branch: "main", claim: claimFact, directory } } } as const;
-  const dir = genesis(directorySeed, directory, claimFact, 0, dirMessage, [{ n: 2, to: destinationSeed, message: destMessage }]);
-  const dest = genesis(destinationSeed, destination, factRefOf(dir), 2, destMessage);
+  const judged = workspaceAncestors(time, "actual-room-space", "workspace lineage fixture");
+  const { register, directory, destination, repository } = judged;
   const open = signed(directory, "open-issue", { definition: definition.digest });
   const laneSeed = seed("lane", definition.digest, directory, intentDigest(open.intent)), lane = ref(laneSeed, laneIncarnation);
   const laneMessage = { class: "request", type: "create", body: { fields: {}, directory } } as const;
   const creation = sealed(directory, 5, { type: "act", signed: open, authority: [], presented: {} }, [], [{ n: 0, to: laneSeed, message: laneMessage }]);
   const born = genesis(laneSeed, lane, factRefOf(creation), 0, laneMessage);
-  const entries = [genesis(registerSeed, register), claim, dir, dest, creation];
-  const bodies = new Map(entries.map(entry => [entryHash(entry), { fact: factRefOf(entry), bytes: canonicalize(entry) }]));
+  const entries = [...judged.entries, creation];
+  const proof = (entry: Entry) => ({ fact: factRefOf(entry), bytes: canonicalize(entry) });
   let calls = 0;
   const sources: WorkspaceSources = {
     births: { async read(name, kind) {
@@ -50,21 +42,29 @@ function fixture(laneIncarnation = 4) {
       const entry = entries.find(entry => entry.at.scope === name && entry.at.kind === kind && entry.seq === 0);
       if (!entry || entry.input.type !== "genesis") return null;
       const named = entry.input.seed.definition as `platform:${string}@${number}`;
-      return { v: 1, proof: bodies.get(entryHash(entry))!, named, declarationName: platformName(named as never), native: true } as NativeBirth;
+      return { v: 1, proof: proof(entry), named, declarationName: platformName(named as never), native: true } as NativeBirth;
     } },
-    proofs: { async read(fact) { calls++; return bodies.get(fact.hash) ?? null; } },
+    proofs: { async read(fact) { calls++; const entry = entries.find(entry => entryHash(entry) === fact.hash); return entry ? proof(entry) : null; } },
   };
   const state = new MemoryState();
   state.setScope({ held: [], at: lane, status: "active", creator: directory, head: { seq: 0, hash: entryHash(born) }, time, genesis: { hash: entryHash(born), source: born.input.type === "genesis" ? born.input.source : null, n: 0 } });
   const given: OutsideGiven = { definition: () => definition, state, scope: () => state.scope(), own: seq => seq === 0 ? { entry: born, hash: entryHash(born) } : null,
     genesis: () => born.input.type === "genesis" ? born.input : null, retained: () => null, clock: { read: () => time }, random: { bytes: n => new Uint8Array(n) } };
-  return { state, given, sources, entries, destination, repository, register, calls: () => calls, born };
+  return { state, given, sources, entries, destination, repository, register, calls: () => calls, born, judged };
 }
 
-test("workspace lineage binds five immutable reads to the actual room namespace and refuses a wrong register or borrowed destination", async () => {
+test("workspace lineage binds six immutable reads to the actual room namespace and refuses a wrong register or borrowed destination", async () => {
   const f = fixture();
+  const directory = f.entries.find(entry => entry.at.kind === "directory" && entry.seq === 0)!;
+  const { claim, claimFact, selected } = f.judged;
+  expect(claim.input).toMatchObject({ type: "act", signed: { intent: { kind: "found" } } });
+  expect(selected.input).toMatchObject({ type: "outcome", owner: "platform:register@17", kind: "create-repository", result: "confirmed", evidence: { basis: "own-answer" } });
+  expect(selected.effects).toContainEqual(expect.objectContaining({ effect: "attempt", selected: true, result: "confirmed" }));
+  expect(directory.input).toMatchObject({ type: "genesis", source: factRefOf(selected), message: { body: { fields: { claim: claimFact } } } });
+  expect(directory.uses.map(use => use.fact)).toEqual([factRefOf(selected), claimFact]);
+  expect(selected.seq).toBeGreaterThan(claim.seq);
   expect(await workspaceRepository(f.given, f.sources, f.register.scope, "artifacts", "actual-room-space")).toEqual({ destination: f.destination, repository: f.repository, branch: "main" });
-  expect(f.calls()).toBe(5);
+  expect(f.calls()).toBe(6);
   expect(await workspaceRepository(f.given, f.sources, f.register.scope, "artifacts", "label-from-an-operator")).toBeNull();
   const other = `sc_${"z".repeat(52)}` as ScopeId;
   expect(await workspaceRepository(f.given, f.sources, other, "artifacts", "actual-room-space")).toBeNull();
@@ -72,6 +72,41 @@ test("workspace lineage binds five immutable reads to the actual room namespace 
   if (destination.input.type !== "genesis") return expect.fail("fixture destination genesis required");
   destination.input.source = { ...destination.input.source!, seq: 9 };
   expect(await workspaceRepository(f.given, f.sources, f.register.scope, "artifacts", "actual-room-space")).toBeNull();
+});
+
+// Adversarial replies below recompute their fact hashes and canonical proof
+// bytes. Their forged sends are not new judgments or authenticated ancestors.
+test("workspace lineage refuses a forged opening claim and an unselected repository outcome", async () => {
+  const forged = fixture();
+  const directory = forged.entries.find(entry => entry.at.kind === "directory" && entry.seq === 0)!;
+  if (directory.input.type !== "genesis" || !directory.input.message || directory.input.message.class !== "request") return expect.fail("actual Directory genesis required");
+  const selected = forged.judged.selected;
+  // Borrow a real Register fact at a different position from the operation's
+  // opening. Keep the source send and message equal so the claim guard decides.
+  const message = structuredClone(directory.input.message);
+  const fields = message.body as { fields: { claim: FactRef } };
+  fields.fields.claim = factRefOf(forged.judged.unselected);
+  const ordinal = directory.input.n;
+  const send = selected.sends.find(send => send.n === ordinal)!;
+  selected.sends = selected.sends.map(row => row === send ? { ...row, message } : row);
+  directory.input.message = message;
+  directory.input.source = factRefOf(selected);
+  expect(await workspaceRepository(forged.given, forged.sources, forged.register.scope, "artifacts", "actual-room-space")).toBeNull();
+  expect(forged.calls(), "The forged claim reaches the operation-opening guard after four immutable reads").toBe(4);
+
+  const late = fixture();
+  const born = late.entries.find(entry => entry.at.kind === "directory" && entry.seq === 0)!;
+  if (born.input.type !== "genesis") return expect.fail("actual Directory genesis required");
+  const unselected = late.judged.unselected;
+  expect(unselected.input).toMatchObject({ type: "outcome", result: "confirmed", evidence: { basis: "own-answer" } });
+  expect(unselected.effects).toContainEqual(expect.objectContaining({ effect: "attempt", selected: false, result: "confirmed" }));
+  expect(unselected.sends).toEqual([]);
+  // A malicious read port borrows the selected outcome's send. Hash/send checks
+  // alone then hold; its actual unselected attempt effect still forbids use.
+  unselected.sends = structuredClone(late.judged.selected.sends);
+  born.input.source = factRefOf(unselected);
+  expect(await workspaceRepository(late.given, late.sources, late.register.scope, "artifacts", "actual-room-space")).toBeNull();
+  expect(late.calls(), "The unselected outcome reaches selection checking after four immutable reads").toBe(4);
 });
 
 test("workspace lineage refuses incomplete proof senders and child concerns without a legacy lookup or provider call", async () => {

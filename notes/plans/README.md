@@ -6,7 +6,7 @@ status line is the first line after its title (see
 
 ## Current
 
-- [034: Head outcome recovery after two stopped S1 attempts](034-2026-10-31-head-outcome-recovery.md): proposed; design only.
+- [034: Head outcome recovery after two stopped S1 attempts](034-2026-10-31-head-outcome-recovery.md): recovery reader not scheduled; diagnosis and lineage repair first. Its premise depends on the next attempt.
 - [Plan 029: a fork for each hold](029-2026-10-11-artifacts-forks.md): current.
 - [One MCP service for every dap application](031-2026-10-12-generic-mcp-service.md): current.
 - [032: The journey as acceptance target](032-2026-10-17-journey-as-acceptance-target.md): current.

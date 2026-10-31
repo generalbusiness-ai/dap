@@ -1,6 +1,6 @@
 # Head outcome recovery after two stopped S1 attempts
 
-Status: design only. Implementation and execution require separate requests.
+Status: recovery reader NOT SCHEDULED. Its premise depends on what the next attempt shows. Ruling `90ee0518ff0fdbad8cb8d1abe68ea1078a771125` puts head diagnosis and the real Register lineage repair first, in one head with one gate.
 
 Both S1 scratch rooms remain stopped. The retained journals each show one head attempt with an unknown outcome. Neither public record identifies a provider failure. A later successful fold rules out the earlier observer wrapper failure as an explanation for the persisted unknown, but it does not locate the host failure.
 
