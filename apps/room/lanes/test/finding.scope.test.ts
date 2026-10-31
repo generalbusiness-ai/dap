@@ -2,52 +2,12 @@ import { expect, test } from "vitest";
 import type { FactRef, FieldValue } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, keyIdOfSecret, signIntent, signInvitationProof } from "@generalbusiness/dap-bytes";
 import type { AskedOf, Kind } from "@generalbusiness/dap-client";
-import { snapshotInput, stagedRefName, valueDigest, type AncestryCheck } from "@generalbusiness/dap-derive";
-import type { EffectAnswer, EffectRequest } from "@generalbusiness/dap-scope";
+import { valueDigest } from "@generalbusiness/dap-derive";
 import { CONFIGURATION_DOMAIN, firstExtents } from "@generalbusiness/dap-platform";
 import { changeFinding } from "../src/index.ts";
-import { Host, answered } from "./support/graph.ts";
+import { answered } from "./support/graph.ts";
+import { WorkspaceStandIn } from "./support/workspace.ts";
 import { checkerKey, oid, publicationOf, rita, room, soon, una, vic, type Room } from "./support/room.ts";
-
-/** STAND-IN: no provider, repository, credential or Git walk exists here. Native operations carry these scripted replies through the real ledger. */
-class WorkspaceStandIn extends Host {
-  constructor(readonly head: string) { super(); }
-  override accepts(owner: string, kind: string): boolean {
-    return owner === "hold@2" && ["head", "fork", "mint", "revoke", "stage", "check"].includes(kind);
-  }
-  override send(request: EffectRequest): EffectAnswer | null {
-    this.asked.push(request.kind);
-    const records = request.origin.entry.effects.filter(effect => effect.effect === "record");
-    const answer = (body: FieldValue, basis: "own-answer" | "read" = "own-answer"): EffectAnswer => ({ result: "confirmed", evidence: { basis, body } });
-    if (request.kind === "head") return answer({ commit: this.head });
-    if (request.kind === "fork") {
-      const fork = records.find(record => record.kind === "fork" && record.values["operation"] === request.operation);
-      if (!fork) return null;
-      const name = `scripted-finding-${fork.key[0]}`;
-      return answer({ id: name, name });
-    }
-    if (request.kind === "mint") return answer({ token: `scripted-token-${request.operation}`, ends: soon(600) });
-    if (request.kind === "revoke") return answer({});
-    if (request.kind === "stage") {
-      const root = records.find(record => record.kind === "root" && record.values["operation"] === request.operation);
-      if (!root) return null;
-      const commit = root.values["commit"] as string;
-      const ref = stagedRefName(request.scope, commit, root.key[0] as number);
-      this.refs.push({ ref, target: commit });
-      return answer({ ref, value: commit }, "read");
-    }
-    const pin = records.find(record => record.kind === "pin" && record.values["check"] === request.operation);
-    const snapshot = snapshotInput(this.refs);
-    if (!pin || !snapshot) return null;
-    const record: AncestryCheck = {
-      commit: pin.values["commit"] as string,
-      root: { number: pin.values["root"] as number, state: "live" },
-      head: this.head, snapshot: { digest: snapshot.digest, count: this.refs.length },
-      start: { foreign: null }, stops: [], F: [], visited: 1,
-    };
-    return { ...answer({ record } as unknown as FieldValue), retain: [snapshot] };
-  }
-}
 
 const definition = changeFinding;
 type Definition = typeof definition;
@@ -85,7 +45,7 @@ async function sources() {
 
   /** `who` integrates on the hold. `opener` opens the change, and is its author. */
   const lane = async (who: typeof vic, handle: string, title: string, opener: typeof vic = who) => {
-    const host = new WorkspaceStandIn(r.firstHead);
+    const host = new WorkspaceStandIn(r.firstHead, () => soon(600));
     const C = await r.lane(opener, "open-pr", definition, digest, { title, draft: false }, undefined, undefined, host);
     // Empty caller grants force the actual Platform authority to read Membership.
     const ask = async <K extends Kind<Definition>>(signer: typeof vic, kind: K, asked: AskedOf<Definition, K>): Promise<string> => {
