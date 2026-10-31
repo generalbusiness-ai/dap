@@ -1,15 +1,20 @@
 {
   "version": 1,
-  "state": "draft-formal-review-and-gate-reconciliation-pending",
+  "state": "draft-formal-review-pending-base-reconciled",
   "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-s1-head-outcome-recovery-design",
-  "qualification": "Recovery design documentation only. No recovery implementation, new test/gate pass, documentation-only gate exception, live/provider action, whole-S1 landing or acceptance. Historical captures keep their own checkpoints/outcomes.",
+  "qualification": "Recovery design documentation only. Source and tests remain unchanged from Gate7; the documentation-only follow-up exception applies. No recovery implementation, new test/gate result, live/provider action, whole-S1 landing or acceptance. Historical captures keep their own checkpoints/outcomes.",
   "request": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f0bdea6f41a90f6f9bbca459a4a27c270485460e",
   "ruling": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f15b9b44c018b1e345b3efe558fcee29d26bffb0",
   "promise": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bdf11579925ae3f045796a3bfab3a8b045b25c2e",
   "base": {
-    "head": "c8c7b63172175576116f86ed4f7facfcdd749ec2",
-    "tree": "540f57099bc8e5835b4f1c9423b387b65a1a2edf",
-    "gateReconciliation": "Pending: this base differs from BO1 gated d08 in S3 production/tests. No documentation-only gate exception claimed."
+    "head": "0f0a949eb5bd59b13691947fc695073b2c304759",
+    "tree": "adcc2fe3a6b0bb41522938703d797d4b60123678",
+    "historicalAdoption": {
+      "head": "c8c7b63172175576116f86ed4f7facfcdd749ec2",
+      "tree": "540f57099bc8e5835b4f1c9423b387b65a1a2edf",
+      "qualification": "Initial adoption base differed from BO1 gated d08 in S3 production/tests; this historical gap is now reconciled."
+    },
+    "gateReconciliation": "Complete: only the two final DX documents separate Gate7 from landed Main; the reconciled branch adds only four S1 documents."
   },
   "documents": {
     "design": {
@@ -21,8 +26,8 @@
     },
     "note": {
       "path": "notes/implementation/2026-10-31-head-outcome-recovery-design.md",
-      "bytes": 3194,
-      "sha256": "c2d48120dd76d548a839fed725fb41bb6a3f0e0fec6f5b36b0e07a41ad54116b"
+      "bytes": 3765,
+      "sha256": "ec5504db2a42586d032b487e4c799327ac86ada10edd5ec62c1b0a0186e6fce4"
     }
   },
   "retained": {
@@ -566,5 +571,34 @@
       "bytes": 10848,
       "sha256": "513ed9e17f59fd8dd8891b03799006a47590cf1f10e34161866b3ac54542faa4"
     }
-  ]
+  ],
+  "reconciliation": {
+    "gate": {
+      "head": "aaf902f276252d4c243e5e74503694bc9d9893fc",
+      "tree": "d44e7fd3f553b963e28257bd936a2e88a85b4cec",
+      "outcome": "passed",
+      "qualification": "Existing Gate7 result; no new gate run."
+    },
+    "design": {
+      "head": "3fc046f30e90f137f7f0730a5af1b75bb20af340",
+      "tree": "887c6abf08f0697d2ba82d677b08574b2ae73882",
+      "qualification": "Reconciled checkpoint before this note/manifest-only proposal."
+    },
+    "gateToMainPaths": [
+      "notes/implementation/2026-10-30-dxa2-minimum-head.md",
+      "notes/implementation/evidence/2026-10-30-dxa2-minimum-head.manifest.json"
+    ],
+    "mainToDesignPaths": [
+      "notes/implementation/2026-10-31-head-outcome-recovery-design.md",
+      "notes/implementation/evidence/2026-10-31-head-outcome-recovery-design.manifest.json",
+      "notes/plans/034-2026-10-31-head-outcome-recovery.md",
+      "notes/plans/README.md"
+    ],
+    "followUpRule": {
+      "path": "docs/testing.md",
+      "section": "Follow-up after a gate",
+      "text": "Do not run the gate again for a commit that changes only documents; say that the source and tests are unchanged, and give the two tree hashes."
+    },
+    "sourceAndTestsUnchanged": true
+  }
 }
