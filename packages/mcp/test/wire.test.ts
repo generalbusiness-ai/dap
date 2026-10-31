@@ -373,7 +373,7 @@ describe("both MCP wire revisions, each by its own rules", () => {
     let release!: () => void;
     let subscribed = 0;
     const deferred = new Promise<void>((resolve) => { release = resolve; });
-    const fake = { snapshot: async () => { await deferred; return { generation: "sha256:x" }; }, subscribe: () => { subscribed++; return () => {}; } } as unknown as McpService;
+    const fake = { catalogueGeneration: async () => { await deferred; return "sha256:x"; }, subscribe: () => { subscribed++; return () => {}; } } as unknown as McpService;
     const wire = new Wire(fake);
     const sent: unknown[] = [];
     const owner = {};
