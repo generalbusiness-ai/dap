@@ -118,9 +118,10 @@ node examples/repo-in-ai/setup.mjs --input /absolute/path/to/s1-input.json --pha
 A new member's inbox stays provisional until its creator's confirmation
 arrives, and the invitation engine accepts only an active inbox. An enrollment
 that reads the inbox too early rechecks it up to 10 times, one second apart.
-A recheck signs and submits no act. It may open a read session, and it may
-record a settled stage in the owner's private records. The receipt's
-`inboxRechecks` holds the count, also when the enrollment completes.
+A recheck signs and submits no act. It uses the existing read session, or
+opens one if that session has ended. It may record a settled stage in the
+owner's private records. The receipt's `inboxRechecks` holds the count, also
+when the enrollment completes.
 
 If the inbox still fails after the last recheck, the enrollment stops at stage
 `invitation-result`. Its `cause` is one of these fixed words:

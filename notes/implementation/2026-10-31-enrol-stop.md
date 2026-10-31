@@ -8,7 +8,7 @@ Request `a34e29784853fb30949db3f2d01f5aa9b46f491b` and promise `7b0de57d099ed985
 
 An S1 enrollment that reads a new inbox too early now rechecks it, and a stop names its condition in the receipt.
 
-- **Recheck.** `enrollment` in `examples/repo-in-ai/identities.ts` runs the invitation engine again in check mode, up to 10 times, 1 second apart. A recheck signs and submits no act. It may open a read session, and it may record a settled stage in the owner's private records. It runs only for the two inbox words below, and only in `new` and `continue` modes.
+- **Recheck.** `enrollment` in `examples/repo-in-ai/identities.ts` runs the invitation engine again in check mode, up to 10 times, 1 second apart. A recheck signs and submits no act. It uses the existing read session, or opens one if that session has ended. It may record a settled stage in the owner's private records. It runs only for the two inbox words below, and only in `new` and `continue` modes.
 - **Fixed words.** `invitationCause` in `examples/repo-in-ai/diagnostics.ts` maps each engine reason to a word at stage `invitation-result`: `inbox-not-confirmed`, `inbox-not-readable`, `opening-unresolved`, `invitation-act-unresolved`, `invitation-unverified`, `directory-unverified`, `binding-unverified`, `successor-pending` or `unknown`. No reason text reaches the receipt.
 - **Receipt.** A new field, `inboxRechecks`, holds the count, also when the enrollment completes.
 - **Runbook.** `examples/repo-in-ai/runbook.md` lists the words and the recovery.
