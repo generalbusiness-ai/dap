@@ -79,6 +79,10 @@ describe("H8, the HTTP layer, through the loopback server", () => {
     await mismatch({ "mcp-protocol-version": MODERN, "mcp-method": "tools/call" }, modern("tools/list"), "Mcp-Method differs");
     await mismatch(modernHeaders("tools/call"), modern("tools/call", { name: "room", arguments: {} }), "missing Mcp-Name");
     await mismatch(modernHeaders("tools/call", "inspect"), modern("tools/call", { name: "room", arguments: {} }), "Mcp-Name differs");
+    await mismatch(modernHeaders("prompts/get"), modern("prompts/get", { name: "work-on", arguments: { goal: "TEST" } }), "missing prompt Mcp-Name");
+    await mismatch(modernHeaders("prompts/get", "other"), modern("prompts/get", { name: "work-on", arguments: { goal: "TEST" } }), "prompt Mcp-Name differs");
+    const prompted = await send("POST", modernHeaders("prompts/get", "work-on"), modern("prompts/get", { name: "work-on", arguments: { goal: "TEST" } }));
+    expect([prompted.status, prompted.json().error, (prompted.json().result as Record<string, unknown>)["resultType"]]).toEqual([200, undefined, "complete"]);
     await mismatch(modernHeaders("tools/call", "=?base64?###?="), modern("tools/call", { name: "room", arguments: {} }), "a sentinel that is not base64");
     await mismatch(modernHeaders("tools/call", `=?base64?${Buffer.from([0xff, 0xfe]).toString("base64")}?=`), modern("tools/call", { name: "��", arguments: {} }), "a sentinel of invalid UTF-8");
     const unsupported = await send("POST", { "mcp-protocol-version": "2025-03-26", "mcp-method": "tools/list" }, modern("tools/list"));

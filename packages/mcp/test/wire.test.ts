@@ -62,6 +62,25 @@ function modernHeaders(body: unknown): Record<string, string> {
 const until = async (check: () => boolean, ms = 3000) => { for (let t = 0; t < ms && !check(); t += 25) await new Promise((r) => setTimeout(r, 25)); return check(); };
 
 describe("both MCP wire revisions, each by its own rules", () => {
+  for (const revision of ["legacy", "modern"] as const) test(`${revision} prompt discovery and work-on use the real client without a scope request`, async () => {
+    const s = await http();
+    const c = client(revision);
+    try {
+      await c.connect(new StreamableHTTPClientTransport(new URL(s.url), bearer(s)));
+      const before = standIn.requests.length;
+      const list = await c.listPrompts();
+      expect(list.prompts).toMatchObject([{ name: "work-on", arguments: [{ name: "goal", required: true }] }]);
+      const prompt = await c.getPrompt({ name: "work-on", arguments: { goal: "TEST work on the recorded issue" } });
+      expect(prompt.messages).toHaveLength(1);
+      expect(prompt.messages[0]).toMatchObject({ role: "user", content: { type: "text" } });
+      const text = (prompt.messages[0]!.content as { text: string }).text;
+      for (const required of ["TEST work on the recorded issue", "same member key", "termsAt", "settle", "block only your own", "at most 60"]) expect(text).toContain(required);
+      await expect(c.getPrompt({ name: "work-on", arguments: { goal: "é".repeat(2049) } })).rejects.toThrow(/4096 UTF-8 bytes/);
+      await expect(c.getPrompt({ name: "missing", arguments: { goal: "TEST" } })).rejects.toThrow(/work-on/);
+      expect(standIn.requests.length).toBe(before);
+    } finally { await c.close(); await s.close(); }
+  });
+
   // Invariant: a 2025-11-25 client initializes, gets a session, opens the GET stream, is told of a list change there, and after
   // DELETE or with an unknown session is answered 404 and initializes again; its results are the server's structured content.
   test("2025-11-25 over loopback HTTP: session, stream, list change, DELETE and 404", async () => {
@@ -175,6 +194,8 @@ describe("both MCP wire revisions, each by its own rules", () => {
     for (const pin of ["legacy", "modern"] as const) {
       const { c, transport, observed } = spawn(pin);
       await c.connect(transport);
+      expect((await c.listPrompts()).prompts.map(prompt => prompt.name)).toEqual(["work-on"]);
+      expect((await c.getPrompt({ name: "work-on", arguments: { goal: "TEST same-key resume" } })).messages[0]).toMatchObject({ role: "user", content: { type: "text" } });
       const names = (await c.listTools()).tools.map((t) => t.name);
       expect(names).toContain("member.role");
       expect(names).not.toContain("act");
