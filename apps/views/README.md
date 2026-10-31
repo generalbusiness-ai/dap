@@ -124,6 +124,12 @@ signed revisions.
 only for the extent it names, so an approval for a change to the rules or to
 deployment files needs the ordinary `review-verdict` act.
 
+**View diff** signs one `read-token` act and spends its credential on one
+read of at most 40 KiB of text. Over a bound, the diff says "truncated". A
+version that holds one file has no integration commit, so its card offers no
+diff. A commit the destination's repository does not hold gives no diff, and
+the card says so. An unpublished workspace commit can fall in this case.
+
 ### Open findings on the finding profile
 
 A required source's open finding holds the merge, and the card and `needs_you`
@@ -201,9 +207,3 @@ needs no `at`. `change.resolve-finding-own` never needs `at`.
 - `needs_you` returns at most 50 rows, and it counts the rest in `omittedRows`.
 - A range belongs to the version the finding names. A later version can move
   those lines.
-
-**View diff** signs one `read-token` act and spends its credential on one
-read of at most 40 KiB of text. Over a bound, the diff says "truncated". A
-version that holds one file has no integration commit, so its card offers no
-diff. A commit the destination's repository does not hold gives no diff, and
-the card says so. An unpublished workspace commit can fall in this case.
