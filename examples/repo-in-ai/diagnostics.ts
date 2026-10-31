@@ -13,13 +13,18 @@ type NativeReadReason = SessionRefusal | "unavailable" | "forbidden";
 const readReasons: Record<NativeReadReason, true> = { ...sessionReasons, unavailable: true, forbidden: true };
 const isReadReason = (reason: unknown): reason is NativeReadReason => typeof reason === "string" && Object.hasOwn(readReasons, reason);
 
+/** Why the invitation engine answered `unknown`. `unknown` itself names an engine reason this table does not hold. */
+export type UnknownCondition = "opening-unresolved" | "invitation-act-unresolved" | "invitation-unverified" | "directory-unverified" | "binding-unverified" | "successor-pending" | "inbox-not-confirmed" | "inbox-not-readable" | "unknown";
+
 export interface EnrollmentDiagnostic {
   stage: "identity" | "plan-only-check" | "plan-only-proof" | "invitation-pre-root" | "invitation-root-retaining" | "invitation-root-retained" | "invitation-resume" | "invitation-result" | "receiver";
-  cause?: "engine-error" | "filesystem-error" | "identity-refusal" | "prepared" | "unknown" | "refused" | "verified";
+  cause?: "engine-error" | "filesystem-error" | "identity-refusal" | "prepared" | "refused" | "verified" | UnknownCondition;
   identityReason?: string;
   filesystemCode?: string;
   nativeReason?: NativeReadReason;
   read?: { method: "GET" | "POST" | "other"; category: "membership-session" | "membership-summary" | "membership-entry" | "other"; status: number | null };
+  /** How many read-only inbox rechecks ran. A later stage keeps the count, so a stop that cleared stays visible. */
+  inboxRechecks?: number;
 }
 
 const identityReasons = new Set([
@@ -31,6 +36,33 @@ const identityReasons = new Set([
   "plan-only-binding", "plan-only-receiver-conflict", "plan-only-owner-conflict", "plan-only-orphan", "plan-only-prior-proof", "plan-only-bound",
 ]);
 const filesystemCodes = new Set(["ENOENT", "EACCES", "EPERM", "ENOSPC", "EEXIST", "EIO", "EMFILE", "ENFILE", "EROFS"]);
+
+// The engine's fixed reason texts. A text selects a word and never enters a receipt.
+const INBOX = "inbox";
+const unknownReasons: Readonly<Record<string, UnknownCondition | typeof INBOX>> = {
+  "The original agent opening is retained.": "opening-unresolved",
+  "The original checker opening is retained.": "opening-unresolved",
+  "The original invitation is retained.": "invitation-act-unresolved",
+  "The current native invitation could not be verified.": "invitation-unverified",
+  "The native directory and repository siblings could not be verified.": "directory-unverified",
+  "A retained private successor awaits explicit Continue. Check restored no pointer and sent nothing.": "successor-pending",
+  "The native agent inbox creation could not be verified.": INBOX,
+  "The native checker inbox creation could not be verified.": INBOX,
+};
+
+/**
+ * The fixed word for one engine answer. The engine reads the inbox summary, then its entry 0, and
+ * accepts it only when active. A last read of GET, other, 200 means both reads answered and the engine
+ * still refused: `inbox-not-confirmed`. Any other last read means an inbox read was refused:
+ * `inbox-not-readable`. The word comes from the fixed reason and the read's status. No body is decoded.
+ */
+export function invitationCause(result: { state: "prepared" | "unknown" | "refused" | "verified"; reason?: string }, read: EnrollmentDiagnostic["read"]): NonNullable<EnrollmentDiagnostic["cause"]> {
+  if (result.state !== "unknown") return result.state;
+  if (result.reason === undefined) return "binding-unverified";
+  const word = Object.hasOwn(unknownReasons, result.reason) ? unknownReasons[result.reason]! : "unknown";
+  if (word !== INBOX) return word;
+  return read?.method === "GET" && read.category === "other" && read.status === 200 ? "inbox-not-confirmed" : "inbox-not-readable";
+}
 
 /** The caller identifies its own refusal class; no arbitrary message escapes. */
 export function failureDiagnostic(error: unknown, prior: EnrollmentDiagnostic | null, identityReason?: string): EnrollmentDiagnostic {
