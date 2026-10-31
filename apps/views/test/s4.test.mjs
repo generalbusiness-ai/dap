@@ -93,6 +93,7 @@ test('nine lanes: repeated calls reach every lane, each call says what it left o
     const seen = [], left = [], counts = [];
     let after;
     do {
+      assert.ok(seen.length < 4, 'The windows of nine lanes end');
       const answer = await read(after === undefined ? {} : { after });
       assert.equal(answer.isError, false);
       const data = answer.structuredContent;
