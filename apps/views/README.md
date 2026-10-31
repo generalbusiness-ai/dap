@@ -12,7 +12,7 @@ can mount the four existing card resources. Imports and the service factory
 do not read a home, bind a port, or load a key. Tests supply public fixture
 signers, configuration, and Brief bytes directly.
 
-`needs_you`, `work`, `context`, and `since` read native current state. Each
+`needs_you`, `work`, `context`, `change`, and `since` read native current state. Each
 call admits at most eight scopes, including Membership, Directory, and any
 support scopes. Those support scopes consume the same eight-scope limit.
 At most six lanes fit in the ordinary flat-directory case. Other support
@@ -79,3 +79,44 @@ those separate boundaries. Run this owner's whole file after source freeze:
 ```sh
 node --test apps/views/test/s4.test.mjs
 ```
+
+## Change card
+
+`view_change` with a `subject` opens one change. The subject is the lane's
+scope reference as JSON. `view_change` with no subject keeps the **Mark
+reviewed** list of heads. The card reads J4 changes only.
+
+The card shows the current version's base and integration, and this version's
+reviews and checks. Each reviewer and checker appears with their kind: a
+person, or an agent or checker with its controller. The card also shows the
+rules, the merges, the conditions of each linked issue, and the decided
+questions of each linked issue. It reads at most four linked issues and names
+any it did not read.
+
+The card offers at most two acts, and each act signs the revisions the card
+read:
+
+| Card state | Acts |
+| --- | --- |
+| You can review this version, and it is not ready to merge. | **Approve**, **Request changes** |
+| It is ready to merge, and you hold `change.merge`. | **Merge**, and **Request changes** if you can review it |
+| A merge is in progress or the change is closed. | None |
+| A merge your key signed is `unknown`, or this server has an unresolved send at this lane. | **Check original request** only |
+| Another member's merge is `unknown`. | None. The card names the merger. |
+
+While this server has an unresolved send at the lane, a retained card signs
+nothing. **Check original request** signs nothing either. One minute after the
+request's `notAfter`, which is at most 15 minutes after it was signed, the check
+sends the same bytes once, so the scope answers with the first entry or refuses
+the request as `expired`. A refusal frees the card's acts. Before that time, the
+receipt gives the time to check again.
+
+**Approve** names the first rules extent of class `content`. A review counts
+only for the extent it names, so an approval for a change to the rules or to
+deployment files needs the ordinary `review-verdict` act.
+
+**View diff** signs one `read-token` act and spends its credential on one
+read of at most 40 KiB of text. Over a bound, the diff says "truncated". A
+version that holds one file has no integration commit, so its card offers no
+diff. A commit the destination's repository does not hold gives no diff, and
+the card says so. An unpublished workspace commit can fall in this case.

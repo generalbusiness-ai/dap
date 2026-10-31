@@ -90,7 +90,7 @@ test("the exact checker codec consumers do not permit a Git-to-Platform cycle or
 // exercises the actual smart-HTTP send boundary with scripted host replies.
 // The certified native archive journey reads its real local Git clone for
 // offline replay; this grants no production Git import.
-const applicationGitUsers = new Set(["packages/mcp/package.json", "packages/mcp/src/service.ts", "apps/room/lanes/test/grow-archive.test.ts", "apps/room/lanes/test/certified-rules-archive.scope.test.ts", "apps/room/lanes/test/evidence.scope.test.ts"]);
+const applicationGitUsers = new Set(["packages/mcp/package.json", "packages/mcp/src/service.ts", "packages/mcp/src/node.ts", "apps/room/lanes/test/grow-archive.test.ts", "apps/room/lanes/test/certified-rules-archive.scope.test.ts", "apps/room/lanes/test/evidence.scope.test.ts"]);
 // Replay's Node and integration test boundaries may depend on Git. The v2
 // witnesses combine real Git archives with offline Replay; Git itself stays
 // below Replay and imports none of it, including from its own tests.
@@ -207,6 +207,8 @@ test("the checkers package uses Platform only at its exact evidence boundaries a
 // tests may run the runtime's test Worker and read the lanes and examples, as the page's do.
 function mcpImportAllowed(file, specifier) {
   if (file === "packages/mcp/src/service.ts" && specifier === "@generalbusiness/dap-git/application") return true;
+  // `dap mcp` under Node supplies the credentialed read of `diff`. Nothing a hosted Worker loads imports this file.
+  if (file === "packages/mcp/src/node.ts" && specifier === "@generalbusiness/dap-git/diff") return true;
   if (specifier.startsWith("./") || specifier.startsWith("../")) {
     const target = normalize(join(dirname(file), specifier));
     return target.startsWith("packages/mcp/src/") && /\.(ts|json)$/.test(target) && files.includes(target);
@@ -220,6 +222,9 @@ test("MCP relative imports stay inside tracked server source", () => {
   assert.equal(mcpImportAllowed("packages/mcp/src/service.ts", "./views/session.ts"), true);
   assert.equal(mcpImportAllowed("packages/mcp/src/service.ts", "@generalbusiness/dap-git/application"), true);
   assert.equal(mcpImportAllowed("packages/mcp/src/views/session.ts", "@generalbusiness/dap-git/application"), false);
+  assert.equal(mcpImportAllowed("packages/mcp/src/node.ts", "@generalbusiness/dap-git/diff"), true);
+  assert.equal(mcpImportAllowed("packages/mcp/src/service.ts", "@generalbusiness/dap-git/diff"), false);
+  assert.equal(mcpImportAllowed("packages/mcp/src/hosted.ts", "@generalbusiness/dap-git/diff"), false);
   for (const specifier of ["@generalbusiness/dap-git", "@generalbusiness/dap-git/node", "@generalbusiness/dap-git/http", "@generalbusiness/dap-git/github", "@generalbusiness/dap-git/application/../node"]) {
     assert.equal(mcpImportAllowed("packages/mcp/src/service.ts", specifier), false, specifier);
   }

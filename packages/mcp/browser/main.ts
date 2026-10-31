@@ -334,7 +334,7 @@ function render() {
     if (display.query.page === "item" && card.actions.length < 2 && !card.unresolvedOriginal && !card.actions.some(action => action.input === "chat")) {
       const ask = button("Ask in chat", handoff, "quiet"); ask.disabled ||= !display.active; actions.append(ask);
     }
-    if (display.query.page === "item" && card.diffAvailable) actions.append(button("View diff", async () => { returnPage = "item"; await read({ page: "diff" }); }, "quiet"));
+    if (display.query.page === "item" && card.diffAvailable) actions.append(button("View diff", async () => { returnPage = "item"; if (card.diffSigned) await act("view-diff"); else await read({ page: "diff" }); }, "quiet"));
     root.append(actions);
   }
 }

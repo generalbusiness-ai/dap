@@ -124,7 +124,7 @@ The list has two parts.
 
 - **The generic tools**, the same for every room: `room`, `inspect`,
   `create`, `join`, `prepare`, `items`, `steps`, `step`, `record`, `sends`, `text`,
-  `wait`, `settle` and `credential`, and in `--generic` and
+  `wait`, `settle`, `credential` and `diff`, and in `--generic` and
   `--generic=add` modes `actions` and `act`.
 - **The act tools**, one for each act declaration of the definitions the
   room's scopes run, that the caller's role may sign or that a rule
@@ -362,7 +362,7 @@ The point has no index, nine blobs and six doubles:
 
 The fixed names are `list`, `room`, `inspect`, `create`, `join`, `prepare`,
 `items`, `steps`, `step`, `record`, `sends`, `text`, `wait`, `settle`,
-`credential`, `actions`, `act`, `install_application`,
+`credential`, `diff`, `actions`, `act`, `install_application`,
 `application_installation`, and hosted `enrol`. Act tool names derived
 from declarations are outside this first map. Their events are dropped
 and counted as invalid fields; their names are not copied or redacted.
@@ -382,7 +382,7 @@ history-unavailable too-large sessions-unavailable bad-request replayed behind
 ```
 
 The server reasons are `exception`, `shape`, `stale-descriptor`, `restart`,
-`transport`, `custody`, `credential`, `target`, `unknown-tool`, `read`,
+`transport`, `custody`, `credential`, `diff`, `target`, `unknown-tool`, `read`,
 `conflicting`, `full`, `locked`, `unreadable`, `terminal` and `unkept`.
 Record phases are `prepared`, `sent`, `unknown`, `accepted`, `refused`,
 `mismatch` and `settled`. Preparation-step phases are `prepared`, `sent`,
@@ -1235,6 +1235,79 @@ The one-time read credential for a read-token act your key signed (entry: its se
 }
 ```
 
+### `diff`
+
+The change between two exact commits, read with the one-time credential of a read-token act your key signed (entry: its seq at the destination). The server keeps the credential and spends it on this read. It signs nothing. The answer holds at most 40 KiB of text. Over a bound, truncated is true and the text says truncated. An object the host does not give is an error, and the answer shows no change it did not read. Sign another read-token for another diff.
+
+```json
+{
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "entry": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "base": {
+        "type": "string",
+        "description": "The exact commit ID of the older side."
+      },
+      "integration": {
+        "type": "string",
+        "description": "The exact commit ID of the newer side."
+      },
+      "target": {
+        "type": [
+          "string",
+          "integer"
+        ],
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
+      }
+    },
+    "required": [
+      "entry",
+      "base",
+      "integration"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "base": {
+        "type": "string"
+      },
+      "integration": {
+        "type": "string"
+      },
+      "files": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "truncated": {
+        "type": "boolean"
+      },
+      "text": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "base",
+      "integration",
+      "files",
+      "truncated",
+      "text"
+    ]
+  },
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": true
+  }
+}
+```
+
 ### `actions`
 
 The acts of one scope, as act tools would describe them: each kind with its derived description, input schema, binding and the definition digest to give to act. For a host that lists few tools.
@@ -1687,7 +1760,8 @@ works; the count given is the default recipe's.
 
 Git steps: `clone` and `propose` use Git outside the server. The server
 returns the remote URL and a one-time credential; the agent's own Git, or
-a generic credential helper, uses them. The server runs no Git.
+a generic credential helper, uses them. The server runs no Git program. The
+`diff` tool reads Git objects over HTTP, with that one-time credential.
 
 `propose` runs, in the recipe test, in a room of its own under
 `change-demo3`, the manifest-list change definition, with a version 3
@@ -1803,10 +1877,10 @@ valid. A closed endpoint returns `404` before reading the request body or
 addressing either namespace. This applies to the control routes too.
 
 `MCP_TOOL_ADDITIONS` is an optional JSON array of distinct known generic
-tool names, at most 1,024 characters and 18 names. Unknown names,
+tool names, at most 1,024 characters and 20 names. Unknown names,
 duplicates, a different JSON shape, or an oversized setting close the
 endpoint. The hosted default omits `create`, `install_application`,
-`credential`, `prepare`, `join`, `record`, `step`, and `text`. To enable
+`credential`, `diff`, `prepare`, `join`, `record`, `step`, and `text`. To enable
 needed tools, name them explicitly, for example `["prepare","text"]`.
 The other accepted names are `room`, `inspect`, `application_installation`,
 `items`, `steps`, `sends`, `wait`, `settle`, `actions`, and `act`. The
@@ -2214,6 +2288,38 @@ act. A lost or unavailable outcome offers only its original request check,
 using the retained custody key. Full native responses remain under custody;
 the card receipt shows item, version and outcome.
 
+A card signs the revisions it displayed. An action can carry its own `at`.
+Its names must be ones the card displayed, with the displayed revisions. A
+card with no `at` on an action signs the card's `at`. If a subject has moved,
+the act still goes out, and the scope refuses it with `revision-moved`. A
+subject that has since gone final, such as a superseded version, keeps its
+captured revision.
+
+A card source can ask for the check of an earlier send. Each read of such a
+card asks custody for an act that this server sent at the card's scope with
+no outcome kept. If custody holds one, the card offers only **Check original
+request**, and it keeps that offer after a restart. While custody holds such
+an act, every other act of that card and of any retained card at that scope is
+refused before it signs. This server's custody is the limit of that refusal:
+a card with another custody home reaches the scope, and the scope judges its
+revisions.
+
+The check asks the scope for the exact request and signs nothing. Before the
+signed intent's `notAfter`, an act with no answer stays unknown, and the receipt
+gives the time to check again. Intents live at most 15 minutes. One minute
+after `notAfter`, a margin for clock differences, the check sends the same bytes
+once. An act that landed answers with its first entry. An act that never arrived
+is refused as `expired`, so the record ends as `refused` and the next read
+offers the card's acts again. If the scope cannot be reached, the record stays
+unknown.
+
+If this server holds no record, the check says so and says that this does not
+show the act was not sent.
+
+**View diff** on a card with `diffRead` goes through `view_act`, because it
+signs one `read-token` act. It reads one bounded `diff` and shows the answer
+on the diff page. Reading a card signs nothing.
+
 The generic kit supplies the carousel, detail, diff, updates and receipt
 screens. Journey projections, package installation and desktop-host
 registration are separate work. The implementation boundary and fixture
@@ -2231,6 +2337,7 @@ tool list; `mcp-tools.json` describes that ordinary list.
 | `needs_you` | Requests, reviews and merges that need your attention. |
 | `work` | Agent commitments, terms, blocks and linked changes. |
 | `context` | Question text, approvals, comments, conditions and Brief pin. |
+| `change` | One change's exact version: base, integration, reviews, checks, rules, merges and linked issues. |
 | `since` | Heads changed since an explicit Mark reviewed action. |
 
 Attention rows name their pinned declaration clause and observed head.

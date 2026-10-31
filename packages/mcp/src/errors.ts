@@ -178,6 +178,7 @@ export type Finding =
       /** The dead reclaimer's file, relative to the custody directory (ARTROOM_HOME/private/mcp-custody). */
       stale?: string }
   | { error: "credential"; destination: string; why: string }
+  | { error: "diff"; why: string; spent: boolean }
   | { error: "target"; what: string }
   | { error: "unknown-tool"; name: string }
   | { error: "read"; scope: string; reason: ReadRefusal };
@@ -213,6 +214,7 @@ export function finding(f: Finding): Said & { error: string } {
       return { error: f.error, sentence: `The server's record for key ${clip(f.key)} on ${clip(f.scope)} is ${f.state}; nothing was sent.${extra}`, next };
     }
     case "credential": return { error: f.error, sentence: `No read token of yours is readable at ${clip(f.destination)} (${f.why}); nothing was returned.`, next: "Call repository.read-token first (or act in --generic mode), then wait for its outcome, then credential." };
+    case "diff": return { error: f.error, sentence: `The server shows no diff (${clip(f.why)}).${f.spent ? " The one-time credential is spent." : ""}`, next: f.spent ? "Sign another read-token. A commit that the host does not hold stays unavailable until the host holds it." : "Run dap mcp, which reads Git for this tool." };
     case "target": return { error: f.error, sentence: `Before signing, the server could not resolve the target: ${f.what}. Nothing was sent.`, next: "Call room for the scopes and lanes of the room; give target as a scope ID or a number." };
     case "unknown-tool": return { error: f.error, sentence: `No tool is named ${clip(f.name)} in this list.`, next: "Call tools/list." };
     case "read": { const said = readRefused(clip(f.scope), f.reason); return { error: f.error, ...said }; }

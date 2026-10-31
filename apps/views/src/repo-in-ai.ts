@@ -5,6 +5,7 @@ import { J4_DIGESTS, QUESTION_DIGESTS, QUESTION_BRIEF_DIGESTS, issueQuestions, i
 import type { ApplicationReadCatalogue, CallResult, LocalReviewCapture } from "@generalbusiness/dap-mcp";
 import { Collection, LIMITS, Unread, sameOptional, minimumFor, type Frame, type ReadOptions } from "./reads.ts";
 import { ReviewStore, ReviewStoreError } from "./review-store.ts";
+import { readChange } from "./change.ts";
 
 export interface Row { scope: ScopeRef; head: Frame["head"]; item: number; type: string; rule: { definition: string; clause: string }; [key: string]: unknown }
 export interface Context {
@@ -33,9 +34,9 @@ export class RepoInAi {
     const decoded = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(this.brief.bytes);
     if (!sameOptional([...utf8(decoded)], [...this.brief.bytes])) throw new Unread("brief-invalid");
   }
-  async collect<T>(run: (collection: Collection) => Promise<T>, target?: ScopeRef): Promise<{ value: T; collection: Collection }> {
+  async collect<T>(run: (collection: Collection) => Promise<T>, target?: ScopeRef, only = false): Promise<{ value: T; collection: Collection }> {
     const collection = new Collection(this.options);
-    try { await collection.begin(target); return { value: await run(collection), collection }; }
+    try { await collection.begin(target, only); return { value: await run(collection), collection }; }
     finally { collection.close(); }
   }
   async #rows(run: (collection: Collection, frames: Frame[]) => Promise<Row[]>): Promise<CallResult> {
@@ -158,6 +159,17 @@ export class RepoInAi {
     }
     catch (error) { return result({ error: "context-unavailable", reason: error instanceof Unread ? error.reason : "read-failed", complete: false }, true); }
   }
+  async change(args: Readonly<Record<string, unknown>>): Promise<CallResult> {
+    if (!isScopeRef(args["scope"])) return result({ error: "change-selector" }, true);
+    try {
+      const { context, collection } = await readChange(this, args["scope"]);
+      const { who, items: _items, mergeKeys: _keys, key: _key, ...fields } = context;
+      const named = (item: Item, party: string) => ({ ...item, [`${party}Is`]: who(item.parties[party]) });
+      const answer = result({ change: { ...fields, reviews: fields.reviews.map(review => named(review, "reviewer")), results: fields.results.map(found => named(found, "checker")), merges: fields.merges.map(merge => named(merge, "merger")) }, heads: collection.points(), counters: collection.counters, complete: true });
+      return resultBytes(answer) > RESULT_BYTES ? result({ error: "change-output-limit", complete: false }, true) : answer;
+    }
+    catch (error) { return result({ error: "change-unavailable", reason: error instanceof Unread ? error.reason : "read-failed", complete: false }, true); }
+  }
   since(): Promise<CallResult> {
     return this.#rows(async (collection, frames) => {
       const marks = this.options.reviewStore.read({ service: this.options.service, directory: collection.directory, viewer: collection.viewer, key: this.options.signer.key });
@@ -176,6 +188,7 @@ export class RepoInAi {
       tool("needs_you", "Current attention, with pinned clauses and heads. At most 50 rows, eight scopes including support; omissions explicit. Attention grants no permission.", () => this.needsYou()),
       tool("work", "Agent commitments, actual controllers, terms, blocks and issue-linked changes, beside current conditions. Bounded reads; no Task or permission inference.", () => this.work()),
       tool("context", "One Question's text versions, requests, approvals, comments, conditions and immutable Brief binding. Legacy questions remain unbound.", args => this.context(args), { question: { type: "object", properties: { scope: { type: "object" }, ask: { type: "integer", minimum: 0 } }, required: ["scope", "ask"], additionalProperties: false } }, ["question"]),
+      tool("change", "One change's exact version: base and integration, this version's reviews with each reviewer's kind, checks, rules, merges, and the linked issues' conditions and decided questions. Bounded reads; it grants no permission.", args => this.change(args), { scope: { type: "object" } }, ["scope"]),
       tool("since", "Pure read of heads since the explicit local review mark. Repeated reads do not consume changes.", () => this.since()),
     ] };
   }

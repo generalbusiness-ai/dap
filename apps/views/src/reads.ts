@@ -44,6 +44,8 @@ export class Collection {
   viewer!: MemberRef;
   actions: readonly string[] = [];
   selected: ScopeRef[] = [];
+  /** The lanes the directory lists: the scopes a linked read may name. */
+  listed: ScopeRef[] = [];
   omitted: ScopeRef[] = [];
   discoveryComplete = false;
 
@@ -132,7 +134,8 @@ export class Collection {
     const frame = { ref, head: got.at, summary: got.value, items: [...got.value.items] };
     this.frames.set(ref.scope, frame); return frame;
   }
-  async begin(target?: ScopeRef): Promise<this> {
+  /** With `only`, keep the allowance for what the target links to, and select no other lane. */
+  async begin(target?: ScopeRef, only = false): Promise<this> {
     this.config = await this.options.config(); this.guard();
     if (this.config.service.replace(/\/+$/, "") !== this.options.service.replace(/\/+$/, "") || !this.config.repository) throw new Unread("room-unconfigured");
     this.membership = this.config.repository.membership; this.directory = this.config.repository.directory;
@@ -161,6 +164,8 @@ export class Collection {
     const refs = [...candidates.values()].sort((a, b) => canonicalize(a).localeCompare(canonicalize(b)));
     if (target && !refs.some(ref => sameOptional(ref, target))) throw new Unread("outside-room");
     if (target) refs.sort((a, b) => Number(sameOptional(b, target)) - Number(sameOptional(a, target)));
+    this.listed = refs;
+    if (only && target) { this.selected = [target]; this.admit(target); return this; }
     this.selected = refs.slice(0, LIMITS.scopes - this.admitted.size); this.omitted = refs.slice(this.selected.length);
     for (const ref of this.selected) this.admit(ref);
     return this;
@@ -206,6 +211,15 @@ export class Collection {
     const size = utf8(got.value).length;
     if (!got.complete || textDigest(got.value) !== digest || size > LIMITS.textBytes || this.counters.textBytes + size > LIMITS.textsBytes) throw new Unread("text-unavailable");
     this.counters.textBytes += size; this.#texts.set(key, got.value); return got.value;
+  }
+  inRoom(ref: ScopeRef): boolean { return this.listed.some(listed => sameOptional(listed, ref)); }
+  /** A member as the membership lists them now. A member that is not active reads as unknown. */
+  actor(member: MemberRef): { kind: string; name: string; controller?: string } {
+    const M = this.frames.get(this.membership.scope)!;
+    const row = M.items.find(item => item.type === "member" && item.state === "active" && sameOptional(item.parties["member"], member));
+    if (!row) return { kind: "unknown", name: member.member };
+    const kind = typeof row.values["kind"] === "string" ? row.values["kind"] : "unknown", controller = row.parties["controller"];
+    return { kind, name: member.member, ...(isMemberRef(controller) ? { controller: controller.member } : {}) };
   }
   isAgent(member: MemberRef): boolean { return this.frames.get(this.membership.scope)!.items.some(item => item.type === "member" && item.state === "active" && item.values["kind"] === "agent" && sameOptional(item.parties["member"], member)); }
   controller(member: MemberRef): MemberRef | null {

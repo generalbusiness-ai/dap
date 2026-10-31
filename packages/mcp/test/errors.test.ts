@@ -115,7 +115,7 @@ describe("errors say who said what, from what the judge returned", () => {
       { error: "restart" }, { error: "transport", scope: "sc_x", submitted: true },
       { error: "custody", state: "full", key: "k", scope: "sc_x", keys: ["a", "b"] }, { error: "custody", state: "conflicting", key: "k", scope: "sc_x", recorded: "comment on sc_x" },
       { error: "custody", state: "locked", key: "k", scope: "sc_x" }, { error: "custody", state: "terminal", key: "k", scope: "sc_x" },
-      { error: "credential", destination: "sc_g", why: "no outcome yet" }, { error: "target", what: "no lane 9" },
+      { error: "credential", destination: "sc_g", why: "no outcome yet" }, { error: "diff", why: "missing-object: commit", spent: true }, { error: "target", what: "no lane 9" },
     ];
     for (const f of findings) {
       const said = finding(f);

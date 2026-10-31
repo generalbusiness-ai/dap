@@ -611,9 +611,8 @@ contains three cases and is outside Vitest's `*.test.ts` selection. The root
 runs the package's Vitest tests, then those same three resolver cases once.
 The gate does not invoke the CLI package's test script separately.
 
-`scripts/control.mjs` cannot select a root project, so a control of the
-story is run by hand: change the line, run
-`npx vitest run --project scope story`, restore the file.
+To run a control of the story, give `scripts/control.mjs` the root as its
+package directory: `-- . --project scope story`.
 
 The page's story, `apps/room/page/test/story.scope.test.ts`, runs from the
 root inside the `scope` project too. Its room is `apps/room/page/test/support/demo.ts`:
