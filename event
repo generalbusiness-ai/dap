@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:321956a263b106245674f80e3dd6e5a120413343","text":"Merge retired a covered predecessor; the successor is at examples/repo-in-ai/agents.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:33db5d4d69a1368af20d5dde750b4d47f9a3b17c","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/wire.ts."}
