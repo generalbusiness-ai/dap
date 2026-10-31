@@ -63,7 +63,7 @@ export class ReviewStore {
   read(bindingOf: Pick<LocalReviewCapture, "service" | "directory" | "viewer" | "key">): Point[] {
     return this.#read().marks.filter(mark => binding(mark) === binding(bindingOf)).map(({ scope, head }) => ({ scope, head }));
   }
-  async mark(capture: LocalReviewCapture, admit: () => void | Promise<void>): Promise<"marked" | "already"> {
+  async mark(capture: LocalReviewCapture, admit: () => void): Promise<"marked" | "already"> {
     if (capture.heads.length === 0 || capture.heads.length > 8 || !capture.heads.every(point => valid({ ...capture, ...point }))
       || new Set(capture.heads.map(point => point.scope.scope)).size !== capture.heads.length) bad("invalid");
     this.#location(true);
@@ -84,7 +84,7 @@ export class ReviewStore {
         changed = true;
       }
       const bytes = utf8(canonicalize(state)); if (bytes.length > BYTES) bad("full");
-      await admit();
+      admit();
       if (!changed) return "already";
       temporary = join(this.#directory, `reviewed-heads-${randomUUID()}.tmp`);
       const writer = openSync(temporary, "wx", 0o600);

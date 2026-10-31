@@ -144,8 +144,8 @@ export interface ViewSource {
   read(query: ViewQuery, access: { call(name: string, args: Record<string, unknown>): Promise<{ structuredContent: Record<string, unknown>; isError: boolean }> }): Promise<Projection>;
   /** A declared source repeats its current when/needs check before signing. */
   admit?(query: ViewQuery, card: Card, action: CardAction): Promise<void>;
-  /** Local publication must call admit after awaited reads, immediately before writing. */
-  markReviewed?(capture: LocalReviewCapture, context: { view: string; cut: number; admit: () => void | Promise<void> }): Promise<import("../service.ts").CallResult>;
+  /** After awaited reads, call admit without awaiting it, immediately before synchronous publication. */
+  markReviewed?(capture: LocalReviewCapture, context: { view: string; cut: number; admit: () => void }): Promise<import("../service.ts").CallResult>;
 }
 export interface CardContext {
   /** Opaque mounted-view key for model input tools; never a dispatch cut. */

@@ -166,6 +166,13 @@ test('since remains a pure read; a local mark survives restart and pre-publicati
   await assert.rejects(() => new ReviewStore(f.home).mark(conflict, () => {}), error => error.reason === 'conflict');
   const linkHome = f.home + '-link'; symlinkSync(f.home, linkHome); t.after(() => rmSync(linkHome));
   assert.throws(() => new ReviewStore(linkHome).read(capture), error => error.reason === 'unsafe-path');
+  let observed;
+  await new ReviewStore(f.home).mark(next, () => {
+    queueMicrotask(() => { observed = readFileSync(path); });
+  });
+  const published = readFileSync(path);
+  assert.notDeepEqual(published, original, 'The later head actually publishes a new local mark');
+  assert.deepEqual(observed, published, 'Publication completes before a microtask queued by the final synchronous admission check');
 });
 
 test('the real static service catalogue and factory do not invoke room inventory or key reads; the collection refuses an unselected ninth scope', async t => {
