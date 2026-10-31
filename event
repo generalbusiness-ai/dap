@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:656ae37239edc399710097036ea728f0c2c2cb3d","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-31-control-tap-parser.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:852828295144681802a376d4f441300717648d06","text":"Merge retired a covered predecessor; the successor is at scripts/test.mjs."}
