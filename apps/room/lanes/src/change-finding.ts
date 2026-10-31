@@ -1,7 +1,7 @@
 /**
  * The finding successor of the workspace Change definition (plan 032, section
  * 2f, decision 2). Existing lanes keep their pins. It adds one item type,
- * three acts and one merge guard, and changes no other row.
+ * four acts and one merge guard, and changes no other row.
  *
  * A source is a row of the rules' `checks`: its `name` is the source's name and
  * its `checker` is the one member who files for it. A row with `required: true`
