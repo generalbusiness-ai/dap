@@ -1,6 +1,6 @@
 /** Shared command outcomes and read/wait primitives. The stop has one identity. */
-import type { Answer, Created, KeyId, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, isFactRef, scopeIdOf, timeMs, timeOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
+import type { Answer, Created, KeyId, ReadMinimum, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
+import { b64url, canonicalize, isFactRef, readMinimum, scopeIdOf, timeMs, timeOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, TransportError, httpTransport, signedReads, requestSession, signerSessionRequest, type OperationalApi, type ReadSigning, type Session, type Signer, type Signing, type Transport } from "@generalbusiness/dap-client";
 import { SourceError } from "@generalbusiness/dap-replay";
 import type { Context, Outcome } from "./commands.ts";
@@ -210,19 +210,25 @@ function makeConnection(ctx: Context, service: string, membership: ScopeRef | un
   };
   const dispatch = <T extends { ok: boolean; reason?: string }>(given: unknown, perform: (reader: unknown) => Promise<T>): Promise<T> =>
     required || given === undefined || typeof given === "string" && readers.has(given) ? read(perform) : perform(given);
+  const ownMinimum = (value: ReadMinimum | undefined): ReadMinimum | undefined => {
+    if (value === undefined) return undefined;
+    const owned = readMinimum(value);
+    if (!owned) throw new TransportError("invalid read minimum");
+    return owned;
+  };
   const transport: Transport & OperationalApi = {
     create: (...args) => base.create(...args), submit: (...args) => base.submit(...args),
     prepare: (...args) => base.prepare(...args), settle: (...args) => base.settle(...args),
-    summary: (scope, given) => dispatch(given, reader => signed.summary(scope, reader)),
-    items: (scope, given, type, cursor) => dispatch(given, reader => signed.items(scope, reader, type, cursor)),
+    summary: (scope, given, atLeast) => { const minimum = ownMinimum(atLeast); return dispatch(given, reader => signed.summary(scope, reader, minimum)); },
+    items: (scope, given, type, cursor, atLeast) => { const minimum = ownMinimum(atLeast); return dispatch(given, reader => signed.items(scope, reader, type, cursor, minimum)); },
     queryItems: (scope, given, query) => dispatch(given, reader => signed.queryItems(scope, reader, query)),
-    applicationProjection: async (scope, given, query) => (await dispatch(given, async reader => {
-      const value = await signed.applicationProjection(scope, reader, query);
+    applicationProjection: async (scope, given, query, atLeast) => { const minimum = ownMinimum(atLeast); return (await dispatch(given, async reader => {
+      const value = await signed.applicationProjection(scope, reader, query, minimum);
       const result = JSON.parse(value) as { ok: boolean; reason?: string };
       return { ok: result.ok, ...(result.reason === undefined ? {} : { reason: result.reason }), value };
-    })).value,
-    history: (scope, given, cursor) => dispatch(given, reader => signed.history(scope, reader, cursor)),
-    entry: (scope, given, seq) => dispatch(given, reader => signed.entry(scope, reader, seq)),
+    })).value; },
+    history: (scope, given, cursor, atLeast) => { const minimum = ownMinimum(atLeast); return dispatch(given, reader => signed.history(scope, reader, cursor, minimum)); },
+    entry: (scope, given, seq, atLeast) => { const minimum = ownMinimum(atLeast); return dispatch(given, reader => signed.entry(scope, reader, seq, minimum)); },
     outbox: (scope, given, cursor) => dispatch(given, reader => signed.outbox(scope, reader, cursor)),
     outboxItem: (scope, given, id) => dispatch(given, reader => signed.outboxItem(scope, reader, id)),
     log: (scope, given, cursor) => dispatch(given, reader => signed.log(scope, reader, cursor)),

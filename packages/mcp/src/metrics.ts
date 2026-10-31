@@ -7,11 +7,11 @@ import type { Phase, Step } from "./custody.ts";
 
 export const MCP_METRIC_SCHEMA = "mcp-metrics-v1";
 const MAX = 0x7fffffff;
-const TOOLS = new Set(["list", "room", "inspect", "create", "join", "prepare", "items", "steps", "step", "record", "sends", "text", "wait", "settle", "credential", "actions", "act", "install_application", "application_installation", "enrol"]);
+const TOOLS = new Set(["list", "room", "inspect", "create", "join", "prepare", "items", "steps", "step", "record", "sends", "text", "wait", "settle", "credential", "diff", "actions", "act", "install_application", "application_installation", "enrol"]);
 const PHASES = new Set(["prepared", "sent", "unknown", "accepted", "archived", "refused", "mismatch", "settled"]);
 const STEP_PHASES = new Set(["prepared", "sent", "unknown", "answered"]);
 const NATIVE: Record<RefusalReason | UnavailableReason | MismatchReason | ReadRefusal | SessionRefusal, true> = {
-  "archived": true, "floor-receipt": true, "floor-ahead": true, "floor-back": true, "floor-step": true, "floor-recent": true, "floor-keep": true, "floor-kept": true,
+  behind: true, "archived": true, "floor-receipt": true, "floor-ahead": true, "floor-back": true, "floor-step": true, "floor-recent": true, "floor-keep": true, "floor-kept": true,
   "wrong-pin": true, "application-revoked": true,
   late: true,
   "revision-moved": true, alias: true, "duplicate-relation": true, "required-unset": true, "scope-full": true,
@@ -24,7 +24,7 @@ const NATIVE: Record<RefusalReason | UnavailableReason | MismatchReason | ReadRe
   "history-unavailable": true, "too-large": true, "sessions-unavailable": true, "bad-request": true, replayed: true,
   "no-repository": true,
 };
-const REASONS = new Set([...Object.keys(NATIVE), ...PHASES, ...STEP_PHASES, "none", "exception", "shape", "stale-descriptor", "restart", "transport", "custody", "credential", "target", "unknown-tool", "read", "conflicting", "full", "locked", "unreadable", "terminal", "unkept"]);
+const REASONS = new Set([...Object.keys(NATIVE), ...PHASES, ...STEP_PHASES, "none", "exception", "shape", "stale-descriptor", "restart", "transport", "custody", "credential", "diff", "target", "unknown-tool", "read", "conflicting", "full", "locked", "unreadable", "terminal", "unkept"]);
 const ENDS = new Set(["ok", "refused", "error", "unavailable"]);
 const metricInteger = (n: number): boolean => natural(n) && n <= MAX;
 const uuid = (s: string): boolean => /^(?:unknown|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/.test(s);

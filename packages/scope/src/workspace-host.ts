@@ -10,6 +10,7 @@ import type { Sql } from "./sqlite.ts";
 import { proofEntry, PROOF_BYTE_BOUNDS } from "./proof-bytes.ts";
 import { ArtifactsProvider } from "./artifacts-host.ts";
 import { workspaceRepository, type WorkspaceRepository, type WorkspaceSources } from "./workspace-lineage.ts";
+import { report, toConsole } from "./diag.ts";
 
 const OWNER = "hold@2";
 const kinds = new Set(["head", "fork", "stage", "check", "mint", "revoke", "delete", "deletion"]);
@@ -179,7 +180,11 @@ export class WorkspaceHost implements Outside {
         if (request.kind === "mint" && reply?.result !== "confirmed") this.#forgetMint(request.operation);
         return reply;
       }
-      const lineage = await this.#lineage(); if (!lineage) return null;
+      const lineage = await this.#lineage();
+      if (!lineage) {
+        if (request.kind === "head") report(toConsole, "workspace-lineage-unavailable", "workspace-lineage", null);
+        return null;
+      }
       if (request.kind === "deletion") return this.#deleteFork(request, lineage);
       const fork = this.#records("fork", "operation", request.operation)[0];
       if (request.kind === "head") {
@@ -196,7 +201,10 @@ export class WorkspaceHost implements Outside {
         return isRecord(reply) && reply["created"] === false ? answer("own-answer", {}, "refused") : isRecord(reply) && typeof reply["id"] === "string" && typeof reply["name"] === "string" ? answer("own-answer", { id: reply["id"], name: reply["name"] }) : null;
       }
       return this.#rootOperation(request, lineage);
-    } catch { return null; }
+    } catch (failure) {
+      if (request.kind === "head") report(toConsole, "outside-call-failed", "workspace-head-send", failure);
+      return null;
+    }
   }
   async #deleteFork(request: EffectRequest, _lineage: WorkspaceRepository): Promise<EffectAnswer | null> {
     const input = request.origin.entry.input;

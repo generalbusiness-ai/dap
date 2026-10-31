@@ -1,3 +1,5 @@
+import { REFERENCE_INSTALL_REFUSAL, ReferenceInstallRefusal, requireReferenceInstall } from "./application-install-reference.ts";
+import { COMMONS_COHORT } from "./commons-cohort.ts";
 import { EVIDENCE_RULES_COHORT as ERC } from "./evidence-cohort.ts";
 /** Explicit device-command package proof under Rules9. Older pins keep their proofs. */
 import type { DeclaredDefinition, FieldValue, MemberObservation, PlatformData } from "@generalbusiness/dap-contract";
@@ -19,7 +21,7 @@ import { DEVICE_GENESIS_BYTES, DEVICE_GRANT_BYTES } from "./device-application-w
 import { APPLICATION_SEMANTIC_VALUE2, APPLICATION_RELEASE_VALUE2 } from "./application-install-v2.ts";
 const archiveInstall = (given: RuleGiven): boolean => {
   const pin = pinnedBy(given);
-  return pin === ARCHIVE_DEVICE_APPLICATION_COHORT.rules || pin === ARCHIVE_CERTIFIED_RULES_COHORT.rules || pin === HARDENED_CERTIFIED_RULES_COHORT.rules || pin === ERC.rules;
+  return pin === COMMONS_COHORT.rules || pin === ARCHIVE_DEVICE_APPLICATION_COHORT.rules || pin === ARCHIVE_CERTIFIED_RULES_COHORT.rules || pin === HARDENED_CERTIFIED_RULES_COHORT.rules || pin === ERC.rules;
 };
 const install = applicationInstallRulesScope.acts["install-application"]!;
 export const deviceApplicationRulesScope: PlatformData = {
@@ -40,12 +42,15 @@ function proof(given: RuleGiven): PublishedApplicationReleaseProof2 | null {
   const release = given.value(APPLICATION_RELEASE_VALUE2.domain, fields["release"], APPLICATION_RELEASE_VALUE2.max);
   if (semantic === undefined || release === undefined) return null;
   const checked = readPublishedApplicationReleaseProof2(semantic, release, fields["release"], { bytes: APPLICATION_SEMANTIC_VALUE2.max + APPLICATION_RELEASE_VALUE2.max });
-  if (checked.ids.semantic !== fields["semantic"] || !deviceApplicationRequirement(checked.semantic) || (!archiveInstall(given) && checked.semantic.host.requires !== undefined) || checked.semantic.host.profiles.some(profile => profile !== "restricted@1")) throw Error("unsupported install proof");
+  if (checked.ids.semantic !== fields["semantic"] || !deviceApplicationRequirement(checked.semantic) || (!archiveInstall(given) && checked.semantic.host.requires !== undefined)
+    || (pinnedBy(given) !== COMMONS_COHORT.rules && checked.semantic.host.requires?.includes("commons") === true)
+    || checked.semantic.host.profiles.some(profile => profile !== "restricted@1")) throw Error("unsupported install proof");
   for (let index = 0; index < checked.semantic.definitions.length; index++) {
     const part = checked.semantic.definitions[index]!;
     if (utf8(part.bytes).length > INSTALL_DEFINITION_BYTES || fields[`definitionText${index}`] !== textDigest(part.bytes)) throw Error("exact native declaration text required");
     const value = parseStrict(part.bytes), native = validateDefinition(value, given.resolved.bounds, RULE_PROFILES);
     if (!native.ok || native.definition.digest !== part.id || canonicalize(value) !== part.bytes) throw Error("unsupported native definition");
+    requireReferenceInstall(native.definition.declared, pinnedBy(given));
   }
   for (let index = checked.semantic.definitions.length; index < INSTALL_DEFINITIONS; index++) if (fields[`definitionText${index}`] !== undefined) throw Error("unrelated declaration text");
   return checked;
@@ -90,7 +95,7 @@ export const deviceApplicationRules: Rules = {
     return { ...request, message: { ...request.message, body: { ...request.message.body,
       fields: { ...request.message.body["fields"], genesis: canonicalize(genesis["fields"]), deviceGrant: canonicalize(genesis["deviceGrant"]) } } } };
   } },
-  "application-install-proof": { place: "guard", refusals: ["invalid-application-package"], run: (given): ReturnType<GuardRule> => {
+  "application-install-proof": { place: "guard", refusals: ["invalid-application-package", REFERENCE_INSTALL_REFUSAL], run: (given): ReturnType<GuardRule> => {
     try {
       readApplicationReleaseUri(given.resolved.fields["uri"]);
       const checked = proof(given); if (!checked) return { holds: null, reason: "dependency-unavailable" };
@@ -102,7 +107,9 @@ export const deviceApplicationRules: Rules = {
       if (utf8(canonicalize(deviceGrant(given, checked))).length > DEVICE_GRANT_BYTES
         || utf8(canonicalize({ fields: initialFields(given, checked)!.fields, deviceGrant: deviceGrant(given, checked) })).length > DEVICE_GENESIS_BYTES) return invalid;
       return { holds: true };
-    } catch { return invalid; }
+    } catch (error) {
+      return error instanceof ReferenceInstallRefusal ? { holds: false, name: REFERENCE_INSTALL_REFUSAL, code: "bad-field" } : invalid;
+    }
   } },
   "application-install-identities": { place: "effect", most: 7, run: given => {
     const checked = proof(given); if (!checked) throw Error("validated install retains its v2 proof");
@@ -113,7 +120,8 @@ export const deviceApplicationRules: Rules = {
     return [
       { effect: "value", item: given.resolved.self, slot: "declarations", value: checked.semantic.definitions.map(part => ({ digest: part.id, text: textDigest(part.bytes), name: (parseStrict(part.bytes) as DeclaredDefinition).name })) },
       { effect: "value", item: given.resolved.self, slot: "additions", value: additions },
-      { effect: "value", item: given.resolved.self, slot: archiveInstall(given) ? "requirements" : "needsDestination", value: archiveInstall(given) ? { destination: genesis.needsDestination, archive: checked.semantic.host.requires?.includes("archive") === true } : genesis.needsDestination },
+      { effect: "value", item: given.resolved.self, slot: archiveInstall(given) ? "requirements" : "needsDestination", value: archiveInstall(given) ? { destination: genesis.needsDestination, archive: checked.semantic.host.requires?.includes("archive") === true,
+        ...(pinnedBy(given) === COMMONS_COHORT.rules ? { commons: checked.semantic.host.requires?.includes("commons") === true } : {}) } : genesis.needsDestination },
       { effect: "value", item: given.resolved.self, slot: "genesis", value: canonicalize({ fields: genesis.fields, deviceGrant: deviceGrant(given, checked) }) },
       { effect: "value", item: given.resolved.self, slot: "definition", value: checked.semantic.entry },
       { effect: "value", item: given.resolved.self, slot: "presentation", value: checked.ids.presentation },

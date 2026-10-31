@@ -9,7 +9,7 @@ import { ApplicationPackageError } from "./application-types.ts";
 import { APPLICATION_PROJECTION_LIMITS as B, type ApplicationReadProjection } from "./application-projection-types.ts";
 export * from "./application-projection-types.ts";
 const NAME = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
-const KINDS: Record<ScopeKind, true> = { register: true, directory: true, membership: true, rules: true, destination: true, inbox: true, task: true, lane: true };
+const KINDS: Record<ScopeKind, true> = { register: true, directory: true, membership: true, rules: true, destination: true, inbox: true, task: true, lane: true, commons: true };
 const META = new Set(["id", "type", "state", "revision"]);
 const object = (value: unknown, keys: string): Record<string, unknown> => isRecord(value) && Object.keys(value).sort().join() === keys ? value : fail();
 const name = (value: unknown): string => typeof value === "string" && NAME.test(value) ? value : fail();
@@ -55,6 +55,7 @@ function fieldType(value: unknown, budget: { left: number }, depth = 0): void {
     case "item": object(value, "of,type"); name(value["of"]); return;
     case "scope": object(value, "kind,type"); if (typeof value["kind"] !== "string" || !Object.hasOwn(KINDS, value["kind"])) return fail(); return;
     case "fact": object(value, "kind,type,under"); name(value["under"]); names(value["kind"], 64, false, entryKind); return;
+    case "reference": object(value, "fragment,type"); projectionInteger(value["fragment"], 0, 64 * 1024); return;
     case "list": object(value, "max,of,type"); projectionInteger(value["max"], 1, 64); fieldType(value["of"], budget, depth + 1); return;
     case "record": {
       object(value, "of,type");

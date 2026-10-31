@@ -102,6 +102,9 @@ test("declared item observations resolve aliases and merge identical subjects wi
     value: { scope, definition: declaration.definition, at: data.at, value: snapshot } });
   expect(completeApplicationItems({ ok: false, reason: "incomplete" }, declaration)).toEqual({ ok: false, reason: "unavailable" });
   expect(completeApplicationItems({ ok: false, reason: "forbidden" }, declaration)).toEqual({ ok: false, reason: "forbidden" });
+  const behind = { ok: false, reason: "behind", current: { at: scope, seq: 1, hash: good.value.at.hash } } as const;
+  expect(completeApplicationItems(behind, declaration)).toEqual(behind);
+  expect(completeApplicationProjection(behind, declaration)).toEqual(behind);
   const raw = completeApplicationProjection({ ...good, value: data }, declaration);
   expect(raw.ok && raw.value.value).toBe(data);
   expect(completeApplicationProjection({ ok: false, reason: "incomplete" }, declaration)).toEqual({ ok: false, reason: "unavailable" });

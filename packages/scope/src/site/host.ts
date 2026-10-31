@@ -17,7 +17,7 @@
 import { isRecord } from "@generalbusiness/dap-bytes";
 import type { Entry, ScopeId } from "@generalbusiness/dap-contract";
 import { canonicalize, isScopeId, isScopeRef, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
-import { isOf, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
+import { isOf, COMMONS_COHORT, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 import { READ_BOUNDS, type GitSource } from "@generalbusiness/dap-git";
 import { githubRepository, type GitHubAccount } from "@generalbusiness/dap-git/github";
 import { requireGitHubRepositoryIdentity } from "../github-host.ts";
@@ -137,7 +137,7 @@ export async function roomOf(scopes: Binding, directory: string): Promise<Room |
   const fields = recordOrNull(recordOrNull(input.message?.body)?.["fields"]);
   const repository = recordOrNull(fields?.["repository"]);
   const branch = fields?.["branch"];
-  if (input.seed.definition === UNPUBLISHED_COHORT.directory && fields && !Object.hasOwn(fields, "repository")
+  if ((input.seed.definition === UNPUBLISHED_COHORT.directory || input.seed.definition === COMMONS_COHORT.directory) && fields && !Object.hasOwn(fields, "repository")
     && typeof branch === "string" && input.seed.kind === "directory" && scopeIdOf(input.seed) === directory
     && isScopeRef(entry.at) && canonicalize(entry.at) === canonicalize(sourced.at) && input.inc === sourced.at.inc
     && isScopeRef(input.seed.creator) && input.seed.creator.kind === "register") return { register: input.seed.creator.scope, repository: null, branch };

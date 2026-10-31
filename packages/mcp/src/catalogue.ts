@@ -27,7 +27,7 @@ import { surfaceOf, wordsDigest, type Words } from "./words.ts";
 import { markRefusals, markText } from "./marks.ts";
 
 /** Where a scope of the inventory sits. */
-export type Place = "register" | "directory" | "partition" | "membership" | "rules" | "destination" | "inbox" | "lane" | "application" | "root";
+export type Place = "register" | "directory" | "partition" | "membership" | "rules" | "commons" | "destination" | "inbox" | "lane" | "application" | "root";
 
 /** One scope of the inventory, with the definition it pins. */
 export interface Held {
@@ -88,7 +88,7 @@ export interface Tool {
   _meta?: Record<string, unknown>;
 }
 
-const SINGLETONS: ReadonlySet<Place> = new Set(["register", "directory", "membership", "rules", "destination", "inbox"]);
+const SINGLETONS: ReadonlySet<Place> = new Set(["register", "directory", "membership", "rules", "commons", "destination", "inbox"]);
 
 /** The item types an act names: every string of its declaration that is an item type of the definition. */
 function itemsNamed(act: unknown, items: Readonly<Record<string, unknown>>): Record<string, unknown> {

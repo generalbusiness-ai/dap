@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. The owner and both controls ran at the checkpoint. The probe of the upstream signal after a forward returned ran three times at main 93a6b661 plus the first witness's uncommitted edit; its test is not in the tree. No container, Git host or hosted run is claimed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-checker-origin-signal-2",
+  "checkpoint": {
+    "commit": "2ccba51a63d996b81bc0feeba8c86ad4399681a7",
+    "tree": "40f2a1ee08a5084deeb582fef8db7f34cbad0e00"
+  },
+  "fileCount": 47,
+  "files": [
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6556,
+      "sha256": "8004efe929d58cf0406a3b267cafa0d3c4e54fc1401a3efa7aacafc4e67d14c6"
+    },
+    {
+      "path": "gate/gate.stderr.log",
+      "bytes": 37,
+      "sha256": "9a35893e9832eccedf9b063c53e99a8b6508c9d02362add2dc3b21fa2f56b41d"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gate/gate.sh",
+      "bytes": 640,
+      "sha256": "2d8ce66e8ff6587a175697e69023466571aac27ef37693dd40c51f3efde7f7a5"
+    },
+    {
+      "path": "owner.stdout.log",
+      "bytes": 261,
+      "sha256": "dfe58f8bf40e4427b3ca3486acc46c2cad662d87ae3574e234b11d277817c05b"
+    },
+    {
+      "path": "owner.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "control.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "control.stderr.log",
+      "bytes": 2678,
+      "sha256": "58c2b5d665482bbb36f34faabea8279efcf6a69789fba5c11a9f9e166966a3a1"
+    },
+    {
+      "path": "control-drop.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "control-drop.stderr.log",
+      "bytes": 2632,
+      "sha256": "b4fca1aa22acf841e13525ae1fe8caba79455a3511305d57117b017784ded77c"
+    },
+    {
+      "path": "after-forward-probe.stdout.txt",
+      "bytes": 333,
+      "sha256": "347305e1364ba99bd9aac59e68ba8d1c18082fdb757482a06c168c9ac1075f1d"
+    },
+    {
+      "path": "after-forward-probe.test.ts.txt",
+      "bytes": 1570,
+      "sha256": "2c5de133ca1c6d0ba5ef247f36e6047fd2bb799661754a5872e04950873e737c"
+    },
+    {
+      "path": "gatewayOrigin-callers.txt",
+      "bytes": 168,
+      "sha256": "6447569789d726f9ccaff32e2d3d4e878ae747c7b6648e06a73a2032a121c050"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 4233,
+      "sha256": "505a6c140258149b768601a6e7f885d729a3ba6845b7254aad30f3f585e74a86"
+    }
+  ]
+}

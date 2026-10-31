@@ -1,3 +1,4 @@
+import { commonsScreen, commonsSelection, commonsNoteForm } from "./commons.ts";
 import { WorkbenchWork } from "./workbench-work.ts";
 /**
  * The page in a browser: the connection kept in local storage, and one screen
@@ -26,7 +27,7 @@ import { connectInvitation, originalConnection, creatorConnectionFiles, type Cre
 import { originalStart, startRoom, type StartedRoom } from "./start-custody.ts";
 import type { Answer, FieldValue, Head, MemberRef, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, isKeyId, isScopeId, isScopeRef, unb64url } from "@generalbusiness/dap-bytes";
-import { act, actAssociation, actsOn, issueCreation, fieldValue, listLanes, loadChange, loadIssue, loadRules, pageObservationSource, roomInitialization, initializationStillCurrent, openRoom, placeOf, sessionKey, siteAddress, type Acted, type Place, type Room, type Session } from "./data.ts";
+import { act, actAssociation, actsOn, issueCreation, fieldValue, listLanes, loadCommonsView, loadChange, loadIssue, loadRules, pageObservationSource, roomInitialization, initializationStillCurrent, openRoom, placeOf, sessionKey, siteAddress, type Acted, type Place, type Room, type Session } from "./data.ts";
 import { PageObservation, pollingInterval } from "./page-observation.ts";
 import { bindDisclosures, openDialog, releaseDialog } from "./popups.ts";
 import { actsPanel, answerLine, nonacceptedAnswerText, changeScreen, failureScreen, h, icon, whoLine, issueScreen, roomScreen, rulesScreen } from "./view.ts";
@@ -485,7 +486,7 @@ function shell(destination: Destination, room: Room | null, ...content: HTMLElem
     h("summary", { class: "account", "aria-label": `Account: ${account}`, "data-focus-key": controlKey(shellContext, "account-connection") }, h("span", { class: "avatar", "aria-hidden": "true" }, account.replace(/^@+/, "").slice(0, 1).toUpperCase()), h("span", { class: "account-label" }, account)),
     h("div", { class: "shell-disclosure-content" }, whoLine(room), h("a", { href: "#/join" }, "Change connection")));
   const navigation = (mobile = false) => h("nav", { class: mobile ? "navigation mobile-nav" : "navigation", "aria-label": "Room" },
-    ([ ["issues", "Issues", "#/"], ["changes", "Changes", "#/?kind=change"], ["rules", "Rules", "#/rules"] ] as const).map(([kind, label, href]) => h("a", { class: "nav-item", href, "data-focus-key": controlKey(shellContext, `nav:${kind}`), ...(destination === kind ? { "aria-current": "page" } : {}) }, label)), room.publication === "unpublished" ? null : h("a", { class: "nav-item", href: siteAddress(room, ""), title: "Latest published pages" }, "Pages"));
+    ([ ["issues", "Issues", "#/"], ["changes", "Changes", "#/?kind=change"], ["rules", "Rules", "#/rules"], ...(room.commons ? [["commons", "Commons", "#/commons"] as const] : []) ] as const).map(([kind, label, href]) => h("a", { class: "nav-item", href, "data-focus-key": controlKey(shellContext, `nav:${kind}`), ...(destination === kind ? { "aria-current": "page" } : {}) }, label)), room.publication === "unpublished" ? null : h("a", { class: "nav-item", href: siteAddress(room, ""), title: "Latest published pages" }, "Pages"));
   const skip = h("a", { class: "skip", href: "#page-main" }, "Skip to content");
   skip.addEventListener("click", event => { event.preventDefault(); document.getElementById("page-main")?.focus(); });
   const create = () => { const button = h("button", { class: "nav-item", type: "button", "data-focus-key": controlKey(shellContext, "create-room") }, "Create room"); button.addEventListener("click", () => { if (offer) claimDialog(room, offer.kept, offer.configured, button); }); return button; };
@@ -997,6 +998,21 @@ async function drawWorkbench(focus: boolean): Promise<void> {
       return viewCurrent();
     };
     const last = (s: string): Answer | null => lastActs.get(actAssociation(loaded, s as ScopeId))?.answer ?? null;
+    if (destination === "commons") {
+      if (!room.commons) return showRoom(h("main", { class: "screen" }, h("h1", {}, "Commons unavailable"), h("p", {}, "No Commons reference is available in this room. Existing rooms keep their original definitions.")));
+      const selected = commonsSelection(scope), cursor = new URLSearchParams(location.hash.split("?")[1] ?? "").get("cursor");
+      const view = await loadCommonsView(room, cursor === null ? {} : { cursor });
+      const screen = commonsScreen(view, selected), offered = await actsOn(room, room.commons.scope);
+      if (!await presentationCurrent()) return;
+      const association = actAssociation(room, room.commons.scope);
+      const panel = await panelFor(room, room.commons.scope, {}, { offered, tasks: (acts, send, context) => {
+        const note = acts.acts.find(act => act.kind === "note");
+        if (!note) return [];
+        screen.querySelector('[data-action-slot="note"]')?.append(commonsNoteForm(note, send, context, selected));
+        return ["note"];
+      } });
+      return showRoom(inspectedScreen(screen, panel, association, "Commons record"));
+    }
     if (destination === "issues" && scope) {
       const issue = await loadIssue(room, scope as ScopeId);
       const defaults = issue.intent === undefined ? undefined : Object.fromEntries(["edit-own", "edit-any", "close-own", "close-any", "reopen-own", "reopen-any"].map((kind) => [kind, { on: issue.intent! }]));
@@ -1143,7 +1159,7 @@ async function drawWorkbench(focus: boolean): Promise<void> {
     try {
       const context = { session: sessionOf(kept), directory: kept.place.directory, membership: kept.place.membership };
       known = [...lastActs.entries()].filter(([association, result]) => association === actAssociation(context, result.requestedScope ?? result.scope)).map(([, result]) => result);
-      const scope = route.scope ?? (route.destination === "rules" ? room?.rules : kept.place.directory);
+      const scope = route.destination === "commons" ? room?.commons?.scope : route.scope ?? (route.destination === "rules" ? room?.rules : kept.place.directory);
       fence = scope ? sending.get(actAssociation(context, scope as ScopeId)) : undefined;
     } catch { /* Invalid current settings cannot match a known result. */ }
     selectedRoom = null;

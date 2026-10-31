@@ -1,7 +1,7 @@
 /** Navigation and room identity shared by the browser shell and its tests. */
 import type { MemberRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isMemberRef } from "@generalbusiness/dap-bytes";
-export type Destination = "issues" | "changes" | "rules" | "join" | "invitation" | "config" | "start";
+export type Destination = "issues" | "changes" | "commons" | "rules" | "join" | "invitation" | "config" | "start";
 export interface Route { destination: Destination; scope: string | null }
 
 /** State-sensitive presentation only; the scope still judges each offered act. */
@@ -24,6 +24,7 @@ export function routeOf(hash: string): Route {
   const [, kind, scope] = (path || "/").split("/");
   if (kind === "settings" || kind === "join") return { destination: "join", scope: null };
   if (kind === "invitation" || kind === "config" || kind === "start" || kind === "rules") return { destination: kind, scope: null };
+  if (kind === "commons") return { destination: "commons", scope: scope ?? null };
   if (kind === "issue" && scope) return { destination: "issues", scope };
   if (kind === "change" && scope) return { destination: "changes", scope };
   return { destination: new URLSearchParams(query).get("kind") === "change" ? "changes" : "issues", scope: null };

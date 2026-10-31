@@ -12,7 +12,7 @@ import { mark, marked, type Defining } from "./context.ts";
 import { at, type Rec } from "./shape.ts";
 
 const FIELD_SHAPES: Readonly<Record<string, readonly string[]>> = {
-  text: ["max"], int: ["min", "max"], bool: [], time: [], enum: ["of"], member: [], item: ["of"], fact: ["kind", "under"], scope: ["kind"], digest: [], commit: [], tree: [], record: ["of"], list: ["of", "max"],
+  text: ["max"], int: ["min", "max"], bool: [], time: [], enum: ["of"], member: [], item: ["of"], fact: ["kind", "under"], scope: ["kind"], reference: ["fragment"], digest: [], commit: [], tree: [], record: ["of"], list: ["of", "max"],
 };
 
 /**
@@ -77,6 +77,9 @@ export function fieldType(d: Defining, v: unknown, path: string, extra: readonly
       // Section 6.2: the kind of a preparation entry is its capability and step, as in `hold@1:check`.
       else for (const kind of o["kind"] as string[]) stepKind(d, kind, at(path, "kind"));
       str(o["under"], at(path, "under"));
+      break;
+    case "reference":
+      if ((int(o["fragment"], at(path, "fragment")) ?? 0) > bounds.textBytes) bad("bound", at(path, "fragment"), `at most ${bounds.textBytes} bytes`);
       break;
     case "scope":
       if (!isScopeKind(o["kind"])) bad("shape", at(path, "kind"), "is not a scope kind");

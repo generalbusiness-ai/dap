@@ -15,12 +15,13 @@ import { invitationRedemptionFields } from "@generalbusiness/dap-client";
 
 import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FieldValue, Item, PlatformDefinition, Read, Receipt, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, isReceipt, entryHash, parseStrict, scopeIdOf, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { TransportError, ScopeHandle, ApplicationPackageError, applicationScreenPath, readApplicationInstallOptions, readDeviceApplicationInstallOptions, readApplicationReleaseUri, readApplicationTrust, applicationTrustForSource, signedApplicationInstall, signedApplicationInstall2, signedDeviceApplicationInstall, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/dap-client";
-import { TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, platform, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
+import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, isReceipt, entryHash, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { TransportError, ScopeHandle, ApplicationPackageError, commonsInstallCheck, loadCommons, readApplicationPackage, applicationScreenPath, readApplicationInstallOptions, readDeviceApplicationInstallOptions, readApplicationReleaseUri, readApplicationTrust, applicationTrustForSource, signedApplicationInstall, signedApplicationInstall2, signedDeviceApplicationInstall, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/dap-client";
+import { TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, platform, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, COMMONS_COHORT } from "@generalbusiness/dap-platform";
+import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/dap-git/application";
 import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
-import { Custody, CustodyError, Lost, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity } from "./custody.ts";
+import { Custody, CustodyError, Lost, TERMINAL, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity } from "./custody.ts";
 import { AT_INPUT, describeAct, grantAction, onOf, schemaOf, type DefinitionLike } from "./describe.ts";
 import { answered, archivedAnswer, clip, finding, type Finding } from "./errors.ts";
 import { Kept, definitionOf, readInventory, readPartitionIndexes, standingIn, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
@@ -31,6 +32,8 @@ import { Unshaped, capturedExpected, effectiveFields, expectedOf, needsOn, shape
 import { WORDS, type Words } from "./words.ts";
 import { McpMetrics, observedFetch, type McpMetricOptions } from "./metrics.ts";
 import { ViewResources, type PresentationPackage } from "./views/resources.ts";
+import { ApplicationReads, type ApplicationReadCatalogue } from "./read-tools.ts";
+import { PackageResources, type PackageBrief } from "./package-brief.ts";
 import { PRESENTATION } from "./views/generated.ts";
 import { ViewSessions } from "./views/session.ts";
 import { toolsForHost, viewTools } from "./views/tools.ts";
@@ -38,6 +41,7 @@ import type { ViewSource } from "./views/types.ts";
 import { DeclaredViewSource } from "./views/declared.ts";
 import { readMembershipDisplay } from "./views/member-reads.ts";
 import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
+import type { CallResult } from "./results.ts";
 
 export interface ServerPort {
   /** The scope service's base URL. */
@@ -48,6 +52,8 @@ export interface ServerPort {
   signer: Signer;
   /** Public Git transport only; separate from authenticated native reads. */
   applicationFetch?: (request: Request) => Promise<Response>;
+  /** The Git read of `diff`. `serve` supplies it under Node; a hosted Worker supplies none, and omits the tool. */
+  readDiff?: (read: { remote: string; credential: string; base: string; integration: string }) => Promise<{ base: string; integration: string; files: number; truncated: boolean; text: string } | { unavailable: string }>;
   /** Raw operator policy, parsed before each install and again before custody builds. */
   applicationTrust?: string | undefined;
   config: ConfigPort;
@@ -74,10 +80,13 @@ export interface ServerPort {
   /** One exact installed declared package; its native install is rechecked
    * on reads. Package bytes provide data, never a custom read adapter. */
   declaredViews?: { bytes: Uint8Array; release: Digest; item: number };
+  /** A static local read adapter. Calls/list/watch do not collect room inventory. */
+  applicationReads?: ApplicationReadCatalogue;
+  /** One immutable raw UTF-8 resource at dap://package/brief. */
+  packageBrief?: PackageBrief;
 }
 
-/** A tool's answer, as `tools/call` sends it: structured content with an object root, and its text. */
-export interface CallResult { content: { type: "text"; text: string }[]; structuredContent: Record<string, unknown>; isError: boolean }
+export type { CallResult } from "./results.ts";
 
 /** A `tools/list` cursor from an earlier generation. */
 export class ListRestart extends Error { constructor() { super("The tool list changed; list again from the start."); } }
@@ -95,7 +104,7 @@ const SEARCH_ENTRIES = 16;
 /** The most bytes of a capability's name or of a step's name that `prepare` takes. */
 const NAME_BYTES = 128;
 const SEARCH_PAGES = 4;
-const SINGLETON_PLACES = ["register", "directory", "membership", "rules", "destination", "inbox"] as const;
+const SINGLETON_PLACES = ["register", "directory", "membership", "rules", "commons", "destination", "inbox"] as const;
 
 interface Snapshot {
   read: Read_;
@@ -176,9 +185,15 @@ const configDigest = (config: McpConfig): Digest => digestBytes(utf8(canonicaliz
 class Stop extends Error { constructor(readonly result: CallResult) { super("stop"); } }
 const stopCall = (f: Finding): never => { throw new Stop(failed(f)); };
 
+const VIEW_DIFF_POLLS = 8;
+/** How far this server's clock can differ from a scope's, for a card's check of an expired request. The contract states no bound. */
+const EXPIRY_MARGIN_MS = 60_000;
+/** The Git reader takes SHA-1 objects. A longer ID is refused here, before a signature or a spent credential. */
+const COMMIT_ID = /^[0-9a-f]{40}$/;
+const DIFF_OUTPUT = { type: "object", properties: { base: { type: "string" }, integration: { type: "string" }, files: { type: "integer", minimum: 0 }, truncated: { type: "boolean" }, text: { type: "string" } }, required: ["base", "integration", "files", "truncated", "text"] };
 const READ = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 const WRITE = { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false };
-const scopeArg = { type: ["string", "integer"], description: "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number." };
+const scopeArg = { type: ["string", "integer"], description: "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number." };
 const keyArg = { type: "string", minLength: 1, maxLength: 128, description: "Your key for this one meaning, 1 to 128 bytes. Keep it." };
 
 export class McpService {
@@ -187,13 +202,20 @@ export class McpService {
   #service: string;
   readonly kept = new Kept();
   readonly custody: Custody;
-  readonly resources: ViewResources;
+  readonly resources: ViewResources | PackageResources;
+  readonly #applicationReads: ApplicationReads | null;
+  readonly #viewTools: ReadonlySet<string>;
+  readonly #readGeneration: Digest | null;
+  readonly #readTools: readonly Tool[] | null;
   readonly mode: Mode;
   readonly words: Words;
   readonly #port: ServerPort;
   readonly #metrics: McpMetrics;
   readonly #fetch: Fetch | undefined;
   readonly #tools: readonly string[] | null;
+  readonly #readReceipts = new WeakMap<CallResult, Receipt>();
+  /** Credential answers that say the mint has no outcome yet, so View diff waits and asks again. */
+  readonly #mintPending = new WeakSet<CallResult>();
   #snapshot: Snapshot | null = null;
   #stale = false;
   /** At most 64 recent hints per cache: next entry or page cursor. Eviction
@@ -227,7 +249,7 @@ export class McpService {
     const declared = port.declaredViews ? new DeclaredViewSource(port.declaredViews.bytes, port.declaredViews.release, {
       now,
       installation: () => this.#declaredInstallation(item!),
-      projection: async query => this.#reads.projection((await this.#applicationRoom()).membership, query),
+      projection: async (query, minimum) => this.#reads.projection((await this.#applicationRoom()).membership, query, minimum),
       members: scope => readMembershipDisplay(this.#reads, scope),
       viewer: async () => {
         const room = await this.#applicationRoom(), session = await this.#reads.session(room.membership);
@@ -244,9 +266,20 @@ export class McpService {
       },
     }) : null;
     const source = declared ?? port.views;
-    this.resources = new ViewResources(port.presentation ?? source?.presentation ?? PRESENTATION);
-    const views = source ? new ViewSessions(source, { call: (name, args) => this.call(name, args) }, (kind, args, admit) => this.#viewPerform(kind, args, admit), (args) => this.call("settle", args)) : null;
-    this.#generic = { ...this.#genericTools(), ...(views ? viewTools(views, source?.screens) : {}) };
+    const presentation = new ViewResources(port.presentation ?? source?.presentation ?? PRESENTATION);
+    this.resources = port.packageBrief ? new PackageResources(presentation, port.packageBrief) : presentation;
+    const views = source ? new ViewSessions(source, { call: (name, args) => this.call(name, args) }, (kind, args, admit) => this.#viewPerform(kind, args, admit), (args) => this.#viewSettle(args), result => this.#readReceipts.get(result) ?? null, { readDiff: (read, admit) => this.#viewDiff(read, admit), unresolved: target => this.#viewUnresolved(target) }) : null;
+    const cards = views ? viewTools(views, source?.screens) : {};
+    this.#viewTools = new Set(Object.keys(cards));
+    this.#generic = { ...this.#genericTools(), ...cards };
+    this.#applicationReads = port.applicationReads ? new ApplicationReads(port.applicationReads, Object.keys(this.#generic)) : null;
+    this.#readTools = this.#applicationReads ? [
+      ...this.#applicationReads.tools(), ...[...this.#viewTools].filter(name => this.#genericAdmitted(name)).map(name => structuredClone(this.#generic[name]!.tool)),
+    ] : null;
+    this.#readGeneration = this.#applicationReads ? digestBytes(utf8(canonicalize({
+      reads: this.#applicationReads.generation, resources: this.resources.generation,
+      tools: this.#readTools, service: port.service, key: port.signer.key,
+    }))) : null;
   }
 
   get key(): string { return this.#port.signer.key; }
@@ -299,7 +332,7 @@ export class McpService {
     return this.#metrics.list(() => this.#page(cursor, ui), error => error instanceof ListRestart ? { end: "refused", reason: "restart" } : error instanceof TransportError ? { end: "unavailable", reason: "transport" } : { end: "error", reason: "exception" });
   }
   async #page(cursor?: unknown, ui?: boolean): Promise<{ tools: Tool[]; nextCursor?: string; generation: Digest; catalogueGeneration?: Digest }> {
-    const s = await this.snapshot();
+    const s = this.#applicationReads ? { generation: this.#readGeneration!, tools: structuredClone([...this.#readTools!]) } : await this.snapshot();
     const generation = (this.#port.views || this.#port.declaredViews) && ui !== undefined ? digestBytes(utf8(canonicalize({ generation: s.generation, ui }))) : s.generation;
     const tools = ui === undefined ? s.tools : toolsForHost(s.tools, ui);
     let from = 0;
@@ -312,12 +345,15 @@ export class McpService {
     return { tools: page, ...(next !== null ? { nextCursor: cursorOf({ g: generation, i: next }) } : {}), generation, ...(generation === s.generation ? {} : { catalogueGeneration: s.generation }) };
   }
 
+  /** The subscription baseline; static application catalogues never read inventory. */
+  async catalogueGeneration(): Promise<Digest> { return this.#readGeneration ?? (await this.snapshot()).generation; }
+
   // ---------------------------------------------------------------- telling subscribed clients
 
   /** Tell `listener` of each new generation, while subscribed; the watch runs only while someone is. */
   subscribe(listener: (generation: Digest) => void): () => void {
     this.#listeners.add(listener);
-    if (!this.#stopWatch) {
+    if (!this.#applicationReads && !this.#stopWatch) {
       const every = this.#port.every ?? ((ms, run) => { const timer = setInterval(run, ms); return () => clearInterval(timer); });
       this.#stopWatch = every(WATCH_MS, () => { void this.check(); });
     }
@@ -331,7 +367,7 @@ export class McpService {
 
   /** Recompute the generation; tell subscribers when it differs from what they were told. Errors of a read are not a change. */
   async check(): Promise<void> {
-    if (this.#listeners.size === 0) return;
+    if (this.#listeners.size === 0 || this.#applicationReads) return;
     try { await this.snapshot(); } catch { /* an unreadable inventory is no change of the list */ }
   }
 
@@ -354,6 +390,11 @@ export class McpService {
   async #call(name: string, args: unknown): Promise<CallResult> {
     const given = isRecord(args) ? args : {};
     try {
+      if (this.#applicationReads) {
+        if (this.#applicationReads.has(name)) return this.#applicationReads.call(name, given);
+        if (this.#viewTools.has(name) && this.#genericAdmitted(name)) return await this.#generic[name]!.run(given);
+        return failed({ error: "unknown-tool", name });
+      }
       const generic = Object.hasOwn(this.#generic, name) ? this.#generic[name]! : null;
       if (generic && ((name !== "actions" && name !== "act") || this.mode !== "default")) return this.#genericAdmitted(name) ? await generic.run(given) : failed({ error: "unknown-tool", name });
       // Keep a known descriptor's identity, but derive its admission from fresh standing.
@@ -379,6 +420,45 @@ export class McpService {
 
   async #viewPerform(kind: string, args: Args, admit: () => void | Promise<void>): Promise<CallResult> {
     try { return await this.#perform(null, args, kind, undefined, admit); }
+    catch (error) { return this.#failure(error, args); }
+  }
+
+  /**
+   * View diff: one signed read-token act, one credential, one bounded read. The act goes under custody, like any act, and asks
+   * for nothing else; the credential stays in this function. The read stops after a bounded wait for the mint.
+   */
+  async #viewDiff(read: { target: string; base: string; integration: string }, admit: () => void | Promise<void>): Promise<CallResult> {
+    if (!this.#port.readDiff) return failed({ error: "diff", why: "this server has no Git reader", spent: false });
+    const unreadable = commitIdFault(read);
+    if (unreadable) return unreadable;
+    try {
+      const signed = await this.#perform(null, { target: read.target, on: 0, fields: { hours: 1 }, idempotencyKey: `view-diff-${crypto.randomUUID()}` }, "read-token", undefined, admit);
+      if (signed.structuredContent["answer"] !== "accepted") return signed;
+      const entry = (signed.structuredContent["fact"] as { seq: number }).seq;
+      const pause = this.#port.pause ?? (() => new Promise<void>((resolve) => { setTimeout(resolve, 1000); }));
+      for (let polls = 0; ; polls++) {
+        const answer = await this.#diff({ entry, target: read.target, base: read.base, integration: read.integration });
+        if (!this.#mintPending.has(answer) || polls >= VIEW_DIFF_POLLS) return answer;
+        await pause([read.target as ScopeId]);
+      }
+    } catch (error) { return this.#failure(error, { target: read.target }); }
+  }
+
+  /** The oldest act this server signed at `target` and sent, with no outcome kept: the request a restarted card must check first. */
+  async #viewUnresolved(target: string): Promise<{ idempotencyKey: string } | null> {
+    const store = this.#port.custody;
+    for (const open of await store.unresolved()) {
+      const record = await store.read(open.id);
+      if (!record || record.standalone || (record.phase !== "sent" && record.phase !== "unknown")) continue;
+      const { identity } = record;
+      if (identity.service === this.#service && identity.signer === this.#port.signer.key && "scope" in identity.target && identity.target.scope === target) return { idempotencyKey: identity.key };
+    }
+    return null;
+  }
+
+  /** Check only a server-retained view original; the public application catalogue still exposes no settle tool. */
+  async #viewSettle(args: Args): Promise<CallResult> {
+    try { return await this.#settle(args, { resendExpired: true }); }
     catch (error) { return this.#failure(error, args); }
   }
 
@@ -520,7 +600,7 @@ export class McpService {
       try {
         shaped = shapeFields(act, fieldsGiven, textsGiven, membership);
         presented = shapePresented(act, presentedGiven);
-        expected = capturedExpected(at, expectedOf(act, items, on as number | null, effectiveFields(act, shaped.fields, summary.scope)));
+        expected = capturedExpected(at, expectedOf(act, items, on as number | null, effectiveFields(act, shaped.fields, summary.scope)), act);
       } catch (error) {
         if (error instanceof Unshaped) return stopCall({ error: "shape", field: error.field, what: error.what, declared: error.declared });
         throw error;
@@ -568,7 +648,9 @@ export class McpService {
       if (summary.scope.kind === "membership") this.#reads.forget(summary.scope.scope);
       void this.check();
     }
-    return ok(this.#answerOf(kept.answer, { scope, kind, tool, retained: kept.retained, said, phase: kept.record.phase }));
+    const result = ok(this.#answerOf(kept.answer, { scope, kind, tool, retained: kept.retained, said, phase: kept.record.phase }));
+    if (kept.answer.answer === "accepted") this.#readReceipts.set(result, kept.answer.receipt);
+    return result;
   }
 
   #answerOf(answer: Answer, at: { scope: string; kind: string; tool: string; retained: boolean; said: { sentence: string; next: string }; phase: string }): Record<string, unknown> {
@@ -603,6 +685,8 @@ export class McpService {
     return Object.fromEntries([
       tool("room", "Orientation. The service, your key, the scopes of the room by name, the issues and changes the directory lists, the applications its factory created (such as a Counter), the standalone scopes, your standing on each membership, the active definitions, and the act tools your role does not hold; paged by bytes, with a cursor. Start here.",
         { cursor: { type: "string" } }, [], READ, (a) => this.#room(a)),
+      tool("commons", "Read one bounded page of Commons notes with their facts, authors, media and opaque about references. Text and citation previews may be shortened; use step for complete citations and text for the retained text. A reference grants no access to its target. Readability and completeness are explicit.",
+        { scope: scopeArg, cursor: { type: "string" } }, [], READ, a => this.#commons(a)),
       tool("inspect", "One scope: its definition and digest, status, head, counts by item type and state, and its live items, paged by bytes at its head. With declaration: true, the definition's bytes, paged. With describe: <kind>, the complete derived text of one act, for an act whose tool description points here.",
         { scope: scopeArg, declaration: { type: "boolean" }, describe: { type: "string" }, cursor: { type: "string" }, offset: { type: "integer", minimum: 0 } }, ["scope"], READ, (a) => this.#inspect(a)),
       tool("create", "Creates a scope with no existing target, and records it in your configuration so later connections list its tools. definition: a platform name such as platform:register@18, a definition's JSON, or its digest; kind: the definition's genesis act; fields; texts and definitions beside it; membership: the membership scope standing for the new scope is read from. Kept under custody like an act: the idempotencyKey is required.",
@@ -636,6 +720,8 @@ export class McpService {
         { target: scopeArg, definition: { type: ["string", "object"] }, idempotencyKey: keyArg, cursor: { type: "string" } }, ["idempotencyKey"], READ, (a) => this.#settle(a)),
       tool("credential", "The one-time read credential for a read-token act your key signed (entry: its seq at the destination), read once from the destination's credential route with your session. Its result is a secret: the credential is in the structured field credential only, with the remote URL beside it. Use it with Git; it is not kept here.",
         { entry: { type: "integer", minimum: 1 }, target: scopeArg }, ["entry"], { ...READ, idempotentHint: false }, (a) => this.#credential(a)),
+      tool("diff", "The change between two exact commits, read with the one-time credential of a read-token act your key signed (entry: its seq at the destination). The server keeps the credential and spends it on this read. It signs nothing. The answer holds at most 40 KiB of text. Over a bound, truncated is true and the text says truncated. An object the host does not give is an error, and the answer shows no change it did not read. Sign another read-token for another diff.",
+        { entry: { type: "integer", minimum: 1 }, base: { type: "string", description: "The exact commit ID of the older side." }, integration: { type: "string", description: "The exact commit ID of the newer side." }, target: scopeArg }, ["entry", "base", "integration"], { ...READ, idempotentHint: false, openWorldHint: true }, (a) => this.#diff(a), DIFF_OUTPUT),
       tool("actions", "The acts of one scope, as act tools would describe them: each kind with its derived description, input schema, binding and the definition digest to give to act. For a host that lists few tools.",
         { scope: scopeArg, cursor: { type: "string" } }, ["scope"], READ, (a) => this.#actions(a)),
       tool("act", "Signs one act of a scope by its native kind, under the same custody and binding checks as an act tool. digest: the definition digest actions gave; fields as actions describes; idempotencyKey required.",
@@ -682,6 +768,35 @@ export class McpService {
       ...(next !== null ? { cursor: cursorOf({ l: layout, i: next }), more: `This page holds entries ${from + 1} to ${next} of ${all.length}; call room with cursor for the rest.` } : {}),
       ...(moved ? { restarted: "The room's collections changed since the cursor was made; this page restarts at the first entry." } : {}),
     }, BOUNDS.room);
+  }
+
+  async #commons(args: Args): Promise<CallResult> {
+    const snapshot = await this.#current();
+    const { scope, membership } = await this.#scope(snapshot, args["scope"] ?? "commons");
+    const { summary } = await this.#summary(scope, membership);
+    if (summary.scope.kind !== "commons" || summary.definition !== "platform:commons@1") return failed({ error: "target", what: "the target is not Commons@1" });
+    const cursor = fromCursor<{ c?: string; i: number; h: string }>(args["cursor"]);
+    if (cursor && (!Number.isSafeInteger(cursor.i) || cursor.i < 0 || typeof cursor.h !== "string" || (cursor.c !== undefined && typeof cursor.c !== "string"))) return failed({ error: "shape", field: "cursor", what: "is not a Commons continuation", declared: "the cursor returned by commons" });
+    const view = await this.#reads.read(membership, async (transport, reader) => {
+      const read = await transport.summary(scope, reader);
+      if (!read.ok) return read;
+      try { return { ...read, value: await loadCommons(new ScopeHandle(transport, scope, reader), summary.scope, cursor?.c ? { cursor: cursor.c } : {}) }; }
+      catch { return { ok: false as const, reason: "unavailable" as const }; }
+    });
+    if (!view.ok) return failed({ error: "read", scope, reason: view.reason });
+    const loaded = view.value, head = canonicalize(loaded.head);
+    const moved = cursor !== null && cursor.h !== head;
+    if (moved) return ok({ scope, complete: false, restarted: "The Commons head changed; call again without a cursor." }, BOUNDS.large);
+    const notes = loaded.notes.map(note => {
+      const preview = note.text === null ? null : sliceText(note.text, 0, 1024);
+      const about = pageBy(note.about, 0, 8192);
+      return { ...note, about: about.page, aboutComplete: about.next === null, text: preview?.text ?? null, textComplete: preview !== null && preview.next === null };
+    });
+    const header = { scope: loaded.scope, head: loaded.head, unreadable: loaded.unreadable.slice(0, 8), unreadableCount: loaded.unreadable.length };
+    const { page, next } = pageBy(notes, cursor?.i ?? 0, pageOf(BOUNDS.large) - bytesOf(header) - 2048);
+    const continuation = next !== null ? cursorOf({ c: cursor?.c, i: next, h: head }) : loaded.next ? cursorOf({ c: loaded.next, i: 0, h: head }) : null;
+    return ok({ ...header, notes: page, complete: loaded.complete && continuation === null,
+      ...(continuation ? { cursor: continuation } : {}), entryRead: "For complete citations and text, read the note fact with step, then its detached text with text." }, BOUNDS.large);
   }
 
   async #inspect(args: Args): Promise<CallResult> {
@@ -850,7 +965,14 @@ export class McpService {
     return ok({ step: { resource: resource.scope, capability, step, phase: stepped.step.phase, answer: stepped.answer === null ? null : projectAnswer(stepped.answer) }, intent: intentDigest(stepped.record.envelope.signed.intent), ...said });
   }
 
-  async #settle(args: Args): Promise<CallResult> {
+  /**
+   * With `card`, this is a card's check of its original request. A card has no other route to the scope's answer, so once the
+   * signed intent's `notAfter` and the clock margin have passed, the check sends the same bytes once. An act that landed answers
+   * with its first entry, and an act that never arrived is refused as `expired`. Either answer comes from the scope and resolves
+   * the record under custody's rule. The passing of `notAfter` resolves nothing by itself, and this path signs nothing. If the
+   * scope's clock lags by more than the margin, the scope accepts the act, and the answer says so.
+   */
+  async #settle(args: Args, card?: { resendExpired: boolean }): Promise<CallResult> {
     const key = args["idempotencyKey"];
     if (!validKey(key)) return failed({ error: "shape", field: "idempotencyKey", what: "is missing, or not 1 to 128 bytes", declared: "the key you gave" });
     const s = await this.#current();
@@ -882,8 +1004,17 @@ export class McpService {
         return read.ok ? read.value : read.reason === "archived" ? read : null;
       } catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
     });
-    if (!settled) return ok({ answer: "not-found", sentence: `No record is kept under key ${String(key)} for that target.`, next: "Nothing was sent under this key from this server; sign with it." });
+    if (!settled) return ok({ answer: "not-found", sentence: `This server keeps no record under key ${String(key)} for that target.`, next: "That does not show that the act was not sent: another server or custody home can hold it. Ask the server that signed it." });
     const record = settled.record;
+    const expiry = timeMs(record.envelope.signed.intent.notAfter)! + EXPIRY_MARGIN_MS;
+    const expired = expiry <= this.#now();
+    if (card?.resendExpired && expired && scope !== null && !TERMINAL.has(record.phase) && !record.standalone) {
+      await this.custody.send(identity, record.meaning, () => Promise.reject(new CustodyError({ held: "unreadable" })), async (envelope) => {
+        try { return await this.#reads.transport.submit(scope!, envelope.signed, [], envelope.beside); }
+        catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
+      }, { notAfter: timeOf(this.#now() + PROPOSED_BOUNDS.intentLifetimeSeconds * 1000) });
+      return this.#settle(args, { resendExpired: false });
+    }
     const last = settled.decided;
     const receipt: Receipt | null = settled.receipt ?? (last?.answer?.answer === "accepted" ? last.answer.receipt : null);
     const archived: ArchivedSettlement | null = last?.archivedSettlement ?? (last?.answer?.answer === "archived"
@@ -902,11 +1033,17 @@ export class McpService {
       : answer === "refused" ? `The act under key ${String(key)} was refused; the refusal is kept.`
       : answer === "mismatch" ? `The key ${String(key)} is on another intent of your key at that scope.`
       : `The outcome under key ${String(key)} is unknown: the scope gave no receipt for the exact envelope. The record stays unknown.`;
-    return ok({ answer, phase: record.phase, sentence, next: answer === "unknown" ? "Call the same tool again with the same idempotencyKey: it resends the same envelope." : "Nothing more is needed.",
+    const unknownNext = !card ? "Call the same tool again with the same idempotencyKey: it resends the same envelope."
+      : expired ? "The scope gave no answer. Check the original request again." : `Check the original request again after ${timeOf(expiry)}. The scope then answers for good.`;
+    const refusal = card && last?.answer?.answer === "refused" ? { reason: last.answer.reason, ...(last.answer.name ? { name: last.answer.name } : {}) } : {};
+    const result = ok({ answer, phase: record.phase, sentence, next: answer === "unknown" ? unknownNext : "Nothing more is needed.", ...refusal,
+      ...(card && answer === "unknown" && !expired ? { checkAfter: timeOf(expiry) } : {}),
       ...(archived ? { ...archivedAnswer(archived.archived, archived.fact), archived: archived.archived, ...(archived.fact ? { fact: archived.fact } : {}) } : {}),
       ...(receipt ? { fact: receipt.fact, outboxIds: receipt.sends } : {}), outcomes: record.count, attempt: record.attempt,
       last: last ? { at: last.at, ...(last.archivedSettlement ? { answer: "archived", archived: last.archivedSettlement.archived, ...(last.archivedSettlement.fact ? { fact: last.archivedSettlement.fact } : {}) } : projectAnswer(last.answer)) } : null,
       steps, ...(nextStep !== null ? { cursor: cursorOf({ i: nextStep }), more: `Steps ${fromStep + 1} to ${nextStep} of ${allSteps.length}; call settle with cursor for the rest.` } : {}) });
+    if (receipt) this.#readReceipts.set(result, receipt);
+    return result;
   }
 
   async #membershipRef(given: unknown): Promise<ScopeRef | null> {
@@ -979,24 +1116,28 @@ export class McpService {
    * room recorded in the configuration; the list is derived again on the next call.
    */
   /** The actual generic room and exact Rules sibling, never a caller alias. */
-  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT | typeof DEVICE_APPLICATION_COHORT | typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_PUBLICATION_COHORT | typeof UNPUBLISHED_COHORT }> {
+  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT | typeof DEVICE_APPLICATION_COHORT | typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_PUBLICATION_COHORT | typeof UNPUBLISHED_COHORT | typeof COMMONS_COHORT }> {
     const config = await this.#port.config.read(), repository = config.repository;
     if (!repository || config.service !== this.#service) return stopCall({ error: "target", what: "configure a trusted-application room before installing" });
     const { summary: directory } = await this.#summary(repository.directory.scope, repository.membership);
     const row = directory.items.find(item => item.type === "repository" && item.state === "open"), rules = row?.refs["rules"], destination = row?.refs["destination"];
-    const cohort = [TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT].find(cohort => directory.definition === cohort.directory);
+    const cohort = [TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, COMMONS_COHORT].find(cohort => directory.definition === cohort.directory);
     if (!cohort || directory.status !== "active" || canonicalize(directory.scope) !== canonicalize(repository.directory)
       || !row || canonicalize(row.refs["membership"]) !== canonicalize(repository.membership)
       || !isScopeRef(rules) || rules.kind !== "rules" || rules.scope !== repository.rules
       || !isScopeRef(destination) || destination.kind !== "destination" || destination.scope !== repository.destination) return stopCall({ error: "target", what: "the configured room does not match its exact generic native siblings" });
     const { summary } = await this.#summary(rules.scope, repository.membership);
     if (summary.status !== "active" || summary.definition !== cohort.rules || canonicalize(summary.scope) !== canonicalize(rules)) return stopCall({ error: "target", what: "the actual Rules sibling does not support native application installation" });
+    if (cohort.directory === COMMONS_COHORT.directory) {
+      const { summary: membership } = await this.#summary(repository.membership.scope, repository.membership);
+      if (membership.status !== "active" || membership.definition !== COMMONS_COHORT.membership || canonicalize(membership.scope) !== canonicalize(repository.membership)) return stopCall({ error: "target", what: "the Commons room does not hold its exact Membership sibling" });
+    }
     return { directory: directory.scope, membership: repository.membership, rules, destination, cohort };
   }
 
   async #declaredInstallation(item: number): Promise<ApplicationInstallation | null> {
     const room = await this.#applicationRoom();
-    if (room.cohort.rules !== DECLARED_APPLICATION_COHORT.rules && room.cohort.rules !== DEVICE_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DECLARED_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DEVICE_APPLICATION_COHORT.rules) return null;
+    if (room.cohort.rules !== DECLARED_APPLICATION_COHORT.rules && room.cohort.rules !== DEVICE_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DECLARED_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DEVICE_APPLICATION_COHORT.rules && room.cohort.rules !== COMMONS_COHORT.rules) return null;
     const read = await this.#reads.read(room.membership, (t, r) => new ScopeHandle(t, room.rules.scope, r).queryItems({ v: 1, scope: room.rules, type: "installation", states: ["active"], ids: [item], limit: 1, cursor: null }));
     if (!read.ok || !read.complete || read.next !== undefined) return null;
     const row = read.value.items[0];
@@ -1016,8 +1157,8 @@ export class McpService {
     let selected: ReturnType<typeof readApplicationInstallOptions> | ReturnType<typeof readDeviceApplicationInstallOptions>;
     try {
       const ordinary = { rules: room.rules, uri: args["uri"], release: args["release"], roles: args["roles"], values: args["values"] };
-      selected = room.cohort.rules === DEVICE_APPLICATION_COHORT.rules || room.cohort.rules === ARCHIVE_DEVICE_APPLICATION_COHORT.rules ? readDeviceApplicationInstallOptions({ ...ordinary, owner: args["owner"] }) : readApplicationInstallOptions(ordinary);
-      if (room.cohort.rules !== DEVICE_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DEVICE_APPLICATION_COHORT.rules && args["owner"] !== undefined) throw Error("this cohort has no owner selection");
+      selected = room.cohort.rules === DEVICE_APPLICATION_COHORT.rules || room.cohort.rules === ARCHIVE_DEVICE_APPLICATION_COHORT.rules || room.cohort.rules === COMMONS_COHORT.rules ? readDeviceApplicationInstallOptions({ ...ordinary, owner: args["owner"] }) : readApplicationInstallOptions(ordinary);
+      if (room.cohort.rules !== DEVICE_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DEVICE_APPLICATION_COHORT.rules && room.cohort.rules !== COMMONS_COHORT.rules && args["owner"] !== undefined) throw Error("this cohort has no owner selection");
     }
     catch { return failed({ error: "shape", field: "installation", what: "needs an immutable Git URI, expected release, explicit unique roles, bounded genesis values and a full existing owner for a device package", declared: "the install_application input" }); }
     const address = readApplicationReleaseUri(selected.uri);
@@ -1037,6 +1178,12 @@ export class McpService {
       try {
         const bytes = await readApplicationGitBlob(address, source.source, 4 * 1024 * 1024);
         const prepare = pin === DECLARED_APPLICATION_COHORT.rules || pin === ARCHIVE_DECLARED_APPLICATION_COHORT.rules ? signedApplicationInstall2 : signedApplicationInstall;
+        const packet = prepare === signedApplicationInstall2 || "owner" in selected
+          ? readPublishedApplicationPackage2(bytes, selected.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 })
+          : readApplicationPackage(bytes, selected.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 });
+        if (packet.package.release.manifest.publisher !== allowed.publisher) throw new ApplicationPackageError("invalid");
+        const { summary: directory } = await this.#summary(room.directory.scope, room.membership);
+        if (!commonsInstallCheck(directory, packet.package.semantic.host.requires).ok) return stopCall({ error: "commons-missing" });
         const prepared = "owner" in selected
           ? await signedDeviceApplicationInstall(this.#port.signer, bytes, readDeviceApplicationInstallOptions(selected), { idempotencyKey: key as string, now: this.#now() }, allowed.publisher)
           : await prepare(this.#port.signer, bytes, selected, { idempotencyKey: key as string, now: this.#now() }, allowed.publisher);
@@ -1050,7 +1197,7 @@ export class McpService {
         catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
       }, { notAfter: timeOf(this.#now() + PROPOSED_BOUNDS.intentLifetimeSeconds * 1000), bytes: 768 * KIB });
     } catch (error) {
-      if (error instanceof CustodyError) throw error;
+      if (error instanceof CustodyError || error instanceof Stop) throw error;
       return failed({ error: "target", what: error instanceof ApplicationHttpError && error.reason === "unsupported-object-format" ? "the public HTTPS Git transport does not support SHA-256 repositories; nothing was submitted" : error instanceof ApplicationPackageError ? "package bytes do not match the expected signed release or install bounds; nothing was submitted" : "the exact Git package could not be prepared; nothing was submitted" });
     }
     if ("lost" in kept) return failed({ error: "transport", scope: room.rules.scope, submitted: true });
@@ -1058,7 +1205,7 @@ export class McpService {
     if (kept.answer.answer !== "accepted") return ok({ ...projectAnswer(kept.answer), retained: kept.retained, phase: kept.record.phase });
     const receipt = kept.answer.receipt;
     if (!isReceipt(receipt) || receipt.definition !== pin || receipt.intent !== intentDigest(kept.record.envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(room.rules)) return failed({ error: "target", what: "the install acknowledgement does not match the retained native request" });
-    const read = await this.#reads.read(room.membership, (t, r) => t.entry(room.rules.scope, r, receipt.fact.seq));
+    const read = await this.#reads.read(room.membership, (t, r) => t.entry(room.rules.scope, r, receipt.fact.seq, { at: receipt.fact.at, head: { seq: receipt.fact.seq, hash: receipt.fact.hash } }));
     if (!read.ok || !read.complete || read.next !== undefined || read.value.hash !== receipt.fact.hash || entryHash(read.value.entry) !== receipt.fact.hash
       || canonicalize(read.value.entry.at) !== canonicalize(room.rules) || read.value.entry.seq !== receipt.fact.seq || read.value.entry.input.type !== "act"
       || canonicalize(read.value.entry.input.signed) !== canonicalize(kept.record.envelope.signed)) return failed({ error: "target", what: "the install receipt's native entry is unavailable or does not hold the exact retained request" });
@@ -1114,7 +1261,7 @@ export class McpService {
     // The admitted entry, read as the member the join made: it must hold the exact request kept, and it names the inbox.
     this.#reads.forget(M.scope);
     const fact = kept.answer.receipt.fact;
-    const entry = await this.#reads.read(M, (t, r) => t.entry(M.scope, r, fact.seq));
+    const entry = await this.#reads.read(M, (t, r) => t.entry(M.scope, r, fact.seq, { at: fact.at, head: { seq: fact.seq, hash: fact.hash } }));
     if (!entry.ok) return failed({ error: "read", scope: M.scope, reason: entry.reason });
     const input = entry.value.entry.input;
     if (entry.value.hash !== fact.hash || input.type !== "act" || canonicalize(input.signed) !== canonicalize(kept.record.envelope.signed)) {
@@ -1285,7 +1432,11 @@ export class McpService {
     }
     this.#searches.set(key, next);
     if (ended) return failed({ error: "credential", destination: scope, why: `the mint of entry ${seq} is ${ended}` });
-    if (handle === null) return failed({ error: "credential", destination: scope, why: `the mint of entry ${seq} has no outcome up to entry ${next - 1}; call credential again to continue the bounded search, or wait first. An evicted continuation restarts the search` });
+    if (handle === null) {
+      const pending = failed({ error: "credential", destination: scope, why: `the mint of entry ${seq} has no outcome up to entry ${next - 1}; call credential again to continue the bounded search, or wait first. An evicted continuation restarts the search` });
+      this.#mintPending.add(pending);
+      return pending;
+    }
     let answer: Read<{ token: string; ends: string; remote: string }>;
     try { answer = await readCredential(this.#service, scope, reader, handle, this.#fetch ? { fetch: this.#fetch } : {}); }
     catch { return failed({ error: "credential", destination: scope, why: "the credential reply was unavailable or invalid; the one-time credential may have been consumed" }); }
@@ -1293,6 +1444,23 @@ export class McpService {
     const structured = { credential: answer.value.token, remote: answer.value.remote, ends: answer.value.ends, entry: seq };
     // The text holds no credential: it says where the one structured field is.
     return { content: [{ type: "text", text: JSON.stringify({ ...structured, credential: "(secret: in structuredContent.credential only)" }) }], structuredContent: structured, isError: false };
+  }
+
+  /** One credential, spent on one bounded read. The answer holds no credential, and a failed read says the credential is spent. */
+  async #diff(args: Args): Promise<CallResult> {
+    const base = args["base"], integration = args["integration"];
+    const unreadable = commitIdFault({ base, integration });
+    if (unreadable) return unreadable;
+    const readDiff = this.#port.readDiff;
+    if (!readDiff) return failed({ error: "diff", why: "this server has no Git reader", spent: false });
+    const read = await this.#credential({ entry: args["entry"], ...(args["target"] === undefined ? {} : { target: args["target"] }) });
+    if (read.isError) return read;
+    const { credential, remote } = read.structuredContent as { credential: string; remote: string };
+    let diff;
+    try { diff = await readDiff({ remote, credential, base: base as string, integration: integration as string }); }
+    catch { return failed({ error: "diff", why: "the host gave no readable answer", spent: true }); }
+    if ("unavailable" in diff) return failed({ error: "diff", why: diff.unavailable, spent: true });
+    return ok({ base: diff.base, integration: diff.integration, files: diff.files, truncated: diff.truncated, text: diff.text }, BOUNDS.large);
   }
 
   async #actions(args: Args): Promise<CallResult> {
@@ -1311,6 +1479,15 @@ export class McpService {
     const { page, next } = pageBy(acts, from, pageOf(BOUNDS.large));
     return ok({ scope, definition: definition.name, digest: summary.definition, acts: page, notHeld: bindings.filter((b) => !listed(b, inventory)).map((b) => b.kind), ...(next !== null ? { cursor: cursorOf({ i: next }) } : {}) }, BOUNDS.large);
   }
+}
+
+/** The fault in a diff's two commit IDs, if it has one. */
+function commitIdFault(ids: { base: unknown; integration: unknown }): CallResult | null {
+  for (const field of ["base", "integration"] as const) {
+    const value = ids[field];
+    if (typeof value !== "string" || !COMMIT_ID.test(value)) return failed({ error: "shape", field, what: "is not a SHA-1 commit ID of 40 hexadecimal characters", declared: "an exact SHA-1 commit ID" });
+  }
+  return null;
 }
 
 /** One entry in one line: seq, time, what, by which key, and its effect and send counts. */

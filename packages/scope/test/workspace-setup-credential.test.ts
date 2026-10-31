@@ -1,9 +1,9 @@
 import { env } from "cloudflare:workers";
 import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import type { Entry, FactRef, OperationId, ScopeRef, Seed, SendForm, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Entry, OperationId, ScopeRef, Seed, SendForm, SignedIntent } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, factRefOf, intentDigest, newIncarnation, platformName, scopeIdOf, seedDigest, signIntent, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, entryHash, factRefOf, intentDigest, platformName, scopeIdOf, signIntent, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import type { RecordState } from "@generalbusiness/dap-derive";
 import { grantOf, keys, variant } from "@generalbusiness/dap-derive/testing";
 import { outsideOf } from "../src/worker.ts";
@@ -16,10 +16,12 @@ import { controls, testPorts } from "../src/testing.ts";
 import { workspaceRepository, type WorkspaceSources } from "../src/workspace-lineage.ts";
 import { reader, START } from "./fixtures-native.ts";
 import { staged } from "./hosted.ts";
+import { workspaceAncestors } from "./support/workspace-ancestors.ts";
 
 // The lane's genesis, acts, hold@2 outcomes, operation ledger and SQL are native.
-// The ancestors, authority, clock, provider binding and Git packets are explicit
-// STAND-INS. No real Membership, Directory, provider or physical drain is proved.
+// Register, Directory and Destination ancestors use their actual rules in memory.
+// Their proof transport, lane creator, authority, clock, provider and Git packets
+// are STAND-INS. No deployed authority, real provider or physical drain is proved.
 const OWNER = "hold@2", SERVICE = "service.invalid", NAMESPACE = "setup-custody";
 const COMMIT = "1".repeat(40), LIMIT = 96;
 type Mode = "created" | "refused" | "late";
@@ -32,32 +34,21 @@ const pending = <T>() => {
 const packet = (text: string) => `${(utf8(text).length + 4).toString(16).padStart(4, "0")}${text}`;
 const advertisement = () => new Response(`${packet("# service=git-upload-pack\n")}0000${packet(`${COMMIT} refs/heads/main\0ofs-delta allow-reachable-sha1-in-want\n`)}0000`, { headers: { "content-type": "application/x-git-upload-pack-advertisement" } });
 
-/** Only immutable ancestor inputs are scripted; this does not install any
- * lane state, setup token, outcome, operation or private custody row. */
+/** Actual ancestor judgments feed scripted immutable read ports. Only the lane
+ * creator is scripted. This installs no lane state or private custody row. */
 function ancestors(definition: ReturnType<typeof variant>) {
   const time = START;
   const hash = digestBytes(utf8(crypto.randomUUID()));
   const seed = (kind: Seed["kind"], named: Seed["definition"], creator: ScopeRef | null, cause = hash, ordinal = 0): Seed => ({ v: 1, kind, definition: named, creator, cause, ordinal });
-  const ref = (value: Seed, n: number): ScopeRef => ({ scope: scopeIdOf(value), kind: value.kind, inc: newIncarnation(new Uint8Array(16).fill(n)) });
   const entry = (at: ScopeRef, seq: number, input: Entry["input"], effects: Entry["effects"] = [], sends: Entry["sends"] = []): Entry => ({ v: 1, at, seq, prev: seq === 0 ? null : hash, time, clamped: false, epoch: 0, input, uses: [], prepared: [], effects, sends });
-  const genesis = (value: Seed, at: ScopeRef, source: FactRef | null = null, n: number | null = null, message: Extract<Entry["input"], { type: "genesis" }>["message"] = null, sends: Entry["sends"] = []): Entry => entry(at, 0, { type: "genesis", seed: value, inc: at.inc, kind: "establish", founding: null, source, n, message, decision: "applied" }, [], sends);
   const signed = (at: ScopeRef, kind: string, fields: SignedIntent["intent"]["fields"]): SignedIntent => signIntent({ v: 1, to: at, actor: keys.rita.key, kind, on: null, fields, expected: {}, idempotencyKey: crypto.randomUUID(), notAfter: timeOf(timeMs(time)! + 60_000) }, keys.rita.secret);
-  const registerSeed = seed("register", "platform:register@17", null), register = ref(registerSeed, 1);
-  const found = signed(register, "found", { founderHandle: "@rita", branch: "main" });
-  const directorySeed = seed("directory", "platform:directory@16", register, intentDigest(found.intent)), directory = ref(directorySeed, 2);
-  const repository = { host: "artifacts", namespace: NAMESPACE, name: "base", id: "base" };
-  const message = { class: "request", type: "create", body: { fields: { repository, claim: { self: true } } } } as const;
-  const claim = entry(register, 1, { type: "act", signed: found, authority: [], presented: {} }, [{ effect: "value", item: 1, slot: "seed", value: seedDigest(directorySeed) }], [{ n: 0, to: directorySeed, message }]);
-  const claimFact = factRefOf(claim);
-  const destinationSeed = seed("destination", "platform:destination@12", directory, hash, 2), destination = ref(destinationSeed, 3);
-  const destinationMessage = { class: "request", type: "create", body: { fields: { repository, branch: "main", claim: claimFact, directory } } } as const;
-  const bornDirectory = genesis(directorySeed, directory, claimFact, 0, message, [{ n: 2, to: destinationSeed, message: destinationMessage }]);
-  const bornDestination = genesis(destinationSeed, destination, factRefOf(bornDirectory), 2, destinationMessage);
+  const judged = workspaceAncestors(time, NAMESPACE, crypto.randomUUID());
+  const { register, directory } = judged;
   const open = signed(directory, "open-issue", { definition: definition.digest });
   const laneSeed = seed("lane", definition.digest, directory, intentDigest(open.intent));
   const laneMessage = { class: "request", type: "create", body: { fields: { title: "Setup custody", opener: keys.rita.member } } } as const;
   const opening = entry(directory, 5, { type: "act", signed: open, authority: [], presented: {} }, [], [{ n: 0, to: laneSeed, message: laneMessage }]);
-  const entries = [genesis(registerSeed, register), claim, bornDirectory, bornDestination, opening];
+  const entries = [...judged.entries, opening];
   const bodies = new Map(entries.map(value => [entryHash(value), { fact: factRefOf(value), bytes: canonicalize(value) }]));
   let reads = 0;
   const trace: Array<{ kind: string; found: boolean }> = [];
@@ -294,16 +285,17 @@ async function fixture(mode: Mode) {
     const commitment = await submit(keys.rita, "offer", { intent: 0 }, null, { intent: 1 });
     await submit(keys.rita, "assign", { performer: keys.una.member }, commitment, { on: 1 });
     // One labelled fixture check before any workspace operation: the actual
-    // production parser makes at most five immutable scripted lineage reads.
+    // production parser makes at most six immutable lineage reads through scripted ports.
     // It performs no provider request and changes no native cleanup record.
     const preflight = await inside(async () => {
       if (!given) throw new Error("Native outside factory was not constructed");
       const before = lineage.readMetadata().count;
       const repository = await workspaceRepository(given, lineage.sources, lineage.register.scope, "artifacts", NAMESPACE);
-      return { recognized: repository !== null, reads: lineage.readMetadata().count - before, readCeiling: 5, trace: lineage.readMetadata().last.slice(-5) };
+      return { recognized: repository !== null, reads: lineage.readMetadata().count - before, readCeiling: 6, trace: lineage.readMetadata().last.slice(-6) };
     });
     console.info("workspace-setup-lineage-preflight", JSON.stringify(preflight));
-    expect(preflight.recognized, "scripted lineage must satisfy production workspaceRepository before take-hold").toBe(true);
+    expect(preflight.recognized, "judged ancestors must satisfy production workspaceRepository before take-hold").toBe(true);
+    expect(preflight.reads).toBe(6);
     await submit(keys.una, "take-hold", { commitment }, null, { commitment: 2 });
     return { life, surface, snapshot, until, calls, requests, releaseFork, releaseRevoke: () => lateRevoke.resolve(true), close };
   } catch (error) {

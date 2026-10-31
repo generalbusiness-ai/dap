@@ -76,7 +76,7 @@ export function viewTools(sessions: ViewSessions, screens?: readonly { name: str
     const display = await sessions.read(string(args, "view"), moving ? integerArgument(args, "cut") : undefined, moving ? { ...(args["refresh"] === true ? { refresh: true } : {}), ...(page === undefined ? {} : { page: page as PageKind }), ...(args["position"] === undefined ? {} : { position: integerArgument(args, "position") }) } : undefined);
     return result({ display }, JSON.stringify(display));
   });
-  add("view_act", "Dispatch one server-retained act of an exact displayed card. The server checks the instance and display cut and signs its captured native revisions under ordinary custody. Duplicate dispatch returns its first outcome. This tool returns private card and receipt data to the app.", { view: key, cut, action: key }, ["view", "cut", "action"], true, undefined, async (args) => {
+  add("view_act", "Invoke one server-retained action of an exact displayed card. The server checks the instance and display cut. Native actions sign captured revisions under ordinary custody. A local review mark signs no native act and creates no native receipt. Duplicate dispatch returns its first outcome. This tool returns private card and result data to the app.", { view: key, cut, action: key }, ["view", "cut", "action"], true, undefined, async (args) => {
     const answer = await sessions.act(string(args, "view"), integerArgument(args, "cut"), string(args, "action"));
     return result(answer, JSON.stringify(answer));
   });

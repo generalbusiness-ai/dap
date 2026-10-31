@@ -4,7 +4,7 @@ import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { DeclaredDefinition, FactRef, Intent, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, factRefOf, intentDigest, isSeed, scopeIdOf, signIntent, textDigest, timeOf } from "@generalbusiness/dap-bytes";
-import { applicationPublicationOrigin, archiveDevicePublicationOrigin, ARCHIVE_DEVICE_PUBLICATION_COHORT, FILE_PUBLICATION_COHORT, fileReceiptRef, platform } from "@generalbusiness/dap-platform";
+import { applicationPublicationOrigin, archiveDevicePublicationOrigin, ARCHIVE_DEVICE_PUBLICATION_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, FILE_PUBLICATION_COHORT, fileReceiptRef, platform } from "@generalbusiness/dap-platform";
 import { Reader } from "@generalbusiness/dap-git";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { SqliteStore } from "../src/index.ts";
@@ -318,12 +318,16 @@ test("a native application publishes once after missing proof, keeps later sourc
   } finally { life.release(); }
 });
 
-// Native R18/D17/M8/Q10/G13 creation, signed v2 install and device owner
-// grant. This TEST declaration reports a real device-command fixture's
-// readings as files. Package HTTP, signing key, Git host and clock are
-// labelled stand-ins; neither a deployed provider nor physical device runs.
-test("an archive-device-publication application automatically publishes device reports and supersedes an unsent older report", async () => {
-  const cohort = ARCHIVE_DEVICE_PUBLICATION_COHORT;
+// Actual native creation, signed v2 install and device owner grant for
+// each complete publication family. This same TEST declaration reports a
+// real device-command fixture's readings as files. Package HTTP, signing
+// key, Git host and clock are labelled stand-ins; no deployed provider or
+// physical device runs. Historical profile bytes and defaults stay fixed.
+test.each([
+  { name: "an archive-device-publication", cohort: ARCHIVE_DEVICE_PUBLICATION_COHORT },
+  { name: "an unpublished-family", cohort: UNPUBLISHED_COHORT },
+  { name: "a Commons", cohort: COMMONS_COHORT },
+])("$name application automatically publishes device reports and supersedes an unsent older report", async ({ cohort }) => {
   const declared: DeclaredDefinition = {
     ...devicePackageFixture,
     items: { ...devicePackageFixture.items, root: { ...devicePackageFixture.items["root"]!, refs: {
@@ -400,7 +404,12 @@ test("an archive-device-publication application automatically publishes device r
     });
     await G.restart();
     const nodes = [R, D, M, Q, G];
-    await pause(nodes);
+    if (cohort.directory === COMMONS_COHORT.directory) {
+      const commons = sibling("commons"); nodes.push(commons);
+      await pause(nodes);
+      expect((await commons.summary()).value.definition).toBe(COMMONS_COHORT.commons);
+      expect((await D.item(0)).refs["commons"]).toEqual(await commons.at());
+    } else await pause(nodes);
     const seat = await M.did(rita, "seat", { expected: await M.expected({ roster: 0 }) });
     await M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) });
     const fixture = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(fixture);
@@ -443,7 +452,10 @@ test("an archive-device-publication application automatically publishes device r
     await pause(nodes);
     const firstCause = factRefOf((await C.entries())[first]!);
     const proof = await life.wait(() => namespace(env.PLATFORM).resolver.read(firstCause, 30, true));
-    expect(proof && "entry" in proof ? archiveDevicePublicationOrigin(firstCause, directory, await G.at(), proof.origin ?? []) : null).toBe(true);
+    const publicationOrigin = platform(cohort.destination)?.applicationPublicationOrigin;
+    expect(proof && "entry" in proof ? publicationOrigin?.(firstCause, directory, await G.at(), proof.origin ?? []) : null).toBe(true);
+    if (cohort.destination !== ARCHIVE_DEVICE_PUBLICATION_COHORT.destination)
+      expect(proof && "entry" in proof ? archiveDevicePublicationOrigin(firstCause, directory, await G.at(), proof.origin ?? []) : null).toBe(false);
     expect((await state()).items.find(item => item.type === "file-publication" && item.values["sourceSeq"] === first)).toMatchObject({ state: "published" });
     const receiptReader = new Reader({
       object: async objectId => { const object = host.stand.objects.get(objectId); return object ? { type: object.type, size: object.data.length, data: object.data } : null; },

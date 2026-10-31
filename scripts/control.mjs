@@ -35,8 +35,14 @@ import { join, resolve } from "node:path";
 
 const USAGE = "usage: node scripts/control.mjs <source file> <old text> <new text> [--expect <part of a test name>] -- <package dir> <test args...>";
 const TIMEOUT_MS = 10 * 60 * 1000;
+let scratch;
+let preserveScratch = false;
 
 function inconclusive(why) {
+  if (scratch !== undefined) {
+    preserveScratch = true;
+    console.error(`Raw child output retained at: ${scratch}`);
+  }
   console.error(`\nINCONCLUSIVE: ${why}\nNothing is shown about the tests.`);
   process.exit(2);
 }
@@ -60,7 +66,7 @@ const count = original.split(oldText).length - 1;
 if (count !== 1) inconclusive(`the text to change occurs ${count} times in ${file}; it must occur exactly once.`);
 
 const nodeRunner = /\bnode\b[^&|;]*--test\b/.test(JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).scripts?.test ?? "");
-const scratch = mkdtempSync(join(tmpdir(), "artroom-control-"));
+scratch = mkdtempSync(join(tmpdir(), "artroom-control-"));
 
 /** Run the tests once. Returns what happened, never a bare exit code. */
 function run(label, show) {
@@ -68,12 +74,20 @@ function run(label, show) {
   const command = nodeRunner
     ? ["node", ["--test", "--test-isolation=none", "--test-timeout=60000", "--test-reporter=tap", ...testArgs]]
     : ["npx", ["vitest", "run", "--reporter=default", "--reporter=json", `--outputFile.json=${report}`, ...testArgs]];
-  const child = spawnSync(command[0], command[1], { cwd: dir, encoding: "utf8", timeout: TIMEOUT_MS, maxBuffer: 256 * 1024 * 1024 });
-  const output = `${child.stdout ?? ""}${child.stderr ?? ""}`;
+  const child = spawnSync(command[0], command[1], { cwd: dir, timeout: TIMEOUT_MS, maxBuffer: 256 * 1024 * 1024 });
+  const stdout = child.stdout ?? Buffer.alloc(0);
+  const stderr = child.stderr ?? Buffer.alloc(0);
+  try {
+    writeFileSync(join(scratch, `${label}.${nodeRunner ? "tap" : "stdout.log"}`), stdout, { flag: "wx", mode: 0o600 });
+    writeFileSync(join(scratch, `${label}.stderr.log`), stderr, { flag: "wx", mode: 0o600 });
+  } catch (error) {
+    return { started: false, why: `the child output could not be retained (${error.code ?? "write failed"}).` };
+  }
+  const output = stdout.toString("utf8") + stderr.toString("utf8");
   if (show && !nodeRunner) process.stderr.write(output);
   if (child.error) return { started: false, why: `the test command did not run (${child.error.code ?? child.error.message}).` };
   if (child.status === null) return { started: false, why: `the test command was stopped by ${child.signal}.` };
-  const result = nodeRunner ? readTap(output) : readVitest(report);
+  const result = nodeRunner ? readTap(stdout.toString("utf8")) : readVitest(report);
   if (result === null) return { started: false, why: `the test command exited ${child.status} and left no report: it did not start, or its configuration or arguments are wrong.\n${output.trim().slice(0, 1200)}` };
   return { started: true, status: child.status, ...result };
 }
@@ -110,17 +124,34 @@ function readTap(output) {
   const failed = [];
   const lines = output.split("\n");
   for (let i = 0; i < lines.length; i++) {
-    const m = /^\s*not ok \d+ - (.*)$/.exec(lines[i]);
+    const m = /^([ \t]*)not ok \d+ - (.*)$/.exec(lines[i]);
     if (!m) continue;
+    const opening = /^([ \t]+)---\s*$/.exec(lines[i + 1] ?? "");
+    const indent = opening?.[1];
     const block = [];
-    for (let j = i + 1; j < lines.length && !/^\s*\.\.\.\s*$/.test(lines[j]); j++) block.push(lines[j]);
-    const yaml = block.join("\n");
-    if (/failureType: 'subtestsFailed'/.test(yaml)) continue;
-    const kind = /failureType: '([^']*)'/.exec(yaml)?.[1] ?? "unknown";
-    const code = /code: '([^']*)'/.exec(yaml)?.[1] ?? "";
-    const error = /error: (?:\|-\n\s*)?'?([^\n']*)/.exec(yaml)?.[1] ?? "";
+    let closed = false;
+    let end = i;
+    if (indent?.startsWith(m[1]) && indent.length > m[1].length) {
+      for (let j = i + 2; j < lines.length; j++) {
+        if (lines[j].trimEnd() === `${indent}...`) {
+          closed = true;
+          end = j;
+          break;
+        }
+        if (lines[j].trim() !== "" && !lines[j].startsWith(indent)) break;
+        block.push(lines[j]);
+        end = j;
+      }
+    }
+    i = end;
+    // Only complete diagnostic fields count. Deeper message/diff lines do not.
+    const yaml = closed ? block.join("\n") : "";
+    const kind = new RegExp(`^${indent}failureType: '([^']*)'`, "m").exec(yaml)?.[1] ?? "unknown";
+    if (kind === "subtestsFailed") continue;
+    const code = new RegExp(`^${indent}code: '([^']*)'`, "m").exec(yaml)?.[1] ?? "";
+    const error = new RegExp(`^${indent}error: (?:\\|-\\n${indent}  )?'?([^\\n']*)`, "m").exec(yaml)?.[1] ?? "";
     const assertion = kind === "testCodeFailure" && code === "ERR_ASSERTION";
-    failed.push({ name: m[1], message: `${assertion ? "AssertionError" : kind === "testTimeoutFailure" ? "Test timed out" : `Error (${kind}${code ? ` ${code}` : ""})`}: ${error}` });
+    failed.push({ name: m[2], message: `${assertion ? "AssertionError" : kind === "testTimeoutFailure" ? "Test timed out" : `Error (${kind}${code ? ` ${code}` : ""})`}: ${error}` });
   }
   const passed = Number(/^# pass (\d+)/m.exec(output)?.[1] ?? 0);
   return { passed, failed, unloaded: [] };
@@ -131,7 +162,9 @@ function firstLine(text) {
 }
 const isAssertion = (t) => /^AssertionError\b/.test(t.message);
 
-process.on("exit", () => rmSync(scratch, { recursive: true, force: true }));
+process.on("exit", () => {
+  if (!preserveScratch) rmSync(scratch, { recursive: true, force: true });
+});
 const base = run("before", false);
 if (!base.started) inconclusive(`before the change, ${base.why}`);
 if (base.status !== 0 || base.failed.length > 0 || base.unloaded.length > 0 || base.passed === 0) {

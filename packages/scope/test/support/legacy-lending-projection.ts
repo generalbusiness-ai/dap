@@ -2,6 +2,7 @@
  * generic item/history reads still use its real issued session and native
  * SQLite state. This supplies neither an installed package nor ownership
  * authority; application-projection-native.test.ts covers that boundary. */
+import type { ItemQueryRead } from "@generalbusiness/dap-contract";
 import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { applicationProjectionQueries, applicationProjectionQueryDigest, isApplicationJournalSource, projectApplicationQueryReads, readApplicationProjectionQuery } from "@generalbusiness/dap-platform/application-v2";
@@ -19,7 +20,10 @@ export function legacyLendingProjection(origin: string, installation: Pick<Appli
     const handle = new ScopeHandle(httpTransport(origin, { fetch }), query.scope.scope, init?.headers?.["authorization"] ?? null);
     const queries = applicationProjectionQueries(lendingStateProjection, query.scope, query.items);
     for (let attempt = 0; ; attempt++) {
-      const replies = Object.fromEntries(await Promise.all(Object.entries(queries).map(async ([name, selection]) => [name, await handle.queryItems(selection)])));
+      // Collect one native query reply before asking for the next.
+      const collected: [string, ItemQueryRead][] = [];
+      for (const [name, selection] of Object.entries(queries)) collected.push([name, await handle.queryItems(selection)]);
+      const replies = Object.fromEntries(collected);
       // This fixture's browser segment fits one history page. Refuse a larger
       // record rather than silently call its first page a complete recent tail.
       const history = await handle.history();

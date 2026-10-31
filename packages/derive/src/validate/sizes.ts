@@ -31,6 +31,8 @@ export function mostBytes(type: FieldType, bounds: Bounds): number {
     case "member": return memberBytes(bounds);
     case "item": return 20;
     case "fact": return FACT_BYTES;
+    // The entry variant is larger than a document digest. Fragment bytes may each require a six-byte JSON escape.
+    case "reference": return 32 + FACT_BYTES + 6 * type.fragment;
     case "scope": return SCOPE_BYTES;
     case "digest": return 73;
     case "commit": case "tree": return 66;

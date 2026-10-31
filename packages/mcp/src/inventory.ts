@@ -78,6 +78,7 @@ export interface Room {
   membership: ScopeRef;
   rules: ScopeRef | null;
   destination: ScopeRef | null;
+  commons: ScopeRef | null;
   inbox: ScopeRef | null;
   /** The directory's lane rows: number, kind, title, state and the lane's reference. */
   lanes: { ref: ScopeRef; number: number | null; kind: string | null; title: string | null; state: string | null }[];
@@ -207,7 +208,7 @@ export async function readInventory(reads: Reads, kept: Kept, config: McpConfig)
       }));
       room = {
         register: ref("register") ?? config.register ?? null, directory: d.scope, membership: M,
-        rules: ref("rules") ?? (rulesRead.ok ? rulesRead.value.scope : null), destination: ref("destination"), inbox: null, lanes, applications,
+        rules: ref("rules") ?? (rulesRead.ok ? rulesRead.value.scope : null), destination: ref("destination"), commons: ref("commons"), inbox: null, lanes, applications,
         membershipItems: membershipRead.ok ? membershipRead.value.items : [], directoryHead: directoryRead.at,
       };
       await hold("directory", d.scope.scope, M, d);
@@ -216,6 +217,7 @@ export async function readInventory(reads: Reads, kept: Kept, config: McpConfig)
       // The destination's pin follows from the directory's: the directory's version creates exactly that sibling.
       const siblings = SIBLINGS_OF[d.definition];
       if (room.destination && siblings && !kept.pins.has(room.destination.scope)) kept.pins.set(room.destination.scope, { ref: room.destination, pinned: siblings.destination });
+      if (room.commons) await hold("commons", room.commons.scope, M);
       if (room.destination) await hold("destination", room.destination.scope, M);
       if (room.register) await hold("register", room.register.scope, M);
       if (repository.inbox) {

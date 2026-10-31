@@ -41,12 +41,13 @@ test("screen context owns exact native routing metadata and rejects mismatched b
   expect(readApplicationInvitation(context, encoded({ ...link, definition: "platform:membership@6" })).ok).toBe(false);
   const archived = readApplicationScreenContext({ ...body, membershipDefinition: "platform:membership@8" }, address, body.origin);
   expect(archived.membershipDefinition).toBe("platform:membership@8");
+  expect(readApplicationScreenContext({ ...body, membershipDefinition: "platform:membership@9" }, address, body.origin).membershipDefinition).toBe("platform:membership@9");
   expect(readApplicationInvitation(archived, encoded({ ...link, definition: "platform:membership@8" })).ok).toBe(true);
   expect(readApplicationInvitation(archived, encoded(link)).ok).toBe(false);
   expect(applicationDeviceIdentity(context, invited.seat, publicKey)).toMatchObject({ scope: body.scope, definition: body.definition, membership: body.membership, member: { membership: body.membership, member: "@browser" }, publicKey });
   expect(() => applicationDeviceIdentity(context, { ...invited.seat, membership: scope("membership", 9) }, publicKey)).toThrow();
   body.ids.release = id("a"); expect(context.ids.release).toBe(id("e"));
-  for (const changed of [{ item: 8 }, { directory: scope("directory", 6) }, { ids: { ...body.ids, presentation: id("a") } }, { scope: directory }, { origin: "https://other.example" }, { membershipDefinition: "platform:membership@6" }, { membershipDefinition: "platform:membership@9" }, { membershipDefinition: ["platform:membership@8"] }, { arbitrary: true }]) expect(() => readApplicationScreenContext({ ...body, ...changed }, address, body.origin)).toThrow();
+  for (const changed of [{ item: 8 }, { directory: scope("directory", 6) }, { ids: { ...body.ids, presentation: id("a") } }, { scope: directory }, { origin: "https://other.example" }, { membershipDefinition: "platform:membership@6" }, { membershipDefinition: "platform:membership@10" }, { membershipDefinition: ["platform:membership@8"] }, { arbitrary: true }]) expect(() => readApplicationScreenContext({ ...body, ...changed }, address, body.origin)).toThrow();
   let calls = 0; Object.defineProperty(body, "deployment", { enumerable: true, get: () => { calls++; return "test"; } });
   expect(read).toThrow(); expect(calls).toBe(0);
 });

@@ -8,7 +8,7 @@ import { canonicalize, definitionDigest, intentDigest, isDigest, isPlatformDefin
 import { creates, isObject, isScopeRef, same, sentBy, validateDefinition, type Delivered } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { applicationJson } from "@generalbusiness/dap-platform/application";
-import { APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
+import { COMMONS_COHORT, APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 import { readRegisterScope } from "./register-setting.ts";
 import type { CreationAdmission } from "./creation-admission.ts";
 import { readNativeBirth, type NativeBirth } from "./native-birth.ts";
@@ -18,7 +18,7 @@ import { proofEntry, type ProofBody } from "./proof-bytes.ts";
 export const CREATION_LINEAGE_BOUNDS = Object.freeze({ bodies: 16, bytes: 1024 * 1024, attempts: 64, visits: 512, milliseconds: 10_000 });
 /** Exact code-supported creation families, each bound to its configured
  * register and native creator proofs. This is not a deployment inventory. */
-export const CREATION_COHORTS = [ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, UNPUBLISHED_COHORT] as const;
+export const CREATION_COHORTS = [ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, UNPUBLISHED_COHORT, COMMONS_COHORT] as const;
 type Cohort = typeof CREATION_COHORTS[number];
 type Pin = Digest | PlatformDefinition;
 interface Edge { child: Seed; from: FactRef; n: number; message: Delivered["message"]; source: Entry; creator: NativeBirth }
@@ -171,9 +171,9 @@ export async function admitChildCreation(binding: Binding, settings: CreationAdm
           } else if (!isDigest(parentPin)) return refused();
           if (!closure?.has(pin)) return refused();
         } else {
-          const wanted: PlatformDefinition | undefined = cohort[edge.child.kind as keyof Cohort];
+          const wanted: PlatformDefinition | undefined = edge.child.kind === "commons" ? ("commons" in cohort ? cohort.commons : undefined) : cohort[edge.child.kind as keyof Cohort];
           const nativeEdge = parentPin === cohort.register ? edge.child.kind === "directory"
-            : parentPin === cohort.directory ? ["membership", "rules", "destination"].includes(edge.child.kind)
+            : parentPin === cohort.directory ? ["membership", "rules", "destination", ...("commons" in cohort ? ["commons"] : [])].includes(edge.child.kind)
             : parentPin === cohort.membership && edge.child.kind === "inbox";
           if (pin !== wanted || !nativeEdge) return refused();
           closure = null;

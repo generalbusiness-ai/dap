@@ -26,8 +26,8 @@
  */
 
 import { PROPOSED_BOUNDS, SESSION_DOMAINS } from "@generalbusiness/dap-contract";
-import type { ReadRequest, ScopeId, SignedRead, SignedReadName, Timestamp } from "@generalbusiness/dap-contract";
-import { b64url, canonicalBytes, parseStrictBytes, retainedReadArgument, taggedBytes, readItemQueryParameter, itemQueryArgument } from "@generalbusiness/dap-bytes";
+import type { ReadMinimum, ReadRequest, ScopeId, SignedRead, SignedReadName, Timestamp } from "@generalbusiness/dap-contract";
+import { readMinimum, b64url, canonicalBytes, parseStrictBytes, retainedReadArgument, taggedBytes, readItemQueryParameter, itemQueryArgument } from "@generalbusiness/dap-bytes";
 import type { Transport } from "./handle.ts";
 import type { Signer } from "./intent.ts";
 
@@ -77,6 +77,12 @@ export async function signedReader(signer: Signer, to: ScopeId, read: SignedRead
 export function signedReads(transport: Transport, signer: Signer, signing: ReadSigning = {}): Transport {
   const as = async (reader: unknown, scope: string, read: SignedReadName, at?: string | number): Promise<unknown> =>
     (typeof reader === "string" ? reader : signedReader(signer, scope as ScopeId, read, readArgument(read, at), signing));
+  const minimum = (value: ReadMinimum | undefined, scope: string): ReadMinimum | undefined => {
+    if (value === undefined) return undefined;
+    const checked = readMinimum(value);
+    if (!checked || checked.at.scope !== scope) throw new RangeError("invalid read minimum");
+    return checked;
+  };
   return {
     // Delegate with the original receiver, including prototype methods and
     // methods that read class-private fields; object spread loses those.
@@ -88,14 +94,23 @@ export function signedReads(transport: Transport, signer: Signer, signing: ReadS
     applicationProjection: (...args) => transport.applicationProjection(...args),
     outbox: (...args) => transport.outbox(...args),
     outboxItem: (...args) => transport.outboxItem(...args),
-    summary: async (scope, reader) => transport.summary(scope, await as(reader, scope, "summary")),
+    summary: async (scope, reader, atLeast) => {
+      const owned = minimum(atLeast, scope);
+      return transport.summary(scope, await as(reader, scope, "summary"), owned);
+    },
     queryItems: async (scope, reader, encoded) => {
       const query = readItemQueryParameter(encoded), argument = query && itemQueryArgument(query);
       if (!query || query.scope.scope !== scope || !argument) throw new RangeError("invalid bounded item query");
       return transport.queryItems(scope, await as(reader, scope, "query-items", argument), encoded);
     },
-    history: async (scope, reader, cursor) => transport.history(scope, await as(reader, scope, "history", cursor), cursor),
-    entry: async (scope, reader, seq) => transport.entry(scope, await as(reader, scope, "entry", seq), seq),
+    history: async (scope, reader, cursor, atLeast) => {
+      const owned = minimum(atLeast, scope);
+      return transport.history(scope, await as(reader, scope, "history", cursor), cursor, owned);
+    },
+    entry: async (scope, reader, seq, atLeast) => {
+      const owned = minimum(atLeast, scope);
+      return transport.entry(scope, await as(reader, scope, "entry", seq), seq, owned);
+    },
     log: async (scope, reader, cursor) => transport.log(scope, await as(reader, scope, "log", cursor), cursor),
     retained: async (scope, reader, kind, digest, domain) => transport.retained(scope, await as(reader, scope, "retained", retainedReadArgument(kind, digest, domain)), kind, digest, domain),
   };

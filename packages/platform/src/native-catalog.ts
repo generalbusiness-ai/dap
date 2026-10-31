@@ -1,3 +1,7 @@
+import { commonsRulesScope, commonsRules } from "./commons-rules.ts";
+import { COMMONS_COHORT as CC } from "./commons-cohort.ts";
+import { commons, commonsMembership } from "./commons.ts";
+import { commonsRegister, commonsRegisterRules, commonsDirectoryData, commonsDirectoryRules, commonsMembershipData, commonsMembershipRules } from "./commons-cohort-data.ts";
 import { EVIDENCE_RULES_COHORT as ERC } from "./evidence-cohort.ts";
 import { evidenceRulesRegister, evidenceRulesDirectory, evidenceRulesDirectoryRules } from "./evidence-cohort-data.ts";
 import { rulesScopeV13, rulesScopeRulesV13, rulesAnswerV13, rulesObservedValuesV13 } from "./rules-scope-v13.ts";
@@ -112,6 +116,11 @@ export interface Platform {
  * cannot run.
  */
 const VERSION_DATA: Readonly<Record<string, Platform>> = {
+  [CC.register]: { data: commonsRegister, rules: commonsRegisterRules },
+  [CC.directory]: { data: commonsDirectoryData, rules: commonsDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
+  [CC.membership]: { data: commonsMembershipData, rules: commonsMembershipRules, observed: (state, asked) => standingOf(state, asked, CC.membership) },
+  [CC.rules]: { data: commonsRulesScope, rules: commonsRules, hostPreparationKinds: ["fetch-application"], declaredText: (state, digest) => installDefinitionText(state, digest, "definition"), observed: (state, asked) => rulesAnswer(state, asked, CC.rules), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
+  [CC.commons]: { data: commons, rules: {}, membership: commonsMembership },
   [ERC.register]: { data: evidenceRulesRegister, rules: registerRules },
   [ERC.directory]: { data: evidenceRulesDirectory, rules: evidenceRulesDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
   [ERC.rules]: { data: rulesScopeV13, rules: rulesScopeRulesV13, hostPreparationKinds: ["fetch-application"], declaredText: (state, digest) => installDefinitionText(state, digest, "definition"), observed: rulesAnswerV13, observedValues: rulesObservedValuesV13, revised: PUBLISH, membership: rulesMembership },

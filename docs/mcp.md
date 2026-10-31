@@ -124,7 +124,7 @@ The list has two parts.
 
 - **The generic tools**, the same for every room: `room`, `inspect`,
   `create`, `join`, `prepare`, `items`, `steps`, `step`, `record`, `sends`, `text`,
-  `wait`, `settle` and `credential`, and in `--generic` and
+  `wait`, `settle`, `credential` and `diff`, and in `--generic` and
   `--generic=add` modes `actions` and `act`.
 - **The act tools**, one for each act declaration of the definitions the
   room's scopes run, that the caller's role may sign or that a rule
@@ -362,7 +362,7 @@ The point has no index, nine blobs and six doubles:
 
 The fixed names are `list`, `room`, `inspect`, `create`, `join`, `prepare`,
 `items`, `steps`, `step`, `record`, `sends`, `text`, `wait`, `settle`,
-`credential`, `actions`, `act`, `install_application`,
+`credential`, `diff`, `actions`, `act`, `install_application`,
 `application_installation`, and hosted `enrol`. Act tool names derived
 from declarations are outside this first map. Their events are dropped
 and counted as invalid fields; their names are not copied or redacted.
@@ -378,11 +378,11 @@ slot-full type-full entry-too-large send-unresolved unknown-message
 unsupported-definition bad-input dependency-unavailable busy clock-behind
 scope-provisional guard-incomplete authority-unavailable unavailable
 rate-limited idempotency-mismatch not-found wrong-incarnation forbidden
-history-unavailable too-large sessions-unavailable bad-request replayed
+history-unavailable too-large sessions-unavailable bad-request replayed behind
 ```
 
 The server reasons are `exception`, `shape`, `stale-descriptor`, `restart`,
-`transport`, `custody`, `credential`, `target`, `unknown-tool`, `read`,
+`transport`, `custody`, `credential`, `diff`, `target`, `unknown-tool`, `read`,
 `conflicting`, `full`, `locked`, `unreadable`, `terminal` and `unkept`.
 Record phases are `prepared`, `sent`, `unknown`, `accepted`, `refused`,
 `mismatch` and `settled`. Preparation-step phases are `prepared`, `sent`,
@@ -454,6 +454,15 @@ These are the generic tools as `tools/list` sends them in
 `--generic=add` mode: each name, description, input schema and
 annotations. In the default mode, `actions` and `act` are not listed.
 
+Rooms in the commons cohort expose `commons.note` through their actual
+member grants. The `commons` read returns bounded note previews with
+authors and references. `step` and `text` read complete entries and their
+retained text. A reference grants no access to another room.
+The [bill-table witness](../examples/commons-bill/README.md) uses synthetic
+text documents retained as signed carrier notes. Its
+[text fragments](https://www.rfc-editor.org/rfc/rfc5147.html) name places
+between lines or characters. File uploads and Capture remain separate work.
+
 ### `room`
 
 Orientation. The service, your key, the scopes of the room by name, the issues and changes the directory lists, the applications its factory created (such as a Counter), the standalone scopes, your standing on each membership, the active definitions, and the act tools your role does not hold; paged by bytes, with a cursor. Start here.
@@ -463,6 +472,38 @@ Orientation. The service, your key, the scopes of the room by name, the issues a
   "inputSchema": {
     "type": "object",
     "properties": {
+      "cursor": {
+        "type": "string"
+      }
+    },
+    "required": [],
+    "additionalProperties": false
+  },
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  }
+}
+```
+
+### `commons`
+
+Read one bounded page of Commons notes with their facts, authors, media and opaque about references. Text and citation previews may be shortened; use step for complete citations and text for the retained text. A reference grants no access to its target. Readability and completeness are explicit.
+
+```json
+{
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "scope": {
+        "type": [
+          "string",
+          "integer"
+        ],
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
+      },
       "cursor": {
         "type": "string"
       }
@@ -493,7 +534,7 @@ One scope: its definition and digest, status, head, counts by item type and stat
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "declaration": {
         "type": "boolean"
@@ -739,7 +780,7 @@ Asks the scope that owns a resource for one step of a capability. With kind: for
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "capability": {
         "type": "string"
@@ -752,7 +793,7 @@ Asks the scope that owns a resource for one step of a capability. With kind: for
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "kind": {
         "type": "string"
@@ -826,7 +867,7 @@ A page of one item type of a scope, in one of two traversals, each with its own 
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "type": {
         "type": "string"
@@ -868,7 +909,7 @@ A page of a scope's entries, oldest first, one line each: seq, time, kind, signe
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "cursor": {
         "type": "string"
@@ -902,7 +943,7 @@ One entry in full: its input, fields, effects, sends and hash, paged by bytes wi
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "seq": {
         "type": "integer",
@@ -942,7 +983,7 @@ A page of the history as stored: each entry's canonical bytes and hash, for a ve
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "cursor": {
         "type": "string"
@@ -976,7 +1017,7 @@ A page of a scope's sends with their attempts and results; or, with outboxId (se
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "outboxId": {
         "type": "string"
@@ -1013,7 +1054,7 @@ A retained input by scope, kind and digest: a definition, a foreign entry, a rul
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "kind": {
         "enum": [
@@ -1066,7 +1107,7 @@ Waits at most 60 seconds until one of: a scope's head reaches seq; an item reach
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "seq": {
         "type": "integer",
@@ -1127,7 +1168,7 @@ What is known about the envelope under idempotencyKey on target (or the creation
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "definition": {
         "type": [
@@ -1177,7 +1218,7 @@ The one-time read credential for a read-token act your key signed (entry: its se
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       }
     },
     "required": [
@@ -1190,6 +1231,79 @@ The one-time read credential for a read-token act your key signed (entry: its se
     "destructiveHint": false,
     "idempotentHint": false,
     "openWorldHint": false
+  }
+}
+```
+
+### `diff`
+
+The change between two exact commits, read with the one-time credential of a read-token act your key signed (entry: its seq at the destination). The server keeps the credential and spends it on this read. It signs nothing. The answer holds at most 40 KiB of text. Over a bound, truncated is true and the text says truncated. An object the host does not give is an error, and the answer shows no change it did not read. Sign another read-token for another diff.
+
+```json
+{
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "entry": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "base": {
+        "type": "string",
+        "description": "The exact commit ID of the older side."
+      },
+      "integration": {
+        "type": "string",
+        "description": "The exact commit ID of the newer side."
+      },
+      "target": {
+        "type": [
+          "string",
+          "integer"
+        ],
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
+      }
+    },
+    "required": [
+      "entry",
+      "base",
+      "integration"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "base": {
+        "type": "string"
+      },
+      "integration": {
+        "type": "string"
+      },
+      "files": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "truncated": {
+        "type": "boolean"
+      },
+      "text": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "base",
+      "integration",
+      "files",
+      "truncated",
+      "text"
+    ]
+  },
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": true
   }
 }
 ```
@@ -1208,7 +1322,7 @@ The acts of one scope, as act tools would describe them: each kind with its deri
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "cursor": {
         "type": "string"
@@ -1242,7 +1356,7 @@ Signs one act of a scope by its native kind, under the same custody and binding 
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "kind": {
         "type": "string"
@@ -1421,10 +1535,17 @@ Install an operator-trusted package in this room by immutable Git URI and indepe
 }
 ```
 
-The device-application cohort requires `owner` as a full MemberRef for a
-package declaring `device-command@1`. Its native Rules checks current
-membership before issuing the bounded grant. Other cohorts reject this
-owner selection. The owner is part of the kept signed request's meaning.
+The device-install families, including the commons cohort, require `owner`
+as a full MemberRef for a package declaring `device-command@1`. Their
+native Rules checks current membership before issuing the bounded grant.
+Older install proof families reject this owner selection. The owner is
+part of the kept signed request's meaning.
+
+A package can require the commons endpoint. The host reports
+`commons-missing` before signing if the room has no verified commons ref.
+That host check is not a recorded refusal in an older room. Directory@22
+also checks the requirement sent by Rules@14 and records `commons-missing`
+if its commons ref is absent.
 
 ### `application_installation`
 
@@ -1639,7 +1760,8 @@ works; the count given is the default recipe's.
 
 Git steps: `clone` and `propose` use Git outside the server. The server
 returns the remote URL and a one-time credential; the agent's own Git, or
-a generic credential helper, uses them. The server runs no Git.
+a generic credential helper, uses them. The server runs no Git program. The
+`diff` tool reads Git objects over HTTP, with that one-time credential.
 
 `propose` runs, in the recipe test, in a room of its own under
 `change-demo3`, the manifest-list change definition, with a version 3
@@ -1755,10 +1877,10 @@ valid. A closed endpoint returns `404` before reading the request body or
 addressing either namespace. This applies to the control routes too.
 
 `MCP_TOOL_ADDITIONS` is an optional JSON array of distinct known generic
-tool names, at most 1,024 characters and 18 names. Unknown names,
+tool names, at most 1,024 characters and 20 names. Unknown names,
 duplicates, a different JSON shape, or an oversized setting close the
 endpoint. The hosted default omits `create`, `install_application`,
-`credential`, `prepare`, `join`, `record`, `step`, and `text`. To enable
+`credential`, `diff`, `prepare`, `join`, `record`, `step`, and `text`. To enable
 needed tools, name them explicitly, for example `["prepare","text"]`.
 The other accepted names are `room`, `inspect`, `application_installation`,
 `items`, `steps`, `sends`, `wait`, `settle`, `actions`, and `act`. The
@@ -2166,7 +2288,113 @@ act. A lost or unavailable outcome offers only its original request check,
 using the retained custody key. Full native responses remain under custody;
 the card receipt shows item, version and outcome.
 
+A card signs the revisions it displayed. An action can carry its own `at`.
+Its names must be ones the card displayed, with the displayed revisions. A
+card with no `at` on an action signs the card's `at`. If a subject has moved,
+the act still goes out, and the scope refuses it with `revision-moved`. A
+subject that has since gone final, such as a superseded version, keeps its
+captured revision.
+
+A card source can ask for the check of an earlier send. Each read of such a
+card asks custody for an act that this server sent at the card's scope with
+no outcome kept. If custody holds one, the card offers only **Check original
+request**, and it keeps that offer after a restart. While custody holds such
+an act, every other act of that card and of any retained card at that scope is
+refused before it signs. This server's custody is the limit of that refusal:
+a card with another custody home reaches the scope, and the scope judges its
+revisions.
+
+The check asks the scope for the exact request and signs nothing. Before the
+signed intent's `notAfter`, an act with no answer stays unknown, and the receipt
+gives the time to check again. Intents live at most 15 minutes. One minute
+after `notAfter`, a margin for clock differences, the check sends the same bytes
+once. An act that landed answers with its first entry. An act that never arrived
+is refused as `expired`, so the record ends as `refused` and the next read
+offers the card's acts again. If the scope cannot be reached, the record stays
+unknown.
+
+If this server holds no record, the check says so and says that this does not
+show the act was not sent.
+
+**View diff** on a card with `diffRead` goes through `view_act`, because it
+signs one `read-token` act. It reads one bounded `diff` and shows the answer
+on the diff page. Reading a card signs nothing.
+
 The generic kit supplies the carousel, detail, diff, updates and receipt
 screens. Journey projections, package installation and desktop-host
 registration are separate work. The implementation boundary and fixture
 browser command are in the [card-kit note](../notes/implementation/2026-10-18-compact-card-kit.md).
+
+## Local project views
+
+The opt-in [project entry](../apps/views/README.md) supplies four reads and
+the compact cards. It uses your existing local configuration and signer.
+It creates no key or room. The ordinary MCP server keeps its existing
+tool list; `mcp-tools.json` describes that ordinary list.
+
+| Read | Result |
+| --- | --- |
+| `needs_you` | Requests, reviews and merges that need your attention. |
+| `work` | Agent commitments, terms, blocks and linked changes. |
+| `context` | Question text, approvals, comments, conditions and Brief pin. |
+| `change` | One change's exact version: base, integration, reviews, checks, rules, merges and linked issues. |
+| `since` | Heads changed since an explicit Mark reviewed action. |
+
+Attention rows name their pinned declaration clause and observed head.
+Work rows name each agent's controller beside the current conditions.
+Context distinguishes text versions and the requests for their approval.
+
+A read admits at most eight scopes, including Membership, Directory and
+other support reads. Support scopes consume the same eight-scope limit.
+At most six lanes fit in the ordinary flat-directory case, and other
+support scopes leave fewer lane slots. A room with more than six lanes
+has omissions and cannot mark reviewed because the collection is incomplete.
+The reads return at most 50 attention rows and read at most 512 live items.
+Results report their read counts, omissions and incomplete discovery.
+A vector of observed heads does not claim one atomic room snapshot.
+
+Question context reads at most 512 total entries from the selected lane,
+including entries unrelated to that Question. Each entry counts once,
+including the current text entry. Exactly 512 entries fit this history
+bound. Beyond 512 lane entries, `context` and the Decision card are
+unavailable even if the Question itself is small. The existing page,
+request and byte limits can stop the read sooner. If the 16-page bound
+decides first, the read reports `page-limit`.
+
+The public context omits unrelated live lane items and does not repeat
+the current body in its version list. The Decision card has a separate
+60 KiB display budget. `context` caps the complete serialized result at
+256 KiB. JSON escaping and history metadata can exceed that bound even
+for a legal 64 KiB Question body. The read then refuses with
+`context-output-limit` rather than returning a partial Question.
+
+The question-with-Brief profile records a required `brief` digest when
+the question is asked. That value stays fixed when the text is revised.
+A different Brief needs a new question. Earlier question profiles remain
+unbound. Approvals name the question's text version; they grant no
+authority over the Brief or the conditions.
+
+The operator selects the package's local Brief file when starting the
+project entry. `dap://package/brief` serves those exact UTF-8 bytes as
+`text/plain`, with a 64 KiB limit and their byte digest. Context reports
+whether that digest matches the question's stored pin. A mismatch does
+not select another file or substitute the question-body digest. The
+existing HTML resources under `ui://dap/` keep their own digest and
+policy checks.
+
+The Decision card retains the selected text version and native expected
+revisions. Approve and Decide use the ordinary signing and request
+custody path. An attention row explains why an item is listed; native
+guards decide whether an act is allowed.
+
+Mark reviewed writes only the captured full scope references and heads
+to local storage under `DAP_HOME`. It signs no native act. The server
+rechecks the displayed cut and heads before writing. A duplicate mark
+does not rewrite the file. A mark requires a complete collection with no
+unread scopes, omitted scopes, or omitted rows. It covers the displayed
+heads and scopes, without claiming review of every journal body between
+heads.
+
+`since` is read-only: equal heads produce no row, and each new head
+appears once in a response. Repeated reads keep showing that change
+until another explicit mark. Reading a card does not clear it.

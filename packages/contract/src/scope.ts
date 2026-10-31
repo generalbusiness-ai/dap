@@ -16,7 +16,7 @@ export type ScopeId = `sc_${string}`;
 export type Incarnation = `in_${string}`;
 
 /** The kinds of scope (section 2.1). `register` is new: the one scope of a deployment that has no creator (section 7.1). */
-export type ScopeKind = "register" | "directory" | "membership" | "rules" | "destination" | "inbox" | "task" | "lane";
+export type ScopeKind = "register" | "directory" | "membership" | "rules" | "destination" | "inbox" | "task" | "lane" | "commons";
 
 /** An Ed25519 public key: `key_` + unpadded base64url of its 32 raw bytes. */
 export type KeyId = `key_${string}`;
@@ -38,7 +38,7 @@ export type Base64Url = string;
 export type OperationId = `${number}:${number}`;
 
 /** A definition the platform supplies in code, by name and version (section 6.1). */
-export type PlatformDefinition = `platform:${"register" | "directory" | "directory-partition" | "membership" | "rules" | "destination" | "inbox" | "task"}@${number}`;
+export type PlatformDefinition = `platform:${"register" | "directory" | "directory-partition" | "membership" | "rules" | "destination" | "inbox" | "task" | "commons"}@${number}`;
 
 /** What a scope ID is the digest of. It holds no sequence number and no hash of the creating entry (section 2.1). */
 export interface Seed {

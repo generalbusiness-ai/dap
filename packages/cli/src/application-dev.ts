@@ -5,7 +5,7 @@ import { watch, type FSWatcher } from "node:fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { resolve } from "node:path";
 import type { Answer, Beside, Read, ReadRefusal, RetainedInput } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isRecord, isSignedIntentShape, parseStrictBytes, timeOf } from "@generalbusiness/dap-bytes";
+import { canonicalize, isDigest, isRecord, isSignedIntentShape, parseStrictBytes, readMinimumParameter, timeOf } from "@generalbusiness/dap-bytes";
 import { secretSigner } from "@generalbusiness/dap-client";
 import { prepareApplicationDirectory, readApplicationScenario } from "./application-files.ts";
 import { openApplicationScenario, type ApplicationDevelopmentSession } from "./application-scenarios.ts";
@@ -31,7 +31,7 @@ export async function runApplicationDevelopment(argv: readonly string[], cwd = p
 }
 
 const BODY_BYTES = 1024 * 1024;
-const READ_STATUS: Record<ReadRefusal, number> = { "no-repository": 404, archived: 410, "not-found": 404, "wrong-incarnation": 409, forbidden: 403, "scope-provisional": 409,
+const READ_STATUS: Record<ReadRefusal, number> = { behind: 503, "no-repository": 404, archived: 410, "not-found": 404, "wrong-incarnation": 409, forbidden: 403, "scope-provisional": 409,
   "unsupported-definition": 501, "history-unavailable": 503, "too-large": 413, unavailable: 503, "sessions-unavailable": 503, "clock-behind": 503, "rate-limited": 429 };
 const RELOAD = 'const source=new EventSource("/__dap/events");const status=document.createElement("aside");status.textContent="Local TEST preview; no room installation";status.style.cssText="position:fixed;bottom:0;left:0;right:0;padding:.4rem;background:#fff5cc;color:#222;font:12px system-ui;z-index:2147483647";document.body.append(status);source.onopen=()=>{status.textContent="Local TEST preview; live reload connected";};source.onerror=()=>{status.textContent="Live reload disconnected; local TEST preview retained";};source.onmessage=event=>{const data=JSON.parse(event.data);if(data.type==="reload")location.replace(data.preview);if(data.type==="error")status.textContent="Build failed; previous preview retained. Native writes are paused.";};';
 const PANEL = '<!doctype html><html lang="en"><meta charset="utf-8"><title>Local application fixture</title><style>body{font:1rem system-ui;margin:2rem}pre{white-space:pre-wrap;overflow-wrap:anywhere}iframe{width:100%;height:32rem;border:1px solid #aaa}</style><h1>Local application fixture</h1><p>Explicit public TEST actors and open fixture reads. No room enrollment, provider calls or durable host state.</p><button id="read">Read state</button> <button id="replay">Replay</button><pre id="result"></pre><iframe title="Application preview" src="/"></iframe><script type="module">const result=document.querySelector("#result");const read=async()=>{const meta=await(await fetch("/__dap/meta")).json();const state=await(await fetch("/v1/scopes/"+encodeURIComponent(meta.scope.scope))).json();result.textContent=JSON.stringify({meta,state},null,2);};document.querySelector("#read").onclick=read;document.querySelector("#replay").onclick=async()=>{result.textContent=JSON.stringify(await(await fetch("/__dap/replay")).json(),null,2);};void read();</script></html>';
@@ -115,6 +115,14 @@ export async function startApplicationDevelopment(directory: string, options: { 
         answer(response, await live.session.scope.submit(given["signed"], beside)); return;
       }
       if (request.method === "GET") {
+        if (url.searchParams.has("atLeast")) {
+          const minima = url.searchParams.getAll("atLeast");
+          if (minima.length !== 1 || !readMinimumParameter(minima[0])) json(response, 400, { error: "invalid-read-minimum" });
+          // This serialized local fixture has no arrival wait. Refuse the
+          // requested barrier explicitly instead of returning older state.
+          else read(response, { ok: false, reason: "unavailable" });
+          return;
+        }
         if (tail.length === 1 && tail[0] === "") { read(response, reads.summary(null)); return; }
         if (tail.length === 1 && tail[0] === "history") { read(response, reads.history(null, cursor)); return; }
         if (tail.length === 2 && tail[0] === "items") { read(response, reads.items(null, tail[1]!, cursor)); return; }

@@ -15,6 +15,16 @@ test("fact fields admit only declared native preparation kinds beside ordinary a
   expect(readApplicationProjection(make("device-command@1:answer")).sources["alert"]!.fields["answer"]!.of).toMatchObject({ kind: ["device-command@1:answer"] });
   for (const kind of ["device-command@1:execute", "device-command@2:answer", "invented@1:answer", "device-command@1:constructor"]) expect(() => readApplicationProjection(make(kind))).toThrow(ApplicationProjectionError);
 });
+test("opaque reference projection types preserve the fragment bound without accepting binding fact options", () => {
+  const make = (of: unknown) => ({ ...declaration(), sources: { alert: { ...declaration().sources.alert,
+    fields: { citation: { from: { kind: "value", name: "citation" }, of, nullable: false } },
+  } } });
+  expect(readApplicationProjection(make({ type: "reference", fragment: 512 })).sources["alert"]!.fields["citation"]!.of).toEqual({ type: "reference", fragment: 512 });
+  for (const of of [{ type: "reference" }, { type: "reference", fragment: -1 }, { type: "reference", fragment: 65537 },
+    { type: "reference", fragment: 512, under: "room" }, { type: "reference", fragment: 512, kind: ["note"] }]) {
+    expect(() => readApplicationProjection(make(of))).toThrow(ApplicationProjectionError);
+  }
+});
 // Invariant: declaration identity covers the exact typed read and is owned,
 // so later caller changes cannot alter the shared projection contract.
 test("a typed declaration owns its complete input and changes identity when the read changes", () => {

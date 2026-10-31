@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
 import type { Head, Item, Read, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { isRead, isSummary, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
-import { platform } from "@generalbusiness/dap-platform";
+import { COMMONS_COHORT, platform } from "@generalbusiness/dap-platform";
 import { projectScopeApplications } from "../src/scope-index-applications.ts";
 
 function ref(kind: ScopeRef["kind"], ordinal: number): ScopeRef {
@@ -83,6 +83,18 @@ test("application listing projects exact metadata from scripted supported native
     expect(JSON.stringify(result)).not.toContain(privateText);
     expect(JSON.stringify(result)).not.toContain("private-repository");
   }
+});
+
+// Invariant: the Commons Rules family exposes the same closed release metadata,
+// without treating its private summary values as exported installation fields.
+// This is a scripted authenticated observation, not a native installation.
+test("application listing recognizes Commons Rules and exports only closed release references", () => {
+  const reply = observation([installation()], COMMONS_COHORT.rules);
+  const result = projectScopeApplications(rules, reply);
+  expect(result).toEqual({ applications: [{ scope: application, installItem: { scope: rules, item: 2 },
+    release, publisher, host: "git.example.test" }], errors: [] });
+  expect(JSON.stringify(result)).not.toContain(privateText);
+  expect(JSON.stringify(result)).not.toContain("private-repository");
 });
 
 // Invariant: unknown pins and declared lookalike items cannot masquerade as

@@ -54,4 +54,10 @@ test("captured revisions preserve values and exact subject coverage", () => {
   expect(() => capturedExpected({ ...at, selected: 0 }, fresh)).toThrow("bound subjects");
   const { linked: _linked, ...missing } = at;
   expect(() => capturedExpected(missing, fresh)).toThrow("bound subjects");
+  // A subject that left the live summary, such as a superseded version, keeps its captured revision. The name stays one the act binds.
+  const act = { also: { version: { item: "manifest", by: "manifest" }, computed: { code: "x" } } };
+  expect(capturedExpected({ on: 2, version: 3 }, { on: 2 }, act)).toEqual({ on: 2, version: 3 });
+  expect(() => capturedExpected({ on: 2, computed: 3 }, { on: 2 }, act)).toThrow("bound subjects");
+  expect(() => capturedExpected({ on: 2, other: 3 }, { on: 2 }, act)).toThrow("bound subjects");
+  expect(() => capturedExpected({ version: 3 }, { on: 2 }, act)).toThrow("bound subjects");
 });

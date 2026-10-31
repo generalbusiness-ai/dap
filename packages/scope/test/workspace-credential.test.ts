@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { Entry, FieldValue, FactRef, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, entryHash, factRefOf, intentDigest, newIncarnation, platformName, scopeIdOf, seedDigest, signIntent, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, entryHash, factRefOf, intentDigest, newIncarnation, platformName, scopeIdOf, signIntent, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { MemoryState, type Item, type RecordState } from "@generalbusiness/dap-derive";
 import { grantOf, keys, variant } from "@generalbusiness/dap-derive/testing";
 import { WorkspaceHost } from "../src/workspace-host.ts";
@@ -12,9 +12,11 @@ import type { EffectRequest } from "../src/operations.ts";
 import type { Sql } from "../src/sqlite.ts";
 import { START, at, create } from "./fixtures-native.ts";
 import { staged } from "./hosted.ts";
+import { workspaceAncestors } from "./support/workspace-ancestors.ts";
 
-// Native lineage, preparations, grants and folded state below are explicit
-// STAND-INS, not journals judged by live Membership or Directory. The actual
+// Ancestor journals use actual Register, Directory and Destination rules in
+// memory. Proof ports, lane creation, preparations, grants and folded state are
+// STAND-INS, not live Membership or Directory authority. The actual
 // WorkspaceHost, TokenDriver, ArtifactsProvider and Durable Object SQL run.
 // The binding answers are a stand-in provider, with no Git/provider claim.
 function fixture(laneIncarnation = 4) {
@@ -33,23 +35,14 @@ function fixture(laneIncarnation = 4) {
   const sealed = (at: ScopeRef, seq: number, input: Entry["input"], effects: Entry["effects"] = [], sends: Entry["sends"] = []): Entry => ({ v: 1, at, seq, prev: seq === 0 ? null : hash, time, clamped: false, epoch: 0, input, uses: [], prepared: [], effects, sends });
   const genesis = (s: Seed, at: ScopeRef, source: FactRef | null = null, n: number | null = null, message: Extract<Entry["input"], { type: "genesis" }>["message"] = null, sends: Entry["sends"] = []): Entry => sealed(at, 0, { type: "genesis", seed: s, inc: at.inc, kind: "establish", founding: null, source, n, message, decision: "applied" }, [], sends);
   const signed = (at: ScopeRef, kind: string, fields: SignedIntent["intent"]["fields"]): SignedIntent => signIntent({ v: 1, to: at, actor: keys.rita.key, kind, on: null, fields, expected: {}, idempotencyKey: kind, notAfter: timeOf(timeMs(START)! + 600_000) }, keys.rita.secret);
-  const registerSeed = seed("register", "platform:register@17", null), register = ref(registerSeed, 1);
-  const found = signed(register, "found", { founderHandle: "@rita", branch: "main" });
-  const directorySeed = seed("directory", "platform:directory@16", register, intentDigest(found.intent)), directory = ref(directorySeed, 2);
-  const repository = { host: "artifacts", namespace: "actual-room-space", name: "room-1", id: "room-1" };
-  const dirMessage = { class: "request", type: "create", body: { fields: { repository, claim: { self: true } } } } as const;
-  const claim = sealed(register, 1, { type: "act", signed: found, authority: [], presented: {} }, [{ effect: "value", item: 1, slot: "seed", value: seedDigest(directorySeed) }], [{ n: 0, to: directorySeed, message: dirMessage }]);
-  const claimFact = factRefOf(claim);
-  const destinationSeed = seed("destination", "platform:destination@12", directory, hash, 2), destination = ref(destinationSeed, 3);
-  const destMessage = { class: "request", type: "create", body: { fields: { repository, branch: "main", claim: claimFact, directory } } } as const;
-  const dir = genesis(directorySeed, directory, claimFact, 0, dirMessage, [{ n: 2, to: destinationSeed, message: destMessage }]);
-  const dest = genesis(destinationSeed, destination, factRefOf(dir), 2, destMessage);
+  const judged = workspaceAncestors(time, "actual-room-space", "workspace custody fixture");
+  const { register, directory, repository } = judged;
   const open = signed(directory, "open-issue", { definition: definition.digest });
   const laneSeed = seed("lane", definition.digest, directory, intentDigest(open.intent)), lane = ref(laneSeed, laneIncarnation);
   const laneMessage = { class: "request", type: "create", body: { fields: {}, directory } } as const;
   const creation = sealed(directory, 5, { type: "act", signed: open, authority: [], presented: {} }, [], [{ n: 0, to: laneSeed, message: laneMessage }]);
   const born = genesis(laneSeed, lane, factRefOf(creation), 0, laneMessage);
-  const entries = [genesis(registerSeed, register), claim, dir, dest, creation];
+  const entries = [...judged.entries, creation];
   const bodies = new Map(entries.map(entry => [entryHash(entry), { fact: factRefOf(entry), bytes: canonicalize(entry) }]));
   let calls = 0;
   const sources: WorkspaceSources = {
@@ -183,15 +176,15 @@ test("workspace mint caps workspace at 900 seconds, internal reads and staging a
     const cases = [
       { remaining: 3600, purpose: "workspace", seconds: 900, repository: selected.name, scope: "write" },
       { remaining: 3600, purpose: "fork-read", seconds: 120, repository: selected.name, scope: "read" },
-      { remaining: 3600, purpose: "staging", seconds: 120, repository: "room-1", scope: "write" },
+      { remaining: 3600, purpose: "staging", seconds: 120, repository: null, scope: "write" },
       { remaining: 37.9, purpose: "workspace", seconds: 37, repository: selected.name, scope: "write" },
       { remaining: 37.9, purpose: "fork-read", seconds: 37, repository: selected.name, scope: "read" },
-      { remaining: 37.9, purpose: "staging", seconds: 37, repository: "room-1", scope: "write" },
+      { remaining: 37.9, purpose: "staging", seconds: 37, repository: null, scope: "write" },
     ] as const;
     for (const [index, row] of cases.entries()) {
       const f = fixture(index + 30); held(f, timeOf(timeMs(START)! + row.remaining * 1000));
       const { host, calls } = adapter(f, native.storage.sql), reply = await mint(f, host, row.purpose);
-      expect(calls).toEqual([{ name: row.repository, scope: row.scope, seconds: row.seconds }]);
+      expect(calls).toEqual([{ name: row.repository ?? f.repository.name, scope: row.scope, seconds: row.seconds }]);
       expect(timeMs(reply.ends)! - timeMs(START)!).toBe(row.seconds * 1000);
       expect(custody(native.storage.sql, f)).toHaveLength(1);
       if (row.purpose !== "workspace") expect(host.credential(reply.token, keys.una.key), "internal credentials never use the public workspace handoff").toBeNull();

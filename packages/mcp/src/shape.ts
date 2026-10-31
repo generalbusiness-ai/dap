@@ -8,7 +8,7 @@
  */
 
 import type { FactRef, FieldValue, Item, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { isDigest, isFactRef, isMemberRef, isRecord, isScopeRef, textDigest, timeMs, utf8, wellFormed } from "@generalbusiness/dap-bytes";
+import { isDigest, isFactRef, isMemberRef, isRecord, isReference, isScopeRef, textDigest, timeMs, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import type { ActLike, FieldLike } from "./describe.ts";
 import { clip } from "./errors.ts";
 
@@ -65,6 +65,7 @@ function shaped(type: FieldLike, value: unknown, path: string, at: Shaping): Fie
       return isMemberRef(value) ? value as unknown as FieldValue : not("is not a member: give @handle, or { membership, member }");
     }
     case "item": return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : not("is not a local item ID");
+    case "reference": return isReference(value, Number(type["fragment"])) ? value as FieldValue : not("is not a document or entry reference with a bounded optional fragment");
     case "fact": return isFactRef(value) ? value as FactRef as unknown as FieldValue : not("is not a fact: { at, seq, hash }");
     case "scope": return isScopeRef(value) && value.kind === type["kind"] ? value as unknown as FieldValue : not(`is not a reference to a ${String(type["kind"])} scope: { scope, inc, kind }`);
     case "digest": return isDigest(value) ? value : not("is not a digest: sha256: and 64 hex characters");
@@ -138,9 +139,18 @@ export function shapeAt(given: unknown): Record<string, number> | undefined {
 }
 
 /** Check coverage only when building a new envelope; a custody re-report retains its original subjects and revisions. */
-export function capturedExpected(at: Record<string, number> | undefined, fresh: Record<string, number>): Record<string, number> {
+export function capturedExpected(at: Record<string, number> | undefined, fresh: Record<string, number>, act?: Pick<ActLike, "also">): Record<string, number> {
   if (at === undefined) return fresh;
-  if (Object.keys(at).length !== Object.keys(fresh).length || Object.keys(at).some((name) => !Object.hasOwn(fresh, name))) {
+  // A subject the captured display showed may since have left the live summary: a superseded version is final. Its captured
+  // revision stays, so the scope refuses the stale act. An `also` name must be one this act binds. For `on`, the scope decides:
+  // it requires exactly the keys it reads, and it refuses an extra `on` as `bad-intent`.
+  const left = (name: string): boolean => {
+    if (act === undefined) return false;
+    if (name === "on") return true;
+    const rule = ownValue(act.also, name) as { code?: string } | undefined;
+    return rule !== undefined && rule.code === undefined;
+  };
+  if (Object.keys(fresh).some((name) => !Object.hasOwn(at, name)) || Object.keys(at).some((name) => !Object.hasOwn(fresh, name) && !left(name))) {
     throw new Unshaped("at", "does not name exactly the act's bound subjects", Object.keys(fresh).sort().join(", ") || "no bound subjects: {}");
   }
   return at;

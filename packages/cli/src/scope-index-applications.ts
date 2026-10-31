@@ -3,7 +3,7 @@
 import type { Digest, KeyId, PlatformData, ReadRefusal, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { isDigest, isKeyId, isRead, isScopeRef, isSummary } from "@generalbusiness/dap-bytes";
 import { readApplicationReleaseUri } from "@generalbusiness/dap-client";
-import { ARCHIVE_APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, HARDENED_CERTIFIED_RULES_COHORT, TRUSTED_APPLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
+import { ARCHIVE_APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, COMMONS_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, HARDENED_CERTIFIED_RULES_COHORT, TRUSTED_APPLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
 
 export interface InstalledApplicationRow {
   readonly scope: ScopeRef;
@@ -25,6 +25,7 @@ const installationRules: ReadonlySet<string> = new Set([
   ARCHIVE_APPLICATION_COHORT.rules, ARCHIVE_DECLARED_APPLICATION_COHORT.rules,
   DEVICE_APPLICATION_COHORT.rules, ARCHIVE_DEVICE_APPLICATION_COHORT.rules,
   ARCHIVE_CERTIFIED_RULES_COHORT.rules, HARDENED_CERTIFIED_RULES_COHORT.rules,
+  COMMONS_COHORT.rules,
 ]);
 const sameScope = (left: ScopeRef, right: ScopeRef): boolean => left.scope === right.scope && left.inc === right.inc && left.kind === right.kind;
 
