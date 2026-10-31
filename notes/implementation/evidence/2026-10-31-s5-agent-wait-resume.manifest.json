@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint, one failed gate at 110a0d56 and one gate stopped at 69e76cf8, kept separately. The focused captures ran before main was merged, at the commits the note names, and the note says which results carry over. No hosted run, deployment or autonomous external agent is claimed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-s5-agent-wait-resume",
+  "checkpoint": {
+    "commit": "a72eed596a9570e385bef8a5a2ec613a8c172f21",
+    "tree": "88fa3aaa91cfe13ae42547f4b039f628f7231cf2"
+  },
+  "fileCount": 200,
+  "files": [
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6516,
+      "sha256": "42c7677a69ec2d5d33da7df53faeb5c77430ab9105a6281e27fd6dee50c85a4d"
+    },
+    {
+      "path": "gate/gate.stderr.log",
+      "bytes": 37,
+      "sha256": "c6be438c131bf50900d5108ab0c7ee2c931bd33a7531cbac8863023878c5eabc"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gate/gate.sh",
+      "bytes": 627,
+      "sha256": "3a34fe80bdee7fadbee23db16649e55adbd6a5df9dd11cc9b29f87162fdf2705"
+    },
+    {
+      "path": "gate-failed-prompt-path/gate.stdout.log",
+      "bytes": 7669,
+      "sha256": "65c60896ae17813aa265bbcde95ea4a07adbd54a59ca57cc26add30e63ac3e5b"
+    },
+    {
+      "path": "gate-failed-prompt-path/gate.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "gate-stopped-wrong-seal/gate.stdout.log",
+      "bytes": 8424,
+      "sha256": "7cc75e61d1780f846960c07962f792a40455eeb56d14786c07470147b8910909"
+    },
+    {
+      "path": "gate-stopped-wrong-seal/WHY.txt",
+      "bytes": 178,
+      "sha256": "b0a0b519bbc4fe8b43b6854a2e67ffda28549c86a9aa7729493180591c7f6b6e"
+    },
+    {
+      "path": "focused/mcp-production-types-1/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused/mcp-test-types-2/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused/mcp-native-types-1/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused/lanes-native-types-1/stdout.log",
+      "bytes": 15435,
+      "sha256": "dabac2a69c549392994809b5dd1dedd0ec994fff4f4d73f895e1bac59f13dfe5"
+    },
+    {
+      "path": "focused/lanes-native-types-2/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "focused/compatibility-1/stdout.log",
+      "bytes": 370,
+      "sha256": "fb18a30d374c7b43e41c68d91ee5cd941bf2866ee5ac5167b6eb62dab8ac4816"
+    },
+    {
+      "path": "focused/plain-owners-1/stdout.log",
+      "bytes": 4423,
+      "sha256": "cca60449054194285a73d765b6e356d27c61c7dbf2d86ba701abe9eec8a9345e"
+    },
+    {
+      "path": "focused/wire-owner-2/stdout.log",
+      "bytes": 2597,
+      "sha256": "bfcdeb8b34edd1a87bba3540ba16e838b22d22bb2f1cc0164eac3fc7980b6606"
+    },
+    {
+      "path": "focused/native-owners-1/stdout.log",
+      "bytes": 13352,
+      "sha256": "b146df6ccc2dab8f4b470e4e99d51f00d3623eaa355111e9d97f5f46c663f805"
+    },
+    {
+      "path": "focused/http-owner-2/stdout.log",
+      "bytes": 2101,
+      "sha256": "3950391b6015454b715872154acea6336616f62506fce9cf5bc242e13ba59a8d"
+    },
+    {
+      "path": "focused/inventory-owner-1/stdout.log",
+      "bytes": 1305,
+      "sha256": "b9f4a9c0b58f92840d3f6fa45372ec5a681bacf21d3cf218df28467701a23d57"
+    },
+    {
+      "path": "focused/pinned-client-protocol-source.json",
+      "bytes": 10251,
+      "sha256": "bfc12296a0bad3f72a1faf31f1b18d2a96f9afff3171df9e55b93ae1a814b2f6"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 20643,
+      "sha256": "dd7cbda7704202898f98b9a827e651438da16d8259a806eaf221ab09b5ba67be"
+    }
+  ]
+}

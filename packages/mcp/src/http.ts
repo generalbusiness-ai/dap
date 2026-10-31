@@ -282,11 +282,11 @@ export class McpHttp {
     const id = m.id ?? null;
     const methodHeader = request.headers.get("mcp-method");
     if (methodHeader === null || !safeHeader(methodHeader) || methodHeader !== m.method) return rpcJsonReply(400, rpcError(id, HEADER_MISMATCH, "Mcp-Method must name the request's method."));
-    if (m.method === "tools/call") {
+    if (m.method === "tools/call" || m.method === "prompts/get") {
       const name = request.headers.get("mcp-name");
       const params = isRecord(m.params) ? m.params : {};
       const decoded = name !== null && safeHeader(name) ? decodeName(name) : null;
-      if (decoded === null || decoded !== params["name"]) return rpcJsonReply(400, rpcError(id, HEADER_MISMATCH, "Mcp-Name must name the tool."));
+      if (decoded === null || decoded !== params["name"]) return rpcJsonReply(400, rpcError(id, HEADER_MISMATCH, `Mcp-Name must name the ${m.method === "prompts/get" ? "prompt" : "tool"}.`));
     }
     if (m.method === "subscriptions/listen" && !notification) {
       if (this.#open.size >= STREAMS_MOST) return rpcJsonReply(409, rpcError(id, TOO_MANY_STREAMS, `At most ${STREAMS_MOST} streams are open at once.`));
