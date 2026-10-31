@@ -1,9 +1,8 @@
 # S4: bounded room reads and a local review mark
 
-Status: focused checks passed at c49e31cf1cbf6e8ee957e2b45693c2f3c8856e30, tree
-ecd3eddc9f332559a0a86d04d6b4f1a2e0896173. Gate 4 and review remain pending.
-Gate 3 covers historical 399269c7, not these repairs; all 62 old rows and the
-first repair failure stay exact. Real S1 rendering remains owed.
+Status: Gate 4 passed at `43d918da8b4ce6ae5954d246f4c9a84fc7a85cdb`, tree
+`4a7e8abd405bc181aae9129068b7bc0803d3e5ea`. Review and real S1 rendering remain
+owed. All 68 prior rows retain their outcomes.
 
 ## Changes and boundaries
 
@@ -65,7 +64,7 @@ fallback exists. `ui://` integrity and policy stays intact. Node factory
 imports read no home or key and open no port or room; configured transport and
 signer perform the work.
 
-## Checker repairs awaiting Gate 4
+## Checker repairs
 
 Correction scope `f705e7b77c46280e10ccd44716828be49adcb41a` repairs six edges:
 omitted application arguments default to `{}`; changed or unreadable Decision
@@ -82,13 +81,13 @@ history allowance, both context and Decision are unavailable. The V2 boundary
 case passes 512 and refuses 513 entries. An ordinary 65,536-byte body fits
 context after removing duplicates; JSON escaping or history metadata can still
 exceed its 256 KiB serialized bound and return context-output-limit. Focused V2
-passed; Gate 4 remains pending.
+and Gate 4 passed.
 
 ## Source and evidence
 
-The proposed final diff from Main has 42 paths: historical 40, the new Decision
-owner and repair manifest. Current c49 has 41 paths; adoption adds only this
-note delta and the companion.
+At 43d the gated diff against Main 112eff12 has 42 paths: historical 40, new
+Decision owner and repair manifest. c49-to-43d changed only the note and
+companion; this final tail changes the same two documents.
 
 Request `a7d77a9bb52f9b490fe002d3d4684851b3ca640e`, promise
 `185054c48cd88f847085bf417d43df15648e1f49`, and ruling
@@ -196,6 +195,7 @@ to three decimals.
 | U66 `R/raw/v2/checks/types-app-views` | `tsc -p apps/views/tsconfig.json --noEmit` | child 0; capture 0 | 0.352 | 1.321 | `a1fcb4be19f51e7ee9ee985340bd0cf793dc231f19440418b18809b0a32e6b81` |
 | U67 `R/raw/v2/checks/node-owners` | `node --test apps/views/test/s4.test.mjs apps/views/test/decision.test.mjs` | child 0; capture 0; 11 pass | 0.921 | 1.755 | `100de32e0da96bb2feef0aa98a51785055f3879091c1b345b3f7b3cc09f42090` |
 | U68 `R/raw/v2/checks/mcp-read-tools-owner` | `node node_modules/vitest/vitest.mjs run --project mcp packages/mcp/test/read-tools.test.ts --reporter=verbose` | child 0; capture 0; 4 pass | 1.517 | 1.946 | `b58a25a829d7179f429360e51a49f2d2cd3575691421b822c540476dd21c240c` |
+| U69 `G4/gate/outer/gate-1` | `npm run gate` | child 0; capture 0; all five stages passed | 1031.122 | 2185.096 | `145ac4b6b06696aca38e96bab5a257b68d02c7dee79fa55e14fe11f98e5d1319` |
 
 The historical U01–U61 receipts sum to 2,123.847197 command-wall seconds and
 4,316.072311 host child CPU seconds, excluding U62. These include
@@ -216,6 +216,24 @@ All streams closed without drops and tracked source stayed unchanged. New
 durations use receipt elapsedSeconds/commandHostChildCpuSeconds; Darwin 27.2.0,
 arm64, 18 CPUs, uncontrolled load/caches. Each receipt includes its host
 sample.
+
+## Gate 4 at the repaired source
+
+All five stages passed: Node 95, Counting 56, Plain 3,202 with one skip,
+Native 889 with two skips; Plain has no callback gap. Native live 871 with
+two skips leaves 18 passed final-only cases, all `turn.test.ts` with numeric
+final durations. Scope
+timing 250/251 is partial because the recorder skipped; 81 unknown/suite
+observations and zero contradictions do not prove a complete callback census.
+Four error markers were zero. All 3608 Source files matched Git/current bytes
+and modes.
+
+Wall/host CPU seconds: command 1031.122456083/2185.095948, collector
+1031.279915959/2185.243487, runner 1032.70208625/2189.846254. Never add these
+nested boundaries. Host 11:27:13.291772 UTC: Darwin 27.2, arm64/18 CPUs, load
+1.14697/1.22168/1.31934; caches uncontrolled, no physical drain claim. The
+[Gate 4 unit](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-review-repair-gate)
+and full inventory bind through the repair manifest.
 
 ## Historical outcomes and their limits
 
@@ -336,9 +354,9 @@ numeric guard typo remain preparation history, not project, gate or copier
 failures. Original PINS still records incorrect `0644`; a separate closure
 records actual `0444`. Both stay retained, without rewriting PINS.
 
-The A8 follow-up cannot certify integrated production; the repairs still need
-Gate 4 and exact-source review. Real S1-room rendering remains owed under
-`449c58c7f7b76f25c5575bbb9f30403f7e0d3960` and
+The A8 follow-up cannot certify integrated production; Gate 4 validates the
+repairs, with exact-source review still owed. Real S1-room rendering remains
+owed under `449c58c7f7b76f25c5575bbb9f30403f7e0d3960` and
 `f152f847ca5dc1a009f735aa6ddc862a1eb7bcb9`.
 
 App owners exercise real adapters, codecs, default-fetch bounds and file
