@@ -1,12 +1,12 @@
 /** One loaded-Page text proposal task. No automatic merge, durable outbox or replacement signature. */
 import { freeze } from "@generalbusiness/dap-bytes";
 import type { Answer, Beside, DeclaredDefinition, Digest, FactRef, FieldValue, Grant, Head, KeyId, ScopeId, ScopeRef, Seed, SignedIntent, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, digestBytes, entryHash, isFactRef, scopeIdOf, utf8, verifySignedIntent, wellFormed } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, digestBytes, entryHash, intentDigest, isFactRef, scopeIdOf, utf8, verifySignedIntent, wellFormed } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, declaredHandle, httpTransport, shapeDeclaredAct, signedIntent, signedReads } from "@generalbusiness/dap-client";
 import { expectedOf, heldActs, type DefinitionShape } from "@generalbusiness/dap-cli/browser";
 import { ARCHIVE_DEVICE_PUBLICATION_COHORT, editPath, fileSound, platform } from "@generalbusiness/dap-platform";
 import { knownLIST1 } from "./source-support.ts";
-import { actAssociation, openingScope, openRoom, sessionSigner, Unreadable, type ChangeView, type Room } from "./data.ts";
+import { actAssociation, endOriginal, keepOriginal, openingScope, openRoom, sessionSigner, Unreadable, type ChangeView, type Room } from "./data.ts";
 
 export interface EditSource { definition: string; manifestFact: FactRef; sourceFact: FactRef; scope: ScopeRef; manifest: number; opened: Digest; base: string; path: string; digest: Digest; size: number; content: string }
 export interface EditDraft { title: string; path: string; content: string }
@@ -165,15 +165,20 @@ async function sendStep(room: Room, task: EditTask, kind: EditStep["kind"], targ
   const current = await taskRoom(room, task, options);
   if (await head(current, task.workflow === "list1") !== task.base) throw new Unreadable("The published base moved before submission. Nothing new was sent.");
   if (kind === "propose-manifest") await verifiedCollectedSource(current, task);
-  check(options); step.attempted = true; options.changed?.();
+  check(options);
+  await keepOriginal(current, step.signed, step.beside);
+  step.attempted = true; options.changed?.();
   try { step.answer = await h.submit(step.signed, step.grants, step.beside); }
   catch { task.state = "unknown"; task.message = `${kind}: outcome unknown. The original request is kept in this loaded Page. No next step was sent.`; options.changed?.(); return false; }
   options.changed?.(); // Preserve known answer before receipt or other awaited reads.
+  const digest = intentDigest(step.signed.intent);
+  if (step.answer.answer === "refused" || step.answer.answer === "archived" || step.answer.answer === "mismatch") await endOriginal(current, digest);
   if (step.answer.answer === "refused") { task.state = "refused"; task.message = `${kind} refused: ${step.answer.reason}${step.answer.name ? ` (${step.answer.name})` : ""}. Earlier accepted steps remain recorded.`; return false; }
   if (step.answer.answer !== "accepted") { task.state = "unknown"; task.message = `${kind}: ${step.answer.answer}; outcome unknown. Check the original request before another action.`; return false; }
   const followed = await h.followReceipt(step.answer.receipt);
   if (!followed.ok || followed.entry.input.type !== "act" || canonicalize(followed.entry.input.signed) !== canonicalize(step.signed)) { task.state = "unknown"; task.message = `${kind} returned acceptance; its recorded entry could not be verified. The answer and request are retained.`; return false; }
   step.receiptVerified = true;
+  await endOriginal(current, digest);
   return true;
 }
 

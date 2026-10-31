@@ -90,7 +90,7 @@ test("page join refuses mismatched encoding before submission and accepts script
     const result = answerText({ service: session.service, directory: repository.directory.scope, membership: repository.membership, key: sessionKey(session), answer, scope: repository.membership.scope, kind: "join", on: null, before: { seq: 0, hash: textDigest("scripted before head") }, after: null, observation: null });
     if (answer.answer !== "refused") {
       expect(result.join(" ")).toContain("before another act");
-      expect(result.join(" ")).toContain("same signed envelope; this page does not retain it");
+      expect(result.join(" ")).toContain(answer.answer === "unavailable" ? "same signed envelope; while the room keeps a copy, Check original request sends the same bytes" : "same signed envelope; this page does not retain it");
     }
   }
 

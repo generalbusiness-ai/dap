@@ -39,8 +39,8 @@ interface DispatchCounts { attempted: number; acknowledged: number; diagnosed: n
 
 /**
  * One alarm combines timed deadlines, outbox dispatch, outside-operation
- * attempts, in-memory driver work, signer maintenance, archives and credential
- * expiry. Each persistent owner supplies its retained wake after a restart.
+ * attempts, in-memory driver work, signer maintenance, archives, credential
+ * expiry and the time bound of original requests. Each persistent owner supplies its retained wake after a restart.
  * Clearing one cause preserves the others; an empty list clears the platform alarm.
  *
  * The alarm is always the earliest remaining wake (authority note, section 5.4,
@@ -61,13 +61,15 @@ export class Wakes {
   #driver: number | null = null;
   readonly #archive: (() => Timestamp | null) | undefined;
   readonly #credentials: (() => Timestamp | null) | undefined;
+  readonly #originals: (() => Timestamp | null) | undefined;
 
-  constructor(store: Store, alarm: Alarm, dispatches = true, archive?: () => Timestamp | null, credentials?: () => Timestamp | null) {
+  constructor(store: Store, alarm: Alarm, dispatches = true, archive?: () => Timestamp | null, credentials?: () => Timestamp | null, originals?: () => Timestamp | null) {
     this.#store = store;
     this.#alarm = alarm;
     this.#dispatches = dispatches;
     this.#archive = archive;
     this.#credentials = credentials;
+    this.#originals = originals;
     this.deadline = { set: (at) => { store.setDeadline(at); return this.set(); } };
     this.maintenance = { set: (at) => { store.setSignerMaintenance(at); return this.set(); } };
   }
@@ -82,7 +84,8 @@ export class Wakes {
     const maintenance = this.#store.signerMaintenance();
     const archive = this.#archive?.() ?? null;
     const credentials = this.#credentials?.() ?? null;
-    const at = [deadline === null ? null : timeMs(deadline), dispatch, this.#store.nextSend(), this.#driver, maintenance === null ? null : timeMs(maintenance), archive === null ? null : timeMs(archive), credentials === null ? null : timeMs(credentials)].filter((ms): ms is number => ms !== null);
+    const originals = this.#originals?.() ?? null;
+    const at = [deadline === null ? null : timeMs(deadline), dispatch, this.#store.nextSend(), this.#driver, maintenance === null ? null : timeMs(maintenance), archive === null ? null : timeMs(archive), credentials === null ? null : timeMs(credentials), originals === null ? null : timeMs(originals)].filter((ms): ms is number => ms !== null);
     return this.#alarm.set(at.length === 0 ? null : timeOf(Math.min(...at)));
   }
 }

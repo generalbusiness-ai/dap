@@ -219,7 +219,7 @@ export function answerText(acted: Acted): string[] {
     case "accepted": known = `Accepted ${acted.kind}: ${a.receipt.fact.at.scope}:${a.receipt.fact.seq}, hash ${a.receipt.fact.hash}, incarnation ${a.receipt.fact.at.inc}.`; break;
     case "archived": case "refused": case "unavailable": case "mismatch": known = nonacceptedAnswerText(a); break;
   }
-  const recovery = a.answer === "archived" || a.answer === "unavailable" || a.answer === "mismatch" ? [`Inspect artroom log ${acted.scope} and the original request before another act. Recovery requires the same signed envelope; this page does not retain it.`] : [];
+  const recovery = a.answer === "archived" || a.answer === "unavailable" || a.answer === "mismatch" ? [`Inspect artroom log ${acted.scope} and the original request before another act. Recovery requires the same signed envelope; ${a.answer === "unavailable" ? "while the room keeps a copy, Check original request sends the same bytes" : "this page does not retain it"}.`] : [];
   return [known, ...recovery, ...(acted.observation === null ? [] : [`Observation unknown: ${acted.observation} Inspect artroom log ${acted.scope}${a.answer === "accepted" ? ` and artroom show ${a.receipt.fact.at.scope}:${a.receipt.fact.seq}` : ""} before submitting another act; do not resubmit to recover observation.`])];
 }
 export function answerLine(acted: Acted): HTMLElement {

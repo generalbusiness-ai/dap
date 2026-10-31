@@ -20,14 +20,15 @@ import { WorkbenchWork } from "./workbench-work.ts";
  * trusted code can still invoke signing: screens must use the sandbox host.
  */
 
-import { creationOffer, type Signer } from "@generalbusiness/dap-client";
+import { creationOffer, DEVICE_KEY_LINK, type OriginalRow, type Signer } from "@generalbusiness/dap-client";
 import { legacySettingsKey, pageKeyStore } from "./browser-key-store.ts";
 import { migratePageOperations } from "./page-key-migration.ts";
 import { connectInvitation, originalConnection, creatorConnectionFiles, type CreatorBinding } from "./connection-custody.ts";
 import { originalStart, startRoom, type StartedRoom } from "./start-custody.ts";
 import type { Answer, FieldValue, Head, MemberRef, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, isKeyId, isScopeId, isScopeRef, unb64url } from "@generalbusiness/dap-bytes";
-import { act, actAssociation, actsOn, issueCreation, fieldValue, listLanes, loadCommonsView, loadChange, loadIssue, loadRules, pageObservationSource, roomInitialization, initializationStillCurrent, openRoom, placeOf, sessionKey, siteAddress, type Acted, type Place, type Room, type Session } from "./data.ts";
+import { checkAnswerLine, checkOriginalRequest, lockedScopes, openOriginals, originalLine } from "./original-check.ts";
+import { act, actAssociation, actsOn, issueDeviceKey, issueCreation, fieldValue, listLanes, loadCommonsView, loadChange, loadIssue, loadRules, pageObservationSource, roomInitialization, initializationStillCurrent, openRoom, placeOf, sessionKey, siteAddress, type Acted, type Place, type Room, type Session } from "./data.ts";
 import { PageObservation, pollingInterval } from "./page-observation.ts";
 import { bindDisclosures, openDialog, releaseDialog } from "./popups.ts";
 import { actsPanel, answerLine, nonacceptedAnswerText, changeScreen, failureScreen, h, icon, whoLine, issueScreen, roomScreen, rulesScreen } from "./view.ts";
@@ -484,7 +485,7 @@ function shell(destination: Destination, room: Room | null, ...content: HTMLElem
     h("div", { class: "shell-disclosure-content" }, h("p", { title: directory }, name), h("a", { href: "#/join" }, "Join another room"))) : null;
   const accountControl = () => h("details", { class: "shell-disclosure account-disclosure" },
     h("summary", { class: "account", "aria-label": `Account: ${account}`, "data-focus-key": controlKey(shellContext, "account-connection") }, h("span", { class: "avatar", "aria-hidden": "true" }, account.replace(/^@+/, "").slice(0, 1).toUpperCase()), h("span", { class: "account-label" }, account)),
-    h("div", { class: "shell-disclosure-content" }, whoLine(room), h("a", { href: "#/join" }, "Change connection")));
+    h("div", { class: "shell-disclosure-content" }, whoLine(room), h("a", { href: "#/devices" }, "Devices"), h("a", { href: "#/join" }, "Change connection")));
   const navigation = (mobile = false) => h("nav", { class: mobile ? "navigation mobile-nav" : "navigation", "aria-label": "Room" },
     ([ ["issues", "Issues", "#/"], ["changes", "Changes", "#/?kind=change"], ["rules", "Rules", "#/rules"], ...(room.commons ? [["commons", "Commons", "#/commons"] as const] : []) ] as const).map(([kind, label, href]) => h("a", { class: "nav-item", href, "data-focus-key": controlKey(shellContext, `nav:${kind}`), ...(destination === kind ? { "aria-current": "page" } : {}) }, label)), room.publication === "unpublished" ? null : h("a", { class: "nav-item", href: siteAddress(room, ""), title: "Latest published pages" }, "Pages"));
   const skip = h("a", { class: "skip", href: "#page-main" }, "Skip to content");
@@ -571,6 +572,51 @@ interface PanelOptions {
   customForm?: (send: (kind: string, on: string, typed: Record<string, string>) => void, blocked: boolean, draftKey: string) => HTMLElement;
   tasks?: (offered: Awaited<ReturnType<typeof actsOn>>, send: Send, context: ActionContext) => readonly string[];
 }
+/** Scopes where this page's key has an open copy within its margin. Each draw reads them again. */
+let lockedByCopy: ReadonlySet<ScopeId> = new Set();
+/** The last answer of each press, by digest, and why a send stopped. Memory only. */
+const originalAnswers = new Map<string, string>();
+
+/** One line and one button for each open copy, then the answers of earlier presses. */
+async function originalNotices(room: Room, rows: readonly OriginalRow[]): Promise<HTMLElement[]> {
+  const { issues, changes } = rows.length > 0 ? await listLanes(room).catch(() => ({ issues: [], changes: [] })) : { issues: [], changes: [] };
+  const lines = rows.map((row) => {
+    const check = h("button", { type: "button", class: "primary", "data-original-check": row.digest }, "Check original request");
+    check.addEventListener("click", () => {
+      check.setAttribute("disabled", "");
+      void startWorkbench(async () => {
+        const result = await checkOriginalRequest(room, row.digest);
+        originalAnswers.set(row.digest, checkAnswerLine(result));
+        await draw();
+      });
+    });
+    return h("div", { class: "answer", role: "status", "data-original-copy": row.digest }, h("p", {}, originalLine(row, room, [...issues, ...changes])), check);
+  });
+  const answers = [...originalAnswers.entries()].map(([key, text]) => h("p", { class: "answer", role: "status", "data-original-answer": key }, text));
+  return [...lines, ...answers];
+}
+
+/** Invite another device for a member. Only a role that holds `membership.invite` signs the act. */
+function devicesScreen(room: Room): HTMLElement {
+  const title = h("h1", {}, "Devices");
+  const about = h("p", {}, "Each device holds its own key. A second device of one member can check that member's open requests.");
+  if (!room.me?.actions.includes("membership.invite")) return h("main", { class: "screen" }, title, about, h("p", { class: "muted" }, "Ask an admin of this room to create a device link for your member."));
+  const handle = h("input", { name: "handle", spellcheck: "false", autocomplete: "off", value: room.me.handle, "aria-label": "Member handle" }) as HTMLInputElement;
+  const create = h("button", { type: "submit", class: "primary" }, "Create device link");
+  const answer = h("div", { role: "status", "data-device-answer": "" });
+  const form = h("form", { class: "entry-form" }, h("label", {}, "Member", handle), create);
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    create.setAttribute("disabled", "");
+    answer.textContent = "Creating device link";
+    void issueDeviceKey(room, handle.value.trim()).then((issued) => {
+      if ("refused" in issued) { answer.textContent = issued.refused; return; }
+      answer.replaceChildren(h("label", {}, "Private device link", h("textarea", { readonly: "", "aria-label": "Private device link", "data-device-link": "", spellcheck: "false" }, issued.link)), h("p", { class: "muted" }, "On the new device, open Join with an invitation and paste this link. Anyone who holds the link can enrol a key for this member."));
+    }).catch((error) => { answer.textContent = error instanceof Error ? error.message : "The device link could not be created."; }).finally(() => { create.removeAttribute("disabled"); });
+  });
+  return h("main", { class: "screen" }, title, about, form, answer);
+}
+
 async function panelFor(room: Room, scope: ScopeId, context: ActionContext = {}, options: PanelOptions = {}): Promise<HTMLElement> {
   const association = actAssociation(room, scope);
   const capturedRoute = location.hash;
@@ -594,7 +640,7 @@ async function panelFor(room: Room, scope: ScopeId, context: ActionContext = {},
   const send: Send = (kind, on, typed, accepted, beforeSign) => {
     if (!workbenchWork.active) return;
     const previous = lastActs.get(association);
-    if (context.uncertain || context.blockedKinds?.includes(kind) || previous && (previous.answer.answer === "archived" || previous.answer.answer === "unavailable" || previous.answer.answer === "mismatch" || previous.observation !== null)) return;
+    if (lockedByCopy.has(scope) || context.uncertain || context.blockedKinds?.includes(kind) || previous && (previous.answer.answer === "archived" || previous.answer.answer === "unavailable" || previous.answer.answer === "mismatch" || previous.observation !== null)) return;
     if (!sending.begin(association, kind)) return;
     cancelCreationFollow();
     if (refusalDialog?.context === association) closeRefusal();
@@ -625,6 +671,7 @@ async function panelFor(room: Room, scope: ScopeId, context: ActionContext = {},
         else if (result.answer.answer !== "accepted" || result.observation !== null) issueDialogOutcome(association, "unknown", "The original request remains unresolved. Check status without sending a replacement.");
       } catch (error) {
         sending.failed(association);
+        if (error instanceof Error && error.name === "CopyNotKept") originalAnswers.set("not-kept", error.message);
         issueDialogOutcome(association, sending.get(association)?.state === "unknown" ? "unknown" : "editable", sending.get(association)?.state === "unknown" ? "Request outcome unknown. Check status without sending a replacement." : error instanceof Error ? error.message : "The request could not be prepared.");
         if (sending.get(association)?.state === "unknown") showLocally(unknownRequest(kind), true, "Request outcome unknown");
         else if (activeView()) showLocally(h("p", { role: "status" }, error instanceof Error ? error.message : String(error)), false, error instanceof Error ? error.message : "The request could not be prepared.");
@@ -636,8 +683,9 @@ async function panelFor(room: Room, scope: ScopeId, context: ActionContext = {},
   const last = lastActs.get(association);
   const fence = sending.get(association);
   const pending = !!fence && fence.state !== "unknown";
-  const uncertain = fence?.state === "unknown" || context.uncertain || !!last && (last.answer.answer === "archived" || last.answer.answer === "unavailable" || last.answer.answer === "mismatch" || last.observation !== null);
-  const taskContext = { ...context, pending, uncertain, draftKey: association, refresh: () => { void startWorkbench(() => draw()); }, current: () => location.hash === capturedRoute && currentContext() };
+  const held = lockedByCopy.has(scope);
+  const uncertain = held || fence?.state === "unknown" || context.uncertain || !!last && (last.answer.answer === "archived" || last.answer.answer === "unavailable" || last.answer.answer === "mismatch" || last.observation !== null);
+  const taskContext = { ...context, pending, uncertain, originalHeld: held, draftKey: association, refresh: () => { void startWorkbench(() => draw()); }, current: () => location.hash === capturedRoute && currentContext() };
   const represented = options.tasks?.(offered, send, taskContext) ?? [];
   const remaining = { ...offered, acts: offered.acts.filter((act) => !options.represented?.includes(act.kind) && !represented.includes(act.kind)) };
   const advancedContext = { ...taskContext };
@@ -647,7 +695,7 @@ async function panelFor(room: Room, scope: ScopeId, context: ActionContext = {},
     pending ? h("p", { role: "status" }, "Sending request") : last ? answerLine(last) : null);
   panel.prepend(answerHost);
   const noticeHost = h("p", { "data-task-status": "", "data-task-context": association, role: "status", "aria-live": "polite", hidden: "" });
-  if (pending || uncertain) { noticeHost.textContent = pending ? "Sending request" : "Request outcome unknown"; noticeHost.removeAttribute("hidden"); }
+  if (pending || uncertain) { noticeHost.textContent = pending ? "Sending request" : held ? "Check the original request before another action here." : "Request outcome unknown"; noticeHost.removeAttribute("hidden"); }
   panel.append(noticeHost);
   if (options.customForm) panel.append(options.customForm(send, pending || !!uncertain, association));
   if (fence?.state === "unknown") panel.append(unknownRequest(fence.kind));
@@ -904,7 +952,7 @@ function connectionScreen(path: "join" | "invitation" | "config", connected: Roo
     invitationDraft = invitation.value;
     const typed = invitation.value.trim();
     if (!current() || connectionBusy || !typed) return;
-    if (!typed.startsWith("artroom-invite:")) { tell("Paste the complete invitation link.", true); return; }
+    if (!typed.startsWith("artroom-invite:") && !typed.startsWith(DEVICE_KEY_LINK)) { tell("Paste the complete invitation link.", true); return; }
     connectionBusy = true; invitation.setAttribute("disabled", ""); tell("Working on joining the room");
     void joinInvitation(location.origin, typed, localStorage, { current }).then(resultOf).catch(error => tell(error instanceof Error ? error.message : "The original join could not be confirmed. Check status before another request.", true)).finally(() => { connectionBusy = false; if (current()) { try { if (originalJoin(location.origin, localStorage)) check.removeAttribute("hidden"); else invitation.removeAttribute("disabled"); } catch { /* Corrupt custody stays fenced. */ } } });
   });
@@ -987,9 +1035,13 @@ async function drawWorkbench(focus: boolean): Promise<void> {
     let initialization = await roomInitialization(room);
     if (!viewCurrent()) return;
     let notice = initializationMessage(initialization.state);
+    const copies = await openOriginals(room);
+    lockedByCopy = lockedScopes(room, copies, room.session.now?.() ?? Date.now());
+    const copyLines = await originalNotices(room, copies);
+    if (!viewCurrent()) return;
     const showRoom = (...content: HTMLElement[]) => {
       pollingNode = h("p", { class: "muted", role: "status", "data-page-polling": "", ...(pollingLine ? {} : { hidden: "" }) }, pollingLine ?? "");
-      show(...shell(destination, room, pollingNode, ...(notice ? [h("p", { class: "answer room-initialization", role: "status" }, notice)] : []), ...content));
+      show(...shell(destination, room, pollingNode, ...(notice ? [h("p", { class: "answer room-initialization", role: "status" }, notice)] : []), ...copyLines, ...content));
     };
     const presentationCurrent = async (): Promise<boolean> => {
       if (initialization.state === "not-initialized" && !await initializationStillCurrent(loaded, initialization)) {
@@ -998,6 +1050,7 @@ async function drawWorkbench(focus: boolean): Promise<void> {
       return viewCurrent();
     };
     const last = (s: string): Answer | null => lastActs.get(actAssociation(loaded, s as ScopeId))?.answer ?? null;
+    if (destination === "devices") return showRoom(devicesScreen(room));
     if (destination === "commons") {
       if (!room.commons) return showRoom(h("main", { class: "screen" }, h("h1", {}, "Commons unavailable"), h("p", {}, "No Commons reference is available in this room. Existing rooms keep their original definitions.")));
       const selected = commonsSelection(scope), cursor = new URLSearchParams(location.hash.split("?")[1] ?? "").get("cursor");
@@ -1074,7 +1127,7 @@ async function drawWorkbench(focus: boolean): Promise<void> {
         const capturedHash = location.hash;
         const capturedContext = settingsContext(kept);
         const priorMutation = lastActs.get(actAssociation(loaded, change.scope));
-        const mutationUnsettled = () => !!sending.get(actAssociation(loaded, change.scope)) || !!priorMutation && (priorMutation.answer.answer === "archived" || priorMutation.answer.answer === "unavailable" || priorMutation.answer.answer === "mismatch" || priorMutation.observation !== null);
+        const mutationUnsettled = () => lockedByCopy.has(change.scope) || lockedByCopy.has(loaded.directory) || !!sending.get(actAssociation(loaded, change.scope)) || !!priorMutation && (priorMutation.answer.answer === "archived" || priorMutation.answer.answer === "unavailable" || priorMutation.answer.answer === "mismatch" || priorMutation.observation !== null);
         screen.querySelector('[data-action-slot="edit"]')?.append(mutationUnsettled() ? h("p", { class: "muted" }, "The current request must be confirmed before proposing an edit.") : retainedEditor(room, change, {
           current: () => location.hash === capturedHash && settingsContext(settings() ?? { place: null, publicKey: "" }) === capturedContext && !mutationUnsettled(),
           recorded: (lane) => { location.hash = `#/change/${lane}`; },

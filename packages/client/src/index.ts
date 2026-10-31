@@ -16,6 +16,8 @@ export * from "./invitation.ts";
 export * from "./creation-offer.ts";
 export * from "./agent-key-invitation.ts";
 export * from "./checker-key-invitation.ts";
+export * from "./device-key-invitation.ts";
+export * from "./originals.ts";
 export * from "./invitation-fields.ts";
 
 export * from "./item-query.ts";

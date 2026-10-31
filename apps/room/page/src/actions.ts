@@ -14,6 +14,8 @@ export interface ActionContext {
   refresh?: () => void;
   /** A submit or its subsequent observation is unsettled. Refresh is read-only. */
   uncertain?: boolean;
+  /** This key's open copy holds this scope. The page offers only the button above the view. */
+  originalHeld?: boolean;
   /** A submission is in flight; a fresh signed act must not replace it. */
   pending?: boolean;
   /** The current subject already shows its uncertainty in its status. */
@@ -67,7 +69,7 @@ export function actsPanel(offered: { acts: Offered[]; hidden: number }, send: Se
     const record = element("details", { class: "action-record" }, element("summary", {}, "Last request"), last);
     panel.append(record);
   }
-  if (context.uncertain || context.pending) {
+  if ((context.uncertain || context.pending) && !context.originalHeld) {
     const refresh = element("button", { type: "button", class: "primary", "data-status-recovery": "", ...(context.draftKey ? { "data-focus-key": controlKey(context.draftKey, "check-status") } : {}) }, "Check status");
     if (!context.refresh) refresh.setAttribute("disabled", "");
     refresh.addEventListener("click", () => context.refresh?.());

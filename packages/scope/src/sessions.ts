@@ -59,9 +59,14 @@ import { readDeployment } from "./deployment-setting.ts";
  * **A reader with no session** gets `forbidden` from every read, and no
  * stream.
  *
- * **What a session cannot do.** It signs nothing and controls nothing.
- * It provides no authority for an act. A credential read is limited to the one-time
- * read token requested by its own key; the outside port checks that handle.
+ * **What a session cannot do.** It signs nothing. It provides no authority
+ * for an act. A credential read is limited to the one-time read token
+ * requested by its own key; the outside port checks that handle.
+ *
+ * **What a session can do beyond a read.** At membership, it reads, delivers
+ * and deletes its own member's original requests (`originals.ts`). It cannot
+ * make or change one, because each row needs the signature of the key that
+ * signed the request.
  *
  * Nothing here logs, stores or returns the secret, and no refusal holds a
  * token or a part of one.

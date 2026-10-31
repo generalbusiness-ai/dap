@@ -1,5 +1,5 @@
 import { isRecord } from "@generalbusiness/dap-bytes";
-import { invitationRedemptionFields } from "@generalbusiness/dap-client";
+import { EXPIRY_MARGIN_MS, invitationRedemptionFields } from "@generalbusiness/dap-client";
 /**
  * One MCP service for every dap application (plan 031). It lists
  * generic tools, and one act tool per act declaration of
@@ -186,8 +186,6 @@ class Stop extends Error { constructor(readonly result: CallResult) { super("sto
 const stopCall = (f: Finding): never => { throw new Stop(failed(f)); };
 
 const VIEW_DIFF_POLLS = 8;
-/** How far this server's clock can differ from a scope's, for a card's check of an expired request. The contract states no bound. */
-const EXPIRY_MARGIN_MS = 60_000;
 /** The Git reader takes SHA-1 objects. A longer ID is refused here, before a signature or a spent credential. */
 const COMMIT_ID = /^[0-9a-f]{40}$/;
 const DIFF_OUTPUT = { type: "object", properties: { base: { type: "string" }, integration: { type: "string" }, files: { type: "integer", minimum: 0 }, truncated: { type: "boolean" }, text: { type: "string" } }, required: ["base", "integration", "files", "truncated", "text"] };

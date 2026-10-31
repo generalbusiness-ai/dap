@@ -1,8 +1,10 @@
 /**
  * A read session, as a device holds one (authority note, sections 3.9 and
  * 5.3). A session is a credential for the reads of one repository. It
- * signs nothing and controls nothing: every act is signed by the device's
- * key, and a session is never presented with one.
+ * signs nothing: the device's key signs every act, and no act presents a
+ * session. A session also reaches its member's original requests at
+ * membership (`originals.ts`): it reads, delivers and deletes them, and it
+ * cannot make or change one.
  *
  * - **Asking.** The device signs a session request with its own key, to the
  *   repository's membership scope with its incarnation, and sends it in a

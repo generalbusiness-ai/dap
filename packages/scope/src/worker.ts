@@ -71,6 +71,7 @@ import { repositorySessionMembership, fixedMembership, repositoryAuthority } fro
 import { membershipIn, namespace, sessionReferencesIn, type Binding } from "./namespace.ts";
 import { ScopeObject, type OutsideGiven, type Wiring } from "./object.ts";
 import type { Incident } from "./operator.ts";
+import type { OriginalBytes, OriginalEnded, OriginalKept, OriginalPage } from "./originals.ts";
 import type { Summary } from "./reads.ts";
 import { credentialInUrl, relay, sessionReaders, sessionsOf, type Opened, type SessionIssueAnswer, type Sessions, type StreamRefusal } from "./sessions.ts";
 import type { OutboxItem, Sealed } from "./store.ts";
@@ -194,6 +195,10 @@ interface Remote {
   waiting(reader: unknown, list: "diagnosed" | "unanswered", cursor?: Cursor): Promise<Read<readonly OutboxItem[]>>;
   credential(reader: unknown, handle: string): Promise<Read<ReadCredential>>;
   requests(reader: unknown, request?: string, trace?: string, cursor?: string): Promise<Read<Pick<RequestPage, "rows" | "window">>>;
+  keepOriginal(reader: unknown, bytes: string): Promise<OriginalKept>;
+  listOriginals(reader: unknown): Promise<OriginalPage>;
+  readOriginal(reader: unknown, digest: string): Promise<OriginalBytes>;
+  endOriginal(reader: unknown, digest: string): Promise<OriginalEnded>;
 }
 
 const MISSING = { ok: false, reason: "not-found" } as const;
@@ -213,6 +218,11 @@ export interface Api extends ScopeApi {
   /** A member's read token at a destination, once (I5). */
   credential(scope: string, reader: unknown, handle: string): Promise<Read<ReadCredential>>;
   requests(scope: string, reader: unknown, request?: string, trace?: string, cursor?: string): Promise<Read<Pick<RequestPage, "rows" | "window">>>;
+  /** A member's original requests at a membership scope (`originals.ts`). None writes an entry. */
+  keepOriginal(scope: string, reader: unknown, bytes: string): Promise<OriginalKept>;
+  listOriginals(scope: string, reader: unknown): Promise<OriginalPage>;
+  readOriginal(scope: string, reader: unknown, digest: string): Promise<OriginalBytes>;
+  endOriginal(scope: string, reader: unknown, digest: string): Promise<OriginalEnded>;
 }
 
 
@@ -336,6 +346,10 @@ export function api(binding: Binding, address: string | null = null, creationAdm
     async stageSnapshot(scope: string, asked: SignedIntent) { return (await at(scope)?.stageSnapshot(asked)) ?? null; },
     async credential(scope: string, reader: unknown, handle: string): Promise<Read<ReadCredential>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.credential(reader, handle)) ?? MISSING; },
     async requests(scope: string, reader: unknown, request?: string, trace?: string, cursor?: string) { const limited = await readGate(reader); if (limited) return limited; return requestQuery(request, trace, cursor) ? (await at(scope)?.requests(reader, request, trace, cursor)) ?? MISSING : MISSING; },
+    async keepOriginal(scope: string, reader: unknown, bytes: string) { return (await at(scope)?.keepOriginal(reader, bytes)) ?? MISSING; },
+    async listOriginals(scope: string, reader: unknown) { return (await at(scope)?.listOriginals(reader)) ?? MISSING; },
+    async readOriginal(scope: string, reader: unknown, digest: string) { return (await at(scope)?.readOriginal(reader, digest)) ?? MISSING; },
+    async endOriginal(scope: string, reader: unknown, digest: string) { return (await at(scope)?.endOriginal(reader, digest)) ?? MISSING; },
   };
 }
 
@@ -361,14 +375,20 @@ const READ_STATUS: Record<ReadRefusal, number> = {
 };
 const SESSION_STATUS: Record<SessionRefusal, number> = { "sessions-unavailable": 503, "bad-request": 400, "not-found": 404, misaddressed: 422, "clock-behind": 503, expired: 422, unauthorized: 403, replayed: 409, "rate-limited": 429 };
 const read = (result: Read<unknown>): Response => json(result.ok ? 200 : READ_STATUS[result.reason], result);
+/** The status of a refusal at the originals routes. Each answer of those routes is marked so that nothing stores it. */
+const ORIGINAL_STATUS: Record<string, number> = { ...READ_STATUS, "bad-request": 400, expired: 422, conflict: 409, full: 507 };
+const NO_STORE = { "content-type": "application/json", "cache-control": "no-store" };
+const originalReply = (answer: { ok: boolean; reason?: string }, ok: number, payload: string | null = null): Response => answer.ok
+  ? new Response(payload, { status: ok, headers: payload === null ? { "cache-control": "no-store" } : NO_STORE })
+  : new Response(JSON.stringify({ ok: false, reason: answer.reason }), { status: ORIGINAL_STATUS[answer.reason ?? ""] ?? 400, headers: NO_STORE });
 
 /**
- * The JSON object of a request body, or null. The budget is of raw bytes and
- * is counted while the body is read: a body that declares more is not read,
- * and one that sends more is cancelled at the chunk that passes the budget.
- * Bytes that are not UTF-8 are no JSON.
+ * The text of a request body, or null. The budget is of raw bytes and is
+ * counted while the body is read: a body that declares more is not read, and
+ * one that sends more is cancelled at the chunk that passes the budget. Bytes
+ * that are not UTF-8 are no text.
  */
-async function body(request: Request): Promise<Record<string, unknown> | null> {
+async function bodyText(request: Request): Promise<string | null> {
   try {
     if (!request.body || Number(request.headers.get("content-length") ?? 0) > BODY_BYTES) return null;
     const reader = request.body.getReader();
@@ -385,7 +405,17 @@ async function body(request: Request): Promise<Record<string, unknown> | null> {
       }
       text += decoder.decode(value, { stream: true });
     }
-    const value: unknown = JSON.parse(text + decoder.decode());
+    return text + decoder.decode();
+  } catch {
+    return null;
+  }
+}
+/** The JSON object of a request body, or null. */
+async function body(request: Request): Promise<Record<string, unknown> | null> {
+  try {
+    const text = await bodyText(request);
+    if (text === null) return null;
+    const value: unknown = JSON.parse(text);
     return isObject(value) ? value : null;
   } catch {
     return null;
@@ -459,6 +489,16 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
     }
     const object = binding.get(binding.idFromName(scope!)) as Remote;
     return queryResponse(await object.queryItems(wire.encoded, reader));
+  }
+  if (what === "originals" && scope !== undefined) {
+    if (request.method === "POST" && which === undefined) {
+      const text = await bodyText(request);
+      return text === null ? originalReply({ ok: false, reason: "bad-request" }, 204) : originalReply(await scopes.keepOriginal(scope, reader, text), 204);
+    }
+    if (request.method === "GET" && which === undefined) { const page = await scopes.listOriginals(scope, reader); return originalReply(page, 200, JSON.stringify(page)); }
+    if (request.method === "GET") { const one = await scopes.readOriginal(scope, reader, which!); return originalReply(one, 200, one.ok ? one.bytes : null); }
+    if (request.method === "DELETE" && which !== undefined) return originalReply(await scopes.endOriginal(scope, reader, which), 204);
+    return json(405, { error: "method-not-allowed" });
   }
   const cursor = url.searchParams.get("cursor") ?? undefined;
   const requestId = url.searchParams.get("request") ?? undefined, traceId = url.searchParams.get("trace") ?? undefined;

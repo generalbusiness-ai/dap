@@ -23,11 +23,12 @@ import { applicationRoom, applicationInstallation, applicationProjectionDeclarat
  * `production()` sends nothing. The owners' rules of `production()` are
  * the capability code's, for the operations of `hold@1` and `git-read@1`.
  *
- * Four things here are no history, and no judgment reads any of them: the
+ * Five things here are no history, and no judgment reads any of them: the
  * read sessions that the object checks, and for a membership scope issues
  * (`sessions.ts`); the streams that it holds open; the serving limits of a
- * join, at the front of a membership scope (`limits.ts`); and the
- * operator's record (`operator.ts`). By default the object has no session
+ * join, at the front of a membership scope (`limits.ts`); a member's original
+ * requests, at a membership scope (`originals.ts`); and the operator's record
+ * (`operator.ts`). By default the object has no session
  * configuration: it issues no session, and its readers port is the
  * refusing one of `production()`.
  */
@@ -49,6 +50,7 @@ import { Operations, type Outside } from "./operations.ts";
 import { OperatorRecord, sendAgain, type Incident, type Resent } from "./operator.ts";
 import { Dispatcher, Wakes } from "./outbox.ts";
 import { CredentialStore } from "./credential-store.ts";
+import { Originals, type OriginalBytes, type OriginalEnded, type OriginalKept, type OriginalPage } from "./originals.ts";
 import { ArchiveDriver, type FixtureArchiveDriverOptions, type RoomArchiveDriverOptions } from "./archive-driver.ts";
 import { archiveRowDiagnostic } from "./archive-operator.ts";
 import { archiveHostItem, type ArchiveHostConfiguration, type ArchiveHostItemAsk } from "./archive-host-item.ts";
@@ -156,6 +158,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   readonly #operations: Operations;
   readonly #wakes: Wakes;
   readonly #credentialExpiry: CredentialStore;
+  readonly #originals: Originals;
   readonly #clock: Clock;
   readonly #transport: Transport | null;
   readonly #seconds: number;
@@ -207,8 +210,9 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const schedulingAlarm: Alarm = { set: at => { this.#alarmRevision++; return given.alarm.set(at); } };
     const credentialExpiry = new CredentialStore(this.#readSql, () => store.scope()?.at ?? null);
     this.#credentialExpiry = credentialExpiry;
+    // `#originals` is made below, once the readers port exists.
     const wakes = new Wakes(store, schedulingAlarm, given.transport !== null, wiring.fixtureArchive || wiring.archive ? () => this.#archive?.wake() ?? null : undefined,
-      () => credentialExpiry.expiryWake(() => given.clock.read()));
+      () => credentialExpiry.expiryWake(() => given.clock.read()), () => this.#originals?.wake() ?? null);
     this.#wakes = wakes;
     // The authority of a deployed scope reads this scope's own genesis entry, for the membership scope that it records.
     const genesis = (): Extract<Input, { type: "genesis" }> | null => {
@@ -267,6 +271,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     });
     this.#signed = { clock: ports.clock, window: bounds.intentLifetimeSeconds, chains: this.#chains, ...(wiring.signedReadObserver ? { observe: wiring.signedReadObserver } : {}) };
     this.#readers = ports.readers;
+    this.#originals = new Originals({ sql: this.#readSql, readers: ports.readers, clock: ports.clock, state: store, pinned: () => this.#scope.pinned(), lifetimeSeconds: bounds.intentLifetimeSeconds });
     this.#requestIndex = new RequestIndex(this.#readSql);
     this.#reads = new Reads(store, () => this.#scope.pinned(), ports.readers, wiring.reads ?? READ_BOUNDS, record, this.#signed, () => this.#scope.owners(), { index: this.#requestIndex, now: () => Date.now() });
     this.#deliveries = new Deliveries(this.#name, this.#scope, store, ports, bounds);
@@ -341,7 +346,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     // Scheduling only on activation; legacy custody work stays alarm-owned.
     // The shared arbiter also reads the archive wake, so it waits for the
     // activation observation just like archive recovery.
-    if (credentialExpiry.expiryWake(() => given.clock.read()) !== null) {
+    if (credentialExpiry.expiryWake(() => given.clock.read()) !== null || this.#originals.wake() !== null) {
       const expiry = diagnostic.then(() => wakes.set()).catch(() => undefined);
       try { ctx.waitUntil(expiry); }
       catch { /* A later activation or ingress can retry scheduling. */ }
@@ -830,6 +835,19 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     metric({ kind: "stream", place: "stream", end: "ok", a: streams.open, b: streams.released });
     return answer;
   }); }
+  /** Keep one member's original request, before the page sends it (`originals.ts`). A new row joins the object's one alarm. */
+  async keepOriginal(reader: unknown, bytes: unknown): Promise<OriginalKept> { return this.#invoke("originals", async () => {
+    this.#first();
+    const answer = this.#originals.keep(reader, bytes);
+    if (answer.ok && answer.fresh) await this.#wakes.set();
+    return answer;
+  }); }
+  /** The open copies of the session's member, without bodies. */
+  async listOriginals(reader: unknown): Promise<OriginalPage> { return this.#invoke("originals", async () => { this.#first(); return this.#originals.list(reader); }); }
+  /** One copy's exact bytes, for a session of its member. */
+  async readOriginal(reader: unknown, digest: unknown): Promise<OriginalBytes> { return this.#invoke("originals", async () => { this.#first(); return this.#originals.read(reader, digest); }); }
+  /** End one copy, for a session of its member. */
+  async endOriginal(reader: unknown, digest: unknown): Promise<OriginalEnded> { return this.#invoke("originals", async () => { this.#first(); return this.#originals.end(reader, digest); }); }
   /** The reader of the stream with that ID went away. Its subscription is released at once. */
   release(id: unknown): void { this.#invokeSync("stream", () => {
     this.#streams.release(id); const streams = this.#streams.counts();
@@ -867,6 +885,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
           // Private expiry has its own bounded quantum and durable earliest wake.
           try { this.#credentialExpiry.expire(this.#clock.read()); }
           catch { /* Final wake arbitration preserves the due queue for retry. */ }
+          try { this.#originals.expire(this.#clock.read()); }
+          catch { /* The same final arbitration retries the time bound. */ }
           // One synchronous bounded quantum gets a turn before potentially
           // asynchronous native owners. A backlog never drains in one alarm.
           try { this.#store.localSigners.maintain(); }
