@@ -27,6 +27,7 @@ contract package's types. Its tests and scripts also use `bytes`,
 | `DIGESTS` | The pinned definition digest of each. |
 | `issueDemo`, `changeDemo`, `DEMO_DIGESTS` | The demo profile and its pinned digests. |
 | `issueJ4`, `changeJ4`, `J4_DIGESTS` | The explicit workspace profile with version 2 holds. |
+| `changeFinding`, `FINDING_DIGESTS` | The explicit finding successor of `changeJ4`: a review finding that holds the merge until someone answers it. |
 | `LANE_FORMS` | The revision and the commit of the lane forms that the rows were written from. |
 | `definitions` | Both declarations as a list. A creator supplies it as the `definitions` of a creation, so that a directory which names the two digests in `create` sends retains their bytes for its children. |
 | `LaneDefinition` | The type each value is checked against. |
