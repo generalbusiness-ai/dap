@@ -51,14 +51,14 @@ test("current question text needs a requested person's approval and person-role 
     expect(await r.M.item(agentKey)).toMatchObject({ state: "active", values: { id: paul.key, kind: "agent" }, refs: { member: agent } });
 
     const otherSecret = new Uint8Array(32).fill(44);
-    const other = { ...paul, secret: otherSecret, key: keyIdOfSecret(otherSecret), member: { ...paul.member, member: "@quinn" as const } };
+    const quinn = { ...paul, secret: otherSecret, key: keyIdOfSecret(otherSecret), member: { ...paul.member, member: "@quinn" as const } };
     const otherMember = await r.M.did(rita, "add-member", { fields: { handle: "@quinn", kind: "agent", controller: owner } });
     const otherInvitationSeed = new Uint8Array(32).fill(45);
     const otherInvitation = await r.M.did(rita, "invite-key", { expected: await r.M.expected({ member: otherMember }), fields: {
       member: otherMember, kind: "agent", inviteKey: keyIdOfSecret(otherInvitationSeed), inviteEnds: soon(3600),
     } });
-    await r.M.did(other, "enrol", { on: 0, expected: await r.M.expected({ on: 0, member: otherMember }), fields: {
-      invitation: otherInvitation, proof: signInvitationProof(otherInvitationSeed, await r.M.at(), otherInvitation, other.key),
+    await r.M.did(quinn, "enrol", { on: 0, expected: await r.M.expected({ on: 0, member: otherMember }), fields: {
+      invitation: otherInvitation, proof: signInvitationProof(otherInvitationSeed, await r.M.at(), otherInvitation, quinn.key),
     } });
     expect(await r.M.item(otherMember)).toMatchObject({ state: "active", values: { kind: "agent", role: "agent" }, parties: { controller: owner } });
 
@@ -123,9 +123,9 @@ test("current question text needs a requested person's approval and person-role 
     await did(paul, "accept", { on: agentOffer.seq, fields: { terms: await I.fact(0) } });
     const agentBlock = (await did(paul, "block", { fields: { commitment: agentOffer.seq, on: ask } })).fact;
     await r.activate(changeDemo, DEMO_DIGESTS.change);
-    const C = await r.lane(other, "open-pr", changeDemo, DEMO_DIGESTS.change, { title: "TEST independent agent change", draft: false });
+    const C = await r.lane(quinn, "open-pr", changeDemo, DEMO_DIGESTS.change, { title: "TEST independent agent change", draft: false });
     const content = "TEST independent change\n";
-    const proposed = await C.signed(other, "propose-file", { fields: {
+    const proposed = await C.signed(quinn, "propose-file", { fields: {
       base: r.firstHead, path: "TEST.txt", digest: digestBytes(utf8(content)), size: utf8(content).length, content,
     } });
     const proposedAnswer = await C.handle.submit(proposed.signed, [], proposed.beside);
