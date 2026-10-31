@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a9e2341ec6213116ca62145f27e32d59a459e897","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/views/session.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b48136627b9dee340c73d82766f2666ae473ad1b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-31-omitted-lanes.manifest.json."}
