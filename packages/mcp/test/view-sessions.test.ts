@@ -219,11 +219,11 @@ test("View diff: a retained card admits nothing while an original is open, and a
   await views.open("v", "change", "subject");
   const { cut } = await views.read("v");
   open = true;
-  await expect(views.act("v", cut, "view-diff")).rejects.toMatchObject({ reason: "stale" });
-  expect(spends).toBe(0);
+  const held = await views.act("v", cut, "view-diff").then(() => "signed", (error: { reason?: string }) => error.reason);
+  expect([held, spends]).toEqual(["stale", 0]);
   open = false;
-  const { display } = await views.act("v", cut, "view-diff");
+  const said = await views.act("v", cut, "view-diff").then(({ display }) => display.receipt, (error: unknown) => String(error));
   expect(spends).toBe(1);
-  expect(display.receipt).toContain("The one-time credential is spent.");
-  expect(display.query.page).not.toBe("diff");
+  expect(said).toContain("The one-time credential is spent.");
+  expect(views.display("v").query.page).not.toBe("diff");
 });

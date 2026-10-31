@@ -91,6 +91,10 @@ test("a long path stays inside the text bound, with its closing line, and the an
   const over = await boundedDiff(source, f.base, named(escapes, lines(4000)), { ...DIFF_BOUNDS, blobBytes: 2048 });
   expect(over.text).toContain("omitted: the file \\x01");
   expect(jsonBytes(over.text)).toBeLessThanOrEqual(DIFF_BOUNDS.textBytes);
+  // A path under the line bound, in which every character escapes, and a bound that names it: the closing line repeats only its start.
+  const named1000 = await boundedDiff(source, f.base, named(new Uint8Array(1000).fill(0x01), lines(4000)), { ...DIFF_BOUNDS, blobBytes: 2048, textBytes: 8192 });
+  expect(named1000.text).toContain("truncated: the file \\x01");
+  expect(jsonBytes(named1000.text)).toBeLessThanOrEqual(8192);
   // Text and closing line together meet a small bound as well.
   const small = await boundedDiff(source, f.base, named(utf8Name("n".repeat(60_000)), lines(4000)), { ...DIFF_BOUNDS, textBytes: 8192 });
   expect(jsonBytes(small.text)).toBeLessThanOrEqual(8192);
@@ -98,9 +102,11 @@ test("a long path stays inside the text bound, with its closing line, and the an
 });
 
 test("an entry name of half a megabyte truncates and does not throw", async () => {
-  const valid = await boundedDiff(source, f.base, named(utf8Name("n".repeat(500_000)), "text\n"));
-  expect([valid.truncated, valid.files]).toEqual([true, 4]);
-  const notUtf8 = await boundedDiff(source, f.base, named(new Uint8Array(500_000).fill(0xfe), "text\n"));
+  // A throw here reads as "the host gave no readable answer" to the caller, so a thrown error is the failure this case names.
+  const read = (name: Uint8Array) => boundedDiff(source, f.base, named(name, "text\n")).catch((error: unknown) => ({ threw: String(error), truncated: false, files: 0, text: "" }));
+  const valid = await read(utf8Name("n".repeat(500_000)));
+  expect([valid.truncated, valid.files, "threw" in valid]).toEqual([true, 4, false]);
+  const notUtf8 = await read(new Uint8Array(500_000).fill(0xfe));
   expect(notUtf8.truncated).toBe(true);
   expect(notUtf8.text).toContain("\\xfe\\xfe");
 });
