@@ -298,4 +298,3 @@ history in `self-host.md` and `demo.md` moved to the footers, the "not run"
 wording is one sentence, `what-is-dap.md` lost its imperative section, the
 first admin replaces "owner" in `self-host.md`, and `hosts.md` says that
 site reads reuse a token.
-
