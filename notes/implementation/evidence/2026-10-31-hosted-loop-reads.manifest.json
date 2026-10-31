@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint, after a failed gate at f06364fc that the directory keeps. Controls ran at a93a3bf3; later commits changed documents, one list in a test, and one cast. No hosted Worker or live agent ran.",
+  "directory": "2026-10-31-hosted-loop-reads",
+  "checkpoint": {
+    "commit": "47958832c4b5e54920ed76681dfffcd003d9aead",
+    "tree": "12c18962ec63b2c5126e025de3ca351faeb84fc1"
+  },
+  "fileCount": 44,
+  "files": [
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6508,
+      "sha256": "94067efbf320d572dfe5d0875b8d8d7ee73ab3cf46004a18be66edfc554db362"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gate-typecheck-failed-f06364fc/gate.stdout.log",
+      "bytes": 5087,
+      "sha256": "ec6933cd5f91f35aecd99f3bc032ff1f54aa54670c8727d4575337e584be26db"
+    },
+    {
+      "path": "control-c1-no-text.log",
+      "bytes": 380103,
+      "sha256": "0917b08c413c59d65e4706e5e00892b48643b970d13369577598524d5668d0b4"
+    },
+    {
+      "path": "control-c2-no-step.log",
+      "bytes": 380104,
+      "sha256": "ebef020c03a86188c9c77489a5912b723d81ed994dfbb572451d3410b8c31843"
+    },
+    {
+      "path": "control-c3-record-listed.log",
+      "bytes": 2580,
+      "sha256": "1bcb3e2595b650d82e20421463c26b955fec7b9e851f6ba66b7a0951f83db586"
+    },
+    {
+      "path": "control-c4-prompt-sentence.log",
+      "bytes": 5821,
+      "sha256": "79fd27a026d201771bfaa7fd20558a468c053a1183cb98f02f0757129bca6919"
+    },
+    {
+      "path": "control-c5-instructions-sentence.log",
+      "bytes": 4232,
+      "sha256": "03d670c8bd68806c077817516f2bb6be9c02a1eae10a00cd9de179b80de0a47d"
+    },
+    {
+      "path": "controls.txt",
+      "bytes": 118,
+      "sha256": "f1adc290533caf2dcc4aa163a141b9cd528ea7c5ca2c88b8a449a57da3c7262d"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 4053,
+      "sha256": "2fafa988132b6d410759cd965aa2e2e31cba7a4a4a84fc1e36d552769a2f82fd"
+    }
+  ]
+}

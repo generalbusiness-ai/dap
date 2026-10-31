@@ -123,11 +123,11 @@ const namedOwners = {
     "packages/cli/src/commands.ts:status": "f77f1396b4bed9f01c159ca07c991ef52da9cd9a50ea4e1aae3f5765d50504b4",
   },
   "packages/mcp/src/service.ts": {
-    "packages/mcp/src/service.ts:$module": "96721b515ac32940f6aceab791da5bf88a1ab0102a842a65a799db96d89ed926",
+    "packages/mcp/src/service.ts:$module": "e85965049cc10f0d15998b2596a03c1bde40a11928ac28daa43f183bae05f8ee",
     "packages/mcp/src/service.ts:ListRestart": "83803f5cf365099c3ed7ad6d12153b68e7616977007feffed4ca4b01bd4ca95d",
     "packages/mcp/src/service.ts:SERVER_NAME": "1a22dd379fec10cbed8b5938dfd522ce9e8cffe176de5f4554e3cad8668764e2",
     "packages/mcp/src/service.ts:SERVER_VERSION": "93926c4b4205a41211c5dfd2e083d8a5d4eed978060ba4d0781fb54d9d3eb366",
-    "packages/mcp/src/service.ts:INSTRUCTIONS": "40301d4cf4dd1c45f29eadbcd4483f791f3d5038beb4a98c03bad0a1e9c47924",
+    "packages/mcp/src/service.ts:INSTRUCTIONS": "676cfcb26d751a57b8b77762cd9344e6c7d6d5c7c3b02f8d568ed91103bb7bae",
     "packages/mcp/src/service.ts:LIST_PAGE_BYTES": "59dd525548661c8bb7618a95bd2fb0d6b1b2fd122a15ea45213a0ae0d26c949b",
     "packages/mcp/src/service.ts:WATCH_MS": "d28d2082347de271b370282a615fc2dc8e34a7d6962e08d76375d7292afaa0c8",
     "packages/mcp/src/service.ts:WAIT_MOST_SECONDS": "18c43e609ce676dbf274befbe7224acfae088c3435e31eaea0e3a549f780868f",
@@ -242,7 +242,7 @@ const seals = {
   "packages/scope/src/workspace-lineage.ts": "8ab25e2b89e8438a7914c441aa9aca3c18e5e7335eb32488251d5631ed52a1ff", // Reviewed bounded authenticated Register, Directory and Destination creation lineage.
   "packages/scope/src/native-birth.ts": "ab9ecd331850e5f183fafaee07145c64adadb3ad904ea95bcc4ddf569da6ad6f", // Reviewed bounded genesis decoding and exact indexed scope and kind discovery.
   "packages/mcp/src/hosted.ts": "408713d777ced9eb3ea9d0c8e590071e08be433c58d35bd9e04ed094439b66b7",
-  "packages/mcp/src/hosted-tools.ts": "66ce61ea81e43434e9d852c46c58937760a5ea046f9d2674b8a6066acdfb9604", // Reviewed R5 admission owner; actual maintained parser output.
+  "packages/mcp/src/hosted-tools.ts": "ef46fa061bb0ed440d81d08e0f1f537c4234dabdb861fb749123bdf93aa81a85", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": namedOwners["packages/mcp/src/service.ts"],
   "packages/mcp/src/catalogue.ts": "02b1252e490171b58a01814831ec83c1c4d1e658edd42aed566e2c59d383df1e", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/inventory.ts": "51fdd5f834ae032f20f7abd9e4a02143f57fda36cb29a9552a1a5e46ad79352b", // Reviewed R5 admission owner; actual maintained parser output.
