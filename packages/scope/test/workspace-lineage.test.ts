@@ -209,7 +209,7 @@ test("workspace head keeps an unknown answer and fixed diagnoses when its provid
     values: { epoch: 1, ...(timer ? { [timer.deadline]: "2026-10-30T11:00:00Z" } : {}) } });
   f.state.putRecord({ capability: "hold@2", kind: "fork", key: [4], state: "creating", seq: 4, values: { operation: "4:0" } });
   const entry: Entry = { ...f.born, seq: 4, effects: [{ effect: "operation", k: 0, owner: "hold@2", kind: "head", attempts: 3 }] };
-  const request = { scope: entry.at, operation: "4:0" as const, attempt: 1, owner: "hold@2", kind: "head", origin: { entry, hash: entryHash(entry) } };
+  const request = { scope: entry.at, operation: "4:0" as const, attempt: 1, owner: "hold@2" as const, kind: "head", origin: { entry, hash: entryHash(entry) } };
   const secret = "synthetic-private-provider-answer";
   await storage.inside(async native => {
     const provider = new ArtifactsProvider({ binding: { get: async () => { throw new Error("no binding call"); }, create: async () => null, delete: async () => null }, host: "artifacts", namespace: "actual-room-space", service: "service.invalid", maxBytes: 1024, credentialHandle: async () => "unused" });
