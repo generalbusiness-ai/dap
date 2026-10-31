@@ -1,0 +1,20 @@
+{
+  "v": 1,
+  "service": "https://dap-demo.inguz.workers.dev",
+  "providerOrigin": "https://6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net",
+  "deploymentVersion": "COPY-THE-REVIEWED-WORKER-VERSION",
+  "register": {
+    "scope": "sc_b5q435os6lggypatelcltqzvul4kqxzdaaxpmybvwumsmxwj2djq",
+    "inc": "in_rjfrmifznpi65vm6y2kbc36xpi",
+    "kind": "register"
+  },
+  "namespace": "dap-demo",
+  "name": "repo-in-ai",
+  "home": "/Users/hughpyle/.config/generalbusiness/repo-in-ai",
+  "handles": {
+    "owner": "@owner",
+    "agent-a": "@agent-a",
+    "agent-b": "@agent-b",
+    "checker": "@checker"
+  }
+}
