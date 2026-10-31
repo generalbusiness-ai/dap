@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. The owner and control ran at the checkpoint. The probe of the path after a forward returned ran three times at main 93a6b661 plus the witness's uncommitted edit; its test is not in the tree. No container, Git host or hosted run is claimed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-checker-origin-signal",
+  "checkpoint": {
+    "commit": "1575833944c993eb159a850206d8544031bb69a2",
+    "tree": "f1c1159f1675cb71657429bcfc2b74d5ef9e6b32"
+  },
+  "fileCount": 44,
+  "files": [
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6525,
+      "sha256": "daaf96f8a0d5a38785eb4c14030d2d0cd54d8f4ad54437647b9a4596b6b6c074"
+    },
+    {
+      "path": "gate/gate.stderr.log",
+      "bytes": 37,
+      "sha256": "753df3ad32a46fa2675a431eb7d36887e2d2939b752a7d9868e1a2de2baebe0e"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gate/gate.sh",
+      "bytes": 632,
+      "sha256": "4346fb4404e27185524ad9b7155a72236958eb46c9fee1c1f7328ed2597fdb2a"
+    },
+    {
+      "path": "owner.stdout.log",
+      "bytes": 570,
+      "sha256": "6faefcdc3eb8473a45ba8d6176cbbc61fb147fcc8d1f11a2398df36a592af43c"
+    },
+    {
+      "path": "owner.exit",
+      "bytes": 13,
+      "sha256": "c49ad83d517967969a54b08cce3b8788c8dfd6af1c60eccb731730a540a0a213"
+    },
+    {
+      "path": "control.stdout.log",
+      "bytes": 15,
+      "sha256": "49b962573a010e8b2ec24e6576e6de0a4c1547b19260abd3a431e900159e8ba5"
+    },
+    {
+      "path": "control.stderr.log",
+      "bytes": 1959,
+      "sha256": "fe76fd06cc46d20e89f0f5ca9a2c0ec04bc07627f0ceee4f45b83a7c9205e002"
+    },
+    {
+      "path": "after-forward-probe.stdout.txt",
+      "bytes": 333,
+      "sha256": "347305e1364ba99bd9aac59e68ba8d1c18082fdb757482a06c168c9ac1075f1d"
+    },
+    {
+      "path": "after-forward-probe.test.ts.txt",
+      "bytes": 1570,
+      "sha256": "2c5de133ca1c6d0ba5ef247f36e6047fd2bb799661754a5872e04950873e737c"
+    },
+    {
+      "path": "gatewayOrigin-callers.txt",
+      "bytes": 168,
+      "sha256": "6447569789d726f9ccaff32e2d3d4e878ae747c7b6648e06a73a2032a121c050"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 3938,
+      "sha256": "2ad1c8193a8b698cfe7ad0a1fd6bdaa77b41275c13ee820d1e5ace844d13834e"
+    }
+  ]
+}
