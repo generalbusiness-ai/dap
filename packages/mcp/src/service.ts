@@ -52,6 +52,8 @@ export interface ServerPort {
   signer: Signer;
   /** Public Git transport only; separate from authenticated native reads. */
   applicationFetch?: (request: Request) => Promise<Response>;
+  /** The Git read of `diff`. `serve` supplies it under Node; a hosted Worker supplies none, and omits the tool. */
+  readDiff?: (read: { remote: string; credential: string; base: string; integration: string }) => Promise<{ base: string; integration: string; files: number; truncated: boolean; text: string } | { unavailable: string }>;
   /** Raw operator policy, parsed before each install and again before custody builds. */
   applicationTrust?: string | undefined;
   config: ConfigPort;
@@ -183,6 +185,9 @@ const configDigest = (config: McpConfig): Digest => digestBytes(utf8(canonicaliz
 class Stop extends Error { constructor(readonly result: CallResult) { super("stop"); } }
 const stopCall = (f: Finding): never => { throw new Stop(failed(f)); };
 
+const VIEW_DIFF_POLLS = 8;
+const COMMIT_ID = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
+const DIFF_OUTPUT = { type: "object", properties: { base: { type: "string" }, integration: { type: "string" }, files: { type: "integer", minimum: 0 }, truncated: { type: "boolean" }, text: { type: "string" } }, required: ["base", "integration", "files", "truncated", "text"] };
 const READ = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 const WRITE = { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false };
 const scopeArg = { type: ["string", "integer"], description: "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number." };
@@ -206,6 +211,8 @@ export class McpService {
   readonly #fetch: Fetch | undefined;
   readonly #tools: readonly string[] | null;
   readonly #readReceipts = new WeakMap<CallResult, Receipt>();
+  /** Credential answers that say the mint has no outcome yet, so View diff waits and asks again. */
+  readonly #mintPending = new WeakSet<CallResult>();
   #snapshot: Snapshot | null = null;
   #stale = false;
   /** At most 64 recent hints per cache: next entry or page cursor. Eviction
@@ -258,7 +265,7 @@ export class McpService {
     const source = declared ?? port.views;
     const presentation = new ViewResources(port.presentation ?? source?.presentation ?? PRESENTATION);
     this.resources = port.packageBrief ? new PackageResources(presentation, port.packageBrief) : presentation;
-    const views = source ? new ViewSessions(source, { call: (name, args) => this.call(name, args) }, (kind, args, admit) => this.#viewPerform(kind, args, admit), (args) => port.applicationReads ? this.#viewSettle(args) : this.call("settle", args), result => this.#readReceipts.get(result) ?? null) : null;
+    const views = source ? new ViewSessions(source, { call: (name, args) => this.call(name, args) }, (kind, args, admit) => this.#viewPerform(kind, args, admit), (args) => port.applicationReads ? this.#viewSettle(args) : this.call("settle", args), result => this.#readReceipts.get(result) ?? null, { readDiff: (read, admit) => this.#viewDiff(read, admit), unresolved: target => this.#viewUnresolved(target) }) : null;
     const cards = views ? viewTools(views, source?.screens) : {};
     this.#viewTools = new Set(Object.keys(cards));
     this.#generic = { ...this.#genericTools(), ...cards };
@@ -413,6 +420,37 @@ export class McpService {
     catch (error) { return this.#failure(error, args); }
   }
 
+  /**
+   * View diff: one signed read-token act, one credential, one bounded read. The act goes under custody, like any act, and asks
+   * for nothing else; the credential stays in this function. The read stops after a bounded wait for the mint.
+   */
+  async #viewDiff(read: { target: string; base: string; integration: string }, admit: () => void): Promise<CallResult> {
+    if (!this.#port.readDiff) return failed({ error: "diff", why: "this server has no Git reader", spent: false });
+    try {
+      const signed = await this.#perform(null, { target: read.target, on: 0, fields: { hours: 1 }, idempotencyKey: `view-diff-${crypto.randomUUID()}` }, "read-token", undefined, admit);
+      if (signed.structuredContent["answer"] !== "accepted") return signed;
+      const entry = (signed.structuredContent["fact"] as { seq: number }).seq;
+      const pause = this.#port.pause ?? (() => new Promise<void>((resolve) => { setTimeout(resolve, 1000); }));
+      for (let polls = 0; ; polls++) {
+        const answer = await this.#diff({ entry, target: read.target, base: read.base, integration: read.integration });
+        if (!this.#mintPending.has(answer) || polls >= VIEW_DIFF_POLLS) return answer;
+        await pause([read.target as ScopeId]);
+      }
+    } catch (error) { return this.#failure(error, { target: read.target }); }
+  }
+
+  /** The oldest act this server signed at `target` and sent, with no outcome kept: the request a restarted card must check first. */
+  async #viewUnresolved(target: string): Promise<{ idempotencyKey: string } | null> {
+    const store = this.#port.custody;
+    for (const open of await store.unresolved()) {
+      const record = await store.read(open.id);
+      if (!record || record.standalone || (record.phase !== "sent" && record.phase !== "unknown")) continue;
+      const { identity } = record;
+      if (identity.service === this.#service && identity.signer === this.#port.signer.key && "scope" in identity.target && identity.target.scope === target) return { idempotencyKey: identity.key };
+    }
+    return null;
+  }
+
   /** Check only a server-retained view original; the public application catalogue still exposes no settle tool. */
   async #viewSettle(args: Args): Promise<CallResult> {
     try { return await this.#settle(args); }
@@ -557,7 +595,7 @@ export class McpService {
       try {
         shaped = shapeFields(act, fieldsGiven, textsGiven, membership);
         presented = shapePresented(act, presentedGiven);
-        expected = capturedExpected(at, expectedOf(act, items, on as number | null, effectiveFields(act, shaped.fields, summary.scope)));
+        expected = capturedExpected(at, expectedOf(act, items, on as number | null, effectiveFields(act, shaped.fields, summary.scope)), act);
       } catch (error) {
         if (error instanceof Unshaped) return stopCall({ error: "shape", field: error.field, what: error.what, declared: error.declared });
         throw error;
@@ -677,6 +715,8 @@ export class McpService {
         { target: scopeArg, definition: { type: ["string", "object"] }, idempotencyKey: keyArg, cursor: { type: "string" } }, ["idempotencyKey"], READ, (a) => this.#settle(a)),
       tool("credential", "The one-time read credential for a read-token act your key signed (entry: its seq at the destination), read once from the destination's credential route with your session. Its result is a secret: the credential is in the structured field credential only, with the remote URL beside it. Use it with Git; it is not kept here.",
         { entry: { type: "integer", minimum: 1 }, target: scopeArg }, ["entry"], { ...READ, idempotentHint: false }, (a) => this.#credential(a)),
+      tool("diff", "The change between two exact commits, read with the one-time credential of a read-token act your key signed (entry: its seq at the destination). The server keeps the credential and spends it on this read. It signs nothing. The answer holds at most 40 KiB of text. Over a bound, truncated is true and the text says truncated. An object the host does not give is an error, and the answer shows no change it did not read. Sign another read-token for another diff.",
+        { entry: { type: "integer", minimum: 1 }, base: { type: "string", description: "The exact commit ID of the older side." }, integration: { type: "string", description: "The exact commit ID of the newer side." }, target: scopeArg }, ["entry", "base", "integration"], { ...READ, idempotentHint: false, openWorldHint: true }, (a) => this.#diff(a), DIFF_OUTPUT),
       tool("actions", "The acts of one scope, as act tools would describe them: each kind with its derived description, input schema, binding and the definition digest to give to act. For a host that lists few tools.",
         { scope: scopeArg, cursor: { type: "string" } }, ["scope"], READ, (a) => this.#actions(a)),
       tool("act", "Signs one act of a scope by its native kind, under the same custody and binding checks as an act tool. digest: the definition digest actions gave; fields as actions describes; idempotencyKey required.",
@@ -1367,7 +1407,11 @@ export class McpService {
     }
     this.#searches.set(key, next);
     if (ended) return failed({ error: "credential", destination: scope, why: `the mint of entry ${seq} is ${ended}` });
-    if (handle === null) return failed({ error: "credential", destination: scope, why: `the mint of entry ${seq} has no outcome up to entry ${next - 1}; call credential again to continue the bounded search, or wait first. An evicted continuation restarts the search` });
+    if (handle === null) {
+      const pending = failed({ error: "credential", destination: scope, why: `the mint of entry ${seq} has no outcome up to entry ${next - 1}; call credential again to continue the bounded search, or wait first. An evicted continuation restarts the search` });
+      this.#mintPending.add(pending);
+      return pending;
+    }
     let answer: Read<{ token: string; ends: string; remote: string }>;
     try { answer = await readCredential(this.#service, scope, reader, handle, this.#fetch ? { fetch: this.#fetch } : {}); }
     catch { return failed({ error: "credential", destination: scope, why: "the credential reply was unavailable or invalid; the one-time credential may have been consumed" }); }
@@ -1375,6 +1419,24 @@ export class McpService {
     const structured = { credential: answer.value.token, remote: answer.value.remote, ends: answer.value.ends, entry: seq };
     // The text holds no credential: it says where the one structured field is.
     return { content: [{ type: "text", text: JSON.stringify({ ...structured, credential: "(secret: in structuredContent.credential only)" }) }], structuredContent: structured, isError: false };
+  }
+
+  /** One credential, spent on one bounded read. The answer holds no credential, and a failed read says the credential is spent. */
+  async #diff(args: Args): Promise<CallResult> {
+    const base = args["base"], integration = args["integration"];
+    for (const [field, value] of [["base", base], ["integration", integration]] as const) {
+      if (typeof value !== "string" || !COMMIT_ID.test(value)) return failed({ error: "shape", field, what: "is not a commit ID of 40 or 64 hexadecimal characters", declared: "an exact commit ID" });
+    }
+    const readDiff = this.#port.readDiff;
+    if (!readDiff) return failed({ error: "diff", why: "this server has no Git reader", spent: false });
+    const read = await this.#credential({ entry: args["entry"], ...(args["target"] === undefined ? {} : { target: args["target"] }) });
+    if (read.isError) return read;
+    const { credential, remote } = read.structuredContent as { credential: string; remote: string };
+    let diff;
+    try { diff = await readDiff({ remote, credential, base: base as string, integration: integration as string }); }
+    catch { return failed({ error: "diff", why: "the host gave no readable answer", spent: true }); }
+    if ("unavailable" in diff) return failed({ error: "diff", why: diff.unavailable, spent: true });
+    return ok({ base: diff.base, integration: diff.integration, files: diff.files, truncated: diff.truncated, text: diff.text }, BOUNDS.large);
   }
 
   async #actions(args: Args): Promise<CallResult> {

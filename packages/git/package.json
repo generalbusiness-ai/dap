@@ -16,6 +16,7 @@
     "./journal-local": "./src/journal-local.ts",
     "./journal": "./src/journal.ts",
     "./application": "./src/application.ts",
+    "./diff": "./src/diff.ts",
     "./tree-proof": "./src/tree-proof.ts",
     "./checkout-types": "./src/checkout-types.ts"
   },

@@ -778,6 +778,74 @@
       }
     },
     {
+      "name": "diff",
+      "description": "The change between two exact commits, read with the one-time credential of a read-token act your key signed (entry: its seq at the destination). The server keeps the credential and spends it on this read. It signs nothing. The answer holds at most 40 KiB of text. Over a bound, truncated is true and the text says truncated. An object the host does not give is an error, and the answer shows no change it did not read. Sign another read-token for another diff.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "entry": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "base": {
+            "type": "string",
+            "description": "The exact commit ID of the older side."
+          },
+          "integration": {
+            "type": "string",
+            "description": "The exact commit ID of the newer side."
+          },
+          "target": {
+            "type": [
+              "string",
+              "integer"
+            ],
+            "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
+          }
+        },
+        "required": [
+          "entry",
+          "base",
+          "integration"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "base": {
+            "type": "string"
+          },
+          "integration": {
+            "type": "string"
+          },
+          "files": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "base",
+          "integration",
+          "files",
+          "truncated",
+          "text"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      }
+    },
+    {
       "name": "change.ask-rules",
       "title": "ask-rules (change)",
       "description": "ask-rules: moves a proposal; needs change.propose, which your role (admin) holds. Fields: none. No guards.",

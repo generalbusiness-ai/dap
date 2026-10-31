@@ -139,9 +139,17 @@ export function shapeAt(given: unknown): Record<string, number> | undefined {
 }
 
 /** Check coverage only when building a new envelope; a custody re-report retains its original subjects and revisions. */
-export function capturedExpected(at: Record<string, number> | undefined, fresh: Record<string, number>): Record<string, number> {
+export function capturedExpected(at: Record<string, number> | undefined, fresh: Record<string, number>, act?: Pick<ActLike, "also">): Record<string, number> {
   if (at === undefined) return fresh;
-  if (Object.keys(at).length !== Object.keys(fresh).length || Object.keys(at).some((name) => !Object.hasOwn(fresh, name))) {
+  // A subject the captured display showed may since have left the live summary: a superseded version is final. Its captured
+  // revision stays, so the scope refuses the stale act. The name must still be one this act binds.
+  const left = (name: string): boolean => {
+    if (act === undefined) return false;
+    if (name === "on") return true;
+    const rule = ownValue(act.also, name) as { code?: string } | undefined;
+    return rule !== undefined && rule.code === undefined;
+  };
+  if (Object.keys(fresh).some((name) => !Object.hasOwn(at, name)) || Object.keys(at).some((name) => !Object.hasOwn(fresh, name) && !left(name))) {
     throw new Unshaped("at", "does not name exactly the act's bound subjects", Object.keys(fresh).sort().join(", ") || "no bound subjects: {}");
   }
   return at;

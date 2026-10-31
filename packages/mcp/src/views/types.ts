@@ -82,6 +82,8 @@ export interface Card {
   /** An uncertain external request can offer only its original check. */
   unresolvedOriginal?: boolean;
   diffAvailable?: boolean;
+  /** Server-held endpoints of View diff. It signs one read-token act at `target` and reads this diff once. */
+  diffRead?: { target: string; base: string; integration: string };
   detailPage?: "item" | "updates";
   fallback: string;
   /** Generic declared presentation; all data stays on the app-only path. */
@@ -141,7 +143,9 @@ export interface ViewSource {
   readonly screens?: readonly { name: string; resource: string }[];
   readonly inputActs?: readonly { screen: string; id: string; label: string; parameters: ApplicationViewParameters }[];
   readonly presentation?: PresentationPackage;
-  initialPage?(screen: ViewKind): PageKind;
+  initialPage?(screen: ViewKind, subject?: string): PageKind;
+  /** After a restart, such a card offers only the check of an act that this server sent and has no outcome for. */
+  checksOriginals?(query: ViewQuery): boolean;
   read(query: ViewQuery, access: { call(name: string, args: Record<string, unknown>): Promise<{ structuredContent: Record<string, unknown>; isError: boolean }> }, minimum?: ReadMinimum): Promise<Projection>;
   /** A declared source repeats its current when/needs check before signing. */
   admit?(query: ViewQuery, card: Card, action: CardAction): Promise<void>;
@@ -176,7 +180,9 @@ export interface Display {
   status: Projection["status"];
   position: number;
   count: number;
-  card?: Omit<Card, "actions" | "declared"> & {
+  card?: Omit<Card, "actions" | "declared" | "diffRead"> & {
+    /** View diff goes through `view_act`, because it signs a read-token act. */
+    diffSigned?: true;
     declared?: Omit<NonNullable<Card["declared"]>, "data"> & { data?: ApplicationProjectionData };
     actions: (Pick<CardAction, "id" | "label" | "purpose"> & { input?: "chat" })[];
   };
