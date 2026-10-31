@@ -2349,10 +2349,10 @@ tool list; `mcp-tools.json` describes that ordinary list.
 
 | Read | Result |
 | --- | --- |
-| `needs_you` | Requests, reviews and merges that need your attention. |
+| `needs_you` | Requests, reviews, merges and required open findings that need your attention. |
 | `work` | Agent commitments, terms, blocks and linked changes. |
 | `context` | Question text, approvals, comments, conditions and Brief pin. |
-| `change` | One change's exact version: base, integration, reviews, checks, rules, merges and linked issues. |
+| `change` | One change's exact version: base, integration, reviews, checks, rules, merges, open findings and linked issues. |
 | `since` | Heads changed since an explicit Mark reviewed action. |
 
 Attention rows name their pinned declaration clause and observed head.
@@ -2400,6 +2400,26 @@ The Decision card retains the selected text version and native expected
 revisions. Approve and Decide use the ordinary signing and request
 custody path. An attention row explains why an item is listed; native
 guards decide whether an act is allowed.
+
+These reads and the Change card accept change lanes on two exact definition
+pins: J4 and its finding successor. On the finding successor, the Change card
+lists each open finding with its file, range, class, severity, source, source
+version and change version. It says that a finding from a required source holds
+the merge, and it offers no **Merge** while one does. The card escapes a source's
+text by the rule of a diff path. `needs_you` lists a required open finding on a
+live change when you have an act that bears on it, with its pin, clause and head.
+A finding from a source that is not required stays on the card, says that it
+does not hold the merge, and has no row. An answered finding leaves both.
+
+No card answers a finding, and the project entry lists no act tool. On the
+ordinary server, use `change.resolve-finding-any`,
+`change.mark-finding-irrelevant` or `change.resolve-finding-own`. In `--generic`
+mode, use `act` with those native kinds. For a finding on an earlier version, the
+first two also need `at`, because the server reads revisions from the live
+summary and that version has left it. `change` gives the value as `answerAt`.
+Without `at`, the scope refuses the act as `bad-intent`. The
+[project entry's page](../apps/views/README.md#open-findings-on-the-finding-profile)
+has the rows, the acts and the limits.
 
 Mark reviewed writes only the captured full scope references and heads
 to local storage under `DAP_HOME`. It signs no native act. The server

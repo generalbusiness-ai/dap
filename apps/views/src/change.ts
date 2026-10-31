@@ -1,11 +1,12 @@
 /** The Change card: one exact version of a J4 change, read from native records. The card grants nothing; the scope judges each act. */
 import { canonicalize, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { FieldValue, Item, MemberRef, ReadMinimum, ScopeRef } from "@generalbusiness/dap-contract";
-import { J4_DIGESTS, changeJ4 } from "@generalbusiness/dap-lanes";
+import { changeFinding, changeJ4 } from "@generalbusiness/dap-lanes";
 import type { ActLike, Card, CardAction, Projection } from "@generalbusiness/dap-mcp";
 import { captureInput } from "./capture.ts";
+import { findingProfile, malformedRange, openFindings, requiredSource, shownText } from "./findings.ts";
 import { sameOptional, Unread, type Collection, type Frame } from "./reads.ts";
-import { questions, type RepoInAi } from "./repo-in-ai.ts";
+import { changes as changeProfile, questions, type RepoInAi } from "./repo-in-ai.ts";
 
 const LINKED_ISSUES = 4;
 export const changeSubject = (scope: ScopeRef): string => JSON.stringify(scope);
@@ -18,13 +19,20 @@ function selector(subject: string | undefined): ScopeRef {
 const idOf = (value: unknown): number | null => typeof value === "number" ? value : value && typeof value === "object" && "seq" in value && typeof value["seq"] === "number" ? value["seq"] : null;
 
 export interface LinkedIssue { scope: ScopeRef; title?: string; conditions?: readonly string[]; decided?: readonly { ask: number; question: string; decidedAt: number | null }[]; unread?: string }
+/**
+ * One open finding, and whether it holds this change's merge. `answerAt` is the revisions that `resolve-finding-any` and `mark-finding-irrelevant` bind.
+ * The ordinary act tools read current revisions from the live summary, which an earlier version has left, so they need this as `at` for a finding on that version.
+ */
+export interface ShownFinding { item: Item; required: boolean; holdsMerge: boolean; answerAt: Record<string, number> }
 export interface ChangeContext {
-  scope: ScopeRef; head: Frame["head"]; destination: string; viewer: MemberRef; key: string; actions: readonly string[];
+  scope: ScopeRef; head: Frame["head"]; definition: string; destination: string; viewer: MemberRef; key: string; actions: readonly string[];
   proposal: Item; manifest: Item | null; versions: number; rules: Item | null;
   reviews: Item[]; requests: Item[]; jobs: Item[]; results: Item[]; merges: Item[]; items: Item[];
   /** The merge items this viewer's key signed, with the request key of each. */
   mergeKeys: Record<number, string>;
   linked: LinkedIssue[];
+  /** Present only on the finding profile. Every other profile has no findings to show. */
+  findings?: ShownFinding[];
   /** Lines naming each member the card shows, from the membership it read. */
   who: (member: unknown) => string;
 }
@@ -33,7 +41,7 @@ export interface ChangeContext {
 export async function readChange(app: RepoInAi, scope: ScopeRef, minimum?: ReadMinimum): Promise<{ context: ChangeContext; collection: Collection }> {
   const { value, collection } = await app.collect(async collection => {
     const frame = await collection.frame(scope, minimum);
-    if (frame.summary.definition !== J4_DIGESTS.change) throw new Unread("change-profile-unsupported");
+    if (!changeProfile(frame.summary.definition)) throw new Unread("change-profile-unsupported");
     const live = (type: string) => frame.items.filter(item => item.type === type);
     const proposal = live("proposal")[0] ?? (await collection.items(frame, "proposal", ["merged"]))[0];
     if (!proposal) throw new Unread("change-absent");
@@ -60,10 +68,16 @@ export async function readChange(app: RepoInAi, scope: ScopeRef, minimum?: ReadM
       if (actor.kind === "unknown") return `${actor.name} (not a current member)`;
       return `${actor.name} (${actor.kind}${actor.controller ? ` of ${actor.controller}` : ", no controller shown"}; not a person)`;
     };
-    return { scope, head: frame.head, destination: collection.config.repository!.destination, viewer: collection.viewer, key: collection.options.signer.key, actions: collection.actions,
-      proposal, manifest, versions: live("manifest").length + superseded.length, rules: live("rules")[0] ?? null,
+    const rules = live("rules")[0] ?? null;
+    const findings = findingProfile(frame.summary.definition) ? openFindings(frame.items).map(item => {
+      const required = requiredSource(rules, item.values["source"]);
+      const answer = changeFinding.acts["resolve-finding-any"] as unknown as ActLike;
+      return { item, required, holdsMerge: required && proposal.state !== "merged", answerAt: captureInput(answer, [...frame.items, ...superseded, proposal], scope, item.id, {}).at };
+    }) : undefined;
+    return { scope, head: frame.head, definition: frame.summary.definition, destination: collection.config.repository!.destination, viewer: collection.viewer, key: collection.options.signer.key, actions: collection.actions,
+      proposal, manifest, versions: live("manifest").length + superseded.length, rules,
       reviews: manifest ? live("review").filter(item => idOf(item.refs["manifest"]) === manifest.id) : [], requests: live("review-request"),
-      jobs: manifest ? live("job").filter(item => idOf(item.refs["manifest"]) === manifest.id) : [], results, merges, items: [...frame.items, ...superseded, proposal], mergeKeys, linked, who: owner };
+      jobs: manifest ? live("job").filter(item => idOf(item.refs["manifest"]) === manifest.id) : [], results, merges, items: [...frame.items, ...superseded, proposal], mergeKeys, linked, ...(findings ? { findings } : {}), who: owner };
   }, scope, true);
   return { context: value, collection };
 }
@@ -104,17 +118,18 @@ function approvalExtent(rules: Item | null): string | null {
   const named = (extents as { name?: unknown; class?: unknown }[]).find(extent => typeof extent.name === "string" && extent.class === "content");
   return typeof named?.name === "string" ? named.name : null;
 }
-const act = (kind: string) => changeJ4.acts[kind as keyof typeof changeJ4.acts] as unknown as ActLike;
+const act = (context: ChangeContext, kind: "review-verdict" | "merge") => (findingProfile(context.definition) ? changeFinding : changeJ4).acts[kind] as unknown as ActLike;
+const holding = (context: ChangeContext): ShownFinding[] => (context.findings ?? []).filter(finding => finding.holdsMerge);
 function verdict(context: ChangeContext, manifest: Item, value: "approve" | "request-changes"): CardAction {
   const request = context.requests.find(item => item.state === "open" && sameOptional(item.parties["requested"], context.viewer));
   const extent = approvalExtent(context.rules);
   const fields: Record<string, FieldValue> = { manifest: manifest.id, verdict: value, ...(request ? { request: request.id } : {}), ...(value === "approve" && extent ? { extent } : {}) };
-  return { id: value, label: value === "approve" ? "Approve" : "Request changes", purpose: "approve", kind: "review-verdict", args: { ...captureInput(act("review-verdict"), context.items, context.scope, null, fields) } };
+  return { id: value, label: value === "approve" ? "Approve" : "Request changes", purpose: "approve", kind: "review-verdict", args: { ...captureInput(act(context, "review-verdict"), context.items, context.scope, null, fields) } };
 }
 function merging(context: ChangeContext, manifest: Item): CardAction {
   const selected = manifest.values["selected"];
   const reports = (Array.isArray(selected) ? selected as { report?: FieldValue }[] : []).flatMap(selection => selection.report === undefined ? [] : [selection.report]);
-  return { id: "merge", label: "Merge", purpose: "act", kind: "merge", args: { ...captureInput(act("merge"), context.items, context.scope, null, { manifest: manifest.id, reports }) } };
+  return { id: "merge", label: "Merge", purpose: "act", kind: "merge", args: { ...captureInput(act(context, "merge"), context.items, context.scope, null, { manifest: manifest.id, reports }) } };
 }
 /** At most two acts. Each carries the revisions of the subjects it binds, read with this card. */
 function changeActions(context: ChangeContext): CardAction[] {
@@ -125,9 +140,35 @@ function changeActions(context: ChangeContext): CardAction[] {
     && !context.reviews.some(item => item.state === "submitted" && sameOptional(item.parties["reviewer"], viewer));
   const needed = countOf(rules);
   const ready = manifest.values["complete"] === true && rules?.values["revision"] !== undefined && rules.values["revision"] !== null && needed !== null && approvals(context).length >= needed
-    && changes(context).length === 0 && requiredChecks(rules).every(check => checkPassed(context, check.name));
+    && changes(context).length === 0 && requiredChecks(rules).every(check => checkPassed(context, check.name)) && holding(context).length === 0;
   if (ready && actions.includes("change.merge")) return [merging(context, manifest), ...(reviewable ? [verdict(context, manifest, "request-changes")] : [])];
   return reviewable ? [verdict(context, manifest, "approve"), verdict(context, manifest, "request-changes")] : [];
+}
+
+/** Each author-controlled value stands alone on a labelled line, after a status line that no finding's text can reach. */
+function findingLines(context: ChangeContext, findings: readonly ShownFinding[]): string[] {
+  const lines = ["", "Open findings:"];
+  if (!findings.length) return [...lines, "None."];
+  if (holding(context).length) {
+    lines.push("A required source has an open finding, so this change cannot merge until someone answers it.");
+    if (activeMerge(context)) lines.push("The merge in progress does not wait for it. It holds the next merge if this one is refused.");
+  }
+  lines.push("Each range belongs to the version the finding names.");
+  const manifests = context.items.filter(item => item.type === "manifest").map(item => item.id).sort((a, b) => a - b);
+  for (const { item, required, holdsMerge } of findings) {
+    const id = idOf(item.refs["version"]), ordinal = id === null ? 0 : manifests.indexOf(id) + 1;
+    lines.push(`Finding ${item.id}: ${holdsMerge ? "holds the merge." : required ? "open. The change has merged, so it holds nothing." : "open. It does not hold the merge, because its source is not required."}`,
+      `File: ${shownText(item.values["file"])}`,
+      `Lines: ${shownText(item.values["start"])} to ${shownText(item.values["end"])}${malformedRange(item) ? ". Malformed: the end comes before the start." : ""}`,
+      `Class: ${shownText(item.values["class"])}`,
+      `Severity: ${shownText(item.values["severity"])}`,
+      `Source: ${shownText(item.values["source"])}`,
+      `Source version: ${shownText(item.values["sourceVersion"])}`,
+      `Change version: ${ordinal > 0 ? `${ordinal}, ` : ""}manifest ${id ?? "unknown"}${id === context.manifest?.id ? ", the version this card shows" : ""}.`,
+      `Filed by: ${context.who(item.parties["reporter"])}`);
+  }
+  lines.push("This card does not answer a finding. The ordinary dap mcp server does: change.resolve-finding-any or change.mark-finding-irrelevant for a holder of change.dismiss, and change.resolve-finding-own for the source that filed it. The change's opener and the authors of the finding's version cannot answer it with change.dismiss. For a finding on an earlier version, the first two tools also need answerAt from the change read, as at.");
+  return lines;
 }
 
 function bodyOf(context: ChangeContext): string {
@@ -150,6 +191,7 @@ function bodyOf(context: ChangeContext): string {
     lines.push(`${String(job.values["name"])}: ${job.state}${result ? `, by ${who(result.parties["checker"])}` : ""}.`);
   }
   for (const check of required) lines.push(`${check.name}: required, not run.`);
+  if (context.findings) lines.push(...findingLines(context, context.findings));
   lines.push("", "Rules:");
   const needed = countOf(rules);
   if (!rules || needed === null || rules.values["revision"] === undefined || rules.values["revision"] === null) lines.push("Not known yet.");
@@ -183,9 +225,10 @@ export async function changeProjection(app: RepoInAi, subject: string | undefine
   for (const action of actions) if (!action.local) Object.assign(at, action.args["at"] ?? {});
   const integration = manifest?.values["integration"], base = manifest?.values["base"];
   const diffable = manifest?.state === "current" && typeof integration === "string" && typeof base === "string";
+  const held = holding(context).length;
   const card: Card = { identity: { item: String((manifest ?? proposal).id), kind: manifest ? "manifest" : "proposal", revision: String((manifest ?? proposal).revision), subject: { scope: scope.scope, item: proposal.id }, at },
-    title: String(proposal.values["title"]), summary: `${typeof proposal.values["number"] === "number" ? `Change ${proposal.values["number"]}` : "Change"}, ${proposal.state}${manifest ? `, version ${context.versions}` : ""}.`,
-    body: bodyOf(context), reasons: [`${J4_DIGESTS.change} acts.review-verdict / acts.merge; the scope decides each act`],
+    title: String(proposal.values["title"]), summary: `${typeof proposal.values["number"] === "number" ? `Change ${proposal.values["number"]}` : "Change"}, ${proposal.state}${manifest ? `, version ${context.versions}` : ""}.${held ? ` ${held} open finding${held === 1 ? " holds" : "s hold"} the merge.` : ""}`,
+    body: bodyOf(context), reasons: [`${context.definition} acts.review-verdict / acts.merge; the scope decides each act`],
     projection: collection.points().map(point => ({ scope: point.scope.scope, seq: point.head.seq, hash: point.head.hash })),
     reviewIntended: [], unavailable: [], waitsOn: [], settles: [], actions, ...(original !== undefined ? { unresolvedOriginal: true } : {}),
     ...(diffable ? { diffAvailable: true, diffRead: { target: context.destination, base, integration } } : {}),

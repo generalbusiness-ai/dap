@@ -89,7 +89,9 @@ node --test apps/views/test/s4.test.mjs
 
 `view_change` with a `subject` opens one change. The subject is the lane's
 scope reference as JSON. `view_change` with no subject keeps the **Mark
-reviewed** list of heads. The card reads J4 changes only.
+reviewed** list of heads. The card, `needs_you`, `work`, and `change` read
+change lanes on two exact definition pins: J4 and its finding successor. They
+report any other pin as unsupported, and no generic profile loader exists.
 
 The card shows the current version's base and integration, and this version's
 reviews and checks. Each reviewer and checker appears with their kind: a
@@ -121,6 +123,82 @@ signed revisions.
 **Approve** names the first rules extent of class `content`. A review counts
 only for the extent it names, so an approval for a change to the rules or to
 deployment files needs the ordinary `review-verdict` act.
+
+### Open findings on the finding profile
+
+A required source's open finding holds the merge, and the card and `needs_you`
+both say so. The lane's `merge` guard makes that decision. These views only
+read the same rules row and the same open items. A lane on J4 has no findings,
+and it reads exactly as it did before this profile.
+
+The card lists each open finding under **Open findings**. Each finding has a
+status line, then one labelled line each for the file, range, class, severity,
+source, source version, change version, and filer. The status line says one of
+three things:
+
+| Finding | Status line |
+| --- | --- |
+| From a required source | `holds the merge.` |
+| From a source that is not required | `open. It does not hold the merge, because its source is not required.` |
+| Open on a change that has merged | `open. The change has merged, so it holds nothing.` |
+
+The card offers no **Merge** while a finding holds the merge. A card read before
+a later finding still offers **Merge**. That act reaches the scope, and the guard
+refuses it as `finding-open`. A merge already in progress does not wait for a
+later finding, and the card says so. A range with its end before its start reads
+as malformed, and the finding still holds the merge.
+
+A source writes the file, class, and source version of a finding. The card
+escapes each one by the rule of the diff path, so a value stays on its own line
+and cannot start another. A backslash and each C0 control or DEL appear as
+`\xNN`. Each C1 control, bidi control, or line separator appears as `\uNNNN`.
+
+`needs_you` lists a row of category `open-finding` for each open finding from a
+required source on an open or draft change, when you have an act that bears on
+it. The row names its pin, the clause `acts.merge#finding-open;items.finding`,
+its head, the rules revision, the source's row, and the finding. Its `acts` list
+holds what your role and your parties let you ask for:
+
+| Act | When the row names it |
+| --- | --- |
+| `resolve-finding-any`, `mark-finding-irrelevant` | You hold `change.dismiss`, and you did not open the change or write the finding's version. |
+| `resolve-finding-own` | You hold `change.check`, and your source filed the finding. |
+| `propose-manifest` | You hold `change.propose`, and you opened the change or wrote the finding's version. |
+| `merge` | You hold `change.merge`. The scope refuses it until someone answers the finding. |
+
+With no such act, you get no row. A finding from a source that is not required
+has no row. The `merge-attention` row of a lane on this profile also gives
+`heldBy`, the IDs of the findings that hold the merge. The rows grant nothing.
+
+`change` returns each open finding whole, with its scenario, `required`,
+`holdsMerge`, and `answerAt`. The card does not show the scenario.
+
+### Answer a finding with the ordinary server
+
+No card answers a finding, and this entry lists no act tool. Use the ordinary
+`dap mcp` server:
+
+- A holder of `change.dismiss` uses `change.resolve-finding-any` or
+  `change.mark-finding-irrelevant`.
+- The source that filed the finding uses `change.resolve-finding-own`.
+- In `--generic` mode, `act` takes the same acts by their native kinds.
+
+To answer a finding on an earlier version with the first two tools, also pass
+that finding's `answerAt` from `change` as `at`. Without `at`, the scope refuses
+the act as `bad-intent`, because the server reads revisions from the live
+summary and an earlier version has left it. A finding on the current version
+needs no `at`. `change.resolve-finding-own` never needs `at`.
+
+### Limits of the finding views
+
+- The card has a 60 KiB budget. Over it, the card offers no acts and points to
+  `change`. Long file names can reach that budget before the 256 findings that
+  a change can hold.
+- `change` refuses with `change-output-limit` over 256 KiB, because each finding
+  can hold a scenario of 4096 characters.
+- `needs_you` returns at most 50 rows, and it counts the rest in `omittedRows`.
+- A range belongs to the version the finding names. A later version can move
+  those lines.
 
 **View diff** signs one `read-token` act and spends its credential on one
 read of at most 40 KiB of text. Over a bound, the diff says "truncated". A
