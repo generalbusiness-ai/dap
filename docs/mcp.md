@@ -2218,3 +2218,76 @@ The generic kit supplies the carousel, detail, diff, updates and receipt
 screens. Journey projections, package installation and desktop-host
 registration are separate work. The implementation boundary and fixture
 browser command are in the [card-kit note](../notes/implementation/2026-10-18-compact-card-kit.md).
+
+## Local project views
+
+The opt-in [project entry](../apps/views/README.md) supplies four reads and
+the compact cards. It uses your existing local configuration and signer.
+It creates no key or room. The ordinary MCP server keeps its existing
+tool list; `mcp-tools.json` describes that ordinary list.
+
+| Read | Result |
+| --- | --- |
+| `needs_you` | Requests, reviews and merges that need your attention. |
+| `work` | Agent commitments, terms, blocks and linked changes. |
+| `context` | Question text, approvals, comments, conditions and Brief pin. |
+| `since` | Heads changed since an explicit Mark reviewed action. |
+
+Attention rows name their pinned declaration clause and observed head.
+Work rows name each agent's controller beside the current conditions.
+Context distinguishes text versions and the requests for their approval.
+
+A read admits at most eight scopes, including Membership, Directory and
+other support reads. Support scopes consume the same eight-scope limit.
+At most six lanes fit in the ordinary flat-directory case, and other
+support scopes leave fewer lane slots. A room with more than six lanes
+has omissions and cannot mark reviewed because the collection is incomplete.
+The reads return at most 50 attention rows and read at most 512 live items.
+Results report their read counts, omissions and incomplete discovery.
+A vector of observed heads does not claim one atomic room snapshot.
+
+Question context reads at most 512 total entries from the selected lane,
+including entries unrelated to that Question. Each entry counts once,
+including the current text entry. Exactly 512 entries fit this history
+bound. Beyond 512 lane entries, `context` and the Decision card are
+unavailable even if the Question itself is small. The existing page,
+request and byte limits can stop the read sooner. If the 16-page bound
+decides first, the read reports `page-limit`.
+
+The public context omits unrelated live lane items and does not repeat
+the current body in its version list. The Decision card has a separate
+60 KiB display budget. `context` caps the complete serialized result at
+256 KiB. JSON escaping and history metadata can exceed that bound even
+for a legal 64 KiB Question body. The read then refuses with
+`context-output-limit` rather than returning a partial Question.
+
+The question-with-Brief profile records a required `brief` digest when
+the question is asked. That value stays fixed when the text is revised.
+A different Brief needs a new question. Earlier question profiles remain
+unbound. Approvals name the question's text version; they grant no
+authority over the Brief or the conditions.
+
+The operator selects the package's local Brief file when starting the
+project entry. `dap://package/brief` serves those exact UTF-8 bytes as
+`text/plain`, with a 64 KiB limit and their byte digest. Context reports
+whether that digest matches the question's stored pin. A mismatch does
+not select another file or substitute the question-body digest. The
+existing HTML resources under `ui://dap/` keep their own digest and
+policy checks.
+
+The Decision card retains the selected text version and native expected
+revisions. Approve and Decide use the ordinary signing and request
+custody path. An attention row explains why an item is listed; native
+guards decide whether an act is allowed.
+
+Mark reviewed writes only the captured full scope references and heads
+to local storage under `DAP_HOME`. It signs no native act. The server
+rechecks the displayed cut and heads before writing. A duplicate mark
+does not rewrite the file. A mark requires a complete collection with no
+unread scopes, omitted scopes, or omitted rows. It covers the displayed
+heads and scopes, without claiming review of every journal body between
+heads.
+
+`since` is read-only: equal heads produce no row, and each new head
+appears once in a response. Repeated reads keep showing that change
+until another explicit mark. Reading a card does not clear it.

@@ -730,6 +730,14 @@ does not verify manifest contents or replace the reviewer's evidence check.
 
 ## Entry-point inventory
 
+The fixed Node stage includes `apps/views/test/s4.test.mjs` once. That
+owner exercises the project adapter through bounded transport stand-ins
+and uses real scratch files for the local reviewed-head store. The
+stand-ins provide Membership, Directory and lane answers; they prove no
+native authority, provider or live-room outcome. The Brief profile's
+native refusal belongs in its lane Scope owner. Generic catalogue,
+resource and local-action checks remain in the MCP package's owners.
+
 `node --test scripts/security-entry-points.test.mjs` checks the route, method,
 and gate-class bijection in [the Worker inventory](security/entry-points.md).
 It derives names from source matchers, using boundary stand-ins for scope and

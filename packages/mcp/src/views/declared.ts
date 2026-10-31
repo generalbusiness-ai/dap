@@ -7,7 +7,7 @@ import type { ApplicationInstallation } from "@generalbusiness/dap-platform/appl
 import { applicationProjectionId, applicationViewFactField, isApplicationJournalSource, readPublishedApplicationPackage2, type ApplicationView, type ApplicationViewAct, type PublishedPackedApplication2 } from "@generalbusiness/dap-platform/application-v2";
 import { admit, evaluate, RuleEvalError } from "@generalbusiness/dap-derive/rule";
 import { ViewError } from "./session.ts";
-import type { Card, CardAction, DeclaredSurface, Projection, ViewQuery, ViewSource } from "./types.ts";
+import type { Card, CardAction, NativeCardAction, DeclaredSurface, Projection, ViewQuery, ViewSource } from "./types.ts";
 import { PRESENTATION } from "./generated.ts";
 import type { DefinitionLike } from "../describe.ts";
 import { effectiveFields, expectedOf } from "../shape.ts";
@@ -145,9 +145,9 @@ export class DeclaredViewSource implements ViewSource {
     if (declaration.step === "transition") names.push("on");
     return names.every(name => Object.hasOwn(expected, name)) ? expected : null;
   }
-  async #allowed(view: ApplicationView, row: ApplicationProjectionRow, data: ApplicationProjectionData, scope: ScopeRef, definition: Digest): Promise<CardAction[]> {
+  async #allowed(view: ApplicationView, row: ApplicationProjectionRow, data: ApplicationProjectionData, scope: ScopeRef, definition: Digest): Promise<NativeCardAction[]> {
     if (view.kind === "surface" || !view.acts.length) return [];
-    const held = await this.port.actions(), actions: CardAction[] = [];
+    const held = await this.port.actions(), actions: NativeCardAction[] = [];
     for (const [index, control] of view.acts.entries()) {
       if (!held.includes(control.needs)) continue;
       let holds = false;
@@ -180,7 +180,7 @@ export class DeclaredViewSource implements ViewSource {
     }
     return { label: series.label, scale: series.scale, unit: series.unit, window, samples, fallback };
   }
-  async read(query: ViewQuery, _access?: Parameters<ViewSource["read"]>[1], minimum?: ReadMinimum): Promise<Projection> {
+  async read(query: ViewQuery, _access?: Parameters<ViewSource["read"]>[1], minimum?: ReadMinimum): Promise<Omit<Projection, "card"> & { card?: Omit<Card, "actions"> & { actions: NativeCardAction[] } }> {
     const { view, root, scope, definition, reply, rows, routed, points, unknown } = await this.#read(query, minimum);
     const declaration = this.packet.package.semantic.projections[view.projection]!;
     const backScope = this.#backScope(view, scope, root), surface = this.#surface(query.screen, view, backScope);
@@ -194,7 +194,7 @@ export class DeclaredViewSource implements ViewSource {
     const row = rows[position]!;
     if (unknown.has(row.id)) {
       const fallback = "The available evidence does not establish whether this item is for you. Refresh after the evidence is updated.";
-      const card: Card = {
+      const card: Omit<Card, "actions"> & { actions: NativeCardAction[] } = {
         identity: { item: String(row.id), kind: row.type, revision: String(row.revision), subject: { scope: scope.scope, item: row.id }, at: { on: row.revision } },
         title: "Assignment unavailable", summary: `Item ${row.id}: the available evidence does not establish whether this is for you.`, reasons: [],
         projection: points, reviewIntended: [], unavailable: [], waitsOn: [fallback], settles: [], actions: [], fallback,
@@ -211,7 +211,7 @@ export class DeclaredViewSource implements ViewSource {
     const fallback = template(view.fallback, row, waiting, members), actions = await this.#allowed(view, row, reply.value, scope, definition);
     const now = this.port.now?.() ?? Date.now();
     const series = this.#series(view, row, reply.value);
-    const card: Card = {
+    const card: Omit<Card, "actions"> & { actions: NativeCardAction[] } = {
       identity: surface ? { item: scope.scope, kind: "scope", revision: String(reply.value.at.seq), subject: { scope: scope.scope }, at: {} }
         : { item: String(row.id), kind: row.entry ? "entry" : row.type, revision: String(row.revision), subject: { scope: scope.scope, ...(row.entry ? {} : { item: row.id }) }, at: row.entry ? {} : { on: row.revision } },
       title: view.kind === "surface" ? query.screen : memberValueText(values[view.title], members) ?? displayText(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : memberValueText(values[view.summary], members) ?? displayText(values[view.summary]),
@@ -241,6 +241,7 @@ export class DeclaredViewSource implements ViewSource {
   /** Called by the mounted-view host inside the custody build, immediately
    * before signing. Native expected revisions and grants still judge submit. */
   async admit(query: ViewQuery, card: Card, action: CardAction): Promise<void> {
+    if (action.local) throw new ViewError("shape", "Declared native acts cannot publish a local review mark.");
     const { view, scope, definition, reply, rows, unknown } = await this.#read(query);
     const row = rows.find(row => row.id === card.identity.subject.item);
     if (row && unknown.has(row.id)) throw new ViewError("unavailable", "The available evidence does not establish whether this item is for you. No request was signed.");

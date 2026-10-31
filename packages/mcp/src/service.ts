@@ -32,6 +32,8 @@ import { Unshaped, capturedExpected, effectiveFields, expectedOf, needsOn, shape
 import { WORDS, type Words } from "./words.ts";
 import { McpMetrics, observedFetch, type McpMetricOptions } from "./metrics.ts";
 import { ViewResources, type PresentationPackage } from "./views/resources.ts";
+import { ApplicationReads, type ApplicationReadCatalogue } from "./read-tools.ts";
+import { PackageResources, type PackageBrief } from "./package-brief.ts";
 import { PRESENTATION } from "./views/generated.ts";
 import { ViewSessions } from "./views/session.ts";
 import { toolsForHost, viewTools } from "./views/tools.ts";
@@ -39,6 +41,7 @@ import type { ViewSource } from "./views/types.ts";
 import { DeclaredViewSource } from "./views/declared.ts";
 import { readMembershipDisplay } from "./views/member-reads.ts";
 import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
+import type { CallResult } from "./results.ts";
 
 export interface ServerPort {
   /** The scope service's base URL. */
@@ -75,10 +78,13 @@ export interface ServerPort {
   /** One exact installed declared package; its native install is rechecked
    * on reads. Package bytes provide data, never a custom read adapter. */
   declaredViews?: { bytes: Uint8Array; release: Digest; item: number };
+  /** A static local read adapter. Calls/list/watch do not collect room inventory. */
+  applicationReads?: ApplicationReadCatalogue;
+  /** One immutable raw UTF-8 resource at dap://package/brief. */
+  packageBrief?: PackageBrief;
 }
 
-/** A tool's answer, as `tools/call` sends it: structured content with an object root, and its text. */
-export interface CallResult { content: { type: "text"; text: string }[]; structuredContent: Record<string, unknown>; isError: boolean }
+export type { CallResult } from "./results.ts";
 
 /** A `tools/list` cursor from an earlier generation. */
 export class ListRestart extends Error { constructor() { super("The tool list changed; list again from the start."); } }
@@ -188,7 +194,11 @@ export class McpService {
   #service: string;
   readonly kept = new Kept();
   readonly custody: Custody;
-  readonly resources: ViewResources;
+  readonly resources: ViewResources | PackageResources;
+  readonly #applicationReads: ApplicationReads | null;
+  readonly #viewTools: ReadonlySet<string>;
+  readonly #readGeneration: Digest | null;
+  readonly #readTools: readonly Tool[] | null;
   readonly mode: Mode;
   readonly words: Words;
   readonly #port: ServerPort;
@@ -246,9 +256,20 @@ export class McpService {
       },
     }) : null;
     const source = declared ?? port.views;
-    this.resources = new ViewResources(port.presentation ?? source?.presentation ?? PRESENTATION);
-    const views = source ? new ViewSessions(source, { call: (name, args) => this.call(name, args) }, (kind, args, admit) => this.#viewPerform(kind, args, admit), (args) => this.call("settle", args), result => this.#readReceipts.get(result) ?? null) : null;
-    this.#generic = { ...this.#genericTools(), ...(views ? viewTools(views, source?.screens) : {}) };
+    const presentation = new ViewResources(port.presentation ?? source?.presentation ?? PRESENTATION);
+    this.resources = port.packageBrief ? new PackageResources(presentation, port.packageBrief) : presentation;
+    const views = source ? new ViewSessions(source, { call: (name, args) => this.call(name, args) }, (kind, args, admit) => this.#viewPerform(kind, args, admit), (args) => port.applicationReads ? this.#viewSettle(args) : this.call("settle", args), result => this.#readReceipts.get(result) ?? null) : null;
+    const cards = views ? viewTools(views, source?.screens) : {};
+    this.#viewTools = new Set(Object.keys(cards));
+    this.#generic = { ...this.#genericTools(), ...cards };
+    this.#applicationReads = port.applicationReads ? new ApplicationReads(port.applicationReads, Object.keys(this.#generic)) : null;
+    this.#readTools = this.#applicationReads ? [
+      ...this.#applicationReads.tools(), ...[...this.#viewTools].filter(name => this.#genericAdmitted(name)).map(name => structuredClone(this.#generic[name]!.tool)),
+    ] : null;
+    this.#readGeneration = this.#applicationReads ? digestBytes(utf8(canonicalize({
+      reads: this.#applicationReads.generation, resources: this.resources.generation,
+      tools: this.#readTools, service: port.service, key: port.signer.key,
+    }))) : null;
   }
 
   get key(): string { return this.#port.signer.key; }
@@ -301,7 +322,7 @@ export class McpService {
     return this.#metrics.list(() => this.#page(cursor, ui), error => error instanceof ListRestart ? { end: "refused", reason: "restart" } : error instanceof TransportError ? { end: "unavailable", reason: "transport" } : { end: "error", reason: "exception" });
   }
   async #page(cursor?: unknown, ui?: boolean): Promise<{ tools: Tool[]; nextCursor?: string; generation: Digest; catalogueGeneration?: Digest }> {
-    const s = await this.snapshot();
+    const s = this.#applicationReads ? { generation: this.#readGeneration!, tools: structuredClone([...this.#readTools!]) } : await this.snapshot();
     const generation = (this.#port.views || this.#port.declaredViews) && ui !== undefined ? digestBytes(utf8(canonicalize({ generation: s.generation, ui }))) : s.generation;
     const tools = ui === undefined ? s.tools : toolsForHost(s.tools, ui);
     let from = 0;
@@ -314,12 +335,15 @@ export class McpService {
     return { tools: page, ...(next !== null ? { nextCursor: cursorOf({ g: generation, i: next }) } : {}), generation, ...(generation === s.generation ? {} : { catalogueGeneration: s.generation }) };
   }
 
+  /** The subscription baseline; static application catalogues never read inventory. */
+  async catalogueGeneration(): Promise<Digest> { return this.#readGeneration ?? (await this.snapshot()).generation; }
+
   // ---------------------------------------------------------------- telling subscribed clients
 
   /** Tell `listener` of each new generation, while subscribed; the watch runs only while someone is. */
   subscribe(listener: (generation: Digest) => void): () => void {
     this.#listeners.add(listener);
-    if (!this.#stopWatch) {
+    if (!this.#applicationReads && !this.#stopWatch) {
       const every = this.#port.every ?? ((ms, run) => { const timer = setInterval(run, ms); return () => clearInterval(timer); });
       this.#stopWatch = every(WATCH_MS, () => { void this.check(); });
     }
@@ -333,7 +357,7 @@ export class McpService {
 
   /** Recompute the generation; tell subscribers when it differs from what they were told. Errors of a read are not a change. */
   async check(): Promise<void> {
-    if (this.#listeners.size === 0) return;
+    if (this.#listeners.size === 0 || this.#applicationReads) return;
     try { await this.snapshot(); } catch { /* an unreadable inventory is no change of the list */ }
   }
 
@@ -356,6 +380,11 @@ export class McpService {
   async #call(name: string, args: unknown): Promise<CallResult> {
     const given = isRecord(args) ? args : {};
     try {
+      if (this.#applicationReads) {
+        if (this.#applicationReads.has(name)) return this.#applicationReads.call(name, given);
+        if (this.#viewTools.has(name) && this.#genericAdmitted(name)) return await this.#generic[name]!.run(given);
+        return failed({ error: "unknown-tool", name });
+      }
       const generic = Object.hasOwn(this.#generic, name) ? this.#generic[name]! : null;
       if (generic && ((name !== "actions" && name !== "act") || this.mode !== "default")) return this.#genericAdmitted(name) ? await generic.run(given) : failed({ error: "unknown-tool", name });
       // Keep a known descriptor's identity, but derive its admission from fresh standing.
@@ -381,6 +410,12 @@ export class McpService {
 
   async #viewPerform(kind: string, args: Args, admit: () => void | Promise<void>): Promise<CallResult> {
     try { return await this.#perform(null, args, kind, undefined, admit); }
+    catch (error) { return this.#failure(error, args); }
+  }
+
+  /** Check only a server-retained view original; the public application catalogue still exposes no settle tool. */
+  async #viewSettle(args: Args): Promise<CallResult> {
+    try { return await this.#settle(args); }
     catch (error) { return this.#failure(error, args); }
   }
 

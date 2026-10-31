@@ -24,6 +24,8 @@ const nodeFiles = [
   'homepage/test/home.test.mjs',
   'packages/cli/test/config-dir.test.mjs',
   'examples/commons-bill/test/witness.test.mjs',
+  'apps/views/test/s4.test.mjs',
+  'apps/views/test/decision.test.mjs',
   'apps/jam/test/managed-assets.test.mjs',
   'scripts/test.test.mjs',
   'scripts/test-summary.test.mjs',

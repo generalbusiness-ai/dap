@@ -1,0 +1,374 @@
+# S4: bounded room reads and a local review mark
+
+Status: Gate 4 passed at `43d918da8b4ce6ae5954d246f4c9a84fc7a85cdb`, tree
+`4a7e8abd405bc181aae9129068b7bc0803d3e5ea`. Review and real S1 rendering remain
+owed. All 68 prior rows retain their outcomes.
+
+## Changes and boundaries
+
+`apps/views` adds four bounded MCP reads and a Decision card over Question
+records. Reads bind the active key, MemberRef, controller and full scope
+incarnation. Membership8 and Membership9 with flat Directory16 and Directory22
+are supported; unknown profiles and partitions are not. The eight-scope
+allowance includes Membership, Directory and at most six lanes.
+
+Limits: 50 output rows, 512 live items, 512 distinct whole-lane history entries
+including genesis, 16 pages and 64 HTTP attempts. Each request gets five
+seconds; a collection gets twenty. Replies cap at four MiB, aggregate bytes at
+sixteen MiB. Omissions and unread totals stay explicit. Observed heads form a
+vector, not an atomic cut. The default fetch owns redirect refusal, abort,
+deadlines and byte bounds; an injected fetch is trusted. No hostile port
+cancellation or physical drain follows.
+
+`needs_you` names the pinned clause, item, full ref and head. Assignment is not
+permission. `work` shows actual agent controllers, terms, conditions, blocks
+and exact Change links; it invents no Native Task or controller authority.
+`context` resolves body positions through contiguous canonical, hash-checked
+history. Missing bytes, gaps, changed heads and required unread scopes prevent
+complete context.
+
+Decision uses the existing native approve/decide path, captured text version
+and expected revision. An accepted receipt's full scope and head minimum
+reaches the next summary and refuses an older coherent cut. Authority and read
+admission precede that barrier. The local mark rechecks the displayed cut and
+heads, then publishes after synchronous final admission. It signs no act,
+creates no native fact, receipt, credential or custody row, and never erases or
+fabricates a retained receipt. Pure `since` repeats new heads until a mark.
+
+`review-store.ts` binds one owner-only DAP_HOME file to service, Directory,
+viewer key and MemberRef, incarnation and head; caps are 64 heads and 32 KiB.
+Rollback, conflicting equal-sequence hashes, links, uncertain locks and
+overflow refuse. Duplicates and restart preserve the mark. Before rename,
+failure preserves prior bytes; after rename, flush or readback failure may
+leave a visible mark with uncertain durability. Stop without automatic repeat
+or Native fallback. Marks cover displayed heads, not all bodies or history.
+Omitted scopes make the collection incomplete and prevent Mark reviewed.
+
+The trusted `read-tools.ts` catalogue keeps bounded immutable descriptors,
+static listing and watch without inventory; ordinary services keep their
+catalogues. Annotations grant no authority; native actions retain service
+admission and the signed engine, without generic act registration.
+
+The opt-in `issue-questions-brief` uses existing digest fields, guards and
+effects. `ask` pins one Brief. `revise-ask` can omit or repeat it; replacing it
+requires a new Question. Old S3 bytes and pins stay unchanged and
+Brief-unbound. Approval concerns Question text, not Brief or conditions. No
+kernel contract, judge, capability or historical pin changes.
+[Kernel section 7](../../docs/kernel.md#7) remains the review boundary.
+
+`package-brief.ts` serves copied UTF-8 bytes, at most 64 KiB, as non-executable
+`text/plain` at fixed `dap://package/brief`, checked with raw `digestBytes`
+against the ask's pin. The operator selects it at startup; no generic URI
+loader, client selection, external fetch, executable body or Question-body
+fallback exists. `ui://` integrity and policy stays intact. Node factory
+imports read no home or key and open no port or room; configured transport and
+signer perform the work.
+
+## Checker repairs
+
+Correction scope `f705e7b77c46280e10ccd44716828be49adcb41a` repairs six edges:
+omitted application arguments default to `{}`; changed or unreadable Decision
+admission returns typed stale failure; comment facts require the exact local
+scope and retained hash; bodyAt and history charge each entry once; public
+context omits internal items and repeated current text; stale marks keep their
+own reason. Internal action-capture rows and native authority checks stay
+intact.
+
+Ruling `4a276240` raises whole-lane history to 512 distinct entries, including
+genesis and unrelated entries, each charged once. The attention-row bound stays
+50. Unchanged page, request and byte limits may stop context first; beyond the
+history allowance, both context and Decision are unavailable. The V2 boundary
+case passes 512 and refuses 513 entries. An ordinary 65,536-byte body fits
+context after removing duplicates; JSON escaping or history metadata can still
+exceed its 256 KiB serialized bound and return context-output-limit. Focused V2
+and Gate 4 passed.
+
+## Source and evidence
+
+At 43d the gated diff against Main 112eff12 has 42 paths: historical 40, new
+Decision owner and repair manifest. c49-to-43d changed only the note and
+companion; this final tail changes the same two documents.
+
+Request `a7d77a9bb52f9b490fe002d3d4684851b3ca640e`, promise
+`185054c48cd88f847085bf417d43df15648e1f49`, and ruling
+`2c938074fbe65a0ac8a32a6fdb738adf31da861f` own S4 and its Brief. Integration
+`3fd9cc28bf9f68d2f9afafc2191abdff3a3bf336` joins A8 and Main
+`112eff124e7a51d2ebdd2d100ae24b52d03848ac`; the original branch stays A8. It
+preserves DX minimum-head fences, S4 local actions and neutral `CallResult`,
+Main workspace ancestry, fixed-stage diagnoses and single-read error names,
+both MCP seals and three Scope seals. Unlike the six-document reconciliation
+`4aa8de96fcc296f026a8540b44a5907089259acc`, this changed production inputs: the
+old isolated follow-up cannot certify it. Gate 3 covered that integration; it
+does not cover the later checker repairs.
+
+The unchanged
+[historical manifest](evidence/2026-10-31-s4-journey-reads.manifest.json) binds
+seven sealed collections: focused H, integration I, failed gates G1/G2,
+incomplete follow-up F, directed Native N5 and integrated gate G3. Their
+counts, bytes, full inventories and SUMS stay unchanged. Its 62 units and 279
+material entries expand to 285 canonical leaves. All 208 original H/I objects
+and 263 pre-G3 tuples stay exact. Immutable inventories and SUMS keep the 32
+redundant extras omitted from citations. Failure receipts, provenance,
+diagnoses, rejected plan and PINS and interrupted proof remain bound. The
+[repair manifest](evidence/2026-10-31-s4-review-repairs.manifest.json) binds
+six focused commands in the
+[sealed focused unit](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-review-repair-focused).
+Its 179 files total 18,385,386 bytes. The companion pins its full inventory and
+SUMS; temporary copy-success/readback artifacts outside the unit are not cited.
+
+One row means one actual outer command; controls include healthy and fault
+runs. Seal calculations have lightweight receipts, not formal terminals;
+wrappers and no-child refusals add no tests. `tsc` expands to
+`node node_modules/typescript/bin/tsc`; `vitest` means
+`node node_modules/vitest/vitest.mjs`. `[R]` and `[C]` mean exact retained
+reporter or control arguments in `command.json`. Each linked SHA identifies the
+receipt; the manifest also binds command and streams. Receipt durations round
+to three decimals.
+
+| Unit and artifact prefix | Actual command | Outcome | Wall s | Host child CPU s | Receipt SHA-256 |
+|---|---|---|---:|---:|---|
+| U01 `H/control-capture-v1/checks/local-admit-control` | `node scripts/control.mjs [C]` | child 2; capture 125; inconclusive; exact restoration | 4.522 | 5.279 | [0913894a0cec82755845cf4dd411c23e1ca04dbdf642e5aa53fa779adf6ed94a](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/control-capture-v1/checks/local-admit-control/receipt.json) |
+| U02 `H/control-capture-v2/checks/local-admit-control` | `node scripts/control.mjs [C]` | child 0; capture 0; distinguishes; exact restoration | 4.401 | 4.865 | [46ab4d421c7de5824d1b4777c6455d7be18ff6fd2e6c7edeac82151453505982](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/control-capture-v2/checks/local-admit-control/receipt.json) |
+| U03 `H/focused-v1/checks/compatibility` | `node scripts/cloudflare-pool-compat.mjs` | child 0; capture 0 | 0.088 | 0.077 | [39cdbcf8a58764b7c63057a91f921add315a5147733423e098190d06fef7f28e](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v1/checks/compatibility/receipt.json) |
+| U04 `H/focused-v1/checks/typecheck` | `npm run typecheck` | child 1; capture 1 | 10.797 | 42.597 | [fbf8d3d7ef2103a230e135d0a8ffcc9d9606b5c179ddeff132a00077963d47d7](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v1/checks/typecheck/receipt.json) |
+| U05 `H/focused-v1/generate/lane-reference` | `node apps/room/lanes/scripts/reference.mjs` | child 0; capture 0; declared lane-reference delta | 0.221 | 0.339 | [cfa0f1cd02ce738072d2635d2622b23eadaa7aa30607d9310ff36eb5d9e0d634](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v1/generate/lane-reference/receipt.json) |
+| U06 `H/focused-v1/generate/mcp-views` | `node packages/mcp/scripts/views.mjs` | child 0; capture 0; tracked bytes unchanged | 0.311 | 0.158 | [6ff0bb173f62f002e56013464eb78db6e779c6911d6a9b4ca3124efa843a0ed8](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v1/generate/mcp-views/receipt.json) |
+| U07 `H/focused-v1/generate/page-assets` | `npm run build --workspace @generalbusiness/dap-page` | child 0; capture 0; tracked bytes unchanged | 0.322 | 0.233 | [811ffa6fa4ebb5fd6c28708450106f08fbdc4fa460dc20a5cff4ea52fd703d28](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v1/generate/page-assets/receipt.json) |
+| U08 `H/focused-v2/checks/types-commons-bill` | `tsc -p examples/commons-bill/tsconfig.json` | child 0; capture 0 | 0.268 | 1.047 | [ef0e640c5816f3de775982098542175c6f125a18a7133486b232d84c11c59e13](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v2/checks/types-commons-bill/receipt.json) |
+| U09 `H/focused-v2/checks/types-counter` | `tsc -p apps/counter/tsconfig.json` | child 0; capture 0 | 0.193 | 0.684 | [f7e09c93e690197bed133ca64ca496ddda34209532a70caca17dbef08ec5ff0f](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v2/checks/types-counter/receipt.json) |
+| U10 `H/focused-v2/checks/types-counter-browser` | `tsc -p apps/counter/browser/tsconfig.json` | child 0; capture 0 | 0.176 | 0.580 | [bf5992f98aa57a48d1f3a087eeb739c81a029bc01e375b5d648e89923be75823](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v2/checks/types-counter-browser/receipt.json) |
+| U11 `H/focused-v2/checks/types-grow` | `tsc -p examples/grow/tsconfig.json` | child 0; capture 0 | 0.416 | 1.626 | [51617e3cdcb6499e46da39875f413ee02c9071b58295475b856ba318d56005be](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v2/checks/types-grow/receipt.json) |
+| U12 `H/focused-v2/checks/types-lending` | `tsc -p examples/lending/tsconfig.json` | child 0; capture 0 | 0.184 | 0.721 | [3424bf939e3c15a74fb17b9021d4ba161dd14566fe6ff85a856cf0f4f0b33d3a](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v2/checks/types-lending/receipt.json) |
+| U13 `H/focused-v2/checks/types-lending-browser` | `tsc -p examples/lending/browser/tsconfig.json` | child 0; capture 0 | 0.219 | 0.795 | [b6401d15a62b155ba616a46f8c80b260b74443ab510c9748d401617530690c3b](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v2/checks/types-lending-browser/receipt.json) |
+| U14 `H/focused-v2/checks/types-mcp` | `tsc -p packages/mcp/tsconfig.json` | child 0; capture 0 | 0.282 | 1.120 | [0e69f63c479a7101ce6edd36b11711c78fd6eb50cc8218448bd96f53336ac2da](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v2/checks/types-mcp/receipt.json) |
+| U15 `H/focused-v2/checks/types-mcp-browser` | `tsc -p packages/mcp/tsconfig.browser.json` | child 0; capture 0 | 0.132 | 0.285 | [ea705b3c9dcf724dc6fd87f825aa2eb8ee1b90971e00d402932e829a10fc0a49](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v2/checks/types-mcp-browser/receipt.json) |
+| U16 `H/focused-v2/checks/types-mcp-scope` | `tsc -p packages/mcp/tsconfig.scope.json` | child 0; capture 0 | 0.567 | 2.466 | [fad48657f00a3d02ee82a8349bc185e9f7b577d2d773de4e719f5a1543130999](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v2/checks/types-mcp-scope/receipt.json) |
+| U17 `H/focused-v2/checks/types-mcp-test` | `tsc -p packages/mcp/tsconfig.test.json` | child 0; capture 0 | 0.523 | 2.353 | [6d7f35cbe3396c6fad774c68762710a7a1c8badaa4dc52d9c5055e749581d0be](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v2/checks/types-mcp-test/receipt.json) |
+| U18 `H/focused-v2/checks/types-sandbox` | `tsc -p apps/sandbox/tsconfig.json` | child 0; capture 0 | 0.148 | 0.331 | [aad65ceefae561fb2469f2b151077d68abadc818c75a9438185ca5acb9f3ec2f](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v2/checks/types-sandbox/receipt.json) |
+| U19 `H/focused-v2/checks/types-scripts` | `tsc -p scripts/tsconfig.json` | child 0; capture 0 | 0.403 | 1.597 | [2c55292e732c5be34070eec2c1900cf9cbb4e1b2ac3d92b2fa9955a9a0b2465a](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v2/checks/types-scripts/receipt.json) |
+| U20 `H/focused-v2/checks/types-views` | `tsc -p apps/views/tsconfig.json` | child 1; capture 1 | 0.329 | 1.301 | [5d26582dd3fdc322a50fe62ba693798cce217c604cee768b8d3ff747bf94f03b](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v2/checks/types-views/receipt.json) |
+| U21 `H/focused-v3/checks/app-node-owner` | `node --test apps/views/test/s4.test.mjs` | child 1; capture 1; 5 pass, 1 fail | 3.435 | 4.066 | [33af6e3b43fa2907b1ba3d6d4ff202a81f515b9f6312fec28554833c2ae14544](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v3/checks/app-node-owner/receipt.json) |
+| U22 `H/focused-v3/checks/types-mcp` | `tsc -p packages/mcp/tsconfig.json` | child 0; capture 0 | 0.544 | 1.308 | [42ab37bb07ec2dcea017b37e5fe63d37424b6b1112f50de9153e0b06bc3cf1ab](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v3/checks/types-mcp/receipt.json) |
+| U23 `H/focused-v3/checks/types-mcp-browser` | `tsc -p packages/mcp/tsconfig.browser.json` | child 0; capture 0 | 0.149 | 0.306 | [c39a859ec0abe27d3601f98cf4a914aab476206a9028f456a0054153c0f3bb8b](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v3/checks/types-mcp-browser/receipt.json) |
+| U24 `H/focused-v3/checks/types-mcp-scope` | `tsc -p packages/mcp/tsconfig.scope.json` | child 0; capture 0 | 0.608 | 2.524 | [f7f889e9db0a91cec17741a4f0685f6b10f062cb4d59536618b727673386b03c](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v3/checks/types-mcp-scope/receipt.json) |
+| U25 `H/focused-v3/checks/types-mcp-test` | `tsc -p packages/mcp/tsconfig.test.json` | child 0; capture 0 | 0.484 | 2.027 | [da3a9e615b16ae73726d0924198c30db21be1b6a2c2e69822ef16e7c27a8ee40](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v3/checks/types-mcp-test/receipt.json) |
+| U26 `H/focused-v3/checks/types-views` | `tsc -p apps/views/tsconfig.json` | child 0; capture 0 | 0.379 | 1.540 | [5533643c12ac81be40c55e31d8504bebaef246fe0d57685d8c2fcb407953af43](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v3/checks/types-views/receipt.json) |
+| U27 `H/focused-v4/checks/app-node-owner` | `node --test apps/views/test/s4.test.mjs` | child 0; capture 0; 6 pass, 0 fail | 3.791 | 3.473 | [b2287b229dfc274d0aec9dea9d486bb9c2ce4ba5f44ee31d18b2d2161fef2eab](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v4/checks/app-node-owner/receipt.json) |
+| U28 `H/focused-v4/checks/fixed-stage-owner` | `node --test scripts/test.test.mjs` | child 0; capture 0; 6 pass, 0 fail | 2.366 | 2.286 | [a961515212ef8e27510db093003e6e1b8b970367a88d89d4ae6bd24f88d5da93](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v4/checks/fixed-stage-owner/receipt.json) |
+| U29 `H/focused-v4/checks/security-owners` | `node --test scripts/security-entry-points.test.mjs scripts/security-settings.test.mjs` | child 1; capture 1; 12 pass, 1 fail | 72.394 | 85.250 | [641703d177ae3eae39427327bdf2b75e2060cc4ab479c16369394d78a157b589](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v4/checks/security-owners/receipt.json) |
+| U30 `H/focused-v5/checks/plain-owners` | `vitest run --project mcp --project lanes --project page packages/mcp/test/read-tools.test.ts packages/mcp/test/view-resources.test.ts packages/mcp/test/view-sessions.test.ts packages/mcp/test/declared-views.test.ts apps/room/lanes/test/issue-questions-brief.test.ts apps/room/lanes/test/issue-questions.test.ts apps/room/lanes/test/definitions.test.ts apps/room/page/test/assets.test.ts [R]` | child 1; capture 1; 25 pass, 1 fail | 2.720 | 5.957 | [8b112d1d37d4dc2ed2bc96a77b1bcc790a8b7604cc92c1efded511ffc65eaa5a](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v5/checks/plain-owners/receipt.json) |
+| U31 `H/focused-v5/checks/security-entry-points` | `node --test scripts/security-entry-points.test.mjs` | child 0; capture 0; 10 pass, 0 fail | 2.879 | 3.584 | [4493f6a4c712685ceaac9c3d8604c1e4724d5a4ea11bcaaa0a5e3fcce5abb751](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v5/checks/security-entry-points/receipt.json) |
+| U32 `H/focused-v6/checks/native-brief-owner` | `vitest run --project scope apps/room/lanes/test/issue-questions-brief.scope.test.ts [R]` | child 0; capture 0; 1 pass, 0 fail | 7.445 | 8.231 | [b5ccbf3da1d5942024e5e83f1bcef9571d870d0368b20a39d90924f8ece0b00f](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v6/checks/native-brief-owner/receipt.json) |
+| U33 `H/focused-v6/checks/types-mcp-test` | `tsc -p packages/mcp/tsconfig.test.json` | child 0; capture 0 | 0.563 | 2.223 | [33f5d5bf3be13e13ea9c1ab91c2abe1e10d0a31b74f03f6d3004aa17e42635d3](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v6/checks/types-mcp-test/receipt.json) |
+| U34 `H/focused-v6/checks/view-resources-owner` | `vitest run --project mcp packages/mcp/test/view-resources.test.ts [R]` | child 0; capture 0; 4 pass, 0 fail | 1.811 | 2.397 | [ebaeaefd874877a315ce26a3c9a5e4a6175bfb79c460e8f432ded4faff1ece8d](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/focused-v6/checks/view-resources-owner/receipt.json) |
+| U35 `H/security-seal-calculation/calculation-1` | `node H/security-seal-calculation/calculate.mjs` | child 0; calculation only | 0.462 | 0.533 | [55ddc7d523439dfe2e55b8d97b4c66ae5a9e10db5575ece5e23b7b8cc6aea79c](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/security-seal-calculation/calculation-1/receipt.json) |
+| U36 `I/integration-v1/checks/app-node-owner` | `node --test apps/views/test/s4.test.mjs` | child 1; capture 1; 6 pass, 1 fail | 2.283 | 2.541 | [dee74775d2b0729fef41e09c179974dd1b9cb233f5c614cf51bfdb4f4b6ee991](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-integration/integration-v1/checks/app-node-owner/receipt.json) |
+| U37 `I/integration-v1/checks/types-app-views` | `tsc -p apps/views/tsconfig.json --noEmit` | child 0; capture 0 | 0.325 | 1.300 | [a96835381d62a2ee314797ba33bfc3f20d27ae79f8084488e3c76d61a6c939bb](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-integration/integration-v1/checks/types-app-views/receipt.json) |
+| U38 `I/integration-v1/checks/types-mcp` | `tsc -p packages/mcp/tsconfig.json --noEmit` | child 0; capture 0 | 0.280 | 1.045 | [0a3fcbee8ce7e0c2544a216a3a4d017afef12f89fbb189cd6111ec8509a85690](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-integration/integration-v1/checks/types-mcp/receipt.json) |
+| U39 `I/integration-v1/checks/types-mcp-browser` | `tsc -p packages/mcp/tsconfig.browser.json --noEmit` | child 0; capture 0 | 0.121 | 0.273 | [ce6e826c1d0dacc234e487a8453fe391e5abd52e74dcb4e12302208e6cb3a655](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-integration/integration-v1/checks/types-mcp-browser/receipt.json) |
+| U40 `I/integration-v1/checks/types-mcp-scope` | `tsc -p packages/mcp/tsconfig.scope.json --noEmit` | child 0; capture 0 | 0.469 | 2.387 | [a455b939a107023c5a75d79670cee7b86ea41c65cd20448df93b68ff2e676c34](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-integration/integration-v1/checks/types-mcp-scope/receipt.json) |
+| U41 `I/integration-v1/checks/types-mcp-test` | `tsc -p packages/mcp/tsconfig.test.json --noEmit` | child 0; capture 0 | 0.420 | 1.984 | [442f60ff0f2e454c619f326f326ac507b1333b72d3abba4cde3a74d7afa0a7e9](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-integration/integration-v1/checks/types-mcp-test/receipt.json) |
+| U42 `I/integration-v1/generate/lane-reference` | `node apps/room/lanes/scripts/reference.mjs` | child 0; capture 0; tracked bytes unchanged | 0.187 | 0.293 | [08a24d670459675e2f9de2cbad74888fc0aa1ef7cbe2d1ef7376d3b3296db1fe](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-integration/integration-v1/generate/lane-reference/receipt.json) |
+| U43 `I/integration-v1/generate/mcp-views` | `node packages/mcp/scripts/views.mjs` | child 0; capture 0; tracked bytes unchanged | 0.110 | 0.076 | [de6ca9126748e1d98a31dc9cd7d88ba8100e62a07ed88c9aeb0d8d6c1f4760ce](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-integration/integration-v1/generate/mcp-views/receipt.json) |
+| U44 `I/integration-v1/generate/page-assets` | `npm run build --workspace @generalbusiness/dap-page` | child 0; capture 0; tracked bytes unchanged | 0.322 | 0.224 | [ccb1d331784d3260dd6f8c029d1c9a2758b0d43f4b387d1fd9ca92742b3e1f85](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-integration/integration-v1/generate/page-assets/receipt.json) |
+| U45 `I/integration-v2/checks/app-node-owner` | `node --test apps/views/test/s4.test.mjs` | child 1; capture 1; 6 pass, 1 fail | 2.131 | 2.416 | [77b3fceea6a40ef0d05155503e9507ecd7792600569d06c1fbbcba2a987828f0](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-integration/integration-v2/checks/app-node-owner/receipt.json) |
+| U46 `I/integration-v3/checks/app-node-owner` | `node --test apps/views/test/s4.test.mjs` | child 0; capture 0; 7 pass, 0 fail | 0.760 | 0.870 | [9152391819c354ab7dac3b111e794e6a366a18533fdcb15936ee78e7cc2a94f5](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-integration/integration-v3/checks/app-node-owner/receipt.json) |
+| U47 `I/integration-v3/checks/plain-integration-owners` | `vitest run --project mcp --project client packages/mcp/test/read-tools.test.ts packages/mcp/test/view-resources.test.ts packages/mcp/test/view-sessions.test.ts packages/mcp/test/declared-views.test.ts packages/client/test/read-minimum.test.ts [R]` | child 0; capture 0; 27 pass, 0 fail | 1.639 | 3.544 | [106b3c8fed68d66a4b4c3215751a71469125c81709200ba539405d42f3679c1d](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-integration/integration-v3/checks/plain-integration-owners/receipt.json) |
+| U48 `I/integration-v3/checks/security-entry-points` | `node --test scripts/security-entry-points.test.mjs` | child 0; capture 0; 10 pass, 0 fail | 2.584 | 3.201 | [d15ede3cd796997bd55fc8319d057e67f2c71fd374b28bb013521f096deee06e](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-integration/integration-v3/checks/security-entry-points/receipt.json) |
+| U49 `I/integration-seals/calculation-1` | `node I/integration-seals/calculate.mjs` | child 0; calculation only | 0.376 | 0.435 | [73bfe698e50850604491f2b0d15fc739b576e36b67bd75f33bc03b97f3e5aad7](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-integration/integration-seals/calculation-1/receipt.json) |
+| U50 `I/control-capture/checks/decision-minimum-control` | `node scripts/control.mjs [C]` | child 0; capture 0; distinguishes; exact restoration | 1.590 | 1.771 | [e13f16e393d03e1b43e2727b98b215e8d2529ded7b74b842119e6a118ff6f5f1](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-integration/control-capture/checks/decision-minimum-control/receipt.json) |
+| U51 `G1/gate/outer/gate-1` | `npm run gate` | child 1; capture 1; helpers failed; compilers and test stages unreached | 1.573 | 1.572 | [0bc93c0240bf7ae4df79981361721cb5e5395092f91c3422ad03c110a1c866fe](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate1-failed/gate/outer/gate-1/receipt.json) |
+| U52 `G2/helper-repair/checks/checks/shared-helpers` | `node scripts/check-shared-helpers.mjs` | child 0; capture 0 | 0.453 | 0.565 | [7b9351642fd92dddf0db9e7e3c2e63748536927c157c775c40f1dcddf7244ba4](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/helper-repair/checks/checks/shared-helpers/receipt.json) |
+| U53 `G2/helper-repair/checks/checks/types-app-views` | `tsc -p apps/views/tsconfig.json --noEmit` | child 0; capture 0 | 0.364 | 1.365 | [62566cbf204f6df5d7a6d1ef7ea937ce3d8af1a5c9d39a1d6147ff1512c3c2b2](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/helper-repair/checks/checks/types-app-views/receipt.json) |
+| U54 `G2/helper-repair/checks/checks/app-node-owner` | `node --test apps/views/test/s4.test.mjs` | child 0; capture 0; 7 pass | 0.853 | 0.907 | [5d54760f6fdf58a8e4f1c9538b4d84ab3d800e27b0a183b12ae60337ae7ec0e1](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/helper-repair/checks/checks/app-node-owner/receipt.json) |
+| U55 `G2/gate/outer/gate-1` | `npm run gate` | child 1; capture 1; Plain 3201 pass, 1 fail, 1 skip; Native unreached | 158.206 | 420.024 | [8de7bf5b43d8ae7527641120dd90f403c6c552f77d50d5926abf248d352d7aea](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/gate/outer/gate-1/receipt.json) |
+| U56 `F/followup/checks/types-mcp-test` | `tsc -p packages/mcp/tsconfig.test.json --noEmit` | child 0; capture 0 | 0.413 | 1.870 | [176b696862ef06ae2213ad560fe7cf13b8fed8a941e5f3d5ce992d924dc50d2c](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-isolated-followup/followup/checks/types-mcp-test/receipt.json) |
+| U57 `F/followup/checks/compatibility` | `node scripts/cloudflare-pool-compat.mjs` | child 0; capture 0 | 0.076 | 0.074 | [5933f73315c958fa9f3c41aaa8d9e354245771ac022a78e50e7ceed845d4622d](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-isolated-followup/followup/checks/compatibility/receipt.json) |
+| U58 `F/followup/checks/wire-owner` | `vitest run --project mcp packages/mcp/test/wire.test.ts [R]` | child 0; capture 0; 12 pass | 6.159 | 4.797 | [6811c6e919f7e0edce4fc7a944e8a82ee8aa31cb759643cf96c347b0443d3a4b](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-isolated-followup/followup/checks/wire-owner/receipt.json) |
+| U59 `F/followup/checks/native-phase` | `node /private/tmp/artroom-s4-isolated-followup-source-20261031-v2/run-native.mjs` | child 1; capture 125; stdout-limit; Native child 143 after SIGTERM; inconclusive | 680.287 | 1383.085 | [97701d33cdf6291b75e1b8026bcb1b4d58b4c216b0bce1114624c8a5c91a9ff4](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-isolated-followup/followup/checks/native-phase/receipt.json) |
+| U60 `N5/native-v5/checks/compatibility` | `node scripts/cloudflare-pool-compat.mjs` | child 0; capture 0 | 0.082 | 0.074 | [fef0888373f494961f578fa4f1d40f22e1c4abbeab27427c403f298f3e6c6584](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-native-v5-completion/native-v5/checks/compatibility/receipt.json) |
+| U61 `N5/native-v5/checks/native-phase` | `node /private/tmp/artroom-s4-isolated-followup-source-20261031-v5/run-native.mjs` | child 0; capture 0; Native 880 pass, 2 skip; 253 modules terminal | 1137.252 | 2285.221 | [f876398f268cdad55733729dca7019acaff643cbf768f5315ec7d3ec1d644643](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-native-v5-completion/native-v5/checks/native-phase/receipt.json) |
+| U62 `G3/gate/outer/gate-1` | `npm run gate` | child 0; capture 0; all five stages passed | 1057.558 | 2235.097 | [18c208f516cb7338d0decc24a8e583026dbc54804aedc70184624a94f98114cc](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate/gate/outer/gate-1/receipt.json) |
+| U63 `R/raw/v1/checks/types-app-views` | `tsc -p apps/views/tsconfig.json --noEmit` | child 0; capture 0 | 0.381 | 1.345 | `af5680f132c0a281f074afbc409572ed1710c0787afb8d9f1e81c154354e6c12` |
+| U64 `R/raw/v1/checks/types-mcp-test` | `tsc -p packages/mcp/tsconfig.test.json --noEmit` | child 0; capture 0 | 0.445 | 2.030 | `3b634188225c87957b57d0f263bcb83d3b1ce5eee7106a74a659a1f69e861f41` |
+| U65 `R/raw/v1/checks/node-owners` | `node --test apps/views/test/s4.test.mjs apps/views/test/decision.test.mjs scripts/security-entry-points.test.mjs scripts/test.test.mjs` | child 1; capture 1; 25 pass,2 fail; MCP unreached | 2.682 | 7.314 | `2731a943cb7215a526edbc101c61b89daadcd06098667e153edb8101cb7286c1` |
+| U66 `R/raw/v2/checks/types-app-views` | `tsc -p apps/views/tsconfig.json --noEmit` | child 0; capture 0 | 0.352 | 1.321 | `a1fcb4be19f51e7ee9ee985340bd0cf793dc231f19440418b18809b0a32e6b81` |
+| U67 `R/raw/v2/checks/node-owners` | `node --test apps/views/test/s4.test.mjs apps/views/test/decision.test.mjs` | child 0; capture 0; 11 pass | 0.921 | 1.755 | `100de32e0da96bb2feef0aa98a51785055f3879091c1b345b3f7b3cc09f42090` |
+| U68 `R/raw/v2/checks/mcp-read-tools-owner` | `node node_modules/vitest/vitest.mjs run --project mcp packages/mcp/test/read-tools.test.ts --reporter=verbose` | child 0; capture 0; 4 pass | 1.517 | 1.946 | `b58a25a829d7179f429360e51a49f2d2cd3575691421b822c540476dd21c240c` |
+| U69 `G4/gate/outer/gate-1` | `npm run gate` | child 0; capture 0; all five stages passed | 1031.122 | 2185.096 | `145ac4b6b06696aca38e96bab5a257b68d02c7dee79fa55e14fe11f98e5d1319` |
+
+The historical U01–U61 receipts sum to 2,123.847197 command-wall seconds and
+4,316.072311 host child CPU seconds, excluding U62. These include
+failures, inconclusive attempts and nested controls, not packaging or one
+end-to-end run. Host CPU excludes guest and remote work; uncontrolled load and
+caches establish no cold-cache measurement.
+
+## Focused repair checks
+
+At b01, app and MCP test compilers passed; Node had 25 passes/two failures. The
+Decision fixture expected flat view_read output instead of display; the
+existing HTTP case hit sandbox listen EPERM at 127.0.0.1. The runner stopped
+before MCP. At c49, app types, both app Node owners (11 cases) and that
+previously unreached MCP owner (four cases) all passed 0/0. V2 includes the
+512/513 boundary and corrected stale Decision fixture; it repeats no unchanged
+MCP test compiler, security or fixed-stage owner. Neither run is a full gate.
+All streams closed without drops and tracked source stayed unchanged. New
+durations use receipt elapsedSeconds/commandHostChildCpuSeconds; Darwin 27.2.0,
+arm64, 18 CPUs, uncontrolled load/caches. Each receipt includes its host
+sample.
+
+## Gate 4 at the repaired source
+
+All five stages passed: Node 95, Counting 56, Plain 3,202 with one skip,
+Native 889 with two skips; Plain has no callback gap. Native live 871 with
+two skips leaves 18 passed final-only cases, all `turn.test.ts` with numeric
+final durations. Scope
+timing 250/251 is partial because the recorder skipped; 81 unknown/suite
+observations and zero contradictions do not prove a complete callback census.
+Four error markers were zero. All 3608 Source files matched Git/current bytes
+and modes.
+
+Wall/host CPU seconds: command 1031.122456083/2185.095948, collector
+1031.279915959/2185.243487, runner 1032.70208625/2189.846254. Never add these
+nested boundaries. Host 11:27:13.291772 UTC: Darwin 27.2, arm64/18 CPUs, load
+1.14697/1.22168/1.31934; caches uncontrolled, no physical drain claim. The
+[Gate 4 unit](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-review-repair-gate)
+and full inventory bind through the repair manifest.
+
+## Historical outcomes and their limits
+
+The broad typecheck failed in imported Disposable, fetch-body and Node metrics
+contexts. Targeted contexts later included the app. Its first compiler lacked a
+visible generic Reads overload; the added overload exposes the same
+implementation without changing fallback or decoding. Canonical encoding fixed
+the app's noncanonical reply; reviewed seals then matched. Plain's Brief
+resource fixture needed `notifications/initialized`. The table preserves all
+failed and successor counts.
+
+The Native Brief case passed under actual Membership8 person authority, lane
+judgment and SQLite, with labelled clock, Git and transport. It proves
+immutable Brief refusal and retained bodies, not package, provider or browser
+behavior. No Brief mutation control ran: changing canonical definition bytes
+changes the pin and masks naive guard omission. Actual wrong-B refuses
+`brief-fixed` with unchanged head and item.
+
+The first integration app failed on a summary page before an item action; the
+second discarded a wrapped refresh exception. Separate loader graphs could give
+`Unread` different class identities: an inferred hazard, not its proven inner
+cause. A shared graph passed. Plain integration retained S2 capability and
+controller and DX minimum-head owners, not native authority proof.
+
+The first local-admission control stays inconclusive: child 2/capture 125,
+unclassified failure. A boolean assertion preserved the invariant; its
+successor distinguished `await admit()` and restored exact bytes and modes.
+Unsupported `--mode` refused before a child; no receipt was fabricated. The
+receipt-floor control passed seven baseline cases; dropping only the summary
+minimum gave six passes and one ordinary receipt-wire assertion. The full
+accepted receipt failed to reach the summary. The helper classified
+distinguishes and restored exact bytes and modes. Its outer diagnostic is not
+raw child TAP; controls never reclassify earlier failures.
+
+Gate 1 failed helpers before compilers/test stages. Four app modules renamed
+the optional comparison `sameOptional`; defined values still call `bytes.same`,
+undefined behavior stays exact. Helpers, app types and seven cases then passed.
+Gate 2 passed prechecks, types, Kernel, Node 91 and Counting 56; Plain had
+3,201 passes, one failure and one skip, leaving Native unreached. Its wire fake
+supplied `snapshot` while production awaited asynchronous
+`catalogueGeneration`; the missing method threw before the deferred gate. The
+one-line fake repair restored disconnect ordering. At A8 the test compiler and
+twelve-case wire owner passed; production, configuration, dependencies, cases,
+assertions and deadlines stayed unchanged. This test-only exception covers that
+historical source, not subsequent production integration or repairs.
+
+Gate 2 packaging refused twice before destination writes. The
+[first receipt](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/retention-failed-attempt/execution/receipt.json)
+expected TAP `# pass 7` rather than Node spec `ℹ pass 7`; the
+[second receipt](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/retention-failed-attempt-2/execution/receipt.json)
+hit the source-parent fence because an old manifest sat above the destination.
+Staging exact old anchors with
+[provenance](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/prior-failed/original-anchor-provenance.json)
+kept every copy guard. Metadata failures add no project command or changed gate
+result. Temporary copy-success receipts and outside-unit readbacks are not
+retained citations.
+
+The interrupted Native wrapper exited 1/capture 125, signalled child 143, read
+33,559,772 stdout bytes, kept 33,554,432 and dropped 5,340. Its 149 file-local
+module passes and 641 case observations have no finals, run end or terminal
+unhandled count. SIGTERM and process closure prove no later worker/global
+teardown. Checker `3c5d30556992fcb69d179aa5e70d6aa9dbbf8a5e` rejected the
+unexecuted 149/104 complement; planner
+`87491c9ef138e7e672b2bee11afb6c285acf943d` directed full completion of the
+unfinished Native step.
+
+V5 completed all 253 unchanged files at A8: same config, project order,
+workers, cases, assertions and deadlines; 2,400 seconds, 128 MiB per stream. It
+closed 0/0 with 880 passes, two skips, 252 passed modules, expected recorder
+skip and a passed end with zero unhandled errors. The
+[retained V5 builder proof](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-native-v5-completion/public-support/artroom-s4-native-v5-root-readback-20261031-v1.json)
+binds 3,603 files totaling 109,999,502 bytes, exact pre/post bytes and modes,
+receipts and complete ledger. Stdout 40,930,694 and stderr 2,865 had no drops.
+Compatibility wall and host CPU: 0.081510625/0.074059 seconds; Native:
+1,137.251548/2,285.221191. Terminals and finals prove neither complete live
+callbacks nor physical drain.
+
+## Historical integrated gate and remaining work
+
+Gate 3 at `399269c7a42eeee72f2d289abf0eb5fc98bf7c37`, tree
+`576a5010ea44e6dd48e8a62e19cac41b2a8f0d6b`, closed command and capture 0 with
+five passed stages and no report errors. Finals: Node 91, Counting 56, Plain
+3,202 passes and one skip, Native 889 passes and two skips. Plain has 338 final
+modules and no case gap; Native has 252 passed modules and one expected
+recorder skip. The builder verified 3,606 files totaling 110,111,218 bytes and
+223 changed copies against historical 5dc, with a 58,660-byte source index.
+
+Native callbacks show 868 passes and two skips; 21 passed cases exist only in
+finals, all with numeric final durations. The skipped recorder's null module
+duration causes the separate partial module-timing label, not those case gaps.
+All four reporter streams terminated; Node and Counting global summaries passed
+and both Vitest ends report zero unhandled. Scope timing is 250/251; console
+unknown or suite observations 78, contradictions 0. Terminal completion is not
+a complete live-callback census; concurrent duration sums are neither wall time
+nor CPU.
+
+U62 command wall/host CPU: 1,057.5580229999998/2,235.0968779999994 seconds;
+collector: 1,057.723244/2,235.2512030000003; runner:
+1,059.160277417/2,240.0059969999998. These nested boundaries must not be added.
+Host CPU excludes guest CPU. The 09:57:14.630914 UTC sample reports Darwin
+27.2, arm64, 18 logical CPUs, load 2.29931640625/1.96142578125/2.0654296875.
+Uncontrolled caches prove no cold-cache, physical-drain or cancellation bound.
+
+The
+[sealed integrated-gate unit](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate)
+holds 362 files totaling 62,839,889 bytes. Its
+[full inventory](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate.manifest.json)
+is 76,956 bytes, SHA256
+`770b0665fe8b03ff6ed5ffa5442b23a751f16ff0911439ef846243af3e6b23d4`. Its
+[SHA256SUMS](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate/SHA256SUMS)
+is 43,575 bytes, SHA256
+`7f14a06829a5158c66cc734c96bd4797c6b0dc432914559fb802189427fe600b`. The
+[in-unit proof](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate/public-support/artroom-s4-main-gate-root-readback-20261031-v1.json)
+binds source, stages and reporter limits. Inventory retains 233 outer, 27
+inner, six Counting files, programs and preparation history. G3's 16 material
+nodes preserve 61 earlier units and 263 tuples. A substitution assertion and
+numeric guard typo remain preparation history, not project, gate or copier
+failures. Original PINS still records incorrect `0644`; a separate closure
+records actual `0444`. Both stay retained, without rewriting PINS.
+
+The A8 follow-up cannot certify integrated production; Gate 4 validates the
+repairs, with exact-source review still owed. Real S1-room rendering remains
+owed under `449c58c7f7b76f25c5575bbb9f30403f7e0d3960` and
+`f152f847ca5dc1a009f735aa6ddc862a1eb7bcb9`.
+
+App owners exercise real adapters, codecs, default-fetch bounds and file
+publication over scripted replies, not native authority replay. Generic MCP
+keeps its stand-ins; Native Brief proves no live S1 render, provider, package
+resource, browser or operator custody. S4 request
+`a7d77a9bb52f9b490fe002d3d4684851b3ca640e` owns validation and review; S6
+`ddf2a597876b00342f7481941ca7571a1705d83e` owns the later version-bound seam;
+parser `0bcf9984a08c175522c784852a38fd2623104bde` owns failure parsing and raw
+child TAP, without reclassifying the first control. No S6 wire, new act,
+provider operation, hosted route, identity, deployment, settings change or live
+acceptance enters this slice. Ruling `4a276240` keeps complete-collection marks
+and pure `since`. Omitted-lane access belongs to
+`ca74f78b02437337ee11f989f7c09e1e3cfcd601`, after S6 and before J1; this head
+adds no lane traversal.

@@ -183,6 +183,7 @@ void(async()=>{input={view:config.id,subject:config.screen,...(config.scope?{sco
       const uri = instance.service.resources.list().resources.find(resource => resource.uri.endsWith(`/${url.searchParams.get("screen")}`))?.uri;
       if (!uri) return json(response, { error: "Unknown fixture resource" }, 404);
       const resource = instance.service.resources.read(uri).contents[0]!;
+      if (resource.mimeType !== "text/html;profile=mcp-app" || !resource._meta?.ui) return json(response, { error: "Unknown fixture resource" }, 404);
       response.writeHead(200, { "content-type": "text/html", "content-security-policy": policy(resource._meta.ui) });
       response.end(resource.text); return;
     }

@@ -1,11 +1,11 @@
-import { canonicalize, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, isHead, isKeyId, isMemberRef, isRecord, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { Receipt, ScopeRef } from "@generalbusiness/dap-contract";
 import { validKey } from "../custody.ts";
 import { decodeViewParameters } from "@generalbusiness/dap-platform/application-v2";
 import { capturedExpected, shapeAt } from "../shape.ts";
 import type { CallResult } from "../service.ts";
 import type { ViewKind } from "./resources.ts";
-import type { Card, CardAction, CardContext, Display, EntryRange, PageKind, Projection, ViewQuery, ViewSource } from "./types.ts";
+import type { Card, CardAction, CardContext, Display, EntryRange, LocalReviewAction, NativeCardAction, PageKind, Projection, ViewQuery, ViewSource } from "./types.ts";
 
 export class ViewError extends Error {
   constructor(readonly reason: "shape" | "absent" | "superseded" | "stale" | "busy" | "unavailable", message: string) { super(message); }
@@ -53,6 +53,26 @@ function mergeRanges(ranges: EntryRange[]): EntryRange[] {
 }
 function ranges(entries: NonNullable<Card["entries"]>): EntryRange[] { return mergeRanges(entries.map(({ scope, seq }) => ({ scope, from: seq, to: seq }))); }
 
+function checkedLocal(action: LocalReviewAction, card: Card): void {
+  const capture = action.capture;
+  if (action.purpose !== "mark-reviewed" || "kind" in action || "args" in action || "parameters" in action || "parameterInput" in action
+    || !capture || !Array.isArray(capture.heads) || capture.heads.length < 1 || capture.heads.length > 8 || capture.heads.length !== card.projection.length
+    || !isScopeRef(capture.directory) || capture.directory.kind !== "directory" || !isMemberRef(capture.viewer) || !isKeyId(capture.key)
+    || typeof capture.service !== "string" || utf8(capture.service).length > 2048 || !Array.isArray(capture.ranges)) throw new ViewError("unavailable", "The local review capture is malformed.");
+  let service: URL;
+  try { service = new URL(capture.service); } catch { throw new ViewError("unavailable", "The local review service is malformed."); }
+  if (!["https:", "http:"].includes(service.protocol) || service.username || service.password || service.hash || service.search) throw new ViewError("unavailable", "The local review service is malformed.");
+  const scopes = new Set<string>();
+  for (const point of capture.heads) {
+    if (!isScopeRef(point.scope) || !isHead(point.head) || scopes.has(point.scope.scope)
+      || !card.projection.some(read => read.scope === point.scope.scope && read.seq === point.head.seq && read.hash === point.head.hash)) throw new ViewError("unavailable", "The local review capture differs from the displayed heads.");
+    scopes.add(point.scope.scope);
+  }
+  for (const range of capture.ranges) if (!finite(range.from) || !finite(range.to) || range.from > range.to
+    || !capture.heads.some(point => point.scope.scope === range.scope && range.to <= point.head.seq)) throw new ViewError("unavailable", "The local review range has no captured head.");
+  if (canonicalize(mergeRanges([...capture.ranges])) !== canonicalize(mergeRanges(card.reviewIntended))) throw new ViewError("unavailable", "The local review capture differs from the displayed ranges.");
+}
+
 function checked(projection: Projection, query: ViewQuery): Projection {
   if (utf8(canonicalize(projection)).length > 64 * 1024) throw new ViewError("unavailable", "The card projection exceeds its byte bound.");
   if (!finite(projection.count) || !finite(projection.position) || (projection.count > 0 && projection.position >= projection.count)) throw new ViewError("unavailable", "The card projection has an invalid position.");
@@ -67,6 +87,7 @@ function checked(projection: Projection, query: ViewQuery): Projection {
     for (const point of card.projection) if (!finite(point.seq)) throw new ViewError("unavailable", "A projection read point is malformed.");
     for (const range of [...card.reviewIntended, ...card.unavailable]) if (!finite(range.from) || !finite(range.to) || range.from > range.to) throw new ViewError("unavailable", "An entry range is malformed.");
     for (const action of card.actions) {
+      if (action.local) { checkedLocal(action, card); continue; }
       const at = shapeAt(action.args["at"]);
       if (!card.declared) capturedExpected(at, card.identity.at);
       else if (at === undefined || Object.keys(card.identity.at).some(name => Object.hasOwn(at, name) && at[name] !== card.identity.at[name])) throw new ViewError("unavailable", "A declared act disagrees with the displayed subject revision.");
@@ -231,7 +252,7 @@ export class ViewSessions {
     const outcome = (async () => {
       const card = instance.projection.card;
       if (!card || card.identity.item !== item || card.identity.revision !== revision) throw new ViewError("stale", "The selected item or revision changed. Read the card again; no request was signed.");
-      const offered = card.actions.find(action => action.id === actionId && action.parameters);
+      const offered = card.actions.find((action): action is NativeCardAction => !action.local && action.id === actionId && action.parameters !== undefined);
       if (!offered) throw new ViewError("stale", "This card no longer offers that input act; no request was signed.");
       const action = { ...offered, parameterInput: structuredClone(values), args: { ...offered.args,
         fields: { ...(offered.args["fields"] as Record<string, unknown> | undefined), ...fields } } };
@@ -246,6 +267,36 @@ export class ViewSessions {
     instance.inputs.set(request, { meaning, outcome });
     return outcome;
   }
+  async #markReviewed(instance: Instance, cut: number, card: Card, action: LocalReviewAction, dispatchKey: string): Promise<{ result: CallResult; display: Display }> {
+    if (!this.source.markReviewed) throw new ViewError("unavailable", "This view has no local review store.");
+    if (instance.query.page !== "updates" || card.unavailable.length || !(card.entries?.length)
+      || canonicalize(mergeRanges(card.reviewIntended)) !== canonicalize(ranges(card.entries))) throw new ViewError("shape", "Only the exact displayed available updates can be marked locally.");
+    if (instance.dispatches.size >= 32) throw new ViewError("busy", "This view retains 32 local or native outcomes. Open a new view.");
+    checkedLocal(action, card);
+    const mark = this.source.markReviewed;
+    instance.busy = true;
+    const dispatch = (async (): Promise<CallResult> => {
+      let admitted = false;
+      let result: CallResult;
+      try { result = structuredClone(await mark.call(this.source, structuredClone(action.capture), { view: instance.key, cut, admit: () => {
+        this.#admit(instance, cut);
+        admitted = true;
+      } })); }
+      catch (error) { if (error instanceof ViewError) throw error; throw new ViewError("unavailable", "The local review mark could not be confirmed. No native act was sent."); }
+      if (!isRecord(result) || !isRecord(result.structuredContent) || typeof result.isError !== "boolean" || !Array.isArray(result.content)
+        || result.content.some(entry => !isRecord(entry) || entry["type"] !== "text" || typeof entry["text"] !== "string")) throw new ViewError("unavailable", "The local review callback returned a malformed local result.");
+      const status = result.structuredContent["localStatus"];
+      if (typeof status !== "string" || !["marked", "already", "refused", "unavailable", "stale"].includes(status)
+        || "answer" in result.structuredContent || "fact" in result.structuredContent || "receipt" in result.structuredContent
+        || utf8(canonicalize(result)).length > 64 * 1024 || ((status === "marked" || status === "already") && !admitted)) throw new ViewError("unavailable", "The local review callback returned no bounded local result.");
+      instance.receipt = `Local review: ${status}. This is not a native journal receipt.`;
+      return result;
+    })();
+    instance.dispatches.set(dispatchKey, dispatch);
+    try { return { result: await dispatch, display: this.#display(instance) }; }
+    finally { instance.busy = false; }
+  }
+
   async #dispatch(instance: Instance, cut: number, action: CardAction | undefined, dispatchKey: string): Promise<{ result: CallResult; display: Display }> {
     const retained = action?.purpose === "check-original" ? undefined : instance.dispatches.get(dispatchKey);
     if (retained) return { result: await retained, display: this.#display(instance) };
@@ -253,6 +304,7 @@ export class ViewSessions {
     if (instance.busy) throw new ViewError("busy", "The card has an operation in progress. Retry its read.");
     if (!action) throw new ViewError("shape", "The displayed card offers no such act.");
     const card = instance.projection.card!;
+    if (action.local) return this.#markReviewed(instance, cut, card, action, dispatchKey);
     if (action.purpose !== "check-original" && instance.dispatches.size >= 32) throw new ViewError("busy", "This card retains its maximum of 32 act outcomes. Open a new card; no new act was sent.");
     // Reserve room before dispatch; checking an already retained original needs no new slot.
     if (!instance.pending.has(this.#itemKey(card)) && instance.pending.size >= 32) throw new ViewError("busy", "This card retains its maximum of 32 unresolved requests. Check those originals before another dispatch.");
