@@ -69,6 +69,13 @@ describe("safe sinks (authority note, section 5.3; proof plan, key O3)", () => {
     expect([said[5]!.event, said[5]!.step.length]).toEqual(["x token=<redacted>", MAX_FIELD]);
     expect(lines).toEqual([['{"event":"outside-call-failed","step":"hold@1:mint","name":"Error"}']]);
     expect(JSON.stringify([said, lines])).not.toContain(leaked);
+    // A stateful name must not replace the value that passed the allowlist.
+    const changing = new Error();
+    let nameReads = 0;
+    Object.defineProperty(changing, "name", { get: () => ++nameReads === 1 ? "Error" : leaked });
+    const changingDiagnosis = diagnosis("outside-call-failed", "hold@1:mint", changing);
+    expect(changingDiagnosis.name, "A diagnosis must retain only the name that passed its allowlist").toBe("Error");
+    expect(JSON.stringify(changingDiagnosis)).not.toContain(leaked);
     // A sink that fails changes nothing for the caller.
     expect(() => report(() => { throw new Error("the log is down"); }, "e", "s", thrown)).not.toThrow();
   });
