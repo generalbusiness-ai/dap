@@ -301,7 +301,7 @@ test("hosted default policy travels through Worker Env and the actual agent cons
     const body = await listed.json() as { result: { tools: { name: string }[] } };
     const names = body.result.tools.map(tool => tool.name);
     expect(names).toContain("room");
-    for (const name of ["create", "install_application", "credential", "prepare", "join", "record"]) {
+    for (const name of ["create", "install_application", "credential", "diff", "prepare", "join", "record"]) {
       expect(names).not.toContain(name);
       const called = await room.wait(() => modernCall(bot.bearer, name, {}));
       const refused = await called.json() as { result: { isError: boolean; structuredContent: Record<string, unknown> } };

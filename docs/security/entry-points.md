@@ -114,8 +114,8 @@ owner. The local celld shim reexports the same production room entry, bindings
 and migration history. It introduces no route or caller authority.
 
 The hosted default omits `create`, `install_application`, `credential`,
-`prepare`, `join`, and `record`. An explicit addition affects
-both listing and direct calls. Local MCP services keep their existing default.
+`diff`, `prepare`, `join`, and `record`. An explicit addition affects both listing
+and direct calls. Local MCP services keep their existing default.
 Generated named tools additionally require fresh standing and tool selection
 checks, then the actual target's membership check when called. A remembered tool name
 does not preserve an expired grant or authorize another target.
