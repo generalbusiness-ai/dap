@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint, which includes main 074255e8. The third scratch room ran at 4b9e1a89 on Worker da13242c, before the merge of main and the runbook edit; the directory cites its sealed unit by digest. No real room ran.",
+  "directory": "2026-10-31-s1-repo-in-ai",
+  "checkpoint": {
+    "commit": "42099ef161431ed5bf8fff5af3e5bfc08686a783",
+    "tree": "efc2ec6eee9b46d586d796d91d5fb437bf5218e7"
+  },
+  "fileCount": 38,
+  "files": [
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6521,
+      "sha256": "fef00afef0c36c065d3cdea1a2df1590d40efda87beabe6c7e0a13fbb49b1eb1"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "third-room-phases.json",
+      "bytes": 36778,
+      "sha256": "911d36343b9884224c418ef8fb66039d5b26c91299f90ff1ff8c93ed15c23d8f"
+    },
+    {
+      "path": "third-projection/s1r3-projection.json",
+      "bytes": 8898,
+      "sha256": "e6c2186d33d1643032e231488cdf90a9a38e335fa1982ef83adad8d8b44ab825"
+    },
+    {
+      "path": "third-projection/s1r3-project.mts",
+      "bytes": 1825,
+      "sha256": "a38bc619069a5904681a33b67ff35c7e86470bd5439a5d393c19928cb5155102"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 3449,
+      "sha256": "6486a888a0ead141608227881c6e77c4b3e10e7ce36609e7d36451ae6e8d1c87"
+    }
+  ]
+}
