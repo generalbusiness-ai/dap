@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:32942ef3b3cf003e44c51a81e29a5028d45b68dc","text":"Merge retired a covered predecessor; the successor is at packages/contract/src/result.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3d0982f91d61e44ad123c0b5a32cb35ce891908c","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-30-dxa2-minimum-head.manifest.json."}
