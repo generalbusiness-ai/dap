@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/evidence/2026-10-30-s3-question-approvals.manifest.json","body":{"commit":"871cdec9f1d3b6d81b1f5ad211de3b088d931d57","path":"notes/implementation/evidence/2026-10-30-s3-question-approvals.manifest.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0a4f37d87a97bbc9aaf6acef4af130b88db14661","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/scripts/reference.mjs."}
