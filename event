@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2a83038684c160b1edd75e2b45da1a536c4a1a6b","text":"Replaced by the review request for exact head c755be80d8b602bee03306eb177229ec516ab614; any review promised on this request is released, and a verdict filed against it would bind to nothing."}
+{"kind":"promise","text":"I will review the hosted loop reads repair at exact head c755be80, as the diff from 4bc469ef."}
