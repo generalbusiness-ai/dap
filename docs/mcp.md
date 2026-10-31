@@ -2246,11 +2246,13 @@ The reads return at most 50 attention rows and read at most 512 live items.
 Results report their read counts, omissions and incomplete discovery.
 A vector of observed heads does not claim one atomic room snapshot.
 
-Question context reads at most 50 total entries from the selected lane,
+Question context reads at most 512 total entries from the selected lane,
 including entries unrelated to that Question. Each entry counts once,
-including the current text entry. Exactly 50 entries fit this history
-bound. Beyond 50 lane entries, `context` and the Decision card are
-unavailable even if the Question itself is small.
+including the current text entry. Exactly 512 entries fit this history
+bound. Beyond 512 lane entries, `context` and the Decision card are
+unavailable even if the Question itself is small. The existing page,
+request and byte limits can stop the read sooner. If the 16-page bound
+decides first, the read reports `page-limit`.
 
 The public context omits unrelated live lane items and does not repeat
 the current body in its version list. The Decision card has a separate

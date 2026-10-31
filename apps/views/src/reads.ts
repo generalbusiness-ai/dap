@@ -5,7 +5,7 @@ import { ScopeHandle, type Fetch, type Signer } from "@generalbusiness/dap-clien
 import { Reads, type McpConfig } from "@generalbusiness/dap-mcp";
 import { ROLE_LISTS, type Role } from "@generalbusiness/dap-platform";
 
-export const LIMITS = Object.freeze({ scopes: 8, rows: 50, items: 512, history: 50, pages: 16, requests: 64, replyBytes: 4 * 1024 * 1024, bytes: 16 * 1024 * 1024, textBytes: 65536, textsBytes: 262144, milliseconds: 20000, requestMilliseconds: 5000 });
+export const LIMITS = Object.freeze({ scopes: 8, rows: 50, items: 512, history: 512, pages: 16, requests: 64, replyBytes: 4 * 1024 * 1024, bytes: 16 * 1024 * 1024, textBytes: 65536, textsBytes: 262144, milliseconds: 20000, requestMilliseconds: 5000 });
 export class Unread extends Error { constructor(readonly reason: string) { super(reason); } }
 /** Compare optional values; canonical comparison applies once both are defined. */
 export const sameOptional = (a: unknown, b: unknown): boolean => a === undefined || b === undefined ? a === b : same(a, b);

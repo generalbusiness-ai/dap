@@ -80,9 +80,11 @@ test('a revised Question or failed admission read returns a stale view through M
     const summary = await call('view_decision', { view, subject: questionSubject(f.scope, f.ask.id) });
     assert.equal(summary.structuredContent.status, 'ready');
     const read = await call('view_read', { view, cut: 0, page: 'item' });
-    assert.equal(read.structuredContent.status, 'ready');
-    assert.equal(read.structuredContent.card.actions[0].id, 'approve');
-    return read.structuredContent;
+    assert.equal(read.isError, false);
+    const display = read.structuredContent.display;
+    assert.equal(display.status, 'ready');
+    assert.equal(display.card.actions[0].id, 'approve');
+    return display;
   };
   const shown = await open('revised');
   // Paired positive: the same displayed revision is admissible before it changes.

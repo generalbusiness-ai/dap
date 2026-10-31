@@ -167,12 +167,12 @@ test('context attaches comments only to exact retained facts in its own scope', 
   assert.deepEqual(got.structuredContent.context.comments.map(comment => comment.text), ['TEST comment 0'], 'A matching sequence alone must not attribute a foreign or wrong-hash comment');
 });
 
-test('context counts bodyAt and whole history once: exactly 50 entries are readable, 51 are unavailable', async t => {
+test('context remains readable above 50 entries and counts its 512-entry history allowance once', async t => {
   const f = fixture(t), q = await question(f);
-  while (q.state.entries.length < 50) f.peer.append(q.state, { type: 'timed', item: 0, rule: 'TEST full lane history', due: '2099-01-01T00:00:00Z' });
+  while (q.state.entries.length < 512) f.peer.append(q.state, { type: 'timed', item: 0, rule: 'TEST full lane history', due: '2099-01-01T00:00:00Z' });
   const got = await f.app.context({ question: { scope: q.state.ref, ask: q.opening.entry.seq } });
   assert.equal(got.isError, false); assert.equal(got.structuredContent.complete, true);
-  assert.equal(got.structuredContent.counters.history, 50, 'The separately read bodyAt is already part of the whole history');
+  assert.equal(got.structuredContent.counters.history, 512, 'The separately read bodyAt is already part of the whole history');
   assert.equal(got.structuredContent.context.body, q.body);
   f.peer.append(q.state, { type: 'timed', item: 0, rule: 'TEST one entry beyond the limit', due: '2099-01-01T00:00:00Z' });
   const refused = await f.app.context({ question: { scope: q.state.ref, ask: q.opening.entry.seq } });

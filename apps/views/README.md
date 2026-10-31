@@ -36,11 +36,12 @@ Use the same selector encoded as `[scopeRef, askId]` in a Decision view's
 `subject`. Local body sequence refs resolve through the actual sealed entry
 and its checked hash. Missing bytes or an incomplete window offer no review.
 
-The history limit is 50 total entries from the selected lane, including
+The history limit is 512 total entries from the selected lane, including
 entries unrelated to the Question. Each entry counts once, including the
-current text entry. Exactly 50 entries fit this history bound. Beyond
-50 lane entries, `context` and the Decision card are unavailable even for
-a small Question.
+current text entry. Exactly 512 entries fit this history bound. Beyond
+512 lane entries, `context` and the Decision card are unavailable even for
+a small Question. The existing page, request and byte limits can stop the
+read sooner. A read stopped by the 16-page bound reports `page-limit`.
 
 The public context omits unrelated live lane items and does not repeat the
 current body in the version list. The Decision card has a separate 60 KiB

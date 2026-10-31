@@ -111,7 +111,7 @@ export class RepoInAi {
       const versions: Context["versions"] = [];
       const facts = new Map<number, FactRef>();
       // Verify the whole lane from genesis to this head. The bodyAt read and
-      // history share one allowance of 50 distinct entries, including genesis.
+      // history share one allowance of 512 distinct entries, including genesis.
       let cursor: string | undefined, previous: SealedEntry | null = null;
       type SealedEntry = Awaited<ReturnType<Collection["entry"]>>;
       do {
