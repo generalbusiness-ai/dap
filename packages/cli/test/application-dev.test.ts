@@ -42,6 +42,12 @@ test("loopback native SDK requests use only explicit TEST authority and preserve
     expect(await handle.submit(signed)).toEqual(accepted);
     expect(await handle.settle(signed)).toMatchObject({ ok: true, value: { fact: accepted.receipt.fact } });
     expect(await handle.entry(accepted.receipt.fact.seq)).toMatchObject({ ok: true, value: { entry: { input: { signed } } } });
+    // This serialized local fixture explicitly lacks the native arrival wait.
+    expect(await handle.summary(accepted.receipt)).toEqual({ ok: false, reason: "unavailable" });
+    expect(await handle.entry(accepted.receipt.fact.seq, accepted.receipt)).toEqual({ ok: false, reason: "unavailable" });
+    const malformed = await fetch(f.server.origin + "/v1/scopes/" + data.scope.scope + "?atLeast=invalid");
+    expect(malformed.status).toBe(400);
+    expect(await malformed.json()).toEqual({ error: "invalid-read-minimum" });
     const unknown = await signedIntent(secretSigner(new Uint8Array(32).fill(99)), { to: data.scope, kind: "add", fields: { text: "No TEST grant." } }, { now: Date.parse(data.time) });
     expect(await handle.submit(unknown)).toMatchObject({ answer: "refused", reason: "unauthorized" });
     const path = f.server.origin + "/v1/scopes/" + encodeURIComponent(data.scope.scope) + "/acts";

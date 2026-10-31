@@ -1,6 +1,6 @@
 import type { CallResult } from "../results.ts";
 import type { PresentationPackage, ViewKind } from "./resources.ts";
-import type { ApplicationProjectionData, FactRef, FieldValue, Head, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
+import type { ReadMinimum, ApplicationProjectionData, FactRef, FieldValue, Head, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import type { ApplicationView, ApplicationViewParameters } from "@generalbusiness/dap-platform/application-v2";
 import type { MemberTable } from "./member-types.ts";
 
@@ -142,7 +142,7 @@ export interface ViewSource {
   readonly inputActs?: readonly { screen: string; id: string; label: string; parameters: ApplicationViewParameters }[];
   readonly presentation?: PresentationPackage;
   initialPage?(screen: ViewKind): PageKind;
-  read(query: ViewQuery, access: { call(name: string, args: Record<string, unknown>): Promise<{ structuredContent: Record<string, unknown>; isError: boolean }> }): Promise<Projection>;
+  read(query: ViewQuery, access: { call(name: string, args: Record<string, unknown>): Promise<{ structuredContent: Record<string, unknown>; isError: boolean }> }, minimum?: ReadMinimum): Promise<Projection>;
   /** A declared source repeats its current when/needs check before signing. */
   admit?(query: ViewQuery, card: Card, action: CardAction): Promise<void>;
   /** After awaited reads, call admit without awaiting it, immediately before synchronous publication. */

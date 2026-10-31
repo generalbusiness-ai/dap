@@ -2,7 +2,7 @@
  * no viewer; a native read owner owes authorization and coverage. */
 import { freeze } from "@generalbusiness/dap-bytes";
 import { APPLICATION_PROJECTION_REFUSALS, APPLICATION_PROJECTION_WIRE_BOUNDS as B, type ApplicationProjectionData, type ApplicationProjectionQuery, type ApplicationProjectionRead } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, isDigest, isFactRef, isFieldValue, isHead, isRecord, isScopeRef, parseStrict, parseStrictBytes, unb64url, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, digestBytes, isDigest, isFactRef, isBehindRead, isFieldValue, isHead, isRecord, isScopeRef, parseStrict, parseStrictBytes, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { timeMs } from "@generalbusiness/dap-bytes";
 import type { Digest } from "@generalbusiness/dap-contract";
 import { applicationJson } from "./application-json.ts";
@@ -51,7 +51,7 @@ function data(value: unknown): value is ApplicationProjectionData {
 export function isApplicationProjectionRead(value: unknown): value is ApplicationProjectionRead {
   if (!isRecord(value)) return false;
   return value["ok"] === true ? only(value, "ok,query,value") && isDigest(value["query"]) && data(value["value"])
-    : value["ok"] === false && only(value, "ok,reason") && APPLICATION_PROJECTION_REFUSALS.some(reason => reason === value["reason"]);
+    : isBehindRead(value) || value["ok"] === false && value["reason"] !== "behind" && only(value, "ok,reason") && APPLICATION_PROJECTION_REFUSALS.some(reason => reason === value["reason"]);
 }
 /** Bytes are capped before strict parsing; materialized data is owned before
  * recursive record checks. Shape is not authorization or journal coverage. */
@@ -61,6 +61,7 @@ export function readApplicationProjectionReply(bytes: Uint8Array, query?: Applic
     const value: unknown = parseStrictBytes(bytes);
     if (!isApplicationProjectionRead(value) || canonicalize(value) !== new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes)) return null;
     if (value.ok && query && (value.query !== applicationProjectionQueryDigest(query) || canonicalize(value.value.scope) !== canonicalize(query.scope))) return null;
+    if (!value.ok && value.reason === "behind" && query && canonicalize(value.current.at) !== canonicalize(query.scope)) return null;
     applicationJson(value, B.resultBytes); freeze(value); return value;
   } catch { return null; }
 }

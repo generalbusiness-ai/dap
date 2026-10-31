@@ -7,8 +7,8 @@
  * what was recorded.
  */
 
-import type { ScopeApi } from "@generalbusiness/dap-contract";
-import { itemQueryReadFor, readItemQueryParameter, within, LATE } from "@generalbusiness/dap-bytes";
+import type { ReadMinimum, ScopeApi } from "@generalbusiness/dap-contract";
+import { readMinimum, itemQueryReadFor, readItemQueryParameter, within, LATE } from "@generalbusiness/dap-bytes";
 import { readApplicationProjectionQuery, readApplicationProjectionReplyText } from "@generalbusiness/dap-platform/application-v2";
 import { ANSWERS } from "./answers.ts";
 import { TransportError, type Transport } from "./handle.ts";
@@ -36,13 +36,19 @@ export function bindingTransport(service: ServiceBinding): Transport {
     if (!ok) throw new TransportError(`the reply is not an answer of ${op}`);
     return answer;
   };
+  const minimum = (value: ReadMinimum | undefined, scope: string): ReadMinimum | undefined => {
+    if (value === undefined) return undefined;
+    const checked = readMinimum(value);
+    if (!checked || checked.at.scope !== scope) throw new TransportError("invalid read minimum");
+    return checked;
+  };
   return {
     create: (creation, definition, definitions = [], beside = {}) => call("create", () => service.create(creation, definition, definitions, beside)),
     submit: (scope, signed, grants, beside = {}) => call("submit", () => service.submit(scope, signed, grants, beside)),
     prepare: (scope, signed, grants, capability, step) => call("prepare", () => service.prepare(scope, signed, grants, capability, step)),
     settle: (scope, signed) => call("settle", () => service.settle(scope, signed)),
-    summary: (scope, reader) => call("summary", () => service.summary(scope, reader)),
-    items: (scope, reader, type, cursor) => call("items", () => service.items(scope, reader, type, cursor)),
+    summary: (scope, reader, atLeast) => call("summary", () => service.summary(scope, reader, minimum(atLeast, scope))),
+    items: (scope, reader, type, cursor, atLeast) => call("items", () => service.items(scope, reader, type, cursor, minimum(atLeast, scope))),
     queryItems: async (scope, reader, encoded) => {
       const query = readItemQueryParameter(encoded);
       if (!query || query.scope.scope !== scope) throw new TransportError("invalid bounded item query");
@@ -51,18 +57,18 @@ export function bindingTransport(service: ServiceBinding): Transport {
       if (!itemQueryReadFor(reply, query)) throw new TransportError("the reply does not match the bounded item query");
       return reply;
     },
-    applicationProjection: async (scope, reader, encoded) => {
+    applicationProjection: async (scope, reader, encoded, atLeast) => {
       const query = readApplicationProjectionQuery(encoded);
       if (!query || query.scope.scope !== scope) throw new TransportError("invalid bounded application projection");
-      const reply = await within(10, async () => await service.applicationProjection(scope, reader, encoded)).catch(() => {
+      const reply = await within(10, async () => await service.applicationProjection(scope, reader, encoded, minimum(atLeast, scope))).catch(() => {
         throw new TransportError("no application projection reply");
       });
       if (reply === LATE) throw new TransportError("no whole application projection within 10 seconds; coverage is incomplete");
       if (!readApplicationProjectionReplyText(reply, query)) throw new TransportError("the reply does not match the bounded application projection");
       return reply;
     },
-    history: (scope, reader, cursor) => call("history", () => service.history(scope, reader, cursor)),
-    entry: (scope, reader, seq) => call("entry", () => service.entry(scope, reader, seq)),
+    history: (scope, reader, cursor, atLeast) => call("history", () => service.history(scope, reader, cursor, minimum(atLeast, scope))),
+    entry: (scope, reader, seq, atLeast) => call("entry", () => service.entry(scope, reader, seq, minimum(atLeast, scope))),
     outbox: (scope, reader, cursor) => call("outbox", () => service.outbox(scope, reader, cursor)),
     outboxItem: (scope, reader, outboxId) => call("outboxItem", () => service.outboxItem(scope, reader, outboxId)),
     log: (scope, reader, cursor) => call("log", () => service.log(scope, reader, cursor)),

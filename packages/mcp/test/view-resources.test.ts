@@ -67,7 +67,7 @@ test("both revisions provide text fallback and bind paging to the host's UI capa
         await rpc("initialize", { protocolVersion: LEGACY, capabilities, clientInfo: { name: "profile-fixture", version: "1" } });
         await wire.handle({ jsonrpc: "2.0", method: "notifications/initialized" }, session, () => {});
       }
-      const tools: { name: string; _meta?: { ui?: { resourceUri?: string } } }[] = [];
+      const tools: { name: string; _meta?: { ui?: { resourceUri?: string; visibility?: string[] } } }[] = [];
       let cursor: string | undefined;
       do {
         const answer = await rpc("tools/list", cursor ? { cursor } : {});
@@ -81,6 +81,13 @@ test("both revisions provide text fallback and bind paging to the host's UI capa
       expect(opening._meta?.ui?.resourceUri).toBe(ui ? "ui://dap/needs-you" : undefined);
       const fallback = (await rpc("tools/call", { name: "view_needs_you", arguments: { view: `${version}-${ui}` } }))!.result as { content: { text: string }[] };
       expect(fallback.content[0]!.text).toContain("0 items");
+      expect(tools.find(tool => tool.name === "view_read")?._meta?.ui?.visibility).toEqual(ui ? ["app"] : undefined);
+      // Visibility describes host presentation, not a new caller authority.
+      // The same authenticated wire can call the retained view directly.
+      const direct = await rpc("tools/call", { name: "view_read", arguments: { view: `${version}-${ui}` } });
+      expect(direct?.error).toBeUndefined();
+      expect((direct!.result as { structuredContent: { display: { view: string; status: string } } }).structuredContent.display)
+        .toMatchObject({ view: `${version}-${ui}`, status: "empty" });
       if (version === LEGACY) expect(session.listed).toBe((await service.snapshot()).generation);
     } finally { wire.endLegacy(session); wire.closeAll(); }
   }

@@ -8,10 +8,11 @@ export interface PreparationRun { readonly ends: number; active(): boolean; rema
 export class PreparationFlights {
   #pending: object | null = null;
   constructor(readonly clock: ProofTimer = timer) {}
-  run<T>(work: (run: PreparationRun) => Promise<T | null>): Promise<T | null> {
+  /** A caller may preserve an earlier request deadline, never extend it. */
+  run<T>(work: (run: PreparationRun) => Promise<T | null>, earlierEnds?: number): Promise<T | null> {
     // This precedes request validation, local storage and any peer choice.
-    const began = this.clock.now(), ends = began + PREPARATION_MILLISECONDS;
-    if (this.#pending || !Number.isFinite(began) || !Number.isFinite(ends)) return Promise.resolve(null);
+    const began = this.clock.now(), ends = Math.min(began + PREPARATION_MILLISECONDS, earlierEnds ?? Infinity);
+    if (this.#pending || !Number.isFinite(began) || !Number.isFinite(ends) || ends <= began) return Promise.resolve(null);
     const slot = {}; this.#pending = slot;
     let abandoned = false, complete!: (value: T | null) => void;
     const answer = new Promise<T | null>(resolve => { complete = resolve; });
