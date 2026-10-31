@@ -1806,10 +1806,10 @@ addressing either namespace. This applies to the control routes too.
 tool names, at most 1,024 characters and 18 names. Unknown names,
 duplicates, a different JSON shape, or an oversized setting close the
 endpoint. The hosted default omits `create`, `install_application`,
-`credential`, `prepare`, `join`, `record`, `step`, and `text`. To enable
-needed tools, name them explicitly, for example `["prepare","text"]`.
-The other accepted names are `room`, `inspect`, `application_installation`,
-`items`, `steps`, `sends`, `wait`, `settle`, `actions`, and `act`. The
+`credential`, `prepare`, `join`, and `record`. To enable needed tools, name
+them explicitly, for example `["prepare","record"]`. The other accepted names
+are `room`, `commons`, `inspect`, `application_installation`, `items`, `steps`,
+`step`, `sends`, `text`, `wait`, `settle`, `actions`, and `act`. The
 existing service mode still decides whether `actions` and `act` are listed.
 These settings do not change local Node MCP defaults.
 
