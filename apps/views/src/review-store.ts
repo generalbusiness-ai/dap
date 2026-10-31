@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 import { canonicalize, isDigest, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { LocalReviewCapture } from "@generalbusiness/dap-mcp";
 import type { Point } from "./reads.ts";
-import { same } from "./reads.ts";
+import { sameOptional } from "./reads.ts";
 
 const BYTES = 32768, HEADS = 64;
 type Mark = Pick<LocalReviewCapture, "service" | "directory" | "viewer" | "key"> & Point;
@@ -78,7 +78,7 @@ export class ReviewStore {
         const index = state.marks.findIndex(mark => identity(mark) === identity(next)), old = state.marks[index];
         if (old) {
           if (point.head.seq < old.head.seq) bad("rollback");
-          if (point.head.seq === old.head.seq) { if (!same(point.head, old.head)) bad("conflict"); continue; }
+          if (point.head.seq === old.head.seq) { if (!sameOptional(point.head, old.head)) bad("conflict"); continue; }
           state.marks[index] = next;
         } else { if (state.marks.length >= HEADS) bad("full"); state.marks.push(next); }
         changed = true;
@@ -92,7 +92,7 @@ export class ReviewStore {
       // No awaited work follows the admission check and precedes publication.
       renameSync(temporary, this.#path); temporary = null;
       const directory = openSync(this.#directory, "r"); try { fsyncSync(directory); } finally { closeSync(directory); }
-      if (!same(this.#read(), state)) bad("invalid");
+      if (!sameOptional(this.#read(), state)) bad("invalid");
       return "marked";
     } finally { closeSync(fd); if (temporary !== null) unlinkSync(temporary); unlinkSync(lock); }
   }

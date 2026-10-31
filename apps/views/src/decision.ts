@@ -2,7 +2,7 @@ import { canonicalize, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/da
 import type { FieldValue, Item, ScopeRef } from "@generalbusiness/dap-contract";
 import { expectedOf, effectiveFields, type ActLike, type Card, type CardAction, type LocalReviewCapture, type ViewSource } from "@generalbusiness/dap-mcp";
 import { RepoInAi, questionDefinition, result, type Context, type Row } from "./repo-in-ai.ts";
-import { same, Unread } from "./reads.ts";
+import { sameOptional, Unread } from "./reads.ts";
 import { ReviewStoreError } from "./review-store.ts";
 
 export const questionSubject = (scope: ScopeRef, ask: number): string => JSON.stringify([scope, ask]);
@@ -25,8 +25,8 @@ export function captureQuestionAction(context: Context, kind: "approve" | "decid
 function questionActions(context: Context): CardAction[] {
   if (!context.briefMatches || context.ask.state !== "asked") return [];
   const requests = context.requests.filter(item => item.state === "open" && localId(item.refs["bodyAt"]) === context.bodyAt.seq);
-  const mine = requests.find(item => same(item.parties["requested"], context.viewer));
-  if (mine && context.actions.includes("issue.approve") && !same(context.ask.parties["asker"], context.viewer)) return [captureQuestionAction(context, "approve", mine), captureQuestionAction(context, "approve", mine, "request-changes")];
+  const mine = requests.find(item => sameOptional(item.parties["requested"], context.viewer));
+  if (mine && context.actions.includes("issue.approve") && !sameOptional(context.ask.parties["asker"], context.viewer)) return [captureQuestionAction(context, "approve", mine), captureQuestionAction(context, "approve", mine, "request-changes")];
   const approvals = context.approvals.filter(item => localId(item.refs["bodyAt"]) === context.bodyAt.seq);
   if (context.actions.includes("issue.decide") && !requests.length && approvals.some(item => item.values["verdict"] === "approve") && !approvals.some(item => item.values["verdict"] === "request-changes")) return [captureQuestionAction(context, "decide")];
   return [];
@@ -77,8 +77,8 @@ export function decisionSource(app: RepoInAi): ViewSource {
     markReviewed: async (capture, { admit }) => {
       try {
         await app.collect(async collection => {
-          if (capture.service !== app.options.service || capture.key !== app.options.signer.key || !same(capture.directory, collection.directory) || !same(capture.viewer, collection.viewer)) throw new Unread("review-binding");
-          for (const point of capture.heads) { const frame = await collection.frame(point.scope); if (!same(frame.head, point.head)) throw new Unread("head-changed"); }
+          if (capture.service !== app.options.service || capture.key !== app.options.signer.key || !sameOptional(capture.directory, collection.directory) || !sameOptional(capture.viewer, collection.viewer)) throw new Unread("review-binding");
+          for (const point of capture.heads) { const frame = await collection.frame(point.scope); if (!sameOptional(frame.head, point.head)) throw new Unread("head-changed"); }
         });
         const status = await app.options.reviewStore.mark(capture, admit);
         return result({ localStatus: status });

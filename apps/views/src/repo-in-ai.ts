@@ -3,7 +3,7 @@ import { canonicalize, digestBytes, isDigest, isMemberRef, isScopeRef, utf8 } fr
 import type { Digest, FactRef, Item, ReadMinimum, ScopeRef } from "@generalbusiness/dap-contract";
 import { J4_DIGESTS, QUESTION_DIGESTS, QUESTION_BRIEF_DIGESTS, issueQuestions, issueQuestionsBrief } from "@generalbusiness/dap-lanes";
 import type { ApplicationReadCatalogue, CallResult, LocalReviewCapture } from "@generalbusiness/dap-mcp";
-import { Collection, LIMITS, Unread, same, minimumFor, type Frame, type ReadOptions } from "./reads.ts";
+import { Collection, LIMITS, Unread, sameOptional, minimumFor, type Frame, type ReadOptions } from "./reads.ts";
 import { ReviewStore, ReviewStoreError } from "./review-store.ts";
 
 export interface Row { scope: ScopeRef; head: Frame["head"]; item: number; type: string; rule: { definition: string; clause: string }; [key: string]: unknown }
@@ -28,7 +28,7 @@ export class RepoInAi {
     this.brief = { bytes: options.brief.bytes.slice(), digest: options.brief.digest };
     if (this.brief.bytes.length > 65536 || digestBytes(this.brief.bytes) !== this.brief.digest) throw new Unread("brief-invalid");
     const decoded = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(this.brief.bytes);
-    if (!same([...utf8(decoded)], [...this.brief.bytes])) throw new Unread("brief-invalid");
+    if (!sameOptional([...utf8(decoded)], [...this.brief.bytes])) throw new Unread("brief-invalid");
   }
   async collect<T>(run: (collection: Collection) => Promise<T>, target?: ScopeRef): Promise<{ value: T; collection: Collection }> {
     const collection = new Collection(this.options);
@@ -52,15 +52,15 @@ export class RepoInAi {
       const rows: Row[] = [];
       for (const frame of frames) {
         if (questions(frame.summary.definition)) for (const item of frame.items) {
-          if (item.type !== "approval-request" || item.state !== "open" || !same(item.parties["requested"], collection.viewer)) continue;
+          if (item.type !== "approval-request" || item.state !== "open" || !sameOptional(item.parties["requested"], collection.viewer)) continue;
           const ask = frame.items.find(ask => ask.type === "ask" && matchItem(item.refs["ask"], ask.id));
-          rows.push(row(frame, item, "acts.request-approval;items.approval-request", { category: "requested-review", bodyAt: item.refs["bodyAt"], currentBody: !!ask && same(item.refs["bodyAt"], ask.refs["bodyAt"]), permission: "not-determined" }));
+          rows.push(row(frame, item, "acts.request-approval;items.approval-request", { category: "requested-review", bodyAt: item.refs["bodyAt"], currentBody: !!ask && sameOptional(item.refs["bodyAt"], ask.refs["bodyAt"]), permission: "not-determined" }));
         }
         else if (frame.summary.definition === J4_DIGESTS.change) {
           const manifest = frame.items.find(item => item.type === "manifest" && item.state === "current");
-          for (const item of frame.items) if (item.type === "review-request" && item.state === "open" && same(item.parties["requested"], collection.viewer))
+          for (const item of frame.items) if (item.type === "review-request" && item.state === "open" && sameOptional(item.parties["requested"], collection.viewer))
             rows.push(row(frame, item, "acts.request-review-own;items.review-request", { category: "requested-review", currentManifest: manifest?.id ?? null, requestVersionBound: false, permission: "not-determined" }));
-          for (const item of frame.items) if (item.type === "merge" && item.state === "unknown" && (same(item.parties["merger"], collection.viewer) || isMemberRef(item.parties["merger"]) && same(collection.controller(item.parties["merger"]), collection.viewer)))
+          for (const item of frame.items) if (item.type === "merge" && item.state === "unknown" && (sameOptional(item.parties["merger"], collection.viewer) || isMemberRef(item.parties["merger"]) && sameOptional(collection.controller(item.parties["merger"]), collection.viewer)))
             rows.push(row(frame, item, "acts.merge;items.merge", { category: "unknown-merge", manifest: item.refs["manifest"], retryAllowed: false }));
           if (manifest && frame.items.some(item => item.type === "proposal" && item.state === "open") && collection.actions.includes("change.merge")) rows.push(row(frame, manifest, "acts.merge", { category: "merge-attention", roleIncludes: "change.merge", permission: "not-determined", rules: frame.items.find(item => item.type === "rules")?.values ?? null }));
         } else if (!issue(frame.summary.definition)) collection.unread.push({ scope: frame.ref, reason: "unsupported-profile" });
@@ -83,7 +83,7 @@ export class RepoInAi {
           const controller = collection.controller(performer); if (!controller) { collection.unread.push({ scope: frame.ref, reason: "agent-controller-unavailable" }); continue; }
           const blocks = frame.items.filter(item => item.type === "block" && item.state === "blocked" && matchItem(item.refs["commitment"], commitment.id));
           const intent = frame.items.find(item => item.type === "intent");
-          const changes = frames.filter(other => other.summary.definition === J4_DIGESTS.change).flatMap(other => other.items.filter(item => item.type === "manifest" && item.state === "current" && !!item.refs["goal"] && typeof item.refs["goal"] === "object" && "at" in item.refs["goal"] && same(item.refs["goal"]["at"], frame.ref)).map(item => ({ scope: other.ref, head: other.head, manifest: item.id, relationship: "issue-linked; commitment/report proof not established" })));
+          const changes = frames.filter(other => other.summary.definition === J4_DIGESTS.change).flatMap(other => other.items.filter(item => item.type === "manifest" && item.state === "current" && !!item.refs["goal"] && typeof item.refs["goal"] === "object" && "at" in item.refs["goal"] && sameOptional(item.refs["goal"]["at"], frame.ref)).map(item => ({ scope: other.ref, head: other.head, manifest: item.id, relationship: "issue-linked; commitment/report proof not established" })));
           rows.push(row(frame, commitment, "items.commitment;items.block;items.intent", { state: commitment.state, agent: performer, controller,
             terms: commitment.values, conditionsAt: commitment.refs["conditionsAt"], termsAt: commitment.refs["termsAt"], currentConditions: intent?.values["conditions"] ?? null, currentConditionsAt: intent?.refs["conditionsAt"] ?? null, blocks, changes }));
         }
@@ -115,7 +115,7 @@ export class RepoInAi {
         for (const sealed of got.value) {
           collection.counters.history++;
           const entry = sealed.entry;
-          if ((!previous && (entry.seq !== 0 || entry.prev !== null)) || !same(entry.at, scope) || entryHashFor(sealed) !== sealed.hash || (previous && (entry.seq !== previous.entry.seq + 1 || entry.prev !== previous.hash))) throw new Unread("history-mismatch");
+          if ((!previous && (entry.seq !== 0 || entry.prev !== null)) || !sameOptional(entry.at, scope) || entryHashFor(sealed) !== sealed.hash || (previous && (entry.seq !== previous.entry.seq + 1 || entry.prev !== previous.hash))) throw new Unread("history-mismatch");
           previous = sealed;
           const input = entry.input;
           if (input.type === "act" && (input.signed.intent.kind === "ask" && entry.seq === id || input.signed.intent.kind === "revise-ask" && input.signed.intent.on === id)) {
@@ -129,7 +129,7 @@ export class RepoInAi {
       } while (cursor);
       for (const item of frame.items.filter(item => item.type === "comment")) {
         const about = item.refs["about"];
-        if (!versions.some(version => matchItem(about, version.fact.seq)) && !approvals.some(approval => matchItem(about, approval.id)) && !(ask.refs["decisionAt"] !== null && same(about, ask.refs["decisionAt"]))) continue;
+        if (!versions.some(version => matchItem(about, version.fact.seq)) && !approvals.some(approval => matchItem(about, approval.id)) && !(ask.refs["decisionAt"] !== null && sameOptional(about, ask.refs["decisionAt"]))) continue;
         const digest = item.values["body"]; comments.push({ item, text: isDigest(digest) ? await collection.text(frame, digest) : null });
       }
       const brief = pin === QUESTION_BRIEF_DIGESTS.issue && isDigest(ask.values["brief"]) ? ask.values["brief"] : null;
@@ -154,9 +154,9 @@ export class RepoInAi {
       const marks = this.options.reviewStore.read({ service: this.options.service, directory: collection.directory, viewer: collection.viewer, key: this.options.signer.key });
       const rows: Row[] = [];
       for (const frame of [...frames, collection.frames.get(collection.membership.scope)!, collection.frames.get(collection.directory.scope)!]) {
-        const mark = marks.find(mark => same(mark.scope, frame.ref));
+        const mark = marks.find(mark => sameOptional(mark.scope, frame.ref));
         if (mark && frame.head.seq < mark.head.seq || mark && frame.head.seq === mark.head.seq && frame.head.hash !== mark.head.hash) { collection.unread.push({ scope: frame.ref, reason: "review-head-conflict" }); continue; }
-        if (!mark || !same(mark.head, frame.head)) rows.push(row(frame, { id: frame.head.seq, type: "head" } as Item, "apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)", { since: mark?.head ?? null, interpretation: "Repeated until an explicit mark" }));
+        if (!mark || !sameOptional(mark.head, frame.head)) rows.push(row(frame, { id: frame.head.seq, type: "head" } as Item, "apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)", { since: mark?.head ?? null, interpretation: "Repeated until an explicit mark" }));
       }
       return rows;
     });
