@@ -1,14 +1,17 @@
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
+import { after, test } from 'node:test';
 import { createServer } from 'node:http';
 import { mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { tsImport } from 'tsx/esm/api';
+import { register } from 'tsx/esm/api';
 
 // Actual adapter/Reads/codecs/local filesystem over scripted scope answers.
 // No native authority, hosted room, provider, or browser is exercised here.
-const load = source => tsImport(source, import.meta.url);
+// One namespace keeps shared runtime classes identical across all actual adapters.
+const scoped = register({ namespace: 'artroom-s4-owner' });
+after(async () => { await scoped.unregister(); });
+const load = source => scoped.import(source, import.meta.url);
 const { canonicalize, digestBytes, entryHash, itemQueryArgument, itemQueryDigest, readItemQueryParameter, readMinimumParameter, textDigest, utf8 } = await load('@generalbusiness/dap-bytes');
 const { secretSigner, signedIntent } = await load('@generalbusiness/dap-client');
 const { issueQuestionsBrief, QUESTION_DIGESTS, J4_DIGESTS } = await load('@generalbusiness/dap-lanes');
