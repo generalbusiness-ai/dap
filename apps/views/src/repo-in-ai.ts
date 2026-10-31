@@ -1,11 +1,12 @@
 /** Read projections of the actual pinned lane records. These rows grant nothing. */
 import { canonicalize, digestBytes, isDigest, isFactRef, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { Digest, FactRef, Item, ReadMinimum, ScopeRef } from "@generalbusiness/dap-contract";
-import { J4_DIGESTS, QUESTION_DIGESTS, QUESTION_BRIEF_DIGESTS, issueQuestions, issueQuestionsBrief } from "@generalbusiness/dap-lanes";
+import { FINDING_DIGESTS, J4_DIGESTS, QUESTION_DIGESTS, QUESTION_BRIEF_DIGESTS, issueQuestions, issueQuestionsBrief } from "@generalbusiness/dap-lanes";
 import type { ApplicationReadCatalogue, CallResult, LocalReviewCapture } from "@generalbusiness/dap-mcp";
 import { Collection, LIMITS, Unread, sameOptional, minimumFor, type Frame, type ReadOptions } from "./reads.ts";
 import { ReviewStore, ReviewStoreError } from "./review-store.ts";
 import { readChange } from "./change.ts";
+import { FINDING_CLAUSE, findingActs, findingProfile, malformedRange, openFindings, requiredSource, shownText, sourceRow } from "./findings.ts";
 
 export interface Row { scope: ScopeRef; head: Frame["head"]; item: number; type: string; rule: { definition: string; clause: string }; [key: string]: unknown }
 export interface Context {
@@ -23,8 +24,27 @@ const RESULT_BYTES = 256 * 1024;
 const resultBytes = (answer: CallResult): number => utf8(canonicalize(answer)).length;
 export const questions = (pin: unknown): boolean => pin === QUESTION_DIGESTS.issue || pin === QUESTION_BRIEF_DIGESTS.issue;
 const issue = (pin: unknown): boolean => questions(pin) || pin === J4_DIGESTS.issue;
+/** The exact pins of a change lane that these views read. There is no generic profile loader. */
+export const changes = (pin: unknown): boolean => pin === J4_DIGESTS.change || pin === FINDING_DIGESTS.change;
 const matchItem = (value: unknown, id: number, scope: ScopeRef): boolean => value === id || isFactRef(value) && sameOptional(value.at, scope) && value.seq === id;
 const row = (frame: Frame, item: Item, clause: string, values: Record<string, unknown>): Row => ({ scope: frame.ref, head: frame.head, item: item.id, type: item.type, rule: { definition: frame.summary.definition, clause }, ...values });
+
+/** One row for each open finding from a required source on a live change, for a viewer with an act that bears on it. The text is data, escaped as the Change card escapes it. */
+async function findingRows(collection: Collection, frame: Frame, holding: readonly Item[], rules: Item | undefined): Promise<Row[]> {
+  const proposal = frame.items.find(item => item.type === "proposal" && (item.state === "open" || item.state === "draft"));
+  if (!proposal || !holding.length) return [];
+  const version = (finding: Item) => (item: Item) => item.type === "manifest" && matchItem(finding.refs["version"], item.id, frame.ref);
+  // A finding carries across versions, and an earlier version has left the live summary. Its authors decide who can answer.
+  const earlier = holding.filter(finding => !frame.items.some(version(finding))).map(finding => finding.refs["version"]).filter((id): id is number => typeof id === "number");
+  const known = [...frame.items, ...earlier.length ? await collection.items(frame, "manifest", ["superseded"], [...new Set(earlier)].sort((a, b) => a - b)) : []];
+  return holding.flatMap(finding => {
+    const acts = findingActs(finding, proposal, known.find(version(finding)), collection.viewer, collection.actions);
+    return acts.length ? [row(frame, finding, FINDING_CLAUSE, { category: "open-finding", holdsMerge: true, acts, permission: "not-determined",
+      file: shownText(finding.values["file"]), start: finding.values["start"], end: finding.values["end"], ...(malformedRange(finding) ? { malformedRange: true } : {}),
+      class: shownText(finding.values["class"]), severity: shownText(finding.values["severity"]), source: shownText(finding.values["source"]), sourceVersion: shownText(finding.values["sourceVersion"]),
+      version: finding.refs["version"], rulesRevision: rules?.values["revision"] ?? null, sourceRow: sourceRow(rules, finding.values["source"]) })] : [];
+  });
+}
 
 export class RepoInAi {
   readonly brief: { bytes: Uint8Array; digest: Digest };
@@ -62,13 +82,16 @@ export class RepoInAi {
           const ask = frame.items.find(ask => ask.type === "ask" && matchItem(item.refs["ask"], ask.id, frame.ref));
           rows.push(row(frame, item, "acts.request-approval;items.approval-request", { category: "requested-review", bodyAt: item.refs["bodyAt"], currentBody: !!ask && sameOptional(item.refs["bodyAt"], ask.refs["bodyAt"]), permission: "not-determined" }));
         }
-        else if (frame.summary.definition === J4_DIGESTS.change) {
+        else if (changes(frame.summary.definition)) {
           const manifest = frame.items.find(item => item.type === "manifest" && item.state === "current");
           for (const item of frame.items) if (item.type === "review-request" && item.state === "open" && sameOptional(item.parties["requested"], collection.viewer))
             rows.push(row(frame, item, "acts.request-review-own;items.review-request", { category: "requested-review", currentManifest: manifest?.id ?? null, requestVersionBound: false, permission: "not-determined" }));
           for (const item of frame.items) if (item.type === "merge" && item.state === "unknown" && (sameOptional(item.parties["merger"], collection.viewer) || isMemberRef(item.parties["merger"]) && sameOptional(collection.controller(item.parties["merger"]), collection.viewer)))
             rows.push(row(frame, item, "acts.merge;items.merge", { category: "unknown-merge", manifest: item.refs["manifest"], retryAllowed: false }));
-          if (manifest && frame.items.some(item => item.type === "proposal" && item.state === "open") && collection.actions.includes("change.merge")) rows.push(row(frame, manifest, "acts.merge", { category: "merge-attention", roleIncludes: "change.merge", permission: "not-determined", rules: frame.items.find(item => item.type === "rules")?.values ?? null }));
+          const rules = frame.items.find(item => item.type === "rules");
+          const holding = findingProfile(frame.summary.definition) ? openFindings(frame.items).filter(item => requiredSource(rules, item.values["source"])) : null;
+          if (manifest && frame.items.some(item => item.type === "proposal" && item.state === "open") && collection.actions.includes("change.merge")) rows.push(row(frame, manifest, "acts.merge", { category: "merge-attention", roleIncludes: "change.merge", permission: "not-determined", rules: rules?.values ?? null, ...(holding ? { heldBy: holding.map(item => item.id) } : {}) }));
+          if (holding) rows.push(...await findingRows(collection, frame, holding, rules));
         } else if (!issue(frame.summary.definition)) collection.unread.push({ scope: frame.ref, reason: "unsupported-profile" });
       }
       return rows;
@@ -79,7 +102,7 @@ export class RepoInAi {
       const rows: Row[] = [];
       for (const frame of frames) {
         if (!issue(frame.summary.definition)) {
-          if (frame.summary.definition !== J4_DIGESTS.change) collection.unread.push({ scope: frame.ref, reason: "unsupported-profile" });
+          if (!changes(frame.summary.definition)) collection.unread.push({ scope: frame.ref, reason: "unsupported-profile" });
           continue;
         }
         for (const commitment of frame.items.filter(item => item.type === "commitment")) {
@@ -89,9 +112,9 @@ export class RepoInAi {
           const controller = collection.controller(performer); if (!controller) { collection.unread.push({ scope: frame.ref, reason: "agent-controller-unavailable" }); continue; }
           const blocks = frame.items.filter(item => item.type === "block" && item.state === "blocked" && matchItem(item.refs["commitment"], commitment.id, frame.ref));
           const intent = frame.items.find(item => item.type === "intent");
-          const changes = frames.filter(other => other.summary.definition === J4_DIGESTS.change).flatMap(other => other.items.filter(item => item.type === "manifest" && item.state === "current" && !!item.refs["goal"] && typeof item.refs["goal"] === "object" && "at" in item.refs["goal"] && sameOptional(item.refs["goal"]["at"], frame.ref)).map(item => ({ scope: other.ref, head: other.head, manifest: item.id, relationship: "issue-linked; commitment/report proof not established" })));
+          const linked = frames.filter(other => changes(other.summary.definition)).flatMap(other => other.items.filter(item => item.type === "manifest" && item.state === "current" && !!item.refs["goal"] && typeof item.refs["goal"] === "object" && "at" in item.refs["goal"] && sameOptional(item.refs["goal"]["at"], frame.ref)).map(item => ({ scope: other.ref, head: other.head, manifest: item.id, relationship: "issue-linked; commitment/report proof not established" })));
           rows.push(row(frame, commitment, "items.commitment;items.block;items.intent", { state: commitment.state, agent: performer, controller,
-            terms: commitment.values, conditionsAt: commitment.refs["conditionsAt"], termsAt: commitment.refs["termsAt"], currentConditions: intent?.values["conditions"] ?? null, currentConditionsAt: intent?.refs["conditionsAt"] ?? null, blocks, changes }));
+            terms: commitment.values, conditionsAt: commitment.refs["conditionsAt"], termsAt: commitment.refs["termsAt"], currentConditions: intent?.values["conditions"] ?? null, currentConditionsAt: intent?.refs["conditionsAt"] ?? null, blocks, changes: linked }));
         }
       }
       return rows;
@@ -165,9 +188,9 @@ export class RepoInAi {
     if (!isScopeRef(args["scope"])) return result({ error: "change-selector" }, true);
     try {
       const { context, collection } = await readChange(this, args["scope"]);
-      const { who, items: _items, mergeKeys: _keys, key: _key, ...fields } = context;
+      const { who, definition: _definition, items: _items, mergeKeys: _keys, key: _key, ...fields } = context;
       const named = (item: Item, party: string) => ({ ...item, [`${party}Is`]: who(item.parties[party]) });
-      const answer = result({ change: { ...fields, reviews: fields.reviews.map(review => named(review, "reviewer")), results: fields.results.map(found => named(found, "checker")), merges: fields.merges.map(merge => named(merge, "merger")) }, heads: collection.points(), counters: collection.counters, complete: true });
+      const answer = result({ change: { ...fields, reviews: fields.reviews.map(review => named(review, "reviewer")), results: fields.results.map(found => named(found, "checker")), merges: fields.merges.map(merge => named(merge, "merger")), ...(fields.findings ? { findings: fields.findings.map(({ item, required, holdsMerge, answerAt }) => ({ ...named(item, "reporter"), required, holdsMerge, answerAt })) } : {}) }, heads: collection.points(), counters: collection.counters, complete: true });
       return resultBytes(answer) > RESULT_BYTES ? result({ error: "change-output-limit", complete: false }, true) : answer;
     }
     catch (error) { return result({ error: "change-unavailable", reason: error instanceof Unread ? error.reason : "read-failed", complete: false }, true); }
@@ -186,11 +209,11 @@ export class RepoInAi {
   }
   catalogue(): ApplicationReadCatalogue {
     const tool = (name: string, description: string, run: (args: Readonly<Record<string, unknown>>) => Promise<CallResult>, properties: Record<string, unknown> = {}, required: string[] = []) => ({ tool: { name, description, inputSchema: { type: "object", properties, required, additionalProperties: false }, annotations: { readOnlyHint: true } }, run });
-    return { revision: digestBytes(utf8(canonicalize({ adapter: "repo-in-ai@1", pins: [QUESTION_DIGESTS.issue, QUESTION_BRIEF_DIGESTS.issue, J4_DIGESTS.issue, J4_DIGESTS.change], brief: this.brief.digest }))), tools: [
+    return { revision: digestBytes(utf8(canonicalize({ adapter: "repo-in-ai@1", pins: [QUESTION_DIGESTS.issue, QUESTION_BRIEF_DIGESTS.issue, J4_DIGESTS.issue, J4_DIGESTS.change, FINDING_DIGESTS.change], brief: this.brief.digest }))), tools: [
       tool("needs_you", "Current attention, with pinned clauses and heads. At most 50 rows, eight scopes including support; omissions explicit. To read the next lanes, pass the answer's next as after. Attention grants no permission.", args => this.needsYou(args), { after: { type: "object" } }),
       tool("work", "Agent commitments, actual controllers, terms, blocks and issue-linked changes, beside current conditions. Bounded reads; no Task or permission inference.", () => this.work()),
       tool("context", "One Question's text versions, requests, approvals, comments, conditions and immutable Brief binding. Legacy questions remain unbound.", args => this.context(args), { question: { type: "object", properties: { scope: { type: "object" }, ask: { type: "integer", minimum: 0 } }, required: ["scope", "ask"], additionalProperties: false } }, ["question"]),
-      tool("change", "One change's exact version: base and integration, this version's reviews with each reviewer's kind, checks, rules, merges, and the linked issues' conditions and decided questions. Bounded reads; it grants no permission.", args => this.change(args), { scope: { type: "object" } }, ["scope"]),
+      tool("change", "One change's exact version: base and integration, this version's reviews with each reviewer's kind, checks, rules, merges, open findings on the finding profile, and the linked issues' conditions and decided questions. Bounded reads; it grants no permission.", args => this.change(args), { scope: { type: "object" } }, ["scope"]),
       tool("since", "Pure read of heads since the explicit local review mark. Repeated reads do not consume changes. To read the next lanes, pass the answer's next as after.", args => this.since(args), { after: { type: "object" } }),
     ] };
   }

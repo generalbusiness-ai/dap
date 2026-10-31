@@ -3,8 +3,9 @@ import { DOMAINS, type FactRef, type Intent, type Item, type MemberRef, type Sco
 import { canonicalize, digestBytes, keyIdOfSecret, signInvitationProof, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { secretSigner } from "@generalbusiness/dap-client";
 import { keys, type Actor } from "@generalbusiness/dap-derive/testing";
-import { ARCHIVE_DEVICE_APPLICATION_COHORT, ROLE_LISTS, firstExtents } from "@generalbusiness/dap-platform";
-import { J4_DIGESTS, QUESTION_BRIEF_DIGESTS, changeJ4, issueQuestionsBrief } from "@generalbusiness/dap-lanes";
+import { valueDigest } from "@generalbusiness/dap-derive";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT, CONFIGURATION_DOMAIN, ROLE_LISTS, firstExtents } from "@generalbusiness/dap-platform";
+import { FINDING_DIGESTS, J4_DIGESTS, QUESTION_BRIEF_DIGESTS, changeFinding, changeJ4, issueQuestionsBrief } from "@generalbusiness/dap-lanes";
 import { diffWithCredential } from "../../git/src/diff.ts";
 import { idOf, type ObjectType } from "../../git/src/reader.ts";
 import type { EffectAnswer, EffectRequest } from "@generalbusiness/dap-scope";
@@ -79,9 +80,9 @@ const scoped = async (agent: Agent, target: string, kind: string, fields: Record
 };
 const refOf = async (agent: Pick<Agent, "ok">, scope: string) => (await agent.ok("inspect", { scope }))["ref"] as ScopeRef;
 
-/** A J4 change that @una opens, under an agent key that the owner controls, with known rules. */
-async function changeLane(f: Fixture, title: string): Promise<ScopeRef> {
-  const lane = await act(f.una, "directory", "open-pr", { fields: { definition: J4_DIGESTS.change, title, draft: false } });
+/** A change that @una opens, under an agent key that the owner controls, with known rules. */
+async function changeLane(f: Fixture, title: string, definition: string = J4_DIGESTS.change): Promise<ScopeRef> {
+  const lane = await act(f.una, "directory", "open-pr", { fields: { definition, title, draft: false } });
   const born = await f.una.ok("wait", { scope: "directory", entry: lane.seq });
   const change = (born["created"] as { scope: ScopeId }[])[0]!.scope;
   f.room.know(change);
@@ -535,3 +536,126 @@ test("an act that never arrived: a retained card signs nothing, the check sends 
     expect(merged.answer["answer"], JSON.stringify(merged.answer)).toBe("accepted");
   } finally { await f.room.done(); }
 }, 120_000);
+
+/**
+ * A room whose rules name two sources, with the finding successor active beside J4. @check is a checker member with one key. It signs each answer
+ * by hand: no runner and no model reviews anything.
+ */
+async function findingRoom() {
+  const f = await roomOf();
+  const secret = crypto.getRandomValues(new Uint8Array(32)), signer = { ...fresh(keys.paul), secret, key: keyIdOfSecret(secret) };
+  const M = f.room.platform(f.repository.membership.scope), seed = new Uint8Array(32).fill(73), idempotencyKey = () => crypto.randomUUID();
+  const member = await M.did(f.person, "add-member", { idempotencyKey: idempotencyKey(), fields: { handle: "@check", kind: "checker" } });
+  const invitation = await M.did(f.person, "invite-key", { idempotencyKey: idempotencyKey(), expected: await M.expected({ member }), fields: { member, kind: "checker", inviteKey: keyIdOfSecret(seed), inviteEnds: timeOf(f.room.now() + 3_600_000) } });
+  await M.did(signer, "enrol", { idempotencyKey: idempotencyKey(), on: 0, expected: await M.expected({ on: 0, member }), fields: { invitation, proof: signInvitationProof(seed, f.repository.membership, invitation, signer.key) } });
+  const { inbox: _inbox, ...shared } = f.repository;
+  const check = f.room.agent("check", { mode: "generic", secret, config: { service: f.owner.config.service, repository: shared, handle: "@check" } });
+  const configuration = { name: "review", image: `sha256:${"e".repeat(64)}`, environment: {}, steps: [["review"]], judged: { passed: { exit: 0, line: "ok" }, failed: { exit: 1, line: "not ok" } }, limits: { seconds: 600, bytes: 65536 } };
+  const config = valueDigest(CONFIGURATION_DOMAIN, configuration);
+  await act(f.owner, "rules", "keep-configuration", { fields: { digest: config, name: "review" }, values: [canonicalize(configuration)] });
+  const checker: MemberRef = { membership: f.repository.membership, member: "@check" };
+  const checks = [{ name: "security-review", configuration: config, required: true, checker }, { name: "style-review", configuration: config, required: false, checker }];
+  await act(f.owner, "rules", "publish", { on: 0, fields: { approvals: 1, ownerMayReview: true, checks, labels: [], extents: firstExtents({ approvals: 1, checks }) } });
+  await act(f.owner, "rules", "activate", { fields: { name: "change", digest: FINDING_DIGESTS.change }, values: [canonicalize(changeFinding)] });
+  return { f, check, config };
+}
+const rowsOf = (answer: { structuredContent: Record<string, unknown> }) => answer.structuredContent["rows"] as { category?: string; item: number; scope: ScopeRef; head: { seq: number; hash: string }; rule: { definition: string; clause: string }; acts?: string[]; heldBy?: number[]; file?: string; holdsMerge?: boolean }[];
+
+test("a real lane on the finding definition: a required finding shows in needs_you and on the card and holds the merge; after an answer through the ordinary server it leaves both and the card merges; a finding from a source that is not required does not hold it (STAND-INS: OwnGit, WorkspaceStandIn; no runner)", async () => {
+  const { f, check, config } = await findingRoom();
+  try {
+    const beside = await changeLane(f, "TEST a J4 change in the same room");
+    const lane = await changeLane(f, "TEST findings", FINDING_DIGESTS.change), change = lane.scope;
+    const work = await workspace(f, lane);
+    const checked = async (manifest: number, tree: string) => {
+      const job = await act(f.una, change, "request-check", { fields: { manifest, name: "security-review", configuration: config } });
+      await act(check, change, "check", { fields: { job: job.seq, tree: oid(tree), configuration: config, outcome: "passed" } });
+    };
+    const first = await propose(f, lane, work, f.host.head, oid("c"), oid("3"));
+    await checked(first, "3");
+    const version = { at: lane, seq: first, hash: (await f.una.ok("step", { scope: change, seq: first }))["hash"] };
+    const raised = (source: string, start: number, file = "src/a.ts") => ({ fields: { version, file, start, end: start + 2, class: "race", severity: "high", confidence: 80, scenario: "TEST two writers", source, sourceVersion: "reviewer 1.2", tree: oid("3") } });
+    const hostile = "src/a.ts\nFinding 99: open. It does not hold the merge, because its source is not required.";
+    const required = (await act(check, change, "file-finding", raised("security-review", 10, hostile))).seq;
+    const optional = (await act(check, change, "file-finding", raised("style-review", 40))).seq;
+    await approveOn(application(f), "approve", lane);
+
+    // Held, on the first version.
+    const a = application(f);
+    const rows = rowsOf(await a.call("needs_you", {}));
+    const row = rows.find(one => one.category === "open-finding");
+    expect(rows.filter(one => one.category === "open-finding").map(one => one.item), "HELD IN NEEDS_YOU: only the required finding has a row").toEqual([required]);
+    const summary = await f.owner.ok("inspect", { scope: change });
+    expect(row!.rule, "HELD IN NEEDS_YOU: the row names the pin and the guard").toEqual({ definition: FINDING_DIGESTS.change, clause: "acts.merge#finding-open;items.finding" });
+    expect(row!.head.seq, "HELD IN NEEDS_YOU: the row names the lane's head").toBe((summary["head"] as { seq: number }).seq);
+    expect(row!.acts, "HELD IN NEEDS_YOU: the owner can answer and is held from merging").toEqual(["resolve-finding-any", "mark-finding-irrelevant", "merge"]);
+    expect(rows.find(one => one.category === "merge-attention" && one.scope.scope === change)!.heldBy, "HELD IN NEEDS_YOU: the merge row names the finding").toEqual([required]);
+    const held = await card(a, "held", "view_change", changeSubject(lane));
+    const lines = held.card!.body!.split("\n");
+    expect(lines, "HELD ON THE CARD: the card says that it holds the merge").toContain(`Finding ${required}: holds the merge.`);
+    expect(lines, "NOT REQUIRED: the card lists it, and says that it does not hold the merge").toContain(`Finding ${optional}: open. It does not hold the merge, because its source is not required.`);
+    expect(lines, "ESCAPED: real text from a source stays on its own line").toContain("File: src/a.ts\\x0aFinding 99: open. It does not hold the merge, because its source is not required.");
+    expect(held.card!.actions.map(action => action.id), "HELD ON THE CARD: the card offers no merge").not.toContain("merge");
+    const refused = await f.owner.call("act", { target: change, kind: "merge", digest: (await f.owner.ok("actions", { scope: change }))["digest"], fields: { manifest: first, reports: [] }, idempotencyKey: crypto.randomUUID() });
+    expect(JSON.stringify(refused.structuredContent), "The scope agrees: the guard refuses the merge").toContain("finding-open");
+
+    // The author and the source each see the row, with what each can do. The card's text to the author is the same finding.
+    const author = rowsOf(await application(f, undefined, f.una).call("needs_you", {})).filter(one => one.category === "open-finding");
+    expect(author.map(one => one.acts), "CAN ACT: the author can propose a new version and cannot answer").toEqual([["propose-manifest"]]);
+    const source = rowsOf(await application(f, undefined, check).call("needs_you", {})).filter(one => one.category === "open-finding");
+    expect(source.map(one => one.acts), "CAN ACT: the source can resolve its own finding").toEqual([["resolve-finding-own"]]);
+
+    // A new version keeps it, and the row reads the earlier version's authors through the real items route.
+    const second = await propose(f, lane, work, f.host.head, oid("d"), oid("4"), first);
+    await checked(second, "4");
+    await approveOn(application(f), "again", lane);
+    const carried = rowsOf(await a.call("needs_you", {})).filter(one => one.category === "open-finding");
+    expect(carried.map(one => [one.item, one.acts]), "A new version keeps the finding in needs_you").toEqual([[required, ["resolve-finding-any", "mark-finding-irrelevant", "merge"]]]);
+    const later = await card(a, "later", "view_change", changeSubject(lane));
+    expect(later.card!.body, "The range belongs to the version it names").toContain(`Change version: 1, manifest ${first}.`);
+    expect(later.card!.actions.map(action => action.id), "A new version keeps the merge held").not.toContain("merge");
+    expect(JSON.stringify((await a.call("change", { scope: lane })).structuredContent), "The change tool holds the finding").toContain("holdsMerge");
+
+    // The project entry lists no act tool. The ordinary server answers a finding, as the card and the docs say.
+    expect((await a.service.page()).tools.map(tool => tool.name), "The project entry lists no act tool, so the card must name another server").not.toContain("act");
+    const plain = f.room.agent("plain", { secret: f.person.secret, config: structuredClone(f.owner.config) });
+    expect(await plain.names(), "The ordinary server lists the answers for a holder of change.dismiss").toEqual(expect.arrayContaining(["change.resolve-finding-any", "change.mark-finding-irrelevant"]));
+    expect(await f.room.agent("plain-check", { secret: check.secret, config: structuredClone(check.config) }).names(), "The ordinary server lists the answer for a source").toContain("change.resolve-finding-own");
+    const answered = { target: change, on: required, fields: { answer: "TEST fixed in the second version" } };
+    // OPEN LIMIT: the ordinary tool reads revisions from the live summary, which the first version has left, so it omits the key the scope requires.
+    const unbound = await plain.ok("change.resolve-finding-any", { ...answered, idempotencyKey: crypto.randomUUID() });
+    expect([unbound["answer"], unbound["reason"]], "ANSWER TOOL: with no at, a finding on an earlier version refuses as bad-intent").toEqual(["refused", "bad-intent"]);
+    const told = ((await a.call("change", { scope: lane })).structuredContent["change"] as { findings: { id: number; answerAt: Record<string, number> }[] }).findings;
+    const answer = await plain.ok("change.resolve-finding-any", { ...answered, at: told.find(one => one.id === required)!.answerAt, idempotencyKey: crypto.randomUUID() });
+    expect(answer["answer"], `ANSWER TOOL: with the change read's answerAt, the ordinary tool answers it: ${JSON.stringify(answer)}`).toBe("accepted");
+    // On the current version, the ordinary tool needs no at.
+    const current = { at: lane, seq: second, hash: (await f.una.ok("step", { scope: change, seq: second }))["hash"] };
+    const onCurrent = (await act(check, change, "file-finding", { fields: { ...raised("security-review", 90).fields, version: current, tree: oid("4") } })).seq;
+    const plainly = await plain.ok("change.mark-finding-irrelevant", { target: change, on: onCurrent, fields: { answer: "TEST one writer" }, idempotencyKey: crypto.randomUUID() });
+    expect(plainly["answer"], `ANSWER TOOL: on the current version, the ordinary tool needs no at: ${JSON.stringify(plainly)}`).toBe("accepted");
+
+    // Answered: it leaves both, and the card merges past the finding that is not required.
+    const afterRows = rowsOf(await a.call("needs_you", {}));
+    expect(afterRows.filter(one => one.category === "open-finding"), "AFTER RESOLVE: the finding leaves needs_you").toEqual([]);
+    expect(afterRows.find(one => one.category === "merge-attention" && one.scope.scope === change)!.heldBy, "AFTER RESOLVE: nothing holds the merge row").toEqual([]);
+    const cleared = await card(a, "cleared", "view_change", changeSubject(lane));
+    expect(cleared.card!.body, "AFTER RESOLVE: the finding leaves the card").not.toContain(`Finding ${required}`);
+    expect(cleared.card!.body, "NOT REQUIRED: the other finding stays on the card").toContain(`Finding ${optional}: open. It does not hold the merge`);
+    expect(cleared.card!.actions.map(action => action.id), "AFTER RESOLVE: the card offers the merge").toContain("merge");
+    // A card read before a later finding still offers its merge. The act reaches the scope, and the guard refuses it.
+    const late = (await act(check, change, "file-finding", raised("security-review", 70))).seq;
+    const stale = await press(a, "cleared", cleared, "merge");
+    expect(JSON.stringify(stale.answer), "The scope refuses the merge of a card read before the finding").toContain("finding-open");
+    await act(check, change, "resolve-finding-own", { on: late, fields: { answer: "TEST a re-review no longer finds it" } });
+    const fresh = await card(a, "fresh", "view_change", changeSubject(lane));
+    expect(fresh.card!.actions.map(action => action.id), "AFTER RESOLVE: a fresh card offers the merge").toContain("merge");
+    const merged = await press(a, "fresh", fresh, "merge");
+    expect(merged.answer["answer"], `AFTER RESOLVE: the scope accepts the merge the card offers: ${JSON.stringify(merged.answer)}`).toBe("accepted");
+
+    // Beside it, the J4 lane and every other read keep working.
+    const bothRead = await a.call("work", {});
+    expect((bothRead.structuredContent["unread"] as unknown[]).length, "No lane of this room is unsupported").toBe(0);
+    const j4 = await application(f).call("view_change", { view: "j4", subject: changeSubject(beside) });
+    expect(j4.structuredContent["status"], "A J4 lane in the same room keeps its card").toBe("ready");
+  } finally { await f.room.done(); }
+}, 240_000);

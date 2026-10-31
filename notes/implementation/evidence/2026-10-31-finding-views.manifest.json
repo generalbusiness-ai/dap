@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint, which includes main b686862e. The gap run ran at 76cac675 and the controls at 6ed502a5. No Worker, browser host or real room ran.",
+  "directory": "2026-10-31-finding-views",
+  "checkpoint": {
+    "commit": "2055112de2dc0ac23f76a6786f1870c4030c31a4",
+    "tree": "4a0f905ddd7f1d257ec5c30a644eb2c5560e09d2"
+  },
+  "fileCount": 72,
+  "files": [
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6518,
+      "sha256": "f68174f08213cc6dd76925ea8ea066989226797376b3e10c9073a12d5822407b"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gap/gap-run.log",
+      "bytes": 8590,
+      "sha256": "b242877bdc0f68a73eb60e49cc0fe2d30d9849ac81914c68d6fed5dc4de6aa39"
+    },
+    {
+      "path": "controls/controls.txt",
+      "bytes": 1618,
+      "sha256": "f8ba47ddf0750361c406bd9bb9bc0456248f46c3ddcfd6d079982febb2775594"
+    },
+    {
+      "path": "controls/run-controls.mjs",
+      "bytes": 7342,
+      "sha256": "d5d71fe2fab1c181905a7ca5c6ff3e97e8bd63e08b004ec9ff30c74234299511"
+    },
+    {
+      "path": "controls/control-c1-needs-you-omits-the-finding.log",
+      "bytes": 1942,
+      "sha256": "d881dda2a455112de7c1cde0fcb88e4723eddeffc5d6da2b619b9f937775e11f"
+    },
+    {
+      "path": "controls/control-c2-card-omits-the-findings.log",
+      "bytes": 2078,
+      "sha256": "962ca942d31153886ced4ad8b25a987072f497b056e9a775b0fe61000e431db5"
+    },
+    {
+      "path": "controls/control-c3-card-offers-a-held-merge.log",
+      "bytes": 1194,
+      "sha256": "55e0d6b2192b67cb9f872395c1b4f785156b7610b57b93d2feab626c44fde804"
+    },
+    {
+      "path": "controls/control-c4-merge-row-names-no-finding.log",
+      "bytes": 1223,
+      "sha256": "c185f899a692f261be18934d9dc3995b76de1aad4f832351f5ab69c70560da64"
+    },
+    {
+      "path": "controls/control-c5-real-lane-no-row.log",
+      "bytes": 12026,
+      "sha256": "dbaf5b4391556e6922e25797a4fcf3ac06f5ae8f759cf8c54cdeff9290d09f0d"
+    },
+    {
+      "path": "controls/control-c6-real-lane-card-offers-a-held-merge.log",
+      "bytes": 11321,
+      "sha256": "8f87667351ee8d88b1c98f1912f39aa9c6239349f53f0ae95f120a9d2e26e413"
+    },
+    {
+      "path": "controls/control-c7-needs-you-keeps-a-resolved-finding.log",
+      "bytes": 1814,
+      "sha256": "36ec5e49efb01cd1a0c713a98af0796cf7fc268e4e2afced1033e213d22b28c8"
+    },
+    {
+      "path": "controls/control-c8-card-keeps-a-resolved-finding.log",
+      "bytes": 1388,
+      "sha256": "1472670f6e360cdbf2cf51ba29015ac1499b7f2bbbe05da919ca42ff29876c05"
+    },
+    {
+      "path": "controls/control-c9-merge-never-offered-on-the-profile.log",
+      "bytes": 1435,
+      "sha256": "5e3faee631c1c90bcb4a4b290e6e475c4dea04d12481e0a730abf79bef5534cb"
+    },
+    {
+      "path": "controls/control-c10-real-lane-merge-never-offered.log",
+      "bytes": 11881,
+      "sha256": "961f1332beac43792f86d9df3c9f01f7d99dd1bb9f2386e760cefddf40302461"
+    },
+    {
+      "path": "controls/control-c11-any-source-reads-as-required.log",
+      "bytes": 1202,
+      "sha256": "0e198f1b739dc570c3ae6a8bfac839b2074793bb037af6a969d8d06c0cacd8e7"
+    },
+    {
+      "path": "controls/control-c12-real-lane-any-source-reads-as-required.log",
+      "bytes": 11992,
+      "sha256": "4f1308c8715aa387dafe445bcc58923d3322c8728bc0140b5e4ac8ab9da6bfca"
+    },
+    {
+      "path": "controls/control-c13-card-says-every-finding-holds.log",
+      "bytes": 1369,
+      "sha256": "2748eccf9eccefb87c280b620b62f09d4fe4925c105e0fbc1a272060482ba1f0"
+    },
+    {
+      "path": "controls/control-c14-j4-context-gains-findings.log",
+      "bytes": 1106,
+      "sha256": "af2cf1b3571ed25f61578a9c39f5933ce8e3548760d22aa1a02ad719d1830d62"
+    },
+    {
+      "path": "controls/control-c15-j4-reads-as-the-finding-profile.log",
+      "bytes": 1112,
+      "sha256": "ea532029fd95b847be8ee56e68eecbafb989abce79ea7b2409619f67c303fdd5"
+    },
+    {
+      "path": "controls/control-c16-j4-change-read-gains-the-pin.log",
+      "bytes": 1053,
+      "sha256": "e1c2af797d27f773166e321811333c99bbb08ea94581de2d6fc8c6d28f3f926c"
+    },
+    {
+      "path": "controls/control-c17-any-change-pin-reads.log",
+      "bytes": 1374,
+      "sha256": "8e34ea5bdbc29d74e38b3f189ddcd3a3555778c373af63bbd18e59b5cd4e523e"
+    },
+    {
+      "path": "controls/control-c18-the-finding-pin-is-refused.log",
+      "bytes": 2324,
+      "sha256": "1d8730f69338b55a5fe478044509ac2fb956f0d676a2f1469b676a0a357b7e44"
+    },
+    {
+      "path": "controls/control-c19-controls-reach-the-card.log",
+      "bytes": 1241,
+      "sha256": "a43cae630f3bde2735450067dafd3513a5b0bbb32a7204fbab896750dd8354fb"
+    },
+    {
+      "path": "controls/control-c20-bidi-reaches-the-card.log",
+      "bytes": 1339,
+      "sha256": "731092404a71018ec6c5ceb5a972b88ea33181d03064cd0966be39f7fe0d4de6"
+    },
+    {
+      "path": "controls/control-c21-the-opener-can-answer.log",
+      "bytes": 1449,
+      "sha256": "61ebcd786d2bd2f44f8100fc410c91e437e4c5285a7c2c63e1bfe8b0fa3ee4e9"
+    },
+    {
+      "path": "controls/control-c22-every-viewer-has-a-row.log",
+      "bytes": 1436,
+      "sha256": "17fc4a415b2a653ced75884274ddfcd37b42d6544c1ff4cb1913060bbeff5b04"
+    },
+    {
+      "path": "controls/control-c23-earlier-version-not-read.log",
+      "bytes": 1310,
+      "sha256": "2e8a0c6b40a6f1bcd722df752742ed335b1b3130119494c43563d6a9b7916e25"
+    },
+    {
+      "path": "controls/control-c24-answer-at-omits-the-earlier-version.log",
+      "bytes": 13041,
+      "sha256": "ed2bc41f5847c090515a3a8d455a25bfc6fc4fa7fe25b34fee664b6f8c8679cb"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 7159,
+      "sha256": "5cd97fc2a4d8d3b6ad3e7ce84a0c6e5eff8268042778abc1a1ca44eaf1f1e12e"
+    }
+  ]
+}
