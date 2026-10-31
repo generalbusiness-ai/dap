@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5d7a280dc550893ebdb52948f41e1019e3176e3b","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/definitions/issue-questions-brief.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:610d2903150b7e2b77e20acb2c89c29200a1ea8b","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/view-sessions.test.ts."}
