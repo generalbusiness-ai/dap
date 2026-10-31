@@ -6,11 +6,11 @@ checker. Each identity has its own private home. The script does not use a
 previous room's signing key.
 
 The source is the S1 implementation tracked by gitseq request `449c58c7`.
-The adopted compatibility ruling is `2a9ec821`. J4 source landed at
-`5dc9765f`. Before running this script, the planner deploys all three
-Workers from that source, waits for Durable Object turnover, and records
-the actual Worker version. Source landing alone does not establish a live
-deployment or a completed witness.
+The adopted compatibility ruling is `2a9ec821`. Run this script against a
+Worker at `112eff12` or later, because earlier Workers cannot resolve a
+real room's repository lineage and every head operation ends unknown. Before
+running this script, the planner records the actual Worker version. Source
+landing alone does not establish a live deployment or a completed witness.
 
 ## Prepare the inputs
 
@@ -56,6 +56,10 @@ This is the one setup script. It runs creation through first-key in one
 CLI invocation, within the founding window. It uses the existing register;
 it does not install another register or change Worker settings.
 
+To run one phase at a time, pass its name to `--phase` instead of `all`,
+with a new diagnostics directory for each command. Phases run in the order
+of `setupPhases` in [setup.ts](setup.ts).
+
 The script prints only a phase, its status and any accepted native fact.
 Invitation links, signing material, credentials and full SDK answers stay
 in the private identity homes. Do not copy those files into the workroom,
@@ -86,6 +90,10 @@ continue that phase:
 ```sh
 node examples/repo-in-ai/setup.mjs --input /absolute/path/to/s1-input.json --phase manifest-stage --mode continue --diagnostics /absolute/public/NEW-continue-diagnostics
 ```
+
+An enrollment can stop at stage `invitation-result` with cause `unknown`
+after its invitation succeeded. Its `check` then stops at stage `receiver`,
+and `continue` completes that enrollment from the retained handoff.
 
 `continue` uses the same retained envelope and deadline. It never replaces
 a missing key or original. A missing original, changed scope incarnation,
