@@ -2,9 +2,9 @@
 
 Status: design for J1 ([plan 032](plans/032-2026-10-17-journey-as-acceptance-target.md), section 2b). Nothing here is built, and no case or witness here has run. Code citations hold at main `b686862e`.
 
-Ana comments on an issue from her laptop. The page signs the act and sends it. The reply never comes, and then the laptop's battery runs out. Ana opens the room on her phone and wants to know one thing: did the comment land?
+Ana comments on an issue from their laptop. The page signs the act and sends it. The reply never comes, and then the laptop's battery runs out. Ana opens the room on a phone and wants to know one thing: did the comment land?
 
-Today nothing can tell her. The page says "this page does not retain it" (`apps/room/page/src/view.ts:222`), and the signed request went with the laptop's memory.
+Today nothing can tell Ana. The page says "this page does not retain it" (`apps/room/page/src/view.ts:222`), and the signed request went with the laptop's memory.
 
 J1 keeps a copy of the request where the phone can reach it. This note uses three terms:
 
@@ -103,7 +103,7 @@ The last row is the copy's one power. It can finish only the act that the signer
 
 ## 5. The scope's answer ends the copy
 
-J1 reuses the route of S6 (`apps/views/README.md:109-119`, `packages/mcp/src/service.ts:1009-1016`):
+J1 reuses the route of S6 (`apps/views/README.md`, "Change card", and `packages/mcp/src/service.ts:1009-1016`):
 
 1. The page asks the settle route (`packages/scope/src/core.ts:795-810`).
 2. If the scope holds no entry, the page shows the time to press again, `notAfter` plus `EXPIRY_MARGIN_MS` (`service.ts:190`). That constant moves to the client package, and both callers use it.
@@ -126,10 +126,10 @@ These rules complete the route:
 
 The copy never lived on the lost device.
 
-- **Ana holds another key.** She settles the request from it. The lost key stays active until someone revokes it.
+- **Ana holds another key.** Ana settles the request from it. The lost key stays active until someone revokes it.
 - **Someone revokes the key.** The `revoke-key` act needs `membership.manage` or the recovery key (`membership.ts:508`). The member can still read that key's copies. A landed act still returns its first entry, because the judge looks there first. An unlanded act is refused. Either answer ends the copy.
 - **A thief holds the device.** The thief can sign until the revocation, and the copy adds nothing to that. The copy routes refuse the revoked key at once, because they read standing from the head. The thief's session can read other scopes for up to 600 more seconds (`sessions.ts:45-48`).
-- **Ana held only that device.** An admin invites a new `device` key for the same member. The new key reads her open copies within the seven days. The recovery key does this when she was the last admin. A person invitation creates a new member, who reads nothing.
+- **Ana held only that device.** An admin invites a new `device` key for the same member. The new key reads the open copies within the seven days. The recovery key does this when Ana was the last admin. A person invitation creates a new member, who reads nothing.
 - **The time bound passed, or the member was removed.** No one reads the copy. The journal still holds any act that landed.
 
 A copy restores no key and no standing.
@@ -144,7 +144,7 @@ J1 needs no kernel change. It meets none of the conditions in [`docs/kernel.md`,
 - It needs no new `platform:membership` version. The table sits outside the fold, and `invite-key`, `enrol` and kind `device` exist.
 - `docs/kernel.md` section 7.1 does not hold J1, because J1 adds no tool family and no new entry kind.
 
-The section 7 of `notes/plans/032-2026-10-17-journey-as-acceptance-target.md` lists draft changes and holds no route. If a review finds that J1 needs a contract export, J1 follows `docs/kernel.md` section 7.
+[Plan 032](plans/032-2026-10-17-journey-as-acceptance-target.md) section 7 lists draft changes and holds no route. If a review finds that J1 needs a contract export, J1 follows `docs/kernel.md` section 7.
 
 ## 8. Test and witness
 
