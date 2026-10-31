@@ -42,17 +42,17 @@ The request's five witnesses map to these cases. All seven passed in the gate at
 | Check | Command | Exit | Digest |
 |---|---|---|---|
 | Gate at the checkpoint: 3213 plain and 896 native tests passed. The test step took 1355.5 s in one observed run, while other work shared the machine. A first gate at `92e34569` stopped when main moved, and its logs are in `stopped-main-moved` | `npm run gate` | 0 | `0a28d969adbb7f261c414bb2db0c38d9a7b321a7010761f901ebb4f1aa79082f` |
-| Diff owner: 3 passed, at `61ff4367` | `vitest run packages/git/test/diff.test.ts` | 0 | `f7e0ced70a849f150ea38275f47c8466d794e2cbb224c321d2a0d15d6aee5a47` |
-| Change card owner: 6 passed, at `932f0cac` | `vitest run --project scope packages/mcp/test/change-view.scope.test.ts` | 0 | `675e9619dcd2720903a9d16ce7993fa60d80719d0916f4743721621946d1df7a` |
+| Diff owner: 3 passed, at `61ff4367` | `vitest run --project git test/diff.test.ts` | 0 | `f7e0ced70a849f150ea38275f47c8466d794e2cbb224c321d2a0d15d6aee5a47` |
+| Change card owner: 6 passed, at `932f0cac` | `vitest run --project scope ../mcp/test/change-view.scope.test.ts` | 0 | `675e9619dcd2720903a9d16ce7993fa60d80719d0916f4743721621946d1df7a` |
 | MCP plain owners, 11 files: 80 passed and 1 skipped, at `932f0cac` | `vitest run --project mcp` on those files | 0 | `654ab64ca60cb5ac0a90ca4c0db58e285bb31de66afceb716c2fe1065aab1ab3` |
 | J4 workspace, room, captured revisions and card actions: 5 passed, at `61ff4367` | `vitest run --project scope` on those files | 0 | `d48369be9f80229f1048d4fc4d5953b8d92c0e7abc12f5ed4412a3b16e0c2a5a` |
-| Views Node owner: 11 passed, at `61ff4367` | `node --test apps/views/test` | 0 | `4b6dc6f7c25cdb408ee7e7284808c0ca5f39c118983195ae1dc9fc176a80b845` |
+| Views Node owner: 11 passed, at `61ff4367` | `node --test apps/views/test/decision.test.mjs apps/views/test/s4.test.mjs` | 0 | `4b6dc6f7c25cdb408ee7e7284808c0ca5f39c118983195ae1dc9fc176a80b845` |
 | Active source: 12 passed, at `61ff4367` | `node --test scripts/active-source.test.mjs` | 0 | `d2fa9f062f4f387322c2d203f5c87c2ce3b9261026665826fd46c1b78992bb43` |
 | Security entry points: 10 passed, at `932f0cac`. No route, method or gate class changed. The seals of `hosted-tools.ts` and `service.ts` moved, and three named seals are new | `node --test scripts/security-entry-points.test.mjs` | 0 | `62238b7498448dc84b9382897d351ad8974355f320ad58cf193c77ab8d3e0554` |
 | Control C1: the service ignores `at`. Witness 1 is refused as an invalid intent, not `revision-moved` | `scripts/control.mjs` | 0, distinguishes | `2cf2077354dd4fe286743cbdf20e140e2259895be9876d53b45840569739e6d9` |
 | Control C3: the service ignores `at`. The Decision card is refused `stale-question`, not `revision-moved` | `scripts/control.mjs` | 0, distinguishes | `0c8f3f9a469191945487241eda75c945c67b975732500bc2bb5ae05b4016260e` |
 | Control C4: S4's local compare returns. The Decision card stops locally | `scripts/control.mjs` | 0, distinguishes | `04b5e9c950e789a68339498b3c1310f76b66d1ef10713e6e7f8e0828a8375ff3` |
-| Control C2a: no allowance for `on`, before commit `a0f492dc`. It survives, and that commit added the case that catches it | `scripts/control.mjs` | 0, survives | `98c3e6b11705b1a0a99f16e95ac0033d93efb4c85454e810bc1270445381e3d2` |
+| Control C2a: no allowance for `on`, before commit `a0f492dc`. It survives, and that commit added the case that catches it | `scripts/control.mjs` | 1, survives | `98c3e6b11705b1a0a99f16e95ac0033d93efb4c85454e810bc1270445381e3d2` |
 | Control C2b: the same fault after `a0f492dc`. The Decision card signs nothing | `scripts/control.mjs` | 0, distinguishes | `636aa1c6d193aac62669e3c68f943795ac9c0390f5390b65c37542ee3c3c51cb` |
 | Control C2c: a final `also` subject is not allowed. Witness 1 fails with a local shape error | `scripts/control.mjs` | 0, distinguishes | `5d7e0eabf88f18fb395594dbb389ccfeb7347fdcedf8792235416fac5e71e25b` |
 | Control C2d: a computed name is allowed. `shape.test.ts` fails | `scripts/control.mjs` | 0, distinguishes | `3015ea6bb88c4d413dce4eba0a7a4afe1f9809d8eeb98e9c6bf82e781209d234` |
@@ -66,7 +66,7 @@ The request's five witnesses map to these cases. All seven passed in the gate at
 | Control C14: the diff is never truncated. Witness 4 fails | `scripts/control.mjs` | 0, distinguishes | `fb4d079b09061fce8175e41dcddf78eb67b90f5e3cea3436c09a4ff434e390a4` |
 | Control C15: the card's `at` goes unchecked. `view-sessions.test.ts` reads "ready" where it expects "unavailable" | `scripts/control.mjs` | 0, distinguishes | `346e046402b50e049f16a496e052501c60024e9edd1139fc139d886e91cd9055` |
 | Control C16: the card's `at` overwrites the action's. `view-sessions.test.ts` fails | `scripts/control.mjs` | 0, distinguishes | `e5022e7a3126cfe6c2db8681455df28dc1b35a8fcf70db391bfbb8694430df70` |
-| Control C17, by hand: the import guard widens. The active-source case fails | edit, `node --test`, restore | 0, distinguishes | `5f4e5722d76583f5625e984eb2c9f6a269544a5193097b5b750fcbc66ed723ec` |
+| Control C17, by hand: the import guard widens. The active-source case fails | edit, `node --test`, restore | One of 12 failed by an assertion. The file records no exit code | `5f4e5722d76583f5625e984eb2c9f6a269544a5193097b5b750fcbc66ed723ec` |
 
 The retained file for C9 is not evidence. Removing the merge guard from the definition moved its digest, so setup failed and the tool's word says nothing about the guard.
 
