@@ -24,6 +24,6 @@ Call wait on the question item and type ask, states ["decided"], with seconds at
 
 After a decision, read the exact decide entry and the current conditions. A question decision does not revise commitment terms. The owner must revise conditions and make a new offer when terms change. Accept that offer naming its exact new termsAt fact. Release your old block with its own commitment and the matching decide fact. Keep old commitments and terms distinct. Propose through the maintained change tools or dap propose, linking the issue. Do not report fulfilled without a recorded fulfilment.
 
-In a fresh session, keep the same member key and existing room configuration. Reconstruct your commitment, block, question, terms and decision from room reads alone. Do not rely on conversation memory or a saved item list. Resume only the next supported step. A different key or member is not a handover, and this prompt never transfers work. See examples/repo-in-ai/agents.md.` } }],
+In a fresh session, keep the same member key and existing room configuration. Reconstruct your commitment, block, question, terms and decision from room reads alone. Do not rely on conversation memory or a saved item list. Resume only the next supported step. A different key or member is not a handover, and this prompt never transfers work.` } }],
   };
 }
