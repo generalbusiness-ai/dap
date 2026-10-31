@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ae7f90d6b2f3ed5a4c9a8438bd77219a6f4f6bd7","text":"Merge retired a covered predecessor; the successor is at examples/commons-bill/run.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b1d175719327e3e29debbcb6abbcc838d291f1e2","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/creation-admission.test.ts."}
