@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:100a30aa27fda0a79e658c72bad455070161538f","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/http.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:19d54bdae3077aca78e34f9308f5fe02328aee75","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-31-s5-agent-wait-resume.manifest.json."}
