@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5accc1d2ab86f7d85f395106c6d30bd98c4622c7","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-31-enrol-stop.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5ce23a4b1c4d3636ae933317bed73b2949fd93b8","text":"Merge retired a covered predecessor; the successor is at examples/repo-in-ai/test/identities.test.ts."}
