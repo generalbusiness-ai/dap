@@ -696,7 +696,7 @@ parser, failure behavior, health visibility, and other readers.
       "readers": [
         "packages/mcp/src/hosted-tools.ts"
       ],
-      "parser": "Optional JSON array, at most 1024 characters, known distinct generic names, no more than 18 items.",
+      "parser": "Optional JSON array, at most 1024 characters, known distinct generic names, no more than 20 items.",
       "missing": "Uses narrow hosted defaults: create/install_application/credential/diff/prepare/join/record omitted.",
       "invalid": "Malformed, duplicate, unknown or oversized list closes the endpoint.",
       "health": "Not reported."
