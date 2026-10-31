@@ -1,6 +1,6 @@
 # Keep a stream opening's Request until its abort check
 
-Status: source implementation. The gate passed at `731bbfd8`. Checker review and landing are owed.
+Status: landed at `e3e65a0b`. The gate passed at `731bbfd8`. The change needs no deployment before J4 closes.
 
 Request `2fd85d189012944771ed490d69846b6de665bfb4` and promise `a001b0fe0acbc9f8a96eeeb4563e05b427a36710` own this head. Report `5901440f84e109b42a342cae8abafb0369bd24e4` gave the diagnosis to the planner.
 
