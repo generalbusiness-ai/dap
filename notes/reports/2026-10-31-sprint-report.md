@@ -3,11 +3,11 @@
 Status: landed; describes work that is done.
 
 The sprint ran from 17:00 on 30 October to 17:00 on 31 October. Sixteen
-heads landed on `main`. A person can now create a room on a deployed
-Worker, seed it, work in a provisioned fork, have an agent's review
-refused, review as the owner, merge, publish, and clone the published
-result. One scratch room did all of that today. The J4 live witness
-reached the end of its setup phase on the real provider. The three room
+heads landed on `main`. One scratch room on a deployed Worker was
+created and seeded, worked in a provisioned fork, had an agent's review
+refused, took the owner's review, merged, published, and matched a fresh
+clone. The script that does this has not landed, so a person cannot run
+it from `main` yet. The J4 live witness reached the end of its setup phase on the real provider. The three room
 Workers were deployed once. The cost-of-change review is below.
 
 ## Story: the first complete repo-in-AI room
@@ -21,8 +21,9 @@ confirmed revoke.
 
 This is one scratch run. One enrollment step stopped on its first try
 for a reason nobody has found, and the runbook's continue path closed
-it. A real room can meet the same stop. The whole slice is in review
-and has not landed.
+it. A real room can meet the same stop. The whole slice has not landed.
+Its review requests changes to the runbook and the note, with no change
+to the code.
 
 ## Story: a repair found by reading, then proved live
 
@@ -38,9 +39,10 @@ failed and the head ended unknown without reaching the provider.
 The repair reads both facts and binds them. Its test builds the lineage
 through the real register rules, and forged-claim and unselected-outcome
 cases are refused. The same head adds fixed-stage diagnosis at the
-places that absorbed failures. A review of that head found that the
-diagnosis read an error's name twice, so a crafted error could pass the
-allowlist and return other text. That was fixed before landing.
+places that absorbed failures. The first approval of that head missed
+that the diagnosis read an error's name twice, so a crafted error could
+pass the allowlist and return other text. The builder found it before
+landing, and it was fixed with a new gate.
 
 After deployment, four head and fork operations in the J4 room were
 confirmed on their first attempt, and the third S1 room passed the same
@@ -94,8 +96,8 @@ The change lane has a new definition with a finding item: file, range,
 class, severity, confidence, failure scenario, source and version. A
 merge guard refuses while a finding from a required source stays open. A
 finding is review input and never counts as a person's approval. No view
-shows findings yet, and a room on this definition would lose its change
-cards until the view change lands.
+shows findings yet. By reading the code, a room on this definition would
+lose its change cards until the view change lands. Nobody has run that.
 
 ## Story: rooms that share notes
 
@@ -199,8 +201,9 @@ have cut it, and whether to revisit.
 - A question names its brief by digest in the record, and that brief stays
   fixed for the life of the question (`2c938074`).
 - Lane history for a decision card reads up to 512 entries (`4a276240`).
-- Approved source lands when it is ready, and deployment waits for the
-  witness (`f71e8a29`).
+- Approved source lands when it is ready (`f71e8a29`). The deployment
+  at 06:01 replaced that ruling's hold on deploying, and the Workers have
+  been held at `112eff12` since then until J4 closes.
 - One try per scratch room, and no resume design (`2e2ccb6b`).
 - Native retries run on fork, and head waits a stated window (`8f2f7140`).
 - Holds that end are retaken in the same room, and the mint, push and end
@@ -224,15 +227,17 @@ have cut it, and whether to revisit.
 | `d711f37d` | builder | finding item; landed |
 | `e63f921c` | builder | hosted loop reads; landed |
 | `f0bdea6f` | builder | head outcome recovery design; landed |
-| `ca74f78b` | builder | reach omitted lanes; changes requested |
+| `ca74f78b` | builder | reach omitted lanes; landed after the sprint |
 | `eb4da1f1` | builder | views for the finding item; open |
 
 ## In progress
 
 - J4 later phases: source V13, not frozen. The room, policy and enrolled
   agents stand. Nothing after setup has run live.
-- Whole S1 head: in review.
-- Omitted lanes: one change requested, on the Work card.
+- Whole S1 head: changes requested on the runbook and the note, with no
+  change to the code.
+- Omitted lanes: one change requested at 17:00. It landed after the sprint
+  ended, at 17:17 (`76cac675`).
 
 Owed after J4 closes: the deployment, a hosted agent running the loop,
 the S2 render against a real room, the Commons Worker and its witness,
@@ -247,6 +252,9 @@ and deletion of the leftover forks.
   it before anything ran.
 - Setup source V10 departed from a ruling on fork attempts, because the
   ruling was not read before the work began. The checker caught it.
+- The checker's first approval of the lineage head missed the double read
+  of an error's name. The builder found it, and the checker corrected its
+  approval.
 - The workroom resident was found down at 09:30 and restarted. Its cause
   is unknown.
 - Two landing subjects passed 100 code points, at 147 and 588. Landings
@@ -260,6 +268,6 @@ and deletion of the leftover forks.
 - Run the J4 later phases, once V13 is adopted, and close the witness.
 - Deploy `main` after J4 closes, and run a hosted agent through the loop.
 - Review and land the whole S1 head, then decide the real room.
-- Land omitted lanes and the views for the finding item.
+- Land the views for the finding item.
 - Half-hourly surveys; the daily report at 17:00; the worktree sweep after
   it.
