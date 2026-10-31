@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/mcp/test/support/views-host.ts","body":{"commit":"9ad5ae93714bb09b69d99d65c7c9f1d612779b87","path":"packages/mcp/test/support/views-host.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9a5b5d34b371ab3bf977858607eecf300a46072d","text":"Replaced by the review request for exact head 9a835622862172c98d6e44316d234161067ad4da; any review promised on this request is released, and a verdict filed against it would bind to nothing."}
