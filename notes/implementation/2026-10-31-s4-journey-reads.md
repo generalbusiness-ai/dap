@@ -1,132 +1,132 @@
 # S4: bounded room reads and a local review mark
 
-Status: integrated source; one final full gate passed at
-`399269c7a42eeee72f2d289abf0eb5fc98bf7c37`, tree
-`576a5010ea44e6dd48e8a62e19cac41b2a8f0d6b`.
-Implementation commit `3fd9cc28bf9f68d2f9afafc2191abdff3a3bf336` joins
-S4 A8 and landed Main `112eff124e7a51d2ebdd2d100ae24b52d03848ac`.
-The original S4 branch remains at A8. Exact-head review remains pending.
-Seven evidence collections are sealed; the later documentation tail changes no
-production code.
+Status: focused checks passed at c49e31cf1cbf6e8ee957e2b45693c2f3c8856e30, tree
+ecd3eddc9f332559a0a86d04d6b4f1a2e0896173. Gate 4 and review remain pending.
+Gate 3 covers historical 399269c7, not these repairs; all 62 old rows and the
+first repair failure stay exact. Real S1 rendering remains owed.
 
-The first 61 rows preserve historical results at their own checkpoints; row 62
-records the integrated gate.
-Neither failed ordinary gate becomes a pass. The incomplete Native capture
-stays inconclusive; the directed V5 Native completion passed at A8. Those
-results do not establish coverage of the new Main production changes. The
-older documentation-only reconciliation and isolated-test follow-up do not
-apply to this integration. S1-room rendering and live acceptance remain owed.
+## Changes and boundaries
 
-## Behavior and boundaries
+`apps/views` adds four bounded MCP reads and a Decision card over Question
+records. Reads bind the active key, MemberRef, controller and full scope
+incarnation. Membership8 and Membership9 with flat Directory16 and Directory22
+are supported; unknown profiles and partitions are not. The eight-scope
+allowance includes Membership, Directory and at most six lanes.
 
-S4 adds `apps/views`, four bounded MCP reads and a Decision card over actual
-Question records. Authenticated reads bind the active viewer key, MemberRef,
-controller and full scope incarnations. Supported families are Membership8
-and Membership9 with flat Directory16 and Directory22. Unknown profiles or
-partitions remain unsupported. Each collection counts all support scopes in
-its eight-scope limit: Membership, Directory and at most six lanes.
+Limits: 50 output rows, 512 live items, 512 distinct whole-lane history entries
+including genesis, 16 pages and 64 HTTP attempts. Each request gets five
+seconds; a collection gets twenty. Replies cap at four MiB, aggregate bytes at
+sixteen MiB. Omissions and unread totals stay explicit. Observed heads form a
+vector, not an atomic cut. The default fetch owns redirect refusal, abort,
+deadlines and byte bounds; an injected fetch is trusted. No hostile port
+cancellation or physical drain follows.
 
-Limits remain 50 returned rows, 512 live items, 50 sealed history entries,
-16 pages and 64 HTTP attempts. A request has a five-second deadline; a
-collection has twenty seconds. Replies are bounded to four MiB and aggregate
-bytes to sixteen MiB. Changed heads, omissions and unavailable totals stay
-visible. A collection is a vector of observed heads, not an atomic room cut.
-The default fetch owns redirect refusal, abort, deadline and byte bounds. An
-injected fetch port is trusted; these tests prove no hostile-port cancellation
-or physical process drain.
+`needs_you` names the pinned clause, item, full ref and head. Assignment is not
+permission. `work` shows actual agent controllers, terms, conditions, blocks
+and exact Change links; it invents no Native Task or controller authority.
+`context` resolves body positions through contiguous canonical, hash-checked
+history. Missing bytes, gaps, changed heads and required unread scopes prevent
+complete context.
 
-`repo-in-ai.ts` implements `needs_you`, `work`, `context` and `since`.
-Attention identifies the pinned declaration/source clause, item, full ref and
-head. It distinguishes a request or assignment from permission. Work shows
-actual agent controllers, commitment terms, conditions, blocks and exact
-Change links. It invents no Native Task or agent authority for a controller.
-Context resolves local `bodyAt` positions through contiguous canonical,
-hash-checked entries into full FactRefs. A missing body, history gap, required
-unread scope or changed head prevents complete context.
+Decision uses the existing native approve/decide path, captured text version
+and expected revision. An accepted receipt's full scope and head minimum
+reaches the next summary and refuses an older coherent cut. Authority and read
+admission precede that barrier. The local mark rechecks the displayed cut and
+heads, then publishes after synchronous final admission. It signs no act,
+creates no native fact, receipt, credential or custody row, and never erases or
+fabricates a retained receipt. Pure `since` repeats new heads until a mark.
 
-Decision uses existing native approve/decide paths with the captured Question
-body version and expected revision. The accepted receipt's full scope and
-head minimum reaches the next authenticated summary; an older coherent cut
-refuses. Native authority and read admission precede that barrier. The local
-mark action rechecks the displayed cut and heads, then publishes through
-synchronous final admission. It signs no native act and creates no Native
-fact, receipt, credential or custody row. It neither erases nor fabricates a
-retained native receipt. `since` remains a pure read: repeated reads show the
-same new head until an explicit local mark.
+`review-store.ts` binds one owner-only DAP_HOME file to service, Directory,
+viewer key and MemberRef, incarnation and head; caps are 64 heads and 32 KiB.
+Rollback, conflicting equal-sequence hashes, links, uncertain locks and
+overflow refuse. Duplicates and restart preserve the mark. Before rename,
+failure preserves prior bytes; after rename, flush or readback failure may
+leave a visible mark with uncertain durability. Stop without automatic repeat
+or Native fallback. Marks cover displayed heads, not all bodies or history.
+Omitted scopes make the collection incomplete and prevent Mark reviewed.
 
-`review-store.ts` keeps one owner-only file under DAP_HOME, bound to service,
-Directory, viewer key and MemberRef, full incarnation and head. It caps marks
-at 64 heads and 32 KiB. It rejects rollback, conflicting equal-sequence hashes,
-links, uncertain locks and overflow; duplicates and restart retain the same
-mark. A pre-publication failure keeps the prior bytes. After rename, directory
-flush or readback failure can leave the new mark visible with uncertain
-durability. That result stops for inspection without automatic repeat or a
-Native fallback. A later entry remains new. The mark covers displayed heads,
-not omitted scopes, every body, all history or an atomic room snapshot.
+The trusted `read-tools.ts` catalogue keeps bounded immutable descriptors,
+static listing and watch without inventory; ordinary services keep their
+catalogues. Annotations grant no authority; native actions retain service
+admission and the signed engine, without generic act registration.
 
-The trusted local catalogue in `read-tools.ts` supplies bounded immutable tool
-descriptors and static list/watch checks without a room inventory. Its
-annotations grant no native authority. Ordinary services retain their
-catalogue. Native Decision actions keep the service admission and signed
-request engine; S4 adds no generic native-act registration.
-
-The opt-in `issue-questions-brief` profile uses existing digest fields, guards
-and effects. `ask` records one required Brief digest. `revise-ask` can omit its
-comparison or repeat that digest; it cannot replace it. A different Brief
-requires a new Question. Historical S3 bytes and pins remain unchanged and
-read as Brief-unbound. Approval names the Question text, not the Brief or
-conditions. No kernel contract, judge, capability or historical pin changes.
+The opt-in `issue-questions-brief` uses existing digest fields, guards and
+effects. `ask` pins one Brief. `revise-ask` can omit or repeat it; replacing it
+requires a new Question. Old S3 bytes and pins stay unchanged and
+Brief-unbound. Approval concerns Question text, not Brief or conditions. No
+kernel contract, judge, capability or historical pin changes.
 [Kernel section 7](../../docs/kernel.md#7) remains the review boundary.
 
-`package-brief.ts` serves one fixed, non-executable `text/plain` resource at
-`dap://package/brief`: copied UTF-8 bytes, at most 64 KiB, checked with raw
-`digestBytes`. Context compares that digest with the ask's stored Brief. The
-operator selects the local package file at startup. There is no generic URI
-loader, client URI selection, external fetch, executable body or Question-body
-fallback. Existing `ui://` HTML integrity and policy stay intact. The Node
-factory remains inert on import: no home/key read, port or room creation.
-The maintained transport and configured signer perform the actual work.
+`package-brief.ts` serves copied UTF-8 bytes, at most 64 KiB, as non-executable
+`text/plain` at fixed `dap://package/brief`, checked with raw `digestBytes`
+against the ask's pin. The operator selects it at startup; no generic URI
+loader, client selection, external fetch, executable body or Question-body
+fallback exists. `ui://` integrity and policy stays intact. Node factory
+imports read no home or key and open no port or room; configured transport and
+signer perform the work.
 
-## Source integration and evidence
+## Checker repairs awaiting Gate 4
+
+Correction scope `f705e7b77c46280e10ccd44716828be49adcb41a` repairs six edges:
+omitted application arguments default to `{}`; changed or unreadable Decision
+admission returns typed stale failure; comment facts require the exact local
+scope and retained hash; bodyAt and history charge each entry once; public
+context omits internal items and repeated current text; stale marks keep their
+own reason. Internal action-capture rows and native authority checks stay
+intact.
+
+Ruling `4a276240` raises whole-lane history to 512 distinct entries, including
+genesis and unrelated entries, each charged once. The attention-row bound stays
+50. Unchanged page, request and byte limits may stop context first; beyond the
+history allowance, both context and Decision are unavailable. The V2 boundary
+case passes 512 and refuses 513 entries. An ordinary 65,536-byte body fits
+context after removing duplicates; JSON escaping or history metadata can still
+exceed its 256 KiB serialized bound and return context-output-limit. Focused V2
+passed; Gate 4 remains pending.
+
+## Source and evidence
+
+The proposed final diff from Main has 42 paths: historical 40, the new Decision
+owner and repair manifest. Current c49 has 41 paths; adoption adds only this
+note delta and the companion.
 
 Request `a7d77a9bb52f9b490fe002d3d4684851b3ca640e`, promise
 `185054c48cd88f847085bf417d43df15648e1f49`, and ruling
-`2c938074fbe65a0ac8a32a6fdb738adf31da861f` own S4 and its Brief binding.
-Earlier Main integration preserved DX's exact minimum-head fences alongside
-S4's local action and neutral `CallResult`. The new merge brings Main's
-workspace ancestry, fixed-stage diagnoses and safe single-read error-name
-repair. The union retains both MCP service seals and all three Scope seals.
-It is a production integration, not the historical six-file documentation
-reconciliation at `4aa8de96fcc296f026a8540b44a5907089259acc`.
+`2c938074fbe65a0ac8a32a6fdb738adf31da861f` own S4 and its Brief. Integration
+`3fd9cc28bf9f68d2f9afafc2191abdff3a3bf336` joins A8 and Main
+`112eff124e7a51d2ebdd2d100ae24b52d03848ac`; the original branch stays A8. It
+preserves DX minimum-head fences, S4 local actions and neutral `CallResult`,
+Main workspace ancestry, fixed-stage diagnoses and single-read error names,
+both MCP seals and three Scope seals. Unlike the six-document reconciliation
+`4aa8de96fcc296f026a8540b44a5907089259acc`, this changed production inputs: the
+old isolated follow-up cannot certify it. Gate 3 covered that integration; it
+does not cover the later checker repairs.
 
-The citation manifest binds six sealed historical collections. `H` is focused
-history: 593 files, 56,976,280 bytes. `I` is integration history: 316 files,
-27,205,563 bytes. `G1` is the first failed gate: 250 files, 8,747,551 bytes.
-`G2` is the second failed gate and helper history: 378 files, 24,642,590 bytes.
-`F` retains the incomplete follow-up and rejected analysis: 138 files,
-42,239,919 bytes. `N5` retains the successful A8 Native completion: 79 files,
-47,127,555 bytes. Every full inventory and SUMS remains immutable.
+The unchanged
+[historical manifest](evidence/2026-10-31-s4-journey-reads.manifest.json) binds
+seven sealed collections: focused H, integration I, failed gates G1/G2,
+incomplete follow-up F, directed Native N5 and integrated gate G3. Their
+counts, bytes, full inventories and SUMS stay unchanged. Its 62 units and 279
+material entries expand to 285 canonical leaves. All 208 original H/I objects
+and 263 pre-G3 tuples stay exact. Immutable inventories and SUMS keep the 32
+redundant extras omitted from citations. Failure receipts, provenance,
+diagnoses, rejected plan and PINS and interrupted proof remain bound. The
+[repair manifest](evidence/2026-10-31-s4-review-repairs.manifest.json) binds
+six focused commands in the
+[sealed focused unit](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-review-repair-focused).
+Its 179 files total 18,385,386 bytes. The companion pins its full inventory and
+SUMS; temporary copy-success/readback artifacts outside the unit are not cited.
 
-The compact manifest preserves all 61 prior command-unit objects and all 208
-original H/I file objects. Its 263 prior material entries plus 16 new entries
-make 279 total. It omits only 32 redundant extras with no direct note link or
-literal file digest. Those raw leaves remain in their unchanged full
-inventories; no evidence was deleted. Every note link and file digest stays
-bound. Both retention-failure receipts, their provenance and diagnoses, the
-rejected-plan PLAN/PINS and interrupted-run proof stay selected. U62 and G3
-bind the passing integrated gate.
+One row means one actual outer command; controls include healthy and fault
+runs. Seal calculations have lightweight receipts, not formal terminals;
+wrappers and no-child refusals add no tests. `tsc` expands to
+`node node_modules/typescript/bin/tsc`; `vitest` means
+`node node_modules/vitest/vitest.mjs`. `[R]` and `[C]` mean exact retained
+reporter or control arguments in `command.json`. Each linked SHA identifies the
+receipt; the manifest also binds command and streams. Receipt durations round
+to three decimals.
 
-Each table row records one actual outer command. Controls contain their own
-healthy and fault runs. Seal calculations use their lighter receipt schema,
-not formal process terminals. Phase wrappers and no-child refusals are not
-extra tests. `tsc` expands to `node node_modules/typescript/bin/tsc`; `vitest`
-to `node node_modules/vitest/vitest.mjs`. `[R]` and `[C]` name the exact
-retained
-reporter/control arguments in `command.json`. The linked digest identifies
-`receipt.json`; each unit also binds its actual command and streams. Durations
-use command receipt values, rounded to three decimals.
-
-| Unit and retained prefix | Actual command | Outcome | Wall s | Host child CPU s | Receipt SHA-256 |
+| Unit and artifact prefix | Actual command | Outcome | Wall s | Host child CPU s | Receipt SHA-256 |
 |---|---|---|---:|---:|---|
 | U01 `H/control-capture-v1/checks/local-admit-control` | `node scripts/control.mjs [C]` | child 2; capture 125; inconclusive; exact restoration | 4.522 | 5.279 | [0913894a0cec82755845cf4dd411c23e1ca04dbdf642e5aa53fa779adf6ed94a](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/control-capture-v1/checks/local-admit-control/receipt.json) |
 | U02 `H/control-capture-v2/checks/local-admit-control` | `node scripts/control.mjs [C]` | child 0; capture 0; distinguishes; exact restoration | 4.401 | 4.865 | [46ab4d421c7de5824d1b4777c6455d7be18ff6fd2e6c7edeac82151453505982](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-focused-history/control-capture-v2/checks/local-admit-control/receipt.json) |
@@ -190,178 +190,167 @@ use command receipt values, rounded to three decimals.
 | U60 `N5/native-v5/checks/compatibility` | `node scripts/cloudflare-pool-compat.mjs` | child 0; capture 0 | 0.082 | 0.074 | [fef0888373f494961f578fa4f1d40f22e1c4abbeab27427c403f298f3e6c6584](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-native-v5-completion/native-v5/checks/compatibility/receipt.json) |
 | U61 `N5/native-v5/checks/native-phase` | `node /private/tmp/artroom-s4-isolated-followup-source-20261031-v5/run-native.mjs` | child 0; capture 0; Native 880 pass, 2 skip; 253 modules terminal | 1137.252 | 2285.221 | [f876398f268cdad55733729dca7019acaff643cbf768f5315ec7d3ec1d644643](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-native-v5-completion/native-v5/checks/native-phase/receipt.json) |
 | U62 `G3/gate/outer/gate-1` | `npm run gate` | child 0; capture 0; all five stages passed | 1057.558 | 2235.097 | [18c208f516cb7338d0decc24a8e583026dbc54804aedc70184624a94f98114cc](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate/gate/outer/gate-1/receipt.json) |
+| U63 `R/raw/v1/checks/types-app-views` | `tsc -p apps/views/tsconfig.json --noEmit` | child 0; capture 0 | 0.381 | 1.345 | `af5680f132c0a281f074afbc409572ed1710c0787afb8d9f1e81c154354e6c12` |
+| U64 `R/raw/v1/checks/types-mcp-test` | `tsc -p packages/mcp/tsconfig.test.json --noEmit` | child 0; capture 0 | 0.445 | 2.030 | `3b634188225c87957b57d0f263bcb83d3b1ce5eee7106a74a659a1f69e861f41` |
+| U65 `R/raw/v1/checks/node-owners` | `node --test apps/views/test/s4.test.mjs apps/views/test/decision.test.mjs scripts/security-entry-points.test.mjs scripts/test.test.mjs` | child 1; capture 1; 25 pass,2 fail; MCP unreached | 2.682 | 7.314 | `2731a943cb7215a526edbc101c61b89daadcd06098667e153edb8101cb7286c1` |
+| U66 `R/raw/v2/checks/types-app-views` | `tsc -p apps/views/tsconfig.json --noEmit` | child 0; capture 0 | 0.352 | 1.321 | `a1fcb4be19f51e7ee9ee985340bd0cf793dc231f19440418b18809b0a32e6b81` |
+| U67 `R/raw/v2/checks/node-owners` | `node --test apps/views/test/s4.test.mjs apps/views/test/decision.test.mjs` | child 0; capture 0; 11 pass | 0.921 | 1.755 | `100de32e0da96bb2feef0aa98a51785055f3879091c1b345b3f7b3cc09f42090` |
+| U68 `R/raw/v2/checks/mcp-read-tools-owner` | `node node_modules/vitest/vitest.mjs run --project mcp packages/mcp/test/read-tools.test.ts --reporter=verbose` | child 0; capture 0; 4 pass | 1.517 | 1.946 | `b58a25a829d7179f429360e51a49f2d2cd3575691421b822c540476dd21c240c` |
 
-The historical receipts U01–U61 total 2,123.847197 seconds of command wall
-time and 4,316.072311 seconds of host child CPU. These sums exclude U62,
-whose costs appear in the integrated-gate paragraph. They include failures,
-inconclusive attempts and nested controls, not packaging. They are not one
-end-to-end duration. Command, collector and runner boundaries must not be
-added. Host CPU excludes guest and remote work; host load and caches were
-uncontrolled. No cold-cache measurement is claimed.
+The historical U01–U61 receipts sum to 2,123.847197 command-wall seconds and
+4,316.072311 host child CPU seconds, excluding U62. These include
+failures, inconclusive attempts and nested controls, not packaging or one
+end-to-end run. Host CPU excludes guest and remote work; uncontrolled load and
+caches establish no cold-cache measurement.
 
-## What the historical checks show
+## Focused repair checks
 
-The initial broad typecheck failed in imported contexts, including Disposable,
-typed fetch-body and Node metrics declarations. Later targeted contexts
-include the application itself. Its first compiler failed because the generic
-Reads implementation signature was not a visible overload; the added overload
-exposes the same implementation without changing fallback or decoding.
+At b01, app and MCP test compilers passed; Node had 25 passes/two failures. The
+Decision fixture expected flat view_read output instead of display; the
+existing HTTP case hit sandbox listen EPERM at 127.0.0.1. The runner stopped
+before MCP. At c49, app types, both app Node owners (11 cases) and that
+previously unreached MCP owner (four cases) all passed 0/0. V2 includes the
+512/513 boundary and corrected stale Decision fixture; it repeats no unchanged
+MCP test compiler, security or fixed-stage owner. Neither run is a full gate.
+All streams closed without drops and tracked source stayed unchanged. New
+durations use receipt elapsedSeconds/commandHostChildCpuSeconds; Darwin 27.2.0,
+arm64, 18 CPUs, uncontrolled load/caches. Each receipt includes its host
+sample.
 
-The first application owner passed five cases and failed one noncanonical
-fixture reply; canonical encoding repaired the fixture and all six passed.
-The initial security pair passed twelve and failed one reviewed seal; the
-successor entry owner passed ten. An eight-file Plain run passed twenty-five
-and failed a Brief resource fixture missing `notifications/initialized`; its
-corrected whole owner passed four. The separate Native Brief owner passed
-one under actual Membership8 person authority, native lane judgments and
-SQLite, with labelled clock, Git and transport. It proves the immutable Brief
-guard and retained detached bodies, not package serving, provider or browser
-behavior. No Brief guard mutation control ran: changing canonical definition
-bytes changes its pin and masks a naive guard omission. The actual wrong-B
-refusal still asserts `brief-fixed` with unchanged head and item.
+## Historical outcomes and their limits
 
-The first integration application attempt failed before an item action because
-the fixture remained on a summary page. The next failed with a wrapped refresh
-error. Separate TS loader graphs could give `Unread` distinct class identities;
-that is an inferred explanation, not an observed inner exception. The shared
-loader fixture passed all seven cases. The five-file Plain integration also
-preserves S2 capability/controller cases and DX's minimum-head owner. These
-scripted reads do not prove production native authority.
+The broad typecheck failed in imported Disposable, fetch-body and Node metrics
+contexts. Targeted contexts later included the app. Its first compiler lacked a
+visible generic Reads overload; the added overload exposes the same
+implementation without changing fallback or decoding. Canonical encoding fixed
+the app's noncanonical reply; reviewed seals then matched. Plain's Brief
+resource fixture needed `notifications/initialized`. The table preserves all
+failed and successor counts.
 
-The first local-admission control remains inconclusive: child two, capture
-125; its parser did not classify the printed failure. The corrected boolean
-assertion keeps the same invariant. Its control distinguishes `await admit()`
-and restores exact source bytes and modes. The retained no-child invocation
-refused unsupported `--mode`; it is not a test or fabricated receipt.
+The Native Brief case passed under actual Membership8 person authority, lane
+judgment and SQLite, with labelled clock, Git and transport. It proves
+immutable Brief refusal and retained bodies, not package, provider or browser
+behavior. No Brief mutation control ran: changing canonical definition bytes
+changes the pin and masks naive guard omission. Actual wrong-B refuses
+`brief-fixed` with unchanged head and item.
 
-The receipt-floor control passed its seven-case baseline. Dropping ONLY the
-summary minimum produced six passes and one named ordinary receipt-wire
-assertion: the exact accepted receipt did not reach the application summary
-wire. The helper reported distinguishes and restored exact source bytes and
-modes. Its retained outer diagnostic is not raw child TAP. Neither successful
-control replaces an earlier failure.
+The first integration app failed on a summary page before an item action; the
+second discarded a wrapped refresh exception. Separate loader graphs could give
+`Unread` different class identities: an inferred hazard, not its proven inner
+cause. A shared graph passed. Plain integration retained S2 capability and
+controller and DX minimum-head owners, not native authority proof.
 
-Gate 1 failed helpers before compilers and all test stages. Four application
-modules now call the optional comparison `sameOptional`; defined values still
-delegate to `bytes.same`, and the undefined branch stays unchanged. Focused
-helpers, application types and all seven application cases passed before
-Gate 2. Gate 2 passed prechecks, compilers, Kernel, Node91 and Counting56;
-Plain had 3,201 passes, one failure and one skip, so Native was unreached.
+The first local-admission control stays inconclusive: child 2/capture 125,
+unclassified failure. A boolean assertion preserved the invariant; its
+successor distinguished `await admit()` and restored exact bytes and modes.
+Unsupported `--mode` refused before a child; no receipt was fabricated. The
+receipt-floor control passed seven baseline cases; dropping only the summary
+minimum gave six passes and one ordinary receipt-wire assertion. The full
+accepted receipt failed to reach the summary. The helper classified
+distinguishes and restored exact bytes and modes. Its outer diagnostic is not
+raw child TAP; controls never reclassify earlier failures.
 
-That Plain failure came from the wire cancellation fixture: its fake supplied
-`snapshot` while production awaited asynchronous `catalogueGeneration`.
-The missing method threw before the fake's deferred gate. Changing only the
-fake method restored disconnect-before-read-completion ordering. At A8, the
-MCP test compiler and whole twelve-case wire owner passed with unchanged
-production, configuration, dependencies, cases, assertions and deadlines.
-This isolated test-only result stays attached to that historical source; it
-is not the combined-head validation now owed.
+Gate 1 failed helpers before compilers/test stages. Four app modules renamed
+the optional comparison `sameOptional`; defined values still call `bytes.same`,
+undefined behavior stays exact. Helpers, app types and seven cases then passed.
+Gate 2 passed prechecks, types, Kernel, Node 91 and Counting 56; Plain had
+3,201 passes, one failure and one skip, leaving Native unreached. Its wire fake
+supplied `snapshot` while production awaited asynchronous
+`catalogueGeneration`; the missing method threw before the deferred gate. The
+one-line fake repair restored disconnect ordering. At A8 the test compiler and
+twelve-case wire owner passed; production, configuration, dependencies, cases,
+assertions and deadlines stayed unchanged. This test-only exception covers that
+historical source, not subsequent production integration or repairs.
 
-The two Gate 2 packaging refusals happened before destination writes. The
+Gate 2 packaging refused twice before destination writes. The
 [first receipt](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/retention-failed-attempt/execution/receipt.json)
-records a guard expecting TAP `# pass 7` instead of Node's `ℹ pass 7` spec
-line. The [second receipt](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/retention-failed-attempt-2/execution/receipt.json)
-records the source-parent overlap fence because the old manifest sat above
-the destination. Exact old public anchors were staged with
-[provenance](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/prior-failed/original-anchor-provenance.json),
-keeping the copy guards. These are retained metadata failures, not extra
-project commands or changed gate outcomes. Successful temporary copy receipts
-and outside-unit retention readbacks are not retained citations.
+expected TAP `# pass 7` rather than Node spec `ℹ pass 7`; the
+[second receipt](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/retention-failed-attempt-2/execution/receipt.json)
+hit the source-parent fence because an old manifest sat above the destination.
+Staging exact old anchors with
+[provenance](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/prior-failed/original-anchor-provenance.json)
+kept every copy guard. Metadata failures add no project command or changed gate
+result. Temporary copy-success receipts and outside-unit readbacks are not
+retained citations.
 
-The first Native attempt remains inconclusive. Its wrapper exited one,
-capture 125 and signalled child 143. It read 33,559,772 stdout bytes, kept
-33,554,432 and dropped 5,340. SIGTERM and process closure supply no complete
-phase: the stream has 149 file-local module passes and 641 case observations,
-without final rows, run end or terminal unhandled-error count. Later worker
-and global teardown cannot be inferred.
+The interrupted Native wrapper exited 1/capture 125, signalled child 143, read
+33,559,772 stdout bytes, kept 33,554,432 and dropped 5,340. Its 149 file-local
+module passes and 641 case observations have no finals, run end or terminal
+unhandled count. SIGTERM and process closure prove no later worker/global
+teardown. Checker `3c5d30556992fcb69d179aa5e70d6aa9dbbf8a5e` rejected the
+unexecuted 149/104 complement; planner
+`87491c9ef138e7e672b2bee11afb6c285acf943d` directed full completion of the
+unfinished Native step.
 
-The proposed 149-result/104-file complement never ran. Checker
-`3c5d30556992fcb69d179aa5e70d6aa9dbbf8a5e` rejected it; planner survey
-`87491c9ef138e7e672b2bee11afb6c285acf943d` kept that verdict. They directed
-one full Native completion, treating it as completion of an unfinished step.
-V5 ran the unchanged 253-file phase at A8, with the same configurations,
-project order, worker limits, cases, assertions, deadlines and 2,400-second
-command budget, using 128 MiB per stream. It closed 0/0: 880 passed cases and
-two skipped; 252 modules passed and the expected Page recorder skipped. The
-end record reports passed and zero unhandled errors. Neither failed ordinary
-gate nor the earlier output-limited capture becomes a pass.
+V5 completed all 253 unchanged files at A8: same config, project order,
+workers, cases, assertions and deadlines; 2,400 seconds, 128 MiB per stream. It
+closed 0/0 with 880 passes, two skips, 252 passed modules, expected recorder
+skip and a passed end with zero unhandled errors. The
+[retained V5 builder proof](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-native-v5-completion/public-support/artroom-s4-native-v5-root-readback-20261031-v1.json)
+binds 3,603 files totaling 109,999,502 bytes, exact pre/post bytes and modes,
+receipts and complete ledger. Stdout 40,930,694 and stderr 2,865 had no drops.
+Compatibility wall and host CPU: 0.081510625/0.074059 seconds; Native:
+1,137.251548/2,285.221191. Terminals and finals prove neither complete live
+callbacks nor physical drain.
 
-The [retained V5 Root proof](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-native-v5-completion/public-support/artroom-s4-native-v5-root-readback-20261031-v1.json)
-binds 3,603 tracked files, 109,999,502 bytes, exact pre/post bytes and modes,
-both receipts and the complete Native ledger. Native stdout is 40,930,694
-bytes and stderr 2,865 bytes, with no drops. Compatibility cost 0.081510625
-seconds of command wall time and 0.074059 seconds of host child CPU; Native
-cost 1,137.251548 and 2,285.221191 seconds respectively. Public terminals and
-final records do not promise complete live callbacks or physical drain.
+## Historical integrated gate and remaining work
 
-## Final validation and remaining obligations
+Gate 3 at `399269c7a42eeee72f2d289abf0eb5fc98bf7c37`, tree
+`576a5010ea44e6dd48e8a62e19cac41b2a8f0d6b`, closed command and capture 0 with
+five passed stages and no report errors. Finals: Node 91, Counting 56, Plain
+3,202 passes and one skip, Native 889 passes and two skips. Plain has 338 final
+modules and no case gap; Native has 252 passed modules and one expected
+recorder skip. The builder verified 3,606 files totaling 110,111,218 bytes and
+223 changed copies against historical 5dc, with a 58,660-byte source index.
 
-The integrated gate closed with command and capture zero at
-`399269c7a42eeee72f2d289abf0eb5fc98bf7c37`, tree
-`576a5010ea44e6dd48e8a62e19cac41b2a8f0d6b`.
-All five stages passed with no stage report errors. Actual final counts are
-Node 91, Counting 56, Plain 3,202 passed and one skipped, and Native 889 passed
-and two skipped. Plain has 338 final modules and no live/final case gap.
-Native has 252 passed modules and one expected recorder skip. The builder
-verified 3,606 tracked files totaling 110,111,218 bytes and 223 copied changed
-files relative to the historical 5dc base. Its changed-source index is 58,660
-bytes. These are combined-source observations; earlier failures keep their
-recorded outcomes.
+Native callbacks show 868 passes and two skips; 21 passed cases exist only in
+finals, all with numeric final durations. The skipped recorder's null module
+duration causes the separate partial module-timing label, not those case gaps.
+All four reporter streams terminated; Node and Counting global summaries passed
+and both Vitest ends report zero unhandled. Scope timing is 250/251; console
+unknown or suite observations 78, contradictions 0. Terminal completion is not
+a complete live-callback census; concurrent duration sums are neither wall time
+nor CPU.
 
-Native live callbacks record 868 passed and two skipped cases. Twenty-one
-passed cases appear only in final records, all with numeric final durations.
-The separate partial module-timing label comes from the expected skipped
-recorder's null duration, not the missing case callbacks. All four reporter
-terminal streams completed. Node and Counting global
-summaries passed; both Vitest end records report zero unhandled errors. Scope
-has 250 known module durations out of 251. The console reports 78 unknown or
-suite observations and zero contradictory records. Terminal completion does
-not establish a complete live-callback census. Concurrent duration
-sums are not wall time or CPU.
+U62 command wall/host CPU: 1,057.5580229999998/2,235.0968779999994 seconds;
+collector: 1,057.723244/2,235.2512030000003; runner:
+1,059.160277417/2,240.0059969999998. These nested boundaries must not be added.
+Host CPU excludes guest CPU. The 09:57:14.630914 UTC sample reports Darwin
+27.2, arm64, 18 logical CPUs, load 2.29931640625/1.96142578125/2.0654296875.
+Uncontrolled caches prove no cold-cache, physical-drain or cancellation bound.
 
-The receipt records command wall 1,057.5580229999998 seconds and host CPU
-2,235.0968779999994 seconds. Collector wall and host CPU are 1,057.723244 and
-2,235.2512030000003 seconds. The outer runner reports 1,059.160277417 and
-2,240.0059969999998 seconds. These nested boundaries must not be added. Host
-CPU excludes guest CPU. The host sample at 09:57:14.630914 UTC reports Darwin
-27.2 on arm64, 18 logical CPUs and load averages 2.29931640625, 1.96142578125
-and 2.0654296875. Cache state remains uncontrolled; no physical drain or
-cancellation guarantee follows.
+The
+[sealed integrated-gate unit](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate)
+holds 362 files totaling 62,839,889 bytes. Its
+[full inventory](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate.manifest.json)
+is 76,956 bytes, SHA256
+`770b0665fe8b03ff6ed5ffa5442b23a751f16ff0911439ef846243af3e6b23d4`. Its
+[SHA256SUMS](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate/SHA256SUMS)
+is 43,575 bytes, SHA256
+`7f14a06829a5158c66cc734c96bd4797c6b0dc432914559fb802189427fe600b`. The
+[in-unit proof](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate/public-support/artroom-s4-main-gate-root-readback-20261031-v1.json)
+binds source, stages and reporter limits. Inventory retains 233 outer, 27
+inner, six Counting files, programs and preparation history. G3's 16 material
+nodes preserve 61 earlier units and 263 tuples. A substitution assertion and
+numeric guard typo remain preparation history, not project, gate or copier
+failures. Original PINS still records incorrect `0644`; a separate closure
+records actual `0444`. Both stay retained, without rewriting PINS.
 
-The [sealed integrated-gate unit](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate) holds 362 files and 62,839,889 bytes.
-Its [full inventory](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate.manifest.json) is 76,956 bytes, SHA256
-`770b0665fe8b03ff6ed5ffa5442b23a751f16ff0911439ef846243af3e6b23d4`.
-Its [SHA256SUMS](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate/SHA256SUMS) is 43,575 bytes, SHA256
-`7f14a06829a5158c66cc734c96bd4797c6b0dc432914559fb802189427fe600b`.
-The [in-unit proof](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate/public-support/artroom-s4-main-gate-root-readback-20261031-v1.json) binds source, stages and reporter limits.
-The full inventory retains 233 outer files, 27 inner files, six Counting files,
-programs and preparation history. The citation subset adds 16 material files;
-all 61 prior units and 263 citation objects stay exact. Preparation history
-includes a substitution assertion and a numeric guard typo. The unchanged
-original source PINS still has incorrect `0644` literals; a separate closure
-records the actual `0444` modes. Both remain retained, without rewriting the
-original PINS. They add no project, gate or copier failure. Temporary
-success-copy receipts and outside-unit retention readbacks are not cited.
-
-The old isolated-test follow-up remains historical coverage at A8; it does
-not certify the merged source. The new full gate supplies the integrated
-validation. The final review still must assess that source and its disclosed
-evidence limits. The final review request names the actual reviewed head and
-gated checkpoint; the later note and manifest tail changes no production code.
-Real S1-room rendering and live acceptance remain owed.
-
-Application owners use real adapters, codecs, bounded default fetch and file
-publication over scripted native replies; their signed canonical entries are
-not a Native authority replay. Generic MCP owners retain their stand-ins. The
-separate Native Brief case proves no real S1-room render, provider, package
-resource, browser or operator custody. The S1 witness remains owed under
-request `449c58c7f7b76f25c5575bbb9f30403f7e0d3960` and ruling
+The A8 follow-up cannot certify integrated production; the repairs still need
+Gate 4 and exact-source review. Real S1-room rendering remains owed under
+`449c58c7f7b76f25c5575bbb9f30403f7e0d3960` and
 `f152f847ca5dc1a009f735aa6ddc862a1eb7bcb9`.
 
-S4 request `a7d77a9bb52f9b490fe002d3d4684851b3ca640e` owns final validation
-and review. S6 `ddf2a597876b00342f7481941ca7571a1705d83e` owns the later
-version-bound Decision seam. Parser request
-`0bcf9984a08c175522c784852a38fd2623104bde` owns failure-block parsing and
-raw child TAP retention; it does not reclassify the first control. No S6
-wire, new native act, provider operation, hosted route, identity creation,
-deployment, settings change or live acceptance belongs to this slice.
+App owners exercise real adapters, codecs, default-fetch bounds and file
+publication over scripted replies, not native authority replay. Generic MCP
+keeps its stand-ins; Native Brief proves no live S1 render, provider, package
+resource, browser or operator custody. S4 request
+`a7d77a9bb52f9b490fe002d3d4684851b3ca640e` owns validation and review; S6
+`ddf2a597876b00342f7481941ca7571a1705d83e` owns the later version-bound seam;
+parser `0bcf9984a08c175522c784852a38fd2623104bde` owns failure parsing and raw
+child TAP, without reclassifying the first control. No S6 wire, new act,
+provider operation, hosted route, identity, deployment, settings change or live
+acceptance enters this slice. Ruling `4a276240` keeps complete-collection marks
+and pure `since`. Omitted-lane access belongs to
+`ca74f78b02437337ee11f989f7c09e1e3cfcd601`, after S6 and before J1; this head
+adds no lane traversal.
