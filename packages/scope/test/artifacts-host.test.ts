@@ -1,10 +1,13 @@
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { utf8 } from "@generalbusiness/dap-bytes";
 import { idOf, snapshotCommit } from "@generalbusiness/dap-git";
 import { buildPack, type RawGitObject } from "@generalbusiness/dap-git/http";
 import { editTree, type DestinationObject } from "@generalbusiness/dap-platform";
 import { ArtifactsProvider, READ_TTL, WRITE_TTL, type ArtifactsNamespace, type CreationCustody } from "../src/artifacts-host.ts";
 import type { DestinationBinding } from "../src/destination-host.ts";
+import type { Diagnosis } from "../src/diag.ts";
+import type { MetricPoint } from "../src/metrics.ts";
+import { measured, operationContext } from "../src/operational.ts";
 
 // Every reply here is SCRIPTED: a binding double stands for Cloudflare
 // Artifacts, and a scripted fetch for its smart-HTTP endpoint. No
@@ -62,6 +65,36 @@ const receiveAdvertisement = (refs: Record<string, string>) => {
 function provider(s: ReturnType<typeof service>, fetch: (request: Request) => Promise<Response> = async () => { throw new Error("no fetch scripted"); }, repositoryOf: () => typeof repository | null = () => repository, creation = s.custody) {
   return new ArtifactsProvider({ binding: s.ns, host: "artifacts", namespace: NAMESPACE, service: SERVICE, maxBytes: 1024 * 1024, fetch, credentialHandle: async () => "adapter:local-handle", creation, repositoryOf });
 }
+
+// Real adapter and diagnostic sinks; only provider/Git replies are scripted.
+// A failed stage must identify itself without publishing its private input.
+test.each(["identity", "token", "reply", "git", "revoke"] as const)("head read diagnoses its %s boundary without private values and preserves the read/revocation outcome", async stage => {
+  const secret = "synthetic-private-read-credential", request = "0123456789abcdef";
+  const scope = `sc_${"a".repeat(52)}`;
+  const diagnoses: Diagnosis[] = [], points: MetricPoint[] = [];
+  const log = vi.spyOn(console, "error").mockImplementation(line => { diagnoses.push(JSON.parse(String(line)) as Diagnosis); });
+  try {
+    const s = service(), commit = "1".repeat(40);
+    if (stage === "identity") s.script.remote = () => { throw new Error(secret); };
+    if (stage === "token") s.script.token = () => { throw new Error(secret); };
+    if (stage === "reply") s.script.token = () => ({ plaintext: secret, scope: "write", expiresAt: "2026-10-07T13:15:00Z" });
+    if (stage === "revoke") s.script.revoke = () => { throw new Error(secret); };
+    const p = provider(s, async () => {
+      if (stage === "git") throw new Error(secret);
+      return uploadAdvertisement({ "refs/heads/main": commit });
+    });
+    const observed = await measured(operationContext({ DEPLOYMENT: "head-diagnosis-test", METRICS: { writeDataPoint: point => points.push(point) } }, scope, "dispatch", { request, trace: null }),
+      () => p.ref(repository, "refs/heads/main").then(value => ({ value }), () => ({ failed: true })));
+    expect(observed).toEqual(stage === "revoke" ? { value: commit } : { failed: true });
+    const step = `artifacts-read-${stage}`;
+    expect(diagnoses, "The failed read stage must reach the safe Workers log").toEqual([{ event: "outside-call-failed", step, name: "Error", request }]);
+    expect(points.filter(point => point.blobs[0] === "diagnosis").map(point => [point.indexes, point.blobs.slice(3, 7)]), "The same fixed stage must reach Analytics Engine").toEqual([[[scope], [step, "error", "outside-call-failed", request]]]);
+    expect(points.find(point => point.blobs[0] === "metric-dropped")?.doubles).toEqual([1, 0, 0, 0, 0, 0]);
+    expect(JSON.stringify({ diagnoses, points })).not.toContain(secret);
+    expect(s.calls.filter(call => call.startsWith("createToken"))).toHaveLength(stage === "identity" ? 0 : 1);
+    expect(s.calls.filter(call => call.startsWith("revokeToken"))).toHaveLength(stage === "identity" || stage === "token" ? 0 : 1);
+  } finally { log.mockRestore(); }
+});
 
 // Invariant: a creation is one call; its write token is revoked at once, and
 // reported as owed only when that revocation is not confirmed. A stated
