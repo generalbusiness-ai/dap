@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:262256d3ea5742b2dcef66fbd097644fd13a05fb","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/read-tools.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:27afb19b04d76f151c799e5e2fcb4d9b3153b9d9","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-31-s4-journey-reads.manifest.json."}
