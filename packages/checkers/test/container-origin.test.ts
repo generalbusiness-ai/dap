@@ -1,3 +1,5 @@
+import { setFlagsFromString } from "node:v8";
+import { runInNewContext } from "node:vm";
 import { expect, test, vi } from "vitest";
 import { gatewayOrigin, originClient, ORIGIN_CLOSE_MS, serveOrigin } from "../src/container-origin.ts";
 import { MemoryRecords } from "../../git/test/support/host.ts";
@@ -58,5 +60,31 @@ test("origin close stops admission and waits for late forward/body ownership; an
   } finally {
     release.resolve(new Response()); await pending;
     await unknown.close().catch(() => undefined); vi.useRealTimers();
+  }
+});
+
+// On Node, a Request's signal follows its source only while the Request is reachable.
+// This keeps the rebuilt upstream Request alive, as a real fetch does, and drops only the caller's.
+test("a forward whose caller dropped the Request still passes the source's abort upstream", async () => {
+  setFlagsFromString("--expose-gc");
+  const collect = runInNewContext("gc") as () => void;
+  const entered = gate(), release = gate<Response>(), source = new AbortController();
+  let upstream: Request | null = null;
+  const origin = await gatewayOrigin({ records: new MemoryRecords(),
+    credential: token => ["authorization", `Bearer ${token}`],
+    upstream: async request => { upstream = request; entered.resolve(); return release.promise; },
+  }, { attempt: "TEST-origin-collected", repository: "https://git.test/repo.git", update: null,
+    token: { id: "TEST-origin-collected-token", state: "live", plaintext: "TEST-origin-credential" } });
+  const forwarding = origin.forward(new Request("https://git.test/repo.git/info/refs?service=git-upload-pack", { signal: source.signal })).catch(error => error);
+  try {
+    await entered.promise;
+    for (let i = 0; i < 4; i++) { await new Promise(resolve => setImmediate(resolve)); collect(); }
+    source.abort();
+    await new Promise(resolve => setImmediate(resolve));
+    expect((upstream as unknown as Request).signal.aborted).toBe(true);
+  } finally {
+    release.resolve(new Response());
+    await forwarding;
+    await origin.close();
   }
 });
