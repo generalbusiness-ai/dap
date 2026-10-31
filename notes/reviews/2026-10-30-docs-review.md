@@ -224,44 +224,39 @@ removed text, 16,862 words, is in
 
 ## 5. Checks run
 
-Each check ran once from the worktree at checkpoint commit
-`d10d153078cd2a7c42c0a2bc0304ecfc0b19141f` (tree `8ca875e2`) on 30 October
-2026. The final head adds the evidence manifest and this table and changes
-no page. Raw output is in the read-only folder
-`/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review/`, with a
-`SHA256SUMS` file and the gate's own 29 log files under `gate-logs/`. The
-head commits
-[the manifest](../implementation/evidence/2026-10-30-docs-review.manifest.json),
-which lists each file's bytes and digest.
+The gate passed at the first checkpoint, `d10d153078cd2a7c42c0a2bc0304ecfc0b19141f`,
+and its evidence stays in `/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review/`.
+This head merges main `c8c7b631`, and only documents differ from main. Under
+the [documents-only rule](../../docs/testing.md#follow-up-after-a-gate), the
+gate did not run again. Main's tree hash is `540f57099bc8e5835b4f1c9423b387b65a1a2edf`, and the
+checkpoint's is `0f6aeabac85a620eef9f6332cb3deb9ef35cd74f`.
 
-What the logs show. The gate passed. The link checker resolved 951 local
-links with none broken. The section-citation check found none broken. The
-six MCP test files passed 39 tests. The settings test passed 3 of 3, the
-entry-point test 10 of 10, and the lane reference test 4 of 4; the lane
-reference did not change. The kernel boundary check read 126 production
-sources with 0 refusals. The residue scan of every prose line under
-`docs/`, outside tables and code, found no semicolon joining clauses, no
-dash, no "admission" for an act and no bare hash; its log lists the lines
-where "admission" is a code path and "checker" is the product noun. The
-scratch resolver checked 826 links and anchors; the two `<a id>` anchors
-it does not parse, `scopes.md#composition` and `kernel.md#k1`, exist. The
-probe refused a platform mark in a declared definition's effects with code
-`shape` at `acts.establish.effects.2`, as the definition-author table says.
+The checks below ran once at the checkpoint `d9b7ebdfe78413dd49add087a1ec3c3c90dc6eaf`, or at its parent, which
+differs by one blank line of this record. Raw output is in the read-only folder
+`/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review-2/`, listed in
+[the manifest](../implementation/evidence/2026-10-30-docs-review.manifest.json).
+
+The link checker resolved its links with none broken. The six MCP test files
+passed 40 tests. The settings test passed 3 of 3, the entry-point test 10 of
+10, and the lane reference test 4 of 4. The `notes` step gave one warning, the
+expected size of the relocated-text note. The residue scan's log lists the
+lines where "admission" is a code path, and where a role word is a product noun,
+the kernel filing duty or a use case's own planner.
 
 | Check | Command | Exit | Output SHA-256 |
 |---|---|---|---|
-| gate | `npm run gate` | 0 | `f6d5dc6a3bec2fad59555a53a299f93f8f123ce8d57be8cdba06dfe7d4cafc42` |
-| documentation links | `node scripts/check-doc-links.mjs` | 0 | `777cc4b59d48da8ef84a768d94fce263aaf35f285fb6edd8942f28a5b719ad7d` |
-| section citations | `node scripts/check-section-citations.mjs` | 0 | `8735a91c6eb2aca3b9d4dd0edc0d05520d64453d8dd8692283986563253cff27` |
-| commit messages | `node scripts/check-commit-messages.mjs origin/main HEAD` | 0 | `b4c2ce0b98997179c70461f42789c754b31ad0cd6cb06b877ea698065669be73` |
-| MCP page tests | `npx vitest run` on the six `packages/mcp/test` files that read `docs/mcp.md` | 0 | `47d8ad77b9c61b830b28fcd3db609e328f26d9ef0386b9165f0653a130de8b06` |
-| settings lookup and inventory | `node scripts/security-settings.test.mjs` | 0 | `8a52e2221b6735022cd3b3325ed62a68e221edc3c9586b559597e780fd38d82e` |
-| entry-point tables | `node scripts/security-entry-points.test.mjs` | 0 | `e0363672671b55023ce9b9fd7cfdaad6b026bb062581db7e0e0af7167bfc17e0` |
-| lane reference | `npx vitest run apps/room/lanes/test/definitions.test.ts` | 0 | `74934135e4605dbe56507a76a63f6ce458dd3cef65302106324a5cc8238015f6` |
+| documents only | `nondoc.sh` (in the folder) | 0 | `e4d1593a033dffb7fb9fc3d2bb2a17f0b3162f4682e25667d97624198ad6d9d0` |
+| documentation links | `node scripts/check-doc-links.mjs` | 0 | `c36d6867bf99de1eedf6f792342ba8899c0fdf8e4517234136c514dcfb357bda` |
+| section citations | `node scripts/check-section-citations.mjs` | 0 | `760679d39d7fd07382edf5f6267ddaaa1ba7fcf296698793935635dda9f3fb7e` |
+| commit messages | `node scripts/check-commit-messages.mjs origin/main HEAD` | 0 | `355ffc1aa882a7024fb85c42faafa0545437e48f9b68f5a1ae3a00995e102a68` |
+| whitespace | `git diff --check origin/main HEAD` | 0 | `28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320` |
+| notes warnings | `node scripts/check-notes.mjs origin/main HEAD` | 0 | `386220d417dc2bc4e40581852513e6eb9818068d47b9da9e79a4a024e191cd5b` |
+| MCP page tests | `npx vitest run` on the six `packages/mcp/test` files that read `docs/mcp.md` | 0 | `a8619101ed2ac03e93423f087092a4e08982f9b901897100990b970dce359ba6` |
+| settings lookup and inventory | `node scripts/security-settings.test.mjs` | 0 | `c6ceb28250fecb9b89e960f340112be86e38a627c9a6f6cfd80acffe6358b0f6` |
+| entry-point tables | `node scripts/security-entry-points.test.mjs` | 0 | `c2e7b07ba3304e75f01f5d196c514b2bd4037865564c611817bbb33aa310703e` |
+| lane reference | `npx vitest run apps/room/lanes/test/definitions.test.ts` | 0 | `8464d68b57a037f05e99bb6aa3ce90fbee9b9aa95e1a2895703869a38c73a367` |
 | kernel boundary | `node scripts/check-kernel-boundary.mjs` | 0 | `f7ae5d7815f1e7c2c379c5ea1db70b7da25590e4b3570216f4cc07a8fc871298` |
-| prose residue scan | `python3 -I residue.py .` (script in the folder) | 0 | `9c1febee2ff92fe9903746e7a597b51c50a7bec33a3a26810540c3b220257333` |
-| link and anchor resolver | `python3 -I linkcheck.py .` (script in the folder) | 0 | `7c6c603156f94058b1bee1245e0ef6dc8361aa335c4df1a78e304503d93b5cf7` |
-| platform mark probe | `node markprobe.mjs` (script in the folder) | 0 | `233aef7670a3c2f50e3084986b9d1b6478e002cafaa44e610a9d63f9aa55412f` |
+| prose residue scan | `python3 -I residue.py .` (in the folder) | 0 | `01d33ba0fb84ba8c70b089629b4de81dd0444bac70ac37d9d34b2c06db198f92` |
 
 Not run for this revision: the commands on the self-host, deploy, local
 Worker, run-your-app (steps 3 to 8) and demo pages. Each of those pages

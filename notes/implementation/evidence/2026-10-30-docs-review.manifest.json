@@ -1,48 +1,51 @@
 {
-  "qualification": "Documentation review head: prose and one index under docs/, two notes, one anchor change in the room ledger, one link in a design note. The gate, both documentation checks, the six MCP test files that read docs/mcp.md, the two security documentation tests, the lane reference test, the kernel boundary check and three scratch scans ran once at the checkpoint commit. The final head adds this manifest and the evidence table in the review record and changes no page. No acceptance is inferred from sealing.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review",
+  "qualification": "Documents-only follow-up to the first review of head 4436d508. The head merges main c8c7b631, and only documents differ from main (non-doc-paths.log). Under the documents-only rule the gate did not run again. The tests that read docs/mcp.md, docs/security and the lane reference ran again, with the documentation checks, at the merge commit or at the checkpoint, which changes one blank line of the review record. The final head adds this manifest and the record's evidence table and changes no page. No acceptance is inferred from sealing.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review-2",
   "base": {
-    "commit": "5dc9765fdc6fb6896b736127801944c46ee288f9",
-    "tree": "39c0bfaa8a48bfb3544a18c82e1873ddbafe76aa"
+    "commit": "c8c7b63172175576116f86ed4f7facfcdd749ec2",
+    "tree": "540f57099bc8e5835b4f1c9423b387b65a1a2edf"
   },
   "checkpoint": {
-    "commit": "d10d153078cd2a7c42c0a2bc0304ecfc0b19141f",
-    "tree": "8ca875e20e6376865cb03f67e70eaecd1bec3623"
+    "commit": "d9b7ebdfe78413dd49add087a1ec3c3c90dc6eaf",
+    "tree": "0f6aeabac85a620eef9f6332cb3deb9ef35cd74f"
   },
-  "gate": {
-    "command": "npm run gate",
-    "exitCode": 0,
-    "log": "gate.log",
-    "rawLogs": "gate-logs",
-    "commit": "d10d153078cd2a7c42c0a2bc0304ecfc0b19141f",
-    "tree": "8ca875e20e6376865cb03f67e70eaecd1bec3623"
+  "priorEvidence": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review",
+    "checkpoint": {
+      "commit": "d10d153078cd2a7c42c0a2bc0304ecfc0b19141f",
+      "tree": "8ca875e20e6376865cb03f67e70eaecd1bec3623"
+    },
+    "gate": {
+      "command": "npm run gate",
+      "exitCode": 0,
+      "log": "gate.log",
+      "rawLogs": "gate-logs",
+      "commit": "d10d153078cd2a7c42c0a2bc0304ecfc0b19141f",
+      "tree": "8ca875e20e6376865cb03f67e70eaecd1bec3623"
+    },
+    "priorManifestSha256": "fdfc5e5a8dfc1f695b2b70fe0989be31c66678ff5e47183cde20f232b5937842"
   },
-  "fileCount": 17,
+  "fileCount": 16,
   "files": [
     {
       "path": "SHA256SUMS",
-      "bytes": 4148,
-      "sha256": "ca2903b068474844e1fad17de739940248e8bd7d237fa6a2f8fd06c0acf98a26"
+      "bytes": 1259,
+      "sha256": "23a3becbc111a68b850725538cf46dbd5268ed64123bc1091edb84f2a1ed2630"
     },
     {
       "path": "HEAD.txt",
-      "bytes": 94,
-      "sha256": "2a4a90fc987676d8effd2b7747a79444d6e74cdd86b430933131a45e9372002e"
+      "bytes": 134,
+      "sha256": "0560b636601cb073c557484ae6f3357a89ce64a9f4c3deb7b383935e044e921c"
     },
     {
       "path": "commit-messages.log",
       "bytes": 45,
-      "sha256": "b4c2ce0b98997179c70461f42789c754b31ad0cd6cb06b877ea698065669be73"
+      "sha256": "355ffc1aa882a7024fb85c42faafa0545437e48f9b68f5a1ae3a00995e102a68"
     },
     {
       "path": "doc-links.log",
       "bytes": 42,
-      "sha256": "777cc4b59d48da8ef84a768d94fce263aaf35f285fb6edd8942f28a5b719ad7d"
-    },
-    {
-      "path": "gate.log",
-      "bytes": 6286,
-      "sha256": "f6d5dc6a3bec2fad59555a53a299f93f8f123ce8d57be8cdba06dfe7d4cafc42"
+      "sha256": "c36d6867bf99de1eedf6f792342ba8899c0fdf8e4517234136c514dcfb357bda"
     },
     {
       "path": "kernel-boundary.log",
@@ -52,32 +55,32 @@
     {
       "path": "lanes-definitions-test.log",
       "bytes": 259,
-      "sha256": "74934135e4605dbe56507a76a63f6ce458dd3cef65302106324a5cc8238015f6"
-    },
-    {
-      "path": "linkcheck.py",
-      "bytes": 1320,
-      "sha256": "7f0f5956db9e1d5297d95aa31bac298f5a0664527ec2fc2d0480dd570a631941"
-    },
-    {
-      "path": "markprobe.mjs",
-      "bytes": 766,
-      "sha256": "9e15aaac824d21fb2a900e077465646145d00be62bdda8da3609e5f1f897f4b1"
+      "sha256": "8464d68b57a037f05e99bb6aa3ce90fbee9b9aa95e1a2895703869a38c73a367"
     },
     {
       "path": "mcp-doc-tests.log",
-      "bytes": 2811,
-      "sha256": "47d8ad77b9c61b830b28fcd3db609e328f26d9ef0386b9165f0653a130de8b06"
+      "bytes": 3090,
+      "sha256": "a8619101ed2ac03e93423f087092a4e08982f9b901897100990b970dce359ba6"
     },
     {
-      "path": "platform-mark-probe.log",
-      "bytes": 46,
-      "sha256": "233aef7670a3c2f50e3084986b9d1b6478e002cafaa44e610a9d63f9aa55412f"
+      "path": "non-doc-paths.log",
+      "bytes": 37,
+      "sha256": "e4d1593a033dffb7fb9fc3d2bb2a17f0b3162f4682e25667d97624198ad6d9d0"
+    },
+    {
+      "path": "nondoc.sh",
+      "bytes": 274,
+      "sha256": "7752bb209e21bfe0085e60f8552d091882ef0224e742c2318fe1d6659f1f82dd"
+    },
+    {
+      "path": "notes.log",
+      "bytes": 128,
+      "sha256": "386220d417dc2bc4e40581852513e6eb9818068d47b9da9e79a4a024e191cd5b"
     },
     {
       "path": "residue-scan.log",
-      "bytes": 6805,
-      "sha256": "9c1febee2ff92fe9903746e7a597b51c50a7bec33a3a26810540c3b220257333"
+      "bytes": 7019,
+      "sha256": "01d33ba0fb84ba8c70b089629b4de81dd0444bac70ac37d9d34b2c06db198f92"
     },
     {
       "path": "residue.py",
@@ -85,33 +88,24 @@
       "sha256": "9608db8c18fea8ba42fcb1071a091a978ceff22f3c523f791f88ceca02615bd4"
     },
     {
-      "path": "scratch-linkcheck.log",
-      "bytes": 137,
-      "sha256": "7c6c603156f94058b1bee1245e0ef6dc8361aa335c4df1a78e304503d93b5cf7"
-    },
-    {
       "path": "section-citations.log",
-      "bytes": 1559909,
-      "sha256": "8735a91c6eb2aca3b9d4dd0edc0d05520d64453d8dd8692283986563253cff27"
+      "bytes": 1563419,
+      "sha256": "760679d39d7fd07382edf5f6267ddaaa1ba7fcf296698793935635dda9f3fb7e"
     },
     {
       "path": "security-entry-points-test.log",
       "bytes": 1308,
-      "sha256": "e0363672671b55023ce9b9fd7cfdaad6b026bb062581db7e0e0af7167bfc17e0"
+      "sha256": "c2e7b07ba3304e75f01f5d196c514b2bd4037865564c611817bbb33aa310703e"
     },
     {
       "path": "security-settings-test.log",
-      "bytes": 428,
-      "sha256": "8a52e2221b6735022cd3b3325ed62a68e221edc3c9586b559597e780fd38d82e"
-    }
-  ],
-  "directoryCount": 1,
-  "directories": [
+      "bytes": 427,
+      "sha256": "c6ceb28250fecb9b89e960f340112be86e38a627c9a6f6cfd80acffe6358b0f6"
+    },
     {
-      "path": "gate-logs",
-      "fileCount": 29,
-      "totalBytes": 50920305,
-      "sha256Sums": "24d1d9fbb1efd265ecdcdafcdd732c62c72af4572a09aa9e5dc818a85bec8fa7"
+      "path": "whitespace.log",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
     }
   ],
   "retention": "Directory and files are read-only; retain for at least 30 days after landing.",
