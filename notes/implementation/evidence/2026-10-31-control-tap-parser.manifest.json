@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. The focused owners and the two controls ran before the rebase at ed25438905 and at 66e324d3; the rebase adds only the landed repair, so those runs carry over by the retained range diff and path list. One owner run failed and stays as evidence. No deployment or hosted run is claimed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-control-tap-parser",
+  "checkpoint": {
+    "commit": "e314592d96ae52f5f9540cd6d8229d5c4c30d2c9",
+    "tree": "e712edbb1b8959c201ef87386d81bfbbd32f9180"
+  },
+  "fileCount": 149,
+  "files": [
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6492,
+      "sha256": "0e5d0156dc7f7424fbf6469e702a06cf2992339773e720d3c9c30c754fe7b2a4"
+    },
+    {
+      "path": "gate/gate.stderr.log",
+      "bytes": 37,
+      "sha256": "52a1d88ebfa7e88f36ef21582e6287f5374bb069d77edfa1601b53000f0570e6"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gate/gate.sh",
+      "bytes": 617,
+      "sha256": "0fe84d8493d762153551f223312ed06a769734b9617d6dc1e4d979461f63d8b9"
+    },
+    {
+      "path": "gate/logs/test-evidence/node.jsonl",
+      "bytes": 262418,
+      "sha256": "2362f50816f645b739e5e88907d872563d8d07583edb7211d4434c0eee77dc1e"
+    },
+    {
+      "path": "focused/SHA256SUMS",
+      "bytes": 11654,
+      "sha256": "e38a1a1bfbd91df031a5d3638aa2c495ac9735feedc36925381e23d1e08c874b"
+    },
+    {
+      "path": "focused/outer/message-check/stdout.log",
+      "bytes": 14,
+      "sha256": "32a45b2a0dfc651ccd5a8355d6f4cb56b8a6b1bc10cbd8281506e37622317d19"
+    },
+    {
+      "path": "focused/outer/node-owners/stdout.log",
+      "bytes": 13516,
+      "sha256": "9daaf65663b824413011a54cb4d6900b5d6be18d2f8d877a22cfaed080b2bf2f"
+    },
+    {
+      "path": "focused/outer/node-owners/receipt.json",
+      "bytes": 1832,
+      "sha256": "c9289e4b2f91dd6fddf676c45e4bc9dd008622bdc86218904f665b933be85994"
+    },
+    {
+      "path": "focused/outer/message-check-2/stdout.log",
+      "bytes": 14,
+      "sha256": "32a45b2a0dfc651ccd5a8355d6f4cb56b8a6b1bc10cbd8281506e37622317d19"
+    },
+    {
+      "path": "focused/outer/control-owner-2/stdout.log",
+      "bytes": 583,
+      "sha256": "6a375c90639cf9f19b5b721b3fbfa1171f3b66dd1735a3ccb1ac9216c2ae1f64"
+    },
+    {
+      "path": "focused/outer/old-ellipsis-control/stderr.log",
+      "bytes": 609,
+      "sha256": "3d7c7d768599d900f9ed4e932586a2bb4e42d3e5ef463fa3f2acb68ba71c559c"
+    },
+    {
+      "path": "focused/outer/stdout-channel-control/stderr.log",
+      "bytes": 663,
+      "sha256": "edad27f9f2497beb52d329fcb0409f6c2719f232eb994ff9a2fec7b0e95bd66b"
+    },
+    {
+      "path": "rebase-range-diff.txt",
+      "bytes": 166,
+      "sha256": "4ee6d596b301c598eba4662e13fcb76234ed07bdb27d5c374eb9de942ad0a353"
+    },
+    {
+      "path": "rebase-paths.txt",
+      "bytes": 229,
+      "sha256": "a220c7cd41310540f526a0c68be1b99b0395af4a17ed33effd9eecd87af49037"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 15867,
+      "sha256": "cfbc7c87cf1ff7057169d2b97ba680ab872d75237d601e6b65a55f39e80ab330"
+    }
+  ]
+}

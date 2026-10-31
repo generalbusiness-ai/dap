@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "qualification": "One failed and one passing gate at their own checkpoints, kept separately. The named red and the whole-owner run were taken at a8034631, whose http.ts and http.test.ts equal those of the checkpoint. Diagnostic counts come from shell loops that printed counts only. No deployment or hosted run is claimed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-http-request-lifetime",
+  "checkpoint": {
+    "commit": "731bbfd8cd62e0b6201d90fe91e1836132033e63",
+    "tree": "c9e1acb033305c6b5e8a93e1bb004c82dbcb9b00"
+  },
+  "fileCount": 57,
+  "files": [
+    {
+      "path": "gate-2/gate.stdout.log",
+      "bytes": 6531,
+      "sha256": "ed94a54540f570ea37f4aa04d59f00eb2d0a0ad8ac4a75853cb407b6b01954be"
+    },
+    {
+      "path": "gate-2/gate.stderr.log",
+      "bytes": 37,
+      "sha256": "c45b166c57958149146c917766d15d49c28706f80f5cca7fe69666e3f6d4f460"
+    },
+    {
+      "path": "gate-2/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gate-2/gate.sh",
+      "bytes": 636,
+      "sha256": "623a661b8b877a31c6766468f185236eef93539bb46f21174fb56a844cc18eb2"
+    },
+    {
+      "path": "gate-1-failed/gate.stdout.log",
+      "bytes": 8341,
+      "sha256": "15c74f5bdb0e743719595da9bbc4193f65cf2162ce8463932a101162273082c1"
+    },
+    {
+      "path": "gate-1-failed/gate.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "red-witness-without-fix.stdout.log",
+      "bytes": 2266,
+      "sha256": "b68bf508bc3529e54233810bfcaabb19402170758e573fe799a795da13f3ed15"
+    },
+    {
+      "path": "red-witness-without-fix.report.json",
+      "bytes": 5270,
+      "sha256": "11dc5e107b32825292388d9050c7995bc9804c8ea548799621687e4c5da7d89b"
+    },
+    {
+      "path": "owner-at-checkpoint.stdout.log",
+      "bytes": 2157,
+      "sha256": "21e9f93ab6c95ceae08ea8700ff342fa3426338193b128dee67f792a095f4319"
+    },
+    {
+      "path": "owner-at-checkpoint.report.json",
+      "bytes": 4794,
+      "sha256": "8f1fa2c9321f7555833b844744ba50a0e46637ee211b88614f5979d944e1ebd6"
+    },
+    {
+      "path": "workerd-probe.md",
+      "bytes": 783,
+      "sha256": "d95700532f0ddb62b3c10ab3f37e96b861490985a7d03502920eabf385190218"
+    },
+    {
+      "path": "diagnosis/RUNS.md",
+      "bytes": 1933,
+      "sha256": "fc63e45ab08ad52e8a0da7582cf19e2659160a7a50e1098a15d442c07f88276b"
+    },
+    {
+      "path": "diagnosis/trace-failed.txt",
+      "bytes": 15072,
+      "sha256": "ea5f69bc43fcea403d0d43c5c3a0126b512282da965ab1681ab0379ed3f66c68"
+    },
+    {
+      "path": "diagnosis/gc-signal.mjs",
+      "bytes": 885,
+      "sha256": "e4e4e2de486e338eb462db96fbb3e731c21d7893630ed6e7d6f6b8346209e55e"
+    },
+    {
+      "path": "diagnosis/gc-signal.stdout.txt",
+      "bytes": 214,
+      "sha256": "677b0d63f7687f71e485cfffaa8de71e640a4656265b540f974837727e17f7b7"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 5238,
+      "sha256": "8abafe00e964dd035898b2bd5f20240812fcdf602acc8d42e044b70053b16af4"
+    }
+  ]
+}

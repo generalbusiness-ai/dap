@@ -228,7 +228,7 @@ export class McpHttp {
       const session = this.sessions.get(sessionId);
       if (!session) return bare(404);
       if (method === "GET" && !(await this.#touch(session))) return bare(404);
-      return method === "GET" ? this.#stream(session, request.signal) : this.#end(session, true);
+      return method === "GET" ? this.#stream(session, request) : this.#end(session, true);
     }
     if (method !== "POST") return notAllowed();
     const body = await this.#body(request);
@@ -359,9 +359,11 @@ export class McpHttp {
    * session owns its one slot from the moment an opening is admitted, across every opening pending for it and the stream it
    * holds, until it has no stream and no opening pending: a fresh open takes the session's slot or is refused, a replacement
    * takes nothing new, the incumbent's cancellation during a pending opening frees nothing, and however many replacements
-   * overlap and abort in whatever order, a session with a live stream is counted exactly once.
+   * overlap and abort in whatever order, a session with a live stream is counted exactly once. It takes the whole request, not
+   * its signal: on Node a request's signal follows its source only while the request is reachable, so a signal held alone can
+   * miss a client's going away.
    */
-  async #stream(session: LegacySession, signal?: AbortSignal): Promise<Response> {
+  async #stream(session: LegacySession, request: Request): Promise<Response> {
     if (this.#closed || this.#due()) { if (!this.#discarded) await this.closeAll(); return bare(this.#due() ? 401 : 404); }
     const fresh = session.stream === null && !this.#pending.has(session);
     if (fresh && this.#open.size >= STREAMS_MOST) return rpcJsonReply(409, rpcError(null, TOO_MANY_STREAMS, `At most ${STREAMS_MOST} streams are open at once.`));
@@ -382,7 +384,7 @@ export class McpHttp {
     // The session may have ended, the layer been discarded, or the client gone, while the snapshot was read: then no stream opens.
     if (this.#closed || this.#due()) { exit(); if (!this.#discarded) await this.closeAll(); return bare(this.#due() ? 401 : 404); }
     if (session.ended || (session.id !== null && !this.sessions.has(session.id))) { exit(); return bare(404); }
-    if (signal?.aborted) { exit(); return bare(204); }
+    if (request.signal.aborted) { exit(); return bare(204); }
     const old = session.stream;
     const sse = this.#sse(() => { if (session.stream === stream) { this.port.wire.endLegacy(session); if (!this.#pending.has(session)) this.#open.delete(session); this.#lifetime(); } });
     const stream: Stream = {
