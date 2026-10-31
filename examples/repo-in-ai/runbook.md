@@ -1,9 +1,14 @@
 # Create and seed repo-in-ai
 
-This script creates the room named **repo-in-ai** for MVP slices S2 to S9.
-It creates a new owner identity, two agents controlled by that owner, and a
-checker. Each identity has its own private home. The script does not use a
-previous room's signing key.
+This script creates the room for MVP slices S2 to S9, labeled **repo-in-ai**
+in the input. It creates a new owner identity, two agents controlled by that
+owner, and a checker. Each identity has its own private home. The script does
+not use a previous room's signing key.
+
+The home directory binds a run to its room. `name` is a local label: the
+service does not hold it, and the repository's name comes from the mint reply.
+A run with a new home creates another room. The owner's private `s1-room-refs`
+holds the room's references, and S2 to S9 take them from that run.
 
 The source is the S1 implementation tracked by gitseq request `449c58c7`.
 The adopted compatibility ruling is `2a9ec821`. Run this script against a
@@ -14,7 +19,11 @@ landing alone does not establish a live deployment or a completed witness.
 
 ## Prepare the inputs
 
-Use the reviewed checkout and its locked dependencies. Read
+Use a clean checkout at the reviewed commit, with its locked dependencies.
+Keep that checkout unchanged until `verify-seed` exits. `build-seed` reads
+`task-list/` from the working tree, and `verify-seed` compares the clone with
+the retained candidate. So an uncommitted edit made before `build-seed` still
+ends with every phase at exit 0. Read
 [the test policy](../../docs/testing.md) before changing the script. Do
 not install a tool into the checkout to probe it.
 
@@ -23,6 +32,16 @@ Copy [input.example.json](input.example.json) outside the checkout. Replace
 deployment receipt. Check the service, Artifacts origin and full register
 reference against that receipt. The template deliberately has no usable
 version. The script checks `/health` before running a phase.
+
+Check `providerOrigin` against the receipt before the first phase. A wrong
+origin shows only after the workspace's one-time credential is spent, and
+that stop is permanent.
+
+Deploy no Worker between the first phase and the last. Every invocation,
+including `check`, requires `deploymentVersion` to equal the live version.
+The owner's home retains the input, and a changed input stops with
+"different setup plan". So a deployment in that window leaves no `check` or
+`continue` path for the run.
 
 Use these identity homes for the real room:
 
@@ -46,19 +65,19 @@ identity home for the real room.
 
 ## Run the setup
 
-From the checkout root, run:
+Run one command per phase, in the order of `setupPhases` in
+[setup.ts](setup.ts). The script has 42 phases, from `owner` to `released`.
+This is the route the third scratch room closed. From the checkout root, run
+the first phase:
 
 ```sh
-node examples/repo-in-ai/setup.mjs --input /absolute/path/to/s1-input.json --phase all --mode new --diagnostics /absolute/public/NEW-start-diagnostics
+node examples/repo-in-ai/setup.mjs --input /absolute/path/to/s1-input.json --phase owner --mode new --diagnostics /absolute/public/NEW-owner-diagnostics
 ```
 
-This is the one setup script. It runs creation through first-key in one
-CLI invocation, within the founding window. It uses the existing register;
-it does not install another register or change Worker settings.
-
-To run one phase at a time, pass its name to `--phase` instead of `all`,
-with a new diagnostics directory for each command. Phases run in the order
-of `setupPhases` in [setup.ts](setup.ts).
+Then run each later phase the same way, with its name and a new diagnostics
+directory. `--phase all --mode new` runs every phase in one command. No `all`
+run has closed. The script uses the existing register. It does not install
+another register or change Worker settings.
 
 The script prints only a phase, its status and any accepted native fact.
 Invitation links, signing material, credentials and full SDK answers stay
@@ -66,7 +85,9 @@ in the private identity homes. Do not copy those files into the workroom,
 a source commit, a review comment or a public evidence bundle.
 
 Every invocation requires a new absolute diagnostics directory outside the
-private homes. The script creates it exclusively with owner-only modes.
+private homes. Its parent must already exist, and the script refuses a path
+that holds `.config`. The script creates the directory exclusively with
+owner-only modes.
 It flushes and reads back the helper's exit status and exact safe stderr
 line before exit. Enrollment metadata records only a fixed stage, coded
 cause, read method/category and HTTP status when known. It records no
@@ -77,7 +98,9 @@ failure; never reuse it or write into sealed evidence.
 
 The script stops when a native delivery or outside outcome is unresolved.
 For an outside operation that is still pending, rerun its read phase. For
-an uncertain write, first check the exact phase named by the stop:
+an uncertain write, first check the exact phase named by the stop. A stop
+under `all` prints "Use check" and names the phase. The script refuses
+`--phase all --mode check`, so pass that phase's name:
 
 ```sh
 node examples/repo-in-ai/setup.mjs --input /absolute/path/to/s1-input.json --phase manifest-stage --mode check --diagnostics /absolute/public/NEW-check-diagnostics
@@ -118,9 +141,9 @@ stops. Check stays read-only and reports the missing original; it never
 enters this first-root branch. Existing signatures, keys, secrets and
 deadlines never change.
 
-After resolving the stopped phase, run `all` in `new` mode again. Completed
-phases use their retained receipts. The script does not create another room
-or identity when those receipts already exist.
+After resolving the stopped phase, run the next phase in `new` mode. A
+completed phase uses its retained receipt, so running one again creates no
+other room or identity.
 
 ## What the script witnesses
 
@@ -161,6 +184,23 @@ S2 to S9.
 The seed app starts empty. It supports adding tasks, toggling completion,
 and local browser persistence. It intentionally leaves the later “Clear
 completed” product decision for the MVP scenario.
+
+## Close the witness
+
+The witness closes only when every phase in `setupPhases` has exited 0 or has
+completed by the `continue` route above. A final phase does not show this.
+`released` needs only `release`, and `release` needs only `hold`. `verify-seed`,
+`clone-verify`, `members`, `roles-after` and `rules` are prerequisites of no
+final phase. A single-phase run does not enforce their order.
+
+Read these receipts before you call the witness closed:
+
+- Each command's `receipt.json` in its diagnostics directory, for the phase,
+  the mode and the exit code. A phase with exit 1 needs a later `continue`
+  with exit 0.
+- The owner's private `s1-done-<phase>` receipt, one for each of the 42 phases.
+- The owner's private `s1-seed-comparison`, for `matches` true at the published
+  commit.
 
 ## Record the result
 
