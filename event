@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0ddf5ae347ac77e0a3600aefe8d8e523dc468b31","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-31-checker-origin-signal.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2eb7ee83f18db29d238e26befd7285a696b37ce3","text":"Merge retired a covered predecessor; the successor is at packages/checkers/test/container-origin.test.ts."}
