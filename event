@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:12b460f9d72ad1351a77b92f10e0060d99aee1ef","text":"Merge retired a covered predecessor; the successor is at packages/client/src/application-projection.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:12d63655e5a702507984c484536b58ad57566796","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-30-dxa2-minimum-head.md."}
