@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2441dac965bf2a4962867a61676b81c68c36607e","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-31-hosted-loop-reads.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:260dc76a62472da1efeb545fccc60dc40cc13afd","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/wire.test.ts."}
