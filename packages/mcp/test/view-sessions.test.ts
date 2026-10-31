@@ -38,3 +38,28 @@ test("a full view retains original-request checks without admitting another writ
   expect(checked[0]!["idempotencyKey"]).toBe(sent[0]!["idempotencyKey"]);
   expect(sent).toHaveLength(32);
 });
+
+// Invariant: the generic card never presents an agent as ready without a
+// controller. The projection is a stand-in, not membership authority.
+test("an agent card needs its controller before it can offer a write", async () => {
+  const performed: string[] = [];
+  const source: ViewSource = { read: async query => ({ status: "ready", count: 1, position: 0, fallback: "Inspect the item.", card: {
+    identity: { kind: "fixture", item: "q1", revision: "0", subject: { scope: "fixture-scope", item: 0 }, at: { on: 0 } },
+    title: "Fixture question", summary: "A controlled agent", actor: { kind: "agent", name: "Builder", ...(query.subject === "controlled" ? { controller: "Rita" } : {}) },
+    reasons: [], projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "Inspect the item.",
+    actions: [{ id: "apply", label: "Apply", purpose: "act", kind: "apply", args: { target: "fixture-scope", on: 0, at: { on: 0 } } }],
+  } }) };
+  const sessions = new ViewSessions(source, { call: async () => { throw Error("No native read belongs to this projection fixture."); } },
+    async kind => { performed.push(kind); return answer("accepted"); }, async () => { throw Error("No original request exists."); });
+  await sessions.open("controlled", "work", "controlled");
+  const controlled = await sessions.read("controlled", sessions.display("controlled").cut, { page: "item" });
+  expect(controlled.status).toBe("ready");
+  expect(controlled.card!.actor).toEqual({ kind: "agent", name: "Builder", controller: "Rita" });
+  expect(controlled.card!.actions.map(action => action.id)).toEqual(["apply"]);
+  await sessions.open("unbound", "work", "unbound");
+  const refused = sessions.display("unbound");
+  expect(refused.status).toBe("unavailable");
+  expect(refused.card).toBeUndefined();
+  await expect(sessions.act("unbound", refused.cut, "apply")).rejects.toMatchObject({ reason: "shape" });
+  expect(performed).toEqual([]);
+});
