@@ -1,9 +1,9 @@
 /** Read projections of the actual pinned lane records. These rows grant nothing. */
 import { canonicalize, digestBytes, isDigest, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
-import type { Digest, FactRef, Item, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Digest, FactRef, Item, ReadMinimum, ScopeRef } from "@generalbusiness/dap-contract";
 import { J4_DIGESTS, QUESTION_DIGESTS, QUESTION_BRIEF_DIGESTS, issueQuestions, issueQuestionsBrief } from "@generalbusiness/dap-lanes";
 import type { ApplicationReadCatalogue, CallResult, LocalReviewCapture } from "@generalbusiness/dap-mcp";
-import { Collection, LIMITS, Unread, same, type Frame, type ReadOptions } from "./reads.ts";
+import { Collection, LIMITS, Unread, same, minimumFor, type Frame, type ReadOptions } from "./reads.ts";
 import { ReviewStore, ReviewStoreError } from "./review-store.ts";
 
 export interface Row { scope: ScopeRef; head: Frame["head"]; item: number; type: string; rule: { definition: string; clause: string }; [key: string]: unknown }
@@ -91,9 +91,10 @@ export class RepoInAi {
       return rows;
     });
   }
-  async question(scope: ScopeRef, id: number): Promise<{ context: Context; collection: Collection }> {
+  async question(scope: ScopeRef, id: number, minimum?: ReadMinimum): Promise<{ context: Context; collection: Collection }> {
+    const floor = minimumFor(scope, minimum);
     const { value, collection } = await this.collect(async collection => {
-      const frame = await collection.frame(scope), pin = frame.summary.definition;
+      const frame = await collection.frame(scope, floor), pin = frame.summary.definition;
       if (!questions(pin)) throw new Unread("question-profile-unsupported");
       const ask = frame.items.find(item => item.type === "ask" && item.id === id) ?? (await collection.items(frame, "ask", ["asked", "decided", "withdrawn"], [id]))[0];
       if (!ask || ask.type !== "ask") throw new Unread("question-absent");

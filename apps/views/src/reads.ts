@@ -1,6 +1,6 @@
 /** One authenticated, bounded collection. No room inventory or background read. */
-import { canonicalize, entryHash, isFactRef, isMemberRef, isScopeRef, textDigest, utf8 } from "@generalbusiness/dap-bytes";
-import type { Digest, FactRef, Head, Item, MemberRef, ScopeRef, Sealed, Summary } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, isFactRef, isMemberRef, isScopeRef, readMinimum, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import type { Digest, FactRef, Head, Item, MemberRef, ReadMinimum, ScopeRef, Sealed, Summary } from "@generalbusiness/dap-contract";
 import { ScopeHandle, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import { Reads, type McpConfig } from "@generalbusiness/dap-mcp";
 import { ROLE_LISTS, type Role } from "@generalbusiness/dap-platform";
@@ -8,6 +8,18 @@ import { ROLE_LISTS, type Role } from "@generalbusiness/dap-platform";
 export const LIMITS = Object.freeze({ scopes: 8, rows: 50, items: 512, history: 50, pages: 16, requests: 64, replyBytes: 4 * 1024 * 1024, bytes: 16 * 1024 * 1024, textBytes: 65536, textsBytes: 262144, milliseconds: 20000, requestMilliseconds: 5000 });
 export class Unread extends Error { constructor(readonly reason: string) { super(reason); } }
 export const same = (a: unknown, b: unknown): boolean => a === undefined || b === undefined ? a === b : canonicalize(a) === canonicalize(b);
+/** A receipt floor belongs to one exact target; it supplies no authority. */
+export function minimumFor(ref: ScopeRef, value?: ReadMinimum): ReadMinimum | undefined {
+  if (value === undefined) return undefined;
+  const floor = readMinimum(value);
+  if (!floor || !same(floor.at, ref)) throw new Unread("read-minimum-scope");
+  return floor;
+}
+function requireMinimum(head: Head, floor?: ReadMinimum): void {
+  if (!floor) return;
+  const seq = typeof floor.head === "number" ? floor.head : floor.head.seq;
+  if (head.seq < seq || typeof floor.head !== "number" && head.seq === seq && head.hash !== floor.head.hash) throw new Unread("read-minimum-behind");
+}
 export interface Point { scope: ScopeRef; head: Head }
 export interface ReadOptions { service: string; signer: Signer; config: () => Promise<McpConfig>; fetch?: Fetch; now?: () => number }
 export interface Frame { ref: ScopeRef; head: Head; summary: Summary; items: Item[] }
@@ -110,9 +122,10 @@ export class Collection {
     }
     this.counters.items += fresh.length;
   }
-  async frame(ref: ScopeRef): Promise<Frame> {
-    const held = this.frames.get(ref.scope); if (held) { if (!same(ref, held.ref)) throw new Unread("incarnation-conflict"); return held; }
-    const got = await this.read(ref, handle => handle.summary());
+  async frame(ref: ScopeRef, minimum?: ReadMinimum): Promise<Frame> {
+    const floor = minimumFor(ref, minimum);
+    const held = this.frames.get(ref.scope); if (held) { if (!same(ref, held.ref)) throw new Unread("incarnation-conflict"); requireMinimum(held.head, floor); return held; }
+    const got = await this.read(ref, handle => handle.summary(floor));
     if (!same(got.value.scope, ref) || !got.complete || got.value.status !== "active") throw new Unread("summary-incomplete");
     this.#keepItems(ref, got.at, got.value.items);
     const frame = { ref, head: got.at, summary: got.value, items: [...got.value.items] };

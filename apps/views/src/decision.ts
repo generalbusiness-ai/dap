@@ -34,10 +34,10 @@ function questionActions(context: Context): CardAction[] {
 export function decisionSource(app: RepoInAi): ViewSource {
   return {
     initialPage: screen => screen === "change" ? "updates" : "summary",
-    read: async query => {
+    read: async (query, _access, minimum) => {
       try {
         if (query.screen === "decision") {
-          const selected = selector(query.subject), { context } = await app.question(selected.scope, selected.ask);
+          const selected = selector(query.subject), { context } = await app.question(selected.scope, selected.ask, minimum);
           const actions = questionActions(context), at = actions[0] && !actions[0].local ? actions[0].args["at"] as Record<string, number> : { on: context.ask.revision };
           const card: Card = { identity: { item: String(context.ask.id), kind: "ask", revision: String(context.ask.revision), subject: { scope: context.scope.scope, item: context.ask.id }, at },
             title: String(context.ask.values["question"]), summary: context.brief === null ? "Legacy Question: no Brief binding." : context.briefMatches ? "Question text under its immutable Brief. Approval does not approve the Brief or conditions." : "The retained Brief resource does not match this Question.",
@@ -47,6 +47,7 @@ export function decisionSource(app: RepoInAi): ViewSource {
           if (utf8(canonicalize(card)).length > 60 * 1024) return { status: "incomplete", position: 0, count: 0, fallback: "Question body exceeds this card's display budget. No approval is offered; read the bounded context." };
           return { status: "ready", position: 0, count: 1, card, fallback: card.fallback };
         }
+        if (minimum !== undefined) return { status: "unavailable", position: 0, count: 0, fallback: "This screen does not support a receipt read minimum." };
         const response = query.screen === "work" ? await app.work() : query.screen === "change" ? await app.since() : await app.needsYou();
         if (response.isError) return { status: "unavailable", position: 0, count: 0, fallback: "This bounded read is unavailable." };
         const data = response.structuredContent, rows = data["rows"] as Row[];
@@ -65,6 +66,7 @@ export function decisionSource(app: RepoInAi): ViewSource {
         return { status: "ready", position, count: rows.length, card, fallback: card.fallback };
       } catch (error) {
         if (!(error instanceof Unread) && !(error instanceof SyntaxError)) throw error;
+        if (error instanceof Unread && error.reason === "read-minimum-scope") return { status: "unavailable", position: 0, count: 0, fallback: "The receipt minimum does not name this exact Question scope and incarnation." };
         return { status: "unavailable", position: 0, count: 0, fallback: "The selected Question or bounded read is unavailable." };
       }
     },

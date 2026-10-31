@@ -9,14 +9,15 @@ import { tsImport } from 'tsx/esm/api';
 // Actual adapter/Reads/codecs/local filesystem over scripted scope answers.
 // No native authority, hosted room, provider, or browser is exercised here.
 const load = source => tsImport(source, import.meta.url);
-const { canonicalize, digestBytes, entryHash, itemQueryArgument, itemQueryDigest, readItemQueryParameter, textDigest, utf8 } = await load('@generalbusiness/dap-bytes');
+const { canonicalize, digestBytes, entryHash, itemQueryArgument, itemQueryDigest, readItemQueryParameter, readMinimumParameter, textDigest, utf8 } = await load('@generalbusiness/dap-bytes');
 const { secretSigner, signedIntent } = await load('@generalbusiness/dap-client');
 const { issueQuestionsBrief, QUESTION_DIGESTS, J4_DIGESTS } = await load('@generalbusiness/dap-lanes');
 const { StandIn, SERVICE } = await load(new URL('../../../packages/mcp/test/support/standin.ts', import.meta.url).href);
 const { RepoInAi } = await load(new URL('../src/repo-in-ai.ts', import.meta.url).href);
 const { ReviewStore } = await load(new URL('../src/review-store.ts', import.meta.url).href);
 const { Collection } = await load(new URL('../src/reads.ts', import.meta.url).href);
-const { captureQuestionAction, decisionSource } = await load(new URL('../src/decision.ts', import.meta.url).href);
+const { captureQuestionAction, decisionSource, questionSubject } = await load(new URL('../src/decision.ts', import.meta.url).href);
+const { ViewSessions } = await load(new URL('../../../packages/mcp/src/views/session.ts', import.meta.url).href);
 const { createRepoInAiService } = await load(new URL('../src/node.ts', import.meta.url).href);
 const NOW = Date.parse('2099-01-01T00:00:00Z');
 const item = (id, type, state, values = {}, refs = {}, parties = {}) => ({ id, type, state, revision: id, opened: null, values, refs, parties, attributed: [] });
@@ -203,4 +204,57 @@ test('the real static service catalogue and factory do not invoke room inventory
   finally { bounded.close(); }
   assert.equal(reached, 0, 'The actual default Fetch must not follow a redirect beyond the selected service');
   assert.equal(nativeWrites, 0, 'A read diagnostic must never turn into a native act');
+});
+
+
+// Real mounted-view/Decision/Collection/Reads/codecs over scripted scope answers.
+// The perform callback and receipt lookup stand in for Native admission/custody;
+// this owner does not prove Native authority or the service's private receipt map.
+test('an accepted Decision receipt floors the next actual app read; an older coherent cut cannot replace it', async t => {
+  const f = fixture(t), q = await question(f), older = structuredClone(q.state);
+  const wires = [], receipts = new WeakMap(); let serveOlder = false, performed = 0, accepted;
+  const app = new RepoInAi({ ...f.options, fetch: async (url, init) => {
+    const asked = new URL(url), target = asked.pathname.startsWith('/v1/scopes/' + q.state.ref.scope);
+    if (asked.pathname === '/v1/scopes/' + q.state.ref.scope && asked.searchParams.has('atLeast')) {
+      const minimum = readMinimumParameter(asked.searchParams.get('atLeast'));
+      assert.ok(minimum, 'The actual summary route carries the maintained canonical minimum wire'); wires.push(minimum);
+    }
+    if (!target || !serveOlder) return f.options.fetch(url, init);
+    // Every route of this one target can serve the same old cut, not a mixed-head fixture.
+    f.peer.scopes.set(q.state.ref.scope, older);
+    try { return await f.options.fetch(url, init); } finally { f.peer.scopes.set(q.state.ref.scope, q.state); }
+  } });
+  const source = decisionSource(app), sessions = new ViewSessions(source, { call: async () => { throw Error('Unexpected generic read.'); } }, async (kind, args, admit) => {
+    await admit(); assert.equal(kind, 'approve'); performed++;
+    const signed = await signedIntent(f.signer, { to: q.state.ref, kind, on: args.on, fields: args.fields, expected: args.at }, { now: NOW });
+    const sealed = f.peer.append(q.state, { type: 'act', signed, authority: [], presented: {} });
+    accepted = f.peer.receipt(q.state, sealed);
+    const request = q.state.items.find(row => row.type === 'approval-request'); request.state = 'met'; request.revision = sealed.entry.seq;
+    q.state.items.push(item(sealed.entry.seq, 'approval', 'submitted', { verdict: 'approve' }, { ask: q.opening.entry.seq, bodyAt: q.opening.entry.seq }, { approver: f.viewer }));
+    const answer = { content: [{ type: 'text', text: 'Scripted accepted approval.' }], structuredContent: { answer: 'accepted', fact: accepted.fact }, isError: false };
+    receipts.set(answer, accepted); return answer;
+  }, async () => { throw Error('No settlement is needed in this composition witness.'); }, answer => receipts.get(answer) ?? null);
+  await sessions.open('floor', 'decision', questionSubject(q.state.ref, q.opening.entry.seq));
+  const initial = sessions.display('floor'); assert.equal(initial.status, 'ready'); assert.equal(initial.card.actions[0].id, 'approve');
+  const done = await sessions.act('floor', initial.cut, 'approve'); assert.equal(done.result.structuredContent.answer, 'accepted'); assert.equal(performed, 1);
+  const required = { at: accepted.fact.at, head: { seq: accepted.fact.seq, hash: accepted.fact.hash } };
+  serveOlder = true;
+  const behind = await sessions.read('floor', done.display.cut, { refresh: true });
+  assert.deepEqual(wires, [required], 'The accepted full receipt reaches the app summary wire without losing scope, incarnation or hash');
+  assert.equal(behind.status, 'unavailable', 'A coherent cut below the accepted receipt must not become the next actionable card'); assert.equal(behind.card, undefined); assert.equal(behind.receipt, done.display.receipt);
+  serveOlder = false;
+  const reached = await sessions.read('floor', behind.cut, { refresh: true });
+  assert.equal(reached.status, 'ready'); assert.deepEqual(reached.card.projection, [{ scope: q.state.ref.scope, seq: required.head.seq, hash: required.head.hash }]);
+  assert.ok(!reached.card.actions.some(action => action.id === 'approve')); assert.equal(performed, 1);
+  const count = f.peer.requests.length, foreign = { ...required, at: { ...required.at, inc: f.peer.membership.inc } };
+  assert.equal((await source.read({ screen: 'decision', subject: questionSubject(q.state.ref, q.opening.entry.seq), position: 0, page: 'summary' }, { call: async () => { throw Error('No generic read.'); } }, foreign)).status, 'unavailable');
+  assert.equal(f.peer.requests.length, count, 'A foreign incarnation refuses before any room read');
+  assert.equal((await source.read({ screen: 'work', position: 0, page: 'summary' }, { call: async () => { throw Error('No generic read.'); } }, required)).status, 'unavailable');
+  assert.equal(f.peer.requests.length, count, 'An unsupported screen cannot silently drop the receipt floor');
+  const collection = await new Collection(f.options).begin(q.state.ref);
+  try {
+    const frame = await collection.frame(q.state.ref);
+    await assert.rejects(() => collection.frame(q.state.ref, { at: q.state.ref, head: { seq: frame.head.seq + 1, hash: frame.head.hash } }), error => error.reason === 'read-minimum-behind');
+    await assert.rejects(() => collection.frame(q.state.ref, { at: q.state.ref, head: { seq: frame.head.seq, hash: q.opening.hash } }), error => error.reason === 'read-minimum-behind');
+  } finally { collection.close(); }
 });
