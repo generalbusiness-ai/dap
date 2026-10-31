@@ -39,16 +39,17 @@ export class RepoInAi {
     try { await collection.begin(target, only, after); return { value: await run(collection), collection }; }
     finally { collection.close(); }
   }
-  async #rows(run: (collection: Collection, frames: Frame[]) => Promise<Row[]>, after?: unknown): Promise<CallResult> {
+  async #rows(run: (collection: Collection, frames: Frame[]) => Promise<Row[]>, after?: unknown, walks = true): Promise<CallResult> {
+    const position = (collection: Collection) => walks ? { next: collection.next } : {};
     if (after !== undefined && !isScopeRef(after)) return result({ error: "after-selector", complete: false }, true);
     try {
       const { value, collection } = await this.collect(async collection => run(collection, await collection.lanes()), undefined, false, after);
       const rows = value.slice(0, LIMITS.rows); let omittedRows = value.length - rows.length;
-      const reply = () => ({ rows, heads: collection.points(), unread: collection.unread, omittedScopes: collection.omitted, next: collection.next,
+      const reply = () => ({ rows, heads: collection.points(), unread: collection.unread, omittedScopes: collection.omitted, ...position(collection),
         discoveryComplete: collection.discoveryComplete, omittedRows, counters: collection.counters, viewer: collection.viewer, directory: collection.directory, complete: collection.unread.length === 0 && collection.omitted.length === 0 && omittedRows === 0 });
       let answer = result(reply());
       while (resultBytes(answer) > RESULT_BYTES && rows.length) { rows.pop(); omittedRows++; answer = result(reply()); }
-      if (resultBytes(answer) > RESULT_BYTES) return result({ error: "rows-output-limit", omittedRows, omittedScopes: collection.omitted.length, next: collection.next, unreadScopes: new Set(collection.unread.map(row => row.scope.scope)).size, complete: false }, true);
+      if (resultBytes(answer) > RESULT_BYTES) return result({ error: "rows-output-limit", omittedRows, omittedScopes: collection.omitted.length, ...position(collection), unreadScopes: new Set(collection.unread.map(row => row.scope.scope)).size, complete: false }, true);
       return answer;
     } catch (error) { return result({ error: "read-unavailable", reason: error instanceof Unread || error instanceof ReviewStoreError ? error.reason : "read-failed", complete: false }, true); }
   }
@@ -94,7 +95,7 @@ export class RepoInAi {
         }
       }
       return rows;
-    });
+    }, undefined, false);
   }
   async question(scope: ScopeRef, id: number, minimum?: ReadMinimum): Promise<{ context: Context; collection: Collection }> {
     const floor = minimumFor(scope, minimum);

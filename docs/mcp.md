@@ -2416,5 +2416,6 @@ until another explicit mark. Reading a card does not clear it.
 With more lanes than one call can read, `needs_you` and `since` read a window
 of lanes in a stable order. `omittedScopes` lists the lanes that the answer left
 out, and `next` names the lane to continue from. To read the next window, pass
-`next` as `after`, or open the card again with `next` as `scope`. `next` is
-null at the last window.
+`next` as `after`, or open the card again with `next` as `scope`. A null `next`
+ends the walk. A lane that opened during the walk appears on the next walk.
+`work` reads only the first window and has no `next`.

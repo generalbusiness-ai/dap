@@ -32,9 +32,11 @@ function questionActions(context: Context): CardAction[] {
   return [];
 }
 /** What a list left out, and how to reach what follows. Empty when the list left out no lane. */
-function lanesLeft(data: Readonly<Record<string, unknown>>): string {
+function lanesLeft(data: Readonly<Record<string, unknown>>, screen: string): string {
   const omitted = (data["omittedScopes"] as unknown[]).length, next = data["next"];
   if (omitted === 0) return "";
+  // The Work list takes no cursor, so it names the omission and offers no scope.
+  if (screen === "work") return ` This list leaves out ${omitted} lane${omitted === 1 ? "" : "s"}. The Work list reads only the first lanes.`;
   return ` This list leaves out ${omitted} lane${omitted === 1 ? "" : "s"}.${isScopeRef(next) ? ` To read the lanes that follow, open this screen again with scope ${canonicalize(next)}.` : " No lane follows this one. To read the first lanes, open this screen with no scope."}`;
 }
 export function decisionSource(app: RepoInAi): ViewSource {
@@ -64,7 +66,7 @@ export function decisionSource(app: RepoInAi): ViewSource {
         const response = query.screen === "work" ? await app.work() : query.screen === "change" ? await app.since(after) : await app.needsYou(after);
         if (response.isError) return { status: "unavailable", position: 0, count: 0, fallback: "This bounded read is unavailable." };
         const data = response.structuredContent, rows = data["rows"] as Row[];
-        const left = lanesLeft(data);
+        const left = lanesLeft(data, query.screen);
         if (!rows.length) return { status: data["complete"] ? "empty" : "incomplete", position: 0, count: 0, fallback: data["complete"] ? "No current rows in the reviewed scope selection." : `No rows in the readable selection; omissions remain.${left}` };
         const position = Math.min(query.position, rows.length - 1), current = rows[position]!;
         const points = data["heads"] as LocalReviewCapture["heads"];

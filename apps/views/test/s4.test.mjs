@@ -108,7 +108,7 @@ test('nine lanes: repeated calls reach every lane, each call says what it left o
   const all = states.map(state => state.ref.scope).sort();
   for (const read of [args => f.app.needsYou(args), args => f.app.since(args)]) {
     const { seen, left, counts } = await walk(read);
-    assert.deepEqual(seen.map(rows => rows.length), [6, 3]);
+    assert.deepEqual(seen.map(rows => rows.length), [6, 3], 'The walk has a window of six lanes and a window of three');
     assert.deepEqual(seen.flat().sort(), all, 'The windows reach all nine lanes, each once');
     seen.forEach((rows, index) => assert.deepEqual([...rows, ...left[index]].sort(), all, 'Each call names every lane it did not read'));
     assert.ok(counts.every(count => count <= 8), 'Each call keeps the scope limit');
@@ -124,7 +124,7 @@ test('nine lanes: repeated calls reach every lane, each call says what it left o
   assert.ok(first.card.reasons.some(reason => reason.includes('leaves out 3 lanes')));
   const windowOne = mark.capture.heads.map(point => point.scope.scope).filter(scope => all.includes(scope));
   assert.equal(windowOne.length, 6);
-  assert.deepEqual((await source.markReviewed(mark.capture, { view: 'TEST', cut: 1, admit() {} })).structuredContent, { localStatus: 'marked' });
+  assert.deepEqual((await source.markReviewed(mark.capture, { view: 'TEST', cut: 1, admit() {} })).structuredContent, { localStatus: 'marked' }, 'The mark reads the lanes of its own capture');
   const after = (await f.app.since()).structuredContent;
   assert.deepEqual(after.rows, [], 'The marked window has no new head');
   assert.equal(after.complete, false, 'The room is still not complete');
@@ -140,16 +140,23 @@ test('nine lanes: repeated calls reach every lane, each call says what it left o
   assert.ok(secondRows.every(row => row.since === null));
   const secondMark = second.card.actions.find(action => action.id === 'mark-reviewed');
   assert.deepEqual((await source.markReviewed(secondMark.capture, { view: 'TEST', cut: 2, admit() {} })).structuredContent, { localStatus: 'marked' });
-  assert.deepEqual((await f.app.since({ after: after.next })).structuredContent.rows, []);
+  assert.deepEqual((await f.app.since({ after: after.next })).structuredContent.rows, [], 'The second mark covers the second window');
+  assert.deepEqual((await f.app.since()).structuredContent.rows, [], 'The first window keeps its marks after the second mark');
+
+  // The Work list reads the first window. It names the omission and offers nothing it would refuse.
+  const work = await source.read({ screen: 'work', position: 0, page: 'summary' });
+  assert.match(work.fallback, /leaves out 3 lanes\. The Work list reads only the first lanes\./, 'The Work list names its omission');
+  assert.doesNotMatch(work.fallback, /with scope/, 'The Work list offers no scope');
+  assert.equal('next' in (await f.app.work()).structuredContent, false, 'The Work tool answer has no next');
 
   // The session and its tool take that scope on a list.
   const sessions = new ViewSessions(source, { call: async () => { throw Error('TEST no generic read'); } }, async () => { throw Error('TEST no act'); }, async () => { throw Error('TEST no settle'); });
-  assert.equal((await sessions.open('TEST-window', 'change', undefined, undefined, after.next).catch(error => ({ status: error.message }))).status, 'incomplete');
+  assert.equal((await sessions.open('TEST-window', 'change', undefined, undefined, after.next).catch(error => ({ status: error.message }))).status, 'incomplete', 'The session opens a list at its next window');
   await assert.rejects(() => sessions.open('TEST-bad-window', 'change', undefined, undefined, 'TEST not a scope'), /selected scope/);
 
   // A capture cannot name a scope outside the room, and a list is the only screen with a scope.
   const stranger = { scope: { ...after.next, scope: 'sc_' + 'z'.repeat(52) }, head: second.card.projection[0] && { seq: 0, hash: 'sha256:' + 'a'.repeat(64) } };
-  assert.equal((await source.markReviewed({ ...mark.capture, heads: [stranger] }, { view: 'TEST', cut: 3, admit() {} })).structuredContent.reason, 'outside-room');
+  assert.equal((await source.markReviewed({ ...mark.capture, heads: [stranger] }, { view: 'TEST', cut: 3, admit() {} })).structuredContent.reason, 'outside-room', 'A capture cannot name a lane outside the room');
   assert.equal((await source.read({ screen: 'work', position: 0, page: 'summary', scope: after.next })).status, 'unavailable');
 });
 

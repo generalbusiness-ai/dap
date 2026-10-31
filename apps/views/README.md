@@ -20,8 +20,8 @@ support scopes leave fewer lane slots. With more lanes, `needs_you` and `since`
 read a window of lanes in a stable order. Each answer lists the lanes it left
 out in `omittedScopes` and names the lane to continue from in `next`. To read
 the next window, pass `next` as `after`, or open the card again with `next` as
-`scope`. `next` is null at the last window. `work` still reads only the first
-window.
+`scope`. A null `next` ends the walk. A lane that opened during the walk appears
+on the next walk. `work` reads only the first window and has no `next`.
 The adapter returns at most 50 attention rows and separately caps live Item
 rows at 512, pages at 16, and HTTP attempts at 64. It counts session and
 signed-read fallback requests. Omissions and read failures remain visible.
