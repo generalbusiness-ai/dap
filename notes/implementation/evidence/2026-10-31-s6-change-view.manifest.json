@@ -1,22 +1,22 @@
 {
   "version": 1,
-  "qualification": "One passing gate at the checkpoint. Each focused run and control file names the commit it ran at, which is earlier than the checkpoint. The gate ran every witness again at the checkpoint. No hosted Worker, real provider or browser ran. Witness 5 ran on Native stand-ins and the hosted scratch room witness stays owed.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-s6-change-view",
+  "qualification": "One passing gate at the checkpoint, and fourteen controls at the checkpoint. earlier-checkpoint holds copies of the focused runs and controls from the head before the repair, each naming the commit it ran at, and the sealed directory 2026-10-31-s6-change-view keeps the originals with that gate. The gate ran every witness again at the checkpoint. No hosted Worker, real provider or browser ran. Witness 5 ran on Native stand-ins and the hosted scratch room witness stays owed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-s6-change-view-repair",
   "checkpoint": {
-    "commit": "98c055ae205b2bd818f3ad03b8c2c478d83b73d4",
-    "tree": "186fe956858e9058fbfddf0e31ce9160f3a4cf50"
+    "commit": "3a05555a1304764e392c2d36083af548cb0768b8",
+    "tree": "67e7d1ff6093d9dae5a3cb3f77583bf58187348e"
   },
-  "fileCount": 70,
+  "fileCount": 109,
   "files": [
     {
       "path": "gate/gate.stdout.log",
-      "bytes": 6470,
-      "sha256": "0a28d969adbb7f261c414bb2db0c38d9a7b321a7010761f901ebb4f1aa79082f"
+      "bytes": 6458,
+      "sha256": "c10b267cc74d5dd663ce2dcfbea7826bf6527c48800fa1a8ec99c05b40ce057a"
     },
     {
       "path": "gate/gate.stderr.log",
       "bytes": 37,
-      "sha256": "f02840891d6a58f6ab3914a77a0238f33552dca548551aa180d196742d7f41d6"
+      "sha256": "c4614fc4f6470127e4cf365c699e115f06fafa0a95381f417743c0c35d45c699"
     },
     {
       "path": "gate/gate.exit",
@@ -25,168 +25,268 @@
     },
     {
       "path": "gate/gate.sh",
-      "bytes": 597,
-      "sha256": "737154c46ed01dafcecd512f2fce8db80d7aa520a1ab200c0bdc8aa2f9e764a8"
+      "bytes": 625,
+      "sha256": "f7512465297971c5f9345e2dbd10dd0e0c0a2f2bbabced27564795234268fdf5"
     },
     {
-      "path": "stopped-main-moved/WHY.txt",
-      "bytes": 117,
-      "sha256": "6b2498318127fe1e5c38357c0ff3b9a65bccf749222ba99e7b31240303c45c18"
+      "path": "gate/logs/test.log",
+      "bytes": 41351695,
+      "sha256": "fcc57372890b070e8ef955a7db13f354674ca76331f080ff5ddd673abc1c92d2"
     },
     {
-      "path": "focused/01-git-diff.txt",
+      "path": "stopped-planner-ruling/WHY.txt",
+      "bytes": 140,
+      "sha256": "3ba3b3b2841557c2cbdd911c82a91410ea770e1283f2f5d749cfac743f93a7db"
+    },
+    {
+      "path": "controls.txt",
+      "bytes": 334,
+      "sha256": "9a158e00d1fbf0644df578ff12b0489adec83d9ad3e4084df3d6b1b6feda0262"
+    },
+    {
+      "path": "earlier-controls/controls.txt",
+      "bytes": 162,
+      "sha256": "810b883f542135b9cf0791e2cf5f6f02933b34853774820029e0e429964b5c13"
+    },
+    {
+      "path": "earlier-controls/first-controls/controls-first.txt",
+      "bytes": 311,
+      "sha256": "f3914777e60a4c6a494e5b99027038cf850e1786932b8780afdea4a5e2ad3a0b"
+    },
+    {
+      "path": "control-r1-no-resend.log",
+      "bytes": 35927,
+      "sha256": "4ef909a30505901f71cccae46d9aab4c9c522e133f40e0d1210131320f084c38"
+    },
+    {
+      "path": "control-r2-no-custody-check.log",
+      "bytes": 39756,
+      "sha256": "1654f2913457eb75c407fd6d99b3c0242b294b75bb610cb3beab2ed7565751fa"
+    },
+    {
+      "path": "control-r3-early-resend.log",
+      "bytes": 36352,
+      "sha256": "955f982087ae3b35029f390472b0914bc1a110d211633141cc1da8001d0642d2"
+    },
+    {
+      "path": "control-r4-not-found-says-sign.log",
+      "bytes": 35374,
+      "sha256": "45fe2e391770b0a8f953dff742ea9cad8a19efef12a38fc9aec01cb6c8e7643d"
+    },
+    {
+      "path": "control-r5-unbounded-closing.log",
+      "bytes": 2394,
+      "sha256": "4663c9d6195ab6855dedacef643d8706c202ba57bb9e5583e405f04680576b6d"
+    },
+    {
+      "path": "control-r6-unbounded-path.log",
+      "bytes": 4531,
+      "sha256": "11f76f9fc3408d5b65001b2c417d4aaed3516f3b22b908566de03f7c4634ac7e"
+    },
+    {
+      "path": "control-r7-spread.log",
+      "bytes": 2437,
+      "sha256": "43b721a8849f023ba5934bed28c5257a208733d2a2c898372b9d3c0d83e28603"
+    },
+    {
+      "path": "control-r8-backslash-raw.log",
+      "bytes": 2572,
+      "sha256": "cbfdb9a5487d0eb8340d7d1bea9c84d5f0a1a78c74f6843141f80874b18ef85e"
+    },
+    {
+      "path": "control-r9-bidi-raw.log",
+      "bytes": 2718,
+      "sha256": "dee7e499af8de06b4e90d094d22188d7d3830d999d19ae3030d3705efa00e93b"
+    },
+    {
+      "path": "control-r10-sha256-tool.log",
+      "bytes": 35696,
+      "sha256": "762ce56576302a6c3b10cee79d9790b52ece99bb91bc53e960e20747adeafcc7"
+    },
+    {
+      "path": "control-r11-card-signs-first.log",
+      "bytes": 35677,
+      "sha256": "2149a214f37ae86cef9c923352c1a526169644c2b86ec3b4bffdf3f84e9b4347"
+    },
+    {
+      "path": "control-r12-diff-no-guard.log",
+      "bytes": 2582,
+      "sha256": "952a912e6b918159ebe634350a6a1fc120dc5c1c85c29b671d77e9a5833cf45f"
+    },
+    {
+      "path": "control-r13-spent-unsaid.log",
+      "bytes": 2691,
+      "sha256": "bfa073dd21bd75878f61ecf53ea6a7571b494d2897c11050756b046afdf85cfc"
+    },
+    {
+      "path": "control-r14-no-margin.log",
+      "bytes": 35918,
+      "sha256": "4d402ef3db54c5873b8e3eb1297c85353ba4634055acb9aaf92ea3c652d74c90"
+    },
+    {
+      "path": "earlier-checkpoint/SHA256SUMS",
+      "bytes": 6859,
+      "sha256": "7a16d1033364c8affcc7b2e3199c467b0df90c2169828a727cf7ba8c2048abde"
+    },
+    {
+      "path": "earlier-checkpoint/gate.stdout.log",
+      "bytes": 6470,
+      "sha256": "0a28d969adbb7f261c414bb2db0c38d9a7b321a7010761f901ebb4f1aa79082f"
+    },
+    {
+      "path": "earlier-checkpoint/focused/01-git-diff.txt",
       "bytes": 479,
       "sha256": "f7e0ced70a849f150ea38275f47c8466d794e2cbb224c321d2a0d15d6aee5a47"
     },
     {
-      "path": "focused/02-scope-change-view.txt",
+      "path": "earlier-checkpoint/focused/02-scope-change-view.txt",
       "bytes": 503,
       "sha256": "675e9619dcd2720903a9d16ce7993fa60d80719d0916f4743721621946d1df7a"
     },
     {
-      "path": "focused/03-mcp-plain.txt",
+      "path": "earlier-checkpoint/focused/03-mcp-plain.txt",
       "bytes": 725,
       "sha256": "654ab64ca60cb5ac0a90ca4c0db58e285bb31de66afceb716c2fe1065aab1ab3"
     },
     {
-      "path": "focused/04-scope-regressions.txt",
+      "path": "earlier-checkpoint/focused/04-scope-regressions.txt",
       "bytes": 635,
       "sha256": "d48369be9f80229f1048d4fc4d5953b8d92c0e7abc12f5ed4412a3b16e0c2a5a"
     },
     {
-      "path": "focused/05-views-node.txt",
+      "path": "earlier-checkpoint/focused/05-views-node.txt",
       "bytes": 2122,
       "sha256": "4b6dc6f7c25cdb408ee7e7284808c0ca5f39c118983195ae1dc9fc176a80b845"
     },
     {
-      "path": "focused/06-active-source.txt",
+      "path": "earlier-checkpoint/focused/06-active-source.txt",
       "bytes": 1571,
       "sha256": "d2fa9f062f4f387322c2d203f5c87c2ce3b9261026665826fd46c1b78992bb43"
     },
     {
-      "path": "focused/07-security-entry-points.txt",
+      "path": "earlier-checkpoint/focused/07-security-entry-points.txt",
       "bytes": 1502,
       "sha256": "62238b7498448dc84b9382897d351ad8974355f320ad58cf193c77ab8d3e0554"
     },
     {
-      "path": "focused/08-kernel-boundary.txt",
+      "path": "earlier-checkpoint/focused/08-kernel-boundary.txt",
       "bytes": 243,
       "sha256": "769621d89dab36a7bf897093d6e49828f5c909fcdb60b5ae0076b8272aee451d"
     },
     {
-      "path": "focused/09-shared-helpers.txt",
+      "path": "earlier-checkpoint/focused/09-shared-helpers.txt",
       "bytes": 257,
       "sha256": "24e177a7765ce8897f141f1977e18f584653cebcf586dbcf82fc7260f95a57a1"
     },
     {
-      "path": "focused/10-tsc-mcp.txt",
+      "path": "earlier-checkpoint/focused/10-tsc-mcp.txt",
       "bytes": 491,
       "sha256": "58e657fae2e4c0dfc6205acc860766daf93ad0b4bdb71491ed62f40d28eb9d4f"
     },
     {
-      "path": "focused/11-tsc-others.txt",
+      "path": "earlier-checkpoint/focused/11-tsc-others.txt",
       "bytes": 732,
       "sha256": "72089374541399ceb46f95ca3834613fd0a508a24d7f3a1a4ac336b28ca8b02c"
     },
     {
-      "path": "focused/controls/C1-service-ignores-at.txt",
+      "path": "earlier-checkpoint/focused/controls/C1-service-ignores-at.txt",
       "bytes": 9042,
       "sha256": "2cf2077354dd4fe286743cbdf20e140e2259895be9876d53b45840569739e6d9"
     },
     {
-      "path": "focused/controls/C10-custody-per-process.txt",
+      "path": "earlier-checkpoint/focused/controls/C10-custody-per-process.txt",
       "bytes": 2224,
       "sha256": "c7c01c0aa9357f72e68f218421c4fc18e82577153a548e0a1a1df0cf0dd6fdb0"
     },
     {
-      "path": "focused/controls/C11-repeat-resends.txt",
+      "path": "earlier-checkpoint/focused/controls/C11-repeat-resends.txt",
       "bytes": 2024,
       "sha256": "e44aea5a816aa899e6c0f88dee3716fe7a022f4e3856f314180715ac34a0e23a"
     },
     {
-      "path": "focused/controls/C12-diff-never-truncated.txt",
+      "path": "earlier-checkpoint/focused/controls/C12-diff-never-truncated.txt",
       "bytes": 3879,
       "sha256": "9328b9fa173a607344901a0e3789601f2cc2752c2b26e9985bc05171853fa504"
     },
     {
-      "path": "focused/controls/C13-diff-endpoints-swapped.txt",
+      "path": "earlier-checkpoint/focused/controls/C13-diff-endpoints-swapped.txt",
       "bytes": 2962,
       "sha256": "eac1c076c88e8fa36cb5a0fd594269e6246f50bc62a148cecac7c7945ee8491d"
     },
     {
-      "path": "focused/controls/C14-witness4-never-truncated.txt",
+      "path": "earlier-checkpoint/focused/controls/C14-witness4-never-truncated.txt",
       "bytes": 8190,
       "sha256": "fb4d079b09061fce8175e41dcddf78eb67b90f5e3cea3436c09a4ff434e390a4"
     },
     {
-      "path": "focused/controls/C15-card-at-unchecked.txt",
+      "path": "earlier-checkpoint/focused/controls/C15-card-at-unchecked.txt",
       "bytes": 2953,
       "sha256": "346e046402b50e049f16a496e052501c60024e9edd1139fc139d886e91cd9055"
     },
     {
-      "path": "focused/controls/C16-action-at-overwritten.txt",
+      "path": "earlier-checkpoint/focused/controls/C16-action-at-overwritten.txt",
       "bytes": 3167,
       "sha256": "e5022e7a3126cfe6c2db8681455df28dc1b35a8fcf70db391bfbb8694430df70"
     },
     {
-      "path": "focused/controls/C17-active-source-widened.txt",
+      "path": "earlier-checkpoint/focused/controls/C17-active-source-widened.txt",
       "bytes": 610,
       "sha256": "5f4e5722d76583f5625e984eb2c9f6a269544a5193097b5b750fcbc66ed723ec"
     },
     {
-      "path": "focused/controls/C2a-on-not-allowed-witness-1.txt",
+      "path": "earlier-checkpoint/focused/controls/C2a-on-not-allowed-witness-1.txt",
       "bytes": 5857,
       "sha256": "98c3e6b11705b1a0a99f16e95ac0033d93efb4c85454e810bc1270445381e3d2"
     },
     {
-      "path": "focused/controls/C2b-on-not-allowed-decision.txt",
+      "path": "earlier-checkpoint/focused/controls/C2b-on-not-allowed-decision.txt",
       "bytes": 7759,
       "sha256": "636aa1c6d193aac62669e3c68f943795ac9c0390f5390b65c37542ee3c3c51cb"
     },
     {
-      "path": "focused/controls/C2c-final-also-not-allowed.txt",
+      "path": "earlier-checkpoint/focused/controls/C2c-final-also-not-allowed.txt",
       "bytes": 8422,
       "sha256": "5d7e0eabf88f18fb395594dbb389ccfeb7347fdcedf8792235416fac5e71e25b"
     },
     {
-      "path": "focused/controls/C2d-computed-name-allowed.txt",
+      "path": "earlier-checkpoint/focused/controls/C2d-computed-name-allowed.txt",
       "bytes": 2268,
       "sha256": "3015ea6bb88c4d413dce4eba0a7a4afe1f9809d8eeb98e9c6bf82e781209d234"
     },
     {
-      "path": "focused/controls/C3-decision-ignores-at.txt",
+      "path": "earlier-checkpoint/focused/controls/C3-decision-ignores-at.txt",
       "bytes": 8965,
       "sha256": "0c8f3f9a469191945487241eda75c945c67b975732500bc2bb5ae05b4016260e"
     },
     {
-      "path": "focused/controls/C4-decision-local-compare.txt",
+      "path": "earlier-checkpoint/focused/controls/C4-decision-local-compare.txt",
       "bytes": 8459,
       "sha256": "04b5e9c950e789a68339498b3c1310f76b66d1ef10713e6e7f8e0828a8375ff3"
     },
     {
-      "path": "focused/controls/C5-merge-unknown-no-check.txt",
+      "path": "earlier-checkpoint/focused/controls/C5-merge-unknown-no-check.txt",
       "bytes": 7672,
       "sha256": "b59e72527ae2591fd58d0251ed90fe26617f60778a0d2e8a3b77c31417a4e8eb"
     },
     {
-      "path": "focused/controls/C6-restart-no-custody-check.txt",
+      "path": "earlier-checkpoint/focused/controls/C6-restart-no-custody-check.txt",
       "bytes": 7934,
       "sha256": "02c25e58691a828a3c7bc9fbba952c38ec214d2c13285e1ca01dabca31e81b3e"
     },
     {
-      "path": "focused/controls/C7-approve-wrong-extent.txt",
+      "path": "earlier-checkpoint/focused/controls/C7-approve-wrong-extent.txt",
       "bytes": 9261,
       "sha256": "f78d1a304406b7c643e59b3397c2fe74918445d63f59986a507c14459795aa4f"
     },
     {
-      "path": "focused/controls/C9-merge-guard-removed-setup-failure-not-evidence.txt",
+      "path": "earlier-checkpoint/focused/controls/C9-merge-guard-removed-setup-failure-not-evidence.txt",
       "bytes": 8101,
       "sha256": "26ac8a476b884ed61e4f2e43414c8fdf21d980c115e47801bcdc0c1d6cdbeac7"
     },
     {
       "path": "SHA256SUMS",
-      "bytes": 6859,
-      "sha256": "7a16d1033364c8affcc7b2e3199c467b0df90c2169828a727cf7ba8c2048abde"
+      "bytes": 11610,
+      "sha256": "ad432fdb74db1594fdadcd10cc8a4d8abfd4a10212b7f2fe8c6f8aa358d82d95"
     }
   ]
 }
