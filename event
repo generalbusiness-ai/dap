@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:caa61c4684b3fd6495b80449b4212938ae6c91d2","text":"Merge retired a covered predecessor; the successor is at notes/plans/034-2026-10-31-head-outcome-recovery.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d387cf0966c7cfd96612e227d5ec74eb21764ecc","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/workspace-lineage.test.ts."}
