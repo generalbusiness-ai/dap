@@ -41,6 +41,14 @@ plain entry behavior after the same request authentication without admitting
 strangers to behind.current. No archived payload or supplied historical hash
 is verified, and no new read authority or wire field appears.
 
+Ruling `f71e8a29ffac0988ec9b341417bc706ad81eb6d3` accepts `archived` before
+minimum kind or incarnation checks below the floor. HTTP route-scope
+validation and request authentication still apply. Approved parent:
+`e38f9cc4b7780bfb9a80de435e8b43b6036109c3`, tree
+`8d63028755575b0b4966c3d6aab5b64ce1283292`. Only docs/scopes.md, note and
+manifest change; production and tests keep gate bytes. Exact-head re-review
+is due. Deployment waits for the J4 live witness to close. No new test is claimed.
+
 The installed projection owner uses real Scope turns and SQLite, old signed
 causal input, elapsed intent time and an actual floor. Both whole-file cases
 pass. The controlled floor, archive receipt, clock, definition and provider

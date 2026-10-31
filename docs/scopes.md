@@ -771,8 +771,10 @@ A minimum grants no access. The read checks its existing authority before
 waiting and again after an arrival or timeout. It waits at most one second
 for the named head, then performs the normal read. A full head also requires
 the retained hash at that sequence. A missing or different hash returns
-`unavailable`; another incarnation returns `wrong-incarnation`. If the
-scope remains behind, an authorized reader receives
+`unavailable`; another incarnation returns `wrong-incarnation`.
+For an entry below the archive floor, the existing `archived` answer takes
+precedence over a minimum's kind or incarnation mismatch.
+If the scope remains behind, an authorized reader receives
 `{ ok: false, reason: "behind", current: FactRef }` with HTTP 503.
 The wait writes no entry or durable alarm. An abandoned transport request
 may retain its callback until an arrival or the bounded deadline.
