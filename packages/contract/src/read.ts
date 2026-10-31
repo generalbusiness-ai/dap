@@ -6,17 +6,24 @@
 import type { Digest, FactRef, MemberRef, PlatformDefinition, ScopeRef, Seed, Timestamp } from "./scope.ts";
 import type { Attempt, OutboxId, Entry, Message, Receipt } from "./entry.ts";
 import type { FieldValue } from "./intent.ts";
-import type { ReadRefusal } from "./result.ts";
+import type { Head, ReadRefusal } from "./result.ts";
 
 /** An opaque, resumable position in a paged read. */
 export type Cursor = string;
 
 import type { Archived } from "./floor.ts";
 
+/** A minimum journal position in one exact scope incarnation. A full head also requires its recorded hash. */
+export interface ReadMinimum { readonly at: ScopeRef; readonly head: number | Head }
+
+/** The authorized scope remained below the minimum when its bounded wait ended. */
+export interface BehindRead { ok: false; reason: "behind"; current: FactRef }
+
 export type Read<T> =
+  | BehindRead
   | { ok: false; reason: "archived"; archived: Archived; fact?: FactRef; next?: Cursor }
   | { ok: true; at: { seq: number; hash: Digest }; value: T; complete: boolean; next?: Cursor }
-  | { ok: false; reason: Exclude<ReadRefusal, "archived">; detail?: FactRef | ScopeRef };
+  | { ok: false; reason: Exclude<ReadRefusal, "archived" | "behind">; detail?: FactRef | ScopeRef };
 
 /** Settlement of one signed intent: one receipt or `not-found` (section 4.2). */
 export type Settlement = Read<Receipt>;

@@ -49,7 +49,8 @@ export function applicationItemSnapshot(declaration: ApplicationReadProjection, 
 /** Adapt a complete native projection to the existing observation contract.
  * A refused projection never becomes a current/partial observation. */
 export function completeApplicationItems(read: ApplicationProjectionRead, declaration: ApplicationReadProjection): Read<CompleteSnapshot<ApplicationItemSnapshot>> {
-  if (!read.ok) return { ok: false, reason: read.reason === "forbidden" || read.reason === "too-large" || read.reason === "sessions-unavailable" || read.reason === "clock-behind" ? read.reason : "unavailable" };
+  if (!read.ok && read.reason === "behind") return read;
+  if (!read.ok) return { ok: false, reason: read.reason === "forbidden" || read.reason === "too-large" || read.reason === "sessions-unavailable" || read.reason === "clock-behind" || read.reason === "wrong-incarnation" ? read.reason : "unavailable" };
   const value = applicationItemSnapshot(declaration, read.value);
   return { ok: true, at: value.at, complete: true, value: { scope: value.scope, definition: value.definition, at: value.at, value } };
 }
