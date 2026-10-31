@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b48136627b9dee340c73d82766f2666ae473ad1b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-31-omitted-lanes.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ba1a77c18cbb32c3895475ace2c907d709bebfb8","text":"Merge retired a covered predecessor; the successor is at apps/views/src/repo-in-ai.ts."}
