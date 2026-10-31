@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-entry-points.test.mjs","body":{"commit":"93a6b661ff139c1b7f7079983eb43ea119863743","path":"scripts/security-entry-points.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:043c09a5011719ce8144868f9ebd48ea2d50c91b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-31-s5-agent-wait-resume.md."}
