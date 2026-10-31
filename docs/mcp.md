@@ -1887,6 +1887,12 @@ are `room`, `commons`, `inspect`, `application_installation`, `items`, `steps`,
 existing service mode still decides whether `actions` and `act` are listed.
 These settings do not change local Node MCP defaults.
 
+`step` and `text` give a hosted agent a full fact and complete text, with the
+same member read and byte bounds as the other reads. So `step` on Membership
+shows a hosted agent's model the secret in a redeemed `join` or `enrol`. That
+secret is spent: the invitation refuses it as `invitation-used`. Room text that
+other members wrote reaches the model too, as data that grants nothing.
+
 A named act call takes a fresh inventory snapshot and applies the same
 selection and standing predicates as `tools/list`. Dispatch also checks
 the actual target's membership: standing on scope A cannot admit the same
