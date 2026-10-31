@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. Focused runs and fourteen controls ran at d2ddf228, before main merged; the merge changed the scenario's stand-in import and nothing in the definition. No Worker, room or real source ran.",
+  "directory": "2026-10-31-finding-item",
+  "checkpoint": {
+    "commit": "c83c21cc97ab75230fa497b30bff769b2cf080ac",
+    "tree": "8185b3b213998d43354f37ee7f5d26096c9ff227"
+  },
+  "fileCount": 58,
+  "files": [
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6420,
+      "sha256": "953eb6d3557c9346f5f6fbc02638942ca3adf099a1ed657d63ebe0fba11cd6c3"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "focused/focused-04-plain-definitions.txt",
+      "bytes": 2551,
+      "sha256": "de1af6b12cf2a0c746bc999f979d8bfac785e70d05122d873381910c391fb59a"
+    },
+    {
+      "path": "focused/focused-05-scope-finding.txt",
+      "bytes": 23577,
+      "sha256": "6be43871a44ad9e69a2c0ac508266d0ee1ad687813f4a6cba48777a6df39acc2"
+    },
+    {
+      "path": "focused/focused-06-scope-j4-workspace.txt",
+      "bytes": 16872,
+      "sha256": "35d723f20631fb57b090f93311f749323bccde960d210b80c31a9d3b9f4f4fa5"
+    },
+    {
+      "path": "focused/control-c1-open-required-refuses.txt",
+      "bytes": 24655,
+      "sha256": "9c275e165f14eda95d9cef7e0e135388fa7f4fc5383f2054061277fb5074ab31"
+    },
+    {
+      "path": "focused/control-c2-resolved-allows.txt",
+      "bytes": 21177,
+      "sha256": "be88b813196ef7b764f33aaefe384acb74e75bf271291ac37a4a99d9cc721e1b"
+    },
+    {
+      "path": "focused/control-c3-irrelevant-allows.txt",
+      "bytes": 25733,
+      "sha256": "1412dfbe4bc6f1385403341e43fd9fa97d9f430421471977f2b076dd73b762d1"
+    },
+    {
+      "path": "focused/control-c4-not-required-does-not-refuse.txt",
+      "bytes": 21120,
+      "sha256": "ca5389b85a6ddb83a01f4d9d5b1ae3aa8ab736d9ab613ca35acdf565fa24c191"
+    },
+    {
+      "path": "focused/control-c5-not-this-change.txt",
+      "bytes": 25151,
+      "sha256": "79692b14079e4b4451add8c60bcb8895f2f09c2474948f9ec588a362ce7f8dfb"
+    },
+    {
+      "path": "focused/control-c6-new-version-keeps-open.txt",
+      "bytes": 25803,
+      "sha256": "271ae5f50efc03a526d0a526ab25dc727f7a04cc1d9c858027777a2c22338648"
+    },
+    {
+      "path": "focused/control-c7-unauthorized-cannot-answer.txt",
+      "bytes": 20029,
+      "sha256": "214eddb1a4933093b353625dd1eee6c5f4789416f3c3161d4d83c6be2109c44d"
+    },
+    {
+      "path": "focused/control-c8-no-repeat-finding.txt",
+      "bytes": 24636,
+      "sha256": "64cf0de2aeb43112199162290aac03b5176631f0076f69864b2c0d63be6f77a2"
+    },
+    {
+      "path": "focused/control-c9-finding-is-no-approval.txt",
+      "bytes": 25621,
+      "sha256": "98a52ee188606b32d90e3330369811e94e1bdbde4fa993a6c42a0d8a27c89fe8"
+    },
+    {
+      "path": "focused/control-c10-not-the-source.txt",
+      "bytes": 24712,
+      "sha256": "071b36de5a6afc896fb27269ca869165ab71d1c4a1a39dabf07310805486ce30"
+    },
+    {
+      "path": "focused/control-c11-not-this-version.txt",
+      "bytes": 24661,
+      "sha256": "36a87bceeaac31a7a8908fac6d65fb4a86b980b1948be6f4a38093e85b916e5c"
+    },
+    {
+      "path": "focused/control-c12-opener-cannot-answer.txt",
+      "bytes": 25167,
+      "sha256": "873c6da122c24fadc0424ce845e32af0e0c762177f048b3ad403ca78364120d6"
+    },
+    {
+      "path": "focused/control-c13-version-author-cannot-answer.txt",
+      "bytes": 25648,
+      "sha256": "76b07020c13350a8d30e3270889ab92cf3f0a2b4654a54d730113300dc6d9e33"
+    },
+    {
+      "path": "focused/control-c14-another-source-cannot-resolve-own.txt",
+      "bytes": 24426,
+      "sha256": "399ef047a9d4b3860873aabdad4c95a873052c3b93c3dbfb9970bc52ac827f7c"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 5631,
+      "sha256": "83041f537f93fd4680a5d2eeee9337874833a01db4f0062955c64a5cf78af54d"
+    }
+  ]
+}

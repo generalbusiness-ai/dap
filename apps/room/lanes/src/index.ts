@@ -38,3 +38,7 @@ export { QUESTION_DIGESTS } from "./digests-questions.ts";
 /** Explicit Question profile that fixes the Brief digest for each ask. */
 export { issueQuestionsBrief } from "./issue-questions-brief.ts";
 export { QUESTION_BRIEF_DIGESTS } from "./digests-questions-brief.ts";
+
+/** Explicit finding successor of the workspace Change; earlier change definitions keep their pins. */
+export { changeFinding } from "./change-finding.ts";
+export { FINDING_DIGESTS } from "./digests-finding.ts";
