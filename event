@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a3653b43cb36c113111bc0adfccdc28285a8cf2d","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/workspace-setup-credential.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:aaaaa086fc9f5bdfdd61a6cc96d3f257b6919d4c","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/artifacts-host.ts."}
