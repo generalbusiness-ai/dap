@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import type { Entry, FactRef, ScopeId, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, entryHash, factRefOf, intentDigest, newIncarnation, platformName, scopeIdOf, seedDigest, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { MemoryState } from "@generalbusiness/dap-derive";
@@ -10,6 +10,9 @@ import { create } from "./fixtures-native.ts";
 import type { NativeBirth } from "../src/native-birth.ts";
 import { workspaceRepository, type WorkspaceSources } from "../src/workspace-lineage.ts";
 import { staged } from "./hosted.ts";
+import type { Diagnosis } from "../src/diag.ts";
+import type { MetricPoint } from "../src/metrics.ts";
+import { measured, operationContext } from "../src/operational.ts";
 
 // Sealed-entry and trusted native-reader STAND-INS. These entries did not pass
 // a native creation judge. This witnesses adapter lineage parsing and bounds,
@@ -130,4 +133,65 @@ test("workspace fork attempt names include the actual incarnation and never reus
     }
   });
   expect(new Set(names).size).toBe(4);
+});
+
+async function observeDiagnosis<T>(scope: ScopeId, work: () => Promise<T>) {
+  const diagnoses: Diagnosis[] = [], points: MetricPoint[] = [];
+  const request = "0123456789abcdef";
+  const log = vi.spyOn(console, "error").mockImplementation(line => { diagnoses.push(JSON.parse(String(line)) as Diagnosis); });
+  try {
+    const result = await measured(operationContext({ DEPLOYMENT: "head-diagnosis-test", METRICS: { writeDataPoint: point => points.push(point) } }, scope, "dispatch", { request, trace: null }), work);
+    return { result, diagnoses, points };
+  } finally { log.mockRestore(); }
+}
+
+test("workspace lineage diagnoses a failed immutable proof read without changing its unavailable answer", async () => {
+  const f = fixture(), secret = "synthetic-private-proof-response";
+  const observed = await observeDiagnosis(f.born.at.scope, () => workspaceRepository(f.given,
+    { ...f.sources, births: { async read() { throw new Error(secret); } } }, f.register.scope, "artifacts", "actual-room-space"));
+  expect(observed.result).toBeNull();
+  expect(observed.diagnoses).toEqual([{ event: "outside-call-failed", step: "workspace-lineage-read", name: "Error", request: "0123456789abcdef" }]);
+  expect(observed.points.filter(point => point.blobs[0] === "diagnosis").map(point => [point.indexes, point.blobs.slice(3, 6)])).toEqual([[[f.born.at.scope], ["workspace-lineage-read", "error", "outside-call-failed"]]]);
+  expect(JSON.stringify(observed)).not.toContain(secret);
+});
+
+test("workspace lineage diagnoses an absorbed local read failure without reading its private error text", async () => {
+  const f = fixture(), secret = "synthetic-private-local-state";
+  const observed = await observeDiagnosis(f.born.at.scope, () => workspaceRepository({ ...f.given, own() { throw new Error(secret); } }, f.sources, f.register.scope, "artifacts", "actual-room-space"));
+  expect(observed.result).toBeNull();
+  expect(observed.diagnoses).toEqual([{ event: "outside-call-failed", step: "workspace-lineage", name: "Error", request: "0123456789abcdef" }]);
+  expect(observed.points.filter(point => point.blobs[0] === "diagnosis").map(point => point.blobs.slice(3, 6))).toEqual([["workspace-lineage", "error", "outside-call-failed"]]);
+  expect(JSON.stringify(observed)).not.toContain(secret);
+});
+
+// The lineage/state/provider are explicit stand-ins. The real host and SQLite
+// constructor diagnose the absorbed provider throw and a lineage refusal.
+test("workspace head keeps an unknown answer and fixed diagnoses when its provider fails or lineage is unavailable", async () => {
+  const f = fixture(), storage = await create(), definition = f.given.definition!()!;
+  const type = definition.holdTypes[0]!, shape = definition.declared.items[type]!;
+  const timer = Object.values(definition.declared.timed).find(rule => rule.on === type && rule.effects.some(effect => "hold" in effect && effect.hold.do === "end"));
+  f.state.putItem({ id: 4, type, state: shape.initial, revision: 0, opened: entryHash(f.born), parties: {}, refs: {}, attributed: [],
+    values: { epoch: 1, ...(timer ? { [timer.deadline]: "2026-10-30T11:00:00Z" } : {}) } });
+  f.state.putRecord({ capability: "hold@2", kind: "fork", key: [4], state: "creating", seq: 4, values: { operation: "4:0" } });
+  const entry: Entry = { ...f.born, seq: 4, effects: [{ effect: "operation", k: 0, owner: "hold@2", kind: "head", attempts: 3 }] };
+  const request = { scope: entry.at, operation: "4:0" as const, attempt: 1, owner: "hold@2", kind: "head", origin: { entry, hash: entryHash(entry) } };
+  const secret = "synthetic-private-provider-answer";
+  await storage.inside(async native => {
+    const provider = new ArtifactsProvider({ binding: { get: async () => { throw new Error("no binding call"); }, create: async () => null, delete: async () => null }, host: "artifacts", namespace: "actual-room-space", service: "service.invalid", maxBytes: 1024, credentialHandle: async () => "unused" });
+    let providerCalls = 0;
+    provider.ref = async () => { providerCalls++; throw new Error(secret); };
+    const host = new WorkspaceHost(f.given, native.storage.sql, provider, f.sources, f.register.scope, "actual-room-space");
+    const failed = await observeDiagnosis(entry.at.scope, () => host.send(request));
+    expect(failed.result).toBeNull();
+    expect(failed.diagnoses, "The absorbed head failure must remain diagnosable").toEqual([{ event: "outside-call-failed", step: "workspace-head-send", name: "Error", request: "0123456789abcdef" }]);
+    expect(failed.points.filter(point => point.blobs[0] === "diagnosis").map(point => point.blobs.slice(3, 6))).toEqual([["workspace-head-send", "error", "outside-call-failed"]]);
+    expect(JSON.stringify(failed)).not.toContain(secret);
+    expect(providerCalls).toBe(1);
+    const unavailable = new WorkspaceHost(f.given, native.storage.sql, provider, { ...f.sources, births: { async read() { return null; } } }, f.register.scope, "actual-room-space");
+    const refused = await observeDiagnosis(entry.at.scope, () => unavailable.send(request));
+    expect(refused.result).toBeNull();
+    expect(refused.diagnoses).toEqual([{ event: "workspace-lineage-unavailable", step: "workspace-lineage", name: "null", request: "0123456789abcdef" }]);
+    expect(refused.points.filter(point => point.blobs[0] === "diagnosis").map(point => point.blobs.slice(3, 6))).toEqual([["workspace-lineage", "error", "workspace-lineage-unavailable"]]);
+    expect(providerCalls).toBe(1);
+  });
 });

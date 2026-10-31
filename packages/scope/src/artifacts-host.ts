@@ -20,6 +20,7 @@ import { deleteRefOnce, inspectGit, sendOnce, type DestinationRefDeletion } from
 import type { RegisterProvider } from "./register-host.ts";
 import { archiveProvider, fixtureArchiveProvider, type FixtureArchivePorts } from "./archive-host.ts";
 import { readRulesTree, rulesTreeRequest, rulesTreeIsolation, type RulesTreeRequest, type RulesTreeObjects } from "./rules-tree-provider.ts";
+import { report, toConsole } from "./diag.ts";
 
 /** A repository handle of the binding: the parts this port uses. */
 export interface ArtifactsRepository {
@@ -395,18 +396,31 @@ export class ArtifactsProvider implements RegisterProvider, DestinationProvider 
    * revocation is not proof that the requested TTL was honored.
    */
   async #read<T>(repository: DestinationRepository, read: (source: SmartHttpSource) => Promise<T>, rulesTree = false): Promise<T> {
-    repository = { ...repository };
-    const remote = this.#remote(repository);
-    const handleOf = await this.#options.binding.get(repository.name);
-    if (own(await handleOf.info(), "remote") !== remote) return bad();
-    const token = await handleOf.createToken("read", READ_TTL);
-    const plaintext = plaintextOf(own(token, "plaintext"));
+    let step = "artifacts-read-identity";
     try {
-      if (own(token, "scope") !== "read") return bad();
-      endsOf(own(token, "expiresAt"));
-      return await read(new SmartHttpSource({ ...this.#transport(remote), ...(rulesTree ? rulesTreeIsolation(this.#options.maxBytes) : {}), authorization: `Bearer ${plaintext}` }));
-    } finally {
-      try { await handleOf.revokeToken(plaintext); } catch { /* no confirmed revocation; the reported expiry remains the service's assertion */ }
+      repository = { ...repository };
+      const remote = this.#remote(repository);
+      const handleOf = await this.#options.binding.get(repository.name);
+      if (own(await handleOf.info(), "remote") !== remote) return bad();
+      step = "artifacts-read-token";
+      const token = await handleOf.createToken("read", READ_TTL);
+      step = "artifacts-read-reply";
+      const plaintext = plaintextOf(own(token, "plaintext"));
+      try {
+        if (own(token, "scope") !== "read") return bad();
+        endsOf(own(token, "expiresAt"));
+        step = "artifacts-read-git";
+        return await read(new SmartHttpSource({ ...this.#transport(remote), ...(rulesTree ? rulesTreeIsolation(this.#options.maxBytes) : {}), authorization: `Bearer ${plaintext}` }));
+      } finally {
+        try { await handleOf.revokeToken(plaintext); }
+        catch (failure) {
+          // Preserve the read outcome; this is still no confirmed revocation.
+          report(toConsole, "outside-call-failed", "artifacts-read-revoke", failure);
+        }
+      }
+    } catch (failure) {
+      report(toConsole, "outside-call-failed", step, failure);
+      throw failure;
     }
   }
 }

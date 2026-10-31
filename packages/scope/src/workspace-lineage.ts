@@ -7,6 +7,7 @@ import type { OutsideGiven } from "./given.ts";
 import { readNativeBirth, type NativeBirthNameSource } from "./native-birth.ts";
 import { proofEntry, PROOF_BYTE_BOUNDS, type ProofSource } from "./proof-bytes.ts";
 import type { DestinationRepository } from "./destination-host.ts";
+import { report, toConsole } from "./diag.ts";
 
 export interface WorkspaceSources { births: NativeBirthNameSource; proofs: ProofSource }
 export interface WorkspaceRepository { destination: ScopeRef; repository: DestinationRepository; branch: string }
@@ -22,7 +23,8 @@ export async function workspaceRepository(given: OutsideGiven, sources: Workspac
   const read = async <T>(work: (remaining: number) => Promise<T>): Promise<T | null> => {
     const remaining = Math.floor(deadline - performance.now());
     if (!Number.isSafeInteger(remaining) || remaining <= 0 || ++calls > 5) return null;
-    try { const value = await within(remaining / 1000, () => work(remaining)); return value === LATE ? null : value; } catch { return null; }
+    try { const value = await within(remaining / 1000, () => work(remaining)); return value === LATE ? null : value; }
+    catch (failure) { report(toConsole, "outside-call-failed", "workspace-lineage-read", failure); return null; }
   };
   const birth = async (name: ScopeId, kind: "directory" | "destination" | "register") => {
     const raw = await read(ms => sources.births.read(name, kind, ms, BYTES));
@@ -75,5 +77,5 @@ export async function workspaceRepository(given: OutsideGiven, sources: Workspac
       || !isRecord(fields) || !same(fields["directory"], directory.entry.at) || !same(fields["claim"], dirInput.source)
       || typeof fields["branch"] !== "string") return null;
     return { destination: destination.entry.at, repository: repository as unknown as DestinationRepository, branch: fields["branch"] };
-  } catch { return null; }
+  } catch (failure) { report(toConsole, "outside-call-failed", "workspace-lineage", failure); return null; }
 }
