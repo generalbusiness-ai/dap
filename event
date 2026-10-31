@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a9e919052442eb4c4f7bc9ec9b34ee121dcbd67c","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/creation-versions.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ab9cec1f6230db484b79a11ce25651921c949879","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-30-bo1-commons.manifest.json."}
