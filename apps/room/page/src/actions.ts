@@ -35,11 +35,13 @@ const element = (tag: string, attrs: Record<string, string> = {}, ...children: (
 
 const labels: Record<string, string> = {
   "open-issue": "Create issue", "open-pr": "Propose change", "review-verdict": "Review change",
+  note: "Write note",
   merge: "Merge change", publish: "Save changes", comment: "Comment", "edit-own": "Save changes",
   "propose-file": "Propose change", "request-review-own": "Request review", "ready-own": "Ready for review",
   "close-own": "Close", "close-any": "Close", "reopen-own": "Reopen", "cancel-merge": "Cancel merge",
 };
 const fieldLabels: Record<string, string> = {
+  text: "Note", media: "Media type", about: "About (references as JSON)",
   body: "Description", title: "Title", path: "Path", content: "Content", requested: "Reviewer",
   request: "Review request", verdict: "Decision", extent: "Review requirement", manifest: "Version", reason: "Reason", approvals: "Required approvals",
   ownerMayReview: "Allow author review", singleControllerException: "Single controller exception", checks: "Checks",
@@ -137,7 +139,7 @@ export function actionForm(act: Offered, send: Send, context: ActionContext, pri
         element("option", { value: correctingRequest ? chooseRequest : "", ...(correctingRequest && !choices.some(choice => choice.value === value) ? { selected: "" } : {}) }, choices.length ? `Choose ${labelOf(field.name).toLowerCase()}` : "No eligible choice"),
         choices.map((choice) => element("option", { value: choice.value, ...(choice.value === value ? { selected: "" } : {}) }, choice.label))) as HTMLSelectElement;
       if (choices.length === 0) input.setAttribute("disabled", "");
-    } else if (field.name === "body" || field.name === "content" || field.type === "list") {
+    } else if (field.name === "body" || field.name === "text" || field.name === "content" || field.type === "list") {
       if (field.name === "body" && act.kind === "comment") attrs["placeholder"] = "Add a comment…";
       input = element("textarea", { ...attrs, rows: field.name === "content" ? "8" : "3" }, value) as HTMLTextAreaElement;
     } else {

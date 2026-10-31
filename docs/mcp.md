@@ -454,6 +454,15 @@ These are the generic tools as `tools/list` sends them in
 `--generic=add` mode: each name, description, input schema and
 annotations. In the default mode, `actions` and `act` are not listed.
 
+Rooms in the commons cohort expose `commons.note` through their actual
+member grants. The `commons` read returns bounded note previews with
+authors and references. `step` and `text` read complete entries and their
+retained text. A reference grants no access to another room.
+The [bill-table witness](../examples/commons-bill/README.md) uses synthetic
+text documents retained as signed carrier notes. Its
+[text fragments](https://www.rfc-editor.org/rfc/rfc5147.html) name places
+between lines or characters. File uploads and Capture remain separate work.
+
 ### `room`
 
 Orientation. The service, your key, the scopes of the room by name, the issues and changes the directory lists, the applications its factory created (such as a Counter), the standalone scopes, your standing on each membership, the active definitions, and the act tools your role does not hold; paged by bytes, with a cursor. Start here.
@@ -463,6 +472,38 @@ Orientation. The service, your key, the scopes of the room by name, the issues a
   "inputSchema": {
     "type": "object",
     "properties": {
+      "cursor": {
+        "type": "string"
+      }
+    },
+    "required": [],
+    "additionalProperties": false
+  },
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  }
+}
+```
+
+### `commons`
+
+Read one bounded page of Commons notes with their facts, authors, media and opaque about references. Text and citation previews may be shortened; use step for complete citations and text for the retained text. A reference grants no access to its target. Readability and completeness are explicit.
+
+```json
+{
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "scope": {
+        "type": [
+          "string",
+          "integer"
+        ],
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
+      },
       "cursor": {
         "type": "string"
       }
@@ -493,7 +534,7 @@ One scope: its definition and digest, status, head, counts by item type and stat
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "declaration": {
         "type": "boolean"
@@ -739,7 +780,7 @@ Asks the scope that owns a resource for one step of a capability. With kind: for
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "capability": {
         "type": "string"
@@ -752,7 +793,7 @@ Asks the scope that owns a resource for one step of a capability. With kind: for
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "kind": {
         "type": "string"
@@ -826,7 +867,7 @@ A page of one item type of a scope, in one of two traversals, each with its own 
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "type": {
         "type": "string"
@@ -868,7 +909,7 @@ A page of a scope's entries, oldest first, one line each: seq, time, kind, signe
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "cursor": {
         "type": "string"
@@ -902,7 +943,7 @@ One entry in full: its input, fields, effects, sends and hash, paged by bytes wi
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "seq": {
         "type": "integer",
@@ -942,7 +983,7 @@ A page of the history as stored: each entry's canonical bytes and hash, for a ve
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "cursor": {
         "type": "string"
@@ -976,7 +1017,7 @@ A page of a scope's sends with their attempts and results; or, with outboxId (se
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "outboxId": {
         "type": "string"
@@ -1013,7 +1054,7 @@ A retained input by scope, kind and digest: a definition, a foreign entry, a rul
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "kind": {
         "enum": [
@@ -1066,7 +1107,7 @@ Waits at most 60 seconds until one of: a scope's head reaches seq; an item reach
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "seq": {
         "type": "integer",
@@ -1127,7 +1168,7 @@ What is known about the envelope under idempotencyKey on target (or the creation
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "definition": {
         "type": [
@@ -1177,7 +1218,7 @@ The one-time read credential for a read-token act your key signed (entry: its se
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       }
     },
     "required": [
@@ -1208,7 +1249,7 @@ The acts of one scope, as act tools would describe them: each kind with its deri
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "cursor": {
         "type": "string"
@@ -1242,7 +1283,7 @@ Signs one act of a scope by its native kind, under the same custody and binding 
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "kind": {
         "type": "string"
@@ -1421,10 +1462,17 @@ Install an operator-trusted package in this room by immutable Git URI and indepe
 }
 ```
 
-The device-application cohort requires `owner` as a full MemberRef for a
-package declaring `device-command@1`. Its native Rules checks current
-membership before issuing the bounded grant. Other cohorts reject this
-owner selection. The owner is part of the kept signed request's meaning.
+The device-install families, including the commons cohort, require `owner`
+as a full MemberRef for a package declaring `device-command@1`. Their
+native Rules checks current membership before issuing the bounded grant.
+Older install proof families reject this owner selection. The owner is
+part of the kept signed request's meaning.
+
+A package can require the commons endpoint. The host reports
+`commons-missing` before signing if the room has no verified commons ref.
+That host check is not a recorded refusal in an older room. Directory@22
+also checks the requirement sent by Rules@14 and records `commons-missing`
+if its commons ref is absent.
 
 ### `application_installation`
 

@@ -21,6 +21,33 @@
       }
     },
     {
+      "name": "commons",
+      "description": "Read one bounded page of Commons notes with their facts, authors, media and opaque about references. Text and citation previews may be shortened; use step for complete citations and text for the retained text. A reference grants no access to its target. Readability and completeness are explicit.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": [
+              "string",
+              "integer"
+            ],
+            "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
+          },
+          "cursor": {
+            "type": "string"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
       "name": "inspect",
       "description": "One scope: its definition and digest, status, head, counts by item type and state, and its live items, paged by bytes at its head. With declaration: true, the definition's bytes, paged. With describe: <kind>, the complete derived text of one act, for an act whose tool description points here.",
       "inputSchema": {
@@ -31,7 +58,7 @@
               "string",
               "integer"
             ],
-            "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+            "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
           },
           "declaration": {
             "type": "boolean"
@@ -342,7 +369,7 @@
               "string",
               "integer"
             ],
-            "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+            "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
           },
           "capability": {
             "type": "string"
@@ -355,7 +382,7 @@
               "string",
               "integer"
             ],
-            "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+            "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
           },
           "kind": {
             "type": "string"
@@ -424,7 +451,7 @@
               "string",
               "integer"
             ],
-            "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+            "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
           },
           "type": {
             "type": "string"
@@ -461,7 +488,7 @@
               "string",
               "integer"
             ],
-            "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+            "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
           },
           "cursor": {
             "type": "string"
@@ -490,7 +517,7 @@
               "string",
               "integer"
             ],
-            "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+            "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
           },
           "seq": {
             "type": "integer",
@@ -525,7 +552,7 @@
               "string",
               "integer"
             ],
-            "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+            "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
           },
           "cursor": {
             "type": "string"
@@ -554,7 +581,7 @@
               "string",
               "integer"
             ],
-            "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+            "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
           },
           "outboxId": {
             "type": "string"
@@ -586,7 +613,7 @@
               "string",
               "integer"
             ],
-            "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+            "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
           },
           "kind": {
             "enum": [
@@ -634,7 +661,7 @@
               "string",
               "integer"
             ],
-            "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+            "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
           },
           "seq": {
             "type": "integer",
@@ -690,7 +717,7 @@
               "string",
               "integer"
             ],
-            "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+            "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
           },
           "definition": {
             "type": [
@@ -735,7 +762,7 @@
               "string",
               "integer"
             ],
-            "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+            "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
           }
         },
         "required": [

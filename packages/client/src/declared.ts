@@ -21,10 +21,10 @@
  * scope checks every field again, with its own bounds.
  */
 
-import type {
+import type { ReferenceValue,
   Answer, Beside, DeclaredDefinition, Digest, FactRef, FieldType, FieldValue, Grant, MemberRef, PlatformDefinition, ReadRefusal, ScopeRef, SignedIntent, Timestamp,
 } from "@generalbusiness/dap-contract";
-import { definitionDigest, isDigest, isFactRef, isLocalId, isMemberRef, isRecord, isScopeRef, textDigest, timeMs, utf8, wellFormed } from "@generalbusiness/dap-bytes";
+import { isReference, definitionDigest, isDigest, isFactRef, isLocalId, isMemberRef, isRecord, isScopeRef, textDigest, timeMs, utf8, wellFormed } from "@generalbusiness/dap-bytes";
 import type { ScopeHandle } from "./handle.ts";
 import { signedIntent, type Signer, type Signing } from "./intent.ts";
 
@@ -40,6 +40,7 @@ export type ValueOf<T> =
   : T extends { type: "member" } ? MemberRef
   : T extends { type: "item" } ? number
   : T extends { type: "fact" } ? FactRef
+  : T extends { type: "reference" } ? ReferenceValue
   : T extends { type: "scope" } ? ScopeRef
   : T extends { type: "digest" } ? Digest
   : T extends { type: "commit" | "tree" } ? string
@@ -101,6 +102,7 @@ function shaped(type: FieldType, value: unknown, path: string, texts: Set<string
     case "member": return isMemberRef(value) ? value : not("is not a member reference");
     case "item": return isLocalId(value) ? value : not("is not a local item ID");
     case "fact": return isFactRef(value) ? value : not("is not a fact reference");
+    case "reference": return isReference(value, type.fragment) ? value : not("is not a document or entry reference with a bounded fragment");
     case "scope": return isScopeRef(value) && value.kind === type.kind ? value : not(`is not a reference to a scope of kind ${type.kind}`);
     case "digest": return isDigest(value) ? value : not("is not a digest");
     case "commit": case "tree": return typeof value === "string" && /^([0-9a-f]{40}|[0-9a-f]{64})$/.test(value) ? value : not("is not a Git object ID");

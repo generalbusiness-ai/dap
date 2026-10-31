@@ -46,17 +46,20 @@ scope to price. To the insurer it is evidence of a date. The parties do
 not have to agree on what a thing means to work on it together. They
 have to agree only on which thing it is.
 
-So a room needs two kinds of act that no application defines:
+The [boundary-objects design](../notes/2026-10-28-boundary-objects-in-use.md)
+keeps these statements as notes about documents and entries:
 
-- **Pointing.** Anyone can name a thing and say something about it: here
-  is the wall; this file is the drawing of it; I read the width as
-  4.2 m. Pointing needs nobody's agreement. It opens nothing that another
-  party must answer.
-- **A claim of agreement.** Named parties sign one statement: the owner
-  and the contractor agree to this change at this price. The claim takes
-  effect only when every named party has signed. It fixes the words and
-  the signatures. It does not fix what each party takes the words to
-  mean.
+- **A reading.** An agent reads a drawing as a width of 4.2 m, or a bill
+  as fourteen rows of charges. The reading names its sources and belongs
+  to whoever signs it.
+- **A mark.** A person says "ask about this" against one row or a region
+  of a photograph. The mark is that person's own statement.
+- **An agreement.** A party writes words or a glyph about another
+  party's terms. Each party signs its own note. The record keeps those
+  statements and does not decide what the parties mean by them.
+
+A note binds nobody and opens no obligation to answer. A package act
+binds a party only under the package's rules and that party's authority.
 
 An application's rules are a third thing. They say what counts as a
 proposal, an acceptance or a completion, and what each one changes. The
@@ -66,7 +69,7 @@ thing's meaning before the parties have claimed it. A package that calls
 the claim closed because one of its items reached a final state has
 forced the family's part into the insurer's structure. So this catalogue
 follows one rule: an application's structure is entered only through a
-claim of agreement by the parties it binds, or through an authority that
+package act signed by the parties it binds, or through an authority that
 one party already holds. The insurer decides its own claim. Nobody
 decides for the family when they are home.
 
@@ -115,8 +118,10 @@ different weight. When an agent reads a document, by OCR, transcription
 or summary, its reading is a new statement attributed to the agent. The
 reading does not turn the document into the other party's confirmation.
 
-A person's own statement and a document are pointing. A signed act is a
-claim by one party. A claim of agreement is a signed act by several.
+A reading, a mark and an agreement are notes signed by their own authors.
+An agent's reading remains the agent's statement, even when its
+controller reads it or agrees with it. A package act can carry a
+commitment under rules; a note about that act creates no commitment.
 
 The documents themselves never change. What people conclude from them,
 and where each matter stands, can change.
@@ -633,6 +638,11 @@ section 7, as the smallest of the three and the first to build.
 **Also needs:** nothing for the shared record. A native completion
 protocol for publication, in which the destination's receipt reaches
 the room as its own fact, is named and deferred.
+This card covers the publication workflow. It leaves out the owner's
+brief, the agent's exploratory drafts and a reviewer's remarks against
+passages before a post is ready for approval. The
+[boundary-objects design](../notes/2026-10-28-boundary-objects-in-use.md)
+keeps those as documents and notes with their authors.
 
 ### From the dap-spike's sweep: buildable today
 
@@ -781,8 +791,8 @@ and two projects that share one budget.
 ## 3. Separate rooms, one authority
 
 Every member of a room reads every scope in that room. So these cases
-keep each party's private part in a room of its own, which that party
-shares with the authority, and the authority's room holds the decision
+give each party its own room, shared with the authority, for that
+party's private part. The authority's room holds the decision
 they share. The authority's room sends each party only what that party
 may read. Membership is the privacy boundary, which dap checks on every
 act and every read, so there are no readers to write by hand. The

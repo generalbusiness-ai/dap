@@ -3,7 +3,7 @@
 import type { Digest, Entry, FactRef } from "@generalbusiness/dap-contract";
 import { canonicalize, deliveryCauseDigest, isDigest, isFactRef, isMemberRef, isPlatformDefinition, isRecord, isScopeRef, isSeed, messageDigest, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { same, sentBy } from "@generalbusiness/dap-derive";
-import { ARCHIVE_APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, HARDENED_CERTIFIED_RULES_COHORT, TRUSTED_APPLICATION_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
+import { COMMONS_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, HARDENED_CERTIFIED_RULES_COHORT, TRUSTED_APPLICATION_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
 import { readApplicationTrust } from "./admission.ts";
 import type { ProofTimer } from "../genesis-proof.ts";
 import { readNativeBirth, type NativeBirthSource } from "../native-birth.ts";
@@ -26,7 +26,7 @@ export interface ApplicationActAdmissionOptions {
 /** Seventeen package definitions can form a chain, followed by its Directory.
  * These are proof-work limits, not a new package quota or a heap guarantee. */
 export const APPLICATION_ACT_ADMISSION_BOUNDS = Object.freeze({ ancestors: 18, bodies: 37, bytes: 16 * 1024 * 1024, rpcs: 36, body: PROOF_BYTE_BOUNDS.body });
-const cohorts = [TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT,
+const cohorts = [COMMONS_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT,
   ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT,
   ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, UNPUBLISHED_COHORT] as const;
 type Provenance = { kind: "unpackaged" } | { kind: "installed"; release: Digest };
