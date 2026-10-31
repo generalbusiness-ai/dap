@@ -41,6 +41,7 @@ import type { ViewSource } from "./views/types.ts";
 import { DeclaredViewSource } from "./views/declared.ts";
 import { readMembershipDisplay } from "./views/member-reads.ts";
 import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
+import type { CallResult } from "./results.ts";
 
 export interface ServerPort {
   /** The scope service's base URL. */
@@ -83,8 +84,7 @@ export interface ServerPort {
   packageBrief?: PackageBrief;
 }
 
-/** A tool's answer, as `tools/call` sends it: structured content with an object root, and its text. */
-export interface CallResult { content: { type: "text"; text: string }[]; structuredContent: Record<string, unknown>; isError: boolean }
+export type { CallResult } from "./results.ts";
 
 /** A `tools/list` cursor from an earlier generation. */
 export class ListRestart extends Error { constructor() { super("The tool list changed; list again from the start."); } }

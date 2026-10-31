@@ -1,3 +1,4 @@
+import type { CallResult } from "../results.ts";
 import type { PresentationPackage, ViewKind } from "./resources.ts";
 import type { ApplicationProjectionData, FactRef, FieldValue, Head, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import type { ApplicationView, ApplicationViewParameters } from "@generalbusiness/dap-platform/application-v2";
@@ -145,7 +146,7 @@ export interface ViewSource {
   /** A declared source repeats its current when/needs check before signing. */
   admit?(query: ViewQuery, card: Card, action: CardAction): Promise<void>;
   /** After awaited reads, call admit without awaiting it, immediately before synchronous publication. */
-  markReviewed?(capture: LocalReviewCapture, context: { view: string; cut: number; admit: () => void }): Promise<import("../service.ts").CallResult>;
+  markReviewed?(capture: LocalReviewCapture, context: { view: string; cut: number; admit: () => void }): Promise<CallResult>;
 }
 export interface CardContext {
   /** Opaque mounted-view key for model input tools; never a dispatch cut. */
