@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8296f4c58ad1d1e0e601fbc41b161d33e09257b4","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-31-s6-change-view.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:84a03f855058a2c30c8e702de1704b5f51084e12","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/shape.test.ts."}
