@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:906e3b178eadfac9ce592a64e180a0977aba818f","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-30-s3-question-approvals.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:92fd471512c3bc62bab959fdb263ad81d87a0fd6","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/issue-questions.test.ts."}
