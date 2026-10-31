@@ -139,7 +139,7 @@ test('nine lanes: repeated calls reach every lane, each call says what it left o
   const secondRows = (await f.app.since({ after: after.next })).structuredContent.rows;
   assert.ok(secondRows.every(row => row.since === null));
   const secondMark = second.card.actions.find(action => action.id === 'mark-reviewed');
-  assert.deepEqual((await source.markReviewed(secondMark.capture, { view: 'TEST', cut: 2, admit() {} })).structuredContent, { localStatus: 'marked' });
+  assert.deepEqual((await source.markReviewed(secondMark.capture, { view: 'TEST', cut: 2, admit() {} })).structuredContent, { localStatus: 'marked' }, 'A mark reaches the lanes of the second window');
   assert.deepEqual((await f.app.since({ after: after.next })).structuredContent.rows, [], 'The second mark covers the second window');
   assert.deepEqual((await f.app.since()).structuredContent.rows, [], 'The first window keeps its marks after the second mark');
 
