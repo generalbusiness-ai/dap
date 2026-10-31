@@ -5,6 +5,8 @@
  * STAND-IN of test/support/standin.ts.
  */
 import { createServer, request, type Server } from "node:http";
+import { setFlagsFromString } from "node:v8";
+import { runInNewContext } from "node:vm";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { McpService, MODERN, LEGACY, memoryStore, type McpConfig } from "../src/index.ts";
 import { HEADER_MISMATCH, SESSIONS_MOST, STREAMS_MOST } from "../src/http.ts";
@@ -287,6 +289,45 @@ describe("a replacement that goes away while its snapshot is held", () => {
     for (const st of held) st.abort.abort();
     expect(await until(() => s.http.streams === 0)).toBe(true);
     for (const id of sessions) await send("DELETE", { "mcp-protocol-version": LEGACY, "mcp-session-id": id });
+  });
+});
+
+describe("a replacement whose Request is collected while its snapshot is held", () => {
+  test("its client's going away still reaches the opening: the live stream stays", async () => {
+    setFlagsFromString("--expose-gc");
+    const collect = runInNewContext("gc") as () => void;
+    const id = await legacySession();
+    const live = openStream({ "mcp-protocol-version": LEGACY, "mcp-session-id": id });
+    expect(await until(() => live.text().includes(": stream"))).toBe(true);
+    const session = s.http.sessions.get(id)!;
+    const incumbent = session.stream;
+    let release!: () => void;
+    holds.push(new Promise<void>((r) => { release = r; }));
+    // The Node server keeps no use of its Request across this await, and optimized code may drop it. The caller here drops it
+    // outright, so that the collection is certain rather than dependent on when the frame was optimized.
+    const gone = new AbortController();
+    let opening: Request | null = new Request(s.url, { method: "GET", signal: gone.signal, headers: { authorization: `Bearer ${s.bearer}`, "mcp-protocol-version": LEGACY, "mcp-session-id": id } });
+    const answer = s.http.handle(opening);
+    opening = null;
+    let answered: Response | undefined;
+    try {
+      expect(await until(() => holds.length === 0), "the opening holds its snapshot").toBe(true);
+      collect();
+      gone.abort();
+      release();
+      answered = await answer;
+      expect(answered.status, "no stream opens for a client that went away").toBe(204);
+      expect(session.stream, "the live stream stays").toBe(incumbent);
+    } finally {
+      // A failed case gives back what it took, so that its failure stays its own.
+      holds.length = 0;
+      release();
+      await (answered ?? await answer).body?.cancel();
+      live.abort.abort();
+      await until(() => s.http.streams === 0);
+      await send("DELETE", { "mcp-protocol-version": LEGACY, "mcp-session-id": id });
+    }
+    expect(s.http.streams).toBe(0);
   });
 });
 
