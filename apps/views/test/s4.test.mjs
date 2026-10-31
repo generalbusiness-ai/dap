@@ -172,7 +172,7 @@ test('since remains a pure read; a local mark survives restart and pre-publicati
   });
   const published = readFileSync(path);
   assert.notDeepEqual(published, original, 'The later head actually publishes a new local mark');
-  assert.deepEqual(observed, published, 'Publication completes before a microtask queued by the final synchronous admission check');
+  assert.equal(Buffer.isBuffer(observed) && observed.equals(published), true, 'Publication completes before a microtask queued by the final synchronous admission check');
 });
 
 test('the real static service catalogue and factory do not invoke room inventory or key reads; the collection refuses an unselected ninth scope', async t => {
