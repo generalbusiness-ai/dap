@@ -2218,3 +2218,55 @@ The generic kit supplies the carousel, detail, diff, updates and receipt
 screens. Journey projections, package installation and desktop-host
 registration are separate work. The implementation boundary and fixture
 browser command are in the [card-kit note](../notes/implementation/2026-10-18-compact-card-kit.md).
+
+## Local project views
+
+The opt-in [project entry](../apps/views/README.md) supplies four reads and
+the compact cards. It uses your existing local configuration and signer.
+It creates no key or room. The ordinary MCP server keeps its existing
+tool list; `mcp-tools.json` describes that ordinary list.
+
+| Read | Result |
+| --- | --- |
+| `needs_you` | Requests, reviews and merges that need your attention. |
+| `work` | Agent commitments, terms, blocks and linked changes. |
+| `context` | Question text, approvals, comments, conditions and Brief pin. |
+| `since` | Heads changed since an explicit Mark reviewed action. |
+
+Attention rows name their pinned declaration clause and observed head.
+Work rows name each agent's controller beside the current conditions.
+Context distinguishes text versions and the requests for their approval.
+
+A read admits at most eight scopes, including Membership, Directory and
+other support reads. It returns at most 50 attention rows. Separate input
+bounds cover 512 live items and 50 history entries. Results report their
+read counts, omissions and incomplete discovery. A vector of observed
+heads does not claim one atomic snapshot of the whole room.
+
+The question-with-Brief profile records a required `brief` digest when
+the question is asked. That value stays fixed when the text is revised.
+A different Brief needs a new question. Earlier question profiles remain
+unbound. Approvals name the question's text version; they grant no
+authority over the Brief or the conditions.
+
+The operator selects the package's local Brief file when starting the
+project entry. `dap://package/brief` serves those exact UTF-8 bytes as
+`text/plain`, with a 64 KiB limit and their byte digest. Context reports
+whether that digest matches the question's stored pin. A mismatch does
+not select another file or substitute the question-body digest. The
+existing HTML resources under `ui://dap/` keep their own digest and
+policy checks.
+
+The Decision card retains the selected text version and native expected
+revisions. Approve and Decide use the ordinary signing and request
+custody path. An attention row explains why an item is listed; native
+guards decide whether an act is allowed.
+
+Mark reviewed writes only the captured full scope references and heads
+to local storage under `DAP_HOME`. It signs no native act. The server
+rechecks the displayed cut and heads before writing. A duplicate mark
+does not rewrite the file. A mark covers only the displayed scopes.
+
+`since` is read-only: equal heads produce no row, and each new head
+appears once in a response. Repeated reads keep showing that change
+until another explicit mark. Reading a card does not clear it.

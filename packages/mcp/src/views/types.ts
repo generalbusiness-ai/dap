@@ -1,5 +1,5 @@
 import type { PresentationPackage, ViewKind } from "./resources.ts";
-import type { ApplicationProjectionData, FactRef, FieldValue, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
+import type { ApplicationProjectionData, FactRef, FieldValue, Head, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import type { ApplicationView, ApplicationViewParameters } from "@generalbusiness/dap-platform/application-v2";
 import type { MemberTable } from "./member-types.ts";
 
@@ -17,7 +17,8 @@ export interface CardIdentity {
 }
 export interface ActorChip { kind: "person" | "agent" | "checker"; name: string; controller?: string }
 export type MemberFacts = Readonly<Record<number, { label: string; refs: readonly MemberRef[] }>>;
-export interface CardAction {
+export interface NativeCardAction {
+  readonly local?: false;
   id: string;
   label: string;
   purpose: "act" | "approve" | "mark-reviewed" | "check-original";
@@ -28,6 +29,28 @@ export interface CardAction {
   parameters?: ApplicationViewParameters;
   parameterInput?: unknown;
 }
+/** Exact server-held read vector and displayed ranges, not a native grant. */
+export interface LocalReviewCapture {
+  readonly heads: readonly { scope: ScopeRef; head: Head }[];
+  readonly ranges: readonly EntryRange[];
+  readonly service: string;
+  readonly directory: ScopeRef;
+  readonly viewer: MemberRef;
+  readonly key: string;
+}
+export interface LocalReviewAction {
+  readonly local: true;
+  id: string;
+  label: string;
+  purpose: "mark-reviewed";
+  capture: LocalReviewCapture;
+  kind?: never;
+  args?: never;
+  parameters?: never;
+  parameterInput?: never;
+}
+export type CardAction = NativeCardAction | LocalReviewAction;
+
 /** Verified package HTML and declared navigation, separate from native rows. */
 export interface DeclaredSurface {
   screen: string;
@@ -121,6 +144,8 @@ export interface ViewSource {
   read(query: ViewQuery, access: { call(name: string, args: Record<string, unknown>): Promise<{ structuredContent: Record<string, unknown>; isError: boolean }> }): Promise<Projection>;
   /** A declared source repeats its current when/needs check before signing. */
   admit?(query: ViewQuery, card: Card, action: CardAction): Promise<void>;
+  /** Local publication must call admit after awaited reads, immediately before writing. */
+  markReviewed?(capture: LocalReviewCapture, context: { view: string; cut: number; admit: () => void | Promise<void> }): Promise<import("../service.ts").CallResult>;
 }
 export interface CardContext {
   /** Opaque mounted-view key for model input tools; never a dispatch cut. */

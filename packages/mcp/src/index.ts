@@ -18,3 +18,5 @@ export * from "./hosted.ts";
 export * from "./hosted-tools.ts";
 export * from "./views/resources.ts";
 export * from "./views/types.ts";
+export * from "./read-tools.ts";
+export * from "./package-brief.ts";

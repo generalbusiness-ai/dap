@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "vitest";
-import { digestBytes, utf8 } from "@generalbusiness/dap-bytes";
-import { LEGACY, MODERN, McpService, ViewResources, Wire, memoryStore, newSession, type PresentationPackage } from "../src/index.ts";
+import { digestBytes, textDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { LEGACY, MODERN, McpService, PACKAGE_BRIEF_URI, PackageResources, ViewResources, Wire, memoryStore, newSession, type PresentationPackage } from "../src/index.ts";
 import { sandboxDomain } from "../src/views/hosts.ts";
 import { PRESENTATION } from "../src/views/generated.ts";
 import { MODULE, viewModule } from "../scripts/views.mjs";
@@ -87,4 +87,38 @@ test("both revisions provide text fallback and bind paging to the host's UI capa
   const first = await service.page(undefined, true);
   expect(first.nextCursor).toBeTruthy();
   await expect(service.page(first.nextCursor, false)).rejects.toThrow("list changed");
+});
+
+// Invariant: the fixed Brief is raw UTF-8 data with its own digest; HTML policy and URI handling stay separate.
+test("both revisions serve one immutable raw Brief without extending HTML policy", async () => {
+  const text = "\uFEFFPackage Brief: café\n", expected = utf8(text), digest = digestBytes(expected);
+  expect(digest).not.toBe(textDigest(text));
+  for (const version of [LEGACY, MODERN]) {
+    const bytes = expected.slice();
+    const service = new McpService({ service: SERVICE, signer: fixedSigner(34), config: { read: async () => { throw Error("No room inventory for a fixed resource."); }, addRoot: async () => {} },
+      custody: memoryStore(), applicationReads: { revision: digest, tools: [] }, packageBrief: { bytes, digest } });
+    bytes.fill(0);
+    const wire = new Wire(service), session = newSession(null);
+    const rpc = (method: string, params = {}) => wire.handle({ jsonrpc: "2.0", id: 1, method, params: { ...params, ...(version === MODERN ? {
+      _meta: { "io.modelcontextprotocol/protocolVersion": MODERN, "io.modelcontextprotocol/clientCapabilities": {} },
+    } : {}) } }, version === LEGACY ? session : null, () => {});
+    try {
+      if (version === LEGACY) await rpc("initialize", { protocolVersion: LEGACY });
+      const listing = (await rpc("resources/list"))!.result as { resources: { uri: string; mimeType: string }[] };
+      expect(listing.resources.at(-1)).toMatchObject({ uri: PACKAGE_BRIEF_URI, mimeType: "text/plain" });
+      const read = (await rpc("resources/read", { uri: PACKAGE_BRIEF_URI }))!.result as { contents: { uri: string; mimeType: string; text: string; _meta?: unknown }[] };
+      expect(read.contents).toEqual([{ uri: PACKAGE_BRIEF_URI, mimeType: "text/plain", text }]);
+      expect(digestBytes(utf8(read.contents[0]!.text))).toBe(digest);
+      expect((await rpc("resources/read", { uri: "https://unlisted.example/brief" }))!.error).toBeDefined();
+      const html = service.resources.read("ui://dap/needs-you").contents[0]!;
+      expect(html.mimeType).toBe("text/html;profile=mcp-app");
+      expect(html._meta?.ui.csp).toEqual({});
+    } finally { wire.endLegacy(session); wire.closeAll(); }
+  }
+  const views = new ViewResources(PRESENTATION);
+  expect(() => new PackageResources(views, { bytes: expected, digest: textDigest(text) })).toThrow("digest");
+  expect(() => new PackageResources(views, { bytes: new Uint8Array([0xc3, 0x28]), digest })).toThrow();
+  const tooLarge = new Uint8Array(65537);
+  expect(() => new PackageResources(views, { bytes: tooLarge, digest: digestBytes(tooLarge) })).toThrow("Brief");
+  expect(() => new PackageResources(views).read(PACKAGE_BRIEF_URI)).toThrow("No package Brief");
 });

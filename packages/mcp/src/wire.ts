@@ -300,7 +300,7 @@ export class Wire {
         if (tools) {
           // The baseline is the list as it is now; only a later change is told. The watch runs before the acknowledgement, so no
           // change between the two is lost.
-          try { listen.told = (await this.service.snapshot()).generation; } catch { listen.told = null; }
+          try { listen.told = await this.service.catalogueGeneration(); } catch { listen.told = null; }
           // The stream may have closed, or the listen ended, while the snapshot was read: then no watcher is installed at all.
           if (!this.#owns(owner, key, listen)) return null;
           listen.unsubscribe = this.service.subscribe((generation) => {
