@@ -15,9 +15,13 @@ signers, configuration, and Brief bytes directly.
 `needs_you`, `work`, `context`, `change`, and `since` read native current state. Each
 call admits at most eight scopes, including Membership, Directory, and any
 support scopes. Those support scopes consume the same eight-scope limit.
-At most six lanes fit in the ordinary flat-directory case. Other support
-scopes leave fewer lane slots. A room with more than six lanes has omissions
-and offers no **Mark reviewed** action because the collection is incomplete.
+At most six lanes fit in one call in the ordinary flat-directory case. Other
+support scopes leave fewer lane slots. With more lanes, `needs_you` and `since`
+read a window of lanes in a stable order. Each answer lists the lanes it left
+out in `omittedScopes` and names the lane to continue from in `next`. To read
+the next window, pass `next` as `after`, or open the card again with `next` as
+`scope`. `next` is null at the last window. `work` still reads only the first
+window.
 The adapter returns at most 50 attention rows and separately caps live Item
 rows at 512, pages at 16, and HTTP attempts at 64. It counts session and
 signed-read fallback requests. Omissions and read failures remain visible.
@@ -62,9 +66,10 @@ under this `DAP_HOME`, after rechecking the mounted cut and exact heads.
 It signs no native act and returns no native accepted fact. A duplicate
 mark is harmless; a restart keeps the recorded marks. Another head appears
 once per response and repeats until the next explicit mark. The mark covers
-the displayed head summaries and captured scopes. A mark requires a complete
-collection with no unread scopes, omitted scopes, or omitted rows. It does
-not claim review of every journal body between heads. Store conflicts,
+the displayed head summaries and captured scopes. A mark requires a window
+with no unread scopes or omitted rows, and a lane outside that window stays
+unreviewed. It does not claim review of every journal body between heads. The
+store holds at most 64 marks, so a room over 62 lanes reaches `full`. Store conflicts,
 unsafe paths, uncertain locks, and capacity limits stop the local write.
 Failures before the rename preserve the prior file. If the rename succeeds
 but the directory flush or readback fails, the new mark may already be

@@ -47,6 +47,8 @@ export class Collection {
   /** The lanes the directory lists: the scopes a linked read may name. */
   listed: ScopeRef[] = [];
   omitted: ScopeRef[] = [];
+  /** The lane to name as `after` for the next window. Null when no lane follows this window. */
+  next: ScopeRef | null = null;
   discoveryComplete = false;
 
   constructor(readonly options: ReadOptions) {
@@ -134,8 +136,11 @@ export class Collection {
     const frame = { ref, head: got.at, summary: got.value, items: [...got.value.items] };
     this.frames.set(ref.scope, frame); return frame;
   }
-  /** With `only`, keep the allowance for what the target links to, and select no other lane. */
-  async begin(target?: ScopeRef, only = false): Promise<this> {
+  /**
+   * With `only`, keep the allowance for what the target links to, and select no other lane.
+   * With `after`, select the window of lanes that follows that lane in the stable order. That lane need not still be listed.
+   */
+  async begin(target?: ScopeRef, only = false, after?: ScopeRef): Promise<this> {
     this.config = await this.options.config(); this.guard();
     if (this.config.service.replace(/\/+$/, "") !== this.options.service.replace(/\/+$/, "") || !this.config.repository) throw new Unread("room-unconfigured");
     this.membership = this.config.repository.membership; this.directory = this.config.repository.directory;
@@ -165,8 +170,11 @@ export class Collection {
     if (target && !refs.some(ref => sameOptional(ref, target))) throw new Unread("outside-room");
     if (target) refs.sort((a, b) => Number(sameOptional(b, target)) - Number(sameOptional(a, target)));
     this.listed = refs;
-    if (only && target) { this.selected = [target]; this.admit(target); return this; }
-    this.selected = refs.slice(0, LIMITS.scopes - this.admitted.size); this.omitted = refs.slice(this.selected.length);
+    if (only) { this.selected = target ? [target] : []; if (target) this.admit(target); return this; }
+    const start = after ? canonicalize(after) : null, following = start === null ? refs : refs.filter(ref => canonicalize(ref).localeCompare(start) > 0);
+    this.selected = following.slice(0, LIMITS.scopes - this.admitted.size);
+    this.omitted = refs.filter(ref => !this.selected.includes(ref));
+    this.next = following.length > this.selected.length ? this.selected.at(-1) ?? null : null;
     for (const ref of this.selected) this.admit(ref);
     return this;
   }

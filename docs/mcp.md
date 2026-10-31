@@ -2346,10 +2346,9 @@ Context distinguishes text versions and the requests for their approval.
 
 A read admits at most eight scopes, including Membership, Directory and
 other support reads. Support scopes consume the same eight-scope limit.
-At most six lanes fit in the ordinary flat-directory case, and other
-support scopes leave fewer lane slots. A room with more than six lanes
-has omissions and cannot mark reviewed because the collection is incomplete.
-The reads return at most 50 attention rows and read at most 512 live items.
+At most six lanes fit in one call in the ordinary flat-directory case, and
+other support scopes leave fewer lane slots. `work` reads only the first
+window of lanes. The reads return at most 50 attention rows and read at most 512 live items.
 Results report their read counts, omissions and incomplete discovery.
 A vector of observed heads does not claim one atomic room snapshot.
 
@@ -2390,11 +2389,17 @@ guards decide whether an act is allowed.
 Mark reviewed writes only the captured full scope references and heads
 to local storage under `DAP_HOME`. It signs no native act. The server
 rechecks the displayed cut and heads before writing. A duplicate mark
-does not rewrite the file. A mark requires a complete collection with no
-unread scopes, omitted scopes, or omitted rows. It covers the displayed
-heads and scopes, without claiming review of every journal body between
-heads.
+does not rewrite the file. A mark requires a window with no unread scopes
+or omitted rows. It covers the displayed heads and scopes, without claiming
+review of every journal body between heads. A lane outside the window stays
+unreviewed.
 
 `since` is read-only: equal heads produce no row, and each new head
 appears once in a response. Repeated reads keep showing that change
 until another explicit mark. Reading a card does not clear it.
+
+With more lanes than one call can read, `needs_you` and `since` read a window
+of lanes in a stable order. `omittedScopes` lists the lanes that the answer left
+out, and `next` names the lane to continue from. To read the next window, pass
+`next` as `after`, or open the card again with `next` as `scope`. `next` is
+null at the last window.

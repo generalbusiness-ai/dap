@@ -84,6 +84,74 @@ test('attention filters actual requested members and met requests; nine total sc
   assert.ok(capped.counters.items <= 512);
 });
 
+// The request's nine lanes: every lane read at the scope limit of one call, and a mark that covers one window.
+test('nine lanes: repeated calls reach every lane, each call says what it left out, and a mark leaves other lanes unreviewed', async t => {
+  const f = fixture(t), states = Array.from({ length: 9 }, () => f.lane());
+  for (const state of states) state.items.push(item(1, 'ask', 'asked', { question: 'TEST question' }, { bodyAt: 1 }, { asker: f.other }),
+    item(2, 'approval-request', 'open', {}, { ask: 1, bodyAt: 1 }, { requested: f.viewer, requester: f.other }));
+  const walk = async (read) => {
+    const seen = [], left = [], counts = [];
+    let after;
+    do {
+      const answer = await read(after === undefined ? {} : { after });
+      assert.equal(answer.isError, false);
+      const data = answer.structuredContent;
+      seen.push(data.rows.filter(row => states.some(state => state.ref.scope === row.scope.scope)).map(row => row.scope.scope));
+      left.push(data.omittedScopes.map(ref => ref.scope));
+      counts.push(data.counters.scopes);
+      assert.equal(data.complete, false, 'A window is never the whole room');
+      after = data.next ?? undefined;
+    } while (after !== undefined);
+    return { seen, left, counts };
+  };
+  const all = states.map(state => state.ref.scope).sort();
+  for (const read of [args => f.app.needsYou(args), args => f.app.since(args)]) {
+    const { seen, left, counts } = await walk(read);
+    assert.deepEqual(seen.map(rows => rows.length), [6, 3]);
+    assert.deepEqual(seen.flat().sort(), all, 'The windows reach all nine lanes, each once');
+    seen.forEach((rows, index) => assert.deepEqual([...rows, ...left[index]].sort(), all, 'Each call names every lane it did not read'));
+    assert.ok(counts.every(count => count <= 8), 'Each call keeps the scope limit');
+  }
+  assert.equal((await f.app.since({ after: 'TEST not a scope' })).structuredContent.error, 'after-selector');
+
+  // Through the card: the first window offers a mark, and that mark covers only its own lanes.
+  const source = decisionSource(f.app);
+  const first = await source.read({ screen: 'change', position: 0, page: 'updates' });
+  assert.equal(first.status, 'ready');
+  const mark = first.card.actions.find(action => action.id === 'mark-reviewed');
+  assert.ok(mark, 'A complete window offers a mark');
+  assert.ok(first.card.reasons.some(reason => reason.includes('leaves out 3 lanes')));
+  const windowOne = mark.capture.heads.map(point => point.scope.scope).filter(scope => all.includes(scope));
+  assert.equal(windowOne.length, 6);
+  assert.deepEqual((await source.markReviewed(mark.capture, { view: 'TEST', cut: 1, admit() {} })).structuredContent, { localStatus: 'marked' });
+  const after = (await f.app.since()).structuredContent;
+  assert.deepEqual(after.rows, [], 'The marked window has no new head');
+  assert.equal(after.complete, false, 'The room is still not complete');
+  assert.equal(after.omittedScopes.length, 3);
+  const empty = await source.read({ screen: 'change', position: 0, page: 'updates' });
+  assert.equal(empty.status, 'incomplete');
+  assert.match(empty.fallback, /leaves out 3 lanes.*open this screen again with scope/);
+
+  // The second window still shows its three lanes as never reviewed, and a mark can reach them.
+  const second = await source.read({ screen: 'change', position: 0, page: 'updates', scope: after.next });
+  assert.deepEqual(second.card.reviewIntended.map(range => range.scope).sort(), all.filter(scope => !windowOne.includes(scope)));
+  const secondRows = (await f.app.since({ after: after.next })).structuredContent.rows;
+  assert.ok(secondRows.every(row => row.since === null));
+  const secondMark = second.card.actions.find(action => action.id === 'mark-reviewed');
+  assert.deepEqual((await source.markReviewed(secondMark.capture, { view: 'TEST', cut: 2, admit() {} })).structuredContent, { localStatus: 'marked' });
+  assert.deepEqual((await f.app.since({ after: after.next })).structuredContent.rows, []);
+
+  // The session and its tool take that scope on a list.
+  const sessions = new ViewSessions(source, { call: async () => { throw Error('TEST no generic read'); } }, async () => { throw Error('TEST no act'); }, async () => { throw Error('TEST no settle'); });
+  assert.equal((await sessions.open('TEST-window', 'change', undefined, undefined, after.next)).status, 'incomplete');
+  await assert.rejects(() => sessions.open('TEST-bad-window', 'change', undefined, undefined, 'TEST not a scope'), /selected scope/);
+
+  // A capture cannot name a scope outside the room, and a list is the only screen with a scope.
+  const stranger = { scope: { ...after.next, scope: 'sc_' + 'z'.repeat(52) }, head: second.card.projection[0] && { seq: 0, hash: 'sha256:' + 'a'.repeat(64) } };
+  assert.equal((await source.markReviewed({ ...mark.capture, heads: [stranger] }, { view: 'TEST', cut: 3, admit() {} })).structuredContent.reason, 'outside-room');
+  assert.equal((await source.read({ screen: 'work', position: 0, page: 'summary', scope: after.next })).status, 'unavailable');
+});
+
 test('work retains the real agent controller; an unresolved controller never becomes the viewer', async t => {
   const f = fixture(t), state = f.lane(), agent = { membership: f.peer.membership, member: '@builder' };
   f.M.items.push(item(8, 'member', 'active', { kind: 'agent', role: 'agent', handle: '@builder' }, {}, { member: agent, controller: f.other }));
