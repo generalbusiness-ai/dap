@@ -1,17 +1,17 @@
 {
   "version": 1,
-  "qualification": "One passing gate at the checkpoint, which includes main 074255e8. The third scratch room ran at 4b9e1a89 on Worker da13242c, before the merge of main and the runbook edit; the directory cites its sealed unit by digest. No real room ran.",
-  "directory": "2026-10-31-s1-repo-in-ai",
+  "qualification": "One passing gate at the checkpoint, which includes main 76cac675. The third scratch room ran at 4b9e1a89 on Worker da13242c, before the merges of main and the runbook edits; the directory cites its sealed unit by digest. No real room ran.",
+  "directory": "2026-10-31-s1-repo-in-ai-repair",
   "checkpoint": {
-    "commit": "42099ef161431ed5bf8fff5af3e5bfc08686a783",
-    "tree": "efc2ec6eee9b46d586d796d91d5fb437bf5218e7"
+    "commit": "9bc8c663f389fdc6ec9dd9835e5af1cce32ba699",
+    "tree": "8c2ba946eeb2af05b3a713c3189834c77f9a7e91"
   },
   "fileCount": 38,
   "files": [
     {
       "path": "gate/gate.stdout.log",
-      "bytes": 6521,
-      "sha256": "fef00afef0c36c065d3cdea1a2df1590d40efda87beabe6c7e0a13fbb49b1eb1"
+      "bytes": 6535,
+      "sha256": "73474fd162703663a31502fd340afa9afac126b0c2a6aae3f74dd582479aa320"
     },
     {
       "path": "gate/gate.exit",
@@ -36,7 +36,7 @@
     {
       "path": "SHA256SUMS",
       "bytes": 3449,
-      "sha256": "6486a888a0ead141608227881c6e77c4b3e10e7ce36609e7d36451ae6e8d1c87"
+      "sha256": "99007a2a2d35f793c6181a3a3672275c80a37f4824fc6f2cee3ced92a107379e"
     }
   ]
 }
