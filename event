@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at package.json","body":{"commit":"c8c7b63172175576116f86ed4f7facfcdd749ec2","path":"package.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/bytes/src/field-value.ts","body":{"commit":"c8c7b63172175576116f86ed4f7facfcdd749ec2","path":"packages/bytes/src/field-value.ts"}}
