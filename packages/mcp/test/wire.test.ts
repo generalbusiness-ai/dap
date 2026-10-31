@@ -65,8 +65,15 @@ describe("both MCP wire revisions, each by its own rules", () => {
   for (const revision of ["legacy", "modern"] as const) test(`${revision} prompt discovery and work-on use the real client without a scope request`, async () => {
     const s = await http();
     const c = client(revision);
+    // The legacy client opens a GET stream whose inventory snapshot is a
+    // transport effect. Join that actual snapshot before measuring prompts.
+    let opened!: () => void;
+    const streamSnapshot = new Promise<void>(resolve => { opened = resolve; });
+    const snapshot = s.mcp.snapshot.bind(s.mcp);
+    s.mcp.snapshot = async () => { const result = await snapshot(); opened(); return result; };
     try {
       await c.connect(new StreamableHTTPClientTransport(new URL(s.url), bearer(s)));
+      if (revision === "legacy") await streamSnapshot;
       const before = standIn.requests.length;
       const list = await c.listPrompts();
       expect(list.prompts).toMatchObject([{ name: "work-on", arguments: [{ name: "goal", required: true }] }]);
