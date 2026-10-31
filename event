@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:55e7227863909e6824311747509eeeb8ca8ff5bb","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/src/index.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:807a80dcda0c059cb0064b2238cea4d2c3ab45cb","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/src/digests-finding.ts."}
