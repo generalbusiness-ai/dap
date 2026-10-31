@@ -1,13 +1,16 @@
 # S4: bounded room reads and a local review mark
 
 Status: integrated source; one final full gate passed at
-`399269c7a42eeee72f2d289abf0eb5fc98bf7c37`, tree `576a5010ea44e6dd48e8a62e19cac41b2a8f0d6b`.
+`399269c7a42eeee72f2d289abf0eb5fc98bf7c37`, tree
+`576a5010ea44e6dd48e8a62e19cac41b2a8f0d6b`.
 Implementation commit `3fd9cc28bf9f68d2f9afafc2191abdff3a3bf336` joins
 S4 A8 and landed Main `112eff124e7a51d2ebdd2d100ae24b52d03848ac`.
 The original S4 branch remains at A8. Exact-head review remains pending.
-Seven evidence collections are sealed; the later documentation tail changes no production code.
+Seven evidence collections are sealed; the later documentation tail changes no
+production code.
 
-The first 61 rows preserve historical results at their own checkpoints; row 62 records the integrated gate.
+The first 61 rows preserve historical results at their own checkpoints; row 62
+records the integrated gate.
 Neither failed ordinary gate becomes a pass. The incomplete Native capture
 stays inconclusive; the directed V5 Native completion passed at A8. Those
 results do not establish coverage of the new Main production changes. The
@@ -117,7 +120,8 @@ Each table row records one actual outer command. Controls contain their own
 healthy and fault runs. Seal calculations use their lighter receipt schema,
 not formal process terminals. Phase wrappers and no-child refusals are not
 extra tests. `tsc` expands to `node node_modules/typescript/bin/tsc`; `vitest`
-to `node node_modules/vitest/vitest.mjs`. `[R]` and `[C]` name the exact retained
+to `node node_modules/vitest/vitest.mjs`. `[R]` and `[C]` name the exact
+retained
 reporter/control arguments in `command.json`. The linked digest identifies
 `receipt.json`; each unit also binds its actual command and streams. Durations
 use command receipt values, rounded to three decimals.
@@ -293,7 +297,8 @@ final records do not promise complete live callbacks or physical drain.
 ## Final validation and remaining obligations
 
 The integrated gate closed with command and capture zero at
-`399269c7a42eeee72f2d289abf0eb5fc98bf7c37`, tree `576a5010ea44e6dd48e8a62e19cac41b2a8f0d6b`.
+`399269c7a42eeee72f2d289abf0eb5fc98bf7c37`, tree
+`576a5010ea44e6dd48e8a62e19cac41b2a8f0d6b`.
 All five stages passed with no stage report errors. Actual final counts are
 Node 91, Counting 56, Plain 3,202 passed and one skipped, and Native 889 passed
 and two skipped. Plain has 338 final modules and no live/final case gap.
@@ -306,7 +311,8 @@ recorded outcomes.
 Native live callbacks record 868 passed and two skipped cases. Twenty-one
 passed cases appear only in final records, all with numeric final durations.
 The separate partial module-timing label comes from the expected skipped
-recorder's null duration, not the missing case callbacks. All four reporter terminal streams completed. Node and Counting global
+recorder's null duration, not the missing case callbacks. All four reporter
+terminal streams completed. Node and Counting global
 summaries passed; both Vitest end records report zero unhandled errors. Scope
 has 250 known module durations out of 251. The console reports 78 unknown or
 suite observations and zero contradictory records. Terminal completion does
