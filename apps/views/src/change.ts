@@ -1,4 +1,4 @@
-/** The Change card: one exact version of a J4 change, read from native records. The card grants nothing; the scope judges each act. */
+/** The Change card: one exact version of a change on an accepted pin, read from native records. The card grants nothing; the scope judges each act. */
 import { canonicalize, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { FieldValue, Item, MemberRef, ReadMinimum, ScopeRef } from "@generalbusiness/dap-contract";
 import { changeFinding, changeJ4 } from "@generalbusiness/dap-lanes";

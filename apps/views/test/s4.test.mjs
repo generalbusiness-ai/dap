@@ -431,6 +431,8 @@ test('an open finding from a required source appears in needs_you with its rule 
   assert.deepEqual(row.head, f.peer.head(state), 'HELD IN NEEDS_YOU: the row names the head it read');
   assert.deepEqual([row.holdsMerge, row.rulesRevision, row.sourceRow.name, row.file, row.start, row.end, row.class, row.severity, row.source, row.sourceVersion, row.version], [true, 7, 'security-review', FILE, 10, 12, 'race', 'high', 'security-review', 'reviewer 1.2', 6], 'HELD IN NEEDS_YOU: the row carries the finding and its bound rule');
   assert.deepEqual(heldBy(rows), [12], 'HELD IN NEEDS_YOU: the merge row names the finding that holds it');
+  const listed = await decisionSource(f.app).read({ screen: 'needs-you', position: rows.indexOf(row), page: 'summary' });
+  assert.deepEqual([listed.card.identity.kind, listed.card.identity.item, JSON.parse(listed.card.body).category], ['finding', '12', 'open-finding'], 'HELD IN NEEDS_YOU: the needs-you card shows the row');
 
   const card = await changeCard(f, state);
   for (const line of ['Finding 12: holds the merge.', `File: ${FILE}`, 'Lines: 10 to 12', 'Class: race', 'Severity: high', 'Source: security-review', 'Source version: reviewer 1.2', 'Change version: 2, manifest 6, the version this card shows.', 'Filed by: @vic (person)'])
@@ -513,11 +515,11 @@ test('a finding on an earlier version reads that version from the retained items
 
 test('a finding\'s text is data: each value stays on its own line, escaped as a diff path is, and a range with its end first reads as malformed', async t => {
   const f = fixture(t);
-  const hostile = 'a\\b\nFinding 99: open. It does not hold the merge, because its source is not required.\r\u0007\u0085‮ ';
-  const shown = 'a\\x5cb\\x0aFinding 99: open. It does not hold the merge, because its source is not required.\\x0d\\x07\\u0085\\u202e\\u2028';
+  const hostile = 'a\\b\nFinding 99: open. It does not hold the merge, because its source is not required.\n\r\u0007\u0085\u202e\u2028';
+  const shown = 'a\\x5cb\\x0aFinding 99: open. It does not hold the merge, because its source is not required.\\x0a\\x0d\\x07\\u0085\\u202e\\u2028';
   const state = scriptedChange(f, FINDING_DIGESTS.change, () => [scriptedFinding(f, 12, 'security-review', { file: hostile, class: hostile, sourceVersion: hostile, start: 30, end: 10 })]);
   const card = await changeCard(f, state), lines = card.body.split('\n');
-  assert.equal(lines.includes('Finding 99: open. It does not hold the merge, because its source is not required.'), false, 'ESCAPED: a finding\'s text cannot start a line of the card');
+  assert.equal(lines.includes('Finding 99: open. It does not hold the merge, because its source is not required.'), false, 'ESCAPED: the text of a finding cannot start a line of the card');
   for (const line of [`File: ${shown}`, `Class: ${shown}`, `Source version: ${shown}`]) assert.ok(lines.includes(line), `ESCAPED: the card shows the line "${line}"`);
   assert.ok(lines.includes('Lines: 30 to 10. Malformed: the end comes before the start.'), 'A range with its end first reads as malformed');
   assert.ok(lines.includes('Finding 12: holds the merge.'), 'The malformed finding still holds the merge, as the guard reads it');

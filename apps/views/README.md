@@ -152,6 +152,8 @@ A source writes the file, class, and source version of a finding. The card
 escapes each one by the rule of the diff path, so a value stays on its own line
 and cannot start another. A backslash and each C0 control or DEL appear as
 `\xNN`. Each C1 control, bidi control, or line separator appears as `\uNNNN`.
+The `needs_you` row carries the same escaped text. `change` returns the source's
+original text as JSON values.
 
 `needs_you` lists a row of category `open-finding` for each open finding from a
 required source on an open or draft change, when you have an act that bears on
