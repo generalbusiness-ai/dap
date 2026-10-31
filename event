@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:92e3309deb80230022f57eeced49a67708fd028c","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/views/types.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:935609b826dfe6558176eac967db02c8f02d45ea","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/change-view.scope.test.ts."}
