@@ -2313,6 +2313,12 @@ is refused as `expired`, so the record ends as `refused` and the next read
 offers the card's acts again. If the scope cannot be reached, the record stays
 unknown.
 
+The scope's clock decides whether the bytes are expired, and one minute covers
+ordinary differences. If the scope's clock lags this server's by more than one
+minute, the same signed act can land when the check sends it. The act's signed
+revisions still bind it, so it lands only if they still match. The check then
+records that first entry as the act's answer.
+
 If this server holds no record, the check says so and says that this does not
 show the act was not sent.
 
