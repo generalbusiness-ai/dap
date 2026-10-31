@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:75ffb1594d92d54eb540b3607771efafded63b49","text":"Merge retired a covered predecessor; the successor is at packages/bytes/src/field-value.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:760b73d57c7def8ee2752344ac0d4890a28c9bc7","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/hosted-tools.ts."}
