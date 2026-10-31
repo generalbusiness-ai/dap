@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f9baa7b0c9c7d74f0a5dcdea062a8c341b33167e","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-21-capture-with-source.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fff4ce3d28ebac766586a2abf43726c059bcd14d","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/application-codec/application-package-validation.ts."}
