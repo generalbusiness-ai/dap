@@ -6,11 +6,11 @@
  */
 import { env, evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import type { ControlRequest, Digest, FactRef, KeyId, MemberId, ScopeRef } from "@generalbusiness/dap-contract";
+import type { ControlRequest, Digest, Entry, FactRef, Item, KeyId, MemberId, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, keyIdOfSecret, newIncarnation, signControl, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { invitationIssueFields, encodeAgentKeyInvitation, secretSigner, type AgentKeyInvitation } from "@generalbusiness/dap-client";
-import { ARCHIVE_DEVICE_APPLICATION_COHORT, FIRST_ACTIONS_OF, firstExtents } from "@generalbusiness/dap-platform";
-import { DEMO_DIGESTS, changeDemo, issueDemo } from "@generalbusiness/dap-lanes";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT, FIRST_ACTIONS_OF, ROLE_LISTS, firstExtents } from "@generalbusiness/dap-platform";
+import { DEMO_DIGESTS, QUESTION_DIGESTS, changeDemo, issueDemo, issueQuestions } from "@generalbusiness/dap-lanes";
 import { counting } from "../../../apps/counter/definition.ts";
 import { COUNTING_DEFINITION } from "../../../apps/counter/pin.ts";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
@@ -301,7 +301,7 @@ test("hosted default policy travels through Worker Env and the actual agent cons
     const body = await listed.json() as { result: { tools: { name: string }[] } };
     const names = body.result.tools.map(tool => tool.name);
     expect(names).toContain("room");
-    for (const name of ["create", "install_application", "credential", "prepare", "join", "record", "step", "text"]) {
+    for (const name of ["create", "install_application", "credential", "diff", "prepare", "join", "record"]) {
       expect(names).not.toContain(name);
       const called = await room.wait(() => modernCall(bot.bearer, name, {}));
       const refused = await called.json() as { result: { isError: boolean; structuredContent: Record<string, unknown> } };
@@ -310,6 +310,104 @@ test("hosted default policy travels through Worker Env and the actual agent cons
     }
     const orientation = await room.wait(() => modernCall(bot.bearer, "room", {}));
     expect((await orientation.json() as { result: { isError: boolean } }).result.isError).toBe(false);
+  } finally { hostedTest.toolSettings = previousToolSettings; done(room); }
+});
+// The agent loop on the hosted default: every fact and text the agent uses comes
+// from its own tool calls. Rita only makes the room's state, as the person.
+test("a hosted session on the default tools accepts exact terms and releases its block with facts and text it read through hosted tools", async () => {
+  const previousToolSettings = hostedTest.toolSettings;
+  hostedTest.toolSettings = { MCP_ENABLED: "true" };
+  const room = mcpRoom();
+  hostedTest.now = () => room.now();
+  hostedTest.pause = waiting => room.pause(waiting);
+  try {
+    const rita = room.agent("rita");
+    await createRoom(room, rita, "default");
+    expect((await rita.ok("rules.publish", { on: 0, fields: { approvals: 0, ownerMayReview: false, checks: [], labels: [], extents: firstExtents({ approvals: 0, checks: [] }) }, idempotencyKey: "publish" }))["answer"]).toBe("accepted");
+    expect((await rita.ok("rules.activate", { fields: { digest: QUESTION_DIGESTS.issue, name: "issue" }, values: [canonicalize(issueQuestions)], idempotencyKey: "activate-issue" }))["answer"]).toBe("accepted");
+    const roster = (await allItems(rita, "membership")).find(item => item.type === "roster")!;
+    const prior = roster.values[ROLE_LISTS.admin] as string[];
+    expect((await rita.ok("member.actions", { on: 0, fields: { role: "admin", actions: [...prior, ...["issue.approve", "issue.decide"].filter(action => !prior.includes(action))] }, idempotencyKey: "admin-decides" }))["answer"]).toBe("accepted");
+    const bot = await hosted(room, rita, "@bot", "create-bot");
+    const person = async (name: string, args: Record<string, unknown>) => {
+      const answer = await rita.ok(name, { idempotencyKey: crypto.randomUUID(), ...args });
+      expect(answer["answer"], `${name}: ${JSON.stringify(answer)}`).toBe("accepted");
+      return answer["fact"] as FactRef;
+    };
+    const opened = await person("issue.create", { fields: { definition: QUESTION_DIGESTS.issue, title: "TEST hosted loop", conditions: ["TEST first terms"] }, values: [canonicalize(issueQuestions)] });
+    const created = await rita.ok("wait", { scope: "directory", entry: opened.seq });
+    const made = (created["created"] as { scope: ScopeId; kind: string }[]).find(row => row.kind === "lane")!.scope;
+    await person("issue.offer", { target: made, fields: { offeree: "@bot" } });
+
+    const called: string[] = [];
+    const tool = async (name: string, args: Record<string, unknown> = {}) => {
+      called.push(name);
+      const reply = await room.wait(() => modernCall(bot.bearer, name, args));
+      const body = await reply.json() as { result: { isError: boolean; structuredContent: Record<string, unknown> } };
+      expect(body.result.isError, `${name}: ${JSON.stringify(body.result.structuredContent)}`).toBe(false);
+      return body.result.structuredContent;
+    };
+    const did = async (name: string, args: Record<string, unknown>) => {
+      const answer = await tool(name, { idempotencyKey: crypto.randomUUID(), ...args });
+      expect(answer["answer"], `${name}: ${JSON.stringify(answer)}`).toBe("accepted");
+      return answer["fact"] as FactRef;
+    };
+    const factOf = async (scope: ScopeId, seq: number): Promise<FactRef> => {
+      const read = await tool("step", { scope, seq });
+      const entry = read["entry"] as Entry;
+      return { at: entry.at, seq, hash: read["hash"] as FactRef["hash"] };
+    };
+    const seqOf = (ref: unknown): number => typeof ref === "number" ? ref : (ref as FactRef).seq;
+    const wholeText = async (scope: ScopeId, digest: string): Promise<string> => {
+      let whole = "", offset: number | undefined;
+      do {
+        const part = await tool("text", { scope, kind: "text", digest, ...(offset !== undefined ? { offset } : {}) });
+        whole += part["text"] as string;
+        offset = part["offset"] as number | undefined;
+      } while (offset !== undefined);
+      return whole;
+    };
+
+    const listed = await room.wait(() => mcp(bot.bearer, "POST", { "mcp-protocol-version": MODERN, "mcp-method": "tools/list" }, { jsonrpc: "2.0", id: 1, method: "tools/list", params: { _meta: META } }));
+    const names = (await listed.json() as { result: { tools: { name: string }[] } }).result.tools.map(row => row.name);
+    for (const name of ["step", "text", "steps", "items", "issue.take", "issue.block", "issue.release-block"]) expect(names).toContain(name);
+    expect(names).not.toContain("record");
+
+    // Accept: the terms come from the entry that the commitment names.
+    const lane = ((await tool("room"))["lanes"] as { scope: ScopeId; kind: string }[]).find(row => row.kind === "issue")!.scope;
+    expect(lane).toBe(made);
+    const items = async (type: string, final = false) => (await tool("items", { scope: lane, type, final }))["items"] as Item[];
+    const offered = (await items("commitment")).find(item => item.state === "offered")!;
+    await did("issue.take", { target: lane, on: offered.id, fields: { terms: await factOf(lane, seqOf(offered.refs["termsAt"])) } });
+
+    // Ask and block, on a question long enough to be a detached text.
+    const body = "TEST question body. ".repeat(3000);
+    const question = await did("issue.ask", { target: lane, fields: { question: "TEST which terms?", body } });
+    await did("issue.request-approval", { target: lane, fields: { ask: question.seq, bodyAt: question, requested: "@rita" } });
+    await did("issue.block", { target: lane, fields: { commitment: offered.id, on: question } });
+
+    // The person approves with a long comment and decides.
+    const comment = "TEST the person's reasons. ".repeat(2000);
+    const request = (await allItems(rita, lane)).find(item => item.type === "approval-request" && item.state === "open")!;
+    await person("issue.approve", { target: lane, fields: { request: request.id, bodyAt: question, verdict: "approve", comment } });
+    await person("issue.decide", { target: lane, on: question.seq, fields: { bodyAt: question } });
+
+    // The agent reads each person's whole text by the digest its entry holds.
+    const asked = (await items("ask", true)).find(item => item.id === question.seq)!;
+    expect(asked.state).toBe("decided");
+    expect(await wholeText(lane, asked.values["body"] as string)).toBe(body);
+    const steps = (await tool("steps", { scope: lane }))["steps"] as { seq: number; kind: string | null }[];
+    const approval = await tool("step", { scope: lane, seq: steps.find(row => row.kind === "approve")!.seq });
+    const signed = (approval["entry"] as { input: { signed: { intent: { fields: { comment: string } } } } }).input.signed;
+    expect(await wholeText(lane, signed.intent.fields.comment)).toBe(comment);
+
+    // Release: the answer is the decide entry that the question names.
+    const block = (await items("block")).find(item => item.state === "blocked")!;
+    const decision = await factOf(lane, seqOf(asked.refs["decisionAt"]));
+    expect(((await tool("step", { scope: lane, seq: decision.seq }))["entry"] as Entry).input).toMatchObject({ type: "act", signed: { intent: { kind: "decide", on: asked.id } } });
+    await did("issue.release-block", { target: lane, on: block.id, fields: { commitment: offered.id, answer: decision } });
+    expect((await items("block", true)).find(item => item.id === block.id)).toMatchObject({ state: "released" });
+    expect(called).not.toContain("record");
   } finally { hostedTest.toolSettings = previousToolSettings; done(room); }
 });
 // Invariant: an enrolled native hosted agent's production fetch port carries

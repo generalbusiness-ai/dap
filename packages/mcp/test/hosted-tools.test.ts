@@ -7,14 +7,14 @@ import { TRUSTED_APPLICATION_COHORT, firstExtents } from "@generalbusiness/dap-p
 test("hosted tool settings default closed, admit only known additions, and preserve local generic defaults", async () => {
   for (const settings of [{}, { MCP_ENABLED: "false" }, { MCP_ENABLED: "TRUE" }, ...["null", "{}", '["unknown"]', '["create","create"]', "["].map(MCP_TOOL_ADDITIONS => ({ MCP_ENABLED: "true", MCP_TOOL_ADDITIONS }))]) expect(hostedMcpTools(settings)).toBeNull();
   const policy = hostedMcpTools({ MCP_ENABLED: "true" })!;
-  const omitted = ["create", "install_application", "credential", "diff", "prepare", "join", "record", "step", "text"];
-  expect(policy).toContain("room");
-  expect(policy).toContain("actions");
+  const omitted = ["create", "install_application", "credential", "diff", "prepare", "join", "record"];
+  // `step` and `text` give the agent loop a full fact and complete bounded text.
+  expect(policy).toEqual(["room", "commons", "inspect", "application_installation", "items", "steps", "step", "sends", "text", "wait", "settle", "actions", "act"]);
   for (const name of omitted) expect(policy).not.toContain(name);
-  const additions = hostedMcpTools({ MCP_ENABLED: "true", MCP_TOOL_ADDITIONS: '["create","text"]' })!;
+  const additions = hostedMcpTools({ MCP_ENABLED: "true", MCP_TOOL_ADDITIONS: '["create","record"]' })!;
   expect(additions).toContain("create");
-  expect(additions).toContain("text");
-  for (const name of omitted.filter(name => name !== "create" && name !== "text")) expect(additions).not.toContain(name);
+  expect(additions).toContain("record");
+  for (const name of omitted.filter(name => name !== "create" && name !== "record")) expect(additions).not.toContain(name);
   const signer = fixedSigner(27);
   const make = (genericTools?: readonly string[]) => new McpService({ service: "https://x", signer, config: { read: async () => ({ service: "https://x" }), addRoot: async () => {} }, custody: memoryStore(), ...(genericTools ? { genericTools } : {}) });
   const local = make(), hosted = make(policy);

@@ -1880,12 +1880,21 @@ addressing either namespace. This applies to the control routes too.
 tool names, at most 1,024 characters and 20 names. Unknown names,
 duplicates, a different JSON shape, or an oversized setting close the
 endpoint. The hosted default omits `create`, `install_application`,
-`credential`, `diff`, `prepare`, `join`, `record`, `step`, and `text`. To enable
-needed tools, name them explicitly, for example `["prepare","text"]`.
-The other accepted names are `room`, `inspect`, `application_installation`,
-`items`, `steps`, `sends`, `wait`, `settle`, `actions`, and `act`. The
+`credential`, `diff`, `prepare`, `join`, and `record`. To enable needed tools,
+name them explicitly, for example `["prepare","record"]`. The other accepted names
+are `room`, `commons`, `inspect`, `application_installation`, `items`, `steps`,
+`step`, `sends`, `text`, `wait`, `settle`, `actions`, and `act`. The
 existing service mode still decides whether `actions` and `act` are listed.
 These settings do not change local Node MCP defaults.
+
+`step` and `text` give a hosted agent a full fact and complete text, with the
+same member read and byte bounds as the other reads. What a redeemed `join` or
+`enrol` shows through `step` depends on the room's Membership pin. On
+`platform:membership@1`, `@2`, `@4` and `@5`, it shows a hosted agent's model the
+secret. That secret is spent: the invitation refuses it as `invitation-used`. On
+`@6` to `@9`, it shows a proof bound to the scope, the invitation and the joining
+key, and no secret. Room text that other members wrote reaches the model too, as
+data that grants nothing.
 
 A named act call takes a fresh inventory snapshot and applies the same
 selection and standing predicates as `tools/list`. Dispatch also checks
