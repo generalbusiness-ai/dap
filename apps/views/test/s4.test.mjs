@@ -143,7 +143,7 @@ test('nine lanes: repeated calls reach every lane, each call says what it left o
 
   // The session and its tool take that scope on a list.
   const sessions = new ViewSessions(source, { call: async () => { throw Error('TEST no generic read'); } }, async () => { throw Error('TEST no act'); }, async () => { throw Error('TEST no settle'); });
-  assert.equal((await sessions.open('TEST-window', 'change', undefined, undefined, after.next)).status, 'incomplete');
+  assert.equal((await sessions.open('TEST-window', 'change', undefined, undefined, after.next).catch(error => ({ status: error.message }))).status, 'incomplete');
   await assert.rejects(() => sessions.open('TEST-bad-window', 'change', undefined, undefined, 'TEST not a scope'), /selected scope/);
 
   // A capture cannot name a scope outside the room, and a list is the only screen with a scope.
