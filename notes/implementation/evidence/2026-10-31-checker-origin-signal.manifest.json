@@ -1,22 +1,22 @@
 {
   "version": 1,
-  "qualification": "One passing gate at the checkpoint. The owner and control ran at the checkpoint. The probe of the path after a forward returned ran three times at main 93a6b661 plus the witness's uncommitted edit; its test is not in the tree. No container, Git host or hosted run is claimed.",
-  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-checker-origin-signal",
+  "qualification": "One passing gate at the checkpoint. The owner and both controls ran at the checkpoint. The probe of the upstream signal after a forward returned ran three times at main 93a6b661 plus the first witness's uncommitted edit; its test is not in the tree. No container, Git host or hosted run is claimed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-checker-origin-signal-2",
   "checkpoint": {
-    "commit": "1575833944c993eb159a850206d8544031bb69a2",
-    "tree": "f1c1159f1675cb71657429bcfc2b74d5ef9e6b32"
+    "commit": "2ccba51a63d996b81bc0feeba8c86ad4399681a7",
+    "tree": "40f2a1ee08a5084deeb582fef8db7f34cbad0e00"
   },
-  "fileCount": 44,
+  "fileCount": 47,
   "files": [
     {
       "path": "gate/gate.stdout.log",
-      "bytes": 6525,
-      "sha256": "daaf96f8a0d5a38785eb4c14030d2d0cd54d8f4ad54437647b9a4596b6b6c074"
+      "bytes": 6556,
+      "sha256": "8004efe929d58cf0406a3b267cafa0d3c4e54fc1401a3efa7aacafc4e67d14c6"
     },
     {
       "path": "gate/gate.stderr.log",
       "bytes": 37,
-      "sha256": "753df3ad32a46fa2675a431eb7d36887e2d2939b752a7d9868e1a2de2baebe0e"
+      "sha256": "9a35893e9832eccedf9b063c53e99a8b6508c9d02362add2dc3b21fa2f56b41d"
     },
     {
       "path": "gate/gate.exit",
@@ -25,28 +25,38 @@
     },
     {
       "path": "gate/gate.sh",
-      "bytes": 632,
-      "sha256": "4346fb4404e27185524ad9b7155a72236958eb46c9fee1c1f7328ed2597fdb2a"
+      "bytes": 640,
+      "sha256": "2d8ce66e8ff6587a175697e69023466571aac27ef37693dd40c51f3efde7f7a5"
     },
     {
       "path": "owner.stdout.log",
-      "bytes": 570,
-      "sha256": "6faefcdc3eb8473a45ba8d6176cbbc61fb147fcc8d1f11a2398df36a592af43c"
+      "bytes": 261,
+      "sha256": "dfe58f8bf40e4427b3ca3486acc46c2cad662d87ae3574e234b11d277817c05b"
     },
     {
       "path": "owner.exit",
-      "bytes": 13,
-      "sha256": "c49ad83d517967969a54b08cce3b8788c8dfd6af1c60eccb731730a540a0a213"
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
     },
     {
       "path": "control.stdout.log",
-      "bytes": 15,
-      "sha256": "49b962573a010e8b2ec24e6576e6de0a4c1547b19260abd3a431e900159e8ba5"
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
       "path": "control.stderr.log",
-      "bytes": 1959,
-      "sha256": "fe76fd06cc46d20e89f0f5ca9a2c0ec04bc07627f0ceee4f45b83a7c9205e002"
+      "bytes": 2678,
+      "sha256": "58c2b5d665482bbb36f34faabea8279efcf6a69789fba5c11a9f9e166966a3a1"
+    },
+    {
+      "path": "control-drop.stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "control-drop.stderr.log",
+      "bytes": 2632,
+      "sha256": "b4fca1aa22acf841e13525ae1fe8caba79455a3511305d57117b017784ded77c"
     },
     {
       "path": "after-forward-probe.stdout.txt",
@@ -65,8 +75,8 @@
     },
     {
       "path": "SHA256SUMS",
-      "bytes": 3938,
-      "sha256": "2ad1c8193a8b698cfe7ad0a1fd6bdaa77b41275c13ee820d1e5ace844d13834e"
+      "bytes": 4233,
+      "sha256": "505a6c140258149b768601a6e7f885d729a3ba6845b7254aad30f3f585e74a86"
     }
   ]
 }
