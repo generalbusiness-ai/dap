@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2edb2e3c0ea07249850d45e7fbafa7416464ae33","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/sessions.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2fed8bdd92164f0646577388176eb5628b4a0eca","text":"Merge retired a covered predecessor; the successor is at docs/security/trust-boundaries.md."}
