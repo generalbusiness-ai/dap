@@ -1,3 +1,4 @@
+import { commonsNoteForm } from "../src/commons.ts";
 import { afterEach, beforeEach, expect, test } from "vitest";
 import { actsPanel } from "../src/actions.ts";
 import { changeTaskContext, createIssue, issueDialogOutcome, nextChangeAction, requestedReviewCandidates, reviewSelectionProblem, taskForm } from "../src/tasks.ts";
@@ -395,4 +396,17 @@ test("a refused creation keeps its draft editable; unknown creation offers a rea
   expect(sent).toHaveLength(1);
   dialog.all().find(node => node.hasAttribute("data-check-original"))!.event("click");
   expect([reads, sent.length, dialog.closed]).toEqual([1, 1, true]);
+});
+
+test("the Commons form sends only explicit note fields through the existing sender and disables uncertain replacement", () => {
+  const note: Offered = { kind: "note", step: "comment", on: null, line: "Write a Commons note", fields: [{ name: "text", type: "text", required: true }, { name: "media", type: "text", required: true }, { name: "about", type: "list", required: true }] };
+  const document = { document: digestBytes(new Uint8Array([1])), fragment: "line=2,3" };
+  const sent: unknown[] = [];
+  const control = commonsNoteForm(note, (...args) => { sent.push(args); }, {}, document) as unknown as Element;
+  control.querySelector<Element>('[name="field:text"]')!.value = "A member's own mark";
+  control.all().find(node => node.tag === "form")!.event("submit");
+  expect(sent).toEqual([["note", "", { text: "A member's own mark", media: "text/plain", about: JSON.stringify([{ document: document.document, fragment: document.fragment }]) }]]);
+  const blocked = commonsNoteForm(note, (...args) => { sent.push(args); }, { uncertain: true }, document) as unknown as Element;
+  blocked.all().find(node => node.tag === "form")!.event("submit");
+  expect(sent).toHaveLength(1);
 });

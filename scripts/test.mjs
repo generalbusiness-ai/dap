@@ -23,6 +23,7 @@ const nodeFiles = [
   'scripts/deploy-check.test.mjs',
   'homepage/test/home.test.mjs',
   'packages/cli/test/config-dir.test.mjs',
+  'examples/commons-bill/test/witness.test.mjs',
   'apps/jam/test/managed-assets.test.mjs',
   'scripts/test.test.mjs',
   'scripts/test-summary.test.mjs',

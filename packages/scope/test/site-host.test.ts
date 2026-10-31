@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { canonicalize, digestBytes, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import type { Seed } from "@generalbusiness/dap-contract";
-import { UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
+import { COMMONS_COHORT, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 import { otherLane } from "@generalbusiness/dap-derive/testing";
 import { readerOf, roomOf, type Room, type SiteEnv } from "../src/site/host.ts";
 import type { Binding } from "../src/namespace.ts";
@@ -16,7 +16,7 @@ const repository = () => ({ id: 71, name: "demo", owner: ACCOUNT, private: false
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { "content-type": "application/json" } });
 const packet = (value: string) => `${(new TextEncoder().encode(value).length + 4).toString(16).padStart(4, "0")}${value}`;
 
-test("scripted Site metadata distinguishes the exact unpublished birth from older missing or malformed repository fields", async () => {
+test("scripted Site metadata distinguishes exact unpublished and Commons births from older missing or malformed repository fields", async () => {
   // This is a parser boundary, not a native birth/authority witness. The
   // integrated host-none story separately reads genuine Native source bytes.
   const creator = { ...otherLane, kind: "register" as const };
@@ -28,10 +28,12 @@ test("scripted Site metadata distinguishes the exact unpublished birth from olde
     const scopes: Binding<string> = { idFromName: value => value, get: () => ({ siteRoom: async () => ({ at, under: "TEST-scripted", bytes }) }) };
     return roomOf(scopes, directory);
   };
-  expect(await read(seed, { branch: "main" })).toEqual({ register: creator.scope, repository: null, branch: "main" });
+  for (const selected of [seed, { ...seed, definition: COMMONS_COHORT.directory }]) {
+    expect(await read(selected, { branch: "main" })).toEqual({ register: creator.scope, repository: null, branch: "main" });
+    expect(await read(selected, { branch: "main", repository: null })).toBeNull();
+    expect(await read(selected, { branch: "main" }, true)).toBeNull();
+  }
   expect(await read({ ...seed, definition: "platform:directory@3" }, { branch: "main" })).toBeNull();
-  expect(await read(seed, { branch: "main", repository: null })).toBeNull();
-  expect(await read(seed, { branch: "main" }, true)).toBeNull();
 });
 
 // Invariant: Site acquisition requires the recorded stable repository ID

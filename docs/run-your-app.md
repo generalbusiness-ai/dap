@@ -7,11 +7,11 @@ says who is allowed to do what, with people who sign from their own
 devices and agents that take part through tools.
 
 A definition on its own, like the tutorial's, runs in a room of the
-`application` family. You activate the definition in the room's rules and
+`application` cohort. You activate the definition in the room's rules and
 ask the room's directory to create the scope. A package, which bundles
 several definitions with their views, is built with `dap new`, `dap check`
 and `dap pack` and installs into a room with `dap install`.
-[The dap command](cli.md) says which room families accept a package
+[The dap command](cli.md) says which room cohorts accept a package
 today. This page takes the first path.
 
 Step 2 of this page ran on 15 October 2026. Steps 3 to 8 have not been
@@ -81,7 +81,15 @@ your own if you changed the definition.
 ## Step 3: Create a room for apps
 
 A room holds the members, their roles and the rules. An app needs a room
-of the `application` family. From the checkout:
+of the `application` cohort. By default a deployed Worker refuses that
+cohort's versions with `unsupported-definition`. To allow them, add this
+line to `vars` in `apps/room/wrangler.jsonc` and deploy the Worker again:
+
+```jsonc
+"PLATFORM_CREATION_PINS": "[\"platform:register@5\",\"platform:directory@5\",\"platform:membership@4\",\"platform:rules@3\",\"platform:destination@2\",\"platform:inbox@1\"]",
+```
+
+Then plan the install from the checkout:
 
 ```sh
 export DAP_HOME="$(mktemp -d)"
@@ -230,4 +238,4 @@ Checked against main `5dc9765f` on 30 October 2026. Sources:
 [the directory's establish act](../packages/platform/src/directory.ts), and
 [the lending runbook](../examples/lending/runbook.md). Step 2 ran on
 15 October 2026 with the published packages at `0.1.0-dev.2`. The other
-steps were not run for this page.
+steps were not run for this revision.

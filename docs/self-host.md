@@ -5,9 +5,6 @@ invite a person on another device. The scope Worker serves both the API and
 the room page. To run the service on one Mac, follow
 [Run on a Mac](#run-on-a-mac).
 
-The project ran this guide on 13 October 2026 with an earlier Worker
-configuration. Nobody has run it again since the bindings changed.
-
 ## Deploy a room
 
 You need Git, Node 26, and a Cloudflare account that supports Workers,
@@ -128,7 +125,7 @@ checkout.
    ```
 
    Install prints `Installed: register sc_..., ... as planned.` Create
-   makes the room's Git repository, enrolls you as the owner, and prints
+   makes the room's Git repository, enrolls you as the room's first admin, and prints
    the room's directory and membership references. Keep `DAP_HOME` for
    later commands. If create stops waiting, run the same command again
    without `--again`. If an install is uncertain, keep its original plan
@@ -482,4 +479,5 @@ and the node name.
 ## Source
 
 Checked against main `5dc9765f` on 30 October 2026. Sources: [apps/room/wrangler.jsonc](../apps/room/wrangler.jsonc), [packages/scope/src/register-setting.ts](../packages/scope/src/register-setting.ts), [packages/scope/src/applications/route.ts](../packages/scope/src/applications/route.ts), [packages/cli/src/line.ts](../packages/cli/src/line.ts), [apps/room/celld/mac](../apps/room/celld/mac/), [scripts/celld-smoke.mjs](../scripts/celld-smoke.mjs).
-The commands on this page were not run for this revision.
+The project ran this guide on 13 October 2026 with an earlier Worker
+configuration. The commands on this page were not run for this revision.

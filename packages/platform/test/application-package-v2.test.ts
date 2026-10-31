@@ -1,3 +1,5 @@
+import { requireReferenceInstall } from "../src/application-install-reference.ts";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT, COMMONS_COHORT } from "../src/index.ts";
 import { emptyPackageComposition } from "@generalbusiness/dap-package-graph";
 import { expect, test } from "vitest";
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
@@ -102,15 +104,24 @@ test("v2 signs explicit composition, refuses ambiguous references and keeps late
   }
 });
 
-test("a signed host requirement names archive explicitly and refuses unknown or ambiguous requirements", async () => {
+test("signed host requirements bind archive and commons and refuse unknown or ambiguous requirements", async () => {
   const original = await packApplication2(input(), signer);
   const requested: ApplicationPackageInput2 = { ...input(), semantic: { ...input().semantic, host: { ...input().semantic.host, requires: ["archive"] } } };
   const required = await packApplication2(requested, signer);
   expect(required.ids.semantic).not.toBe(original.ids.semantic);
   expect(readApplicationPackage2(required.bytes, required.ids.release).package.semantic.host.requires).toEqual(["archive"]);
-  for (const requires of [[], ["unknown"], ["archive", "archive"], "archive", null]) {
+  for (const requires of [["commons"], ["archive", "commons"]] as const) {
+    const commons = await packApplication2({ ...input(), semantic: { ...input().semantic, host: { ...input().semantic.host, requires } } }, signer);
+    expect(commons.ids.semantic).not.toBe(original.ids.semantic);
+    expect(commons.ids.semantic).not.toBe(required.ids.semantic);
+    expect(readApplicationPackage2(commons.bytes, commons.ids.release).package.semantic.host.requires).toEqual(requires);
+  }
+  for (const requires of [[], ["unknown"], ["commons", "archive"], ["archive", "archive"], ["commons", "commons"], ["archive", "commons", "unknown"], "archive", null]) {
     const bad: ApplicationPackageInput2 = input(); Reflect.set(bad.semantic.host, "requires", requires);
-    await expect(packApplication2(bad, signer)).rejects.toThrow("application-package-invalid");
+    const refused = await packApplication2(bad, signer).then(
+      () => false, (error: unknown) => error instanceof Error && error.message.includes("application-package-invalid"),
+    );
+    expect(refused).toBe(true);
   }
 });
 
@@ -131,4 +142,21 @@ test("a child created only by a late replacement belongs to the signed package c
   const complete = await packApplication({ ...packet, semantic: { ...packet.semantic, definitions: [...packet.semantic.definitions, { id: childId, bytes: canonicalize(child) }] } }, tracked);
   expect(complete.package.semantic.creates).toEqual([{ from: parentId, to: childId }]);
   expect(readApplicationPackage(complete.bytes, complete.ids.release).ids).toEqual(complete.ids);
+});
+
+
+test("the reference install gate reads schema types, not names or text defaults", () => {
+  const ordinary: DeclaredDefinition = { ...definition, items: { ...definition.items, note: {
+    ...definition.items["note"]!, values: { reference: {
+      required: false, fixed: false, of: { type: "text", max: 100 }, default: "reference",
+    } },
+  } } };
+  expect(() => requireReferenceInstall(ordinary, ARCHIVE_DEVICE_APPLICATION_COHORT.rules)).not.toThrow();
+  const nested: DeclaredDefinition = { ...ordinary, acts: { ...ordinary.acts, touch: {
+    ...ordinary.acts["touch"]!, fields: { citations: { required: false, type: "list", max: 1,
+      of: { type: "record", of: { source: { type: "reference", fragment: 512, required: true } } },
+    } },
+  } } };
+  expect(() => requireReferenceInstall(nested, ARCHIVE_DEVICE_APPLICATION_COHORT.rules)).toThrow("reference-requires-rules14");
+  expect(() => requireReferenceInstall(nested, COMMONS_COHORT.rules)).not.toThrow();
 });

@@ -7,9 +7,6 @@ directory on one machine, and writes down what each command printed. The
 captures script then takes pictures of the room's page. Run both the
 evening before a recording, and again on the morning of it.
 
-The story was rehearsed against a deployment on 12 October 2026. The
-runner has changed since then.
-
 ## What the runner does
 
 `scripts/demo-run.ts` runs 27 shots in order by default. Each ordinary
@@ -228,3 +225,6 @@ with `DEMO_RECORD=1` and is skipped by name otherwise.
 ## Source
 
 Checked against main `5dc9765f` on 30 October 2026. Sources: [demo-run.ts](../scripts/demo-run.ts), [rehearse.ts](../scripts/demo/rehearse.ts), [demo-captures.ts](../scripts/demo-captures.ts), [demo.scope.test.ts](../apps/room/lanes/test/demo.scope.test.ts). The commands on this page were not run for this revision.
+The story was rehearsed against a deployment on 12 October 2026, and the
+runner has changed since then. The commands on this page were not run for
+this revision.

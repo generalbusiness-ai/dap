@@ -62,7 +62,7 @@ share that local transaction. Other scopes do not join it. Their messages
 and the replies of outside operations become later inputs with their own
 judgments.
 
-## Distinguish the four answers
+## Distinguish the five answers
 
 | Answer | Meaning and next step |
 |---|---|
@@ -70,10 +70,7 @@ judgments.
 | `refused` | The request failed a check at the stated head. Read its reason and any named guard. Inspect before you change the request. |
 | `unavailable` | The reply does not say whether the act took effect. Keep the original intent and inspect. Due entries, or an earlier entry for this act, can exist despite the reply. |
 | `mismatch` | The key's idempotency key already belongs to a different intent that took effect. Inspect that record. Do not send new bytes under the same key. |
-
-A read of an entry below a scope's journal floor gets a fifth answer,
-`archived`. It names the floor and the archive commit that covers the
-entry. No act gets that answer.
+| `archived` | The act took effect at a position now below the scope's journal floor. A repeated intent for that act gets this answer, and so does a read of such an entry. It names the floor, the archive commit that covers the entry, and the entry. Read the entry from the archive. Do not sign the act again. |
 
 A transport failure gives no answer at all. A lost reply does not mean
 that the scope did nothing. To ask for settlement or an exact replay, the

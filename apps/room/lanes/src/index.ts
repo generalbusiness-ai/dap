@@ -30,3 +30,7 @@ export { EVIDENCE_DIGESTS } from "./digests4.ts";
 /** Explicit workspace profile; creation and activation select these pins. */
 export { issueJ4, changeJ4 } from "./j4.ts";
 export { J4_DIGESTS } from "./digests-j4.ts";
+
+/** Explicit question approval successor; earlier issue definitions keep their pins. */
+export { issueQuestions } from "./issue-questions.ts";
+export { QUESTION_DIGESTS } from "./digests-questions.ts";

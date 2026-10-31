@@ -824,8 +824,9 @@ raw output, including room identifiers from hosted tails, may stay.
 Design packets commit their sources and at most three key images. Renders
 and screenshot series go in the directory and its manifest.
 
-Notes, evidence files and manifests that were in the tree before
-25 October 2026 stay as they are. The gate's `notes` step checks the committed base-to-head file
+The rule applies to heads filed after ruling `fcab078d` of 25 October
+2026. Notes, evidence files and manifests already in the tree stay as
+they are. The gate's `notes` step checks the committed base-to-head file
 changes. It warns on each added or changed file under
 `notes/implementation/` over 40,960 bytes, and on each added path under
 `notes/implementation/evidence/` whose name does not end in `.manifest.json`.

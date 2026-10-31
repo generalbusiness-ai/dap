@@ -16,8 +16,9 @@ import { invitationRedemptionFields } from "@generalbusiness/dap-client";
 import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FieldValue, Item, PlatformDefinition, Read, Receipt, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, isReceipt, entryHash, parseStrict, scopeIdOf, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { TransportError, ScopeHandle, ApplicationPackageError, applicationScreenPath, readApplicationInstallOptions, readDeviceApplicationInstallOptions, readApplicationReleaseUri, readApplicationTrust, applicationTrustForSource, signedApplicationInstall, signedApplicationInstall2, signedDeviceApplicationInstall, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/dap-client";
-import { TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, platform, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
+import { TransportError, ScopeHandle, ApplicationPackageError, commonsInstallCheck, loadCommons, readApplicationPackage, applicationScreenPath, readApplicationInstallOptions, readDeviceApplicationInstallOptions, readApplicationReleaseUri, readApplicationTrust, applicationTrustForSource, signedApplicationInstall, signedApplicationInstall2, signedDeviceApplicationInstall, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/dap-client";
+import { TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, platform, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, COMMONS_COHORT } from "@generalbusiness/dap-platform";
+import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/dap-git/application";
 import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
 import { Custody, CustodyError, Lost, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity } from "./custody.ts";
@@ -95,7 +96,7 @@ const SEARCH_ENTRIES = 16;
 /** The most bytes of a capability's name or of a step's name that `prepare` takes. */
 const NAME_BYTES = 128;
 const SEARCH_PAGES = 4;
-const SINGLETON_PLACES = ["register", "directory", "membership", "rules", "destination", "inbox"] as const;
+const SINGLETON_PLACES = ["register", "directory", "membership", "rules", "commons", "destination", "inbox"] as const;
 
 interface Snapshot {
   read: Read_;
@@ -178,7 +179,7 @@ const stopCall = (f: Finding): never => { throw new Stop(failed(f)); };
 
 const READ = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 const WRITE = { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false };
-const scopeArg = { type: ["string", "integer"], description: "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number." };
+const scopeArg = { type: ["string", "integer"], description: "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number." };
 const keyArg = { type: "string", minLength: 1, maxLength: 128, description: "Your key for this one meaning, 1 to 128 bytes. Keep it." };
 
 export class McpService {
@@ -603,6 +604,8 @@ export class McpService {
     return Object.fromEntries([
       tool("room", "Orientation. The service, your key, the scopes of the room by name, the issues and changes the directory lists, the applications its factory created (such as a Counter), the standalone scopes, your standing on each membership, the active definitions, and the act tools your role does not hold; paged by bytes, with a cursor. Start here.",
         { cursor: { type: "string" } }, [], READ, (a) => this.#room(a)),
+      tool("commons", "Read one bounded page of Commons notes with their facts, authors, media and opaque about references. Text and citation previews may be shortened; use step for complete citations and text for the retained text. A reference grants no access to its target. Readability and completeness are explicit.",
+        { scope: scopeArg, cursor: { type: "string" } }, [], READ, a => this.#commons(a)),
       tool("inspect", "One scope: its definition and digest, status, head, counts by item type and state, and its live items, paged by bytes at its head. With declaration: true, the definition's bytes, paged. With describe: <kind>, the complete derived text of one act, for an act whose tool description points here.",
         { scope: scopeArg, declaration: { type: "boolean" }, describe: { type: "string" }, cursor: { type: "string" }, offset: { type: "integer", minimum: 0 } }, ["scope"], READ, (a) => this.#inspect(a)),
       tool("create", "Creates a scope with no existing target, and records it in your configuration so later connections list its tools. definition: a platform name such as platform:register@18, a definition's JSON, or its digest; kind: the definition's genesis act; fields; texts and definitions beside it; membership: the membership scope standing for the new scope is read from. Kept under custody like an act: the idempotencyKey is required.",
@@ -682,6 +685,35 @@ export class McpService {
       ...(next !== null ? { cursor: cursorOf({ l: layout, i: next }), more: `This page holds entries ${from + 1} to ${next} of ${all.length}; call room with cursor for the rest.` } : {}),
       ...(moved ? { restarted: "The room's collections changed since the cursor was made; this page restarts at the first entry." } : {}),
     }, BOUNDS.room);
+  }
+
+  async #commons(args: Args): Promise<CallResult> {
+    const snapshot = await this.#current();
+    const { scope, membership } = await this.#scope(snapshot, args["scope"] ?? "commons");
+    const { summary } = await this.#summary(scope, membership);
+    if (summary.scope.kind !== "commons" || summary.definition !== "platform:commons@1") return failed({ error: "target", what: "the target is not Commons@1" });
+    const cursor = fromCursor<{ c?: string; i: number; h: string }>(args["cursor"]);
+    if (cursor && (!Number.isSafeInteger(cursor.i) || cursor.i < 0 || typeof cursor.h !== "string" || (cursor.c !== undefined && typeof cursor.c !== "string"))) return failed({ error: "shape", field: "cursor", what: "is not a Commons continuation", declared: "the cursor returned by commons" });
+    const view = await this.#reads.read(membership, async (transport, reader) => {
+      const read = await transport.summary(scope, reader);
+      if (!read.ok) return read;
+      try { return { ...read, value: await loadCommons(new ScopeHandle(transport, scope, reader), summary.scope, cursor?.c ? { cursor: cursor.c } : {}) }; }
+      catch { return { ok: false as const, reason: "unavailable" as const }; }
+    });
+    if (!view.ok) return failed({ error: "read", scope, reason: view.reason });
+    const loaded = view.value, head = canonicalize(loaded.head);
+    const moved = cursor !== null && cursor.h !== head;
+    if (moved) return ok({ scope, complete: false, restarted: "The Commons head changed; call again without a cursor." }, BOUNDS.large);
+    const notes = loaded.notes.map(note => {
+      const preview = note.text === null ? null : sliceText(note.text, 0, 1024);
+      const about = pageBy(note.about, 0, 8192);
+      return { ...note, about: about.page, aboutComplete: about.next === null, text: preview?.text ?? null, textComplete: preview !== null && preview.next === null };
+    });
+    const header = { scope: loaded.scope, head: loaded.head, unreadable: loaded.unreadable.slice(0, 8), unreadableCount: loaded.unreadable.length };
+    const { page, next } = pageBy(notes, cursor?.i ?? 0, pageOf(BOUNDS.large) - bytesOf(header) - 2048);
+    const continuation = next !== null ? cursorOf({ c: cursor?.c, i: next, h: head }) : loaded.next ? cursorOf({ c: loaded.next, i: 0, h: head }) : null;
+    return ok({ ...header, notes: page, complete: loaded.complete && continuation === null,
+      ...(continuation ? { cursor: continuation } : {}), entryRead: "For complete citations and text, read the note fact with step, then its detached text with text." }, BOUNDS.large);
   }
 
   async #inspect(args: Args): Promise<CallResult> {
@@ -979,24 +1011,28 @@ export class McpService {
    * room recorded in the configuration; the list is derived again on the next call.
    */
   /** The actual generic room and exact Rules sibling, never a caller alias. */
-  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT | typeof DEVICE_APPLICATION_COHORT | typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_PUBLICATION_COHORT | typeof UNPUBLISHED_COHORT }> {
+  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT | typeof DEVICE_APPLICATION_COHORT | typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_PUBLICATION_COHORT | typeof UNPUBLISHED_COHORT | typeof COMMONS_COHORT }> {
     const config = await this.#port.config.read(), repository = config.repository;
     if (!repository || config.service !== this.#service) return stopCall({ error: "target", what: "configure a trusted-application room before installing" });
     const { summary: directory } = await this.#summary(repository.directory.scope, repository.membership);
     const row = directory.items.find(item => item.type === "repository" && item.state === "open"), rules = row?.refs["rules"], destination = row?.refs["destination"];
-    const cohort = [TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT].find(cohort => directory.definition === cohort.directory);
+    const cohort = [TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, COMMONS_COHORT].find(cohort => directory.definition === cohort.directory);
     if (!cohort || directory.status !== "active" || canonicalize(directory.scope) !== canonicalize(repository.directory)
       || !row || canonicalize(row.refs["membership"]) !== canonicalize(repository.membership)
       || !isScopeRef(rules) || rules.kind !== "rules" || rules.scope !== repository.rules
       || !isScopeRef(destination) || destination.kind !== "destination" || destination.scope !== repository.destination) return stopCall({ error: "target", what: "the configured room does not match its exact generic native siblings" });
     const { summary } = await this.#summary(rules.scope, repository.membership);
     if (summary.status !== "active" || summary.definition !== cohort.rules || canonicalize(summary.scope) !== canonicalize(rules)) return stopCall({ error: "target", what: "the actual Rules sibling does not support native application installation" });
+    if (cohort.directory === COMMONS_COHORT.directory) {
+      const { summary: membership } = await this.#summary(repository.membership.scope, repository.membership);
+      if (membership.status !== "active" || membership.definition !== COMMONS_COHORT.membership || canonicalize(membership.scope) !== canonicalize(repository.membership)) return stopCall({ error: "target", what: "the Commons room does not hold its exact Membership sibling" });
+    }
     return { directory: directory.scope, membership: repository.membership, rules, destination, cohort };
   }
 
   async #declaredInstallation(item: number): Promise<ApplicationInstallation | null> {
     const room = await this.#applicationRoom();
-    if (room.cohort.rules !== DECLARED_APPLICATION_COHORT.rules && room.cohort.rules !== DEVICE_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DECLARED_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DEVICE_APPLICATION_COHORT.rules) return null;
+    if (room.cohort.rules !== DECLARED_APPLICATION_COHORT.rules && room.cohort.rules !== DEVICE_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DECLARED_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DEVICE_APPLICATION_COHORT.rules && room.cohort.rules !== COMMONS_COHORT.rules) return null;
     const read = await this.#reads.read(room.membership, (t, r) => new ScopeHandle(t, room.rules.scope, r).queryItems({ v: 1, scope: room.rules, type: "installation", states: ["active"], ids: [item], limit: 1, cursor: null }));
     if (!read.ok || !read.complete || read.next !== undefined) return null;
     const row = read.value.items[0];
@@ -1016,8 +1052,8 @@ export class McpService {
     let selected: ReturnType<typeof readApplicationInstallOptions> | ReturnType<typeof readDeviceApplicationInstallOptions>;
     try {
       const ordinary = { rules: room.rules, uri: args["uri"], release: args["release"], roles: args["roles"], values: args["values"] };
-      selected = room.cohort.rules === DEVICE_APPLICATION_COHORT.rules || room.cohort.rules === ARCHIVE_DEVICE_APPLICATION_COHORT.rules ? readDeviceApplicationInstallOptions({ ...ordinary, owner: args["owner"] }) : readApplicationInstallOptions(ordinary);
-      if (room.cohort.rules !== DEVICE_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DEVICE_APPLICATION_COHORT.rules && args["owner"] !== undefined) throw Error("this cohort has no owner selection");
+      selected = room.cohort.rules === DEVICE_APPLICATION_COHORT.rules || room.cohort.rules === ARCHIVE_DEVICE_APPLICATION_COHORT.rules || room.cohort.rules === COMMONS_COHORT.rules ? readDeviceApplicationInstallOptions({ ...ordinary, owner: args["owner"] }) : readApplicationInstallOptions(ordinary);
+      if (room.cohort.rules !== DEVICE_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DEVICE_APPLICATION_COHORT.rules && room.cohort.rules !== COMMONS_COHORT.rules && args["owner"] !== undefined) throw Error("this cohort has no owner selection");
     }
     catch { return failed({ error: "shape", field: "installation", what: "needs an immutable Git URI, expected release, explicit unique roles, bounded genesis values and a full existing owner for a device package", declared: "the install_application input" }); }
     const address = readApplicationReleaseUri(selected.uri);
@@ -1037,6 +1073,12 @@ export class McpService {
       try {
         const bytes = await readApplicationGitBlob(address, source.source, 4 * 1024 * 1024);
         const prepare = pin === DECLARED_APPLICATION_COHORT.rules || pin === ARCHIVE_DECLARED_APPLICATION_COHORT.rules ? signedApplicationInstall2 : signedApplicationInstall;
+        const packet = prepare === signedApplicationInstall2 || "owner" in selected
+          ? readPublishedApplicationPackage2(bytes, selected.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 })
+          : readApplicationPackage(bytes, selected.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 });
+        if (packet.package.release.manifest.publisher !== allowed.publisher) throw new ApplicationPackageError("invalid");
+        const { summary: directory } = await this.#summary(room.directory.scope, room.membership);
+        if (!commonsInstallCheck(directory, packet.package.semantic.host.requires).ok) return stopCall({ error: "commons-missing" });
         const prepared = "owner" in selected
           ? await signedDeviceApplicationInstall(this.#port.signer, bytes, readDeviceApplicationInstallOptions(selected), { idempotencyKey: key as string, now: this.#now() }, allowed.publisher)
           : await prepare(this.#port.signer, bytes, selected, { idempotencyKey: key as string, now: this.#now() }, allowed.publisher);
@@ -1050,7 +1092,7 @@ export class McpService {
         catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
       }, { notAfter: timeOf(this.#now() + PROPOSED_BOUNDS.intentLifetimeSeconds * 1000), bytes: 768 * KIB });
     } catch (error) {
-      if (error instanceof CustodyError) throw error;
+      if (error instanceof CustodyError || error instanceof Stop) throw error;
       return failed({ error: "target", what: error instanceof ApplicationHttpError && error.reason === "unsupported-object-format" ? "the public HTTPS Git transport does not support SHA-256 repositories; nothing was submitted" : error instanceof ApplicationPackageError ? "package bytes do not match the expected signed release or install bounds; nothing was submitted" : "the exact Git package could not be prepared; nothing was submitted" });
     }
     if ("lost" in kept) return failed({ error: "transport", scope: room.rules.scope, submitted: true });

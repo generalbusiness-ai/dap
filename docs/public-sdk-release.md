@@ -111,7 +111,11 @@ The export and dependency lists are exact. An unknown export, an unknown
 dependency, a changed exclusion or a changed pin refuses the release.
 Each export lists `types` before the JavaScript `default`.
 
-| Package | Published exports | Excluded source exports | Coordinated dependencies |
+The table holds the plan in `scripts/public-release.json`. The release that
+npm serves at `0.1.0-dev.2` is older: platform and client export only `.`,
+and derive exports `.`, `./rule` and `./testing`.
+
+| Package | Planned exports | Excluded source exports | Coordinated dependencies |
 |---|---|---|---|
 | contract | `.` | | |
 | bytes | `.`, `./web` | | contract |
@@ -262,7 +266,9 @@ journey, the compiled stages and the copied dependencies, with no
 external module. It accepts one exception: the synthetic `<runtime>`
 input edge that esbuild adds for jsonata's helper import, in its exact
 path, kind and three-field shape. The bundle shows that the browser
-closure builds. It does not run in a browser.
+closure builds. It does not run in a browser. Packaging does not establish
+browser cross-origin access. The producer adds no CORS, grant, hosting or
+onboarding protocol, and no universal durable outbox.
 
 ## Source
 

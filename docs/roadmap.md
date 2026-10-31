@@ -27,7 +27,7 @@ keep stable, and lists the parts that fail its test today.
 | A room Worker run on your own machine with celld, and a kit that installs it as a service on a Mac. | [Run the local Worker](celld.md), [Run on a Mac](self-host.md#run-on-a-mac) |
 | Published repositories served as pages. | [Pages](pages.md) |
 | dap-grow, a declared application of several scopes: a site that creates grow rooms, with operator views, probes from chat, routing, presence and device commands. A simulator runs the hosted demo room. | [The grow runbook](../examples/grow/runbook.md) |
-| Application packages: `dap new`, `dap dev`, `dap check` and `dap pack`. A room installs a trusted package in one act. Package views run as cards in an AI app. | [Run your app](run-your-app.md), [Declared application views](application-views.md) |
+| Application packages: `dap new`, `dap dev`, `dap check` and `dap pack`. A room of a device cohort installs a trusted `device-command@1` package in one act. No current cohort installs ordinary packages such as Counter in a new room. Package views run as cards in an AI app. | [Run your app](run-your-app.md), [Declared application views](application-views.md) |
 | Evidence rules for landing, first slice, deployed. A room's rules say who may produce a check's result, when the check runs, and whether a passed result on the same tree counts again. Rooms opt in to it. | [Evidence rules for landing](../notes/2026-10-16-evidence-rules-design.md), [`evidence-cohort.ts`](../packages/platform/src/evidence-cohort.ts) |
 
 Each of those pages states its own evidence and limits.
@@ -64,7 +64,7 @@ In order, nearest first.
 
 | Capability | State | Use cases that need it |
 |---|---|---|
-| [The commons `note` act](../notes/2026-10-28-boundary-objects-in-use.md) | Designed. The first slice, a fragment on references and the `note` act, is being built | Every case: readings, marks and agreements between parties |
+| [The commons `note` act](../notes/2026-10-28-boundary-objects-in-use.md) | The first slice is built: `commons@1`, its `note` act and reference fields. The hosted `dap-commons` Worker is configured and holds no planned register in its source | Every case: readings, marks and agreements between parties |
 | [An application's own messages between scopes](#an-applications-own-messages-between-scopes) | Runs within one room, for the grow site and its rooms. Not yet across rooms | 21, 25, 31, 32, 33, 37, 39, 40, 41, 51, and parts of 08, 18, 19, 24 |
 | [Durability levels](#durability-levels) | Recorded runs. The journal floor's first two slices and the archive binding are built. Live and the Sequenced level are designed, not built | 36, 44, and the live part of every case |
 | [A fork for each hold](#a-fork-for-each-hold) | Planned. A first measurement ran | 34 |
@@ -150,8 +150,7 @@ the archive binding. The Sequenced level itself and the order scope are
 not built. The
 [journal floor note](../notes/2026-10-20-retained-journal-floor.md)
 designs incremental archive passes and a floor below which a scope drops
-archived entries. Its first two slices, F1 and F2, are built. The third,
-F3, is not.
+archived entries. Its first two slices are built. The third is not.
 
 ### A fork for each hold
 
@@ -438,7 +437,7 @@ in members by vote.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources:
+Checked against main `c8c7b631` on 30 October 2026. Sources:
 [use cases](use-cases.md), the design notes linked from each row,
 [`capability.ts`](../packages/contract/src/capability.ts),
 [`definition.ts`](../packages/contract/src/definition.ts),

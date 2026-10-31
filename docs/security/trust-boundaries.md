@@ -57,6 +57,41 @@ The operator sets `SESSION_SECRET` and `DEPLOYMENT`. The `deployment` member of 
 
 It declares no Artifacts binding, R2 bucket or analytics dataset, so it shares no Cloudflare resource with another Worker. The file sets `DEPLOYMENT` to `dap-celld-local` and the index to `enforce`. The operator sets `REGISTER_SCOPE` and `SESSION_SECRET` in a private `.dev.vars` file. `APPLICATION_SCREEN_HOSTS` is empty. See [Run the local Worker](../celld.md).
 
+## dap-commons
+
+[`apps/room/wrangler.commons.jsonc`](../../apps/room/wrangler.commons.jsonc)
+uses the separate [Commons entry](../../apps/room/worker.commons.ts) with
+the shared room handlers. Its `SCOPES`, `SCOPE_INDEX`, `REGISTRIES`, and
+`AGENTS` bindings have no cross-Worker `script_name`. Equal class names
+do not share Durable Object storage across these Worker namespaces.
+
+The configuration names the `dap-commons` Artifacts namespace on the same
+Artifacts host as Demo. It declares no application-content R2 bucket and
+shares the `artroom_metrics_v1` dataset with room, Grow, and Demo. Namespace
+names in this file do not prove provider-side IDs or ACLs.
+
+`DEPLOYMENT` is `dap-commons`, and `PUBLIC_ORIGIN` names its workers.dev
+origin. The operator supplies `SESSION_SECRET`. Its custody and uniqueness
+remain separate from those public labels. Read sessions still require the
+deployment, exact Membership reference, allowed read, and expiry checks.
+
+The index mode is `enforce`. The explicit creation family is Register 23,
+Directory 22, Membership 9, Rules 14, Destination 16, Inbox 1, and Commons 1.
+`REGISTER_SCOPE` and `ARTIFACTS_CONFIG.registerScope` remain `unplanned`
+until the operator binds the retained install plan. Those invalid register
+pins keep new creation closed. `ALLOW_OPEN_CREATION` is absent.
+
+`APPLICATION_SCREEN_HOSTS` and `APPLICATION_TRUST` are empty. MCP opt-in
+variables are absent from the checked-in file. Retained operator settings
+and actual hosted routes still require their own evidence.
+
+The checked-in `DEMO_START_CONFIG` is not a Commons provisioning interface.
+The maintained Demo parser recognizes Register 17, not this Register 23
+family. Follow the
+[Commons CLI order](../deploy.md#provision-the-commons-worker) and bind only
+the two operational register fields. This source describes
+no deployment, activation, namespace creation, or hosted W1 result.
+
 ## dap-grow-simulator
 
 [`examples/grow/wrangler.jsonc`](../../examples/grow/wrangler.jsonc) declares a scheduled Worker with no Scope, Artifacts, R2, MCP, or metrics bindings. It has no public workers.dev or preview endpoint, and its [fetch handler](../../examples/grow/simulator-host.ts) returns 404.
@@ -89,14 +124,14 @@ A separate screen origin separates browser storage from the room origin. It does
 |---|---|
 | Artifacts namespace `artroom-demo` | `artroom-scope`, `dap-grow` |
 | R2 bucket `artroom-application-content` | `artroom-scope`, `dap-grow` |
-| Analytics dataset `artroom_metrics_v1` | `artroom-scope`, `dap-grow`, `dap-demo` |
+| Analytics dataset `artroom_metrics_v1` | `artroom-scope`, `dap-grow`, `dap-demo`, `dap-commons` |
 
 For these resources, different Worker names and code pins do not isolate namespaces. The Artifacts adapter's pinned register and verified destination birth limit repository operations. Checks on content digest, publisher, release and installation limit application delivery. Metrics labels tell events apart. Code makes each of these checks with a shared capability.
 
-Each Worker's local Durable Object classes are a separate boundary, and so are the `dap-demo` and `dap-lending` Artifacts namespaces. Shared resources do not make all Worker storage shared. Separate Scope or MCP objects do not isolate a shared bucket or Artifacts namespace.
+Each Worker's local Durable Object classes are a separate boundary, and so are the `dap-demo`, `dap-lending` and `dap-commons` Artifacts namespaces. Shared resources do not make all Worker storage shared. Separate Scope or MCP objects do not isolate a shared bucket or Artifacts namespace.
 
 Secret equality, provider access controls, namespace IDs, bucket public-access settings, the operator's variables and deployed versions can be read only from the hosted account. Names and a local `wired` health result do not show them.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources: [apps/room/wrangler.jsonc](../../apps/room/wrangler.jsonc), [apps/room/wrangler.grow.jsonc](../../apps/room/wrangler.grow.jsonc), [apps/room/wrangler.lending.jsonc](../../apps/room/wrangler.lending.jsonc), [apps/room/wrangler.demo.jsonc](../../apps/room/wrangler.demo.jsonc), [apps/room/celld/wrangler.json](../../apps/room/celld/wrangler.json), [examples/grow/wrangler.jsonc](../../examples/grow/wrangler.jsonc), [apps/sandbox/wrangler.jsonc](../../apps/sandbox/wrangler.jsonc), [homepage/wrangler.jsonc](../../homepage/wrangler.jsonc), [apps/jam/wrangler.jsonc](../../apps/jam/wrangler.jsonc).
+Checked against main `c8c7b631` on 30 October 2026. Sources: [apps/room/wrangler.jsonc](../../apps/room/wrangler.jsonc), [apps/room/wrangler.grow.jsonc](../../apps/room/wrangler.grow.jsonc), [apps/room/wrangler.lending.jsonc](../../apps/room/wrangler.lending.jsonc), [apps/room/wrangler.demo.jsonc](../../apps/room/wrangler.demo.jsonc), [apps/room/celld/wrangler.json](../../apps/room/celld/wrangler.json), [examples/grow/wrangler.jsonc](../../examples/grow/wrangler.jsonc), [apps/sandbox/wrangler.jsonc](../../apps/sandbox/wrangler.jsonc), [homepage/wrangler.jsonc](../../homepage/wrangler.jsonc), [apps/jam/wrangler.jsonc](../../apps/jam/wrangler.jsonc).

@@ -21,6 +21,12 @@ import { creationRita as rita } from "./fixtures-entry.ts";
 // Evidence: /tmp/artroom-cohort25-generation-one/result.json
 // SHA-256: e2a2052d23705690ec4b884786f453718875f6505d515fdda88a20191eb64269.
 const DIGESTS: Readonly<Record<string, string>> = {
+  // Observed complete BO1 catalogue generation; all 80 historical literals below stay exact.
+  "platform:commons@1": "sha256:6fe2e11405aeb6eca1f9b8441e85d6c876d365dd77540173ff3975b3237df538",
+  "platform:directory@22": "sha256:2e55fd1b0faf081286dc98594cdb752c826c6fead00912b19803cba9deeaf7ad",
+  "platform:membership@9": "sha256:d4116e2df6279198064322d076f3c2b61766aacad9c9feb706fcc2d2e1dfb658",
+  "platform:register@23": "sha256:fbdc6072c321e201a966a2179a72db4519597dd262c81bd83f366b183e66125c",
+  "platform:rules@14": "sha256:09b197062140bc50a3d9b88aee80916a90be5dcc68b7fb6355d2090aaad9fd9a",
   // Observed opt-in evidence generation; all 76 historical identities stay exact.
   "platform:register@22": "sha256:af4c384cebbf4e9b9526bf939dee17b7faa370dc3026b54ae7a7b57c2a254091",
   "platform:directory@21": "sha256:439af34d88a076581b51cb833eea276799f3fa7d9d75e5e1cf274792e1c28eb3",

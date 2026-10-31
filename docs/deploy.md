@@ -6,6 +6,9 @@ flag keeps the plain settings that the Worker already has and the file
 omits. A value in the file, or a value given with `--var`, replaces the
 stored one. The command sets no missing setting and changes no secret.
 
+Deploy only from a checkout of the reviewed commit, after a review of that
+exact head. From that checkout, run:
+
 ```sh
 npm run deploy:scope
 ```
@@ -14,12 +17,14 @@ To deploy another configuration, run the pinned Wrangler from a scratch
 directory and give it the absolute path of the file:
 
 ```sh
-DAP_REPO=/absolute/path/to/the-checkout
+DAP_REPO=/absolute/path/to/the-reviewed-checkout
 cd "$(mktemp -d)"
 npx -y wrangler@4.147.0 deploy --keep-vars --config "$DAP_REPO/apps/room/wrangler.demo.jsonc"
 ```
 
-Repeat any `--var` overrides that the Worker needs on the same command.
+Repeat the Worker's reviewed `--var` overrides on the same command. A value
+in the file or in `--var` needs review, because it replaces what the Worker
+holds. `--keep-vars` does not establish that a kept value is correct.
 
 To deploy on your own Cloudflare account for the first time, follow
 [Run your own service](self-host.md). To run the Worker on your machine,
@@ -48,9 +53,111 @@ with its reader, parser and failure behavior. The order below uses these:
   `GITHUB_READ_TOKEN` and the optional `GITHUB_CLEANUP_TOKENS`: the GitHub
   host. See [Configure a Git host](hosts.md#github-host-githubcom).
 - `PLATFORM_CREATION_PINS`: optional. Earlier platform pins that new
-  scopes may use besides the newest family.
+  scopes may use besides the default cohorts, `archive-device-publication`,
+  `unpublished` and `commons`. See
+  [Roll out new creation versions](#roll-out-new-creation-versions).
 - `ALLOW_OPEN_CREATION`: local and test deployments only. Never set it on
   a hosted Worker.
+
+## Provision the Commons Worker
+
+`dap-commons` is a separate Worker at
+`https://dap-commons.inguz.workers.dev`, configured by
+[`apps/room/wrangler.commons.jsonc`](../apps/room/wrangler.commons.jsonc).
+It uses the same Artifacts host as `dap-demo` and its own namespace,
+`dap-commons`. The file pins Register 23, Directory 22, Membership 9,
+Rules 14, Destination 16, Inbox 1 and Commons 1. The CLI's default cohort
+stays the same, so planning and installing select `--cohort commons`.
+
+Run the pinned Wrangler from a scratch directory for each reviewed
+deployment:
+
+```sh
+DAP_REPO=/absolute/path/to/the-reviewed-checkout
+cd "$(mktemp -d)"
+npx -y wrangler@4.147.0 deploy --keep-vars --config "$DAP_REPO/apps/room/wrangler.commons.jsonc"
+```
+
+After the reviewed head lands, follow [the order](#the-order):
+
+1. Create the `dap-commons` Artifacts namespace. Deploy the reviewed
+   configuration with `DEPLOYMENT=dap-commons` and `SESSION_SECRET`.
+2. From a separate empty private CLI directory, run:
+
+   ```sh
+   dap install --plan https://dap-commons.inguz.workers.dev --cohort commons --host artifacts --namespace dap-commons
+   ```
+
+3. Keep that exact install plan. Replace `unplanned` with its public
+   register ID in `REGISTER_SCOPE` and in `ARTIFACTS_CONFIG.registerScope`.
+   Deploy the same configuration again before you submit the plan.
+4. From the same private directory, run:
+
+   ```sh
+   dap install --planned --cohort commons
+   ```
+
+5. Record the full register reference after the install. Its incarnation
+   is not known while the plan only names the future scope. Record it with
+   the planned scope ID and the deployed version, and commit the two public
+   register bindings. Check the full reference and the exact Register 23
+   definition before you create a room.
+
+The `unplanned` pins in the file make no claim about identity. Provisioning
+uses the explicit cohort and the kept plan. The `dap-demo` Start metadata
+does not govern this path or revive the retired demo-offer route. Keep the
+existing `dap-demo`, `dap-grow` and `dap-lending` registers, and leave
+`ALLOW_OPEN_CREATION` unset. Commons rooms use this Worker until the
+[register succession design](../notes/2026-10-22-definition-succession.md)
+lands. Rooms on `dap-demo` stay on its Register 17.
+
+## Roll out new creation versions
+
+`PLATFORM_CREATION_PINS` decides which platform versions a Worker accepts
+for new scopes. Historical loading and replay do not read it, and it changes
+no existing scope's pin. Follow these steps for each Worker that changes.
+
+1. Keep that deployment's saved R2 manifest and its original CLI directory.
+   Confirm the service, the namespace and the register's identity from
+   operator records. Do not treat the manifest or the fixed index as a
+   global live-scope inventory.
+2. Run the version report with the reviewed CLI and that manifest:
+
+   ```sh
+   dap scope-index versions --manifest /absolute/path/to/deployment-scopes.json
+   ```
+
+   The report rereads the exact listed genesis identities and hashes.
+   `observedPins` holds their platform pins. `usableCreationCohorts` holds
+   the supported cohort coverage, including the default pins. An unknown
+   pin, an unsupported cohort, an unavailable read or a mismatch makes the
+   report unready. The report changes no setting and emits no policy JSON.
+   Register-mode reads may register the exact scopes they authenticate.
+3. Review the historical pins to keep for that Worker. Keep
+   `ARTIFACTS_CONFIG.registerScope` and `REGISTER_SCOPE` equal to the exact
+   planned signed install. Keep attempted plans with their original pins
+   and IDs. Do not replan an attempted or acknowledged install to make it
+   fit the new defaults. A Worker accepts one configured register root.
+   Allowing both sets of version pins does not accept two roots. Use a
+   separate Worker or an explicitly planned root cutover for a new register,
+   and keep the old root on a Worker that serves a fixed public offer.
+4. Deploy the exact reviewed source and nonsecret policy, for each Worker
+   separately. Keep its bindings, secrets, register pins and reviewed
+   `--var` overrides. `--keep-vars` keeps omitted values, and it does not
+   fill in or validate this policy. A deployed object reads the policy when
+   it activates.
+5. Verify the intended refusal of a new creation and the behavior of
+   existing scopes. `/health` neither validates nor shows
+   `PLATFORM_CREATION_PINS`, and a healthy register probe does not prove
+   that a version is accepted or that the configuration is complete.
+
+`dap scope-index census` lists the scopes a Worker has registered. A
+registration that lands below an advancing cursor can be missed during its
+recorded time window, and an unregistered legacy object is not listed. A
+complete registered-scope census proves neither an empty legacy fleet nor
+permission to retire a definition version. Neither the CLI report nor this
+page attests hosted policy, namespace isolation, full live-scope coverage
+or readiness for every creation path.
 
 ## The order
 
@@ -169,7 +276,9 @@ lineage.
 
 The `artroom-scope` Start page links to `dap-demo` for new rooms. It keeps
 **Check** and **Continue** for a creation that started on `artroom-scope`.
-The link carries no saved request or browser key.
+The link carries no saved request or browser key. `artroom-scope` keeps its
+live `DEMO_START_CONFIG` for existing GitHub destinations and retained Start
+references until 8 November 2026.
 
 The client keeps its earlier private custody and can still read version 1
 offers. The server makes no offer from setting version 1 or 2, including
@@ -259,5 +368,5 @@ which only you can read. Its config file holds no secret.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources: [package.json](../package.json), [packages/scope/src/creation-admission.ts](../packages/scope/src/creation-admission.ts), [packages/scope/src/register-setting.ts](../packages/scope/src/register-setting.ts), [packages/cli/src/commands.ts](../packages/cli/src/commands.ts), [apps/room/demo-creation.ts](../apps/room/demo-creation.ts), [packages/scope/src/applications/route.ts](../packages/scope/src/applications/route.ts).
+Checked against main `c8c7b631` on 30 October 2026. Sources: [package.json](../package.json), [packages/scope/src/creation-admission.ts](../packages/scope/src/creation-admission.ts), [packages/scope/src/register-setting.ts](../packages/scope/src/register-setting.ts), [packages/cli/src/commands.ts](../packages/cli/src/commands.ts), [apps/room/demo-creation.ts](../apps/room/demo-creation.ts), [packages/scope/src/applications/route.ts](../packages/scope/src/applications/route.ts).
 The commands on this page were not run for this revision.

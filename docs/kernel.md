@@ -73,7 +73,7 @@ whether it is one, or a special case that the kernel knows.
 
 | Part | Kind | What the kernel knows about it | What retiring it takes |
 |---|---|---|---|
-| Register, directory, directory partition, membership, rules, destination, inbox, task | Special cases | Their kinds are a closed list (`ScopeKind` in `contract/src/scope.ts`), and the kind is in every seed, so in every scope ID. Their `platform:` names (`PlatformDefinition`, same file). Parts of their rules: a register opens only by `install` and a directory with no creator only by `found` (`genesisJudged` in `derive/src/genesis.ts`). Only membership issues grants (`observationOf` in `derive/src/grant.ts`). Literal destination versions in `judgeTimed` (`derive/src/judge.ts`). Their own rules are code in `packages/platform`. | Their rules as declared forms, or as code pinned by digest (K1), and their kinds out of the closed list. |
+| Register, directory, directory partition, membership, rules, destination, inbox, task, commons | Special cases | Their kinds are a closed list (`ScopeKind` in `contract/src/scope.ts`), and the kind is in every seed, so in every scope ID. Their `platform:` names (`PlatformDefinition`, same file). Parts of their rules: a register opens only by `install` and a directory with no creator only by `found` (`genesisJudged` in `derive/src/genesis.ts`). Only membership issues grants (`observationOf` in `derive/src/grant.ts`). Literal destination versions in `judgeTimed` (`derive/src/judge.ts`). Their own rules are code in `packages/platform`. | Their rules as declared forms, or as code pinned by digest (K1), and their kinds out of the closed list. |
 | Issue and change lanes | Definitions pinned by digest | `derive` names their actions: `issue.comment` and `change.comment` (`COMMENTS` in `grant.ts`), `work.export` and `change.check` (`windowOf` in `grant.ts`). Replay names the lanes (`replay/src/identity.ts`). | Move those names into the lane definitions as data (K4, K6). |
 | `hold@1`, `hold@2`, `git-read@1`, `device-command@1` | Capability code in the kernel | Closed names (`CapabilityName` in `contract/src/capability.ts`), code in `derive/src/capability/`. | A capability is kernel by review (section 7). `device-command@1` also carries the grow device kinds (K4). |
 | Runtime host, MCP service, Git code, checkers, package checks | Services | Nothing, except what K2 named. | Replace the service. Entries keep their meaning. |
@@ -83,7 +83,7 @@ whether it is one, or a special case that the kernel knows.
 Each item names what passing takes, its status, and the work that covers
 it.
 
-- <a id="k1"></a>**K1. Platform rules are code that replay needs.** A platform scope pins `platform:<name>@<n>`, and replay derives it only with code its caller supplies. The catalog holds 80 versions. Passing takes pinning each version's rules by digest, freezing the shipped versions into the kernel, or replacing the marks with declared forms. Open. Covered by the design note "Platform rules that replay needs".
+- <a id="k1"></a>**K1. Platform rules are code that replay needs.** A platform scope pins `platform:<name>@<n>`, and replay derives it only with code its caller supplies. The catalog holds 85 versions. Passing takes pinning each version's rules by digest, freezing the shipped versions into the kernel, or replacing the marks with declared forms. Open. Covered by the design note "Platform rules that replay needs".
 - **K2. The package graph leaves the production kernel.** Closed. Covered by "Kernel K2, K3 and K11 as one hygiene item".
 - **K3. Application codecs leave `bytes`.** Closed. Covered by "Kernel K2, K3 and K11 as one hygiene item".
 - **K4. Platform and application vocabulary in `contract` and `derive`.** For example the closed kind list, the closed capability names, the grow device kinds, membership versions in `INVITATION_KEY_MEMBERSHIPS` (`contract/src/invitation.ts`), the rules scope's content in observations (`contract/src/observation.ts`), and lane actions and literal destination versions in `derive`. Passing takes each name into the definition or capability that owns it, as data. Open. No work covers it yet.
@@ -141,7 +141,13 @@ the review in section 7.
 Nothing new enters the kernel without a review that cites this page and
 says why the part cannot be a platform service or an application.
 
-A change adds to the kernel when it does any of these:
+The [relocated text of the 30 October review](../notes/implementation/2026-10-30-docs-relocated-text.md#from-docskernelmd)
+holds the reason for each earlier addition. Rules observation record
+revision 21 is permitted under this section by ruling `1bc4f7fd`: its
+nullable `roomService` and scoped `serviceGeneration` state what a judge may
+know of the Rules scope's admin-published mark and native-selected position.
+
+A head adds to the kernel when it does any of these:
 
 - adds a file or an export to `packages/contract`, `packages/derive`, or
   the kernel part of `packages/bytes`.
@@ -208,8 +214,11 @@ These do not wait:
   documents, tests and fixes.
 - a new version of an existing platform definition. It is not a new name,
   but it adds one to K1's count, and the change says so.
-- fixes for filed security findings. They still follow section 7 and add
-  no K item.
+- fixes for the filed security findings, R1 to R16 and D1 to D6. They
+  still follow section 7 and add no K item.
+
+A head that adds to the kernel names the K item that it closes, or the
+planner holds it.
 
 ### 7.2 Definition-format validation
 
@@ -234,6 +243,51 @@ review, even when it is a bug fix. A named corpus in
 and a stricter check fails at a named row. The
 [definition contract](../notes/2026-10-04-scope-and-replay-contract.md),
 section 6.1, states the binding.
+
+### 7.3 Commons and reference fields
+
+The `commons` scope kind and platform name and the `reference` field type
+are in the kernel. A note's text bound, media text bound, reference shapes
+and list bound decide whether runtime and replay accept the same entry, so
+those checks belong in the contract. A service cannot decide what a
+recorded entry means. A package cannot supply a Commons, because a Commons
+must exist before any package is installed. The `note` act has no guards,
+effects or operations.
+
+`ReferenceValue`, in `packages/contract/src/definition.ts`, gives the
+runtime, replay and clients one type for document and entry references.
+`isReference`, in `packages/bytes/src/field-value.ts`, checks that closed
+shape and the fragment's UTF-8 byte bound. These exports define which
+values a recorded field accepts. A host service cannot replace those
+checks or decide their meaning after the entry exists.
+
+`INVITATION_KEY_MEMBERSHIPS`, in `packages/contract/src/invitation.ts`,
+holds the exact pin `platform:membership@9`. That version keeps the private
+invitation proof protocol. Clients use this list to choose the redemption
+fields for the exact native version. A host service or an application
+cannot choose a different credential form for that pin. The entry
+recognizes the version and grants no invitation authority.
+
+A `reference` holds exactly one document digest or entry `FactRef`, with an
+optional bounded fragment string. The kernel checks its shape and byte
+bounds. It does not resolve the target or interpret the fragment. A
+reference creates no `FactUse`, supplies no authority and changes no closed
+`FactRef` form. Typed, binding entry references remain the `fact` field
+type. Media interpretation, source reads, threads and tables belong to the
+host. This addition closes no K item.
+
+The fixed-slot equality index reads the structure of reference values. In a
+fixed slot, it walks nested values and records a local dependency when an
+entry `FactRef` names the same full scope reference. That dependency lets
+it refresh equality keys when the local sequence and hash metadata become
+available. It supplies no grant and creates no foreign `FactUse`. A Commons
+note's `about` field is not a fixed slot.
+
+Reference fields stay in the `artroom-definition-1` format. Installing one
+requires a native cohort that explicitly supports it, at Rules 14 or later.
+Older Rules refuse the field with `reference-requires-rules14`. An unknown
+future pin stays closed until its cohort opts in. The shared field type
+does not migrate an older room's native installation policy.
 
 ## 8. Second host
 
@@ -263,4 +317,4 @@ way.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources: [check-kernel-boundary.mjs](../scripts/check-kernel-boundary.mjs), [scope.ts](../packages/contract/src/scope.ts), [definition.ts](../packages/contract/src/definition.ts), [capability.ts](../packages/contract/src/capability.ts), [native-catalog.ts](../packages/platform/src/native-catalog.ts), [verify.ts](../packages/replay/src/verify.ts), [commands.ts](../packages/cli/src/commands.ts), [code.ts](../packages/derive/src/capability/code.ts).
+Checked against main `c8c7b631` on 30 October 2026. Sources: [check-kernel-boundary.mjs](../scripts/check-kernel-boundary.mjs), [scope.ts](../packages/contract/src/scope.ts), [definition.ts](../packages/contract/src/definition.ts), [capability.ts](../packages/contract/src/capability.ts), [native-catalog.ts](../packages/platform/src/native-catalog.ts), [verify.ts](../packages/replay/src/verify.ts), [commands.ts](../packages/cli/src/commands.ts), [code.ts](../packages/derive/src/capability/code.ts).

@@ -1,9 +1,9 @@
 # Documentation review, 30 October 2026
 
-Status: the review pass and the writing pass are complete at this head.
-The review read every page under `docs/` at main `5dc9765f`: 33 pages,
-about 165,000 words. The writing pass edited the pages on one branch and
-sent the head for review.
+Status: the review pass and the writing pass are complete at this head,
+which answers the first review (section 6). The review read every page
+under `docs/` at main `5dc9765f`: 33 pages, about 165,000 words. The writing
+pass edited the pages on one branch. The head merges main `c8c7b631`.
 
 The review asked three questions of each page. Does it help a reader
 understand what to build with dap, and does it sit in a clear reading
@@ -62,18 +62,24 @@ or an unlanded intent-v2 wire format").
 | self-host | Keep one binding and one migration; cleanup deletes one class | Four Durable Object bindings, three migrations, an R2 bucket, an Analytics dataset; four classes |
 | self-host, deploy, hosts | Pin the register through `ARTIFACTS_CONFIG.registerScope` only | `REGISTER_SCOPE` is the pin; the GitHub order fails without it |
 | hosts | Hosts are Artifacts and GitHub; namespace is `artroom-demo` | `--host none` exists; each deployment has its own namespace |
-| mcp | Fourteen generic tools | Eighteen, two of which the hosted endpoint omits by default |
+| mcp | Fourteen generic tools | Eighteen at `5dc9765f`, of which the hosted endpoint omits eight by default. Nineteen at `c8c7b631`, with `commons` |
 | pages | Each read mints and revokes a token; `dap claim` prints "Claimed" | Site tokens are shared and reused; `dap create` prints "Created" |
 | pages | Refusal table | Lacks `no-repository`, `rate-limited`, `unavailable` |
 | operations | Health body has four fields; 200 on two conditions | Five fields including `wiring`; a configured host whose wiring is off gives 503 |
 | demo | Link to a deploy.md "Plan" section; `ARTROOM_HOME` | No such section; `DAP_HOME` |
 | trust-boundaries | No `dap-celld-local`; no `REGISTER_SCOPE`; no `APPLICATION_TRUST` on dap-demo | All three present in the configuration files |
 | testing | Six-package SDK | Eight packages |
-| public-sdk-release | All packages at `0.1.0-dev.2` | Sources at `0.1.0-dev.1`; the producer stamps `0.1.0-dev.2`; `./package-validation` export missing |
+| public-sdk-release | All packages at `0.1.0-dev.2` | Sources at `0.1.0-dev.1`; the producer stamps `0.1.0-dev.2`; the npm release has no `./package-validation` export |
 | use-cases | Two acts, pointing and a claim of agreement | The landed one-act design: a `note` with references |
 | use-cases | Sequenced "first slices have landed" | The `late` form and the archive binding landed; the level is not built |
 | architecture, ten-terms | Eight kinds of input | Nine |
 | tutorials | "the next release renames `founded`" | The published release names it `founded`; the source names it `created` |
+| run-your-app (found in review) | Step 3 runs `--cohort application` on a Worker from the self-host guide | The default policy refuses those pins; the Worker needs `PLATFORM_CREATION_PINS` |
+| life-of-an-act, what-is-dap, architecture, index (found in review) | No act gets `archived`; four answers | A repeated intent below the floor gets `archived`; five answers |
+| write-an-application (found in review) | `validatePackage` from `dap-derive` | `dap-platform/package-validation`, not yet in the npm release |
+| what-is-dap (found in review) | No hosted sign-up | `dap-demo` configures Browser Start |
+| roadmap (found in review) | A room installs a trusted package | Device cohorts install `device-command@1` packages; no current cohort installs ordinary packages in a new room |
+| public-sdk-release (found in review) | "Published exports" | The column is the plan; npm at `0.1.0-dev.2` serves less |
 
 Every page's status footer was stale, and five footer forms were in use.
 The limits that tests enforce (MCP schemas and inventory, the settings
@@ -119,20 +125,28 @@ instructions.
   generated. The MCP tool entries, the W1 inventory and the two recipes,
   the settings lookup and inventory, and the entry-point route tables are
   what tests check. Prose around them changed.
-- **One footer form.** "## Source. Checked against main `5dc9765f` on
+- **One footer form.** "## Source. Checked against main `<commit>` on
   30 October 2026. Sources: ..." and, where true, one sentence that the
   page's commands were not run for this revision. Tutorials keep the date
-  and versions of the run that produced their output blocks.
+  and versions of the run that produced their output blocks. The commit is
+  `c8c7b631` on the pages that main changed after the first pass and the
+  pages that state its facts (index, cli, deploy, kernel, mcp, roadmap,
+  scopes, settings, trust boundaries, entry points, use cases). It is
+  `5dc9765f` on the others. The generated lane reference and the `lanes.md`
+  redirect have no footer.
 - **Relocate, do not delete.** Status and evidence text that is recorded
   nowhere else moved to
   [one implementation note](../implementation/2026-10-30-docs-relocated-text.md),
   one section per source page, unchanged.
 - **One name per thing.** Intent, receipt, takes effect, enrollment. The
   word "admission" stays only as a code identifier in code font.
-- **Dependency names stay in instructions.** The Mac and local setup
-  pages name celld, Caddy, SeaweedFS and Homebrew because the reader
-  installs them. The house rule against product names is for presentation
-  material; the owner may rule otherwise.
+- **Product names stay.** The owner ruled on 30 October 2026 that public
+  material has no limit on vendor or product names. The Mac and local setup
+  pages name their dependencies, and the use cases keep "Codex CLI sessions".
+- **Rules stay with the reader.** A rule that a person relies on stays on a
+  reader page, even when it names a process step. The relocated-text note
+  is history. Its size is expected to raise the 40,960-byte warning in the
+  gate's `notes` step, because it stays one file.
 
 ## 3. What changed, by page
 
@@ -197,6 +211,12 @@ removed text, 16,862 words, is in
   Collapsing them needs the bijection test changed.
 - The Browser Start page on dap-demo has no live witness yet (its request
   is open). The pages say what is configured, not that it was seen.
+- `self-host.md` and `celld.md` say Node 26, and the root `package.json`
+  allows 22 or later. Nobody has run these guides on 22, so the pages keep
+  the version named at the first run.
+- `deploy.md` keeps reference tables inside a how-to.
+- Other heads in flight edit `kernel.md`, `scopes.md`, `mcp.md` and
+  `deploy.md`. Whichever lands second merges by hand.
 - The roadmap's paragraph on the dap-spike's boundary rule could name its
   lineage (the actor model's locality, Helland's entities, the aggregate
   rules of domain-driven design) and its two limits (it does not choose
@@ -246,3 +266,36 @@ probe refused a platform mark in a declared definition's effects with code
 Not run for this revision: the commands on the self-host, deploy, local
 Worker, run-your-app (steps 3 to 8) and demo pages. Each of those pages
 says so in its footer.
+
+## 6. Answer to the first review
+
+The first review of head `4436d508` requested changes. This head answers
+each item.
+
+| Item | Answer |
+|---|---|
+| 1 `run-your-app` stops at step 3 | Step 3 sets `PLATFORM_CREATION_PINS` and deploys again |
+| 2 The answers | Five answers on every page. `archived` is a row in the life of an act |
+| 3 `validatePackage` import | Names `dap-platform/package-validation` and says that npm lacks it |
+| 4 Two contradictions | `what-is-dap` names Browser Start. `roadmap` names device cohorts |
+| 5 SDK export column | "Planned exports", with what npm serves, read with `npm view` |
+| 6 Record's own rows | Corrected in section 1 |
+| 7 Kernel filing gate | The head duty and the closed list of findings are restored |
+| 8 Evidence rule's scope | The filing-date sentence is restored |
+| 9 Deploy from reviewed source | Stated at the top of `deploy.md`, with the `--var` review |
+| 10 Rollout rules | New section, "Roll out new creation versions", linked from settings |
+| 11 Duties that became options | The bearer renewal and cleanup claim duties, the two `scopes` sentences and the SDK sentence are restored |
+| 12 Citations | `lanes.md` follows the new headings. `deploy.md` holds the 8 November date. Kernel section 7 holds revision 21 |
+| 13 Index footer | Added. Section 2 names the two exempt pages |
+| 14 Form | `claim` is `create`, `cohort` is the one name, and the slice names left the roadmap. "Codex CLI sessions" stays under the owner's ruling |
+
+The merge of main adds the Commons facts: the `commons` kind, cohort, tool
+and Worker, 85 catalog versions and eight platform definitions. Kernel
+section 7.3 holds the Commons rules without the request IDs, and the
+relocated-text note keeps the text as landed. The open points of the review
+are in section 4, or are done: section 7 links the relocated note, the run
+history in `self-host.md` and `demo.md` moved to the footers, the "not run"
+wording is one sentence, `what-is-dap.md` lost its imperative section, the
+first admin replaces "owner" in `self-host.md`, and `hosts.md` says that
+site reads reuse a token.
+

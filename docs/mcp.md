@@ -125,11 +125,11 @@ a notification, is not run and issues no session.
 
 The list has two parts.
 
-- **The generic tools**, the same for every room: `room`, `inspect`,
+- **The generic tools**, the same for every room: `room`, `commons`, `inspect`,
   `create`, `join`, `install_application`, `application_installation`,
   `prepare`, `items`, `steps`, `step`, `record`, `sends`, `text`, `wait`,
   `settle` and `credential`, and in `--generic` and `--generic=add` modes
-  `actions` and `act`. These are the eighteen names of
+  `actions` and `act`. These are the nineteen names of
   `GENERIC_TOOL_NAMES` in `packages/mcp/src/hosted-tools.ts`. The hosted
   endpoint omits `create`, `install_application`, `credential`, `prepare`,
   `join`, `record`, `step` and `text` by default. `MCP_TOOL_ADDITIONS`
@@ -436,7 +436,7 @@ acts.
 
 ### Install a trusted application package
 
-New room creation offers no family that installs ordinary application
+New room creation offers no cohort that installs ordinary application
 packages such as Counter or Lending. In an existing `trusted-application`
 room, `install_application` records one native admin request. Its arguments are `uri`, `release`, `roles`,
 `values`, and `idempotencyKey`. The URI names a regular Git blob at an exact
@@ -471,6 +471,15 @@ These are the generic tools as `tools/list` sends them in
 `--generic=add` mode: each name, description, input schema and
 annotations. In the default mode, `actions` and `act` are not listed.
 
+Rooms in the commons cohort expose `commons.note` through their actual
+member grants. The `commons` read returns bounded note previews with
+authors and references. `step` and `text` read complete entries and their
+retained text. A reference grants no access to another room.
+The [bill-table witness](../examples/commons-bill/README.md) uses synthetic
+text documents retained as signed carrier notes. Its
+[text fragments](https://www.rfc-editor.org/rfc/rfc5147.html) name places
+between lines or characters. File uploads and Capture remain separate work.
+
 ### `room`
 
 Orientation. The service, your key, the scopes of the room by name, the issues and changes the directory lists, the applications its factory created (such as a Counter), the standalone scopes, your standing on each membership, the active definitions, and the act tools your role does not hold; paged by bytes, with a cursor. Start here.
@@ -480,6 +489,38 @@ Orientation. The service, your key, the scopes of the room by name, the issues a
   "inputSchema": {
     "type": "object",
     "properties": {
+      "cursor": {
+        "type": "string"
+      }
+    },
+    "required": [],
+    "additionalProperties": false
+  },
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  }
+}
+```
+
+### `commons`
+
+Read one bounded page of Commons notes with their facts, authors, media and opaque about references. Text and citation previews may be shortened; use step for complete citations and text for the retained text. A reference grants no access to its target. Readability and completeness are explicit.
+
+```json
+{
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "scope": {
+        "type": [
+          "string",
+          "integer"
+        ],
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
+      },
       "cursor": {
         "type": "string"
       }
@@ -510,7 +551,7 @@ One scope: its definition and digest, status, head, counts by item type and stat
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "declaration": {
         "type": "boolean"
@@ -756,7 +797,7 @@ Asks the scope that owns a resource for one step of a capability. With kind: for
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "capability": {
         "type": "string"
@@ -769,7 +810,7 @@ Asks the scope that owns a resource for one step of a capability. With kind: for
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "kind": {
         "type": "string"
@@ -843,7 +884,7 @@ A page of one item type of a scope, in one of two traversals, each with its own 
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "type": {
         "type": "string"
@@ -885,7 +926,7 @@ A page of a scope's entries, oldest first, one line each: seq, time, kind, signe
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "cursor": {
         "type": "string"
@@ -919,7 +960,7 @@ One entry in full: its input, fields, effects, sends and hash, paged by bytes wi
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "seq": {
         "type": "integer",
@@ -959,7 +1000,7 @@ A page of the history as stored: each entry's canonical bytes and hash, for a ve
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "cursor": {
         "type": "string"
@@ -993,7 +1034,7 @@ A page of a scope's sends with their attempts and results; or, with outboxId (se
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "outboxId": {
         "type": "string"
@@ -1030,7 +1071,7 @@ A retained input by scope, kind and digest: a definition, a foreign entry, a rul
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "kind": {
         "enum": [
@@ -1083,7 +1124,7 @@ Waits at most 60 seconds until one of: a scope's head reaches seq; an item reach
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "seq": {
         "type": "integer",
@@ -1144,7 +1185,7 @@ What is known about the envelope under idempotencyKey on target (or the creation
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "definition": {
         "type": [
@@ -1194,7 +1235,7 @@ The one-time read credential for a read-token act your key signed (entry: its se
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       }
     },
     "required": [
@@ -1225,7 +1266,7 @@ The acts of one scope, as act tools would describe them: each kind with its deri
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "cursor": {
         "type": "string"
@@ -1259,7 +1300,7 @@ Signs one act of a scope by its native kind, under the same custody and binding 
           "string",
           "integer"
         ],
-        "description": "A scope ID; one of register, directory, membership, rules, destination, inbox; or an issue or change number."
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
       },
       "kind": {
         "type": "string"
@@ -1438,10 +1479,17 @@ Install an operator-trusted package in this room by immutable Git URI and indepe
 }
 ```
 
-The device-application cohort requires `owner` as a full MemberRef for a
-package declaring `device-command@1`. Its native Rules checks current
-membership before issuing the bounded grant. Other cohorts reject this
-owner selection. The owner is part of the kept signed request's meaning.
+The device-install cohorts, including the commons cohort, require `owner`
+as a full MemberRef for a package declaring `device-command@1`. Their
+native Rules checks current membership before issuing the bounded grant.
+Older install proof cohorts reject this owner selection. The owner is
+part of the kept signed request's meaning.
+
+A package can require the commons endpoint. The host reports
+`commons-missing` before signing if the room has no verified commons ref.
+That host check is not a recorded refusal in an older room. Directory@22
+also checks the requirement sent by Rules@14 and records `commons-missing`
+if its commons ref is absent.
 
 ### `application_installation`
 
@@ -1682,9 +1730,9 @@ valid. A closed endpoint returns `404` before reading the request body or
 addressing either namespace. This applies to the control routes too.
 
 `MCP_TOOL_ADDITIONS` is an optional JSON array of distinct known generic
-tool names, at most 1,024 characters and 18 names. Unknown names,
+tool names, at most 1,024 characters and 19 names. Unknown names,
 duplicates, a different JSON shape, or an oversized setting close the
-endpoint. The accepted names are the eighteen generic tools listed in
+endpoint. The accepted names are the nineteen generic tools listed in
 [What the server lists](#what-the-server-lists). By default the endpoint
 omits `create`, `install_application`, `credential`, `prepare`, `join`,
 `record`, `step` and `text`. To serve one of them, name it in
@@ -1796,16 +1844,18 @@ A reset before issuance commits can still resume the same enrollment and
 issue once, without creating a second agent or key.
 
 A bearer with no valid stored expiry fails closed. The endpoint infers no
-grace period or deadline from activation or an unrelated update. To keep
-such an agent, renew its bearer with a signed `bearer` operation. A legacy
+grace period or deadline from activation or an unrelated update. The
+operator must renew live hosted-agent tokens, with a signed `bearer`
+operation, as a deployment step and record that step. A legacy
 receipt has `bearerExpires: null` and grants no further token use.
 
 The migration that scrubs stored answers runs when each agent or registry
 object is constructed. Renewing an agent does not activate its
 repository's registry. A dormant registry can therefore keep an old raw
-creation answer until something activates it. To clean every registry,
-activate each one through the control routes. The endpoint has no route
-that lists registries. A request cannot return a stored answer before that
+creation answer until something activates it. Before you claim complete
+cleanup, activate the relevant registries through the control routes, or
+record that dormant cleanup remains lazy and incomplete. The endpoint has no
+route that lists registries. A request cannot return a stored answer before that
 object's migration runs.
 
 After expiry, new requests return `401` at the bearer check, before the
@@ -2164,4 +2214,4 @@ gives the command that runs the fixture browser.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources: [packages/mcp/src](../packages/mcp/src/), [packages/mcp/src/hosted-tools.ts](../packages/mcp/src/hosted-tools.ts), [packages/mcp/src/hosted.ts](../packages/mcp/src/hosted.ts), [packages/mcp/src/http.ts](../packages/mcp/src/http.ts), [packages/mcp/test/inventory.test.ts](../packages/mcp/test/inventory.test.ts), [docs/mcp-tools.json](mcp-tools.json).
+Checked against main `c8c7b631` on 30 October 2026. Sources: [packages/mcp/src](../packages/mcp/src/), [packages/mcp/src/hosted-tools.ts](../packages/mcp/src/hosted-tools.ts), [packages/mcp/src/hosted.ts](../packages/mcp/src/hosted.ts), [packages/mcp/src/http.ts](../packages/mcp/src/http.ts), [packages/mcp/test/inventory.test.ts](../packages/mcp/test/inventory.test.ts), [docs/mcp-tools.json](mcp-tools.json).

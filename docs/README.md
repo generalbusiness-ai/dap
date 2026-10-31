@@ -42,7 +42,7 @@ real application.
 | Page | What it gives you |
 |---|---|
 | [The ten terms](manual/ten-terms.md) | The word list that every other page uses. |
-| [The life of an act](manual/life-of-an-act.md) | A request, from the definition to the receipt, and the four answers. |
+| [The life of an act](manual/life-of-an-act.md) | A request, from the definition to the receipt, and the five answers. |
 | [The record](manual/record.md) | What a receipt proves and what a consistency report leaves open. |
 | [The architecture of a dap application](architecture.md) | Scopes, acts, entries, delivery, authority and where the record is kept. |
 | [Scopes](scopes.md) | The runtime reference: identity, entries, answers, definitions, bounds, reads and replay. |
@@ -150,3 +150,8 @@ is later work.
 Three guides of the earlier model (its release guide, its protocol and its
 default policy pack) are retired under `notes/retired-guides/`. This
 directory describes only the current system.
+
+## Source
+
+Checked against main `c8c7b631` on 30 October 2026. Sources: the pages this
+index links.

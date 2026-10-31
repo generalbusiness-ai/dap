@@ -28,7 +28,7 @@ test("page join refuses mismatched encoding before submission and accepts script
     submissions.push(signed);
     expect(verifySignedIntent(signed)).toBe(true);
     expect([signed.intent.to, signed.intent.kind, signed.intent.expected, signed.intent.fields]).toEqual([
-      repository.membership, "join", {}, ["platform:membership@6", "platform:membership@7", "platform:membership@8"].includes(replyDefinition)
+      repository.membership, "join", {}, ["platform:membership@6", "platform:membership@7", "platform:membership@8", "platform:membership@9"].includes(replyDefinition)
         ? { invitation: 3, proof: expect.any(String) } : { invitation: 3, secret: original.secret },
     ]);
     if ("proof" in signed.intent.fields) expect(verifyInvitationProof(keyIdOfSecret(new Uint8Array(32).fill(17)),

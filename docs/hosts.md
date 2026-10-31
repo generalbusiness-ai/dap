@@ -36,7 +36,7 @@ each value.
 ## No host (host `none`)
 
 `--host none` takes no namespace. The CLI plans the register under the
-unpublished family, `platform:register@21`, and a deployed Worker refuses a
+unpublished cohort, `platform:register@21`, and a deployed Worker refuses a
 `none` install under any other register definition. The room publishes no
 repository and keeps no journal archive. Its entries stay in the service,
 within the service's bounds, so the operator must back up the service.
@@ -100,7 +100,8 @@ What it does:
   a 900-second TTL, and records its expiry as the service reports it. The
   push goes through the same receive-pack client and checks as GitHub's.
 - **Reads.** Each read requests a read token with a 120-second TTL and
-  revokes it after the read. A token reply must state the requested scope
+  revokes it after the read. A published site's reads reuse a shared token
+  instead, as [Pages](pages.md) describes. A token reply must state the requested scope
   and a valid ISO expiry. The port infers no expiry from the TTL. A failed
   revocation stays unconfirmed, and the expiry is the service's own
   statement. Before it reads, the port checks that the service reports the

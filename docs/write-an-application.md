@@ -110,7 +110,7 @@ supported yet. The validator refuses their declarations as
 An archive is a binding of the room, not of a definition. A signed
 package can require it with `host.requires: ["archive"]`, and
 installation in a room without the binding ends with
-`archive-unavailable`. An admin binds an archive at the claim or later
+`archive-unavailable`. An admin binds an archive when the room is created or later
 with `bind-archive`. A binding does not prove that any journal has been
 exported. [The dap command](cli.md) lists the room families that can
 bind one.
@@ -245,7 +245,7 @@ detached texts. Membership must then allow the intended members to take
 the definition's own actions, such as `counting.control`. Enrollment
 alone allows none.
 [The dap command](cli.md#an-explicitly-selected-application-room) lists
-the install and claim commands and the custody each one needs.
+the install and create commands and the custody each one needs.
 
 The lending library's [runbook](../examples/lending/runbook.md) has the
 commands for this path: `activate`, `establish-application` and
@@ -316,8 +316,10 @@ with another digest cannot take the declared peer's place.
 
 The package codec checks composition during packing, before signing, and
 when reading signed bytes. `validatePackage(bytes, bounds, profiles)`
-from `@generalbusiness/dap-derive` also validates every native definition
-and returns the graph findings and projected counts. Pass the same bounds
+from `@generalbusiness/dap-platform/package-validation` also validates every
+native definition and returns the graph findings and projected counts. The
+release on npm at `0.1.0-dev.2` does not export that path yet, and `dap check`
+runs the same function from a checkout. Pass the same bounds
 and rule profiles you use for whole-definition validation.
 
 The graph checks endpoint writers, port field types, handler reachability,
@@ -439,6 +441,6 @@ Checked against main `5dc9765f` on 30 October 2026. Sources:
 [the Grow device forms](../examples/grow/device.ts). The validation and
 pin commands on this page ran on 12 October 2026 at main `d309b6b9`, and
 the printed digests are from that run. The scope-creation commands were
-not run for this page. The text about consuming the published Grow
+not run for this revision. The text about consuming the published Grow
 release that an earlier revision carried is kept in
 [the relocated text of the 30 October review](../notes/implementation/2026-10-30-docs-relocated-text.md).

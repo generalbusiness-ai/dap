@@ -10,7 +10,7 @@ import type { Binding } from "../src/namespace.ts";
 import type { CreationAdmission } from "../src/creation-admission.ts";
 import { parentlessCreationAdmission } from "../src/creation-admission.ts";
 import { readRegisterScope } from "../src/register-setting.ts";
-import { UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
+import { COMMONS_COHORT, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 
 // Invariant: a deployed parentless creation is refused before any namespace
 // addressing unless it is the exact signed pinned-register install.
@@ -96,6 +96,8 @@ test("Register selection is host-independent and deployed host checks follow exa
   }
   expect(parentlessCreationAdmission({ DEPLOYMENT: "TEST-none", ALLOW_OPEN_CREATION: "true" }, signed, seed)).toEqual({ ok: false, reason: "unauthorized" });
   expect(parentlessCreationAdmission(settings, signed, seed)).toEqual({ ok: true });
+  const commonsSeed: Seed = { ...seed, definition: COMMONS_COHORT.register };
+  expect(parentlessCreationAdmission({ ...settings, REGISTER_SCOPE: scopeIdOf(commonsSeed) }, signed, commonsSeed)).toEqual({ ok: true });
   const oldSeed: Seed = { ...seed, definition: "platform:register@3" };
   expect(parentlessCreationAdmission(settings, signed, oldSeed)).toEqual({ ok: false, reason: "unauthorized" });
   expect(parentlessCreationAdmission({ ...settings, REGISTER_SCOPE: scopeIdOf(oldSeed) }, signed, oldSeed)).toEqual({ ok: false, reason: "unsupported-definition" });

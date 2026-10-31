@@ -66,7 +66,7 @@ The scope handles one input at a time. Each is a turn:
 If another input moved the head during the turn, nothing is written and
 the turn starts again. A judgment is always about one head.
 [The life of an act](manual/life-of-an-act.md) follows one request through
-a turn and names the four answers it can get.
+a turn and names the five answers it can get.
 
 The folded view keeps exact equality counts for every item slot declared
 `fixed: true`. A range guard with one equality between such a slot and a

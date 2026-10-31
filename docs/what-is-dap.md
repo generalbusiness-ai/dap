@@ -43,7 +43,7 @@ A participant signs an **intent**: a request for one act on one scope,
 with its fields, the item revision the signer expects, and a deadline.
 The scope handles one input at a time. For each, it checks the signer's
 authority, evaluates the act's guards on its current state, and then
-gives one of four answers:
+gives one of five answers:
 
 - The act takes effect. The scope writes one entry, folds it into its
   items, and returns a **receipt** that names the entry by scope, position
@@ -55,6 +55,9 @@ gives one of four answers:
   signing anything new.
 - The scope answers `mismatch` when the same key already used the
   intent's idempotency key for a different intent.
+- The scope answers `archived` when a repeated intent's act took effect
+  at a position now below the journal floor. The answer names the archive
+  commit that covers the entry.
 
 [The life of an act](manual/life-of-an-act.md) says what to do after each
 answer.
@@ -133,8 +136,11 @@ not a review.
 
 ## How you take part today
 
-There is no hosted sign-up. You enter a room in one of two ways:
+You enter a room in one of three ways:
 
+- Create a new room from the room page, on a service that configures
+  [Browser Start](deploy.md#browser-start-configuration). The page needs
+  no account.
 - Open an invitation link that one of its members gave you. The client
   makes a new device key and joins with it.
 - Load the configuration file and device key that the command line keeps
@@ -145,19 +151,11 @@ command line. [The page](../apps/room/docs/page.md) describes both paths
 in the room's browser page. To run a service of your own, read
 [Run your own service](self-host.md).
 
-## Read the answer before the next step
-
-- Keep a receipt. It locates the exact entry.
-- Read a refusal at the head where it was judged. It names missing
-  authority, an outdated revision or an unmet rule.
-- Treat a lost reply as unresolved. Check the record with the original
-  signed intent before you sign another.
-
 ## Source
 
 Checked against main `5dc9765f` on 30 October 2026. Sources:
 [the entry and its inputs](../packages/contract/src/entry.ts),
-[the four answers](../packages/contract/src/result.ts),
+[the five answers](../packages/contract/src/result.ts),
 [the judges](../packages/derive/src/index.ts),
 [the Counter definition](../apps/counter/definition.ts),
 [the lending definition](../examples/lending/definition.ts),

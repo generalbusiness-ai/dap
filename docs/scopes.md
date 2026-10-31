@@ -46,7 +46,7 @@ of the runtime's. The package guides describe each package's parts.
 four reference classes.
 
 A scope has a **kind** (`ScopeKind`): `register`, `directory`,
-`membership`, `rules`, `destination`, `inbox`, `task` or `lane`. The
+`membership`, `rules`, `destination`, `inbox`, `task`, `lane` or `commons`. The
 runtime treats every kind alike.
 
 A scope's ID (`ScopeId`) is the digest of its **seed** (`Seed`). The seed
@@ -75,11 +75,11 @@ scopes, a whole fact reference names an entry.
 A definition the platform supplies in code has a name and a version
 (`PlatformDefinition`), such as `platform:destination@2`. The names are
 `register`, `directory`, `directory-partition`, `membership`, `rules`,
-`destination`, `inbox` and `task`. The platform package supplies seven of
+`destination`, `inbox`, `task` and `commons`. The platform package supplies eight of
 them. It does not supply `platform:task`. A change to a platform
 definition's data or rules makes a new version, and a shipped version does
 not change. The catalog (`VERSIONS`, in
-`packages/platform/src/native-catalog.ts`) holds 80 versions, and
+`packages/platform/src/native-catalog.ts`) holds 85 versions, and
 `platform(name)` resolves any of them. A scope pins its version in its seed,
 and that version judges and replays it for as long as it exists. Replay needs
 the code of those versions: see
@@ -753,8 +753,9 @@ its signed `notAfter`, which is at most 900 seconds ahead of membership's
 clock. At that limit the HTTP route returns 429 with the `rate-limited`
 answer and an advisory `Retry-After` header. The header's delay comes from
 that key's earliest retained request deadline, on the same clock reading.
-This limit is separate from the session's ten-minute lifetime. A later
-request is not sure to succeed: membership checks standing again.
+This limit is separate from the session's ten-minute lifetime. Waiting does
+not guarantee that a later request succeeds, because membership checks
+standing again.
 
 A read token, minted by a `read-token` act, is answered once by its
 credential route. Only an authorized session of the key that signed the
@@ -922,7 +923,7 @@ incarnation and handler. An older delivery that arrives first still
 applies, and the newer one applies after it. So source order suppresses
 late arrivals. It does not guarantee a latest value or detect a missing
 delivery. A suppressed delivery still spends the decision that a numbered
-native receiver reserved for it. A native item-bound handler cannot declare
+native receiver reserved for it, and suppression grants no license. A native item-bound handler cannot declare
 source order. Every decision whose result depends on the order of two
 scopes' acts belongs to one scope, where its journal is the order. The
 [sequenced level](../notes/2026-10-18-sequenced-level-and-order-scope.md)
@@ -1021,6 +1022,6 @@ scope's summary and its published definition.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources: [contract](../packages/contract/src/), [scope.ts](../packages/contract/src/scope.ts), [entry.ts](../packages/contract/src/entry.ts), [floor.ts](../packages/contract/src/floor.ts), [result.ts](../packages/contract/src/result.ts), [definition.ts](../packages/contract/src/definition.ts), [bounds.ts](../packages/contract/src/bounds.ts), [read.ts](../packages/contract/src/read.ts), [transport.ts](../packages/contract/src/transport.ts), [report.ts](../packages/contract/src/report.ts), [reserve.ts](../packages/derive/src/reserve.ts), [native-catalog.ts](../packages/platform/src/native-catalog.ts), [sessions.ts](../packages/scope/src/sessions.ts), [replay cli.ts](../packages/replay/src/cli.ts), [client http.ts](../packages/client/src/http.ts).
+Checked against main `c8c7b631` on 30 October 2026. Sources: [contract](../packages/contract/src/), [scope.ts](../packages/contract/src/scope.ts), [entry.ts](../packages/contract/src/entry.ts), [floor.ts](../packages/contract/src/floor.ts), [result.ts](../packages/contract/src/result.ts), [definition.ts](../packages/contract/src/definition.ts), [bounds.ts](../packages/contract/src/bounds.ts), [read.ts](../packages/contract/src/read.ts), [transport.ts](../packages/contract/src/transport.ts), [report.ts](../packages/contract/src/report.ts), [reserve.ts](../packages/derive/src/reserve.ts), [native-catalog.ts](../packages/platform/src/native-catalog.ts), [sessions.ts](../packages/scope/src/sessions.ts), [replay cli.ts](../packages/replay/src/cli.ts), [client http.ts](../packages/client/src/http.ts).
 
 The commands on this page were not run for this revision.

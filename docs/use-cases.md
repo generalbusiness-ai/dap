@@ -43,38 +43,39 @@ scope to price. To the insurer it is evidence of a date. The parties do
 not have to agree on what a thing means to work on it together. They
 have to agree only on which thing it is.
 
-So the design gives every room one act that no application defines:
-`note`. A note has two fields. Its `text` is a detached text with a
-media type. Its `about` lists references to documents and entries, and each reference
-can carry a fragment, such as a page of a PDF or a region of a photo.
-What a note is follows from its media type and from what it is about:
+The [boundary-objects design](../notes/2026-10-28-boundary-objects-in-use.md)
+keeps these statements as notes about documents and entries:
 
-- A **reading** is a note whose text is data, such as the charges parsed
-  from a bill. It is about the documents it read.
-- A **mark** is a short remark or a choice about one row, one note, or
-  one region of a document. "Ask about this." "Not in scope." "I was
-  home."
-- An **agreement** is a note, often one word or one glyph, about another
-  party's words.
+- **A reading.** An agent reads a drawing as a width of 4.2 m, or a bill
+  as fourteen rows of charges. The reading names its sources and belongs
+  to whoever signs it.
+- **A mark.** A person says "ask about this" against one row or a region
+  of a photograph. The mark is that person's own statement.
+- **An agreement.** A party writes words or a glyph about another
+  party's terms. Each party signs its own note. The record keeps those
+  statements and does not decide what the parties mean by them.
+
+A note binds nobody and opens no obligation to answer. A package act
+binds a party only under the package's rules and that party's authority.
 
 In the commons nothing binds. A note is its signer's statement, and a
 member who reads it is not bound by it. A party is bound only by a
 package act that the party signs, and that act names the terms by
 reference. [Boundary objects in use](../notes/2026-10-28-boundary-objects-in-use.md)
-gives the design. dap does not run the `note` act yet, and the
-[roadmap](roadmap.md#what-is-not-yet-built) lists it.
+gives the design. The [roadmap](roadmap.md#what-is-not-yet-built) says how
+much of it runs.
 
 An application's rules are a different thing. They say what counts as a
 proposal, an acceptance or a completion, and what each one changes. The
 rules bind every member of the room the same way, so adopting them is
 itself a recorded act. A case goes wrong when an application fixes a
-thing's meaning before the parties have settled it. Suppose a package
-closes the family's matter because the insurer's item reached a final
-state. That package has forced the family's part into the insurer's
-structure. So this catalogue follows one rule: an application binds a
-party only through an act that the party signs, or through an authority
-that one party already holds. The insurer decides its own insurance
-claim. Nobody decides for the family when they are home.
+thing's meaning before the parties have claimed it. A package that calls
+the claim closed because one of its items reached a final state has
+forced the family's part into the insurer's structure. So this catalogue
+follows one rule: an application's structure is entered only through a
+package act signed by the parties it binds, or through an authority that
+one party already holds. The insurer decides its own claim. Nobody
+decides for the family when they are home.
 
 Agreement then has three degrees, each one costlier than the one before:
 
@@ -121,10 +122,10 @@ different weight. When an agent reads a document, by OCR, transcription
 or summary, its reading is a new statement attributed to the agent. The
 reading does not turn the document into the other party's confirmation.
 
-A person's own statement and an agent's reading are notes. A document
-is kept unchanged and referenced by its digest. An agreement is a note
-about another party's words, and it binds nobody. When a rule must read
-agreement, each party signs a package act that names the terms.
+A reading, a mark and an agreement are notes signed by their own authors.
+An agent's reading remains the agent's statement, even when its
+controller reads it or agrees with it. A package act can carry a
+commitment under rules. A note about that act creates no commitment.
 
 The documents themselves never change. What people conclude from them,
 and where each matter stands, can change.
@@ -638,6 +639,11 @@ section 7, as the smallest of the three and the first to build.
 **Also needs:** nothing for the shared record. A native completion
 protocol for publication, in which the destination's receipt reaches
 the room as its own fact, is named and deferred.
+This card covers the publication workflow. It leaves out the owner's
+brief, the agent's exploratory drafts and a reviewer's remarks against
+passages before a post is ready for approval. The
+[boundary-objects design](../notes/2026-10-28-boundary-objects-in-use.md)
+keeps those as documents and notes with their authors.
 
 ### From the dap-spike's sweep: buildable today
 
@@ -787,8 +793,8 @@ and two projects that share one budget.
 ## 3. Separate rooms, one authority
 
 Every member of a room reads every scope in that room. So these cases
-keep each party's private part in a room of its own, which that party
-shares with the authority, and the authority's room holds the decision
+give each party its own room, shared with the authority, for that
+party's private part. The authority's room holds the decision
 they share. The authority's room sends each party only what that party
 may read. Membership is the privacy boundary, which dap checks on every
 act and every read, so there are no readers to write by hand. The
@@ -1489,7 +1495,7 @@ refresh the page or stage a turn out of order to show this.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources:
+Checked against main `c8c7b631` on 30 October 2026. Sources:
 [boundary objects in use](../notes/2026-10-28-boundary-objects-in-use.md),
 [the roadmap](roadmap.md), and the design note that each case cites.
 

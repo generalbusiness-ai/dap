@@ -93,9 +93,9 @@ creator key.
   `--host artifacts --namespace artroom-demo`.
 - `--register-policy keys`, the default, lets only the install's founder
   keys create rooms. `open` lets a key outside that list create a room.
-  `open` selects the `archive-device-application` family, or `unpublished`
+  `open` selects the `archive-device-application` cohort, or `unpublished`
   with `--host none`. With any other `--cohort`, `open` is refused.
-- `--cohort` selects a [creation family](#creation-families).
+- `--cohort` selects a [creation cohort](#creation-cohorts).
 
 ```
 Installed: register sc_hinqqbm4..., under platform:register@18.
@@ -132,7 +132,7 @@ them. Before it sends anything, it checks the plan:
   `--cohort` or `--register-policy` conflicts with the plan.
 - `plan-expired`: the plan's time is over and the install was never
   attempted. Nothing is sent.
-- `retired-cohort`: the plan is for the retired register@6 family.
+- `retired-cohort`: the plan is for the retired register@6 cohort.
 
 ```
 Installed: register sc_4kq2v7..., under platform:register@18, as planned.
@@ -157,9 +157,9 @@ receipt is the service's acknowledgement. It is not a journal
 verification. [The order](deploy.md#the-order) in the deploy guide says
 when to plan first.
 
-#### Creation families
+#### Creation cohorts
 
-Each family pins one version of each platform definition. Every name has
+Each cohort pins one version of each platform definition. Every name has
 the `platform:` prefix.
 
 | `--cohort` | register | directory | membership | rules | destination | inbox |
@@ -170,27 +170,30 @@ the `platform:` prefix.
 | `archive-device-application` (selected by `--register-policy open`) | 17 | 16 | 8 | 10 | 12 | 1 |
 | `archive-certified-rules` | 19 | 18 | 8 | 11 | 14 | 1 |
 | `hardened-certified-rules` | 20 | 19 | 8 | 12 | 15 | 1 |
+| `commons` | 23 | 22 | 9 | 14 | 16 | 1 |
+
+The `commons` cohort also pins `platform:commons@1`.
 
 Without `--cohort`, a host other than `none` selects
 `archive-device-publication`. `--host none` requires the `unpublished`
-family. The service's creation policy still decides whether it accepts a
+cohort. The service's creation policy still decides whether it accepts a
 new register. An unknown or repeated `--cohort`, or a conflict with a
 retained plan's cohort, service, host or namespace, is refused before
 anything is signed. Adding an explicit choice does not change the
 default or the pins of existing rooms.
 
-The device families install `device-command@1` packages with an explicit
+The device cohorts install `device-command@1` packages with an explicit
 existing owner, and accept an archive binding when the room is created
-or later. No current family installs ordinary application packages such
-as Counter or Lending. The `application` family supports explicit
+or later. No current cohort installs ordinary application packages such
+as Counter or Lending. The `application` cohort supports explicit
 definition activation instead, as the next sections describe.
 
-#### Historical families
+#### Historical cohorts
 
-`dap install --planned` still reads saved plans for these families. A
+`dap install --planned` still reads saved plans for these cohorts. A
 new plan cannot select them.
 
-| Family | Register |
+| Cohort | Register |
 |---|---|
 | `file-publication` | register@3 |
 | `application-publication` | register@9 |
@@ -207,7 +210,7 @@ and the command never upgrades the plan to a newer version. A matching
 selection adds a local custody marker only. The signature, register ID
 and deadline stay the same. The ordinary planning path can still replace
 an older unmarked register@3 plan that was definitely never sent. The
-retired register@6 family stays readable but cannot be installed.
+retired register@6 cohort stays readable but cannot be installed.
 
 An existing `application-publication` room uses register@9,
 directory@8, membership@4, rules@3, destination@4 and inbox@1. Its
@@ -221,7 +224,7 @@ describes the write authority and the publication outcomes.
 #### An explicitly selected application room
 
 For an application such as Jam, use a separate owner-only `DAP_HOME`
-and a service that supports all six pins of the `application` family:
+and a service that supports all six pins of the `application` cohort:
 
 ```sh
 dap install --plan <base-url> --cohort application --host <configured-host> --namespace <configured-namespace>
@@ -270,7 +273,7 @@ records one application install in the room.
 - An ordinary version 1 package needs an existing historical
   `trusted-application` room. An ordinary version 2 package needs an
   existing historical `declared-application` room.
-- A device-command package needs a room of a current device family, or an
+- A device-command package needs a room of a current device cohort, or an
   existing historical `device-application` room. It also needs `--owner`
   with the full JSON member reference: the membership scope, incarnation
   and member handle. The install checks that the member is active in the
@@ -279,7 +282,7 @@ records one application install in the room.
 - A package whose signed host requirements include `archive` needs an
   archive-capable room: historical `archive-application` for version 1,
   historical `archive-declared-application` for version 2, or a current
-  device family for a version 2 package with `device-command@1`. The
+  device cohort for a version 2 package with `device-command@1`. The
   room's directory must have the binding `archive: "journal"`. An admin
   sets it with `bind-archive`, when the room is created or later. Without
   the binding the install ends with `archive-unavailable` before it grants
@@ -526,7 +529,7 @@ Link for @una only (it holds the invitation's secret): artroom-invite:eyJ2Ijox..
 With `--keep`, the command makes the secret, signs `invite-member` and
 saves both in an owner-only private file before it sends anything. The
 link names the membership's exact definition, such as
-`platform:membership@4` in a room of the `application` family. If the
+`platform:membership@4` in a room of the `application` cohort. If the
 answer is lost, run `dap invite --check` to read the outcome without
 sending, or `dap invite --continue` to resend the original request. While
 one kept invitation is unresolved, a new one is refused. A verified or
@@ -1138,4 +1141,4 @@ The room's browser client is [the page](../apps/room/docs/page.md).
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources: [line.ts](../packages/cli/src/line.ts), [commands.ts](../packages/cli/src/commands.ts), [application-command.ts](../packages/cli/src/application-command.ts), [application-dev.ts](../packages/cli/src/application-dev.ts), [mcp.ts](../packages/cli/src/mcp.ts), [scope-index-command.ts](../packages/cli/src/scope-index-command.ts). The samples come from the tests in `packages/cli/test` and `apps/room/lanes/test`, with long IDs cut short, except the `dap new`, `dap dev` and `dap pack` samples, which follow the source.
+Checked against main `c8c7b631` on 30 October 2026. Sources: [line.ts](../packages/cli/src/line.ts), [commands.ts](../packages/cli/src/commands.ts), [application-command.ts](../packages/cli/src/application-command.ts), [application-dev.ts](../packages/cli/src/application-dev.ts), [mcp.ts](../packages/cli/src/mcp.ts), [scope-index-command.ts](../packages/cli/src/scope-index-command.ts). The samples come from the tests in `packages/cli/test` and `apps/room/lanes/test`, with long IDs cut short, except the `dap new`, `dap dev` and `dap pack` samples, which follow the source.
