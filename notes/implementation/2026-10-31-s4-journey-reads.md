@@ -1,15 +1,13 @@
 # S4: bounded room reads and a local review mark
 
-Status: integrated source; final validation pending. Implementation commit
-`3fd9cc28bf9f68d2f9afafc2191abdff3a3bf336`, tree
-`78e0c1feece4cbab87c9e5ab6ca33bf556e7da9a`, joins S4 A8
-`a8c409dff0edca5a29b04f7a51f7259ea001cd12` and landed Main
-`112eff124e7a51d2ebdd2d100ae24b52d03848ac`. The original S4 branch remains at
-A8. No new full gate or final review
-result exists for the combined source. Root must bind the actual clean
-post-documentation checkpoint when it releases the gate.
+Status: integrated source; one final full gate passed at
+`399269c7a42eeee72f2d289abf0eb5fc98bf7c37`, tree `576a5010ea44e6dd48e8a62e19cac41b2a8f0d6b`.
+Implementation commit `3fd9cc28bf9f68d2f9afafc2191abdff3a3bf336` joins
+S4 A8 and landed Main `112eff124e7a51d2ebdd2d100ae24b52d03848ac`.
+The original S4 branch remains at A8. Exact-head review remains pending.
+Seven evidence collections are sealed; the later documentation tail changes no production code.
 
-The 61 rows below preserve historical results at their own checkpoints.
+The first 61 rows preserve historical results at their own checkpoints; row 62 records the integrated gate.
 Neither failed ordinary gate becomes a pass. The incomplete Native capture
 stays inconclusive; the directed V5 Native completion passed at A8. Those
 results do not establish coverage of the new Main production changes. The
@@ -106,14 +104,14 @@ history: 593 files, 56,976,280 bytes. `I` is integration history: 316 files,
 42,239,919 bytes. `N5` retains the successful A8 Native completion: 79 files,
 47,127,555 bytes. Every full inventory and SUMS remains immutable.
 
-The compact manifest preserves all 61 command-unit objects and all 208
-original H/I file objects. It selects 263 material file objects, omitting only
-32 redundant extras that have no direct note link or literal file digest.
-Those raw leaves remain available through their unchanged full inventories;
-no evidence was deleted. Every note link and file digest remains directly
+The compact manifest preserves all 61 prior command-unit objects and all 208
+original H/I file objects. Its 263 prior material entries plus 16 new entries
+make 279 total. It omits only 32 redundant extras with no direct note link or
+literal file digest. Those raw leaves remain in their unchanged full
+inventories; no evidence was deleted. Every note link and file digest stays
 bound. Both retention-failure receipts, their provenance and diagnoses, the
-rejected-plan PLAN/PINS and interrupted-run proof stay selected. The future
-gate has no collection, citation, command row or outcome yet.
+rejected-plan PLAN/PINS and interrupted-run proof stay selected. U62 and G3
+bind the passing integrated gate.
 
 Each table row records one actual outer command. Controls contain their own
 healthy and fault runs. Seal calculations use their lighter receipt schema,
@@ -187,13 +185,15 @@ use command receipt values, rounded to three decimals.
 | U59 `F/followup/checks/native-phase` | `node /private/tmp/artroom-s4-isolated-followup-source-20261031-v2/run-native.mjs` | child 1; capture 125; stdout-limit; Native child 143 after SIGTERM; inconclusive | 680.287 | 1383.085 | [97701d33cdf6291b75e1b8026bcb1b4d58b4c216b0bce1114624c8a5c91a9ff4](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-isolated-followup/followup/checks/native-phase/receipt.json) |
 | U60 `N5/native-v5/checks/compatibility` | `node scripts/cloudflare-pool-compat.mjs` | child 0; capture 0 | 0.082 | 0.074 | [fef0888373f494961f578fa4f1d40f22e1c4abbeab27427c403f298f3e6c6584](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-native-v5-completion/native-v5/checks/compatibility/receipt.json) |
 | U61 `N5/native-v5/checks/native-phase` | `node /private/tmp/artroom-s4-isolated-followup-source-20261031-v5/run-native.mjs` | child 0; capture 0; Native 880 pass, 2 skip; 253 modules terminal | 1137.252 | 2285.221 | [f876398f268cdad55733729dca7019acaff643cbf768f5315ec7d3ec1d644643](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-native-v5-completion/native-v5/checks/native-phase/receipt.json) |
+| U62 `G3/gate/outer/gate-1` | `npm run gate` | child 0; capture 0; all five stages passed | 1057.558 | 2235.097 | [18c208f516cb7338d0decc24a8e583026dbc54804aedc70184624a94f98114cc](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate/gate/outer/gate-1/receipt.json) |
 
-The 61 command receipts total 2,123.847197 seconds of command wall time and
-4,316.072311 seconds of host child CPU. They include failures, inconclusive
-attempts and nested controls, not packaging. These sums are not one
+The historical receipts U01–U61 total 2,123.847197 seconds of command wall
+time and 4,316.072311 seconds of host child CPU. These sums exclude U62,
+whose costs appear in the integrated-gate paragraph. They include failures,
+inconclusive attempts and nested controls, not packaging. They are not one
 end-to-end duration. Command, collector and runner boundaries must not be
 added. Host CPU excludes guest and remote work; host load and caches were
-uncontrolled. No cold-cache or future-gate cost is claimed.
+uncontrolled. No cold-cache measurement is claimed.
 
 ## What the historical checks show
 
@@ -292,12 +292,57 @@ final records do not promise complete live callbacks or physical drain.
 
 ## Final validation and remaining obligations
 
-The new Main integration changes runtime and test inputs. The 61 historical
-rows remain valid at their recorded heads; their snapshots do not certify
-`3fd9cc28` or a later documentation head. One new full gate at the actual clean
-integrated source and exact-head review remain pending. No old isolated-test
-exception or documentation-only tail substitutes for them. This note predicts
-no gate result, collection or final review head.
+The integrated gate closed with command and capture zero at
+`399269c7a42eeee72f2d289abf0eb5fc98bf7c37`, tree `576a5010ea44e6dd48e8a62e19cac41b2a8f0d6b`.
+All five stages passed with no stage report errors. Actual final counts are
+Node 91, Counting 56, Plain 3,202 passed and one skipped, and Native 889 passed
+and two skipped. Plain has 338 final modules and no live/final case gap.
+Native has 252 passed modules and one expected recorder skip. The builder
+verified 3,606 tracked files totaling 110,111,218 bytes and 223 copied changed
+files relative to the historical 5dc base. Its changed-source index is 58,660
+bytes. These are combined-source observations; earlier failures keep their
+recorded outcomes.
+
+Native live callbacks record 868 passed and two skipped cases. Twenty-one
+passed cases appear only in final records, all with numeric final durations.
+The separate partial module-timing label comes from the expected skipped
+recorder's null duration, not the missing case callbacks. All four reporter terminal streams completed. Node and Counting global
+summaries passed; both Vitest end records report zero unhandled errors. Scope
+has 250 known module durations out of 251. The console reports 78 unknown or
+suite observations and zero contradictory records. Terminal completion does
+not establish a complete live-callback census. Concurrent duration
+sums are not wall time or CPU.
+
+The receipt records command wall 1,057.5580229999998 seconds and host CPU
+2,235.0968779999994 seconds. Collector wall and host CPU are 1,057.723244 and
+2,235.2512030000003 seconds. The outer runner reports 1,059.160277417 and
+2,240.0059969999998 seconds. These nested boundaries must not be added. Host
+CPU excludes guest CPU. The host sample at 09:57:14.630914 UTC reports Darwin
+27.2 on arm64, 18 logical CPUs and load averages 2.29931640625, 1.96142578125
+and 2.0654296875. Cache state remains uncontrolled; no physical drain or
+cancellation guarantee follows.
+
+The [sealed integrated-gate unit](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate) holds 362 files and 62,839,889 bytes.
+Its [full inventory](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate.manifest.json) is 76,956 bytes, SHA256
+`770b0665fe8b03ff6ed5ffa5442b23a751f16ff0911439ef846243af3e6b23d4`.
+Its [SHA256SUMS](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate/SHA256SUMS) is 43,575 bytes, SHA256
+`7f14a06829a5158c66cc734c96bd4797c6b0dc432914559fb802189427fe600b`.
+The [in-unit proof](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-main-integration-gate/public-support/artroom-s4-main-gate-root-readback-20261031-v1.json) binds source, stages and reporter limits.
+The full inventory retains 233 outer files, 27 inner files, six Counting files,
+programs and preparation history. The citation subset adds 16 material files;
+all 61 prior units and 263 citation objects stay exact. Preparation history
+includes a substitution assertion and a numeric guard typo. The unchanged
+original source PINS still has incorrect `0644` literals; a separate closure
+records the actual `0444` modes. Both remain retained, without rewriting the
+original PINS. They add no project, gate or copier failure. Temporary
+success-copy receipts and outside-unit retention readbacks are not cited.
+
+The old isolated-test follow-up remains historical coverage at A8; it does
+not certify the merged source. The new full gate supplies the integrated
+validation. The final review still must assess that source and its disclosed
+evidence limits. The final review request names the actual reviewed head and
+gated checkpoint; the later note and manifest tail changes no production code.
+Real S1-room rendering and live acceptance remain owed.
 
 Application owners use real adapters, codecs, bounded default fetch and file
 publication over scripted native replies; their signed canonical entries are
