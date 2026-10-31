@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "state": "draft-formal-review-pending-base-reconciled",
+  "state": "recovery-design-only",
   "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-s1-head-outcome-recovery-design",
-  "qualification": "Recovery design documentation only. Source and tests remain unchanged from Gate7; the documentation-only follow-up exception applies. No recovery implementation, new test/gate result, live/provider action, whole-S1 landing or acceptance. Historical captures keep their own checkpoints/outcomes.",
+  "qualification": "Recovery design documentation only. Existing gated Source and tests remain unchanged. Actual sealed telemetry retains its scoped observations and gaps; no new query, diagnosis implementation, reader, room/provider action, landing or acceptance follows. Historical captures keep their own checkpoints/outcomes.",
   "request": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f0bdea6f41a90f6f9bbca459a4a27c270485460e",
   "ruling": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f15b9b44c018b1e345b3efe558fcee29d26bffb0",
   "promise": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bdf11579925ae3f045796a3bfab3a8b045b25c2e",
@@ -19,15 +19,15 @@
   "documents": {
     "design": {
       "path": "notes/plans/034-2026-10-31-head-outcome-recovery.md",
-      "bytes": 35551,
-      "sha256": "0636f3c1e5080adc0fc3b6317c9c6d00c09309039b9dea59717b75e5d6ef5a59",
+      "bytes": 40794,
+      "sha256": "da6806e3012a4370d0e7963fb5a7ef0e42f101f4de2f2ffb2ab3e1a86a0c363d",
       "reviewedV2Sha256": "07e4611659e5fa7cd19997ea27ee0a0813a04012e7fa66300b4a62c40374673c",
-      "change": "Status line only; exact V2 and patch retained."
+      "change": "Reviewed original V2 and required status line remain in the old sealed collection. The current repair adds actual scoped telemetry, diagnosis-first disposition and stable status; original-response authority/custody limits stay unchanged."
     },
     "note": {
       "path": "notes/implementation/2026-10-31-head-outcome-recovery-design.md",
-      "bytes": 3765,
-      "sha256": "ec5504db2a42586d032b487e4c799327ac86ada10edd5ec62c1b0a0186e6fce4"
+      "bytes": 6666,
+      "sha256": "1b1196bd824d370b145a07b9b4df4a45b0d203c69a0e9b269cf6b10237fd2943"
     }
   },
   "retained": {
@@ -582,7 +582,7 @@
     "design": {
       "head": "3fc046f30e90f137f7f0730a5af1b75bb20af340",
       "tree": "887c6abf08f0697d2ba82d677b08574b2ae73882",
-      "qualification": "Reconciled checkpoint before this note/manifest-only proposal."
+      "qualification": "Historical reconciled checkpoint before later documentation repairs; the current repair changes documentation only."
     },
     "gateToMainPaths": [
       "notes/implementation/2026-10-30-dxa2-minimum-head.md",
@@ -600,5 +600,182 @@
       "text": "Do not run the gate again for a commit that changes only documents; say that the source and tests are unchanged, and give the two tree hashes."
     },
     "sourceAndTestsUnchanged": true
+  },
+  "citationCollections": {
+    "telemetry": {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-s1-head-telemetry",
+      "fileCount": 14,
+      "bytes": 418806,
+      "directoryMode": 365,
+      "rootIndex": {
+        "path": "SHA256SUMS",
+        "bytes": 1011,
+        "sha256": "8c4f9c5d8f8e8717587f197cb0a54b7b2d4e4519befa60c641b247200bbf4008"
+      },
+      "files": [
+        {
+          "path": "README.md",
+          "bytes": 986,
+          "sha256": "4b21116475bc41ef393c112dd3049c9424638c4f475f25ef31bc28a05d976a69",
+          "mode": 292
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1011,
+          "sha256": "8c4f9c5d8f8e8717587f197cb0a54b7b2d4e4519befa60c641b247200bbf4008",
+          "mode": 292
+        },
+        {
+          "path": "ae-dropped.json",
+          "bytes": 863,
+          "sha256": "ab134af80c5f5db67015e23b0552f3b6218f714ead726e447a1c8ae3b21b9106",
+          "mode": 292
+        },
+        {
+          "path": "ae-dropped.sql",
+          "bytes": 316,
+          "sha256": "713661271dfb970ef49263658c6d85a0484795266648fe4b2f72fbda83cb1cbc",
+          "mode": 292
+        },
+        {
+          "path": "ae-r1.json",
+          "bytes": 66174,
+          "sha256": "3a1d6838b38fc9be69b9a7e1723f891c02a89837777a8e3970d666bc05a473a4",
+          "mode": 292
+        },
+        {
+          "path": "ae-r1.sql",
+          "bytes": 402,
+          "sha256": "0cd7ff5dfb4ad98d1b7b884d4a06b4a65d7360a0bd84224fcdf7962e8defee6b",
+          "mode": 292
+        },
+        {
+          "path": "ae-r2.json",
+          "bytes": 53204,
+          "sha256": "e7ecc492cb45b5839169dc6f3a53d30437a42126e3fcd0cd89cec08250228a84",
+          "mode": 292
+        },
+        {
+          "path": "ae-r2.sql",
+          "bytes": 402,
+          "sha256": "95977ee97f343e41d49242eec138dc2dd3e8015b14a85e7a8903ca84471ec0a3",
+          "mode": 292
+        },
+        {
+          "path": "ae-window.json",
+          "bytes": 12463,
+          "sha256": "14c0d180358d9db094f2a9fd34c4f3b4cff683fba35848d23ead5d2b983e0bfe",
+          "mode": 292
+        },
+        {
+          "path": "ae-window.sql",
+          "bytes": 501,
+          "sha256": "388e4f95296e7c0813644f883a64c7a428160a1c9abed50eab3b92a8fe960508",
+          "mode": 292
+        },
+        {
+          "path": "logs-r1.json",
+          "bytes": 191980,
+          "sha256": "bdd8ff985035baf5b6fdb64ce673c5b0c0329f3ef6b2daa37fb1a238dfbe82e5",
+          "mode": 292
+        },
+        {
+          "path": "logs-r2.json",
+          "bytes": 82082,
+          "sha256": "b1fbd23012b7311e7c42242c846127e226716fc2f78c9e99040dee49368d4198",
+          "mode": 292
+        },
+        {
+          "path": "q0.json",
+          "bytes": 8094,
+          "sha256": "a371161206180c4b599c0d07db29254983e999468cca7d1a66dfcfb5add635fb",
+          "mode": 292
+        },
+        {
+          "path": "q0.sql",
+          "bytes": 328,
+          "sha256": "4d594bf436363723e670a3271490b3e4adae6349967370303f4dea7a7cf8c4da",
+          "mode": 292
+        }
+      ],
+      "qualification": "Exact sealed public files independently verified read-only. Query execution/operator time is planner-reported; account retention was not checked. No original-operation/head/provider-stage or completeness proof follows."
+    },
+    "roomInputs": {
+      "files": [
+        {
+          "bytes": 635,
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-10-30-s1-identity-members-followup/input/scratch-input.json",
+          "sha256": "bcaff6825ec713054edac1201afcf2b523487b05fde3e5c11a7dfdba712c82a5"
+        },
+        {
+          "bytes": 637,
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-10-30-s1-second-scratch/preparation/second-scratch/input.candidate.json",
+          "sha256": "e39b2dc07f15d692b74018a39d8786eab85e2c0c3ecd29b1234c414db002b5f2"
+        }
+      ],
+      "qualification": "Existing sealed public input bytes bind configured room/Worker targets; no private home or original invocation proof."
+    }
+  },
+  "canonicalReferences": [
+    "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b834767897a2902dce9f02f3a293000a05f31094",
+    "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3ed61daa013c04b5886fa44c08c22c10d8d5c264",
+    "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:787203a804b00b26abf50dd881afe7605bdee817",
+    "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4f3336c17fe8c0e3b3065b272f0b7c101850ca38"
+  ],
+  "sourceCodeReferences": {
+    "head": "495c02f98dc141b54cd22e68e28eb34989be95e3",
+    "tree": "a12f008ec6e8faf023dc83b7fc950758fba3cb0c",
+    "files": [
+      {
+        "path": "apps/room/wrangler.demo.jsonc",
+        "head": "495c02f98dc141b54cd22e68e28eb34989be95e3",
+        "gitBlob": "fcdf019b4da82292f7e9c22cc1d51f94885210b9",
+        "bytes": 2563,
+        "sha256": "29bd49e8c021bb123134f9231e350f37fe7718f441ea4cb517682b42f6e63ca1"
+      },
+      {
+        "path": "packages/scope/src/metrics.ts",
+        "head": "495c02f98dc141b54cd22e68e28eb34989be95e3",
+        "gitBlob": "4508e5079b0d692bdb26918d20e06061bf01e89b",
+        "bytes": 12971,
+        "sha256": "1aa8cf408fe2cd7dab6828ad386921baa7c27d720f925c66a8e52b89c519a05d"
+      },
+      {
+        "path": "packages/scope/src/operational.ts",
+        "head": "495c02f98dc141b54cd22e68e28eb34989be95e3",
+        "gitBlob": "ff53723161dfd1333d4754d6045d7ca9f7209e98",
+        "bytes": 7767,
+        "sha256": "ab969fa9949aa1d621fc79f38bb295a31b8ac405daf5d904214ff4e4bd0b4cea"
+      },
+      {
+        "path": "packages/scope/src/diag.ts",
+        "head": "495c02f98dc141b54cd22e68e28eb34989be95e3",
+        "gitBlob": "9bb6403ab90bf11716700f899d1b879933957bcc",
+        "bytes": 9745,
+        "sha256": "2bbf9516110b509afe35b894dfb3a7146632dbab31f9a9ef20a2fd5aaf44e07a"
+      },
+      {
+        "path": "packages/scope/src/workspace-host.ts",
+        "head": "495c02f98dc141b54cd22e68e28eb34989be95e3",
+        "gitBlob": "4b0273d7f847b8a68d41c54734b50d16a40e1702",
+        "bytes": 23956,
+        "sha256": "da31d66530d659f9eb7bc387fbb4d8af4461d0e1c3683635ac076d4a660a6a78"
+      },
+      {
+        "path": "packages/scope/src/artifacts-host.ts",
+        "head": "495c02f98dc141b54cd22e68e28eb34989be95e3",
+        "gitBlob": "2760b38a6a2bbc3ca60dad81d080c6f1ae809a33",
+        "bytes": 25032,
+        "sha256": "b0c6525be89a33baf4173fb20f818b1b6a31dc527bbd749591e096d4ae2a0855"
+      },
+      {
+        "path": "packages/scope/src/operations.ts",
+        "head": "495c02f98dc141b54cd22e68e28eb34989be95e3",
+        "gitBlob": "f0308c66e65c30e3c591a2a6188af6337a20a1b5",
+        "bytes": 48073,
+        "sha256": "1c726fd47bc0dfc1f9e00f7b17ab8bfddce7ebd0c9e1a2fc51b7b45393c72e2a"
+      }
+    ],
+    "qualification": "Immutable checked-in Git Source references, not copied raw snapshots or deployed-byte proof."
   }
 }

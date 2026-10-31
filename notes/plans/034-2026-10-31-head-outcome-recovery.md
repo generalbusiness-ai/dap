@@ -1,10 +1,10 @@
 # Head outcome recovery after two stopped S1 attempts
 
-Status: proposed. Design only; implementation requires a separate request.
+Status: design only. Implementation and execution require separate requests.
 
 Both S1 scratch rooms remain stopped. The retained journals each show one head attempt with an unknown outcome. Neither public record identifies a provider failure. A later successful fold rules out the earlier observer wrapper failure as an explanation for the persisted unknown, but it does not locate the host failure.
 
-This design selects a fixed-key original-response recovery reader, preceded by the bounded diagnostic of each exact original operation. Recovery acquires only a proven existing original reply and hands its unchanged answer to trusted Operations. No such head-reply store or reader exists in the inspected implementation. Either current attempt may therefore return answer-unavailable. A new attempt remains a separate policy boundary, not this reader's fallback. This note grants no execution or implementation approval.
+This design selects a fixed-key original-response recovery reader. Planner request `4f3336c17fe8c0e3b3065b272f0b7c101850ca38` chooses fixed-stage diagnosis before reader implementation; the bounded journal diagnostic below remains a separate proposal. Recovery acquires only a proven existing original reply and hands its unchanged answer to trusted Operations. No such head-reply store or reader exists in the inspected implementation. Either current attempt may therefore return answer-unavailable. A new attempt remains a separate policy boundary, not this reader's fallback. This note grants no execution or implementation approval.
 
 ## Authority and scope
 
@@ -53,6 +53,33 @@ Planner survey `61039acc8582e4790155b9b158341dc75f85c250` reports health version
 ## Why unknown does not identify the cause
 
 `WorkspaceHost.send` checks the immutable request, lineage and held state before the head branch calls `ArtifactsProvider.ref`. It catches exceptions and returns null. A failed check can also return null. The operations driver writes unknown when it receives no answer in time, receives null or an invalid answer, or cannot admit a decisive answer. Those paths collapse different causes into the same journal result.
+
+The head path has a concrete blind spot. `WorkspaceHost.send` returns null
+from its catch at `workspace-host.ts:199`. `Operations.#answer` emits
+`outside-call-failed` only when the outside port throws (`operations.ts:578`).
+A head exception swallowed by the workspace owner therefore reaches neither
+that diagnosis nor its metric. `ArtifactsProvider.ref` calls `#read`
+(`artifacts-host.ts:339–340`), which checks the remote, obtains a temporary
+read token, reads Git and attempts revocation (`397–414`). Its final catch
+can lose revocation confirmation. The token parsing and custody catches in
+`createRepository` (`262–269`) illustrate another silent path; they are not
+evidence that either head attempt failed during repository creation.
+
+An empty Workers Logs or Analytics Engine result cannot clear the provider,
+host or observer. A third unknown would remain equally blind with the present
+instrumentation. The selected reader has no implemented original-reply store
+and would add no host or provider stage evidence. This is no permission for
+a third room or another attempt.
+
+Planner request `4f3336c17fe8c0e3b3065b272f0b7c101850ca38` chooses fixed-stage,
+fixed-name diagnosis before the reader. That separate implementation owns
+the workspace head catch, token-read/Git failures and other absorbing head
+catches, the metric-dropped cause and any small fix. Its note must identify
+Workers Logs, Analytics Engine or both and scope queries. It must obey
+`diag.ts`: fixed names, optional validated correlation, no message, stack,
+cause, body, token, credential hash or provider text. It requires stage
+witnesses, a distinguishing control, exact-head review and a passed gate.
+This design adds no diagnosis, event schema, reader, retry or room action.
 
 A genuine original promise can return late. `Operations.#answer` retains that callback in memory after a timeout and offers its valid answer through normal judgment. The callback is not a resend. Its lifetime does not prove that it survives eviction or process loss.
 
@@ -203,9 +230,10 @@ The authenticated journal collection retains the diagnostic's finite page, entry
 
 ### Selected policy and the separate new-attempt boundary
 
-This contract selects original-response recovery only. It can produce answer-unavailable for both current rooms. No durable original head response archive exists in the inspected `5dc` implementation, and the public records establish no alternative original-response custody. The design therefore does not claim the two attempts can recover now.
-
-Choice B below records a separate policy boundary. It is not a fallback of this reader, an available command, a selected retry plan or an implementation instruction. If no original response survives, only a separately authorized design for new work could observe a current reference. This packet does not choose its version, budget, migration or authority.
+Original-response recovery remains the selected design, not an available
+command or a claim that either room can recover. Choice B below is only a
+separate policy boundary. This packet chooses no new version, budget,
+migration, attempt or authority.
 
 ## Selected recovery and the separate policy boundary
 
@@ -216,11 +244,20 @@ Choice B below records a separate policy boundary. It is not a fallback of this 
 
 ### Why the selected reader requires original-response proof
 
-Matching repository, branch and commit is insufficient. A branch is mutable. A fresh read of the same reference proves only what that new request observed. It cannot acquire `own-answer` provenance for attempt 1 merely because an operator, host or recovery port labels it so.
+A mutable branch's repository, name and current commit cannot authenticate
+an original answer. The complete lane incarnation, opening/ordinal,
+owner/kind/attempt and original provider request association must bind the
+response under the trusted host basis specified above. A provider ID or an
+operator label alone is insufficient. Public output stays fixed metadata;
+sensitive custody stays private.
 
-The admissible identity includes the lane incarnation, authenticated opening FactRef and ordinal, operation owner/kind, attempt number, original immutable request/provider reference and a retained response or provider request identifier that proves the response belongs to that request. The actual responder and response authenticity need a stated trust basis. The public projection can expose binding booleans and nonsecret metadata, while private custody keeps any sensitive material. A provider ID without a retained association is not proof.
-
-The current kernel permits at most one late decisive outcome after the unknown, and requires `own-answer`. A current read with basis `read` cannot follow it. Recovering a genuine retained answer needs no new provider request or resubmission of the original mutation. A future host service could use the existing durable-replies hook, keyed by full scope/operation/attempt, even after the ordinary sending row closes. It must handle eviction, exact duplicate delivery and durable acknowledgement without clearing the sent mark. The host must not rely only on an in-memory promise.
+Only a genuine original own-answer can follow this unknown. A fresh read
+with basis read cannot. The existing durable-replies hook could receive an
+exact retained answer after sending closes, preserving eviction, duplicate
+and acknowledgement rules without clearing sent marks. The inspected host
+has no such archive; neither an in-memory promise nor a new provider query
+supplies it. Calling a fresh observation recovery still needs Choice B's
+separate semantic and compatibility review.
 
 The old unknown remains an entry. Replay verifies the subsequent late answer against the original operation and preserves its trusted host provenance. A genuine late response may still fail eligibility or produce a failed fork if the hold has ended. It does not promise a selected fork or revive expired authority. A refusal settles only what the owner's existing rules actually derive. No wall-clock inference supplies an outcome.
 
@@ -236,24 +273,75 @@ A bounded retry policy needs a finite ordinal and decreasing budget, an admitted
 
 This packet intentionally does not choose that version, migration or retry count. No evidence here justifies one extra attempt rather than another policy. Those choices require the separate implementation request and planner ruling.
 
-## What further evidence could decide
+## What the retained telemetry shows and cannot decide
 
-| Evidence, if it already exists | What it can distinguish | What it cannot establish |
+The checked-in `wrangler.demo.jsonc:24–26` enables Workers Logs at sampling
+rate 1, disables invocation logs and binds `METRICS` to `artroom_metrics_v1`.
+The two sealed public inputs map both rooms to `dap-demo` at
+`https://dap-demo.inguz.workers.dev`, namespace `dap-demo`, expected version
+`c18b5dde-a8a0-4217-8c46-ef111fa46cac`. Those inputs bind the configured
+target; sink rows also report that Worker version. Neither proves deployed
+byte equality or which code served an original provider invocation. No input
+home path was opened.
+
+| Room | Exact lane incarnation | Public UTC capture windows on 30 October |
 |---|---|---|
-| Exact-original journal projection for both rooms | Correct association, ordinal, recorded unknown and any already-admitted late outcome | Which host/provider stage ran, private token custody or a response that never reached the journal |
-| Existing correlated host stage/dispatch metadata | Pre-provider rejection versus dispatch, timeout versus explicit host failure, answer-received versus answer-admitted | Provider execution without a correlated provider record; complete absence from missing logs |
-| Existing provider request/response metadata linked to that original request | Whether provider work and a response actually occurred for that request | That a current reference value was the old response; native admission or revocation unless separately confirmed |
-| Existing revocation acknowledgement for the exact temporary credential | That specific cleanup confirmation under its stated provider trust | Token absence merely from TTL or no workspace phase |
-| Exact deployed artifact plus original invocation correlation | Which host/adapter implementation governed the attempt | The runtime path taken or a callback's survival |
+| First scratch `repo-in-ai-s1-scratch-20261030` | `sc_5fw2zefynhvfsmk3iphyslbwtbml4fahg7n2vticbwcw54zloaba`, `in_3npooswszrvb5yt5oa6h2zjjbu` | Accepted hold 21:01:18.755729–21:01:23.269673; fork-ready 21:04:09.145361–21:04:12.947409 |
+| Second scratch `repo-in-ai-s1-scratch-20261030-2` | `sc_jop4hg4oj6lzucwamxgwngm3vbkkvmqdclxdqo6khzzi63f2pacq`, `in_g4y6unlrjxglszhqocpjjb2nnq` | Accepted hold 23:20:10.082022–23:20:14.847081; fork-ready 23:25:06.922587–23:25:08.841902 |
 
-Read-only metadata extraction still needs its own reviewed channel and public projection. This design does not authorize opening private logs or account custody. It also does not assume those logs exist. If the host lost an in-memory response, no provider request identity survives, or the provider never recorded a historical reply, the exact cause can remain unknowable. A new probe cannot repair that evidentiary gap.
+Both accepted-hold receipts name entry 7, not item 7. These capture windows
+are not original provider timestamps or exhaustive callback windows. Exact
+hold-to-opening association still needs the bounded journal projection.
+
+Planner assertion `3ed61daa013c04b5886fa44c08c22c10d8d5c264`, corrected by
+`787203a804b00b26abf50dd881afe7605bdee817`, reports read-only sink queries at
+01:01–01:05 Eastern (05:01–05:05 UTC) on 31 October. Their sealed public
+unit is `/Users/hughpyle/play/artroom-evidence/2026-10-31-s1-head-telemetry`:
+14 read-only files, 418,806 bytes, root `SHA256SUMS`
+`8c4f9c5d8f8e8717587f197cb0a54b7b2d4e4519befa60c641b247200bbf4008`.
+This repair verified every file, mode, hash and exact membership; it ran no
+query. The planner performed the account reads. Only an authorized account
+operator may query live sinks; the sealed copy needs no account credential.
+
+| Retained sink evidence | Exact query scope, bounds and result | What it cannot establish |
+|---|---|---|
+| Analytics Engine lane queries, `ae-r1.sql`, `ae-r1.json`, `ae-r2.sql` and `ae-r2.json` | Each exact lane index since 30 October 12:00 UTC, ordered by timestamp, limit 500; 111 and 89 returned rows. Kinds are route, turn, dispatch and metric-dropped. The first lane has accepted act/dispatch answers at 21:01:23; the second has a dispatch answer at 23:20:14. | No row names a head operation, host stage or provider outcome. `metrics.ts:99` has no original OperationId dimension. Scope, request, trace and version are coarse operational correlation, not original-response provenance. |
+| Analytics Engine filtered window, `ae-window.sql` and `ae-window.json` | `dap-demo`, all scopes, 21:01–21:05 and 23:20–23:26 UTC on 30 October, inclusive; excludes metric-dropped and places summary/entries/retained/health; limit 300, 34 returned rows. | This deliberately filtered window is not all telemetry. Grouping, budgets, coarsening, loss and best-effort writes prevent a completeness claim. Missing or silent points clear nothing. |
+| Workers Logs, `logs-r1.json` and `logs-r2.json` | `dap-demo`, 20:55–21:20 and 23:15–23:35 UTC on 30 October; reported cap 2,000; 111 and 45 events. There are 110 and 45 archive-row-diagnostic-v1 events. The remaining first-window event is an RPC-stub disposal warning at 21:03:38.721 on DeployedScope/observed. | Invocation logs are off. Diagnosis has no scope or OperationId field. No retained correlation ties that warning to a head attempt; the second window has none. These events clear neither provider nor host nor observer. |
+| Analytics Engine grouped summary, `q0.sql` and `q0.json` | `dap-demo` since 30 October 12:00 UTC, grouped by kind/deployment/version/place/end/reason, limit 200; 26 groups. At this query, 1,456 metric-dropped points versus 936 others. | No cause follows from that count. The separate `ae-dropped.sql` and `ae-dropped.json` query reports 1,457; preserve both snapshots. Correction 787203a8 uses q0's 1,456/936 comparison. The later diagnosis request owns finding the cause. |
+
+The metrics blobs hold kind, deployment, version, place, end, reason, request,
+trace and answer, indexed by scope. They do not expose an operation-bound
+host stage. The swallowed workspace head exception emits no outside-call
+diagnosis. Thus neither these empty stage results nor another unknown can
+clear a cause. A third attempt would remain blind under the inspected
+instrumentation and is not authorized here.
+
+The planner explicitly did not check this account's retention limits. The
+earlier public-document check records Workers Logs retention of three days
+on Free or seven on Paid and Analytics Engine three months; these do not
+identify this account's effective settings, plan or surviving population.
+Those references are [Workers Logs](https://developers.cloudflare.com/workers/observability/logs/workers-logs/#pricing)
+and [Analytics Engine](https://developers.cloudflare.com/analytics/analytics-engine/limits/#data-retention).
+The sealed copy no longer depends on future account retention. A count below
+a query cap does not prove complete ingestion or recover missing records.
+
+Further exact-original journal evidence can establish association and an
+already admitted late outcome, not a missing host stage. Authenticated
+original provider request/response metadata could distinguish a received
+reply; a current reference cannot substitute. An exact original credential's
+revocation acknowledgement could prove that cleanup under provider trust;
+TTL or absent logs cannot. Deployed-byte and original-invocation correlation
+remain distinct. None of those missing facts authorizes a query, provider
+probe, token operation, new attempt or room action. Some history may remain
+forensically unknowable.
 
 ## Selected design and kernel filing
 
-Adopt the fixed-key original-response reader design, conditional on a separately filed host archive/adapter and verified provenance. First use the diagnostic design to establish the exact original association and whether a late result already exists. The reader must report answer-unavailable or provenance-unproven when existing custody cannot supply the original reply. It cannot make either current room recoverable by design alone. A new observation requires Choice B's separate policy, authority and migration decision. Both rooms remain stopped. The evidence identifies neither provider failure nor host failure.
+Adopt the fixed-key original-response reader design, conditional on a separately filed host archive/adapter and verified provenance. Request `4f3336c17fe8c0e3b3065b272f0b7c101850ca38` puts fixed-stage diagnosis before reader implementation. The separate journal diagnostic must still establish the original association and any already admitted late result. The reader must report answer-unavailable or provenance-unproven when existing custody cannot supply the original reply. It cannot make either current room recoverable by design alone. A new observation requires Choice B's separate policy, authority and migration decision. Both rooms remain stopped. The evidence identifies neither provider failure nor host failure.
 
 This packet adds no kernel code, export, scope kind, capability name/form, tool family or record model. It closes no K item and claims no gate. `docs/kernel.md` section 7 governs later implementation review. The proposed reader and any required host archive/adapter need a separate implementation filing. They can belong to host services because they supply provenance through existing rules. Ordinary Operations acquisition/handoff recovery must preserve its existing reoffer semantics. The metadata observer can remain operator tooling. Neither service nor observer can change the meaning of an outcome.
 
 Any change to late-answer admissibility, attempt budgets, reservations, owner dispatch or replay belongs in the shared kernel review. A host cannot unilaterally reinterpret `own-answer` or settle unknown from a current read. A new version of the existing capability still needs an explicit compatibility and filing disposition. A new record model or form would also trigger section 7.1's waiting rule unless the planner names a satisfied K-item condition. No such addition or exemption is assumed here.
 
-Root can adopt this reviewed note later on an appropriate clean Main. Adoption must preserve the actual Source/gate history, both sealed evidence units and the existing rooms. This Source-only packet ran no project code, test, gate, signing, native read, provider operation or recovery.
+The builder records this design in this documentation head. Adoption preserves the actual source and gate history, both sealed evidence units and the existing rooms. This documentation repair runs no project code, test, gate, signing, native read, telemetry query, provider operation or recovery.
