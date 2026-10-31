@@ -199,6 +199,16 @@ test("the Decision card: an old card's approval reaches the scope and is refused
     const accepted = await press(b, "fresh", fresh, "approve");
     expect(accepted.answer["answer"], JSON.stringify(accepted.answer)).toBe("accepted");
     expect(b.signed.map(intent => [intent.kind, intent.expected])).toEqual([["approve", fresh.card!.identity.at]]);
+    // A decided Question is final and leaves the live summary. The act is on that item. A card that showed it signs what it showed, and the scope refuses it.
+    const c = application(f), d = application(f);
+    const first = await card(c, "first", "view_decision", questionSubject(lane, asked.seq));
+    const second = await card(d, "second", "view_decision", questionSubject(lane, asked.seq));
+    expect([first.card!.actions.map(action => action.id), second.card!.actions.map(action => action.id)]).toEqual([["decide"], ["decide"]]);
+    const decided = await press(c, "first", first, "decide");
+    expect(decided.answer["answer"], JSON.stringify(decided.answer)).toBe("accepted");
+    const onFinal = await press(d, "second", second, "decide");
+    expect(d.signed.map(intent => [intent.kind, intent.expected])).toEqual([["decide", second.card!.identity.at]]);
+    expect(onFinal.answer["answer"], JSON.stringify(onFinal.answer)).toBe("refused");
   } finally { await f.room.done(); }
 }, 120_000);
 
