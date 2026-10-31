@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:744cf6f14f34d0a73910fff56d823bf87e81de54","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-31-workspace-head-lineage.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:825076270a8fc27952ccc84c95367b4453129465","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support/workspace-ancestors.ts."}
