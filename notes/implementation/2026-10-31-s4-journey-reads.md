@@ -1,146 +1,128 @@
 # S4: bounded room reads and a local review mark
 
-S4 adds the local `apps/views` application, four bounded MCP reads, and a
-Decision card over actual Question records. It also adds an opt-in Question
-profile that records one immutable Brief digest. Existing S3 definitions and
-pins remain unchanged.
+Status: integrated source; final validation pending. Implementation commit
+`3fd9cc28bf9f68d2f9afafc2191abdff3a3bf336`, tree
+`78e0c1feece4cbab87c9e5ab6ca33bf556e7da9a`, joins S4 A8
+`a8c409dff0edca5a29b04f7a51f7259ea001cd12` and landed Main
+`112eff124e7a51d2ebdd2d100ae24b52d03848ac`. The original S4 branch remains at
+A8. No new full gate or final review
+result exists for the combined source. Root must bind the actual clean
+post-documentation checkpoint when it releases the gate.
 
-The focused checks and controls describe source checkpoint
-`8653d6b1421a1a9b85982c57a27f2f1738ae179a`, tree
-`c6195dfb0a30b636a2597482528e8ab14fb763ee`. The final focused application,
-Plain integration, and security owners passed. The pre-documentation
-reconciliation is `4aa8de96fcc296f026a8540b44a5907089259acc`, tree
-`af53e0a337a07e2d19621044f7bae4ebf75b4eac`. That merge changes six
-documentation files and preserves production and test bytes. The full gate has
-not run. The source needs the gate and exact-head checker review before
-acceptance. The real S1-room rendering remains owed. This note makes no
-hosted, provider, deployment, landing, or live acceptance claim.
+The 61 rows below preserve historical results at their own checkpoints.
+Neither failed ordinary gate becomes a pass. The incomplete Native capture
+stays inconclusive; the directed V5 Native completion passed at A8. Those
+results do not establish coverage of the new Main production changes. The
+older documentation-only reconciliation and isolated-test follow-up do not
+apply to this integration. S1-room rendering and live acceptance remain owed.
 
-## Changes
+## Behavior and boundaries
 
-`apps/views/src/reads.ts` admits configured Membership and Directory refs
-before reading their exact incarnations. It supports the declared flat
-Directory16 and Directory22 profiles and Membership8 and Membership9. Each
-call reads at most eight scopes, including support scopes. It caps output at
-50 rows, live items at 512, history at 50 entries, pages at 16, and HTTP
-attempts at 64. A default request has a five-second deadline and the
-collection has a 20-second deadline. Replies have a four-MiB bound, with a
-16-MiB aggregate bound. Refusals, omissions, unknown totals, and changed heads
-remain visible. The collection is a vector of observed heads, not an atomic
-room snapshot.
+S4 adds `apps/views`, four bounded MCP reads and a Decision card over actual
+Question records. Authenticated reads bind the active viewer key, MemberRef,
+controller and full scope incarnations. Supported families are Membership8
+and Membership9 with flat Directory16 and Directory22. Unknown profiles or
+partitions remain unsupported. Each collection counts all support scopes in
+its eight-scope limit: Membership, Directory and at most six lanes.
 
-`apps/views/src/repo-in-ai.ts` implements `needs_you`, `work`, `context`, and
-`since`. Attention names the actual rule, definition, item, and head. It
-distinguishes requests, assignments, unread heads, and permission. Work
-retains each actual agent controller beside commitment terms, conditions,
-blocks, and exact Change links. It does not invent a native Task or treat a
-controller as the acting agent.
+Limits remain 50 returned rows, 512 live items, 50 sealed history entries,
+16 pages and 64 HTTP attempts. A request has a five-second deadline; a
+collection has twenty seconds. Replies are bounded to four MiB and aggregate
+bytes to sixteen MiB. Changed heads, omissions and unavailable totals stay
+visible. A collection is a vector of observed heads, not an atomic room cut.
+The default fetch owns redirect refusal, abort, deadline and byte bounds. An
+injected fetch port is trusted; these tests prove no hostile-port cancellation
+or physical process drain.
 
-Context resolves local `bodyAt` positions through contiguous, hash-checked
-sealed entries. Missing text, history gaps, an incomplete required read, or a
-changed head prevents a complete context. Question selection names the full
-ScopeRef and ask ID. Decision uses the existing bound native approve and
-decide paths with the captured body and expected revision. The new adapter
-offers no generic native-act registration.
+`repo-in-ai.ts` implements `needs_you`, `work`, `context` and `since`.
+Attention identifies the pinned declaration/source clause, item, full ref and
+head. It distinguishes a request or assignment from permission. Work shows
+actual agent controllers, commitment terms, conditions, blocks and exact
+Change links. It invents no Native Task or agent authority for a controller.
+Context resolves local `bodyAt` positions through contiguous canonical,
+hash-checked entries into full FactRefs. A missing body, history gap, required
+unread scope or changed head prevents complete context.
 
-`packages/mcp/src/read-tools.ts` adds a trusted local read catalogue. Its
-immutable descriptors support static list and watch checks without room
-inventory. Descriptor, argument, result, name, and count limits remain
-explicit. Read-only annotations describe the adapter. They grant no native
-authority. Ordinary services keep their existing catalogue.
+Decision uses existing native approve/decide paths with the captured Question
+body version and expected revision. The accepted receipt's full scope and
+head minimum reaches the next authenticated summary; an older coherent cut
+refuses. Native authority and read admission precede that barrier. The local
+mark action rechecks the displayed cut and heads, then publishes through
+synchronous final admission. It signs no native act and creates no Native
+fact, receipt, credential or custody row. It neither erases nor fabricates a
+retained native receipt. `since` remains a pure read: repeated reads show the
+same new head until an explicit local mark.
 
-`apps/views/src/decision.ts`, MCP view types, and `views/session.ts`
-distinguish native actions from the server-held local mark action. The local
-action rechecks the displayed cut and observed heads, then publishes through
-synchronous final admission. It creates no native intent, fact, receipt,
-credential, or custody row. Decision native actions continue through the
-existing service admission and signed-request engine.
+`review-store.ts` keeps one owner-only file under DAP_HOME, bound to service,
+Directory, viewer key and MemberRef, full incarnation and head. It caps marks
+at 64 heads and 32 KiB. It rejects rollback, conflicting equal-sequence hashes,
+links, uncertain locks and overflow; duplicates and restart retain the same
+mark. A pre-publication failure keeps the prior bytes. After rename, directory
+flush or readback failure can leave the new mark visible with uncertain
+durability. That result stops for inspection without automatic repeat or a
+Native fallback. A later entry remains new. The mark covers displayed heads,
+not omitted scopes, every body, all history or an atomic room snapshot.
 
-`apps/views/src/review-store.ts` stores reviewed heads in one owner-only file
-beneath the existing DAP_HOME. Its format binds service, Directory, viewer key
-and MemberRef, and full scope incarnation and head. It refuses rollback,
-conflicting equal-sequence hashes, unsafe links, uncertain locks, and capacity
-overflow. The store permits 64 heads and 32 KiB. Duplicates return the
-existing mark. A restart reads the same file.
+The trusted local catalogue in `read-tools.ts` supplies bounded immutable tool
+descriptors and static list/watch checks without a room inventory. Its
+annotations grant no native authority. Ordinary services retain their
+catalogue. Native Decision actions keep the service admission and signed
+request engine; S4 adds no generic native-act registration.
 
-`apps/room/lanes/src/issue-questions-brief.ts` derives a new opt-in profile
-from S3. `ask` requires one digest-valued `brief`. `revise-ask` may omit
-`brief` and retain the stored digest, or repeat that digest. It cannot replace
-it. `QUESTION_BRIEF_DIGESTS` and the canonical definition bind the new bytes.
-The historical S3 profile remains separate and reads as Brief-unbound.
+The opt-in `issue-questions-brief` profile uses existing digest fields, guards
+and effects. `ask` records one required Brief digest. `revise-ask` can omit its
+comparison or repeat that digest; it cannot replace it. A different Brief
+requires a new Question. Historical S3 bytes and pins remain unchanged and
+read as Brief-unbound. Approval names the Question text, not the Brief or
+conditions. No kernel contract, judge, capability or historical pin changes.
+[Kernel section 7](../../docs/kernel.md#7) remains the review boundary.
 
-`packages/mcp/src/package-brief.ts` serves one fixed non-executable
-`text/plain` resource at `dap://package/brief`. It copies the configured UTF-8
-bytes, limits them to 64 KiB, and checks their raw `digestBytes` value.
-Context compares that value with the ask's stored Brief digest. The existing
-`ui://` HTML, integrity, and policy behavior remains intact. There is no
-generic URI loader, external fetch, or question-body fallback.
+`package-brief.ts` serves one fixed, non-executable `text/plain` resource at
+`dap://package/brief`: copied UTF-8 bytes, at most 64 KiB, checked with raw
+`digestBytes`. Context compares that digest with the ask's stored Brief. The
+operator selects the local package file at startup. There is no generic URI
+loader, client URI selection, external fetch, executable body or Question-body
+fallback. Existing `ui://` HTML integrity and policy stay intact. The Node
+factory remains inert on import: no home/key read, port or room creation.
+The maintained transport and configured signer perform the actual work.
 
-The Node entry composes the maintained MCP transport, configured signer, and
-explicit local package file. Importing the factory does not open a home, load
-a key, bind a port, or provision a room. README documents the local
-invocation. The fixed Node list includes the application owner. The root
-typecheck includes its compiler context. Maintained generators produce the
-lane reference, Page asset, and MCP view output.
+## Source integration and evidence
 
-## Decisions and integration
+Request `a7d77a9bb52f9b490fe002d3d4684851b3ca640e`, promise
+`185054c48cd88f847085bf417d43df15648e1f49`, and ruling
+`2c938074fbe65a0ac8a32a6fdb738adf31da861f` own S4 and its Brief binding.
+Earlier Main integration preserved DX's exact minimum-head fences alongside
+S4's local action and neutral `CallResult`. The new merge brings Main's
+workspace ancestry, fixed-stage diagnoses and safe single-read error-name
+repair. The union retains both MCP service seals and all three Scope seals.
+It is a production integration, not the historical six-file documentation
+reconciliation at `4aa8de96fcc296f026a8540b44a5907089259acc`.
 
-Request `a7d77a9bb52f9b490fe002d3d4684851b3ca640e` defines S4. Ruling
-`2c938074fbe65a0ac8a32a6fdb738adf31da861f` adopts the native Brief binding and
-amends that scope. An approval names the Question text version. It does not
-approve the Brief or the conditions. A different Brief requires a new
-Question.
+The citation manifest binds six sealed historical collections. `H` is focused
+history: 593 files, 56,976,280 bytes. `I` is integration history: 316 files,
+27,205,563 bytes. `G1` is the first failed gate: 250 files, 8,747,551 bytes.
+`G2` is the second failed gate and helper history: 378 files, 24,642,590 bytes.
+`F` retains the incomplete follow-up and rejected analysis: 138 files,
+42,239,919 bytes. `N5` retains the successful A8 Native completion: 79 files,
+47,127,555 bytes. Every full inventory and SUMS remains immutable.
 
-The profile uses existing digest fields, acts, guards, and effects. It changes
-no kernel contract, judge, capability, or historical pin. [Kernel section
-7](../../docs/kernel.md#7) remains the filing boundary. The new native profile
-and generic MCP extensions require source review.
+The compact manifest preserves all 61 command-unit objects and all 208
+original H/I file objects. It selects 263 material file objects, omitting only
+32 redundant extras that have no direct note link or literal file digest.
+Those raw leaves remain available through their unchanged full inventories;
+no evidence was deleted. Every note link and file digest remains directly
+bound. Both retention-failure receipts, their provenance and diagnoses, the
+rejected-plan PLAN/PINS and interrupted-run proof stay selected. The future
+gate has no collection, citation, command row or outcome yet.
 
-The integration preserves Main's full minimum-head propagation alongside S4's
-local action and neutral `CallResult` boundary. The service retains the exact
-accepted receipt object and passes its full scope and head minimum to the next
-projection. The application passes that minimum into the authenticated summary
-read and rejects an older coherent cut. Native authority and read admission
-still precede the barrier. Local review publication neither fabricates a
-native receipt nor erases a retained native receipt.
-
-The first integration application attempt exposed a missing fixture action at
-the new minimum-head assertion. The next attempt reported a wrapped refresh
-refusal. Source review found that separately loaded `Unread` classes could
-fail the production `instanceof` check. That error-class identity hazard is an
-inferred explanation, not the observed cause of the discarded inner exception.
-The shared-namespace fixture repair passed all seven cases. These results do
-not establish production native authority. The final five-file Plain owner
-also retains S2's capability and agent-controller cases alongside DX-A2's
-minimum-head owner.
-
-## Validation and retained evidence
-
-The [citation manifest](evidence/2026-10-31-s4-journey-reads.manifest.json)
-maps each unit below to its exact command, receipt, streams, and public report
-where one exists. File rows contain bytes and full SHA-256 values. `H` names
-the sealed historical collection: 593 files and 56,976,280 bytes. `I` names
-the sealed integration collection: 316 files and 27,205,563 bytes. Each
-external manifest binds its complete inventory. The compact citation manifest
-records both external manifest and sums bindings, then the directly cited
-leaves. The old collection remains separate and unchanged. The temporary copy
-command receipt and outside-unit readback are not retained citations.
-
-Every row records one actual outer command. A maintained control invokes its
-own baseline and fault runs inside that row. The seal-calculation receipts
-have their own lighter schema and do not claim formal process terminal fields.
-Phase wrappers and the refused no-child invocation are not extra test
-commands.
-
-All commands ran in the S4 worktree. `tsc` means `node
-node_modules/typescript/bin/tsc`. `vitest` means `node
-node_modules/vitest/vitest.mjs`. `[R]` expands to the actual verbose and JSON
-reporters and unit-specific output path in `command.json`. `[C]` expands to
-the unchanged whole-owner control command recorded in that unit. The command
-artifact preserves every original argument, including inert temporary paths.
-Times use receipt values, rounded to three decimal places. The linked SHA-256
-column identifies `receipt.json`, never a stream. The manifest separately
-binds each actual stdout and stderr digest.
+Each table row records one actual outer command. Controls contain their own
+healthy and fault runs. Seal calculations use their lighter receipt schema,
+not formal process terminals. Phase wrappers and no-child refusals are not
+extra tests. `tsc` expands to `node node_modules/typescript/bin/tsc`; `vitest`
+to `node node_modules/vitest/vitest.mjs`. `[R]` and `[C]` name the exact retained
+reporter/control arguments in `command.json`. The linked digest identifies
+`receipt.json`; each unit also binds its actual command and streams. Durations
+use command receipt values, rounded to three decimals.
 
 | Unit and retained prefix | Actual command | Outcome | Wall s | Host child CPU s | Receipt SHA-256 |
 |---|---|---|---:|---:|---|
@@ -194,92 +176,141 @@ binds each actual stdout and stderr digest.
 | U48 `I/integration-v3/checks/security-entry-points` | `node --test scripts/security-entry-points.test.mjs` | child 0; capture 0; 10 pass, 0 fail | 2.584 | 3.201 | [d15ede3cd796997bd55fc8319d057e67f2c71fd374b28bb013521f096deee06e](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-integration/integration-v3/checks/security-entry-points/receipt.json) |
 | U49 `I/integration-seals/calculation-1` | `node I/integration-seals/calculate.mjs` | child 0; calculation only | 0.376 | 0.435 | [73bfe698e50850604491f2b0d15fc739b576e36b67bd75f33bc03b97f3e5aad7](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-integration/integration-seals/calculation-1/receipt.json) |
 | U50 `I/control-capture/checks/decision-minimum-control` | `node scripts/control.mjs [C]` | child 0; capture 0; distinguishes; exact restoration | 1.590 | 1.771 | [e13f16e393d03e1b43e2727b98b215e8d2529ded7b74b842119e6a118ff6f5f1](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-integration/control-capture/checks/decision-minimum-control/receipt.json) |
+| U51 `G1/gate/outer/gate-1` | `npm run gate` | child 1; capture 1; helpers failed; compilers and test stages unreached | 1.573 | 1.572 | [0bc93c0240bf7ae4df79981361721cb5e5395092f91c3422ad03c110a1c866fe](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate1-failed/gate/outer/gate-1/receipt.json) |
+| U52 `G2/helper-repair/checks/checks/shared-helpers` | `node scripts/check-shared-helpers.mjs` | child 0; capture 0 | 0.453 | 0.565 | [7b9351642fd92dddf0db9e7e3c2e63748536927c157c775c40f1dcddf7244ba4](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/helper-repair/checks/checks/shared-helpers/receipt.json) |
+| U53 `G2/helper-repair/checks/checks/types-app-views` | `tsc -p apps/views/tsconfig.json --noEmit` | child 0; capture 0 | 0.364 | 1.365 | [62566cbf204f6df5d7a6d1ef7ea937ce3d8af1a5c9d39a1d6147ff1512c3c2b2](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/helper-repair/checks/checks/types-app-views/receipt.json) |
+| U54 `G2/helper-repair/checks/checks/app-node-owner` | `node --test apps/views/test/s4.test.mjs` | child 0; capture 0; 7 pass | 0.853 | 0.907 | [5d54760f6fdf58a8e4f1c9538b4d84ab3d800e27b0a183b12ae60337ae7ec0e1](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/helper-repair/checks/checks/app-node-owner/receipt.json) |
+| U55 `G2/gate/outer/gate-1` | `npm run gate` | child 1; capture 1; Plain 3201 pass, 1 fail, 1 skip; Native unreached | 158.206 | 420.024 | [8de7bf5b43d8ae7527641120dd90f403c6c552f77d50d5926abf248d352d7aea](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/gate/outer/gate-1/receipt.json) |
+| U56 `F/followup/checks/types-mcp-test` | `tsc -p packages/mcp/tsconfig.test.json --noEmit` | child 0; capture 0 | 0.413 | 1.870 | [176b696862ef06ae2213ad560fe7cf13b8fed8a941e5f3d5ce992d924dc50d2c](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-isolated-followup/followup/checks/types-mcp-test/receipt.json) |
+| U57 `F/followup/checks/compatibility` | `node scripts/cloudflare-pool-compat.mjs` | child 0; capture 0 | 0.076 | 0.074 | [5933f73315c958fa9f3c41aaa8d9e354245771ac022a78e50e7ceed845d4622d](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-isolated-followup/followup/checks/compatibility/receipt.json) |
+| U58 `F/followup/checks/wire-owner` | `vitest run --project mcp packages/mcp/test/wire.test.ts [R]` | child 0; capture 0; 12 pass | 6.159 | 4.797 | [6811c6e919f7e0edce4fc7a944e8a82ee8aa31cb759643cf96c347b0443d3a4b](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-isolated-followup/followup/checks/wire-owner/receipt.json) |
+| U59 `F/followup/checks/native-phase` | `node /private/tmp/artroom-s4-isolated-followup-source-20261031-v2/run-native.mjs` | child 1; capture 125; stdout-limit; Native child 143 after SIGTERM; inconclusive | 680.287 | 1383.085 | [97701d33cdf6291b75e1b8026bcb1b4d58b4c216b0bce1114624c8a5c91a9ff4](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-isolated-followup/followup/checks/native-phase/receipt.json) |
+| U60 `N5/native-v5/checks/compatibility` | `node scripts/cloudflare-pool-compat.mjs` | child 0; capture 0 | 0.082 | 0.074 | [fef0888373f494961f578fa4f1d40f22e1c4abbeab27427c403f298f3e6c6584](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-native-v5-completion/native-v5/checks/compatibility/receipt.json) |
+| U61 `N5/native-v5/checks/native-phase` | `node /private/tmp/artroom-s4-isolated-followup-source-20261031-v5/run-native.mjs` | child 0; capture 0; Native 880 pass, 2 skip; 253 modules terminal | 1137.252 | 2285.221 | [f876398f268cdad55733729dca7019acaff643cbf768f5315ec7d3ec1d644643](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-native-v5-completion/native-v5/checks/native-phase/receipt.json) |
 
-The 50 receipt durations sum to 138.129578 seconds of command wall time and
-216.518923 seconds of host child CPU time. Those sums include failed attempts
-and nested control work. They are not an end-to-end elapsed-time measurement.
-Shared host load and caches were uncontrolled. Host CPU excludes guest CPU and
-does not measure remote work.
+The 61 command receipts total 2,123.847197 seconds of command wall time and
+4,316.072311 seconds of host child CPU. They include failures, inconclusive
+attempts and nested controls, not packaging. These sums are not one
+end-to-end duration. Command, collector and runner boundaries must not be
+added. Host CPU excludes guest and remote work; host load and caches were
+uncontrolled. No cold-cache or future-gate cost is claimed.
 
-The historical broad typecheck failed in imported compiler contexts, including
-Disposable declarations, typed fetch bodies, and Node metrics types. Later
-targeted contexts include the actual application context. Its first targeted
-compiler failed because the existing generic Reads implementation signature
-was not a visible overload. The added overload exposes that existing behavior
-without changing its implementation.
+## What the historical checks show
 
-The first application owner passed five cases and failed one fixture query.
-Its successor passed all six. The initial security pair passed 12 and failed
-one reviewed seal. The successor entry-point owner passed ten. The eight-file
-Plain run passed 25 cases and failed the legacy Brief resource fixture, which
-omitted `notifications/initialized`. The corrected whole resource owner passed
-four. The separate real Scope Brief owner passed one case under actual
-Membership8 person authority, native lane judgments, and SQLite. Its clock,
-Git answers, and transport come from the labelled fixture. It proves the
-immutable Brief guard and detached body retention, not package-resource or
-provider behavior.
+The initial broad typecheck failed in imported contexts, including Disposable,
+typed fetch-body and Node metrics declarations. Later targeted contexts
+include the application itself. Its first compiler failed because the generic
+Reads implementation signature was not a visible overload; the added overload
+exposes the same implementation without changing fallback or decoding.
 
-The first local-admission control remains inconclusive: child 2 and capture
-125. Its parser did not classify the printed failure as an assertion. The
-corrected boolean byte-equality assertion keeps the same publication
-invariant. The second control distinguishes the inserted `await admit()` fault
-and restores exact source bytes and mode. Neither record replaces the first
-result. A separate invocation refused unsupported `--mode` before any check or
-raw capture. Its retained public record describes that refusal and does not
-fabricate a receipt.
+The first application owner passed five cases and failed one noncanonical
+fixture reply; canonical encoding repaired the fixture and all six passed.
+The initial security pair passed twelve and failed one reviewed seal; the
+successor entry owner passed ten. An eight-file Plain run passed twenty-five
+and failed a Brief resource fixture missing `notifications/initialized`; its
+corrected whole owner passed four. The separate Native Brief owner passed
+one under actual Membership8 person authority, native lane judgments and
+SQLite, with labelled clock, Git and transport. It proves the immutable Brief
+guard and retained detached bodies, not package serving, provider or browser
+behavior. No Brief guard mutation control ran: changing canonical definition
+bytes changes its pin and masks a naive guard omission. The actual wrong-B
+refusal still asserts `brief-fixed` with unchanged head and item.
 
-The final integration receipts report complete closure, unchanged source, and
-child and capture zero. The builder's independent public readback binds their
-hashes and all 3,598 tracked source entries, 109,858,546 bytes, to this
-checkpoint. The prior generator that changed only the declared lane reference
-reports that accepted generator delta separately.
+The first integration application attempt failed before an item action because
+the fixture remained on a summary page. The next failed with a wrapped refresh
+error. Separate TS loader graphs could give `Unread` distinct class identities;
+that is an inferred explanation, not an observed inner exception. The shared
+loader fixture passed all seven cases. The five-file Plain integration also
+preserves S2 capability/controller cases and DX's minimum-head owner. These
+scripted reads do not prove production native authority.
 
-## Limits and work still owed
+The first local-admission control remains inconclusive: child two, capture
+125; its parser did not classify the printed failure. The corrected boolean
+assertion keeps the same invariant. Its control distinguishes `await admit()`
+and restores exact source bytes and modes. The retained no-child invocation
+refused unsupported `--mode`; it is not a test or fabricated receipt.
 
-No native Brief guard mutation control ran because changing canonical
-definition bytes changes the pinned profile digest and masks a naive guard
-mutation. The existing native wrong-Brief-B case asserts the named
-`brief-fixed` refusal and unchanged head and item under actual native
-judgment. It provides no distinguishing control result for that guard.
+The receipt-floor control passed its seven-case baseline. Dropping ONLY the
+summary minimum produced six passes and one named ordinary receipt-wire
+assertion: the exact accepted receipt did not reach the application summary
+wire. The helper reported distinguishes and restored exact source bytes and
+modes. Its retained outer diagnostic is not raw child TAP. Neither successful
+control replaces an earlier failure.
 
-The full integrated gate and exact-head review remain pending. The actual
-receipt-floor control passed its seven-case baseline. Dropping only the
-summary minimum produced six passes and one ordinary assertion: the full
-accepted receipt did not reach the application summary wire. The helper
-classified that fault as distinguishes and restored exact source bytes and
-modes. Its retained diagnostic is not raw child TAP. Any later gate needs its
-own closed evidence and note update. The final review request must name the
-actual documentation-tail head. This draft does not predict that hash.
+Gate 1 failed helpers before compilers and all test stages. Four application
+modules now call the optional comparison `sameOptional`; defined values still
+delegate to `bytes.same`, and the undefined branch stays unchanged. Focused
+helpers, application types and all seven application cases passed before
+Gate 2. Gate 2 passed prechecks, compilers, Kernel, Node91 and Counting56;
+Plain had 3,201 passes, one failure and one skip, so Native was unreached.
 
-The application owner exercises real adapters, codecs, the default fetch
-boundary, and filesystem publication over scripted native read answers. Its
-canonical signed entries are not a native authority replay. Generic MCP owners
-use their declared stand-ins. The separate native Brief case does not exercise
-a real S1 room, a provider, a rendered Decision card, or real operator
-custody. The S1-room rendered witness remains owed under S1 request
-`449c58c7f7b76f25c5575bbb9f30403f7e0d3960` and ruling
+That Plain failure came from the wire cancellation fixture: its fake supplied
+`snapshot` while production awaited asynchronous `catalogueGeneration`.
+The missing method threw before the fake's deferred gate. Changing only the
+fake method restored disconnect-before-read-completion ordering. At A8, the
+MCP test compiler and whole twelve-case wire owner passed with unchanged
+production, configuration, dependencies, cases, assertions and deadlines.
+This isolated test-only result stays attached to that historical source; it
+is not the combined-head validation now owed.
+
+The two Gate 2 packaging refusals happened before destination writes. The
+[first receipt](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/retention-failed-attempt/execution/receipt.json)
+records a guard expecting TAP `# pass 7` instead of Node's `ℹ pass 7` spec
+line. The [second receipt](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/retention-failed-attempt-2/execution/receipt.json)
+records the source-parent overlap fence because the old manifest sat above
+the destination. Exact old public anchors were staged with
+[provenance](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-full-gate2-failed/prior-failed/original-anchor-provenance.json),
+keeping the copy guards. These are retained metadata failures, not extra
+project commands or changed gate outcomes. Successful temporary copy receipts
+and outside-unit retention readbacks are not retained citations.
+
+The first Native attempt remains inconclusive. Its wrapper exited one,
+capture 125 and signalled child 143. It read 33,559,772 stdout bytes, kept
+33,554,432 and dropped 5,340. SIGTERM and process closure supply no complete
+phase: the stream has 149 file-local module passes and 641 case observations,
+without final rows, run end or terminal unhandled-error count. Later worker
+and global teardown cannot be inferred.
+
+The proposed 149-result/104-file complement never ran. Checker
+`3c5d30556992fcb69d179aa5e70d6aa9dbbf8a5e` rejected it; planner survey
+`87491c9ef138e7e672b2bee11afb6c285acf943d` kept that verdict. They directed
+one full Native completion, treating it as completion of an unfinished step.
+V5 ran the unchanged 253-file phase at A8, with the same configurations,
+project order, worker limits, cases, assertions, deadlines and 2,400-second
+command budget, using 128 MiB per stream. It closed 0/0: 880 passed cases and
+two skipped; 252 modules passed and the expected Page recorder skipped. The
+end record reports passed and zero unhandled errors. Neither failed ordinary
+gate nor the earlier output-limited capture becomes a pass.
+
+The [retained V5 Root proof](/Users/hughpyle/play/artroom-evidence/2026-10-31-s4-native-v5-completion/public-support/artroom-s4-native-v5-root-readback-20261031-v1.json)
+binds 3,603 tracked files, 109,999,502 bytes, exact pre/post bytes and modes,
+both receipts and the complete Native ledger. Native stdout is 40,930,694
+bytes and stderr 2,865 bytes, with no drops. Compatibility cost 0.081510625
+seconds of command wall time and 0.074059 seconds of host child CPU; Native
+cost 1,137.251548 and 2,285.221191 seconds respectively. Public terminals and
+final records do not promise complete live callbacks or physical drain.
+
+## Final validation and remaining obligations
+
+The new Main integration changes runtime and test inputs. The 61 historical
+rows remain valid at their recorded heads; their snapshots do not certify
+`3fd9cc28` or a later documentation head. One new full gate at the actual clean
+integrated source and exact-head review remain pending. No old isolated-test
+exception or documentation-only tail substitutes for them. This note predicts
+no gate result, collection or final review head.
+
+Application owners use real adapters, codecs, bounded default fetch and file
+publication over scripted native replies; their signed canonical entries are
+not a Native authority replay. Generic MCP owners retain their stand-ins. The
+separate Native Brief case proves no real S1-room render, provider, package
+resource, browser or operator custody. The S1 witness remains owed under
+request `449c58c7f7b76f25c5575bbb9f30403f7e0d3960` and ruling
 `f152f847ca5dc1a009f735aa6ddc862a1eb7bcb9`.
 
-The catalogue offers personal reads only after actual key and member binding.
-It supports the named flat Directory families, not arbitrary partitions or
-unknown profiles. Omitted scopes remain unread. Complete required selection
-can still fail within the finite bounds. The injected fetch port is a trusted
-test boundary. The default fetch owns redirects, abort, request, and reply
-bounds. No hostile injected port cancellation or physical process-drain
-guarantee follows from these tests.
-
-Mark reviewed covers displayed scope heads only. It does not mark omitted
-scopes, every retained body, all history, or an atomic room cut. A native
-entry after the final check remains new. A pre-publication failure keeps the
-prior file. After rename, directory flush or readback failure can leave the
-new mark visible with uncertain durability. That outcome stops for inspection
-and does not automatically repeat or create a native fallback.
-
-S4 request `a7d77a9bb52f9b490fe002d3d4684851b3ca640e` owns the gate and
-exact-head review still owed here. S6 request
-`ddf2a597876b00342f7481941ca7571a1705d83e` owns the later version-bound
-Decision seam. Parser request `0bcf9984a08c175522c784852a38fd2623104bde` owns
-the failure-block parser repair and raw child TAP retention on an inconclusive
-result. That separate repair does not reclassify S4’s first control. No S6
+S4 request `a7d77a9bb52f9b490fe002d3d4684851b3ca640e` owns final validation
+and review. S6 `ddf2a597876b00342f7481941ca7571a1705d83e` owns the later
+version-bound Decision seam. Parser request
+`0bcf9984a08c175522c784852a38fd2623104bde` owns failure-block parsing and
+raw child TAP retention; it does not reclassify the first control. No S6
 wire, new native act, provider operation, hosted route, identity creation,
-deployment, or settings change belongs to this slice.
+deployment, settings change or live acceptance belongs to this slice.
