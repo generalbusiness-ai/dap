@@ -31,13 +31,24 @@ function questionActions(context: Context): CardAction[] {
   if (context.actions.includes("issue.decide") && !requests.length && approvals.some(item => item.values["verdict"] === "approve") && !approvals.some(item => item.values["verdict"] === "request-changes")) return [captureQuestionAction(context, "decide")];
   return [];
 }
+/** What a list left out, and how to reach what follows. Empty when the list left out no lane. */
+function lanesLeft(data: Readonly<Record<string, unknown>>, screen: string): string {
+  const omitted = (data["omittedScopes"] as unknown[]).length, next = data["next"];
+  if (omitted === 0) return "";
+  // The Work list takes no cursor, so it names the omission and offers no scope.
+  if (screen === "work") return ` This list leaves out ${omitted} lane${omitted === 1 ? "" : "s"}. The Work list reads only the first lanes.`;
+  return ` This list leaves out ${omitted} lane${omitted === 1 ? "" : "s"}.${isScopeRef(next) ? ` To read the lanes that follow, open this screen again with scope ${canonicalize(next)}.` : " No lane follows this one. To read the first lanes, open this screen with no scope."}`;
+}
 export function decisionSource(app: RepoInAi): ViewSource {
   return {
     initialPage: (screen, subject) => screen === "change" && subject === undefined ? "updates" : "summary",
     // A card of one exact subject signs acts; a list of heads or rows signs none.
     checksOriginals: query => query.subject !== undefined,
+    listsAfterScope: true,
     read: async (query, _access, minimum) => {
       try {
+        // A scope on a list names the lane that the list continues after. No other screen takes one.
+        if (query.scope !== undefined && (query.subject !== undefined || query.screen === "decision" || query.screen === "work")) return { status: "unavailable", position: 0, count: 0, fallback: "Only the needs-you and updates lists continue after a lane." };
         if (query.screen === "decision") {
           const selected = selector(query.subject), { context } = await app.question(selected.scope, selected.ask, minimum);
           const actions = questionActions(context), at = actions[0] && !actions[0].local ? actions[0].args["at"] as Record<string, number> : { on: context.ask.revision };
@@ -51,21 +62,24 @@ export function decisionSource(app: RepoInAi): ViewSource {
         }
         if (query.screen === "change" && query.subject !== undefined) return await changeProjection(app, query.subject, minimum);
         if (minimum !== undefined) return { status: "unavailable", position: 0, count: 0, fallback: "This screen does not support a receipt read minimum." };
-        const response = query.screen === "work" ? await app.work() : query.screen === "change" ? await app.since() : await app.needsYou();
+        const after = query.scope === undefined ? {} : { after: query.scope };
+        const response = query.screen === "work" ? await app.work() : query.screen === "change" ? await app.since(after) : await app.needsYou(after);
         if (response.isError) return { status: "unavailable", position: 0, count: 0, fallback: "This bounded read is unavailable." };
         const data = response.structuredContent, rows = data["rows"] as Row[];
-        if (!rows.length) return { status: data["complete"] ? "empty" : "incomplete", position: 0, count: 0, fallback: data["complete"] ? "No current rows in the reviewed scope selection." : "No rows in the readable selection; omissions remain." };
+        const left = lanesLeft(data, query.screen);
+        if (!rows.length) return { status: data["complete"] ? "empty" : "incomplete", position: 0, count: 0, fallback: data["complete"] ? "No current rows in the reviewed scope selection." : `No rows in the readable selection; omissions remain.${left}` };
         const position = Math.min(query.position, rows.length - 1), current = rows[position]!;
         const points = data["heads"] as LocalReviewCapture["heads"];
         const ranges = query.screen === "change" ? rows.map(row => ({ scope: row.scope.scope, from: row.head.seq, to: row.head.seq })) : [];
         const entries = ranges.map(range => ({ scope: range.scope, seq: range.from, text: "A new native head since your explicit local mark. This summary does not claim a full journal review." }));
         const actions: CardAction[] = [];
-        if (query.screen === "change" && data["complete"] && isScopeRef(data["directory"]) && isMemberRef(data["viewer"])) actions.push({ id: "mark-reviewed", label: "Mark reviewed", purpose: "mark-reviewed", local: true,
+        // A mark covers the heads this window displayed, so a lane outside the window stays unreviewed.
+        if (query.screen === "change" && (data["unread"] as unknown[]).length === 0 && data["omittedRows"] === 0 && isScopeRef(data["directory"]) && isMemberRef(data["viewer"])) actions.push({ id: "mark-reviewed", label: "Mark reviewed", purpose: "mark-reviewed", local: true,
           capture: { service: app.options.service, directory: data["directory"], viewer: data["viewer"], key: app.options.signer.key, heads: points, ranges } });
         const card: Card = { identity: { item: String(current.item), kind: current.type, revision: String(current.head.seq), subject: { scope: current.scope.scope, item: current.item }, at: {} },
           title: query.screen === "change" ? "Heads since your explicit review mark" : current.type, summary: `${current.rule.definition} ${current.rule.clause}`,
-          reasons: ["This projection explains attention; it grants no permission."], body: JSON.stringify(current, null, 2), projection: points.map(point => ({ scope: point.scope.scope, seq: point.head.seq, hash: point.head.hash })),
-          reviewIntended: ranges, unavailable: [], entries, waitsOn: [], settles: [], actions, fallback: "Read the named bounded tool for exact rows, heads and omissions." };
+          reasons: ["This projection explains attention; it grants no permission.", ...(left ? [left.trim()] : [])], body: JSON.stringify(current, null, 2), projection: points.map(point => ({ scope: point.scope.scope, seq: point.head.seq, hash: point.head.hash })),
+          reviewIntended: ranges, unavailable: [], entries, waitsOn: [], settles: [], actions, fallback: `Read the named bounded tool for exact rows, heads and omissions.${left}` };
         return { status: "ready", position, count: rows.length, card, fallback: card.fallback };
       } catch (error) {
         if (!(error instanceof Unread) && !(error instanceof SyntaxError)) throw error;
@@ -87,10 +101,14 @@ export function decisionSource(app: RepoInAi): ViewSource {
     },
     markReviewed: async (capture, { admit }) => {
       try {
+        // Selects no lane, so the capture's own lanes can be the window it displayed.
         await app.collect(async collection => {
           if (capture.service !== app.options.service || capture.key !== app.options.signer.key || !sameOptional(capture.directory, collection.directory) || !sameOptional(capture.viewer, collection.viewer)) throw new Unread("review-binding");
-          for (const point of capture.heads) { const frame = await collection.frame(point.scope); if (!sameOptional(frame.head, point.head)) throw new Unread("head-changed"); }
-        });
+          for (const point of capture.heads) {
+            if (!collection.inRoom(point.scope) && !sameOptional(point.scope, collection.membership) && !sameOptional(point.scope, collection.directory)) throw new Unread("outside-room");
+            const frame = await collection.frame(point.scope); if (!sameOptional(frame.head, point.head)) throw new Unread("head-changed");
+          }
+        }, undefined, true);
         const status = await app.options.reviewStore.mark(capture, admit);
         return result({ localStatus: status });
       } catch (error) {

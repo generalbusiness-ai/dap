@@ -51,7 +51,7 @@ function fixture(t) {
       if (readFailure) throw new Unread('transport');
       return { context: current };
     },
-    collect: async run => ({ value: await run({ directory: peer.directory, viewer, frame: async ref => {
+    collect: async run => ({ value: await run({ directory: peer.directory, membership: peer.membership, inRoom: () => true, viewer, frame: async ref => {
       assert.deepEqual(ref, scope); return { head: peer.head(state) };
     } }) }),
   };
