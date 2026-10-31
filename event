@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d8d61315262eaad0b5ffdc5e2213481c503c1fdd","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/applications/act-admission.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d92cfb99ddb9d73ac78b774fa3799f4e8bfcc6e4","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/native-catalog.ts."}
