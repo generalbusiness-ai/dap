@@ -20,7 +20,7 @@ const { captureQuestionAction, decisionSource } = await load(new URL('../src/dec
 const { createRepoInAiService } = await load(new URL('../src/node.ts', import.meta.url).href);
 const NOW = Date.parse('2099-01-01T00:00:00Z');
 const item = (id, type, state, values = {}, refs = {}, parties = {}) => ({ id, type, state, revision: id, opened: null, values, refs, parties, attributed: [] });
-const json = body => new Response(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
+const json = body => new Response(canonicalize(body), { headers: { 'content-type': 'application/json' } });
 
 function fixture(t) {
   const home = realpathSync(mkdtempSync(join(tmpdir(), 'artroom-s4-')));
