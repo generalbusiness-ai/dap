@@ -1,7 +1,8 @@
-# S2 MCP Apps source inventory
+# S2 MCP Apps kit validation
 
-Status: source inventory, focused owners and a corrected-host fixture witness.
-The full gate, exact-head review and real-room acceptance remain open.
+Status: generic kit source delivery, corrected-host fixture rendering and an
+ordinary-gate pass. Actual S1-room rendering remains owed under ruling
+`f152f847ca5dc1a009f735aa6ddc862a1eb7bcb9`.
 
 This first S2 change inventories Main
 `c8c7b63172175576116f86ed4f7facfcdd749ec2`, tree
@@ -11,8 +12,9 @@ work from the S1 wait. It does not complete S1 or the live witnesses.
 
 The [MVP plan](../2026-10-16-repo-in-ai-mvp-plan.md), section S2,
 and [compact cards design](../2026-10-17-compact-cards-design.md) define
-S2. The table identifies existing source, not a new validation result.
-Line numbers refer to the source base above.
+S2. The historical inventory below describes that source base, including the
+gaps known then. Later sections record the focused, browser and gate results.
+Line numbers in this inventory refer to the source base above.
 
 | S2 deliverable | Current file and line | Existing behavior and remaining work |
 | --- | --- | --- |
@@ -70,10 +72,11 @@ this change did not repeat them or relabel their fixture projections.
 All ten command captures observed the same 3,572 source files, including
 bytes, executable modes and symlink kinds. Those files equal the clean
 test-only checkpoint. This later note update changes only this report.
-The summary retains the command arrays, stream hashes and source proof:
-`/private/tmp/artroom-s2-kit-validation-20261031-v1/SUMMARY.json`, SHA-256
+The retained focused summary keeps command arrays, stream hashes and source
+proof at `focused/captures/SUMMARY.json`, SHA-256
 `74b8601597e40ee47f118ddcd245155f90b4b7304caf258c4521d859c43dc13e`.
-These are closed scratch captures awaiting final public retention.
+The focused collection now retains these exact captures and summary;
+the original scratch paths remain execution provenance.
 
 In the table, `R/` expands to
 `/private/tmp/artroom-s2-kit-validation-20261031-v1/captures/`, `T/` to
@@ -92,7 +95,10 @@ these new rows show child/capture. Browser wall and CPU use the owned Node
 child fields, not the slightly longer outer capture. The preflight receipt
 includes its wrapper and source guards. Syntax checks prove no runtime import.
 Builds produce scratch host assets, not product acceptance. No sum of these
-rows measures one pipeline. Current Source for all thirteen is clean
+rows measures one pipeline. `G/` names the third durable gate unit below.
+Its new row records
+the actual owned command wall and CPU. Source for the thirteen browser-stage
+commands was clean
 `1d30d34ccd1896f47ed983e66d99b1141135f84c`, tree
 `b4e31ee74dce4c6435469ec64110d74bb1f8cb8f`.
 
@@ -121,6 +127,7 @@ rows measures one pipeline. Current Source for all thirteen is clean
 | B/command-v4 | `command.json`; V4: first case failed, 17 unreached | 1/1 | `80d353502051e02188a624ab2374fa0e7d4116f76e1a3d91b9eb982b035bd3f5` | `7de0774ef31aa196a549b30112cb8412cecd88e1bf3b40accf5ada52d22e290f` | `1c5408c28d820fc3a90de4d005faa6890200ad69d0fcb0d3654b0f82d892e2bb` | 8.914771042; 1.664901 |
 | B/command-v5 | `command.json`; V5: 18 passed | 0/0 | `17bd351a434386f64f040f279c44cdec20d28353fdee1f0cc63583bfe327d50e` | `95735ad180b72b43e748dcb3081aee2099841ef9e0c78fecc07c1292c2fa9f59` | `75bdec4ffcf3637e23bdccabf4f8491c67bc2dd4e39a840d64fa5420bb117b9a` | 30.829128084; 11.946833 |
 | B/preflight-v4/execution | `argv.json`; synthetic admission preflight | 0/0 | `371a7dc83769ebfc88e12d5416d2bed49071867b4d522dd273f4cd3f39543c9f` | `65d9b4ea1f960c658990acb8a7324bc3c99e255d19dd4e8337f1ebe5b10d8367` | `44d85c36efb80005db6db601bfa7e39891a2d9a86b64590ddf0abcca08cacf6c` | 0.678463959; 0.780000 |
+| G/gate/outer/gate-1 | `["npm","run","gate"]` | 0/0 | `88ba9d355f7b5c90b87bea8beebb79a7e78de414308b0c0c253ca32d662f56b8` | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` | `579e0a3bd0635f5c199d7b9628ec3a4405d4fe9ed6b99155a3d1798d9bb8a37d` | 1326.700207250; 2778.365070 |
 
 ## Historical focused-stage interoperability
 
@@ -145,25 +152,26 @@ It does not establish a rendered basic-host pass or failure.
 
 The pinned [MCP Apps specification][mcp-apps-capabilities]
 requires host negotiation and recommends a text-only server fallback when
-that capability is absent. Production negotiation stays unchanged. A
-separate unexecuted two-constructor capability proposal retains the exact
-upstream delta and diagnostic pins for planner review. No corrected host
-was imported, built or rendered. The prepared upstream host and sandbox
-HTML built with only an explicit loopback listener adaptation; neither
-server launched. The first build's relative-entry failure remains failed.
+that capability is absent. Production negotiation stays unchanged. At the
+focused stage, a separate unexecuted two-constructor proposal
+retained the upstream delta and diagnostic pins for planner review. No
+corrected host had run then. The initial upstream HTML builds used only
+the loopback adaptation, and neither server had launched. The first build's
+relative-entry failure remains failed. The later corrected-host witness
+below records the separately authorized build and render.
 
 All dependencies stay in the worktree's own lock-matching copied namespace
 or the separate non-Git tool directory. Installation touched no checkout.
 The measured child CPU excludes VM CPU. Shared machine load and OS cache
 remain uncontrolled; these are warm dependency views, not benchmarks.
 
-No Browser plugin was available. Root reported Cua with no browsers and a
-Chrome creation failure. This head makes no new browser claim. The actual
-basic-host renderer, desktop and narrow layouts in both themes, and every
-S1-room witness remain open. The custom fixture host proves none of them.
-No real signing home, room reference or provider entered this work. Both
-actual S1 rooms remain stopped. The Brief binding decision is still open.
-The full gate, exact-head review and all S2 completion claims remain due.
+No Browser plugin was available. The builder reported Cua with no browsers
+and a Chrome creation failure. At that stage the custom fixture host proved
+neither actual basic-host rendering nor S1-room acceptance. The next section
+records the later corrected-host headless result. No real signing home,
+room reference or provider entered either fixture. Both actual S1 rooms
+remain stopped. S4 owns its concrete journey data and Brief binding; neither
+this generic kit nor its fixture establishes that separate delivery.
 
 ## Corrected basic-host browser witness
 
@@ -226,7 +234,7 @@ The public result `B/browser-v5/result.json` has 93,078 bytes, SHA-256
 `32025e54cc44df199c269c68fcc147525195a812e37b987a3710c54f8c3bf511`.
 Its capture receipt is
 `75bdec4ffcf3637e23bdccabf4f8491c67bc2dd4e39a840d64fa5420bb117b9a`.
-All nineteen PNG hashes and dimensions match. Root visually reviewed desktop
+All nineteen PNG hashes and dimensions match. The builder visually reviewed desktop
 Needs you and narrow dark Work, plus the two loss-state images. The unknown
 image shows the scrolled viewport without a visible Check button. The checked
 image shows the next card while the host result panel still says Loading.
@@ -248,20 +256,53 @@ reaping, group observation and I/O; they prove no escaped-process or physical
 descendant drain. The prior six-case inert ProcessOwner qualification is
 reused without a new process qualification.
 
-## Post-merge source status
+## Final source validation
 
-S2 reconciles with landed Main at
-`e0c3e133246cb694d1853f141c2437ee0649b326`, tree
-`33e0c2eb4a8cfa76a7a492b47d572a454ee8f33c`. Against Main
-`0f0a949eb5bd59b13691947fc695073b2c304759`, only the original four S2 paths
-differ: this note and the three MCP test or fixture files. The full gate is
-pending. This merge adds no test result. The ten earlier focused captures keep
-their test-only `891179d5` binding. The thirteen corrected-host build, syntax,
-preflight and browser captures keep their `1d30d34c` binding. None was rerun.
+The single ordinary gate passed at
+`bcd6615a2d017a3a2169f86d2f2f3c92b14dc351`, tree
+`b305525097e33e773f9b52669ca05264bca5086f`. It follows the historical
+`e0c3e133` reconciliation with Main `0f0a949e`; that merge itself added no
+result. The ten focused commands retain their `891179d5` binding, and the
+thirteen browser-stage commands retain `1d30d34c`. Their historical
+captures keep their own outcomes and costs; the later gate supplies a
+separate whole-suite result. Source changes remain the three MCP owning
+or fixture files; this final note and citation-manifest tail changes only
+documentation. The exact-head review request supplies the final review
+head and tree without a self-referential value in this note.
+
+The gate's collector receipt is `G/gate/outer/gate-1/receipt.json`, SHA-256
+`579e0a3bd0635f5c199d7b9628ec3a4405d4fe9ed6b99155a3d1798d9bb8a37d`.
+The maintained stage ledger `G/gate/inner/test-evidence/stages.json` records
+Kernel, Node, Counting, Plain and Native all passed with empty reportErrors.
+Node passed 84, Counting 56, Plain 3193 with one skip, and Native 879 with
+two skips. All four reporter terminal ledgers close completely. Native has
+37 final-only cases; its timing sample stays partial. The outer summary
+reports 75 unknown or suite observations and zero contradictory records.
+Concurrent duration sums are neither wall time nor CPU.
+
+The complete tracked-source maps before and after match: 3,581 entries and
+109,658,630 bytes at the gated head and tree. The collected source index
+binds 183 changed Source blobs, their Git hashes and executable modes. The
+sole footer names the actual inner directory; its canonical alias matched
+device and inode. The six separate Counting leaves retain four generated
+modules, source/output mapping and metafile. The raw runner request keeps
+its prelaunch gate-unreached state, while the terminal runner result records
+the pass. Neither historical record is rewritten by later retention.
+
+Command wall was 1326.70020725 seconds and host child CPU 2778.36507 seconds.
+Collector wall was 1326.838466542 seconds with capture host CPU 2778.50256.
+The runner, including extra source guards, recorded 1328.228079541 seconds
+wall and 2783.54916 host child CPU seconds. These are distinct measurements.
+At runner start the host reported Darwin 27.2.0, arm64, 18 logical CPUs and
+load averages 1.513671875, 2.12744140625 and 1.92578125. No later load or
+controlled cache sample was taken. The lock-matching dependency view was
+warm; OS cache and shared load were uncontrolled, and guest CPU is unknown.
+Timeouts exclude guards, cleanup, reaping, group observation and I/O. The
+records prove no physical descendant or VM drain.
 
 ## Public custody and remaining acceptance
 
-Two read-only public units remain separate. The focused unit is
+Three read-only public units remain separate. The focused unit is
 `/Users/hughpyle/play/artroom-evidence/2026-10-31-s2-focused-kit-source`:
 122 files and 16,465,681 bytes. Its external full inventory is 25,413 bytes,
 SHA-256 `cfae14691a93eeee20a40a9e68078baf8d38bd69332ef3a6ce0efa228501b863`.
@@ -269,25 +310,40 @@ Its SUMS has SHA-256
 `6e6fc4cde8f8002bad3d01bb8600960e6e04281e7d335435bb312e0aebe4f43a`.
 The old R/ paths resolve inside that unit's `captures/captures` tree. The old
 T/ and P/ paths remain original command provenance, with retained host-tool and
-host-packet Source copies. None requires a temporary directory for readback.
+fixture-packet Source copies. None requires a temporary directory for readback.
 
 The browser unit B contains 302 files and 22,379,034 bytes. Its external full
 inventory is 59,383 bytes, SHA-256
 `fa4dcd25a3a45feed758734ca437025d389da3fcc6cc0297dca5dd5721672114`.
 Its 31,931-byte SUMS has SHA-256
 `9b7897bce1ff8e895bddf79faa83777bab4801033e653019ed2e73cebbe29b6e`.
-The compact Git manifest binds both complete inventories and SUMS, then lists
+The compact Git manifest binds the complete inventories and SUMS, then lists
 exact cited leaves. Those full inventories bind every remaining selected
-public leaf. Root reports copy 0/0 and portable verification of all 300 copied
+public leaf. The builder reports copy 0/0 and portable verification of all
+300 copied
 Source leaves. These are custody metadata operations, not project tests.
 The public unit excludes private fixture homes, custody bytes, keys, tool
 caches, dependencies and the browser executable. No live capture is included.
 
-Keep both units at least thirty days after landing. Removal requires a planner
-act naming their manifests. The full gate and exact-head review remain pending.
-S1 stays stopped. S4 real journey data, Brief binding and real-room actor and
-write witnesses remain separate obligations. This bounded corrected-host
-fixture pass grants no landing, deployment, provider or S2 completion claim.
+The gate unit `G/` is
+`/Users/hughpyle/play/artroom-evidence/2026-10-31-s2-full-gate`: 253 files
+and 60,502,943 bytes. Its 53,614-byte external inventory has SHA-256
+`d4f5aec2143cd3e111d36c1784077a5178a8b63493340411a7f5098b44d92703`.
+Its 30,451-byte SUMS has SHA-256
+`e272f667fea3f21b7dd7634819502fff2616534145e6e7e4530c05cf83d9be26`.
+The builder reports copy/seal 0/0, portable verification 0, and independent
+readback of all 251 selected Source leaves, modes, 253 sealed durable members
+and hashes. The complete outer, inner and Counting roots, runner Source and
+the builder's public readback remain inside the unit. Temporary copy-dispatch
+records are not claimed as retained and supply no citation digest here.
+
+Keep all three units at least thirty days after landing. Removal requires a
+planner act naming their manifests. Ruling `f152f847` permits this generic
+source delivery and separately pinned corrected-host fixture witness.
+Actual S1-room rendering, real-room actor and write observations remain owed.
+Both S1 rooms stay stopped. S4 journey data remains a separate obligation.
+No fixture or gate pass claims Native authority, provider success, production
+Origin admission, unmodified-host compatibility, deployment or live acceptance.
 
 [mcp-apps-capabilities]: https://github.com/modelcontextprotocol/ext-apps/blob/82221c0c8ce7661efa6771c9d461511b1650495f/specification/2026-01-26/apps.mdx#clientserver-capability-negotiation
 
