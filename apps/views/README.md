@@ -14,11 +14,14 @@ signers, configuration, and Brief bytes directly.
 
 `needs_you`, `work`, `context`, and `since` read native current state. Each
 call admits at most eight scopes, including Membership, Directory, and any
-support scopes. Six lane slots remain in the ordinary flat-directory case.
+support scopes. Those support scopes consume the same eight-scope limit.
+At most six lanes fit in the ordinary flat-directory case. Other support
+scopes leave fewer lane slots. A room with more than six lanes has omissions
+and offers no **Mark reviewed** action because the collection is incomplete.
 The adapter returns at most 50 attention rows and separately caps live Item
-rows at 512, history entries at 50, pages at 16, and HTTP attempts at 64.
-It counts session and signed-read fallback requests. Omissions and read
-failures remain visible. These limits do not claim complete room coverage.
+rows at 512, pages at 16, and HTTP attempts at 64. It counts session and
+signed-read fallback requests. Omissions and read failures remain visible.
+These limits do not claim complete room coverage.
 
 Each attention row names its exact definition pin and declaration clause.
 An assignment, an open request, and a role action mean different things.
@@ -33,6 +36,19 @@ Use the same selector encoded as `[scopeRef, askId]` in a Decision view's
 `subject`. Local body sequence refs resolve through the actual sealed entry
 and its checked hash. Missing bytes or an incomplete window offer no review.
 
+The history limit is 50 total entries from the selected lane, including
+entries unrelated to the Question. Each entry counts once, including the
+current text entry. Exactly 50 entries fit this history bound. Beyond
+50 lane entries, `context` and the Decision card are unavailable even for
+a small Question.
+
+The public context omits unrelated live lane items and does not repeat the
+current body in the version list. The Decision card has a separate 60 KiB
+display budget. `context` caps its complete serialized result at 256 KiB.
+JSON escaping and history metadata can exceed that bound even for a legal
+64 KiB Question body. In that case, `context` refuses with
+`context-output-limit` rather than returning a partial Question.
+
 The new Question Brief profile stores one immutable raw-byte digest. The
 fixed `dap://package/brief` resource serves only the operator-selected UTF-8
 file, at most 64 KiB, as `text/plain`. The adapter compares `digestBytes` of
@@ -45,8 +61,9 @@ under this `DAP_HOME`, after rechecking the mounted cut and exact heads.
 It signs no native act and returns no native accepted fact. A duplicate
 mark is harmless; a restart keeps the recorded marks. Another head appears
 once per response and repeats until the next explicit mark. The mark covers
-the displayed head summaries and captured scopes. It does not claim review
-of omitted scopes or every journal body between heads. Store conflicts,
+the displayed head summaries and captured scopes. A mark requires a complete
+collection with no unread scopes, omitted scopes, or omitted rows. It does
+not claim review of every journal body between heads. Store conflicts,
 unsafe paths, uncertain locks, and capacity limits stop the local write.
 Failures before the rename preserve the prior file. If the rename succeeds
 but the directory flush or readback fails, the new mark may already be

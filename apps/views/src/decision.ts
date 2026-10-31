@@ -1,6 +1,6 @@
 import { canonicalize, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { FieldValue, Item, ScopeRef } from "@generalbusiness/dap-contract";
-import { expectedOf, effectiveFields, type ActLike, type Card, type CardAction, type LocalReviewCapture, type ViewSource } from "@generalbusiness/dap-mcp";
+import { expectedOf, effectiveFields, ViewError, type ActLike, type Card, type CardAction, type LocalReviewCapture, type ViewSource } from "@generalbusiness/dap-mcp";
 import { RepoInAi, questionDefinition, result, type Context, type Row } from "./repo-in-ai.ts";
 import { sameOptional, Unread } from "./reads.ts";
 import { ReviewStoreError } from "./review-store.ts";
@@ -71,8 +71,14 @@ export function decisionSource(app: RepoInAi): ViewSource {
       }
     },
     admit: async (query, card) => {
-      const selected = selector(query.subject), { context } = await app.question(selected.scope, selected.ask);
-      if (context.ask.revision !== Number(card.identity.revision) || !context.briefMatches) throw new Unread("question-changed");
+      let context: Context;
+      try {
+        const selected = selector(query.subject);
+        ({ context } = await app.question(selected.scope, selected.ask));
+      } catch {
+        throw new ViewError("stale", "The selected Question could not be read again. Read the card again; no request was signed.");
+      }
+      if (context.ask.revision !== Number(card.identity.revision) || !context.briefMatches) throw new ViewError("stale", "The selected Question changed. Read the card again; no request was signed.");
     },
     markReviewed: async (capture, { admit }) => {
       try {
@@ -83,7 +89,7 @@ export function decisionSource(app: RepoInAi): ViewSource {
         const status = await app.options.reviewStore.mark(capture, admit);
         return result({ localStatus: status });
       } catch (error) {
-        if (error instanceof Unread || error instanceof ReviewStoreError) return result({ localStatus: "unavailable", reason: error.reason }, true);
+        if (error instanceof Unread || error instanceof ReviewStoreError || error instanceof ViewError) return result({ localStatus: "unavailable", reason: error.reason }, true);
         return result({ localStatus: "unavailable", reason: "local-review-write" }, true);
       }
     },

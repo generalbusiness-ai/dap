@@ -181,12 +181,19 @@ export class Collection {
     } while (cursor !== null);
     return found;
   }
+  keepEntry(frame: Frame, sealed: Sealed): Sealed {
+    const seq = sealed.entry.seq, key = canonicalize([frame.ref, seq]), old = this.#entries.get(key);
+    if (!Number.isSafeInteger(seq) || seq < 0 || seq > frame.head.seq || !sameOptional(sealed.entry.at, frame.ref) || entryHash(sealed.entry) !== sealed.hash || (seq === frame.head.seq && sealed.hash !== frame.head.hash)) throw new Unread("entry-mismatch");
+    if (old) { if (!sameOptional(old, sealed)) throw new Unread("entry-mismatch"); return old; }
+    if (this.counters.history >= LIMITS.history) throw new Unread("history-limit");
+    this.counters.history++; this.#entries.set(key, sealed); return sealed;
+  }
   async entry(frame: Frame, seq: number): Promise<Sealed> {
     const key = canonicalize([frame.ref, seq]), old = this.#entries.get(key); if (old) return old;
     if (!Number.isSafeInteger(seq) || seq < 0 || seq > frame.head.seq || this.counters.history >= LIMITS.history) throw new Unread("history-limit");
-    const got = await this.read(frame.ref, handle => handle.entry(seq)), sealed = got.value;
-    if (!got.complete || !sameOptional(sealed.entry.at, frame.ref) || sealed.entry.seq !== seq || entryHash(sealed.entry) !== sealed.hash || (seq === frame.head.seq && sealed.hash !== frame.head.hash)) throw new Unread("entry-mismatch");
-    this.counters.history++; this.#entries.set(key, sealed); return sealed;
+    const got = await this.read(frame.ref, handle => handle.entry(seq));
+    if (!got.complete || got.value.entry.seq !== seq) throw new Unread("entry-mismatch");
+    return this.keepEntry(frame, got.value);
   }
   async fact(frame: Frame, value: unknown): Promise<FactRef> {
     const seq = typeof value === "number" ? value : isFactRef(value) && sameOptional(value.at, frame.ref) ? value.seq : NaN;

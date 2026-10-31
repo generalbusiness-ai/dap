@@ -2238,10 +2238,26 @@ Work rows name each agent's controller beside the current conditions.
 Context distinguishes text versions and the requests for their approval.
 
 A read admits at most eight scopes, including Membership, Directory and
-other support reads. It returns at most 50 attention rows. Separate input
-bounds cover 512 live items and 50 history entries. Results report their
-read counts, omissions and incomplete discovery. A vector of observed
-heads does not claim one atomic snapshot of the whole room.
+other support reads. Support scopes consume the same eight-scope limit.
+At most six lanes fit in the ordinary flat-directory case, and other
+support scopes leave fewer lane slots. A room with more than six lanes
+has omissions and cannot mark reviewed because the collection is incomplete.
+The reads return at most 50 attention rows and read at most 512 live items.
+Results report their read counts, omissions and incomplete discovery.
+A vector of observed heads does not claim one atomic room snapshot.
+
+Question context reads at most 50 total entries from the selected lane,
+including entries unrelated to that Question. Each entry counts once,
+including the current text entry. Exactly 50 entries fit this history
+bound. Beyond 50 lane entries, `context` and the Decision card are
+unavailable even if the Question itself is small.
+
+The public context omits unrelated live lane items and does not repeat
+the current body in its version list. The Decision card has a separate
+60 KiB display budget. `context` caps the complete serialized result at
+256 KiB. JSON escaping and history metadata can exceed that bound even
+for a legal 64 KiB Question body. The read then refuses with
+`context-output-limit` rather than returning a partial Question.
 
 The question-with-Brief profile records a required `brief` digest when
 the question is asked. That value stays fixed when the text is revised.
@@ -2265,7 +2281,10 @@ guards decide whether an act is allowed.
 Mark reviewed writes only the captured full scope references and heads
 to local storage under `DAP_HOME`. It signs no native act. The server
 rechecks the displayed cut and heads before writing. A duplicate mark
-does not rewrite the file. A mark covers only the displayed scopes.
+does not rewrite the file. A mark requires a complete collection with no
+unread scopes, omitted scopes, or omitted rows. It covers the displayed
+heads and scopes, without claiming review of every journal body between
+heads.
 
 `since` is read-only: equal heads produce no row, and each new head
 appears once in a response. Repeated reads keep showing that change

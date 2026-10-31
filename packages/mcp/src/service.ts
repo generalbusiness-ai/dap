@@ -381,7 +381,7 @@ export class McpService {
     const given = isRecord(args) ? args : {};
     try {
       if (this.#applicationReads) {
-        if (this.#applicationReads.has(name)) return this.#applicationReads.call(name, args);
+        if (this.#applicationReads.has(name)) return this.#applicationReads.call(name, given);
         if (this.#viewTools.has(name) && this.#genericAdmitted(name)) return await this.#generic[name]!.run(given);
         return failed({ error: "unknown-tool", name });
       }

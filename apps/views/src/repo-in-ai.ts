@@ -1,5 +1,5 @@
 /** Read projections of the actual pinned lane records. These rows grant nothing. */
-import { canonicalize, digestBytes, isDigest, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, isDigest, isFactRef, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { Digest, FactRef, Item, ReadMinimum, ScopeRef } from "@generalbusiness/dap-contract";
 import { J4_DIGESTS, QUESTION_DIGESTS, QUESTION_BRIEF_DIGESTS, issueQuestions, issueQuestionsBrief } from "@generalbusiness/dap-lanes";
 import type { ApplicationReadCatalogue, CallResult, LocalReviewCapture } from "@generalbusiness/dap-mcp";
@@ -13,13 +13,16 @@ export interface Context {
   versions: { fact: FactRef; text: string }[]; conditions: unknown; brief: Digest | null; briefMatches: boolean;
   viewer: LocalReviewCapture["viewer"]; actions: readonly string[]; items: Item[];
 }
+export type PublicContext = Omit<Context, "items" | "versions"> & {
+  versions: ({ fact: FactRef; current: true } | { fact: FactRef; text: string })[];
+};
 export interface AdapterOptions extends ReadOptions { reviewStore: ReviewStore; brief: { bytes: Uint8Array; digest: Digest } }
 export const result = (value: Record<string, unknown>, isError = false): CallResult => ({ structuredContent: value, content: [{ type: "text", text: JSON.stringify(value) }], isError });
 const RESULT_BYTES = 256 * 1024;
 const resultBytes = (answer: CallResult): number => utf8(canonicalize(answer)).length;
 export const questions = (pin: unknown): boolean => pin === QUESTION_DIGESTS.issue || pin === QUESTION_BRIEF_DIGESTS.issue;
 const issue = (pin: unknown): boolean => questions(pin) || pin === J4_DIGESTS.issue;
-const matchItem = (value: unknown, id: number): boolean => value === id || (!!value && typeof value === "object" && "seq" in value && value["seq"] === id);
+const matchItem = (value: unknown, id: number, scope: ScopeRef): boolean => value === id || isFactRef(value) && sameOptional(value.at, scope) && value.seq === id;
 const row = (frame: Frame, item: Item, clause: string, values: Record<string, unknown>): Row => ({ scope: frame.ref, head: frame.head, item: item.id, type: item.type, rule: { definition: frame.summary.definition, clause }, ...values });
 
 export class RepoInAi {
@@ -53,7 +56,7 @@ export class RepoInAi {
       for (const frame of frames) {
         if (questions(frame.summary.definition)) for (const item of frame.items) {
           if (item.type !== "approval-request" || item.state !== "open" || !sameOptional(item.parties["requested"], collection.viewer)) continue;
-          const ask = frame.items.find(ask => ask.type === "ask" && matchItem(item.refs["ask"], ask.id));
+          const ask = frame.items.find(ask => ask.type === "ask" && matchItem(item.refs["ask"], ask.id, frame.ref));
           rows.push(row(frame, item, "acts.request-approval;items.approval-request", { category: "requested-review", bodyAt: item.refs["bodyAt"], currentBody: !!ask && sameOptional(item.refs["bodyAt"], ask.refs["bodyAt"]), permission: "not-determined" }));
         }
         else if (frame.summary.definition === J4_DIGESTS.change) {
@@ -81,7 +84,7 @@ export class RepoInAi {
           if (!isMemberRef(performer)) continue;
           if (!collection.isAgent(performer)) continue;
           const controller = collection.controller(performer); if (!controller) { collection.unread.push({ scope: frame.ref, reason: "agent-controller-unavailable" }); continue; }
-          const blocks = frame.items.filter(item => item.type === "block" && item.state === "blocked" && matchItem(item.refs["commitment"], commitment.id));
+          const blocks = frame.items.filter(item => item.type === "block" && item.state === "blocked" && matchItem(item.refs["commitment"], commitment.id, frame.ref));
           const intent = frame.items.find(item => item.type === "intent");
           const changes = frames.filter(other => other.summary.definition === J4_DIGESTS.change).flatMap(other => other.items.filter(item => item.type === "manifest" && item.state === "current" && !!item.refs["goal"] && typeof item.refs["goal"] === "object" && "at" in item.refs["goal"] && sameOptional(item.refs["goal"]["at"], frame.ref)).map(item => ({ scope: other.ref, head: other.head, manifest: item.id, relationship: "issue-linked; commitment/report proof not established" })));
           rows.push(row(frame, commitment, "items.commitment;items.block;items.intent", { state: commitment.state, agent: performer, controller,
@@ -100,27 +103,30 @@ export class RepoInAi {
       if (!ask || ask.type !== "ask") throw new Unread("question-absent");
       const bodyAt = await collection.fact(frame, ask.refs["bodyAt"]), body = ask.values["body"];
       if (!isDigest(body)) throw new Unread("question-body-unavailable");
-      const requests = (await collection.items(frame, "approval-request", ["open", "met", "withdrawn"])).filter(item => matchItem(item.refs["ask"], id));
-      const approvals = (await collection.items(frame, "approval", ["submitted"])).filter(item => matchItem(item.refs["ask"], id));
+      const requests = (await collection.items(frame, "approval-request", ["open", "met", "withdrawn"])).filter(item => matchItem(item.refs["ask"], id, frame.ref));
+      const approvals = (await collection.items(frame, "approval", ["submitted"])).filter(item => matchItem(item.refs["ask"], id, frame.ref));
       const approvalTexts: Context["approvalTexts"] = [];
       for (const approval of approvals) { const digest = approval.values["comment"]; approvalTexts.push({ approval: approval.id, text: isDigest(digest) ? await collection.text(frame, digest) : null }); }
       const comments = [] as Context["comments"];
       const versions: Context["versions"] = [];
-      // Collect only actual question entries, up to the same 50-entry allowance.
+      const facts = new Map<number, FactRef>();
+      // Verify the whole lane from genesis to this head. The bodyAt read and
+      // history share one allowance of 50 distinct entries, including genesis.
       let cursor: string | undefined, previous: SealedEntry | null = null;
       type SealedEntry = Awaited<ReturnType<Collection["entry"]>>;
       do {
         const got = await collection.read(scope, handle => handle.history(cursor));
-        if (collection.counters.history + got.value.length > LIMITS.history) throw new Unread("history-limit");
         for (const sealed of got.value) {
-          collection.counters.history++;
           const entry = sealed.entry;
           if ((!previous && (entry.seq !== 0 || entry.prev !== null)) || !sameOptional(entry.at, scope) || entryHashFor(sealed) !== sealed.hash || (previous && (entry.seq !== previous.entry.seq + 1 || entry.prev !== previous.hash))) throw new Unread("history-mismatch");
           previous = sealed;
+          collection.keepEntry(frame, sealed);
+          const fact = { at: scope, seq: entry.seq, hash: sealed.hash };
+          facts.set(entry.seq, fact);
           const input = entry.input;
           if (input.type === "act" && (input.signed.intent.kind === "ask" && entry.seq === id || input.signed.intent.kind === "revise-ask" && input.signed.intent.on === id)) {
             const digest = input.signed.intent.fields["body"];
-            if (isDigest(digest)) versions.push({ fact: { at: scope, seq: entry.seq, hash: sealed.hash }, text: await collection.text(frame, digest) });
+            if (isDigest(digest)) versions.push({ fact, text: await collection.text(frame, digest) });
           }
         }
         if (!got.complete && !got.next) throw new Unread("history-incomplete");
@@ -129,7 +135,8 @@ export class RepoInAi {
       } while (cursor);
       for (const item of frame.items.filter(item => item.type === "comment")) {
         const about = item.refs["about"];
-        if (!versions.some(version => matchItem(about, version.fact.seq)) && !approvals.some(approval => matchItem(about, approval.id)) && !(ask.refs["decisionAt"] !== null && sameOptional(about, ask.refs["decisionAt"]))) continue;
+        if (isFactRef(about) && !sameOptional(about, facts.get(about.seq))) continue;
+        if (!versions.some(version => matchItem(about, version.fact.seq, frame.ref)) && !approvals.some(approval => matchItem(about, approval.id, frame.ref)) && !(ask.refs["decisionAt"] !== null && sameOptional(about, ask.refs["decisionAt"]))) continue;
         const digest = item.values["body"]; comments.push({ item, text: isDigest(digest) ? await collection.text(frame, digest) : null });
       }
       const brief = pin === QUESTION_BRIEF_DIGESTS.issue && isDigest(ask.values["brief"]) ? ask.values["brief"] : null;
@@ -144,7 +151,9 @@ export class RepoInAi {
     if (!q || !isScopeRef(q.scope) || !Number.isSafeInteger(q.ask) || Number(q.ask) < 0) return result({ error: "question-selector" }, true);
     try {
       const { context, collection } = await this.question(q.scope, Number(q.ask));
-      const answer = result({ context, heads: collection.points(), counters: collection.counters, briefResource: { uri: "dap://package/brief", digest: this.brief.digest }, complete: true });
+      const { items: _items, versions, ...fields } = context;
+      const publicContext: PublicContext = { ...fields, versions: versions.map(version => sameOptional(version.fact, context.bodyAt) && version.text === context.body ? { fact: version.fact, current: true as const } : version) };
+      const answer = result({ context: publicContext, heads: collection.points(), counters: collection.counters, briefResource: { uri: "dap://package/brief", digest: this.brief.digest }, complete: true });
       return resultBytes(answer) > RESULT_BYTES ? result({ error: "context-output-limit", complete: false }, true) : answer;
     }
     catch (error) { return result({ error: "context-unavailable", reason: error instanceof Unread ? error.reason : "read-failed", complete: false }, true); }

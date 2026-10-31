@@ -3,14 +3,14 @@ import { b64url, canonicalize, digestBytes, domainBytes, utf8 } from "@generalbu
 import { DOMAINS, type SignedIntent } from "@generalbusiness/dap-contract";
 import { TransportError } from "@generalbusiness/dap-client";
 import { issueDemo } from "@generalbusiness/dap-lanes";
-import { LEGACY, MODERN, McpService, Wire, memoryStore, newSession, type ApplicationReadCatalogue, type CallResult, type Display, type Tool, type ViewSource } from "../src/index.ts";
+import { LEGACY, MODERN, ApplicationReads, McpService, Wire, memoryStore, newSession, type ApplicationReadCatalogue, type CallResult, type Display, type Tool, type ViewSource } from "../src/index.ts";
 import { fixedSigner } from "./fixtures.ts";
 import { SERVICE, StandIn } from "./support/standin.ts";
 
 const result = (name: string): CallResult => ({ content: [{ type: "text", text: name }], structuredContent: { name }, isError: false });
 const descriptor = (name: string): Tool => ({ name, description: `Bounded ${name} read.`, inputSchema: { type: "object", additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false } });
 const names = ["needs_you", "work", "context", "since"];
-const catalogue = (run: (name: string) => Promise<CallResult> = async name => result(name)): ApplicationReadCatalogue => ({ revision: digestBytes(utf8("adapter-1")), tools: names.map(name => ({ tool: descriptor(name), run: () => run(name) })) });
+const catalogue = (run: (name: string, args: Readonly<Record<string, unknown>>) => Promise<CallResult> = async name => result(name)): ApplicationReadCatalogue => ({ revision: digestBytes(utf8("adapter-1")), tools: names.map(name => ({ tool: descriptor(name), run: args => run(name, args) })) });
 
 // Invariant: static application catalogue operations and reads never acquire the generic room inventory.
 // The handlers are explicit local stand-ins; this is not a native authorization or eight-scope budget witness.
@@ -21,7 +21,7 @@ test("application list, calls and both subscription paths avoid inventory", asyn
     config: { read: async () => { configReads++; throw Error("Inventory must not be collected."); }, addRoot: async () => {} },
     fetch: async () => { requests++; throw Error("No application handler uses the native transport."); },
     every: () => { timers++; throw Error("A static catalogue needs no poll."); },
-    applicationReads: catalogue(async name => { called.push(name); return result(name); }),
+    applicationReads: catalogue(async (name, args) => { expect(args).toEqual({}); called.push(name); return result(name); }),
     views: { read: async () => ({ status: "empty", position: 0, count: 0, fallback: "Empty fixture." }) },
   });
   const page = await service.page();
@@ -36,6 +36,12 @@ test("application list, calls and both subscription paths avoid inventory", asyn
   await wire.handle({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: LEGACY } }, session, send);
   await wire.handle({ jsonrpc: "2.0", method: "notifications/initialized" }, session, send);
   expect((await wire.handle({ jsonrpc: "2.0", id: 2, method: "tools/list" }, session, send))?.error).toBeUndefined();
+  for (const [index, name] of ["needs_you", "work", "since"].entries()) {
+    const reply = await wire.handle({ jsonrpc: "2.0", id: 10 + index, method: "tools/call", params: { name } }, session, send);
+    expect(reply?.error).toBeUndefined();
+    expect((reply?.result as CallResult).structuredContent).toEqual({ name });
+  }
+  expect(called).toEqual([...names, "needs_you", "work", "since"]);
   await wire.handle({ jsonrpc: "2.0", id: 3, method: "subscriptions/listen", params: {
     notifications: { toolsListChanged: true }, _meta: { "io.modelcontextprotocol/protocolVersion": MODERN, "io.modelcontextprotocol/clientCapabilities": {} },
   } }, null, send);
@@ -78,7 +84,7 @@ test("catalogue collisions, shape and UTF-8 bounds fail before handler dispatch"
   let calls = 0;
   const service = make(catalogue(async () => { calls++; return { ...result("large"), structuredContent: { text: "é".repeat(140000) } }; }));
   expect((await service.call("needs_you", { text: "é".repeat(9000) })).structuredContent["reason"]).toBe("bounds");
-  expect((await service.call("needs_you", null)).structuredContent["reason"]).toBe("shape");
+  expect((await new ApplicationReads(catalogue(), []).call("needs_you", null)).structuredContent["reason"]).toBe("shape");
   expect(calls).toBe(0);
   expect((await service.call("needs_you", {})).structuredContent["reason"]).toBe("bounds");
   expect(calls).toBe(1);
