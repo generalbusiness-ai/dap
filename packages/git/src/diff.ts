@@ -5,6 +5,10 @@
  *
  * Over a bound, the answer stops, sets `truncated` and says "truncated" in its text. A missing or corrupt object is a
  * `GitRefusal`: the answer never shows a change it did not read.
+ *
+ * A repository's author chooses every name and line here. A path appears as one unambiguous line: see `shownPath`. File text
+ * stays exact, because `git apply` must reproduce the file, so a line keeps its ESC, CR and bidi characters. Read file text as
+ * data. The card shows it as text and never as markup.
  */
 import { GitRefusal, objectId, type ObjectId } from "./names.ts";
 import { READ_BOUNDS, Reader, parseTree, type GitSource, type TreeEntry } from "./reader.ts";
@@ -37,18 +41,40 @@ export interface BoundedDiff {
   truncated: boolean;
 }
 const CONTEXT = 3;
+/** The bytes of a path that a line shows. A longer path shows its start and its length, and the answer says `truncated`. */
+const PATH_BYTES = 1024;
+/** The characters of a shown path that a statement of a bound repeats. */
+const BRIEF_PATH = 128;
+/** Room kept for the closing line: its words and one brief path, at the most JSON bytes per character. */
+const CLOSING_BYTES = 1024;
 const encoder = new TextEncoder();
 const bytesOf = (line: string): number => encoder.encode(JSON.stringify(line)).length;
 /** Keep each line's own ending, so a last line without a newline differs from the same line with one. */
 const linesOf = (text: string): string[] => text.match(/[^\n]*\n|[^\n]+$/g) ?? [];
-/** A path's bytes as one safe line: control bytes and bytes that are not UTF-8 appear as \xNN. */
+const asByte = (c: string): string => `\\x${c.charCodeAt(0).toString(16).padStart(2, "0")}`;
+const asUnit = (c: string): string => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`;
+/** Bytes as one character each. It takes a name of any length, because it spreads a bounded slice at a time. */
+const byteString = (bytes: Uint8Array): string => {
+  let out = "";
+  for (let at = 0; at < bytes.length; at += 8192) out += String.fromCharCode(...bytes.subarray(at, at + 8192));
+  return out;
+};
+/**
+ * A path's bytes as one line that a reader can trust. In UTF-8, a backslash and each C0 control or DEL appear as \xNN, and each
+ * C1 control, bidi control or line separator appears as \uNNNN. A path that is not UTF-8 appears byte by byte, with each byte
+ * over ASCII as \xNN. An escaped backslash means that no name can show as the escape of another name.
+ */
 function shownPath(path: Uint8Array): string {
+  const kept = path.subarray(0, PATH_BYTES), over = path.length > PATH_BYTES;
   let text: string;
-  try { text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(path); }
-  catch { text = String.fromCharCode(...path).replace(/[\u0080-ÿ]/g, c => `\\x${c.charCodeAt(0).toString(16).padStart(2, "0")}`); }
+  // A cut can fall inside a character. In `stream` mode the decoder keeps those bytes back and does not call them invalid.
   // eslint-disable-next-line no-control-regex
-  return text.replace(/[\u0000-\u001f\u007f]/g, c => `\\x${c.charCodeAt(0).toString(16).padStart(2, "0")}`);
+  try { text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(kept, { stream: over }).replace(/[\u0000-\u001f\\\u007f]/g, asByte).replace(/[\u0080-\u009f\u061c\u200e\u200f\u2028-\u202e\u2066-\u2069]/g, asUnit); }
+  // eslint-disable-next-line no-control-regex
+  catch { text = byteString(kept).replace(/[\u0000-\u001f\\\u007f-\u00ff]/g, asByte); }
+  return over ? `${text}... (${path.length} bytes)` : text;
 }
+const brief = (shown: string): string => shown.length > BRIEF_PATH ? `${shown.slice(0, BRIEF_PATH)}...` : shown;
 function textOf(data: Uint8Array): string | null {
   if (data.includes(0)) return null;
   try { return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(data); } catch { return null; }
@@ -59,7 +85,7 @@ const joined = (prefix: Uint8Array, name: Uint8Array): Uint8Array => {
   out.set(prefix); out[prefix.length] = 0x2f; out.set(name, prefix.length + 1);
   return out;
 };
-const nameKey = (name: Uint8Array): string => String.fromCharCode(...name);
+const nameKey = byteString;
 
 class Walk {
   readonly #reader: Reader;
@@ -80,10 +106,10 @@ class Walk {
   }
   get text(): string { return this.#lines.join(""); }
   #stop(why: string): void { this.why ??= why; this.stopped = true; }
-  /** Add lines all or none, keeping room for the closing line. */
+  /** Add lines all or none, keeping room for the closing line, so the whole text stays inside its bound. */
   #emit(...lines: string[]): boolean {
     const size = lines.reduce((sum, line) => sum + bytesOf(line), 0);
-    if (this.#size + size > this.#bounds.textBytes - 256) { this.#stop(`the text reached its bound of ${this.#bounds.textBytes} bytes`); return false; }
+    if (this.#size + size > this.#bounds.textBytes - CLOSING_BYTES) { this.#stop(`the text reached its bound of ${this.#bounds.textBytes} bytes`); return false; }
     this.#lines.push(...lines); this.#size += size;
     return true;
   }
@@ -105,7 +131,7 @@ class Walk {
       return parseTree(data);
     } catch (error) {
       if (!(error instanceof GitRefusal) || error.reason !== "too-large") throw error;
-      this.why ??= `the tree ${shown || "at the root"} is over its bound`;
+      this.why ??= `the tree ${brief(shown) || "at the root"} is over its bound`;
       this.#emit(`omitted: the tree ${shown || "at the root"} is too large to read\n`);
       return null;
     }
@@ -120,7 +146,7 @@ class Walk {
       return data;
     } catch (error) {
       if (!(error instanceof GitRefusal) || error.reason !== "too-large") throw error;
-      this.why ??= `the file ${shown} is over its bound of ${this.#bounds.blobBytes} bytes`;
+      this.why ??= `the file ${brief(shown)} is over its bound of ${this.#bounds.blobBytes} bytes`;
       this.#emit(`omitted: the file ${shown} is too large to read\n`);
       return null;
     }
@@ -130,6 +156,7 @@ class Walk {
     if (this.files >= this.#bounds.files) { this.#stop(`the answer reached its bound of ${this.#bounds.files} files`); return; }
     this.files++;
     const shown = shownPath(path);
+    if (path.length > PATH_BYTES) this.why ??= `a path of ${path.length} bytes shows only its first ${PATH_BYTES}`;
     if (before?.kind === "gitlink" || after?.kind === "gitlink") {
       this.#emit(`submodule ${shown}: ${before?.id ?? "none"} to ${after?.id ?? "none"}\n`);
       return;

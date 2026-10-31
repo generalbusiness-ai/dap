@@ -104,6 +104,13 @@ read:
 | A merge your key signed is `unknown`, or this server has an unresolved send at this lane. | **Check original request** only |
 | Another member's merge is `unknown`. | None. The card names the merger. |
 
+While this server has an unresolved send at the lane, a retained card signs
+nothing. **Check original request** signs nothing either. After the request's
+`notAfter`, at most 15 minutes after it was signed, the check sends the same
+bytes once, so the scope answers with the first entry or refuses the request as
+`expired`. A refusal frees the card's acts. Before `notAfter`, the receipt gives
+the time to check again.
+
 **Approve** names the first rules extent of class `content`. A review counts
 only for the extent it names, so an approval for a change to the rules or to
 deployment files needs the ordinary `review-verdict` act.

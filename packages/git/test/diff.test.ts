@@ -51,7 +51,7 @@ test("over a bound the answer says truncated and keeps what it read; a binary fi
   const text = await boundedDiff(source, f.base, f.long);
   expect([text.truncated, text.text.endsWith("This diff does not show the whole change.\n")]).toEqual([true, true]);
   expect(text.text).toContain("truncated: the text reached its bound of 40960 bytes");
-  expect(new TextEncoder().encode(JSON.stringify(text.text)).length).toBeLessThanOrEqual(DIFF_BOUNDS.textBytes + 512);
+  expect(new TextEncoder().encode(JSON.stringify(text.text)).length).toBeLessThanOrEqual(DIFF_BOUNDS.textBytes);
   const large = await over(f.large, { blobBytes: 2048 });
   expect([large.truncated, large.text]).toEqual([true, expect.stringContaining("omitted: the file kept is too large to read\n")]);
   expect(large.text).toContain("truncated: the file kept is over its bound of 2048 bytes");
@@ -71,4 +71,53 @@ test("a read over the transport's bound says truncated; a missing object is a re
   const absent: GitSource = { ...source, object: async (id, limit) => id === f.next ? null : source.object(id, limit) };
   await expect(boundedDiff(absent, f.base, f.next)).rejects.toMatchObject({ reason: "missing-object" });
   await expect(boundedDiff(source, "not an id", f.next)).rejects.toBeInstanceOf(GitRefusal);
+});
+
+/** A commit whose tree holds one file under a name of exact bytes. */
+const named = (name: Uint8Array, content: string): string => commit(dir, put(dir, "tree", Buffer.concat([Buffer.from("100644 "), name, Buffer.from([0]), Buffer.from(blob(dir, content), "hex")])), [f.base]);
+const utf8Name = (name: string): Uint8Array => new TextEncoder().encode(name);
+const jsonBytes = (text: string): number => new TextEncoder().encode(JSON.stringify(text)).length;
+
+test("a long path stays inside the text bound, with its closing line, and the answer says truncated", async () => {
+  for (const size of [60_000, 90_000]) {
+    const answer = await boundedDiff(source, f.base, named(utf8Name("n".repeat(size)), "text\n"));
+    expect(jsonBytes(answer.text)).toBeLessThanOrEqual(DIFF_BOUNDS.textBytes);
+    expect(answer.truncated).toBe(true);
+    expect(answer.text).toContain(`... (${size} bytes)`);
+    expect(answer.text).toContain("truncated: a path of");
+  }
+  // The bound that names the path repeats only its start, in the worst case for JSON: every character escapes.
+  const escapes = new Uint8Array(60_000).fill(0x01);
+  const over = await boundedDiff(source, f.base, named(escapes, lines(4000)), { ...DIFF_BOUNDS, blobBytes: 2048 });
+  expect(over.text).toContain("omitted: the file \\x01");
+  expect(jsonBytes(over.text)).toBeLessThanOrEqual(DIFF_BOUNDS.textBytes);
+  // Text and closing line together meet a small bound as well.
+  const small = await boundedDiff(source, f.base, named(utf8Name("n".repeat(60_000)), lines(4000)), { ...DIFF_BOUNDS, textBytes: 8192 });
+  expect(jsonBytes(small.text)).toBeLessThanOrEqual(8192);
+  expect(small.text.endsWith("This diff does not show the whole change.\n")).toBe(true);
+});
+
+test("an entry name of half a megabyte truncates and does not throw", async () => {
+  const valid = await boundedDiff(source, f.base, named(utf8Name("n".repeat(500_000)), "text\n"));
+  expect([valid.truncated, valid.files]).toEqual([true, 4]);
+  const notUtf8 = await boundedDiff(source, f.base, named(new Uint8Array(500_000).fill(0xfe), "text\n"));
+  expect(notUtf8.truncated).toBe(true);
+  expect(notUtf8.text).toContain("\\xfe\\xfe");
+});
+
+test("a shown path escapes controls, bidi characters and the backslash, so no name reads as another; file text stays exact", async () => {
+  const line = async (name: Uint8Array): Promise<string> => (await boundedDiff(source, f.base, named(name, "text\n"))).text.split("\n").find(text => text.startsWith("+++ b/"))!.slice("+++ b/".length);
+  // A real newline, and the four characters that its escape is made of.
+  const real = await line(utf8Name("a\nb")), literal = await line(utf8Name("a\\x0ab"));
+  expect([real, literal]).toEqual(["a\\x0ab", "a\\x5cx0ab"]);
+  expect(await line(utf8Name("a\u009bb"))).toBe("a\\u009bb");
+  expect(await line(utf8Name("a\u202eb\u2066c\u200fd\u061ce\u2028f"))).toBe("a\\u202eb\\u2066c\\u200fd\\u061ce\\u2028f");
+  expect(await line(utf8Name("a\u001bb\u007fc"))).toBe("a\\x1bb\\x7fc");
+  // One byte that is not UTF-8 shows the whole name byte by byte, and its backslash escapes too.
+  expect(await line(new Uint8Array([0x61, 0x5c, 0x9b]))).toBe("a\\x5c\\x9b");
+  // Ordinary non-ASCII names stay readable.
+  expect(await line(utf8Name("caf\u00e9/\u6587".replace("/", "-")))).toBe("caf\u00e9-\u6587");
+  // File text keeps these characters, because the patch must reproduce the file.
+  const text = await boundedDiff(source, f.base, named(utf8Name("plain"), "esc \u001b[31m cr\r bidi \u202e\n"));
+  expect(text.text).toContain("+esc \u001b[31m cr\r bidi \u202e\n");
 });

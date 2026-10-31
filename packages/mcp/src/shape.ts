@@ -142,7 +142,8 @@ export function shapeAt(given: unknown): Record<string, number> | undefined {
 export function capturedExpected(at: Record<string, number> | undefined, fresh: Record<string, number>, act?: Pick<ActLike, "also">): Record<string, number> {
   if (at === undefined) return fresh;
   // A subject the captured display showed may since have left the live summary: a superseded version is final. Its captured
-  // revision stays, so the scope refuses the stale act. The name must still be one this act binds.
+  // revision stays, so the scope refuses the stale act. An `also` name must be one this act binds. For `on`, the scope decides:
+  // it requires exactly the keys it reads, and it refuses an extra `on` as `bad-intent`.
   const left = (name: string): boolean => {
     if (act === undefined) return false;
     if (name === "on") return true;

@@ -2298,9 +2298,22 @@ captured revision.
 A card source can ask for the check of an earlier send. Each read of such a
 card asks custody for an act that this server sent at the card's scope with
 no outcome kept. If custody holds one, the card offers only **Check original
-request**, and it keeps that offer after a restart. An act that never reached
-the scope stays unknown, and the card keeps offering the check. No card
-resends it.
+request**, and it keeps that offer after a restart. While custody holds such
+an act, every other act of that card and of any retained card at that scope is
+refused before it signs. This server's custody is the limit of that refusal:
+a card with another custody home reaches the scope, and the scope judges its
+revisions.
+
+The check asks the scope for the exact request and signs nothing. Before the
+signed intent's `notAfter`, an act with no answer stays unknown, and the receipt
+gives the time to check again. Intents live at most 15 minutes. After
+`notAfter`, the check sends the same bytes once. An act that landed answers with
+its first entry. An act that never arrived is refused as `expired`, so the
+record ends as `refused` and the next read offers the card's acts again. If the
+scope cannot be reached, the record stays unknown.
+
+If this server holds no record, the check says so and says that this does not
+show the act was not sent.
 
 **View diff** on a card with `diffRead` goes through `view_act`, because it
 signs one `read-token` act. It reads one bounded `diff` and shows the answer

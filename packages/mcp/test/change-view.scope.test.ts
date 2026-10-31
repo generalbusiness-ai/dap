@@ -259,7 +259,8 @@ test("witness 2: with a merge unknown, a merge from any card is refused, and the
     expect(item.state).toBe("unknown");
     expect(f.room.git.refs.get("refs/heads/main")).toBe(mainBefore);
 
-    // A card from before the unknown outcome: it signs what it displayed, and the scope refuses.
+    // A card from before the unknown outcome, with another custody home, so no custody check can see the merge. It signs what it
+    // displayed, and the scope refuses.
     const refused = await press(stale, "old", old, "merge");
     expect([refused.answer["answer"], refused.answer["reason"], refused.answer["name"]], JSON.stringify(refused.answer)).toEqual(["refused", "guard-failed", "merge-in-progress"]);
     expect(stale.signed.map(intent => [intent.kind, intent.fields["manifest"], intent.expected])).toEqual([["merge", manifest, displayed]]);
@@ -278,8 +279,16 @@ test("witness 2: with a merge unknown, a merge from any card is refused, and the
     expect([noSuch.isError, noSuch.structuredContent["reason"]]).toEqual([true, "shape"]);
     expect(self.signed.length).toBe(signedBefore);
 
-    // Its check signs nothing and sends nothing. This connection holds no custody of the merge, so the check of the very
-    // connection that sent it comes next.
+    // This connection holds no custody of the merge, and the merge exists. So its check claims nothing about the merge.
+    const elsewhere = await press(self, "fresh", fresh, "check-original");
+    expect(elsewhere.answer["answer"], JSON.stringify(elsewhere.answer)).toBe("not-found");
+    expect(elsewhere.answer["sentence"]).toContain("This server keeps no record");
+    expect(elsewhere.answer["next"]).toContain("does not show that the act was not sent");
+    expect(JSON.stringify(elsewhere.answer)).not.toMatch(/sign with/i);
+    expect(elsewhere.display.receipt).toContain("does not show that it was not sent");
+    expect(self.signed.length).toBe(signedBefore);
+
+    // The check of the very connection that sent it signs nothing and reports the act.
     const sentBefore = a.signed.length;
     const mine = await card(a, "after", "view_change", changeSubject(lane));
     expect(mine.card!.actions.map(action => action.purpose)).toEqual(["check-original"]);
@@ -417,6 +426,21 @@ test("witness 4: View diff signs one read-token act and shows the bounded diff; 
     expect((none.display as Shown & { query: { page: string } }).query.page).toBe("item");
     expect(none.display.receipt).toContain("Diff not shown: The server shows no diff");
     expect(none.display.card!.body).not.toContain("truncated");
+
+    // A SHA-256 commit, which this reader cannot take: the card signs nothing, and no credential goes.
+    await propose(f, lane, work, base, "e".repeat(64), "f".repeat(64), hidden);
+    const c = application(f);
+    const long = await card(c, "long", "view_change", changeSubject(lane));
+    const refused = await press(c, "long", long, "view-diff");
+    expect(refused.answer["error"], JSON.stringify(refused.answer)).toBe("shape");
+    expect(c.signed).toEqual([]);
+    expect(refused.display.receipt).toContain("Diff not shown");
+    const token2 = await act(f.owner, "destination", "read-token", { on: 0, fields: { hours: 1 } });
+    await settle(f, f.repository.destination);
+    const direct = await f.owner.call("diff", { entry: token2.seq, base: "e".repeat(64), integration: small.integration });
+    expect([direct.isError, direct.structuredContent["error"]]).toEqual([true, "shape"]);
+    const unspent = await f.owner.call("diff", { entry: token2.seq, base, integration: small.integration });
+    expect(unspent.isError, JSON.stringify(unspent.structuredContent)).toBe(false);
   } finally { await f.room.done(); }
 }, 120_000);
 
@@ -450,5 +474,56 @@ test("after a lost reply and a restart, a fresh card over the same custody offer
     const after = await card(second, "after", "view_change", changeSubject(lane));
     expect(after.card!.unresolvedOriginal).toBeUndefined();
     expect(after.card!.actions.map(action => action.id)).toEqual(["merge"]);
+  } finally { await f.room.done(); }
+}, 120_000);
+
+test("an act that never arrived: a retained card signs nothing, the check sends nothing before notAfter, and after it the scope's refusal frees the card", async () => {
+  const f = await roomOf();
+  try {
+    const lane = await changeLane(f, "TEST never arrived");
+    await proposeFile(f, lane);
+    const custody = memoryStore();
+    const a = application(f, custody), other = application(f, custody);
+    await approveOn(a, "approve", lane);
+    const ready = await card(a, "merge", "view_change", changeSubject(lane));
+    const retained = await card(other, "retained", "view_change", changeSubject(lane));
+    expect([ready.card!.actions.map(action => action.id), retained.card!.actions.map(action => action.id)]).toEqual([["merge"], ["merge"]]);
+    const merges = async () => (await f.owner.ok("items", { scope: lane.scope, type: "merge" }))["items"];
+
+    f.room.dropNextRequest("/acts");
+    const lost = await press(a, "merge", ready, "merge");
+    expect(lost.answer["error"], JSON.stringify(lost.answer)).toBe("transport");
+    expect(await merges(), "the merge never arrived").toEqual([]);
+    const signed = a.signed.length;
+
+    // A retained card over the same custody: no second merge is signed, although no guard at the scope would stop it.
+    const held = await other.call("view_act", { view: "retained", cut: retained.cut, action: "merge" });
+    expect([held.isError, held.structuredContent["reason"]], JSON.stringify(held.structuredContent)).toEqual([true, "stale"]);
+    expect(other.signed).toEqual([]);
+
+    // Before notAfter the act could still land. The check says when to ask again, and sends nothing.
+    const early = await press(a, "merge", lost.display, lost.display.card!.actions[0]!.id);
+    expect([early.answer["answer"], typeof early.answer["checkAfter"]], JSON.stringify(early.answer)).toEqual(["unknown", "string"]);
+    expect(early.answer["next"]).toContain("Check the original request again after");
+    expect(early.answer["next"]).not.toContain("same tool");
+    expect(early.display.receipt).toContain(`check the original request after ${String(early.answer["checkAfter"])}`);
+    expect(early.display.card!.actions.map(action => action.purpose)).toEqual(["check-original"]);
+    expect(await merges(), "the check sent nothing").toEqual([]);
+
+    // After notAfter the same bytes go once, and the scope refuses them: an answer, and no inference from the clock.
+    f.room.advance(16 * 60_000);
+    await f.room.pause([lane.scope]);
+    const late = await press(a, "merge", early.display, early.display.card!.actions[0]!.id);
+    expect([late.answer["answer"], late.answer["phase"], late.answer["reason"]], JSON.stringify(late.answer)).toEqual(["refused", "refused", "expired"]);
+    expect(late.display.receipt).toContain("refused (expired)");
+    expect(a.signed.length, "the check signs nothing").toBe(signed);
+    expect(await merges(), "the expired act took no effect").toEqual([]);
+
+    // Custody holds an outcome now, so a fresh card offers its acts, and a new merge is a new request.
+    const fresh = await card(other, "fresh", "view_change", changeSubject(lane));
+    expect(fresh.card!.unresolvedOriginal).toBeUndefined();
+    expect(fresh.card!.actions.map(action => action.id)).toEqual(["merge"]);
+    const merged = await press(other, "fresh", fresh, "merge");
+    expect(merged.answer["answer"], JSON.stringify(merged.answer)).toBe("accepted");
   } finally { await f.room.done(); }
 }, 120_000);

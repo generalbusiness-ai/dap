@@ -29,7 +29,7 @@ interface Instance {
 export const VIEW_DIFF = "view-diff";
 export interface ViewPorts {
   /** Sign one read-token act and read one bounded diff. `admit` runs before the signature. */
-  readDiff?: (read: NonNullable<Card["diffRead"]>, admit: () => void) => Promise<CallResult>;
+  readDiff?: (read: NonNullable<Card["diffRead"]>, admit: () => void | Promise<void>) => Promise<CallResult>;
   /** The key of an act sent at this scope with no outcome kept. */
   unresolved?: (target: string) => Promise<{ idempotencyKey: string } | null>;
 }
@@ -42,7 +42,9 @@ function receiptLine(card: Card, result: CallResult): string {
   const reason = [answer["reason"], answer["name"]].filter((value): value is string => typeof value === "string").join(", ");
   const uncertain = answer["answer"] === "unknown" || answer["answer"] === "unavailable" || answer["error"] === "transport" || answer["error"] === "custody";
   let outcome: string;
-  if (uncertain) outcome = "outcome unknown; check the original request";
+  const later = typeof answer["checkAfter"] === "string" ? ` after ${answer["checkAfter"]}` : "";
+  if (uncertain) outcome = `outcome unknown; check the original request${later}`;
+  else if (answer["answer"] === "not-found") outcome = "this server keeps no record of it, which does not show that it was not sent";
   else if (answer["answer"] === "accepted") {
     const fact = answer["fact"] as { seq?: unknown } | undefined;
     outcome = `accepted${typeof fact?.seq === "number" ? ` (entry ${fact.seq})` : ""}`;
@@ -124,11 +126,19 @@ export class ViewSessions {
   readonly #instances = new Map<string, Instance>();
   readonly #current = new Map<ViewKind, string>();
   constructor(readonly source: ViewSource, readonly access: Parameters<ViewSource["read"]>[1], readonly perform: (kind: string, args: Record<string, unknown>, admit: () => void | Promise<void>) => Promise<CallResult>, readonly settle: (args: Record<string, unknown>) => Promise<CallResult>, readonly receiptOf: (result: CallResult) => Receipt | null = () => null, readonly ports: ViewPorts = {}) {}
+  async #openOriginal(card: Card, query: ViewQuery): Promise<{ idempotencyKey: string } | null> {
+    if (card.declared || !this.source.checksOriginals?.(query) || !this.ports.unresolved) return null;
+    return this.ports.unresolved(card.identity.subject.scope);
+  }
+  /** A retained card read before the unknown outcome. It signs nothing while custody holds that outcome open. */
+  async #refuseWhileOpen(card: Card, query: ViewQuery): Promise<void> {
+    if (await this.#openOriginal(card, query)) throw new ViewError("stale", "An earlier act at this scope has no known outcome. Read the card again and check the original request; no new act was sent.");
+  }
   /** A record of custody outlives this process, and a retained card does not. So each read of the card asks custody again. */
   async #checkOriginal(projection: Projection, query: ViewQuery): Promise<void> {
     const card = projection.card;
-    if (!card || card.declared || !this.source.checksOriginals?.(query) || !this.ports.unresolved) return;
-    const open = await this.ports.unresolved(card.identity.subject.scope);
+    if (!card) return;
+    const open = await this.#openOriginal(card, query);
     if (!open) return;
     card.unresolvedOriginal = true;
     card.actions = [{ id: "check-original", label: "Check original request", purpose: "check-original", kind: "", args: { target: card.identity.subject.scope, idempotencyKey: open.idempotencyKey } }];
@@ -338,7 +348,11 @@ export class ViewSessions {
     if (card.unresolvedOriginal) throw new ViewError("busy", "Check the original request before you read the diff.");
     instance.busy = true;
     try {
-      const result = await this.ports.readDiff(structuredClone(read), () => this.#admit(instance, cut));
+      const result = await this.ports.readDiff(structuredClone(read), async () => {
+        this.#admit(instance, cut);
+        await this.#refuseWhileOpen(card, instance.query);
+        this.#admit(instance, cut);
+      });
       this.#admit(instance, cut);
       const text = result.structuredContent["text"];
       if (result.isError || typeof text !== "string") {
@@ -347,8 +361,15 @@ export class ViewSessions {
         return { result, display: this.#display(instance) };
       }
       const query: ViewQuery = { ...instance.query, page: "diff" };
+      let shown: Projection;
+      try { shown = checked({ ...instance.projection, card: { ...structuredClone(card), body: text } }, query); }
+      catch (error) {
+        if (!(error instanceof ViewError)) throw error;
+        instance.receipt = "Diff not shown: the card cannot hold this answer. The one-time credential is spent.";
+        return { result, display: this.#display(instance) };
+      }
       instance.diff = { of: canonicalize([card.identity, read]), text };
-      instance.projection = checked({ ...instance.projection, card: { ...structuredClone(card), body: text } }, query);
+      instance.projection = shown;
       instance.query = query;
       instance.cut++;
       return { result, display: this.#display(instance) };
@@ -376,9 +397,11 @@ export class ViewSessions {
       args["idempotencyKey"] = `view-${crypto.randomUUID()}`;
     }
     instance.busy = true;
-    const dispatch = action.purpose === "check-original" ? this.settle(args) : this.perform(action.kind, args, () => {
+    const dispatch = action.purpose === "check-original" ? this.settle(args) : this.perform(action.kind, args, async () => {
       this.#admit(instance, cut);
-      return this.source.admit?.(instance.query, card, action).then(() => this.#admit(instance, cut));
+      await this.#refuseWhileOpen(card, instance.query);
+      await this.source.admit?.(instance.query, card, action);
+      this.#admit(instance, cut);
     });
     if (action.purpose !== "check-original") instance.dispatches.set(dispatchKey, dispatch);
     try {

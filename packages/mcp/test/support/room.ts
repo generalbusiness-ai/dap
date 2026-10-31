@@ -71,6 +71,8 @@ export interface Room {
   now(): number;
   /** The next request whose path ends with `suffix` reaches the Worker, and its reply is lost: a STAND-IN for a dropped reply. */
   loseNextReply(suffix: string): void;
+  /** STAND-IN for a fault: the next request to a path with this suffix never reaches the scope. */
+  dropNextRequest(suffix: string): void;
   fetch: Fetch;
   /** The Git host STAND-IN: `OwnGit`, with the repository the destination publishes to. */
   git: OwnGit;
@@ -118,8 +120,9 @@ export function mcpRoom(external?: { finish: "external"; capture: (life: ReturnT
     const nodes = [...known, ...waiting.filter((scope) => !known.some((node) => node.name === scope)).map((scope) => lifetime.platform(scope as ScopeId))];
     await driveFixture(nodes, wait);
   };
-  let lose: string | null = null;
+  let lose: string | null = null, drop: string | null = null;
   const fetch: Fetch = (async (url: string, init?: RequestInit) => {
+    if (drop !== null && new URL(url).pathname.endsWith(drop)) { drop = null; throw new Error("scripted loss of the request"); }
     const response = await lifetime.waitFor(sessionOwner, () => routed(url, init));
     if (lose !== null && new URL(url).pathname.endsWith(lose)) { lose = null; await response.body?.cancel(); throw new Error("scripted loss of the reply"); }
     return response;
@@ -128,6 +131,7 @@ export function mcpRoom(external?: { finish: "external"; capture: (life: ReturnT
     now: () => lifetime.now(),
     know: (scope) => { if (!known.some((node) => node.name === scope)) known.push(lifetime.platform(scope)); },
     loseNextReply: (suffix) => { lose = suffix; },
+    dropNextRequest: (suffix) => { drop = suffix; },
     pause, wait, active, fetch, done, git: at.stand as OwnGit,
     platform: (scope) => lifetime.platform(scope),
     advance: (ms) => lifetime.advance(ms),

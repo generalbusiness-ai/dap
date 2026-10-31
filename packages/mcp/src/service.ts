@@ -15,13 +15,13 @@ import { invitationRedemptionFields } from "@generalbusiness/dap-client";
 
 import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FieldValue, Item, PlatformDefinition, Read, Receipt, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, isReceipt, entryHash, parseStrict, scopeIdOf, textDigest, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, isReceipt, entryHash, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { TransportError, ScopeHandle, ApplicationPackageError, commonsInstallCheck, loadCommons, readApplicationPackage, applicationScreenPath, readApplicationInstallOptions, readDeviceApplicationInstallOptions, readApplicationReleaseUri, readApplicationTrust, applicationTrustForSource, signedApplicationInstall, signedApplicationInstall2, signedDeviceApplicationInstall, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import { TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, platform, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, COMMONS_COHORT } from "@generalbusiness/dap-platform";
 import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/dap-git/application";
 import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
-import { Custody, CustodyError, Lost, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity } from "./custody.ts";
+import { Custody, CustodyError, Lost, TERMINAL, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity } from "./custody.ts";
 import { AT_INPUT, describeAct, grantAction, onOf, schemaOf, type DefinitionLike } from "./describe.ts";
 import { answered, archivedAnswer, clip, finding, type Finding } from "./errors.ts";
 import { Kept, definitionOf, readInventory, readPartitionIndexes, standingIn, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
@@ -186,7 +186,8 @@ class Stop extends Error { constructor(readonly result: CallResult) { super("sto
 const stopCall = (f: Finding): never => { throw new Stop(failed(f)); };
 
 const VIEW_DIFF_POLLS = 8;
-const COMMIT_ID = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
+/** The Git reader takes SHA-1 objects. A longer ID is refused here, before a signature or a spent credential. */
+const COMMIT_ID = /^[0-9a-f]{40}$/;
 const DIFF_OUTPUT = { type: "object", properties: { base: { type: "string" }, integration: { type: "string" }, files: { type: "integer", minimum: 0 }, truncated: { type: "boolean" }, text: { type: "string" } }, required: ["base", "integration", "files", "truncated", "text"] };
 const READ = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 const WRITE = { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false };
@@ -265,7 +266,7 @@ export class McpService {
     const source = declared ?? port.views;
     const presentation = new ViewResources(port.presentation ?? source?.presentation ?? PRESENTATION);
     this.resources = port.packageBrief ? new PackageResources(presentation, port.packageBrief) : presentation;
-    const views = source ? new ViewSessions(source, { call: (name, args) => this.call(name, args) }, (kind, args, admit) => this.#viewPerform(kind, args, admit), (args) => port.applicationReads ? this.#viewSettle(args) : this.call("settle", args), result => this.#readReceipts.get(result) ?? null, { readDiff: (read, admit) => this.#viewDiff(read, admit), unresolved: target => this.#viewUnresolved(target) }) : null;
+    const views = source ? new ViewSessions(source, { call: (name, args) => this.call(name, args) }, (kind, args, admit) => this.#viewPerform(kind, args, admit), (args) => this.#viewSettle(args), result => this.#readReceipts.get(result) ?? null, { readDiff: (read, admit) => this.#viewDiff(read, admit), unresolved: target => this.#viewUnresolved(target) }) : null;
     const cards = views ? viewTools(views, source?.screens) : {};
     this.#viewTools = new Set(Object.keys(cards));
     this.#generic = { ...this.#genericTools(), ...cards };
@@ -424,8 +425,10 @@ export class McpService {
    * View diff: one signed read-token act, one credential, one bounded read. The act goes under custody, like any act, and asks
    * for nothing else; the credential stays in this function. The read stops after a bounded wait for the mint.
    */
-  async #viewDiff(read: { target: string; base: string; integration: string }, admit: () => void): Promise<CallResult> {
+  async #viewDiff(read: { target: string; base: string; integration: string }, admit: () => void | Promise<void>): Promise<CallResult> {
     if (!this.#port.readDiff) return failed({ error: "diff", why: "this server has no Git reader", spent: false });
+    const unreadable = commitIdFault(read);
+    if (unreadable) return unreadable;
     try {
       const signed = await this.#perform(null, { target: read.target, on: 0, fields: { hours: 1 }, idempotencyKey: `view-diff-${crypto.randomUUID()}` }, "read-token", undefined, admit);
       if (signed.structuredContent["answer"] !== "accepted") return signed;
@@ -453,7 +456,7 @@ export class McpService {
 
   /** Check only a server-retained view original; the public application catalogue still exposes no settle tool. */
   async #viewSettle(args: Args): Promise<CallResult> {
-    try { return await this.#settle(args); }
+    try { return await this.#settle(args, { resendExpired: true }); }
     catch (error) { return this.#failure(error, args); }
   }
 
@@ -960,7 +963,13 @@ export class McpService {
     return ok({ step: { resource: resource.scope, capability, step, phase: stepped.step.phase, answer: stepped.answer === null ? null : projectAnswer(stepped.answer) }, intent: intentDigest(stepped.record.envelope.signed.intent), ...said });
   }
 
-  async #settle(args: Args): Promise<CallResult> {
+  /**
+   * With `card`, this is a card's check of its original request. A card has no other route to the scope's answer, so once the
+   * signed intent's `notAfter` has passed, the check sends the same bytes once. An act that landed answers with its first entry,
+   * and an act that never arrived is refused as `expired`. Either answer comes from the scope and resolves the record under
+   * custody's rule. The passing of `notAfter` resolves nothing by itself, and this path signs nothing.
+   */
+  async #settle(args: Args, card?: { resendExpired: boolean }): Promise<CallResult> {
     const key = args["idempotencyKey"];
     if (!validKey(key)) return failed({ error: "shape", field: "idempotencyKey", what: "is missing, or not 1 to 128 bytes", declared: "the key you gave" });
     const s = await this.#current();
@@ -992,8 +1001,17 @@ export class McpService {
         return read.ok ? read.value : read.reason === "archived" ? read : null;
       } catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
     });
-    if (!settled) return ok({ answer: "not-found", sentence: `No record is kept under key ${String(key)} for that target.`, next: "Nothing was sent under this key from this server; sign with it." });
+    if (!settled) return ok({ answer: "not-found", sentence: `This server keeps no record under key ${String(key)} for that target.`, next: "That does not show that the act was not sent: another server or custody home can hold it. Ask the server that signed it." });
     const record = settled.record;
+    const expiry = record.envelope.signed.intent.notAfter;
+    const expired = timeMs(expiry)! <= this.#now();
+    if (card?.resendExpired && expired && scope !== null && !TERMINAL.has(record.phase) && !record.standalone) {
+      await this.custody.send(identity, record.meaning, () => Promise.reject(new CustodyError({ held: "unreadable" })), async (envelope) => {
+        try { return await this.#reads.transport.submit(scope!, envelope.signed, [], envelope.beside); }
+        catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
+      }, { notAfter: timeOf(this.#now() + PROPOSED_BOUNDS.intentLifetimeSeconds * 1000) });
+      return this.#settle(args, { resendExpired: false });
+    }
     const last = settled.decided;
     const receipt: Receipt | null = settled.receipt ?? (last?.answer?.answer === "accepted" ? last.answer.receipt : null);
     const archived: ArchivedSettlement | null = last?.archivedSettlement ?? (last?.answer?.answer === "archived"
@@ -1012,7 +1030,11 @@ export class McpService {
       : answer === "refused" ? `The act under key ${String(key)} was refused; the refusal is kept.`
       : answer === "mismatch" ? `The key ${String(key)} is on another intent of your key at that scope.`
       : `The outcome under key ${String(key)} is unknown: the scope gave no receipt for the exact envelope. The record stays unknown.`;
-    const result = ok({ answer, phase: record.phase, sentence, next: answer === "unknown" ? "Call the same tool again with the same idempotencyKey: it resends the same envelope." : "Nothing more is needed.",
+    const unknownNext = !card ? "Call the same tool again with the same idempotencyKey: it resends the same envelope."
+      : expired ? "The scope gave no answer. Check the original request again." : `Check the original request again after ${expiry}. The scope then answers for good.`;
+    const refusal = card && last?.answer?.answer === "refused" ? { reason: last.answer.reason, ...(last.answer.name ? { name: last.answer.name } : {}) } : {};
+    const result = ok({ answer, phase: record.phase, sentence, next: answer === "unknown" ? unknownNext : "Nothing more is needed.", ...refusal,
+      ...(card && answer === "unknown" && !expired ? { checkAfter: expiry } : {}),
       ...(archived ? { ...archivedAnswer(archived.archived, archived.fact), archived: archived.archived, ...(archived.fact ? { fact: archived.fact } : {}) } : {}),
       ...(receipt ? { fact: receipt.fact, outboxIds: receipt.sends } : {}), outcomes: record.count, attempt: record.attempt,
       last: last ? { at: last.at, ...(last.archivedSettlement ? { answer: "archived", archived: last.archivedSettlement.archived, ...(last.archivedSettlement.fact ? { fact: last.archivedSettlement.fact } : {}) } : projectAnswer(last.answer)) } : null,
@@ -1424,9 +1446,8 @@ export class McpService {
   /** One credential, spent on one bounded read. The answer holds no credential, and a failed read says the credential is spent. */
   async #diff(args: Args): Promise<CallResult> {
     const base = args["base"], integration = args["integration"];
-    for (const [field, value] of [["base", base], ["integration", integration]] as const) {
-      if (typeof value !== "string" || !COMMIT_ID.test(value)) return failed({ error: "shape", field, what: "is not a commit ID of 40 or 64 hexadecimal characters", declared: "an exact commit ID" });
-    }
+    const unreadable = commitIdFault({ base, integration });
+    if (unreadable) return unreadable;
     const readDiff = this.#port.readDiff;
     if (!readDiff) return failed({ error: "diff", why: "this server has no Git reader", spent: false });
     const read = await this.#credential({ entry: args["entry"], ...(args["target"] === undefined ? {} : { target: args["target"] }) });
@@ -1455,6 +1476,15 @@ export class McpService {
     const { page, next } = pageBy(acts, from, pageOf(BOUNDS.large));
     return ok({ scope, definition: definition.name, digest: summary.definition, acts: page, notHeld: bindings.filter((b) => !listed(b, inventory)).map((b) => b.kind), ...(next !== null ? { cursor: cursorOf({ i: next }) } : {}) }, BOUNDS.large);
   }
+}
+
+/** The fault in a diff's two commit IDs, if it has one. */
+function commitIdFault(ids: { base: unknown; integration: unknown }): CallResult | null {
+  for (const field of ["base", "integration"] as const) {
+    const value = ids[field];
+    if (typeof value !== "string" || !COMMIT_ID.test(value)) return failed({ error: "shape", field, what: "is not a SHA-1 commit ID of 40 hexadecimal characters", declared: "an exact SHA-1 commit ID" });
+  }
+  return null;
 }
 
 /** One entry in one line: seq, time, what, by which key, and its effect and send counts. */
