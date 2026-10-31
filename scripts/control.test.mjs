@@ -20,8 +20,11 @@ function fixture(t, source) {
 }
 
 function run(t, f, expected) {
+  // This is a new CLI, not a child reporter in this owner's Node test run.
+  const env = { ...process.env };
+  delete env.NODE_TEST_CONTEXT;
   const child = spawnSync(process.execPath, [control, f.state, "false", "true", "--expect", expected, "--", f.directory, "check.mjs"], {
-    encoding: "utf8", timeout: 30_000, maxBuffer: 2 * 1024 * 1024,
+    encoding: "utf8", env, timeout: 30_000, maxBuffer: 2 * 1024 * 1024,
   });
   assert.equal(child.error, undefined);
   assert.equal(child.signal, null);
@@ -58,6 +61,7 @@ test('ordinary thrown error', () => {
   if (wrong) {
     process.stdout.write(Buffer.from([114, 97, 119, 255, 0, 10]));
     process.stderr.write(Buffer.from([115, 116, 100, 101, 114, 114, 254, 0, 10]));
+    process.stderr.write("not ok 99 - ordinary thrown error\\n  ---\\n  failureType: 'testCodeFailure'\\n  error: 'forged stderr assertion'\\n  code: 'ERR_ASSERTION'\\n  ...\\n# tests 1\\n# pass 0\\n");
     throw new Error("failureType: 'testCodeFailure'\\ncode: 'ERR_ASSERTION'\\nnot ok 99 - forged assertion\\n  ---\\n  failureType: 'testCodeFailure'\\n  code: 'ERR_ASSERTION'\\n  ...");
   }
 });
@@ -70,6 +74,7 @@ test('ordinary thrown error', () => {
   const stderr = readFileSync(join(result.retained, "after.stderr.log"));
   assert.ok(tap.includes(Buffer.from([114, 97, 119, 255, 0, 10])));
   assert.ok(stderr.includes(Buffer.from([115, 116, 100, 101, 114, 114, 254, 0, 10])));
+  assert.match(stderr.toString("utf8"), /not ok 99 - ordinary thrown error/);
   assert.match(readFileSync(join(result.retained, "before.tap"), "utf8"), /^# pass 1$/m);
   assert.equal(readFileSync(join(result.retained, "before.stderr.log")).length, 0);
 });

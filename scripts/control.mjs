@@ -87,7 +87,7 @@ function run(label, show) {
   if (show && !nodeRunner) process.stderr.write(output);
   if (child.error) return { started: false, why: `the test command did not run (${child.error.code ?? child.error.message}).` };
   if (child.status === null) return { started: false, why: `the test command was stopped by ${child.signal}.` };
-  const result = nodeRunner ? readTap(output) : readVitest(report);
+  const result = nodeRunner ? readTap(stdout.toString("utf8")) : readVitest(report);
   if (result === null) return { started: false, why: `the test command exited ${child.status} and left no report: it did not start, or its configuration or arguments are wrong.\n${output.trim().slice(0, 1200)}` };
   return { started: true, status: child.status, ...result };
 }
