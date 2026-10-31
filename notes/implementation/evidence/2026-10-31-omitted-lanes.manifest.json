@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. Seven controls ran at dd87f073; afterward only docs/mcp.md, apps/views/README.md and a merge of main that adds the finding item's paths changed. No Worker or real room ran.",
+  "directory": "2026-10-31-omitted-lanes",
+  "checkpoint": {
+    "commit": "3f85721e3b2c397ae2f913ace78b2494fa72daa0",
+    "tree": "2e0a88cb9cba1d8db1e67fa399371dc9021f6226"
+  },
+  "fileCount": 44,
+  "files": [
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6429,
+      "sha256": "edbea71b5180f03e92b5d56f5bc1c076537af27caeb87fdc02a4753f8822f6ec"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "control-c1-after-ignored.log",
+      "bytes": 556,
+      "sha256": "bac8ba7cc87556929204e90ba2e26669345a6eb1cf052b19f4dcf10c193b4bc2"
+    },
+    {
+      "path": "control-c2-mark-needs-whole-room.log",
+      "bytes": 558,
+      "sha256": "3b8201171f8c230a5d597ffc8dd457aae9c5d00f0a4673e061e91c088436f955"
+    },
+    {
+      "path": "control-c3-omitted-only-following.log",
+      "bytes": 559,
+      "sha256": "b83e955d1be9fc83a9b2f52aa06a89352941755ffd2eb814c01cb5236bf191a1"
+    },
+    {
+      "path": "control-c4-mark-selects-first-window.log",
+      "bytes": 569,
+      "sha256": "e9f646c44588e76579805e308a888d08f0d0e29acf252886e5b488f09ac20de5"
+    },
+    {
+      "path": "control-c5-capture-outside-room.log",
+      "bytes": 564,
+      "sha256": "21ce974f9181305a2ce85caa698486f7518fd16c817040c5f8c4642ad857ba0e"
+    },
+    {
+      "path": "control-c6-next-always-null.log",
+      "bytes": 569,
+      "sha256": "e9f646c44588e76579805e308a888d08f0d0e29acf252886e5b488f09ac20de5"
+    },
+    {
+      "path": "control-c7-session-refuses-scope.log",
+      "bytes": 564,
+      "sha256": "21ce974f9181305a2ce85caa698486f7518fd16c817040c5f8c4642ad857ba0e"
+    },
+    {
+      "path": "controls.txt",
+      "bytes": 215,
+      "sha256": "89e174e5a981ef754a2adb046a512206dc0f8ebbb8e29034fa48aa4f48052c52"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 4030,
+      "sha256": "5b3af9a0870be4d4625f749ac3285914e654069953d7abb1cae833286f21e8d4"
+    }
+  ]
+}
