@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { FactRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
-import { effectiveFields, expectedOf, type ActLike } from "../src/index.ts";
+import { effectiveFields, expectedOf, finalStates, viaLeft, type ActLike } from "../src/index.ts";
 import { capturedExpected, shapeAt } from "../src/shape.ts";
 
 const scopeOf = (cause: string) => scopeIdOf({ v: 1, kind: "lane", definition: "platform:issue@1", creator: null, cause: textDigest(cause), ordinal: 0 } as never);
@@ -60,4 +60,18 @@ test("captured revisions preserve values and exact subject coverage", () => {
   expect(() => capturedExpected({ on: 2, computed: 3 }, { on: 2 }, act)).toThrow("bound subjects");
   expect(() => capturedExpected({ on: 2, other: 3 }, { on: 2 }, act)).toThrow("bound subjects");
   expect(() => capturedExpected({ version: 3 }, { on: 2 }, act)).toThrow("bound subjects");
+});
+
+// Invariant: only a slot of another subject asks for a read, and only for an item the summary does not hold.
+test("viaLeft names an item a via rule selects that the summary lacks, and no item the caller named", () => {
+  const act = { step: "transition", on: "finding", fields: {},
+    also: { version: { item: "manifest", via: { of: "on", slot: "version" } }, chained: { item: "plan", via: { of: "also.version", slot: "plan" } }, named: { item: "job", by: "job" }, one: { item: "proposal", one: true }, rule: { code: "selects", item: "key" } } } as unknown as ActLike;
+  const finding = { id: 9, type: "finding", revision: 1, refs: { version: { at: {}, seq: 4, hash: "h" } } };
+  const left = { id: 4, type: "manifest", revision: 2, refs: { plan: 7 } };
+  type Items = Parameters<typeof viaLeft>[1];
+  expect(viaLeft(act, [finding] as unknown as Items, 9, { job: 5 }), "A left version; the named job and the one proposal stay out").toEqual([{ type: "manifest", id: 4 }]);
+  expect(viaLeft(act, [finding, left] as unknown as Items, 9, {}), "A live version asks for nothing, and its own slot asks next").toEqual([{ type: "plan", id: 7 }]);
+  expect(viaLeft(act, [] as Items, 9, {}), "A subject that is itself absent selects nothing").toEqual([]);
+  expect(finalStates({ states: { open: { final: false }, resolved: { final: true }, irrelevant: { final: true } } })).toEqual(["irrelevant", "resolved"]);
+  expect(finalStates(undefined)).toEqual([]);
 });

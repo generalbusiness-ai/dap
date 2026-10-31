@@ -20,8 +20,8 @@ const idOf = (value: unknown): number | null => typeof value === "number" ? valu
 
 export interface LinkedIssue { scope: ScopeRef; title?: string; conditions?: readonly string[]; decided?: readonly { ask: number; question: string; decidedAt: number | null }[]; unread?: string }
 /**
- * One open finding, and whether it holds this change's merge. `answerAt` is the revisions that `resolve-finding-any` and `mark-finding-irrelevant` bind.
- * The ordinary act tools read current revisions from the live summary, which an earlier version has left, so they need this as `at` for a finding on that version.
+ * One open finding, and whether it holds this change's merge. `answerAt` is the revisions that `resolve-finding-any` and `mark-finding-irrelevant` bind, as this read saw them.
+ * The ordinary act tools need no `at`: they read an earlier version's revision themselves. A caller passes this as `at` to bind what this read showed.
  */
 export interface ShownFinding { item: Item; required: boolean; holdsMerge: boolean; answerAt: Record<string, number> }
 export interface ChangeContext {

@@ -98,26 +98,26 @@ async function changeLane(f: Fixture, title: string, definition: string = J4_DIG
 const settle = async (f: Fixture, scope: string) => { for (let n = 0; n < 8; n++) { await f.room.pause([scope]); f.room.advance(100); } };
 
 /** @una's hold and a workspace instance: real hold@2 acts, with each outside operation answered by WorkspaceStandIn. */
-async function workspace(f: Fixture, lane: ScopeRef) {
-  const offer = await act(f.una, lane.scope, "offer", { fields: { offeree: f.uva, terms: "TEST work" } });
-  await act(f.una, lane.scope, "accept", { on: offer.seq, fields: { terms: offer } });
-  const hold = (await act(f.una, lane.scope, "take-hold", { fields: { commitment: offer.seq } })).seq;
+async function workspace(f: Fixture, lane: ScopeRef, who: Agent = f.una, member: MemberRef = f.uva) {
+  const offer = await act(who, lane.scope, "offer", { fields: { offeree: member, terms: "TEST work" } });
+  await act(who, lane.scope, "accept", { on: offer.seq, fields: { terms: offer } });
+  const hold = (await act(who, lane.scope, "take-hold", { fields: { commitment: offer.seq } })).seq;
   await settle(f, lane.scope);
   const instance = "s6-a";
   for (const [step, fields] of [["instance", { hold, task: lane, instance }], ["token", { hold, instance }]] as const) {
-    const done = await f.una.ok("prepare", { resource: lane.scope, capability: "hold@2", step, fields, idempotencyKey: crypto.randomUUID() });
+    const done = await who.ok("prepare", { resource: lane.scope, capability: "hold@2", step, fields, idempotencyKey: crypto.randomUUID() });
     expect((done["step"] as { answer: { answer: string } }).answer.answer, JSON.stringify(done)).toBe("accepted");
   }
   await settle(f, lane.scope);
   return { hold, instance };
 }
 /** One version, staged and then proposed. No repository is staged: the stand-in reads back the commit it was given. */
-async function propose(f: Fixture, lane: ScopeRef, work: { hold: number; instance: string }, base: string, integration: string, tree: string, previous?: number): Promise<number> {
+async function propose(f: Fixture, lane: ScopeRef, work: { hold: number; instance: string }, base: string, integration: string, tree: string, previous?: number, who: Agent = f.una): Promise<number> {
   const key = crypto.randomUUID(), fields = { hold: work.hold, instance: work.instance, base, integration, tree, complete: true, selected: [], decisions: [], ...(previous === undefined ? {} : { previous }) };
-  const staged = await f.una.ok("prepare", { resource: lane.scope, capability: "hold@2", step: "stage", target: lane.scope, kind: "propose-manifest", fields, idempotencyKey: key });
+  const staged = await who.ok("prepare", { resource: lane.scope, capability: "hold@2", step: "stage", target: lane.scope, kind: "propose-manifest", fields, idempotencyKey: key });
   expect((staged["step"] as { answer: { answer: string } }).answer.answer, JSON.stringify(staged)).toBe("accepted");
   await settle(f, lane.scope);
-  const proposed = await scoped(f.una, lane.scope, "propose-manifest", fields, key);
+  const proposed = await scoped(who, lane.scope, "propose-manifest", fields, key);
   expect(proposed["answer"], JSON.stringify(proposed)).toBe("accepted");
   return (proposed["fact"] as FactRef).seq;
 }
@@ -622,12 +622,8 @@ test("a real lane on the finding definition: a required finding shows in needs_y
     expect(await plain.names(), "The ordinary server lists the answers for a holder of change.dismiss").toEqual(expect.arrayContaining(["change.resolve-finding-any", "change.mark-finding-irrelevant"]));
     expect(await f.room.agent("plain-check", { secret: check.secret, config: structuredClone(check.config) }).names(), "The ordinary server lists the answer for a source").toContain("change.resolve-finding-own");
     const answered = { target: change, on: required, fields: { answer: "TEST fixed in the second version" } };
-    // OPEN LIMIT: the ordinary tool reads revisions from the live summary, which the first version has left, so it omits the key the scope requires.
-    const unbound = await plain.ok("change.resolve-finding-any", { ...answered, idempotencyKey: crypto.randomUUID() });
-    expect([unbound["answer"], unbound["reason"]], "ANSWER TOOL: with no at, a finding on an earlier version refuses as bad-intent").toEqual(["refused", "bad-intent"]);
-    const told = ((await a.call("change", { scope: lane })).structuredContent["change"] as { findings: { id: number; answerAt: Record<string, number> }[] }).findings;
-    const answer = await plain.ok("change.resolve-finding-any", { ...answered, at: told.find(one => one.id === required)!.answerAt, idempotencyKey: crypto.randomUUID() });
-    expect(answer["answer"], `ANSWER TOOL: with the change read's answerAt, the ordinary tool answers it: ${JSON.stringify(answer)}`).toBe("accepted");
+    const answer = await plain.ok("change.resolve-finding-any", { ...answered, idempotencyKey: crypto.randomUUID() });
+    expect(answer["answer"], `ANSWER TOOL: with no at, the ordinary tool answers a finding on an earlier version: ${JSON.stringify(answer)}`).toBe("accepted");
     // On the current version, the ordinary tool needs no at.
     const current = { at: lane, seq: second, hash: (await f.una.ok("step", { scope: change, seq: second }))["hash"] };
     const onCurrent = (await act(check, change, "file-finding", { fields: { ...raised("security-review", 90).fields, version: current, tree: oid("4") } })).seq;
@@ -657,5 +653,131 @@ test("a real lane on the finding definition: a required finding shows in needs_y
     expect((bothRead.structuredContent["unread"] as unknown[]).length, "No lane of this room is unsupported").toBe(0);
     const j4 = await application(f).call("view_change", { view: "j4", subject: changeSubject(beside) });
     expect(j4.structuredContent["status"], "A J4 lane in the same room keeps its card").toBe("ready");
+  } finally { await f.room.done(); }
+}, 240_000);
+
+// The ordinary tools on a finding, with no `at` and with one. Real: the scope, the finding definition, read sessions and custody.
+// STAND-INS: OwnGit and WorkspaceStandIn, as above; no runner. A filed finding is signed by hand by the @check member.
+const STAND_INS = "(STAND-INS: OwnGit, WorkspaceStandIn; no runner)";
+const QUERY_ITEMS = /\/query-items$/;
+const version = async (f: Fixture, lane: ScopeRef, manifest: number) => ({ at: lane, seq: manifest, hash: (await f.una.ok("step", { scope: lane.scope, seq: manifest }))["hash"] });
+const filed = (at: unknown, tree: string, start: number) => ({ fields: { version: at, file: "src/a.ts", start, end: start + 2, class: "race", severity: "high", confidence: 80, scenario: "TEST two writers", source: "security-review", sourceVersion: "reviewer 1.2", tree: oid(tree) } });
+const reply = (answer: Record<string, unknown>) => [answer["answer"], answer["reason"], answer["name"]].filter(part => part !== undefined);
+const finalState = async (agent: Agent, scope: string, id: number) => ((await agent.ok("items", { scope, type: "finding", final: true }))["items"] as Item[]).find(item => item.id === id);
+
+/**
+ * A change with two versions and findings on each. `earlier` holds two findings on the first version, and `live` holds one on the second.
+ * `plain` is the owner's ordinary server, which holds change.dismiss, and `told` gives the change tool's answerAt.
+ */
+async function versions(integrator: "una" | "owner" = "una") {
+  const { f, check } = await findingRoom();
+  const lane = await changeLane(f, "TEST findings on two versions", FINDING_DIGESTS.change), change = lane.scope;
+  const who = integrator === "owner" ? f.owner : f.una;
+  const work = await workspace(f, lane, who, integrator === "owner" ? f.ownerRef : f.uva);
+  const first = await propose(f, lane, work, f.host.head, oid("c"), oid("3"), undefined, who);
+  const onFirst = await version(f, lane, first);
+  const earlier = [(await act(check, change, "file-finding", filed(onFirst, "3", 10))).seq, (await act(check, change, "file-finding", filed(onFirst, "3", 20))).seq] as const;
+  const second = await propose(f, lane, work, f.host.head, oid("d"), oid("4"), first, who);
+  const live = (await act(check, change, "file-finding", filed(await version(f, lane, second), "4", 30))).seq;
+  const plain = f.room.agent("plain", { secret: f.person.secret, config: structuredClone(f.owner.config) });
+  const told = async (id: number) => ((await application(f).call("change", { scope: lane })).structuredContent["change"] as { findings: { id: number; answerAt: Record<string, number> }[] }).findings.find(one => one.id === id)!.answerAt;
+  return { f, change, earlier, live, plain, told, first };
+}
+/** One tool call, with the requests it made and the intent it signed. */
+async function answering(agent: Agent, tool: string, args: Record<string, unknown>) {
+  const requests = agent.requests.length, signed = agent.signedIntents.length;
+  const answer = await agent.ok(tool, { fields: { answer: "TEST answered" }, idempotencyKey: crypto.randomUUID(), ...args });
+  return { answer, queries: agent.requests.slice(requests).filter(request => QUERY_ITEMS.test(request)).length, signed: agent.signedIntents.slice(signed) };
+}
+
+test(`NO AT, RESOLVE: change.resolve-finding-any answers a finding on an earlier version, and signs that version's final revision ${STAND_INS}`, async () => {
+  const { f, change, earlier, plain, told } = await versions();
+  try {
+    const expected = await told(earlier[0]);
+    const done = await answering(plain, "change.resolve-finding-any", { target: change, on: earlier[0] });
+    expect(reply(done.answer), `RESOLVE: ${JSON.stringify(done.answer)}`).toEqual(["accepted"]);
+    expect(done.signed.map(intent => intent.expected), "RESOLVE: the intent binds what the change read gives").toEqual([expected]);
+    expect(done.queries, "RESOLVE: one read of the one version that left the summary").toBe(1);
+    expect(await finalState(plain, change, earlier[0]), "RESOLVE: the scope records the answer").toMatchObject({ state: "resolved", values: { answer: "TEST answered" } });
+    const again = await answering(plain, "change.resolve-finding-any", { target: change, on: earlier[0] });
+    expect(reply(again.answer), "RESOLVE: an answered finding has left the summary, and the scope refuses a second answer").toEqual(["refused", "bad-intent"]);
+  } finally { await f.room.done(); }
+}, 240_000);
+
+test(`NO AT, IRRELEVANT: change.mark-finding-irrelevant answers a finding on an earlier version, and so does act in generic mode ${STAND_INS}`, async () => {
+  const { f, change, earlier, plain } = await versions();
+  try {
+    const done = await answering(plain, "change.mark-finding-irrelevant", { target: change, on: earlier[0] });
+    expect(reply(done.answer), `IRRELEVANT: ${JSON.stringify(done.answer)}`).toEqual(["accepted"]);
+    expect(await finalState(plain, change, earlier[0]), "IRRELEVANT: the scope records the answer").toMatchObject({ state: "irrelevant", values: { answer: "TEST answered" } });
+    const digest = (await f.owner.ok("actions", { scope: change }))["digest"];
+    const generic = await answering(f.owner, "act", { target: change, on: earlier[1], kind: "mark-finding-irrelevant", digest });
+    expect(reply(generic.answer), `GENERIC: ${JSON.stringify(generic.answer)}`).toEqual(["accepted"]);
+  } finally { await f.room.done(); }
+}, 240_000);
+
+test(`NO AT, LIVE VERSION: a finding on the live version answers from the summary, with no extra read ${STAND_INS}`, async () => {
+  const { f, change, live, plain, told } = await versions();
+  try {
+    const expected = await told(live);
+    const done = await answering(plain, "change.resolve-finding-any", { target: change, on: live });
+    expect(reply(done.answer), `LIVE: ${JSON.stringify(done.answer)}`).toEqual(["accepted"]);
+    expect(done.signed.map(intent => intent.expected), "LIVE: the intent binds the live version's revision").toEqual([expected]);
+    expect(done.queries, "LIVE: the summary holds the version, so the server reads no final item").toBe(0);
+  } finally { await f.room.done(); }
+}, 240_000);
+
+test(`EXPLICIT AT: the server signs a given at unchanged and reads nothing for it, and the scope judges it ${STAND_INS}`, async () => {
+  const { f, change, earlier, plain, told } = await versions();
+  try {
+    const expected = await told(earlier[0]);
+    const stale = { ...expected, manifest: expected["manifest"]! + 1 };
+    const moved = await answering(plain, "change.resolve-finding-any", { target: change, on: earlier[0], at: stale });
+    expect(reply(moved.answer), "AT STALE: the scope refuses a revision that moved").toEqual(["refused", "revision-moved"]);
+    expect(moved.signed.map(intent => intent.expected), "AT STALE: the server does not refresh it").toEqual([stale]);
+    const { manifest: _manifest, ...partial } = expected;
+    const short = await answering(plain, "change.resolve-finding-any", { target: change, on: earlier[0], at: partial });
+    expect(reply(short.answer), "AT SHORT: the server does not fill in the subject that left the summary, and the scope refuses").toEqual(["refused", "bad-intent"]);
+    expect(short.signed.map(intent => intent.expected), "AT SHORT: the server signs what it was given").toEqual([partial]);
+    const done = await answering(plain, "change.resolve-finding-any", { target: change, on: earlier[0], at: expected });
+    expect(reply(done.answer), `AT: answerAt answers it: ${JSON.stringify(done.answer)}`).toEqual(["accepted"]);
+    expect(done.signed.map(intent => intent.expected), "AT: the intent binds what was given").toEqual([expected]);
+    expect([moved.queries, short.queries, done.queries], "AT: a given at takes no read of a final item").toEqual([0, 0, 0]);
+  } finally { await f.room.done(); }
+}, 240_000);
+
+test(`THE SCOPE JUDGES: with no at, an author of the earlier version reaches the guard and the scope refuses ${STAND_INS}`, async () => {
+  const { f, change, earlier, plain, first } = await versions("owner");
+  try {
+    const done = await answering(plain, "change.resolve-finding-any", { target: change, on: earlier[0] });
+    expect(reply(done.answer), `GUARD: ${JSON.stringify(done.answer)}`).toEqual(["refused", "guard-failed", "author-cannot-answer"]);
+    expect(done.queries, "GUARD: the server read the version the guard reads").toBe(1);
+    const finding = ((await plain.ok("inspect", { scope: change }))["items"] as Item[]).find(item => item.id === earlier[0]);
+    expect(finding, "GUARD: the finding stays open").toMatchObject({ state: "open", refs: { version: first } });
+  } finally { await f.room.done(); }
+}, 240_000);
+
+test(`READ REFUSED: if the scope refuses the read of the earlier version, the server signs nothing, and the same key answers once the read works (STAND-IN: the test strips the reader from the item query, and the real scope refuses it) ${STAND_INS}`, async () => {
+  const { f, change, earlier } = await versions();
+  try {
+    const config = structuredClone(f.owner.config), signer = secretSigner(f.person.secret);
+    let refusing = true, signs = 0;
+    const service = new McpService({ service: config.service, custody: memoryStore(), now: f.room.now, every: () => () => {},
+      fetch: async (url, init) => {
+        if (!refusing || !QUERY_ITEMS.test(new URL(url).pathname)) return f.room.fetch(url, init);
+        const { authorization: _reader, ...headers } = (init?.headers ?? {}) as Record<string, string>;
+        return f.room.fetch(url, { ...init, headers });
+      },
+      signer: { key: signer.key, sign: bytes => { if (new TextDecoder().decode(bytes).startsWith(`${DOMAINS.intent}\n`)) signs++; return signer.sign(bytes); } },
+      config: { read: async () => structuredClone(config), addRoot: async () => { throw new Error("no new root"); } } });
+    const args = { target: change, on: earlier[0], fields: { answer: "TEST answered" }, idempotencyKey: crypto.randomUUID() };
+    const refused = await f.room.wait(() => service.call("change.resolve-finding-any", args));
+    expect(refused.structuredContent["error"], `READ REFUSED: a read error: ${JSON.stringify(refused.structuredContent)}`).toBe("read");
+    expect(refused.structuredContent["message"], "READ REFUSED: the scope forbids the read").toContain("forbidden");
+    expect(signs, "READ REFUSED: nothing was signed").toBe(0);
+    refusing = false;
+    const answered = await f.room.wait(() => service.call("change.resolve-finding-any", args));
+    expect(answered.structuredContent["answer"], `READ REFUSED: the same key answers: ${JSON.stringify(answered.structuredContent)}`).toBe("accepted");
+    expect(signs, "READ REFUSED: the one answer is the one signature").toBe(1);
   } finally { await f.room.done(); }
 }, 240_000);

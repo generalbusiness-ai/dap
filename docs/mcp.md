@@ -228,6 +228,13 @@ fact of the target scope read as its entry's position, as the scope reads
 it. So an item a default selects, or one a local fact selects, is expected
 like one the caller named by its ID. The intent carries the fact as given.
 
+A slot of another subject can select a subject too, by a `via` rule of the
+act's `also`. That subject can be final, and a final item has left the live
+summary. With no `at`, the server reads its revision by ID from the scope's
+final items before it signs. If the scope refuses the read, the server returns a
+`read` error and signs nothing. A subject that a field names has no such read:
+the server reads it from the summary alone.
+
 When `at` is present, the server checks its shape and subject coverage,
 then signs those captured numbers unchanged. The native scope refuses a
 revision that has moved. The server does not silently refresh it. An
@@ -2414,10 +2421,9 @@ does not hold the merge, and has no row. An answered finding leaves both.
 No card answers a finding, and the project entry lists no act tool. On the
 ordinary server, use `change.resolve-finding-any`,
 `change.mark-finding-irrelevant` or `change.resolve-finding-own`. In `--generic`
-mode, use `act` with those native kinds. For a finding on an earlier version, the
-first two also need `at`, because the server reads revisions from the live
-summary and that version has left it. `change` gives the value as `answerAt`.
-Without `at`, the scope refuses the act as `bad-intent`. The
+mode, use `act` with those native kinds. None of them needs `at`, on the current
+version or an earlier one. To sign the revisions that `change` read, pass a
+finding's `answerAt` as `at`. The
 [project entry's page](../apps/views/README.md#open-findings-on-the-finding-profile)
 has the rows, the acts and the limits.
 
