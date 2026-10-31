@@ -23,7 +23,7 @@ A room on the finding definition now keeps its Change card and its S4 views, and
 
 ## Evidence
 
-The checkpoint is `2055112de2dc0ac23f76a6786f1870c4030c31a4`, tree `4a0f905ddd7f1d257ec5c30a644eb2c5560e09d2`. It includes main `b686862e`. Raw evidence is in `~/play/artroom-evidence/2026-10-31-finding-views/`, `SHA256SUMS` `5cd97fc2a4d8d3b6ad3e7ce84a0c6e5eff8268042778abc1a1ca44eaf1f1e12e`. The reviewed head adds only this note and its manifest.
+The checkpoint is `2055112de2dc0ac23f76a6786f1870c4030c31a4`, tree `4a0f905ddd7f1d257ec5c30a644eb2c5560e09d2`. It includes main `b686862e`. Raw evidence is in `~/play/artroom-evidence/2026-10-31-finding-views/`, `SHA256SUMS` `5cd97fc2a4d8d3b6ad3e7ce84a0c6e5eff8268042778abc1a1ca44eaf1f1e12e`. The reviewed head adds this note, its manifest and one README passage about controllers, so the source and tests are the tree above.
 
 Before any change, `gap/gap-run.log` ran a change lane on the finding definition against the S4 reads and the S6 card, at `76cac675`. `needs_you` and `work` answered `unsupported-profile`, `change` answered `change-unavailable` with reason `change-profile-unsupported`, and `view_change` was unavailable. `since` read normally, and the scope refused a held merge. So the gap the request names was real, and only the views had it.
 
@@ -48,7 +48,8 @@ The gate reports 3236 plain and 901 native tests, 115 Node and 56 Counting.
 
 ## Open limits
 
-- **"You can act" is the agent's reading.** A row depends on the reader's role and parties. A controller of an agent author gets no row, and the scope alone decides.
+- **A row asks, and the scope decides.** A row's `acts` follow the reader's role and parties, and the row says `permission: not-determined`. The scope can also refuse `merge` for approvals or checks. `propose-manifest` needs a hold and does not answer the finding.
+- **Controllers.** A controller gets a row only by its own role and parties. A controller that holds `change.dismiss` can answer a finding on its agent's version, because the guards exclude the opener and the version's authors and not their controller. A person answers for their agents. No test has a controller row.
 - **Non-finding rooms.** Their reads are byte for byte as before, apart from the catalogue. The catalogue's `revision` and the `change` tool's description change everywhere.
 - **Mixed rooms.** A room with both profiles lists `change.merge@656c87eb` and `change.merge@a43e108c`, and no plain name.
 - **An older card.** A card read before a finding can still offer **Merge**. The scope refuses it with `finding-open`.

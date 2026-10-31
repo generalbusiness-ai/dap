@@ -175,7 +175,10 @@ holds what your role and your parties let you ask for:
 | `merge` | You hold `change.merge`. The scope refuses it until someone answers the finding. |
 
 With no such act, you get no row. A finding from a source that is not required
-has no row. The `merge-attention` row of a lane on this profile also gives
+has no row. A controller gets a row only by its own role and parties. A
+controller that holds `change.dismiss` can answer a finding on its agent's
+version, because the guards exclude the opener and the version's authors and
+not their controller. The `merge-attention` row of a lane on this profile also gives
 `heldBy`, the IDs of the findings that hold the merge. The rows grant nothing.
 
 `change` returns each open finding whole, with its scenario, `required`,
