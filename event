@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3ef68ead6fe3d5fa3d259b908afdcd150e1802e8","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/http.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4c577a56800982fdf43aa149139c99324b1f1e0f","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/agent-wait.scope.test.ts."}
