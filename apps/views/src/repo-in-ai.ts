@@ -34,24 +34,26 @@ export class RepoInAi {
     const decoded = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(this.brief.bytes);
     if (!sameOptional([...utf8(decoded)], [...this.brief.bytes])) throw new Unread("brief-invalid");
   }
-  async collect<T>(run: (collection: Collection) => Promise<T>, target?: ScopeRef, only = false): Promise<{ value: T; collection: Collection }> {
+  async collect<T>(run: (collection: Collection) => Promise<T>, target?: ScopeRef, only = false, after?: ScopeRef): Promise<{ value: T; collection: Collection }> {
     const collection = new Collection(this.options);
-    try { await collection.begin(target, only); return { value: await run(collection), collection }; }
+    try { await collection.begin(target, only, after); return { value: await run(collection), collection }; }
     finally { collection.close(); }
   }
-  async #rows(run: (collection: Collection, frames: Frame[]) => Promise<Row[]>): Promise<CallResult> {
+  async #rows(run: (collection: Collection, frames: Frame[]) => Promise<Row[]>, after?: unknown, walks = true): Promise<CallResult> {
+    const position = (collection: Collection) => walks ? { next: collection.next } : {};
+    if (after !== undefined && !isScopeRef(after)) return result({ error: "after-selector", complete: false }, true);
     try {
-      const { value, collection } = await this.collect(async collection => run(collection, await collection.lanes()));
+      const { value, collection } = await this.collect(async collection => run(collection, await collection.lanes()), undefined, false, after);
       const rows = value.slice(0, LIMITS.rows); let omittedRows = value.length - rows.length;
-      const reply = () => ({ rows, heads: collection.points(), unread: collection.unread, omittedScopes: collection.omitted,
+      const reply = () => ({ rows, heads: collection.points(), unread: collection.unread, omittedScopes: collection.omitted, ...position(collection),
         discoveryComplete: collection.discoveryComplete, omittedRows, counters: collection.counters, viewer: collection.viewer, directory: collection.directory, complete: collection.unread.length === 0 && collection.omitted.length === 0 && omittedRows === 0 });
       let answer = result(reply());
       while (resultBytes(answer) > RESULT_BYTES && rows.length) { rows.pop(); omittedRows++; answer = result(reply()); }
-      if (resultBytes(answer) > RESULT_BYTES) return result({ error: "rows-output-limit", omittedRows, omittedScopes: collection.omitted.length, unreadScopes: new Set(collection.unread.map(row => row.scope.scope)).size, complete: false }, true);
+      if (resultBytes(answer) > RESULT_BYTES) return result({ error: "rows-output-limit", omittedRows, omittedScopes: collection.omitted.length, ...position(collection), unreadScopes: new Set(collection.unread.map(row => row.scope.scope)).size, complete: false }, true);
       return answer;
     } catch (error) { return result({ error: "read-unavailable", reason: error instanceof Unread || error instanceof ReviewStoreError ? error.reason : "read-failed", complete: false }, true); }
   }
-  needsYou(): Promise<CallResult> {
+  needsYou(args: Readonly<Record<string, unknown>> = {}): Promise<CallResult> {
     return this.#rows(async (collection, frames) => {
       const rows: Row[] = [];
       for (const frame of frames) {
@@ -70,7 +72,7 @@ export class RepoInAi {
         } else if (!issue(frame.summary.definition)) collection.unread.push({ scope: frame.ref, reason: "unsupported-profile" });
       }
       return rows;
-    });
+    }, args["after"]);
   }
   work(): Promise<CallResult> {
     return this.#rows(async (collection, frames) => {
@@ -93,7 +95,7 @@ export class RepoInAi {
         }
       }
       return rows;
-    });
+    }, undefined, false);
   }
   async question(scope: ScopeRef, id: number, minimum?: ReadMinimum): Promise<{ context: Context; collection: Collection }> {
     const floor = minimumFor(scope, minimum);
@@ -170,7 +172,7 @@ export class RepoInAi {
     }
     catch (error) { return result({ error: "change-unavailable", reason: error instanceof Unread ? error.reason : "read-failed", complete: false }, true); }
   }
-  since(): Promise<CallResult> {
+  since(args: Readonly<Record<string, unknown>> = {}): Promise<CallResult> {
     return this.#rows(async (collection, frames) => {
       const marks = this.options.reviewStore.read({ service: this.options.service, directory: collection.directory, viewer: collection.viewer, key: this.options.signer.key });
       const rows: Row[] = [];
@@ -180,16 +182,16 @@ export class RepoInAi {
         if (!mark || !sameOptional(mark.head, frame.head)) rows.push(row(frame, { id: frame.head.seq, type: "head" } as Item, "apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)", { since: mark?.head ?? null, interpretation: "Repeated until an explicit mark" }));
       }
       return rows;
-    });
+    }, args["after"]);
   }
   catalogue(): ApplicationReadCatalogue {
     const tool = (name: string, description: string, run: (args: Readonly<Record<string, unknown>>) => Promise<CallResult>, properties: Record<string, unknown> = {}, required: string[] = []) => ({ tool: { name, description, inputSchema: { type: "object", properties, required, additionalProperties: false }, annotations: { readOnlyHint: true } }, run });
     return { revision: digestBytes(utf8(canonicalize({ adapter: "repo-in-ai@1", pins: [QUESTION_DIGESTS.issue, QUESTION_BRIEF_DIGESTS.issue, J4_DIGESTS.issue, J4_DIGESTS.change], brief: this.brief.digest }))), tools: [
-      tool("needs_you", "Current attention, with pinned clauses and heads. At most 50 rows, eight scopes including support; omissions explicit. Attention grants no permission.", () => this.needsYou()),
+      tool("needs_you", "Current attention, with pinned clauses and heads. At most 50 rows, eight scopes including support; omissions explicit. To read the next lanes, pass the answer's next as after. Attention grants no permission.", args => this.needsYou(args), { after: { type: "object" } }),
       tool("work", "Agent commitments, actual controllers, terms, blocks and issue-linked changes, beside current conditions. Bounded reads; no Task or permission inference.", () => this.work()),
       tool("context", "One Question's text versions, requests, approvals, comments, conditions and immutable Brief binding. Legacy questions remain unbound.", args => this.context(args), { question: { type: "object", properties: { scope: { type: "object" }, ask: { type: "integer", minimum: 0 } }, required: ["scope", "ask"], additionalProperties: false } }, ["question"]),
       tool("change", "One change's exact version: base and integration, this version's reviews with each reviewer's kind, checks, rules, merges, and the linked issues' conditions and decided questions. Bounded reads; it grants no permission.", args => this.change(args), { scope: { type: "object" } }, ["scope"]),
-      tool("since", "Pure read of heads since the explicit local review mark. Repeated reads do not consume changes.", () => this.since()),
+      tool("since", "Pure read of heads since the explicit local review mark. Repeated reads do not consume changes. To read the next lanes, pass the answer's next as after.", args => this.since(args), { after: { type: "object" } }),
     ] };
   }
 }

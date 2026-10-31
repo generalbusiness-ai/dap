@@ -140,6 +140,8 @@ export interface Projection {
 /** A trusted application's projection adapter. Reads use the service's normal authenticated tool path. */
 export interface ViewSource {
   readonly declared?: boolean;
+  /** A list screen takes a scope: the lane that the list continues after. */
+  readonly listsAfterScope?: boolean;
   readonly screens?: readonly { name: string; resource: string }[];
   readonly inputActs?: readonly { screen: string; id: string; label: string; parameters: ApplicationViewParameters }[];
   readonly presentation?: PresentationPackage;

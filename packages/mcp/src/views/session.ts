@@ -155,7 +155,7 @@ export class ViewSessions {
   }
   async open(key: string, screen: ViewKind, subject?: string, items?: Readonly<Record<string, number>>, scope?: ScopeRef) {
     if (!validKey(key)) throw new ViewError("shape", "Choose a view key of 1 to 128 UTF-8 bytes.");
-    if (scope !== undefined && (!this.source.declared || !isScopeRef(scope))) throw new ViewError("shape", "A selected scope needs a declared view and a full native scope reference.");
+    if (scope !== undefined && (!(this.source.declared || this.source.listsAfterScope) || !isScopeRef(scope))) throw new ViewError("shape", "A selected scope needs a view that takes one and a full native scope reference.");
     const old = this.#instances.get(key);
     if (old) {
       if (old.query.screen !== screen || old.query.subject !== subject || canonicalize(old.query.items ?? {}) !== canonicalize(items ?? {}) || canonicalize(old.query.scope ?? null) !== canonicalize(scope ?? null)) throw new ViewError("shape", "This view key already names another opening.");
