@@ -818,6 +818,13 @@ helper prints each failed test and the first line of its failure. Read
 them: the assertion should be the one that states the invariant. The
 helper cannot judge that for you.
 
+On an inconclusive result, the helper prints the fresh scratch directory
+that retains the actual child output. Node runs keep stdout bytes in
+`before.tap` and `after.tap`, with separate `*.stderr.log` files. Vitest
+runs keep their JSON reports and separate stdout and stderr logs. Only
+attempted runs have files. Retain that directory with the control's other
+evidence. Conclusive results still remove the scratch directory.
+
 There is no mutation sweep. Do not write one mutant per field or per
 condition, and do not run whole suites per mutant. One or two honest
 controls for each invariant you touch are the evidence. If a guard cannot
