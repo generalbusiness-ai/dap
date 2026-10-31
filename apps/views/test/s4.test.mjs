@@ -20,6 +20,7 @@ const { RepoInAi } = await load(new URL('../src/repo-in-ai.ts', import.meta.url)
 const { ReviewStore } = await load(new URL('../src/review-store.ts', import.meta.url).href);
 const { Collection } = await load(new URL('../src/reads.ts', import.meta.url).href);
 const { captureQuestionAction, decisionSource, questionSubject } = await load(new URL('../src/decision.ts', import.meta.url).href);
+const { changeSubject } = await load(new URL('../src/change.ts', import.meta.url).href);
 const { ViewSessions } = await load(new URL('../../../packages/mcp/src/views/session.ts', import.meta.url).href);
 const { createRepoInAiService } = await load(new URL('../src/node.ts', import.meta.url).href);
 const NOW = Date.parse('2099-01-01T00:00:00Z');
@@ -185,8 +186,8 @@ test('work retains the real agent controller; an unresolved controller never bec
   assert.ok(!incomplete.unread.some(row => row.scope.scope === change.ref.scope), 'The explicitly supported Change profile is not an unsupported lane');
 });
 
-async function question(f, body = 'TEST current Question body\n') {
-  const state = f.lane(), signed = await signedIntent(f.signer, { to: state.ref, kind: 'ask', fields: { question: 'TEST question', body: textDigest(body), brief: f.brief.digest } }, { now: NOW });
+async function question(f, body = 'TEST current Question body\n', idempotencyKey) {
+  const state = f.lane(), signed = await signedIntent(f.signer, { to: state.ref, kind: 'ask', fields: { question: 'TEST question', body: textDigest(body), brief: f.brief.digest } }, { now: NOW, ...(idempotencyKey ? { idempotencyKey } : {}) });
   const opening = f.peer.append(state, { type: 'act', signed, authority: [], presented: {} });
   while (state.entries.length < 6) f.peer.append(state, { type: 'timed', item: 0, rule: 'TEST history position', due: '2099-01-01T00:00:00Z' });
   state.items.push(item(opening.entry.seq, 'ask', 'asked', { question: 'TEST question', body: textDigest(body), brief: f.brief.digest }, { bodyAt: opening.entry.seq }, { asker: f.other }),
@@ -377,4 +378,39 @@ test('an accepted Decision receipt floors the next actual app read; an older coh
     await assert.rejects(() => collection.frame(q.state.ref, { at: q.state.ref, head: { seq: frame.head.seq + 1, hash: frame.head.hash } }), error => error.reason === 'read-minimum-behind');
     await assert.rejects(() => collection.frame(q.state.ref, { at: q.state.ref, head: { seq: frame.head.seq, hash: q.opening.hash } }), error => error.reason === 'read-minimum-behind');
   } finally { collection.close(); }
+});
+
+/**
+ * A scripted change lane: an open proposal, a current version, one earlier version, rules with one required check, a passed job and a review.
+ * A STAND-IN answers the reads, and nothing judges these rows. `extra` adds rows of the lane.
+ */
+function scriptedChange(f, definition, extra = () => []) {
+  const state = f.lane(definition), author = { membership: f.peer.membership, member: '@una' };
+  const rules = item(1, 'rules', 'current', { revision: 7, approvals: 1, ownerMayReview: false, checks: [{ name: 'security-review', required: true, checker: f.other }, { name: 'style-review', required: false, checker: f.other }], extents: [{ name: 'source', class: 'content' }] });
+  state.items.push(item(0, 'proposal', 'open', { title: 'TEST change', number: 4 }, {}, { author }), rules,
+    item(6, 'manifest', 'current', { base: 'b'.repeat(40), integration: 'c'.repeat(40), tree: '3'.repeat(40), complete: true, selected: [] }, {}, { authors: [author] }),
+    item(7, 'job', 'passed', { name: 'security-review' }, { manifest: 6 }),
+    item(9, 'review', 'submitted', { verdict: 'approve' }, { manifest: 6 }, { reviewer: f.other }),
+    ...extra(state));
+  state.final.push(item(5, 'manifest', 'superseded', { base: 'b'.repeat(40), integration: 'a'.repeat(40), tree: '2'.repeat(40), complete: true, selected: [] }, {}, { authors: [author] }),
+    item(8, 'result', 'recorded', { outcome: 'passed' }, { job: 7 }, { checker: f.other }));
+  while (state.entries.length <= 20) f.peer.append(state, { type: 'timed', item: 0, rule: 'TEST scripted change position', due: '2099-01-01T00:00:00Z' });
+  return state;
+}
+
+// Every read of a room with no finding profile, as canonical bytes, against the bytes that main 76cac675 gave. The golden file's commit holds the source of that main.
+test('a room with no finding profile reads byte for byte as it did before the finding profile', async t => {
+  const f = fixture(t), source = decisionSource(f.app);
+  const ready = scriptedChange(f, J4_DIGESTS.change);
+  const requested = scriptedChange(f, J4_DIGESTS.change, () => [item(10, 'review-request', 'open', {}, {}, { requested: f.viewer, requester: f.other }),
+    item(11, 'merge', 'unknown', {}, { manifest: 6 }, { merger: f.viewer })]);
+  const q = await question(f, undefined, 'TEST-fixed-question');
+  const screens = { 'needs-you': await source.read({ screen: 'needs-you', position: 0, page: 'summary' }), work: await source.read({ screen: 'work', position: 0, page: 'summary' }), updates: await source.read({ screen: 'change', position: 0, page: 'updates' }),
+    ready: await source.read({ screen: 'change', subject: changeSubject(ready.ref), position: 0, page: 'item' }), requested: await source.read({ screen: 'change', subject: changeSubject(requested.ref), position: 0, page: 'item' }),
+    question: await source.read({ screen: 'decision', subject: questionSubject(q.state.ref, q.opening.entry.seq), position: 0, page: 'item' }) };
+  const tools = { needsYou: await f.app.needsYou(), work: await f.app.work(), since: await f.app.since(), ready: await f.app.change({ scope: ready.ref }), requested: await f.app.change({ scope: requested.ref }), context: await f.app.context({ question: { scope: q.state.ref, ask: q.opening.entry.seq } }) };
+  assert.equal(screens.ready.card.actions[0].id, 'merge', 'The compared room offers a merge, so the bytes cover its signed revisions');
+  assert.equal(tools.needsYou.structuredContent.rows.length, 5, 'The compared room holds attention rows, so the bytes cover them');
+  const actual = canonicalize({ screens, tools }), golden = new URL('./j4-reads.golden.json', import.meta.url);
+  assert.equal(actual + '\n', readFileSync(golden, 'utf8'), 'NON-FINDING ROOM: the reads and cards differ from their bytes before the finding profile');
 });
