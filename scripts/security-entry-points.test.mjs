@@ -234,7 +234,7 @@ const seals = {
   "packages/scope/src/applications/projection.ts": "8576f78bb68850421ca7843e6fd0e4ecfb18f136009b82296097feca603f5484",
   "packages/scope/src/destination-host.ts": "e272abc7502b17f171944632ab2da10c23ab2bb58018404ec43b57379eb5d3eb",
   "packages/scope/src/workspace-host.ts": "fc194d9584dc30b7e24d635534a83a6218c3ca9f7a625bf48540a5c28de87271", // Reviewed SQL custody, setup revocation and full refs for recorded branch names.
-  "packages/scope/src/workspace-lineage.ts": "e504accd924593ea2aed7f6180ed2e00112ef4f1c7455ab1594f12d3784f6573", // Reviewed bounded authenticated Register, Directory and Destination creation lineage.
+  "packages/scope/src/workspace-lineage.ts": "8ab25e2b89e8438a7914c441aa9aca3c18e5e7335eb32488251d5631ed52a1ff", // Reviewed bounded authenticated Register, Directory and Destination creation lineage.
   "packages/scope/src/native-birth.ts": "ab9ecd331850e5f183fafaee07145c64adadb3ad904ea95bcc4ddf569da6ad6f", // Reviewed bounded genesis decoding and exact indexed scope and kind discovery.
   "packages/mcp/src/hosted.ts": "408713d777ced9eb3ea9d0c8e590071e08be433c58d35bd9e04ed094439b66b7",
   "packages/mcp/src/hosted-tools.ts": "32b0fe82dd52d335dafad53ef8736405c7bb44689b15f0f567e010d45972e160", // Reviewed R5 admission owner; actual maintained parser output.
