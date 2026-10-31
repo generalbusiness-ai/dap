@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:52e698a23651d99778c240799eda780ede7282fb","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/application-install.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5a1f32de2a76728c4c037d6afab512dd8300395e","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-21-capture-with-source.md."}
