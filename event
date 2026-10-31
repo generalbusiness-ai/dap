@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:df8e3e38cad995872f1b202136d76bf1de649e7a"}
+{"kind":"artifact","text":"apps/room/lanes/test/issue-questions.scope.test.ts at exact d683e7cbbd58d5ff4650a6afefd189190c6c84cd on builder/s5-agent-wait-resume-20261031, under promise git:sha1…03f3001 on request git:sha1…6c380ab","body":{"commit":"d683e7cbbd58d5ff4650a6afefd189190c6c84cd","path":"apps/room/lanes/test/issue-questions.scope.test.ts"}}
