@@ -510,10 +510,18 @@ test("an act that never arrived: a retained card signs nothing, the check sends 
     expect(early.display.card!.actions.map(action => action.purpose)).toEqual(["check-original"]);
     expect(await merges(), "the check sent nothing").toEqual([]);
 
-    // After notAfter the same bytes go once, and the scope refuses them: an answer, and no inference from the clock.
-    f.room.advance(16 * 60_000);
+    // Just past notAfter, inside the clock margin, the check still sends nothing.
+    const checkAfter = Date.parse(String(early.answer["checkAfter"]));
+    const intentEnds = Date.parse(a.signed.at(-1)!.notAfter);
+    expect(checkAfter - intentEnds).toBe(60_000);
+    f.room.advance(intentEnds + 1000 - f.room.now());
+    const margin = await press(a, "merge", early.display, early.display.card!.actions[0]!.id);
+    expect([margin.answer["answer"], typeof margin.answer["checkAfter"]], JSON.stringify(margin.answer)).toEqual(["unknown", "string"]);
+
+    // Past the margin the same bytes go once, and the scope refuses them: an answer, and no inference from the clock.
+    f.room.advance(checkAfter + 1000 - f.room.now());
     await f.room.pause([lane.scope]);
-    const late = await press(a, "merge", early.display, early.display.card!.actions[0]!.id);
+    const late = await press(a, "merge", margin.display, margin.display.card!.actions[0]!.id);
     expect([late.answer["answer"], late.answer["phase"], late.answer["reason"]], JSON.stringify(late.answer)).toEqual(["refused", "refused", "expired"]);
     expect(late.display.receipt).toContain("refused (expired)");
     expect(a.signed.length, "the check signs nothing").toBe(signed);

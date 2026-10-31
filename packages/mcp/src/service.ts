@@ -186,6 +186,8 @@ class Stop extends Error { constructor(readonly result: CallResult) { super("sto
 const stopCall = (f: Finding): never => { throw new Stop(failed(f)); };
 
 const VIEW_DIFF_POLLS = 8;
+/** How far this server's clock can differ from a scope's, for a card's check of an expired request. The contract states no bound. */
+const EXPIRY_MARGIN_MS = 60_000;
 /** The Git reader takes SHA-1 objects. A longer ID is refused here, before a signature or a spent credential. */
 const COMMIT_ID = /^[0-9a-f]{40}$/;
 const DIFF_OUTPUT = { type: "object", properties: { base: { type: "string" }, integration: { type: "string" }, files: { type: "integer", minimum: 0 }, truncated: { type: "boolean" }, text: { type: "string" } }, required: ["base", "integration", "files", "truncated", "text"] };
@@ -965,9 +967,10 @@ export class McpService {
 
   /**
    * With `card`, this is a card's check of its original request. A card has no other route to the scope's answer, so once the
-   * signed intent's `notAfter` has passed, the check sends the same bytes once. An act that landed answers with its first entry,
-   * and an act that never arrived is refused as `expired`. Either answer comes from the scope and resolves the record under
-   * custody's rule. The passing of `notAfter` resolves nothing by itself, and this path signs nothing.
+   * signed intent's `notAfter` and the clock margin have passed, the check sends the same bytes once. An act that landed answers
+   * with its first entry, and an act that never arrived is refused as `expired`. Either answer comes from the scope and resolves
+   * the record under custody's rule. The passing of `notAfter` resolves nothing by itself, and this path signs nothing. If the
+   * scope's clock lags by more than the margin, the scope accepts the act, and the answer says so.
    */
   async #settle(args: Args, card?: { resendExpired: boolean }): Promise<CallResult> {
     const key = args["idempotencyKey"];
@@ -1003,8 +1006,8 @@ export class McpService {
     });
     if (!settled) return ok({ answer: "not-found", sentence: `This server keeps no record under key ${String(key)} for that target.`, next: "That does not show that the act was not sent: another server or custody home can hold it. Ask the server that signed it." });
     const record = settled.record;
-    const expiry = record.envelope.signed.intent.notAfter;
-    const expired = timeMs(expiry)! <= this.#now();
+    const expiry = timeMs(record.envelope.signed.intent.notAfter)! + EXPIRY_MARGIN_MS;
+    const expired = expiry <= this.#now();
     if (card?.resendExpired && expired && scope !== null && !TERMINAL.has(record.phase) && !record.standalone) {
       await this.custody.send(identity, record.meaning, () => Promise.reject(new CustodyError({ held: "unreadable" })), async (envelope) => {
         try { return await this.#reads.transport.submit(scope!, envelope.signed, [], envelope.beside); }
@@ -1031,10 +1034,10 @@ export class McpService {
       : answer === "mismatch" ? `The key ${String(key)} is on another intent of your key at that scope.`
       : `The outcome under key ${String(key)} is unknown: the scope gave no receipt for the exact envelope. The record stays unknown.`;
     const unknownNext = !card ? "Call the same tool again with the same idempotencyKey: it resends the same envelope."
-      : expired ? "The scope gave no answer. Check the original request again." : `Check the original request again after ${expiry}. The scope then answers for good.`;
+      : expired ? "The scope gave no answer. Check the original request again." : `Check the original request again after ${timeOf(expiry)}. The scope then answers for good.`;
     const refusal = card && last?.answer?.answer === "refused" ? { reason: last.answer.reason, ...(last.answer.name ? { name: last.answer.name } : {}) } : {};
     const result = ok({ answer, phase: record.phase, sentence, next: answer === "unknown" ? unknownNext : "Nothing more is needed.", ...refusal,
-      ...(card && answer === "unknown" && !expired ? { checkAfter: expiry } : {}),
+      ...(card && answer === "unknown" && !expired ? { checkAfter: timeOf(expiry) } : {}),
       ...(archived ? { ...archivedAnswer(archived.archived, archived.fact), archived: archived.archived, ...(archived.fact ? { fact: archived.fact } : {}) } : {}),
       ...(receipt ? { fact: receipt.fact, outboxIds: receipt.sends } : {}), outcomes: record.count, attempt: record.attempt,
       last: last ? { at: last.at, ...(last.archivedSettlement ? { answer: "archived", archived: last.archivedSettlement.archived, ...(last.archivedSettlement.fact ? { fact: last.archivedSettlement.fact } : {}) } : projectAnswer(last.answer)) } : null,
