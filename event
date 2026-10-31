@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7b211b631c1589e600dc05c72b73ecd3be8dffa6","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-31-finding-views.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:842b6ad183c335720921a43ff12c568bea0a3dd5","text":"Merge retired a covered predecessor; the successor is at apps/views/test/s4.test.mjs."}
