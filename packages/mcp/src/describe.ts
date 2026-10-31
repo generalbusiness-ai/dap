@@ -123,6 +123,7 @@ export function typeWords(type: FieldLike, setting: Setting): string {
     case "enum": return `one of ${(type["of"] as string[]).join(", ")}`;
     case "member": return "a member, as @handle";
     case "item": return `the ID of ${article(String(type["of"]))} item on this scope`;
+    case "reference": return `a document digest or entry fact, as { document } or { entry }, with an optional opaque fragment up to ${String(type["fragment"])} UTF-8 bytes; this grants no read permission`;
     case "fact": return `an entry of kind ${or(type["kind"] as string[])} under ${String(type["under"])}, as { at, seq, hash }`;
     case "scope": return `a reference to ${article(String(type["kind"]))} scope, as { scope, inc, kind }`;
     case "commit": return "a Git commit ID, 40 or 64 hex characters";
@@ -438,6 +439,19 @@ export function schemaOf(type: FieldLike, setting: Setting): Schema {
     case "enum": return { type: "string", enum: type["of"] };
     case "member": return { anyOf: [{ type: "string", pattern: "^@" }, { type: "object", required: ["membership", "member"] }], description };
     case "item": return { type: "integer", minimum: 0, description };
+    case "reference": {
+      const fragment = { type: "string", description: `At most ${String(type["fragment"])} UTF-8 bytes` };
+      const entry = { type: "object", required: ["at", "seq", "hash"], additionalProperties: false, properties: {
+        at: { type: "object", required: ["scope", "inc", "kind"], additionalProperties: false, properties: {
+          scope: { type: "string" }, inc: { type: "string" }, kind: { type: "string" },
+        } },
+        seq: { type: "integer", minimum: 0 }, hash: { type: "string", pattern: "^sha256:[0-9a-f]{64}$" },
+      } };
+      return { oneOf: [
+        { type: "object", properties: { document: { type: "string", pattern: "^sha256:[0-9a-f]{64}$" }, fragment }, required: ["document"], additionalProperties: false },
+        { type: "object", properties: { entry, fragment }, required: ["entry"], additionalProperties: false },
+      ], description };
+    }
     case "fact": return { type: "object", required: ["at", "seq", "hash"], description };
     case "scope": return { type: "object", required: ["scope", "inc", "kind"], properties: { kind: { const: type["kind"] } }, description };
     case "commit": case "tree": return { type: "string", pattern: "^([0-9a-f]{40}|[0-9a-f]{64})$" };

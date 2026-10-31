@@ -1,5 +1,5 @@
 /** Native field-value guards, shared by the runtime and package constants. */
-import type { Bounds, FieldType, MemberRef } from "@generalbusiness/dap-contract";
+import type { Bounds, FieldType, MemberRef, ReferenceValue } from "@generalbusiness/dap-contract";
 import { timeMs } from "./ids.ts";
 import { isDigest } from "./hash.ts";
 import { isFactRef, isLocalId, isMemberRef, isRecord, isScopeRef } from "./records.ts";
@@ -9,6 +9,15 @@ export const memberFits = (v: MemberRef, bounds: Pick<Bounds, "memberBytes">): b
 
 /** A Git object ID: SHA-1 or SHA-256, lowercase hex. */
 const isObjectId = (v: unknown) => typeof v === "string" && /^([0-9a-f]{40}|[0-9a-f]{64})$/.test(v);
+
+/** A closed document-or-entry citation. It checks shape and the fragment bound, without resolving either target. */
+export function isReference(v: unknown, fragmentBytes: number): v is ReferenceValue {
+  if (!Number.isSafeInteger(fragmentBytes) || fragmentBytes < 0 || !isRecord(v)) return false;
+  const document = Object.hasOwn(v, "document"), entry = Object.hasOwn(v, "entry");
+  if (document === entry || Object.keys(v).some(key => key !== "fragment" && key !== (document ? "document" : "entry"))) return false;
+  if (Object.hasOwn(v, "fragment") && (typeof v["fragment"] !== "string" || !wellFormed(v["fragment"]) || utf8(v["fragment"]).length > fragmentBytes)) return false;
+  return document ? isDigest(v["document"]) : isFactRef(v["entry"]);
+}
 
 /**
  * True when `v` is a value of `type`. An `item` is checked as a local ID
@@ -26,6 +35,7 @@ export function fitsFieldType(type: FieldType, v: unknown, bounds: Bounds): bool
     case "member": return isMemberRef(v) && memberFits(v, bounds);
     case "item": return isLocalId(v);
     case "fact": return isFactRef(v);
+    case "reference": return isReference(v, type.fragment);
     case "scope": return isScopeRef(v) && v.kind === type.kind;
     case "digest": return isDigest(v);
     case "commit": case "tree": return isObjectId(v);

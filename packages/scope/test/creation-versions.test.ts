@@ -6,7 +6,7 @@ import { expect, test } from "vitest";
 import type { Intent, PlatformDefinition, Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, isSignedIntentShape, parseStrict, scopeIdOf, signIntent, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { keys } from "@generalbusiness/dap-derive/testing";
-import { ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
+import { COMMONS_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
 import { readPlatformCreationPolicy, injectedPlatformCreationPolicy, permitsNewPlatformScope } from "../src/creation-versions.ts";
 import { admitChildCreation, type CreationTimer } from "../src/creation-lineage.ts";
 import { indexedScopes, type ScopeIndexPort } from "../src/scope-index.ts";
@@ -16,8 +16,8 @@ import { creationVersionSettings } from "./worker.ts";
 
 const legacy = "platform:register@2";
 const newest = ARCHIVE_DEVICE_PUBLICATION_COHORT.register;
-const install = (now?: number) => signIntent({ v: 1, to: null, actor: keys.paul.key, kind: "install", on: null, expected: {},
-  fields: { host: "git.example", namespace: "versions", policy: "keys", founders: [keys.rita.key] },
+const install = (now?: number, host = "git.example") => signIntent({ v: 1, to: null, actor: keys.paul.key, kind: "install", on: null, expected: {},
+  fields: { host, namespace: "versions", policy: "keys", founders: [keys.rita.key] },
   idempotencyKey: crypto.randomUUID(), notAfter: timeOf((now ?? Date.now()) + 60_000) } satisfies Intent, keys.paul.secret);
 const seedOf = (signed: ReturnType<typeof install>, definition: PlatformDefinition): Seed => ({ v: 1, kind: "register", definition, creator: null, cause: intentDigest(signed.intent), ordinal: 0 });
 
@@ -31,9 +31,8 @@ test("install fixture is a valid signed intent at an exact-second deadline", () 
 });
 
 test("creation policy owns bounded known pins; absent and explicit undefined default, invalid configuration closes", () => {
-  // The unpublished family is an additional admitted baseline, not a change
-  // to the existing hosted creation choices or their native pins.
-  const expected = [...new Set([...Object.values(ARCHIVE_DEVICE_PUBLICATION_COHORT), ...Object.values(UNPUBLISHED_COHORT)])];
+  // The Commons family adds admission without changing hosted creation pins.
+  const expected = [...new Set([...Object.values(ARCHIVE_DEVICE_PUBLICATION_COHORT), ...Object.values(UNPUBLISHED_COHORT), ...Object.values(COMMONS_COHORT)])];
   for (const settings of [{}, { PLATFORM_CREATION_PINS: undefined }, { PLATFORM_CREATION_PINS: "[]" }]) {
     const policy = readPlatformCreationPolicy(settings);
     expect(policy?.pins).toEqual(expected);
@@ -41,6 +40,7 @@ test("creation policy owns bounded known pins; absent and explicit undefined def
     expect(permitsNewPlatformScope(policy, UNPUBLISHED_COHORT.register)).toBe(true);
     expect(permitsNewPlatformScope(policy, UNPUBLISHED_COHORT.directory)).toBe(true);
     expect(permitsNewPlatformScope(policy, UNPUBLISHED_COHORT.destination)).toBe(true);
+    for (const pin of Object.values(COMMONS_COHORT)) expect(permitsNewPlatformScope(policy, pin)).toBe(true);
     expect(permitsNewPlatformScope(policy, legacy)).toBe(false);
     expect(permitsNewPlatformScope(policy, ARCHIVE_DEVICE_APPLICATION_COHORT.register)).toBe(false);
   }
@@ -120,14 +120,14 @@ const count = (object: ReturnType<typeof objectOf>) => runInDurableObject(object
 });
 
 test("actual deployed object defaults reject old new genesis and invalid policy rejects newest without an outer API", async () => {
-  for (const [pin, raw] of [[legacy, undefined], [ARCHIVE_DEVICE_APPLICATION_COHORT.register, undefined], [newest, null], [newest, undefined]] as const) {
-    const signed = install(), name = scopeIdOf(seedOf(signed, pin));
+  for (const [pin, raw] of [[legacy, undefined], [ARCHIVE_DEVICE_APPLICATION_COHORT.register, undefined], [newest, null], [newest, undefined], [COMMONS_COHORT.register, undefined]] as const) {
+    const signed = install(undefined, pin === COMMONS_COHORT.register ? "none" : "git.example"), name = scopeIdOf(seedOf(signed, pin));
     creationVersionSettings.set(name, raw); // own undefined must have the absent-setting meaning
     const object = objectOf(name), native = object as unknown as Native;
     try {
       const answer = await native.create(signed, pin);
-      if (pin === newest && raw === undefined) {
-        expect(answer).toMatchObject({ answer: "accepted", receipt: { definition: newest, fact: { at: { scope: name, kind: "register" }, seq: 0 } } });
+      if ((pin === newest || pin === COMMONS_COHORT.register) && raw === undefined) {
+        expect(answer).toMatchObject({ answer: "accepted", receipt: { definition: pin, fact: { at: { scope: name, kind: "register" }, seq: 0 } } });
         expect(await count(object)).toBe(1);
       } else {
         expect(answer).toEqual({ answer: "refused", reason: "unsupported-definition" });

@@ -1,3 +1,4 @@
+import { ARCHIVE_DEVICE_APPLICATION_COHORT, COMMONS_COHORT, platform } from "@generalbusiness/dap-platform";
 import { relaxedCounting } from "./support/definition-corpus-data.ts";
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
@@ -203,4 +204,19 @@ describe("descriptions are derived from the whole declaration", () => {
     expect(text(forward)).toContain(`which your role (member on ${m2}, admin on ${MEMBERSHIP}) holds`);
     expect(generationOf(bindingsOf(backward, WORDS), backward, options)).toBe(generationOf(bindingsOf(forward, WORDS), forward, options));
   });
+});
+
+
+test("native install descriptions expose the reference Rules refusal", () => {
+  for (const pin of [ARCHIVE_DEVICE_APPLICATION_COHORT.rules, COMMONS_COHORT.rules]) {
+    const native = platform(pin)!;
+    const definition = native.data as unknown as DefinitionLike;
+    const act = definition.acts["install-application"]!;
+    const guards = guardSentences(definition, act, { pinned: pin });
+    expect(guards.some(guard => guard.names?.includes("reference-requires-rules14"))).toBe(true);
+    expect(guards.map(inline).join(" ")).toContain("reference-requires-rules14");
+    expect(describeAct(definition, "install-application", act, { standing: "unknown" }, { pinned: pin },
+      { definition: definition.name, kind: "install-application", declaration: pin, digests: [] }, "").complete)
+      .toContain("reference-requires-rules14");
+  }
 });

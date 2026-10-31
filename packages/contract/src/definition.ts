@@ -12,7 +12,7 @@
  * left.
  */
 
-import type { Digest, PlatformDefinition, ScopeKind } from "./scope.ts";
+import type { Digest, FactRef, PlatformDefinition, ScopeKind } from "./scope.ts";
 import type { FieldValue } from "./intent.ts";
 import type { CapabilityName } from "./capability.ts";
 
@@ -61,6 +61,11 @@ export interface TimedRule {
 
 // ---------------------------------------------------------------- section 6.2
 
+/** A citation carries no authority or retained dependency. The reader interprets its optional fragment. */
+export type ReferenceValue =
+  | { document: Digest; fragment?: string }
+  | { entry: FactRef; fragment?: string };
+
 export type FieldType =
   | { type: "text"; max: number; detached?: true }      // at most 64 KiB; detached: held beside the intent and named in it by digest
   | { type: "int"; min: number; max: number }
@@ -70,6 +75,7 @@ export type FieldType =
   | { type: "item"; of: string }              // a local item of that type
   | { type: "fact"; kind: readonly string[]; under: string }   // an entry of one of those kinds, under a definition of that name
   | { type: "scope"; kind: ScopeKind }
+  | { type: "reference"; fragment: number }    // document or entry citation; fragment is an opaque UTF-8 byte bound
   | { type: "digest" } | { type: "commit" } | { type: "tree" }
   | { type: "record"; of: Record<string, FieldType & { required: boolean }> }   // named members; a member is named after its field with a dot
   | { type: "list"; of: FieldType; max: number };   // at most 64 elements from revision 19 (section 6.1)
