@@ -169,7 +169,10 @@ export function redact(text: string): string {
 export function diagnosis(event: string, step: string, thrown: unknown): Diagnosis {
   let name: string = thrown === null ? "null" : typeof thrown;
   try {
-    if (thrown instanceof Error) name = SAFE_NAMES.has(thrown.name) ? thrown.name : "Error";
+    if (thrown instanceof Error) {
+      const observedName = thrown.name;
+      name = SAFE_NAMES.has(observedName) ? observedName : "Error";
+    }
   } catch {
     name = "object";
   }
