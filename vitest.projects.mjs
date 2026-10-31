@@ -1,6 +1,6 @@
 /**
  * Canonical projects for the root suite and its plain/native phase views.
- * Each project keeps its package's own config. The plain projects share a
+ * Each project keeps its package's own config. The fifteen plain projects share a
  * group with at most four active file tasks in total. The `scope`,
  * `scope-lending` and `scope-denial` groups follow in order, with worker
  * limits of two, one and one in separate runtimes.
@@ -59,9 +59,13 @@ const projects = [
         extends: "./examples/grow/vitest.config.ts",
         test: { name: "grow", root: "./examples/grow", sequence: { groupOrder: 0 } },
       },
+      {
+        extends: "./examples/repo-in-ai/vitest.config.ts",
+        test: { name: "repo-in-ai", root: "./examples/repo-in-ai", sequence: { groupOrder: 0 } },
+      },
 ];
 
-const plainNames = ["bytes", "derive", "platform", "git", "checkers", "replay", "client", "lanes", "cli", "page", "mcp", "counting", "lending", "grow"];
+const plainNames = ["bytes", "derive", "platform", "git", "checkers", "replay", "client", "lanes", "cli", "page", "mcp", "counting", "lending", "grow", "repo-in-ai"];
 const nativeNames = ["scope", "scope-lending", "scope-denial"];
 const namesEqual = (actual, expected) => actual.length === expected.length && actual.every((name, index) => name === expected[index]);
 
@@ -74,7 +78,7 @@ export function testOptions(phase = "all") {
   if (!namesEqual(plain.map(project => project.test.name), plainNames)
     || !namesEqual(native.map(project => project.test.name), nativeNames)
     || native.some((project, index) => project.test.sequence.groupOrder !== index + 1)) {
-    throw new Error("The canonical test projects do not match the fourteen/plain three/native partition.");
+    throw new Error("The canonical test projects do not match the fifteen/plain three/native partition.");
   }
   return {
     maxWorkers: 4,
