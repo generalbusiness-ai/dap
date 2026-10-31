@@ -28,6 +28,7 @@ const nodeFiles = [
   'apps/views/test/decision.test.mjs',
   'apps/jam/test/managed-assets.test.mjs',
   'scripts/test.test.mjs',
+  'scripts/control.test.mjs',
   'scripts/test-summary.test.mjs',
   'scripts/test-progress.test.mjs',
   'scripts/test-phases.test.mjs',
