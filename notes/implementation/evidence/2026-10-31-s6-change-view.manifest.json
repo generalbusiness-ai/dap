@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. Each focused run and control file names the commit it ran at, which is earlier than the checkpoint. The gate ran every witness again at the checkpoint. No hosted Worker, real provider or browser ran. Witness 5 ran on Native stand-ins and the hosted scratch room witness stays owed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-s6-change-view",
+  "checkpoint": {
+    "commit": "98c055ae205b2bd818f3ad03b8c2c478d83b73d4",
+    "tree": "186fe956858e9058fbfddf0e31ce9160f3a4cf50"
+  },
+  "fileCount": 70,
+  "files": [
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6470,
+      "sha256": "0a28d969adbb7f261c414bb2db0c38d9a7b321a7010761f901ebb4f1aa79082f"
+    },
+    {
+      "path": "gate/gate.stderr.log",
+      "bytes": 37,
+      "sha256": "f02840891d6a58f6ab3914a77a0238f33552dca548551aa180d196742d7f41d6"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gate/gate.sh",
+      "bytes": 597,
+      "sha256": "737154c46ed01dafcecd512f2fce8db80d7aa520a1ab200c0bdc8aa2f9e764a8"
+    },
+    {
+      "path": "stopped-main-moved/WHY.txt",
+      "bytes": 117,
+      "sha256": "6b2498318127fe1e5c38357c0ff3b9a65bccf749222ba99e7b31240303c45c18"
+    },
+    {
+      "path": "focused/01-git-diff.txt",
+      "bytes": 479,
+      "sha256": "f7e0ced70a849f150ea38275f47c8466d794e2cbb224c321d2a0d15d6aee5a47"
+    },
+    {
+      "path": "focused/02-scope-change-view.txt",
+      "bytes": 503,
+      "sha256": "675e9619dcd2720903a9d16ce7993fa60d80719d0916f4743721621946d1df7a"
+    },
+    {
+      "path": "focused/03-mcp-plain.txt",
+      "bytes": 725,
+      "sha256": "654ab64ca60cb5ac0a90ca4c0db58e285bb31de66afceb716c2fe1065aab1ab3"
+    },
+    {
+      "path": "focused/04-scope-regressions.txt",
+      "bytes": 635,
+      "sha256": "d48369be9f80229f1048d4fc4d5953b8d92c0e7abc12f5ed4412a3b16e0c2a5a"
+    },
+    {
+      "path": "focused/05-views-node.txt",
+      "bytes": 2122,
+      "sha256": "4b6dc6f7c25cdb408ee7e7284808c0ca5f39c118983195ae1dc9fc176a80b845"
+    },
+    {
+      "path": "focused/06-active-source.txt",
+      "bytes": 1571,
+      "sha256": "d2fa9f062f4f387322c2d203f5c87c2ce3b9261026665826fd46c1b78992bb43"
+    },
+    {
+      "path": "focused/07-security-entry-points.txt",
+      "bytes": 1502,
+      "sha256": "62238b7498448dc84b9382897d351ad8974355f320ad58cf193c77ab8d3e0554"
+    },
+    {
+      "path": "focused/08-kernel-boundary.txt",
+      "bytes": 243,
+      "sha256": "769621d89dab36a7bf897093d6e49828f5c909fcdb60b5ae0076b8272aee451d"
+    },
+    {
+      "path": "focused/09-shared-helpers.txt",
+      "bytes": 257,
+      "sha256": "24e177a7765ce8897f141f1977e18f584653cebcf586dbcf82fc7260f95a57a1"
+    },
+    {
+      "path": "focused/10-tsc-mcp.txt",
+      "bytes": 491,
+      "sha256": "58e657fae2e4c0dfc6205acc860766daf93ad0b4bdb71491ed62f40d28eb9d4f"
+    },
+    {
+      "path": "focused/11-tsc-others.txt",
+      "bytes": 732,
+      "sha256": "72089374541399ceb46f95ca3834613fd0a508a24d7f3a1a4ac336b28ca8b02c"
+    },
+    {
+      "path": "focused/controls/C1-service-ignores-at.txt",
+      "bytes": 9042,
+      "sha256": "2cf2077354dd4fe286743cbdf20e140e2259895be9876d53b45840569739e6d9"
+    },
+    {
+      "path": "focused/controls/C10-custody-per-process.txt",
+      "bytes": 2224,
+      "sha256": "c7c01c0aa9357f72e68f218421c4fc18e82577153a548e0a1a1df0cf0dd6fdb0"
+    },
+    {
+      "path": "focused/controls/C11-repeat-resends.txt",
+      "bytes": 2024,
+      "sha256": "e44aea5a816aa899e6c0f88dee3716fe7a022f4e3856f314180715ac34a0e23a"
+    },
+    {
+      "path": "focused/controls/C12-diff-never-truncated.txt",
+      "bytes": 3879,
+      "sha256": "9328b9fa173a607344901a0e3789601f2cc2752c2b26e9985bc05171853fa504"
+    },
+    {
+      "path": "focused/controls/C13-diff-endpoints-swapped.txt",
+      "bytes": 2962,
+      "sha256": "eac1c076c88e8fa36cb5a0fd594269e6246f50bc62a148cecac7c7945ee8491d"
+    },
+    {
+      "path": "focused/controls/C14-witness4-never-truncated.txt",
+      "bytes": 8190,
+      "sha256": "fb4d079b09061fce8175e41dcddf78eb67b90f5e3cea3436c09a4ff434e390a4"
+    },
+    {
+      "path": "focused/controls/C15-card-at-unchecked.txt",
+      "bytes": 2953,
+      "sha256": "346e046402b50e049f16a496e052501c60024e9edd1139fc139d886e91cd9055"
+    },
+    {
+      "path": "focused/controls/C16-action-at-overwritten.txt",
+      "bytes": 3167,
+      "sha256": "e5022e7a3126cfe6c2db8681455df28dc1b35a8fcf70db391bfbb8694430df70"
+    },
+    {
+      "path": "focused/controls/C17-active-source-widened.txt",
+      "bytes": 610,
+      "sha256": "5f4e5722d76583f5625e984eb2c9f6a269544a5193097b5b750fcbc66ed723ec"
+    },
+    {
+      "path": "focused/controls/C2a-on-not-allowed-witness-1.txt",
+      "bytes": 5857,
+      "sha256": "98c3e6b11705b1a0a99f16e95ac0033d93efb4c85454e810bc1270445381e3d2"
+    },
+    {
+      "path": "focused/controls/C2b-on-not-allowed-decision.txt",
+      "bytes": 7759,
+      "sha256": "636aa1c6d193aac62669e3c68f943795ac9c0390f5390b65c37542ee3c3c51cb"
+    },
+    {
+      "path": "focused/controls/C2c-final-also-not-allowed.txt",
+      "bytes": 8422,
+      "sha256": "5d7e0eabf88f18fb395594dbb389ccfeb7347fdcedf8792235416fac5e71e25b"
+    },
+    {
+      "path": "focused/controls/C2d-computed-name-allowed.txt",
+      "bytes": 2268,
+      "sha256": "3015ea6bb88c4d413dce4eba0a7a4afe1f9809d8eeb98e9c6bf82e781209d234"
+    },
+    {
+      "path": "focused/controls/C3-decision-ignores-at.txt",
+      "bytes": 8965,
+      "sha256": "0c8f3f9a469191945487241eda75c945c67b975732500bc2bb5ae05b4016260e"
+    },
+    {
+      "path": "focused/controls/C4-decision-local-compare.txt",
+      "bytes": 8459,
+      "sha256": "04b5e9c950e789a68339498b3c1310f76b66d1ef10713e6e7f8e0828a8375ff3"
+    },
+    {
+      "path": "focused/controls/C5-merge-unknown-no-check.txt",
+      "bytes": 7672,
+      "sha256": "b59e72527ae2591fd58d0251ed90fe26617f60778a0d2e8a3b77c31417a4e8eb"
+    },
+    {
+      "path": "focused/controls/C6-restart-no-custody-check.txt",
+      "bytes": 7934,
+      "sha256": "02c25e58691a828a3c7bc9fbba952c38ec214d2c13285e1ca01dabca31e81b3e"
+    },
+    {
+      "path": "focused/controls/C7-approve-wrong-extent.txt",
+      "bytes": 9261,
+      "sha256": "f78d1a304406b7c643e59b3397c2fe74918445d63f59986a507c14459795aa4f"
+    },
+    {
+      "path": "focused/controls/C9-merge-guard-removed-setup-failure-not-evidence.txt",
+      "bytes": 8101,
+      "sha256": "26ac8a476b884ed61e4f2e43414c8fdf21d980c115e47801bcdc0c1d6cdbeac7"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 6859,
+      "sha256": "7a16d1033364c8affcc7b2e3199c467b0df90c2169828a727cf7ba8c2048abde"
+    }
+  ]
+}
