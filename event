@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/mcp/test/view-sessions.test.ts","body":{"commit":"9ad5ae93714bb09b69d99d65c7c9f1d612779b87","path":"packages/mcp/test/view-sessions.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:230ae4de218374a46242765cfd7ccc6a1e8d33d1","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/view-resources.test.ts."}
