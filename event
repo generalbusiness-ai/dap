@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1a4ef5be7958efe39ed289edf922baad02939d5b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-31-http-request-lifetime.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6f793fefb400a6a15af8a2d9a16499b946086218","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/http.test.ts."}
