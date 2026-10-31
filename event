@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8050877ec2dfd218345538bdfefedbcaf273960c","text":"Merge retired a covered predecessor; the successor is at examples/repo-in-ai/session.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:80661d3ad06b82f39e6a5cbf8894d88ea4a3f88f","text":"Merge retired a covered predecessor; the successor is at packages/client/test/checker-key-invitation.test.ts."}
