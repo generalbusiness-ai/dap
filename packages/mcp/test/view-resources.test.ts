@@ -103,7 +103,10 @@ test("both revisions serve one immutable raw Brief without extending HTML policy
       _meta: { "io.modelcontextprotocol/protocolVersion": MODERN, "io.modelcontextprotocol/clientCapabilities": {} },
     } : {}) } }, version === LEGACY ? session : null, () => {});
     try {
-      if (version === LEGACY) await rpc("initialize", { protocolVersion: LEGACY });
+      if (version === LEGACY) {
+        await rpc("initialize", { protocolVersion: LEGACY, capabilities: {}, clientInfo: { name: "brief-fixture", version: "1" } });
+        await wire.handle({ jsonrpc: "2.0", method: "notifications/initialized" }, session, () => {});
+      }
       const listing = (await rpc("resources/list"))!.result as { resources: { uri: string; mimeType: string }[] };
       expect(listing.resources.at(-1)).toMatchObject({ uri: PACKAGE_BRIEF_URI, mimeType: "text/plain" });
       const read = (await rpc("resources/read", { uri: PACKAGE_BRIEF_URI }))!.result as { contents: { uri: string; mimeType: string; text: string; _meta?: unknown }[] };
