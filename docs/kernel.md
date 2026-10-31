@@ -295,6 +295,37 @@ A head adds to the kernel when it does any of these:
 
 The checker checks this rule on every head that touches these packages.
 
+Request `1c124ebf` adds a qualified minimum head to five existing reads:
+summary, items, history, entry, and application projection. The contract adds
+`ReadMinimum`, `BehindRead`, the `behind` variant of `Read` and `ReadRefusal`,
+and `Bounds.readWaitMilliseconds`. They belong in the kernel because every
+transport must agree on the qualified position, bounded wait and refusal.
+The optional trailing `atLeast` argument on `ScopeApi.summary`, `items`,
+`history`, `entry` and `applicationProjection` carries that same contract.
+A platform application cannot redefine an existing read's meaning.
+
+The new `packages/bytes/src/read-minimum.ts` exports
+`READ_MINIMUM_WIRE_BOUNDS`, `readMinimum`, `isReadMinimum`,
+`encodeReadMinimumParameter` and `readMinimumParameter`. These closed-shape,
+ownership and bounded canonical-wire rules belong in the kernel because HTTP,
+RPC and local clients must accept the same record without retaining caller
+mutation. The new `isBehindRead` export in `bytes/src/records.ts` validates the
+authenticated current `FactRef` carried by that shared refusal.
+`APPLICATION_PROJECTION_REFUSALS` adds `wrong-incarnation` and `behind`, and
+`ApplicationProjectionRead` carries the dedicated behind record. These contract
+changes keep projection failures consistent across the native reader, wire
+codec and client rather than giving an application its own refusal language.
+
+The wait itself stays in Scope. It holds ephemeral arrival callbacks outside
+turns and storage transactions, checks existing read authority at each wake,
+and removes its timer and callback when the read finishes. A minimum grants
+no read permission and creates no journal entry or durable alarm. A full
+head at or above the journal floor also requires the retained hash at that
+sequence. Missing or different hashes return `unavailable`. Strictly below
+the floor, the minimum orders the read but does not verify the historical
+hash. A timeout returns `behind` only after authority checks succeed. This
+adds no platform kind or application vocabulary.
+
 Request `0c3091fa` adds the existing hold capability's second version under
 ruling `adb1a6ed`. A confirmed head or fork outcome changes the records that
 runtime and replay derive. Those rules belong beside the ledger in the

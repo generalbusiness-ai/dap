@@ -1,6 +1,7 @@
 /** Session-authorized declared application read wire. No field here grants
  * authority or changes the native definition pinned by a scope. */
 import type { Digest, FactRef, ScopeRef, Timestamp } from "./scope.ts";
+import type { BehindRead } from "./read.ts";
 import type { Head } from "./result.ts";
 import type { FieldValue } from "./intent.ts";
 export const APPLICATION_PROJECTION_WIRE_BOUNDS = Object.freeze({ queryBytes: 4096, encodedChars: 5462, urlBytes: 8192, sessionChars: 4104,
@@ -34,6 +35,6 @@ export interface ApplicationProjectionData {
   readonly at: Readonly<Head>;
   readonly sources: Readonly<Record<string, readonly ApplicationProjectionRow[]>>;
 }
-export const APPLICATION_PROJECTION_REFUSALS = Object.freeze(["invalid-query", "forbidden", "unavailable", "incomplete", "stale", "too-large", "query-not-ready", "clock-behind", "sessions-unavailable", "wrong-scope"] as const);
+export const APPLICATION_PROJECTION_REFUSALS = Object.freeze(["invalid-query", "forbidden", "unavailable", "incomplete", "stale", "too-large", "query-not-ready", "clock-behind", "sessions-unavailable", "wrong-scope", "wrong-incarnation", "behind"] as const);
 export type ApplicationProjectionRefusal = typeof APPLICATION_PROJECTION_REFUSALS[number];
-export type ApplicationProjectionRead = { ok: true; query: Digest; value: ApplicationProjectionData } | { ok: false; reason: ApplicationProjectionRefusal };
+export type ApplicationProjectionRead = { ok: true; query: Digest; value: ApplicationProjectionData } | BehindRead | { ok: false; reason: Exclude<ApplicationProjectionRefusal, "behind"> };
