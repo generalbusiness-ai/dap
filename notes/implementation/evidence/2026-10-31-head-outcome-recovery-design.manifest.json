@@ -1,0 +1,781 @@
+{
+  "version": 1,
+  "state": "recovery-design-only",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-s1-head-outcome-recovery-design",
+  "qualification": "Recovery design documentation only. Existing gated Source and tests remain unchanged. Actual sealed telemetry retains its scoped observations and gaps; no new query, diagnosis implementation, reader, room/provider action, landing or acceptance follows. Historical captures keep their own checkpoints/outcomes.",
+  "request": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f0bdea6f41a90f6f9bbca459a4a27c270485460e",
+  "ruling": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f15b9b44c018b1e345b3efe558fcee29d26bffb0",
+  "promise": "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bdf11579925ae3f045796a3bfab3a8b045b25c2e",
+  "base": {
+    "head": "0f0a949eb5bd59b13691947fc695073b2c304759",
+    "tree": "adcc2fe3a6b0bb41522938703d797d4b60123678",
+    "historicalAdoption": {
+      "head": "c8c7b63172175576116f86ed4f7facfcdd749ec2",
+      "tree": "540f57099bc8e5835b4f1c9423b387b65a1a2edf",
+      "qualification": "Initial adoption base differed from BO1 gated d08 in S3 production/tests; this historical gap is now reconciled."
+    },
+    "gateReconciliation": "Complete: only the two final DX documents separate Gate7 from landed Main; the reconciled branch adds only four S1 documents."
+  },
+  "documents": {
+    "design": {
+      "path": "notes/plans/034-2026-10-31-head-outcome-recovery.md",
+      "bytes": 40794,
+      "sha256": "da6806e3012a4370d0e7963fb5a7ef0e42f101f4de2f2ffb2ab3e1a86a0c363d",
+      "reviewedV2Sha256": "07e4611659e5fa7cd19997ea27ee0a0813a04012e7fa66300b4a62c40374673c",
+      "change": "Reviewed original V2 and required status line remain in the old sealed collection. The current repair adds actual scoped telemetry, diagnosis-first disposition and stable status; original-response authority/custody limits stay unchanged."
+    },
+    "note": {
+      "path": "notes/implementation/2026-10-31-head-outcome-recovery-design.md",
+      "bytes": 6666,
+      "sha256": "1b1196bd824d370b145a07b9b4df4a45b0d203c69a0e9b269cf6b10237fd2943"
+    }
+  },
+  "retained": {
+    "files": 104,
+    "bytes": 2397664,
+    "rootIndex": {
+      "path": "SHA256SUMS",
+      "bytes": 10627,
+      "sha256": "de17781247501ee9cdbf7179957f4091bbce429132e8b107da91f1f26f75eee1"
+    },
+    "externalInventory": {
+      "path": "/Users/hughpyle/play/artroom-evidence/2026-10-31-s1-head-outcome-recovery-design.manifest.json",
+      "bytes": 20591,
+      "sha256": "856fe033f5d49a9c9f44ada342bbe007ee476f3974968454a55a61da285e29f8"
+    },
+    "copyAndVerify": "Root reports copy0/0 and durable-only verify PASS; temporary dispatch capture not claimed as retained.",
+    "adoptionReadback": "All104 retained leaves, modes and hashes reread against external inventory."
+  },
+  "digestKinds": {
+    "fileSha256": "The files, documents and retained anchors below bind actual file bytes.",
+    "domainReferences": "Git object IDs, canonical workroom events, ScopeRef/FactRef identities and semantic/domain digests remain domain references, not file-hash claims."
+  },
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 10627,
+      "sha256": "de17781247501ee9cdbf7179957f4091bbce429132e8b107da91f1f26f75eee1"
+    },
+    {
+      "path": "adoption-source/adoption.pending.json",
+      "bytes": 965,
+      "sha256": "fe8dab36ac335891f08ebfddbfedaa6d03d82f593474e8daefdd364009f39431"
+    },
+    {
+      "path": "adoption-source/citation-manifest.pending.json",
+      "bytes": 16926,
+      "sha256": "e4c5ce4483ac5610dd56ea4203a9ea7742a8c34bf1dd82db70852e088db3b282"
+    },
+    {
+      "path": "adoption-source/design-status.patch",
+      "bytes": 558,
+      "sha256": "5a3a3a5f26abb8402cb6277d12c4862412bf0d13e3fd44a24f1bc7babb61d3b6"
+    },
+    {
+      "path": "adoption-source/design.md",
+      "bytes": 35551,
+      "sha256": "0636f3c1e5080adc0fc3b6317c9c6d00c09309039b9dea59717b75e5d6ef5a59"
+    },
+    {
+      "path": "adoption-source/implementation-note.pending.md",
+      "bytes": 2428,
+      "sha256": "f1cd485e31f1bba91cdcc207f45708900f3ed2fbff8a3cc9b3e5194ef802162c"
+    },
+    {
+      "path": "adoption-source/plans-README.md",
+      "bytes": 4682,
+      "sha256": "28ba2edd352a6ebc23e09c51ac5fb9fde21a906041639e47dc570b5aeba59e49"
+    },
+    {
+      "path": "adoption-source/plans-index.patch",
+      "bytes": 489,
+      "sha256": "c6525a1e2474a540fd69a9b4fc9865ab1ad03a3cae806670db976519f58280e1"
+    },
+    {
+      "path": "design-v1/DESIGN.md",
+      "bytes": 21073,
+      "sha256": "16eb9ba873359f84dfad8f7035b22bf4d6930d00f40d4386089509de2de76681"
+    },
+    {
+      "path": "design-v1/PINS.json",
+      "bytes": 3705,
+      "sha256": "5e111903aba5e343cedc67f1103a991074579eeb1a3f06df9393c26b44e672cb"
+    },
+    {
+      "path": "design-v1/REVIEW.md",
+      "bytes": 1792,
+      "sha256": "b0065e2fac7cdd73b487a3f84ec4a485e9d4e2891edda6580a35496712246f3f"
+    },
+    {
+      "path": "design-v1/canonical/61039acc-survey.json",
+      "bytes": 1360,
+      "sha256": "e665c722d71b39870845dbbc26aaddeb3808ac6f58b0edd8e870b1372f47de81"
+    },
+    {
+      "path": "design-v1/canonical/bdf11579-promise.json",
+      "bytes": 2119,
+      "sha256": "02d392d16db2af96d60cfd5f6b25a07aa2f10b53086353bf4bb809b3e3caac98"
+    },
+    {
+      "path": "design-v1/canonical/f0bdea6f-request.json",
+      "bytes": 2786,
+      "sha256": "187036d43779ed68619e807ddab7009d25847cda1c8eae2bfb2a9537a6794a9e"
+    },
+    {
+      "path": "design-v1/canonical/f15b9b44-ruling.json",
+      "bytes": 2338,
+      "sha256": "803ce7f7a56ca4936985711744b5da9d771766b1296ca8a9ea0244ac306da394"
+    },
+    {
+      "path": "design-v1/evidence-pins.json",
+      "bytes": 14886,
+      "sha256": "e636571268a1a24e46d5eff81a4b31949617d7080fc409869f9c67901a8cc2c6"
+    },
+    {
+      "path": "design-v1/kernel-input.json",
+      "bytes": 309,
+      "sha256": "74daf0aced32464ba3f2100e5ab84a08224f9b0214d3f336569660c58d616857"
+    },
+    {
+      "path": "design-v1/kernel-section-7.md",
+      "bytes": 15957,
+      "sha256": "57ad9382cc350d79d39a4f179c882e579dbae4b640f0687c96b6ffa7e3a09a9d"
+    },
+    {
+      "path": "design-v1/reported-source-to-main.patch",
+      "bytes": 4643,
+      "sha256": "7eaa1d5e3ff53876fbf520f842565976467365a57cf8fcebc429aedca42c7dc6"
+    },
+    {
+      "path": "design-v1/source-pins.json",
+      "bytes": 7771,
+      "sha256": "90bf7d41e071d03f908971f9769ab36d0ac86c3c2cecc38c9b96dba91bcded46"
+    },
+    {
+      "path": "design-v2/DESIGN.md",
+      "bytes": 35475,
+      "sha256": "07e4611659e5fa7cd19997ea27ee0a0813a04012e7fa66300b4a62c40374673c"
+    },
+    {
+      "path": "design-v2/PINS.json",
+      "bytes": 2637,
+      "sha256": "431d36f5f6b77648b70936a7a1a4e88231e686623d8045087b012816af4a801d"
+    },
+    {
+      "path": "design-v2/REVISION.md",
+      "bytes": 1728,
+      "sha256": "37bbf4ae627d1b6b194b274fbdd95d97df02082a7d02e961e00447199837019c"
+    },
+    {
+      "path": "design-v2/canonical/61039acc-survey.json",
+      "bytes": 1360,
+      "sha256": "e665c722d71b39870845dbbc26aaddeb3808ac6f58b0edd8e870b1372f47de81"
+    },
+    {
+      "path": "design-v2/canonical/bdf11579-promise.json",
+      "bytes": 2119,
+      "sha256": "02d392d16db2af96d60cfd5f6b25a07aa2f10b53086353bf4bb809b3e3caac98"
+    },
+    {
+      "path": "design-v2/canonical/f0bdea6f-request.json",
+      "bytes": 2786,
+      "sha256": "187036d43779ed68619e807ddab7009d25847cda1c8eae2bfb2a9537a6794a9e"
+    },
+    {
+      "path": "design-v2/canonical/f15b9b44-ruling.json",
+      "bytes": 2338,
+      "sha256": "803ce7f7a56ca4936985711744b5da9d771766b1296ca8a9ea0244ac306da394"
+    },
+    {
+      "path": "design-v2/evidence-pins.json",
+      "bytes": 14886,
+      "sha256": "e636571268a1a24e46d5eff81a4b31949617d7080fc409869f9c67901a8cc2c6"
+    },
+    {
+      "path": "design-v2/kernel-input.json",
+      "bytes": 309,
+      "sha256": "74daf0aced32464ba3f2100e5ab84a08224f9b0214d3f336569660c58d616857"
+    },
+    {
+      "path": "design-v2/kernel-section-7.md",
+      "bytes": 15957,
+      "sha256": "57ad9382cc350d79d39a4f179c882e579dbae4b640f0687c96b6ffa7e3a09a9d"
+    },
+    {
+      "path": "design-v2/reported-source-to-main.patch",
+      "bytes": 4643,
+      "sha256": "7eaa1d5e3ff53876fbf520f842565976467365a57cf8fcebc429aedca42c7dc6"
+    },
+    {
+      "path": "design-v2/source-pins.json",
+      "bytes": 7771,
+      "sha256": "90bf7d41e071d03f908971f9769ab36d0ac86c3c2cecc38c9b96dba91bcded46"
+    },
+    {
+      "path": "design-v2/supplemental-source-pins.json",
+      "bytes": 1194,
+      "sha256": "3dc30220f7e9304f934097311865877476af55b7e4b01cd9861630f57eb4ce2c"
+    },
+    {
+      "path": "design-v2/v1-provenance.json",
+      "bytes": 2289,
+      "sha256": "8beefd365f18235579cf404a47e8b0e58f8c2e5c4be824e5a1ec4ded6e3df3fe"
+    },
+    {
+      "path": "design-v2/v1-to-v2.patch",
+      "bytes": 22088,
+      "sha256": "fcc4200e56fbf3ce790b15c2f0f165d45a3fc6534633c764ff8e844b30062326"
+    },
+    {
+      "path": "evidence-00/command.json",
+      "bytes": 1352,
+      "sha256": "9a70eec2ca878c90c2c0765b9a5526cf6290fb9fcab723557165ae34cf7f2e1c"
+    },
+    {
+      "path": "evidence-00/receipt.json",
+      "bytes": 1770,
+      "sha256": "200c467fac48e1c795450581f4b57698f1d86ffbf7ee9541b70e61abed556f9e"
+    },
+    {
+      "path": "evidence-00/stderr.log",
+      "bytes": 174,
+      "sha256": "3891af8fbdbb43737a8fda600380936a14bdabd95d60b999c7078eb7c0e7b488"
+    },
+    {
+      "path": "evidence-00/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "evidence-01/command.json",
+      "bytes": 1287,
+      "sha256": "e816beef007f8e496953e1408d39d935475eab53c715cc3caa2b59436606370b"
+    },
+    {
+      "path": "evidence-01/receipt.json",
+      "bytes": 1701,
+      "sha256": "2fe455d5d7a1108c65b63d3dc64b199d0a211a13380f4fbf187e2ba09ef0366b"
+    },
+    {
+      "path": "evidence-01/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "evidence-01/stdout.log",
+      "bytes": 2202,
+      "sha256": "0a490f6aff2834cefe373dafcdd3e1f12bb7b9c854dad8bba82c7f462887b9d1"
+    },
+    {
+      "path": "evidence-02/command.json",
+      "bytes": 1283,
+      "sha256": "caf5c4cb8e973850724e7c316350b5e608f5ccc808f331545865ca57584d11e9"
+    },
+    {
+      "path": "evidence-02/receipt.json",
+      "bytes": 1697,
+      "sha256": "bed8630d0946574dc4eb2da764ffc7c130620efb4666c15d59bcb1f0398fd74f"
+    },
+    {
+      "path": "evidence-02/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "evidence-02/stdout.log",
+      "bytes": 2991,
+      "sha256": "ace630ff028a85c5f31f41e2355c5a422b552c585a58bb801b34a2613fb3266b"
+    },
+    {
+      "path": "evidence-03/command.json",
+      "bytes": 1287,
+      "sha256": "924130bfcdbcf7f69c7e92732ccad83162e8d2dc3503bd47b188f2ca97d655ae"
+    },
+    {
+      "path": "evidence-03/receipt.json",
+      "bytes": 1727,
+      "sha256": "abe09912fcfec8900533fee4f36dcb66f96dad6382e85893606cd6317eeda17a"
+    },
+    {
+      "path": "evidence-03/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "evidence-03/stdout.log",
+      "bytes": 3859,
+      "sha256": "a1563c8af7d91e6166d1285129925064b25a7451b8b690bc156dfe6d5751cc91"
+    },
+    {
+      "path": "evidence-04/PLAN.md",
+      "bytes": 5517,
+      "sha256": "3dbd779b612b3f44eea06b1624039f8a01316383936a2d32bd32945f13ca3701"
+    },
+    {
+      "path": "evidence-04/source-pins.json",
+      "bytes": 3221,
+      "sha256": "aa9b68c7ffc587fe3918a39018ec62dd3655edd6f997f50ef25cf35878ed4420"
+    },
+    {
+      "path": "evidence-05/PLAN.md",
+      "bytes": 6822,
+      "sha256": "58bcf24cac5fefb849c1f93e048fc832aa981a24d03d9b9560b91bdd76de5d68"
+    },
+    {
+      "path": "evidence-06/PLAN.md",
+      "bytes": 6474,
+      "sha256": "a6c4f927a8dd82a69f359a5060d6990a49ebcbb9a16e1eb834ba99fb040a4a9f"
+    },
+    {
+      "path": "evidence-07/command.json",
+      "bytes": 1330,
+      "sha256": "6fa3ac01616ea6c36b02efc83684e4bd275a0562c59bb8845ac3d3f461341f34"
+    },
+    {
+      "path": "evidence-07/receipt.json",
+      "bytes": 1758,
+      "sha256": "9cb7fe92bbd41b860e50bc07e33ff4aba504d9a3c05f776dafab76a26df34b63"
+    },
+    {
+      "path": "evidence-07/stderr.log",
+      "bytes": 174,
+      "sha256": "3891af8fbdbb43737a8fda600380936a14bdabd95d60b999c7078eb7c0e7b488"
+    },
+    {
+      "path": "evidence-07/stdout.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "evidence-08/command.json",
+      "bytes": 1288,
+      "sha256": "e87f2422f79e10213a1d508232d4cc6ab01f54b114c2ab0646ef433e055e1b2e"
+    },
+    {
+      "path": "evidence-08/receipt.json",
+      "bytes": 1712,
+      "sha256": "573aceb15300da3a3ea947edc9b76a9399a53f93358cca546861a0aa0c291150"
+    },
+    {
+      "path": "evidence-08/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "evidence-08/stdout.log",
+      "bytes": 3754,
+      "sha256": "717d933914bf3293979dd75ae1c0efe624937489fac67b8f55b016977fbe9e64"
+    },
+    {
+      "path": "evidence-09/PLAN.md",
+      "bytes": 6439,
+      "sha256": "952cf79dca3a34563a086424b4622efe089519383268c91629c5931ea719d76e"
+    },
+    {
+      "path": "evidence-09/closed-inputs.json",
+      "bytes": 1142,
+      "sha256": "f37dcf33bbd7328ff7f23fb03aa06c4fe3f87e364b715fae4b65e79820100cf1"
+    },
+    {
+      "path": "evidence-10/artroom-s1-r2-fork-diagnostic-root-release-20261030-v1.json",
+      "bytes": 1287,
+      "sha256": "627580b5b437931a1c87d20aa95fcf1fe303f0c273bae0b192fa055ca45eecf6"
+    },
+    {
+      "path": "j4-start-condition/packet-binding.json",
+      "bytes": 8869,
+      "sha256": "4aae8e9ea3c5ab2b708400945d031ae0b17f5aea75e6a4646b31b7d578b0e3aa"
+    },
+    {
+      "path": "packaging-plan.json",
+      "bytes": 24478,
+      "sha256": "eaaa40b0904e79d35694660abbb09629c1f8cbccc4dd79851bb5f9ec3f5ac8db"
+    },
+    {
+      "path": "prior-metadata/2026-10-30-s1-identity-members-followup.manifest.json",
+      "bytes": 613258,
+      "sha256": "6769a69514cd69f973daf0ef7fdbdac4e058ce4e2d190e5e8813ebcedea796e4"
+    },
+    {
+      "path": "prior-metadata/2026-10-30-s1-second-scratch.manifest.json",
+      "bytes": 476341,
+      "sha256": "76930b33290f1f1951887c3dfc2ca13b4e4f412a978144892b75008ab8e42fba"
+    },
+    {
+      "path": "prior-metadata/staging-provenance.json",
+      "bytes": 882,
+      "sha256": "00cb7d532e0c11162aaa285bc55e7f095551dbe808148a8eba52ff199a360fb9"
+    },
+    {
+      "path": "retention/CLI.json",
+      "bytes": 966,
+      "sha256": "2f9a3b19858b9bf8b18b0660c5ca9338e204eed8ff5a251142e28952828cb7e7"
+    },
+    {
+      "path": "retention/PINS.json",
+      "bytes": 1151,
+      "sha256": "93d15b8a0f3d96e146f23e2a1233ea9e557637fafc901d00a231e0429e2b8e15"
+    },
+    {
+      "path": "retention/PLAN.md",
+      "bytes": 4559,
+      "sha256": "b2283663d5162844adf056a85beec027eacf620beb1e854b4c102b6e48348b56"
+    },
+    {
+      "path": "retention/adapted-from.json",
+      "bytes": 669,
+      "sha256": "938bc054e869c06bb8ae9222078855448264d13ae85af92634c3b779f549ada8"
+    },
+    {
+      "path": "retention/adapter.patch",
+      "bytes": 11732,
+      "sha256": "b152429c2521e6c8940fd556ee997083cbadced584fd50f48b1c16805d2e2fd2"
+    },
+    {
+      "path": "retention/package-public.py",
+      "bytes": 17893,
+      "sha256": "f96cf1ff5aa2d8fcdfc16affb870348c137d91b20761f4f3b1eacb79ecf7587d"
+    },
+    {
+      "path": "retention/upstream-package-public.py",
+      "bytes": 17036,
+      "sha256": "4133c0df1c5df6327c644a14bed359eaaa7f12e4fb309e37cab6abf72ac0c2e2"
+    },
+    {
+      "path": "source-snapshots/main/docs/kernel.md",
+      "bytes": 33258,
+      "sha256": "bf2d9621da07a908310ae9a1cc48cb88025068883a25a42e3dd2ec5fff1d189d"
+    },
+    {
+      "path": "source-snapshots/main/packages/contract/src/capability.ts",
+      "bytes": 7274,
+      "sha256": "c094f04eb7519b0009c751a2929c56244917a45289a88ce1ae2e0cf7c89d90d4"
+    },
+    {
+      "path": "source-snapshots/main/packages/derive/src/capability/hold.ts",
+      "bytes": 78590,
+      "sha256": "3641f16ad2bc2a0ac46b613055b42c16e64153ef72e4a4fb3b84ca92a4b1a267"
+    },
+    {
+      "path": "source-snapshots/main/packages/derive/src/hold.ts",
+      "bytes": 6640,
+      "sha256": "eafb6c13419e794fcc3793df17a2017954afc39ae55247632beff12069e44242"
+    },
+    {
+      "path": "source-snapshots/main/packages/derive/src/ledger.ts",
+      "bytes": 31955,
+      "sha256": "a25d470ee93aad8d58fd1831cb787d01351cbece756fd069d70c52a9ca87bdb0"
+    },
+    {
+      "path": "source-snapshots/main/packages/git/src/host.ts",
+      "bytes": 20006,
+      "sha256": "882fff09ddc9c630f895997b1e12676f52bc8affd861fce7292b4e14aa03dbb2"
+    },
+    {
+      "path": "source-snapshots/main/packages/scope/src/artifacts-host.ts",
+      "bytes": 25032,
+      "sha256": "b0c6525be89a33baf4173fb20f818b1b6a31dc527bbd749591e096d4ae2a0855"
+    },
+    {
+      "path": "source-snapshots/main/packages/scope/src/artifacts-wiring.ts",
+      "bytes": 10714,
+      "sha256": "a0c5aad078f59f904e1af703109c4c5cbf2bdd944981347c39244c5740b79c79"
+    },
+    {
+      "path": "source-snapshots/main/packages/scope/src/object.ts",
+      "bytes": 70418,
+      "sha256": "3edf0393fec8842b146a8392a1bfe6fecdbfac4234643a7f5a948402aa499af3"
+    },
+    {
+      "path": "source-snapshots/main/packages/scope/src/operations.ts",
+      "bytes": 48073,
+      "sha256": "1c726fd47bc0dfc1f9e00f7b17ab8bfddce7ebd0c9e1a2fc51b7b45393c72e2a"
+    },
+    {
+      "path": "source-snapshots/main/packages/scope/src/sqlite.ts",
+      "bytes": 61650,
+      "sha256": "aed4f145d7cc3d8f101ff24bd787ba9dc9e62a8534aade31d94761ceca6a6acd"
+    },
+    {
+      "path": "source-snapshots/main/packages/scope/src/worker.ts",
+      "bytes": 65847,
+      "sha256": "4be48db10a39e4c936c343c6a7f480851df0f4b6e905d26c3331af67238e1618"
+    },
+    {
+      "path": "source-snapshots/main/packages/scope/src/workspace-host.ts",
+      "bytes": 23956,
+      "sha256": "da31d66530d659f9eb7bc387fbb4d8af4461d0e1c3683635ac076d4a660a6a78"
+    },
+    {
+      "path": "source-snapshots/main/packages/scope/src/workspace-lineage.ts",
+      "bytes": 6509,
+      "sha256": "088ec8ca889479a29d4fb4d08b8d88c344a8b12776fbbf6dcf73a895a9a80541"
+    },
+    {
+      "path": "source-snapshots/reported-source/packages/contract/src/capability.ts",
+      "bytes": 7274,
+      "sha256": "c094f04eb7519b0009c751a2929c56244917a45289a88ce1ae2e0cf7c89d90d4"
+    },
+    {
+      "path": "source-snapshots/reported-source/packages/derive/src/capability/hold.ts",
+      "bytes": 78590,
+      "sha256": "3641f16ad2bc2a0ac46b613055b42c16e64153ef72e4a4fb3b84ca92a4b1a267"
+    },
+    {
+      "path": "source-snapshots/reported-source/packages/derive/src/ledger.ts",
+      "bytes": 31955,
+      "sha256": "a25d470ee93aad8d58fd1831cb787d01351cbece756fd069d70c52a9ca87bdb0"
+    },
+    {
+      "path": "source-snapshots/reported-source/packages/git/src/host.ts",
+      "bytes": 20006,
+      "sha256": "882fff09ddc9c630f895997b1e12676f52bc8affd861fce7292b4e14aa03dbb2"
+    },
+    {
+      "path": "source-snapshots/reported-source/packages/scope/src/artifacts-host.ts",
+      "bytes": 25032,
+      "sha256": "b0c6525be89a33baf4173fb20f818b1b6a31dc527bbd749591e096d4ae2a0855"
+    },
+    {
+      "path": "source-snapshots/reported-source/packages/scope/src/artifacts-wiring.ts",
+      "bytes": 10714,
+      "sha256": "a0c5aad078f59f904e1af703109c4c5cbf2bdd944981347c39244c5740b79c79"
+    },
+    {
+      "path": "source-snapshots/reported-source/packages/scope/src/object.ts",
+      "bytes": 70393,
+      "sha256": "dafc57ca59d4c7c3640a06ee81a8fccfa325831671d3d5b1d8d585bbda4b9da7"
+    },
+    {
+      "path": "source-snapshots/reported-source/packages/scope/src/operations.ts",
+      "bytes": 48024,
+      "sha256": "82f4fd376f74bdf98d28d3ec81c9db0b2ee6950132b9e1a515497076ef7559ff"
+    },
+    {
+      "path": "source-snapshots/reported-source/packages/scope/src/worker.ts",
+      "bytes": 65814,
+      "sha256": "e8026f4480fab6337f10d5aafcb331cd7ba788dffe1677fbb0b3846448d2ec7d"
+    },
+    {
+      "path": "source-snapshots/reported-source/packages/scope/src/workspace-host.ts",
+      "bytes": 23956,
+      "sha256": "da31d66530d659f9eb7bc387fbb4d8af4461d0e1c3683635ac076d4a660a6a78"
+    },
+    {
+      "path": "source-snapshots/reported-source/packages/scope/src/workspace-lineage.ts",
+      "bytes": 6509,
+      "sha256": "088ec8ca889479a29d4fb4d08b8d88c344a8b12776fbbf6dcf73a895a9a80541"
+    },
+    {
+      "path": "source-snapshots/source-index.json",
+      "bytes": 10848,
+      "sha256": "513ed9e17f59fd8dd8891b03799006a47590cf1f10e34161866b3ac54542faa4"
+    }
+  ],
+  "reconciliation": {
+    "gate": {
+      "head": "aaf902f276252d4c243e5e74503694bc9d9893fc",
+      "tree": "d44e7fd3f553b963e28257bd936a2e88a85b4cec",
+      "outcome": "passed",
+      "qualification": "Existing Gate7 result; no new gate run."
+    },
+    "design": {
+      "head": "3fc046f30e90f137f7f0730a5af1b75bb20af340",
+      "tree": "887c6abf08f0697d2ba82d677b08574b2ae73882",
+      "qualification": "Historical reconciled checkpoint before later documentation repairs; the current repair changes documentation only."
+    },
+    "gateToMainPaths": [
+      "notes/implementation/2026-10-30-dxa2-minimum-head.md",
+      "notes/implementation/evidence/2026-10-30-dxa2-minimum-head.manifest.json"
+    ],
+    "mainToDesignPaths": [
+      "notes/implementation/2026-10-31-head-outcome-recovery-design.md",
+      "notes/implementation/evidence/2026-10-31-head-outcome-recovery-design.manifest.json",
+      "notes/plans/034-2026-10-31-head-outcome-recovery.md",
+      "notes/plans/README.md"
+    ],
+    "followUpRule": {
+      "path": "docs/testing.md",
+      "section": "Follow-up after a gate",
+      "text": "Do not run the gate again for a commit that changes only documents; say that the source and tests are unchanged, and give the two tree hashes."
+    },
+    "sourceAndTestsUnchanged": true
+  },
+  "citationCollections": {
+    "telemetry": {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-31-s1-head-telemetry",
+      "fileCount": 14,
+      "bytes": 418806,
+      "directoryMode": 365,
+      "rootIndex": {
+        "path": "SHA256SUMS",
+        "bytes": 1011,
+        "sha256": "8c4f9c5d8f8e8717587f197cb0a54b7b2d4e4519befa60c641b247200bbf4008"
+      },
+      "files": [
+        {
+          "path": "README.md",
+          "bytes": 986,
+          "sha256": "4b21116475bc41ef393c112dd3049c9424638c4f475f25ef31bc28a05d976a69",
+          "mode": 292
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1011,
+          "sha256": "8c4f9c5d8f8e8717587f197cb0a54b7b2d4e4519befa60c641b247200bbf4008",
+          "mode": 292
+        },
+        {
+          "path": "ae-dropped.json",
+          "bytes": 863,
+          "sha256": "ab134af80c5f5db67015e23b0552f3b6218f714ead726e447a1c8ae3b21b9106",
+          "mode": 292
+        },
+        {
+          "path": "ae-dropped.sql",
+          "bytes": 316,
+          "sha256": "713661271dfb970ef49263658c6d85a0484795266648fe4b2f72fbda83cb1cbc",
+          "mode": 292
+        },
+        {
+          "path": "ae-r1.json",
+          "bytes": 66174,
+          "sha256": "3a1d6838b38fc9be69b9a7e1723f891c02a89837777a8e3970d666bc05a473a4",
+          "mode": 292
+        },
+        {
+          "path": "ae-r1.sql",
+          "bytes": 402,
+          "sha256": "0cd7ff5dfb4ad98d1b7b884d4a06b4a65d7360a0bd84224fcdf7962e8defee6b",
+          "mode": 292
+        },
+        {
+          "path": "ae-r2.json",
+          "bytes": 53204,
+          "sha256": "e7ecc492cb45b5839169dc6f3a53d30437a42126e3fcd0cd89cec08250228a84",
+          "mode": 292
+        },
+        {
+          "path": "ae-r2.sql",
+          "bytes": 402,
+          "sha256": "95977ee97f343e41d49242eec138dc2dd3e8015b14a85e7a8903ca84471ec0a3",
+          "mode": 292
+        },
+        {
+          "path": "ae-window.json",
+          "bytes": 12463,
+          "sha256": "14c0d180358d9db094f2a9fd34c4f3b4cff683fba35848d23ead5d2b983e0bfe",
+          "mode": 292
+        },
+        {
+          "path": "ae-window.sql",
+          "bytes": 501,
+          "sha256": "388e4f95296e7c0813644f883a64c7a428160a1c9abed50eab3b92a8fe960508",
+          "mode": 292
+        },
+        {
+          "path": "logs-r1.json",
+          "bytes": 191980,
+          "sha256": "bdd8ff985035baf5b6fdb64ce673c5b0c0329f3ef6b2daa37fb1a238dfbe82e5",
+          "mode": 292
+        },
+        {
+          "path": "logs-r2.json",
+          "bytes": 82082,
+          "sha256": "b1fbd23012b7311e7c42242c846127e226716fc2f78c9e99040dee49368d4198",
+          "mode": 292
+        },
+        {
+          "path": "q0.json",
+          "bytes": 8094,
+          "sha256": "a371161206180c4b599c0d07db29254983e999468cca7d1a66dfcfb5add635fb",
+          "mode": 292
+        },
+        {
+          "path": "q0.sql",
+          "bytes": 328,
+          "sha256": "4d594bf436363723e670a3271490b3e4adae6349967370303f4dea7a7cf8c4da",
+          "mode": 292
+        }
+      ],
+      "qualification": "Exact sealed public files independently verified read-only. Query execution/operator time is planner-reported; account retention was not checked. No original-operation/head/provider-stage or completeness proof follows."
+    },
+    "roomInputs": {
+      "files": [
+        {
+          "bytes": 635,
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-10-30-s1-identity-members-followup/input/scratch-input.json",
+          "sha256": "bcaff6825ec713054edac1201afcf2b523487b05fde3e5c11a7dfdba712c82a5"
+        },
+        {
+          "bytes": 637,
+          "path": "/Users/hughpyle/play/artroom-evidence/2026-10-30-s1-second-scratch/preparation/second-scratch/input.candidate.json",
+          "sha256": "e39b2dc07f15d692b74018a39d8786eab85e2c0c3ecd29b1234c414db002b5f2"
+        }
+      ],
+      "qualification": "Existing sealed public input bytes bind configured room/Worker targets; no private home or original invocation proof."
+    }
+  },
+  "canonicalReferences": [
+    "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b834767897a2902dce9f02f3a293000a05f31094",
+    "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3ed61daa013c04b5886fa44c08c22c10d8d5c264",
+    "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:787203a804b00b26abf50dd881afe7605bdee817",
+    "git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4f3336c17fe8c0e3b3065b272f0b7c101850ca38"
+  ],
+  "sourceCodeReferences": {
+    "head": "495c02f98dc141b54cd22e68e28eb34989be95e3",
+    "tree": "a12f008ec6e8faf023dc83b7fc950758fba3cb0c",
+    "files": [
+      {
+        "path": "apps/room/wrangler.demo.jsonc",
+        "head": "495c02f98dc141b54cd22e68e28eb34989be95e3",
+        "gitBlob": "fcdf019b4da82292f7e9c22cc1d51f94885210b9",
+        "bytes": 2563,
+        "sha256": "29bd49e8c021bb123134f9231e350f37fe7718f441ea4cb517682b42f6e63ca1"
+      },
+      {
+        "path": "packages/scope/src/metrics.ts",
+        "head": "495c02f98dc141b54cd22e68e28eb34989be95e3",
+        "gitBlob": "4508e5079b0d692bdb26918d20e06061bf01e89b",
+        "bytes": 12971,
+        "sha256": "1aa8cf408fe2cd7dab6828ad386921baa7c27d720f925c66a8e52b89c519a05d"
+      },
+      {
+        "path": "packages/scope/src/operational.ts",
+        "head": "495c02f98dc141b54cd22e68e28eb34989be95e3",
+        "gitBlob": "ff53723161dfd1333d4754d6045d7ca9f7209e98",
+        "bytes": 7767,
+        "sha256": "ab969fa9949aa1d621fc79f38bb295a31b8ac405daf5d904214ff4e4bd0b4cea"
+      },
+      {
+        "path": "packages/scope/src/diag.ts",
+        "head": "495c02f98dc141b54cd22e68e28eb34989be95e3",
+        "gitBlob": "9bb6403ab90bf11716700f899d1b879933957bcc",
+        "bytes": 9745,
+        "sha256": "2bbf9516110b509afe35b894dfb3a7146632dbab31f9a9ef20a2fd5aaf44e07a"
+      },
+      {
+        "path": "packages/scope/src/workspace-host.ts",
+        "head": "495c02f98dc141b54cd22e68e28eb34989be95e3",
+        "gitBlob": "4b0273d7f847b8a68d41c54734b50d16a40e1702",
+        "bytes": 23956,
+        "sha256": "da31d66530d659f9eb7bc387fbb4d8af4461d0e1c3683635ac076d4a660a6a78"
+      },
+      {
+        "path": "packages/scope/src/artifacts-host.ts",
+        "head": "495c02f98dc141b54cd22e68e28eb34989be95e3",
+        "gitBlob": "2760b38a6a2bbc3ca60dad81d080c6f1ae809a33",
+        "bytes": 25032,
+        "sha256": "b0c6525be89a33baf4173fb20f818b1b6a31dc527bbd749591e096d4ae2a0855"
+      },
+      {
+        "path": "packages/scope/src/operations.ts",
+        "head": "495c02f98dc141b54cd22e68e28eb34989be95e3",
+        "gitBlob": "f0308c66e65c30e3c591a2a6188af6337a20a1b5",
+        "bytes": 48073,
+        "sha256": "1c726fd47bc0dfc1f9e00f7b17ab8bfddce7ebd0c9e1a2fc51b7b45393c72e2a"
+      }
+    ],
+    "qualification": "Immutable checked-in Git Source references, not copied raw snapshots or deployed-byte proof."
+  }
+}
