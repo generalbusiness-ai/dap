@@ -1,6 +1,6 @@
 # Refuse a founder key that is also the recovery key
 
-Status: source implementation. No Worker runs this code yet. The planner decides when a deployment creates rooms on the new cohort.
+Status: source implementation. The gate passed at `86f7c025`. No Worker runs this code yet. The planner decides when a deployment creates rooms on the new cohort.
 
 Request `309f3434eb9cff1618d23546a2b00cea6c36ef2e` and promise `81ab0ddba4ec5a02a1afb84119b10319c31ae71b` own this head. Planner decision `40ea8fdf` routes this repair.
 
@@ -79,7 +79,9 @@ Checkpoint: head `770d16623beb57a357ee9b2a1ff9dabb146b6c68`, tree `3ea605197afd0
 | MCP inventory | `770d1662` | `npx vitest run --project mcp packages/mcp/test/inventory.test.ts` | 0 | `78f8995edcdd6de27db10b7fe2fef42976d8918c3f45acd729cc7dd169c00938` |
 | MCP types | `770d1662` | `npx tsc -p packages/mcp/tsconfig.json` | 0 | `30e3142ffce5767e301359cbcbdee194e74be5d9cb744707abc62e8f9952e594` |
 | Scope test types | `770d1662` | `npx tsc -p packages/scope/tsconfig.test.json` | 0 | `30e3142ffce5767e301359cbcbdee194e74be5d9cb744707abc62e8f9952e594` |
-<!-- gate row -->
+| Gate | `86f7c025` | `npm run gate` | 0 | `2b681fbacc1ea7d4` |
+
+The gate reports 3475 plain and 974 native tests, 116 Node and 56 Counting. The gate's head is `86f7c0258c50c550fe07da27366e087f0791ba51`, tree `7473bd7d`, and it includes main `cf617842`. `SHA256SUMS` hashes to `22510c505f0b8007c3731cbd5a7b744c6a67f4103e67a4de9726e2d394f99e88`. The reviewed head adds the manifest and this note's gate row, and merges main `ad411431`. That merge brings test helpers and one note, so I did not run the gate again. `merge/after-settle.log` ran `founder-recovery.test.ts`, `join.test.ts` and the seal test at `a4320607`, a merge of that main before this note's commit. Its tree differs from this head's only by this note and its manifest. `gate-failed-join-list/` holds the gate before this one, which failed in `apps/room/page/test/join.test.ts`: the test listed the proof pins by hand and lacked `platform:membership@10`. The next commit adds that pin to the list.
 
 Before the merge, the seals moved for 18 owners, and `focused/seal-moves.txt` lists each one. The merge moved two of them again, and `merge/seal-moves.txt` lists both. Each value came from the owner's failure output.
 
