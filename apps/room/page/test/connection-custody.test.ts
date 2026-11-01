@@ -77,6 +77,16 @@ test("a creator proof that fails does not call a saved connection unsent", async
   expect(shared.issueInvitation).not.toHaveBeenCalled();
 });
 
+test("a press for a row that this browser no longer holds cannot say what an earlier send did", async () => {
+  const { storage } = fixture();
+  const input: InvitationIssueInput = { kind: "person", handle: "@guest", role: "member", hours: 24 };
+  for (const mode of ["check", "continue"] as const) {
+    const stopped = await connectInvitation(origin, storage, expected, input, { mode, locks }).then(() => "no stop", (error: Error) => error.message);
+    expect(stopped).toBe("There is no retained original connection. This step sent nothing, and this browser cannot say whether an earlier send of a connection went.");
+  }
+  expect(shared.issueInvitation).not.toHaveBeenCalled();
+});
+
 test("dropped connection reservation dispatches nothing; agent input uses the verified controller and public configuration exports no browser key", async () => {
   const f = fixture();
   const dropped: ClaimStorage = { getItem: () => null, setItem: () => {} };

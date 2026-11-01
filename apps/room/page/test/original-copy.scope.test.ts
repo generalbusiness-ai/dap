@@ -18,8 +18,8 @@ import { SERVICE, demo, type Demo } from "./support/demo.ts";
 // losing its connection does. No DOM: the two-context witness (`two-devices.mjs`) runs the page.
 
 type Mode = "pass" | "reply-lost" | "never-arrived" | "held";
-/** What the stand-in network loses or refuses: session requests, copy lists, a refused list, and copy deletions. */
-type Down = "sessions" | "list" | "list-refused" | "end";
+/** What the stand-in network loses or refuses: session requests, copy lists, a refused list, a keep, a refused keep, and copy deletions. */
+type Down = "sessions" | "list" | "list-refused" | "keep" | "keep-refused" | "end";
 interface Wire { mode: Mode; down: Set<Down>; acts: { actor: string; body: string; arrived: boolean }[]; copies: { method: string; path: string }[]; order: string[]; release?: () => void; arrived?: () => void }
 const wireOf = (): Wire => ({ mode: "pass", down: new Set(), acts: [], copies: [], order: [] });
 const ACTS = /\/v1\/scopes\/[^/]+\/acts$/;
@@ -32,6 +32,8 @@ const wrapOf = (wire: Wire) => (inner: Fetch): Fetch => async (url, init) => {
   if (wire.down.has("sessions") && path.endsWith("/sessions")) throw new Error("no reply to the session request");
   if (wire.down.has("list") && method === "GET" && path.endsWith("/originals")) throw new Error("no reply to the list");
   if (wire.down.has("list-refused") && method === "GET" && path.endsWith("/originals")) return new Response(JSON.stringify({ ok: false, reason: "unavailable" }), { status: 503 }) as never;
+  if (wire.down.has("keep") && method === "POST" && path.endsWith("/originals")) throw new Error("no reply to the keep");
+  if (wire.down.has("keep-refused") && method === "POST" && path.endsWith("/originals")) return new Response(JSON.stringify({ reason: "conflict" }), { status: 409 }) as never;
   if (wire.down.has("end") && method === "DELETE" && COPIES.test(path)) throw new Error("no reply to the deletion");
   if (method !== "POST" || !ACTS.test(path)) return inner(url, init);
   const body = init?.body as string;
@@ -331,7 +333,7 @@ test("a full cap sends nothing", async () => {
     // The page sends nothing, and it says so.
     const stopped = await comment(s.laptop, s.lane, "One too many.").then(() => null, (error: Error) => error);
     expect(stopped).toBeInstanceOf(CopyNotKept);
-    expect(stopped?.message).toContain("Nothing was sent");
+    expect(stopped?.message).toBe("You have too many open requests. This press sent nothing. Check the open requests in this room first.");
     expect(s.wire.acts).toEqual([]);
     expect(await openRows(s.laptop)).toHaveLength(64);
     // Another member keeps their own cap.
@@ -588,13 +590,13 @@ test("a full object and a full member say different things", async () => {
     await fill(s, "@paul", "paul-fills-it", GIB);
     const roomFull = await comment(s.laptop, s.lane, "No space.").then(() => null, (error: Error) => error);
     expect(roomFull).toBeInstanceOf(CopyNotKept);
-    expect(roomFull?.message).toBe("This room has no space for more open requests. Nothing was sent. Space returns as open requests end, within seven days at most. An admin can still remove a member who has left, and that frees the member's requests.");
+    expect(roomFull?.message).toBe("This room has no space for more open requests. This press sent nothing. Space returns as open requests end, within seven days at most. An admin can still remove a member who has left, and that frees the member's requests.");
     expect(s.wire.acts).toEqual([]);
     await s.d.wait(() => runInDurableObject(s.d.M.object, (_instance, state) => { state.storage.sql.exec("DELETE FROM original_copy").toArray(); }));
     for (let i = 0; i < 64; i++) await fill(s, "@una", `una-${i}`, 1);
     const mine = await comment(s.laptop, s.lane, "Too many.").then(() => null, (error: Error) => error);
     expect(mine).toBeInstanceOf(CopyNotKept);
-    expect(mine?.message).toBe("You have too many open requests. Nothing was sent. Check the open requests in this room first.");
+    expect(mine?.message).toBe("You have too many open requests. This press sent nothing. Check the open requests in this room first.");
     expect(s.wire.acts).toEqual([]);
   } finally { s.d.done(); }
 }, 120_000);
@@ -664,7 +666,7 @@ test("a page that held a session and failed to renew it stops the send", async (
     s.d.advanceClock(601_000); // The laptop's session ends. Its renewal gets no reply.
     const stopped = await comment(s.laptop, s.lane, "No copy, no send.").then(() => null, (error: Error) => error);
     expect(stopped).toBeInstanceOf(CopyNotKept);
-    expect(stopped?.message).toBe("This page could not renew its session with the room, so it cannot keep a copy of this request. Nothing was sent. Check your connection and send it again, or reload the page.");
+    expect(stopped?.message).toBe("This page could not renew its session with the room, so it cannot keep a copy of this request. This press sent nothing. When your connection returns, open this view again and check your open requests before you send it again.");
     expect(s.laptop.reader).toBeNull();
     expect(s.wire.acts).toEqual([]);
     // It stays stopped on the next try, and the read says that it failed.
@@ -689,6 +691,53 @@ test("a page that held a session and failed to renew it stops the send", async (
     expect(sentAgain).toBe("accepted");
     expect(s.laptop.reader).not.toBeNull();
     expect(s.wire.order).toEqual(["POST originals", "POST acts", "DELETE originals"]);
+  } finally { s.d.done(); }
+});
+
+test("a press after a reload in an outage speaks of the press, and its next step finds the earlier send", async () => {
+  const s = await scene();
+  try {
+    // The earlier press: its reply is lost, and its row stands. No list read has run, so `lastRead` holds nothing, as after a reload.
+    s.wire.mode = "reply-lost";
+    await expect(comment(s.laptop, s.lane, "The earlier press.")).rejects.toThrow();
+    s.wire.mode = "pass";
+    expect(s.wire.acts).toHaveLength(1);
+    // The reload: a working session, a failed list read, and so no lock. `send` tests the lock that this read stored.
+    const reloaded = await openRoom(s.session(s.secrets.laptop), s.place);
+    expect(reloaded.reader).not.toBeNull();
+    s.wire.down.add("list");
+    const unread = await openOriginals(reloaded);
+    expect(unread).toEqual({ rows: [], failed: true });
+    expect(lockedScopes(reloaded, unread.rows, reloaded.session.now!()).size).toBe(0);
+    // The session is then lost, and the next press reaches the stop with an earlier send of unknown outcome.
+    s.wire.down.add("sessions");
+    s.d.advanceClock(601_000);
+    const stopped = await comment(reloaded, s.lane, "The next press.").then(() => null, (error: Error) => error);
+    expect(stopped?.message).toBe("This page could not renew its session with the room, so it cannot keep a copy of this request. This press sent nothing. When your connection returns, open this view again and check your open requests before you send it again.");
+    expect(s.wire.acts).toHaveLength(1);
+    // The step that those words name: the route returns, the view opens, and the read finds the row. The session outlives the earlier
+    // request's margin, so no lock stands by then. The row stays, and its check finds the entry that a second press would repeat.
+    s.wire.down.clear();
+    const opened = await openOriginals(reloaded);
+    expect(opened.failed).toBe(false);
+    expect(opened.rows).toHaveLength(1);
+    expect(lockedScopes(reloaded, opened.rows, reloaded.session.now!()).size).toBe(0);
+    expect((await checkOriginalRequest(reloaded, opened.rows[0]!.digest)).state).toBe("landed");
+  } finally { s.d.done(); }
+});
+
+test("a keep that stops speaks of this press", async () => {
+  const s = await scene();
+  try {
+    const stop = (body: string) => comment(s.laptop, s.lane, body).then(() => "no stop", (error: Error) => error.message);
+    s.wire.down.add("keep-refused");
+    expect(await stop("Refused.")).toBe("The room did not keep a copy of this request (conflict). This press sent nothing.");
+    s.wire.down.clear();
+    s.wire.down.add("keep");
+    expect(await stop("No reply.")).toBe("The room gave no reply when it was asked to keep a copy of this request. This press sent nothing.");
+    s.wire.down.add("end");
+    expect(await stop("No reply, and no end.")).toBe("The room gave no reply when it was asked to keep a copy of this request. This press sent nothing. This page could not end its copy, so the request can show as open. Press Check original request before you send it again.");
+    expect(s.wire.acts).toEqual([]);
   } finally { s.d.done(); }
 });
 
