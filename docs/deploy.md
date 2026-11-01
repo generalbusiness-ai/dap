@@ -279,6 +279,52 @@ token.
 When `publicReads` is true and the repositories are public, the Worker
 reads them with no token. `GITHUB_READ_TOKEN` is then not needed.
 
+## What closes a register
+
+A register holds at most 64 live claims. A claim is live until a directory's `applied` result reaches it. When a claim's three attempts fail during an outage, the claim stays `pending` and keeps its place.
+
+At 64 live claims, the register refuses every later `found` with `type-full`. The Git host's return does not reopen it. Neither does a rerun, `--again`, a restart, or time, and no act or setting frees a place. [An outage can close a register](security/trust-boundaries.md#an-outage-can-close-a-register) gives what fails an attempt and who can fill the places.
+
+The way out of a full register is a new register. Install it on a separate Worker, as [the Commons steps](#provision-the-commons-worker) show, and keep the old Worker serving the rooms that it has. A cutover on one Worker strands the old rooms, because each room's host authority names the old register.
+
+### Count a register's claims from its log
+
+Count live claims before people report `type-full`, and after any outage of the Git host.
+
+1. Choose a config directory that holds a room of this register.
+
+   The operator key reads the history for only 900 seconds after its last entry at the register, then gets `Cannot read the history of <register>: forbidden.` A session of a member of a room that this register created reads the log with no window.
+
+2. Print the whole log. Use a limit larger than the number of entries, because the default prints 20.
+
+   ```
+   dap log register --limit 100000
+   ```
+
+3. Count the rows. `dap log` shows no failure, and an `outcome` row does not show its result.
+
+   | Row | What it means |
+   |---|---|
+   | `act found by <key>; 8 effects, 0 sends` | This row opens one claim. The claim's ID is the row's number. |
+   | `outcome; ...` | One attempt ended. Only `dap show` gives its result. |
+   | `delivery result from directory:<seq>; 3 effects, ...` | This row closes one claim, which becomes `active`. |
+
+   Live claims are the `act found` rows minus the `delivery result from directory` rows with 3 effects. A result row with 0 effects is a refused directory, and its claim stays live. Free places are 64 minus the live claims.
+
+4. To name the live claims, run `dap show` on each row that closes a claim.
+
+   ```
+   dap show register:<seq>
+   ```
+
+   The first effect of a closing row names the claim: `{"effect":"state","item":<found row>,"state":"active"}`. A `found` row that no closing row names is a live claim.
+
+5. To see why a live claim is stuck, run `dap show` on its `outcome` rows.
+
+   Each row's effect names the claim and the result: `{"attempt":3,"effect":"attempt","operation":"<found row>:0","result":"unknown","selected":null}`. A claim with no `selected` value and a result for attempt 3 has used its attempts.
+
+A test ran this count once, against 64 stuck claims and 2 finished ones (`packages/cli/test/failed-claims-close-register.defect.scope.test.ts`). The count gave the same 64 claim IDs as a direct read of the items. It ran on real scopes with a scripted host, and it has not run on a deployed Worker.
+
 ## Browser Start configuration
 
 `DEMO_START_CONFIG` configures Browser Start, which creates a room from the

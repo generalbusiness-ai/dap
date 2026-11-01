@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. Local Chromium and wrangler dev ran the probes. No deployed Worker, real room or hosted endpoint ran this code.",
+  "directory": "2026-11-01-page-lock",
+  "checkpoint": {
+    "commit": "0b75055cdb18ece0a1a6dbe2a015bcea83bfea6a",
+    "tree": "98a7cecc5acb7203ce3df4ad1a2860cefb39869f"
+  },
+  "fileCount": 162,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "96306b69746e1014f814838e7b15261f8291f5519d0c5332dfa179c2689de7f4"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6474,
+      "sha256": "6b20662faa24b69d2dd25ad27aab038083031145dcfe07533f4f400725b43171"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "red/run.log",
+      "bytes": 50857,
+      "sha256": "143bceed8741ceee4f566939039330720edb99db6fa7473241a76bd100199f1c"
+    },
+    {
+      "path": "controls/summary.jsonl",
+      "bytes": 3373,
+      "sha256": "55d2f662bb69ffcf32abbc13d2541e07e7d5a9724e2a1d65adb652a8bfed00b5"
+    },
+    {
+      "path": "probe/before/report.json",
+      "bytes": 13335,
+      "sha256": "8cfb87e23e098c27591458204c6b7c12e3a64ae762018420e70f4a1803f9b3ba"
+    },
+    {
+      "path": "probe/after/report.json",
+      "bytes": 11613,
+      "sha256": "6edae7bfd77b11e76eae82e8f332703588391a59f3f2e30778211ab377f50b31"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 15591,
+      "sha256": "934299210c8d32e1ba4bbb0f78ce8beea784309c25b39d04ba184bec62317956"
+    }
+  ]
+}

@@ -11,6 +11,16 @@ import { fixedSigner } from "./fixtures.ts";
 const head = { seq: 41, hash: `sha256:${"c".repeat(64)}` } as const;
 const asked = { scope: "sc_the_scope", kind: "close-own", on: 3, action: "issue.close-own" };
 
+// Invariant: only a register's `found` says that the register needs its operator. The name of the kind alone does not decide it.
+test("a type-full names the operator for a register's found, and for no other definition or act", () => {
+  const refused: Answer = { answer: "refused", reason: "type-full", judgedAt: head };
+  const plain = { sentence: `sc_the_scope refused found, because the scope holds as many live items of that type as it may, judged at head ${head.seq}.`, next: "Close or finish one first." };
+  expect(answered(refused, { scope: "sc_the_scope", kind: "found", definition: "platform:directory" }, null)).toEqual(plain);
+  expect(answered(refused, { scope: "sc_the_scope", kind: "found" }, null)).toEqual(plain);
+  expect(answered(refused, { scope: "sc_the_scope", kind: "install", definition: "platform:register" }, null).next).toBe("Close or finish one first.");
+  expect(answered(refused, { scope: "sc_the_scope", kind: "found", definition: "platform:register" }, null).next).toContain("the register's operator");
+});
+
 // Real MCP custody/projection and scripted transport only. These archive
 // locations prove no native judgment, clone verification or provider custody.
 test("archived submit and settlement stay explicit and terminal without inventing missing facts", async () => {

@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
 import { ScopeHandle, httpTransport, type Fetch } from "@generalbusiness/dap-client";
 import { command } from "@generalbusiness/dap-cli";
-import { canonicalize, definitionDigest, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, intentDigest, utf8 } from "@generalbusiness/dap-bytes";
 import { changeDemo3 } from "@generalbusiness/dap-lanes";
-import { act, joinRoom, listLanes, loadChange, openRoom, placeOf, type Room } from "../src/data.ts";
+import { act, endOriginal, joinRoom, listLanes, loadChange, openRoom, placeOf, type Room } from "../src/data.ts";
 import { checkEditRequest, continueEdit, editFields, prepareEdit, readEditSource } from "../src/retained-editor-data.ts";
 import { demo } from "./support/demo.ts";
 
@@ -53,6 +53,7 @@ test("an extra collected source stops the bounded editor before freeze without s
       const signed = init?.method === "POST" && new URL(url).pathname.endsWith("/acts") ? JSON.parse(String(init.body)).signed : null;
       if (!inserted && signed?.intent.kind === "propose-file") {
         inserted = true;
+        await endOriginal(f.room, intentDigest(signed.intent)); // The stand-in acts under the task's key, and the row of the send in flight would stop it.
         expect((await act(f.room, signed.intent.to.scope, "propose-file", { fields: editFields({ title: "Another source", path: "extra.md", content: "extra\n" }, signed.intent.fields.base) })).answer.answer).toBe("accepted");
       }
       return response;

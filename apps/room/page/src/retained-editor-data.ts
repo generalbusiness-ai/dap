@@ -6,7 +6,7 @@ import { ScopeHandle, declaredHandle, httpTransport, shapeDeclaredAct, signedInt
 import { expectedOf, heldActs, type DefinitionShape } from "@generalbusiness/dap-cli/browser";
 import { ARCHIVE_DEVICE_PUBLICATION_COHORT, editPath, fileSound, platform } from "@generalbusiness/dap-platform";
 import { knownLIST1 } from "./source-support.ts";
-import { actAssociation, endOriginal, keepToSend, openingScope, openRoom, sessionSigner, Unreadable, type ChangeView, type Room } from "./data.ts";
+import { actAssociation, CopyNotKept, endOriginal, keepToSend, openingScope, openRoom, sessionSigner, Unreadable, type ChangeView, type Room } from "./data.ts";
 
 export interface EditSource { definition: string; manifestFact: FactRef; sourceFact: FactRef; scope: ScopeRef; manifest: number; opened: Digest; base: string; path: string; digest: Digest; size: number; content: string }
 export interface EditDraft { title: string; path: string; content: string }
@@ -165,7 +165,13 @@ async function sendStep(room: Room, task: EditTask, kind: EditStep["kind"], targ
   const current = await taskRoom(room, task, options);
   if (await head(current, task.workflow === "list1") !== task.base) throw new Unreadable("The published base moved before submission. Nothing new was sent.");
   if (kind === "propose-manifest") await verifiedCollectedSource(current, task);
-  await keepToSend(current, step.signed, step.beside, () => check(options), () => check(options));
+  try { await keepToSend(current, step.signed, step.beside, () => check(options), () => check(options)); }
+  catch (error) {
+    if (!(error instanceof CopyNotKept)) throw error;
+    // The step never went, so the next press signs it again. The task stays where it was, and the button stays.
+    task.steps.pop(); task.message = error.message; options.changed?.();
+    return false;
+  }
   step.attempted = true; options.changed?.();
   try { step.answer = await h.submit(step.signed, step.grants, step.beside); }
   catch { task.state = "unknown"; task.message = `${kind}: outcome unknown. The original request is kept in this loaded Page. No next step was sent.`; options.changed?.(); return false; }
@@ -244,6 +250,7 @@ export async function checkEditRequest(room: Room, task: EditTask, options: Edit
     const verified = await handle(room, step.target.scope).followReceipt(result.value);
     if (!verified.ok || verified.entry.input.type !== "act" || canonicalize(verified.entry.input.signed) !== canonicalize(step.signed)) { task.message = "The acceptance could not be verified; the task stays unknown."; return; }
     step.receiptVerified = true;
+    await endOriginal(room, intentDigest(step.signed.intent)); // A verified answer ends the copy, or the row would stop the task's next step.
     if (step.kind === "propose-manifest" || step.kind === "propose-file" && task.workflow === "legacy") { task.version = result.value.fact; task.state = "recorded"; task.message = "Proposal recorded. Not published; the original source remains unchanged."; }
     else if (step.kind === "propose-file") { task.collectedSource = result.value.fact; task.state = "source-recorded"; task.message = "Original source recorded. Continue verifies it before freezing the one-file manifest."; }
     else { task.state = step.kind === "open-pr" ? "waiting-lane" : "waiting-rules"; task.message = "Original request recorded. Continue reads its progress before the next unsent step."; }

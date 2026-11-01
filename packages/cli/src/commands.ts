@@ -1,7 +1,8 @@
 import { describe, expectedOf, heldActs, LINK, linkOf, valueOf, type ActShape, type DefinitionShape, type Link, type Standing } from "./browser-helpers.ts";
 export { describe, expectedOf, heldActs, LINK, linkOf, valueOf, type ActShape, type DefinitionShape, type Link, type Standing } from "./browser-helpers.ts";
 export { claim, checkClaim } from "./claim.ts";
-import { Stop, validStep, managedReadsOf, requiredReadsOf, sessionOf, accepted, active, answered, configOf, createdBy, done, failed, fresh, handleOf, readSigning, readTransportOf, readerOf, run, signerOf, signing, stopCommand, summaryOf, transportOf, usage, waitFor } from "./command-support.ts";
+import { REGISTER_FULL, Stop, validStep, managedReadsOf, requiredReadsOf, sessionOf, accepted, active, answered, configOf, createdBy, done, failed, fresh, handleOf, readSigning, readTransportOf, readerOf, run, signerOf, signing, stopCommand, summaryOf, transportOf, usage, waitFor } from "./command-support.ts";
+import type { ClaimSteps } from "./claim.ts";
 import { ARCHIVE_REPLAY_CODE, INVITATION_KEY_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
 import { invitationIssueFields, invitationRedemptionFields, isInvitationMembership } from "@generalbusiness/dap-client";
 import { applicationList } from "./application-list.ts";
@@ -82,6 +83,8 @@ export interface Context {
   pause?: (waiting: readonly ScopeId[]) => Promise<void>;
   /** How many reads a wait makes before it gives up. The default is 120. */
   tries?: number;
+  /** What a claim's stops tell a person to do next. The default names the command's `--again`. */
+  claimSteps?: ClaimSteps;
   /** History pages per scope while discovering the room for `verify --all`. The default is 1,000. */
   historyPages?: number;
   /** The `git` program, for `clone`. `main.ts` gives Node's (`git.ts`); a test gives a stand-in. Absent: there is none. */
@@ -667,7 +670,7 @@ export function act(ctx: Context, kind: string, options: { on?: string; target?:
       return answered(scope, await typed.handle.submit(signed, [], { ...beside, ...(values.length > 0 ? { values } : {}) }), "Took effect");
     }
     const signed = await signedIntent(signer, { to: summary.scope, kind, on: target, fields, expected }, signing(ctx));
-    return answered(scope, await handle.submit(signed, [], values.length > 0 ? { values } : {}), "Took effect");
+    return answered(scope, await handle.submit(signed, [], values.length > 0 ? { values } : {}), "Took effect", kind === "found" && summary.scope.kind === "register" ? REGISTER_FULL : undefined);
   });
 }
 

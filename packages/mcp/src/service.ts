@@ -697,7 +697,7 @@ export class McpService {
       const beside: Beside = { ...(shaped.texts.length > 0 ? { texts: shaped.texts } : {}), ...(Object.keys(presented).length > 0 ? { presented } : {}), ...(values.length > 0 ? { values } : {}) };
       return { binding: { definition: definition.name, kind, declaration, pinned: summary.definition }, envelope: { signed, beside } };
     };
-    const asked = { scope, kind, on: on as number | null, action: grantAction(act) };
+    const asked = { scope, kind, on: on as number | null, action: grantAction(act), definition: definition.name };
     const guards = describeAct(definition, kind, act, { standing: "unknown" }, { pinned: summary.definition }, { definition: definition.name, kind, declaration, digests: [summary.definition] }, "").guards;
     const notAfter = timeOf(this.#now() + PROPOSED_BOUNDS.intentLifetimeSeconds * 1000);
     // What the envelope will carry, for custody's byte bound before anything is signed.
