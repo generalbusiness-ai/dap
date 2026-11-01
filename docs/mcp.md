@@ -282,9 +282,12 @@ caller's `idempotencyKey`, in the config directory's
   The server reads its custody for this with no new signature. If it cannot
   read its custody, it says that it cannot tell. If the scope accepted the
   request and a read after it failed, the error says that the scope accepted
-  the request, and the same call returns the kept answer. If the server's check
-  of an accepted request fails on an entry that cannot change, the same call
-  stops at the same check and sends nothing, so the error says to report it.
+  the request, and the same call returns the kept answer. If the read answers
+  with no entry, the error says that the scope accepted the request, and that
+  the same call can pass. For `join`, it also says that the server has not
+  recorded the room yet. If the server's check of an accepted request fails on
+  an entry that cannot change, the same call stops at the same check and sends
+  nothing, so the error says to report it.
 - **A failed read of the room.** The record keeps the room's membership in its
   identity, so `settle` and the same call find the record while the room's
   scopes are unread. The list can lose an act tool with those scopes. The tool
@@ -312,7 +315,15 @@ caller's `idempotencyKey`, in the config directory's
   machine and does not replace it. After a restart, `settle` or the same call
   reads the outcome, also when the page settled the request first.
 - **Another meaning under a used key** is refused before anything is
-  signed.
+  signed, and the next step says to use a new key. This holds where this
+  server keeps the key's record.
+- **A key used in another custody home.** The server finds no record, so it
+  signs a new intent, and the scope answers `mismatch`, because it accepted
+  another intent of your key under this key. This request makes no entry. The
+  server cannot say whether the two intents ask for the same thing, so the next
+  step says to read the scope with `inspect` or `steps`, or to call `settle` on
+  the server that signed the earlier intent. A new key for the same request
+  makes a second entry. Use a new key only for another request.
 - **The outcome** given is always the newest decisive one of the current
   attempt: an answer other than unavailable, or a receipt that settlement
   found. A record that was lost, then unavailable, then settled answers `accepted`.

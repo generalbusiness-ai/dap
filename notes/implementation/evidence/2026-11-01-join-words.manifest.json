@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. The red run and 6 controls ran at the source commit ececd0bd. No deployed Worker or real room ran these words.",
+  "directory": "2026-11-01-join-words",
+  "checkpoint": {
+    "commit": "ececd0bde0dd90a30b15956fdf1980684bdae6c5",
+    "tree": "71b7565e38eb87a55fd7d989ee1d780d7b0bb711"
+  },
+  "fileCount": 63,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "252eabebdf3ad493aea4a3f8091730000abcaff33444622b81c6befb06eb0709"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6484,
+      "sha256": "02d45d1c249ac063d79ba4ba75e3378ac1693d41cd9b6415858ee51bef888aeb"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "red/run.log",
+      "bytes": 16512,
+      "sha256": "0afad88fa768e84397517a48636991a477a4386cf33987ac31ec9f7a304ea201"
+    },
+    {
+      "path": "controls/summary.jsonl",
+      "bytes": 1441,
+      "sha256": "1ec4e66ce5f51297d2810425f6dd561c1a0e6191ffffe69e82cd5644c022b39c"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 5644,
+      "sha256": "cd10393e88d0ed3c6a6c9b40e7c98866151890f13de7fcea1493b65220a474a3"
+    }
+  ]
+}

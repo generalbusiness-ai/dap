@@ -132,7 +132,8 @@ export function answered(answer: Answer, asked: Asked, guards: readonly Sentence
       return { sentence: `${asked.scope} refused ${asked.kind}, because ${said.sentence}${name}${named ? `: ${inline(named)}` : ""}, ${at(answer.judgedAt)}.`, next: said.next };
     }
     case "unavailable": return { sentence: `${asked.scope} did not judge ${asked.kind} (${answer.reason}: ${UNAVAILABLE_NOTES[answer.reason]}). Nothing is known to have been accepted; timed entries may have been written.`, next: HINTS.settle };
-    case "mismatch": return { sentence: `Your key already signed another intent under this idempotency key on ${asked.scope} (${answer.reason}).`, next: "Use a new idempotencyKey for a new meaning." };
+    // Custody compares what it holds and refuses another meaning before signing, so this answer means it holds no record of the earlier request.
+    case "mismatch": return { sentence: `${asked.scope} already accepted another request that your key signed under this idempotency key (${answer.reason}), and this request made no entry. This server finds no record of the earlier request, so it cannot say whether the two ask for the same thing. The earlier request can come from another custody home or another device.`, next: "Read the scope first with inspect or steps, or call settle on the server that signed the earlier request. If the scope holds what you asked for, you need nothing more, and a new key would make a second entry. If you mean another request, use a new idempotencyKey." };
   }
 }
 
