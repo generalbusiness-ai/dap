@@ -12,6 +12,7 @@
 // through a `device-key` invitation that an admin's page functions make. A loopback proxy stands between every client and the Worker,
 // and it is the one stand-in: it logs each `POST .../acts` and each request to the copy routes with the body's SHA-256, and for the
 // marked request it forwards the bytes, reads the Worker's whole reply and destroys the socket. That is a lost reply on the real path.
+// While the outage of the same key runs, it destroys the socket of every GET: an outage that also stops reads.
 //
 // The first device dies by SIGKILL of its PID before the page presses. A new `dap mcp` over the same home then reads the outcome.
 //
@@ -52,9 +53,10 @@ const sha = text => createHash("sha256").update(text).digest("hex");
 
 // The proxy. Each row is in the order that the request reached it.
 const wire = [];
-let loseFor = null;
+let loseFor = null, readsDown = false;
 const proxy = createServer((req, res) => {
   const path = new URL(req.url, base).pathname;
+  if (readsDown && req.method === "GET") return res.destroy();
   const acts = req.method === "POST" && path.endsWith("/acts"), copies = /\/originals(\/|$)/.test(path);
   const forward = (body, finish) => {
     const out = httpRequest({ host: "127.0.0.1", port: workerPort, path: req.url, method: req.method, headers: { ...req.headers, host: `127.0.0.1:${workerPort}` } }, reply => finish(reply));
@@ -227,6 +229,13 @@ try {
   const keptRows = firstWire.filter(row => row.what === "POST originals");
   const rowsBefore = await openRows(place.membership, anaSigner);
 
+  // An outage that also stops reads, under the same key: the call fails at the read of its target, and must not say that nothing went.
+  const fromOutage = wire.length;
+  readsDown = true;
+  const outage = await first.call("act", commentArgs);
+  readsDown = false;
+  const outageSends = wire.slice(fromOutage).filter(row => row.what !== "GET originals").length;
+
   // The laptop's battery runs out.
   await first.kill();
   first = null;
@@ -281,6 +290,8 @@ try {
   check("the copy came before the act", firstWire.map(row => row.what), ["POST originals", "POST acts"]);
   check("the copy holds the bytes that went", keptRows.map(row => row.sha256), firstActs.map(row => row.sha256));
   check("the row is open before the press", rowsBefore.length, 1);
+  check("an outage says the earlier send has no known outcome", [outage.error, outage.message.startsWith("An earlier send under this key has no known outcome. "), outage.message.endsWith("This call sent nothing."), outage.next.endsWith("because a new key can make a second entry.")], ["transport", true, true, true]);
+  check("the outage sent nothing", outageSends, 0);
   check("the second device's line", line, [`You sent a comment on issue ${issue.number} from another device. It has no answer yet.`]);
   check("the second device's button", button, ["Check original request"]);
   check("the answer", answer, [`The request landed: entry ${held.seqs[0]}.`]);
@@ -302,7 +313,7 @@ try {
     rows, wire: wire.slice(fromHere).filter(row => row.what !== "GET originals").map(({ what, sha256, reachedWorker, replyLost }) => ({ what, sha256, reachedWorker, replyLost })),
     line, button, answer, signaturesToLine: toLine.map(signature => signature.kind),
     afterRestart: { settle: { answer: settled.answer, phase: settled.phase, seq: settled.fact?.seq }, repeat: { answer: repeated.answer, retained: repeated.retained, seq: repeated.fact?.seq }, requests: afterRestart, rows: rowsAfterRestart.length },
-    journal: held, failures,
+    journal: held, outage: { error: outage.error, message: outage.message, next: outage.next }, failures,
   };
   process.stdout.write(JSON.stringify(report, null, 2) + "\n");
   if (failures.length > 0) process.exitCode = 1;

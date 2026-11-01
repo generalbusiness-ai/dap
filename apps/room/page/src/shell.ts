@@ -84,7 +84,7 @@ const waitOf = (seconds?: number): string => seconds === undefined ? "a few minu
  */
 export function noSessionWords({ why, retryAfterSeconds }: NoSession): string {
   switch (why) {
-    case "no-reply": return "The service did not answer this page's request for a read session. Reload this page to try again.";
+    case "no-reply": return "The service did not give a usable answer to this page's request for a read session. Reload this page to try again.";
     case "rate-limited": return `This key has asked for too many read sessions. Wait ${waitOf(retryAfterSeconds)}, then reload this page.`;
     case "sessions-unavailable": return "This service is not giving read sessions to any key, so it did not check whether this key belongs to the room. Without a session, the room opens only for a key that signed there recently. Ask whoever runs this service to turn on read sessions, then reload this page.";
     case "unauthorized": return "This key is not an active key of a member of this room, so the service gave it no read session. Ask someone in the room for a new invitation link, then join with it.";
