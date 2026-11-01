@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:46603e1c6aa37ededcfb3d4c780ca9270dc8c0a9","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-17-compact-cards-design.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:76dfcf6d1e300c6d9b0d5319e0afb3eecae84c58","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/views/hosts.ts."}
