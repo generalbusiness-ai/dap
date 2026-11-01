@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. The controls and the local run are at 57d27878, and the checkpoint adds only the removal of one blank line. The local run used stand-ins that the note names. No deployed Worker ran this code.",
+  "directory": "2026-10-31-hosted-loop",
+  "checkpoint": {
+    "commit": "389a7fb3f0ab7abc702f1f65ae8b9a122918e5a2",
+    "tree": "16a64db876d84ac5061d8d3d09ecea1544548d09"
+  },
+  "fileCount": 293,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "764c257a07878414933794583a68e5312ec56d04b1cb2f2aed3c8d52ea79788d"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6497,
+      "sha256": "80f1e4e24ce2fb6b8cbe5b29c45128fd43c43d08b2c981f511d6d5239a84e8a5"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "controls/results.json",
+      "bytes": 14733,
+      "sha256": "5f7648798717392d8bd1a75f0ba0c46b6f848fa4badffbb690d7a57ba1e26981"
+    },
+    {
+      "path": "controls/run-controls.mjs",
+      "bytes": 12878,
+      "sha256": "d0566f241e37bf868f0d3d0563115cec6820b7921e789e3d5521b71873f8d322"
+    },
+    {
+      "path": "local-run/summary.json",
+      "bytes": 8233,
+      "sha256": "05de7aeec978f763fd5facff9f50b738bc768816c03a3816d595c3adcb7fabca"
+    },
+    {
+      "path": "local-run/transcript.jsonl",
+      "bytes": 17835,
+      "sha256": "0dd2d4aa56c72e4fa793393d4af1c71b8e6c7c8a71cfed5229feee6418d4f684"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 31869,
+      "sha256": "5b598b3e3acebdddd380668669092aa2c582f07b6d21c93c7cc0d43f0f6a1993"
+    }
+  ]
+}
