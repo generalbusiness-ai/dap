@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:edf0c095f97b2ac65832a4a26fb4512f95dbe554","text":"Merge retired a covered predecessor; the successor is at packages/client/test/browser-joining.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f09517ceaf90954bc6482034c96e66ff2a79d875","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/original-copy.scope.test.ts."}
