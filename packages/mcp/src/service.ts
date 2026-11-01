@@ -1452,7 +1452,7 @@ export class McpService {
     this.#reads.forget(M.scope);
     const fact = kept.answer.receipt.fact;
     const entry = await this.#afterAccepted(M.scope, () => this.#reads.read(M, (t, r) => t.entry(M.scope, r, fact.seq, { at: fact.at, head: { seq: fact.seq, hash: fact.hash } })));
-    if (!entry.ok) return failed({ error: "read", scope: M.scope, reason: entry.reason });
+    if (!entry.ok) return failed({ error: "target", sent: "read", what: `the read of entry ${M.scope}:${fact.seq} gave no entry (${entry.reason}), so this server has not recorded the room yet` });
     const input = entry.value.entry.input;
     if (entry.value.hash !== fact.hash || input.type !== "act" || canonicalize(input.signed) !== canonicalize(kept.record.envelope.signed)) {
       return failed({ error: "target", sent: "report", what: `entry ${M.scope}:${fact.seq} does not hold the join kept under this key` });

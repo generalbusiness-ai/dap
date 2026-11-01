@@ -786,6 +786,69 @@ test("a join that was accepted and lost the read after it does not say that noth
   } finally { s.d.done(); }
 }, 120_000);
 
+// Invariant: a read of an accepted join that gives no entry says that the scope accepted the join, so a person does not join again.
+test("a join that was accepted and whose read gave no entry says that the scope accepted it, and a repeat sends nothing", async () => {
+  const s = await scene();
+  try {
+    const mcp = s.server(memoryStore(), crypto.getRandomValues(new Uint8Array(32)));
+    const invited = await s.d.run(s.d.rita, "invite", "@ann", "--role", "member");
+    if (invited.code !== 0) throw new Error(invited.lines.join("\n"));
+    const args = { link: invited.lines[1]!.split(": ")[1]!, idempotencyKey: "join-1" };
+    reset(s.wire);
+    const membership = s.phone.membership.scope;
+    s.wire.unread = membership;
+    for (let call = 1; call <= 2; call++) {
+      const stopped = said(await mcp.call("join", args));
+      expect(stopped.error, JSON.stringify(stopped)).toBe("target");
+      expect(stopped.message).toMatch(new RegExp(`^The scope accepted this request, and the server could not check it: the read of entry ${membership}:\\d+ gave no entry \\(unavailable\\), so this server has not recorded the room yet\\.$`));
+      expect(stopped.next).toBe("Call again with the same idempotencyKey: nothing goes twice. If the call stops here again, report this message and the key. Do not use a new key, because a new key can make a second entry.");
+    }
+    s.wire.unread = null;
+    const kept = said(await mcp.call("join", args));
+    expect([kept.answer, kept.retained], JSON.stringify(kept)).toEqual(["accepted", true]);
+    expect(s.wire.acts, "one join went, across three calls").toHaveLength(1);
+  } finally { s.d.done(); }
+}, 120_000);
+
+// Invariant: a mismatch says that the scope holds an earlier request this server cannot compare, and reading the scope comes before a new
+// key. Two stores with one signer stand for two custody homes of one key. The real scope judges both requests.
+test("a request under a key from another custody home reads the scope before a new key, and a new meaning keeps its own words", async () => {
+  const s = await scene();
+  try {
+    const first = memoryStore();
+    const signed = said(await comment(s, s.server(first), "home-1"));
+    expect(signed.answer, JSON.stringify(signed)).toBe("accepted");
+    s.d.advanceClock(60_000);
+    const other = s.server();
+    const sentence = `${s.lane} already accepted another request that your key signed under this idempotency key (idempotency-mismatch), and this request made no entry. This server finds no record of the earlier request, so it cannot say whether the two ask for the same thing. The earlier request can come from another custody home or another device.`;
+    const next = "Read the scope first with inspect or steps, or call settle on the server that signed the earlier request. If the scope holds what you asked for, you need nothing more, and a new key would make a second entry. If you mean another request, use a new idempotencyKey.";
+    const told = said(await comment(s, other, "home-1"));
+    expect([told.answer, told["sentence"], told.next], JSON.stringify(told)).toEqual(["mismatch", sentence, next]);
+    expect(await entriesUnder(s, "home-1"), "the scope holds one entry under the key").toHaveLength(1);
+    const repeat = said(await comment(s, other, "home-1"));
+    expect([repeat.answer, repeat.retained, repeat["sentence"], repeat.next]).toEqual(["mismatch", true, `${sentence} This outcome was kept under custody; this call sent nothing.`, next]);
+
+    // Both ways to look that the next step names give the person an answer, with nothing signed.
+    const acts = s.wire.acts.length;
+    expect(said(await other.call("inspect", { scope: s.lane })).error).toBeUndefined();
+    const steps = said(await other.call("steps", { scope: s.lane }))["steps"] as { seq: number; kind: string; signer: string }[];
+    expect(steps.find(line => line.seq === signed.fact?.seq), "steps names the earlier request's kind and signer").toMatchObject({ kind: "comment", signer: s.laptopKey });
+    const settled = said(await s.server(first).call("settle", { target: s.lane, idempotencyKey: "home-1" }));
+    expect([settled.answer, settled.fact?.seq]).toEqual(["accepted", signed.fact?.seq]);
+    expect(s.wire.acts).toHaveLength(acts);
+
+    // A new key makes a new entry, which is right for a new request and is the second entry for the same one.
+    const fresh = said(await comment(s, other, "home-2", "Another request."));
+    expect(fresh.answer, JSON.stringify(fresh)).toBe("accepted");
+    expect(await entriesUnder(s, "home-2")).toHaveLength(1);
+
+    // Another meaning in the home that holds the record: this server can compare, so it asks for a new key.
+    const held = said(await comment(s, s.server(first), "home-1", "Another body."));
+    expect(held.message).toContain(`The server's record for key home-1 on ${s.lane} is conflicting; this call sent nothing.`);
+    expect(held.next).toBe("Use a new idempotencyKey for a new meaning.");
+  } finally { s.d.done(); }
+}, 120_000);
+
 test("a server on the plain path keeps its custody record after a failed room read, and sends the same bytes", async () => {
   const s = await scene();
   try {
