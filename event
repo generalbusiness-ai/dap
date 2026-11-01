@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9f9f34ff425a50b8a2fe2e49c8c2a8738f8bf2f0","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-31-invite-wait.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c0549dca4de6459340e2559162312dee1fdea7a6","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/invitations.ts."}
