@@ -351,12 +351,15 @@ A refusal, unavailable reply or lost answer leaves the request pending;
 a later run keeps the same signature and deadline. A marker that the act took effect is checked against the receipt for that exact envelope before reuse.
 
 ```
-Gave up waiting for the directory after 120 reads. What was asked may still take effect; run dap create demo again to go on waiting for this claim, or with --again to sign a new one, which creates a second repository.
+Gave up waiting for the directory after 120 reads. The register accepted this claim, and its directory has not appeared. This command cannot tell whether the claim is still being tried or all its attempts have failed. Run dap create demo to go on waiting. That sends nothing new, and it cannot restart a failed claim, even after the Git host returns. When the Git host is up, dap create demo --again signs a new claim. The new claim takes a new place in the register, the old claim keeps its place, and if the old claim still finishes you have a second repository.
 ```
 
 Run `dap create <name>` again to continue the saved claim. The command
 reads or retries the exact saved steps, then waits for their confirmed
-scopes. It checks child identities against the actual directory seed and
+scopes. A claim whose three attempts failed does not restart, even after the
+Git host returns, and it keeps its place in the register. `--again` signs a
+new claim and takes a new place. [What closes a register](deploy.md#what-closes-a-register)
+gives the limit. It checks child identities against the actual directory seed and
 full reference. It does not extend a saved deadline or invent a replacement
 request. `--handle` is ignored on resume: the handle is the one already
 signed. Older digest-only state resumes only when the retained creation

@@ -44,6 +44,11 @@ const ARTIFACT_HOST = "service.invalid";
 const MAX = 64;
 const ACCOUNT = { id: 285042784, login: "generalbusiness-ai", type: "Organization" } as const;
 
+/** The stops' words, written out here so that a changed sentence turns a named case red. */
+const FULL = "The register is full of unfinished claims, so it refused this one, and this request holds no place. A place frees only when one of those claims finishes. A claim whose attempts have all failed stays unfinished, even after the Git host returns. If this refusal repeats, this needs the register's operator, whose way out is a new register.";
+const fullLine = (name: string) => `${FULL} dap create ${name} --again asks the register again with a new request.`;
+const gaveUp = (reads: number, name: string) => `Gave up waiting for the directory after ${reads} reads. The register accepted this claim, and its directory has not appeared. This command cannot tell whether the claim is still being tried or all its attempts have failed. Run dap create ${name} to go on waiting. That sends nothing new, and it cannot restart a failed claim, even after the Git host returns. When the Git host is up, dap create ${name} --again signs a new claim. The new claim takes a new place in the register, the old claim keeps its place, and if the old claim still finishes you have a second repository.`;
+
 type Life = ReturnType<typeof nativeFixtureLifetime>;
 type Node = ReturnType<Life["platform"]>;
 const fixture = (sessions: boolean): Life => nativeFixtureLifetime(beginSessionFixture(sessions
@@ -145,8 +150,13 @@ const found = (life: Life, R: Node, who: typeof rita, recoveryKey: KeyId = sam.k
 async function publicRegister(life: Life) {
   const { control, ns } = artifactsService();
   let register: Node | undefined;
+  /** A scripted reply to one signed act kind. Everything else goes through the real routes. */
+  const scripted = { kind: null as string | null, body: null as unknown };
   const fetch: Fetch = async (url, init) => {
     const endpoint = new URL(url);
+    if (scripted.kind !== null && endpoint.pathname.endsWith("/acts") && typeof init?.body === "string" && (JSON.parse(init.body) as { signed?: { intent: { kind: string } } }).signed?.intent.kind === scripted.kind) {
+      return Response.json(scripted.body, { status: 422 });
+    }
     if (endpoint.pathname === "/v1/demo/creation-offer") {
       const response = await life.wait(async () => demoCreationRoute(new Request(url, { ...init, redirect: "manual" }), {
         SCOPES: env.PLATFORM as unknown as Binding, DEPLOYMENT: "TEST failed claims", ARTIFACTS_NAMESPACE: NAMESPACE, ARTIFACTS_CONFIG: artifactsConfig(register!.name),
@@ -173,7 +183,7 @@ async function publicRegister(life: Life) {
     const ctx = (tries: number): Context => ({ store, fetch, now: life.now, pause, tries });
     return { store, ctx };
   };
-  return { R, control, fetch, operator, person };
+  return { R, control, fetch, scripted, operator, person };
 }
 const words = (R: Node, result: { code: number; lines: readonly string[] }): string => `exit ${result.code}: ${cut(R.name, result.lines.join(" / "))}`;
 
@@ -260,8 +270,7 @@ test("DEFECT: on the public route, new keys fill the 64 places during an outage;
     const stuck = await person(vic);
     const first = await life.wait(() => command(stuck.ctx(3), ["claim", "stuck", "--handle", "@stuck"]));
     report("dap claim during the outage", words(R, first));
-    expect(first.code).toBe(1);
-    expect(first.lines.join(" ")).toContain("Gave up waiting for the directory");
+    expect(first).toEqual({ code: 1, lines: [gaveUp(3, "stuck")] });
     const seq = (await claimsOf(life, R)).find(item => item.state === "pending")!.id;
     expect(outcomesOf(await entries(), seq)).toEqual(["1:unknown", "2:unknown", "3:unknown"]);
     report("journal of that claim", outcomesOf(await entries(), seq).join(" "), "counts", JSON.stringify(await countsOf(life, R)));
@@ -271,7 +280,7 @@ test("DEFECT: on the public route, new keys fill the 64 places during an outage;
     const calls = control.creates.length, foundsBefore = founds(await entries());
     const rerun = await life.wait(() => command(stuck.ctx(3), ["claim", "stuck", "--handle", "@stuck"]));
     report("rerun of dap claim with the host back", words(R, rerun));
-    expect(rerun.code).toBe(1);
+    expect(rerun).toEqual({ code: 1, lines: [gaveUp(3, "stuck")] });
     const check = await life.wait(() => checkClaim(stuck.ctx(1), "stuck"));
     report("read-only check with the host back", words(R, check));
     life.advance(3_600_000);
@@ -279,7 +288,7 @@ test("DEFECT: on the public route, new keys fill the 64 places during an outage;
     await driveFixture([R], life.wait);
     const later = await life.wait(() => command(stuck.ctx(3), ["claim", "stuck", "--handle", "@stuck"]));
     report("rerun an hour later, after a restart", words(R, later));
-    expect(later.code).toBe(1);
+    expect(later).toEqual({ code: 1, lines: [gaveUp(3, "stuck")] });
     expect([control.creates.length, founds(await entries())]).toEqual([calls, foundsBefore]);
     expect(outcomesOf(await entries(), seq)).toEqual(["1:unknown", "2:unknown", "3:unknown"]);
 
@@ -311,13 +320,11 @@ test("DEFECT: on the public route, new keys fill the 64 places during an outage;
     const beforeRefusal = (await entries()).length;
     const same = await life.wait(() => command(flood.ctx(1), ["claim", "flood", "--handle", "@flood", "--again"]));
     report("claim 65, same key", words(R, same));
-    expect(same.code).toBe(1);
-    expect(same.lines.join(" ")).toContain("Refused: type-full");
+    expect(same).toEqual({ code: 1, lines: [`Refused: type-full, judged at entry ${R.name}:${beforeRefusal - 1}. ${fullLine("flood")}`] });
     const stranger = await person(rita);
     const closed = await life.wait(() => command(stranger.ctx(1), ["claim", "new", "--handle", "@new"]));
     report("claim 65, a new key", words(R, closed));
-    expect(closed.code).toBe(1);
-    expect(closed.lines.join(" ")).toContain("Refused: type-full");
+    expect(closed).toEqual({ code: 1, lines: [`Refused: type-full, judged at entry ${R.name}:${beforeRefusal - 1}. ${fullLine("new")}`] });
     expect((await entries()).length).toBe(beforeRefusal);
 
     // A key with a recent entry can read the log. No line says that a claim failed.
@@ -334,7 +341,7 @@ test("DEFECT: on the public route, new keys fill the 64 places during an outage;
     const still = await person(paul);
     const reopened = await life.wait(() => command(still.ctx(1), ["claim", "next-day", "--handle", "@nextday"]));
     report("a day later with the host up, a new key", words(R, reopened));
-    expect(reopened.lines.join(" ")).toContain("Refused: type-full");
+    expect(reopened).toEqual({ code: 1, lines: [`Refused: type-full, judged at entry ${R.name}:${beforeRefusal - 1}. ${fullLine("next-day")}`] });
     const retry = await life.wait(() => command(stranger.ctx(1), ["claim", "new", "--handle", "@new"]));
     report("a day later, a rerun of the refused claim", words(R, retry));
     report("a day later: counts", JSON.stringify(await countsOf(life, R)), "host calls since the outage ended", control.creates.length - afterOutage);
@@ -344,8 +351,31 @@ test("DEFECT: on the public route, new keys fill the 64 places during an outage;
     // What the other reads show. A room from before the outage still reads and acts.
     const log = await life.wait(() => command({ store: operator, fetch: async (url, init) => life.wait(() => routed(url, init)), now: life.now }, ["log", "register", "--limit", "2"]));
     report("operator dap log register, a day after its last entry", words(R, log));
+    expect(log).toEqual({ code: 1, lines: [`Cannot read the history of ${R.name}: forbidden.`] });
     const roomLog = await life.wait(() => command(before.ctx(1), ["log", "register", "--limit", "2"]));
     report("dap log register from the room made before the outage", words(R, roomLog).slice(0, 400));
+    expect(roomLog.code).toBe(0);
+
+    // The count that docs/deploy.md gives an operator: `dap log` from a room, then `dap show` on each result row.
+    const whole = await life.wait(() => command(before.ctx(1), ["log", "register", "--limit", "100000"]));
+    expect(whole.code).toBe(0);
+    const rowsOf = (pattern: RegExp) => whole.lines.flatMap(line => { const match = pattern.exec(line); return match ? [Number(match[1])] : []; });
+    const foundRows = rowsOf(/:(\d+) {2}\S+ {2}act found by /), resultRows = rowsOf(/:(\d+) {2}\S+ {2}delivery result from directory:\d+; 3 effects/), outcomeRows = rowsOf(/:(\d+) {2}\S+ {2}outcome; /);
+    const finished = new Set<number>();
+    for (const seq of resultRows) {
+      const shown = await life.wait(() => command(before.ctx(1), ["show", `register:${seq}`]));
+      expect(shown.code).toBe(0);
+      const effects = JSON.parse(shown.lines[1]!.replace(/^Effects: /, "").replace(/\.$/, "")) as { effect: string; item?: number; state?: string }[];
+      for (const effect of effects) if (effect.effect === "state" && effect.state === "active") finished.add(effect.item!);
+    }
+    const live = foundRows.filter(seq => !finished.has(seq));
+    const actual = (await claimsOf(life, R)).map(item => item.id);
+    report("count from the log: found rows", foundRows.length, "outcome rows", outcomeRows.length, "result rows with 3 effects", resultRows.length, "found rows that no result names", live.length, "inspector's pending claims", actual.length, "same IDs", canonicalize(live) === canonicalize(actual));
+    expect([foundRows.length, resultRows.length, live]).toEqual([MAX + 2, 2, actual]);
+    const outcomeShown = await life.wait(() => command(before.ctx(1), ["show", `register:${outcomeRows.at(-1)!}`]));
+    report("dap show of the last outcome row", words(R, outcomeShown).slice(0, 500));
+    const resultShown = await life.wait(() => command(before.ctx(1), ["show", `register:${resultRows[0]!}`]));
+    report("dap show of a result row", words(R, resultShown).slice(0, 700));
     const roomConfig = (await before.store.config())!;
     const status = await life.wait(() => command(before.ctx(1), ["status"]));
     report("dap status from the room made before the outage", words(R, status).slice(0, 400));
@@ -476,4 +506,85 @@ test("a hung request's own late reply frees the place, after the two later attem
     if (name) net.sized.delete(name);
     life.release();
   }
+}, 60_000);
+
+// Invariant: the stop on the directory says what the client knows, what a rerun cannot do, and what --again spends.
+test("WORDS: a claim that gave up on the directory states what is known, what a rerun cannot do, and what --again spends", async () => {
+  const life = fixture(true);
+  try {
+    const { R, control, person } = await publicRegister(life);
+    control.mode = "network";
+    const stuck = await person(vic);
+    const first = await life.wait(() => command(stuck.ctx(3), ["claim", "stuck", "--handle", "@stuck"]));
+    expect(first).toEqual({ code: 1, lines: [gaveUp(3, "stuck")] });
+    // Each statement holds in the run: a rerun adds no entry and no host call, and --again takes one more place while the first stays.
+    control.mode = "up";
+    const calls = control.creates.length, entries = (await journal(life, R)).length;
+    const rerun = await life.wait(() => command(stuck.ctx(3), ["claim", "stuck", "--handle", "@stuck"]));
+    expect(rerun).toEqual({ code: 1, lines: [gaveUp(3, "stuck")] });
+    expect([control.creates.length, (await journal(life, R)).length]).toEqual([calls, entries]);
+    const again = await life.wait(() => command(stuck.ctx(8), ["claim", "stuck", "--handle", "@stuck", "--again"]));
+    expect(again.code, again.lines.join("\n")).toBe(0);
+    expect(await countsOf(life, R)).toEqual([["claim", "active", 1], ["claim", "pending", 1]]);
+  } finally { life.release(); }
+}, 60_000);
+
+// Invariant: once the directory exists, the repository exists, so the stop keeps its plain statement and adds what --again spends.
+test("WORDS: a claim whose directory exists and whose children wait says --again takes a place and creates a second repository", async () => {
+  const life = fixture(true);
+  try {
+    const { person } = await publicRegister(life);
+    life.setHold(envelope => "definition" in envelope.to && envelope.to.kind !== "directory");
+    const who = await person(vic);
+    const result = await life.wait(() => command(who.ctx(6), ["claim", "waiting", "--handle", "@waiting"]));
+    report("children still waiting", result.lines.join(" / "));
+    expect(result).toEqual({ code: 1, lines: ["Gave up waiting for membership, the rules scope and the destination after 6 reads. What was asked may still take effect; run dap create waiting again to go on waiting for this claim, or with --again to sign a new one, which takes a new place in the register and creates a second repository."] });
+  } finally { life.release(); }
+}, 60_000);
+
+// Invariant: `type-full` on a register's `found` names the unfinished claims and the operator, and each route that signs `found` says so.
+test("WORDS: a full register's type-full names the unfinished claims and the operator, by dap claim and by dap act found", async () => {
+  const life = fixture(true);
+  try {
+    const { R, control, person } = await publicRegister(life);
+    control.mode = "network";
+    const flood = await person(una);
+    await life.wait(() => command(flood.ctx(1), ["claim", "flood", "--handle", "@flood"]));
+    await exhaust(life, R);
+    for (let n = 2; n <= MAX; n++) {
+      await life.wait(() => command(flood.ctx(1), ["claim", "flood", "--handle", "@flood", "--again"]));
+      await exhaust(life, R);
+    }
+    const head = (await journal(life, R)).length - 1;
+    const stranger = await person(rita);
+    const claimed = await life.wait(() => command(stranger.ctx(1), ["claim", "new", "--handle", "@new"]));
+    report("type-full by dap claim", words(R, claimed));
+    expect(claimed).toEqual({ code: 1, lines: [`Refused: type-full, judged at entry ${R.name}:${head}. ${fullLine("new")}`] });
+    const acted = await life.wait(() => command(flood.ctx(1), ["act", "found", "--on", "register", "--set", "branch=main", "--set", "founderHandle=@flood", "--set", `recoveryKey=${sam.key}`]));
+    report("type-full by dap act found", words(R, acted));
+    expect(acted).toEqual({ code: 1, lines: [`Refused: type-full, judged at entry ${R.name}:${head}. ${FULL}`] });
+  } finally { life.release(); }
+}, 120_000);
+
+// Invariant: the longer sentence belongs to a register's `found`. A `type-full` of any other act keeps the plain last sentence.
+test("WORDS: a type-full of another act at another scope keeps its plain words, by dap act and at the claim's seat step", async () => {
+  const life = fixture(true);
+  try {
+    const { scripted, person } = await publicRegister(life);
+    const judgedAt = { seq: 7, hash: `sha256:${"a".repeat(64)}` };
+    const room = await person(sam);
+    expect((await life.wait(() => command(room.ctx(8), ["claim", "room", "--handle", "@room"]))).code).toBe(0);
+    const membership = (await room.store.config())!.repository!.membership.scope;
+    scripted.kind = "invite-member";
+    scripted.body = { answer: "refused", reason: "type-full", judgedAt };
+    const acted = await life.wait(() => command(room.ctx(1), ["act", "invite-member", "--on", "membership", "--set", "handle=@guest", "--set", "role=member"]));
+    report("type-full at membership, dap act", acted.lines.join(" / "));
+    expect(acted).toEqual({ code: 1, lines: [`Refused: type-full, judged at entry ${membership}:7. The request was refused.`] });
+    scripted.kind = "seat";
+    const other = await person(vic);
+    const seated = await life.wait(() => command(other.ctx(8), ["claim", "seated", "--handle", "@seated"]));
+    const otherMembership = (await other.store.config())!.claim!.repository!.membership.scope;
+    report("type-full at membership, the claim's seat step", seated.lines.join(" / "));
+    expect(seated).toEqual({ code: 1, lines: [`Refused: type-full, judged at entry ${otherMembership}:7. The request was refused.`] });
+  } finally { life.release(); }
 }, 60_000);
