@@ -23,8 +23,6 @@ export interface EnrollmentDiagnostic {
   filesystemCode?: string;
   nativeReason?: NativeReadReason;
   read?: { method: "GET" | "POST" | "other"; category: "membership-session" | "membership-summary" | "membership-entry" | "other"; status: number | null };
-  /** How many read-only inbox rechecks ran. A later stage keeps the count, so a stop that cleared stays visible. */
-  inboxRechecks?: number;
 }
 
 const identityReasons = new Set([
@@ -51,10 +49,10 @@ const unknownReasons: Readonly<Record<string, UnknownCondition | typeof INBOX>> 
 };
 
 /**
- * The fixed word for one engine answer. The engine reads the inbox summary, then its entry 0, and
- * accepts it only when active. A last read of GET, other, 200 means both reads answered and the engine
- * still refused: `inbox-not-confirmed`. Any other last read means an inbox read was refused:
- * `inbox-not-readable`. The word comes from the fixed reason and the read's status. No body is decoded.
+ * The fixed word for one engine answer. The engine reads the inbox summary and, once it is active,
+ * its entry 0. A last read of GET, other, 200 means the inbox answered and the engine still refused:
+ * `inbox-not-confirmed`. Any other last read means an inbox read was refused: `inbox-not-readable`.
+ * The word comes from the fixed reason and the read's status. No body is decoded.
  */
 export function invitationCause(result: { state: "prepared" | "unknown" | "refused" | "verified"; reason?: string }, read: EnrollmentDiagnostic["read"]): NonNullable<EnrollmentDiagnostic["cause"]> {
   if (result.state !== "unknown") return result.state;
