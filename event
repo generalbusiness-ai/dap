@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e1a71650c951ea31fc3cb94068ea9a8420a36369","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/credential-store.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ec1528f744d0f945022d77e556b61739d229c6b8","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-01-signed-read-refusal.md."}
