@@ -217,4 +217,3 @@ export async function main(argv: readonly string[], options: LoopOptions = {}): 
     return 1;
   }
 }
-
