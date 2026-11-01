@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"docs/scopes.md at exact 84007d6bea6c45aa07880baf48ed38987298532b on builder/signed-read-20261101, under promise git:sha1…32fa382 on request git:sha1…e4ed7d7","body":{"commit":"84007d6bea6c45aa07880baf48ed38987298532b","path":"docs/scopes.md"}}
+{"kind":"artifact","text":"docs/security/trust-boundaries.md at exact 84007d6bea6c45aa07880baf48ed38987298532b on builder/signed-read-20261101, under promise git:sha1…32fa382 on request git:sha1…e4ed7d7","body":{"commit":"84007d6bea6c45aa07880baf48ed38987298532b","path":"docs/security/trust-boundaries.md"}}
