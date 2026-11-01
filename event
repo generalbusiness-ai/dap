@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:45c5866299d28e1eab5732e51f81dd62c5f2f5b3","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/needs-you.scope.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4b33348796414bfdd15e6741bff49b595871cd6c","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-01-j5-needs-you.md."}
