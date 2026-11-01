@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fd1135518918ab3c05856c78252920fb23cd3fa5","text":"Merge retired a covered predecessor; the successor is at packages/mcp/scripts/views.mjs."}
+{"kind":"promise","text":"I take the J2 acceptance. I start step 1 with no person, write the person's steps as a file, and take views-browser.mjs. I do not say the acceptance is met.","body":{"request":"2082efd92c58b0ab84fa77fb4f3660c1722b3e4a"}}
