@@ -1,12 +1,13 @@
 import { expect, test } from "vitest";
 import { runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import type { ScopeId, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalBytes, canonicalize, newIncarnation, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalBytes, canonicalize, intentDigest, newIncarnation, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { DEMO_DIGESTS } from "@generalbusiness/dap-lanes";
 import { actBodyText, originalRequest, requestSession, secretSigner, sendableAt, signedIntent, signedRead, signerSessionRequest, type Fetch, type OriginalRow, type Signer } from "@generalbusiness/dap-client";
 import { applicationGatewayRoute } from "../../../../packages/client/src/application-gateway.ts";
-import { CopyNotKept, act, actAssociation, copiesOf, handleOf, issueDeviceKey, joinRoom, keepOriginal, listLanes, loadIssue, openRoom, placeOf, prepareJoin, submitJoin, type Room, type Session } from "../src/data.ts";
-import { ORIGINALS_UNREAD, checkOriginalRequest, lockedScopes, openOriginals, originalLine, settledAssociations } from "../src/original-check.ts";
+import { CopyNotKept, act, actAssociation, sessionLost, copiesOf, handleOf, issueDeviceKey, joinRoom, keepOriginal, listLanes, loadIssue, openRoom, placeOf, prepareJoin, submitJoin, type Room, type Session } from "../src/data.ts";
+import { ORIGINALS_UNREAD, checkOriginalRequest, liftFences, lockedScopes, openOriginals, originalLine, settledAssociations } from "../src/original-check.ts";
+import { ScopeSending } from "../src/shell.ts";
 import { SERVICE, demo, type Demo } from "./support/demo.ts";
 
 // Invariant: a copy of a request stays where another key of one member reaches it. That key settles the request with no signature,
@@ -649,9 +650,10 @@ test("a page that held a session and failed to renew it stops the send", async (
     expect(s.wire.acts).toEqual([]);
     expect((await openOriginals(s.laptop)).failed).toBe(true);
 
-    // A page that opens with no session keeps today's behaviour: no copy, and the act goes.
+    // A page that opens with no session keeps today's behaviour: no copy, and the act goes. This module has held a session under each
+    // key of the scene, and a new page load forgets that. So a key that this module never held stands in for that page's memory.
     s.wire.order.length = 0;
-    const signedReads = await openRoom(s.session(s.secrets.laptop), s.place);
+    const signedReads: Room = { ...await openRoom(s.session(s.secrets.laptop), s.place), key: secretSigner(crypto.getRandomValues(new Uint8Array(32))).key };
     expect(signedReads.reader).toBeNull();
     const sentOnSignedReads = await comment(signedReads, s.lane, "On signed reads.").then(acted => acted.answer.answer, (error: Error) => error.name);
     expect(sentOnSignedReads).toBe("accepted");
@@ -677,10 +679,67 @@ test("an answer lifts only this page's own fence", async () => {
     expect(landed.state).toBe("landed");
     expect(settledAssociations(s.phone, row, landed)).toEqual([]);
     expect(settledAssociations(s.laptop, row, landed)).toEqual([own]);
-    for (const state of ["refused", "archived", "mismatch", "gone"] as const) expect(settledAssociations(s.laptop, row, { state, reason: "x" } as never), state).toEqual([own]);
-    for (const state of ["waiting", "unknown", "unverified"] as const) expect(settledAssociations(s.laptop, row, { state, until: 0 } as never), state).toEqual([]);
+    expect(settledAssociations(s.laptop, row, { state: "refused", reason: "expired" })).toEqual([own]);
+    // A missing row shows nothing, and `mismatch` and `archived` are fences on the send path too.
+    for (const state of ["gone", "mismatch", "archived", "waiting", "unknown", "unverified"] as const) expect(settledAssociations(s.laptop, row, { state, reason: "x", until: 0 } as never), state).toEqual([]);
     // An opening act can sit under the directory, where the page's panel keeps its fence.
     const opening = { ...row, to: { ...row.to, kind: "directory" as const } };
     expect(settledAssociations(s.laptop, opening, landed)).toEqual([own, actAssociation(s.laptop, s.laptop.directory)]);
+  } finally { s.d.done(); }
+});
+
+test("a page that clears its opened rooms still stops the send", async () => {
+  const s = await scene();
+  try {
+    // The page held a session under this service, membership and key. `opened.clear()` makes a new `Session` at the next open.
+    s.wire.down.add("sessions");
+    const reopened = await openRoom(s.session(s.secrets.laptop), s.place);
+    expect(reopened.reader).toBeNull();
+    const stopped = await comment(reopened, s.lane, "No copy, no send.").then(() => null, (error: Error) => error);
+    expect(stopped).toBeInstanceOf(CopyNotKept);
+    expect(s.wire.acts).toEqual([]);
+    expect((await openOriginals(reopened)).failed).toBe(true);
+    // Another key's memory is its own: a key that this page never held a session under has lost nothing, and the phone's page still holds its session.
+    expect(sessionLost({ ...reopened, key: secretSigner(crypto.getRandomValues(new Uint8Array(32))).key })).toBe(false);
+    expect(s.phone.reader).not.toBeNull();
+    expect((await comment(s.phone, s.lane, "From the phone.")).answer.answer).toBe("accepted");
+  } finally { s.d.done(); }
+});
+
+test("an older row lifts no newer request's fence", async () => {
+  const s = await scene();
+  try {
+    // The digest that the send hands over, and the digest of its answer, are the row's digest.
+    let handed = "";
+    s.wire.mode = "reply-lost";
+    const lostSend = await act(s.laptop, s.lane, "comment", { fields: { body: "Older." } }, undefined, digest => { handed = digest; }).then(() => null, (error: Error) => error);
+    expect(lostSend).not.toBeNull();
+    s.wire.mode = "pass";
+    const older = (await openRows(s.laptop))[0]!;
+    expect(handed).toBe(older.digest);
+    const landed = await checkOriginalRequest(s.laptop, older.digest);
+    expect(landed.state).toBe("landed");
+    const answered = await comment(s.laptop, s.lane, "Newer.");
+    const sentBody = JSON.parse(s.wire.acts.at(-1)!.body) as { signed: SignedIntent };
+    expect(answered.digest).toBe(intentDigest(sentBody.signed.intent));
+
+    const own = actAssociation(s.laptop, s.lane);
+    const fences = (digest: string) => {
+      const sending = new ScopeSending();
+      sending.begin(own, "comment");
+      sending.submitting(own, digest);
+      sending.failed(own);
+      return { lastActs: new Map([[own, { ...answered, digest } as typeof answered]]), sending };
+    };
+    // A press on the older row, with the page's fences on a newer request: both stay.
+    const newer = fences(answered.digest);
+    liftFences(s.laptop, older, landed, newer.lastActs, newer.sending);
+    expect(newer.lastActs.has(own)).toBe(true);
+    expect(newer.sending.get(own)?.state).toBe("unknown");
+    // A press on the row of the fences' own request: both lift.
+    const same = fences(older.digest);
+    liftFences(s.laptop, older, landed, same.lastActs, same.sending);
+    expect(same.lastActs.has(own)).toBe(false);
+    expect(same.sending.get(own)).toBeUndefined();
   } finally { s.d.done(); }
 });

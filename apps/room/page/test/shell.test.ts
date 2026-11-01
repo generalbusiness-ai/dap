@@ -50,9 +50,9 @@ test("a scope fence permits pre-submit correction but never a fresh signature af
   expect(fences.begin(association, "merge")).toBe(false);
   fences.failed(association); // Typing/signing failed before the submission boundary.
   expect(fences.begin(association, "comment")).toBe(true);
-  fences.submitting(association);
+  fences.submitting(association, "sha256:scripted");
   fences.failed(association); // The transport may have delivered the signed request.
-  expect(fences.get(association)).toEqual({ kind: "comment", state: "unknown" });
+  expect(fences.get(association)).toEqual({ kind: "comment", state: "unknown", digest: "sha256:scripted" });
   expect(fences.begin(association, "comment")).toBe(false);
   expect(fences.begin("origin/another-room/member/scope", "comment")).toBe(true);
   // A readable newer head is not a reply to this request: reads do not clear it.

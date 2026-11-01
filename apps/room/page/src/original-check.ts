@@ -14,7 +14,8 @@
 import type { Answer, Digest, Head, Receipt, ScopeId, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, isMemberRef } from "@generalbusiness/dap-bytes";
 import { originalRequest, sendableAt, type OriginalRow } from "@generalbusiness/dap-client";
-import { actAssociation, copiesOf, endOriginal, fresh, handleOf, itemsOf, nowOf, renewLost, sessionLost, summaryOf, type Room } from "./data.ts";
+import type { ScopeSending } from "./shell.ts";
+import { actAssociation, copiesOf, endOriginal, fresh, handleOf, itemsOf, nowOf, renewLost, sessionLost, summaryOf, type Acted, type Room } from "./data.ts";
 
 export type OriginalCheck =
   /** The scope holds the act's entry, and the page verified it. The copy ended. */
@@ -59,13 +60,24 @@ export async function openOriginals(room: Room): Promise<OpenOriginals> {
 }
 
 /**
- * The fences of this page that an answer lifts: the page's own request at the
- * row's scope. An opening act can sit under the directory. Another key's
- * answer lifts nothing here, and neither does a press with no answer.
+ * The fences of this page that an answer can lift: the page's own request at
+ * the row's scope. An opening act can sit under the directory. Only `landed`
+ * and `refused` settle a request. `gone` shows nothing, because a missing row
+ * does not show that no act was sent. `mismatch` and `archived` are fences on
+ * the send path too. Another key's answer lifts nothing here.
  */
 export function settledAssociations(room: Pick<Room, "session" | "key" | "directory" | "membership">, row: OriginalRow, check: OriginalCheck): readonly string[] {
-  if (row.actor !== room.key || check.state === "waiting" || check.state === "unknown" || check.state === "unverified") return [];
+  if (row.actor !== room.key || (check.state !== "landed" && check.state !== "refused")) return [];
   return [actAssociation(room, row.to.scope), ...(row.to.kind === "directory" ? [actAssociation(room, room.directory)] : [])];
+}
+
+/** Lifts those fences, each only if it holds this row's request. An older row lifts no newer request's fence. */
+export function liftFences(room: Pick<Room, "session" | "key" | "directory" | "membership">, row: OriginalRow, check: OriginalCheck, lastActs: Map<string, Acted>, sending: Pick<ScopeSending, "get" | "answered">): void {
+  for (const association of settledAssociations(room, row, check)) {
+    if (lastActs.get(association)?.digest === row.digest) lastActs.delete(association);
+    const fence = sending.get(association);
+    if (fence?.state === "unknown" && fence.digest === row.digest) sending.answered(association);
+  }
 }
 
 /**

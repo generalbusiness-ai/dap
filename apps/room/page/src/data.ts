@@ -113,14 +113,20 @@ export const handleOf = (room: Pick<Room, "session" | "reader">, scope: ScopeId)
   return new ScopeHandle(transportOf(room.session, reader), scope, reader);
 };
 
-/** The sessions this page held a read session under. Memory only: a reload starts again, and a page that opens with none stays on signed reads. */
-const heldSessions = new WeakSet<Session>();
-/** This page held a read session for this room, and it holds none now. It cannot keep a copy, and it must not send as if it had. */
-export const sessionLost = (room: Pick<Room, "session" | "reader">): boolean => !room.reader && heldSessions.has(room.session);
+/** Each service, membership and key under which this page load held a read session. Memory only: closing or leaving a room forgets nothing, and only a new page load does. */
+const heldSessions = new Set<string>();
+const heldContext = (session: Session, membership: ScopeRef, key: string): string => JSON.stringify([session.service.replace(/\/+$/, ""), membership.scope, membership.inc, key]);
+/**
+ * Since this page loaded, it held a read session under this service, membership
+ * and key, and it holds none now. It cannot keep a copy, and it must not send as
+ * if it had. After a new page load this is false, and a page that opens with no
+ * session stays on signed reads.
+ */
+export const sessionLost = (room: Pick<Room, "session" | "reader" | "membership" | "key">): boolean => !room.reader && heldSessions.has(heldContext(room.session, room.membership, room.key));
 
 /** Renews the caller's session when it has ended, or will within ten seconds. A room that membership gave no session stays on signed reads. */
 export async function fresh(room: Room): Promise<void> {
-  if (room.reader) heldSessions.add(room.session);
+  if (room.reader) heldSessions.add(heldContext(room.session, room.membership, room.key));
   if (!room.reader || !room.reader.endedBy(timeOf(nowOf(room.session) + 10_000))) return;
   const asked = await readerFor(room.session, room.membership);
   room.reader = asked.session;
@@ -367,7 +373,7 @@ export async function joinRoom(session: Session, typed: string, submitting?: () 
 export async function openRoom(session: Session, place: Place): Promise<Room> {
   const key = sessionKey(session);
   const asked = await readerFor(session, place.membership);
-  if (asked.session) heldSessions.add(session);
+  if (asked.session) heldSessions.add(heldContext(session, place.membership, key));
   const room: Room = { session, directory: place.directory, directoryIndex: null, membership: place.membership, rules: "" as ScopeId, destination: "" as ScopeId, key, me: null, reader: asked.session, unsessioned: asked.why, definitions: new Map() };
   const { summary } = await summaryOf(handleOf(room, place.directory));
   room.directoryIndex = { scope: summary.scope, definition: summary.definition };
@@ -1048,6 +1054,8 @@ export interface Acted {
   service: string; directory: ScopeId; membership: ScopeRef; key: KeyId; scope: ScopeId; kind: string; on: number | null;
   /** UI association only; scope and the receipt still name the actual target. */
   requestedScope?: ScopeId;
+  /** The digest of the signed intent, which names the request that this answer answers. */
+  digest: Digest;
   answer: Answer; before: Head; after: Head | null; observation: string | null;
 }
 export type IssueCreation = { state: "confirmed"; child: ScopeRef } | { state: "pending" } | { state: "unavailable" };
@@ -1163,7 +1171,7 @@ function notKept(reason: string): string {
  * stops too, because the person relies on the copy. A page that opened on
  * signed reads keeps no copy, and it sends as it always did.
  */
-export async function keepOriginal(room: Pick<Room, "session" | "membership" | "reader" | "unsessioned">, signed: SignedIntent, beside: Beside): Promise<void> {
+export async function keepOriginal(room: Pick<Room, "session" | "membership" | "reader" | "unsessioned" | "key">, signed: SignedIntent, beside: Beside): Promise<void> {
   if (sessionLost(room)) throw new CopyNotKept(`This page could not renew its session with the room${room.unsessioned && room.unsessioned !== "no-reply" ? ` (${room.unsessioned})` : ""}, so it cannot keep a copy of this request. Nothing was sent. Check your connection and send it again, or reload the page.`);
   const copies = copiesOf(room);
   if (!copies) return;
@@ -1181,12 +1189,13 @@ export async function keepOriginal(room: Pick<Room, "session" | "membership" | "
  * with no row. Anything that stops it after the keep ends the row, because a
  * row reads "You sent" and a press past the margin sends its bytes.
  */
-export async function keepToSend(room: Pick<Room, "session" | "membership" | "reader" | "unsessioned">, signed: SignedIntent, beside: Beside, before?: () => void, after?: () => void): Promise<void> {
+export async function keepToSend(room: Pick<Room, "session" | "membership" | "reader" | "unsessioned" | "key">, signed: SignedIntent, beside: Beside, before?: () => void, after?: (digest: Digest) => void): Promise<void> {
+  const digest = intentDigest(signed.intent);
   before?.();
   await keepOriginal(room, signed, beside);
-  try { after?.(); }
+  try { after?.(digest); }
   catch (error) {
-    if (!await endOriginal(room, intentDigest(signed.intent)) && error instanceof Error) error.message += ROW_STAYS;
+    if (!await endOriginal(room, digest) && error instanceof Error) error.message += ROW_STAYS;
     throw error;
   }
 }
@@ -1246,7 +1255,7 @@ export async function issueDeviceKey(room: Room, handle: string): Promise<{ link
  * act goes through the client's declared handle, which checks each field's
  * shape before it signs and carries detached texts beside the intent.
  */
-export async function act(room: Room, scope: ScopeId, kind: string, asked: { on?: number | null; fields?: Record<string, FieldValue> } = {}, received?: (result: Acted) => void, submitting?: () => void, stopping?: () => void): Promise<Acted> {
+export async function act(room: Room, scope: ScopeId, kind: string, asked: { on?: number | null; fields?: Record<string, FieldValue> } = {}, received?: (result: Acted) => void, submitting?: (digest: Digest) => void, stopping?: () => void): Promise<Acted> {
   await renewLost(room);
   await fresh(room);
   const requestedScope = scope;
@@ -1289,7 +1298,7 @@ export async function act(room: Room, scope: ScopeId, kind: string, asked: { on?
     sent = signed;
     answer = await handle.submit(signed, [], sending);
   }
-  const result: Acted = { service: room.session.service, directory: room.directory, membership: { ...room.membership }, key: signer.key, scope, ...(scope !== requestedScope ? { requestedScope } : {}), kind, on, answer, before, after: null, observation: "Observation refresh pending." };
+  const result: Acted = { service: room.session.service, directory: room.directory, membership: { ...room.membership }, key: signer.key, scope, ...(scope !== requestedScope ? { requestedScope } : {}), kind, on, digest: intentDigest(sent.intent), answer, before, after: null, observation: "Observation refresh pending." };
   received?.(result); // Preserve the real answer before any awaited refresh.
   await endAnswered(room, handle, sent, answer);
   try { result.after = (await summaryOf(handle, answer.answer === "accepted" ? answer.receipt : undefined)).at; result.observation = null; }

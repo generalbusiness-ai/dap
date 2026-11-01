@@ -27,7 +27,7 @@ import { connectInvitation, originalConnection, creatorConnectionFiles, type Cre
 import { originalStart, startRoom, type StartedRoom } from "./start-custody.ts";
 import type { Answer, FieldValue, Head, MemberRef, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, isKeyId, isScopeId, isScopeRef, unb64url } from "@generalbusiness/dap-bytes";
-import { ORIGINALS_UNREAD, checkAnswerLine, checkOriginalRequest, lockedScopes, openOriginals, originalLine, settledAssociations, type OpenOriginals } from "./original-check.ts";
+import { ORIGINALS_UNREAD, checkAnswerLine, checkOriginalRequest, liftFences, lockedScopes, openOriginals, originalLine, type OpenOriginals } from "./original-check.ts";
 import { act, actAssociation, actsOn, issueDeviceKey, issueCreation, fieldValue, listLanes, loadCommonsView, loadChange, loadIssue, loadRules, pageObservationSource, roomInitialization, initializationStillCurrent, openRoom, placeOf, sessionKey, siteAddress, type Acted, type Place, type Room, type Session } from "./data.ts";
 import { PageObservation, pollingInterval } from "./page-observation.ts";
 import { bindDisclosures, openDialog, releaseDialog } from "./popups.ts";
@@ -587,10 +587,7 @@ async function originalNotices(room: Room, { rows, failed }: OpenOriginals): Pro
       void startWorkbench(async () => {
         const result = await checkOriginalRequest(room, row.digest);
         originalAnswers.set(row.digest, checkAnswerLine(result));
-        for (const association of settledAssociations(room, row, result)) {
-          lastActs.delete(association);
-          if (sending.get(association)?.state === "unknown") sending.answered(association);
-        }
+        liftFences(room, row, result, lastActs, sending);
         await draw();
       });
     });
@@ -666,9 +663,9 @@ async function panelFor(room: Room, scope: ScopeId, context: ActionContext = {},
           showLocally(answerLine(known), true, known.answer.answer === "accepted" ? "Request accepted" : known.answer.answer === "refused" ? `Request refused: ${known.answer.reason}` : known.answer.answer === "archived" ? "Request archived; verify the original result" : "Request outcome unknown");
           if (known.answer.answer === "accepted") accepted?.();
           else if (known.answer.answer === "refused" && activeView()) showRefusal(known, association);
-        }, () => {
+        }, (digest) => {
           if (!currentContext()) throw new Error("The room or key changed before submission. Nothing was sent.");
-          sending.submitting(association);
+          sending.submitting(association, digest);
         }, () => {
           if (!currentContext()) throw new Error("The room or key changed before submission. Nothing was sent.");
         });

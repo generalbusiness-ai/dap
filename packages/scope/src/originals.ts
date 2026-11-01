@@ -40,7 +40,12 @@
  * longer active or who hold no active key, one bounded quantum at a time. A retired
  * key of a member with another active key keeps its rows. The object's cap does not
  * refuse a request to this membership scope, so an admin can still remove a member.
- * Only the member's own caps bound those rows.
+ * Only the member's own caps bound those rows. Cloudflare's limits page states 10 GB
+ * per Durable Object: that is the provider's statement and no measurement here. It
+ * takes about 600 active members who each fill 16 MiB on purpose. The page says that
+ * writes then fail with `SQLITE_FULL` and `DELETE` still succeeds. It also states 1 GB
+ * in one section for the Free plan, and nobody checked which plan applies. Nobody
+ * tested whether the alarm finishes its work at that point.
  *
  * **The time bound.** A row with no answer goes seven days past its `notAfter`,
  * plus the delay of the object's one alarm. `wake` is one cause of `Wakes`, so
