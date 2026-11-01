@@ -152,11 +152,13 @@ export async function retainedInvitationRequests(store: Store, pointer: Pick<Pen
 }
 
 /** Create only the explicitly new owner. Recovery uses its existing signer. */
-export async function initializeOwner(home: string, input: OwnerInput, mode: IdentityMode): Promise<Context> {
+export async function initializeOwner(home: string, input: OwnerInput, mode: IdentityMode, options: { loopback?: boolean } = {}): Promise<Context> {
   modeOf(mode); privateHome(home, mode === "new");
   let service: URL;
   try { service = new URL(input.service); } catch { return refuse("owner-input-invalid"); }
-  if (service.protocol !== "https:" || service.origin !== input.service || !isScopeRef(input.register) || input.register.kind !== "register" || !isHandle(input.handle)) refuse("owner-input-invalid");
+  // Only a caller that names a local Worker may use its loopback HTTP origin. S1's own plan stays HTTPS.
+  const local = options.loopback === true && service.protocol === "http:" && service.hostname === "127.0.0.1";
+  if ((service.protocol !== "https:" && !local) || service.origin !== input.service || !isScopeRef(input.register) || input.register.kind !== "register" || !isHandle(input.handle)) refuse("owner-input-invalid");
   const store = storeAt(home), expected: OwnerBinding = { v: 1, key: "operator", service: input.service, register: input.register, handle: input.handle };
   if (mode === "new") await keep(store, OWNER_INPUT, expected);
   else if (!same(await readPrivate(store, OWNER_INPUT), expected)) refuse("owner-input-changed");
