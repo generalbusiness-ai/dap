@@ -32,7 +32,7 @@ import { act, actAssociation, actsOn, issueDeviceKey, issueCreation, fieldValue,
 import { PageObservation, pollingInterval } from "./page-observation.ts";
 import { bindDisclosures, openDialog, releaseDialog } from "./popups.ts";
 import { actsPanel, answerLine, nonacceptedAnswerText, changeScreen, failureScreen, h, icon, whoLine, issueScreen, roomScreen, rulesScreen } from "./view.ts";
-import { initializationMessage, RoomOpening, ScopeSending, changeActions, issueActions, roomContext, routeOf, type Destination } from "./shell.ts";
+import { failureText, initializationMessage, RoomOpening, ScopeSending, changeActions, issueActions, roomContext, routeOf, type Destination } from "./shell.ts";
 import { editPath } from "@generalbusiness/dap-platform";
 import { reconcileActionDrafts, type ActionContext } from "./actions.ts";
 import { rulesEditor } from "./rules-editor.ts";
@@ -864,7 +864,7 @@ function startScreen(): HTMLElement {
       const result = await startRoom(location.origin, localStorage, { mode, ...(offer ? { offer } : {}), label: name.value,
         creationOffer: async register => { const offered = await creationOffer(location.origin, { register }); if (canonicalize(offered.register) !== canonicalize(register)) throw new Error("The offered register changed. Original Start is retained."); return offered; }, current });
       await showResult(result);
-    } catch (error) { tell(error instanceof Error ? error.message : "The original creation remains unresolved. Check status without replacing its key.", true); }
+    } catch (error) { tell(failureText(error, "The original creation remains unresolved. Check status without replacing its key."), true); }
     finally { connectionBusy = false; if (current()) { restore(); if (!blocked) { submit.removeAttribute("disabled"); check.removeAttribute("disabled"); } } }
   };
   form.addEventListener("submit", event => { event.preventDefault(); void run(original ? "continue" : "new"); });
@@ -924,7 +924,7 @@ function connectionScreen(path: "join" | "invitation" | "config", connected: Roo
         const signer = await privateKeys.migrate({ seed: b64url(secret), current, removeSecret: () => {} });
         signers.set(signer.key, signer);
         if (await selectRoom({ place, publicKey: signer.key, ...(parsed.register ? { register: parsed.register as ScopeRef } : {}) })) key.value = "";
-      } catch (error) { tell(error instanceof Error ? error.message : "The room could not verify this config and key.", true); }
+      } catch (error) { tell(failureText(error, "The room could not verify this config and key."), true); }
       finally { decodedSecret?.fill(0); connectionBusy = false; if (current()) submit.removeAttribute("disabled"); }
     })(); });
     return h("main", { class: "screen entry-screen" }, back(), h("h1", {}, "Join with config and key"), h("p", { class: "entry-intro" }, "Both files are required."), form, message);
@@ -958,9 +958,9 @@ function connectionScreen(path: "join" | "invitation" | "config", connected: Roo
     if (!current() || connectionBusy || !typed) return;
     if (!typed.startsWith("artroom-invite:") && !typed.startsWith(DEVICE_KEY_LINK)) { tell("Paste the complete invitation link.", true); return; }
     connectionBusy = true; invitation.setAttribute("disabled", ""); tell("Working on joining the room");
-    void joinInvitation(location.origin, typed, localStorage, { current }).then(resultOf).catch(error => tell(error instanceof Error ? error.message : "The original join could not be confirmed. Check status before another request.", true)).finally(() => { connectionBusy = false; if (current()) { try { if (originalJoin(location.origin, localStorage)) check.removeAttribute("hidden"); else invitation.removeAttribute("disabled"); } catch { /* Corrupt custody stays fenced. */ } } });
+    void joinInvitation(location.origin, typed, localStorage, { current }).then(resultOf).catch(error => tell(failureText(error, "The original join could not be confirmed. Check status before another request."), true)).finally(() => { connectionBusy = false; if (current()) { try { if (originalJoin(location.origin, localStorage)) check.removeAttribute("hidden"); else invitation.removeAttribute("disabled"); } catch { /* Corrupt custody stays fenced. */ } } });
   });
-  check.addEventListener("click", () => { if (!current() || connectionBusy) return; connectionBusy = true; check.setAttribute("disabled", ""); tell("Reading the original join status"); void checkOriginal(location.origin, localStorage, { current }).then(resultOf).catch(error => tell(error instanceof Error ? error.message : "The original join remains unresolved.", true)).finally(() => { connectionBusy = false; if (current()) check.removeAttribute("disabled"); }); });
+  check.addEventListener("click", () => { if (!current() || connectionBusy) return; connectionBusy = true; check.setAttribute("disabled", ""); tell("Reading the original join status"); void checkOriginal(location.origin, localStorage, { current }).then(resultOf).catch(error => tell(failureText(error, "The original join remains unresolved."), true)).finally(() => { connectionBusy = false; if (current()) check.removeAttribute("disabled"); }); });
   return h("main", { class: "screen entry-screen" }, back(), h("h1", {}, "Join with an invitation"), h("p", { class: "entry-intro" }, "Paste your invitation link to join automatically."), form, message, check);
 }
 
@@ -1038,7 +1038,7 @@ async function drawWorkbench(focus: boolean): Promise<void> {
     };
     let initialization = await roomInitialization(room);
     if (!viewCurrent()) return;
-    let notice = initializationMessage(initialization.state);
+    let notice = initializationMessage(initialization.state, room.unsessioned);
     const copies = await openOriginals(room);
     lockedByCopy = lockedScopes(room, copies.rows, room.session.now?.() ?? Date.now());
     const copyLines = await originalNotices(room, copies);
