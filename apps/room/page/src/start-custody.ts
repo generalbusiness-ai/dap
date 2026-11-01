@@ -77,7 +77,7 @@ export async function startRoom(origin: string, storage: ClaimStorage, options: 
   originOf(origin);
   const browser = globalThis as { navigator?: { locks?: import("./claim.ts").ClaimLocks } };
   const locks = options.locks ?? browser.navigator?.locks;
-  if (!locks) throw new Error("Private Start locking is unavailable. Nothing was submitted.");
+  if (!locks) throw new Error("Private Start locking is unavailable. This step sent nothing. A saved Start stays kept, and an earlier send of it can have gone. A new creation can make a second room.");
   return locks.request(`artroom-page-start:${origin}`, async () => {
     current(options);
     let row = read(origin, storage);

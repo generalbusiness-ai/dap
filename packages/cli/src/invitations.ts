@@ -541,8 +541,8 @@ export async function invitePerson(ctx: Context, member: string | undefined, opt
     const config = await ctx.store.config();
     if (!config?.repository) return say(2, "No repository is known here. Run: dap create <name>.");
     const retained = config.invitationIssue ? await retainedIssue(ctx, config.invitationIssue) : null;
-    if (config.invitationIssue && !retained) return say(1, "The retained invitation's private record is unavailable. Nothing was signed or sent.");
-    if (retained?.input.kind === "checker-key") return say(1, "A checker invitation is retained. Resume it through issueCheckerInvitation; nothing was signed or sent.");
+    if (config.invitationIssue && !retained) return say(1, "The retained invitation's private record is unavailable. This command signed and sent nothing, and it cannot say whether an earlier send of that invitation went. Restore the record; do not issue the invitation again.");
+    if (retained?.input.kind === "checker-key") return say(1, "A checker invitation is retained. Resume it through issueCheckerInvitation. This command signed and sent nothing, and an earlier send of that invitation can have gone.");
     if (options.mode !== "new") {
       if (!retained) return say(2, "No invitation is retained here.");
       return await finish(await issueInvitation(ctx, retained.input, { privateRequests: retained.names, mode: options.mode, operation: retained.operation }));

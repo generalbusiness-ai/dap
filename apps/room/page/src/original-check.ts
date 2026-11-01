@@ -24,13 +24,13 @@ export type OriginalCheck =
   | { state: "refused"; reason: string; name?: string }
   | { state: "archived" }
   | { state: "mismatch"; reason: string }
-  /** The scope holds no entry, and the margin has not passed. The page sent nothing. */
+  /** The scope holds no entry, and the margin has not passed. This press sent nothing. */
   | { state: "waiting"; until: number }
   /** No answer: the copy stays open. */
   | { state: "unknown" }
   /** No open copy has this digest. */
   | { state: "gone" }
-  /** The copy does not verify, or another member signed it. The page sent nothing. */
+  /** The copy does not verify, or another member signed it. This press sent nothing. */
   | { state: "unverified" };
 
 /** The member's open copies. `failed` says that the read failed, and then `rows` holds what this page read last. */
@@ -166,9 +166,9 @@ export function checkAnswerLine(check: OriginalCheck): string {
     case "refused": return `The scope refused the request: ${check.reason}${check.name ? ` (${check.name})` : ""}. No entry exists for it.`;
     case "archived": return "The scope is archived. Read the archive for this request's result.";
     case "mismatch": return `The scope holds another request under this key: ${check.reason}.`;
-    case "waiting": return `The scope holds no entry for this request yet. Nothing was sent. Check again after ${new Date(check.until).toISOString()}.`;
+    case "waiting": return `The scope holds no entry for this request yet. This check sent nothing, and an earlier send of this request can still arrive. Do not send it again as a new request. Check again after ${new Date(check.until).toISOString()}.`;
     case "unknown": return "The scope gave no answer. The request stays open. Check again.";
     case "gone": return "This request has no open copy.";
-    case "unverified": return "This copy does not verify as your request. Nothing was sent.";
+    case "unverified": return "This copy does not verify as your request. This check sent nothing, and it cannot say whether an earlier send went. Read the scope before you send this request again.";
   }
 }

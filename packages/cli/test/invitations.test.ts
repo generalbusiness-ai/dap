@@ -355,6 +355,10 @@ test("checker receivers reject other tags before creating custody, and retained 
   const config = (await store.config())!;
   await store.save({ ...config, invitationIssue: { ...config.invitationIssue!, request: currentRequest, digest: textDigest(current) } });
   const refusedPersonDispatch = await command(context, ["invite", "--check"]);
-  expect(refusedPersonDispatch).toEqual({ code: 1, lines: ["A checker invitation is retained. Resume it through issueCheckerInvitation; nothing was signed or sent."] });
+  expect(refusedPersonDispatch).toEqual({ code: 1, lines: ["A checker invitation is retained. Resume it through issueCheckerInvitation. This command signed and sent nothing, and an earlier send of that invitation can have gone."] });
+  expect(calls).toBe(0);
+  // The pointer stays, and its private record does not. An earlier send of that invitation can have gone.
+  await store.save({ ...config, invitationIssue: { ...config.invitationIssue!, request: "i-" + "5".repeat(30) } });
+  expect(await command(context, ["invite", "--check"])).toEqual({ code: 1, lines: ["The retained invitation's private record is unavailable. This command signed and sent nothing, and it cannot say whether an earlier send of that invitation went. Restore the record; do not issue the invitation again."] });
   expect(calls).toBe(0);
 });

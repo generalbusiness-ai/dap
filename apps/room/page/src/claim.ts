@@ -57,6 +57,9 @@ function originOf(session: { service: string }): void {
   if (url.origin !== session.service || !["https:", "http:"].includes(url.protocol) || browser.location && browser.location.origin !== session.service) throw new Error("Claiming requires the exact origin of the Worker serving this page.");
 }
 
+/** The stop read no record of an earlier send, or the record is gone, so these words speak of the step. */
+const CREATION_UNKNOWN = "This step sent nothing, and this browser cannot say whether an earlier send of this creation went. Report it. A new creation can make a second room.";
+
 function bindingOf(session: Session | ClaimIdentity, configured: ClaimRegister): string {
   if (!isScopeRef(configured.register) || configured.register.kind !== "register" || !DIRECTORY_OF[configured.definition]) throw new Error("A valid key and an explicitly supported configured register are required.");
   // The browser caller passes location.origin; an arbitrary remote connection
@@ -67,12 +70,12 @@ function bindingOf(session: Session | ClaimIdentity, configured: ClaimRegister):
 
 function readKept(raw: string, binding: string, session: { service: string }, configured: ClaimRegister): Kept {
   let got: Kept | null;
-  try { got = parseStrict(raw) as unknown as Kept | null; } catch { throw new Error("The private claim record cannot be read. It is kept; nothing was submitted."); }
+  try { got = parseStrict(raw) as unknown as Kept | null; } catch { throw new Error(`The private claim record cannot be read. It is kept. ${CREATION_UNKNOWN}`); }
   if (!got || got.v !== 1 || got.binding !== binding || typeof got.label !== "string" || !got.config || got.config.v !== 1
     || got.config.service !== session.service || got.config.key !== "browser" || canonicalize(got.config.register) !== canonicalize(configured.register)
     || got.config.plan !== undefined || got.config.join !== undefined
     || (got.recovery !== undefined && (unb64url(got.recovery)?.length !== 32 || got.recoveryKey !== undefined))
-    || (got.recoveryKey !== undefined && !isKeyId(got.recoveryKey))) throw new Error("The private claim record does not match this Worker, register and key. It is kept; nothing was submitted.");
+    || (got.recoveryKey !== undefined && !isKeyId(got.recoveryKey))) throw new Error(`The private claim record does not match this Worker, register and key. It is kept. ${CREATION_UNKNOWN}`);
   return got;
 }
 function readJournal(session: Session | ClaimIdentity, configured: ClaimRegister, storage: ClaimStorage): { binding: string; storageKey: string; journal: Journal | null } {
@@ -81,7 +84,7 @@ function readJournal(session: Session | ClaimIdentity, configured: ClaimRegister
   const raw = storage.getItem(storageKey);
   if (raw === null) return { binding, storageKey, journal: null };
   let value: unknown;
-  try { value = parseStrict(raw); } catch { throw new Error("The private claim journal cannot be read. It is kept; nothing was submitted."); }
+  try { value = parseStrict(raw); } catch { throw new Error(`The private claim journal cannot be read. It is kept. ${CREATION_UNKNOWN}`); }
   // Preserve every byte of the legacy record until a checked native workflow
   // updates that same operation. Migration never invents another found.
   if ((value as Kept | null)?.v === 1) {
@@ -93,7 +96,7 @@ function readJournal(session: Session | ClaimIdentity, configured: ClaimRegister
     || !got.claims || typeof got.claims !== "object" || Array.isArray(got.claims)
     || got.originalLegacy !== undefined && typeof got.originalLegacy !== "string"
     || Object.keys(got.claims).length > MAX_CLAIMS || !Object.hasOwn(got.claims, got.active)
-    || Object.entries(got.claims).some(([id, bytes]) => !operationId(id) || typeof bytes !== "string")) throw new Error("The private claim journal does not match this context. It is kept; nothing was submitted.");
+    || Object.entries(got.claims).some(([id, bytes]) => !operationId(id) || typeof bytes !== "string")) throw new Error(`The private claim journal does not match this context. It is kept. ${CREATION_UNKNOWN}`);
   return { binding, storageKey, journal: got };
 }
 /** A local descriptor only. It carries neither signing keys nor permission,
@@ -102,7 +105,7 @@ export function claimStatus(session: Session | ClaimIdentity, configured: ClaimR
   const { binding, journal } = readJournal(session, configured, storage);
   if (!journal) return null;
   const operation = selectedOperation ?? journal.active;
-  if (!Object.hasOwn(journal.claims, operation)) throw new Error("The exact original creation is missing from its private journal. Nothing was submitted.");
+  if (!Object.hasOwn(journal.claims, operation)) throw new Error(`The exact original creation is missing from its private journal. ${CREATION_UNKNOWN}`);
   const kept = readKept(journal.claims[operation]!, binding, session, configured);
   return { operation, label: kept.label, state: kept.completed ? "complete" : "pending" };
 }
@@ -172,7 +175,7 @@ function storeFor(session: Session, configured: ClaimRegister, storage: ClaimSto
   if (!operationId(operation)) throw new Error("The creation operation ID is invalid. Nothing was submitted.");
   if (fresh && Object.keys(journal.claims).length >= MAX_CLAIMS) throw new Error("This browser's claim journal is full. Original proofs are kept; no new creation was submitted.");
   const raw = journal.claims[operation];
-  if (fresh && raw !== undefined || !fresh && raw === undefined) throw new Error("The creation operation does not match the private journal. Nothing was submitted.");
+  if (fresh && raw !== undefined || !fresh && raw === undefined) throw new Error(`The creation operation does not match the private journal. ${CREATION_UNKNOWN}`);
   let record: Kept = raw !== undefined ? readKept(raw, binding, session, configured) : { v: 1, binding, label, config: { v: 1, service: session.service, key: "browser", register: configured.register } };
   const write = (next: Kept): void => {
     const nextJournal: Journal = { ...journal, ...(fresh ? { active: operation } : {}), claims: { ...journal.claims, [operation]: canonicalize(next) } };
@@ -230,7 +233,7 @@ export async function claimRoom(session: Session, configured: ClaimRegister, sto
   const binding = bindingOf(session, configured);
   const browser = globalThis as { navigator?: { locks?: ClaimLocks } };
   const locks = options.locks ?? browser.navigator?.locks;
-  if (!locks) throw new Error("This browser cannot lock private claim recovery across tabs. Nothing was submitted.");
+  if (!locks) throw new Error("This browser cannot lock private claim recovery across tabs. This step sent nothing. A saved creation stays kept, and an earlier send of it can have gone. A new creation can make a second room.");
   return locks.request(`artroom-page-claim:${binding}`, async () => {
     const checkCurrent = (): void => {
       if (options.current?.() === false) throw new Error("The Page room, key or register changed. This continuation sends no new mutation. Any saved original claim is kept; its earlier outcome may be accepted or unknown.");
@@ -285,7 +288,7 @@ export async function claimRoom(session: Session, configured: ClaimRegister, sto
     }
     const privateStore = storeFor(session, configured, storage, label.trim(), operation, fresh, keys);
     const before = privateStore.kept();
-    if (before.config.repository && !before.completed) throw new Error("The saved room has no exact native claim recovery proof. It is kept; nothing was submitted.");
+    if (before.config.repository && !before.completed) throw new Error("The saved room has no exact native claim recovery proof. It is kept. This step sent nothing, and an earlier step of this creation went ahead. Report it. A new creation makes a second room.");
     checkCurrent();
     if (fresh) privateStore.retain();
     if (!readOnlyCheck) retainOperation?.(operation);

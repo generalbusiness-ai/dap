@@ -6,7 +6,7 @@ import { DEMO_DIGESTS } from "@generalbusiness/dap-lanes";
 import { actBodyText, originalRequest, requestSession, secretSigner, sendableAt, signedIntent, signedRead, signerSessionRequest, type Fetch, type OriginalRow, type Signer } from "@generalbusiness/dap-client";
 import { applicationGatewayRoute } from "../../../../packages/client/src/application-gateway.ts";
 import { CopyNotKept, act, actAssociation, sessionLost, copiesOf, handleOf, issueDeviceKey, joinRoom, keepOriginal, listLanes, loadIssue, openRoom, placeOf, prepareJoin, submitJoin, type Room, type Session } from "../src/data.ts";
-import { ORIGINALS_UNREAD, checkOriginalRequest, liftFences, lockedScopes, openOriginals, originalLine, settledAssociations } from "../src/original-check.ts";
+import { ORIGINALS_UNREAD, checkAnswerLine, checkOriginalRequest, liftFences, lockedScopes, openOriginals, originalLine, settledAssociations } from "../src/original-check.ts";
 import { ScopeSending } from "../src/shell.ts";
 import { SERVICE, demo, type Demo } from "./support/demo.ts";
 
@@ -190,6 +190,28 @@ test("an act that never arrived ends refused expired", async () => {
     expect(await openRows(s.phone)).toEqual([]);
     const signed = (JSON.parse(firstBody) as { signed: SignedIntent }).signed;
     expect(await entriesUnder(s.phone, s.lane, signed.intent.idempotencyKey)).toEqual([]);
+  } finally { s.d.done(); }
+});
+
+test("a check that stops under a lost send does not call the request unsent", async () => {
+  const s = await scene();
+  try {
+    const row = await lost(s, "reply-lost");
+    expect(s.wire.acts).toHaveLength(1);
+    // The scope holds the entry, so this row settles. A second request stays in flight: the wire holds it, and the scope has no entry.
+    expect((await checkOriginalRequest(s.phone, row.digest)).state).toBe("landed");
+    const held = await lost(s, "never-arrived", "It is in docs/README.md.");
+    const waiting = await checkOriginalRequest(s.phone, held.digest);
+    expect(waiting.state).toBe("waiting");
+    const said = checkAnswerLine(waiting);
+    expect(said).toContain("This check sent nothing, and an earlier send of this request can still arrive. Do not send it again as a new request.");
+    expect(said).not.toContain("Nothing was sent");
+    // A copy that no longer verifies says nothing about the send that went before it.
+    await s.d.wait(() => runInDurableObject(s.d.M.object, (_instance, state) => { state.storage.sql.exec("UPDATE original_copy SET bytes = '{}' WHERE digest = ?", held.digest); }));
+    const unverified = await checkOriginalRequest(s.phone, held.digest);
+    expect(unverified.state).toBe("unverified");
+    expect(checkAnswerLine(unverified)).toBe("This copy does not verify as your request. This check sent nothing, and it cannot say whether an earlier send went. Read the scope before you send this request again.");
+    expect(s.wire.acts).toHaveLength(2);
   } finally { s.d.done(); }
 });
 
