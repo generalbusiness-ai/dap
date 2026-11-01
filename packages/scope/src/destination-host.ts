@@ -64,7 +64,7 @@ export interface SnapshotReader {
   /** Fresh authenticated Rules observation; required only for room stage reads. */
   rules?(rules: ScopeRef): Promise<unknown>;
 }
-export interface DestinationHostOptions { snapshotReader?: SnapshotReader; host: string; namespace: string; provider: DestinationProvider; custody: Pick<CredentialStore, "put" | "putRead" | "reply" | "live" | "read" | "judged" | "revoked" | "pending" | "expectRevoke" | "revocations" | "held" | "take"> }
+export interface DestinationHostOptions { snapshotReader?: SnapshotReader; host: string; namespace: string; provider: DestinationProvider; custody: Pick<CredentialStore, "put" | "putRead" | "reply" | "live" | "read" | "judged" | "revoked" | "pending" | "expectRevoke" | "revocations" | "held" | "take" | "named"> }
 
 /** The byte domain of the nonsecret handle of a member's read credential. */
 const READ_HANDLE = "artroom.read-credential.v1";
@@ -363,11 +363,12 @@ export class DestinationHost implements Outside {
    * The one-time read of a member's read credential (the planner's decision for I5). It answers only for a `mint-read` whose
    * confirmed own answer this scope committed, naming that handle; only to the key that signed the `read-token` that opened it;
    * only before its end; and only once: the plaintext leaves custody as it is answered. Every other case is null, and a read
-   * after the end drops the plaintext. It writes no entry.
+   * after the end drops the plaintext. A key that a `compromised` notice named takes nothing, and its plaintext stays until the
+   * expiry drops it. It writes no entry.
    */
   credential(handle: string, key: KeyId): ReadCredential | null {
     try {
-      if (!destinationText(handle) || !this.#given.scope()) return null;
+      if (!destinationText(handle) || !this.#given.scope() || this.#options.custody.named(key)) return null;
       const held = this.#options.custody.held(handle);
       const operation = held ? this.#given.state.operation(held.mint) : null;
       if (!held || held.state !== "live" || !isOf(operation?.owner, OWNER) || operation.kind !== DESTINATION_KINDS.mintRead) return null;

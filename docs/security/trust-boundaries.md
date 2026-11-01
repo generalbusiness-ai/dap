@@ -73,13 +73,22 @@ Replacing `SESSION_SECRET` ends every session of the deployment at once. It does
 
 The `read-token` act at the destination gives a member a Git read token, and every role holds its grant. The token reads the repository until its own end. On Cloudflare Artifacts the member asks for 1 to 24 hours. On GitHub the lifetime is GitHub's own, one hour.
 
-A revocation ends no token:
+A `compromised` notice closes two routes for the key that it names. Membership tells the directory, and the directory tells the destination. Once the destination applies the notice:
 
-- A token that the key read before the revocation stays good until its end. The `compromised` notice at the destination aborts a publication that the key is behind, and it ends no token.
-- A scope can accept the key's acts for up to 300 seconds, so the destination can accept a new `read-token`. A session that the key already holds reads the new token once.
-- Membership issues no new session to a revoked key. A token that the key minted and did not read before its session's end stays unread.
+- The key's `read-token` gets `unauthorized`, and the scope writes nothing. This holds while the destination still keeps an observation that shows the key active.
+- The credential route answers `forbidden` to the key's session for every token. This covers a token minted before the notice and not yet read, and a token whose mint finishes after the notice.
 
-The key must read a new token while its session lasts, which is at most 600 seconds after the revocation. So the repository stays readable for at most 24 hours and 600 seconds after the revocation on Cloudflare Artifacts, plus clock difference. On GitHub that time is about one hour and 600 seconds. No `dap` command ends a read token, and the service keeps no plaintext of a token that a member has read.
+Each destination keeps the named key in private custody beside its journal, so both refusals survive a restart. The refusals apply at every destination pin and on both hosts. Another key of the same member keeps both routes.
+
+These things stay open:
+
+- **A token already read.** It stays good until its end. The service keeps no plaintext of a token that a member has read, and no `dap` command ends a read token.
+- **The time before the notice arrives.** A scope can accept the key's acts for up to 300 seconds after the revocation, so the destination can accept a new `read-token`. A session that the key already holds reads the token, for at most 600 seconds after the revocation. The notice waits in the outbox of membership and then of the directory. Nobody has measured that delay.
+- **A key revoked as `retired`, and a removed member.** Neither sends a notice, so the time above applies in full.
+- **A lane's workspace token.** The notice reaches no lane, so the lane's credential route still gives the key a workspace token that the key prepared with `hold@2:token`, while its session lasts. That token lasts at most 900 seconds, and it reads and writes one fork. It does not open the room's repository.
+- **The key's other acts at the destination.** The notice refuses `read-token` only. Other acts keep the 300-second limit.
+
+So the repository stays readable for at most 24 hours and 600 seconds after the revocation on Cloudflare Artifacts, plus clock difference. On GitHub that time is about one hour and 600 seconds. Replay cannot check the `read-token` refusal, because no definition states it and a refused act writes no entry.
 
 ### A founder key that is also the recovery key has no end at membership
 
@@ -113,9 +122,9 @@ Do these steps in each room that enrolled the key:
 5. After 300 seconds plus clock difference, read what the key signed with [`dap log`](../cli.md#the-commands) at each scope where it could act:
    `dap log <scope>`.
 
-The key's signed read ends within 1200 seconds of step 3, plus clock difference. If the key is on the register's `founders` list, it keeps `found` and its read of the register after these steps.
+Use `as=compromised` in step 3 for a stolen key, because `as=retired` sends no notice. The key's signed read ends within 1200 seconds of step 3, plus clock difference. If the key is on the register's `founders` list, it keeps `found` and its read of the register after these steps.
 
-These steps end no Git read token. Treat the repository's content as read until the time that [the token's section](#a-git-read-token-outlasts-the-bound) states, and replace any secret that the repository holds.
+These steps stop new Git read tokens once the notice arrives, and they end no token that the key has read. Treat the repository's content as read until the time that [the token's section](#a-git-read-token-outlasts-the-bound) states, and replace any secret that the repository holds.
 
 ### What no run has covered
 

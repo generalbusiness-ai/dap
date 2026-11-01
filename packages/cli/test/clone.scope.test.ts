@@ -335,6 +335,52 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
       expect(retainedClone.lines.join("\n")).not.toContain(service.minted.at(-1)!);
     }
 
+    // A stolen key, as a person sees it. The holder of the key clones and leaves one accepted act unread. The admin revokes the key
+    // with `dap act`, and the scheduler stand-in carries the notice through the directory to the destination.
+    // SCRIPTED: `holding` answers a session request with the session that membership issued before the revocation. It stands for a
+    // process that holds its session across the revocation, because a command asks for a new one and membership refuses a revoked key.
+    {
+      let issued: string | null = null, replay = false;
+      const originals: { signed: SignedIntent; receipt: Receipt }[] = [];
+      const holding: Fetch = async (url, init) => {
+        const path = new URL(url).pathname;
+        if (path.endsWith("/sessions") && init?.method === "POST") {
+          if (replay && issued !== null) return new Response(issued, { status: 200, headers: { "content-type": "application/json" } }) as never;
+          const response = await fetch(url, init);
+          issued = await (response as unknown as Response).clone().text();
+          return response;
+        }
+        const response = await fetch(url, init);
+        if (path === `/v1/scopes/${G.name}/acts` && init?.method === "POST") {
+          const answer = await (response as unknown as Response).clone().json() as { answer: string; receipt: Receipt };
+          if (answer.answer === "accepted") originals.push({ signed: (JSON.parse(init.body!) as { signed: SignedIntent }).signed, receipt: answer.receipt });
+        }
+        return response;
+      };
+      ok(await run({ ...una, fetch: holding }, "clone", "before-the-revocation"));
+      originals.length = 0;
+      ok(await run({ ...una, fetch: holding }, "act", "read-token", "--on", "destination", "--target", "0", "--set", "hours=1"));
+      const M = lifetime.platform(repository.membership.scope);
+      const items = (await M.summary()).value.items;
+      const member = items.find((item) => item.type === "member" && item.values["handle"] === "@una")!;
+      const keyItem = items.find((item) => item.type === "key" && item.state === "active" && item.refs["member"] === member.id)!;
+      ok(await run(rita, "act", "revoke-key", "--on", "membership", "--target", String(keyItem.id), "--set", "as=compromised"));
+      await pause([repository.membership.scope, repository.directory.scope, repository.destination]);
+      expect((await G.entries()).some(({ input }) => input.type === "delivery" && input.message.class === "request" && input.message.type === "tell" && (input.message.body as { message?: string }).message === "compromised")).toBe(true);
+      // One second passes, so the observation that the destination holds of the key still serves, and only the notice refuses.
+      lifetime.advance(1000);
+      const beforeMints = service.minted.length;
+      git.runs.length = 0;
+      const stolen = await run({ ...una, fetch: holding }, "clone", "stolen-copy");
+      expect([stolen.code, stolen.lines]).toEqual([1, [expect.stringMatching(new RegExp(`^Refused: unauthorized, judged at entry ${G.name}:\\d+\\. The request was refused\\.$`))]]);
+      replay = true;
+      const held = await lifetime.wait(() => cloneRetained({ ...una, fetch: holding }, "held-copy", originals[0]!));
+      expect([held.code, held.lines]).toEqual([1, [expect.stringMatching(/^Cannot read the read token read:sha256:[0-9a-f]+: forbidden\.$/)]]);
+      expect([service.minted.length, git.runs.filter((row) => row.args[0] === "clone")]).toEqual([beforeMints, []]);
+      // A key that the notice did not name still clones.
+      ok(await run(rita, "clone", "after-the-notice"));
+    }
+
   } finally {
     lifetime.unOutside(G.name);
     lifetime.unWire(R.name);

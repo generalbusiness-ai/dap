@@ -2,6 +2,8 @@ import { describe, expect, test } from "vitest";
 import type { Entry, KeyId, Observation, ObservationUse, ScopeRef } from "@generalbusiness/dap-contract";
 import { WINDOWS, agrees } from "@generalbusiness/dap-derive";
 import { d, membership } from "@generalbusiness/dap-derive/testing";
+import { observing } from "../src/authority.ts";
+import type { Asked } from "../src/ports.ts";
 import { HOLD, at, definition, create, rita, una, type Lane } from "./fixtures-native.ts";
 
 const actions = Object.values(definition.declared.acts).map((a) => a.grant);
@@ -210,5 +212,32 @@ describe("the observation read, with a scripted membership, a stand-in (authorit
       .toEqual([[["act", false], ["act", false], ["act", false], ["act", false], ["checkpoint", true], ["timed", false]], 1, 4]);
     // An act still needs a grant. Rita's observation is past its window and cannot be read again: the act is not judged.
     expect([await s.act(rita, "remark", remark("silent")), (await s.head()).seq]).toEqual([UNAVAILABLE, 6]);
+  });
+});
+
+// The order of two things that race: the destination's read of membership, and the notice that lands during that read. The commit
+// asks for the notice, so the read that began first does not win. The reader is a STAND-IN that the test answers by hand. It shows
+// the observing scope's side, and nothing about membership or a delivery.
+describe("a compromised notice that lands during the read, with a scripted reader, a stand-in", () => {
+  test("the commit of `read-token` is refused on the answer that shows the key active; another act of the key, and another key, are judged as before", async () => {
+    const reading = { reading: at(0), behind: false, asOf: at(0) };
+    const view = { observed: () => null } as unknown as Parameters<NonNullable<Awaited<ReturnType<ReturnType<typeof observing>["read"]>>>["held"]>[0];
+    const named = new Set<KeyId>();
+    const answers: ((answer: unknown) => void)[] = [];
+    const port = observing({ clock: { read: () => at(0) }, random: { bytes: (n) => new Uint8Array(n) }, membership: () => membership, reader: { observe: () => new Promise((resolve) => answers.push(resolve)) }, named: (key) => named.has(key) });
+    const active = (who: typeof una) => ({ of: membership, head: { seq: 40, hash: d("4") }, key: who.key, keyState: "active", member: who.member.member, memberState: "active", role: "member", actions, within: { membership }, controller: null, controllerActive: null, notAfter: null, definition: "platform:membership@1" });
+    const asked = (who: typeof una, kind: string) => ({ scope: { scope: membership.scope, inc: membership.inc, kind: "destination" }, grants: [], action: actions[0]!, window: WINDOWS.ordinary, signed: { intent: { actor: who.key, kind } } }) as unknown as Asked;
+    const held = async (who: typeof una, kind: string, name: boolean) => {
+      const read = port.read(asked(who, kind), 5);
+      if (name) named.add(una.key);
+      answers.shift()?.(active(who));
+      return (await read)!.held(view, reading);
+    };
+    expect(await held(una, "read-token", true)).toEqual([]);
+    named.clear();
+    expect(await held(rita, "read-token", false)).toMatchObject([{ current: true }]);
+    named.add(una.key);
+    expect(await held(rita, "read-token", false)).toMatchObject([{ current: true }]);
+    expect(await held(una, "evidence-recover-timeout", false)).toMatchObject([{ current: true }]);
   });
 });

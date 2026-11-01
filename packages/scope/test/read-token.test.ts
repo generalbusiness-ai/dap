@@ -183,12 +183,13 @@ describe("a member's read token on real scopes (the planner's decision for I5). 
       expect((await credential(late.handle.token, await sessionOf(una))).status).toBe(403);
       expect(await runInDurableObject(G.object, (_instance, state: DurableObjectState) => state.storage.sql.exec("SELECT plaintext FROM private_credential WHERE id = ?", late.handle.token).toArray())).toEqual([{ plaintext: null }]);
 
-      // A stolen key (the checker's 02639e3e). Revocation ends no read token. The token that una's key read before its
-      // revocation keeps its end. For up to 300 seconds the destination keeps its observation of the key and accepts the key's
-      // next `read-token`, and the session that the key already holds reads the new token. The host revokes nothing.
+      // A stolen key before its notice arrives (the checker's 02639e3e). Revocation ends no read token. For up to 300 seconds the
+      // destination keeps its observation of the key and accepts the key's next `read-token`, and the session that the key already
+      // holds reads the new token. The host revokes nothing. `token-refusal.test.ts` shows what the notice closes.
       const held2 = await sessionOf(una);
       const before2 = await readToken(una, 24);
       if (!("handle" in before2)) throw new Error("read-token was not accepted");
+      net.hold = (envelope) => envelope.message.class === "request" && envelope.message.type === "tell" && (envelope.message.body as { message?: string }).message === "compromised";
       await M.did(rita, "revoke-key", { on: unasKey, expected: await M.expected({ on: unasKey, roster: 0, member: (await M.item(unasKey)).refs["member"] as number }), fields: { as: "compromised" } });
       await settle(M, D, G);
       await expect(sessionOf(una)).rejects.toThrow("no session");
@@ -205,6 +206,7 @@ describe("a member's read token on real scopes (the planner's decision for I5). 
       expect(service.revoked).toEqual([]);
 
     } finally {
+      net.hold = null;
       owner.close();
       platformOutside.delete(G.name);
     }

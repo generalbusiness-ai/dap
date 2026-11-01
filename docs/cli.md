@@ -637,6 +637,18 @@ The token is for the clone. A later `git fetch` in the clone needs a new
 token; run `dap clone` again for one. A token that is never read ends
 at its end.
 
+Once a `compromised` notice reaches the destination, the key that it names
+gets one of these answers, and git does not run. The first line comes from
+the act, and the second from the credential route.
+
+```
+Refused: unauthorized, judged at entry sc_rh5ctnhi...:18. The request was refused.
+Cannot read the read token read:sha256:0f3a...: forbidden.
+```
+
+[A Git read token outlasts the bound](security/trust-boundaries.md#a-git-read-token-outlasts-the-bound)
+states what the notice closes and what stays open.
+
 **`dap propose <branch> [--title <text>]`** submits the committed files
 that differ between the room's published head and a local branch tip. It
 reads committed objects, so uncommitted files and the index remain untouched.

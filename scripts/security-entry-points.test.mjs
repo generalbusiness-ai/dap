@@ -8,8 +8,8 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 // its own source-ordered line. Root adopts actual parser values after review.
 const namedOwners = {
   "packages/scope/src/object.ts": {
-    "packages/scope/src/object.ts:$module": "b967c0c59a5ab483622f91a37004c91e6f81173ecac6cbe54a1ba90c4176afbb",
-    "packages/scope/src/object.ts:ScopeObject": "dbe66ac8bc5d97e6f71d86939db91e9e184badca6be1b774648d91c217e536e4", // Founder recovery: membership@10 joins the invitation-proof pins.
+    "packages/scope/src/object.ts:$module": "efb93c1e218aa9cd34110dbb5c137355334a7a44a80d46bffcaa45bb9beeff53", // Token refusal: the delivery's transaction keeps a key that a compromised notice named.
+    "packages/scope/src/object.ts:ScopeObject": "637316ddb5dd284d021fcb1cf7c8c970a6a35f4a13320672a0fd197f27465518", // Token refusal: the delivery's transaction keeps a key that a compromised notice named, and the authority asks for it.
   },
   "packages/scope/src/worker.ts": {
     "packages/scope/src/worker.ts:$module": "9a4a5a5ae5f70e7319629aba25d102e230da620acdd1047a3775d20cdf28c893",
@@ -191,7 +191,7 @@ const namedOwners = {
 const seals = {
   "packages/bytes/src/read-minimum.ts": "5ead3e9579b2805c525bae5d1ad3bd6883c0a18f0022a202c01eea91a181939c", // DX-A2 reviewed minimum admission and wait owner; actual maintained AST value.
   "packages/scope/src/read-wait.ts": "0bf31ae0c52975c9e91b22dfac278c03ab04c575b88941c3a6480433fd79e2cb", // DX-A2 reviewed minimum admission and wait owner; actual maintained AST value.
-  "packages/scope/src/authority.ts": "4294a05ea2033027e7300019510e65a967cee2078bab08880337f9fc8079a18b", // Founder recovery: membership@10 joins the recognised pins; maintained whole-AST value.
+  "packages/scope/src/authority.ts": "cead976a1b27f98a4bbb9456a0e20eec94e7b6491290206bb283f10b1772b373", // Token refusal: the commit of read-token asks whether a compromised notice named the key; maintained whole-AST value.
   "packages/platform/src/reservation-v17.ts": "e00aa0f08f9b3b1f4aca5e794436367ab550dcd1966c5258f1e96e42ab97a856", // Reviewed retained-policy decoder; actual maintained parser output.
   "packages/platform/src/evidence.ts": "e3f0fa91c32d848b5bec7dc9ac047d4cc72815ddce70365ad8fade6884a7354b", // Reviewed platform binding codec under ruling 1bc4f7fd; actual maintained parser output.
   "packages/git/src/checkout-snapshot.ts": "82f53717d419b70fe208801b6d0bf2fc0c947ac2beffb27b2e2d01898f48ee25", // Detached object identity and closure bounds; imports do not seal this implementation.
@@ -244,7 +244,7 @@ const seals = {
   "packages/scope/src/session-preparation.ts": "44b7bf3227e638fa2cc9e49e61162d903b4d915102069ab7848511f102b9ccf1",
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
   "packages/scope/src/applications/projection.ts": "8576f78bb68850421ca7843e6fd0e4ecfb18f136009b82296097feca603f5484",
-  "packages/scope/src/destination-host.ts": "e272abc7502b17f171944632ab2da10c23ab2bb58018404ec43b57379eb5d3eb",
+  "packages/scope/src/destination-host.ts": "e902165d3c484579dda561794cdd3b1f0a4eff705ebac7f3c2f9b3d9c78c777c", // Token refusal: a key that a compromised notice named takes no read token.
   "packages/scope/src/workspace-host.ts": "c65f21658fc1715bf417be22cc929dbac4234b451416607c559200e24a951f4f", // Reviewed SQL custody, setup revocation and full refs for recorded branch names.
   "packages/scope/src/workspace-lineage.ts": "8ab25e2b89e8438a7914c441aa9aca3c18e5e7335eb32488251d5631ed52a1ff", // Reviewed bounded authenticated Register, Directory and Destination creation lineage.
   "packages/scope/src/native-birth.ts": "ab9ecd331850e5f183fafaee07145c64adadb3ad904ea95bcc4ddf569da6ad6f", // Reviewed bounded genesis decoding and exact indexed scope and kind discovery.
