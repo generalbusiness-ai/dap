@@ -204,7 +204,7 @@ function bodyOf(context: ChangeContext): string {
   }
   for (const check of required) lines.push(`${check.name}: required, not run.`);
   if (context.findings) lines.push(...findingLines(context, context.findings));
-  lines.push("", "Rules:");
+  lines.push("", "Rules:", `Lane definition: ${context.definition}.`);
   const needed = countOf(rules);
   if (!rules || needed === null || rules.values["revision"] === undefined || rules.values["revision"] === null) lines.push("Not known yet.");
   else lines.push(`Approvals needed: ${needed}. Given: ${approvals(context).length}. The owner may review: ${rules.values["ownerMayReview"] === true ? "yes" : "no"}. Rules revision: ${String(rules.values["revision"])}.`);
@@ -226,7 +226,16 @@ function bodyOf(context: ChangeContext): string {
   return lines.join("\n");
 }
 
-export async function changeProjection(app: RepoInAi, subject: string | undefined, minimum?: ReadMinimum): Promise<Projection> {
+/** The words on this page of the card. A person is not told to do what the card offers no way to do. */
+function reasonsOf(page: string, actions: readonly CardAction[]): string[] {
+  const acts = actions.filter(action => action.purpose !== "check-original"), rules = "The room's rules decide each act.";
+  if (page !== "summary") return acts.length ? [rules] : [];
+  const reviews = acts.some(action => action.id === "approve" || action.id === "request-changes"), merges = acts.some(action => action.id === "merge");
+  const offered = reviews && merges ? "read the change, review it or merge it" : reviews ? "read the change or review it" : merges ? "read the change or merge it" : "read the change";
+  return [`Open this card to ${offered}.${acts.length ? ` ${rules}` : ""}`];
+}
+
+export async function changeProjection(app: RepoInAi, subject: string | undefined, minimum?: ReadMinimum, page = "summary"): Promise<Projection> {
   const scope = selector(subject), { context, collection } = await readChange(app, scope, minimum);
   const { manifest, proposal } = context;
   const unknown = context.merges.find(item => item.state === "unknown");
@@ -243,7 +252,7 @@ export async function changeProjection(app: RepoInAi, subject: string | undefine
   const held = holding(context).length;
   const card: Card = { identity: { item: String((manifest ?? proposal).id), kind: manifest ? "manifest" : "proposal", revision: String((manifest ?? proposal).revision), subject: { scope: scope.scope, item: proposal.id }, at },
     title: String(proposal.values["title"]), summary: `${typeof proposal.values["number"] === "number" ? `Change ${proposal.values["number"]}` : "Change"}, ${proposal.state}${manifest ? `, version ${context.versions}` : ""}.${held ? ` ${held} open finding${held === 1 ? " holds" : "s hold"} the merge.` : ""}`,
-    body: bodyOf(context), reasons: [`${context.definition} acts.review-verdict / acts.merge; the scope decides each act`],
+    body: bodyOf(context), reasons: reasonsOf(page, actions),
     projection: collection.points().map(point => ({ scope: point.scope.scope, seq: point.head.seq, hash: point.head.hash })),
     reviewIntended: [], unavailable: [], waitsOn: [], settles: [], actions, ...(original !== undefined ? { unresolvedOriginal: true } : {}),
     ...(diffable ? { diffAvailable: true, diffRead: { target: context.destination, base, integration, label }, ...(interdiffReads.length ? { interdiffReads } : {}) } : {}),

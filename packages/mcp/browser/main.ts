@@ -18,6 +18,8 @@ let view = "";
 let openingCall: { tool: string; args: Record<string, unknown> } | null = null;
 let busy = false;
 let notice = "";
+/** The last call got no answer, or found the card busy, so the display may be old. The card offers a read. */
+let readAgain = false;
 let contextError = "";
 let pendingContext: Display["context"] | null = null;
 let sendingContext = false;
@@ -60,6 +62,7 @@ function button(label: string, run: () => Promise<void>, className?: string) {
 function showError(error: unknown) {
   if (!alive) return;
   if (error instanceof AppToolError && error.reason === "superseded" && display) display.active = false;
+  if (!(error instanceof AppToolError) || error.reason === "busy") readAgain = true;
   notice = error instanceof Error ? error.message : String(error); render();
 }
 function updateContext() {
@@ -118,9 +121,15 @@ async function reopen() {
   }
 }
 const isAbsent = (error: unknown) => error instanceof AppToolError && error.reason === "absent";
+const PERMANENT_READ = "a permanent read";
+const isStale = (error: unknown) => error instanceof AppToolError && error.reason === "stale";
+/** What a person reads when the card's cut moved under a press or a move. The server refused it before it signed anything. */
+const CHANGED = "The card had changed, so this press sent nothing. It shows the current state now. Check it, then press again.";
+/** What the card knows when no answer came: only that it does not know. `what` names what that press can sign. */
+const NO_ANSWER = (what: string) => `The app gave no answer to this press, so the card does not know how it ended. The request may have gone, and ${what} may have been signed. The card read its view again. Check it before you press again.`;
 async function read(move?: { page?: PageKind; position?: number; refresh?: boolean }) {
   if (busy || !alive) return;
-  busy = true; notice = ""; render();
+  busy = true; notice = ""; readAgain = false; render();
   try {
     let data;
     try { data = await bridge.tool("view_read", { view, ...(move ? { cut: display?.cut, ...move } : {}) }); }
@@ -132,8 +141,11 @@ async function read(move?: { page?: PageKind; position?: number; refresh?: boole
         data = await bridge.tool("view_read", { view });
         if (move && !move.refresh) notice = NOT_REPEATED;
       }
-      else if (!(error instanceof AppToolError) || error.reason !== "stale" || !move?.refresh) throw error;
-      else data = await bridge.tool("view_read", { view });
+      else if (!isStale(error)) throw error;
+      else {
+        data = await bridge.tool("view_read", { view });
+        if (move && !move.refresh) notice = CHANGED;
+      }
     }
     accept(data);
   } finally { busy = false; render(); }
@@ -147,7 +159,7 @@ async function open() {
   } catch (error) { notice = `${error instanceof Error ? error.message : String(error)} Detail remains inside this card.`; }
   const modeNotice = notice;
   await read({ page: display.card.detailPage ?? "item" });
-  notice = modeNotice; render();
+  notice = modeNotice || notice; render();
 }
 async function declaredMode() {
   const requested = display?.card?.declared?.display ?? display?.surface?.display;
@@ -197,20 +209,22 @@ async function back() {
   }
   const modeNotice = notice;
   await read({ page: target, position: display.position });
-  notice = modeNotice; render();
+  notice = modeNotice || notice; render();
 }
-async function act(action: string) {
+async function act(action: string, signs = "an act") {
   if (!display || busy || !display.active) return;
-  busy = true; notice = ""; render();
+  busy = true; notice = ""; readAgain = false; render();
   let accepted = false;
   try {
     let data;
     try { data = await bridge.tool("view_act", { view, cut: display.cut, action }); }
     catch (error) {
-      if (!isAbsent(error)) throw error;
-      await reopen();
-      accept(await bridge.tool("view_read", { view }));
-      notice = NOT_REPEATED;
+      if (error instanceof AppToolError && !isAbsent(error) && !isStale(error)) throw error;
+      const words = isAbsent(error) ? NOT_REPEATED : isStale(error) ? CHANGED : NO_ANSWER(signs);
+      if (isAbsent(error)) await reopen();
+      try { accept(await bridge.tool("view_read", { view })); }
+      catch (failure) { readAgain = true; notice = `${words} The read did not finish: ${failure instanceof Error ? failure.message : String(failure)}`; return; }
+      notice = words;
       return;
     }
     accept(data);
@@ -224,7 +238,7 @@ async function act(action: string) {
     try { if (await bridge.displayMode(requested) !== requested) modeNotice = "The host kept the previous display mode."; }
     catch (error) { modeNotice = error instanceof Error ? error.message : String(error); }
     await read({ page: record ? "item" : "summary", position: display.position, refresh: true });
-    notice = modeNotice; render();
+    notice = modeNotice || notice; render();
   }
 }
 async function handoff() {
@@ -245,9 +259,10 @@ function render() {
   root.replaceChildren();
   root.setAttribute("aria-busy", String(busy));
   document.documentElement.dataset["mode"] = bridge.context.displayMode ?? "inline";
-  if (!display) { root.append(node("p", notice || "Loading the card…", "muted")); return; }
+  if (!display) { root.append(node("p", notice || "Loading the card…", "muted")); if (readAgain) root.append(button("Read the card again", () => read(), "quiet")); return; }
   if (display.receipt) { const receipt = node("p", display.receipt, "receipt"); receipt.setAttribute("role", "status"); root.append(receipt); }
   if (notice) { const status = node("p", notice, "notice"); status.setAttribute("role", "status"); root.append(status); }
+  if (readAgain) root.append(button("Read the card again", () => read(), "quiet"));
   if (!display.active) root.append(node("p", "A newer card replaced this one. Receipts remain readable.", "notice"));
   if (contextError) {
     const error = node("div", undefined, "notice");
@@ -363,6 +378,9 @@ function render() {
     next.setAttribute("aria-label", "Next item"); next.disabled ||= display.position + 1 >= display.count;
     nav.append(previous, node("span", `${display.position + 1} / ${display.count}`, "position"), next); root.append(nav);
   }
+  if (summary && cardOpens(display.status)) {
+    const opener = button("Open", open, "quiet"); opener.disabled ||= !display.active; root.append(opener);
+  }
   if (display.query.page !== "diff" && (!summary || card.declared?.routed && card.actions.length > 0 || card.actions.some(action => action.input === "chat" || action.purpose === "check-original"))) {
     const actions = node("div", undefined, "actions");
     for (const action of card.actions) {
@@ -373,12 +391,12 @@ function render() {
       const ask = button("Ask in chat", handoff, "quiet"); ask.disabled ||= !display.active; actions.append(ask);
     }
     if (display.query.page === "item" && card.diffAvailable && card.readers?.length) for (const reader of card.readers) actions.append(readerButton(reader));
-    else if (display.query.page === "item" && card.diffAvailable) actions.append(button("View diff", async () => { returnPage = "item"; if (card.diffSigned) await act("view-diff"); else await read({ page: "diff" }); }, "quiet"));
+    else if (display.query.page === "item" && card.diffAvailable) actions.append(button("View diff", async () => { returnPage = "item"; if (card.diffSigned) await act("view-diff", PERMANENT_READ); else await read({ page: "diff" }); }, "quiet"));
     root.append(actions);
   }
 }
 function readerButton(reader: { action: string; label: string; current?: boolean }): HTMLButtonElement {
-  const control = button(reader.label, async () => { returnPage = "item"; await act(reader.action); }, "quiet");
+  const control = button(reader.label, async () => { returnPage = "item"; await act(reader.action, PERMANENT_READ); }, "quiet");
   control.disabled ||= !display?.active || reader.current === true;
   if (reader.current) control.setAttribute("aria-current", "true");
   return control;

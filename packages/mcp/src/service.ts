@@ -199,7 +199,7 @@ const configDigest = (config: McpConfig): Digest => digestBytes(utf8(canonicaliz
 class Stop extends Error { constructor(readonly result: CallResult) { super("stop"); } }
 const stopCall = (f: Finding): never => { throw new Stop(failed(f)); };
 
-const VIEW_DIFF_POLLS = 8;
+export const VIEW_DIFF_POLLS = 8;
 /** The Git reader takes SHA-1 objects. A longer ID is refused here, before a signature or a spent credential. */
 const COMMIT_ID = /^[0-9a-f]{40}$/;
 const DIFF_OUTPUT = { type: "object", properties: { base: { type: "string" }, integration: { type: "string" }, files: { type: "integer", minimum: 0 }, truncated: { type: "boolean" }, text: { type: "string" } }, required: ["base", "integration", "files", "truncated", "text"] };
