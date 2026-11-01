@@ -1,6 +1,6 @@
 # How a register retires a founder
 
-Status: design, no code is built.
+Status: current. It landed at `273cbd75` (approval `d2b283ec`). No code is built. The planner ruled in `cccd205a`: the operator key's read with no window stands, with its cost stated beside it. No refusal list goes to the Worker. This design stays unbuilt until a slice needs it.
 
 Ana holds a founder key on the register of a team's Worker. The register runs under policy `keys`. Rita operates the Worker, and keeps the register's operator key on a drive in a locked drawer.
 
@@ -34,7 +34,7 @@ This note uses these terms:
 - An **attempt** is one try of the operation `create-repository`. A claim has at most three.
 - To **retire** a founder is to end that key's right to sign `found`, for good.
 
-A file and line reference marks a fact that was read and not run. A short file name repeats a path given earlier, and a bare `:135` belongs to the file just before it. References hold at main `ad411431`. References to `platform:register@24` hold at the founder key refusal head `641c49b2`, and that head has not landed. No test and no Worker ran anything in this note.
+A file and line reference marks a fact that was read and not run. A short file name repeats a path given earlier, and a bare `:135` belongs to the file just before it. References hold at main `ad411431`. References to `platform:register@24` hold at main `991129fc`, where the founder key refusal head landed. A reference marked with main `970c701c` holds at that later main. No test and no Worker ran anything in this note.
 
 ## The operator key retires a founder, and a founder can retire only itself
 
@@ -71,13 +71,13 @@ A rule that keeps the last founder makes this worse, because nobody can then rem
 
 Rita's next step after a retirement is the log, so that read cannot depend on a new entry. A refused act writes no entry. Suppose the thief signs `dap retire-founder --self` first. The claims stop at that entry, and Rita's act then gets a refusal. Rita has no recent entry, so today's rule gives `forbidden` on the next step (`signed-reads.ts:369-373`). The same holds whenever more than 900 seconds pass after Rita's act.
 
-So this note recommends a sixth rule. On the new pin, the operator key can read the register's summary, history and entries with no window. The census already trusts this key across the deployment (`scope-index-census.ts:73`). The key can also get the same read for 900 seconds when it signs `add-founder`, so the rule gives it no new knowledge.
+So this note recommends a sixth rule. On the new pin, the operator key can read the register's summary, history and entries with no window. The census already trusts this key across the deployment (`scope-index-census.ts:73`). The key can also get the same read for 900 seconds when it signs `add-founder`, so the rule gives it no new knowledge. It does change who can see the look. Without this rule, the key must sign an act such as `add-founder` to read the log, and that act leaves an entry. With this rule, a thief with a stolen operator key reads that log with no trace in the journal until the register is replaced. The thief also learns of each new room as it is claimed. A metric point counts each signed read and names no key (`signed-reads.ts:359`).
 
 The change sits in `checkedRead`, because a definition states no read rule. `checkedRead` already holds the root of entry 0 (`signed-reads.ts:368`). For a pin in an explicit set, a register whose root actor is the reader sets `scoped` and `whole` with no time check (`:369-370`). `#rooted` already finds that root for a key with no recent entry (`packages/scope/src/object.ts:917-927`).
 
 The set holds the new pin alone. A register from today's `dap install` has one key in both jobs. A thief with that key would gain a read with no end.
 
-The planner rules on this read, because it changes decisions `61cc5e50` and `ca8ad1cf` for one key at one kind of scope.
+The planner accepted this read in `cccd205a`, with its cost stated. It changes decisions `61cc5e50` and `ca8ad1cf` for one key at one kind of scope.
 
 This note rejects two other answers. A dedicated act writes an entry for each look, and its window still closes. A log out of reach leaves Rita the census and the host's list, and neither shows what this key made.
 
@@ -119,7 +119,7 @@ This note rejects these other answers:
 The recommendation has four costs:
 
 - `dap install` makes two keys, and the operator must keep the operator key away from every founder's machine.
-- A stolen operator key means a new register, and that key reads the log until then.
+- A stolen operator key means a new register, and that key reads the log until then. A thief with that key reads the log with no trace in the journal.
 - A register accepts 256 `add-founder` acts over its life. The 257th gets `type-full`, and the way out is a new register. One replacement a month lasts 21 years.
 - A thief with the only founder key can close `found` by a self-retirement, until the operator adds a founder. The operator wanted that key gone in any case.
 
@@ -165,7 +165,7 @@ Ana's client can hold an original claim that the retirement stopped. Today that 
 
 The client cannot find the state by a read. The summary omits final items (`packages/scope/src/reads.ts:235-236`), and a key with no recent entry gets `forbidden` anyway. So the settlement reply gains one optional member under the new pin: the state of the item that the act opened. The exact signed intent already authorizes that reply (`packages/scope/src/core.ts:795-811`), so nobody else learns the state.
 
-When that state is `stopped`, each path stops at once and exits 1 with these lines:
+A client settles at the start of a rerun, and it reads that state there. When that state is `stopped`, each rerun stops at once and exits 1 with these lines:
 
 ```
 Stopped: the retirement of key_anaLaptop... stopped this claim. No directory follows it.
@@ -174,6 +174,8 @@ This key cannot sign a new claim here. Ask the register's operator to add a new 
 
 - **`dap create` and `dap claim`.** A rerun prints the same lines and does not wait. The saved envelope stays. `--again` signs a new `found`, and the register refuses it `unauthorized`.
 - **The page's Check and Continue.** Each shows the same lines. `ClaimStatus` gains the state `stopped` (`apps/room/page/src/claim.ts:47`), `pending` is false, and the page offers no Continue.
+
+A first run already in its wait reads only the directory. It gives up after 120 reads, as it does today, and its rerun then stops.
 
 The stopped original fences nothing that matters. The page's message `A creation is already in progress` applies to one key (`apps/room/page/src/claim.ts:65`, `:271`). The retired key can sign no new claim, and Ana's new key has a new journal.
 
@@ -269,7 +271,7 @@ A rule can write an item that is not a subject of the act (`packages/derive/src/
 
 ### The pin comes after the founder key refusal head
 
-This design needs request `309f3434` to land first. That head adds `platform:register@24`, its data `separateRecoveryRegister`, and the cohort `separate-recovery`.
+This design builds on request `309f3434`, which landed as main `991129fc`. That head adds `platform:register@24`, its data `separateRecoveryRegister`, and the cohort `separate-recovery`.
 
 The new pin is `platform:register@25`, if nothing else takes that number first. The new cohort is `founder-retirement`: register 25, directory 23, membership 10, rules 10, destination 13, and inbox 1. Only the register changes.
 
@@ -292,6 +294,8 @@ The build also needs these smaller changes:
 - A way to write `register` into a founder's config directory. Only `install` writes it today (`commands.ts:278`, `:480`).
 - A new selector in `dap create` that signs `expected: { register: 1 }` on the new pin. `retainedRegisterSelector` needs the operator's plan and policy `open`, so it does not fit a founder (`packages/cli/src/claim.ts:24-48`). Today a founder under `keys` reads the summary first, and gets `forbidden` with no recent entry (`:168`).
 - The settlement reply's new member, and the `stopped` lines in the commands and the page. The section on a stopped claim gives them.
+- The tool `settle` in `dap mcp`. A person who signs `found` through the tool `act` settles with `settle`, and a model can then `wait` on the directory. `#settle` builds its own reply from the custody record and the receipt's `fact` and `sends`. So the new member reaches that surface only if `#settle` passes it on (`packages/mcp/src/service.ts:1227`, at main `970c701c`). With a `target`, `#settle` first reads that scope's summary, so a founder with no recent entry gets `forbidden` there (`:1171`). The build settles that too.
+- A check of the summary's size. On a very old register the summary holds about 600 live items: 1 `register`, 64 `claim`, 288 `retired-founder` and 256 `added-founder`. The build confirms that such a summary still reads as complete on the clients.
 
 ### An installed register keeps its pin, and the stolen key keeps `found`
 
@@ -303,7 +307,7 @@ The operator of an installed `keys` register has these moves:
 - **On Artifacts, no narrow setting exists.** The next section says what a change of `registerScope` does.
 - **Install a new register on a separate Worker, on the new cohort.** Old rooms stay on the old Worker, and the stolen key stays on the old register's list.
 
-This note recommends the last move, with the old Worker kept for its rooms. The planner decides whether an installed `keys` register justifies a refusal list at the Worker.
+This note recommends the last move, with the old Worker kept for its rooms. The planner ruled in `cccd205a` that an installed `keys` register gets no refusal list at the Worker.
 
 ## A hosted operator needs only the act on a new register
 

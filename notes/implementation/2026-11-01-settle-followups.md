@@ -12,7 +12,7 @@ Request `187f478d3ab698c2987475b364dc131e8f13fd08` and promise `ef1e2eac6c501700
 2. **The sender is off the list.** `settle` neither calls nor reads a scope outside its list.
 3. **The send waits for the clock.** A retry or busy answer, or no answer at all, leaves the send due at a later time on the scripted clock. Nothing is due now, so the next round counts 0. A delivery that throws counts as no answer: `namespace.ts` turns the error into `null`.
 
-A scratch test forced each case and read the outbox when `settle` returned. In the first case the platform's own alarm made a second attempt, and `settle` returned with that attempt unanswered. The same send landed when the gate opened, with no further `settle`. The second and third cases also left the send unanswered. In the third case a second `settle` at the same clock did not send it, and moving the clock did. The third case ran with no answer. The retry and busy paths come from reading `Dispatcher.#dispatch`.
+A scratch test forced each case and read the outbox when `settle` returned. In the first case the platform's own alarm, which the test armed, made a second attempt, and `settle` returned with that attempt unanswered. The same send landed when the gate opened, with no further `settle`. The second and third cases also left the send unanswered. In the third case a second `settle` at the same clock did not send it, and moving the clock did. The third case ran with no answer. The retry and busy paths come from reading `Dispatcher.#dispatch`.
 
 These forced orders show that the condition allows such a return. No run shows that one happened in a gate.
 
