@@ -1,7 +1,8 @@
 import { expect, test } from "vitest";
 import type { CallResult } from "../src/service.ts";
 import { ViewSessions } from "../src/views/session.ts";
-import type { Card, LocalReviewCapture, Projection, ViewSource } from "../src/views/types.ts";
+import { viewTools } from "../src/views/tools.ts";
+import type { Card, Display, LocalReviewCapture, Projection, ViewSource } from "../src/views/types.ts";
 import { digestBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { fixedSigner } from "./fixtures.ts";
 import { StandIn, SERVICE } from "./support/standin.ts";
@@ -200,6 +201,27 @@ test("View diff goes through its port once per cut, keeps the card's two acts, a
   const again = await sessions.read("v", back.cut, { page: "diff" });
   expect(again.card!.body).toBe("TEST text\ntruncated: TEST\n");
   expect(reads).toHaveLength(2);
+});
+
+// Invariant: one view_act frame holds a read's text once, so an answer at the read's bound stays near that bound.
+test("a view_act frame and a view_read frame hold a read's text once", async () => {
+  const MARK = "TEST-LINE-OF-THE-READ", body = `${MARK}\n`.repeat(1800);
+  const projection = (): Projection => ({ status: "ready", position: 0, count: 1, fallback: "TEST", card: { identity: { item: "1", kind: "manifest", revision: "2", subject: { scope: "sc_a" }, at: { manifest: 2 } }, title: "TEST", summary: "TEST", actor: { kind: "person", name: "TEST" }, reasons: [],
+    projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST", actions: [], diffAvailable: true, diffRead: { target: "sc_a", base: "a".repeat(40), integration: "b".repeat(40) } } });
+  const sessions = new ViewSessions({ initialPage: () => "item", read: async () => projection() }, { call: async () => { throw Error("No native tool read."); } }, async () => answer("accepted"), async () => answer("accepted"), () => null,
+    { readExact: async () => ({ content: [{ type: "text", text: JSON.stringify({ text: body }) }], structuredContent: { text: body, files: 1, truncated: false, commits: [{ label: "Base", id: "a".repeat(40) }] }, isError: false }) });
+  await sessions.open("v", "change");
+  const tools = viewTools(sessions), copies = (frame: unknown) => JSON.stringify(frame).split(MARK).length - 1;
+  const acted = await tools["view_act"]!.run({ view: "v", cut: sessions.display("v").cut, action: "view-diff" });
+  expect(copies(acted)).toBe(1800);
+  expect(JSON.stringify(acted).length).toBeLessThan(44 * 1024);
+  const said = acted.structuredContent as { result: { structuredContent: Record<string, unknown>; content: { text: string }[] }; display: Display };
+  expect(said.display.card!.body).toBe(body);
+  expect(said.result.structuredContent).toMatchObject({ files: 1, truncated: false, commits: [{ label: "Base", id: "a".repeat(40) }] });
+  expect(said.result.content[0]!.text).toBe("Diff shown on the page.");
+  expect((acted.content[0] as { text: string }).text).toMatch(/^The result is in structuredContent: \d+ bytes of JSON/);
+  const read = await tools["view_read"]!.run({ view: "v" });
+  expect(copies(read)).toBe(1800);
 });
 
 // Invariant: an exact read's action IDs are reserved only on a card that offers exact reads. Another card's act keeps its own ID.
