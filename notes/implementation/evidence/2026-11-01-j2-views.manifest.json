@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. The reviewer's path ran as a composed local proxy. No deployed Worker, real room, Artifacts repository or desktop AI app ran this code.",
+  "directory": "2026-11-01-j2-views",
+  "checkpoint": {
+    "commit": "e143d7315a44488ff6a132d816302407ee638b78",
+    "tree": "3f42055e3b428fad315b59a44bb955337d1f2d3e"
+  },
+  "fileCount": 323,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "45de2b04eed5dd5aca6d453fef83d1f69ade4b789457d3a10c53857bcdeee206"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6461,
+      "sha256": "1662d71aed1c687caddd21291b42a37d086d8ccce91fd62a979d62559b4c4158"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "red/run.log",
+      "bytes": 38033,
+      "sha256": "da2cfbc7c173080312a0a447f36787c7c89d76fb40fd283c8531d190283604fa"
+    },
+    {
+      "path": "controls/summary.jsonl",
+      "bytes": 3954,
+      "sha256": "3acd76f632fecf33c4a4e3f6351afb8447ed7ce187077892c8a3dcbfceed1356"
+    },
+    {
+      "path": "after-review/summary.jsonl",
+      "bytes": 509,
+      "sha256": "b74938fc7e306e4b432cbdb6db6437355d37b00c07783a89eecaba5ccb5fed46"
+    },
+    {
+      "path": "probe/final/report.json",
+      "bytes": 76211,
+      "sha256": "eedec4b4cf4bc3522cdc82f0d1c7fb9bdc2a8036fd89be120c90538306043244"
+    },
+    {
+      "path": "probe/final-after-review/report.json",
+      "bytes": 76203,
+      "sha256": "bf3382ddcd4e85855dc9c66fe5e490ed04c246eae4c01f2d938b7fb641d18f47"
+    },
+    {
+      "path": "witness/scope-witnesses.log",
+      "bytes": 254,
+      "sha256": "6c1069baa6e4329d4488c678605e3305fa4a38a942aaceb4338f39e72c63ba1d"
+    },
+    {
+      "path": "witness/fixture-browser-at-head.log",
+      "bytes": 756,
+      "sha256": "6b15dbeee6fe632a35b167472c5f92fb67487a3264d271bab4919a94b2bce816"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 32633,
+      "sha256": "ef9b6bf0747df69196a629c87c45ed036b32e3c6711977b001b0a689b31b586d"
+    }
+  ]
+}
