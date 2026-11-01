@@ -90,6 +90,10 @@ These things stay open:
 
 So a new request with the token can read the repository for at most 24 hours and 600 seconds after the revocation on Cloudflare Artifacts, plus clock difference. On GitHub that time is about one hour and 600 seconds. On Artifacts, a download under way ran past its token's end in one run at 30 MB, as [the stolen-key section](#respond-to-a-stolen-key) states. No run shows what a download under way meets on GitHub. Replay cannot check the `read-token` refusal, because no definition states it and a refused act writes no entry.
 
+### A Git read token lists and fetches staged work
+
+A staged commit is a proposal that the room's record names. Any member with a Git read token can list it under `refs/artroom/staged/` with `git ls-remote`, and can fetch it, as any member can read the proposal. So a revoked key's token reaches unmerged work too, for the token's life. A run on Cloudflare Artifacts at dap-demo showed the listing and the fetch. See [the J2 acceptance record](../../notes/implementation/2026-11-01-j2-acceptance.md).
+
 ### A founder key that is also the recovery key has no end at membership
 
 In a room whose founder key is also its recovery key, `revoke-key` does not stop the key at membership. The `recovery-key` rule passes that key and checks nothing about its state. The key can keep signing `invite-member`, `invite-key`, `remove-member`, `revoke-key`, and `rotate-recovery`. Each accepted act restarts its read of membership, with no limit. The read is the smaller part of this, because the key keeps the recovery key's authority.
