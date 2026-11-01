@@ -1,19 +1,19 @@
 # Deployment trust boundaries
 
-A Worker binding is authority to use a resource. An application-level check narrows how the reviewed code uses that authority; it does not create a separate resource namespace.
+A Worker binding is authority to use a resource. A check in the application code narrows how the code uses that authority. The check does not create a separate resource namespace.
 
-This page describes the checked-in deployment configurations and their source owners. It does not establish which version is running, which settings an operator retained, whether secrets are unique, or which namespace IDs Cloudflare assigned. Local configuration readiness and `/health` do not prove provider connectivity or hosted authorization. [Deployment settings](../deploy.md#local-wiring-readiness) describes that distinction.
+Each section below follows one checked-in configuration file. A file does not show which version runs, which settings an operator kept, whether two Workers share a secret value, or which namespace IDs Cloudflare assigned. `/health` checks local configuration only, not provider connectivity or hosted authorization ([Failure and health meanings](settings.md#failure-and-health-meanings)).
 
 ## What each resource protects
 
 | Resource | Authority and boundary |
 |---|---|
-| `SESSION_SECRET` with `DEPLOYMENT` | Authenticates read-session claims by HMAC. Reading scopes check the deployment, repository membership reference, allowed read, and expiry. Every holder of the secret can mint claims, so all such holders share a trust boundary. A different deployment label is not a substitute for separate secret custody after compromise. Sessions do not sign acts or grant provider authority. |
-| `ARTIFACTS` | A capability for one configured Artifacts namespace. Its interface can get, create, and delete repositories and mint or revoke repository tokens. The adapter needs no separate outside Worker secret. Register, recorded host, namespace, and destination-birth checks constrain the reviewed code's use of this capability. |
+| `SESSION_SECRET` with `DEPLOYMENT` | Authenticates read-session claims by HMAC. Reading scopes check the deployment, repository membership reference, allowed read, and expiry. Every holder of the secret can mint claims, so all holders share one trust boundary. A different deployment label is not a substitute for separate secret custody after compromise. Sessions do not sign acts or grant provider authority. |
+| `ARTIFACTS` | A capability for one configured Artifacts namespace. Its interface can get, create, and delete repositories and mint or revoke repository tokens. The adapter needs no separate outside Worker secret. Checks on the register, the recorded host, the namespace and the destination's birth limit how the code uses this capability. |
 | `APPLICATION_CONTENT` | A private R2 binding for retained application release bytes. The production wrapper uses `applications/releases/<sha256>` keys and checks trusted release bytes before use or immutable writes. Shared release keys are not Worker-specific tenant namespaces. Content custody alone creates no native installation or member authority. |
-| `REGISTRIES` and `AGENTS` | Durable storage for hosted MCP control identities and agent state. A registry is named by membership scope ID; it allocates an agent in `AGENTS`. Agent storage holds its private signing seed, bearer digest and expiry, redacted receipts, and sessions. These objects rely on signed control requests, current membership authority, native enrolment, and bearer checks, not `SESSION_SECRET` alone. |
-| `SCOPE_INDEX` and `SCOPES` | Worker-local scope discovery, serving admission, and native scope state. Binding possession is an internal RPC boundary. Public callers still pass the relevant creation, act, read, or session checks. |
-| `METRICS` | A dataset write binding. Code emits bounded points with deployment, version, scope, and fixed event labels. Labels support attribution; they do not provide dataset isolation or establish who can query account analytics. |
+| `REGISTRIES` and `AGENTS` | Durable storage for hosted MCP control identities and agent state. A registry is named by its membership scope ID and allocates each agent in `AGENTS`. Agent storage holds its private signing seed, bearer digest and expiry, redacted receipts, and sessions. These objects rely on signed control requests, current membership authority, native enrollment and bearer checks, not `SESSION_SECRET` alone. |
+| `SCOPE_INDEX` and `SCOPES` | Scope discovery inside the Worker, the check that accepts or refuses a request before it reaches a scope, and native scope state. Binding possession is an internal RPC boundary. Public callers still pass the relevant creation, act, read, or session checks. |
+| `METRICS` | A dataset write binding. Code emits bounded points with deployment, version, scope, and fixed event labels. Labels identify the source of a point. They do not isolate datasets or control who can query the account's analytics. |
 
 The source owners are [sessions](../../packages/scope/src/sessions.ts), [Artifacts wiring](../../packages/scope/src/artifacts-wiring.ts), [host authority](../../packages/scope/src/host-wiring.ts), [application content](../../packages/scope/src/applications/content.ts), [Worker MCP wiring](../../packages/scope/src/worker.ts), and [hosted MCP storage and control](../../packages/mcp/src/hosted.ts).
 
@@ -128,14 +128,14 @@ The log holds nothing of a room's content: no lane, no membership, no rules, and
 
 Do these steps in each room that enrolled the key:
 
-1. If the key is also the room's recovery key, sign the rotation first with [`dap act`](../cli.md#the-commands), from the config directory that holds the key:
+1. If the key is also the room's recovery key, sign the rotation first with [`dap act`](../cli.md#dap-act), from the config directory that holds the key:
    `dap act rotate-recovery --on membership --target <roster-item> --set key=<new-key>`. The new key must never have been a member's key. No `dap` command prints a new key's ID, so you need another way to compute `<new-key>`. Do this before the revocation, because `dap act` asks for a session first and membership gives a revoked key none.
-2. Find the key's item with [`dap items`](../cli.md#the-commands), from another admin's config directory:
+2. Find the key's item with [`dap items`](../cli.md#dap-items), from another admin's config directory:
    `dap items membership --query <query>`. Query the type `key` and the state `active`.
 3. Revoke the key from that config directory:
    `dap act revoke-key --on membership --target <key-item> --set as=compromised`. Membership then tells the directory, and the directory tells the destination. The rule `last-admin-kept` refuses to revoke the last active key of the last admin, except when the recovery key signs.
-4. To end the key's sessions before their own end, replace [`SESSION_SECRET`](../deploy.md#settings-and-secrets). This step ends every member's session in the deployment, so each member asks for a new one.
-5. After 300 seconds plus clock difference, read what the key signed with [`dap log`](../cli.md#the-commands) at each scope where it could act:
+4. To end the key's sessions before their own end, replace [`SESSION_SECRET`](../deploy.md#settings-the-order-uses). This step ends every member's session in the deployment, so each member asks for a new one.
+5. After 300 seconds plus clock difference, read what the key signed with [`dap log`](../cli.md#dap-log) at each scope where it could act:
    `dap log <scope>`.
 
 Use `as=compromised` in step 3 for a stolen key, because `as=retired` sends no notice. The key's signed read ends within 1200 seconds of step 3, plus clock difference. If the key is on the register's `founders` list, it keeps `found` and its read of the register after these steps. To check that the notice arrived, run `dap log destination` from the config directory of step 3. The notice's row reads `delivery tell from directory:<seq>`, and that row names no key.
@@ -148,11 +148,11 @@ On Cloudflare Artifacts, an operator can also end the repository's read tokens t
    `GET /artifacts/namespaces/:namespace/repos/:name/tokens`. Cloudflare's page says that each row gives the token's `id`, `scope`, and `state`. The list names no key.
 2. Revoke every active `read` token of the repository, because the list cannot show which token the key holds. Revoke each one with:
    `DELETE /artifacts/namespaces/:namespace/tokens/:id`. One of the service's own 120-second reads can fail with an unknown outcome, because that read uses its own `read` token.
-3. Ask every member to run [`dap clone`](../cli.md#the-commands) again.
+3. Ask every member to run [`dap clone`](../cli.md#dap-clone) again.
 
-Revoking by ID has run twice through this REST route, in the planner's runs of 1 November 2026. In the first run, the planner revoked one `read` token on a new empty repository. The next `git ls-remote`, 0.1 seconds after the reply, exited 128 with `Invalid or expired token`. Five later tries over 10 seconds answered the same. Listing a repository's tokens has not run, because the planner's list command failed with a usage error.
+Revoking by ID has run twice through this REST route, on 1 November 2026. In the first run, an operator revoked one `read` token on a new empty repository. The next `git ls-remote`, 0.1 seconds after the reply, exited 128 with `Invalid or expired token`. Five later tries over 10 seconds answered the same. Listing a repository's tokens has not run, because that run's list command failed with a usage error.
 
-A revocation stops new requests and does not stop a download under way, in one run at 30 MB. In that second run, the planner revoked a 3600-second token 31 seconds into a throttled `git clone`. `git ls-remote` with that token exited 128, and the clone finished about 178 seconds later with the right head. In the same run's other case, a clone finished about 149 seconds after the end of its 60-second token, by arithmetic from the lifetime that the planner asked for. So treat a clone under way as having everything it reached. A buffer between the host and the planner's proxy could hold part of the reply, and nobody measured one.
+A revocation stops new requests and does not stop a download under way, in one run at 30 MB. In that second run, the operator revoked a 3600-second token 31 seconds into a throttled `git clone`. `git ls-remote` with that token exited 128, and the clone finished about 178 seconds later with the right head. In the same run's other case, a clone finished about 149 seconds after the end of its 60-second token, by arithmetic from the lifetime that the operator asked for. So treat a clone under way as having everything it reached. A buffer between the host and the planner's proxy could hold part of the reply, and nobody measured one.
 
 These cases have not run: a download larger than 30 MB, a longer gap between a token's end and the last byte, a commit published during a download, a download under way on GitHub, and the binding's `revokeToken(id)`.
 
@@ -169,35 +169,41 @@ These cases have no run behind them:
 
 [`apps/room/wrangler.jsonc`](../../apps/room/wrangler.jsonc) uses the [room entry](../../apps/room/worker.ts), which exports the Scope classes and serves through [room fetch](../../apps/room/fetch.ts).
 
-It declares its own `SCOPES`, `SCOPE_INDEX`, `REGISTRIES`, and `AGENTS` bindings. These bindings have no cross-Worker `script_name` in this configuration. The classes are local to this Worker; equal class names in another Worker do not imply shared Durable Object storage.
+It declares its own `SCOPES`, `SCOPE_INDEX`, `REGISTRIES`, and `AGENTS` bindings. These bindings have no cross-Worker `script_name`. The classes are local to this Worker. The same class name in another Worker does not share Durable Object storage.
 
-Its shared resources are `ARTIFACTS` namespace `artroom-demo`, R2 bucket `artroom-application-content`, and dataset `artroom_metrics_v1`. `SESSION_SECRET`, `DEPLOYMENT`, and `ARTIFACTS_CONFIG` are operator-set rather than file-owned values. The file does not establish their current values or uniqueness.
+Its shared resources are `ARTIFACTS` namespace `artroom-demo`, R2 bucket `artroom-application-content`, and dataset `artroom_metrics_v1`. The operator sets `SESSION_SECRET`, `DEPLOYMENT`, `REGISTER_SCOPE` and `ARTIFACTS_CONFIG`. The file holds none of them.
 
-The MCP namespaces are present, but neither `MCP_ENABLED` nor `MCP_TOOL_ADDITIONS` is in the file's variables. The route requires exact opt-in and both namespaces. Omitted file variables do not prove the hosted endpoint is off, because retained operator settings are not inspected. `APPLICATION_SCREEN_HOSTS` is explicitly empty. The configuration is marked for existing rooms; new public Start discovery points to `dap-demo`.
+The MCP namespaces are present, but the file sets neither `MCP_ENABLED` nor `MCP_TOOL_ADDITIONS`. The route needs exact opt-in and both namespaces. An operator can still have set the opt-in on the Worker, so the file alone does not show that the hosted endpoint is off. `APPLICATION_SCREEN_HOSTS` is explicitly empty. The file is marked for existing rooms. Browser Start for new rooms points to `dap-demo`.
 
 ## dap-grow
 
-[`apps/room/wrangler.grow.jsonc`](../../apps/room/wrangler.grow.jsonc) uses [worker.grow.ts](../../apps/room/worker.grow.ts). Its `DeployedScope` subclass retains the generic scope wiring and adds the reviewed room archive policy. It does not create a separate archive credential or Artifacts namespace.
+[`apps/room/wrangler.grow.jsonc`](../../apps/room/wrangler.grow.jsonc) uses [worker.grow.ts](../../apps/room/worker.grow.ts). Its `DeployedScope` subclass keeps the generic scope wiring and adds the room archive policy. It does not create a separate archive credential or Artifacts namespace.
 
-Grow declares its own `SCOPES`, `SCOPE_INDEX`, `REGISTRIES`, and `AGENTS`. It shares `artroom-demo`, `artroom-application-content`, and `artroom_metrics_v1` with `artroom-scope`. `DEPLOYMENT` is file-owned as `dap-grow-v1`; `SESSION_SECRET` is operator-set. The register in `ARTIFACTS_CONFIG` is pinned to `sc_yatkl7kuktl2gauvjrt7b2zy7nr6nu55vkzorot2bm5n2umgpbnq`. The omitted namespace setting uses the source default `artroom-demo`.
+Grow declares its own `SCOPES`, `SCOPE_INDEX`, `REGISTRIES`, and `AGENTS`. It shares `artroom-demo`, `artroom-application-content`, and `artroom_metrics_v1` with `artroom-scope`. The file sets `DEPLOYMENT` to `dap-grow-v1`. The operator sets `SESSION_SECRET`. The file pins the register in `REGISTER_SCOPE` and in `ARTIFACTS_CONFIG`, both `sc_yatkl7kuktl2gauvjrt7b2zy7nr6nu55vkzorot2bm5n2umgpbnq`. The file omits `ARTIFACTS_NAMESPACE`, so the Worker uses the default `artroom-demo`.
 
-The file pins one application release, publisher, and fetch host, plus the exact `grow.inguz.space` item 2 screen descriptor. These are software admission checks within shared content storage. They do not establish that the installation, DNS mapping, or archive is currently healthy. MCP namespaces are declared; hosted opt-in variables are not file-owned here.
+`APPLICATION_TRUST` lists one application release, publisher and fetch host. `APPLICATION_SCREEN_HOSTS` holds the exact `grow.inguz.space` item 2 screen descriptor. Code applies these checks inside shared content storage. They do not show whether the installation, the DNS mapping or the archive is healthy. The MCP namespaces are declared. The file does not set the hosted opt-in variables.
 
 ## dap-lending
 
-[`apps/room/wrangler.lending.jsonc`](../../apps/room/wrangler.lending.jsonc) is marked as historical service configuration, rather than the generic M1 deployment target. It uses the ordinary room entry and declares local `SCOPES` and `SCOPE_INDEX` classes.
+[`apps/room/wrangler.lending.jsonc`](../../apps/room/wrangler.lending.jsonc) is marked as historical service configuration. It uses the ordinary room entry and declares local `SCOPES` and `SCOPE_INDEX` classes.
 
-Its Artifacts namespace and matching namespace setting are `dap-lending`, separate from `artroom-demo`. Its register is pinned in `ARTIFACTS_CONFIG`. The file declares no application-content R2 bucket, analytics dataset, `REGISTRIES`, or `AGENTS`. With those MCP namespaces absent, the MCP route refuses even if opt-in is requested. `APPLICATION_SCREEN_HOSTS` is empty.
+Its Artifacts namespace and matching namespace setting are `dap-lending`, separate from `artroom-demo`. The file pins its register in `REGISTER_SCOPE` and in `ARTIFACTS_CONFIG`. The file declares no application-content R2 bucket, analytics dataset, `REGISTRIES`, or `AGENTS`. With those MCP namespaces absent, the MCP route refuses even if opt-in is requested. `APPLICATION_SCREEN_HOSTS` is empty.
 
-`SESSION_SECRET` and `DEPLOYMENT` are operator-set. This file alone is not an inventory of any historical hosted bindings or retained settings.
+The operator sets `SESSION_SECRET` and `DEPLOYMENT`. The file does not list bindings or settings that the hosted Worker kept from earlier deployments.
 
 ## dap-demo
 
-[`apps/room/wrangler.demo.jsonc`](../../apps/room/wrangler.demo.jsonc) uses the ordinary room entry with local `SCOPES`, `SCOPE_INDEX`, `REGISTRIES`, and `AGENTS`. It explicitly sets the index to `enforce` and pins the Start origin, Register17 reference, and Artifacts register.
+[`apps/room/wrangler.demo.jsonc`](../../apps/room/wrangler.demo.jsonc) uses the ordinary room entry with local `SCOPES`, `SCOPE_INDEX`, `REGISTRIES`, and `AGENTS`. It sets the index to `enforce`. It pins the Start origin, the register 17 reference, and the register in `REGISTER_SCOPE` and `ARTIFACTS_CONFIG`.
 
-Its Artifacts namespace is `dap-demo`. It shares dataset `artroom_metrics_v1` with room and Grow, but declares no application-content bucket. `APPLICATION_SCREEN_HOSTS` is empty. MCP opt-in variables are absent from the file.
+Its Artifacts namespace is `dap-demo`. It shares dataset `artroom_metrics_v1` with `artroom-scope` and `dap-grow`, but declares no application content bucket. `APPLICATION_TRUST` lists one release, publisher and host. Without the `APPLICATION_CONTENT` binding, the Worker stores and serves no package for that release. `APPLICATION_SCREEN_HOSTS` is empty. The file sets no MCP opt-in variable.
 
-`SESSION_SECRET` and `DEPLOYMENT` remain operator-set. The `deployment` member of `DEMO_START_CONFIG` is a separate value; its presence does not prove the live `DEPLOYMENT` binding matches it.
+The operator sets `SESSION_SECRET` and `DEPLOYMENT`. The `deployment` member of `DEMO_START_CONFIG` is a separate value. The file does not show that the live `DEPLOYMENT` binding matches it.
+
+## dap-celld-local
+
+[`apps/room/celld/wrangler.json`](../../apps/room/celld/wrangler.json) is the local Worker for celld. Its [entry](../../apps/room/celld/worker.ts) imports the production room Worker. It declares local `SCOPES`, `SCOPE_INDEX`, `REGISTRIES` and `AGENTS` classes, with the same three migration tags as `artroom-scope`.
+
+It declares no Artifacts binding, R2 bucket or analytics dataset, so it shares no Cloudflare resource with another Worker. The file sets `DEPLOYMENT` to `dap-celld-local` and the index to `enforce`. The operator sets `REGISTER_SCOPE` and `SESSION_SECRET` in a private `.dev.vars` file. `APPLICATION_SCREEN_HOSTS` is empty. See [Run the local Worker](../celld.md).
 
 ## dap-commons
 
@@ -217,10 +223,10 @@ origin. The operator supplies `SESSION_SECRET`. Its custody and uniqueness
 remain separate from those public labels. Read sessions still require the
 deployment, exact Membership reference, allowed read, and expiry checks.
 
-The index mode is `enforce`. The explicit creation family is Register 23,
+The index mode is `enforce`. The explicit creation cohort is Register 23,
 Directory 22, Membership 9, Rules 14, Destination 16, Inbox 1, and Commons 1.
 `REGISTER_SCOPE` and `ARTIFACTS_CONFIG.registerScope` remain `unplanned`
-until the planner binds the retained install plan. Those invalid register
+until the operator binds the retained install plan. Those invalid register
 pins keep new creation closed. `ALLOW_OPEN_CREATION` is absent.
 
 `APPLICATION_SCREEN_HOSTS` and `APPLICATION_TRUST` are empty. MCP opt-in
@@ -229,7 +235,7 @@ and actual hosted routes still require their own evidence.
 
 The checked-in `DEMO_START_CONFIG` is not a Commons provisioning interface.
 The maintained Demo parser recognizes Register 17, not this Register 23
-family. Follow the
+cohort. Follow the
 [Commons CLI order](../deploy.md#provision-the-commons-worker) and bind only
 the two operational register fields. This source describes
 no deployment, activation, namespace creation, or hosted W1 result.
@@ -238,17 +244,17 @@ no deployment, activation, namespace creation, or hosted W1 result.
 
 [`examples/grow/wrangler.jsonc`](../../examples/grow/wrangler.jsonc) declares a scheduled Worker with no Scope, Artifacts, R2, MCP, or metrics bindings. It has no public workers.dev or preview endpoint, and its [fetch handler](../../examples/grow/simulator-host.ts) returns 404.
 
-The operator supplies `GROW_BINDING` and two distinct agent secrets, `GROW_SENSORS_SECRET` and `GROW_CLIMATE_SECRET`. The simulator signs as those two native agents and requests their read sessions from Grow. It does not hold Grow's session-signing secret or an operator key. The source validates distinct keys and the expected installed owner context. Actual secret provisioning, grants, cron state, and hosted progress remain outside this configuration evidence.
+The operator supplies `GROW_BINDING` and two distinct agent secrets, `GROW_SENSORS_SECRET` and `GROW_CLIMATE_SECRET`. The simulator signs as those two native agents and requests their read sessions from Grow. It does not hold Grow's session-signing secret or an operator key. The source validates distinct keys and the expected installed owner context. The file does not show which secrets, grants or cron state the hosted Worker has.
 
 ## dap-application-sandbox
 
 The [default config](../../apps/sandbox/wrangler.jsonc) and [rollout config](../../apps/sandbox/wrangler.rollout.jsonc) name the same Worker. Both bind the fixed `ApplicationScreenService` entrypoints of `artroom-scope` as `ROOM`, `dap-grow` as `GROW`, and `dap-lending` as `LENDING`.
 
-The sandbox has no session-signing secret, Artifacts binding, R2 bucket, MCP namespace, or analytics dataset in either file. It can reach the configured room services. Its [gateway](../../apps/sandbox/worker.ts) accepts only a mapped origin and allowed route, then requires an identical installation descriptor from the selected room service. Package reads and native checks remain owned by that room.
+The sandbox has no session-signing secret, Artifacts binding, R2 bucket, MCP namespace, or analytics dataset in either file. It can reach the room services that it binds. Its [gateway](../../apps/sandbox/worker.ts) accepts only a mapped origin and allowed route, then requires an identical installation descriptor from the selected room service. That room owns package reads and native checks.
 
-The default `SCREEN_HOSTS` is empty. The rollout file maps only `grow.inguz.space` item 2 to `GROW`. Browser requests carry only the permitted headers; package asset requests do not forward authorization. Native traffic still passes the room's credential and authority checks.
+The default `SCREEN_HOSTS` is empty. The rollout file maps only `grow.inguz.space` item 2 to `GROW`. Browser requests carry only the permitted headers. Package asset requests do not forward authorization. Native traffic still passes the room's credential and authority checks.
 
-A separate screen origin separates browser storage from the room origin. It does not give the gateway independent backend namespaces, and it does not make trusted script at the screen's own origin untrusted. These files do not prove current DNS, routes, rollout selection, or live browser behavior.
+A separate screen origin separates browser storage from the room origin. It does not give the gateway its own backend namespaces. It also does not make trusted script at the screen's own origin untrusted. The files do not show the current DNS, routes, rollout choice or browser behavior.
 
 ## dap-home
 
@@ -256,11 +262,11 @@ A separate screen origin separates browser storage from the room origin. It does
 
 ## artroom-jam
 
-[`apps/jam/wrangler.jsonc`](../../apps/jam/wrangler.jsonc) is another static-assets configuration. It names no Worker main or backend bindings. It is included because it is a checked-in deployment, although it was outside the original five-Worker entry-point inventory. Its actual deployment state is not established here.
+[`apps/jam/wrangler.jsonc`](../../apps/jam/wrangler.jsonc) is another static-assets configuration. It names no Worker main and no backend bindings.
 
-## Shared resources and finding 3.13
+## Shared resources
 
-The 21 October security review described room and Grow sharing as finding 3.13, marked **inferred** at the earlier source head. The current checked-in configuration directly names the following shared resources:
+`artroom-scope` and `dap-grow` share an Artifacts namespace and an R2 bucket. Three Workers share one analytics dataset. The checked-in configuration names these shared resources:
 
 | Resource | Configurations that name it |
 |---|---|
@@ -268,12 +274,12 @@ The 21 October security review described room and Grow sharing as finding 3.13, 
 | R2 bucket `artroom-application-content` | `artroom-scope`, `dap-grow` |
 | Analytics dataset `artroom_metrics_v1` | `artroom-scope`, `dap-grow`, `dap-demo`, `dap-commons` |
 
-For these resources, different Worker names and code pins are not independent namespace isolation. The Artifacts adapter's pinned register and verified destination birth constrain repository operations. Content digest, publisher, release, and installation checks constrain application delivery. Metrics labels distinguish events. These are checks made by code using shared capabilities.
+For these resources, different Worker names and code pins do not isolate namespaces. The Artifacts adapter's pinned register and verified destination birth limit repository operations. Checks on content digest, publisher, release and installation limit application delivery. Metrics labels tell events apart. Code makes each of these checks with a shared capability.
 
-The Workers' local Durable Object classes and the distinct configured
-`dap-demo`, `dap-lending`, and `dap-commons` Artifacts namespaces are
-different boundaries. The shared-resource finding does not imply that all
-Worker storage is shared. Conversely, separate Scope or MCP objects do not
-isolate a shared bucket or Artifacts namespace.
+Each Worker's local Durable Object classes are a separate boundary, and so are the `dap-demo`, `dap-lending` and `dap-commons` Artifacts namespaces. Shared resources do not make all Worker storage shared. Separate Scope or MCP objects do not isolate a shared bucket or Artifacts namespace.
 
-Secret equality, provider-side ACLs, actual namespace IDs, bucket public-access settings, effective operator variables, and deployed versions require hosted evidence. None is inferred from names or from a locally `wired` health result. Deployment and any namespace separation remain separately authorized operator work.
+Secret equality, provider access controls, namespace IDs, bucket public-access settings, the operator's variables and deployed versions can be read only from the hosted account. Names and a local `wired` health result do not show them.
+
+## Source
+
+Checked against main `b0af01d2` on 1 November 2026. Sources: [apps/room/wrangler.jsonc](../../apps/room/wrangler.jsonc), [apps/room/wrangler.grow.jsonc](../../apps/room/wrangler.grow.jsonc), [apps/room/wrangler.lending.jsonc](../../apps/room/wrangler.lending.jsonc), [apps/room/wrangler.demo.jsonc](../../apps/room/wrangler.demo.jsonc), [apps/room/celld/wrangler.json](../../apps/room/celld/wrangler.json), [examples/grow/wrangler.jsonc](../../examples/grow/wrangler.jsonc), [apps/sandbox/wrangler.jsonc](../../apps/sandbox/wrangler.jsonc), [homepage/wrangler.jsonc](../../homepage/wrangler.jsonc), [apps/jam/wrangler.jsonc](../../apps/jam/wrangler.jsonc).
