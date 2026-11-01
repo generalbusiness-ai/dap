@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. The red run and the controls ran at 3df54c5b, before the merge of main. The endpoint scene ran through /mcp on a local Worker. No deployed Worker, wrangler dev or real room ran this code.",
+  "directory": "2026-11-01-identity-drift",
+  "checkpoint": {
+    "commit": "7d055e1262a942bda0fd4235ef563fbb4a645ae6",
+    "tree": "70eb2c00ebbb1923662c7d2a947b5a06c9db072f"
+  },
+  "fileCount": 78,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "ea77720214c04aaca19fa08c0a5f05b64910b8a64557f596c7465cf64e3098e5"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6532,
+      "sha256": "14e052766ab13ce15b9de306201afde8220b6536f9d7852bdd87b6fed30629ac"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "red/run.log",
+      "bytes": 491796,
+      "sha256": "d9a8eb8dbc26d66662de6c5f55b3c83f62bb9a25933cfb509bb18620e0718faa"
+    },
+    {
+      "path": "controls/summary.jsonl",
+      "bytes": 3796,
+      "sha256": "3492ebfe2ea8032f636cb7e23494d25ea824a2214dca844ec57c0b37d5e92a2b"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 7093,
+      "sha256": "dad5489946857e90e8aa907ac954034e662e61da543d7db1acddd4dcf411a35c"
+    }
+  ]
+}
