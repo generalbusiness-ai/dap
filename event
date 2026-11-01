@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:07f7b749bd85b18898282bc175db4bb025e14faa","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/invitations.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:08f441c0063687f2515ef93b699e3998a7b2ce00","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/device-key.scope.test.ts."}
