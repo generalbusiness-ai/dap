@@ -129,10 +129,10 @@ instructions.
   30 October 2026. Sources: ..." and, where true, one sentence that the
   page's commands were not run for this revision. Tutorials keep the date
   and versions of the run that produced their output blocks. The commit is
-  `ada88648` on the pages that main changed after the second pass and on the
-  index (kernel, mcp, scopes, settings, entry points, testing, index). It is
-  `c8c7b631` on the pages that main changed after the first pass or that state
-  its facts (cli, deploy, roadmap, trust boundaries, use cases). It is
+  `b0af01d2` on the pages that main changed after the third pass (cli, deploy,
+  hosts, kernel, mcp, scopes, entry points, trust boundaries, ten terms). It is
+  `ada88648` on the settings page, the testing page and the index. It is
+  `c8c7b631` on the roadmap and use cases. It is
   `5dc9765f` on the others. The generated lane reference and the `lanes.md`
   redirect have no footer.
 - **Relocate, do not delete.** Status and evidence text that is recorded
@@ -320,3 +320,32 @@ The catalog still holds 85 versions, read from `VERSIONS` at this head. The
 views section said "four reads" above a table of five, and it now says five.
 Kernel section 7.4 holds main's rules without the request ID, and the
 relocated-text note keeps the text as landed.
+
+## 8. Merge after the third review
+
+The third review approved head `b02fe46b`. Main then conflicted with that head
+in six pages, so this head merges main `b0af01d2` and needs a review of the
+merge alone.
+
+The merge adds these facts:
+
+- the `separate-recovery` cohort, as a row of the cohort table in `cli.md` and
+  a section under the rollout heading of `deploy.md`, and 88 catalog versions;
+- what a revoked key keeps, in `trust-boundaries.md`, with links from `cli.md`,
+  `deploy.md`, `mcp.md` and `scopes.md`;
+- the `compromised` notice's refusals, in `cli.md`, `hosts.md`, `scopes.md` and
+  `entry-points.md`;
+- the 900-second read before `found`, in `cli.md` and `deploy.md`.
+
+Four changes go beyond main's text. The `dap install` synopsis also lists
+`commons`, which the cohort table already had and the synopsis lacked. Main's
+links to `#the-commands` and `#settings-and-secrets` follow the rewritten
+headings. The run notes in `trust-boundaries.md` say "operator" and not
+"planner". `cli.md` states the policy `keys` read without main's reference to
+the legacy selector, because the rewrite moved that passage to the
+relocated-text note.
+
+Main's sentence on supported lineage cohorts, which now also names
+`separate-recovery`, has no reader page. The relocated-text note holds the
+earlier list, and `settings.md` states the rule that a pin opens no other
+lineage cohort.

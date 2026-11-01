@@ -32,7 +32,7 @@ function decode(raw: string, origin: string): RecordJoin {
       key = row["publicKey"];
     }
     const p = row["prepared"];
-    if (!closed(p, ["place", "definition", "handle", "link", "signed"]) || !closed(p["place"], ["directory", "membership"]) || !isScopeId(p["place"]["directory"]) || !isScopeRef(p["place"]["membership"]) || p["place"]["membership"].kind !== "membership" || !isInvitationMembership(p["definition"]) || typeof p["handle"] !== "string" || !p["handle"] || typeof p["link"] !== "string" || !/^sha256:[0-9a-f]{64}$/.test(p["link"]) || !isSignedIntentShape(p["signed"]) || !verifySignedIntent(p["signed"]) || p["signed"].intent.actor !== key || p["signed"].intent.kind !== "join" || canonicalize(p["signed"].intent.to) !== canonicalize(p["place"]["membership"]) || Object.keys(p["signed"].intent.expected).length !== 0 || !isInvitationRedemptionFields(String(p["definition"]), p["signed"].intent.fields)) throw error();
+    if (!closed(p, ["place", "definition", "handle", "link", "signed"]) || !closed(p["place"], ["directory", "membership"]) || !isScopeId(p["place"]["directory"]) || !isScopeRef(p["place"]["membership"]) || p["place"]["membership"].kind !== "membership" || !isInvitationMembership(p["definition"]) || typeof p["handle"] !== "string" || !p["handle"] || typeof p["link"] !== "string" || !/^sha256:[0-9a-f]{64}$/.test(p["link"]) || !isSignedIntentShape(p["signed"]) || !verifySignedIntent(p["signed"]) || p["signed"].intent.actor !== key || !(p["signed"].intent.kind === "enrol" ? p["signed"].intent.on === 0 : p["signed"].intent.kind === "join" && Object.keys(p["signed"].intent.expected).length === 0) || canonicalize(p["signed"].intent.to) !== canonicalize(p["place"]["membership"]) || !isInvitationRedemptionFields(String(p["definition"]), p["signed"].intent.fields)) throw error();
     seed?.fill(0);
     if (row["receipt"] !== undefined && (!isReceipt(row["receipt"]) || row["receipt"].definition !== p["definition"] || row["receipt"].intent !== intentDigest(p["signed"].intent) || canonicalize(row["receipt"].fact.at) !== canonicalize(p["place"]["membership"]))) throw error();
     if (row["phase"] === "verified" && !row["receipt"]) throw error();
@@ -56,7 +56,7 @@ function locked<T>(origin: string, options: JoinOptions, work: () => Promise<T>)
   const locks = (globalThis as unknown as { navigator?: { locks?: {
     request<T>(name: string, work: () => Promise<T>): Promise<T>;
   } } }).navigator?.locks;
-  if (!locks) throw new Error("Private enrollment locking is unavailable. Nothing was submitted.");
+  if (!locks) throw new Error("Private enrollment locking is unavailable. This step sent nothing. A saved enrollment stays kept, and an earlier send of it can have gone. Do not use the invitation again.");
   return locks.request(`artroom-page-enrollment:${origin}`, work);
 }
 function publicOf(row: RecordJoin): OriginalJoin {

@@ -33,6 +33,7 @@ what a judge drafts, in one storage transaction for each entry.
 | `turn` | `Turns.run(waiting, creation?)`: section 5.2, steps 3 to 7, and section 5.3. `isSigned` and `fetchFacts`: step 1. `Waiting`, `Verdict`, `End`. |
 | `core` | `Scope`: `create`, `submit`, `settle`, `alarm`, `checkpoint`, `pinned`. `receiptOf`. The answers `Created` and `Checkpointed`. |
 | `sessions` | Read sessions: `sessionsOf`, `mintSession`, `openSession`, `sessionReaders` (the production readers port), `issueSession` (membership's answer to a signed request), `credentialInUrl`, and `Streams` with `relay`, the streams of a scope's head. |
+| `originals` | `Originals`: the exact bodies of a member's `POST .../acts` requests, in the membership object and outside its history, until an answer ends them. `keep`, `list`, `read`, `end`, and the alarm's `wake` and `expire`. Only a session of the row's member reaches a row. |
 | `signed-reads` | `checkSignedRead`: a read signed by a key with a recent local signed entry or a recent signed root of this scope's cause chain. `rootOf` follows at most four causes through verified source entries. The read covers summary, genesis, that key's signed and causally rooted entries, and their typed retained inputs. At a register, a recent local signer reads the whole history. It grants no stream. |
 | `limits` | `JoinLimits`: the serving limits of a join at the front of a membership scope. `addressKey`, `isJoin`, `PROPOSED_LIMITS`. |
 | `operator` | `OperatorRecord`: the operator's record of a scope, outside its history. `incidentsOf`, `waitingIn`, and `sendAgain`, the instruction to dispatch a waiting request once more. |
@@ -432,7 +433,7 @@ Five more routes serve what is no history:
 | `GET /v1/scopes/:scope/stream` | Lines of JSON, `{ at }`: the scope's head when the stream opens and after each commit | 200; as a read otherwise |
 | `GET /v1/scopes/:scope/incidents?cursor=` | A page of the operator's record of the scope, for an admin's session | as a read |
 | `GET /v1/scopes/:scope/waiting/:list?cursor=` | One page of the list `diagnosed` or `unanswered` of the requests that wait, for an admin's session | as a read |
-| `GET /v1/scopes/:destination/credential/:handle` | A member's read token, `{ token, ends, remote }`, once: only to the session of the key that signed the `read-token` act whose `mint-read` outcome names that handle, and only before its end. The plaintext leaves custody as it is answered. Marked `cache-control: no-store` | 200; 403 `forbidden` for a second read, another key's session, no session, a read at or after the end, or a handle that names nothing; 503 `sessions-unavailable`, `clock-behind` |
+| `GET /v1/scopes/:destination/credential/:handle` | A member's read token, `{ token, ends, remote }`, once: only to the session of the key that signed the `read-token` act whose `mint-read` outcome names that handle, and only before its end. The plaintext leaves custody as it is answered. Marked `cache-control: no-store` | 200; 403 `forbidden` for a second read, another key's session, no session, a read at or after the end, a handle that names nothing, or a key that a `compromised` notice named at this destination; 503 `sessions-unavailable`, `clock-behind` |
 
 A request whose URL holds a credential, in its path or its query, is
 answered 400 `credential-in-url` before anything is routed. A read with a
@@ -442,7 +443,11 @@ session adds two answers: 503 `sessions-unavailable` and 503
 ## Read sessions
 
 A read session is a credential: whoever holds the token reads. It signs
-nothing and controls nothing (authority note, section 3.9). The one other
+nothing and adds no authority to an act (authority note, section 3.9). At
+membership, a session also reads, delivers and deletes its own member's
+original requests (`originals`). It can make one only of a request that its
+key signed. The unsigned parts can differ, and the scope verifies them when
+they are sent, so this grants nothing. The one other
 credential it reads is a read token that its own key asked for by a
 signed `read-token` act at the destination, once (the planner's decision
 for I5).
@@ -454,10 +459,10 @@ for I5).
 | Issuance limit | At most 64 retained requests per key. A 429 keeps the `rate-limited` answer body and adds advisory `Retry-After` seconds until that key's earliest retained request deadline, on membership's clock. It does not promise admission after that delay. |
 | How it is verified | By HMAC-SHA-256 under the deployment's session secret, over the exact claim bytes, compared in constant time. Then the deployment's name, then the membership reference: a scope accepts a session only for the membership scope that it records itself. Then the scope's own clock against the end time, at every read and before every send on a stream. |
 | Which clock | Two. Membership's clock wrote the end time, and each reading scope compares it with its own. A scope whose clock reads earlier than its previous entry's time answers `clock-behind` and sends nothing. |
-| After a key is revoked or a member is removed | A session already issued is accepted until its end: at most 600 seconds on membership's clock, plus the difference between the two clocks. No new one is issued. Nothing recalls what was read. |
+| After a key is revoked or a member is removed | A session already issued is accepted until its end: at most 600 seconds on membership's clock, plus the difference between the two clocks. No new one is issued. Nothing recalls what was read. A signed read has its own end: [What a revoked key keeps](../../docs/security/trust-boundaries.md#what-a-revoked-key-keeps). |
 | A reader with no session | `forbidden`, from every read, unless it presents a signed read: "Signed reads", below. |
 | With no secret | The bindings `SESSION_SECRET`, at least 32 bytes, and `DEPLOYMENT`. With either missing, no session is issued and none is accepted: `sessions-unavailable`. No file of this repository holds a secret. |
-| When the secret is replaced | Every session ends at once. |
+| When the secret is replaced | Every session ends at once. Signed reads do not end. |
 | A stream | Its session is checked before every send. There is no timer: a stream whose session has ended is sent nothing, and is closed when its next send is due. A reader that goes away is released at once, by the route. |
 
 ## Signed reads

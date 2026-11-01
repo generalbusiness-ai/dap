@@ -1,7 +1,12 @@
 /**
  * A read session, as a device and a scope service exchange it (authority
  * note, section 3.9). A session is a credential for reads of one repository.
- * It signs nothing, controls nothing and gets no credential.
+ * It signs nothing. It adds no authority to an act, and it gets no credential.
+ * The one write it reaches is a member's original requests at membership
+ * (notes/2026-10-31-signed-requests-across-devices.md): it reads, delivers and
+ * deletes them, and it can make one only of a request that its key signed. The
+ * unsigned parts can differ, and the scope verifies them when they are sent. This
+ * grants nothing.
  *
  * The authority note states what a token names and that a device asks with
  * a signed request. It states no form for either. The forms here are I3's

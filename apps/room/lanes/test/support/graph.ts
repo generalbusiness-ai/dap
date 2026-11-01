@@ -33,6 +33,7 @@ import { grantOf, keys, type Actor } from "@generalbusiness/dap-derive/testing";
 import type { Checkpointed, Delivery, EffectAnswer, EffectRequest } from "@generalbusiness/dap-scope";
 import { CODE, net, type CapabilityScript } from "@generalbusiness/dap-scope/testing";
 import { api, route } from "@generalbusiness/dap-scope/worker";
+import { settle, type Dispatching } from "../../../../../packages/scope/test/net.ts";
 import { DIGESTS, change, definitions, issue } from "../../src/index.ts";
 
 export { net };
@@ -160,7 +161,7 @@ type Remote = {
   prepare(signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer>; effect(): Promise<number>;
 };
 /** What the graph needs of a scope, whatever its definition: its entries and its dispatcher. */
-type Member = { entry(seq: number): Promise<Entry>; readonly stub: Remote };
+type Member = { entry(seq: number): Promise<Entry>; readonly object: DurableObjectStub; readonly stub: Remote };
 const objectOf = (name: string): DurableObjectStub => env.NET.get(env.NET.idFromName(name));
 
 /** How an act was answered, in one text: `accepted`; or the refusal's code, with the name when the failed guard or the capability declares one. */
@@ -349,20 +350,15 @@ export class Peer {
 
 /** The graph: one office, the lanes it creates, the two scripted peers a change lane names, and every scope a scenario adds. */
 export class Graph {
-  readonly nodes: Member[] = [];
+  readonly nodes: (Member & Dispatching)[] = [];
   /** SCRIPTED peers: the rules scope and the destination that a change lane names. */
   readonly rules = new Peer("rules", "platform:rules");
   readonly destination = new Peer("destination", "platform:destination");
 
   constructor(readonly office: Node<typeof officeDefinition>) { this.nodes.push(office); }
 
-  /** Wait until no dispatcher of the graph has anything to do now. It carries nothing: the dispatchers do. */
-  async settle(): Promise<void> {
-    for (let made = 1; made > 0;) {
-      made = 0;
-      for (const node of this.nodes) made += await node.stub.dispatch();
-    }
-  }
+  /** `settle` over the graph: one round makes no dispatch and moves no head. It carries nothing: the dispatchers do. */
+  settle(): Promise<void> { return settle(...this.nodes); }
   /** Move the shared clock on, and let the dispatchers do what is then due. */
   async later(seconds: number): Promise<void> {
     net.clock.now = soon(seconds);
@@ -381,8 +377,7 @@ export class Graph {
   async created<const D extends DeclaredDefinition>(parent: Member, seq: number, definition: D, validated: ValidDefinition, n = 0): Promise<Node<D>> {
     const name = scopeIdOf((await parent.entry(seq)).sends.find((s) => s.n === n)!.to as Seed);
     // The child's dispatcher has work as soon as it has a genesis, and it is not in the graph yet.
-    const child = objectOf(name) as unknown as Remote;
-    for (let made = 1; made > 0;) made = (await parent.stub.dispatch()) + (await child.dispatch());
+    await settle(parent, { object: objectOf(name), stub: objectOf(name) as unknown as Remote });
     const node = await this.node(name, definition, validated);
     await this.settle();
     return node;

@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. The red run, the controls and the claim tests ran before the merge of main, as the note's Head column states. No deployed Worker or real room ran the new cohort.",
+  "directory": "2026-11-01-founder-recovery",
+  "checkpoint": {
+    "commit": "86f7c0258c50c550fe07da27366e087f0791ba51",
+    "tree": "7473bd7dc471fc7d9daac386e79e6b58067e2d35"
+  },
+  "fileCount": 136,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "a5ed00f5f93f69dbb894f1ff3d70db6e1a3c5826184053e3fadb0e9a5a5ff741"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6585,
+      "sha256": "2b681fbacc1ea7d47bf9baf483f95f944a9b8e2e7daaccf9c7ff51eebb5995ea"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "head.txt",
+      "bytes": 392,
+      "sha256": "e106f68ebf8364ddbf6bb06da9baf07b215f5755248f865e9af029c6f88d584e"
+    },
+    {
+      "path": "red-run.txt",
+      "bytes": 12340,
+      "sha256": "2a9ae523d385bff5c70db890cfc1509d63224c3b08f2da4353e8be3008dfc4a1"
+    },
+    {
+      "path": "red-head.txt",
+      "bytes": 134,
+      "sha256": "cb74c167175af1d881043c669d0f64733aaa2b7c8de379df195dfb4ab7803846"
+    },
+    {
+      "path": "merge/exits.txt",
+      "bytes": 459,
+      "sha256": "c14db2a2a8dc522d1e27edf5910de7832e679ef6a41884fd5313281be731062f"
+    },
+    {
+      "path": "merge/seal-moves.txt",
+      "bytes": 341,
+      "sha256": "73c971667ae65a3e208cb92d165986670da14245ca250eb0ce32232f3a1bfe04"
+    },
+    {
+      "path": "focused/seal-moves.txt",
+      "bytes": 3092,
+      "sha256": "8496c48f5ab85e7638d0ff49c1e9154ecb072d70025b148f3d412327d9b21dbf"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 12506,
+      "sha256": "22510c505f0b8007c3731cbd5a7b744c6a67f4103e67a4de9726e2d394f99e88"
+    }
+  ]
+}

@@ -56,8 +56,9 @@ test("partition consumers keep the Root stable, open through the active partitio
     expect((await P.summary()).at.seq + 1).toBeGreaterThanOrEqual(16);
     await P.did(rita, "seal", { on: 0, expected: await P.expected({ on: 0 }) });
     await settle(...r.scopes, P, ...opened);
-    const creating = (await r.root.summary()).value.items.find(item => item.type === "partition" && item.state === "creating")!;
-    const Q = await r.root.created(creating.id);
+    // The partition can already be active here: a background pass may finish its creation before `settle` returns.
+    const successor = (await r.root.summary()).value.items.find(item => item.type === "partition" && (item.state === "creating" || item.state === "active"))!;
+    const Q = await r.root.created(successor.id);
     await settle(...r.scopes, P, Q, ...opened);
     const next = await command(ctx, ["issue", "open", "--title", "Successor issue"]);
     expect(next, next.lines.join("\n")).toMatchObject({ code: 0, lines: [expect.stringContaining("Opened issue #100001:")] });

@@ -49,7 +49,7 @@ export { isOf, isStandingDestination, pinnedBy, pinnedOf, usesFilePublicationPro
 export { ACTIONS_MOST, FIRST_ACTIONS, FIRST_ACTIONS_OF, MEMBERSHIP, MEMBERSHIP_1, NO_MEMBER, ROLE_LISTS, ROLE_TABLE, ROLE_TABLE_OF, actionsIn, isActions, isHandle, standingOf, type Role } from "./membership.ts";
 export { CREATION_ATTEMPTS, DIRECTORY_OF, REGISTER, REPOSITORY, directoryIdOf, directorySeed, registerRules, repositoryName } from "./register.ts";
 export { DEFINITION_DOMAIN, DIRECTORY, IMPORT_ATTEMPTS, SEEN, SIBLINGS_OF, directoryMembership, directoryRules, directoryRulesScope } from "./directory.ts";
-export { COLLECT_MOST, DESTINATION, DESTINATION_1, DESTINATION_5, DESTINATION_ATTEMPTS, DESTINATION_KINDS, READ_TOKEN_HOURS, destinationEvidenceValues, destinationMembership, destinationRulesScope, destinationReceipt, firstHeadCommit, initialCommitOf, revokedToken } from "./destination.ts";
+export { COLLECT_MOST, DESTINATION, DESTINATION_1, DESTINATION_5, DESTINATION_ATTEMPTS, DESTINATION_KINDS, READ_TOKEN_HOURS, compromisedKey, destinationEvidenceValues, destinationMembership, destinationRulesScope, destinationReceipt, firstHeadCommit, initialCommitOf, revokedToken } from "./destination.ts";
 export { unpublishedDestinationBranch } from "./unpublished-destination.ts";
 export { initialCommitObjects, readmeText, receiptObjects, receiptRef, importRef, type Readme, type DestinationObject, type DestinationCommit, type ObjectFormat } from "./destination-objects.ts";
 export { EDIT_PATH_BYTES, editCommit, editObjects, editPath, editTree, manifestCommit } from "./destination-objects.ts";
@@ -108,6 +108,8 @@ export { rulesScopeV12, rulesScopeRulesV12, rulesAnswerV12, rulesObservedValuesV
 export { rulesCertificateFamilyV15, rulesCertificateOpeningV15, rulesPublishedCertificateV15, rulesCertificateDeclineV15, rulesCertificateInterveningFactV15, readRulesCertificateDeclinedV15, RULES_CERTIFICATE_DECLINED_V15_MAX, type RulesCertificateDeclinedV15 } from "./rules-certificate-v15.ts";
 export { certifiedPublicationStateV15, certifiedReservationSnapshotV15, certifiedPublicationBudgetV15, certifiedCaptureBudgetV15, certifiedFutureEnvelopeBytesV15, type CertifiedPublicationStateV15, type CertifiedReservationSnapshotV15, type CertifiedGenerationV15 } from "./destination-budget-v15.ts";
 
+/** Explicit cohort that refuses one key as founder and recovery; global NEWEST remains unchanged. */
+export { SEPARATE_RECOVERY_COHORT } from "./separate-recovery-cohort.ts";
 /** Explicit opt-in evidence cohort; global NEWEST remains unchanged. */
 export { EVIDENCE_RULES_COHORT } from "./evidence-cohort.ts";
 export { evidenceRulesRegister, evidenceRulesDirectory, evidenceRulesDirectoryRules } from "./evidence-cohort-data.ts";

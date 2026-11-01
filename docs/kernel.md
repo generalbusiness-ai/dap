@@ -83,7 +83,7 @@ whether it is one, or a special case that the kernel knows.
 Each item names what passing takes, its status, and the work that covers
 it.
 
-- <a id="k1"></a>**K1. Platform rules are code that replay needs.** A platform scope pins `platform:<name>@<n>`, and replay derives it only with code its caller supplies. The catalog holds 85 versions. Passing takes pinning each version's rules by digest, freezing the shipped versions into the kernel, or replacing the marks with declared forms. Open. Covered by the design note "Platform rules that replay needs".
+- <a id="k1"></a>**K1. Platform rules are code that replay needs.** A platform scope pins `platform:<name>@<n>`, and replay derives it only with code its caller supplies. The catalog holds 88 versions. Passing takes pinning each version's rules by digest, freezing the shipped versions into the kernel, or replacing the marks with declared forms. Open. Covered by the design note "Platform rules that replay needs".
 - **K2. The package graph leaves the production kernel.** Closed. Covered by "Kernel K2, K3 and K11 as one hygiene item".
 - **K3. Application codecs leave `bytes`.** Closed. Covered by "Kernel K2, K3 and K11 as one hygiene item".
 - **K4. Platform and application vocabulary in `contract` and `derive`.** For example the closed kind list, the closed capability names, the grow device kinds, membership versions in `INVITATION_KEY_MEMBERSHIPS` (`contract/src/invitation.ts`), the rules scope's content in observations (`contract/src/observation.ts`), and lane actions and literal destination versions in `derive`. Passing takes each name into the definition or capability that owns it, as data. Open. No work covers it yet.
@@ -349,4 +349,4 @@ way.
 
 ## Source
 
-Checked against main `ada88648` on 31 October 2026. Sources: [check-kernel-boundary.mjs](../scripts/check-kernel-boundary.mjs), [scope.ts](../packages/contract/src/scope.ts), [definition.ts](../packages/contract/src/definition.ts), [capability.ts](../packages/contract/src/capability.ts), [native-catalog.ts](../packages/platform/src/native-catalog.ts), [verify.ts](../packages/replay/src/verify.ts), [commands.ts](../packages/cli/src/commands.ts), [code.ts](../packages/derive/src/capability/code.ts).
+Checked against main `b0af01d2` on 1 November 2026. Sources: [check-kernel-boundary.mjs](../scripts/check-kernel-boundary.mjs), [scope.ts](../packages/contract/src/scope.ts), [definition.ts](../packages/contract/src/definition.ts), [capability.ts](../packages/contract/src/capability.ts), [native-catalog.ts](../packages/platform/src/native-catalog.ts), [verify.ts](../packages/replay/src/verify.ts), [commands.ts](../packages/cli/src/commands.ts), [code.ts](../packages/derive/src/capability/code.ts).

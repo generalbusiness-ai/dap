@@ -1,4 +1,4 @@
 {
   "extends": "../../packages/cli/tsconfig.json",
-  "include": ["*.ts", "test/*.test.ts"]
+  "include": ["*.ts", "hosted-loop/*.ts", "test/*.test.ts"]
 }

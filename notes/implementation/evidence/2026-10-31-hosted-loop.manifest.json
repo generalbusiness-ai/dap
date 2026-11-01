@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "qualification": "The live run is one observed run on dap-demo, driven by a script, with no model. One passing gate at the checkpoint, with 43 controls and the local run at the same commit. The checkpoint merges main into the script's approved head and does not change the script.",
+  "directory": "2026-11-01-hosted-loop-land",
+  "checkpoint": {
+    "commit": "f6c6ef9ccce3e8715354e072d4842fded0e9f195",
+    "tree": "9c12e467c31e31bae8650f8bf19bac96aec12ba6"
+  },
+  "fileCount": 452,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "0c825037b39697937ab0dc03ebab3c91f6d57bf9f471b00fa32493bb63fb9a11"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6508,
+      "sha256": "cd62d5f96124a0469073eb60ff9fcaa46f477ff1304a89c88edcee564dbe7510"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "controls/head.txt",
+      "bytes": 82,
+      "sha256": "eb20848d963118b8383de37b1f88c4a8feb5cc934efecf8d580da01c25f8b65d"
+    },
+    {
+      "path": "controls/results.json",
+      "bytes": 20845,
+      "sha256": "ffa5c3c6159ee0c9f9b20cbd2c56f96a129d70dc6d20803686f6b20b9f6973cb"
+    },
+    {
+      "path": "controls/run-controls.mjs",
+      "bytes": 16920,
+      "sha256": "0c58f61ca9302820cf97843fb06b5f2f98991d7450ba72b2339bfa62f34ff78d"
+    },
+    {
+      "path": "controls/exit.txt",
+      "bytes": 16,
+      "sha256": "a532a833144ee739532b3b96c76f0ea2503b0245b086b5bef2984cd8aeaecfb3"
+    },
+    {
+      "path": "local-run/head.txt",
+      "bytes": 82,
+      "sha256": "0c825037b39697937ab0dc03ebab3c91f6d57bf9f471b00fa32493bb63fb9a11"
+    },
+    {
+      "path": "local-run/exit.txt",
+      "bytes": 13,
+      "sha256": "a0c166aa4d368d62122c047dff08bdf7d79229f55be716df06cfc7483b90f193"
+    },
+    {
+      "path": "local-run/summary.json",
+      "bytes": 8531,
+      "sha256": "5e45dc9c2e803da51b1e5d4251869811ed77f7dae71ab411e937593eac559fa5"
+    },
+    {
+      "path": "local-run/transcript.jsonl",
+      "bytes": 18505,
+      "sha256": "d470764b8a1cf2e3faa47f49c56334fddbd3638a9f3d3fe36dcdbe7b92bee6ae"
+    },
+    {
+      "path": "run/SHA256SUMS",
+      "bytes": 13584,
+      "sha256": "1080e268bf357d4912eb3e81470d73f2ed6fa8405059c739539698073c11c53e"
+    },
+    {
+      "path": "run/summary.md",
+      "bytes": 909,
+      "sha256": "2e59331c31b4805f39427c5d13e5237292c3de50ad3b5f97471d11b22d5ccd20"
+    },
+    {
+      "path": "run/target.txt",
+      "bytes": 214,
+      "sha256": "5699d0c990efbd18033da449efca98f38c51f70c9d1a8cd4162bba1b67c3edfb"
+    },
+    {
+      "path": "run/head.txt",
+      "bytes": 82,
+      "sha256": "e6f673bb1d4871d9089be102be968687fdac43eff698a62be19bbaf0ffcafd39"
+    },
+    {
+      "path": "run/input.json",
+      "bytes": 532,
+      "sha256": "e111159fb59256541e71734884a8e69305f0bb77002d594d241e814018575306"
+    },
+    {
+      "path": "run/transcript.jsonl",
+      "bytes": 3990,
+      "sha256": "ac87e1fdf8d1de69fc30e90f0ce6447625191e08649436b003b840703f24f479"
+    },
+    {
+      "path": "run/hosted-tools-compare.txt",
+      "bytes": 111,
+      "sha256": "eee9bed8ce8072ff653637b73c15a0e4d4d0a2024e20cdbac424eb7347882f59"
+    },
+    {
+      "path": "run/scan.json",
+      "bytes": 120,
+      "sha256": "2acb6611b6f1387bbfb5a8d9f410b00637f55a414409c6999a1743f00dbadff4"
+    },
+    {
+      "path": "run/lines/000-preflight-new.stdout",
+      "bytes": 163,
+      "sha256": "9ac29da0929585af293568dfc1b66fef88a29a67bc9c820dbd35662d8e0a8555"
+    },
+    {
+      "path": "run/lines/022-agent-tools-new.stdout",
+      "bytes": 1314,
+      "sha256": "b0a98b7ccf890e5e8a6a563455c0dd134101fb9bc7b86b3d58c4de129af77d78"
+    },
+    {
+      "path": "run/lines/034-agent-wait-new.stdout",
+      "bytes": 520,
+      "sha256": "03a0c16ba2fdf64fa32043e7c5806210be7739f01a08905319acf81ec2bc6943"
+    },
+    {
+      "path": "run/lines/038-decide-new.stdout",
+      "bytes": 291,
+      "sha256": "0be48377dc5487382b5aac72943f16dcd853886fcdbec4d1389f80f4a85317df"
+    },
+    {
+      "path": "run/lines/054-agent-propose-new.stdout",
+      "bytes": 595,
+      "sha256": "febe92afc61dd5313b1d9c3c4d2b4cd538db5be467855ff7814eeaf725ee0a4f"
+    },
+    {
+      "path": "run/lines/056-agent-verify-new.stdout",
+      "bytes": 1123,
+      "sha256": "cb82134d874d789cbdc2ca0447218d11bf8d10768ab89bb4f96b36eb67ee51be"
+    },
+    {
+      "path": "run/after/agent-tools.stdout",
+      "bytes": 1578,
+      "sha256": "f5b5f82d7aa9ea10624926ac2ecbfe22ebd4124fc2a6f4aecbeef14d6483edee"
+    },
+    {
+      "path": "run/after/health.txt",
+      "bytes": 121,
+      "sha256": "4f56e331df2113bbb2bc003f72f3975e8f1fbd20d133e1f596626ac47a230afb"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 48434,
+      "sha256": "8bfd355c6117c7699ac768d733a427e173322d75d785525979ff8d4429e8d70c"
+    }
+  ]
+}

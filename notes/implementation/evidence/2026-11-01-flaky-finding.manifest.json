@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. A forced window reproduces the assertion, and no run under load reproduced it. No run ties this race to J1's failed gate.",
+  "directory": "2026-11-01-flaky-finding",
+  "checkpoint": {
+    "commit": "5ceada8b957ef4b2bf28db728ba941bc57c37dc3",
+    "tree": "7c89c38e030fe508200b68230bc71f900f3be8d1"
+  },
+  "fileCount": 194,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "5e7c6f7d0ca80137315ac8f0b133f0a247fdd850c4855ef7b6bde15d96c5fbdd"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6524,
+      "sha256": "7c0baff1448148fa25570c4a4a1e53a443198221a5b91f95d369071d656ac87d"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "run-04-forced-window-old-settle/exit.txt",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "run-04-forced-window-old-settle/stdout.log",
+      "bytes": 13351,
+      "sha256": "c17b3a4eb393ea0fcd3321da6eb926ad255104936f75b925b08d5f6d4c2cae44"
+    },
+    {
+      "path": "run-04-forced-window-old-settle/forced-window.patch",
+      "bytes": 6088,
+      "sha256": "4fb0d697441e553a5dac4ed319bec81bd14a9d3966eac13fbaa195195619ef93"
+    },
+    {
+      "path": "run-05-forced-window-repaired-settle/exit.txt",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "run-05-forced-window-repaired-settle/stdout.log",
+      "bytes": 11494,
+      "sha256": "ad179cc97d54d4f1664485b8b78ccbfdbfdb29e09d6d61f1897da90e8b6ea96f"
+    },
+    {
+      "path": "run-08-old-settle-under-load/exits.txt",
+      "bytes": 332,
+      "sha256": "f131cc703b1c17a7f43686c8c3bab6a7102f14d9aae5c40618aca8e34fd956ab"
+    },
+    {
+      "path": "run-08-old-settle-under-load/load.txt",
+      "bytes": 1607,
+      "sha256": "310c5ed6a1ea18b6ac1103fbe3e7c2bb004598ea35ba18a4301b8987fb4f4da9"
+    },
+    {
+      "path": "run-09-repaired-settle-under-load/exits.txt",
+      "bytes": 83,
+      "sha256": "49b6b8b1416b654399c3719e12d5eb0140abba56ae442be173a18820af2dcaef"
+    },
+    {
+      "path": "run-09-repaired-settle-under-load/load.txt",
+      "bytes": 454,
+      "sha256": "203dc1e0730f6a626de0782fc2a4b5ecb04ce44f73be291b2a39ebf1c8659a12"
+    },
+    {
+      "path": "run-10-probe-withdrawal-alone-old-settle/exit.txt",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "control-c-forced-window-real-test/exit.txt",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "control-c-forced-window-real-test/stderr.log",
+      "bytes": 11471,
+      "sha256": "f34a8de2cbf3121ed84f78eb2aa5398b8397900b02c6b1763042e7a1c9245277"
+    },
+    {
+      "path": "control-d-settle-witness-at-head/exit.txt",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "control-d-settle-witness-at-head/stderr.log",
+      "bytes": 3166,
+      "sha256": "ac2c9cffa733bcedbfe3aedcd2da1d8b33c33e20f1d32f87bcbfd8284909d276"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 21253,
+      "sha256": "b8974ff2b209482e6fea72ccfcdbbd2117fe775f74024c06e26d397814a0a70d"
+    }
+  ]
+}

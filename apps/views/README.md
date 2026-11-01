@@ -194,11 +194,13 @@ No card answers a finding, and this entry lists no act tool. Use the ordinary
 - The source that filed the finding uses `change.resolve-finding-own`.
 - In `--generic` mode, `act` takes the same acts by their native kinds.
 
-To answer a finding on an earlier version with the first two tools, also pass
-that finding's `answerAt` from `change` as `at`. Without `at`, the scope refuses
-the act as `bad-intent`, because the server reads revisions from the live
-summary and an earlier version has left it. A finding on the current version
-needs no `at`. `change.resolve-finding-own` never needs `at`.
+These tools need no `at`, on the current version or an earlier one. An earlier
+version has left the live summary, so the server reads its revision by ID from
+the scope's final items before it signs. If the scope refuses that read, the
+server returns a `read` error and signs nothing.
+
+To sign the revisions that `change` read, pass that finding's `answerAt` as `at`.
+The scope refuses the act if a subject has moved since that read.
 
 ### Limits of the finding views
 

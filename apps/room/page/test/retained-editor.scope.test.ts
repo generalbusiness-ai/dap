@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { takeBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { ARCHIVE_DEVICE_PUBLICATION_COHORT } from "@generalbusiness/dap-platform";
-import { act, joinRoom, listLanes, loadChange, openRoom, placeOf } from "../src/data.ts";
+import { act, copiesOf, joinRoom, listLanes, loadChange, openRoom, placeOf } from "../src/data.ts";
 import { checkEditRequest, continueEdit, prepareEdit } from "../src/retained-editor-data.ts";
 import { demo } from "./support/demo.ts";
 
@@ -133,3 +133,30 @@ test("invalid target and stale context/base send nothing new; an invalid old pro
     expect(moved.state).toBe("stopped"); expect(moved.steps).toEqual([]); expect(posts).toBe(beforeMoved);
   } finally { d.done(); }
 }, 180_000);
+
+// Invariant: a copy reads "You sent", and a press past the margin sends its bytes. A stop after the keep leaves no such row.
+test("a room change after the editor's keep ends the copy and sends nothing (STAND-IN Git/scheduler)", async () => {
+  const d = await demo();
+  try {
+    expect((await d.run(d.paul, "edit", "after-keep.md", "--file", "readme.md", "--title", "After the keep")).code).toBe(0);
+    const room = await openRoom(d.as(await d.secretOf(d.paul)), placeOf(JSON.stringify(d.config))!);
+    const oldRow = (await listLanes(room)).changes.find(r => r.title === "After the keep")!;
+    const old = await loadChange(room, oldRow.scope);
+    const task = await prepareEdit(room, old, old.manifests[0]!.id, { title: "Changed during the keep", path: "after-keep.md", content: "x" }, { current: () => true, pause: d.pause });
+    let current = true, kept = 0, sent = 0;
+    const raced = { ...room, session: { ...room.session, fetch: (async (url: string, init?: Parameters<typeof d.fetch>[1]) => {
+      const reply = await d.fetch(url, init);
+      const path = new URL(url).pathname;
+      if (init?.method === "POST" && path.endsWith("/acts")) sent++;
+      if (init?.method === "POST" && path.endsWith("/originals") && reply.status === 204) { kept++; current = false; } // The room changes during the keep.
+      return reply;
+    }) as typeof d.fetch } };
+    await continueEdit(raced, task, { current: () => current, pause: d.pause });
+    expect(kept).toBe(1);
+    expect(sent).toBe(0);
+    expect(task.steps[0]!.attempted).toBe(false);
+    expect(task.state).toBe("stopped");
+    const listed = await copiesOf(room)!.list();
+    expect(listed).toEqual({ ok: true, rows: [] });
+  } finally { d.done(); }
+});

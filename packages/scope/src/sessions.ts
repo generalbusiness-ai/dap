@@ -46,9 +46,13 @@ import { readDeployment } from "./deployment-setting.ts";
  * seconds on membership's clock, plus the difference between the reading
  * scope's clock and membership's. Membership issues no new session to a key
  * that is not active or to a member that is removed. So a revoked device
- * stops reading within that window, and not before. What changes a role
- * takes effect in a session the same way: at the next session. Replacing
- * the secret ends every session at once.
+ * stops reading under its session within that window, and not before. What
+ * changes a role takes effect in a session the same way: at the next session.
+ * Replacing the secret ends every session at once and ends no signed read.
+ * A revoked key's signed read of a room's scope ends within 1200 seconds, plus
+ * the same clock difference: up to 300 for a scope's observation of membership,
+ * then the window of 900 (docs/security/trust-boundaries.md, "What a revoked
+ * key keeps").
  *
  * **How one is issued.** A device signs a session request with its own key,
  * to the membership scope, and membership answers from its head and its own
@@ -59,9 +63,15 @@ import { readDeployment } from "./deployment-setting.ts";
  * **A reader with no session** gets `forbidden` from every read, and no
  * stream.
  *
- * **What a session cannot do.** It signs nothing and controls nothing.
- * It provides no authority for an act. A credential read is limited to the one-time
- * read token requested by its own key; the outside port checks that handle.
+ * **What a session cannot do.** It signs nothing. It provides no authority
+ * for an act. A credential read is limited to the one-time read token
+ * requested by its own key; the outside port checks that handle.
+ *
+ * **What a session can do beyond a read.** At membership, it reads, delivers
+ * and deletes its own member's original requests (`originals.ts`). It can make
+ * one only of a request that its key signed, because each row needs that
+ * signature. The unsigned parts can differ, and the scope verifies them when
+ * they are sent. This grants nothing.
  *
  * Nothing here logs, stores or returns the secret, and no refusal holds a
  * token or a part of one.
@@ -368,7 +378,7 @@ export function issueSession(
   const { to, actor, notAfter } = asked.request;
   const scope = state.scope();
   // A provisional membership answers no session (section 12.1.3).
-  if (!scope || scope.status !== "active" || scope.at.kind !== "membership" || !(pinned && (pinned.named === "platform:membership@1" || pinned.named === "platform:membership@2" || pinned.named === "platform:membership@4" || pinned.named === "platform:membership@5" || pinned.named === "platform:membership@6" || pinned.named === "platform:membership@7" || pinned.named === "platform:membership@8" || pinned.named === "platform:membership@9") && platform(pinned.named))) return no("not-found");
+  if (!scope || scope.status !== "active" || scope.at.kind !== "membership" || !(pinned && (pinned.named === "platform:membership@1" || pinned.named === "platform:membership@2" || pinned.named === "platform:membership@4" || pinned.named === "platform:membership@5" || pinned.named === "platform:membership@6" || pinned.named === "platform:membership@7" || pinned.named === "platform:membership@8" || pinned.named === "platform:membership@9" || pinned.named === "platform:membership@10") && platform(pinned.named))) return no("not-found");
   if (to.scope !== scope.at.scope || to.inc !== scope.at.inc || to.kind !== scope.at.kind) return no("misaddressed");
   const [reading, previous, ends] = [timeMs(config.clock.read()), timeMs(scope.time), timeMs(notAfter)!];
   if (reading === null || previous === null || reading < previous) return no("clock-behind");

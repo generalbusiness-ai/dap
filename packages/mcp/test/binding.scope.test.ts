@@ -87,7 +87,7 @@ test("binding: variants, stale descriptors, retirement, collisions and controls"
     const before = (await rita.ok("inspect", { scope: 2 }))["head"];
     const stale = await rita.call(v1.name, { target: 2, fields: manifest, idempotencyKey: "stale-1" });
     expect(stale.isError).toBe(true);
-    expect(stale.structuredContent["message"]).toMatch(new RegExp(`Before signing, the server found that sc_\\w+ runs change ${definitionDigest(change3)}, which this tool does not serve\\. Nothing was sent\\. The tool for that target is ${v2.name.replace(".", "\\.")}\\.`));
+    expect(stale.structuredContent["message"]).toMatch(new RegExp(`Before signing, the server found that sc_\\w+ runs change ${definitionDigest(change3)}, which this tool does not serve\\. This call sent nothing\\. The tool for that target is ${v2.name.replace(".", "\\.")}\\.`));
     expect((await rita.ok("inspect", { scope: 2 }))["head"]).toEqual(before);
     expect((await rita.call(v2.name, { target: 1, fields: manifest, idempotencyKey: "stale-2" })).structuredContent["message"]).toContain(`The tool for that target is ${v1.name}.`);
     // On its own lane, the variant sends the presented fact beside the intent, and the lane judges it.
@@ -97,7 +97,7 @@ test("binding: variants, stale descriptors, retirement, collisions and controls"
 
     // A different-name definition that declares the same kind is served by neither variant.
     const other = await rita.call(v1.name, { target: 3, fields: manifest, idempotencyKey: "stale-3" });
-    expect(other.structuredContent["message"]).toMatch(/runs room sha256:\w+, which this tool does not serve\. Nothing was sent\. The tool for that target is room\.propose-manifest\./);
+    expect(other.structuredContent["message"]).toMatch(/runs room sha256:\w+, which this tool does not serve\. This call sent nothing\. The tool for that target is room\.propose-manifest\./);
 
     // A byte-identical row under another kind and another name is another identity: room-like's join collides with membership's
     // room.join by name, and both get variants; the inbox's mark-read, whose row it copies, keeps its own name.

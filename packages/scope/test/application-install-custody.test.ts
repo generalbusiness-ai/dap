@@ -97,17 +97,21 @@ test.each(installations)("$name: one signed native install settles through Direc
       const membership = await life.wait(() => M.at()), directory = await life.wait(() => D.at());
       const store = custodyStore(), key = "TEST-native-install";
       let lose = specimen.application === "Counter";
+      const copyRoute: string[] = [];
       const port: ServerPort = { service: "https://scopes.test", signer: secretSigner(rita.secret), custody: store, now: life.now,
         config: { read: async () => ({ service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name } }), addRoot: async () => { throw Error("TEST installs discover through Directory"); } },
         applicationFetch: peer.fetch, applicationTrust: JSON.stringify(f.trust),
         fetch: async (url, init) => {
+          const path = new URL(url).pathname;
+          if (path.endsWith("/acts") || path.includes("/originals")) copyRoute.push(`${init?.method ?? "GET"} ${path.endsWith("/acts") ? "acts" : "originals"}`);
           const response = await life.wait(() => routed(url, init));
           if (lose && new URL(url).pathname.endsWith("/acts")) { lose = false; await response.body?.cancel(); throw Error("TEST lost accepted MCP install reply"); }
           return response;
         },
       };
       const args = { uri: f.uri, release: f.packet.ids.release, roles: ["admin", "member"], values: parseStrict(specimen.values), idempotencyKey: key };
-      installedService = new McpService({ ...port, mode: specimen.application === "Lending" ? "generic" : "default" });
+      // A person's `dap mcp` keeps the original of an install at membership, as it does for any act. The command line does not.
+      installedService = specimen.application === "Lending" ? new McpService({ ...port, mode: "generic", originals: true }) : new McpService(port);
       let result;
       if (specimen.application === "Counter") {
         const local = cliStore(); await local.keep("operator", rita.secret);
@@ -125,6 +129,7 @@ test.each(installations)("$name: one signed native install settles through Direc
       } else result = await life.wait(() => installedService!.call("install_application", args));
       expect(result.isError, JSON.stringify(result.structuredContent)).toBe(false);
       expect(result.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });
+      expect(copyRoute).toEqual(specimen.application === "Lending" ? ["POST originals", "POST acts", "DELETE originals"] : expect.not.arrayContaining(["POST originals"]));
       job = Number(result.structuredContent["item"]);
       const kept = await installedService.custody.find({ service: port.service, membership, signer: rita.key, target: rulesAt, key });
       if (!kept) throw Error("MCP must retain the exact envelope before submission.");

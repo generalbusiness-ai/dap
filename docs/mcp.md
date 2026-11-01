@@ -234,6 +234,13 @@ fact of the target scope read as its entry's position, as the scope reads
 it. So an item a default selects, or one a local fact selects, is expected
 like one the caller named by its ID. The intent carries the fact as given.
 
+A slot of another subject can select a subject too, by a `via` rule of the
+act's `also`. That subject can be final, and a final item has left the live
+summary. With no `at`, the server reads its revision by ID from the scope's
+final items before it signs. If the scope refuses the read, the server returns a
+`read` error and signs nothing. A subject that a field names has no such read:
+the server reads it from the summary alone.
+
 When `at` is present, the server checks its shape and subject coverage,
 then signs those captured numbers unchanged. The native scope refuses a
 revision that has moved. The server does not silently refresh it. An
@@ -268,6 +275,42 @@ caller's `idempotencyKey`, in the config directory's
 - **A lost reply** leaves the record unknown. The same call with the same
   key sends the same bytes again. `settle` reads the scope's settlement.
   Neither signs a second intent.
+- **What an error says about a send.** An error that stops a call says what
+  that call did: "This call sent nothing." It speaks of the call, not the key.
+  When an earlier send under the key has no known outcome, the error says so
+  first and says to keep the key, because a new key can make a second entry.
+  The server reads its custody for this with no new signature. If it cannot
+  read its custody, it says that it cannot tell. If the scope accepted the
+  request and a read after it failed, the error says that the scope accepted
+  the request, and the same call returns the kept answer. If the server's check
+  of an accepted request fails on an entry that cannot change, the same call
+  stops at the same check and sends nothing, so the error says to report it.
+- **A failed read of the room.** The record keeps the room's membership in its
+  identity, so `settle` and the same call find the record while the room's
+  scopes are unread. The list can lose an act tool with those scopes. The tool
+  then answers `unknown-tool`, and that error names the earlier send and points
+  at `settle`. `settle` is the way to the answer until the reads return.
+- **A changed target under the same key is a new request.** The record's
+  identity names the target, so custody keeps a new record and signs a new
+  intent. The new target's scope can accept it. A key protects one request
+  against a second send to its target, and does not protect it against a change
+  of target.
+- **A copy for your other devices.** When the server holds a read session
+  of a person's membership, it also keeps the exact request in that room's
+  membership object, after it records the envelope and before it sends. The
+  room's page on another device of the same member shows the request and can
+  check it, with no new signature. If the room keeps no copy, the server
+  sends nothing and returns the error `original`, and the same call tries
+  again. The scope's answer ends the copy. A server that never held a session
+  keeps no copy. A server that held a session and cannot renew it sends
+  nothing, and says so when an earlier send under the key has no known
+  outcome. A record with a kept answer returns that answer with no session. A
+  restart forgets that the server held a session, so a restarted server with
+  no session sends with no copy. A key of an agent or a checker keeps no copy,
+  and neither does a hosted agent. A key whose reads have not stated its kind
+  can keep rows until a read states its kind. The copy adds to custody on this
+  machine and does not replace it. After a restart, `settle` or the same call
+  reads the outcome, also when the page settled the request first.
 - **Another meaning under a used key** is refused before anything is
   signed.
 - **The outcome** given is always the newest decisive one of the current
@@ -1964,8 +2007,10 @@ can still authenticate successfully. A failed new address gets `429` if
 expired keys cannot free a slot. Active keys are never evicted to make room.
 
 Revocation also belongs to the membership. After an admin's `key.revoke`
-or `member.remove`, every scope refuses the key's acts. `retire` only
-stops the hosted service.
+or `member.remove`, membership refuses the key's acts at once. Another scope
+of the room can still accept them for up to 300 seconds, as
+[What a revoked key keeps](security/trust-boundaries.md#what-a-revoked-key-keeps)
+states. `retire` only stops the hosted service.
 
 ### The two revisions over HTTP
 
@@ -2407,10 +2452,9 @@ does not hold the merge, and has no row. An answered finding leaves both.
 No card answers a finding, and the project entry lists no act tool. On the
 ordinary server, use `change.resolve-finding-any`,
 `change.mark-finding-irrelevant` or `change.resolve-finding-own`. In `--generic`
-mode, use `act` with those native kinds. For a finding on an earlier version, the
-first two also need `at`, because the server reads revisions from the live
-summary and that version has left it. `change` gives the value as `answerAt`.
-Without `at`, the scope refuses the act as `bad-intent`. The
+mode, use `act` with those native kinds. None of them needs `at`, on the current
+version or an earlier one. To sign the revisions that `change` read, pass a
+finding's `answerAt` as `at`. The
 [project entry's page](../apps/views/README.md#open-findings-on-the-finding-profile)
 has the rows, the acts and the limits.
 
@@ -2435,4 +2479,4 @@ ends the walk. A lane that opened during the walk appears on the next walk.
 
 ## Source
 
-Checked against main `ada88648` on 31 October 2026. Sources: [packages/mcp/src](../packages/mcp/src/), [packages/mcp/src/hosted-tools.ts](../packages/mcp/src/hosted-tools.ts), [packages/mcp/src/hosted.ts](../packages/mcp/src/hosted.ts), [packages/mcp/src/http.ts](../packages/mcp/src/http.ts), [packages/mcp/test/inventory.test.ts](../packages/mcp/test/inventory.test.ts), [docs/mcp-tools.json](mcp-tools.json).
+Checked against main `b0af01d2` on 1 November 2026. Sources: [packages/mcp/src](../packages/mcp/src/), [packages/mcp/src/hosted-tools.ts](../packages/mcp/src/hosted-tools.ts), [packages/mcp/src/hosted.ts](../packages/mcp/src/hosted.ts), [packages/mcp/src/http.ts](../packages/mcp/src/http.ts), [packages/mcp/test/inventory.test.ts](../packages/mcp/test/inventory.test.ts), [docs/mcp-tools.json](mcp-tools.json).

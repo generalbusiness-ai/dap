@@ -32,6 +32,7 @@
 
 import { WorkerEntrypoint } from "cloudflare:workers";
 import type { ScopeApi } from "@generalbusiness/dap-contract";
+import type { Delivered } from "@generalbusiness/dap-derive";
 import { platform, VERSIONS } from "@generalbusiness/dap-platform";
 import { lacking } from "@generalbusiness/dap-platform/testing";
 import { scopeIdOf } from "@generalbusiness/dap-bytes";
@@ -166,15 +167,16 @@ export class NetScope extends DeployedScope<NetEnv> {
  * generates. Null: none is bound, and the session configuration is read
  * from the Worker's own bindings, exactly as deployed, which hold none here.
  * Both are read at each use. `limits`: the serving limits of a join, read
- * when a scope's object starts. Null: the proposed ones.
+ * when a scope's object starts. Null: the proposed ones. `pause`: each send
+ * waits for what it returns, to place a delivery in a race. Null: none waits.
  */
 /**
  * `inspector`: while `sessions` is set, a reader that is exactly this text is let read, as the test readers let every reader. It is
  * for a test's own reads of what a scope holds, by a reader that no client presents. Every other reader is judged by the real read
  * sessions.
  */
-export const platformNet: { without: string | null; readonly sessions: boolean; readonly secret: string | null; limits: LimitConfig | null; readonly inspector: string | null } = {
-  without: null, limits: null,
+export const platformNet: { without: string | null; readonly sessions: boolean; readonly secret: string | null; limits: LimitConfig | null; readonly inspector: string | null; pause: ((envelope: Delivered) => Promise<void>) | null } = {
+  without: null, limits: null, pause: null,
   get sessions() { return sessionFields.sessions; },
   get secret() { return sessionFields.secret; },
   get inspector() { return sessionFields.inspector; },
@@ -269,7 +271,8 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
       ports: {
         ...deployed.ports, clock: net.clock,
         // Transport that a test can hold: a send that `net.hold` matches is not delivered, and its attempt gets no answer.
-        transport: { send: (envelope) => (net.hold?.(envelope) ? Promise.resolve(null) : transport!.send(envelope)) },
+        // A send waits at `platformNet.pause` first, while its dispatcher's pass stays in flight.
+        transport: { send: async (envelope) => { if (net.hold?.(envelope)) return null; await platformNet.pause?.(envelope); return transport!.send(envelope); } },
         // A scripted peer: an entry that a test wrote by hand, for a lane that sends a notice. Every other entry is read from the real object.
         resolver: { read: (fact, seconds, origin) => { const peer = net.peers.get(fact.hash); return peer ? Promise.resolve(peer) : resolver.read(fact, seconds, origin); } },
         definitions: { read: (named, holder) => definitions.read(named, holder), platform: (named) => (platformNet.without === null ? platform(named) : lacking(named, platformNet.without)) },

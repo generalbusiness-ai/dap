@@ -25,6 +25,7 @@ import type { ReadMinimum, ItemQuery, ScopeApi, ApplicationProjectionQuery } fro
 import { readMinimum, encodeReadMinimumParameter, LATE, takeBytes, within, readItemQueryParameter, readItemQueryReply, type ByteStream } from "@generalbusiness/dap-bytes";
 import { readApplicationProjectionQuery, readApplicationProjectionReply } from "@generalbusiness/dap-platform/application-v2";
 import { ANSWERS } from "./answers.ts";
+import { actBody } from "./originals.ts";
 import { OPERATIONAL_ANSWERS, type OperationalApi } from "./operational.ts";
 type HttpApi = ScopeApi & OperationalApi;
 const HTTP_ANSWERS = { ...ANSWERS, ...OPERATIONAL_ANSWERS };
@@ -115,7 +116,7 @@ export function httpTransport(service: string, options: { fetch?: Fetch; bytes?:
   return {
     // What travels beside the intent goes in the same body: each detached text, and each presented fact by name.
     create: (creation, definition, definitions = [], beside = {}) => call("create", "", null, { creation, definition, definitions, ...beside }),
-    submit: (scope, signed, grants, beside = {}) => call("submit", `/${part(scope)}/acts`, null, { signed, grants, ...beside }),
+    submit: (scope, signed, grants, beside = {}) => call("submit", `/${part(scope)}/acts`, null, actBody(signed, grants, beside)),
     prepare: (scope, signed, grants, capability, step) => call("prepare", `/${part(scope)}/preparations`, null, { signed, grants, capability, step }),
     settle: (scope, signed) => call("settle", `/${part(scope)}/settle`, null, { signed }),
     summary: (scope, reader, minimum) => call("summary", minimumPath(`/${part(scope)}`, minimum, scope), reader),

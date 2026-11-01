@@ -74,7 +74,7 @@ async function screenResponse(request: Request, env: ApplicationBindings & { SCO
     if (install === LATE) return applicationJsonReply(503, { error: "application-unavailable" });
     if (!install || canonicalize(install.rules) !== canonicalize(room.rules) || canonicalize(install.directory) !== canonicalize(room.directory)
       || install.ids.presentation !== address.presentation || !trust.some(row => row.release === install.ids.release)) return applicationJsonReply(404, { error: "not-found" });
-    const context = readApplicationScreenContext({ ...install, v: 1, origin, deployment, membershipDefinition: install.membershipDefinition ?? "platform:membership@7" }, address, origin);
+    const context = readApplicationScreenContext({ ...install, v: 1, origin, deployment, membershipDefinition: room.membershipDefinition ?? install.membershipDefinition ?? "platform:membership@7" }, address, origin);
     const packet = await packetOf(env.APPLICATION_CONTENT, env.APPLICATION_TRUST, trust, install.ids.release);
     if (!packet) return applicationJsonReply(503, { error: "application-unavailable" });
     if (canonicalize(packet.ids) !== canonicalize(install.ids) || packet.package.semantic.entry !== install.definition) return applicationJsonReply(404, { error: "not-found" });

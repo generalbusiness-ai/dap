@@ -17,6 +17,154 @@ Each section below follows one checked-in configuration file. A file does not sh
 
 The source owners are [sessions](../../packages/scope/src/sessions.ts), [Artifacts wiring](../../packages/scope/src/artifacts-wiring.ts), [host authority](../../packages/scope/src/host-wiring.ts), [application content](../../packages/scope/src/applications/content.ts), [Worker MCP wiring](../../packages/scope/src/worker.ts), and [hosted MCP storage and control](../../packages/mcp/src/hosted.ts).
 
+## What a revoked key keeps
+
+Membership refuses a revoked key at once. Another scope of the room learns of the revocation only when it next reads membership. This section lists what the key keeps until then, and what ends it.
+
+### A signed read ends within 1200 seconds, plus clock difference
+
+A revoked key's signed read of a room's scope ends within 1200 seconds of the revocation, plus the difference between membership's clock and the reading scope's clock. Nobody has measured a real clock difference.
+
+| Part | Length | What sets it |
+|---|---|---|
+| A scope's observation of membership | Up to 300 seconds | A scope keeps one observation of each key in memory. It reuses the observation until the observation's age reaches 300 seconds. No delivery changes the observation. A `compromised` notice reaches the directory and the destination, and the directory still holds the observation. |
+| The signed-read window | 900 seconds | Each entry that the key signs and the scope accepts restarts the key's read of that scope. The read ends 900 seconds after the time of the key's latest such entry. |
+
+A scope can still accept the key's acts during those 300 seconds. This matters more than the read, because an accepted act changes the room.
+
+The bound rests on these facts:
+
+- A refused act stores no entry, so it does not restart the read.
+- A resent act that already landed stores no new entry, so it does not restart the read.
+- The scope's clock sets an entry's time. A key cannot sign a later time.
+- If membership does not answer, the scope still ends the key's acts when the observation's age reaches 300 seconds. The answer is `authority-unavailable`, and the scope writes nothing.
+- A scope that restarts holds no observation, so it reads membership again.
+- The key's read of a lane that it opened during the 300 seconds ends at the same bound.
+
+### A revoked key reads its own trail and the live summary
+
+During the window, the key can read these things at a scope where it signed an entry:
+
+- The scope's summary, with all live items. The directory's summary includes the items of other members' lanes.
+- `query-items`, for live states.
+- Entry 0.
+- Its own entries.
+- Filtered history and log, limited to the entries above and the entries that come from them.
+- The summary of a lane that it opened.
+- The retained inputs that its readable entries name by digest, such as its own texts and a lane's definition.
+
+The key cannot read these things:
+
+- Another key's entry, unless that entry comes from one of the key's own.
+- Final items.
+- The outbox.
+- A scope where it signed no entry in the window, such as another member's lane, the rules scope, or the destination.
+- Retained text that none of its readable entries names.
+
+These lists cover signed reads. A Git read token reads the repository by another route, and [it outlasts these limits](#a-git-read-token-outlasts-the-bound).
+
+### A session ends by its own time
+
+[Sessions](../../packages/scope/src/sessions.ts) check nothing about the key. A session that a revoked key already holds stays good until its `ends`. That time is at most 600 seconds after issue on membership's clock, plus the difference between membership's clock and the reading scope's clock. Membership issues no new session to a revoked key.
+
+Replacing `SESSION_SECRET` ends every session of the deployment at once. It does not end signed reads, because a signed read uses the key's signature and not the secret.
+
+### A Git read token outlasts the bound
+
+The `read-token` act at the destination gives a member a Git read token, and every role holds its grant. The token reads the repository until its own end. On Cloudflare Artifacts the member asks for 1 to 24 hours. On GitHub the lifetime is GitHub's own, one hour.
+
+A `compromised` notice closes two routes for the key that it names. Membership tells the directory, and the directory tells the destination. Once the destination applies the notice:
+
+- The key's `read-token` gets `unauthorized`, and the scope writes nothing. This holds while the destination still keeps an observation that shows the key active.
+- The credential route answers `forbidden` to the key's session for every token. This covers a token minted before the notice and not yet read, and a token whose mint finishes after the notice.
+
+Each destination keeps the named key in private custody beside its journal, so both refusals survive a restart. The refusals apply at every destination pin and on both hosts. Another key of the same member keeps both routes.
+
+These things stay open:
+
+- **A token already read.** It stays good until its end. The service keeps no plaintext of a token that a member has read, and no `dap` command ends a read token.
+- **The time before the notice arrives.** A scope can accept the key's acts for up to 300 seconds after the revocation, so the destination can accept a new `read-token`. A session that the key already holds reads the token, for at most 600 seconds after the revocation. The notice waits in the outbox of membership and then of the directory. Nobody has measured that delay.
+- **A key revoked as `retired`, and a removed member.** Neither sends a notice, so the time above applies in full.
+- **A lane's workspace token.** The notice reaches no lane, so the lane's credential route still gives the key a workspace token that the key prepared with `hold@2:token`, while its session lasts. That token lasts at most 900 seconds, and it reads and writes one fork. It does not open the room's repository.
+- **The key's other acts at the destination.** The notice refuses `read-token` only. Other acts keep the 300-second limit.
+
+So a new request with the token can read the repository for at most 24 hours and 600 seconds after the revocation on Cloudflare Artifacts, plus clock difference. On GitHub that time is about one hour and 600 seconds. On Artifacts, a download under way ran past its token's end in one run at 30 MB, as [the stolen-key section](#respond-to-a-stolen-key) states. No run shows what a download under way meets on GitHub. Replay cannot check the `read-token` refusal, because no definition states it and a refused act writes no entry.
+
+### A founder key that is also the recovery key has no end at membership
+
+In a room whose founder key is also its recovery key, `revoke-key` does not stop the key at membership. The `recovery-key` rule passes that key and checks nothing about its state. The key can keep signing `invite-member`, `invite-key`, `remove-member`, `revoke-key`, and `rotate-recovery`. Each accepted act restarts its read of membership, with no limit. The read is the smaller part of this, because the key keeps the recovery key's authority.
+
+That room ends this only by rotating the recovery key. Only the recovery key can sign `rotate-recovery`, so another admin cannot do it. Anyone who holds the stolen key can also sign it, so the first signer names the next recovery key. After the rotation, membership refuses the revoked old key at once, and the key's read of membership ends 900 seconds after its last entry there.
+
+The other scopes of the room take no recovery act, so the 1200-second bound holds at those scopes.
+
+The `separate-recovery` cohort refuses this shape at `found` and `first-key`, by the name `recovery-key`, but the default install and the `newest` creation cohort do not refuse it, so an installed room or a new room on those pins keeps this route.
+
+### A key on the register's `founders` list keeps `found`
+
+The register is its own authority, and a room's revocation does not reach it. A key on the register's `founders` list can still sign `found` after a room revokes it. Each accepted `found` restarts the key's read of the register, with no limit, and opens a claim and a repository's creation. This route reads nothing of the room.
+
+No command removes a key from the list. `install` alone writes `founders`, the value is fixed, and no register act changes it.
+
+Under policy `open`, any key can sign `found`, so the read grants nothing more.
+
+### A session of a room that a thief made reads the register's whole log
+
+A thief with a key on the `founders` list can sign `found` and take the first key of the new room. The thief can then hold a session of that room's membership. A session of a membership that a claim of the register created reads the register's `history`, `log`, `entry`, and `retained` routes. This read has no signed-read window. It covers every entry of the register, and not only the thief's own claim. It gives no summary and no `items`.
+
+Every member of a room that a claim created holds the same read. Under policy `open`, any key can get this read by claiming a room. No register act ends it, and nobody outside a room can close that room. Replacing `SESSION_SECRET` ends the session, and the room's membership then issues a new one.
+
+The log holds these things:
+
+- The `install` intent: the host, the namespace, the policy, `founders`, and the key that signed it.
+- Each `found` intent: the key that signed it, `branch`, `founderHandle`, `recoveryKey`, and any `import` or `archive` field.
+- Each claim's `seed`, `founder`, `policy`, `branch`, and `repository`. The `repository` value holds the host, the namespace, the name, and the ID.
+- Each attempt's outcome, with the repository's name and ID, and a nonsecret cleanup handle when the host answered with one.
+- Each room's directory reference, from the directory's result.
+
+The log holds nothing of a room's content: no lane, no membership, no rules, and no Git object. It holds no token's plaintext. For each other room, it does name the key that claimed the room and that key's handle. It also names the recovery key, the directory, and the repository.
+
+### Respond to a stolen key
+
+Do these steps in each room that enrolled the key:
+
+1. If the key is also the room's recovery key, sign the rotation first with [`dap act`](../cli.md#dap-act), from the config directory that holds the key:
+   `dap act rotate-recovery --on membership --target <roster-item> --set key=<new-key>`. The new key must never have been a member's key. No `dap` command prints a new key's ID, so you need another way to compute `<new-key>`. Do this before the revocation, because `dap act` asks for a session first and membership gives a revoked key none.
+2. Find the key's item with [`dap items`](../cli.md#dap-items), from another admin's config directory:
+   `dap items membership --query <query>`. Query the type `key` and the state `active`.
+3. Revoke the key from that config directory:
+   `dap act revoke-key --on membership --target <key-item> --set as=compromised`. Membership then tells the directory, and the directory tells the destination. The rule `last-admin-kept` refuses to revoke the last active key of the last admin, except when the recovery key signs.
+4. To end the key's sessions before their own end, replace [`SESSION_SECRET`](../deploy.md#settings-the-order-uses). This step ends every member's session in the deployment, so each member asks for a new one.
+5. After 300 seconds plus clock difference, read what the key signed with [`dap log`](../cli.md#dap-log) at each scope where it could act:
+   `dap log <scope>`.
+
+Use `as=compromised` in step 3 for a stolen key, because `as=retired` sends no notice. The key's signed read ends within 1200 seconds of step 3, plus clock difference. If the key is on the register's `founders` list, it keeps `found` and its read of the register after these steps. To check that the notice arrived, run `dap log destination` from the config directory of step 3. The notice's row reads `delivery tell from directory:<seq>`, and that row names no key.
+
+These steps stop new Git read tokens once the notice arrives, and they end no token that the key has read. Treat the repository's content as read until the time that [the token's section](#a-git-read-token-outlasts-the-bound) states, and replace any secret that the repository holds.
+
+On Cloudflare Artifacts, an operator can also end the repository's read tokens through the REST API. A Cloudflare API token with **Artifacts** > **Edit** authorizes the revocation. Do the steps below after step 4, or 600 seconds after step 3 plus clock difference. Until then, the key can take a new token if the notice has not arrived. GitHub's installation pages list no route that revokes another token.
+
+1. List the repository's tokens:
+   `GET /artifacts/namespaces/:namespace/repos/:name/tokens`. Cloudflare's page says that each row gives the token's `id`, `scope`, and `state`. The list names no key.
+2. Revoke every active `read` token of the repository, because the list cannot show which token the key holds. Revoke each one with:
+   `DELETE /artifacts/namespaces/:namespace/tokens/:id`. One of the service's own 120-second reads can fail with an unknown outcome, because that read uses its own `read` token.
+3. Ask every member to run [`dap clone`](../cli.md#dap-clone) again.
+
+Revoking by ID has run twice through this REST route, on 1 November 2026. In the first run, an operator revoked one `read` token on a new empty repository. The next `git ls-remote`, 0.1 seconds after the reply, exited 128 with `Invalid or expired token`. Five later tries over 10 seconds answered the same. Listing a repository's tokens has not run, because that run's list command failed with a usage error.
+
+A revocation stops new requests and does not stop a download under way, in one run at 30 MB. In that second run, the operator revoked a 3600-second token 31 seconds into a throttled `git clone`. `git ls-remote` with that token exited 128, and the clone finished about 178 seconds later with the right head. In the same run's other case, a clone finished about 149 seconds after the end of its 60-second token, by arithmetic from the lifetime that the operator asked for. So treat a clone under way as having everything it reached. A buffer between the host and the planner's proxy could hold part of the reply, and nobody measured one.
+
+These cases have not run: a download larger than 30 MB, a longer gap between a token's end and the last byte, a commit published during a download, a download under way on GitHub, and the binding's `revokeToken(id)`.
+
+### What no run has covered
+
+These cases have no run behind them:
+
+- `install`.
+- `found` under policy `open`.
+- Hosted and application scopes.
+- Real clock differences.
+
 ## artroom-scope
 
 [`apps/room/wrangler.jsonc`](../../apps/room/wrangler.jsonc) uses the [room entry](../../apps/room/worker.ts), which exports the Scope classes and serves through [room fetch](../../apps/room/fetch.ts).
@@ -134,4 +282,4 @@ Secret equality, provider access controls, namespace IDs, bucket public-access s
 
 ## Source
 
-Checked against main `c8c7b631` on 30 October 2026. Sources: [apps/room/wrangler.jsonc](../../apps/room/wrangler.jsonc), [apps/room/wrangler.grow.jsonc](../../apps/room/wrangler.grow.jsonc), [apps/room/wrangler.lending.jsonc](../../apps/room/wrangler.lending.jsonc), [apps/room/wrangler.demo.jsonc](../../apps/room/wrangler.demo.jsonc), [apps/room/celld/wrangler.json](../../apps/room/celld/wrangler.json), [examples/grow/wrangler.jsonc](../../examples/grow/wrangler.jsonc), [apps/sandbox/wrangler.jsonc](../../apps/sandbox/wrangler.jsonc), [homepage/wrangler.jsonc](../../homepage/wrangler.jsonc), [apps/jam/wrangler.jsonc](../../apps/jam/wrangler.jsonc).
+Checked against main `b0af01d2` on 1 November 2026. Sources: [apps/room/wrangler.jsonc](../../apps/room/wrangler.jsonc), [apps/room/wrangler.grow.jsonc](../../apps/room/wrangler.grow.jsonc), [apps/room/wrangler.lending.jsonc](../../apps/room/wrangler.lending.jsonc), [apps/room/wrangler.demo.jsonc](../../apps/room/wrangler.demo.jsonc), [apps/room/celld/wrangler.json](../../apps/room/celld/wrangler.json), [examples/grow/wrangler.jsonc](../../examples/grow/wrangler.jsonc), [apps/sandbox/wrangler.jsonc](../../apps/sandbox/wrangler.jsonc), [homepage/wrangler.jsonc](../../homepage/wrangler.jsonc), [apps/jam/wrangler.jsonc](../../apps/jam/wrangler.jsonc).

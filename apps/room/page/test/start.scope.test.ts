@@ -72,6 +72,9 @@ test("fresh Page Start discovers native Register17 and refuses a deployed legacy
     const anonymous = await native(`${origin}/v1/scopes/${register.scope}`);
     expect(anonymous.status).toBe(403);
     await anonymous.body?.getReader().cancel();
+    // The answer that the invitation engine waits through: an inbox that the deployed index does not know yet reads as not-found.
+    const notCreated = await lifetime.wait(() => worker.fetch(new Request(`${origin}/v1/scopes/${scopeIdOf({ ...seed, ordinal: 1 })}`), bindings));
+    expect([notCreated.status, await notCreated.json()]).toEqual([404, { ok: false, reason: "not-found" }]);
     let offerStatus: number | null = null, offerTransportError: string | null = null;
     const offerFetch: CreationOfferFetch = async (url, init) => {
       let response: Awaited<ReturnType<Fetch>>;

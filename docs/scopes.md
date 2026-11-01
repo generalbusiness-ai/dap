@@ -79,7 +79,7 @@ A definition the platform supplies in code has a name and a version
 them. It does not supply `platform:task`. A change to a platform
 definition's data or rules makes a new version, and a shipped version does
 not change. The catalog (`VERSIONS`, in
-`packages/platform/src/native-catalog.ts`) holds 85 versions, and
+`packages/platform/src/native-catalog.ts`) holds 88 versions, and
 `platform(name)` resolves any of them. A scope pins its version in its seed,
 and that version judges and replays it for as long as it exists. Replay needs
 the code of those versions: see
@@ -770,6 +770,8 @@ summary or items permission, and no access to another directory's
 journal. A reader with neither a session nor a signed read reads nothing.
 The [scope package guide](../packages/scope/README.md#read-sessions) says
 what a session binds, how it ends, and the form of a signed read.
+[What a revoked key keeps](security/trust-boundaries.md#what-a-revoked-key-keeps)
+gives the end of each read after a revocation.
 
 Membership retains at most 64 answered session requests per key, each until
 its signed `notAfter`, which is at most 900 seconds ahead of membership's
@@ -784,7 +786,8 @@ A read token, minted by a `read-token` act, is answered once by its
 credential route. Only an authorized session of the key that signed the
 `read-token` act receives it, and only before the token's end. After that
 answer, the token leaves private custody. Every other read of it is
-forbidden.
+forbidden, and so is every read by a key that a `compromised` notice named at
+that destination.
 
 ## Reports
 
@@ -1045,6 +1048,6 @@ scope's summary and its published definition.
 
 ## Source
 
-Checked against main `ada88648` on 31 October 2026. Sources: [contract](../packages/contract/src/), [scope.ts](../packages/contract/src/scope.ts), [entry.ts](../packages/contract/src/entry.ts), [floor.ts](../packages/contract/src/floor.ts), [result.ts](../packages/contract/src/result.ts), [definition.ts](../packages/contract/src/definition.ts), [bounds.ts](../packages/contract/src/bounds.ts), [read.ts](../packages/contract/src/read.ts), [transport.ts](../packages/contract/src/transport.ts), [report.ts](../packages/contract/src/report.ts), [reserve.ts](../packages/derive/src/reserve.ts), [native-catalog.ts](../packages/platform/src/native-catalog.ts), [sessions.ts](../packages/scope/src/sessions.ts), [replay cli.ts](../packages/replay/src/cli.ts), [client http.ts](../packages/client/src/http.ts).
+Checked against main `b0af01d2` on 1 November 2026. Sources: [contract](../packages/contract/src/), [scope.ts](../packages/contract/src/scope.ts), [entry.ts](../packages/contract/src/entry.ts), [floor.ts](../packages/contract/src/floor.ts), [result.ts](../packages/contract/src/result.ts), [definition.ts](../packages/contract/src/definition.ts), [bounds.ts](../packages/contract/src/bounds.ts), [read.ts](../packages/contract/src/read.ts), [transport.ts](../packages/contract/src/transport.ts), [report.ts](../packages/contract/src/report.ts), [reserve.ts](../packages/derive/src/reserve.ts), [native-catalog.ts](../packages/platform/src/native-catalog.ts), [sessions.ts](../packages/scope/src/sessions.ts), [replay cli.ts](../packages/replay/src/cli.ts), [client http.ts](../packages/client/src/http.ts).
 
 The commands on this page were not run for this revision.

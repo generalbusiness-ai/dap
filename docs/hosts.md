@@ -181,7 +181,10 @@ lifetime from 1 to 24 hours. The destination opens one host operation,
 The result records the token by a nonsecret handle and its end, never the
 token itself. The token goes to the destination's private custody, as a
 write token does. The credential route gives it once to the session of the
-key that signed the act, before its end. The command then runs
+key that signed the act, before its end. Once a `compromised` notice reaches
+the destination, the key that it names gets
+[neither a new token nor an unread one](security/trust-boundaries.md#a-git-read-token-outlasts-the-bound).
+The command then runs
 `git clone` with the token in an `Authorization` header that Git reads
 from its environment. `dap remote` prints the repository's remote URL in
 the host's form.
@@ -243,4 +246,4 @@ or optional evidence-host permission.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources: [packages/cli/src/commands.ts](../packages/cli/src/commands.ts), [packages/platform/src/archive-binding-wire.ts](../packages/platform/src/archive-binding-wire.ts), [packages/scope/src/creation-admission.ts](../packages/scope/src/creation-admission.ts), [packages/scope/src/artifacts-wiring.ts](../packages/scope/src/artifacts-wiring.ts), [packages/scope/src/artifacts-host.ts](../packages/scope/src/artifacts-host.ts), [packages/scope/src/github-wiring.ts](../packages/scope/src/github-wiring.ts).
+Checked against main `b0af01d2` on 1 November 2026. Sources: [packages/cli/src/commands.ts](../packages/cli/src/commands.ts), [packages/platform/src/archive-binding-wire.ts](../packages/platform/src/archive-binding-wire.ts), [packages/scope/src/creation-admission.ts](../packages/scope/src/creation-admission.ts), [packages/scope/src/artifacts-wiring.ts](../packages/scope/src/artifacts-wiring.ts), [packages/scope/src/artifacts-host.ts](../packages/scope/src/artifacts-host.ts), [packages/scope/src/github-wiring.ts](../packages/scope/src/github-wiring.ts).

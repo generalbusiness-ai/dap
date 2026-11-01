@@ -44,12 +44,17 @@ describe("tagged agent-key enrolment on the trusted application and historical a
     const lifetime = nativeFixtureLifetime(owner);
     try { await story(lifetime, cohort); } finally { lifetime.release(); }
   }, 60_000);
+  test("archive-device-application: issuance waits for a new agent's provisional inbox: it stops at the bound with the fixed reason and posts no act, Check reads once, a closed context stops the wait, and a confirmation inside the bound completes the link and the enrolment (Git host and scheduler STAND-INs)", async () => {
+    const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
+    const lifetime = nativeFixtureLifetime(owner);
+    try { await story(lifetime, "archive-device-application", true); } finally { lifetime.release(); }
+  }, 60_000);
 });
 
 type Lifetime = ReturnType<typeof nativeFixtureLifetime>;
 
 type SelectedCohort = "declared-application" | "archive-application" | "archive-declared-application" | "archive-device-application";
-async function story(lifetime: Lifetime, selected?: SelectedCohort): Promise<void> {
+async function story(lifetime: Lifetime, selected?: SelectedCohort, inboxWaitOnly = false): Promise<void> {
   const now = lifetime.now;
   const node = lifetime.platform;
   const registers: Platform[] = [];
@@ -62,14 +67,24 @@ async function story(lifetime: Lifetime, selected?: SelectedCohort): Promise<voi
   };
   // Each request goes through the Worker's routes; after an act is answered the scheduler stand-in runs, so an issuance's add-member
   // has its inbox created before the issuance verifies it, as a deployment's alarm would have.
-  let actSubmits = 0, forbidActSubmit = false;
+  let actSubmits = 0, forbidActSubmit = false, holdDelivery = false;
+  /** What each summary read of a scope other than these answered, while a test names these scopes: `status reason-or-status`. */
+  let notInbox: readonly string[] | null = null, sessionRequests = 0;
+  const inboxReads: string[] = [];
   const fetch = (async (url: string, init?: RequestInit) => {
-    if (new URL(url).pathname.endsWith("/acts")) {
+    const path = new URL(url).pathname;
+    if (path.endsWith("/sessions")) sessionRequests++;
+    if (path.endsWith("/acts")) {
       actSubmits++;
       if (forbidActSubmit) throw Error("SUBMIT TRIPWIRE: retained or locally refused work must not submit an act");
     }
     const response = await lifetime.wait(() => routed(url, init));
-    if (new URL(url).pathname.endsWith("/acts")) await settle();
+    const summaryOf = /^\/v1\/scopes\/([^/]+)$/.exec(path)?.[1];
+    if (notInbox && summaryOf && !notInbox.includes(summaryOf)) {
+      const read = await response.clone().json() as { reason?: string; value?: { status?: string } };
+      inboxReads.push(`${response.status} ${read.value?.status ?? read.reason}`);
+    }
+    if (path.endsWith("/acts") && !holdDelivery) await settle();
     return response;
   }) as unknown as Fetch;
   const withoutActSubmission = async <T>(work: () => Promise<T>): Promise<T> => {
@@ -196,6 +211,46 @@ async function story(lifetime: Lifetime, selected?: SelectedCohort): Promise<voi
     const config=(await admin.store.config())!;
     for(const [scope,pin]of [[config.register!.scope,pins.register],[room.repository.directory.scope,pins.directory],[room.membership.scope,pins.membership],[room.repository.rules,pins.rules],[room.repository.destination,pins.destination]] as const){
       expect((await node(scope).summary()).value.definition).toBe(pin);
+    }
+    if (inboxWaitOnly) {
+      const REASON = "The native agent inbox creation could not be verified.";
+      const names: string[] = [], base = issuanceStore(admin);
+      const store: Store = { ...base, keepPrivate: async (name, bytes) => { names.push(name); await base.keepPrivate(name, bytes); } };
+      const operation = crypto.randomUUID(), input = { kind: "agent-key" as const, handle: "@waiting", hours: 1, controller: { membership: room.membership, member: "@rita" as never } };
+      const run = (mode: "new" | "check" | "continue", pause: NonNullable<Context["pause"]>, current?: () => boolean) => lifetime.wait(() => issueInvitation({ ...admin, store, pause }, input, { privateRequests: mode === "new" ? [] : names, mode, operation, ...(current ? { current } : {}) }));
+      // STAND-IN for a slow network: the membership's sends stay undelivered until the test releases them, creation first and the
+      // confirmation last. With no index here, a read of the inbox before its creation answers forbidden; start.scope.test.ts holds the deployed index's not-found.
+      const sends = (kind: "all" | "after-creation") => lifetime.setHold(envelope => envelope.from.at.scope === room.membership.scope && (kind === "all" || !("creator" in envelope.to)));
+      const release = async (kind: "after-creation" | null) => {
+        if (kind) sends(kind); else lifetime.setHold(() => false);
+        lifetime.advance(4_000);
+        await settle();
+      };
+      holdDelivery = true; notInbox = [room.membership.scope, room.repository.directory.scope];
+      sends("all");
+      const actsBefore = actSubmits;
+      let pauses = 0, sessionsAtFirstPause = -1, actsAtFirstPause = -1;
+      const stopped = await run("new", async () => { if (++pauses === 1) { sessionsAtFirstPause = sessionRequests; actsAtFirstPause = actSubmits; await release("after-creation"); } });
+      expect([stopped.state, stopped.reason, stopped.link, pauses], "the stop at the bound").toEqual(["unknown", REASON, undefined, 20]);
+      expect([inboxReads.length, [...new Set(inboxReads)]], "reads across the creation").toEqual([21, ["403 forbidden", "200 provisional"]]);
+      expect([actSubmits, sessionRequests], "the wait posts no act and asks for no new read session").toEqual([actsAtFirstPause, sessionsAtFirstPause]);
+      expect(actSubmits - actsBefore, "the opening and the invitation, and nothing else").toBe(2);
+      const snapshots = names.length;
+      const link = await withoutActSubmission(async () => {
+        const reads = inboxReads.length; let checkPauses = 0;
+        const checked = await run("check", async () => { checkPauses++; });
+        expect([checked.state, checked.reason, inboxReads.length - reads, checkPauses], "check reads once").toEqual(["unknown", REASON, 1, 0]);
+        let open = true;
+        await expect(run("continue", async () => { open = false; }, () => open), "a closed context stops the wait").rejects.toThrow("The original invitation custody or context is unavailable.");
+        const beforeDelivery = inboxReads.length; let deliveries = 0;
+        const verified = await run("continue", async () => { if (++deliveries === 2) await release(null); });
+        expect([verified.state, verified.reason, deliveries, inboxReads.slice(beforeDelivery)], "the confirmation arrives inside the bound").toEqual(["verified", undefined, 2, ["200 provisional", "200 provisional", "200 active"]]);
+        expect(names.length, "only the finished link adds a snapshot").toBe(snapshots + 1);
+        return verified.link!;
+      });
+      holdDelivery = false; notInbox = null;
+      await enrol(room, person(), link, "@waiting", pins.membership);
+      return;
     }
     if (selected !== "declared-application") {
       const key = (await admin.store.secret(config.key))!.slice(), id = keyIdOfSecret(key);

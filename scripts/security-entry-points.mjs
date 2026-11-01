@@ -76,6 +76,8 @@ const gates = {
   census: "self-signed",
   summary: readGate("summary"), items: readGate("items"), history: readGate("history"), entry: readGate("entry"), outbox: readGate("outbox"), outboxItem: readGate("outbox"), log: readGate("log"), retained: readGate("retained"), queryItems: readGate("query-items"), applicationProjection: "session", stream: "session", credential: "session",
   incidents: readGate("incidents"), requests: readGate("requests"), waiting: readGate("waiting"),
+  // A session of the row's own member, checked against the object's own head on each request.
+  keepOriginal: "session", listOriginals: "session", readOriginal: "session", endOriginal: "session",
 };
 
 export async function scopeRows(text, snapshotDispatches = []) {
@@ -153,7 +155,7 @@ export async function scopeRows(text, snapshotDispatches = []) {
       } };
     },
   };
-  const { routedRequest } = load(text, ["body", "routedRequest"], { ...globals, scopeIndexCensusRoute, itemQueryWire: wire.itemQueryWire, applicationProjectionWire: projection.applicationProjectionWire });
+  const { routedRequest } = load(text, ["READ_STATUS", "NO_STORE", "ORIGINAL_STATUS", "originalReply", "bodyText", "body", "routedRequest"], { ...globals, scopeIndexCensusRoute, itemQueryWire: wire.itemQueryWire, applicationProjectionWire: projection.applicationProjectionWire });
   const domains = [literals("v"), literals("root"), [undefined, scope], [undefined, ...literals("what")], [undefined, generic, "0", ...literals("which")], [undefined, generic]];
   function* product(at = 0, prefix = []) {
     if (at === domains.length) { yield prefix; return; }
@@ -191,7 +193,7 @@ export async function scopeRows(text, snapshotDispatches = []) {
           assert.ok(Object.hasOwn(gates, operation), `Unclassified dispatch: ${operation}`);
           // Normalize only unconstrained arguments. Literal matcher choices,
           // such as waiting's two lists, stay distinct.
-          const parameters = { items: ["type"], entry: ["seq"], outboxItem: ["duty"], retained: ["kind", "digest"], credential: ["handle"] };
+          const parameters = { readOriginal: ["digest"], endOriginal: ["digest"], items: ["type"], entry: ["seq"], outboxItem: ["duty"], retained: ["kind", "digest"], credential: ["handle"] };
           const normalized = parts === null ? path : "/" + parts.filter(part => part !== undefined).map((part, index) => index === 2 ? ":scope" : index >= 4 && parameters[operation] ? ":" + parameters[operation][index - 4] : part).join("/");
           const route = row(method, normalized, gates[operation]);
           if (operation === "reservationSnapshot" || operation === "stageSnapshot") snapshotDispatches.push({ ...route, operation, body: requestBody });

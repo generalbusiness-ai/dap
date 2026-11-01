@@ -5,7 +5,7 @@ import { canonicalize, factRefOf, parseStrict } from "@generalbusiness/dap-bytes
 import { derivable, operationSettled, runnable, type Item, type JudgedInput, type PlatformRule, type RuleGiven } from "@generalbusiness/dap-derive";
 import { t } from "@generalbusiness/dap-derive/testing";
 // The data and the rules of the newest version, `platform:destination@2`, which every test here creates on.
-import { COLLECT_MOST, DESTINATION, DESTINATION_KINDS, NAMED_MOST, RECEIPTS_OWED, REPORTS_MOST, destination2 as destination, destinationRules2 as destinationRules, revokedToken, writeSends } from "../src/destination.ts";
+import { COLLECT_MOST, DESTINATION, DESTINATION_KINDS, NAMED_MOST, RECEIPTS_OWED, REPORTS_MOST, compromisedKey, destination2 as destination, destinationRules2 as destinationRules, revokedToken, writeSends } from "../src/destination.ts";
 import { firstExtents } from "../src/extents.ts";
 import { platform } from "../src/index.ts";
 import { judgeReservation, type JudgeEvidence, type ReservationRead, type Statement } from "../src/reservation.ts";
@@ -33,6 +33,18 @@ const rule = (name: string) => { const matched = destinationRules[name]!; if (ma
 const TOKEN = { token: "host-token-1", ends: t(600) };
 
 // The plan's T43, for `platform:destination@2` (authority note, revision 26, section 12.1.5, and its table of marks, section 12.1.8).
+test("only an applied `compromised` notice at a destination names a key: a refused notice, another message, a result and another scope kind name none", () => {
+  const entry = (kind: string, input: unknown) => ({ at: { kind }, input }) as unknown as Entry;
+  const tell = (message: string) => ({ class: "request", type: "tell", body: { message, fields: { key: "key_named" } } });
+  expect(compromisedKey(entry("destination", { type: "delivery", decision: "applied", message: tell("compromised") }))).toBe("key_named");
+  // A stranger's notice: the row's guard refused it, and the entry still records it.
+  expect(compromisedKey(entry("destination", { type: "delivery", decision: "refused", message: tell("compromised") }))).toBeNull();
+  expect(compromisedKey(entry("destination", { type: "delivery", decision: "applied", message: tell("reserve") }))).toBeNull();
+  expect(compromisedKey(entry("destination", { type: "delivery", clause: "applied", message: { class: "result", of: {}, outcome: "applied" } }))).toBeNull();
+  expect(compromisedKey(entry("directory", { type: "delivery", decision: "applied", message: tell("compromised") }))).toBeNull();
+  expect(compromisedKey(entry("destination", { type: "act", signed: {} }))).toBeNull();
+});
+
 test("the destination definition validates whole with the platform option; its marks and its outcome kinds are listed; every mark has a rule, so the package's rules run it; it names no fence", () => {
   const checked = destinationDefinition;
   expect([checked.underived, derivable(checked, null), destination.capabilities, destination.rules, destination.timed]).toEqual([[], true, [], {}, {}]);

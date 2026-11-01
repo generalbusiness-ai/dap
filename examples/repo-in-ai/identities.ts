@@ -6,7 +6,7 @@ import { agentKeyInvitationOf, checkerKeyInvitationOf } from "@generalbusiness/d
 import type { KeyId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { isHandle } from "@generalbusiness/dap-platform";
 import { claim, checkClaim, enrolAgentKey, enrolCheckerKey, issueCheckerInvitation, issueInvitation } from "@generalbusiness/dap-cli";
-import type { Config, Context, InvitationIssueOptions, Outcome, PendingClaim, PendingInvitationIssue, Store } from "@generalbusiness/dap-cli";
+import type { Config, Context, Outcome, PendingClaim, PendingInvitationIssue, Store } from "@generalbusiness/dap-cli";
 import { nodeGit } from "../../packages/cli/src/git.ts";
 import { newStoredSigner, storedSigner } from "../../packages/cli/src/store-signer.ts";
 import { durableCliStore } from "./custody.ts";
@@ -25,8 +25,6 @@ interface IdentityPlan {
 interface Handoff { v: 1; plan: string; link: string; pointer: PendingInvitationIssue }
 interface PrivatePointer { request: string; digest: ReturnType<typeof textDigest> }
 const LIMIT = 16, MAX_PRIVATE_BYTES = 64 * 1024;
-// A new inbox is provisional until its creator's confirmation arrives. Each recheck signs and submits no act.
-const INBOX_RECHECKS = 10, INBOX_RECHECK_MS = 1000;
 const MAX_ENCODED_PRIVATE_BYTES = Math.ceil(MAX_PRIVATE_BYTES / 3) * 4 + 1, MAX_PROOF_BYTES = 4 * 1024 * 1024;
 const OWNER_INPUT = "s1-owner-input", OWNER_KEY = "s1-owner-key";
 const ROOM = "s1-room", COMPLETE = "s1-room-complete";
@@ -152,11 +150,13 @@ export async function retainedInvitationRequests(store: Store, pointer: Pick<Pen
 }
 
 /** Create only the explicitly new owner. Recovery uses its existing signer. */
-export async function initializeOwner(home: string, input: OwnerInput, mode: IdentityMode): Promise<Context> {
+export async function initializeOwner(home: string, input: OwnerInput, mode: IdentityMode, options: { loopback?: boolean } = {}): Promise<Context> {
   modeOf(mode); privateHome(home, mode === "new");
   let service: URL;
   try { service = new URL(input.service); } catch { return refuse("owner-input-invalid"); }
-  if (service.protocol !== "https:" || service.origin !== input.service || !isScopeRef(input.register) || input.register.kind !== "register" || !isHandle(input.handle)) refuse("owner-input-invalid");
+  // Only a caller that names a local Worker may use its loopback HTTP origin. S1's own plan stays HTTPS.
+  const local = options.loopback === true && service.protocol === "http:" && service.hostname === "127.0.0.1";
+  if ((service.protocol !== "https:" && !local) || service.origin !== input.service || !isScopeRef(input.register) || input.register.kind !== "register" || !isHandle(input.handle)) refuse("owner-input-invalid");
   const store = storeAt(home), expected: OwnerBinding = { v: 1, key: "operator", service: input.service, register: input.register, handle: input.handle };
   if (mode === "new") await keep(store, OWNER_INPUT, expected);
   else if (!same(await readPrivate(store, OWNER_INPUT), expected)) refuse("owner-input-changed");
@@ -343,7 +343,7 @@ async function enrollment(ownerCtx: Context, receiverHome: string, kind: Enrollm
   modeOf(mode); privateHome(receiverHome, mode === "new");
   const receiver = storeAt(receiverHome), core = await ownerPlan(ownerCtx, receiverHome, kind, handle);
   const boundedReads = new Map<string, number>();
-  let plan: IdentityPlan, inboxRechecks = 0;
+  let plan: IdentityPlan;
   if (mode === "new") {
     if ((await ownerCtx.store.config())?.invitationIssue) return refuse("another-invitation-pending");
     plan = { ...core, operation: crypto.randomUUID() };
@@ -391,20 +391,10 @@ async function enrollment(ownerCtx: Context, receiverHome: string, kind: Enrollm
     const reserved = !issuing?.invitationIssue && requests.length === 1 ? requests[0] : undefined;
     const options = { operation: plan.operation, mode: firstRoot ? "new" as const : mode, privateRequests: requests, ...(reserved ? { reservedRequest: reserved } : {}) };
     report({ stage: firstRoot || mode === "new" ? "invitation-pre-root" : "invitation-resume" });
-    const issue = (given: InvitationIssueOptions) => kind === "agent"
-      ? issueInvitation({ ...ownerCtx, store: issueStore }, { kind: "agent-key", handle, hours: 1, controller: plan.controller! }, given)
-      : issueCheckerInvitation({ ...ownerCtx, store: issueStore }, { handle, hours: 1 }, given);
-    let result = await issue(options), cause = invitationCause(result, lastRead());
-    report({ stage: "invitation-result", cause });
-    // The same read-only settlement that `check` runs. It keeps the exit, word and recovery of a stop if the bound passes.
-    while (mode !== "check" && (cause === "inbox-not-confirmed" || cause === "inbox-not-readable") && inboxRechecks < INBOX_RECHECKS) {
-      await (ownerCtx.pause?.([]) ?? new Promise<void>(resolve => { setTimeout(resolve, INBOX_RECHECK_MS); }));
-      inboxRechecks++;
-      const latest = (await journal(receiver, "s1-issue")).at(-1)!;
-      result = await issue({ operation: plan.operation, mode: "check", privateRequests: await retainedInvitationRequests(ownerCtx.store, { ...latest, operation: plan.operation }) });
-      cause = invitationCause(result, lastRead());
-      report({ stage: "invitation-result", cause, inboxRechecks });
-    }
+    const result = kind === "agent"
+      ? await issueInvitation({ ...ownerCtx, store: issueStore }, { kind: "agent-key", handle, hours: 1, controller: plan.controller! }, options)
+      : await issueCheckerInvitation({ ...ownerCtx, store: issueStore }, { handle, hours: 1 }, options);
+    report({ stage: "invitation-result", cause: invitationCause(result, lastRead()) });
     if (result.state !== "verified" || !result.link) return { code: 1, lines: [`The original ${kind} invitation is ${result.state}. Check it or Continue explicitly; no replacement follows.`] };
     const pointer = (await ownerCtx.store.config())?.invitationIssue;
     if (!pointer || pointer.operation !== plan.operation || pointer.actor !== plan.actor || !same(pointer.membership, plan.repository.membership)) return refuse("invitation-pointer-changed");
@@ -434,7 +424,7 @@ async function enrollment(ownerCtx: Context, receiverHome: string, kind: Enrollm
     } else if (!same(started, binding) || !key || envelope === null) refuse("original-receiver-missing");
   }
   const ctx = { ...ownerCtx, store: receiver };
-  report({ stage: "receiver", ...(inboxRechecks ? { inboxRechecks } : {}) });
+  report({ stage: "receiver" });
   return kind === "agent" ? enrolAgentKey(ctx, handoff.link, { mode: mode === "check" ? "check" : "continue" })
     : enrolCheckerKey(ctx, handoff.link, { mode: mode === "check" ? "check" : "continue" });
 }

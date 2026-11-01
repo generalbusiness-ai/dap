@@ -19,13 +19,16 @@ const secret = new Uint8Array(32).fill(66);
 let standIn: StandIn, server: Server, service: string, home: string;
 let holding = true, arrived: () => void = () => {};
 const posted: string[] = [];
+const copyThenAct: string[] = [];
 
 beforeAll(async () => {
   standIn = new StandIn(secretSigner(secret).key);
   server = createServer(async (req, res) => {
     let body = ""; for await (const chunk of req) body += chunk;
     const answer = await standIn.fetch(`http://scopes${req.url}`, { method: req.method ?? "GET", ...(body ? { body } : {}) });
+    if (req.method === "POST" && req.url?.endsWith("/originals")) copyThenAct.push("POST originals");
     if (req.method === "POST" && req.url?.endsWith("/acts")) {
+      copyThenAct.push("POST acts");
       posted.push(req.url);
       if (holding) { arrived(); req.socket.once("close", () => res.destroy()); return; }
     }
@@ -76,6 +79,8 @@ test("witness 3: with dap mcp killed after sending and before the reply, settle 
   const recorded = kinds();
   expect(recorded).toHaveLength(1);
   expect(posted).toHaveLength(1);
+  // A person's `dap mcp` keeps the copy before it sends. The stand-in's copy route runs no rule.
+  expect(copyThenAct).toEqual(["POST originals", "POST acts"]);
 
   holding = false;
   const second = await start();

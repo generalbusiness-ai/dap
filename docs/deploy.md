@@ -43,7 +43,9 @@ with its reader, parser and failure behavior. The order below uses these:
   session names it.
 - `SESSION_SECRET`: a secret of at least 32 bytes from a cryptographic
   random source. It signs read sessions. Without it or `DEPLOYMENT`, the
-  Worker issues and accepts no session. A new value ends every session.
+  Worker issues and accepts no session. A new value ends every session and
+  does not end signed reads. See
+  [What a revoked key keeps](security/trust-boundaries.md#what-a-revoked-key-keeps).
 - `REGISTER_SCOPE`: the register's scope ID. On a deployed Worker, a
   creation with no parent is accepted only when it is the exact signed
   install of this register.
@@ -159,6 +161,31 @@ permission to retire a definition version. Neither the CLI report nor this
 page attests hosted policy, namespace isolation, full live-scope coverage
 or readiness for every creation path.
 
+### Create rooms that refuse a shared founder and recovery key
+
+The `separate-recovery` cohort refuses a room whose founder key is also its
+recovery key: register 24, directory 23, membership 10, rules 10,
+destination 13 and inbox 1. The cohort is explicit. Unqualified installs
+keep register 18, and the newest cohort holds only rules 10, destination 13
+and inbox 1 of these pins. The Worker needs no Durable Object migration,
+because the cohort adds no class.
+
+To create new rooms on this cohort:
+
+1. Add `platform:register@24`, `platform:directory@23` and
+   `platform:membership@10` to `PLATFORM_CREATION_PINS`, and deploy.
+2. Set `DAP_HOME` to a new private directory, and run
+   `dap install --plan <base-url> --cohort separate-recovery --host <host> --namespace <namespace>`.
+3. Set `REGISTER_SCOPE`, and `registerScope` in the Worker's host setting,
+   to the planned ID, and deploy.
+4. Run `dap install --planned --cohort separate-recovery` with the same `DAP_HOME`.
+
+One Worker admits child creation from one configured register. Moving that
+setting closes new rooms under the old register, so use a separate Worker
+if the old register must keep creating rooms. Rooms and registers on older
+pins keep their rules and their acts. An older room whose founder key is
+also its recovery key stays that way until the recovery key rotates.
+
 ## The order
 
 A register's ID follows from its install's signed intent, so the command
@@ -195,6 +222,13 @@ install:
    waiting, run the same command again. It continues the pending creation
    and signs nothing new. `--again` signs a second creation, which makes a
    second repository.
+
+   Under policy `keys`, the command reads the register's summary before it
+   signs `found`. A key with no entry at the register in the last 900
+   seconds gets `forbidden`. The command prints
+   `Cannot read <register>: forbidden.` and signs nothing. So run the first
+   creation within 900 seconds of the install. Each accepted `found` restarts
+   those 900 seconds for the key that signed it.
 
 If the seed's time passes before the CLI sends the install, the CLI
 refuses it as `plan-expired`:
@@ -368,5 +402,5 @@ which only you can read. Its config file holds no secret.
 
 ## Source
 
-Checked against main `c8c7b631` on 30 October 2026. Sources: [package.json](../package.json), [packages/scope/src/creation-admission.ts](../packages/scope/src/creation-admission.ts), [packages/scope/src/register-setting.ts](../packages/scope/src/register-setting.ts), [packages/cli/src/commands.ts](../packages/cli/src/commands.ts), [apps/room/demo-creation.ts](../apps/room/demo-creation.ts), [packages/scope/src/applications/route.ts](../packages/scope/src/applications/route.ts).
+Checked against main `b0af01d2` on 1 November 2026. Sources: [package.json](../package.json), [packages/scope/src/creation-admission.ts](../packages/scope/src/creation-admission.ts), [packages/scope/src/register-setting.ts](../packages/scope/src/register-setting.ts), [packages/cli/src/commands.ts](../packages/cli/src/commands.ts), [apps/room/demo-creation.ts](../apps/room/demo-creation.ts), [packages/scope/src/applications/route.ts](../packages/scope/src/applications/route.ts).
 The commands on this page were not run for this revision.

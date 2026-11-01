@@ -6,6 +6,7 @@ import { siteAddress, Unreadable, type Acted, type ChangeView, type IssueView, t
 import { changeStates } from "./states.ts";
 import { LIST_QUERY_LIMIT, type ListState } from "./list-context.ts";
 import { controlKey } from "./focus.ts";
+import { noSessionOf, noSessionWords } from "./shell.ts";
 
 type Child = Node | string | null | undefined | false;
 
@@ -219,7 +220,7 @@ export function answerText(acted: Acted): string[] {
     case "accepted": known = `Accepted ${acted.kind}: ${a.receipt.fact.at.scope}:${a.receipt.fact.seq}, hash ${a.receipt.fact.hash}, incarnation ${a.receipt.fact.at.inc}.`; break;
     case "archived": case "refused": case "unavailable": case "mismatch": known = nonacceptedAnswerText(a); break;
   }
-  const recovery = a.answer === "archived" || a.answer === "unavailable" || a.answer === "mismatch" ? [`Inspect artroom log ${acted.scope} and the original request before another act. Recovery requires the same signed envelope; this page does not retain it.`] : [];
+  const recovery = a.answer === "archived" || a.answer === "unavailable" || a.answer === "mismatch" ? [`Inspect artroom log ${acted.scope} and the original request before another act. Recovery requires the same signed envelope; ${a.answer === "unavailable" ? "while the room keeps a copy, Check original request sends the same bytes" : "this page does not retain it"}.`] : [];
   return [known, ...recovery, ...(acted.observation === null ? [] : [`Observation unknown: ${acted.observation} Inspect artroom log ${acted.scope}${a.answer === "accepted" ? ` and artroom show ${a.receipt.fact.at.scope}:${a.receipt.fact.seq}` : ""} before submitting another act; do not resubmit to recover observation.`])];
 }
 export function answerLine(acted: Acted): HTMLElement {
@@ -227,7 +228,9 @@ export function answerLine(acted: Acted): HTMLElement {
 }
 /** The actual failure screen keeps known results visible when a view reload fails. */
 export function failureScreen(error: unknown, known: readonly Acted[] = []): HTMLElement {
-  return h("main", { class: "screen" }, h("h1", {}, "Observation unknown"), h("p", { class: "answer bad" }, error instanceof Unreadable ? error.message : "The view could not be read."),
+  const noSession = noSessionOf(error);
+  return h("main", { class: "screen" }, h("h1", {}, noSession ? "This room did not open" : "Observation unknown"), h("p", { class: "answer bad" }, noSession ? noSessionWords(noSession) : error instanceof Unreadable ? error.message : "The view could not be read."),
+    noSession ? h("p", { class: "muted" }, `Details: ${(error as Error).message} Session request: ${noSession.why}.`) : null,
     known.map((result) => answerLine({ ...result, observation: result.observation ?? "The subsequent view could not be read." })),
     h("p", {}, h("a", { href: "#/join" }, "Join another room")));
 }

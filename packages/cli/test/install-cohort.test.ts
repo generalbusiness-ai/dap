@@ -3,13 +3,14 @@ import { expect, test } from "vitest";
 import type { PlatformDefinition, Receipt, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, timeMs } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
-import { COMMONS_COHORT, UNPUBLISHED_COHORT, INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
+import { SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
 import { CREATION_COHORTS } from "../../scope/src/creation-lineage.ts";
 import { CREATION_INSTALL_COHORTS, USAGE, command, install, installPlanned, memoryStore, planInstall, type Config, type Context, type Store } from "../src/index.ts";
 
 const SERVICE = "https://cohort.test";
 const COHORT = "trusted-application" as const;
 const COHORTS = [
+  { name: "separate-recovery", definition: SEPARATE_RECOVERY_COHORT.register, other: COHORT },
   { name: "commons", definition: COMMONS_COHORT.register, other: COHORT },
   { name: "unpublished", definition: UNPUBLISHED_COHORT.register, other: COHORT },
   { name: "file-publication", definition: "platform:register@3", other: COHORT },

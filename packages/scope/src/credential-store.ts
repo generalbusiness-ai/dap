@@ -74,6 +74,8 @@ CREATE TABLE IF NOT EXISTS private_credential_revocation (
   PRIMARY KEY (scope, revoke, attempt)
 ) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS private_credential_revocations ON private_credential_revocation (scope, done, revoke, attempt);
+-- One row for each key that an applied compromised notice named. At most one row for each such entry of the journal.
+CREATE TABLE IF NOT EXISTS private_named_key (scope TEXT NOT NULL, key TEXT NOT NULL, PRIMARY KEY (scope, key)) WITHOUT ROWID;
 CREATE TRIGGER IF NOT EXISTS private_credential_revoked AFTER UPDATE OF state ON private_credential
 WHEN NEW.state = 'revoked'
 BEGIN
@@ -93,6 +95,19 @@ export class CredentialStore {
     sql.exec(SCHEMA).toArray();
   }
 
+
+  /** Keep a key that a `compromised` notice named. The notice's own transaction calls this, so the row and the entry commit together. */
+  name(key: string): void {
+    const scope = this.#scope();
+    if (scope === null) throw new Error("a notice names a key only in a scope");
+    this.#sql.exec("INSERT OR IGNORE INTO private_named_key (scope, key) VALUES (?, ?)", scope, key).toArray();
+  }
+
+  /** Whether a `compromised` notice named this key. This key gets no read token and takes none from custody. */
+  named(key: string): boolean {
+    const scope = this.#scope();
+    return scope !== null && this.#sql.exec("SELECT 1 FROM private_named_key WHERE scope = ? AND key = ?", scope, key).toArray().length > 0;
+  }
 
   /** Durable private scheduling, across every incarnation. No plaintext is selected. */
   expiryWake(now: Timestamp | (() => Timestamp)): Timestamp | null {

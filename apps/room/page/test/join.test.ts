@@ -28,7 +28,7 @@ test("page join refuses mismatched encoding before submission and accepts script
     submissions.push(signed);
     expect(verifySignedIntent(signed)).toBe(true);
     expect([signed.intent.to, signed.intent.kind, signed.intent.expected, signed.intent.fields]).toEqual([
-      repository.membership, "join", {}, ["platform:membership@6", "platform:membership@7", "platform:membership@8", "platform:membership@9"].includes(replyDefinition)
+      repository.membership, "join", {}, ["platform:membership@6", "platform:membership@7", "platform:membership@8", "platform:membership@9", "platform:membership@10"].includes(replyDefinition)
         ? { invitation: 3, proof: expect.any(String) } : { invitation: 3, secret: original.secret },
     ]);
     if ("proof" in signed.intent.fields) expect(verifyInvitationProof(keyIdOfSecret(new Uint8Array(32).fill(17)),
@@ -74,7 +74,7 @@ test("page join refuses mismatched encoding before submission and accepts script
 
   const archived = { answer: "archived", fact: { at: repository.membership, seq: 4, hash: textDigest("scripted archived fact") },
     archived: { floor: 10, commit: "a".repeat(40), through: { seq: 12, hash: textDigest("scripted archive head") } } } as const;
-  const archivedLines = answerText({ service: session.service, directory: repository.directory.scope, membership: repository.membership,
+  const archivedLines = answerText({ digest: textDigest("scripted intent"), service: session.service, directory: repository.directory.scope, membership: repository.membership,
     key: sessionKey(session), answer: archived, scope: repository.membership.scope, kind: "join", on: null,
     before: { seq: 12, hash: archived.archived.through.hash }, after: null, observation: null });
   expect(archivedLines[0]).toContain(`Archived: original entry ${repository.membership.scope}:4`);
@@ -87,10 +87,10 @@ test("page join refuses mismatched encoding before submission and accepts script
   for (const answer of [{ answer: "unavailable", reason: "busy" }, { answer: "mismatch", reason: "idempotency-mismatch" }, { answer: "refused", reason: "unauthorized", judgedAt: { seq: 0, hash: textDigest("scripted refused head") } }] as const) {
     expect(nonacceptedAnswerText(answer)).toMatch(new RegExp(`^${answer.answer === "unavailable" ? "Unavailable" : answer.answer === "mismatch" ? "Mismatch" : "Refused"}:`));
     expect(nonacceptedAnswerText(answer)).not.toContain("Nothing was written");
-    const result = answerText({ service: session.service, directory: repository.directory.scope, membership: repository.membership, key: sessionKey(session), answer, scope: repository.membership.scope, kind: "join", on: null, before: { seq: 0, hash: textDigest("scripted before head") }, after: null, observation: null });
+    const result = answerText({ digest: textDigest("scripted intent"), service: session.service, directory: repository.directory.scope, membership: repository.membership, key: sessionKey(session), answer, scope: repository.membership.scope, kind: "join", on: null, before: { seq: 0, hash: textDigest("scripted before head") }, after: null, observation: null });
     if (answer.answer !== "refused") {
       expect(result.join(" ")).toContain("before another act");
-      expect(result.join(" ")).toContain("same signed envelope; this page does not retain it");
+      expect(result.join(" ")).toContain(answer.answer === "unavailable" ? "same signed envelope; while the room keeps a copy, Check original request sends the same bytes" : "same signed envelope; this page does not retain it");
     }
   }
 
@@ -168,6 +168,7 @@ test("incomplete projections stay unreadable and a real returned submit answer s
     expect([bytes.verifySignedRead(signed), signed.request.read]).toEqual([true, "summary"]);
   } finally {
     derivations.mockRestore(); refusedRenewal = false; room.reader = null;
+    room = { ...room, session: { ...room.session, service: "https://signed-reads.test" } }; // A page that opens on signed reads, from here on: it never held a session under this service.
   }
   expect((await loadRules(room)).definitions).toEqual([]); // Distinguishing complete empty enumeration.
   mode = "item-refused";

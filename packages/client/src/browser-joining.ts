@@ -134,7 +134,7 @@ export function browserJoining(signer: Signer, options: JoiningOptions): Joining
         if ((held ?? null) === null) return null;
         if (!validJoin(held, signer.key)) return { status: "unknown" as const, reason: "The kept join cannot be read. It stays in this browser." };
         const deadline = timeMs(held.kept.envelope.signed.intent.notAfter);
-        if (deadline === null || now() >= deadline) return { status: "unknown" as const, seat: held.seat, reason: "The original join's deadline has passed. Check it; nothing was sent." };
+        if (deadline === null || now() >= deadline) return { status: "unknown" as const, seat: held.seat, reason: "The original join's deadline has passed. This press sent nothing, and an earlier send of this join has no known outcome. Check it; do not use the invitation again." };
         return conclude(held, false, true);
       });
     },

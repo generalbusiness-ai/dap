@@ -93,7 +93,7 @@ function location(request: Request): { place: string; scope: string | null } {
     let scope: string | null = null;
     try { const decoded = decodeURIComponent(parts[3]); if (isScopeId(decoded)) scope = decoded; } catch { /* invalid name, no free text */ }
     const route = parts[4] || "summary";
-    const place = route === "outbox" && parts[5] ? "outboxItem" : ["acts", "preparations", "settle", "summary", "items", "query-items", "application-projection", "reservation-snapshot", "history", "entries", "outbox", "log", "retained", "sessions", "stream", "incidents", "waiting", "requests", "credential"].includes(route) ? route : "other";
+    const place = route === "outbox" && parts[5] ? "outboxItem" : ["acts", "preparations", "settle", "summary", "items", "query-items", "application-projection", "reservation-snapshot", "history", "entries", "outbox", "log", "retained", "sessions", "stream", "incidents", "waiting", "requests", "credential", "originals"].includes(route) ? route : "other";
     return { place, scope };
   }
   if (parts[1] === "health" && parts.length === 2) return { place: "health", scope: null };

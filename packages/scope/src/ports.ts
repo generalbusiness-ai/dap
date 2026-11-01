@@ -255,6 +255,8 @@ export interface Ports {
   proofs?: ProofSource;
   /** Bounded raw native birth metadata; no identity alias or authority. */
   births?: NativeBirthSource;
+  /** Told each delivery's sealed entry, inside its transaction. A failure here aborts the delivery, and the sender keeps the task. */
+  sealedDelivery?(entry: Entry): void;
   clock: Clock; random: Random; authority: Authority; resolver: Resolver; rules: Rules; alarm: Alarm; definitions: Definitions; texts: SentTexts; readers: Readers;
   /** Null: this scope has no transport. Its sends stay in the outbox and nothing dispatches them. */
   transport: Transport | null;

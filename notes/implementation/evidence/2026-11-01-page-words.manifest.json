@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint, with 9 controls and a browser witness at 162edc1a. The witness used a local Worker in Chromium, with stand-ins at the route for no-reply and rate-limited. No deployed Worker ran this code.",
+  "directory": "2026-11-01-page-words",
+  "checkpoint": {
+    "commit": "162edc1ac8c8c7c95cbbba90516818a80dc785e4",
+    "tree": "4d11085e9621adc22e125f8129c5bcab2aae59cd"
+  },
+  "fileCount": 68,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "947da8ee3eb3c08ae1926f1be5cd87519a4fd01d85566d81f929bede00fb38a3"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6483,
+      "sha256": "88db4b78fbe549f720349ee2581eff1ab200ed7a4ef9a8fe9529e242bebaca64"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "head.txt",
+      "bytes": 138,
+      "sha256": "526c931a1aab8b252fa555edc2506bc46ca76bfab460bef2268836e939ab9533"
+    },
+    {
+      "path": "controls/exits.txt",
+      "bytes": 347,
+      "sha256": "5d533a4cb14a5c19a57693a11527882453dba33692f68dbebe5bf0da0055ead8"
+    },
+    {
+      "path": "browser/report.json",
+      "bytes": 2239,
+      "sha256": "008a19495a71e932abd7caa2c3319432f2754aa2a18be3f956dd1ded59d86637"
+    },
+    {
+      "path": "tests/no-session-words.txt",
+      "bytes": 252,
+      "sha256": "db8da7b47a620650c3e6a02025d4aee977336be9a1937bcab66338de6bab4393"
+    },
+    {
+      "path": "tests/story-scope.txt",
+      "bytes": 252,
+      "sha256": "9361946ea3d0097caaeca93f2bf75508f52adbef875761a8a47e63d249c9dc55"
+    },
+    {
+      "path": "tests/view-test-ts.txt",
+      "bytes": 253,
+      "sha256": "b86218f712c60bdbd70a0c22446e5f9312ae3626c372abc742b1f374d0921c7c"
+    },
+    {
+      "path": "tests/settings-test-ts.txt",
+      "bytes": 251,
+      "sha256": "281366e812950478d0b6edf4152edf7c41e8c594d978f1453655c5d8ec5cf926"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 6624,
+      "sha256": "3d6f46391f0069738189dfedad797845b09fe816d4e6949f355892f4e19dbf89"
+    }
+  ]
+}

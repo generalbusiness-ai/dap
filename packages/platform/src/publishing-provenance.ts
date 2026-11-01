@@ -226,9 +226,12 @@ export function archiveDeviceApplicationPublicationOrigin(from: FactRef, directo
   return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@16", rules: "platform:rules@10", destination: "platform:destination@12", membership: "platform:membership@8", deviceCommand: true });
 }
 
-/** Corrected publication cohort only; Destination12 retains its original policy. */
+/** Corrected publication cohort only; Destination12 retains its original policy.
+ * Destination13 also admits the separate-recovery family, never mixed pins. */
 export function archiveDevicePublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
-  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@17", rules: "platform:rules@10", destination: "platform:destination@13", membership: "platform:membership@8", deviceCommand: true });
+  const historical = installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@17", rules: "platform:rules@10", destination: "platform:destination@13", membership: "platform:membership@8", deviceCommand: true });
+  if (historical !== false) return historical;
+  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@23", rules: "platform:rules@10", destination: "platform:destination@13", membership: "platform:membership@10", deviceCommand: true });
 }
 
 /** Only the certified-rules destination admits this exact device factory. */

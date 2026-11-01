@@ -24,6 +24,8 @@ const REFUSED_FOR_MS = 60_000;
 export class Reads {
   readonly #port: ReadPort;
   readonly #sessions = new Map<ScopeId, { session: Session | null; refusedAt: number | null }>();
+  /** Each membership incarnation under which this process held a session. Memory only: only a restart forgets it. */
+  readonly #held = new Set<string>();
   readonly #plain: Transport;
   readonly #signed: Transport;
 
@@ -51,6 +53,7 @@ export class Reads {
       const asked = await signerSessionRequest(membership, this.#port.signer, notAfter, crypto.randomUUID());
       const answer = await requestSession(this.#port.service, membership.scope, asked, this.#port.fetch ? { fetch: this.#port.fetch } : {});
       this.#sessions.set(membership.scope, answer.ok ? { session: answer.session, refusedAt: null } : { session: null, refusedAt: now });
+      if (answer.ok) this.#held.add(`${membership.scope} ${membership.inc}`);
       return answer.ok ? answer.session : null;
     } catch (error) {
       if (!(error instanceof TransportError)) throw error;
@@ -58,6 +61,9 @@ export class Reads {
       return null;
     }
   }
+
+  /** Since this process started, it held a session of this membership. */
+  held(membership: ScopeRef): boolean { return this.#held.has(`${membership.scope} ${membership.inc}`); }
 
   /** Forget a session, so the next read asks again: after a read that the session was refused for, as after a role change. */
   forget(membership: ScopeId): void { this.#sessions.delete(membership); }

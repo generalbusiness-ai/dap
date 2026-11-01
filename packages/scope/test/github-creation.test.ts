@@ -11,7 +11,7 @@ import { SqliteStore, mintSession, readerOf, sessionsOf } from "../src/index.ts"
 import { gitHubOutside, type GitHubBindings } from "../src/github-wiring.ts";
 import { net } from "../src/testing.ts";
 import { soon } from "./net.ts";
-import { Platform, rita, routed, sam, settle } from "./repository.ts";
+import { Platform, quiet, rita, routed, sam, settle } from "./repository.ts";
 import { reader } from "./fixtures-native.ts";
 import { beginSessionFixture } from "./session-settings.ts";
 import { TEST_DEPLOYMENT, platformNet, platformOutside } from "./worker.ts";
@@ -189,15 +189,17 @@ test("real PLATFORM founding through production GitHub factory writes exact firs
     await settle(R, D, membership, rules, G);
     // Each real outcome can open the next operation. Drain the actual drivers,
     // including the receipt's newly opened revoke, without supplying answers.
-    for (let pass = 0; pass < 32; pass++) {
+    const founders = [R, D, membership, rules, G];
+    let passes = 0;
+    await quiet(() => founders, async () => {
+      if (++passes > 32) expect.fail("the real founding drivers did not settle");
       let made = 0;
-      for (const node of [R, D, membership, rules, G]) {
+      for (const node of founders) {
         made += await (node.stub as unknown as { effect(): Promise<number> }).effect();
         made += await node.stub.dispatch();
       }
-      if (made === 0) break;
-      if (pass === 31) expect.fail("the real founding drivers did not settle");
-    }
+      return made;
+    });
     const registerEntries = await R.entries();
     const genesis = (await G.entries())[0]!;
     // The creation commit of `platform:destination@2`: one README that names the repository, the creator's handle and the directory.

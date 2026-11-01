@@ -69,13 +69,17 @@ retained inputs through the room's creation chain. A session grants no
 register summary and no other room's private journal. Journal and log
 pages can be filtered, and a sparse page is not complete replay evidence.
 
+A revoked key keeps both reads for a limited time.
+[What a revoked key keeps](security/trust-boundaries.md#what-a-revoked-key-keeps)
+gives each end, and the steps for a stolen key.
+
 ## Platform commands
 
 ### `dap install`
 
 ```
-dap install <base-url> --host none|artifacts|github.com [--namespace <name>] [--register-policy keys|open] [--cohort unpublished|application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules]
-dap install --plan <base-url> --host none|artifacts|github.com [--namespace <name>] [--register-policy keys|open] [--cohort unpublished|application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules]
+dap install <base-url> --host none|artifacts|github.com [--namespace <name>] [--register-policy keys|open] [--cohort unpublished|application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|separate-recovery|commons]
+dap install --plan <base-url> --host none|artifacts|github.com [--namespace <name>] [--register-policy keys|open] [--cohort unpublished|application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|separate-recovery|commons]
 dap install --planned [--register-policy keys|open] [--cohort <saved-cohort>]
 dap install <git+https-uri> --release <release-id> --request <kept-key> [--role <default-role> ...] [--values <genesis-JSON>] [--owner <full-member-JSON>]
 ```
@@ -171,8 +175,15 @@ the `platform:` prefix.
 | `archive-certified-rules` | 19 | 18 | 8 | 11 | 14 | 1 |
 | `hardened-certified-rules` | 20 | 19 | 8 | 12 | 15 | 1 |
 | `commons` | 23 | 22 | 9 | 14 | 16 | 1 |
+| `separate-recovery` | 24 | 23 | 10 | 10 | 13 | 1 |
 
 The `commons` cohort also pins `platform:commons@1`.
+
+The `separate-recovery` cohort refuses a room whose founder key is also its
+recovery key, by the name `recovery-key`. It offers no checker-key invitation
+and no journal archive export.
+[Create rooms that refuse a shared founder and recovery key](deploy.md#create-rooms-that-refuse-a-shared-founder-and-recovery-key)
+says what a deployment does before it creates rooms on this cohort.
 
 Without `--cohort`, a host other than `none` selects
 `archive-device-publication`. `--host none` requires the `unpublished`
@@ -494,6 +505,10 @@ The creator reads the new scopes by signed reads until the seat and first
 key are recorded, and signed reads last for the 15-minute intent window.
 A creation that takes longer gives up, and a resumed create cannot read
 the directory either. A saved create does not extend that window.
+
+Under policy `keys`, the command reads the register's summary first. A key
+with no entry at the register in the last 900 seconds gets `forbidden`, and
+the command signs nothing. [The order](deploy.md#the-order) states this.
 
 `--again` replaces the pending create with a new signed `found`. Each
 `found` that takes effect creates a repository, so an earlier unknown
@@ -922,6 +937,18 @@ token, and no command gives one to them. Run `dap clone` again. A token
 that nobody reads ends at its end. A room created with `--host none` is
 refused as `no-repository`.
 
+Once a `compromised` notice reaches the destination, the key that it names
+gets one of these answers, and git does not run. The first line comes from
+the act, and the second from the credential route.
+
+```
+Refused: unauthorized, judged at entry sc_rh5ctnhi...:18. The request was refused.
+Cannot read the read token read:sha256:0f3a...: forbidden.
+```
+
+[A Git read token outlasts the bound](security/trust-boundaries.md#a-git-read-token-outlasts-the-bound)
+states what the notice closes and what stays open.
+
 An active member's session reads the destination before the member's
 first act, also after the creator's signed-read window. The destination
 checks the member's full confirmed membership reference from its recorded
@@ -1141,4 +1168,4 @@ The room's browser client is [the page](../apps/room/docs/page.md).
 
 ## Source
 
-Checked against main `c8c7b631` on 30 October 2026. Sources: [line.ts](../packages/cli/src/line.ts), [commands.ts](../packages/cli/src/commands.ts), [application-command.ts](../packages/cli/src/application-command.ts), [application-dev.ts](../packages/cli/src/application-dev.ts), [mcp.ts](../packages/cli/src/mcp.ts), [scope-index-command.ts](../packages/cli/src/scope-index-command.ts). The samples come from the tests in `packages/cli/test` and `apps/room/lanes/test`, with long IDs cut short, except the `dap new`, `dap dev` and `dap pack` samples, which follow the source.
+Checked against main `b0af01d2` on 1 November 2026. Sources: [line.ts](../packages/cli/src/line.ts), [commands.ts](../packages/cli/src/commands.ts), [application-command.ts](../packages/cli/src/application-command.ts), [application-dev.ts](../packages/cli/src/application-dev.ts), [mcp.ts](../packages/cli/src/mcp.ts), [scope-index-command.ts](../packages/cli/src/scope-index-command.ts). The samples come from the tests in `packages/cli/test` and `apps/room/lanes/test`, with long IDs cut short, except the `dap new`, `dap dev` and `dap pack` samples, which follow the source.

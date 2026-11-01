@@ -87,11 +87,14 @@ within a 64 KiB record; full, malformed or unavailable custody blocks dispatch.
 **Check status** remains read-only for refused requests.
 The page then asks membership for a read session signed by the key, and
 presents it to every read. A session lasts 600 seconds; the page asks for
-a new one before a read when the last one has ended. If membership gives
-no session (a key that is no active member's, or a deployment with no
-session secret), each read that can be signed goes as a signed read by the
+a new one before a read when the last one has ended. If the page gets
+no session (a key that is no active member's, a key with too many
+requests, a deployment with no session secret, or a request with no reply),
+each read that can be signed goes as a signed read by the
 key, and the scope answers only where that key signed an entry in the
-window of an intent, about 15 minutes. Record inspection says which read
+window of an intent, about 15 minutes. If the directory refuses that read,
+the room does not open, and the page says why it has no session and what to
+do next. Record inspection says which read
 method the page is using. The page then reads the directory's repository item for
 the rules scope and the destination, and the member's standing in
 membership.
