@@ -1,6 +1,6 @@
 # A Git read token after its key is revoked
 
-Status: design, no code is built.
+Status: current. It landed at `970c701c` (approval `7a2618e4`). No code is built. The planner ruled in `cccd205a`: the one-hour pin is not built before real calls 2 and 3 run, and the planner runs those calls. `revoke-reads` follows that change and is not built now. No notice goes to a lane. One next cohort lands at a time, so a slice that builds the token pin carries `separate-recovery` with it. `separate-recovery` has no opt-in now.
 
 Teo keeps a member key on a laptop. Mara is an admin of the same room. The room publishes to a repository on Cloudflare Artifacts, and Rita operates the Worker.
 
@@ -39,7 +39,7 @@ sc_p6xp2lmd...:59  2099-01-01T09:41:09Z  outcome; 0 effects, 0 sends
 { "key": "key_teoLaptop...", "revoked": 1, "gone": 0, "cannot": 0, "left": 0 }
 ```
 
-Mara can now say: "Cloudflare confirmed the revocation of the one live read token of this key. Commits that we publish after 09:41 are safe from that token." Mara still cannot say that the thief read nothing, because the thief had hours before 09:41.
+Mara can now say: "Cloudflare confirmed the revocation of the one live read token of this key. Commits that we publish after the host applies it are safe from that token." Mara still cannot say that the thief read nothing, because the thief had hours before 09:41.
 
 This note uses these terms:
 
@@ -102,15 +102,32 @@ The code matches the types and then drops the ID:
 - `workspaceMint` keeps the host's `id`, and `workspaceRevoke` passes that ID to `revokeToken` (`:131`, `:133-136`). This code path already revokes by ID. Only a stand-in binding has run it.
 - GitHub's `revoke` sends the plaintext to `DELETE /installation/token` (`packages/scope/src/github-host.ts:138-142`, `packages/git/src/github.ts:159-161`).
 
-So `notes/implementation/2026-11-01-signed-read-refusal.md` gives the wrong reason for Artifacts when it says that `revokeToken` takes the plaintext. On Artifacts, the service cannot revoke a taken token today because `mintRead` drops the ID. On GitHub, the reason is at the host.
+So `notes/implementation/2026-11-01-signed-read-refusal.md` gave the wrong reason for Artifacts when it landed, because it said that `revokeToken` takes the plaintext. That note now gives the reasons below. On Artifacts, the service cannot revoke a taken token today because `mintRead` drops the ID. On GitHub, the reason is at the host.
 
 ### Three real calls settle what the pages leave open
 
-The planner can run these calls. I ran none of them. Each one needs a throwaway repository and no room.
+The planner runs these calls, by the ruling in `cccd205a`. I ran none of them. Each one needs a throwaway repository and no room.
 
 1. **Artifacts, by ID.** Mint `createToken("read", 3600)`, and run `git ls-remote` with the plaintext. Run `revokeToken(id)`, and run `git ls-remote` again. Record the reply, the refusal and the delay. This call also tests the `hold@2` revocation path above. Compare the ID with the secret by program, with no output of the secret. The REST page's example ID repeats the first 16 digits of its example token. No page says that an ID contains no part of the secret.
 2. **Artifacts, in flight.** Mint a token for 60 seconds, the documented minimum. Run `git clone` over a throttled link so that the pack outlasts the token. Repeat with `revokeToken(id)` during the download. Record whether the clone finishes.
 3. **GitHub, in flight.** Start the same throttled clone with an installation token. Send `DELETE /installation/token` during the download, and then run `git ls-remote`. Repeat once with a clone that outlasts one hour.
+
+### The planner ran real call 1 once, through REST, and calls 2 and 3 have not run
+
+This is the planner's observed run of 1 November 2026, from act `a83f1a22`. I did not run it, and I read its evidence: `~/play/artroom-evidence/2026-11-01-artifacts-token-call-1`, `SHA256SUMS` `8efb34cc`.
+
+- **The route.** The planner used the REST route through `cf artifacts namespaces`, and not the binding, on a new empty repository.
+- **The revocation.** The planner minted a `read` token for 3600 seconds, and `git ls-remote` exited 0 twice. The planner revoked the token by ID, and the reply held the ID. The next `git ls-remote`, 0.1 seconds after the reply, exited 128 with "Invalid or expired token". Five later tries over 10 seconds answered the same.
+- **The ID.** The ID has 16 characters. By program, the ID is not a substring of the secret, and the two share no common prefix. That holds for this one token.
+
+One call on one empty repository does not give the host's delay in general.
+
+The run does not show these things:
+
+- The binding's `revokeToken(id)`, which `hold@2` uses.
+- A token in use during a clone.
+- A repository with content.
+- The list of a repository's tokens, because the planner's list command failed with a usage error.
 
 ## Keep the Artifacts ID, and never keep the plaintext
 
@@ -148,7 +165,7 @@ The gain on GitHub is small, because GitHub expires the token within about one h
 
 ### The ID needs one column and one operation
 
-On Artifacts the ID gives the whole gain with no secret. The ID alone opens nothing: revocation needs the Worker's binding or a Cloudflare API token. Real call 1 checks that the ID contains no part of the secret.
+On Artifacts the ID gives the whole gain with no secret. The ID alone opens nothing: revocation needs the Worker's binding or a Cloudflare API token. Real call 1 found, for one token, that the ID is not a substring of the secret and shares no common prefix with it.
 
 The custody change is small. `private_read_credential` gains `host_id` and `actor`, the key that signed the act. Both stay in custody, and both stay after the token's expiry, as the other metadata do today (`credential-store.ts:9-10`). A stolen backup then shows each token's host ID and its key, and it opens no repository. I keep the ID out of the journal because no reader needs it. `hold@2` already writes its host ID into an entry (`hold.ts:889`), so real call 1 matters there too.
 
@@ -182,7 +199,7 @@ This operation has three costs:
 - **A fixed budget.** An operation of a held kind draws on a holder's count, and a delivery has no `adds` (`packages/derive/src/draws.ts:14-17`, `:41-46`). So the branch needs a fixed count. I propose `"revoke-reads": 16` in `branch.holds.operations` (`destination.ts:198`). The rule opens nothing at 0, and the notice still lands. A room past 16 such notices has only the time bound. Each held operation also reserves room in the scope (`packages/derive/src/held.ts`). I did not compute that total against the validator's limit.
 - **One host's behaviour.** The operation gives more on Artifacts than on GitHub. Mara reads `cannot` to know the difference.
 
-I recommend this operation after the lifetime change. An hour still matters on Artifacts, because a team that has lost a key can publish a fix in that hour. The planner decides whether `revoke-reads` follows the lifetime change, and the two can land apart.
+I recommend this operation after the lifetime change. An hour still matters on Artifacts, because a team that has lost a key can publish a fix in that hour. The planner ruled in `cccd205a` that `revoke-reads` follows the lifetime change and is not built now.
 
 ## One hour is the right longest lifetime on both hosts
 
@@ -249,7 +266,7 @@ This section traces the second credential that the same route gives out. Practic
 - **A new one stops early.** The step `token` needs an observation of the key at most 10 seconds old. It spends that observation (`hold.ts:570`, `grant.ts:33`). So a revoked key mints no new workspace token after about 10 seconds. Its last token expires about 910 seconds after the revocation, plus the delay before the host mints it and the clock difference.
 - **Revocation exists.** A hold's release, its expiry and a new holder each move a live token to `revoking`. The host then revokes the token by ID (`hold.ts:538-540`, `workspace-host.ts:150`). In `issue-j4`, only the holder can sign `release-hold`, so Teo can do it from another key. An admin has no such act in that definition. The timed rule `hold-end` has the same effect at the hold's deadline.
 
-So a thief can read one fork and push to it for about 15 minutes. `stage` takes only the commit that a signed step names (`workspace-host.ts:230`, `:243`), so a push alone reaches nothing in the room. I recommend no change to the definition, because 15 minutes do not justify a notice to every lane. Mara can ask Teo to release the hold from another key, and the team then treats the fork's later commits as untrusted. The planner decides whether a lane learns of a notice.
+So a thief can read one fork and push to it for about 15 minutes. `stage` takes only the commit that a signed step names (`workspace-host.ts:230`, `:243`), so a push alone reaches nothing in the room. I recommend no change to the definition, because 15 minutes do not justify a notice to every lane. Mara can ask Teo to release the hold from another key, and the team then treats the fork's later commits as untrusted. The planner ruled in `cccd205a` that no notice goes to a lane.
 
 One smaller fact belongs here. `private_workspace_token` is outside the expiry queue, so an unread plaintext stays until a read or a confirmed revocation clears it (`workspace-host.ts:18-22`, `:151`, `:168`). That row can outlast its token, and the plaintext opens nothing after the expiry.
 
@@ -262,11 +279,11 @@ This section gives the true sentence for each case, with the time bound counted 
 | Older pin, Artifacts | 24 hours + 600 s | "Read the token's expiry in `dap show`. Commits published before that time are exposed." |
 | Older pin, GitHub | about 1 hour + 600 s | The same sentence, with a shorter time. |
 | New pin, GitHub | about 1 hour + 600 s | "The log says how many tokens we cannot revoke, and each expires within the hour." |
-| New pin, Artifacts, `revoke-reads` confirmed with `left` 0 | Until the host applies the revocation, and no page gives that delay | "The host confirmed each revocation. Commits after that time are safe from these tokens." |
+| New pin, Artifacts, `revoke-reads` confirmed with `left` 0 | Until the host applies the revocation, and no page gives that delay | "The host confirmed each revocation. Commits after the host applies each one are safe from these tokens." |
 | New pin, Artifacts, `left` above 0 or all attempts unknown | 1 hour + 600 s | "Some tokens are not revoked. The rest expire within the hour." |
-| A key revoked as `retired`, or a removed member | The token's expiry | No notice goes out, so nothing is revoked (`membership.ts:501`, `:521`). |
+| A key revoked as `retired`, or a removed member | The pin's lifetime + 600 s, as in the rows above | No notice goes out, so nothing is revoked and nothing refuses the session (`membership.ts:501`, `:521`). |
 
-Rita has one more tool on Artifacts for older pins. `GET /artifacts/namespaces/:namespace/repos/:name/tokens` lists each token's `id`, `scope` and `state`, and `DELETE .../tokens/:id` revokes one (<https://developers.cloudflare.com/artifacts/api/rest-api/>). The list names no key, so Rita revokes every active `read` token of the repository. Every member then runs `dap clone` again, and one of the service's own 120-second reads can fail with an unknown outcome. `wrangler artifacts` lists `issue-token` and no revocation (<https://developers.cloudflare.com/artifacts/api/wrangler/>). The docs need a step for this in [Respond to a stolen key](../docs/security/trust-boundaries.md#respond-to-a-stolen-key). I recommend that step whatever the planner decides about the design, because it needs no code. Nobody here has run it.
+Rita has one more tool on Artifacts for older pins. `GET /artifacts/namespaces/:namespace/repos/:name/tokens` lists each token's `id`, `scope` and `state`, and `DELETE /artifacts/namespaces/:namespace/tokens/:id` revokes one (<https://developers.cloudflare.com/artifacts/api/rest-api/>). The list names no key, so Rita revokes every active `read` token of the repository. Every member then runs `dap clone` again, and one of the service's own 120-second reads can fail with an unknown outcome. `wrangler artifacts` lists `issue-token` and no revocation (<https://developers.cloudflare.com/artifacts/api/wrangler/>). [Respond to a stolen key](../docs/security/trust-boundaries.md#respond-to-a-stolen-key) now holds this step, because it needs no code. Revoking by ID has run once through the REST route, and listing a repository's tokens has not. The section on real call 1 gives that run.
 
 These things stay open under every answer:
 
