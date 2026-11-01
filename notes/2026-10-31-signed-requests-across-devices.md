@@ -207,7 +207,7 @@ These limits apply to J1:
   | `POST originals` | 1 | 3.475 ms | 8.421 ms |
   | `DELETE originals` | 1 | 3.781 ms | 12.625 ms |
   | `POST acts`, for comparison | 1 | 7.534 ms | 11.24 ms |
-  | `GET originals` | 1 on the first comment, 2 on each later one | 2.269 ms | 10.071 ms |
+  | `GET originals` | 1 or 2, one per draw | 2.269 ms | 10.071 ms |
 
   A hosted room adds one real round trip to each of these requests. The run measured none.
 
