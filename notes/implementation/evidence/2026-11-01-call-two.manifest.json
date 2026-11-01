@@ -1,17 +1,17 @@
 {
   "version": 1,
   "qualification": "Plain-node document checks at the checkpoint. No gate ran, because this head changes no source. No host, account or room was touched.",
-  "directory": "2026-11-01-call-two",
+  "directory": "2026-11-01-call-two-2",
   "checkpoint": {
-    "commit": "4cc840b240fbb140d3fb7a11715e0fb8a771e185",
-    "tree": "998ed4b52b86805bc2d0a736e07f152ed61f38b1"
+    "commit": "e90c2b37335c778cfa06f5fa77f1334b449a3682",
+    "tree": "0cc634444234a07e682d2bd1fde46f4b872a6ebc"
   },
   "fileCount": 16,
   "files": [
     {
       "path": "SHA256SUMS",
       "bytes": 1248,
-      "sha256": "9421c980d7c1a7d015ea81e219eb923586a3ce17cee399eeffd4ff9fbe0fd344"
+      "sha256": "90d37918be8e34443c5a602ac1c66f56908cd3f737abb39a4b69c24f1407830f"
     },
     {
       "path": "call-2-digests.log",
@@ -20,8 +20,8 @@
     },
     {
       "path": "changed-paths.log",
-      "bytes": 135,
-      "sha256": "36731fd10b82e34febb1f2b6a5aae8e19a01d93fb8953a7fc59cba611750cfae"
+      "bytes": 243,
+      "sha256": "43ac89f0d374934e4874a59852929c0677566726d762048fe8c691a6a9bbe1a6"
     },
     {
       "path": "commit-messages.exit",
@@ -31,7 +31,7 @@
     {
       "path": "commit-messages.log",
       "bytes": 38,
-      "sha256": "e961aa82d898e3425096da8901160f918cd74166d8c76fd918aaac9c3386377d"
+      "sha256": "fc8765466e4e267859aeefd91456d6d8c027c5b75f972ee69d76ef7d3d3dd256"
     },
     {
       "path": "doc-links.exit",
@@ -46,7 +46,7 @@
     {
       "path": "head.txt",
       "bytes": 92,
-      "sha256": "7d246a776809dc4ecc0efd445d39b1e74b20ea0ce1415899aa412f2dae6a50a3"
+      "sha256": "3a18d7143ab1a7768f00c3f8bee6598e7d8f014a9e8f5d9e321a6da93f89a199"
     },
     {
       "path": "notes.exit",
@@ -66,12 +66,12 @@
     {
       "path": "section-citations.json",
       "bytes": 3931661,
-      "sha256": "2fd0f2bcee9da54363ecf2da27521fc267e81d9a73175ae05a63b8bbe859779a"
+      "sha256": "cf4704c4728c7c997fc4c454e112595303379b1df368b7522068e90484b2c457"
     },
     {
       "path": "section-citations.log",
       "bytes": 1563518,
-      "sha256": "034722d22e7661eb90da54c92c04c7238191102b1d0356ec335183b21bb53a8f"
+      "sha256": "f0f197b47b27f36f7d0cbae2b7d473ca5d1ee63c92271ed1acb1234728d06d26"
     },
     {
       "path": "source-unchanged.exit",
