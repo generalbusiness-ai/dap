@@ -64,9 +64,10 @@ import { readDeployment } from "./deployment-setting.ts";
  * requested by its own key; the outside port checks that handle.
  *
  * **What a session can do beyond a read.** At membership, it reads, delivers
- * and deletes its own member's original requests (`originals.ts`). It cannot
- * make or change one, because each row needs the signature of the key that
- * signed the request.
+ * and deletes its own member's original requests (`originals.ts`). It can make
+ * one only of a request that its key signed, because each row needs that
+ * signature. The unsigned parts can differ, and the scope verifies them when
+ * they are sent. This grants nothing.
  *
  * Nothing here logs, stores or returns the secret, and no refusal holds a
  * token or a part of one.

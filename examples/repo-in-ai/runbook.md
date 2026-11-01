@@ -115,6 +115,18 @@ continue that phase:
 node examples/repo-in-ai/setup.mjs --input /absolute/path/to/s1-input.json --phase manifest-stage --mode continue --diagnostics /absolute/public/NEW-continue-diagnostics
 ```
 
+`stage-ready` and `published` read outcomes that arrive after the act before
+them, so a first read can find an outcome still pending. In `new` or
+`continue` mode, each of these phases rechecks a pending read up to 15 times,
+2 seconds apart. The bound is 30 seconds of pauses, plus the time of the 16
+reads. A recheck signs and submits no act. It uses the existing read session,
+or opens one if that session has ended. `check` reads once and does not wait.
+A failed read stops the phase at once.
+
+If the read is still pending after the last recheck, the phase stops with
+exit 1. Run `check` on that phase, which completes the phase once the read
+settles. Then run the next phase in `new` mode.
+
 A new member's inbox stays provisional until its creator's confirmation
 arrives, and the invitation engine accepts only an active inbox. In `new` and
 `continue` modes the engine waits for that inbox. It reads the inbox one second

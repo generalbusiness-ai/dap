@@ -4,7 +4,8 @@
  * signs nothing: the device's key signs every act, and no act presents a
  * session. A session also reaches its member's original requests at
  * membership (`originals.ts`): it reads, delivers and deletes them, and it
- * cannot make or change one.
+ * can make one only of a request that its key signed. The unsigned parts can
+ * differ, and the scope verifies them when they are sent. This grants nothing.
  *
  * - **Asking.** The device signs a session request with its own key, to the
  *   repository's membership scope with its incarnation, and sends it in a

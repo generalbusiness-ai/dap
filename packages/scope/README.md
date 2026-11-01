@@ -445,7 +445,9 @@ session adds two answers: 503 `sessions-unavailable` and 503
 A read session is a credential: whoever holds the token reads. It signs
 nothing and adds no authority to an act (authority note, section 3.9). At
 membership, a session also reads, delivers and deletes its own member's
-original requests, and it cannot make or change one (`originals`). The one other
+original requests (`originals`). It can make one only of a request that its
+key signed. The unsigned parts can differ, and the scope verifies them when
+they are sent, so this grants nothing. The one other
 credential it reads is a read token that its own key asked for by a
 signed `read-token` act at the destination, once (the planner's decision
 for I5).

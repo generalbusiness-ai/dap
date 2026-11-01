@@ -20,14 +20,14 @@ import { WorkbenchWork } from "./workbench-work.ts";
  * trusted code can still invoke signing: screens must use the sandbox host.
  */
 
-import { creationOffer, DEVICE_KEY_LINK, type OriginalRow, type Signer } from "@generalbusiness/dap-client";
+import { creationOffer, DEVICE_KEY_LINK, type Signer } from "@generalbusiness/dap-client";
 import { legacySettingsKey, pageKeyStore } from "./browser-key-store.ts";
 import { migratePageOperations } from "./page-key-migration.ts";
 import { connectInvitation, originalConnection, creatorConnectionFiles, type CreatorBinding } from "./connection-custody.ts";
 import { originalStart, startRoom, type StartedRoom } from "./start-custody.ts";
 import type { Answer, FieldValue, Head, MemberRef, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, isKeyId, isScopeId, isScopeRef, unb64url } from "@generalbusiness/dap-bytes";
-import { checkAnswerLine, checkOriginalRequest, lockedScopes, openOriginals, originalLine } from "./original-check.ts";
+import { ORIGINALS_UNREAD, checkAnswerLine, checkOriginalRequest, liftFences, lockedScopes, openOriginals, originalLine, type OpenOriginals } from "./original-check.ts";
 import { act, actAssociation, actsOn, issueDeviceKey, issueCreation, fieldValue, listLanes, loadCommonsView, loadChange, loadIssue, loadRules, pageObservationSource, roomInitialization, initializationStillCurrent, openRoom, placeOf, sessionKey, siteAddress, type Acted, type Place, type Room, type Session } from "./data.ts";
 import { PageObservation, pollingInterval } from "./page-observation.ts";
 import { bindDisclosures, openDialog, releaseDialog } from "./popups.ts";
@@ -577,8 +577,8 @@ let lockedByCopy: ReadonlySet<ScopeId> = new Set();
 /** The last answer of each press, by digest, and why a send stopped. Memory only. */
 const originalAnswers = new Map<string, string>();
 
-/** One line and one button for each open copy, then the answers of earlier presses. */
-async function originalNotices(room: Room, rows: readonly OriginalRow[]): Promise<HTMLElement[]> {
+/** Whether the last read failed, then one line and one button for each open copy, then the answers of earlier presses. */
+async function originalNotices(room: Room, { rows, failed }: OpenOriginals): Promise<HTMLElement[]> {
   const { issues, changes } = rows.length > 0 ? await listLanes(room).catch(() => ({ issues: [], changes: [] })) : { issues: [], changes: [] };
   const lines = rows.map((row) => {
     const check = h("button", { type: "button", class: "primary", "data-original-check": row.digest }, "Check original request");
@@ -587,13 +587,14 @@ async function originalNotices(room: Room, rows: readonly OriginalRow[]): Promis
       void startWorkbench(async () => {
         const result = await checkOriginalRequest(room, row.digest);
         originalAnswers.set(row.digest, checkAnswerLine(result));
+        liftFences(room, row, result, lastActs, sending);
         await draw();
       });
     });
     return h("div", { class: "answer", role: "status", "data-original-copy": row.digest }, h("p", {}, originalLine(row, room, [...issues, ...changes])), check);
   });
   const answers = [...originalAnswers.entries()].map(([key, text]) => h("p", { class: "answer", role: "status", "data-original-answer": key }, text));
-  return [...lines, ...answers];
+  return [...(failed ? [h("p", { class: "answer", role: "status", "data-original-unread": "" }, ORIGINALS_UNREAD)] : []), ...lines, ...answers];
 }
 
 /** Invite another device for a member. Only a role that holds `membership.invite` signs the act. */
@@ -642,6 +643,7 @@ async function panelFor(room: Room, scope: ScopeId, context: ActionContext = {},
     const previous = lastActs.get(association);
     if (lockedByCopy.has(scope) || context.uncertain || context.blockedKinds?.includes(kind) || previous && (previous.answer.answer === "archived" || previous.answer.answer === "unavailable" || previous.answer.answer === "mismatch" || previous.observation !== null)) return;
     if (!sending.begin(association, kind)) return;
+    originalAnswers.delete("not-kept");
     cancelCreationFollow();
     if (refusalDialog?.context === association) closeRefusal();
     showLocally(h("p", { role: "status" }, "Sending request"), true, "Sending request");
@@ -661,9 +663,11 @@ async function panelFor(room: Room, scope: ScopeId, context: ActionContext = {},
           showLocally(answerLine(known), true, known.answer.answer === "accepted" ? "Request accepted" : known.answer.answer === "refused" ? `Request refused: ${known.answer.reason}` : known.answer.answer === "archived" ? "Request archived; verify the original result" : "Request outcome unknown");
           if (known.answer.answer === "accepted") accepted?.();
           else if (known.answer.answer === "refused" && activeView()) showRefusal(known, association);
+        }, (digest) => {
+          if (!currentContext()) throw new Error("The room or key changed before submission. Nothing was sent.");
+          sending.submitting(association, digest);
         }, () => {
           if (!currentContext()) throw new Error("The room or key changed before submission. Nothing was sent.");
-          sending.submitting(association);
         });
         lastActs.set(association, result);
         if (result.answer.answer === "accepted" && result.observation === null && activeView()) await options.settled?.(result, activeView);
@@ -1036,7 +1040,7 @@ async function drawWorkbench(focus: boolean): Promise<void> {
     if (!viewCurrent()) return;
     let notice = initializationMessage(initialization.state);
     const copies = await openOriginals(room);
-    lockedByCopy = lockedScopes(room, copies, room.session.now?.() ?? Date.now());
+    lockedByCopy = lockedScopes(room, copies.rows, room.session.now?.() ?? Date.now());
     const copyLines = await originalNotices(room, copies);
     if (!viewCurrent()) return;
     const showRoom = (...content: HTMLElement[]) => {

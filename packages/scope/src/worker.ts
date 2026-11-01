@@ -376,7 +376,7 @@ const READ_STATUS: Record<ReadRefusal, number> = {
 const SESSION_STATUS: Record<SessionRefusal, number> = { "sessions-unavailable": 503, "bad-request": 400, "not-found": 404, misaddressed: 422, "clock-behind": 503, expired: 422, unauthorized: 403, replayed: 409, "rate-limited": 429 };
 const read = (result: Read<unknown>): Response => json(result.ok ? 200 : READ_STATUS[result.reason], result);
 /** The status of a refusal at the originals routes. Each answer of those routes is marked so that nothing stores it. */
-const ORIGINAL_STATUS: Record<string, number> = { ...READ_STATUS, "bad-request": 400, expired: 422, conflict: 409, full: 507 };
+const ORIGINAL_STATUS: Record<string, number> = { ...READ_STATUS, "bad-request": 400, expired: 422, conflict: 409, full: 507, "room-full": 423 };
 const NO_STORE = { "content-type": "application/json", "cache-control": "no-store" };
 const originalReply = (answer: { ok: boolean; reason?: string }, ok: number, payload: string | null = null): Response => answer.ok
   ? new Response(payload, { status: ok, headers: payload === null ? { "cache-control": "no-store" } : NO_STORE })

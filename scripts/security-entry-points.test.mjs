@@ -12,7 +12,7 @@ const namedOwners = {
     "packages/scope/src/object.ts:ScopeObject": "9bd9d90a069563281140c8efbb8ccf02b2e18af195a0f3a8b39a7f89dd89118e", // J4: bounded birth discovery and the exact hold@2 credential branch.
   },
   "packages/scope/src/worker.ts": {
-    "packages/scope/src/worker.ts:$module": "a63e46a29c95cdf83d8e4f317d31db14c99da90487b7589fd913cc69c340204c",
+    "packages/scope/src/worker.ts:$module": "9a4a5a5ae5f70e7319629aba25d102e230da620acdd1047a3775d20cdf28c893",
     "packages/scope/src/worker.ts:ScopeIndex": "c427427157118cacbc763f65d5523f598eeb72a0b9a01520f1b088c5bc6dbad5", // Reviewed empty Site wake deletion; route and authority gates unchanged.
     "packages/scope/src/worker.ts:MISSING": "e8958a6cf8d4cd2f412b30c76b38aca2f4523bc2b9df96606ac01059b6d4fb42",
     "packages/scope/src/worker.ts:api": "03bb00a1a523796ca66c26c23d91142ef46758ad62290fdc9a5cc74556e8c171",
@@ -21,7 +21,7 @@ const namedOwners = {
     "packages/scope/src/worker.ts:READ_STATUS": "8fcae05135649353af9322b5361f0b16e8a1d93c47583a3a18b80848f2990df7",
     "packages/scope/src/worker.ts:SESSION_STATUS": "99632b0bd230a76488353a2e1fce61925bbb595605a27d0f9e8c8e67f77a9587",
     "packages/scope/src/worker.ts:read": "4a083fdf987741284f15628b0c45881da42de526268465ee66f4c37422636dd9",
-    "packages/scope/src/worker.ts:ORIGINAL_STATUS": "b9b27590eb6023fb59ff919907da23a323203f3d2ecd5cb481bc1e5a41d85107",
+    "packages/scope/src/worker.ts:ORIGINAL_STATUS": "95b36ba73a5c328ed72c0c4f2427012dadcd1e29d84570ed380d70836892559b",
     "packages/scope/src/worker.ts:NO_STORE": "3c2d731f8eea8254d81b670ab342feba2ee0d809f59778a0b8e8760f0f31e082",
     "packages/scope/src/worker.ts:originalReply": "f2ab7919d41666a605dcd260843300ca0aa03de5c3dea95b8089661449cc5e31",
     "packages/scope/src/worker.ts:bodyText": "2837bd384fbfca821750f6f351cdd308d4b23bc264bbca872d1d48c632c27e53",
@@ -233,7 +233,7 @@ const seals = {
   "packages/derive/src/genesis.ts": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843",
   "packages/derive/src/judge.ts": "65a10677dd4da355e9edac490979cacf6911cfa1aa37020c41516f5c53ad94fb",
   "packages/scope/src/sessions.ts": "8a3a0fe2ac79dfc94bef23a07aa8d36a6bb6acf30fb8af4089e9f89851221aba",
-  "packages/scope/src/originals.ts": "25f270077b1d223a2e4bc99b3bce125204a6daf5412e3749f6041537edc8da81", // Reviewed J1 owner: the member compare, the signature and actor check, and the caps.
+  "packages/scope/src/originals.ts": "c8a5185ad8a57a851ecbe77d87649b0bbfd45bf9c93e685d7dc3a35982ef72cc", // Reviewed J1 owner: the member compare, the signature and actor check, and the caps.
   "packages/client/src/originals.ts": "4b77af1b7f1d97f573f072efbe278cd3fa38ee4809b031d648fa57c5d5d17cf4", // Reviewed J1 owner: the bytes that a second device verifies before it sends them again.
   "packages/scope/src/reads.ts": "1fbb2ae6de2566c33c5dc6e19bd8ef7660a30cab6707a12c02508d650085a2cb",
   "packages/scope/src/signed-reads.ts": "3204207ea73dc48cdc40727bbde7f8b734675975fd78694a501b0116cf0abfe2", // Census wire name; its separate fixed-index predicate grants no ordinary scope read.

@@ -9,7 +9,7 @@ import { tsImport } from "tsx/esm/api";
 // StandIn scripts HTTP summaries, standing and decisions; it judges nothing.
 // These are local custody/transport witnesses, not Worker or Native authority.
 const load = source => tsImport(source, import.meta.url);
-const { canonicalize, entryHash, factRefOf, intentDigest, isLogPage, newIncarnation, textDigest, verifySignedIntent } = await load("@generalbusiness/dap-bytes");
+const { canonicalize, entryHash, factRefOf, intentDigest, isLogPage, newIncarnation, textDigest, timeOf, verifySignedIntent } = await load("@generalbusiness/dap-bytes");
 const { secretSigner } = await load("@generalbusiness/dap-client");
 const { firstExtents, ARCHIVE_DEVICE_APPLICATION_COHORT: setupCohort } = await load("@generalbusiness/dap-platform");
 const { identityId } = await load("@generalbusiness/dap-mcp");
@@ -19,6 +19,8 @@ const { durableCliStore, durableRequestStore } = await load(new URL("../custody.
 const { openSession, SessionRefusal } = await load(new URL("../session.ts", import.meta.url).href);
 const { roomRefs } = await load(new URL("../workflow.ts", import.meta.url).href);
 const { laneState } = await load(new URL("../journal.ts", import.meta.url).href);
+const { publicationPhase } = await load(new URL("../publication.ts", import.meta.url).href);
+const { retain } = await load(new URL("../plan.ts", import.meta.url).href);
 const { hashOfBytes } = await load("@generalbusiness/dap-replay");
 const NOW = Date.parse("2099-01-01T00:00:00Z");
 
@@ -71,7 +73,7 @@ async function fixture(t) {
   };
   return {
     home, peer, script, calls, mutations, custody, identity,
-    open: () => openSession(home, { fetch, now: () => NOW }),
+    open: (now = () => NOW) => openSession(home, { fetch, now }),
     async record(target, key) { return custody.read(identityId(identity(target, key))); },
     original() {
       const names = readdirSync(join(home, "private")).filter(name => name.startsWith("s1o-") && name.endsWith(".data"));
@@ -250,6 +252,23 @@ test("laneState decodes actual Session/MCP record Stored bytes and folds the exa
   assert.deepEqual(folded.memory.scope().head, f.peer.head(f.scope));
   assert.equal(f.mutations.length, 0);
   assert.ok(f.calls.filter(call => call.method === "POST").every(call => call.path.endsWith("/sessions")));
+});
+
+test("a stage-ready that stays pending reads the actual journal, posts no act or preparation, and its pauses stay inside one read session", { timeout: 30_000 }, async t => {
+  const f = await journalFixture(t), store = durableCliStore(f.home);
+  await retain(store, "s1-seed-lane", f.lane);
+  await retain(store, "s1-done-hold", { phase: "hold", status: "accepted", fact: { seq: 0 } });
+  await retain(store, "s1-done-manifest-stage", { phase: "manifest-stage", status: "accepted", intent: textDigest("SCRIPTED staged intent") });
+  // The stand-in's session ends when the reader asks: 60 seconds on. The clock moves only by the pauses,
+  // so a second session request means the pauses alone outlast one session. Read time is not modelled.
+  f.peer.sessionEnds = timeOf(NOW + 60_000);
+  let now = NOW, pauses = 0;
+  const opened = await f.open(() => now);
+  opened.ctx.pause = async () => { pauses++; now += 2000; };
+  await assert.rejects(publicationPhase(opened, opened, opened, {}, "stage-ready", "new"), { message: "The actual stage/check outcome is not ready. Read this phase again." });
+  assert.equal(f.mutations.length, 0, "The wait posts no act or preparation");
+  assert.deepEqual(f.calls.filter(call => call.method === "POST").map(call => call.path.split("/").at(-1)), ["sessions"], "The only signed request is the first read's one read session");
+  assert.equal(pauses, 15);
 });
 
 test("laneState refuses malformed, noncanonical, hash-substituted, misbound and incomplete Stored logs after the real codec", { timeout: 30_000 }, async t => {

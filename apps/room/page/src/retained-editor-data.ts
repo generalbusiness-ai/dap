@@ -6,7 +6,7 @@ import { ScopeHandle, declaredHandle, httpTransport, shapeDeclaredAct, signedInt
 import { expectedOf, heldActs, type DefinitionShape } from "@generalbusiness/dap-cli/browser";
 import { ARCHIVE_DEVICE_PUBLICATION_COHORT, editPath, fileSound, platform } from "@generalbusiness/dap-platform";
 import { knownLIST1 } from "./source-support.ts";
-import { actAssociation, endOriginal, keepOriginal, openingScope, openRoom, sessionSigner, Unreadable, type ChangeView, type Room } from "./data.ts";
+import { actAssociation, endOriginal, keepToSend, openingScope, openRoom, sessionSigner, Unreadable, type ChangeView, type Room } from "./data.ts";
 
 export interface EditSource { definition: string; manifestFact: FactRef; sourceFact: FactRef; scope: ScopeRef; manifest: number; opened: Digest; base: string; path: string; digest: Digest; size: number; content: string }
 export interface EditDraft { title: string; path: string; content: string }
@@ -165,8 +165,7 @@ async function sendStep(room: Room, task: EditTask, kind: EditStep["kind"], targ
   const current = await taskRoom(room, task, options);
   if (await head(current, task.workflow === "list1") !== task.base) throw new Unreadable("The published base moved before submission. Nothing new was sent.");
   if (kind === "propose-manifest") await verifiedCollectedSource(current, task);
-  check(options);
-  await keepOriginal(current, step.signed, step.beside);
+  await keepToSend(current, step.signed, step.beside, () => check(options), () => check(options));
   step.attempted = true; options.changed?.();
   try { step.answer = await h.submit(step.signed, step.grants, step.beside); }
   catch { task.state = "unknown"; task.message = `${kind}: outcome unknown. The original request is kept in this loaded Page. No next step was sent.`; options.changed?.(); return false; }

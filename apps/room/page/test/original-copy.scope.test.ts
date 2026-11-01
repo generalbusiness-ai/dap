@@ -1,12 +1,13 @@
 import { expect, test } from "vitest";
 import { runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import type { ScopeId, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalBytes, canonicalize, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalBytes, canonicalize, intentDigest, newIncarnation, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { DEMO_DIGESTS } from "@generalbusiness/dap-lanes";
 import { actBodyText, originalRequest, requestSession, secretSigner, sendableAt, signedIntent, signedRead, signerSessionRequest, type Fetch, type OriginalRow, type Signer } from "@generalbusiness/dap-client";
 import { applicationGatewayRoute } from "../../../../packages/client/src/application-gateway.ts";
-import { CopyNotKept, act, copiesOf, handleOf, issueDeviceKey, joinRoom, keepOriginal, listLanes, loadIssue, openRoom, placeOf, prepareJoin, submitJoin, type Room, type Session } from "../src/data.ts";
-import { checkOriginalRequest, lockedScopes, openOriginals, originalLine } from "../src/original-check.ts";
+import { CopyNotKept, act, actAssociation, sessionLost, copiesOf, handleOf, issueDeviceKey, joinRoom, keepOriginal, listLanes, loadIssue, openRoom, placeOf, prepareJoin, submitJoin, type Room, type Session } from "../src/data.ts";
+import { ORIGINALS_UNREAD, checkOriginalRequest, liftFences, lockedScopes, openOriginals, originalLine, settledAssociations } from "../src/original-check.ts";
+import { ScopeSending } from "../src/shell.ts";
 import { SERVICE, demo, type Demo } from "./support/demo.ts";
 
 // Invariant: a copy of a request stays where another key of one member reaches it. That key settles the request with no signature,
@@ -17,8 +18,10 @@ import { SERVICE, demo, type Demo } from "./support/demo.ts";
 // losing its connection does. No DOM: the two-context witness (`two-devices.mjs`) runs the page.
 
 type Mode = "pass" | "reply-lost" | "never-arrived" | "held";
-interface Wire { mode: Mode; acts: { actor: string; body: string; arrived: boolean }[]; copies: { method: string; path: string }[]; order: string[]; release?: () => void; arrived?: () => void }
-const wireOf = (): Wire => ({ mode: "pass", acts: [], copies: [], order: [] });
+/** What the stand-in network loses or refuses: session requests, copy lists, a refused list, and copy deletions. */
+type Down = "sessions" | "list" | "list-refused" | "end";
+interface Wire { mode: Mode; down: Set<Down>; acts: { actor: string; body: string; arrived: boolean }[]; copies: { method: string; path: string }[]; order: string[]; release?: () => void; arrived?: () => void }
+const wireOf = (): Wire => ({ mode: "pass", down: new Set(), acts: [], copies: [], order: [] });
 const ACTS = /\/v1\/scopes\/[^/]+\/acts$/;
 const COPIES = /\/v1\/scopes\/[^/]+\/originals(\/.*)?$/;
 
@@ -26,6 +29,10 @@ const COPIES = /\/v1\/scopes\/[^/]+\/originals(\/.*)?$/;
 const wrapOf = (wire: Wire) => (inner: Fetch): Fetch => async (url, init) => {
   const method = init?.method ?? "GET", path = new URL(url).pathname;
   if (COPIES.test(path)) { wire.copies.push({ method, path }); wire.order.push(`${method} originals`); }
+  if (wire.down.has("sessions") && path.endsWith("/sessions")) throw new Error("no reply to the session request");
+  if (wire.down.has("list") && method === "GET" && path.endsWith("/originals")) throw new Error("no reply to the list");
+  if (wire.down.has("list-refused") && method === "GET" && path.endsWith("/originals")) return new Response(JSON.stringify({ ok: false, reason: "unavailable" }), { status: 503 }) as never;
+  if (wire.down.has("end") && method === "DELETE" && COPIES.test(path)) throw new Error("no reply to the deletion");
   if (method !== "POST" || !ACTS.test(path)) return inner(url, init);
   const body = init?.body as string;
   const actor = (JSON.parse(body) as { signed: SignedIntent }).signed.intent.actor;
@@ -86,6 +93,24 @@ async function scene(wire: Wire = wireOf()): Promise<Scene> {
   return { d, wire, place, laptop, phone, rita, paul, lane: issue.scope, number: issue.number!, secrets, phoneSignatures: count, session };
 }
 
+const GIB = 1024 * 1024 * 1024;
+/** A row that only states its size and its member, so that a case can fill an object at once. */
+const fill = (s: Scene, member: string, digest: string, size: number) => s.d.wait(() => runInDurableObject(s.d.M.object, (_instance, state) => {
+  state.storage.sql.exec("INSERT INTO original_copy (digest, inc, member, actor, target, kind, item, not_after, drop_ms, size, bytes) VALUES (?, ?, ?, 'k', '{}', 'k', NULL, 'never', ?, ?, '')", digest, s.laptop.membership.inc, member, s.laptop.session.now!() + 8 * 24 * 3600 * 1000, size);
+}));
+/** Each member's row count in the object. */
+const rowsByMember = (s: Scene) => s.d.wait(() => runInDurableObject(s.d.M.object, (_instance, state) => Object.fromEntries(state.storage.sql.exec("SELECT member, COUNT(*) AS n FROM original_copy GROUP BY member").toArray().map(row => [row["member"] as string, row["n"] as number]))));
+/** One signed request by `room`'s key, kept through the route. */
+async function keepBy(s: Scene, room: Room, secret: Uint8Array, to: unknown, kind = "comment") {
+  const signed = await signedIntent(secretSigner(secret), { to: to as never, kind, on: null, fields: {} as never, expected: {} }, { now: room.session.now!() });
+  const reply = await statusOf(s.session(s.secrets.laptop).fetch!, room, "", "POST", actBodyText(signed));
+  return { status: reply.status, reason: reply.text ? (JSON.parse(reply.text) as { reason?: string }).reason ?? null : null };
+}
+const scopeRefOf = async (room: Room, scope: ScopeId) => {
+  const summary = await handleOf(room, scope).summary();
+  if (!summary.ok) throw new Error(summary.reason);
+  return summary.value;
+};
 const comment = (room: Room, lane: ScopeId, body: string) => act(room, lane, "comment", { fields: { body } });
 const entriesUnder = async (room: Room, lane: ScopeId, key: string) => {
   const read = await handleOf(room, lane).history();
@@ -97,12 +122,18 @@ const statusOf = async (fetch: Fetch, room: Room, path: string, method = "GET", 
   const text = reply.body ? new TextDecoder().decode(await new Response(reply.body as never).arrayBuffer()) : "";
   return { status: reply.status, text, cache: reply.headers?.get("cache-control") ?? null };
 };
+/** The rows of a read that must succeed. */
+const openRows = async (room: Room): Promise<readonly OriginalRow[]> => {
+  const read = await openOriginals(room);
+  expect(read.failed).toBe(false);
+  return read.rows;
+};
 /** Sends the act with the wire in `mode`, and returns the copy's row. The page sees a lost reply. */
 async function lost(s: Scene, mode: Mode, body = "It is in README.md."): Promise<OriginalRow> {
   s.wire.mode = mode;
   await expect(comment(s.laptop, s.lane, body)).rejects.toThrow();
   s.wire.mode = "pass";
-  const rows = await openOriginals(s.phone);
+  const rows = await openRows(s.phone);
   expect(rows).toHaveLength(1);
   return rows[0]!;
 }
@@ -124,7 +155,7 @@ test("a second key of one member settles a lost reply", async () => {
     expect(check.state).toBe("landed");
     // The column "Reply lost" of the witness table.
     expect([s.wire.acts.length, phoneActs(), s.phoneSignatures.signatures]).toEqual([1, 0, 0]);
-    expect(await openOriginals(s.phone)).toEqual([]);
+    expect(await openRows(s.phone)).toEqual([]);
     const signed = (JSON.parse(first.body) as { signed: SignedIntent }).signed;
     const entries = await entriesUnder(s.phone, s.lane, signed.intent.idempotencyKey);
     expect(entries).toHaveLength(1);
@@ -156,7 +187,7 @@ test("an act that never arrived ends refused expired", async () => {
     expect(s.wire.acts[1]!.body).toBe(firstBody);
     expect(s.wire.acts.filter(sent => sent.actor === s.laptop.key)).toHaveLength(2); // Both bodies carry the first key's signature.
     expect(s.phoneSignatures.signatures).toBe(0);
-    expect(await openOriginals(s.phone)).toEqual([]);
+    expect(await openRows(s.phone)).toEqual([]);
     const signed = (JSON.parse(firstBody) as { signed: SignedIntent }).signed;
     expect(await entriesUnder(s.phone, s.lane, signed.intent.idempotencyKey)).toEqual([]);
   } finally { s.d.done(); }
@@ -170,7 +201,7 @@ test("another member and a revoked key read nothing", async () => {
     for (const other of [s.paul, s.rita]) {
       expect(await copiesOf(other)!.read(row.digest)).toEqual({ ok: false, reason: "not-found" });
       expect(await copiesOf(other)!.end(row.digest)).toEqual({ ok: false, reason: "not-found" });
-      expect((await openOriginals(other))).toEqual([]);
+      expect((await openRows(other))).toEqual([]);
     }
     // Every route says `no-store`, and no route answers without a session.
     expect((await statusOf(fetch, s.phone, "")).cache).toBe("no-store");
@@ -185,7 +216,7 @@ test("another member and a revoked key read nothing", async () => {
     expect(await copiesOf(s.laptop)!.list()).toEqual({ ok: false, reason: "forbidden" });
     expect(await copiesOf(s.laptop)!.read(row.digest)).toEqual({ ok: false, reason: "forbidden" });
     expect(await copiesOf(s.laptop)!.end(row.digest)).toEqual({ ok: false, reason: "forbidden" });
-    expect((await openOriginals(s.phone)).map(open => open.digest)).toEqual([row.digest]);
+    expect((await openRows(s.phone)).map(open => open.digest)).toEqual([row.digest]);
     expect((await checkOriginalRequest(s.phone, row.digest)).state).toBe("landed");
   } finally { s.d.done(); }
 });
@@ -237,12 +268,19 @@ test("a copy lands nowhere else", async () => {
     const genuine = await fetch(`${SERVICE}/v1/scopes/${encodeURIComponent(s.d.D.name)}`, { headers: { authorization: `Signed ${b64url(canonicalBytes(reading))}` } });
     expect(genuine.status).toBe(200); // The same read with its own signature is what the forged one failed to be.
 
-    // A session cannot make or change a copy: it can keep only what its own key signed, and only with a good signature.
+    // A session can make a copy only of what its own key signed, and only with a good signature.
     expect((await statusOf(fetch, s.paul, "", "POST", secondRead.bytes)).status).toBe(403);
     expect((await statusOf(fetch, s.phone, "", "POST", secondRead.bytes)).status).toBe(403);
     expect((await statusOf(fetch, s.laptop, "", "POST", "{}")).status).toBe(400);
     expect((await statusOf(fetch, s.laptop, "", "POST", actBodyText(secondRequest.signed, altered))).status).toBe(409);
     expect((await copiesOf(s.phone)!.read(second.digest))).toEqual({ ok: true, bytes: secondRead.bytes });
+    // A holder of the key's session can delete the row and keep it again with other unsigned parts. The scope still refuses those parts.
+    expect(await copiesOf(s.laptop)!.end(second.digest)).toEqual({ ok: true });
+    const otherParts = actBodyText(secondRequest.signed, altered);
+    expect((await statusOf(fetch, s.laptop, "", "POST", otherParts)).status).toBe(204);
+    expect(await copiesOf(s.laptop)!.read(second.digest)).toEqual({ ok: true, bytes: otherParts });
+    expect((await target.submit(secondRequest.signed, [], altered)).answer).toBe("refused");
+    expect(await entriesUnder(s.phone, s.lane, secondRequest.signed.intent.idempotencyKey)).toEqual([]);
 
     // Send it unlanded at `notAfter`: `expired`.
     s.d.advanceClock(timeMs(second.notAfter)! - s.phone.session.now!());
@@ -273,10 +311,10 @@ test("a full cap sends nothing", async () => {
     expect(stopped).toBeInstanceOf(CopyNotKept);
     expect(stopped?.message).toContain("Nothing was sent");
     expect(s.wire.acts).toEqual([]);
-    expect(await openOriginals(s.laptop)).toHaveLength(64);
+    expect(await openRows(s.laptop)).toHaveLength(64);
     // Another member keeps their own cap.
     expect((await comment(s.paul, s.lane, "Mine goes.")).answer.answer).toBe("accepted");
-    const lots = await openOriginals(s.laptop);
+    const lots = await openRows(s.laptop);
 
     // The member's bytes: 16 MiB. A row states a 1 MiB body at most.
     for (const row of lots) expect((await copiesOf(s.laptop)!.end(row.digest)).ok).toBe(true);
@@ -287,15 +325,13 @@ test("a full cap sends nothing", async () => {
     const fullBytes = await keepOne(117, { texts: [text] });
     expect(fullBytes.status).toBe(507);
     expect(JSON.parse(fullBytes.text).reason).toBe("full");
-    for (const row of await openOriginals(s.laptop)) expect((await copiesOf(s.laptop)!.end(row.digest)).ok).toBe(true);
+    for (const row of await openRows(s.laptop)) expect((await copiesOf(s.laptop)!.end(row.digest)).ok).toBe(true);
 
-    // The object's bytes: 1 GiB, across members. A row outside this member fills it.
-    await s.d.wait(() => runInDurableObject(s.d.M.object, (_instance, state) => {
-      state.storage.sql.exec("INSERT INTO original_copy (digest, inc, member, actor, target, kind, item, not_after, drop_ms, size, bytes) VALUES ('filler', ?, '@other', 'k', '{}', 'k', NULL, 'never', ?, ?, '')", s.laptop.membership.inc, now + 8 * 24 * 3600 * 1000, 1024 * 1024 * 1024);
-    }));
+    // The object's bytes: 1 GiB, across members. A row of another active member fills it.
+    await fill(s, "@paul", "filler", GIB);
     const overObject = await keepOne(200);
-    expect(overObject.status).toBe(507);
-    expect(JSON.parse(overObject.text).reason).toBe("full");
+    expect(overObject.status).toBe(423);
+    expect(JSON.parse(overObject.text).reason).toBe("room-full");
   } finally { s.d.done(); }
 }, 120_000);
 
@@ -345,7 +381,7 @@ test("an open copy locks only its own key", async () => {
     const sending = comment(s.laptop, s.lane, "Held.");
     await arrived;
     s.wire.mode = "pass";
-    const rows = await openOriginals(s.phone);
+    const rows = await openRows(s.phone);
     expect(rows).toHaveLength(1);
     const row = rows[0]!;
     const now = () => s.phone.session.now!();
@@ -354,16 +390,16 @@ test("an open copy locks only its own key", async () => {
     expect((await checkOriginalRequest(s.phone, row.digest)).state).toBe("waiting");
     expect(s.wire.acts.filter(sent => sent.actor === s.phone.key)).toEqual([]);
     expect((await comment(s.phone, s.lane, "From the phone.")).answer.answer).toBe("accepted");
-    expect(await openOriginals(s.phone)).toHaveLength(1);
+    expect(await openRows(s.phone)).toHaveLength(1);
 
     s.wire.release!();
     await expect(sending).rejects.toThrow();
     // A reloaded page of the first key offers only the button, until the margin passes.
     const reloaded = await openRoom(s.session(s.secrets.laptop), s.place);
-    const open = await openOriginals(reloaded);
+    const open = await openRows(reloaded);
     expect([...lockedScopes(reloaded, open, now())]).toEqual([s.lane]);
     s.d.advanceClock(sendableAt(row.notAfter) - now() - 1000);
-    const later = await openOriginals(await openRoom(s.session(s.secrets.laptop), s.place));
+    const later = await openRows(await openRoom(s.session(s.secrets.laptop), s.place));
     expect([...lockedScopes(reloaded, later, now())]).toEqual([s.lane]);
     s.d.advanceClock(1000);
     expect(lockedScopes(reloaded, later, now()).size).toBe(0);
@@ -420,4 +456,290 @@ test("a page on signed reads keeps no copy", async () => {
   const room = { session: { service: SERVICE, secret: new Uint8Array(32) }, membership: { scope: "m", inc: "i", kind: "membership" }, reader: null } as unknown as Room;
   const fetch: Fetch = () => { throw new Error("no request goes out"); };
   await expect(keepOriginal({ ...room, session: { ...room.session, fetch } }, {} as SignedIntent, {})).resolves.toBeUndefined();
+});
+
+test("a long kind keeps no row, and 64 rows fit the list's reply", async () => {
+  const s = await scene();
+  try {
+    const fetch = s.session(s.secrets.laptop).fetch!;
+    const to = (await scopeRefOf(s.laptop, s.lane)).scope;
+    // One byte past the bound, and a kind that alone would pass the client's bound on a list with two rows: no row.
+    for (const kind of ["k".repeat(257), "k".repeat(600 * 1024)]) expect(await keepBy(s, s.laptop, s.secrets.laptop, to, kind)).toEqual({ status: 400, reason: "bad-request" });
+    expect(await rowsByMember(s)).toEqual({});
+    // The longest reply: 64 rows, each with a kind of 256 control bytes, which JSON writes at six bytes each.
+    for (let i = 0; i < 64; i++) expect((await keepBy(s, s.laptop, s.secrets.laptop, to, "\u0001".repeat(256))).status, `copy ${i + 1}`).toBe(204);
+    const reply = await statusOf(fetch, s.laptop, "");
+    expect(reply.status).toBe(200);
+    const size = utf8(reply.text).length;
+    expect(size).toBeGreaterThan(64 * 1536);
+    expect(size).toBeLessThan(121_600 + 300); // The arithmetic in `originals.ts`, with the reply's envelope.
+    expect(await openRows(s.laptop)).toHaveLength(64);
+  } finally { s.d.done(); }
+}, 120_000);
+
+test("a failed read keeps the last rows and the lock", async () => {
+  const s = await scene();
+  try {
+    const row = await lost(s, "never-arrived");
+    const reloaded = await openRoom(s.session(s.secrets.laptop), s.place);
+    const now = () => reloaded.session.now!();
+    expect((await openRows(reloaded)).map(open => open.digest)).toEqual([row.digest]);
+    expect(ORIGINALS_UNREAD).toContain("could not read your open requests");
+    // A lost reply, and a refused read: each says it failed, and the rows, the lock and the button's digest stay.
+    for (const down of ["list", "list-refused"] as const) {
+      s.wire.down.add(down);
+      const read = await openOriginals(reloaded);
+      s.wire.down.delete(down);
+      expect(read.failed, down).toBe(true);
+      expect(read.rows.map(open => open.digest), down).toEqual([row.digest]);
+      expect([...lockedScopes(reloaded, read.rows, now())], down).toEqual([s.lane]);
+    }
+    // The next good read ends the failure. An empty list is an empty list.
+    expect((await openRows(reloaded)).map(open => open.digest)).toEqual([row.digest]);
+    expect(await copiesOf(reloaded)!.end(row.digest)).toEqual({ ok: true });
+    expect(await openOriginals(reloaded)).toEqual({ rows: [], failed: false });
+    // A page with no earlier read has no rows to keep, and it still says the read failed.
+    s.wire.down.add("list");
+    expect(await openOriginals(s.rita)).toEqual({ rows: [], failed: true });
+  } finally { s.d.done(); }
+});
+
+test("a full object drops the rows of a member who left or holds no key", async () => {
+  const s = await scene();
+  try {
+    const rita = await s.d.secretOf(s.d.rita);
+    const to = (await scopeRefOf(s.rita, s.lane)).scope;
+    const row = await lost(s, "never-arrived");
+    await fill(s, "@paul", "paul-fills-it", GIB);
+    const roomFull = { status: 423, reason: "room-full" };
+    expect(await keepBy(s, s.rita, rita, to)).toEqual(roomFull);
+    expect(await rowsByMember(s)).toEqual({ "@paul": 1, "@una": 1 });
+
+    // A retired key of a member with another active key keeps its rows.
+    const membership = await scopeRefOf(s.rita, s.rita.membership.scope);
+    const keyOf = (key: string) => membership.items.find(item => item.type === "key" && item.values["id"] === key)!;
+    expect((await act(s.rita, s.rita.membership.scope, "revoke-key", { on: keyOf(s.laptop.key).id, fields: { as: "retired" } })).answer.answer).toBe("accepted");
+    expect(await keepBy(s, s.rita, rita, to)).toEqual(roomFull);
+    expect(await rowsByMember(s)).toEqual({ "@paul": 1, "@una": 1 });
+    expect((await openRows(s.phone)).map(open => open.digest)).toEqual([row.digest]);
+
+    // An active member with no active key: the rows go, and the keep passes.
+    expect((await act(s.rita, s.rita.membership.scope, "revoke-key", { on: keyOf(s.paul.key).id, fields: { as: "retired" } })).answer.answer).toBe("accepted");
+    expect((await keepBy(s, s.rita, rita, to)).status).toBe(204);
+    expect(await rowsByMember(s)).toEqual({ "@rita": 1, "@una": 1 });
+
+    // A removed member who still holds an active key: the rows go too.
+    await fill(s, "@una", "una-fills-it", GIB);
+    expect(await keepBy(s, s.rita, rita, to)).toEqual(roomFull);
+    const member = (await scopeRefOf(s.rita, s.rita.membership.scope)).items.find(item => item.type === "member" && item.values["handle"] === "@una")!;
+    expect((await act(s.rita, s.rita.membership.scope, "remove-member", { on: member.id })).answer.answer).toBe("accepted");
+    expect((await keepBy(s, s.rita, rita, to)).status).toBe(204);
+    expect(await rowsByMember(s)).toEqual({ "@rita": 2 });
+  } finally { s.d.done(); }
+}, 120_000);
+
+test("a full object still takes a request to membership, under the member's own caps", async () => {
+  const s = await scene();
+  try {
+    const rita = await s.d.secretOf(s.d.rita);
+    const membershipRef = s.rita.membership;
+    await fill(s, "@paul", "paul-fills-it", GIB);
+    expect(await keepBy(s, s.rita, rita, (await scopeRefOf(s.rita, s.lane)).scope)).toEqual({ status: 423, reason: "room-full" });
+    // Another incarnation of the scope's name is no request to this scope.
+    expect(await keepBy(s, s.rita, rita, { ...membershipRef, inc: newIncarnation(new Uint8Array(16).fill(9)) })).toEqual({ status: 423, reason: "room-full" });
+    expect((await keepBy(s, s.rita, rita, membershipRef)).status).toBe(204);
+    // The member's own caps still apply to a request to membership.
+    for (let i = 0; i < 63; i++) await fill(s, "@rita", `rita-${i}`, 1);
+    expect(await keepBy(s, s.rita, rita, membershipRef)).toEqual({ status: 507, reason: "full" });
+    await s.d.wait(() => runInDurableObject(s.d.M.object, (_instance, state) => { state.storage.sql.exec("DELETE FROM original_copy WHERE member = '@rita'").toArray(); }));
+    // The admin removes a member through the page while the room is full. The removal frees that member's rows.
+    const member = (await scopeRefOf(s.rita, membershipRef.scope)).items.find(item => item.type === "member" && item.values["handle"] === "@paul")!;
+    expect((await act(s.rita, membershipRef.scope, "remove-member", { on: member.id })).answer.answer).toBe("accepted");
+    expect((await comment(s.rita, s.lane, "The room has space again.")).answer.answer).toBe("accepted");
+    expect(await rowsByMember(s)).toEqual({});
+  } finally { s.d.done(); }
+}, 120_000);
+
+test("a full object and a full member say different things", async () => {
+  const s = await scene();
+  try {
+    await fill(s, "@paul", "paul-fills-it", GIB);
+    const roomFull = await comment(s.laptop, s.lane, "No space.").then(() => null, (error: Error) => error);
+    expect(roomFull).toBeInstanceOf(CopyNotKept);
+    expect(roomFull?.message).toBe("This room has no space for more open requests. Nothing was sent. Space returns as open requests end, within seven days at most. An admin can still remove a member who has left, and that frees the member's requests.");
+    expect(s.wire.acts).toEqual([]);
+    await s.d.wait(() => runInDurableObject(s.d.M.object, (_instance, state) => { state.storage.sql.exec("DELETE FROM original_copy").toArray(); }));
+    for (let i = 0; i < 64; i++) await fill(s, "@una", `una-${i}`, 1);
+    const mine = await comment(s.laptop, s.lane, "Too many.").then(() => null, (error: Error) => error);
+    expect(mine).toBeInstanceOf(CopyNotKept);
+    expect(mine?.message).toBe("You have too many open requests. Nothing was sent. Check the open requests in this room first.");
+    expect(s.wire.acts).toEqual([]);
+  } finally { s.d.done(); }
+}, 120_000);
+
+test("a full object frees a bounded quantum at each keep", async () => {
+  const s = await scene();
+  try {
+    const rita = await s.d.secretOf(s.d.rita);
+    const to = (await scopeRefOf(s.rita, s.lane)).scope;
+    const keep = () => keepBy(s, s.rita, rita, to);
+    const ended = async () => { for (const row of await openRows(s.rita)) await copiesOf(s.rita)!.end(row.digest); };
+    // One member's rows: at most 64 at one keep.
+    for (let i = 0; i < 70; i++) await fill(s, "@gone", `gone-${i}`, GIB);
+    expect((await keep()).status).toBe(423);
+    expect(await rowsByMember(s)).toEqual({ "@gone": 6 });
+    expect((await keep()).status).toBe(204);
+    expect(await rowsByMember(s)).toEqual({ "@rita": 1 });
+    await ended();
+    // Many members: at most 16 at one keep, and the next keep continues past them.
+    for (let i = 0; i < 20; i++) await fill(s, `@gone-${String(i).padStart(2, "0")}`, `one-${i}`, GIB);
+    expect((await keep()).status).toBe(423);
+    expect(Object.keys(await rowsByMember(s))).toEqual(["@gone-16", "@gone-17", "@gone-18", "@gone-19"]);
+    await fill(s, "@gone-00", "behind", GIB); // Behind the sweep: this keep goes on from where the last one stopped.
+    expect((await keep()).status).toBe(423);
+    expect(await rowsByMember(s)).toEqual({ "@gone-00": 1 });
+    expect((await keep()).status).toBe(204);
+    expect(await rowsByMember(s)).toEqual({ "@rita": 1 });
+  } finally { s.d.done(); }
+}, 120_000);
+
+test("a stop around the keep leaves no row", async () => {
+  const s = await scene();
+  try {
+    const changed = () => { throw new Error("The room or key changed before submission. Nothing was sent."); };
+    const sendStopped = (room: Room, scope: ScopeId, kind: string, asked: Parameters<typeof act>[3], submitting?: () => void, stopping?: () => void) => expect(act(room, scope, kind, asked, undefined, submitting, stopping)).rejects.toThrow("Nothing was sent");
+    const body = { fields: { body: "Stopped." } };
+    // Before the keep: no request to the copy routes, and no act.
+    await sendStopped(s.laptop, s.lane, "comment", body, undefined, changed);
+    expect(s.wire.order).toEqual([]);
+    // After the keep: the row ends, and no act goes.
+    await sendStopped(s.laptop, s.lane, "comment", body, changed);
+    expect(s.wire.order).toEqual(["POST originals", "DELETE originals"]);
+    expect(await openRows(s.laptop)).toEqual([]);
+    // The page's other way to send: a native act.
+    s.wire.order.length = 0;
+    const member = (await scopeRefOf(s.rita, s.rita.membership.scope)).items.find(item => item.type === "member" && item.values["handle"] === "@paul")!;
+    await sendStopped(s.rita, s.rita.membership.scope, "remove-member", { on: member.id }, undefined, changed);
+    expect(s.wire.order).toEqual([]);
+    await sendStopped(s.rita, s.rita.membership.scope, "remove-member", { on: member.id }, changed);
+    expect(s.wire.order).toEqual(["POST originals", "DELETE originals"]);
+    expect(await openRows(s.rita)).toEqual([]);
+    expect(s.wire.acts).toEqual([]);
+    // A row that the page could not end: the words say so, and the row shows as open.
+    s.wire.down.add("end");
+    const unended = await act(s.laptop, s.lane, "comment", body, undefined, changed).then(() => null, (error: Error) => error);
+    expect(unended?.message).toContain("This page could not end its copy");
+    s.wire.down.delete("end");
+    expect(await openRows(s.laptop)).toHaveLength(1);
+    expect(s.wire.acts).toEqual([]);
+  } finally { s.d.done(); }
+});
+
+test("a page that held a session and failed to renew it stops the send", async () => {
+  const s = await scene();
+  try {
+    s.wire.down.add("sessions");
+    s.d.advanceClock(601_000); // The laptop's session ends. Its renewal gets no reply.
+    const stopped = await comment(s.laptop, s.lane, "No copy, no send.").then(() => null, (error: Error) => error);
+    expect(stopped).toBeInstanceOf(CopyNotKept);
+    expect(stopped?.message).toBe("This page could not renew its session with the room, so it cannot keep a copy of this request. Nothing was sent. Check your connection and send it again, or reload the page.");
+    expect(s.laptop.reader).toBeNull();
+    expect(s.wire.acts).toEqual([]);
+    // It stays stopped on the next try, and the read says that it failed.
+    await expect(comment(s.laptop, s.lane, "No copy, no send.")).rejects.toBeInstanceOf(CopyNotKept);
+    expect(s.wire.acts).toEqual([]);
+    expect((await openOriginals(s.laptop)).failed).toBe(true);
+
+    // A page that opens with no session keeps today's behaviour: no copy, and the act goes. This module has held a session under each
+    // key of the scene, and a new page load forgets that. So a key that this module never held stands in for that page's memory.
+    s.wire.order.length = 0;
+    const signedReads: Room = { ...await openRoom(s.session(s.secrets.laptop), s.place), key: secretSigner(crypto.getRandomValues(new Uint8Array(32))).key };
+    expect(signedReads.reader).toBeNull();
+    const sentOnSignedReads = await comment(signedReads, s.lane, "On signed reads.").then(acted => acted.answer.answer, (error: Error) => error.name);
+    expect(sentOnSignedReads).toBe("accepted");
+    expect(s.wire.order).toEqual(["POST acts"]);
+    expect(await openOriginals(signedReads)).toEqual({ rows: [], failed: false });
+
+    // The connection comes back: the next send renews the session, keeps its copy and goes.
+    s.wire.down.delete("sessions");
+    s.wire.order.length = 0;
+    const sentAgain = await comment(s.laptop, s.lane, "Back again.").then(acted => acted.answer.answer, (error: Error) => error.name);
+    expect(sentAgain).toBe("accepted");
+    expect(s.laptop.reader).not.toBeNull();
+    expect(s.wire.order).toEqual(["POST originals", "POST acts", "DELETE originals"]);
+  } finally { s.d.done(); }
+});
+
+test("an answer lifts only this page's own fence", async () => {
+  const s = await scene();
+  try {
+    const row = await lost(s, "reply-lost");
+    const own = actAssociation(s.laptop, s.lane);
+    const landed = await checkOriginalRequest(s.phone, row.digest);
+    expect(landed.state).toBe("landed");
+    expect(settledAssociations(s.phone, row, landed)).toEqual([]);
+    expect(settledAssociations(s.laptop, row, landed)).toEqual([own]);
+    expect(settledAssociations(s.laptop, row, { state: "refused", reason: "expired" })).toEqual([own]);
+    // A missing row shows nothing, and `mismatch` and `archived` are fences on the send path too.
+    for (const state of ["gone", "mismatch", "archived", "waiting", "unknown", "unverified"] as const) expect(settledAssociations(s.laptop, row, { state, reason: "x", until: 0 } as never), state).toEqual([]);
+    // An opening act can sit under the directory, where the page's panel keeps its fence.
+    const opening = { ...row, to: { ...row.to, kind: "directory" as const } };
+    expect(settledAssociations(s.laptop, opening, landed)).toEqual([own, actAssociation(s.laptop, s.laptop.directory)]);
+  } finally { s.d.done(); }
+});
+
+test("a page that clears its opened rooms still stops the send", async () => {
+  const s = await scene();
+  try {
+    // The page held a session under this service, membership and key. `opened.clear()` makes a new `Session` at the next open.
+    s.wire.down.add("sessions");
+    const reopened = await openRoom(s.session(s.secrets.laptop), s.place);
+    expect(reopened.reader).toBeNull();
+    const stopped = await comment(reopened, s.lane, "No copy, no send.").then(() => null, (error: Error) => error);
+    expect(stopped).toBeInstanceOf(CopyNotKept);
+    expect(s.wire.acts).toEqual([]);
+    expect((await openOriginals(reopened)).failed).toBe(true);
+    // Another key's memory is its own: a key that this page never held a session under has lost nothing, and the phone's page still holds its session.
+    expect(sessionLost({ ...reopened, key: secretSigner(crypto.getRandomValues(new Uint8Array(32))).key })).toBe(false);
+    expect(s.phone.reader).not.toBeNull();
+    expect((await comment(s.phone, s.lane, "From the phone.")).answer.answer).toBe("accepted");
+  } finally { s.d.done(); }
+});
+
+test("an older row lifts no newer request's fence", async () => {
+  const s = await scene();
+  try {
+    // The digest that the send hands over, and the digest of its answer, are the row's digest.
+    let handed = "";
+    s.wire.mode = "reply-lost";
+    const lostSend = await act(s.laptop, s.lane, "comment", { fields: { body: "Older." } }, undefined, digest => { handed = digest; }).then(() => null, (error: Error) => error);
+    expect(lostSend).not.toBeNull();
+    s.wire.mode = "pass";
+    const older = (await openRows(s.laptop))[0]!;
+    expect(handed).toBe(older.digest);
+    const landed = await checkOriginalRequest(s.laptop, older.digest);
+    expect(landed.state).toBe("landed");
+    const answered = await comment(s.laptop, s.lane, "Newer.");
+    const sentBody = JSON.parse(s.wire.acts.at(-1)!.body) as { signed: SignedIntent };
+    expect(answered.digest).toBe(intentDigest(sentBody.signed.intent));
+
+    const own = actAssociation(s.laptop, s.lane);
+    const fences = (digest: string) => {
+      const sending = new ScopeSending();
+      sending.begin(own, "comment");
+      sending.submitting(own, digest);
+      sending.failed(own);
+      return { lastActs: new Map([[own, { ...answered, digest } as typeof answered]]), sending };
+    };
+    // A press on the older row, with the page's fences on a newer request: both stay.
+    const newer = fences(answered.digest);
+    liftFences(s.laptop, older, landed, newer.lastActs, newer.sending);
+    expect(newer.lastActs.has(own)).toBe(true);
+    expect(newer.sending.get(own)?.state).toBe("unknown");
+    // A press on the row of the fences' own request: both lift.
+    const same = fences(older.digest);
+    liftFences(s.laptop, older, landed, same.lastActs, same.sending);
+    expect(same.lastActs.has(own)).toBe(false);
+    expect(same.sending.get(own)).toBeUndefined();
+  } finally { s.d.done(); }
 });
