@@ -88,11 +88,12 @@ async function acted(mcp: HostedSession, mode: Mode, tool: string, target: Scope
   return { fact: factOfAnswer(answer), reused: false };
 }
 
+/** Every agent line says that a script drove its session. No model chose this phase or read the prompt. */
 const accepted = (phase: AgentPhase, facts: Record<string, unknown>, values: Record<string, unknown>, session: HostedSession): PublicResult => ({
-  phase, actor: "agent", status: "accepted", facts, values: { ...values, tools: session.listDigest, session: session.sessionDigest() },
+  phase, actor: "agent", status: "accepted", facts, values: { ...values, driver: "script", tools: session.listDigest, session: session.sessionDigest() },
 });
 const observed = (phase: AgentPhase, facts: Record<string, unknown>, values: Record<string, unknown>, session: HostedSession): PublicResult => ({
-  phase, actor: "agent", status: "observed", facts, values: { ...values, tools: session.listDigest, session: session.sessionDigest() },
+  phase, actor: "agent", status: "observed", facts, values: { ...values, driver: "script", tools: session.listDigest, session: session.sessionDigest() },
 });
 
 /** The agent's commitment in one state, or a stop. */
@@ -175,7 +176,7 @@ export async function agentPhase(phase: AgentPhase, mcp: HostedSession, mode: Mo
     if (waited["timedOut"] !== true) return stop("record-differs");
     const after = (await mcp.call("steps", { scope: issue }));
     if (canonicalize(before as never) !== canonicalize(after as never)) return stop("record-differs");
-    return { phase, actor: "agent", status: "timed-out", values: { timedOut: true, entries: (after["steps"] as unknown[]).length, tools: mcp.listDigest, session: mcp.sessionDigest() } };
+    return { phase, actor: "agent", status: "timed-out", values: { timedOut: true, entries: (after["steps"] as unknown[]).length, driver: "script", tools: mcp.listDigest, session: mcp.sessionDigest() } };
   }
   if (phase === "agent-wait") {
     const room = await Room.read(mcp), issue = room.lane("issue", "no-issue-lane");
@@ -271,6 +272,6 @@ export async function agentPhase(phase: AgentPhase, mcp: HostedSession, mode: Mo
   const released = (await room.items(issue, "block", true)).filter(item => item.state === "released");
   if (commitments.filter(item => item.state === "accepted" && room.mine(item, "performer")).length !== 2 || released.length !== 1) return stop("record-differs");
   return observed(phase, { propose: await room.fact(change, proposal.seq) }, {
-    issueOrder: order, changeOrder: changeSteps.filter(row => row.input === "act").map(row => row.kind), issue, change, version: version.id, fileDigest: version.values["digest"], agentKey: room.key, entries: issueSteps.length + changeSteps.length,
+    issueOrder: order, changeOrder: changeSteps.filter(row => row.input === "act").map(row => row.kind), issue, change, version: version.id, fileDigest: version.values["digest"], agentKey: room.key, entries: issueSteps.length + changeSteps.length, modelChoseStep: false,
   }, mcp);
 }

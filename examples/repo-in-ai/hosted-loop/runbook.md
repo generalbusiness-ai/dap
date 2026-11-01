@@ -9,6 +9,14 @@ Each phase is one command and one process. Each agent phase opens a new MCP
 session on the Worker's `/mcp`. The script is the agent, so no model reads the
 work-on prompt. `agent-tools` fetches the prompt and prints its digest.
 
+A script drives every session, and no model chooses a step. The run shows that
+the hosted tools and the record carry the whole loop. No later claim that a
+model can work the loop can rest on this run, because that claim needs its own
+run. Every agent line prints `driver` as `script`, and `agent-verify` also prints
+`modelChoseStep` as `false`. Say the same in any result or note about the run.
+The operator runs the person's commands, and the person's words are the script's
+fixed `TEST` texts.
+
 The script creates a new room. It never touches the real repo-in-ai room.
 
 ## Prepare the Worker
@@ -20,11 +28,24 @@ exact string `true`. The planner owns that deployment.
 2. Leave `MCP_TOOL_ADDITIONS` unset. Any addition makes the list differ from the
    hosted default, and every agent phase stops at `tool-list-differs`.
 3. Record the Worker version from the deployment receipt.
+4. Compare the tool policy with the deployed commit, and keep the result in the
+   run's evidence. `hostedDefaultTools` reads the policy from this checkout, not
+   from the Worker.
+
+   ```sh
+   git diff --exit-code <deployed commit> HEAD -- packages/mcp/src/hosted-tools.ts
+   ```
+
+   If the file differs, compare the generic names in the `names` of
+   `agent-tools` with `hostedMcpTools` at the deployed commit by hand. Record
+   that comparison in the evidence.
 
 Deploy no Worker between the first phase and the last. Every command compares
 the input's version with the live version, and a new version stops the run at
 `target-version`. A stopped run has no way forward on a new version. Start
-again with a new home, which makes a new room.
+again with a new home, which makes a new room. The section
+[what the script leaves behind](#know-what-the-script-leaves-behind) says what
+happens to the old room's agent.
 
 The run needs no provider credential and no hold. `change.propose-file` carries
 the file in the signed intent, so the agent pushes nothing to a workspace.
@@ -126,6 +147,8 @@ do next:
 
 An agent phase finds its original on the agent's object, by its fixed
 `idempotencyKey`. To learn what happened to a lost reply, run `check` first.
+Those fixed keys are the script's memory, not the record's. A model in a new
+session would have to choose or find its own key.
 
 This table lists the common stops:
 
@@ -137,6 +160,9 @@ This table lists the common stops:
 | `tool-list-differs` | The session's list is not the hosted default. | Stop the run, and read the Worker's settings. |
 | `unsourced-fact` | A phase's argument came from no reply of its session. | Report a script defect. |
 | `bypass-read` | The client tried an address other than `/mcp`. | Report a script defect. |
+| `no-person-home` | The person's home does not exist. | Run `owner`. |
+| `no-retained-plan` | The person's home holds no plan of this script, so it is not this run's home. | Use a new home. If `owner` began this home and stopped, run `owner` with `continue`. |
+| `no-published-head` | The destination's branch has no head at `agent-propose`. The phase signed nothing. | Run `agent-propose` again. If the branch stays empty, stop the run and report it. |
 | `no-bearer`, `agent-home-differs` | The agent's home does not hold exactly its bearer. | Run `create-agent`, or restore the home. |
 | `no-offer`, `no-commitment`, `no-question`, `no-approval-request`, `no-block`, `no-decision`, `no-new-offer`, `no-change-lane`, `no-issue-lane` | An earlier phase has not run. | Run the earlier phase. |
 | `no-original` | `check` or `continue` found no original. | Run the phase with `new`. |
@@ -171,8 +197,20 @@ A local run differs from a live run in three ways:
 
 ## Know what the script leaves behind
 
-The scratch room, its agent and its bearer stay in place after the run. The
-script deletes nothing on the Worker. The proposal stays open, and no phase
-merges it.
+The scratch room, its agent and its proposal stay in place after the run. The
+script deletes nothing on the Worker, revokes no key and merges nothing.
+
+The bearer stays valid after the run, because the agent's object keeps the
+agent's key. Closing the endpoint does not end the bearer. A later deployment
+that reopens the endpoint makes it work again. So after you seal the evidence,
+delete the whole private home that `home` names. The sealed evidence holds only
+public lines, so nothing in it depends on that home. The home holds the only copy
+of the bearer and the person's key, so nobody can then use or rotate the bearer.
+
+A stop after `create` can cost a new home and a new room. The old room stays on
+the Worker, and its agent stays enrolled there. That agent signs nothing unless
+someone presents its bearer, and the new run never reads the old home. The new
+home makes a new person's key, a new room and a new agent. Keep the old home until
+you seal the evidence, then delete it with the new one.
 
 Read [the test policy](../../../docs/testing.md) before you change the script.

@@ -41,7 +41,7 @@ const SHAPES: readonly [string, RegExp][] = [
 ];
 /** A long run of token characters that no public reference explains. */
 const TOKEN = /[A-Za-z0-9_-]{32,}/g;
-const EXPLAINED = [/^sc_[a-z2-7]{52}$/, /^in_[a-z2-7]{26}$/, /^key_[A-Za-z0-9_-]{43}$/, /^[0-9a-f]{40}$/];
+const EXPLAINED = [/^sc_[a-z2-7]{52}$/, /^in_[a-z2-7]{26}$/, /^key_[A-Za-z0-9_-]{43}$/, /^[0-9a-f]{40}$/, /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/];
 const afterDigest = (text: string, at: number): boolean => text.slice(Math.max(0, at - 7), at) === "sha256:";
 
 /** Every problem in text a run produced. `exact` holds the run's private bytes: the bearer, its secret, the link, the room's texts. */

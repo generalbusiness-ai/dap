@@ -106,8 +106,9 @@ test("the hosted loop's phases reach a proposal on the default tools, each from 
     await agentRun("agent-open-change"); await agentRun("agent-link"); await agentRun("agent-propose");
     const verified = await agentRun("agent-verify");
     expect(verified.result.values?.["issueOrder"]).toEqual(["offer", "accept", "ask", "request-approval", "block", "approve", "decide", "revise", "offer", "accept", "release-block"]);
-
     expect(verified.result.values?.["changeOrder"]).toEqual(["link-own", "propose-file"]);
+    expect(verified.result.values?.["driver"]).toBe("script");
+    expect(verified.result.values?.["modelChoseStep"]).toBe(false);
 
     // A rerun from a new session finds each original by its key on the agent object. It reuses the fact and adds no entry.
     for (const phase of ["agent-accept", "agent-ask", "agent-request", "agent-block", "agent-accept-new", "agent-release", "agent-open-change", "agent-link", "agent-propose"] as const) {
@@ -122,7 +123,7 @@ test("the hosted loop's phases reach a proposal on the default tools, each from 
     expect(new Set(requests)).toEqual(new Set(["/mcp"]));
     expect(new Set(sessions).size, "each phase opened its own session").toBe(sessions.length);
     expect(sessions.every(id => id !== null)).toBe(true);
-        const lines = transcript.map(publicLine).join("");
+    const lines = transcript.map(publicLine).join("");
     expect(scanPublic(lines, [bearer, bearer.slice(bearer.indexOf(".") + 1), link, secret, b64url(secretKey), TEXT.body, TEXT.question, TEXT.comment, TEXT.content, ...TEXT.conditions, ...TEXT.newConditions])).toEqual([]);
   } finally { hostedTest.toolSettings = previous; hostedTest.now = null; hostedTest.pause = null; room.done(); }
 }, 90_000);

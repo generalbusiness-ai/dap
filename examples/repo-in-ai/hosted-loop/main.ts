@@ -67,9 +67,10 @@ async function person(plan: LoopPlan, options: LoopOptions): Promise<Session> {
   const home = personHome(plan);
   if (await durableCliStore(home).config() === null) return stop("no-person-home");
   const session = await openSession(home, options.fetch ? { fetch: options.fetch as never } : {});
+  // Only `owner` writes the plan. A home with none is not this run's, so no phase adopts it.
   const held = await retained<LoopPlan>(session.ctx.store, "hosted-loop-plan");
-  if (held !== null && !same(held, plan)) return stop("plan-differs");
-  await retain(session.ctx.store, "hosted-loop-plan", plan);
+  if (held === null) return stop("no-retained-plan");
+  if (!same(held, plan)) return stop("plan-differs");
   return session;
 }
 export function personPort(session: Session, mode: Mode): PersonPort {
@@ -179,9 +180,11 @@ export async function runPhase(plan: LoopPlan, phase: LoopPhase, mode: Mode, opt
 const roomRefs = (repository: { directory: ScopeRef; membership: ScopeRef; rules: string; destination: string }) => ({ directory: repository.directory, membership: repository.membership, rules: repository.rules, destination: repository.destination });
 
 /** Private bytes a line must not carry, known to this process. The closed projection already refuses them; the scan is the second check. */
-function privateValues(plan: LoopPlan): string[] {
+async function privateValues(plan: LoopPlan): Promise<string[]> {
   const values: string[] = [TEXT.body, TEXT.question, TEXT.comment, TEXT.content, TEXT.goal, TEXT.issueTitle, TEXT.changeTitle, ...TEXT.conditions, ...TEXT.newConditions];
   try { const bearer = readFileSync(bearerPath(plan), "utf8"); values.push(bearer, bearer.slice(bearer.indexOf(".") + 1)); } catch { /* No bearer yet. */ }
+  // The link stays in the person's home. This scan reads it after the phase ends, and no phase receives it.
+  try { const link = await durableCliStore(personHome(plan)).private("hosted-loop-link"); if (link !== null) values.push(new TextDecoder().decode(link)); } catch { /* No link yet. */ }
   return values;
 }
 
@@ -204,7 +207,7 @@ export async function main(argv: readonly string[], options: LoopOptions = {}): 
     const plan = readLoopPlan(input);
     diagnostics = newDiagnostics(diagnosticsPath, plan.home);
     const line = publicLine(await runPhase(plan, phase as LoopPhase, mode, options));
-    if (scanPublic(line, privateValues(plan)).length > 0) stop("public-output");
+    if (scanPublic(line, await privateValues(plan)).length > 0) stop("public-output");
     process.stdout.write(line);
     diagnostics.finish({ phase, mode, exitCode: 0, enrollment: null }, "");
     return 0;

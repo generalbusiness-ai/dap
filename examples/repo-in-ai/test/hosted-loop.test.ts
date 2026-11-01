@@ -8,8 +8,10 @@ import { join } from "node:path";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { hostedMcpTools, HOSTED_TOOL_OMISSIONS } from "@generalbusiness/dap-mcp";
 import type { Item } from "@generalbusiness/dap-contract";
+import { utf8 } from "@generalbusiness/dap-bytes";
 import { durableCliStore } from "../custody.ts";
 import { initializeOwner } from "../identities.ts";
+import { retained } from "../plan.ts";
 import { agentPhase } from "../hosted-loop/agent.ts";
 import { agentFetch } from "../hosted-loop/hosted-client.ts";
 import { HostedSession, type McpPort } from "../hosted-loop/hosted-session.ts";
@@ -473,6 +475,48 @@ test("an HTTPS input does not adopt a key that planned a register, because that 
   const answer = await runPhase(plan, "owner", "new", { fetch: health() }).catch(() => null);
   expect(answer?.values?.["localFounder"]).toBeUndefined();
   expect((await store.config())?.handle).toBeUndefined();
+});
+
+test.each(personPhases)("%s refuses an existing home with no retained plan, and writes no plan into it", async phase => {
+  const plan = planOf(), home = join(plan.home, "person");
+  mkdirSync(plan.home, { recursive: true, mode: 0o700 });
+  await initializeOwner(home, { service: SERVICE, register: plan.register, handle: plan.handles.person }, "new");
+  expect(await stoppedWith(() => runPhase(plan, phase, "new", { fetch: health() }))).toBe("no-retained-plan");
+  expect(await retained(durableCliStore(home), "hosted-loop-plan")).toBeNull();
+});
+test("owner's own continue writes the plan into a home that owner began, and the next phase then accepts it", async () => {
+  const plan = planOf(), home = join(plan.home, "person");
+  mkdirSync(plan.home, { recursive: true, mode: 0o700 });
+  await initializeOwner(home, { service: SERVICE, register: plan.register, handle: plan.handles.person }, "new");
+  expect(await stoppedWith(() => runPhase(plan, "owner", "new", { fetch: health() }))).toBe("no-retained-plan");
+  await runPhase(plan, "owner", "continue", { fetch: health() });
+  expect(await retained(durableCliStore(home), "hosted-loop-plan")).toEqual(plan);
+  expect(await stoppedWith(() => runPhase(plan, "invite-agent", "new", { fetch: health() }))).toBe("room-unresolved");
+});
+
+test("the run's own scan holds the person's link: a line that carries it prints nothing", async () => {
+  // A real link cannot fit the closed projection, so this home's link is the fixed word that preflight prints. That reaches the second check.
+  const input = inputOf(usable()), home = join(temp, "home", "person");
+  const out = vi.spyOn(process.stdout, "write").mockReturnValue(true), err = vi.spyOn(process.stderr, "write").mockReturnValue(true);
+  mkdirSync(home, { recursive: true, mode: 0o700 });
+  await durableCliStore(home).keepPrivate("hosted-loop-link", utf8("open"));
+  expect(await main(["--input", input, "--phase", "preflight", "--mode", "new", "--diagnostics", join(temp, "diagnostics")], { fetch: health() })).toBe(1);
+  expect(out).not.toHaveBeenCalled();
+  expect(String(err.mock.calls[0]?.[0])).toContain("preflight: public-output.");
+});
+test("with no person's home and no link, preflight prints its one line, with a deployed Worker's version in it", async () => {
+  const input = inputOf(usable()), out = vi.spyOn(process.stdout, "write").mockReturnValue(true);
+  expect(await main(["--input", input, "--phase", "preflight", "--mode", "new", "--diagnostics", join(temp, "diagnostics")], { fetch: health() })).toBe(0);
+  const line = JSON.parse(String(out.mock.calls[0]?.[0]));
+  expect(line["values"]).toEqual({ version: VERSION, deployment: "the-worker", endpoint: "open" });
+});
+
+test("every agent line says that a script drove its session", async () => {
+  const session = new HostedSession(scripted({ lanes, live: [asked] }));
+  const tools = await agentPhase("agent-tools", session, "new");
+  const waited = await agentPhase("agent-wait-open", new HostedSession(scripted({ lanes, live: [asked] })), "new");
+  const accepted = await agentPhase("agent-accept", new HostedSession(scripted(ACCEPTABLE)), "new");
+  expect([tools, waited, accepted].map(row => row.values?.["driver"])).toEqual(["script", "script", "script"]);
 });
 
 test("S1's owner still refuses plain HTTP unless its caller names a local Worker", async () => {

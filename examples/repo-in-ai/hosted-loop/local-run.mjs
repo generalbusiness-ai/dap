@@ -176,6 +176,7 @@ try {
 
   const summary = {
     head: spawnSync("git", ["-C", root, "rev-parse", "HEAD"], { encoding: "utf8" }).stdout.trim(),
+    driver: "A script drove every session. No model chose a step or read the prompt, and no claim about a model can rest on this run.",
     label: "Observed run: each phase's own process against a local wrangler dev Worker on loopback, one room, with a real clock. Times are this driver's wall clock around each process.",
     worker: { deployment: health.deployment, version: health.version, wrangler: readFileSync(join(WRANGLER, "../../package.json"), "utf8").match(/"version": "([^"]+)"/)[1] },
     standIns: ["wrangler dev's local workerd for the deployment", "standInBase for a published head"],
