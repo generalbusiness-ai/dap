@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:00f6a294a08fb16a51c66b54bb5d9c9ab96e1b0c","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-01-card-press.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0fc966ced43236cf88ec5a53267b751fd654ea3f","text":"Merge retired a covered predecessor; the successor is at apps/views/src/change.ts."}
