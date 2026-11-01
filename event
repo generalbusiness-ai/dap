@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/demo-captures.ts","body":{"commit":"d56394da6f1a9cfe5ec605f2b1b829ddf80e93cd","path":"scripts/demo-captures.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:030c694bbf9ed922942767f82333c7cc6a0f9c42","text":"Merge retired a covered predecessor; the successor is at apps/views/src/repo-in-ai.ts."}
