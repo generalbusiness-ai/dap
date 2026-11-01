@@ -138,7 +138,7 @@ Do these steps in each room that enrolled the key:
 5. After 300 seconds plus clock difference, read what the key signed with [`dap log`](../cli.md#dap-log) at each scope where it could act:
    `dap log <scope>`.
 
-Use `as=compromised` in step 3 for a stolen key, because `as=retired` sends no notice. The key's signed read ends within 1200 seconds of step 3, plus clock difference. If the key is on the register's `founders` list, it keeps `found` and its read of the register after these steps. To check that the notice arrived, run `dap log destination` from the config directory of step 3. The notice's row reads `delivery tell from directory:<seq>`, and that row names no key.
+Use `as=compromised` in step 3 for a stolen key, because `as=retired` sends no notice. The key's signed read ends within 1200 seconds of step 3, plus clock difference. If the key is on the register's `founders` list, it keeps `found` and its read of the register after these steps. To check that the notice arrived, run `dap log destination` from the config directory of step 3. The notice's row reads `delivery tell from directory:<seq>`, and that row names no key. The row does not show whether the destination applied the notice. `dap log` prints the last 20 entries by default, so add `--limit` on a busy destination.
 
 These steps stop new Git read tokens once the notice arrives, and they end no token that the key has read. Treat the repository's content as read until the time that [the token's section](#a-git-read-token-outlasts-the-bound) states, and replace any secret that the repository holds.
 
@@ -164,6 +164,33 @@ These cases have no run behind them:
 - `found` under policy `open`.
 - Hosted and application scopes.
 - Real clock differences.
+
+## An outage can close a register
+
+A register holds at most 64 live claims. Each `found` opens one claim and one operation, `create-repository`, with three attempts. A claim stays live until a directory's `applied` result reaches it.
+
+An outage of the Git host ends those attempts with no repository, and the claim then stays `pending`. These failures use an attempt:
+
+- A thrown call, a network error, a reply out of form, or a hung request records `unknown`. On GitHub, every error reply records `unknown`, including a 503, a 403 rate limit and a 422.
+- On Artifacts, the codes `ALREADY_EXISTS`, `INVALID_INPUT`, `INVALID_REPO_NAME`, `INVALID_TTL` and `NOT_FOUND` record `refused`. Any other code records `unknown`.
+
+The attempts are 1 second and then 2 seconds apart, so a host that fails at once uses all three in about 3 seconds. A host that hangs uses them in about 93 seconds, with 30 seconds for each request. An absent host setting differs: the attempt stays unsent, the claim keeps its place, and the claim completes when the setting returns.
+
+At 64 live claims, the register refuses every later `found` with `type-full`. Stuck claims add up across outages, and these do not free a place:
+
+- The Git host's return.
+- A rerun of the claim, which reads and sends nothing new.
+- `--again`, which signs a new claim and takes a new place while the old claim keeps its own.
+- A restart, or the passing of time. The register has no timed rule.
+- Any act. The register's acts are `install` and `found`, so the operator has no act that frees a place.
+
+One thing moves a stuck claim. If an attempt is `unknown` and its own request still answers while the object that sent it lives, that late reply can select the repository, and the claim then finishes. A restart loses that reply.
+
+Who can fill the places depends on the policy. Under `open`, any key can sign `found`, one key can open every claim, and no limit applies to `found`. Under `keys`, only the keys on `founders` can sign it, and one founder can still fill the register. A register on `host: none` opens no attempt, so this limit does not close it this way.
+
+A full register refuses only `found`. Rooms that exist go on. The way out is a new register: see [What closes a register](../deploy.md#what-closes-a-register), which also shows how to count a register's claims from its log.
+
+A test shows this on real scopes on each register pin of `CREATION_COHORTS`, through the production host wiring with a scripted host (`packages/cli/test/failed-claims-close-register.defect.scope.test.ts`). No real outage has run.
 
 ## artroom-scope
 

@@ -4,7 +4,7 @@
 import type { KeyId, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isKeyId, isScopeRef, parseStrict, unb64url } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, httpTransport, signedReads, isCreationOffer, type Fetch } from "@generalbusiness/dap-client";
-import { claim, checkClaim, type Config, type Context, type Outcome, type PendingClaim, type Repository, type Store } from "@generalbusiness/dap-cli/browser";
+import { claim, checkClaim, type ClaimSteps, type Config, type Context, type Outcome, type PendingClaim, type Repository, type Store } from "@generalbusiness/dap-cli/browser";
 import { DIRECTORY_OF } from "@generalbusiness/dap-platform";
 import { sessionKey, sessionSigner, type Session } from "./data.ts";
 import { pageKeyStore } from "./browser-key-store.ts";
@@ -56,6 +56,12 @@ function originOf(session: { service: string }): void {
   const browser = globalThis as { location?: { origin: string } };
   if (url.origin !== session.service || !["https:", "http:"].includes(url.protocol) || browser.location && browser.location.origin !== session.service) throw new Error("Claiming requires the exact origin of the Worker serving this page.");
 }
+
+/** A page has its Continue control and no `--again`, and this browser starts no other creation while one is unfinished. */
+const PAGE_STEPS: ClaimSteps = {
+  directory: () => "The register accepted this claim, and its directory has not appeared. This page cannot tell whether the claim is still being tried or all its attempts have failed. Continuing this creation goes on waiting. That sends nothing new, and it cannot restart a failed claim, even after the Git host returns. This browser starts no other creation while this one is unfinished. If the directory does not appear, tell the register's operator.",
+  children: () => "continue this creation to go on waiting. That sends nothing new.",
+};
 
 /** The stop read no record of an earlier send, or the record is gone, so these words speak of the step. */
 const CREATION_UNKNOWN = "This step sent nothing, and this browser cannot say whether an earlier send of this creation went. Report it. A new creation can make a second room.";
@@ -255,7 +261,7 @@ export async function claimRoom(session: Session, configured: ClaimRegister, sto
       return send(url, init);
     };
     async function runNative(privateStore: ReturnType<typeof storeFor>, localLabel: string): Promise<Outcome> {
-      const context = { store: privateStore.store, fetch: guardedFetch, ...session.now ? { now: session.now } : {}, ...waiting };
+      const context = { store: privateStore.store, fetch: guardedFetch, claimSteps: PAGE_STEPS, ...session.now ? { now: session.now } : {}, ...waiting };
       return readOnlyCheck ? checkClaim(context, localLabel) : claim(context, localLabel, handle !== undefined ? { handle } : {});
     }
     const loaded = readJournal(session, configured, storage);

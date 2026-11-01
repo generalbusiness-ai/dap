@@ -122,7 +122,7 @@ test("a stop over a pending claim says that the earlier send has no known outcom
 
   await save({ register: register.scope, intent, handle: "@rita" });
   const legacy = (await claim(ctx, "demo")).lines.join(" ");
-  expect(legacy).toContain(`${said} Retry the reads later, or recover it manually. --again signs a new claim, which can create a second repository.`);
+  expect(legacy).toContain(`${said} Retry the reads later, or recover it manually. --again signs a new claim, which takes a new place in the register and can create a second repository.`);
   expect((await store.config())!.claim!.intent).toBe(intent);
 });
 

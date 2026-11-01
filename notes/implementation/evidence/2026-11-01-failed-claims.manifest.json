@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. The first unit 2026-11-01-failed-claims-words holds the words' red runs and controls from before merge bd4a4843. No real outage, deployed Worker or real full membership ran these words.",
+  "directory": "2026-11-01-failed-claims-words-2",
+  "checkpoint": {
+    "commit": "c88b6ea5aa40791737b6c2ac0c3373d7a28a634c",
+    "tree": "fe00e40ee0ed53285593e0824d58f7ad64add657"
+  },
+  "fileCount": 52,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "b9c4237d5e1f3a3a0d2ea895f56f8de811511188003b7058d7cbaf3b7a764e12"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6539,
+      "sha256": "14bcd6709ef7be2f00f96d555c9a516c481501434be2602c03bb00ddab0be68d"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "red/run.log",
+      "bytes": 40143,
+      "sha256": "ef58bcc664d326ba21cb1de22b50a487c97ab9940d9f8420ba27dcf0dd02596a"
+    },
+    {
+      "path": "red/run-unit.log",
+      "bytes": 3077,
+      "sha256": "b357dca191959cdc9081b95e03ce6af1883741863ce21a3711a7d35c35ba4b5e"
+    },
+    {
+      "path": "controls/summary.jsonl",
+      "bytes": 3862,
+      "sha256": "8d91cb4829d85f62dad4f97e2acdd08bd5365f81419c1c07c6fd7123f0a6e9b1"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 4678,
+      "sha256": "b82d4b306fa6671ed334cdf5388b4ec8560a94968716cb7687d5f1c9e226bff4"
+    }
+  ]
+}

@@ -34,7 +34,7 @@ This note uses these terms:
 - An **attempt** is one try of the operation `create-repository`. A claim has at most three.
 - To **retire** a founder is to end that key's right to sign `found`, for good.
 
-A file and line reference marks a fact that was read and not run. A short file name repeats a path given earlier, and a bare `:135` belongs to the file just before it. References hold at main `ad411431`. References to `platform:register@24` hold at main `991129fc`, where the founder key refusal head landed. A reference marked with main `970c701c` holds at that later main. No test and no Worker ran anything in this note.
+A file and line reference marks a fact that was read and not run. A short file name repeats a path given earlier, and a bare `:135` belongs to the file just before it. References hold at main `ad411431`. References to `platform:register@24` hold at main `991129fc`, where the founder key refusal head landed. A reference marked with main `970c701c` holds at that later main. No Worker ran anything in this note. One test ran one fact: the late reply in the table of claim positions (`packages/cli/test/failed-claims-close-register.defect.scope.test.ts`).
 
 ## The operator key retires a founder, and a founder can retire only itself
 
@@ -151,7 +151,7 @@ The journal puts each `found` before or after the retirement, so each claim is i
 | The key signed `found`, and no entry holds it | No | `founding-policy` refuses `unauthorized`, and the scope writes no entry. | Nothing |
 | `pending`, attempt open, not sent | No | Stops the claim. `beforeSend` closes the attempt. | The `found` entry and the stopped claim |
 | `pending`, attempt sent, no answer yet | The request can arrive at the host | Stops the claim. A `refused` answer ends the operation. A late `confirmed` answer opens `delete-repository`. | A host repository if no answer ever comes, under the attempt's own name (`register.ts:233`) |
-| `pending`, all three attempts used | No | Stops the claim, and so frees its place in `max`. | The same, for each `unknown` attempt |
+| `pending`, all three attempts used | Only by a late reply. While an attempt is `unknown` and the object that sent it lives, its own reply can still select the repository. | Stops the claim, and so frees its place in `max`. A late `confirmed` answer opens `delete-repository`. | The same, for each `unknown` attempt |
 | `delete-repository` or `revoke-credential` in progress | Yes | Nothing. This work removes what the key made. | A repository, if the cleanup fails |
 | `pending`, `repository` set, `create` sent | Yes | Nothing. The entry that holds the request exists already. | A host repository and a directory |
 | Directory made, result on its way | Yes | Nothing. The claim moves to `active`, and that move is true. | The same |
@@ -373,4 +373,4 @@ These points stay open:
 - **The number of repositories.** `max` counts live claims alone, so a key can make any number of `active` claims before its retirement. Only the host's own limits apply.
 - **Founders on the page.** `allowedClaim` reads the summary, so a founder with no recent entry gets `forbidden` there.
 - **Registers on `host: none`.** There `found` sends `create` in its own entry, so no claim can stop (`packages/platform/src/unpublished-register.ts:24`, `:64-70`). The cohort above does not cover them, and a Commons version needs its own row in the table.
-- **What no run has covered.** Nothing here ran, and [the list on that page](../docs/security/trust-boundaries.md#what-no-run-has-covered) still applies. This note needs no deployment.
+- **What no run has covered.** Apart from that late reply, nothing here ran, and [the list on that page](../docs/security/trust-boundaries.md#what-no-run-has-covered) still applies. This note needs no deployment.

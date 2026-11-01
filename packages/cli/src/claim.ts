@@ -9,7 +9,7 @@ import type { Context, Outcome } from "./commands.ts";
 import type { ClaimStep, Config, PendingClaim, Repository } from "./store.ts";
 import { expectedOf, type DefinitionShape } from "./browser-helpers.ts";
 import { newStoredSigner } from "./store-signer.ts";
-import { validStep, accepted, active, configOf, createdBy, done, failed, handleOf, readSigning, run, signerOf, signing, stopCommand, summaryOf, transportOf, usage, waitFor } from "./command-support.ts";
+import { REGISTER_FULL, validStep, accepted, active, configOf, createdBy, done, failed, handleOf, readSigning, run, signerOf, signing, stopCommand, summaryOf, transportOf, usage, waitFor } from "./command-support.ts";
 
 
 /** Saved envelopes are checked against their actual caller and destination,
@@ -81,6 +81,21 @@ async function recordedStep(handle: ScopeHandle, seq: number, at: ScopeRef, key:
   return step;
 }
 
+/** What a claim's stops tell a person to do next. A command has `--again`, and a page has its Continue control and no `--again`. */
+export interface ClaimSteps {
+  /** No directory appeared. The client cannot read the claim's state, so this states what the wait shows. */
+  directory(name: string): string;
+  /** The directory exists, so the claim's repository exists. This follows "What was asked may still take effect;". */
+  children(name: string): string;
+  /** A next step after a full register's words, where this surface has one. */
+  afterFull?(name: string): string;
+}
+const COMMAND_STEPS: ClaimSteps = {
+  directory: (name) => `The register accepted this claim, and its directory has not appeared. This command cannot tell whether the claim is still being tried or all its attempts have failed. Run dap create ${name} to go on waiting. That sends nothing new, and it cannot restart a failed claim, even after the Git host returns. When the Git host is up, dap create ${name} --again signs a new claim. The new claim takes a new place in the register, the old claim keeps its place, and if the old claim still finishes you have a second repository.`,
+  children: (name) => `run dap create ${name} again to go on waiting for this claim, or with --again to sign a new one, which takes a new place in the register and creates a second repository.`,
+  afterFull: (name) => `dap create ${name} --again asks the register again with a new request.`,
+};
+
 /**
  * `dap create <name>`: the register's `found` act, signed by the creator
  * key. The register fixes the directory's seed, so its ID is known from the
@@ -115,6 +130,8 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
     const register = config.register ?? stopCommand(usage("No register is known here. Run: dap install <base-url>."));
     if (config.repository) return usage(`A repository is claimed here already: directory ${config.repository.directory.scope}.`);
     if (readOnly && !config.claim) return failed("No original claim is retained. Check prepares and submits nothing.");
+    const steps = ctx.claimSteps ?? COMMAND_STEPS;
+    const registerFull = steps.afterFull ? `${REGISTER_FULL} ${steps.afterFull(name)}` : REGISTER_FULL;
     // A status check reads once and invokes no injected scheduler/pause hook.
     const waiting = readOnly ? { ...ctx, tries: 1, pause: async () => {} } : ctx;
     const signer = await signerOf(ctx, config);
@@ -212,7 +229,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
           } catch { /* Not a checked copy of this legacy claim. */ }
         }
       }
-      if (!matched) return failed(`This pending claim has only a digest and no readable admitted directory with its exact creation signature (${unread}). This step sent nothing, and an earlier send of this claim has no known outcome. Retry the reads later, or recover it manually. --again signs a new claim, which can create a second repository.`);
+      if (!matched) return failed(`This pending claim has only a digest and no readable admitted directory with its exact creation signature (${unread}). This step sent nothing, and an earlier send of this claim has no known outcome. Retry the reads later, or recover it manually. --again signs a new claim, which takes a new place in the register and can create a second repository.`);
       await keep({ ...pending, "found": matched });
     }
     const submitted = async (step: ClaimStep, at: ScopeRef, handle: ScopeHandle, took: string): Promise<FactRef> => {
@@ -236,7 +253,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
         if (step.signed.intent.kind === "found" && canonicalize(at) === canonicalize(register)) registerDefinition = settled.value.definition;
         return step.accepted;
       }
-      const receipt = accepted(await handle.submit(step.signed), at.scope, took).receipt;
+      const receipt = accepted(await handle.submit(step.signed), at.scope, took, step.signed.intent.kind === "found" && at.kind === "register" ? registerFull : undefined).receipt;
       if (!isFactRef(receipt.fact) || canonicalize(receipt.fact.at) !== canonicalize(at) || receipt.intent !== digest) throw new TransportError("The accepted reply does not match this exact claim step; its saved request remains pending.");
       if (step.signed.intent.kind === "found" && canonicalize(at) === canonicalize(register)) {
         if (registerDefinition !== null && receipt.definition !== registerDefinition) throw new TransportError("The accepted reply names another register definition; its exact saved request remains pending.");
@@ -254,7 +271,6 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
       // settle the found or change its already accepted request bytes.
       await R.summary();
     }
-    const resume = `run dap create ${name} again to go on waiting for this claim, or with --again to sign a new one, which creates a second repository.`;
 
     // The checked register receipt selects the exact directory/sibling tuple.
     const directoryDefinition = registerDefinition === null ? undefined : DIRECTORY_OF[registerDefinition];
@@ -267,7 +283,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
     if (!repository) {
       const D = await handleOf(ctx, config, scopeIdOf(seed), null);
       const children: ScopeId[] = [];
-      const directory = await waitFor(waiting, () => [register.scope, D.scope, ...children], () => active(D), "the directory", resume);
+      const directory = await waitFor(waiting, () => [register.scope, D.scope, ...children], () => active(D), "the directory", { stated: steps.directory(name) });
       const made = await createdBy(D, 0);
       const kind = (k: string) => made.find((m) => m.seed.kind === k)?.scope ?? stopCommand(failed(`The directory's genesis creates no ${k}.`));
       children.push(kind("membership"), kind("rules"), kind("destination"));
@@ -275,7 +291,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
       const summaries = await waitFor(waiting, () => [register.scope, D.scope, ...children], async () => {
         const all = await Promise.all(handles.map(active));
         return all.every((s) => s !== null) ? (all as Summary[]) : null;
-      }, "membership, the rules scope and the destination", resume);
+      }, "membership, the rules scope and the destination", steps.children(name));
       if (directory.scope.scope !== D.scope || directory.scope.kind !== "directory" || directory.definition !== directoryDefinition || summaries.some((summary, n) => summary.scope.scope !== children[n] || summary.scope.kind !== ["membership", "rules", "destination"][n] || summary.definition !== [siblings.membership, siblings.rules, siblings.destination][n])) return failed("A creation read names another scope; the claim remains pending.");
       repository = { directory: directory.scope, membership: summaries[0]!.scope, rules: children[1]!, destination: children[2]! };
       await keep({ ...pending, repository });

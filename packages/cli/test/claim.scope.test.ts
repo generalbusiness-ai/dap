@@ -204,8 +204,7 @@ async function resumed(owner: SessionOwner, cleanups: (() => void)[], resourcesA
   await owner.required(() => R.restart());
   // The same found is admitted once; it then gives up waiting on Git settings.
   const first = await run("claim", "demo", "--handle", "@rita");
-  const resume = "run dap create demo again to go on waiting for this claim, or with --again to sign a new one, which creates a second repository.";
-  expect(first).toEqual({ code: 1, lines: [`Gave up waiting for the directory after 3 reads. What was asked may still take effect; ${resume}`] });
+  expect(first).toEqual({ code: 1, lines: ["Gave up waiting for the directory after 3 reads. The register accepted this claim, and its directory has not appeared. This command cannot tell whether the claim is still being tried or all its attempts have failed. Run dap create demo to go on waiting. That sends nothing new, and it cannot restart a failed claim, even after the Git host returns. When the Git host is up, dap create demo --again signs a new claim. The new claim takes a new place in the register, the old claim keeps its place, and if the old claim still finishes you have a second repository."] });
   const pending = (await configOf())!;
   expect([pending.repository, pending.claim]).toEqual([undefined, { register: R.name, intent: expect.stringMatching(/^sha256:/), handle: "@rita", "found": { signed: savedCreation, accepted: expect.objectContaining({ at: await owner.required(() => R.at()), seq: 1 }) } }]);
   expect(sent["found"]).toEqual([savedCreation, savedCreation, savedCreation]);
