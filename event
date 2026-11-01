@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/evidence/2026-11-01-call-two.manifest.json","body":{"commit":"a2501e06c53b4b9743085ea7984a2dae8d65152f","path":"notes/implementation/evidence/2026-11-01-call-two.manifest.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:072b1a8da0f2bedc7500b10d16bd7784275ea277","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-01-token-refusal.md."}
