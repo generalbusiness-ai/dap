@@ -175,7 +175,16 @@ These limits apply to J1:
 - **No session, no copy.** `join`, `enrol`, start and connection requests keep their browser custody, because their signer holds no session yet. A page on signed reads behaves as it does today.
 - **No proof of absence.** A missing row does not show that no act was sent. The journal stays the only proof.
 - **Redaction.** A copy can hold a redacted text until the copy ends.
-- **Cost.** Each act adds two requests to the membership object, unmeasured until the build.
+- **Cost.** Each act adds two requests to the membership object: `POST originals` before the send and `DELETE originals` after the answer. The page also adds one entry read at the target that verifies the receipt, and one `GET originals` per draw of a view. While copies are open, a draw also lists the room's lanes. An observed run of 10 comments through the page, in Chromium, against a local `wrangler dev` Worker on loopback, gave these times from Chromium's `responseEnd`. They state the Worker's own work and no network distance.
+
+  | Request | Requests per comment | Median | Longest |
+  |---|---|---|---|
+  | `POST originals` | 1 | 3.853 ms | 11.835 ms |
+  | `DELETE originals` | 1 | 4.433 ms | 27 ms |
+  | `POST acts`, for comparison | 1 | 7.549 ms | 20.806 ms |
+  | `GET originals` | 1 on the first comment, 2 on each later one | 2.222 ms | 10.032 ms |
+
+  A hosted room adds one real round trip to each of these requests. The run measured none.
 
 Hosted code changes are `packages/scope/src/originals.ts` and the routes and wake in `object.ts`, `worker.ts` and `outbox.ts`. The page gains its writer and button in a rebuilt `apps/room/page/assets.ts`.
 
