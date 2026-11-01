@@ -388,7 +388,7 @@ export class ViewSessions {
     if (action === VIEW_DIFF) return { kind: "diff", ...diff };
     const ordinal = (prefix: string) => /^\d{1,4}$/.test(action.slice(prefix.length)) ? Number(action.slice(prefix.length)) : -1;
     if (action.startsWith(VIEW_INTERDIFF)) { const read = card.interdiffReads?.[ordinal(VIEW_INTERDIFF)]; return read ? { kind: "interdiff", ...read } : null; }
-    const current = (held: HeldRead | undefined) => held?.of === canonicalize([card.identity, held?.read]) ? held : undefined;
+    const current = (held: HeldRead | undefined) => held && held.of === canonicalize([card.identity, held.read]) ? held : undefined;
     if (action === VIEW_LAST_FILE) return current([...instance.reads].reverse().find(held => held.read.kind === "file"))?.read ?? null;
     return current(instance.current)?.files[ordinal(VIEW_FILE)] ?? null;
   }

@@ -181,6 +181,36 @@ test("over a bound, an interdiff says truncated, stays inside the bound, and say
   expect(stopped.text).not.toContain("makes no edit of its own");
 });
 
+test("over a bound inside a path with two patches, the words name what stays out of each patch", async () => {
+  // Each bound rereads the same objects, so the test keeps them instead of asking git each time.
+  const kept = new Map<string, ReturnType<GitSource["object"]>>();
+  const once: GitSource = { ...source, object: (id, limit) => { const held = kept.get(id) ?? source.object(id, limit); kept.set(id, held); return held; }, ref: name => source.ref(name), refs: (prefix, limit) => source.refs(prefix, limit) };
+  const seen = new Set<string>();
+  for (let textBytes = 2800; textBytes < 6000; textBytes += 8) {
+    const answer = await boundedInterdiff(once, { base: at.b1, integration: at.v1 }, { base: at.b2, integration: at.rebasedEdited }, LABELS, { ...DIFF_BOUNDS, textBytes });
+    const leftOut = answer.leftOut ?? "";
+    if (!answer.text.includes("Version 1's patch of moved.txt, from base")) continue;
+    const secondBody = answer.text.includes("Version 2's patch of moved.txt, from base") && answer.text.lastIndexOf("+++ b/moved.txt") > answer.text.indexOf("Version 2's patch of moved.txt, from base");
+    if (!secondBody) {
+      // A stop before the first patch's lines leaves out the whole file, so that sentence stays true.
+      if (leftOut === "the file moved.txt and every path after it") { expect(answer.text).not.toContain("--- a/moved.txt"); continue; }
+      expect(leftOut).toContain("Version 2's patch of");
+      seen.add(/^the last \d+ lines of Version 1's patch of moved\.txt, Version 2's patch of that file, and every path after it$/.test(leftOut) ? "cut in the first" : leftOut === "Version 2's patch of moved.txt and every path after it" ? "between the two" : leftOut);
+    } else if (answer.truncated) {
+      expect(leftOut).toMatch(/^(the last \d+ lines of Version 2's patch of moved\.txt and every path after it|every path after moved\.txt)$/);
+      if (leftOut.startsWith("the last")) seen.add("cut in the second");
+    }
+  }
+  expect([...seen].sort()).toEqual(["between the two", "cut in the first", "cut in the second"]);
+});
+
+test("on a rebased version, an omitted file stands in its own section, in no group that names who changed it", async () => {
+  const answer = await interdiff({ base: at.b2, integration: at.rebasedEdited }, { ...DIFF_BOUNDS, blobBytes: 200 });
+  expect(answer.truncated).toBe(true);
+  expect(answer.text).toContain("Not read. A bound kept these out of every group:\nomitted: the file kept.txt is too large to read\n");
+  expect(answer.text).not.toContain("makes no edit of its own");
+});
+
 test("an interdiff shows no change it did not read: a version's missing commit is a refusal", async () => {
   const absent: GitSource = { ...source, object: async (id, limit) => id === at.v1 ? null : source.object(id, limit) };
   await expect(boundedInterdiff(absent, { base: at.b1, integration: at.v1 }, { base: at.b2, integration: at.rebased }, LABELS)).rejects.toMatchObject({ reason: "missing-object" });

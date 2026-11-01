@@ -213,6 +213,20 @@ test("a card with no exact read dispatches its own act whose ID resembles a read
   expect([said, acts.length]).toEqual(["dispatched", 1]);
 });
 
+// Invariant: a file action names a read this view holds. With no read held, it is the ordinary refusal and signs nothing.
+test("a file action before any read is refused as no such read", async () => {
+  const projection = (): Projection => ({ status: "ready", position: 0, count: 1, fallback: "TEST", card: { identity: { item: "1", kind: "manifest", revision: "2", subject: { scope: "sc_a" }, at: { manifest: 2 } }, title: "TEST", summary: "TEST", actor: { kind: "person", name: "TEST" }, reasons: [],
+    projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST", actions: [], diffAvailable: true, diffRead: { target: "sc_a", base: "a".repeat(40), integration: "b".repeat(40) } } });
+  let reads = 0;
+  const sessions = new ViewSessions({ initialPage: () => "item", read: async () => projection() }, { call: async () => { throw Error("No native tool read."); } }, async () => answer("accepted"), async () => answer("accepted"), () => null, { readExact: async () => { reads++; return answer("read"); } });
+  await sessions.open("v", "change");
+  for (const action of ["view-file", "view-file-0"]) {
+    const said = await sessions.act("v", sessions.display("v").cut, action).then(() => "dispatched", (error: { reason?: string }) => error.reason);
+    expect([action, said]).toEqual([action, "shape"]);
+  }
+  expect(reads).toBe(0);
+});
+
 // Invariant: View diff signs nothing while custody holds an earlier act open, and an answer the card cannot hold says the credential is spent.
 test("View diff: a retained card admits nothing while an original is open, and an oversized answer says spent", async () => {
   let open = false;

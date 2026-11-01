@@ -121,7 +121,11 @@ abstract class Walk {
   /** The last path the walk reached, and how much of its patch a stop left out: all of it, or a count of lines. */
   #last: string | null = null;
   #cut: "whole" | number | null = null;
+  /** For a path with two patches: the patch under way, and the whole patch a stop would still leave out. */
+  #pair: { patch: string; next: string | null } | null = null;
   #omitted = 0;
+  /** Where an omitted line goes when it belongs to none of the sections of `sink`. */
+  protected omissions: string[] | null = null;
   readonly paths: ReachedPath[] = [];
   constructor(reader: Reader, bounds: DiffBounds, now: () => number, reserved = 0) {
     this.reader = reader; this.#bounds = bounds; this.#now = now; this.#reserved = reserved; this.#ends = now() + bounds.milliseconds;
@@ -143,7 +147,13 @@ abstract class Walk {
     this.#objects++;
     return true;
   }
-  #omit(line: string): void { this.#omitted++; this.emit(line); }
+  #omit(line: string): void {
+    this.#omitted++;
+    const sink = this.sink;
+    this.sink = this.omissions ?? sink;
+    this.emit(line);
+    this.sink = sink;
+  }
   /** One tree's entries, or null when a bound omits it. */
   protected async entries(id: ObjectId | null, shown: string): Promise<TreeEntry[] | null> {
     if (id === null) return [];
@@ -214,7 +224,7 @@ abstract class Walk {
     this.files++;
     const shown = shownPath(path);
     if (path.length > PATH_BYTES) this.why ??= `a path of ${path.length} bytes shows only its first ${PATH_BYTES}`;
-    this.#last = shown; this.#cut = "whole";
+    this.#last = shown; this.#cut = "whole"; this.#pair = null;
     return shown;
   }
   /** List a path beside the text, for a reader who wants its file. */
@@ -222,7 +232,9 @@ abstract class Walk {
     if (this.paths.length < PATHS) this.paths.push({ path: b64url(path), shown, commit });
   }
   /** The path the walk reached needs nothing more. */
-  protected reached(): void { this.#cut = null; }
+  protected reached(): void { this.#cut = null; this.#pair = null; }
+  /** Name the patch under way, and the patch still to come after it. */
+  protected onPatch(patch: string, next: string | null): void { this.#pair = { patch, next }; }
   /** One changed path. Each side is a non-tree entry, or absent. */
   protected abstract file(path: Uint8Array, before: TreeEntry | null, after: TreeEntry | null): Promise<void>;
   async #side(path: Uint8Array, entry: TreeEntry, added: boolean, depth: number): Promise<void> {
@@ -264,7 +276,8 @@ abstract class Walk {
     if (this.stopped) {
       if (this.#last === null) parts.push("every changed path, because the read stopped before it reached one");
       else if (this.#cut === "whole") parts.push(`the file ${brief(this.#last)} and every path after it`);
-      else if (typeof this.#cut === "number") parts.push(`the last ${this.#cut} lines of the patch of ${brief(this.#last)} and every path after it`);
+      else if (typeof this.#cut === "number") parts.push(`the last ${this.#cut} lines of ${this.#pair?.patch ?? "the patch"} of ${brief(this.#last)}${this.#pair?.next ? `, ${this.#pair.next} of that file,` : ""} and every path after it`);
+      else if (this.#pair?.next) parts.push(`${this.#pair.next} of ${brief(this.#last)} and every path after it`);
       else parts.push(`every path after ${brief(this.#last)}`);
     }
     if (this.#omitted) parts.push(`${this.#omitted} ${this.#omitted === 1 ? "file or tree" : "files or trees"} too large to read, each on an omitted line`);
@@ -344,11 +357,12 @@ class InterdiffWalk extends Walk {
   readonly mixed: string[] = [];
   readonly carried: string[] = [];
   readonly baseOnly: string[] = [];
+  readonly notRead: string[] = [];
   counts = { edited: 0, mixed: 0, carried: 0, baseOnly: 0 };
   constructor(reader: Reader, bounds: DiffBounds, now: () => number, reserved: number, from: { base: ObjectId; integration: ObjectId }, to: { base: ObjectId; integration: ObjectId }, labels: { from: string; to: string }) {
     super(reader, bounds, now, reserved); this.#from = from; this.#to = to; this.#fromLabel = labels.from; this.#toLabel = labels.to;
   }
-  setBases(from: ObjectId, to: ObjectId): void { this.#bases = { from, to }; }
+  setBases(from: ObjectId, to: ObjectId): void { this.#bases = { from, to }; this.omissions = this.notRead; }
   /** The entry at a path in a tree, null when the path is absent, or undefined when a bound stopped the read. */
   async #at(root: ObjectId, path: Uint8Array): Promise<TreeEntry | null | undefined> {
     let tree: ObjectId | null = root;
@@ -403,14 +417,18 @@ class InterdiffWalk extends Walk {
     }
     this.counts.mixed++;
     const label = (who: string, commit: ObjectId, base: ObjectId) => `${who}'s patch of ${shown}, from base ${base} to integration ${commit}:\n`;
+    const firstName = `${this.#fromLabel}'s patch`, secondName = `${this.#toLabel}'s patch`;
     if (!this.emit(label(this.#fromLabel, this.#from.integration, this.#from.base))) return;
-    if (!this.#patchOrWords(older, this.#fromLabel)) return;
+    if (!this.#patchOrWords(older, this.#fromLabel, firstName, secondName)) return;
+    this.reached(); this.onPatch(secondName, secondName);
     if (!this.emit(label(this.#toLabel, this.#to.integration, this.#to.base))) return;
-    if (this.#patchOrWords(newer, this.#toLabel)) this.reached();
+    if (this.#patchOrWords(newer, this.#toLabel, secondName, null)) this.reached();
   }
-  #patchOrWords(patch: Patch, who: string): boolean {
+  #patchOrWords(patch: Patch, who: string, name: string, next: string | null): boolean {
     if (!patch.head.length) return this.emit(`${who} does not change this file.\n`);
-    return this.emit(...patch.head) && this.emitBody(patch);
+    if (!this.emit(...patch.head)) return false;
+    this.onPatch(name, next);
+    return this.emitBody(patch);
   }
 }
 /** Room kept for the summary and the headings of an interdiff's sections. */
@@ -456,6 +474,7 @@ export async function boundedInterdiff(source: GitSource, from: VersionPoints, t
     section(`Cannot separate. The new base and this change both touch these files, and the two versions' patches differ. A difference between the two patches can come from the new base or from ${labels.to}. Read both patches:`, walk.mixed),
     section(`The same edit as ${labels.from} on the new base. These files show no lines:`, walk.carried),
     section("Changed only by the new base. These files show no lines:", walk.baseOnly),
+    section("Not read. A bound kept these out of every group:", walk.notRead),
   ].join("") : walk.edited.length ? `\n${walk.edited.join("")}` : "";
   const closing = truncated ? `truncated: ${walk.why}. Left out: ${leftOut}. This interdiff does not show the whole change.\n` : "";
   return { from: a, to: b, rebased, files: walk.files, edited, mixed, carried, baseOnly, text: head + method + summary + body + closing, truncated, leftOut, paths: walk.paths };
