@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e0329feb964469899836b4d0d089bccb8667377d","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-10-31-signed-requests.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e220e8d56c029b8259fdc9b961b9f3e496c2198a","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/shell.test.ts."}
