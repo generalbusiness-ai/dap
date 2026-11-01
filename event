@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/mcp/test/page-questions.scope.test.ts","body":{"commit":"0719adce30649c41479764ffdddf1dab1fd218ed","path":"packages/mcp/test/page-questions.scope.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:02fa3c59bc7010c5a25a67b559d6d4a2f1aa9e0f","text":"Merge retired a covered predecessor; the successor is at docs/testing.md."}
