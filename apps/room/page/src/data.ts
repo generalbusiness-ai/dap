@@ -1143,7 +1143,7 @@ export async function openingScope(room: Room): Promise<ScopeId> {
   const root = (await summaryOf(handleOf(room, room.directory))).summary;
   if (root.definition !== "platform:directory@10") return room.directory;
   const selected = await activeDirectory({ summary: scope => handleOf(room, scope).summary(), query: (scope, query) => handleOf(room, scope).queryItems(query) }, root.scope, room.membership);
-  if (!selected.ref) throw new Unreadable(`Cannot open work: ${selected.reason}. No mutation was submitted.`);
+  if (!selected.ref) throw new Unreadable(`Cannot open work: ${selected.reason}. This press sent nothing.`);
   return selected.ref.scope;
 }
 

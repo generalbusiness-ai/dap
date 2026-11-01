@@ -154,6 +154,7 @@ J1 needs no kernel change. It meets none of the conditions in [`docs/kernel.md`,
 | `a good read stops a press only at this key's own scope` | The same key acts at another scope, and another key acts at the same scope. A failed read stops both. |
 | `an opening act's row stops the next opening act of that key` | A row at the directory stops the next opening act. |
 | `a device link meets the same read and the same lock` | `issueDeviceKey` stops on a failed read and on its own open row. |
+| `an opening press that cannot find its partition speaks of this press and reads no lock` (in `open-requests.test.ts`, scripted replies) | The opening stop comes before the read, so it reads no lock. Its words claim only this press. |
 | `a failed list read stops the editor's step before its keep` (in `retained-editor.scope.test.ts`) | The editor's step keeps nothing and sends nothing, and the task stays where it was with the page's words. The same button then signs the step and sends it. |
 | `a full object drops the rows of a member who left or holds no key` | A removed member's rows and those of a member with no active key go, and the keep passes. A retired key's rows stay while its member holds another key. |
 | `a full object still takes a request to membership, under the member's own caps` | A request to this scope passes the full object, and an admin removes a member through the page. The member's own cap still returns `full`. Another incarnation gets no exception. |
@@ -221,6 +222,7 @@ These limits apply to J1:
 - **A failed read stops every press.** While the read fails, this page sends no act at any scope, with or without an earlier request. The person keeps the draft and presses again. The keep uses the same route, so a route that is down already stopped every press. The new cost falls on a failure of `GET` alone. A Worker with no `/originals` routes refuses both.
 - **Two tabs in one gap.** The read and the keep are two requests. A second tab of one key that presses between them does not see the first tab's row, and both requests go. A rule in the object could close this gap. It would refuse a row at the keep, so it also changes `dap mcp`, which sends several requests at one scope.
 - **A press signs before it reads.** The read sits beside the keep, so all three send paths share it. A stopped press discards one signature, which never leaves the page.
+- **A stop before the read holds no lock.** A stop earlier on the send path reads no list, for example `openingScope` when it finds no partition. It sends nothing, and its words claim only this press. The next press that reaches the keep reads the list.
 - **`kind` has a bound here.** The page cannot keep, and so cannot send, an act whose `kind` is over 256 bytes.
 - **`/originals` tells a scope's kind.** It answers 404 at a scope that is no membership scope, and 403 at a membership scope with no token. So a caller with no token learns which kind a scope is.
 - **No proof of absence.** A missing row does not show that no act was sent. The journal stays the only proof.

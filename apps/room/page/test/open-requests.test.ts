@@ -2,9 +2,10 @@ import { expect, test } from "vitest";
 import { digestBytes, keyIdOfSecret, newIncarnation, scopeIdOf, timeOf } from "@generalbusiness/dap-bytes";
 import type { Digest, ScopeRef } from "@generalbusiness/dap-contract";
 import { sendableAt, type OriginalRow } from "@generalbusiness/dap-client";
+import { act, type Room } from "../src/data.ts";
 import { pressStop } from "../src/open-requests.ts";
 
-// Invariant: a read that succeeded stops a press only for a row of this key at this scope. The room of `original-copy.scope.test.ts` has one partition,
+// Invariant: a read that succeeded stops a press only for a row of this key at this scope. The room of `original-copy.scope.test.ts` opens work at one scope,
 // so this case states the rule for a second partition over written rows. That file runs the rest on real scopes.
 const digest = digestBytes(new Uint8Array([1, 2, 3]));
 const scopeRef = (kind: ScopeRef["kind"], ordinal: number): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: digest, creator: null, cause: digest, ordinal }), kind, inc: newIncarnation(new Uint8Array(16).fill(ordinal + 1)) });
@@ -29,4 +30,24 @@ test("only this key's row at this scope stops a press, and the margin and a draw
   expect(pressStop(key, [past], [], lane, now)).toBe("unshown");
   expect(pressStop(key, [past], [past], lane, now)).toBeNull();
   expect(pressStop(key, [past, row(lane)], [past], lane, now)).toBe("locked");
+});
+
+// Invariant: the opening stop comes before the read of the open requests, so it holds no lock, and its words claim only this press. The earlier send can still arrive.
+// The HTTP replies are SCRIPTED. The demo room's opening act went on past this line in a run, so `original-copy.scope.test.ts` does not reach it on real scopes.
+test("an opening press that cannot find its partition speaks of this press and reads no lock", async () => {
+  const directory: ScopeRef = { ...scopeRef("directory", 5) };
+  const membership: ScopeRef = { ...scopeRef("membership", 6) };
+  const asked: string[] = [];
+  const repository = { id: 0, type: "repository", state: "open", revision: 1, opened: digest, attributed: [], parties: {}, refs: { membership }, values: {} };
+  const head = { seq: 1, hash: digest };
+  const room = { directory: directory.scope, directoryIndex: { scope: directory, definition: "platform:directory@10" }, membership, rules: directory.scope, destination: directory.scope, key, me: null, reader: null, unsessioned: "SCRIPTED", definitions: new Map(),
+    session: { service: "https://room.test", secret: new Uint8Array(32).fill(1), now: () => now, fetch: async (url: string) => {
+      const path = new URL(url).pathname;
+      asked.push(path);
+      if (path === `/v1/scopes/${directory.scope}`) return Response.json({ ok: true, complete: true, at: head, value: { scope: directory, status: "active", definition: "platform:directory@10", time: timeOf(now), items: [repository], counts: [] } });
+      throw new Error("no reply to the query");
+    } } } as unknown as Room;
+  const stopped = await act(room, directory.scope, "open-issue", {}).then(() => "no stop", (error: Error) => error.message);
+  expect(stopped).toMatch(/^Cannot open work: [a-z-]+\. This press sent nothing\.$/);
+  expect(asked.some(path => path.endsWith("/originals") || path.endsWith("/acts"))).toBe(false);
 });
