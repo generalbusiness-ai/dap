@@ -531,6 +531,7 @@ kept proof reads the register summary instead.
 ```
 dap invite <@member> --role <role> [--hours 24] [--keep]
 dap invite --check | --continue
+dap invite <@member> --device [--hours 24]
 ```
 
 Signs membership's `invite-member` and prints a link that holds the
@@ -562,10 +563,26 @@ Link for @una only (it holds the invitation's secret): artroom-invite:eyJ2Ijox..
 `--acts` is refused with exit 2: `invite-member` has no list of acts for
 one member. A role's actions apply to every member of that role.
 
+With `--device`, the command signs membership's `invite-key` with kind
+`device` for an active member, and prints an `artroom-device-key:` link. The
+new key keeps that member's role, so `--role` is refused with exit 2. The
+invitation lasts 24 hours unless `--hours` says otherwise. Only a role that
+holds `membership.invite` can sign the act: by default, an admin. Another
+member asks an admin to run the command with that member's handle.
+
+```
+Invited a new device of @una: invitation sc_p6xp2lmd...:9, until 2099-01-02T00:00:00Z.
+Link for a new device of @una only (it holds the invitation's secret): artroom-device-key:eyJ2Ijox...
+```
+
+The command keeps no copy of the secret. After a lost answer, make another
+link. The room's Devices screen makes the same link. Anyone who holds the
+link can enroll a key for that member, so give it to that member only.
+
 ### `dap join`
 
 ```
-dap join <link> [--check for an agent-key invitation]
+dap join <link> [--check for an agent-key, checker-key or device-key invitation]
 ```
 
 With an `artroom-invite:` link, signs membership's person `join` with a
@@ -603,6 +620,32 @@ the recorded enrollment, the agent and key kinds, the controller, the
 directory's sibling scopes and the active inbox. A missing private
 request, a changed link, a person and agent mismatch or a definite
 refusal keeps the original. Treat both kinds of link as private.
+
+With an `artroom-device-key:` link, enrolls a new key of an existing member
+with membership's `enrol`. `dap invite <@member> --device` and the page's
+Devices screen make this link. The page and `dap join` both redeem it. Use an
+empty owner-only config directory on the new device. The command makes the
+key in that directory and saves the signed request before it sends. It
+treats a lost answer as it does for an agent key: run the same command with
+`--check` to read the outcome without sending, or without `--check` to
+continue with the original signature.
+
+The command saves a usable connection only after it reads the invitation's
+entry, the member that entry names, the handle in the link, the active key,
+the directory's sibling scopes and the member's inbox. Then the commands and
+the views work in that config directory, under the new key.
+
+```
+Joined as @una on key key_H1bY2Hml..., a new device key of this member.
+Your inbox: sc_zbtu7vax....
+```
+
+The link holds the revisions of the roster and of the member at the time of
+the invitation. Membership refuses the enrollment with `revision-moved` after an act
+changes either revision, such as `set-actions` or `set-role`. Another
+member's join or another key's enrollment changes neither. A refused link
+stays retained in its config directory. Make a new link, and use it in
+another empty config directory.
 
 ### `dap acts`
 

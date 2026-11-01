@@ -46,8 +46,8 @@ export interface PendingJoin {
   repository: Repository;
   handle: string;
   accepted?: FactRef;
-  /** Absent is the legacy person join. Agent and checker enrolments have separate tags. */
-  kind?: "enrol" | "checker-enrol";
+  /** Absent is the legacy person join. Agent, checker and device enrolments have separate tags. */
+  kind?: "enrol" | "checker-enrol" | "device-enrol";
   /** A definite terminal native refusal is retained for key enrollment. */
   refused?: Extract<import("@generalbusiness/dap-contract").Answer, { answer: "refused" }>;
 }

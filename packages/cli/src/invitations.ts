@@ -1,15 +1,15 @@
 import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/dap-client";
 import { UNPUBLISHED_COHORT, INVITATION_KEY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
-/** Retained invitation creation and explicitly tagged agent and checker enrollment.
+/** Retained invitation creation and explicitly tagged agent, checker and device enrollment.
  * Store.private holds secrets/envelopes; public config holds only exact pointers.
  * Callers serialize one Store and fence their captured Page context. */
 import type { Answer, Entry, FactRef, FieldValue, MemberRef, Receipt, SignedIntent, Summary, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, entryHash, factRefOf, intentDigest, isMemberRef, isScopeRef, isScopeId, isRecord, isHead, isKeyId, REFUSAL_REASONS, unb64url, timeMs, isReceipt, isSignedIntentShape, keyIdOfSecret, parseStrict, scopeIdOf, textDigest, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { agentKeyInvitationOf, encodeAgentKeyInvitation, checkerKeyInvitationOf, encodeCheckerKeyInvitation, CHECKER_KEY_MEMBERSHIP, httpTransport, isAgentKeyMembership, ScopeHandle, secretSigner, signedIntent, type AgentKeyMembership, type Signer } from "@generalbusiness/dap-client";
+import { agentKeyInvitationOf, encodeAgentKeyInvitation, checkerKeyInvitationOf, deviceKeyInvitationOf, encodeCheckerKeyInvitation, CHECKER_KEY_MEMBERSHIP, httpTransport, isAgentKeyMembership, ScopeHandle, secretSigner, signedIntent, type AgentKeyMembership, type DeviceKeyInvitation, type Signer } from "@generalbusiness/dap-client";
 import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, DEMO_REGISTER, DIRECTORY_OF, WEB_DEMO_COHORT, isHandle, platform } from "@generalbusiness/dap-platform";
 import { expectedOf, LINK, linkOf, type DefinitionShape, type Link } from "./browser-helpers.ts";
 import type { Context, Outcome } from "./commands.ts";
-import { requiredReadsOf, Stop } from "./command-support.ts";
+import { requiredReadsOf, Stop, usage } from "./command-support.ts";
 import type { Config, PendingInvitationIssue, Repository } from "./store.ts";
 
 export interface InvitationIssueInput { kind: "person" | "agent-key"; handle: string; hours: number; role?: "member" | "maintainer" | "admin"; controller?: MemberRef }
@@ -376,16 +376,51 @@ export function enrolAgentKey(ctx: Context, text: string, options: { mode?: "con
 export function enrolCheckerKey(ctx: Context, text: string, options: { mode?: "continue" | "check" } = {}): Promise<Outcome> {
   return enrolKey(ctx, text, options, "checker");
 }
-async function enrolKey(ctx: Context, text: string, options: { mode?: "continue" | "check" }, nativeKind: "agent" | "checker"): Promise<Outcome> {
-  const checker = nativeKind === "checker", retainedKind = checker ? "checker-enrol" : "enrol";
+/** A new key of an existing member. Its link names no member fact, so the receiver reads the member from the invitation's entry. */
+export function enrolDeviceKey(ctx: Context, text: string, options: { mode?: "continue" | "check" } = {}): Promise<Outcome> {
+  return enrolKey(ctx, text, options, "device");
+}
+/**
+ * The inbox of an existing member. No entry sets a member's reference to its inbox (EM9): `seat` and `add-member` create it at the
+ * member's entry, and a person's `join` creates it at that key's entry. The inbox's own birth and owner are then checked.
+ */
+async function inboxOfMember(reads: InvitationReads, M: ScopeHandle, s: Summary, member: Summary["items"][number], membership: ScopeRef, owner: MemberRef): Promise<ScopeRef | null> {
+  for (const seq of [member.id, ...s.items.filter(item => item.type === "key" && item.refs["member"] === member.id).map(item => item.id)]) {
+    const read = await M.entry(seq);
+    if (!read.ok || !read.complete || read.next !== undefined || entryHash(read.value.entry) !== read.value.hash) return null;
+    if (!read.value.entry.sends.some(send => "creator" in send.to && send.to.kind === "inbox")) continue;
+    const inbox = await inboxOfOpening(reads, read.value.entry, membership, owner);
+    return inbox && !("pending" in inbox) ? inbox : null;
+  }
+  return null;
+}
+/** The recorded facts of a device key after its `enrol`: the invitation's entry, the member and handle it names, this key, the directory's siblings and the member's inbox. */
+async function deviceBindings(reads: InvitationReads, M: ScopeHandle, link: DeviceKeyInvitation, pin: AgentKeyMembership, s: Summary, own: string): Promise<Repository | null> {
+  const invitation = await followFact(M, link.invitation);
+  if (!invitation || invitation.input.type !== "act") return null;
+  const invited = invitation.input.signed.intent;
+  if (invited.kind !== "invite-key" || !sameOptional(invited.fields, { member: invited.fields["member"], kind: "device", ...invitationIssueFields(pin, link.secret), inviteEnds: invited.fields["inviteEnds"] })) return null;
+  const member = s.items.find(item => item.type === "member" && item.id === invited.fields["member"]), key = s.items.find(item => item.type === "key" && item.id === link.invitation.seq);
+  const owner = member?.parties["member"];
+  if (!member || member.state !== "active" || member.values["handle"] !== link.handle || !isMemberRef(owner) || !key || key.state !== "active" || key.values["kind"] !== "device" || key.values["id"] !== own || key.refs["member"] !== member.id) return null;
+  const observed = await boundDirectory(reads, link.repository, s, pin);
+  const inbox = observed && await inboxOfMember(reads, M, s, member, link.repository.membership, owner);
+  return observed && inbox ? { ...observed, inbox: inbox.scope } : null;
+}
+async function enrolKey(ctx: Context, text: string, options: { mode?: "continue" | "check" }, nativeKind: "agent" | "checker" | "device"): Promise<Outcome> {
+  const checker = nativeKind === "checker", device = nativeKind === "device", retainedKind = device ? "device-enrol" : checker ? "checker-enrol" : "enrol", title = device ? "Device" : checker ? "Checker" : "Agent";
+  // A definite refusal keeps its original, so the next link needs a config directory of its own.
+  const afterRefusal = device ? " Make a new device link, and run dap join with it in an empty config directory." : "";
   // This receiver retains a raw-key/envelope pair in filesystem custody.
   // Capability stores require a separate supported receiver; never bypass
   // their signing namespace by reading or creating a seed here.
-  if (ctx.store.signer) return { code: 1, lines: [`${checker ? "Checker" : "Agent"}-key enrollment in this command requires filesystem key custody. No signing key was read or created and nothing was submitted.`] };
-  const bad = (): Outcome => ({ code: 1, lines: [`The original ${nativeKind} enrollment is unavailable or unverified. Nothing was replaced.`] });
+  if (ctx.store.signer) return { code: 1, lines: [`${title}-key enrollment in this command requires filesystem key custody. No signing key was read or created and nothing was submitted.`] };
+  const bad = (): Outcome => ({ code: 1, lines: [`The original ${nativeKind} enrollment is unavailable or unverified. Nothing was replaced.${device ? " If an answer was lost, run the same command with --check." : ""}`] });
   try {
-    const link = checker ? checkerKeyInvitationOf(text) : agentKeyInvitationOf(text);
-    if (!link) return bad();
+    const link = device ? deviceKeyInvitationOf(text) : checker ? checkerKeyInvitationOf(text) : agentKeyInvitationOf(text);
+    // A device link's codec admits every invitation membership. This receiver verifies only the pins with a known directory pair.
+    if (!link || !isAgentKeyMembership(link.definition)) return bad();
+    const pin: AgentKeyMembership = link.definition;
     let config = await ctx.store.config();
     let heldConfig = config;
     const save = async (next: Config): Promise<void> => {
@@ -395,8 +430,9 @@ async function enrolKey(ctx: Context, text: string, options: { mode?: "continue"
       heldConfig = next;
     };
     const digest = textDigest(canonicalize(link)), pending = config?.join;
+    if (device && config && !pending) return usage(config.repository ? `This config directory has a repository already: directory ${config.repository.directory.scope}.` : "This config directory is set up already; use another config directory to join.");
     if (pending && (pending.kind !== retainedKind || pending.link !== digest || config!.service !== link.service || !sameOptional(pending.repository, link.repository) || pending.handle !== link.handle) || config && !pending) return bad();
-    if (pending?.refused) return { code: 1, lines: [`The original ${nativeKind} enrollment was refused: ${pending.refused.reason}. Nothing was replaced.`] };
+    if (pending?.refused) return { code: 1, lines: [`The original ${nativeKind} enrollment was refused: ${pending.refused.reason}. Nothing was replaced.${afterRefusal}`] };
     if (options.mode === "check" && !pending) return bad();
     let own: Uint8Array | null = null;
     const tag = digest.slice("sha256:".length, "sha256:".length + 30), keyName = "k-" + tag, requestName = "a-" + tag;
@@ -462,7 +498,7 @@ async function enrolKey(ctx: Context, text: string, options: { mode?: "continue"
           config = { ...config!, join: { ...config!.join!, refused: answer } };
           await save(config);
           if (!sameOptional(await ctx.store.config(), config)) return bad();
-          return { code: 1, lines: [`${checker ? "Checker" : "Agent"} enrollment refused: ${answer.reason}. The exact original remains retained.`] };
+          return { code: 1, lines: [`${title} enrollment refused: ${answer.reason}. The exact original remains retained.${afterRefusal}`] };
         }
         if (answer.answer !== "accepted") return { code: 1, lines: [`The original ${nativeKind} enrollment remains unknown. Check it or Continue explicitly.`] };
         receipt = answer.receipt;
@@ -475,6 +511,16 @@ async function enrolKey(ctx: Context, text: string, options: { mode?: "continue"
       if (!await follow(M, signed, receipt, link.definition)) return bad();
       config = { ...config!, join: { ...config!.join!, accepted: receipt.fact } }; await save(config);
       if (!sameOptional(await ctx.store.config(), config)) return bad();
+      if (link.kind === "device-key") {
+        const bound = await deviceBindings(reads, M, link, pin, await summary(M, link.repository.membership, pin), keyIdOfSecret(key));
+        if (!bound) return bad();
+        // The usable connection replaces the pending enrollment, as a person's join does. The private original stays in its file.
+        const { join: _enrolled, ...enrolled } = config!;
+        config = { ...enrolled, repository: bound, handle: link.handle };
+        await save(config);
+        if (!sameOptional(await ctx.store.config(), config)) return bad();
+        return { code: 0, lines: [`Joined as ${link.handle} on key ${keyIdOfSecret(key)}, a new device key of this member.`, `Your inbox: ${bound.inbox}.`] };
+      }
       const memberEntry = await followFact(M, link.member);
       const invitationEntry = await followFact(M, link.invitation);
       const s = await summary(M, link.repository.membership, link.definition);
