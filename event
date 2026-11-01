@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"notes/implementation/2026-10-31-signed-requests.md at exact d87ea2b1010b6436400e5ff6db94f9b9d6b6ca3a on builder/j1-design-20261031, under promise git:sha1…15812d9 on request git:sha1…7d699c2","body":{"commit":"d87ea2b1010b6436400e5ff6db94f9b9d6b6ca3a","path":"notes/implementation/2026-10-31-signed-requests.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a6f5bc544234872607dfec4b0b53838b5f85a782","text":"Republished at d87ea2b1010b6436400e5ff6db94f9b9d6b6ca3a; the successor stands at apps/room/page/assets.ts."}
