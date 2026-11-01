@@ -96,7 +96,7 @@ export function diagnosticFetch(fetcher: Fetch, membership: ScopeRef, observe: (
 }
 
 export interface Diagnostics {
-  finish(value: { phase: string; mode: string; exitCode: number; enrollment: EnrollmentDiagnostic | null }, stderr: string): void;
+  finish(value: { phase: string; mode: string; exitCode: number; enrollment: EnrollmentDiagnostic | null; stop?: string }, stderr: string): void;
 }
 
 /** Read public input first, then reserve a new directory outside private homes.
