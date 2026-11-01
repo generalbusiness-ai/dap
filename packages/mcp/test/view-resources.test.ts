@@ -35,9 +35,21 @@ test("both MCP revisions serve package-checked resources and preserve declared p
   fixture.resources[0]!.text += " changed";
   expect(immutable.read("ui://fixture/card").contents[0]!.text).not.toContain("changed");
   expect(() => new ViewResources(fixture).read("ui://fixture/card")).toThrow("package digest");
-  const domain = sandboxDomain(undefined, immutable.generation);
-  expect(domain).toMatch(/^[a-z2-7]{52}\.inguz\.space$/);
-  expect(() => sandboxDomain("invalid.example", immutable.generation)).toThrow("DNS label");
+  expect(sandboxDomain("policy-fixture")).toBe("policy-fixture.inguz.space");
+  expect(() => sandboxDomain("invalid.example")).toThrow("DNS label");
+});
+
+// Invariant: a resource names no sandbox domain unless its package declares one, so a host that sets the field's format uses its default origin.
+test("a resource carries no sandbox domain by default", () => {
+  const text = "<!doctype html><p>fixture</p>";
+  const plain = new ViewResources({ resources: [{ uri: "ui://fixture/card", name: "fixture", description: "A fixture", text, digest: digestBytes(utf8(text)), ui: { prefersBorder: true } }] });
+  expect(plain.list().resources[0]!._meta.ui).toEqual({ prefersBorder: true });
+  expect(plain.read("ui://fixture/card").contents[0]!._meta.ui).toEqual({ prefersBorder: true });
+  const shipped = new ViewResources(PRESENTATION);
+  for (const resource of shipped.list().resources) {
+    expect(resource._meta.ui).not.toHaveProperty("domain");
+    expect(shipped.read(resource.uri).contents[0]!._meta.ui).not.toHaveProperty("domain");
+  }
 });
 
 // Invariant: every byte served by the production resources is rebuilt from the current browser inputs.
