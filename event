@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:54b5b611450a6e0c6321589fe76c35e91ffdeed0","text":"Merge retired a covered predecessor; the successor is at notes/plans/032-2026-10-17-journey-as-acceptance-target.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5ea4802ceeb3ce612cb4508028d09333fca3ca07","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/views/session.ts."}
