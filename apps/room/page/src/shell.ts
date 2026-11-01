@@ -1,7 +1,7 @@
 /** Navigation and room identity shared by the browser shell and its tests. */
 import type { MemberRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isMemberRef } from "@generalbusiness/dap-bytes";
-export type Destination = "issues" | "changes" | "commons" | "rules" | "join" | "invitation" | "config" | "start";
+export type Destination = "issues" | "changes" | "commons" | "rules" | "devices" | "join" | "invitation" | "config" | "start";
 export interface Route { destination: Destination; scope: string | null }
 
 /** State-sensitive presentation only; the scope still judges each offered act. */
@@ -23,7 +23,7 @@ export function routeOf(hash: string): Route {
   const [path, query] = hash.replace(/^#/, "").split("?");
   const [, kind, scope] = (path || "/").split("/");
   if (kind === "settings" || kind === "join") return { destination: "join", scope: null };
-  if (kind === "invitation" || kind === "config" || kind === "start" || kind === "rules") return { destination: kind, scope: null };
+  if (kind === "invitation" || kind === "config" || kind === "start" || kind === "rules" || kind === "devices") return { destination: kind, scope: null };
   if (kind === "commons") return { destination: "commons", scope: scope ?? null };
   if (kind === "issue" && scope) return { destination: "issues", scope };
   if (kind === "change" && scope) return { destination: "changes", scope };
@@ -51,16 +51,17 @@ export class RoomOpening<T> {
 export type SendingState = "preparing" | "submitting" | "unknown";
 /** One mutation per room/member/scope. An attempted request is never replaced after an unknown outcome. */
 export class ScopeSending {
-  private states = new Map<string, { kind: string; state: SendingState }>();
-  get(key: string): { kind: string; state: SendingState } | undefined { return this.states.get(key); }
+  private states = new Map<string, { kind: string; state: SendingState; digest?: string }>();
+  get(key: string): { kind: string; state: SendingState; digest?: string } | undefined { return this.states.get(key); }
   begin(key: string, kind: string): boolean {
     if (this.states.has(key)) return false;
     this.states.set(key, { kind, state: "preparing" });
     return true;
   }
-  submitting(key: string): void {
+  /** `digest` names the request, so that an answer to another request lifts no fence. */
+  submitting(key: string, digest: string): void {
     const current = this.states.get(key);
-    if (current?.state === "preparing") current.state = "submitting";
+    if (current?.state === "preparing") { current.state = "submitting"; current.digest = digest; }
   }
   answered(key: string): void { this.states.delete(key); }
   failed(key: string): void {

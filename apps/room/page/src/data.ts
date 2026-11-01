@@ -1,7 +1,7 @@
 import { commonsAuthorLabels, loadCommons, type CommonsView } from "@generalbusiness/dap-client";
 import { stringOrNull as text } from "@generalbusiness/dap-bytes";
 import { isRecord as record } from "@generalbusiness/dap-bytes";
-import { invitationRedemptionFields, isInvitationMembership } from "@generalbusiness/dap-client";
+import { actBodyText, deviceKeyInvitationOf, encodeDeviceKeyInvitation, invitationIssueFields, invitationRedemptionFields, isInvitationMembership, originalsAt, type DeviceKeyInvitation } from "@generalbusiness/dap-client";
 /**
  * The page's data functions: what it reads from a room and the one thing it
  * writes, a signed act. Each takes a `Session`, the scope service's base URL
@@ -26,7 +26,8 @@ import { invitationRedemptionFields, isInvitationMembership } from "@generalbusi
  * | `loadRules` | The rules scope: the rules of the room, the active definitions, and which members may change the rules. |
  * | `loadSite` | One page of the room's published site, as the site route answers it. |
  * | `actsOn` | The acts of a scope's definition that the caller may sign now. |
- * | `act` | Signs and sends one act, with a definition's bytes beside it where a field states their place, and reads the head before and after. |
+ * | `act` | Signs one act, keeps its copy at membership, sends it with a definition's bytes beside it where a field states their place, ends the copy on the scope's answer, and reads the head before and after. |
+ * | `issueDeviceKey` | Signs membership's `invite-key` for an existing member, and returns the private `device-key` invitation link. |
  *
  * **Who reads.** Every read presents a read session that membership
  * issued to the caller's key, renewed when it has ended. Where membership
@@ -37,7 +38,7 @@ import { invitationRedemptionFields, isInvitationMembership } from "@generalbusi
  * is shown as its reason.
  */
 
-import type { Answer, DeclaredDefinition, Digest, Entry, FactRef, FieldValue, Head, Item, KeyId, MemberRef, ScopeId, ScopeRef, Summary, Read, SignedIntent, Receipt, OutboxId } from "@generalbusiness/dap-contract";
+import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FactRef, FieldValue, Head, Item, KeyId, MemberRef, ScopeId, ScopeRef, Summary, Read, SignedIntent, Receipt, OutboxId } from "@generalbusiness/dap-contract";
 import { LATE, b64url, byteOrder, canonicalize, definitionDigest, entryHash, intentDigest, isFactRef, isMemberRef, isScopeId, isSeed, scopeIdOf, isScopeRef as fullScopeRef, takeBytes, textDigest, timeMs, timeOf, verifySignedIntent, type Expiry } from "@generalbusiness/dap-bytes";
 import {
   ScopeHandle, activeDirectory, collectItemQuery, partitionIndexes, completeSummary, declaredHandle, httpTransport, openHttpHeadStream, requestSession, secretSigner, signerSessionRequest, shapeDeclaredAct, signedIntent, signedReads, type Fetch, type Session as ReadSession, type Signer, type Signing, type Transport,
@@ -100,28 +101,48 @@ export class Unreadable extends Error {
   override readonly name = "Unreadable";
 }
 
-const nowOf = (session: Session): number => session.now?.() ?? Date.now();
+export const nowOf = (session: Session): number => session.now?.() ?? Date.now();
 const transportOf = (session: Session, reader: string | null = null): Transport => {
   const transport = httpTransport(session.service, session.fetch ? { fetch: session.fetch } : {});
   return typeof reader === "string" ? transport : signedReads(transport, sessionSigner(session), session.now ? { now: session.now } : {});
 };
 
 /** A handle on one scope that presents the caller's session, or signs each read where there is none. */
-const handleOf = (room: Pick<Room, "session" | "reader">, scope: ScopeId): ScopeHandle => {
+export const handleOf = (room: Pick<Room, "session" | "reader">, scope: ScopeId): ScopeHandle => {
   const reader = room.reader?.reader() ?? null;
   return new ScopeHandle(transportOf(room.session, reader), scope, reader);
 };
 
+/** Each service, membership and key under which this page load held a read session. Memory only: closing or leaving a room forgets nothing, and only a new page load does. */
+const heldSessions = new Set<string>();
+const heldContext = (session: Session, membership: ScopeRef, key: string): string => JSON.stringify([session.service.replace(/\/+$/, ""), membership.scope, membership.inc, key]);
+/**
+ * Since this page loaded, it held a read session under this service, membership
+ * and key, and it holds none now. It cannot keep a copy, and it must not send as
+ * if it had. After a new page load this is false, and a page that opens with no
+ * session stays on signed reads.
+ */
+export const sessionLost = (room: Pick<Room, "session" | "reader" | "membership" | "key">): boolean => !room.reader && heldSessions.has(heldContext(room.session, room.membership, room.key));
+
 /** Renews the caller's session when it has ended, or will within ten seconds. A room that membership gave no session stays on signed reads. */
-async function fresh(room: Room): Promise<void> {
+export async function fresh(room: Room): Promise<void> {
+  if (room.reader) heldSessions.add(heldContext(room.session, room.membership, room.key));
   if (!room.reader || !room.reader.endedBy(timeOf(nowOf(room.session) + 10_000))) return;
   const asked = await readerFor(room.session, room.membership);
   room.reader = asked.session;
   room.unsessioned = asked.why;
 }
 
-async function summaryOf(handle: ScopeHandle): Promise<{ summary: Summary; at: Head }> {
-  const read = await handle.summary();
+/** Asks again for the session of a page that lost it. A page on signed reads asks for nothing. */
+export async function renewLost(room: Room): Promise<void> {
+  if (!sessionLost(room)) return;
+  const asked = await readerFor(room.session, room.membership);
+  room.reader = asked.session;
+  room.unsessioned = asked.why;
+}
+
+export async function summaryOf(handle: ScopeHandle, atLeast?: Receipt): Promise<{ summary: Summary; at: Head }> {
+  const read = await handle.summary(atLeast);
   if (!read.ok) throw new Unreadable(`Cannot read ${handle.scope}: ${read.reason}.`);
   if (!read.complete || read.next !== undefined) throw new Unreadable(`Cannot read ${handle.scope}: incomplete summary.`);
   return { summary: read.value, at: read.at };
@@ -206,7 +227,7 @@ async function pagesOf<T>(request: (cursor?: string) => Promise<Read<readonly T[
 
 /** A finite selected suffix at the same head as its surrounding view.
  * Incomplete/refused coverage never becomes a complete item inventory. */
-async function itemsOf(room: Room, handle: ScopeHandle, summary: Summary, type: string, at: Head): Promise<Item[]> {
+export async function itemsOf(room: Room, handle: ScopeHandle, summary: Summary, type: string, at: Head): Promise<Item[]> {
   const declared = platform(summary.definition)?.data ?? await laneDefinition(room, handle, summary);
   const selected = declared.items[type];
   if (!selected) throw new Unreadable(`The definition of ${handle.scope} declares no ${type} items.`);
@@ -276,6 +297,8 @@ export function enrollmentAssociation(session: Session, membership: ScopeRef): s
 }
 
 export function joinAssociation(session: Session, typed: string): string {
+  const device = deviceLinkOf(session.service, typed);
+  if (device) return enrollmentAssociation(session, device.repository.membership);
   const link = linkOf(typed.trim());
   if (!link || !admittedInvitation(session, link)) throw new Unreadable("The invitation does not match this configured service, complete repository references and an explicit supported membership version.");
   return enrollmentAssociation(session, link.repository.membership);
@@ -288,17 +311,32 @@ export function joinAssociation(session: Session, typed: string): string {
  * The hint is not proven provenance; the answer is membership's. This direct
  * request has no CLI-style saved enrollment envelope or durable recovery.
  */
+/** A `device-key` link for this service, or null when the text is no such link. */
+function deviceLinkOf(service: string, typed: string): DeviceKeyInvitation | null {
+  const device = deviceKeyInvitationOf(typed.trim());
+  if (!device) return null;
+  if (device.service.replace(/\/+$/, "") !== service.replace(/\/+$/, "") || platform(device.definition)?.data.acts["enrol"] === undefined) throw new Unreadable("The device invitation does not match this configured service and an explicit supported membership version.");
+  return device;
+}
 export interface PreparedJoin { place: Place; definition: string; handle: string; link: Digest; signed: SignedIntent }
 /** Encoding only: validate the explicit invitation before a key is prepared. */
 export function invitationTarget(service: string, typed: string): Omit<PreparedJoin, "signed"> {
   if (typed.length > 16 * 1024) throw new Unreadable("The invitation exceeds its bound.");
+  const device = deviceLinkOf(service, typed);
+  if (device) return { place: { directory: device.repository.directory.scope, membership: device.repository.membership }, definition: device.definition, handle: device.handle, link: textDigest(canonicalize(device)) };
   const link = linkOf(typed.trim());
   if (!link || !admittedInvitation({ service }, link)) throw new Unreadable("The invitation does not match this configured service, complete repository references and an explicit supported membership version.");
   return { place: { directory: link.repository.directory.scope, membership: link.repository.membership }, definition: link.definition!, handle: link.handle, link: textDigest(canonicalize(link)) };
 }
 /** Retain the exact signed request privately; legacy fields contain the invitation secret. */
 export async function prepareJoin(session: Session, typed: string): Promise<PreparedJoin> {
-  const target = invitationTarget(session.service, typed), link = linkOf(typed.trim())!;
+  const target = invitationTarget(session.service, typed), device = deviceLinkOf(session.service, typed);
+  if (device) {
+    const fields = invitationRedemptionFields(device.definition, device.repository.membership, device.invitation.seq, sessionKey(session), device.secret);
+    const signed = await signedIntent(sessionSigner(session), { to: device.repository.membership, kind: "enrol", on: 0, fields, expected: device.expected }, session.now ? { now: session.now() } : {});
+    return { ...target, signed };
+  }
+  const link = linkOf(typed.trim())!;
   const shape = platform(target.definition)!.data as unknown as DefinitionShape;
   const fields = invitationRedemptionFields(target.definition, target.place.membership, link.invitation, sessionKey(session), link.secret);
   const signing: Signing = session.now ? { now: session.now() } : {};
@@ -335,6 +373,7 @@ export async function joinRoom(session: Session, typed: string, submitting?: () 
 export async function openRoom(session: Session, place: Place): Promise<Room> {
   const key = sessionKey(session);
   const asked = await readerFor(session, place.membership);
+  if (asked.session) heldSessions.add(heldContext(session, place.membership, key));
   const room: Room = { session, directory: place.directory, directoryIndex: null, membership: place.membership, rules: "" as ScopeId, destination: "" as ScopeId, key, me: null, reader: asked.session, unsessioned: asked.why, definitions: new Map() };
   const { summary } = await summaryOf(handleOf(room, place.directory));
   room.directoryIndex = { scope: summary.scope, definition: summary.definition };
@@ -1015,6 +1054,8 @@ export interface Acted {
   service: string; directory: ScopeId; membership: ScopeRef; key: KeyId; scope: ScopeId; kind: string; on: number | null;
   /** UI association only; scope and the receipt still name the actual target. */
   requestedScope?: ScopeId;
+  /** The digest of the signed intent, which names the request that this answer answers. */
+  digest: Digest;
   answer: Answer; before: Head; after: Head | null; observation: string | null;
 }
 export type IssueCreation = { state: "confirmed"; child: ScopeRef } | { state: "pending" } | { state: "unavailable" };
@@ -1102,12 +1143,120 @@ export async function openingScope(room: Room): Promise<ScopeId> {
 }
 
 /**
+ * The member's open copies at this room's membership object, or null on a
+ * page with no session: such a page keeps no copy
+ * (notes/2026-10-31-signed-requests-across-devices.md, section 9).
+ */
+export const copiesOf = (room: Pick<Room, "session" | "membership" | "reader">) =>
+  room.reader ? originalsAt(room.session.service, room.membership.scope, room.reader.reader(), room.session.fetch ? { fetch: room.session.fetch } : {}) : null;
+
+/** The room kept no copy, so the page sent nothing. */
+export class CopyNotKept extends Error {
+  override readonly name = "CopyNotKept";
+}
+
+/** What the page adds to "Nothing was sent" when it could not end the row of a request that it did not send. */
+const ROW_STAYS = " This page could not end its copy, so the request can show as open. Press Check original request before you send it again.";
+
+/** Why the room refused to keep a copy, in the person's words. */
+function notKept(reason: string): string {
+  if (reason === "full") return "You have too many open requests. Nothing was sent. Check the open requests in this room first.";
+  if (reason === "room-full") return "This room has no space for more open requests. Nothing was sent. Space returns as open requests end, within seven days at most. An admin can still remove a member who has left, and that frees the member's requests.";
+  return `The room did not keep a copy of this request (${reason}). Nothing was sent.`;
+}
+
+/**
+ * Keep the exact body of a request before it is sent. A refusal, or a lost
+ * reply, stops the send. A page that held a session and failed to renew it
+ * stops too, because the person relies on the copy. A page that opened on
+ * signed reads keeps no copy, and it sends as it always did.
+ */
+export async function keepOriginal(room: Pick<Room, "session" | "membership" | "reader" | "unsessioned" | "key">, signed: SignedIntent, beside: Beside): Promise<void> {
+  if (sessionLost(room)) throw new CopyNotKept(`This page could not renew its session with the room${room.unsessioned && room.unsessioned !== "no-reply" ? ` (${room.unsessioned})` : ""}, so it cannot keep a copy of this request. Nothing was sent. Check your connection and send it again, or reload the page.`);
+  const copies = copiesOf(room);
+  if (!copies) return;
+  let kept: Awaited<ReturnType<NonNullable<typeof copies>["keep"]>>;
+  try { kept = await copies.keep(actBodyText(signed, beside)); }
+  catch {
+    const ended = await endOriginal(room, intentDigest(signed.intent)); // A row the page never sent would show as a request with no answer.
+    throw new CopyNotKept(`The room gave no reply when it was asked to keep a copy of this request. Nothing was sent.${ended ? "" : ROW_STAYS}`);
+  }
+  if (!kept.ok) throw new CopyNotKept(notKept(kept.reason));
+}
+
+/**
+ * Keep a request's copy on the way to its send. `before` can stop the send
+ * with no row. Anything that stops it after the keep ends the row, because a
+ * row reads "You sent" and a press past the margin sends its bytes.
+ */
+export async function keepToSend(room: Pick<Room, "session" | "membership" | "reader" | "unsessioned" | "key">, signed: SignedIntent, beside: Beside, before?: () => void, after?: (digest: Digest) => void): Promise<void> {
+  const digest = intentDigest(signed.intent);
+  before?.();
+  await keepOriginal(room, signed, beside);
+  try { after?.(digest); }
+  catch (error) {
+    if (!await endOriginal(room, digest) && error instanceof Error) error.message += ROW_STAYS;
+    throw error;
+  }
+}
+
+/** End a copy. A failed `DELETE` leaves the row and the button, and answers false. A row that is already gone is ended. */
+export async function endOriginal(room: Pick<Room, "session" | "membership" | "reader">, digest: Digest): Promise<boolean> {
+  try {
+    const ended = await copiesOf(room)?.end(digest);
+    return !ended || ended.ok || ended.reason === "not-found";
+  } catch { return false; } // The row stays open, and any key of the member can check it.
+}
+
+/** Whether a scope's reply is an answer that ends a copy: `unavailable` is none. */
+export async function endAnswered(room: Pick<Room, "session" | "membership" | "reader" | "unsessioned">, handle: ScopeHandle, signed: SignedIntent, answer: Answer): Promise<boolean> {
+  if (!room.reader || answer.answer === "unavailable") return false;
+  if (answer.answer === "accepted") {
+    try {
+      const followed = await handle.followReceipt(answer.receipt);
+      if (!followed.ok || followed.entry.input.type !== "act" || canonicalize(followed.entry.input.signed) !== canonicalize(signed)) return false;
+    } catch { return false; }
+  }
+  await endOriginal(room, intentDigest(signed.intent));
+  return true;
+}
+
+/** How long a `device-key` invitation stays open. */
+const DEVICE_INVITATION_MS = 24 * 3600 * 1000;
+
+/**
+ * Signs `invite-key` with kind `device` for an existing member and returns the
+ * private link. The page holds the link in memory, and only a role that holds
+ * `membership.invite` can sign the act.
+ */
+export async function issueDeviceKey(room: Room, handle: string): Promise<{ link: string } | { refused: string }> {
+  const membership = handleOf(room, room.membership.scope);
+  const before = (await summaryOf(membership)).summary;
+  const member = before.items.find(item => item.type === "member" && item.state === "active" && item.values["handle"] === handle);
+  if (!member) return { refused: `${handle} is no active member of this room.` };
+  const definition = before.definition;
+  if (typeof definition !== "string" || !isInvitationMembership(definition)) return { refused: "This room's membership version has no invitation of a device." };
+  const secret = b64url(crypto.getRandomValues(new Uint8Array(32)));
+  const fields = { member: member.id, kind: "device", ...invitationIssueFields(definition, secret), inviteEnds: timeOf(nowOf(room.session) + DEVICE_INVITATION_MS) };
+  const result = await act(room, room.membership.scope, "invite-key", { fields });
+  if (result.answer.answer !== "accepted") return { refused: result.answer.answer === "refused" ? `The room refused the invitation: ${result.answer.reason}.` : "The room gave no answer. Check the request before you make another invitation." };
+  const after = (await summaryOf(membership, result.answer.receipt)).summary;
+  const [roster, current] = [after.items.find(item => item.type === "roster" && item.state === "open"), after.items.find(item => item.type === "member" && item.id === member.id)];
+  if (!roster || !current) return { refused: "The room's roster could not be read after the invitation." };
+  return { link: encodeDeviceKeyInvitation({
+    v: 1, kind: "device-key", service: new URL(room.session.service).origin, repository: { directory: room.directoryIndex?.scope ?? (() => { throw new Unreadable("The directory could not be read."); })(), membership: room.membership, rules: room.rules, destination: room.destination },
+    definition, handle, invitation: result.answer.receipt.fact, secret, expected: { on: roster.revision, member: current.revision },
+  }) };
+}
+
+/**
  * Signs and sends one act. The expected revision of each item the act
  * names is read from the summary, and the scope checks each again. A lane's
  * act goes through the client's declared handle, which checks each field's
  * shape before it signs and carries detached texts beside the intent.
  */
-export async function act(room: Room, scope: ScopeId, kind: string, asked: { on?: number | null; fields?: Record<string, FieldValue> } = {}, received?: (result: Acted) => void, submitting?: () => void): Promise<Acted> {
+export async function act(room: Room, scope: ScopeId, kind: string, asked: { on?: number | null; fields?: Record<string, FieldValue> } = {}, received?: (result: Acted) => void, submitting?: (digest: Digest) => void, stopping?: () => void): Promise<Acted> {
+  await renewLost(room);
   await fresh(room);
   const requestedScope = scope;
   if (scope === room.directory && OPENING_ACTS.has(kind)) scope = await openingScope(room);
@@ -1125,12 +1274,15 @@ export async function act(room: Room, scope: ScopeId, kind: string, asked: { on?
   const signer = sessionSigner(room.session);
   const signing: Signing = room.session.now ? { now: room.session.now() } : {};
   let answer: Answer;
+  let sent: SignedIntent;
   if (declared) {
     const typed = await declaredHandle(handle, declared);
     if (!typed.ok) throw new Unreadable(`Cannot act on ${scope}: ${typed.reason}.`);
     const { signed, beside } = await typed.handle.intent(signer, kind as never, { on, fields, expected } as never, signing);
-    submitting?.();
-    answer = await typed.handle.submit(signed, [], values.length > 0 ? { ...beside, values } : beside);
+    const sending = values.length > 0 ? { ...beside, values } : beside;
+    await keepToSend(room, signed, sending, stopping, submitting);
+    sent = signed;
+    answer = await typed.handle.submit(signed, [], sending);
   } else {
     // The shaping helper reads only the actual act declaration. Platform
     // fields use the same typed inputs and detached-text transport as lanes.
@@ -1141,12 +1293,15 @@ export async function act(room: Room, scope: ScopeId, kind: string, asked: { on?
     const marked = Object.fromEntries(Object.entries(fields).filter(([name]) => !Object.hasOwn(ordinary, name)));
     const signedFields = { ...shaped.fields, ...marked };
     const signed = await signedIntent(signer, { to: summary.scope, kind, on: shaped.on, fields: signedFields, expected: expectedOf(declaration, summary.items, shaped.on, signedFields) }, signing);
-    submitting?.();
-    answer = await handle.submit(signed, [], values.length > 0 ? { ...shaped.beside, values } : shaped.beside);
+    const sending = values.length > 0 ? { ...shaped.beside, values } : shaped.beside;
+    await keepToSend(room, signed, sending, stopping, submitting);
+    sent = signed;
+    answer = await handle.submit(signed, [], sending);
   }
-  const result: Acted = { service: room.session.service, directory: room.directory, membership: { ...room.membership }, key: signer.key, scope, ...(scope !== requestedScope ? { requestedScope } : {}), kind, on, answer, before, after: null, observation: "Observation refresh pending." };
+  const result: Acted = { service: room.session.service, directory: room.directory, membership: { ...room.membership }, key: signer.key, scope, ...(scope !== requestedScope ? { requestedScope } : {}), kind, on, digest: intentDigest(sent.intent), answer, before, after: null, observation: "Observation refresh pending." };
   received?.(result); // Preserve the real answer before any awaited refresh.
-  try { result.after = (await summaryOf(handle)).at; result.observation = null; }
+  await endAnswered(room, handle, sent, answer);
+  try { result.after = (await summaryOf(handle, answer.answer === "accepted" ? answer.receipt : undefined)).at; result.observation = null; }
   catch (error) { result.observation = error instanceof Unreadable ? error.message : "The observation refresh failed."; }
   return result;
 }
