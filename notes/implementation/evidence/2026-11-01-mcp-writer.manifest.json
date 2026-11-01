@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. The controls and the witness ran at c81afb6f, and the checkpoint merges main, which changes no file of the writer and adds the hosted loop's scope test. The witness used a local Worker, a real dap mcp over stdio and browser contexts on one machine. No hosted Worker or real room ran.",
+  "directory": "2026-11-01-mcp-writer",
+  "checkpoint": {
+    "commit": "1e7826108ea3406ed10f59dcb6ea8b9e18fc92a8",
+    "tree": "f25cca4f537bb852a7de77d73e4681e8de041f53"
+  },
+  "fileCount": 83,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "ecb4707309f48b29b34b32efb432b81c0459efbdde88424515320c19177a46eb"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6514,
+      "sha256": "38b844d1ab50549348b15c89e80d0322b3e54c17ab277f82876f3fee5352fb51"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "controls/head.txt",
+      "bytes": 82,
+      "sha256": "01a5823c6762c3f7c5d6302daf53738b9dfbe72ab63361e0c79a076c45d551e7"
+    },
+    {
+      "path": "controls/exit.txt",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "controls/summary.jsonl",
+      "bytes": 5934,
+      "sha256": "79cc6fa6b4ad4d163fbbc2cbca6c9fe071c9eb936657e4ee95ea206c9683c004"
+    },
+    {
+      "path": "controls/run-controls.mjs",
+      "bytes": 10535,
+      "sha256": "82963d83eed07211f7112340fa0225a51c91adfebfdc3212914895276f864681"
+    },
+    {
+      "path": "witness/head.txt",
+      "bytes": 82,
+      "sha256": "01a5823c6762c3f7c5d6302daf53738b9dfbe72ab63361e0c79a076c45d551e7"
+    },
+    {
+      "path": "witness/exit.txt",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "witness/report.json",
+      "bytes": 1987,
+      "sha256": "28fe022c4bb42470f1c612b9436352c0b6b844813d84f2c3c7ebceb14f3ba380"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 7691,
+      "sha256": "873e731aced1792232e192359d16775566923a58c3e8133b5fd352a365799a74"
+    }
+  ]
+}
