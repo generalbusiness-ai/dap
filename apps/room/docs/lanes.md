@@ -448,5 +448,5 @@ decide is in the data as the lane forms state it.
 | Every row, in tables | [lanes-reference.md](../../../docs/lanes-reference.md) |
 | The rows themselves | `apps/room/lanes/src` |
 | The package's exports and scripts | `apps/room/lanes/README.md` |
-| What each form means | [scopes.md](../../../docs/scopes.md), "Definitions are data" and "Composition" |
+| What each form means | [scopes.md](../../../docs/scopes.md), "Definitions" and "Composition and delivery" |
 | The source choices behind the forms | `notes/implementation/2026-10-05-i2-contract-deltas.md` |

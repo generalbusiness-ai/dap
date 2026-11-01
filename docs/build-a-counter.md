@@ -115,9 +115,8 @@ show(0);
 ```
 
 `keys` holds five test people, each with a signing key: `@rita`, `@una`,
-`@vic`, `@paul` and `@sam`. In this release the function that makes a
-test counter is called `founded`; the next release renames it to use the
-word "create".
+`@vic`, `@paul` and `@sam`. The published release names the function that
+makes a test counter `founded`. The source on main names it `created`.
 
 Run it:
 
@@ -394,3 +393,11 @@ definition.
   each with its own life, and actions that only staff hold.
 - [The Counter](../apps/counter): the full app, which also checks whose
   turn it is from the list of players.
+
+## Source
+
+Checked against main `5dc9765f` on 30 October 2026. The commands ran on
+15 October 2026 with the published packages at `0.1.0-dev.2`, and every
+output block is copied from that run. Sources:
+[the test fixtures](../packages/derive/test/fixtures.ts) and
+[the Counter definition](../apps/counter/definition.ts).
