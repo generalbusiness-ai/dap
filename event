@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:db4a920d8835a16061bc37f9b0fd86cdddeab9b5","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-01-token-refusal.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ea4bb44d0a02df3fd6d1e9848202e8b700952ecc","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-01-git-read-token-after-revocation.md."}
