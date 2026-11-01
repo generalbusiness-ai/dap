@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import type { CallResult } from "../src/service.ts";
+import { cardOpens } from "../src/views/opens.ts";
 import { ViewSessions } from "../src/views/session.ts";
 import { viewTools } from "../src/views/tools.ts";
 import type { Card, Display, LocalReviewCapture, Projection, ViewSource } from "../src/views/types.ts";
@@ -273,4 +274,25 @@ test("View diff: a retained card admits nothing while an original is open, and a
   expect(spends).toBe(1);
   expect(said).toContain("The one-time credential is spent.");
   expect(views.display("v").query.page).not.toBe("diff");
+});
+
+// Invariant: a person can read what an incomplete card holds, and that read offers no act. An unavailable placeholder has no detail to open.
+// The source is a stand-in that returns one scripted card; session.ts and the browser's open rule are the production code.
+test("an incomplete card opens its available entries and offers no act", async () => {
+  expect(cardOpens("incomplete")).toBe(true);
+  expect(cardOpens("ready")).toBe(true);
+  expect(cardOpens("unavailable")).toBe(false);
+  const source: ViewSource = { read: async (query) => ({ status: "incomplete", position: 0, count: 1, fallback: "Inspect the scope.", card: {
+    identity: { kind: "updates", item: "q7", revision: "v2", subject: { scope: "fixture-scope", item: 0 }, at: { on: 0 } },
+    title: "6 updates", summary: "One scope is unread.", actor: { kind: "person", name: "Fixture" }, reasons: [], detailPage: "updates",
+    projection: [], reviewIntended: [{ scope: "fixture-scope", from: 1, to: 1 }, { scope: "change-9", from: 9, to: 9 }], unavailable: [{ scope: "change-9", from: 9, to: 9 }], waitsOn: [], settles: [], fallback: "Inspect the scope.",
+    ...(query.page === "updates" ? { entries: [{ scope: "fixture-scope", seq: 1, text: "Entry 1" }] } : {}),
+    actions: [{ id: "primary", label: "Mark reviewed", purpose: "mark-reviewed", kind: "publish", args: { target: "fixture-scope", on: 0, at: { on: 0 } } }],
+  } }) };
+  const sessions = new ViewSessions(source, { call: async () => { throw new Error("The fixture reads no scope."); } }, async () => answer("unavailable"), async () => answer("unavailable"));
+  await sessions.open("partial", "needs-you");
+  const detail = await sessions.read("partial", sessions.display("partial").cut, { page: "updates" });
+  expect(detail.status).toBe("incomplete");
+  expect(detail.card!.entries!.map(entry => entry.text)).toEqual(["Entry 1"]);
+  expect(detail.card!.actions).toEqual([]);
 });
