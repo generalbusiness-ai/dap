@@ -55,7 +55,7 @@ The head is `aa706bd7136426d09038d2013befba6cb54d7f93`, tree `2a595280`. Raw evi
 | Gate | observed run | `npm run gate` | exit 0: 3550 plain and 1025 native tests, 116 Node and 56 Counting | `604688ade7b673fe` |
 | The scene | observed run, a script in headless Chromium on a local Worker | `apps/room/page/test/needs-you-browser.mjs` | exit 0: 85 of 85 steps | `acb7e3ed48b70be5` |
 | Red: the old Page | observed run: main's bundle on this head's Worker | the same script | exit 1: 38 of 41 steps fail, and the first names "the first screen" | `c0ccb1c791f7a8e6` |
-| Controls | observed runs: 5 in the browser, 15 by `scripts/control.mjs`, 5 by hand on `apps/views`, each restored | `controls-index.txt` lists each one | all 25 exit 1 or report DISTINGUISHES. 24 name a failed step or assertion, and `next-reads-same` ends on a timeout that its error log names | `cc488b8300449a77` |
+| Controls | observed runs: 5 in the browser, 15 by `scripts/control.mjs`, 5 by hand on `apps/views`, each restored | `controls-index.txt` lists each one | all 25 exit 1 or report DISTINGUISHES. 24 name a failed step or assertion, and `next-reads-same` ends on a timeout that its `next-reads-same.json` names | `cc488b8300449a77` |
 | `apps/views` tests | observed run | `node --test` | exit 0, 22 tests | `a9ab4d1c683900f5` |
 | Security entry points | observed run | `node --test scripts/security-entry-points.test.mjs` | exit 0, no seal moved | `5bc4d274a65b3ea2` |
 | `test-changed`, before the gate | observed run | `node scripts/test-changed.mjs 3e055104` | exit 1: 2 of 305 fail, on the 30 s limit with no failed assertion: `source-preview.scope.test.ts` and `task-data.scope.test.ts` | `ae527ca908329caa` |
