@@ -3,7 +3,7 @@ import { UNPUBLISHED_COHORT, INVITATION_KEY_COHORT, TRUSTED_APPLICATION_COHORT, 
 /** Retained invitation creation and explicitly tagged agent and checker enrollment.
  * Store.private holds secrets/envelopes; public config holds only exact pointers.
  * Callers serialize one Store and fence their captured Page context. */
-import type { Answer, Entry, FactRef, FieldValue, MemberRef, Receipt, SignedIntent, Summary, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Answer, Entry, FactRef, FieldValue, MemberRef, Receipt, SignedIntent, Summary, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, entryHash, factRefOf, intentDigest, isMemberRef, isScopeRef, isScopeId, isRecord, isHead, isKeyId, REFUSAL_REASONS, unb64url, timeMs, isReceipt, isSignedIntentShape, keyIdOfSecret, parseStrict, scopeIdOf, textDigest, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { agentKeyInvitationOf, encodeAgentKeyInvitation, checkerKeyInvitationOf, encodeCheckerKeyInvitation, CHECKER_KEY_MEMBERSHIP, httpTransport, isAgentKeyMembership, ScopeHandle, secretSigner, signedIntent, type AgentKeyMembership, type Signer } from "@generalbusiness/dap-client";
 import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, DEMO_REGISTER, DIRECTORY_OF, WEB_DEMO_COHORT, isHandle, platform } from "@generalbusiness/dap-platform";
@@ -181,19 +181,42 @@ async function follow(M: ScopeHandle, signed: SignedIntent, receipt: Receipt, de
   const read = await M.followReceipt(receipt);
   return read.ok && read.entry.input.type === "act" && sameOptional(read.entry.input.signed, signed) ? read.entry : null;
 }
-/** M2 records an inbox create send, not member.refs.inbox (EM9). */
-async function inboxOfOpening(reads: InvitationReads, opening: Entry, membership: ScopeRef, owner: MemberRef): Promise<ScopeRef | null> {
+/**
+ * Issuance's wait for a new member's inbox: one read, then at most 20 pauses of one second, until 20 seconds have passed. A person
+ * waits on this in the page, so it stays short; the third S1 room's stop cleared within 11.4 seconds. `Context.tries` can only lower it.
+ */
+const INBOX_WAIT_MS = 20_000, INBOX_WAIT_READS = 21;
+/**
+ * One read of the inbox. M2 records an inbox create send, not member.refs.inbox (EM9). `pending`: this inbox is not active yet, and
+ * can still turn active. It is provisional until its creator's confirmation arrives, and before its creation arrives a read answers
+ * `not-found` from the deployed scope index, or `forbidden` from a scope with no index.
+ */
+async function inboxOfOpening(reads: InvitationReads, opening: Entry, membership: ScopeRef, owner: MemberRef): Promise<ScopeRef | { pending: ScopeId } | null> {
   const births = opening.sends.filter(send => "creator" in send.to && send.to.kind === "inbox");
   const birth = births.length === 1 ? births[0] : undefined;
   if (!birth || !("creator" in birth.to) || birth.to.definition !== "platform:inbox@1" || !sameOptional(birth.to.creator, membership)) return null;
   const scope = scopeIdOf(birth.to), I = handle(reads, scope);
   const summaryRead = await I.summary();
+  if (!summaryRead.ok && (summaryRead.reason === "not-found" || summaryRead.reason === "forbidden")) return { pending: scope };
+  if (!summaryRead.ok || !summaryRead.complete || summaryRead.next !== undefined || summaryRead.value.definition !== "platform:inbox@1" || summaryRead.value.scope.kind !== "inbox" || summaryRead.value.scope.scope !== scope) return null;
+  if (summaryRead.value.status === "provisional") return { pending: scope };
+  if (summaryRead.value.status !== "active") return null;
   const birthRead = await I.entry(0);
-  if (!summaryRead.ok || !summaryRead.complete || summaryRead.next !== undefined || summaryRead.value.status !== "active" || summaryRead.value.definition !== "platform:inbox@1" || summaryRead.value.scope.kind !== "inbox" || summaryRead.value.scope.scope !== scope || !birthRead.ok || !birthRead.complete || birthRead.next !== undefined) return null;
+  if (!birthRead.ok || !birthRead.complete || birthRead.next !== undefined) return null;
   const entry = birthRead.value.entry;
   if (entry.seq !== 0 || entry.input.type !== "genesis" || entry.input.decision !== "applied" || entry.input.kind !== "establish" || entry.input.inc !== summaryRead.value.scope.inc || !sameOptional(entry.at, summaryRead.value.scope) || !sameOptional(entry.input.seed, birth.to) || !sameOptional(entry.input.source, factRefOf(opening)) || entry.input.n !== birth.n || entryHash(entry) !== birthRead.value.hash) return null;
   const inbox = summaryRead.value.items.find(item => item.type === "inbox" && item.state === "open");
   return inbox && sameOptional(inbox.parties["owner"], owner) && sameOptional(inbox.refs["membership"], membership) ? summaryRead.value.scope : null;
+}
+/** Reads until the inbox is active, within the bound. Check reads once and never pauses. The wait signs and submits no act and adds no snapshot to the retained chain. */
+async function activeInbox(ctx: Context, options: InvitationIssueOptions, reads: InvitationReads, opening: Entry, membership: ScopeRef, owner: MemberRef): Promise<ScopeRef | null> {
+  const started = now(ctx), limit = Math.min(ctx.tries ?? INBOX_WAIT_READS, INBOX_WAIT_READS);
+  for (let read = 1; ; read++) {
+    const inbox = await wait(options, () => inboxOfOpening(reads, opening, membership, owner));
+    if (!inbox || !("pending" in inbox)) return inbox;
+    if (options.mode === "check" || read >= limit || now(ctx) - started >= INBOX_WAIT_MS) return null;
+    await (ctx.pause ?? (() => new Promise<void>(resolve => { setTimeout(resolve, 1000); })))([membership.scope, inbox.pending]);
+  }
 }
 /** No output exposes a signing key. The optional link is a private invitation. */
 export async function issueInvitation(ctx: Context, input: InvitationIssueInput, options: InvitationIssueOptions): Promise<InvitationIssueResult> {
@@ -333,7 +356,7 @@ async function issueRetainedInvitation(ctx: Context, input: IssuedInput, options
       if (!identity || !member || member.state !== "active" || member.values["kind"] !== nativeKind || member.values["role"] !== nativeKind || member.values["handle"] !== row.input.handle || invited.values["kind"] !== nativeKind || invited.refs["member"] !== member.id || !isMemberRef(member.parties["member"]) || !roster) return status("unknown");
       const owner = member.parties["member"];
       const opening = await wait(options, async () => follow(await membershipHandle(), row.member!.signed, row.member!.receipt!, pin));
-      if (!opening || !await wait(options, () => inboxOfOpening(reads!, opening, row.repository.membership, owner))) return status("unknown", `The native ${nativeKind} inbox creation could not be verified.`);
+      if (!opening || !await activeInbox(ctx, options, reads!, opening, row.repository.membership, owner)) return status("unknown", `The native ${nativeKind} inbox creation could not be verified.`);
       const handoff = { v: 1 as const, service: row.service, repository, definition: pin, handle: row.input.handle, member: row.member!.receipt!.fact, invitation: receipt.fact, secret: row.secret, expected: { on: roster.revision, member: member.revision } };
       if (row.input.kind === "checker-key") {
         if (pin !== CHECKER_KEY_MEMBERSHIP) throw blocked();
@@ -467,7 +490,8 @@ async function enrolKey(ctx: Context, text: string, options: { mode?: "continue"
       const observed = await boundDirectory(reads, link.repository, s, link.definition);
       if (!observed) return bad();
       const inbox = await inboxOfOpening(reads, memberEntry, link.repository.membership, member.parties["member"]);
-      if (!inbox) return bad();
+      // Issuance read this inbox as active before it wrote the link, and an inbox never returns to provisional, so a receiver does not wait.
+      if (!inbox || "pending" in inbox) return bad();
       config = { ...config!, repository: { ...observed, inbox: inbox.scope }, handle: link.handle };
       await save(config);
       if (!sameOptional(await ctx.store.config(), config)) return bad();
