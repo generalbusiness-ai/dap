@@ -3,6 +3,7 @@ import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { AppBridge, AppToolError } from "./bridge.ts";
 import type { Display, PageKind, ShownRead } from "../src/views/types.ts";
 import { viewToolName } from "../src/views/names.ts";
+import { cardOpens } from "../src/views/opens.ts";
 import { seriesPanel } from "./series.ts";
 import { SurfacePanels } from "./surface.ts";
 import { memberElement, memberStyleElement } from "./member.ts";
@@ -114,7 +115,7 @@ async function read(move?: { page?: PageKind; position?: number; refresh?: boole
   } finally { busy = false; render(); }
 }
 async function open() {
-  if (!display?.card || display.status !== "ready") return;
+  if (!display?.card || !cardOpens(display.status)) return;
   returnPage = "summary";
   try {
     const requested = display.card.declared?.display ?? "fullscreen", mode = await bridge.displayMode(requested);
@@ -247,7 +248,7 @@ function render() {
   eyebrow.append(node("span", card.identity.kind), node("code", card.identity.revision, "revision"));
   article.append(eyebrow);
   const heading = node("h1");
-  if (summary && display.status === "ready") {
+  if (summary && cardOpens(display.status)) {
     const title = node("a", card.title);
     title.href = "#detail";
     title.dataset["focus"] = "title";
