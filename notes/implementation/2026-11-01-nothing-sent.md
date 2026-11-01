@@ -1,6 +1,6 @@
 # Say what a stop knows of an earlier send, outside the MCP server
 
-Status: source implementation. The gate passed at `ef36af8b`. No deployed Worker or real room ran these words. The Worker bundle's bytes change, because the page's bundle holds the CLI's and the page's words. The planner deploys.
+Status: source implementation. The gate passed at `ef36af8b`, and it passed again at the merge `3d0f0e89`. No deployed Worker or real room ran these words. The Worker bundle's bytes change, because the page's bundle holds the CLI's and the page's words. The planner deploys.
 
 Request `57a09263076c14142038360918a5f630d02a8027` and promise `bfaab3f50c90fcc3ca270e414fac76b029107a15` own this head. It follows [the MCP server's words](2026-11-01-unknown-send-words.md), which named these lines as an open limit.
 
@@ -221,6 +221,10 @@ The checkpoint is `ef36af8be430a8fe87b980cf1217dafc0c719d1b`, tree `1b92e7cd`. I
 | The repair's 9 controls | `controls/run-controls.mjs` | 0 | `9f225657652cf3d9` |
 
 The gate reports 3494 plain and 977 native tests, 116 Node and 56 Counting.
+
+The head then merged main `8b2f4f76`. That merge conflicted in the generated bundle `apps/room/page/assets.ts`, so I rebuilt the bundle and ran a second gate at `3d0f0e89d9cef3bae03e5cc979bbc057c9297b5d`, tree `d56b247c`. The gate exited 0, with 3511 plain and 980 native tests, 116 Node and 56 Counting. The two gates differ in count because main added tests. The raw evidence is in `~/play/artroom-evidence/2026-11-01-nothing-sent-3/`, `SHA256SUMS` `ca5ce0e5a3ac373b0a28e5ea57b932afc0c79c413975713600cc613b5accada1`, and the digest of `gate/gate.stdout.log` is `8f10de431991847a`. The red run and the controls did not run again after that merge.
+
+The head then merged main `a2501e06`, which changes documents and notes and no file of this head. No gate ran on that merge.
 
 ## Open limits
 
