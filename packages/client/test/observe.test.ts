@@ -143,6 +143,18 @@ test("empty EOF is unavailable directly and releases its reader once",async()=>{
  expect(body.cancelled).toBe(1);
 });
 
+test("a body that fails while reading is an outage, not a malformed stream: the observation reconnects, as it must when Node's fetch fails an idle body after 300 seconds",async()=>{
+ const failing=(frames:Uint8Array[])=>({getReader:()=>({read:()=>{const value=frames.shift();return value?Promise.resolve({done:false,value}):Promise.reject(new TypeError("terminated"));},cancel:async()=>{},releaseLock(){}})}) as unknown as ByteStream;
+ const before=await headLines(failing([]),new AbortController().signal).next().catch(error=>error);
+ expect(before,"BEFORE THE FIRST HEAD: a failed read is unavailable").toBeInstanceOf(HeadStreamUnavailable);
+ const second=stream(),reopened=gate(),states:ObservationState<number>[]=[];let opens=0;
+ const observer=observeScope({context,current:()=>true,authenticate:async()=>({ok:true,session:session()}),open:async()=>{opens++;if(opens===2)reopened.resolve();return{ok:true,body:opens===1?failing([utf8(JSON.stringify({at:head(1)})+"\n")]):second.body};},snapshot:async()=>{const value=snapshot(1);return{ok:true,at:value.at,value,complete:true};},emit:s=>states.push(s),reconnectDelay:async()=>{}});
+ await Promise.race([reopened.promise,observer.done]);
+ expect(states.filter(state=>state.status==="error"),"A FAILED READ IS AN OUTAGE: no terminal error").toEqual([]);
+ expect(opens,"A FAILED READ IS AN OUTAGE: the observation opens a new stream").toBe(2);
+ observer.cancel();await observer.done;
+});
+
 test("an outage signals fallback once until a same-head notice recovers before its snapshot, and ignored reconnect cancellation cannot hang",async()=>{
  const first=stream(),recovered=stream(),initial=gate(),rereading=gate(),openedRecovery=gate();
  const waits=[gate(),gate(),gate()],release=[gate(),gate(),gate()];

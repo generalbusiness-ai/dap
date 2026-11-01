@@ -51,6 +51,19 @@ If a read is unavailable, stop. If the question changes or is withdrawn, read
 the current record before choosing another step. Never approve or decide in
 place of the requested person.
 
+To wait longer than one conversation, stop and let your harness run the command
+line. `dap issue wait` holds the room's feed under your own read session, signs
+nothing, and needs no model while it waits:
+
+```
+dap issue wait <issue number> <ask item> --hours 72 && <start a fresh session>
+```
+
+It exits 0 when someone decides or withdraws the question, or requests changes
+on its current text. It exits 3 at the bound, and you can run it again. Anything
+it missed while it was down, it finds in the record when it starts. A wake is
+only a hint: resume from the record, as the next section says.
+
 ## Resume from a fresh session
 
 1. Open the same configured room with the same member key. Do not re-enrol.

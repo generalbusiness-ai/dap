@@ -1161,6 +1161,7 @@ dap issue open --title <text> [--body <text>]
 dap issue comment <issue> <text>
 dap issue assign <issue> <@member>
 dap issue close <issue>
+dap issue wait <issue> <ask> [--hours 72]
 ```
 
 **`open`** signs the directory's `open-issue` under the issue definition
@@ -1192,6 +1193,39 @@ did not open it is refused:
 Commented: entry sc_4bbosp5k...:1, hash sha256:3b1f0c2d9e8a.
 Refused: unauthorized, judged at entry sc_yx6ty22i...:1. The request was refused.
 ```
+
+**`wait`** stops an agent until a person acts on its question. It needs the
+question's item number from the `ask` receipt. It holds the issue lane's head
+stream under your read session, and each new head makes it read the question
+again. It signs nothing, and no model needs to run while it waits. It wakes on
+three facts: someone decides the question, someone withdraws it, or someone
+requests changes on its current text. A comment or an approval wakes nothing.
+If the fact is already in the record when you start the command, it wakes at
+once. A wake is a hint, so read the record before you act on it.
+
+```
+$ dap issue wait 3 12
+Question 12 is decided. Read the record and resume: dap show sc_4bbosp5k...:21
+```
+
+| Exit | Meaning | What to do |
+| --- | --- | --- |
+| 0 | The question woke the wait. | Read the entry that the line names, and resume. |
+| 1 | The feed stopped or refused you, or the issue holds no such question. | Read the words on stderr. The question may still be open. |
+| 2 | The arguments are wrong. | Correct the command. |
+| 3 | The bound passed with the question still open. | Run the same command to keep waiting. |
+
+`--hours` sets the bound, from above 0 to 576. The default is 72 hours. Any
+member can run this command, because the head stream answers each member's
+session. A person whose membership ends stops getting head lines at the next
+check, and the command exits 1. The stream reveals only the lane's head
+position and hash. The question's state comes from the summary read that the
+same session allows.
+
+While nothing moves, the command makes no reads on the stream itself. Node's
+fetch ends an idle response after 300 seconds, so the command opens a new stream
+about every 5 minutes and reads the question once each time. It asks for a new
+read session when the current one ends, at most every 600 seconds.
 
 ### `dap issues`
 

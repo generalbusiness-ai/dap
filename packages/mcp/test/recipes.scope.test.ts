@@ -31,6 +31,7 @@ function inventoryRows(): { activity: string; cells: Record<Mode, string> }[] {
     { activity: "`dap pack [<directory>]` (local command)", cells: { default: "Local files and an existing named publisher key; no MCP tool", generic: "Local only" } },
     { activity: "`dap invite <@member> --device` (local command)", cells: { default: "No MCP tool makes the link. The command signs the invitation of a device key and encodes the link it prints", generic: "Local only" } },
     { activity: "`dap join <artroom-device-key link>` (local command)", cells: { default: "No MCP tool. `join` takes `artroom-invite:` links. The command enrolls a new key in its config directory", generic: "Local only" } },
+    { activity: "`dap issue wait <issue> <ask>` (local command)", cells: { default: "No MCP tool. Runs in a shell after the agent's turn ends, reads the lane's head stream and exits when the question moves", generic: "Local only" } },
     { activity: "`dap scope-index inventory --out FILE`, `sweep --manifest FILE`, `verify --manifest FILE` (Node operator only) (local command)", cells: { default: "No MCP tool. Saves or checks an exact manifest through authenticated native reads; register-mode reads can write registrations. No deployment mode or complete index is inferred.", generic: "Node operator only" } },
   ]);
   const applications = rows.filter(r => r.activity.endsWith("(trusted-application room)"));

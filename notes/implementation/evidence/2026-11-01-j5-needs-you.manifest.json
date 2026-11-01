@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the head, after two failing gates that the note names. The scene ran locally on wrangler dev at the source commit, with stand-ins that the note labels. No deployed Worker ran this code, and no desktop AI app ran it.",
+  "directory": "2026-11-01-j5-needs-you",
+  "checkpoint": {
+    "commit": "f7026aed25f6e87701fa3fa3803b8b0da10c09dc",
+    "tree": "f05555d4d5d44ab5260f18c1a28c94a53d104725"
+  },
+  "fileCount": 135,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "6764b40fc13f1e0a4aa5625e97310402b546d74bf4eec807befbfdb1fad0fa58"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "controls/summary.txt",
+      "bytes": 1960,
+      "sha256": "f5516ef74a43de3e1106dd8da63f8364a544f719747dcf7b87528c190aab5d69"
+    },
+    {
+      "path": "deployed-room-probe/steps.log",
+      "bytes": 2825,
+      "sha256": "f735b1367e1e5ec5cbf0ed64ac4b452cf6d22c8cc09f860961e60cbd2d22392b"
+    },
+    {
+      "path": "gate-failed-1/gate.stdout.log",
+      "bytes": 8260,
+      "sha256": "8ef1ae1cbe7738eb15c45620214a658bcd01c9f54961a6bb3b4dd293de9a2b1c"
+    },
+    {
+      "path": "gate-failed-2/gate.stdout.log",
+      "bytes": 8159,
+      "sha256": "ba625314c56bbfc2191f033cb2384768c4508f4d795159ecbf47eb9ae37e7c04"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6513,
+      "sha256": "84cc8b6205f54b4561c41e55568c63dee6826b6fdbd48b0fda8ea34819bc3471"
+    },
+    {
+      "path": "golden/structural-diff.txt",
+      "bytes": 13763,
+      "sha256": "ee34a550f4205fc39fda43564cec8009eaf822d18bbb786b4fab2fb4ac6d6ac0"
+    },
+    {
+      "path": "probe-failed-2/report.json",
+      "bytes": 1337,
+      "sha256": "95902bd66a5e326c1e9f7e8238370f4b0e617e246c3311ba695da2de7af123d8"
+    },
+    {
+      "path": "probe-final/report.json",
+      "bytes": 17010,
+      "sha256": "a14b9b720d9aba743ed986d61b8884b40569cd9bac5562418d2cf7505261a569"
+    },
+    {
+      "path": "probe-final/wait-fetch.ndjson",
+      "bytes": 2290,
+      "sha256": "fda9a163ece46962d776407b9ab32bd7dd4937b5b1d89507ba943abd8c79f19a"
+    },
+    {
+      "path": "red/native.txt",
+      "bytes": 26366,
+      "sha256": "8d541d3b96260907c82368a9d57e1629dfc500ed2c09ad3e9060198bcdcb57ef"
+    },
+    {
+      "path": "red/plain-j5.txt",
+      "bytes": 5964,
+      "sha256": "20605af84d1b12b1c999e69333825c8e7bcff40a330b22b2704e8c41578ddb0c"
+    },
+    {
+      "path": "stream-fix/red.txt",
+      "bytes": 1033,
+      "sha256": "d66673bfcfcb5b0e4fe920c549c35faba433e6b8bd1e1fb3f4fc4f844159e57e"
+    },
+    {
+      "path": "tests/native.txt",
+      "bytes": 263,
+      "sha256": "7436fb87dbb43738b2828f666fa7c1a5751ba20b671dcbd4c2a2e5c712e7347e"
+    },
+    {
+      "path": "tests/owners.txt",
+      "bytes": 794,
+      "sha256": "09ae210e6319cf09c82d9f1d528f8f2ea143387567db02c37d45e211123ca04f"
+    },
+    {
+      "path": "tests/plain-views.txt",
+      "bytes": 3933,
+      "sha256": "133e2c83be0bfb5c332799ca99c81dcbea53b1a43199444630251e2128189033"
+    },
+    {
+      "path": "tests/source-checks.txt",
+      "bytes": 2680,
+      "sha256": "8171dc05705e53b3b3291ea1a87f4b957325e496b31df7e250cf91fd30428d28"
+    },
+    {
+      "path": "tests/typecheck.txt",
+      "bytes": 587,
+      "sha256": "3b04f4d00be63802fa0a1435a63784bf2b8b82d2c3690e293aff244b5acab70f"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 12535,
+      "sha256": "1086bde511e453bdcd017571c3dd98724dd6f759605b466e041d534cf5e11542"
+    }
+  ]
+}

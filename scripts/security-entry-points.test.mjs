@@ -46,7 +46,7 @@ const namedOwners = {
     "packages/scope/src/worker.ts:McpAgent": "a36d308c7bd5a575e6784a307fb3b404eb2187d39da8a93294eea2217b765c8f",
   },
   "packages/cli/src/commands.ts": {
-    "packages/cli/src/commands.ts:$module": "ceee3c0790c587b2193566f6e2c71507eff8d52260cb73c4a9b3129bc57d1b4f", // Reviewed room-proof import, both helper declarations, separate checker dispatch and retained-clone helpers.
+    "packages/cli/src/commands.ts:$module": "1c370675d41960108df506b0a47617f19b34e99c727918f9b6fd0a7157078f57", // Reviewed room-proof import, both helper declarations, separate checker dispatch and retained-clone helpers; exit code 3 and the export of issueNamed for dap issue wait.
     "packages/cli/src/commands.ts:NEW_REGISTER": "f828e83eeb39a37566e323156efb63274fc43b1d6b9e95b38fbf0cdbba327fbf",
     "packages/cli/src/commands.ts:short": "62f9d565f48fc73fc6b282a941d6d37a48055c6c32f2ef88f21b22ead55f6e57",
     "packages/cli/src/commands.ts:scopeIndexAccess": "b54a6859075907491f4c19313b149572acd5b3bd94c492d61fb342601759c299",
@@ -297,7 +297,7 @@ const pendingR8Seals = {
   "packages/cli/src/verification.ts": "3fb0f354c0d00dd1d21cf293e11dfc81738b9de4e8f5eb43ac9fd918dc9db557", // Reviewed unique-entry ledger, source conflicts and owner retirement; actual maintained output.
   "packages/cli/src/files.ts": "7d0d64f352787e5d30ea03265fb5137a17a1eef61e97454e5408959297ca1d5c", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/store.ts": "b2df92952a0584d615a9d939e0744454ad7251c6c7e8e2c6e4e15188f4a8804a", // Reviewed CLI session or verification boundary; actual maintained parser output.
-  "packages/cli/src/line.ts": "aecb9ca4ff10768d567af27b5d0dffcccb86a40e4202bcee8a3c3caa491a92b5", // Reviewed CLI session or verification boundary; actual maintained parser output.
+  "packages/cli/src/line.ts": "16e5681b077019dabbe1ba2b1bfb04105b9557a9bf3971577644f4fe1f1c885f", // Reviewed CLI session or verification boundary; actual maintained parser output; dap issue wait signs no act.
   "packages/cli/src/invitations.ts": "690a36025feb51ce1af46812c3628246aae8134475e849c4f70b92cdd5c8dd4c", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/scope-index-applications-command.ts": "e72f729f4232f674d0e132c865e4d7c359ac567a21e97b4e7b905342379d33b7", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/scope-index-manifest.ts": "41c5c324789f395e94252c54ea4dc4d28c6559eccfdd1bcb949d329529ad8cb4", // Preserve trusted session refusal outcomes; actual maintained parser output.
