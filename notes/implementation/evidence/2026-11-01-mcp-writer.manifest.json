@@ -1,22 +1,22 @@
 {
   "version": 1,
-  "qualification": "One passing gate at the checkpoint. The controls and the witness ran at c81afb6f, and the checkpoint merges main, which changes no file of the writer and adds the hosted loop's scope test. The witness used a local Worker, a real dap mcp over stdio and browser contexts on one machine. No hosted Worker or real room ran.",
-  "directory": "2026-11-01-mcp-writer",
+  "qualification": "One passing gate at the checkpoint, with 41 controls and the witness at 3be96040. The witness used a local Worker, a real dap mcp over stdio and browser contexts on one machine. No hosted Worker or real room ran.",
+  "directory": "2026-11-01-mcp-writer-2",
   "checkpoint": {
-    "commit": "1e7826108ea3406ed10f59dcb6ea8b9e18fc92a8",
-    "tree": "f25cca4f537bb852a7de77d73e4681e8de041f53"
+    "commit": "fd1658840393741a1eb9b1f9a3a5a36124fd51d2",
+    "tree": "3ab949b85b45e2c2eb914c10debdc73d662c3d92"
   },
-  "fileCount": 83,
+  "fileCount": 98,
   "files": [
     {
       "path": "gate/head.txt",
       "bytes": 82,
-      "sha256": "ecb4707309f48b29b34b32efb432b81c0459efbdde88424515320c19177a46eb"
+      "sha256": "1be5263d4f5c4fdfd7525b4610f164d4a37224821a0a665649af612c0bf575ae"
     },
     {
       "path": "gate/gate.stdout.log",
-      "bytes": 6514,
-      "sha256": "38b844d1ab50549348b15c89e80d0322b3e54c17ab277f82876f3fee5352fb51"
+      "bytes": 6492,
+      "sha256": "a9709995c2634e5f114c3ced46241778504677aa4302d6b4c7ec5cd645b5c8b0"
     },
     {
       "path": "gate/gate.exit",
@@ -26,7 +26,7 @@
     {
       "path": "controls/head.txt",
       "bytes": 82,
-      "sha256": "01a5823c6762c3f7c5d6302daf53738b9dfbe72ab63361e0c79a076c45d551e7"
+      "sha256": "0c68767bf799f4e67bcfe492a359b20ef2a29e8b4788f268a0c0e4b6d8d6b8c1"
     },
     {
       "path": "controls/exit.txt",
@@ -35,18 +35,18 @@
     },
     {
       "path": "controls/summary.jsonl",
-      "bytes": 5934,
-      "sha256": "79cc6fa6b4ad4d163fbbc2cbca6c9fe071c9eb936657e4ee95ea206c9683c004"
+      "bytes": 7689,
+      "sha256": "c48ad46e5014d8569856e7ba4f03d3c23ca15946311472b9b502dffec43a72de"
     },
     {
       "path": "controls/run-controls.mjs",
-      "bytes": 10535,
-      "sha256": "82963d83eed07211f7112340fa0225a51c91adfebfdc3212914895276f864681"
+      "bytes": 12148,
+      "sha256": "18e62db04cb1a4f181d372073725f19bd242ceb2cfa791e246c493e57a452b34"
     },
     {
       "path": "witness/head.txt",
       "bytes": 82,
-      "sha256": "01a5823c6762c3f7c5d6302daf53738b9dfbe72ab63361e0c79a076c45d551e7"
+      "sha256": "0c68767bf799f4e67bcfe492a359b20ef2a29e8b4788f268a0c0e4b6d8d6b8c1"
     },
     {
       "path": "witness/exit.txt",
@@ -56,12 +56,22 @@
     {
       "path": "witness/report.json",
       "bytes": 1987,
-      "sha256": "28fe022c4bb42470f1c612b9436352c0b6b844813d84f2c3c7ebceb14f3ba380"
+      "sha256": "fcb0ece4fa0d86d885d6ef7521275a17c550a209f4288ced3aa790406330cc28"
+    },
+    {
+      "path": "red/run.log",
+      "bytes": 17464,
+      "sha256": "6c9b7b80525008295c1bd1e51e1d10a70a2fbed24e6ee8dec1ba9144decd03e7"
+    },
+    {
+      "path": "red/test-at-red.diff",
+      "bytes": 6546,
+      "sha256": "b7aaaab14eddc6267da79b5328558466c1bfc51280fe39fbc6bc5d3025e86fa9"
     },
     {
       "path": "SHA256SUMS",
-      "bytes": 7691,
-      "sha256": "873e731aced1792232e192359d16775566923a58c3e8133b5fd352a365799a74"
+      "bytes": 9080,
+      "sha256": "ebcba3b52c51eaef80c18fbf1bd16e7447b70d68085cb6a5eb171af15ac29561"
     }
   ]
 }
