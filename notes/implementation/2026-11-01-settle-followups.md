@@ -1,6 +1,6 @@
 # State what settle claims, and move the local loops to it
 
-Status: test-helper change. No file outside a `test` directory changes, so no Worker bundle changes.
+Status: test-helper change. The gate passed at `a4db16ae`. No file outside a `test` directory changes, so no Worker bundle changes.
 
 Request `187f478d3ab698c2987475b364dc131e8f13fd08` and promise `ef1e2eac6c501700a918c988db5e911a36970e66` own this head. They come from the checker's approval `8dfea252` of the settle repair in [the flaky-finding note](2026-11-01-flaky-finding.md).
 
@@ -47,7 +47,7 @@ These forced orders show that the condition allows such a return. No run shows t
 
 ## Evidence
 
-The checkpoint is `4d66156d2de4a9babd6c58c2448e02461794a63c`, tree `1ae2887f`. Raw evidence is in `~/play/artroom-evidence/2026-11-01-settle-followups/`. Each log under `runs/` names the head and has no dirty path. The head adds only this note to the checkpoint. Each digest is the first 16 hex digits of the sha256 of the named files, read in name order.
+The checkpoint is `a4db16aee8c447d2d4f22510a7c79440f28f43fb`, tree `330f90a4`. It includes main `e5069ee6`. Raw evidence is in `~/play/artroom-evidence/2026-11-01-settle-followups/`, `SHA256SUMS` `976c159e2ca822976b2708ad9fad5c8b4cdd105af9b87dd397242ebe0f9d6ba5`. The gate ran there. The focused runs and controls ran at `4d66156d`, which holds the same test changes before the merge of main, and each log under `runs/` names that head and has no dirty path. The reviewed head adds this note and its manifest, and merges main `cf617842`. That merge changes `packages/mcp`, the page and its bundle, documents and seals, and no file of this head, so I did not run the gate again. Each digest is the first 16 hex digits of the sha256 of the named files, read in name order.
 
 | Check | Command | Exit | Digest |
 |---|---|---|---|
@@ -65,7 +65,9 @@ The checkpoint is `4d66156d2de4a9babd6c58c2448e02461794a63c`, tree `1ae2887f`. R
 | Control: the head half of the condition | `node scripts/control.mjs` on `net.ts`, condition reduced to `made === 0` | 0 | `258b30cff15d9aa0` |
 | Control: the dispatch half of the condition | `node scripts/control.mjs` on `net.ts`, condition reduced to the head comparison | 1 | `339ff489bc2275ad` |
 | Scratch test of the three cases | `item3/settle-limits.test.ts`, then `npx vitest run --project scope --silent=false --reporter=verbose packages/scope/test/settle-limits.test.ts` | 0 | `e800d37fbf678dc6` |
-<!-- gate row -->
+| Gate | `npm run gate` | 0 | `37b7ea4fe453ce10` |
+
+The gate reports 3467 plain and 963 native tests, 116 Node and 56 Counting.
 
 The second control exits 0 and names `the send's delivery was answered`. The third exits 1, the result `survives`: `settle.test.ts` does not tell the `made === 0` half of the condition from its absence, because the head half alone ends that test the same way. That control ran on that one file.
 
@@ -78,5 +80,5 @@ The forced failure holds every send from the withdrawal on, so the state stays `
 - **The cause stays open.** Request `c5f0cff9` owns it. The print answers it only when the assertion fails again, and no run here repeats that failure.
 - **The three cases stay in the helper.** A test that needs one of those sends finished must wait on that send. Request `187f478d` asks for this statement and no more.
 - **The operations driver is outside `settle`.** `settle` never calls `effect`, so it joins no operations pass. A commit from that pass counts only if it lands before the second head read. `settleDriving` calls `effect`, and a pass that starts after that call has the limit of case 1. No request owns this.
-- **The runs are a selection.** 193 files name `native-fixture-lifetime.ts` or `fixtures-native.ts`. This head ran the files in the table, and the gate runs the rest. Request `187f478d` owns this until the gate row above is in.
+- **The runs are a selection.** 193 files name `native-fixture-lifetime.ts` or `fixtures-native.ts`. This head ran the files in the table one at a time, and the gate ran the rest.
 - **Cost.** Nobody measured the added head reads in the eight loops: one read per listed scope per round, plus any extra round after a head moved. No request owns this.
