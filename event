@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/evidence/2026-11-01-browser-ci.manifest.json","body":{"commit":"89e59c128084f9c51b20747a72b3f32b050cf097","path":"notes/implementation/evidence/2026-11-01-browser-ci.manifest.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:30293e2665dc7dd5bdc3fd552489633d0a1f97ec","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-01-browser-ci.manifest.json."}
