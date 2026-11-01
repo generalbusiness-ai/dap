@@ -1,9 +1,12 @@
+import { createHash } from "node:crypto";
+import { env } from "cloudflare:workers";
 import { expect, inject, test } from "vitest";
 import { b64url } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
 import { ScopeHandle, httpTransport, signedReads } from "@generalbusiness/dap-client";
 import { DEMO_DIGESTS } from "@generalbusiness/dap-lanes";
 import worker, { type Env } from "../../worker.ts";
+import { BRAND_ASSETS } from "../../brand/assets.ts";
 import { sessionSigner, act, actsOn, joinRoom, listLanes, loadChange, loadIssue, loadRules, loadSite, openRoom, placeOf, type Room } from "../src/index.ts";
 import { prepareEdit } from "../src/retained-editor-data.ts";
 import { SERVICE, demo } from "./support/demo.ts";
@@ -21,8 +24,8 @@ const KEPT_HEADERS = ["content-type", "content-security-policy", "location", "x-
 // (`support/demo.ts`, with its stand-ins: the Git host and the scheduler) to the point where paul's AGENTS.md waits for the
 // controller and README.md is published. Then it reads every screen as the browser will, through the page's data functions over
 // the Worker's routes, and sends paul's review of his own change, which the lane refuses. It also asks the deployed Worker's entry
-// for `/page/` and `/page/page.js`. Each request and its answer is printed, in lines that begin `PAGE-RECORD `, for `screens.mjs`
-// to give the browser in place of a service.
+// for `/page/` and `/page/page.js`, and it adds the Worker's public brand files. Each request and its answer is printed, in lines
+// that begin `PAGE-RECORD `, for `screens.mjs` to give the browser in place of a service (`scripts/demo/recorder-output.ts`).
 test.skipIf(!inject("pageRecord"))("record the Worker's answers to the page's reads, for the screenshots", async () => {
   let recording: Map<string, Recorded> | null = null;
   const keep = async (key: string, answer: Response): Promise<Response> => {
@@ -94,19 +97,20 @@ test.skipIf(!inject("pageRecord"))("record the Worker's answers to the page's re
     // the root, not a rendered link for the immutable version.
     expect((await loadSite(seen, "")).status).toBe(200);
     // The page itself, as the deployed Worker's one entry serves it.
-    for (const path of ["/page/", "/page/page.js"]) await keep(`GET ${path}`, await worker.fetch(new Request(`${SERVICE}${path}`), {} as Env));
+    for (const path of ["/page/", "/page/page.js"]) await keep(`GET ${path}`, await worker.fetch(new Request(`${SERVICE}${path}`), { SCOPES: env.PLATFORM, SCOPE_INDEX: env.SCOPE_INDEX } as Env));
 
     const destination = await new ScopeHandle(signedReads(httpTransport(SERVICE, { fetch: seen.session.fetch! }), sessionSigner(seen.session), { now: seen.session.now! }), seen.destination, seen.reader?.reader() ?? null).summary();
     expect(destination.ok).toBe(true);
     if (!destination.ok) throw new Error("The capture actor could not read its destination.");
     const record = {
-      service: SERVICE, place, issue, readme, agents, manifest, fixture: { destinationDefinition: destination.value.definition, changeDefinition: selected.definition, workflow: "legacy one-file manifest on current CLI cohort; no manifest-list proposal" }, people: { una: b64url(unas), paul: b64url(pauls), rita: b64url(ritas) }, answers: Object.fromEntries(recording),
+      service: SERVICE, place, issue, readme, agents, manifest, brand: BRAND_ASSETS, fixture: { destinationDefinition: destination.value.definition, changeDefinition: selected.definition, workflow: "legacy one-file manifest on current CLI cohort; no manifest-list proposal" }, people: { una: b64url(unas), paul: b64url(pauls), rita: b64url(ritas) }, answers: Object.fromEntries(recording),
     };
     recording = null;
     // In lines of at most 64 KiB, which the test runner prints whole.
     const text = b64url(new TextEncoder().encode(JSON.stringify(record)));
-    for (let at = 0, n = 0; at < text.length; at += 65536, n++) console.log(`PAGE-RECORD ${n} ${text.slice(at, at + 65536)}`);
-    console.log("PAGE-RECORD end");
+    const lines = Math.ceil(text.length / 65536);
+    for (let n = 0; n < lines; n++) console.log(`PAGE-RECORD ${n} ${text.slice(n * 65536, (n + 1) * 65536)}`);
+    console.log(`PAGE-RECORD end ${lines} sha256:${createHash("sha256").update(text).digest("hex")}`);
   } finally {
     d.done();
   }

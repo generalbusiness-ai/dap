@@ -22,6 +22,14 @@ export function captureQuestionAction(context: Context, kind: "approve" | "decid
   return { id: kind === "approve" ? verdict : "decide", label: offerLabel(kind, verdict), purpose: "approve", kind,
     args: { ...captureInput(act, context.items, context.scope, on, fields) } };
 }
+/** The words on this page of the card. A person is not told to do what the card offers no way to do. */
+function questionReasons(page: string, actions: readonly CardAction[]): string[] {
+  const acts = actions.filter(action => action.purpose !== "check-original"), rules = "The room's rules decide each act.";
+  if (page !== "summary") return acts.length ? [rules] : [];
+  const reviews = acts.some(action => action.kind === "approve"), decides = acts.some(action => action.kind === "decide");
+  const offered = reviews && decides ? "read the question, approve it or decide it" : reviews ? "read the question or approve it" : decides ? "read the question or decide it" : "read the question";
+  return [`Open this card to ${offered}.${acts.length ? ` ${rules}` : ""}`];
+}
 function questionActions(context: Context): CardAction[] {
   if (!context.briefMatches || context.ask.state !== "asked") return [];
   return questionOffers(context.ask, context.requests, context.approvals, context.bodyAt.seq, context.viewer, context.actions).map(offer => captureQuestionAction(context, offer.kind, offer.request, offer.verdict));
@@ -55,13 +63,13 @@ export function decisionSource(app: RepoInAi): ViewSource {
           const actions = questionActions(context), at = actions[0] && !actions[0].local ? actions[0].args["at"] as Record<string, number> : { on: context.ask.revision };
           const card: Card = { identity: { item: String(context.ask.id), kind: "ask", revision: String(context.ask.revision), subject: { scope: context.scope.scope, item: context.ask.id }, at },
             title: String(context.ask.values["question"]), summary: context.brief === null ? "Legacy Question: no Brief binding." : context.briefMatches ? `Question text under its immutable Brief. ${APPROVAL_LIMIT}` : "The retained Brief resource does not match this Question.",
-            body: context.body, reasons: [`${context.definition} acts.approve / acts.decide; native admission still decides`],
+            body: context.body, reasons: questionReasons(query.page, actions),
             projection: [{ scope: context.scope.scope, seq: context.head.seq, hash: context.head.hash }], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], actions,
             fallback: "Use context for the exact text versions, requests, approvals, comments and conditions." };
           if (utf8(canonicalize(card)).length > 60 * 1024) return { status: "incomplete", position: 0, count: 0, fallback: "Question body exceeds this card's display budget. No approval is offered; read the bounded context." };
           return { status: "ready", position: 0, count: 1, card, fallback: card.fallback };
         }
-        if (query.screen === "change" && query.subject !== undefined) return await changeProjection(app, query.subject, minimum);
+        if (query.screen === "change" && query.subject !== undefined) return await changeProjection(app, query.subject, minimum, query.page);
         if (minimum !== undefined) return { status: "unavailable", position: 0, count: 0, fallback: "This screen does not support a receipt read minimum." };
         const after = query.scope === undefined ? {} : { after: query.scope };
         const response = query.screen === "work" ? await app.work() : query.screen === "change" ? await app.since(after) : await app.needsYou(after);

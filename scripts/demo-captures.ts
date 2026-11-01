@@ -15,8 +15,8 @@
 // local storage, as the page keeps it; it is never printed.
 //
 // playwright-core is not a dependency of this repository: install it in a scratch directory, outside the checkout. The browser
-// is CHROMIUM, or the chromium under PLAYWRIGHT_BROWSERS_PATH (default /opt/pw-browsers). Without either, the script says it
-// skipped and makes no capture: it exits 0 in the recorded form and 2 against a deployment.
+// is CHROMIUM, or the chromium under PLAYWRIGHT_BROWSERS_PATH (default /opt/pw-browsers). Without either, the script names what
+// is missing, makes no capture and exits 2. `.github/workflows/page-browser.yml` runs the recorded form and its two witnesses.
 
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
@@ -29,6 +29,7 @@ import { fileStore } from "../packages/cli/src/files.ts";
 import type { Config } from "../packages/cli/src/store.ts";
 import { CAPTURE_CONTEXT, captureBinding, captureSource, initializeCapture, ownerJson, type CaptureObservations } from "./demo/capture-context.ts";
 import type { Room } from "./demo/rehearse.ts";
+import { recordFrom, recorderLog } from "./demo/recorder-output.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const MOST = 300 * 1024;
@@ -60,14 +61,14 @@ interface Tab {
   evaluate<T>(f: () => T): Promise<T>;
   setViewportSize(size: { width: number; height: number }): Promise<void>;
 }
-interface Route { abort(reason: string): Promise<void>; request(): { url(): string; method(): string; postData(): string | null; headers(): Record<string, string> }; fulfill(answer: { status: number; headers?: Record<string, string>; contentType?: string; body: string }): Promise<void> }
+interface Route { abort(reason: string): Promise<void>; request(): { url(): string; method(): string; postData(): string | null; headers(): Record<string, string> }; fulfill(answer: { status: number; headers?: Record<string, string>; contentType?: string; body: string | Buffer }): Promise<void> }
 interface BrowserContext { close(): Promise<void>; route(pattern: string, handler: (route: Route) => unknown): Promise<void>; addInitScript<A>(f: (arg: A) => void, arg: A): Promise<void>; newPage(): Promise<Tab> }
 interface Browser { newContext(options: object): Promise<BrowserContext>; close(): Promise<void> }
 interface Chromium { launch(options: { executablePath: string }): Promise<Browser> }
 
 /** What the browser needs: the service's base URL, the room, the key, and the recorded answers when there is no service. */
 interface ClaimActorRecord { recordedName?: string | null; place: { directory: string; membership: unknown }; secret: string; actor: string; answers: NonNullable<Sitting["answers"]> }
-interface Sitting { claimWitness?: { register: ScopeRef; definition: string; "founder": ClaimActorRecord; member: ClaimActorRecord & { refusal: string } }; service: string; place: { directory: string; membership: unknown }; room: Room; secret: string; answers: Record<string, { status: number; headers: Record<string, string>; body: string }> | null; observation?: { source: string; config: string; actor: string } }
+interface Sitting { claimWitness?: { register: ScopeRef; definition: string; "founder": ClaimActorRecord; member: ClaimActorRecord & { refusal: string } }; service: string; place: { directory: string; membership: unknown }; room: Room; secret: string; answers: Record<string, { status: number; headers: Record<string, string>; body: string }> | null; brand?: Record<string, { type: string; base64: string }>; observation?: { source: string; config: string; actor: string } }
 
 function browserPath(): string | null {
   if (process.env["CHROMIUM"]) return existsSync(process.env["CHROMIUM"]) ? process.env["CHROMIUM"] : null;
@@ -89,20 +90,7 @@ function chromiumOf(): Chromium | null {
 
 /** The recorded form: the rehearsal on the test Worker, with its answers to the page's reads. */
 function recordedSitting(): Sitting {
-  let log: string;
-  try {
-    log = execFileSync("npx", ["vitest", "run", "--project", "scope", "lanes/test/demo", "--silent=false", "--reporter=verbose"], {
-      cwd: ROOT, env: { ...process.env, DEMO_RECORD: "1" }, encoding: "utf8", maxBuffer: 256 * 1024 * 1024,
-    });
-  } catch (error) {
-    // The recorder's stdout contains ephemeral signing secrets. A child-process
-    // Error includes that stdout, so it must never become a public diagnostic.
-    const status = (error as { status?: number }).status;
-    throw new Error(`The native demo recorder failed (exit ${status ?? "unknown"}); no private record was exported. Inspect the focused producer tests separately.`);
-  }
-  const parts = [...log.matchAll(/^DEMO-RECORD (\d+) (\S+)$/gm)].sort((a, b) => Number(a[1]) - Number(b[1])).map((m) => m[2]);
-  if (parts.length === 0 || !/^DEMO-RECORD end$/m.test(log)) throw new Error("The recorder printed no whole record.");
-  return JSON.parse(Buffer.from(parts.join(""), "base64url").toString("utf8")) as Sitting;
+  return recordFrom(recorderLog(ROOT, "lanes/test/demo", { DEMO_RECORD: "1" }), "DEMO-RECORD") as Sitting;
 }
 
 /** The live form: the key and the room from a person's config directory, and the IDs from room.json. */
@@ -115,6 +103,12 @@ async function liveSitting(service: string, home: string, roomFile: string): Pro
   const secret = await store.secret(config.key);
   if (!secret || keyIdOfSecret(secret) !== bound.actor) throw new Error("Capture key does not match the owner-home observation.");
   return { ...bound, secret: b64url(secret), answers: null, observation: { source: observed.source, config: observed.config, actor: observed.actor } };
+}
+
+/** Answer a request for the page's fonts and marks: the Worker's public brand files, which the record holds whole because they are binary. */
+function brandAnswer(route: Route, sitting: Sitting, path: string): Promise<void> {
+  const asset = sitting.brand?.[path.slice("/brand/".length)];
+  return asset ? route.fulfill({ status: 200, contentType: asset.type, body: Buffer.from(asset.base64, "base64") }) : route.fulfill({ status: 404, contentType: "text/plain", body: "not-found" });
 }
 
 async function captures(chromium: Chromium, executablePath: string, sitting: Sitting, out: string): Promise<{ name: string; bytes: number }[]> {
@@ -135,6 +129,8 @@ async function captures(chromium: Chromium, executablePath: string, sitting: Sit
       await context.route(`${service}/**`, (route) => {
         const request = route.request();
         const path = request.url().slice(service.length);
+        if (path.endsWith("/stream")) return undefined;
+        if (path.startsWith("/brand/")) return brandAnswer(route, sitting, path);
         const actor = path.endsWith("/sessions") ? ` ${(JSON.parse(request.postData() ?? "{}") as { request?: { actor?: string } }).request?.actor}` : "";
         const answer = answers[`${request.method() === "POST" ? "POST" : "GET"} ${path}${actor}`];
         if (!answer) {
@@ -150,7 +146,7 @@ async function captures(chromium: Chromium, executablePath: string, sitting: Sit
     const posted: string[] = [];
     tab.on("request", (request) => { if (request.method() === "POST") posted.push(request.url()); });
     tab.on("pageerror", (error) => consoleErrors.push(error.message));
-    tab.on("console", (message) => { if (message.type() === "error") consoleErrors.push(message.text()); });
+    tab.on("console", (message) => { if (message.type() === "error") consoleErrors.push(`${message.text()} ${message.location().url ?? ""}`); });
     // The whole content, down to its lowest element and at most 1,400 pixels: the viewport is set to that height for the capture.
     const shot = async (name: string) => {
       const path = join(out, `${name}.png`);
@@ -185,7 +181,7 @@ async function captures(chromium: Chromium, executablePath: string, sitting: Sit
         const after = String(Number(before) + 1);
         const requestsBefore = posted.length;
         await approvals.fill(after);
-        await form.getByRole("button", { name: "Save changes", exact: true }).click();
+        await tab.getByRole("button", { name: "Save changes", exact: true }).click();
         const confirmation = form.locator(".rules-confirmation");
         await confirmation.waitFor({ timeout: 30_000 });
         if (!(await confirmation.textContent())?.includes(`${before}\n→ ${after}`)) throw new Error("Rule confirmation does not name its observed before and edited after values.");
@@ -254,6 +250,8 @@ async function claimWitness(chromium: Chromium, executablePath: string, sitting:
     await context.route(`${sitting.service}/**`, async (route) => {
       const request = route.request();
       const path = request.url().slice(sitting.service.length);
+      if (path.endsWith("/stream")) return;
+      if (path.startsWith("/brand/")) { await brandAnswer(route, sitting, path); return; }
       if (request.method() === "GET" && path === `/v1/scopes/${native.register.scope}`) {
         const header = request.headers()["authorization"];
         const signed = header?.startsWith("Signed ") ? JSON.parse(Buffer.from(header.slice(7), "base64url").toString("utf8")) as SignedRead : null;
@@ -426,6 +424,8 @@ async function labelWitness(chromium: Chromium, executablePath: string, sitting:
       const context = await browser.newContext({ viewport: { width: 320, height: 844 }, deviceScaleFactor: 1, colorScheme });
       await context.route(`${sitting.service}/**`, async (route) => {
         const request = route.request(), path = request.url().slice(sitting.service.length);
+        if (path.endsWith("/stream")) return;
+        if (path.startsWith("/brand/")) { await brandAnswer(route, sitting, path); return; }
         if (request.method() === "GET" && path === `/v1/scopes/${native.register.scope}`) {
           const header = request.headers()["authorization"];
           const signed = header?.startsWith("Signed ") ? JSON.parse(Buffer.from(header.slice(7), "base64url").toString("utf8")) as SignedRead : null;
@@ -510,8 +510,8 @@ async function main(argv: readonly string[]): Promise<number> {
   const executablePath = browserPath();
   const chromium = chromiumOf();
   if (!executablePath || !chromium) {
-    process.stdout.write(`Skipped: ${!chromium ? "no playwright-core: set PLAYWRIGHT_CORE to a directory that holds it, installed outside this checkout" : "no Chromium: set CHROMIUM, or PLAYWRIGHT_BROWSERS_PATH"}. No capture was made.\n`);
-    return recorded ? 0 : 2;
+    process.stderr.write(`No capture was made: ${!chromium ? "no playwright-core: set PLAYWRIGHT_CORE to a directory that holds it, installed outside this checkout" : "no Chromium: set CHROMIUM, or PLAYWRIGHT_BROWSERS_PATH"}.\n`);
+    return 2;
   }
   const sitting = recorded ? recordedSitting() : await liveSitting(words[0]!, flags.get("home")!, flags.get("room")!);
   mkdirSync(resolve(out), { recursive: true });
