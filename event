@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/2026-11-01-j2-acceptance.md","body":{"commit":"e91cd2321dd6e5fe2864a231718e3a18db8f04e3","path":"notes/implementation/2026-11-01-j2-acceptance.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7c8ec7992ecf1b9ed0888b0acae1549e8bcb4352","text":"Merge retired a covered predecessor; the successor is at docs/security/trust-boundaries.md."}
