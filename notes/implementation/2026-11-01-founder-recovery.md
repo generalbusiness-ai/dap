@@ -1,6 +1,6 @@
 # Refuse a founder key that is also the recovery key
 
-Status: source implementation. The gate passed at `86f7c025`. No Worker runs this code yet. The planner decides when a deployment creates rooms on the new cohort.
+Status: source implementation. The gate passed at `86f7c025`. No Worker runs this code yet. The planner ruled in `cccd205a` that no deployment adds the cohort's pins now, and that the default and `newest` stay. A later slice that builds the token pin carries this cohort with it.
 
 Request `309f3434eb9cff1618d23546a2b00cea6c36ef2e` and promise `81ab0ddba4ec5a02a1afb84119b10319c31ae71b` own this head. Planner decision `40ea8fdf` routes this repair.
 

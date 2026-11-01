@@ -75,7 +75,7 @@ service, use `--host artifacts --namespace artroom-demo`;
 
 ```
 Installed: register sc_hinqqbm4....
-The operator key key_baqzbaDy... is kept in the config directory, readable only by you. It is the one founder key.
+The operator key key_baqzbaDy... is kept in the config directory, readable only by you. It is the one creator key.
 ```
 
 **`dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|separate-recovery]`**
@@ -339,6 +339,11 @@ unchanged singleton revision. It signs a fresh `found`; the Register judges
 that act. This local selector supplies no read authority or journal proof.
 Legacy configuration without that retained proof keeps the existing read
 path and can still need a readable Register summary.
+
+A register under policy `keys` has no such selector. The command reads its
+summary first, so a key with no entry at the register in the last 900 seconds
+gets `forbidden`, and the command signs nothing. [The order](deploy.md#the-order)
+states this for `dap claim`.
 
 Before each creation step, the command saves its exact signed envelope:
 `found`, then `seat`, then `first-key`. It saves the recorded fact references as each step completes. These records contain no private signing key.
