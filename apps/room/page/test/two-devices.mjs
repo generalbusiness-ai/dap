@@ -77,17 +77,19 @@ async function stopWorker() {
   if (worker.exitCode === null) process.kill(worker.pid, "SIGKILL");
 }
 
+/** A domain tag, as packages/bytes/src/domains.ts writes it. The key store's local check signs 32 random bytes with no tag (browser-key-store.ts). */
+const DOMAIN = /^artroom-[a-z0-9-]+-[0-9]+$/;
 /** One device: a browser context with its own IndexedDB, and the three counters. */
 async function device(browser, name, actsMode = () => "pass") {
   const context = await browser.newContext();
   const log = { name, acts: [], signatures: [] };
-  await context.exposeBinding("__witnessSignature", (_source, tag) => { log.signatures.push(tag); });
+  await context.exposeBinding("__witnessSignature", (_source, tag, length) => { log.signatures.push({ tag, length, kind: DOMAIN.test(tag) ? "domain" : length === 32 ? "key-check" : "unknown" }); });
   await context.addInitScript(() => {
     const sign = crypto.subtle.sign.bind(crypto.subtle);
     crypto.subtle.sign = (algorithm, key, data) => {
       const view = new Uint8Array(data instanceof ArrayBuffer ? data : data.buffer, data instanceof ArrayBuffer ? 0 : data.byteOffset, data.byteLength);
       const end = view.indexOf(10);
-      void window.__witnessSignature(new TextDecoder().decode(view.subarray(0, end < 0 ? 32 : end)));
+      void window.__witnessSignature(new TextDecoder().decode(view.subarray(0, end < 0 ? 32 : end)), view.byteLength);
       return sign(algorithm, key, data);
     };
   });
@@ -105,6 +107,7 @@ async function device(browser, name, actsMode = () => "pass") {
   page.on("pageerror", error => { failures.push({ name: `${name} page error`, actual: String(error), expected: null }); });
   return { context, page, log };
 }
+const intentsOf = one => one.log.signatures.filter(signature => signature.tag === "artroom-intent-1").length;
 const signatureMark = async one => { await delay(300); return one.log.signatures.length; };
 const signaturesSince = async (one, mark) => { await delay(300); return one.log.signatures.slice(mark); };
 const shell = page => page.waitForSelector("summary.account", { timeout: 60_000, state: "attached" });
@@ -131,6 +134,27 @@ const commentForm = '[data-action-slot="comment"] form';
 async function sendComment(one, body) {
   await one.page.fill(`${commentForm} textarea[name="field:body"]`, body);
   await one.page.click(`${commentForm} button[type="submit"]`);
+}
+/**
+ * One press of the button, with two windows. The first closes at the scope's answer, the reply of `route`, and holds every signature
+ * of any kind. The second closes when the page shows its answer, after the redraw, and sorts what it holds.
+ */
+async function press(one, route) {
+  const mark = await signatureMark(one);
+  let atAnswer = null;
+  const watch = response => { if (response.request().method() === "POST" && new URL(response.url()).pathname.endsWith(route)) atAnswer = one.log.signatures.length; };
+  one.page.on("response", watch);
+  await one.page.click("[data-original-check]");
+  await one.page.waitForSelector("[data-original-answer]", { timeout: 60_000 });
+  one.page.off("response", watch);
+  const toLine = await signaturesSince(one, mark);
+  return {
+    scopeAnswered: atAnswer !== null,
+    toAnswer: atAnswer === null ? null : one.log.signatures.slice(mark, atAnswer).map(signature => signature.kind),
+    domainToLine: toLine.filter(signature => signature.kind === "domain").map(signature => signature.tag),
+    unknownToLine: toLine.filter(signature => signature.kind === "unknown").length,
+    keyChecksToLine: toLine.filter(signature => signature.kind === "key-check").length,
+  };
 }
 const lineOf = async page => (await page.locator("[data-original-copy] p").allTextContents());
 
@@ -185,11 +209,12 @@ try {
   {
     await openIssue(first, issue.scope);
     const before = await signatureMark(first);
+    const firstActsBefore = first.log.acts.length;
     firstMode = "reply-lost";
     await sendComment(first, "It is in README.md.");
     await first.page.waitForFunction(() => document.body.textContent.includes("Request outcome unknown"), null, { timeout: 60_000 });
     firstMode = "pass";
-    lost.firstIntents = (await signaturesSince(first, before)).filter(tag => tag === "artroom-intent-1").length;
+    lost.firstIntents = (await signaturesSince(first, before)).filter(signature => signature.tag === "artroom-intent-1").length;
     // A reloaded page of the first key offers only the button.
     await openIssue(first, issue.scope, true);
     await first.page.waitForSelector("[data-original-check]", { timeout: 60_000 });
@@ -204,18 +229,16 @@ try {
     await second.page.waitForSelector("[data-original-check]", { timeout: 60_000 });
     lost.secondLine = await lineOf(second.page);
     const secondActs = second.log.acts.length;
-    const intentsBefore = second.log.signatures.filter(tag => tag === "artroom-intent-1").length;
-    const mark = await signatureMark(second);
-    await second.page.click("[data-original-check]");
-    await second.page.waitForSelector("[data-original-answer]", { timeout: 60_000 });
+    const intentsBefore = intentsOf(second);
+    lost.press = await press(second, "/settle");
     lost.answer = await second.page.locator("[data-original-answer]").allTextContents();
-    lost.signaturesButtonToAnswer = await signaturesSince(second, mark);
-    lost.secondIntents = second.log.signatures.filter(tag => tag === "artroom-intent-1").length - intentsBefore;
-    lost.secondIntentsEver = second.log.signatures.filter(tag => tag === "artroom-intent-1").length;
-    lost.secondSessionRequestsEver = second.log.signatures.filter(tag => tag === "artroom-session-request-1").length;
-    lost.firstActsReachedWorker = first.log.acts.filter(sent => sent.reachedWorker).length;
+    lost.secondIntents = intentsOf(second) - intentsBefore;
+    lost.secondIntentsEver = intentsOf(second); // Its one `enrol`, at setup.
+    const firstComment = first.log.acts.slice(firstActsBefore);
+    lost.firstActsLogged = firstComment.length;
+    lost.firstActsReachedWorker = firstComment.filter(sent => sent.reachedWorker).length;
     lost.secondActs = second.log.acts.length - secondActs;
-    const signed = JSON.parse(first.log.acts[0].body).signed;
+    const signed = JSON.parse(firstComment[0].body).signed;
     lost.journal = await journal(issue.scope, signed);
     lost.openAfter = await second.page.locator("[data-original-copy]").count();
   }
@@ -224,30 +247,35 @@ try {
   const measured = [];
   {
     const timings = new Map();
+    let order = [];
     const finished = request => {
       const url = new URL(request.url());
       const name = url.pathname.endsWith("/acts") ? "POST acts" : /\/originals$/.test(url.pathname) && request.method() === "POST" ? "POST originals" : /\/originals\//.test(url.pathname) && request.method() === "DELETE" ? "DELETE originals" : /\/entries\//.test(url.pathname) ? "GET entry" : /\/originals$/.test(url.pathname) ? "GET originals" : null;
       if (!name) return;
       const timing = request.timing();
       timings.set(name, [...(timings.get(name) ?? []), timing.responseEnd > 0 ? timing.responseEnd : null]);
+      order.push(name);
     };
     second.page.on("requestfinished", finished);
     await openIssue(second, issue.scope);
     for (let i = 0; i < MEASURED_ACTS; i++) {
-      timings.clear();
+      timings.clear(); order = [];
       await second.page.waitForSelector(`${commentForm} button[type="submit"]:not([disabled])`, { timeout: 60_000 });
       await sendComment(second, `Measured comment ${i + 1}.`);
       await second.page.waitForFunction(text => document.body.textContent.includes(text), `Measured comment ${i + 1}.`, { timeout: 60_000 });
-      await delay(200);
-      measured.push(Object.fromEntries([...timings.entries()].map(([name, values]) => [name, values])));
+      await delay(1000);
+      const [acted, ended] = [order.indexOf("POST acts"), order.indexOf("DELETE originals")];
+      measured.push({ ...Object.fromEntries([...timings.entries()].map(([name, values]) => [name, values])), followReads: order.slice(acted + 1, ended).filter(name => name === "GET entry").length, keptFirst: order.indexOf("POST originals") < acted });
     }
     second.page.off("requestfinished", finished);
   }
   const series = name => measured.flatMap(row => row[name] ?? []).filter(value => value !== null);
   const summary = name => ({ requestsPerAct: measured.map(row => (row[name] ?? []).length), medianMs: median(series(name)), maxMs: Math.max(...series(name)) });
   const measurement = {
-    label: `Observed run: ${MEASURED_ACTS} comments through the page in Chromium, against a local wrangler dev Worker on loopback, one room. Times are Chromium's responseEnd for each request, with no network distance.`,
-    "POST originals": summary("POST originals"), "DELETE originals": summary("DELETE originals"), "POST acts": summary("POST acts"), "GET entry": summary("GET entry"), "GET originals": summary("GET originals"),
+    label: `Observed run: ${MEASURED_ACTS} comments through the page in Chromium, against a local wrangler dev Worker on loopback, one room. Times are Chromium's responseEnd for each request, with no network distance, so they state the Worker's own work and no real round trip.`,
+    "POST originals": summary("POST originals"), "DELETE originals": summary("DELETE originals"), "POST acts": summary("POST acts"), "GET originals": summary("GET originals"),
+    followReadsPerAct: measured.map(row => row.followReads), keptBeforeTheActEachTime: measured.every(row => row.keptFirst),
+    roundTripsAddedPerAct: "Two to the membership object: POST originals and DELETE originals. One at the target: the entry read that verifies the receipt. One GET originals per draw of a view.",
   };
 
   // Column "Never arrived". A third device takes the first device's place, and the second device stays.
@@ -257,40 +285,41 @@ try {
     const third = await device(browser, "third", () => mode);
     await enrolDevice(third, await createDeviceLink(second));
     await openIssue(third, issue.scope);
+    const thirdActsBefore = third.log.acts.length;
     mode = "never-arrived";
     await sendComment(third, "It never arrived.");
     await third.page.waitForFunction(() => document.body.textContent.includes("Request outcome unknown"), null, { timeout: 60_000 });
-    const body = third.log.acts[0].body, signed = JSON.parse(body).signed;
+    const thirdComment = third.log.acts.slice(thirdActsBefore);
+    const signed = JSON.parse(thirdComment[0].body).signed;
     await third.context.close();
     await second.page.reload();
     await shell(second.page);
     await second.page.waitForSelector("[data-original-check]", { timeout: 60_000 });
     never.secondLine = await lineOf(second.page);
     const secondActs = second.log.acts.length;
-    const intentsBefore = second.log.signatures.filter(tag => tag === "artroom-intent-1").length;
-    const press = async () => {
+    const intentsBefore = intentsOf(second);
+    const early = async () => {
       const answers = await second.page.locator("[data-original-answer]").allTextContents();
       await second.page.click("[data-original-check]");
       await second.page.waitForFunction(old => [...document.querySelectorAll("[data-original-answer]")].map(node => node.textContent).join("|") !== old || !document.querySelector("[data-original-check]"), answers.join("|"), { timeout: 60_000 }).catch(() => {});
       await delay(500);
       return second.page.locator("[data-original-answer]").allTextContents();
     };
-    never.earlyAnswer = await press();
+    never.earlyAnswer = await early();
     never.actsBeforeMargin = second.log.acts.length - secondActs;
     const sendable = Date.parse(signed.intent.notAfter) + 60_000;
     await delay(Math.max(0, sendable - Date.now()) + 2_000);
     await second.page.reload();
     await shell(second.page);
     await second.page.waitForSelector("[data-original-check]", { timeout: 60_000 });
-    const mark = await signatureMark(second);
-    await second.page.click("[data-original-check]");
+    never.press = await press(second, "/acts");
     await second.page.waitForFunction(() => document.body.textContent.includes("refused the request") || document.body.textContent.includes("The request landed"), null, { timeout: 60_000 });
     never.answer = await second.page.locator("[data-original-answer]").allTextContents();
-    never.signaturesButtonToAnswer = await signaturesSince(second, mark);
-    never.secondIntents = second.log.signatures.filter(tag => tag === "artroom-intent-1").length - intentsBefore;
-    never.firstActsReachedWorker = third.log.acts.filter(sent => sent.reachedWorker).length;
+    never.secondIntents = intentsOf(second) - intentsBefore;
+    never.firstActsLogged = thirdComment.length;
+    never.firstActsReachedWorker = thirdComment.filter(sent => sent.reachedWorker).length;
     never.secondActs = second.log.acts.length - secondActs;
-    never.sameSha256 = second.log.acts.at(-1)?.sha256 === third.log.acts[0].sha256;
+    never.sameSha256 = second.log.acts.at(-1)?.sha256 === thirdComment[0].sha256;
     never.journal = await journal(issue.scope, signed);
     never.openAfter = await second.page.locator("[data-original-copy]").count();
     never.waitedSeconds = Math.round((Date.now() - Date.parse(signed.intent.notAfter) + 300_000) / 1000);
@@ -304,24 +333,32 @@ try {
   check("Reply lost: the reloaded first key has no enabled comment form", lost.firstReloadFormsEnabled, 0);
   check("Reply lost: the reloaded first key has no other status button", lost.firstReloadStatusRecovery, 0);
   check("Reply lost: the second device's line", lost.secondLine, [issueLine]);
+  check("Reply lost: First device's comment made one request", lost.firstActsLogged, 1);
   check("Reply lost: First device's /acts that reached the Worker", lost.firstActsReachedWorker, 1);
   check("Reply lost: Second device's /acts", lost.secondActs, 0);
   check("Reply lost: Second device's artroom-intent-1 signatures", lost.secondIntents, 0);
-  check("Reply lost: Signatures of any domain, button to answer", lost.signaturesButtonToAnswer, []);
+  check("Reply lost: Signatures of any kind, button to the scope's answer", lost.press.toAnswer, []);
+  check("Reply lost: Signatures of any domain, button to the line", lost.press.domainToLine, []);
+  check("Reply lost: No signature outside a domain and the key check", lost.press.unknownToLine, 0);
   check("Reply lost: Entries under that idempotency key", lost.journal, { entries: 1, firstBytes: true });
   check("Reply lost: no copy stays open", lost.openAfter, 0);
   check("Never arrived: the second device's line", never.secondLine, [issueLine]);
   check("Never arrived: no /acts before the margin", never.actsBeforeMargin, 0);
+  check("Never arrived: First device's comment made one request", never.firstActsLogged, 1);
   check("Never arrived: First device's /acts that reached the Worker", never.firstActsReachedWorker, 0);
   check("Never arrived: Second device's /acts", never.secondActs, 1);
   check("Never arrived: same SHA-256", never.sameSha256, true);
   check("Never arrived: Second device's artroom-intent-1 signatures", never.secondIntents, 0);
-  check("Never arrived: Signatures of any domain, button to answer", never.signaturesButtonToAnswer, []);
+  check("Never arrived: Signatures of any kind, button to the scope's answer", never.press.toAnswer, []);
+  check("Never arrived: Signatures of any domain, button to the line", never.press.domainToLine, []);
+  check("Never arrived: No signature outside a domain and the key check", never.press.unknownToLine, 0);
   check("Never arrived: Entries under that idempotency key", never.journal, { entries: 0, firstBytes: true });
   check("Never arrived: the answer ends refused expired", never.answer.some(line => line.includes("refused the request: expired")), true);
   check("Never arrived: no copy stays open", never.openAfter, 0);
   check("Measurement: one POST originals per act", measurement["POST originals"].requestsPerAct.every(n => n === 1), true);
   check("Measurement: one DELETE originals per act", measurement["DELETE originals"].requestsPerAct.every(n => n === 1), true);
+  check("Measurement: one entry read verifies each receipt", measurement.followReadsPerAct.every(n => n === 1), true);
+  check("Measurement: each copy comes before its act", measurement.keptBeforeTheActEachTime, true);
 
   const report = { replyLost: lost, neverArrived: never, measurement, failures };
   process.stdout.write(JSON.stringify(report, null, 2) + "\n");

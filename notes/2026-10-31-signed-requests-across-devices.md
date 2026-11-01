@@ -74,7 +74,7 @@ The second device already holds its own enrolled key and a read session. The ses
 
 **The button makes no signature.** The settle route and the act route take no reader, and the scope judges the bytes alone (`packages/scope/src/worker.ts:489`, `:499`). The page signs for a session under `artroom-session-request-1` when it opens a room and when a session ends (`data.ts:116-118`), with or without J1. Any proof that a device holds a key needs a signature at some point, and this one's domain keeps it apart from every intent (`packages/contract/src/session.ts:15-19`).
 
-So the second device makes no `artroom-intent-1` signature until the copy ends. It makes no signature of any domain from the button to the answer while its session is current. Its `enrol` is one earlier signature, at setup.
+So the second device makes no `artroom-intent-1` signature until the copy ends. It makes no signature of any domain from the button to the answer while its session is current. Its `enrol` is one earlier signature, at setup. After the answer, the page redraws, and its key store checks the stored key by signing 32 random bytes with no domain (`apps/room/page/src/browser-key-store.ts:43`). The store discards that signature, and the check predates J1.
 
 ## 4. The copy holds the request and nothing else
 
@@ -150,7 +150,7 @@ The landing's evidence measures the two added requests per act, in round trips, 
 The witness counts in three places:
 
 - **Requests.** A `context.route` handler logs every POST to `/acts` with its body's SHA-256. "Reply lost" calls `route.fetch()` and then `route.abort()`. "Never arrived" calls `route.abort()` alone.
-- **Signatures.** `context.addInitScript` wraps `crypto.subtle.sign` and logs the domain tag, the bytes up to the first newline (`packages/bytes/src/domains.ts:15-16`). A browser key signs only through that call (`browser-key.ts:55-57`). The first context's one intent shows that the counter works.
+- **Signatures.** `context.addInitScript` wraps `crypto.subtle.sign` and logs the domain tag, the bytes up to the first newline (`packages/bytes/src/domains.ts:15-16`). A browser key signs only through that call (`browser-key.ts:55-57`). The first context's one intent shows that the counter works. The witness closes the window of the table's fourth row at the scope's reply, and it reports the key store's check apart.
 - **Journal.** The witness compares each entry's `input.signed` with the first context's bytes.
 
 | Observed | Reply lost | Never arrived |

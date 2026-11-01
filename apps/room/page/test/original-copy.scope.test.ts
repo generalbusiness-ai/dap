@@ -266,7 +266,8 @@ test("a full cap sends nothing", async () => {
     // The member's rows: the 64th passes, and the 65th returns `full`.
     for (let i = 0; i < 64; i++) expect((await keepOne(i)).status, `copy ${i + 1}`).toBe(204);
     const over = await keepOne(64);
-    expect([over.status, JSON.parse(over.text).reason]).toEqual([507, "full"]);
+    expect(over.status).toBe(507);
+    expect(JSON.parse(over.text).reason).toBe("full");
     // The page sends nothing, and it says so.
     await expect(comment(s.laptop, s.lane, "One too many.")).rejects.toThrow(CopyNotKept);
     await expect(comment(s.laptop, s.lane, "One too many.")).rejects.toThrow(/Nothing was sent/);
@@ -283,7 +284,8 @@ test("a full cap sends nothing", async () => {
     const overBytes = await keepOne(116, { texts: [text, text.slice(0, 200 * 1024)] });
     expect(overBytes.status).toBe(400); // Over the route's own bound for one body.
     const fullBytes = await keepOne(117, { texts: [text] });
-    expect([fullBytes.status, JSON.parse(fullBytes.text).reason]).toEqual([507, "full"]);
+    expect(fullBytes.status).toBe(507);
+    expect(JSON.parse(fullBytes.text).reason).toBe("full");
     for (const row of await openOriginals(s.laptop)) expect((await copiesOf(s.laptop)!.end(row.digest)).ok).toBe(true);
 
     // The object's bytes: 1 GiB, across members. A row outside this member fills it.
@@ -291,7 +293,8 @@ test("a full cap sends nothing", async () => {
       state.storage.sql.exec("INSERT INTO original_copy (digest, inc, member, actor, target, kind, item, not_after, drop_ms, size, bytes) VALUES ('filler', ?, '@other', 'k', '{}', 'k', NULL, 'never', ?, ?, '')", s.laptop.membership.inc, now + 8 * 24 * 3600 * 1000, 1024 * 1024 * 1024);
     }));
     const overObject = await keepOne(200);
-    expect([overObject.status, JSON.parse(overObject.text).reason]).toEqual([507, "full"]);
+    expect(overObject.status).toBe(507);
+    expect(JSON.parse(overObject.text).reason).toBe("full");
   } finally { s.d.done(); }
 }, 120_000);
 
@@ -312,7 +315,8 @@ test("a repeat with other bytes keeps the first", async () => {
     const parsed = parseStrict(read.bytes) as { signed: SignedIntent };
     const other = actBodyText(parsed.signed, { texts: ["Other words."] } as never);
     const conflict = await statusOf(fetch, s.laptop, "", "POST", other);
-    expect([conflict.status, JSON.parse(conflict.text).reason]).toEqual([409, "conflict"]);
+    expect(conflict.status).toBe(409);
+    expect(JSON.parse(conflict.text).reason).toBe("conflict");
     expect(await held()).toEqual(before);
     expect(await copiesOf(s.laptop)!.read(row.digest)).toEqual({ ok: true, bytes: read.bytes });
     // A lane scope has no such route, and an application screen does not reach it.
@@ -320,6 +324,9 @@ test("a repeat with other bytes keeps the first", async () => {
     expect(lane.status).toBe(404);
     const posted = await fetch(`${SERVICE}/v1/scopes/${encodeURIComponent(s.lane)}/originals`, { method: "POST", headers: { authorization: s.laptop.reader!.reader() }, body: read.bytes });
     expect(posted.status).toBe(404);
+    // Nor does a platform scope of another kind: the directory names a definition, and it holds no copy.
+    const directory = await fetch(`${SERVICE}/v1/scopes/${encodeURIComponent(s.d.D.name)}/originals`, { headers: { authorization: s.laptop.reader!.reader() } });
+    expect(directory.status).toBe(404);
     const host = { roomOrigin: SERVICE, directory: s.d.D.name } as never;
     for (const method of ["GET", "POST", "DELETE"]) {
       expect(applicationGatewayRoute(host, `${SERVICE}/v1/scopes/${encodeURIComponent(s.laptop.membership.scope)}/originals`, method)).toBe(false);
@@ -382,7 +389,10 @@ test("an idle object drops a row at seven days", async () => {
       return read.value.items.filter(item => item.type === "key" && item.state === "invited").length;
     };
     const fire = () => s.d.wait(() => runDurableObjectAlarm(s.d.M.object));
-    expect((await inspect()).alarm).not.toBeNull();
+    // One alarm, at the earliest cause: the invitation's end, a day out, ahead of the row's bound.
+    const armed = (await inspect()).alarm;
+    expect(armed).not.toBeNull();
+    expect(armed!).toBeLessThan(drop - 5 * 24 * 3600 * 1000);
     expect(await invitationState()).toBe(1);
 
     // The invitation's end fires first, and the row stays. The row's cause does not clear the other cause.
@@ -392,8 +402,8 @@ test("an idle object drops a row at seven days", async () => {
     expect((await inspect()).rows).toBe(1);
     expect(await s.d.wait(async () => { const room = await openRoom(s.session(await s.d.secretOf(s.d.rita)), s.place); const read = await handleOf(room, room.membership.scope).summary(); return read.ok ? read.value.items.filter(item => item.type === "key" && item.state === "invited").length : read.reason; })).toBe(0);
 
-    // With no request, the alarm keeps the row before the bound and drops it past the bound.
-    expect((await inspect()).alarm).not.toBeNull();
+    // With no request, the alarm keeps the row before the bound and drops it past the bound. The row's own cause holds the alarm now.
+    expect((await inspect()).alarm).toBe(drop);
     s.d.advanceClock(drop - now() - 1000);
     await fire();
     expect((await inspect()).rows).toBe(1);
