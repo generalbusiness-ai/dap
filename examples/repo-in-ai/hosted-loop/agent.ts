@@ -8,7 +8,7 @@ import type { Entry, FactRef, Item, ScopeId, ScopeRef } from "@generalbusiness/d
 import type { HostedSession, Reply } from "./hosted-session.ts";
 import { LOOP_ACT_TOOLS, checkToolList, hostedDefaultTools } from "./tool-list.ts";
 import { stop, TEXT, type AgentPhase, type Mode, type StopWord } from "./words.ts";
-import type { PublicResult } from "./public.ts";
+import { isCommit, type PublicResult } from "./public.ts";
 
 const WAIT_SECONDS = 60, WAIT_ROUNDS = 30, OPEN_WAIT_SECONDS = 1;
 const refused = (reply: Reply): StopWord => reply["answer"] === "refused" ? "act-refused" : "act-unresolved";
@@ -267,11 +267,16 @@ export async function agentPhase(phase: AgentPhase, mcp: HostedSession, mode: Mo
   if (byKind(["offer", "approve", "decide", "revise"]).some(signer => signer === room.key)) return stop("record-differs");
   const version = (await room.items(change, "manifest")).find(item => item.state === "current") ?? stop("no-manifest");
   const proposal = changeSteps.find(row => row.kind === "propose-file") ?? stop("no-manifest");
+  // The base that the proposal signed, beside the branch's head, both read in this session. Only a loopback input may have no head.
+  const branches = (await mcp.call("items", { scope: "destination", type: "branch" }))["items"] as Item[];
+  const base = version.values["base"], head = branches.find(item => typeof item.values["head"] === "string")?.values["head"] ?? null;
+  if (head === null && standInBase === undefined) return stop("no-published-head");
+  if (!isCommit(base) || (head !== null && !isCommit(head))) return stop("commit-format");
   if (changeSteps.filter(row => row.input === "act").some(row => row.signer !== room.key)) return stop("record-differs");
   const commitments = await room.items(issue, "commitment");
   const released = (await room.items(issue, "block", true)).filter(item => item.state === "released");
   if (commitments.filter(item => item.state === "accepted" && room.mine(item, "performer")).length !== 2 || released.length !== 1) return stop("record-differs");
   return observed(phase, { propose: await room.fact(change, proposal.seq) }, {
-    issueOrder: order, changeOrder: changeSteps.filter(row => row.input === "act").map(row => row.kind), issue, change, version: version.id, fileDigest: version.values["digest"], agentKey: room.key, entries: issueSteps.length + changeSteps.length, modelChoseStep: false,
+    issueOrder: order, changeOrder: changeSteps.filter(row => row.input === "act").map(row => row.kind), issue, change, version: version.id, fileDigest: version.values["digest"], base, head, baseIsHead: base === head, standIn: standInBase !== undefined, agentKey: room.key, entries: issueSteps.length + changeSteps.length, modelChoseStep: false,
   }, mcp);
 }

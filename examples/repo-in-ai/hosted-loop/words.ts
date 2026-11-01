@@ -16,7 +16,7 @@ export const stopWords = [
   "input", "scratch-only", "target-version", "target-unavailable", "endpoint-closed", "plan-differs",
   "no-person-home", "no-retained-plan", "no-bearer", "agent-home-differs", "bearer-unusable", "agent-create-refused", "agent-unresolved", "invitation-unresolved", "room-unresolved",
   "tool-list-differs", "unsourced-fact", "bypass-read", "public-output", "read-failed", "read-incomplete", "unknown-tool",
-  "no-prompt", "no-standing", "no-issue-lane", "no-change-lane", "no-offer", "no-commitment", "no-question", "no-approval-request", "no-block", "no-decision", "no-new-offer", "no-definition", "no-published-head", "no-controller", "no-manifest",
+  "no-prompt", "no-standing", "no-issue-lane", "no-change-lane", "no-offer", "no-commitment", "no-question", "no-approval-request", "no-block", "no-decision", "no-new-offer", "no-definition", "no-published-head", "commit-format", "no-controller", "no-manifest",
   "still-open", "question-changed", "signed-in-read-phase", "act-refused", "act-unresolved", "no-original", "record-differs",
 ] as const;
 export type StopWord = typeof stopWords[number];

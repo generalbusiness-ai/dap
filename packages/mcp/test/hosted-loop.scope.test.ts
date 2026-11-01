@@ -108,6 +108,8 @@ test("the hosted loop's phases reach a proposal on the default tools, each from 
     expect(verified.result.values?.["issueOrder"]).toEqual(["offer", "accept", "ask", "request-approval", "block", "approve", "decide", "revise", "offer", "accept", "release-block"]);
     expect(verified.result.values?.["changeOrder"]).toEqual(["link-own", "propose-file"]);
     expect(verified.result.values?.["driver"]).toBe("script");
+    expect(verified.result.values?.["baseIsHead"], "the stand-in Git host's head is the base the proposal signed").toBe(true);
+    expect(verified.result.values?.["standIn"]).toBe(false);
     expect(verified.result.values?.["modelChoseStep"]).toBe(false);
 
     // A rerun from a new session finds each original by its key on the agent object. It reuses the fact and adds no entry.

@@ -46,6 +46,8 @@ interface Script {
   members?: Item[];
   rules?: Item[];
   steps?: { seq: number; input: string; kind: string; signer: string | null }[];
+  changeSteps?: { seq: number; input: string; kind: string; signer: string | null }[];
+  branches?: Item[];
   settle?: Record<string, unknown>;
   act?: Record<string, unknown>;
   wait?: Record<string, unknown>;
@@ -65,10 +67,10 @@ function scripted(script: Script): McpPort & { called: string[]; closed: number 
       if (name === "inspect") return reply(args["scope"] === "rules" ? { items: script.rules ?? [] } : { ref: at(args["scope"] === "directory" ? DIRECTORY : String(args["scope"])) });
       if (name === "items") {
         if (args["scope"] === "membership") return reply({ items: script.members ?? [] });
-        if (args["scope"] === "destination") return reply({ items: [] });
+        if (args["scope"] === "destination") return reply({ items: script.branches ?? [] });
         return reply({ items: (args["final"] ? script.final ?? [] : script.live ?? []).filter(row => row.type === args["type"]) });
       }
-      if (name === "steps") return reply({ steps: script.steps ?? [] });
+      if (name === "steps") return reply({ steps: (args["scope"] === CHANGE ? script.changeSteps : script.steps) ?? [] });
       if (name === "step") return reply({ hash: HASH, entry: { seq: args["seq"], at: at(ISSUE), input: script.entries?.[args["seq"] as number] ?? { type: "delivery" } } });
       if (name === "settle") return reply(script.settle ?? { answer: "not-found" });
       if (name === "wait") return reply(script.wait ?? { timedOut: true });
@@ -270,6 +272,66 @@ test("a stand-in base is the only head that no reply supplied, and it passes onl
   const result = await agentPhase("agent-propose", new HostedSession(port), "new", "1".repeat(40));
   expect(result.status).toBe("accepted");
   expect(port.called).toContain("change.propose-file");
+});
+
+// ---------------------------------------------------------------- the proposal's base
+
+const PERSON_KEY = `key_${"p".repeat(43)}`, COMMIT_A = "a".repeat(40), COMMIT_B = "b".repeat(40);
+const ORDER = ["offer", "accept", "ask", "request-approval", "block", "approve", "decide", "revise", "offer", "accept", "release-block"];
+const PERSON_ACTS = new Set(["offer", "approve", "decide", "revise"]);
+/** A record that passes every check of `agent-verify`, with the two commits a case names. */
+const recorded = (base: unknown, head: unknown): Script => ({
+  lanes: [ISSUE_LANE, CHANGE_LANE],
+  steps: ORDER.map((kind, seq) => ({ seq, input: "act", kind, signer: PERSON_ACTS.has(kind) ? PERSON_KEY : AGENT_KEY })),
+  changeSteps: [{ seq: 1, input: "act", kind: "link-own", signer: AGENT_KEY }, { seq: 2, input: "act", kind: "propose-file", signer: AGENT_KEY }],
+  live: [item(2, "commitment", "accepted", { parties: mine("performer") }), item(10, "commitment", "accepted", { parties: mine("performer") }), item(4, "manifest", "current", { values: { digest: HASH, base } as Item["values"] })],
+  final: [item(6, "block", "released")],
+  branches: head === undefined ? [] : [item(1, "branch", "ready", { values: { head } as Item["values"] })],
+});
+
+test("agent-verify prints the signed base beside the branch's head, says they are equal, and prints in the projection", async () => {
+  const port = scripted(recorded(COMMIT_A, COMMIT_A));
+  const result = await agentPhase("agent-verify", new HostedSession(port), "new");
+  expect(result.values).toMatchObject({ base: COMMIT_A, head: COMMIT_A, baseIsHead: true, standIn: false });
+  expect(scanPublic(publicLine(result))).toEqual([]);
+  expect(port.called.filter(name => name.includes("."))).toEqual([]);
+});
+test("agent-verify says when the signed base differs from the branch's head", async () => {
+  const result = await agentPhase("agent-verify", new HostedSession(scripted(recorded(COMMIT_A, COMMIT_B))), "new");
+  expect(result.values).toMatchObject({ base: COMMIT_A, head: COMMIT_B, baseIsHead: false, standIn: false });
+  expect(publicLine(result)).toContain(COMMIT_B);
+});
+test("a stand-in input says so, prints the manifest's base and no head, and reads as no real base", async () => {
+  const result = await agentPhase("agent-verify", new HostedSession(scripted(recorded(COMMIT_A, undefined))), "new", COMMIT_B);
+  expect(result.values).toMatchObject({ base: COMMIT_A, head: null, baseIsHead: false, standIn: true });
+  expect(scanPublic(publicLine(result))).toEqual([]);
+});
+test("with no stand-in and no head, agent-verify stops at no-published-head", async () => {
+  expect(await phaseOn("agent-verify", recorded(COMMIT_A, undefined))).toBe("no-published-head");
+});
+test.each<[string, unknown, unknown]>([
+  ["a 64-hex base", "a".repeat(64), COMMIT_A],
+  ["a 64-hex head", COMMIT_A, "a".repeat(64)],
+  ["a base with no value", undefined, COMMIT_A],
+  ["a short head", COMMIT_A, "abc1234"],
+  ["an uppercase base", "A".repeat(40), COMMIT_A],
+])("with %s, agent-verify stops at commit-format and signs nothing", async (_name, base, head) => {
+  const port = scripted(recorded(base, head));
+  expect(await stoppedWith(() => agentPhase("agent-verify", new HostedSession(port), "new"))).toBe("commit-format");
+  expect(port.called.filter(name => name.includes("."))).toEqual([]);
+});
+test("a 40-hex commit fits agent-verify's base and head alone", () => {
+  const verify = (values: Record<string, unknown>): PublicResult => ({ phase: "agent-verify", actor: "agent", status: "observed", values });
+  expect(() => publicLine(verify({ base: COMMIT_A, head: COMMIT_A }))).not.toThrow();
+  expect(() => publicLine(verify({ base: COMMIT_A, head: null }))).not.toThrow();
+  for (const refused of [
+    verify({ base: COMMIT_A, head: COMMIT_A, other: COMMIT_A }),
+    verify({ base: "a".repeat(64), head: COMMIT_A }),
+    verify({ base: COMMIT_A, head: "word" }),
+    verify({ base: null, head: COMMIT_A }),
+    { ...ROW, values: { base: COMMIT_A } },
+    { ...ROW, facts: { base: COMMIT_A } },
+  ]) expect(() => publicLine(refused), JSON.stringify(refused)).toThrow(/public-output/);
 });
 
 // ---------------------------------------------------------------- the person's phases

@@ -163,6 +163,7 @@ try {
   }
   const second = await phase("agent-verify");
   if (second.line.values.entries !== first.line.values.entries) throw new Error("A check added an entry.");
+  if (second.line.values.standIn !== true) throw new Error("A stand-in base must say so.");
 
   // Every byte this run printed or kept in its public directory, against the private bytes this process can read.
   const bearer = readFileSync(join(plan.home, "agent", "bearer"), "utf8");

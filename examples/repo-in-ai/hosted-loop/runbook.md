@@ -116,7 +116,7 @@ and **agent** means a new hosted session that holds only the bearer.
 | `agent-open-change` | Agent | Opens the change lane. | `open-pr` |
 | `agent-link` | Agent | Links the issue to the change. | `link-own` |
 | `agent-propose` | Agent | Proposes the one file. | `propose-file` |
-| `agent-verify` | Agent | Reads both lanes back, and checks their order and their signers. | None |
+| `agent-verify` | Agent | Reads both lanes back, checks their order and their signers, and prints the proposal's base beside the branch's head. | None |
 
 Start `agent-wait` before `approve`, and leave it running. It waits up to 30
 minutes. If it stops or dies, start it again. A new session waits on the same
@@ -129,6 +129,12 @@ words, references (scope IDs, seqs and digests) and small numbers. An accepted
 phase holds the fact that the scope recorded for its act. Every agent phase
 holds `tools`, the digest of its list, and `session`, the digest of its session
 ID. Keep these lines as the run's evidence.
+
+`agent-verify` prints `base`, the commit the proposal signed, and `head`, the
+branch's head now. Both come from this session's hosted tools. `baseIsHead` says
+whether they are equal. `propose-file`'s guards do not check the base, so this
+comparison is the run's evidence of a real base. `standIn` is `true` only on a
+loopback input with `standInBase`, where `base` is a stand-in and no real base.
 
 `publicLine` refuses any other value before it writes a byte, and `scanPublic`
 reads the line again. No bearer, token, link, body, question, comment or file
@@ -163,6 +169,7 @@ This table lists the common stops:
 | `no-person-home` | The person's home does not exist. | Run `owner`. |
 | `no-retained-plan` | The person's home holds no plan of this script, so it is not this run's home. | Use a new home. If `owner` began this home and stopped, run `owner` with `continue`. |
 | `no-published-head` | The destination's branch has no head at `agent-propose`. The phase signed nothing. | Run `agent-propose` again. If the branch stays empty, stop the run and report it. |
+| `commit-format` | The base or the head is not a 40-hex commit. `agent-verify` signed nothing. | Report it. The script needs an edit for this format, and the phase can then run again. |
 | `no-bearer`, `agent-home-differs` | The agent's home does not hold exactly its bearer. | Run `create-agent`, or restore the home. |
 | `no-offer`, `no-commitment`, `no-question`, `no-approval-request`, `no-block`, `no-decision`, `no-new-offer`, `no-change-lane`, `no-issue-lane` | An earlier phase has not run. | Run the earlier phase. |
 | `no-original` | `check` or `continue` found no original. | Run the phase with `new`. |
@@ -190,7 +197,8 @@ A local run differs from a live run in three ways:
 
 - wrangler's local workerd stands in for the deployment.
 - The room has no Git host, and `standInBase` stands in for the published head.
-  An HTTPS input refuses that field.
+  An HTTPS input refuses that field. `agent-verify` prints `standIn` as `true`,
+  `head` as `null` and `baseIsHead` as `false`.
 - A local register has no public creation offer, so the key that planned the
   register creates the room. A live run makes a new key, and that key claims the
   room through the Worker's offer.

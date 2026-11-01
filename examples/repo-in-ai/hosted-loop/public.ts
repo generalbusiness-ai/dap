@@ -12,7 +12,7 @@ export interface PublicResult {
 
 /** A reference or a fixed word. Free text, a body, a link, a bearer and a secret fit none of these. */
 const PUBLIC_STRING = [
-  /^sc_[a-z2-7]{52}$/, /^in_[a-z2-7]{26}$/, /^sha256:[0-9a-f]{64}$/, /^key_[A-Za-z0-9_-]{43}$/, /^[0-9a-f]{40}$/,
+  /^sc_[a-z2-7]{52}$/, /^in_[a-z2-7]{26}$/, /^sha256:[0-9a-f]{64}$/, /^key_[A-Za-z0-9_-]{43}$/,
   /^platform:[a-z]+@[0-9]+$/, /^@[a-z0-9][a-z0-9-]{0,47}$/, /^(?!.*[a-z0-9_-]{32})[a-z][a-z0-9._-]{0,47}$/, /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
 ];
 const closedValue = (value: unknown, depth = 0): boolean => {
@@ -25,10 +25,18 @@ const closedValue = (value: unknown, depth = 0): boolean => {
 };
 const FORBIDDEN_KEYS = new Set(["bearer", "secret", "token", "link", "body", "text", "content", "comment", "conditions", "question", "authorization", "invitation", "seed", "key-secret"]);
 
+/** A 40-hex commit. It fits the projection only as `agent-verify`'s `base` and `head`. */
+export const isCommit = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{40}$/.test(value);
+const closedValues = (phase: LoopPhase, values: Record<string, unknown> | undefined): boolean => {
+  if (phase !== "agent-verify" || values === undefined) return closedValue(values ?? null);
+  const { base, head, ...rest } = values;
+  return isCommit(base) && (head === null || isCommit(head)) && closedValue(rest);
+};
+
 /** The line a phase prints. A value outside the closed shapes stops the phase before any byte is written. */
 export function publicLine(result: PublicResult): string {
   const { phase, actor, status, facts, refs, values, ...rest } = result;
-  if (Object.keys(rest).length > 0 || !closedValue({ phase, actor, status }) || !closedValue(facts ?? null) || !closedValue(refs ?? null) || !closedValue(values ?? null)) return stop("public-output");
+  if (Object.keys(rest).length > 0 || !closedValue({ phase, actor, status }) || !closedValue(facts ?? null) || !closedValue(refs ?? null) || !closedValues(phase, values)) return stop("public-output");
   return JSON.stringify(result) + "\n";
 }
 
