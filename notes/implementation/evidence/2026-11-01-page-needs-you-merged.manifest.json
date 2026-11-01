@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "qualification": "One passing gate after a session-interrupted run at the same clean head. The local Worker issue-question script passed 21 steps. GitHub ran the Page and Card workflows. No deployed scene and no person has run this head.",
+  "directory": "2026-11-01-page-needs-you-merged",
+  "checkpoint": {
+    "commit": "f116d596d9136bdba2b8f47e1ac7b7f9c0632f25",
+    "tree": "1bd2e9e892c74ef19d98db62a33b22468d133dfa"
+  },
+  "fileCount": 74,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "a4b06ce7d05c4360fcd2be3fc612657110fdd2802b7eb9e11e52d762b767ab12"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6552,
+      "sha256": "e9d5a883a67a5fdbfeae614a46d3983c7e699a710647547cfce6c44ceea21c92"
+    },
+    {
+      "path": "issue-questions.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "issue-questions.json",
+      "bytes": 1976,
+      "sha256": "1ea86ed6f00d251d8737003db66dd0ff603b108b94b87703bf0da50a1793e0a2"
+    },
+    {
+      "path": "page-workflow.json",
+      "bytes": 2581,
+      "sha256": "0e98871a2e2ede401bc19f12f1e19b3b62ef6ce6c639e42919bd6c6dc4a86fa8"
+    },
+    {
+      "path": "card-workflow.json",
+      "bytes": 2448,
+      "sha256": "75f111c78bd6bf7d7993e11632c0645877c2599b49571d233c86bd617c7ae9ae"
+    },
+    {
+      "path": "card-workflow-inputs.json",
+      "bytes": 895,
+      "sha256": "7920388977fad377a9ce2e9fd2337f694f018ad569c3ce488f233a9ac1d20b20"
+    },
+    {
+      "path": "gate-interrupted-1714/gate.stderr.log",
+      "bytes": 15,
+      "sha256": "ed9c25996224e994b23a6681b4fa359c4224ae02bbf8fa3835e6d1c147257e3a"
+    },
+    {
+      "path": "gate-interrupted-1714/gate.stdout.log",
+      "bytes": 5801,
+      "sha256": "b296c99508e6d873c4d0bcfcc338651f9bf419a02ff3dbe37a28fdadca560cf6"
+    },
+    {
+      "path": "gate-interrupted-1714/interruption.txt",
+      "bytes": 180,
+      "sha256": "db84b99866e0583108605d3cc860eee84a8f5a7b33d7eed8ddba3428643fc335"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 7304,
+      "sha256": "5048ec3ce1d81ca2c83486dc1d31c7c2075bd492b584499cc5be046a0991b0d5"
+    }
+  ]
+}
