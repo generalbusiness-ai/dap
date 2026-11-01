@@ -16,12 +16,31 @@
  * member reads, so the compare does the work.
  *
  * **Who keeps a row.** A session of the key that signed the intent. A session
- * cannot make a copy of any other request, because the signature must verify
- * and the intent's actor must be the session's key.
+ * can make a copy only of a request that its key signed: the signature must
+ * verify, and the intent's actor must be the session's key. The digest does
+ * not cover `texts`, `presented` or `values`, so those parts can differ from
+ * what the key's page sent. The scope verifies them when they are sent. This
+ * grants nothing, because the signature still binds the act.
  *
  * **What a stolen session does.** It reads, delivers or deletes the member's
- * copies until the session ends. A deletion loses only the button, and the
+ * copies until the session ends. It can delete a row and keep it again with
+ * other unsigned parts, or make a row from a request that its key already
+ * signed and that has not expired. A deletion loses only the button, and the
  * journal stays true.
+ *
+ * **The list's reply.** 64 rows always fit. Only `kind` has a chosen length, and
+ * `keep` bounds it at 256 bytes. JSON writes that in at most 1,536 bytes, six for
+ * each control byte. The rest of a row has one form: digest 71, `to` 55 + 29 + 11,
+ * `actor` 47, `notAfter` at most 24, `on` at most 16 digits, and under 100 of names
+ * and punctuation. A row is under 1,900 bytes, so 64 rows are under 121,600 bytes.
+ * The client's bound on a reply is 1,052,672 bytes.
+ *
+ * **A full object.** The caps of one member refuse with `full`, and the object's
+ * cap with `room-full`. Before `room-full`, `keep` drops rows of members who are no
+ * longer active or who hold no active key, one bounded quantum at a time. A retired
+ * key of a member with another active key keeps its rows. The object's cap does not
+ * refuse a request to this membership scope, so an admin can still remove a member.
+ * Only the member's own caps bound those rows.
  *
  * **The time bound.** A row with no answer goes seven days past its `notAfter`,
  * plus the delay of the object's one alarm. `wake` is one cause of `Wakes`, so
@@ -36,13 +55,15 @@ import type { Clock, Readers } from "./ports.ts";
 import type { Sql } from "./sqlite.ts";
 
 /** The caps of one membership object, and of one member within it. */
-export interface OriginalLimits { rows: number; memberBytes: number; objectBytes: number; bodyBytes: number }
-export const ORIGINAL_LIMITS: OriginalLimits = { rows: 64, memberBytes: 16 * 1024 * 1024, objectBytes: 1024 * 1024 * 1024, bodyBytes: 1024 * 1024 };
+export interface OriginalLimits { rows: number; memberBytes: number; objectBytes: number; bodyBytes: number; kindBytes: number }
+export const ORIGINAL_LIMITS: OriginalLimits = { rows: 64, memberBytes: 16 * 1024 * 1024, objectBytes: 1024 * 1024 * 1024, bodyBytes: 1024 * 1024, kindBytes: 256 };
 /** How long past its `notAfter` a row with no answer lasts, before the alarm's delay. */
 export const ORIGINAL_DAYS = 7;
 const DROP_MS = ORIGINAL_DAYS * 24 * 3600 * 1000;
 /** The most rows one alarm deletes. A backlog leaves a due wake, so the next alarm continues. */
 const EXPIRE_QUANTUM = 64;
+/** The most members one `keep` examines on a full object, and the most of their rows it drops. The next `keep` continues. */
+const SWEEP_MEMBERS = 16, SWEEP_ROWS = 64;
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS original_copy (
@@ -56,7 +77,7 @@ CREATE INDEX IF NOT EXISTS original_copy_due ON original_copy (drop_ms);
 
 /** One open copy, without its body. */
 export interface OriginalRow { digest: Digest; to: ScopeRef; kind: string; on: number | null; actor: string; notAfter: Timestamp }
-export type OriginalKeepRefusal = "bad-request" | "expired" | "conflict" | "full";
+export type OriginalKeepRefusal = "bad-request" | "expired" | "conflict" | "full" | "room-full";
 export type OriginalRefusal = Extract<ReadRefusal, "not-found" | "forbidden" | "sessions-unavailable" | "clock-behind">;
 export type OriginalKept = { ok: true; fresh: boolean } | { ok: false; reason: OriginalRefusal | OriginalKeepRefusal };
 export type OriginalBytes = { ok: true; bytes: string } | { ok: false; reason: OriginalRefusal };
@@ -91,6 +112,8 @@ export class Originals {
   readonly #sql: Pick<Sql, "exec">;
   readonly #config: OriginalsConfig;
   readonly #limits: OriginalLimits;
+  /** Where the next sweep of a full object starts. Memory only: a new instance starts at the first member. */
+  #sweptTo = "";
 
   constructor(config: OriginalsConfig) {
     this.#config = config;
@@ -100,7 +123,7 @@ export class Originals {
   }
 
   /** Who asks: the scope's incarnation and the session's member. A refusal: this is no active membership scope, or the session or its standing fails. */
-  #asker(reader: unknown): { inc: string; member: string; key: string; at: NonNullable<ReturnType<StateView["scope"]>> } | { refused: OriginalRefusal } {
+  #asker(reader: unknown): { inc: string; member: string; key: string; named: string; at: NonNullable<ReturnType<StateView["scope"]>> } | { refused: OriginalRefusal } {
     const scope = this.#config.state.scope();
     const pinned = this.#config.pinned();
     if (!scope || scope.status !== "active" || scope.at.kind !== "membership" || !pinned || typeof pinned.named !== "string" || !platform(pinned.named)) return { refused: "not-found" };
@@ -109,7 +132,30 @@ export class Originals {
     if (key === "sessions-unavailable" || key === "clock-behind") return { refused: key };
     const standing = standingOf(this.#config.state, { of: scope.at, key }, pinned.named as never);
     if (!standing || !("key" in standing) || standing.keyState !== "active" || standing.memberState !== "active" || standing.controllerActive === false) return { refused: "forbidden" };
-    return { inc: scope.at.inc, member: standing.member, key, at: scope };
+    return { inc: scope.at.inc, member: standing.member, key, named: pinned.named, at: scope };
+  }
+
+  /** One bounded quantum on a full object: the rows of members who are no longer active or who hold no active key. */
+  #sweep(asker: { inc: string; named: string; at: NonNullable<ReturnType<StateView["scope"]>> }): void {
+    const members = this.#sql.exec("SELECT DISTINCT member FROM original_copy WHERE inc = ? AND member > ? ORDER BY member LIMIT ?", asker.inc, this.#sweptTo, SWEEP_MEMBERS).toArray().map(row => row["member"] as string);
+    let left = SWEEP_ROWS, after = this.#sweptTo, finished = true;
+    for (const member of members) {
+      const standing = standingOf(this.#config.state, { of: asker.at.at, member: member as never }, asker.named as never);
+      if (standing && "memberState" in standing && (standing.memberState !== "active" || !("activeKey" in standing) || standing.activeKey !== true)) {
+        const doomed = this.#sql.exec("SELECT digest FROM original_copy WHERE inc = ? AND member = ? LIMIT ?", asker.inc, member, left).toArray();
+        for (const row of doomed) this.#sql.exec("DELETE FROM original_copy WHERE digest = ?", row["digest"] as string).toArray();
+        left -= doomed.length;
+        if (left === 0) { finished = false; break; } // This member can hold more rows, so the next sweep starts with it.
+      }
+      after = member;
+    }
+    this.#sweptTo = finished && members.length < SWEEP_MEMBERS ? "" : after;
+  }
+
+  /** The object's bytes with this body would pass the cap. */
+  #objectFull(size: number): boolean {
+    const all = this.#sql.exec("SELECT COALESCE(SUM(size), 0) AS total FROM original_copy").toArray()[0]!;
+    return (all["total"] as number) + size > this.#limits.objectBytes;
   }
 
   /**
@@ -124,7 +170,7 @@ export class Originals {
     const size = utf8(bytes).length;
     if (size > this.#limits.bodyBytes) return { ok: false, reason: "bad-request" };
     const intent = requestOf(bytes);
-    if (!intent) return { ok: false, reason: "bad-request" };
+    if (!intent || utf8(intent.kind).length > this.#limits.kindBytes) return { ok: false, reason: "bad-request" };
     if (intent.actor !== asker.key) return { ok: false, reason: "forbidden" };
     const [now, ends] = [timeMs(this.#config.clock.read()), timeMs(intent.notAfter)];
     if (now === null || ends === null || now >= ends) return { ok: false, reason: "expired" };
@@ -133,8 +179,12 @@ export class Originals {
     const held = this.#sql.exec("SELECT bytes FROM original_copy WHERE digest = ? AND inc = ?", digest, asker.inc).toArray()[0];
     if (held) return held["bytes"] === bytes ? { ok: true, fresh: false } : { ok: false, reason: "conflict" };
     const mine = this.#sql.exec("SELECT COUNT(*) AS n, COALESCE(SUM(size), 0) AS total FROM original_copy WHERE inc = ? AND member = ?", asker.inc, asker.member).toArray()[0]!;
-    const all = this.#sql.exec("SELECT COALESCE(SUM(size), 0) AS total FROM original_copy").toArray()[0]!;
-    if ((mine["n"] as number) >= this.#limits.rows || (mine["total"] as number) + size > this.#limits.memberBytes || (all["total"] as number) + size > this.#limits.objectBytes) return { ok: false, reason: "full" };
+    if ((mine["n"] as number) >= this.#limits.rows || (mine["total"] as number) + size > this.#limits.memberBytes) return { ok: false, reason: "full" };
+    const toThisScope = intent.to?.scope === asker.at.at.scope && intent.to.inc === asker.at.at.inc;
+    if (!toThisScope && this.#objectFull(size)) {
+      this.#sweep(asker);
+      if (this.#objectFull(size)) return { ok: false, reason: "room-full" };
+    }
     this.#sql.exec("INSERT INTO original_copy (digest, inc, member, actor, target, kind, item, not_after, drop_ms, size, bytes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       digest, asker.inc, asker.member, intent.actor, canonicalize(intent.to), intent.kind, intent.on, intent.notAfter, ends + DROP_MS, size, bytes).toArray();
     return { ok: true, fresh: true };

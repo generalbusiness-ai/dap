@@ -168,6 +168,7 @@ test("incomplete projections stay unreadable and a real returned submit answer s
     expect([bytes.verifySignedRead(signed), signed.request.read]).toEqual([true, "summary"]);
   } finally {
     derivations.mockRestore(); refusedRenewal = false; room.reader = null;
+    room = { ...room, session: { ...room.session } }; // A page that opens on signed reads, from here on: it never held a session.
   }
   expect((await loadRules(room)).definitions).toEqual([]); // Distinguishing complete empty enumeration.
   mode = "item-refused";

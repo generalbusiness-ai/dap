@@ -14,7 +14,7 @@
 import type { Answer, Digest, Head, Receipt, ScopeId, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, isMemberRef } from "@generalbusiness/dap-bytes";
 import { originalRequest, sendableAt, type OriginalRow } from "@generalbusiness/dap-client";
-import { copiesOf, endOriginal, fresh, handleOf, itemsOf, nowOf, summaryOf, type Room } from "./data.ts";
+import { actAssociation, copiesOf, endOriginal, fresh, handleOf, itemsOf, nowOf, renewLost, sessionLost, summaryOf, type Room } from "./data.ts";
 
 export type OriginalCheck =
   /** The scope holds the act's entry, and the page verified it. The copy ended. */
@@ -32,12 +32,40 @@ export type OriginalCheck =
   /** The copy does not verify, or another member signed it. The page sent nothing. */
   | { state: "unverified" };
 
-/** The member's open copies. A failed read shows no line, and it blocks nothing: the list is read-only. */
-export async function openOriginals(room: Room): Promise<readonly OriginalRow[]> {
+/** The member's open copies. `failed` says that the read failed, and then `rows` holds what this page read last. */
+export interface OpenOriginals { rows: readonly OriginalRow[]; failed: boolean }
+/** What the page says when a read fails. */
+export const ORIGINALS_UNREAD = "This page could not read your open requests, so it shows the ones it read last. Check your connection. The page reads them again each time a view opens.";
+/** The last rows this page read, for each room and key. Memory only. */
+const lastRead = new Map<string, readonly OriginalRow[]>();
+
+/**
+ * The member's open copies. A failed read is not an empty list: the page keeps
+ * the last rows it read, so the lock and the button stay. A page on signed
+ * reads keeps no copy, and it has none to read.
+ */
+export async function openOriginals(room: Room): Promise<OpenOriginals> {
+  const memory = actAssociation(room, room.membership.scope);
   try {
-    const listed = await copiesOf(room)?.list();
-    return listed?.ok ? listed.rows : [];
-  } catch { return []; }
+    await renewLost(room);
+    await fresh(room);
+    if (!sessionLost(room)) {
+      const listed = await copiesOf(room)?.list();
+      if (!listed) return { rows: [], failed: false };
+      if (listed.ok) { lastRead.set(memory, listed.rows); return { rows: listed.rows, failed: false }; }
+    }
+  } catch { /* A lost reply is a failed read. */ }
+  return { rows: lastRead.get(memory) ?? [], failed: true };
+}
+
+/**
+ * The fences of this page that an answer lifts: the page's own request at the
+ * row's scope. An opening act can sit under the directory. Another key's
+ * answer lifts nothing here, and neither does a press with no answer.
+ */
+export function settledAssociations(room: Pick<Room, "session" | "key" | "directory" | "membership">, row: OriginalRow, check: OriginalCheck): readonly string[] {
+  if (row.actor !== room.key || check.state === "waiting" || check.state === "unknown" || check.state === "unverified") return [];
+  return [actAssociation(room, row.to.scope), ...(row.to.kind === "directory" ? [actAssociation(room, room.directory)] : [])];
 }
 
 /**

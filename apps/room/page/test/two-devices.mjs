@@ -198,7 +198,8 @@ try {
   browser = await chromium.launch({ executablePath: CHROMIUM });
   let firstMode = "pass";
   const first = await device(browser, "first", () => firstMode);
-  const second = await device(browser, "second");
+  let secondMode = "pass";
+  const second = await device(browser, "second", () => secondMode);
   await enrolDevice(first, link);
   const deviceLink = await createDeviceLink(first);
   await enrolDevice(second, deviceLink);
@@ -222,6 +223,20 @@ try {
     lost.firstReloadButton = await first.page.locator("[data-original-check]").allTextContents();
     lost.firstReloadFormsEnabled = await first.page.locator(`${commentForm} button[type="submit"]:not([disabled])`).count();
     lost.firstReloadStatusRecovery = await first.page.locator("[data-status-recovery]").count();
+
+    // A failed read of the open requests: the page says so, and the line, the button and the lock stay.
+    const listRoute = "**/v1/scopes/*/originals";
+    await first.context.route(listRoute, route => route.request().method() === "GET" ? route.abort() : route.continue());
+    await first.page.goto(`${base}/page/#/`);
+    await openIssue(first, issue.scope);
+    await first.page.waitForSelector("[data-original-unread]", { timeout: 60_000 });
+    lost.failedRead = {
+      words: await first.page.locator("[data-original-unread]").allTextContents(),
+      line: await lineOf(first.page),
+      button: await first.page.locator("[data-original-check]").count(),
+      formsEnabled: await first.page.locator(`${commentForm} button[type="submit"]:not([disabled])`).count(),
+    };
+    await first.context.unroute(listRoute);
 
     await first.context.close();
     await second.page.reload();
@@ -286,6 +301,40 @@ try {
     roundTripsAddedPerAct: "Two to the membership object: POST originals and DELETE originals. One at the target: the entry read that verifies the receipt. One GET originals per draw of a view.",
   };
 
+  // A stopped keep, and a press on the page that sent the request. The note's table does not count these.
+  const pageStops = {};
+  {
+    const keepRoute = "**/v1/scopes/*/originals";
+    const enabled = `${commentForm} button[type="submit"]:not([disabled])`;
+    await second.page.waitForSelector(enabled, { timeout: 60_000 });
+    let acts = second.log.acts.length;
+    await second.context.route(keepRoute, route => route.request().method() === "POST" ? route.abort() : route.continue());
+    await sendComment(second, "No copy, no send.");
+    await second.page.waitForSelector('[data-original-answer="not-kept"]', { timeout: 60_000 });
+    pageStops.notKept = await second.page.locator('[data-original-answer="not-kept"]').allTextContents();
+    pageStops.actsWhenNotKept = second.log.acts.length - acts;
+    await second.context.unroute(keepRoute);
+    await second.page.waitForSelector(enabled, { timeout: 60_000 });
+    await sendComment(second, "Now it goes.");
+    await second.page.waitForFunction(text => document.body.textContent.includes(text), "Now it goes.", { timeout: 60_000 });
+    await delay(1000);
+    pageStops.notKeptAfterTheNextSend = await second.page.locator('[data-original-answer="not-kept"]').count();
+
+    await second.page.waitForSelector(enabled, { timeout: 60_000 });
+    acts = second.log.acts.length;
+    secondMode = "reply-lost";
+    await sendComment(second, "Lost here, settled here.");
+    await second.page.waitForFunction(() => document.body.textContent.includes("Request outcome unknown"), null, { timeout: 60_000 });
+    secondMode = "pass";
+    await second.page.waitForSelector("[data-original-check]", { timeout: 60_000 });
+    await second.page.click("[data-original-check]");
+    await second.page.waitForFunction(() => !document.querySelector("[data-original-check]"), null, { timeout: 60_000 });
+    await second.page.waitForSelector(enabled, { timeout: 60_000 });
+    pageStops.unknownAfterThePress = await second.page.evaluate(() => document.body.textContent.includes("Request outcome unknown"));
+    pageStops.formsEnabledAfterThePress = await second.page.locator(enabled).count();
+    pageStops.actsOfThatRequest = second.log.acts.length - acts;
+  }
+
   // Column "Never arrived". A third device takes the first device's place, and the second device stays.
   const never = {};
   {
@@ -340,6 +389,10 @@ try {
   check("Reply lost: the reloaded first key sees the button", lost.firstReloadButton, ["Check original request"]);
   check("Reply lost: the reloaded first key has no enabled comment form", lost.firstReloadFormsEnabled, 0);
   check("Reply lost: the reloaded first key has no other status button", lost.firstReloadStatusRecovery, 0);
+  check("A failed read: the page says so", lost.failedRead.words, ["This page could not read your open requests, so it shows the ones it read last. Check your connection. The page reads them again each time a view opens."]);
+  check("A failed read: the line stays", lost.failedRead.line, lost.firstReloadLine);
+  check("A failed read: the button stays", lost.failedRead.button, 1);
+  check("A failed read: the lock stays", lost.failedRead.formsEnabled, 0);
   check("Reply lost: the second device's line", lost.secondLine, [issueLine]);
   check("Reply lost: First device's comment made one request", lost.firstActsLogged, 1);
   check("Reply lost: First device's /acts that reached the Worker", lost.firstActsReachedWorker, 1);
@@ -363,12 +416,18 @@ try {
   check("Never arrived: Entries under that idempotency key", never.journal, { entries: 0, firstBytes: true });
   check("Never arrived: the answer ends refused expired", never.answer.some(line => line.includes("refused the request: expired")), true);
   check("Never arrived: no copy stays open", never.openAfter, 0);
+  check("A stopped keep: the page says so", pageStops.notKept, ["The room gave no reply when it was asked to keep a copy of this request. Nothing was sent."]);
+  check("A stopped keep: no /acts", pageStops.actsWhenNotKept, 0);
+  check("A stopped keep: the next send clears the words", pageStops.notKeptAfterTheNextSend, 0);
+  check("A press on the sending page: the page no longer reads outcome unknown", pageStops.unknownAfterThePress, false);
+  check("A press on the sending page: the form opens again", pageStops.formsEnabledAfterThePress, 1);
+  check("A press on the sending page: one request", pageStops.actsOfThatRequest, 1);
   check("Measurement: one POST originals per act", measurement["POST originals"].requestsPerAct.every(n => n === 1), true);
   check("Measurement: one DELETE originals per act", measurement["DELETE originals"].requestsPerAct.every(n => n === 1), true);
   check("Measurement: one entry read verifies each receipt", measurement.followReadsPerAct.every(n => n === 1), true);
   check("Measurement: each copy comes before its act", measurement.keptBeforeTheActEachTime, true);
 
-  const report = { replyLost: lost, neverArrived: never, measurement, failures };
+  const report = { replyLost: lost, neverArrived: never, pageStops, measurement, failures };
   process.stdout.write(JSON.stringify(report, null, 2) + "\n");
   if (failures.length > 0) process.exitCode = 1;
 } finally {

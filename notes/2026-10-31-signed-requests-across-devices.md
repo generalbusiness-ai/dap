@@ -37,7 +37,7 @@ Each copy is one row in a new table of the membership scope's object, outside it
 
 The other real design, a new object per member, isolates load. It costs a one-way migration on every Worker, so the membership object is the better place.
 
-The routes sit under `/v1/scopes/:membership/originals`. `POST` keeps a row and returns 204, 409 `conflict` or 507 `full`. `GET` returns a page of the member's open copies, without bodies. `GET /:digest` returns one copy's exact bytes. `DELETE /:digest` ends a copy.
+The routes sit under `/v1/scopes/:membership/originals`. `POST` keeps a row and returns 204, 409 `conflict`, 507 `full` or 423 `room-full`. `GET` returns a page of the member's open copies, without bodies. `GET /:digest` returns one copy's exact bytes. `DELETE /:digest` ends a copy.
 
 All four take the session in the `Authorization` header and set `cache-control: no-store`. They answer only on an active membership scope, and otherwise return `not-found`. The page sends acts from three places (`data.ts:1133`, `:1145`, `apps/room/page/src/retained-editor-data.ts:169`), and each keeps the copy first. If the object does not keep it, the page says that nothing was sent.
 
@@ -49,13 +49,14 @@ A holder of `membership.invite` can reach a copy indirectly. That holder, or the
 
 At each request, the object verifies the session and takes its key (`sessions.ts:297`). It reads that key's standing from its own head, and the key and the member must both be `active`. It then compares the member handle with the row. A removed handle is never reused (`membership.ts:87`).
 
-A `POST` has three more conditions:
+A `POST` has four more conditions:
 
 - `verifySignedIntent` passes, and `intent.actor` equals the session's key. So a member cannot keep another person's request.
 - `notAfter` lies ahead of the object's clock and within the 15-minute bound.
+- `kind` is at most 256 bytes. The rest of a row has one form, so 64 rows always fit the list's reply: a row is under 1,900 bytes, 64 rows are under 121,600 bytes, and the client's bound on a reply is 1,052,672 bytes. `packages/scope/src/originals.ts` states the arithmetic.
 - The digest is new, or the bytes match. The digest covers only the signed intent, and `texts`, `presented` and `values` travel unsigned. The same digest with the same bytes returns 204 and charges nothing. The same digest with other bytes returns 409 and keeps the first.
 
-**J1 widens what a session can do.** Today a session only reads (`sessions.ts:297-300`). Under J1 a token also reads the bytes of the member's unlanded requests, can deliver one, and can delete a row. A deletion loses only the button, and the journal stays true. A `POST` needs the signature, so the token cannot make a copy. J1 corrects the texts that say a session controls nothing (`packages/client/src/session.ts:4`, `packages/contract/src/session.ts:4`, and "Read sessions" in `packages/scope/README.md`).
+**J1 widens what a session can do.** Today a session only reads (`sessions.ts:297-300`). Under J1 a token also reads the bytes of the member's unlanded requests, can deliver one, and can delete a row. A deletion loses only the button, and the journal stays true. A `POST` needs the signature, so the token can make a copy only of a request that its key signed. The digest does not cover the unsigned parts, so a holder can delete a row and keep it again with other unsigned parts, or make a row from a request that the key already signed and that has not expired. The scope verifies those parts when they are sent, and the signature still binds the act, so this grants nothing. J1 corrects the texts that say a session controls nothing (`packages/client/src/session.ts:4`, `packages/contract/src/session.ts:4`, and "Read sessions" in `packages/scope/README.md`).
 
 **The routes use `holder(reader, "summary")` and add no `ReadName`.** A new name needs no kernel change: `ReadName` lives in `packages/scope/src/ports.ts:220`, and the contract holds `reads` as strings (`packages/contract/src/session.ts:41`). But it narrows nothing. `readsOf` gives every member the same list (`sessions.ts:331-335`), and a session request cannot ask for less (`session.ts:32`). It also costs: `isClaims` refuses an unknown name (`sessions.ts:139`), so a new token fails every read at an object that runs old code. The member compare does the real work.
 
@@ -92,7 +93,7 @@ The copy is `{ signed, grants, texts?, presented?, values? }`, as `packages/clie
 | Send it unlanded at or past `notAfter` | `expired` | `judge.ts:224` |
 | Change a detached text or value | The scope verifies each one itself | `worker.ts:475` |
 | Present its signature as a session or a signed read | Fails: another domain | `session.ts:15-19` |
-| Hold a stolen session of the member | Reads, delivers or deletes the member's copies until `ends`, at most 600 seconds. Cannot make or change one | `sessions.ts:385` |
+| Hold a stolen session of the member | Reads, delivers or deletes the member's copies until `ends`, at most 600 seconds. Can make a copy only of a request that its key signed, and the unsigned parts can differ. The scope verifies them when they are sent | `sessions.ts:385` |
 | Send it unlanded before `notAfter` | Lands once, judged on the signer's standing and signed revisions | `judge.ts:218-224` |
 
 The last row is the copy's one power. It can finish only the act that the signer already asked for. The page that receives a copy verifies the signature and the actor's member, and otherwise sends nothing.
@@ -110,15 +111,19 @@ These rules complete the route:
 - **The lock follows the key that signed.** The page offers only the button at a scope in two cases. One is today's fence in that page's memory (`apps/room/page/src/main.ts:636-639`, `uncertain` at `apps/room/page/src/actions.ts:16`). The other is an open row whose `intent.actor` is this page's key, so the lock survives a reload, as the S6 card's does. Neither adds state. A second tab in one browser holds the same key, so it follows the lock too.
 - **Another key keeps its acts.** Each act signs its own revisions, and the scope orders them. At worst Ana comments twice, with the line in view. The lock holds one key at one scope, at most until the margin passes. If the act landed, the button ends it at once.
 - **Time bound.** A row with no answer goes seven days past `notAfter`, plus the delay of the object's one alarm. `Wakes.set` takes the minimum of its causes (`packages/scope/src/outbox.ts:79-87`), so one cause cannot clear another. Membership already shares the alarm with `key-invitation-end` (`membership.ts:551`). J1 adds one cause beside `credentials`, on the model of `CredentialStore.expiryWake` (`packages/scope/src/credential-store.ts:98`, `packages/scope/src/object.ts:861-870`). A `DELETE` leaves the wake, and an early wake clears itself.
-- **Caps.** The object allows 64 rows and 16 MiB per member, and 1 GiB per membership object. Over a cap, the page sends nothing and shows the open copies to settle first.
+- **Caps.** The object allows 64 rows and 16 MiB per member, and 1 GiB per membership object. Over a member's cap, the route returns `full`. The page sends nothing and says "You have too many open requests".
+- **A full object.** On the object's cap, `keep` first drops rows of members who are no longer active or who hold no active key, in a bounded quantum of 16 members and 64 rows. It then checks the cap again, and a later `keep` continues. A retired key of a member with another active key keeps its rows. If the object is still full, the route returns `room-full`, and the page says that the room has no space. The object's cap does not refuse a request to this membership scope, so an admin can still remove a member. The member's own caps still apply.
+- **A stop around the keep.** The page's check runs before the keep. If anything stops the send after the keep, the page ends the row, because a row reads "You sent" and a press past the margin sends its bytes.
+- **A failed read.** A failed list is not an empty list. The page says that it could not read the open requests, and it keeps the last rows it read, so the lock and the button stay.
+- **A failed renewal.** A page that held a session and failed to renew it stops the send and says why. The next send asks for a session again.
 
 ## 6. A lost device loses no copy
 
 The copy never lived on the lost device, so another key of the same member settles it.
 
 - **Someone revokes the key** (`membership.ts:508`). The member still reads that key's copies. A landed act still returns its first entry, and an unlanded one is refused. Either answer ends the copy. Before the revocation a thief can sign, and the copy adds nothing to that. After it, the copy routes refuse that key at once, and its session reads other scopes for up to 600 more seconds (`sessions.ts:45-48`).
-- **Ana held only that device.** An admin invites a new `device` key for the same member. It reads the open copies within the seven days. The recovery key does this for a last admin.
-- **The time bound passed, or the member was removed.** No one reads the copy. The journal holds any act that landed.
+- **Ana held only that device.** An admin invites a new `device` key for the same member. It reads the open copies within the seven days, unless a full object dropped them first, because the member held no active key. The recovery key does this for a last admin.
+- **The time bound passed, or the member was removed.** No one reads the copy, and a full object can drop it. The journal holds any act that landed.
 
 A copy restores no key and no standing.
 
@@ -138,10 +143,20 @@ J1 needs no kernel change. It meets none of the conditions in [`docs/kernel.md`,
 | `an act that never arrived ends refused expired` | The "Never arrived" column, and no `/acts` before the margin. |
 | `another member and a revoked key read nothing` | `not-found` and `forbidden`. A retired first key's copy stays readable by the second key. |
 | `a copy lands nowhere else` | Each row of the "Use of the copy" table. |
-| `a full cap sends nothing` | The 64th copy passes. The 65th returns `full`, and no `/acts` follows. |
+| `a full cap sends nothing` | The 64th copy passes. The 65th returns `full`, and no `/acts` follows. A full object returns `room-full`. |
 | `a repeat with other bytes keeps the first` | Same bytes: 204 and no charge. Other bytes: 409, and `GET` returns the first. A lane scope returns `not-found`. |
 | `an open copy locks only its own key` | During a held request, the second key sees the button and its own act lands. The first key's reloaded page offers only the button until the margin passes. |
 | `an idle object drops a row at seven days` | With no request, the alarm deletes the row past the bound and keeps it before. A live `key-invitation-end` still fires. |
+| `a long kind keeps no row, and 64 rows fit the list's reply` | A `kind` of 257 bytes returns `bad-request`. 64 rows of the longest `kind` come back in one reply, within the arithmetic. |
+| `a failed read keeps the last rows and the lock` | A lost reply and a refused read each report a failure, with the last rows and the lock. A good read ends the failure. An empty list stays an empty list. |
+| `a full object drops the rows of a member who left or holds no key` | A removed member's rows and those of a member with no active key go, and the keep passes. A retired key's rows stay while its member holds another key. |
+| `a full object still takes a request to membership, under the member's own caps` | A request to this scope passes the full object, and an admin removes a member through the page. The member's own cap still returns `full`. Another incarnation gets no exception. |
+| `a full object and a full member say different things` | The page's two sentences, each exact, and no `/acts` after either. |
+| `a full object frees a bounded quantum at each keep` | One keep drops at most 64 rows and examines at most 16 members. The next keep continues from where the last stopped. |
+| `a stop around the keep leaves no row` | A stop before the keep makes no request to the copy routes. A stop after it ends the row, on both of `act`'s paths, and no `/acts` follows. A row that the page cannot end stays, and the words say so. |
+| `a room change after the editor's keep ends the copy and sends nothing` (in `retained-editor.scope.test.ts`) | The retained editor's check after the keep stops the send and ends the row. |
+| `a page that held a session and failed to renew it stops the send` | No `/acts`, and the exact sentence. A page that opens on signed reads sends as it did, with no copy. The next send after the connection returns renews, keeps and sends. |
+| `an answer lifts only this page's own fence` | An answer lifts this key's fence at the row's scope. Another key's answer, and a press with no answer, lift nothing. |
 
 The landing's evidence measures the two added requests per act, in round trips, under this Worker's local test or better.
 
@@ -172,7 +187,17 @@ These limits apply to J1:
   - **`dap mcp`.** The builder owns this writer, as one small follow-up after J1 lands. It uses the same routes and the same rules, when the service holds a person's session. Its witness sends a request through `dap mcp` and loses the reply. The page on a second device then settles the request, and nothing goes out twice. J1 does not build this writer.
   - **The CLI.** The CLI stays with its private device storage.
   - **A hosted agent.** A hosted agent's custody stays separate, because a hosted agent holds its own keys.
-- **No session, no copy.** `join`, `enrol`, start and connection requests keep their browser custody, because their signer holds no session yet. A page on signed reads behaves as it does today.
+- **No session, no copy.** `join`, `enrol` and start requests keep their browser custody, because their signer holds no session yet. A page that opens on signed reads behaves as it does today: it keeps no copy, and it sends.
+- **A page that lost its session.** The page remembers in memory that it held a session. A reload forgets this, so a page that reloads during the failure opens on signed reads and sends with no copy.
+- **Connection requests skip the copy.** `issueInvitation` (`apps/room/page/src/connection-custody.ts`) signs through the shared helper of `packages/cli`, which keeps its own record in that browser. The page has read `room.me` by then, so the signer can hold a session, and a second device still cannot see the request. This is a choice of this build, and a later head can route it through the copy.
+- **`issueDeviceKey` keeps a copy and skips the lock and the fence.** It calls `act` directly, so the copy exists and the button settles it, but the page's checks in `send` do not run. A second press can make a second invitation while the first is open. After a lost reply, the secret is gone: the page held it only in that call, so a landed invitation has no link. The admin makes another link, and the first invitation ends at its `inviteEnds`, 24 hours later.
+- **A device link's `expected` goes stale.** The link states the revisions of the roster and of the member when the link was made. A later `enrol` or `invite-key` on that member moves them, so a second outstanding link gets `revision-moved`. The admin makes that link again.
+- **A held request can hide an act.** A row locks one key at one scope, until `notAfter` plus the margin, about six minutes for a page's five-minute intent. Other keys keep their acts. An opening act also locks the directory, so that key opens nothing new for that time. A lock on membership can delay that key's own `revoke-key`, and a second admin or the recovery key still acts. A slow device clock extends the lock, and the way out is another device.
+- **A room that cannot make space.** A room with no removal possible and every member active stays full until rows end, at most seven days past each `notAfter`. Removing a member frees their rows only when a later `keep` finds the object full. A request to this membership scope passes 1 GiB, so only each member's own 16 MiB bounds those rows.
+- **A row the page cannot end.** If the send stops after the keep and the `DELETE` fails too, the row stays, and the page's words say so. A press past the margin sends its bytes. The scope refuses `expired`, unless a device clock runs ahead.
+- **A first read that fails.** A page with no earlier read has no rows to keep, so it says that the read failed and it shows no lock. Its keep then decides whether a send goes.
+- **`kind` has a bound here.** The page cannot keep, and so cannot send, an act whose `kind` is over 256 bytes.
+- **`/originals` tells a scope's kind.** It answers 404 at a scope that is no membership scope, and 403 at a membership scope with no token. So a caller with no token learns which kind a scope is.
 - **No proof of absence.** A missing row does not show that no act was sent. The journal stays the only proof.
 - **Redaction.** A copy can hold a redacted text until the copy ends.
 - **Cost.** Each act adds two requests to the membership object: `POST originals` before the send and `DELETE originals` after the answer. The page also adds one entry read at the target that verifies the receipt, and one `GET originals` per draw of a view. While copies are open, a draw also lists the room's lanes. An observed run of 10 comments through the page, in Chromium, against a local `wrangler dev` Worker on loopback, gave these times from Chromium's `responseEnd`. They state the Worker's own work and no network distance.
@@ -190,4 +215,4 @@ Hosted code changes are `packages/scope/src/originals.ts` and the routes and wak
 
 The planner deploys all three room Workers in a later deployment. J1 has no migration, so a rollback stays possible, and the time bound stops until new code runs again.
 
-The deployment has one cost. Objects run old code for some minutes after a deployment. During that time the copy route returns 404, so every page act in that room fails with "nothing was sent".
+The deployment has one cost. Objects run old code for some minutes after a deployment. During that time the copy route returns 404, so every page act in that room fails with "nothing was sent", and each view says that it could not read the open requests. Both end when the new code runs.
