@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "qualification": "Focused checks after merging the landed Page head, which changed only documentation from the passing f57299c9 gate. No second gate, no deployed scene and no person-driven run.",
+  "directory": "2026-11-01-card-words-merged",
+  "checkpoint": {
+    "commit": "fd44b6b68a2068d07cae76086c526631b1fff367",
+    "tree": "b92a46083dc1aaf033f696c3a5f73425533e34d5"
+  },
+  "fileCount": 19,
+  "files": [
+    {
+      "path": "head.txt",
+      "bytes": 82,
+      "sha256": "01b938d767332626efd5c9444f122f92c6fdf8a4d5ac8318fbea6f533703d769"
+    },
+    {
+      "path": "views-node.log",
+      "bytes": 5238,
+      "sha256": "a6f2fa2a5b82bee28a6ff9e3a825775d4d3c7d7fc4227ffae6bf7f7bf960be58"
+    },
+    {
+      "path": "views-node.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "focused.log",
+      "bytes": 256,
+      "sha256": "3c7702d6f2258a0caed7f75019bbd8456d5fa4259936d55059b2ab907665c886"
+    },
+    {
+      "path": "focused.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "card-workflow-inputs.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "card-workflow-inputs.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "notes.log",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "links.log",
+      "bytes": 36,
+      "sha256": "05d81cfdd4a20d7f249083d065c7dad85afba93032f10e5b73c1bec4e568c8b0"
+    },
+    {
+      "path": "messages.log",
+      "bytes": 38,
+      "sha256": "70b235d629dedfb1f76eb6b8a46feb6d4145fef5efa7705ba09b8874f78d7662"
+    },
+    {
+      "path": "diff.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "commands.sh",
+      "bytes": 1963,
+      "sha256": "22112cf5b8f031469ca707c694454e0e1135c5e43d21573d7251179a9ae7d599"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 1427,
+      "sha256": "77fcababcf9581e4dda69663a21d0815fd9771f1faf7121d4fd7b4628d69c48d"
+    }
+  ]
+}

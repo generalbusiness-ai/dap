@@ -44,8 +44,14 @@ The planner closed that acceptance in `49816870`, except for the actor, and aske
 
 The head is `f57299c93c6099bd53eb6876ba5346e8abdedb5c`, tree `1ba01e56`. Raw evidence is in `~/play/artroom-evidence/2026-11-01-card-words/`, `SHA256SUMS` `e3030b8df091a0f4e002d84ffc1cc0dd54eb0872aec8466a12755d97bb628cff`. `gate-first-failed/` holds an earlier gate that stopped on a type error in the Page head's demo script, and the Page head fixed it. The previous session ended during the next gate's native stage. `gate-interrupted-1714/` retains that run, which caught SIGTERM and has no passing terminal outcome. The passing gate here restarted at the same clean head.
 
+After the Page landed at `d56394da`, this branch merged main at `fd44b6b68a2068d07cae76086c526631b1fff367`, tree `b92a46083dc1aaf033f696c3a5f73425533e34d5`. Only notes, manifests and the report differ from the gate checkpoint. Source and tests are unchanged, so this merge adds no gate under `docs/testing.md`. The focused follow-up is `~/play/artroom-evidence/2026-11-01-card-words-merged/`, `SHA256SUMS` `77fcababcf9581e4dda69663a21d0815fd9771f1faf7121d4fd7b4628d69c48d`. [Its manifest](evidence/2026-11-01-card-words-merged.manifest.json) records the source checkpoint and the retained commands. The Card workflow's inputs remain unchanged from `90408884` through this merge.
+
 | Check | How taken | Command | Result | Digest |
 |---|---|---|---|---|
+| Merged-head adapter tests | observed run | `node --test apps/views/test/*.test.mjs` | exit 0, 34 tests | `a6f2fa2a5b82bee2` |
+| Merged-head focused tests | observed run; a real scope with stand-ins for Git, plus plain session and row tests | `commands.sh`: `change-view.scope.test.ts`, `view-sessions.test.ts`, `page-needs-you.test.ts` | exit 0, 42 tests in 3 files | `3c7702d6f2258a0c` |
+| Merged-head card inputs | comparison of Git objects | `git diff --exit-code 90408884 HEAD --` and the card workflow's paths | exit 0, no changed input | `e3b0c44298fc1c14` |
+| Merged-head links | observed run | `node scripts/check-doc-links.mjs` | exit 0, 1006 links, no broken link | `05d81cfdd4a20d7f` |
 | Gate | observed run | `npm run gate` | exit 0: 3555 plain and 1027 native tests, 130 Node and 56 Counting | `088c53c8a300ab14` |
 | Merge trace | observed run on a real scope with stand-ins for Git | `npx vitest run --project scope packages/mcp/test/change-view.scope.test.ts` | exit 0, 24 tests in the scope run | `d04ea37a6609b0d2` |
 | Red: finding 1 | observed run with `scripts/control.mjs`: restoring the old holds | `32-control-f1-holds-scope.log` holds the output | DISTINGUISHES | `5fe2b51c1b32377a` |
