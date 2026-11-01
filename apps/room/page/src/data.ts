@@ -51,6 +51,7 @@ import type { Extent as PolicyExtent } from "@generalbusiness/dap-platform";
 import { Q11_READ_ONLY, rulesSummaryV11 } from "./rules-summary-v11.ts";
 import { knownLIST1 } from "./source-support.ts";
 import { currentStanding, reviewCandidates } from "./membership-projection.ts";
+import { pressStop, rowsLastRead } from "./open-requests.ts";
 import type { PageObservationSource } from "./page-observation.ts";
 import type { NoSession } from "./shell.ts";
 
@@ -1142,7 +1143,7 @@ export async function openingScope(room: Room): Promise<ScopeId> {
   const root = (await summaryOf(handleOf(room, room.directory))).summary;
   if (root.definition !== "platform:directory@10") return room.directory;
   const selected = await activeDirectory({ summary: scope => handleOf(room, scope).summary(), query: (scope, query) => handleOf(room, scope).queryItems(query) }, root.scope, room.membership);
-  if (!selected.ref) throw new Unreadable(`Cannot open work: ${selected.reason}. No mutation was submitted.`);
+  if (!selected.ref) throw new Unreadable(`Cannot open work: ${selected.reason}. This press sent nothing.`);
   return selected.ref.scope;
 }
 
@@ -1161,6 +1162,12 @@ export class CopyNotKept extends Error {
 
 /** What the page adds to "This press sent nothing" when it could not end the row of a request that it did not send. */
 const ROW_STAYS = " This page could not end its copy, so the request can show as open. Press Check original request before you send it again.";
+/** What a press says when it could not read the list. It cannot see an earlier request here, and each press reads again. */
+const openRequestsUnread = (reason: string | null): string => `This page could not read your open requests${reason ? ` (${reason})` : ""}, so it cannot tell whether an earlier request here has an answer. This press sent nothing. Press again when your connection returns. The next press reads them first.`;
+const OPEN_REQUEST_STOPS = {
+  locked: "An earlier request from this device here has no answer yet. This press sent nothing. Press Check original request for it before you send this again.",
+  unshown: "An earlier request from this device here has no answer, and this page had not shown it until now. This press sent nothing. Press Check original request for it before you send this again.",
+} as const;
 
 /** Why the room refused to keep a copy, in the person's words. */
 function notKept(reason: string): string {
@@ -1170,15 +1177,24 @@ function notKept(reason: string): string {
 }
 
 /**
- * Keep the exact body of a request before it is sent. A refusal, or a lost
- * reply, stops the send. A page that held a session and failed to renew it
- * stops too, because the person relies on the copy. A page that opened on
- * signed reads keeps no copy, and it sends as it always did.
+ * Keep the exact body of a request before it is sent. The page first reads the
+ * member's open requests, because a press can come after a failed read that left
+ * no lock: a failed read stops the send, and so does an open row of this key at
+ * this scope (`pressStop`). A refusal of the keep, or a lost reply, stops the
+ * send. A page that held a session and failed to renew it stops too, because the
+ * person relies on the copy. A page that opened on signed reads keeps no copy,
+ * and it sends as it always did.
  */
-export async function keepOriginal(room: Pick<Room, "session" | "membership" | "reader" | "unsessioned" | "key">, signed: SignedIntent, beside: Beside): Promise<void> {
+export async function keepOriginal(room: Pick<Room, "session" | "directory" | "membership" | "reader" | "unsessioned" | "key">, signed: SignedIntent, beside: Beside): Promise<void> {
   if (sessionLost(room)) throw new CopyNotKept(`This page could not renew its session with the room${room.unsessioned && room.unsessioned !== "no-reply" ? ` (${room.unsessioned})` : ""}, so it cannot keep a copy of this request. This press sent nothing. When your connection returns, open this view again and check your open requests before you send it again.`);
   const copies = copiesOf(room);
   if (!copies) return;
+  let listed: Awaited<ReturnType<NonNullable<typeof copies>["list"]>>;
+  try { listed = await copies.list(); }
+  catch { throw new CopyNotKept(openRequestsUnread(null)); }
+  if (!listed.ok) throw new CopyNotKept(openRequestsUnread(listed.reason));
+  const stop = signed.intent.to && pressStop(room.key, listed.rows, rowsLastRead(actAssociation(room, room.membership.scope)) ?? [], signed.intent.to, nowOf(room.session));
+  if (stop) throw new CopyNotKept(OPEN_REQUEST_STOPS[stop]);
   let kept: Awaited<ReturnType<NonNullable<typeof copies>["keep"]>>;
   try { kept = await copies.keep(actBodyText(signed, beside)); }
   catch {
@@ -1193,7 +1209,7 @@ export async function keepOriginal(room: Pick<Room, "session" | "membership" | "
  * with no row. Anything that stops it after the keep ends the row, because a
  * row reads "You sent" and a press past the margin sends its bytes.
  */
-export async function keepToSend(room: Pick<Room, "session" | "membership" | "reader" | "unsessioned" | "key">, signed: SignedIntent, beside: Beside, before?: () => void, after?: (digest: Digest) => void): Promise<void> {
+export async function keepToSend(room: Pick<Room, "session" | "directory" | "membership" | "reader" | "unsessioned" | "key">, signed: SignedIntent, beside: Beside, before?: () => void, after?: (digest: Digest) => void): Promise<void> {
   const digest = intentDigest(signed.intent);
   before?.();
   await keepOriginal(room, signed, beside);

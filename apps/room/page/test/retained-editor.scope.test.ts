@@ -134,6 +134,36 @@ test("invalid target and stale context/base send nothing new; an invalid old pro
   } finally { d.done(); }
 }, 180_000);
 
+// Invariant: the editor's step reads the member's open requests before it keeps, as a press of the page does. A failed read sends nothing.
+test("a failed list read stops the editor's step before its keep (STAND-IN Git/scheduler)", async () => {
+  const d = await demo();
+  try {
+    expect((await d.run(d.paul, "edit", "unread-list.md", "--file", "readme.md", "--title", "Unread list")).code).toBe(0);
+    const room = await openRoom(d.as(await d.secretOf(d.paul)), placeOf(JSON.stringify(d.config))!);
+    const oldRow = (await listLanes(room)).changes.find(r => r.title === "Unread list")!;
+    const old = await loadChange(room, oldRow.scope);
+    const task = await prepareEdit(room, old, old.manifests[0]!.id, { title: "After a failed read", path: "unread-list.md", content: "x" }, { current: () => true, pause: d.pause });
+    let kept = 0, sent = 0, down = true;
+    const failing = { ...room, session: { ...room.session, fetch: (async (url: string, init?: Parameters<typeof d.fetch>[1]) => {
+      const path = new URL(url).pathname;
+      if (down && (init?.method ?? "GET") === "GET" && path.endsWith("/originals")) throw new Error("no reply to the list");
+      if (init?.method === "POST" && path.endsWith("/originals")) kept++;
+      if (init?.method === "POST" && path.endsWith("/acts")) sent++;
+      return d.fetch(url, init);
+    }) as typeof d.fetch } };
+    await continueEdit(failing, task, { current: () => true, pause: d.pause });
+    expect([kept, sent]).toEqual([0, 0]);
+    expect(task.steps).toEqual([]);
+    expect(task.state).toBe("prepared");
+    expect(task.message).toBe("This page could not read your open requests, so it cannot tell whether an earlier request here has an answer. This press sent nothing. Press again when your connection returns. The next press reads them first.");
+    // The way forward: the route returns, and the same button signs the step and sends it.
+    down = false;
+    await continueEdit(failing, task, { current: () => true, pause: d.pause });
+    expect(task.steps[0]).toMatchObject({ kind: "open-pr", attempted: true, answer: { answer: "accepted" } });
+    expect(sent).toBeGreaterThan(0);
+  } finally { d.done(); }
+}, 180_000);
+
 // Invariant: a copy reads "You sent", and a press past the margin sends its bytes. A stop after the keep leaves no such row.
 test("a room change after the editor's keep ends the copy and sends nothing (STAND-IN Git/scheduler)", async () => {
   const d = await demo();
