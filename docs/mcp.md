@@ -268,6 +268,22 @@ caller's `idempotencyKey`, in the config directory's
 - **A lost reply** leaves the record unknown. The same call with the same
   key sends the same bytes again; `settle` reads the scope's settlement.
   Neither signs a second intent.
+- **A copy for your other devices.** When the server holds a read session
+  of a person's membership, it also keeps the exact request in that room's
+  membership object, after it records the envelope and before it sends. The
+  room's page on another device of the same member shows the request and can
+  check it, with no new signature. If the room keeps no copy, the server
+  sends nothing and returns the error `original`, and the same call tries
+  again. The scope's answer ends the copy. A server that never held a session
+  keeps no copy. A server that held a session and cannot renew it sends
+  nothing, and says so when an earlier send under the key has no known
+  outcome. A record with a kept answer returns that answer with no session. A
+  restart forgets that the server held a session, so a restarted server with
+  no session sends with no copy. A key of an agent or a checker keeps no copy,
+  and neither does a hosted agent. A key whose reads have not stated its kind
+  can keep rows until a read states its kind. The copy adds to custody on this
+  machine and does not replace it. After a restart, `settle` or the same call
+  reads the outcome, also when the page settled the request first.
 - **Another meaning under a used key** is refused before anything is
   signed.
 - **The outcome** given is always the newest decisive one of the current

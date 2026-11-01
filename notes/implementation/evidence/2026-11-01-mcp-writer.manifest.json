@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint, with 41 controls and the witness at 3be96040. The witness used a local Worker, a real dap mcp over stdio and browser contexts on one machine. No hosted Worker or real room ran.",
+  "directory": "2026-11-01-mcp-writer-2",
+  "checkpoint": {
+    "commit": "fd1658840393741a1eb9b1f9a3a5a36124fd51d2",
+    "tree": "3ab949b85b45e2c2eb914c10debdc73d662c3d92"
+  },
+  "fileCount": 98,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "1be5263d4f5c4fdfd7525b4610f164d4a37224821a0a665649af612c0bf575ae"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6492,
+      "sha256": "a9709995c2634e5f114c3ced46241778504677aa4302d6b4c7ec5cd645b5c8b0"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "controls/head.txt",
+      "bytes": 82,
+      "sha256": "0c68767bf799f4e67bcfe492a359b20ef2a29e8b4788f268a0c0e4b6d8d6b8c1"
+    },
+    {
+      "path": "controls/exit.txt",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "controls/summary.jsonl",
+      "bytes": 7689,
+      "sha256": "c48ad46e5014d8569856e7ba4f03d3c23ca15946311472b9b502dffec43a72de"
+    },
+    {
+      "path": "controls/run-controls.mjs",
+      "bytes": 12148,
+      "sha256": "18e62db04cb1a4f181d372073725f19bd242ceb2cfa791e246c493e57a452b34"
+    },
+    {
+      "path": "witness/head.txt",
+      "bytes": 82,
+      "sha256": "0c68767bf799f4e67bcfe492a359b20ef2a29e8b4788f268a0c0e4b6d8d6b8c1"
+    },
+    {
+      "path": "witness/exit.txt",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "witness/report.json",
+      "bytes": 1987,
+      "sha256": "fcb0ece4fa0d86d885d6ef7521275a17c550a209f4288ced3aa790406330cc28"
+    },
+    {
+      "path": "red/run.log",
+      "bytes": 17464,
+      "sha256": "6c9b7b80525008295c1bd1e51e1d10a70a2fbed24e6ee8dec1ba9144decd03e7"
+    },
+    {
+      "path": "red/test-at-red.diff",
+      "bytes": 6546,
+      "sha256": "b7aaaab14eddc6267da79b5328558466c1bfc51280fe39fbc6bc5d3025e86fa9"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 9080,
+      "sha256": "ebcba3b52c51eaef80c18fbf1bd16e7447b70d68085cb6a5eb171af15ac29561"
+    }
+  ]
+}

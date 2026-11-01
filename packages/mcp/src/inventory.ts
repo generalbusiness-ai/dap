@@ -102,7 +102,8 @@ export function standingIn(items: readonly Item[], key: string): Standing {
   const roster = items.find((item) => item.type === "roster");
   const role = member?.values["role"] as Role | undefined;
   if (!member || !roster || !role || !Object.hasOwn(ROLE_LISTS, role)) return { known: true, role: null, actions: [], handle: null, key };
-  return { known: true, role, actions: (roster.values[ROLE_LISTS[role]] as readonly string[] | null) ?? [], handle: String(member.values["handle"]), key };
+  const kind = member.values["kind"];
+  return { known: true, role, actions: (roster.values[ROLE_LISTS[role]] as readonly string[] | null) ?? [], handle: String(member.values["handle"]), key, ...(typeof kind === "string" ? { kind } : {}) };
 }
 
 /** A definition by its pinned name or digest: the platform's, or one kept, or read once from a scope that retains it. */
