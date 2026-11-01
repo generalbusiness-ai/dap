@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "qualification": "One passing gate. A script drove Chromium with a loopback host in place of the app; the wait-outlasting case uses a scripted clock. No desktop AI app has run this code.",
+  "directory": "2026-11-01-card-press-head",
+  "checkpoint": {
+    "commit": "ee6e7d1fb65e88861d65c5263c02157df207e9ab",
+    "tree": "fc50fcf7f09f85e4944cd4a930518e64517aa6fb"
+  },
+  "fileCount": 66,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "af51b905941d0754ad74b43e13733db4a75810bc9c290c1a13f16246d3fc6a6c"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6530,
+      "sha256": "9ddf02a949207a1f8a82c0881d518e962cf256b1b2cc2bcd7b5fb6b0dc8b39e0"
+    },
+    {
+      "path": "gate-failed-1/gate.stdout.log",
+      "bytes": 5057,
+      "sha256": "71c33a6dcefd34215cc90a0b137a8030e057c6f229bae70ea18c54f90edd0fec"
+    },
+    {
+      "path": "gate-failed-2/gate.stdout.log",
+      "bytes": 7679,
+      "sha256": "47303ce9dc9d7c6b0844b5d4a296c5b34a0aaa03bca572028b171736cdc5dfe0"
+    },
+    {
+      "path": "browser-script.log",
+      "bytes": 276,
+      "sha256": "8c37aee5a6b660caa7abde4c215c1bf41fe680a01f3ccc52c5a7fd76f88318a2"
+    },
+    {
+      "path": "controls/old-wait-2.log",
+      "bytes": 672,
+      "sha256": "741e5c98dd3f02eab822ee76f1303be4a64efdf8f5e7f722f6ba91602457c633"
+    },
+    {
+      "path": "controls/no-recovery.log",
+      "bytes": 722,
+      "sha256": "7de4bf7d3edfff925d0e00679e7bd6900b460e0a67e0d29c942f32c0aae84332"
+    },
+    {
+      "path": "controls/stale-refuses.log",
+      "bytes": 742,
+      "sha256": "c2fa43b5eb3956a53b40f722d5cb375056a311c15301077b644d65c4f9742680"
+    },
+    {
+      "path": "controls/no-read-again.log",
+      "bytes": 857,
+      "sha256": "5e0c4c22067c1bc377929e3c07a28b6b0cf188a3b1d7b825b96f92608d1a69b1"
+    },
+    {
+      "path": "controls/no-open.log",
+      "bytes": 827,
+      "sha256": "f3d72429b9ed7b8cea2e737df0ccfb5695c399fd68a0daf63e360afcd1d17bfb"
+    },
+    {
+      "path": "controls/short-wait-pin-3.log",
+      "bytes": 2828,
+      "sha256": "7e058ec1b2b47185fefc7db56ecdba06d5d537d87e06317629c108c772424a03"
+    },
+    {
+      "path": "other-browser/declared-views.log",
+      "bytes": 1442,
+      "sha256": "af9a988cad300982e8c0e0b903ced48ab0b3fdee7235b27e389aa990d5ec681f"
+    },
+    {
+      "path": "timing-interim/case-b-after-read.fetch.jsonl",
+      "bytes": 28041,
+      "sha256": "f242e85bb2749ffddd118be130cc8d69cf107f2fb870ce0ae8da336db9d33ec2"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 6121,
+      "sha256": "da4726243abd09af0501222ac8f57b24be73bde42be665a1746de9bc86110d5a"
+    }
+  ]
+}
