@@ -227,18 +227,17 @@ removed text, 16,862 words, is in
 
 The gate passed at the first checkpoint, `d10d153078cd2a7c42c0a2bc0304ecfc0b19141f`,
 and its evidence stays in `/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review/`.
-This head merges main `c8c7b631`, and only documents differ from main. Under
+This head merges main `ada88648`, and only documents differ from main. Under
 the [documents-only rule](../../docs/testing.md#follow-up-after-a-gate), the
-gate did not run again. Main's tree hash is `540f57099bc8e5835b4f1c9423b387b65a1a2edf`, and the
-checkpoint's is `0f6aeabac85a620eef9f6332cb3deb9ef35cd74f`.
+gate did not run again. Main's tree hash is `efae95802d3029cdb696cdf8ec8f5932dec631ea`, and the
+checkpoint's is `8a00bf51b3d013364ff035b1478a48ab40e2f51e`.
 
-The checks below ran once at the checkpoint `d9b7ebdfe78413dd49add087a1ec3c3c90dc6eaf`, or at its parent, which
-differs by one blank line of this record. Raw output is in the read-only folder
-`/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review-2/`, listed in
+The checks below ran once at the checkpoint `6e6a94224a2f45179411620e87e3f8db96b37084`. Raw output is in the read-only folder
+`/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review-3/`, listed in
 [the manifest](../implementation/evidence/2026-10-30-docs-review.manifest.json).
 
 The link checker resolved its links with none broken. The six MCP test files
-passed 40 tests. The settings test passed 3 of 3, the entry-point test 10 of
+passed 41 tests. The settings test passed 3 of 3, the entry-point test 10 of
 10, and the lane reference test 4 of 4. The `notes` step gave one warning, the
 expected size of the relocated-text note. The residue scan's log lists the
 lines where "admission" is a code path, and where a role word is a product noun,
@@ -247,17 +246,17 @@ the kernel filing duty or a use case's own planner.
 | Check | Command | Exit | Output SHA-256 |
 |---|---|---|---|
 | documents only | `nondoc.sh` (in the folder) | 0 | `e4d1593a033dffb7fb9fc3d2bb2a17f0b3162f4682e25667d97624198ad6d9d0` |
-| documentation links | `node scripts/check-doc-links.mjs` | 0 | `c36d6867bf99de1eedf6f792342ba8899c0fdf8e4517234136c514dcfb357bda` |
-| section citations | `node scripts/check-section-citations.mjs` | 0 | `760679d39d7fd07382edf5f6267ddaaa1ba7fcf296698793935635dda9f3fb7e` |
-| commit messages | `node scripts/check-commit-messages.mjs origin/main HEAD` | 0 | `355ffc1aa882a7024fb85c42faafa0545437e48f9b68f5a1ae3a00995e102a68` |
+| documentation links | `node scripts/check-doc-links.mjs` | 0 | `3f611999b27915cc487ff2ce2f3bf2f151dfd02a082c87031809d2e72ee28f0c` |
+| section citations | `node scripts/check-section-citations.mjs` | 0 | `7914c8e0c1260d24b7d37ec8d30e50a8c9417b52f59e8c34497655d52c6547d0` |
+| commit messages | `node scripts/check-commit-messages.mjs origin/main HEAD` | 0 | `59bf76ac5666b13d8fb9b1b3f64f299e16a20dffc213b8a872e7e16355953cc3` |
 | whitespace | `git diff --check origin/main HEAD` | 0 | `28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320` |
-| notes warnings | `node scripts/check-notes.mjs origin/main HEAD` | 0 | `386220d417dc2bc4e40581852513e6eb9818068d47b9da9e79a4a024e191cd5b` |
-| MCP page tests | `npx vitest run` on the six `packages/mcp/test` files that read `docs/mcp.md` | 0 | `a8619101ed2ac03e93423f087092a4e08982f9b901897100990b970dce359ba6` |
-| settings lookup and inventory | `node scripts/security-settings.test.mjs` | 0 | `c6ceb28250fecb9b89e960f340112be86e38a627c9a6f6cfd80acffe6358b0f6` |
-| entry-point tables | `node scripts/security-entry-points.test.mjs` | 0 | `c2e7b07ba3304e75f01f5d196c514b2bd4037865564c611817bbb33aa310703e` |
-| lane reference | `npx vitest run apps/room/lanes/test/definitions.test.ts` | 0 | `8464d68b57a037f05e99bb6aa3ce90fbee9b9aa95e1a2895703869a38c73a367` |
-| kernel boundary | `node scripts/check-kernel-boundary.mjs` | 0 | `f7ae5d7815f1e7c2c379c5ea1db70b7da25590e4b3570216f4cc07a8fc871298` |
-| prose residue scan | `python3 -I residue.py .` (in the folder) | 0 | `01d33ba0fb84ba8c70b089629b4de81dd0444bac70ac37d9d34b2c06db198f92` |
+| notes warnings | `node scripts/check-notes.mjs origin/main HEAD` | 0 | `39227300a2a6f80fa18113dfafccc7be42e1bc3bfb104d0c0e5af3047cc4a565` |
+| MCP page tests | `npx vitest run` on the six `packages/mcp/test` files that read `docs/mcp.md` | 0 | `569e0f27b2e3fd39cc2171f296b9d8da63539c62d9d69882a13399c310fe0f3e` |
+| settings lookup and inventory | `node scripts/security-settings.test.mjs` | 0 | `508acb381d6de51f7dc1fc78525247d724fabf3568d607854210a2af1e1e75fd` |
+| entry-point tables | `node scripts/security-entry-points.test.mjs` | 0 | `bb43e1b89cd4239a90fb3d8227a54b5bab9ae6edb12f9f9c80a486a4b685f4c0` |
+| lane reference | `npx vitest run apps/room/lanes/test/definitions.test.ts` | 0 | `d60cb858114dd3fc2a2260e6527dd2ec4976ea6b852d94dec963a8e72a99fe60` |
+| kernel boundary | `node scripts/check-kernel-boundary.mjs` | 0 | `4368d9b6e90e07b574472ad5e81f742d235b0a10bc35f3a83350e51c4d33f457` |
+| prose residue scan | `python3 -I residue.py .` (in the folder) | 0 | `611537fec05e9b740ae2becaa416d21fb6c2ef9eda48babb2e96b8c9978ad689` |
 
 Not run for this revision: the commands on the self-host, deploy, local
 Worker, run-your-app (steps 3 to 8) and demo pages. Each of those pages
