@@ -1,6 +1,6 @@
 # Say what a stop knows of an earlier send, outside the MCP server
 
-Status: source implementation. The gate passed at `60194e08`. No deployed Worker or real room ran these words. The Worker bundle's bytes change, because the page's bundle holds the CLI's and the page's words. The planner deploys.
+Status: source implementation. The gate passed at `ef36af8b`. No deployed Worker or real room ran these words. The Worker bundle's bytes change, because the page's bundle holds the CLI's and the page's words. The planner deploys.
 
 Request `57a09263076c14142038360918a5f630d02a8027` and promise `bfaab3f50c90fcc3ca270e414fac76b029107a15` own this head. It follows [the MCP server's words](2026-11-01-unknown-send-words.md), which named these lines as an open limit.
 
@@ -13,6 +13,8 @@ A person who reads "nothing was sent" after a lost reply can send again under a 
 - **The CLI's join.** `joinSent` reads the pending join in the same way. The two stops after the admitted entry say that the join request went ahead.
 - **The page's custody.** A stop over an unreadable or missing creation record says that this browser cannot say whether an earlier send went. A stop for a missing lock says that a saved request stays kept, because that stop reads no custody.
 - **The page's check.** `checkAnswerLine` says "This check sent nothing, and an earlier send of this request can still arrive."
+- **The page's send path.** The five stops around `keepOriginal` and the three stops for a changed room or key in `send` say "This press sent nothing." The lost session's line no longer says to send again or to reload. It says to open the view again when the connection returns, and to check the open requests first.
+- **The page's missing connection.** A check or continue for a row that this browser no longer holds says that this browser cannot say whether an earlier send went.
 - **The client's join.** A join past its deadline says "This press sent nothing, and an earlier send of this join has no known outcome."
 - **Seals.** Ten seals of `packages/cli/src/commands.ts`, `claim.ts` and `invitations.ts` move to the owner's values. `planSent` and `joinSent` are new named declarations, with two new seals.
 
@@ -34,9 +36,9 @@ The pattern leaves out "nothing was signed" alone, "nothing was replaced" and "n
 
 | Group | Lines of the 144 | Lines of the 78 |
 |---|---|---|
-| true | 82 | 32 |
-| false | 61 | 45 |
-| unsure | 1 | 1 |
+| true | 73 | 23 |
+| false | 71 | 55 |
+| unsure | 0 | 0 |
 
 The line numbers are those of `991129fc`. Each new word is the sentence the line says now. "…" stands for the start of the line, which does not change.
 
@@ -68,23 +70,23 @@ The line numbers are those of `991129fc`. Each new word is the sentence the line
 | `apps/room/page/src/connection-custody.ts:57` | false | Reached on check and continue before the journal read, so a saved connection can hold an earlier send. | "…Check the original Start. This step sent nothing. A saved connection stays kept, and an earlier send of it can have gone." |
 | `apps/room/page/src/connection-custody.ts:80` | true | Mode `new`, after the check that the last row is finished. No row exists for this input. |  |
 | `apps/room/page/src/connection-custody.ts:82` | true | Mode `new`, before the row exists. |  |
-| `apps/room/page/src/connection-custody.ts:88` | true | No row is retained, and the page's custody is the only record of a send from this browser. |  |
+| `apps/room/page/src/connection-custody.ts:88` | false | The mode is `check` or `continue`, so a person pressed a button for a row that the screen showed. An earlier send of that row can have gone. | "…This step sent nothing, and this browser cannot say whether an earlier send of a connection went." |
 | `apps/room/page/src/connection-custody.ts:90` | true | Speaks of Check. A reserved row never reached a stage that sends. |  |
 | `apps/room/page/src/connection-custody.ts:94` | true | A row in state `reserved` never reached `save`, which comes before any dispatch. |  |
 | `apps/room/page/src/data.ts:1145` | true | `act` calls this before it signs. The act is the first send of this press. |  |
 | `apps/room/page/src/data.ts:1157` | true | a comment on this one path, no reader sees it. |  |
-| `apps/room/page/src/data.ts:1162` | true | a comment on this one path, no reader sees it. |  |
-| `apps/room/page/src/data.ts:1167` | true | the page signed this request in this press, and it stops before the act. The in-memory fence blocks a press under an unknown send. The refusal shows the route is up, so the list read holds the lock. |  |
-| `apps/room/page/src/data.ts:1168` | true | the page signed this request in this press, and it stops before the act. The in-memory fence blocks a press under an unknown send. The refusal shows the route is up, so the list read holds the lock. |  |
-| `apps/room/page/src/data.ts:1169` | true | the page signed this request in this press, and it stops before the act. The in-memory fence blocks a press under an unknown send. The refusal shows the route is up, so the list read holds the lock. |  |
-| `apps/room/page/src/data.ts:1179` | true | the page signed this request in this press, and it stops before the act. The in-memory fence blocks a press under an unknown send. Only a page that held a session in this load reaches it, and a reload opens on signed reads and skips the keep. |  |
-| `apps/room/page/src/data.ts:1186` | unsure | This press's request never went. After a reload in an outage, the failed list read leaves no lock, and an earlier press with a lost reply has its own key. Settled by a ruling on whether a new press of the same words is the same intent, and a two-device run of that path. |  |
+| `apps/room/page/src/data.ts:1162` | false | A comment that quotes the words of the stops below, and those words change. No reader sees it, and no case can hold it. | "/** What the page adds to "This press sent nothing" when…" |
+| `apps/room/page/src/data.ts:1167` | false | `send` tests the lock that the last list read stored, and `act` reads no list. After a reload in an outage the lock is empty, so an earlier press can have no known outcome here. | "…This press sent nothing. Check the open requests in this room first." |
+| `apps/room/page/src/data.ts:1168` | false | `send` tests the lock that the last list read stored, and `act` reads no list. After a reload in an outage the lock is empty, so an earlier press can have no known outcome here. | "…This press sent nothing. Space returns as open requests end…" |
+| `apps/room/page/src/data.ts:1169` | false | `send` tests the lock that the last list read stored, and `act` reads no list. After a reload in an outage the lock is empty, so an earlier press can have no known outcome here. | "…This press sent nothing." |
+| `apps/room/page/src/data.ts:1179` | false | `send` tests the lock that the last list read stored, and `act` reads no list. After a reload in an outage the lock is empty, so an earlier press can have no known outcome here. `sessionLost` also holds after a session of this load ends, so a reload with a working session reaches this line. "Send it again" directs the second entry. | "…This press sent nothing. When your connection returns, open this view again and check your open requests before you send it again." |
+| `apps/room/page/src/data.ts:1186` | false | `send` tests the lock that the last list read stored, and `act` reads no list. After a reload in an outage the lock is empty, so an earlier press can have no known outcome here. | "…This press sent nothing." followed by the row's words where they apply |
 | `apps/room/page/src/join-custody.ts:59` | false | The stop comes before any custody read, and a check can sit over a saved enrollment. | "…This step sent nothing. A saved enrollment stays kept, and an earlier send of it can have gone. Do not use the invitation again." |
 | `apps/room/page/src/join-custody.ts:97` | true | Says that the original stays unknown and that no replacement went. |  |
 | `apps/room/page/src/join-custody.ts:101` | true | Says that the check failed and that no replacement went. |  |
-| `apps/room/page/src/main.ts:658` | true | the page signed this request in this press, and it stops before the act. The in-memory fence blocks a press under an unknown send. |  |
-| `apps/room/page/src/main.ts:667` | true | the page signed this request in this press, and it stops before the act. The in-memory fence blocks a press under an unknown send. |  |
-| `apps/room/page/src/main.ts:670` | true | the page signed this request in this press, and it stops before the act. The in-memory fence blocks a press under an unknown send. |  |
+| `apps/room/page/src/main.ts:658` | false | `send` tests the lock that the last list read stored, and `act` reads no list. After a reload in an outage the lock is empty, so an earlier press can have no known outcome here. | "The room or key changed before signing. This press sent nothing." |
+| `apps/room/page/src/main.ts:667` | false | `send` tests the lock that the last list read stored, and `act` reads no list. After a reload in an outage the lock is empty, so an earlier press can have no known outcome here. | "The room or key changed before submission. This press sent nothing." |
+| `apps/room/page/src/main.ts:670` | false | `send` tests the lock that the last list read stored, and `act` reads no list. After a reload in an outage the lock is empty, so an earlier press can have no known outcome here. | "The room or key changed before submission. This press sent nothing." |
 | `apps/room/page/src/main.ts:796` | true | Reached on a refused row, and the words are about a replacement. |  |
 | `apps/room/page/src/main.ts:862` | true | Mode `new` runs only when the screen found no original. A Start from another tab in that gap stays retained, and `startRoom` refuses the next new run. |  |
 | `apps/room/page/src/original-check.ts:9` | true | a comment on this one path, no reader sees it. |  |
@@ -189,7 +191,8 @@ The line numbers are those of `991129fc`. Each new word is the sentence the line
 
 ## Decisions
 
-- **The stops of the page before a send stay.** The page signs each request in the press that sends it, and the fence in memory blocks a second press while an earlier send is unknown. `data.ts:1186` is the one line I could not settle. The request names these stops as true.
+- **The page's stops on the send path speak of the press.** "This press sent nothing." holds whether or not a new press of the same words counts as the same intent, so this head needs no ruling on that question. The page's fence does not close the gap: the page reads the list only when a view opens, `send` tests the stored `lockedByCopy`, and `act` reads no list.
+- **The lost session's line drops both directions.** "Send it again" directs the second entry, and "reload the page" empties the lock and loses a retained editor's task. Both clauses sat in one sentence, `data.ts:1179`. Opening the view again keeps the editor's task, because the editor's records live in the page's memory, and it reads the list again.
 - **The words speak of what ran.** The MCP server says "This call". The CLI says "This run" or "This step", because a claim's run sends several steps. The page says "This step", "This check" or "This press".
 - **A run that sent a step cannot say "This run sent nothing".** `dap create` can send `found` and then stop at a later line of the same run, and `dap join` can send and then stop at the entry it reads. Those stops say "This step", or say only that the request went ahead.
 - **The code reads a marker where it holds one.** `planSent` and `joinSent` read the plan and the pending join. The stops that read no custody say so.
@@ -199,27 +202,33 @@ The line numbers are those of `991129fc`. Each new word is the sentence the line
 
 ## Evidence
 
-The checkpoint is `60194e08d2bb390da3defe2516f520b4d5a7db81`, tree `38388b48`. It includes main. Raw evidence is in `~/play/artroom-evidence/2026-11-01-nothing-sent/`, `SHA256SUMS` `98f38cc4abced025b0a34c243e462ff9665468f78f2f72eb55a56f6e3abcfbc0`. The red run and the controls ran at `32e26c3f`, as their `head.txt` files state, before this note joined the head.
+The checkpoint is `ef36af8be430a8fe87b980cf1217dafc0c719d1b`, tree `1b92e7cd`. It includes main. Raw evidence for the repair is in `~/play/artroom-evidence/2026-11-01-nothing-sent-2/`, `SHA256SUMS` `ad08e8f20c882311e73a763efbbfb126d06d3e110bbbaf7eec273ed717a776d0`. Its red run and controls ran at `ef36af8b`, as their `head.txt` files state. The first red run and the 44 controls ran at `32e26c3f`. They stay in the first unit, `~/play/artroom-evidence/2026-11-01-nothing-sent/`, and this repair did not rerun them.
 
-**The red run.** `red/run.log` is an observed run of the new tests at the source of main `991129fc`, with the head's tests and the bundle of main. It has 23 failed tests of 62. Every failure is an assertion. `a plan that never went keeps the plain words` is red there because the new line puts "The plan is kept" first. It guards the words, and the control `never-sent-says-unknown` shows what it guards.
+**The first red run.** It ran the first head's tests at the source of main `991129fc`, with the bundle of main. It has 23 failed tests of 62. Every failure is an assertion. `a plan that never went keeps the plain words` is red there because the new line puts "The plan is kept" first. It guards the words, and the control `never-sent-says-unknown` shows what it guards.
 
-**The controls.** All 44 turned their named case red by an assertion, each with `scripts/control.mjs`, and the source was clean afterwards. `controls/summary.jsonl` lists them. Two of them work in the other direction: `never-sent-says-unknown` and `fresh-creation-says-unknown` put the warning on a path with no earlier send, and each turns its plain-words case red.
+**The repair's red run.** `red/run.log` is an observed run of the repair's three test files at the source of `8914b8cd`, with its bundle. It has 7 failed tests of 30. Every failure is an assertion.
 
-**The tests.** Most reach their line through the real path. `packages/cli/test/claim.scope.test.ts`, `join.scope.test.ts` and `apps/room/page/test/original-copy.scope.test.ts` run real scopes. `packages/cli/test/nothing-sent.test.ts` runs the real commands with a scripted lost reply, and `apps/room/page/test/nothing-sent.test.ts` runs the real custody code over stand-in storage and locks.
+**The first 44 controls.** All 44 turned their named case red by an assertion, each with `scripts/control.mjs`, and the source was clean afterwards. Two of them work in the other direction: `never-sent-says-unknown` and `fresh-creation-says-unknown` put the warning on a path with no earlier send, and each turns its plain-words case red.
+
+**The repair's 9 controls.** `controls/summary.jsonl` lists them. Each puts one old sentence back, at `data.ts:1167`, `1168`, `1169`, `1179` and `1186`, at `connection-custody.ts:88`, and at `main.ts:658`, `667` and `670`. All 9 turned their named case red by an assertion, and the source was clean afterwards. `data.ts:1162` is a comment, so it has no case and no control.
+
+**The tests.** Most reach their line through the real path. `a press after a reload in an outage` runs the path that reaches `data.ts:1179`: a lost reply, a new room with a working session, a failed list read, no lock, and then a lost session. It then opens the view again, finds the row, and its check reports `landed`. `apps/room/page/test/send-stop-words.test.ts` runs the real `send` of `main.ts` over a minimal DOM and a scripted data boundary, after a failed list read. It reaches `main.ts:658`, `667` and `670` in turn, and it reads each stop's words where the catch hands them on. `packages/cli/test/claim.scope.test.ts`, `join.scope.test.ts` and `apps/room/page/test/original-copy.scope.test.ts` run real scopes. `packages/cli/test/nothing-sent.test.ts` runs the real commands with a scripted lost reply, and `apps/room/page/test/nothing-sent.test.ts` runs the real custody code over stand-in storage and locks.
 
 | Check | Command | Exit | Digest |
 |---|---|---|---|
-| Gate | `npm run gate` | 0 | `4fff1458d28fe039` |
-| Red run | `red/run-red.sh` | 1 | `f5c3d8194b2d5c43` |
-| Controls, 44 | `controls/run-controls.mjs` | 0 | `8ef6ef5833e36e7d` |
+| Gate | `npm run gate` | 0 | `094c0c2074b4585a` |
+| The repair's red run | `red/run-red.sh` | 1 | `246e05ba251e0d32` |
+| The repair's 9 controls | `controls/run-controls.mjs` | 0 | `9f225657652cf3d9` |
 
-The gate reports 3492 plain and 975 native tests, 116 Node and 56 Counting.
+The gate reports 3494 plain and 977 native tests, 116 Node and 56 Counting.
 
 ## Open limits
 
-- **`apps/room/page/src/data.ts:1186` is unsure.** The press's own request never went. After a reload in an outage, `openOriginals` reports a failed read with no rows, because `lastRead` lives in memory. No lock then stands over an earlier press with a lost reply, and that press has its own key. A ruling on whether a new press of the same words is the same intent settles the line, with a two-device run of that path.
-- **A defect outside the request.** The same gap lets a keep succeed and a second act go, whatever the words say. I read this and did not run it. A page that reloads with no session sends with no copy, which the signed-requests note states as a limit. This case differs: the session works, and only the list read fails.
-- **A second defect outside the request.** `keepOriginal` says "or reload the page" when it stops for a lost session. The retained editor reaches that line through `sendStep`, and a reload loses its task, so a person who follows it can open a second change. I read this and did not run it.
+- **The test's reload is a stand-in.** The new room comes from `openRoom` in the same module. `lastRead` holds nothing because no list read has run, and `heldSessions` holds the key because the new room's own session adds it. No browser reloaded. `data.ts:1167` and `1168` ran on the real route with no earlier send, and `1169` and `1186` ran with a stand-in wire.
+- **The case's session ends after the earlier request's lock.** The case moves the clock 601 seconds to end the session. A request's lock ends 360 seconds after it is signed, by default. So the read that returns in that case finds the row and stores no lock. The row stays, and its check reports the entry. A read inside the 360 seconds stores the lock, as the other cases of that test file show.
+- **The send path's case has no earlier press.** `send-stop-words.test.ts` scripts `act`, the DOM and the view, and no earlier send exists in it. It shows that the press goes on with no lock after a failed list read, and it shows the words. By my reading of `apps/room/page/src/main.ts` and `tasks.ts`, a person sees these words only in an issue dialog whose own context still reads as current, because `activeView()` is false after the change. No browser ran that.
+- **Request `c44e1ad7`: the lock after a failed list read.** After a reload in an outage, `lastRead` holds nothing, so a failed read leaves no lock. When the route returns while the view stays open, a keep can succeed and a second act can go, whatever the words say. No refusal shows that the lock holds, because `act` reads no list. I read this and did not run it. A page that reloads with no session sends with no copy, which the signed-requests note states as a limit. This case differs: the session works, and only the list read fails. This head does not fix it.
+- **Request `7c36e4ea`: "or reload the page" in the retained editor.** The sentence that the request names was at `data.ts:1179`, and it is gone at this head. No other line of the page's source held the phrase. What remains is that a person who reloads on their own still loses the task, and the editor's own line says so.
 - **Held by shared words, not by a case of their own.** In `packages/cli/src/claim.ts`, `CLAIM_WENT` at lines 75, 288, 292, 298, 305, 309 and 315, and `CLAIM_UNKNOWN` at lines 189 and 191. In `packages/cli/src/commands.ts`, `planSent` at lines 348 and 424. Line 424 needs a plan that changes between two reads, and line 348 needs a cohort with no pin in this build.
 - **A CLI word on the page.** `packages/cli/src/claim.ts:210` names `--again`, which the page does not have. The line already named it.
-- **Not run.** No deployed Worker, real room, browser or hosted endpoint ran these words. Two of the 82 true lines have a paired control, and the others have none.
+- **Not run.** No deployed Worker, real room, browser or hosted endpoint ran these words. Two of the 73 true lines have a paired control, and the others have none.
