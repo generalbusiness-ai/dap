@@ -195,6 +195,13 @@ helper prints each failed test and the first line of its failure. Read
 them: the assertion should be the one that states the invariant. The
 helper cannot judge that for you.
 
+On an inconclusive result, the helper prints the fresh scratch directory
+that retains the actual child output. Node runs keep stdout bytes in
+`before.tap` and `after.tap`, with separate `*.stderr.log` files. Vitest
+runs keep their JSON reports and separate stdout and stderr logs. Only
+attempted runs have files. Retain that directory with the control's other
+evidence. Conclusive results still remove the scratch directory.
+
 There is no mutation sweep. Do not write one mutant per field or per
 condition, and do not run whole suites per mutant. One or two honest
 controls for each invariant you touch are the evidence. If a guard cannot
@@ -719,9 +726,8 @@ contains three cases and is outside Vitest's `*.test.ts` selection. The root
 runs the package's Vitest tests, then those same three resolver cases once.
 The gate does not invoke the CLI package's test script separately.
 
-`scripts/control.mjs` cannot select a root project, so a control of the
-story is run by hand: change the line, run
-`npx vitest run --project scope story`, restore the file.
+To run a control of the story, give `scripts/control.mjs` the root as its
+package directory: `-- . --project scope story`.
 
 The page's story, `apps/room/page/test/story.scope.test.ts`, runs from the
 root inside the `scope` project too. Its room is `apps/room/page/test/support/demo.ts`:
@@ -837,6 +843,14 @@ does not verify manifest contents or replace the reviewer's evidence check.
 
 ## Entry-point inventory
 
+The fixed Node stage includes `apps/views/test/s4.test.mjs` once. That
+owner exercises the project adapter through bounded transport stand-ins
+and uses real scratch files for the local reviewed-head store. The
+stand-ins provide Membership, Directory and lane answers; they prove no
+native authority, provider or live-room outcome. The Brief profile's
+native refusal belongs in its lane Scope owner. Generic catalogue,
+resource and local-action checks remain in the MCP package's owners.
+
 `node --test scripts/security-entry-points.test.mjs` checks the route, method,
 and gate-class bijection in [the Worker inventory](security/entry-points.md).
 It derives names from source matchers, using boundary stand-ins for scope and
@@ -925,7 +939,7 @@ State the machine, the load and the cache state with any figure.
 
 ## Source
 
-Checked against main `5dc9765f` on 30 October 2026. Sources:
+Checked against main `ada88648` on 31 October 2026. Sources:
 [`package.json`](../package.json), [`scripts/gate.sh`](../scripts/gate.sh),
 [`scripts/test.mjs`](../scripts/test.mjs),
 [`vitest.projects.mjs`](../vitest.projects.mjs),

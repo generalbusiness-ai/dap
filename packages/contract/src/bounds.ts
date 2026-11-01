@@ -15,6 +15,9 @@ export interface Bounds {
   // Section 2.1
   intentLifetimeSeconds: number;   // `notAfter` is at most this long after signing
 
+  // Section 9.1: one serving read, outside storage transactions and turns.
+  readWaitMilliseconds: number;    // minimum-head barrier; one Worker value below its request timeout
+
   // Section 6: a definition
   items: number;                   // item types
   acts: number;
@@ -75,6 +78,7 @@ export interface Bounds {
 
 export const PROPOSED_BOUNDS: Bounds = {
   intentLifetimeSeconds: 15 * 60,
+  readWaitMilliseconds: 1000,
   items: 16,
   acts: 64,
   receives: 24,

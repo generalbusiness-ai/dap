@@ -1,5 +1,6 @@
+import type { CallResult } from "../results.ts";
 import type { PresentationPackage, ViewKind } from "./resources.ts";
-import type { ApplicationProjectionData, FactRef, FieldValue, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
+import type { ReadMinimum, ApplicationProjectionData, FactRef, FieldValue, Head, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import type { ApplicationView, ApplicationViewParameters } from "@generalbusiness/dap-platform/application-v2";
 import type { MemberTable } from "./member-types.ts";
 
@@ -17,7 +18,8 @@ export interface CardIdentity {
 }
 export interface ActorChip { kind: "person" | "agent" | "checker"; name: string; controller?: string }
 export type MemberFacts = Readonly<Record<number, { label: string; refs: readonly MemberRef[] }>>;
-export interface CardAction {
+export interface NativeCardAction {
+  readonly local?: false;
   id: string;
   label: string;
   purpose: "act" | "approve" | "mark-reviewed" | "check-original";
@@ -28,6 +30,28 @@ export interface CardAction {
   parameters?: ApplicationViewParameters;
   parameterInput?: unknown;
 }
+/** Exact server-held read vector and displayed ranges, not a native grant. */
+export interface LocalReviewCapture {
+  readonly heads: readonly { scope: ScopeRef; head: Head }[];
+  readonly ranges: readonly EntryRange[];
+  readonly service: string;
+  readonly directory: ScopeRef;
+  readonly viewer: MemberRef;
+  readonly key: string;
+}
+export interface LocalReviewAction {
+  readonly local: true;
+  id: string;
+  label: string;
+  purpose: "mark-reviewed";
+  capture: LocalReviewCapture;
+  kind?: never;
+  args?: never;
+  parameters?: never;
+  parameterInput?: never;
+}
+export type CardAction = NativeCardAction | LocalReviewAction;
+
 /** Verified package HTML and declared navigation, separate from native rows. */
 export interface DeclaredSurface {
   screen: string;
@@ -58,6 +82,8 @@ export interface Card {
   /** An uncertain external request can offer only its original check. */
   unresolvedOriginal?: boolean;
   diffAvailable?: boolean;
+  /** Server-held endpoints of View diff. It signs one read-token act at `target` and reads this diff once. */
+  diffRead?: { target: string; base: string; integration: string };
   detailPage?: "item" | "updates";
   fallback: string;
   /** Generic declared presentation; all data stays on the app-only path. */
@@ -114,13 +140,19 @@ export interface Projection {
 /** A trusted application's projection adapter. Reads use the service's normal authenticated tool path. */
 export interface ViewSource {
   readonly declared?: boolean;
+  /** A list screen takes a scope: the lane that the list continues after. */
+  readonly listsAfterScope?: boolean;
   readonly screens?: readonly { name: string; resource: string }[];
   readonly inputActs?: readonly { screen: string; id: string; label: string; parameters: ApplicationViewParameters }[];
   readonly presentation?: PresentationPackage;
-  initialPage?(screen: ViewKind): PageKind;
-  read(query: ViewQuery, access: { call(name: string, args: Record<string, unknown>): Promise<{ structuredContent: Record<string, unknown>; isError: boolean }> }): Promise<Projection>;
+  initialPage?(screen: ViewKind, subject?: string): PageKind;
+  /** After a restart, such a card offers only the check of an act that this server sent and has no outcome for. */
+  checksOriginals?(query: ViewQuery): boolean;
+  read(query: ViewQuery, access: { call(name: string, args: Record<string, unknown>): Promise<{ structuredContent: Record<string, unknown>; isError: boolean }> }, minimum?: ReadMinimum): Promise<Projection>;
   /** A declared source repeats its current when/needs check before signing. */
   admit?(query: ViewQuery, card: Card, action: CardAction): Promise<void>;
+  /** After awaited reads, call admit without awaiting it, immediately before synchronous publication. */
+  markReviewed?(capture: LocalReviewCapture, context: { view: string; cut: number; admit: () => void }): Promise<CallResult>;
 }
 export interface CardContext {
   /** Opaque mounted-view key for model input tools; never a dispatch cut. */
@@ -150,7 +182,9 @@ export interface Display {
   status: Projection["status"];
   position: number;
   count: number;
-  card?: Omit<Card, "actions" | "declared"> & {
+  card?: Omit<Card, "actions" | "declared" | "diffRead"> & {
+    /** View diff goes through `view_act`, because it signs a read-token act. */
+    diffSigned?: true;
     declared?: Omit<NonNullable<Card["declared"]>, "data"> & { data?: ApplicationProjectionData };
     actions: (Pick<CardAction, "id" | "label" | "purpose"> & { input?: "chat" })[];
   };

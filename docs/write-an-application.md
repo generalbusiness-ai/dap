@@ -112,7 +112,7 @@ package can require it with `host.requires: ["archive"]`, and
 installation in a room without the binding ends with
 `archive-unavailable`. An admin binds an archive when the room is created or later
 with `bind-archive`. A binding does not prove that any journal has been
-exported. [The dap command](cli.md) lists the room families that can
+exported. [The dap command](cli.md) lists the creation cohorts that can
 bind one.
 
 ## Validate the whole definition
@@ -360,11 +360,11 @@ authority is separate from installation, live membership and a provider.
 
 ## Publish a file from an act
 
-A room of the `application-publication` family has a destination that
-publishes a file when an application's act asks it to. That family is not
-among the families a new room can be created with today, so a new room
+A room of the `application-publication` cohort has a destination that
+publishes a file when an application's act asks it to. That cohort is not
+among the cohorts a new room can be created with today, so a new room
 cannot publish files from an act. The lending library's rehearsal room is
-one that can. [The dap command](cli.md) lists the current families.
+one that can. [The dap command](cli.md) lists the current cohorts.
 
 Declare a genesis field named `destination`, with type `scope` and kind
 `destination`. Keep that reference in a fixed item slot. The directory
@@ -404,7 +404,7 @@ A package v2 may require the host's finite `device-command@1` capability:
 ```
 
 List kinds in sorted order. The requirement names no owner identity.
-Install in a device family (`archive-device-application` or
+Install in a device cohort (`archive-device-application` or
 `archive-device-publication`), and choose an existing full member
 reference with `--owner`. The native install checks that member's current
 membership. This cohort runs host capability code, never code supplied by

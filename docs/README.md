@@ -66,6 +66,7 @@ and deployment configuration.
 | [Review an exact change version](../apps/room/docs/reviewing.md) | Record a verdict on the exact content you read. |
 | [Follow a change through publication](../apps/room/docs/landing.md) | Read a merge through to its published outcome. |
 | [The page](../apps/room/docs/page.md) | Reading and acting through the room's browser page. |
+| [Read a room with the local adapter](../apps/views/README.md) | Five reads and the compact cards, from an enrolled `DAP_HOME`. |
 | [Pages](pages.md) | A room's published repository, served as a site. |
 | [Lane reference](lanes-reference.md) | Every row of the lane definitions, generated from the data. |
 | [Rehearse the demo](demo.md) | Run and record the repository story against a deployment. |
@@ -153,5 +154,5 @@ directory describes only the current system.
 
 ## Source
 
-Checked against main `c8c7b631` on 30 October 2026. Sources: the pages this
+Checked against main `ada88648` on 31 October 2026. Sources: the pages this
 index links.

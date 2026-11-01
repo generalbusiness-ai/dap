@@ -1,3 +1,5 @@
+import { readMinimumParameter } from "@generalbusiness/dap-bytes";
+import type { ReadMinimum } from "@generalbusiness/dap-contract";
 import { readDeployment } from "./deployment-setting.ts";
 import { readPublicOrigin, type PublicOriginBindings } from "./public-origin.ts";
 import { jsonReply as json } from "./response.ts";
@@ -175,16 +177,16 @@ interface Remote {
   submit(signed: SignedIntent, grants: readonly Grant[], beside?: Beside, address?: string | null): Promise<Answer>;
   prepare(signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer>;
   settle(signed: SignedIntent): Promise<Settlement>;
-  summary(reader: unknown): Promise<Read<Summary>>;
-  items(reader: unknown, type: string, cursor?: Cursor): Promise<Read<readonly Item[]>>;
-  history(reader: unknown, cursor?: Cursor): Promise<Read<readonly Sealed[]>>;
-  entry(reader: unknown, seq: number): Promise<Read<Sealed>>;
+  summary(reader: unknown, atLeast?: ReadMinimum): Promise<Read<Summary>>;
+  items(reader: unknown, type: string, cursor?: Cursor, atLeast?: ReadMinimum): Promise<Read<readonly Item[]>>;
+  history(reader: unknown, cursor?: Cursor, atLeast?: ReadMinimum): Promise<Read<readonly Sealed[]>>;
+  entry(reader: unknown, seq: number, atLeast?: ReadMinimum): Promise<Read<Sealed>>;
   outbox(reader: unknown, cursor?: Cursor): Promise<Read<readonly OutboxItem[]>>;
   outboxItem(reader: unknown, outboxId: OutboxId): Promise<Read<OutboxItem>>;
   log(reader: unknown, cursor?: Cursor): Promise<Read<LogPage>>;
   retained(reader: unknown, kind: RetainedInput["kind"], digest: Digest, domain?: string): Promise<Read<RetainedInput>>;
   queryItems(encoded: unknown, reader: unknown): Promise<NativeItemQuery>;
-  applicationProjection(encoded: unknown, reader: unknown): Promise<NativeApplicationProjection>;
+  applicationProjection(encoded: unknown, reader: unknown, atLeast?: ReadMinimum): Promise<NativeApplicationProjection>;
   session(asked: unknown): Promise<SessionIssueAnswer>;
   stream(reader: unknown): Promise<Opened | StreamRefusal>;
   release(id: string): Promise<void>;
@@ -304,20 +306,20 @@ export function api(binding: Binding, address: string | null = null, creationAdm
     async submit(scope: string, signed: SignedIntent, grants: readonly Grant[], beside: Beside = {}): Promise<Answer> { return (await at(scope)?.submit(signed, grants, beside, address)) ?? { answer: "unavailable", reason: "unavailable" }; },
     async prepare(scope: string, signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer> { return (await at(scope)?.prepare(signed, grants, capability, step)) ?? { answer: "unavailable", reason: "unavailable" }; },
     async settle(scope: string, signed: SignedIntent): Promise<Settlement> { return (await at(scope)?.settle(signed)) ?? MISSING; },
-    async summary(scope: string, reader: unknown): Promise<Read<Summary>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.summary(reader)) ?? MISSING; },
-    async items(scope: string, reader: unknown, type: string, cursor?: Cursor): Promise<Read<readonly Item[]>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.items(reader, type, cursor)) ?? MISSING; },
+    async summary(scope: string, reader: unknown, atLeast?: ReadMinimum): Promise<Read<Summary>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.summary(reader, atLeast)) ?? MISSING; },
+    async items(scope: string, reader: unknown, type: string, cursor?: Cursor, atLeast?: ReadMinimum): Promise<Read<readonly Item[]>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.items(reader, type, cursor, atLeast)) ?? MISSING; },
     async queryItems(scope: string, reader: unknown, encoded: string): Promise<ItemQueryRead> {
       const limited = await readGate(reader); if (limited) return limited;
       const result = await at(scope)?.queryItems(encoded, reader);
       return result?.ok ? readItemQueryReply(utf8(result.serialized)) ?? { ok: false, reason: "unavailable" } : result ?? { ok: false, reason: "invalid-query" };
     },
-    async applicationProjection(scope: string, reader: unknown, encoded: string): Promise<string> {
+    async applicationProjection(scope: string, reader: unknown, encoded: string, atLeast?: ReadMinimum): Promise<string> {
       if (typeof reader !== "string" || reader.length > APPLICATION_PROJECTION_WIRE_BOUNDS.sessionChars || reader.startsWith("Signed ")) return '{"ok":false,"reason":"forbidden"}';
-      const result = await at(scope)?.applicationProjection(encoded, reader);
+      const result = await at(scope)?.applicationProjection(encoded, reader, atLeast);
       return result?.ok ? result.serialized : JSON.stringify(result ?? { ok: false, reason: "invalid-query" });
     },
-    async history(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly Sealed[]>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.history(reader, cursor)) ?? MISSING; },
-    async entry(scope: string, reader: unknown, seq: number): Promise<Read<Sealed>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.entry(reader, seq)) ?? MISSING; },
+    async history(scope: string, reader: unknown, cursor?: Cursor, atLeast?: ReadMinimum): Promise<Read<readonly Sealed[]>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.history(reader, cursor, atLeast)) ?? MISSING; },
+    async entry(scope: string, reader: unknown, seq: number, atLeast?: ReadMinimum): Promise<Read<Sealed>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.entry(reader, seq, atLeast)) ?? MISSING; },
     async outbox(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.outbox(reader, cursor)) ?? MISSING; },
     async outboxItem(scope: string, reader: unknown, outboxId: OutboxId): Promise<Read<OutboxItem>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.outboxItem(reader, outboxId)) ?? MISSING; },
     async log(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<LogPage>> { const limited = await readGate(reader); if (limited) return limited; return (await at(scope)?.log(reader, cursor)) ?? MISSING; },
@@ -351,6 +353,7 @@ function answered(answer: Created | Answer, accepted: number): Response {
 
 const READ_STATUS: Record<ReadRefusal, number> = {
   "rate-limited": 429,
+  behind: 503,
   "no-repository": 404,
   archived: 410,
   "not-found": 404, "wrong-incarnation": 409, forbidden: 403, "scope-provisional": 409, "unsupported-definition": 501, "history-unavailable": 503, "too-large": 413, unavailable: 503,
@@ -401,7 +404,7 @@ function queryResponse(result: NativeItemQuery): Response {
 }
 const PROJECTION_STATUS: Record<ApplicationProjectionRefusal, number> = {
   "invalid-query": 400, forbidden: 403, unavailable: 503, incomplete: 409, stale: 409, "too-large": 413,
-  "query-not-ready": 409, "clock-behind": 503, "sessions-unavailable": 503, "wrong-scope": 409,
+  "query-not-ready": 409, "clock-behind": 503, "sessions-unavailable": 503, "wrong-scope": 409, "wrong-incarnation": 409, behind: 503,
 };
 function projectionResponse(result: NativeApplicationProjection): Response {
   return new Response(result.ok ? result.serialized : JSON.stringify(result), { status: result.ok ? 200 : PROJECTION_STATUS[result.reason],
@@ -433,13 +436,16 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
   // Only a retained input is named by two parts: its kind and its digest.
   if (what === "retained" ? which === undefined || last === undefined : last !== undefined) return json(404, { error: "not-found" });
   if ((what === "sessions" || what === "stream" || what === "incidents" || what === "requests") && (scope === undefined || which !== undefined)) return json(404, { error: "not-found" });
+  const minima = url.searchParams.getAll("atLeast");
+  const atLeast = minima.length === 1 ? readMinimumParameter(minima[0]) : undefined;
+  if (minima.length > 1 || minima.length === 1 && (!atLeast || atLeast.at.scope !== scope)) return json(400, { error: "bad-request" });
   const reader = request.headers.get("authorization");
   if (what === "application-projection") {
     const wire = applicationProjectionWire(request, scope ?? "");
     if (!wire.ok) return projectionResponse(wire);
     if (typeof reader !== "string" || reader.length > APPLICATION_PROJECTION_WIRE_BOUNDS.sessionChars || reader.startsWith("Signed ")) return projectionResponse({ ok: false, reason: "forbidden" });
     const object = binding.get(binding.idFromName(scope!)) as Remote;
-    return projectionResponse(await object.applicationProjection(wire.encoded, reader));
+    return projectionResponse(await object.applicationProjection(wire.encoded, reader, wire.atLeast));
   }
   if (what === "query-items") {
     const wire = itemQueryWire(request, scope ?? "");
@@ -493,11 +499,11 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
     return read(await scopes.settle(scope, given["signed"] as SignedIntent));
   }
   if (scope === undefined) return json(404, { error: "not-found" });
-  if (what === undefined) return read(await scopes.summary(scope, reader));
-  if (what === "items" && which !== undefined) return read(await scopes.items(scope, reader, which, cursor));
-  if (what === "history" && which === undefined) return read(await scopes.history(scope, reader, cursor));
+  if (what === undefined) return read(await scopes.summary(scope, reader, atLeast ?? undefined));
+  if (what === "items" && which !== undefined) return read(await scopes.items(scope, reader, which, cursor, atLeast ?? undefined));
+  if (what === "history" && which === undefined) return read(await scopes.history(scope, reader, cursor, atLeast ?? undefined));
   const seq = what === "entries" ? positionOf(which) : null;
-  if (seq !== null) return read(await scopes.entry(scope, reader, seq));
+  if (seq !== null) return read(await scopes.entry(scope, reader, seq, atLeast ?? undefined));
   if (what === "outbox") return read(which === undefined ? await scopes.outbox(scope, reader, cursor) : await scopes.outboxItem(scope, reader, which as OutboxId));
   if (what === "log" && which === undefined) return read(await scopes.log(scope, reader, cursor));
   if (what === "retained") return read(await scopes.retained(scope, reader, which as RetainedInput["kind"], last as Digest, url.searchParams.get("domain") ?? undefined));

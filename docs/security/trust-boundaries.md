@@ -75,7 +75,7 @@ origin. The operator supplies `SESSION_SECRET`. Its custody and uniqueness
 remain separate from those public labels. Read sessions still require the
 deployment, exact Membership reference, allowed read, and expiry checks.
 
-The index mode is `enforce`. The explicit creation family is Register 23,
+The index mode is `enforce`. The explicit creation cohort is Register 23,
 Directory 22, Membership 9, Rules 14, Destination 16, Inbox 1, and Commons 1.
 `REGISTER_SCOPE` and `ARTIFACTS_CONFIG.registerScope` remain `unplanned`
 until the operator binds the retained install plan. Those invalid register
@@ -87,7 +87,7 @@ and actual hosted routes still require their own evidence.
 
 The checked-in `DEMO_START_CONFIG` is not a Commons provisioning interface.
 The maintained Demo parser recognizes Register 17, not this Register 23
-family. Follow the
+cohort. Follow the
 [Commons CLI order](../deploy.md#provision-the-commons-worker) and bind only
 the two operational register fields. This source describes
 no deployment, activation, namespace creation, or hosted W1 result.

@@ -13,9 +13,12 @@ import { viewToolName } from "../../src/views/names.ts";
 import { applicationProjectionId, applicationProjectionQueryDigest } from "@generalbusiness/dap-platform/application-v2";
 import { DeclaredViewSource } from "../../src/views/declared.ts";
 import { fixedSigner } from "../fixtures.ts";
+import type { CustodyStore } from "../../src/custody.ts";
 
 const fields = { approvals: 0, ownerMayReview: false, checks: [], labels: [], extents: firstExtents({ approvals: 0, checks: [] }) };
-function fixture(mode: string) {
+/** Shared scripted card/scope source for the custom host and actual basic-host.
+ * Its signer is a public test fixture; no live room or provider is contacted. */
+export function fixture(mode: string, custody: CustodyStore = memoryStore()) {
   const signer = fixedSigner(17), scope = new StandIn(signer.key);
   const completed = new Set<number>();
   let revision = 0, lose = mode === "loss";
@@ -44,7 +47,7 @@ function fixture(mode: string) {
     if (card.body === undefined) delete card.body;
     return { status: mode === "incomplete" ? "incomplete" : "ready", position, count, card, fallback: card.fallback };
   } };
-  const service = new McpService({ service: SERVICE, mode: "add", config: { read: async () => scope.config(), addRoot: async () => {} }, custody: memoryStore(), views: source,
+  const service = new McpService({ service: SERVICE, mode: "add", config: { read: async () => scope.config(), addRoot: async () => {} }, custody, views: source,
     signer: { key: signer.key, sign: (bytes) => { const text = new TextDecoder().decode(bytes), prefix = `${DOMAINS.intent}\n`; if (text.startsWith(prefix)) signed.push(JSON.parse(text.slice(prefix.length))); return signer.sign(bytes); } },
     fetch: async (url, init) => {
       const answer = await scope.fetch(url, init);
@@ -180,6 +183,7 @@ void(async()=>{input={view:config.id,subject:config.screen,...(config.scope?{sco
       const uri = instance.service.resources.list().resources.find(resource => resource.uri.endsWith(`/${url.searchParams.get("screen")}`))?.uri;
       if (!uri) return json(response, { error: "Unknown fixture resource" }, 404);
       const resource = instance.service.resources.read(uri).contents[0]!;
+      if (resource.mimeType !== "text/html;profile=mcp-app" || !resource._meta?.ui) return json(response, { error: "Unknown fixture resource" }, 404);
       response.writeHead(200, { "content-type": "text/html", "content-security-policy": policy(resource._meta.ui) });
       response.end(resource.text); return;
     }

@@ -36,8 +36,8 @@ async function fixture(joined=true) {
       if(race==="before-reply"&&held.journal)held={...held,journal:markActive(held.journal,"unknown")};
       if(reply==="lost")throw new Error("FAKE lost response");return Response.json({answer:"refused",reason:"guard-failed",judgedAt:head},{status:422});
     }
-    if(path.endsWith("/settle")){settles++;return settleAccepted&&receipt?Response.json({ok:true,at:head,complete:true,value:receipt}):Response.json({ok:false,reason:"not-found"});}
-    if(path.includes("/entries/"))return entry?Response.json({ok:true,at:head,complete:true,value:{entry,hash:entryHash(entry)}}):Response.json({ok:false,reason:"not-found"});
+    if(path.endsWith("/settle")){settles++;return settleAccepted&&receipt?Response.json({ok:true,at:{seq:receipt.fact.seq,hash:receipt.fact.hash},complete:true,value:receipt}):Response.json({ok:false,reason:"not-found"});}
+    if(path.includes("/entries/"))return entry?Response.json({ok:true,at:{seq:entry.seq,hash:entryHash(entry)},complete:true,value:{entry,hash:entryHash(entry)}}):Response.json({ok:false,reason:"not-found"});
     throw Error(`The FAKE Counter service does not provide this read: ${path}`);
   };
   const stream:HeadStreamFetch=async(url,init)=>{assert.equal(init.redirect,"error");return{status:200,url,redirected:false,headers:new Headers({"content-type":"application/x-ndjson"}),body:new ReadableStream<Uint8Array>({start(c){c.enqueue(new TextEncoder().encode(JSON.stringify({at:head})+"\n"));}})};};

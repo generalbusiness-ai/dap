@@ -6,7 +6,7 @@ const duration = value => typeof value === 'number' && Number.isFinite(value) &&
 const text = value => typeof value === 'string' ? value : null;
 const directive = value => value === true || typeof value === 'string';
 const number = value => Number.isSafeInteger(value) && value >= 0 ? value : null;
-const projects = ['bytes','derive','platform','git','checkers','replay','client','scope','scope-lending','scope-denial','lanes','cli','page','mcp','counting','lending','grow'];
+const projects = ['bytes','derive','platform','git','checkers','replay','client','scope','scope-lending','scope-denial','lanes','cli','page','mcp','counting','lending','grow','repo-in-ai'];
 const phases = ['kernel','node','counting','plain','native'];
 const vitestKey = row => JSON.stringify([row.phase,row.project,row.file,row.id]);
 const nodeKey = row => row.entryFile !== null && row.testId !== null ? JSON.stringify([row.phase,row.entryFile,row.testId]) : null;

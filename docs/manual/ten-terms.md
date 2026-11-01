@@ -100,7 +100,7 @@ them:
 
 Three other keys have one job each. The **operator key** signs the
 install of a register: it is the key that creates that register. The room
-creator's **first key** is enrolled when the room is claimed. The **recovery key**,
+creator's **first key** is enrolled when the room is created. The **recovery key**,
 named when the room is created, is not a member's key. It can still invite and remove
 members and revoke keys, so a room whose admins have lost their keys can
 be recovered. Membership is in

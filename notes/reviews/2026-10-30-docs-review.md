@@ -62,7 +62,7 @@ or an unlanded intent-v2 wire format").
 | self-host | Keep one binding and one migration; cleanup deletes one class | Four Durable Object bindings, three migrations, an R2 bucket, an Analytics dataset; four classes |
 | self-host, deploy, hosts | Pin the register through `ARTIFACTS_CONFIG.registerScope` only | `REGISTER_SCOPE` is the pin; the GitHub order fails without it |
 | hosts | Hosts are Artifacts and GitHub; namespace is `artroom-demo` | `--host none` exists; each deployment has its own namespace |
-| mcp | Fourteen generic tools | Eighteen at `5dc9765f`, of which the hosted endpoint omits eight by default. Nineteen at `c8c7b631`, with `commons` |
+| mcp | Fourteen generic tools | Eighteen at `5dc9765f`, of which the hosted endpoint omits eight by default. Nineteen at `c8c7b631`, with `commons`. Twenty at `ada88648`, with `diff`, of which the hosted endpoint omits seven |
 | pages | Each read mints and revokes a token; `dap claim` prints "Claimed" | Site tokens are shared and reused; `dap create` prints "Created" |
 | pages | Refusal table | Lacks `no-repository`, `rate-limited`, `unavailable` |
 | operations | Health body has four fields; 200 on two conditions | Five fields including `wiring`; a configured host whose wiring is off gives 503 |
@@ -129,9 +129,10 @@ instructions.
   30 October 2026. Sources: ..." and, where true, one sentence that the
   page's commands were not run for this revision. Tutorials keep the date
   and versions of the run that produced their output blocks. The commit is
-  `c8c7b631` on the pages that main changed after the first pass and the
-  pages that state its facts (index, cli, deploy, kernel, mcp, roadmap,
-  scopes, settings, trust boundaries, entry points, use cases). It is
+  `ada88648` on the pages that main changed after the second pass and on the
+  index (kernel, mcp, scopes, settings, entry points, testing, index). It is
+  `c8c7b631` on the pages that main changed after the first pass or that state
+  its facts (cli, deploy, roadmap, trust boundaries, use cases). It is
   `5dc9765f` on the others. The generated lane reference and the `lanes.md`
   redirect have no footer.
 - **Relocate, do not delete.** Status and evidence text that is recorded
@@ -293,3 +294,30 @@ history in `self-host.md` and `demo.md` moved to the footers, the "not run"
 wording is one sentence, `what-is-dap.md` lost its imperative section, the
 first admin replaces "owner" in `self-host.md`, and `hosts.md` says that
 site reads reuse a token.
+
+## 7. Answer to the second review
+
+The second review of head `dfe69293` requested three wording repairs. Twelve
+of the first review's 14 items held in full. This head answers the three
+repairs and merges main `ada88648`.
+
+| Item | Answer |
+|---|---|
+| 1 `settings.md` default | Names the three default cohorts: `archive-device-publication`, `unpublished` and `commons` |
+| 2 `cohort` is the one name | "family" became "cohort" on every cited line of `write-an-application.md`, `self-host.md`, `settings.md` and `trust-boundaries.md`. `ten-terms.md` says "created" |
+| 3 `what-is-dap.md` paths | Names the invitation link and the configuration file and key, which `apps/room/docs/page.md` describes |
+
+The merge of main adds these facts:
+
+- the `diff` tool, which makes twenty generic names, and the seven hosted
+  omissions, where `step` and `text` are now served by default;
+- the `behind` read answer and the `diff` server reason in the metric lists;
+- minimum heads on reads, in `scopes.md` and in the new kernel section 7.4;
+- the local project views section of `mcp.md`, and a row for its page in the
+  index;
+- the inconclusive-result paragraph of `testing.md`.
+
+The catalog still holds 85 versions, read from `VERSIONS` at this head. The
+views section said "four reads" above a table of five, and it now says five.
+Kernel section 7.4 holds main's rules without the request ID, and the
+relocated-text note keeps the text as landed.

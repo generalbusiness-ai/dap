@@ -95,8 +95,9 @@ caller-selected root nor a membership session supplies that authority.
 
 [Roll out new creation versions](../deploy.md#roll-out-new-creation-versions)
 describes the procedure. `PLATFORM_CREATION_PINS` adds earlier platform pins that new scopes may use
-besides the newest publication and unpublished families. It does not change
-the pins of existing scopes or open another native lineage family. An index
+besides the default cohorts, `archive-device-publication`, `unpublished` and
+`commons`. It does not change the pins of existing scopes or open another
+native lineage cohort. An index
 entry allows lookup only. A pin outside the setting can repeat only an
 exact existing birth that the target validates. Health does not read this
 setting, so a `200` response does not show that a given pin can create a
@@ -695,8 +696,8 @@ failure behavior, health visibility and the other readers.
       "readers": [
         "packages/mcp/src/hosted-tools.ts"
       ],
-      "parser": "Optional JSON array, at most 1024 characters, known distinct generic names, no more than 18 items.",
-      "missing": "Uses narrow hosted defaults: create/install_application/credential/prepare/join/record/step/text omitted.",
+      "parser": "Optional JSON array, at most 1024 characters, known distinct generic names, no more than 20 items.",
+      "missing": "Uses narrow hosted defaults: create/install_application/credential/diff/prepare/join/record omitted.",
       "invalid": "Malformed, duplicate, unknown or oversized list closes the endpoint.",
       "health": "Not reported."
     },
@@ -1073,4 +1074,4 @@ failure behavior, health visibility and the other readers.
 
 ## Source
 
-Checked against main `c8c7b631` on 30 October 2026. Sources: [scripts/security-settings.mjs](../../scripts/security-settings.mjs), [packages/scope/src/register-setting.ts](../../packages/scope/src/register-setting.ts), [packages/scope/src/health.ts](../../packages/scope/src/health.ts), [packages/scope/src/creation-versions.ts](../../packages/scope/src/creation-versions.ts), [packages/scope/src/public-origin.ts](../../packages/scope/src/public-origin.ts).
+Checked against main `ada88648` on 31 October 2026. Sources: [scripts/security-settings.mjs](../../scripts/security-settings.mjs), [packages/scope/src/register-setting.ts](../../packages/scope/src/register-setting.ts), [packages/scope/src/health.ts](../../packages/scope/src/health.ts), [packages/scope/src/creation-versions.ts](../../packages/scope/src/creation-versions.ts), [packages/scope/src/public-origin.ts](../../packages/scope/src/public-origin.ts).

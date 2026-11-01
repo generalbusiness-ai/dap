@@ -13,11 +13,12 @@ export const METRIC_KINDS = ["turn", "route", "session", "signed-read", "join", 
 type Kind = typeof METRIC_KINDS[number];
 const ENDS = ["answer", "idle", "busy", "clock-behind", "unavailable"] as const;
 const ANSWERS = ["accepted", "archived", "refused", "unavailable", "mismatch", "none", "mixed"];
-export const STEPS = ["retained-replies", "owner", "judged"] as const;
-export const EVENTS = ["outside-call-failed", "outside-replies-failed", "outside-recovery-failed"] as const;
+export const STEPS = ["retained-replies", "owner", "judged", "workspace-head-send", "workspace-lineage-read", "workspace-lineage",
+  "artifacts-read-identity", "artifacts-read-token", "artifacts-read-reply", "artifacts-read-git", "artifacts-read-revoke"] as const;
+export const EVENTS = ["outside-call-failed", "outside-replies-failed", "outside-recovery-failed", "workspace-lineage-unavailable"] as const;
 export const METRIC_PLACES = ["create", "acts", "preparations", "rpc:create", "rpc:acts", "rpc:preparations", "settle", "summary", "items", "query-items", "application-projection", "reservation-snapshot", "operations", "history", "entries", "outbox", "outboxItem", "log", "retained", "sessions", "stream", "incidents", "waiting", "credential", "site", "page", "health", "requests", "alarm", "dispatch", "metrics", "mixed", "other", ...STEPS] as const;
 // An exhaustive union makes a new contract reason an explicit schema decision.
-const REASONS: Record<RefusalReason | CreationUnavailableReason | MismatchReason | ReadRefusal | SessionRefusal, true> = {
+const REASONS: Record<RefusalReason | CreationUnavailableReason | MismatchReason | ReadRefusal | SessionRefusal, true> = { behind: true,
   "archived": true, "floor-receipt": true, "floor-ahead": true, "floor-back": true, "floor-step": true, "floor-recent": true, "floor-keep": true, "floor-kept": true,
   "wrong-pin": true, "application-revoked": true,
   "revision-moved": true, alias: true, "duplicate-relation": true, "required-unset": true, "scope-full": true,

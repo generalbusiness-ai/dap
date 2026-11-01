@@ -289,6 +289,38 @@ Older Rules refuse the field with `reference-requires-rules14`. An unknown
 future pin stays closed until its cohort opts in. The shared field type
 does not migrate an older room's native installation policy.
 
+### 7.4 Read minimums
+
+A read can name a minimum head. The `summary`, `items`, `history`, `entry` and
+application projection reads accept it. The contract adds `ReadMinimum`,
+`BehindRead`, the `behind` variant of `Read` and `ReadRefusal`, and
+`Bounds.readWaitMilliseconds`. They belong in the kernel because every transport
+must agree on the qualified position, the bounded wait and the refusal. The
+optional trailing `atLeast` argument on `ScopeApi.summary`, `items`, `history`,
+`entry` and `applicationProjection` carries the same contract. A platform
+application cannot redefine the meaning of an existing read.
+
+`packages/bytes/src/read-minimum.ts` exports `READ_MINIMUM_WIRE_BOUNDS`,
+`readMinimum`, `isReadMinimum`, `encodeReadMinimumParameter` and
+`readMinimumParameter`. These closed-shape, ownership and bounded canonical-wire
+rules belong in the kernel because HTTP, RPC and local clients must accept the
+same record without retaining caller mutation. `isBehindRead` in
+`bytes/src/records.ts` validates the authenticated current `FactRef` that the
+refusal carries. `APPLICATION_PROJECTION_REFUSALS` adds `wrong-incarnation` and
+`behind`, and `ApplicationProjectionRead` carries the dedicated behind record.
+Projection failures therefore stay the same across the native reader, the wire
+codec and the client, and an application has no refusal language of its own.
+
+The wait itself stays in Scope. Scope holds ephemeral arrival callbacks outside
+turns and storage transactions, checks the existing read authority at each wake,
+and removes its timer and callback when the read finishes. A minimum grants no
+read permission and creates no journal entry or durable alarm. A full head at or
+above the journal floor also requires the retained hash at that sequence. A
+missing or different hash returns `unavailable`. Strictly below the floor, the
+minimum orders the read but does not verify the historical hash. A timeout
+returns `behind` only after the authority checks succeed. Read minimums add no
+platform kind and no application vocabulary.
+
 ## 8. Second host
 
 The second host ([self-hosting on celld](../notes/2026-10-19-self-hosting-on-celld.md))
@@ -317,4 +349,4 @@ way.
 
 ## Source
 
-Checked against main `c8c7b631` on 30 October 2026. Sources: [check-kernel-boundary.mjs](../scripts/check-kernel-boundary.mjs), [scope.ts](../packages/contract/src/scope.ts), [definition.ts](../packages/contract/src/definition.ts), [capability.ts](../packages/contract/src/capability.ts), [native-catalog.ts](../packages/platform/src/native-catalog.ts), [verify.ts](../packages/replay/src/verify.ts), [commands.ts](../packages/cli/src/commands.ts), [code.ts](../packages/derive/src/capability/code.ts).
+Checked against main `ada88648` on 31 October 2026. Sources: [check-kernel-boundary.mjs](../scripts/check-kernel-boundary.mjs), [scope.ts](../packages/contract/src/scope.ts), [definition.ts](../packages/contract/src/definition.ts), [capability.ts](../packages/contract/src/capability.ts), [native-catalog.ts](../packages/platform/src/native-catalog.ts), [verify.ts](../packages/replay/src/verify.ts), [commands.ts](../packages/cli/src/commands.ts), [code.ts](../packages/derive/src/capability/code.ts).

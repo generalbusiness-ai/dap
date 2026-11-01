@@ -147,8 +147,8 @@ You enter a room in one of three ways:
   for a member who has already joined.
 
 [The dap command](cli.md) describes invitations and joining from the
-command line. [The page](../apps/room/docs/page.md) describes both paths
-in the room's browser page. To run a service of your own, read
+command line. [The page](../apps/room/docs/page.md) describes the invitation link and
+the configuration file and key in the room's browser page. To run a service of your own, read
 [Run your own service](self-host.md).
 
 ## Source

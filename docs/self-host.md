@@ -162,7 +162,7 @@ Counter and Lending are signed application packages. The Worker serves their
 screens through the route
 `/applications/<directory>/<install-item>/<presentation>/`.
 
-New room creation offers no family that installs ordinary application
+New room creation offers no cohort that installs ordinary application
 packages such as Counter or Lending. These steps apply to an existing
 `trusted-application` room. Before you install an application, configure
 the [private application content bucket and exact release trust](deploy.md#trusted-application-screens).

@@ -7,7 +7,7 @@
  * anywhere: `Session` keeps it out of its JSON and text.
  */
 
-import type { ItemQueryRead, Read, ScopeId, ScopeRef, ApplicationProjectionQuery, ApplicationProjectionRead } from "@generalbusiness/dap-contract";
+import type { ReadMinimum, ItemQueryRead, Read, ScopeId, ScopeRef, ApplicationProjectionQuery, ApplicationProjectionRead } from "@generalbusiness/dap-contract";
 import { timeOf } from "@generalbusiness/dap-bytes";
 import { TransportError, ScopeHandle, httpTransport, requestSession, signedReads, signerSessionRequest, type Fetch, type Session, type Signer, type Transport } from "@generalbusiness/dap-client";
 
@@ -64,10 +64,10 @@ export class Reads {
 
   /** A declared projection requires a session. One refused read is returned
    * as it stands; there is no signed fallback or implicit retry. */
-  async projection(membership: ScopeRef, query: ApplicationProjectionQuery): Promise<ApplicationProjectionRead> {
+  async projection(membership: ScopeRef, query: ApplicationProjectionQuery, minimum?: ReadMinimum): Promise<ApplicationProjectionRead> {
     const session = await this.session(membership);
     if (!session) return { ok: false, reason: "forbidden" };
-    const result = await new ScopeHandle(this.#plain, query.scope.scope, session.reader()).applicationProjection(query);
+    const result = await new ScopeHandle(this.#plain, query.scope.scope, session.reader()).applicationProjection(query, minimum);
     if (!result.ok && (result.reason === "forbidden" || result.reason === "sessions-unavailable")) this.forget(membership.scope);
     return result;
   }
@@ -78,6 +78,7 @@ export class Reads {
    */
   async read<T>(membership: ScopeRef | null, run: (transport: Transport, reader: string | null) => Promise<Read<T>>): Promise<Read<T>>;
   async read(membership: ScopeRef | null, run: (transport: Transport, reader: string | null) => Promise<ItemQueryRead>): Promise<ItemQueryRead>;
+  async read<R extends { ok: true } | { ok: false; reason: string }>(membership: ScopeRef | null, run: (transport: Transport, reader: string | null) => Promise<R>): Promise<R>;
   async read<R extends { ok: true } | { ok: false; reason: string }>(membership: ScopeRef | null, run: (transport: Transport, reader: string | null) => Promise<R>): Promise<R> {
     const session = await this.session(membership);
     if (session) {

@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint, which is based on main c1ff846e. The controls and the native probe are in the separate sealed unit 2026-10-31-enrol-stop. No Worker or room ran this code.",
+  "directory": "2026-10-31-enrol-stop-gate",
+  "checkpoint": {
+    "commit": "d1af219760ae65b15f82182ab83948cb55d6e4c1",
+    "tree": "7114e67a2b3ee40c036c15a0c2e86be17bc2cab7"
+  },
+  "fileCount": 36,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "bc8431abfc30624291500796adacf24a83c4da078541bffe0313882965ba4204"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6492,
+      "sha256": "30c2d2b205009614dd92743ee684348cb2755bb3c5ca63bc852ff3d196ce7481"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 3239,
+      "sha256": "041e2ee69f821a20b1f57e3789b2c4b211b7c7b13727a40a83318767641853b3"
+    }
+  ]
+}

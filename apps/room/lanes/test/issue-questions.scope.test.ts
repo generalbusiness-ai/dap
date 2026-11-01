@@ -1,10 +1,10 @@
 import { expect, test } from "vitest";
 import type { Answer, Receipt } from "@generalbusiness/dap-contract";
-import { isSeed, keyIdOfSecret, scopeIdOf, signInvitationProof, textDigest } from "@generalbusiness/dap-bytes";
+import { digestBytes, isSeed, keyIdOfSecret, scopeIdOf, signInvitationProof, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import type { AskedOf, Kind } from "@generalbusiness/dap-client";
 import { ROLE_LISTS } from "@generalbusiness/dap-platform";
 import { drainScheduledFixture } from "../../../../packages/scope/test/support/native-fixture-lifetime.ts";
-import { issueQuestions, QUESTION_DIGESTS } from "../src/index.ts";
+import { changeDemo, DEMO_DIGESTS, issueQuestions, QUESTION_DIGESTS } from "../src/index.ts";
 import { Platform, paul, rita, room, soon, una, vic } from "./support/room.ts";
 
 // Native Membership8, Rules, Directory and issue judgments/storage. Git setup
@@ -49,6 +49,18 @@ test("current question text needs a requested person's approval and person-role 
     } });
     expect(await r.M.item(agent)).toMatchObject({ state: "active", values: { kind: "agent", role: "agent" }, parties: { controller: owner } });
     expect(await r.M.item(agentKey)).toMatchObject({ state: "active", values: { id: paul.key, kind: "agent" }, refs: { member: agent } });
+
+    const otherSecret = new Uint8Array(32).fill(44);
+    const quinn = { ...paul, secret: otherSecret, key: keyIdOfSecret(otherSecret), member: { ...paul.member, member: "@quinn" as const } };
+    const otherMember = await r.M.did(rita, "add-member", { fields: { handle: "@quinn", kind: "agent", controller: owner } });
+    const otherInvitationSeed = new Uint8Array(32).fill(45);
+    const otherInvitation = await r.M.did(rita, "invite-key", { expected: await r.M.expected({ member: otherMember }), fields: {
+      member: otherMember, kind: "agent", inviteKey: keyIdOfSecret(otherInvitationSeed), inviteEnds: soon(3600),
+    } });
+    await r.M.did(quinn, "enrol", { on: 0, expected: await r.M.expected({ on: 0, member: otherMember }), fields: {
+      invitation: otherInvitation, proof: signInvitationProof(otherInvitationSeed, await r.M.at(), otherInvitation, quinn.key),
+    } });
+    expect(await r.M.item(otherMember)).toMatchObject({ state: "active", values: { kind: "agent", role: "agent" }, parties: { controller: owner } });
 
     // Preserve each whole role list. The adopted boundary is role grants;
     // this does not claim protection against granting a person role to an agent.
@@ -104,6 +116,23 @@ test("current question text needs a requested person's approval and person-role 
     const offer = (await did(rita, "offer", { fields: { offeree: person } })).fact;
     await did(una, "accept", { on: offer.seq, fields: { terms: await I.fact(0) } });
     const block = (await did(una, "block", { fields: { commitment: offer.seq, on: ask } })).fact;
+
+    // S5: a controlled agent's block is local to its commitment. The other
+    // controlled agent can record a real Change proposal while it remains.
+    const agentOffer = (await did(rita, "offer", { fields: { offeree: controlled } })).fact;
+    await did(paul, "accept", { on: agentOffer.seq, fields: { terms: await I.fact(0) } });
+    const agentBlock = (await did(paul, "block", { fields: { commitment: agentOffer.seq, on: ask } })).fact;
+    await r.activate(changeDemo, DEMO_DIGESTS.change);
+    const C = await r.lane(quinn, "open-pr", changeDemo, DEMO_DIGESTS.change, { title: "TEST independent agent change", draft: false });
+    const content = "TEST independent change\n";
+    const proposed = await C.signed(quinn, "propose-file", { fields: {
+      base: r.firstHead, path: "TEST.txt", digest: digestBytes(utf8(content)), size: utf8(content).length, content,
+    } });
+    const proposedAnswer = await C.handle.submit(proposed.signed, [], proposed.beside);
+    expect(proposedAnswer).toMatchObject({ answer: "accepted" });
+    if (proposedAnswer.answer !== "accepted") throw new Error("The other controlled agent's native Change proposal must be accepted.");
+    expect(await C.item(proposedAnswer.receipt.fact.seq)).toMatchObject({ type: "manifest", state: "current", parties: { integrator: await r.member("@quinn") } });
+    expect(await I.item(agentBlock.seq)).toMatchObject({ state: "blocked", refs: { commitment: agentOffer.seq } });
 
     const agentRequest = (await did(rita, "request-approval", { fields: { ask: ask.seq, bodyAt: ask, requested: controlled } })).fact;
     const personRequest = (await did(rita, "request-approval", { fields: { ask: ask.seq, bodyAt: ask, requested: person } })).fact;
@@ -169,6 +198,19 @@ test("current question text needs a requested person's approval and person-role 
     await refused(una, "release-block", { on: block.seq, fields: { commitment: offer.seq, answer: otherDecision } }, "guard-failed", "not-this-ask");
     await did(una, "release-block", { on: block.seq, fields: { commitment: offer.seq, answer: decision } });
     expect(await I.item(block.seq)).toMatchObject({ state: "released", refs: { releasedBy: decision.seq } });
+
+    // Old offers keep their terms. Only the NEW offer names the revision.
+    const oldTerms = await I.fact(0);
+    const changedTerms = (await did(rita, "revise", { on: 0, fields: { conditions: ["TEST revised conditions for new work"] } })).fact;
+    const newOffer = (await did(rita, "offer", { fields: { offeree: controlled } })).fact;
+    const beforeOffer = await I.item(newOffer.seq);
+    await refused(paul, "accept", { on: newOffer.seq, fields: { terms: oldTerms } }, "guard-failed", "terms-differ");
+    expect(await I.item(newOffer.seq)).toEqual(beforeOffer);
+    await did(paul, "accept", { on: newOffer.seq, fields: { terms: changedTerms } });
+    expect(await I.item(newOffer.seq)).toMatchObject({ state: "accepted", refs: { termsAt: changedTerms.seq } });
+    expect(await I.item(agentOffer.seq)).toMatchObject({ state: "accepted", refs: { termsAt: oldTerms.seq } });
+    await did(paul, "release-block", { on: agentBlock.seq, fields: { commitment: agentOffer.seq, answer: decision } });
+    expect(await I.item(agentBlock.seq)).toMatchObject({ state: "released", refs: { releasedBy: decision.seq } });
   } finally {
     // Discover only actual Membership-created Inboxes. Join their callbacks
     // with the room's before this scenario returns; no physical-drain claim.

@@ -1,13 +1,13 @@
 /** The generic host interpreter for a verified declared presentation. It
  * runs no package code. Its ports are native reads, not application adapters. */
-import type { ApplicationProjectionData, ApplicationProjectionQuery, ApplicationProjectionRead, ApplicationProjectionRow, Digest, FieldValue, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
+import type { ReadMinimum, ApplicationProjectionData, ApplicationProjectionQuery, ApplicationProjectionRead, ApplicationProjectionRow, Digest, FieldValue, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { applicationItemSnapshot } from "@generalbusiness/dap-client";
 import { canonicalize, isLocalId, isMemberRef, parseStrict, unb64url } from "@generalbusiness/dap-bytes";
 import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
 import { applicationProjectionId, applicationViewFactField, isApplicationJournalSource, readPublishedApplicationPackage2, type ApplicationView, type ApplicationViewAct, type PublishedPackedApplication2 } from "@generalbusiness/dap-platform/application-v2";
 import { admit, evaluate, RuleEvalError } from "@generalbusiness/dap-derive/rule";
 import { ViewError } from "./session.ts";
-import type { Card, CardAction, DeclaredSurface, Projection, ViewQuery, ViewSource } from "./types.ts";
+import type { Card, CardAction, NativeCardAction, DeclaredSurface, Projection, ViewQuery, ViewSource } from "./types.ts";
 import { PRESENTATION } from "./generated.ts";
 import type { DefinitionLike } from "../describe.ts";
 import { effectiveFields, expectedOf } from "../shape.ts";
@@ -26,7 +26,7 @@ export interface DeclaredViewPort {
   now?(): number;
   /** The current active native install, read under the configured membership. */
   installation(): Promise<ApplicationInstallation | null>;
-  projection(query: ApplicationProjectionQuery): Promise<ApplicationProjectionRead>;
+  projection(query: ApplicationProjectionQuery, minimum?: ReadMinimum): Promise<ApplicationProjectionRead>;
   /** Current native role actions. Unknown standing returns no actions. */
   actions(): Promise<readonly string[]>;
   /** Authenticated bounded display reads only; never native authority. */
@@ -87,18 +87,18 @@ export class DeclaredViewSource implements ViewSource {
     return { screen, resource: view.resource, html: new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes),
       opens: view.opens, refresh: view.refresh, display: view.display, back: view.back, backScope };
   }
-  async #projection(selection: ApplicationProjectionQuery) {
-    const reply = await this.port.projection(selection);
+  async #projection(selection: ApplicationProjectionQuery, minimum?: ReadMinimum) {
+    const reply = await this.port.projection(selection, minimum?.at.scope === selection.scope.scope ? minimum : undefined);
     if (!reply.ok) throw new ViewError(reply.reason === "stale" ? "stale" : "unavailable", `The declared projection refused: ${reply.reason}.`);
     const projection = this.packet.package.semantic.projections[selection.projection]!;
     if (reply.value.projection !== applicationProjectionId(projection) || canonicalize(reply.value.scope) !== canonicalize(selection.scope)) throw new ViewError("unavailable", "The read does not name this declared projection and scope.");
     return reply;
   }
-  async #read(query: ViewQuery) {
+  async #read(query: ViewQuery, minimum?: ReadMinimum) {
     const view = this.#view(query), install = await this.port.installation();
     if (!install || canonicalize(install.ids) !== canonicalize(this.packet.ids) || install.definition !== this.packet.package.semantic.entry) throw new ViewError("unavailable", "The exact declared package is not active in this installation.");
     const selection: ApplicationProjectionQuery = { v: 1, scope: query.scope ?? install.scope, directory: install.directory, install: install.item, projection: view.projection, items: query.items ?? {} };
-    const reply = await this.#projection(selection);
+    const reply = await this.#projection(selection, minimum);
     const projection = this.packet.package.semantic.projections[view.projection]!;
     const nativeRows = reply.value.sources[view.item];
     if (!nativeRows) throw new ViewError("unavailable", "The read omitted the declared item source.");
@@ -145,9 +145,9 @@ export class DeclaredViewSource implements ViewSource {
     if (declaration.step === "transition") names.push("on");
     return names.every(name => Object.hasOwn(expected, name)) ? expected : null;
   }
-  async #allowed(view: ApplicationView, row: ApplicationProjectionRow, data: ApplicationProjectionData, scope: ScopeRef, definition: Digest): Promise<CardAction[]> {
+  async #allowed(view: ApplicationView, row: ApplicationProjectionRow, data: ApplicationProjectionData, scope: ScopeRef, definition: Digest): Promise<NativeCardAction[]> {
     if (view.kind === "surface" || !view.acts.length) return [];
-    const held = await this.port.actions(), actions: CardAction[] = [];
+    const held = await this.port.actions(), actions: NativeCardAction[] = [];
     for (const [index, control] of view.acts.entries()) {
       if (!held.includes(control.needs)) continue;
       let holds = false;
@@ -180,8 +180,8 @@ export class DeclaredViewSource implements ViewSource {
     }
     return { label: series.label, scale: series.scale, unit: series.unit, window, samples, fallback };
   }
-  async read(query: ViewQuery): Promise<Projection> {
-    const { view, root, scope, definition, reply, rows, routed, points, unknown } = await this.#read(query);
+  async read(query: ViewQuery, _access?: Parameters<ViewSource["read"]>[1], minimum?: ReadMinimum): Promise<Omit<Projection, "card"> & { card?: Omit<Card, "actions"> & { actions: NativeCardAction[] } }> {
+    const { view, root, scope, definition, reply, rows, routed, points, unknown } = await this.#read(query, minimum);
     const declaration = this.packet.package.semantic.projections[view.projection]!;
     const backScope = this.#backScope(view, scope, root), surface = this.#surface(query.screen, view, backScope);
     const navigation = view.back ? { back: { screen: view.back, scope: backScope } } : {};
@@ -194,7 +194,7 @@ export class DeclaredViewSource implements ViewSource {
     const row = rows[position]!;
     if (unknown.has(row.id)) {
       const fallback = "The available evidence does not establish whether this item is for you. Refresh after the evidence is updated.";
-      const card: Card = {
+      const card: Omit<Card, "actions"> & { actions: NativeCardAction[] } = {
         identity: { item: String(row.id), kind: row.type, revision: String(row.revision), subject: { scope: scope.scope, item: row.id }, at: { on: row.revision } },
         title: "Assignment unavailable", summary: `Item ${row.id}: the available evidence does not establish whether this is for you.`, reasons: [],
         projection: points, reviewIntended: [], unavailable: [], waitsOn: [fallback], settles: [], actions: [], fallback,
@@ -211,7 +211,7 @@ export class DeclaredViewSource implements ViewSource {
     const fallback = template(view.fallback, row, waiting, members), actions = await this.#allowed(view, row, reply.value, scope, definition);
     const now = this.port.now?.() ?? Date.now();
     const series = this.#series(view, row, reply.value);
-    const card: Card = {
+    const card: Omit<Card, "actions"> & { actions: NativeCardAction[] } = {
       identity: surface ? { item: scope.scope, kind: "scope", revision: String(reply.value.at.seq), subject: { scope: scope.scope }, at: {} }
         : { item: String(row.id), kind: row.entry ? "entry" : row.type, revision: String(row.revision), subject: { scope: scope.scope, ...(row.entry ? {} : { item: row.id }) }, at: row.entry ? {} : { on: row.revision } },
       title: view.kind === "surface" ? query.screen : memberValueText(values[view.title], members) ?? displayText(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : memberValueText(values[view.summary], members) ?? displayText(values[view.summary]),
@@ -241,6 +241,7 @@ export class DeclaredViewSource implements ViewSource {
   /** Called by the mounted-view host inside the custody build, immediately
    * before signing. Native expected revisions and grants still judge submit. */
   async admit(query: ViewQuery, card: Card, action: CardAction): Promise<void> {
+    if (action.local) throw new ViewError("shape", "Declared native acts cannot publish a local review mark.");
     const { view, scope, definition, reply, rows, unknown } = await this.#read(query);
     const row = rows.find(row => row.id === card.identity.subject.item);
     if (row && unknown.has(row.id)) throw new ViewError("unavailable", "The available evidence does not establish whether this item is for you. No request was signed.");

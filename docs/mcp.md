@@ -128,11 +128,11 @@ The list has two parts.
 - **The generic tools**, the same for every room: `room`, `commons`, `inspect`,
   `create`, `join`, `install_application`, `application_installation`,
   `prepare`, `items`, `steps`, `step`, `record`, `sends`, `text`, `wait`,
-  `settle` and `credential`, and in `--generic` and `--generic=add` modes
-  `actions` and `act`. These are the nineteen names of
+  `settle`, `credential` and `diff`, and in `--generic` and `--generic=add` modes
+  `actions` and `act`. These are the twenty names of
   `GENERIC_TOOL_NAMES` in `packages/mcp/src/hosted-tools.ts`. The hosted
-  endpoint omits `create`, `install_application`, `credential`, `prepare`,
-  `join`, `record`, `step` and `text` by default. `MCP_TOOL_ADDITIONS`
+  endpoint omits `create`, `install_application`, `credential`, `diff`,
+  `prepare`, `join` and `record` by default. `MCP_TOOL_ADDITIONS`
   adds them back (see [Hosted endpoint settings](#hosted-endpoint-settings)).
 - **The act tools**, one for each act declaration of the definitions the
   room's scopes run, that the caller's role may sign or that a rule
@@ -1252,6 +1252,79 @@ The one-time read credential for a read-token act your key signed (entry: its se
 }
 ```
 
+### `diff`
+
+The change between two exact commits, read with the one-time credential of a read-token act your key signed (entry: its seq at the destination). The server keeps the credential and spends it on this read. It signs nothing. The answer holds at most 40 KiB of text. Over a bound, truncated is true and the text says truncated. An object the host does not give is an error, and the answer shows no change it did not read. Sign another read-token for another diff.
+
+```json
+{
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "entry": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "base": {
+        "type": "string",
+        "description": "The exact commit ID of the older side."
+      },
+      "integration": {
+        "type": "string",
+        "description": "The exact commit ID of the newer side."
+      },
+      "target": {
+        "type": [
+          "string",
+          "integer"
+        ],
+        "description": "A scope ID; one of register, directory, membership, rules, commons, destination, inbox; or an issue or change number."
+      }
+    },
+    "required": [
+      "entry",
+      "base",
+      "integration"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "type": "object",
+    "properties": {
+      "base": {
+        "type": "string"
+      },
+      "integration": {
+        "type": "string"
+      },
+      "files": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "truncated": {
+        "type": "boolean"
+      },
+      "text": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "base",
+      "integration",
+      "files",
+      "truncated",
+      "text"
+    ]
+  },
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": true
+  }
+}
+```
+
 ### `actions`
 
 The acts of one scope, as act tools would describe them: each kind with its derived description, input schema, binding and the definition digest to give to act. For a host that lists few tools.
@@ -1703,7 +1776,8 @@ works. The count given is the default recipe's.
 
 Git steps: `clone` and `propose` use Git outside the server. The server
 returns the remote URL and a one-time credential. The agent's own Git, or
-a generic credential helper, uses them. The server runs no Git.
+a generic credential helper, uses them. The server runs no Git program. The
+`diff` tool reads Git objects over HTTP, with that one-time credential.
 
 `propose` runs, in the recipe test, in a room of its own under
 `change-demo3`, the manifest-list change definition, with a version 3
@@ -1730,15 +1804,24 @@ valid. A closed endpoint returns `404` before reading the request body or
 addressing either namespace. This applies to the control routes too.
 
 `MCP_TOOL_ADDITIONS` is an optional JSON array of distinct known generic
-tool names, at most 1,024 characters and 19 names. Unknown names,
+tool names, at most 1,024 characters and 20 names. Unknown names,
 duplicates, a different JSON shape, or an oversized setting close the
-endpoint. The accepted names are the nineteen generic tools listed in
+endpoint. The accepted names are the twenty generic tools listed in
 [What the server lists](#what-the-server-lists). By default the endpoint
-omits `create`, `install_application`, `credential`, `prepare`, `join`,
-`record`, `step` and `text`. To serve one of them, name it in
-`MCP_TOOL_ADDITIONS`, for example `["prepare","text"]`. The service mode
+omits `create`, `install_application`, `credential`, `diff`, `prepare`,
+`join` and `record`. To serve one of them, name it in
+`MCP_TOOL_ADDITIONS`, for example `["prepare","record"]`. The service mode
 still decides whether `actions` and `act` are listed. These settings do
 not change the defaults of local `dap mcp`.
+
+`step` and `text` give a hosted agent a full fact and complete text, with the
+same member read and byte bounds as the other reads. What a redeemed `join` or
+`enrol` shows through `step` depends on the room's Membership pin. On
+`platform:membership@1`, `@2`, `@4` and `@5`, it shows a hosted agent's model the
+secret. That secret is spent: the invitation refuses it as `invitation-used`. On
+`@6` to `@9`, it shows a proof bound to the scope, the invitation and the joining
+key, and no secret. Room text that other members wrote reaches the model too, as
+data that grants nothing.
 
 A named act call takes a fresh inventory snapshot and applies the same
 selection and standing rules as `tools/list`. The endpoint also checks the
@@ -1968,7 +2051,7 @@ The point has no index, nine blobs and six doubles:
 
 The fixed names are `list`, `room`, `inspect`, `create`, `join`, `prepare`,
 `items`, `steps`, `step`, `record`, `sends`, `text`, `wait`, `settle`,
-`credential`, `actions`, `act`, `install_application`,
+`credential`, `diff`, `actions`, `act`, `install_application`,
 `application_installation`, and hosted `enrol`. Act tool names derived
 from declarations are outside this first map. Their events are dropped
 and counted as invalid fields. Their names are not copied or redacted.
@@ -1984,11 +2067,11 @@ slot-full type-full entry-too-large send-unresolved unknown-message
 unsupported-definition bad-input dependency-unavailable busy clock-behind
 scope-provisional guard-incomplete authority-unavailable unavailable
 rate-limited idempotency-mismatch not-found wrong-incarnation forbidden
-history-unavailable too-large sessions-unavailable bad-request replayed
+history-unavailable too-large sessions-unavailable bad-request replayed behind
 ```
 
 The server reasons are `exception`, `shape`, `stale-descriptor`, `restart`,
-`transport`, `custody`, `credential`, `target`, `unknown-tool`, `read`,
+`transport`, `custody`, `credential`, `diff`, `target`, `unknown-tool`, `read`,
 `conflicting`, `full`, `locked`, `unreadable`, `terminal` and `unkept`.
 Record phases are `prepared`, `sent`, `unknown`, `accepted`, `refused`,
 `mismatch` and `settled`. Preparation-step phases are `prepared`, `sent`,
@@ -2206,12 +2289,150 @@ act. A lost or unavailable outcome offers only its original request check,
 using the retained custody key. Full native responses stay under custody.
 The card receipt shows item, version and outcome.
 
+A card signs the revisions it displayed. An action can carry its own `at`.
+Its names must be ones the card displayed, with the displayed revisions. A
+card with no `at` on an action signs the card's `at`. If a subject has moved,
+the act still goes out, and the scope refuses it with `revision-moved`. A
+subject that has since gone final, such as a superseded version, keeps its
+captured revision.
+
+A card source can ask for the check of an earlier send. Each read of such a
+card asks custody for an act that this server sent at the card's scope with
+no outcome kept. If custody holds one, the card offers only **Check original
+request**, and it keeps that offer after a restart. While custody holds such
+an act, every other act of that card and of any retained card at that scope is
+refused before it signs. This server's custody is the limit of that refusal:
+a card with another custody home reaches the scope, and the scope judges its
+revisions.
+
+The check asks the scope for the exact request and signs nothing. Before the
+signed intent's `notAfter`, an act with no answer stays unknown, and the receipt
+gives the time to check again. Intents live at most 15 minutes. One minute
+after `notAfter`, a margin for clock differences, the check sends the same bytes
+once. An act that landed answers with its first entry. An act that never arrived
+is refused as `expired`, so the record ends as `refused` and the next read
+offers the card's acts again. If the scope cannot be reached, the record stays
+unknown.
+
+The scope's clock decides whether the bytes are expired, and one minute covers
+ordinary differences. If the scope's clock lags this server's by more than one
+minute, the same signed act can land when the check sends it. The act's signed
+revisions still bind it, so it lands only if they still match. The check then
+records that first entry as the act's answer.
+
+If this server holds no record, the check says so and says that this does not
+show the act was not sent.
+
+**View diff** on a card with `diffRead` goes through `view_act`, because it
+signs one `read-token` act. It reads one bounded `diff` and shows the answer
+on the diff page. Reading a card signs nothing.
+
 The generic kit supplies the carousel, detail, diff, updates and receipt
 screens. It does not include journey projections, package installation or
 desktop-host registration. The
 [card-kit note](../notes/implementation/2026-10-18-compact-card-kit.md)
 gives the command that runs the fixture browser.
 
+## Local project views
+
+The opt-in [project entry](../apps/views/README.md) supplies five reads and
+the compact cards. It uses your existing local configuration and signer.
+It creates no key or room. The ordinary MCP server keeps its existing
+tool list, and `mcp-tools.json` describes that ordinary list.
+
+| Read | Result |
+| --- | --- |
+| `needs_you` | Requests, reviews, merges and required open findings that need your attention. |
+| `work` | Agent commitments, terms, blocks and linked changes. |
+| `context` | Question text, approvals, comments, conditions and Brief pin. |
+| `change` | One change's exact version: base, integration, reviews, checks, rules, merges, open findings and linked issues. |
+| `since` | Heads changed since an explicit Mark reviewed action. |
+
+Attention rows name their pinned declaration clause and observed head.
+Work rows name each agent's controller beside the current conditions.
+Context distinguishes text versions and the requests for their approval.
+
+A read covers at most eight scopes, including Membership, Directory and
+other support reads. Support scopes consume the same eight-scope limit.
+At most six lanes fit in one call in the ordinary flat-directory case, and
+other support scopes leave fewer lane slots. `work` reads only the first
+window of lanes. The reads return at most 50 attention rows and read at most 512 live items.
+Results report their read counts, omissions and incomplete discovery.
+A vector of observed heads does not claim one atomic room snapshot.
+
+Question context reads at most 512 total entries from the selected lane,
+including entries unrelated to that Question. Each entry counts once,
+including the current text entry. Exactly 512 entries fit this history
+bound. Beyond 512 lane entries, `context` and the Decision card are
+unavailable even if the Question itself is small. The existing page,
+request and byte limits can stop the read sooner. If the 16-page bound
+decides first, the read reports `page-limit`.
+
+The public context omits unrelated live lane items and does not repeat
+the current body in its version list. The Decision card has a separate
+60 KiB display budget. `context` caps the complete serialized result at
+256 KiB. JSON escaping and history metadata can exceed that bound even
+for a legal 64 KiB Question body. The read then refuses with
+`context-output-limit` rather than returning a partial Question.
+
+The question-with-Brief profile records a required `brief` digest when
+the question is asked. That value stays fixed when the text is revised.
+A different Brief needs a new question. Earlier question profiles remain
+unbound. Approvals name the question's text version. They grant no
+authority over the Brief or the conditions.
+
+The operator selects the package's local Brief file when starting the
+project entry. `dap://package/brief` serves those exact UTF-8 bytes as
+`text/plain`, with a 64 KiB limit and their byte digest. Context reports
+whether that digest matches the question's stored pin. A mismatch does
+not select another file or substitute the question-body digest. The
+existing HTML resources under `ui://dap/` keep their own digest and
+policy checks.
+
+The Decision card retains the selected text version and native expected
+revisions. Approve and Decide use the ordinary signing and request
+custody path. An attention row explains why an item is listed; native
+guards decide whether an act is allowed.
+
+These reads and the Change card accept change lanes on two exact definition
+pins: J4 and its finding successor. On the finding successor, the Change card
+lists each open finding with its file, range, class, severity, source, source
+version and change version. It says that a finding from a required source holds
+the merge, and it offers no **Merge** while one does. The card escapes a source's
+text by the rule of a diff path. `needs_you` lists a required open finding on a
+live change when you have an act that bears on it, with its pin, clause and head.
+A finding from a source that is not required stays on the card, says that it
+does not hold the merge, and has no row. An answered finding leaves both.
+
+No card answers a finding, and the project entry lists no act tool. On the
+ordinary server, use `change.resolve-finding-any`,
+`change.mark-finding-irrelevant` or `change.resolve-finding-own`. In `--generic`
+mode, use `act` with those native kinds. For a finding on an earlier version, the
+first two also need `at`, because the server reads revisions from the live
+summary and that version has left it. `change` gives the value as `answerAt`.
+Without `at`, the scope refuses the act as `bad-intent`. The
+[project entry's page](../apps/views/README.md#open-findings-on-the-finding-profile)
+has the rows, the acts and the limits.
+
+Mark reviewed writes only the captured full scope references and heads
+to local storage under `DAP_HOME`. It signs no native act. The server
+rechecks the displayed cut and heads before writing. A duplicate mark
+does not rewrite the file. A mark requires a window with no unread scopes
+or omitted rows. It covers the displayed heads and scopes, without claiming
+review of every journal body between heads. A lane outside the window stays
+unreviewed.
+
+`since` is read-only: equal heads produce no row, and each new head
+appears once in a response. Repeated reads keep showing that change
+until another explicit mark. Reading a card does not clear it.
+
+With more lanes than one call can read, `needs_you` and `since` read a window
+of lanes in a stable order. `omittedScopes` lists the lanes that the answer left
+out, and `next` names the lane to continue from. To read the next window, pass
+`next` as `after`, or open the card again with `next` as `scope`. A null `next`
+ends the walk. A lane that opened during the walk appears on the next walk.
+`work` reads only the first window and has no `next`.
+
 ## Source
 
-Checked against main `c8c7b631` on 30 October 2026. Sources: [packages/mcp/src](../packages/mcp/src/), [packages/mcp/src/hosted-tools.ts](../packages/mcp/src/hosted-tools.ts), [packages/mcp/src/hosted.ts](../packages/mcp/src/hosted.ts), [packages/mcp/src/http.ts](../packages/mcp/src/http.ts), [packages/mcp/test/inventory.test.ts](../packages/mcp/test/inventory.test.ts), [docs/mcp-tools.json](mcp-tools.json).
+Checked against main `ada88648` on 31 October 2026. Sources: [packages/mcp/src](../packages/mcp/src/), [packages/mcp/src/hosted-tools.ts](../packages/mcp/src/hosted-tools.ts), [packages/mcp/src/hosted.ts](../packages/mcp/src/hosted.ts), [packages/mcp/src/http.ts](../packages/mcp/src/http.ts), [packages/mcp/test/inventory.test.ts](../packages/mcp/test/inventory.test.ts), [docs/mcp-tools.json](mcp-tools.json).

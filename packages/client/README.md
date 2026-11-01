@@ -184,9 +184,21 @@ not reach it, and it is the value the signature covers.
   matches. Another incarnation is `wrong-incarnation`; another scope, kind
   or position is `reference-mismatch`; another hash is `hash-mismatch`. In
   each case the receipt is not of this history.
+  The first entry request carries the receipt's qualified sequence minimum.
+  Only `unavailable` permits one ordinary entry read with the same reader and
+  target, so the handle can diagnose a kind mismatch itself. This fallback
+  does not poll. The handle rejects a successful reply below the receipt's
+  position and preserves `behind`, `forbidden`, `wrong-incarnation` and
+  `archived` without a fallback.
 - `followOutbox(outboxId)` reads the outbox status of one send, by an outbox ID
   from a receipt's `sends`: whether it is held, its attempts, its
   acknowledgment, and for a request its result or diagnosis.
+
+The five minimum-qualified handle reads reject successful replies below their
+requested position with `TransportError`. This also detects a transport that
+drops the minimum. CLI session transports forward the same minimum. The local
+`dap dev` fixture has no arrival wait and explicitly answers `unavailable` to
+a valid minimum instead of silently serving older state.
 
 ## Signers
 

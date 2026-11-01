@@ -706,6 +706,29 @@ the [scope package guide](../packages/scope/README.md#routes). Hosted
 callers use the in-process `api(binding)`. The application sandbox has a
 separate named binding for its screen and native requests.
 
+**Minimum heads.** The `summary`, `items`, `history`, `entry`, and
+`applicationProjection` reads accept an optional trailing `ReadMinimum`:
+`{ at: ScopeRef, head }`. The head is a nonnegative sequence number or
+`{ seq, hash }`. The full scope reference qualifies the sequence by scope, kind,
+and incarnation. `ScopeHandle` also accepts a receipt and uses its exact fact as
+the minimum.
+
+The HTTP form is one `atLeast` parameter containing unpadded base64url of
+canonical JSON, with at most 512 decoded bytes. For application projection,
+`atLeast` stays separate from the hashed projection query. A malformed parameter
+or a different route scope returns HTTP 400 before a read.
+
+A minimum grants no access. The read checks its existing authority before
+waiting and again after an arrival or timeout. It waits at most one second for
+the named head, then performs the normal read. A full head also requires the
+retained hash at that sequence. A missing or different hash returns
+`unavailable`. Another incarnation returns `wrong-incarnation`. For an entry
+below the archive floor, the existing `archived` answer takes precedence over a
+minimum's kind or incarnation mismatch. If the scope remains behind, an
+authorized reader receives `{ ok: false, reason: "behind", current: FactRef }`
+with HTTP 503. The wait writes no entry or durable alarm. An abandoned transport
+request may retain its callback until an arrival or the bounded deadline.
+
 **Observations and values.** Platform data declares further observations
 on acts, outcome kinds and result clauses. The runtime reads those subjects
 before the turn. An outcome can name them from its origin's retained
@@ -1022,6 +1045,6 @@ scope's summary and its published definition.
 
 ## Source
 
-Checked against main `c8c7b631` on 30 October 2026. Sources: [contract](../packages/contract/src/), [scope.ts](../packages/contract/src/scope.ts), [entry.ts](../packages/contract/src/entry.ts), [floor.ts](../packages/contract/src/floor.ts), [result.ts](../packages/contract/src/result.ts), [definition.ts](../packages/contract/src/definition.ts), [bounds.ts](../packages/contract/src/bounds.ts), [read.ts](../packages/contract/src/read.ts), [transport.ts](../packages/contract/src/transport.ts), [report.ts](../packages/contract/src/report.ts), [reserve.ts](../packages/derive/src/reserve.ts), [native-catalog.ts](../packages/platform/src/native-catalog.ts), [sessions.ts](../packages/scope/src/sessions.ts), [replay cli.ts](../packages/replay/src/cli.ts), [client http.ts](../packages/client/src/http.ts).
+Checked against main `ada88648` on 31 October 2026. Sources: [contract](../packages/contract/src/), [scope.ts](../packages/contract/src/scope.ts), [entry.ts](../packages/contract/src/entry.ts), [floor.ts](../packages/contract/src/floor.ts), [result.ts](../packages/contract/src/result.ts), [definition.ts](../packages/contract/src/definition.ts), [bounds.ts](../packages/contract/src/bounds.ts), [read.ts](../packages/contract/src/read.ts), [transport.ts](../packages/contract/src/transport.ts), [report.ts](../packages/contract/src/report.ts), [reserve.ts](../packages/derive/src/reserve.ts), [native-catalog.ts](../packages/platform/src/native-catalog.ts), [sessions.ts](../packages/scope/src/sessions.ts), [replay cli.ts](../packages/replay/src/cli.ts), [client http.ts](../packages/client/src/http.ts).
 
 The commands on this page were not run for this revision.

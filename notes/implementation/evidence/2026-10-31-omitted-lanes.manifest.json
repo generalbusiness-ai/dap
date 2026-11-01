@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "qualification": "One failed gate and one passing gate at the checkpoint, which includes main 074255e8. Ten controls ran at dd41e4e6; C4 ran again at 1f220d10, whose only change is that assertion's message. The sealed directory 2026-10-31-omitted-lanes keeps the gate before the repair. No Worker or real room ran.",
+  "directory": "2026-10-31-omitted-lanes-repair",
+  "checkpoint": {
+    "commit": "1f220d105d36315b7f0144b7837ef8827de7e06d",
+    "tree": "1ce92ac605d9e610b0d6cb8abbb78374cd15a506"
+  },
+  "fileCount": 53,
+  "files": [
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6448,
+      "sha256": "1fee25bac725f698d89c6c6434f76c3cf0965c84ba959e0d17e00718dd4c18b3"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "control-c1-after-ignored.log",
+      "bytes": 556,
+      "sha256": "bac8ba7cc87556929204e90ba2e26669345a6eb1cf052b19f4dcf10c193b4bc2"
+    },
+    {
+      "path": "control-c2-mark-needs-whole-room.log",
+      "bytes": 558,
+      "sha256": "3b8201171f8c230a5d597ffc8dd457aae9c5d00f0a4673e061e91c088436f955"
+    },
+    {
+      "path": "control-c3-omitted-only-following.log",
+      "bytes": 559,
+      "sha256": "b83e955d1be9fc83a9b2f52aa06a89352941755ffd2eb814c01cb5236bf191a1"
+    },
+    {
+      "path": "control-c4-mark-selects-first-window.log",
+      "bytes": 572,
+      "sha256": "deac9b3ebaa022f804c8973a7a5bdf6d4c0b958647cc4f9bd766a252755e8f41"
+    },
+    {
+      "path": "control-c5-capture-outside-room.log",
+      "bytes": 572,
+      "sha256": "8499e17782e076994c397dfe38074eb2ff1568f6a26a083ea4f957f97315de53"
+    },
+    {
+      "path": "control-c6-next-always-null.log",
+      "bytes": 583,
+      "sha256": "5b2359146fe73dfb0721a105fe72c7731a4a50a81aaaf9fb1df1497e77f1a836"
+    },
+    {
+      "path": "control-c7-session-refuses-scope.log",
+      "bytes": 570,
+      "sha256": "9f312332b0597d974cf87434693d900ea0ccb4dc7e0909adc749a9d1d354209b"
+    },
+    {
+      "path": "control-c8-work-offers-scope.log",
+      "bytes": 559,
+      "sha256": "77d83fb76b6bcf2b456e4d5854f929a8cd85f52c5c151a38317ab09610294f48"
+    },
+    {
+      "path": "control-c9-work-has-next.log",
+      "bytes": 559,
+      "sha256": "e996f3d1c6fc133471614e82b01c58fdd35028bb5c933b50eaba087fe6b45120"
+    },
+    {
+      "path": "control-c10-second-mark-drops-first.log",
+      "bytes": 785,
+      "sha256": "257c3bfe1839ebba51221f7771dea313af0e5774e45c8455a1b0a1777d8f057e"
+    },
+    {
+      "path": "controls.txt",
+      "bytes": 1068,
+      "sha256": "b6a1f2cea35bcc4499d40305d5608fdbb1b697069fb5b843dc44cfe8e08f0db0"
+    },
+    {
+      "path": "gate-teardown-failed-1f220d10/gate.stdout.log",
+      "bytes": 8761,
+      "sha256": "72780ba976affb0e5a618c7a62ff6a707f0d4f0be226d18322212f0aebc04233"
+    },
+    {
+      "path": "gate-teardown-failed-1f220d10/gate.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 5005,
+      "sha256": "92fd2a8c1b8fd3d443df4dd38dabe8f4d9a11760c40f1f5cca0f868e29360f28"
+    }
+  ]
+}

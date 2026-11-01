@@ -563,7 +563,7 @@ additions return 404 before the MCP route reads a body or selects an agent
 or registry object. The shared room request setup still runs first.
 
 The hosted default omits `create`, `install_application`, `credential`,
-`prepare`, `join`, `record`, `step`, and `text`. An explicit addition
+`diff`, `prepare`, `join`, and `record`. An explicit addition
 affects both the listing and direct calls. Local MCP services keep their
 own default. Generated named tools also require fresh standing and tool
 selection checks, then the actual target's membership check when called. A
@@ -834,4 +834,4 @@ Gate owners: [address.ts](../../packages/bytes/src/address.ts),
 
 ## Source
 
-Checked against main `c8c7b631` on 30 October 2026. Sources: [apps/room/fetch.ts](../../apps/room/fetch.ts), [packages/scope/src/worker.ts](../../packages/scope/src/worker.ts), [serving-limits.ts](../../packages/scope/src/serving-limits.ts), [site/window.ts](../../packages/scope/src/site/window.ts), [apps/sandbox/worker.ts](../../apps/sandbox/worker.ts), [security-entry-points.test.mjs](../../scripts/security-entry-points.test.mjs).
+Checked against main `ada88648` on 31 October 2026. Sources: [apps/room/fetch.ts](../../apps/room/fetch.ts), [packages/scope/src/worker.ts](../../packages/scope/src/worker.ts), [serving-limits.ts](../../packages/scope/src/serving-limits.ts), [site/window.ts](../../packages/scope/src/site/window.ts), [apps/sandbox/worker.ts](../../apps/sandbox/worker.ts), [security-entry-points.test.mjs](../../scripts/security-entry-points.test.mjs).
