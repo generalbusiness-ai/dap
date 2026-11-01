@@ -44,7 +44,7 @@ export interface Held {
 
 /** The caller's standing on one membership: known (and then a role and its actions, or none), or unknown. */
 export type Standing =
-  | { known: true; role: string | null; actions: readonly string[]; handle: string | null; key: string }
+  | { known: true; role: string | null; actions: readonly string[]; handle: string | null; key: string; kind?: string }
   | { known: false; reason: string };
 
 export interface Inventory {
