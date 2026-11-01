@@ -50,7 +50,8 @@ During the window, the key can read these things at a scope where it signed an e
 - Entry 0.
 - Its own entries.
 - Filtered history and log, limited to the entries above and the entries that come from them.
-- The summary of a lane that it opened, and that lane's retained definition.
+- The summary of a lane that it opened.
+- The retained inputs that its readable entries name by digest, such as its own texts and a lane's definition.
 
 The key cannot read these things:
 
@@ -60,11 +61,25 @@ The key cannot read these things:
 - A scope where it signed no entry in the window, such as another member's lane, the rules scope, or the destination.
 - Retained text that none of its readable entries names.
 
+These lists cover signed reads. A Git read token reads the repository by another route, and [it outlasts these limits](#a-git-read-token-outlasts-the-bound).
+
 ### A session ends by its own time
 
 [Sessions](../../packages/scope/src/sessions.ts) check nothing about the key. A session that a revoked key already holds stays good until its `ends`. That time is at most 600 seconds after issue on membership's clock, plus the difference between membership's clock and the reading scope's clock. Membership issues no new session to a revoked key.
 
 Replacing `SESSION_SECRET` ends every session of the deployment at once. It does not end signed reads, because a signed read uses the key's signature and not the secret.
+
+### A Git read token outlasts the bound
+
+The `read-token` act at the destination gives a member a Git read token, and every role holds its grant. The token reads the repository until its own end. On Cloudflare Artifacts the member asks for 1 to 24 hours. On GitHub the lifetime is GitHub's own, one hour.
+
+A revocation ends no token:
+
+- A token that the key read before the revocation stays good until its end. The `compromised` notice at the destination aborts a publication that the key is behind, and it ends no token.
+- A scope can accept the key's acts for up to 300 seconds, so the destination can accept a new `read-token`. A session that the key already holds reads the new token once.
+- Membership issues no new session to a revoked key. A token that the key minted and did not read before its session's end stays unread.
+
+The key must read a new token while its session lasts, which is at most 600 seconds after the revocation. So the repository stays readable for at most 24 hours and 600 seconds after the revocation on Cloudflare Artifacts, plus clock difference. On GitHub that time is about one hour and 600 seconds. No `dap` command ends a read token, and the service keeps no plaintext of a token that a member has read.
 
 ### A founder key that is also the recovery key has no end at membership
 
@@ -87,7 +102,7 @@ Under policy `open`, any key can sign `found`, so the read grants nothing more.
 Do these steps in each room that enrolled the key:
 
 1. If the key is also the room's recovery key, sign the rotation first with [`dap act`](../cli.md#the-commands), from the config directory that holds the key:
-   `dap act rotate-recovery --on membership --target <roster-item> --set key=<new-key>`. The new key must never have been a member's key. Do this before the revocation, because `dap act` asks for a session first and membership gives a revoked key none.
+   `dap act rotate-recovery --on membership --target <roster-item> --set key=<new-key>`. The new key must never have been a member's key. No `dap` command prints a new key's ID, so you need another way to compute `<new-key>`. Do this before the revocation, because `dap act` asks for a session first and membership gives a revoked key none.
 2. Find the key's item with [`dap items`](../cli.md#the-commands), from another admin's config directory:
    `dap items membership --query <query>`. Query the type `key` and the state `active`.
 3. Revoke the key from that config directory:
@@ -97,6 +112,8 @@ Do these steps in each room that enrolled the key:
    `dap log <scope>`.
 
 The key's signed read ends within 1200 seconds of step 3, plus clock difference. If the key is on the register's `founders` list, it keeps `found` and its read of the register after these steps.
+
+These steps end no Git read token. Treat the repository's content as read until the time that [the token's section](#a-git-read-token-outlasts-the-bound) states, and replace any secret that the repository holds.
 
 ### What no run has covered
 
