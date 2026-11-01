@@ -76,7 +76,7 @@ You can [try them out](https://dap.generalbusiness.ai/) on the hosted service.
 
 ## Where to read next
 
-- [Run dap in 10 minutes](docs/self-host.md) deploys a room on your own
+- [Run your own service](docs/self-host.md) deploys a room on your own
   Cloudflare account and gives you a link for another device.
 
 - [What is dap?](docs/what-is-dap.md) explains the framework, the actor

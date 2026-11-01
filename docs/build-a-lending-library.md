@@ -110,9 +110,8 @@ show(0);
 ```
 
 `keys` holds five test people, each with a signing key: `@rita`, `@una`,
-`@vic`, `@paul` and `@sam`. In this release the function that makes a
-test library is called `founded`; the next release renames it to use the
-word "create".
+`@vic`, `@paul` and `@sam`. The published release names the function that
+makes a test library `founded`. The source on main names it `created`.
 
 Run it:
 
@@ -240,7 +239,7 @@ In `definition.ts`, change the `states` line of `thing`, and replace its
 ```
 
 Add the two acts above `export const lending`. `return` is a reserved
-word in JavaScript, so the constant is called `giveBack`; the act is
+word in JavaScript, so the constant is called `giveBack`. The act is
 still called `return`:
 
 ```ts
@@ -304,7 +303,7 @@ records a reason and moves the thing to `gone`. Nothing can bring back a
 thing that is gone.
 
 So far the test library has let everyone do everything. Now we say who
-is allowed: `@rita` is staff and a member; `@una` and `@vic` are
+is allowed. `@rita` is staff and a member. `@una` and `@vic` are
 members.
 
 In `definition.ts`, change the `states` line of `thing` to add `gone`:
@@ -415,7 +414,7 @@ So far the library has run in one process, with test keys and
 permissions you made up. In a running dap app, a room gives the actions
 to roles, and each member signs with their own key. You pin the
 definition's exact bytes, turn it on in the room, and ask the room to
-create the library; the room fills in `opener` with you. This exact
+create the library. The room fills in `opener` with you. This exact
 definition ran that way on a deployed service on 14 October 2026.
 [Run your app](run-your-app.md) takes you through it.
 
@@ -443,8 +442,16 @@ definition ran that way on a deployed service on 14 October 2026.
 - [The lending library](../examples/lending): the full app. Its current
   definition also publishes a page for each thing to the room's Git
   repository, through the room's
-  [destination](manual/ten-terms.md#9-destination);
+  [destination](manual/ten-terms.md#9-destination).
   [Publish a file from an act](write-an-application.md#publish-a-file-from-an-act)
   shows how.
 - [Build a counter](build-a-counter.md): rules that do arithmetic, and
   the same request sent twice.
+
+## Source
+
+Checked against main `5dc9765f` on 30 October 2026. The commands ran on
+15 October 2026 with the published packages at `0.1.0-dev.2`, and every
+output block is copied from that run. Sources:
+[the test fixtures](../packages/derive/test/fixtures.ts) and
+[the lending definition](../examples/lending/definition.ts).

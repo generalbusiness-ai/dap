@@ -579,7 +579,7 @@ R5 slice A adds explicit hosted admission: `MCP_ENABLED` must be exactly
 `"true"`, both hosted namespaces must be bound, and the optional
 `MCP_TOOL_ADDITIONS` setting must be valid. Bindings alone no longer open
 the endpoint. The bounded additions and narrow hosted defaults are in
-[the MCP guide](../docs/mcp.md#hosted-admission-settings). Local Node MCP
+[the MCP guide](../docs/mcp.md#hosted-endpoint-settings). Local Node MCP
 defaults are unchanged. The shared actual-target admission also runs before
 generic `install_application` resolves a package or enters custody. It
 adds no R9 trust-schema behavior.

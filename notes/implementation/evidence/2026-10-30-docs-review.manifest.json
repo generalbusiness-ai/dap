@@ -1,0 +1,121 @@
+{
+  "qualification": "Documents-only merge after the approval of head b02fe46b. The head merges main b0af01d2, and only documents differ from main (non-doc-paths.log). Under the documents-only rule the gate did not run again. The tests that read docs/mcp.md, docs/security and the lane reference ran again, with the documentation checks, at the checkpoint. The final head adds this manifest and the record's evidence table and changes no page. No acceptance is inferred from sealing.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review-4",
+  "base": {
+    "commit": "b0af01d25914a532c973f4e7ab7cd4ac6206459a",
+    "tree": "5228c576e5e579bb7d36606088cb33ba80a9411f"
+  },
+  "checkpoint": {
+    "commit": "39e293f063342e2605b54913351ae84744238bf0",
+    "tree": "294bdb17d93b962c1a8f08e3c580118412fee2c5"
+  },
+  "priorEvidence": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review",
+    "checkpoint": {
+      "commit": "d10d153078cd2a7c42c0a2bc0304ecfc0b19141f",
+      "tree": "8ca875e20e6376865cb03f67e70eaecd1bec3623"
+    },
+    "gate": {
+      "command": "npm run gate",
+      "exitCode": 0,
+      "log": "gate.log",
+      "rawLogs": "gate-logs",
+      "commit": "d10d153078cd2a7c42c0a2bc0304ecfc0b19141f",
+      "tree": "8ca875e20e6376865cb03f67e70eaecd1bec3623"
+    },
+    "priorManifestSha256": "fdfc5e5a8dfc1f695b2b70fe0989be31c66678ff5e47183cde20f232b5937842"
+  },
+  "fileCount": 16,
+  "files": [
+    {
+      "path": "SHA256SUMS",
+      "bytes": 1259,
+      "sha256": "dbe4a47acaa96bcc13f4747ccce6a1560442bead62cbbbddfd50e79c4fca9dc7"
+    },
+    {
+      "path": "HEAD.txt",
+      "bytes": 158,
+      "sha256": "0cfc4b205f97693cdcc92354a63ab845175685122ab966b47144751ffd105f51"
+    },
+    {
+      "path": "commit-messages.log",
+      "bytes": 45,
+      "sha256": "0b7eabd14e726a1d67d8450f65c24c6ce8ea334a44ef4925a9deee30c0a2f024"
+    },
+    {
+      "path": "doc-links.log",
+      "bytes": 42,
+      "sha256": "83777579138964a0a463a72aef9e8296198d2579835cc2014bcdc827ef08d851"
+    },
+    {
+      "path": "kernel-boundary.log",
+      "bytes": 60,
+      "sha256": "4368d9b6e90e07b574472ad5e81f742d235b0a10bc35f3a83350e51c4d33f457"
+    },
+    {
+      "path": "lanes-definitions-test.log",
+      "bytes": 259,
+      "sha256": "9b3f231d8889220abf106b46737f9a4548ffe4abfd9228424897775e2ff63df7"
+    },
+    {
+      "path": "mcp-doc-tests.log",
+      "bytes": 3090,
+      "sha256": "be30fa781b0ef5062e715540b5fd47a28798bc090b93ab86308b85721827dd2c"
+    },
+    {
+      "path": "non-doc-paths.log",
+      "bytes": 37,
+      "sha256": "e4d1593a033dffb7fb9fc3d2bb2a17f0b3162f4682e25667d97624198ad6d9d0"
+    },
+    {
+      "path": "nondoc.sh",
+      "bytes": 274,
+      "sha256": "7752bb209e21bfe0085e60f8552d091882ef0224e742c2318fe1d6659f1f82dd"
+    },
+    {
+      "path": "notes.log",
+      "bytes": 128,
+      "sha256": "39227300a2a6f80fa18113dfafccc7be42e1bc3bfb104d0c0e5af3047cc4a565"
+    },
+    {
+      "path": "residue-scan.log",
+      "bytes": 7711,
+      "sha256": "a30d7c526f839c08acc8fc74ba18bdb3cb4c0f7e5313ee14b5d9602ad662c484"
+    },
+    {
+      "path": "residue.py",
+      "bytes": 1179,
+      "sha256": "9608db8c18fea8ba42fcb1071a091a978ceff22f3c523f791f88ceca02615bd4"
+    },
+    {
+      "path": "section-citations.log",
+      "bytes": 1565973,
+      "sha256": "adc308cc71e4d4c865fb7d0033fadbfa6a19fb07017f821e0c185cef50e20c0a"
+    },
+    {
+      "path": "security-entry-points-test.log",
+      "bytes": 1305,
+      "sha256": "dca3dba984986746ce87faca678d11d72ddfce40e68c3a0071f90a1483d0ce2c"
+    },
+    {
+      "path": "security-settings-test.log",
+      "bytes": 429,
+      "sha256": "2c61ac23e442c5be06b7d23c956334c9cf06d0dc6e58f8269cd801b87931f842"
+    },
+    {
+      "path": "whitespace.log",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    }
+  ],
+  "retention": "Directory and files are read-only; retain for at least 30 days after landing.",
+  "withheld": "No raw environment, secret, token or request body was captured.",
+  "priorFollowUp": {
+    "directory": "/Users/hughpyle/play/artroom-evidence/2026-10-30-docs-review-3",
+    "checkpoint": {
+      "commit": "6e6a94224a2f45179411620e87e3f8db96b37084",
+      "tree": "8a00bf51b3d013364ff035b1478a48ab40e2f51e"
+    },
+    "priorManifestSha256": "d2a3443cfcbd216f3ab7e0dee66c7e45dcc198d7460e7641f815a15a5af983e6"
+  }
+}
