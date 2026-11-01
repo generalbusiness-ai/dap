@@ -298,7 +298,7 @@ try {
     label: `Observed run: ${MEASURED_ACTS} comments through the page in Chromium, against a local wrangler dev Worker on loopback, one room. Times are Chromium's responseEnd for each request, with no network distance, so they state the Worker's own work and no real round trip.`,
     "POST originals": summary("POST originals"), "DELETE originals": summary("DELETE originals"), "POST acts": summary("POST acts"), "GET originals": summary("GET originals"),
     followReadsPerAct: measured.map(row => row.followReads), keptBeforeTheActEachTime: measured.every(row => row.keptFirst),
-    roundTripsAddedPerAct: "Two to the membership object: POST originals and DELETE originals. One at the target: the entry read that verifies the receipt. One GET originals per draw of a view.",
+    roundTripsAddedPerAct: "Three to the membership object: GET originals, POST originals and DELETE originals. One at the target: the entry read that verifies the receipt. One more GET originals per draw of a view.",
   };
 
   // A stopped keep, and a press on the page that sent the request. The note's table does not count these.
@@ -389,7 +389,7 @@ try {
   check("Reply lost: the reloaded first key sees the button", lost.firstReloadButton, ["Check original request"]);
   check("Reply lost: the reloaded first key has no enabled comment form", lost.firstReloadFormsEnabled, 0);
   check("Reply lost: the reloaded first key has no other status button", lost.firstReloadStatusRecovery, 0);
-  check("A failed read: the page says so", lost.failedRead.words, ["This page could not read your open requests, so it shows the ones it read last. Check your connection. The page reads them again each time a view opens."]);
+  check("A failed read: the page says so", lost.failedRead.words, ["This page could not read your open requests, so it shows the ones it read last. Check your connection. Each new request reads them first, and it goes only when that read works. The page reads them again each time a view opens."]);
   check("A failed read: the line stays", lost.failedRead.line, lost.firstReloadLine);
   check("A failed read: the button stays", lost.failedRead.button, 1);
   check("A failed read: the lock stays", lost.failedRead.formsEnabled, 0);
@@ -416,7 +416,7 @@ try {
   check("Never arrived: Entries under that idempotency key", never.journal, { entries: 0, firstBytes: true });
   check("Never arrived: the answer ends refused expired", never.answer.some(line => line.includes("refused the request: expired")), true);
   check("Never arrived: no copy stays open", never.openAfter, 0);
-  check("A stopped keep: the page says so", pageStops.notKept, ["The room gave no reply when it was asked to keep a copy of this request. Nothing was sent."]);
+  check("A stopped keep: the page says so", pageStops.notKept, ["The room gave no reply when it was asked to keep a copy of this request. This press sent nothing."]);
   check("A stopped keep: no /acts", pageStops.actsWhenNotKept, 0);
   check("A stopped keep: the next send clears the words", pageStops.notKeptAfterTheNextSend, 0);
   check("A press on the sending page: the page no longer reads outcome unknown", pageStops.unknownAfterThePress, false);
