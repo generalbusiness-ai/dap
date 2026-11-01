@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import type { ScopeId, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, canonicalBytes, canonicalize, intentDigest, newIncarnation, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalBytes, canonicalize, intentDigest, newIncarnation, parseStrict, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { DEMO_DIGESTS } from "@generalbusiness/dap-lanes";
 import { actBodyText, originalRequest, requestSession, secretSigner, sendableAt, signedIntent, signedRead, signerSessionRequest, type Fetch, type OriginalRow, type Signer } from "@generalbusiness/dap-client";
 import { applicationGatewayRoute } from "../../../../packages/client/src/application-gateway.ts";
@@ -96,9 +96,11 @@ async function scene(wire: Wire = wireOf()): Promise<Scene> {
 }
 
 const GIB = 1024 * 1024 * 1024;
-/** A row that only states its size and its member, so that a case can fill an object at once. */
+/** A row of another key that states its size and its member, so that a case can fill an object at once. The list reads it as a row, and it locks no key of the scene. */
+const FILLER_KEY = secretSigner(new Uint8Array(32).fill(7)).key;
 const fill = (s: Scene, member: string, digest: string, size: number) => s.d.wait(() => runInDurableObject(s.d.M.object, (_instance, state) => {
-  state.storage.sql.exec("INSERT INTO original_copy (digest, inc, member, actor, target, kind, item, not_after, drop_ms, size, bytes) VALUES (?, ?, ?, 'k', '{}', 'k', NULL, 'never', ?, ?, '')", digest, s.laptop.membership.inc, member, s.laptop.session.now!() + 8 * 24 * 3600 * 1000, size);
+  const now = s.laptop.session.now!();
+  state.storage.sql.exec("INSERT INTO original_copy (digest, inc, member, actor, target, kind, item, not_after, drop_ms, size, bytes) VALUES (?, ?, ?, ?, ?, 'k', NULL, ?, ?, ?, '')", `sha256:${digest.split("").map(c => c.charCodeAt(0).toString(16)).join("").padEnd(64, "0").slice(0, 64)}`, s.laptop.membership.inc, member, FILLER_KEY, JSON.stringify(s.laptop.membership), timeOf(now + 300_000), now + 8 * 24 * 3600 * 1000, size);
 }));
 /** Each member's row count in the object. */
 const rowsByMember = (s: Scene) => s.d.wait(() => runInDurableObject(s.d.M.object, (_instance, state) => Object.fromEntries(state.storage.sql.exec("SELECT member, COUNT(*) AS n FROM original_copy GROUP BY member").toArray().map(row => [row["member"] as string, row["n"] as number]))));
@@ -145,7 +147,7 @@ test("a second key of one member settles a lost reply", async () => {
   try {
     const row = await lost(s, "reply-lost");
     // The page keeps the copy before it sends the act.
-    expect(s.wire.order.slice(0, 2)).toEqual(["POST originals", "POST acts"]);
+    expect(s.wire.order.slice(0, 3)).toEqual(["GET originals", "POST originals", "POST acts"]);
     expect(s.wire.acts).toHaveLength(1);
     const first = s.wire.acts[0]!;
     expect(row.actor).toBe(s.laptop.key);
@@ -330,8 +332,8 @@ test("a full cap sends nothing", async () => {
     const over = await keepOne(64);
     expect(over.status).toBe(507);
     expect(JSON.parse(over.text).reason).toBe("full");
-    // The page sends nothing, and it says so.
-    const stopped = await comment(s.laptop, s.lane, "One too many.").then(() => null, (error: Error) => error);
+    // The page sends nothing, and it says so. These rows lock the lane, so the press goes to another scope, where only the cap stops it.
+    const stopped = await act(s.laptop, s.d.D.name, "open-issue", { fields: { definition: DEMO_DIGESTS.issue, title: "One too many", conditions: ["Nothing"] } }).then(() => null, (error: Error) => error);
     expect(stopped).toBeInstanceOf(CopyNotKept);
     expect(stopped?.message).toBe("You have too many open requests. This press sent nothing. Check the open requests in this room first.");
     expect(s.wire.acts).toEqual([]);
@@ -638,7 +640,7 @@ test("a stop around the keep leaves no row", async () => {
     expect(s.wire.order).toEqual([]);
     // After the keep: the row ends, and no act goes.
     await sendStopped(s.laptop, s.lane, "comment", body, changed);
-    expect(s.wire.order).toEqual(["POST originals", "DELETE originals"]);
+    expect(s.wire.order).toEqual(["GET originals", "POST originals", "DELETE originals"]);
     expect(await openRows(s.laptop)).toEqual([]);
     // The page's other way to send: a native act.
     s.wire.order.length = 0;
@@ -646,7 +648,7 @@ test("a stop around the keep leaves no row", async () => {
     await sendStopped(s.rita, s.rita.membership.scope, "remove-member", { on: member.id }, undefined, changed);
     expect(s.wire.order).toEqual([]);
     await sendStopped(s.rita, s.rita.membership.scope, "remove-member", { on: member.id }, changed);
-    expect(s.wire.order).toEqual(["POST originals", "DELETE originals"]);
+    expect(s.wire.order).toEqual(["GET originals", "POST originals", "DELETE originals"]);
     expect(await openRows(s.rita)).toEqual([]);
     expect(s.wire.acts).toEqual([]);
     // A row that the page could not end: the words say so, and the row shows as open.
@@ -690,7 +692,7 @@ test("a page that held a session and failed to renew it stops the send", async (
     const sentAgain = await comment(s.laptop, s.lane, "Back again.").then(acted => acted.answer.answer, (error: Error) => error.name);
     expect(sentAgain).toBe("accepted");
     expect(s.laptop.reader).not.toBeNull();
-    expect(s.wire.order).toEqual(["POST originals", "POST acts", "DELETE originals"]);
+    expect(s.wire.order).toEqual(["GET originals", "POST originals", "POST acts", "DELETE originals"]);
   } finally { s.d.done(); }
 });
 
@@ -723,6 +725,126 @@ test("a press after a reload in an outage speaks of the press, and its next step
     expect(opened.rows).toHaveLength(1);
     expect(lockedScopes(reloaded, opened.rows, reloaded.session.now!()).size).toBe(0);
     expect((await checkOriginalRequest(reloaded, opened.rows[0]!.digest)).state).toBe("landed");
+  } finally { s.d.done(); }
+});
+
+// Invariant: a press reads the member's open requests before it keeps. A failed read stops the press, and a row of this key at this scope stops it.
+// The earlier press signed its own request, so a second press with the same words signs another request under a new key. Only this read can stop it.
+const READ_STOP = "This page could not read your open requests, so it cannot tell whether an earlier request here has an answer. This press sent nothing. Press again when your connection returns. The next press reads them first.";
+const READ_REFUSED = READ_STOP.replace("your open requests,", "your open requests (unavailable),");
+const LOCK_STOP = "An earlier request from this device here has no answer yet. This press sent nothing. Press Check original request for it before you send this again.";
+const UNSHOWN_STOP = "An earlier request from this device here has no answer, and this page had not shown it until now. This press sent nothing. Press Check original request for it before you send this again.";
+const WORDS = "It is in README.md.";
+/** A press with a lost reply, then a reload whose list read fails. No list read has run in this load, so the page holds no rows and no lock. */
+async function reloadInOutage(s: Scene): Promise<Room> {
+  s.wire.mode = "reply-lost";
+  await expect(comment(s.laptop, s.lane, WORDS)).rejects.toThrow();
+  s.wire.mode = "pass";
+  expect(s.wire.acts).toHaveLength(1);
+  const reloaded = await openRoom(s.session(s.secrets.laptop), s.place);
+  expect(reloaded.reader).not.toBeNull();
+  s.wire.down.add("list");
+  const read = await openOriginals(reloaded);
+  expect(read).toEqual({ rows: [], failed: true });
+  expect(lockedScopes(reloaded, read.rows, reloaded.session.now!()).size).toBe(0);
+  s.wire.down.clear();
+  s.wire.order.length = 0;
+  return reloaded;
+}
+const stopOf = (room: Room, lane: ScopeId, body: string) => comment(room, lane, body).then(() => "no stop", (error: Error) => { expect(error).toBeInstanceOf(CopyNotKept); return error.message; });
+const bodies = async (s: Scene) => (await loadIssue(s.phone, s.lane)).comments.map(c => c.body);
+/** What a press came to: the scope's answer, or the words of a stop. */
+const pressed = (sending: ReturnType<typeof act>) => sending.then(acted => acted.answer.answer as string, (error: Error) => error.message);
+
+test("a press after a failed list read cannot make a second entry", async () => {
+  const s = await scene();
+  try {
+    const reloaded = await reloadInOutage(s);
+    expect(await bodies(s)).toEqual([WORDS]); // The earlier press landed, and the person cannot see that.
+    // The read stays down and the keep works: a lost reply, then a refused read.
+    s.wire.down.add("list");
+    expect(await stopOf(reloaded, s.lane, WORDS)).toBe(READ_STOP);
+    s.wire.down.clear(); s.wire.down.add("list-refused");
+    expect(await stopOf(reloaded, s.lane, WORDS)).toBe(READ_REFUSED);
+    expect(s.wire.order).toEqual(["GET originals", "GET originals"]); // No keep, and no act.
+    expect(s.wire.acts).toHaveLength(1);
+    expect((await openOriginals(reloaded)).failed).toBe(true);
+    expect(ORIGINALS_UNREAD).toBe("This page could not read your open requests, so it shows the ones it read last. Check your connection. Each new request reads them first, and it goes only when that read works. The page reads them again each time a view opens.");
+    // The route returns, with the view still open and no new draw. The press reads the row, and it stops.
+    s.wire.down.clear(); s.wire.order.length = 0;
+    expect(await stopOf(reloaded, s.lane, WORDS)).toBe(LOCK_STOP);
+    expect(s.wire.order).toEqual(["GET originals"]);
+    expect(s.wire.acts).toHaveLength(1);
+    expect(await bodies(s)).toEqual([WORDS]);
+    // The way forward: the next draw shows the row, the button finds the entry, and a press then goes.
+    const shown = await openRows(reloaded);
+    expect(await checkOriginalRequest(reloaded, shown[0]!.digest)).toMatchObject({ state: "landed" });
+    expect(await pressed(comment(reloaded, s.lane, "A new comment."))).toBe("accepted");
+    expect(await bodies(s)).toEqual([WORDS, "A new comment."]);
+  } finally { s.d.done(); }
+});
+
+test("an outage that outlasts the margin shows the row before a press goes", async () => {
+  const s = await scene();
+  try {
+    const reloaded = await reloadInOutage(s);
+    const row = (await openRows(s.phone))[0]!;
+    // The margin has passed, the session still holds, and no draw has shown the row to this page.
+    const now = () => reloaded.session.now!();
+    s.d.advanceClock(sendableAt(row.notAfter) - now());
+    expect(lockedScopes(reloaded, [row], now()).size).toBe(0);
+    expect(await stopOf(reloaded, s.lane, WORDS)).toBe(UNSHOWN_STOP);
+    expect(s.wire.acts).toHaveLength(1);
+    expect(await bodies(s)).toEqual([WORDS]);
+    // A draw shows the line. A later press with the line in view is the person's choice, as section 5 of the note says.
+    expect((await openRows(reloaded)).map(open => open.digest)).toEqual([row.digest]);
+    expect(await pressed(comment(reloaded, s.lane, WORDS))).toBe("accepted");
+    expect(await bodies(s)).toEqual([WORDS, WORDS]);
+    expect((await openRows(reloaded)).map(open => open.digest)).toEqual([row.digest]);
+  } finally { s.d.done(); }
+});
+
+test("a good read stops a press only at this key's own scope", async () => {
+  const s = await scene();
+  try {
+    const reloaded = await reloadInOutage(s);
+    // Another scope: this key opens an issue with the row open at the lane. Another key: the second device comments on the same lane.
+    expect(await pressed(act(reloaded, s.d.D.name, "open-issue", { fields: { definition: DEMO_DIGESTS.issue, title: "Elsewhere", conditions: ["Nothing"] } }))).toBe("accepted");
+    expect(await pressed(comment(s.phone, s.lane, "From the phone."))).toBe("accepted");
+    expect(s.wire.order.filter(name => name === "POST acts")).toHaveLength(2);
+    // A failed read stops every key at every scope: it cannot say what the list holds.
+    s.wire.down.add("list");
+    expect(await stopOf(s.phone, s.lane, "Also from the phone.")).toBe(READ_STOP);
+  } finally { s.d.done(); }
+});
+
+test("an opening act's row stops the next opening act of that key", async () => {
+  const s = await scene();
+  try {
+    const opening = (room: Room, title: string) => act(room, s.d.D.name, "open-issue", { fields: { definition: DEMO_DIGESTS.issue, title, conditions: ["Nothing"] } });
+    s.wire.mode = "reply-lost";
+    await expect(opening(s.laptop, "Lost")).rejects.toThrow();
+    s.wire.mode = "pass";
+    const reloaded = await openRoom(s.session(s.secrets.laptop), s.place);
+    const stopped = await opening(reloaded, "Lost").then(() => "no stop", (error: Error) => error.message);
+    expect(stopped).toBe(LOCK_STOP);
+    expect(s.wire.acts).toHaveLength(1);
+  } finally { s.d.done(); }
+});
+
+test("a device link meets the same read and the same lock", async () => {
+  const s = await scene();
+  try {
+    const link = () => issueDeviceKey(s.rita, "@paul").then(() => "a link", (error: Error) => error.message);
+    s.wire.down.add("list");
+    expect(await link()).toBe(READ_STOP);
+    s.wire.down.clear();
+    expect(s.wire.acts).toEqual([]);
+    s.wire.mode = "reply-lost";
+    expect(await link()).not.toBe("a link");
+    s.wire.mode = "pass";
+    expect(await link()).toBe(LOCK_STOP);
+    expect(s.wire.acts).toHaveLength(1);
   } finally { s.d.done(); }
 });
 

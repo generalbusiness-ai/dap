@@ -11,11 +11,14 @@
  * same bytes once, and only past the margin. Before the margin it says when to
  * check again.
  */
-import type { Answer, Digest, Head, Receipt, ScopeId, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Answer, Digest, Head, Receipt, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, isMemberRef } from "@generalbusiness/dap-bytes";
 import { originalRequest, sendableAt, type OriginalRow } from "@generalbusiness/dap-client";
 import type { ScopeSending } from "./shell.ts";
 import { actAssociation, copiesOf, endOriginal, fresh, handleOf, itemsOf, nowOf, renewLost, sessionLost, summaryOf, type Acted, type Room } from "./data.ts";
+import { rememberRows, rowsLastRead } from "./open-requests.ts";
+
+export { lockedScopes } from "./open-requests.ts";
 
 export type OriginalCheck =
   /** The scope holds the act's entry, and the page verified it. The copy ended. */
@@ -36,9 +39,7 @@ export type OriginalCheck =
 /** The member's open copies. `failed` says that the read failed, and then `rows` holds what this page read last. */
 export interface OpenOriginals { rows: readonly OriginalRow[]; failed: boolean }
 /** What the page says when a read fails. */
-export const ORIGINALS_UNREAD = "This page could not read your open requests, so it shows the ones it read last. Check your connection. The page reads them again each time a view opens.";
-/** The last rows this page read, for each room and key. Memory only. */
-const lastRead = new Map<string, readonly OriginalRow[]>();
+export const ORIGINALS_UNREAD = "This page could not read your open requests, so it shows the ones it read last. Check your connection. Each new request reads them first, and it goes only when that read works. The page reads them again each time a view opens.";
 
 /**
  * The member's open copies. A failed read is not an empty list: the page keeps
@@ -53,10 +54,10 @@ export async function openOriginals(room: Room): Promise<OpenOriginals> {
     if (!sessionLost(room)) {
       const listed = await copiesOf(room)?.list();
       if (!listed) return { rows: [], failed: false };
-      if (listed.ok) { lastRead.set(memory, listed.rows); return { rows: listed.rows, failed: false }; }
+      if (listed.ok) { rememberRows(memory, listed.rows); return { rows: listed.rows, failed: false }; }
     }
   } catch { /* A lost reply is a failed read. */ }
-  return { rows: lastRead.get(memory) ?? [], failed: true };
+  return { rows: rowsLastRead(memory) ?? [], failed: true };
 }
 
 /**
@@ -78,20 +79,6 @@ export function liftFences(room: Pick<Room, "session" | "key" | "directory" | "m
     const fence = sending.get(association);
     if (fence?.state === "unknown" && fence.digest === row.digest) sending.answered(association);
   }
-}
-
-/**
- * The scopes where this page offers only the button: an open copy that this
- * page's key signed, until the margin passes. Other keys keep their acts.
- */
-export function lockedScopes(room: Pick<Room, "key" | "directory">, rows: readonly OriginalRow[], now: number): ReadonlySet<ScopeId> {
-  const locked = new Set<ScopeId>();
-  for (const row of rows) {
-    if (row.actor !== room.key || now >= sendableAt(row.notAfter)) continue;
-    locked.add(row.to.scope);
-    if (row.to.kind === "directory") locked.add(room.directory); // An opening act can go to the directory's current partition.
-  }
-  return locked;
 }
 
 /** The key that signed belongs to this page's member. Every state of the key counts: a revoked key's request stays the member's. */
