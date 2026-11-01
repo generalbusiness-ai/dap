@@ -1,6 +1,6 @@
 # List what needs a person on the Page's first screen
 
-Status: source implementation. The gate passed at `aa706bd7`. The scene passes on a local Worker in a browser, and a script drove it. No deployed Worker has run this head, and no person has used this screen, so J5's acceptance stays open.
+Status: source implementation. The gates passed at `aa706bd7` and `f116d596`. The scene passes on a local Worker in a browser, and a script drove it. No deployed Worker has run this head, and no person has used this screen, so J5's acceptance stays open.
 
 Request `7424c6b9583a9a345affedb16b8f85b20649241c` and promise `8268feb1f346003803e5146499c73a5eae65ccd5` own this head. Request `51ff164cd4193afea7bd5fce77f86af6c90ab002` owns the deployed run and stays open after this head lands.
 
@@ -48,11 +48,19 @@ A script drove headless Chromium against a local Worker from the pinned wrangler
 
 ## Evidence
 
-The head is `aa706bd7136426d09038d2013befba6cb54d7f93`, tree `2a595280`. Raw evidence is in `~/play/artroom-evidence/2026-11-01-page-needs-you/`, `SHA256SUMS` `ebb27a18b2d13dfd432c3a36e28ae4d4ae8dfc81f1cba12fa769306887f77597`. After the gate the head adds this note and its manifest, and it merges main `bea12935`. The merge shares `docs/testing.md` with this head, and the two edits touch the same table row. The focused checks at the merged head and the page workflow's run appear in the review request.
+The head is `aa706bd7136426d09038d2013befba6cb54d7f93`, tree `2a595280`. Raw evidence is in `~/play/artroom-evidence/2026-11-01-page-needs-you/`, `SHA256SUMS` `ebb27a18b2d13dfd432c3a36e28ae4d4ae8dfc81f1cba12fa769306887f77597`. After the gate the head adds this note and its manifest, and it merges main `bea12935`. The merge shares `docs/testing.md` with this head, and the two edits touch the same table row.
+
+The second gate ran at `f116d596d9136bdba2b8f47e1ac7b7f9c0632f25`, tree `1bd2e9e892c74ef19d98db62a33b22468d133dfa`. Its unit is `~/play/artroom-evidence/2026-11-01-page-needs-you-merged/`, `SHA256SUMS` `5048ec3ce1d81ca2c83486dc1d31c7c2075bd492b584499cc5be046a0991b0d5`. [The merged-head manifest](evidence/2026-11-01-page-needs-you-merged.manifest.json) names the gate, the 21-step local Worker run and the workflow results. The previous session ended during a gate at that same clean head. `gate-interrupted-1714/` keeps its output and temporary logs. That interrupted run printed `gate FAILED` and wrote no `gate.exit`; it supplies no passing terminal result.
+
+Three script fixes followed the first gate. `screens.mjs` and `issue-questions-browser.mjs` now find the repeated issue link inside the issue list. `demo-captures.ts` uses that selector and records `loadNeedsYou`. Page workflow runs `41354397670`, `41354669569` and `41354993152` exposed those faults. Page run `41356100860` succeeds at `f116d596`. Card run `41354397658` succeeds at ancestor `4d63f8fe`, and every input named by that card workflow is unchanged through `f116d596`.
 
 | Check | How taken | Command | Result | Digest |
 |---|---|---|---|---|
 | Gate | observed run | `npm run gate` | exit 0: 3550 plain and 1025 native tests, 116 Node and 56 Counting | `604688ade7b673fe` |
+| Merged-head gate | observed run | `npm run gate` | exit 0: 3552 plain and 1025 native tests, 124 Node and 56 Counting | `e9d5a883a67a5fdb` |
+| Issue questions after the script fixes | observed run on a local Worker | `issue-questions-browser.mjs` | exit 0, 21 steps | `1ea86ed6f00d251d` |
+| Page workflow | observed run on GitHub | run `41356100860` | success at `f116d596` | `0e98871a2e2ede40` |
+| Card workflow | observed run on GitHub | run `41354397658` | success at `4d63f8fe`, with unchanged inputs | `75f111c78bd6bf7d` |
 | The scene | observed run, a script in headless Chromium on a local Worker | `apps/room/page/test/needs-you-browser.mjs` | exit 0: 85 of 85 steps | `acb7e3ed48b70be5` |
 | Red: the old Page | observed run: main's bundle on this head's Worker | the same script | exit 1: 38 of 41 steps fail, and the first names "the first screen" | `c0ccb1c791f7a8e6` |
 | Controls | observed runs: 5 in the browser, 15 by `scripts/control.mjs`, 5 by hand on `apps/views`, each restored | `controls-index.txt` lists each one | all 25 exit 1 or report DISTINGUISHES. 24 name a failed step or assertion, and `next-reads-same` ends on a timeout that its `next-reads-same.json` names | `cc488b8300449a77` |
@@ -67,7 +75,7 @@ A token scan of the evidence's files found no link, bearer or session shape. The
 
 - **The deployed run and a person.** The Worker needs a deployment of the new Page bundle, `apps/room/page/assets.ts`. No definition, migration or wrangler setting changes, and `needs_you` runs locally and needs none. The deployed run and its record close `51ff164c`.
 - **Bounds.** The Page applies the lane, row, item and 20 s bounds of `needs_you`. It has no 256 KB byte cut, because that bound guards an MCP answer. It has no request, page or byte counters, and its item count covers membership and lane rows and not the directory's other items.
-- **Default rooms.** The walk reads only lanes under the issue definitions that these views know, and each lane of a default `dap install` room uses another definition. So the list on such a room always says that it could not read those lanes, and links them. That is true and noisy, and the planner owns whether to change it.
+- **Default rooms.** The walk reads only lanes under the issue definitions that these views know, and each lane of a default `dap install` room uses another definition. So the list on such a room always says that it could not read those lanes, and links them. Planner ruling `c70dc4bf` permits this head to land as it stands and assigns the repair to `e82c6550`. That repair distinguishes failed reads from unsupported definitions, puts the unsupported lanes below the list in a collapsed section, and states what the list can leave out.
 - **An open finding's row.** The row carries the words and opens the change screen, which shows no finding text. I did not run the answering of a finding from the Page in a browser.
 - **No live updates.** The list reads when the screen draws, so a new item appears after a reload or a navigation.
 - **Lane order.** The walk keeps `localeCompare`, so a browser in another locale can split the windows differently from the adapter. A walk still reaches every lane.
