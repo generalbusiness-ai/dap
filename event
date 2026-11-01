@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:51c0e5b06dc9c49f720aa09b9bb992e136a80fa1","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/invitations.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:55e8af321177afbb90f7e78fb7bc72d3bba7b0ed","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-01-join-used-dir.manifest.json."}
