@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/reviews/2026-10-30-docs-review.md","body":{"commit":"e754d96198c5e66c71f940d444c9dc79767c01c1","path":"notes/reviews/2026-10-30-docs-review.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:009d3a2248bcb08ba19c4dcab5f584ecfd700ba3","text":"Merge retired a covered predecessor; the successor is at docs/manual/life-of-an-act.md."}
