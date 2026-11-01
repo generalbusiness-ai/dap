@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:968c8b8eabd04430841a0bd52e0da3cf286d3d18","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-01-founder-recovery.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9879118e3f8a21d91484cd499a362d04d2b2d22b","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/application-codec/application-types.ts."}
