@@ -398,7 +398,7 @@ function scriptedChange(f, definition, extra = () => []) {
   return state;
 }
 
-// Every read of a room with no finding profile, as canonical bytes. The finding profile left these bytes alone at main 76cac675. The J5 head changed them on purpose: three reasons on each needs_you row, and entry lines on since and the updates card.
+// Every read of a room with no finding profile, as canonical bytes. The finding profile left these bytes alone at main 76cac675. J2 added a change's Earlier versions lines, the diff read's label and its interdiff reads. J5 added three reasons on each needs_you row, and entry lines on since and the updates card.
 test('a room with no finding profile reads byte for byte as it did before the finding profile', async t => {
   const f = fixture(t), source = decisionSource(f.app);
   const ready = scriptedChange(f, J4_DIGESTS.change);

@@ -180,7 +180,7 @@ test("View diff goes through its port once per cut, keeps the card's two acts, a
   const projection = (): Projection => ({ status: "ready", position: 0, count: 1, fallback: "TEST", card: { identity: { item: "1", kind: "manifest", revision: "2", subject: { scope: "sc_a" }, at: { manifest: 2 } }, title: "TEST", summary: "TEST", body: "TEST body", reasons: [], projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST", diffAvailable: true, diffRead: { target: "sc_d", base: "a", integration: "b" },
     actions: [{ id: "one", label: "TEST", purpose: "act", kind: "k", args: { target: "sc_a" } }, { id: "two", label: "TEST", purpose: "act", kind: "k", args: { target: "sc_a" } }] } });
   const reads: unknown[] = []; let fail = true;
-  const sessions = new ViewSessions({ initialPage: () => "item", read: async () => projection() }, { call: async () => { throw Error("No native tool read."); } }, async () => answer("accepted"), async () => answer("accepted"), () => null, { readDiff: async (read, admit) => { await admit(); reads.push(read); return fail ? { content: [], isError: true, structuredContent: { error: "diff", message: "TEST no diff." } } : { content: [], isError: false, structuredContent: { text: "TEST text\ntruncated: TEST\n", truncated: true } }; } });
+  const sessions = new ViewSessions({ initialPage: () => "item", read: async () => projection() }, { call: async () => { throw Error("No native tool read."); } }, async () => answer("accepted"), async () => answer("accepted"), () => null, { readExact: async (read, admit) => { await admit(); reads.push(read); return fail ? { content: [], isError: true, structuredContent: { error: "diff", message: "TEST no diff." } } : { content: [], isError: false, structuredContent: { text: "TEST text\ntruncated: TEST\n", truncated: true } }; } });
   await sessions.open("v", "change");
   const item = sessions.display("v");
   expect(item.card!.actions.map(action => action.id)).toEqual(["one", "two"]);
@@ -202,6 +202,31 @@ test("View diff goes through its port once per cut, keeps the card's two acts, a
   expect(reads).toHaveLength(2);
 });
 
+// Invariant: an exact read's action IDs are reserved only on a card that offers exact reads. Another card's act keeps its own ID.
+test("a card with no exact read dispatches its own act whose ID resembles a read", async () => {
+  const projection = (): Projection => ({ status: "ready", position: 0, count: 1, fallback: "TEST", card: { identity: { item: "1", kind: "manifest", revision: "2", subject: { scope: "sc_a" }, at: { manifest: 2 } }, title: "TEST", summary: "TEST", reasons: [], projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST",
+    actions: [{ id: "view-file-report", label: "TEST", purpose: "act", kind: "k", args: { target: "sc_a", at: { manifest: 2 } } }] } });
+  const acts: unknown[] = [];
+  const sessions = new ViewSessions({ initialPage: () => "item", read: async () => projection() }, { call: async () => { throw Error("No native tool read."); } }, async (args) => { acts.push(args); return answer("accepted"); }, async () => answer("accepted"), () => null, {});
+  await sessions.open("v", "change");
+  const said = await sessions.act("v", sessions.display("v").cut, "view-file-report").then(() => "dispatched", (error: { reason?: string }) => error.reason);
+  expect([said, acts.length]).toEqual(["dispatched", 1]);
+});
+
+// Invariant: a file action names a read this view holds. With no read held, it is the ordinary refusal and signs nothing.
+test("a file action before any read is refused as no such read", async () => {
+  const projection = (): Projection => ({ status: "ready", position: 0, count: 1, fallback: "TEST", card: { identity: { item: "1", kind: "manifest", revision: "2", subject: { scope: "sc_a" }, at: { manifest: 2 } }, title: "TEST", summary: "TEST", actor: { kind: "person", name: "TEST" }, reasons: [],
+    projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST", actions: [], diffAvailable: true, diffRead: { target: "sc_a", base: "a".repeat(40), integration: "b".repeat(40) } } });
+  let reads = 0;
+  const sessions = new ViewSessions({ initialPage: () => "item", read: async () => projection() }, { call: async () => { throw Error("No native tool read."); } }, async () => answer("accepted"), async () => answer("accepted"), () => null, { readExact: async () => { reads++; return answer("read"); } });
+  await sessions.open("v", "change");
+  for (const action of ["view-file", "view-file-0"]) {
+    const said = await sessions.act("v", sessions.display("v").cut, action).then(() => "dispatched", (error: { reason?: string }) => error.reason);
+    expect([action, said]).toEqual([action, "shape"]);
+  }
+  expect(reads).toBe(0);
+});
+
 // Invariant: View diff signs nothing while custody holds an earlier act open, and an answer the card cannot hold says the credential is spent.
 test("View diff: a retained card admits nothing while an original is open, and an oversized answer says spent", async () => {
   let open = false;
@@ -214,7 +239,7 @@ test("View diff: a retained card admits nothing while an original is open, and a
   let spends = 0;
   const views = new ViewSessions(source, { call: async () => answer("read") }, async () => answer("accepted"), async () => answer("accepted"), () => null, {
     unresolved: async () => open ? { idempotencyKey: "open" } : null,
-    readDiff: async (_read, admit) => { await admit(); spends++; return { content: [], structuredContent: { text: "t".repeat(32 * 1024) }, isError: false }; },
+    readExact: async (_read, admit) => { await admit(); spends++; return { content: [], structuredContent: { text: "t".repeat(32 * 1024) }, isError: false }; },
   });
   await views.open("v", "change", "subject");
   const { cut } = await views.read("v");

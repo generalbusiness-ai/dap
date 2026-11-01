@@ -30,7 +30,7 @@ import { canonicalize, timeMs } from "@generalbusiness/dap-bytes";
 import type { Signer, Fetch } from "@generalbusiness/dap-client";
 import { CustodyError, TERMINAL, type CustodyRecord, type CustodyStore, type Outcome } from "./custody.ts";
 import type { ConfigPort } from "./inventory.ts";
-import { diffWithCredential } from "@generalbusiness/dap-git/diff";
+import { diffWithCredential, fileWithCredential, interdiffWithCredential } from "@generalbusiness/dap-git/diff";
 import { McpService } from "./service.ts";
 import { MCP_METRIC_SCHEMA, type McpMetricOptions } from "./metrics.ts";
 import type { Mode } from "./catalogue.ts";
@@ -455,7 +455,7 @@ export async function serve(options: ServeOptions): Promise<void> {
   const service = new McpService({
     service: options.service, signer: options.signer, config: options.config, custody: fileStore(join(options.home, "private", "mcp-custody")), originals: true,
     applicationTrust: process.env["APPLICATION_TRUST"],
-    mode: options.mode, tools: options.tools, ...(options.fetch ? { fetch: options.fetch } : {}), readDiff: read => diffWithCredential(read),
+    mode: options.mode, tools: options.tools, ...(options.fetch ? { fetch: options.fetch } : {}), readDiff: read => diffWithCredential(read), readInterdiff: read => interdiffWithCredential(read), readFile: read => fileWithCredential(read),
     metrics: options.metrics ?? { report: point => { console.error(`dap.metric ${JSON.stringify({ schema: MCP_METRIC_SCHEMA, ...point })}`); } },
   });
   if (options.http) {

@@ -15,7 +15,7 @@ import { EXPIRY_MARGIN_MS, invitationRedemptionFields } from "@generalbusiness/d
 
 import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FieldValue, Item, PlatformDefinition, Read, Receipt, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, isReceipt, entryHash, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, isReceipt, entryHash, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { TransportError, ScopeHandle, ApplicationPackageError, actBodyText, originalsAt, commonsInstallCheck, loadCommons, readApplicationPackage, applicationScreenPath, readApplicationInstallOptions, readDeviceApplicationInstallOptions, readApplicationReleaseUri, readApplicationTrust, applicationTrustForSource, signedApplicationInstall, signedApplicationInstall2, signedDeviceApplicationInstall, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import { SEPARATE_RECOVERY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, platform, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, COMMONS_COHORT } from "@generalbusiness/dap-platform";
 import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
@@ -37,7 +37,7 @@ import { PackageResources, type PackageBrief } from "./package-brief.ts";
 import { PRESENTATION } from "./views/generated.ts";
 import { ViewSessions } from "./views/session.ts";
 import { toolsForHost, viewTools } from "./views/tools.ts";
-import type { ViewSource } from "./views/types.ts";
+import type { ExactRead, ViewSource } from "./views/types.ts";
 import { DeclaredViewSource } from "./views/declared.ts";
 import { readMembershipDisplay } from "./views/member-reads.ts";
 import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
@@ -53,7 +53,11 @@ export interface ServerPort {
   /** Public Git transport only; separate from authenticated native reads. */
   applicationFetch?: (request: Request) => Promise<Response>;
   /** The Git read of `diff`. `serve` supplies it under Node; a hosted Worker supplies none, and omits the tool. */
-  readDiff?: (read: { remote: string; credential: string; base: string; integration: string }) => Promise<{ base: string; integration: string; files: number; truncated: boolean; text: string } | { unavailable: string }>;
+  readDiff?: (read: { remote: string; credential: string; base: string; integration: string }) => Promise<{ base: string; integration: string; files: number; truncated: boolean; text: string; leftOut?: string | null; paths?: readonly { path: string; shown: string; commit: string }[] } | { unavailable: string }>;
+  /** The Git read of an interdiff, for a view. A hosted Worker supplies none. */
+  readInterdiff?: (read: { remote: string; credential: string; from: { base: string; integration: string }; to: { base: string; integration: string }; labels: { from: string; to: string } }) => Promise<{ from: { base: string; integration: string }; to: { base: string; integration: string }; rebased: boolean; files: number; truncated: boolean; leftOut: string | null; text: string; paths: readonly { path: string; shown: string; commit: string }[] } | { unavailable: string }>;
+  /** The Git read of one file at one commit, for a view. A hosted Worker supplies none. */
+  readFile?: (read: { remote: string; credential: string; commit: string; path: Uint8Array }) => Promise<{ commit: string; truncated: boolean; leftOut: string | null; text: string } | { unavailable: string }>;
   /** Raw operator policy, parsed before each install and again before custody builds. */
   applicationTrust?: string | undefined;
   config: ConfigPort;
@@ -278,7 +282,7 @@ export class McpService {
     const source = declared ?? port.views;
     const presentation = new ViewResources(port.presentation ?? source?.presentation ?? PRESENTATION);
     this.resources = port.packageBrief ? new PackageResources(presentation, port.packageBrief) : presentation;
-    const views = source ? new ViewSessions(source, { call: (name, args) => this.call(name, args) }, (kind, args, admit) => this.#viewPerform(kind, args, admit), (args) => this.#viewSettle(args), result => this.#readReceipts.get(result) ?? null, { readDiff: (read, admit) => this.#viewDiff(read, admit), unresolved: target => this.#viewUnresolved(target) }) : null;
+    const views = source ? new ViewSessions(source, { call: (name, args) => this.call(name, args) }, (kind, args, admit) => this.#viewPerform(kind, args, admit), (args) => this.#viewSettle(args), result => this.#readReceipts.get(result) ?? null, { readExact: (read, admit) => this.#viewExact(read, admit), unresolved: target => this.#viewUnresolved(target) }) : null;
     const cards = views ? viewTools(views, source?.screens) : {};
     this.#viewTools = new Set(Object.keys(cards));
     this.#generic = { ...this.#genericTools(), ...cards };
@@ -480,12 +484,13 @@ export class McpService {
   }
 
   /**
-   * View diff: one signed read-token act, one credential, one bounded read. The act goes under custody, like any act, and asks
-   * for nothing else; the credential stays in this function. The read stops after a bounded wait for the mint.
+   * An exact read of a view: one signed read-token act, one credential, one bounded read. The act goes under custody, like any act,
+   * and asks for nothing else; the credential stays in this function. The read stops after a bounded wait for the mint.
    */
-  async #viewDiff(read: { target: string; base: string; integration: string }, admit: () => void | Promise<void>): Promise<CallResult> {
-    if (!this.#port.readDiff) return failed({ error: "diff", why: "this server has no Git reader", spent: false });
-    const unreadable = commitIdFault(read);
+  async #viewExact(read: ExactRead, admit: () => void | Promise<void>): Promise<CallResult> {
+    const ready = read.kind === "diff" ? this.#port.readDiff : read.kind === "interdiff" ? this.#port.readInterdiff : this.#port.readFile;
+    if (!ready) return failed({ error: "diff", why: "this server has no Git reader", spent: false });
+    const unreadable = commitIdFault(read.kind === "diff" ? { base: read.base, integration: read.integration } : read.kind === "file" ? { commit: read.commit } : { "from base": read.from.base, "from integration": read.from.integration, "to base": read.to.base, "to integration": read.to.integration });
     if (unreadable) return unreadable;
     try {
       const signed = await this.#perform(null, { target: read.target, on: 0, fields: { hours: 1 }, idempotencyKey: `view-diff-${crypto.randomUUID()}` }, "read-token", undefined, admit);
@@ -493,7 +498,7 @@ export class McpService {
       const entry = (signed.structuredContent["fact"] as { seq: number }).seq;
       const pause = this.#port.pause ?? (() => new Promise<void>((resolve) => { setTimeout(resolve, 1000); }));
       for (let polls = 0; ; polls++) {
-        const answer = await this.#diff({ entry, target: read.target, base: read.base, integration: read.integration });
+        const answer = await this.#exactAnswer(read, entry);
         if (!this.#mintPending.has(answer) || polls >= VIEW_DIFF_POLLS) return answer;
         await pause([read.target as ScopeId]);
       }
@@ -1643,14 +1648,47 @@ export class McpService {
     if (unreadable) return unreadable;
     const readDiff = this.#port.readDiff;
     if (!readDiff) return failed({ error: "diff", why: "this server has no Git reader", spent: false });
-    const read = await this.#credential({ entry: args["entry"], ...(args["target"] === undefined ? {} : { target: args["target"] }) });
-    if (read.isError) return read;
-    const { credential, remote } = read.structuredContent as { credential: string; remote: string };
-    let diff;
-    try { diff = await readDiff({ remote, credential, base: base as string, integration: integration as string }); }
+    return this.#withCredential({ entry: args["entry"], ...(args["target"] === undefined ? {} : { target: args["target"] }) }, async ({ remote, credential }) => {
+      const diff = await readDiff({ remote, credential, base: base as string, integration: integration as string });
+      return "unavailable" in diff ? diff : { base: diff.base, integration: diff.integration, files: diff.files, truncated: diff.truncated, text: diff.text };
+    });
+  }
+
+  /** One credential, spent on one bounded read that holds none of it. */
+  async #withCredential(args: Args, read: (credential: { remote: string; credential: string }) => Promise<Record<string, unknown> | { unavailable: string }>): Promise<CallResult> {
+    const got = await this.#credential(args);
+    if (got.isError) return got;
+    let answer;
+    try { answer = await read(got.structuredContent as { credential: string; remote: string }); }
     catch { return failed({ error: "diff", why: "the host gave no readable answer", spent: true }); }
-    if ("unavailable" in diff) return failed({ error: "diff", why: diff.unavailable, spent: true });
-    return ok({ base: diff.base, integration: diff.integration, files: diff.files, truncated: diff.truncated, text: diff.text }, BOUNDS.large);
+    if ("unavailable" in answer) return failed({ error: "diff", why: String(answer["unavailable"]), spent: true });
+    return ok(answer, BOUNDS.large);
+  }
+
+  /** The answer of a view's exact read. Its `commits` come from the read's own answer, so the page names what the read returned. */
+  #exactAnswer(read: ExactRead, entry: number): Promise<CallResult> {
+    const args = { entry, target: read.target };
+    if (read.kind === "diff") return this.#withCredential(args, async ({ remote, credential }) => {
+      const diff = await this.#port.readDiff!({ remote, credential, base: read.base, integration: read.integration });
+      if ("unavailable" in diff) return diff;
+      const version = read.label ? ` of ${read.label}` : "";
+      return { base: diff.base, integration: diff.integration, files: diff.files, truncated: diff.truncated, leftOut: diff.leftOut ?? null, paths: diff.paths ?? [], text: diff.text, commits: [{ label: `Base${version}`, id: diff.base }, { label: `Integration${version}`, id: diff.integration }] };
+    });
+    if (read.kind === "interdiff") return this.#withCredential(args, async ({ remote, credential }) => {
+      const answer = await this.#port.readInterdiff!({ remote, credential, from: { base: read.from.base, integration: read.from.integration }, to: { base: read.to.base, integration: read.to.integration }, labels: { from: read.from.label, to: read.to.label } });
+      if ("unavailable" in answer) return answer;
+      const { from, to } = answer;
+      return { ...answer, commits: [
+        ...(answer.rebased ? [{ label: `Base of ${read.from.label}`, id: from.base }, { label: `Integration of ${read.from.label}`, id: from.integration }, { label: `Base of ${read.to.label}`, id: to.base }] : [{ label: `Base of both versions`, id: to.base }, { label: `Integration of ${read.from.label}`, id: from.integration }]),
+        { label: `Integration of ${read.to.label}`, id: to.integration }] };
+    });
+    return this.#withCredential(args, async ({ remote, credential }) => {
+      const path = unb64url(read.path);
+      if (!path) return { unavailable: "the file's path did not decode" };
+      const file = await this.#port.readFile!({ remote, credential, commit: read.commit, path });
+      if ("unavailable" in file) return file;
+      return { ...file, commits: [{ label: `Commit of ${read.commitLabel}`, id: file.commit }] };
+    });
   }
 
   async #actions(args: Args): Promise<CallResult> {
@@ -1672,9 +1710,8 @@ export class McpService {
 }
 
 /** The fault in a diff's two commit IDs, if it has one. */
-function commitIdFault(ids: { base: unknown; integration: unknown }): CallResult | null {
-  for (const field of ["base", "integration"] as const) {
-    const value = ids[field];
+function commitIdFault(ids: Record<string, unknown>): CallResult | null {
+  for (const [field, value] of Object.entries(ids)) {
     if (typeof value !== "string" || !COMMIT_ID.test(value)) return failed({ error: "shape", field, what: "is not a SHA-1 commit ID of 40 hexadecimal characters", declared: "an exact SHA-1 commit ID" });
   }
   return null;
