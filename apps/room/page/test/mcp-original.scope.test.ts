@@ -786,10 +786,10 @@ test("a join that was accepted and lost the read after it does not say that noth
   } finally { s.d.done(); }
 }, 120_000);
 
-test("a server on the plain path signs a second intent after a failed room read, and the scope refuses it", async () => {
+test("a server on the plain path keeps its custody record after a failed room read, and sends the same bytes", async () => {
   const s = await scene();
   try {
-    // Hosted's McpService has no `originals` port, so its custody identity still carries the null membership of a failed room read.
+    // A generic-mode McpService with no `originals` port. The hosted endpoint's own path is in `packages/mcp/test/hosted.scope.test.ts`.
     const store = memoryStore();
     const plain = s.server(store, s.laptopSecret, false);
     s.wire.mode = "reply-lost";
@@ -799,8 +799,10 @@ test("a server on the plain path signs a second intent after a failed room read,
     s.wire.down.add("sessions");
     const second = said(await comment(s, plain, "drift-1"));
     s.wire.down.delete("sessions");
-    expect([second.answer, second.reason], JSON.stringify(second)).toEqual(["mismatch", "idempotency-mismatch"]);
+    expect([second.answer, second.phase], JSON.stringify(second)).toEqual(["accepted", "accepted"]);
     expect(s.wire.acts).toHaveLength(2);
+    expect(s.wire.acts[1]!.body, "the repeat sends the bytes that custody kept, with no new signature").toBe(s.wire.acts[0]!.body);
+    expect(store.records.size, "one record, under one identity").toBe(1);
     const read = await handleOf(await openRoom(s.session(s.laptopSecret), placeOf(JSON.stringify(s.d.config))!), s.lane).history();
     if (!read.ok) throw new Error(read.reason);
     expect(read.value.filter(sealed => sealed.entry.input.type === "act" && sealed.entry.input.signed.intent.idempotencyKey === "drift-1")).toHaveLength(1);

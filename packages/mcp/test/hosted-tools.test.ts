@@ -48,11 +48,12 @@ test("a derived tool hidden for missing standing refuses direct invocation befor
   const service = new McpService({ service: "https://scopes.test", fetch: peer.fetch, signer: { key: signer.key, sign: async intent => { signs++; return signer.sign(intent); } }, config: { read: async () => peer.config(), addRoot: async () => {} }, custody: memoryStore() });
   const snapshot = await service.snapshot();
   expect(snapshot.hidden).toContain("rules.publish");
-  // Read authentication itself signs. The act/custody path must never begin.
+  // Read authentication itself signs. The act/custody path must never begin. The stop reads the unresolved list, so that it can say what
+  // an earlier send under this key did: that read holds no lock and writes nothing, and with no record under the key it reads no more.
   const signedBytes: string[] = [];
   let custodyCalls = 0;
   const blocked = async (): Promise<never> => { custodyCalls++; expect.fail("A hidden call reached custody."); };
-  const custody = { lock: blocked, exclusive: blocked, read: blocked, write: blocked, unresolved: blocked, segment: blocked, segmented: blocked, admit: blocked, unadmit: blocked };
+  const custody = { lock: blocked, exclusive: blocked, read: blocked, write: blocked, unresolved: async () => [], segment: blocked, segmented: blocked, admit: blocked, unadmit: blocked };
   const guarded = new McpService({ mode: "add", service: "https://scopes.test", fetch: peer.fetch, signer: { key: signer.key, sign: async bytes => { signedBytes.push(new TextDecoder().decode(bytes)); return signer.sign(bytes); } }, config: { read: async () => peer.config(), addRoot: async () => {} }, custody });
   expect((await guarded.call("rules.publish", { on: 0, fields: {}, idempotencyKey: "hidden" })).structuredContent).toEqual({ error: "unknown-tool", message: "No tool is named rules.publish in this list.", next: "Call tools/list." });
   const definition = peer.scopes.get(peer.rules.scope)!.definition;
@@ -122,7 +123,7 @@ test("actual-target standing and definition selection refuse before signing, cus
     const install = new McpService({ mode: "add", ...(excludedDefinition ? { tools: ["membership"] } : {}), service: "https://scopes.test", fetch: installPeer.fetch,
       signer: { key: signer.key, sign: async bytes => { writes.push(new TextDecoder().decode(bytes)); return signer.sign(bytes); } },
       config: { read: async () => installPeer.config(), addRoot: async () => {} },
-      custody: { lock: blocked, exclusive: blocked, read: blocked, write: blocked, unresolved: blocked, segment: blocked, segmented: blocked, admit: blocked, unadmit: blocked },
+      custody: { lock: blocked, exclusive: blocked, read: blocked, write: blocked, unresolved: async () => [], segment: blocked, segmented: blocked, admit: blocked, unadmit: blocked },
       applicationFetch: async () => { packages++; expect.fail("Unadmitted installation fetched a package"); } });
     const answer = await install.call("install_application", { uri: `git+https://packages.test/apps.git/@${"c".repeat(40)}/application.dap.json`, release: `sha256:${"c".repeat(64)}`, roles: [], values: {}, idempotencyKey: `unadmitted-install-${excludedDefinition}` });
     expect(answer.structuredContent).toEqual({ error: "unknown-tool", message: "No tool is named install_application in this list.", next: "Call tools/list." });

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { Answer, DeclaredDefinition, MismatchReason, ReadRefusal, RefusalReason, UnavailableReason } from "@generalbusiness/dap-contract";
 import { REFUSAL_REASONS, READ_REFUSALS, b64url, utf8 } from "@generalbusiness/dap-bytes";
-import { readApplicationInstallOptions, secretSigner, signedIntent, TransportError } from "@generalbusiness/dap-client";
+import { INVITATION_LINK, readApplicationInstallOptions, secretSigner, signedIntent, TransportError } from "@generalbusiness/dap-client";
 import { TRUSTED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { earlierSaid } from "../src/errors.ts";
 import { McpService, MISMATCH_NOTES, UNAVAILABLE_NOTES, answered, finding, guardSentences, meaningOf, memoryStore, type DefinitionLike, type Finding } from "../src/index.ts";
@@ -91,6 +91,131 @@ test("install_application returns its archived settlement on repeat without fetc
   expect([posts, settlements, packages]).toEqual([1, 1, 0]);
 });
 
+// A kept install request and a stand-in room, as above. These cases test what a stop says after the scope's answer or a server failure.
+// No native scope judges here, and no Git package is read except where a case says so.
+function installOn(options: { store?: ReturnType<typeof memoryStore>; applicationFetch?: () => Promise<never>; trust?: () => string } = {}) {
+  const signer = fixedSigner(23), stand = new StandIn(signer.key, "admin", ["application.install"]), store = options.store ?? memoryStore();
+  const rules = stand.scopes.get(stand.rules.scope)!;
+  stand.scopes.get(stand.directory.scope)!.definition = TRUSTED_APPLICATION_COHORT.directory;
+  rules.definition = TRUSTED_APPLICATION_COHORT.rules;
+  const args = { uri: `git+https://packages.test/apps.git/@${"c".repeat(40)}/application.dap.json`, release: head.hash, roles: [], values: {}, idempotencyKey: "install-1" };
+  const selected = readApplicationInstallOptions({ rules: stand.rules, uri: args.uri, release: args.release, roles: args.roles, values: args.values });
+  const trust = JSON.stringify([{ release: args.release, publisher: signer.key, host: "packages.test" }]);
+  const seen = { posts: 0, entries: null as null | ((body: string) => Response) };
+  const port = { service: SERVICE, signer, custody: store, now: () => Date.parse("2099-01-01T00:00:00Z"),
+    config: { read: async () => stand.config(), addRoot: async () => { throw Error("must not grant a root"); } },
+    get applicationTrust() { return options.trust ? options.trust() : trust; },
+    applicationFetch: options.applicationFetch ?? (async () => { throw Error("a kept request must not read a package"); }),
+    fetch: (async (url: string, init?: RequestInit) => {
+      if (url.endsWith("/acts")) seen.posts++;
+      const reply = await stand.fetch(url, init as never);
+      if (seen.entries && new URL(url).pathname.includes("/entries/")) return seen.entries(await new Response(reply.body as never).text());
+      return reply;
+    }) as never };
+  const service = new McpService(port);
+  const identity = { service: SERVICE, membership: stand.membership, signer: signer.key, target: stand.rules, key: args.idempotencyKey };
+  const keep = () => service.custody.keep(identity, meaningOf(selected), async () => ({
+    binding: { definition: "platform:rules", kind: "install-application", declaration: null, pinned: TRUSTED_APPLICATION_COHORT.rules },
+    envelope: { signed: await signedIntent(signer, { to: stand.rules, kind: "install-application", fields: {}, expected: {} }, { idempotencyKey: args.idempotencyKey, now: Date.parse("2099-01-01T00:00:00Z") }), beside: {} },
+  }), "2099-01-01T00:15:00Z");
+  const call = async () => (await service.call("install_application", args)).structuredContent as Record<string, unknown> & { error?: string; message?: string; next?: string };
+  return { stand, rules, service, store, identity, keep, call, seen };
+}
+const REPORT = "A repeat stops at this check again and sends nothing, so report this message and the idempotencyKey. Do not use a new key, because a new key can make a second entry.";
+
+describe("a stop after the scope accepted says what the person does next", () => {
+  // Invariant: a failed check of what cannot change stops again on a repeat, with nothing sent, so its next step says to report it.
+  test("an install whose acknowledgement does not match stops again on a repeat and says to report it", async () => {
+    const at = installOn();
+    await at.keep();
+    at.stand.answers.set("install-application", signed => {
+      const sealed = at.stand.append(at.rules, { type: "act", signed, authority: [], presented: {} } as never);
+      return { answer: "accepted", receipt: { ...at.stand.receipt(at.rules, sealed), intent: `sha256:${"0".repeat(64)}` } } as never;
+    });
+    for (let call = 1; call <= 2; call++) {
+      const said = await at.call();
+      expect([said.error, said.message], JSON.stringify(said)).toEqual(["target", "The scope accepted this request, and the server could not check it: the install acknowledgement does not match the retained native request."]);
+      expect(said.next).toBe(REPORT);
+    }
+    expect(at.seen.posts, "a repeat sends nothing").toBe(1);
+  });
+
+  // Invariant: a read that gave no entry can pass on a repeat, and an entry that does not hold the request cannot.
+  test("an install's entry read says to call again, and an entry that does not hold the request says to report it", async () => {
+    const at = installOn();
+    await at.keep();
+    at.seen.entries = () => Response.json({ ok: false, reason: "unavailable" });
+    const unread = await at.call();
+    expect([unread.error, unread.message], JSON.stringify(unread)).toEqual(["target", "The scope accepted this request, and the server could not check it: the read of the install receipt's native entry gave no entry."]);
+    expect(unread.next).toMatch(/^Call again with the same idempotencyKey: nothing goes twice\. If the call stops here again, report this message/);
+    at.seen.entries = body => { const read = JSON.parse(body) as { value: { hash: string } }; read.value.hash = `sha256:${"0".repeat(64)}`; return Response.json(read); };
+    const other = await at.call();
+    expect([other.error, other.message], JSON.stringify(other)).toEqual(["target", "The scope accepted this request, and the server could not check it: the install receipt's native entry does not hold the exact retained request."]);
+    expect(other.next).toBe(REPORT);
+    at.seen.entries = null;
+    const kept = await at.call();
+    expect([kept["answer"], kept["retained"]], JSON.stringify(kept)).toEqual(["accepted", true]);
+    expect(at.seen.posts, "every repeat read the kept answer").toBe(1);
+  });
+
+  // Invariant: an accepted join whose entry names no inbox stops again on a repeat, with nothing sent. The stand-in's entry creates no inbox.
+  test("an accepted join with no inbox stops again on a repeat and says to report it", async () => {
+    const signer = fixedSigner(24), stand = new StandIn(signer.key);
+    let posts = 0;
+    const service = new McpService({ service: SERVICE, signer, custody: memoryStore(), now: () => Date.parse("2099-01-01T00:00:00Z"),
+      config: { read: async () => ({ service: SERVICE }), addRoot: async () => { throw Error("must not grant a root"); } },
+      fetch: (async (url: string, init?: RequestInit) => { if (url.endsWith("/acts")) posts++; return stand.fetch(url, init as never); }) as never });
+    const { inbox: _inbox, ...repository } = stand.config().repository!;
+    const link = INVITATION_LINK + b64url(utf8(JSON.stringify({ v: 1, service: SERVICE, repository, invitation: 1, secret: "s".repeat(43), handle: "@ann", definition: "platform:membership@2" })));
+    for (let call = 1; call <= 2; call++) {
+      const said = (await service.call("join", { link, idempotencyKey: "join-1" })).structuredContent;
+      expect(said["error"], JSON.stringify(said)).toBe("target");
+      expect(String(said["message"])).toMatch(/^The scope accepted this request, and the server could not check it: entry .+ creates no inbox\.$/);
+      expect(said["next"]).toBe(REPORT);
+    }
+    expect(posts, "a repeat sends nothing").toBe(1);
+  });
+});
+
+describe("install_application's stop says what this call did", () => {
+  const NOTHING = "This call sent nothing.";
+  // Invariant: a package that cannot be prepared leaves no record and no request, so "This call sent nothing" holds on both branches.
+  test("a failed read of the package and a changed trust setting each send nothing, keep nothing and say so", async () => {
+    const read = installOn({ applicationFetch: async () => { throw Error("no such host"); } });
+    const unread = await read.call();
+    expect([unread.error, unread.message], JSON.stringify(unread)).toEqual(["target", `Before signing, the server could not resolve the target: the exact Git package could not be prepared. ${NOTHING}`]);
+    expect([read.seen.posts, read.store.records.size]).toEqual([0, 0]);
+
+    // The first read of the setting passes, and custody's recheck before the build refuses it: ApplicationPackageError, inside the build.
+    let reads = 0, trust = "";
+    const changed = installOn({ trust: () => (reads++ === 0 ? trust : "[]") });
+    trust = JSON.stringify([{ release: head.hash, publisher: changed.identity.signer, host: "packages.test" }]);
+    const refused = await changed.call();
+    expect([refused.error, refused.message], JSON.stringify(refused)).toEqual(["target", `Before signing, the server could not resolve the target: package bytes do not match the expected signed release or install bounds. ${NOTHING}`]);
+    expect([changed.seen.posts, changed.store.records.size]).toEqual([0, 0]);
+  });
+
+  // Invariant: once a request left under the key, a server failure never reads as a call that sent nothing. This stand-in store fails to
+  // release its lock after the send, as a failed unlink would, so the error reaches the install's catch with the outcome kept.
+  test("a server failure after the request left says that it left, and settle gives the answer", async () => {
+    const inner = memoryStore();
+    let failing = false;
+    const store = { ...inner, lock: async (id: string, notAfter: string) => {
+      const release = await inner.lock(id, notAfter);
+      return release && (async () => { await release(); if (failing) { failing = false; throw Error("the lock could not be released"); } });
+    } } as typeof inner;
+    const at = installOn({ store });
+    await at.keep();
+    failing = true;
+    const said = await at.call();
+    expect([said.error, said.message], JSON.stringify(said)).toEqual(["transport", `This server failed after a request under this key went to ${at.stand.rules.scope}, so this call has no answer to show. The envelope is under custody.`]);
+    expect(said.next).toMatch(/^Call settle with the same idempotencyKey/);
+    expect(at.seen.posts).toBe(1);
+    const settled = (await at.service.call("settle", { target: at.stand.rules.scope, idempotencyKey: "install-1" })).structuredContent;
+    expect(settled["answer"], JSON.stringify(settled)).toBe("accepted");
+  });
+});
+
 describe("errors say who said what, from what the judge returned", () => {
   // Invariant: every refusal reason of the contract has a sentence that names the scope, the kind and the judged head, and a next step.
   test("every refusal, unavailable, mismatch and read reason has a sentence and a next step", () => {
@@ -151,13 +276,40 @@ describe("errors say who said what, from what the judge returned", () => {
       expect(blind.next.split(NEW_KEY)).toHaveLength(2);
       expect(earlierSaid("stepped", said.error, said)).toEqual({ sentence: `An earlier preparation step under this key went, and this request did not. ${said.sentence}`, next: said.next });
     }
-    // A request the scope accepted: a lost or a failed check after it never says that this call sent nothing.
-    for (const f of [{ error: "transport", scope: "sc_x", submitted: false, accepted: true }, { error: "target", what: "entry 4 creates no inbox", sent: true }] satisfies Finding[]) {
+    // A request the scope accepted: a lost read or a failed check after it never says that this call sent nothing.
+    const accepted = (f: Finding) => {
       const said = finding(f);
       expect(said.sentence.startsWith("The scope accepted this request, and")).toBe(true);
       expect(said.sentence).not.toMatch(/nothing|Before signing/);
-      expect(said.next).toBe("Call again with the same idempotencyKey: the kept answer returns, and nothing goes twice.");
-    }
+      return said.next;
+    };
+    expect(accepted({ error: "transport", scope: "sc_x", submitted: false, accepted: true })).toBe("Call again with the same idempotencyKey: the kept answer returns, and nothing goes twice.");
+    expect(accepted({ error: "target", what: "entry 4 creates no inbox", sent: "report" })).toBe("A repeat stops at this check again and sends nothing, so report this message and the idempotencyKey. Do not use a new key, because a new key can make a second entry.");
+    expect(accepted({ error: "target", what: "the read gave no entry", sent: "read" })).toBe("Call again with the same idempotencyKey: nothing goes twice. If the call stops here again, report this message and the key. Do not use a new key, because a new key can make a second entry.");
+  });
+
+  // Invariant: the words about an earlier send appear once in a stop, however many layers state them, and the next step does not grow.
+  test.each([
+    ["unknown", "An earlier send under this key has no known outcome."],
+    ["unreadable", "This server could not read its custody, so it cannot say whether an earlier send under this key went."],
+    ["stepped", "An earlier preparation step under this key went, and this request did not."],
+  ] as const)("the words for an earlier send of kind %s appear once when two layers state them", (earlier, line) => {
+    const base = finding({ error: "target", what: "x" });
+    const once = earlierSaid(earlier, base.error, base);
+    const twice = earlierSaid(earlier, base.error, once);
+    expect(once.sentence.split(line)).toHaveLength(2);
+    expect(twice).toEqual(once);
+  });
+
+  // Invariant: a tool the list no longer holds after a failed read points at settle while the key has an earlier send, and a stop after
+  // a request left under the key never says that this call sent nothing.
+  test("an unknown tool under a key with an earlier send points at settle", () => {
+    const said = earlierSaid("unknown", "unknown-tool", finding({ error: "unknown-tool", name: "issue.comment" }));
+    expect(said.sentence).toBe("An earlier send under this key has no known outcome. No tool is named issue.comment in this list.");
+    expect(said.next).toBe("Call settle with this idempotencyKey, or repeat the first call's arguments under it. Do not use a new key until the scope has answered, because a new key can make a second entry.");
+    const stopped = finding({ error: "transport", scope: "sc_x", submitted: true, stopped: true });
+    expect(stopped.sentence).toBe("This server failed after a request under this key went to sc_x, so this call has no answer to show. The envelope is under custody.");
+    expect(stopped.next).toMatch(/^Call settle with the same idempotencyKey/);
   });
 
   // Invariant: a refusal with no guard name attributes no guard: with two unnamed guards, the sentence says the scope does not say
