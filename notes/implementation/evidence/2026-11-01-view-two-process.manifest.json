@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "qualification": "One passing gate. Scripts and a loopback host stand in for the desktop AI app, and no desktop AI app has rendered this code.",
+  "directory": "2026-11-01-view-two-process",
+  "checkpoint": {
+    "commit": "1dc134fd454585e4a46345f6d1ffae984fe6fe6a",
+    "tree": "3725379560ba1e159320a2866167ebe2788044d7"
+  },
+  "fileCount": 60,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "9936a6224474809119c6aa065f3d10271bf8d3434e451c584e83a7eda07c9c7a"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6557,
+      "sha256": "7590f085969596eaa44c2c5d451ae3e98b55c056960ed76968cb0957ec7ee984"
+    },
+    {
+      "path": "red/server-at-main.log",
+      "bytes": 1247,
+      "sha256": "36b114a9e6f00727ef4b0b06f776196a58c703ac661742fb07a02ba8b9372d93"
+    },
+    {
+      "path": "controls/before.log",
+      "bytes": 673,
+      "sha256": "21e69a37627b294a349a664b871b8364b71e30119170c2d0c3d7b66da042e6ee"
+    },
+    {
+      "path": "controls/old-words.log",
+      "bytes": 1670,
+      "sha256": "7247c87de254a4b79dfddc5305de532d6171aaad014bb7225b1151940dfa34e3"
+    },
+    {
+      "path": "controls/no-custody-check.log",
+      "bytes": 2021,
+      "sha256": "3ff93749ec06acb4dcbbb675732e0ed4d402a9fd88ef62dad19a161da0a30ca6"
+    },
+    {
+      "path": "controls/custody-per-process.log",
+      "bytes": 3654,
+      "sha256": "a369ea7dbdd0ce3c67003f8ad8530a8aa5b7a9142400261919e64cb86f6b920f"
+    },
+    {
+      "path": "controls/no-reopen.log",
+      "bytes": 559,
+      "sha256": "2ddf64e5098ce09a37066b7230ac45eedee51555e9ba0fc43ba95c5c9849978a"
+    },
+    {
+      "path": "controls/press-repeated.log",
+      "bytes": 573,
+      "sha256": "6ab3226e8aafcca09073a6b37e8b2510b4dc6781577d3417c5a463110c6ac48d"
+    },
+    {
+      "path": "controls/declared-first-screen.log",
+      "bytes": 650,
+      "sha256": "4aeb37ea8339d05ce70ab2409a5fa7e17515f0de93d51142ccba178d4ff87750"
+    },
+    {
+      "path": "browser-script/report.json",
+      "bytes": 216105,
+      "sha256": "4a0efde4bb227e2092c4cdb102d2cfd378d4cf2754920773b53d7e837384d524"
+    },
+    {
+      "path": "witness/steps.log",
+      "bytes": 821,
+      "sha256": "21da55fdaaee6247cf4bee95f38ebff56bce66d9a12efcb28f87c63bf22491e2"
+    },
+    {
+      "path": "remote/run.txt",
+      "bytes": 766,
+      "sha256": "28dfba133b95523bee589f4d31368ec71fd0fc4d423ad631996677ecb3c61146"
+    },
+    {
+      "path": "app-log/dap-views-12-17.txt",
+      "bytes": 2409,
+      "sha256": "6649b55736249db4759042ca70788189e25dad9dfa16c5a2525eff3c33465713"
+    },
+    {
+      "path": "declared-script/run.log",
+      "bytes": 1442,
+      "sha256": "271093f08585e55fb9606e9c0583d67064f2a222a9df495b82d6da356a35fd50"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 5433,
+      "sha256": "8a5312efe0f8943bd5a9e0b3dc8e874a73b22d24d0e09ed2f74471dc97e545cc"
+    }
+  ]
+}
