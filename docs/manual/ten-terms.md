@@ -103,7 +103,9 @@ install of a register: it is the key that creates that register. The room
 creator's **first key** is enrolled when the room is claimed. The **recovery key**,
 named at the claim, is not a member's key. It can still invite and remove
 members and revoke keys, so a room whose admins have lost their keys can
-be recovered. Membership is in
+be recovered. Keep the first key and the recovery key separate: the `dap`
+CLI and the page each make two keys. A room on the `separate-recovery`
+cohort refuses one key in both places. Membership is in
 [membership.ts](../../packages/platform/src/membership.ts).
 
 ## 8. Rules

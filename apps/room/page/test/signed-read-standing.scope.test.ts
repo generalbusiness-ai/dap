@@ -617,7 +617,8 @@ test("a new scope: a lane that a revoked key opened in the delay ends at the sam
 });
 
 // STAND-IN for a creation made by hand: the demo's store names the founder's key as the recovery key. The command line and the page each
-// make a separate recovery key. The signed `found` and `first-key` are real, and no rule of either refuses this choice.
+// make a separate recovery key. The signed `found` and `first-key` are real, and no rule of either refuses this choice on the demo's default pins.
+// The `separate-recovery` cohort refuses it, so this witness stays on those pins.
 test("a key that is also the room's recovery key keeps signing at membership after its revocation, and each act restarts its read of membership; only a rotation ends that", async () => {
   const d = await demo(undefined, null, { recoveryIsFounder: true });
   try {
@@ -629,6 +630,7 @@ test("a key that is also the room's recovery key keeps signing at membership aft
       return { definition: read.value.definition, roster: read.value.items.find((item) => item.type === "roster")! };
     };
     const { definition, roster } = await rows();
+    expect(definition).toBe("platform:membership@8");
     expect(roster.values["recoveryKey"]).toBe(ritaKey);
     await revoke(second, ritaKey, "compromised");
     expect(await liveKey(second, ritaKey)).toBeUndefined();

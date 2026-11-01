@@ -2,6 +2,8 @@ import { commonsRulesScope, commonsRules } from "./commons-rules.ts";
 import { COMMONS_COHORT as CC } from "./commons-cohort.ts";
 import { commons, commonsMembership } from "./commons.ts";
 import { commonsRegister, commonsRegisterRules, commonsDirectoryData, commonsDirectoryRules, commonsMembershipData, commonsMembershipRules } from "./commons-cohort-data.ts";
+import { SEPARATE_RECOVERY_COHORT as SR } from "./separate-recovery-cohort.ts";
+import { separateRecoveryRegister, separateRecoveryRegisterRules, separateRecoveryDirectory, separateRecoveryDirectoryRules, separateRecoveryMembership, separateRecoveryMembershipRules } from "./separate-recovery-cohort-data.ts";
 import { EVIDENCE_RULES_COHORT as ERC } from "./evidence-cohort.ts";
 import { evidenceRulesRegister, evidenceRulesDirectory, evidenceRulesDirectoryRules } from "./evidence-cohort-data.ts";
 import { rulesScopeV13, rulesScopeRulesV13, rulesAnswerV13, rulesObservedValuesV13 } from "./rules-scope-v13.ts";
@@ -116,6 +118,9 @@ export interface Platform {
  * cannot run.
  */
 const VERSION_DATA: Readonly<Record<string, Platform>> = {
+  [SR.register]: { data: separateRecoveryRegister, rules: separateRecoveryRegisterRules },
+  [SR.directory]: { data: separateRecoveryDirectory, rules: separateRecoveryDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
+  [SR.membership]: { data: separateRecoveryMembership, rules: separateRecoveryMembershipRules, observed: (state, asked) => standingOf(state, asked, SR.membership) },
   [CC.register]: { data: commonsRegister, rules: commonsRegisterRules },
   [CC.directory]: { data: commonsDirectoryData, rules: commonsDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
   [CC.membership]: { data: commonsMembershipData, rules: commonsMembershipRules, observed: (state, asked) => standingOf(state, asked, CC.membership) },

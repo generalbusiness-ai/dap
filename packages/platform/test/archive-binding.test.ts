@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { keys } from "@generalbusiness/dap-derive/testing";
-import { ARCHIVE_APPLICATION_COHORT as C, ARCHIVE_DEVICE_APPLICATION_COHORT as DC, ARCHIVE_DEVICE_PUBLICATION_COHORT as DP, applicationRoom } from "../src/index.ts";
+import { ARCHIVE_APPLICATION_COHORT as C, ARCHIVE_DEVICE_APPLICATION_COHORT as DC, ARCHIVE_DEVICE_PUBLICATION_COHORT as DP, SEPARATE_RECOVERY_COHORT as SR, applicationRoom } from "../src/index.ts";
 import { installGraph } from "./fixtures-entry.ts";
 
 // Actual register/directory rules, native judges and MemoryState. Child
@@ -12,6 +12,8 @@ test.each([["archive", C], ["device/archive", DC], ["corrected device/archive", 
   // The bounded metadata route must resolve this actual native factory's
   // recorded Directory/Rules pair; no package or authority is inferred here.
   expect(applicationRoom(late.state, C.directory)).toEqual({ directory: late.at, rules: graph.A.at });
+  // Rules 10 serves Membership 8 and Membership 10, so the separate-recovery Directory names its own sibling.
+  expect(applicationRoom(late.state, SR.directory)).toEqual({ directory: late.at, rules: graph.A.at, membershipDefinition: SR.membership });
   expect(applicationRoom(late.state, "platform:directory@9999")).toBeNull();
   const rita = { ...keys.rita, member: { membership: graph.M.at, member: "@rita" as const } };
   expect(late.item(0).values["archive"]).toBeNull();

@@ -89,6 +89,8 @@ That room ends this only by rotating the recovery key. Only the recovery key can
 
 The other scopes of the room take no recovery act, so the 1200-second bound holds at those scopes.
 
+The `separate-recovery` cohort refuses this shape at `found` and `first-key`, by the name `recovery-key`, but the default install and the `newest` creation cohort do not refuse it, so an installed room or a new room on those pins keeps this route.
+
 ### A key on the register's `founders` list keeps `found`
 
 The register is its own authority, and a room's revocation does not reach it. A key on the register's `founders` list can still sign `found` after a room revokes it. Each accepted `found` restarts the key's read of the register, with no limit, and opens a claim and a repository's creation. This route reads nothing of the room.
