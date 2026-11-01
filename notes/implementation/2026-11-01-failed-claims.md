@@ -1,6 +1,6 @@
 # Tell a person what a failed claim keeps and what a full register needs
 
-Status: source implementation. The gate passed at `c88b6ea5`. The Worker bundle changes, because the page's words and the MCP server's words change. No states or counts change, and no real outage ran.
+Status: source implementation. The gate passed at `c88b6ea5`, and it passed again at the merge `1db050c6`. The Worker bundle changes, because the page's words and the MCP server's words change. No states or counts change, and no real outage ran.
 
 Request `c19f25da45640957d3ffb6ffca797c8591bb2cae` and promise `75a11674d2589f48117e3081707b275291bfc932` own this head, from the planner's ruling `9af818a5`: option E now, option A in the next cohort, and option D not now. This head builds E and starts neither A nor D.
 
@@ -81,6 +81,10 @@ The red runs of unit 1 put the six source and asset files from merge commit `062
 The count method ran once in the public-route DEFECT case, on real scopes with a scripted host. It read 66 `found` rows, 194 outcome rows and 2 result rows with 3 effects. 64 `found` rows have no result row, and the inspector's 64 pending claims are the same IDs. In that run the operator's history read answered `forbidden`, and a room member's `dap log register` exited 0. The operator's refusal came a day past the operator's last entry, on the test's scripted clock.
 
 The gate reports 3512 plain and 1002 native tests, 116 Node and 56 Counting.
+
+After the gate at `c88b6ea5`, the head merged main twice. The first merge holds the documentation rewrite and the join words. It conflicted in `docs/cli.md`, `docs/deploy.md` and the seal of `McpService`, because the rewrite moved those pages and the join words changed that class. I took main's pages, put this head's passages back, and took the seal from the owner's failure output. That merge also adds a sentence that the checker's `d035ffc9` asked for: `docs/security/trust-boundaries.md` now says that the `dap log destination` row does not show whether the destination applied the notice, and that `--limit` is needed on a busy destination. The second merge holds the page lock, and it conflicted in the generated `apps/room/page/assets.ts`, so I rebuilt that file.
+
+The first gate after those merges failed with no failed test. At `4c0f871f`, tree `d5863a0b`, 3515 plain and 1010 native tests passed, and Vitest reported one unhandled `EnvironmentTeardownError`, attributed to `packages/scope/test/founder-recovery.test.ts`, a file that this head does not change. That run is in `~/play/artroom-evidence/2026-11-01-failed-claims-words-3/`, `SHA256SUMS` `b445b51ea119433dff6389bf7fe6bb1f314a22c4d681723a7ae7a7e32d97d373`, and the digest of `gate/gate.stdout.log` is `773950df89e92eee`. The cause is not established, and request `2f31daaa` holds it. The gate then ran again on the same tree, at `1db050c6`, which adds a merge of main with no change of tree. It exited 0, with 3515 plain and 1010 native tests. That run is in `~/play/artroom-evidence/2026-11-01-failed-claims-words-4/`, `SHA256SUMS` `a7d204b91b4020a66e94f2aef6320492778c573e8ac914e252da456d57367de1`, and the digest of `gate/gate.stdout.log` is `beaf3444e6dd0fb0`. The red runs and controls of units 1 and 2 did not run again after these merges.
 
 ## Open limits
 
