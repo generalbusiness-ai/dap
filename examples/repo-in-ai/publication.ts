@@ -19,6 +19,8 @@ import { agentReviewControl } from "./review-control.ts";
 
 const equal = (a: unknown, b: unknown) => canonicalize(a) === canonicalize(b);
 const instance = "repo-in-ai-seed";
+// An outcome arrives after the act that asks for it. Each recheck is the same read and submits no act.
+const PENDING_RECHECKS = 15, PENDING_RECHECK_MS = 2000;
 type WireCandidate = Omit<SeedCandidate, "objects" | "expected"> & { objects: { id: string; kind: "commit" | "tree" | "blob"; body: string }[]; expected: { path: string; mode: string; bytes: string }[] };
 interface Workspace { tokenId: string; tokenNumber: number; remote: string; ends: string }
 const pack = (candidate: SeedCandidate): WireCandidate => ({ ...candidate, objects: candidate.objects.map(object => ({ ...object, body: Buffer.from(object.body).toString("base64") })), expected: candidate.expected.map(file => ({ ...file, bytes: Buffer.from(file.bytes).toString("base64") })) });
@@ -26,6 +28,14 @@ export async function candidateOf(owner: Session): Promise<SeedCandidate> {
   const wire = await retained<WireCandidate>(owner.ctx.store, "s1-candidate");
   if (wire === null) throw new Error("Build the seed candidate first.");
   return { ...wire, objects: wire.objects.map(object => ({ ...object, body: Buffer.from(object.body, "base64") })), expected: wire.expected.map(file => ({ ...file, bytes: Buffer.from(file.bytes, "base64") })) };
+}
+
+/** Reads until `settled` answers true, and stops with `words` at the bound. A failed read stops at once. Check reads once. */
+async function whenSettled(owner: Session, lane: ScopeRef, mode: SessionMode, words: string, settled: () => Promise<boolean>): Promise<void> {
+  for (let rechecks = 0; !await settled(); rechecks++) {
+    if (mode === "check" || rechecks === PENDING_RECHECKS) throw new Error(words);
+    await (owner.ctx.pause?.([lane.scope]) ?? new Promise<void>(resolve => { setTimeout(resolve, PENDING_RECHECK_MS); }));
+  }
 }
 
 async function observed(owner: Session, phase: string, extra: Omit<PhaseResult, "phase" | "status"> = {}): Promise<PhaseResult> {
@@ -152,12 +162,14 @@ export async function publicationPhase(owner: Session, agent: Session, reviewer:
     return preparePhase(owner, agent, phase, mode, "stage", { hold: hold.seq, instance, base: candidate.base, integration: candidate.commit, tree: candidate.tree, complete: true, selected: [], decisions: [] }, { target: lane.scope, digest: J4_DIGESTS.change, kind: "propose-manifest" });
   }
   if (phase === "stage-ready") {
-    const staged = await requiredDone(owner, "manifest-stage"), state = await laneState(owner, lane);
-    if (!staged.intent) throw new Error("The staged intent digest is unavailable.");
-    const pin = state.memory.record("hold@2", "pin", [lane, staged.intent]);
-    const root = pin?.values["root"];
-    const checks = state.memory.records("hold@2", "check", { states: ["recorded"], member: "intent", value: staged.intent });
-    if (pin?.state !== "provisional" || checks.length !== 1 || typeof root !== "number" || state.memory.record("hold@2", "root", [root])?.state !== "live") throw new Error("The actual stage/check outcome is not ready. Read this phase again.");
+    const intent = (await requiredDone(owner, "manifest-stage")).intent;
+    if (!intent) throw new Error("The staged intent digest is unavailable.");
+    await whenSettled(owner, lane, mode, "The actual stage/check outcome is not ready. Read this phase again.", async () => {
+      const state = await laneState(owner, lane), pin = state.memory.record("hold@2", "pin", [lane, intent]);
+      const root = pin?.values["root"];
+      const checks = state.memory.records("hold@2", "check", { states: ["recorded"], member: "intent", value: intent });
+      return pin?.state === "provisional" && checks.length === 1 && typeof root === "number" && state.memory.record("hold@2", "root", [root])?.state === "live";
+    });
     return observed(owner, phase);
   }
   if (phase === "manifest") {
@@ -180,9 +192,11 @@ export async function publicationPhase(owner: Session, agent: Session, reviewer:
   }
   if (phase === "published") {
     const merge = (await requiredDone(owner, "merge")).fact;
-    const item = merge ? (await laneState(owner, lane)).memory.item(merge.seq) : null;
-    const refs = await roomRefs(owner), destination = await owner.read(refs.destination), candidate = await candidateOf(owner);
-    if (item?.state !== "published" || singleton(destination, "branch").values["head"] !== candidate.commit) throw new Error("The actual publication is not complete. Read this phase again.");
+    await whenSettled(owner, lane, mode, "The actual publication is not complete. Read this phase again.", async () => {
+      const item = merge ? (await laneState(owner, lane)).memory.item(merge.seq) : null;
+      const refs = await roomRefs(owner), destination = await owner.read(refs.destination), candidate = await candidateOf(owner);
+      return item?.state === "published" && singleton(destination, "branch").values["head"] === candidate.commit;
+    });
     return observed(owner, phase);
   }
   if (phase === "verify-seed") {
