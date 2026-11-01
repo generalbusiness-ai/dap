@@ -1,6 +1,6 @@
 # A Git read token after its key is revoked
 
-Status: current. It landed at `970c701c` (approval `7a2618e4`). No code is built. The planner ruled in `cccd205a`: the one-hour pin is not built before real calls 2 and 3 run, and the planner runs those calls. `revoke-reads` follows that change and is not built now. No notice goes to a lane. One next cohort lands at a time, so a slice that builds the token pin carries `separate-recovery` with it. `separate-recovery` has no opt-in now.
+Status: current. It landed at `970c701c` (approval `7a2618e4`). No code is built. The planner ruled in `cccd205a`: the one-hour pin is not built before real calls 2 and 3 run, and the planner runs those calls. The planner has run real call 2, and ruled in `908b6d86` that the pin does not need real call 3. So the pin can join the next cohort, and nobody has started it. `revoke-reads` follows that change and is not built now. No notice goes to a lane. One next cohort lands at a time, so a slice that builds the token pin carries `separate-recovery` with it. The planner ruled in `9af818a5` that a final failed state for a claim joins the same cohort, and that it is the first reason to build that cohort. `separate-recovery` has no opt-in now.
 
 Teo keeps a member key on a laptop. Mara is an admin of the same room. The room publishes to a repository on Cloudflare Artifacts, and Rita operates the Worker.
 
@@ -39,7 +39,7 @@ sc_p6xp2lmd...:59  2099-01-01T09:41:09Z  outcome; 0 effects, 0 sends
 { "key": "key_teoLaptop...", "revoked": 1, "gone": 0, "cannot": 0, "left": 0 }
 ```
 
-Mara can now say: "Cloudflare confirmed the revocation of the one live read token of this key. Commits that we publish after the host applies it are safe from that token." Mara still cannot say that the thief read nothing, because the thief had hours before 09:41.
+Mara can now say: "Cloudflare confirmed the revocation of the one live read token of this key. The host now refuses new requests with that token. A download already under way can still finish, so count everything it reached as read. Only commits that no download reached are safe from that token." Mara still cannot say that the thief read nothing, because the thief had hours before 09:41. A team that counts on a fix treats a clone under way as having whatever it reached. The sentence about a download rests on real call 2, which is one run at 30 MB.
 
 This note uses these terms:
 
@@ -112,9 +112,9 @@ The planner runs these calls, by the ruling in `cccd205a`. I ran none of them. E
 2. **Artifacts, in flight.** Mint a token for 60 seconds, the documented minimum. Run `git clone` over a throttled link so that the pack outlasts the token. Repeat with `revokeToken(id)` during the download. Record whether the clone finishes.
 3. **GitHub, in flight.** Start the same throttled clone with an installation token. Send `DELETE /installation/token` during the download, and then run `git ls-remote`. Repeat once with a clone that outlasts one hour.
 
-### The planner ran real call 1 once, through REST, and calls 2 and 3 have not run
+### The planner ran real calls 1 and 2 once each, through REST, and call 3 has not run
 
-This is the planner's observed run of 1 November 2026, from act `a83f1a22`. I did not run it, and I read its evidence: `~/play/artroom-evidence/2026-11-01-artifacts-token-call-1`, `SHA256SUMS` `8efb34cc`.
+Real call 1 is the planner's observed run of 1 November 2026, from act `a83f1a22`. I did not run it, and I read its evidence: `~/play/artroom-evidence/2026-11-01-artifacts-token-call-1`, `SHA256SUMS` `8efb34cc`.
 
 - **The route.** The planner used the REST route through `cf artifacts namespaces`, and not the binding, on a new empty repository.
 - **The revocation.** The planner minted a `read` token for 3600 seconds, and `git ls-remote` exited 0 twice. The planner revoked the token by ID, and the reply held the ID. The next `git ls-remote`, 0.1 seconds after the reply, exited 128 with "Invalid or expired token". Five later tries over 10 seconds answered the same.
@@ -122,12 +122,33 @@ This is the planner's observed run of 1 November 2026, from act `a83f1a22`. I di
 
 One call on one empty repository does not give the host's delay in general.
 
-The run does not show these things:
+Real call 2 is the planner's observed run of 1 November 2026, from act `908b6d86`. I did not run it, and I read its evidence: `~/play/artroom-evidence/2026-11-01-artifacts-token-call-2`, `SHA256SUMS` `b56d230d`. The planner pushed one commit of 30 MB of random bytes, and ran `git clone --no-checkout` with each token that `cf` minted. A local proxy on the planner's side throttled the reply to about 150 KB/s.
+
+| Case | Token | Clone | Clone's head matches |
+|---|---|---|---|
+| Control | 3600 seconds | Exit 0 in 209.0 s | Yes |
+| The token ends during the clone | 60 seconds | Exit 0 in 208.9 s | Yes |
+| The token is revoked during the clone | 3600 seconds, revoked by ID at 31 s | Exit 0 in 209.4 s | Yes |
+
+- **The revocation.** When the revocation returned, 4.6 MB had reached the proxy. `git ls-remote` with that token then exited 128 with "Invalid or expired token". The clone ran about 178 more seconds, and about 27 MB more reached the proxy.
+- **The token's end.** The 60-second token ended about 149 seconds before its clone's last byte. That number is arithmetic from the lifetime that the planner asked for. The script did not try that token after 60 seconds.
+
+So on Artifacts, in this run, a clone under way outlasted its token's end and its token's revocation. The revocation stopped a new request, and it did not stop a download under way.
+
+Real call 2 has these limits:
+
+- **One run of each case, at one size.** No 1 GB clone ran, and no clone ran past a one-hour token.
+- **A buffer.** A buffer between the host and the proxy could hold part of the reply, and the planner did not measure one. So the run does not say how much of the reply the host had sent at either moment.
+- **The gap.** A longer gap between a token's end and the last byte did not run.
+- **Two repositories.** The first attempt stopped after its control, on one 401 from the token route, and the delete 3 seconds later worked. The other two cases ran on a new repository. The planner deleted both.
+- **Publishing.** Each repository held one commit, and nobody published during a clone. So the run does not show whether a commit published during a download can reach that download.
+
+Real call 1 does not show a token in use during a clone, or a repository with content. Real call 2 covers those two, within its limits. Neither run shows these things:
 
 - The binding's `revokeToken(id)`, which `hold@2` uses.
-- A token in use during a clone.
-- A repository with content.
-- The list of a repository's tokens, because the planner's list command failed with a usage error.
+- The list of a repository's tokens. The planner's list command failed with a usage error in real call 1, and real call 2 did not list tokens.
+
+Real call 3 has not run. The planner ruled in `908b6d86` that the one-hour pin does not need it. GitHub already has about one hour, and the service has no ID to revoke by there, so its answer changes no choice in this design. So what GitHub does with a reply under way stays unknown.
 
 ## Keep the Artifacts ID, and never keep the plaintext
 
@@ -214,7 +235,7 @@ A clone longer than the token therefore depends on the host, and neither host do
 - **GitHub.** "Using an expired token produces a status code of 401 - Unauthorized" (<https://docs.github.com/en/rest/apps/apps#create-an-installation-access-token-for-an-app>). Also, "When a token has expired or has been revoked, it can no longer be used to authenticate Git and API requests." (<https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/token-expiration-and-revocation>) Neither sentence speaks of a reply in flight.
 - **Artifacts.** The Git protocol page states the token's format, `art_v1_<40 hex>?expires=<unix_seconds>`, and it says nothing about a reply in flight (<https://developers.cloudflare.com/artifacts/api/git-protocol/>).
 
-So the answer is unknown. Real calls 2 and 3 settle it. A token that expires between two requests of one clone fails at the next request. I expect that gap to last seconds on a new clone, and nobody measured it. If a clone fails, `dap clone` prints `git clone exited with <code>; the token was read and is not kept.` (`commands.ts:1139`), and a new `dap clone` starts over.
+So the pages leave the answer open. On Artifacts, real call 2 ran one clone past a 60-second token's end and one clone past its token's revocation, at 30 MB. Both finished with the right head. The section on the real calls gives that run's limits. On GitHub the answer stays unknown, because real call 3 has not run. A token that expires between two requests of one clone fails at the next request. I expect that gap to last seconds on a new clone, and nobody measured it. If a clone fails, `dap clone` prints `git clone exited with <code>; the token was read and is not kept.` (`commands.ts:1139`), and a new `dap clone` starts over.
 
 ### Renewal goes through membership, so a revoked key gets nothing
 
@@ -245,7 +266,7 @@ I recommend one hour, for three reasons:
 
 One hour has these costs:
 
-- **A very slow clone can fail on Artifacts.** Suppose that real call 2 shows that Artifacts cuts a reply at expiry. Then a 1 GB clone below 2.2 Mbit/s fails every time. `dap clone` has no shallow form (`commands.ts:1056`). GitHub has that limit today.
+- **A very slow clone stays an open risk.** In real call 2, a 30 MB clone on Artifacts finished about 149 seconds after its 60-second token ended. So no cut at expiry appeared at this size, in one run. No 1 GB clone ran, and no clone ran past a one-hour token. If a host cuts a reply at expiry, then a 1 GB clone below 2.2 Mbit/s fails every time. `dap clone` has no shallow form (`commands.ts:1056`). GitHub has that lifetime today, and nobody has run this case there.
 - **An agent renews.** A local agent that fetches across hours needs one act and three reads for each token (`docs/mcp.md:2218`, `:2233`). The destination's journal gains two entries for each token.
 - **A new pin.** The next section gives that change. Older rooms gain nothing from it.
 
@@ -279,7 +300,7 @@ This section gives the true sentence for each case, with the time bound counted 
 | Older pin, Artifacts | 24 hours + 600 s | "Read the token's expiry in `dap show`. Commits published before that time are exposed." |
 | Older pin, GitHub | about 1 hour + 600 s | The same sentence, with a shorter time. |
 | New pin, GitHub | about 1 hour + 600 s | "The log says how many tokens we cannot revoke, and each expires within the hour." |
-| New pin, Artifacts, `revoke-reads` confirmed with `left` 0 | Until the host applies the revocation, and no page gives that delay | "The host confirmed each revocation. Commits after the host applies each one are safe from these tokens." |
+| New pin, Artifacts, `revoke-reads` confirmed with `left` 0 | New requests: until the host applies the revocation, and no page gives that delay. A download under way: past that time, in one run at 30 MB | "The host confirmed each revocation, and it now refuses new requests with these tokens. Count everything that a download under way reached as read. Only commits that no download reached are safe from these tokens." |
 | New pin, Artifacts, `left` above 0 or all attempts unknown | 1 hour + 600 s | "Some tokens are not revoked. The rest expire within the hour." |
 | A key revoked as `retired`, or a removed member | The pin's lifetime + 600 s, as in the rows above | No notice goes out, so nothing is revoked and nothing refuses the session (`membership.ts:501`, `:521`). |
 
