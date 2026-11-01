@@ -8,7 +8,7 @@ import { net } from "@generalbusiness/dap-scope/testing";
 import { beginSessionFixture } from "../../../../packages/scope/test/session-settings.ts";
 import { platformOutside } from "@generalbusiness/dap-scope/testing/worker";
 import { ownHost, type Stand } from "../../../../packages/scope/test/hosts.ts";
-import { Platform, routed, settle } from "../../../../packages/scope/test/repository.ts";
+import { Platform, routed, settleDriving } from "../../../../packages/scope/test/repository.ts";
 import { command, memoryStore, type Context, type Outcome } from "../../../../packages/cli/src/index.ts";
 import { DEMO_DIGESTS, changeDemo, issueDemo } from "../src/index.ts";
 
@@ -57,15 +57,7 @@ async function story(at: Stand, wired: Set<ScopeId>): Promise<void> {
   const known: Platform[] = [];
   const pause = async (waiting: readonly string[]) => {
     const nodes = [...known, ...waiting.filter((scope) => !known.some((node) => node.name === scope)).map((scope) => new Platform(scope as never))];
-    for (let pass = 0; pass < 64; pass++) {
-      let made = 0;
-      for (const node of nodes) {
-        while ((await (node.stub as unknown as { effect(): Promise<number> }).effect()) > 0) made++;
-        made += await node.stub.dispatch();
-      }
-      if (made === 0) return;
-    }
-    await settle(...nodes);
+    await settleDriving(...nodes);
   };
   const files: Record<string, Uint8Array> = {
     "change-demo.json": utf8(canonicalize(changeDemo)),

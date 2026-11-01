@@ -4,7 +4,7 @@ import { timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import type { Digest, ScopeId } from "@generalbusiness/dap-contract";
 import { net } from "../../src/testing.ts";
 import type { SessionOwner } from "../session-settings.ts";
-import { Platform } from "../repository.ts";
+import { Platform, quiet } from "../repository.ts";
 import { wired } from "../outside.ts";
 import { platformOutside } from "../worker.ts";
 import { applicationTrustSettings } from "./application-trust-settings.ts";
@@ -185,7 +185,9 @@ async function fixturePasses(nodes: readonly Platform[], wait: <T>(action: () =>
     work += value;
     if (work > 4096) throw new Error("Native fixture exceeded its finite work budget.");
   };
-  for (let pass = 0; pass < 64; pass++) {
+  let pass = 0;
+  await quiet(() => distinct, async () => {
+    if (++pass > 64) throw new Error("Native fixture exceeded its finite scheduler passes.");
     let made = 0;
     for (const node of distinct) {
       if (mode !== "dispatch") {
@@ -201,9 +203,8 @@ async function fixturePasses(nodes: readonly Platform[], wait: <T>(action: () =>
         count(dispatched); made += dispatched;
       }
     }
-    if (!made) return;
-  }
-  throw new Error("Native fixture exceeded its finite scheduler passes.");
+    return made;
+  }, wait);
 }
 
 /** Effect and dispatch rounds, preserving the existing driver order. */
@@ -234,7 +235,9 @@ export async function drainScheduledFixture(projected: () => readonly Platform[]
     return joined;
   };
   let nodes = distinct();
-  for (let pass = 0; pass < 64; pass++) {
+  let pass = 0;
+  await quiet(() => nodes, async () => {
+    if (++pass > 64) throw new Error("Native scheduled fixture exceeded 64 callback/driver rounds.");
     const previous = new Set(nodes.map(node => node.name));
     const before = await callbacks(nodes);
     nodes = distinct();
@@ -251,7 +254,6 @@ export async function drainScheduledFixture(projected: () => readonly Platform[]
     nodes = distinct();
     added ||= nodes.some(node => !driven.has(node.name));
     const after = await callbacks(nodes);
-    if (!before && !after && !made && !added) return;
-  }
-  throw new Error("Native scheduled fixture exceeded 64 callback/driver rounds.");
+    return before + after + made + (added ? 1 : 0);
+  }, wait);
 }
