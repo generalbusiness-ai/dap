@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. The controls ran at 923d6456. No Worker, browser host or real room ran.",
+  "directory": "2026-10-31-finding-at",
+  "checkpoint": {
+    "commit": "6a2f581a924720a35c08185eada3f5b8b596ff74",
+    "tree": "784e987d16cc3113e11f059f15272dd33546cb58"
+  },
+  "fileCount": 113,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "3eac1c25e5883584127bc7cc29bd50d2ebd8b06c03be27833771dc0908e6633e"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6482,
+      "sha256": "cd4fb12c9988731a65c04313054a17f1cc1a7d8b06d64a631ca64ee8dedd6c84"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "controls/summary.json",
+      "bytes": 18483,
+      "sha256": "84844cf151974b4cb9675360d2038b4c596d4b429522ec0fb8a1eb76de686c31"
+    },
+    {
+      "path": "controls/run-controls.mjs",
+      "bytes": 7472,
+      "sha256": "a52a50f3be8ce63dccbe2bea49de829e0999012c03abe0afbaceb36c511f8478"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 10971,
+      "sha256": "04a7c0d8646f4b349b2d4ff65142bcd9182a68928acdab5a3578a354fb055a1c"
+    }
+  ]
+}
