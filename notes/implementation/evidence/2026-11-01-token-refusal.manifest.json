@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint, after one gate that failed on a load timeout in an unrelated test. The red run ran at main 991129fc, and the focused logs and the controls ran at abbe2646, as the note's Head column states. No deployed Worker, real host token or real room ran this code.",
+  "directory": "2026-11-01-token-refusal",
+  "checkpoint": {
+    "commit": "fdfc1564a172718ac48fc75977d2a7ee83faca3c",
+    "tree": "d6e38c43d02792f07f23f6576ee9b84cee02872a"
+  },
+  "fileCount": 71,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "8735c08b87131db0454f3c1c22de4c4b79f57d89205de066f91dca61b620904d"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6550,
+      "sha256": "8211677a6f05cb6b39c0debc869b130a8225c1dcac5755e4b95490dd1823f480"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "red/run.log",
+      "bytes": 7884,
+      "sha256": "e6180e1533a6afaa1d574c23f5c3b859a9430926bc61a7eef623e0c7c484492c"
+    },
+    {
+      "path": "controls/summary.jsonl",
+      "bytes": 4746,
+      "sha256": "57a4d8e218a9f9a75b9619511a4329d23225d9e0e6d750c77364e87ce5be50d0"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 6616,
+      "sha256": "a0cda48bf16b7c30c250833117d651e389a331f0416151ba0a0508ffc5151993"
+    }
+  ]
+}
