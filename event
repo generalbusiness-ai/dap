@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7df32b4522b1fc0cd06040c6ec848cb9ad3e7807","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-01-j5-needs-you.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7faaa2bd44bcda7b76aa68ee5c3e4e03c62c5a47","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/recipes.scope.test.ts."}
