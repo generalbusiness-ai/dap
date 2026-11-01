@@ -5,6 +5,7 @@ import { expect, test, vi } from "vitest";
 import { b64url, canonicalize, entryHash, intentDigest, newIncarnation, scopeIdOf, textDigest, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import type { Entry, Item, OutboxId, Receipt, SignedIntent, Summary } from "@generalbusiness/dap-contract";
 import type { Fetch } from "@generalbusiness/dap-client";
+import type { Context } from "@generalbusiness/dap-cli";
 import { memoryStore } from "../../../packages/cli/src/store.ts";
 import type { PendingInvitationIssue, Store } from "../../../packages/cli/src/store.ts";
 import { storedSigner } from "../../../packages/cli/src/store-signer.ts";
@@ -62,13 +63,15 @@ async function enrollmentFixture() {
   await bindPlan(owner, setup);
   const receipts = new Map<string, Receipt>(), sent: SignedIntent[] = [], traces: EnrollmentDiagnostic[] = [];
   let refuseSummary = false, stopAtDispatch = false, unknownSession = false, beforeDispatch: ((signed: SignedIntent) => Promise<void>) | null = null;
-  let inboxState: (summaryRead: number) => "active" | "provisional" | "forbidden" | "not-found" = () => "active", inboxSummaryReads = 0;
+  let inboxState: (summaryRead: number) => "active" | "provisional" | "refused" | "forbidden" | "not-found" | "unavailable" | "no-reply" = () => "active", inboxSummaryReads = 0, sessionRequests = 0, clockAhead = 0;
+  const waited: (readonly string[])[] = [];
   const live = (): Item[] => Object.entries(roster.definition.declared.items).flatMap(([type, item]) => roster.state.page(type, Object.keys(item.states).filter(s => !item.states[s]!.final), null, 100).items)
     .map(item => item.type === "roster" ? { ...item, refs: { ...item.refs, directory } } : item);
   const fetcher: Fetch = async (url, init) => {
     const path = new URL(url).pathname;
     if (path === "/health") return Response.json({ deployment: "dap-demo", version: setup.deploymentVersion, register: "ready", sessions: "ok", wiring: { artifacts: { state: "wired" } } });
     if (path.endsWith("/sessions")) {
+      sessionRequests++;
       const asked = JSON.parse(init!.body!).request;
       const key = live().find(item => item.type === "key" && item.state === "active" && item.values["id"] === asked.actor);
       const member = key ? live().find(item => item.type === "member" && item.id === key.refs["member"]) : unknownSession ? live().find(item => item.type === "member" && item.values["handle"] === "@rita") : null;
@@ -103,6 +106,8 @@ async function enrollmentFixture() {
       const state = inboxState(path.endsWith("/entries/0") ? inboxSummaryReads : inboxSummaryReads++);
       if (state === "forbidden") return Response.json({ ok: false, reason: "forbidden" }, { status: 403 });
       if (state === "not-found") return Response.json({ ok: false, reason: "not-found" }, { status: 404 });
+      if (state === "unavailable") return Response.json({ ok: false, reason: "unavailable" }, { status: 503 });
+      if (state === "no-reply") throw Error("SCRIPTED lost inbox read");
       if (path.endsWith("/entries/0")) return Response.json({ ok: true, at: head, value: { entry, hash: head.hash }, complete: true });
       return Response.json({ ok: true, at: head, value: { scope: at, status: state, definition: "platform:inbox@1", time: roster.now, counts: [["inbox", "open", 1]], items: [{ id: 0, type: "inbox", state: "open", revision: 1, opened: textDigest("SCRIPTED inbox"), attributed: [], values: {}, parties: { owner: member.parties["member"] }, refs: { membership: roster.at } }] }, complete: true });
     }
@@ -114,8 +119,9 @@ async function enrollmentFixture() {
     if (refuseSummary) return Response.json({ ok: false, reason: "unavailable" }, { status: 503 });
     return Response.json({ ok: true, at: roster.head, complete: true, value: { scope: roster.at, status: "active", definition: "platform:membership@8", time: roster.now, items: live(), counts: Object.entries(roster.definition.declared.items).flatMap(([type, item]) => Object.keys(item.states).map(state => [type, state, roster.state.count(type, state)])) } });
   };
-  const ctx = { store: owner, fetch: fetcher, now: () => timeMs(roster.now)!, pause: async () => {} };
-  return { home, setup, owner, ctx, fetcher, sent, traces, roster, live, repository,
+  const ctx: Context = { store: owner, fetch: fetcher, now: () => timeMs(roster.now)! + clockAhead, pause: async names => { waited.push(names); } };
+  return { home, setup, owner, ctx, fetcher, sent, traces, waited, roster, live, repository,
+    inboxReads: () => inboxSummaryReads, sessionRequests: () => sessionRequests, advance: (ms: number) => { clockAhead += ms; },
     failSummary: (value: boolean) => { refuseSummary = value; }, stopDispatch: () => { stopAtDispatch = true; },
     permitUnknownSession: () => { unknownSession = true; },
     inbox: (state: typeof inboxState) => { inboxState = state; },
@@ -303,16 +309,17 @@ test("the entry point retains actual pre-root failure status and only safe stder
   } finally { stderr.mockRestore(); vi.unstubAllGlobals(); f.close(); rmSync(publicRoot, { recursive: true, force: true }); }
 });
 
-test("the entry point names a provisional inbox with a fixed word and no private value, signs nothing while it rechecks, and keeps check and continue", async () => {
+test("the entry point names a provisional inbox with a fixed word and no private value after the engine's timed wait, signs nothing while it waits, and keeps check and continue", async () => {
   const f = await enrollmentFixture(), publicRoot = realpathSync(mkdtempSync(join(tmpdir(), "artroom-s1-enrol-stop-")));
   const stderr = vi.spyOn(process.stderr, "write").mockReturnValue(true), stdout = vi.spyOn(process.stdout, "write").mockReturnValue(true);
   const wait = setTimeout;
+  let oneSecondTimers = 0;
   try {
     const input = join(publicRoot, "input.json");
     writeFileSync(input, JSON.stringify(f.setup), { mode: 0o600 });
     vi.stubGlobal("fetch", f.fetcher);
-    // The recheck's own pause only: the transport's deadlines keep their real values.
-    vi.stubGlobal("setTimeout", ((run: () => void, ms?: number) => wait(run, ms === 1000 ? 0 : ms)) as typeof setTimeout);
+    // The wait's own pause only: the transport's deadlines keep their real values.
+    vi.stubGlobal("setTimeout", ((run: () => void, ms?: number) => { if (ms === undefined || ms > 5000) return wait(run, ms); if (ms === 1000) oneSecondTimers++; return wait(run, 0); }) as typeof setTimeout);
     vi.useFakeTimers({ toFake: ["Date"], now: timeMs(f.roster.now)! });
     const run = async (mode: "new" | "check" | "continue") => {
       const directory = join(publicRoot, mode);
@@ -322,44 +329,135 @@ test("the entry point names a provisional inbox with a fixed word and no private
     };
     f.inbox(() => "provisional");
     const stopped = await run("new");
+    expect(oneSecondTimers, "an operator's run pauses 20 times, one second each").toBe(20);
     const ownerHome = identityHome(f.setup, "owner"), rows = readdirSync(join(ownerHome, "private")).filter(name => name.startsWith("i-")).map(name => name.slice(0, -5));
     const secret = JSON.parse(new TextDecoder().decode((await f.owner.private(rows[0]!))!))["secret"] as string;
     expect(stopped.raw, "the receipt holds no invitation secret").not.toContain(secret);
     expect(stopped.raw, "the receipt holds no session token").not.toContain(b64url(new Uint8Array(32).fill(9)));
     expect(stopped.raw, "the receipt holds no engine reason text").not.toContain("could not be verified");
-    expect([stopped.code, stopped.enrollment]).toEqual([1, { stage: "invitation-result", cause: "inbox-not-confirmed", inboxRechecks: 10, read: { method: "GET", category: "other", status: 200 } }]);
-    expect(f.sent.map(signed => signed.intent.kind), "a recheck signs and submits no act").toEqual(["add-member", "invite-key"]);
-
+    expect([stopped.code, stopped.enrollment]).toEqual([1, { stage: "invitation-result", cause: "inbox-not-confirmed", read: { method: "GET", category: "other", status: 200 } }]);
+    expect(f.sent.map(signed => signed.intent.kind), "the wait signs and submits no act").toEqual(["add-member", "invite-key"]);
 
     f.inbox(() => "active");
     const checked = await run("check");
-    expect([checked.code, checked.enrollment.stage, checked.enrollment.inboxRechecks]).toEqual([1, "receiver", undefined]);
+    expect([checked.code, checked.enrollment.stage]).toEqual([1, "receiver"]);
     expect(checked.raw, "the receipt holds no invitation link").not.toContain("artroom-agent-key:");
     const continued = await run("continue");
     expect([continued.code, continued.enrollment.stage, f.sent.map(signed => signed.intent.kind)]).toEqual([0, "receiver", ["add-member", "invite-key", "enrol"]]);
+    expect(oneSecondTimers, "neither check nor a read of an active inbox pauses").toBe(20);
   } finally { vi.useRealTimers(); stderr.mockRestore(); stdout.mockRestore(); vi.unstubAllGlobals(); f.close(); rmSync(publicRoot, { recursive: true, force: true }); }
 });
 
-test("a provisional inbox that confirms within the bound completes the enrollment and records the rechecks", async () => {
+// The engine's wait, through the script's entry point. Each inbox read below is an HTTP stand-in of the fixture's; agent-key.scope.test.ts
+// holds the wait on real scopes.
+const INBOX_STOP = "The original agent invitation is unknown. Check it or Continue explicitly; no replacement follows.";
+const results = (traces: EnrollmentDiagnostic[]) => traces.filter(trace => trace.stage === "invitation-result").map(trace => trace.cause);
+
+test("a provisional inbox that turns active on the last read of the bound completes the enrollment in one engine run", async () => {
   const f = await enrollmentFixture();
   try {
-    f.inbox(summaryRead => summaryRead < 3 ? "provisional" : "active");
+    f.inbox(summaryRead => summaryRead < 20 ? "provisional" : "active");
     expect([(await f.enroll("agent-a", "new")).code, f.sent.map(signed => signed.intent.kind)]).toEqual([0, ["add-member", "invite-key", "enrol"]]);
-    // Each read reports again with the fields it holds, so the test reads the distinct steps.
-    const steps = [...new Set(f.traces.filter(trace => trace.stage === "invitation-result").map(trace => `${trace.cause} ${trace.inboxRechecks ?? 0}`))];
-    expect(steps).toEqual(["inbox-not-confirmed 0", "inbox-not-confirmed 1", "inbox-not-confirmed 2", "verified 3"]);
-    expect(f.traces.at(-1)).toMatchObject({ stage: "receiver", inboxRechecks: 3 });
+    expect([f.inboxReads(), f.waited.length, results(f.traces)], "21 reads by the engine, one more by the receiver").toEqual([22, 20, ["verified"]]);
+    expect(f.waited[0], "the pause names the two scopes that the confirmation passes between").toEqual([f.repository.membership.scope, expect.stringMatching(/^sc_/)]);
   } finally { f.close(); }
 });
 
-test("an inbox read that a recheck cannot pass stops at the bound as inbox-not-readable, and Check itself does not wait", async () => {
+test("an inbox that is not created yet answers not-found, and the engine waits through that into provisional and active", async () => {
   const f = await enrollmentFixture();
   try {
-    f.inbox(() => "forbidden");
+    f.inbox(summaryRead => summaryRead < 2 ? "not-found" : summaryRead < 4 ? "provisional" : "active");
+    expect((await f.enroll("agent-a", "new")).code).toBe(0);
+    expect([f.inboxReads(), f.waited.length], "5 reads by the engine, one more by the receiver").toEqual([6, 4]);
+  } finally { f.close(); }
+});
+
+test("an inbox that stays provisional stops at the bound with the fixed word and posts no act, and check then reads once without a pause", async () => {
+  const f = await enrollmentFixture();
+  try {
+    f.inbox(() => "provisional");
+    let sessionsAtFirstPause = -1;
+    f.ctx.pause = async names => { if (f.waited.length === 0) sessionsAtFirstPause = f.sessionRequests(); f.waited.push(names); };
     const outcome = await f.enroll("agent-a", "new");
-    expect([outcome.code, f.traces.at(-1)]).toMatchObject([1, { stage: "invitation-result", cause: "inbox-not-readable", inboxRechecks: 10 }]);
-    const before = f.traces.length, checked = await f.enroll("agent-a", "check");
-    expect([checked.code, f.traces.slice(before).filter(trace => trace.stage === "invitation-result").map(trace => [trace.cause, trace.inboxRechecks])]).toEqual([1, [["inbox-not-readable", undefined]]]);
+    expect([outcome.code, outcome.lines, f.traces.at(-1)]).toMatchObject([1, [INBOX_STOP], { stage: "invitation-result", cause: "inbox-not-confirmed", read: { method: "GET", category: "other", status: 200 } }]);
+    expect([f.inboxReads(), f.waited.length, f.sessionRequests()], "21 reads, 20 pauses and one read session").toEqual([21, 20, sessionsAtFirstPause]);
+    expect(f.sent.map(signed => signed.intent.kind), "the wait signs and submits no act").toEqual(["add-member", "invite-key"]);
+    const readsBefore = f.inboxReads(), pausesBefore = f.waited.length, tracesBefore = f.traces.length;
+    const checked = await f.enroll("agent-a", "check");
+    expect([checked.code, f.inboxReads() - readsBefore, f.waited.length - pausesBefore, results(f.traces.slice(tracesBefore))], "check reads once").toEqual([1, 1, 0, ["inbox-not-confirmed"]]);
+    expect(f.sent.length, "check posts no act").toBe(2);
+  } finally { f.close(); }
+});
+
+test.each([["not-found", 404], ["forbidden", 403]] as const)("an inbox read that keeps answering %s stops at the bound as inbox-not-readable", async (state, status) => {
+  const f = await enrollmentFixture();
+  try {
+    f.inbox(() => state);
+    expect((await f.enroll("agent-a", "new")).code).toBe(1);
+    expect(f.waited.length).toBe(20);
+    expect(f.traces.at(-1)).toMatchObject({ stage: "invitation-result", cause: "inbox-not-readable", read: state === "not-found" ? { method: "GET", category: "other", status } : { method: "GET", category: "membership-summary", status: 200 } });
+  } finally { f.close(); }
+});
+
+test.each([["unavailable", "inbox-not-readable"], ["refused", "inbox-not-confirmed"]] as const)("an inbox read that answers %s stops at once, with no pause", async (state, cause) => {
+  const f = await enrollmentFixture();
+  try {
+    f.inbox(() => state);
+    expect((await f.enroll("agent-a", "new")).code).toBe(1);
+    expect([f.inboxReads(), f.waited.length, f.traces.at(-1)?.cause]).toEqual([1, 0, cause]);
+  } finally { f.close(); }
+});
+
+test("an inbox read with no reply stops at once as an engine error, with no pause", async () => {
+  const f = await enrollmentFixture();
+  try {
+    f.inbox(() => "no-reply");
+    const thrown = await f.enroll("agent-a", "new").then(() => null, (error: unknown) => error);
+    expect(String(thrown)).toContain("Nothing was read");
+    expect([f.inboxReads(), f.waited.length, f.traces.at(-1)?.cause]).toEqual([1, 0, "engine-error"]);
+  } finally { f.close(); }
+});
+
+test("a receiver that reads a provisional inbox refuses and does not wait", async () => {
+  const f = await enrollmentFixture();
+  try {
+    // The engine read the inbox as active before it wrote the link. Only a stand-in can answer provisional after that.
+    f.inbox(summaryRead => summaryRead === 0 ? "active" : "provisional");
+    const outcome = await f.enroll("agent-a", "new");
+    expect([outcome.code, outcome.lines, f.inboxReads(), f.waited.length]).toEqual([1, ["The original agent enrollment is unavailable or unverified. Nothing was replaced."], 2, 0]);
+  } finally { f.close(); }
+});
+
+test("the wait ends after 20 seconds by the clock, whatever a read or a pause takes", async () => {
+  const f = await enrollmentFixture();
+  try {
+    f.inbox(() => "provisional");
+    f.ctx.pause = async names => { f.waited.push(names); f.advance(5_000); };
+    expect((await f.enroll("agent-a", "new")).code).toBe(1);
+    expect([f.inboxReads(), f.waited.length, f.traces.at(-1)?.cause]).toEqual([5, 4, "inbox-not-confirmed"]);
+  } finally { f.close(); }
+});
+
+test("Context.tries lowers the wait's reads and cannot raise them", async () => {
+  const low = await enrollmentFixture(), high = await enrollmentFixture();
+  try {
+    low.inbox(() => "provisional"); high.inbox(() => "provisional");
+    low.ctx.tries = 3; high.ctx.tries = 120;
+    await low.enroll("agent-a", "new"); await high.enroll("agent-a", "new");
+    expect([low.inboxReads(), low.waited.length, high.inboxReads(), high.waited.length]).toEqual([3, 2, 21, 20]);
+  } finally { low.close(); high.close(); }
+});
+
+test("a read session that reaches its 30-second margin during the wait signs one read-session request and still no act", async () => {
+  const f = await enrollmentFixture();
+  try {
+    f.inbox(() => "provisional");
+    // The read session lasts 60 seconds and renews with 30 seconds left. Fifteen seconds pass in the issuance, and 20 in the wait.
+    f.beforeDispatch(async signed => { if (signed.intent.kind === "invite-key") f.advance(15_000); });
+    let sessionsAtFirstPause = -1;
+    f.ctx.pause = async names => { if (f.waited.length === 0) sessionsAtFirstPause = f.sessionRequests(); f.waited.push(names); f.advance(5_000); };
+    expect((await f.enroll("agent-a", "new")).code).toBe(1);
+    expect([f.sessionRequests() - sessionsAtFirstPause, f.sent.map(signed => signed.intent.kind)]).toEqual([1, ["add-member", "invite-key"]]);
   } finally { f.close(); }
 });
 
