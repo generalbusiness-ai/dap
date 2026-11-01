@@ -7,6 +7,7 @@ import { changeStates } from "./states.ts";
 import { LIST_QUERY_LIMIT, type ListState } from "./list-context.ts";
 import { controlKey } from "./focus.ts";
 import { noSessionOf, noSessionWords } from "./shell.ts";
+import { READING_LEAVES_OPEN } from "../../../views/src/attention.ts";
 
 type Child = Node | string | null | undefined | false;
 
@@ -87,12 +88,25 @@ function issueTime(label: string, value: string | null): HTMLElement {
   return h("p", { class: "record-meta" }, `${label}: `, ms === null ? "Unavailable" : h("time", { datetime: value! }, new Intl.DateTimeFormat(undefined, { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit", timeZoneName: "short" }).format(new Date(ms))));
 }
 
+/** Each open question, in the words `apps/views` gives. The answers go in this question's slot, and the scope judges each one. */
+const questionsSection = (issue: IssueView): HTMLElement | null => !issue.questions.length ? null : section("Questions",
+  h("p", { class: "muted" }, READING_LEAVES_OPEN),
+  issue.questions.map(question => h("article", { class: "comment", "data-question": String(question.ask) },
+    question.question ? h("h3", {}, question.question) : null,
+    question.ask >= 0 ? h("p", {}, or(question.body, "Text not held")) : null,
+    question.brief ? h("p", { class: "muted" }, question.brief) : null,
+    question.rows.map(row => h("div", { "data-question-row": String(row.item) }, h("p", {}, h("strong", {}, row.needs)), h("p", {}, row.why), row.lines.map(line => h("p", { class: "muted" }, line)))),
+    question.others.map(line => h("p", { class: "muted" }, line)),
+    question.ask >= 0 ? h("div", { class: "toolbar-actions", "data-question-answers": String(question.ask) }) : null,
+  )));
+
 export function issueScreen(room: Room, issue: IssueView): HTMLElement {
   return h("main", { class: "screen" }, back("issue"),
     h("div", { class: "detail-top" }, h("div", { class: "detail-heading" }, title(issue.title, issue.number), h("div", { class: "detail-meta" }, state(issue.state === "closed" ? "Closed" : issue.state === "open" ? "Open" : issue.state), issue.requester ? h("span", {}, `· ${issue.requester}`) : null)), h("div", { class: "toolbar-actions", "data-action-slot": "next" })),
     issueTime("Created", issue.createdAt), issueTime("Modified", issue.modifiedAt),
     issue.assignees.length ? h("p", { class: "record-meta" }, `Assigned to ${list(issue.assignees)}`) : null,
     issue.conditions.length ? section("Conditions", h("ul", {}, issue.conditions.map((c) => h("li", {}, c)))) : null,
+    questionsSection(issue),
     discussion(issue.body, issue.comments),
     inspect("Inspect issue record", whoLine(room), h("dl", {}, field("Lane", h("code", {}, issue.scope)), field("Definition", h("code", {}, issue.definition)), field("Read at", `${issue.head.seq}, ${issue.head.hash}`), issue.closeReason ? field("Close reason", issue.closeReason) : null), commentsRecord(issue.comments)),
   );

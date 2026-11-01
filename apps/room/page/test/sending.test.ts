@@ -93,7 +93,7 @@ test("the shell fences the whole scope during a submit and keeps a lost reply re
     attempt.resolve();
     return new Promise<never>((_resolve, reject) => { rejects.push(reject); });
   });
-  const issueRead = vi.fn(async () => ({ state: "closed", intent: 0, requesterRef: room.me.ref }));
+  const issueRead = vi.fn(async () => ({ questions: [], state: "closed", intent: 0, requesterRef: room.me.ref }));
   // The captured send returns the actual owned action promise, including
   // its final redraw. A refused synchronous admission returns immediately.
   vi.doMock("@generalbusiness/dap-bytes", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-bytes")>("@generalbusiness/dap-bytes"), b64url: () => "device", unb64url: () => new Uint8Array(32), keyIdOfSecret: () => "key", isScopeRef: (value: unknown) => !!value && typeof value === "object" && "kind" in value }));
@@ -219,7 +219,7 @@ test("the shell fences the whole scope during a submit and keeps a lost reply re
     const reading = gate(), releaseRead = gate();
     fixture.release(releaseRead.resolve);
     const sourceReadsBefore = issueRead.mock.calls.length;
-    issueRead.mockImplementationOnce(async () => { reading.resolve(); await releaseRead.promise; return { state: "closed", intent: 0, requesterRef: room.me.ref }; });
+    issueRead.mockImplementationOnce(async () => { reading.resolve(); await releaseRead.promise; return { questions: [], state: "closed", intent: 0, requesterRef: room.me.ref }; });
     location.hash = "#/issue/delayed";
     redraw(); await fixture.wait(() => reading.promise);
     context = { ...context, place: { ...context.place, directory: "newest-room" } };
@@ -350,7 +350,7 @@ test("retained dialogs use the live scope; accepted draft retirement and refresh
   const settings={place,publicKey:key};
   const room={session:{service:'https://page.test',signer:{key,sign:unexpectedKeyOperation}},...place,rules:'rules',destination:'destination',key,me:{handle:'@reader',role:'maintainer',actions:['change.review','change.merge','issue.open'],ref:{membership:place.membership,member:'@reader'}},reader:{}};
   const issueScope=scopeIdOf({v:1,kind:'lane',definition:fixtureDigest,creator:null,cause:fixtureDigest,ordinal:2});
-  const issue={scope:issueScope,ref:{scope:issueScope,kind:'lane',inc:newIncarnation(new Uint8Array(16).fill(2))},requesterRef:room.me.ref,definition:'definition',head:{seq:1,hash:'head'},intent:0,title:'Native issue',number:1,body:null,state:'open',requester:'@author',assignees:[],conditions:[],comments:[],closeReason:null};
+  const issue={questions:[],scope:issueScope,ref:{scope:issueScope,kind:'lane',inc:newIncarnation(new Uint8Array(16).fill(2))},requesterRef:room.me.ref,definition:'definition',head:{seq:1,hash:'head'},intent:0,title:'Native issue',number:1,body:null,state:'open',requester:'@author',assignees:[],conditions:[],comments:[],closeReason:null};
   const changeScope=scopeIdOf({v:1,kind:'lane',definition:fixtureDigest,creator:null,cause:fixtureDigest,ordinal:0});
   const change={scope:changeScope,ref:{scope:changeScope,kind:'lane',inc:newIncarnation(new Uint8Array(16).fill(1))},definition:'definition',head:{seq:2,hash:'head'},proposal:0,title:'Selected change',number:2,body:null,state:'open',author:'@author',currentManifest:12,
     manifests:[{id:12,state:'current',authors:['@author'],integrator:'@author',base:'a'.repeat(40),integration:null,tree:null,complete:true,selectedReports:[],file:{path:'AGENTS.md',digest:'digest',size:4,page:'latest',content:'Text'}}],

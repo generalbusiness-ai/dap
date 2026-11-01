@@ -1,5 +1,7 @@
 import { commonsAuthorLabels, loadCommons, type CommonsView } from "@generalbusiness/dap-client";
 import { stringOrNull as text } from "@generalbusiness/dap-bytes";
+import { APPROVAL_LIMIT, otherRequestLine, questionOffers, questionRows, questions as questionProfile, reasonLines, whyLine } from "../../../views/src/attention.ts";
+import { sameOptional, shownText } from "../../../views/src/words.ts";
 import { isRecord as record } from "@generalbusiness/dap-bytes";
 import { actBodyText, deviceKeyInvitationOf, encodeDeviceKeyInvitation, invitationIssueFields, invitationRedemptionFields, isInvitationMembership, originalsAt, type DeviceKeyInvitation } from "@generalbusiness/dap-client";
 /**
@@ -467,6 +469,16 @@ export interface Comment { id: number; author: string | null; state: string; bod
 const commentsOf = async (room: Room, handle: ScopeHandle, summary: Summary, at: Head): Promise<Comment[]> =>
   Promise.all((await itemsOf(room, handle, summary, "comment", at)).map(async (c) => ({ id: c.id, author: memberOf(c.parties["author"]), state: c.state, body: await textOf(handle, c.values["body"]) })));
 
+/** One open question at one read of the lane, in the words `apps/views` gives. These rows grant nothing. */
+export interface QuestionAnswer { kind: "approve" | "decide"; label: string; on: string; typed: Record<string, string> }
+export interface QuestionRowView { item: number; needs: string; why: string; lines: string[] }
+export interface QuestionView {
+  ask: number; question: string; body: string | null;
+  /** The Brief's digest and the limit of an approval. The Page holds no Brief, so it cannot compare the two. */
+  brief: string | null;
+  /** The rows for this viewer, the requests that name another member, and the answers this viewer can press. */
+  rows: QuestionRowView[]; others: string[]; answers: QuestionAnswer[];
+}
 export interface IssueView {
   /** The actual intent item used by transitions. */
   intent?: number;
@@ -474,6 +486,8 @@ export interface IssueView {
   number: number | null; title: string | null; body: string | null; state: string; closeReason: string | null;
   createdAt: string | null; modifiedAt: string | null;
   requesterRef: MemberRef | null; requester: string | null; assignees: string[]; conditions: string[]; comments: Comment[];
+  /** Each open question of a lane under a question definition. Empty under any other definition. */
+  questions: QuestionView[];
 }
 
 /** Times are native genesis/latest-entry times at this full authenticated read frontier. */
@@ -493,6 +507,42 @@ async function issueTimes(handle: ScopeHandle, summary: Summary, at: Head): Prom
   } catch { return unavailable; } // A denied or changed read supplies no substitute clock.
 }
 
+/** The exact fact of one entry of this lane. A name that disagrees with the record gives null, and the Page offers no answer on it. */
+async function factOf(handle: ScopeHandle, ref: ScopeRef, value: unknown): Promise<FactRef | null> {
+  const seq = typeof value === "number" ? value : isFactRef(value) && canonicalize(value.at) === canonicalize(ref) ? value.seq : null;
+  if (seq === null) return null;
+  const read = await handle.entry(seq);
+  if (!read.ok || !read.complete || read.next !== undefined || read.value.entry.seq !== seq || canonicalize(read.value.entry.at) !== canonicalize(ref) || entryHash(read.value.entry) !== read.value.hash) return null;
+  const fact: FactRef = { at: ref, seq, hash: read.value.hash };
+  return isFactRef(value) && canonicalize(value) !== canonicalize(fact) ? null : fact;
+}
+
+/** Each open question and request of one read, in the words of `apps/views`. A request whose question has left the live items comes last, under its own row. */
+async function questionsOf(room: Room, handle: ScopeHandle, summary: Summary): Promise<{ questions: QuestionView[] }> {
+  if (!questionProfile(summary.definition)) return { questions: [] };
+  const items = summary.items, scope = summary.scope, viewer = room.me?.ref, actions = room.me?.actions ?? [], definition = String(summary.definition);
+  const rows = viewer ? questionRows(items, scope, viewer, actions) : [];
+  const shown = (row: (typeof rows)[number]): QuestionRowView => ({ item: row.item.id, needs: row.values.needs, why: whyLine(row.values), lines: reasonLines(row.values, { definition, clause: row.clause }) });
+  const asks = items.filter(item => item.type === "ask" && item.state === "asked");
+  const requests = items.filter(item => item.type === "approval-request" && item.state === "open"), approvals = items.filter(item => item.type === "approval" && item.state === "submitted");
+  const about = (item: Item, ask: Item): boolean => { const ref = item.refs["ask"]; return ref === ask.id || isFactRef(ref) && ref.seq === ask.id; };
+  const found: QuestionView[] = [];
+  for (const ask of asks) {
+    const own = requests.filter(item => about(item, ask)), bodyAt = await factOf(handle, scope, ask.refs["bodyAt"]);
+    const answers: QuestionAnswer[] = !viewer || !bodyAt ? [] : questionOffers(ask, own, approvals.filter(item => about(item, ask)), bodyAt.seq, viewer, actions).map(offer => offer.kind === "decide"
+      ? { kind: "decide", label: offer.label, on: String(ask.id), typed: { bodyAt: canonicalize(bodyAt) } }
+      : { kind: "approve", label: offer.label, on: "", typed: { request: String(offer.request!.id), bodyAt: canonicalize(bodyAt), verdict: offer.verdict! } });
+    found.push({
+      ask: ask.id, question: shownText(ask.values["question"]), body: await textOf(handle, ask.values["body"]), brief: typeof ask.values["brief"] === "string" ? `Brief ${ask.values["brief"]}. ${APPROVAL_LIMIT}` : null,
+      rows: rows.filter(row => row.item.id === ask.id || about(row.item, ask)).map(shown), answers,
+      others: own.filter(item => !sameOptional(item.parties["requested"], viewer)).map(item => otherRequestLine(item, sameOptional(item.refs["bodyAt"], ask.refs["bodyAt"]))),
+    });
+  }
+  const left = rows.filter(row => row.item.type === "approval-request" && !asks.some(ask => about(row.item, ask)));
+  if (left.length) found.push({ ask: -1, question: "", body: null, brief: null, rows: left.map(shown), others: [], answers: [] });
+  return { questions: found };
+}
+
 /** An issue lane: its intent item, its comments, and the head it was read at. */
 export async function loadIssue(room: Room, scope: ScopeId): Promise<IssueView> {
   await fresh(room);
@@ -508,6 +558,7 @@ export async function loadIssue(room: Room, scope: ScopeId): Promise<IssueView> 
     number: typeof intent.values["number"] === "number" ? intent.values["number"] : null, title: text(intent.values["title"]), body: await textOf(handle, intent.values["body"]),
     state: intent.state, closeReason: text(intent.values["closeReason"]), requesterRef: isMemberRef(intent.parties["requester"]) ? structuredClone(intent.parties["requester"]) : null, requester: memberOf(intent.parties["requester"]), assignees: membersOf(intent.parties["assignees"]),
     conditions: Array.isArray(intent.values["conditions"]) ? (intent.values["conditions"] as string[]) : [], comments: await commentsOf(room, handle, summary, at),
+    ...await questionsOf(room, handle, summary),
   };
 }
 
