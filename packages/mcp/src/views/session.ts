@@ -5,7 +5,7 @@ import { decodeViewParameters } from "@generalbusiness/dap-platform/application-
 import { shapeAt } from "../shape.ts";
 import type { CallResult } from "../service.ts";
 import type { ViewKind } from "./resources.ts";
-import type { Card, CardAction, CardContext, Display, EntryRange, LocalReviewAction, NativeCardAction, PageKind, Projection, ViewQuery, ViewSource } from "./types.ts";
+import type { Card, CardAction, CardContext, Display, EntryRange, ExactRead, LocalReviewAction, NamedCommit, NativeCardAction, PageKind, Projection, ShownRead, ViewQuery, ViewSource } from "./types.ts";
 
 export class ViewError extends Error {
   constructor(readonly reason: "shape" | "absent" | "superseded" | "stale" | "busy" | "unavailable", message: string) { super(message); }
@@ -22,14 +22,43 @@ interface Instance {
   dispatches: Map<string, Promise<CallResult>>;
   pending: Map<string, Card["actions"][number]>;
   inputs: Map<string, { meaning: string; outcome: Promise<InputOpening> }>;
-  /** The text of the last View diff, and the exact version it belongs to. */
-  diff?: { of: string; text: string };
+  /** The exact reads this view holds, newest last, and the one its diff page shows. Each holds the exact version it belongs to. */
+  reads: HeldRead[];
+  current?: HeldRead;
 }
-/** The action ID of View diff. A card's two acts stay free for its native acts. */
+interface HeldRead { of: string; read: ExactRead; text: string; shown: ShownRead; files: ExactRead[] }
+/** The action IDs of the exact reads. A card's two acts stay free for its native acts. */
 export const VIEW_DIFF = "view-diff";
+const VIEW_INTERDIFF = "view-interdiff-";
+const VIEW_FILE = "view-file-";
+/** The latest file this view read. A press shows it again and signs nothing. */
+const VIEW_LAST_FILE = "view-file";
+const isExactAction = (id: string): boolean => id === VIEW_DIFF || id === VIEW_LAST_FILE || id.startsWith(VIEW_INTERDIFF) || id.startsWith(VIEW_FILE);
+/** Reads one view holds. An answer's commits do not change, so a held read needs no second credential. */
+const HELD_READS = 4;
+/** The files of one read that offer a File action. */
+const FILE_ACTIONS = 16;
+const FILE_LABEL = 128;
+const READ_WORD: Record<ExactRead["kind"], string> = { diff: "Diff", interdiff: "Interdiff", file: "File" };
+
+/** A read's words, commits and file actions, from the service's answer, so that the page names what the read returned. */
+function shownOf(read: ExactRead, answer: Record<string, unknown>): { shown: ShownRead; files: ExactRead[] } {
+  const leftOut = typeof answer["leftOut"] === "string" ? answer["leftOut"] : null, truncated = answer["truncated"] === true;
+  const paths = Array.isArray(answer["paths"]) ? answer["paths"] as { path: string; shown: string; commit: string }[] : [];
+  const reached = typeof answer["files"] === "number" ? answer["files"] : paths.length;
+  const listed = paths.slice(0, FILE_ACTIONS);
+  const shown: ShownRead = { kind: read.kind, title: "", commits: Array.isArray(answer["commits"]) ? answer["commits"] as NamedCommit[] : [], truncated, leftOut, files: [], moreFiles: Math.max(0, reached - listed.length) };
+  if (read.kind === "diff") shown.title = `Diff of ${read.label ?? "this version"}`;
+  else if (read.kind === "interdiff") shown.title = `Interdiff from ${read.from.label} to ${read.to.label}`;
+  else { shown.title = `File at ${read.commitLabel}`; shown.moreFiles = 0; }
+  const label = read.kind === "diff" ? read.label ?? "this version" : read.kind === "interdiff" ? read.to.label : "";
+  const files: ExactRead[] = read.kind === "file" ? [] : listed.map(path => ({ kind: "file", target: read.target, commit: path.commit, commitLabel: path.commit === (read.kind === "diff" ? read.integration : read.to.integration) ? label : (read.kind === "diff" ? "the base" : read.from.label), path: path.path, shown: path.shown }));
+  shown.files = listed.map((path, n) => ({ action: `${VIEW_FILE}${n}`, label: `File: ${path.shown.length > FILE_LABEL ? `${path.shown.slice(0, FILE_LABEL)}...` : path.shown}` }));
+  return { shown, files };
+}
 export interface ViewPorts {
-  /** Sign one read-token act and read one bounded diff. `admit` runs before the signature. */
-  readDiff?: (read: NonNullable<Card["diffRead"]>, admit: () => void | Promise<void>) => Promise<CallResult>;
+  /** Sign one read-token act and make one bounded read. `admit` runs before the signature. */
+  readExact?: (read: ExactRead, admit: () => void | Promise<void>) => Promise<CallResult>;
   /** The key of an act sent at this scope with no outcome kept. */
   unresolved?: (target: string) => Promise<{ idempotencyKey: string } | null>;
 }
@@ -163,7 +192,7 @@ export class ViewSessions {
     }
     if (this.#instances.size >= MAX_INSTANCES) throw new ViewError("busy", "This connection retains its maximum of 128 views. Start a new connection.");
     const query: ViewQuery = { screen, position: 0, page: this.source.initialPage?.(screen, subject) ?? "summary", ...(subject === undefined ? {} : { subject }), ...(items === undefined ? {} : { items: structuredClone(items) }), ...(scope === undefined ? {} : { scope: structuredClone(scope) }) };
-    const instance: Instance = { key, query, cut: 0, projection: { status: "unavailable", count: 0, position: 0, fallback: "Loading the card." }, busy: true, dispatches: new Map(), pending: new Map(), inputs: new Map() };
+    const instance: Instance = { key, query, cut: 0, projection: { status: "unavailable", count: 0, position: 0, fallback: "Loading the card." }, busy: true, dispatches: new Map(), pending: new Map(), inputs: new Map(), reads: [] };
     this.#instances.set(key, instance);
     this.#current.set(screen, key);
     try {
@@ -199,10 +228,11 @@ export class ViewSessions {
       reviewIntended: query.page === "updates" ? structuredClone(card?.reviewIntended ?? []) : [],
       unavailable: structuredClone(card?.unavailable ?? []), waitsOn: [...(card?.waitsOn ?? [])], settles: [...(card?.settles ?? [])],
       navigation: query.page === "summary" ? [...(projection.status !== "ready" && projection.back ? ["back"] : []), ...(projection.position > 0 ? ["previous"] : []), ...(projection.position + 1 < projection.count ? ["next"] : []), ...(card && projection.status === "ready" ? ["open"] : [])] : ["back", ...(card?.diffAvailable && query.page === "item" ? ["diff"] : [])],
+      ...(query.page === "diff" && card?.shownRead ? { exact: { kind: card.shownRead.kind, commits: structuredClone(card.shownRead.commits), truncated: card.shownRead.truncated } } : {}),
       ...(card?.declared ? { note: card.declared.context } : {}),
       ...(instance.receipt ? { receipt: instance.receipt } : {}),
     };
-    const displayedCard: Display["card"] = card ? (({ diffRead, ...shown }) => ({ ...shown, ...(diffRead ? { diffSigned: true as const } : {}), actions: card.actions.map(({ id, label, purpose, parameters }) => ({ id, label, purpose, ...(parameters ? { input: "chat" as const } : {}) })) }))(card) : undefined;
+    const displayedCard: Display["card"] = card ? (({ diffRead, interdiffReads: _interdiffReads, ...shown }) => ({ ...shown, ...(diffRead ? { diffSigned: true as const, ...this.#readers(instance, card) } : {}), actions: card.actions.map(({ id, label, purpose, parameters }) => ({ id, label, purpose, ...(parameters ? { input: "chat" as const } : {}) })) }))(card) : undefined;
     if (displayedCard?.declared?.routed) {
       const { data: _data, ...declared } = displayedCard.declared;
       displayedCard.declared = declared;
@@ -233,7 +263,7 @@ export class ViewSessions {
       const page = move.page ?? instance.query.page;
       if (!finite(position) || !PAGES.has(page)) throw new ViewError("shape", "The card position or page is malformed.");
       if (page === "diff" && !instance.projection.card?.diffAvailable) throw new ViewError("shape", "This card offers no diff.");
-      if (page === "diff" && instance.projection.card?.diffRead && !instance.diff) throw new ViewError("shape", "View diff signs a read request. Use the card's View diff action.");
+      if (page === "diff" && instance.projection.card?.diffRead && !instance.current) throw new ViewError("shape", "View diff signs a read request. Use the card's View diff action.");
       const query = { ...instance.query, position, page };
       instance.busy = true;
       try {
@@ -243,8 +273,10 @@ export class ViewSessions {
         if (query.page !== "diff") await this.#checkOriginal(projection, query);
         this.#admit(instance, cut ?? -1);
         if (projection.card?.diffRead && query.page === "diff") {
-          if (instance.diff?.of !== canonicalize([projection.card.identity, projection.card.diffRead])) throw new ViewError("stale", "The displayed version changed. Read the card again, then use View diff.");
-          projection.card.body = instance.diff.text;
+          const held = instance.current;
+          if (!held || held.of !== canonicalize([projection.card.identity, held.read])) throw new ViewError("stale", "The displayed version changed. Read the card again, then use View diff.");
+          projection.card.body = held.text;
+          projection.card.shownRead = held.shown;
         }
         if (projection.card) {
           const pending = instance.pending.get(this.#itemKey(projection.card));
@@ -265,7 +297,7 @@ export class ViewSessions {
   }
   async act(key: string, cut: number, actionId: string): Promise<{ result: CallResult; display: Display }> {
     const instance = this.#instance(key);
-    if (actionId === VIEW_DIFF) return this.#readDiff(instance, cut);
+    if (actionId === VIEW_DIFF || (isExactAction(actionId) && instance.projection.card?.diffRead)) return this.#readExact(instance, cut, actionId);
     const dispatchKey = `${cut}:${actionId}`;
     const action = instance.projection.card?.actions.find((candidate) => candidate.id === actionId);
     if (action?.parameters) throw new ViewError("shape", "Type the declared measurements in chat; this card cannot supply their values.");
@@ -339,16 +371,54 @@ export class ViewSessions {
     finally { instance.busy = false; }
   }
 
-  /** The card's diff page shows the answer. A failure keeps the item page and says why; another View diff signs another request. */
-  async #readDiff(instance: Instance, cut: number): Promise<{ result: CallResult; display: Display }> {
+  /** The exact reads this card offers, for its item page and its reader page. A card with View diff alone needs no list. */
+  #readers(instance: Instance, card: Card): { readers?: { action: string; label: string; current: boolean }[] } {
+    const current = instance.query.page === "diff" ? instance.current?.read : undefined;
+    const same = (read: ExactRead) => current !== undefined && canonicalize(current) === canonicalize(read);
+    const readers = [{ action: VIEW_DIFF, label: "View diff", current: current?.kind === "diff" }];
+    (card.interdiffReads ?? []).forEach((read, n) => { readers.push({ action: `${VIEW_INTERDIFF}${n}`, label: `Interdiff from ${read.from.label}`, current: same({ kind: "interdiff", ...read }) }); });
+    const file = [...instance.reads].reverse().find(held => held.read.kind === "file" && held.of === canonicalize([card.identity, held.read]));
+    if (file?.read.kind === "file") readers.push({ action: VIEW_LAST_FILE, label: `File: ${file.read.shown.length > FILE_LABEL ? `${file.read.shown.slice(0, FILE_LABEL)}...` : file.read.shown}`, current: same(file.read) });
+    return readers.length > 1 ? { readers } : {};
+  }
+  /** The server-held read that an action names, from this card and the read the page shows. A browser supplies only the action's ID. */
+  #exactRead(instance: Instance, card: Card, action: string): ExactRead | null {
+    const diff = card.diffRead;
+    if (!diff) return null;
+    if (action === VIEW_DIFF) return { kind: "diff", ...diff };
+    const ordinal = (prefix: string) => /^\d{1,4}$/.test(action.slice(prefix.length)) ? Number(action.slice(prefix.length)) : -1;
+    if (action.startsWith(VIEW_INTERDIFF)) { const read = card.interdiffReads?.[ordinal(VIEW_INTERDIFF)]; return read ? { kind: "interdiff", ...read } : null; }
+    const current = (held: HeldRead | undefined) => held?.of === canonicalize([card.identity, held?.read]) ? held : undefined;
+    if (action === VIEW_LAST_FILE) return current([...instance.reads].reverse().find(held => held.read.kind === "file"))?.read ?? null;
+    return current(instance.current)?.files[ordinal(VIEW_FILE)] ?? null;
+  }
+  #showRead(instance: Instance, card: Card, held: HeldRead): boolean {
+    const query: ViewQuery = { ...instance.query, page: "diff" };
+    let shown: Projection;
+    try { shown = checked({ ...instance.projection, card: { ...structuredClone(card), body: held.text, shownRead: held.shown } }, query); }
+    catch (error) { if (!(error instanceof ViewError)) throw error; return false; }
+    instance.current = held;
+    instance.projection = shown;
+    instance.query = query;
+    instance.cut++;
+    return true;
+  }
+  /** The diff page shows the answer. A failure keeps the page and says why; another press signs another request. A read this view holds signs nothing. */
+  async #readExact(instance: Instance, cut: number, action: string): Promise<{ result: CallResult; display: Display }> {
     this.#admit(instance, cut);
     if (instance.busy) throw new ViewError("busy", "The card has an operation in progress. Retry its read.");
-    const card = instance.projection.card, read = card?.diffRead;
-    if (!card || !read || !card.diffAvailable || !this.ports.readDiff) throw new ViewError("shape", "This card offers no diff.");
+    const card = instance.projection.card, read = card ? this.#exactRead(instance, card, action) : null;
+    if (!card || !read || !card.diffAvailable || !this.ports.readExact) throw new ViewError("shape", "This card offers no such read.");
     if (card.unresolvedOriginal) throw new ViewError("busy", "Check the original request before you read the diff.");
+    const word = READ_WORD[read.kind], of = canonicalize([card.identity, read]);
+    const held = instance.reads.find(item => item.of === of);
+    if (held) {
+      this.#showRead(instance, card, held);
+      return { result: { structuredContent: { held: true, commits: held.shown.commits, truncated: held.shown.truncated }, content: [{ type: "text", text: `${word} shown again. No new request was signed.` }], isError: false }, display: this.#display(instance) };
+    }
     instance.busy = true;
     try {
-      const result = await this.ports.readDiff(structuredClone(read), async () => {
+      const result = await this.ports.readExact(structuredClone(read), async () => {
         this.#admit(instance, cut);
         await this.#refuseWhileOpen(card, instance.query);
         this.#admit(instance, cut);
@@ -357,21 +427,16 @@ export class ViewSessions {
       const text = result.structuredContent["text"];
       if (result.isError || typeof text !== "string") {
         const message = result.structuredContent["message"], answer = result.structuredContent["answer"];
-        instance.receipt = (`Diff not shown: ${typeof message === "string" ? message : typeof answer === "string" ? `the read request was ${answer}.` : "the read did not finish."}`).slice(0, 512);
+        instance.receipt = (`${word} not shown: ${typeof message === "string" ? message : typeof answer === "string" ? `the read request was ${answer}.` : "the read did not finish."}`).slice(0, 512);
         return { result, display: this.#display(instance) };
       }
-      const query: ViewQuery = { ...instance.query, page: "diff" };
-      let shown: Projection;
-      try { shown = checked({ ...instance.projection, card: { ...structuredClone(card), body: text } }, query); }
-      catch (error) {
-        if (!(error instanceof ViewError)) throw error;
-        instance.receipt = "Diff not shown: the card cannot hold this answer. The one-time credential is spent.";
+      const { shown, files } = shownOf(read, result.structuredContent);
+      const answer: HeldRead = { of, read, text, shown, files };
+      if (!this.#showRead(instance, card, answer)) {
+        instance.receipt = `${word} not shown: the card cannot hold this answer. The one-time credential is spent.`;
         return { result, display: this.#display(instance) };
       }
-      instance.diff = { of: canonicalize([card.identity, read]), text };
-      instance.projection = shown;
-      instance.query = query;
-      instance.cut++;
+      instance.reads = [...instance.reads, answer].slice(-HELD_READS);
       return { result, display: this.#display(instance) };
     } finally { instance.busy = false; }
   }

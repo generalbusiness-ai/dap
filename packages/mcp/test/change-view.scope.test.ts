@@ -6,7 +6,7 @@ import { keys, type Actor } from "@generalbusiness/dap-derive/testing";
 import { valueDigest } from "@generalbusiness/dap-derive";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, CONFIGURATION_DOMAIN, ROLE_LISTS, firstExtents } from "@generalbusiness/dap-platform";
 import { FINDING_DIGESTS, J4_DIGESTS, QUESTION_BRIEF_DIGESTS, changeFinding, changeJ4, issueQuestionsBrief } from "@generalbusiness/dap-lanes";
-import { diffWithCredential } from "../../git/src/diff.ts";
+import { diffWithCredential, fileWithCredential, interdiffWithCredential } from "../../git/src/diff.ts";
 import { idOf, type ObjectType } from "../../git/src/reader.ts";
 import type { EffectAnswer, EffectRequest } from "@generalbusiness/dap-scope";
 import { WorkspaceStandIn } from "../../../apps/room/lanes/test/support/workspace.ts";
@@ -67,7 +67,7 @@ function application(f: Fixture, custody: CustodyStore = memoryStore(), as?: Age
   const signed: Intent[] = [];
   const service = new McpService({ service: config.service, fetch: f.room.fetch, custody, views: decisionSource(app), applicationReads: app.catalogue(), packageBrief: app.brief,
     signer: { key: signer.key, sign: bytes => { const text = new TextDecoder().decode(bytes), prefix = `${DOMAINS.intent}\n`; if (text.startsWith(prefix)) signed.push(JSON.parse(text.slice(prefix.length)) as Intent); return signer.sign(bytes); } },
-    readDiff: read => diffWithCredential(read, f.room.git.fetch), now: f.room.now, every: () => () => {}, pause: async waiting => { f.room.advance(1000); await f.room.pause(waiting); },
+    readDiff: read => diffWithCredential(read, f.room.git.fetch), readInterdiff: read => interdiffWithCredential(read, f.room.git.fetch), readFile: read => fileWithCredential(read, f.room.git.fetch), now: f.room.now, every: () => () => {}, pause: async waiting => { f.room.advance(1000); await f.room.pause(waiting); },
     config: { read: async () => structuredClone(config), addRoot: async () => { throw new Error("no new root"); } } });
   const call = (name: string, args: Record<string, unknown>) => f.room.wait(() => service.call(name, args));
   return { service, custody, signed, call };
@@ -399,7 +399,7 @@ test("witness 4: View diff signs one read-token act and shows the bounded diff; 
     expect(page.query.page).toBe("diff");
     expect(page.card!.actions).toEqual([]);
     expect(page.card!.body).toContain("+a line of the larger change 0\n");
-    expect(page.card!.body).toContain("truncated: the text reached its bound of 40960 bytes. This diff does not show the whole change.");
+    expect(page.card!.body).toContain("This diff does not show the whole change.");
     const secrets = [...f.room.git.tokens.keys()];
     for (const secret of secrets) expect(JSON.stringify(shownDiff)).not.toContain(secret);
     // Back to the item page, and its acts return.
@@ -442,6 +442,166 @@ test("witness 4: View diff signs one read-token act and shows the bounded diff; 
     expect([direct.isError, direct.structuredContent["error"]]).toEqual([true, "shape"]);
     const unspent = await f.owner.call("diff", { entry: token2.seq, base, integration: small.integration });
     expect(unspent.isError, JSON.stringify(unspent.structuredContent)).toBe(false);
+  } finally { await f.room.done(); }
+}, 120_000);
+
+/** One STAND-IN commit: flat files, one parent. */
+function commitOf(f: Fixture, parent: string, files: Record<string, string>): { commit: string; tree: string } {
+  const add = (type: ObjectType, data: Uint8Array): string => { const id = idOf(type, data); f.room.git.objects.set(id, { id, type, data }); return id; };
+  const raw = (hex: string) => Uint8Array.from(hex.match(/../g)!.map(pair => parseInt(pair, 16)));
+  const entries = Object.keys(files).sort().map(name => { const head = utf8(`100644 ${name}\0`), entry = new Uint8Array(head.length + 20); entry.set(head); entry.set(raw(add("blob", utf8(files[name]!))), head.length); return entry; });
+  const data = new Uint8Array(entries.reduce((n, entry) => n + entry.length, 0));
+  entries.reduce((at, entry) => { data.set(entry, at); return at + entry.length; }, 0);
+  const tree = add("tree", data), who = "TEST <test@example.invalid> 1700000000 +0000";
+  return { commit: add("commit", utf8(`tree ${tree}\nparent ${parent}\nauthor ${who}\ncommitter ${who}\n\nTEST\n`)), tree };
+}
+interface Page extends Shown { query: { page: string }; context: { exact?: { commits: { label: string; id: string }[]; truncated: boolean } }; card?: NonNullable<Shown["card"]> & { readers?: { action: string; label: string; current: boolean }[]; shownRead?: { title: string; commits: { label: string; id: string }[]; truncated: boolean; leftOut: string | null; files: { action: string; label: string }[]; moreFiles: number } } }
+
+test("J2 witness 1: version 2's diff and its interdiff from version 1 each name their exact commits and sign one read each; a file reads at its exact commit; a held read signs nothing", async () => {
+  const f = await roomOf();
+  try {
+    const lane = await changeLane(f, "TEST versions");
+    const work = await workspace(f, lane);
+    const baseFiles = { "app.txt": "one\ntwo\nthree\n", "base.txt": "first base\n" };
+    const b1 = commitOf(f, f.host.head, baseFiles).commit;
+    const v1 = commitOf(f, b1, { ...baseFiles, "app.txt": "one\nTWO\nthree\n" });
+    const v2 = commitOf(f, b1, { ...baseFiles, "app.txt": "one\nTWO\nTHREE\n" });
+    const first = await propose(f, lane, work, b1, v1.commit, v1.tree);
+    const second = await propose(f, lane, work, b1, v2.commit, v2.tree, first);
+
+    const a = application(f);
+    const item = await card(a, "read", "view_change", changeSubject(lane)) as Page;
+    expect(item.card!.readers?.map(reader => [reader.action, reader.label])).toEqual([["view-diff", "View diff"], ["view-interdiff-0", "Interdiff from Version 1"]]);
+    expect(item.card!.body).toContain(`Version 1, manifest ${first}. Base: ${b1}. Integration: ${v1.commit}.`);
+    expect(JSON.stringify(item.card)).not.toContain("interdiffReads");
+    expect(a.signed).toEqual([]);
+
+    // Version 2's diff.
+    const diff = await press(a, "read", item, "view-diff"), page = diff.display as Page;
+    expect(a.signed.map(intent => [intent.kind, intent.to!.scope])).toEqual([["read-token", f.repository.destination]]);
+    expect(page.card!.shownRead).toMatchObject({ title: "Diff of Version 2", truncated: false, leftOut: null, commits: [{ label: "Base of Version 2", id: b1 }, { label: "Integration of Version 2", id: v2.commit }] });
+    expect(page.card!.body).toContain(`Diff between two exact commits.\nBase: ${b1}\nIntegration: ${v2.commit}\n`);
+    expect(page.card!.body).toContain("-two\n-three\n+TWO\n+THREE\n");
+    expect(page.context.exact).toMatchObject({ truncated: false, commits: page.card!.shownRead!.commits });
+    expect(page.card!.actions).toEqual([]);
+
+    // What changed since version 1, from the same page.
+    const inter = await press(a, "read", page, "view-interdiff-0"), since = inter.display as Page;
+    expect(a.signed.map(intent => intent.kind)).toEqual(["read-token", "read-token"]);
+    expect(since.card!.shownRead).toMatchObject({ title: "Interdiff from Version 1 to Version 2", truncated: false, commits: [{ label: "Base of both versions", id: b1 }, { label: "Integration of Version 1", id: v1.commit }, { label: "Integration of Version 2", id: v2.commit }] });
+    expect(since.card!.body).toContain(`Version 1: base ${b1}, integration ${v1.commit}\nVersion 2: base ${b1}, integration ${v2.commit}\n`);
+    expect(since.card!.body).toContain("-three\n+THREE\n");
+    expect(since.card!.body).not.toContain("-two\n");
+    expect(since.card!.readers!.find(reader => reader.current)?.action).toBe("view-interdiff-0");
+
+    // One file at the exact commit that the interdiff names.
+    expect(since.card!.shownRead!.files).toEqual([{ action: "view-file-0", label: "File: app.txt" }]);
+    const file = await press(a, "read", since, "view-file-0"), read = file.display as Page;
+    expect(a.signed).toHaveLength(3);
+    expect(read.card!.shownRead).toMatchObject({ title: "File at Version 2", commits: [{ label: "Commit of Version 2", id: v2.commit }] });
+    expect(read.card!.body).toContain(`File at an exact commit.\nCommit: ${v2.commit}\nPath: app.txt\n`);
+    expect(read.card!.body!.endsWith("one\nTWO\nTHREE\n")).toBe(true);
+
+    // A held read signs nothing and shows the same words. A browser cannot name another read.
+    const again = await press(a, "read", read, "view-diff"), held = again.display as Page;
+    expect(a.signed).toHaveLength(3);
+    expect(held.card!.shownRead!.title).toBe("Diff of Version 2");
+    expect(held.card!.body).toBe(page.card!.body);
+    for (const action of ["view-interdiff-1", "view-file-9", "view-file-x", "view-interdiff-"]) {
+      const refused = await a.call("view_act", { view: "read", cut: held.cut, action });
+      expect([action, refused.isError, refused.structuredContent["reason"]]).toEqual([action, true, "shape"]);
+    }
+    expect(a.signed).toHaveLength(3);
+    for (const secret of f.room.git.tokens.keys()) for (const shownPage of [page, since, read, held, diff.answer, inter.answer]) expect(JSON.stringify(shownPage)).not.toContain(secret);
+
+    // A new version moves the card. The page it showed no longer reads as current.
+    const v3 = commitOf(f, b1, { ...baseFiles, "app.txt": "ONE\nTWO\nTHREE\n" });
+    await propose(f, lane, work, b1, v3.commit, v3.tree, second);
+    const moved = await a.call("view_read", { view: "read", cut: held.cut, refresh: true });
+    expect([moved.isError, moved.structuredContent["reason"]]).toEqual([true, "stale"]);
+    expect(a.signed).toHaveLength(3);
+  } finally { await f.room.done(); }
+}, 120_000);
+
+test("J2 witness 2: a rebased version 2 names the new base, shows the change's own edits, names the base's files, and says what it cannot separate", async () => {
+  const f = await roomOf();
+  try {
+    const lane = await changeLane(f, "TEST rebase");
+    const work = await workspace(f, lane);
+    const baseFiles = { "app.txt": "one\ntwo\nthree\n", "base.txt": "first base\n", "own.txt": "own\n" };
+    const b1 = commitOf(f, f.host.head, baseFiles).commit;
+    const v1 = commitOf(f, b1, { ...baseFiles, "app.txt": "one\nTWO\nthree\n" });
+    const m1 = await propose(f, lane, work, b1, v1.commit, v1.tree);
+
+    // The base moves in base.txt only. Version 2 repeats version 1's edit and adds one in own.txt.
+    const b2Files = { ...baseFiles, "base.txt": "second base\n" };
+    const b2 = commitOf(f, b1, b2Files).commit;
+    const v2 = commitOf(f, b2, { ...b2Files, "app.txt": "one\nTWO\nthree\n", "own.txt": "own edited\n" });
+    const m2 = await propose(f, lane, work, b2, v2.commit, v2.tree, m1);
+    const a = application(f);
+    const item = await card(a, "rebased", "view_change", changeSubject(lane)) as Page;
+    expect(item.card!.readers?.map(reader => reader.label)).toEqual(["View diff", "Interdiff from Version 1"]);
+    const page = (await press(a, "rebased", item, "view-interdiff-0")).display as Page, text = page.card!.body!;
+    expect(page.card!.shownRead!.commits).toEqual([{ label: "Base of Version 1", id: b1 }, { label: "Integration of Version 1", id: v1.commit }, { label: "Base of Version 2", id: b2 }, { label: "Integration of Version 2", id: v2.commit }]);
+    expect(text).toContain("Version 2 names a new base.");
+    expect(text).toContain("Edited by Version 2, shown below: 1 file.\nCannot separate from the new base, shown below: 0 files.\nThe same edit as Version 1 on the new base, named below: 0 files.\nChanged only by the new base, named below: 1 file.\n");
+    expect(text).toContain("+own edited\n");
+    expect(text).toContain("Changed only by the new base. These files show no lines:\nbase.txt\n");
+    expect(text).not.toContain("second base");
+
+    // The base's next commit edits the very line that the change edits. Version 3 keeps its intent on that line.
+    const b3Files = { ...b2Files, "app.txt": "one\ntwo from base\nthree\n" };
+    const b3 = commitOf(f, b2, b3Files).commit;
+    const v3 = commitOf(f, b3, { ...b3Files, "app.txt": "one\nTWO AND BASE\nthree\n", "own.txt": "own edited\n" });
+    await propose(f, lane, work, b3, v3.commit, v3.tree, m2);
+    const b = application(f);
+    const third = await card(b, "mixed", "view_change", changeSubject(lane)) as Page;
+    expect(third.card!.readers?.map(reader => reader.label)).toEqual(["View diff", "Interdiff from Version 2", "Interdiff from Version 1"]);
+    const mixed = ((await press(b, "mixed", third, "view-interdiff-0")).display as Page).card!.body!;
+    expect(mixed).toContain("Cannot separate from the new base, shown below: 1 file.");
+    expect(mixed).toContain("A difference between the two patches can come from the new base or from Version 3. Read both patches:");
+    expect(mixed).toContain(`Version 2's patch of app.txt, from base ${b2} to integration ${v2.commit}:`);
+    expect(mixed).toContain(`Version 3's patch of app.txt, from base ${b3} to integration ${v3.commit}:`);
+    expect(mixed).toContain("-two\n+TWO\n");
+    expect(mixed).toContain("-two from base\n+TWO AND BASE\n");
+  } finally { await f.room.done(); }
+}, 120_000);
+
+test("J2 witness 3: over a bound an interdiff says truncated on the band and in the text and says what it left out; a version the host does not hold shows no lines", async () => {
+  const f = await roomOf();
+  try {
+    const lane = await changeLane(f, "TEST bound");
+    const work = await workspace(f, lane);
+    const baseFiles = { "app.txt": "one\n" };
+    const b1 = commitOf(f, f.host.head, baseFiles).commit;
+    const v1 = commitOf(f, b1, { "app.txt": "ONE\n" });
+    const m1 = await propose(f, lane, work, b1, v1.commit, v1.tree);
+    const v2 = commitOf(f, b1, { "app.txt": Array.from({ length: 5000 }, (_, n) => `a line of the larger version ${n}\n`).join(""), "later.txt": "after the bound\n" });
+    const m2 = await propose(f, lane, work, b1, v2.commit, v2.tree, m1);
+    const a = application(f);
+    const item = await card(a, "bound", "view_change", changeSubject(lane)) as Page;
+    expect(item.card!.readers?.map(reader => reader.action)).toEqual(["view-diff", "view-interdiff-0"]);
+    const page = (await press(a, "bound", item, "view-interdiff-0")).display as Page, band = page.card!.shownRead!;
+    expect(band.truncated).toBe(true);
+    expect(band.leftOut ?? "").toMatch(/^the last \d+ lines of the patch of app\.txt and every path after it$/);
+    expect(page.context.exact!.truncated).toBe(true);
+    expect(page.card!.body!.endsWith(`truncated: the text reached its bound of 40960 bytes. Left out: ${band.leftOut}. This interdiff does not show the whole change.\n`)).toBe(true);
+    expect(page.card!.body).not.toContain("after the bound");
+    expect(band.commits.map(commit => commit.id)).toEqual([b1, v1.commit, v2.commit]);
+
+    // The host holds no such commit: the read shows no lines, says why, and the credential is gone.
+    const v3 = commitOf(f, b1, { "app.txt": "THREE\n" });
+    const m3 = await propose(f, lane, work, b1, oid("e"), oid("f"), m2);
+    await propose(f, lane, work, b1, v3.commit, v3.tree, m3);
+    const b = application(f);
+    const later = await card(b, "gone", "view_change", changeSubject(lane)) as Page;
+    const absent = await press(b, "gone", later, "view-interdiff-0"), none = absent.display as Page;
+    expect(b.signed.map(intent => intent.kind)).toEqual(["read-token"]);
+    expect(absent.answer["error"], JSON.stringify(absent.answer)).toBe("diff");
+    expect(none.query.page).toBe("item");
+    expect(none.receipt ?? "").toContain("Interdiff not shown: The server shows no diff");
+    expect(none.receipt ?? "").toContain("The one-time credential is spent.");
+    expect(none.card!.shownRead).toBeUndefined();
   } finally { await f.room.done(); }
 }, 120_000);
 

@@ -398,7 +398,7 @@ function scriptedChange(f, definition, extra = () => []) {
   return state;
 }
 
-// Every read of a room with no finding profile, as canonical bytes, against the bytes that main 76cac675 gave. The golden file's commit holds the source of that main.
+// Every read of a room with no finding profile, as canonical bytes, against the bytes that main 76cac675 gave, plus J2's additions to a change with an earlier version: the card's Earlier versions lines, the diff read's label and its interdiff reads.
 test('a room with no finding profile reads byte for byte as it did before the finding profile', async t => {
   const f = fixture(t), source = decisionSource(f.app);
   const ready = scriptedChange(f, J4_DIGESTS.change);

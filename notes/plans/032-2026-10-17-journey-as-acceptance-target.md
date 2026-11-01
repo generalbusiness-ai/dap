@@ -121,13 +121,14 @@ binding and `settle`), and on the reads that wait for a head (DX-A2,
 `1c124ebf`), which give the second device a read that answers once the
 settling head has arrived (rulings `22bf9af5`, `261004b1`, `366b3989`).
 
-**J2. Immutable file, diff and interdiff views.** No diff exists in the
-page or in MCP. The page shows the file of a one-file proposal only; for a
-Git tree it says "File preview is not available yet"
-(`apps/room/page/src/view.ts:133-142`). J2 adds MCP App views of a file
-at an exact commit, a diff between two exact commits, and an interdiff
-between two versions of one change, each bounded and labelled "truncated"
-over its bound. Browser parity is optional. *Done when* a reviewer in the
+**J2. Immutable file, diff and interdiff views.** MVP S6 landed the `diff`
+tool and the Change card's View diff. J2 adds a Change card's interdiff
+between two versions of one change and its file at an exact commit, and
+makes every read name its commits and say what it left out. A rebased
+version compares each changed path across all four commits, and a path
+that those commits cannot separate shows both patches. These views run in
+the local `apps/views` entry: the hosted service has no views and no Git
+reader. Browser parity is optional. *Done when* a reviewer in the
 desktop AI app reads the diff of version 2 and the interdiff from version
 1, and both name the exact commits they show. *Depends on* MVP S2 and S6,
 and the MCP Apps views design (section 4).

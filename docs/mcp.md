@@ -2383,6 +2383,17 @@ show the act was not sent.
 signs one `read-token` act. It reads one bounded `diff` and shows the answer
 on the diff page. Reading a card signs nothing.
 
+A card can also hold `interdiffReads`. Each one offers an interdiff from an
+earlier version, and the diff page offers **File** for each changed path it
+lists. Each of these reads signs one `read-token` act, and the answer names
+the exact commits it read. A view keeps its last four answers, so a second
+press of a read that it holds shows the answer again and signs nothing. A
+moved version makes the held answers stale.
+
+The server holds each read's commits and paths. The browser sends only an
+opaque action ID. Over a bound, the page says "Truncated" and says what the
+read left out.
+
 The generic kit supplies the carousel, detail, diff, updates and receipt
 screens. It does not include journey projections, package installation or
 desktop-host registration. The

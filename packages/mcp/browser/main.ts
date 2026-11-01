@@ -1,7 +1,7 @@
 import { isMemberRef } from "@generalbusiness/dap-bytes";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { AppBridge, AppToolError } from "./bridge.ts";
-import type { Display, PageKind } from "../src/views/types.ts";
+import type { Display, PageKind, ShownRead } from "../src/views/types.ts";
 import { viewToolName } from "../src/views/names.ts";
 import { seriesPanel } from "./series.ts";
 import { SurfacePanels } from "./surface.ts";
@@ -75,7 +75,8 @@ async function reportContext() {
       const encoded = JSON.stringify(context);
       if (encoded === reportedContext) { contextError = ""; continue; }
       const identity = context.identity;
-      const line = `${context.note ? `${context.note} ` : ""}${identity ? `${identity.kind} ${identity.item}, revision ${identity.revision}` : `${context.screen}: ${context.status}`}. View ${context.view}. ${context.navigation.join(", ") || "No navigation"}.${context.receipt ? ` ${context.receipt}` : ""}`;
+      const exact = context.exact ? ` Showing ${context.exact.kind}${context.exact.truncated ? ", truncated" : ""}: ${context.exact.commits.map(commit => `${commit.label} ${commit.id}`).join(", ")}.` : "";
+      const line = `${context.note ? `${context.note} ` : ""}${identity ? `${identity.kind} ${identity.item}, revision ${identity.revision}` : `${context.screen}: ${context.status}`}. View ${context.view}. ${context.navigation.join(", ") || "No navigation"}.${exact}${context.receipt ? ` ${context.receipt}` : ""}`;
       try {
         await bridge.request("ui/update-model-context", { content: [{ type: "text", text: line }], structuredContent: context });
         reportedContext = encoded;
@@ -300,7 +301,10 @@ function render() {
       }
       article.append(section);
     }
+    if (display.query.page === "diff" && card.readers?.length) article.append(readerNav(card.readers));
+    if (display.query.page === "diff" && card.shownRead) article.append(readBand(card.shownRead));
     if (card.body) article.append(node(display.query.page === "diff" ? "pre" : "p", card.body, display.query.page === "diff" ? "diff" : "body"));
+    if (display.query.page === "diff" && card.shownRead) article.append(...readFiles(card.shownRead));
     for (const entry of card.entries ?? []) {
       const section = node("section", undefined, "entry");
       section.append(node("h2", `${entry.scope} · entry ${entry.seq}`), node("p", entry.text)); article.append(section);
@@ -334,9 +338,38 @@ function render() {
     if (display.query.page === "item" && card.actions.length < 2 && !card.unresolvedOriginal && !card.actions.some(action => action.input === "chat")) {
       const ask = button("Ask in chat", handoff, "quiet"); ask.disabled ||= !display.active; actions.append(ask);
     }
-    if (display.query.page === "item" && card.diffAvailable) actions.append(button("View diff", async () => { returnPage = "item"; if (card.diffSigned) await act("view-diff"); else await read({ page: "diff" }); }, "quiet"));
+    if (display.query.page === "item" && card.diffAvailable && card.readers?.length) for (const reader of card.readers) actions.append(readerButton(reader));
+    else if (display.query.page === "item" && card.diffAvailable) actions.append(button("View diff", async () => { returnPage = "item"; if (card.diffSigned) await act("view-diff"); else await read({ page: "diff" }); }, "quiet"));
     root.append(actions);
   }
+}
+function readerButton(reader: { action: string; label: string; current?: boolean }): HTMLButtonElement {
+  const control = button(reader.label, async () => { returnPage = "item"; await act(reader.action); }, "quiet");
+  control.disabled ||= !display?.active || reader.current === true;
+  if (reader.current) control.setAttribute("aria-current", "true");
+  return control;
+}
+/** The reads of one version. Each names its commits, and a read this view holds signs nothing. */
+function readerNav(readers: NonNullable<NonNullable<Display["card"]>["readers"]>): HTMLElement {
+  const nav = node("nav", undefined, "actions"); nav.setAttribute("aria-label", "Exact reads");
+  nav.append(...readers.map(readerButton));
+  return nav;
+}
+/** The title, the exact commits and any truncation of a read. They stand above its lines, so a reader sees them first. */
+function readBand(shown: ShownRead): HTMLElement {
+  const band = node("section", undefined, "read-band");
+  band.append(node("h2", shown.title));
+  const commits = node("dl");
+  for (const commit of shown.commits) commits.append(node("dt", commit.label), node("dd", commit.id));
+  band.append(commits);
+  if (shown.truncated) { const cut = node("p", `Truncated. Left out: ${shown.leftOut ?? "part of this read"}.`, "notice"); cut.setAttribute("role", "status"); band.append(cut); }
+  return band;
+}
+function readFiles(shown: ShownRead): HTMLElement[] {
+  if (!shown.files.length && !shown.moreFiles) return [];
+  const list = node("div", undefined, "actions");
+  list.append(...shown.files.map(file => readerButton({ action: file.action, label: file.label })));
+  return [list, ...(shown.moreFiles ? [node("p", `${shown.moreFiles} more changed ${shown.moreFiles === 1 ? "path has" : "paths have"} no File button here.`, "muted")] : [])];
 }
 function keyboard(event: KeyboardEvent) {
   if (!display || busy || display.query.page !== "summary" || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;

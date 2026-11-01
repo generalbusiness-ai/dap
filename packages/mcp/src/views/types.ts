@@ -16,6 +16,28 @@ export interface CardIdentity {
    * potentially different expected sets in each server-held action. */
   at: Record<string, number>;
 }
+/** One version of a change, as an interdiff compares it. */
+export interface VersionRead { label: string; base: string; integration: string }
+/** One server-held exact read. Each signs one read-token act at `target` and spends its credential on this read. */
+export type ExactRead =
+  | { kind: "diff"; target: string; base: string; integration: string; label?: string }
+  | { kind: "interdiff"; target: string; from: VersionRead; to: VersionRead }
+  | { kind: "file"; target: string; commit: string; commitLabel: string; path: string; shown: string };
+/** One commit that a read names, from the read's own answer. */
+export interface NamedCommit { label: string; id: string }
+/** What a reader page shows beside its text. It holds no executable input: an action is an opaque ID. */
+export interface ShownRead {
+  kind: ExactRead["kind"];
+  title: string;
+  commits: NamedCommit[];
+  truncated: boolean;
+  /** What a truncated read left out, in words. */
+  leftOut: string | null;
+  /** A file of this read that a press reads at its exact commit. */
+  files: { action: string; label: string }[];
+  /** Changed paths this read reached that have no action here. */
+  moreFiles: number;
+}
 export interface ActorChip { kind: "person" | "agent" | "checker"; name: string; controller?: string }
 export type MemberFacts = Readonly<Record<number, { label: string; refs: readonly MemberRef[] }>>;
 export interface NativeCardAction {
@@ -83,7 +105,11 @@ export interface Card {
   unresolvedOriginal?: boolean;
   diffAvailable?: boolean;
   /** Server-held endpoints of View diff. It signs one read-token act at `target` and reads this diff once. */
-  diffRead?: { target: string; base: string; integration: string };
+  diffRead?: { target: string; base: string; integration: string; label?: string };
+  /** Server-held endpoints of each interdiff this card offers, nearest earlier version first. */
+  interdiffReads?: Omit<Extract<ExactRead, { kind: "interdiff" }>, "kind">[];
+  /** The exact read that the diff page shows. */
+  shownRead?: ShownRead;
   detailPage?: "item" | "updates";
   fallback: string;
   /** Generic declared presentation; all data stays on the app-only path. */
@@ -169,6 +195,8 @@ export interface CardContext {
   waitsOn: string[];
   settles: string[];
   navigation: string[];
+  /** The commits that the diff page names. A commit ID is no private card text. */
+  exact?: { kind: ExactRead["kind"]; commits: NamedCommit[]; truncated: boolean };
   note?: string;
   receipt?: string;
 }
@@ -182,9 +210,11 @@ export interface Display {
   status: Projection["status"];
   position: number;
   count: number;
-  card?: Omit<Card, "actions" | "declared" | "diffRead"> & {
+  card?: Omit<Card, "actions" | "declared" | "diffRead" | "interdiffReads"> & {
     /** View diff goes through `view_act`, because it signs a read-token act. */
     diffSigned?: true;
+    /** The exact reads this card offers, as opaque actions. A read this view already holds signs nothing. */
+    readers?: { action: string; label: string; current: boolean }[];
     declared?: Omit<NonNullable<Card["declared"]>, "data"> & { data?: ApplicationProjectionData };
     actions: (Pick<CardAction, "id" | "label" | "purpose"> & { input?: "chat" })[];
   };

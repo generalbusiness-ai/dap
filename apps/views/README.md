@@ -125,10 +125,33 @@ only for the extent it names, so an approval for a change to the rules or to
 deployment files needs the ordinary `review-verdict` act.
 
 **View diff** signs one `read-token` act and spends its credential on one
-read of at most 40 KiB of text. Over a bound, the diff says "truncated". A
-version that holds one file has no integration commit, so its card offers no
-diff. A commit the destination's repository does not hold gives no diff, and
-the card says so. An unpublished workspace commit can fall in this case.
+read of at most 40 KiB of text. Over a bound, the diff says "truncated" and
+says what it left out. A version that holds one file has no integration
+commit, so its card offers no diff. A commit the destination's repository
+does not hold gives no diff, and the card says so. An unpublished workspace
+commit can fall in this case.
+
+**Interdiff from version N** compares this version with an earlier version
+that names commits. It signs one `read-token` act in the same way. The page
+names each commit it read.
+
+When both versions name one base, the page shows the diff between the two
+integrations. When the later version names a new base, the page compares each
+changed path across the four commits, and puts the path in one of four groups:
+
+| Group | What the commits show | What the page shows |
+| --- | --- | --- |
+| Edited by the later version | The two bases agree at this path | The patch between the two versions |
+| Cannot separate from the new base | The bases differ at this path, and so do the two versions' patches | Both patches, and a statement that a difference can come from either side |
+| The same edit on the new base | The bases differ at this path, and the two patches match apart from their line numbers | The path, with no lines |
+| Changed only by the new base | Each version holds its own base's file | The path, with no lines |
+
+The page never assigns a line to the base or to the change by a guess. It has
+no rename detection, so a renamed file shows as one removal and one addition.
+
+**File** reads one changed path at the exact commit that the page names. A view
+keeps its last four answers. A second press of a read it holds shows the same
+answer and signs nothing.
 
 ### Open findings on the finding profile
 
