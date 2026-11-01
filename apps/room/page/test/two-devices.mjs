@@ -248,14 +248,19 @@ try {
   {
     const timings = new Map();
     let order = [];
-    const finished = request => {
+    const nameOf = request => {
       const url = new URL(request.url());
-      const name = url.pathname.endsWith("/acts") ? "POST acts" : /\/originals$/.test(url.pathname) && request.method() === "POST" ? "POST originals" : /\/originals\//.test(url.pathname) && request.method() === "DELETE" ? "DELETE originals" : /\/entries\//.test(url.pathname) ? "GET entry" : /\/originals$/.test(url.pathname) ? "GET originals" : null;
+      return url.pathname.endsWith("/acts") ? "POST acts" : /\/originals$/.test(url.pathname) && request.method() === "POST" ? "POST originals" : /\/originals\//.test(url.pathname) && request.method() === "DELETE" ? "DELETE originals" : /\/entries\//.test(url.pathname) ? "GET entry" : /\/originals$/.test(url.pathname) ? "GET originals" : null;
+    };
+    // The order is the order in which the page starts each request. A finish event can arrive in another order.
+    const started = request => { const name = nameOf(request); if (name) order.push(name); };
+    const finished = request => {
+      const name = nameOf(request);
       if (!name) return;
       const timing = request.timing();
       timings.set(name, [...(timings.get(name) ?? []), timing.responseEnd > 0 ? timing.responseEnd : null]);
-      order.push(name);
     };
+    second.page.on("request", started);
     second.page.on("requestfinished", finished);
     await openIssue(second, issue.scope);
     for (let i = 0; i < MEASURED_ACTS; i++) {
@@ -265,12 +270,15 @@ try {
       await second.page.waitForFunction(text => document.body.textContent.includes(text), `Measured comment ${i + 1}.`, { timeout: 60_000 });
       await delay(1000);
       const [acted, ended] = [order.indexOf("POST acts"), order.indexOf("DELETE originals")];
-      measured.push({ ...Object.fromEntries([...timings.entries()].map(([name, values]) => [name, values])), followReads: order.slice(acted + 1, ended).filter(name => name === "GET entry").length, keptFirst: order.indexOf("POST originals") < acted });
+      await second.page.waitForSelector(`${commentForm} button[type="submit"]:not([disabled])`, { timeout: 60_000 });
+      await delay(500);
+      measured.push({ ...Object.fromEntries([...timings.entries()].map(([name, values]) => [name, values])), order: [...order], followReads: order.slice(acted + 1, ended).filter(name => name === "GET entry").length, keptFirst: order.indexOf("POST originals") < acted });
     }
+    second.page.off("request", started);
     second.page.off("requestfinished", finished);
   }
   const series = name => measured.flatMap(row => row[name] ?? []).filter(value => value !== null);
-  const summary = name => ({ requestsPerAct: measured.map(row => (row[name] ?? []).length), medianMs: median(series(name)), maxMs: Math.max(...series(name)) });
+  const summary = name => ({ requestsPerAct: measured.map(row => row.order.filter(started => started === name).length), medianMs: median(series(name)), maxMs: Math.max(...series(name)) });
   const measurement = {
     label: `Observed run: ${MEASURED_ACTS} comments through the page in Chromium, against a local wrangler dev Worker on loopback, one room. Times are Chromium's responseEnd for each request, with no network distance, so they state the Worker's own work and no real round trip.`,
     "POST originals": summary("POST originals"), "DELETE originals": summary("DELETE originals"), "POST acts": summary("POST acts"), "GET originals": summary("GET originals"),

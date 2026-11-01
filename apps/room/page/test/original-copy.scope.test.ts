@@ -269,8 +269,9 @@ test("a full cap sends nothing", async () => {
     expect(over.status).toBe(507);
     expect(JSON.parse(over.text).reason).toBe("full");
     // The page sends nothing, and it says so.
-    await expect(comment(s.laptop, s.lane, "One too many.")).rejects.toThrow(CopyNotKept);
-    await expect(comment(s.laptop, s.lane, "One too many.")).rejects.toThrow(/Nothing was sent/);
+    const stopped = await comment(s.laptop, s.lane, "One too many.").then(() => null, (error: Error) => error);
+    expect(stopped).toBeInstanceOf(CopyNotKept);
+    expect(stopped?.message).toContain("Nothing was sent");
     expect(s.wire.acts).toEqual([]);
     expect(await openOriginals(s.laptop)).toHaveLength(64);
     // Another member keeps their own cap.
