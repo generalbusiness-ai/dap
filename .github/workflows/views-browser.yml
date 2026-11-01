@@ -1,0 +1,66 @@
+name: Card browser script
+on:
+  pull_request:
+    paths:
+      - 'packages/mcp/browser/**'
+      - 'packages/mcp/src/views/**'
+      - 'packages/mcp/scripts/views.mjs'
+      - 'packages/mcp/test/views-browser.mjs'
+      - 'packages/mcp/test/support/views-host.ts'
+      - 'packages/mcp/test/support/standin.ts'
+      - 'packages/mcp/test/fixtures.ts'
+      - '.github/workflows/views-browser.yml'
+  push:
+    branches: ['**']
+    paths:
+      - 'packages/mcp/browser/**'
+      - 'packages/mcp/src/views/**'
+      - 'packages/mcp/scripts/views.mjs'
+      - 'packages/mcp/test/views-browser.mjs'
+      - 'packages/mcp/test/support/views-host.ts'
+      - 'packages/mcp/test/support/standin.ts'
+      - 'packages/mcp/test/fixtures.ts'
+      - '.github/workflows/views-browser.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  views-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '26'
+          cache: npm
+      - run: npm ci
+      - name: Install the pinned browser tools in a scratch directory
+        env:
+          # The script asserts this version, and this version's browsers.json names this revision.
+          PLAYWRIGHT_VERSION: 1.63.0
+          PLAYWRIGHT_INTEGRITY: sha512-rYCsBF/M5HjUch52bbtVONEFjv6Xu8sm8h72dNlR5bzIE1fvC/bxgspzkjSfU+MweEMmPM8KJebG6nnyxo5mCg==
+          CHROMIUM_REVISION: '1243'
+        run: |
+          set -euo pipefail
+          tools="$RUNNER_TEMP/browser-tools"
+          mkdir -p "$tools"
+          npm install --prefix "$tools" --ignore-scripts --no-audit --no-fund --save-exact "playwright-core@$PLAYWRIGHT_VERSION"
+          core="$tools/node_modules/playwright-core"
+          [ "$(node -p "require('$tools/package-lock.json').packages['node_modules/playwright-core'].integrity")" = "$PLAYWRIGHT_INTEGRITY" ]
+          export PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/ms-playwright"
+          node "$core/cli.js" install --with-deps --no-shell chromium
+          chromium=$(node -p "require('$core').chromium.executablePath()")
+          [[ "$chromium" == "$PLAYWRIGHT_BROWSERS_PATH/chromium-$CHROMIUM_REVISION/"* ]]
+          [ -x "$chromium" ]
+          echo "PLAYWRIGHT_CORE=$core" >> "$GITHUB_ENV"
+          echo "CHROMIUM=$chromium" >> "$GITHUB_ENV"
+      - name: Refuse a generated card module that its sources do not build
+        run: |
+          set -euo pipefail
+          node packages/mcp/scripts/views.mjs
+          git diff --exit-code -- packages/mcp/src/views/generated.ts
+      - name: Run the card browser script
+        env:
+          VIEW_CAPTURE_OUT: /tmp/views-browser
+        run: node --import tsx packages/mcp/test/views-browser.mjs
