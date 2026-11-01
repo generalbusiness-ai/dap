@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the head, and one run on GitHub Actions on the branch with one on a broken control branch.",
+  "directory": "2026-11-01-browser-ci",
+  "checkpoint": {
+    "commit": "2b3c35396c5520b3e3ee110020ed5377dc0b5ad8",
+    "tree": "a79439eae01daf07c33dcad86e4a1fabaf63deff"
+  },
+  "fileCount": 103,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "ec7f1a032b3323248c94237bbd1189e181c94407a2e981881e52a947fc9d6712"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "checks.log",
+      "bytes": 233,
+      "sha256": "859dc7512a101554c0310c368526e05525e5cb0591060662255cd2e5d0763cb1"
+    },
+    {
+      "path": "controls/final/linux-card-target.log",
+      "bytes": 1461,
+      "sha256": "b46799106d9802a79808f0a8ddf601b2f50a372fb9bdf346c5e2002c1bd9078b"
+    },
+    {
+      "path": "controls/final/linux-no-skip.log",
+      "bytes": 1080,
+      "sha256": "49fc3f5e73515d3a7f6e13c7a020f7357ebe41255f817bba1ec3bc3798ce1a3c"
+    },
+    {
+      "path": "controls/linux-card-opens.log",
+      "bytes": 1587,
+      "sha256": "0a88b804d07c4986eee0f55c2855635d343e5baae9e67264ef08aa8d1330b391"
+    },
+    {
+      "path": "controls/linux-stale-module.log",
+      "bytes": 1037,
+      "sha256": "bba1050b945dc2d76ba57dc5ddfc2de0312c4b4f7bca8cc8b75d76f53b97fd2d"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6516,
+      "sha256": "91f4ef9a607465bc16126fb3dec92084f9fd8fef1c54a45eae2304b7b4ec7f80"
+    },
+    {
+      "path": "linux-proxy/final-run.log",
+      "bytes": 4735,
+      "sha256": "1ec6c10a7bdcdcd9009096974be7b81cc9f4aa65b82f62bc7e36cd8efb65bbb0"
+    },
+    {
+      "path": "linux-proxy/scripts/results.tsv",
+      "bytes": 546,
+      "sha256": "6900e2e47bfb6ea928ce554e6b1dba0c68d5b54997a353916a2935f19069d90c"
+    },
+    {
+      "path": "remote/branch-run.log",
+      "bytes": 69724,
+      "sha256": "8a54fb5a5475f0a6126461093ebaa65505f0a6cc2ff4e198a0f4a0a235bbe483"
+    },
+    {
+      "path": "remote/control-run.log",
+      "bytes": 70430,
+      "sha256": "84158f2e9e68580fef9a921635fec6d529f488c092102580230b6d78eb458c04"
+    },
+    {
+      "path": "runs/results.tsv",
+      "bytes": 995,
+      "sha256": "0259e17281ada9dd879511d07a6cabe3fc2517a37929f846a7e7bf254fbdf9bb"
+    },
+    {
+      "path": "scrub.log",
+      "bytes": 1278,
+      "sha256": "daeedf2c4b4df6405257ebbcea3156578a8895041a4bb2337e39b9389c4ed04a"
+    },
+    {
+      "path": "stray-gate.txt",
+      "bytes": 1313,
+      "sha256": "af617097bc132dc5eac0a48d8ae407f67e664820dab7619f4e4c7e6537144bd1"
+    },
+    {
+      "path": "workflow-lint.log",
+      "bytes": 203,
+      "sha256": "4c7624d9cc7c1782be626209afeee4b5037c592f6ef9c0daf8e742b2b47d416b"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 9806,
+      "sha256": "87f1d8aea86f8c2b58e2ca36076fd814ddfcf2db691a8a385ede87ef2aa919fc"
+    }
+  ]
+}

@@ -323,7 +323,10 @@ The S2 browser rehearsal compares this in-place/context receipt flow with
 the prototype's message-per-act loop. Record which one it keeps and why;
 the current design follows clarification `f89c614b` pending that evidence.
 S0 owns the `inguz.space` sandbox domain and proxied apex/wildcard records.
-A resource's `_meta.ui.domain` identifies its `<id>.inguz.space` origin.
+Those origins serve a dap web host. A resource declares no `_meta.ui.domain`
+by default, because each host sets that field's format: the desktop AI app
+accepts only an origin it derives from a connector URL, and a local stdio
+server has no such URL. See `notes/implementation/2026-11-01-view-domain.md`.
 The kit reads CSP from each package resource's metadata, rather than
 substituting a hard-coded empty policy; the journey's views declare none.
 The later dap web host remains outside this design and S2 kit slice.

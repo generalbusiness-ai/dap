@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "qualification": "One passing gate. A loopback host stands in for the desktop AI app, and no desktop AI app has rendered this code.",
+  "directory": "2026-11-01-view-domain",
+  "checkpoint": {
+    "commit": "4c2fedf3dc40178e64775f1b755ac6cbef92fbd2",
+    "tree": "80e52ab212b618340e9a71d40352ff714cfd1a2b"
+  },
+  "fileCount": 43,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "bd1a8607b87f2049d41c36f75145c59921a4b7f4e5685d47c627b75173796894"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "app-log/dap-cards-read-then-call.txt",
+      "bytes": 380,
+      "sha256": "9acc181aca6b285b00c650e46455770a4c4d45d3432585ddac54adb47ff62998"
+    },
+    {
+      "path": "app-log/dap-views-2026-11-01.txt",
+      "bytes": 945,
+      "sha256": "af6c5adf7e87e5937ea86ef4993495e52aeb3ca58b11168a906c71fe80dfc244"
+    },
+    {
+      "path": "browser-script/report.json",
+      "bytes": 212290,
+      "sha256": "2cf634f1a196a21e5dea74af8970a434cbdaacba782f68f3b23588934d430e86"
+    },
+    {
+      "path": "controls/default-domain.log",
+      "bytes": 2255,
+      "sha256": "069577d39cc35e1f51effaf7d111f2406f6190aca9f74003b333e444ff2ca423"
+    },
+    {
+      "path": "controls/metadata-always.log",
+      "bytes": 2251,
+      "sha256": "267f7c32113539eaede968bf1d8c9923ebde1eda1c58cd23d2daa771034b7356"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6500,
+      "sha256": "6f25b9fbc171eb16377902e05745f9c3fea7d9aa80c17e83edb859e9715d3944"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 3896,
+      "sha256": "feebd81b8fa788290029f619d17b77857c3b63e480750a4e9c4bcc8aba98ca76"
+    }
+  ]
+}

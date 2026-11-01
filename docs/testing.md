@@ -884,6 +884,65 @@ Darwin, the owner skips both children. These offline tests use scratch files,
 synthetic loopback TLS, and scripted service ports. They start no host
 services and prove no installed-host, shutdown, or deployment outcome.
 
+## Card browser script
+
+[`.github/workflows/views-browser.yml`](../.github/workflows/views-browser.yml)
+runs `packages/mcp/test/views-browser.mjs` in Chromium on Linux. The script
+presses through the cards on a fixture host, in two themes and three widths.
+The workflow runs on a pull request and on a push to any branch, when the
+change touches the card source, the generated module, the script, the script's
+support files or the workflow. Its `on:` block lists the paths. The gate does
+not run the script, and `scripts/gate.sh` has no browser step.
+
+A head that touches `packages/mcp/browser/**`, `packages/mcp/src/views/**` or
+the script cites this workflow's run at the head's own commit. That citation
+replaces running the script by hand and citing the result. A head's branch
+reaches `origin` only when you push it, and a run on `main` comes after the
+landing. To get the run:
+
+1. Push the branch: `git push origin <branch>`.
+2. Find the run: `gh run list --workflow views-browser.yml --branch <branch>`.
+3. Cite the run's URL and its conclusion in the implementation note.
+
+To run the script on your machine, set the three paths. The output directory
+must be under `/tmp`.
+
+```
+PLAYWRIGHT_CORE=<scratch directory>/node_modules/playwright-core \
+CHROMIUM=<chromium executable> VIEW_CAPTURE_OUT=/tmp/<new directory> \
+  node --import tsx packages/mcp/test/views-browser.mjs
+```
+
+After `npm ci`, the job has three steps of its own:
+
+- **Tools.** The job installs `playwright-core` 1.63.0 under `RUNNER_TEMP` and
+  compares its integrity value with the one in the workflow. That package then
+  installs Chromium revision 1243, the revision that its `browsers.json` names.
+  `package.json` and the lock file do not change. To move the version, change
+  `PLAYWRIGHT_VERSION`, `PLAYWRIGHT_INTEGRITY`, `CHROMIUM_REVISION` and the
+  script's assertion in one commit.
+- **Generated module.** The browser loads card bytes from
+  `packages/mcp/src/views/generated.ts`, not from `packages/mcp/browser/`. The
+  job runs `packages/mcp/scripts/views.mjs` and fails if the module changes,
+  because a fault in unbuilt source passes the script. After you change card
+  source, run that command and commit the module.
+- **Script.** The job runs the script, and any failure fails the job.
+
+No step skips. A missing tool fails the job.
+
+The other browser scripts run by hand.
+`apps/counter/scripts/test-browser.mjs` is not one of them: it runs Node
+witnesses, and the gate's Counting stage runs it.
+
+| Script | Needs beyond Playwright and Chromium | The workflow's tools can run it |
+|---|---|---|
+| `packages/mcp/test/declared-*-browser.mjs`, `grow-*-browser.mjs`, `owned-scopes-browser.mjs` | nothing | yes |
+| `apps/room/page/test/no-session-screens.mjs`, `mcp-second-device.mjs`, `two-devices.mjs` | `WRANGLER`, `WITNESS_DIR` and a loopback port for a local Worker. `two-devices.mjs` takes about seven minutes | yes, with those two settings |
+| `apps/room/page/test/screens.mjs` | a recorder run in the `scope` project and a clean tree | no: it rewrites the tracked screenshots |
+| `scripts/demo-captures.ts --recorded` | a recorder run in the `scope` project | no: it makes captures, and it exits 0 when its tools are missing |
+| `notes/2026-10-17-journey-views-design/render.mjs` | a static server over the checkout | no: it checks a frozen design packet |
+| `notes/2026-10-17-compact-cards-design/verification/*.mjs`, `notes/plans/retired/027-artroom-usability/preview-qa.mjs` | absolute paths that no longer exist | no: they record past runs |
+
 ## Settings inventory
 
 `node --test scripts/security-settings.test.mjs` checks the static inventory in

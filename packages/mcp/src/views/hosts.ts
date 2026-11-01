@@ -1,10 +1,10 @@
 /** Host-specific names stay here. The resource and app protocols use standard MCP Apps fields. */
-import { base32, isDigest } from "@generalbusiness/dap-bytes";
-import type { Digest } from "@generalbusiness/dap-contract";
 
-export function sandboxDomain(declared: string | undefined, presentation: Digest): string {
-  if (!isDigest(presentation)) throw new Error("Presentation digest is malformed.");
-  const label = declared ?? base32(Uint8Array.from(presentation.slice(7).match(/../g)!, (pair) => Number.parseInt(pair, 16)));
-  if (!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(label)) throw new Error("Presentation domain must be one lowercase DNS label.");
-  return `${label}.inguz.space`;
+/**
+ * The origin a deployment declares for a host that accepts it. Each host sets the format of `_meta.ui.domain` and may refuse
+ * a value it does not recognize, so a resource declares none by default and takes the host's default sandbox origin.
+ */
+export function sandboxDomain(declared: string): string {
+  if (!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(declared)) throw new Error("Presentation domain must be one lowercase DNS label.");
+  return `${declared}.inguz.space`;
 }

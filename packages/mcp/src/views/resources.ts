@@ -22,7 +22,7 @@ export interface PresentationResource {
   ui: ResourcePolicy;
 }
 export interface PresentationPackage {
-  /** One DNS label, or omitted to use the presentation digest. */
+  /** One DNS label for a host that accepts it. Omitted, the resource declares no domain and the host uses its default origin. */
   domain?: string;
   resources: readonly PresentationResource[];
 }
@@ -31,7 +31,7 @@ export interface PresentationPackage {
 export class ViewResources {
   readonly generation: Digest;
   readonly #resources: PresentationResource[];
-  readonly #domain: string;
+  readonly #domain: string | undefined;
   constructor(presentation: PresentationPackage) {
     this.#resources = structuredClone([...presentation.resources]);
     const uris = new Set<string>();
@@ -41,10 +41,10 @@ export class ViewResources {
       if (utf8(resource.text).length > 1024 * 1024) throw new Error("Presentation resource exceeds one MiB.");
     }
     this.generation = digestBytes(utf8(canonicalize({ domain: presentation.domain ?? null, resources: this.#resources.map(({ text: _text, ...metadata }) => metadata) })));
-    this.#domain = sandboxDomain(presentation.domain, this.generation);
+    this.#domain = presentation.domain === undefined ? undefined : sandboxDomain(presentation.domain);
   }
   #metadata(resource: PresentationResource) {
-    return { uri: resource.uri, name: resource.name, description: resource.description, mimeType: APP_MIME, _meta: { ui: { ...structuredClone(resource.ui), domain: this.#domain } } };
+    return { uri: resource.uri, name: resource.name, description: resource.description, mimeType: APP_MIME, _meta: { ui: { ...structuredClone(resource.ui), ...(this.#domain === undefined ? {} : { domain: this.#domain }) } } };
   }
   list() { return { resources: this.#resources.map((resource) => this.#metadata(resource)) }; }
   read(uri: string) {
