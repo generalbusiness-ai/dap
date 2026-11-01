@@ -1413,6 +1413,62 @@ test("H6 through the endpoint: a custody budget refuses full before signing, a s
   } finally { done(room); }
 });
 
+// Real: the production app Worker's fetch, the agent object, its SQLite custody, and the scopes. STAND-INS: `hostedTest.lose`, for the lost
+// replies, and the room's scripted clock. Invariant: after a lost reply, 601 seconds and a failed session renewal, the agent's custody
+// identity still names the room's membership. So `settle` finds the record, no second intent is signed, and the stop names the earlier send.
+test("H6 through the endpoint: a lost reply, 601 seconds and a failed session renewal keep the custody record, and the scope holds one entry", async () => {
+  const { room, rita } = await roomWithIssues();
+  try {
+    const bot = await hosted(room, rita, "@bot", "create-bot");
+    const result = async (r: Response) => (await r.json() as { result: { structuredContent: Record<string, unknown> } }).result.structuredContent;
+    const stub = agentStub(bot.agent);
+    const lane = async (title: string, key: string) => {
+      const opened = await rita.ok("issue.create", { fields: { definition: DEMO_DIGESTS.issue, title, conditions: ["done"] }, values: [canonicalize(issueDemo)], idempotencyKey: key });
+      await rita.ok("wait", { scope: "directory", entry: (opened["fact"] as FactRef).seq });
+      return ((await rita.ok("room"))["lanes"] as { title: string; scope: string }[]).find(row => row.title === title)!.scope;
+    };
+    const [first, second] = [await lane("first", "open-first"), await lane("second", "open-second")];
+    const comments = async (scope: string) => ((await rita.ok("steps", { scope }))["steps"] as { kind: string | null; signer: string | null }[]).filter(step => step.kind === "comment" && step.signer === bot.key);
+    // The agent's entries age past the signed-read window, so its later signed reads of the room's scopes are refused.
+    room.advance(601_000);
+    const args = { target: first, fields: { body: "It is in README.md." }, idempotencyKey: "drift-1" };
+    hostedTest.lose = `/${first}/acts`;
+    const lost = await result(await room.wait(() => modernCall(bot.bearer, "issue.comment", args)));
+    expect(lost["error"], JSON.stringify(lost)).toBe("transport");
+    const kept = (await stub.custodyRecord("drift-1"))!;
+    expect(kept.phase).toBe("unknown");
+
+    room.advance(601_000);
+    hostedTest.lose = "/sessions";
+    const unread = await result(await room.wait(() => modernCall(bot.bearer, "room", {})));
+    expect(hostedTest.lose, "the renewal went, and its reply was lost").toBeNull();
+    expect((unread["unread"] as { reason: string }[]).map(row => row.reason), "the room's scopes are unread").toEqual(["forbidden", "forbidden", "forbidden"]);
+    expect(unread["lanes"], "the list holds no lane").toEqual([]);
+
+    // The list lost the tool with the lane: the stop says so, names the earlier send, and points at settle. Nothing is signed.
+    const stop = await result(await room.wait(() => modernCall(bot.bearer, "issue.comment", args)));
+    expect([stop["error"], stop["message"]], JSON.stringify(stop)).toEqual(["unknown-tool", "An earlier send under this key has no known outcome. No tool is named issue.comment in this list."]);
+    expect(stop["next"]).toBe("Call settle with this idempotencyKey, or repeat the first call's arguments under it. Do not use a new key until the scope has answered, because a new key can make a second entry.");
+
+    // `settle` finds the record it holds, under the same read failure, and the scope's settlement resolves it.
+    const settled = await result(await room.wait(() => modernCall(bot.bearer, "settle", { idempotencyKey: "drift-1", target: first })));
+    expect([settled["answer"], settled["phase"]], JSON.stringify(settled)).toEqual(["accepted", "accepted"]);
+    expect((await stub.custodyRecord("drift-1"))!.intent, "the same signed intent").toBe(kept.intent);
+    expect(await comments(first), "one entry under the key").toHaveLength(1);
+
+    // The renewal works again past its refusal window: the tool is back, and the same call returns the kept answer.
+    room.advance(61_000);
+    const repeat = await result(await room.wait(() => modernCall(bot.bearer, "issue.comment", args)));
+    expect([repeat["answer"], repeat["retained"], (repeat["fact"] as FactRef).seq], JSON.stringify(repeat)).toEqual(["accepted", true, (settled["fact"] as FactRef).seq]);
+    expect(await comments(first)).toHaveLength(1);
+
+    // A limit that docs/mcp.md states: the identity names the target, so a changed target under the same key is a new record and a new entry.
+    const moved = await result(await room.wait(() => modernCall(bot.bearer, "issue.comment", { ...args, target: second })));
+    expect([moved["answer"], moved["retained"]], JSON.stringify(moved)).toEqual(["accepted", false]);
+    expect([(await comments(first)).length, (await comments(second)).length]).toEqual([1, 1]);
+  } finally { done(room); }
+}, 120_000);
+
 test("H6 through the endpoint: a write that fails while a result is written is reported as an outcome not kept, never as nothing sent; the record stays sent, and settle under the same key writes the receipt", async () => {
   const { room, rita } = await roomWithIssues();
   hostedTest.custodyBounds = { budget: 1024 * 1024 * 1024, identityMost: 64 * 1024 * 1024, terminalMost: 1024, ageDays: 30 };

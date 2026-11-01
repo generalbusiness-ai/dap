@@ -701,6 +701,17 @@ not an exact-wall-clock guarantee. Taking or dropping plaintext keeps its
 metadata and does not revoke the provider token. Generic write-token plaintext
 stays available for provider revocation, even if its ID resembles a read handle.
 
+A delivery's own transaction adds one row to `private_named_key` for the key
+that an applied `compromised` notice names at a destination. A notice that the
+row's guard refuses adds nothing. The credential route answers `forbidden` to a
+named key, and its unread plaintext stays until the expiry queue drops it. The
+table holds one row for each named key and no secret, and a named key never
+leaves it. A row needs a key that membership enrolled and then revoked, which
+takes at least three entries of its journal apart from the first key. Membership
+journals take no floor, so `scopeEntries` limits a room to about 33,000 rows of
+under 256 bytes each. A notice that arrived before this table existed names
+nobody.
+
 Planner decision `21a8e35b103dd0280ea711d78d167db0d355cafd` accepts partial
 legacy coverage. An untagged row needs bounded retained current-incarnation
 mint-read, opening and confirmed-outcome proof before enrollment. Rows with

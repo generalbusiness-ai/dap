@@ -8,7 +8,10 @@ import { describe, expect, test } from "vitest";
 import type { Receipt } from "@generalbusiness/dap-contract";
 import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import { COMPLETION_BYTES, SEGMENT_ROW_BYTES, chargedOf, sqliteStore, type Sql, type SqlValue, type SqliteCustodyBounds } from "../src/sqlite-custody.ts";
-import { Custody, CustodyError, Lost, RECORD_BYTES, identityId, type CustodyRecord, type Outcome } from "../src/custody.ts";
+import { Custody, CustodyError, Lost, RECORD_BYTES, TERMINAL, identityId, memoryStore, type CustodyRecord, type CustodyStore, type Outcome } from "../src/custody.ts";
+import { McpService } from "../src/service.ts";
+import { fixedSigner } from "./fixtures.ts";
+import { SERVICE, StandIn } from "./support/standin.ts";
 
 /** Node's SQLite as the store sees a Durable Object's: `exec` with bindings, and a transaction that rolls back on a throw. */
 function nodeSql(): Sql & { db: DatabaseSync } {
@@ -327,4 +330,42 @@ test("the complete charged cost is reserved before anything is built: one byte s
   expect(enough.identity(b).reserved, "the result releases the rest").toBe(0);
   expect((await enough.read(b))?.phase).toBe("accepted");
   expect(enough.used() + enough.reserved()).toBe(COMPLETION_BYTES + enough.identity(b).stored);
+});
+
+// Invariant: the hosted store and the local stores agree on what is unresolved. An archived settlement is terminal: it holds no
+// capacity, moves to the archive past the bounds, and no later stop calls it a send of no known outcome.
+test.each([...TERMINAL])("a %s record is not unresolved in the SQLite store or the memory store", async phase => {
+  const sqlite = sqliteStore(nodeSql()), memory = memoryStore();
+  for (const store of [sqlite, memory]) {
+    await store.write("t", recordOf("t", phase));
+    await store.write("u", recordOf("u", "unknown"));
+    expect((await store.unresolved()).map(open => open.key), phase).toEqual(["u"]);
+  }
+});
+
+test("an archived record moves to the archive past the bound, and reads back", async () => {
+  const store = sqliteStore(nodeSql(), { budget: 64 * 1024 * 1024, identityMost: 64 * 1024 * 1024, terminalMost: 0, ageDays: 30 });
+  await store.write("t", recordOf("t", "archived"));
+  expect(store.archived()).toBe(1);
+  expect((await store.read("t"))?.phase).toBe("archived");
+});
+
+// Real custody and the real SQLite store under Node's SQLite, with the stand-in room's scripted settlement. No hosted object runs here.
+test("a stop under a key whose settlement is archived does not call it a send of no known outcome", async () => {
+  const signer = fixedSigner(25), stand = new StandIn(signer.key), store: CustodyStore = sqliteStore(nodeSql());
+  const archived = { floor: 5, commit: "b".repeat(40), through: { seq: 6, hash: `sha256:${"c".repeat(64)}` } };
+  const service = new McpService({ service: SERVICE, signer, custody: store, now: () => Date.parse("2099-01-01T00:00:00Z"),
+    config: { read: async () => stand.config(), addRoot: async () => { throw Error("must not grant a root"); } },
+    fetch: (async (url: string, init?: RequestInit) => {
+      if (url.endsWith("/acts")) throw new Error("scripted lost reply");
+      if (url.endsWith("/settle")) return Response.json({ ok: false, reason: "archived", archived }, { status: 410 });
+      return stand.fetch(url, init as never);
+    }) as never });
+  await service.page();
+  await service.call("repository.read-token", { on: 0, fields: { hours: 1 }, idempotencyKey: "gone" });
+  expect((await service.call("settle", { target: "destination", idempotencyKey: "gone" })).structuredContent["answer"]).toBe("archived");
+  expect((await store.unresolved()).length).toBe(0);
+  const stop = (await service.call("repository.read-token", { idempotencyKey: "gone", fields: { hours: 1 } })).structuredContent;
+  expect(stop["error"], JSON.stringify(stop)).toBe("shape");
+  expect(String(stop["message"])).not.toContain("no known outcome");
 });

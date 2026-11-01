@@ -275,7 +275,19 @@ caller's `idempotencyKey`, in the config directory's
   The server reads its custody for this with no new signature. If it cannot
   read its custody, it says that it cannot tell. If the scope accepted the
   request and a read after it failed, the error says that the scope accepted
-  the request, and the same call returns the kept answer.
+  the request, and the same call returns the kept answer. If the server's check
+  of an accepted request fails on an entry that cannot change, the same call
+  stops at the same check and sends nothing, so the error says to report it.
+- **A failed read of the room.** The record keeps the room's membership in its
+  identity, so `settle` and the same call find the record while the room's
+  scopes are unread. The list can lose an act tool with those scopes. The tool
+  then answers `unknown-tool`, and that error names the earlier send and points
+  at `settle`. `settle` is the way to the answer until the reads return.
+- **A changed target under the same key is a new request.** The record's
+  identity names the target, so custody keeps a new record and signs a new
+  intent. The new target's scope can accept it. A key protects one request
+  against a second send to its target, and does not protect it against a change
+  of target.
 - **A copy for your other devices.** When the server holds a read session
   of a person's membership, it also keeps the exact request in that room's
   membership object, after it records the envelope and before it sends. The

@@ -160,6 +160,10 @@ export function clip(value: unknown, chars: number = FRAGMENT_CHARS): string {
 }
 
 const AFTER_ACCEPTED = "Call again with the same idempotencyKey: the kept answer returns, and nothing goes twice.";
+/** After an acceptance, for a check of what cannot change: a repeat returns the same kept answer to the same check. */
+const REPORT_ACCEPTED = "A repeat stops at this check again and sends nothing, so report this message and the idempotencyKey. Do not use a new key, because a new key can make a second entry.";
+/** After an acceptance, for a read that gave no entry: a later read can give it. */
+const READ_ACCEPTED = "Call again with the same idempotencyKey: nothing goes twice. If the call stops here again, report this message and the key. Do not use a new key, because a new key can make a second entry.";
 
 /**
  * The server's own findings, before or beside the scope's judgment. Each is a tool error, never a scope's answer. Every
@@ -173,9 +177,10 @@ export type Finding =
   | { error: "restart" }
   /**
    * `submitted`: this call sent the request, and its reply was lost. Otherwise a read failed. `accepted`: the read came after the
-   * scope accepted this call's request, so the request stands.
+   * scope accepted this call's request, so the request stands. `stopped`: the server failed on its own after a request under this
+   * key left, so this call has no answer to show.
    */
-  | { error: "transport"; scope: string; submitted: boolean; accepted?: boolean }
+  | { error: "transport"; scope: string; submitted: boolean; accepted?: boolean; stopped?: boolean }
   | { error: "custody"; state: "conflicting" | "full" | "locked" | "unreadable" | "terminal" | "too-large" | "unkept"; key: string; scope: string; keys?: string[]; recorded?: string; bytes?: number; reason?: "budget";
       /** For `unkept`: what the scope answered before the store failed to keep it (`lost` for a reply that never came). */
       answer?: string;
@@ -191,8 +196,11 @@ export type Finding =
   | { error: "original"; why: "full" | "room-full" | "no-reply" | "refused" | "session-lost" | "stopped"; reason?: string; earlier: boolean; stepped?: boolean; rowStays: boolean }
   | { error: "credential"; destination: string; why: string }
   | { error: "diff"; why: string; spent: boolean }
-  /** `sent`: the finding came after the scope accepted this call's request, so it is no finding before signing. */
-  | { error: "target"; what: string; sent?: boolean }
+  /**
+   * `sent`: the finding came after the scope accepted this call's request, so it is no finding before signing. `report`: the check
+   * failed on what cannot change, so a repeat stops again. `read`: the read of the entry gave nothing, so a repeat can pass.
+   */
+  | { error: "target"; what: string; sent?: "report" | "read" }
   | { error: "unknown-tool"; name: string }
   | { error: "read"; scope: string; reason: ReadRefusal };
 
@@ -207,12 +215,13 @@ const NEW_KEY_RISK = "Do not use a new key until the scope has answered, because
  * meet the conflict or make a second entry, so settling comes first.
  */
 export function earlierSaid(earlier: Earlier, error: string, said: Said): Said {
-  if (earlier === "stepped") return { sentence: `An earlier preparation step under this key went, and this request did not. ${said.sentence}`, next: said.next };
+  const once = (line: string): string => (said.sentence.includes(line) ? said.sentence : `${line} ${said.sentence}`);
+  if (earlier === "stepped") return { sentence: once("An earlier preparation step under this key went, and this request did not."), next: said.next };
   const risked = said.next.includes(NEW_KEY_RISK) ? said.next : `${said.next} ${NEW_KEY_RISK}`;
-  if (earlier === "unreadable") return { sentence: `This server could not read its custody, so it cannot say whether an earlier send under this key went. ${said.sentence}`, next: risked };
+  if (earlier === "unreadable") return { sentence: once("This server could not read its custody, so it cannot say whether an earlier send under this key went."), next: risked };
   return {
-    sentence: `An earlier send under this key has no known outcome. ${said.sentence}`,
-    next: error === "shape" || /new idempotencyKey|smaller/.test(said.next) ? `Call settle with this idempotencyKey, or repeat the first call's arguments under it. ${NEW_KEY_RISK}` : risked,
+    sentence: once("An earlier send under this key has no known outcome."),
+    next: error === "shape" || error === "unknown-tool" || /new idempotencyKey|smaller/.test(said.next) ? `Call settle with this idempotencyKey, or repeat the first call's arguments under it. ${NEW_KEY_RISK}` : risked,
   };
 }
 
@@ -224,6 +233,7 @@ export function finding(f: Finding): Said & { error: string } {
     case "restart": return { error: f.error, sentence: "The tool list changed; list again from the start.", next: "Call tools/list without a cursor." };
     case "transport":
       if (f.accepted) return { error: f.error, sentence: "The scope accepted this request, and the reply to the read after it was lost or malformed.", next: AFTER_ACCEPTED };
+      if (f.stopped) return { error: f.error, sentence: `This server failed after a request under this key went to ${clip(f.scope)}, so this call has no answer to show. The envelope is under custody.`, next: HINTS.settle };
       if (!f.submitted) return { error: f.error, sentence: `The reply from ${clip(f.scope)} to a read was lost or malformed. This call sent nothing.`, next: "Call again, and keep the same idempotencyKey if this call carried one." };
       return { error: f.error, sentence: `The reply from ${clip(f.scope)} was lost or malformed; the outcome is unknown. The envelope is under custody.`, next: HINTS.settle };
     case "custody": {
@@ -267,7 +277,7 @@ export function finding(f: Finding): Said & { error: string } {
     case "credential": return { error: f.error, sentence: `No read token of yours is readable at ${clip(f.destination)} (${f.why}); nothing was returned.`, next: "Call repository.read-token first (or act in --generic mode), then wait for its outcome, then credential." };
     case "diff": return { error: f.error, sentence: `The server shows no diff (${clip(f.why)}).${f.spent ? " The one-time credential is spent." : ""}`, next: f.spent ? "Sign another read-token. A commit that the host does not hold stays unavailable until the host holds it." : "Run dap mcp, which reads Git for this tool." };
     case "target":
-      if (f.sent) return { error: f.error, sentence: `The scope accepted this request, and the server could not check it: ${f.what}.`, next: AFTER_ACCEPTED };
+      if (f.sent) return { error: f.error, sentence: `The scope accepted this request, and the server could not check it: ${f.what}.`, next: f.sent === "report" ? REPORT_ACCEPTED : READ_ACCEPTED };
       return { error: f.error, sentence: `Before signing, the server could not resolve the target: ${f.what}. This call sent nothing.`, next: "Call room for the scopes and lanes of the room; give target as a scope ID or a number." };
     case "unknown-tool": return { error: f.error, sentence: `No tool is named ${clip(f.name)} in this list.`, next: "Call tools/list." };
     case "read": { const said = readRefused(clip(f.scope), f.reason); return { error: f.error, ...said }; }

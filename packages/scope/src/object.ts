@@ -1,7 +1,7 @@
 import { readMinimum } from "@generalbusiness/dap-bytes";
 import { ReadWait, type ReadWaitRefusal } from "./read-wait.ts";
 import { offerFloor } from "./floor-writer.ts";
-import { applicationRoom, applicationInstallation, applicationProjectionDeclaration, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
+import { applicationRoom, applicationInstallation, applicationProjectionDeclaration, compromisedKey, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 /**
  * One scope as one Durable Object (scope contract, section 2.3): the object
  * named by the scope's ID in the one scope namespace, with SQLite storage.
@@ -76,7 +76,7 @@ import { Chains, checkLocalSignedRead, checkSignedReadRequest, presentsSignedRea
 import { LATE, within } from "./turn.ts";
 import { SqliteStore, type Sql } from "./sqlite.ts";
 import type { OutboxItem, OperationStatus, Sealed } from "./store.ts";
-import type { Given, OutsideGiven } from "./given.ts";
+import type { AuthorityGiven, Given, OutsideGiven } from "./given.ts";
 export type { Given, OutsideGiven } from "./given.ts";
 import { siteDestination, sitePublication, sitePublishedCommit } from "./site/publication.ts";
 import { RequestIndex, requestQuery } from "./request-index.ts";
@@ -107,7 +107,7 @@ export interface Wiring {
   /** Internal deployment index; receives only this object's checked stored genesis. */
   registerGenesis?: (proof: import("./scope-index.ts").ScopeRegistration) => Promise<boolean>;
   ports?: Partial<Ports>; bounds?: Bounds; reads?: ReadBounds;
-  authority?: (given: Given) => Authority;
+  authority?: (given: AuthorityGiven) => Authority;
   readers?: (given: Given) => Readers;
   outside?: (given: OutsideGiven) => Outside;
   sessions?: () => Sessions | null;
@@ -222,7 +222,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     };
     // A directory records its membership reference in an item, so the authority is also given the folded state (authority note, section 3.3).
     const made: Given = { clock: given.clock, random: given.random, genesis, state: store, scope: () => store.scope() };
-    const authority = wiring.authority?.(made);
+    const authority = wiring.authority?.({ ...made, named: (key) => credentialExpiry.named(key) });
     const readers = wiring.readers?.(made);
     // The outside port reads the current record when it sends, outside any commit. A facade gives it only state reads, not the store.
     const outsideState: StateView = {
@@ -249,7 +249,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       },
     };
     const outside = wiring.outside?.(outsideGiven);
-    const ports: Ports = { ...given, alarm: wakes.deadline, ...(authority ? { authority } : {}), ...(readers ? { readers } : {}), ...(outside ? { outside } : {}),
+    const ports: Ports = { ...given, alarm: wakes.deadline, sealedDelivery: (entry) => { const key = compromisedKey(entry); if (key !== null) credentialExpiry.name(key); }, ...(authority ? { authority } : {}), ...(readers ? { readers } : {}), ...(outside ? { outside } : {}),
       ...(wiring.applicationTrust && !given.freshActAdmission ? { freshActAdmission: { read: () => this.#applicationActAdmission!.read() } } : {}) };
     // The operator's record: two tables of this object's storage that are no part of the store, and that no judgment is given.
     const record = new OperatorRecord({ exec: (query, ...bindings) => ctx.storage.sql.exec(query, ...bindings) }, ports.clock, () => store.scope()?.at ?? null);

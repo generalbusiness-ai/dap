@@ -60,6 +60,8 @@ export const RECORD_CHARGED_MOST = chargedOf(RECORD_BYTES);
 /** One identity's completion need with nothing stored: the record's rows at its bound, and one more segment row with its overhead. */
 export const COMPLETION_BYTES = RECORD_CHARGED_MOST + SEGMENT_ROW_BYTES + CHUNK_ROW_OVERHEAD;
 export const CUSTODY_BUDGET = 1024 * 1024 * 1024;
+/** Custody's own list of terminal phases as SQL, so that the queries here and the local store's filter cannot differ. */
+const TERMINAL_PHASES = [...TERMINAL].map((phase) => `'${phase}'`).join(", ");
 export const IDENTITY_MOST = 64 * 1024 * 1024;
 
 export interface SqliteCustodyBounds {
@@ -172,7 +174,7 @@ export function sqliteStore(sql: Sql, bounds: SqliteCustodyBounds = SQLITE_CUSTO
    * record itself carries every outcome, and its segment rows were never removed, so nothing of its history is lost.
    */
   const archive = () => {
-    const terminal = sql.exec(`SELECT id, updated FROM record WHERE phase IN ('accepted', 'refused', 'mismatch', 'settled') ORDER BY updated ASC`).toArray();
+    const terminal = sql.exec(`SELECT id, updated FROM record WHERE phase IN (${TERMINAL_PHASES}) ORDER BY updated ASC`).toArray();
     const old = now() - bounds.ageDays * 86_400_000;
     const due = terminal.filter((r, i) => i < terminal.length - bounds.terminalMost || Date.parse(String(r["updated"])) < old);
     for (const r of due) {
@@ -258,7 +260,7 @@ export function sqliteStore(sql: Sql, bounds: SqliteCustodyBounds = SQLITE_CUSTO
     unadmit: async (id) => {
       sql.transaction(() => { if (!one(`SELECT id FROM record WHERE id = ?`, id)) release(id); });
     },
-    unresolved: async () => sql.exec(`SELECT id, key, created FROM record WHERE phase NOT IN ('accepted', 'refused', 'mismatch', 'settled') ORDER BY created ASC`).toArray()
+    unresolved: async () => sql.exec(`SELECT id, key, created FROM record WHERE phase NOT IN (${TERMINAL_PHASES}) ORDER BY created ASC`).toArray()
       .map((r) => ({ id: String(r["id"]), key: String(r["key"]), created: String(r["created"]) })),
     segment: async (id, at, outcomes) => {
       sql.transaction(() => {

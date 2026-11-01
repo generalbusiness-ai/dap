@@ -134,7 +134,10 @@ with contents read; GitHub fixes its lifetime at one hour. The outcome
 records the token by a nonsecret handle and its end, never the token. The
 token goes to the destination's private custody, as a write token does,
 and the credential route gives it once to the session of the key that
-signed the act, before its end. The command then runs `git clone` with
+signed the act, before its end. Once a `compromised` notice reaches the
+destination, the key that it names gets
+[neither a new token nor an unread one](security/trust-boundaries.md#a-git-read-token-outlasts-the-bound).
+The command then runs `git clone` with
 the token in an `Authorization` header that git reads from its
 environment. `dap remote` prints the repository's remote URL in the
 host's form.

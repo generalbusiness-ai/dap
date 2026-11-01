@@ -839,7 +839,7 @@ the delay from that key's earliest retained request deadline using the same
 clock reading. This is separate from the session's ten-minute lifetime.
 Waiting does not guarantee a later admission; standing is checked again.
 
-One credential route answers a read token once to the authorized session of the key that signed its read-token act, before its end; the token then leaves private custody. Other reads are forbidden.
+One credential route answers a read token once to the authorized session of the key that signed its read-token act, before its end; the token then leaves private custody. Other reads are forbidden, and so is every read by a key that a `compromised` notice named at that destination.
 
 ## Replay, and what a report means
 
