@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. The card fixture browser ran in local Chromium. No deployed Worker or desktop AI app ran this code.",
+  "directory": "2026-11-01-views-browser",
+  "checkpoint": {
+    "commit": "5595ddd746647c2382e3209f5cbde64323c963c2",
+    "tree": "cffd87515018206edd43cf3cae6b65a97d832cd7"
+  },
+  "fileCount": 50,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "41018109a0e21b1f9c0ad260235569978b16436708db0e7b94edfc3187428b24"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6521,
+      "sha256": "56535ba94f06a88be319a7865821d581f0158d6bdf97fd6bff306a80360c9aa0"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "cause/history.log",
+      "bytes": 1450,
+      "sha256": "be4933ea81dda095585ca1400db816f04f0fa189574064dabfda115c2e2ce592"
+    },
+    {
+      "path": "red/run.log",
+      "bytes": 866,
+      "sha256": "e498764773a4e0ee78d9fe574e5a577214b0135f1d2bab649067a41d84261a84"
+    },
+    {
+      "path": "green/report.json",
+      "bytes": 212357,
+      "sha256": "b03bbd6abbc1a4c6036912705cc41c791caf96ca75526374152bd7c53730615d"
+    },
+    {
+      "path": "control/incomplete-opens.log",
+      "bytes": 2757,
+      "sha256": "3b43bbd979454b74641e2615c1df0bb9ff4b524fe3b48cbbafd2465b7a0405fd"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 4409,
+      "sha256": "d280459014271eccc03d6cf953772ba7ce7efaf171a2a0b94aec82b4393c2369"
+    }
+  ]
+}
