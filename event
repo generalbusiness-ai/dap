@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:695b2936308398aba019fd5fa7dd81f4da34c0c2","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/connection-custody.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6ec52a42be83052da998795406f4ba3a80059b05","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/main.ts."}
