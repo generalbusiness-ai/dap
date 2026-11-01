@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/evidence/2026-11-01-owed-words.manifest.json","body":{"commit":"76c67b3f4a69c58c37a72781da84a2b4923744a3","path":"notes/implementation/evidence/2026-11-01-owed-words.manifest.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:033efb82b8a6cc5858e35de2b7441fd74c30baf6","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-01-owed-words.manifest.json."}
