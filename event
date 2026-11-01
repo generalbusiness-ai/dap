@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fc814aa1da1e6f6a3970d56f40588fa6f357e4de","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-01-settle-followups.manifest.json."}
+{"kind":"promise","text":"I take the design note on a Git read token after its key is revoked. It starts while the founder key head finishes, because it changes no source.","body":{"request":"3db806df170e47468e6ccebbe5211180d64d6085","to":"20db43a245e9780b92a587425d387d393b17ffc90b89e036ff752399f88fc517"}}
