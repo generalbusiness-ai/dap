@@ -17,7 +17,7 @@ import { demo, type Demo } from "./support/demo.ts";
 // routes, so those replies are written here and no scope gave them: a lost session request, a rate-limited one, `clock-behind`, `replayed`
 // and an `unavailable` read. Every other reason in this file is the real scope's answer to the page's real request.
 
-const NO_REPLY = "The service did not answer this page's request for a read session. Reload this page to try again.";
+const NO_REPLY = "The service did not give a usable answer to this page's request for a read session. Reload this page to try again.";
 const NO_SESSIONS_AT_ALL = "This service is not giving read sessions to any key, so it did not check whether this key belongs to the room. Without a session, the room opens only for a key that signed there recently. Ask whoever runs this service to turn on read sessions, then reload this page.";
 const NOT_A_MEMBER = "This key is not an active key of a member of this room, so the service gave it no read session. Ask someone in the room for a new invitation link, then join with it.";
 const NO_SUCH_ROOM = "This connection does not match an active room on this service, so the service gave this key no read session. Ask someone in the room for a new invitation link, then join with it.";
@@ -138,5 +138,28 @@ test("a key that opens on signed reads hears why the rules are out of reach; a s
     wire.reads = { scope: d.rules.name, reason: "unavailable" };
     expect((await roomInitialization(room)).state).toBe("unknown");
     expect(initializationMessage("unknown", room.unsessioned)).toBeNull();
+  } finally { d.done(); }
+});
+
+test("a founder whose session request fails in the room's first moments is not told to ask for an invitation", async () => {
+  const wire: Wire = { sessions: null, reads: null };
+  const d = await demo(wrapOf(wire));
+  try {
+    // The founder's key: membership holds it as soon as the creation returns, so the real scope gives it a session at once.
+    const founder = await d.secretOf(d.rita);
+    const held = await openRoom(d.as(founder), placeIn(d));
+    expect([held.reader !== null, held.unsessioned]).toEqual([true, null]);
+
+    // STAND-IN: the first session request gets no reply, a rate limit, a slow clock or no sessions at all. These are the reasons an active key can get.
+    for (const reply of ["lost", { status: 429, reason: "rate-limited", retryAfter: "30" }, { status: 503, reason: "clock-behind" }, { status: 501, reason: "sessions-unavailable" }] satisfies Reply[]) {
+      wire.sessions = reply;
+      const opened = await openRoom(d.as(founder), placeIn(d));
+      wire.sessions = null;
+      expect(opened.reader).toBeNull();
+      expect(opened.me?.handle).toBe(held.me?.handle);
+      const notice = initializationMessage("unknown", opened.unsessioned);
+      expect(notice).toContain("The complete rules could not be read.");
+      expect(notice).not.toContain("invitation link");
+    }
   } finally { d.done(); }
 });

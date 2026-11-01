@@ -124,7 +124,7 @@ try {
   await joiningPage.goto(`${base}/page/#/invitation`);
   await joiningPage.waitForSelector('textarea[name="invitation"]');
   await joiningPage.fill('textarea[name="invitation"]', await linkOf("@bea"));
-  await keep(joiningPage, "invitation-form-no-reply", "The service did not answer this page's request for a read session.", joiningAnswers);
+  await keep(joiningPage, "invitation-form-no-reply", "The service did not give a usable answer to this page's request for a read session.", joiningAnswers);
   // The next step those words name: a reload, with the service answering, keeps the join, and Check status opens the room.
   await joining.unroute(SESSIONS);
   await joiningPage.reload();
@@ -136,7 +136,7 @@ try {
   // The saved room: STAND-IN lost session request.
   await context.route(SESSIONS, route => route.abort());
   await page.reload();
-  await keep(page, "saved-room-no-reply", "The service did not answer this page's request for a read session. Reload this page to try again.", answers);
+  await keep(page, "saved-room-no-reply", "The service did not give a usable answer to this page's request for a read session. Reload this page to try again.", answers);
   await page.setViewportSize({ width: 375, height: 667 });
   await page.screenshot({ path: join(shots, "saved-room-no-reply-phone.png"), fullPage: true });
   report["saved-room-no-reply"].phoneScrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);

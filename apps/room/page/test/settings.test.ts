@@ -269,7 +269,7 @@ test("Config and key select a room only after matching standing and exact storag
     refusal = new data.Unreadable("Cannot read SCRIPTED-directory: forbidden.", { why: "no-reply" });
     submit();
     await drain();
-    expect(root.textContent).toContain("The service did not answer this page's request for a read session. Reload this page to try again.");
+    expect(root.textContent).toContain("The service did not give a usable answer to this page's request for a read session. Reload this page to try again.");
     expect(root.textContent).not.toContain("SCRIPTED-directory");
     expect(writes).not.toHaveBeenCalled();
     refusal = null;
@@ -300,7 +300,7 @@ test("Config and key select a room only after matching standing and exact storag
     initialization = "unknown"; unsessioned = "no-reply";
     submit();
     await drain();
-    expect(root.textContent).toContain("The complete rules could not be read. The service did not answer this page's request for a read session. Reload this page to try again.");
+    expect(root.textContent).toContain("The complete rules could not be read. The service did not give a usable answer to this page's request for a read session. Reload this page to try again.");
     expect(location.hash).toBe("#/");
     expect(
       open.mock.calls.every(([session]) => session.service === location.origin),

@@ -145,7 +145,7 @@ export class ViewSessions {
   }
   #instance(key: string): Instance {
     const instance = this.#instances.get(key);
-    if (!instance) throw new ViewError("absent", "This view is no longer retained. Open it again; no act was sent.");
+    if (!instance) throw new ViewError("absent", "This view is no longer retained. Open it again; this call sent no act.");
     return instance;
   }
   #active(instance: Instance): boolean { return this.#current.get(instance.query.screen) === instance.key; }
@@ -171,7 +171,7 @@ export class ViewSessions {
       await this.#checkOriginal(projection, query);
       instance.projection = projection;
     }
-    catch { instance.projection = { status: "unavailable", count: 0, position: 0, fallback: "The card could not be read. Retry the read; no act was sent." }; }
+    catch { instance.projection = { status: "unavailable", count: 0, position: 0, fallback: "The card could not be read. Retry the read; this read sent no act." }; }
     finally { instance.busy = false; }
     return this.opening(instance);
   }

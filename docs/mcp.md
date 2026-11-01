@@ -268,6 +268,14 @@ caller's `idempotencyKey`, in the config directory's
 - **A lost reply** leaves the record unknown. The same call with the same
   key sends the same bytes again; `settle` reads the scope's settlement.
   Neither signs a second intent.
+- **What an error says about a send.** An error that stops a call says what
+  that call did: "This call sent nothing." It speaks of the call, not the key.
+  When an earlier send under the key has no known outcome, the error says so
+  first and says to keep the key, because a new key can make a second entry.
+  The server reads its custody for this with no new signature. If it cannot
+  read its custody, it says that it cannot tell. If the scope accepted the
+  request and a read after it failed, the error says that the scope accepted
+  the request, and the same call returns the kept answer.
 - **A copy for your other devices.** When the server holds a read session
   of a person's membership, it also keeps the exact request in that room's
   membership object, after it records the envelope and before it sends. The
