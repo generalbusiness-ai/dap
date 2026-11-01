@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:55378a1d02ef4728c1cc2e3639230c2bddcd9f37","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-01-identity-drift.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:62be7a12884de9230748ea9c2c595d518b4070c9","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/errors.ts."}
