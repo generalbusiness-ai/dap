@@ -1,8 +1,9 @@
 import { expect, test } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
-import type { Entry, Item, KeyId, Read, ScopeId, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, textDigest, timeMs, timeOf } from "@generalbusiness/dap-bytes";
+import type { Entry, Item, KeyId, PlatformDefinition, Read, ScopeId, SignedIntent } from "@generalbusiness/dap-contract";
+import { b64url, canonicalize, textDigest, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { DEMO_DIGESTS } from "@generalbusiness/dap-lanes";
+import { platform } from "@generalbusiness/dap-platform";
 import { ScopeHandle, httpTransport, requestSession, invitationIssueFields, secretSigner, signedIntent, signedReader, signedReads, signerSessionRequest, type Fetch } from "@generalbusiness/dap-client";
 import { beginSessionChild } from "../../../../packages/scope/test/session-settings.ts";
 import { act, fresh, handleOf, issueDeviceKey, joinRoom, listLanes, loadRules, openRoom, placeOf, prepareJoin, roomInitialization, submitJoin, type Room, type Session } from "../src/data.ts";
@@ -558,9 +559,11 @@ test("a new scope: a lane that a revoked key opened in the delay ends at the sam
     const rita = await sessioned(d, ritas), second = await secondKeyOf(d, rita, "@rita");
     const shape = await issueBody(wire, await sessioned(d, laptop), d);
     const register = d.config.register!;
+    let registerPin: PlatformDefinition | null = null;
     const registerItem = async () => {
       const read = await new ScopeHandle(signedReader_(d, ritas), register.scope, null).summary();
       if (!read.ok) expect.fail(`no register: ${read.reason}`);
+      registerPin = read.value.definition as PlatformDefinition;
       return read.value.items.find((item) => item.type === "register")!.revision;
     };
     let revision = await registerItem();
@@ -598,9 +601,18 @@ test("a new scope: a lane that a revoked key opened in the delay ends at the sam
       expect(await signedSummary(d.as(ritas), register.scope)).toBe("ok");
       expect(await signedSummary(d.as(ritas), d.D.name)).toBe("forbidden");
       expect(await signedSummary(d.as(ritas), d.M.name)).toBe("forbidden");
+      const journal = await new ScopeHandle(signedReader_(d, ritas), register.scope, null).history();
+      if (!journal.ok) expect.fail(journal.reason);
+      // The first claim of this register and each round's `found` open a repository's creation.
+      expect(journal.value.flatMap(({ entry }) => entry.effects).filter((effect) => effect.effect === "operation" && effect.kind === "create-repository")).toHaveLength(round + 1);
       d.advanceClock(WINDOW_MS + 1);
       expect(await signedSummary(d.as(ritas), register.scope)).toBe("forbidden");
     }
+
+    // No act removes a key from the list: `install` alone writes `founders`, and the value is fixed. Each `found` also opens a repository's creation.
+    const definition = platform(registerPin!)!.data as unknown as { items: { register: { values: { founders: { fixed: boolean } } } }; acts: Record<string, { effects: readonly unknown[] }> };
+    expect(definition.items.register.values.founders.fixed).toBe(true);
+    expect(Object.entries(definition.acts).filter(([, row]) => JSON.stringify(row.effects).includes('"founders"')).map(([kind]) => kind)).toEqual(["install"]);
   } finally { d.done(); }
 });
 
@@ -638,10 +650,86 @@ test("a key that is also the room's recovery key keeps signing at membership aft
     expect(await post(d, d.M.name, "acts", { signed: await rotation(second.key), grants: [] })).toMatchObject({ answer: "refused", name: "key-in-use" });
 
     // The rotation is the recovery key's own act. After it the key is refused, and the window ends the read.
+    // `dap act` asks for a session first, and membership gives a revoked key none. So the command cannot sign this act now, and the scope still takes the signed act.
+    const byCommand = await d.run(d.rita, "act", "rotate-recovery", "--on", "membership", "--target", String(current.id), "--set", `key=${secretSigner(secretOf()).key}`);
+    expect(byCommand.code).toBe(1);
+    expect(byCommand.lines.join("\n")).toContain("Read session refused: unauthorized");
     const rotated = await post(d, d.M.name, "acts", { signed: await rotation(secretSigner(secretOf()).key), grants: [] });
     expect(rotated.answer, JSON.stringify(rotated)).toBe("accepted");
     expect(await invite(4)).toMatchObject({ answer: "refused", reason: "unauthorized" });
     d.advanceClock(WINDOW_MS + 1);
     expect(await signedSummary(d.as(ritas), d.M.name)).toBe("forbidden");
+  } finally { d.done(); }
+});
+
+test("while the key is active, `dap act rotate-recovery` moves the recovery key, and the old key then gets no recovery act", async () => {
+  const d = await demo(undefined, null, { recoveryIsFounder: true });
+  try {
+    const ritas = await d.secretOf(d.rita), ritaKey = secretSigner(ritas).key, next = secretSigner(secretOf()).key;
+    const rita = await sessioned(d, ritas), second = await sessioned(d, await secondKeyOf(d, rita, "@rita"));
+    const roster = async () => {
+      const read = await handleOf(second, d.M.name).summary();
+      if (!read.ok) expect.fail(read.reason);
+      return read.value.items.find((item) => item.type === "roster")!;
+    };
+    expect((await roster()).values["recoveryKey"]).toBe(ritaKey);
+    const rotated = await d.run(d.rita, "act", "rotate-recovery", "--on", "membership", "--target", String((await roster()).id), "--set", `key=${next}`);
+    expect(rotated.code, rotated.lines.join("\n")).toBe(0);
+    await fresh(second);
+    expect((await roster()).values["recoveryKey"]).toBe(next);
+    const definition = (await handleOf(second, d.M.name).summary() as { value: { definition: string } }).value.definition;
+    await revoke(second, ritaKey, "compromised");
+    d.advanceClock(WINDOW_MS + 1);
+    const signed = await signedIntent(secretSigner(ritas), { to: rita.membership, kind: "invite-member", on: null, expected: {}, fields: { handle: "@guest", role: "member", ...invitationIssueFields(definition as never, b64url(secretOf())), inviteEnds: timeOf(clockOf(d) + 60_000) } }, { now: clockOf(d) });
+    expect(await post(d, d.M.name, "acts", { signed, grants: [] })).toMatchObject({ answer: "refused", reason: "unauthorized" });
+    expect(await signedSummary(d.as(ritas), d.M.name)).toBe("forbidden");
+  } finally { d.done(); }
+});
+
+// The command line's own route: `dap items`, `dap act revoke-key`, `dap log`. STAND-IN: a child of the session owner holds the new secret, as a new `SESSION_SECRET` binding does.
+test("a stolen key: the commands revoke it, its session ends by time or at once with a new secret, and a new secret leaves its signed read", async () => {
+  const wire: Wire = { sessions: null, dropActs: false, dropped: [] };
+  const d = await demo(wrapOf(wire));
+  try {
+    const laptop = secretOf(), key = secretSigner(laptop).key, ritas = await d.secretOf(d.rita);
+    expect((await joinRoom(d.as(laptop), d.link)).answer.answer).toBe("accepted");
+    const shape = await issueBody(wire, await sessioned(d, laptop), d);
+    expect((await post(d, d.D.name, "acts", await signedAgain(shape, laptop, clockOf(d)))).answer).toBe("accepted");
+    const issued = clockOf(d), room = await sessioned(d, laptop), rita = await sessioned(d, ritas);
+
+    const row = await fieldsOfKey(rita, key);
+    const query = canonicalize({ cursor: null, ids: null, limit: 25, scope: rita.membership, states: ["active"], type: "key", v: 1 });
+    const listed = await d.run(d.rita, "items", "membership", "--query", query);
+    expect(listed.code, listed.lines.join("\n")).toBe(0);
+    expect(listed.lines.join("\n")).toContain(key);
+    const revoked = await d.run(d.rita, "act", "revoke-key", "--on", "membership", "--target", String(row.id), "--set", "as=compromised");
+    expect(revoked.code, revoked.lines.join("\n")).toBe(0);
+    expect(await requestSession(SERVICE, d.M.name, await signerSessionRequest(rita.membership, secretSigner(laptop), timeOf(clockOf(d) + 60_000), "c2Vzc2lvbi1hZnRlci1yZXZva2U"), { fetch: d.fetch })).toMatchObject({ ok: false, reason: "unauthorized" });
+    // The `compromised` notice reaches the directory and changes nothing that it holds of the key: the act is still accepted, until the observation's age.
+    await d.pause([d.D.name, d.M.name]);
+    // An entry reuses an observation only on a reading later than the last entry's time.
+    d.advanceClock(1);
+    const noticed = await post(d, d.D.name, "acts", await current(d, shape, laptop));
+    expect(noticed.answer, JSON.stringify(noticed)).toBe("accepted");
+    const logged = await d.run(d.rita, "log", "directory");
+    expect(logged.code, logged.lines.join("\n")).toBe(0);
+    expect(logged.lines.join("\n")).toContain("act open-issue by key_");
+
+    // A new secret: the held session is refused at once, the signed read stays, and an active key asks for a new session.
+    const replaced = beginSessionChild(d.sessionOwner, { secret: b64url(secretOf()) });
+    try {
+      const held = { session: d.as(laptop, replaced), reader: room.reader };
+      expect(answerOf(await handleOf(held, d.D.name).summary())).toBe("forbidden");
+      expect(await signedSummary(d.as(laptop, replaced), d.D.name)).toBe("ok");
+      expect((await openRoom(d.as(ritas, replaced), placeIn(d))).reader).not.toBeNull();
+    } finally { replaced.close(); }
+
+    // Under the same secret the session ends at its own end, at most 600 seconds after it was issued.
+    const ends = timeMs(room.reader!.claims.ends)!;
+    expect(ends - issued).toBeLessThanOrEqual(600_000);
+    d.advanceClock(ends - 1 - clockOf(d));
+    expect(answerOf(await handleOf(room, d.D.name).summary())).toBe("ok");
+    d.advanceClock(1);
+    expect(answerOf(await handleOf(room, d.D.name).summary())).toBe("forbidden");
   } finally { d.done(); }
 });
