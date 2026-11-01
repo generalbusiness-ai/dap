@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint, with focused runs and controls at 4d66156d on test files only. One control on the condition survives, as the note states. No Worker changes.",
+  "directory": "2026-11-01-settle-followups",
+  "checkpoint": {
+    "commit": "a4db16aee8c447d2d4f22510a7c79440f28f43fb",
+    "tree": "330f90a4ad816318c925396f8c6d959a864ed366"
+  },
+  "fileCount": 78,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "cf27c44a9a0ed795042103cbaa577c32a818829c7b560896b465787b07d4d7e2"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6559,
+      "sha256": "37b7ea4fe453ce10c35f18737efd60d32800760283238e92979fe13980a12534"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "runs/01-settle.log",
+      "bytes": 403,
+      "sha256": "80e55bd599bd436c128cc7d226bb82da0868540adfc1714dbf02beed97a53406"
+    },
+    {
+      "path": "runs/02-finding.log",
+      "bytes": 412,
+      "sha256": "0856093de3b51c5cadd34b3cfaa1c2e05108b92a00b9c8a6d3307fb788f3e7f1"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 7345,
+      "sha256": "976c159e2ca822976b2708ad9fad5c8b4cdd105af9b87dd397242ebe0f9d6ba5"
+    }
+  ]
+}

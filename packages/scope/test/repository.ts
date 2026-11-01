@@ -28,10 +28,10 @@ import type { Delivery, OutboxItem, Sealed, Summary } from "../src/index.ts";
 import { route } from "../src/worker.ts";
 import { startupTest } from "./support/serving-startup.ts";
 import { net } from "../src/testing.ts";
-import { settle, soon } from "./net.ts";
+import { quiet, settle, settleDriving, soon } from "./net.ts";
 import { reader } from "./support.ts";
 
-export { settle };
+export { quiet, settle, settleDriving };
 export const { rita, una, vic, sam } = keys;
 
 interface Surface {
