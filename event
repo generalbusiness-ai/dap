@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:72eb83cc06d6a051a57cc974e8111de2eceb8a26","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-01-unknown-send-words.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:77fe560bc30d8b3a25d9f1430b98f239d07b7b2f","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/errors.ts."}
