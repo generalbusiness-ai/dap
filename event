@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:033efb82b8a6cc5858e35de2b7441fd74c30baf6","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-01-owed-words.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0a3ad6a0d6c2184bf746faa43605d12d8505606d","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-01-git-read-token-after-revocation.md."}
