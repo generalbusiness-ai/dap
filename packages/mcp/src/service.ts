@@ -22,13 +22,13 @@ import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/dap-git/application";
 import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
 import { Custody, CustodyError, Lost, TERMINAL, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity } from "./custody.ts";
-import { AT_INPUT, describeAct, grantAction, onOf, schemaOf, type DefinitionLike } from "./describe.ts";
+import { AT_INPUT, describeAct, grantAction, onOf, schemaOf, type ActLike, type DefinitionLike } from "./describe.ts";
 import { answered, archivedAnswer, clip, finding, type Finding } from "./errors.ts";
 import { Kept, definitionOf, readInventory, readPartitionIndexes, standingIn, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
 import { KIB, bytesOf, cursorOf, fromCursor, pageBy, sliceText } from "./paging.ts";
 import { Reads } from "./reads.ts";
 import { Recent } from "./recent.ts";
-import { Unshaped, capturedExpected, effectiveFields, expectedOf, needsOn, shapeAt, shapeFields, shapePresented, valuePlaces } from "./shape.ts";
+import { Unshaped, capturedExpected, effectiveFields, expectedOf, finalStates, needsOn, shapeAt, shapeFields, shapePresented, valuePlaces, viaLeft } from "./shape.ts";
 import { WORDS, type Words } from "./words.ts";
 import { McpMetrics, observedFetch, type McpMetricOptions } from "./metrics.ts";
 import { ViewResources, type PresentationPackage } from "./views/resources.ts";
@@ -533,6 +533,22 @@ export class McpService {
     if (!binding || !selected(binding, this.#tools) || !listed(binding, inventory)) stopCall({ error: "unknown-tool", name });
   }
 
+  /**
+   * The final items that an act's `via` names select. Each has left the live summary, and the scope requires its revision. A final
+   * item's revision does not move, so a read at a later head gives the same number. An act with a stale number is refused. A refused read stops the act before it is signed.
+   */
+  async #viaFinal(definition: DefinitionLike, act: ActLike, items: readonly Item[], on: number | null, fields: Readonly<Record<string, FieldValue>>, ref: ScopeRef, membership: ScopeRef | null): Promise<Item[]> {
+    const found: Item[] = [];
+    for (const { type, id } of viaLeft(act, items, on, fields)) {
+      const states = finalStates(definition.items[type]);
+      if (states.length === 0) continue;
+      const read = await this.#reads.read(membership, (t, r) => new ScopeHandle(t, ref.scope, r).queryItems({ v: 1, scope: ref, type, states, ids: [id], limit: 1, cursor: null }));
+      if (!read.ok) return stopCall({ error: "read", scope: ref.scope, reason: read.reason === "forbidden" || read.reason === "too-large" ? read.reason : "unavailable" });
+      found.push(...read.value.items.filter((item) => item.id === id && item.type === type));
+    }
+    return found;
+  }
+
   // ---------------------------------------------------------------- an act, under custody
 
   async #perform(binding: Binding | null, args: Args, kind: string, preparing?: { resource: unknown; capability: string; step: string }, admit?: () => void | Promise<void>, suppliedSnapshot?: Snapshot): Promise<CallResult> {
@@ -600,7 +616,9 @@ export class McpService {
       try {
         shaped = shapeFields(act, fieldsGiven, textsGiven, membership);
         presented = shapePresented(act, presentedGiven);
-        expected = capturedExpected(at, expectedOf(act, items, on as number | null, effectiveFields(act, shaped.fields, summary.scope)), act);
+        const effective = effectiveFields(act, shaped.fields, summary.scope);
+        const known = at === undefined ? [...items, ...await this.#viaFinal(definition, act, items, on as number | null, effective, summary.scope, membership)] : items;
+        expected = capturedExpected(at, expectedOf(act, known, on as number | null, effective), act);
       } catch (error) {
         if (error instanceof Unshaped) return stopCall({ error: "shape", field: error.field, what: error.what, declared: error.declared });
         throw error;

@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. Control F12 ran at the checkpoint's source, and F1 to F11 ran at 923d6456 in the earlier unit. No Worker, browser host or real room ran.",
+  "directory": "2026-10-31-finding-at-card",
+  "checkpoint": {
+    "commit": "dbc98ed0b3b76c707f65373613d83344353b9a6b",
+    "tree": "4973378a0f9e31b4afbede69486959fc04d07699"
+  },
+  "fileCount": 42,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "2251f14149abb843cbb9b26dac9266bd07afb5c32d0f7cf7e59a1d7422942116"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6499,
+      "sha256": "f45837c0cbbb13619826554039f9e34d23c02597aed74e9c70653eff6c79b599"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "controls/summary.json",
+      "bytes": 1678,
+      "sha256": "702c1e0412956fcb0ae6c8c645932328490c3c73b01df7e0e687225dfbce420b"
+    },
+    {
+      "path": "controls/run-controls.mjs",
+      "bytes": 2589,
+      "sha256": "7650c2fdd675245b8ea3d3be8867cbd4b23a890ad3c911ef7532127d155799cd"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 3845,
+      "sha256": "16247bf6a369af9e51aa3bf467d7b9fffadb49706c279333094d9208d7ad18f6"
+    }
+  ]
+}
