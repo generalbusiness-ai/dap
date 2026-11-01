@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:52f2bf4e2ee7d90e5b060fb2efc6ab13cdf9d3f5","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/needs-you-browser.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:586774c7f56acbd31c7783534de97ca5044177e8","text":"Merge retired a covered predecessor; the successor is at apps/views/src/reads.ts."}
