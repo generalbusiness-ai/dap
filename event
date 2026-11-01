@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-11-01-retiring-a-founder.md","body":{"commit":"273cbd755a4a11959fa40fe6445eab84d22442db","path":"notes/2026-11-01-retiring-a-founder.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:655c513ddcd35a8d85b5a200b7a9a85515f70d84","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-01-retiring-a-founder.md."}
