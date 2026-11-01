@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { env } from "cloudflare:workers";
 import { describe, expect, inject, test, onTestFinished } from "vitest";
 import type { ScopeId, SignedIntent } from "@generalbusiness/dap-contract";
@@ -7,13 +8,14 @@ import { net } from "@generalbusiness/dap-scope/testing";
 import { beginSessionFixture } from "../../../../packages/scope/test/session-settings.ts";
 import { platformOutside } from "@generalbusiness/dap-scope/testing/worker";
 import worker, { type Env } from "../../worker.ts";
+import { BRAND_ASSETS } from "../../brand/assets.ts";
 import { site } from "../../../../packages/scope/src/site/route.ts";
 import { SCOPE_INDEX_NAME } from "../../../../packages/scope/src/scope-index.ts";
 import { siteTokenTestSettings } from "../../../../packages/scope/test/worker.ts";
 import { gitHub, Hub, ownHost, type Stand } from "../../../../packages/scope/test/hosts.ts";
 import { Platform, routed, settleDriving } from "../../../../packages/scope/test/repository.ts";
 import { memoryStore, type Context, type Git, type Outcome } from "../../../../packages/cli/src/index.ts";
-import { actsOn, listLanes, loadChange, loadIssue, loadRules, loadSite, openRoom, placeOf } from "../../page/src/index.ts";
+import { actsOn, copiesOf, listLanes, loadChange, loadIssue, loadRules, loadSite, openRoom, placeOf } from "../../page/src/index.ts";
 import { FILES, branchFiles, judged, registerSetting, rehearse, transcript, type NextShot, type Person, type Rehearsal, type Stage, type Taken } from "../../../../scripts/demo/rehearse.ts";
 import { allowedClaim } from "../../page/src/claim.ts";
 import { captureBinding, observeCaptures } from "../../../../scripts/demo/capture-binding.ts";
@@ -218,6 +220,8 @@ async function record(at: Stand, wired: Set<ScopeId>, siteCleanups: (() => void)
   }
   await loadRules(room);
   await actsOn(room, room.rules);
+  // The page reads this member's open requests on a screen that shows them.
+  expect((await copiesOf(room)!.list()).ok).toBe(true);
   expect((await loadSite(room, "guide/start.md")).status).toBe(200);
   for (const path of ["/page/", "/page/page.js"]) await keep(`GET ${path}`, await worker.fetch(new Request(`${SERVICE}${path}`), { SCOPES: env.PLATFORM, SCOPE_INDEX: env.SCOPE_INDEX } as Env));
   // Readonly claim eligibility is recorded separately for each actual caller.
@@ -234,13 +238,14 @@ async function record(at: Stand, wired: Set<ScopeId>, siteCleanups: (() => void)
   const memberRoom = await openRoom(memberSession, memberPlace);
   await listLanes(memberRoom);
   await actsOn(memberRoom, memberRoom.directory);
+  expect((await copiesOf(memberRoom)!.list()).ok).toBe(true);
   let memberRefusal = "";
   try { await allowedClaim(memberSession, config.register!); }
   catch (error) { memberRefusal = error instanceof Error ? error.message : "Eligibility could not be read."; }
   expect(memberRefusal).not.toBe("");
   const assets = Object.fromEntries(Object.entries(creatorAnswers).filter(([key]) => key === "GET /page/" || key === "GET /page/page.js"));
   const kept = {
-    service: SERVICE, place, room: rehearsal.room, secret: b64url(secret), answers: creatorAnswers,
+    service: SERVICE, place, room: rehearsal.room, secret: b64url(secret), answers: creatorAnswers, brand: BRAND_ASSETS,
     claimWitness: { register: configured.register, definition: configured.definition,
       "founder": { place, secret: b64url(secret), actor: keyIdOfSecret(secret), recordedName: room.name, answers: creatorAnswers },
       member: { place: memberPlace, secret: b64url(memberSecret), actor: keyIdOfSecret(memberSecret), answers: { ...assets, ...Object.fromEntries(recording) }, refusal: memberRefusal },
@@ -248,8 +253,9 @@ async function record(at: Stand, wired: Set<ScopeId>, siteCleanups: (() => void)
   };
   // In lines of at most 64 KiB, which the test runner prints whole.
   const text = b64url(new TextEncoder().encode(JSON.stringify(kept)));
-  for (let i = 0, n = 0; i < text.length; i += 65536, n++) console.log(`DEMO-RECORD ${n} ${text.slice(i, i + 65536)}`);
-  console.log("DEMO-RECORD end");
+  const lines = Math.ceil(text.length / 65536);
+  for (let n = 0; n < lines; n++) console.log(`DEMO-RECORD ${n} ${text.slice(n * 65536, (n + 1) * 65536)}`);
+  console.log(`DEMO-RECORD end ${lines} sha256:${createHash("sha256").update(text).digest("hex")}`);
 }
 
 /** The stage of the rehearsal on the test Worker, and what the test reads of it: the people's contexts and the stand-in host. */

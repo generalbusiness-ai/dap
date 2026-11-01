@@ -742,7 +742,7 @@ tests: the states of a change, and that the scope Worker's page module
 `PAGE_RECORD=1`, and `apps/room/page/test/screens.mjs` uses what it prints
 to take the page's screenshots in a browser. That script needs
 `playwright-core` installed outside the checkout. It is not part of the
-gate.
+gate, and [`page-browser.yml`](../.github/workflows/page-browser.yml) runs it.
 
 The lane scenarios, `apps/room/lanes/test/*.scope.test.ts`, run from
 the root inside the `scope` project: the same Worker code, loaded once per
@@ -884,19 +884,22 @@ Darwin, the owner skips both children. These offline tests use scratch files,
 synthetic loopback TLS, and scripted service ports. They start no host
 services and prove no installed-host, shutdown, or deployment outcome.
 
-## Card browser script
+## Card browser scripts
 
 [`.github/workflows/views-browser.yml`](../.github/workflows/views-browser.yml)
-runs `packages/mcp/test/views-browser.mjs` in Chromium on Linux. The script
+runs two scripts in Chromium on Linux. `packages/mcp/test/views-browser.mjs`
 presses through the cards on a fixture host, in two themes and three widths.
+`packages/mcp/test/owned-scopes-browser.mjs` opens the Grow site, two rooms and
+their benches, and checks that each room keeps its own card state.
 The workflow runs on a pull request and on a push to any branch, when the
-change touches the card source, the generated module, the script, the script's
-support files or the workflow. Its `on:` block lists the paths. The gate does
-not run the script, and `scripts/gate.sh` has no browser step.
+change touches the card source, the generated module, a script, a script's
+support files, the Grow check package or the workflow. Its `on:` block lists
+the paths. The gate does not run the scripts, and `scripts/gate.sh` has no
+browser step.
 
 A head that touches `packages/mcp/browser/**`, `packages/mcp/src/views/**` or
-the script cites this workflow's run at the head's own commit. That citation
-replaces running the script by hand and citing the result. A head's branch
+either script cites this workflow's run at the head's own commit. That citation
+replaces running the scripts by hand and citing the result. A head's branch
 reaches `origin` only when you push it, and a run on `main` comes after the
 landing. To get the run:
 
@@ -904,7 +907,7 @@ landing. To get the run:
 2. Find the run: `gh run list --workflow views-browser.yml --branch <branch>`.
 3. Cite the run's URL and its conclusion in the implementation note.
 
-To run the script on your machine, set the three paths. The output directory
+To run a script on your machine, set the three paths. The output directory
 must be under `/tmp`.
 
 ```
@@ -920,15 +923,65 @@ After `npm ci`, the job has three steps of its own:
   installs Chromium revision 1243, the revision that its `browsers.json` names.
   `package.json` and the lock file do not change. To move the version, change
   `PLAYWRIGHT_VERSION`, `PLAYWRIGHT_INTEGRITY`, `CHROMIUM_REVISION` and the
-  script's assertion in one commit.
+  scripts' assertions in one commit.
 - **Generated module.** The browser loads card bytes from
   `packages/mcp/src/views/generated.ts`, not from `packages/mcp/browser/`. The
   job runs `packages/mcp/scripts/views.mjs` and fails if the module changes,
-  because a fault in unbuilt source passes the script. After you change card
+  because a fault in unbuilt source passes the scripts. After you change card
   source, run that command and commit the module.
-- **Script.** The job runs the script, and any failure fails the job.
+- **Scripts.** The job runs each script in its own step, and any failure fails
+  the job.
 
 No step skips. A missing tool fails the job.
+
+## Page browser scripts
+
+[`.github/workflows/page-browser.yml`](../.github/workflows/page-browser.yml)
+runs four commands in Chromium on Linux, with the tools step of the card
+workflow:
+
+- `apps/room/page/test/screens.mjs` opens the page's screens at desktop and
+  phone widths. It checks the Create issue dialog, list context, a comment
+  draft, the review forms, a refused review, the source preview, the editor,
+  target sizes and overflow.
+- `scripts/demo-captures.ts --recorded` takes the six pictures of
+  [docs/demo.md](demo.md) and cancels a rule edit.
+- `scripts/demo-captures.ts --recorded --claim-witness` checks the Create room
+  dialog, its retries and its Web Lock across two tabs.
+- `scripts/demo-captures.ts --recorded --label-witness` checks a local room
+  label at 320 pixels in two themes.
+
+The workflow runs on a pull request and on a push to any branch, when the
+change touches the page, the brand files, the Worker's dispatch, the demo
+recorder, the demo scripts or the workflow. Its `on:` block lists the paths.
+The gate does not run these commands.
+
+Each command first runs a recorder test in the `scope` project:
+`apps/room/page/test/record.scope.test.ts` or the second test of
+`apps/room/lanes/test/demo.scope.test.ts`. The browser then gets the Worker's
+recorded answers. A request that the recorder did not make fails the command.
+A browser POST is answered by its path, so these commands admit no act.
+
+`scripts/demo/recorder-output.ts` reads the record. It stops by name when a
+line is missing or the digest on the end line differs. The record holds fixture
+signing keys, so a failure message never quotes the recorder's output.
+
+The commands write only under their output directories. `screens.mjs` needs a
+clean tracked tree, because its `checks.json` names the commit it describes.
+A missing tool fails each command.
+
+To run the commands on your machine, set the same paths:
+
+```
+PLAYWRIGHT_CORE=<scratch directory>/node_modules/playwright-core \
+CHROMIUM=<chromium executable> VIEW_CAPTURE_OUT=/tmp/<new directory> \
+  node apps/room/page/test/screens.mjs
+PLAYWRIGHT_CORE=<scratch directory>/node_modules/playwright-core \
+CHROMIUM=<chromium executable> node --import tsx --no-warnings \
+  scripts/demo-captures.ts --recorded --out /tmp/<new directory>
+```
+
+## Hand-run browser scripts
 
 The other browser scripts run by hand.
 `apps/counter/scripts/test-browser.mjs` is not one of them: it runs Node
@@ -936,12 +989,15 @@ witnesses, and the gate's Counting stage runs it.
 
 | Script | Needs beyond Playwright and Chromium | The workflow's tools can run it |
 |---|---|---|
-| `packages/mcp/test/declared-*-browser.mjs`, `grow-*-browser.mjs`, `owned-scopes-browser.mjs` | nothing | yes |
+| `packages/mcp/test/declared-*-browser.mjs`, `grow-*-browser.mjs` | nothing | yes |
 | `apps/room/page/test/no-session-screens.mjs`, `mcp-second-device.mjs`, `issue-questions-browser.mjs`, `two-devices.mjs` | `WRANGLER`, `WITNESS_DIR` and a loopback port for a local Worker. `two-devices.mjs` takes about seven minutes | yes, with those two settings |
-| `apps/room/page/test/screens.mjs` | a recorder run in the `scope` project and a clean tree | no: it rewrites the tracked screenshots |
-| `scripts/demo-captures.ts --recorded` | a recorder run in the `scope` project | no: it makes captures, and it exits 0 when its tools are missing |
 | `notes/2026-10-17-journey-views-design/render.mjs` | a static server over the checkout | no: it checks a frozen design packet |
 | `notes/2026-10-17-compact-cards-design/verification/*.mjs`, `notes/plans/retired/027-artroom-usability/preview-qa.mjs` | absolute paths that no longer exist | no: they record past runs |
+
+`packages/mcp/test/grow-routing-browser.mjs` can fail at line 89. The card
+rebuilds its content at each refresh, every 2 seconds, and that rebuild closes
+the **Read points** section. The script times out when the rebuild comes before
+its wait for the section's text.
 
 ## Settings inventory
 

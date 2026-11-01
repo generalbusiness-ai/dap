@@ -1,4 +1,4 @@
-name: Card browser script
+name: Card browser scripts
 on:
   pull_request:
     paths:
@@ -6,6 +6,9 @@ on:
       - 'packages/mcp/src/views/**'
       - 'packages/mcp/scripts/views.mjs'
       - 'packages/mcp/test/views-browser.mjs'
+      - 'packages/mcp/test/owned-scopes-browser.mjs'
+      - 'examples/grow/check/**'
+      - 'examples/grow/prepare-check.ts'
       - 'packages/mcp/test/support/views-host.ts'
       - 'packages/mcp/test/support/standin.ts'
       - 'packages/mcp/test/fixtures.ts'
@@ -17,6 +20,9 @@ on:
       - 'packages/mcp/src/views/**'
       - 'packages/mcp/scripts/views.mjs'
       - 'packages/mcp/test/views-browser.mjs'
+      - 'packages/mcp/test/owned-scopes-browser.mjs'
+      - 'examples/grow/check/**'
+      - 'examples/grow/prepare-check.ts'
       - 'packages/mcp/test/support/views-host.ts'
       - 'packages/mcp/test/support/standin.ts'
       - 'packages/mcp/test/fixtures.ts'
@@ -64,3 +70,7 @@ jobs:
         env:
           VIEW_CAPTURE_OUT: /tmp/views-browser
         run: node --import tsx packages/mcp/test/views-browser.mjs
+      - name: Run the Grow room browser script
+        env:
+          VIEW_CAPTURE_OUT: /tmp/owned-scopes-browser
+        run: node --import tsx packages/mcp/test/owned-scopes-browser.mjs
