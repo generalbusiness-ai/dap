@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:be6ac65fe5d78a6f8f297e06151ab27783960db3","text":"Merge retired a covered predecessor; the successor is at packages/replay/src/verify.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:cbbf653d4f3cc7fdfdcb31e7052d37e19997e418","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-01-verify-anchors.md."}
