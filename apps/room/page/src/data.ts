@@ -1159,14 +1159,14 @@ export class CopyNotKept extends Error {
   override readonly name = "CopyNotKept";
 }
 
-/** What the page adds to "Nothing was sent" when it could not end the row of a request that it did not send. */
+/** What the page adds to "This press sent nothing" when it could not end the row of a request that it did not send. */
 const ROW_STAYS = " This page could not end its copy, so the request can show as open. Press Check original request before you send it again.";
 
 /** Why the room refused to keep a copy, in the person's words. */
 function notKept(reason: string): string {
-  if (reason === "full") return "You have too many open requests. Nothing was sent. Check the open requests in this room first.";
-  if (reason === "room-full") return "This room has no space for more open requests. Nothing was sent. Space returns as open requests end, within seven days at most. An admin can still remove a member who has left, and that frees the member's requests.";
-  return `The room did not keep a copy of this request (${reason}). Nothing was sent.`;
+  if (reason === "full") return "You have too many open requests. This press sent nothing. Check the open requests in this room first.";
+  if (reason === "room-full") return "This room has no space for more open requests. This press sent nothing. Space returns as open requests end, within seven days at most. An admin can still remove a member who has left, and that frees the member's requests.";
+  return `The room did not keep a copy of this request (${reason}). This press sent nothing.`;
 }
 
 /**
@@ -1176,14 +1176,14 @@ function notKept(reason: string): string {
  * signed reads keeps no copy, and it sends as it always did.
  */
 export async function keepOriginal(room: Pick<Room, "session" | "membership" | "reader" | "unsessioned" | "key">, signed: SignedIntent, beside: Beside): Promise<void> {
-  if (sessionLost(room)) throw new CopyNotKept(`This page could not renew its session with the room${room.unsessioned && room.unsessioned !== "no-reply" ? ` (${room.unsessioned})` : ""}, so it cannot keep a copy of this request. Nothing was sent. Check your connection and send it again, or reload the page.`);
+  if (sessionLost(room)) throw new CopyNotKept(`This page could not renew its session with the room${room.unsessioned && room.unsessioned !== "no-reply" ? ` (${room.unsessioned})` : ""}, so it cannot keep a copy of this request. This press sent nothing. When your connection returns, open this view again and check your open requests before you send it again.`);
   const copies = copiesOf(room);
   if (!copies) return;
   let kept: Awaited<ReturnType<NonNullable<typeof copies>["keep"]>>;
   try { kept = await copies.keep(actBodyText(signed, beside)); }
   catch {
     const ended = await endOriginal(room, intentDigest(signed.intent)); // A row the page never sent would show as a request with no answer.
-    throw new CopyNotKept(`The room gave no reply when it was asked to keep a copy of this request. Nothing was sent.${ended ? "" : ROW_STAYS}`);
+    throw new CopyNotKept(`The room gave no reply when it was asked to keep a copy of this request. This press sent nothing.${ended ? "" : ROW_STAYS}`);
   }
   if (!kept.ok) throw new CopyNotKept(notKept(kept.reason));
 }

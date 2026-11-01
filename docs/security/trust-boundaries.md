@@ -73,13 +73,22 @@ Replacing `SESSION_SECRET` ends every session of the deployment at once. It does
 
 The `read-token` act at the destination gives a member a Git read token, and every role holds its grant. The token reads the repository until its own end. On Cloudflare Artifacts the member asks for 1 to 24 hours. On GitHub the lifetime is GitHub's own, one hour.
 
-A revocation ends no token:
+A `compromised` notice closes two routes for the key that it names. Membership tells the directory, and the directory tells the destination. Once the destination applies the notice:
 
-- A token that the key read before the revocation stays good until its end. The `compromised` notice at the destination aborts a publication that the key is behind, and it ends no token.
-- A scope can accept the key's acts for up to 300 seconds, so the destination can accept a new `read-token`. A session that the key already holds reads the new token once.
-- Membership issues no new session to a revoked key. A token that the key minted and did not read before its session's end stays unread.
+- The key's `read-token` gets `unauthorized`, and the scope writes nothing. This holds while the destination still keeps an observation that shows the key active.
+- The credential route answers `forbidden` to the key's session for every token. This covers a token minted before the notice and not yet read, and a token whose mint finishes after the notice.
 
-The key must read a new token while its session lasts, which is at most 600 seconds after the revocation. So the repository stays readable for at most 24 hours and 600 seconds after the revocation on Cloudflare Artifacts, plus clock difference. On GitHub that time is about one hour and 600 seconds. No `dap` command ends a read token, and the service keeps no plaintext of a token that a member has read.
+Each destination keeps the named key in private custody beside its journal, so both refusals survive a restart. The refusals apply at every destination pin and on both hosts. Another key of the same member keeps both routes.
+
+These things stay open:
+
+- **A token already read.** It stays good until its end. The service keeps no plaintext of a token that a member has read, and no `dap` command ends a read token.
+- **The time before the notice arrives.** A scope can accept the key's acts for up to 300 seconds after the revocation, so the destination can accept a new `read-token`. A session that the key already holds reads the token, for at most 600 seconds after the revocation. The notice waits in the outbox of membership and then of the directory. Nobody has measured that delay.
+- **A key revoked as `retired`, and a removed member.** Neither sends a notice, so the time above applies in full.
+- **A lane's workspace token.** The notice reaches no lane, so the lane's credential route still gives the key a workspace token that the key prepared with `hold@2:token`, while its session lasts. That token lasts at most 900 seconds, and it reads and writes one fork. It does not open the room's repository.
+- **The key's other acts at the destination.** The notice refuses `read-token` only. Other acts keep the 300-second limit.
+
+So a new request with the token can read the repository for at most 24 hours and 600 seconds after the revocation on Cloudflare Artifacts, plus clock difference. On GitHub that time is about one hour and 600 seconds. On Artifacts, a download under way ran past its token's end in one run at 30 MB, as [the stolen-key section](#respond-to-a-stolen-key) states. No run shows what a download under way meets on GitHub. Replay cannot check the `read-token` refusal, because no definition states it and a refused act writes no entry.
 
 ### A founder key that is also the recovery key has no end at membership
 
@@ -129,11 +138,11 @@ Do these steps in each room that enrolled the key:
 5. After 300 seconds plus clock difference, read what the key signed with [`dap log`](../cli.md#the-commands) at each scope where it could act:
    `dap log <scope>`.
 
-The key's signed read ends within 1200 seconds of step 3, plus clock difference. If the key is on the register's `founders` list, it keeps `found` and its read of the register after these steps.
+Use `as=compromised` in step 3 for a stolen key, because `as=retired` sends no notice. The key's signed read ends within 1200 seconds of step 3, plus clock difference. If the key is on the register's `founders` list, it keeps `found` and its read of the register after these steps. To check that the notice arrived, run `dap log destination` from the config directory of step 3. The notice's row reads `delivery tell from directory:<seq>`, and that row names no key.
 
-These steps end no Git read token. Treat the repository's content as read until the time that [the token's section](#a-git-read-token-outlasts-the-bound) states, and replace any secret that the repository holds.
+These steps stop new Git read tokens once the notice arrives, and they end no token that the key has read. Treat the repository's content as read until the time that [the token's section](#a-git-read-token-outlasts-the-bound) states, and replace any secret that the repository holds.
 
-On Cloudflare Artifacts, an operator can also end the repository's read tokens through the REST API. A Cloudflare API token with **Artifacts** > **Edit** authorizes the revocation. Do these steps after step 4, or 600 seconds after step 3 plus clock difference, because the key can take a new token until then. GitHub's installation pages list no route that revokes another token.
+On Cloudflare Artifacts, an operator can also end the repository's read tokens through the REST API. A Cloudflare API token with **Artifacts** > **Edit** authorizes the revocation. Do the steps below after step 4, or 600 seconds after step 3 plus clock difference. Until then, the key can take a new token if the notice has not arrived. GitHub's installation pages list no route that revokes another token.
 
 1. List the repository's tokens:
    `GET /artifacts/namespaces/:namespace/repos/:name/tokens`. Cloudflare's page says that each row gives the token's `id`, `scope`, and `state`. The list names no key.
@@ -141,7 +150,11 @@ On Cloudflare Artifacts, an operator can also end the repository's read tokens t
    `DELETE /artifacts/namespaces/:namespace/tokens/:id`. One of the service's own 120-second reads can fail with an unknown outcome, because that read uses its own `read` token.
 3. Ask every member to run [`dap clone`](../cli.md#the-commands) again.
 
-Revoking by ID has run once. On 1 November 2026, the planner revoked one `read` token through this REST route, on a new empty repository. The next `git ls-remote`, 0.1 seconds after the reply, exited 128 with `Invalid or expired token`. Five later tries over 10 seconds answered the same. Listing a repository's tokens has not run, because the planner's list command failed with a usage error. No run covers a token in use during a clone, or a repository with content.
+Revoking by ID has run twice through this REST route, in the planner's runs of 1 November 2026. In the first run, the planner revoked one `read` token on a new empty repository. The next `git ls-remote`, 0.1 seconds after the reply, exited 128 with `Invalid or expired token`. Five later tries over 10 seconds answered the same. Listing a repository's tokens has not run, because the planner's list command failed with a usage error.
+
+A revocation stops new requests and does not stop a download under way, in one run at 30 MB. In that second run, the planner revoked a 3600-second token 31 seconds into a throttled `git clone`. `git ls-remote` with that token exited 128, and the clone finished about 178 seconds later with the right head. In the same run's other case, a clone finished about 149 seconds after the end of its 60-second token, by arithmetic from the lifetime that the planner asked for. So treat a clone under way as having everything it reached. A buffer between the host and the planner's proxy could hold part of the reply, and nobody measured one.
+
+These cases have not run: a download larger than 30 MB, a longer gap between a token's end and the last byte, a commit published during a download, a download under way on GitHub, and the binding's `revokeToken(id)`.
 
 ### What no run has covered
 

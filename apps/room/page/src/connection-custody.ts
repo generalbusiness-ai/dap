@@ -85,7 +85,7 @@ export async function connectInvitation(origin: string, storage: ClaimStorage, e
       if (storage.getItem(storageKey(binding)) !== (journal.active ? canonicalize(journal) : null)) throw unavailable();
       journal = write(storage, { ...journal, active: operation, rows: { ...journal.rows, [operation]: row } }, current);
     } else {
-      if (!active) throw new Error("There is no retained original connection. Nothing was submitted.");
+      if (!active) throw new Error("There is no retained original connection. This step sent nothing, and this browser cannot say whether an earlier send of a connection went.");
       row = structuredClone(active);
       if (row.state === "reserved" && options.mode === "check") return { operation: row.operation, kind: row.input.kind, handle: row.input.handle, state: "prepared", reason: "A reserved original is retained, but its public pointer has not been verified. Check sends nothing. Continue explicitly to recover its exact initial private snapshot if available." };
     }

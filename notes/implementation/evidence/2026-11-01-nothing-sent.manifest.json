@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. The repair red run and 9 controls ran at the head before the note; the first red run and 44 controls are in unit 2026-11-01-nothing-sent, from 32e26c3f. No deployed Worker, real room or browser ran these words.",
+  "directory": "2026-11-01-nothing-sent-2",
+  "checkpoint": {
+    "commit": "ef36af8be430a8fe87b980cf1217dafc0c719d1b",
+    "tree": "1b92e7cd9121e6db0512b63313bb96e198561d1d"
+  },
+  "fileCount": 57,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "78ef1c0f6666576b06baa5df2bcb223811dedba1edc80d29b8b9614d4df0d0c6"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6516,
+      "sha256": "094c0c2074b4585ad8d6daf202605d4e736152826e79f033cdd8267c89f5d138"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "red/run.log",
+      "bytes": 28966,
+      "sha256": "246e05ba251e0d329efb5800acd1a1a7356933595f3956d7a52a5e856b68b888"
+    },
+    {
+      "path": "controls/summary.jsonl",
+      "bytes": 1462,
+      "sha256": "9f225657652cf3d90c87214d277821cab6e225491a0c1f6f55917d0cf4813bb9"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 5129,
+      "sha256": "ad08e8f20c882311e73a763efbbfb126d06d3e110bbbaf7eec273ed717a776d0"
+    }
+  ]
+}

@@ -45,10 +45,10 @@ export class Deliveries {
   readonly #name: ScopeId | null;
   readonly #scope: Scope;
   readonly #store: Store;
-  readonly #ports: Pick<Ports, "resolver" | "proofs" | "births" | "definitions" | "texts" | "random" | "capabilities" | "clock">;
+  readonly #ports: Pick<Ports, "resolver" | "proofs" | "births" | "definitions" | "texts" | "random" | "capabilities" | "clock" | "sealedDelivery">;
   readonly #bounds: Bounds;
 
-  constructor(name: ScopeId | null, scope: Scope, store: Store, ports: Pick<Ports, "resolver" | "proofs" | "births" | "definitions" | "texts" | "random" | "capabilities" | "clock">, bounds: Bounds) {
+  constructor(name: ScopeId | null, scope: Scope, store: Store, ports: Pick<Ports, "resolver" | "proofs" | "births" | "definitions" | "texts" | "random" | "capabilities" | "clock" | "sealedDelivery">, bounds: Bounds) {
     this.#name = name;
     this.#scope = scope;
     this.#store = store;
@@ -293,7 +293,7 @@ export class Deliveries {
             }
             return {
               verdict: "write", draft: judged.draft, facts: [source, ...facts], retain,
-              sealed: ({ entry, hash }) => { rows.sealed({ entry, hash }); return { answer: "recorded", fact: { at: entry.at, seq: entry.seq, hash } }; },
+              sealed: ({ entry, hash }) => { rows.sealed({ entry, hash }); this.#ports.sealedDelivery?.(entry); return { answer: "recorded", fact: { at: entry.at, seq: entry.seq, hash } }; },
               // An entry that cannot be written now is not a decision: the sender keeps the task.
               unfit: () => retry("unavailable"), full: (_head, bound) => ({ ...retry("scope-full"), ...(definition().declared.capacity ? { name: bound } : {}) }),
             };

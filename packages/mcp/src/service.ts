@@ -439,7 +439,7 @@ export class McpService {
   /** A stop before signing: its base words say what this call did, and the words here add what custody holds under its key. */
   #stoppedEarly(result: CallResult, given: Args): Promise<CallResult> | CallResult {
     const error = result.isError ? result.structuredContent["error"] : null;
-    return error === "shape" || error === "stale-descriptor" || error === "target" || error === "commons-missing" || error === "read" ? this.#stated(result, given) : result;
+    return error === "shape" || error === "stale-descriptor" || error === "target" || error === "commons-missing" || error === "read" || error === "unknown-tool" ? this.#stated(result, given) : result;
   }
 
   /** Each answer states what it knows: this call's words stay, and a record unresolved under the key is named, with the key to keep. */
@@ -522,8 +522,8 @@ export class McpService {
 
   #membershipOf(s: Snapshot, held: Held | undefined): ScopeRef | null {
     if (held?.membership) return s.memberships.get(held.membership) ?? null;
-    // On a person's server, a failed read of the room still leaves its membership: it holds the copy, and it names the custody record.
-    return s.read.room?.membership ?? (this.#port.originals ? s.repository : null);
+    // A failed read of the room leaves its membership: it names the custody record, so a repeat finds that record.
+    return s.read.room?.membership ?? s.repository;
   }
 
   /** A scope by ID, by a room name, or by a lane's number. */
@@ -1383,17 +1383,22 @@ export class McpService {
       kept = await this.#sendAct(snapshot, room.membership, room.rules.scope, identity, meaning, build, { notAfter: timeOf(this.#now() + PROPOSED_BOUNDS.intentLifetimeSeconds * 1000), bytes: 768 * KIB });
     } catch (error) {
       if (error instanceof CustodyError || error instanceof Stop) throw error;
-      return failed({ error: "target", what: error instanceof ApplicationHttpError && error.reason === "unsupported-object-format" ? "the public HTTPS Git transport does not support SHA-256 repositories" : error instanceof ApplicationPackageError ? "package bytes do not match the expected signed release or install bounds; nothing was submitted" : "the exact Git package could not be prepared; nothing was submitted" });
+      // Custody writes `sent` before it delivers, so a record past `prepared` means that a request under this key left. Package
+      // preparation runs only with no record, so a failure there leaves none.
+      const record = await this.custody.find(identity);
+      if (record && record.phase !== "prepared") return failed({ error: "transport", scope: room.rules.scope, submitted: true, stopped: true });
+      return failed({ error: "target", what: error instanceof ApplicationHttpError && error.reason === "unsupported-object-format" ? "the public HTTPS Git transport does not support SHA-256 repositories" : error instanceof ApplicationPackageError ? "package bytes do not match the expected signed release or install bounds" : "the exact Git package could not be prepared" });
     }
     if ("lost" in kept) return failed({ error: "transport", scope: room.rules.scope, submitted: true });
     if ("archivedSettlement" in kept) return ok(this.#archivedSettlementOf(kept.archivedSettlement, { scope: room.rules.scope, kind: "install-application", tool: "install_application" }));
     if (kept.answer.answer !== "accepted") return ok({ ...projectAnswer(kept.answer), retained: kept.retained, phase: kept.record.phase });
     const receipt = kept.answer.receipt;
-    if (!isReceipt(receipt) || receipt.definition !== pin || receipt.intent !== intentDigest(kept.record.envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(room.rules)) return failed({ error: "target", sent: true, what: "the install acknowledgement does not match the retained native request" });
+    if (!isReceipt(receipt) || receipt.definition !== pin || receipt.intent !== intentDigest(kept.record.envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(room.rules)) return failed({ error: "target", sent: "report", what: "the install acknowledgement does not match the retained native request" });
     const read = await this.#afterAccepted(room.rules.scope, () => this.#reads.read(room.membership, (t, r) => t.entry(room.rules.scope, r, receipt.fact.seq, { at: receipt.fact.at, head: { seq: receipt.fact.seq, hash: receipt.fact.hash } })));
-    if (!read.ok || !read.complete || read.next !== undefined || read.value.hash !== receipt.fact.hash || entryHash(read.value.entry) !== receipt.fact.hash
+    if (!read.ok || !read.complete || read.next !== undefined) return failed({ error: "target", sent: "read", what: "the read of the install receipt's native entry gave no entry" });
+    if (read.value.hash !== receipt.fact.hash || entryHash(read.value.entry) !== receipt.fact.hash
       || canonicalize(read.value.entry.at) !== canonicalize(room.rules) || read.value.entry.seq !== receipt.fact.seq || read.value.entry.input.type !== "act"
-      || canonicalize(read.value.entry.input.signed) !== canonicalize(kept.record.envelope.signed)) return failed({ error: "target", sent: true, what: "the install receipt's native entry is unavailable or does not hold the exact retained request" });
+      || canonicalize(read.value.entry.input.signed) !== canonicalize(kept.record.envelope.signed)) return failed({ error: "target", sent: "report", what: "the install receipt's native entry does not hold the exact retained request" });
     this.#invalidate();
     return ok({ answer: "accepted", fact: receipt.fact, item: receipt.fact.seq, retained: kept.retained, phase: "recorded", next: "Read application_installation with this item. Native acceptance records the request; installation may still be pending or refused." });
   }
@@ -1450,10 +1455,10 @@ export class McpService {
     if (!entry.ok) return failed({ error: "read", scope: M.scope, reason: entry.reason });
     const input = entry.value.entry.input;
     if (entry.value.hash !== fact.hash || input.type !== "act" || canonicalize(input.signed) !== canonicalize(kept.record.envelope.signed)) {
-      return failed({ error: "target", sent: true, what: `entry ${M.scope}:${fact.seq} does not hold the join kept under this key` });
+      return failed({ error: "target", sent: "report", what: `entry ${M.scope}:${fact.seq} does not hold the join kept under this key` });
     }
     const inbox = entry.value.entry.sends.flatMap((send) => ("creator" in send.to && send.to.kind === "inbox" ? [scopeIdOf(send.to as Seed)] : []))[0];
-    if (!inbox) return failed({ error: "target", sent: true, what: `entry ${M.scope}:${fact.seq} creates no inbox` });
+    if (!inbox) return failed({ error: "target", sent: "report", what: `entry ${M.scope}:${fact.seq} creates no inbox` });
     const repository = { ...link.repository, inbox };
     if (this.#port.config.joined) await this.#port.config.joined({ service: link.service, repository, handle: link.handle });
     else if (this.#port.config.setRepository) await this.#port.config.setRepository(repository);
