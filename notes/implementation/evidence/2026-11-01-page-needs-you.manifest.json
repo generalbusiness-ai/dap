@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "qualification": "One passing gate. A script drove the scene in headless Chromium on a local Worker. No deployed Worker and no person has run this head.",
+  "directory": "2026-11-01-page-needs-you",
+  "checkpoint": {
+    "commit": "aa706bd7136426d09038d2013befba6cb54d7f93",
+    "tree": "2a595280d2f03a942124ab295be60715dab3e50e"
+  },
+  "fileCount": 124,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "a51fd3b8b61c7083e28514b3db6aa5501e1d1df1a5d9b880e90bc175e262bce6"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6533,
+      "sha256": "604688ade7b673fe94065798d666dfd7bfb2ef081ab9f38e586d2b26cd525045"
+    },
+    {
+      "path": "witness/run.json",
+      "bytes": 9398,
+      "sha256": "acb7e3ed48b70be5e46abd32484eeca3d8b7e1898b94d251640fbb76bb0bbced"
+    },
+    {
+      "path": "red/old-page.json",
+      "bytes": 9565,
+      "sha256": "c0ccb1c791f7a8e67cfaa70df105c24e2018d4c27bfa4a22049b33a2cccde390"
+    },
+    {
+      "path": "controls-index.txt",
+      "bytes": 2551,
+      "sha256": "cc488b8300449a7708e36da9136c21137ac8f8a51b405bad328eea57a4c272c8"
+    },
+    {
+      "path": "tests/views-node.log",
+      "bytes": 3466,
+      "sha256": "a9ab4d1c683900f5479d128322083a570092123e99a26aaee6e212940afacd76"
+    },
+    {
+      "path": "tests/security-entry-points.log",
+      "bytes": 1309,
+      "sha256": "5bc4d274a65b3ea2e004b22dbb07f54bdf35dfc3241fcdff6ffe6777d1148c16"
+    },
+    {
+      "path": "tests/test-changed.log",
+      "bytes": 21219,
+      "sha256": "ae527ca908329caaf071ff7c586bfed735e5a9627c52464384b61a52e2a5f358"
+    },
+    {
+      "path": "tests/timed-out-two-alone.log",
+      "bytes": 294,
+      "sha256": "4792508d6deb0adc236d1e3690c431b96a26b6494efe0afc4174398cb6838fe8"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 11711,
+      "sha256": "ebb27a18b2d13dfd432c3a36e28ae4d4ae8dfc81f1cba12fa769306887f77597"
+    }
+  ]
+}
