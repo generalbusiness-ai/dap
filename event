@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8f9388dabf2b1bb62acd0c03f35aadf0208f8113","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-01-mcp-writer.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:99431991c3f398e5b18d8a856d57364ec6c0faea","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/catalogue.ts."}
