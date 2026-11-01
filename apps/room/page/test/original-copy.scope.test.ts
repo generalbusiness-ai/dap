@@ -630,8 +630,8 @@ test("a full object frees a bounded quantum at each keep", async () => {
 test("a stop around the keep leaves no row", async () => {
   const s = await scene();
   try {
-    const changed = () => { throw new Error("The room or key changed before submission. Nothing was sent."); };
-    const sendStopped = (room: Room, scope: ScopeId, kind: string, asked: Parameters<typeof act>[3], submitting?: () => void, stopping?: () => void) => expect(act(room, scope, kind, asked, undefined, submitting, stopping)).rejects.toThrow("Nothing was sent");
+    const changed = () => { throw new Error("The room or key changed before submission. This press sent nothing."); };
+    const sendStopped = (room: Room, scope: ScopeId, kind: string, asked: Parameters<typeof act>[3], submitting?: () => void, stopping?: () => void) => expect(act(room, scope, kind, asked, undefined, submitting, stopping)).rejects.toThrow("This press sent nothing");
     const body = { fields: { body: "Stopped." } };
     // Before the keep: no request to the copy routes, and no act.
     await sendStopped(s.laptop, s.lane, "comment", body, undefined, changed);
