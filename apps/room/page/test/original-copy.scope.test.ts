@@ -626,7 +626,8 @@ test("a stop around the keep leaves no row", async () => {
     expect(s.wire.acts).toEqual([]);
     // A row that the page could not end: the words say so, and the row shows as open.
     s.wire.down.add("end");
-    await expect(act(s.laptop, s.lane, "comment", body, undefined, changed)).rejects.toThrow("This page could not end its copy");
+    const unended = await act(s.laptop, s.lane, "comment", body, undefined, changed).then(() => null, (error: Error) => error);
+    expect(unended?.message).toContain("This page could not end its copy");
     s.wire.down.delete("end");
     expect(await openRows(s.laptop)).toHaveLength(1);
     expect(s.wire.acts).toEqual([]);
@@ -652,14 +653,16 @@ test("a page that held a session and failed to renew it stops the send", async (
     s.wire.order.length = 0;
     const signedReads = await openRoom(s.session(s.secrets.laptop), s.place);
     expect(signedReads.reader).toBeNull();
-    expect((await comment(signedReads, s.lane, "On signed reads.")).answer.answer).toBe("accepted");
+    const sentOnSignedReads = await comment(signedReads, s.lane, "On signed reads.").then(acted => acted.answer.answer, (error: Error) => error.name);
+    expect(sentOnSignedReads).toBe("accepted");
     expect(s.wire.order).toEqual(["POST acts"]);
     expect(await openOriginals(signedReads)).toEqual({ rows: [], failed: false });
 
     // The connection comes back: the next send renews the session, keeps its copy and goes.
     s.wire.down.delete("sessions");
     s.wire.order.length = 0;
-    expect((await comment(s.laptop, s.lane, "Back again.")).answer.answer).toBe("accepted");
+    const sentAgain = await comment(s.laptop, s.lane, "Back again.").then(acted => acted.answer.answer, (error: Error) => error.name);
+    expect(sentAgain).toBe("accepted");
     expect(s.laptop.reader).not.toBeNull();
     expect(s.wire.order).toEqual(["POST originals", "POST acts", "DELETE originals"]);
   } finally { s.d.done(); }

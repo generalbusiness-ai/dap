@@ -160,7 +160,7 @@ J1 needs no kernel change. It meets none of the conditions in [`docs/kernel.md`,
 
 The landing's evidence measures the two added requests per act, in round trips, under this Worker's local test or better.
 
-**The witness** is `apps/room/page/test/two-devices.mjs`. `playwright-core` stays outside the checkout, and the gate does not run it (`apps/room/page/test/screens.mjs:1-8`). It uses a local Worker from a pinned `wrangler`, because playback verifies no signature (`screens.mjs:14`). Two `browser.newContext()` calls give two devices with separate IndexedDB stores. The second enrols through the `device-key` invitation. The first then closes, and the second reloads before the press. The "Never arrived" column uses a third context in the first context's place, with the same second context.
+**The witness** is `apps/room/page/test/two-devices.mjs`. `playwright-core` stays outside the checkout, and the gate does not run it (`apps/room/page/test/screens.mjs:1-8`). It uses a local Worker from a pinned `wrangler`, because playback verifies no signature (`screens.mjs:14`). Two `browser.newContext()` calls give two devices with separate IndexedDB stores. The second enrols through the `device-key` invitation. The first then closes, and the second reloads before the press. The "Never arrived" column uses a third context in the first context's place, with the same second context. The witness also checks three things that the table does not count: a failed read keeps the line, the button and the lock; a stopped keep sends nothing, and the next send clears its words; and a press on the page that sent the request lifts that page's fence.
 
 The witness counts in three places:
 
@@ -204,10 +204,10 @@ These limits apply to J1:
 
   | Request | Requests per comment | Median | Longest |
   |---|---|---|---|
-  | `POST originals` | 1 | 3.853 ms | 11.835 ms |
-  | `DELETE originals` | 1 | 4.433 ms | 27 ms |
-  | `POST acts`, for comparison | 1 | 7.549 ms | 20.806 ms |
-  | `GET originals` | 1 on the first comment, 2 on each later one | 2.222 ms | 10.032 ms |
+  | `POST originals` | 1 | 3.475 ms | 8.421 ms |
+  | `DELETE originals` | 1 | 3.781 ms | 12.625 ms |
+  | `POST acts`, for comparison | 1 | 7.534 ms | 11.24 ms |
+  | `GET originals` | 1 on the first comment, 2 on each later one | 2.269 ms | 10.071 ms |
 
   A hosted room adds one real round trip to each of these requests. The run measured none.
 
