@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint, with 20 controls at the same commit. No Worker, real room or browser ran the wait.",
+  "directory": "2026-10-31-invite-wait",
+  "checkpoint": {
+    "commit": "6c4a3f14fb1ff79475742db22466cd538f616a41",
+    "tree": "da6780860d1a66dd9872c31b8cbae0089edb01b6"
+  },
+  "fileCount": 139,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "fccedc6a16e737bc08981f66b9bb55c6ef0db50bfb57f66457170f6f3aa191ed"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6497,
+      "sha256": "63681056e07332966a986a4702d7f69c2b329e9a3a6b68e1eafbadc1955d6eaa"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "controls/results.json",
+      "bytes": 16840,
+      "sha256": "c6f148b311ef75545dc7ab64725cb89f98d7a141695564387e91284dd171061f"
+    },
+    {
+      "path": "controls/run-controls.mjs",
+      "bytes": 9817,
+      "sha256": "88da086801710941abfcfe296d34b38b004a386baf5fdd29d26195e6a21e4977"
+    },
+    {
+      "path": "controls/run.out",
+      "bytes": 1750,
+      "sha256": "ead842fdb0d040ad09b4a3428666e88060db2a229298a0113a1415003753c0bf"
+    },
+    {
+      "path": "controls/exit.txt",
+      "bytes": 16,
+      "sha256": "a532a833144ee739532b3b96c76f0ea2503b0245b086b5bef2984cd8aeaecfb3"
+    },
+    {
+      "path": "controls/run-at-01092cfb/results.json",
+      "bytes": 16840,
+      "sha256": "2adea74879cd1a1fa500e684cc7e8e44ebbde21c465871aa273603d8a5eb2332"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 14740,
+      "sha256": "c5eb251940cec57f32e2bf01aadab8a80cb985c0f171f6bebd52fa630407b3bb"
+    }
+  ]
+}
