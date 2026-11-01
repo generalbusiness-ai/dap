@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-11-01-git-read-token-after-revocation.md","body":{"commit":"970c701c72d5ceb1de8a09294ae2d1ddaaff4a8e","path":"notes/2026-11-01-git-read-token-after-revocation.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c5dc0d952f38de417d02b31442748ba14f9b68ba","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-01-git-read-token-after-revocation.md."}
