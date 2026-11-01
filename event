@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5a8468534e52afb3a10ab42a4f9e0697cfa2dc6b","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/device-key.scope.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6c6218197f068ec5238c01c059bfb7158f0ffbed","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-01-join-used-dir.md."}
