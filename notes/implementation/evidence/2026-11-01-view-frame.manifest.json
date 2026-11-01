@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. No deployed Worker or desktop AI app ran this code.",
+  "directory": "2026-11-01-view-frame",
+  "checkpoint": {
+    "commit": "42c33abf6d5eb7403ce3d98aa4e625fedbe8cf0a",
+    "tree": "cc91608b0a063ca5a21702e1c72d155df11a6af2"
+  },
+  "fileCount": 43,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "9c338dfcea30f1ebc11f3fe6fe8c9b2842e6cb54df64a4f1f3e195fd53e0270b"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6486,
+      "sha256": "14f402ff22a4d261781a669ca4cdc9be32a6b45f56aeac77512de8d3f6ee5fef"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "controls/summary.txt",
+      "bytes": 82,
+      "sha256": "6fa93ffea52988c53d73c6d3283bde626c70c7923b7207ff9a6b4ea0a64d9540"
+    },
+    {
+      "path": "focused.log",
+      "bytes": 254,
+      "sha256": "a35e8674ccb5f34766c706005a75669c5fc7249966c0260c25fd0e1f9496f629"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 3878,
+      "sha256": "8adb8fd9b6291bda4d040e9edbd70168ada204eeedb586f83f457a7c64147460"
+    }
+  ]
+}

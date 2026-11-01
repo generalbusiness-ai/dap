@@ -29,6 +29,13 @@ export function toolsForHost(tools: readonly Tool[], ui: boolean): Tool[] {
   });
 }
 const result = (structuredContent: Record<string, unknown>, text: string, isError = false): CallResult => ({ structuredContent, content: [{ type: "text", text }], isError });
+/** The largest display a result's text repeats. An ordinary card keeps the copy, which the card's bridge reads from a host that drops structuredContent. A reader page holds up to 40 KiB of a repository's text, and one copy serves the app. */
+const TEXT_COPY_BYTES = 32 * 1024;
+/** A display or an answer as a result's text. Over the bound, the text says where the result is. */
+const copyOf = (value: unknown): string => {
+  const text = JSON.stringify(value), bytes = new TextEncoder().encode(text).length;
+  return bytes <= TEXT_COPY_BYTES ? text : `The result is in structuredContent: ${bytes} bytes of JSON, which this text does not repeat.`;
+};
 const string = (args: Args, name: string): string => {
   if (typeof args[name] !== "string") throw new ViewError("shape", `${name} must be a string.`);
   return args[name];
@@ -74,11 +81,11 @@ export function viewTools(sessions: ViewSessions, screens?: readonly { name: str
     if (page !== undefined && !["summary", "item", "diff", "updates"].includes(String(page))) throw new ViewError("shape", "page is not a card page.");
     const moving = page !== undefined || args["position"] !== undefined || args["refresh"] === true;
     const display = await sessions.read(string(args, "view"), moving ? integerArgument(args, "cut") : undefined, moving ? { ...(args["refresh"] === true ? { refresh: true } : {}), ...(page === undefined ? {} : { page: page as PageKind }), ...(args["position"] === undefined ? {} : { position: integerArgument(args, "position") }) } : undefined);
-    return result({ display }, JSON.stringify(display));
+    return result({ display }, copyOf(display));
   });
   add("view_act", "Invoke one server-retained action of an exact displayed card. The server checks the instance and display cut. Native actions sign captured revisions under ordinary custody. A local review mark signs no native act and creates no native receipt. Duplicate dispatch returns its first outcome. This tool returns private card and result data to the app.", { view: key, cut, action: key }, ["view", "cut", "action"], true, undefined, async (args) => {
     const answer = await sessions.act(string(args, "view"), integerArgument(args, "cut"), string(args, "action"));
-    return result(answer, JSON.stringify(answer));
+    return result(answer, copyOf(answer));
   });
   for (const action of sessions.source.inputActs ?? []) {
     const name = viewInputToolName(action.screen, action.id);
