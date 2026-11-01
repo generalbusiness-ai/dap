@@ -1,3 +1,5 @@
+import { TOOL_WAIT_MS } from "../src/views/waits.ts";
+
 type Object_ = Record<string, unknown>;
 const record = (value: unknown): value is Object_ => typeof value === "object" && value !== null && !Array.isArray(value);
 export interface HostContext {
@@ -6,6 +8,8 @@ export interface HostContext {
   styles?: { variables?: Record<string, string> };
   [key: string]: unknown;
 }
+/** A message the app answers itself, with no server call behind it. */
+const HOST_WAIT_MS = 10_000;
 export class AppToolError extends Error {
   constructor(message: string, readonly reason?: string) { super(message); }
 }
@@ -25,12 +29,12 @@ export class AppBridge {
     window.parent.postMessage({ jsonrpc: "2.0", ...message }, "*");
   }
   notify(method: string, params: Object_ = {}) { this.#send({ method, params }); }
-  request(method: string, params: Object_ = {}): Promise<Object_> {
+  request(method: string, params: Object_ = {}, wait = HOST_WAIT_MS): Promise<Object_> {
     if (this.#closed) return Promise.reject(new Error("The host closed this card."));
     if (this.#pending.size >= 32) return Promise.reject(new Error("The card is waiting for too many host replies."));
     const id = ++this.#next;
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => { this.#pending.delete(id); reject(new Error(`${method}: the host did not reply. No action was retried.`)); }, 10_000);
+      const timer = setTimeout(() => { this.#pending.delete(id); reject(new Error(`The app did not answer ${method} in ${wait / 1000} seconds.`)); }, wait);
       this.#pending.set(id, { resolve, reject, timer });
       try { this.#send({ id, method, params }); }
       catch (error) { clearTimeout(timer); this.#pending.delete(id); reject(error); }
@@ -89,7 +93,7 @@ export class AppBridge {
     });
   }
   async tool(name: string, args: Object_): Promise<Object_> {
-    const reply = await this.request("tools/call", { name, arguments: args });
+    const reply = await this.request("tools/call", { name, arguments: args }, TOOL_WAIT_MS);
     let data = reply["structuredContent"];
     if (!record(data) && Array.isArray(reply["content"])) {
       const text = reply["content"].find((part: unknown) => record(part) && part["type"] === "text");

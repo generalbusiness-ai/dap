@@ -416,7 +416,7 @@ test('a room with no finding profile reads byte for byte as it did before the fi
   assert.equal(actual + '\n', readFileSync(golden, 'utf8'), 'NON-FINDING ROOM: the reads and cards differ from their bytes before the finding profile');
 });
 
-// The words of each page, ported from main's card press head. A short question offers its acts on the first card, so that page's reason differs from main's line about Open.
+// A person is not told to do what the card offers no way to do, and is not told to open a card that is open.
 test('a card says only what this page offers', async t => {
   const f = fixture(t), source = decisionSource(f.app);
   const ready = scriptedChange(f, J4_DIGESTS.change);

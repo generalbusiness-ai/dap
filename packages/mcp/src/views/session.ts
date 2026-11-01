@@ -435,6 +435,10 @@ export class ViewSessions {
         await this.#refuseWhileOpen(card, instance.query);
         this.#admit(instance, cut);
       });
+      // The read has returned, so a request may be signed. These words say so, where #admit says that nothing was sent.
+      if (!this.#active(instance)) throw new ViewError("superseded", result.isError || typeof result.structuredContent["text"] !== "string"
+        ? "A newer card replaced this one during the read. The read may have been signed, and this card does not show its answer."
+        : "A newer card replaced this one during the read. The read was signed, and this card does not show its answer.");
       this.#admit(instance, cut);
       const text = result.structuredContent["text"];
       if (result.isError || typeof text !== "string") {

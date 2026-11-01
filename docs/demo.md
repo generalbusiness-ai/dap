@@ -188,8 +188,8 @@ The browser automation package `playwright-core` is not a dependency of
 this repository. Install it in a scratch directory outside the checkout,
 and name that directory in `PLAYWRIGHT_CORE`. The browser is the one in
 `CHROMIUM`, or the one under `PLAYWRIGHT_BROWSERS_PATH` (default
-`/opt/pw-browsers`). Without either, the script says that it skipped and
-makes no picture.
+`/opt/pw-browsers`). Without either, the script names what is missing,
+makes no picture and exits 2.
 
 With `--recorded` in place of the base URL, `--home` and `--room`, the
 script runs the rehearsal on the test Worker (`DEMO_RECORD=1`, see

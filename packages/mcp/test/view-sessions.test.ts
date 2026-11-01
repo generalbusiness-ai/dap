@@ -1,5 +1,8 @@
 import { expect, test } from "vitest";
-import type { CallResult } from "../src/service.ts";
+import { TOOL_WAIT_MS } from "../src/views/waits.ts";
+import { REPLY_SECONDS } from "@generalbusiness/dap-client";
+import { readFileSync } from "node:fs";
+import { VIEW_DIFF_POLLS, type CallResult } from "../src/service.ts";
 import { cardOpens } from "../src/views/opens.ts";
 import { ViewSessions } from "../src/views/session.ts";
 import { viewTools } from "../src/views/tools.ts";
@@ -276,6 +279,33 @@ test("View diff: a retained card admits nothing while an original is open, and a
   expect(views.display("v").query.page).not.toBe("diff");
 });
 
+// Invariant: a card never says that nothing was sent after a read has signed.
+// The sources and the read port are stand-ins; session.ts is the production code.
+test("a read that a newer card supersedes says that it signed", async () => {
+  const source: ViewSource = { read: async (query) => ({ status: "ready", position: query.position, count: 1, fallback: "Inspect the item.", card: {
+    identity: { kind: "fixture", item: "1", revision: "0", subject: { scope: "fixture-scope", item: 1 }, at: { on: 0 } },
+    title: "Fixture item", summary: "s", actor: { kind: "person", name: "Fixture" }, reasons: [],
+    projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "Inspect the item.", actions: [],
+    diffAvailable: true, diffRead: { target: "destination", base: "a".repeat(40), integration: "b".repeat(40) },
+  } }) };
+  let answer_: CallResult = { content: [], structuredContent: { text: "the diff" }, isError: false };
+  let signed = 0;
+  const views: ViewSessions = new ViewSessions(source, { call: async () => answer("read") }, async () => answer("accepted"), async () => answer("accepted"), () => null, {
+    readExact: async (_read, admit) => { await admit(); signed++; await views.open(`newer-${signed}`, "change", "subject"); return answer_; },
+  });
+  await views.open("v", "change", "subject");
+  const { cut } = await views.read("v");
+  const said = await views.act("v", cut, "view-diff").then(() => "no refusal", (error: { reason?: string; message: string }) => [error.reason, error.message]);
+  expect(signed).toBe(1);
+  expect(said).toEqual(["superseded", "A newer card replaced this one during the read. The read was signed, and this card does not show its answer."]);
+
+  // A read that ended with no text may or may not have signed, so the words say "may".
+  answer_ = { content: [], structuredContent: { answer: "refused" }, isError: true };
+  await views.open("w", "change", "subject");
+  const again = await views.act("w", (await views.read("w")).cut, "view-diff").then(() => "no refusal", (error: { reason?: string; message: string }) => [error.reason, error.message]);
+  expect(again).toEqual(["superseded", "A newer card replaced this one during the read. The read may have been signed, and this card does not show its answer."]);
+});
+
 // Invariant: a person can read what an incomplete card holds, and that read offers no act. An unavailable placeholder has no detail to open.
 // The source is a stand-in that returns one scripted card; session.ts and the browser's open rule are the production code.
 test("an incomplete card opens its available entries and offers no act", async () => {
@@ -334,4 +364,11 @@ test("a first card's press with an unknown outcome offers only the check of the 
   expect(away.card!.actions.map(action => action.purpose), "ANOTHER ITEM keeps its own act").toEqual(["approve"]);
   const back = await sessions.read("v", away.cut, { position: 0 });
   expect(back.card!.actions.map(action => action.purpose), "BACK ON THE ITEM: the check, and no second Approve").toEqual(["check-original"]);
+});
+
+// Invariant: the card's wait covers one stalled request at each stage of the slowest press. The session, the act and the read of the mint each wait REPLY_SECONDS.
+test("a press's wait outlasts one stalled request at each stage of a signed read", () => {
+  // This package's tests do not import the Git package, so the test reads the bound from its source.
+  const gitRead = /const DIFF_READ_MS = ([\d_]+);/.exec(readFileSync(new URL("../../git/src/diff.ts", import.meta.url), "utf8"))!;
+  expect(TOOL_WAIT_MS).toBeGreaterThanOrEqual(3 * REPLY_SECONDS * 1000 + VIEW_DIFF_POLLS * 1000 + Number(gitRead[1]!.replaceAll("_", "")));
 });

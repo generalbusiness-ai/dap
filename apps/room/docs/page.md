@@ -229,5 +229,5 @@ the real read sessions, the edit command and the site route; the Git host
 and the scheduler are labelled stand-ins. `assets.test.ts` checks the
 Worker's page module, `states.test.ts` the states of a change, and
 `apps/room/page/test/route.scope.test.ts` the `/page/` route.
-`apps/room/page/test/screens.mjs` takes the screenshots in
-`apps/room/page/test/screenshots`.
+`apps/room/page/test/screens.mjs` writes screenshots under its
+`VIEW_CAPTURE_OUT` directory, and `.github/workflows/page-browser.yml` runs it.
