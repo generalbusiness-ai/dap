@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3fe6a4dc23b62f183408995b0f3d55b21904249c","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/issue-wait.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:421c10c57450a1504cb2b8ad9999d519d42679e0","text":"Merge retired a covered predecessor; the successor is at apps/views/test/s4.test.mjs."}
