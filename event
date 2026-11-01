@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0e0b9ead582dab58ebde3c5592b5108edb9375ff","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/send-stop-words.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:13a038b343058c1efbc012008a44bbaa09726de6","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/connection-custody.test.ts."}
