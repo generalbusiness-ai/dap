@@ -88,7 +88,7 @@ These things stay open:
 - **A lane's workspace token.** The notice reaches no lane, so the lane's credential route still gives the key a workspace token that the key prepared with `hold@2:token`, while its session lasts. That token lasts at most 900 seconds, and it reads and writes one fork. It does not open the room's repository.
 - **The key's other acts at the destination.** The notice refuses `read-token` only. Other acts keep the 300-second limit.
 
-So the repository stays readable for at most 24 hours and 600 seconds after the revocation on Cloudflare Artifacts, plus clock difference. On GitHub that time is about one hour and 600 seconds. Replay cannot check the `read-token` refusal, because no definition states it and a refused act writes no entry.
+So a new request with the token can read the repository for at most 24 hours and 600 seconds after the revocation on Cloudflare Artifacts, plus clock difference. On GitHub that time is about one hour and 600 seconds. On Artifacts, a download under way ran past its token's end in one run at 30 MB, as [the stolen-key section](#respond-to-a-stolen-key) states. No run shows what a download under way meets on GitHub. Replay cannot check the `read-token` refusal, because no definition states it and a refused act writes no entry.
 
 ### A founder key that is also the recovery key has no end at membership
 
@@ -138,7 +138,7 @@ Do these steps in each room that enrolled the key:
 5. After 300 seconds plus clock difference, read what the key signed with [`dap log`](../cli.md#the-commands) at each scope where it could act:
    `dap log <scope>`.
 
-Use `as=compromised` in step 3 for a stolen key, because `as=retired` sends no notice. The key's signed read ends within 1200 seconds of step 3, plus clock difference. If the key is on the register's `founders` list, it keeps `found` and its read of the register after these steps.
+Use `as=compromised` in step 3 for a stolen key, because `as=retired` sends no notice. The key's signed read ends within 1200 seconds of step 3, plus clock difference. If the key is on the register's `founders` list, it keeps `found` and its read of the register after these steps. To check that the notice arrived, run `dap log destination` from the config directory of step 3. The notice's row reads `delivery tell from directory:<seq>`, and that row names no key.
 
 These steps stop new Git read tokens once the notice arrives, and they end no token that the key has read. Treat the repository's content as read until the time that [the token's section](#a-git-read-token-outlasts-the-bound) states, and replace any secret that the repository holds.
 
@@ -150,7 +150,11 @@ On Cloudflare Artifacts, an operator can also end the repository's read tokens t
    `DELETE /artifacts/namespaces/:namespace/tokens/:id`. One of the service's own 120-second reads can fail with an unknown outcome, because that read uses its own `read` token.
 3. Ask every member to run [`dap clone`](../cli.md#the-commands) again.
 
-Revoking by ID has run once. On 1 November 2026, the planner revoked one `read` token through this REST route, on a new empty repository. The next `git ls-remote`, 0.1 seconds after the reply, exited 128 with `Invalid or expired token`. Five later tries over 10 seconds answered the same. Listing a repository's tokens has not run, because the planner's list command failed with a usage error. No run covers a token in use during a clone, or a repository with content.
+Revoking by ID has run twice through this REST route, in the planner's runs of 1 November 2026. In the first run, the planner revoked one `read` token on a new empty repository. The next `git ls-remote`, 0.1 seconds after the reply, exited 128 with `Invalid or expired token`. Five later tries over 10 seconds answered the same. Listing a repository's tokens has not run, because the planner's list command failed with a usage error.
+
+A revocation stops new requests and does not stop a download under way, in one run at 30 MB. In that second run, the planner revoked a 3600-second token 31 seconds into a throttled `git clone`. `git ls-remote` with that token exited 128, and the clone finished about 178 seconds later with the right head. In the same run's other case, a clone finished about 149 seconds after the end of its 60-second token, by arithmetic from the lifetime that the planner asked for. So treat a clone under way as having everything it reached. A buffer between the host and the planner's proxy could hold part of the reply, and nobody measured one.
+
+These cases have not run: a download larger than 30 MB, a longer gap between a token's end and the last byte, a commit published during a download, a download under way on GitHub, and the binding's `revokeToken(id)`.
 
 ### What no run has covered
 

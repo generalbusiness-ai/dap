@@ -56,7 +56,7 @@ function locked<T>(origin: string, options: JoinOptions, work: () => Promise<T>)
   const locks = (globalThis as unknown as { navigator?: { locks?: {
     request<T>(name: string, work: () => Promise<T>): Promise<T>;
   } } }).navigator?.locks;
-  if (!locks) throw new Error("Private enrollment locking is unavailable. Nothing was submitted.");
+  if (!locks) throw new Error("Private enrollment locking is unavailable. This step sent nothing. A saved enrollment stays kept, and an earlier send of it can have gone. Do not use the invitation again.");
   return locks.request(`artroom-page-enrollment:${origin}`, work);
 }
 function publicOf(row: RecordJoin): OriginalJoin {

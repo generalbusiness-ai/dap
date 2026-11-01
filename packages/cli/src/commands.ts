@@ -232,29 +232,39 @@ function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === "archive-device-publication") return INSTALL_COHORTS["archive-device-publication"];
   if (cohort === "archive-certified-rules") return INSTALL_COHORTS["archive-certified-rules"];
   if (cohort === "hardened-certified-rules") return INSTALL_COHORTS["hardened-certified-rules"];
-  return stopCommand(usage("--cohort needs one current creation family or the historical family of a retained plan; nothing was signed or sent."));
+  return stopCommand(usage("--cohort needs one current creation family or the historical family of a retained plan; this run signed and sent nothing."));
+}
+/** What a stop says of a plan's earlier send. The attempted marker precedes the first possible request. */
+function planSent(plan: PlannedInstall): string {
+  if (plan.acknowledged !== undefined) return "This run sent nothing, and an earlier send of this plan went ahead. A new plan makes a second register.";
+  if (plan.attempted !== undefined) return "This run sent nothing, and an earlier send of this plan has no known outcome. A new plan can make a second register.";
+  return "Nothing was sent.";
+}
+/** What a stop says of a join's earlier send. The pointer is kept before any send. */
+function joinSent(pending: PendingJoin): string {
+  return `This run sent nothing, and an earlier send of this join ${pending.accepted ? "went ahead" : "has no known outcome"}.`;
 }
 /** Public creation is an explicit fixed cohort, independent of future defaults. */
 function installSelection(options: InstallOptions, retained = false): PlatformDefinition | undefined {
-  if (!retained && options.host === undefined) return stopCommand(usage("--host is required: none, artifacts or github.com; nothing was signed or sent."));
-  if (options.host !== undefined && !["none", "artifacts", "github.com"].includes(options.host)) return stopCommand(usage("Refused: host-unknown. Choose --host none, artifacts or github.com; nothing was signed or sent."));
+  if (!retained && options.host === undefined) return stopCommand(usage("--host is required: none, artifacts or github.com; this run signed and sent nothing."));
+  if (options.host !== undefined && !["none", "artifacts", "github.com"].includes(options.host)) return stopCommand(usage("Refused: host-unknown. Choose --host none, artifacts or github.com; this run signed and sent nothing."));
   if (options.registerPolicy !== undefined && options.registerPolicy !== "keys" && options.registerPolicy !== "open") {
-    return stopCommand(usage("--register-policy takes exactly keys or open; nothing was signed or sent."));
+    return stopCommand(usage("--register-policy takes exactly keys or open; this run signed and sent nothing."));
   }
   const selected = selectedRegister(options.cohort);
   if (options.host === "none") {
-    if (selected !== undefined && selected !== UNPUBLISHED_COHORT.register && selected !== COMMONS_COHORT.register) return stopCommand(usage("--host none requires the unpublished or commons cohort; nothing was signed or sent."));
+    if (selected !== undefined && selected !== UNPUBLISHED_COHORT.register && selected !== COMMONS_COHORT.register) return stopCommand(usage("--host none requires the unpublished or commons cohort; this run signed and sent nothing."));
     return selected ?? UNPUBLISHED_COHORT.register;
   }
   if (options.registerPolicy !== "open" || selected === UNPUBLISHED_COHORT.register || selected === COMMONS_COHORT.register) return selected;
   if (selected !== undefined && selected !== ARCHIVE_DEVICE_APPLICATION_COHORT.register) {
-    return stopCommand(usage("--register-policy open requires the archive-device-application cohort; nothing was signed or sent."));
+    return stopCommand(usage("--register-policy open requires the archive-device-application cohort; this run signed and sent nothing."));
   }
   return ARCHIVE_DEVICE_APPLICATION_COHORT.register;
 }
 const selectedPlan = (plan: PlannedInstall): boolean => {
   if (Object.hasOwn(plan, "selected") && plan.selected !== true) {
-    return stopCommand(failed("Refused: plan-mismatch. The retained install selection marker is invalid. The original plan is kept; nothing was signed or sent."));
+    return stopCommand(failed(`Refused: plan-mismatch. The retained install selection marker is invalid. The original plan is kept. ${planSent(plan)}`));
   }
   // Register3 also names old unselected plans; the local marker distinguishes
   // new explicit selection without changing the signed or attempted identity.
@@ -341,11 +351,11 @@ function retainedCohortPlan(before: Config, service: string, options: InstallOpt
       && (options.registerPolicy === undefined || options.registerPolicy === plan["founding"].intent.fields["policy"])
       && isScopeId(plan.register) && registerIdOf(plan["founding"], plan.definition) === plan.register;
   } catch { /* malformed retained plan cannot select a new request */ }
-  if (!compatible) stopCommand(failed("Refused: plan-mismatch. The retained install's cohort, service, host, namespace or policy conflicts with this request. The original plan is kept; nothing was signed or sent."));
+  if (!compatible) stopCommand(failed(`Refused: plan-mismatch. The retained install's cohort, service, host, namespace or policy conflicts with this request. The original plan is kept. ${planSent(plan)}`));
   return parseStrict(canonicalize(plan)) as PlannedInstall;
 }
 async function cohortPlan(ctx: Context, service: string, options: InstallOptions, before: Config | null, definition: PlatformDefinition): Promise<PlannedInstall> {
-  if (!knownPlatform(definition, "platform:register")) stopCommand(failed("Unsupported selected cohort: the exact register pin is not installed. Nothing was signed or sent."));
+  if (!knownPlatform(definition, "platform:register")) stopCommand(failed(`Unsupported selected cohort: the exact register pin is not installed. ${before?.plan ? planSent(before.plan) : "Nothing was signed or sent."}`));
   if (before?.plan) {
     const plan = retainedCohortPlan(before, service, options, definition);
     await readBackCohortConfig(ctx, before);
@@ -418,15 +428,15 @@ async function executePlannedInstall(ctx: Context, cohort?: InstallCohort, expec
   if (before?.register) return usage(`This config directory has a register already: ${before.register.scope}.`);
   const kept = before?.plan ?? stopCommand(usage("No install is planned here. Run: dap install --plan <base-url>."));
   if (cohort === undefined && kept.definition === UNPUBLISHED_COHORT.register) selected = UNPUBLISHED_COHORT.register;
-  if (kept.definition === COUNTING_COHORT.register) return failed("Refused: retired-cohort. Choose a currently admitted cohort for a new room. The old plan is kept; nothing was sent.");
-  if (selected && kept.definition !== selected) return failed("Refused: plan-mismatch. The selected cohort conflicts with the original install plan. Nothing was sent; the plan is kept.");
-  if (registerPolicy !== undefined && (!isSignedIntentShape(kept["founding"]) || kept["founding"].intent.fields["policy"] !== registerPolicy)) return failed("Refused: plan-mismatch. The register policy conflicts with the original install plan. Nothing was sent; the plan is kept.");
-  if (expected && canonicalize(kept) !== canonicalize(expected)) return failed("Held: the selected install plan changed before delivery. Nothing was sent; restore the original request.");
+  if (kept.definition === COUNTING_COHORT.register) return failed(`Refused: retired-cohort. Choose a currently admitted cohort for a new room. The old plan is kept. ${planSent(kept)}`);
+  if (selected && kept.definition !== selected) return failed(`Refused: plan-mismatch. The selected cohort conflicts with the original install plan. The plan is kept. ${planSent(kept)}`);
+  if (registerPolicy !== undefined && (!isSignedIntentShape(kept["founding"]) || kept["founding"].intent.fields["policy"] !== registerPolicy)) return failed(`Refused: plan-mismatch. The register policy conflicts with the original install plan. The plan is kept. ${planSent(kept)}`);
+  if (expected && canonicalize(kept) !== canonicalize(expected)) return failed(`Held: the selected install plan changed before delivery. Restore the original request. ${planSent(kept)}`);
   const strictCustody = selectedPlan(kept) || selected !== undefined;
   let plan = strictCustody ? parseStrict(canonicalize(kept)) as PlannedInstall : kept;
   const operator = await storedSigner(ctx.store, "operator");
   const now = ctx.now?.() ?? Date.now();
-  if (!knownPlatform(plan.definition, "platform:register")) return failed("Unsupported install provenance: this command cannot serve the plan's exact pinned register version. The pending plan is kept; nothing was sent.");
+  if (!knownPlatform(plan.definition, "platform:register")) return failed(`Unsupported install provenance: this command cannot serve the plan's exact pinned register version. The pending plan is kept. ${planSent(plan)}`);
   const valid = isSignedIntentShape(plan["founding"]) && verifySignedIntent(plan["founding"])
     && plan["founding"].intent.kind === "install" && plan["founding"].intent.to === null && plan["founding"].intent.on === null
     && Object.keys(plan["founding"].intent.expected).length === 0
@@ -435,10 +445,10 @@ async function executePlannedInstall(ctx: Context, cohort?: InstallCohort, expec
     && isScopeId(plan.register) && registerIdOf(plan["founding"], plan.definition) === plan.register
     && timeMs(plan["founding"].intent.notAfter)! - now <= PROPOSED_BOUNDS.intentLifetimeSeconds * 1000;
   if (!valid) {
-    return failed("Refused: plan-mismatch. The saved plan does not match this service, operator key and supported register version. Nothing was sent. Keep the original plan for recovery; do not silently replace it.");
+    return failed(`Refused: plan-mismatch. The saved plan does not match this service, operator key and supported register version. ${planSent(plan)} Keep the original plan for recovery; do not silently replace it.`);
   }
   const attempt = installAttemptOf(plan);
-  if (plan.attempted !== undefined && plan.attempted !== attempt) return failed("Refused: plan-mismatch. The attempted marker belongs to another service, operator, envelope, version or register. The pending plan is kept; nothing was sent.");
+  if (plan.attempted !== undefined && plan.attempted !== attempt) return failed(`Refused: plan-mismatch. The attempted marker belongs to another service, operator, envelope, version or register. The pending plan is kept. ${planSent(plan)}`);
   if (plan.attempted === undefined && now >= timeMs(plan["founding"].intent.notAfter)!) {
     const label = Object.entries(INSTALL_COHORTS).find(([, pin]) => pin === plan.definition)?.[0] ?? "trusted-application";
     return failed(`Refused: plan-expired. The planned install could be created until ${plan["founding"].intent.notAfter}. ${strictCustody
@@ -453,7 +463,7 @@ async function executePlannedInstall(ctx: Context, cohort?: InstallCohort, expec
     return failed("Held: the retained install acknowledgement does not match the original plan. The plan is kept.");
   }
   if (ctx.fetch !== undefined && (ctx.trustedCreationService?.service !== plan.service || ctx.trustedCreationService.fetch !== ctx.fetch)) {
-    return failed("Held: this injected transport has no configured-service acknowledgement trust. The plan is kept; no request was sent.");
+    return failed(`Held: this injected transport has no configured-service acknowledgement trust. The plan is kept. ${planSent(plan)}`);
   }
   if (selected && plan.selected !== true) {
     plan = { ...plan, selected: true };
@@ -529,7 +539,7 @@ export function join(ctx: Context, text: string): Promise<Outcome> {
     const linkDigest = textDigest(canonicalize(link));
     let pending: PendingJoin | undefined = before?.join;
     const shared = pending && (({ inbox: _inbox, ...repository }) => repository)(pending.repository);
-    if (pending && (pending.link !== linkDigest || before!.service !== link.service || canonicalize(shared) !== canonicalize(link.repository) || pending.handle !== link.handle)) return failed("The invitation link does not match the pending join; nothing was submitted. Retry the original invitation link.");
+    if (pending && (pending.link !== linkDigest || before!.service !== link.service || canonicalize(shared) !== canonicalize(link.repository) || pending.handle !== link.handle)) return failed(`The invitation link does not match the pending join. ${joinSent(pending)} Retry the original invitation link.`);
     const base: Config = before ? { v: 1, service: before.service, key: before.key } : { v: 1, service: link.service, key: "device" };
     const signer = pending ? await signerOf(ctx, base) : await newStoredSigner(ctx.store, base.key);
     let signed: SignedIntent;
@@ -552,21 +562,21 @@ export function join(ctx: Context, text: string): Promise<Outcome> {
       await keep({ request, intent: intentDigest(signed.intent), link: linkDigest, repository: link.repository, handle: link.handle });
     } else {
       const bytes = await ctx.store.private(pending.request);
-      if (!bytes) return failed("The exact private join request is missing; nothing was submitted. Restore its private record before retrying.");
+      if (!bytes) return failed(`The exact private join request is missing. ${joinSent(pending)} Restore its private record before retrying.`);
       try { signed = JSON.parse(new TextDecoder().decode(bytes)) as SignedIntent; }
-      catch { return failed("The private join request cannot be read; nothing was submitted."); }
+      catch { return failed(`The private join request cannot be read. ${joinSent(pending)} Restore its private record before retrying.`); }
     }
     const at = link.repository.membership;
     if (!validStep({ signed, ...(pending!.accepted ? { accepted: pending!.accepted } : {}) }, at, signer.key, "join")
-      || intentDigest(signed.intent) !== pending!.intent || canonicalize(signed.intent.fields) !== canonicalize(invitationRedemptionFields(link.definition ?? "platform:membership@1", at, link.invitation, signer.key, link.secret))) return failed("The saved join does not match this invitation, membership and signing key; nothing was submitted.");
+      || intentDigest(signed.intent) !== pending!.intent || canonicalize(signed.intent.fields) !== canonicalize(invitationRedemptionFields(link.definition ?? "platform:membership@1", at, link.invitation, signer.key, link.secret))) return failed(`The saved join does not match this invitation, membership and signing key. ${joinSent(pending!)}`);
     const config: Config = { ...base, repository: link.repository };
     const M = await handleOf(ctx, config, at.scope, null);
     const digest = intentDigest(signed.intent);
     let fact: FactRef;
     if (pending!.accepted) {
       const settled = await M.settle(signed);
-      if (!settled.ok) return failed(`Cannot confirm the saved join: ${settled.reason}. The exact request remains pending; nothing was submitted.`);
-      if (settled.value.intent !== digest || canonicalize(settled.value.fact) !== canonicalize(pending!.accepted)) return failed("The saved accepted fact does not match this exact join; nothing was submitted.");
+      if (!settled.ok) return failed(`Cannot confirm the saved join: ${settled.reason}. The exact request remains pending. ${joinSent(pending!)}`);
+      if (settled.value.intent !== digest || canonicalize(settled.value.fact) !== canonicalize(pending!.accepted)) return failed(`The saved accepted fact does not match this exact join. ${joinSent(pending!)}`);
       fact = pending!.accepted;
     } else {
       const receipt = accepted(await M.submit(signed), M.scope, "Joined").receipt;
@@ -577,10 +587,10 @@ export function join(ctx: Context, text: string): Promise<Outcome> {
     const entry = await M.entry(fact.seq);
     if (!entry.ok) return failed(`Cannot read entry ${M.scope}:${fact.seq}: ${entry.reason}. The join remains pending; retry the original invitation link.`);
     if (canonicalize(factRefOf(entry.value.entry)) !== canonicalize(fact) || entry.value.hash !== fact.hash
-      || entry.value.entry.input.type !== "act" || canonicalize(entry.value.entry.input.signed) !== canonicalize(signed)) return failed("The admitted entry does not match this exact join; nothing was submitted.");
+      || entry.value.entry.input.type !== "act" || canonicalize(entry.value.entry.input.signed) !== canonicalize(signed)) return failed("The admitted entry does not match this exact join. The join request went ahead, and the join remains pending. Retry the original invitation link.");
     const inbox = entry.value.entry.sends.flatMap((send) => "creator" in send.to && send.to.kind === "inbox" ? [scopeIdOf(send.to as Seed)] : [])[0]
       ?? stopCommand(failed(`Joined, but entry ${M.scope}:${fact.seq} creates no inbox. The join remains pending.`));
-    if (pending!.repository.inbox && pending!.repository.inbox !== inbox) return failed("The saved inbox does not match this join; nothing was submitted.");
+    if (pending!.repository.inbox && pending!.repository.inbox !== inbox) return failed("The saved inbox does not match this join. The join request went ahead, and the join remains pending. Retry the original invitation link.");
     await keep({ ...pending!, repository: { ...link.repository, inbox } });
     const I = await handleOf(ctx, config, inbox, null);
     await waitFor(ctx, () => [M.scope, inbox], () => active(I), "your inbox", "retry the original dap join invitation link to continue this enrollment.");

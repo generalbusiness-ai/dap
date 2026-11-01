@@ -83,7 +83,8 @@ test("Continue submits only the original unexpired browser join and a failed dur
   expect(await f.api.continueOriginal()).toEqual({ status: "joined", seat: f.seat }); expect(f.posts).toHaveLength(2); expect(canonicalize(f.posts[1])).toBe(original);
   const expired = await fixture(); await expired.api.join(expired.link, expired.seat); const pending = expired.kept()!;
   expired.clock(Date.parse(pending.kept.envelope.signed.intent.notAfter));
-  expect(await expired.api.continueOriginal()).toMatchObject({ status: "unknown" }); expect(expired.posts).toHaveLength(1); expect(expired.kept()).toEqual(pending);
+  // The first send went and lost its reply. Past the deadline, this press sends nothing and cannot call the join unsent.
+  expect(await expired.api.continueOriginal()).toMatchObject({ status: "unknown", reason: "The original join's deadline has passed. This press sent nothing, and an earlier send of this join has no known outcome. Check it; do not use the invitation again." }); expect(expired.posts).toHaveLength(1); expect(expired.kept()).toEqual(pending);
 });
 
 test("browser invitation context mismatches and malformed kept joins cannot be signed, dispatched or cleared", async () => {

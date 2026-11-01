@@ -64,6 +64,7 @@ async function resumed(owner: SessionOwner, cleanups: (() => void)[], resourcesA
   let beforeCreation = false;
   let unavailableCreation = false;
   let unavailableSettlement = false;
+  let hiddenEntries = false;
   let mismatchedDefinition = false;
   const requestedPaths: string[] = [];
   let after: "seat" | "first-key" | null = null;
@@ -77,6 +78,7 @@ async function resumed(owner: SessionOwner, cleanups: (() => void)[], resourcesA
     const body = typeof init?.body === "string" ? JSON.parse(init.body) as { signed?: SignedIntent } : null;
     const settlement = new URL(url).pathname.endsWith("/settle");
     if (settlement && unavailableSettlement) { unavailableSettlement = false; return Response.json({ ok: false, reason: "unavailable" }); }
+    if (hiddenEntries && /\/entries\/\d+$/.test(new URL(url).pathname)) return Response.json({ ok: false, reason: "unavailable" });
     // Settlement is a read-only POST, never a mutation delivery/fault target.
     const signed = new URL(url).pathname.endsWith("/acts") ? body?.signed : undefined;
     const kind = signed?.intent.kind;
@@ -265,14 +267,22 @@ async function resumed(owner: SessionOwner, cleanups: (() => void)[], resourcesA
   await owner.required(() => rita.store.save(originalSeated));
   unavailableSettlement = true;
   const beforeUnavailableMarker = [sent["found"]!.length, sent["seat"]!.length, sent["first-key"]!.length];
-  expect(await run("claim", "demo")).toEqual({ code: 1, lines: ["Cannot confirm the saved create step: unavailable. The exact request remains pending; nothing was submitted."] });
+  expect(await run("claim", "demo")).toEqual({ code: 1, lines: ["Cannot confirm the saved create step: unavailable. The exact request remains pending. This step sent nothing, and an earlier step of this claim went ahead. Keep this claim: a new claim creates a second repository."] });
   expect(await configOf()).toEqual(originalSeated);
   expect([sent["found"]!.length, sent["seat"]!.length, sent["first-key"]!.length]).toEqual(beforeUnavailableMarker);
   // A real receipt for the first claim cannot skip the second found step,
   // even though it has the same register, incarnation and signing key.
   await owner.required(async () => rita.store.save({ ...originalSeated, claim: { ...seatedPending, "found": { signed: seatedPending["found"]!.signed, accepted: pending.claim!["found"]!.accepted! } } }));
   const beforeMarker = [sent["found"]!.length, sent["seat"]!.length, sent["first-key"]!.length];
-  expect(await run("claim", "demo")).toEqual({ code: 1, lines: ["The saved accepted fact does not match this exact claim step; nothing was submitted."] });
+  expect(await run("claim", "demo")).toEqual({ code: 1, lines: ["The saved accepted fact does not match this exact claim step. This step sent nothing, and an earlier step of this claim went ahead. Keep this claim: a new claim creates a second repository."] });
+  expect([sent["found"]!.length, sent["seat"]!.length, sent["first-key"]!.length]).toEqual(beforeMarker);
+  // Check reads the same marker. It sends nothing, and the claim's earlier steps went.
+  expect(await owner.required(() => checkClaim({ ...rita, pause: async () => {} }, "demo"))).toEqual({ code: 1, lines: ["The checked receipt does not match the exact original stage. It remains pending; Check submitted nothing."] });
+  expect([sent["found"]!.length, sent["seat"]!.length, sent["first-key"]!.length]).toEqual(beforeMarker);
+  await owner.required(async () => rita.store.save(originalSeated));
+  hiddenEntries = true;
+  expect(await owner.required(() => checkClaim({ ...rita, pause: async () => {} }, "demo"))).toEqual({ code: 1, lines: ["The original accepted stage could not be followed exactly. It remains pending; Check submitted nothing."] });
+  hiddenEntries = false;
   expect([sent["found"]!.length, sent["seat"]!.length, sent["first-key"]!.length]).toEqual(beforeMarker);
   await owner.required(async () => rita.store.save(originalSeated));
   const firstSeed: Seed = { v: 1, kind: "directory", definition: directoryDefinition, creator: await owner.required(() => R.at()), cause: pending.claim!.intent, ordinal: 0 };
@@ -282,7 +292,7 @@ async function resumed(owner: SessionOwner, cleanups: (() => void)[], resourcesA
   const { seat: _seat, firstKey: _firstKey, ...withoutEnrollment } = seatedPending;
   await owner.required(async () => rita.store.save({ ...originalSeated, claim: { ...withoutEnrollment, repository: { ...seatedPending.repository!, membership: await owner.required(() => firstMembership.at()) } } }));
   const beforeMix = [sent["seat"]!.length, sent["first-key"]!.length];
-  expect(await run("claim", "demo")).toEqual({ code: 1, lines: ["The saved repository references do not match this claim; nothing was submitted."] });
+  expect(await run("claim", "demo")).toEqual({ code: 1, lines: ["The saved repository references do not match this claim. This step sent nothing, and an earlier step of this claim went ahead. Keep this claim: a new claim creates a second repository."] });
   expect([sent["seat"]!.length, sent["first-key"]!.length]).toEqual(beforeMix);
   await owner.required(async () => rita.store.save(originalSeated));
   advanceClock();

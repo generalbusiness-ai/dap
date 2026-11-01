@@ -655,7 +655,7 @@ async function panelFor(room: Room, scope: ScopeId, context: ActionContext = {},
         if (!offered) throw new Error("This action is no longer offered. Check status before sending.");
         await options.beforeSign?.(kind, on);
         await beforeSign?.();
-        if (!currentContext()) throw new Error("The room or key changed before signing. Nothing was sent.");
+        if (!currentContext()) throw new Error("The room or key changed before signing. This press sent nothing.");
         const fields: Record<string, FieldValue> = Object.fromEntries(Object.entries(typed).map(([name, text]) => [name, fieldValue(room, offered.fields.find((f) => f.name === name)?.type ?? "text", text)]));
         const target = /^\d+$/.test(on) ? Number(on) : null;
         const result = await act(room, scope, kind, { on: target, fields }, (known) => {
@@ -664,10 +664,10 @@ async function panelFor(room: Room, scope: ScopeId, context: ActionContext = {},
           if (known.answer.answer === "accepted") accepted?.();
           else if (known.answer.answer === "refused" && activeView()) showRefusal(known, association);
         }, (digest) => {
-          if (!currentContext()) throw new Error("The room or key changed before submission. Nothing was sent.");
+          if (!currentContext()) throw new Error("The room or key changed before submission. This press sent nothing.");
           sending.submitting(association, digest);
         }, () => {
-          if (!currentContext()) throw new Error("The room or key changed before submission. Nothing was sent.");
+          if (!currentContext()) throw new Error("The room or key changed before submission. This press sent nothing.");
         });
         lastActs.set(association, result);
         if (result.answer.answer === "accepted" && result.observation === null && activeView()) await options.settled?.(result, activeView);
