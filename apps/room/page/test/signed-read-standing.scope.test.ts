@@ -643,7 +643,7 @@ test("a key that is also the room's recovery key keeps signing at membership aft
       expect(await signedSummary(d.as(ritas), d.D.name), `round ${round}`).toBe("forbidden");
     }
 
-    // The rotation cannot name an enrolled key, so this is the only way that one key holds both places: the founding acts.
+    // The rotation cannot name an enrolled key, so one key holds both places only through the founding acts, or through a rotation to the founding key before `first-key`.
     await fresh(second);
     const current = (await rows()).roster;
     const rotation = (key: KeyId) => signedIntent(secretSigner(ritas), { to: rita.membership, kind: "rotate-recovery", on: current.id, expected: { on: current.revision }, fields: { key } }, { now: clockOf(d) });
