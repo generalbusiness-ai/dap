@@ -12,6 +12,7 @@ import { controls } from "../src/testing.ts";
 import type { MetricEnvironment } from "../src/operational.ts";
 import type { MetricPoint } from "../src/metrics.ts";
 import type { Delivered } from "@generalbusiness/dap-derive";
+import { quiet } from "./net.ts";
 import { metricBindings, metricWiring, type TestScope } from "./worker.ts";
 import { type Remote, at, reader } from "./fixtures-native.ts";
 
@@ -79,11 +80,13 @@ test("absent, throwing, slow and SQL-faulted telemetry preserve native creation,
       const children = worlds.map(world => world.wire(child));
       release();
       // Join the actual dispatchers, without sleeps or carrying their messages.
-      for (let round = 0; round < 8; round++) {
-        const made = await Promise.all([...worlds, ...children].map(node => node.peer.dispatch()));
-        if (made.every(n => n === 0)) break;
-        if (round === 7) throw Error("Native paired worlds did not settle");
-      }
+      let rounds = 0;
+      const paired = [...worlds, ...children].map(node => ({ object: node.object, stub: node.peer }));
+      await quiet(() => paired, async () => {
+        if (++rounds > 8) throw Error("Native paired worlds did not settle");
+        const made = await Promise.all(paired.map(node => node.stub.dispatch()));
+        return made.reduce((sum, n) => sum + n, 0);
+      });
       expect(worlds[0]!.packets.length).toBeGreaterThan(0);
       expect(worlds[1]!.packets).toEqual(worlds[0]!.packets);
       expect(worlds[1]!.replies).toEqual(worlds[0]!.replies);

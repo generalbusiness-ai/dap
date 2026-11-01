@@ -1,7 +1,11 @@
 /**
- * What every test of several scopes rests on: when `settle` returns, no send
- * that a scope of its list recorded is still in flight. A transport gate
+ * What every test of several scopes rests on: `settle` returns only after a
+ * round that made no dispatch and moved no head of its list. A send recorded
+ * behind a round moves its scope's head, so `settle` goes on. A transport gate
  * places the send behind the round, as a slow machine does.
+ *
+ * A send can stay on its way past that condition. The comment on `quiet` in
+ * `net.ts` lists those cases.
  *
  * The office is the STAND-IN of `repository.ts`. The membership scope, its
  * dispatcher and the inbox it creates are real.

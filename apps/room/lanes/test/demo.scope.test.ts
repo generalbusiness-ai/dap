@@ -11,7 +11,7 @@ import { site } from "../../../../packages/scope/src/site/route.ts";
 import { SCOPE_INDEX_NAME } from "../../../../packages/scope/src/scope-index.ts";
 import { siteTokenTestSettings } from "../../../../packages/scope/test/worker.ts";
 import { gitHub, Hub, ownHost, type Stand } from "../../../../packages/scope/test/hosts.ts";
-import { Platform, routed, settle } from "../../../../packages/scope/test/repository.ts";
+import { Platform, routed, settleDriving } from "../../../../packages/scope/test/repository.ts";
 import { memoryStore, type Context, type Git, type Outcome } from "../../../../packages/cli/src/index.ts";
 import { actsOn, listLanes, loadChange, loadIssue, loadRules, loadSite, openRoom, placeOf } from "../../page/src/index.ts";
 import { FILES, branchFiles, judged, registerSetting, rehearse, transcript, type NextShot, type Person, type Rehearsal, type Stage, type Taken } from "../../../../scripts/demo/rehearse.ts";
@@ -264,15 +264,7 @@ function testStage(at: Stand, wired: Set<ScopeId>, siteCleanups: (() => void)[])
   const known: Platform[] = [];
   const pause = async (waiting: readonly string[]) => {
     for (const scope of waiting) if (!known.some((node) => node.name === scope)) known.push(new Platform(scope as never));
-    for (let pass = 0; pass < 64; pass++) {
-      let made = 0;
-      for (const node of known) {
-        while ((await (node.stub as unknown as { effect(): Promise<number> }).effect()) > 0) made++;
-        made += await node.stub.dispatch();
-      }
-      if (made === 0) return;
-    }
-    await settle(...known);
+    await settleDriving(...known);
   };
   // STAND-IN for git: a clone is a read of the stand-in's refs with the clone's header, and keeps the head it read.
   const clones = new Map<string, string>();
