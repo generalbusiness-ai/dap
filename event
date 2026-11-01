@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:090e276f1e6a5b7e8f10ebd0a7d81a6290cd115a","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/invitations.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0e0b9ead582dab58ebde3c5592b5108edb9375ff","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/send-stop-words.test.ts."}
