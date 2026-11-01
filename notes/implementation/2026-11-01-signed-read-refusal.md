@@ -1,8 +1,8 @@
 # Why a key that signed nothing at the directory cannot read it
 
-Status: traced, with no repair to the read. The gate passed at `a06f01c6`. This head adds one test, and states what a revoked key keeps in `docs/security/trust-boundaries.md`. Source changes in a comment of `packages/scope/src/sessions.ts`, and no seal moves. No deployed Worker ran the test.
+Status: traced, with no repair to the read. The gate passed at `5944c177`. This head adds one test file and one case in `read-token.test.ts`, and states what a revoked key keeps in `docs/security/trust-boundaries.md`. Source changes in a comment of `packages/scope/src/sessions.ts`, and no seal moves. No deployed Worker ran the test.
 
-Request `09083039541e0abc818cb906febe64b56e4ed7d7` and promise `ca502951cc47a526ce9150babfe55ce7c32fa382` own this head, under planner decisions `6d96e044` and `40ea8fdf`.
+Request `09083039541e0abc818cb906febe64b56e4ed7d7` and promise `ca502951cc47a526ce9150babfe55ce7c32fa382` own this head, under planner decisions `6d96e044`, `40ea8fdf`, `6379bc9d` and `5f36be81`, and the checker's verdict `02639e3e`.
 
 ## The refusal is right, and it lasts
 
@@ -38,15 +38,13 @@ The refusal reaches past new devices. With no session, the founder gets it once 
 
 ## What a page on signed reads shows
 
-The test holds the sentence. The heading and the link come from reading `failureScreen` in `view.ts`, and no browser ran them.
+`1277da37` changed these words under request `278db3de`, and this head merges it. `apps/room/page/test/no-session-screens.mjs` ran the first two rows in Chromium against a local Worker, and its evidence is in `~/play/artroom-evidence/2026-11-01-page-words/`. The scope test in this head holds only the error's own text, `Cannot read <directory scope ID>: forbidden.`, which the page now shows on the `Details:` line.
 
 | The page | What it shows |
 |---|---|
-| A saved room | The heading `Observation unknown`, the words `Cannot read <directory scope ID>: forbidden.`, and the link `Join another room` |
-| An invitation or a config form | `Cannot read <directory scope ID>: forbidden.` No room is saved. The join stays recorded, and after a reload the invitation screen says `The original join is verified. Check status to open its saved room, or paste another invitation.` |
-| A key that opens on signed reads | The lanes. The rules view shows `Cannot read <rules scope ID>: forbidden.` |
-
-These words fall short. An active member sees what a stranger sees, with no cause and no next step. `openRoom` holds the reason (`sessions-unavailable`, `no-reply` or `rate-limited`) and loses it when its first read throws. Request `278db3de` owns that repair.
+| A saved room | The heading `This room did not open`, the words for the session's failure, a `Details:` line with the scope ID and the reason, and the link `Join another room` |
+| An invitation or a config form | The words for the session's failure. No room is saved. The join stays recorded |
+| A key that opens on signed reads | The lanes. The rules view shows `The complete rules could not be read.` and the words for the session's failure |
 
 ## What a revoked key keeps
 
@@ -66,6 +64,8 @@ The trace raised a question: the read does not ask membership, so a revoked key 
 - **A founder key that is also the recovery key, at membership.** The `recovery-key` grant checks only the signer, so the key keeps signing after its revocation, and each act restarts its read of membership. The key keeps the recovery key's authority, which is worse than the read. Only a hand-built `found` makes this shape, and the test's `recoveryIsFounder` option in `support/demo.ts` builds it. Request `309f3434` refuses it at creation. An existing room ends it only by rotating the recovery key.
 - **A key on the register's `founders` list, at the register.** The register is its own authority, and a room's revocation does not reach it. Each `found` restarts the key's read of the register and reads nothing of the room.
 
+**A Git read token outlasts the bound.** The checker found this in `02639e3e`, and `read-token.test.ts` now runs it on real scopes over a stand-in Artifacts binding. A key signs `read-token` 299 s after its `compromised` revocation, with a lifetime of 24 hours, and the destination accepts it. The session that the key already holds reads the token, and it reads a token minted before the revocation too. At 300 s the act gets `unauthorized`, and the host revokes nothing. Taking a token drops its plaintext, and the provider's `revokeToken` takes the plaintext, so the service cannot revoke a token after a member reads it. `docs/security/entry-points.md` already says that taking a token does not revoke it. Planner decision `5f36be81` lands this statement, and it says that their bound of 1200 s covers signed reads only. It files two requests below the current items: one refuses `read-token` and the credential route for a key that a `compromised` notice named, and one is a design note on a token already read.
+
 **The routes that gave nothing.** A refused act writes nothing. Resent landed bytes make no new signed entry. An old intent sent after the delay, a comment at a lane, a preparation and an old grant each get `unauthorized`. `join` and `enrol` get `key-in-use`. A signed time gives nothing, because an entry takes the scope's clock. A stalled membership gives no more time, because the act gets `authority-unavailable` at 300 s and writes nothing.
 
 ## Decisions
@@ -77,9 +77,9 @@ The trace raised a question: the read does not ask membership, so a revoked key 
 
 ## Evidence
 
-The checkpoint is `a06f01c64dda3a71c9ed79c48541a9914d8d1839`, tree `81cd8b34`. It includes main. Raw evidence is in `~/play/artroom-evidence/2026-11-01-signed-read/`, `SHA256SUMS` `c63ca3c24326c3bd38df1dc146a9fdeb4c8e03248a9f8edab85a9aea6258fa4b`. The reviewed head adds only this note and its manifest.
+The checkpoint is `5944c177ffe0869c277490d9667eedc22060df3b`, tree `c0584e6b`. It includes main. Raw evidence is in `~/play/artroom-evidence/2026-11-01-signed-read/`, `SHA256SUMS` `e95fe6b6683496b314221a0e616d7ff079894e30cfab2e51897f27960200dd02`. The reviewed head adds only this note and its manifest.
 
-The test and the controls ran at `9105a6ed` or earlier, as each log's head states. The checkpoint merges main twice, and the head adds only the note and its manifest. `gate-stopped-for-main/` holds a gate that I stopped when main moved, and it reached no result. `head-run-3.log` holds all 14 cases at `9105a6ed`. `first-run.log` keeps the first failing run, where the test looked for a key row that a summary does not list. `a stolen key` uses a session-owner child with a new secret in place of a real `SESSION_SECRET` change.
+The test and the controls ran at `9105a6ed` or earlier, as each log's head states. The checkpoint merges main twice, and the head adds only the note and its manifest. `gate-stopped-for-main/` holds a gate that I stopped when main moved, and it reached no result. `gate-before-token/` holds the passing gate of the head that the checker sent back in `02639e3e`, at `a06f01c6`. The gate in `gate/` ran with the token case, which changes only a test and documents. `head-run-3.log` holds all 14 cases at `9105a6ed`. `first-run.log` keeps the first failing run, where the test looked for a key row that a summary does not list. `a stolen key` uses a session-owner child with a new secret in place of a real `SESSION_SECRET` change.
 
 | Control | The test that failed |
 |---|---|
@@ -99,12 +99,17 @@ The test and the controls ran at `9105a6ed` or earlier, as each log's head state
 | `c14`: `founders` not fixed | `a new scope` |
 | `c15`: any secret accepted | `a stolen key` |
 | `c16`: a session reads at its end | `a stolen key` |
+| `t1`: an observation kept for 600 s | The token case: the act at 300 s is not refused |
+| `t2`: an observation kept for 299 s | The token case: the act at 299 s gets no token |
+| `t3`: reading a token revokes it | The token case: the host's revocations are not empty |
 
 | Check | Command | Exit | Digest |
 |---|---|---|---|
-| Gate | `npm run gate` | 0 | `308150536211ec37` |
+| Gate | `npm run gate` | 0 | `c738e77f4f14939e` |
 | The test, 14 cases | `vitest --project scope signed-read-standing` | 0 | `afcb8f0b78b86764` |
 | Controls, 16 | `scripts/control.mjs` | 0 | `56899180c934ed2f` |
+| The token case | `vitest --project scope read-token` | 0 | `0f70e7d4c67f7931` |
+| Token controls, 3 | `scripts/control.mjs` | 0 | `5d73bfe82fbb0535` |
 
 The gate reports 3467 plain and 963 native tests, 116 Node and 56 Counting.
 
@@ -113,7 +118,7 @@ The gate reports 3467 plain and 963 native tests, 116 Node and 56 Counting.
 - **A stolen key on `founders`.** Each accepted `found` also opens a claim and a repository's creation, and no command removes the key. The fixture's git double holds one repository, so no run showed a second one created. Design request `788d0ec8` owns how a register retires a founder, and nothing in this head builds it.
 - **Clock differences.** Nobody measured a real difference between membership's clock and a reading scope's clock, and the bound adds that difference.
 - **The command line and a stolen recovery key.** No command prints a new key's ID for `--set key=<new-key>`, and `dap act` signs with the config's key, so it cannot sign with a separate recovery key. The first signer of `rotate-recovery` names the next recovery key, so a holder of the stolen key can get there first. I read that race from the rule and did not run it.
+- **The token on a real host.** The case used a stand-in binding, so no real Artifacts or GitHub token ran. Only the code and `docs/cli.md` state GitHub's one hour. I did not check what either host offers an operator to end a token.
 - **Not run.** `install`, `found` under policy `open`, hosted and application scopes, and `member.remove`'s path in `docs/mcp.md`.
 - **A room past the window with no session secret.** No key can open it, and the same holds during a session outage. Changing that means the widening above.
-- **`data.ts`'s head comment.** The "Who reads" comment omits the lost and rate-limited session requests. The words repair changes that file and owns this too.
 - **No browser or deployed Worker.** No browser and no deployed Worker ran this test. I do not know which deployed Workers bind the secret, although the docs require it.

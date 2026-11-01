@@ -3,20 +3,20 @@
   "qualification": "One passing gate at the checkpoint. The test and 16 controls ran on real scopes in the test pool on a scripted clock, with stand-ins on the wire and a hand-built recovery key that the note names. No browser or deployed Worker ran, and nobody measured a real clock difference.",
   "directory": "2026-11-01-signed-read",
   "checkpoint": {
-    "commit": "a06f01c64dda3a71c9ed79c48541a9914d8d1839",
-    "tree": "81cd8b341ccf1f4418241e19fd5b3be210945303"
+    "commit": "5944c177ffe0869c277490d9667eedc22060df3b",
+    "tree": "c0584e6b471d9d5ecf62491469cc109cd72833d3"
   },
-  "fileCount": 97,
+  "fileCount": 140,
   "files": [
     {
       "path": "gate/head.txt",
       "bytes": 82,
-      "sha256": "6a2b650a7e09c3cfeaf00478aa45c95ac4a612483442e23206e55ff9ef547381"
+      "sha256": "7eabd27ba83e931d8e35eb3ec791be625ef2e96ff59d798d2420db4a3325c011"
     },
     {
       "path": "gate/gate.stdout.log",
-      "bytes": 6525,
-      "sha256": "308150536211ec3742a27a77309b7f33a9d4a1c951933d5981d49c76304d15f3"
+      "bytes": 6500,
+      "sha256": "c738e77f4f14939ea88d0232a86bdb09e8274dd4c5f8af04d4e733e81cddd31d"
     },
     {
       "path": "gate/gate.exit",
@@ -74,9 +74,24 @@
       "sha256": "5074b784afac9db4307e2577b3b374c89520710df8bbd194cd76e0da1bca67f6"
     },
     {
+      "path": "token/head.txt",
+      "bytes": 41,
+      "sha256": "ff53f32a2d8a2b7b7f48a0b723a76bde4591c43bb5e98f6190f3e4fc2d4d72fa"
+    },
+    {
+      "path": "token/run-2.log",
+      "bytes": 253,
+      "sha256": "0f70e7d4c67f7931ee9afda0bbe710d1ce01b264243b4dd9a419db02c5949ef3"
+    },
+    {
+      "path": "token/controls/exits.txt",
+      "bytes": 110,
+      "sha256": "5d73bfe82fbb053560da09782b0c31bd88d1e4a51cbbadfebefcfe74bfbf4c92"
+    },
+    {
       "path": "SHA256SUMS",
-      "bytes": 8828,
-      "sha256": "c63ca3c24326c3bd38df1dc146a9fdeb4c8e03248a9f8edab85a9aea6258fa4b"
+      "bytes": 13269,
+      "sha256": "e95fe6b6683496b314221a0e616d7ff079894e30cfab2e51897f27960200dd02"
     }
   ]
 }
