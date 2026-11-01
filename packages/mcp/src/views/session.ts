@@ -437,7 +437,9 @@ export class ViewSessions {
         return { result, display: this.#display(instance) };
       }
       instance.reads = [...instance.reads, answer].slice(-HELD_READS);
-      return { result, display: this.#display(instance) };
+      // The display holds the text. The result states what the read returned, and it does not repeat the text.
+      const { text: _text, ...facts } = result.structuredContent;
+      return { result: { structuredContent: facts, content: [{ type: "text", text: `${word} shown on the page.` }], isError: false }, display: this.#display(instance) };
     } finally { instance.busy = false; }
   }
 
