@@ -1,22 +1,22 @@
 {
   "version": 1,
-  "qualification": "One passing gate at the checkpoint. The witness and last controls ran at c50c9723, whose next commit changes one line of the design note. The witness used a local Worker and browser contexts on one machine. No hosted Worker or real room ran.",
-  "directory": "2026-10-31-j1-build-2",
+  "qualification": "One passing gate at the checkpoint, after one failed gate at the same commit in a test this head does not touch, which request c5f0cff9 owns. The witness and 45 controls ran at that commit. 18 controls last went red at 48511905, and packages/scope changes only a comment since. The witness used a local Worker and browser contexts on one machine. No hosted Worker or real room ran.",
+  "directory": "2026-10-31-j1-build-3",
   "checkpoint": {
-    "commit": "57269b5b63b4b1188cbf0a9480c802e959cdb0c3",
-    "tree": "638f81e9592769e09e97d911d396e0a140ed5071"
+    "commit": "5ad1b308ab108a6266637146a0aadf07c7220a96",
+    "tree": "98dbeafbcf5e660c4336e128a445c6fcc517b337"
   },
-  "fileCount": 104,
+  "fileCount": 106,
   "files": [
     {
       "path": "gate/head.txt",
       "bytes": 82,
-      "sha256": "5fef6fa5aeb0c0d3dfcce128d598217922072af0542b994dfa7353486e644e72"
+      "sha256": "3e594d33de0c10bf2e83d2eafcae40b0aa55a237042c9c1f6a4a417f751a42bb"
     },
     {
       "path": "gate/gate.stdout.log",
-      "bytes": 6474,
-      "sha256": "4e3f19bef152768c6e22092b008d06889d2b65b9c99b3bdc6be798247e6e4bd1"
+      "bytes": 6475,
+      "sha256": "bd7c65c5d7cb4ee8df0c2d0656b7b278300d2e062101ff0545a464e5f6cca197"
     },
     {
       "path": "gate/gate.exit",
@@ -26,7 +26,7 @@
     {
       "path": "witness/head.txt",
       "bytes": 41,
-      "sha256": "4799853eb37f1ce52d45a7415805b74e3d7f5a10f330b6c092086d187387212e"
+      "sha256": "6771b6f18cd9ed5dbe47c29b187ac21a0a3cec3889a0a1409d897f3a9cf5d457"
     },
     {
       "path": "witness/exit.txt",
@@ -35,13 +35,13 @@
     },
     {
       "path": "witness/report.json",
-      "bytes": 3841,
-      "sha256": "a6d967633affcae3436f38f103324f4013f3cfe9360c555e9c034b9d69e588bb"
+      "bytes": 3842,
+      "sha256": "90b4093455704ba41d42d2bd97535dd4798cbdae856545766b9e8c4ef9216fa0"
     },
     {
       "path": "controls/head.txt",
       "bytes": 41,
-      "sha256": "4799853eb37f1ce52d45a7415805b74e3d7f5a10f330b6c092086d187387212e"
+      "sha256": "6771b6f18cd9ed5dbe47c29b187ac21a0a3cec3889a0a1409d897f3a9cf5d457"
     },
     {
       "path": "controls/exit.txt",
@@ -50,28 +50,58 @@
     },
     {
       "path": "controls/summary.jsonl",
-      "bytes": 1240,
-      "sha256": "53af1202ce224a085f0603fd4c280a90cde5559993f51c61b31f556e8343ec2a"
-    },
-    {
-      "path": "controls/first-run/summary.jsonl",
-      "bytes": 6740,
-      "sha256": "537bba0b93fb771ab5589fc25b55935831e7c1a02cbca54491d4e70b7afc2d79"
+      "bytes": 6182,
+      "sha256": "ac1870b8141bc9cd789c74a60eb9a8ff427089077c01ae3c1da7fca18b803dfe"
     },
     {
       "path": "controls/not-rerun.txt",
-      "bytes": 1003,
-      "sha256": "b1806e0e7b8181ed0828e40df08cf7fd15b4946ae4702fa7effec26a2d7fbb93"
+      "bytes": 3422,
+      "sha256": "4d15b4dc6ea486e9a295f0b27916bd387438d26ba141cb626a0bfe3eeadc57ab"
     },
     {
       "path": "controls/run-controls.mjs",
-      "bytes": 13797,
-      "sha256": "80a05b51303cf204fb3b8d5b05922cb93847a1bd960fa14322700ceb3cd74071"
+      "bytes": 16815,
+      "sha256": "de9c10ea68fec8bd9b2aa540068402d671da061f624c15b0dc5393770f826745"
+    },
+    {
+      "path": "controls-page/head.txt",
+      "bytes": 41,
+      "sha256": "6771b6f18cd9ed5dbe47c29b187ac21a0a3cec3889a0a1409d897f3a9cf5d457"
+    },
+    {
+      "path": "controls-page/exit.txt",
+      "bytes": 16,
+      "sha256": "a532a833144ee739532b3b96c76f0ea2503b0245b086b5bef2984cd8aeaecfb3"
+    },
+    {
+      "path": "controls-page/summary.jsonl",
+      "bytes": 1510,
+      "sha256": "05a0447a4234501efd7b1b8eb1233326ef662d785103fe97c76c22de51908c30"
+    },
+    {
+      "path": "controls-page/not-rerun.txt",
+      "bytes": 2263,
+      "sha256": "be542b6a40ab2659108fe0d0b8cd36343eb001956befa1328014f95370a0391c"
+    },
+    {
+      "path": "controls-page/run-controls.mjs",
+      "bytes": 16634,
+      "sha256": "59b04f891b103c6fb334735733487ccf27bddbfc58b257764e5c315858f70b0b"
+    },
+    {
+      "path": "gate-finding-stop/gate.stdout.log",
+      "bytes": 8359,
+      "sha256": "eff79d9acd8ef46df404170c9f5181827cb9e101c677bbd00293c1373d7ce190"
+    },
+    {
+      "path": "gate-finding-stop/gate.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
     },
     {
       "path": "SHA256SUMS",
-      "bytes": 10095,
-      "sha256": "4867110dd07f3964f1f95f549c2de6401ee40ac7480c3eb297343a7e4c47ca35"
+      "bytes": 9960,
+      "sha256": "4871fd2514fe3c2d1238fa5ffcc0f6c96ca57cab2429e358c763f82e322b7b80"
     }
   ]
 }

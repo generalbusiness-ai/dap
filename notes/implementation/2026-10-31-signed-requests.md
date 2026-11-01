@@ -1,6 +1,6 @@
 # Keep a page's signed request where a person's other device can settle it
 
-Status: source implementation. The gate passed at `57269b5b`. No Worker runs this code yet. The planner deploys it in a later deployment.
+Status: source implementation. The gate passed at `5ad1b308`. No Worker runs this code yet. The planner deploys it in a later deployment.
 
 Request `7d6ce0f63b9db0f726bd65ed474e411af7d699c2` and promise `3649cf4ac25e995f657730259cbc8b1b415812d9` own this head. The design is [the signed-requests note](../2026-10-31-signed-requests-across-devices.md), and the checker approved it in `30f424c3`.
 
@@ -10,11 +10,11 @@ A person who loses a reply on one device can now get the scope's answer from ano
 
 - **The copy.** `packages/scope/src/originals.ts` keeps the exact body of a member's `POST .../acts` request in the membership object. Four `/originals` routes in `packages/scope/src/worker.ts` keep, list, read and end a copy. Only a session of the same member reaches a row.
 - **The writer.** `act` in `apps/room/page/src/data.ts` keeps a copy before it sends, and ends the copy on the scope's answer. `retained-editor-data.ts` does the same. If the room keeps no copy, the page sends nothing and says so. Anything that stops the send after the keep ends the row.
-- **The button.** `apps/room/page/src/original-check.ts` holds **Check original request**. One press settles the request. If the scope holds no entry, the page sends the same bytes once, and only past the margin. Before the margin, it says when to check again.
+- **The button.** `apps/room/page/src/original-check.ts` holds **Check original request**. One press settles the request. If the scope holds no entry, the page sends the same bytes once, and only past the margin. Before the margin, it says when to check again. Only `landed` and `refused` lift the page's fence, and only when the fence holds that row's digest.
 - **The lock.** A key's own open copy locks that scope on that page until the margin passes. Other keys keep their acts.
 - **A second key.** `packages/client/src/device-key-invitation.ts` adds a closed link format, and the page's new Devices screen issues a link through `issueDeviceKey`.
 - **A full object.** `keep` refuses `full` at a member's own caps and `room-full` at the object's cap, each with its own page text. Before `room-full`, it drops the rows of members who are no longer active or who hold no active key, one bounded quantum at a time.
-- **A failed read or renewal.** A failed read of the open copies keeps the last rows, with the lock and the button, and the page says so. A page that held a session and failed to renew it stops the send and says why.
+- **A failed read or renewal.** A failed read of the open copies keeps the last rows, with the lock and the button, and the page says so. A page that held a session and failed to renew it stops the send and says why. The page remembers each service, membership and key under which it held a session, so closing a room forgets nothing, and only a new page load does.
 - **The time bound.** A row with no answer goes seven days past its `notAfter`, through the object's one alarm. `Wakes` in `packages/scope/src/outbox.ts` gains the `originals` cause.
 - **Reference.** `docs/security/entry-points.md` and `scripts/security-entry-points.mjs` state the four routes. `packages/scope/README.md` and `packages/client/README.md` add their rows.
 
@@ -23,18 +23,21 @@ Hosted code changes. `apps/room/page/assets.ts` is the rebuilt bundle.
 ## Decisions
 
 - **The planner's ruling `d64edebe` holds the scope.** J1's head closes plan 032's condition for the room page, and the condition stays open for other writers. The builder owns the `dap mcp` writer, under request `6db548f00356714d766da2242da4e39ba004c440`, after this landing. The CLI stays with its private device storage. A hosted agent's custody stays separate, because a hosted agent holds its own keys.
-- **The object's cap does not refuse a request to this membership scope.** A full room must still let an admin remove a member. Only the member's own caps bound those rows, so a large room can pass 1 GiB. I accept that: it takes many active members who each fill 16 MiB on purpose, and each member must be admitted first. The limits below state it.
+- **The object's cap does not refuse a request to this membership scope.** A full room must still let an admin remove a member. Only the member's own caps bound those rows, so a large room can pass 1 GiB. The checker ruled in `cfe5f76e` that this bound is good enough and that a second cap would bring the lockout back. Cloudflare's limits page states 10 GB per Durable Object, as the provider's statement and no measurement here. That takes about 600 active members who each fill 16 MiB on purpose, and only an admin admits members.
+- **A missing row lifts no fence.** `gone` does not show that no act was sent, and a replacement would make a second entry. `mismatch` and `archived` are fences on the send path too. When no row remains to press, the fence stays until a reload, as it did before this head.
 - **Stop a send when a held session is lost.** A person who had a session relies on the copy. A page that opened on signed reads keeps no copy and sends as before.
 - **No kernel change.** The diff under `packages/contract` is one comment in `session.ts`. It corrects the statement that a session controls nothing. `node scripts/check-kernel-boundary.mjs` reports 127 production sources and 0 refusals at this head.
 - **Correct the design note where the build disagreed.** The page's key store signs 32 random bytes with no domain on a redraw (`browser-key-store.ts:43`), and this predates J1. So the witness closes its signature window at the scope's reply and reports that check apart. "Never arrived" uses a third context in the first context's place. The phone presses again by hand, with no timer.
 
 ## Evidence
 
-The checkpoint is `57269b5b63b4b1188cbf0a9480c802e959cdb0c3`, tree `638f81e9`. It includes main. Raw evidence is in `~/play/artroom-evidence/2026-10-31-j1-build-2/`, `SHA256SUMS` `4867110dd07f3964f1f95f549c2de6401ee40ac7480c3eb297343a7e4c47ca35`. The reviewed head adds only this note and its manifest.
+The checkpoint is `5ad1b308ab108a6266637146a0aadf07c7220a96`, tree `98dbeafb`. It includes main. Raw evidence is in `~/play/artroom-evidence/2026-10-31-j1-build-3/`, `SHA256SUMS` `4871fd2514fe3c2d1238fa5ffcc0f6c96ca57cab2429e358c763f82e322b7b80`. The reviewed head adds only this note and its manifest.
 
-The witness and the last controls ran at `c50c9723`, and each directory's `head.txt` records that commit. The checkpoint adds one line to the design note. `controls/first-run/` and `witness/first-run/` keep the run at `48511905`. `c50c9723` changes no source: it makes three cases assert their outcome, and it adds the measured cost to the design note.
+The gate, the witness and the controls all ran at the checkpoint, and each directory's `head.txt` records that commit.
 
-The earlier review's head had its own unit, `~/play/artroom-evidence/2026-10-31-j1-build/`, `SHA256SUMS` `3630da9c764718d78bb6cb686cb30b2a556b2aea9d339484b3db3db07b79df05`. It holds the first witness, the first 24 controls, the two passing gates before this repair, and the earlier failed runs.
+**A failed gate at the same commit.** `gate-finding-stop/` keeps the first gate at the checkpoint, which failed in one test: `apps/room/lanes/test/finding.scope.test.ts:107`, expected `intended` to be `aborted`. Other runs on the machine added load during that gate. This head changes no file under `apps/room/lanes`, and the test passed 3 of 3 runs alone at this commit. The second gate, with no source change, is the one that the table cites. Request `c5f0cff95ec5bc192e4cba520400596015bfbd8e` owns the cause, which nobody has named yet.
+
+Two earlier units hold the earlier heads' runs. `~/play/artroom-evidence/2026-10-31-j1-build-2/`, `SHA256SUMS` `4867110dd07f3964f1f95f549c2de6401ee40ac7480c3eb297343a7e4c47ca35`, holds the run at `48511905` and the gate before this repair. `~/play/artroom-evidence/2026-10-31-j1-build/`, `SHA256SUMS` `3630da9c764718d78bb6cb686cb30b2a556b2aea9d339484b3db3db07b79df05`, holds the first witness, the first 24 controls, the two passing gates before that repair, and the earlier failed runs.
 
 **The witness.** `apps/room/page/test/two-devices.mjs` ran in Chromium against a local Worker from a pinned `wrangler`, and it exited 0 with no failures. Each row is read from `witness/report.json`.
 
@@ -50,9 +53,8 @@ The witness also checks that a failed read keeps the line, the button and the lo
 
 **The cases and the controls.** The test is `apps/room/page/test/original-copy.scope.test.ts`, except the retained editor's case, in `retained-editor.scope.test.ts`. Each control below turned its case red by an assertion.
 
-- **New controls, 28.** They ran at `48511905`, in `controls/first-run/summary.jsonl`. Three came back inconclusive there, because their cases failed on a thrown error: `silent-when-row-stays`, `signed-reads-stopped` and `renewal-not-retried`. Those three and the other 4 controls of the same two cases went red by an assertion at `c50c9723`, in `controls/summary.jsonl`.
-- **Earlier controls rerun, 10.** They ran at `48511905`: `kept-after-send`, `landed-keeps-copy`, `refused-keeps-copy`, `row-cap-off`, `member-bytes-off`, `object-bytes-off`, `page-sends-when-full`, `lock-any-key`, `lock-past-margin` and `no-lock`.
-- **Earlier controls not rerun, 14.** Their reds are in the earlier unit, at `b1537244`. `controls/not-rerun.txt` shows that each break's source line still occurs once. The assertions they turned red did not change, and those cases now read rows through a test helper. This rests on reading the diff, not on a run.
+- **At the checkpoint, 45.** `controls/summary.jsonl` holds 36: the 14 earlier controls that the checker asked to run, 9 from the send and session cases that the repair changed, and 13 for the fence, the older row and the memory. `controls-page/summary.jsonl` holds the 9 earlier controls whose source files the fence repair changed. All 45 turned their case red by an assertion.
+- **Last red at `48511905`, 18.** These break a line in `packages/scope/src/originals.ts` or `packages/scope/src/worker.ts`, and their rows are in the earlier unit's `controls/first-run/summary.jsonl`. From there to the checkpoint, `packages/scope` changes only a comment, and their cases do not change. `controls-page/not-rerun.txt` shows that each break's line still occurs once. This rests on reading the diff, not on a run.
 
 | Section 8 case | Controls |
 |---|---|
@@ -73,29 +75,31 @@ The witness also checks that a failed read keeps the line, the button and the lo
 | `a stop around the keep leaves no row` | `check-after-keep-only`, `row-stays-after-stop`, `silent-when-row-stays` |
 | `a room change after the editor's keep ends the copy and sends nothing` | `retained-no-second-check` |
 | `a page that held a session and failed to renew it stops the send` | `renewal-sends-anyway`, `signed-reads-stopped`, `renewal-not-retried`, `lost-session-reads-empty` |
-| `an answer lifts only this page's own fence` | `fence-lifts-any-key`, `fence-lifts-no-answer` |
+| `an answer lifts only this page's own fence` | `fence-lifts-any-key`, `fence-lifts-no-answer`, `gone-lifts`, `mismatch-lifts`, `archived-lifts`, `refused-lifts-nothing` |
+| `an older row lifts no newer request's fence` | `older-row-lifts-answer`, `older-row-lifts-send`, `matching-row-lifts-nothing`, `send-hands-no-digest`, `answer-holds-no-digest` |
+| `a page that clears its opened rooms still stops the send` | `memory-by-session-object`, `memory-ignores-key` |
 
 **The measurement.** This is an observed run, in `witness/report.json`: 10 comments through the page in Chromium, against a local `wrangler dev` Worker on loopback, in one room. The times are Chromium's `responseEnd`. They show the Worker's own work and no real round trip.
 
 | Request | Per comment | Median | Longest |
 |---|---|---|---|
-| `POST originals` | 1 | 3.811 ms | 6.494 ms |
-| `DELETE originals` | 1 | 3.612 ms | 5.927 ms |
-| `POST acts`, for comparison | 1 | 7.111 ms | 7.677 ms |
-| `GET originals` | 1 or 2, one per draw | 2.46 ms | 7.077 ms |
+| `POST originals` | 1 | 3.712 ms | 4.203 ms |
+| `DELETE originals` | 1 | 4.36 ms | 13.858 ms |
+| `POST acts`, for comparison | 1 | 7.624 ms | 8.387 ms |
+| `GET originals` | 1 or 2, one per draw | 3.882 ms | 4.304 ms |
 
-The design note's Cost line gives the figures of the run at `48511905`, kept in `witness/first-run/`.
+The design note's Cost line gives the figures of the run at `48511905`, kept in the earlier unit's `witness/first-run/`.
 
 The page also adds one entry read at the target per act. The page kept a copy before every send.
 
 | Check | Command | Exit | Digest |
 |---|---|---|---|
-| Gate | `npm run gate` | 0 | `4e3f19bef152768c` |
-| Witness | `node apps/room/page/test/two-devices.mjs` | 0 | `a6d967633affcae3` |
-| Controls, the last 7 | `controls/run-controls.mjs` | 0 | `53af1202ce224a08` |
-| Controls, the first 38 rows | `controls/run-controls.mjs` | 3 inconclusive | `537bba0b93fb771a` |
+| Gate | `npm run gate` | 0 | `bd7c65c5d7cb4ee8` |
+| Witness | `node apps/room/page/test/two-devices.mjs` | 0 | `90b4093455704ba4` |
+| Controls, 36 | `controls/run-controls.mjs` | 0 | `ac1870b8141bc9cd` |
+| Controls, the 9 page rows | `controls-page/run-controls.mjs` | 0 | `05a0447a4234501e` |
 
-The gate reports 3242 plain and 926 native tests, 115 Node and 56 Counting.
+The gate reports 3242 plain and 928 native tests, 115 Node and 56 Counting.
 
 ## Open limits
 
@@ -103,10 +107,14 @@ The gate reports 3242 plain and 926 native tests, 115 Node and 56 Counting.
 - **Not run.** No Worker, real room or second physical device ran this code. The witness uses browser contexts on one machine.
 - **A deployment's window.** Objects run old code for some minutes after a deployment. During that time the copy route returns 404, so every page act in that room fails with "nothing was sent".
 - **Lock coverage.** The scope test covers the lock at the data level, and only the browser witness covers it in the interface.
-- **A room's total can pass 1 GiB.** Requests to membership pass the object's cap, and only each member's 16 MiB bounds them. Nobody measured this against the object's storage limit.
+- **A room's total can pass 1 GiB.** Requests to membership pass the object's cap, and only each member's 16 MiB bounds them. Cloudflare's limits page says that writes fail with `SQLITE_FULL` at 10 GB and that `DELETE` still succeeds. It also states 1 GB in one section for the Free plan, and nobody checked which plan applies. Nobody tested whether the alarm finishes its work at that point.
 - **Removal frees rows late.** Removing a member frees their rows only when a later `keep` finds the object full.
 - **A full room can lose rows.** A member with no active key loses rows on a full object that a new device could otherwise settle.
-- **A reload during a failed renewal.** The memory of a held session is lost, so that page opens on signed reads and sends with no copy.
+- **A reload during a failed renewal.** A new page load forgets that it held a session, so that page opens on signed reads and sends with no copy. The checker accepted this in `cfe5f76e`.
+- **A fence can outlast its request.** If the row ends on another device and this page has no row left to press, its fence stays until a reload.
+- **A simulated page load.** `vi.resetModules()` breaks the Durable Objects in this test pool, so the renewal case's signed-reads step uses a room with a key that this module never held. The act takes the real path, and no real reload ran in that case.
+- **An untraced refusal.** While building that step, a newly enrolled third key with no session got `forbidden` on its signed read of the directory, even after a pause. The build did not trace this and dropped that approach. A new device on signed reads may fail to open a room until something else happens. The witness's second device holds a session, so it does not meet this.
+- **The repair's path is not reproduced in a browser.** The checker read the `gone` path from the code. The scope test and its controls hold the lift, and the witness shows only that a press on the sending page clears "outcome unknown".
 - **A first read that fails.** A page with no earlier read shows the failure but holds no lock.
 - **Coverage below a browser.** The scope test alone covers renewal stopping, the `room-full` words and the retained editor's stop, with no DOM.
 - **Filler rows.** The full-object cases use SQL filler rows that state a size and hold no real bytes.
