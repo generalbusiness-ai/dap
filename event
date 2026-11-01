@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dd864637d30dd851bf333cae8bd26cb260f525c5","text":"Merge retired a covered predecessor with no successor at its old path."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e617900174fe5d82a40bf1d76d7d0f0774c3dbb5","text":"Merge retired a covered predecessor; the successor is at apps/room/docs/page.md."}
