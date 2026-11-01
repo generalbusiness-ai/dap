@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/mcp/test/views-browser.mjs","body":{"commit":"237d61a6a5b71cdd2b933c93ae3b38eb74d5746f","path":"packages/mcp/test/views-browser.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:29a864b501c45b2c6d9f87989bf7fe232ff065a9","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-01-view-two-process.md."}
