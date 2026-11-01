@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "qualification": "One passing gate. Forged registers ran against scripted refusals, and the --all path ran on dap-demo in scratch homes. No person read the report.",
+  "directory": "2026-11-01-verify-anchors",
+  "checkpoint": {
+    "commit": "8d5acf45e2661cdcfd8c9a295018908a8fb9a9a5",
+    "tree": "929f87d18e11d47cfdd57ab7f08f726c87d0b5b2"
+  },
+  "fileCount": 47,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "ac04d4a08abd988066fee87e99f223782ac96f9d9f94852ea6e4dad26353f012"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6564,
+      "sha256": "5bf34f07e79d98de6dd6a513c1ccf94d117309f9e2b48aaf77bcff7bb6881777"
+    },
+    {
+      "path": "gate-failed-1/gate.stdout.log",
+      "bytes": 4420,
+      "sha256": "e179d448a0c3f6f6c9e8d4dc9523d0244b1b363938b195c3b1ad9185efe12cdd"
+    },
+    {
+      "path": "all/rita.txt",
+      "bytes": 9909,
+      "sha256": "7fc761c6970b78a6f634a641a9a60e5fc8322bdab394685594ea3fbfde0962c5"
+    },
+    {
+      "path": "all/una.txt",
+      "bytes": 9909,
+      "sha256": "7fc761c6970b78a6f634a641a9a60e5fc8322bdab394685594ea3fbfde0962c5"
+    },
+    {
+      "path": "controls/old-answer.log",
+      "bytes": 4594,
+      "sha256": "64574383b278cee76ca7b1f67021c18997a59b25c25b90337d0bbce77a408421"
+    },
+    {
+      "path": "controls/no-seed-check.log",
+      "bytes": 3052,
+      "sha256": "5f3b08a45562b41836c2358475d22ac0aa4d2d3937564d51dd77ce0548bff5d5"
+    },
+    {
+      "path": "controls/no-seed-check-no-rule-check.log",
+      "bytes": 3052,
+      "sha256": "98849b79df39c41541b066f1f142f0721b1b13438b946af42fe8301c73c70e23"
+    },
+    {
+      "path": "controls/own-directory-anchored.log",
+      "bytes": 3202,
+      "sha256": "747b81f4047e815a987b13e0ad2fd10995f4ccdc393c3949273b7c7b0e84cc81"
+    },
+    {
+      "path": "controls/no-words.log",
+      "bytes": 3151,
+      "sha256": "013de1e7a70ceaf1146cd8ff368f451f46cfee2f47bc6ad97e77728ed35aa90a"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 4227,
+      "sha256": "9b44c09048a67193f6b0fe967e64010fc8ffd6e4d608abbbac2a8334733611aa"
+    }
+  ]
+}

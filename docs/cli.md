@@ -771,13 +771,39 @@ Result: consistent, for the mode, target, coverage and trusts stated below.
 Mode: replay. Within the coverage stated below, the history was folded from its genesis, ...
 ```
 
+In a room that is not the register's first room, the register holds the
+creation results of other rooms, and you cannot read those rooms'
+directories. The verifier replays the register and your room's scopes from
+their first entries, and it takes each of those results on the service's
+word. It takes a result on that word only when all of these hold:
+
+- The result is the first entry of a directory that is not your room's.
+- The register's own request created that directory, by the seed the
+  request names.
+- The service answered `forbidden` for that directory.
+
+The report then says what `consistent` covers and how many results it took
+on the service's word:
+
+```
+Result: consistent, for the mode, target, coverage and trusts stated below.
+This result covers the scopes under Coverage, replayed from their first entries. It does not cover other rooms on this register: 11 of their creation results stand on the service's word, because this reader cannot read their directories.
+```
+
+The section `Anchors, other rooms' creation results, taken on the service's
+word:` lists those entries. The report of a register's first room carries no
+such line, because that report's replay has no other room's result to take.
+A server that relabels your room's own result as another room's fails the
+proof.
+
 `dap verify --all` replays every scope of the room. It starts at the
 register and the directory and follows the creations in their journals to
 membership, the rules scope, the destination, each lane and each inbox.
 It prints one line for each scope: its kind, its ID, the entry that the
 replay reached and the result. The last line is `All consistent: <n>
-scopes.`, or the first finding, and then the command exits 1. A journal
-that cannot be read is a finding.
+scopes.`, or `All consistent: <n> scopes, and <m> creation results of other
+rooms on the service's word.`, or the first finding, and then the command
+exits 1. A journal that cannot be read is a finding.
 
 ```
 register sc_3kisrweg..., entry 3: consistent.
