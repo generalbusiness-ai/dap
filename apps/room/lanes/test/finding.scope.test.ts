@@ -5,7 +5,7 @@ import type { AskedOf, Kind } from "@generalbusiness/dap-client";
 import { valueDigest } from "@generalbusiness/dap-derive";
 import { CONFIGURATION_DOMAIN, firstExtents } from "@generalbusiness/dap-platform";
 import { changeFinding } from "../src/index.ts";
-import { answered } from "./support/graph.ts";
+import { answered, net, reader } from "./support/graph.ts";
 import { WorkspaceStandIn } from "./support/workspace.ts";
 import { checkerKey, oid, publicationOf, rita, room, soon, una, vic, type Room } from "./support/room.ts";
 
@@ -86,6 +86,23 @@ async function sources() {
   return { r, lane };
 }
 
+/**
+ * Each send of the room and its dispatch log, for a merge whose withdrawal did not reach `aborted`. Request `c5f0cff9` asks why this
+ * assertion failed once, and that failed gate kept no outbox state. A read that fails prints its error, and the assertion still decides.
+ */
+async function printOutboxes(r: Room): Promise<void> {
+  const lines = [`outbox attempts: clock ${net.clock.now}`];
+  for (const node of r.scopes) {
+    try {
+      const read = await node.stub.outbox(reader);
+      if (!read.ok) { lines.push(`${node.name}: not read: ${read.reason}`); continue; }
+      lines.push(`${node.name}: head ${read.at.seq}, first page ${read.complete ? "complete" : "only"}`);
+      for (const { outboxId, to, class: kind, held, attempts, acknowledged, result, diagnosis } of read.value) lines.push(`  ${JSON.stringify({ outboxId, to, kind, held, attempts, acknowledged, result, diagnosis })}`);
+    } catch (error) { lines.push(`${node.name}: not read: ${String(error)}`); }
+  }
+  console.log(lines.join("\n"));
+}
+
 /** One finding, as a source files it. */
 const raised = (version: FactRef, source: string, tree: string, start = 10) => ({ fields: {
   version, file: "src/a.ts", start, end: start + 2, class: "race", severity: "high", confidence: 80, scenario: "Two writers lose an update.", source, sourceVersion: "reviewer 1.2", tree: oid(tree),
@@ -104,7 +121,9 @@ test("a finding from a required source holds the merge across versions until it 
     const seq = answer.receipt.fact.seq;
     await did(rita, "cancel-merge", { on: seq });
     await r.settle();
-    expect((await C.item(seq)).state).toBe("aborted");
+    const { state } = await C.item(seq);
+    if (state !== "aborted") await printOutboxes(r);
+    expect(state).toBe("aborted");
     return "accepted";
   };
 

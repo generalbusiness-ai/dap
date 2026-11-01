@@ -11,7 +11,7 @@ import { TEST_DEPLOYMENT } from "../../scope/test/worker.ts";
 import { nativeFixtureLifetime, driveFixture } from "../../scope/test/support/native-fixture-lifetime.ts";
 import { captureSignedSummary, installSignedDiagnostic } from "../../scope/test/signed-read-diagnostic.ts";
 import { beginSessionFixture, type SessionOwner } from "../../scope/test/session-settings.ts";
-import { Platform, routed } from "../../scope/test/repository.ts";
+import { Platform, quiet, routed } from "../../scope/test/repository.ts";
 import { outsideOf, wired } from "../../scope/test/outside.ts";
 import { checkClaim, command, memoryStore, type Context } from "../src/index.ts";
 
@@ -131,11 +131,13 @@ async function resumed(owner: SessionOwner, cleanups: (() => void)[], resourcesA
   const pause = async (waiting: readonly string[]) => {
     const nodes = waiting.map(scope => platform(scope as ScopeId));
     let passes = 0;
-    for (let made = 1; made > 0;) {
+    await quiet(() => nodes, async () => {
       if (++passes > 64) expect.fail("The owned dispatch fixture did not quiesce within 64 passes.");
-      owner.active(); made = 0;
+      owner.active();
+      let made = 0;
       for (const node of nodes) { owner.active(); made += await node.stub.dispatch(); owner.active(); }
-    }
+      return made;
+    }, (action) => owner.required(action));
   };
   const rita: Context = { store: memoryStore(), fetch, now: () => { owner.active(); return timeMs(net.clock.now)!; }, pause, tries: 3 };
   // A fresh command context each time; only the store survives. memoryStore

@@ -122,21 +122,49 @@ const heads = (nodes: readonly Dispatching[]): Promise<(number | null)[]> => Pro
   runInDurableObject(node.object, (_instance, state) => state.storage.sql.exec<{ seq: number | null }>("SELECT MAX(seq) AS seq FROM entry").one().seq)));
 
 /**
- * Wait until no dispatcher of these scopes has anything to do now. It carries nothing.
+ * Run `round` until one round counts no work and moves no head of `nodes()`. It carries nothing. `round` owns any ceiling on its
+ * passes, and `wait` wraps each read of the heads for a fixture that owns its work. A longer list in a later round counts as a move.
  *
  * A call to `dispatch` joins the pass in flight or runs one, and counts only that pass. A background pass can deliver to a scope
  * that this round has already called, and end before this round calls its own scope. The round then counts nothing while the
- * receiver's reply is on its way. That delivery moved the receiver's head, so a round is quiet only when it made no dispatch and
- * no head moved across it.
+ * receiver's reply is on its way. That delivery moved the receiver's head, so the second read of the heads catches it.
+ *
+ * The claim is that one round made no dispatch and moved no head, and no more. A send can still be on its way when this returns:
+ *
+ * - An alarm or a background pass starts after this round's call to its scope, and no commit moves a head before the second read.
+ * - The send belongs to a scope outside `nodes()`.
+ * - The send got a retry or busy answer, or no answer. It waits for the clock.
+ *
+ * `notes/implementation/2026-11-01-settle-followups.md` states these cases.
  */
-export async function settle(...nodes: readonly Dispatching[]): Promise<void> {
-  for (let before = await heads(nodes); ;) {
-    let made = 0;
-    for (const node of nodes) made += await node.stub.dispatch();
-    const after = await heads(nodes);
+export async function quiet(nodes: () => readonly Dispatching[], round: () => Promise<number>, wait: <T>(action: () => Promise<T>) => Promise<T> = (action) => action()): Promise<void> {
+  for (let before = await wait(() => heads(nodes())); ;) {
+    const made = await round();
+    const after = await wait(() => heads(nodes()));
     if (made === 0 && after.every((head, i) => head === before[i])) return;
     before = after;
   }
+}
+
+/** The rounds of `quiet`, with one call to `dispatch` for each scope. Each call joins the pass in flight or runs one. */
+export function settle(...nodes: readonly Dispatching[]): Promise<void> {
+  return quiet(() => nodes, async () => {
+    let made = 0;
+    for (const node of nodes) made += await node.stub.dispatch();
+    return made;
+  });
+}
+
+/** The rounds of `quiet`, where each scope runs its operations driver until the driver has nothing to do, then one call to `dispatch`. */
+export function settleDriving(...nodes: readonly Dispatching[]): Promise<void> {
+  return quiet(() => nodes, async () => {
+    let made = 0;
+    for (const node of nodes) {
+      while ((await (node.stub as unknown as { effect(): Promise<number> }).effect()) > 0) made++;
+      made += await node.stub.dispatch();
+    }
+    return made;
+  });
 }
 
 /** Move the shared clock on, and let the dispatchers do what is then due. */
