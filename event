@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dd82e39b0a632569909046d3c5fc7f87cfe851e7","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-01-page-lock.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e81385e41527b9c9ec20292a51f8400a0c2f6fa5","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-01-page-lock.manifest.json."}
