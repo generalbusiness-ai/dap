@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d06cb938d623f11229d5b4263de820aedd33319c","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-01-view-two-process.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d5454295ec1c30a72f68637bafbea0caa1861ba9","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/page-observation.test.ts."}
