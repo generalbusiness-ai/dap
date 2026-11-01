@@ -115,20 +115,38 @@ continue that phase:
 node examples/repo-in-ai/setup.mjs --input /absolute/path/to/s1-input.json --phase manifest-stage --mode continue --diagnostics /absolute/public/NEW-continue-diagnostics
 ```
 
-A new member's inbox stays provisional until its creator's confirmation
-arrives, and the invitation engine accepts only an active inbox. An enrollment
-that reads the inbox too early rechecks it up to 10 times, one second apart.
-A recheck signs and submits no act. It uses the existing read session, or
-opens one if that session has ended. It may record a settled stage in the
-owner's private records. The receipt's `inboxRechecks` holds the count, also
-when the enrollment completes.
+`stage-ready` and `published` read outcomes that arrive after the act before
+them, so a first read can find an outcome still pending. In `new` or
+`continue` mode, each of these phases rechecks a pending read up to 15 times,
+2 seconds apart. The bound is 30 seconds of pauses, plus the time of the 16
+reads. A recheck signs and submits no act. It uses the existing read session,
+or opens one if that session has ended. `check` reads once and does not wait.
+A failed read stops the phase at once.
 
-If the inbox still fails after the last recheck, the enrollment stops at stage
-`invitation-result`. Its `cause` is one of these fixed words:
+If the read is still pending after the last recheck, the phase stops with
+exit 1. Run `check` on that phase, which completes the phase once the read
+settles. Then run the next phase in `new` mode.
+If `check` still reports the outcome as not ready after a few minutes, read the
+lane's stage outcome, because the room may have refused the stage.
+
+A new member's inbox stays provisional until its creator's confirmation
+arrives, and the invitation engine accepts only an active inbox. In `new` and
+`continue` modes the engine waits for that inbox. It reads the inbox one second
+apart for at most 20 seconds, and it also waits through `not-found` and
+`forbidden`, which a read answers before the inbox is created. `check` reads
+once and does not wait.
+
+The wait signs and submits no act. It uses the existing read session, and it
+signs a read-session request only when that session has 30 seconds left or
+fails a read check.
+
+If the inbox is not active at the end of the wait, the enrollment stops at stage
+`invitation-result`. Any other failed inbox read stops there at once. Its `cause`
+is one of these fixed words:
 
 | Cause | Condition |
 |---|---|
-| `inbox-not-confirmed` | Both inbox reads answered 200, and the engine refused the inbox. |
+| `inbox-not-confirmed` | The inbox reads answered 200, and the engine refused the inbox. |
 | `inbox-not-readable` | An inbox read was refused. `read` holds the last status. |
 | `opening-unresolved` | The member opening has no verified receipt. |
 | `invitation-act-unresolved` | The invitation act has no verified receipt. |

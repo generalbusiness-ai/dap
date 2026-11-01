@@ -33,6 +33,7 @@ what a judge drafts, in one storage transaction for each entry.
 | `turn` | `Turns.run(waiting, creation?)`: section 5.2, steps 3 to 7, and section 5.3. `isSigned` and `fetchFacts`: step 1. `Waiting`, `Verdict`, `End`. |
 | `core` | `Scope`: `create`, `submit`, `settle`, `alarm`, `checkpoint`, `pinned`. `receiptOf`. The answers `Created` and `Checkpointed`. |
 | `sessions` | Read sessions: `sessionsOf`, `mintSession`, `openSession`, `sessionReaders` (the production readers port), `issueSession` (membership's answer to a signed request), `credentialInUrl`, and `Streams` with `relay`, the streams of a scope's head. |
+| `originals` | `Originals`: the exact bodies of a member's `POST .../acts` requests, in the membership object and outside its history, until an answer ends them. `keep`, `list`, `read`, `end`, and the alarm's `wake` and `expire`. Only a session of the row's member reaches a row. |
 | `signed-reads` | `checkSignedRead`: a read signed by a key with a recent local signed entry or a recent signed root of this scope's cause chain. `rootOf` follows at most four causes through verified source entries. The read covers summary, genesis, that key's signed and causally rooted entries, and their typed retained inputs. At a register, a recent local signer reads the whole history. It grants no stream. |
 | `limits` | `JoinLimits`: the serving limits of a join at the front of a membership scope. `addressKey`, `isJoin`, `PROPOSED_LIMITS`. |
 | `operator` | `OperatorRecord`: the operator's record of a scope, outside its history. `incidentsOf`, `waitingIn`, and `sendAgain`, the instruction to dispatch a waiting request once more. |
@@ -442,7 +443,11 @@ session adds two answers: 503 `sessions-unavailable` and 503
 ## Read sessions
 
 A read session is a credential: whoever holds the token reads. It signs
-nothing and controls nothing (authority note, section 3.9). The one other
+nothing and adds no authority to an act (authority note, section 3.9). At
+membership, a session also reads, delivers and deletes its own member's
+original requests (`originals`). It can make one only of a request that its
+key signed. The unsigned parts can differ, and the scope verifies them when
+they are sent, so this grants nothing. The one other
 credential it reads is a read token that its own key asked for by a
 signed `read-token` act at the destination, once (the planner's decision
 for I5).
