@@ -15,7 +15,7 @@ import { validStep, accepted, active, configOf, createdBy, done, failed, handleO
 /** Saved envelopes are checked against their actual caller and destination,
  * never re-signed from metadata. An accepted marker belongs to that scope. */
 
-const RETAINED_OPEN_REGISTERS = new Set<PlatformDefinition>(["platform:register@5", "platform:register@17", "platform:register@18", "platform:register@19", "platform:register@20", "platform:register@21"]);
+const RETAINED_OPEN_REGISTERS = new Set<PlatformDefinition>(["platform:register@5", "platform:register@17", "platform:register@18", "platform:register@19", "platform:register@20", "platform:register@21", "platform:register@24"]);
 /** Local revision selector from retained configured-service install custody.
  * These exact native pins open singleton item 0 at revision 1 and never
  * change it. This is neither a Summary nor proof of history or authority.

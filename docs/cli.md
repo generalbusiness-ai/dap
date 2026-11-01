@@ -66,7 +66,7 @@ authorization to install a register remains unimplemented.
 The examples are from one run of the test in
 `packages/cli/test/story.scope.test.ts`, with long IDs cut short.
 
-**`dap install <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules]`**
+**`dap install <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|separate-recovery]`**
 creates the register with an `install` intent, signed by a new operator
 key, which is also the one creator key. The host defaults to `github.com`
 and the namespace to `artroom`. For the demo's host, the hosting's own Git
@@ -78,7 +78,7 @@ Installed: register sc_hinqqbm4....
 The operator key key_baqzbaDy... is kept in the config directory, readable only by you. It is the one founder key.
 ```
 
-**`dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules]`**
+**`dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--register-policy keys|open] [--cohort application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|separate-recovery]`**
 signs the same `install` intent and creates nothing. A register's ID is a
 function of its seed, and the seed of the intent and the register's
 version alone, so the command prints the ID that the install will create,
@@ -111,8 +111,8 @@ or delete the original config or keys.
 For example, set `DAP_HOME` to a new private directory, then run
 `dap install --plan <base-url> --cohort <cohort> --host <host>
 --namespace <namespace>`, using `application`, `archive-device-application`,
-`archive-device-publication`, `archive-certified-rules` or `hardened-certified-rules`
-for `<cohort>`. After configuring the new register ID,
+`archive-device-publication`, `archive-certified-rules`, `hardened-certified-rules` or
+`separate-recovery` for `<cohort>`. After configuring the new register ID,
 run `dap install --planned --cohort <cohort>` with the same
 `DAP_HOME`. This creates separate custody and a new operator key; it
 does not renew or replace the expired original.
@@ -155,7 +155,13 @@ packages with an explicit existing owner, and archive binding at claim or later.
 register@19, directory@18, membership@8, rules@11, destination@14 and inbox@1.
 `--cohort hardened-certified-rules` selects `HARDENED_CERTIFIED_RULES_COHORT`:
 register@20, directory@19, membership@8, rules@12, destination@15 and inbox@1.
-These are the five code-supported creation families. The service's configured
+`--cohort separate-recovery` selects `SEPARATE_RECOVERY_COHORT`: register@24,
+directory@23, membership@10, rules@10, destination@13 and inbox@1. It refuses
+a room whose founder key is also its recovery key, by the name `recovery-key`.
+It offers no checker-key invitation and no journal archive export.
+[Creation versions](deploy.md#creation-versions) says what a deployment does
+before it creates rooms on this cohort.
+These are the six code-supported creation families. The service's configured
 creation policy still decides whether a particular new register is admitted.
 Unknown or multiple choices, another retained cohort, service, host or
 namespace refuse before signing or sending. Creation defaults and existing

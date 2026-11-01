@@ -108,6 +108,8 @@ export { rulesScopeV12, rulesScopeRulesV12, rulesAnswerV12, rulesObservedValuesV
 export { rulesCertificateFamilyV15, rulesCertificateOpeningV15, rulesPublishedCertificateV15, rulesCertificateDeclineV15, rulesCertificateInterveningFactV15, readRulesCertificateDeclinedV15, RULES_CERTIFICATE_DECLINED_V15_MAX, type RulesCertificateDeclinedV15 } from "./rules-certificate-v15.ts";
 export { certifiedPublicationStateV15, certifiedReservationSnapshotV15, certifiedPublicationBudgetV15, certifiedCaptureBudgetV15, certifiedFutureEnvelopeBytesV15, type CertifiedPublicationStateV15, type CertifiedReservationSnapshotV15, type CertifiedGenerationV15 } from "./destination-budget-v15.ts";
 
+/** Explicit cohort that refuses one key as founder and recovery; global NEWEST remains unchanged. */
+export { SEPARATE_RECOVERY_COHORT } from "./separate-recovery-cohort.ts";
 /** Explicit opt-in evidence cohort; global NEWEST remains unchanged. */
 export { EVIDENCE_RULES_COHORT } from "./evidence-cohort.ts";
 export { evidenceRulesRegister, evidenceRulesDirectory, evidenceRulesDirectoryRules } from "./evidence-cohort-data.ts";

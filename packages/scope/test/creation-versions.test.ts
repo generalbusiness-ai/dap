@@ -6,7 +6,7 @@ import { expect, test } from "vitest";
 import type { Intent, PlatformDefinition, Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, isSignedIntentShape, parseStrict, scopeIdOf, signIntent, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { keys } from "@generalbusiness/dap-derive/testing";
-import { COMMONS_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
+import { COMMONS_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, SEPARATE_RECOVERY_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
 import { readPlatformCreationPolicy, injectedPlatformCreationPolicy, permitsNewPlatformScope } from "../src/creation-versions.ts";
 import { admitChildCreation, type CreationTimer } from "../src/creation-lineage.ts";
 import { indexedScopes, type ScopeIndexPort } from "../src/scope-index.ts";
@@ -166,4 +166,24 @@ test("old live deployed genesis needs sealed applied integrity for repeats while
     const old = parseStrict(stored);
     expect((await native.source(0))?.bytes).toBe(canonicalize(old));
   } finally { await evictDurableObject(object); creationVersionSettings.delete(name); }
+});
+
+test("a deployment creates on the separate-recovery cohort only after PLATFORM_CREATION_PINS names its register, directory and membership", async () => {
+  const { register, directory, membership, rules, destination, inbox } = SEPARATE_RECOVERY_COHORT;
+  const added = JSON.stringify([register, directory, membership]);
+  const absent = readPlatformCreationPolicy({}), named = readPlatformCreationPolicy({ PLATFORM_CREATION_PINS: added });
+  for (const pin of [register, directory, membership]) expect(permitsNewPlatformScope(absent, pin)).toBe(false);
+  // The newest cohort already holds these three, so the setting need not name them.
+  for (const pin of [rules, destination, inbox]) expect(permitsNewPlatformScope(absent, pin)).toBe(true);
+  for (const pin of Object.values(SEPARATE_RECOVERY_COHORT)) expect(permitsNewPlatformScope(named, pin)).toBe(true);
+
+  for (const [raw, answer] of [[undefined, "refused"], [added, "accepted"]] as const) {
+    const signed = install(), name = scopeIdOf(seedOf(signed, register));
+    creationVersionSettings.set(name, raw);
+    const object = objectOf(name), native = object as unknown as Native;
+    try {
+      expect(await native.create(signed, register)).toMatchObject({ answer });
+      expect(await count(object)).toBe(answer === "accepted" ? 1 : 0);
+    } finally { await evictDurableObject(object); creationVersionSettings.delete(name); }
+  }
 });

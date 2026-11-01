@@ -57,6 +57,7 @@ Revoking one key differs from losing the member's last usable key. Removing a me
 - **Wrong, used or expired invitation:** preserve the original pending request and ask the actual admin to inspect the invitation.
 - **Handle already in use:** do not create a lookalike identity to replace the old member or its history.
 - **Key already used or a recovery key:** use the proper explicit enrollment path; invitation authority does not override those guards.
+- **Founder key is the recovery key:** a room on `platform:register@24` refuses this with the name `recovery-key`, at both `found` and `first-key`. Claim the room with a founder key and a different recovery key. An older room keeps its keys until its recovery key rotates.
 - **No management action or last-admin guard:** use the qualified admin/recovery owner; do not remove the protection by editing local config.
 - **Member removed or no active key:** resolve its recorded lifetime and recovery path before asking for new authority.
 - **Reply unavailable:** keep the exact original where its workflow supports that; generic management acts do not gain a durable retry journal from this page.

@@ -205,8 +205,8 @@ children from its existing register 5 and directory 5 can add these pins:
 Use that example only when the deployment's retained evidence supports
 those pins. Inbox 1 is already included. A recognized catalog pin does
 not add a supported lineage family: deployed child admission still checks
-the `archive-device-publication`, `archive-device-application` or
-`application` family and its native
+the `archive-device-publication`, `archive-device-application`,
+`application` or `separate-recovery` family and its native
 creator proofs. The setting grants no member, credential or host authority.
 An index entry permits lookup, not creation.
 
@@ -286,6 +286,31 @@ These steps describe planner work, not a completed deployment. Neither the
 CLI report nor this page attests hosted policy, namespace isolation, full
 live-scope coverage or readiness for every creation path. Version activation
 and the separate rules-version change remain planner-owned work.
+
+### Create rooms that refuse a shared founder and recovery key
+
+The `separate-recovery` cohort refuses a room whose founder key is also its
+recovery key: register 24, directory 23, membership 10, rules 10,
+destination 13 and inbox 1. The cohort is explicit. Unqualified installs
+keep register 18, and the newest cohort holds only rules 10, destination 13
+and inbox 1 of these pins. The Worker needs no Durable Object migration,
+because the cohort adds no class.
+
+To create new rooms on this cohort:
+
+1. Add `platform:register@24`, `platform:directory@23` and
+   `platform:membership@10` to `PLATFORM_CREATION_PINS`, and deploy.
+2. Set `DAP_HOME` to a new private directory, and run
+   `dap install --plan <base-url> --cohort separate-recovery --host <host> --namespace <namespace>`.
+3. Set `REGISTER_SCOPE`, and `registerScope` in the Worker's host setting,
+   to the planned ID, and deploy.
+4. Run `dap install --planned --cohort separate-recovery` with the same `DAP_HOME`.
+
+One Worker admits child creation from one configured register. Moving that
+setting closes new rooms under the old register, so use a separate Worker
+if the old register must keep creating rooms. Rooms and registers on older
+pins keep their rules and their acts. An older room whose founder key is
+also its recovery key stays that way until the recovery key rotates.
 
 ## Provision the Commons Worker
 
