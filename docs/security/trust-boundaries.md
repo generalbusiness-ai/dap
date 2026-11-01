@@ -99,6 +99,22 @@ No command removes a key from the list. `install` alone writes `founders`, the v
 
 Under policy `open`, any key can sign `found`, so the read grants nothing more.
 
+### A session of a room that a thief made reads the register's whole log
+
+A thief with a key on the `founders` list can sign `found` and take the first key of the new room. The thief can then hold a session of that room's membership. A session of a membership that a claim of the register created reads the register's `history`, `log`, `entry`, and `retained` routes. This read has no signed-read window. It covers every entry of the register, and not only the thief's own claim. It gives no summary and no `items`.
+
+Every member of a room that a claim created holds the same read. Under policy `open`, any key can get this read by claiming a room. No register act ends it, and nobody outside a room can close that room. Replacing `SESSION_SECRET` ends the session, and the room's membership then issues a new one.
+
+The log holds these things:
+
+- The `install` intent: the host, the namespace, the policy, `founders`, and the key that signed it.
+- Each `found` intent: the key that signed it, `branch`, `founderHandle`, `recoveryKey`, and any `import` or `archive` field.
+- Each claim's `seed`, `founder`, `policy`, `branch`, and `repository`. The `repository` value holds the host, the namespace, the name, and the ID.
+- Each attempt's outcome, with the repository's name and ID, and a nonsecret cleanup handle when the host answered with one.
+- Each room's directory reference, from the directory's result.
+
+The log holds nothing of a room's content: no lane, no membership, no rules, and no Git object. It holds no token's plaintext. For each other room, it does name the key that claimed the room and that key's handle. It also names the recovery key, the directory, and the repository.
+
 ### Respond to a stolen key
 
 Do these steps in each room that enrolled the key:
@@ -116,6 +132,16 @@ Do these steps in each room that enrolled the key:
 The key's signed read ends within 1200 seconds of step 3, plus clock difference. If the key is on the register's `founders` list, it keeps `found` and its read of the register after these steps.
 
 These steps end no Git read token. Treat the repository's content as read until the time that [the token's section](#a-git-read-token-outlasts-the-bound) states, and replace any secret that the repository holds.
+
+On Cloudflare Artifacts, an operator can also end the repository's read tokens through the REST API. A Cloudflare API token with **Artifacts** > **Edit** authorizes the revocation. Do these steps after step 4, or 600 seconds after step 3 plus clock difference, because the key can take a new token until then. GitHub's installation pages list no route that revokes another token.
+
+1. List the repository's tokens:
+   `GET /artifacts/namespaces/:namespace/repos/:name/tokens`. Cloudflare's page says that each row gives the token's `id`, `scope`, and `state`. The list names no key.
+2. Revoke every active `read` token of the repository, because the list cannot show which token the key holds. Revoke each one with:
+   `DELETE /artifacts/namespaces/:namespace/tokens/:id`. One of the service's own 120-second reads can fail with an unknown outcome, because that read uses its own `read` token.
+3. Ask every member to run [`dap clone`](../cli.md#the-commands) again.
+
+Revoking by ID has run once. On 1 November 2026, the planner revoked one `read` token through this REST route, on a new empty repository. The next `git ls-remote`, 0.1 seconds after the reply, exited 128 with `Invalid or expired token`. Five later tries over 10 seconds answered the same. Listing a repository's tokens has not run, because the planner's list command failed with a usage error. No run covers a token in use during a clone, or a repository with content.
 
 ### What no run has covered
 
