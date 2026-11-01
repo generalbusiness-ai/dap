@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1fee260521d668b2622bde0e46a2ade33584159a","text":"Merge retired a covered predecessor; the successor is at docs/security/entry-points.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:237813520bfec2e0ccd9d4e007f5cbdb79ea9923","text":"Merge retired a covered predecessor; the successor is at packages/client/src/device-key-invitation.ts."}
