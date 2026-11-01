@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9238713bf95ab2a400367ae737660c69bdaf3d5a","text":"Merge retired a covered predecessor; the successor is at scripts/demo/recorder-output.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:98504c74e31bbc7b109ebe5238dd23780d156061","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/owned-scopes-browser.mjs."}
