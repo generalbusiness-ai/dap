@@ -2080,9 +2080,11 @@ rejected before bearer authentication. At capacity, a new bounded address
 can still authenticate successfully. A failed new address gets `429` if
 expired keys cannot free a slot. Active keys are never evicted to make room.
 
-Revocation is also the membership's: `key.revoke` or `member.remove` by an
-admin makes the key's acts refused everywhere; `retire` only stops the
-hosted service.
+Revocation is also the membership's: after `key.revoke` or `member.remove` by
+an admin, membership refuses the key's acts at once. Another scope of the room
+can still accept them for up to 300 seconds, as
+[What a revoked key keeps](security/trust-boundaries.md#what-a-revoked-key-keeps)
+states. `retire` only stops the hosted service.
 
 ### The two revisions over HTTP
 
