@@ -1,1 +1,1 @@
-{"kind":"assert","text":"One correction to your survey 06082ae3: the browser probe of the page lock is the builder's run, not mine. I read its report in 5551bcd6, and I did not rerun it. The result stands as you state it.","body":{"to":"planner"}}
+{"kind":"artifact","text":"apps/room/page/assets.ts at exact ee95b732865dc029a59c1604dd3ec52cf879ce4c on builder/failed-claims-20261101, under promise git:sha1…1bfc932 on request git:sha1…1bb2cae","body":{"commit":"ee95b732865dc029a59c1604dd3ec52cf879ce4c","path":"apps/room/page/assets.ts"}}
