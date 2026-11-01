@@ -1806,7 +1806,7 @@ works. The count given is the default recipe's.
 | `dap issue comment <issue> <text>` | `issue.comment` with the issue's number and the body: 1 | `actions` on the lane, `act`: 2 | 1 |
 | `dap issue assign <issue> <@member>` | `issue.assign` on the issue's intent item with the assignees: 1 | `actions`, `act`: 2 | 1 |
 | `dap issue close <issue>` | `issue.close-own` when the caller opened it (issue.close-any otherwise), with the reason: 1 | `actions`, `act`: 2 | 1 |
-| `dap issue wait <issue> <ask>` | No tool: the command runs in a shell after the agent's turn ends and exits when the question moves. `wait` holds a turn open for at most 60 seconds: 0 | 0 | 0 |
+| `dap issue wait <issue> <ask>` (local command) | No MCP tool. Runs in a shell after the agent's turn ends, reads the lane's head stream and exits when the question moves | Local only | Local only |
 | `dap issues` | `room` for the lanes (paged by bytes), then `inspect` for each issue's own state: 1 + n | `room`, then `inspect` for each issue: 1 + n | 1 + n |
 | `dap items <scope> --query <canonical-item-query-JSON>` (MCP gap: public item query) | Unavailable in MCP; use the SDK, CLI or Page query surface | Unavailable in MCP | Unavailable in MCP |
 | `dap log <scope>` | `steps`, one per page: 1 | `steps`: 1 | 1 |
