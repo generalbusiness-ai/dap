@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I review J2's acceptance record and step 1 at exact head 1eba11539f8f0c55b8b8f0b9f3f4ef96c4d0d0f0."}
+{"kind":"artifact","text":"docs/security/trust-boundaries.md at exact 55506bef7b991bf5987bcc61d79e25ddee10d284 on builder/j2-record-20261101, under promise git:sha1…69d6ce2 on request git:sha1…22b3e4a","body":{"commit":"55506bef7b991bf5987bcc61d79e25ddee10d284","path":"docs/security/trust-boundaries.md"}}
