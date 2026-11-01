@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "qualification": "One passing gate at the checkpoint. The test and 16 controls ran on real scopes in the test pool on a scripted clock, with stand-ins on the wire and a hand-built recovery key that the note names. No browser or deployed Worker ran, and nobody measured a real clock difference.",
+  "directory": "2026-11-01-signed-read",
+  "checkpoint": {
+    "commit": "a06f01c64dda3a71c9ed79c48541a9914d8d1839",
+    "tree": "81cd8b341ccf1f4418241e19fd5b3be210945303"
+  },
+  "fileCount": 97,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "6a2b650a7e09c3cfeaf00478aa45c95ac4a612483442e23206e55ff9ef547381"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6525,
+      "sha256": "308150536211ec3742a27a77309b7f33a9d4a1c951933d5981d49c76304d15f3"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "head.txt",
+      "bytes": 158,
+      "sha256": "ee93230529920d002f7e64b26d21ab86e7237e093552b2a3f26ddf223fd32dd6"
+    },
+    {
+      "path": "head-run-3.log",
+      "bytes": 78366,
+      "sha256": "afcb8f0b78b867647bde6051caf5ffc927ec899b20b245306918d1b4617c723a"
+    },
+    {
+      "path": "head-3.report.json",
+      "bytes": 6446,
+      "sha256": "31524423775a04ec0e8120f63ccbcc46472a5ab7328cdb789b25f409f68acb25"
+    },
+    {
+      "path": "first-run.log",
+      "bytes": 21247,
+      "sha256": "6acf5fa5be08c0a1522968160e43d65c053e1690a09878e3c191de0943101bdf"
+    },
+    {
+      "path": "typecheck-docs.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "seals-docs.log",
+      "bytes": 1302,
+      "sha256": "7764f789c3c392d296335913c815daaa381efaa172db25b594eeede782cce90d"
+    },
+    {
+      "path": "controls/exits.txt",
+      "bytes": 557,
+      "sha256": "56899180c934ed2face0e65bd0e8af2770f36568f462a857440b16151246e534"
+    },
+    {
+      "path": "controls/c7-observation-age-doubled.log",
+      "bytes": 72040,
+      "sha256": "0e02a3313246dee7eb3fbf209659ef530f171aceee3bf9eec46f1795806239ad"
+    },
+    {
+      "path": "controls/c12-recovery-mark-off.log",
+      "bytes": 69266,
+      "sha256": "612b69e1daea16d63b43daf00214556232a189b43bf72b252e59cb5276baaf74"
+    },
+    {
+      "path": "controls/c14-founders-not-fixed.log",
+      "bytes": 79152,
+      "sha256": "5074b784afac9db4307e2577b3b374c89520710df8bbd194cd76e0da1bca67f6"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 8828,
+      "sha256": "c63ca3c24326c3bd38df1dc146a9fdeb4c8e03248a9f8edab85a9aea6258fa4b"
+    }
+  ]
+}
