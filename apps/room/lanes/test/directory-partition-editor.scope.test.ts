@@ -72,8 +72,9 @@ test("native retained editor keeps its accepted unknown opening on the original 
     expect((await P.summary()).at.seq + 1).toBeGreaterThanOrEqual(16);
     await P.did(rita, "seal", { on: 0, expected: await P.expected({ on: 0 }) });
     await options.pause([]);
-    const creating = (await r.root.summary()).value.items.find(item => item.type === "partition" && item.state === "creating")!;
-    const Q = await r.root.created(creating.id); nodes.push(Q); await options.pause([]);
+    // The partition can already be active here: a background pass may finish its creation before `settle` returns.
+    const successor = (await r.root.summary()).value.items.find(item => item.type === "partition" && (item.state === "creating" || item.state === "active"))!;
+    const Q = await r.root.created(successor.id); nodes.push(Q); await options.pause([]);
     expect((await Q.summary()).value.status).toBe("active");
     await continueEdit(watched, task, options);
     expect([task.state, openings, canonicalize(task.steps[0]!.signed)]).toEqual(["unknown", 1, original]);

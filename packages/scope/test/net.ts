@@ -114,15 +114,28 @@ export class Node {
   alarmAt(): Promise<number | null> { return runInDurableObject(this.object as unknown as DurableObjectStub<NetScope>, (_instance, state) => state.storage.getAlarm()); }
 }
 
+/** One scope that `settle` waits for: the object whose head it reads, and the dispatcher it calls. */
+export interface Dispatching { readonly object: DurableObjectStub; readonly stub: { dispatch(): Promise<number> } }
+
+/** The position of each scope's newest entry, from its own storage. It moves with every commit, whoever caused it. */
+const heads = (nodes: readonly Dispatching[]): Promise<(number | null)[]> => Promise.all(nodes.map((node) =>
+  runInDurableObject(node.object, (_instance, state) => state.storage.sql.exec<{ seq: number | null }>("SELECT MAX(seq) AS seq FROM entry").one().seq)));
+
 /**
- * Wait until no dispatcher of these scopes has anything to do now. Each
- * call joins the pass in flight or runs one; a round in which none made a
- * dispatch means all are quiet. It carries nothing.
+ * Wait until no dispatcher of these scopes has anything to do now. It carries nothing.
+ *
+ * A call to `dispatch` joins the pass in flight or runs one, and counts only that pass. A background pass can deliver to a scope
+ * that this round has already called, and end before this round calls its own scope. The round then counts nothing while the
+ * receiver's reply is on its way. That delivery moved the receiver's head, so a round is quiet only when it made no dispatch and
+ * no head moved across it.
  */
-export async function settle(...nodes: readonly Node[]): Promise<void> {
-  for (let made = 1; made > 0;) {
-    made = 0;
+export async function settle(...nodes: readonly Dispatching[]): Promise<void> {
+  for (let before = await heads(nodes); ;) {
+    let made = 0;
     for (const node of nodes) made += await node.stub.dispatch();
+    const after = await heads(nodes);
+    if (made === 0 && after.every((head, i) => head === before[i])) return;
+    before = after;
   }
 }
 
