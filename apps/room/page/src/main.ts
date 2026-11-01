@@ -6,7 +6,7 @@ import { WorkbenchWork } from "./workbench-work.ts";
  *
  * | Address | Screen |
  * |---|---|
- * | `#/` | The room's issues and changes, and the acts the caller may sign on the directory (opening an issue or a change). |
+ * | `#/` | What needs the caller, the room's issues and changes, and the acts the caller may sign on the directory (opening an issue or a change). `?after=` names the lane the list of what needs the caller continues after. |
  * | `#/issue/<scope>` | One issue, and the acts the caller may sign on it. |
  * | `#/change/<scope>` | One change, with its states, and the acts the caller may sign on it. |
  * | `#/rules` | The rules of this room, and the acts the caller may sign on the rules scope. |
@@ -28,7 +28,7 @@ import { originalStart, startRoom, type StartedRoom } from "./start-custody.ts";
 import type { Answer, FieldValue, Head, MemberRef, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, isKeyId, isScopeId, isScopeRef, unb64url } from "@generalbusiness/dap-bytes";
 import { ORIGINALS_UNREAD, checkAnswerLine, checkOriginalRequest, liftFences, lockedScopes, openOriginals, originalLine, type OpenOriginals } from "./original-check.ts";
-import { act, actAssociation, actsOn, issueDeviceKey, issueCreation, fieldValue, listLanes, loadCommonsView, loadChange, loadIssue, loadRules, pageObservationSource, roomInitialization, initializationStillCurrent, openRoom, placeOf, sessionKey, siteAddress, type Acted, type Place, type Room, type Session } from "./data.ts";
+import { act, actAssociation, actsOn, issueDeviceKey, issueCreation, fieldValue, listLanes, loadCommonsView, loadChange, loadIssue, loadNeedsYou, loadRules, pageObservationSource, roomInitialization, initializationStillCurrent, openRoom, placeOf, sessionKey, siteAddress, type Acted, type Place, type Room, type Session } from "./data.ts";
 import { PageObservation, pollingInterval } from "./page-observation.ts";
 import { bindDisclosures, openDialog, releaseDialog } from "./popups.ts";
 import { actsPanel, answerLine, nonacceptedAnswerText, changeScreen, failureScreen, h, icon, whoLine, issueScreen, roomScreen, rulesScreen } from "./view.ts";
@@ -1189,8 +1189,9 @@ async function drawWorkbench(focus: boolean): Promise<void> {
     const listContext = { origin: location.origin, directory: room.directory, membership: room.membership, key: room.key };
     const lanes = await listLanes(room);
     const offered = await actsOn(room, room.directory);
+    const needs = destination === "issues" ? await loadNeedsYou(room, new URLSearchParams(location.hash.split("?")[1] ?? "").get("after")) : undefined;
     if (!await presentationCurrent()) return;
-    const screen = roomScreen(room, lanes, kind, { state: stateOf(listContext, kind), changed: (state) => { keepState(listContext, kind, state); }, focusKey: actAssociation(room, room.directory) });
+    const screen = roomScreen(room, lanes, kind, { state: stateOf(listContext, kind), changed: (state) => { keepState(listContext, kind, state); }, focusKey: actAssociation(room, room.directory) }, needs);
     const panel = await panelFor(loaded, loaded.directory, {}, { offered, settled: async (result, current) => {
       if (result.kind !== "open-issue") return;
       await followCreatedIssue(loaded, result, current);

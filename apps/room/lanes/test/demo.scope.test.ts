@@ -15,7 +15,7 @@ import { siteTokenTestSettings } from "../../../../packages/scope/test/worker.ts
 import { gitHub, Hub, ownHost, type Stand } from "../../../../packages/scope/test/hosts.ts";
 import { Platform, routed, settleDriving } from "../../../../packages/scope/test/repository.ts";
 import { memoryStore, type Context, type Git, type Outcome } from "../../../../packages/cli/src/index.ts";
-import { actsOn, copiesOf, listLanes, loadChange, loadIssue, loadRules, loadSite, openRoom, placeOf } from "../../page/src/index.ts";
+import { actsOn, copiesOf, listLanes, loadChange, loadIssue, loadRules, loadSite, openRoom, placeOf, loadNeedsYou } from "../../page/src/index.ts";
 import { FILES, branchFiles, judged, registerSetting, rehearse, transcript, type NextShot, type Person, type Rehearsal, type Stage, type Taken } from "../../../../scripts/demo/rehearse.ts";
 import { allowedClaim } from "../../page/src/claim.ts";
 import { captureBinding, observeCaptures } from "../../../../scripts/demo/capture-binding.ts";
@@ -211,6 +211,7 @@ async function record(at: Stand, wired: Set<ScopeId>, siteCleanups: (() => void)
   // the rendered page, which the browser opens by its address.
   const room = await openRoom({ service: SERVICE, secret, fetch: recorded, now: () => timeMs(net.clock.now)! }, place);
   await listLanes(room);
+  await loadNeedsYou(room);
   await actsOn(room, room.directory);
   await loadIssue(room, issue as ScopeId);
   await actsOn(room, issue as ScopeId);
@@ -237,6 +238,7 @@ async function record(at: Stand, wired: Set<ScopeId>, siteCleanups: (() => void)
   const memberSession = { service: SERVICE, secret: memberSecret, fetch: recorded, now: () => timeMs(net.clock.now)! };
   const memberRoom = await openRoom(memberSession, memberPlace);
   await listLanes(memberRoom);
+  await loadNeedsYou(memberRoom);
   await actsOn(memberRoom, memberRoom.directory);
   expect((await copiesOf(memberRoom)!.list()).ok).toBe(true);
   let memberRefusal = "";

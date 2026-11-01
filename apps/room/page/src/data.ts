@@ -1,6 +1,7 @@
 import { commonsAuthorLabels, loadCommons, type CommonsView } from "@generalbusiness/dap-client";
 import { stringOrNull as text } from "@generalbusiness/dap-bytes";
-import { APPROVAL_LIMIT, otherRequestLine, questionOffers, questionRows, questions as questionProfile, reasonLines, whyLine } from "../../../views/src/attention.ts";
+import { APPROVAL_LIMIT, decidedLine, laneName, otherRequestLine, questionOffers, questionRows, questions as questionProfile, reasonLines, whyLine, type Reasons } from "../../../views/src/attention.ts";
+import { LIMITS, controllerIn, keyHolder, laneRefs, laneWindow, needsYouRows, type Frame, type Row } from "../../../views/src/needs-you.ts";
 import { sameOptional, shownText } from "../../../views/src/words.ts";
 import { isRecord as record } from "@generalbusiness/dap-bytes";
 import { actBodyText, deviceKeyInvitationOf, encodeDeviceKeyInvitation, invitationIssueFields, invitationRedemptionFields, isInvitationMembership, originalsAt, type DeviceKeyInvitation } from "@generalbusiness/dap-client";
@@ -23,7 +24,8 @@ import { actBodyText, deviceKeyInvitationOf, encodeDeviceKeyInvitation, invitati
  * | `joinRoom` | Signs membership's `join` with an invitation link, which enrols the page's key. |
  * | `openRoom` | A read session from membership; the directory's repository item, for the rules scope and the destination; the caller's standing in membership. |
  * | `listLanes` | The directory's index rows, one for each lane, with each lane's own state. |
- * | `loadIssue` | An issue lane: its intent, assignees, state and comments. |
+ * | `loadNeedsYou` | The rows of `needs_you` for the caller, over one window of the directory's lanes, and those lanes' decided questions. It signs no act and never throws. |
+ * | `loadIssue` | An issue lane: its intent, assignees, state, comments, open questions and decided questions. |
  * | `loadChange` | A change lane: its proposal, versions (a one-file version's path, digest and size), reviews by extent, review requests, checks, links and merges, the rules it holds, and for each merge the destination's publication and its outside operations. |
  * | `loadRules` | The rules scope: the rules of the room, the active definitions, and which members may change the rules. |
  * | `loadSite` | One page of the room's published site, as the site route answers it. |
@@ -422,20 +424,7 @@ export interface LaneRow { scope: ScopeId; number: number | null; kind: "issue" 
  * row reads that lane. Listing never fetches each lane's details. */
 export async function listLanes(room: Room): Promise<{ issues: LaneRow[]; changes: LaneRow[] }> {
   await fresh(room);
-  const index = room.directoryIndex;
-  if (!index || index.scope.scope !== room.directory) throw new Unreadable("The room has no bound directory index reference. Reopen the room.");
-  let items: readonly Item[];
-  if (index.definition === "platform:directory@10") {
-    const coverage = await partitionIndexes({ summary: scope => handleOf(room, scope).summary(), query: (scope, query) => handleOf(room, scope).queryItems(query) }, index.scope, room.membership);
-    if (!coverage.complete) throw new Unreadable(`Directory indexes incomplete (${coverage.reason ?? "unavailable"}); partitions read: ${coverage.indexes.length}.`);
-    items = coverage.indexes.flatMap(part => [...part.lanes]);
-  } else {
-    const declared = platform(index.definition)?.data.items["lane"];
-    if (!declared) throw new Unreadable("The directory index definition is unsupported.");
-    const coverage = await collectItemQuery(handleOf(room, room.directory), { v: 1, scope: index.scope, type: "lane", states: Object.keys(declared.states).sort(byteOrder), ids: null, limit: 100, cursor: null });
-    if (!coverage.complete) throw new Unreadable(`Directory index incomplete (${coverage.reason ?? "unavailable"}); rows read: ${coverage.items.length}.`);
-    items = coverage.items;
-  }
+  const items = await directoryLanes(room);
   const rows: LaneRow[] = [];
   for (const item of items) {
     const scope = scopeOf(item.refs["scope"]);
@@ -445,6 +434,22 @@ export async function listLanes(room: Room): Promise<{ issues: LaneRow[]; change
   }
   rows.sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
   return { issues: rows.filter(row => row.kind === "issue"), changes: rows.filter(row => row.kind === "pr") };
+}
+
+/** Every lane row of the directory's index, complete or refused. */
+async function directoryLanes(room: Room): Promise<readonly Item[]> {
+  const index = room.directoryIndex;
+  if (!index || index.scope.scope !== room.directory) throw new Unreadable("The room has no bound directory index reference. Reopen the room.");
+  if (index.definition === "platform:directory@10") {
+    const coverage = await partitionIndexes({ summary: scope => handleOf(room, scope).summary(), query: (scope, query) => handleOf(room, scope).queryItems(query) }, index.scope, room.membership);
+    if (!coverage.complete) throw new Unreadable(`Directory indexes incomplete (${coverage.reason ?? "unavailable"}); partitions read: ${coverage.indexes.length}.`);
+    return coverage.indexes.flatMap(part => [...part.lanes]);
+  }
+  const declared = platform(index.definition)?.data.items["lane"];
+  if (!declared) throw new Unreadable("The directory index definition is unsupported.");
+  const coverage = await collectItemQuery(handleOf(room, room.directory), { v: 1, scope: index.scope, type: "lane", states: Object.keys(declared.states).sort(byteOrder), ids: null, limit: 100, cursor: null });
+  if (!coverage.complete) throw new Unreadable(`Directory index incomplete (${coverage.reason ?? "unavailable"}); rows read: ${coverage.items.length}.`);
+  return coverage.items;
 }
 
 // ---------------------------------------------------------------- one lane
@@ -479,6 +484,8 @@ export interface QuestionView {
   /** The rows for this viewer, the requests that name another member, and the answers this viewer can press. */
   rows: QuestionRowView[]; others: string[]; answers: QuestionAnswer[];
 }
+/** A question that took its decision. `by` and `at` come from the decide entry, and are null where this read did not fetch that entry. */
+export interface DecidedQuestion { ask: number; line: string; question: string; body: string | null; by: string | null; at: string | null; comment: string | null }
 export interface IssueView {
   /** The actual intent item used by transitions. */
   intent?: number;
@@ -488,6 +495,8 @@ export interface IssueView {
   requesterRef: MemberRef | null; requester: string | null; assignees: string[]; conditions: string[]; comments: Comment[];
   /** Each open question of a lane under a question definition. Empty under any other definition. */
   questions: QuestionView[];
+  /** Each decided question of the lane, newest first. Empty under any other definition. */
+  decided: DecidedQuestion[];
 }
 
 /** Times are native genesis/latest-entry times at this full authenticated read frontier. */
@@ -518,8 +527,8 @@ async function factOf(handle: ScopeHandle, ref: ScopeRef, value: unknown): Promi
 }
 
 /** Each open question and request of one read, in the words of `apps/views`. A request whose question has left the live items comes last, under its own row. */
-async function questionsOf(room: Room, handle: ScopeHandle, summary: Summary): Promise<{ questions: QuestionView[] }> {
-  if (!questionProfile(summary.definition)) return { questions: [] };
+async function questionsOf(room: Room, handle: ScopeHandle, summary: Summary): Promise<{ questions: QuestionView[]; decided: DecidedQuestion[] }> {
+  if (!questionProfile(summary.definition)) return { questions: [], decided: [] };
   const items = summary.items, scope = summary.scope, viewer = room.me?.ref, actions = room.me?.actions ?? [], definition = String(summary.definition);
   const rows = viewer ? questionRows(items, scope, viewer, actions) : [];
   const shown = (row: (typeof rows)[number]): QuestionRowView => ({ item: row.item.id, needs: row.values.needs, why: whyLine(row.values), lines: reasonLines(row.values, { definition, clause: row.clause }) });
@@ -540,7 +549,111 @@ async function questionsOf(room: Room, handle: ScopeHandle, summary: Summary): P
   }
   const left = rows.filter(row => row.item.type === "approval-request" && !asks.some(ask => about(row.item, ask)));
   if (left.length) found.push({ ask: -1, question: "", body: null, brief: null, rows: left.map(shown), others: [], answers: [] });
-  return { questions: found };
+  const decided = await decidedAsks(handle, summary);
+  return { questions: found, decided: !decided.length ? [] : await decidedQuestions(handle, summary.scope, decided, (await summaryOf(handleOf(room, room.membership.scope))).summary.items, ISSUE_DECIDED_DETAILS, true) };
+}
+
+/** How many decided questions of a lane name who decided and when: on the issue's screen, and in the room's list. The rest keep their question and their entry. */
+const ISSUE_DECIDED_DETAILS = 20, LIST_DECIDED_PER_LANE = 5;
+const decidedEntry = (ask: Item): number | null => { const ref = ask.refs["decisionAt"]; return typeof ref === "number" ? ref : isFactRef(ref) ? ref.seq : null; };
+/** A lane's decided questions at the summary's head, newest decision first. They leave the summary when they take the decision, so this is a query. */
+async function decidedAsks(handle: ScopeHandle, summary: Summary): Promise<Item[]> {
+  const coverage = await collectItemQuery(handle, { v: 1, scope: summary.scope, type: "ask", states: ["decided"], ids: null, limit: 100, cursor: null }, { pages: 4, bytes: 1024 * 1024, milliseconds: 10_000 });
+  if (!coverage.complete) throw new Unreadable(`Cannot read the decided questions of ${handle.scope}: incomplete (${coverage.reason ?? "unavailable"}).`);
+  return [...coverage.items].sort((a, b) => (decidedEntry(b) ?? -1) - (decidedEntry(a) ?? -1));
+}
+/** The words of each decided question. The first `details` read their decide entry, and with `bodies` their text. A read that fails leaves those fields null, and the question keeps its words. */
+async function decidedQuestions(handle: ScopeHandle, ref: ScopeRef, asks: readonly Item[], members: readonly Item[], details: number, bodies: boolean): Promise<DecidedQuestion[]> {
+  return Promise.all(asks.map(async (ask, index) => {
+    const seq = decidedEntry(ask), question = shownText(ask.values["question"]), comment = typeof ask.values["decisionComment"] === "string" ? shownText(ask.values["decisionComment"]) : null;
+    const read = seq === null || index >= details ? null : await handle.entry(seq).catch(() => null);
+    const entry = read?.ok && read.complete && read.value.entry.seq === seq && canonicalize(read.value.entry.at) === canonicalize(ref) && entryHash(read.value.entry) === read.value.hash ? read.value.entry : null;
+    const input = entry?.input;
+    return { ask: ask.id, line: decidedLine(question, seq), question, body: bodies && index < details ? await textOf(handle, ask.values["body"]).catch(() => null) : null,
+      by: input?.type === "act" ? keyHolder(members, input.signed.intent.actor)?.member ?? "a key that is no longer active" : null, at: entry?.time ?? null, comment };
+  }));
+}
+
+// ---------------------------------------------------------------- the room's list
+
+/** One row of `needs_you` in the Page's words. `row` is that row itself. */
+export interface LaneLink { scope: ScopeId; kind: "issue" | "change"; lane: string }
+export interface NeedsItem extends QuestionRowView, LaneLink { row: Row }
+export interface NeedsYouView {
+  /** Why the whole list could not be read, or null. */
+  failed: string | null;
+  items: NeedsItem[]; omittedRows: number; omittedLanes: number;
+  /** The lane to name to read the following lanes. Null when no lane follows this window. */
+  next: ScopeRef | null;
+  /** This read continued after a lane, so it can be the last window. */
+  continued: boolean;
+  /** The address named no lane, so this read started at the first lane. */
+  lostPlace: boolean;
+  unread: (LaneLink & { ref: ScopeRef; reason: string })[];
+  decided: (DecidedQuestion & LaneLink)[];
+  /** Lanes with more decided questions than this list holds, and how many more. */
+  older: (LaneLink & { count: number })[];
+  decidedUnread: number;
+}
+
+/** The lane an address names. Null when it names none. */
+export function afterLane(after: string): ScopeRef | null {
+  try { const value: unknown = JSON.parse(after); return fullScopeRef(value) ? value : null; } catch { return null; }
+}
+
+/**
+ * What needs the caller now: the rows of `needs_you`, by the same walk and the same bounds of lanes, rows, items and time. It reads and signs no act, so it moves no head.
+ * A lane that fails to read joins `unread`, and any other failure fills `failed`, so the screen around this list still opens.
+ */
+export async function loadNeedsYou(room: Room, after: string | null = null): Promise<NeedsYouView> {
+  const place = after === null ? null : afterLane(after);
+  const view: NeedsYouView = { failed: null, items: [], omittedRows: 0, omittedLanes: 0, next: null, continued: !!place, lostPlace: after !== null && !place, unread: [], decided: [], older: [], decidedUnread: 0 };
+  try {
+    await fresh(room);
+    const send = room.session.fetch ?? globalThis.fetch, deadline = AbortSignal.timeout(LIMITS.milliseconds);
+    const owned: Room = { ...room, session: { ...room.session, fetch: (url, init) => send(url, { ...init, signal: deadline as never }) } };
+    const membership = (await summaryOf(handleOf(owned, room.membership.scope))).summary.items;
+    const me = currentStanding(membership, room.membership, room.key);
+    if (!me) return { ...view, failed: "This key is not an active member's key, so this list cannot say what needs you." };
+    const listed = await directoryLanes(owned), refs = laneRefs(listed);
+    if (!refs) return { ...view, failed: "The directory names one lane twice, so this list cannot read it." };
+    const { selected, omitted, next } = laneWindow(refs, LIMITS.scopes - 2, place ?? undefined);
+    view.omittedLanes = omitted.length; view.next = next;
+    const linkOf = (ref: ScopeRef): LaneLink => { const lane = listed.find(item => item.type === "lane" && sameOptional(item.refs["scope"], ref)); return { scope: ref.scope, kind: lane?.values["kind"] === "pr" ? "change" : "issue", lane: laneName(lane) }; };
+    const reads = await Promise.all(selected.map(async ref => { try { return await summaryOf(handleOf(owned, ref.scope)); } catch (error) { return error instanceof Unreadable ? error.message : "transport"; } }));
+    const unread: { scope: ScopeRef; reason: string }[] = [], frames: Frame[] = [];
+    let held = membership.length + listed.length;
+    selected.forEach((ref, index) => {
+      const read = reads[index]!;
+      if (typeof read === "string") return void unread.push({ scope: ref, reason: read });
+      if (!sameOptional(read.summary.scope, ref) || read.summary.status !== "active") return void unread.push({ scope: ref, reason: "summary-incomplete" });
+      if (held + read.summary.items.length > LIMITS.items) return void unread.push({ scope: ref, reason: "item-limit" });
+      held += read.summary.items.length;
+      frames.push({ ref, head: read.at, summary: read.summary, items: [...read.summary.items] });
+    });
+    const found = await needsYouRows(frames, { viewer: me.ref, actions: me.actions, unread, controller: member => controllerIn(membership, room.membership, member),
+      items: async (frame, type, states, ids) => {
+        const coverage = await collectItemQuery(handleOf(owned, frame.ref.scope), { v: 1, scope: frame.ref, type, states: [...states].sort(byteOrder), ids: [...ids], limit: 100, cursor: null });
+        if (!coverage.complete || !coverage.at || !sameOptional(coverage.at, frame.head)) throw new Unreadable(`Cannot read ${type} items of ${frame.ref.scope}: incomplete.`);
+        return [...coverage.items];
+      } });
+    const rows = found.slice(0, LIMITS.rows);
+    view.omittedRows = found.length - rows.length;
+    view.items = rows.map(row => { const reasons = row as unknown as Reasons; return { ...linkOf(row.scope), row, item: row.item, needs: reasons.needs, why: whyLine(reasons), lines: reasonLines(reasons, row.rule) }; });
+    view.unread = unread.map(row => ({ ...linkOf(row.scope), ref: row.scope, reason: row.reason }));
+    const decided = await Promise.all(frames.filter(frame => questionProfile(frame.summary.definition)).map(async frame => {
+      try {
+        const handle = handleOf(owned, frame.ref.scope), asks = await decidedAsks(handle, frame.summary), link = linkOf(frame.ref), shown = asks.slice(0, LIST_DECIDED_PER_LANE);
+        return { link, older: asks.length - shown.length, shown: (await decidedQuestions(handle, frame.ref, shown, membership, LIST_DECIDED_PER_LANE, false)).map(question => ({ ...question, ...link })) };
+      } catch { return null; }
+    }));
+    view.decidedUnread = decided.filter(lane => !lane).length;
+    view.older = decided.flatMap(lane => lane?.older ? [{ ...lane.link, count: lane.older }] : []);
+    view.decided = decided.flatMap(lane => lane?.shown ?? []).sort((a, b) => (timeMs(b.at) ?? 0) - (timeMs(a.at) ?? 0));
+    return view;
+  } catch (error) {
+    return { ...view, items: [], failed: `This list could not be read. ${error instanceof Unreadable ? error.message : "The read did not finish."} The list of issues below still opens.` };
+  }
 }
 
 /** An issue lane: its intent item, its comments, and the head it was read at. */

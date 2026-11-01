@@ -3,7 +3,7 @@ import type { CommonsView, CommonsNote } from "@generalbusiness/dap-client";
 import { canonicalize, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { afterEach, expect, test, vi } from "vitest";
 import type { Answer } from "@generalbusiness/dap-contract";
-import { Unreadable, type ChangeView, type Room } from "../src/data.ts";
+import { Unreadable, type ChangeView, type NeedsYouView, type Room } from "../src/data.ts";
 import { answerLine, changeCondition, changeScreen, failureScreen, issueScreen, whoLine, roomScreen, rulesScreen } from "../src/view.ts";
 import type { ListState } from "../src/list-context.ts";
 
@@ -79,7 +79,7 @@ test("ordinary screens omit empty record panels while inspection preserves full 
 
 test("issue and rules keep their subject once and move authority detail into inspection", () => {
   vi.stubGlobal("document", document);
-  const issue = issueScreen(room, { scope: "sc_issue", definition: "sha256:issue-definition", head, questions: [], title: "<script>unsafe</script>", number: 5, body: null, state: "open", requester: "@author", assignees: [], conditions: [], comments: [], closeReason: null, createdAt: "2026-10-12T14:03:00Z", modifiedAt: "2026-10-12T14:05:00Z" } as never) as unknown as Element;
+  const issue = issueScreen(room, { scope: "sc_issue", definition: "sha256:issue-definition", head, questions: [], decided: [], title: "<script>unsafe</script>", number: 5, body: null, state: "open", requester: "@author", assignees: [], conditions: [], comments: [], closeReason: null, createdAt: "2026-10-12T14:03:00Z", modifiedAt: "2026-10-12T14:05:00Z" } as never) as unknown as Element;
   expect(issue.all("h1")[0]!.textContent).toBe("<script>unsafe</script> #5");
   expect(issue.all("script")).toEqual([]);
   expect(issue.all("h2")).toEqual([]);
@@ -289,8 +289,55 @@ test("the issue screen lists a question with its text, its reasons and a slot fo
     rows: [{ item: 5, needs: "Approve or request changes on question 4.", why: "Why it is yours: @una asked you by name.", lines: ["What settles it: an act.", "Rule: sha256:d acts.request-approval."] }],
     others: ["@una asked @vic to approve this question."], answers: [{ kind: "approve" as const, label: "Approve", on: "", typed: {} }] };
   const closed = { ask: -1, question: "", body: null, brief: null, rows: [{ item: 8, needs: "A request about question 7, which has closed.", why: "Why it is yours: @vic asked you by name.", lines: [] }], others: [], answers: [] };
-  const screen = issueScreen(room, { scope: "sc_issue", definition: "sha256:d", head, questions: [question, closed], title: "TEST", number: 1, body: null, state: "open", requester: "@rita", assignees: [], conditions: [], comments: [], createdAt: null, modifiedAt: null } as never) as unknown as Element;
+  const screen = issueScreen(room, { scope: "sc_issue", definition: "sha256:d", head, questions: [question, closed], decided: [], title: "TEST", number: 1, body: null, state: "open", requester: "@rita", assignees: [], conditions: [], comments: [], createdAt: null, modifiedAt: null } as never) as unknown as Element;
   const seen = screen.textContent;
   for (const words of ["Reading this item leaves it open. This list grants no permission.", "TEST which format?", "TEST keep CSV.", "Approval does not approve the Brief", "Approve or request changes on question 4.", "Why it is yours: @una asked you by name.", "What settles it: an act.", "Rule: sha256:d acts.request-approval.", "@una asked @vic to approve this question.", "A request about question 7, which has closed."]) expect(seen, words).toContain(words);
   expect(screen.all("div").filter(node => node.getAttribute("data-question-answers") !== null).map(node => node.getAttribute("data-question-answers")), "ANSWERS: a slot for the live question only").toEqual(["4"]);
+});
+
+test("Needs you shows each row with its lane and its link, says what it left out with a link to reach it, and keeps decided questions", () => {
+  vi.stubGlobal("document", document);
+  const lane = { scope: "sc_one" as never, kind: "issue" as const, lane: "Issue 2: TEST the import" };
+  const other = { scope: "sc_two" as never, kind: "change" as const, lane: "Change 3: TEST the fix" };
+  const item = { ...lane, row: {} as never, item: 5, needs: "Approve or request changes on question 4.", why: "Why it is yours: @una asked you by name.", lines: ["What settles it: an act.", "Rule: sha256:d acts.request-approval."] };
+  const base = { failed: null, items: [item, { ...item, ...other, item: 9, needs: "Merge change 3." }], omittedRows: 0, omittedLanes: 0, next: null, continued: false, lostPlace: false, unread: [], decided: [], older: [], decidedUnread: 0 };
+  const list = (needs: Partial<NeedsYouView>) => (roomScreen(room, { issues: [], changes: [] }, "issue", undefined, { ...base, ...needs }) as unknown as Element).all("section")[0]!;
+  const whole = list({});
+  for (const words of ["Needs you", "Reading this item leaves it open.", "Issue 2: TEST the import", "Approve or request changes on question 4.", "Why it is yours: @una asked you by name.", "What settles it: an act.", "Rule: sha256:d acts.request-approval.", "Merge change 3."]) expect(whole.textContent, words).toContain(words);
+  expect(whole.all("a").map(link => link.getAttribute("href")), "EACH ROW OPENS ITS OWN LANE").toEqual(["#/issue/sc_one", "#/change/sc_two"]);
+  expect(whole.textContent, "A WHOLE LIST says nothing about what it left out").not.toContain("leaves out");
+
+  const ref = { scope: "sc_two", kind: "lane", inc: "in_a" };
+  const cut = list({ omittedLanes: 2, next: ref as never });
+  expect(cut.textContent, "A CUT LIST says how many lanes it left out").toContain("This list leaves out 2 lanes. Read the lanes that follow");
+  const nextHref = cut.all("a").at(-1)!.getAttribute("href")!;
+  expect(JSON.parse(new URLSearchParams(nextHref.split("?")[1]).get("after")!), "THE LINK NAMES THE LANE to continue after").toEqual(ref);
+  const last = list({ omittedLanes: 1, next: null, continued: true });
+  expect(last.textContent, "THE LAST WINDOW: it says that no lane follows, and offers the first lanes").toContain("This list leaves out 1 lane. No lane follows this one. Read the first lanes");
+  expect(last.all("a").at(-1)!.getAttribute("href")).toBe("#/");
+  expect(list({ items: [], omittedRows: 3 }).textContent, "A CUT LIST says how many items it left out").toContain("This list leaves out 3 more items. Settle some of the items above, then read it again.");
+
+  const unread = list({ unread: [{ ...other, ref: ref as never, reason: "unsupported-profile" }] });
+  expect(unread.textContent, "AN UNREAD LANE is named and can be opened").toContain("This list could not read 1 lane, so it can leave out items there.");
+  expect(unread.all("a").at(-1)!.textContent).toBe("Change 3: TEST the fix");
+  expect(list({ items: [] }).textContent, "AN EMPTY WHOLE LIST speaks of the room").toContain("Nothing in this room needs you.");
+  expect(list({ items: [], omittedLanes: 1, next: ref as never }).textContent, "AN EMPTY CUT LIST speaks only of what it read").toContain("Nothing in the lanes this list read needs you.");
+  expect(list({ lostPlace: true }).textContent, "A BAD ADDRESS").toContain("This address names no lane, so this list starts at the first lane.");
+
+  const failed = list({ failed: "TEST the reason", items: [] });
+  expect(failed.textContent, "A FAILED LIST says so and shows no empty line").toContain("TEST the reason");
+  expect(failed.textContent).not.toContain("Nothing in this room");
+
+  const decided = list({ decided: [{ ...lane, ask: 4, line: "Decided question: TEST which? (entry 11)", question: "TEST which?", body: null, by: "@rita", at: "2026-11-01T12:00:00.000Z", comment: "TEST keep CSV" }], older: [{ ...other, count: 2 }], decidedUnread: 1 });
+  for (const words of ["Decided question: TEST which? (entry 11)", "Decided by @rita on ", "Comment: TEST keep CSV", "This list leaves out 2 older decided questions of Change 3: TEST the fix. Open it to read them.", "This list could not read the decided questions of 1 lane."]) expect(decided.textContent, words).toContain(words);
+});
+
+test("the issue screen keeps a decided question with who decided, and leaves out what its read did not fetch", () => {
+  vi.stubGlobal("document", document);
+  const room = { me: { handle: "@ana", name: null, role: "admin", kind: "person", actions: [] }, directory: "sc_directory", membership: { scope: "sc_membership" } } as unknown as Room;
+  const decided = [{ ask: 4, line: "Decided question: TEST which? (entry 11)", question: "TEST which?", body: "TEST keep CSV.", by: "@ana", at: "2026-11-01T12:00:00.000Z", comment: null }, { ask: 2, line: "Decided question: TEST older? (entry 3)", question: "TEST older?", body: null, by: null, at: null, comment: null }];
+  const screen = issueScreen(room, { scope: "sc_issue", definition: "sha256:d", head, questions: [], decided, title: "TEST", number: 1, body: null, state: "open", requester: "@rita", assignees: [], conditions: [], comments: [], createdAt: null, modifiedAt: null, closeReason: null, requesterRef: null } as never) as unknown as Element;
+  expect(screen.all("h2").map(node => node.textContent), "THE SECTION").toContain("Decided questions");
+  for (const words of ["Decided question: TEST which? (entry 11)", "TEST keep CSV.", "Decided by @ana on ", "Decided question: TEST older? (entry 3)"]) expect(screen.textContent, words).toContain(words);
+  expect(screen.textContent.match(/Decided by/g), "AN ENTRY NOT READ names nobody").toHaveLength(1);
 });

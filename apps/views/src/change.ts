@@ -3,6 +3,7 @@ import { canonicalize, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/da
 import type { FieldValue, Item, MemberRef, ReadMinimum, ScopeRef } from "@generalbusiness/dap-contract";
 import { changeFinding, changeJ4 } from "@generalbusiness/dap-lanes";
 import type { ActLike, Card, CardAction, Projection } from "@generalbusiness/dap-mcp";
+import { decidedLine } from "./attention.ts";
 import { captureInput } from "./capture.ts";
 import { findingProfile, malformedRange, openFindings, requiredSource, shownText } from "./findings.ts";
 import { sameOptional, Unread, type Collection, type Frame } from "./reads.ts";
@@ -221,7 +222,7 @@ function bodyOf(context: ChangeContext): string {
     if (issue.unread !== undefined) { lines.push(`${issue.scope.scope}: not read (${issue.unread}).`); continue; }
     lines.push(`${issue.title ?? issue.scope.scope}:`);
     lines.push(...(issue.conditions?.length ? issue.conditions.map(condition => `Condition: ${condition}`) : ["No conditions."]));
-    for (const decided of issue.decided ?? []) lines.push(`Decided question: ${decided.question}${decided.decidedAt === null ? "" : ` (entry ${decided.decidedAt})`}`);
+    for (const decided of issue.decided ?? []) lines.push(decidedLine(decided.question, decided.decidedAt));
   }
   return lines.join("\n");
 }

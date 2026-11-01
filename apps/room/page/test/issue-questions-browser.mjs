@@ -147,7 +147,7 @@ try {
   await page.fill('textarea[name="invitation"]', link); // The one value this script types.
   await page.waitForSelector("summary.account", { timeout: 90_000, state: "attached" });
   // The second device reads its way to the issue, as a person does.
-  await page.getByRole("link", { name: /The import fails on large files/ }).click({ timeout: 60_000 });
+  await page.locator("a.work-title", { hasText: "The import fails on large files" }).click({ timeout: 60_000 });
   await page.waitForSelector('[data-action-slot="comment"] form', { timeout: 60_000 });
   await page.screenshot({ path: join(shots, "1-opened.png"), fullPage: true });
 

@@ -53,7 +53,7 @@ for (const { setting, storedInterval, interval } of [
   vi.doMock("../src/data.ts", async () => ({ ...await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts"),
     openRoom, roomInitialization: async () => ({ state: "configured" }), initializationStillCurrent: async () => true,
     actsOn: async () => ({ acts: [], hidden: 0 }),
-    loadIssue: async () => ({ questions: [], scope: scope.scope, ref: scope, definition, head: head(seq), number: 1, title: "Scripted issue", body: null, state: "open", closeReason: null, createdAt: null, modifiedAt: null, requesterRef: null, requester: null, assignees: [], conditions: [], comments: seq ? [{ id: 1, author: "@other", state: "visible", body: "Later participant comment" }] : [] }),
+    loadIssue: async () => ({ questions: [], decided: [], scope: scope.scope, ref: scope, definition, head: head(seq), number: 1, title: "Scripted issue", body: null, state: "open", closeReason: null, createdAt: null, modifiedAt: null, requesterRef: null, requester: null, assignees: [], conditions: [], comments: seq ? [{ id: 1, author: "@other", state: "visible", body: "Later participant comment" }] : [] }),
     pageObservationSource: async (): Promise<PageObservationSource> => {
       loads++;
       return { initial: snapshot(seq), poll: async () => { polls++; return snapshot(seq); }, options: {

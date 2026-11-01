@@ -6,10 +6,10 @@ import type { ApplicationReadCatalogue, CallResult, LocalReviewCapture } from "@
 import { Collection, LIMITS, Unread, sameOptional, minimumFor, type Frame, type ReadOptions } from "./reads.ts";
 import { ReviewStore, ReviewStoreError } from "./review-store.ts";
 import { readChange } from "./change.ts";
-import { FINDING_CLAUSE, findingActs, findingProfile, malformedRange, openFindings, requiredSource, shownText, sourceRow } from "./findings.ts";
-import { findingReasons, mergeReasons, questionRows, questions, reviewReasons, unknownMergeReasons } from "./attention.ts";
+import { laneName, questions } from "./attention.ts";
+import { changes, issueLane, matchItem, needsYouRows, row, type Row } from "./needs-you.ts";
 
-export interface Row { scope: ScopeRef; head: Frame["head"]; item: number; type: string; rule: { definition: string; clause: string }; [key: string]: unknown }
+export type { Row };
 export interface Context {
   scope: ScopeRef; head: Frame["head"]; definition: Digest; ask: Item; bodyAt: FactRef; body: string;
   requests: Item[]; approvals: Item[]; approvalTexts: { approval: number; text: string | null }[]; comments: { item: Item; text: string | null }[];
@@ -24,28 +24,7 @@ export const result = (value: Record<string, unknown>, isError = false): CallRes
 const RESULT_BYTES = 256 * 1024;
 const resultBytes = (answer: CallResult): number => utf8(canonicalize(answer)).length;
 export { questions };
-const issue = (pin: unknown): boolean => questions(pin) || pin === J4_DIGESTS.issue;
-/** The exact pins of a change lane that these views read. There is no generic profile loader. */
-export const changes = (pin: unknown): boolean => pin === J4_DIGESTS.change || pin === FINDING_DIGESTS.change;
-const matchItem = (value: unknown, id: number, scope: ScopeRef): boolean => value === id || isFactRef(value) && sameOptional(value.at, scope) && value.seq === id;
-const row = (frame: Frame, item: Item, clause: string, values: Record<string, unknown>): Row => ({ scope: frame.ref, head: frame.head, item: item.id, type: item.type, rule: { definition: frame.summary.definition, clause }, ...values });
-
-/** One row for each open finding from a required source on a live change, for a viewer with an act that bears on it. The text is data, escaped as the Change card escapes it. */
-async function findingRows(collection: Collection, frame: Frame, holding: readonly Item[], rules: Item | undefined): Promise<Row[]> {
-  const proposal = frame.items.find(item => item.type === "proposal" && (item.state === "open" || item.state === "draft"));
-  if (!proposal || !holding.length) return [];
-  const version = (finding: Item) => (item: Item) => item.type === "manifest" && matchItem(finding.refs["version"], item.id, frame.ref);
-  // A finding carries across versions, and an earlier version has left the live summary. Its authors decide who can answer.
-  const earlier = holding.filter(finding => !frame.items.some(version(finding))).map(finding => finding.refs["version"]).filter((id): id is number => typeof id === "number");
-  const known = [...frame.items, ...earlier.length ? await collection.items(frame, "manifest", ["superseded"], [...new Set(earlier)].sort((a, b) => a - b)) : []];
-  return holding.flatMap(finding => {
-    const acts = findingActs(finding, proposal, known.find(version(finding)), collection.viewer, collection.actions);
-    return acts.length ? [row(frame, finding, FINDING_CLAUSE, { category: "open-finding", ...findingReasons(finding, acts), holdsMerge: true, acts, permission: "not-determined",
-      file: shownText(finding.values["file"]), start: finding.values["start"], end: finding.values["end"], ...(malformedRange(finding) ? { malformedRange: true } : {}),
-      class: shownText(finding.values["class"]), severity: shownText(finding.values["severity"]), source: shownText(finding.values["source"]), sourceVersion: shownText(finding.values["sourceVersion"]),
-      version: finding.refs["version"], rulesRevision: rules?.values["revision"] ?? null, sourceRow: sourceRow(rules, finding.values["source"]) })] : [];
-  });
-}
+export { changes };
 
 /** How many of a lane's newest entries a catch-up row lists. The row counts the others. */
 export const SINCE_ENTRIES = 6;
@@ -63,9 +42,7 @@ function whatHappened(collection: Collection, sealed: Sealed): string {
 function scopeName(collection: Collection, frame: Frame): string {
   if (sameOptional(frame.ref, collection.membership)) return "The membership";
   if (sameOptional(frame.ref, collection.directory)) return "The directory";
-  const lane = collection.frames.get(collection.directory.scope)!.items.find(item => item.type === "lane" && sameOptional(item.refs["scope"], frame.ref));
-  const kind = lane?.values["kind"] === "issue" ? "Issue" : lane?.values["kind"] === "change" ? "Change" : "Lane";
-  return `${kind} ${String(lane?.values["number"] ?? "")}${typeof lane?.values["title"] === "string" ? `: ${shownText(lane.values["title"])}` : ""}`.trim();
+  return laneName(collection.frames.get(collection.directory.scope)!.items.find(item => item.type === "lane" && sameOptional(item.refs["scope"], frame.ref)));
 }
 /** The entries after a mark, newest last, read in one page. A person reads these; the mark still covers the head, as S4 ruled. */
 async function changedSince(collection: Collection, frame: Frame, since: Frame["head"] | null): Promise<{ changed: { seq: number; what: string }[]; earlier: number; name: string }> {
@@ -103,32 +80,13 @@ export class RepoInAi {
     } catch (error) { return result({ error: "read-unavailable", reason: error instanceof Unread || error instanceof ReviewStoreError ? error.reason : "read-failed", complete: false }, true); }
   }
   needsYou(args: Readonly<Record<string, unknown>> = {}): Promise<CallResult> {
-    return this.#rows(async (collection, frames) => {
-      const rows: Row[] = [];
-      for (const frame of frames) {
-        if (questions(frame.summary.definition)) for (const one of questionRows(frame.items, frame.ref, collection.viewer, collection.actions)) rows.push(row(frame, one.item, one.clause, { ...one.values }));
-        if (changes(frame.summary.definition)) {
-          const proposal = frame.items.find(item => item.type === "proposal");
-          const manifest = frame.items.find(item => item.type === "manifest" && item.state === "current");
-          for (const item of frame.items) if (item.type === "review-request" && item.state === "open" && sameOptional(item.parties["requested"], collection.viewer))
-            rows.push(row(frame, item, "acts.request-review-own;items.review-request", { category: "requested-review", ...reviewReasons(item, proposal), currentManifest: manifest?.id ?? null, requestVersionBound: false, permission: "not-determined" }));
-          for (const item of frame.items) if (item.type === "merge" && item.state === "unknown" && (sameOptional(item.parties["merger"], collection.viewer) || isMemberRef(item.parties["merger"]) && sameOptional(collection.controller(item.parties["merger"]), collection.viewer)))
-            rows.push(row(frame, item, "acts.merge;items.merge", { category: "unknown-merge", ...unknownMergeReasons(item, collection.viewer), manifest: item.refs["manifest"], retryAllowed: false }));
-          const rules = frame.items.find(item => item.type === "rules");
-          const holding = findingProfile(frame.summary.definition) ? openFindings(frame.items).filter(item => requiredSource(rules, item.values["source"])) : null;
-          if (manifest && frame.items.some(item => item.type === "proposal" && item.state === "open") && collection.actions.includes("change.merge")) rows.push(row(frame, manifest, "acts.merge", { category: "merge-attention", ...mergeReasons(proposal, holding?.map(item => item.id)), roleIncludes: "change.merge", permission: "not-determined", rules: rules?.values ?? null, ...(holding ? { heldBy: holding.map(item => item.id) } : {}) }));
-          if (holding) rows.push(...await findingRows(collection, frame, holding, rules));
-        }
-        if (!issue(frame.summary.definition) && !changes(frame.summary.definition)) collection.unread.push({ scope: frame.ref, reason: "unsupported-profile" });
-      }
-      return rows;
-    }, args["after"]);
+    return this.#rows((collection, frames) => needsYouRows(frames, collection), args["after"]);
   }
   work(): Promise<CallResult> {
     return this.#rows(async (collection, frames) => {
       const rows: Row[] = [];
       for (const frame of frames) {
-        if (!issue(frame.summary.definition)) {
+        if (!issueLane(frame.summary.definition)) {
           if (!changes(frame.summary.definition)) collection.unread.push({ scope: frame.ref, reason: "unsupported-profile" });
           continue;
         }

@@ -3,7 +3,7 @@
  * The lane's merge guard decides. They read the rules the way that guard reads them, so a source is required only while the lane's current rules say so.
  */
 import type { Item, MemberRef } from "@generalbusiness/dap-contract";
-import { FINDING_DIGESTS } from "@generalbusiness/dap-lanes";
+import { FINDING_DIGESTS } from "../../room/lanes/src/digests-finding.ts";
 import { sameOptional, shownText } from "./words.ts";
 
 export const findingProfile = (pin: unknown): boolean => pin === FINDING_DIGESTS.change;

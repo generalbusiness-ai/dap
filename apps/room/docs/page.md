@@ -103,7 +103,7 @@ membership.
 
 | Address | Screen |
 |---|---|
-| `#/` | Issues, with search and Open, Closed and All filters. Changes uses `#/?kind=change`. Each row keeps its lane's observed state. |
+| `#/` | **Needs you**, then Issues, with search and Open, Closed and All filters. Changes uses `#/?kind=change`. Each row keeps its lane's observed state. **Needs you** gives the rows of `needs_you` for this member over six lanes, and `?after=` names the lane it continues after. It also lists the decided questions of those lanes. |
 | `#/issue/<scope>` | One issue: number, title, state and close reason, who opened it, assignees, conditions, body and comments. |
 | `#/change/<scope>` | One change: where it stands; the current version (base and authors; for a one-file version from `dap edit`, its path, size and digest and any recorded publication commit; otherwise the integration commit and tree); reviews by extent, against the extents of the rules the lane holds; review requests; checks; links to the issues it closes; each merge with the destination's publication and its outside operations; and comments. Immutable version rendering is unavailable. |
 | The site | Pages and **Open latest page** navigate to `/site/<directory>/HEAD/`. These show the latest branch, not an immutable rendered preview. Exact source preview verifies the selected retained signed proposal's subject, digest and size; rendered same-version links and assets remain separate work. |

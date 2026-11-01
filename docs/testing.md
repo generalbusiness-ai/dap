@@ -990,7 +990,7 @@ witnesses, and the gate's Counting stage runs it.
 | Script | Needs beyond Playwright and Chromium | The workflow's tools can run it |
 |---|---|---|
 | `packages/mcp/test/declared-*-browser.mjs`, `grow-*-browser.mjs` | nothing | yes |
-| `apps/room/page/test/no-session-screens.mjs`, `mcp-second-device.mjs`, `issue-questions-browser.mjs`, `two-devices.mjs` | `WRANGLER`, `WITNESS_DIR` and a loopback port for a local Worker. `two-devices.mjs` takes about seven minutes | yes, with those two settings |
+| `apps/room/page/test/no-session-screens.mjs`, `mcp-second-device.mjs`, `issue-questions-browser.mjs`, `needs-you-browser.mjs`, `two-devices.mjs` | `WRANGLER`, `WITNESS_DIR` and a loopback port for a local Worker. `two-devices.mjs` takes about seven minutes | yes, with those two settings |
 | `notes/2026-10-17-journey-views-design/render.mjs` | a static server over the checkout | no: it checks a frozen design packet |
 | `notes/2026-10-17-compact-cards-design/verification/*.mjs`, `notes/plans/retired/027-artroom-usability/preview-qa.mjs` | absolute paths that no longer exist | no: they record past runs |
 

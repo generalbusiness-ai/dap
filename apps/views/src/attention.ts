@@ -94,6 +94,20 @@ export function questionOffers(ask: Item, requests: readonly Item[], approvals: 
   return [];
 }
 
+/** The name a person knows a lane by, from its directory row. */
+export function laneName(lane: Item | undefined): string {
+  const kind = lane?.values["kind"] === "issue" ? "Issue" : lane?.values["kind"] === "pr" || lane?.values["kind"] === "change" ? "Change" : "Lane";
+  return `${kind} ${String(lane?.values["number"] ?? "")}${typeof lane?.values["title"] === "string" ? `: ${shownText(lane.values["title"])}` : ""}`.trim();
+}
+/** What a list could not read or show. A person must not take a short list for the whole room. */
+export function notShown(unread: readonly { scope: ScopeRef }[], omittedRows: number): string[] {
+  const lanes = new Set(unread.map(row => row.scope.scope)).size;
+  return [...lanes ? [`This list could not read ${lanes} lane${lanes === 1 ? "" : "s"}, so it can leave out items there.`] : [], ...omittedRows ? [`This list leaves out ${omittedRows} more item${omittedRows === 1 ? "" : "s"}. Settle some of the items above, then read it again.`] : []];
+}
+export const lanesLeftOut = (omitted: number): string => `This list leaves out ${omitted} lane${omitted === 1 ? "" : "s"}.`;
+/** A question that took its decision. `entry` is the lane entry of the decide act. */
+export const decidedLine = (question: string, entry: number | null): string => `Decided question: ${question}${entry === null ? "" : ` (entry ${entry})`}`;
+
 const titled = (proposal: Item | undefined): string => proposal ? `change ${String(proposal.values["number"] ?? proposal.id)}: ${quoted(proposal.values["title"])}` : "this change";
 
 export const reviewReasons = (request: Item, proposal: Item | undefined): Reasons => ({

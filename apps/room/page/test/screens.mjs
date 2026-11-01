@@ -140,7 +140,7 @@ const shot = async (tab, name, height = null) => {
 const una = await as("una");
 await una.goto(`${record.service}/page/#/`);
 await una.getByRole("heading", { name: "Issues", exact: true }).waitFor({ state: "attached" });
-await una.getByRole("link", { name: /The handbook is empty/ }).waitFor();
+await una.locator("a.work-title", { hasText: "The handbook is empty" }).waitFor();
 await shot(una, "issues-desktop");
 const create = una.locator('[data-action-slot="create"]').getByRole("button", { name: "Create issue", exact: true });
 await create.click();
@@ -169,7 +169,7 @@ keyboardChecks.push({ flow: "Create issue", escapeCloses: true, returnsFocus: tr
 const query = una.getByRole("searchbox", { name: "Search issues", exact: true });
 await query.fill("handbook");
 await una.getByRole("button", { name: "All", exact: true }).click();
-await una.getByRole("link", { name: /The handbook is empty/ }).click();
+await una.locator("a.work-title", { hasText: "The handbook is empty" }).click();
 await una.getByRole("heading", { name: /The handbook is empty/ }).waitFor();
 await una.getByRole("link", { name: "Back to issue list", exact: true }).click();
 await query.waitFor();
@@ -190,7 +190,7 @@ const draftText = "A local draft that is not submitted.";
 await comment.locator('[name="field:body"]').fill(draftText);
 await una.goto(`${record.service}/page/#/`);
 await una.getByRole("heading", { name: "Issues", exact: true }).waitFor({ state: "attached" });
-await una.getByRole("link", { name: /The handbook is empty/ }).click();
+await una.locator("a.work-title", { hasText: "The handbook is empty" }).click();
 await una.getByRole("heading", { name: /The handbook is empty/ }).waitFor();
 if (await una.locator('form[data-act="comment"] [name="field:body"]').inputValue() !== draftText) throw new Error("Comment draft was lost during room navigation.");
 
@@ -292,13 +292,13 @@ for (const width of [390, 320]) {
   const phone = await as("una", { width, height: 844 });
   await phone.goto(`${record.service}/page/#/`);
   await phone.getByRole("heading", { name: "Issues", exact: true }).waitFor({ state: "attached" });
-  await phone.getByRole("link", { name: /The handbook is empty/ }).waitFor();
+  await phone.locator("a.work-title", { hasText: "The handbook is empty" }).waitFor();
   await shot(phone, width === 390 ? "issues-mobile" : "issues-narrow");
   await phone.locator('[data-action-slot="create"]').getByRole("button", { name: "Create issue", exact: true }).click();
   await phone.getByRole("dialog", { name: "Create issue", exact: true }).waitFor();
   await shot(phone, width === 390 ? "create-issue-mobile" : "create-issue-narrow");
   await phone.keyboard.press("Escape");
-  await phone.getByRole("link", { name: /The handbook is empty/ }).click();
+  await phone.locator("a.work-title", { hasText: "The handbook is empty" }).click();
   await phone.getByRole("heading", { name: /The handbook is empty/ }).waitFor();
   await shot(phone, width === 390 ? "issue-mobile" : "issue-narrow");
 }
@@ -309,7 +309,7 @@ await shot(dark, "rules-mobile-dark");
 
 const zoom = await as("una", { width: 1024, height: 800 });
 await zoom.goto(`${record.service}/page/#/`);
-await zoom.getByRole("link", { name: /The handbook is empty/ }).waitFor();
+await zoom.locator("a.work-title", { hasText: "The handbook is empty" }).waitFor();
 // CSS zoom is a layout magnification witness, not OS/browser accessibility zoom.
 await zoom.evaluate(() => { document.documentElement.style.zoom = "2"; });
 await shot(zoom, "issues-layout-zoom-200");

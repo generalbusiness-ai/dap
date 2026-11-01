@@ -171,7 +171,7 @@ async function captures(chromium: Chromium, executablePath: string, sitting: Sit
       await tab.getByRole("navigation", { name: "Room" }).first().waitFor({ timeout: 30_000, state: "attached" });
       if (name === "room") {
         await tab.getByRole("button", { name: "All" }).click();
-        await tab.getByRole("link", { name: /Add a getting-started page/ }).waitFor({ timeout: 30_000 });
+        await tab.locator('a.work-title:has-text("Add a getting-started page")').waitFor({ timeout: 30_000 });
         interactions.push({ name: "show recorded closed issue in All filter", scope: room.issue });
       }
       if (name === "rules") {
