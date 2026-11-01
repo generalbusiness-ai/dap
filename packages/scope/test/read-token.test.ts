@@ -29,6 +29,7 @@ const HOST = "service.invalid";
  */
 function binding() {
   const minted: { name: string; scope: string; ttl: number; plaintext: string }[] = [];
+  const revoked: string[] = [];
   const ns: ArtifactsNamespace = {
     get: async (name) => ({
       createToken: async (scope, ttl) => {
@@ -36,13 +37,13 @@ function binding() {
         minted.push({ name, scope, ttl, plaintext });
         return { id: `tok-${minted.length}`, plaintext, scope, expiresAt: soon(ttl) };
       },
-      revokeToken: async () => true,
+      revokeToken: async (token) => { revoked.push(token); return true; },
       info: async () => ({ name, remote: `https://${HOST}/git/${NAMESPACE}/${name}.git` }),
     }),
     create: async () => { throw new Error("no creation in this test"); },
     delete: async () => false,
   };
-  return { minted, ns };
+  return { minted, revoked, ns };
 }
 
 /** Only the host operation this test is about reaches the scripted host: the destination's first head and its mint stay recorded and unsent. */
@@ -89,7 +90,7 @@ describe("a member's read token on real scopes (the planner's decision for I5). 
     await M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) });
     const secret = "the secret of una's invitation, of 32 bytes or more";
     const invitation = await M.did(rita, "invite-member", { fields: { handle: "@una", role: "member", inviteHash: textDigest(secret), inviteEnds: soon(3600) } });
-    await M.did(una, "join", { fields: { invitation, secret } });
+    const unasKey = await M.did(una, "join", { fields: { invitation, secret } });
     await settle(M);
 
     // The destination's port: the real wiring of Artifacts, pinned to this register, over the scripted binding.
@@ -181,6 +182,27 @@ describe("a member's read token on real scopes (the planner's decision for I5). 
       expect((await G.summary()).at).toEqual(beforeExpiry);
       expect((await credential(late.handle.token, await sessionOf(una))).status).toBe(403);
       expect(await runInDurableObject(G.object, (_instance, state: DurableObjectState) => state.storage.sql.exec("SELECT plaintext FROM private_credential WHERE id = ?", late.handle.token).toArray())).toEqual([{ plaintext: null }]);
+
+      // A stolen key (the checker's 02639e3e). Revocation ends no read token. The token that una's key read before its
+      // revocation keeps its end. For up to 300 seconds the destination keeps its observation of the key and accepts the key's
+      // next `read-token`, and the session that the key already holds reads the new token. The host revokes nothing.
+      const held2 = await sessionOf(una);
+      const before2 = await readToken(una, 24);
+      if (!("handle" in before2)) throw new Error("read-token was not accepted");
+      await M.did(rita, "revoke-key", { on: unasKey, expected: await M.expected({ on: unasKey, roster: 0, member: (await M.item(unasKey)).refs["member"] as number }), fields: { as: "compromised" } });
+      await settle(M, D, G);
+      await expect(sessionOf(una)).rejects.toThrow("no session");
+      net.clock.now = soon(299);
+      const stolen = await readToken(una, 24);
+      expect(stolen).toHaveProperty("handle");
+      if (!("handle" in stolen)) return;
+      expect(stolen.handle.ends).toBe(soon(24 * 3600));
+      const taken = await credential(stolen.handle.token, held2);
+      expect([taken.status, ((await taken.json()) as { value: { ends: string } }).value.ends]).toEqual([200, soon(24 * 3600)]);
+      expect((await credential(before2.handle.token, held2)).status).toBe(200);
+      net.clock.now = soon(1);
+      expect(await G.act(una, "read-token", { on: 0, expected: await G.expected({ on: 0 }), fields: { hours: 1 } })).toMatchObject({ answer: "refused", reason: "unauthorized" });
+      expect(service.revoked).toEqual([]);
 
     } finally {
       owner.close();

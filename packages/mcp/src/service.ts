@@ -16,14 +16,14 @@ import { EXPIRY_MARGIN_MS, invitationRedemptionFields } from "@generalbusiness/d
 import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FieldValue, Item, PlatformDefinition, Read, Receipt, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, isReceipt, entryHash, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { TransportError, ScopeHandle, ApplicationPackageError, commonsInstallCheck, loadCommons, readApplicationPackage, applicationScreenPath, readApplicationInstallOptions, readDeviceApplicationInstallOptions, readApplicationReleaseUri, readApplicationTrust, applicationTrustForSource, signedApplicationInstall, signedApplicationInstall2, signedDeviceApplicationInstall, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/dap-client";
+import { TransportError, ScopeHandle, ApplicationPackageError, actBodyText, originalsAt, commonsInstallCheck, loadCommons, readApplicationPackage, applicationScreenPath, readApplicationInstallOptions, readDeviceApplicationInstallOptions, readApplicationReleaseUri, readApplicationTrust, applicationTrustForSource, signedApplicationInstall, signedApplicationInstall2, signedDeviceApplicationInstall, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import { SEPARATE_RECOVERY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, platform, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, COMMONS_COHORT } from "@generalbusiness/dap-platform";
 import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/dap-git/application";
 import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
-import { Custody, CustodyError, Lost, TERMINAL, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity } from "./custody.ts";
+import { Custody, CustodyError, Lost, TERMINAL, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity, type Sent } from "./custody.ts";
 import { AT_INPUT, describeAct, grantAction, onOf, schemaOf, type ActLike, type DefinitionLike } from "./describe.ts";
-import { answered, archivedAnswer, clip, finding, type Finding } from "./errors.ts";
+import { answered, archivedAnswer, clip, earlierSaid, finding, type Earlier, type Finding, type Said } from "./errors.ts";
 import { Kept, definitionOf, readInventory, readPartitionIndexes, standingIn, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
 import { KIB, bytesOf, cursorOf, fromCursor, pageBy, sliceText } from "./paging.ts";
 import { Reads } from "./reads.ts";
@@ -58,6 +58,12 @@ export interface ServerPort {
   applicationTrust?: string | undefined;
   config: ConfigPort;
   custody: CustodyStore;
+  /**
+   * Keep each act's signed original at the room's membership object before it is sent, when this service holds a person's session
+   * (notes/2026-10-31-signed-requests-across-devices.md, section 9). A person's local server sets this. A hosted agent and the
+   * command line omit it: each keeps only its own custody.
+   */
+  originals?: boolean;
   /** Operational observations only; absent or failed reporting does not own a result. */
   metrics?: McpMetricOptions;
   mode?: Mode;
@@ -113,11 +119,15 @@ interface Snapshot {
   generation: Digest;
   hidden: string[];
   memberships: Map<string, ScopeRef>;
+  /** The configured room's membership, read or not. */
+  repository: ScopeRef | null;
   /** The digest of the configuration the snapshot was derived from. */
   configured: Digest;
 }
 
 type Args = Record<string, unknown>;
+type Copies = ReturnType<typeof originalsAt>;
+type SentBefore = { earlier: boolean; stepped: boolean };
 type Run = (args: Args) => Promise<CallResult>;
 
 const callResultText = (structured: Record<string, unknown>): string => JSON.stringify(structured);
@@ -146,8 +156,8 @@ export const ERROR_BYTES = Math.min(...Object.values(BOUNDS));
  * names is relative to ARTROOM_HOME), so the last check, on the result with no sentence at all, holds for each of them; were
  * one ever longer, the next step would be cut to fit, with its length, rather than the result pass its bound.
  */
-export const failed = (f: Finding): CallResult => {
-  const said = finding(f);
+export const failed = (f: Finding | (Said & { error: string })): CallResult => {
+  const said = "sentence" in f ? f : finding(f);
   const result = (message: string, next: string = said.next): CallResult => { const structured = { error: said.error, message, next }; return { content: [{ type: "text", text: callResultText(structured) }], structuredContent: structured, isError: true }; };
   const whole = result(said.sentence);
   if (bytesOf(whole) <= ERROR_BYTES) return whole;
@@ -225,6 +235,8 @@ export class McpService {
   #told: Digest | null = null;
   readonly #generic: Record<string, { tool: Tool; run: Run }>;
   readonly #genericPolicy: readonly string[] | undefined;
+  /** The memberships where this key's standing stated an agent or a checker. */
+  readonly #notPeople = new Set<ScopeId>();
   /** Every list-change the service raised, for a test to count. */
   raised = 0;
 
@@ -302,7 +314,7 @@ export class McpService {
     const hidden = shown.filter((b) => !listed(b, read.inventory)).map((b) => b.name);
     const acts = this.mode === "generic" ? [] : shown.filter((b) => listed(b, read.inventory)).map((b) => actTool(b, read.inventory, this.mode));
     const generic = Object.entries(this.#generic).filter(([name]) => this.#genericAdmitted(name)).map(([, g]) => g.tool);
-    const snapshot: Snapshot = { read, bindings, tools: [...generic, ...acts], generation, hidden, memberships, configured: configDigest(config) };
+    const snapshot: Snapshot = { read, bindings, tools: [...generic, ...acts], generation, hidden, memberships, repository: config.repository?.membership ?? null, configured: configDigest(config) };
     this.#stale = false;
     const previous = this.#snapshot?.generation ?? null;
     this.#snapshot = snapshot;
@@ -387,6 +399,10 @@ export class McpService {
   }
   async #call(name: string, args: unknown): Promise<CallResult> {
     const given = isRecord(args) ? args : {};
+    return this.#stoppedEarly(await this.#answer(name, given), given);
+  }
+
+  async #answer(name: string, given: Args): Promise<CallResult> {
     try {
       if (this.#applicationReads) {
         if (this.#applicationReads.has(name)) return this.#applicationReads.call(name, given);
@@ -409,16 +425,58 @@ export class McpService {
     return ((name !== "actions" && name !== "act") || this.mode !== "default") && (this.#genericPolicy === undefined || this.#genericPolicy.includes(name));
   }
 
-  #failure(error: unknown, given: Args): CallResult {
+  async #failure(error: unknown, given: Args): Promise<CallResult> {
     if (error instanceof Stop) return error.result;
-    if (error instanceof CustodyError) return failed({ error: "custody", state: error.why.held, key: String(given["idempotencyKey"] ?? ""), scope: String(given["target"] ?? given["scope"] ?? ""), ...("keys" in error.why ? { keys: error.why.keys } : {}), ...("recorded" in error.why ? { recorded: error.why.recorded } : {}), ...("bytes" in error.why ? { bytes: error.why.bytes } : {}), ...("reason" in error.why && error.why.reason === "budget" ? { reason: "budget" } : {}), ...("stale" in error.why && error.why.stale ? { stale: error.why.stale } : {}), ...("answer" in error.why ? { answer: error.why.answer } : {}), ...("step" in error.why && error.why.step ? { step: error.why.step } : {}) });
-    if (error instanceof TransportError) return failed({ error: "transport", scope: String(given["target"] ?? given["scope"] ?? "the scope"), submitted: false });
+    if (error instanceof CustodyError) {
+      const result = failed({ error: "custody", state: error.why.held, key: String(given["idempotencyKey"] ?? ""), scope: String(given["target"] ?? given["scope"] ?? ""), ...("keys" in error.why ? { keys: error.why.keys } : {}), ...("recorded" in error.why ? { recorded: error.why.recorded } : {}), ...("bytes" in error.why ? { bytes: error.why.bytes } : {}), ...("reason" in error.why && error.why.reason === "budget" ? { reason: "budget" } : {}), ...("stale" in error.why && error.why.stale ? { stale: error.why.stale } : {}), ...("answer" in error.why ? { answer: error.why.answer } : {}), ...("step" in error.why && error.why.step ? { step: error.why.step } : {}) });
+      // An unkept outcome and an unreadable record already say what the server knows of the send.
+      return error.why.held === "unkept" || error.why.held === "unreadable" ? result : this.#stated(result, given);
+    }
+    if (error instanceof TransportError) return this.#stated(failed({ error: "transport", scope: String(given["target"] ?? given["scope"] ?? "the scope"), submitted: false }), given);
     throw error;
   }
 
+  /** A stop before signing: its base words say what this call did, and the words here add what custody holds under its key. */
+  #stoppedEarly(result: CallResult, given: Args): Promise<CallResult> | CallResult {
+    const error = result.isError ? result.structuredContent["error"] : null;
+    return error === "shape" || error === "stale-descriptor" || error === "target" || error === "commons-missing" || error === "read" ? this.#stated(result, given) : result;
+  }
+
+  /** Each answer states what it knows: this call's words stay, and a record unresolved under the key is named, with the key to keep. */
+  async #stated(result: CallResult, given: Args): Promise<CallResult> {
+    const key = given["idempotencyKey"];
+    if (typeof key !== "string") return result;
+    const earlier = await this.#earlierUnder(key);
+    if (earlier === null) return result;
+    const { error, message, next } = result.structuredContent as { error: string; message: string; next: string };
+    return failed({ error, ...earlierSaid(earlier, error, { sentence: message, next }) });
+  }
+
+  /** What custody holds under `key` for this signer, read with no signature and no lock. A store that cannot answer is stated as such. */
+  async #earlierUnder(key: string): Promise<Earlier | null> {
+    const store = this.#port.custody;
+    try {
+      let stepped = false;
+      for (const open of await store.unresolved()) {
+        if (open.key !== key) continue;
+        const record = await store.read(open.id);
+        if (!record || record.identity.service !== this.#service || record.identity.signer !== this.#port.signer.key) continue;
+        if (record.phase !== "prepared") return "unknown";
+        if (Object.keys(record.steps).length > 0) stepped = true;
+      }
+      return stepped ? "stepped" : null;
+    } catch { return "unreadable"; }
+  }
+
+  /** A read after the scope accepted this call's request: its loss must not read as a call that sent nothing. */
+  async #afterAccepted<T>(scope: string, read: () => Promise<T>): Promise<T> {
+    try { return await read(); }
+    catch (error) { if (error instanceof TransportError) return stopCall({ error: "transport", scope, submitted: false, accepted: true }); throw error; }
+  }
+
   async #viewPerform(kind: string, args: Args, admit: () => void | Promise<void>): Promise<CallResult> {
-    try { return await this.#perform(null, args, kind, undefined, admit); }
-    catch (error) { return this.#failure(error, args); }
+    try { return await this.#stoppedEarly(await this.#perform(null, args, kind, undefined, admit), args); }
+    catch (error) { return this.#stoppedEarly(await this.#failure(error, args), args); }
   }
 
   /**
@@ -456,15 +514,16 @@ export class McpService {
 
   /** Check only a server-retained view original; the public application catalogue still exposes no settle tool. */
   async #viewSettle(args: Args): Promise<CallResult> {
-    try { return await this.#settle(args, { resendExpired: true }); }
-    catch (error) { return this.#failure(error, args); }
+    try { return await this.#stoppedEarly(await this.#settle(args, { resendExpired: true }), args); }
+    catch (error) { return this.#stoppedEarly(await this.#failure(error, args), args); }
   }
 
   // ---------------------------------------------------------------- scopes and targets
 
   #membershipOf(s: Snapshot, held: Held | undefined): ScopeRef | null {
     if (held?.membership) return s.memberships.get(held.membership) ?? null;
-    return s.read.room?.membership ?? null;
+    // On a person's server, a failed read of the room still leaves its membership: it holds the copy, and it names the custody record.
+    return s.read.room?.membership ?? (this.#port.originals ? s.repository : null);
   }
 
   /** A scope by ID, by a room name, or by a lane's number. */
@@ -651,10 +710,7 @@ export class McpService {
         : { sentence: `${resource.scope} answered step ${preparing.step} of ${preparing.capability} for your intent: ${stepped.answer.answer}${stepped.answer.answer === "refused" ? ` (${stepped.answer.reason}${stepped.answer.name ? `, ${stepped.answer.name}` : ""})` : ""}. The act is not submitted by this; its phase is ${record.phase}.`, next: "Submit the act with the same idempotencyKey when the steps you need are answered; settle shows each step and the act apart." };
       return ok({ step: { resource: resource.scope, capability: preparing.capability, step: preparing.step, phase: stepped.step.phase, answer: stepped.answer === null ? null : projectAnswer(stepped.answer) }, act: { phase: stepped.record.phase, intent: intentDigest(stepped.record.envelope.signed.intent) }, ...said });
     }
-    const kept = await this.custody.send(identity, meaning, build, async (envelope) => {
-      try { return await this.#reads.transport.submit(scope, envelope.signed, [], envelope.beside); }
-      catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
-    }, { ...(args["resubmit"] === true ? { resubmit: true } : {}), notAfter, bytes: carried });
+    const kept = await this.#sendAct(s, membership, scope, identity, meaning, build, { ...(args["resubmit"] === true ? { resubmit: true } : {}), notAfter, bytes: carried });
     const tool = binding?.name ?? "act";
     if ("lost" in kept) return failed({ error: "transport", scope, submitted: true });
     if ("archivedSettlement" in kept) return ok(this.#archivedSettlementOf(kept.archivedSettlement, { scope, kind, tool }));
@@ -669,8 +725,121 @@ export class McpService {
     return result;
   }
 
+  /**
+   * One act's send under custody. A person's service also keeps the original at membership first, by the page's rules: the room
+   * keeps no copy, nothing is sent. A stop after the keep ends the row, and the scope's answer ends the row. A service with no
+   * person's session takes the plain path, and a hosted agent's service always does.
+   */
+  async #sendAct(s: Snapshot, membership: ScopeRef | null, scope: ScopeId, identity: Identity, meaning: Digest, build: () => Promise<{ binding: CustodyRecord["binding"]; envelope: Envelope }>, options: { resubmit?: true; notAfter: string; bytes: number }): Promise<Sent> {
+    const deliver = async (envelope: Envelope): Promise<Answer> => {
+      try { return await this.#reads.transport.submit(scope, envelope.signed, [], envelope.beside); }
+      catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
+    };
+    if (membership === null || !this.#keepsOriginals(s, membership)) return this.custody.send(identity, meaning, build, deliver, options);
+    const answered = async (kept: Sent): Promise<Sent> => {
+      if (!("lost" in kept)) await this.#endAnswered(membership, scope, kept.record.envelope.signed, "answer" in kept ? kept.answer : null);
+      return kept;
+    };
+    const before = await this.custody.find(identity);
+    const resubmits = before?.phase === "refused" && options.resubmit === true;
+    // A kept answer sits in custody on this machine, so it needs no session and no copy.
+    if (before && TERMINAL.has(before.phase) && !resubmits) return answered(await this.custody.send(identity, meaning, build, deliver, options));
+    let copies = await this.#copies(membership);
+    if (!copies && this.#reads.held(membership)) { // The next send asks again, as the page does.
+      this.#reads.forget(membership.scope);
+      copies = await this.#copies(membership);
+      if (!copies) return stopCall({ error: "original", why: "session-lost", ...this.#sentBefore(before, resubmits), rowStays: false });
+    }
+    if (!copies) return this.custody.send(identity, meaning, build, deliver, options);
+    const made = await this.custody.keep(identity, meaning, build, options.notAfter, options.bytes);
+    // The stored form: the bytes that custody sends and sends again, so a repeat after a restart matches the row.
+    const record = await this.custody.find(identity) ?? made;
+    const said = this.#sentBefore(record, record.phase === "refused" && options.resubmit === true);
+    // Only a record with no send open owns the row. After a send of unknown outcome, the row is that send's, and a stop leaves it.
+    const own = !said.earlier;
+    const digest = intentDigest(record.envelope.signed.intent);
+    await this.#keepOriginal(membership, copies, record.envelope, digest, said);
+    let delivered = false;
+    let kept: Sent;
+    try { kept = await this.custody.send(identity, meaning, build, envelope => { delivered = true; return deliver(envelope); }, options); }
+    catch (error) {
+      // A lock means that another call of this key holds the send, and the row is its row.
+      const locked = error instanceof CustodyError && error.why.held === "locked";
+      if (own && !delivered && !locked && !await this.#endOriginal(membership, digest)) stopCall({ error: "original", why: "stopped", ...said, rowStays: true });
+      throw error;
+    }
+    return answered(kept);
+  }
+
+  /**
+   * What a stop says of earlier sends under this key. Custody writes `sent` before it delivers, so the bytes of a `prepared` record
+   * never left this server, though a preparation step can have gone ahead of them. A resubmitted refusal's earlier send has its answer.
+   */
+  #sentBefore(record: CustodyRecord | null, resubmits: boolean): SentBefore {
+    return {
+      earlier: record !== null && !resubmits && record.phase !== "prepared",
+      stepped: record !== null && Object.keys(record.steps).length > 0,
+    };
+  }
+
+  /**
+   * Whether this service keeps originals at `membership`: a person's local server. A standing that states an agent or a checker
+   * ends this for the process, because a member's kind is fixed and a later failed read states no kind. A key whose reads have not
+   * stated its kind counts as a person, so it can keep rows until a read states its kind.
+   */
+  #keepsOriginals(s: Snapshot, membership: ScopeRef): boolean {
+    if (!this.#port.originals) return false;
+    const standing = s.read.inventory.standing[membership.scope];
+    if (standing?.known && typeof standing.kind === "string" && standing.kind !== "person") this.#notPeople.add(membership.scope);
+    return !this.#notPeople.has(membership.scope);
+  }
+
+  /** The copy routes under this membership's session, or null: membership gave none. */
+  async #copies(membership: ScopeRef): Promise<Copies | null> {
+    const session = await this.#reads.session(membership);
+    return session && originalsAt(this.#service, membership.scope, session.reader(), this.#fetch ? { fetch: this.#fetch } : {});
+  }
+
+  /**
+   * Keep the exact body of a request before it goes. `expired` does not stop the send. The row's own check refuses a request past
+   * its `notAfter`. Those bytes cannot make a second entry, and only the scope's answer resolves custody.
+   */
+  async #keepOriginal(membership: ScopeRef, copies: Copies, envelope: Envelope, digest: Digest, said: SentBefore): Promise<void> {
+    let kept: Awaited<ReturnType<Copies["keep"]>>;
+    try { kept = await copies.keep(actBodyText(envelope.signed, envelope.beside)); }
+    catch {
+      const ended = said.earlier || await this.#endOriginal(membership, digest); // The keep may have written a row for a request that never went.
+      return stopCall({ error: "original", why: "no-reply", ...said, rowStays: !ended });
+    }
+    if (kept.ok || kept.reason === "expired") return;
+    if (kept.reason === "forbidden" || kept.reason === "sessions-unavailable") this.#reads.forget(membership.scope);
+    return stopCall({ error: "original", why: kept.reason === "full" || kept.reason === "room-full" ? kept.reason : "refused", reason: kept.reason, ...said, rowStays: false });
+  }
+
+  /** End a copy. False: the row stays open, and any key of the member can check it. A row that is already gone is ended. */
+  async #endOriginal(membership: ScopeRef, digest: Digest): Promise<boolean> {
+    try {
+      const ended = await (await this.#copies(membership))?.end(digest);
+      return !ended || ended.ok || ended.reason === "not-found";
+    } catch { return false; }
+  }
+
+  /** The scope's answer ends the row. `unavailable` is no answer, and an acceptance must follow to the entry that holds these bytes. Null: an archived settlement. */
+  async #endAnswered(membership: ScopeRef, scope: ScopeId, signed: Envelope["signed"], answer: Answer | null): Promise<void> {
+    if (answer?.answer === "unavailable") return;
+    if (answer?.answer === "accepted") {
+      try {
+        const session = await this.#reads.session(membership);
+        if (!session) return;
+        const followed = await new ScopeHandle(this.#reads.transport, scope, session.reader()).followReceipt(answer.receipt);
+        if (!followed.ok || followed.entry.input.type !== "act" || canonicalize(followed.entry.input.signed) !== canonicalize(signed)) return;
+      } catch { return; }
+    }
+    await this.#endOriginal(membership, intentDigest(signed.intent));
+  }
+
   #answerOf(answer: Answer, at: { scope: string; kind: string; tool: string; retained: boolean; said: { sentence: string; next: string }; phase: string }): Record<string, unknown> {
-    const base = { answer: answer.answer, sentence: at.retained ? `${at.said.sentence} This outcome was kept under custody; nothing was sent.` : at.said.sentence, next: at.retained && answer.answer === "refused" ? `${at.said.next} To send the same envelope again, deliberately: resubmit: true.` : at.said.next, scope: at.scope, kind: at.kind, tool: at.tool, retained: at.retained, phase: at.phase };
+    const base = { answer: answer.answer, sentence: at.retained ? `${at.said.sentence} This outcome was kept under custody; this call sent nothing.` : at.said.sentence, next: at.retained && answer.answer === "refused" ? `${at.said.next} To send the same envelope again, deliberately: resubmit: true.` : at.said.next, scope: at.scope, kind: at.kind, tool: at.tool, retained: at.retained, phase: at.phase };
     switch (answer.answer) {
       case "archived": return { ...base, archived: answer.archived, fact: answer.fact };
       case "accepted": return { ...base, fact: answer.receipt.fact, outboxIds: answer.receipt.sends };
@@ -994,9 +1163,11 @@ export class McpService {
     const s = await this.#current();
     let identity: Identity;
     let scope: ScopeId | null = null;
+    let membership: ScopeRef | null = null;
     if (args["target"] !== undefined) {
       const at = await this.#scope(s, args["target"]);
       scope = at.scope;
+      membership = at.membership;
       const { summary } = await this.#summary(at.scope, at.membership);
       identity = { service: this.#service, membership: at.membership, signer: this.#port.signer.key, target: summary.scope, key: key as string };
     } else if (args["definition"] !== undefined) {
@@ -1032,6 +1203,7 @@ export class McpService {
       return this.#settle(args, { resendExpired: false });
     }
     const last = settled.decided;
+    if (last && scope !== null && membership !== null && !record.standalone && this.#keepsOriginals(s, membership)) await this.#endAnswered(membership, scope, record.envelope.signed, last.answer ?? null);
     const receipt: Receipt | null = settled.receipt ?? (last?.answer?.answer === "accepted" ? last.answer.receipt : null);
     const archived: ArchivedSettlement | null = last?.archivedSettlement ?? (last?.answer?.answer === "archived"
       ? { ok: false, reason: "archived", archived: last.answer.archived, fact: last.answer.fact } : null);
@@ -1184,7 +1356,7 @@ export class McpService {
       return allowed;
     };
     try { trustForBuild(); }
-    catch { return failed({ error: "target", what: "the expected release and Git host are not in a valid APPLICATION_TRUST setting; nothing was fetched or submitted" }); }
+    catch { return failed({ error: "target", what: "the expected release and Git host are not in a valid APPLICATION_TRUST setting; this call fetched nothing" }); }
     const identity: Identity = { service: this.#service, membership: room.membership, signer: this.#port.signer.key, target: room.rules, key: key as string };
     const meaning = meaningOf(selected);
     const build = async () => {
@@ -1208,23 +1380,20 @@ export class McpService {
     };
     let kept;
     try {
-      kept = await this.custody.send(identity, meaning, build, async envelope => {
-        try { return await this.#reads.transport.submit(room.rules.scope, envelope.signed, [], envelope.beside); }
-        catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
-      }, { notAfter: timeOf(this.#now() + PROPOSED_BOUNDS.intentLifetimeSeconds * 1000), bytes: 768 * KIB });
+      kept = await this.#sendAct(snapshot, room.membership, room.rules.scope, identity, meaning, build, { notAfter: timeOf(this.#now() + PROPOSED_BOUNDS.intentLifetimeSeconds * 1000), bytes: 768 * KIB });
     } catch (error) {
       if (error instanceof CustodyError || error instanceof Stop) throw error;
-      return failed({ error: "target", what: error instanceof ApplicationHttpError && error.reason === "unsupported-object-format" ? "the public HTTPS Git transport does not support SHA-256 repositories; nothing was submitted" : error instanceof ApplicationPackageError ? "package bytes do not match the expected signed release or install bounds; nothing was submitted" : "the exact Git package could not be prepared; nothing was submitted" });
+      return failed({ error: "target", what: error instanceof ApplicationHttpError && error.reason === "unsupported-object-format" ? "the public HTTPS Git transport does not support SHA-256 repositories" : error instanceof ApplicationPackageError ? "package bytes do not match the expected signed release or install bounds; nothing was submitted" : "the exact Git package could not be prepared; nothing was submitted" });
     }
     if ("lost" in kept) return failed({ error: "transport", scope: room.rules.scope, submitted: true });
     if ("archivedSettlement" in kept) return ok(this.#archivedSettlementOf(kept.archivedSettlement, { scope: room.rules.scope, kind: "install-application", tool: "install_application" }));
     if (kept.answer.answer !== "accepted") return ok({ ...projectAnswer(kept.answer), retained: kept.retained, phase: kept.record.phase });
     const receipt = kept.answer.receipt;
-    if (!isReceipt(receipt) || receipt.definition !== pin || receipt.intent !== intentDigest(kept.record.envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(room.rules)) return failed({ error: "target", what: "the install acknowledgement does not match the retained native request" });
-    const read = await this.#reads.read(room.membership, (t, r) => t.entry(room.rules.scope, r, receipt.fact.seq, { at: receipt.fact.at, head: { seq: receipt.fact.seq, hash: receipt.fact.hash } }));
+    if (!isReceipt(receipt) || receipt.definition !== pin || receipt.intent !== intentDigest(kept.record.envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(room.rules)) return failed({ error: "target", sent: true, what: "the install acknowledgement does not match the retained native request" });
+    const read = await this.#afterAccepted(room.rules.scope, () => this.#reads.read(room.membership, (t, r) => t.entry(room.rules.scope, r, receipt.fact.seq, { at: receipt.fact.at, head: { seq: receipt.fact.seq, hash: receipt.fact.hash } })));
     if (!read.ok || !read.complete || read.next !== undefined || read.value.hash !== receipt.fact.hash || entryHash(read.value.entry) !== receipt.fact.hash
       || canonicalize(read.value.entry.at) !== canonicalize(room.rules) || read.value.entry.seq !== receipt.fact.seq || read.value.entry.input.type !== "act"
-      || canonicalize(read.value.entry.input.signed) !== canonicalize(kept.record.envelope.signed)) return failed({ error: "target", what: "the install receipt's native entry is unavailable or does not hold the exact retained request" });
+      || canonicalize(read.value.entry.input.signed) !== canonicalize(kept.record.envelope.signed)) return failed({ error: "target", sent: true, what: "the install receipt's native entry is unavailable or does not hold the exact retained request" });
     this.#invalidate();
     return ok({ answer: "accepted", fact: receipt.fact, item: receipt.fact.seq, retained: kept.retained, phase: "recorded", next: "Read application_installation with this item. Native acceptance records the request; installation may still be pending or refused." });
   }
@@ -1277,14 +1446,14 @@ export class McpService {
     // The admitted entry, read as the member the join made: it must hold the exact request kept, and it names the inbox.
     this.#reads.forget(M.scope);
     const fact = kept.answer.receipt.fact;
-    const entry = await this.#reads.read(M, (t, r) => t.entry(M.scope, r, fact.seq, { at: fact.at, head: { seq: fact.seq, hash: fact.hash } }));
+    const entry = await this.#afterAccepted(M.scope, () => this.#reads.read(M, (t, r) => t.entry(M.scope, r, fact.seq, { at: fact.at, head: { seq: fact.seq, hash: fact.hash } })));
     if (!entry.ok) return failed({ error: "read", scope: M.scope, reason: entry.reason });
     const input = entry.value.entry.input;
     if (entry.value.hash !== fact.hash || input.type !== "act" || canonicalize(input.signed) !== canonicalize(kept.record.envelope.signed)) {
-      return failed({ error: "target", what: `entry ${M.scope}:${fact.seq} does not hold the join kept under this key` });
+      return failed({ error: "target", sent: true, what: `entry ${M.scope}:${fact.seq} does not hold the join kept under this key` });
     }
     const inbox = entry.value.entry.sends.flatMap((send) => ("creator" in send.to && send.to.kind === "inbox" ? [scopeIdOf(send.to as Seed)] : []))[0];
-    if (!inbox) return failed({ error: "target", what: `entry ${M.scope}:${fact.seq} creates no inbox` });
+    if (!inbox) return failed({ error: "target", sent: true, what: `entry ${M.scope}:${fact.seq} creates no inbox` });
     const repository = { ...link.repository, inbox };
     if (this.#port.config.joined) await this.#port.config.joined({ service: link.service, repository, handle: link.handle });
     else if (this.#port.config.setRepository) await this.#port.config.setRepository(repository);

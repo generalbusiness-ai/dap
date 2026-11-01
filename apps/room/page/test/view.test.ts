@@ -3,8 +3,8 @@ import type { CommonsView, CommonsNote } from "@generalbusiness/dap-client";
 import { canonicalize, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
 import { afterEach, expect, test, vi } from "vitest";
 import type { Answer } from "@generalbusiness/dap-contract";
-import type { ChangeView, Room } from "../src/data.ts";
-import { answerLine, changeCondition, changeScreen, issueScreen, whoLine, roomScreen, rulesScreen } from "../src/view.ts";
+import { Unreadable, type ChangeView, type Room } from "../src/data.ts";
+import { answerLine, changeCondition, changeScreen, failureScreen, issueScreen, whoLine, roomScreen, rulesScreen } from "../src/view.ts";
 import type { ListState } from "../src/list-context.ts";
 
 // A DOM-construction stand-in, not a browser. It witnesses the facts the view
@@ -266,4 +266,18 @@ test("Commons prototype-named columns leave other rows missing and retain the no
   expect(column("constructor")).toEqual(["7", "Not supplied"]);
   expect(column("charge")).toEqual(["Not supplied", "25"]);
   expect(rendered!.all("section").some(section => section.attributes["data-action-slot"] === "note" && section.attributes["aria-label"] === "Write a note")).toBe(true);
+});
+
+test("the failure screen says the cause and the next step of an open with no session; every other failure keeps its heading and words", () => {
+  vi.stubGlobal("document", document);
+  const refused = failureScreen(new Unreadable("Cannot read sc_directory: forbidden.", { why: "no-reply" })) as unknown as Element;
+  expect(refused.all("h1")[0]!.textContent).toBe("This room did not open");
+  expect(refused.all("p").map(line => line.textContent)).toEqual([
+    "The service did not give a usable answer to this page's request for a read session. Reload this page to try again.",
+    "Details: Cannot read sc_directory: forbidden. Session request: no-reply.",
+    "Join another room",
+  ]);
+  const heldSession = failureScreen(new Unreadable("Cannot read sc_directory: forbidden.")) as unknown as Element;
+  expect(heldSession.all("h1")[0]!.textContent).toBe("Observation unknown");
+  expect(heldSession.all("p").map(line => line.textContent)).toEqual(["Cannot read sc_directory: forbidden.", "Join another room"]);
 });

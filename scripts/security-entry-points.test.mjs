@@ -129,7 +129,7 @@ const namedOwners = {
     "packages/cli/src/commands.ts:status": "f77f1396b4bed9f01c159ca07c991ef52da9cd9a50ea4e1aae3f5765d50504b4",
   },
   "packages/mcp/src/service.ts": {
-    "packages/mcp/src/service.ts:$module": "cf17b0bbe2dadc7c74c61357b86e38e4698095af140da5ae072ee8a79e99e402",
+    "packages/mcp/src/service.ts:$module": "9c8279b419f351f9730fa89def6f210229392f2a9712c5eca5ce9fde6a56680a",
     "packages/mcp/src/service.ts:ListRestart": "83803f5cf365099c3ed7ad6d12153b68e7616977007feffed4ca4b01bd4ca95d",
     "packages/mcp/src/service.ts:SERVER_NAME": "1a22dd379fec10cbed8b5938dfd522ce9e8cffe176de5f4554e3cad8668764e2",
     "packages/mcp/src/service.ts:SERVER_VERSION": "93926c4b4205a41211c5dfd2e083d8a5d4eed978060ba4d0781fb54d9d3eb366",
@@ -147,7 +147,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:pageOf": "e0aed29507d78dc28f1b498cf91a4d01bfa6e59aae798f1414fc909e071b6bb2",
     "packages/mcp/src/service.ts:ok": "0c1818e2749e7828fa629cfc35cc4d7203068f7243d3193907ac71a416fd13b0",
     "packages/mcp/src/service.ts:ERROR_BYTES": "3cf4f0d3c6271b3cef45b42e64e8d210f063b480addfd1f4f1d26d73c3e64d04",
-    "packages/mcp/src/service.ts:failed": "d77838edf83316f8fc07c79973a118b3589d432ecb7a22dfe8f7115c3e1c24d6",
+    "packages/mcp/src/service.ts:failed": "2e15188162d10d67a65f897bd8d267b65ec2b10634216a828e1470b90714afd7",
     "packages/mcp/src/service.ts:projectAnswer": "ab287949458589079d41c6552bb2a306162fff4c3b30edb21ab83a74fed72cab",
     "packages/mcp/src/service.ts:configDigest": "db445c9209d8d937f49e2016f1a7ef2eb7ab57a189a05093d2ce8d61e49ff5db",
     "packages/mcp/src/service.ts:Stop": "be559905e3dbcdb763828b74b97ba6c27e00c98644ae913cb46daaa6b4a0ebe7",
@@ -159,7 +159,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:WRITE": "5920731b91c504f8bfb945b3edbe132bea0167ec1c9a44579e3dd658e5e9cd91",
     "packages/mcp/src/service.ts:scopeArg": "36e8957cdbc823f8e1bf9ab903a7a353df3b10d1292ed7d378362aabc41f6ef4",
     "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
-    "packages/mcp/src/service.ts:McpService": "768805a125b57f7b92fa503f970615876a5e018b790145232566adb8cf18e0d3",
+    "packages/mcp/src/service.ts:McpService": "0a98afd3ff4b7bdb891176464d31ef742d5bb169a595db2c98b36c334a6daaf0",
     "packages/mcp/src/service.ts:commitIdFault": "26bdaf75c6bfe4bb53bd47795225b3af83b91a80912689eaae18509f89aecf31",
     "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
     "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",
@@ -251,8 +251,8 @@ const seals = {
   "packages/mcp/src/hosted.ts": "408713d777ced9eb3ea9d0c8e590071e08be433c58d35bd9e04ed094439b66b7",
   "packages/mcp/src/hosted-tools.ts": "ef46fa061bb0ed440d81d08e0f1f537c4234dabdb861fb749123bdf93aa81a85", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": namedOwners["packages/mcp/src/service.ts"],
-  "packages/mcp/src/catalogue.ts": "02b1252e490171b58a01814831ec83c1c4d1e658edd42aed566e2c59d383df1e", // Reviewed R5 admission owner; actual maintained parser output.
-  "packages/mcp/src/inventory.ts": "51fdd5f834ae032f20f7abd9e4a02143f57fda36cb29a9552a1a5e46ad79352b", // Reviewed R5 admission owner; actual maintained parser output.
+  "packages/mcp/src/catalogue.ts": "8d1af74b33b07b063a1dad51477b51d22ac9cb7bb08d79ad366a0a3b717c3e53", // Reviewed R5 admission owner; actual maintained parser output.
+  "packages/mcp/src/inventory.ts": "4e7f7ebb2d669f5b7a6697de945174b37af821c619120953377adde4ade77219", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/http.ts": "6c14755074002c14b939c1a73a088ba0f98f085793c47ef9b93bd406db95bfb4", // Reviewed Mcp-Name binding for prompts/get.
   "packages/client/src/application-trust.ts": "137391c8b1ed6f59f66e9368012c1355ed77325fdb16f67b73296be1ccc856b3", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
   "packages/client/src/application-install.ts": "4046c6792d4671cdb259691dcf2171a2c3144450664c696cb722db161790164b", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.

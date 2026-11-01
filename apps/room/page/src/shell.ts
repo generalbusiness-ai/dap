@@ -71,7 +71,44 @@ export class ScopeSending {
   }
 }
 
-/** Initialization guidance is shown only for positive native absence evidence. */
-export function initializationMessage(state: "not-initialized" | "configured" | "unknown"): string | null {
-  return state === "not-initialized" ? "This room is not initialized yet. Its creator initializes it before issues, changes and rules can be used." : null;
+/** Why this page holds no read session: membership's refusal, or `no-reply`, and how long a rate limit says to wait. */
+export interface NoSession { why: string; retryAfterSeconds?: number }
+
+const waitOf = (seconds?: number): string => seconds === undefined ? "a few minutes" : seconds < 120 ? `${seconds} second${seconds === 1 ? "" : "s"}` : `${Math.ceil(seconds / 60)} minutes`;
+
+/**
+ * The cause and the next step of a read refused because the page holds no session. The refusal alone says neither.
+ * Membership answers `sessions-unavailable` before it reads the request, so on such a service a member's key and a
+ * stranger's key get these same words. Where the service issues sessions, a stranger's key gets `unauthorized` and a
+ * member's active key gets a session. So only `unauthorized` speaks of the key's standing.
+ */
+export function noSessionWords({ why, retryAfterSeconds }: NoSession): string {
+  switch (why) {
+    case "no-reply": return "The service did not give a usable answer to this page's request for a read session. Reload this page to try again.";
+    case "rate-limited": return `This key has asked for too many read sessions. Wait ${waitOf(retryAfterSeconds)}, then reload this page.`;
+    case "sessions-unavailable": return "This service is not giving read sessions to any key, so it did not check whether this key belongs to the room. Without a session, the room opens only for a key that signed there recently. Ask whoever runs this service to turn on read sessions, then reload this page.";
+    case "unauthorized": return "This key is not an active key of a member of this room, so the service gave it no read session. Ask someone in the room for a new invitation link, then join with it.";
+    case "not-found": case "misaddressed": return "This connection does not match an active room on this service, so the service gave this key no read session. Ask someone in the room for a new invitation link, then join with it.";
+    case "clock-behind": return "The service's clock is behind, so it gave no read session. Reload this page later to try again.";
+    case "expired": case "bad-request": return "The service refused this page's request for a read session. This device's clock may be wrong. Check its date and time, then reload this page.";
+    default: return `The service refused this page's request for a read session (${why}). Reload this page to try again.`;
+  }
+}
+
+/** Why a failed read has no session behind it, or null: every other failure keeps its own words. */
+export const noSessionOf = (error: unknown): NoSession | null => error instanceof Error ? (error as Error & { noSession?: NoSession | null }).noSession ?? null : null;
+
+/** What a form shows for a failed open. */
+export function failureText(error: unknown, otherwise: string): string {
+  const noSession = noSessionOf(error);
+  return noSession ? noSessionWords(noSession) : error instanceof Error ? error.message : otherwise;
+}
+
+/**
+ * Initialization guidance is shown only for positive native absence evidence. A room open on signed reads
+ * may not reach its rules, so there an unknown state says why the page holds no session.
+ */
+export function initializationMessage(state: "not-initialized" | "configured" | "unknown", unsessioned: string | null = null): string | null {
+  if (state === "not-initialized") return "This room is not initialized yet. Its creator initializes it before issues, changes and rules can be used.";
+  return state === "unknown" && unsessioned !== null ? `The complete rules could not be read. ${noSessionWords({ why: unsessioned })}` : null;
 }

@@ -30,12 +30,14 @@ import { actBodyText, deviceKeyInvitationOf, encodeDeviceKeyInvitation, invitati
  * | `issueDeviceKey` | Signs membership's `invite-key` for an existing member, and returns the private `device-key` invitation link. |
  *
  * **Who reads.** Every read presents a read session that membership
- * issued to the caller's key, renewed when it has ended. Where membership
- * refuses one (a key that is no active member's, or a deployment with no
- * session secret), each read the client can sign goes as a signed read by
- * the caller's key, and the scope decides: it answers only where that key
- * signed an entry within the window of an intent. A read that is refused
- * is shown as its reason.
+ * issued to the caller's key, renewed when it has ended. Where the page gets
+ * none (membership refuses a key that is no active member's, a key with too
+ * many requests, or every key on a deployment with no session secret; or the
+ * request gets no reply), each read the client can sign goes as a signed read
+ * by the caller's key, and the scope decides: it answers only where that key
+ * signed an entry within the window of an intent. A read that is refused is
+ * shown as its reason. A directory read refused on open also keeps why the
+ * page has no session, which the page shows as the cause and the next step.
  */
 
 import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FactRef, FieldValue, Head, Item, KeyId, MemberRef, ScopeId, ScopeRef, Summary, Read, SignedIntent, Receipt, OutboxId } from "@generalbusiness/dap-contract";
@@ -50,6 +52,7 @@ import { Q11_READ_ONLY, rulesSummaryV11 } from "./rules-summary-v11.ts";
 import { knownLIST1 } from "./source-support.ts";
 import { currentStanding, reviewCandidates } from "./membership-projection.ts";
 import type { PageObservationSource } from "./page-observation.ts";
+import type { NoSession } from "./shell.ts";
 
 /** Who is reading and signing, and where. `fetch` and `now` replace the runtime's, as a test does. */
 export type Session = {
@@ -96,9 +99,10 @@ export interface Room {
   definitions: Map<string, DeclaredDefinition>;
 }
 
-/** A read that failed: the page shows this text and nothing else about the thing it could not read. */
+/** A read that failed: the page shows this text and nothing else about the thing it could not read. `noSession` says why the page held no session, where a refused open has that cause. */
 export class Unreadable extends Error {
   override readonly name = "Unreadable";
+  constructor(message: string, readonly noSession: NoSession | null = null) { super(message); }
 }
 
 export const nowOf = (session: Session): number => session.now?.() ?? Date.now();
@@ -141,9 +145,9 @@ export async function renewLost(room: Room): Promise<void> {
   room.unsessioned = asked.why;
 }
 
-export async function summaryOf(handle: ScopeHandle, atLeast?: Receipt): Promise<{ summary: Summary; at: Head }> {
+export async function summaryOf(handle: ScopeHandle, atLeast?: Receipt, noSession: NoSession | null = null): Promise<{ summary: Summary; at: Head }> {
   const read = await handle.summary(atLeast);
-  if (!read.ok) throw new Unreadable(`Cannot read ${handle.scope}: ${read.reason}.`);
+  if (!read.ok) throw new Unreadable(`Cannot read ${handle.scope}: ${read.reason}.`, read.reason === "forbidden" ? noSession : null);
   if (!read.complete || read.next !== undefined) throw new Unreadable(`Cannot read ${handle.scope}: incomplete summary.`);
   return { summary: read.value, at: read.at };
 }
@@ -375,7 +379,7 @@ export async function openRoom(session: Session, place: Place): Promise<Room> {
   const asked = await readerFor(session, place.membership);
   if (asked.session) heldSessions.add(heldContext(session, place.membership, key));
   const room: Room = { session, directory: place.directory, directoryIndex: null, membership: place.membership, rules: "" as ScopeId, destination: "" as ScopeId, key, me: null, reader: asked.session, unsessioned: asked.why, definitions: new Map() };
-  const { summary } = await summaryOf(handleOf(room, place.directory));
+  const { summary } = await summaryOf(handleOf(room, place.directory), undefined, asked.why === null ? null : { why: asked.why, ...(asked.retryAfterSeconds === undefined ? {} : { retryAfterSeconds: asked.retryAfterSeconds }) });
   room.directoryIndex = { scope: summary.scope, definition: summary.definition };
   const repository = summary.items.find((item) => item.type === "repository");
   const M = repository?.refs["membership"];
@@ -398,11 +402,11 @@ export async function openRoom(session: Session, place: Place): Promise<Room> {
 }
 
 /** A read session from membership, signed for by the caller's key, or why membership gave none. A request that got no reply is `no-reply`. */
-async function readerFor(session: Session, membership: ScopeRef): Promise<{ session: ReadSession | null; why: string | null }> {
+async function readerFor(session: Session, membership: ScopeRef): Promise<{ session: ReadSession | null; why: string | null; retryAfterSeconds?: number }> {
   const asked = await signerSessionRequest(membership, sessionSigner(session), timeOf(Math.floor(nowOf(session) / 1000) * 1000 + 60_000), b64url(crypto.getRandomValues(new Uint8Array(16))));
   try {
     const answer = await requestSession(session.service, membership.scope, asked, session.fetch ? { fetch: session.fetch } : {});
-    return answer.ok ? { session: answer.session, why: null } : { session: null, why: answer.reason };
+    return answer.ok ? { session: answer.session, why: null } : { session: null, why: answer.reason, ...(answer.retryAfterSeconds === undefined ? {} : { retryAfterSeconds: answer.retryAfterSeconds }) };
   } catch {
     return { session: null, why: "no-reply" };
   }

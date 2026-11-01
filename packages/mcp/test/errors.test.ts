@@ -3,6 +3,7 @@ import type { Answer, DeclaredDefinition, MismatchReason, ReadRefusal, RefusalRe
 import { REFUSAL_REASONS, READ_REFUSALS, b64url, utf8 } from "@generalbusiness/dap-bytes";
 import { readApplicationInstallOptions, secretSigner, signedIntent, TransportError } from "@generalbusiness/dap-client";
 import { TRUSTED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
+import { earlierSaid } from "../src/errors.ts";
 import { McpService, MISMATCH_NOTES, UNAVAILABLE_NOTES, answered, finding, guardSentences, meaningOf, memoryStore, type DefinitionLike, type Finding } from "../src/index.ts";
 import { READ_CREDENTIAL, SERVICE, SESSION_TOKEN, StandIn } from "./support/standin.ts";
 import { fixedSigner } from "./fixtures.ts";
@@ -115,16 +116,48 @@ describe("errors say who said what, from what the judge returned", () => {
       { error: "restart" }, { error: "transport", scope: "sc_x", submitted: true },
       { error: "custody", state: "full", key: "k", scope: "sc_x", keys: ["a", "b"] }, { error: "custody", state: "conflicting", key: "k", scope: "sc_x", recorded: "comment on sc_x" },
       { error: "custody", state: "locked", key: "k", scope: "sc_x" }, { error: "custody", state: "terminal", key: "k", scope: "sc_x" },
+      { error: "original", why: "full", earlier: false, rowStays: false }, { error: "original", why: "no-reply", earlier: true, rowStays: true },
       { error: "credential", destination: "sc_g", why: "no outcome yet" }, { error: "diff", why: "missing-object: commit", spent: true }, { error: "target", what: "no lane 9" },
     ];
     for (const f of findings) {
       const said = finding(f);
-      expect(said.sentence, f.error).toMatch(/server|Nothing was sent|nothing was sent|unknown|list again|nothing was returned/i);
+      expect(said.sentence, f.error).toMatch(/server|nothing was sent|this call sent nothing|unknown|list again|nothing was returned/i);
       expect(said.next.length).toBeGreaterThan(5);
     }
     expect(finding(findings[4]!).sentence).toContain("The oldest unresolved keys: a, b.");
     expect(finding(findings[1]!).sentence).toContain("The tool for that target is change.propose-version@aa.");
     expect(finding({ error: "credential", destination: "sc_g", why: "x" }).next).toContain("repository.read-token");
+  });
+
+  // Invariant: a stop says what this call did, and only that. It never says that nothing was sent under the key, because an earlier
+  // send under the key can have no known outcome.
+  test("a stop's own words speak of this call, and name what custody holds under the key first", () => {
+    const stops: Finding[] = [
+      { error: "commons-missing" }, { error: "shape", field: "f", what: "x", declared: "y" }, { error: "stale-descriptor", scope: "sc_x", runs: "r", tool: null }, { error: "target", what: "x" },
+      { error: "transport", scope: "sc_x", submitted: false }, ...(["conflicting", "full", "locked", "unreadable", "terminal", "too-large"] as const).map((state): Finding => ({ error: "custody", state, key: "k", scope: "sc_x" })),
+    ];
+    const NEW_KEY = "Do not use a new key until the scope has answered, because a new key can make a second entry.";
+    for (const f of stops) {
+      const said = finding(f);
+      expect(`${said.sentence} ${said.next}`, f.error).not.toMatch(/nothing was (sent|submitted)/i);
+      expect(said.sentence, f.error).toMatch(/this call (sent|submitted) nothing/i);
+      const unknown = earlierSaid("unknown", said.error, said);
+      expect(unknown.sentence.startsWith("An earlier send under this key has no known outcome. ")).toBe(true);
+      expect(unknown.next, f.error).toContain(NEW_KEY);
+      expect(unknown.next, f.error).not.toMatch(/use a new idempotencyKey/i);
+      expect(unknown.next.split(NEW_KEY)).toHaveLength(2);
+      const blind = earlierSaid("unreadable", said.error, said);
+      expect(blind.sentence.startsWith("This server could not read its custody, so it cannot say whether an earlier send under this key went. ")).toBe(true);
+      expect(blind.next.split(NEW_KEY)).toHaveLength(2);
+      expect(earlierSaid("stepped", said.error, said)).toEqual({ sentence: `An earlier preparation step under this key went, and this request did not. ${said.sentence}`, next: said.next });
+    }
+    // A request the scope accepted: a lost or a failed check after it never says that this call sent nothing.
+    for (const f of [{ error: "transport", scope: "sc_x", submitted: false, accepted: true }, { error: "target", what: "entry 4 creates no inbox", sent: true }] satisfies Finding[]) {
+      const said = finding(f);
+      expect(said.sentence.startsWith("The scope accepted this request, and")).toBe(true);
+      expect(said.sentence).not.toMatch(/nothing|Before signing/);
+      expect(said.next).toBe("Call again with the same idempotencyKey: the kept answer returns, and nothing goes twice.");
+    }
   });
 
   // Invariant: a refusal with no guard name attributes no guard: with two unnamed guards, the sentence says the scope does not say

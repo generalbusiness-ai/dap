@@ -28,9 +28,10 @@ import type { Delivery, OutboxItem, Sealed, Summary } from "../src/index.ts";
 import { route } from "../src/worker.ts";
 import { startupTest } from "./support/serving-startup.ts";
 import { net } from "../src/testing.ts";
-import { soon } from "./net.ts";
+import { settle, soon } from "./net.ts";
 import { reader } from "./support.ts";
 
+export { settle };
 export const { rita, una, vic, sam } = keys;
 
 interface Surface {
@@ -104,14 +105,6 @@ export class Platform {
   }
   /** Evict the object. Its storage stays, and everything in memory is gone: its run, and each observation that it held. */
   restart(): Promise<void> { return evictDurableObject(this.object); }
-}
-
-/** Wait until no dispatcher of these scopes has anything to do now. It carries nothing. */
-export async function settle(...nodes: readonly Platform[]): Promise<void> {
-  for (let made = 1; made > 0;) {
-    made = 0;
-    for (const node of nodes) made += await node.stub.dispatch();
-  }
 }
 
 /**

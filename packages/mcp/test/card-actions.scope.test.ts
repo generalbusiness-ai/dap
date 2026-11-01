@@ -90,7 +90,15 @@ test("server-retained card actions keep displayed revisions and custody across d
     const pending = lost["display"] as Display;
     expect(pending.card!.actions.map((action) => action.purpose)).toEqual(["check-original"]);
     const beforeCheck = rita.signedIntents.length;
-    const checked = await rita.ok("view_act", { view: "new", cut: pending.cut, action: pending.card!.actions[0]!.id });
+    // A read lost in the check does not read as a call that sent nothing under the key.
+    room.loseNextReply(`/${newDetail.card!.identity.subject.scope}`);
+    const unread = await rita.ok("view_act", { view: "new", cut: pending.cut, action: pending.card!.actions[0]!.id });
+    const stopped = (unread["result"] as { structuredContent: { error: string; message: string; next: string } }).structuredContent;
+    expect(stopped.error).toBe("transport");
+    expect(stopped.message.startsWith("An earlier send under this key has no known outcome. The reply from ")).toBe(true);
+    expect(stopped.next).toContain("keep the same idempotencyKey");
+    const again = unread["display"] as Display;
+    const checked = await rita.ok("view_act", { view: "new", cut: again.cut, action: again.card!.actions[0]!.id });
     expect((checked["result"] as { structuredContent: unknown }).structuredContent).toMatchObject({ answer: "accepted" });
     expect(rita.signedIntents.length).toBe(beforeCheck);
 
