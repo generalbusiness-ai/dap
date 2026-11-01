@@ -937,7 +937,7 @@ witnesses, and the gate's Counting stage runs it.
 | Script | Needs beyond Playwright and Chromium | The workflow's tools can run it |
 |---|---|---|
 | `packages/mcp/test/declared-*-browser.mjs`, `grow-*-browser.mjs`, `owned-scopes-browser.mjs` | nothing | yes |
-| `apps/room/page/test/no-session-screens.mjs`, `mcp-second-device.mjs`, `issue-questions-browser.mjs`, `two-devices.mjs` | `WRANGLER`, `WITNESS_DIR` and a loopback port for a local Worker. `two-devices.mjs` takes about seven minutes | yes, with those two settings |
+| `apps/room/page/test/no-session-screens.mjs`, `mcp-second-device.mjs`, `issue-questions-browser.mjs`, `needs-you-browser.mjs`, `two-devices.mjs` | `WRANGLER`, `WITNESS_DIR` and a loopback port for a local Worker. `two-devices.mjs` takes about seven minutes | yes, with those two settings |
 | `apps/room/page/test/screens.mjs` | a recorder run in the `scope` project and a clean tree | no: it rewrites the tracked screenshots |
 | `scripts/demo-captures.ts --recorded` | a recorder run in the `scope` project | no: it makes captures, and it exits 0 when its tools are missing |
 | `notes/2026-10-17-journey-views-design/render.mjs` | a static server over the checkout | no: it checks a frozen design packet |

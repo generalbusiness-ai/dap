@@ -1,13 +1,13 @@
 /** Native screens built only from the room's recorded observations. */
-import { timeMs } from "@generalbusiness/dap-bytes";
+import { canonicalize, timeMs } from "@generalbusiness/dap-bytes";
 import { editPath, matches } from "@generalbusiness/dap-platform";
 import type { Answer } from "@generalbusiness/dap-contract";
-import { siteAddress, Unreadable, type Acted, type ChangeView, type IssueView, type LaneRow, type Room, type RulesView } from "./data.ts";
+import { siteAddress, Unreadable, type Acted, type ChangeView, type DecidedQuestion, type IssueView, type LaneLink, type LaneRow, type NeedsYouView, type Room, type RulesView } from "./data.ts";
 import { changeStates } from "./states.ts";
 import { LIST_QUERY_LIMIT, type ListState } from "./list-context.ts";
 import { controlKey } from "./focus.ts";
 import { noSessionOf, noSessionWords } from "./shell.ts";
-import { READING_LEAVES_OPEN } from "../../../views/src/attention.ts";
+import { READING_LEAVES_OPEN, lanesLeftOut, notShown } from "../../../views/src/attention.ts";
 
 type Child = Node | string | null | undefined | false;
 
@@ -47,8 +47,41 @@ export function whoLine(room: Room): HTMLElement {
   return h("p", { class: "who" }, room.me ? `Signed in as ${room.me.handle} (${room.me.role}), key ${room.key}.` : "Reconnect with an active room member's key before sending an action.");
 }
 
+const laneHref = (lane: LaneLink): string => `#/${lane.kind}/${lane.scope}`;
+const openLane = (lane: LaneLink): HTMLElement => h("a", { href: laneHref(lane) }, lane.lane);
+/** Who decided and when, where this read fetched the decide entry, and the comment on the decision. */
+const decidedLines = (decided: DecidedQuestion): HTMLElement[] => [
+  ...decided.by ? [h("p", { class: "muted" }, `Decided by ${decided.by}`, decided.at ? [" on ", localTime(decided.at)] : null, ".")] : [],
+  ...decided.comment ? [h("p", { class: "muted" }, `Comment: ${decided.comment}`)] : [],
+];
+/** How a person reaches the lanes this window left out. Each link is a read. */
+const lanesLeftLine = (needs: NeedsYouView): HTMLElement | null => !needs.omittedLanes ? null : h("p", { "data-needs-left": String(needs.omittedLanes) }, `${lanesLeftOut(needs.omittedLanes)} `,
+  needs.next ? h("a", { href: `#/?after=${encodeURIComponent(canonicalize(needs.next))}`, "data-needs-next": "" }, "Read the lanes that follow")
+    : ["No lane follows this one. ", h("a", { href: "#/", "data-needs-first": "" }, "Read the first lanes")]);
+
+/** The room's list of what needs this person: the rows of `needs_you` in the words of `apps/views`, what it left out, and what was decided. Opening a row is a read. */
+function needsYouSection(needs: NeedsYouView): HTMLElement {
+  const whole = !needs.unread.length && !needs.omittedLanes && !needs.omittedRows;
+  return h("section", { class: "panel", "data-needs-you": "" }, h("h2", { class: "panel-head" }, "Needs you"),
+    ...needs.failed ? [h("p", { role: "status" }, needs.failed)] : [
+      needs.lostPlace ? h("p", { class: "muted" }, "This address names no lane, so this list starts at the first lane.") : null,
+      needs.items.length ? h("p", { class: "muted" }, READING_LEAVES_OPEN) : h("p", { "data-needs-empty": "" }, whole ? "Nothing in this room needs you." : "Nothing in the lanes this list read needs you."),
+      needs.items.map(item => h("article", { class: "comment", "data-needs-row": String(item.item), "data-needs-lane": item.scope },
+        h("p", { class: "muted" }, item.lane), h("p", {}, h("a", { href: laneHref(item) }, h("strong", {}, item.needs))), h("p", {}, item.why), item.lines.map(line => h("p", { class: "muted" }, line)))),
+      notShown(needs.unread.map(lane => ({ scope: lane.ref })), needs.omittedRows).map(line => h("p", { "data-needs-short": "" }, line)),
+      needs.unread.length ? h("p", {}, "Open each one to read it: ", needs.unread.flatMap((lane, index) => [index ? ", " : "", openLane(lane)]), ".") : null,
+      lanesLeftLine(needs),
+      needs.decided.length || needs.decidedUnread ? h("h3", {}, "Decided") : null,
+      needs.decided.length ? h("p", { class: "muted" }, "Decided questions in these lanes, newest first. This page keeps no mark of what you read, so a decided question stays here.") : null,
+      needs.decided.map(decided => h("article", { class: "comment", "data-decided-row": String(decided.ask), "data-needs-lane": decided.scope },
+        h("p", { class: "muted" }, decided.lane), h("p", {}, h("a", { href: laneHref(decided) }, decided.line)), decidedLines(decided))),
+      needs.older.map(lane => h("p", {}, `This list leaves out ${lane.count} older decided question${lane.count === 1 ? "" : "s"} of `, openLane(lane), ". Open it to read them.")),
+      needs.decidedUnread ? h("p", {}, `This list could not read the decided questions of ${needs.decidedUnread} lane${needs.decidedUnread === 1 ? "" : "s"}.`) : null,
+    ]);
+}
+
 /** One list destination, without repeating room identity from the switcher. */
-export function roomScreen(room: Room, lanes: { issues: LaneRow[]; changes: LaneRow[] }, kind: "issue" | "change" = "issue", context?: { state: ListState; changed(state: ListState): void; focusKey?: string }): HTMLElement {
+export function roomScreen(room: Room, lanes: { issues: LaneRow[]; changes: LaneRow[] }, kind: "issue" | "change" = "issue", context?: { state: ListState; changed(state: ListState): void; focusKey?: string }, needs?: NeedsYouView): HTMLElement {
   const label = kind === "issue" ? "Issues" : "Changes";
   const all = kind === "issue" ? lanes.issues : lanes.changes;
   let filter = context?.state.filter ?? "open";
@@ -71,7 +104,7 @@ export function roomScreen(room: Room, lanes: { issues: LaneRow[]; changes: Lane
   }
   query.addEventListener("input", () => { context?.changed({ query: query.value, filter }); render(); });
   render();
-  return h("main", { class: "screen" }, h("h1", { class: "hide" }, label), h("p", { class: "record-meta" }, "Directory index. Open an issue or change for its current state."), h("div", { class: "toolbar" }, h("label", { class: "search" }, query), filters, h("div", { class: "toolbar-actions", "data-action-slot": "create" })), content,
+  return h("main", { class: "screen" }, h("h1", { class: "hide" }, label), needs ? needsYouSection(needs) : null, h("p", { class: "record-meta" }, "Directory index. Open an issue or change for its current state."), h("div", { class: "toolbar" }, h("label", { class: "search" }, query), filters, h("div", { class: "toolbar-actions", "data-action-slot": "create" })), content,
     inspect("Inspect room record", whoLine(room), h("dl", {}, field("Directory", h("code", {}, room.directory)))),
   );
 }
@@ -83,10 +116,11 @@ const discussion = (body: string | null, comments: IssueView["comments"]): HTMLE
 );
 
 /** Render only a native timestamp, in this browser's local time zone. */
-function issueTime(label: string, value: string | null): HTMLElement {
+function localTime(value: string | null): Child {
   const ms = timeMs(value);
-  return h("p", { class: "record-meta" }, `${label}: `, ms === null ? "Unavailable" : h("time", { datetime: value! }, new Intl.DateTimeFormat(undefined, { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit", timeZoneName: "short" }).format(new Date(ms))));
+  return ms === null ? "Unavailable" : h("time", { datetime: value! }, new Intl.DateTimeFormat(undefined, { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit", timeZoneName: "short" }).format(new Date(ms)));
 }
+const issueTime = (label: string, value: string | null): HTMLElement => h("p", { class: "record-meta" }, `${label}: `, localTime(value));
 
 /** Each open question, in the words `apps/views` gives. The answers go in this question's slot, and the scope judges each one. */
 const questionsSection = (issue: IssueView): HTMLElement | null => !issue.questions.length ? null : section("Questions",
@@ -100,6 +134,11 @@ const questionsSection = (issue: IssueView): HTMLElement | null => !issue.questi
     question.ask >= 0 ? h("div", { class: "toolbar-actions", "data-question-answers": String(question.ask) }) : null,
   )));
 
+/** Each decided question of this lane. A decided question leaves the open list, and this section keeps it after a reload. */
+const decidedSection = (issue: IssueView): HTMLElement | null => !issue.decided.length ? null : section("Decided questions",
+  issue.decided.map(decided => h("article", { class: "comment", "data-decided": String(decided.ask) },
+    h("h3", {}, decided.line), decided.body ? h("p", {}, decided.body) : null, decidedLines(decided))));
+
 export function issueScreen(room: Room, issue: IssueView): HTMLElement {
   return h("main", { class: "screen" }, back("issue"),
     h("div", { class: "detail-top" }, h("div", { class: "detail-heading" }, title(issue.title, issue.number), h("div", { class: "detail-meta" }, state(issue.state === "closed" ? "Closed" : issue.state === "open" ? "Open" : issue.state), issue.requester ? h("span", {}, `· ${issue.requester}`) : null)), h("div", { class: "toolbar-actions", "data-action-slot": "next" })),
@@ -107,6 +146,7 @@ export function issueScreen(room: Room, issue: IssueView): HTMLElement {
     issue.assignees.length ? h("p", { class: "record-meta" }, `Assigned to ${list(issue.assignees)}`) : null,
     issue.conditions.length ? section("Conditions", h("ul", {}, issue.conditions.map((c) => h("li", {}, c)))) : null,
     questionsSection(issue),
+    decidedSection(issue),
     discussion(issue.body, issue.comments),
     inspect("Inspect issue record", whoLine(room), h("dl", {}, field("Lane", h("code", {}, issue.scope)), field("Definition", h("code", {}, issue.definition)), field("Read at", `${issue.head.seq}, ${issue.head.hash}`), issue.closeReason ? field("Close reason", issue.closeReason) : null), commentsRecord(issue.comments)),
   );

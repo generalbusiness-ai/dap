@@ -1,12 +1,14 @@
 /** One authenticated, bounded collection. No room inventory or background read. */
 import { canonicalize, entryHash, isFactRef, isMemberRef, isScopeRef, readMinimum, textDigest, utf8 } from "@generalbusiness/dap-bytes";
-import type { Digest, FactRef, Head, Item, MemberRef, ReadMinimum, ScopeRef, Sealed, Summary } from "@generalbusiness/dap-contract";
+import type { Digest, FactRef, Head, Item, MemberRef, ReadMinimum, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
 import { ScopeHandle, type Fetch, type Signer } from "@generalbusiness/dap-client";
 import { Reads, type McpConfig } from "@generalbusiness/dap-mcp";
 import { ROLE_LISTS, type Role } from "@generalbusiness/dap-platform";
+import { LIMITS, controllerIn, keyHolder, laneRefs, laneWindow, type Frame } from "./needs-you.ts";
 import { sameOptional } from "./words.ts";
 
-export const LIMITS = Object.freeze({ scopes: 8, rows: 50, items: 512, history: 512, pages: 16, requests: 64, replyBytes: 4 * 1024 * 1024, bytes: 16 * 1024 * 1024, textBytes: 65536, textsBytes: 262144, milliseconds: 20000, requestMilliseconds: 5000 });
+export { LIMITS };
+export type { Frame };
 export class Unread extends Error { constructor(readonly reason: string) { super(reason); } }
 export { sameOptional };
 /** A receipt floor belongs to one exact target; it supplies no authority. */
@@ -23,7 +25,6 @@ function requireMinimum(head: Head, floor?: ReadMinimum): void {
 }
 export interface Point { scope: ScopeRef; head: Head }
 export interface ReadOptions { service: string; signer: Signer; config: () => Promise<McpConfig>; fetch?: Fetch; now?: () => number }
-export interface Frame { ref: ScopeRef; head: Head; summary: Summary; items: Item[] }
 export interface Counters { scopes: number; requests: number; bytes: number; pages: number; items: number; history: number; textBytes: number }
 
 export class Collection {
@@ -160,21 +161,14 @@ export class Collection {
     const actions = roster.values[ROLE_LISTS[role as Role]];
     if (!Array.isArray(actions) || actions.some(action => typeof action !== "string")) throw new Unread("viewer-role");
     this.actions = actions as string[];
-    const candidates = new Map<string, ScopeRef>();
-    for (const item of D.items) if (item.type === "lane" && isScopeRef(item.refs["scope"])) {
-      const ref = item.refs["scope"], old = candidates.get(ref.scope);
-      if (old && !sameOptional(old, ref)) throw new Unread("incarnation-conflict"); candidates.set(ref.scope, ref);
-    }
+    const refs = laneRefs(D.items);
+    if (!refs) throw new Unread("incarnation-conflict");
     this.discoveryComplete = true;
-    const refs = [...candidates.values()].sort((a, b) => canonicalize(a).localeCompare(canonicalize(b)));
     if (target && !refs.some(ref => sameOptional(ref, target))) throw new Unread("outside-room");
     if (target) refs.sort((a, b) => Number(sameOptional(b, target)) - Number(sameOptional(a, target)));
     this.listed = refs;
     if (only) { this.selected = target ? [target] : []; if (target) this.admit(target); return this; }
-    const start = after ? canonicalize(after) : null, following = start === null ? refs : refs.filter(ref => canonicalize(ref).localeCompare(start) > 0);
-    this.selected = following.slice(0, LIMITS.scopes - this.admitted.size);
-    this.omitted = refs.filter(ref => !this.selected.includes(ref));
-    this.next = following.length > this.selected.length ? this.selected.at(-1) ?? null : null;
+    ({ selected: this.selected, omitted: this.omitted, next: this.next } = laneWindow(refs, LIMITS.scopes - this.admitted.size, after));
     for (const ref of this.selected) this.admit(ref);
     return this;
   }
@@ -231,19 +225,10 @@ export class Collection {
   }
   /** Who holds a key, as the membership lists it now. A key that is no longer active reads as unknown. */
   actorOfKey(key: string): { kind: string; name: string; controller?: string } | null {
-    const M = this.frames.get(this.membership.scope)!;
-    const held = M.items.find(item => item.type === "key" && item.state === "active" && item.values["id"] === key);
-    const member = held && M.items.find(item => item.type === "member" && item.id === held.refs["member"])?.parties["member"];
-    return isMemberRef(member) ? this.actor(member) : null;
+    const member = keyHolder(this.frames.get(this.membership.scope)!.items, key);
+    return member ? this.actor(member) : null;
   }
   isAgent(member: MemberRef): boolean { return this.frames.get(this.membership.scope)!.items.some(item => item.type === "member" && item.state === "active" && item.values["kind"] === "agent" && sameOptional(item.parties["member"], member)); }
-  controller(member: MemberRef): MemberRef | null {
-    const M = this.frames.get(this.membership.scope)!;
-    const agents = M.items.filter(item => item.type === "member" && item.state === "active" && item.values["kind"] === "agent" && item.values["role"] === "agent" && sameOptional(item.parties["member"], member));
-    const controller = agents.length === 1 ? agents[0]!.parties["controller"] : null;
-    if (!isMemberRef(controller) || !sameOptional(controller.membership, this.membership)) return null;
-    const people = M.items.filter(item => item.type === "member" && item.state === "active" && item.values["kind"] === "person" && sameOptional(item.parties["member"], controller));
-    return people.length === 1 ? controller : null;
-  }
+  controller(member: MemberRef): MemberRef | null { return controllerIn(this.frames.get(this.membership.scope)!.items, this.membership, member); }
   points(): Point[] { return [...this.frames.values()].map(frame => ({ scope: frame.ref, head: frame.head })); }
 }

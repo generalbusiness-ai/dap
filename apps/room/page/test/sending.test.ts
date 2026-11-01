@@ -93,7 +93,7 @@ test("the shell fences the whole scope during a submit and keeps a lost reply re
     attempt.resolve();
     return new Promise<never>((_resolve, reject) => { rejects.push(reject); });
   });
-  const issueRead = vi.fn(async () => ({ questions: [], state: "closed", intent: 0, requesterRef: room.me.ref }));
+  const issueRead = vi.fn(async () => ({ questions: [], decided: [], state: "closed", intent: 0, requesterRef: room.me.ref }));
   // The captured send returns the actual owned action promise, including
   // its final redraw. A refused synchronous admission returns immediately.
   vi.doMock("@generalbusiness/dap-bytes", async () => ({ ...await vi.importActual<typeof import("@generalbusiness/dap-bytes")>("@generalbusiness/dap-bytes"), b64url: () => "device", unb64url: () => new Uint8Array(32), keyIdOfSecret: () => "key", isScopeRef: (value: unknown) => !!value && typeof value === "object" && "kind" in value }));
@@ -101,7 +101,7 @@ test("the shell fences the whole scope during a submit and keeps a lost reply re
     const { sessionKey, Unreadable } = await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts");
     return { sessionKey, Unreadable,
     act: dataAct, actAssociation: (_room: unknown, scope: string) => `room/member/${scope}`, actsOn: async () => ({ acts: [...["comment", "close-own", "close-any", "reopen-own", "merge", "review-verdict", "ready-own", "open-pr"].map((kind) => ({ kind, fields: [] })), ...(initializedDuringView ? [{ kind: "open-issue", step: "open", on: "lane", line: "Open", fields: [{ name: "definition", type: "digest", required: true, choices: [{ label: "Issue", value: "SCRIPTED-current-definition" }] }, { name: "title", type: "text", required: true }, { name: "conditions", type: "list", required: true }] }] : [])], hidden: 0 }), fieldValue: (_room: unknown, _type: unknown, value: string) => value,
-    initializationStillCurrent: async () => !initializedDuringView, roomInitialization: async () => initialization === "not-initialized" ? { state: initialization, scope: { scope: "rules", kind: "rules", inc: "one" }, head: { seq: 1, hash: "head" }, rulesItem: 0, definition: "platform:rules@3", context: "SCRIPTED-private-read-context" } : initialization === "unknown" ? { state: initialization, reason: "Scripted read unavailable" } : { state: initialization }, openRoom: async (session: import("../src/data.ts").Session) => ({ ...room, session, key: context.publicKey, directory: context.place.directory, membership: context.place.membership, name: `Recorded ${context.place.directory}` }), listLanes: async () => ({ issues: [], changes: [] }), siteAddress: () => "/site/", placeOf: () => null,
+    initializationStillCurrent: async () => !initializedDuringView, roomInitialization: async () => initialization === "not-initialized" ? { state: initialization, scope: { scope: "rules", kind: "rules", inc: "one" }, head: { seq: 1, hash: "head" }, rulesItem: 0, definition: "platform:rules@3", context: "SCRIPTED-private-read-context" } : initialization === "unknown" ? { state: initialization, reason: "Scripted read unavailable" } : { state: initialization }, openRoom: async (session: import("../src/data.ts").Session) => ({ ...room, session, key: context.publicKey, directory: context.place.directory, membership: context.place.membership, name: `Recorded ${context.place.directory}` }), loadNeedsYou: async () => undefined, listLanes: async () => ({ issues: [], changes: [] }), siteAddress: () => "/site/", placeOf: () => null,
     joinRoom: vi.fn(), loadChange: async () => ({ state: "open", manifests: [{ id: 1, state: "current", file: { path: "../unsafe.md" } }], merges: [] }), loadIssue: issueRead, loadRules: async () => { if (rulesUnavailable) throw new Error("Scripted rules read unavailable"); return { scope: "rules", head: { seq: 1, hash: "head" }, revision: null, approvals: 1, ownerMayReview: false, singleControllerException: false, checks: [], labels: [], extents: null, definitions: [], controllers: [] }; },
     };
   });
@@ -219,7 +219,7 @@ test("the shell fences the whole scope during a submit and keeps a lost reply re
     const reading = gate(), releaseRead = gate();
     fixture.release(releaseRead.resolve);
     const sourceReadsBefore = issueRead.mock.calls.length;
-    issueRead.mockImplementationOnce(async () => { reading.resolve(); await releaseRead.promise; return { questions: [], state: "closed", intent: 0, requesterRef: room.me.ref }; });
+    issueRead.mockImplementationOnce(async () => { reading.resolve(); await releaseRead.promise; return { questions: [], decided: [], state: "closed", intent: 0, requesterRef: room.me.ref }; });
     location.hash = "#/issue/delayed";
     redraw(); await fixture.wait(() => reading.promise);
     context = { ...context, place: { ...context.place, directory: "newest-room" } };
@@ -350,7 +350,7 @@ test("retained dialogs use the live scope; accepted draft retirement and refresh
   const settings={place,publicKey:key};
   const room={session:{service:'https://page.test',signer:{key,sign:unexpectedKeyOperation}},...place,rules:'rules',destination:'destination',key,me:{handle:'@reader',role:'maintainer',actions:['change.review','change.merge','issue.open'],ref:{membership:place.membership,member:'@reader'}},reader:{}};
   const issueScope=scopeIdOf({v:1,kind:'lane',definition:fixtureDigest,creator:null,cause:fixtureDigest,ordinal:2});
-  const issue={questions:[],scope:issueScope,ref:{scope:issueScope,kind:'lane',inc:newIncarnation(new Uint8Array(16).fill(2))},requesterRef:room.me.ref,definition:'definition',head:{seq:1,hash:'head'},intent:0,title:'Native issue',number:1,body:null,state:'open',requester:'@author',assignees:[],conditions:[],comments:[],closeReason:null};
+  const issue={questions:[],decided:[],scope:issueScope,ref:{scope:issueScope,kind:'lane',inc:newIncarnation(new Uint8Array(16).fill(2))},requesterRef:room.me.ref,definition:'definition',head:{seq:1,hash:'head'},intent:0,title:'Native issue',number:1,body:null,state:'open',requester:'@author',assignees:[],conditions:[],comments:[],closeReason:null};
   const changeScope=scopeIdOf({v:1,kind:'lane',definition:fixtureDigest,creator:null,cause:fixtureDigest,ordinal:0});
   const change={scope:changeScope,ref:{scope:changeScope,kind:'lane',inc:newIncarnation(new Uint8Array(16).fill(1))},definition:'definition',head:{seq:2,hash:'head'},proposal:0,title:'Selected change',number:2,body:null,state:'open',author:'@author',currentManifest:12,
     manifests:[{id:12,state:'current',authors:['@author'],integrator:'@author',base:'a'.repeat(40),integration:null,tree:null,complete:true,selectedReports:[],file:{path:'AGENTS.md',digest:'digest',size:4,page:'latest',content:'Text'}}],
@@ -387,7 +387,7 @@ test("retained dialogs use the live scope; accepted draft retirement and refresh
   vi.doMock('../src/view.ts', async () => vi.importActual<typeof import('../src/view.ts')>('../src/view.ts'));
   vi.doMock('../src/data.ts',async()=>{
     const {sessionKey}=await vi.importActual<typeof import('../src/data.ts')>('../src/data.ts');
-    return {sessionKey,Unreadable:class Unreadable extends Error{},act,actAssociation:(_room:unknown,scope:string)=>`room/member/${scope}`,fieldValue:(_room:unknown,_type:string,value:string)=>value,initializationStillCurrent:async()=>true,roomInitialization:async()=>({state:"configured"}),issueCreation:createdChild,openRoom:async()=>room,listLanes:async()=>({issues:listedIssue?[{scope:issue.scope,number:1,title:'Native issue',state:'open'}]:[],changes:[]}),actsOn:async(_room:unknown,scope:string)=>({acts:scope==='directory'?[create]:scope==='rules'?[publish,otherRule]:scope===change.scope?[comment,review]:[comment,close],hidden:0}),loadIssue:async()=>issue,loadChange:async()=>change,loadRules:async()=>loadedRules,siteAddress:()=>'/site/HEAD/',placeOf:vi.fn(),joinRoom:vi.fn(),enrollmentAssociation:vi.fn(),joinAssociation:vi.fn()};
+    return {sessionKey,Unreadable:class Unreadable extends Error{},act,actAssociation:(_room:unknown,scope:string)=>`room/member/${scope}`,fieldValue:(_room:unknown,_type:string,value:string)=>value,initializationStillCurrent:async()=>true,roomInitialization:async()=>({state:"configured"}),issueCreation:createdChild,openRoom:async()=>room,loadNeedsYou:async()=>undefined,listLanes:async()=>({issues:listedIssue?[{scope:issue.scope,number:1,title:'Native issue',state:'open'}]:[],changes:[]}),actsOn:async(_room:unknown,scope:string)=>({acts:scope==='directory'?[create]:scope==='rules'?[publish,otherRule]:scope===change.scope?[comment,review]:[comment,close],hidden:0}),loadIssue:async()=>issue,loadChange:async()=>change,loadRules:async()=>loadedRules,siteAddress:()=>'/site/HEAD/',placeOf:vi.fn(),joinRoom:vi.fn(),enrollmentAssociation:vi.fn(),joinAssociation:vi.fn()};
   });
   vi.doMock('../src/retained-editor.ts',()=>({retainedEditor:()=>new Node('div')}));
   let redraw!:()=>void;const location={origin:'https://page.test',hash:'#/'};

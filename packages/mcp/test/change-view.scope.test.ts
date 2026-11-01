@@ -10,6 +10,7 @@ import { diffWithCredential, fileWithCredential, interdiffWithCredential } from 
 import { idOf, type ObjectType } from "../../git/src/reader.ts";
 import type { EffectAnswer, EffectRequest } from "@generalbusiness/dap-scope";
 import { WorkspaceStandIn } from "../../../apps/room/lanes/test/support/workspace.ts";
+import { loadNeedsYou, openRoom } from "../../../apps/room/page/src/data.ts";
 import { changeSubject } from "../../../apps/views/src/change.ts";
 import { decisionSource, questionSubject } from "../../../apps/views/src/decision.ts";
 import { RepoInAi } from "../../../apps/views/src/repo-in-ai.ts";
@@ -750,6 +751,8 @@ test("a real lane on the finding definition: a required finding shows in needs_y
     expect(row!.head.seq, "HELD IN NEEDS_YOU: the row names the lane's head").toBe((summary["head"] as { seq: number }).seq);
     expect(row!.acts, "HELD IN NEEDS_YOU: the owner can answer and is held from merging").toEqual(["resolve-finding-any", "mark-finding-irrelevant", "merge"]);
     expect(rows.find(one => one.category === "merge-attention" && one.scope.scope === change)!.heldBy, "HELD IN NEEDS_YOU: the merge row names the finding").toEqual([required]);
+    const page = await f.room.wait(async () => loadNeedsYou(await openRoom({ service: f.owner.config.service, secret: f.person.secret, fetch: f.room.fetch, now: f.room.now }, { directory: f.repository.directory.scope, membership: f.repository.membership })));
+    expect(page.items.map(one => one.row), "THE SAME ROWS ON THE PAGE: a browser reaches each change lane's rows, from the reads of a real scope").toEqual(rows);
     const held = await card(a, "held", "view_change", changeSubject(lane));
     const lines = held.card!.body!.split("\n");
     expect(lines, "HELD ON THE CARD: the card says that it holds the merge").toContain(`Finding ${required}: holds the merge.`);

@@ -1,7 +1,7 @@
 import { canonicalize, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { FieldValue, Item, ScopeRef } from "@generalbusiness/dap-contract";
 import { ViewError, type ActLike, type Card, type CardAction, type LocalReviewCapture, type ViewSource } from "@generalbusiness/dap-mcp";
-import { APPROVAL_LIMIT, READING_LEAVES_OPEN, offerLabel, questionOffers, reasonLines, whyLine, type Reasons } from "./attention.ts";
+import { APPROVAL_LIMIT, READING_LEAVES_OPEN, lanesLeftOut, notShown, offerLabel, questionOffers, reasonLines, whyLine, type Reasons } from "./attention.ts";
 import { captureInput } from "./capture.ts";
 import { changeProjection } from "./change.ts";
 import { RepoInAi, questionDefinition, result, type Context, type Row } from "./repo-in-ai.ts";
@@ -31,13 +31,8 @@ function lanesLeft(data: Readonly<Record<string, unknown>>, screen: string): str
   const omitted = (data["omittedScopes"] as unknown[]).length, next = data["next"];
   if (omitted === 0) return "";
   // The Work list takes no cursor, so it names the omission and offers no scope.
-  if (screen === "work") return ` This list leaves out ${omitted} lane${omitted === 1 ? "" : "s"}. The Work list reads only the first lanes.`;
-  return ` This list leaves out ${omitted} lane${omitted === 1 ? "" : "s"}.${isScopeRef(next) ? ` To read the lanes that follow, open this screen again with scope ${canonicalize(next)}.` : " No lane follows this one. To read the first lanes, open this screen with no scope."}`;
-}
-/** What a list could not read or show. A person must not take a short list for the whole room. */
-function notShown(data: Readonly<Record<string, unknown>>): string[] {
-  const unread = [...new Set((data["unread"] as { scope: ScopeRef }[]).map(row => row.scope.scope))].length, rows = data["omittedRows"] as number;
-  return [...unread ? [`This list could not read ${unread} lane${unread === 1 ? "" : "s"}, so it can leave out items there.`] : [], ...rows ? [`This list leaves out ${rows} more item${rows === 1 ? "" : "s"}. Settle some of the items above, then read it again.`] : []];
+  if (screen === "work") return ` ${lanesLeftOut(omitted)} The Work list reads only the first lanes.`;
+  return ` ${lanesLeftOut(omitted)}${isScopeRef(next) ? ` To read the lanes that follow, open this screen again with scope ${canonicalize(next)}.` : " No lane follows this one. To read the first lanes, open this screen with no scope."}`;
 }
 /** One entry of the catch-up list: a lane's new entries in words. */
 function changeWords(row: Row): string {
@@ -84,7 +79,7 @@ export function decisionSource(app: RepoInAi): ViewSource {
           capture: { service: app.options.service, directory: data["directory"], viewer: data["viewer"], key: app.options.signer.key, heads: points, ranges } });
         const identity = { item: String(current.item), kind: current.type, revision: String(current.head.seq), subject: { scope: current.scope.scope, item: current.item }, at: {} };
         const projection = points.map(point => ({ scope: point.scope.scope, seq: point.head.seq, hash: point.head.hash }));
-        const shortfall = [...notShown(data), ...(left ? [left.trim()] : [])];
+        const shortfall = [...notShown(data["unread"] as { scope: ScopeRef }[], data["omittedRows"] as number), ...(left ? [left.trim()] : [])];
         const card: Card = query.screen === "needs-you" ? { identity, title: String(current["needs"]), summary: whyLine(current as unknown as Reasons),
             reasons: [...reasonLines(current as unknown as Reasons, current.rule), READING_LEAVES_OPEN, ...shortfall],
             body: JSON.stringify(current, null, 2), projection, reviewIntended: [], unavailable: [], entries: [], waitsOn: (current["waiting"] as string[] | undefined) ?? [], settles: current["settledBy"] as string[], actions, fallback: `Read needs_you for exact rows, heads and omissions. To read a question and answer it, open its Decision card.${left}` }
