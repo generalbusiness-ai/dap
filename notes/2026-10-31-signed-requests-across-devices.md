@@ -1,6 +1,6 @@
 # Signed requests across devices
 
-Status: design for J1 ([plan 032](plans/032-2026-10-17-journey-as-acceptance-target.md), section 2b). The build is on branch `builder/j1-design-20261031` and has not landed. Code citations hold at main `c1ff846e`.
+Status: design for J1 ([plan 032](plans/032-2026-10-17-journey-as-acceptance-target.md), section 2b). The build lands with this note. Code citations hold at main `c1ff846e`.
 
 Ana comments on an issue from a laptop. The page signs the act and sends it. The reply never comes, and then the laptop's battery runs out. Ana opens the room on a phone and wants to know one thing: did the comment land?
 
@@ -167,7 +167,7 @@ The witness counts in three places:
 
 These limits apply to J1:
 
-- **The page only.** Plan 032 says "every person's act". J1 closes that condition for the room page only. `dap mcp` and the CLI keep their custody on their machine, and a phone cannot see those requests. The condition stays open until a `dap mcp` writer has an owner or a planner ruling drops it. The routes take any session, so a writer needs no new design.
+- **The page only.** Plan 032 says "every person's act". J1 closes that condition for the room page only. `dap mcp` and the CLI keep their custody on their machine, and a phone cannot see those requests. The routes take any session, so a writer needs no new design.
 - **The planner's ruling on other writers** (act `d64edebe`). J1's head closes the plan's condition for the room page, and the condition stays open for other writers.
   - **`dap mcp`.** The builder owns this writer, as one small follow-up after J1 lands. It uses the same routes and the same rules, when the service holds a person's session. Its witness sends a request through `dap mcp` and loses the reply. The page on a second device then settles the request, and nothing goes out twice. J1 does not build this writer.
   - **The CLI.** The CLI stays with its private device storage.
@@ -188,6 +188,6 @@ These limits apply to J1:
 
 Hosted code changes are `packages/scope/src/originals.ts` and the routes and wake in `object.ts`, `worker.ts` and `outbox.ts`. The page gains its writer and button in a rebuilt `apps/room/page/assets.ts`.
 
-The planner deploys all three room Workers after the J4 witness closes. J1 has no migration, so a rollback stays possible, and the time bound stops until new code runs again.
+The planner deploys all three room Workers in a later deployment. J1 has no migration, so a rollback stays possible, and the time bound stops until new code runs again.
 
 The deployment has one cost. Objects run old code for some minutes after a deployment. During that time the copy route returns 404, so every page act in that room fails with "nothing was sent".
