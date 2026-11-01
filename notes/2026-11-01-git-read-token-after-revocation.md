@@ -104,9 +104,9 @@ The code matches the types and then drops the ID:
 
 So `notes/implementation/2026-11-01-signed-read-refusal.md` gave the wrong reason for Artifacts when it landed, because it said that `revokeToken` takes the plaintext. That note now gives the reasons below. On Artifacts, the service cannot revoke a taken token today because `mintRead` drops the ID. On GitHub, the reason is at the host.
 
-### Three real calls settle what the pages leave open
+### Three real calls answer what the pages leave open, and the pin does not need call 3
 
-The planner runs these calls, by the ruling in `cccd205a`. I ran none of them. Each one needs a throwaway repository and no room.
+The planner ran calls 1 and 2, by the ruling in `cccd205a`. The planner ruled in `908b6d86` that the one-hour pin does not need call 3, so call 3 stays named here and has not run. I ran none of them. Each one needs a throwaway repository and no room.
 
 1. **Artifacts, by ID.** Mint `createToken("read", 3600)`, and run `git ls-remote` with the plaintext. Run `revokeToken(id)`, and run `git ls-remote` again. Record the reply, the refusal and the delay. This call also tests the `hold@2` revocation path above. Compare the ID with the secret by program, with no output of the secret. The REST page's example ID repeats the first 16 digits of its example token. No page says that an ID contains no part of the secret.
 2. **Artifacts, in flight.** Mint a token for 60 seconds, the documented minimum. Run `git clone` over a throttled link so that the pack outlasts the token. Repeat with `revokeToken(id)` during the download. Record whether the clone finishes.
@@ -304,7 +304,9 @@ This section gives the true sentence for each case, with the time bound counted 
 | New pin, Artifacts, `left` above 0 or all attempts unknown | 1 hour + 600 s | "Some tokens are not revoked. The rest expire within the hour." |
 | A key revoked as `retired`, or a removed member | The pin's lifetime + 600 s, as in the rows above | No notice goes out, so nothing is revoked and nothing refuses the session (`membership.ts:501`, `:521`). |
 
-Rita has one more tool on Artifacts for older pins. `GET /artifacts/namespaces/:namespace/repos/:name/tokens` lists each token's `id`, `scope` and `state`, and `DELETE /artifacts/namespaces/:namespace/tokens/:id` revokes one (<https://developers.cloudflare.com/artifacts/api/rest-api/>). The list names no key, so Rita revokes every active `read` token of the repository. Every member then runs `dap clone` again, and one of the service's own 120-second reads can fail with an unknown outcome. `wrangler artifacts` lists `issue-token` and no revocation (<https://developers.cloudflare.com/artifacts/api/wrangler/>). [Respond to a stolen key](../docs/security/trust-boundaries.md#respond-to-a-stolen-key) now holds this step, because it needs no code. Revoking by ID has run once through the REST route, and listing a repository's tokens has not. The section on real call 1 gives that run.
+The column "Longest time that a read token still works" counts new requests, and a download under way can outlast it, as real call 2 showed on Artifacts in one run at 30 MB.
+
+Rita has one more tool on Artifacts for older pins. `GET /artifacts/namespaces/:namespace/repos/:name/tokens` lists each token's `id`, `scope` and `state`, and `DELETE /artifacts/namespaces/:namespace/tokens/:id` revokes one (<https://developers.cloudflare.com/artifacts/api/rest-api/>). The list names no key, so Rita revokes every active `read` token of the repository. Every member then runs `dap clone` again, and one of the service's own 120-second reads can fail with an unknown outcome. `wrangler artifacts` lists `issue-token` and no revocation (<https://developers.cloudflare.com/artifacts/api/wrangler/>). [Respond to a stolen key](../docs/security/trust-boundaries.md#respond-to-a-stolen-key) now holds this step, because it needs no code. Revoking by ID has run twice through the REST route, and listing a repository's tokens has not. The section on the real calls gives those runs.
 
 These things stay open under every answer:
 
