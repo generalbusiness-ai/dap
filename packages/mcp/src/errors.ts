@@ -179,9 +179,10 @@ export type Finding =
       stale?: string }
   /**
    * The room kept no copy of the request, so this call sent nothing. `earlier`: an earlier send under this key has no known
-   * outcome. `rowStays`: a row of a request that never went stays open.
+   * outcome. `stepped`: a preparation step under this key went, and this request did not. `rowStays`: a row of a request that
+   * never went stays open.
    */
-  | { error: "original"; why: "full" | "room-full" | "no-reply" | "refused" | "session-lost" | "stopped"; reason?: string; earlier: boolean; rowStays: boolean }
+  | { error: "original"; why: "full" | "room-full" | "no-reply" | "refused" | "session-lost" | "stopped"; reason?: string; earlier: boolean; stepped?: boolean; rowStays: boolean }
   | { error: "credential"; destination: string; why: string }
   | { error: "diff"; why: string; spent: boolean }
   | { error: "target"; what: string }
@@ -219,7 +220,9 @@ export function finding(f: Finding): Said & { error: string } {
       return { error: f.error, sentence: `The server's record for key ${clip(f.key)} on ${clip(f.scope)} is ${f.state}; nothing was sent.${extra}`, next };
     }
     case "original": {
-      const nothing = f.earlier ? "This call sent nothing, and an earlier send under this key has no known outcome." : "Nothing was sent.";
+      const nothing = f.earlier ? "This call sent nothing, and an earlier send under this key has no known outcome."
+        : f.stepped ? "This call sent nothing. An earlier preparation step under this key went, and this request did not."
+        : "Nothing was sent.";
       const why = f.why === "full" ? "You have too many open requests."
         : f.why === "room-full" ? "This room has no space for more open requests. Space returns as open requests end, within seven days at most. An admin can still remove a member who has left, and that frees the member's requests."
         : f.why === "no-reply" ? "The room gave no reply when it was asked to keep a copy of this request."

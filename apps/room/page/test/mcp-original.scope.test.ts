@@ -519,6 +519,147 @@ test("a server that held a session and failed to renew it stops the send", async
   } finally { s.d.done(); }
 }, 120_000);
 
+const LOST_SESSION = "This server could not renew its session with the room, so it cannot keep a copy of this request.";
+
+test("a lost session after a lost reply says that an earlier send has no known outcome", async () => {
+  const s = await scene();
+  try {
+    const store = memoryStore();
+    const mcp = s.server(store);
+    s.wire.mode = "reply-lost";
+    expect(said(await comment(s, mcp, "lost-1")).error).toBe("transport");
+    s.wire.mode = "pass";
+    expect(s.wire.acts).toHaveLength(1);
+    expect(await rows(s)).toHaveLength(1);
+
+    // The connection stays bad, so the session's renewal fails too. The same key must not read that nothing went.
+    s.d.advanceClock(601_000);
+    s.wire.down.add("sessions");
+    const stopped = await comment(s, mcp, "lost-1");
+    s.wire.down.delete("sessions");
+    expect(said(stopped).error, JSON.stringify(said(stopped))).toBe("original");
+    expect(said(stopped).message).toBe(`${LOST_SESSION} This call sent nothing, and an earlier send under this key has no known outcome.`);
+    expect(said(stopped).message).not.toContain("Nothing was sent");
+    expect(s.wire.acts).toHaveLength(1);
+    expect(await rows(s)).toHaveLength(1);
+
+    // The connection returns. The same key gets the first entry, and the row ends.
+    const landed = await comment(s, mcp, "lost-1");
+    expect(said(landed).answer, JSON.stringify(said(landed))).toBe("accepted");
+    expect(await entriesUnder(s, "lost-1")).toHaveLength(1);
+    expect(await rows(s)).toEqual([]);
+
+    // The keep's own stops say the same. The page ended this request's row, and the record still knows no answer.
+    s.wire.mode = "reply-lost";
+    expect(said(await comment(s, mcp, "lost-2", "Lost again.")).error).toBe("transport");
+    s.wire.mode = "pass";
+    expect((await checkOriginalRequest(s.phone, (await rows(s))[0]!.digest)).state).toBe("landed");
+    await fill(s, s.rita.me!.ref!.member, "filler-room", 1024 * 1024 * 1024);
+    const full = await comment(s, mcp, "lost-2", "Lost again.");
+    await unfill(s);
+    expect(said(full).message).toContain("This call sent nothing, and an earlier send under this key has no known outcome.");
+    expect(said(full).message).not.toContain("Nothing was sent");
+
+    // `settle` needs no session. The scope's answer resolves custody, and the row waits for a session that can end it.
+    s.wire.mode = "reply-lost";
+    expect(said(await comment(s, mcp, "lost-3", "Settled in the failure.")).error).toBe("transport");
+    s.wire.mode = "pass";
+    s.d.advanceClock(601_000);
+    s.wire.down.add("sessions");
+    const read = await mcp.call("settle", { target: s.lane, idempotencyKey: "lost-3" });
+    s.wire.down.delete("sessions");
+    expect([said(read).answer, said(read).phase], JSON.stringify(said(read))).toEqual(["accepted", "accepted"]);
+    expect(await rows(s)).toHaveLength(1);
+    s.d.advanceClock(61_000); // A refused session is not asked for again for 60 seconds.
+    expect(said(await comment(s, mcp, "lost-3", "Settled in the failure.")).retained).toBe(true);
+    expect(await rows(s)).toEqual([]);
+
+    // A restart during the failure forgets the session. The server sends the same bytes with no copy, and the first send's row stays.
+    s.wire.mode = "reply-lost";
+    expect(said(await comment(s, mcp, "lost-4", "Restarted in the failure.")).error).toBe("transport");
+    s.wire.mode = "pass";
+    s.wire.down.add("sessions");
+    reset(s.wire);
+    const restarted = s.server(store);
+    const resent = await comment(s, restarted, "lost-4", "Restarted in the failure.");
+    s.wire.down.delete("sessions");
+    expect([said(resent).answer, said(resent).retained], JSON.stringify(said(resent))).toEqual(["accepted", false]);
+    expect(s.wire.order).toEqual(["POST acts"]);
+    expect(await entriesUnder(s, "lost-4")).toHaveLength(1);
+    expect(await rows(s)).toHaveLength(1);
+    s.d.advanceClock(61_000);
+    expect(said(await comment(s, restarted, "lost-4", "Restarted in the failure.")).retained).toBe(true);
+    expect(await rows(s)).toEqual([]);
+  } finally { s.d.done(); }
+}, 120_000);
+
+test("a kept answer needs no session, and a resubmission still does", async () => {
+  const s = await scene();
+  try {
+    const mcp = s.server();
+    const accepted = await comment(s, mcp, "kept-1", "Accepted first.");
+    expect(said(accepted).answer).toBe("accepted");
+    s.wire.mode = "never-arrived";
+    expect(said(await comment(s, mcp, "kept-2", "Refused first.")).error).toBe("transport");
+    s.wire.mode = "pass";
+    const row = (await rows(s))[0]!;
+    s.d.advanceClock(sendableAt(row.notAfter) + 1000 - s.phone.session.now!());
+    expect([said(await comment(s, mcp, "kept-2", "Refused first.")).answer, said(await comment(s, mcp, "kept-2", "Refused first.")).retained]).toEqual(["refused", true]);
+    expect(await rows(s)).toEqual([]);
+
+    // The session ends and no new one comes. Each answer sits in custody on this machine.
+    s.d.advanceClock(601_000);
+    s.wire.down.add("sessions");
+    reset(s.wire);
+    const retained = await comment(s, mcp, "kept-1", "Accepted first.");
+    expect([said(retained).answer, said(retained).retained, said(retained).fact?.seq], JSON.stringify(said(retained))).toEqual(["accepted", true, said(accepted).fact?.seq]);
+    const refusal = await comment(s, mcp, "kept-2", "Refused first.");
+    expect([said(refusal).answer, said(refusal).retained], JSON.stringify(said(refusal))).toEqual(["refused", true]);
+    expect(s.wire.acts).toEqual([]);
+    expect(s.wire.order).toEqual([]);
+    // `settle` reads the target first. Past the key's window for signed reads, it says that it cannot read, and it sends nothing.
+    const settled = await mcp.call("settle", { target: s.lane, idempotencyKey: "kept-1" });
+    expect(said(settled).error, JSON.stringify(said(settled))).toBe("read");
+    expect(s.wire.acts).toEqual([]);
+
+    // A deliberate resubmission needs a copy, and it stops. The earlier send has a known answer, and this one did not go.
+    const resubmitted = await mcp.call("act", { ...commentArgs(s, "kept-2", "Refused first."), resubmit: true });
+    expect(said(resubmitted).message).toBe(`${LOST_SESSION} Nothing was sent.`);
+    expect(s.wire.acts).toEqual([]);
+    s.wire.down.delete("sessions");
+  } finally { s.d.done(); }
+}, 120_000);
+
+test("a lost session on a request that never went says that nothing was sent", async () => {
+  const s = await scene();
+  try {
+    const store = memoryStore();
+    const mcp = s.server(store);
+    // The object's cap stops the keep, and custody holds a `prepared` record: it never wrote `sent`, so these bytes never left it.
+    await fill(s, s.rita.me!.ref!.member, "filler-room", 1024 * 1024 * 1024);
+    expect(said(await comment(s, mcp, "never-1")).error).toBe("original");
+    await unfill(s);
+    const id = identityId(await identityOf(s, "never-1")), newKey = identityId(await identityOf(s, "never-2"));
+    expect((await store.read(id))?.phase).toBe("prepared");
+    expect(s.wire.acts).toEqual([]);
+
+    s.d.advanceClock(601_000);
+    s.wire.down.add("sessions");
+    expect(said(await comment(s, mcp, "never-1")).message).toBe(`${LOST_SESSION} Nothing was sent.`);
+    // A new key, the same words, and no record of it.
+    expect(said(await comment(s, mcp, "never-2", "A new key.")).message).toBe(`${LOST_SESSION} Nothing was sent.`);
+    expect(await store.read(newKey)).toBeNull();
+
+    // STAND-IN: a record scripted with one preparation step. A step under this key went ahead of the act, and the act did not go.
+    const scripted = JSON.parse(store.records.get(id)!) as Record<string, unknown>;
+    store.records.set(id, JSON.stringify({ ...scripted, steps: { step: { intent: "scripted", resource: s.lane, capability: "scripted", step: "scripted", phase: "answered", answers: [] } } }));
+    const stepped = await comment(s, mcp, "never-1");
+    s.wire.down.delete("sessions");
+    expect(said(stepped).message).toBe(`${LOST_SESSION} This call sent nothing. An earlier preparation step under this key went, and this request did not.`);
+    expect(s.wire.acts).toEqual([]);
+  } finally { s.d.done(); }
+}, 120_000);
+
 test("the row's body is the request that custody stores", async () => {
   const s = await scene();
   try {

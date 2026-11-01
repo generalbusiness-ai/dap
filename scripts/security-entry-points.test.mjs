@@ -159,7 +159,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:WRITE": "5920731b91c504f8bfb945b3edbe132bea0167ec1c9a44579e3dd658e5e9cd91",
     "packages/mcp/src/service.ts:scopeArg": "36e8957cdbc823f8e1bf9ab903a7a353df3b10d1292ed7d378362aabc41f6ef4",
     "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
-    "packages/mcp/src/service.ts:McpService": "f0508ca60e3888463dbf1b0309d4f3ec44a5ea6f747eee5f5f8af479925d9f09",
+    "packages/mcp/src/service.ts:McpService": "b26813048e4e0e8ecb13d48dd59fe4c00c0fca00451b1dc9db812614c2adcacb",
     "packages/mcp/src/service.ts:commitIdFault": "26bdaf75c6bfe4bb53bd47795225b3af83b91a80912689eaae18509f89aecf31",
     "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
     "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",

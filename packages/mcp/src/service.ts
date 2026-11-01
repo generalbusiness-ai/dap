@@ -127,6 +127,7 @@ interface Snapshot {
 
 type Args = Record<string, unknown>;
 type Copies = ReturnType<typeof originalsAt>;
+type SentBefore = { earlier: boolean; stepped: boolean };
 type Run = (args: Args) => Promise<CallResult>;
 
 const callResultText = (structured: Record<string, unknown>): string => JSON.stringify(structured);
@@ -475,7 +476,8 @@ export class McpService {
 
   #membershipOf(s: Snapshot, held: Held | undefined): ScopeRef | null {
     if (held?.membership) return s.memberships.get(held.membership) ?? null;
-    return s.read.room?.membership ?? null;
+    // On a person's server, a failed read of the room still leaves its membership: it holds the copy, and it names the custody record.
+    return s.read.room?.membership ?? (this.#port.originals ? s.repository : null);
   }
 
   /** A scope by ID, by a room name, or by a lane's number. */
@@ -687,41 +689,57 @@ export class McpService {
       try { return await this.#reads.transport.submit(scope, envelope.signed, [], envelope.beside); }
       catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
     };
-    // A failed read of the room leaves no membership on the target. The room's own membership still holds the copy.
-    const holder = membership ?? s.repository;
-    if (holder === null || !this.#keepsOriginals(s, holder)) return this.custody.send(identity, meaning, build, deliver, options);
-    let copies = await this.#copies(holder);
-    if (!copies && this.#reads.held(holder)) { // The next send asks again, as the page does.
-      this.#reads.forget(holder.scope);
-      copies = await this.#copies(holder);
-      if (!copies) return stopCall({ error: "original", why: "session-lost", earlier: false, rowStays: false });
+    if (membership === null || !this.#keepsOriginals(s, membership)) return this.custody.send(identity, meaning, build, deliver, options);
+    const answered = async (kept: Sent): Promise<Sent> => {
+      if (!("lost" in kept)) await this.#endAnswered(membership, scope, kept.record.envelope.signed, "answer" in kept ? kept.answer : null);
+      return kept;
+    };
+    const before = await this.custody.find(identity);
+    const resubmits = before?.phase === "refused" && options.resubmit === true;
+    // A kept answer sits in custody on this machine, so it needs no session and no copy.
+    if (before && TERMINAL.has(before.phase) && !resubmits) return answered(await this.custody.send(identity, meaning, build, deliver, options));
+    let copies = await this.#copies(membership);
+    if (!copies && this.#reads.held(membership)) { // The next send asks again, as the page does.
+      this.#reads.forget(membership.scope);
+      copies = await this.#copies(membership);
+      if (!copies) return stopCall({ error: "original", why: "session-lost", ...this.#sentBefore(before, resubmits), rowStays: false });
     }
     if (!copies) return this.custody.send(identity, meaning, build, deliver, options);
     const made = await this.custody.keep(identity, meaning, build, options.notAfter, options.bytes);
     // The stored form: the bytes that custody sends and sends again, so a repeat after a restart matches the row.
     const record = await this.custody.find(identity) ?? made;
-    const again = record.phase === "refused" && options.resubmit === true;
-    const sends = again || !TERMINAL.has(record.phase);
+    const said = this.#sentBefore(record, record.phase === "refused" && options.resubmit === true);
     // Only a record with no send open owns the row. After a send of unknown outcome, the row is that send's, and a stop leaves it.
-    const own = again || record.phase === "prepared";
+    const own = !said.earlier;
     const digest = intentDigest(record.envelope.signed.intent);
-    if (sends) await this.#keepOriginal(holder, copies, record.envelope, digest, own);
+    await this.#keepOriginal(membership, copies, record.envelope, digest, said);
     let delivered = false;
     let kept: Sent;
     try { kept = await this.custody.send(identity, meaning, build, envelope => { delivered = true; return deliver(envelope); }, options); }
     catch (error) {
       // A lock means that another call of this key holds the send, and the row is its row.
       const locked = error instanceof CustodyError && error.why.held === "locked";
-      if (own && sends && !delivered && !locked && !await this.#endOriginal(holder, digest)) stopCall({ error: "original", why: "stopped", earlier: false, rowStays: true });
+      if (own && !delivered && !locked && !await this.#endOriginal(membership, digest)) stopCall({ error: "original", why: "stopped", ...said, rowStays: true });
       throw error;
     }
-    if (!("lost" in kept)) await this.#endAnswered(holder, scope, kept.record.envelope.signed, "answer" in kept ? kept.answer : null);
-    return kept;
+    return answered(kept);
+  }
+
+  /**
+   * What a stop says of earlier sends under this key. Custody writes `sent` before it delivers, so the bytes of a `prepared` record
+   * never left this server, though a preparation step can have gone ahead of them. A resubmitted refusal's earlier send has its answer.
+   */
+  #sentBefore(record: CustodyRecord | null, resubmits: boolean): SentBefore {
+    return {
+      earlier: record !== null && !resubmits && record.phase !== "prepared",
+      stepped: record !== null && Object.keys(record.steps).length > 0,
+    };
   }
 
   /**
    * Whether this service keeps originals at `membership`: a person's local server. A standing that states an agent or a checker
-   * ends this for the process, because a member's kind is fixed and a later failed read states no kind.
+   * ends this for the process, because a member's kind is fixed and a later failed read states no kind. A key whose reads have not
+   * stated its kind counts as a person, so it can keep rows until a read states its kind.
    */
   #keepsOriginals(s: Snapshot, membership: ScopeRef): boolean {
     if (!this.#port.originals) return false;
@@ -738,18 +756,18 @@ export class McpService {
 
   /**
    * Keep the exact body of a request before it goes. `expired` does not stop the send. The row's own check refuses a request past
-   * its `notAfter`, the bytes can then only return their first entry or `expired`, and only that answer resolves custody.
+   * its `notAfter`. Those bytes cannot make a second entry, and only the scope's answer resolves custody.
    */
-  async #keepOriginal(membership: ScopeRef, copies: Copies, envelope: Envelope, digest: Digest, own: boolean): Promise<void> {
+  async #keepOriginal(membership: ScopeRef, copies: Copies, envelope: Envelope, digest: Digest, said: SentBefore): Promise<void> {
     let kept: Awaited<ReturnType<Copies["keep"]>>;
     try { kept = await copies.keep(actBodyText(envelope.signed, envelope.beside)); }
     catch {
-      const ended = !own || await this.#endOriginal(membership, digest); // The keep may have written a row for a request that never went.
-      return stopCall({ error: "original", why: "no-reply", earlier: !own, rowStays: !ended });
+      const ended = said.earlier || await this.#endOriginal(membership, digest); // The keep may have written a row for a request that never went.
+      return stopCall({ error: "original", why: "no-reply", ...said, rowStays: !ended });
     }
     if (kept.ok || kept.reason === "expired") return;
     if (kept.reason === "forbidden" || kept.reason === "sessions-unavailable") this.#reads.forget(membership.scope);
-    return stopCall({ error: "original", why: kept.reason === "full" || kept.reason === "room-full" ? kept.reason : "refused", reason: kept.reason, earlier: !own, rowStays: false });
+    return stopCall({ error: "original", why: kept.reason === "full" || kept.reason === "room-full" ? kept.reason : "refused", reason: kept.reason, ...said, rowStays: false });
   }
 
   /** End a copy. False: the row stays open, and any key of the member can check it. A row that is already gone is ended. */
@@ -1139,8 +1157,7 @@ export class McpService {
       return this.#settle(args, { resendExpired: false });
     }
     const last = settled.decided;
-    const holder = membership ?? s.repository;
-    if (last && scope !== null && holder !== null && !record.standalone && this.#keepsOriginals(s, holder)) await this.#endAnswered(holder, scope, record.envelope.signed, last.answer ?? null);
+    if (last && scope !== null && membership !== null && !record.standalone && this.#keepsOriginals(s, membership)) await this.#endAnswered(membership, scope, record.envelope.signed, last.answer ?? null);
     const receipt: Receipt | null = settled.receipt ?? (last?.answer?.answer === "accepted" ? last.answer.receipt : null);
     const archived: ArchivedSettlement | null = last?.archivedSettlement ?? (last?.answer?.answer === "archived"
       ? { ok: false, reason: "archived", archived: last.answer.archived, fact: last.answer.fact } : null);
