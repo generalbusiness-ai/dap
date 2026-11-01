@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bb6da8e3aadfc34ff25e5999db2f658613ba6fc9","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/standin.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bbf9957d45caf568821bb686713fdffbc9fa8411","text":"Merge retired a covered predecessor; the successor is at .github/workflows/views-browser.yml."}
