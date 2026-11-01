@@ -647,6 +647,13 @@ member's join or another key's enrollment changes neither. A refused link
 stays retained in its config directory. Make a new link, and use it in
 another empty config directory.
 
+A new device link in a used config directory stops with these words, and
+it sends nothing:
+
+```
+This config directory holds a failed attempt: an earlier link was refused with revision-moved. This run sent nothing. A new link needs an empty config directory.
+```
+
 ### `dap acts`
 
 ```

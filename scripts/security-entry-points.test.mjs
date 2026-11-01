@@ -298,7 +298,7 @@ const pendingR8Seals = {
   "packages/cli/src/files.ts": "7d0d64f352787e5d30ea03265fb5137a17a1eef61e97454e5408959297ca1d5c", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/store.ts": "b2df92952a0584d615a9d939e0744454ad7251c6c7e8e2c6e4e15188f4a8804a", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/line.ts": "16e5681b077019dabbe1ba2b1bfb04105b9557a9bf3971577644f4fe1f1c885f", // Reviewed CLI session or verification boundary; actual maintained parser output; dap issue wait signs no act.
-  "packages/cli/src/invitations.ts": "690a36025feb51ce1af46812c3628246aae8134475e849c4f70b92cdd5c8dd4c", // Reviewed CLI session or verification boundary; actual maintained parser output.
+  "packages/cli/src/invitations.ts": "baee2e790bd116925f71099eae0d918c5af6299f506291248dbdc76aa5f6c9c6", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/scope-index-applications-command.ts": "e72f729f4232f674d0e132c865e4d7c359ac567a21e97b4e7b905342379d33b7", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/scope-index-manifest.ts": "41c5c324789f395e94252c54ea4dc4d28c6559eccfdd1bcb949d329529ad8cb4", // Preserve trusted session refusal outcomes; actual maintained parser output.
   "packages/cli/src/status-report.ts": "00e41c40d07337fa5a6eb28ff3fa3df27670a861f718598a8ecc7ad83596b7cf", // Reviewed CLI session or verification boundary; actual maintained parser output.
