@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bf2b13ed31f8ec534b9a0fe7b36a0607d10bdea4","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-01-join-device.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c7607c8cfb8bc8c40ad6363d7008d5ec52d779db","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/line.ts."}
