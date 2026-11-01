@@ -3,7 +3,7 @@ import { canonicalize, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/da
 import type { FieldValue, Item, MemberRef, ReadMinimum, ScopeRef } from "@generalbusiness/dap-contract";
 import { changeFinding, changeJ4 } from "@generalbusiness/dap-lanes";
 import type { ActLike, Card, CardAction, Projection } from "@generalbusiness/dap-mcp";
-import { decidedLine } from "./attention.ts";
+import { MERGE_STARTED, changeKicker, decidedLine, mergeHolds, reviewRecorded } from "./attention.ts";
 import { captureInput } from "./capture.ts";
 import { findingProfile, malformedRange, openFindings, requiredSource, shownText } from "./findings.ts";
 import { sameOptional, Unread, type Collection, type Frame } from "./reads.ts";
@@ -101,12 +101,10 @@ async function linkedIssue(collection: Collection, ref: ScopeRef): Promise<Linke
 
 const countOf = (rules: Item | null): number | null => typeof rules?.values["approvals"] === "number" ? rules.values["approvals"] : null;
 const approvals = (context: ChangeContext) => context.reviews.filter(item => item.state === "submitted" && item.values["verdict"] === "approve");
-const changes = (context: ChangeContext) => context.reviews.filter(item => item.state === "submitted" && item.values["verdict"] === "request-changes");
 const requiredChecks = (rules: Item | null): { name: string }[] => {
   const checks = rules?.values["checks"];
   return Array.isArray(checks) ? (checks as { name?: unknown; required?: unknown }[]).filter(check => check.required === true && typeof check.name === "string") as { name: string }[] : [];
 };
-const checkPassed = (context: ChangeContext, name: string) => context.jobs.some(job => job.values["name"] === name && job.state === "passed");
 const activeMerge = (context: ChangeContext) => context.merges.find(item => ["intended", "committed", "unknown"].includes(item.state));
 
 /**
@@ -125,12 +123,12 @@ function verdict(context: ChangeContext, manifest: Item, value: "approve" | "req
   const request = context.requests.find(item => item.state === "open" && sameOptional(item.parties["requested"], context.viewer));
   const extent = approvalExtent(context.rules);
   const fields: Record<string, FieldValue> = { manifest: manifest.id, verdict: value, ...(request ? { request: request.id } : {}), ...(value === "approve" && extent ? { extent } : {}) };
-  return { id: value, label: value === "approve" ? "Approve" : "Request changes", purpose: "approve", kind: "review-verdict", args: { ...captureInput(act(context, "review-verdict"), context.items, context.scope, null, fields) } };
+  return { id: value, label: value === "approve" ? "Approve" : "Request changes", purpose: "approve", kind: "review-verdict", done: reviewRecorded(value), args: { ...captureInput(act(context, "review-verdict"), context.items, context.scope, null, fields) } };
 }
 function merging(context: ChangeContext, manifest: Item): CardAction {
   const selected = manifest.values["selected"];
   const reports = (Array.isArray(selected) ? selected as { report?: FieldValue }[] : []).flatMap(selection => selection.report === undefined ? [] : [selection.report]);
-  return { id: "merge", label: "Merge", purpose: "act", kind: "merge", args: { ...captureInput(act(context, "merge"), context.items, context.scope, null, { manifest: manifest.id, reports }) } };
+  return { id: "merge", label: "Merge", purpose: "act", kind: "merge", done: MERGE_STARTED, args: { ...captureInput(act(context, "merge"), context.items, context.scope, null, { manifest: manifest.id, reports }) } };
 }
 /** At most two acts. Each carries the revisions of the subjects it binds, read with this card. */
 function changeActions(context: ChangeContext): CardAction[] {
@@ -139,9 +137,7 @@ function changeActions(context: ChangeContext): CardAction[] {
   const authors = manifest.parties["authors"];
   const reviewable = actions.includes("change.review") && !(Array.isArray(authors) && authors.some(author => sameOptional(author, viewer)))
     && !context.reviews.some(item => item.state === "submitted" && sameOptional(item.parties["reviewer"], viewer));
-  const needed = countOf(rules);
-  const ready = manifest.values["complete"] === true && rules?.values["revision"] !== undefined && rules.values["revision"] !== null && needed !== null && approvals(context).length >= needed
-    && changes(context).length === 0 && requiredChecks(rules).every(check => checkPassed(context, check.name)) && holding(context).length === 0;
+  const ready = mergeHolds(context.items, manifest, rules, holding(context).map(finding => finding.item.id), context.versions, context.scope).length === 0;
   if (ready && actions.includes("change.merge")) return [merging(context, manifest), ...(reviewable ? [verdict(context, manifest, "request-changes")] : [])];
   return reviewable ? [verdict(context, manifest, "approve"), verdict(context, manifest, "request-changes")] : [];
 }
@@ -252,7 +248,7 @@ export async function changeProjection(app: RepoInAi, subject: string | undefine
     from: { label: from, base: version.values["base"] as string, integration: version.values["integration"] as string }, to: { label, base, integration } })) : [];
   const held = holding(context).length;
   const card: Card = { identity: { item: String((manifest ?? proposal).id), kind: manifest ? "manifest" : "proposal", revision: String((manifest ?? proposal).revision), subject: { scope: scope.scope, item: proposal.id }, at },
-    title: String(proposal.values["title"]), summary: `${typeof proposal.values["number"] === "number" ? `Change ${proposal.values["number"]}` : "Change"}, ${proposal.state}${manifest ? `, version ${context.versions}` : ""}.${held ? ` ${held} open finding${held === 1 ? " holds" : "s hold"} the merge.` : ""}`,
+    kicker: changeKicker(proposal, manifest ? context.versions : null), title: String(proposal.values["title"]), summary: `${typeof proposal.values["number"] === "number" ? `Change ${proposal.values["number"]}` : "Change"}, ${proposal.state}${manifest ? `, version ${context.versions}` : ""}.${held ? ` ${held} open finding${held === 1 ? " holds" : "s hold"} the merge.` : ""}`,
     body: bodyOf(context), reasons: reasonsOf(page, actions),
     projection: collection.points().map(point => ({ scope: point.scope.scope, seq: point.head.seq, hash: point.head.hash })),
     reviewIntended: [], unavailable: [], waitsOn: [], settles: [], actions, ...(original !== undefined ? { unresolvedOriginal: true } : {}),

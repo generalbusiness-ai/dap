@@ -112,7 +112,7 @@ const listen = (server: Server): Promise<string> => new Promise((resolve) => ser
 const stop = (server: Server): Promise<void> => new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
 
 /** Two loopback origins, a cross-origin sandbox proxy and the real single-file app behind package-derived CSP. */
-export async function startViewsHost(options: { declared?: (base: ReturnType<typeof fixture>) => Promise<ReturnType<typeof fixture>> } = {}) {
+export async function startViewsHost(options: { declared?: (base: ReturnType<typeof fixture>) => Promise<ReturnType<typeof fixture>>; words?: (scene: string) => Promise<ReturnType<typeof fixture> & { subject?: string }> } = {}) {
   const instances = new Map<string, ReturnType<typeof fixture> & { wire: Wire; session: ReturnType<typeof newSession>; version: string; cardProcess?: { service: McpService; wire: Wire } }>();
   let hostOrigin = "", sandboxOrigin = "";
   const host = createServer((request, response) => { void (async () => {
@@ -153,7 +153,7 @@ export async function startViewsHost(options: { declared?: (base: ReturnType<typ
     }
     if (url.pathname !== "/") { response.writeHead(404); response.end(); return; }
     if (instances.size >= 128) return json(response, { error: "Fixture host full" }, 429);
-    const id = crypto.randomUUID(), mode = url.searchParams.get("fixture") ?? "normal", demo = mode === "declared" ? await (options.declared ? options.declared(fixture("empty")) : declaredFixture()) : fixture(mode), wire = new Wire(demo.service), session = newSession(null);
+    const id = crypto.randomUUID(), mode = url.searchParams.get("fixture") ?? "normal", demo: ReturnType<typeof fixture> & { subject?: string } = mode === "words" ? await options.words!(url.searchParams.get("scene") ?? "") : mode === "declared" ? await (options.declared ? options.declared(fixture("empty")) : declaredFixture()) : fixture(mode), wire = new Wire(demo.service), session = newSession(null);
     const version = url.searchParams.get("wire") === "legacy" ? LEGACY : MODERN;
     const second = url.searchParams.get("processes") === "two" ? demo.process() : null;
     instances.set(id, { ...demo, wire, session, version, ...(second ? { cardProcess: { service: second, wire: new Wire(second) } } : {}) });
@@ -161,7 +161,7 @@ export async function startViewsHost(options: { declared?: (base: ReturnType<typ
       await wire.handle({ jsonrpc: "2.0", id: 0, method: "initialize", params: { protocolVersion: LEGACY, capabilities: { extensions: { "io.modelcontextprotocol/ui": { mimeTypes: ["text/html;profile=mcp-app"] } } }, clientInfo: { name: "S2 fixture host", version: "1" } } }, session, () => {});
       await wire.handle({ jsonrpc: "2.0", method: "notifications/initialized" }, session, () => {});
     }
-    const settings = { id, sandboxOrigin, denyOpen: url.searchParams.has("denyOpen"), scope: url.searchParams.has("scope") ? JSON.parse(url.searchParams.get("scope")!) : undefined, items: url.searchParams.has("items") ? JSON.parse(url.searchParams.get("items")!) : undefined, screen: url.searchParams.get("screen") ?? "needs-you", openingTool: viewToolName(url.searchParams.get("screen") ?? "needs-you", mode === "declared"), theme: url.searchParams.get("theme") ?? "light", deny: url.searchParams.has("deny"), contextFail: url.searchParams.has("context-fail"), prototype: url.searchParams.has("prototype"), fields };
+    const settings = { id, sandboxOrigin, subject: demo.subject, denyOpen: url.searchParams.has("denyOpen"), scope: url.searchParams.has("scope") ? JSON.parse(url.searchParams.get("scope")!) : undefined, items: url.searchParams.has("items") ? JSON.parse(url.searchParams.get("items")!) : undefined, screen: url.searchParams.get("screen") ?? "needs-you", openingTool: viewToolName(url.searchParams.get("screen") ?? "needs-you", mode === "declared"), theme: url.searchParams.get("theme") ?? "light", deny: url.searchParams.has("deny"), contextFail: url.searchParams.has("context-fail"), prototype: url.searchParams.has("prototype"), fields };
     response.writeHead(200, { "content-type": "text/html" });
     response.end(`<!doctype html><html><head><meta charset="utf-8"><title>S2 card fixture host</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:16px;font:14px system-ui;background:#e9e9e9}header{font-size:12px;margin-bottom:12px;color:#555}#frame{display:block;width:min(100%,592px);height:1px;border:0;background:white;border-radius:12px}body.fullscreen #frame{width:100%}</style></head><body><header>S2 test host · scripted card and scope fixtures</header><iframe id="frame" title="MCP Apps sandbox"></iframe><script>
 const config=${JSON.stringify(settings)}, frame=document.querySelector('#frame');
@@ -183,7 +183,7 @@ if(m.method==='ui/request-display-mode'){proof.mode=config.deny?'inline':m.param
 if(m.method==='ui/message'){proof.chat.push(m.params.content.text);proof.modelTurns++;send({id:m.id,result:{}});return}
 if(m.id!==undefined)send({id:m.id,error:{code:-32601,message:'Fixture host does not support '+m.method}})
 })().catch(error=>proof.errors.push(String(error)))});
-void(async()=>{input={view:config.id,subject:config.screen,...(config.scope?{scope:config.scope}:{}),...(config.items?{items:config.items}:{})};const opened=await rpc('model',config.openingTool,input);if(opened.error||opened.result?.isError)throw Error(JSON.stringify(opened));frame.src=config.sandboxOrigin+'/proxy?instance='+config.id+'&screen='+config.screen})().catch(error=>proof.errors.push(String(error)));
+void(async()=>{input={view:config.id,subject:config.subject??config.screen,...(config.scope?{scope:config.scope}:{}),...(config.items?{items:config.items}:{})};const opened=await rpc('model',config.openingTool,input);if(opened.error||opened.result?.isError)throw Error(JSON.stringify(opened));frame.src=config.sandboxOrigin+'/proxy?instance='+config.id+'&screen='+config.screen})().catch(error=>proof.errors.push(String(error)));
 </script></body></html>`);
   })().catch((error) => { if (!response.headersSent) json(response, { error: String(error) }, 500); else response.end(); }); });
   const sandbox = createServer((request, response) => {

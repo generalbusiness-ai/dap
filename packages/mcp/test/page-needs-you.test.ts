@@ -62,7 +62,7 @@ test("every kind of row on the Page is the row of needs_you, and each names its 
   expect(of("merge-attention").kind).toBe("change");
   expect(of("merge-attention").lane).toBe("Change 2: TEST the fix");
   expect(of("decision-due").why, "THE WORDS OF apps/views").toBe(`Why it is yours: ${String(of("decision-due").row["why"])}`);
-  expect(of("decision-due").lines.at(-1), "THE RULE").toBe(`Rule: ${QUESTION_DIGESTS.issue} acts.decide.`);
+  expect(of("decision-due").lines.at(-1), "THE RULE").toBe("Rule: this lane's rule for a decision.");
   expect(page.unread, "EACH LANE READ").toEqual([]);
   expect(f.peer.requests.filter(line => !line.startsWith("GET ")), "A READ SENDS NO ACT: the Page's list only reads").toEqual([]);
 });
