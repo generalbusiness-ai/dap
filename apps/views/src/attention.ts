@@ -2,11 +2,13 @@
  * The words of one attention row: what needs you, why it is yours, and what settles it. These words grant nothing.
  * `settledBy` names the act or delivery of the row's pinned definition that closes the item, so a reader can check it against the definition.
  * The clause on the row names the rule. Text that a member wrote goes through `shownText`, so it stays one line of data.
+ * The room's Page imports this file too, so a person reads the same words on the Page and on a card. Keep its imports free of room reads and of Node.
  */
 import type { Item, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { isMemberRef } from "@generalbusiness/dap-bytes";
-import { shownText } from "./findings.ts";
-import { sameOptional } from "./reads.ts";
+import { QUESTION_BRIEF_DIGESTS } from "../../room/lanes/src/digests-questions-brief.ts";
+import { QUESTION_DIGESTS } from "../../room/lanes/src/digests-questions.ts";
+import { sameOptional, shownText } from "./words.ts";
 
 export interface Reasons { needs: string; why: string; settles: string; settledBy: string[]; waiting?: string[] }
 const named = (member: unknown): string => isMemberRef(member) ? member.member : "a member";
@@ -46,6 +48,51 @@ export function decidable(ask: Item, items: readonly Item[], scope: ScopeRef): b
     && approvals.some(item => item.values["verdict"] === "approve") && !approvals.some(item => item.values["verdict"] === "request-changes");
 }
 const textAt = (ref: unknown): number | null => typeof ref === "number" ? ref : ref && typeof ref === "object" && "seq" in ref && typeof ref.seq === "number" ? ref.seq : null;
+
+/** The two definitions whose question acts these words describe. */
+export const questions = (pin: unknown): boolean => pin === QUESTION_DIGESTS.issue || pin === QUESTION_BRIEF_DIGESTS.issue;
+
+/** Each question row for this viewer, at one read of a lane's live items: a request that names them, then a question they may decide. */
+export interface QuestionRow { item: Item; clause: string; values: Reasons & { category: string; bodyAt: unknown; currentBody?: boolean; permission: "not-determined" } }
+export function questionRows(items: readonly Item[], scope: ScopeRef, viewer: MemberRef, actions: readonly string[]): QuestionRow[] {
+  const rows: QuestionRow[] = [];
+  for (const item of items) {
+    if (item.type !== "approval-request" || item.state !== "open" || !sameOptional(item.parties["requested"], viewer)) continue;
+    const ask = items.find(ask => ask.type === "ask" && namesItem(item.refs["ask"], ask.id, scope));
+    const currentBody = !!ask && sameOptional(item.refs["bodyAt"], ask.refs["bodyAt"]);
+    rows.push({ item, clause: "acts.request-approval;items.approval-request", values: { category: "requested-review", ...approvalReasons(item, ask, currentBody, ask ? waitingOn(items, ask.id, scope) : []), bodyAt: item.refs["bodyAt"], currentBody, permission: "not-determined" } });
+  }
+  if (actions.includes("issue.decide")) for (const ask of items) {
+    // After the last approval the request leaves this list, and the question still waits for a decision.
+    if (ask.type === "ask" && decidable(ask, items, scope)) rows.push({ item: ask, clause: "acts.decide", values: { category: "decision-due", ...decisionReasons(ask, waitingOn(items, ask.id, scope)), bodyAt: ask.refs["bodyAt"], permission: "not-determined" } });
+  }
+  return rows;
+}
+
+/** The lines under a row's title, in the order a person reads them. */
+export const whyLine = (reasons: Reasons): string => `Why it is yours: ${reasons.why}`;
+export const reasonLines = (reasons: Reasons, rule: { definition: string; clause: string }): string[] => [
+  `What settles it: ${reasons.settles}`,
+  ...(reasons.waiting ? [`Waiting on this: ${reasons.waiting.join(", ")}.`] : []),
+  `Rule: ${rule.definition} ${rule.clause}.`,
+];
+export const READING_LEAVES_OPEN = "Reading this item leaves it open. This list grants no permission.";
+export const APPROVAL_LIMIT = "Approval does not approve the Brief or conditions.";
+/** A request that names someone else. It is not this viewer's to answer. */
+export const otherRequestLine = (request: Item, current: boolean): string => `${named(request.parties["requester"])} asked ${named(request.parties["requested"])} to approve${current ? "" : " an earlier text of"} this question.`;
+
+const localId = (value: unknown): number | null => typeof value === "number" ? value : value && typeof value === "object" && "seq" in value && typeof value["seq"] === "number" ? value["seq"] : null;
+export interface QuestionOffer { kind: "approve" | "decide"; verdict?: "approve" | "request-changes"; request?: Item; label: string }
+export const offerLabel = (kind: "approve" | "decide", verdict: "approve" | "request-changes" = "approve"): string => kind === "decide" ? "Decide" : verdict === "approve" ? "Approve" : "Request changes";
+/** The answers this viewer can press on the question's text at `bodyAt`. The scope still judges each act. */
+export function questionOffers(ask: Item, requests: readonly Item[], approvals: readonly Item[], bodyAt: number, viewer: MemberRef, actions: readonly string[]): QuestionOffer[] {
+  const open = requests.filter(item => item.state === "open" && localId(item.refs["bodyAt"]) === bodyAt);
+  const mine = open.find(item => sameOptional(item.parties["requested"], viewer));
+  if (mine && actions.includes("issue.approve") && !sameOptional(ask.parties["asker"], viewer)) return (["approve", "request-changes"] as const).map(verdict => ({ kind: "approve", verdict, request: mine, label: offerLabel("approve", verdict) }));
+  const onText = approvals.filter(item => localId(item.refs["bodyAt"]) === bodyAt);
+  if (actions.includes("issue.decide") && !open.length && onText.some(item => item.values["verdict"] === "approve") && !onText.some(item => item.values["verdict"] === "request-changes")) return [{ kind: "decide", label: offerLabel("decide") }];
+  return [];
+}
 
 const titled = (proposal: Item | undefined): string => proposal ? `change ${String(proposal.values["number"] ?? proposal.id)}: ${quoted(proposal.values["title"])}` : "this change";
 

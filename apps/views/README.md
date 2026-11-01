@@ -65,6 +65,9 @@ Each `needs_you` row answers three questions. `needs` says what needs you, `why`
 says why it is yours, and `settles` says what closes it. `settledBy` names the act
 or delivery of the row's pinned definition that closes it, and `rule` names the
 clause that put the row there. `waiting` names the agents blocked on a question.
+The room's Page imports the same words from `src/attention.ts` for a question on its
+issue screen, so a person reads one text on both.
+
 These words grant nothing, and the lane still judges the act. A row of category
 `decision-due` lists a question whose `decide` guards hold, for a viewer who holds
 `issue.decide`. Without it, a question would leave the list when its last approval

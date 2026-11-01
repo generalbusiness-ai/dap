@@ -42,7 +42,7 @@ Each press takes a new random idempotency key, so the keys do not stop a second 
 
 1. **The card does not repeat a press.** A press that meets no view signs nothing, because `#instance` refuses before any dispatch. A control that repeats the press fails a named assertion.
 2. **A built-in card reads custody.** A press on one process while the other waits for its answer is refused, because `#refuseWhileOpen` finds the open record on disk. After a lost reply, the other process offers only **Check original request** on the same record. Controls that remove the check or give each process its own directory fail named assertions.
-3. **The scope judges the signed revisions.** Two processes can both pass the check in the moment before either keeps its record. Then both send, and the scope refuses the second act by its revision. This head does not change that, and the tests here use a stand-in that judges nothing, so they do not show it.
+3. **The scope judges the signed revisions.** Two processes can both pass the check in the moment before either keeps its record. Then both send, and the scope refuses the second act by its revision or its guards. This head does not change that, and the tests here use a stand-in that judges nothing, so they do not show it.
 
 ## Evidence
 
