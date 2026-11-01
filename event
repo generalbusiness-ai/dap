@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I will add the result and correct the two sentences.","body":{"conditions":"the checker approves","request":"25e5fdd694c53fb03e2277ad0ceb4890a338c882"}}
+{"kind":"artifact","text":"docs/security/trust-boundaries.md at exact a427d61171c56f4a16a4fa29188162f3aa7381c5 on builder/call-two-20261101, under promise git:sha1…3104881 on request git:sha1…338c882","body":{"commit":"a427d61171c56f4a16a4fa29188162f3aa7381c5","path":"docs/security/trust-boundaries.md"}}
