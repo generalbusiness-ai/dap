@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:78b2b4d97dff8cf16a4541c9b350bc3c0b2d2ef6","text":"Replaced by the review request for exact head eae70586c0296f0750386d9a07d4a54d16356fab; any review promised on this request is released, and a verdict filed against it would bind to nothing."}
+{"kind":"promise","text":"Checker reviews the signed-read trace at exact head eae70586 for request 09083039."}
