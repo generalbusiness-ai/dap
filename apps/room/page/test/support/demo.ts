@@ -69,7 +69,7 @@ export interface Demo {
 
 const ok = (outcome: Outcome): Outcome => { expect(outcome.code, outcome.lines.join("\n")).toBe(0); return outcome; };
 /** The editor needs only change; its actual Una invitation stays enabled unless explicitly omitted. */
-export interface DemoSetup { editorOnly?: true; invitation?: false; holdIssueCreation?: () => boolean }
+export interface DemoSetup { editorOnly?: true; invitation?: false; holdIssueCreation?: () => boolean; recoveryIsFounder?: true }
 /** Creates a fresh room. Full setup is the default; `wrap` may stand between the page and the routes. */
 export async function demo(wrap: (fetch: Fetch, owner: SessionOwner) => Fetch = (f) => f, parent: SessionOwner | null = null, setup: DemoSetup = {}): Promise<Demo> {
   const secret = b64url(crypto.getRandomValues(new Uint8Array(32)));
@@ -151,6 +151,8 @@ export async function demo(wrap: (fetch: Fetch, owner: SessionOwner) => Fetch = 
     active();
     known.push(R);
     lifetime.setHold((envelope) => { if ("definition" in envelope.to) { const name = scopeIdOf(envelope.to); wire(name); if (envelope.to.kind === "lane") createdLanes.set(name, lifetime.platform(name)); return envelope.to.definition === DEMO_DIGESTS.issue && setup.holdIssueCreation?.() === true; } return false; });
+    // A creation made by hand can name the founder's key as the recovery key. `claim` uses the key that the store already holds under the name.
+    if (setup.recoveryIsFounder) await wait(async () => rita.store.keep("recovery", (await rita.store.secret(installed.key))!));
     ok(await run(rita, "claim", "demo", "--handle", "@rita"));
     active();
     const config = (await rita.store.config())!;
