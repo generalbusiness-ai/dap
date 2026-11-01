@@ -279,6 +279,33 @@ test("View diff: a retained card admits nothing while an original is open, and a
   expect(views.display("v").query.page).not.toBe("diff");
 });
 
+// Invariant: a card never says that nothing was sent after a read has signed.
+// The sources and the read port are stand-ins; session.ts is the production code.
+test("a read that a newer card supersedes says that it signed", async () => {
+  const source: ViewSource = { read: async (query) => ({ status: "ready", position: query.position, count: 1, fallback: "Inspect the item.", card: {
+    identity: { kind: "fixture", item: "1", revision: "0", subject: { scope: "fixture-scope", item: 1 }, at: { on: 0 } },
+    title: "Fixture item", summary: "s", actor: { kind: "person", name: "Fixture" }, reasons: [],
+    projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "Inspect the item.", actions: [],
+    diffAvailable: true, diffRead: { target: "destination", base: "a".repeat(40), integration: "b".repeat(40) },
+  } }) };
+  let answer_: CallResult = { content: [], structuredContent: { text: "the diff" }, isError: false };
+  let signed = 0;
+  const views: ViewSessions = new ViewSessions(source, { call: async () => answer("read") }, async () => answer("accepted"), async () => answer("accepted"), () => null, {
+    readExact: async (_read, admit) => { await admit(); signed++; await views.open(`newer-${signed}`, "change", "subject"); return answer_; },
+  });
+  await views.open("v", "change", "subject");
+  const { cut } = await views.read("v");
+  const said = await views.act("v", cut, "view-diff").then(() => "no refusal", (error: { reason?: string; message: string }) => [error.reason, error.message]);
+  expect(signed).toBe(1);
+  expect(said).toEqual(["superseded", "A newer card replaced this one during the read. The read was signed, and this card does not show its answer."]);
+
+  // A read that ended with no text may or may not have signed, so the words say "may".
+  answer_ = { content: [], structuredContent: { answer: "refused" }, isError: true };
+  await views.open("w", "change", "subject");
+  const again = await views.act("w", (await views.read("w")).cut, "view-diff").then(() => "no refusal", (error: { reason?: string; message: string }) => [error.reason, error.message]);
+  expect(again).toEqual(["superseded", "A newer card replaced this one during the read. The read may have been signed, and this card does not show its answer."]);
+});
+
 // Invariant: a person can read what an incomplete card holds, and that read offers no act. An unavailable placeholder has no detail to open.
 // The source is a stand-in that returns one scripted card; session.ts and the browser's open rule are the production code.
 test("an incomplete card opens its available entries and offers no act", async () => {

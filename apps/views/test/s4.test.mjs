@@ -415,6 +415,27 @@ test('a room with no finding profile reads byte for byte as it did before the fi
   assert.equal(actual + '\n', readFileSync(golden, 'utf8'), 'NON-FINDING ROOM: the reads and cards differ from their bytes before the finding profile');
 });
 
+// A person is not told to do what the card offers no way to do, and is not told to open a card that is open.
+test('a card says only what this page offers', async t => {
+  const f = fixture(t), source = decisionSource(f.app);
+  const ready = scriptedChange(f, J4_DIGESTS.change);
+  const requested = scriptedChange(f, J4_DIGESTS.change, () => [item(10, 'review-request', 'open', {}, {}, { requested: f.viewer, requester: f.other }),
+    item(11, 'merge', 'unknown', {}, { manifest: 6 }, { merger: f.viewer })]);
+  const read = async (state, page) => (await source.read({ screen: 'change', subject: changeSubject(state.ref), position: 0, page })).card;
+  assert.deepEqual((await read(ready, 'summary')).reasons, ["Open this card to read the change or merge it. The room's rules decide each act."]);
+  assert.deepEqual((await read(ready, 'item')).reasons, ["The room's rules decide each act."]);
+  assert.deepEqual((await read(requested, 'summary')).actions, []);
+  assert.deepEqual((await read(requested, 'summary')).reasons, ['Open this card to read the change.']);
+  assert.deepEqual((await read(requested, 'item')).reasons, []);
+
+  const q = await question(f, undefined, 'TEST-fixed-question');
+  const asked = async page => (await source.read({ screen: 'decision', subject: questionSubject(q.state.ref, q.opening.entry.seq), position: 0, page })).card;
+  assert.deepEqual((await asked('summary')).actions.map(action => action.kind), (await asked('item')).actions.map(action => action.kind));
+  assert.deepEqual((await asked('item')).reasons, (await asked('item')).actions.length ? ["The room's rules decide each act."] : []);
+  assert.match((await asked('summary')).reasons[0], /^Open this card to read the question/);
+  assert.ok(!(await asked('summary')).reasons[0].includes('sha256:'), 'A card reason shows no digest');
+});
+
 // The finding profile over scripted scope answers. No scope judges these rows, so nothing here shows a guard: `packages/mcp/test/change-view.scope.test.ts` runs the real lane.
 const FILE = 'src/a.ts';
 const scriptedFinding = (f, id, source, values = {}, refs = {}, parties = {}) => item(id, 'finding', 'open', { file: FILE, start: 10, end: 12, class: 'race', severity: 'high', confidence: 80, scenario: 'TEST two writers', source, sourceVersion: 'reviewer 1.2', tree: '3'.repeat(40), ...values }, { version: 6, ...refs }, { reporter: f.other, ...parties });
