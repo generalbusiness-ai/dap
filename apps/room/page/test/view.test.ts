@@ -273,7 +273,7 @@ test("the failure screen says the cause and the next step of an open with no ses
   const refused = failureScreen(new Unreadable("Cannot read sc_directory: forbidden.", { why: "no-reply" })) as unknown as Element;
   expect(refused.all("h1")[0]!.textContent).toBe("This room did not open");
   expect(refused.all("p").map(line => line.textContent)).toEqual([
-    "The service did not answer this page's request for a read session. Reload this page to try again.",
+    "The service did not give a usable answer to this page's request for a read session. Reload this page to try again.",
     "Details: Cannot read sc_directory: forbidden. Session request: no-reply.",
     "Join another room",
   ]);

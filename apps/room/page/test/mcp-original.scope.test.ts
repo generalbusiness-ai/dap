@@ -19,7 +19,7 @@ import { SERVICE, demo, type Demo } from "./support/demo.ts";
 // connection does. No DOM and no process: `mcp-second-device.mjs` runs `dap mcp` and the page.
 
 type Mode = "pass" | "reply-lost" | "never-arrived" | "unavailable";
-type Down = "sessions" | "keep-reply" | "end" | "entries";
+type Down = "sessions" | "keep-reply" | "end" | "entries" | "reads";
 interface Wire { mode: Mode; down: Set<Down>; acts: { actor: string; body: string; arrived: boolean }[]; kept: string[]; order: string[]; sessions: number; unread: string | null }
 const wireOf = (): Wire => ({ mode: "pass", down: new Set(), acts: [], kept: [], order: [], sessions: 0, unread: null });
 const ACTS = /\/v1\/scopes\/[^/]+\/acts$/;
@@ -30,6 +30,7 @@ const wrapOf = (wire: Wire) => (inner: Fetch): Fetch => async (url, init) => {
   const method = init?.method ?? "GET", path = new URL(url).pathname;
   if (path.endsWith("/sessions")) { wire.sessions++; if (wire.down.has("sessions")) throw new Error("no reply to the session request"); }
   if (wire.down.has("entries") && /\/entries\//.test(path)) throw new Error("no reply to the entry read");
+  if (wire.down.has("reads") && method === "GET") throw new Error("no reply to a read");
   if (wire.unread !== null && method === "GET" && `${path}/`.includes(`/${encodeURIComponent(wire.unread)}/`)) return new Response(JSON.stringify({ ok: false, reason: "unavailable" }), { status: 503 }) as never;
   if (COPIES.test(path)) {
     wire.order.push(`${method} originals`);
@@ -100,7 +101,7 @@ const reset = (wire: Wire) => { wire.acts.length = 0; wire.kept.length = 0; wire
 
 const commentArgs = (s: Scene, key: string, body: string) => ({ target: s.lane, kind: "comment", digest: DEMO_DIGESTS.issue, fields: { body }, idempotencyKey: key });
 const comment = (s: Scene, mcp: McpService, key: string, body = "It is in README.md.") => mcp.call("act", commentArgs(s, key, body));
-const said = (result: CallResult) => result.structuredContent as Record<string, unknown> & { error?: string; message?: string; answer?: string; phase?: string; retained?: boolean; fact?: { seq: number }; reason?: string };
+const said = (result: CallResult) => result.structuredContent as Record<string, unknown> & { error?: string; message?: string; next?: string; answer?: string; phase?: string; retained?: boolean; fact?: { seq: number }; reason?: string };
 const rows = async (s: Scene) => { const read = await openOriginals(s.phone); expect(read.failed).toBe(false); return read.rows; };
 const entriesUnder = async (s: Scene, key: string) => {
   const read = await handleOf(s.phone, s.lane).history();
@@ -657,6 +658,152 @@ test("a lost session on a request that never went says that nothing was sent", a
     s.wire.down.delete("sessions");
     expect(said(stepped).message).toBe(`${LOST_SESSION} This call sent nothing. An earlier preparation step under this key went, and this request did not.`);
     expect(s.wire.acts).toEqual([]);
+  } finally { s.d.done(); }
+}, 120_000);
+
+const EARLIER = "An earlier send under this key has no known outcome.";
+const NEW_KEY = "Do not use a new key until the scope has answered, because a new key can make a second entry.";
+const SETTLE_FIRST = `Call settle with this idempotencyKey, or repeat the first call's arguments under it. ${NEW_KEY}`;
+
+test("every answer that stops a call says when an earlier send under the key has no known outcome", async () => {
+  const s = await scene();
+  try {
+    const { store, state } = breakable();
+    const mcp = s.server(store);
+    s.wire.mode = "reply-lost";
+    expect(said(await comment(s, mcp, "unknown-1")).error).toBe("transport");
+    s.wire.mode = "pass";
+    expect(s.wire.acts).toHaveLength(1);
+    const again = commentArgs(s, "unknown-1", "It is in README.md.");
+    const stopped = async (args: Record<string, unknown>) => { const result = await mcp.call("act", args); expect(result.isError, JSON.stringify(said(result))).toBe(true); return said(result); };
+
+    // An outage that also stops reads: the read of the target fails, before the writer and before custody.
+    s.wire.down.add("reads");
+    const outage = await stopped(again);
+    s.wire.down.delete("reads");
+    expect([outage.error, outage.message, outage.next]).toEqual(["transport", `${EARLIER} The reply from ${s.lane} to a read was lost or malformed. This call sent nothing.`, `Call again, and keep the same idempotencyKey if this call carried one. ${NEW_KEY}`]);
+
+    // Another call holds the record.
+    state.locked = true;
+    const locked = await stopped(again);
+    state.locked = false;
+    expect(locked.message).toBe(`${EARLIER} The server's record for key unknown-1 on ${s.lane} is locked; this call sent nothing. Another call under this key holds the record, and its send can be in flight.`);
+    expect(locked.next).toBe(`Wait a moment and call again with the same idempotencyKey. ${NEW_KEY}`);
+
+    // Another meaning under the key: a new key is exactly the wrong advice here.
+    const conflicting = await stopped(commentArgs(s, "unknown-1", "Another body."));
+    expect(conflicting.message).toContain(`${EARLIER} The server's record for key unknown-1 on ${s.lane} is conflicting; this call sent nothing.`);
+    expect(conflicting.next).toBe(SETTLE_FIRST);
+
+    // A shape, a stale descriptor, a target and a refused read, each before signing.
+    const shape = await stopped({ ...again, on: 5 });
+    expect([shape.error, shape.next]).toEqual(["shape", SETTLE_FIRST]);
+    expect(shape.message!.startsWith(`${EARLIER} Before signing, the server found field on`)).toBe(true);
+    expect(shape.message!.endsWith("This call sent nothing.")).toBe(true);
+    const stale = await stopped({ ...again, digest: DEMO_DIGESTS.change });
+    expect([stale.error, stale.message!.startsWith(`${EARLIER} Before signing,`), stale.message].slice(0, 2)).toEqual(["stale-descriptor", true]);
+    expect(stale.message).toContain("This call sent nothing.");
+    expect(stale.next!.endsWith(NEW_KEY)).toBe(true);
+    const target = await stopped({ ...again, target: 4040 });
+    expect([target.error, target.message!.startsWith(`${EARLIER} Before signing,`), target.next!.endsWith(NEW_KEY)]).toEqual(["target", true, true]);
+    s.wire.unread = s.lane;
+    const refused = await stopped(again);
+    s.wire.unread = null;
+    expect([refused.error, refused.message!.startsWith(EARLIER), refused.next!.endsWith(NEW_KEY)]).toEqual(["read", true, true]);
+
+    // None of these sent anything, and no answer here says that nothing was sent under the key.
+    expect(s.wire.acts).toHaveLength(1);
+    for (const answer of [outage, locked, conflicting, shape, stale, target, refused]) expect(`${answer.message} ${answer.next}`).not.toMatch(/nothing was (sent|submitted)/i);
+
+    // Another key under the same outage has no earlier send to speak of.
+    s.wire.down.add("reads");
+    const otherKey = await stopped(commentArgs(s, "other-1", "Another request."));
+    s.wire.down.delete("reads");
+    expect([otherKey.message, otherKey.next]).toEqual([`The reply from ${s.lane} to a read was lost or malformed. This call sent nothing.`, "Call again, and keep the same idempotencyKey if this call carried one."]);
+
+    // The same key still settles it.
+    const settled = await mcp.call("settle", { target: s.lane, idempotencyKey: "unknown-1" });
+    expect(said(settled).answer).toBe("accepted");
+    expect(await entriesUnder(s, "unknown-1")).toHaveLength(1);
+  } finally { s.d.done(); }
+}, 120_000);
+
+test("an answer with no earlier send under the key says only what this call did, and an unreadable custody claims neither", async () => {
+  const s = await scene();
+  try {
+    const { store, inner } = breakable();
+    const mcp = s.server(store);
+    const fresh = commentArgs(s, "fresh-1", "A new key.");
+
+    s.wire.down.add("reads");
+    const outage = said(await mcp.call("act", fresh));
+    s.wire.down.delete("reads");
+    expect([outage.message, outage.next]).toEqual([`The reply from ${s.lane} to a read was lost or malformed. This call sent nothing.`, "Call again, and keep the same idempotencyKey if this call carried one."]);
+
+    const shape = said(await mcp.call("act", { ...fresh, on: 5 }));
+    expect(shape.message!.startsWith("Before signing,")).toBe(true);
+    expect(shape.message!.endsWith("This call sent nothing.")).toBe(true);
+    expect(shape.next).toBe("Correct the field and call again with the same idempotencyKey.");
+
+    // A step went under this key, and the act did not. STAND-IN: the record is scripted, as no definition of this room has a step.
+    s.wire.mode = "reply-lost";
+    await comment(s, mcp, "stepped-1");
+    s.wire.mode = "pass";
+    const id = identityId(await identityOf(s, "stepped-1"));
+    const record = JSON.parse(inner.records.get(id)!) as Record<string, unknown>;
+    inner.records.set(id, JSON.stringify({ ...record, phase: "prepared", steps: { step: { intent: "scripted", resource: s.lane, capability: "scripted", step: "scripted", phase: "answered", answers: [] } } }));
+    const stepped = said(await mcp.call("act", { ...commentArgs(s, "stepped-1", "It is in README.md."), on: 5 }));
+    expect(stepped.message!.startsWith("An earlier preparation step under this key went, and this request did not. Before signing,")).toBe(true);
+    expect(stepped.next).toBe("Correct the field and call again with the same idempotencyKey.");
+
+    // A custody that cannot be read: the answer claims neither way.
+    const unreadable: CustodyStore = { ...store, unresolved: () => Promise.reject(new Error("TEST no store")) };
+    const blind = s.server(unreadable);
+    s.wire.down.add("reads");
+    const told = said(await blind.call("act", commentArgs(s, "blind-1", "Unknown.")));
+    s.wire.down.delete("reads");
+    expect(told.message).toBe(`This server could not read its custody, so it cannot say whether an earlier send under this key went. The reply from ${s.lane} to a read was lost or malformed. This call sent nothing.`);
+    expect(told.next).toBe(`Call again, and keep the same idempotencyKey if this call carried one. ${NEW_KEY}`);
+  } finally { s.d.done(); }
+}, 120_000);
+
+test("a join that was accepted and lost the read after it does not say that nothing was submitted", async () => {
+  const s = await scene();
+  try {
+    const store = memoryStore();
+    const secret = crypto.getRandomValues(new Uint8Array(32));
+    const mcp = s.server(store, secret);
+    const invited = await s.d.run(s.d.rita, "invite", "@ann", "--role", "member");
+    if (invited.code !== 0) throw new Error(invited.lines.join("\n"));
+    const link = invited.lines[1]!.split(": ")[1]!;
+    s.wire.down.add("entries");
+    const joined = said(await mcp.call("join", { link, idempotencyKey: "join-1" }));
+    s.wire.down.delete("entries");
+    expect([joined.error, joined.message], JSON.stringify(joined)).toEqual(["transport", "The scope accepted this request, and the reply to the read after it was lost or malformed."]);
+    expect(joined.next).toBe("Call again with the same idempotencyKey: the kept answer returns, and nothing goes twice.");
+    const kept = said(await mcp.call("join", { link, idempotencyKey: "join-1" }));
+    expect([kept.answer, kept.retained], JSON.stringify(kept)).toEqual(["accepted", true]);
+  } finally { s.d.done(); }
+}, 120_000);
+
+test("a server on the plain path signs a second intent after a failed room read, and the scope refuses it", async () => {
+  const s = await scene();
+  try {
+    // Hosted's McpService has no `originals` port, so its custody identity still carries the null membership of a failed room read.
+    const store = memoryStore();
+    const plain = s.server(store, s.laptopSecret, false);
+    s.wire.mode = "reply-lost";
+    expect(said(await comment(s, plain, "drift-1")).error).toBe("transport");
+    s.wire.mode = "pass";
+    s.d.advanceClock(601_000);
+    s.wire.down.add("sessions");
+    const second = said(await comment(s, plain, "drift-1"));
+    s.wire.down.delete("sessions");
+    expect([second.answer, second.reason], JSON.stringify(second)).toEqual(["mismatch", "idempotency-mismatch"]);
+    expect(s.wire.acts).toHaveLength(2);
+    const read = await handleOf(await openRoom(s.session(s.laptopSecret), placeOf(JSON.stringify(s.d.config))!), s.lane).history();
+    if (!read.ok) throw new Error(read.reason);
+    expect(read.value.filter(sealed => sealed.entry.input.type === "act" && sealed.entry.input.signed.intent.idempotencyKey === "drift-1")).toHaveLength(1);
   } finally { s.d.done(); }
 }, 120_000);
 

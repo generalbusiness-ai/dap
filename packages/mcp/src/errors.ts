@@ -159,6 +159,8 @@ export function clip(value: unknown, chars: number = FRAGMENT_CHARS): string {
   return `${whole.slice(0, cut)}… (${whole.length} characters)`;
 }
 
+const AFTER_ACCEPTED = "Call again with the same idempotencyKey: the kept answer returns, and nothing goes twice.";
+
 /**
  * The server's own findings, before or beside the scope's judgment. Each is a tool error, never a scope's answer. Every
  * fragment a caller gave (a field's path, a key, a scope or target as given, a tool's name) is clipped here, where the
@@ -169,7 +171,11 @@ export type Finding =
   | { error: "shape"; field: string; what: string; declared: string }
   | { error: "stale-descriptor"; scope: string; runs: string; tool: string | null }
   | { error: "restart" }
-  | { error: "transport"; scope: string; submitted: boolean }
+  /**
+   * `submitted`: this call sent the request, and its reply was lost. Otherwise a read failed. `accepted`: the read came after the
+   * scope accepted this call's request, so the request stands.
+   */
+  | { error: "transport"; scope: string; submitted: boolean; accepted?: boolean }
   | { error: "custody"; state: "conflicting" | "full" | "locked" | "unreadable" | "terminal" | "too-large" | "unkept"; key: string; scope: string; keys?: string[]; recorded?: string; bytes?: number; reason?: "budget";
       /** For `unkept`: what the scope answered before the store failed to keep it (`lost` for a reply that never came). */
       answer?: string;
@@ -185,17 +191,41 @@ export type Finding =
   | { error: "original"; why: "full" | "room-full" | "no-reply" | "refused" | "session-lost" | "stopped"; reason?: string; earlier: boolean; stepped?: boolean; rowStays: boolean }
   | { error: "credential"; destination: string; why: string }
   | { error: "diff"; why: string; spent: boolean }
-  | { error: "target"; what: string }
+  /** `sent`: the finding came after the scope accepted this call's request, so it is no finding before signing. */
+  | { error: "target"; what: string; sent?: boolean }
   | { error: "unknown-tool"; name: string }
   | { error: "read"; scope: string; reason: ReadRefusal };
 
+/** What custody holds under a key that a call's stop did not reach: a send of no known outcome, a step that went, or no reading at all. */
+export type Earlier = "unknown" | "stepped" | "unreadable";
+
+const NEW_KEY_RISK = "Do not use a new key until the scope has answered, because a new key can make a second entry.";
+
+/**
+ * A stop's words under a key whose record is unresolved. The base words say what this call did. These words add what the record
+ * holds, first, so that a cut of a long sentence's tail cannot remove them. A next step that changes the request or the key would
+ * meet the conflict or make a second entry, so settling comes first.
+ */
+export function earlierSaid(earlier: Earlier, error: string, said: Said): Said {
+  if (earlier === "stepped") return { sentence: `An earlier preparation step under this key went, and this request did not. ${said.sentence}`, next: said.next };
+  const risked = said.next.includes(NEW_KEY_RISK) ? said.next : `${said.next} ${NEW_KEY_RISK}`;
+  if (earlier === "unreadable") return { sentence: `This server could not read its custody, so it cannot say whether an earlier send under this key went. ${said.sentence}`, next: risked };
+  return {
+    sentence: `An earlier send under this key has no known outcome. ${said.sentence}`,
+    next: error === "shape" || /new idempotencyKey|smaller/.test(said.next) ? `Call settle with this idempotencyKey, or repeat the first call's arguments under it. ${NEW_KEY_RISK}` : risked,
+  };
+}
+
 export function finding(f: Finding): Said & { error: string } {
   switch (f.error) {
-    case "commons-missing": return { error: f.error, sentence: "Before signing, the host reports commons-missing: this package requires Commons and the room has none. Nothing was submitted.", next: "Choose a room with Commons. This host finding is not a recorded native refusal." };
-    case "shape": return { error: f.error, sentence: `Before signing, the server found field ${clip(f.field, PATH_CHARS)} ${f.what}; declared: ${f.declared}. Nothing was sent.`, next: "Correct the field and call again with the same idempotencyKey." };
-    case "stale-descriptor": return { error: f.error, sentence: `Before signing, the server found that ${clip(f.scope)} runs ${clip(f.runs)}, which this tool does not serve. Nothing was sent.${f.tool ? ` The tool for that target is ${f.tool}.` : " No listed tool serves it for your standing."}`, next: "List tools again; call the named tool." };
+    case "commons-missing": return { error: f.error, sentence: "Before signing, the host reports commons-missing: this package requires Commons and the room has none. This call submitted nothing.", next: "Choose a room with Commons. This host finding is not a recorded native refusal." };
+    case "shape": return { error: f.error, sentence: `Before signing, the server found field ${clip(f.field, PATH_CHARS)} ${f.what}; declared: ${f.declared}. This call sent nothing.`, next: "Correct the field and call again with the same idempotencyKey." };
+    case "stale-descriptor": return { error: f.error, sentence: `Before signing, the server found that ${clip(f.scope)} runs ${clip(f.runs)}, which this tool does not serve. This call sent nothing.${f.tool ? ` The tool for that target is ${f.tool}.` : " No listed tool serves it for your standing."}`, next: "List tools again; call the named tool." };
     case "restart": return { error: f.error, sentence: "The tool list changed; list again from the start.", next: "Call tools/list without a cursor." };
-    case "transport": return { error: f.error, sentence: `The reply from ${clip(f.scope)} was lost or malformed; the outcome is unknown.${f.submitted ? " The envelope is under custody." : ""}`, next: f.submitted ? HINTS.settle : "Call again; nothing was submitted." };
+    case "transport":
+      if (f.accepted) return { error: f.error, sentence: "The scope accepted this request, and the reply to the read after it was lost or malformed.", next: AFTER_ACCEPTED };
+      if (!f.submitted) return { error: f.error, sentence: `The reply from ${clip(f.scope)} to a read was lost or malformed. This call sent nothing.`, next: "Call again, and keep the same idempotencyKey if this call carried one." };
+      return { error: f.error, sentence: `The reply from ${clip(f.scope)} was lost or malformed; the outcome is unknown. The envelope is under custody.`, next: HINTS.settle };
     case "custody": {
       if (f.state === "unkept" && f.step) {
         const said = f.answer === "lost" ? "its reply was lost" : `${clip(f.step.resource)} answered ${f.answer}`;
@@ -208,16 +238,18 @@ export function finding(f: Finding): Said & { error: string } {
       const extra = f.state === "full" && f.reason === "budget" ? ` The server's custody store is at its budget: it holds ${f.bytes} bytes with what unresolved records may still receive, and admits no completion capacity for another dispatch; nothing was signed.`
         : f.state === "full" && f.bytes !== undefined ? ` The envelope would carry about ${f.bytes} bytes, more than a record of 2 MiB holds with its outcomes; nothing was signed.`
         : f.state === "full" && f.keys ? ` The oldest unresolved keys: ${f.keys.map((k) => clip(k)).join(", ")}.` : f.recorded ? ` It holds ${f.recorded}.`
-        : f.state === "locked" && f.stale ? " A process died while recovering this lock and left its reclaim file, named in the next step; the server does not break it, so that no two processes can recover at once." : "";
+        : f.state === "locked" && f.stale ? " A process died while recovering this lock and left its reclaim file, named in the next step; the server does not break it, so that no two processes can recover at once."
+        : f.state === "locked" ? " Another call under this key holds the record, and its send can be in flight."
+        : f.state === "unreadable" ? " This server cannot say whether an earlier send under this key went." : "";
       const next = f.state === "conflicting" ? "Use a new idempotencyKey for a new meaning."
         : f.state === "locked" && f.stale ? `Once no process of this ARTROOM_HOME runs, remove the file private/mcp-custody/${f.stale}, relative to ARTROOM_HOME, then call again with the same idempotencyKey.`
-        : f.state === "locked" ? "Wait a moment and call again with the same idempotencyKey."
+        : f.state === "locked" ? `Wait a moment and call again with the same idempotencyKey. ${NEW_KEY_RISK}`
         : f.state === "full" && f.reason === "budget" ? "Call settle for the unresolved keys, or wait for them to complete; retained answers are still read."
         : f.state === "full" && f.bytes !== undefined ? "Make the act smaller: move long texts to detached texts or smaller values."
         : f.state === "full" ? "Call settle for the unresolved keys first."
         : f.state === "terminal" ? "The retained outcome is in the result; resubmit: true sends the same envelope again, deliberately."
-        : f.state === "too-large" ? "Make the act smaller." : "Report it; nothing was sent.";
-      return { error: f.error, sentence: `The server's record for key ${clip(f.key)} on ${clip(f.scope)} is ${f.state}; nothing was sent.${extra}`, next };
+        : f.state === "too-large" ? "Make the act smaller." : `Report it. ${NEW_KEY_RISK}`;
+      return { error: f.error, sentence: `The server's record for key ${clip(f.key)} on ${clip(f.scope)} is ${f.state}; this call sent nothing.${extra}`, next };
     }
     case "original": {
       const nothing = f.earlier ? "This call sent nothing, and an earlier send under this key has no known outcome."
@@ -234,7 +266,9 @@ export function finding(f: Finding): Said & { error: string } {
     }
     case "credential": return { error: f.error, sentence: `No read token of yours is readable at ${clip(f.destination)} (${f.why}); nothing was returned.`, next: "Call repository.read-token first (or act in --generic mode), then wait for its outcome, then credential." };
     case "diff": return { error: f.error, sentence: `The server shows no diff (${clip(f.why)}).${f.spent ? " The one-time credential is spent." : ""}`, next: f.spent ? "Sign another read-token. A commit that the host does not hold stays unavailable until the host holds it." : "Run dap mcp, which reads Git for this tool." };
-    case "target": return { error: f.error, sentence: `Before signing, the server could not resolve the target: ${f.what}. Nothing was sent.`, next: "Call room for the scopes and lanes of the room; give target as a scope ID or a number." };
+    case "target":
+      if (f.sent) return { error: f.error, sentence: `The scope accepted this request, and the server could not check it: ${f.what}.`, next: AFTER_ACCEPTED };
+      return { error: f.error, sentence: `Before signing, the server could not resolve the target: ${f.what}. This call sent nothing.`, next: "Call room for the scopes and lanes of the room; give target as a scope ID or a number." };
     case "unknown-tool": return { error: f.error, sentence: `No tool is named ${clip(f.name)} in this list.`, next: "Call tools/list." };
     case "read": { const said = readRefused(clip(f.scope), f.reason); return { error: f.error, ...said }; }
   }

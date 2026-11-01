@@ -23,7 +23,7 @@ import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob 
 import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
 import { Custody, CustodyError, Lost, TERMINAL, meaningOf, validKey, type ArchivedSettlement, type CustodyRecord, type CustodyStore, type Envelope, type Identity, type Sent } from "./custody.ts";
 import { AT_INPUT, describeAct, grantAction, onOf, schemaOf, type ActLike, type DefinitionLike } from "./describe.ts";
-import { answered, archivedAnswer, clip, finding, type Finding } from "./errors.ts";
+import { answered, archivedAnswer, clip, earlierSaid, finding, type Earlier, type Finding, type Said } from "./errors.ts";
 import { Kept, definitionOf, readInventory, readPartitionIndexes, standingIn, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
 import { KIB, bytesOf, cursorOf, fromCursor, pageBy, sliceText } from "./paging.ts";
 import { Reads } from "./reads.ts";
@@ -156,8 +156,8 @@ export const ERROR_BYTES = Math.min(...Object.values(BOUNDS));
  * names is relative to ARTROOM_HOME), so the last check, on the result with no sentence at all, holds for each of them; were
  * one ever longer, the next step would be cut to fit, with its length, rather than the result pass its bound.
  */
-export const failed = (f: Finding): CallResult => {
-  const said = finding(f);
+export const failed = (f: Finding | (Said & { error: string })): CallResult => {
+  const said = "sentence" in f ? f : finding(f);
   const result = (message: string, next: string = said.next): CallResult => { const structured = { error: said.error, message, next }; return { content: [{ type: "text", text: callResultText(structured) }], structuredContent: structured, isError: true }; };
   const whole = result(said.sentence);
   if (bytesOf(whole) <= ERROR_BYTES) return whole;
@@ -399,6 +399,10 @@ export class McpService {
   }
   async #call(name: string, args: unknown): Promise<CallResult> {
     const given = isRecord(args) ? args : {};
+    return this.#stoppedEarly(await this.#answer(name, given), given);
+  }
+
+  async #answer(name: string, given: Args): Promise<CallResult> {
     try {
       if (this.#applicationReads) {
         if (this.#applicationReads.has(name)) return this.#applicationReads.call(name, given);
@@ -421,16 +425,58 @@ export class McpService {
     return ((name !== "actions" && name !== "act") || this.mode !== "default") && (this.#genericPolicy === undefined || this.#genericPolicy.includes(name));
   }
 
-  #failure(error: unknown, given: Args): CallResult {
+  async #failure(error: unknown, given: Args): Promise<CallResult> {
     if (error instanceof Stop) return error.result;
-    if (error instanceof CustodyError) return failed({ error: "custody", state: error.why.held, key: String(given["idempotencyKey"] ?? ""), scope: String(given["target"] ?? given["scope"] ?? ""), ...("keys" in error.why ? { keys: error.why.keys } : {}), ...("recorded" in error.why ? { recorded: error.why.recorded } : {}), ...("bytes" in error.why ? { bytes: error.why.bytes } : {}), ...("reason" in error.why && error.why.reason === "budget" ? { reason: "budget" } : {}), ...("stale" in error.why && error.why.stale ? { stale: error.why.stale } : {}), ...("answer" in error.why ? { answer: error.why.answer } : {}), ...("step" in error.why && error.why.step ? { step: error.why.step } : {}) });
-    if (error instanceof TransportError) return failed({ error: "transport", scope: String(given["target"] ?? given["scope"] ?? "the scope"), submitted: false });
+    if (error instanceof CustodyError) {
+      const result = failed({ error: "custody", state: error.why.held, key: String(given["idempotencyKey"] ?? ""), scope: String(given["target"] ?? given["scope"] ?? ""), ...("keys" in error.why ? { keys: error.why.keys } : {}), ...("recorded" in error.why ? { recorded: error.why.recorded } : {}), ...("bytes" in error.why ? { bytes: error.why.bytes } : {}), ...("reason" in error.why && error.why.reason === "budget" ? { reason: "budget" } : {}), ...("stale" in error.why && error.why.stale ? { stale: error.why.stale } : {}), ...("answer" in error.why ? { answer: error.why.answer } : {}), ...("step" in error.why && error.why.step ? { step: error.why.step } : {}) });
+      // An unkept outcome and an unreadable record already say what the server knows of the send.
+      return error.why.held === "unkept" || error.why.held === "unreadable" ? result : this.#stated(result, given);
+    }
+    if (error instanceof TransportError) return this.#stated(failed({ error: "transport", scope: String(given["target"] ?? given["scope"] ?? "the scope"), submitted: false }), given);
     throw error;
   }
 
+  /** A stop before signing: its base words say what this call did, and the words here add what custody holds under its key. */
+  #stoppedEarly(result: CallResult, given: Args): Promise<CallResult> | CallResult {
+    const error = result.isError ? result.structuredContent["error"] : null;
+    return error === "shape" || error === "stale-descriptor" || error === "target" || error === "commons-missing" || error === "read" ? this.#stated(result, given) : result;
+  }
+
+  /** Each answer states what it knows: this call's words stay, and a record unresolved under the key is named, with the key to keep. */
+  async #stated(result: CallResult, given: Args): Promise<CallResult> {
+    const key = given["idempotencyKey"];
+    if (typeof key !== "string") return result;
+    const earlier = await this.#earlierUnder(key);
+    if (earlier === null) return result;
+    const { error, message, next } = result.structuredContent as { error: string; message: string; next: string };
+    return failed({ error, ...earlierSaid(earlier, error, { sentence: message, next }) });
+  }
+
+  /** What custody holds under `key` for this signer, read with no signature and no lock. A store that cannot answer is stated as such. */
+  async #earlierUnder(key: string): Promise<Earlier | null> {
+    const store = this.#port.custody;
+    try {
+      let stepped = false;
+      for (const open of await store.unresolved()) {
+        if (open.key !== key) continue;
+        const record = await store.read(open.id);
+        if (!record || record.identity.service !== this.#service || record.identity.signer !== this.#port.signer.key) continue;
+        if (record.phase !== "prepared") return "unknown";
+        if (Object.keys(record.steps).length > 0) stepped = true;
+      }
+      return stepped ? "stepped" : null;
+    } catch { return "unreadable"; }
+  }
+
+  /** A read after the scope accepted this call's request: its loss must not read as a call that sent nothing. */
+  async #afterAccepted<T>(scope: string, read: () => Promise<T>): Promise<T> {
+    try { return await read(); }
+    catch (error) { if (error instanceof TransportError) return stopCall({ error: "transport", scope, submitted: false, accepted: true }); throw error; }
+  }
+
   async #viewPerform(kind: string, args: Args, admit: () => void | Promise<void>): Promise<CallResult> {
-    try { return await this.#perform(null, args, kind, undefined, admit); }
-    catch (error) { return this.#failure(error, args); }
+    try { return await this.#stoppedEarly(await this.#perform(null, args, kind, undefined, admit), args); }
+    catch (error) { return this.#stoppedEarly(await this.#failure(error, args), args); }
   }
 
   /**
@@ -468,8 +514,8 @@ export class McpService {
 
   /** Check only a server-retained view original; the public application catalogue still exposes no settle tool. */
   async #viewSettle(args: Args): Promise<CallResult> {
-    try { return await this.#settle(args, { resendExpired: true }); }
-    catch (error) { return this.#failure(error, args); }
+    try { return await this.#stoppedEarly(await this.#settle(args, { resendExpired: true }), args); }
+    catch (error) { return this.#stoppedEarly(await this.#failure(error, args), args); }
   }
 
   // ---------------------------------------------------------------- scopes and targets
@@ -793,7 +839,7 @@ export class McpService {
   }
 
   #answerOf(answer: Answer, at: { scope: string; kind: string; tool: string; retained: boolean; said: { sentence: string; next: string }; phase: string }): Record<string, unknown> {
-    const base = { answer: answer.answer, sentence: at.retained ? `${at.said.sentence} This outcome was kept under custody; nothing was sent.` : at.said.sentence, next: at.retained && answer.answer === "refused" ? `${at.said.next} To send the same envelope again, deliberately: resubmit: true.` : at.said.next, scope: at.scope, kind: at.kind, tool: at.tool, retained: at.retained, phase: at.phase };
+    const base = { answer: answer.answer, sentence: at.retained ? `${at.said.sentence} This outcome was kept under custody; this call sent nothing.` : at.said.sentence, next: at.retained && answer.answer === "refused" ? `${at.said.next} To send the same envelope again, deliberately: resubmit: true.` : at.said.next, scope: at.scope, kind: at.kind, tool: at.tool, retained: at.retained, phase: at.phase };
     switch (answer.answer) {
       case "archived": return { ...base, archived: answer.archived, fact: answer.fact };
       case "accepted": return { ...base, fact: answer.receipt.fact, outboxIds: answer.receipt.sends };
@@ -1310,7 +1356,7 @@ export class McpService {
       return allowed;
     };
     try { trustForBuild(); }
-    catch { return failed({ error: "target", what: "the expected release and Git host are not in a valid APPLICATION_TRUST setting; nothing was fetched or submitted" }); }
+    catch { return failed({ error: "target", what: "the expected release and Git host are not in a valid APPLICATION_TRUST setting; this call fetched nothing" }); }
     const identity: Identity = { service: this.#service, membership: room.membership, signer: this.#port.signer.key, target: room.rules, key: key as string };
     const meaning = meaningOf(selected);
     const build = async () => {
@@ -1337,17 +1383,17 @@ export class McpService {
       kept = await this.#sendAct(snapshot, room.membership, room.rules.scope, identity, meaning, build, { notAfter: timeOf(this.#now() + PROPOSED_BOUNDS.intentLifetimeSeconds * 1000), bytes: 768 * KIB });
     } catch (error) {
       if (error instanceof CustodyError || error instanceof Stop) throw error;
-      return failed({ error: "target", what: error instanceof ApplicationHttpError && error.reason === "unsupported-object-format" ? "the public HTTPS Git transport does not support SHA-256 repositories; nothing was submitted" : error instanceof ApplicationPackageError ? "package bytes do not match the expected signed release or install bounds; nothing was submitted" : "the exact Git package could not be prepared; nothing was submitted" });
+      return failed({ error: "target", what: error instanceof ApplicationHttpError && error.reason === "unsupported-object-format" ? "the public HTTPS Git transport does not support SHA-256 repositories" : error instanceof ApplicationPackageError ? "package bytes do not match the expected signed release or install bounds; nothing was submitted" : "the exact Git package could not be prepared; nothing was submitted" });
     }
     if ("lost" in kept) return failed({ error: "transport", scope: room.rules.scope, submitted: true });
     if ("archivedSettlement" in kept) return ok(this.#archivedSettlementOf(kept.archivedSettlement, { scope: room.rules.scope, kind: "install-application", tool: "install_application" }));
     if (kept.answer.answer !== "accepted") return ok({ ...projectAnswer(kept.answer), retained: kept.retained, phase: kept.record.phase });
     const receipt = kept.answer.receipt;
-    if (!isReceipt(receipt) || receipt.definition !== pin || receipt.intent !== intentDigest(kept.record.envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(room.rules)) return failed({ error: "target", what: "the install acknowledgement does not match the retained native request" });
-    const read = await this.#reads.read(room.membership, (t, r) => t.entry(room.rules.scope, r, receipt.fact.seq, { at: receipt.fact.at, head: { seq: receipt.fact.seq, hash: receipt.fact.hash } }));
+    if (!isReceipt(receipt) || receipt.definition !== pin || receipt.intent !== intentDigest(kept.record.envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(room.rules)) return failed({ error: "target", sent: true, what: "the install acknowledgement does not match the retained native request" });
+    const read = await this.#afterAccepted(room.rules.scope, () => this.#reads.read(room.membership, (t, r) => t.entry(room.rules.scope, r, receipt.fact.seq, { at: receipt.fact.at, head: { seq: receipt.fact.seq, hash: receipt.fact.hash } })));
     if (!read.ok || !read.complete || read.next !== undefined || read.value.hash !== receipt.fact.hash || entryHash(read.value.entry) !== receipt.fact.hash
       || canonicalize(read.value.entry.at) !== canonicalize(room.rules) || read.value.entry.seq !== receipt.fact.seq || read.value.entry.input.type !== "act"
-      || canonicalize(read.value.entry.input.signed) !== canonicalize(kept.record.envelope.signed)) return failed({ error: "target", what: "the install receipt's native entry is unavailable or does not hold the exact retained request" });
+      || canonicalize(read.value.entry.input.signed) !== canonicalize(kept.record.envelope.signed)) return failed({ error: "target", sent: true, what: "the install receipt's native entry is unavailable or does not hold the exact retained request" });
     this.#invalidate();
     return ok({ answer: "accepted", fact: receipt.fact, item: receipt.fact.seq, retained: kept.retained, phase: "recorded", next: "Read application_installation with this item. Native acceptance records the request; installation may still be pending or refused." });
   }
@@ -1400,14 +1446,14 @@ export class McpService {
     // The admitted entry, read as the member the join made: it must hold the exact request kept, and it names the inbox.
     this.#reads.forget(M.scope);
     const fact = kept.answer.receipt.fact;
-    const entry = await this.#reads.read(M, (t, r) => t.entry(M.scope, r, fact.seq, { at: fact.at, head: { seq: fact.seq, hash: fact.hash } }));
+    const entry = await this.#afterAccepted(M.scope, () => this.#reads.read(M, (t, r) => t.entry(M.scope, r, fact.seq, { at: fact.at, head: { seq: fact.seq, hash: fact.hash } })));
     if (!entry.ok) return failed({ error: "read", scope: M.scope, reason: entry.reason });
     const input = entry.value.entry.input;
     if (entry.value.hash !== fact.hash || input.type !== "act" || canonicalize(input.signed) !== canonicalize(kept.record.envelope.signed)) {
-      return failed({ error: "target", what: `entry ${M.scope}:${fact.seq} does not hold the join kept under this key` });
+      return failed({ error: "target", sent: true, what: `entry ${M.scope}:${fact.seq} does not hold the join kept under this key` });
     }
     const inbox = entry.value.entry.sends.flatMap((send) => ("creator" in send.to && send.to.kind === "inbox" ? [scopeIdOf(send.to as Seed)] : []))[0];
-    if (!inbox) return failed({ error: "target", what: `entry ${M.scope}:${fact.seq} creates no inbox` });
+    if (!inbox) return failed({ error: "target", sent: true, what: `entry ${M.scope}:${fact.seq} creates no inbox` });
     const repository = { ...link.repository, inbox };
     if (this.#port.config.joined) await this.#port.config.joined({ service: link.service, repository, handle: link.handle });
     else if (this.#port.config.setRepository) await this.#port.config.setRepository(repository);
