@@ -18,7 +18,7 @@ Stopped: 1 claim with no repository.
 Not stopped: claims that already hold a repository. Read them with: dap log register
 ```
 
-Rita runs that command, because the new signature lets Rita's key read the whole log for 900 seconds. Rita finds four `found` entries by Ana's key. Ana knows three of the rooms. Nobody knows the fourth room, and it has a repository on the team's Git host. Rita deletes that repository at the host, so later pushes to it fail. The room's scopes stay on the Worker.
+Rita runs that command, because the operator key can read the register's log at any time. Rita finds four `found` entries by Ana's key. Ana knows three of the rooms. Nobody knows the fourth room, and it has a repository on the team's Git host. Rita deletes that repository at the host, so later pushes to it fail. The room's scopes stay on the Worker.
 
 Ana makes a new key on a new laptop, and Rita runs `dap add-founder` with that key. Ana then follows [Respond to a stolen key](../docs/security/trust-boundaries.md#respond-to-a-stolen-key) in the three rooms that Ana knows. No Worker setting changes, and nobody deploys.
 
@@ -34,7 +34,7 @@ This note uses these terms:
 - An **attempt** is one try of the operation `create-repository`. A claim has at most three.
 - To **retire** a founder is to end that key's right to sign `found`, for good.
 
-A file and line reference marks a fact that was read and not run. A short file name repeats a path given earlier, and a bare `:135` belongs to the file just before it. References hold at main `cf617842`. References to `platform:register@24` hold at the founder key refusal head `641c49b2`, and that head has not landed. No test and no Worker ran anything in this note.
+A file and line reference marks a fact that was read and not run. A short file name repeats a path given earlier, and a bare `:135` belongs to the file just before it. References hold at main `ad411431`. References to `platform:register@24` hold at the founder key refusal head `641c49b2`, and that head has not landed. No test and no Worker ran anything in this note.
 
 ## The operator key retires a founder, and a founder can retire only itself
 
@@ -67,6 +67,34 @@ The scope's journal puts two acts in one order. Suppose a register has two found
 
 A rule that keeps the last founder makes this worse, because nobody can then remove the thief. So speed would decide the outcome, and the thief knows about the theft first.
 
+### The operator key reads the register's log at any time
+
+Rita's next step after a retirement is the log, so that read cannot depend on a new entry. A refused act writes no entry. Suppose the thief signs `dap retire-founder --self` first. The claims stop at that entry, and Rita's act then gets a refusal. Rita has no recent entry, so today's rule gives `forbidden` on the next step (`signed-reads.ts:369-373`). The same holds whenever more than 900 seconds pass after Rita's act.
+
+So this note recommends a sixth rule. On the new pin, the operator key can read the register's summary, history and entries with no window. The census already trusts this key across the deployment (`scope-index-census.ts:73`). The key can also get the same read for 900 seconds when it signs `add-founder`, so the rule gives it no new knowledge.
+
+The change sits in `checkedRead`, because a definition states no read rule. `checkedRead` already holds the root of entry 0 (`signed-reads.ts:368`). For a pin in an explicit set, a register whose root actor is the reader sets `scoped` and `whole` with no time check (`:369-370`). `#rooted` already finds that root for a key with no recent entry (`packages/scope/src/object.ts:917-927`).
+
+The set holds the new pin alone. A register from today's `dap install` has one key in both jobs. A thief with that key would gain a read with no end.
+
+The planner rules on this read, because it changes decisions `61cc5e50` and `ca8ad1cf` for one key at one kind of scope.
+
+This note rejects two other answers. A dedicated act writes an entry for each look, and its window still closes. A log out of reach leaves Rita the census and the host's list, and neither shows what this key made.
+
+### A retirement that finds the key already retired succeeds
+
+Rita wants the register to refuse the key, and the register already does. So the command does not report a failure. The guard `current-founder` gives two names, so the command needs no read to tell them apart:
+
+- `founder-retired` means that an earlier retirement holds the key. The command exits 0 and prints the lines below.
+- `not-a-founder` means that the key was never on the list. The command prints `Refused: not-a-founder` and exits 1, because the command probably got the wrong key.
+
+```
+Already retired: key_anaLaptop.... The register already refuses every found by this key. Nothing changed.
+Read who retired it, and what stopped, with: dap log register
+```
+
+If the log shows a self-retirement that Ana did not sign, then the thief acted first. The claims stopped at that entry in any case.
+
 ### What each loss leaves
 
 | Stolen or lost | What the register does | What the operator does |
@@ -75,7 +103,7 @@ A rule that keeps the last founder makes this worse, because nobody can then rem
 | The only founder key | Refuses every `found` after the retirement, because the list is empty. Claims and rooms that exist go on. | Retires the key, then adds a new founder. |
 | A founder key is stolen, and the operator key is lost | Accepts a retirement that the founder key signs itself. Accepts no new founder. | Signs the retirement from a copy of the founder key. Replaces the register when no founder remains. |
 | A founder key is stolen with no copy left, and the operator key is lost | Keeps that key on the list. No act can end it. | Replaces the register. |
-| The operator key is stolen | Accepts the thief's retirements and new founders. No act can end this. | Replaces the register. |
+| The operator key is stolen | Accepts the thief's retirements and new founders, and lets the thief read the log. No act can end this. | Replaces the register. |
 
 A new register has a high cost. The section on a hosted operator gives it.
 
@@ -88,10 +116,11 @@ This note rejects these other answers:
 - **A Worker setting that refuses a key.** A reader of the register cannot see why the key stopped, because a setting sits outside the journal.
 - **A rotation of the operator key.** It repeats the race of `rotate-recovery`, where the first signer gives the next key ([that section](../docs/security/trust-boundaries.md#a-founder-key-that-is-also-the-recovery-key-has-no-end-at-membership)). The census also reads this key from the genesis entry, and `docs/cli.md:852` says that it does not support a later key.
 
-The recommendation has three costs:
+The recommendation has four costs:
 
 - `dap install` makes two keys, and the operator must keep the operator key away from every founder's machine.
-- A stolen operator key means a new register.
+- A stolen operator key means a new register, and that key reads the log until then.
+- A register accepts 256 `add-founder` acts over its life. The 257th gets `type-full`, and the way out is a new register. One replacement a month lasts 21 years.
 - A thief with the only founder key can close `found` by a self-retirement, until the operator adds a founder. The operator wanted that key gone in any case.
 
 ## A retirement stops every claim with no repository, and nothing past that
@@ -130,6 +159,28 @@ The journal puts each `found` before or after the retirement, so each claim is i
 
 On GitHub, `delete-repository` needs a token for that exact repository in `GITHUB_CLEANUP_TOKENS`. Without it, the deletion waits (`packages/scope/src/github-wiring.ts:106`). A repository of a thief has no such token, so the operator deletes it at the host. On Artifacts, the Worker's binding deletes it (`packages/scope/src/artifacts-host.ts:282-286`).
 
+### A client that holds a stopped claim gets a final answer
+
+Ana's client can hold an original claim that the retirement stopped. Today that client waits for a directory that never comes. `dap create` and `dap claim` run the same code. A rerun settles the saved `found`, then reads the directory up to 120 times (`packages/cli/src/claim.ts:228`, `:265`). It then prints `Gave up waiting for the directory`, and it tells Ana to run the command again (`claim.ts:252`, `packages/cli/src/command-support.ts:309`). The page's Check and Continue run the same code, and they report the claim as `pending` (`apps/room/page/src/claim.ts:254-257`, `:296`).
+
+The client cannot find the state by a read. The summary omits final items (`packages/scope/src/reads.ts:235-236`), and a key with no recent entry gets `forbidden` anyway. So the settlement reply gains one optional member under the new pin: the state of the item that the act opened. The exact signed intent already authorizes that reply (`packages/scope/src/core.ts:795-811`), so nobody else learns the state.
+
+When that state is `stopped`, each path stops at once and exits 1 with these lines:
+
+```
+Stopped: the retirement of key_anaLaptop... stopped this claim. No directory follows it.
+This key cannot sign a new claim here. Ask the register's operator to add a new key, then claim from a new config directory.
+```
+
+- **`dap create` and `dap claim`.** A rerun prints the same lines and does not wait. The saved envelope stays. `--again` signs a new `found`, and the register refuses it `unauthorized`.
+- **The page's Check and Continue.** Each shows the same lines. `ClaimStatus` gains the state `stopped` (`apps/room/page/src/claim.ts:47`), `pending` is false, and the page offers no Continue.
+
+The stopped original fences nothing that matters. The page's message `A creation is already in progress` applies to one key (`apps/room/page/src/claim.ts:65`, `:271`). The retired key can sign no new claim, and Ana's new key has a new journal.
+
+Start custody cannot hold such a claim on this cohort. It keeps one row for each origin, and it accepts only registers 7, 8 and 17 (`apps/room/page/src/start-custody.ts:28`, `:87`). A new Start also needs a public offer, and only policy `open` has one (`start-custody.ts:88`). If the planner offers this pin through Start, the row at `:87` then needs a way past a `stopped` original.
+
+A claim with `repository` set does not reach this path, because it does not stop. Its client waits and gives up as it does today.
+
 ### A room that the thief made stays the thief's
 
 The thief's `found` sets the room's founder key and its recovery key (`packages/platform/src/directory.ts:261-264`). No other key holds authority in that room unless the thief adds one. Its destination keeps the Worker's host authority, because `destinationBirth` asks only whether the room came from the configured register (`packages/scope/src/host-wiring.ts:22-37`). A deletion at the host ends the pushes and leaves the scopes. A search of `packages/scope/src` and `packages/cli/src` for a scope deletion found none.
@@ -146,24 +197,33 @@ The thief's `found` sets the room's founder key and its recovery key (`packages/
 
 Today a claim leaves `pending` only by a directory's result. A claim with three failed attempts stays `pending`, and `max: 64` counts it (`register.ts:101`, `packages/derive/src/handlers.ts:296-300`). So 64 such claims make every later `found` fail with `type-full` (`handlers.ts:409-410`). A `stopped` claim is final, so the retirement frees those places.
 
+One kind of claim keeps its place. A claim with `repository` set leaves `pending` only by an `applied` result. A refused genesis writes its entry and sends a `refused` result (`packages/derive/src/genesis.ts:160-166`), and the register's clause for `refused` holds no effect (`register.ts:177`). So that claim stays `pending`, and its repository stays at the host. A retirement does not stop it, because `stop-claims` cannot tell it from a `create` on its way.
+
+A refusal at the Worker's child admission takes another route (`packages/scope/src/scope-index.ts:128`). This note did not trace what the register gets from that route.
+
 ## A new register pin holds the change, and an installed register cannot take it
 
 This section gives the definition, the pin, the commands, and what an installed register's operator gets.
 
 ### `founders` stays fixed, and two new item types hold the changes
 
-A mutable `founders` looks simpler, and it fails for one reason. `found` names the `register` item in `also`, so its `expected` needs that item's revision (`packages/derive/src/judge.ts:293-302`). A change to the item raises the revision (`packages/derive/src/fold.ts:172`). A key with no entry at the register in the last 900 seconds gets `forbidden` on the summary. That key cannot learn the new revision (`signed-reads.ts:369-373`). Honest founders could then sign no `found`.
+`founders` stays fixed, because a retirement must not move the `register` item's revision. `found` names that item in `also`, so its `expected` needs the revision (`packages/derive/src/judge.ts:293-302`). A change to the item raises the revision (`packages/derive/src/fold.ts:172`). A founder with no entry at the register in the last 900 seconds gets `forbidden` on the summary. That founder cannot learn the new revision (`signed-reads.ts:369-373`).
 
 With separate items, the `register` item stays at revision 1. `retire-founder` also needs no read before its signature, because it opens an item and names no other.
+
+This section rejects two other shapes:
+
+- **A mutable `founders`, with `also.register` dropped from `found`.** `founding-policy` reads the state anyway, so a new pin can give `found` no `expected`. A mark then selects the item for the policy effect (`judge.ts:289-295`, `register.ts:158`). The summary then shows the current list, and that is a real gain. Rule 4 still needs a record of retired keys, so the gain in code is small, and `found` then differs from every earlier register.
+- **A final `retired-founder`, with an index on `key`.** It needs no count, and `lookup` finds final items (`packages/derive/src/state.ts:322-334`). The summary omits final items, so `currentFounders` cannot run on a client.
 
 ```ts
 // Over separateRecoveryRegister, the data of platform:register@24.
 items: {
   ...items,
   claim: { ...claim, states: { ...claim.states, stopped: { final: true } } },
-  "retired-founder": { many: true, max: 64, initial: "recorded", states: { recorded: { final: false } }, parties: {}, refs: {},
+  "retired-founder": { many: true, max: 288, initial: "recorded", states: { recorded: { final: false } }, parties: {}, refs: {},
     values: { key: { fixed: true, required: true, of: KEY } } },
-  "added-founder": { many: true, max: 32, initial: "recorded", states: { recorded: { final: false } }, parties: {}, refs: {},
+  "added-founder": { many: true, max: 256, initial: "recorded", states: { recorded: { final: false } }, parties: {}, refs: {},
     values: { key: { fixed: true, required: true, of: KEY } } },
 },
 acts: {
@@ -182,22 +242,30 @@ acts: {
 },
 ```
 
-`max: 64` means that a retirement never gets `type-full`. `founders` holds at most 32 keys (`register.ts:69`), `added-founder` holds at most 32, and a retired key never returns.
+`added-founder` counts additions over the register's life, because its one state is not final. The list reads these items, so a final state does not fit them. A `max` of 32 lets routine laptop replacements end a register, so this note sets 256. A larger `max` is cheap, and the destination already declares 2048 (`packages/platform/src/destination-evidence-v17.ts:463`). The cost is that each summary holds every live item (`reads.ts:235-236`).
+
+`max: 288` means that a retirement never gets `type-full`. `founders` holds at most 32 keys (`register.ts:69`), `added-founder` holds at most 256, and a retired key never returns. `new-founder` keeps the current list at 32 keys, the bound that `founders` already has.
 
 | Rule | Place | What it does |
 |---|---|---|
 | `currentFounders(state)` | Exported helper | Gives `founders` plus each `added-founder` key, minus each `retired-founder` key. |
 | `founding-policy`, changed | Grant of `found` | Passes under `open`, or when `currentFounders` holds the key. |
-| `operator-or-self` | Grant of `retire-founder` | Passes for the actor of the genesis entry's `founding` intent, or for a signer equal to the field `key`. Otherwise `unauthorized`. |
+| `operator-or-self` | Grant of `retire-founder` | Passes for the actor of the `founding` intent in `given.own(0)`, or for a signer equal to the field `key`. Otherwise `unauthorized`. |
 | `operator-key` | Grant of `add-founder` | Passes for that same actor alone. |
 | `keys-policy` | Guard | Refuses `open-policy` under `open`. |
-| `current-founder` | Guard | Refuses `not-a-founder` when `currentFounders` lacks the key. |
-| `new-founder` | Guard | Refuses `founder-retired`, `founder-present` or `operator-key`. |
-| `operator-not-founder` | Guard of `install` | Refuses `operator-key` when `founders` holds the signer. |
-| `stop-claims` | Effect of `retire-founder` | Moves the key's `pending` claims with an empty `repository` to `stopped`. At most 64 effects. |
+| `current-founder` | Guard | Refuses `founder-retired` when a `retired-founder` item holds the key. Refuses `not-a-founder` when the key was never on the list. |
+| `new-founder` | Guard | Refuses `founder-retired`, `founder-present`, `operator-key`, or `founders-full` at 32 current keys. |
+| `operator-not-founder` | Guard of `install` | Refuses `operator-key` when `founders` holds the signer, under every policy. |
+| `stop-claims` | Effect of `retire-founder` | Moves the key's `pending` claims with an empty `repository` to `stopped`. Declares `most: 64`. |
 | `create-repository`, changed | Outcome | Adds `beforeSend`, and adds the claim's state to `retries` and `holds`. `wellFormed` admits the local refusal's body. |
 
-A rule can write an item that is not a subject of the act (`packages/derive/src/effects.ts:223-224`). The 64 state effects fit one entry by estimate, under `entryBytes` of 256 KiB (`packages/contract/src/bounds.ts:109`). The build measures that.
+`dap install` writes `founders: [signer.key]` under every policy today (`commands.ts:288`). Under the new guard, the command writes no `founders` under `open`, and it writes the `--founder` keys under `keys`.
+
+`operator-or-self` needs no new slot. It reads the genesis through `given.own(0)`, as `create-directory` reads the entry that opened its operation (`register.ts:417`). `RuleGiven` lists `own` (`packages/derive/src/marks.ts:277`), and `givenTo` falls back to an empty reader when the judge gives none (`marks.ts:482`). The build confirms that a grant's `given` holds it.
+
+`wellFormed` requires `nameExists` and the attempt's own name on a `refused` body (`register.ts:371-373`). So the local refusal carries them, or the rule admits a new body. The build settles that. This note prefers a new body, because `nameExists` would state a fact about the host that nobody asked.
+
+A rule can write an item that is not a subject of the act (`packages/derive/src/effects.ts:223-224`). `derivedEffects` allows 256 effects in one entry (`effects.ts:509-510`, `packages/contract/src/bounds.ts:112`). The 64 state effects come to about 3 KiB, as a sum of 64 effects of 50 bytes, against `entryBytes` of 256 KiB (`bounds.ts:109`). The build measures the whole entry.
 
 ### The pin comes after the founder key refusal head
 
@@ -216,13 +284,14 @@ A register can share a directory version, as `platform:register@7` does (`regist
 | `dap add-founder <key>` | The operator | `add-founder` |
 | `dap install ... --founder <key>` | The operator | `install`, with that key in `founders` |
 
-`dap act` cannot sign these acts when the key has no entry at the register in the last 900 seconds. It reads the summary before it signs (`commands.ts:638`), and the register refuses it. Each new command signs with `expected: {}`, and it reads nothing first. After the act lands, the key's new entry lets it read the whole log for 900 seconds (`signed-reads.ts:370`).
+`dap act` reads the summary before it signs (`commands.ts:638`). The operator key can now do that, and a founder with no recent entry cannot. Each new command signs with `expected: {}` and reads nothing first, so `--self` works for that founder. Each command also prints the words that this note gives.
 
-The build also needs three smaller changes:
+The build also needs these smaller changes:
 
 - A command that makes a key and prints its ID. None exists ([the response steps](../docs/security/trust-boundaries.md#respond-to-a-stolen-key) state this gap).
 - A way to write `register` into a founder's config directory. Only `install` writes it today (`commands.ts:278`, `:480`).
-- A wider `retainedRegisterSelector` for the new pin under `keys`, because the `register` item stays at revision 1 (`packages/cli/src/claim.ts:24-48`). Today `dap claim` under `keys` reads the summary first, so a founder with no recent entry gets `forbidden` (`packages/cli/src/claim.ts:168`).
+- A new selector in `dap create` that signs `expected: { register: 1 }` on the new pin. `retainedRegisterSelector` needs the operator's plan and policy `open`, so it does not fit a founder (`packages/cli/src/claim.ts:24-48`). Today a founder under `keys` reads the summary first, and gets `forbidden` with no recent entry (`:168`).
+- The settlement reply's new member, and the `stopped` lines in the commands and the page. The section on a stopped claim gives them.
 
 ### An installed register keeps its pin, and the stolen key keeps `found`
 
@@ -289,6 +358,7 @@ Rita cannot say these things:
 - That the key stopped elsewhere. Each room and each other register decides for itself.
 - When the theft happened. The log shows one key, so it does not separate the thief's claims from Ana's.
 - What the key read or pushed.
+- That the key can no longer read the repository. It can hold a Git read token, and [that token outlasts the retirement](../docs/security/trust-boundaries.md#a-git-read-token-outlasts-the-bound).
 
 These points stay open:
 
