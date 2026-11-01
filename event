@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8a3d1230390eecde8245d8dfa5b7151f6ccf1924","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/data.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9a6b127b29fef893f873800f8cc3adf7fc4cc264","text":"Merge retired a covered predecessor; the successor is at packages/client/test/device-key-invitation.test.ts."}
