@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:112c849e3384672def7bed2641c7c0d7e5515b35","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/mcp-original.scope.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:21f0fce3c6025ddbba3bd9781ee22729002b1c04","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/no-session-words.scope.test.ts."}
