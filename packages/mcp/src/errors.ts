@@ -177,6 +177,11 @@ export type Finding =
       step?: { resource: string; capability: string; step: string };
       /** The dead reclaimer's file, relative to the custody directory (ARTROOM_HOME/private/mcp-custody). */
       stale?: string }
+  /**
+   * The room kept no copy of the request, so this call sent nothing. `earlier`: an earlier send under this key has no known
+   * outcome. `rowStays`: a row of a request that never went stays open.
+   */
+  | { error: "original"; why: "full" | "room-full" | "no-reply" | "refused" | "session-lost" | "stopped"; reason?: string; earlier: boolean; rowStays: boolean }
   | { error: "credential"; destination: string; why: string }
   | { error: "diff"; why: string; spent: boolean }
   | { error: "target"; what: string }
@@ -212,6 +217,17 @@ export function finding(f: Finding): Said & { error: string } {
         : f.state === "terminal" ? "The retained outcome is in the result; resubmit: true sends the same envelope again, deliberately."
         : f.state === "too-large" ? "Make the act smaller." : "Report it; nothing was sent.";
       return { error: f.error, sentence: `The server's record for key ${clip(f.key)} on ${clip(f.scope)} is ${f.state}; nothing was sent.${extra}`, next };
+    }
+    case "original": {
+      const nothing = f.earlier ? "This call sent nothing, and an earlier send under this key has no known outcome." : "Nothing was sent.";
+      const why = f.why === "full" ? "You have too many open requests."
+        : f.why === "room-full" ? "This room has no space for more open requests. Space returns as open requests end, within seven days at most. An admin can still remove a member who has left, and that frees the member's requests."
+        : f.why === "no-reply" ? "The room gave no reply when it was asked to keep a copy of this request."
+        : f.why === "session-lost" ? "This server could not renew its session with the room, so it cannot keep a copy of this request."
+        : f.why === "stopped" ? "The server's custody stopped this request after the room kept a copy."
+        : `The room did not keep a copy of this request (${clip(f.reason ?? "no reason")}).`;
+      const stays = f.rowStays ? " This server could not end the copy, so the request can show as open. Check it before you send it again." : "";
+      return { error: f.error, sentence: `${why} ${nothing}${stays}`, next: f.why === "full" ? "Check the open requests in this room first: call settle for each key, or press Check original request on the room's page. Then call again with the same idempotencyKey." : "Check your connection, and call again with the same idempotencyKey." };
     }
     case "credential": return { error: f.error, sentence: `No read token of yours is readable at ${clip(f.destination)} (${f.why}); nothing was returned.`, next: "Call repository.read-token first (or act in --generic mode), then wait for its outcome, then credential." };
     case "diff": return { error: f.error, sentence: `The server shows no diff (${clip(f.why)}).${f.spent ? " The one-time credential is spent." : ""}`, next: f.spent ? "Sign another read-token. A commit that the host does not hold stays unavailable until the host holds it." : "Run dap mcp, which reads Git for this tool." };

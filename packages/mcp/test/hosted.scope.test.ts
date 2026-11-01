@@ -919,6 +919,8 @@ test("H5, H6 and H7: eviction and reconciliation, custody across a lost reply an
     const lost = await room.wait(() => modernCall(bot.bearer, "issue.create", { fields: { definition: DEMO_DIGESTS.issue, title: "lost on the way back", conditions: ["done"] }, idempotencyKey: "lost-1" }));
     const lostBody = (await lost.json() as { result: { structuredContent: Record<string, unknown> } }).result.structuredContent;
     expect(lostBody["error"], JSON.stringify(lostBody)).toBe("transport");
+    // A hosted agent holds its own key and its own custody: a lost reply leaves no copy at membership (signed-requests note, section 9).
+    expect(await room.wait(() => runInDurableObject(room.platform(rita.config.repository!.membership.scope).object, (_instance, state) => state.storage.sql.exec("SELECT COUNT(*) AS n FROM original_copy").toArray()[0]!["n"])), "a hosted agent keeps no copy").toBe(0);
     await stub.reset();
     const settled = await room.wait(() => modernCall(bot.bearer, "settle", { idempotencyKey: "lost-1", target: "directory" }));
     const settledBody = (await settled.json() as { result: { structuredContent: Record<string, unknown> } }).result.structuredContent;

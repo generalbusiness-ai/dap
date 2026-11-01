@@ -125,6 +125,7 @@ export class StandIn {
     if (this.sessions === "forbid" && authorization?.includes(SESSION_TOKEN)) return json({ ok: false, reason: "forbidden" });
     if (route.length === 0) return json(this.read(s, { scope: s.ref, status: "active", definition: s.definition, time: T, items: s.items, counts: [] }));
     switch (route[0]) {
+      case "originals": return { status: 204, body: new ReadableStream({ start(c) { c.close(); } }) as never }; // The copy routes answer as if the row was kept. No rule of `originals.ts` runs here.
       case "entries": { const e = s.entries[Number(route[1])]; return e ? json(this.read(s, e)) : json({ ok: false, reason: "not-found" }); }
       case "history": return json(this.read(s, s.entries));
       case "log": return json(this.read(s, { scope: s.ref, definition: s.definition, entries: s.entries.map((e) => ({ seq: e.entry.seq, hash: e.hash, bytes: canonicalize(e.entry) })) }));

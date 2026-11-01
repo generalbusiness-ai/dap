@@ -63,7 +63,7 @@ A `POST` has four more conditions:
 | Who holds a person's session today | Reach under J1 |
 |---|---|
 | The room page, in memory (`data.ts:91`) | The intended reader. |
-| Local `dap mcp` and its views, in memory (`packages/mcp/src/reads.ts:26`, `packages/mcp/src/views/member-reads.ts:11`, `apps/views/src/reads.ts:55`), and the CLI, in private device storage (`docs/architecture.md:260`) | The token reaches copies, and the same machine holds a key that signs as the person. J1 adds no tool. |
+| Local `dap mcp` and its views, in memory (`packages/mcp/src/reads.ts:26`, `packages/mcp/src/views/member-reads.ts:11`, `apps/views/src/reads.ts:55`), and the CLI, in private device storage (`docs/architecture.md:260`) | The token reaches copies, and the same machine holds a key that signs as the person. `dap mcp` keeps and ends copies (section 9). No tool lists or reads a copy. The CLI and the service of `apps/views` keep none. |
 | An application page | None. A screen loses `authorization` (`apps/sandbox/worker.ts:59`), and the gateway list omits these routes (`packages/client/src/application-gateway.ts:55`). |
 | Hosted `McpAgent` | None. Its session states the agent (`packages/mcp/src/hosted.ts:428`), and the compare fails. |
 
@@ -184,9 +184,17 @@ The witness counts in three places:
 
 These limits apply to J1:
 
-- **The page only.** Plan 032 says "every person's act". J1 closes that condition for the room page only. `dap mcp` and the CLI keep their custody on their machine, and a phone cannot see those requests. The routes take any session, so a writer needs no new design.
-- **The planner's ruling on other writers** (act `d64edebe`). J1's head closes the plan's condition for the room page, and the condition stays open for other writers.
-  - **`dap mcp`.** The builder owns this writer, as one small follow-up after J1 lands. It uses the same routes and the same rules, when the service holds a person's session. Its witness sends a request through `dap mcp` and loses the reply. The page on a second device then settles the request, and nothing goes out twice. J1 does not build this writer.
+- **The page and `dap mcp`.** Plan 032 says "every person's act". The room page and `dap mcp` keep a copy. The CLI keeps its custody on its machine, and a phone cannot see those requests. The routes take any session, so another writer needs no new design.
+- **The planner's ruling on other writers** (act `d64edebe`).
+  - **`dap mcp`.** `#sendAct` in `packages/mcp/src/service.ts` writes the copy on the page's routes and under the page's rules. Custody stays on the server's machine, and the copy adds to it. `apps/room/page/test/mcp-second-device.mjs` sends a request through a real `dap mcp` and loses the reply. The page on a second device then settles the request, and nothing goes out twice.
+    - **The order.** The server records the envelope as `prepared`, keeps the copy, and then sends. If the room keeps no copy, the server sends nothing, and the record stays `prepared`. A repeat of the call tries again. The row's bytes come from the stored record, so a repeat after a restart matches them.
+    - **`expired` from the keep.** The request goes anyway. Bytes past `notAfter` can only return the first entry or a refusal, and custody ends only on the scope's answer. The page's press past the margin does the same.
+    - **The end of a row.** The scope's answer ends the row, and `settle` and a retained answer end it again if an earlier end failed. A stop after the keep ends the row of a request that never went. A stop leaves the row of an earlier send with no known outcome, and it leaves the row while another call holds the send.
+    - **Which server keeps a copy.** The `originals` port turns the writer on. `serve()` in `packages/mcp/src/node.ts` sets it. `packages/mcp/src/hosted.ts`, the CLI's install runtime and `createRepoInAiService` in `apps/views/src/node.ts` omit it. A key whose member is an `agent` or a `checker` keeps no copy, because only a person has a page to read it.
+    - **No session, no copy.** A server that never held a session of the membership sends as it did before, with no copy. A server that held one and cannot renew it stops the send, as the page does. A restart forgets that it held one.
+    - **Requests with no copy.** `join` and `create` have no session or no `to`. Preparation steps are not requests to `/acts`. The card's resend past `notAfter` skips the keep.
+    - **A restart with a custody record and an open copy.** `dap mcp` does nothing at start, and the row stays until a call reaches the record. `settle` reads the scope's answer and ends the row. A repeat of the call within `notAfter` sends the same bytes and ends the row on the first entry. If the page settled first, `settle` returns the same entry and the row is already gone. A repeat then returns the retained answer and sends nothing. If the page got a refusal first, `settle` says `unknown`, and a repeat returns `expired`, with no entry.
+    - **A Worker without the routes.** A keep at a Worker with no `/originals` routes returns `not-found`, so this server stops every send there.
   - **The CLI.** The CLI stays with its private device storage.
   - **A hosted agent.** A hosted agent's custody stays separate, because a hosted agent holds its own keys.
 - **No session, no copy.** `join`, `enrol` and start requests keep their browser custody, because their signer holds no session yet. A page that opens on signed reads behaves as it does today: it keeps no copy, and it sends.
