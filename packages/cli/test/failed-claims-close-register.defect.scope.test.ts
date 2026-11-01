@@ -4,7 +4,7 @@
  * Today a claim whose three create attempts failed stays `pending`, and it counts toward `claim.max`, which is 64. So 64 such claims
  * make the register refuse every later `found` with `type-full`, and nothing here frees a place, including the host's return.
  *
- * Real: the CLI's `command`, the Worker's HTTP routes and the public creation offer route, the deployed scope class with the production
+ * Real: the CLI's `command`, `McpService` in its two cases, the Worker's HTTP routes and the public creation offer route, the deployed scope class with the production
  * authority and each pin's own rules, the journal, the operations driver, and the production wiring `artifactsOutside` and
  * `gitHubOutside` with their `RegisterProvider`s.
  * STAND-INS: the Artifacts binding and the GitHub `fetch` are scripted, so no host runs. The clock is scripted. `pause` and the fixture
@@ -18,7 +18,7 @@ import { expect, test } from "vitest";
 import { b64url, canonicalize, intentDigest, isSeed, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Answer, Entry, Intent, KeyId, PlatformDefinition, Read, ScopeId } from "@generalbusiness/dap-contract";
-import type { Fetch } from "@generalbusiness/dap-client";
+import { secretSigner, type Fetch } from "@generalbusiness/dap-client";
 import type { Item } from "@generalbusiness/dap-derive";
 import { keys } from "@generalbusiness/dap-derive/testing";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT as DEMO, NEWEST, platform } from "@generalbusiness/dap-platform";
@@ -36,6 +36,7 @@ import { beginSessionFixture } from "../../scope/test/session-settings.ts";
 import { reader as inspector } from "../../scope/test/support.ts";
 import { soon } from "../../scope/test/net.ts";
 import { checkClaim, command, memoryStore, type Context } from "../src/index.ts";
+import { McpService, memoryStore as mcpCustody, type McpConfig } from "../../mcp/src/index.ts";
 
 const { paul } = keys;
 const SERVICE = "https://dap-demo.inguz.workers.dev";
@@ -586,5 +587,61 @@ test("WORDS: a type-full of another act at another scope keeps its plain words, 
     const otherMembership = (await other.store.config())!.claim!.repository!.membership.scope;
     report("type-full at membership, the claim's seat step", seated.lines.join(" / "));
     expect(seated).toEqual({ code: 1, lines: [`Refused: type-full, judged at entry ${otherMembership}:7. The request was refused.`] });
+  } finally { life.release(); }
+}, 60_000);
+
+/** The real `McpService` on this file's routes, with custody in memory. It holds the configuration that a person's config directory holds. */
+const mcpOf = (life: Life, fetch: Fetch, who: { secret: Uint8Array }, config: McpConfig): McpService => new McpService({
+  service: SERVICE, fetch, signer: secretSigner(who.secret), custody: mcpCustody(), now: life.now, every: () => () => {},
+  config: { read: async () => structuredClone(config), addRoot: async () => {} },
+});
+
+// Invariant: a person who reaches a full register through MCP learns what the command line says, and no step that the register cannot take.
+// Real: `McpService`, the routes and the full register. STAND-IN: the same scripted host failures as the cases above.
+test("WORDS: MCP's room.create at a full register names the unfinished claims and the operator", async () => {
+  const life = fixture(true);
+  try {
+    const { R, control, fetch, person } = await publicRegister(life);
+    control.mode = "network";
+    const flood = await person(una);
+    await life.wait(() => command(flood.ctx(1), ["claim", "flood", "--handle", "@flood"]));
+    await exhaust(life, R);
+    for (let n = 2; n <= MAX; n++) {
+      await life.wait(() => command(flood.ctx(1), ["claim", "flood", "--handle", "@flood", "--again"]));
+      await exhaust(life, R);
+    }
+    const head = (await journal(life, R)).length - 1;
+    // A key with an entry at the register in its read window: a key with none reads `forbidden`, and its list holds no `room.create`.
+    const mcp = mcpOf(life, fetch, una, { service: SERVICE, register: (await flood.store.config())!.register! });
+    await life.wait(() => mcp.page());
+    const result = await life.wait(() => mcp.call("room.create", { target: R.name, fields: { branch: "main", founderHandle: "@new", recoveryKey: sam.key }, idempotencyKey: "after-full" }));
+    report("type-full by MCP room.create", cut(R.name, `${String(result.structuredContent["sentence"])} / ${String(result.structuredContent["next"])}`));
+    expect([result.structuredContent["answer"], result.structuredContent["reason"], result.structuredContent["sentence"], result.structuredContent["next"]]).toEqual([
+      "refused", "type-full",
+      `${R.name} refused found, because the register is full of unfinished claims, so this request holds no place, judged at head ${head}.`,
+      "A place frees only when one of those claims finishes. A claim whose attempts have all failed stays unfinished, even after the Git host returns. If this refusal repeats, this needs the register's operator, whose way out is a new register.",
+    ]);
+  } finally { life.release(); }
+}, 120_000);
+
+// Invariant: the register's words belong to a register's `found`. Another act's `type-full` keeps its own next step.
+// Real: `McpService`, the routes and the room's scopes. STAND-IN: the `/acts` reply for `invite-member` is scripted, because no membership here is full.
+test("WORDS: MCP's member.invite at a type-full keeps its plain words", async () => {
+  const life = fixture(true);
+  try {
+    const { scripted, fetch, person } = await publicRegister(life);
+    const room = await person(sam);
+    expect((await life.wait(() => command(room.ctx(8), ["claim", "room", "--handle", "@room"]))).code).toBe(0);
+    const config = (await room.store.config())!;
+    scripted.kind = "invite-member";
+    scripted.body = { answer: "refused", reason: "type-full", judgedAt: { seq: 7, hash: `sha256:${"a".repeat(64)}` } };
+    const mcp = mcpOf(life, fetch, sam, { service: SERVICE, register: config.register!, repository: config.repository! });
+    await life.wait(() => mcp.page());
+    const result = await life.wait(() => mcp.call("member.invite", { fields: { handle: "@guest", role: "member", inviteEnds: "2099-01-01T00:00:00Z", inviteKey: una.key }, idempotencyKey: "plain-words" }));
+    report("type-full by MCP member.invite", `${String(result.structuredContent["sentence"])} / ${String(result.structuredContent["next"])}`);
+    expect([result.structuredContent["sentence"], result.structuredContent["next"]]).toEqual([
+      `${config.repository!.membership.scope} refused invite-member, because the scope holds as many live items of that type as it may, judged at head 7.`,
+      "Close or finish one first.",
+    ]);
   } finally { life.release(); }
 }, 60_000);

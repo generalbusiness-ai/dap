@@ -15,7 +15,14 @@ import type { Answer, Archived, FactRef, Head, MismatchReason, ReadRefusal, Refu
 import { inline, sentenceNamed, type Sentence } from "./describe.ts";
 
 /** What was asked, for the sentence. */
-export interface Asked { scope: string; kind: string; on?: number | null; action?: string | null }
+export interface Asked {
+  scope: string;
+  kind: string;
+  on?: number | null;
+  action?: string | null;
+  /** The name of the definition that the scope runs, where the caller has read it. */
+  definition?: string;
+}
 
 /** A sentence and its next step. */
 export interface Said { sentence: string; next: string }
@@ -26,6 +33,12 @@ const HINTS = {
   read: "Read again with inspect, then sign again with a new idempotencyKey.",
   settle: "Call settle with the same idempotencyKey; do not sign again first.",
 } as const;
+
+/** A `type-full` of a register's `found`, with the meaning of `REGISTER_FULL` in the command line. No act frees a place in a register, so the plain next step cannot apply. */
+const REGISTER_FULL: Said = {
+  sentence: "the register is full of unfinished claims, so this request holds no place",
+  next: "A place frees only when one of those claims finishes. A claim whose attempts have all failed stays unfinished, even after the Git host returns. If this refusal repeats, this needs the register's operator, whose way out is a new register.",
+};
 
 /** One plain sentence for each refusal reason of the contract, and its next step. `name` is what the answer carries. */
 export const REFUSALS: Readonly<Record<RefusalReason, (asked: Asked, name: string | undefined) => Said>> = {
@@ -57,7 +70,7 @@ export const REFUSALS: Readonly<Record<RefusalReason, (asked: Asked, name: strin
   late: () => ({ sentence: "the message arrived after the handler's declared time limit", next: "Read the sender's recorded result; retrying the same message keeps this decision." }),
   "capability-refused": (_, name) => ({ sentence: `a capability's rule does not hold${name ? "" : ""}`, next: "Prepare the capability's step with prepare, or read the scope; then submit again." }),
   "slot-full": () => ({ sentence: "a party list would pass its bound", next: "Remove a member from that list first, or act on another item." }),
-  "type-full": () => ({ sentence: "the scope holds as many live items of that type as it may", next: "Close or finish one first." }),
+  "type-full": (asked) => asked.definition === "platform:register" && asked.kind === "found" ? REGISTER_FULL : { sentence: "the scope holds as many live items of that type as it may", next: "Close or finish one first." },
   "entry-too-large": (_, name) => ({ sentence: `the entry would pass a bound${name ? ` (${name})` : ""}`, next: "Make the act smaller: fewer or shorter values." }),
   "send-unresolved": () => ({ sentence: "a send of the act names a target or item that resolves to nothing", next: "Read the scope; correct the fields that name the target." }),
   "unknown-message": () => ({ sentence: "the message names no handler of the definition", next: "Nothing an act tool can change; report it." }),
