@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5a6a83390c2531ee336642045c5b185869668e16","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-01-flaky-finding.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8ad0c129557b08bb03401850c557b1168ed731d2","text":"Merge retired a covered predecessor; the successor is at apps/room/lanes/test/directory-partition-consumers.scope.test.ts."}
