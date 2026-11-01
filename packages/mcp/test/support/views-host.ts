@@ -47,7 +47,8 @@ export function fixture(mode: string, custody: CustodyStore = memoryStore()) {
     if (card.body === undefined) delete card.body;
     return { status: mode === "incomplete" ? "incomplete" : "ready", position, count, card, fallback: card.fallback };
   } };
-  const service = new McpService({ service: SERVICE, mode: "add", config: { read: async () => scope.config(), addRoot: async () => {} }, custody, views: source,
+  /** Each call is another process of one home: its own views, over one custody store and one service. */
+  const process_ = () => new McpService({ service: SERVICE, mode: "add", config: { read: async () => scope.config(), addRoot: async () => {} }, custody, views: source,
     signer: { key: signer.key, sign: (bytes) => { const text = new TextDecoder().decode(bytes), prefix = `${DOMAINS.intent}\n`; if (text.startsWith(prefix)) signed.push(JSON.parse(text.slice(prefix.length))); return signer.sign(bytes); } },
     fetch: async (url, init) => {
       const answer = await scope.fetch(url, init);
@@ -58,7 +59,7 @@ export function fixture(mode: string, custody: CustodyStore = memoryStore()) {
       return answer;
     },
   });
-  return { service, signed, scope, complete: (item: string) => completed.add(Number(item.slice(1)) - 7) };
+  return { service: process_(), process: process_, signed, scope, complete: (item: string) => completed.add(Number(item.slice(1)) - 7) };
 }
 
 /** Pure declared-view browser fixture. Native projection, install and role
@@ -86,9 +87,9 @@ async function declaredFixture() {
       sources: { board: [{ id: 2, type: "board", state: "open", revision: 1, fields: { lastNumber: 42 } }] } } }),
   });
   const signer = fixedSigner(17);
-  const service = new McpService({ service: SERVICE, signer, custody: memoryStore(), views: source, fetch: base.scope.fetch,
+  const custody = memoryStore(), process_ = () => new McpService({ service: SERVICE, signer, custody, views: source, fetch: base.scope.fetch,
     config: { read: async () => base.scope.config(), addRoot: async () => {} } });
-  return { ...base, service };
+  return { ...base, service: process_(), process: process_ };
 }
 
 function policy(ui: ResourcePolicy): string {
@@ -109,7 +110,7 @@ const stop = (server: Server): Promise<void> => new Promise((resolve, reject) =>
 
 /** Two loopback origins, a cross-origin sandbox proxy and the real single-file app behind package-derived CSP. */
 export async function startViewsHost(options: { declared?: (base: ReturnType<typeof fixture>) => Promise<ReturnType<typeof fixture>> } = {}) {
-  const instances = new Map<string, ReturnType<typeof fixture> & { wire: Wire; session: ReturnType<typeof newSession>; version: string }>();
+  const instances = new Map<string, ReturnType<typeof fixture> & { wire: Wire; session: ReturnType<typeof newSession>; version: string; cardProcess?: { service: McpService; wire: Wire } }>();
   let hostOrigin = "", sandboxOrigin = "";
   const host = createServer((request, response) => { void (async () => {
     const url = new URL(request.url!, hostOrigin);
@@ -118,21 +119,30 @@ export async function startViewsHost(options: { declared?: (base: ReturnType<typ
       const asked = await body(request), instance = instances.get(String(asked["instance"]));
       if (!instance) return json(response, { error: "Unknown fixture instance" }, 404);
       const message = asked["request"] as Message;
+      // With two processes, as the desktop AI app runs them: the model's calls reach one, and the card's calls reach the other.
+      const reached = asked["actor"] === "app" && instance.cardProcess ? instance.cardProcess : instance;
       if (message.method === "tools/call") {
-        const name = String(message.params?.["name"]), tools = (await instance.service.snapshot()).tools;
+        const name = String(message.params?.["name"]), tools = (await reached.service.snapshot()).tools;
         const tool = tools.find((tool) => tool.name === name);
         const visibility = (tool?._meta?.["ui"] as { visibility?: string[] } | undefined)?.visibility ?? ["model", "app"];
         if (!tool || !visibility.includes(asked["actor"] === "app" ? "app" : "model")) return json(response, { jsonrpc: "2.0", id: message.id, error: { code: -32601, message: "The host does not expose that same-server tool to this caller." } });
       }
-      const before = message.method === "tools/call" && message.params?.["name"] === "view_act" ? await instance.service.call("view_read", { view: (message.params["arguments"] as Record<string, unknown>)["view"] }) : null;
+      const before = message.method === "tools/call" && message.params?.["name"] === "view_act" ? await reached.service.call("view_read", { view: (message.params["arguments"] as Record<string, unknown>)["view"] }) : null;
       if (instance.version === MODERN) message.params = { ...message.params, _meta: { "io.modelcontextprotocol/protocolVersion": MODERN, "io.modelcontextprotocol/clientCapabilities": { extensions: { "io.modelcontextprotocol/ui": { mimeTypes: ["text/html;profile=mcp-app"] } } } } };
-      const answer = await instance.wire.handle(message, instance.version === LEGACY ? instance.session : null, () => {});
+      const answer = await reached.wire.handle(message, instance.version === LEGACY ? instance.session : null, () => {});
       const outcome = (answer?.result as { structuredContent?: { result?: { structuredContent?: Record<string, unknown> } } } | undefined)?.structuredContent?.result?.structuredContent;
       if (outcome?.["answer"] === "accepted" || outcome?.["error"] === "transport") {
         const item = (before?.structuredContent["display"] as { card?: { identity: { item: string } } } | undefined)?.card?.identity.item;
         if (item) instance.complete(item);
       }
       return json(response, answer);
+    }
+    if (url.pathname === "/restart") {
+      const instance = instances.get(url.searchParams.get("instance") ?? "");
+      if (!instance?.cardProcess) return json(response, { error: "No second process" }, 404);
+      const service = instance.process();
+      instance.cardProcess = { service, wire: new Wire(service) };
+      return json(response, {});
     }
     if (url.pathname === "/proof") {
       const instance = instances.get(url.searchParams.get("instance") ?? "");
@@ -142,12 +152,13 @@ export async function startViewsHost(options: { declared?: (base: ReturnType<typ
     if (instances.size >= 128) return json(response, { error: "Fixture host full" }, 429);
     const id = crypto.randomUUID(), mode = url.searchParams.get("fixture") ?? "normal", demo = mode === "declared" ? await (options.declared ? options.declared(fixture("empty")) : declaredFixture()) : fixture(mode), wire = new Wire(demo.service), session = newSession(null);
     const version = url.searchParams.get("wire") === "legacy" ? LEGACY : MODERN;
-    instances.set(id, { ...demo, wire, session, version });
+    const second = url.searchParams.get("processes") === "two" ? demo.process() : null;
+    instances.set(id, { ...demo, wire, session, version, ...(second ? { cardProcess: { service: second, wire: new Wire(second) } } : {}) });
     if (version === LEGACY) {
       await wire.handle({ jsonrpc: "2.0", id: 0, method: "initialize", params: { protocolVersion: LEGACY, capabilities: { extensions: { "io.modelcontextprotocol/ui": { mimeTypes: ["text/html;profile=mcp-app"] } } }, clientInfo: { name: "S2 fixture host", version: "1" } } }, session, () => {});
       await wire.handle({ jsonrpc: "2.0", method: "notifications/initialized" }, session, () => {});
     }
-    const settings = { id, sandboxOrigin, scope: url.searchParams.has("scope") ? JSON.parse(url.searchParams.get("scope")!) : undefined, items: url.searchParams.has("items") ? JSON.parse(url.searchParams.get("items")!) : undefined, screen: url.searchParams.get("screen") ?? "needs-you", openingTool: viewToolName(url.searchParams.get("screen") ?? "needs-you", mode === "declared"), theme: url.searchParams.get("theme") ?? "light", deny: url.searchParams.has("deny"), contextFail: url.searchParams.has("context-fail"), prototype: url.searchParams.has("prototype"), fields };
+    const settings = { id, sandboxOrigin, denyOpen: url.searchParams.has("denyOpen"), scope: url.searchParams.has("scope") ? JSON.parse(url.searchParams.get("scope")!) : undefined, items: url.searchParams.has("items") ? JSON.parse(url.searchParams.get("items")!) : undefined, screen: url.searchParams.get("screen") ?? "needs-you", openingTool: viewToolName(url.searchParams.get("screen") ?? "needs-you", mode === "declared"), theme: url.searchParams.get("theme") ?? "light", deny: url.searchParams.has("deny"), contextFail: url.searchParams.has("context-fail"), prototype: url.searchParams.has("prototype"), fields };
     response.writeHead(200, { "content-type": "text/html" });
     response.end(`<!doctype html><html><head><meta charset="utf-8"><title>S2 card fixture host</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:16px;font:14px system-ui;background:#e9e9e9}header{font-size:12px;margin-bottom:12px;color:#555}#frame{display:block;width:min(100%,592px);height:1px;border:0;background:white;border-radius:12px}body.fullscreen #frame{width:100%}</style></head><body><header>S2 test host · scripted card and scope fixtures</header><iframe id="frame" title="MCP Apps sandbox"></iframe><script>
 const config=${JSON.stringify(settings)}, frame=document.querySelector('#frame');
@@ -162,7 +173,7 @@ if(m.method==='ui/initialize'){send({id:m.id,result:{protocolVersion:'2026-01-26
 if(m.method==='ui/notifications/initialized'){initialized=true;send({method:'ui/notifications/tool-input',params:{arguments:input}});send({method:'ui/notifications/tool-result',params:{content:[{type:'text',text:'Card opened. Use its controls or the ordinary read tools.'}]}});proof.ready=true;return}
 if(!initialized){proof.errors.push('Message before initialized: '+m.method);return}
 if(m.method==='ui/notifications/size-changed'){proof.sizes.push(m.params);frame.style.height=m.params.height+'px';return}
-if(m.method==='tools/call'){proof.calls.push(m.params);const answer=await rpc('app',m.params.name,m.params.arguments);if(m.params.name==='view_act'){actSeen=true;if(config.prototype&&answer.result?.structuredContent?.result?.structuredContent?.answer==='accepted'){proof.chat.push('✓ Act completed.');proof.modelTurns++}}send({id:m.id,...(answer.error?{error:answer.error}:{result:answer.result})});return}
+if(m.method==='tools/call'){proof.calls.push(m.params);if(config.denyOpen&&m.params.name===config.openingTool){send({id:m.id,error:{code:-32000,message:'the host refused the call'}});return}const answer=await rpc('app',m.params.name,m.params.arguments);if(m.params.name==='view_act'){actSeen=true;if(config.prototype&&answer.result?.structuredContent?.result?.structuredContent?.answer==='accepted'){proof.chat.push('✓ Act completed.');proof.modelTurns++}}send({id:m.id,...(answer.error?{error:answer.error}:{result:answer.result})});return}
 if(m.method==='ui/update-model-context'){if(config.contextFail&&actSeen&&!failedContext){failedContext=true;send({id:m.id,error:{code:-32000,message:'Fixture context-report failure'}});return}proof.contexts.push(m.params);send({id:m.id,result:{}});return}
 if(m.method==='ui/request-display-mode'){proof.mode=config.deny?'inline':m.params.mode;document.body.classList.toggle('fullscreen',proof.mode==='fullscreen');send({id:m.id,result:{mode:proof.mode}});return}
 if(m.method==='ui/message'){proof.chat.push(m.params.content.text);proof.modelTurns++;send({id:m.id,result:{}});return}

@@ -140,6 +140,54 @@ try{
   }
   for(const screen of ['work','decision','change']){const {page,app,errors}=await opened({screen},390);await click(page,app,app.getByRole('link'));await app.getByRole('button',{name:'Accept',exact:true}).waitFor();await verify(page,app,errors,'resource-'+screen);report.cases.push({label:'resource-'+screen});await page.close()}
   {const {page,app,errors}=await opened({},390);await click(page,app,app.getByRole('link'));await click(page,app,app.getByRole('button',{name:'Ask in chat',exact:true}));const evidence=await verify(page,app,errors,'explicit-handoff');assert.equal(evidence.proof.chat.length,1);report.cases.push({label:'explicit-handoff',chat:evidence.proof.chat});await page.close()}
+  // The desktop AI app's shape: the model's call opens the view on one process, and the card's calls reach another of the same home.
+  const proofOf=page=>page.evaluate(async()=>fetch('/proof?instance='+window.proof.config.id).then(r=>r.json()));
+  const calledTools=page=>page.evaluate(()=>window.proof.calls.map(call=>call.name));
+  {
+    const page=await browser.newPage({viewport:{width:624,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(['error','warning'].includes(m.type()))errors.push(m.text())});
+    await page.goto(host.url+'/?'+new URLSearchParams({processes:'two'}));
+    const app=page.frameLocator('#frame').frameLocator('iframe');
+    await app.locator('#card-root').getByText(/Choose the first milestone|no view with this key/).first().waitFor();
+    assert.equal(await app.getByText('no view with this key',{exact:false}).count(),0,'The card opens its view on the process that its calls reach');
+    assert.deepEqual((await calledTools(page)).slice(0,3),['view_read','view_needs_you','view_read']);
+    await page.waitForFunction(()=>window.proof.contexts.length>0);
+    assert.equal(await app.getByText('process changed',{exact:false}).count(),0,'The first opening shows a person no notice');
+    await click(page,app,app.getByRole('link'));await app.getByRole('button',{name:'Accept',exact:true}).waitFor();
+    assert.equal((await proofOf(page)).signed.length,0,'Opening on the second process signs nothing');
+    await click(page,app,app.getByRole('button',{name:'Accept',exact:true}));await app.getByText('accepted',{exact:false}).first().waitFor();
+    assert.equal((await proofOf(page)).signed.length,1);
+    await verify(page,app,errors,'two-process');await page.screenshot({path:out+'/two-process.png'});report.cases.push({label:'two-process',calls:await calledTools(page)});await page.close();
+  }
+  // A process that restarts under a card: the card reopens, and it never repeats the press.
+  {
+    const {page,app,errors}=await opened({processes:'two'},592);
+    await click(page,app,app.getByRole('link'));await app.getByRole('button',{name:'Accept',exact:true}).waitFor();
+    await page.evaluate(async()=>fetch('/restart?instance='+window.proof.config.id));
+    await click(page,app,app.getByRole('button',{name:'Accept',exact:true}));await app.locator('#card-root').getByText(/so nothing was sent|no view with this key|accepted/).first().waitFor();
+    assert.equal((await proofOf(page)).signed.length,0,'The press that met no view signed nothing, and the card did not repeat it');
+    assert.equal(await app.getByText('so nothing was sent',{exact:false}).count()>0,true,'The card says that the press sent nothing');
+    await click(page,app,app.getByRole('link'));await click(page,app,app.getByRole('button',{name:'Accept',exact:true}));await app.getByText('accepted',{exact:false}).first().waitFor();
+    assert.equal((await proofOf(page)).signed.length,1,'The next press signs once');
+    await page.screenshot({path:out+'/process-restart.png'});report.cases.push({label:'process-restart',errors});await page.close();
+  }
+  // A card that cannot reopen says what a person can do, and it does not say to open it again.
+  {
+    const page=await browser.newPage({viewport:{width:624,height:1000}});await page.goto(host.url+'/?'+new URLSearchParams({processes:'two',denyOpen:'1'}));
+    const app=page.frameLocator('#frame').frameLocator('iframe');
+    await app.getByText('Ask for a new card in the chat.',{exact:false}).first().waitFor();
+    assert.equal(await app.getByText('Open it again',{exact:false}).count(),0);
+    assert.equal((await proofOf(page)).signed.length,0);
+    await page.screenshot({path:out+'/reopen-refused.png'});report.cases.push({label:'reopen-refused'});await page.close();
+  }
+  // A declared card names its own opening tool, which differs from the built-in screens' tools.
+  {
+    const page=await browser.newPage({viewport:{width:624,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(String(e)));
+    await page.goto(host.url+'/?'+new URLSearchParams({fixture:'declared',screen:'board',processes:'two'}));
+    const app=page.frameLocator('#frame').frameLocator('iframe');
+    await app.locator('#card-root').getByText(/lastNumber: 42|could not open its view/).first().waitFor();
+    assert.deepEqual((await calledTools(page)).slice(0,3),['view_read','view_board','view_read'],'A declared card names its own opening tool');
+    assert.deepEqual(errors,[]);report.cases.push({label:'declared-two-process'});await page.close();
+  }
   await writeFile(out+'/report.json',JSON.stringify(report,null,2));console.log(JSON.stringify({cases:report.cases.length,browser:report.browser,errors:report.errors,output:out}));
 }catch(error){for(const context of browser?.contexts()??[])for(const page of context.pages()){try{await page.screenshot({path:out+'/failure.png'});await writeFile(out+'/failure.json',JSON.stringify({url:page.url(),proof:await page.evaluate(()=>window.proof),body:await page.frameLocator('#frame').frameLocator('iframe').locator('body').innerText(),state:await page.evaluate(async()=>fetch('/proof?instance='+window.proof.config.id).then(r=>r.json()))},null,2))}catch(capture){console.error('capture: '+capture)}}report.errors.push(String(error));await writeFile(out+'/report.json',JSON.stringify(report,null,2));console.error(error);process.exitCode=1}
 finally{if(browser)await browser.close();await host.close()}

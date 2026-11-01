@@ -150,7 +150,11 @@ function checked(projection: Projection, query: ViewQuery): Projection {
   return projection;
 }
 
-/** Bounded mounted-view state, not authority or custody. Restarted or unknown instances cannot dispatch. */
+/**
+ * Bounded mounted-view state of one process, not authority or custody. A process that holds no view cannot dispatch.
+ * A host can run two processes on one home, and a restart empties this state, so an opening call is how any process gets a view.
+ * Custody is one record on disk under the home, and each read of a card asks it again.
+ */
 export class ViewSessions {
   readonly #instances = new Map<string, Instance>();
   readonly #current = new Map<ViewKind, string>();
@@ -174,7 +178,7 @@ export class ViewSessions {
   }
   #instance(key: string): Instance {
     const instance = this.#instances.get(key);
-    if (!instance) throw new ViewError("absent", "This view is no longer retained. Open it again; this call sent no act.");
+    if (!instance) throw new ViewError("absent", "This server process holds no view with this key, so no act was sent. Call the view's opening tool with the same key and arguments to open it here.");
     return instance;
   }
   #active(instance: Instance): boolean { return this.#current.get(instance.query.screen) === instance.key; }

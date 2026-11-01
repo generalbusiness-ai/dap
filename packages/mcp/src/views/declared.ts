@@ -2,7 +2,7 @@
  * runs no package code. Its ports are native reads, not application adapters. */
 import type { ReadMinimum, ApplicationProjectionData, ApplicationProjectionQuery, ApplicationProjectionRead, ApplicationProjectionRow, Digest, FieldValue, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { applicationItemSnapshot } from "@generalbusiness/dap-client";
-import { canonicalize, isLocalId, isMemberRef, parseStrict, unb64url } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, isLocalId, isMemberRef, parseStrict, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
 import { applicationProjectionId, applicationViewFactField, isApplicationJournalSource, readPublishedApplicationPackage2, type ApplicationView, type ApplicationViewAct, type PublishedPackedApplication2 } from "@generalbusiness/dap-platform/application-v2";
 import { admit, evaluate, RuleEvalError } from "@generalbusiness/dap-derive/rule";
@@ -44,6 +44,12 @@ const template = (source: string, row: ApplicationProjectionRow, waiting: string
     return memberValueText(value, members) ?? displayText(value);
   });
 };
+/** One card's bytes. The card reads its screen from its body, so that it can send its opening call to another process. */
+function cardFor(screen: string) {
+  const base = PRESENTATION.resources[0]!, escaped = screen.replace(/[&<>"']/g, character => `&#${character.codePointAt(0)};`);
+  const text = base.text.replace(/<body data-screen="[^"]*">/, () => `<body data-screen="${escaped}" data-declared>`);
+  return { ...base, text, digest: digestBytes(utf8(text)) };
+}
 export class DeclaredViewSource implements ViewSource {
   readonly declared = true;
   readonly packet: PublishedPackedApplication2;
@@ -53,7 +59,7 @@ export class DeclaredViewSource implements ViewSource {
   }
   get screens() { return Object.keys(this.packet.package.presentation.views).map(name => ({ name, resource: `ui://dap/declared/${name}` })); }
   get presentation() {
-    return { resources: this.screens.map(({ name, resource }) => ({ ...PRESENTATION.resources[0]!, uri: resource, name,
+    return { resources: this.screens.map(({ name, resource }) => ({ ...cardFor(name), uri: resource, name,
       description: `Declared ${this.packet.package.presentation.views[name]!.kind} view. Private data is read separately through app-only tools.` })) };
   }
   initialPage(screen: string) {
