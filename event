@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e81385e41527b9c9ec20292a51f8400a0c2f6fa5","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-01-page-lock.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fbd12697b0840bd32618c5f9aa560ae40c9f3a11","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/original-check.ts."}
