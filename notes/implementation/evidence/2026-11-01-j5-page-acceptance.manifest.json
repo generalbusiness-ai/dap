@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "qualification": "Observed run on dap-demo, driven entirely by scripts on one Mac. Separate homes and a browser profile stand in for two devices. One initial opening check timed out; its cause stays unproved. No person or desktop AI app ran the scene.",
+  "directory": "2026-11-01-j5-page-acceptance",
+  "checkpoint": {
+    "commit": "d56394da6f1a9cfe5ec605f2b1b829ddf80e93cd",
+    "tree": "0b852a36d38ddd9ef25a8e3d58e5f4b8ea6f3f69"
+  },
+  "fileCount": 162,
+  "files": [
+    {
+      "path": "witness-head.txt",
+      "bytes": 82,
+      "sha256": "226e7b7973c12740f81abfebb3921b3cc3a7181b16531b3ec7285c6528944edc"
+    },
+    {
+      "path": "0-deployment.json",
+      "bytes": 411,
+      "sha256": "b3faf9eb8a8ea651aee326ae0087876167fe6a674337cbadb4157db97c822195"
+    },
+    {
+      "path": "5-first-device.json",
+      "bytes": 20782,
+      "sha256": "581f4b08eeda8bc934518402c422b73a8d8e51f952312152111b47d70bc8296b"
+    },
+    {
+      "path": "4-roomwide-old-page.json",
+      "bytes": 8650,
+      "sha256": "f02b5793eaf72b59e1c141c94b9d115d41213a071dc457d9f9de0fbb0937238e"
+    },
+    {
+      "path": "4-roomwide-read.json",
+      "bytes": 8387,
+      "sha256": "5dab2b9d8dfef863528f0d42e337df7d3b4d3b6b0da5a4e86fd88ed3904ea362"
+    },
+    {
+      "path": "11-first-device-after.json",
+      "bytes": 19068,
+      "sha256": "5cd82c0eaeae97149f3b390642286952319075c34b99b4bd7d523f605eb4d9b8"
+    },
+    {
+      "path": "11-roomwide-after.json",
+      "bytes": 6534,
+      "sha256": "838887cf41b96a24fbc9aed619071fe54747b59d43bd4290e36a130ad3143895"
+    },
+    {
+      "path": "8-approve.json",
+      "bytes": 3393,
+      "sha256": "efc2bb4bdb544a204ddc684632e947ad1b0fff3afadb30e49b824bbd2eee0def"
+    },
+    {
+      "path": "8-decide.json",
+      "bytes": 2957,
+      "sha256": "f2cf022b146af21d5d6f51c4400b39399085cadeb24c86a1063318f97ec84229"
+    },
+    {
+      "path": "9-resume.stdout.log",
+      "bytes": 1032,
+      "sha256": "765ed0ec45cd015497a1dced5daead108da3ba1484bd859e28aff6bb8e4398d6"
+    },
+    {
+      "path": "9-show-decide.txt",
+      "bytes": 471,
+      "sha256": "68772428637e48b2d0d674b09915213bc235fd755a75628d33327261e07d1b53"
+    },
+    {
+      "path": "9-log-final.txt",
+      "bytes": 1786,
+      "sha256": "cc49ff31c2dc819fcd7cc4d423823a9a96a053db98ed79d98360ab18eea8c7f7"
+    },
+    {
+      "path": "wait-exit.json",
+      "bytes": 277,
+      "sha256": "1b2ad573fde89d61093c60c7710ce78a3547dd5a508ab920ad20e154135c3143"
+    },
+    {
+      "path": "wait-analysis.txt",
+      "bytes": 1320,
+      "sha256": "9863f690df9f5b2f9c2ae4c245ed9c0bb3d017d2c4d96ecae4850ba1c6b9abdc"
+    },
+    {
+      "path": "diagnostic-navigation.json",
+      "bytes": 2725,
+      "sha256": "75705a08e9d52c280b1167d07f43c34b3d8c5c71e5f84707957824649a861b2f"
+    },
+    {
+      "path": "failed-read-1/4-roomwide-read.stderr.log",
+      "bytes": 645,
+      "sha256": "4df426aec76a1e6b0e181889a16328fa64d1b6072a5f01e8898cccfba3349c0e"
+    },
+    {
+      "path": "failed-read-1/qualification.txt",
+      "bytes": 539,
+      "sha256": "2c483009a540cf5a384edafcab32cc4d4b40ef094f22a24a28022aaaf3a0f85b"
+    },
+    {
+      "path": "validation.json",
+      "bytes": 1481,
+      "sha256": "10f620b314c438277466a7cc8cc54b9cf349a27a31ada1b12f249e7457e8c3c8"
+    },
+    {
+      "path": "token-scan.json",
+      "bytes": 200,
+      "sha256": "10e80d0b4cc7c489e0104a291c724d8d74560ee6a233bb65361c92fda6b4003e"
+    },
+    {
+      "path": "commands.txt",
+      "bytes": 2131,
+      "sha256": "8cfcebef676ef30d80d61b989fb7d7445b4bfa73e4ec4c809cc2604006e3fee2"
+    },
+    {
+      "path": "INPUTS.sha256",
+      "bytes": 1776,
+      "sha256": "1567205173babb4592ccb09cb205acf4e96b55f8ca368e1ba2316b57d5be1198"
+    },
+    {
+      "path": "earlier-unit-count.json",
+      "bytes": 230,
+      "sha256": "925574290ac8143865055a2f07c6144e18c4eadb2bd9baf873e10a7e118b97f9"
+    },
+    {
+      "path": "page/4-roomwide-read-first-screen.png",
+      "bytes": 265691,
+      "sha256": "33e53742bbe364200694fa99550858c96821bfd14ba9da69b38fc1595c72a0b1"
+    },
+    {
+      "path": "page/4-roomwide-read-opened-item-after-reload.png",
+      "bytes": 147322,
+      "sha256": "bd1a30c883ae619408ec8e49fed642d1db5f73be9fb723e747ad40f46279dc46"
+    },
+    {
+      "path": "page/11-roomwide-after-after-reload.png",
+      "bytes": 238033,
+      "sha256": "92bb89fb88c5924915dd9fae7b2a700c94c1da8244e0327b35ffcd1d10cb2ed6"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 14906,
+      "sha256": "12dc8743400c4a4ced187c153b2b81451b55938036e419cdba98a1a5bb6c0cde"
+    }
+  ]
+}
