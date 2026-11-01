@@ -459,10 +459,10 @@ for I5).
 | Issuance limit | At most 64 retained requests per key. A 429 keeps the `rate-limited` answer body and adds advisory `Retry-After` seconds until that key's earliest retained request deadline, on membership's clock. It does not promise admission after that delay. |
 | How it is verified | By HMAC-SHA-256 under the deployment's session secret, over the exact claim bytes, compared in constant time. Then the deployment's name, then the membership reference: a scope accepts a session only for the membership scope that it records itself. Then the scope's own clock against the end time, at every read and before every send on a stream. |
 | Which clock | Two. Membership's clock wrote the end time, and each reading scope compares it with its own. A scope whose clock reads earlier than its previous entry's time answers `clock-behind` and sends nothing. |
-| After a key is revoked or a member is removed | A session already issued is accepted until its end: at most 600 seconds on membership's clock, plus the difference between the two clocks. No new one is issued. Nothing recalls what was read. |
+| After a key is revoked or a member is removed | A session already issued is accepted until its end: at most 600 seconds on membership's clock, plus the difference between the two clocks. No new one is issued. Nothing recalls what was read. A signed read has its own end: [What a revoked key keeps](../../docs/security/trust-boundaries.md#what-a-revoked-key-keeps). |
 | A reader with no session | `forbidden`, from every read, unless it presents a signed read: "Signed reads", below. |
 | With no secret | The bindings `SESSION_SECRET`, at least 32 bytes, and `DEPLOYMENT`. With either missing, no session is issued and none is accepted: `sessions-unavailable`. No file of this repository holds a secret. |
-| When the secret is replaced | Every session ends at once. |
+| When the secret is replaced | Every session ends at once. Signed reads do not end. |
 | A stream | Its session is checked before every send. There is no timer: a stream whose session has ended is sent nothing, and is closed when its next send is due. A reader that goes away is released at once, by the route. |
 
 ## Signed reads

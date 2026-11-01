@@ -828,6 +828,8 @@ register summary or items permission. The whole register journal does not
 grant access to another directory's private journal. A reader with
 neither reads nothing. The scope package's guide says what a
 session binds, how it ends, and the form of a signed read.
+[What a revoked key keeps](security/trust-boundaries.md#what-a-revoked-key-keeps)
+gives the end of each read after a revocation.
 
 Membership retains at most 64 answered session requests per key until each
 request's signed `notAfter`, which can be at most 900 seconds ahead of its

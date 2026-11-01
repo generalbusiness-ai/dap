@@ -909,6 +909,10 @@ key signed, the entries that come from one of those within 15 minutes of
 it (the intent window), and the retained inputs those entries carry. Journal and log pages can
 be filtered; a sparse page is not complete replay evidence. Replay still states its actual coverage and foreign-journal trust.
 
+A revoked key keeps both reads for a limited time.
+[What a revoked key keeps](security/trust-boundaries.md#what-a-revoked-key-keeps)
+gives each end, and the steps for a stolen key.
+
 ## What it does not do yet
 
 - There is no page. This is the command line only.
