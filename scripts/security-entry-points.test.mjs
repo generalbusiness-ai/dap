@@ -129,7 +129,7 @@ const namedOwners = {
     "packages/cli/src/commands.ts:status": "f77f1396b4bed9f01c159ca07c991ef52da9cd9a50ea4e1aae3f5765d50504b4",
   },
   "packages/mcp/src/service.ts": {
-    "packages/mcp/src/service.ts:$module": "ecc46c2cc9fe2a9e1f26131a4a36ff6bc5bdbb575c8da8e981aa5ec12a69ef7d",
+    "packages/mcp/src/service.ts:$module": "add79ef77fe918879b38a4b7f32f56f554871f1b0422022fda2ed64ec1f70a94",
     "packages/mcp/src/service.ts:ListRestart": "83803f5cf365099c3ed7ad6d12153b68e7616977007feffed4ca4b01bd4ca95d",
     "packages/mcp/src/service.ts:SERVER_NAME": "1a22dd379fec10cbed8b5938dfd522ce9e8cffe176de5f4554e3cad8668764e2",
     "packages/mcp/src/service.ts:SERVER_VERSION": "93926c4b4205a41211c5dfd2e083d8a5d4eed978060ba4d0781fb54d9d3eb366",
@@ -159,7 +159,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:WRITE": "5920731b91c504f8bfb945b3edbe132bea0167ec1c9a44579e3dd658e5e9cd91",
     "packages/mcp/src/service.ts:scopeArg": "36e8957cdbc823f8e1bf9ab903a7a353df3b10d1292ed7d378362aabc41f6ef4",
     "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
-    "packages/mcp/src/service.ts:McpService": "b07884d9ee60bebbd1d404dbde0c57ba80c179e44a715b4a8639c3f3025c992d",
+    "packages/mcp/src/service.ts:McpService": "e5853e1ed4ae8662dc8bc19577229cabf5be50985b2c3dcca09c80ecf845ea7e",
     "packages/mcp/src/service.ts:commitIdFault": "26bdaf75c6bfe4bb53bd47795225b3af83b91a80912689eaae18509f89aecf31",
     "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
     "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",
