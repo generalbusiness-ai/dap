@@ -11,6 +11,8 @@ export interface Report {
   target: FactRef;                          // the head verified through
   coverage: readonly { scope: ScopeRef; from: number; through: number }[];
   anchors: readonly FactRef[];              // heads taken on trust, or none
+  /** Present when `anchors` holds other rooms' creation results on a shared register: the service's word stands for them, not the caller's. */
+  otherRooms?: true;
   dependencies: { verified: number; anchored: number; missing: readonly FactRef[] };
   trusts: readonly string[];                // for example "service clock", "delivery times", "Git host as read at T"
   /** Each text that a tombstone removed, and that was therefore not derived again: the tombstone entry, and the slot that held the text. */

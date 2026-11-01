@@ -335,7 +335,7 @@ async function resumed(owner: SessionOwner, cleanups: (() => void)[], resourcesA
 let lateClaimClock: { failed: boolean } | null = null;
 // Actual current unpublished cohort and open Register. The host-time clock,
 // HTTP option bridge and finite scheduler are TEST fixtures, not a deployment.
-test("a retained selected install founds a second real room after its Signed window and names its session-denied genesis proof without widening authority", async context => {
+test("a retained selected install founds a second real room after its Signed window and verifies it, naming the first room's creation result on the service's word, without widening authority", async context => {
   if (lateClaimClock?.failed) return context.skip("Late-claim fixture skipped: failed close retained ownership");
   if (lateClaimClock !== null) throw Error("Late-claim fixture clock already owned");
   const previous = net.clock, clock = new ScriptedClock(timeOf(Date.now())), owned = { failed: false };
@@ -422,17 +422,20 @@ test("a retained selected install founds a second real room after its Signed win
     const outcome = await run(second, "verify", "--all");
     measure = false;
     const firstDirectory = saved.repository!.directory.scope;
-    const qualified = `not proven: needs ${firstDirectory} entries 0 to 0, not readable by this session`;
-    expect(outcome.code, outcome.lines.join("\n")).toBe(1);
+    // The second room's member cannot read the first room's directory, and the first room's creation result on the register stands on the service's word. Decision 578e8ca5.
+    expect(outcome.code, outcome.lines.join("\n")).toBe(0);
     const registerLine = outcome.lines.find(line => line.startsWith(`register ${R.name}, entry `))!;
-    expect(registerLine).toContain(qualified);
-    expect(registerLine).not.toMatch(/incomplete|consistent/);
-    expect(outcome.lines.at(-1)).not.toMatch(/^All consistent/);
+    expect(registerLine).toMatch(/consistent/);
+    expect(registerLine).not.toContain("not proven");
+    const anchors = outcome.lines.filter(line => line.startsWith("Shared anchor: "));
+    expect(anchors).toHaveLength(1);
+    expect(anchors[0]).toContain(firstDirectory);
+    expect(outcome.lines.at(-1)).toMatch(/^All consistent: \d+ scopes, and 1 creation result of other rooms on the service's word\.$/);
+    expect(outcome.lines).toContain("This result covers the scopes under Coverage, replayed from their first entries. It does not cover other rooms on this register: 1 of their creation results stands on the service's word, because this reader cannot read their directories.");
     const result = (await life.wait(() => R.entries())).find(entry => entry.input.type === "delivery" && entry.input.message.class === "result" && entry.input.from.at.scope === firstDirectory)!;
     expect(result).toBeDefined();
-    expect(outcome.lines).toContain(`Proof dependency: Register creation result ${R.name}:${result.seq}.`);
     expect(sessionRegisterReads).toBeGreaterThan(0); expect(signedRegisterReads).toBe(0);
     expect((await first.store.config())!.repository).toEqual(saved.repository);
-    Object.assign(context.task.meta, { lateClaim: { qualification: "Actual two-room CLI/Worker/Native creation and qualified full-replay missing-dependency result; no retained copy or caller anchor supplies admission proof. TEST clock, scheduler, transport-option bridge and generated session secret. No hosted runtime or throughput claim.", register: R.name, first: firstDirectory, second: selected.repository!.directory.scope, sessionRegisterReads, signedRegisterReads, qualifiedLines: outcome.lines.filter(line => line.includes(qualified)), dependency: { journal: firstDirectory, from: 0, through: 0, registerCreationResult: result.seq } } });
+    Object.assign(context.task.meta, { lateClaim: { qualification: "Actual two-room CLI/Worker/Native creation and a consistent full replay that states the first room's creation result on the service's word; no retained copy or caller anchor supplies admission proof. TEST clock, scheduler, transport-option bridge and generated session secret. No hosted runtime or throughput claim.", register: R.name, first: firstDirectory, second: selected.repository!.directory.scope, sessionRegisterReads, signedRegisterReads, anchors, registerCreationResult: result.seq } });
   } finally { await close(); }
 });
