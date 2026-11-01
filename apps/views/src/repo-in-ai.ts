@@ -1,12 +1,13 @@
 /** Read projections of the actual pinned lane records. These rows grant nothing. */
 import { canonicalize, digestBytes, isDigest, isFactRef, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
-import type { Digest, FactRef, Item, ReadMinimum, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Digest, FactRef, Item, ReadMinimum, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
 import { FINDING_DIGESTS, J4_DIGESTS, QUESTION_DIGESTS, QUESTION_BRIEF_DIGESTS, issueQuestions, issueQuestionsBrief } from "@generalbusiness/dap-lanes";
 import type { ApplicationReadCatalogue, CallResult, LocalReviewCapture } from "@generalbusiness/dap-mcp";
 import { Collection, LIMITS, Unread, sameOptional, minimumFor, type Frame, type ReadOptions } from "./reads.ts";
 import { ReviewStore, ReviewStoreError } from "./review-store.ts";
 import { readChange } from "./change.ts";
 import { FINDING_CLAUSE, findingActs, findingProfile, malformedRange, openFindings, requiredSource, shownText, sourceRow } from "./findings.ts";
+import { approvalReasons, decidable, decisionReasons, findingReasons, mergeReasons, reviewReasons, unknownMergeReasons, waitingOn } from "./attention.ts";
 
 export interface Row { scope: ScopeRef; head: Frame["head"]; item: number; type: string; rule: { definition: string; clause: string }; [key: string]: unknown }
 export interface Context {
@@ -39,11 +40,39 @@ async function findingRows(collection: Collection, frame: Frame, holding: readon
   const known = [...frame.items, ...earlier.length ? await collection.items(frame, "manifest", ["superseded"], [...new Set(earlier)].sort((a, b) => a - b)) : []];
   return holding.flatMap(finding => {
     const acts = findingActs(finding, proposal, known.find(version(finding)), collection.viewer, collection.actions);
-    return acts.length ? [row(frame, finding, FINDING_CLAUSE, { category: "open-finding", holdsMerge: true, acts, permission: "not-determined",
+    return acts.length ? [row(frame, finding, FINDING_CLAUSE, { category: "open-finding", ...findingReasons(finding, acts), holdsMerge: true, acts, permission: "not-determined",
       file: shownText(finding.values["file"]), start: finding.values["start"], end: finding.values["end"], ...(malformedRange(finding) ? { malformedRange: true } : {}),
       class: shownText(finding.values["class"]), severity: shownText(finding.values["severity"]), source: shownText(finding.values["source"]), sourceVersion: shownText(finding.values["sourceVersion"]),
       version: finding.refs["version"], rulesRevision: rules?.values["revision"] ?? null, sourceRow: sourceRow(rules, finding.values["source"]) })] : [];
   });
+}
+
+/** How many of a lane's newest entries a catch-up row lists. The row counts the others. */
+export const SINCE_ENTRIES = 6;
+const actorWords = (actor: ReturnType<Collection["actorOfKey"]>): string => !actor ? "a key that is no longer active" : `${actor.name} (${actor.controller ? `${actor.kind} of ${actor.controller}` : actor.kind})`;
+/** One entry in the words of its input. Kinds and rules are a definition's names, and a handle is checked at the membership. */
+function whatHappened(collection: Collection, sealed: Sealed): string {
+  const input = sealed.entry.input;
+  if (input.type === "act" || input.type === "preparation") return `${input.signed.intent.kind} by ${actorWords(collection.actorOfKey(input.signed.intent.actor))}`;
+  if (input.type === "delivery") return `a delivery from ${input.from.at.kind}`;
+  if (input.type === "timed") return `the timed rule ${input.rule}`;
+  if (input.type === "outcome") return `the ${input.result} outcome of ${input.kind}`;
+  return input.type === "genesis" ? "the scope opened" : input.type;
+}
+/** The name a person knows this scope by. */
+function scopeName(collection: Collection, frame: Frame): string {
+  if (sameOptional(frame.ref, collection.membership)) return "The membership";
+  if (sameOptional(frame.ref, collection.directory)) return "The directory";
+  const lane = collection.frames.get(collection.directory.scope)!.items.find(item => item.type === "lane" && sameOptional(item.refs["scope"], frame.ref));
+  const kind = lane?.values["kind"] === "issue" ? "Issue" : lane?.values["kind"] === "change" ? "Change" : "Lane";
+  return `${kind} ${String(lane?.values["number"] ?? "")}${typeof lane?.values["title"] === "string" ? `: ${shownText(lane.values["title"])}` : ""}`.trim();
+}
+/** The entries after a mark, newest last, read in one page. A person reads these; the mark still covers the head, as S4 ruled. */
+async function changedSince(collection: Collection, frame: Frame, since: Frame["head"] | null): Promise<{ changed: { seq: number; what: string }[]; earlier: number; name: string }> {
+  const from = since ? since.seq + 1 : 0, first = Math.max(from, frame.head.seq - SINCE_ENTRIES + 1);
+  const page = await collection.read(frame.ref, handle => handle.history(String(first)));
+  const changed = page.value.filter(sealed => sealed.entry.seq >= first && sealed.entry.seq <= frame.head.seq).map(sealed => { collection.keepEntry(frame, sealed); return { seq: sealed.entry.seq, what: whatHappened(collection, sealed) }; });
+  return { changed, earlier: frame.head.seq - from + 1 - changed.length, name: scopeName(collection, frame) };
 }
 
 export class RepoInAi {
@@ -80,19 +109,26 @@ export class RepoInAi {
         if (questions(frame.summary.definition)) for (const item of frame.items) {
           if (item.type !== "approval-request" || item.state !== "open" || !sameOptional(item.parties["requested"], collection.viewer)) continue;
           const ask = frame.items.find(ask => ask.type === "ask" && matchItem(item.refs["ask"], ask.id, frame.ref));
-          rows.push(row(frame, item, "acts.request-approval;items.approval-request", { category: "requested-review", bodyAt: item.refs["bodyAt"], currentBody: !!ask && sameOptional(item.refs["bodyAt"], ask.refs["bodyAt"]), permission: "not-determined" }));
+          const currentBody = !!ask && sameOptional(item.refs["bodyAt"], ask.refs["bodyAt"]);
+          rows.push(row(frame, item, "acts.request-approval;items.approval-request", { category: "requested-review", ...approvalReasons(item, ask, currentBody, ask ? waitingOn(frame.items, ask.id, frame.ref) : []), bodyAt: item.refs["bodyAt"], currentBody, permission: "not-determined" }));
         }
-        else if (changes(frame.summary.definition)) {
+        if (questions(frame.summary.definition) && collection.actions.includes("issue.decide")) for (const ask of frame.items) {
+          // After the last approval the request leaves this list, and the question still waits for a decision.
+          if (ask.type === "ask" && decidable(ask, frame.items, frame.ref)) rows.push(row(frame, ask, "acts.decide", { category: "decision-due", ...decisionReasons(ask, waitingOn(frame.items, ask.id, frame.ref)), bodyAt: ask.refs["bodyAt"], permission: "not-determined" }));
+        }
+        if (changes(frame.summary.definition)) {
+          const proposal = frame.items.find(item => item.type === "proposal");
           const manifest = frame.items.find(item => item.type === "manifest" && item.state === "current");
           for (const item of frame.items) if (item.type === "review-request" && item.state === "open" && sameOptional(item.parties["requested"], collection.viewer))
-            rows.push(row(frame, item, "acts.request-review-own;items.review-request", { category: "requested-review", currentManifest: manifest?.id ?? null, requestVersionBound: false, permission: "not-determined" }));
+            rows.push(row(frame, item, "acts.request-review-own;items.review-request", { category: "requested-review", ...reviewReasons(item, proposal), currentManifest: manifest?.id ?? null, requestVersionBound: false, permission: "not-determined" }));
           for (const item of frame.items) if (item.type === "merge" && item.state === "unknown" && (sameOptional(item.parties["merger"], collection.viewer) || isMemberRef(item.parties["merger"]) && sameOptional(collection.controller(item.parties["merger"]), collection.viewer)))
-            rows.push(row(frame, item, "acts.merge;items.merge", { category: "unknown-merge", manifest: item.refs["manifest"], retryAllowed: false }));
+            rows.push(row(frame, item, "acts.merge;items.merge", { category: "unknown-merge", ...unknownMergeReasons(item, collection.viewer), manifest: item.refs["manifest"], retryAllowed: false }));
           const rules = frame.items.find(item => item.type === "rules");
           const holding = findingProfile(frame.summary.definition) ? openFindings(frame.items).filter(item => requiredSource(rules, item.values["source"])) : null;
-          if (manifest && frame.items.some(item => item.type === "proposal" && item.state === "open") && collection.actions.includes("change.merge")) rows.push(row(frame, manifest, "acts.merge", { category: "merge-attention", roleIncludes: "change.merge", permission: "not-determined", rules: rules?.values ?? null, ...(holding ? { heldBy: holding.map(item => item.id) } : {}) }));
+          if (manifest && frame.items.some(item => item.type === "proposal" && item.state === "open") && collection.actions.includes("change.merge")) rows.push(row(frame, manifest, "acts.merge", { category: "merge-attention", ...mergeReasons(proposal, holding?.map(item => item.id)), roleIncludes: "change.merge", permission: "not-determined", rules: rules?.values ?? null, ...(holding ? { heldBy: holding.map(item => item.id) } : {}) }));
           if (holding) rows.push(...await findingRows(collection, frame, holding, rules));
-        } else if (!issue(frame.summary.definition)) collection.unread.push({ scope: frame.ref, reason: "unsupported-profile" });
+        }
+        if (!issue(frame.summary.definition) && !changes(frame.summary.definition)) collection.unread.push({ scope: frame.ref, reason: "unsupported-profile" });
       }
       return rows;
     }, args["after"]);
@@ -202,7 +238,11 @@ export class RepoInAi {
       for (const frame of [...frames, collection.frames.get(collection.membership.scope)!, collection.frames.get(collection.directory.scope)!]) {
         const mark = marks.find(mark => sameOptional(mark.scope, frame.ref));
         if (mark && frame.head.seq < mark.head.seq || mark && frame.head.seq === mark.head.seq && frame.head.hash !== mark.head.hash) { collection.unread.push({ scope: frame.ref, reason: "review-head-conflict" }); continue; }
-        if (!mark || !sameOptional(mark.head, frame.head)) rows.push(row(frame, { id: frame.head.seq, type: "head" } as Item, "apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)", { since: mark?.head ?? null, interpretation: "Repeated until an explicit mark" }));
+        if (mark && sameOptional(mark.head, frame.head)) continue;
+        let listed: Awaited<ReturnType<typeof changedSince>>;
+        try { listed = await changedSince(collection, frame, mark?.head ?? null); }
+        catch (error) { if (!(error instanceof Unread)) throw error; collection.unread.push({ scope: frame.ref, reason: error.reason }); continue; }
+        rows.push(row(frame, { id: frame.head.seq, type: "head" } as Item, "apps/views/src/repo-in-ai.ts#since (local comparison, not a native permission clause)", { since: mark?.head ?? null, interpretation: "Repeated until an explicit mark", ...listed }));
       }
       return rows;
     }, args["after"]);
@@ -210,11 +250,11 @@ export class RepoInAi {
   catalogue(): ApplicationReadCatalogue {
     const tool = (name: string, description: string, run: (args: Readonly<Record<string, unknown>>) => Promise<CallResult>, properties: Record<string, unknown> = {}, required: string[] = []) => ({ tool: { name, description, inputSchema: { type: "object", properties, required, additionalProperties: false }, annotations: { readOnlyHint: true } }, run });
     return { revision: digestBytes(utf8(canonicalize({ adapter: "repo-in-ai@1", pins: [QUESTION_DIGESTS.issue, QUESTION_BRIEF_DIGESTS.issue, J4_DIGESTS.issue, J4_DIGESTS.change, FINDING_DIGESTS.change], brief: this.brief.digest }))), tools: [
-      tool("needs_you", "Current attention, with pinned clauses and heads. At most 50 rows, eight scopes including support; omissions explicit. To read the next lanes, pass the answer's next as after. Attention grants no permission.", args => this.needsYou(args), { after: { type: "object" } }),
+      tool("needs_you", "Current attention. Each row says what needs you, why it is yours and what settles it, and names its pinned clause, the acts that settle it (settledBy) and its head. At most 50 rows, eight scopes including support; omissions explicit. To read the next lanes, pass the answer's next as after. Attention grants no permission.", args => this.needsYou(args), { after: { type: "object" } }),
       tool("work", "Agent commitments, actual controllers, terms, blocks and issue-linked changes, beside current conditions. Bounded reads; no Task or permission inference.", () => this.work()),
       tool("context", "One Question's text versions, requests, approvals, comments, conditions and immutable Brief binding. Legacy questions remain unbound.", args => this.context(args), { question: { type: "object", properties: { scope: { type: "object" }, ask: { type: "integer", minimum: 0 } }, required: ["scope", "ask"], additionalProperties: false } }, ["question"]),
       tool("change", "One change's exact version: base and integration, this version's reviews with each reviewer's kind, checks, rules, merges, open findings on the finding profile, and the linked issues' conditions and decided questions. Bounded reads; it grants no permission.", args => this.change(args), { scope: { type: "object" } }, ["scope"]),
-      tool("since", "Pure read of heads since the explicit local review mark. Repeated reads do not consume changes. To read the next lanes, pass the answer's next as after.", args => this.since(args), { after: { type: "object" } }),
+      tool("since", "Pure read of what changed since the explicit local review mark of this device: each head, its newest entries and how many earlier entries it left out. Repeated reads do not consume changes. To read the next lanes, pass the answer's next as after.", args => this.since(args), { after: { type: "object" } }),
     ] };
   }
 }

@@ -177,7 +177,8 @@ item leaves it open, and an absent person returning on another device sees
 every item that arrived. *Added in draft 3:* the agent wake is part of
 J5. An agent that waits on a person is woken by an authorized event feed
 from the room, with no webhook, and resumes its work; this lands before
-the exit test (section 2f, decision 3). Schedules and webhook conditions
+the exit test (section 2f, decision 3). The feed is the lane's existing head
+stream, and `dap issue wait` holds it. Schedules and webhook conditions
 come later. *Depends on* MVP S2, S3 and S4, and the views design.
 
 ### 2c. In parallel

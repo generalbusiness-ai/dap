@@ -7,6 +7,7 @@ import { parseStrict } from "@generalbusiness/dap-bytes";
 import { applicationInstallation, installApplication } from "./application-install.ts";
 import { enrolAgentKey, enrolCheckerKey, invitePerson } from "./invitations.ts";
 import { AGENT_KEY_LINK, CHECKER_KEY_LINK } from "@generalbusiness/dap-client";
+import { issueWait } from "./issue-wait.ts";
 import { act, acts, apps, claim, clone, edit, install, installPlanned, invite, issueAssign, issueClose, issueComment, issueOpen, issues, items, join, log, merge, planInstall, propose, remote, show, status, verify, CREATION_INSTALL_COHORTS, type Context, type InstallCohort, type RegisterPolicy, type Outcome } from "./commands.ts";
 
 export const USAGE = [
@@ -45,6 +46,7 @@ export const USAGE = [
   "  dap issue comment <issue> <text>",
   "  dap issue assign <issue> <@member>",
   "  dap issue close <issue>",
+  "  dap issue wait <issue> <ask> [--hours 72]",
   "  dap issues",
   "  dap mcp [--generic | --generic=add] [--tools <definition>,...] [--http 127.0.0.1:<port>] [--scope <scope> --membership <scope>]",
   "A scope is a scope ID, or one of: register, directory, membership, rules, destination, inbox.",
@@ -76,7 +78,7 @@ export function parse(argv: readonly string[]): { words: string[]; flags: Map<st
 }
 
 const KNOWN: Record<string, readonly string[]> = {
-  install: ["host", "namespace", "register-policy", "plan", "planned", "cohort", "release", "request", "role", "values", "owner"], application: [], apps: ["cursor"], create: ["handle", "branch", "again"], claim: ["handle", "branch", "again"], invite: ["role", "acts", "hours", "keep", "check", "continue"], join: ["check"], acts: [], act: ["on", "target", "set", "value"], log: ["limit"], items: ["query"], show: [], verify: ["all"], status: ["request"], remote: [], clone: ["hours", "archive"], edit: ["file", "title", "closes"], propose: ["title"], merge: ["closes"], issue: ["title", "body"], issues: [],
+  install: ["host", "namespace", "register-policy", "plan", "planned", "cohort", "release", "request", "role", "values", "owner"], application: [], apps: ["cursor"], create: ["handle", "branch", "again"], claim: ["handle", "branch", "again"], invite: ["role", "acts", "hours", "keep", "check", "continue"], join: ["check"], acts: [], act: ["on", "target", "set", "value"], log: ["limit"], items: ["query"], show: [], verify: ["all"], status: ["request"], remote: [], clone: ["hours", "archive"], edit: ["file", "title", "closes"], propose: ["title"], merge: ["closes"], issue: ["title", "body", "hours"], issues: [],
 };
 
 /** Runs one command line with the given context. */
@@ -150,12 +152,16 @@ export async function command(ctx: Context, argv: readonly string[]): Promise<Ou
 function issue(ctx: Context, sub: string | undefined, words: readonly string[], flags: Map<string, string[]>): Promise<Outcome> | Outcome {
   const wrong = (what: string): Outcome => ({ code: 2, lines: [what, USAGE] });
   const flag = (f: string) => flags.get(f)?.at(-1);
-  if (sub !== "open" && flags.size > 0) return wrong("Only issue open takes flags.");
+  if (sub === "wait") {
+    if ([...flags.keys()].some(name => name !== "hours") || (flags.get("hours")?.length ?? 0) > 1 || words.length !== 2) return wrong("issue wait needs an issue and a question's item number, and takes only --hours.");
+    return issueWait(ctx, words[0]!, words[1]!, flag("hours") !== undefined ? { hours: Number(flag("hours")) } : {});
+  }
+  if (sub !== "open" && flags.size > 0) return wrong("Only issue open and issue wait take flags.");
   switch (sub) {
     case "open": return words.length > 0 ? wrong("issue open takes no argument: give the title with --title.") : issueOpen(ctx, { ...(flag("title") !== undefined ? { title: flag("title")! } : {}), ...(flag("body") !== undefined ? { body: flag("body")! } : {}) });
     case "comment": return words.length === 2 ? issueComment(ctx, words[0]!, words[1]!) : wrong("issue comment needs an issue and a text.");
     case "assign": return words.length === 2 ? issueAssign(ctx, words[0]!, words[1]!) : wrong("issue assign needs an issue and a member's handle.");
     case "close": return words.length === 1 ? issueClose(ctx, words[0]!) : wrong("issue close needs an issue.");
-    default: return wrong("issue takes one of: open, comment, assign, close.");
+    default: return wrong("issue takes one of: open, comment, assign, close, wait.");
   }
 }

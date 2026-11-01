@@ -229,6 +229,13 @@ export class Collection {
     const kind = typeof row.values["kind"] === "string" ? row.values["kind"] : "unknown", controller = row.parties["controller"];
     return { kind, name: member.member, ...(isMemberRef(controller) ? { controller: controller.member } : {}) };
   }
+  /** Who holds a key, as the membership lists it now. A key that is no longer active reads as unknown. */
+  actorOfKey(key: string): { kind: string; name: string; controller?: string } | null {
+    const M = this.frames.get(this.membership.scope)!;
+    const held = M.items.find(item => item.type === "key" && item.state === "active" && item.values["id"] === key);
+    const member = held && M.items.find(item => item.type === "member" && item.id === held.refs["member"])?.parties["member"];
+    return isMemberRef(member) ? this.actor(member) : null;
+  }
   isAgent(member: MemberRef): boolean { return this.frames.get(this.membership.scope)!.items.some(item => item.type === "member" && item.state === "active" && item.values["kind"] === "agent" && sameOptional(item.parties["member"], member)); }
   controller(member: MemberRef): MemberRef | null {
     const M = this.frames.get(this.membership.scope)!;

@@ -54,7 +54,10 @@ export async function* headLines(body: ByteStream, signal: Expiry): AsyncGenerat
   try {
     for (;;) {
       if (signal.aborted || stopped) return;
-      const read = await Promise.race([reader.read(), end]);
+      let read: Awaited<ReturnType<typeof reader.read>> | { done: true };
+      // A failed read is an outage and no bad frame. Node's fetch fails an idle body after 300 seconds, so the caller reconnects and reads the record.
+      try { read = await Promise.race([reader.read(), end]); }
+      catch { if (signal.aborted || stopped || announced) return; throw new HeadStreamUnavailable(); }
       if (signal.aborted || stopped) return;
       if (read.done) { if (pending.length) throw new Error("Truncated native head frame."); if (!announced) throw new HeadStreamUnavailable(); return; }
       const chunk = read.value;
