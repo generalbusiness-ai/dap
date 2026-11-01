@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:008bb197edacec436d3d27b25e3a5400e42a6a74","text":"Merge retired a covered predecessor; the successor is at docs/cli.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0892762cb71963000bc60c732703bcb26219edfe","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-01-signed-read-refusal.md."}
