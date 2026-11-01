@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7feae1248bfe319026791398ec7836f5e8b96ae0","text":"Merge retired a covered predecessor; the successor is at docs/security/trust-boundaries.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8ffd99e8a9e224c11383ccea80f38f50dd6ee3d0","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-01-git-read-token-after-revocation.md."}
