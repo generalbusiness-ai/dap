@@ -1,7 +1,7 @@
 import { canonicalize, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { FieldValue, Item, ScopeRef } from "@generalbusiness/dap-contract";
 import { ViewError, type ActLike, type Card, type CardAction, type LocalReviewCapture, type ViewSource } from "@generalbusiness/dap-mcp";
-import { APPROVAL_LIMIT, READING_LEAVES_OPEN, lanesLeftOut, notShown, offerLabel, questionOffers, reasonLines, whyLine, type Reasons } from "./attention.ts";
+import { APPROVAL_LIMIT, DECISION_RECORDED, LIST_GRANTS_NOTHING, READING_LEAVES_OPEN, lanesLeftOut, notShown, offerLabel, questionKicker, questionOffers, reasonLines, reviewRecorded, ruleLine, whyLine, workWords, type Reasons } from "./attention.ts";
 import { captureInput } from "./capture.ts";
 import { changeProjection } from "./change.ts";
 import { RepoInAi, questionDefinition, result, type Context, type Row } from "./repo-in-ai.ts";
@@ -19,7 +19,7 @@ export function captureQuestionAction(context: Context, kind: "approve" | "decid
   const definition = questionDefinition(context.definition); if (!definition) throw new Unread("question-profile-unsupported");
   const fields: Record<string, FieldValue> = kind === "approve" ? { request: request!.id, bodyAt: context.bodyAt, verdict } : { bodyAt: context.bodyAt };
   const on = kind === "decide" ? context.ask.id : null, act = definition.acts[kind]! as unknown as ActLike;
-  return { id: kind === "approve" ? verdict : "decide", label: offerLabel(kind, verdict), purpose: "approve", kind,
+  return { id: kind === "approve" ? verdict : "decide", label: offerLabel(kind, verdict), purpose: "approve", kind, done: kind === "approve" ? reviewRecorded(verdict) : DECISION_RECORDED,
     args: { ...captureInput(act, context.items, context.scope, on, fields) } };
 }
 /** The words on this page of the card. A person is not told to do what the card offers no way to do. */
@@ -30,6 +30,12 @@ function questionReasons(page: string, actions: readonly CardAction[]): string[]
   const offered = reviews && decides ? "read the question, approve it or decide it" : reviews ? "read the question or approve it" : decides ? "read the question or decide it" : "read the question";
   return [`Open this card to ${offered}.${acts.length ? ` ${rules}` : ""}`];
 }
+/**
+ * How long a question's text can be and still stand on the first card, with the acts under it. A person must read the whole text before they can press,
+ * so a longer text keeps Open and shows no act on the first card. The card never cuts a text next to an act.
+ */
+export const FIRST_CARD_TEXT = Object.freeze({ characters: 600, lines: 8 });
+export const fitsFirstCard = (text: string): boolean => [...text].length <= FIRST_CARD_TEXT.characters && text.split(/\r\n|\r|\n|\u2028|\u2029/).length <= FIRST_CARD_TEXT.lines;
 function questionActions(context: Context): CardAction[] {
   if (!context.briefMatches || context.ask.state !== "asked") return [];
   return questionOffers(context.ask, context.requests, context.approvals, context.bodyAt.seq, context.viewer, context.actions).map(offer => captureQuestionAction(context, offer.kind, offer.request, offer.verdict));
@@ -48,6 +54,9 @@ function changeWords(row: Row): string {
   const listed = changed.map(entry => `Entry ${entry.seq}: ${entry.what}.`).join(" "), since = row["since"] as Row["head"] | null;
   return `${String(row["name"])}. ${since ? `New since entry ${since.seq}, where you last marked it.` : "You have not marked this one on this device."} ${listed}${count ? ` This list leaves out ${count} earlier entr${count === 1 ? "y" : "ies"}.` : ""}`;
 }
+/** What an empty list says, by its screen. */
+const empty = (screen: string): string => screen === "work" ? "No work is open in this room." : screen === "change" ? "Nothing has changed since your last review." : "Nothing in this room needs you.";
+const nothingRead = (screen: string): string => screen === "work" ? "No work is open in the lanes this list read." : screen === "change" ? "Nothing has changed in the lanes this list read." : "Nothing in the lanes this list read needs you.";
 export function decisionSource(app: RepoInAi): ViewSource {
   return {
     initialPage: (screen, subject) => screen === "change" && subject === undefined ? "updates" : "summary",
@@ -61,9 +70,10 @@ export function decisionSource(app: RepoInAi): ViewSource {
         if (query.screen === "decision") {
           const selected = selector(query.subject), { context } = await app.question(selected.scope, selected.ask, minimum);
           const actions = questionActions(context), at = actions[0] && !actions[0].local ? actions[0].args["at"] as Record<string, number> : { on: context.ask.revision };
+          const whole = fitsFirstCard(context.body);
           const card: Card = { identity: { item: String(context.ask.id), kind: "ask", revision: String(context.ask.revision), subject: { scope: context.scope.scope, item: context.ask.id }, at },
-            title: String(context.ask.values["question"]), summary: context.brief === null ? "Legacy Question: no Brief binding." : context.briefMatches ? `Question text under its immutable Brief. ${APPROVAL_LIMIT}` : "The retained Brief resource does not match this Question.",
-            body: context.body, reasons: questionReasons(query.page, actions),
+            kicker: questionKicker(context.ask.id), ...(whole ? { wholeText: true as const } : {}), title: String(context.ask.values["question"]), summary: context.brief === null ? "Legacy Question: no Brief binding." : context.briefMatches ? `Question text under its immutable Brief. ${APPROVAL_LIMIT}` : "The retained Brief resource does not match this Question.",
+            body: context.body, reasons: questionReasons(whole ? "item" : query.page, actions),
             projection: [{ scope: context.scope.scope, seq: context.head.seq, hash: context.head.hash }], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], actions,
             fallback: "Use context for the exact text versions, requests, approvals, comments and conditions." };
           if (utf8(canonicalize(card)).length > 60 * 1024) return { status: "incomplete", position: 0, count: 0, fallback: "Question body exceeds this card's display budget. No approval is offered; read the bounded context." };
@@ -76,7 +86,7 @@ export function decisionSource(app: RepoInAi): ViewSource {
         if (response.isError) return { status: "unavailable", position: 0, count: 0, fallback: "This bounded read is unavailable." };
         const data = response.structuredContent, rows = data["rows"] as Row[];
         const left = lanesLeft(data, query.screen);
-        if (!rows.length) return { status: data["complete"] ? "empty" : "incomplete", position: 0, count: 0, fallback: data["complete"] ? "No current rows in the reviewed scope selection." : `No rows in the readable selection; omissions remain.${left}` };
+        if (!rows.length) return { status: data["complete"] ? "empty" : "incomplete", position: 0, count: 0, fallback: data["complete"] ? empty(query.screen) : `${nothingRead(query.screen)}${notShown(data["unread"] as { scope: ScopeRef }[], data["omittedRows"] as number).map(line => ` ${line}`).join("")}${left}` };
         const position = Math.min(query.position, rows.length - 1), current = rows[position]!;
         const points = data["heads"] as LocalReviewCapture["heads"];
         const ranges = query.screen === "change" ? rows.map(row => ({ scope: row.scope.scope, from: row.head.seq, to: row.head.seq })) : [];
@@ -88,13 +98,15 @@ export function decisionSource(app: RepoInAi): ViewSource {
         const identity = { item: String(current.item), kind: current.type, revision: String(current.head.seq), subject: { scope: current.scope.scope, item: current.item }, at: {} };
         const projection = points.map(point => ({ scope: point.scope.scope, seq: point.head.seq, hash: point.head.hash }));
         const shortfall = [...notShown(data["unread"] as { scope: ScopeRef }[], data["omittedRows"] as number), ...(left ? [left.trim()] : [])];
-        const card: Card = query.screen === "needs-you" ? { identity, title: String(current["needs"]), summary: whyLine(current as unknown as Reasons),
+        const record = { label: "Exact record", text: JSON.stringify(current, null, 2) };
+        const work = query.screen === "work" ? workWords(current as unknown as Parameters<typeof workWords>[0]) : null;
+        const card: Card = query.screen === "needs-you" ? { identity, kicker: String(current["kicker"]), title: String(current["needs"]), summary: whyLine(current as unknown as Reasons),
             reasons: [...reasonLines(current as unknown as Reasons, current.rule), READING_LEAVES_OPEN, ...shortfall],
-            body: JSON.stringify(current, null, 2), projection, reviewIntended: [], unavailable: [], entries: [], waitsOn: (current["waiting"] as string[] | undefined) ?? [], settles: current["settledBy"] as string[], actions, fallback: `Read needs_you for exact rows, heads and omissions. To read a question and answer it, open its Decision card.${left}` }
-          : query.screen === "change" ? { identity, title: "What changed since your last review", summary: "Each scope below lists its newest entries since you last pressed Mark reviewed on this device.",
+            record, rule: current.rule, projection, reviewIntended: [], unavailable: [], entries: [], waitsOn: (current["waiting"] as string[] | undefined) ?? [], settles: current["settledBy"] as string[], actions, fallback: `Read needs_you for exact rows, heads and omissions. To read a question and answer it, open its Decision card.${left}` }
+          : query.screen === "change" ? { identity, kicker: "Updates", title: "What changed since your last review", summary: "Each scope below lists its newest entries since you last pressed Mark reviewed on this device.",
             reasons: ["Mark reviewed moves your place on this device and closes nothing. Another device keeps its own place, so it shows these changes again.", ...shortfall], projection, reviewIntended: ranges, unavailable: [], entries, waitsOn: [], settles: [], actions, fallback: `Read since for exact rows, heads and omissions.${left}` }
-          : { identity, title: current.type, summary: `${current.rule.definition} ${current.rule.clause}`,
-            reasons: ["This projection explains attention; it grants no permission.", ...(left ? [left.trim()] : [])], body: JSON.stringify(current, null, 2), projection, reviewIntended: ranges, unavailable: [], entries, waitsOn: [], settles: [], actions, fallback: `Read the named bounded tool for exact rows, heads and omissions.${left}` };
+          : { identity, kicker: work!.kicker, title: work!.title, summary: work!.summary,
+            reasons: [...work!.lines, ruleLine(current.rule.clause), LIST_GRANTS_NOTHING, ...(left ? [left.trim()] : [])], record, rule: current.rule, projection, reviewIntended: ranges, unavailable: [], entries, waitsOn: [], settles: [], actions, fallback: `Read the named bounded tool for exact rows, heads and omissions.${left}` };
         return { status: "ready", position, count: rows.length, card, fallback: card.fallback };
       } catch (error) {
         if (!(error instanceof Unread) && !(error instanceof SyntaxError)) throw error;

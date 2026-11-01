@@ -7,11 +7,12 @@ const require = createRequire(join(process.env.PLAYWRIGHT_CORE, 'package.json'))
 const { chromium } = require('playwright-core');
 assert.equal(require('playwright-core/package.json').version, '1.63.0');
 import { startViewsHost } from './support/views-host.ts';
+import { wordsFixture } from './support/card-words.ts';
 import { TOOL_WAIT_MS } from '../src/views/waits.ts';
 import { mkdir, writeFile } from 'node:fs/promises';
 const out=process.env.VIEW_CAPTURE_OUT;
 if (!/^\/(?:private\/)?tmp\//.test(out)) throw new Error('Browser evidence belongs in a scratch directory under /tmp.'); await mkdir(out,{recursive:true});
-const host=await startViewsHost(); let browser;
+const host=await startViewsHost({words:wordsFixture}); let browser;
 const report={browserPlugin:'Browser plugin not available',playwright:'1.63.0',origin:host.url,sandbox:host.sandboxOrigin,cases:[],errors:[]};
 async function opened(params={},width=592){
   const page=await browser.newPage({viewport:{width:width+32,height:1000}}), errors=[];
@@ -140,6 +141,34 @@ try{
     const evidence=await verify(page,app,errors,'receipt-rehearsal-'+prototype);assert.equal(evidence.proof.chat.length,prototype?1:0);report.cases.push({label:'receipt-rehearsal-'+prototype,chat:evidence.proof.chat,modelTurns:evidence.proof.modelTurns});await page.close();
   }
   for(const screen of ['work','decision','change']){const {page,app,errors}=await opened({screen},390);await click(page,app,app.getByRole('link'));await app.getByRole('button',{name:'Accept',exact:true}).waitFor();await verify(page,app,errors,'resource-'+screen);report.cases.push({label:'resource-'+screen});await page.close()}
+  // The words a person reads, in each theme. The views adapter is real; a stand-in answers its scope reads. The host here shows no Reply box, so the bottom room is measured against that box's size.
+  for(const theme of ['light','dark']){
+    const words=async(scene,screen)=>{
+      const page=await browser.newPage({viewport:{width:624,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(['error','warning'].includes(m.type()))errors.push(m.text())});
+      await page.goto(host.url+'/?'+new URLSearchParams({fixture:'words',scene,screen,theme}));
+      const app=page.frameLocator('#frame').frameLocator('iframe');await page.waitForFunction(()=>window.proof.contexts.length>0);await app.locator('#card-root').first().waitFor();
+      return {page,app,errors,text:()=>app.locator('#card-root').innerText(),shot:async name=>{await stable(page,app);await page.waitForTimeout(300);const fit=await app.locator('#card-root').evaluate(root=>({root:root.getBoundingClientRect().height,scroll:document.documentElement.scrollHeight,client:document.documentElement.clientHeight}));report.cases.push({label:'words-fit-'+name+'-'+theme,fit});assert.ok(fit.scroll<=fit.client+1,name+' WHOLE CARD: the frame holds the card: '+JSON.stringify(fit));await page.screenshot({path:out+'/words-'+name+'-'+theme+'.png',fullPage:true})},done:async label=>{assert.deepEqual(errors,[],label+' console');report.cases.push({label:'words-'+label+'-'+theme});await page.close()}};
+    };
+    const noRaw=(said,label)=>{for(const raw of ['sha256:','items.','acts.','"scope"','manifest 6','approval-request'])assert.ok(!said.includes(raw),label+' A PERSON READS WORDS: '+raw+' in '+said)};
+    {const c=await words('merge-waits','needs-you'),first=await c.text();assert.match(first,/Change 2, version 2/,'merge kicker');assert.match(first,/waits on its author, @una\./,'MERGE WAITS: the row says who it waits on');assert.ok(!first.includes('Merge change'),'MERGE WAITS: the row does not say merge');noRaw(first,'merge first');await c.shot('merge-waits-first');
+      await c.app.getByRole('link').first().click();await c.app.locator('details.read-points summary').waitFor();
+      const disclosure=c.app.locator('details.read-points');assert.equal(await disclosure.locator('summary').innerText(),'Exact record','RAW ROW: the disclosure names what it holds');assert.equal(await disclosure.evaluate(e=>e.open),false,'RAW ROW: the disclosure starts closed');
+      noRaw((await c.text()).replace(/Exact record[\s\S]*$/,''),'merge opened');await c.shot('merge-waits-opened');await disclosure.locator('summary').click();assert.match(await disclosure.innerText(),/"category": "merge-attention"/,'NOTHING LOST: the disclosure holds the row');await c.shot('merge-waits-disclosed');
+      // The app's Reply box lies over about 40px, with about 25px of margin below it. Nothing the card offers may sit in that band of an expanded card.
+      const room=await c.app.locator('#card-root').evaluate(root=>{const mode=document.documentElement.dataset.mode,bottom=root.getBoundingClientRect().bottom,last=[...root.querySelectorAll('a,button,summary')].filter(e=>e.getClientRects().length).at(-1);return {mode,padding:getComputedStyle(root).paddingBottom,gap:bottom-last.getBoundingClientRect().bottom,last:last.textContent}});
+      assert.equal(room.mode,'fullscreen','BOTTOM ROOM: the opened card is expanded');assert.ok(room.gap>=65,'BOTTOM ROOM: the last control clears the Reply box: '+JSON.stringify(room));report.cases.push({label:'words-bottom-room-fullscreen-'+theme,room});await c.done('merge-waits')}
+    {const c=await words('merge-waits','needs-you'),inline=await c.app.locator('#card-root').evaluate(root=>[document.documentElement.dataset.mode,getComputedStyle(root).paddingBottom]);assert.deepEqual(inline,['inline','16px'],'BOTTOM ROOM: an inline card keeps its padding');report.cases.push({label:'words-bottom-room-inline-'+theme,inline});await c.page.close()}
+    {const c=await words('question-row','needs-you'),said=await c.text();assert.match(said,/Question 1/,'question kicker');assert.match(said,/Rule: this lane's rule for an approval request\./,'RULE LINE: words');noRaw(said,'question row');await c.shot('question-row');await c.done('question-row')}
+    {const c=await words('work','work'),one=await c.text();assert.match(one,/Issue 1: TEST first import/,'WORK: the first title');assert.match(one,/@una, agent of @vic, accepted this work\./,'WORK: the first line');noRaw(one,'work first');await c.shot('work-1');
+      await c.app.getByRole('button',{name:'Next item',exact:true}).click();await c.app.getByText('Issue 2: TEST second import').waitFor();const two=await c.text();assert.match(two,/@una2, agent of @rita, accepted this work\./,'WORK: the second line');assert.notEqual(one,two,'WORK: page 2 differs from page 1');await c.shot('work-2');await c.done('work')}
+    {const c=await words('decision-short','decision');await c.app.getByRole('button',{name:'Request changes',exact:true}).waitFor();const said=await c.text();assert.match(said,/The import keeps its old row format/,'SHORT TEXT: the first card holds the text');assert.match(said,/Question 1/,'decision kicker');assert.equal(await c.app.getByRole('button',{name:'Approve',exact:true}).count(),1,'SHORT TEXT: the first card offers Approve');await c.shot('decision-short');
+      await c.app.getByRole('button',{name:'Request changes',exact:true}).click();await c.app.getByText('Review recorded: changes requested.').waitFor();await c.shot('decision-short-receipt');await c.done('decision-short')}
+    {const c=await words('decision-long','decision');await c.app.getByRole('link').first().waitFor();const said=await c.text();assert.ok(!said.includes('The import keeps its old row format'),'LONG TEXT: the first card shows no part of the text');assert.equal(await c.app.getByRole('button',{name:'Approve',exact:true}).count(),0,'LONG TEXT: the first card offers no act');await c.shot('decision-long');
+      await c.app.getByRole('link').first().click();await c.app.getByRole('button',{name:'Approve',exact:true}).waitFor();assert.match(await c.text(),/The import keeps its old row format/,'LONG TEXT: Open shows the text');await c.shot('decision-long-opened');await c.done('decision-long')}
+    {const c=await words('change','change'),first=await c.text();assert.match(first,/Change 2, version 2/,'change kicker');await c.shot('change-first');await c.app.getByRole('link').first().click();await c.app.getByRole('button',{name:'Request changes',exact:true}).waitFor();await c.shot('change-opened');
+      await c.app.getByRole('button',{name:'Request changes',exact:true}).click();await c.app.getByText('Review recorded: changes requested.').waitFor();await c.shot('change-receipt');await c.done('change')}
+    {const c=await words('empty','work');await c.app.getByText('No work is open in this room.').waitFor();assert.ok(!(await c.text()).includes('reviewed scope'),'EMPTY: no internal words');await c.shot('empty-work');await c.done('empty')}
+  }
   {const {page,app,errors}=await opened({},390);await click(page,app,app.getByRole('link'));await click(page,app,app.getByRole('button',{name:'Ask in chat',exact:true}));const evidence=await verify(page,app,errors,'explicit-handoff');assert.equal(evidence.proof.chat.length,1);report.cases.push({label:'explicit-handoff',chat:evidence.proof.chat});await page.close()}
   // The desktop AI app's shape: the model's call opens the view on one process, and the card's calls reach another of the same home.
   const proofOf=page=>page.evaluate(async()=>fetch('/proof?instance='+window.proof.config.id).then(r=>r.json()));

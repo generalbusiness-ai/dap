@@ -286,12 +286,12 @@ test("the issue screen lists a question with its text, its reasons and a slot fo
   vi.stubGlobal("document", document);
   const room = { me: { handle: "@ana", name: null, role: "admin", kind: "person", actions: [] }, directory: "sc_directory", membership: { scope: "sc_membership" } } as unknown as Room;
   const question = { ask: 4, question: "TEST which format?", body: "TEST keep CSV.", brief: "Brief sha256:b. Approval does not approve the Brief or conditions.",
-    rows: [{ item: 5, needs: "Approve or request changes on question 4.", why: "Why it is yours: @una asked you by name.", lines: ["What settles it: an act.", "Rule: sha256:d acts.request-approval."] }],
+    rows: [{ item: 5, needs: "Approve or request changes on question 4.", why: "Why it is yours: @una asked you by name.", lines: ["What settles it: an act.", "Rule: this lane's rule for an approval request."], exact: "Definition sha256:d, clause acts.request-approval." }],
     others: ["@una asked @vic to approve this question."], answers: [{ kind: "approve" as const, label: "Approve", on: "", typed: {} }] };
-  const closed = { ask: -1, question: "", body: null, brief: null, rows: [{ item: 8, needs: "A request about question 7, which has closed.", why: "Why it is yours: @vic asked you by name.", lines: [] }], others: [], answers: [] };
+  const closed = { ask: -1, question: "", body: null, brief: null, rows: [{ item: 8, needs: "A request about question 7, which has closed.", why: "Why it is yours: @vic asked you by name.", lines: [], exact: "Definition sha256:d, clause acts.request-approval." }], others: [], answers: [] };
   const screen = issueScreen(room, { scope: "sc_issue", definition: "sha256:d", head, questions: [question, closed], decided: [], title: "TEST", number: 1, body: null, state: "open", requester: "@rita", assignees: [], conditions: [], comments: [], createdAt: null, modifiedAt: null } as never) as unknown as Element;
   const seen = screen.textContent;
-  for (const words of ["Reading this item leaves it open. This list grants no permission.", "TEST which format?", "TEST keep CSV.", "Approval does not approve the Brief", "Approve or request changes on question 4.", "Why it is yours: @una asked you by name.", "What settles it: an act.", "Rule: sha256:d acts.request-approval.", "@una asked @vic to approve this question.", "A request about question 7, which has closed."]) expect(seen, words).toContain(words);
+  for (const words of ["Reading this item leaves it open. This list grants no permission.", "TEST which format?", "TEST keep CSV.", "Approval does not approve the Brief", "Approve or request changes on question 4.", "Why it is yours: @una asked you by name.", "What settles it: an act.", "Rule: this lane's rule for an approval request.", "@una asked @vic to approve this question.", "A request about question 7, which has closed."]) expect(seen, words).toContain(words);
   expect(screen.all("div").filter(node => node.getAttribute("data-question-answers") !== null).map(node => node.getAttribute("data-question-answers")), "ANSWERS: a slot for the live question only").toEqual(["4"]);
 });
 
@@ -299,11 +299,11 @@ test("Needs you shows each row with its lane and its link, says what it left out
   vi.stubGlobal("document", document);
   const lane = { scope: "sc_one" as never, kind: "issue" as const, lane: "Issue 2: TEST the import" };
   const other = { scope: "sc_two" as never, kind: "change" as const, lane: "Change 3: TEST the fix" };
-  const item = { ...lane, row: {} as never, item: 5, needs: "Approve or request changes on question 4.", why: "Why it is yours: @una asked you by name.", lines: ["What settles it: an act.", "Rule: sha256:d acts.request-approval."] };
+  const item = { ...lane, row: {} as never, item: 5, needs: "Approve or request changes on question 4.", why: "Why it is yours: @una asked you by name.", lines: ["What settles it: an act.", "Rule: this lane's rule for an approval request."], exact: "Definition sha256:d, clause acts.request-approval." };
   const base = { failed: null, items: [item, { ...item, ...other, item: 9, needs: "Merge change 3." }], omittedRows: 0, omittedLanes: 0, next: null, continued: false, lostPlace: false, unread: [], decided: [], older: [], decidedUnread: 0 };
   const list = (needs: Partial<NeedsYouView>) => (roomScreen(room, { issues: [], changes: [] }, "issue", undefined, { ...base, ...needs }) as unknown as Element).all("section")[0]!;
   const whole = list({});
-  for (const words of ["Needs you", "Reading this item leaves it open.", "Issue 2: TEST the import", "Approve or request changes on question 4.", "Why it is yours: @una asked you by name.", "What settles it: an act.", "Rule: sha256:d acts.request-approval.", "Merge change 3."]) expect(whole.textContent, words).toContain(words);
+  for (const words of ["Needs you", "Reading this item leaves it open.", "Issue 2: TEST the import", "Approve or request changes on question 4.", "Why it is yours: @una asked you by name.", "What settles it: an act.", "Rule: this lane's rule for an approval request.", "Merge change 3."]) expect(whole.textContent, words).toContain(words);
   expect(whole.all("a").map(link => link.getAttribute("href")), "EACH ROW OPENS ITS OWN LANE").toEqual(["#/issue/sc_one", "#/change/sc_two"]);
   expect(whole.textContent, "A WHOLE LIST says nothing about what it left out").not.toContain("leaves out");
 
@@ -340,4 +340,15 @@ test("the issue screen keeps a decided question with who decided, and leaves out
   expect(screen.all("h2").map(node => node.textContent), "THE SECTION").toContain("Decided questions");
   for (const words of ["Decided question: TEST which? (entry 11)", "TEST keep CSV.", "Decided by @ana on ", "Decided question: TEST older? (entry 3)"]) expect(screen.textContent, words).toContain(words);
   expect(screen.textContent.match(/Decided by/g), "AN ENTRY NOT READ names nobody").toHaveLength(1);
+});
+
+// The shell moves a screen's first `details.inspection` into its record panel, so a row's own disclosure must not be one.
+test("each row of what needs you keeps its exact rule in its own disclosure, and none of them is the screen's record", () => {
+  vi.stubGlobal("document", document);
+  const row = (id: number) => ({ scope: "sc_a", item: id, lane: "Issue 1: TEST", needs: `TEST ${id}`, why: "TEST why", lines: [], exact: `Definition sha256:${"a".repeat(64)}, clause acts.decide.`, row: {} });
+  const needs = { items: [row(1), row(2)], decided: [], decidedUnread: 0, older: [], unread: [], omittedLanes: 0, omittedRows: 0, next: null, continued: false, lostPlace: false, failed: null } as unknown as NeedsYouView;
+  const screen = roomScreen(room, { issues: [], changes: [] }, "issue", undefined, needs) as unknown as Element;
+  const rows = screen.all("article").filter(one => one.getAttribute("data-needs-row") !== null);
+  expect(rows.map(one => one.all("details").map(node => node.getAttribute("class"))), "EACH ROW holds its own disclosure").toEqual([["exact-rule"], ["exact-rule"]]);
+  expect((screen.all("details").find(node => node.getAttribute("class") === "inspection")?.children[0] as Element | undefined)?.textContent, "THE SCREEN'S FIRST RECORD stays the room's").toBe("Inspect room record");
 });

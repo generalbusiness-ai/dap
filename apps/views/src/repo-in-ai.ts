@@ -98,7 +98,7 @@ export class RepoInAi {
           const blocks = frame.items.filter(item => item.type === "block" && item.state === "blocked" && matchItem(item.refs["commitment"], commitment.id, frame.ref));
           const intent = frame.items.find(item => item.type === "intent");
           const linked = frames.filter(other => changes(other.summary.definition)).flatMap(other => other.items.filter(item => item.type === "manifest" && item.state === "current" && !!item.refs["goal"] && typeof item.refs["goal"] === "object" && "at" in item.refs["goal"] && sameOptional(item.refs["goal"]["at"], frame.ref)).map(item => ({ scope: other.ref, head: other.head, manifest: item.id, relationship: "issue-linked; commitment/report proof not established" })));
-          rows.push(row(frame, commitment, "items.commitment;items.block;items.intent", { state: commitment.state, agent: performer, controller,
+          rows.push(row(frame, commitment, "items.commitment;items.block;items.intent", { lane: scopeName(collection, frame), state: commitment.state, agent: performer, controller,
             terms: commitment.values, conditionsAt: commitment.refs["conditionsAt"], termsAt: commitment.refs["termsAt"], currentConditions: intent?.values["conditions"] ?? null, currentConditionsAt: intent?.refs["conditionsAt"] ?? null, blocks, changes: linked }));
         }
       }

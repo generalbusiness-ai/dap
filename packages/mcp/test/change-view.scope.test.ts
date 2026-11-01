@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { DOMAINS, type FactRef, type Intent, type Item, type MemberRef, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, keyIdOfSecret, signInvitationProof, timeOf, utf8 } from "@generalbusiness/dap-bytes";
-import { secretSigner } from "@generalbusiness/dap-client";
+import { b64url, canonicalize, digestBytes, keyIdOfSecret, signInvitationProof, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { INVITATION_LINK, invitationIssueFields, secretSigner } from "@generalbusiness/dap-client";
 import { keys, type Actor } from "@generalbusiness/dap-derive/testing";
 import { valueDigest } from "@generalbusiness/dap-derive";
 import { ARCHIVE_DEVICE_APPLICATION_COHORT, CONFIGURATION_DOMAIN, ROLE_LISTS, firstExtents } from "@generalbusiness/dap-platform";
@@ -945,3 +945,119 @@ test(`READ REFUSED: if the scope refuses the read of the earlier version, the se
     expect(signs, "READ REFUSED: the one answer is the one signature").toBe(1);
   } finally { await f.room.done(); }
 }, 240_000);
+
+/** A second reviewer: a person who joins by the invitation route, as the asking room's members do. */
+async function reviewerIn(f: Fixture, handle: string): Promise<Agent> {
+  const secret = b64url(crypto.getRandomValues(new Uint8Array(32))), { inbox: _inbox, ...shared } = f.repository;
+  const invited = await act(f.owner, "membership", "invite-member", { fields: { handle, role: "member", ...invitationIssueFields("platform:membership@8", secret), inviteEnds: timeOf(f.room.now() + 3_600_000) } });
+  const link = `${INVITATION_LINK}${b64url(utf8(JSON.stringify({ v: 1, service: f.owner.config.service, repository: shared, invitation: invited.seq, secret, handle, definition: "platform:membership@8" })))}`;
+  const agent = f.room.agent(handle, { mode: "generic", secret: crypto.getRandomValues(new Uint8Array(32)), config: { service: "" } });
+  expect((await agent.ok("join", { link, idempotencyKey: "join" }))["answer"]).toBe("accepted");
+  return agent;
+}
+const mergeRowOf = async (a: App) => rowsOf(await a.call("needs_you", {})).find(one => one.category === "merge-attention") as unknown as { needs: string; why: string; settles: string; settledBy: string[]; holds: string[]; changesRequested: number[]; kicker: string; rule: { clause: string } };
+
+// The trace behind the merge row, on the J4 change definition: `acts.merge` holds `none: review, submitted, request-changes, on this manifest` with the reason `changes-requested`, after the approvals guard.
+test("a merge is refused while any request for changes stands on the current version, whoever asked and whatever others approved; the row says who it waits on; a new version clears the old request and takes new approvals (STAND-INS: OwnGit, WorkspaceStandIn)", async () => {
+  const f = await roomOf();
+  try {
+    const lane = await changeLane(f, "TEST refused change"), change = lane.scope, work = await workspace(f, lane);
+    const ola = await reviewerIn(f, "@ola"), a = application(f);
+    const v1 = await propose(f, lane, work, f.host.head, oid("c"), oid("3"));
+    const merge = async (manifest: number) => {
+      const answer = await f.owner.call("act", { target: change, kind: "merge", digest: (await f.owner.ok("actions", { scope: change }))["digest"], fields: { manifest, reports: [] }, idempotencyKey: crypto.randomUUID() });
+      return [answer.structuredContent["answer"], answer.structuredContent["name"] ?? null];
+    };
+    const verdict = (who: Agent, manifest: number, value: string, earlier?: number) => act(who, change, "review-verdict", { fields: { manifest, verdict: value, ...(earlier === undefined ? {} : { earlier }) } });
+
+    // The person's press: Request changes on the current version, on the card.
+    const opened = await card(a, "refuse", "view_change", changeSubject(lane));
+    const refusal = await press(a, "refuse", opened, "request-changes");
+    expect(refusal.answer["answer"], JSON.stringify(refusal.answer)).toBe("accepted");
+    expect(refusal.display.receipt, "RECEIPT: a person reads what was recorded, in words").toBe("Review recorded: changes requested.");
+    const refused = (refusal.answer["fact"] as FactRef).seq;
+    expect(await merge(v1), "REFUSED, NO APPROVALS: the approvals guard answers first").toEqual(["refused", "approvals-needed"]);
+    let row = await mergeRowOf(a);
+    expect(row.needs, "THE ROW DOES NOT SAY MERGE: it waits on the author").toBe(`Change ${String(((await f.owner.ok("inspect", { scope: change }))["items"] as Item[]).find(item => item.type === "proposal")!.values["number"] ?? 0)}: "TEST refused change" waits on its author, @una.`);
+    expect(row.why, "WHY: you asked for changes on this version").toBe("You requested changes on version 1.");
+    expect(row.settledBy, "SETTLED BY: acts of the pinned definition").toEqual(["propose-manifest", "review-verdict"]);
+    for (const named of row.settledBy) expect(changeJ4.acts[named as keyof typeof changeJ4.acts], `SETTLED BY: the definition holds ${named}`).toBeDefined();
+    expect([row.changesRequested, row.rule.clause, row.kicker.endsWith("version 1")], "THE ROW'S FIELDS name the review and the guard").toEqual([[refused], "acts.merge#changes-requested;items.review", true]);
+    expect(row.holds, "HOLDS: the guards that refuse this merge, in their order").toEqual(["approvals-needed", "changes-requested"]);
+
+    // A mix: another member approves. The approval meets the count, and the one request for changes still refuses the merge.
+    const approval = await verdict(ola, v1, "approve");
+    expect(await merge(v1), "A MIX OF REVIEWERS: an approval does not outweigh a request for changes").toEqual(["refused", "changes-requested"]);
+    row = await mergeRowOf(a);
+    expect([row.needs.includes("waits on its author"), row.holds], "A MIX: the row still waits on the author").toEqual([true, ["changes-requested"]]);
+    const page = await f.room.wait(async () => loadNeedsYou(await openRoom({ service: f.owner.config.service, secret: f.person.secret, fetch: f.room.fetch, now: f.room.now }, { directory: f.repository.directory.scope, membership: f.repository.membership })));
+    expect(page.items.map(one => one.needs), "THE SAME WORDS ON THE PAGE").toEqual(rowsOf(await a.call("needs_you", {})).map(one => (one as unknown as { needs: string }).needs));
+
+    // The room's act list leaves out a second verdict from one person, so the card offers none. The lane's way to replace a verdict names the earlier one, through the ordinary act tool.
+    expect((await card(a, "again", "view_change", changeSubject(lane))).card!.actions.map(action => action.id), "A SECOND VERDICT: the card offers no act").toEqual([]);
+
+    // Replaced: nothing holds it, and the row says merge. No merge yet.
+    await verdict(f.owner, v1, "approve", refused);
+    row = await mergeRowOf(a);
+    expect([row.needs.startsWith("Merge change"), row.holds, row.settledBy], "REPLACED: the row says merge again").toEqual([true, [], ["merge"]]);
+
+    // Another reviewer now asks for changes, and the merger has approved. The merge is refused for the merger as well.
+    await verdict(ola, v1, "request-changes", approval.seq);
+    expect(await merge(v1), "ANOTHER REVIEWER'S REFUSAL holds the merger's merge").toEqual(["refused", "changes-requested"]);
+    row = await mergeRowOf(a);
+    expect(row.why, "WHY: the row names who asked").toBe("Your role holds change.merge, and @ola requested changes on version 1.");
+
+    // A new version: the old request no longer counts, and neither do the old approvals. The row says what the room needs now.
+    const v2 = await propose(f, lane, work, f.host.head, oid("d"), oid("4"), v1);
+    expect(await merge(v2), "A NEWER VERSION: the old request is gone, and the approvals start again").toEqual(["refused", "approvals-needed"]);
+    row = await mergeRowOf(a);
+    expect([row.needs.endsWith("Version 2 needs 1 more approval first."), row.why, row.holds, row.kicker.endsWith("version 2")], "A NEWER VERSION: the row names the new version and the earlier request").toEqual([true, "Your role holds change.merge. @ola requested changes on an earlier version.", ["approvals-needed"], true]);
+    await verdict(f.owner, v2, "approve");
+    expect((await mergeRowOf(a)).holds, "APPROVED: nothing holds the new version").toEqual([]);
+    expect(await merge(v2), "THE ROW AND THE LANE AGREE: the merge passes").toEqual(["accepted", null]);
+  } finally { await f.room.done(); }
+}, 180_000);
+
+test("the first card: a short question shows its text and acts, and the press binds that text: a revised question refuses an old card's press and a fresh card's press is accepted; a long text offers no act (STAND-INS: OwnGit, WorkspaceStandIn)", async () => {
+  const f = await roomOf();
+  try {
+    await act(f.owner, "rules", "activate", { fields: { name: "issue", digest: QUESTION_BRIEF_DIGESTS.issue }, values: [canonicalize(issueQuestionsBrief)] });
+    const opening = await act(f.owner, "directory", "open-issue", { fields: { definition: QUESTION_BRIEF_DIGESTS.issue, title: "TEST first card", conditions: ["TEST condition"] } });
+    const issue = ((await f.owner.ok("wait", { scope: "directory", entry: opening.seq }))["created"] as { scope: ScopeId }[])[0]!.scope;
+    f.room.know(issue);
+    const lane = await refOf(f.owner, issue);
+    const first = async (a: App, view: string, ask: number) => { await a.call("view_decision", { view, subject: questionSubject(lane, ask) }); return shown((await a.call("view_read", { view })).structuredContent); };
+    const asked = await act(f.una, issue, "ask", { fields: { question: "TEST which?", body: "TEST first text", brief: BRIEF.digest } });
+    await act(f.una, issue, "request-approval", { fields: { ask: asked.seq, bodyAt: asked, requested: f.ownerRef } });
+
+    const a = application(f), b = application(f);
+    const old = await first(a, "old", asked.seq);
+    expect([old.card!.body, old.card!.actions.map(action => action.id), (old.card as unknown as { wholeText?: boolean }).wholeText], "THE FIRST CARD holds the whole text and both acts").toEqual(["TEST first text", ["approve", "request-changes"], true]);
+    const displayed = structuredClone(old.card!.identity.at);
+    await act(f.una, issue, "revise-ask", { on: asked.seq, fields: { bodyAt: asked, body: "TEST second text" } });
+    const stale = await press(a, "old", old, "approve");
+    expect([stale.answer["answer"], stale.answer["reason"]], JSON.stringify(stale.answer)).toEqual(["refused", "revision-moved"]);
+    expect(a.signed.map(intent => [intent.kind, intent.expected, (intent.fields["bodyAt"] as FactRef).seq]), "THE PRESS BINDS the text this card showed").toEqual([["approve", displayed, asked.seq]]);
+
+    const revised = ((await f.una.ok("inspect", { scope: issue }))["items"] as Item[]).find(item => item.id === asked.seq)!, seq = revised.refs["bodyAt"] as number;
+    const bodyAt: FactRef = { at: lane, seq, hash: (await f.una.ok("step", { scope: issue, seq }))["hash"] as FactRef["hash"] };
+    await act(f.una, issue, "request-approval", { fields: { ask: asked.seq, bodyAt, requested: f.ownerRef } });
+    const fresh = await first(b, "fresh", asked.seq);
+    expect(fresh.card!.body, "A FRESH CARD shows the current text").toBe("TEST second text");
+    const accepted = await press(b, "fresh", fresh, "request-changes");
+    expect(accepted.answer["answer"], JSON.stringify(accepted.answer)).toBe("accepted");
+    expect(b.signed.map(intent => [intent.kind, (intent.fields["bodyAt"] as FactRef).seq, intent.fields["verdict"]]), "THE PRESS BINDS the current text").toEqual([["approve", seq, "request-changes"]]);
+    expect(accepted.display.receipt, "RECEIPT").toBe("Review recorded: changes requested.");
+
+    const long = "TEST long text. ".repeat(50);
+    const asking = await act(f.una, issue, "ask", { fields: { question: "TEST long?", body: long, brief: BRIEF.digest } });
+    await act(f.una, issue, "request-approval", { fields: { ask: asking.seq, bodyAt: asking, requested: f.ownerRef } });
+    const c = application(f), kept = await first(c, "long", asking.seq);
+    expect([kept.card!.actions, (kept.card as unknown as { wholeText?: boolean }).wholeText], "A LONG TEXT keeps Open, and the first card offers no act").toEqual([[], undefined]);
+    const noAct = await c.call("view_act", { view: "long", cut: kept.cut, action: "approve" });
+    expect([noAct.isError, noAct.structuredContent["reason"], c.signed], "A LONG TEXT: a press names no act here, and signs nothing").toEqual([true, "shape", []]);
+    const item = await c.call("view_read", { view: "long", cut: kept.cut, page: "item" });
+    expect(shown(item.structuredContent).card!.actions.map(action => action.id), "A LONG TEXT: Open offers both acts with the whole text").toEqual(["approve", "request-changes"]);
+    expect(shown(item.structuredContent).card!.body).toBe(long);
+  } finally { await f.room.done(); }
+}, 180_000);

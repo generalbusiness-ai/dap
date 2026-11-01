@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "qualification": "One passing gate. A script drove the renders against a fixture host. No person and no desktop app has seen these words.",
+  "directory": "2026-11-01-card-words",
+  "checkpoint": {
+    "commit": "f57299c93c6099bd53eb6876ba5346e8abdedb5c",
+    "tree": "1ba01e56d14adb12f59ddfcb5e0436630c4908af"
+  },
+  "fileCount": 163,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "4997de07f59261ecc1b9375473f5fed1c13a752a716774cf0b918336b5becbf1"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6516,
+      "sha256": "088c53c8a300ab14b9d371518e3166239668cd1fd2836de9d16b1c4b932601ee"
+    },
+    {
+      "path": "46-scope-final.log",
+      "bytes": 256,
+      "sha256": "d04ea37a6609b0d22aa6ceb768b4c22a450317e4126123b7052133ab25021bbe"
+    },
+    {
+      "path": "32-control-f1-holds-scope.log",
+      "bytes": 11645,
+      "sha256": "5fe2b51c1b32377a98eab093103cf3199d0b1d7b56bd97165eaab6119a448753"
+    },
+    {
+      "path": "27-control-219ba382-rule-line.log",
+      "bytes": 475,
+      "sha256": "b0b2cb825386ed2d056b321a831691418d11fc77f211a927e6fbd82b1fafebd7"
+    },
+    {
+      "path": "36-control-f6-bottom-room.log",
+      "bytes": 824,
+      "sha256": "4dcb24edfb4676ba24f1edc20644af56a933ca804c6902136da02a03352bd15a"
+    },
+    {
+      "path": "58-control-f5-unknown-outcome.log",
+      "bytes": 3370,
+      "sha256": "d001a3c6269f58460a0475f445ab5845ad3f57b0614d327e5c372f4ecd3ab97f"
+    },
+    {
+      "path": "53-browser-final.log",
+      "bytes": 373,
+      "sha256": "595bf0a57b5b666f54f19f46a67acd62cd7244b56faad12221d4ec29fce82888"
+    },
+    {
+      "path": "renders/report.json",
+      "bytes": 223843,
+      "sha256": "021cfcea4f4c6dd5dae9f462af00735327b70e406f7c76404460e7b15da0da9b"
+    },
+    {
+      "path": "43-work-cards-j5.log",
+      "bytes": 681,
+      "sha256": "56a66ac897304c2cfd4551174d7b9fb85c8437d6ec9a80ca62e984a4d6212c61"
+    },
+    {
+      "path": "62-card-workflow.log",
+      "bytes": 3395,
+      "sha256": "211a2cd65eef3bbe6fd21c856f4ece25b16ac5aebb0a2fd75931c96ffbf88ff0"
+    },
+    {
+      "path": "63-card-workflow-merged.json",
+      "bytes": 2448,
+      "sha256": "d40538860623fd4c3e0e78c9e967269aa3a70a8c255f49d731aae1ca8ab48b3f"
+    },
+    {
+      "path": "gate-interrupted-1714/gate.stdout.log",
+      "bytes": 6053,
+      "sha256": "b53f430639d298211a1fc9e39c8b65d95122a78f7579c9eae725fa0df84cb4c0"
+    },
+    {
+      "path": "gate-interrupted-1714/gate.stderr.log",
+      "bytes": 15,
+      "sha256": "ed9c25996224e994b23a6681b4fa359c4224ae02bbf8fa3835e6d1c147257e3a"
+    },
+    {
+      "path": "gate-interrupted-1714/interruption.txt",
+      "bytes": 180,
+      "sha256": "db84b99866e0583108605d3cc860eee84a8f5a7b33d7eed8ddba3428643fc335"
+    },
+    {
+      "path": "card-workflow-inputs.json",
+      "bytes": 895,
+      "sha256": "93babd7c335dae3a41986081ee3e801f2361b2d94f41b88e4d9f262f42b9cb8f"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 15818,
+      "sha256": "e3030b8df091a0f4e002d84ffc1cc0dd54eb0872aec8466a12755d97bb628cff"
+    }
+  ]
+}

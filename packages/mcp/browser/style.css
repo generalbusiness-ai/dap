@@ -13,3 +13,5 @@ button,a{font:inherit;-webkit-tap-highlight-color:transparent}button{min-width:4
 .native-series p, .native-series li { overflow-wrap: anywhere; }
 .read-points summary { min-height: 44px; padding: 10px 0; cursor: pointer; }
 .native-series summary { cursor: pointer; }
+/* The host's Reply box lies over the bottom of a fullscreen card: about 40px, and about 25px of margin below it. */
+html[data-mode=fullscreen] #card-root { padding-bottom: 96px; }
