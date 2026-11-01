@@ -67,18 +67,20 @@ The checkpoint is `ececd0bde0dd90a30b15956fdf1980684bdae6c5`, tree `71b7565e`, b
 
 The gate reports 3492 plain and 979 native tests, 116 Node and 56 Counting.
 
+The head then merged main `b0af01d2`. Of this head's files, the merge changes only `scripts/security-entry-points.test.mjs`, on other seals' lines, and git merged that file with no conflict. No gate ran on that merge. On the merged tree, `node --test scripts/security-entry-points.test.mjs` passed 10 of 10, and `vitest run --project mcp packages/mcp/test/errors.test.ts` passed 17 of 17. These two runs are observed and hold no digest, because the evidence unit was already sealed.
+
 ## Open limits
 
 - **Reasons not run.** The join case ran `unavailable`. The other read refusals take the same line, and I read them and did not run them.
 - **The stand-in network.** The `unavailable` answers come from the file's stand-in, not from a real outage.
 - **Two custody homes.** Two memory stores in one test stand for them. No two `dap mcp` processes or `ARTROOM_HOME` directories ran this.
 - **A mismatch on `join` from an empty configuration.** The next step names `inspect`, and a server with no room reads a scope by ID with a signed read. I read this and did not run it.
-- **The join's other stops.** The `sent: "report"` stops do not say that the room is unrecorded. No request owns this.
+- **The join's other stops.** The `sent: "report"` stops do not say that the room is unrecorded. Request `1efebcc0` holds this.
 - **Not run.** A deployed Worker, a real room, `wrangler dev`, and `tsc -p apps/room/page/tsconfig.scope.json`, because the worktree's cloned `node_modules` has no `@cloudflare/workers-types`. The gate runs that check.
 
 ## Defects outside the request
 
-I name these and did not fix them. Each comes from a reading of the code, and none ran.
+I name these and did not fix them. Each comes from a reading of the code, and none ran. Request `1efebcc0` holds them with the join's other stops. Under the planner's `32f19d16`, none is a false sentence about a send that can lead to a second entry, so no head is promised.
 
 - **`settle` after a mismatch.** `#settle` in `service.ts` answers "The key K is on another intent of your key at that scope." and "Nothing more is needed.", on the server whose record holds the refused request. It does not say that this request made no entry, and a person who means another request needs a new key.
 - **A failed configuration write after an accepted join.** `config.joined` and `setRepository` in `#join` can throw. `#failure` rethrows an error it does not know, so the call rejects with no word that the scope accepted.
