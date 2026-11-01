@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3921d31257ad0cfb2d213c4578622f0a92823af9","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-04-authority-effects-and-publication.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3abbe5ee29b1861ffe3a42b5d96256adfd9b176d","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/register.ts."}
