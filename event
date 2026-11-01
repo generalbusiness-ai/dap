@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6c9db26123548120e71ff2979fb215dcbc9db922","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-01-token-refusal.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:71f1f6355461d0d6fea8a7acad9fdcaf752550ef","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/delivery.ts."}
