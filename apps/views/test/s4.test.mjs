@@ -19,7 +19,7 @@ const { StandIn, SERVICE } = await load(new URL('../../../packages/mcp/test/supp
 const { RepoInAi } = await load(new URL('../src/repo-in-ai.ts', import.meta.url).href);
 const { ReviewStore } = await load(new URL('../src/review-store.ts', import.meta.url).href);
 const { Collection } = await load(new URL('../src/reads.ts', import.meta.url).href);
-const { captureQuestionAction, decisionSource, questionSubject } = await load(new URL('../src/decision.ts', import.meta.url).href);
+const { FIRST_CARD_TEXT, captureQuestionAction, decisionSource, fitsFirstCard, questionSubject } = await load(new URL('../src/decision.ts', import.meta.url).href);
 const { changeSubject } = await load(new URL('../src/change.ts', import.meta.url).href);
 const { ViewSessions } = await load(new URL('../../../packages/mcp/src/views/session.ts', import.meta.url).href);
 const { createRepoInAiService } = await load(new URL('../src/node.ts', import.meta.url).href);
@@ -331,7 +331,7 @@ test('the real static service catalogue and factory do not invoke room inventory
 // The perform callback and receipt lookup stand in for Native admission/custody;
 // this owner does not prove Native authority or the service's private receipt map.
 test('an accepted Decision receipt floors the next actual app read; an older coherent cut cannot replace it', async t => {
-  const f = fixture(t), q = await question(f), older = structuredClone(q.state);
+  const f = fixture(t), q = await question(f, 'TEST current Question body. '.repeat(40)), older = structuredClone(q.state);
   const wires = [], receipts = new WeakMap(); let serveOlder = false, performed = 0, accepted;
   const app = new RepoInAi({ ...f.options, fetch: async (url, init) => {
     const asked = new URL(url), target = asked.pathname.startsWith('/v1/scopes/' + q.state.ref.scope);
@@ -355,9 +355,10 @@ test('an accepted Decision receipt floors the next actual app read; an older coh
     receipts.set(answer, accepted); return answer;
   }, async () => { throw Error('No settlement is needed in this composition witness.'); }, answer => receipts.get(answer) ?? null);
   await sessions.open('floor', 'decision', questionSubject(q.state.ref, q.opening.entry.seq));
-  const summary = sessions.display('floor'); assert.equal(summary.status, 'ready'); assert.deepEqual(summary.card.actions, [], 'Summary pages keep native actions hidden');
+  const summary = sessions.display('floor'); assert.equal(summary.status, 'ready'); assert.deepEqual(summary.card.actions, [], 'A text too long for the first card keeps its acts behind Open');
   const initial = await sessions.read('floor', summary.cut, { page: 'item' }); assert.equal(initial.status, 'ready'); assert.equal(initial.card.actions[0].id, 'approve');
   const done = await sessions.act('floor', initial.cut, 'approve'); assert.equal(done.result.structuredContent.answer, 'accepted'); assert.equal(performed, 1);
+  assert.equal(done.display.receipt, 'Review recorded: approved.', 'THE RECEIPT says what the room recorded');
   const required = { at: accepted.fact.at, head: { seq: accepted.fact.seq, hash: accepted.fact.hash } };
   serveOlder = true;
   const behind = await sessions.read('floor', done.display.cut, { refresh: true });
@@ -398,7 +399,7 @@ function scriptedChange(f, definition, extra = () => []) {
   return state;
 }
 
-// Every read of a room with no finding profile, as canonical bytes. The finding profile left these bytes alone at main 76cac675. J2 added a change's Earlier versions lines, the diff read's label and its interdiff reads. J5 added three reasons on each needs_you row, and entry lines on since and the updates card.
+// Every read of a room with no finding profile, as canonical bytes. The finding profile left these bytes alone at main 76cac675. J2 added a change's Earlier versions lines, the diff read's label and its interdiff reads. J5 added three reasons on each needs_you row, and entry lines on since and the updates card. The card words head took the raw row out of the card's body, into a disclosure, gave each card a kicker and each act its receipt words, gave the rule line words, added a merge row's holds, and said what an empty list means.
 test('a room with no finding profile reads byte for byte as it did before the finding profile', async t => {
   const f = fixture(t), source = decisionSource(f.app);
   const ready = scriptedChange(f, J4_DIGESTS.change);
@@ -413,6 +414,141 @@ test('a room with no finding profile reads byte for byte as it did before the fi
   assert.equal(tools.needsYou.structuredContent.rows.length, 5, 'The compared room holds attention rows, so the bytes cover them');
   const actual = canonicalize({ screens, tools }), golden = new URL('./j4-reads.golden.json', import.meta.url);
   assert.equal(actual + '\n', readFileSync(golden, 'utf8'), 'NON-FINDING ROOM: the reads and cards differ from their bytes before the finding profile');
+});
+
+// The words of each page, ported from main's card press head. A short question offers its acts on the first card, so that page's reason differs from main's line about Open.
+test('a card says only what this page offers', async t => {
+  const f = fixture(t), source = decisionSource(f.app);
+  const ready = scriptedChange(f, J4_DIGESTS.change);
+  const requested = scriptedChange(f, J4_DIGESTS.change, () => [item(10, 'review-request', 'open', {}, {}, { requested: f.viewer, requester: f.other }),
+    item(11, 'merge', 'unknown', {}, { manifest: 6 }, { merger: f.viewer })]);
+  const read = async (state, page) => (await source.read({ screen: 'change', subject: changeSubject(state.ref), position: 0, page })).card;
+  assert.deepEqual((await read(ready, 'summary')).reasons, ["Open this card to read the change or merge it. The room's rules decide each act."]);
+  assert.deepEqual((await read(ready, 'item')).reasons, ["The room's rules decide each act."]);
+  assert.deepEqual((await read(requested, 'summary')).actions, []);
+  assert.deepEqual((await read(requested, 'summary')).reasons, ['Open this card to read the change.']);
+  assert.deepEqual((await read(requested, 'item')).reasons, []);
+
+  const q = await question(f, undefined, 'TEST-fixed-question');
+  const asked = async page => (await source.read({ screen: 'decision', subject: questionSubject(q.state.ref, q.opening.entry.seq), position: 0, page })).card;
+  assert.deepEqual((await asked('summary')).actions.map(action => action.kind), (await asked('item')).actions.map(action => action.kind));
+  assert.deepEqual((await asked('item')).reasons, (await asked('item')).actions.length ? ["The room's rules decide each act."] : []);
+  assert.deepEqual((await asked('summary')).reasons, ["The room's rules decide each act."], 'A SHORT TEXT: the first card holds the text and its acts, so it names no Open step');
+  const long = await question(f, 'TEST long text. '.repeat(50)), kept = (await source.read({ screen: 'decision', subject: questionSubject(long.state.ref, long.opening.entry.seq), position: 0, page: 'summary' })).card;
+  assert.match(kept.reasons[0], /^Open this card to read the question/, 'A LONG TEXT: the first card sends the person to Open');
+  assert.ok(!kept.reasons[0].includes('sha256:'), 'A card reason shows no digest');
+});
+
+// Words over scripted scope answers: nothing judges these rows. `packages/mcp/test/change-view.scope.test.ts` runs the merge guard on the real lane.
+const refusedBy = (id, reviewer, manifest = 6) => item(id, 'review', 'submitted', { verdict: 'request-changes' }, { manifest }, { reviewer });
+const mergeRow = async f => (await f.app.needsYou()).structuredContent.rows.find(row => row.category === 'merge-attention');
+
+test('a refused version waits on its author: the row says who asked for changes, and no longer says merge', async t => {
+  const own = fixture(t); scriptedChange(own, J4_DIGESTS.change, () => [refusedBy(10, own.viewer)]);
+  let row = await mergeRow(own);
+  assert.equal(row.needs, 'Change 4: "TEST change" waits on its author, @una.', 'REFUSED BY YOU: the row names who it waits on');
+  assert.equal(row.why, 'You requested changes on version 2.', 'REFUSED BY YOU: the row says why');
+  assert.equal(row.settles, 'A new version from the author ends the wait. A reviewer who requested changes can also replace that verdict with a new review. Until then the room refuses a merge of version 2.', 'REFUSED BY YOU: the row says what ends the wait');
+  assert.deepEqual(row.settledBy, ['propose-manifest', 'review-verdict'], 'REFUSED BY YOU: the row names the acts that end it');
+  assert.deepEqual([row.rule.clause, row.holds, row.changesRequested], ['acts.merge#changes-requested;items.review', ['changes-requested'], [10]], 'REFUSED BY YOU: the exact fields stay true for a model');
+  assert.equal(row.category, 'merge-attention', 'A MODEL\'S CATEGORY stays');
+
+  const mix = fixture(t); scriptedChange(mix, J4_DIGESTS.change, () => [refusedBy(10, mix.viewer), refusedBy(11, { membership: mix.peer.membership, member: '@ola' })]);
+  assert.equal((await mergeRow(mix)).why, 'You and @ola requested changes on version 2.', 'A MIX: the row names everyone who asked');
+
+  const other = fixture(t); scriptedChange(other, J4_DIGESTS.change, () => [refusedBy(10, other.other)]);
+  assert.equal((await mergeRow(other)).why, 'Your role holds change.merge, and @vic requested changes on version 2.', 'REFUSED BY ANOTHER: the row names them');
+
+  const author = fixture(t), mine = scriptedChange(author, J4_DIGESTS.change, () => [refusedBy(10, author.other)]);
+  mine.items.find(one => one.type === 'proposal').parties.author = author.viewer;
+  assert.equal((await mergeRow(author)).needs, 'Change 4: "TEST change" waits on you, its author.', 'THE AUTHOR reads that it waits on them');
+
+  const newer = fixture(t); scriptedChange(newer, J4_DIGESTS.change, () => [refusedBy(10, newer.viewer, 5)]);
+  row = await mergeRow(newer);
+  assert.equal(row.why, 'Your role holds change.merge. You requested changes on an earlier version.', 'A NEWER VERSION: the old request is named as earlier');
+  assert.deepEqual([row.needs, row.settledBy, row.rule.clause, row.changesRequested], ['Merge change 4: "TEST change".', ['merge'], 'acts.merge', []], 'A NEWER VERSION: nothing holds this version');
+});
+
+test('the opened needs-you item shows no raw row: the exact row and rule stay behind a disclosure and in the fields a model reads', async t => {
+  const f = fixture(t), state = f.lane(QUESTION_DIGESTS.issue);
+  state.items.push(item(1, 'ask', 'asked', { question: 'TEST question' }, { bodyAt: 1 }, { asker: f.other }), item(2, 'approval-request', 'open', {}, { ask: 1, bodyAt: 1 }, { requested: f.viewer, requester: f.other }));
+  const [row] = (await f.app.needsYou()).structuredContent.rows, source = decisionSource(f.app);
+  for (const page of ['summary', 'item']) {
+    const { card } = await source.read({ screen: 'needs-you', position: 0, page });
+    assert.equal(card.body, undefined, `NO RAW ROW: the ${page} page has no JSON body`);
+    assert.equal(card.kicker, 'Question 1', 'THE KICKER says the room\'s word');
+    assert.deepEqual(JSON.parse(card.record.text), JSON.parse(JSON.stringify(row)), 'NOTHING LOST: the disclosure holds the whole row');
+    assert.deepEqual(card.rule, { definition: QUESTION_DIGESTS.issue, clause: 'acts.request-approval;items.approval-request' }, 'NOTHING LOST: the exact rule stays');
+    assert.ok(!card.reasons.join('\n').includes('sha256:'), 'A PERSON READS WORDS: no reason prints a digest');
+    assert.ok(card.reasons.includes("Rule: this lane's rule for an approval request."), 'A PERSON READS WORDS: the rule line says what the rule covers');
+  }
+  assert.deepEqual([row.rule.definition, row.rule.clause], [QUESTION_DIGESTS.issue, 'acts.request-approval;items.approval-request'], 'THE MODEL\'S ROW keeps the digest and the clause');
+});
+
+test('two work rows that read alike tell a person which lane and which agent each one is', async t => {
+  const f = fixture(t), [one, two] = [f.lane(QUESTION_DIGESTS.issue), f.lane(QUESTION_DIGESTS.issue)];
+  const agent = member => ({ membership: f.peer.membership, member });
+  f.M.items.push(item(8, 'member', 'active', { kind: 'agent', role: 'agent', handle: '@una' }, {}, { member: agent('@una'), controller: f.other }),
+    item(9, 'member', 'active', { kind: 'agent', role: 'agent', handle: '@una2' }, {}, { member: agent('@una2'), controller: f.viewer }));
+  for (const [state, performer, title, number] of [[one, '@una', 'TEST first import', 1], [two, '@una2', 'TEST second import', 2]]) {
+    Object.assign(f.D.items.find(row => row.type === 'lane' && row.refs.scope === state.ref).values, { kind: 'issue', title, number });
+    state.items.push(item(1, 'intent', 'open', { conditions: ['TEST large files import'] }, { conditionsAt: 0 }),
+      item(2, 'commitment', 'accepted', { conditions: ['TEST large files import'] }, { conditionsAt: 0, termsAt: 2 }, { performer: agent(performer) }));
+  }
+  const source = decisionSource(f.app), cards = [(await source.read({ screen: 'work', position: 0, page: 'summary' })).card, (await source.read({ screen: 'work', position: 1, page: 'summary' })).card];
+  assert.notEqual(cards[0].title, cards[1].title, 'TELL THEM APART: the titles differ');
+  assert.notEqual(cards[0].summary, cards[1].summary, 'TELL THEM APART: the summaries differ');
+  assert.deepEqual(cards.map(card => card.title).sort(), ['Issue 1: TEST first import', 'Issue 2: TEST second import'], 'THE TITLE names the lane, in the room\'s word');
+  assert.deepEqual(cards.map(card => card.summary).sort(), ['@una, agent of @vic, accepted this work.', '@una2, agent of @rita, accepted this work.'], 'THE SUMMARY names who holds the work');
+  for (const card of cards) {
+    assert.equal(card.kicker, 'Work', 'THE KICKER says the room\'s word');
+    assert.equal(card.body, undefined, 'NO RAW ROW: the work card has no JSON body');
+    assert.ok(card.reasons.includes('Conditions: TEST large files import.'), 'THE LINES say what was agreed');
+    assert.ok(!card.reasons.join('\n').includes('sha256:') && !card.summary.includes('items.commitment'), 'A PERSON READS WORDS: no digest and no clause');
+    assert.ok(JSON.parse(card.record.text).rule.definition.startsWith('sha256:'), 'NOTHING LOST: the disclosure holds the exact row');
+  }
+});
+
+test('kickers and receipts use the room\'s words, and the model\'s context keeps the entry', async t => {
+  const f = fixture(t), source = decisionSource(f.app), state = scriptedChange(f, J4_DIGESTS.change), q = await question(f);
+  const change = (await source.read({ screen: 'change', subject: changeSubject(state.ref), position: 0, page: 'item' })).card;
+  assert.equal(change.kicker, 'Change 4, version 2', 'THE CHANGE KICKER');
+  assert.deepEqual(change.actions.map(action => action.done), ['Merge started.'], 'THE MERGE RECEIPT');
+  const reviewable = scriptedChange(f, J4_DIGESTS.change, () => [item(10, 'review-request', 'open', {}, {}, { requested: f.viewer, requester: f.other })]);
+  const asked = (await source.read({ screen: 'change', subject: changeSubject(reviewable.ref), position: 0, page: 'item' })).card;
+  for (const action of asked.actions.filter(one => one.kind === 'review-verdict')) assert.equal(action.done, action.id === 'approve' ? 'Review recorded: approved.' : 'Review recorded: changes requested.', 'THE REVIEW RECEIPT');
+  const decision = (await source.read({ screen: 'decision', subject: questionSubject(q.state.ref, q.opening.entry.seq), position: 0, page: 'item' })).card;
+  assert.equal(decision.kicker, `Question ${q.opening.entry.seq}`, 'THE QUESTION KICKER');
+  assert.deepEqual(decision.actions.map(action => action.done), ['Review recorded: approved.', 'Review recorded: changes requested.'], 'THE QUESTION RECEIPTS');
+  assert.equal((await source.read({ screen: 'change', position: 0, page: 'updates' })).card.kicker, 'Updates', 'THE UPDATES KICKER');
+  for (const card of [change, decision, asked]) assert.ok(!/manifest|\bask\b|approval-request/.test(card.kicker), `NO INTERNAL NAME in ${card.kicker}`);
+});
+
+test('an empty list says that nothing is open, in words, and no list speaks of rows', async t => {
+  const f = fixture(t), source = decisionSource(f.app);
+  const said = {};
+  for (const screen of ['needs-you', 'work']) said[screen] = await source.read({ screen, position: 0, page: 'summary' });
+  // The first read of updates lists the room's own lanes. Mark reviewed moves the place, and then nothing has changed.
+  const updates = await source.read({ screen: 'change', position: 0, page: 'updates' });
+  const mark = updates.card.actions.find(action => action.id === 'mark-reviewed');
+  assert.deepEqual((await source.markReviewed(mark.capture, { view: 'TEST', cut: 1, admit() {} })).structuredContent, { localStatus: 'marked' });
+  said.change = await source.read({ screen: 'change', position: 0, page: 'updates' });
+  assert.deepEqual(Object.values(said).map(one => one.status), ['empty', 'empty', 'empty'], 'A COMPLETE READ of an empty room');
+  assert.deepEqual(Object.values(said).map(one => one.fallback), ['Nothing in this room needs you.', 'No work is open in this room.', 'Nothing has changed since your last review.'], 'THE WORDS');
+  for (const one of Object.values(said)) assert.ok(!/\brows?\b|reviewed scope/.test(one.fallback), 'NO INTERNAL WORDS');
+});
+
+test('a question fits the first card up to the named bound, in characters and in lines, and the first card never shows part of a text', async t => {
+  assert.deepEqual([FIRST_CARD_TEXT.characters, FIRST_CARD_TEXT.lines], [600, 8], 'THE NAMED BOUND');
+  assert.equal(fitsFirstCard('x'.repeat(FIRST_CARD_TEXT.characters)), true, 'AT THE BOUND: the text fits');
+  assert.equal(fitsFirstCard('x'.repeat(FIRST_CARD_TEXT.characters + 1)), false, 'PAST THE BOUND: the text does not fit');
+  assert.equal(fitsFirstCard(Array.from({ length: FIRST_CARD_TEXT.lines }, () => 'x').join('\n')), true, 'AT THE LINE BOUND: the text fits');
+  assert.equal(fitsFirstCard(Array.from({ length: FIRST_CARD_TEXT.lines + 1 }, () => 'x').join('\n')), false, 'PAST THE LINE BOUND: the text does not fit');
+  const f = fixture(t), source = decisionSource(f.app);
+  const first = async body => { const q = await question(f, body); return (await source.read({ screen: 'decision', subject: questionSubject(q.state.ref, q.opening.entry.seq), position: 0, page: 'summary' })).card; };
+  const short = await first('x'.repeat(FIRST_CARD_TEXT.characters)), long = await first('x'.repeat(FIRST_CARD_TEXT.characters + 1));
+  assert.deepEqual([short.body, short.wholeText, short.actions.map(action => action.id)], ['x'.repeat(FIRST_CARD_TEXT.characters), true, ['approve', 'request-changes']], 'THAT FITS: the whole text and both acts');
+  assert.equal(long.wholeText, undefined, 'THAT DOES NOT FIT: the card does not claim the whole text, so the session keeps its acts behind Open');
 });
 
 // The finding profile over scripted scope answers. No scope judges these rows, so nothing here shows a guard: `packages/mcp/test/change-view.scope.test.ts` runs the real lane.
@@ -432,7 +568,7 @@ test('an open finding from a required source appears in needs_you with its rule 
   assert.deepEqual([row.holdsMerge, row.rulesRevision, row.sourceRow.name, row.file, row.start, row.end, row.class, row.severity, row.source, row.sourceVersion, row.version], [true, 7, 'security-review', FILE, 10, 12, 'race', 'high', 'security-review', 'reviewer 1.2', 6], 'HELD IN NEEDS_YOU: the row carries the finding and its bound rule');
   assert.deepEqual(heldBy(rows), [12], 'HELD IN NEEDS_YOU: the merge row names the finding that holds it');
   const listed = await decisionSource(f.app).read({ screen: 'needs-you', position: rows.indexOf(row), page: 'summary' });
-  assert.deepEqual([listed.card.identity.kind, listed.card.identity.item, JSON.parse(listed.card.body).category], ['finding', '12', 'open-finding'], 'HELD IN NEEDS_YOU: the needs-you card shows the row');
+  assert.deepEqual([listed.card.identity.kind, listed.card.identity.item, JSON.parse(listed.card.record.text).category], ['finding', '12', 'open-finding'], 'HELD IN NEEDS_YOU: the needs-you card holds the row behind its disclosure');
 
   const card = await changeCard(f, state);
   for (const line of ['Finding 12: holds the merge.', `File: ${FILE}`, 'Lines: 10 to 12', 'Class: race', 'Severity: high', 'Source: security-review', 'Source version: reviewer 1.2', 'Change version: 2, manifest 6, the version this card shows.', 'Filed by: @vic (person)'])
@@ -536,5 +672,5 @@ test('only the exact pins read: a change lane on another pin stays unsupported i
   assert.equal((await f.app.change({ scope: other.ref })).structuredContent.reason, 'change-profile-unsupported', 'EXACT PIN: the change tool refuses another pin');
   assert.equal((await decisionSource(f.app).read({ screen: 'change', subject: changeSubject(other.ref), position: 0, page: 'item' })).status, 'unavailable', 'EXACT PIN: the card refuses another pin');
   assert.equal((await f.app.change({ scope: found.ref })).isError, false, 'EXACT PIN: the change tool reads the finding pin');
-  assert.ok((await changeCard(f, found)).reasons[0].startsWith(FINDING_DIGESTS.change), 'EXACT PIN: the card names the pin of its lane');
+  assert.ok((await changeCard(f, found)).body.split('\n').includes(`Lane definition: ${FINDING_DIGESTS.change}.`), 'EXACT PIN: the card names the pin of its lane');
 });

@@ -278,7 +278,8 @@ function render() {
   }
   const article = node("article");
   const eyebrow = node("div", undefined, "eyebrow");
-  eyebrow.append(node("span", card.identity.kind), node("code", card.identity.revision, "revision"));
+  if (card.kicker) eyebrow.append(node("span", card.kicker));
+  else eyebrow.append(node("span", card.identity.kind), node("code", card.identity.revision, "revision"));
   article.append(eyebrow);
   const heading = node("h1");
   if (summary && cardOpens(display.status)) {
@@ -345,6 +346,13 @@ function render() {
     }
     if (card.unavailable.length) article.append(node("p", `Unavailable: ${card.unavailable.map((range) => `${range.scope} entries ${range.from}–${range.to}`).join("; ")}.`, "notice"));
   }
+  // A first card shows a whole text only, so a person reads all of it before the acts under it.
+  if (summary && card.wholeText && card.body) article.append(node("p", card.body, "body"));
+  if (!summary && card.record) {
+    const record = node("details", undefined, "read-points");
+    record.append(node("summary", card.record.label), node("pre", card.record.text, "diff"));
+    article.append(record);
+  }
   if (card.declared?.series) article.append(seriesPanel(card.declared.series));
   if (card.declared?.links?.length) {
     const links = node("nav"); links.setAttribute("aria-label", "Related records");
@@ -374,6 +382,11 @@ function render() {
     }
     if (display.query.page === "item" && card.diffAvailable && card.readers?.length) for (const reader of card.readers) actions.append(readerButton(reader));
     else if (display.query.page === "item" && card.diffAvailable) actions.append(button("View diff", async () => { returnPage = "item"; if (card.diffSigned) await act("view-diff"); else await read({ page: "diff" }); }, "quiet"));
+    root.append(actions);
+  }
+  if (summary && card.wholeText && card.actions.length && !card.actions.some(action => action.input === "chat" || action.purpose === "check-original")) {
+    const actions = node("div", undefined, "actions");
+    for (const action of card.actions) { const control = button(action.label, () => act(action.id)); control.disabled ||= !display.active; actions.append(control); }
     root.append(actions);
   }
 }

@@ -51,6 +51,8 @@ export interface NativeCardAction {
   /** Server-owned declaration and transient model input; never app action arguments. */
   parameters?: ApplicationViewParameters;
   parameterInput?: unknown;
+  /** The receipt line a person reads when the scope accepts this act. */
+  done?: string;
 }
 /** Exact server-held read vector and displayed ranges, not a native grant. */
 export interface LocalReviewCapture {
@@ -87,12 +89,20 @@ export interface DeclaredSurface {
 }
 export interface Card {
   identity: CardIdentity;
+  /** The line above the title, in a person's words. Without one, the card shows the identity's kind and revision. */
+  kicker?: string;
   title: string;
   summary: string;
   actor?: ActorChip;
   reasons: string[];
   /** Plain text, rendered without HTML. */
   body?: string;
+  /** The first card shows this whole body, so it may offer its acts there. A card sets this only when the body is short enough to read whole. */
+  wholeText?: true;
+  /** The exact record behind a disclosure on the opened card. A person need not read it. */
+  record?: { label: string; text: string };
+  /** The exact rule of this row, for the model's context. */
+  rule?: { definition: string; clause: string };
   entries?: { scope: string; seq: number; text: string }[];
   projection: ReadPoint[];
   reviewIntended: EntryRange[];
@@ -199,6 +209,7 @@ export interface CardContext {
   exact?: { kind: ExactRead["kind"]; commits: NamedCommit[]; truncated: boolean };
   note?: string;
   receipt?: string;
+  rule?: { definition: string; clause: string };
 }
 /** App data excludes executable action inputs: only opaque action IDs and labels cross to the browser. */
 export interface Display {

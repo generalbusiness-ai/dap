@@ -1,6 +1,6 @@
 import { commonsAuthorLabels, loadCommons, type CommonsView } from "@generalbusiness/dap-client";
 import { stringOrNull as text } from "@generalbusiness/dap-bytes";
-import { APPROVAL_LIMIT, decidedLine, laneName, otherRequestLine, questionOffers, questionRows, questions as questionProfile, reasonLines, whyLine, type Reasons } from "../../../views/src/attention.ts";
+import { APPROVAL_LIMIT, decidedLine, exactRule, laneName, otherRequestLine, questionOffers, questionRows, questions as questionProfile, reasonLines, whyLine, type Reasons } from "../../../views/src/attention.ts";
 import { LIMITS, controllerIn, keyHolder, laneRefs, laneWindow, needsYouRows, type Frame, type Row } from "../../../views/src/needs-you.ts";
 import { sameOptional, shownText } from "../../../views/src/words.ts";
 import { isRecord as record } from "@generalbusiness/dap-bytes";
@@ -476,7 +476,7 @@ const commentsOf = async (room: Room, handle: ScopeHandle, summary: Summary, at:
 
 /** One open question at one read of the lane, in the words `apps/views` gives. These rows grant nothing. */
 export interface QuestionAnswer { kind: "approve" | "decide"; label: string; on: string; typed: Record<string, string> }
-export interface QuestionRowView { item: number; needs: string; why: string; lines: string[] }
+export interface QuestionRowView { item: number; needs: string; why: string; lines: string[]; exact: string }
 export interface QuestionView {
   ask: number; question: string; body: string | null;
   /** The Brief's digest and the limit of an approval. The Page holds no Brief, so it cannot compare the two. */
@@ -531,7 +531,7 @@ async function questionsOf(room: Room, handle: ScopeHandle, summary: Summary): P
   if (!questionProfile(summary.definition)) return { questions: [], decided: [] };
   const items = summary.items, scope = summary.scope, viewer = room.me?.ref, actions = room.me?.actions ?? [], definition = String(summary.definition);
   const rows = viewer ? questionRows(items, scope, viewer, actions) : [];
-  const shown = (row: (typeof rows)[number]): QuestionRowView => ({ item: row.item.id, needs: row.values.needs, why: whyLine(row.values), lines: reasonLines(row.values, { definition, clause: row.clause }) });
+  const shown = (row: (typeof rows)[number]): QuestionRowView => ({ item: row.item.id, needs: row.values.needs, why: whyLine(row.values), lines: reasonLines(row.values, { definition, clause: row.clause }), exact: exactRule({ definition, clause: row.clause }) });
   const asks = items.filter(item => item.type === "ask" && item.state === "asked");
   const requests = items.filter(item => item.type === "approval-request" && item.state === "open"), approvals = items.filter(item => item.type === "approval" && item.state === "submitted");
   const about = (item: Item, ask: Item): boolean => { const ref = item.refs["ask"]; return ref === ask.id || isFactRef(ref) && ref.seq === ask.id; };
@@ -639,7 +639,7 @@ export async function loadNeedsYou(room: Room, after: string | null = null): Pro
       } });
     const rows = found.slice(0, LIMITS.rows);
     view.omittedRows = found.length - rows.length;
-    view.items = rows.map(row => { const reasons = row as unknown as Reasons; return { ...linkOf(row.scope), row, item: row.item, needs: reasons.needs, why: whyLine(reasons), lines: reasonLines(reasons, row.rule) }; });
+    view.items = rows.map(row => { const reasons = row as unknown as Reasons; return { ...linkOf(row.scope), row, item: row.item, needs: reasons.needs, why: whyLine(reasons), lines: reasonLines(reasons, row.rule), exact: exactRule(row.rule) }; });
     view.unread = unread.map(row => ({ ...linkOf(row.scope), ref: row.scope, reason: row.reason }));
     const decided = await Promise.all(frames.filter(frame => questionProfile(frame.summary.definition)).map(async frame => {
       try {

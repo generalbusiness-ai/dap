@@ -38,6 +38,8 @@ const field = (label: string, value: Child): HTMLElement => h("div", { class: "f
 const section = (title: string, ...children: (Child | Child[])[]): HTMLElement => h("section", { class: "panel" }, h("h2", { class: "panel-head" }, title), ...children);
 const table = (head: string[], rows: Child[][]): HTMLElement | null => rows.length === 0 ? null : h("div", { class: "table-scroll" }, h("table", { class: "record-table" }, h("thead", {}, h("tr", {}, head.map((c) => h("th", { scope: "col" }, c)))), h("tbody", {}, rows.map((row) => h("tr", {}, row.map((c) => h("td", {}, c)))))));
 const inspect = (label: string, ...children: (Child | Child[])[]): HTMLElement => h("details", { class: "inspection" }, h("summary", {}, label), ...children);
+/** One row's exact rule, behind a disclosure. It stays in its row: the shell moves a screen's first `inspection` to the screen's end. */
+const exactRuleOf = (exact: string): HTMLElement => h("details", { class: "exact-rule" }, h("summary", { class: "muted" }, "Exact rule"), h("p", { class: "muted" }, exact));
 const commentsRecord = (comments: IssueView["comments"]): HTMLElement | null => table(["Comment", "Author", "State"], comments.map((c) => [String(c.id), or(c.author), c.state]));
 const back = (kind: "issue" | "change"): HTMLElement => h("a", { class: "icon-button back", href: kind === "issue" ? "#/" : "#/?kind=change", "aria-label": `Back to ${kind} list` }, "←");
 const title = (text: string | null, number: number | null): HTMLElement => h("h1", {}, or(text, "Untitled"), " ", h("span", { class: "number" }, `#${or(number, "?")}`));
@@ -67,7 +69,7 @@ function needsYouSection(needs: NeedsYouView): HTMLElement {
       needs.lostPlace ? h("p", { class: "muted" }, "This address names no lane, so this list starts at the first lane.") : null,
       needs.items.length ? h("p", { class: "muted" }, READING_LEAVES_OPEN) : h("p", { "data-needs-empty": "" }, whole ? "Nothing in this room needs you." : "Nothing in the lanes this list read needs you."),
       needs.items.map(item => h("article", { class: "comment", "data-needs-row": String(item.item), "data-needs-lane": item.scope },
-        h("p", { class: "muted" }, item.lane), h("p", {}, h("a", { href: laneHref(item) }, h("strong", {}, item.needs))), h("p", {}, item.why), item.lines.map(line => h("p", { class: "muted" }, line)))),
+        h("p", { class: "muted" }, item.lane), h("p", {}, h("a", { href: laneHref(item) }, h("strong", {}, item.needs))), h("p", {}, item.why), item.lines.map(line => h("p", { class: "muted" }, line)), exactRuleOf(item.exact))),
       notShown(needs.unread.map(lane => ({ scope: lane.ref })), needs.omittedRows).map(line => h("p", { "data-needs-short": "" }, line)),
       needs.unread.length ? h("p", {}, "Open each one to read it: ", needs.unread.flatMap((lane, index) => [index ? ", " : "", openLane(lane)]), ".") : null,
       lanesLeftLine(needs),
@@ -129,7 +131,7 @@ const questionsSection = (issue: IssueView): HTMLElement | null => !issue.questi
     question.question ? h("h3", {}, question.question) : null,
     question.ask >= 0 ? h("p", {}, or(question.body, "Text not held")) : null,
     question.brief ? h("p", { class: "muted" }, question.brief) : null,
-    question.rows.map(row => h("div", { "data-question-row": String(row.item) }, h("p", {}, h("strong", {}, row.needs)), h("p", {}, row.why), row.lines.map(line => h("p", { class: "muted" }, line)))),
+    question.rows.map(row => h("div", { "data-question-row": String(row.item) }, h("p", {}, h("strong", {}, row.needs)), h("p", {}, row.why), row.lines.map(line => h("p", { class: "muted" }, line)), exactRuleOf(row.exact))),
     question.others.map(line => h("p", { class: "muted" }, line)),
     question.ask >= 0 ? h("div", { class: "toolbar-actions", "data-question-answers": String(question.ask) }) : null,
   )));

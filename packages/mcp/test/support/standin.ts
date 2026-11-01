@@ -27,6 +27,13 @@ export const FINAL_PAGE = 2;
 const item = (id: number, type: string, state: string, values: Record<string, unknown> = {}, refs: Record<string, unknown> = {}): Item =>
   ({ id, type, state, revision: 0, opened: null, parties: {}, refs, values, attributed: [] }) as unknown as Item;
 
+/** The counts a summary holds, from the items a test scripted: one row for each type and state that occurs, in order. */
+const countsOf = (items: readonly Item[]): (readonly [string, string, number])[] => {
+  const counted = new Map<string, [string, string, number]>();
+  for (const one of items) { const key = `${one.type} ${one.state}`, row = counted.get(key) ?? [one.type, one.state, 0]; row[2]++; counted.set(key, row); }
+  return [...counted.values()].sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]));
+};
+
 export class StandIn {
   readonly scopes = new Map<ScopeId, Scope>();
   /** Scripted answers by act kind: a function of the signed intent, or undefined to accept. */
@@ -123,7 +130,7 @@ export class StandIn {
     }
     const authorization = (init?.headers as Record<string, string> | undefined)?.["authorization"];
     if (this.sessions === "forbid" && authorization?.includes(SESSION_TOKEN)) return json({ ok: false, reason: "forbidden" });
-    if (route.length === 0) return json(this.read(s, { scope: s.ref, status: "active", definition: s.definition, time: T, items: s.items, counts: [] }));
+    if (route.length === 0) return json(this.read(s, { scope: s.ref, status: "active", definition: s.definition, time: T, items: s.items, counts: countsOf([...s.items, ...s.final]) }));
     switch (route[0]) {
       case "originals": return { status: 204, body: new ReadableStream({ start(c) { c.close(); } }) as never }; // The copy routes answer as if the row was kept. No rule of `originals.ts` runs here.
       case "entries": { const e = s.entries[Number(route[1])]; return e ? json(this.read(s, e)) : json({ ok: false, reason: "not-found" }); }

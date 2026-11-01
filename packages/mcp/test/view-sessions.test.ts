@@ -296,3 +296,42 @@ test("an incomplete card opens its available entries and offers no act", async (
   expect(detail.card!.entries!.map(entry => entry.text)).toEqual(["Entry 1"]);
   expect(detail.card!.actions).toEqual([]);
 });
+
+// Invariant: acts reach a summary page only with the card's whole text, and a person's receipt line leaves the entry to the model's context.
+test("a first card offers acts only with its whole text; a person reads the act's words and the model's context keeps the entry", async () => {
+  const projection = (wholeText: boolean, body: string | undefined, page: string): Projection => ({ status: "ready", position: 0, count: 1, fallback: "TEST", card: { identity: { item: "1", kind: "manifest", revision: "2", subject: { scope: "sc_a" }, at: { manifest: 2 } }, kicker: "Change 2, version 3", title: "TEST", summary: "TEST", actor: { kind: "person", name: "TEST" }, reasons: [], projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST", ...(body === undefined ? {} : { body }), ...(wholeText ? { wholeText: true as const } : {}),
+    actions: page === "summary" && !wholeText ? [] : [{ id: "approve", label: "Approve", purpose: "approve", kind: "k", done: "Review recorded: approved.", args: { target: "sc_a", at: { manifest: 2 } } }, { id: "plain", label: "Plain", purpose: "act", kind: "k", args: { target: "sc_a", at: { manifest: 2 } } }] } });
+  const sessionOf = (wholeText: boolean, body: string | undefined) => new ViewSessions({ read: async query => projection(wholeText, body, query.page) }, { call: async () => { throw Error("No native tool read."); } }, async () => ({ content: [{ type: "text", text: "accepted" }], structuredContent: { answer: "accepted", fact: { seq: 39 } }, isError: false }), async () => { throw Error("No settlement here."); });
+
+  const whole = sessionOf(true, "TEST text");
+  await whole.open("v", "decision");
+  const first = whole.display("v");
+  expect(first.card!.actions.map(action => action.id), "THE WHOLE TEXT: the first card offers the acts").toEqual(["approve", "plain"]);
+  const done = await whole.act("v", first.cut, "approve");
+  expect(done.display.receipt, "A PERSON reads the act's words").toBe("Review recorded: approved.");
+  expect(done.display.context.receipt, "THE MODEL'S CONTEXT keeps the entry").toBe("Review recorded: approved. Entry 39.");
+
+  const noBody = sessionOf(true, undefined);
+  await noBody.open("v", "decision");
+  expect(noBody.display("v").status, "A CARD THAT CLAIMS THE WHOLE TEXT must hold a text").toBe("unavailable");
+
+  const plain = sessionOf(true, "TEST text");
+  await plain.open("v", "decision");
+  const pressed = await plain.act("v", plain.display("v").cut, "plain");
+  expect(pressed.display.receipt, "AN ACT WITH NO WORDS of its own takes the card's kicker").toBe("Change 2, version 3: accepted (entry 39).");
+});
+
+// Invariant: an act from a first card whose outcome is unknown leaves that item offering the check of the original, even after a person pages away and back. A second press could not tell a person what the first one did.
+test("a first card's press with an unknown outcome offers only the check of the original, and paging away and back keeps it so", async () => {
+  const projection = (position: number): Projection => ({ status: "ready", position, count: 2, fallback: "TEST", card: { identity: { item: String(position + 1), kind: "ask", revision: "2", subject: { scope: "sc_a", item: position + 1 }, at: { on: 2 } }, kicker: `Question ${position + 1}`, title: "TEST", summary: "TEST", actor: { kind: "person", name: "TEST" }, reasons: [], projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST", body: "TEST text", wholeText: true,
+    actions: [{ id: "approve", label: "Approve", purpose: "approve", kind: "k", done: "Review recorded: approved.", args: { target: "sc_a", at: { on: 2 } } }] } });
+  const sessions = new ViewSessions({ read: async query => projection(query.position) }, { call: async () => { throw Error("No native tool read."); } }, async () => ({ content: [{ type: "text", text: "unknown" }], structuredContent: { answer: "unknown" }, isError: false }), async () => { throw Error("No settlement here."); });
+  await sessions.open("v", "decision");
+  const pressed = await sessions.act("v", sessions.display("v").cut, "approve");
+  expect(pressed.display.card!.actions.map(action => action.purpose), "UNKNOWN: the card offers the check").toEqual(["check-original"]);
+  expect(pressed.display.receipt, "UNKNOWN: the receipt does not say it was recorded").toContain("outcome unknown");
+  const away = await sessions.read("v", pressed.display.cut, { position: 1 });
+  expect(away.card!.actions.map(action => action.purpose), "ANOTHER ITEM keeps its own act").toEqual(["approve"]);
+  const back = await sessions.read("v", away.cut, { position: 0 });
+  expect(back.card!.actions.map(action => action.purpose), "BACK ON THE ITEM: the check, and no second Approve").toEqual(["check-original"]);
+});

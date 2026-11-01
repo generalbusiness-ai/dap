@@ -50,7 +50,7 @@ test("@ana returns on a second device: one list holds her items of two issues, r
     expect(page.items.map(one => one.item).sort((a, b) => a - b), "EVERY ITEM, IN BOTH ISSUES").toEqual([first.request.seq, request.seq].sort((a, b) => a - b));
     expect(new Set(page.items.map(one => one.scope)), "TWO LANES").toEqual(new Set([f.issue, second]));
     const row = rows.find(one => one.item === first.request.seq)!, shown = page.items.find(one => one.item === first.request.seq)!;
-    expect([shown.needs, shown.why, shown.lines], "THE WORDS OF apps/views: what needs Ana, why, what settles it, who waits and the rule").toEqual([row["needs"], `Why it is yours: ${String(row["why"])}`, [`What settles it: ${String(row["settles"])}`, "Waiting on this: @una.", `Rule: ${row.rule.definition} ${row.rule.clause}.`]]);
+    expect([shown.needs, shown.why, shown.lines], "THE WORDS OF apps/views: what needs Ana, why, what settles it, who waits and the rule").toEqual([row["needs"], `Why it is yours: ${String(row["why"])}`, [`What settles it: ${String(row["settles"])}`, "Waiting on this: @una.", "Rule: this lane's rule for an approval request."]]);
     expect([page.omittedLanes, page.omittedRows, page.next, page.unread], "NOTHING LEFT OUT").toEqual([0, 0, null, []]);
 
     const line = `Decided question: TEST which header stays? (entry ${decided.seq})`;

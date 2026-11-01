@@ -53,18 +53,18 @@ const textAt = (ref: unknown): number | null => typeof ref === "number" ? ref : 
 export const questions = (pin: unknown): boolean => pin === QUESTION_DIGESTS.issue || pin === QUESTION_BRIEF_DIGESTS.issue;
 
 /** Each question row for this viewer, at one read of a lane's live items: a request that names them, then a question they may decide. */
-export interface QuestionRow { item: Item; clause: string; values: Reasons & { category: string; bodyAt: unknown; currentBody?: boolean; permission: "not-determined" } }
+export interface QuestionRow { item: Item; clause: string; values: Reasons & { category: string; kicker: string; bodyAt: unknown; currentBody?: boolean; permission: "not-determined" } }
 export function questionRows(items: readonly Item[], scope: ScopeRef, viewer: MemberRef, actions: readonly string[]): QuestionRow[] {
   const rows: QuestionRow[] = [];
   for (const item of items) {
     if (item.type !== "approval-request" || item.state !== "open" || !sameOptional(item.parties["requested"], viewer)) continue;
     const ask = items.find(ask => ask.type === "ask" && namesItem(item.refs["ask"], ask.id, scope));
     const currentBody = !!ask && sameOptional(item.refs["bodyAt"], ask.refs["bodyAt"]);
-    rows.push({ item, clause: "acts.request-approval;items.approval-request", values: { category: "requested-review", ...approvalReasons(item, ask, currentBody, ask ? waitingOn(items, ask.id, scope) : []), bodyAt: item.refs["bodyAt"], currentBody, permission: "not-determined" } });
+    rows.push({ item, clause: "acts.request-approval;items.approval-request", values: { category: "requested-review", kicker: questionKicker(ask?.id ?? localId(item.refs["ask"])), ...approvalReasons(item, ask, currentBody, ask ? waitingOn(items, ask.id, scope) : []), bodyAt: item.refs["bodyAt"], currentBody, permission: "not-determined" } });
   }
   if (actions.includes("issue.decide")) for (const ask of items) {
     // After the last approval the request leaves this list, and the question still waits for a decision.
-    if (ask.type === "ask" && decidable(ask, items, scope)) rows.push({ item: ask, clause: "acts.decide", values: { category: "decision-due", ...decisionReasons(ask, waitingOn(items, ask.id, scope)), bodyAt: ask.refs["bodyAt"], permission: "not-determined" } });
+    if (ask.type === "ask" && decidable(ask, items, scope)) rows.push({ item: ask, clause: "acts.decide", values: { category: "decision-due", kicker: questionKicker(ask.id), ...decisionReasons(ask, waitingOn(items, ask.id, scope)), bodyAt: ask.refs["bodyAt"], permission: "not-determined" } });
   }
   return rows;
 }
@@ -74,9 +74,27 @@ export const whyLine = (reasons: Reasons): string => `Why it is yours: ${reasons
 export const reasonLines = (reasons: Reasons, rule: { definition: string; clause: string }): string[] => [
   `What settles it: ${reasons.settles}`,
   ...(reasons.waiting ? [`Waiting on this: ${reasons.waiting.join(", ")}.`] : []),
-  `Rule: ${rule.definition} ${rule.clause}.`,
+  ruleLine(rule.clause),
 ];
+/** What each kind of rule is about, by the part of its clause before a semicolon. */
+const RULE_WORDS: Readonly<Record<string, string>> = {
+  "acts.merge": "a merge",
+  "acts.merge#changes-requested": "a merge after a request for changes",
+  "acts.merge#finding-open": "a finding that holds a merge",
+  "acts.decide": "a decision",
+  "acts.request-approval": "an approval request",
+  "acts.request-review-own": "a review request",
+  "items.commitment": "accepted work",
+};
+/** A rule in words, for a person. The row and the card's record keep the exact definition and clause. */
+export const ruleLine = (clause: string): string => {
+  const words = RULE_WORDS[clause.split(";")[0]!];
+  return words ? `Rule: this lane's rule for ${words}.` : "Rule: this lane's definition decides it.";
+};
+/** The exact rule, behind a disclosure on the Page. */
+export const exactRule = (rule: { definition: string; clause: string }): string => `Definition ${rule.definition}, clause ${rule.clause}.`;
 export const READING_LEAVES_OPEN = "Reading this item leaves it open. This list grants no permission.";
+export const LIST_GRANTS_NOTHING = "This list grants no permission.";
 export const APPROVAL_LIMIT = "Approval does not approve the Brief or conditions.";
 /** A request that names someone else. It is not this viewer's to answer. */
 export const otherRequestLine = (request: Item, current: boolean): string => `${named(request.parties["requester"])} asked ${named(request.parties["requested"])} to approve${current ? "" : " an earlier text of"} this question.`;
@@ -110,6 +128,14 @@ export const decidedLine = (question: string, entry: number | null): string => `
 
 const titled = (proposal: Item | undefined): string => proposal ? `change ${String(proposal.values["number"] ?? proposal.id)}: ${quoted(proposal.values["title"])}` : "this change";
 
+/** The line above a card's title: the name a person knows the subject by. The card's identity keeps the exact item and revision. */
+export const questionKicker = (ask: number | null): string => `Question ${ask ?? "with no number"}`;
+export const changeKicker = (proposal: Item | undefined, version: number | null): string => `Change ${String(proposal?.values["number"] ?? proposal?.id ?? "with no number")}${version === null ? "" : `, version ${version}`}`;
+/** The receipt line of an accepted act. The context a model reads adds the entry. */
+export const reviewRecorded = (verdict: "approve" | "request-changes"): string => `Review recorded: ${verdict === "approve" ? "approved" : "changes requested"}.`;
+export const DECISION_RECORDED = "Decision recorded.";
+export const MERGE_STARTED = "Merge started.";
+
 export const reviewReasons = (request: Item, proposal: Item | undefined): Reasons => ({
   needs: `Review ${titled(proposal)}.`,
   why: `${named(request.parties["requester"])} asked you by name.`,
@@ -124,12 +150,65 @@ export const unknownMergeReasons = (merge: Item, viewer: MemberRef): Reasons => 
   settledBy: ["publication"],
 });
 
-export const mergeReasons = (proposal: Item | undefined, heldBy: readonly number[] | undefined): Reasons => ({
-  needs: `Merge ${titled(proposal)}.${heldBy?.length ? ` Open finding ${heldBy.join(", ")} holds the merge first.` : ""}`,
-  why: "Your role holds change.merge.",
-  settles: "A merge act on the current version settles it.",
-  settledBy: ["merge"],
+const version_ = (version: number | null): string => version === null ? "this version" : `version ${version}`;
+const sentence = (text: string): string => `${text[0]!.toUpperCase()}${text.slice(1)}`;
+/** What stops a merge of this version: the guards of `acts.merge`, in their order, each with its reason and its words. Findings come from the finding profile's guard. */
+export interface MergeHold { reason: string; words: string }
+export function mergeHolds(items: readonly Item[], manifest: Item, rules: Item | undefined | null, findings: readonly number[], version: number | null, scope: ScopeRef): MergeHold[] {
+  const holds: MergeHold[] = [], label = sentence(version_(version));
+  const reviews = items.filter(item => item.type === "review" && item.state === "submitted" && namesItem(item.refs["manifest"], manifest.id, scope));
+  const given = reviews.filter(item => item.values["verdict"] === "approve").length, needed = rules?.values["approvals"], revision = rules?.values["revision"];
+  if (manifest.values["complete"] !== true) holds.push({ reason: "not-complete", words: `${label} is not complete yet.` });
+  const merging = items.find(item => item.type === "merge" && ["intended", "committed", "unknown"].includes(item.state));
+  if (merging) holds.push({ reason: "merge-in-progress", words: `Merge ${merging.id} must finish first.` });
+  if (revision === undefined || revision === null || typeof needed !== "number") holds.push({ reason: "rules-unknown", words: "The rules of this change are not known yet." });
+  else if (given < needed) holds.push({ reason: "approvals-needed", words: `${label} needs ${needed - given} more approval${needed - given === 1 ? "" : "s"} first.` });
+  if (reviews.some(item => item.values["verdict"] === "request-changes")) holds.push({ reason: "changes-requested", words: `Someone requested changes on ${version_(version)}.` });
+  const checks = rules?.values["checks"];
+  for (const check of Array.isArray(checks) ? checks as { name?: unknown; required?: unknown; configuration?: unknown }[] : []) {
+    if (check.required !== true || typeof check.name !== "string") continue;
+    if (!items.some(item => item.type === "job" && item.state === "passed" && item.values["name"] === check.name && namesItem(item.refs["manifest"], manifest.id, scope) && (check.configuration === undefined || item.values["configuration"] === check.configuration)))
+      holds.push({ reason: "required-check-not-passed", words: `The check ${shownText(check.name)} must pass first.` });
+  }
+  if (findings.length) holds.push({ reason: "finding-open", words: findings.length === 1 ? `Open finding ${findings[0]} holds the merge first.` : `Open findings ${findings.join(", ")} hold the merge first.` });
+  return holds;
+}
+/** Who asked for changes on this version, and on an earlier one. A request for changes counts only on the version it names. */
+export function changeRequests(items: readonly Item[], manifest: Item, scope: ScopeRef): { current: Item[]; earlier: Item[] } {
+  const reviews = items.filter(item => item.type === "review" && item.state === "submitted" && item.values["verdict"] === "request-changes");
+  const on = (item: Item) => namesItem(item.refs["manifest"], manifest.id, scope);
+  return { current: reviews.filter(on), earlier: reviews.filter(item => !on(item)) };
+}
+const askedForChanges = (reviews: readonly Item[], viewer: MemberRef): { you: boolean; others: string[] } => ({
+  you: reviews.some(item => sameOptional(item.parties["reviewer"], viewer)),
+  others: [...new Set(reviews.filter(item => !sameOptional(item.parties["reviewer"], viewer)).map(item => named(item.parties["reviewer"])))],
 });
+const listed = (names: readonly string[]): string => names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)!}` : names[0] ?? "";
+
+/**
+ * The merge row. A merge act names one version, and the lane refuses it while any submitted request for changes stands on that version, whoever asked and whatever other reviews say.
+ * So a refused version waits on its author. A new version takes a new review: the old request no longer counts, and the old approvals do not count either.
+ */
+export function mergeReasons(proposal: Item | undefined, version: number | null, holds: readonly MergeHold[], requests: { current: readonly Item[]; earlier: readonly Item[] }, viewer: MemberRef): Reasons {
+  if (requests.current.length) {
+    const { you, others } = askedForChanges(requests.current, viewer), author = proposal?.parties["author"];
+    const who = you ? listed(["You", ...others]) : listed(others);
+    return {
+      needs: `${sentence(titled(proposal))} waits on ${sameOptional(author, viewer) ? "you, its author" : `its author, ${named(author)}`}.`,
+      why: you ? `${who} requested changes on ${version_(version)}.` : `Your role holds change.merge, and ${who} requested changes on ${version_(version)}.`,
+      settles: `A new version from the author ends the wait. A reviewer who requested changes can also replace that verdict with a new review. Until then the room refuses a merge of ${version_(version)}.`,
+      settledBy: ["propose-manifest", "review-verdict"],
+    };
+  }
+  const { you, others } = askedForChanges(requests.earlier, viewer);
+  const earlier = you || others.length ? ` ${listed([...you ? ["You"] : [], ...others])} requested changes on an earlier version.` : "";
+  return {
+    needs: `Merge ${titled(proposal)}.${holds.length ? ` ${holds.map(hold => hold.words).join(" ")}` : ""}`,
+    why: `Your role holds change.merge.${earlier}`,
+    settles: `A merge act on the current version settles it.${holds.length ? " The room refuses that act until then." : ""}`,
+    settledBy: ["merge"],
+  };
+}
 
 const WHY_FINDING: Readonly<Record<string, string>> = {
   "resolve-finding-any": "Your role holds change.dismiss.",
@@ -144,3 +223,16 @@ export const findingReasons = (finding: Item, acts: readonly string[]): Reasons 
   settles: "An answer closes it: the source resolves it, or a holder of change.dismiss resolves it or marks it irrelevant.",
   settledBy: ["resolve-finding-own", "resolve-finding-any", "mark-finding-irrelevant"],
 });
+
+/** How many of a commitment's conditions a card names, and how much of each. The record holds them all. */
+const SHOWN_CONDITIONS = 3, SHOWN_CONDITION = 200;
+const WORK_STATE: Readonly<Record<string, string>> = { offered: "has an offer of this work", proposed: "proposed terms for this work", accepted: "accepted this work" };
+const clipped = (text: string): string => text.length > SHOWN_CONDITION ? `${text.slice(0, SHOWN_CONDITION)}…` : text;
+/** The words of one row of the Work list: the lane it is in, who holds it, and what holds it up. Two rows of two lanes read apart by the lane's name. */
+export function workWords(row: { lane: string; state: unknown; agent: MemberRef; controller: MemberRef; terms: Record<string, unknown>; blocks: readonly Item[]; changes: readonly unknown[] }): { kicker: string; title: string; summary: string; lines: string[] } {
+  const conditions = Array.isArray(row.terms["conditions"]) ? row.terms["conditions"].filter((one): one is string => typeof one === "string") : [];
+  const shown = conditions.slice(0, SHOWN_CONDITIONS).map(one => clipped(shownText(one))), more = conditions.length - shown.length;
+  const on = row.blocks.map(block => localId(block.refs["on"])).filter((id): id is number => id !== null);
+  return { kicker: "Work", title: row.lane, summary: `${row.agent.member}, agent of ${row.controller.member}, ${WORK_STATE[String(row.state)] ?? `holds this work in the state ${shownText(row.state)}`}.`,
+    lines: [...shown.length ? [`Conditions: ${shown.join("; ")}${more ? `; and ${more} more` : ""}.`] : [], ...on.length ? [`Blocked on question ${on.join(", ")}.`] : [], ...row.changes.length ? [`Linked change${row.changes.length === 1 ? "" : "s"}: ${row.changes.length}.`] : []] };
+}

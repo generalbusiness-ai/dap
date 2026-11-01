@@ -155,7 +155,7 @@ try {
   const text = async () => page.locator("main").innerText();
   const screen = await text(), row = first.find(one => one.item === request) ?? { needs: "no such row", why: "", settles: "", rule: {} };
   check("the card lists one row for Ana", first.length, 1);
-  for (const [name, words] of [["what needs you", row.needs], ["why it is yours", `Why it is yours: ${row.why}`], ["what settles it", `What settles it: ${row.settles}`], ["who waits", "Waiting on this: @vic."], ["the rule", `Rule: ${row.rule.definition} ${row.rule.clause}.`], ["the question", QUESTION], ["the text", BODY]]) check(`the screen shows ${name}, in the words of apps/views`, screen.includes(words));
+  for (const [name, words] of [["what needs you", row.needs], ["why it is yours", `Why it is yours: ${row.why}`], ["what settles it", `What settles it: ${row.settles}`], ["who waits", "Waiting on this: @vic."], ["the rule", "Rule: this lane's rule for "], ["the exact rule, behind its disclosure", "Exact rule"], ["the question", QUESTION], ["the text", BODY]]) check(`the screen shows ${name}, in the words of apps/views`, screen.includes(words));
   check("the screen lists the question that does not need Ana", screen.includes(OTHER));
   check("the screen says who was asked", screen.includes("@rita asked @vic to approve this question."));
   await delay(1500);

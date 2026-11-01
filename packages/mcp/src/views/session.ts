@@ -17,6 +17,8 @@ interface Instance {
   cut: number;
   projection: Projection;
   receipt?: string;
+  /** The model's context for the receipt `of`, when a person's line leaves out the exact entry. */
+  exactReceipt?: { of: string; text: string };
   readReceipt?: Receipt;
   busy: boolean;
   dispatches: Map<string, Promise<CallResult>>;
@@ -66,7 +68,8 @@ const MAX_INSTANCES = 128;
 const PAGES = new Set<PageKind>(["summary", "item", "diff", "updates"]);
 const finite = (value: number) => Number.isSafeInteger(value) && value >= 0;
 
-function receiptLine(card: Card, result: CallResult): string {
+/** What a person reads after a press, and what the model's context reads. An accepted act with its own words names no entry to a person; the context does. */
+function receiptLine(card: Card, action: CardAction, result: CallResult): { shown: string; exact?: string } {
   const answer = result.structuredContent;
   const reason = [answer["reason"], answer["name"]].filter((value): value is string => typeof value === "string").join(", ");
   const uncertain = answer["answer"] === "unknown" || answer["answer"] === "unavailable" || answer["error"] === "transport" || answer["error"] === "custody";
@@ -79,7 +82,9 @@ function receiptLine(card: Card, result: CallResult): string {
     outcome = `accepted${typeof fact?.seq === "number" ? ` (entry ${fact.seq})` : ""}`;
   } else if (typeof answer["answer"] === "string") outcome = `${answer["answer"]}${reason ? ` (${reason})` : ""}`;
   else outcome = "the act could not be confirmed; refresh the card";
-  return `${card.identity.kind} ${card.identity.item} ${card.identity.revision}: ${outcome}.`.replace(/\s+/g, " ").slice(0, 512);
+  const fact = answer["fact"] as { seq?: unknown } | undefined;
+  if (answer["answer"] === "accepted" && !action.local && action.done) return { shown: action.done, ...(typeof fact?.seq === "number" ? { exact: `${action.done} Entry ${fact.seq}.` } : {}) };
+  return { shown: `${card.kicker ?? `${card.identity.kind} ${card.identity.item} ${card.identity.revision}`}: ${outcome}.`.replace(/\s+/g, " ").slice(0, 512) };
 }
 
 function mergeRanges(ranges: EntryRange[]): EntryRange[] {
@@ -123,6 +128,7 @@ function checked(projection: Projection, query: ViewQuery): Projection {
     if (card.actions.length > 2) throw new ViewError("unavailable", "A card may offer at most two acts.");
     if (new Set(card.actions.map((act) => act.id)).size !== card.actions.length) throw new ViewError("unavailable", "Card act IDs must be distinct.");
     shapeAt(card.identity.at);
+    if (card.wholeText && typeof card.body !== "string") throw new ViewError("unavailable", "A card that offers its acts with its text must hold that text.");
     if (card.actor?.kind === "agent" && !card.actor.controller) throw new ViewError("unavailable", "The agent projection does not name its controller.");
     for (const entry of card.entries ?? []) if (!finite(entry.seq)) throw new ViewError("unavailable", "An entry position is malformed.");
     for (const point of card.projection) if (!finite(point.seq)) throw new ViewError("unavailable", "A projection read point is malformed.");
@@ -139,7 +145,8 @@ function checked(projection: Projection, query: ViewQuery): Projection {
     card.actions = card.actions.filter((action) => {
       if (query.page === "diff") return false;
       if (card.unresolvedOriginal) return action.purpose === "check-original";
-      if (query.page === "summary" && !(card.declared?.kind === "carousel" && (action.parameters || card.declared.routed))) return false;
+      // The first card offers an act only where a person has read what it answers: its whole text, or a declared carousel's row.
+      if (query.page === "summary" && !card.wholeText && !(card.declared?.kind === "carousel" && (action.parameters || card.declared.routed))) return false;
       if (projection.status !== "ready") return false;
       if (query.page === "updates") return action.purpose === "mark-reviewed" && card.unavailable.length === 0 && (card.entries?.length ?? 0) > 0 && canonicalize(mergeRanges(card.reviewIntended)) === canonicalize(ranges(card.entries ?? []));
       if (action.purpose === "mark-reviewed") return false;
@@ -234,7 +241,8 @@ export class ViewSessions {
       navigation: query.page === "summary" ? [...(projection.status !== "ready" && projection.back ? ["back"] : []), ...(projection.position > 0 ? ["previous"] : []), ...(projection.position + 1 < projection.count ? ["next"] : []), ...(card && projection.status === "ready" ? ["open"] : [])] : ["back", ...(card?.diffAvailable && query.page === "item" ? ["diff"] : [])],
       ...(query.page === "diff" && card?.shownRead ? { exact: { kind: card.shownRead.kind, commits: structuredClone(card.shownRead.commits), truncated: card.shownRead.truncated } } : {}),
       ...(card?.declared ? { note: card.declared.context } : {}),
-      ...(instance.receipt ? { receipt: instance.receipt } : {}),
+      ...(instance.receipt ? { receipt: instance.exactReceipt?.of === instance.receipt ? instance.exactReceipt.text : instance.receipt } : {}),
+      ...(card?.rule ? { rule: { ...card.rule } } : {}),
     };
     const displayedCard: Display["card"] = card ? (({ diffRead, interdiffReads: _interdiffReads, ...shown }) => ({ ...shown, ...(diffRead ? { diffSigned: true as const, ...this.#readers(instance, card) } : {}), actions: card.actions.map(({ id, label, purpose, parameters }) => ({ id, label, purpose, ...(parameters ? { input: "chat" as const } : {}) })) }))(card) : undefined;
     if (displayedCard?.declared?.routed) {
@@ -284,7 +292,7 @@ export class ViewSessions {
         }
         if (projection.card) {
           const pending = instance.pending.get(this.#itemKey(projection.card));
-          if (pending && query.page !== "diff" && (query.page !== "summary" || projection.card.declared?.kind === "carousel")) {
+          if (pending && query.page !== "diff" && (query.page !== "summary" || projection.card.wholeText || projection.card.declared?.kind === "carousel")) {
             projection.card.unresolvedOriginal = true;
             projection.card.actions = [pending];
           }
@@ -478,7 +486,9 @@ export class ViewSessions {
     try {
       const result = await dispatch;
       const answer = result.structuredContent;
-      instance.receipt = receiptLine(card, result);
+      const line = receiptLine(card, action, result);
+      instance.receipt = line.shown;
+      if (line.exact) instance.exactReceipt = { of: line.shown, text: line.exact };
       const receipt = this.receiptOf(result);
       if (answer["answer"] === "accepted" && receipt) instance.readReceipt = structuredClone(receipt);
       const itemKey = this.#itemKey(card);
