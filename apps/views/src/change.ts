@@ -171,6 +171,15 @@ function findingLines(context: ChangeContext, findings: readonly ShownFinding[])
   return lines;
 }
 
+/** The earlier versions of the change, oldest first, each with its ordinal. An interdiff can read those that name commits. */
+function earlierVersions(context: ChangeContext): { manifest: Item; label: string }[] {
+  const all = context.items.filter(item => item.type === "manifest").sort((a, b) => a.id - b.id);
+  return all.map((manifest, n) => ({ manifest, label: `Version ${n + 1}` })).filter(({ manifest }) => context.manifest !== null && manifest.id < context.manifest.id);
+}
+const namesCommits = (manifest: Item): boolean => typeof manifest.values["base"] === "string" && typeof manifest.values["integration"] === "string";
+/** The interdiffs that a card offers. A version beyond this count stays readable through the generic reads. */
+const INTERDIFFS = 4;
+
 function bodyOf(context: ChangeContext): string {
   const { manifest, rules, who } = context, lines: string[] = [];
   if (!manifest) lines.push("No version yet.");
@@ -179,6 +188,9 @@ function bodyOf(context: ChangeContext): string {
     lines.push(`Base: ${String(manifest.values["base"])}`);
     if (typeof manifest.values["integration"] === "string") lines.push(`Integration: ${manifest.values["integration"]}`, ...(typeof manifest.values["tree"] === "string" ? [`Tree: ${manifest.values["tree"]}`] : []));
     else lines.push(`Integration: none yet. This version holds one file, ${String(manifest.values["path"])}, and the destination writes the commit when it publishes. It has no diff.`);
+    const earlier = earlierVersions(context);
+    if (earlier.length) lines.push("", "Earlier versions:");
+    for (const { manifest: version, label } of earlier) lines.push(namesCommits(version) ? `${label}, manifest ${version.id}. Base: ${String(version.values["base"])}. Integration: ${String(version.values["integration"])}.` : `${label}, manifest ${version.id}: one file and no commit, so no interdiff reads it.`);
   }
   lines.push("", "Reviews of this version:");
   if (!context.reviews.length) lines.push("None.");
@@ -225,13 +237,16 @@ export async function changeProjection(app: RepoInAi, subject: string | undefine
   for (const action of actions) if (!action.local) Object.assign(at, action.args["at"] ?? {});
   const integration = manifest?.values["integration"], base = manifest?.values["base"];
   const diffable = manifest?.state === "current" && typeof integration === "string" && typeof base === "string";
+  const label = `Version ${earlierVersions(context).length + 1}`;
+  const interdiffReads = diffable ? earlierVersions(context).filter(({ manifest: version }) => namesCommits(version)).reverse().slice(0, INTERDIFFS).map(({ manifest: version, label: from }) => ({ target: context.destination,
+    from: { label: from, base: version.values["base"] as string, integration: version.values["integration"] as string }, to: { label, base, integration } })) : [];
   const held = holding(context).length;
   const card: Card = { identity: { item: String((manifest ?? proposal).id), kind: manifest ? "manifest" : "proposal", revision: String((manifest ?? proposal).revision), subject: { scope: scope.scope, item: proposal.id }, at },
     title: String(proposal.values["title"]), summary: `${typeof proposal.values["number"] === "number" ? `Change ${proposal.values["number"]}` : "Change"}, ${proposal.state}${manifest ? `, version ${context.versions}` : ""}.${held ? ` ${held} open finding${held === 1 ? " holds" : "s hold"} the merge.` : ""}`,
     body: bodyOf(context), reasons: [`${context.definition} acts.review-verdict / acts.merge; the scope decides each act`],
     projection: collection.points().map(point => ({ scope: point.scope.scope, seq: point.head.seq, hash: point.head.hash })),
     reviewIntended: [], unavailable: [], waitsOn: [], settles: [], actions, ...(original !== undefined ? { unresolvedOriginal: true } : {}),
-    ...(diffable ? { diffAvailable: true, diffRead: { target: context.destination, base, integration } } : {}),
+    ...(diffable ? { diffAvailable: true, diffRead: { target: context.destination, base, integration, label }, ...(interdiffReads.length ? { interdiffReads } : {}) } : {}),
     fallback: "Read change for this version's base, integration, reviews, checks, rules and linked issues." };
   if (utf8(canonicalize(card)).length > 60 * 1024) return { status: "incomplete", position: 0, count: 0, fallback: "This change is too large for its card. It offers no acts here; read change." };
   return { status: "ready", position: 0, count: 1, card, fallback: card.fallback };

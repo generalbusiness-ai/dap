@@ -47,7 +47,7 @@ test("the text of a bounded diff applies with git to the exact tree of the integ
 test("over a bound the answer says truncated and keeps what it read; a binary file is no truncation", async () => {
   const over = async (head: string, bounds: Partial<DiffBounds>) => boundedDiff(source, f.base, head, { ...DIFF_BOUNDS, ...bounds });
   const files = await over(f.many, { files: 2 });
-  expect([files.truncated, files.files, files.text.split("\n").at(-2)]).toEqual([true, 2, "truncated: the answer reached its bound of 2 files. This diff does not show the whole change."]);
+  expect([files.truncated, files.files, files.text.split("\n").at(-2)]).toEqual([true, 2, "truncated: the answer reached its bound of 2 files. Left out: every path after file-0. This diff does not show the whole change."]);
   const text = await boundedDiff(source, f.base, f.long);
   expect([text.truncated, text.text.endsWith("This diff does not show the whole change.\n")]).toEqual([true, true]);
   expect(text.text).toContain("truncated: the text reached its bound of 40960 bytes");
@@ -56,7 +56,7 @@ test("over a bound the answer says truncated and keeps what it read; a binary fi
   expect([large.truncated, large.text]).toEqual([true, expect.stringContaining("omitted: the file kept is too large to read\n")]);
   expect(large.text).toContain("truncated: the file kept is over its bound of 2048 bytes");
   const objects = await over(f.next, { objects: 2 });
-  expect([objects.truncated, objects.text]).toEqual([true, "truncated: the read reached its bound of 2 objects. This diff does not show the whole change.\n"]);
+  expect([objects.truncated, objects.text.split("\n").at(-2)]).toEqual([true, "truncated: the read reached its bound of 2 objects. Left out: every changed path, because the read stopped before it reached one. This diff does not show the whole change."]);
   let clock = 0;
   const late = await boundedDiff(source, f.base, f.next, DIFF_BOUNDS, () => (clock += DIFF_BOUNDS.milliseconds));
   expect([late.truncated, late.text]).toEqual([true, expect.stringContaining("truncated: the read reached its bound of 20000 ms")]);
@@ -67,7 +67,7 @@ test("over a bound the answer says truncated and keeps what it read; a binary fi
 test("a read over the transport's bound says truncated; a missing object is a refusal and no invented change", async () => {
   const tooLarge: GitSource = { ...source, object: async () => { throw new GitRefusal("too-large", "upload response"); } };
   const pack = await boundedDiff(tooLarge, f.base, f.next);
-  expect([pack.truncated, pack.files, pack.text]).toEqual([true, 0, "truncated: the base commit or the pack that holds it is over the read bound. This diff does not show the whole change.\n"]);
+  expect([pack.truncated, pack.files, pack.text.split("\n").at(-2)]).toEqual([true, 0, "truncated: the base commit or the pack that holds it is over the read bound. Left out: every changed path, because the read stopped before it reached one. This diff does not show the whole change."]);
   const absent: GitSource = { ...source, object: async (id, limit) => id === f.next ? null : source.object(id, limit) };
   await expect(boundedDiff(absent, f.base, f.next)).rejects.toMatchObject({ reason: "missing-object" });
   await expect(boundedDiff(source, "not an id", f.next)).rejects.toBeInstanceOf(GitRefusal);

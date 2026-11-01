@@ -14,8 +14,9 @@ export async function viewPackage() {
   if (Object.keys(files).sort().join(",") !== "card.css,card.js") throw new Error("The card build has unexpected outputs.");
   const template = await readFile(here("../browser/index.html"), "utf8");
   const entry = '<script type="module" src="./main.ts"></script>';
+  // Each replacer is a function: minified code can hold "$&", which a replacement string reads as the matched text.
   if (template.split(entry).length !== 2 || !template.includes("</head>")) throw new Error("The card entry is not the owned template.");
-  const text = template.replace(entry, `<script>${files["card.js"].replace(/<\/script/gi, "<\\/script")}</script>`).replace("</head>", `<style>${files["card.css"].replace(/<\/style/gi, "<\\/style")}</style></head>`);
+  const text = template.replace(entry, () => `<script>${files["card.js"].replace(/<\/script/gi, "<\\/script")}</script>`).replace("</head>", () => `<style>${files["card.css"].replace(/<\/style/gi, "<\\/style")}</style></head>`);
   const resources = kinds.map(kind => {
     const html = text.replace("<body>", `<body data-screen="${kind}">`);
     return { uri: `ui://dap/${kind}`, name: kind, description: `Compact ${kind} card. Details are read separately through app-only tools.`, text: html, digest: `sha256:${createHash("sha256").update(html).digest("hex")}`, ui: { csp: {}, permissions: {}, prefersBorder: true } };
