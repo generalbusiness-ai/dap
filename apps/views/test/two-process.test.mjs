@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
-import { mkdtempSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, test } from 'node:test';
@@ -102,7 +102,7 @@ async function room(t) {
   return { home, peer, lane, pair, posted, subject: questionSubject(ref, opening.entry.seq), loseNext() { lose = true; },
     holdNext() { let open; held = new Promise(resolve => { open = resolve; }); return open; }, posting() { return new Promise(resolve => { reached = resolve; }); } };
 }
-const records = home => readdirSync(join(home, 'private', 'mcp-custody', 'records')).filter(name => name.endsWith('.json'));
+const records = home => { const directory = join(home, 'private', 'mcp-custody', 'records'); return existsSync(directory) ? readdirSync(directory).filter(name => name.endsWith('.json')) : []; };
 
 const page = async (process_, view, name) => {
   const summary = (await process_.call('view_read', { view })).structuredContent.display;
