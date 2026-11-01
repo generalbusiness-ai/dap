@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "qualification": "One passing gate. The scene ran on the deployed Worker with two homes on one Mac in place of two machines. No desktop AI app ran this code.",
+  "directory": "2026-11-01-join-device",
+  "checkpoint": {
+    "commit": "5718e09cc1d49fa9f7470ed8f38af2b3a6e26bbe",
+    "tree": "8355f42f33f6f39b010e64f102139c98fabbe7d1"
+  },
+  "fileCount": 93,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "e5bb303852774359410929508f22f729cea42b455e9777e9bceb3e5d74858ace"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "controls-head/check-mode.log",
+      "bytes": 27016,
+      "sha256": "34a4f96fe24f6d1ffd33f38259daa96247361e90176f3b2b33156eabc8fefa82"
+    },
+    {
+      "path": "controls-head/device-kind.log",
+      "bytes": 29150,
+      "sha256": "dcc4b230fdd7cdc4daa3cb6261ae579b7ec0b20fb4f08c721c451ec0be1af830"
+    },
+    {
+      "path": "controls-head/handle-binding.log",
+      "bytes": 23989,
+      "sha256": "a1c394478d7cfe53fab0ec73c6c2c203d0cef6eeeeb3b10dcdb157782637f1c9"
+    },
+    {
+      "path": "controls-head/inbox-of-join.log",
+      "bytes": 24605,
+      "sha256": "f0cd1987535bb4564b716498de81798590a8884b84108008bb1eb83f492ed085"
+    },
+    {
+      "path": "controls-head/join-dispatch.log",
+      "bytes": 29594,
+      "sha256": "5a8f304f6d8b7bcbe44be47ebed5d627f4e19aca46888849928fba329ab9b44a"
+    },
+    {
+      "path": "controls-head/pending-cleared.log",
+      "bytes": 27829,
+      "sha256": "c984e11af76f0057ce0fe071fb70c1df42fa1f72544ad846f153c3af9b3f6f48"
+    },
+    {
+      "path": "deployed/steps.log",
+      "bytes": 13736,
+      "sha256": "874824ca632f4c09b492fd28c85522d2e238c04cd0043febd634fce840089854"
+    },
+    {
+      "path": "focused/cli.txt",
+      "bytes": 268,
+      "sha256": "b72be2d5c458885a2b7f63e6cfc0eba25ddd3e1b3c7c3d56dd884c3fad2a66e6"
+    },
+    {
+      "path": "focused/client.txt",
+      "bytes": 260,
+      "sha256": "6dda601447798dba3522d30f21c0540681f7f07babd1ef6667bdbfeb3d633991"
+    },
+    {
+      "path": "focused/mcp-inventory.txt",
+      "bytes": 258,
+      "sha256": "8d6695cbb0826da6403828c14e8347df9be72d38b8a697e87333d13881f22696"
+    },
+    {
+      "path": "focused/page.txt",
+      "bytes": 260,
+      "sha256": "78bb06a7e539499092267cd67aaef4db6ef491170b3880383dbfd468fafe8eb0"
+    },
+    {
+      "path": "focused/scope.txt",
+      "bytes": 265,
+      "sha256": "da51e5bc7cb86ee22450c074f839c7b0203aa360ff8c56e0326c461790a5bba4"
+    },
+    {
+      "path": "focused/seals.txt",
+      "bytes": 1314,
+      "sha256": "89d62e8fc68e6ca697e6dfcda241a32ac4e71df42f4c86efe33784b25758beb2"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6528,
+      "sha256": "fd7ef44ecf5b386f57ab209859b3b785547f7dcb7b47d6fdd705f0f67b1316c2"
+    },
+    {
+      "path": "red-at-head-test-on-main-source.txt",
+      "bytes": 38188,
+      "sha256": "c0dceac34873a62ca1a30e4b20de7c61fbe7f737c55b02a7fc6af50a5f18ccf1"
+    },
+    {
+      "path": "scene-head/dap.log",
+      "bytes": 18151,
+      "sha256": "78e368beaf5da4ff5bf09a358e118664ce130560c25e557ef5980ce14637b238"
+    },
+    {
+      "path": "scene-head/report.json",
+      "bytes": 6477,
+      "sha256": "a19aced303364d4116fdb082cf4263eda38cdf3f04d786cfc6a1f179d7e7b150"
+    },
+    {
+      "path": "gate-failed-1/gate.stdout.log",
+      "bytes": 2872,
+      "sha256": "2a06713d8c2fb7ab3600fb7c4bddb4ae36f1f50ed403a938251af9470a08f425"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 8387,
+      "sha256": "7e74eb37d2ad0106eb619c6eae48eb2b0c37ac4ed278a94ca0dbf07591f94922"
+    }
+  ]
+}

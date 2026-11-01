@@ -1796,7 +1796,9 @@ works. The count given is the default recipe's.
 | `dap create <name>` | `room.create` on the register with the branch, the creator's handle and a recovery key, `wait` with the entry for the created directory and its children, `room.seat`, `room.first-key` with the seat's entry, `wait` for the inbox: 5 | `actions` on the register, `act`, `wait`, `actions` on membership, `act` seat, `act` first-key, `wait`: 7 | 5 |
 | Page: Create room | the same calls as `dap create`: `room.create`, `wait`, `room.seat`, `room.first-key`, `wait`: 5 | the same calls as `dap create`: 7 | 5 |
 | `dap invite <@member> --role <role>` | `member.invite` with the handle, the role, the digest of a secret of at least 32 bytes that the inviter makes, and the end; the inviter passes the link with the number and secret to the member: 1 | `actions` on membership, `act`: 2 | 1 |
+| `dap invite <@member> --device` (local command) | No MCP tool makes the link. The command signs the invitation of a device key and encodes the link it prints | Local only | Local only |
 | `dap join <link>` | `join` with the link, from an empty configuration, then `wait` for the inbox: 2 | `join`, `wait`: 2 | 2 |
+| `dap join <artroom-device-key link>` (local command) | No MCP tool. `join` takes `artroom-invite:` links. The command enrolls a new key in its config directory | Local only | Local only |
 | Page: Join with an invitation link | `join`, `wait`: 2 | `join`, `wait`: 2 | 2 |
 | Page: Rules editor | `inspect` on the rules scope, `rules.publish` with the changed counts and the rest kept: 2 | `inspect`, `actions` on the rules scope, `act`: 3 | 2 |
 | `dap act <kind> --on <scope>` | The act tool of that kind, such as `rules.activate` with the definition's digest, name and bytes: 1 | `actions`, `act`: 2 | 1 |
@@ -1913,7 +1915,8 @@ Enrollment belongs to the membership. Nothing here grants a permission.
    field. The field is `inviteKey`, the invitation's public key, for
    membership@6, @7 or @8. It is `inviteHash`, the secret's digest, for
    legacy membership@2, @4 and @5.
-   The CLI does not expose `dap invite --kind agent-key`. The retained
+   The CLI does not expose `dap invite --kind agent-key`; `dap invite
+   --device` makes only a device key's link. The retained
    issuer is `issueInvitation` in the [CLI API](../packages/cli/src/invitations.ts),
    with `kind: "agent-key"`, the full controller reference and an explicit
    private custody store. It keeps both signed requests before submission,

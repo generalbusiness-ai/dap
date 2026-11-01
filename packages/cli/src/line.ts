@@ -5,10 +5,10 @@
 
 import { parseStrict } from "@generalbusiness/dap-bytes";
 import { applicationInstallation, installApplication } from "./application-install.ts";
-import { enrolAgentKey, enrolCheckerKey, invitePerson } from "./invitations.ts";
-import { AGENT_KEY_LINK, CHECKER_KEY_LINK } from "@generalbusiness/dap-client";
+import { enrolAgentKey, enrolCheckerKey, enrolDeviceKey, invitePerson } from "./invitations.ts";
+import { AGENT_KEY_LINK, CHECKER_KEY_LINK, DEVICE_KEY_LINK } from "@generalbusiness/dap-client";
 import { issueWait } from "./issue-wait.ts";
-import { act, acts, apps, claim, clone, edit, install, installPlanned, invite, issueAssign, issueClose, issueComment, issueOpen, issues, items, join, log, merge, planInstall, propose, remote, show, status, verify, CREATION_INSTALL_COHORTS, type Context, type InstallCohort, type RegisterPolicy, type Outcome } from "./commands.ts";
+import { act, acts, apps, claim, clone, edit, install, installPlanned, invite, inviteDevice, issueAssign, issueClose, issueComment, issueOpen, issues, items, join, log, merge, planInstall, propose, remote, show, status, verify, CREATION_INSTALL_COHORTS, type Context, type InstallCohort, type RegisterPolicy, type Outcome } from "./commands.ts";
 
 export const USAGE = [
   "Usage:",
@@ -26,7 +26,8 @@ export const USAGE = [
   "  dap create <name> [--handle @you] [--branch main] [--again]",
   "  dap invite <@member> --role <role> [--hours 24] [--keep]",
   "  dap invite --check | --continue",
-  "  dap join <link> [--check for an agent-key or checker-key invitation]",
+  "  dap invite <@member> --device [--hours 24]",
+  "  dap join <link> [--check for an agent-key, checker-key or device-key invitation]",
   "  dap acts [<scope>]",
   "  dap act <kind> --on <scope> [--target <item>] [--set name=value ...] [--value <file> ...]",
   "  dap log <scope> [--limit n]",
@@ -54,7 +55,7 @@ export const USAGE = [
 ].join("\n");
 
 /** The flags that take no value. */
-const SWITCHES: ReadonlySet<string> = new Set(["again", "all", "plan", "planned", "check", "keep", "continue", "archive"]);
+const SWITCHES: ReadonlySet<string> = new Set(["again", "all", "plan", "planned", "check", "keep", "continue", "archive", "device"]);
 
 /** The words of a command line: the positional ones, each `--name value`, and each switch; `--set` may be given more than once. */
 export function parse(argv: readonly string[]): { words: string[]; flags: Map<string, string[]> } | null {
@@ -78,7 +79,7 @@ export function parse(argv: readonly string[]): { words: string[]; flags: Map<st
 }
 
 const KNOWN: Record<string, readonly string[]> = {
-  install: ["host", "namespace", "register-policy", "plan", "planned", "cohort", "release", "request", "role", "values", "owner"], application: [], apps: ["cursor"], create: ["handle", "branch", "again"], claim: ["handle", "branch", "again"], invite: ["role", "acts", "hours", "keep", "check", "continue"], join: ["check"], acts: [], act: ["on", "target", "set", "value"], log: ["limit"], items: ["query"], show: [], verify: ["all"], status: ["request"], remote: [], clone: ["hours", "archive"], edit: ["file", "title", "closes"], propose: ["title"], merge: ["closes"], issue: ["title", "body", "hours"], issues: [],
+  install: ["host", "namespace", "register-policy", "plan", "planned", "cohort", "release", "request", "role", "values", "owner"], application: [], apps: ["cursor"], create: ["handle", "branch", "again"], claim: ["handle", "branch", "again"], invite: ["role", "acts", "hours", "keep", "check", "continue", "device"], join: ["check"], acts: [], act: ["on", "target", "set", "value"], log: ["limit"], items: ["query"], show: [], verify: ["all"], status: ["request"], remote: [], clone: ["hours", "archive"], edit: ["file", "title", "closes"], propose: ["title"], merge: ["closes"], issue: ["title", "body", "hours"], issues: [],
 };
 
 /** Runs one command line with the given context. */
@@ -124,12 +125,13 @@ export async function command(ctx: Context, argv: readonly string[]): Promise<Ou
       return first === undefined ? needs("a name") : claim(ctx, first, { ...(flag("handle") ? { handle: flag("handle")! } : {}), ...(flag("branch") ? { branch: flag("branch")! } : {}), ...(flag("again") ? { again: true } : {}) });
     }
     case "invite":
+      if (flag("device") !== undefined) return flag("role") || flag("acts") !== undefined || flag("keep") !== undefined || flag("check") !== undefined || flag("continue") !== undefined ? { code: 2, lines: ["invite --device takes a member's handle and --hours only: a device key keeps the member's role.", USAGE] } : first === undefined ? needs("a member's handle") : inviteDevice(ctx, first, { ...(flag("hours") ? { hours: number("hours")! } : {}) });
       if (flag("check") !== undefined && flag("continue") !== undefined) return { code: 2, lines: ["invite takes --check or --continue, not both.", USAGE] };
       if (flag("check") !== undefined || flag("continue") !== undefined) return first !== undefined || flag("role") || flag("keep") !== undefined || flag("hours") !== undefined || flag("acts") !== undefined ? { code: 2, lines: ["invite --check and --continue take no handle, role, hours or acts: the retained invitation holds them.", USAGE] } : invitePerson(ctx, undefined, { mode: flag("check") !== undefined ? "check" : "continue" });
       if (flag("keep") !== undefined && flag("acts") !== undefined) return { code: 2, lines: ["invite --keep takes no --acts: a role's actions are the roster's.", USAGE] };
       if (flag("keep") !== undefined) return first === undefined ? needs("a member's handle") : invitePerson(ctx, first, { mode: "new", ...(flag("role") ? { role: flag("role")! } : {}), ...(flag("hours") ? { hours: number("hours")! } : {}) });
       return first === undefined ? needs("a member's handle") : invite(ctx, first, { ...(flag("role") ? { role: flag("role")! } : {}), ...(flag("acts") !== undefined ? { acts: flag("acts")! } : {}), ...(flag("hours") ? { hours: number("hours")! } : {}) });
-    case "join": return first === undefined ? needs("a link") : flag("check") !== undefined ? first.startsWith(AGENT_KEY_LINK) ? enrolAgentKey(ctx, first, { mode: "check" }) : first.startsWith(CHECKER_KEY_LINK) ? enrolCheckerKey(ctx, first, { mode: "check" }) : needs("an explicitly tagged agent-key invitation for --check") : join(ctx, first);
+    case "join": return first === undefined ? needs("a link") : flag("check") !== undefined ? first.startsWith(AGENT_KEY_LINK) ? enrolAgentKey(ctx, first, { mode: "check" }) : first.startsWith(CHECKER_KEY_LINK) ? enrolCheckerKey(ctx, first, { mode: "check" }) : first.startsWith(DEVICE_KEY_LINK) ? enrolDeviceKey(ctx, first, { mode: "check" }) : needs("an explicitly tagged agent-key invitation for --check") : join(ctx, first);
     case "acts": return acts(ctx, first);
     case "act":
       if (flag("target") !== undefined && (!/^(0|[1-9][0-9]*)$/.test(flag("target")!) || !Number.isSafeInteger(number("target")))) return { code: 2, lines: ["--target must be a nonnegative item number; a member handle is not accepted here. Nothing was signed or sent."] };

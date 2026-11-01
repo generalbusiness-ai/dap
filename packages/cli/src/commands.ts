@@ -24,6 +24,7 @@ import { applicationList } from "./application-list.ts";
  * | `install` | Creates the register by an `install` intent, signed by a new operator key that is also the one creator key. With `--plan`, it signs the intent and prints the register ID it will create, and creates nothing; `--planned` creates that plan. |
  * | `claim` | Signs the register's `found` act, then waits until the directory, membership, rules scope and destination are created and confirmed. Then it takes the creator's seat and first key in membership. A claim it gave up waiting on is kept as pending, and the next `claim` goes on from it; `--again` signs a new one. |
  * | `invite`, `join` | Membership's `invite-member` and `join`. The link carries the invitation's number and secret; the joining key is made and kept locally. |
+ * | `inviteDevice`, `enrolDeviceKey` | Membership's `invite-key` with kind `device` and `enrol`: a new key of an existing member, by the same kind of private link. |
  * | `acts` | The acts of a scope's definition, with the ones the caller's role holds. |
  * | `act` | One act of any kind, through the client's declared handle for a declared definition, or as a signed intent for a platform one. |
  * | `log`, `show` | The scope's history, and one entry, over the read routes. |
@@ -41,8 +42,8 @@ import { ScopeHandle, ShapeError, TransportError, activeDirectory, partitionInde
 import { CAPABILITY_CODE as REPLAY_CAPABILITY_CODE } from "@generalbusiness/dap-derive";
 import { SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { SourceError, httpSource, render, roomVerification, verify as replay, type FinishedRoom, type HistorySource } from "@generalbusiness/dap-replay";
-import { enrolAgentKey, enrolCheckerKey } from "./invitations.ts";
-import { AGENT_KEY_LINK, CHECKER_KEY_LINK } from "@generalbusiness/dap-client";
+import { enrolAgentKey, enrolCheckerKey, enrolDeviceKey } from "./invitations.ts";
+import { AGENT_KEY_LINK, CHECKER_KEY_LINK, DEVICE_KEY_LINK, encodeDeviceKeyInvitation, isAgentKeyMembership, isDeviceKeyInvitation, type DeviceKeyInvitation } from "@generalbusiness/dap-client";
 const NEW_REGISTER = NEWEST["platform:register"]!;
 
 import type { Config, PendingJoin, PlannedInstall, Store } from "./store.ts";
@@ -527,16 +528,53 @@ export function invite(ctx: Context, member: string, options: { role?: string; a
   });
 }
 
+/**
+ * `dap invite <@member> --device`: membership's `invite-key`, kind `device`, for an active member. The link holds the
+ * invitation's private credential and is printed once. `dap join` or the page redeems it with a new key of that member.
+ */
+export function inviteDevice(ctx: Context, member: string, options: { hours?: number } = {}): Promise<Outcome> {
+  return run(async () => {
+    const config = await configOf(ctx);
+    const repository = config.repository ?? stopCommand(usage("No repository is known here. Run: dap create <name>."));
+    const signer = await signerOf(ctx, config);
+    const M = await handleOf(ctx, config, repository.membership.scope);
+    const before = await summaryOf(M);
+    const held = standing(before.items, signer.key);
+    if (held && !held.actions.includes("membership.invite")) return failed(`Your role ${held.role} does not hold membership.invite, so nothing was signed. Ask an admin of this room to run: dap invite ${member} --device.`);
+    const row = before.items.find((item) => item.type === "member" && item.state === "active" && item.values["handle"] === member);
+    if (!row) return failed(`${member} is no active member of this room. Nothing was signed.`);
+    const { inbox: _inbox, ...shared } = repository;
+    const secret = b64url(fresh(32));
+    const link = (invitation: DeviceKeyInvitation["invitation"], expected: DeviceKeyInvitation["expected"]): DeviceKeyInvitation => ({ v: 1, kind: "device-key", service: new URL(config.service).origin, repository: shared, definition: before.definition, handle: member, invitation, secret, expected });
+    // A link that cannot be encoded must stop before the act: its secret is not kept, so the invitation could not be used.
+    if (!isAgentKeyMembership(before.definition) || !isDeviceKeyInvitation(link({ at: repository.membership, seq: 1, hash: textDigest("") }, { on: 1, member: 1 }))) return failed(`This room's service and membership version ${before.definition} have no device link. Nothing was signed.`);
+    const shape = (await definitionOf(M, before)).shape;
+    const now = ctx.now?.() ?? Date.now();
+    const fields = { member: row.id, kind: "device", ...invitationIssueFields(before.definition, secret), inviteEnds: timeOf(Math.floor(now / 1000) * 1000 + (options.hours ?? 24) * 3600_000) };
+    const signed = await signedIntent(signer, { to: repository.membership, kind: "invite-key", fields, expected: expectedOf(shape.acts["invite-key"]!, before.items, null, fields) }, signing(ctx));
+    const invitation = accepted(await M.submit(signed), M.scope, "Invited").receipt.fact;
+    const after = await summaryOf(M);
+    const roster = after.items.find((item) => item.type === "roster" && item.state === "open"), current = after.items.find((item) => item.type === "member" && item.id === row.id);
+    if (!roster || !current) return failed(`The invitation ${M.scope}:${invitation.seq} took effect, and the roster could not be read after it. Make another device link.`);
+    return done(
+      `Invited a new device of ${member}: invitation ${M.scope}:${invitation.seq}, until ${fields.inviteEnds}.`,
+      `Link for a new device of ${member} only (it holds the invitation's secret): ${encodeDeviceKeyInvitation(link(invitation, { on: roster.revision, member: current.revision }))}`,
+    );
+  });
+}
+
 /** `dap join <link>` resumes the exact enrollment kept before delivery. */
 export function join(ctx: Context, text: string): Promise<Outcome> {
   if (text.startsWith(AGENT_KEY_LINK)) return enrolAgentKey(ctx, text);
   if (text.startsWith(CHECKER_KEY_LINK)) return enrolCheckerKey(ctx, text);
+  if (text.startsWith(DEVICE_KEY_LINK)) return enrolDeviceKey(ctx, text);
   return run(async () => {
     const link = linkOf(text) ?? stopCommand(usage("That is not an invitation link from dap invite."));
     if (!wellFormedInvitation(link)) return usage("That invitation link has invalid repository references.");
     const before = await ctx.store.config();
     if (before?.join?.kind === "enrol") return failed("An original agent enrollment is retained; a person invitation cannot replace it.");
     if (before?.join?.kind === "checker-enrol") return failed("An original checker enrollment is retained; a person invitation cannot replace it.");
+    if (before?.join?.kind === "device-enrol") return failed("An original device enrollment is retained; a person invitation cannot replace it.");
     if (before?.repository) return usage(`This config directory has a repository already: directory ${before.repository.directory.scope}.`);
     if (before && !before.join) return usage("This config directory is set up already; use another config directory to join.");
     const linkDigest = textDigest(canonicalize(link));
