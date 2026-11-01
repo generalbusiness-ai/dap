@@ -5,6 +5,8 @@ import { LEGACY, MODERN, McpService, PACKAGE_BRIEF_URI, PackageResources, ViewRe
 import { sandboxDomain } from "../src/views/hosts.ts";
 import { PRESENTATION } from "../src/views/generated.ts";
 import { MODULE, viewModule } from "../scripts/views.mjs";
+import { DeclaredViewSource } from "../src/views/declared.ts";
+import { applicationCounterNavigationPacket2 } from "../../scope/test/fixtures.ts";
 import { StandIn, SERVICE } from "./support/standin.ts";
 import { fixedSigner } from "./fixtures.ts";
 
@@ -143,4 +145,18 @@ test("both revisions serve one immutable raw Brief without extending HTML policy
   const tooLarge = new Uint8Array(65537);
   expect(() => new PackageResources(views, { bytes: tooLarge, digest: digestBytes(tooLarge) })).toThrow("Brief");
   expect(() => new PackageResources(views).read(PACKAGE_BRIEF_URI)).toThrow("No package Brief");
+});
+
+// A card opens its view on another process by its own opening call, so its body names its screen.
+test("a declared resource carries its own screen, and its digest holds its bytes", async () => {
+  const packet = await applicationCounterNavigationPacket2(true);
+  const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {} as never);
+  const resources = source.presentation.resources;
+  expect(resources.length).toBeGreaterThan(1);
+  for (const resource of resources) {
+    expect(resource.text).toContain(`<body data-screen="${resource.name}" data-declared>`);
+    expect(resource.digest).toBe(digestBytes(utf8(resource.text)));
+  }
+  const views = new ViewResources(source.presentation);
+  expect(views.read(resources[0]!.uri).contents[0]!.text).toBe(resources[0]!.text);
 });

@@ -14,6 +14,8 @@ const root = document.querySelector<HTMLElement>("#card-root")!;
 const bridge = new AppBridge();
 let display: Display | null = null;
 let view = "";
+/** The call that opened this view: the host's tool input, or the card's own call for a declared screen. */
+let openingCall: { tool: string; args: Record<string, unknown> } | null = null;
 let busy = false;
 let notice = "";
 let contextError = "";
@@ -99,6 +101,23 @@ function accept(data: Record<string, unknown>) {
   updateContext();
   scheduleRefresh();
 }
+/** What a person reads when a process change stopped a press or a move. */
+const NOT_REPEATED = "The server process changed before this press arrived, so nothing was sent. Check the card, then press again.";
+/**
+ * A host can send this card's calls to another process of the same home than the model's call, and a process that holds no
+ * view answers `absent`. The opening call opens the view there. It reads and signs nothing beyond the model's own call, and
+ * the card never repeats a press after it. If this fails, a person cannot fix it inside the card, so the words say what to do.
+ */
+async function reopen() {
+  try {
+    if (!openingCall) throw new Error("the card has no opening call");
+    const opened = await bridge.tool(openingCall.tool, openingCall.args);
+    if (opened["view"] !== view) throw new Error("the opening kept another view key");
+  } catch (error) {
+    throw new Error(`This card could not open its view on this server process: ${error instanceof Error ? error.message : String(error)}. No act was sent. Ask for a new card in the chat.`);
+  }
+}
+const isAbsent = (error: unknown) => error instanceof AppToolError && error.reason === "absent";
 async function read(move?: { page?: PageKind; position?: number; refresh?: boolean }) {
   if (busy || !alive) return;
   busy = true; notice = ""; render();
@@ -108,8 +127,13 @@ async function read(move?: { page?: PageKind; position?: number; refresh?: boole
     catch (error) {
       // A model input can advance this retained view between app polls.
       // Recover its current server display; never repeat a stale navigation.
-      if (!(error instanceof AppToolError) || error.reason !== "stale" || !move?.refresh) throw error;
-      data = await bridge.tool("view_read", { view });
+      if (isAbsent(error)) {
+        await reopen();
+        data = await bridge.tool("view_read", { view });
+        if (move && !move.refresh) notice = NOT_REPEATED;
+      }
+      else if (!(error instanceof AppToolError) || error.reason !== "stale" || !move?.refresh) throw error;
+      else data = await bridge.tool("view_read", { view });
     }
     accept(data);
   } finally { busy = false; render(); }
@@ -146,6 +170,7 @@ async function openDeclared(screen: string, items?: Readonly<Record<string, numb
       declaredHistory.push(structuredClone(previous));
     }
     view = key; display = null;
+    openingCall = { tool: viewToolName(screen, true), args: { view: key, ...(items ? { items } : {}), ...(scope ? { scope } : {}) } };
   } finally { busy = false; render(); }
   await read();
   await declaredMode();
@@ -179,7 +204,15 @@ async function act(action: string) {
   busy = true; notice = ""; render();
   let accepted = false;
   try {
-    const data = await bridge.tool("view_act", { view, cut: display.cut, action });
+    let data;
+    try { data = await bridge.tool("view_act", { view, cut: display.cut, action }); }
+    catch (error) {
+      if (!isAbsent(error)) throw error;
+      await reopen();
+      accept(await bridge.tool("view_read", { view }));
+      notice = NOT_REPEATED;
+      return;
+    }
     accept(data);
     const result = data["result"] as { structuredContent?: Record<string, unknown> } | undefined;
     accepted = result?.structuredContent?.["answer"] === "accepted";
@@ -420,6 +453,7 @@ void (async () => {
   const input = await bridge.input();
   if (typeof input["view"] !== "string") throw new Error("The opening tool input has no view key. Open this card again.");
   view = input["view"];
+  openingCall = { tool: viewToolName(document.body.dataset["screen"] ?? "", "declared" in document.body.dataset), args: input };
   await read();
   await declaredMode();
 })().catch(showError);

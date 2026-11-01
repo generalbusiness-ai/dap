@@ -125,6 +125,13 @@ read:
 | A merge your key signed is `unknown`, or this server has an unresolved send at this lane. | **Check original request** only |
 | Another member's merge is `unknown`. | None. The card names the merger. |
 
+The desktop AI app starts two server processes on one home. The model's call
+can reach one process, and the card's calls can reach the other. A process
+keeps its views in memory, so the second process answers `absent`. The card
+then sends its opening call to that process and reads the card there. It never
+repeats a press. The custody record lives on disk under the home, so both
+processes read the same record.
+
 While this server has an unresolved send at the lane, a retained card signs
 nothing. **Check original request** signs nothing either. One minute after the
 request's `notAfter`, which is at most 15 minutes after it was signed, the check
