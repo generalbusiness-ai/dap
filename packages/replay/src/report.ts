@@ -27,8 +27,12 @@ const RESULTS: Record<Report["result"], string> = {
 };
 
 /** The report as lines of plain English. `why`: what was found, when the result is not `consistent`. */
+/** What a result on a shared register covers. A reader can use this line in any summary of the same proof. */
+export const otherRoomsLine = (count: number): string => `This result covers the scopes under Coverage, replayed from their first entries. It does not cover other rooms on this register: ${count === 1 ? "1 of their creation results stands" : `${count} of their creation results stand`} on the service's word, because this reader cannot read their directories.`;
+
 export function render(report: Report, why: string | null = null): string {
   const lines = [`Result: ${RESULTS[report.result]}.`];
+  if (report.otherRooms && report.result === "consistent") lines.push(otherRoomsLine(report.anchors.length));
   if (report.at) lines.push(`At: ${fact(report.at)}.`);
   if (report.name) lines.push(`Named mismatch: ${report.name}.`);
   if (why !== null) lines.push(`Finding: ${why}.`);
@@ -36,7 +40,7 @@ export function render(report: Report, why: string | null = null): string {
   lines.push(`Target: ${scope(report.target.at)}, ${report.result === "consistent" ? "through" : "aiming for"} entry ${report.target.seq} (${report.target.hash}).`);
   lines.push(report.coverage.length === 0 ? "Coverage: no entry." : "Coverage:");
   for (const c of report.coverage) lines.push(`  - ${scope(c.scope)}: entries ${c.from} to ${c.through}`);
-  lines.push(report.anchors.length === 0 ? "Anchors: none." : "Anchors, taken on the caller's word (including values observed at these heads):");
+  lines.push(report.anchors.length === 0 ? "Anchors: none." : report.otherRooms ? "Anchors, other rooms' creation results, taken on the service's word:" : "Anchors, taken on the caller's word (including values observed at these heads):");
   for (const a of report.anchors) lines.push(`  - ${fact(a)}`);
   const { verified, anchored, missing } = report.dependencies;
   lines.push(`Foreign facts: ${verified} shown by replay of their source scope, ${anchored} taken from an anchor, ${missing.length} missing.`);

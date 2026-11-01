@@ -38,7 +38,7 @@
  */
 
 import { DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Bounds, CapabilityName, Digest, Entry, FactRef, Grant, Head, KeyId, Observation, ObservationRequest, ObservationUse, MismatchName, PlatformData, PlatformDefinition, Report, RetainedInput, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Seed, Bounds, CapabilityName, Digest, Entry, FactRef, Grant, Head, KeyId, Observation, ObservationRequest, ObservationUse, MismatchName, PlatformData, PlatformDefinition, Report, RetainedInput, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { rawRetainedJSON, domainRetainedJSON, canonicalize, intentDigest, isDigest, isEntry, isObservationUse, isPlatformDefinition, natural, parseStrict, platformName, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import {
   AmountError, ByteUsage, bound, capacityFull, namedDeclarations, amountMath, subtract, NOTHING, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeAct, judgeCheckpoint, judgeDelivery,
@@ -84,6 +84,12 @@ export interface Options {
   head?: Head | undefined;
   /** Facts taken on trust. An anchor covers exactly the entry it names. */
   anchors?: readonly Anchor[] | undefined;
+  /**
+   * The reader's own directory, on a register that several rooms share. Each room's directory admits only that room's members, so a reader cannot replay the
+   * first entry of another room's directory. With this option, a register's creation result from another room's directory stands on the service's word, when the service refuses that read and the register's own request created that directory.
+   * The report says so. It never covers this directory's own result.
+   */
+  otherRooms?: { ownDirectory: ScopeId } | undefined;
   publishedAnchorPolicies?: ReadonlyMap<ScopeId, PublishedAnchorPolicy> | undefined;
   limits?: Partial<Limits> | undefined;
   /** The bounds the scopes run under. A replay scans every range guard to its end, whatever `guardScan` says (section 9.3). */
@@ -243,6 +249,7 @@ export interface FinishedRoom {
   readonly coverage: readonly (Report["coverage"][number] & { readonly root: ScopeId })[];
   readonly trusts: Report["trusts"];
   readonly anchors: Report["anchors"];
+  readonly otherRooms?: true;
   readonly dependencies: Report["dependencies"];
   readonly redacted: Report["redacted"];
   readonly texts: readonly { readonly digest: Digest; readonly source: ScopeRef; readonly root: ScopeId; readonly consumers: readonly ScopeId[] }[];
@@ -286,6 +293,7 @@ export const TRUSTS = {
   dispatched: "that the outside effects which a preparation entry opened were dispatched only after that entry was sealed",
   staged: "staged-ref-read: that the Git host returned the snapshot of staged refs and the head that each ancestry record names, when the staging lane read them, and that the lane kept what was returned",
   anchors: "the caller's anchors, including any value observed at an anchored head and each retained definition name",
+  otherRooms: "other rooms' creation results: that each entry listed under Anchors is the first entry of another room's directory, as the service says. This reader cannot read those directories, so those rooms' histories were not replayed",
   bounds: "the bounds: each scope is taken to run under the bounds this replay was given",
   redacted: "each redacted text: its bytes are gone, so nothing shows that they were the text its digest names, or that they were within the bound of their field",
   omitted: "each text that the archive omits: its digest, its byte count and the first entry that names it; nothing shows that the bytes were the text its digest names, or that they were within the bound of their field",
@@ -455,6 +463,7 @@ class Verifier {
   #target: ScopeId;
   #expected: Head | null;
   readonly #anchors: readonly Anchor[];
+  readonly #otherRooms: Options["otherRooms"];
   readonly #publications: ReadonlyMap<ScopeId, PublishedAnchorPolicy> | undefined;
   readonly #consulted = new Map<ScopeId, Map<PublishedAnchorPolicy["ranges"][number], Set<FactRef>>>();
   readonly #limits: Limits;
@@ -534,6 +543,7 @@ class Verifier {
     this.#target = options.scope;
     this.#expected = options.head ?? null;
     this.#anchors = options.anchors ?? [];
+    this.#otherRooms = options.otherRooms;
     this.#publications = options.publishedAnchorPolicies;
     this.#limits = { ...LIMITS, ...options.limits };
     // Section 9.3: each range guard is derived over every item it covers, so the scan never stops unfinished.
@@ -768,7 +778,7 @@ class Verifier {
       return origin ? [{ digest, source: origin.fact.at, root: origin.root, consumers: [...users] }] : [];
     });
     this.#live();
-    return { roots, coverage, trusts: report?.trusts ?? [], anchors: report?.anchors ?? [], dependencies: { verified: report?.dependencies.verified ?? 0, anchored: report?.dependencies.anchored ?? 0, missing: [...missing.values()] },
+    return { roots, coverage, trusts: report?.trusts ?? [], anchors: report?.anchors ?? [], ...(report?.otherRooms ? { otherRooms: true as const } : {}), dependencies: { verified: report?.dependencies.verified ?? 0, anchored: report?.dependencies.anchored ?? 0, missing: [...missing.values()] },
       redacted: report?.redacted ?? [], texts, ...(report?.omittedTexts ? { omittedTexts: report.omittedTexts } : {}), ...(report?.incompleteBytes ? { incompleteBytes: report.incompleteBytes } : {}) };
   }
 
@@ -1004,6 +1014,7 @@ class Verifier {
       target: stop || !through ? { at, seq: target.head.seq, hash: target.head.hash } : { at, seq: through.entry.seq, hash: through.hash },
       coverage: covered.map((run) => ({ scope: run.at!, from: 0, through: run.sealed.length - 1 })),
       anchors: this.#anchored,
+      ...(this.#trusts.has("otherRooms") ? { otherRooms: true as const } : {}),
       dependencies: { verified: proven.filter((how) => how === "replayed").length, anchored: proven.filter((how) => how === "anchored").length, missing: stop?.missing ? [stop.missing] : [] },
       trusts: [...(Object.keys(TRUSTS) as Trust[]).filter((trust) => this.#trusts.has(trust) && (trust !== "redacted" || redacted.length > 0) && (trust !== "omitted" || omittedTexts.length > 0)).map((trust) => TRUSTS[trust]), ...[...this.#coded].sort().map(platformCode)],
       redacted,
@@ -1491,6 +1502,22 @@ class Verifier {
    * that entry, or by replay of the source scope up to it. `user` is the
    * entry that used the fact.
    */
+  /**
+   * A register's creation result from another room's directory: the entry under judgment delivers this exact fact, and an earlier entry of this register
+   * sent the request that created that directory. A relabelled result names a directory other than its request's, so it stays unproven.
+   */
+  #otherRoomResult(fact: FactRef, user: FactRef, entry: Entry | undefined): boolean {
+    const own = this.#otherRooms?.ownDirectory, input = entry?.input;
+    if (!own || input?.type !== "delivery" || !same(input.from, fact) || input.message.class !== "result" || input.message.outcome !== "applied") return false;
+    if (fact.seq !== 0 || fact.at.kind !== "directory" || fact.at.scope === own) return false;
+    const run = this.#runs.get(user.at.scope), of = input.message.of;
+    if (run?.at?.kind !== "register" || !sameScope(of.from.at, run.at)) return false;
+    const request = run.sealed[of.from.seq];
+    if (!request || request.hash !== of.from.hash) return false;
+    const to = request.entry.sends[of.n]?.to;
+    return !!to && "creator" in to && to.kind === "directory" && scopeIdOf(to as Seed) === fact.at.scope;
+  }
+
   #anchor(fact: FactRef, user: FactRef): boolean {
     if (!this.#anchors.some(a => a.scope === fact.at.scope && a.seq === fact.seq && a.hash === fact.hash)) return false;
     if (!this.#publications) return true;
@@ -1513,7 +1540,7 @@ class Verifier {
     return true;
   }
 
-  async #prove(fact: FactRef, user: FactRef, depth: number): Promise<"replayed" | "anchored"> {
+  async #prove(fact: FactRef, user: FactRef, depth: number, entry?: Entry): Promise<"replayed" | "anchored"> {
     this.#live();
     const key = this.#room ? canonicalize(fact) : `${fact.at.scope}:${fact.seq}:${fact.hash}`;
     const known = this.#proven.get(key);
@@ -1554,6 +1581,13 @@ class Verifier {
         : this.#anchors;
       const conflict = eligible.find(anchor => anchor.scope === fact.at.scope && anchor.seq === fact.seq);
       if (conflict) throw new Stop("mismatch", `the caller's anchor for entry ${fact.seq} of ${fact.at.scope} names hash ${conflict.hash}, but the required reference names ${fact.hash}`, user);
+      if (opened === "forbidden" && this.#otherRoomResult(fact, user, entry)) {
+        this.#proven.set(key, "anchored");
+        this.#proofFacts.set(key, fact);
+        if (!this.#anchored.some(known => same(known, fact))) this.#anchored.push(fact);
+        this.#trust("otherRooms");
+        return "anchored";
+      }
       throw new Stop("missing-dependency", `the history of the source scope ${fact.at.scope} cannot be read, and no anchor names its entry ${fact.seq}`, user, fact);
     }
     this.#live();
@@ -2031,7 +2065,7 @@ class Verifier {
     const proved = new Map<string, "replayed" | "anchored">();
     for (const fact of distinctForeign) {
       if (!isFactRef(fact)) throw mismatch("a reference is not a fact reference");
-      proved.set(canonicalize(fact), await this.#prove(fact, where, depth));
+      proved.set(canonicalize(fact), await this.#prove(fact, where, depth, entry));
     }
     const identity = await this.#receiverEvidence(run, entry, where, depth);
     for (const fact of distinctForeign) {

@@ -43,7 +43,7 @@ test("verify --all refuses incomplete room discovery at its page bound and retai
 // explicit STAND-INs. This is dependency replay, not a Native room proof.
 import type { Digest, Request, RetainedInput, ScopeId } from "@generalbusiness/dap-contract";
 import { canonicalize, timeMs } from "@generalbusiness/dap-bytes";
-import { clockOf, judgeDelivery, judgeGenesis } from "@generalbusiness/dap-derive";
+import { clockOf, judgeDelivery, judgeGenesis, useOf } from "@generalbusiness/dap-derive";
 import { Ledger } from "@generalbusiness/dap-derive/testing";
 import { repositoryName } from "@generalbusiness/dap-platform";
 import { MemorySource, type MemoryScope } from "@generalbusiness/dap-replay";
@@ -76,11 +76,11 @@ function broadRegister() {
     }
     return { scope: ledger.at, entries: ledger.entries.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained };
   });
-  return { R, children, memory: new MemorySource(scopes, 32) };
+  return { R, children, scopes, memory: new MemorySource(scopes, 32) };
 }
 
-async function broadContext(wide: ReturnType<typeof broadRegister>, discovery: "empty" | "wide", progress: string[], refusal?: "forbidden" | "unavailable") {
-  const { R, children, memory } = wide, D = children[0]!;
+async function broadContext(wide: Pick<ReturnType<typeof broadRegister>, "R" | "children" | "memory">, discovery: "empty" | "wide", progress: string[], refusal?: "forbidden" | "unavailable", refused?: (scope: ScopeId) => boolean, ownAt = 0) {
+  const { R, children, memory } = wide, D = children[ownAt]!;
   const store = memoryStore(); await store.keep("device", rita.secret);
   await store.save({ v: 1, service: "https://service.test", key: "device", repository: { directory: D.at, membership: { ...D.at, kind: "membership" }, rules: D.at.scope, destination: D.at.scope } });
   const logs = new Set<ScopeId>(), histories: ScopeId[] = [], logPages = new Map<string, number>();
@@ -107,7 +107,7 @@ async function broadContext(wide: ReturnType<typeof broadRegister>, discovery: "
       logs.add(scope);
       const page = `${scope}:${address.searchParams.get("cursor") ?? "0"}`;
       logPages.set(page, (logPages.get(page) ?? 0) + 1);
-      if (refusal && scope === D.at.scope) return Response.json({ ok: false, reason: refusal }, { status: refusal === "forbidden" ? 403 : 503 });
+      if (refusal && (refused ? refused(scope) : scope === D.at.scope)) return Response.json({ ok: false, reason: refusal }, { status: refusal === "forbidden" ? 403 : 503 });
       const got = await memory.page(scope, Number(address.searchParams.get("cursor") ?? 0), { entries: 32, bytes: 4 * 1024 * 1024 });
       return Response.json(got.ok ? { ok: true, at: got.page.head, complete: got.page.next === null, value: { scope: got.page.scope, entries: got.page.entries }, ...(got.page.next === null ? {} : { next: String(got.page.next) }) } : got);
     }
@@ -195,5 +195,84 @@ test("only an actual Session-forbidden Directory genesis matching the replay's n
       expect(outcome.lines.join("\n")).not.toContain("not readable by this session");
     }
     expect(outcome.lines.at(-1)).not.toMatch(/^All consistent/);
+  }
+});
+
+// Each room's directory admits only its own members. The refusal of other rooms' directories is SCRIPTED, and the journals are judged bytes.
+const otherRoomsRefused = (wide: ReturnType<typeof broadRegister>) => {
+  const own = wide.children[0]!.at.scope, others = new Set(wide.children.map(child => child.at.scope).filter(scope => scope !== own));
+  return { own, others, refused: (scope: ScopeId) => others.has(scope) };
+};
+
+test("a second room verifies its own room: other rooms' creation results stand on the service's word, and the report says what that result covers", async () => {
+  const wide = broadRegister(), { refused, others } = otherRoomsRefused(wide);
+  const { ctx } = await broadContext(wide, "empty", [], "forbidden", refused);
+  const outcome = await command(ctx, ["verify", wide.R.at.scope]);
+  expect(outcome.code, outcome.lines.slice(0, 6).join("\n")).toBe(0);
+  expect(outcome.lines[0]).toBe("Result: consistent, for the mode, target, coverage and trusts stated below.");
+  expect(outcome.lines[1], "WHAT IT COVERS: the second line says what stands on the service's word").toBe("This result covers the scopes under Coverage, replayed from their first entries. It does not cover other rooms on this register: 64 of their creation results stand on the service's word, because this reader cannot read their directories.");
+  expect(outcome.lines, "THE ANCHORS have their own heading").toContain("Anchors, other rooms' creation results, taken on the service's word:");
+  expect(outcome.lines.join("\n"), "THE TRUST is stated").toContain("other rooms' creation results: that each entry listed under Anchors is the first entry of another room's directory, as the service says.");
+  const heading = outcome.lines.indexOf("Anchors, other rooms' creation results, taken on the service's word:");
+  const anchors = outcome.lines.slice(heading + 1, heading + 65);
+  expect(anchors.every(line => line.startsWith("  - entry 0 of ")), anchors.slice(0, 2).join("\n")).toBe(true);
+  expect(anchors.every(line => [...others].some(scope => line.includes(scope))), "EVERY ANCHOR is another room's").toBe(true);
+  expect(anchors.some(line => line.includes(wide.children[0]!.at.scope)), "THE OWN DIRECTORY is no anchor").toBe(false);
+
+  const all = await command(ctx, ["verify", "--all"]);
+  expect(all.code, all.lines.slice(-6).join("\n")).toBe(0);
+  expect(all.lines.at(-1), "--all: the last line says the same").toBe("All consistent: 2 scopes, and 64 creation results of other rooms on the service's word.");
+  expect(all.lines[0]).toContain("It does not cover other rooms on this register: 64 of their creation results");
+});
+
+test("the first room of a register reads as a full replay: no line about other rooms", async () => {
+  const wide = broadRegister();
+  const { ctx } = await broadContext(wide, "empty", []);
+  const outcome = await command(ctx, ["verify", wide.R.at.scope]);
+  expect(outcome.code).toBe(0);
+  expect(outcome.lines.join("\n")).not.toContain("other rooms");
+  expect(outcome.lines).toContain("Anchors: none.");
+});
+
+/** A server's forged register: a change to one entry, each later entry sealed again, so the chain holds. */
+function forged(wide: ReturnType<typeof broadRegister>, change: (entry: Entry) => Entry | null, retained: RetainedInput[] = []) {
+  let prev: Digest | null = null, seq = 0;
+  const entries: MemoryScope["entries"] = [];
+  for (const { entry } of wide.R.entries) {
+    const next = change(entry);
+    if (!next) continue;
+    const moved: Entry = { ...next, seq, prev };
+    const hash = entryHash(moved);
+    entries.push({ seq, hash, bytes: canonicalize(moved) }); prev = hash; seq++;
+  }
+  const scopes = wide.scopes.map(scope => scope.scope.scope === wide.R.at.scope ? { ...scope, entries, retained: [...scope.retained, ...retained] } : scope);
+  return { R: wide.R, children: wide.children, memory: new MemorySource(scopes, 32) };
+}
+
+// The own room is the second room here, so the first room's request is already sealed when the forged result arrives.
+test("a server that relabels this room's own result as another room's fails the proof", async () => {
+  const wide = broadRegister(), ownAt = 1, own = wide.children[ownAt]!, theirs = wide.children[0]!;
+  const refused = (scope: ScopeId) => scope !== own.at.scope && wide.children.some(child => child.at.scope === scope);
+  const results = (scope: ScopeId) => wide.R.entries.find(({ entry }) => entry.input.type === "delivery" && entry.input.message.class === "result" && entry.input.from.at.scope === scope)!.entry;
+  const ownResult = results(own.at.scope), theirResult = results(theirs.at.scope);
+  const relabelUses = (from: unknown, use: unknown) => (entry: Entry) => entry.seq === ownResult.seq ? { ...entry, input: { ...entry.input, from }, uses: [use] } as Entry : entry;
+  const relabel = (fields: (input: { from: unknown; message: { of: unknown } }) => object) => (entry: Entry) => entry.seq === ownResult.seq ? { ...entry, input: { ...entry.input, ...fields(entry.input as never) } } as Entry : entry;
+  // The strongest form: an invented entry, named as the last room's first entry and retained for the reader, with that room's real result removed from the end. Only that room's readers could compare the hash.
+  const last = wide.children.at(-1)!, lastResult = results(last.at.scope);
+  const invented: Entry = { ...own.entries[0]!.entry, at: last.at };
+  const inventedFact = { at: last.at, seq: 0, hash: entryHash(invented) }, inventedUse = useOf(inventedFact, invented);
+  const inventedCopy: RetainedInput = { kind: "entry", digest: inventedUse.content, bytes: canonicalize(invented), under: own.definition.declared.name };
+  const variants: Record<string, [(entry: Entry) => Entry | null, string, RetainedInput[]?]> = {
+    "an invented source entry": [(entry: Entry) => entry.seq === lastResult.seq ? null : relabelUses(inventedFact, inventedUse)(entry), `Result: not proven: needs ${last.at.scope} entries 0 to 0, not readable by this session.`, [inventedCopy]],
+    "the source alone": [relabel(() => ({ from: theirs.fact(0) })), `Result: not proven: needs ${theirs.at.scope} entries 0 to 0, not readable by this session.`],
+    "the source and the request": [relabel(input => ({ from: theirs.fact(0), message: { ...input.message, of: (theirResult.input as { message: { of: unknown } }).message.of } })), "Result: mismatch: the history is not consistent."],
+    "a whole copy of their result": [(entry: Entry) => entry.seq === ownResult.seq ? { ...entry, input: theirResult.input, uses: theirResult.uses } as Entry : entry, "Result: mismatch: the history is not consistent."],
+  };
+  for (const [name, [change, words, retained]] of Object.entries(variants)) {
+    const { ctx } = await broadContext(forged(wide, change, retained), "empty", [], "forbidden", refused, ownAt);
+    const outcome = await command(ctx, ["verify", wide.R.at.scope]);
+    expect(outcome.code, `${name}: ${outcome.lines.slice(0, 5).join(" | ")}`).toBe(1);
+    expect(outcome.lines[0], name).toBe(words);
+    expect(outcome.lines.join("\n"), name).not.toContain("on the service's word, because");
   }
 });

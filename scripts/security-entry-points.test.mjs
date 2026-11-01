@@ -46,7 +46,7 @@ const namedOwners = {
     "packages/scope/src/worker.ts:McpAgent": "a36d308c7bd5a575e6784a307fb3b404eb2187d39da8a93294eea2217b765c8f",
   },
   "packages/cli/src/commands.ts": {
-    "packages/cli/src/commands.ts:$module": "1c370675d41960108df506b0a47617f19b34e99c727918f9b6fd0a7157078f57", // Reviewed room-proof import, both helper declarations, separate checker dispatch and retained-clone helpers; exit code 3 and the export of issueNamed for dap issue wait.
+    "packages/cli/src/commands.ts:$module": "1d6affdc7ddc86d7a349038bb0b6c601003509908f2caf6d7ab5d323552351e6", // Reviewed room-proof import, both helper declarations, separate checker dispatch and retained-clone helpers; exit code 3 and the export of issueNamed for dap issue wait.
     "packages/cli/src/commands.ts:NEW_REGISTER": "f828e83eeb39a37566e323156efb63274fc43b1d6b9e95b38fbf0cdbba327fbf",
     "packages/cli/src/commands.ts:short": "62f9d565f48fc73fc6b282a941d6d37a48055c6c32f2ef88f21b22ead55f6e57",
     "packages/cli/src/commands.ts:scopeIndexAccess": "b54a6859075907491f4c19313b149572acd5b3bd94c492d61fb342601759c299",
@@ -88,12 +88,13 @@ const namedOwners = {
     "packages/cli/src/commands.ts:show": "e5008fae01934cb48b95ed52c0f9108c9f2f8799ef8072e61b80f1abe2823fc9",
     "packages/cli/src/commands.ts:sessionDeniedDependency": "72ee1a12a97166f54168dc35ab2bbb59a0c51f172d1a3c7dbf7d4ef3f1d187b7", // Narrow final-summary input retains the exact permission evidence.
     "packages/cli/src/commands.ts:replaySource": "e2b4cc945442035616ec92e9ab07f44170a5f3014f3444feb49582e46d831064", // One authenticated source, with separate count and unique accounting paths.
-    "packages/cli/src/commands.ts:replayOf": "a75355cce1d2c514be8cfb52ef6050d5334d70698ee90b64b0c33e354f1849eb", // Standalone traversal and its count budget remain isolated.
+    "packages/cli/src/commands.ts:otherRoomsOf": "7c301eee78006007a2f2a6cdfdfbfb73f7224782dd9b8fe3173303a1eec4ead7", // A reader's own directory, for the verifier's other-rooms rule. It widens no read.
+    "packages/cli/src/commands.ts:replayOf": "e4f3f261612d3e755c94a4a19d8d54920d4f938c9e30cee8caafd59f12c3fdac", // Standalone traversal and its count budget remain isolated.
     "packages/cli/src/commands.ts:verificationContext": "bc38c07b7cbcbaa2118086aaf05068fc05d2cd90b1994edc81968e48788c41b6",
     "packages/cli/src/commands.ts:verifyScopeCommand": "4dd727df2ca467fbf11c1d3bd3219dc74ed2a0a12bdd1045f9e8879d0508b598",
     "packages/cli/src/commands.ts:roomScopes": "c128a0c451a22e0cee69335e6ca7d72a0417bfd0699bf5d22bb051edcc6b3fda", // Discovery validates actual entry identities without granting proof.
-    "packages/cli/src/commands.ts:sharedProofLines": "a458a3312582fbbbb9adc7a36c9fb7d15d52aa4706f9f5fafd512bab8c2986cd", // One union disclosure, with prefix and checked-content provenance.
-    "packages/cli/src/commands.ts:verifyAll": "6219ce89a2d1f4734c71d15956ea5694bfca6561fda3b7e654e35d6eca898e3b", // Final summaries follow union validation; cleanup uses the checked target.
+    "packages/cli/src/commands.ts:sharedProofLines": "e549a716ca1e5e2dce6deae3196eab99740493badc0e025f941292aa175ffb33", // One union disclosure, with prefix and checked-content provenance.
+    "packages/cli/src/commands.ts:verifyAll": "abed4baea2213f8387369e5699bc114055b1a2ead05fa2f619a203240258065f", // Final summaries follow union validation; cleanup uses the checked target.
     "packages/cli/src/commands.ts:OWN_HOST": "d8049ba56c1494f7f9ab575b4ccdbe4ea8192229bb9d2a280bbb4528e1c5784a",
     "packages/cli/src/commands.ts:remoteOf": "57afba6cdd6f9169d7366eb5641f61a52a420f55ba723bff6922bfc6332496a9",
     "packages/cli/src/commands.ts:remoteLine": "1eb8d789b8f70e63d8b28176c5b5f923eeae5065c26a17487274295b2803d354",
