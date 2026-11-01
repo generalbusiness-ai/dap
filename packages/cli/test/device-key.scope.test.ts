@@ -197,4 +197,3 @@ describe("a second device of one member, by dap invite --device and dap join", (
     expect([unusable.repository, unusable.handle, unusable.join?.accepted !== undefined]).toEqual([undefined, undefined, true]);
   }), 60_000);
 });
-
