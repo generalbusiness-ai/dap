@@ -11,7 +11,7 @@ async function call(ctx: Context, custody: CustodyStore, applicationFetch: ((req
   if (!config?.repository) return { code: 2, lines: ["Configure a trusted-application or declared-application room before installing a package."] };
   const secret = ctx.store.signer ? null : (await ctx.store.secret(config.key))?.slice() ?? null;
   const signer = ctx.store.signer ? await ctx.store.signer(config.key) : secret ? secretSigner(secret) : null;
-  if (!signer) { secret?.fill(0); return { code: 1, lines: ["The configured signing key is unavailable; nothing was signed or sent."] }; }
+  if (!signer) { secret?.fill(0); return { code: 1, lines: ["The configured signing key is unavailable. This call signed and sent nothing, and it did not read the record under this request key. Keep the original request key and arguments."] }; }
   try {
     const service = new McpService({ service: config.service, signer, custody, applicationTrust,
       config: { read: async () => {

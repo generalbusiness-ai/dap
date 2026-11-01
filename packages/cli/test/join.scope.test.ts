@@ -1,6 +1,6 @@
 import { expect, test, onTestFinished } from "vitest";
-import type { SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, factRefOf, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import type { FactRef, SignedIntent } from "@generalbusiness/dap-contract";
+import { b64url, factRefOf, textDigest, timeMs, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { invitationIssueFields, invitationRedemptionFields, secretSigner, signedIntent, type Fetch } from "@generalbusiness/dap-client";
 import { net } from "@generalbusiness/dap-scope/testing";
 import { beginSessionFixture } from "../../scope/test/session-settings.ts";
@@ -36,6 +36,8 @@ test.each(["platform:membership@2", "platform:membership@6", "platform:membershi
     let hideInbox = true;
     let wrongReceipt = false;
     let wrongSettlement = false;
+    let unavailableSettlement = false;
+    let settledFact: FactRef | null = null;
     const sent: SignedIntent[] = [];
     const initialAnswers: unknown[] = [];
     const fetch = (async (url: string, init?: RequestInit) => {
@@ -56,6 +58,12 @@ test.each(["platform:membership@2", "platform:membership@6", "platform:membershi
         const answer = await response.json() as { receipt?: { fact: { at: { inc: string } } } };
         if (!answer.receipt) return Response.json(answer);
         answer.receipt.fact.at.inc = (await O.at()).inc;
+        return Response.json(answer);
+      }
+      if (path.endsWith("/settle") && unavailableSettlement) return Response.json({ ok: false, reason: "unavailable" });
+      if (path.endsWith("/settle") && settledFact) {
+        const answer = await response.json() as { value: { fact: unknown } };
+        answer.value.fact = settledFact;
         return Response.json(answer);
       }
       if (path.endsWith("/settle") && wrongSettlement) {
@@ -89,13 +97,13 @@ test.each(["platform:membership@2", "platform:membership@6", "platform:membershi
     // refuses it because the accepted join already used this key/invitation.
     const fresh = await signedIntent(secretSigner(key), { to: linkData.repository.membership, kind: "join", fields: invitationRedemptionFields(definition, linkData.repository.membership, invitation, secretSigner(key).key, invitationSecret) }, { now: timeMs(net.clock.now)! });
     expect(await M.stub.submit(fresh, [])).toMatchObject({ answer: "refused", reason: "unauthorized" });
-    expect(await command({ ...ctx }, ["join", `artroom-invite:${b64url(utf8(JSON.stringify({ ...linkData, handle: "@other" })))}`])).toMatchObject({ code: 1, lines: [expect.stringMatching(/^The invitation link does not match/)] });
+    expect(await command({ ...ctx }, ["join", `artroom-invite:${b64url(utf8(JSON.stringify({ ...linkData, handle: "@other" })))}`])).toMatchObject({ code: 1, lines: ["The invitation link does not match the pending join. This run sent nothing, and an earlier send of this join has no known outcome. Retry the original invitation link."] });
     expect(sent).toHaveLength(1);
     // A different valid envelope for the same link/key cannot refresh the
     // saved deadline or idempotency key by changing the private pointer.
     await store.keepPrivate("join-other", utf8(JSON.stringify(fresh)));
     await store.save({ ...unsatisfied, join: { ...pending, request: "join-other" } });
-    expect(await run()).toMatchObject({ code: 1, lines: ["The saved join does not match this invitation, membership and signing key; nothing was submitted."] });
+    expect(await run()).toMatchObject({ code: 1, lines: ["The saved join does not match this invitation, membership and signing key. This run sent nothing, and an earlier send of this join has no known outcome."] });
     expect(sent).toHaveLength(1);
     await store.save(unsatisfied);
     net.clock.now = timeOf(timeMs(net.clock.now)! + 30_000);
@@ -113,12 +121,25 @@ test.each(["platform:membership@2", "platform:membership@6", "platform:membershi
     // A stored marker for another real entry cannot replace the exact join.
     const beforeSettlement = sent.length;
     await store.save({ ...accepted, join: { ...accepted.join!, accepted: factRefOf((await M.entries())[invitation]!) } });
-    expect(await run()).toMatchObject({ code: 1, lines: ["The saved accepted fact does not match this exact join; nothing was submitted."] });
+    expect(await run()).toMatchObject({ code: 1, lines: ["The saved accepted fact does not match this exact join. This run sent nothing, and an earlier send of this join went ahead."] });
     expect(sent).toHaveLength(beforeSettlement);
     await store.save(accepted);
     wrongSettlement = true;
-    expect(await run()).toMatchObject({ code: 1, lines: ["The saved accepted fact does not match this exact join; nothing was submitted."] });
+    expect(await run()).toMatchObject({ code: 1, lines: ["The saved accepted fact does not match this exact join. This run sent nothing, and an earlier send of this join went ahead."] });
     wrongSettlement = false;
+    // The settlement and the saved marker agree on a hash that the join's own entry does not have. This join went ahead in an earlier run.
+    settledFact = { ...accepted.join!.accepted!, hash: textDigest("another entry") };
+    await store.save({ ...accepted, join: { ...accepted.join!, accepted: settledFact } });
+    expect(await run()).toMatchObject({ code: 1, lines: ["The admitted entry does not match this exact join. The join request went ahead, and the join remains pending. Retry the original invitation link."] });
+    settledFact = null;
+    await store.save(accepted);
+    unavailableSettlement = true;
+    expect(await run()).toMatchObject({ code: 1, lines: ["Cannot confirm the saved join: unavailable. The exact request remains pending. This run sent nothing, and an earlier send of this join went ahead."] });
+    unavailableSettlement = false;
+    await store.save({ ...accepted, join: { ...accepted.join!, repository: { ...accepted.join!.repository, inbox: M.name } } });
+    expect(await run()).toMatchObject({ code: 1, lines: ["The saved inbox does not match this join. The join request went ahead, and the join remains pending. Retry the original invitation link."] });
+    await store.save(accepted);
+    expect(sent).toHaveLength(beforeSettlement);
     net.clock.now = timeOf(timeMs(saved.intent.notAfter)! + 1000);
     await M.restart();
     await new Platform(accepted.join!.repository.inbox!).restart();

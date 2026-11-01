@@ -68,6 +68,25 @@ test("connection custody reserves before the shared sender and retains opaque or
   expect(shared.issueInvitation).toHaveBeenCalledTimes(callsBefore); expect(posts).toBe(2);
 });
 
+test("a creator proof that fails does not call a saved connection unsent", async () => {
+  const f = fixture();
+  // SCRIPTED: Start's Check gives no repository, so this stop reads no connection journal.
+  creator.startRoom.mockImplementation(async () => ({ ...expected, repository: null, signer: secretSigner(seed), configured: { register, definition: "platform:register@7" }, handle: "@founder", label: "Room", pending: true, outcome: { code: 1, lines: [] } }));
+  const stopped = await connectInvitation(origin, f.storage, expected, { kind: "person", handle: "@guest", role: "member", hours: 24 }, { mode: "continue", locks }).then(() => "no stop", (error: Error) => error.message);
+  expect(stopped).toBe("The original creator proof is not verified. Check the original Start. This step sent nothing. A saved connection stays kept, and an earlier send of it can have gone.");
+  expect(shared.issueInvitation).not.toHaveBeenCalled();
+});
+
+test("a press for a row that this browser no longer holds cannot say what an earlier send did", async () => {
+  const { storage } = fixture();
+  const input: InvitationIssueInput = { kind: "person", handle: "@guest", role: "member", hours: 24 };
+  for (const mode of ["check", "continue"] as const) {
+    const stopped = await connectInvitation(origin, storage, expected, input, { mode, locks }).then(() => "no stop", (error: Error) => error.message);
+    expect(stopped).toBe("There is no retained original connection. This step sent nothing, and this browser cannot say whether an earlier send of a connection went.");
+  }
+  expect(shared.issueInvitation).not.toHaveBeenCalled();
+});
+
 test("dropped connection reservation dispatches nothing; agent input uses the verified controller and public configuration exports no browser key", async () => {
   const f = fixture();
   const dropped: ClaimStorage = { getItem: () => null, setItem: () => {} };

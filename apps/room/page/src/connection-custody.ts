@@ -54,7 +54,7 @@ async function withCreator<T>(origin: string, storage: ClaimStorage, expected: C
   const result = await startRoom(origin, storage, { ...options, mode: "check" });
   const signer = result.signer;
   {
-    if (!result.repository || !signer || result.operation !== expected.operation || result.key !== expected.key || canonicalize(result.repository.membership) !== canonicalize(expected.membership)) throw new Error("The original creator proof is not verified. Check the original Start; no connection was submitted.");
+    if (!result.repository || !signer || result.operation !== expected.operation || result.key !== expected.key || canonicalize(result.repository.membership) !== canonicalize(expected.membership)) throw new Error("The original creator proof is not verified. Check the original Start. This step sent nothing. A saved connection stays kept, and an earlier send of it can have gone.");
     const room = await openRoom({ service: origin, signer, ...(options.fetch ? { fetch: options.fetch } : {}), ...(options.now ? { now: options.now } : {}) }, { directory: result.repository.directory.scope, membership: result.repository.membership });
     if (options.current?.() === false || room.session.service !== origin || room.directory !== result.repository.directory.scope || canonicalize(room.membership) !== canonicalize(expected.membership) || room.key !== expected.key || room.key !== signer.key || room.me?.handle !== result.handle) throw unavailable();
     return await work(room, { v: 1, service: origin, key: "browser", register: result.configured.register, repository: result.repository, handle: result.handle });
@@ -85,7 +85,7 @@ export async function connectInvitation(origin: string, storage: ClaimStorage, e
       if (storage.getItem(storageKey(binding)) !== (journal.active ? canonicalize(journal) : null)) throw unavailable();
       journal = write(storage, { ...journal, active: operation, rows: { ...journal.rows, [operation]: row } }, current);
     } else {
-      if (!active) throw new Error("There is no retained original connection. Nothing was submitted.");
+      if (!active) throw new Error("There is no retained original connection. This step sent nothing, and this browser cannot say whether an earlier send of a connection went.");
       row = structuredClone(active);
       if (row.state === "reserved" && options.mode === "check") return { operation: row.operation, kind: row.input.kind, handle: row.input.handle, state: "prepared", reason: "A reserved original is retained, but its public pointer has not been verified. Check sends nothing. Continue explicitly to recover its exact initial private snapshot if available." };
     }
