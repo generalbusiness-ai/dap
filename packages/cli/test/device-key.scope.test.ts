@@ -185,6 +185,12 @@ describe("a second device of one member, by dap invite --device and dap join", (
     clearPosted();
     expect((await run(third, "join", older)).lines[0]).toMatch(/^The original device enrollment was refused: /);
     expect(posted()).toEqual([]);
+    // A new link in that directory stays refused, and the words say what the directory holds.
+    const later = linkIn(await ok(first, "invite", "@rita", "--device"), DEVICE_KEY_LINK);
+    clearPosted();
+    const used = await run(third, "join", later);
+    expect([used.code, used.lines]).toEqual([1, ["This config directory holds a failed attempt: an earlier link was refused with revision-moved. This run sent nothing. A new link needs an empty config directory."]]);
+    expect(posted(), "A USED DIRECTORY sends nothing").toEqual([]);
     expect(await active()).toBe(2);
 
     // Another member's join moves neither revision. The room accepts this invitation's key for @rita, and the receiver reads that

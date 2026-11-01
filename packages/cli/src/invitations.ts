@@ -431,7 +431,12 @@ async function enrolKey(ctx: Context, text: string, options: { mode?: "continue"
     };
     const digest = textDigest(canonicalize(link)), pending = config?.join;
     if (device && config && !pending) return usage(config.repository ? `This config directory has a repository already: directory ${config.repository.directory.scope}.` : "This config directory is set up already; use another config directory to join.");
-    if (pending && (pending.kind !== retainedKind || pending.link !== digest || config!.service !== link.service || !sameOptional(pending.repository, link.repository) || pending.handle !== link.handle) || config && !pending) return bad();
+    if (pending && (pending.kind !== retainedKind || pending.link !== digest || config!.service !== link.service || !sameOptional(pending.repository, link.repository) || pending.handle !== link.handle) || config && !pending) {
+      if (!device || !pending) return bad();
+      // A person who brings a new link to a used directory needs to know why it stops, and where the link goes next.
+      const holds = pending.refused ? `a failed attempt: an earlier link was refused with ${pending.refused.reason}` : "an attempt with another link. To finish that attempt, run that link with --check";
+      return { code: 1, lines: [`This config directory holds ${holds}. This run sent nothing. A new link needs an empty config directory.`] };
+    }
     if (pending?.refused) return { code: 1, lines: [`The original ${nativeKind} enrollment was refused: ${pending.refused.reason}. Nothing was replaced.${afterRefusal}`] };
     if (options.mode === "check" && !pending) return bad();
     let own: Uint8Array | null = null;

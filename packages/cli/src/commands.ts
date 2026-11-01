@@ -41,7 +41,7 @@ import { READ_REFUSALS, readItemQuery, b64url, canonicalize, definitionDigest, d
 import { ScopeHandle, ShapeError, TransportError, activeDirectory, partitionIndexes, wellFormedInvitation, readCredential, declaredHandle, create, shapeDeclaredAct, signedIntent, signedLogReader, type Fetch, type Session, type CreationOffer, type Signing, type Transport } from "@generalbusiness/dap-client";
 import { CAPABILITY_CODE as REPLAY_CAPABILITY_CODE } from "@generalbusiness/dap-derive";
 import { SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
-import { SourceError, httpSource, render, roomVerification, verify as replay, type FinishedRoom, type HistorySource } from "@generalbusiness/dap-replay";
+import { SourceError, httpSource, otherRoomsLine, render, roomVerification, verify as replay, type FinishedRoom, type HistorySource } from "@generalbusiness/dap-replay";
 import { enrolAgentKey, enrolCheckerKey, enrolDeviceKey } from "./invitations.ts";
 import { AGENT_KEY_LINK, CHECKER_KEY_LINK, DEVICE_KEY_LINK, encodeDeviceKeyInvitation, isAgentKeyMembership, isDeviceKeyInvitation, type DeviceKeyInvitation } from "@generalbusiness/dap-client";
 const NEW_REGISTER = NEWEST["platform:register"]!;
@@ -858,11 +858,14 @@ async function replaySource(ctx: Context, config: Config, budget: Verification, 
   return { source, results, denied };
 }
 
+/** A room's reader cannot read another room's directory on the shared register. The report says what stands on the service's word. */
+const otherRoomsOf = (config: Config) => config.repository ? { otherRooms: { ownDirectory: config.repository.directory.scope } } : {};
+
 /** Standalone verification keeps its isolated traversal and count budget. */
 async function replayOf(ctx: Context, config: Config, scope: ScopeId, budget: Verification) {
   budget.at("replay", scope, 0); budget.historyRead();
   const { source, results, denied } = await replaySource(ctx, config, budget, "count");
-  const verification = await budget.wait(() => replay(source, { mode: "replay", scope, limits: budget.remaining(), platform, sourceName: ARCHIVE_REPLAY_CODE.sourceName, receiverIdentity: ARCHIVE_REPLAY_CODE.receiverIdentity, grants: "proven", capabilities: REPLAY_CAPABILITY_CODE, owners: REPLAY_CAPABILITY_CODE }));
+  const verification = await budget.wait(() => replay(source, { mode: "replay", scope, ...otherRoomsOf(config), limits: budget.remaining(), platform, sourceName: ARCHIVE_REPLAY_CODE.sourceName, receiverIdentity: ARCHIVE_REPLAY_CODE.receiverIdentity, grants: "proven", capabilities: REPLAY_CAPABILITY_CODE, owners: REPLAY_CAPABILITY_CODE }));
   return { ...verification, notProven: sessionDeniedDependency(verification.report, verification.report.dependencies.missing, results, denied) };
 }
 
@@ -931,7 +934,7 @@ async function roomScopes(ctx: Context, config: Config, budget: Verification): P
 
 /** Disclose the shared proof once, including the actual root of each prefix. */
 function sharedProofLines(proof: FinishedRoom): string[] {
-  const lines = [`Shared room proof: ${proof.roots.length} roots; ${proof.dependencies.verified} verified dependencies; ${proof.dependencies.anchored} anchored dependencies; ${proof.dependencies.missing.length} missing dependencies.`];
+  const lines = [...proof.otherRooms && !proof.dependencies.missing.length ? [otherRoomsLine(proof.anchors.length)] : [], `Shared room proof: ${proof.roots.length} roots; ${proof.dependencies.verified} verified dependencies; ${proof.dependencies.anchored} anchored dependencies; ${proof.dependencies.missing.length} missing dependencies.`];
   for (const row of proof.coverage) lines.push(`Shared coverage: ${row.scope.scope}, incarnation ${row.scope.inc}, kind ${row.scope.kind}, entries ${row.from} to ${row.through}; proving root ${row.root}.`);
   for (const row of proof.texts) lines.push(`Shared checked text: ${row.digest}; source ${row.source.scope}, incarnation ${row.source.inc}, kind ${row.source.kind}; proving root ${row.root}; consumers ${row.consumers.join(", ") || "none"}.`);
   for (const trust of proof.trusts) lines.push(`Shared trust: ${trust}.`);
@@ -960,7 +963,7 @@ function verifyAll(ctx: Context): Promise<Outcome> {
       const { source, results, denied } = await replaySource(reading, config, budget, "unique");
       // These are cumulative engine ceilings, fixed once. The outer owner
       // also charges discovery, authentication and every actual wire read.
-      const owner = room = roomVerification(source, { mode: "replay", limits: { bytes: budget.limits.bytes, entries: budget.limits.entries, scopes: budget.limits.requests },
+      const owner = room = roomVerification(source, { mode: "replay", ...otherRoomsOf(config), limits: { bytes: budget.limits.bytes, entries: budget.limits.entries, scopes: budget.limits.requests },
         platform, sourceName: ARCHIVE_REPLAY_CODE.sourceName, receiverIdentity: ARCHIVE_REPLAY_CODE.receiverIdentity, grants: "proven", capabilities: REPLAY_CAPABILITY_CODE, owners: REPLAY_CAPABILITY_CODE });
       for (const { scope } of scopes) {
         budget.at("replay", scope); budget.progress();
@@ -1000,7 +1003,7 @@ function verifyAll(ctx: Context): Promise<Outcome> {
         }
       }
       budget.check();
-      lines.push(first ?? `All consistent: ${scopes.length} scopes.`);
+      lines.push(first ?? `All consistent: ${scopes.length} scopes${finished.otherRooms ? `, and ${finished.anchors.length} creation result${finished.anchors.length === 1 ? "" : "s"} of other rooms on the service's word` : ""}.`);
       return { code: first === null ? 0 : 1, lines };
     } finally { room?.close(); budget.close(); }
   });

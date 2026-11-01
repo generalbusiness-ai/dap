@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "qualification": "One passing gate and one control. No person has read these words.",
+  "directory": "2026-11-01-join-used-dir",
+  "checkpoint": {
+    "commit": "5790b1ac5b501c095c1838cbfde3687c513e7731",
+    "tree": "a74f8f9127667eb5df74bac8d9f927c250310899"
+  },
+  "fileCount": 44,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "ee3e03848ff60de95f87b076089fac74147e323755847130ca7f8df08981c7f9"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6557,
+      "sha256": "f4707bac2dc1ac8643462f6f6f577924f80f2146c90a1ce12225d15c64f128ea"
+    },
+    {
+      "path": "controls/old-words.log",
+      "bytes": 23451,
+      "sha256": "d9c99f38ab7ad490ea346ac7c83395442942d060e0441ef8cfbbdaf7576b40e0"
+    },
+    {
+      "path": "gate-failed-1/gate.stdout.log",
+      "bytes": 8301,
+      "sha256": "6322666e50707e0f35455b3f6c979314aa61efd49bc8d3f6b8be5cd99b1b61ee"
+    },
+    {
+      "path": "gate-failed-2/gate.stdout.log",
+      "bytes": 9474,
+      "sha256": "6392f31af93cea6a980e3040b9f0cfe5c5240e24cec80485c970e459f1bb0534"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 4000,
+      "sha256": "a526122a2603daea3891e6bd5e38a6285ce391cabea6d318e3463a79b4987324"
+    }
+  ]
+}
