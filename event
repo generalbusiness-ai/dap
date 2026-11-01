@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/evidence/2026-11-01-page-words.manifest.json","body":{"commit":"1277da374bbf17067564194d21bdea83c7fdeb11","path":"notes/implementation/evidence/2026-11-01-page-words.manifest.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:06359bc2046b8098ec58e12811c5471d7625928c","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/settings.test.ts."}
