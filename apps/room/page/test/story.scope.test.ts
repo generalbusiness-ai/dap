@@ -28,7 +28,7 @@ test("the page's data functions against the Worker's routes as deployed: join wi
 
     // A key that is no member's: membership refuses it a session, its signed read of the directory is refused, and nothing is read.
     const stranger = crypto.getRandomValues(new Uint8Array(32));
-    await expect(openRoom(d.as(stranger), place)).rejects.toThrow(new Unreadable(`Cannot read ${d.D.name}: forbidden.`));
+    await expect(openRoom(d.as(stranger), place)).rejects.toThrow(new Unreadable(`Cannot read ${d.D.name}: forbidden.`, { why: "unauthorized" }));
 
     // una signs in on the page: a new key, enrolled by membership's `join` with the invitation link; then a session from membership.
     const unas = crypto.getRandomValues(new Uint8Array(32));
@@ -53,7 +53,7 @@ test("the page's data functions against the Worker's routes as deployed: join wi
       // Limited signed reads do not authorize retained-item enumeration. The
       // page must show that refusal rather than a partial definition list.
       await expect(loadRules(signed)).rejects.toThrow(new Unreadable(`Cannot read definition items of ${d.rules.name}: incomplete (forbidden); items read: 0.`));
-      await expect(openRoom(d.as(unas, unavailableSecret), place)).rejects.toThrow(new Unreadable(`Cannot read ${d.D.name}: forbidden.`));
+      await expect(openRoom(d.as(unas, unavailableSecret), place)).rejects.toThrow(new Unreadable(`Cannot read ${d.D.name}: forbidden.`, { why: "sessions-unavailable" }));
     } finally {
       unavailableSecret.close();
     }

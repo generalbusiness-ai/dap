@@ -138,8 +138,10 @@ test("Config and key select a room only after matching standing and exact storag
     storageMode: "ok" | "drop" | "readback" = "ok",
     saved: string | null = null,
     readFails = false;
+  let refusal: Error | null = null;
+  let initialization = "configured", unsessioned: string | null = null;
   const writes = vi.fn(),
-    open = vi.fn(async (session: { service: string; signer: Signer }) => ({
+    open = vi.fn(async (session: { service: string; signer: Signer }) => { if (refusal) throw refusal; return {
       session,
       directory: place.directory,
       membership,
@@ -157,15 +159,15 @@ test("Config and key select a room only after matching standing and exact storag
             }
           : null,
       reader: null,
-      unsessioned: null,
+      unsessioned,
       definitions: new Map(),
-    }));
+    }; });
   const data =
     await vi.importActual<typeof import("../src/data.ts")>("../src/data.ts");
   vi.doMock("../src/data.ts", () => ({
     ...data,
     initializationStillCurrent: async () => true,
-    roomInitialization: async () => ({ state: "configured" }),
+    roomInitialization: async () => ({ state: initialization }),
     openRoom: open,
     listLanes: async () => {
       if (viewUnavailable) throw new Error("Scripted later view unavailable");
@@ -263,6 +265,14 @@ test("Config and key select a room only after matching standing and exact storag
     expect(open.mock.calls[0]![0].service).toBe(location.origin);
     expect(writes).not.toHaveBeenCalled();
     expect(location.hash).toBe("#/config");
+    // The form shows the cause and the next step of an open refused with no session, and no scope identifier.
+    refusal = new data.Unreadable("Cannot read SCRIPTED-directory: forbidden.", { why: "no-reply" });
+    submit();
+    await drain();
+    expect(root.textContent).toContain("The service did not answer this page's request for a read session. Reload this page to try again.");
+    expect(root.textContent).not.toContain("SCRIPTED-directory");
+    expect(writes).not.toHaveBeenCalled();
+    refusal = null;
     mode = "verified";
     storageMode = "drop";
     submit();
@@ -286,8 +296,11 @@ test("Config and key select a room only after matching standing and exact storag
     redraw();
     await drain();
     fill();
+    // A key that opens on signed reads hears why the rules are out of reach.
+    initialization = "unknown"; unsessioned = "no-reply";
     submit();
     await drain();
+    expect(root.textContent).toContain("The complete rules could not be read. The service did not answer this page's request for a read session. Reload this page to try again.");
     expect(location.hash).toBe("#/");
     expect(
       open.mock.calls.every(([session]) => session.service === location.origin),
