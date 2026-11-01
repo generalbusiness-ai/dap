@@ -205,7 +205,7 @@ test("on a Worker with sessions on, a lost or refused session request gives an a
       wire.sessions = line;
       expect(await opening(d.as(una), d), line).toBe(sentence(d));
     }
-    // The founder's key opens only inside the window of her claim, and the same outage then refuses her too.
+    // The founder's key opens only inside the window of its claim, and the same outage then refuses that key too.
     wire.sessions = "lost";
     expect(await opening(d.as(ritas), d)).toBe("opened as @rita, with no session");
     d.advanceClock(WINDOW_MS + 1_000);
