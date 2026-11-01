@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ecd0d8684c57afdb6579b6ff9a27e70326b69219","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-01-page-questions.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f524468a643f99ac79255ea8d90dd9a0822a4643","text":"Merge retired a covered predecessor; the successor is at apps/views/src/decision.ts."}
