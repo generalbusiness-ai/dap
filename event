@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4dcab9edf9b19301ff4b72404dc724a3866d2c90","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-01-unknown-send-words.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4dda935b88a24138ea13aab47858c02a10306c95","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/shell.ts."}
