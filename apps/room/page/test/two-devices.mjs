@@ -416,7 +416,7 @@ try {
   check("Never arrived: Entries under that idempotency key", never.journal, { entries: 0, firstBytes: true });
   check("Never arrived: the answer ends refused expired", never.answer.some(line => line.includes("refused the request: expired")), true);
   check("Never arrived: no copy stays open", never.openAfter, 0);
-  check("A stopped keep: the page says so", pageStops.notKept, ["The room gave no reply when it was asked to keep a copy of this request. Nothing was sent."]);
+  check("A stopped keep: the page says so", pageStops.notKept, ["The room gave no reply when it was asked to keep a copy of this request. This press sent nothing."]);
   check("A stopped keep: no /acts", pageStops.actsWhenNotKept, 0);
   check("A stopped keep: the next send clears the words", pageStops.notKeptAfterTheNextSend, 0);
   check("A press on the sending page: the page no longer reads outcome unknown", pageStops.unknownAfterThePress, false);
