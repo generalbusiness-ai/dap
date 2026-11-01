@@ -1,5 +1,8 @@
 import { expect, test } from "vitest";
-import type { CallResult } from "../src/service.ts";
+import { TOOL_WAIT_MS } from "../src/views/waits.ts";
+import { REPLY_SECONDS } from "@generalbusiness/dap-client";
+import { readFileSync } from "node:fs";
+import { VIEW_DIFF_POLLS, type CallResult } from "../src/service.ts";
 import { cardOpens } from "../src/views/opens.ts";
 import { ViewSessions } from "../src/views/session.ts";
 import { viewTools } from "../src/views/tools.ts";
@@ -295,4 +298,11 @@ test("an incomplete card opens its available entries and offers no act", async (
   expect(detail.status).toBe("incomplete");
   expect(detail.card!.entries!.map(entry => entry.text)).toEqual(["Entry 1"]);
   expect(detail.card!.actions).toEqual([]);
+});
+
+// Invariant: the card's wait covers one stalled request at each stage of the slowest press. The session, the act and the read of the mint each wait REPLY_SECONDS.
+test("a press's wait outlasts one stalled request at each stage of a signed read", () => {
+  // This package's tests do not import the Git package, so the test reads the bound from its source.
+  const gitRead = /const DIFF_READ_MS = ([\d_]+);/.exec(readFileSync(new URL("../../git/src/diff.ts", import.meta.url), "utf8"))!;
+  expect(TOOL_WAIT_MS).toBeGreaterThanOrEqual(3 * REPLY_SECONDS * 1000 + VIEW_DIFF_POLLS * 1000 + Number(gitRead[1]!.replaceAll("_", "")));
 });

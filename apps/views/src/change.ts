@@ -181,7 +181,7 @@ const namesCommits = (manifest: Item): boolean => typeof manifest.values["base"]
 const INTERDIFFS = 4;
 
 function bodyOf(context: ChangeContext): string {
-  const { manifest, rules, who } = context, lines: string[] = [];
+  const { manifest, rules, who } = context, lines: string[] = [`Lane definition: ${context.definition}.`];
   if (!manifest) lines.push("No version yet.");
   else {
     lines.push(`Version ${context.versions}, manifest ${manifest.id}${manifest.state === "current" ? "." : ": superseded."}`);
@@ -243,7 +243,7 @@ export async function changeProjection(app: RepoInAi, subject: string | undefine
   const held = holding(context).length;
   const card: Card = { identity: { item: String((manifest ?? proposal).id), kind: manifest ? "manifest" : "proposal", revision: String((manifest ?? proposal).revision), subject: { scope: scope.scope, item: proposal.id }, at },
     title: String(proposal.values["title"]), summary: `${typeof proposal.values["number"] === "number" ? `Change ${proposal.values["number"]}` : "Change"}, ${proposal.state}${manifest ? `, version ${context.versions}` : ""}.${held ? ` ${held} open finding${held === 1 ? " holds" : "s hold"} the merge.` : ""}`,
-    body: bodyOf(context), reasons: [`${context.definition} acts.review-verdict / acts.merge; the scope decides each act`],
+    body: bodyOf(context), reasons: ["Open this card to read the change, review it or merge it. The room's rules decide each act."],
     projection: collection.points().map(point => ({ scope: point.scope.scope, seq: point.head.seq, hash: point.head.hash })),
     reviewIntended: [], unavailable: [], waitsOn: [], settles: [], actions, ...(original !== undefined ? { unresolvedOriginal: true } : {}),
     ...(diffable ? { diffAvailable: true, diffRead: { target: context.destination, base, integration, label }, ...(interdiffReads.length ? { interdiffReads } : {}) } : {}),

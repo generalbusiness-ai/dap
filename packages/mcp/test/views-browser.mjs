@@ -7,6 +7,7 @@ const require = createRequire(join(process.env.PLAYWRIGHT_CORE, 'package.json'))
 const { chromium } = require('playwright-core');
 assert.equal(require('playwright-core/package.json').version, '1.63.0');
 import { startViewsHost } from './support/views-host.ts';
+import { TOOL_WAIT_MS } from '../src/views/waits.ts';
 import { mkdir, writeFile } from 'node:fs/promises';
 const out=process.env.VIEW_CAPTURE_OUT;
 if (!/^\/(?:private\/)?tmp\//.test(out)) throw new Error('Browser evidence belongs in a scratch directory under /tmp.'); await mkdir(out,{recursive:true});
@@ -178,6 +179,61 @@ try{
     assert.equal(await app.getByText('Open it again',{exact:false}).count(),0);
     assert.equal((await proofOf(page)).signed.length,0);
     await page.screenshot({path:out+'/reopen-refused.png'});report.cases.push({label:'reopen-refused'});await page.close();
+  }
+  // A signed read of 11.6 s, as the person's press took, against the real service and a fixture Git read. The clock is real.
+  {
+    const page=await browser.newPage({viewport:{width:624,height:1000}}),errors=[];
+    page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(['error','warning'].includes(m.type()))errors.push(m.text())});
+    await page.goto(host.url+'/?'+new URLSearchParams({fixture:'signed-diff-11600'}));
+    const app=page.frameLocator('#frame').frameLocator('iframe');
+    await app.locator('#card-root').getByText(/Choose the first milestone/).first().waitFor();
+    await page.waitForFunction(()=>window.proof.contexts.length>0);
+    await click(page,app,app.getByRole('button',{name:'Open',exact:true}));
+    await app.getByRole('button',{name:'View diff',exact:true}).click();
+    await app.getByText('the slow read',{exact:false}).waitFor({timeout:30000});
+    assert.equal(await app.locator('.notice').count(),0,'A read inside the wait shows the diff and no notice');
+    assert.equal((await proofOf(page)).signed.filter(intent=>intent.kind==='read-token').length,1);
+    assert.deepEqual(errors,[]);report.cases.push({label:'signed-read-11600'});await page.close();
+  }
+  // The read outlasts the card's wait, as a stalled request would. SCRIPTED clock: the card's wait is one second, and the read takes three.
+  {
+    const page=await browser.newPage({viewport:{width:624,height:1000}}),errors=[];
+    page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(['error','warning'].includes(m.type()))errors.push(m.text())});
+    await page.addInitScript(wait=>{const real=window.setTimeout.bind(window);window.setTimeout=(run,ms,...rest)=>real(run,ms===wait?1000:ms,...rest)},TOOL_WAIT_MS);
+    await page.goto(host.url+'/?'+new URLSearchParams({fixture:'signed-diff-3000'}));
+    const app=page.frameLocator('#frame').frameLocator('iframe');
+    await app.locator('#card-root').getByText(/Choose the first milestone/).first().waitFor();
+    await page.waitForFunction(()=>window.proof.contexts.length>0);
+    assert.equal(await app.getByRole('button',{name:'Open',exact:true}).count(),1,'The summary shows a person that the card opens');
+    await click(page,app,app.getByRole('button',{name:'Open',exact:true}));
+    await app.getByRole('button',{name:'View diff',exact:true}).click();
+    await app.getByText('so the card does not know how it ended',{exact:false}).waitFor();
+    assert.match(await app.locator('.notice').first().textContent(),/a permanent read may have been signed/);
+    assert.equal(await app.getByText('No action was retried',{exact:false}).count(),0,'The words do not say that nothing happened');
+    assert.equal(await page.evaluate(()=>window.proof.calls.at(-1).name),'view_read','After no answer the card reads its view again');
+    const reads=()=>proofOf(page).then(proof=>proof.signed.filter(intent=>intent.kind==='read-token').length);
+    // The server still works on the first press. A second press finds it busy, and the card offers the read that its words name.
+    await click(page,app,app.getByRole('button',{name:'View diff',exact:true}));
+    await app.getByText('operation in progress',{exact:false}).waitFor();
+    await click(page,app,app.getByRole('button',{name:'Read the card again',exact:true}));
+    assert.equal(await app.getByRole('button',{name:'Read the card again',exact:true}).count(),0,'The read answered, so the offer goes');
+    for(let tries=0;;tries++){
+      const shown=await page.evaluate(()=>window.appCall('view_read',{view:window.proof.config.id}));
+      if(shown.result?.structuredContent?.display?.query?.page==='diff')break;
+      assert.ok(tries<100,'The late read finished');await page.waitForTimeout(100);
+    }
+    assert.equal(await reads(),1);
+    // The late answer moved the server's cut, and the card holds the old cut. This press finds that out.
+    await click(page,app,app.getByRole('button',{name:'View diff',exact:true}));
+    await app.getByText('The card had changed, so this press sent nothing',{exact:false}).waitFor();
+    assert.equal(await reads(),1,'A press on an old cut signs nothing');
+    await app.getByText('the slow read',{exact:false}).waitFor();
+    assert.equal(await app.getByText('Read it again',{exact:false}).count(),0,'A person is not told to do what the card offers no way to do');
+    await click(page,app,app.getByRole('button',{name:/Back/}));
+    await app.getByRole('button',{name:'View diff',exact:true}).waitFor();
+    assert.equal(await app.getByText('The card had changed',{exact:false}).count(),0,'After the recovery a press works');
+    assert.deepEqual(errors,[]);await page.screenshot({path:out+'/read-outlasts-wait.png'});
+    report.cases.push({label:'read-outlasts-wait',calls:(await calledTools(page)).slice(-6)});await page.close();
   }
   // A declared card names its own opening tool, which differs from the built-in screens' tools.
   {

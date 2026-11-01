@@ -20,6 +20,8 @@ const fields = { approvals: 0, ownerMayReview: false, checks: [], labels: [], ex
  * Its signer is a public test fixture; no live room or provider is contacted. */
 export function fixture(mode: string, custody: CustodyStore = memoryStore()) {
   const signer = fixedSigner(17), scope = new StandIn(signer.key);
+  /** `signed-diff-<ms>`: the diff signs a read-token through the real service, and its Git read takes this long. */
+  const slowRead = /^signed-diff-(\d+)$/.exec(mode), readMs = slowRead ? Number(slowRead[1]) : null;
   const completed = new Set<number>();
   let revision = 0, lose = mode === "loss";
   const signed: Intent[] = [];
@@ -39,7 +41,7 @@ export function fixture(mode: string, custody: CustodyStore = memoryStore()) {
       actor: index === 0 ? { kind: "person", name: "Rita" } : index === 1 ? { kind: "agent", name: "Builder", controller: "Rita" } : { kind: "checker", name: "Checker" },
       reasons: ["Your decision is needed"], ...(query.page === "summary" ? {} : { body: query.page === "diff" ? "@@ first milestone @@\n-Start with every feature.\n+Start with the smallest useful path.\n".repeat(14) : "Choose a bounded first milestone.\n\nThe proposal keeps implementation and review separate.\n\nThe next person receives an exact decision and version." }),
       projection: [{ scope: scope.rules.scope, seq: 10, hash: "sha256:" + "a".repeat(64) }], reviewIntended: updates ? [{ scope: scope.rules.scope, from: 1, to: 6 }, ...(mode === "incomplete" ? [{ scope: "change-9", from: 9, to: 9 }] : [])] : [],
-      unavailable: mode === "incomplete" ? [{ scope: "change-9", from: 9, to: 9 }] : [], waitsOn: ["decision:q7"], settles: ["decision-recorded"], diffAvailable: !updates, ...(updates ? { detailPage: "updates" as const } : {}),
+      unavailable: mode === "incomplete" ? [{ scope: "change-9", from: 9, to: 9 }] : [], waitsOn: ["decision:q7"], settles: ["decision-recorded"], diffAvailable: !updates, ...(updates ? { detailPage: "updates" as const } : {}), ...(readMs === null ? {} : { diffRead: { target: scope.destination.scope, base: "a".repeat(40), integration: "b".repeat(40), label: "Version 1" } }),
       actions: [{ id: "primary", label: updates ? "Mark reviewed" : mode === "checks-failed" ? "Approve" : "Accept", purpose: updates ? "mark-reviewed" : mode === "checks-failed" ? "approve" : "act", kind: "publish", args: { target: "rules", on: 0, fields, at: { on: revision } } }], approvalAllowed: mode !== "checks-failed", fallback: "Inspect the named subject with the ordinary read tools.",
       ...(updates && query.page !== "summary" ? { entries: Array.from({ length: 6 }, (_, i) => ({ scope: scope.rules.scope, seq: i + 1, text: `Entry ${i + 1}: ${i % 2 ? "The checker recorded a review of this exact version." : "The builder recorded a bounded change and its evidence."}` })) } : {}),
     };
@@ -49,6 +51,7 @@ export function fixture(mode: string, custody: CustodyStore = memoryStore()) {
   } };
   /** Each call is another process of one home: its own views, over one custody store and one service. */
   const process_ = () => new McpService({ service: SERVICE, mode: "add", config: { read: async () => scope.config(), addRoot: async () => {} }, custody, views: source,
+    ...(readMs === null ? {} : { readDiff: async () => { await new Promise(resolve => { setTimeout(resolve, readMs); }); return { base: "a".repeat(40), integration: "b".repeat(40), files: 1, truncated: false, text: "@@ the slow read @@\n-before\n+after\n" }; } }),
     signer: { key: signer.key, sign: (bytes) => { const text = new TextDecoder().decode(bytes), prefix = `${DOMAINS.intent}\n`; if (text.startsWith(prefix)) signed.push(JSON.parse(text.slice(prefix.length))); return signer.sign(bytes); } },
     fetch: async (url, init) => {
       const answer = await scope.fetch(url, init);
@@ -166,6 +169,7 @@ window.proof={config,messages:[],contexts:[],sizes:[],calls:[],chat:[],modelTurn
 let seq=100, input, initialized=false, actSeen=false, failedContext=false;
 async function rpc(actor,name,args){const response=await fetch('/rpc',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({instance:config.id,actor,request:{jsonrpc:'2.0',id:++seq,method:'tools/call',params:{name,arguments:args}}})});return response.json()}
 window.modelCall=(name,args)=>rpc('model',name,args);
+window.appCall=(name,args)=>rpc('app',name,args);
 const send=message=>frame.contentWindow.postMessage({jsonrpc:'2.0',...message},config.sandboxOrigin);
 window.sendHost=send;
 window.addEventListener('message',event=>{if(event.source!==frame.contentWindow||event.origin!==config.sandboxOrigin)return;const m=event.data;if(!m||m.jsonrpc!=='2.0')return;proof.messages.push(m);if(typeof m.method!=='string')return;void(async()=>{

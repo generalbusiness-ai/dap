@@ -536,5 +536,5 @@ test('only the exact pins read: a change lane on another pin stays unsupported i
   assert.equal((await f.app.change({ scope: other.ref })).structuredContent.reason, 'change-profile-unsupported', 'EXACT PIN: the change tool refuses another pin');
   assert.equal((await decisionSource(f.app).read({ screen: 'change', subject: changeSubject(other.ref), position: 0, page: 'item' })).status, 'unavailable', 'EXACT PIN: the card refuses another pin');
   assert.equal((await f.app.change({ scope: found.ref })).isError, false, 'EXACT PIN: the change tool reads the finding pin');
-  assert.ok((await changeCard(f, found)).reasons[0].startsWith(FINDING_DIGESTS.change), 'EXACT PIN: the card names the pin of its lane');
+  assert.ok((await changeCard(f, found)).body.split('\n').includes(`Lane definition: ${FINDING_DIGESTS.change}.`), 'EXACT PIN: the card names the pin of its lane');
 });

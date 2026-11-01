@@ -60,7 +60,7 @@ export function decisionSource(app: RepoInAi): ViewSource {
           const actions = questionActions(context), at = actions[0] && !actions[0].local ? actions[0].args["at"] as Record<string, number> : { on: context.ask.revision };
           const card: Card = { identity: { item: String(context.ask.id), kind: "ask", revision: String(context.ask.revision), subject: { scope: context.scope.scope, item: context.ask.id }, at },
             title: String(context.ask.values["question"]), summary: context.brief === null ? "Legacy Question: no Brief binding." : context.briefMatches ? `Question text under its immutable Brief. ${APPROVAL_LIMIT}` : "The retained Brief resource does not match this Question.",
-            body: context.body, reasons: [`${context.definition} acts.approve / acts.decide; native admission still decides`],
+            body: context.body, reasons: ["Open this card to approve or decide. The room's rules decide each act."],
             projection: [{ scope: context.scope.scope, seq: context.head.seq, hash: context.head.hash }], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], actions,
             fallback: "Use context for the exact text versions, requests, approvals, comments and conditions." };
           if (utf8(canonicalize(card)).length > 60 * 1024) return { status: "incomplete", position: 0, count: 0, fallback: "Question body exceeds this card's display budget. No approval is offered; read the bounded context." };
