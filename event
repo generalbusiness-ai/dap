@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9363956a3736cc4ae8bcf6cbe4f97ef66e2455f3","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/browser.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:96301b8d97d77606c242c078f93faec78b3d2635","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-01-failed-claims.manifest.json."}
