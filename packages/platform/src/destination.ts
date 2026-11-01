@@ -23,7 +23,7 @@
  * authority's proposals, to be measured by the proof plan.
  */
 
-import type { FactRef, FieldValue, KeyId, Observation, OperationId, PlatformData, PlatformDefinition, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Entry, FactRef, FieldValue, KeyId, Observation, OperationId, PlatformData, PlatformDefinition, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, parseStrict, entryHash, factRefOf, isDigest, isFactRef, isScopeRef, timeOf, timeMs, utf8, textDigest, isMemberRef } from "@generalbusiness/dap-bytes";
 import type { Item, Opening, Operation, OperationRules, Own, PlatformRule, PublicationOrigin, RecordedRef, RuleEffect, RuleGiven, RuleRequest, Rules, StateView } from "@generalbusiness/dap-derive";
 import { observedOf } from "@generalbusiness/dap-derive";
@@ -2307,6 +2307,16 @@ const WRITTEN: Rules = {
     },
   },
 };
+
+/**
+ * The key that this entry of a destination names, when the entry is an applied `compromised` notice. Null for any other entry. A
+ * notice that the row's guard refused names nobody: it came from no directory of this room, so a stranger cannot close a key.
+ */
+export function compromisedKey({ at, input }: Entry): string | null {
+  if (at.kind !== "destination" || input.type !== "delivery" || input.message.class !== "request" || input.message.type !== "tell" || !("decision" in input) || input.decision !== "applied") return null;
+  const { message, fields } = input.message.body as { message?: unknown; fields?: { key?: unknown } };
+  return message === "compromised" && typeof fields?.key === "string" ? fields.key : null;
+}
 
 /** The rules that version 2 adds: those of the act `read-token` and of its operation `mint-read`. */
 const WRITTEN_2: Rules = {

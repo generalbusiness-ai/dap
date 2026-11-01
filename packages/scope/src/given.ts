@@ -1,6 +1,6 @@
 /** Structural reads supplied to host adapters. No Worker class or ambient
  * storage type belongs to this shared type boundary. */
-import type { Bounds, Input } from "@generalbusiness/dap-contract";
+import type { Bounds, Input, KeyId } from "@generalbusiness/dap-contract";
 import type { ScopeState, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
 import type { Ports } from "./ports.ts";
 import type { Sealed, Store } from "./store.ts";
@@ -10,6 +10,10 @@ export interface Given extends Pick<Ports, "clock" | "random"> {
   state: StateView;
   /** The scope's record: its reference, its head and the time of its previous entry. */
   scope(): ScopeState | null;
+}
+export interface AuthorityGiven extends Given {
+  /** Whether a `compromised` notice that this scope applied named that key. Private custody, and no part of the folded state. */
+  named(key: KeyId): boolean;
 }
 export interface OutsideGiven extends Given {
   /** Exact declaration already admitted by this scope's native runtime. */

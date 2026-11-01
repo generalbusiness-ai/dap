@@ -69,6 +69,10 @@ export interface Observing {
   /** How the membership scope is read. */
   reader: Membership;
   /**
+   * Whether a `compromised` notice that this scope applied named that key (`CredentialStore.named`). Absent: this reader keeps no such record.
+   */
+  named?(key: KeyId): boolean;
+  /**
    * The rules scope that this scope records, for an observation of the
    * rules (the contract's section 16.1, guard 1): where its version says
    * (`Platform.rulesScope`). Null, or absent: it records none, and nothing
@@ -265,6 +269,9 @@ export function observing(config: Observing): Authority {
         held(view, clock) {
           offered = null;
           if (spent) return null;
+          // A `compromised` notice named this key: no new read token. The commit asks, so a notice that landed during the read counts, and
+          // so does an observation that still shows the key active. Membership refuses the key by itself once that observation ends.
+          if (asked.signed.intent.kind === "read-token" && config.named?.(key)) return [];
           // Guard 1 is judged on what the scope records at this commit. An entry written since the read may have fixed an incarnation.
           const recorded = config.membership(scope);
           if (!recorded) return null;
@@ -356,6 +363,8 @@ export interface Repository {
   state?: StateView;
   /** How a membership scope is read: one call on the object that the reference names (`membershipIn`). */
   reader: Membership;
+  /** Whether a `compromised` notice that this scope applied named that key. */
+  named(key: KeyId): boolean;
 }
 
 /**
@@ -475,7 +484,7 @@ export function repositorySessionMembership(config: Pick<Repository, "genesis" |
 export function repositoryAuthority(config: Repository): Authority {
   const own = ownStanding(config.random, config.genesis);
   const observed = observing({
-    clock: config.clock, random: config.random, reader: config.reader, membership: (scope) => recordedMembership(config, scope),
+    clock: config.clock, random: config.random, reader: config.reader, membership: (scope) => recordedMembership(config, scope), named: config.named,
     // Where a version's scopes record their rules reference is code of the version, as for the membership reference. The read goes
     // by the scope ID, through the same namespace. The rules scope answers from its recorded rules, with its publication revision
     // and extents digest; the namespace supplies the extent bytes beside that observation (`rulesAnswer`, `observedAt`).

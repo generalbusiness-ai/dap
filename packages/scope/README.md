@@ -433,7 +433,7 @@ Five more routes serve what is no history:
 | `GET /v1/scopes/:scope/stream` | Lines of JSON, `{ at }`: the scope's head when the stream opens and after each commit | 200; as a read otherwise |
 | `GET /v1/scopes/:scope/incidents?cursor=` | A page of the operator's record of the scope, for an admin's session | as a read |
 | `GET /v1/scopes/:scope/waiting/:list?cursor=` | One page of the list `diagnosed` or `unanswered` of the requests that wait, for an admin's session | as a read |
-| `GET /v1/scopes/:destination/credential/:handle` | A member's read token, `{ token, ends, remote }`, once: only to the session of the key that signed the `read-token` act whose `mint-read` outcome names that handle, and only before its end. The plaintext leaves custody as it is answered. Marked `cache-control: no-store` | 200; 403 `forbidden` for a second read, another key's session, no session, a read at or after the end, or a handle that names nothing; 503 `sessions-unavailable`, `clock-behind` |
+| `GET /v1/scopes/:destination/credential/:handle` | A member's read token, `{ token, ends, remote }`, once: only to the session of the key that signed the `read-token` act whose `mint-read` outcome names that handle, and only before its end. The plaintext leaves custody as it is answered. Marked `cache-control: no-store` | 200; 403 `forbidden` for a second read, another key's session, no session, a read at or after the end, a handle that names nothing, or a key that a `compromised` notice named at this destination; 503 `sessions-unavailable`, `clock-behind` |
 
 A request whose URL holds a credential, in its path or its query, is
 answered 400 `credential-in-url` before anything is routed. A read with a
