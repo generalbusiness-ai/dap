@@ -35,7 +35,7 @@ try {
       projection: async query => {
         const projection = packet.package.semantic.projections[query.projection], index = rooms.findIndex(room => canonicalize(room) === canonicalize(query.scope));
         const isSite = query.projection === 'site' && canonicalize(query.scope) === canonicalize(site);
-        if (!isSite && (index < 0 || !['grid', 'bench'].includes(query.projection))) return { ok: false, reason: 'query-not-ready' };
+        if (!isSite && (index < 0 || !['layers', 'bench'].includes(query.projection))) return { ok: false, reason: 'query-not-ready' };
         const sources = {};
         for (const [name, declaration] of Object.entries(projection.sources)) {
           if (isSite) sources[name] = name === 'site'
@@ -72,14 +72,14 @@ try {
     await app.getByRole('button', { name: 'Open Room A', exact: true }).click();
     await app.getByRole('heading', { name: 'Bench grid', exact: true }).waitFor();
     await app.getByText('Zone A: unobserved', { exact: false }).waitFor();
-    await app.getByRole('button', { name: 'EC', exact: true }).click();
+    await app.getByRole('button', { name: 'Scouting', exact: true }).click();
     await app.locator('#choose-bench').selectOption('11');
     await app.locator('html').evaluate(() => { window.ownedOldButton = document.querySelector('.declared-surface').shadowRoot.querySelector('#open-bench'); });
     await app.getByRole('button', { name: 'Open bench record', exact: true }).click();
     await app.getByRole('heading', { name: 'Room A bench', exact: true }).waitFor();
     await app.getByRole('button', { name: /Back/ }).click();
     await app.getByRole('heading', { name: 'Bench grid', exact: true }).waitFor();
-    assert.equal(await app.getByRole('button', { name: 'EC', exact: true }).getAttribute('aria-pressed'), 'true');
+    assert.equal(await app.getByRole('button', { name: 'Scouting', exact: true }).getAttribute('aria-pressed'), 'true');
     await app.getByRole('button', { name: /Back/ }).click();
     await app.getByRole('heading', { name: 'Grow site', exact: true }).waitFor();
     await app.getByRole('button', { name: 'Open Room B', exact: true }).click();
@@ -102,7 +102,7 @@ try {
     await app.getByRole('heading', { name: 'Grow site', exact: true }).waitFor();
     await app.getByRole('button', { name: 'Open Room A', exact: true }).click();
     await app.getByRole('heading', { name: 'Bench grid', exact: true }).waitFor();
-    assert.equal(await app.getByRole('button', { name: 'EC', exact: true }).getAttribute('aria-pressed'), 'true');
+    assert.equal(await app.getByRole('button', { name: 'Scouting', exact: true }).getAttribute('aria-pressed'), 'true');
     assert.match(await app.locator('#choose-bench').textContent(), /Room A bench/);
     await app.getByText('Room A', { exact: true }).waitFor();
     await app.getByRole('button', { name: 'Open bench record', exact: true }).click();

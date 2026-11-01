@@ -1,10 +1,10 @@
 // The page's screenshots: the issue, the change with a refusal, the rules view and a rendered page of the published site, in a
-// real browser.
+// real browser. It writes them under VIEW_CAPTURE_OUT and writes no tracked file. `.github/workflows/page-browser.yml` runs it.
 //
-//   PLAYWRIGHT_CORE=<a directory holding playwright-core> [CHROMIUM=<a chromium executable>] node apps/room/page/test/screens.mjs
+//   PLAYWRIGHT_CORE=<a directory holding playwright-core> CHROMIUM=<a chromium executable> VIEW_CAPTURE_OUT=/tmp/<new directory> \
+//     node apps/room/page/test/screens.mjs
 //
-// playwright-core is not a dependency of this repository: install it in a scratch directory, outside the checkout. The browser
-// is the one PLAYWRIGHT_BROWSERS_PATH holds, or CHROMIUM.
+// playwright-core is not a dependency of this repository: install it in a scratch directory, outside the checkout.
 //
 // What the browser talks to. No service runs here. The script runs the recorder, `record.scope.test.ts`, with PAGE_RECORD=1: the
 // story on real scopes in the test Worker, with every read of the page's screens, paul's refused review and the site page sent
@@ -17,17 +17,18 @@ import { statSync, writeFileSync, mkdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { recordFrom, recorderLog } from "../../../../scripts/demo/recorder-output.ts";
 
 const page = join(dirname(fileURLToPath(import.meta.url)), "..");
 const root = join(page, "../../..");
-const out = join(page, "test/screenshots");
 const MOST = 300 * 1024;
 
-if (!process.env.PLAYWRIGHT_CORE) throw new Error("Set PLAYWRIGHT_CORE to a directory that holds playwright-core, installed outside this checkout.");
-const playwrightRequire = createRequire(join(process.env.PLAYWRIGHT_CORE, "package.json"));
+const { PLAYWRIGHT_CORE, CHROMIUM: browserPath, VIEW_CAPTURE_OUT: out } = process.env;
+if (!PLAYWRIGHT_CORE || !browserPath || !out) throw new Error("Set PLAYWRIGHT_CORE, CHROMIUM and VIEW_CAPTURE_OUT.");
+if (!/^\/(?:private\/)?tmp\//.test(out)) throw new Error("VIEW_CAPTURE_OUT must be under /tmp, so a run writes no tracked file.");
+const playwrightRequire = createRequire(join(PLAYWRIGHT_CORE, "package.json"));
 const { chromium } = playwrightRequire("playwright-core");
 const playwrightVersion = playwrightRequire("playwright-core/package.json").version;
-const browserPath = process.env.CHROMIUM ?? join(process.env.PLAYWRIGHT_BROWSERS_PATH ?? "/opt/pw-browsers", "chromium-1194/chrome-linux/chrome");
 
 // Root builds and commits page-assets before capture. This script never mutates
 // tracked source as a preflight; a stale asset fails the existing assets witness.
@@ -36,12 +37,7 @@ const sourceDirty = execFileSync("git", ["status", "--porcelain=v1", "--untracke
 if (sourceDirty) throw new Error("Capture requires a clean tracked source/build-assets head; commit preparation before recording.");
 const sourceTree = execFileSync("git", ["rev-parse", "HEAD^{tree}"], { cwd: root, encoding: "utf8" }).trim();
 
-const log = execFileSync(process.execPath, [join(root, "node_modules/vitest/vitest.mjs"), "run", "--project", "scope", "page/test/record", "--silent=false", "--reporter=verbose"], {
-  cwd: root, env: { ...process.env, PAGE_RECORD: "1" }, encoding: "utf8", maxBuffer: 256 * 1024 * 1024,
-});
-const parts = [...log.matchAll(/^PAGE-RECORD (\d+) (\S+)$/gm)].sort((a, b) => Number(a[1]) - Number(b[1])).map((m) => m[2]);
-if (parts.length === 0 || !/^PAGE-RECORD end$/m.test(log)) throw new Error("The recorder printed no whole record.");
-const record = JSON.parse(Buffer.from(parts.join(""), "base64url").toString("utf8"));
+const record = recordFrom(recorderLog(root, "page/test/record", { PAGE_RECORD: "1" }), "PAGE-RECORD");
 // Optional private scratch handoff for targeted browser debugging. This record
 // contains fixture signing keys; never write it into published capture assets.
 if (process.env.PAGE_CAPTURE_RECORD_OUT) {
@@ -62,6 +58,7 @@ const contexts = [];
 const previewChecks = [];
 const taskChecks = [];
 const navigationChecks = [];
+const endedOriginals = [];
 const keyboardChecks = [];
 mkdirSync(out, { recursive: true });
 
@@ -72,6 +69,15 @@ async function as(person, { width = 1024, height = 800, colorScheme = "light" } 
   await context.route(`${record.service}/**`, (route) => {
     const request = route.request();
     const path = request.url().slice(record.service.length);
+    // The page's fonts and marks are the Worker's public brand files, and they are binary, so the record holds them whole.
+    if (path.startsWith("/brand/") && Object.hasOwn(record.brand, path.slice("/brand/".length))) {
+      const asset = record.brand[path.slice("/brand/".length)];
+      return route.fulfill({ status: 200, contentType: asset.type, body: Buffer.from(asset.base64, "base64") });
+    }
+    // Playback holds the head stream open and sends nothing, as a live stream does while the recorded head stays current.
+    if (path.endsWith("/stream")) return undefined;
+    // A refused act ends the page's copy of its original. The recorder sends no such delete, so playback answers it as the route does.
+    if (request.method() === "DELETE" && path.includes("/originals/")) { endedOriginals.push(path); return route.fulfill({ status: 204 }); }
     const actor = path.endsWith("/sessions") ? ` ${JSON.parse(request.postData() ?? "{}").request?.actor}` : "";
     const answer = record.answers[`${request.method() === "POST" ? "POST" : "GET"} ${path}${actor}`];
     if (!answer) {
@@ -191,9 +197,12 @@ if (await una.locator('form[data-act="comment"] [name="field:body"]').inputValue
 const rita = await as("rita");
 await rita.goto(`${record.service}/page/#/change/${record.agents}`);
 await rita.getByRole("heading", { name: /Rules for agents/ }).waitFor();
-const primaryReview = rita.locator('[data-action-slot="next"] form[data-act="review-verdict"]');
-await primaryReview.getByRole("button", { name: "Review change", exact: true }).waitFor();
-if (await primaryReview.locator("xpath=ancestor::details").count()) throw new Error("Qualified review is hidden in Inspect.");
+const openReview = rita.locator('[data-action-slot="next"]').getByRole("button", { name: "Review change", exact: true });
+await openReview.waitFor();
+if (await openReview.locator("xpath=ancestor::details").count()) throw new Error("Qualified review is hidden in Inspect.");
+await openReview.click();
+const primaryReview = rita.getByRole("dialog", { name: `Review version ${record.manifest}`, exact: true }).locator('form[data-act="review-verdict"]');
+await primaryReview.waitFor();
 const reviewManifest = primaryReview.locator('[name="field:manifest"]');
 if (await reviewManifest.inputValue() !== String(record.manifest)) throw new Error("Primary review changed selected version.");
 taskChecks.push({ task: "Review change", role: "recorded admin nonauthor", inlinePrimary: true, exactManifest: record.manifest, submitted: false });
@@ -206,6 +215,7 @@ await paul.getByRole("heading", { name: /Rules for agents/ }).waitFor();
 const review = paul.locator('form[data-act="review-verdict"]');
 // Own-author review is offered only in the inspection surface. This still
 // displays the native recorder refusal through path-based POST playback; the browser signature/body is not admitted again.
+await paul.getByRole("button", { name: "Inspect change record", exact: true }).click();
 const reviewDetails = paul.locator("details", { has: review });
 await reviewDetails.first().locator("summary").first().click();
 const nestedReview = reviewDetails.last();
@@ -221,12 +231,15 @@ if (await extent.evaluate((element) => element.tagName === "SELECT")) await exte
 else if (await extent.getAttribute("type") !== "hidden") await extent.fill("rules");
 else if (await extent.inputValue() !== "rules") throw new Error("Review form names another extent.");
 await review.getByRole("button").click();
-const lastRequest = paul.locator("details.action-record");
-await lastRequest.waitFor();
-await lastRequest.locator("summary").click();
 await paul.getByRole("status").filter({ hasText: "Known answer for review-verdict" })
   .filter({ hasText: /Refused:.*author-cannot-review/ }).waitFor();
 await shot(paul, "change-refused");
+const refused = paul.getByRole("dialog", { name: "Request refused", exact: true });
+await refused.waitFor();
+if (!(await refused.textContent()).includes("Guard: author-cannot-review")) throw new Error("The refusal dialog does not name its guard.");
+await refused.getByRole("button", { name: "Dismiss", exact: true }).click();
+await refused.waitFor({ state: "hidden" });
+await paul.getByRole("button", { name: "Inspect change record", exact: true }).click();
 await paul.getByText("Inspect change record", { exact: true }).click();
 await paul.getByText(/rules-not-met:rules/).first().waitFor();
 await shot(paul, "change-refused-record");
@@ -308,7 +321,7 @@ if (consoleErrors.length > 0) throw new Error(`Browser errors: ${JSON.stringify(
 writeFileSync(join(out, "checks.json"), `${JSON.stringify({
   source, sourceTree, fixture: record.fixture, playwrightVersion, browserVersion,
   executablePath: browserPath, fallback: "Browser plugin not available", layoutChecks,
-  consoleErrors, expectedNetworkRefusals, unanswered, previewChecks, taskChecks, navigationChecks, keyboardChecks, playbackBoundary: "Recorded native replies; POST replay is keyed by route and does not verify the browser intent/signature or re-admit it",
+  consoleErrors, expectedNetworkRefusals, unanswered, endedOriginals, previewChecks, taskChecks, navigationChecks, keyboardChecks, playbackBoundary: "Recorded native replies; POST replay is keyed by route and does not verify the browser intent/signature or re-admit it",
 }, null, 2)}\n`);
 if (unanswered.length > 0) throw new Error(`The browser asked for what the recorder did not read: ${unanswered.join("; ")}`);
 for (const [name, size] of sizes) if (size > MOST) throw new Error(`${name}.png is ${size} bytes, over ${MOST}.`);

@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "qualification": "One passing gate. Chromium ran on one Mac, in a Linux container, and on a GitHub runner in two workflows. One script still fails, and its request is named.",
+  "directory": "2026-11-01-browser-scripts",
+  "checkpoint": {
+    "commit": "2f2fadd18a1a8da73a838f482ed9a7942ceb7d45",
+    "tree": "18afbccf24860ea2c364feb0d2f7c39a98ef66f9"
+  },
+  "fileCount": 93,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "f6e3d2768d6c32775ee0c6ad4edf6a8704c53a345dcff15800458ec46757eee0"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6546,
+      "sha256": "7e9e0b091eb33d0b93024bef362ea7c1897aa0e16c8bf97c97551f07fc3f4f15"
+    },
+    {
+      "path": "30-final-owned-scopes.log",
+      "bytes": 1357,
+      "sha256": "302806f8154897d9e608fcca49702c39f89ff2d438bdbde421bb236545ae26c3"
+    },
+    {
+      "path": "31-final-screens.log",
+      "bytes": 769,
+      "sha256": "2e9d563aaf841e5c270035c5371ac4a63288276cc65b6fabee65236cfae48dc1"
+    },
+    {
+      "path": "32-final-demo-captures-recorded.log",
+      "bytes": 302,
+      "sha256": "28db434b4f04327a86ba8f6cfac2d6264c6505abdca48f3e52e9ffebd9c93052"
+    },
+    {
+      "path": "39-linux-final-summary.log",
+      "bytes": 521,
+      "sha256": "06369dc2c9d0a7d447d3960e5c8defc487e8e87bfc932fee5e3e8a577b21012b"
+    },
+    {
+      "path": "50-control-owned-scopes-shared-room-state.log",
+      "bytes": 1126,
+      "sha256": "89c8b17a48c84b37d2487cf4a00cecc2116cc279a49f79b4793a91fc2b36a94d"
+    },
+    {
+      "path": "51-control-screens-refusal-without-guard.log",
+      "bytes": 787,
+      "sha256": "a2cd989627ea1419da409b4a99397712c9edb76d976a84fa1e3805c4759618e1"
+    },
+    {
+      "path": "52-control-screens-record-without-brand.log",
+      "bytes": 2230,
+      "sha256": "1707d96b15527bd365557536d83f10b50dde357ea3b201f8aaed84af55edecfb"
+    },
+    {
+      "path": "53-control-demo-captures-confirmation-without-value.log",
+      "bytes": 1408,
+      "sha256": "9e584997c68ca3a42d318844d87eb29e8a5f98240227ab96bc441b3085e7a518"
+    },
+    {
+      "path": "54-control-recorder-output-no-colour-handling.log",
+      "bytes": 1683,
+      "sha256": "45289312ba325d715b53d1db3e1e3a01b63fe98e374c3cd9c63d4d0fd33a7d59"
+    },
+    {
+      "path": "55-control-recorder-output-no-line-check.log",
+      "bytes": 3278,
+      "sha256": "734f4048b4ae556de5128da4d707f3738a2e1ffc58f6badb2814025fcd82e41f"
+    },
+    {
+      "path": "10-declared-members-browser.log",
+      "bytes": 4413,
+      "sha256": "ef7e873ca75e34e7e932e6466392cc16a46ec1aba0b4a0037cc789aaec853552"
+    },
+    {
+      "path": "10-grow-routing-browser.log",
+      "bytes": 1215,
+      "sha256": "0c579baaf97259b861dea8a0791084a06e9ce994e8d19f3afb816379525ef105"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 8930,
+      "sha256": "9b8e6d84d05fcddeb02d33ccb82645b7575342fb5a168ca39e402bf99dacf206"
+    }
+  ]
+}
