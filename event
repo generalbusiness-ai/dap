@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d41d8650687a1586fd9aeb02fd87f1d81d52d621","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-01-browser-scripts.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d42d4bff72c2fab67026704d20162fee00219fec","text":"Merge retired a covered predecessor with no successor at its old path."}
