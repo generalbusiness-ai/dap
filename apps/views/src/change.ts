@@ -167,7 +167,7 @@ function findingLines(context: ChangeContext, findings: readonly ShownFinding[])
       `Change version: ${ordinal > 0 ? `${ordinal}, ` : ""}manifest ${id ?? "unknown"}${id === context.manifest?.id ? ", the version this card shows" : ""}.`,
       `Filed by: ${context.who(item.parties["reporter"])}`);
   }
-  lines.push("This card does not answer a finding. The ordinary dap mcp server does: change.resolve-finding-any or change.mark-finding-irrelevant for a holder of change.dismiss, and change.resolve-finding-own for the source that filed it. The change's opener and the authors of the finding's version cannot answer it with change.dismiss. For a finding on an earlier version, the first two tools also need answerAt from the change read, as at.");
+  lines.push("This card does not answer a finding. The ordinary dap mcp server does: change.resolve-finding-any or change.mark-finding-irrelevant for a holder of change.dismiss, and change.resolve-finding-own for the source that filed it. The change's opener and the authors of the finding's version cannot answer it with change.dismiss. None of these tools needs at, on the current version or an earlier one. To sign the revisions that the change read showed, pass the finding's answerAt as at.");
   return lines;
 }
 

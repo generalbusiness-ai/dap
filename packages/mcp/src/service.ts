@@ -535,7 +535,7 @@ export class McpService {
 
   /**
    * The final items that an act's `via` names select. Each has left the live summary, and the scope requires its revision. A final
-   * item's revision does not move, so a read at a later head gives the same number. A refused read stops the act before it is signed.
+   * item's revision does not move, so a read at a later head gives the same number. An act with a stale number is refused. A refused read stops the act before it is signed.
    */
   async #viaFinal(definition: DefinitionLike, act: ActLike, items: readonly Item[], on: number | null, fields: Readonly<Record<string, FieldValue>>, ref: ScopeRef, membership: ScopeRef | null): Promise<Item[]> {
     const found: Item[] = [];

@@ -593,6 +593,7 @@ test("a real lane on the finding definition: a required finding shows in needs_y
     const held = await card(a, "held", "view_change", changeSubject(lane));
     const lines = held.card!.body!.split("\n");
     expect(lines, "HELD ON THE CARD: the card says that it holds the merge").toContain(`Finding ${required}: holds the merge.`);
+    expect(held.card!.body, "THE CARD'S ROUTE: the card tells a person what the docs say about at").toContain("None of these tools needs at, on the current version or an earlier one. To sign the revisions that the change read showed, pass the finding's answerAt as at.");
     expect(lines, "NOT REQUIRED: the card lists it, and says that it does not hold the merge").toContain(`Finding ${optional}: open. It does not hold the merge, because its source is not required.`);
     expect(lines, "ESCAPED: real text from a source stays on its own line").toContain("File: src/a.ts\\x0aFinding 99: open. It does not hold the merge, because its source is not required.");
     expect(held.card!.actions.map(action => action.id), "HELD ON THE CARD: the card offers no merge").not.toContain("merge");
