@@ -46,9 +46,13 @@ import { readDeployment } from "./deployment-setting.ts";
  * seconds on membership's clock, plus the difference between the reading
  * scope's clock and membership's. Membership issues no new session to a key
  * that is not active or to a member that is removed. So a revoked device
- * stops reading within that window, and not before. What changes a role
- * takes effect in a session the same way: at the next session. Replacing
- * the secret ends every session at once.
+ * stops reading under its session within that window, and not before. What
+ * changes a role takes effect in a session the same way: at the next session.
+ * Replacing the secret ends every session at once and ends no signed read.
+ * A revoked key's signed read of a room's scope ends within 1200 seconds, plus
+ * the same clock difference: up to 300 for a scope's observation of membership,
+ * then the window of 900 (docs/security/trust-boundaries.md, "What a revoked
+ * key keeps").
  *
  * **How one is issued.** A device signs a session request with its own key,
  * to the membership scope, and membership answers from its head and its own
