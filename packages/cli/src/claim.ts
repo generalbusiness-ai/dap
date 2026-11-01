@@ -67,12 +67,17 @@ function creationMembership(summary: Summary, at: ScopeRef, key: KeyId, handle: 
   return canonicalize(summary.scope) === canonicalize(at) && summary.definition === definition
     && roster?.values["foundingKey"] === key && roster.values["foundingHandle"] === handle;
 }
+/** A stop under a saved claim whose earlier step went. "Nothing was submitted" would be false of the claim, and this run can have sent that step itself. */
+const CLAIM_WENT = "This step sent nothing, and an earlier step of this claim went ahead. Keep this claim: a new claim creates a second repository.";
+/** A stop under a saved claim with no accepted step on record. */
+const CLAIM_UNKNOWN = "This step sent nothing, and an earlier send of this claim has no known outcome. Keep this claim: a new claim can create a second repository.";
+
 async function recordedStep(handle: ScopeHandle, seq: number, at: ScopeRef, key: KeyId, kind: string): Promise<ClaimStep> {
   const got = await handle.entry(seq);
   if (!got.ok || got.value.entry.input.type !== "act") return stopCommand(failed(`Cannot recover the admitted ${kind} entry; the claim remains pending.`));
   const entry = got.value.entry;
   const step: ClaimStep = { signed: entry.input.type === "act" ? entry.input.signed : stopCommand(failed("The enrollment entry is not an act.")), accepted: factRefOf(entry) };
-  if (!validStep(step, at, key, kind) || step.accepted!.seq !== seq || step.accepted!.hash !== got.value.hash) return stopCommand(failed(`The admitted ${kind} entry does not match this membership and signing key; nothing was submitted.`));
+  if (!validStep(step, at, key, kind) || step.accepted!.seq !== seq || step.accepted!.hash !== got.value.hash) return stopCommand(failed(`The admitted ${kind} entry does not match this membership and signing key. ${CLAIM_WENT}`));
   return step;
 }
 
@@ -121,8 +126,8 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
     let pending: PendingClaim;
     if (config.claim && !options.again) {
       pending = config.claim;
-      if (pending.register !== register.scope || !isDigest(pending.intent) || typeof pending.handle !== "string") return failed("The pending claim does not identify this register and a valid recorded intent; nothing was submitted.");
-      if (pending["found"] && (!validStep(pending["found"], register, signer.key, "found") || intentDigest(pending["found"].signed.intent) !== pending.intent || pending["found"].signed.intent.fields["founderHandle"] !== pending.handle)) return failed("The pending claim does not match this register, signing key and recorded intent; nothing was submitted.");
+      if (pending.register !== register.scope || !isDigest(pending.intent) || typeof pending.handle !== "string") return failed(`The pending claim does not identify this register and a valid recorded intent. ${CLAIM_UNKNOWN}`);
+      if (pending["found"] && (!validStep(pending["found"], register, signer.key, "found") || intentDigest(pending["found"].signed.intent) !== pending.intent || pending["found"].signed.intent.fields["founderHandle"] !== pending.handle)) return failed(`The pending claim does not match this register, signing key and recorded intent. ${CLAIM_UNKNOWN}`);
     } else {
       let offered: CreationOffer | undefined;
       // The dedicated public service offers fresh Register17 selectors without
@@ -186,9 +191,9 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
       // Digest-only records from main used the exact native directory@1.
       // A readable exact register pin can identify a tagged successor;
       // an unreadable pin never guesses that successor from newest aliases.
-      if (registered.ok && canonicalize(registered.value.scope) !== canonicalize(register)) return failed("The register read does not match the saved register reference; nothing was submitted.");
+      if (registered.ok && canonicalize(registered.value.scope) !== canonicalize(register)) return failed(`The register read does not match the saved register reference. ${CLAIM_UNKNOWN}`);
       const legacyDefinition = registered.ok ? DIRECTORY_OF[registered.value.definition] : "platform:directory@1";
-      if (!legacyDefinition) return failed("The legacy claim's register definition is unknown; nothing was submitted.");
+      if (!legacyDefinition) return failed(`The legacy claim's register definition is unknown. ${CLAIM_UNKNOWN}`);
       const legacySeed: Seed = { v: 1, kind: "directory", definition: legacyDefinition, creator: register, cause: pending.intent, ordinal: 0 };
       const D = await handleOf(ctx, config, scopeIdOf(legacySeed), null);
       const genesis = await D.entry(0);
@@ -207,7 +212,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
           } catch { /* Not a checked copy of this legacy claim. */ }
         }
       }
-      if (!matched) return failed(`This pending claim has only a digest and no readable admitted directory with its exact creation signature (${unread}). Nothing was submitted. Retry the reads later, recover it manually, or use --again to sign a new claim, which may create another repository.`);
+      if (!matched) return failed(`This pending claim has only a digest and no readable admitted directory with its exact creation signature (${unread}). This step sent nothing, and an earlier send of this claim has no known outcome. Retry the reads later, or recover it manually. --again signs a new claim, which can create a second repository.`);
       await keep({ ...pending, "found": matched });
     }
     const submitted = async (step: ClaimStep, at: ScopeRef, handle: ScopeHandle, took: string): Promise<FactRef> => {
@@ -216,9 +221,9 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
         const settled = await handle.settle(step.signed);
         if (!settled.ok) return stopCommand(failed(`The original ${step.signed.intent.kind === "found" ? "create" : step.signed.intent.kind} is not confirmed: ${settled.reason}. It remains pending; Check submitted nothing.`));
         const receipt = settled.value;
-        if (!isFactRef(receipt.fact) || canonicalize(receipt.fact.at) !== canonicalize(at) || receipt.intent !== digest || step.accepted && canonicalize(receipt.fact) !== canonicalize(step.accepted)) return stopCommand(failed("The checked receipt does not match the exact original stage. It remains pending; nothing was submitted."));
+        if (!isFactRef(receipt.fact) || canonicalize(receipt.fact.at) !== canonicalize(at) || receipt.intent !== digest || step.accepted && canonicalize(receipt.fact) !== canonicalize(step.accepted)) return stopCommand(failed("The checked receipt does not match the exact original stage. It remains pending; Check submitted nothing."));
         const followed = await handle.followReceipt(receipt);
-        if (!followed.ok || followed.entry.input.type !== "act" || canonicalize(followed.entry.input.signed) !== canonicalize(step.signed)) return stopCommand(failed("The original accepted stage could not be followed exactly. It remains pending; nothing was submitted."));
+        if (!followed.ok || followed.entry.input.type !== "act" || canonicalize(followed.entry.input.signed) !== canonicalize(step.signed)) return stopCommand(failed("The original accepted stage could not be followed exactly. It remains pending; Check submitted nothing."));
         if (step.signed.intent.kind === "found" && canonicalize(at) === canonicalize(register)) registerDefinition = receipt.definition;
         return receipt.fact;
       }
@@ -226,8 +231,8 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
         // Settlement admits nothing and is bound to the exact envelope. A
         // saved marker alone cannot stand for some other accepted request.
         const settled = await handle.settle(step.signed);
-        if (!settled.ok) return stopCommand(failed(`Cannot confirm the saved ${step.signed.intent.kind === "found" ? "create" : step.signed.intent.kind} step: ${settled.reason}. The exact request remains pending; nothing was submitted.`));
-        if (settled.value.intent !== digest || canonicalize(settled.value.fact) !== canonicalize(step.accepted)) return stopCommand(failed("The saved accepted fact does not match this exact claim step; nothing was submitted."));
+        if (!settled.ok) return stopCommand(failed(`Cannot confirm the saved ${step.signed.intent.kind === "found" ? "create" : step.signed.intent.kind} step: ${settled.reason}. The exact request remains pending. ${CLAIM_WENT}`));
+        if (settled.value.intent !== digest || canonicalize(settled.value.fact) !== canonicalize(step.accepted)) return stopCommand(failed(`The saved accepted fact does not match this exact claim step. ${CLAIM_WENT}`));
         if (step.signed.intent.kind === "found" && canonicalize(at) === canonicalize(register)) registerDefinition = settled.value.definition;
         return step.accepted;
       }
@@ -275,7 +280,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
       repository = { directory: directory.scope, membership: summaries[0]!.scope, rules: children[1]!, destination: children[2]! };
       await keep({ ...pending, repository });
     }
-    if (!validRepository(repository, seed)) return failed("The saved repository references do not match this claim; nothing was submitted.");
+    if (!validRepository(repository, seed)) return failed(`The saved repository references do not match this claim. ${CLAIM_WENT}`);
     const handle = pending.handle;
 
     // The creator's seat and first key (`founding-key`): the first admin of the repository.
@@ -285,34 +290,34 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
     if (!pending.seat && readOnly) return failed("The creation and its children are confirmed, but no original seat request is retained. Use explicit Continue to prepare that next stage; Check submitted nothing.");
     if (!pending.seat) {
       const summary = await summaryOf(M);
-      if (!creationMembership(summary, repository.membership, signer.key, pending.handle, siblings.membership)) return failed("Membership does not record this creation's initial key and handle; nothing was submitted.");
+      if (!creationMembership(summary, repository.membership, signer.key, pending.handle, siblings.membership)) return failed(`Membership does not record this creation's initial key and handle. ${CLAIM_WENT}`);
       const members = summary.items.filter((item) => item.type === "member");
       const own = members.filter((item) => item.values["handle"] === pending.handle);
       if (own.length === 1 && own[0]!.state === "active") await keep({ ...pending, seat: await recordedStep(M, own[0]!.id, repository.membership, signer.key, "seat") });
-      else if (members.length !== 0) return failed("Existing membership makes the missing seat stage ambiguous; nothing was submitted.");
+      else if (members.length !== 0) return failed(`Existing membership makes the missing seat stage ambiguous. ${CLAIM_WENT}`);
       else {
         const signed = await signedIntent(signer, { to: repository.membership, kind: "seat", expected: expectedOf(mShape.acts["seat"]!, summary.items, null, {}) }, signing(ctx));
         await keep({ ...pending, seat: { signed } });
       }
     }
-    if (!validStep(pending.seat!, repository.membership, signer.key, "seat")) return failed("The saved seat does not match this membership and signing key; nothing was submitted.");
+    if (!validStep(pending.seat!, repository.membership, signer.key, "seat")) return failed(`The saved seat does not match this membership and signing key. ${CLAIM_WENT}`);
     const seat = await submitted(pending.seat!, repository.membership, M, "Seated");
     if (!pending.seat!.accepted) await keep({ ...pending, seat: { signed: pending.seat!.signed, accepted: seat } });
     const keyFields = { member: seat.seq };
     if (!pending.firstKey && readOnly) return failed("The original seat is confirmed, but no original first-key request is retained. Use explicit Continue to prepare that next stage; Check submitted nothing.");
     if (!pending.firstKey) {
       const summary = await summaryOf(M);
-      if (!creationMembership(summary, repository.membership, signer.key, pending.handle, siblings.membership)) return failed("Membership does not record this creation's initial key and handle; nothing was submitted.");
+      if (!creationMembership(summary, repository.membership, signer.key, pending.handle, siblings.membership)) return failed(`Membership does not record this creation's initial key and handle. ${CLAIM_WENT}`);
       const keys = summary.items.filter((item) => item.type === "key");
       const own = keys.filter((item) => item.values["id"] === signer.key && item.refs["member"] === seat.seq);
       if (own.length === 1 && own[0]!.state === "active") await keep({ ...pending, firstKey: await recordedStep(M, own[0]!.id, repository.membership, signer.key, "first-key") });
-      else if (keys.length !== 0) return failed("Existing membership makes the missing first-key stage ambiguous; nothing was submitted.");
+      else if (keys.length !== 0) return failed(`Existing membership makes the missing first-key stage ambiguous. ${CLAIM_WENT}`);
       else {
         const signed = await signedIntent(signer, { to: repository.membership, kind: "first-key", fields: keyFields, expected: expectedOf(mShape.acts["first-key"]!, summary.items, null, keyFields) }, signing(ctx));
         await keep({ ...pending, firstKey: { signed } });
       }
     }
-    if (!validStep(pending.firstKey!, repository.membership, signer.key, "first-key") || pending.firstKey!.signed.intent.fields["member"] !== seat.seq) return failed("The saved first key does not match this seat and signing key; nothing was submitted.");
+    if (!validStep(pending.firstKey!, repository.membership, signer.key, "first-key") || pending.firstKey!.signed.intent.fields["member"] !== seat.seq) return failed(`The saved first key does not match this seat and signing key. ${CLAIM_WENT}`);
     const firstKey = await submitted(pending.firstKey!, repository.membership, M, "First key");
     if (!pending.firstKey!.accepted) await keep({ ...pending, firstKey: { signed: pending.firstKey!.signed, accepted: firstKey } });
     const inbox = (await createdBy(M, seat.seq)).find((m) => m.seed.kind === "inbox")?.scope;
