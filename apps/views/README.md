@@ -61,6 +61,20 @@ those exact bytes to the ask's stored Brief digest. Existing S3 questions
 remain legacy unbound. There is no URL loader, body-digest fallback, or
 claim that approving a Question approves its Brief or conditions.
 
+Each `needs_you` row answers three questions. `needs` says what needs you, `why`
+says why it is yours, and `settles` says what closes it. `settledBy` names the act
+or delivery of the row's pinned definition that closes it, and `rule` names the
+clause that put the row there. `waiting` names the agents blocked on a question.
+These words grant nothing, and the lane still judges the act. A row of category
+`decision-due` lists a question whose `decide` guards hold, for a viewer who holds
+`issue.decide`. Without it, a question would leave the list when its last approval
+arrives and still wait for a decision. Reading a row, its card or its context leaves
+the item open. The card names any lane it could not read and counts any row it left
+out, so a person knows when the list is short.
+
+Each `since` row names its scope, lists up to six of its newest entries with who
+signed them, and counts the earlier ones in `earlier`.
+
 `since` is a pure read. **Mark reviewed** writes only local reviewed heads
 under this `DAP_HOME`, after rechecking the mounted cut and exact heads.
 It signs no native act and returns no native accepted fact. A duplicate

@@ -2398,11 +2398,11 @@ tool list, and `mcp-tools.json` describes that ordinary list.
 
 | Read | Result |
 | --- | --- |
-| `needs_you` | Requests, reviews, merges and required open findings that need your attention. |
+| `needs_you` | Requests, reviews, decisions, merges and required open findings that need your attention. Each row says what needs you, why it is yours and what settles it, and names its rule and the acts that settle it. |
 | `work` | Agent commitments, terms, blocks and linked changes. |
 | `context` | Question text, approvals, comments, conditions and Brief pin. |
 | `change` | One change's exact version: base, integration, reviews, checks, rules, merges, open findings and linked issues. |
-| `since` | Heads changed since an explicit Mark reviewed action. |
+| `since` | What changed since an explicit Mark reviewed action on this device: each changed head, its newest entries with who signed them, and a count of earlier entries. |
 
 Attention rows name their pinned declaration clause and observed head.
 Work rows name each agent's controller beside the current conditions.
@@ -2480,6 +2480,11 @@ unreviewed.
 `since` is read-only: equal heads produce no row, and each new head
 appears once in a response. Repeated reads keep showing that change
 until another explicit mark. Reading a card does not clear it.
+
+A mark belongs to one device. It moves that device's place and closes nothing.
+A new device has no place, so it shows every scope again. To see what needs you,
+read `needs_you`: its rows come from the record, so every device of a member
+reads the same rows.
 
 With more lanes than one call can read, `needs_you` and `since` read a window
 of lanes in a stable order. `omittedScopes` lists the lanes that the answer left

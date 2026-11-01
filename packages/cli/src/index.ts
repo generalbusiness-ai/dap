@@ -5,3 +5,4 @@ export * from "./line.ts";
 export * from "./invitations.ts";
 
 export * from "./application-install.ts";
+export * from "./issue-wait.ts";

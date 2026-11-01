@@ -39,6 +39,17 @@ function lanesLeft(data: Readonly<Record<string, unknown>>, screen: string): str
   if (screen === "work") return ` This list leaves out ${omitted} lane${omitted === 1 ? "" : "s"}. The Work list reads only the first lanes.`;
   return ` This list leaves out ${omitted} lane${omitted === 1 ? "" : "s"}.${isScopeRef(next) ? ` To read the lanes that follow, open this screen again with scope ${canonicalize(next)}.` : " No lane follows this one. To read the first lanes, open this screen with no scope."}`;
 }
+/** What a list could not read or show. A person must not take a short list for the whole room. */
+function notShown(data: Readonly<Record<string, unknown>>): string[] {
+  const unread = [...new Set((data["unread"] as { scope: ScopeRef }[]).map(row => row.scope.scope))].length, rows = data["omittedRows"] as number;
+  return [...unread ? [`This list could not read ${unread} lane${unread === 1 ? "" : "s"}, so it can leave out items there.`] : [], ...rows ? [`This list leaves out ${rows} more item${rows === 1 ? "" : "s"}. Settle some of the items above, then read it again.`] : []];
+}
+/** One entry of the catch-up list: a lane's new entries in words. */
+function changeWords(row: Row): string {
+  const count = row["earlier"] as number, changed = row["changed"] as { seq: number; what: string }[];
+  const listed = changed.map(entry => `Entry ${entry.seq}: ${entry.what}.`).join(" "), since = row["since"] as Row["head"] | null;
+  return `${String(row["name"])}. ${since ? `New since entry ${since.seq}, where you last marked it.` : "You have not marked this one on this device."} ${listed}${count ? ` This list leaves out ${count} earlier entr${count === 1 ? "y" : "ies"}.` : ""}`;
+}
 export function decisionSource(app: RepoInAi): ViewSource {
   return {
     initialPage: (screen, subject) => screen === "change" && subject === undefined ? "updates" : "summary",
@@ -71,15 +82,21 @@ export function decisionSource(app: RepoInAi): ViewSource {
         const position = Math.min(query.position, rows.length - 1), current = rows[position]!;
         const points = data["heads"] as LocalReviewCapture["heads"];
         const ranges = query.screen === "change" ? rows.map(row => ({ scope: row.scope.scope, from: row.head.seq, to: row.head.seq })) : [];
-        const entries = ranges.map(range => ({ scope: range.scope, seq: range.from, text: "A new native head since your explicit local mark. This summary does not claim a full journal review." }));
+        const entries = query.screen === "change" ? rows.map(row => ({ scope: row.scope.scope, seq: row.head.seq, text: changeWords(row) })) : [];
         const actions: CardAction[] = [];
         // A mark covers the heads this window displayed, so a lane outside the window stays unreviewed.
         if (query.screen === "change" && (data["unread"] as unknown[]).length === 0 && data["omittedRows"] === 0 && isScopeRef(data["directory"]) && isMemberRef(data["viewer"])) actions.push({ id: "mark-reviewed", label: "Mark reviewed", purpose: "mark-reviewed", local: true,
           capture: { service: app.options.service, directory: data["directory"], viewer: data["viewer"], key: app.options.signer.key, heads: points, ranges } });
-        const card: Card = { identity: { item: String(current.item), kind: current.type, revision: String(current.head.seq), subject: { scope: current.scope.scope, item: current.item }, at: {} },
-          title: query.screen === "change" ? "Heads since your explicit review mark" : current.type, summary: `${current.rule.definition} ${current.rule.clause}`,
-          reasons: ["This projection explains attention; it grants no permission.", ...(left ? [left.trim()] : [])], body: JSON.stringify(current, null, 2), projection: points.map(point => ({ scope: point.scope.scope, seq: point.head.seq, hash: point.head.hash })),
-          reviewIntended: ranges, unavailable: [], entries, waitsOn: [], settles: [], actions, fallback: `Read the named bounded tool for exact rows, heads and omissions.${left}` };
+        const identity = { item: String(current.item), kind: current.type, revision: String(current.head.seq), subject: { scope: current.scope.scope, item: current.item }, at: {} };
+        const projection = points.map(point => ({ scope: point.scope.scope, seq: point.head.seq, hash: point.head.hash }));
+        const shortfall = [...notShown(data), ...(left ? [left.trim()] : [])];
+        const card: Card = query.screen === "needs-you" ? { identity, title: String(current["needs"]), summary: `Why it is yours: ${String(current["why"])}`,
+            reasons: [`What settles it: ${String(current["settles"])}`, ...(current["waiting"] ? [`Waiting on this: ${(current["waiting"] as string[]).join(", ")}.`] : []), `Rule: ${current.rule.definition} ${current.rule.clause}.`, "Reading this item leaves it open. This list grants no permission.", ...shortfall],
+            body: JSON.stringify(current, null, 2), projection, reviewIntended: [], unavailable: [], entries: [], waitsOn: (current["waiting"] as string[] | undefined) ?? [], settles: current["settledBy"] as string[], actions, fallback: `Read needs_you for exact rows, heads and omissions. To read a question and answer it, open its Decision card.${left}` }
+          : query.screen === "change" ? { identity, title: "What changed since your last review", summary: "Each scope below lists its newest entries since you last pressed Mark reviewed on this device.",
+            reasons: ["Mark reviewed moves your place on this device and closes nothing. Another device keeps its own place, so it shows these changes again.", ...shortfall], projection, reviewIntended: ranges, unavailable: [], entries, waitsOn: [], settles: [], actions, fallback: `Read since for exact rows, heads and omissions.${left}` }
+          : { identity, title: current.type, summary: `${current.rule.definition} ${current.rule.clause}`,
+            reasons: ["This projection explains attention; it grants no permission.", ...(left ? [left.trim()] : [])], body: JSON.stringify(current, null, 2), projection, reviewIntended: ranges, unavailable: [], entries, waitsOn: [], settles: [], actions, fallback: `Read the named bounded tool for exact rows, heads and omissions.${left}` };
         return { status: "ready", position, count: rows.length, card, fallback: card.fallback };
       } catch (error) {
         if (!(error instanceof Unread) && !(error instanceof SyntaxError)) throw error;
