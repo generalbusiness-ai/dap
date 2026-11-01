@@ -398,6 +398,13 @@ register exists. Plan first, then set the setting, then install:
    nothing new. `--again` signs a second claim, which creates a second
    repository.
 
+   Under policy `keys`, the command reads the register's summary before it
+   signs `found`. A key with no entry at the register in the last 900
+   seconds gets `forbidden`. The command prints
+   `Cannot read <register>: forbidden.` and signs nothing. So run the first
+   claim within 900 seconds of the install. Each accepted `found` restarts
+   those 900 seconds for the key that signed it.
+
 The same order holds for Cloudflare Artifacts, with `--host
 artifacts`, `--namespace artroom-demo` and `ARTIFACTS_CONFIG`
 ([hosts.md](hosts.md)).
