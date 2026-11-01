@@ -55,6 +55,8 @@ This is an observed run, on 1 November 2026. The script at `bed1c8be` ran on dap
 - **The ledger.** `HostedSession` holds the rule "every fact comes through hosted tools" together with the script's structure. It does not prove each value's source. Literals are one list, small numbers such as `1` and `60` pass by equality, and booleans are not checked.
 - **The keys.** The fixed `idempotencyKey` words are the script's memory. A model in a new session would have to choose or find its own key.
 - **The tool list.** The generic names match the hosted default exactly. Act tools are held by form and by the person-only list, because the room's definitions and role decide them.
+- **The next phase.** The operator's command chooses each next phase. So "a fresh session resumes" means that a new session rebuilds the block, the decision and the offer from the record. It does not mean that a session learns from the record what to do next.
+- **One of each.** `Room.lane` stops at `no-issue-lane` or `no-change-lane` unless the room holds exactly one lane of that kind. `rebuild` stops at `no-block` unless the issue holds exactly one blocked block (`examples/repo-in-ai/hosted-loop/agent.ts`). So the run shows a scratch room with one of each, and a room with several stops the script.
 
 ## Evidence
 
