@@ -79,7 +79,7 @@ test("ordinary screens omit empty record panels while inspection preserves full 
 
 test("issue and rules keep their subject once and move authority detail into inspection", () => {
   vi.stubGlobal("document", document);
-  const issue = issueScreen(room, { scope: "sc_issue", definition: "sha256:issue-definition", head, title: "<script>unsafe</script>", number: 5, body: null, state: "open", requester: "@author", assignees: [], conditions: [], comments: [], closeReason: null, createdAt: "2026-10-12T14:03:00Z", modifiedAt: "2026-10-12T14:05:00Z" } as never) as unknown as Element;
+  const issue = issueScreen(room, { scope: "sc_issue", definition: "sha256:issue-definition", head, questions: [], title: "<script>unsafe</script>", number: 5, body: null, state: "open", requester: "@author", assignees: [], conditions: [], comments: [], closeReason: null, createdAt: "2026-10-12T14:03:00Z", modifiedAt: "2026-10-12T14:05:00Z" } as never) as unknown as Element;
   expect(issue.all("h1")[0]!.textContent).toBe("<script>unsafe</script> #5");
   expect(issue.all("script")).toEqual([]);
   expect(issue.all("h2")).toEqual([]);
@@ -280,4 +280,17 @@ test("the failure screen says the cause and the next step of an open with no ses
   const heldSession = failureScreen(new Unreadable("Cannot read sc_directory: forbidden.")) as unknown as Element;
   expect(heldSession.all("h1")[0]!.textContent).toBe("Observation unknown");
   expect(heldSession.all("p").map(line => line.textContent)).toEqual(["Cannot read sc_directory: forbidden.", "Join another room"]);
+});
+
+test("the issue screen lists a question with its text, its reasons and a slot for each answer; a request of a closed question stands alone", () => {
+  vi.stubGlobal("document", document);
+  const room = { me: { handle: "@ana", name: null, role: "admin", kind: "person", actions: [] }, directory: "sc_directory", membership: { scope: "sc_membership" } } as unknown as Room;
+  const question = { ask: 4, question: "TEST which format?", body: "TEST keep CSV.", brief: "Brief sha256:b. Approval does not approve the Brief or conditions.",
+    rows: [{ item: 5, needs: "Approve or request changes on question 4.", why: "Why it is yours: @una asked you by name.", lines: ["What settles it: an act.", "Rule: sha256:d acts.request-approval."] }],
+    others: ["@una asked @vic to approve this question."], answers: [{ kind: "approve" as const, label: "Approve", on: "", typed: {} }] };
+  const closed = { ask: -1, question: "", body: null, brief: null, rows: [{ item: 8, needs: "A request about question 7, which has closed.", why: "Why it is yours: @vic asked you by name.", lines: [] }], others: [], answers: [] };
+  const screen = issueScreen(room, { scope: "sc_issue", definition: "sha256:d", head, questions: [question, closed], title: "TEST", number: 1, body: null, state: "open", requester: "@rita", assignees: [], conditions: [], comments: [], createdAt: null, modifiedAt: null } as never) as unknown as Element;
+  const seen = screen.textContent;
+  for (const words of ["Reading this item leaves it open. This list grants no permission.", "TEST which format?", "TEST keep CSV.", "Approval does not approve the Brief", "Approve or request changes on question 4.", "Why it is yours: @una asked you by name.", "What settles it: an act.", "Rule: sha256:d acts.request-approval.", "@una asked @vic to approve this question.", "A request about question 7, which has closed."]) expect(seen, words).toContain(words);
+  expect(screen.all("div").filter(node => node.getAttribute("data-question-answers") !== null).map(node => node.getAttribute("data-question-answers")), "ANSWERS: a slot for the live question only").toEqual(["4"]);
 });

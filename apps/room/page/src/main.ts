@@ -612,7 +612,7 @@ function devicesScreen(room: Room): HTMLElement {
     answer.textContent = "Creating device link";
     void issueDeviceKey(room, handle.value.trim()).then((issued) => {
       if ("refused" in issued) { answer.textContent = issued.refused; return; }
-      answer.replaceChildren(h("label", {}, "Private device link", h("textarea", { readonly: "", "aria-label": "Private device link", "data-device-link": "", spellcheck: "false" }, issued.link)), h("p", { class: "muted" }, "On the new device, open Join with an invitation and paste this link. Anyone who holds the link can enrol a key for this member."));
+      answer.replaceChildren(h("label", {}, "Private device link", h("textarea", { readonly: "", "aria-label": "Private device link", "data-device-link": "", spellcheck: "false" }, issued.link)), h("p", { class: "muted" }, "On the new device, open Join with an invitation and paste this link, or run dap join with this link in an empty directory. Anyone who holds the link can enrol a key for this member."));
     }).catch((error) => { answer.textContent = error instanceof Error ? error.message : "The device link could not be created."; }).finally(() => { create.removeAttribute("disabled"); });
   });
   return h("main", { class: "screen" }, title, about, form, answer);
@@ -1090,6 +1090,13 @@ async function drawWorkbench(focus: boolean): Promise<void> {
           const control = taskForm(comment, send, context, ["body"], "Comment");
           screen.querySelector('[data-action-slot="comment"]')?.append(control);
           if (control.hasAttribute("data-act")) represented.push("comment");
+        }
+        // A question's answers carry their values, and the raw forms stay under Advanced.
+        for (const question of issue.questions) for (const answer of question.answers) {
+          if (!acts.acts.some((act) => act.kind === answer.kind)) continue;
+          const press = h("form", { "data-act": answer.kind, "data-question-answer": answer.label }, h("button", { type: "submit", class: "primary", ...(context.pending || context.uncertain ? { disabled: "" } : {}) }, answer.label));
+          press.addEventListener("submit", (event) => { event.preventDefault(); send(answer.kind, answer.on, answer.typed); });
+          screen.querySelector(`[data-question-answers="${question.ask}"]`)?.append(press);
         }
         const next = acts.acts.find((act) => actionContext.primary.includes(act.kind) && act.kind !== "comment");
         if (next && !context.pending && !context.uncertain) {

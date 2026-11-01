@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "qualification": "One passing gate. A script drove Chromium against a local Worker, and no person or deployed Worker has run this screen.",
+  "directory": "2026-11-01-page-questions",
+  "checkpoint": {
+    "commit": "9541f0ba63607e1b5ac1e318defd319b61c4b42b",
+    "tree": "2349f870b5eeaaad0f6a541d941b495756acce4f"
+  },
+  "fileCount": 65,
+  "files": [
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "b055646fd587a1bee526b51f51d0243ad982a5f9f3911919b913ec58dded30f0"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6494,
+      "sha256": "a8269445cc9599acb31ed3d4f19d24a2c2cb65130035a7b889a9b47995a21682"
+    },
+    {
+      "path": "witness/run.json",
+      "bytes": 1976,
+      "sha256": "2af4e83d94c6b683deed9813876b17810be4990a83d2b1d93d2281801f9086c8"
+    },
+    {
+      "path": "red/old-screen.json",
+      "bytes": 2460,
+      "sha256": "e173ebf9f69e4401b0e4bebd265b1b12d7f6dd2a74f9bd2fb9240097c596b662"
+    },
+    {
+      "path": "controls/no-answers.json",
+      "bytes": 1398,
+      "sha256": "45bd715b4fd292cb9bd1a31fc040dbadb77c2d0e2cf4b3727f1edd4ff3e47d6c"
+    },
+    {
+      "path": "controls/second-words.json",
+      "bytes": 2102,
+      "sha256": "5488602eb5d4a88efc51a05ac9135a87ad3c7b753faeabbbed57a84793aba2db"
+    },
+    {
+      "path": "controls/read-signs.json",
+      "bytes": 1804,
+      "sha256": "c8abf36a63587c330c84f9204d39cb232713894c77cf9197f44b90a932cbcbf6"
+    },
+    {
+      "path": "controls/no-devices-words.json",
+      "bytes": 2075,
+      "sha256": "5e50692b2a3f1b00c78661cf3e726d941eac7d5ece1b37c298e360c56276abf2"
+    },
+    {
+      "path": "witness/screens/2-approved.png",
+      "bytes": 174304,
+      "sha256": "7f849db69352f16582fd6d9bccfa21f06ca7d911872a9e0ac1ac947ade673aa5"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 5845,
+      "sha256": "76cfdec4062430169f052e5d75aa6e2cf945c3663709ee16cb2c218c4d4afc93"
+    }
+  ]
+}

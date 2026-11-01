@@ -7,7 +7,7 @@ import { Collection, LIMITS, Unread, sameOptional, minimumFor, type Frame, type 
 import { ReviewStore, ReviewStoreError } from "./review-store.ts";
 import { readChange } from "./change.ts";
 import { FINDING_CLAUSE, findingActs, findingProfile, malformedRange, openFindings, requiredSource, shownText, sourceRow } from "./findings.ts";
-import { approvalReasons, decidable, decisionReasons, findingReasons, mergeReasons, reviewReasons, unknownMergeReasons, waitingOn } from "./attention.ts";
+import { findingReasons, mergeReasons, questionRows, questions, reviewReasons, unknownMergeReasons } from "./attention.ts";
 
 export interface Row { scope: ScopeRef; head: Frame["head"]; item: number; type: string; rule: { definition: string; clause: string }; [key: string]: unknown }
 export interface Context {
@@ -23,7 +23,7 @@ export interface AdapterOptions extends ReadOptions { reviewStore: ReviewStore; 
 export const result = (value: Record<string, unknown>, isError = false): CallResult => ({ structuredContent: value, content: [{ type: "text", text: JSON.stringify(value) }], isError });
 const RESULT_BYTES = 256 * 1024;
 const resultBytes = (answer: CallResult): number => utf8(canonicalize(answer)).length;
-export const questions = (pin: unknown): boolean => pin === QUESTION_DIGESTS.issue || pin === QUESTION_BRIEF_DIGESTS.issue;
+export { questions };
 const issue = (pin: unknown): boolean => questions(pin) || pin === J4_DIGESTS.issue;
 /** The exact pins of a change lane that these views read. There is no generic profile loader. */
 export const changes = (pin: unknown): boolean => pin === J4_DIGESTS.change || pin === FINDING_DIGESTS.change;
@@ -106,16 +106,7 @@ export class RepoInAi {
     return this.#rows(async (collection, frames) => {
       const rows: Row[] = [];
       for (const frame of frames) {
-        if (questions(frame.summary.definition)) for (const item of frame.items) {
-          if (item.type !== "approval-request" || item.state !== "open" || !sameOptional(item.parties["requested"], collection.viewer)) continue;
-          const ask = frame.items.find(ask => ask.type === "ask" && matchItem(item.refs["ask"], ask.id, frame.ref));
-          const currentBody = !!ask && sameOptional(item.refs["bodyAt"], ask.refs["bodyAt"]);
-          rows.push(row(frame, item, "acts.request-approval;items.approval-request", { category: "requested-review", ...approvalReasons(item, ask, currentBody, ask ? waitingOn(frame.items, ask.id, frame.ref) : []), bodyAt: item.refs["bodyAt"], currentBody, permission: "not-determined" }));
-        }
-        if (questions(frame.summary.definition) && collection.actions.includes("issue.decide")) for (const ask of frame.items) {
-          // After the last approval the request leaves this list, and the question still waits for a decision.
-          if (ask.type === "ask" && decidable(ask, frame.items, frame.ref)) rows.push(row(frame, ask, "acts.decide", { category: "decision-due", ...decisionReasons(ask, waitingOn(frame.items, ask.id, frame.ref)), bodyAt: ask.refs["bodyAt"], permission: "not-determined" }));
-        }
+        if (questions(frame.summary.definition)) for (const one of questionRows(frame.items, frame.ref, collection.viewer, collection.actions)) rows.push(row(frame, one.item, one.clause, { ...one.values }));
         if (changes(frame.summary.definition)) {
           const proposal = frame.items.find(item => item.type === "proposal");
           const manifest = frame.items.find(item => item.type === "manifest" && item.state === "current");
