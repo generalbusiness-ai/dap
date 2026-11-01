@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ee9d65e55af0b62bc9bfa8f0ff90c54d6792f99d","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-31-signed-requests-across-devices.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ef6d80d60aec1242b81e14292aaded0b8d37fa99","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/inventory.ts."}
