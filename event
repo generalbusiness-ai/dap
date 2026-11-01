@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-entry-points.test.mjs","body":{"commit":"0da186097dc8be02ef433f4f7a41bf0624b786b4","path":"scripts/security-entry-points.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:00327d64478f6e62c788c18046823771b3251be8","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/read-token.test.ts."}
