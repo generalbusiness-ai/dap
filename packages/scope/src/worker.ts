@@ -10,6 +10,8 @@ import { within as boundedWait } from "@generalbusiness/dap-bytes";
 import { applicationHostOutside } from "./applications/wiring.ts";
 import { applicationAnnouncementOutside } from "./applications/announce.ts";
 import type { ApplicationBindings } from "./applications/bindings.ts";
+import { ApplicationContentStore } from "./applications/content.ts";
+import { readApplicationTrust } from "./applications/admission.ts";
 import { health } from "./health.ts";
 /**
  * The Worker (scope contract, sections 2.3, 7.1 and 9.1): the routes of a
@@ -61,7 +63,7 @@ import { health } from "./health.ts";
  */
 
 import { DurableObject, RpcTarget, WorkerEntrypoint } from "cloudflare:workers";
-import { CONTROL_BODY_BYTES, HostedAgent, HostedRegistry, controlOf, hostedMcpTools, type HostedMcpSettings, type AgentPorts, type ControlAnswer, type RegistryPorts } from "@generalbusiness/dap-mcp";
+import { CONTROL_BODY_BYTES, HostedAgent, HostedRegistry, controlOf, hostedMcpTools, remoteCardOrigins, type HostedMcpSettings, type AgentPorts, type ControlAnswer, type RegistryPorts } from "@generalbusiness/dap-mcp";
 import { PROPOSED_BOUNDS, ITEM_QUERY_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
 import type { FactRef, Entry, ItemQueryRead, ItemQueryRefusal, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxId, Grant, LogPage, PlatformDefinition, Read, ReadRefusal, RetainedInput, ScopeApi, ScopeId, ScopeKind, Seed, SessionRefusal, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, entryHash, isEntry, same, parseStrict, readItemQueryReply, utf8, definitionDigest, intentDigest, isPlatformDefinition, isScopeId, positionOf, scopeIdOf } from "@generalbusiness/dap-bytes";
@@ -924,6 +926,12 @@ export class McpAgent<E extends McpEnv = McpEnv> extends DurableObject<E> {
     const scopes = this.scopes();
     this.#agent = new HostedAgent(sqlOf(this.ctx), {
       genericTools: hostedMcpTools(this.env) ?? [],
+      cardOrigins: remoteCardOrigins(this.env.MCP_CARD_ORIGINS) ?? [],
+      applicationContent: async release => {
+        if (!this.env.APPLICATION_CONTENT) return null;
+        const store = new ApplicationContentStore(this.env.APPLICATION_CONTENT, readApplicationTrust(this.env.APPLICATION_TRUST), PROPOSED_BOUNDS);
+        return (await store.get(release))?.bytes ?? null;
+      },
       applicationTrust: this.env.APPLICATION_TRUST,
       id: this.ctx.id.toString(), now: () => Date.now(), random: (n) => crypto.getRandomValues(new Uint8Array(n)), observe: observeThrough(scopes),
       ...(this.env.METRICS ? { metrics: { deployment: readDeployment(this.env.DEPLOYMENT) ?? "unknown", version: this.env.VERSION_METADATA?.id ?? "unknown", report: (point: MetricPoint) => this.env.METRICS?.writeDataPoint(point) } } : {}),

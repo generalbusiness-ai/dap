@@ -14,13 +14,14 @@ import { fixedSigner } from "./fixtures.ts";
 test("both MCP revisions serve package-checked resources and preserve declared policy", async () => {
   const fixture: PresentationPackage = { domain: "policy-fixture", resources: [{ uri: "ui://fixture/card", name: "fixture", description: "A policy fixture", text: "<!doctype html><p>fixture</p>", digest: digestBytes(utf8("<!doctype html><p>fixture</p>")), ui: { csp: { connectDomains: ["https://data.example"], resourceDomains: ["https://assets.example"], frameDomains: ["https://frames.example"], baseUriDomains: ["https://base.example"] }, permissions: { camera: {} }, prefersBorder: false } }] };
   const signer = fixedSigner(11);
+  const capabilities = { extensions: { "io.modelcontextprotocol/ui": { mimeTypes: ["text/html;profile=mcp-app"] } } };
   for (const version of [LEGACY, MODERN]) {
     const service = new McpService({ service: "https://scopes.test", signer, custody: memoryStore(), config: { read: async () => ({ service: "https://scopes.test" }), addRoot: async () => {} }, presentation: fixture });
     const wire = new Wire(service), session = newSession(null);
-    const meta = version === MODERN ? { _meta: { "io.modelcontextprotocol/protocolVersion": MODERN, "io.modelcontextprotocol/clientCapabilities": {} } } : {};
+    const meta = version === MODERN ? { _meta: { "io.modelcontextprotocol/protocolVersion": MODERN, "io.modelcontextprotocol/clientCapabilities": capabilities } } : {};
     const rpc = (method: string, params = {}) => wire.handle({ jsonrpc: "2.0", id: 1, method, params: { ...params, ...meta } }, version === LEGACY ? session : null, () => {});
     if (version === LEGACY) {
-      await rpc("initialize", { protocolVersion: LEGACY, capabilities: {}, clientInfo: { name: "resource-fixture", version: "1" } });
+      await rpc("initialize", { protocolVersion: LEGACY, capabilities, clientInfo: { name: "resource-fixture", version: "1" } });
       await wire.handle({ jsonrpc: "2.0", method: "notifications/initialized" }, session, () => {});
     }
     const listing = await rpc("resources/list");
@@ -28,7 +29,9 @@ test("both MCP revisions serve package-checked resources and preserve declared p
     const listed = listing!.result as { resources: Record<string, unknown>[] };
     expect(listed.resources).toHaveLength(1);
     const read = (await rpc("resources/read", { uri: fixture.resources[0]!.uri }))!.result as { contents: { text: string; mimeType: string; _meta: unknown }[] };
-    expect(read.contents[0]).toEqual({ uri: "ui://fixture/card", mimeType: "text/html;profile=mcp-app", text: fixture.resources[0]!.text, _meta: { ui: { ...fixture.resources[0]!.ui, domain: "policy-fixture.inguz.space" } } });
+    expect(read.contents[0]).toEqual({ uri: "ui://fixture/card", mimeType: "text/html;profile=mcp-app", text: fixture.resources[0]!.text, _meta: { ui: fixture.resources[0]!.ui } });
+    // Package policy cannot declare a remote domain on a stdio wire.
+    expect(service.resources.read("ui://fixture/card").contents[0]!._meta?.ui).toHaveProperty("domain", "policy-fixture.inguz.space");
     expect(listed.resources[0]!["_meta"]).toEqual(read.contents[0]!._meta);
     wire.endLegacy(session);
     wire.closeAll();
@@ -102,6 +105,8 @@ test("both revisions provide text fallback and bind paging to the host's UI capa
       expect(direct?.error).toBeUndefined();
       expect((direct!.result as { structuredContent: { display: { view: string; status: string } } }).structuredContent.display)
         .toMatchObject({ view: `${version}-${ui}`, status: "empty" });
+      const resource = (await rpc("resources/read", { uri: "ui://dap/needs-you" }))!.result as { contents: { _meta?: { ui?: unknown } }[] };
+      expect(resource.contents[0]!._meta?.ui !== undefined).toBe(ui);
       if (version === LEGACY) expect(session.listed).toBe((await service.snapshot()).generation);
     } finally { wire.endLegacy(session); wire.closeAll(); }
   }

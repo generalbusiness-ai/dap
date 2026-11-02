@@ -17,6 +17,7 @@ export * from "./sqlite-custody.ts";
 export * from "./hosted.ts";
 export * from "./hosted-tools.ts";
 export * from "./views/resources.ts";
+export * from "./views/remote-origins.ts";
 export * from "./views/types.ts";
 export { actSigner, signerWords } from "./views/actor.ts";
 export { ViewError } from "./views/session.ts";

@@ -452,7 +452,7 @@ export interface ServeOptions {
 
 /** `dap mcp`: serve over stdio, or over loopback HTTP. Resolves when stdio ends; an HTTP server serves until the process ends. */
 export async function serve(options: ServeOptions): Promise<void> {
-  const service = new McpService({
+  const service = await McpService.fromInstalledApplication({
     service: options.service, signer: options.signer, config: options.config, custody: fileStore(join(options.home, "private", "mcp-custody")), originals: true,
     applicationTrust: process.env["APPLICATION_TRUST"],
     mode: options.mode, tools: options.tools, ...(options.fetch ? { fetch: options.fetch } : {}), readDiff: read => diffWithCredential(read), readInterdiff: read => interdiffWithCredential(read), readFile: read => fileWithCredential(read),

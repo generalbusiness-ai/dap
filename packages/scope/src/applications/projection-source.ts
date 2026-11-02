@@ -25,7 +25,11 @@ export function applicationDeclarationsIn(binding: Binding): ApplicationDeclarat
       const reply = await (binding.get(binding.idFromName(directory.scope)) as DirectoryPeer).applicationRoomBytes();
       if (!run.active()) return null;
       const room = owned(reply, 1024);
-      if (!isRecord(room) || Object.keys(room).sort().join() !== "directory,rules" || !isScopeRef(room["directory"])
+      if (!isRecord(room)) return null;
+      const keys = Object.keys(room).sort().join();
+      if (keys !== "directory,rules" && (keys !== "directory,membershipDefinition,rules"
+        || (room["membershipDefinition"] !== "platform:membership@10" && room["membershipDefinition"] !== "platform:membership@11"))) return null;
+      if (!isScopeRef(room["directory"])
         || canonicalize(room["directory"]) !== canonicalize(directory) || !isScopeRef(room["rules"]) || room["rules"].kind !== "rules") return null;
       const declared = await (binding.get(binding.idFromName(room["rules"].scope)) as RulesPeer).applicationProjectionDeclarationBytes(directory, install, name);
       return run.active() ? owned(declared, APPLICATION_DECLARATION_BYTES) : null;

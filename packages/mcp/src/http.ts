@@ -58,6 +58,9 @@ export interface SessionRow { id: string; version: string | null; initialized: b
 
 export interface HttpPort {
   wire: Wire;
+  /** Presentation metadata from exact deployment URLs; never authority. Local
+   * HTTP and stdio omit it. The wire never retains it between requests. */
+  resourceDomain?(request: Request): string | undefined;
   /** The most bytes of one request body. */
   bodyBytes: number;
   /** Whether the `Authorization` header is the expected bearer. Compared in constant time by the caller. */
@@ -255,7 +258,7 @@ export class McpHttp {
     const notification = frameOf(m) === "notification";
     // A notification is accepted with 202 and no body. One whose method is only a request runs nothing and issues no session.
     if (notification && !isNotificationMethod(m.method!)) { this.port.wire.ignored++; return bare(202); }
-    return revision === "modern" ? this.#modern(m, notification, request) : this.#legacy(m, notification, sessionId);
+    return revision === "modern" ? this.#modern(m, notification, request) : this.#legacy(m, notification, sessionId, request);
   }
 
   async #body(request: Request): Promise<Body> {
@@ -292,12 +295,12 @@ export class McpHttp {
       if (this.#open.size >= STREAMS_MOST) return rpcJsonReply(409, rpcError(id, TOO_MANY_STREAMS, `At most ${STREAMS_MOST} streams are open at once.`));
       return this.#listen(m);
     }
-    const response = await this.port.wire.handle(m, null, () => {});
+    const response = await this.port.wire.handle(m, null, () => {}, undefined, this.port.resourceDomain?.(request));
     if (!response) return bare(202);
     return rpcJsonReply(response.error?.code === -32601 ? 404 : 200, response);
   }
 
-  async #legacy(m: Message, notification: boolean, sessionId: string | null): Promise<Response> {
+  async #legacy(m: Message, notification: boolean, sessionId: string | null, request: Request): Promise<Response> {
     const id = m.id ?? null;
     await this.#expire();
     let session: LegacySession;
@@ -318,7 +321,7 @@ export class McpHttp {
       if (!(await this.#touch(session))) return bare(404);
     }
     let response: Message | null;
-    try { response = await this.port.wire.handle(m, session, (out) => session.stream?.send(out)); }
+    try { response = await this.port.wire.handle(m, session, (out) => session.stream?.send(out), undefined, this.port.resourceDomain?.(request)); }
     finally { this.#issuing.delete(session); }
     if (issued) {
       if (this.#closed || this.#due() || session.ended) {

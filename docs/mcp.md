@@ -1856,9 +1856,9 @@ agent's. One registry per repository creates agents.
 ### Hosted endpoint settings
 
 The endpoint is off unless `MCP_ENABLED` is exactly `"true"`, both
-`REGISTRIES` and `AGENTS` are bound, and `MCP_TOOL_ADDITIONS` is absent or
-valid. A closed endpoint returns `404` before reading the request body or
-addressing either namespace. This applies to the control routes too.
+`REGISTRIES` and `AGENTS` are bound, and both `MCP_TOOL_ADDITIONS` and
+`MCP_CARD_ORIGINS` are absent or valid. A closed endpoint returns `404`
+before reading the request body or addressing either namespace. This applies to the control routes too.
 
 `MCP_TOOL_ADDITIONS` is an optional JSON array of distinct known generic
 tool names, at most 1,024 characters and 20 names. Unknown names,
@@ -1892,6 +1892,64 @@ every act.
 
 If `MCP_ENABLED` is unset on a Worker that served hosted agents, their
 endpoint closes.
+
+### Cards from an installed application
+
+On its first authenticated HTTP request, a hosted agent reads its room's
+active installations through its own native membership session. A complete,
+bounded read must select exactly one active declared installation. The
+service checks the installation's full references, package IDs, definition
+and trusted publisher before it adds card tools. Missing, ambiguous or
+unavailable selections leave the ordinary tools in place. The selection
+lasts for that HTTP layer. A fresh bearer rotation or an object restart
+rebuilds the layer and selects again. Each card read checks that the exact
+installation remains active.
+
+The hosted Worker loads immutable bytes from `APPLICATION_CONTENT` under
+`APPLICATION_TRUST`. Local `dap mcp` uses the same selection and declared
+interpreter, with the package's immutable public Git source. Neither path
+runs package code. A host that declares the MCP Apps capability receives
+the card tools and their UI metadata. Other hosts receive the text opening
+tools without UI metadata or app-only tools. Every card act still uses the
+server's own key, custody and native scope judgment.
+Explicit resource reads remain available to the same authenticated caller;
+resource replies omit UI metadata when the host declares no UI capability.
+
+`MCP_CARD_ORIGINS` optionally binds remote resource metadata to exact
+connector URLs. It accepts at most two distinct host rows and 8,192 UTF-8
+bytes. Each row has only `host`, `url` and `domain`. URLs must be canonical
+HTTPS URLs at `/mcp`, without credentials or fragments. Different query
+strings let two hosts use the same endpoint with different presentation
+origins:
+
+```json
+[
+	{
+		"host": "claude",
+		"url": "https://example.com/mcp",
+		"domain": "c3d80a4ed901ee05b21755a88273b4a4.claudemcpcontent.com"
+	},
+	{
+		"host": "chatgpt",
+		"url": "https://example.com/mcp?host=chatgpt",
+		"domain": "https://dap-plugin.example.com"
+	}
+]
+```
+
+The example domains are placeholders. For Claude, `domain` is the first
+32 hexadecimal digits of SHA-256 over the exact configured connector URL,
+followed by `.claudemcpcontent.com`, without a scheme. The hash includes the
+query string. For ChatGPT, `domain` is an HTTPS origin unique to the plugin.
+See [Claude's domain format](https://claude.com/docs/connectors/building/mcp-apps/getting-started)
+and [OpenAI's component metadata](https://developers.openai.com/plugins/reference).
+
+The agent selects metadata by its verified service origin and the request's
+exact path and query, including behind an internal HTTP proxy. Unknown URLs
+declare no remote domain. Malformed rows, duplicates or an incorrect Claude
+hash close the whole hosted endpoint. These rows select presentation only;
+they change no signer, grant, tool authority or CSP. Stdio and local loopback
+HTTP never read this setting.
 
 ### Routes
 
