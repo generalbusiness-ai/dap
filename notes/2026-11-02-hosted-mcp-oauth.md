@@ -32,7 +32,7 @@ inside Una's own. The token only lets one host reach one hosted agent.
   (`docs/mcp.md`, The hosted endpoint).
 - **Controller.** The active person recorded on an agent member by
   `add-member`. The registry already accepts the controller's signed
-  `create` for that agent (`packages/mcp/src/hosted.ts:132-143`).
+  `create` for that agent (`packages/mcp/src/hosted.ts:133-144`).
 - **Client.** The host application that asks for a token, such as
   Claude or ChatGPT, identified by a client ID.
 - **Grant.** A control request with the new action `grant`, signed by
@@ -262,7 +262,7 @@ the membership at once, as today.
 ### Origin
 
 `/mcp` refuses every `Origin` header with `403` today
-(`packages/mcp/src/hosted.ts:656`, `packages/mcp/src/http.ts:216`). Host
+(`packages/mcp/src/hosted.ts:685`, `packages/mcp/src/http.ts:219`). Host
 backends do not run in a browser, and no source says whether they send
 `Origin`. Slice O4 records what Claude and ChatGPT send. If either sends
 one, a deployment setting `MCP_ALLOWED_ORIGINS` names it exactly, as
@@ -273,7 +273,7 @@ and the token endpoint takes the client's server-to-server call.
 ### Budgets
 
 Each grant, code and token row counts against the agent's existing
-16 MiB control budget (`packages/mcp/src/hosted.ts:43`). An agent holds
+16 MiB control budget (`packages/mcp/src/hosted.ts:44`). An agent holds
 at most 8 live grants. A ninth grant ends the oldest one. The
 registration route holds at most 1,000 registered clients per Worker.
 When it is full, it answers `503` with `Retry-After`.
