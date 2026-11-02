@@ -1,0 +1,2300 @@
+{
+  "schema": "static-diff-design-2",
+  "kind": "diff",
+  "commits": [
+    {
+      "label": "Base of Version 1",
+      "id": "388bda0d8d28e3a82699c4548f317ce495c40e33"
+    },
+    {
+      "label": "Integration of Version 1",
+      "id": "1712067dd3b29b9e72742768039beaa1bd495b88"
+    }
+  ],
+  "counts": {
+    "files": 10
+  },
+  "truncated": false,
+  "leftOut": null,
+  "files": [
+    {
+      "oldPath": "a/docs/scopes.md",
+      "patches": [
+        {
+          "before": "388bda0d8d28e3a82699c4548f317ce495c40e33",
+          "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
+          "hunks": [
+            {
+              "range": [
+                21,
+                9,
+                21,
+                9
+              ],
+              "rows": [
+                [
+                  " ",
+                  "| `@generalbusiness/artroom-bytes` | Canonical JSON, SHA-256, SHA-1 for Git object names, encodings, Ed25519, the eight byte domains, and the guard of each identifier. | contract |\n"
+                ],
+                [
+                  " ",
+                  "| `@generalbusiness/artroom-derive` | The definition validator, the fold, the judges and the rule evaluator. Pure functions. | contract, bytes |\n"
+                ],
+                [
+                  " ",
+                  "| `@generalbusiness/artroom-platform` | Six platform definitions, each with its whole data and every rule: register, directory, membership, rules, destination and inbox. The destination includes the exact first-head and receipt commit rules, its reservation reader, and the held operations and observation rows of the adopted authority revision 28 and scope contract revision 23. A missing version or a version with any missing rule is still `unsupported-definition`; `platform:task@1` is not supplied. | contract, bytes, derive |\n"
+                ],
+                [
+                  "-",
+                  "| `@generalbusiness/artroom-git` | Everything that touches a Git repository or a Git host: the object reader, the commands, the outcome of a push, the gateway, the host port with the token driver, and the files and the commit of a snapshot. It is not part of a scope's commit. The checkers package imports it, and two test files of the scope package import its test support by path. | contract, bytes |\n"
+                ],
+                [
+                  "-",
+                  "| `@generalbusiness/artroom-checkers` | The pure parts of the checker service: its own read of a job before a run, its record of at most one run for a job, the runner's checkout and gateway rule, and the signer. It has no runner, no storage and no Worker: each is a port with no adapter. | contract, bytes, git |\n"
+                ],
+                [
+                  "-",
+                  "| `@generalbusiness/artroom-scope` | The runtime of a scope on a Cloudflare Durable Object with SQLite storage, and the Worker's routes. | contract, bytes, derive, platform |\n"
+                ],
+                [
+                  "+",
+                  "| `@generalbusiness/artroom-git` | The Git object reader, commands, push evidence, token gateway and snapshot builder, with separate Web API modules for smart HTTP and GitHub App requests. It runs outside a scope's commit. Scope and checkers import it. | contract, bytes |\n"
+                ],
+                [
+                  "+",
+                  "| `@generalbusiness/artroom-checkers` | The pure parts of the checker service: its own read of a job before a run, its record of at most one run for a job, the runner's checkout and gateway rule, and the signer. It has no runner, no storage and no Worker: each is a port with no adapter. | contract, bytes, git |\n"
+                ],
+                [
+                  "+",
+                  "| `@generalbusiness/artroom-scope` | The runtime of a scope on a Cloudflare Durable Object with SQLite storage, the Worker's routes and opt-in GitHub host wiring. | contract, bytes, derive, platform, git |\n"
+                ],
+                [
+                  " ",
+                  "| `@generalbusiness/artroom-replay` | An independent check of a history, its report, and the command `artroom-replay`. | contract, bytes, derive |\n"
+                ],
+                [
+                  " ",
+                  "| `@generalbusiness/artroom-client` | Building and signing an intent, and a typed handle on one scope. | contract, bytes |\n"
+                ],
+                [
+                  " ",
+                  "\n"
+                ]
+              ],
+              "complete": true
+            }
+          ]
+        }
+      ],
+      "newPath": "b/docs/scopes.md",
+      "path": {
+        "path": "ZG9jcy9zY29wZXMubWQ",
+        "shown": "docs/scopes.md",
+        "commit": "1712067dd3b29b9e72742768039beaa1bd495b88"
+      },
+      "group": "edited"
+    },
+    {
+      "oldPath": "a/packages/git/package.json",
+      "patches": [
+        {
+          "before": "388bda0d8d28e3a82699c4548f317ce495c40e33",
+          "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
+          "hunks": [
+            {
+              "range": [
+                1,
+                7,
+                1,
+                7
+              ],
+              "rows": [
+                [
+                  " ",
+                  "{\n"
+                ],
+                [
+                  " ",
+                  "  \"name\": \"@generalbusiness/artroom-git\",\n"
+                ],
+                [
+                  " ",
+                  "  \"version\": \"0.1.0-dev.1\",\n"
+                ],
+                [
+                  "-",
+                  "  \"description\": \"Artroom's one place that touches a Git repository or a Git host: the object reader, the commands, the evidence of a push, and the gateway that holds a token. It runs in Node and in a container, never in a scope's commit.\",\n"
+                ],
+                [
+                  "+",
+                  "  \"description\": \"Artroom's Git object reader, commands, push evidence, token gateway and Web HTTP provider primitives. It runs in Node, containers and Workers, outside a scope's commit.\",\n"
+                ],
+                [
+                  " ",
+                  "  \"license\": \"Apache-2.0\",\n"
+                ],
+                [
+                  " ",
+                  "  \"type\": \"module\",\n"
+                ],
+                [
+                  " ",
+                  "  \"sideEffects\": false,\n"
+                ]
+              ],
+              "complete": true
+            }
+          ]
+        }
+      ],
+      "newPath": "b/packages/git/package.json",
+      "path": {
+        "path": "cGFja2FnZXMvZ2l0L3BhY2thZ2UuanNvbg",
+        "shown": "packages/git/package.json",
+        "commit": "1712067dd3b29b9e72742768039beaa1bd495b88"
+      },
+      "group": "edited"
+    },
+    {
+      "oldPath": "a/packages/git/src/http-read.ts",
+      "patches": [
+        {
+          "before": "388bda0d8d28e3a82699c4548f317ce495c40e33",
+          "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
+          "hunks": [
+            {
+              "range": [
+                353,
+                7,
+                353,
+                8
+              ],
+              "rows": [
+                [
+                  " ",
+                  "      const headers = new Headers({ accept: media, \"cache-control\": \"no-cache\" });\n"
+                ],
+                [
+                  " ",
+                  "      if (this.#authorization !== undefined) headers.set(\"authorization\", this.#authorization);\n"
+                ],
+                [
+                  " ",
+                  "      if (body !== undefined) headers.set(\"content-type\", \"application/x-git-upload-pack-request\");\n"
+                ],
+                [
+                  "-",
+                  "      const response = await this.#fetch(new Request(url, { method: body === undefined ? \"GET\" : \"POST\", headers, redirect: \"error\", credentials: \"omit\", signal: AbortSignal.timeout(this.#timeoutMs), ...(body === undefined ? {} : { body }) }));\n"
+                ],
+                [
+                  "+",
+                  "      const init: RequestInit & { credentials: \"omit\" } = { method: body === undefined ? \"GET\" : \"POST\", headers, redirect: \"manual\", credentials: \"omit\", signal: AbortSignal.timeout(this.#timeoutMs), ...(body === undefined ? {} : { body }) };\n"
+                ],
+                [
+                  "+",
+                  "      const response = await this.#fetch(new Request(url, init));\n"
+                ],
+                [
+                  " ",
+                  "      if (response.status !== 200 || response.redirected || (response.url !== \"\" && response.url !== url) || response.headers.get(\"content-type\")?.split(\";\", 1)[0]?.trim() !== media) {\n"
+                ],
+                [
+                  " ",
+                  "        await response.body?.cancel().catch(() => undefined);\n"
+                ],
+                [
+                  " ",
+                  "        throw fail(\"HTTP read response\");\n"
+                ]
+              ],
+              "complete": true
+            }
+          ]
+        }
+      ],
+      "newPath": "b/packages/git/src/http-read.ts",
+      "path": {
+        "path": "cGFja2FnZXMvZ2l0L3NyYy9odHRwLXJlYWQudHM",
+        "shown": "packages/git/src/http-read.ts",
+        "commit": "1712067dd3b29b9e72742768039beaa1bd495b88"
+      },
+      "group": "edited"
+    },
+    {
+      "oldPath": "a/packages/git/src/http.ts",
+      "patches": [
+        {
+          "before": "388bda0d8d28e3a82699c4548f317ce495c40e33",
+          "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
+          "hunks": [
+            {
+              "range": [
+                24,
+                154,
+                24,
+                155
+              ],
+              "rows": [
+                [
+                  " ",
+                  "  maxBytes: number;\n"
+                ],
+                [
+                  " ",
+                  "  /** An HTTP Authorization value. Kept privately, never in a URL or answer. */\n"
+                ],
+                [
+                  " ",
+                  "  authorization?: string;\n"
+                ],
+                [
+                  "-",
+                  "  /** A trusted fetch implementation that honors redirect:error and the signal. */\n"
+                ],
+                [
+                  "-",
+                  "  fetch?: (request: Request) => Promise<Response>;\n"
+                ],
+                [
+                  "-",
+                  "  transport?: Transport;\n"
+                ],
+                [
+                  "-",
+                  "  bounds?: ReadBounds;\n"
+                ],
+                [
+                  "-",
+                  "  timeoutMs?: number;\n"
+                ],
+                [
+                  "-",
+                  "}\n"
+                ],
+                [
+                  "-",
+                  "\n"
+                ],
+                [
+                  "-",
+                  "const utf8 = new TextEncoder();\n"
+                ],
+                [
+                  "-",
+                  "const bad = (what: string) => new GitRefusal(\"unreadable\", what);\n"
+                ],
+                [
+                  "-",
+                  "const join = (parts: readonly Uint8Array[]): Uint8Array => {\n"
+                ],
+                [
+                  "-",
+                  "  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));\n"
+                ],
+                [
+                  "-",
+                  "  let at = 0;\n"
+                ],
+                [
+                  "-",
+                  "  for (const part of parts) { out.set(part, at); at += part.length; }\n"
+                ],
+                [
+                  "-",
+                  "  return out;\n"
+                ],
+                [
+                  "-",
+                  "};\n"
+                ],
+                [
+                  "-",
+                  "const ascii = (bytes: Uint8Array): string => {\n"
+                ],
+                [
+                  "-",
+                  "  let out = \"\";\n"
+                ],
+                [
+                  "-",
+                  "  for (const b of bytes) out += String.fromCharCode(b);\n"
+                ],
+                [
+                  "-",
+                  "  return out;\n"
+                ],
+                [
+                  "-",
+                  "};\n"
+                ],
+                [
+                  "-",
+                  "\n"
+                ],
+                [
+                  "-",
+                  "/** A bounded stream read, cancelled on overflow or failure. */\n"
+                ],
+                [
+                  "-",
+                  "async function bytes(stream: ReadableStream<Uint8Array> | null, limit: number): Promise<Uint8Array> {\n"
+                ],
+                [
+                  "-",
+                  "  if (stream === null) throw bad(\"HTTP body\");\n"
+                ],
+                [
+                  "-",
+                  "  const reader = stream.getReader();\n"
+                ],
+                [
+                  "-",
+                  "  const chunks: Uint8Array[] = [];\n"
+                ],
+                [
+                  "-",
+                  "  let size = 0;\n"
+                ],
+                [
+                  "-",
+                  "  try {\n"
+                ],
+                [
+                  "-",
+                  "    for (;;) {\n"
+                ],
+                [
+                  "-",
+                  "      const next = await reader.read();\n"
+                ],
+                [
+                  "-",
+                  "      if (next.done) return join(chunks);\n"
+                ],
+                [
+                  "-",
+                  "      size += next.value.length;\n"
+                ],
+                [
+                  "-",
+                  "      if (size > limit) throw new GitRefusal(\"too-large\", \"HTTP body\");\n"
+                ],
+                [
+                  "-",
+                  "      chunks.push(next.value);\n"
+                ],
+                [
+                  "-",
+                  "    }\n"
+                ],
+                [
+                  "-",
+                  "  } catch (e) {\n"
+                ],
+                [
+                  "-",
+                  "    await reader.cancel().catch(() => undefined);\n"
+                ],
+                [
+                  "-",
+                  "    throw e;\n"
+                ],
+                [
+                  "-",
+                  "  } finally { reader.releaseLock(); }\n"
+                ],
+                [
+                  "-",
+                  "}\n"
+                ],
+                [
+                  "-",
+                  "\n"
+                ],
+                [
+                  "-",
+                  "function packet(line: string): Uint8Array {\n"
+                ],
+                [
+                  "-",
+                  "  const data = utf8.encode(line);\n"
+                ],
+                [
+                  "-",
+                  "  return join([utf8.encode((data.length + 4).toString(16).padStart(4, \"0\")), data]);\n"
+                ],
+                [
+                  "-",
+                  "}\n"
+                ],
+                [
+                  "-",
+                  "const FLUSH = utf8.encode(\"0000\");\n"
+                ],
+                [
+                  "-",
+                  "\n"
+                ],
+                [
+                  "-",
+                  "/** Entire pkt-line stream, including flushes; no trailing or truncated data. */\n"
+                ],
+                [
+                  "-",
+                  "function packets(data: Uint8Array): (string | null)[] {\n"
+                ],
+                [
+                  "-",
+                  "  const out: (string | null)[] = [];\n"
+                ],
+                [
+                  "-",
+                  "  for (let at = 0; at < data.length;) {\n"
+                ],
+                [
+                  "-",
+                  "    const digits = ascii(data.subarray(at, at + 4));\n"
+                ],
+                [
+                  "-",
+                  "    if (!/^[0-9a-f]{4}$/.test(digits)) throw bad(\"pkt-line\");\n"
+                ],
+                [
+                  "-",
+                  "    const size = Number.parseInt(digits, 16);\n"
+                ],
+                [
+                  "-",
+                  "    if (size === 0) { out.push(null); at += 4; continue; }\n"
+                ],
+                [
+                  "-",
+                  "    if (size <= 4 || size > 65520 || at + size > data.length) throw bad(\"pkt-line\");\n"
+                ],
+                [
+                  "-",
+                  "    let line = ascii(data.subarray(at + 4, at + size));\n"
+                ],
+                [
+                  "-",
+                  "    if (line.endsWith(\"\\n\")) line = line.slice(0, -1);\n"
+                ],
+                [
+                  "-",
+                  "    out.push(line);\n"
+                ],
+                [
+                  "-",
+                  "    at += size;\n"
+                ],
+                [
+                  "-",
+                  "  }\n"
+                ],
+                [
+                  "-",
+                  "  if (out.at(-1) !== null) throw bad(\"pkt-line\");\n"
+                ],
+                [
+                  "-",
+                  "  return out;\n"
+                ],
+                [
+                  "-",
+                  "}\n"
+                ],
+                [
+                  "-",
+                  "\n"
+                ],
+                [
+                  "-",
+                  "/**\n"
+                ],
+                [
+                  "-",
+                  " * A non-delta v2 pack containing exactly the supplied objects. The count,\n"
+                ],
+                [
+                  "-",
+                  " * each raw object use existing read bounds. The caller explicitly supplies\n"
+                ],
+                [
+                  "-",
+                  " * the buffer allowance; this is not a platform quota. Copy before hashing so asynchronous compression cannot\n"
+                ],
+                [
+                  "-",
+                  " * send changed caller-owned bytes under an already checked ID.\n"
+                ],
+                [
+                  "-",
+                  " */\n"
+                ],
+                [
+                  "-",
+                  "export async function buildPack(objects: readonly RawGitObject[], options: { maxBytes: number; bounds?: ReadBounds }): Promise<Uint8Array> {\n"
+                ],
+                [
+                  "-",
+                  "  const bounds = options.bounds ?? READ_BOUNDS;\n"
+                ],
+                [
+                  "-",
+                  "  const maxBytes = options.maxBytes;\n"
+                ],
+                [
+                  "-",
+                  "  if (!Number.isSafeInteger(maxBytes) || maxBytes < 32 || Object.values(bounds).some((n) => !Number.isSafeInteger(n) || n <= 0)) throw new GitRefusal(\"too-large\", \"pack allowance\");\n"
+                ],
+                [
+                  "-",
+                  "  if (objects.length > bounds.closureObjects || objects.length > 0xffffffff) throw new GitRefusal(\"too-large\", \"pack objects\");\n"
+                ],
+                [
+                  "-",
+                  "  let total = 0;\n"
+                ],
+                [
+                  "-",
+                  "  const seen = new Set<string>();\n"
+                ],
+                [
+                  "-",
+                  "  const verified = objects.map((o) => {\n"
+                ],
+                [
+                  "-",
+                  "    objectId(o.id, \"pack object\");\n"
+                ],
+                [
+                  "-",
+                  "    if (o.type !== \"commit\" && o.type !== \"tree\" && o.type !== \"blob\") throw new GitRefusal(\"wrong-type\", \"pack object\");\n"
+                ],
+                [
+                  "-",
+                  "    const limit = o.type === \"commit\" ? bounds.commitBytes : o.type === \"tree\" ? bounds.treeBytes : bounds.blobBytes;\n"
+                ],
+                [
+                  "-",
+                  "    total += o.data.length;\n"
+                ],
+                [
+                  "-",
+                  "    if (o.data.length > limit || total > maxBytes) throw new GitRefusal(\"too-large\", \"pack bytes\");\n"
+                ],
+                [
+                  "-",
+                  "    if (seen.has(o.id)) throw bad(\"repeated pack object\");\n"
+                ],
+                [
+                  "-",
+                  "    seen.add(o.id);\n"
+                ],
+                [
+                  "-",
+                  "    const data = new Uint8Array(o.data); // owns bytes even for Uint8Array subclasses\n"
+                ],
+                [
+                  "-",
+                  "    if (idOf(o.type, data) !== o.id) throw new GitRefusal(\"hash-mismatch\", \"pack object\");\n"
+                ],
+                [
+                  "-",
+                  "    if (o.type === \"commit\") parseCommit(data, bounds);\n"
+                ],
+                [
+                  "-",
+                  "    if (o.type === \"tree\") {\n"
+                ],
+                [
+                  "-",
+                  "      if (parseTree(data).some((entry) => entry.kind === \"gitlink\")) throw new GitRefusal(\"gitlink\", \"pack tree\");\n"
+                ],
+                [
+                  "-",
+                  "    }\n"
+                ],
+                [
+                  "-",
+                  "    return { type: o.type, data };\n"
+                ],
+                [
+                  "-",
+                  "  });\n"
+                ],
+                [
+                  "-",
+                  "  const header = new Uint8Array(12);\n"
+                ],
+                [
+                  "-",
+                  "  header.set(utf8.encode(\"PACK\"));\n"
+                ],
+                [
+                  "-",
+                  "  const view = new DataView(header.buffer);\n"
+                ],
+                [
+                  "-",
+                  "  view.setUint32(4, 2);\n"
+                ],
+                [
+                  "-",
+                  "  view.setUint32(8, verified.length);\n"
+                ],
+                [
+                  "-",
+                  "  const parts: Uint8Array[] = [header];\n"
+                ],
+                [
+                  "-",
+                  "  let size = 32; // header plus SHA-1 trailer\n"
+                ],
+                [
+                  "-",
+                  "  for (const o of verified) {\n"
+                ],
+                [
+                  "-",
+                  "    let remaining = o.data.length;\n"
+                ],
+                [
+                  "-",
+                  "    const type = o.type === \"commit\" ? 1 : o.type === \"tree\" ? 2 : 3;\n"
+                ],
+                [
+                  "-",
+                  "    const entry = [(type << 4) | (remaining % 16)];\n"
+                ],
+                [
+                  "-",
+                  "    remaining = Math.floor(remaining / 16);\n"
+                ],
+                [
+                  "-",
+                  "    while (remaining > 0) {\n"
+                ],
+                [
+                  "-",
+                  "      entry[entry.length - 1]! |= 128;\n"
+                ],
+                [
+                  "-",
+                  "      entry.push(remaining % 128);\n"
+                ],
+                [
+                  "-",
+                  "      remaining = Math.floor(remaining / 128);\n"
+                ],
+                [
+                  "-",
+                  "    }\n"
+                ],
+                [
+                  "-",
+                  "    const compressed = await bytes(new Blob([o.data]).stream().pipeThrough(new CompressionStream(\"deflate\")), maxBytes - size - entry.length);\n"
+                ],
+                [
+                  "-",
+                  "    size += entry.length + compressed.length;\n"
+                ],
+                [
+                  "-",
+                  "    if (size > maxBytes) throw new GitRefusal(\"too-large\", \"pack bytes\");\n"
+                ],
+                [
+                  "-",
+                  "    parts.push(Uint8Array.from(entry), compressed);\n"
+                ],
+                [
+                  "-",
+                  "  }\n"
+                ],
+                [
+                  "-",
+                  "  if (size > maxBytes) throw new GitRefusal(\"too-large\", \"pack bytes\");\n"
+                ],
+                [
+                  "-",
+                  "  const body = join(parts);\n"
+                ],
+                [
+                  "-",
+                  "  return join([body, sha1(body)]);\n"
+                ],
+                [
+                  "-",
+                  "}\n"
+                ],
+                [
+                  "-",
+                  "\n"
+                ],
+                [
+                  "-",
+                  "/** Web fetch over one fixed remote; credentials never leave its origin. */\n"
+                ],
+                [
+                  "-",
+                  "export class SmartHttpGit {\n"
+                ],
+                [
+                  "-",
+                  "  readonly #remote: string;\n"
+                ],
+                [
+                  "-",
+                  "  readonly #authorization: string | undefined;\n"
+                ],
+                [
+                  "-",
+                  "  readonly #fetch: (request: Request) => Promise<Response>;\n"
+                ],
+                [
+                  "-",
+                  "  readonly #bounds: ReadBounds;\n"
+                ],
+                [
+                  "-",
+                  "  readonly #timeoutMs: number;\n"
+                ],
+                [
+                  "-",
+                  "  readonly #maxBytes: number;\n"
+                ],
+                [
+                  "-",
+                  "\n"
+                ],
+                [
+                  "-",
+                  "  constructor(options: SmartHttpOptions) {\n"
+                ],
+                [
+                  "-",
+                  "    this.#remote = remoteUrl(options.remote, options.transport ?? \"https\").replace(/\\/$/, \"\");\n"
+                ],
+                [
+                  "-",
+                  "    if (!this.#remote.startsWith(\"https://\") && !this.#remote.startsWith(\"http://\")) throw new GitRefusal(\"bad-remote\", \"HTTP remote\");\n"
+                ],
+                [
+                  "-",
+                  "    this.#authorization = options.authorization;\n"
+                ],
+                [
+                  "-",
+                  "    this.#fetch = options.fetch ?? ((request) => fetch(request));\n"
+                ],
+                [
+                  "-",
+                  "    this.#bounds = { ...(options.bounds ?? READ_BOUNDS) };\n"
+                ],
+                [
+                  "-",
+                  "    this.#timeoutMs = options.timeoutMs ?? COMMAND_MS;\n"
+                ],
+                [
+                  "-",
+                  "    this.#maxBytes = options.maxBytes;\n"
+                ],
+                [
+                  "-",
+                  "    if (!Number.isSafeInteger(this.#maxBytes) || this.#maxBytes < 32 || !Number.isSafeInteger(this.#timeoutMs) || this.#timeoutMs <= 0 || Object.values(this.#bounds).some((n) => !Number.isSafeInteger(n) || n <= 0)) throw new GitRefusal(\"too-large\", \"HTTP bounds\");\n"
+                ],
+                [
+                  "-",
+                  "  }\n"
+                ],
+                [
+                  "-",
+                  "\n"
+                ],
+                [
+                  "-",
+                  "  async #request(path: string, media: string, signal: AbortSignal, body?: Uint8Array): Promise<Uint8Array> {\n"
+                ],
+                [
+                  "-",
+                  "    try {\n"
+                ],
+                [
+                  "-",
+                  "      const url = `${this.#remote}/${path}`;\n"
+                ],
+                [
+                  "-",
+                  "      const headers = new Headers({ accept: media, \"cache-control\": \"no-cache\" });\n"
+                ],
+                [
+                  "-",
+                  "      if (this.#authorization !== undefined) headers.set(\"authorization\", this.#authorization);\n"
+                ],
+                [
+                  "-",
+                  "      if (body !== undefined) headers.set(\"content-type\", \"application/x-git-receive-pack-request\");\n"
+                ],
+                [
+                  "-",
+                  "      const request = new Request(url, { method: body === undefined ? \"GET\" : \"POST\", headers, redirect: \"error\", credentials: \"omit\", signal, ...(body === undefined ? {} : { body }) });\n"
+                ],
+                [
+                  "+",
+                  "  /** A trusted fetch implementation that honors manual redirects and the signal. */\n"
+                ],
+                [
+                  "+",
+                  "  fetch?: (request: Request) => Promise<Response>;\n"
+                ],
+                [
+                  "+",
+                  "  transport?: Transport;\n"
+                ],
+                [
+                  "+",
+                  "  bounds?: ReadBounds;\n"
+                ],
+                [
+                  "+",
+                  "  timeoutMs?: number;\n"
+                ],
+                [
+                  "+",
+                  "}\n"
+                ],
+                [
+                  "+",
+                  "\n"
+                ],
+                [
+                  "+",
+                  "const utf8 = new TextEncoder();\n"
+                ],
+                [
+                  "+",
+                  "const bad = (what: string) => new GitRefusal(\"unreadable\", what);\n"
+                ],
+                [
+                  "+",
+                  "const join = (parts: readonly Uint8Array[]): Uint8Array => {\n"
+                ],
+                [
+                  "+",
+                  "  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));\n"
+                ],
+                [
+                  "+",
+                  "  let at = 0;\n"
+                ],
+                [
+                  "+",
+                  "  for (const part of parts) { out.set(part, at); at += part.length; }\n"
+                ],
+                [
+                  "+",
+                  "  return out;\n"
+                ],
+                [
+                  "+",
+                  "};\n"
+                ],
+                [
+                  "+",
+                  "const ascii = (bytes: Uint8Array): string => {\n"
+                ],
+                [
+                  "+",
+                  "  let out = \"\";\n"
+                ],
+                [
+                  "+",
+                  "  for (const b of bytes) out += String.fromCharCode(b);\n"
+                ],
+                [
+                  "+",
+                  "  return out;\n"
+                ],
+                [
+                  "+",
+                  "};\n"
+                ],
+                [
+                  "+",
+                  "\n"
+                ],
+                [
+                  "+",
+                  "/** A bounded stream read, cancelled on overflow or failure. */\n"
+                ],
+                [
+                  "+",
+                  "async function bytes(stream: ReadableStream<Uint8Array> | null, limit: number): Promise<Uint8Array> {\n"
+                ],
+                [
+                  "+",
+                  "  if (stream === null) throw bad(\"HTTP body\");\n"
+                ],
+                [
+                  "+",
+                  "  const reader = stream.getReader();\n"
+                ],
+                [
+                  "+",
+                  "  const chunks: Uint8Array[] = [];\n"
+                ],
+                [
+                  "+",
+                  "  let size = 0;\n"
+                ],
+                [
+                  "+",
+                  "  try {\n"
+                ],
+                [
+                  "+",
+                  "    for (;;) {\n"
+                ],
+                [
+                  "+",
+                  "      const next = await reader.read();\n"
+                ],
+                [
+                  "+",
+                  "      if (next.done) return join(chunks);\n"
+                ],
+                [
+                  "+",
+                  "      size += next.value.length;\n"
+                ],
+                [
+                  "+",
+                  "      if (size > limit) throw new GitRefusal(\"too-large\", \"HTTP body\");\n"
+                ],
+                [
+                  "+",
+                  "      chunks.push(next.value);\n"
+                ],
+                [
+                  "+",
+                  "    }\n"
+                ],
+                [
+                  "+",
+                  "  } catch (e) {\n"
+                ],
+                [
+                  "+",
+                  "    await reader.cancel().catch(() => undefined);\n"
+                ],
+                [
+                  "+",
+                  "    throw e;\n"
+                ],
+                [
+                  "+",
+                  "  } finally { reader.releaseLock(); }\n"
+                ],
+                [
+                  "+",
+                  "}\n"
+                ],
+                [
+                  "+",
+                  "\n"
+                ],
+                [
+                  "+",
+                  "function packet(line: string): Uint8Array {\n"
+                ],
+                [
+                  "+",
+                  "  const data = utf8.encode(line);\n"
+                ],
+                [
+                  "+",
+                  "  return join([utf8.encode((data.length + 4).toString(16).padStart(4, \"0\")), data]);\n"
+                ],
+                [
+                  "+",
+                  "}\n"
+                ],
+                [
+                  "+",
+                  "const FLUSH = utf8.encode(\"0000\");\n"
+                ],
+                [
+                  "+",
+                  "\n"
+                ],
+                [
+                  "+",
+                  "/** Entire pkt-line stream, including flushes; no trailing or truncated data. */\n"
+                ],
+                [
+                  "+",
+                  "function packets(data: Uint8Array): (string | null)[] {\n"
+                ],
+                [
+                  "+",
+                  "  const out: (string | null)[] = [];\n"
+                ],
+                [
+                  "+",
+                  "  for (let at = 0; at < data.length;) {\n"
+                ],
+                [
+                  "+",
+                  "    const digits = ascii(data.subarray(at, at + 4));\n"
+                ],
+                [
+                  "+",
+                  "    if (!/^[0-9a-f]{4}$/.test(digits)) throw bad(\"pkt-line\");\n"
+                ],
+                [
+                  "+",
+                  "    const size = Number.parseInt(digits, 16);\n"
+                ],
+                [
+                  "+",
+                  "    if (size === 0) { out.push(null); at += 4; continue; }\n"
+                ],
+                [
+                  "+",
+                  "    if (size <= 4 || size > 65520 || at + size > data.length) throw bad(\"pkt-line\");\n"
+                ],
+                [
+                  "+",
+                  "    let line = ascii(data.subarray(at + 4, at + size));\n"
+                ],
+                [
+                  "+",
+                  "    if (line.endsWith(\"\\n\")) line = line.slice(0, -1);\n"
+                ],
+                [
+                  "+",
+                  "    out.push(line);\n"
+                ],
+                [
+                  "+",
+                  "    at += size;\n"
+                ],
+                [
+                  "+",
+                  "  }\n"
+                ],
+                [
+                  "+",
+                  "  if (out.at(-1) !== null) throw bad(\"pkt-line\");\n"
+                ],
+                [
+                  "+",
+                  "  return out;\n"
+                ],
+                [
+                  "+",
+                  "}\n"
+                ],
+                [
+                  "+",
+                  "\n"
+                ],
+                [
+                  "+",
+                  "/**\n"
+                ],
+                [
+                  "+",
+                  " * A non-delta v2 pack containing exactly the supplied objects. The count,\n"
+                ],
+                [
+                  "+",
+                  " * each raw object use existing read bounds. The caller explicitly supplies\n"
+                ],
+                [
+                  "+",
+                  " * the buffer allowance; this is not a platform quota. Copy before hashing so asynchronous compression cannot\n"
+                ],
+                [
+                  "+",
+                  " * send changed caller-owned bytes under an already checked ID.\n"
+                ],
+                [
+                  "+",
+                  " */\n"
+                ],
+                [
+                  "+",
+                  "export async function buildPack(objects: readonly RawGitObject[], options: { maxBytes: number; bounds?: ReadBounds }): Promise<Uint8Array> {\n"
+                ],
+                [
+                  "+",
+                  "  const bounds = options.bounds ?? READ_BOUNDS;\n"
+                ],
+                [
+                  "+",
+                  "  const maxBytes = options.maxBytes;\n"
+                ],
+                [
+                  "+",
+                  "  if (!Number.isSafeInteger(maxBytes) || maxBytes < 32 || Object.values(bounds).some((n) => !Number.isSafeInteger(n) || n <= 0)) throw new GitRefusal(\"too-large\", \"pack allowance\");\n"
+                ],
+                [
+                  "+",
+                  "  if (objects.length > bounds.closureObjects || objects.length > 0xffffffff) throw new GitRefusal(\"too-large\", \"pack objects\");\n"
+                ],
+                [
+                  "+",
+                  "  let total = 0;\n"
+                ],
+                [
+                  "+",
+                  "  const seen = new Set<string>();\n"
+                ],
+                [
+                  "+",
+                  "  const verified = objects.map((o) => {\n"
+                ],
+                [
+                  "+",
+                  "    objectId(o.id, \"pack object\");\n"
+                ],
+                [
+                  "+",
+                  "    if (o.type !== \"commit\" && o.type !== \"tree\" && o.type !== \"blob\") throw new GitRefusal(\"wrong-type\", \"pack object\");\n"
+                ],
+                [
+                  "+",
+                  "    const limit = o.type === \"commit\" ? bounds.commitBytes : o.type === \"tree\" ? bounds.treeBytes : bounds.blobBytes;\n"
+                ],
+                [
+                  "+",
+                  "    total += o.data.length;\n"
+                ],
+                [
+                  "+",
+                  "    if (o.data.length > limit || total > maxBytes) throw new GitRefusal(\"too-large\", \"pack bytes\");\n"
+                ],
+                [
+                  "+",
+                  "    if (seen.has(o.id)) throw bad(\"repeated pack object\");\n"
+                ],
+                [
+                  "+",
+                  "    seen.add(o.id);\n"
+                ],
+                [
+                  "+",
+                  "    const data = new Uint8Array(o.data); // owns bytes even for Uint8Array subclasses\n"
+                ],
+                [
+                  "+",
+                  "    if (idOf(o.type, data) !== o.id) throw new GitRefusal(\"hash-mismatch\", \"pack object\");\n"
+                ],
+                [
+                  "+",
+                  "    if (o.type === \"commit\") parseCommit(data, bounds);\n"
+                ],
+                [
+                  "+",
+                  "    if (o.type === \"tree\") {\n"
+                ],
+                [
+                  "+",
+                  "      if (parseTree(data).some((entry) => entry.kind === \"gitlink\")) throw new GitRefusal(\"gitlink\", \"pack tree\");\n"
+                ],
+                [
+                  "+",
+                  "    }\n"
+                ],
+                [
+                  "+",
+                  "    return { type: o.type, data };\n"
+                ],
+                [
+                  "+",
+                  "  });\n"
+                ],
+                [
+                  "+",
+                  "  const header = new Uint8Array(12);\n"
+                ],
+                [
+                  "+",
+                  "  header.set(utf8.encode(\"PACK\"));\n"
+                ],
+                [
+                  "+",
+                  "  const view = new DataView(header.buffer);\n"
+                ],
+                [
+                  "+",
+                  "  view.setUint32(4, 2);\n"
+                ],
+                [
+                  "+",
+                  "  view.setUint32(8, verified.length);\n"
+                ],
+                [
+                  "+",
+                  "  const parts: Uint8Array[] = [header];\n"
+                ],
+                [
+                  "+",
+                  "  let size = 32; // header plus SHA-1 trailer\n"
+                ],
+                [
+                  "+",
+                  "  for (const o of verified) {\n"
+                ],
+                [
+                  "+",
+                  "    let remaining = o.data.length;\n"
+                ],
+                [
+                  "+",
+                  "    const type = o.type === \"commit\" ? 1 : o.type === \"tree\" ? 2 : 3;\n"
+                ],
+                [
+                  "+",
+                  "    const entry = [(type << 4) | (remaining % 16)];\n"
+                ],
+                [
+                  "+",
+                  "    remaining = Math.floor(remaining / 16);\n"
+                ],
+                [
+                  "+",
+                  "    while (remaining > 0) {\n"
+                ],
+                [
+                  "+",
+                  "      entry[entry.length - 1]! |= 128;\n"
+                ],
+                [
+                  "+",
+                  "      entry.push(remaining % 128);\n"
+                ],
+                [
+                  "+",
+                  "      remaining = Math.floor(remaining / 128);\n"
+                ],
+                [
+                  "+",
+                  "    }\n"
+                ],
+                [
+                  "+",
+                  "    const compressed = await bytes(new Blob([o.data]).stream().pipeThrough(new CompressionStream(\"deflate\")), maxBytes - size - entry.length);\n"
+                ],
+                [
+                  "+",
+                  "    size += entry.length + compressed.length;\n"
+                ],
+                [
+                  "+",
+                  "    if (size > maxBytes) throw new GitRefusal(\"too-large\", \"pack bytes\");\n"
+                ],
+                [
+                  "+",
+                  "    parts.push(Uint8Array.from(entry), compressed);\n"
+                ],
+                [
+                  "+",
+                  "  }\n"
+                ],
+                [
+                  "+",
+                  "  if (size > maxBytes) throw new GitRefusal(\"too-large\", \"pack bytes\");\n"
+                ],
+                [
+                  "+",
+                  "  const body = join(parts);\n"
+                ],
+                [
+                  "+",
+                  "  return join([body, sha1(body)]);\n"
+                ],
+                [
+                  "+",
+                  "}\n"
+                ],
+                [
+                  "+",
+                  "\n"
+                ],
+                [
+                  "+",
+                  "/** Web fetch over one fixed remote; credentials never leave its origin. */\n"
+                ],
+                [
+                  "+",
+                  "export class SmartHttpGit {\n"
+                ],
+                [
+                  "+",
+                  "  readonly #remote: string;\n"
+                ],
+                [
+                  "+",
+                  "  readonly #authorization: string | undefined;\n"
+                ],
+                [
+                  "+",
+                  "  readonly #fetch: (request: Request) => Promise<Response>;\n"
+                ],
+                [
+                  "+",
+                  "  readonly #bounds: ReadBounds;\n"
+                ],
+                [
+                  "+",
+                  "  readonly #timeoutMs: number;\n"
+                ],
+                [
+                  "+",
+                  "  readonly #maxBytes: number;\n"
+                ],
+                [
+                  "+",
+                  "\n"
+                ],
+                [
+                  "+",
+                  "  constructor(options: SmartHttpOptions) {\n"
+                ],
+                [
+                  "+",
+                  "    this.#remote = remoteUrl(options.remote, options.transport ?? \"https\").replace(/\\/$/, \"\");\n"
+                ],
+                [
+                  "+",
+                  "    if (!this.#remote.startsWith(\"https://\") && !this.#remote.startsWith(\"http://\")) throw new GitRefusal(\"bad-remote\", \"HTTP remote\");\n"
+                ],
+                [
+                  "+",
+                  "    this.#authorization = options.authorization;\n"
+                ],
+                [
+                  "+",
+                  "    this.#fetch = options.fetch ?? ((request) => fetch(request));\n"
+                ],
+                [
+                  "+",
+                  "    this.#bounds = { ...(options.bounds ?? READ_BOUNDS) };\n"
+                ],
+                [
+                  "+",
+                  "    this.#timeoutMs = options.timeoutMs ?? COMMAND_MS;\n"
+                ],
+                [
+                  "+",
+                  "    this.#maxBytes = options.maxBytes;\n"
+                ],
+                [
+                  "+",
+                  "    if (!Number.isSafeInteger(this.#maxBytes) || this.#maxBytes < 32 || !Number.isSafeInteger(this.#timeoutMs) || this.#timeoutMs <= 0 || Object.values(this.#bounds).some((n) => !Number.isSafeInteger(n) || n <= 0)) throw new GitRefusal(\"too-large\", \"HTTP bounds\");\n"
+                ],
+                [
+                  "+",
+                  "  }\n"
+                ],
+                [
+                  "+",
+                  "\n"
+                ],
+                [
+                  "+",
+                  "  async #request(path: string, media: string, signal: AbortSignal, body?: Uint8Array): Promise<Uint8Array> {\n"
+                ],
+                [
+                  "+",
+                  "    try {\n"
+                ],
+                [
+                  "+",
+                  "      const url = `${this.#remote}/${path}`;\n"
+                ],
+                [
+                  "+",
+                  "      const headers = new Headers({ accept: media, \"cache-control\": \"no-cache\" });\n"
+                ],
+                [
+                  "+",
+                  "      if (this.#authorization !== undefined) headers.set(\"authorization\", this.#authorization);\n"
+                ],
+                [
+                  "+",
+                  "      if (body !== undefined) headers.set(\"content-type\", \"application/x-git-receive-pack-request\");\n"
+                ],
+                [
+                  "+",
+                  "      const init: RequestInit & { credentials: \"omit\" } = { method: body === undefined ? \"GET\" : \"POST\", headers, redirect: \"manual\", credentials: \"omit\", signal, ...(body === undefined ? {} : { body }) };\n"
+                ],
+                [
+                  "+",
+                  "      const request = new Request(url, init);\n"
+                ],
+                [
+                  " ",
+                  "      const response = await this.#fetch(request);\n"
+                ],
+                [
+                  " ",
+                  "      if (response.status !== 200 || response.redirected || (response.url !== \"\" && response.url !== url) || response.headers.get(\"content-type\")?.split(\";\", 1)[0]?.trim() !== media) {\n"
+                ],
+                [
+                  " ",
+                  "        await response.body?.cancel().catch(() => undefined);\n"
+                ]
+              ],
+              "complete": true
+            }
+          ]
+        }
+      ],
+      "newPath": "b/packages/git/src/http.ts",
+      "path": {
+        "path": "cGFja2FnZXMvZ2l0L3NyYy9odHRwLnRz",
+        "shown": "packages/git/src/http.ts",
+        "commit": "1712067dd3b29b9e72742768039beaa1bd495b88"
+      },
+      "group": "edited"
+    },
+    {
+      "oldPath": "a/packages/git/src/index.ts",
+      "patches": [
+        {
+          "before": "388bda0d8d28e3a82699c4548f317ce495c40e33",
+          "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
+          "hunks": [
+            {
+              "range": [
+                2,
+                11,
+                2,
+                11
+              ],
+              "rows": [
+                [
+                  " ",
+                  " * @generalbusiness/artroom-git\n"
+                ],
+                [
+                  " ",
+                  " *\n"
+                ],
+                [
+                  " ",
+                  " * Everything of Artroom that touches a Git repository or a Git host (I3\n"
+                ],
+                [
+                  "-",
+                  " * plan, section 3.1). It runs in Node and in a container, never in a scope's\n"
+                ],
+                [
+                  "-",
+                  " * commit. The review that each retained part passed is\n"
+                ],
+                [
+                  "-",
+                  " * `notes/2026-10-05-i3-git-review.md`.\n"
+                ],
+                [
+                  "-",
+                  " *\n"
+                ],
+                [
+                  "-",
+                  " * `./node` has the one module that needs Node: `nodeExec`.\n"
+                ],
+                [
+                  "+",
+                  " * plan, section 3.1). It runs outside a scope's commit. The review that each retained part passed is\n"
+                ],
+                [
+                  "+",
+                  " * `notes/2026-10-05-i3-git-review.md`.\n"
+                ],
+                [
+                  "+",
+                  " *\n"
+                ],
+                [
+                  "+",
+                  " * `./node` has the one module that needs Node: `nodeExec`.\n"
+                ],
+                [
+                  "+",
+                  " * `./http`, `./http-read` and `./github` use Web APIs and also run in Workers.\n"
+                ],
+                [
+                  " ",
+                  " */\n"
+                ],
+                [
+                  " ",
+                  "\n"
+                ],
+                [
+                  " ",
+                  "export { GitRefusal, MAX_REF_NAME, ZERO_ID, branchRef, isObjectId, objectId, refName, remoteUrl } from \"./names.ts\";\n"
+                ]
+              ],
+              "complete": true
+            }
+          ]
+        }
+      ],
+      "newPath": "b/packages/git/src/index.ts",
+      "path": {
+        "path": "cGFja2FnZXMvZ2l0L3NyYy9pbmRleC50cw",
+        "shown": "packages/git/src/index.ts",
+        "commit": "1712067dd3b29b9e72742768039beaa1bd495b88"
+      },
+      "group": "edited"
+    },
+    {
+      "oldPath": "a/packages/git/test/http-read.test.ts",
+      "patches": [
+        {
+          "before": "388bda0d8d28e3a82699c4548f317ce495c40e33",
+          "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
+          "hunks": [
+            {
+              "range": [
+                84,
+                7,
+                84,
+                7
+              ],
+              "rows": [
+                [
+                  " ",
+                  "  expect(await reader.blob(blob2)).toEqual(expected.get(blob2)!.data);\n"
+                ],
+                [
+                  " ",
+                  "  expect(await source.object(blob2, 0)).toEqual({ type: \"blob\", size: expected.get(blob2)!.data.length, data: null });\n"
+                ],
+                [
+                  " ",
+                  "  expect(requests.filter((r) => r.method === \"POST\").map((r) => r.body)).toEqual([`003cwant ${head} ofs-delta\\n00000009done\\n`]);\n"
+                ],
+                [
+                  "-",
+                  "  expect(requests.every((r) => r.redirect === \"error\" && r.credentials === \"omit\" && !r.url.includes(TOKEN) && !r.body.includes(TOKEN))).toBe(true);\n"
+                ],
+                [
+                  "+",
+                  "  expect(requests.every((r) => r.redirect === \"manual\" && r.credentials === \"omit\" && !r.url.includes(TOKEN) && !r.body.includes(TOKEN))).toBe(true);\n"
+                ],
+                [
+                  " ",
+                  "  expect(JSON.stringify(source).includes(TOKEN)).toBe(false);\n"
+                ],
+                [
+                  " ",
+                  "\n"
+                ],
+                [
+                  " ",
+                  "  // A fresh reader wants a nonadvertised exact tree/blob only when real Git\n"
+                ]
+              ],
+              "complete": true
+            }
+          ]
+        }
+      ],
+      "newPath": "b/packages/git/test/http-read.test.ts",
+      "path": {
+        "path": "cGFja2FnZXMvZ2l0L3Rlc3QvaHR0cC1yZWFkLnRlc3QudHM",
+        "shown": "packages/git/test/http-read.test.ts",
+        "commit": "1712067dd3b29b9e72742768039beaa1bd495b88"
+      },
+      "group": "edited"
+    },
+    {
+      "oldPath": "a/packages/git/test/http.test.ts",
+      "patches": [
+        {
+          "before": "388bda0d8d28e3a82699c4548f317ce495c40e33",
+          "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
+          "hunks": [
+            {
+              "range": [
+                118,
+                7,
+                118,
+                7
+              ],
+              "rows": [
+                [
+                  " ",
+                  "  const absent = await client.readRef(REF);\n"
+                ],
+                [
+                  " ",
+                  "  expect([deleted.reported, posts, host.updates, absent.value]).toEqual([\"deleted\", 4, 4, null]);\n"
+                ],
+                [
+                  " ",
+                  "  expect(attemptOutcome(deletion, classifySend(deleted, one), absent).result).toBe(\"confirmed\");\n"
+                ],
+                [
+                  "-",
+                  "  expect(requests.every((r) => r.redirect === \"error\" && r.credentials === \"omit\" && !r.url.includes(TOKEN))).toBe(true);\n"
+                ],
+                [
+                  "+",
+                  "  expect(requests.every((r) => r.redirect === \"manual\" && r.credentials === \"omit\" && !r.url.includes(TOKEN))).toBe(true);\n"
+                ],
+                [
+                  " ",
+                  "  expect(new Set(host.credentials)).toEqual(new Set([`Bearer ${TOKEN}`]));\n"
+                ],
+                [
+                  " ",
+                  "  expect(JSON.stringify([client, requests, applied, raced, lost]).includes(TOKEN)).toBe(false);\n"
+                ],
+                [
+                  " ",
+                  "\n"
+                ]
+              ],
+              "complete": true
+            }
+          ]
+        }
+      ],
+      "newPath": "b/packages/git/test/http.test.ts",
+      "path": {
+        "path": "cGFja2FnZXMvZ2l0L3Rlc3QvaHR0cC50ZXN0LnRz",
+        "shown": "packages/git/test/http.test.ts",
+        "commit": "1712067dd3b29b9e72742768039beaa1bd495b88"
+      },
+      "group": "edited"
+    },
+    {
+      "oldPath": "a/packages/platform/src/destination.ts",
+      "patches": [
+        {
+          "before": "388bda0d8d28e3a82699c4548f317ce495c40e33",
+          "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
+          "hunks": [
+            {
+              "range": [
+                743,
+                7,
+                743,
+                7
+              ],
+              "rows": [
+                [
+                  " ",
+                  " *   wrote into the publication's slot `token`. The search reads this\n"
+                ],
+                [
+                  " ",
+                  " *   scope's own entries back to `reservedAt` (I3 deltas, entry FA5).\n"
+                ],
+                [
+                  " ",
+                  " */\n"
+                ],
+                [
+                  "-",
+                  "function mintRevoked(state: Pick<StateView, \"operation\" | \"item\">, own: Own, revoke: Operation): Operation | null {\n"
+                ],
+                [
+                  "+",
+                  "export function mintRevoked(state: Pick<StateView, \"operation\" | \"item\">, own: Own, revoke: Operation): Operation | null {\n"
+                ],
+                [
+                  " ",
+                  "  const seq = seqOf(revoke.id);\n"
+                ],
+                [
+                  " ",
+                  "  const { input, effects } = ownEntry(own, seq);\n"
+                ],
+                [
+                  " ",
+                  "  if (input.type === \"outcome\") {\n"
+                ]
+              ],
+              "complete": true
+            }
+          ]
+        }
+      ],
+      "newPath": "b/packages/platform/src/destination.ts",
+      "path": {
+        "path": "cGFja2FnZXMvcGxhdGZvcm0vc3JjL2Rlc3RpbmF0aW9uLnRz",
+        "shown": "packages/platform/src/destination.ts",
+        "commit": "1712067dd3b29b9e72742768039beaa1bd495b88"
+      },
+      "group": "edited"
+    },
+    {
+      "oldPath": "a/packages/platform/src/index.ts",
+      "patches": [
+        {
+          "before": "388bda0d8d28e3a82699c4548f317ce495c40e33",
+          "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
+          "hunks": [
+            {
+              "range": [
+                29,
+                6,
+                29,
+                7
+              ],
+              "rows": [
+                [
+                  " ",
+                  "export type { LaneRead } from \"./destination.ts\";\n"
+                ],
+                [
+                  " ",
+                  "// The host port reads the same recorded operation context as the rules.\n"
+                ],
+                [
+                  " ",
+                  "export { branchOf as destinationBranch, mintOf as destinationMint, servedBy as destinationWrite, statementOf as destinationStatement, targetOf as destinationTarget, writeSends as destinationSends, readFor as destinationRead } from \"./destination.ts\";\n"
+                ],
+                [
+                  "+",
+                  "export { mintRevoked as destinationRevokedMint } from \"./destination.ts\";\n"
+                ],
+                [
+                  " ",
+                  "export { DESTINATION_CHANGED_SET, NOT_RESERVED, isJudgeChanges, isJudgeEvidence, isRecordedJudgeEvidence, judgeReservation } from \"./reservation.ts\";\n"
+                ],
+                [
+                  " ",
+                  "export type { JudgeChanges, JudgeEvidence, RecordedJudgeEvidence, Reservation, ReservationAsked, ReservationRead, Statement } from \"./reservation.ts\";\n"
+                ],
+                [
+                  " ",
+                  "export { RULES };\n"
+                ]
+              ],
+              "complete": true
+            }
+          ]
+        }
+      ],
+      "newPath": "b/packages/platform/src/index.ts",
+      "path": {
+        "path": "cGFja2FnZXMvcGxhdGZvcm0vc3JjL2luZGV4LnRz",
+        "shown": "packages/platform/src/index.ts",
+        "commit": "1712067dd3b29b9e72742768039beaa1bd495b88"
+      },
+      "group": "edited"
+    },
+    {
+      "oldPath": "a/packages/scope/src/register-host.ts",
+      "patches": [
+        {
+          "before": "388bda0d8d28e3a82699c4548f317ce495c40e33",
+          "after": "1712067dd3b29b9e72742768039beaa1bd495b88",
+          "hunks": [
+            {
+              "range": [
+                12,
+                62,
+                12,
+                62
+              ],
+              "rows": [
+                [
+                  " ",
+                  "/** Each method sends once. Missing, lost or malformed replies are no answer. */\n"
+                ],
+                [
+                  " ",
+                  "export interface RegisterProvider {\n"
+                ],
+                [
+                  " ",
+                  "  createRepository(name: string): Promise<unknown>;\n"
+                ],
+                [
+                  "-",
+                  "  deleteRepository(id: string): Promise<unknown>;\n"
+                ],
+                [
+                  "-",
+                  "  revokeCredential(id: string): Promise<unknown>;\n"
+                ],
+                [
+                  "-",
+                  "}\n"
+                ],
+                [
+                  "-",
+                  "export type RepositoryCreation =\n"
+                ],
+                [
+                  "-",
+                  "  | { created: true; name: string; id: string; credential?: string }\n"
+                ],
+                [
+                  "-",
+                  "  | { created: false; name: string; nameExists: boolean };\n"
+                ],
+                [
+                  "-",
+                  "export type RepositoryDeletion = { deleted: boolean; id: string };\n"
+                ],
+                [
+                  "-",
+                  "export type CredentialRevocation = { revoked: boolean; credential: string };\n"
+                ],
+                [
+                  "-",
+                  "export interface RegisterHostOptions { host: string; namespace: string; provider: RegisterProvider }\n"
+                ],
+                [
+                  "-",
+                  "\n"
+                ],
+                [
+                  "-",
+                  "const sameScope = (a: ScopeRef, b: ScopeRef): boolean => a.scope === b.scope && a.inc === b.inc && a.kind === b.kind;\n"
+                ],
+                [
+                  "-",
+                  "const text = (value: unknown): value is string => typeof value === \"string\" && utf8(value).length <= 256;\n"
+                ],
+                [
+                  "-",
+                  "\n"
+                ],
+                [
+                  "-",
+                  "/** Snapshot untrusted members once, including getters, then validate that snapshot. */\n"
+                ],
+                [
+                  "-",
+                  "function members(reply: unknown, required: readonly string[], optional: readonly string[] = []): Record<string, unknown> | null {\n"
+                ],
+                [
+                  "-",
+                  "  if (typeof reply !== \"object\" || reply === null || Array.isArray(reply)) return null;\n"
+                ],
+                [
+                  "-",
+                  "  const value = reply as Record<string, unknown>;\n"
+                ],
+                [
+                  "-",
+                  "  try {\n"
+                ],
+                [
+                  "-",
+                  "    const keys = Object.keys(value);\n"
+                ],
+                [
+                  "-",
+                  "    if (!required.every((key) => Object.hasOwn(value, key)) || keys.some((key) => !required.includes(key) && !optional.includes(key))) return null;\n"
+                ],
+                [
+                  "-",
+                  "    return Object.fromEntries(keys.map((key) => [key, value[key]]));\n"
+                ],
+                [
+                  "-",
+                  "  } catch { return null; }\n"
+                ],
+                [
+                  "-",
+                  "}\n"
+                ],
+                [
+                  "-",
+                  "const answer = (result: \"confirmed\" | \"refused\", body: Record<string, FieldValue>): EffectAnswer => ({ result, evidence: { basis: \"own-answer\", body } });\n"
+                ],
+                [
+                  "-",
+                  "\n"
+                ],
+                [
+                  "-",
+                  "export class RegisterHost implements Outside {\n"
+                ],
+                [
+                  "-",
+                  "  readonly #given: OutsideGiven;\n"
+                ],
+                [
+                  "-",
+                  "  readonly #host: string;\n"
+                ],
+                [
+                  "-",
+                  "  readonly #namespace: string;\n"
+                ],
+                [
+                  "-",
+                  "  readonly #provider: RegisterProvider;\n"
+                ],
+                [
+                  "-",
+                  "  constructor(given: OutsideGiven, options: RegisterHostOptions) {\n"
+                ],
+                [
+                  "-",
+                  "    this.#given = given;\n"
+                ],
+                [
+                  "-",
+                  "    this.#host = options.host;\n"
+                ],
+                [
+                  "-",
+                  "    this.#namespace = options.namespace;\n"
+                ],
+                [
+                  "-",
+                  "    this.#provider = options.provider;\n"
+                ],
+                [
+                  "-",
+                  "  }\n"
+                ],
+                [
+                  "-",
+                  "\n"
+                ],
+                [
+                  "-",
+                  "  accepts(owner: string, kind: string): boolean {\n"
+                ],
+                [
+                  "-",
+                  "    return owner === REGISTER && [\"create-repository\", \"delete-repository\", \"revoke-credential\"].includes(kind);\n"
+                ],
+                [
+                  "-",
+                  "  }\n"
+                ],
+                [
+                  "-",
+                  "\n"
+                ],
+                [
+                  "-",
+                  "  async send(request: EffectRequest): Promise<EffectAnswer | null> {\n"
+                ],
+                [
+                  "-",
+                  "    try {\n"
+                ],
+                [
+                  "-",
+                  "      if (!this.#bound(request)) return null;\n"
+                ],
+                [
+                  "-",
+                  "      if (request.kind === \"create-repository\") {\n"
+                ],
+                [
+                  "-",
+                  "        const name = this.#name(request);\n"
+                ],
+                [
+                  "-",
+                  "        if (name === null) return null;\n"
+                ],
+                [
+                  "-",
+                  "        return this.#created(name, await this.#provider.createRepository(name));\n"
+                ],
+                [
+                  "-",
+                  "      }\n"
+                ],
+                [
+                  "-",
+                  "      const opening = request.origin.entry.input;\n"
+                ],
+                [
+                  "-",
+                  "      if (opening.type !== \"outcome\" || opening.owner !== REGISTER || opening.kind !== \"create-repository\" || opening.result !== \"confirmed\" || opening.evidence.basis !== \"own-answer\") return null;\n"
+                ],
+                [
+                  "-",
+                  "      const body = members(opening.evidence.body, [\"name\", \"id\"], [\"credential\"]);\n"
+                ],
+                [
+                  "-",
+                  "      if (!body || !text(body[\"name\"]) || !text(body[\"id\"]) || (body[\"credential\"] !== undefined && !text(body[\"credential\"]))) return null;\n"
+                ],
+                [
+                  "-",
+                  "      if (request.kind === \"delete-repository\") {\n"
+                ],
+                [
+                  "-",
+                  "        const id = body[\"id\"];\n"
+                ],
+                [
+                  "-",
+                  "        const reply = members(await this.#provider.deleteRepository(id), [\"deleted\", \"id\"]);\n"
+                ],
+                [
+                  "+",
+                  "  deleteRepository(id: string, name: string): Promise<unknown>;\n"
+                ],
+                [
+                  "+",
+                  "  revokeCredential(id: string): Promise<unknown>;\n"
+                ],
+                [
+                  "+",
+                  "}\n"
+                ],
+                [
+                  "+",
+                  "export type RepositoryCreation =\n"
+                ],
+                [
+                  "+",
+                  "  | { created: true; name: string; id: string; credential?: string }\n"
+                ],
+                [
+                  "+",
+                  "  | { created: false; name: string; nameExists: boolean };\n"
+                ],
+                [
+                  "+",
+                  "export type RepositoryDeletion = { deleted: boolean; id: string };\n"
+                ],
+                [
+                  "+",
+                  "export type CredentialRevocation = { revoked: boolean; credential: string };\n"
+                ],
+                [
+                  "+",
+                  "export interface RegisterHostOptions { host: string; namespace: string; provider: RegisterProvider }\n"
+                ],
+                [
+                  "+",
+                  "\n"
+                ],
+                [
+                  "+",
+                  "const sameScope = (a: ScopeRef, b: ScopeRef): boolean => a.scope === b.scope && a.inc === b.inc && a.kind === b.kind;\n"
+                ],
+                [
+                  "+",
+                  "const text = (value: unknown): value is string => typeof value === \"string\" && utf8(value).length <= 256;\n"
+                ],
+                [
+                  "+",
+                  "\n"
+                ],
+                [
+                  "+",
+                  "/** Snapshot untrusted members once, including getters, then validate that snapshot. */\n"
+                ],
+                [
+                  "+",
+                  "function members(reply: unknown, required: readonly string[], optional: readonly string[] = []): Record<string, unknown> | null {\n"
+                ],
+                [
+                  "+",
+                  "  if (typeof reply !== \"object\" || reply === null || Array.isArray(reply)) return null;\n"
+                ],
+                [
+                  "+",
+                  "  const value = reply as Record<string, unknown>;\n"
+                ],
+                [
+                  "+",
+                  "  try {\n"
+                ],
+                [
+                  "+",
+                  "    const keys = Object.keys(value);\n"
+                ],
+                [
+                  "+",
+                  "    if (!required.every((key) => Object.hasOwn(value, key)) || keys.some((key) => !required.includes(key) && !optional.includes(key))) return null;\n"
+                ],
+                [
+                  "+",
+                  "    return Object.fromEntries(keys.map((key) => [key, value[key]]));\n"
+                ],
+                [
+                  "+",
+                  "  } catch { return null; }\n"
+                ],
+                [
+                  "+",
+                  "}\n"
+                ],
+                [
+                  "+",
+                  "const answer = (result: \"confirmed\" | \"refused\", body: Record<string, FieldValue>): EffectAnswer => ({ result, evidence: { basis: \"own-answer\", body } });\n"
+                ],
+                [
+                  "+",
+                  "\n"
+                ],
+                [
+                  "+",
+                  "export class RegisterHost implements Outside {\n"
+                ],
+                [
+                  "+",
+                  "  readonly #given: OutsideGiven;\n"
+                ],
+                [
+                  "+",
+                  "  readonly #host: string;\n"
+                ],
+                [
+                  "+",
+                  "  readonly #namespace: string;\n"
+                ],
+                [
+                  "+",
+                  "  readonly #provider: RegisterProvider;\n"
+                ],
+                [
+                  "+",
+                  "  constructor(given: OutsideGiven, options: RegisterHostOptions) {\n"
+                ],
+                [
+                  "+",
+                  "    this.#given = given;\n"
+                ],
+                [
+                  "+",
+                  "    this.#host = options.host;\n"
+                ],
+                [
+                  "+",
+                  "    this.#namespace = options.namespace;\n"
+                ],
+                [
+                  "+",
+                  "    this.#provider = options.provider;\n"
+                ],
+                [
+                  "+",
+                  "  }\n"
+                ],
+                [
+                  "+",
+                  "\n"
+                ],
+                [
+                  "+",
+                  "  accepts(owner: string, kind: string): boolean {\n"
+                ],
+                [
+                  "+",
+                  "    return owner === REGISTER && [\"create-repository\", \"delete-repository\", \"revoke-credential\"].includes(kind);\n"
+                ],
+                [
+                  "+",
+                  "  }\n"
+                ],
+                [
+                  "+",
+                  "\n"
+                ],
+                [
+                  "+",
+                  "  async send(request: EffectRequest): Promise<EffectAnswer | null> {\n"
+                ],
+                [
+                  "+",
+                  "    try {\n"
+                ],
+                [
+                  "+",
+                  "      if (!this.#bound(request)) return null;\n"
+                ],
+                [
+                  "+",
+                  "      if (request.kind === \"create-repository\") {\n"
+                ],
+                [
+                  "+",
+                  "        const name = this.#name(request);\n"
+                ],
+                [
+                  "+",
+                  "        if (name === null) return null;\n"
+                ],
+                [
+                  "+",
+                  "        return this.#created(name, await this.#provider.createRepository(name));\n"
+                ],
+                [
+                  "+",
+                  "      }\n"
+                ],
+                [
+                  "+",
+                  "      const opening = request.origin.entry.input;\n"
+                ],
+                [
+                  "+",
+                  "      if (opening.type !== \"outcome\" || opening.owner !== REGISTER || opening.kind !== \"create-repository\" || opening.result !== \"confirmed\" || opening.evidence.basis !== \"own-answer\") return null;\n"
+                ],
+                [
+                  "+",
+                  "      const body = members(opening.evidence.body, [\"name\", \"id\"], [\"credential\"]);\n"
+                ],
+                [
+                  "+",
+                  "      if (!body || !text(body[\"name\"]) || !text(body[\"id\"]) || (body[\"credential\"] !== undefined && !text(body[\"credential\"]))) return null;\n"
+                ],
+                [
+                  "+",
+                  "      if (request.kind === \"delete-repository\") {\n"
+                ],
+                [
+                  "+",
+                  "        const id = body[\"id\"];\n"
+                ],
+                [
+                  "+",
+                  "        const reply = members(await this.#provider.deleteRepository(id, body[\"name\"]), [\"deleted\", \"id\"]);\n"
+                ],
+                [
+                  " ",
+                  "        return reply?.[\"id\"] === id && typeof reply[\"deleted\"] === \"boolean\" ? answer(reply[\"deleted\"] ? \"confirmed\" : \"refused\", { id }) : null;\n"
+                ],
+                [
+                  " ",
+                  "      }\n"
+                ],
+                [
+                  " ",
+                  "      const credential = body[\"credential\"];\n"
+                ]
+              ],
+              "complete": true
+            }
+          ]
+        }
+      ],
+      "newPath": "b/packages/scope/src/register-host.ts",
+      "path": {
+        "path": "cGFja2FnZXMvc2NvcGUvc3JjL3JlZ2lzdGVyLWhvc3QudHM",
+        "shown": "packages/scope/src/register-host.ts",
+        "commit": "1712067dd3b29b9e72742768039beaa1bd495b88"
+      },
+      "group": "edited"
+    }
+  ],
+  "annotation": "Offline structural annotation of the exact exported answer for static design only. Not a server payload or product renderer. No source line or attribution was added."
+}
