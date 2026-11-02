@@ -22,6 +22,28 @@ export async function logDrawErrors(context, source) {
   return { code: logged, handler: declaration[1], caughtVariable: variable, counters: !!count, qualification: "Browser-only logger at the existing caught-error expression. This enables routing and can affect cache/timing. It changes no Worker or production source byte." };
 }
 
+/** Observe the error already tested by failureScreen. No routing or debugger; native instanceof answers stay unchanged. */
+export async function logCheckedDrawErrors(context, source) {
+  const prefix = source.slice(0, source.indexOf('"This room did not open"'));
+  const declaration = [...prefix.matchAll(/function ([\w$]+)\([\w$]+,[\w$]+=\[\]\)\{/g)].at(-1);
+  if (!declaration) throw Error("Cannot identify the frozen failure-screen function.");
+  await context.addInitScript(({ handler }) => {
+    const original = Function.prototype[Symbol.hasInstance], seen = new WeakSet();
+    Object.defineProperty(Error, Symbol.hasInstance, { configurable: true, value: function(candidate) {
+      const answer = Reflect.apply(original, this, [candidate]);
+      try {
+        const checkedAt = new Error().stack ?? "";
+        if (candidate && typeof candidate === "object" && !seen.has(candidate) && checkedAt.includes(`at ${handler} (`)) {
+          seen.add(candidate);
+          console.warn("ROW-PRESS-DRAW-ERROR " + JSON.stringify({ name: candidate.name, message: candidate.message, stack: candidate.stack, checkedAt, testedBy: this.name }));
+        }
+      } catch { /* A diagnostic failure cannot change the Page's instanceof result. */ }
+      return answer;
+    } });
+  }, { handler: declaration[1] });
+  return { handler: declaration[1], qualification: "Test-only Error instanceof observer. No debugger, routing, cache override, Page byte change, or altered instanceof result. Observing an error check can still affect timing." };
+}
+
 export function rowPressProbe(context, out, debug = {}) {
   const traffic = [], console = [], navigation = [], rows = [], drawErrors = [], ids = new WeakMap();
   let next = 0, page = null, started = false;

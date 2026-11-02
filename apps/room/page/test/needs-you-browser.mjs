@@ -11,7 +11,7 @@
 // The browser fills one text box, the device link. After that it only presses and reloads, and the script counts each act the page sends.
 //
 // Output: one JSON report on stdout, and screenshots under WITNESS_DIR. No link, session token or key leaves this process.
-import { logDrawErrors, rowPressProbe } from "./row-press-probe.mjs";
+import { logCheckedDrawErrors, logDrawErrors, rowPressProbe } from "./row-press-probe.mjs";
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -164,6 +164,10 @@ try {
   const link = linkIn(await run("ana", "invite", "@ana", "--device"), "artroom-device-key:");
   browser = await chromium.launch({ executablePath: CHROMIUM, headless: true });
   const context = await browser.newContext({ viewport: { width: 1100, height: 1200 } }), page = await context.newPage(), errors = [], acts = [];
+  if (probing && process.env.ROW_PRESS_ERROR_CHECK === "1") {
+    const instrumentation = await logCheckedDrawErrors(context, pageBytes);
+    writeFileSync(join(WITNESS_DIR, "error-check-instrumentation.json"), JSON.stringify(instrumentation, null, 2) + "\n");
+  }
   if (probing && process.env.ROW_PRESS_LOG_ERROR === "1") {
     const { code, ...instrumentation } = await logDrawErrors(context, pageBytes);
     writeFileSync(join(WITNESS_DIR, "browser-instrumentation.json"), JSON.stringify({ ...instrumentation, served: bytes.digestBytes(bytes.utf8(pageBytes)), browser: bytes.digestBytes(bytes.utf8(code)) }, null, 2) + "\n");
