@@ -283,6 +283,33 @@ try{
     assert.equal((await proofOf(page)).signed.length,0);
     await page.screenshot({path:out+'/reopen-refused.png'});report.cases.push({label:'reopen-refused'});await page.close();
   }
+  // The Git answers script a bounded stop, then completion. Ordinary presses
+  // use the production bridge/service/session, signatures and TEST scope port.
+  for(const width of [592,320]){
+    const {page,app,errors}=await opened({fixture:'stopped-diff'},width);
+    await click(page,app,app.getByRole('button',{name:'Open',exact:true}));
+    await click(page,app,app.getByRole('button',{name:'View diff',exact:true}));
+    await app.getByText('No changed path was reached.',{exact:false}).waitFor();
+    assert.match(await app.locator('#card-root').innerText(),/every changed path, because the read stopped before it reached one/);
+    const signatures=async()=>(await proofOf(page)).signed.filter(intent=>intent.kind==='read-token').length;
+    assert.equal(await signatures(),1,'The first stopped read signs once');
+    const retry=app.getByRole('button',{name:'View diff',exact:true});
+    assert.equal(await retry.count(),1,'A lone stopped Diff keeps its ordinary reader control');
+    assert.equal(await retry.isEnabled(),true,'The current stopped read can run again');
+    assert.equal(await retry.getAttribute('aria-current'),'true');
+    await page.screenshot({path:out+'/stopped-diff-'+width+'.png'});
+    await click(page,app,retry);
+    await app.getByText('the slow read',{exact:false}).waitFor();
+    assert.equal(await signatures(),2,'The next ordinary press reads again without reopening the view');
+    assert.equal(await app.getByText('No changed path was reached.',{exact:false}).count(),0);
+    await click(page,app,app.getByRole('button',{name:/Back/}));
+    await click(page,app,app.getByRole('button',{name:'View diff',exact:true}));
+    await app.getByText('the slow read',{exact:false}).waitFor();
+    assert.equal(await signatures(),2,'The complete held answer replays without a third credential');
+    await verify(page,app,errors,'stopped-diff-'+width);
+    report.cases.push({label:'stopped-diff-'+width,stoppedBoundsVisible:true,ordinaryRetry:true,completeReplay:true,readTokenSignatures:2});
+    await page.close();
+  }
   // A signed read of 11.6 s, as the person's press took, against the real service and a fixture Git read. The clock is real.
   {
     const page=await browser.newPage({viewport:{width:624,height:1000}}),errors=[];

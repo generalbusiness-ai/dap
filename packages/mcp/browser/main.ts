@@ -428,7 +428,7 @@ function render() {
 }
 function readerButton(reader: { action: string; label: string; current?: boolean }): HTMLButtonElement {
   const control = button(reader.label, async () => { returnPage = "item"; await act(reader.action, PERMANENT_READ); }, "quiet");
-  control.disabled ||= !display?.active || reader.current === true;
+  control.disabled ||= !display?.active || (reader.current === true && display?.card?.shownRead?.truncated !== true);
   if (reader.current) control.setAttribute("aria-current", "true");
   return control;
 }

@@ -21,9 +21,10 @@ const fields = { approvals: 0, ownerMayReview: false, checks: [], labels: [], ex
 export function fixture(mode: string, custody: CustodyStore = memoryStore()) {
   const signer = fixedSigner(17), scope = new StandIn(signer.key);
   /** `signed-diff-<ms>`: the diff signs a read-token through the real service, and its Git read takes this long. */
-  const slowRead = /^signed-diff-(\d+)$/.exec(mode), readMs = slowRead ? Number(slowRead[1]) : null;
+  const stoppedRead = mode === "stopped-diff";
+  const slowRead = /^signed-diff-(\d+)$/.exec(mode), readMs = stoppedRead ? 0 : slowRead ? Number(slowRead[1]) : null;
   const completed = new Set<number>();
-  let revision = 0, lose = mode === "loss";
+  let revision = 0, exactReads = 0, lose = mode === "loss";
   const signed: Intent[] = [];
   const titles = ["Choose the first milestone", "Review the working terms", "Review the proposed change"];
   const source: ViewSource = { read: async (query, access) => {
@@ -53,7 +54,14 @@ export function fixture(mode: string, custody: CustodyStore = memoryStore()) {
   } };
   /** Each call is another process of one home: its own views, over one custody store and one service. */
   const process_ = () => new McpService({ service: SERVICE, mode: "add", config: { read: async () => scope.config(), addRoot: async () => {} }, custody, views: source,
-    ...(readMs === null ? {} : { readDiff: async () => { await new Promise(resolve => { setTimeout(resolve, readMs); }); return { base: "a".repeat(40), integration: "b".repeat(40), files: 1, truncated: false, text: "@@ the slow read @@\n-before\n+after\n" }; } }),
+    ...(readMs === null ? {} : { readDiff: async () => {
+      if (readMs > 0) await new Promise(resolve => { setTimeout(resolve, readMs); });
+      // Script the bounded stop, then a complete answer. The real service
+      // still signs and spends one read-token credential for each call.
+      if (stoppedRead && ++exactReads === 1) return { base: "a".repeat(40), integration: "b".repeat(40), files: 0, paths: [], truncated: true,
+        leftOut: "every changed path, because the read stopped before it reached one", text: "TEST diff stopped at its time bound.\nNo changed path was reached.\n" };
+      return { base: "a".repeat(40), integration: "b".repeat(40), files: 1, truncated: false, text: "@@ the slow read @@\n-before\n+after\n" };
+    } }),
     signer: { key: signer.key, sign: (bytes) => { const text = new TextDecoder().decode(bytes), prefix = `${DOMAINS.intent}\n`; if (text.startsWith(prefix)) signed.push(JSON.parse(text.slice(prefix.length))); return signer.sign(bytes); } },
     fetch: async (url, init) => {
       const answer = await scope.fetch(url, init);
