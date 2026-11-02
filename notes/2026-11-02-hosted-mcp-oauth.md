@@ -140,15 +140,44 @@ endpoint answers `404` on each of them, as it does on `/mcp` today.
 
 | Route | Answer |
 |---|---|
-| `GET /.well-known/oauth-protected-resource/mcp` | RFC 9728 metadata: `resource` is the exact `https://<service>/mcp`, `authorization_servers` is `["https://<service>"]`, `scopes_supported` is `["mcp"]`, `bearer_methods_supported` is `["header"]` |
-| `POST`, `GET`, `DELETE /mcp` with no `Authorization` | `401` with `WWW-Authenticate: Bearer resource_metadata="https://<service>/.well-known/oauth-protected-resource/mcp", scope="mcp"` |
+| `GET /.well-known/oauth-protected-resource/mcp`, with the query of a configured connector URL | RFC 9728 metadata: `resource` is that exact connector URL, query included; `authorization_servers` is `["https://<service>"]`; `scopes_supported` is `["mcp"]`; `bearer_methods_supported` is `["header"]`. A query that matches no configured URL answers `404` |
+| `POST`, `GET`, `DELETE /mcp` with no `Authorization` | `401` with `WWW-Authenticate: Bearer resource_metadata="https://<service>/.well-known/oauth-protected-resource/mcp<query>", scope="mcp"`, where `<query>` is the query of the request URL |
 | `/mcp` with a bad, expired or revoked access token | `401` with the same header and `error="invalid_token"` |
+
+### Connector URLs
+
+One deployment serves several hosts at one endpoint. Each host connects
+at its own connector URL, which differs from the others only in its
+query, as `MCP_CARD_ORIGINS` already requires (`docs/mcp.md`, hosted
+endpoint settings). An example is `https://<service>/mcp` for Claude
+and `https://<service>/mcp?host=chatgpt` for ChatGPT.
+
+A new setting, `MCP_RESOURCE_URLS`, lists the connector URLs as a JSON
+array of at most 8 canonical HTTPS URLs at `/mcp`, with no credentials
+or fragments. Every URL in `MCP_CARD_ORIGINS` must also appear in
+`MCP_RESOURCE_URLS`, so a card origin and a token audience always
+follow the same URL. When the setting is absent, the only connector
+URL is `https://<service>/mcp`. An invalid setting closes the
+endpoint, as an invalid `MCP_CARD_ORIGINS` does.
+
+Each connector URL is its own protected resource:
+
+- The metadata route keeps the query, as RFC 9728 section 3.1 inserts
+  the well-known suffix before it. It returns that URL as `resource`,
+  as section 3.3 requires.
+- The token route accepts `resource` only when it equals a configured
+  connector URL. The token's audience is that URL.
+- The access check compares the token's audience with the exact
+  request URL, query included. That is the same exact match that
+  `remoteCardDomain` uses (`packages/mcp/src/views/remote-origins.ts`).
+
+### Access tokens
 
 The hosted agent accepts either a static bearer or an access token. It
 checks an access token as it checks a bearer today: the digest in
 constant time, the expiry, and the failure window per address. It also
-checks that the token's audience equals the configured resource URL and
-that its grant is live. A token for another service or resource answers
+checks that the token's audience equals the exact request URL and that
+its grant is live. A token for another service or resource answers
 `401`.
 
 On each call with an access token, the object also checks current
@@ -201,7 +230,7 @@ A grant is a control request, `artroom-mcp-control-1`, with action
   "client_id": "https://chatgpt.com/oauth/client.json",
   "redirect_uri": "https://chatgpt.com/connector_platform_oauth_redirect",
   "code_challenge": "<base64url SHA-256 of the verifier>",
-  "resource": "https://dap-demo.inguz.workers.dev/mcp",
+  "resource": "https://dap-demo.inguz.workers.dev/mcp?host=chatgpt",
   "scope": "mcp",
   "state_digest": "<SHA-256 of the client's state>",
   "link": "<agent-key invitation, on a first connection only>"
@@ -242,8 +271,8 @@ challenge. It accepts form-encoded bodies. It answers a code exchange
 within 10 seconds and a refresh within 30 seconds, Claude's limits.
 It returns:
 
-- an access token `<agent>.<grant>.<secret>`, one hour, audience the
-  resource URL;
+- an access token `<agent>.<grant>.<secret>`, one hour, with the
+  connector URL from the grant's `resource` as its audience;
 - a refresh token, at most 30 days from the grant, never later than a
   retire or a revocation.
 
@@ -286,10 +315,10 @@ slice O4 only.
 
 | Slice | Builds | Evidence |
 |---|---|---|
-| O1 | Resource server: the protected-resource route, the `401` challenge, access-token checks beside the static bearer, audience binding, the per-call standing check | A scripted client gets `401` with the header, reads the metadata, and calls `/mcp` with a test-issued token. Controls: wrong audience, expired token, retired agent, a controller removed after consent and then one call after the 60-second bound |
+| O1 | Resource server: `MCP_RESOURCE_URLS`, the protected-resource route for each connector URL, the `401` challenge, access-token checks beside the static bearer, audience binding, the per-call standing check | A scripted client gets `401` with the header, reads the metadata, and calls `/mcp` with a test-issued token. Controls: wrong audience, expired token, retired agent, a controller removed after consent and then one call after the 60-second bound, a token issued for one connector URL and used at the other, and a metadata query that matches no configured URL |
 | O2 | The own-agent membership, at the next free version, with `add-own-agent` and `invite-own-agent-key`, and a creation cohort that pins it | Native tests: a member adds and invites an agent they control. Controls: a checker signer, a ninth agent, a controller who is not the signer, an `agent` role wider than the signer's role, and an `agent` role widened after the add, which refuses the member's invite. Every earlier pin and declaration text stays unchanged, Membership 11 included |
 | O3 | Authorization server: metadata, client ID documents and registration, the redirect list, the consent page, the `grant` control action, codes, the token and revoke routes, refresh rotation | A browser test on a local Worker runs the full code flow with PKCE for an ordinary member on the own-agent membership and for an invited controller on an older pin. Controls: wrong verifier, reused code, unlisted redirect, a signer who is neither admin nor controller, reused refresh token, an `agent` role widened after the add that refuses a member's grant, a framed consent page that does not load, and a client document that names itself "Claude" from another host |
-| O4 | Live runs, after O1 to O3 and hosted cards `288d5988` land | The builder adds dap as a custom connector in Claude web, then ChatGPT developer mode, controls each UI, consents as an ordinary member, makes one card press and one act, and revokes. Record host builds, the `initialize` and `ui/initialize` versions, any `Origin` sent, and screenshots |
+| O4 | Live runs, after O1 to O3 and hosted cards `288d5988` land | The builder adds dap as a custom connector in Claude web, then ChatGPT developer mode, controls each UI, consents as an ordinary member, makes one card press and one act, and revokes. Then connect both hosts to the same deployment at the same time, each at its own connector URL, and make one act from each. Record host builds, the `initialize` and `ui/initialize` versions, any `Origin` sent, and screenshots |
 
 O1 and O2 do not depend on each other. O3 needs both.
 
