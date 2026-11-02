@@ -58,6 +58,7 @@ export class Reads {
   readonly #refused = new WeakMap<SessionEntry, number>();
   /** Each membership incarnation under which this process held a session. Memory only: only a restart forgets it. */
   readonly #held = new Set<string>();
+  readonly #heldScopes = new Set<ScopeId>();
   readonly #plain: Transport;
   readonly #signed: Transport;
 
@@ -83,6 +84,7 @@ export class Reads {
     if (held.session && claims?.key === this.#port.signer.key
       && claims.membership.scope === membership.scope && claims.membership.inc === membership.inc && claims.membership.kind === membership.kind
       && !held.session.endedBy(timeOf(now + 10_000))) {
+      this.#heldScopes.add(membership.scope);
       this.#held.add(`${membership.scope} ${membership.inc}`);
       return held.session;
     }
@@ -103,6 +105,7 @@ export class Reads {
       if (!this.#sessions.current(held)) return null;
       if (answer.ok) { held.session = answer.session; this.#refused.delete(held); }
       else this.#refused.set(held, now);
+      if (answer.ok) this.#heldScopes.add(membership.scope);
       if (answer.ok) this.#held.add(`${membership.scope} ${membership.inc}`);
       return answer.ok ? answer.session : null;
     } catch (error) {
@@ -114,6 +117,9 @@ export class Reads {
 
   /** Since this process started, it held a session of this membership. */
   held(membership: ScopeRef): boolean { return this.#held.has(`${membership.scope} ${membership.inc}`); }
+
+  /** This reader held a session for some incarnation of this scope. No token or authority follows from that history. */
+  hasHeld(scope: ScopeId): boolean { return this.#heldScopes.has(scope); }
 
   /** Forget a session, so the next read asks again: after a read that the session was refused for, as after a role change. */
   forget(membership: ScopeId): void { this.#sessions.forget(membership); }
