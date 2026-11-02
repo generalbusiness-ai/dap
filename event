@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d2bb2da3d4dbc971bbcaaf3d2a1ad7bc74d1b55f","text":"Replaced by the review request for exact head c372ea0399aa07b32896d065f132c0bf65aa642b; any review promised on this request is released, and a verdict filed against it would bind to nothing."}
+{"kind":"promise","text":"I will review corrected readable-diff design head c372ea03: the gutter fix in the three HTML sources and proposal.css, the new gutter check, the recaptured renders, and the paths unchanged since 75b64f90."}
