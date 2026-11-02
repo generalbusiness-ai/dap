@@ -163,14 +163,57 @@ one unhandled localhost `listen EPERM` error and Git `confstr` warnings.
 A second diagnostic runs only those four cases outside the sandbox. All four
 pass at their original deadlines, with five unselected cases. Tracked file
 bytes remain unchanged. The original gate has no recorded `EPERM`, so this
-follow-up does not establish the cause of its original timeouts. The full
-Native phase follows separately because the gate never reached it.
+follow-up does not establish the cause of its original timeouts. The separate
+full Native phase at `465ca274` passes: 1,039 cases and two skips across
+273 passing files and one skipped file. Its actual `native.exit` reads
+`exit 0`, with no unhandled error. Both source snapshots match, and the
+owned process group closes. The run takes 1,264.352 seconds. The gate
+itself remains failed.
 
 Runtime modules, tests, package files, and configuration match the prior
-passing gate at `a612368f`. This record adds four files over `afdd8ee5`:
+passing gate at `a612368f`. This record adds four prepared files over `afdd8ee5`:
 the note, procedure, App configuration template, and baseline script. The
-configuration parser, actual H3 before reads, rollback input validation,
+evidence manifest is the fifth path. The configuration parser, actual H3 before reads, rollback input validation,
 script syntax, and document links pass. The full failed gate and focused
-failures remain in the evidence for exact review; no passing Native phase or
-passing gate at this head is claimed. No validation here proves an App login,
+failures remain in the evidence for exact review. The separate Native phase
+passes. No passing full gate at this head is claimed. No validation here
+proves an App login,
 mini deployment, GitHub push, rollback execution, or parent acceptance.
+
+## Sealed evidence
+
+[The evidence manifest](evidence/2026-11-02-g3-mini-configuration.manifest.json)
+indexes 59 files in the read-only unit
+`/Users/hughpyle/play/artroom-evidence/2026-11-02-g3-mini-configuration`.
+The private index names 36 withheld raw test files with their sizes and
+hashes. Raw test output can contain fixture requests or credentials, so it
+stays in the indexed private directory. Retention lasts at least 30 days
+after landing.
+
+The gate checkpoint is commit `2f0e82952a232f11e9969bb26ca70ae24f56aab8`,
+tree `99f8fc502d89eb2cefd6f7d5675686059fa022fe`. The Native follow-up
+checkpoint is commit `465ca2740bfd35b9fe1c5e549345e65d21ca76c0`, tree
+`92c5126fbaeca5b2cda9eeb048324ca9171572e9`. Their differences change
+only the note and procedure. The final documentation follow-up adds this
+evidence account and manifest. It changes no test or runtime input. The
+review request names the final tree separately.
+
+The following paths belong to that unit. Their hashes also appear in the
+manifest.
+
+| File | What it records | SHA-256 |
+|---|---|---|
+| `01-mini-metadata.stdout.json` | Existing paths and installation metadata | `2123df1f5a6fe2f48ea6f614a203d669ddc09e3a19eaa26e2eb12fdf62d5d3f8` |
+| `02-h3-node-health.stdout.json` | Verified Node TLS and actual health | `d892980edef20e70164eb7c3130de99ad72d51ed7c3a552c88624927773fc8c7` |
+| `03-h3-read-baseline.stdout.json` | Actual original H3 room reads | `0c3d8f46d7d7e5fd713e1346ccd52c08e35e1c2b95714f36a632701320e2235d` |
+| `04-configuration-parser.log` | Placeholder refusal and one-field parser substitution | `b6f2b676844fc5c5839f370f7df664961fc8741695e766c12f4e53acc89aed36` |
+| `05-h3-template-comparison.json` | Whole maintained template equality | `faeb01cc8ec05d044930fe8626c9848e317b99dfaac8e058d1c59c882a28082c` |
+| `09-rollback-readiness.stdout.json` | Original rollback inputs and runtime warning | `9d190e7ff2f3339eeb874b6446d9c271bbf12b6b3e0b0fc2f139e51bdf85c487` |
+| `gate/gate.exit` | Failed full gate | `0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3` |
+| `gate/receipt.json` | Gate source guards and process-group closure | `c772324d5a3a67f5374590265219342f246db2e9cf15a9c8da66995ce917822d` |
+| `diagnostic-summaries.json` | Both distinct focused outcomes | `5acbc91c10ddbfddc37c28c8e24eff937521e430670e3ce6b7e71dd9fb031ef3` |
+| `11-four-unsandboxed.exit` | Four cases pass outside the sandbox | `28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320` |
+| `native-followup/native.exit` | Separate full Native outcome | `28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320` |
+| `native-followup/receipt.json` | Native source guard and process-group closure | `cc8295c8819c2f9b6cc624b6c4fa715353597bbfde4fb547d17ddc342c16b9f1` |
+| `native-followup/summary.json` | Native terminal counts | `c78decf582d9650a361f951a861965a06617bbea8e355c040d8b524e30552671` |
+| `private-raw-index.json` | Private raw locations, sizes and hashes | `1a153b66287220a02e9c8a3af56e1351c9f895a5e2aa432ba7e3a7f17b535a36` |
