@@ -208,6 +208,76 @@ test("View diff goes through its port once per cut, keeps the card's two acts, a
   expect(reads).toHaveLength(2);
 });
 
+// Invariant: a stopped exact read can run again through the same card, while a complete answer replays without another port call.
+// The projections and bounded read answers are scripted; the production view session owns retention and dispatch.
+test("a stopped interdiff runs again on the next press and its complete answer then replays", async () => {
+  const from = { label: "Version 1", base: "a".repeat(40), integration: "b".repeat(40) };
+  const to = { label: "Version 2", base: "a".repeat(40), integration: "c".repeat(40) };
+  const projection: Projection = { status: "ready", position: 0, count: 1, fallback: "TEST", card: {
+    identity: { item: "1", kind: "manifest", revision: "2", subject: { scope: "sc_a" }, at: { manifest: 2 } },
+    title: "TEST", summary: "TEST", reasons: [], projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST", actions: [],
+    diffAvailable: true, diffRead: { target: "sc_d", ...to }, interdiffReads: [{ target: "sc_d", from, to }],
+  } };
+  const stopped = "TEST interdiff stopped at its time bound.\nNo changed path was reached.\n";
+  const leftOut = "every changed path, because the read stopped before it reached one";
+  const complete = "@@ TEST complete interdiff @@\n-before\n+after\n";
+  const reads: unknown[] = [];
+  const views = new ViewSessions({ initialPage: () => "item", read: async () => structuredClone(projection) }, { call: async () => { throw Error("No scope read in this stand-in."); } }, async () => answer("accepted"), async () => answer("accepted"), () => null, {
+    readExact: async (read, admit) => {
+      await admit(); reads.push(read);
+      return { content: [], isError: false, structuredContent: reads.length === 1
+        ? { text: stopped, truncated: true, paths: [], leftOut, commits: [from, to].map(value => ({ label: value.label, id: value.integration })) }
+        : { text: complete, truncated: false, paths: [{ path: "file.txt", shown: "file.txt", commit: to.integration }], commits: [from, to].map(value => ({ label: value.label, id: value.integration })) } };
+    },
+  });
+  await views.open("v", "change");
+  const first = await views.act("v", views.display("v").cut, "view-interdiff-0");
+  expect(first.display.card!.body).toBe(stopped);
+  expect(first.display.card!.shownRead).toMatchObject({ truncated: true, leftOut, files: [] });
+  expect(first.display.card!.readers).toContainEqual({ action: "view-interdiff-0", label: "Interdiff from Version 1", current: true });
+  const again = await views.act("v", first.display.cut, "view-interdiff-0");
+  expect(reads).toEqual([{ kind: "interdiff", target: "sc_d", from, to }, { kind: "interdiff", target: "sc_d", from, to }]);
+  expect(again.result.structuredContent).not.toHaveProperty("held");
+  expect(again.display.card!.body).toBe(complete);
+  expect(again.display.card!.shownRead).toMatchObject({ truncated: false, leftOut: null });
+  const item = await views.read("v", again.display.cut, { page: "item" });
+  const replay = await views.act("v", item.cut, "view-interdiff-0");
+  expect(replay.result.structuredContent).toMatchObject({ held: true, truncated: false });
+  expect(replay.display.card!.body).toBe(complete);
+  expect(reads).toHaveLength(2);
+});
+
+// Invariant: an answer that no longer fits is not reported as shown, and replay failure spends no new credential.
+// The source grows only its summary without changing the exact read's identity; the read port is a stand-in.
+test("a retained answer that no longer fits reports no new signature and can replay when it fits again", async () => {
+  let summary = "TEST short summary", reads = 0;
+  const text = "t".repeat(32 * 1024);
+  const views = new ViewSessions({ initialPage: () => "item", read: async () => ({ status: "ready", position: 0, count: 1, fallback: "TEST", card: {
+    identity: { item: "1", kind: "manifest", revision: "2", subject: { scope: "sc_a" }, at: { manifest: 2 } },
+    title: "TEST", summary, reasons: [], projection: [], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], fallback: "TEST", actions: [],
+    diffAvailable: true, diffRead: { target: "sc_d", base: "a".repeat(40), integration: "b".repeat(40) },
+  } }) }, { call: async () => { throw Error("No scope read in this stand-in."); } }, async () => answer("accepted"), async () => answer("accepted"), () => null, {
+    readExact: async (_read, admit) => { await admit(); reads++; return { content: [], structuredContent: { text, truncated: false }, isError: false }; },
+  });
+  await views.open("v", "change");
+  const first = await views.act("v", views.display("v").cut, "view-diff");
+  expect(first.display.card!.body).toBe(text);
+  summary = "s".repeat(40 * 1024);
+  const item = await views.read("v", first.display.cut, { page: "item" });
+  const refused = await views.act("v", item.cut, "view-diff");
+  expect(refused.result.isError).toBe(true);
+  expect(refused.result.structuredContent).not.toHaveProperty("held");
+  expect(refused.display.receipt).toBe("Diff not shown: the card cannot hold the retained answer. No new request was signed.");
+  expect([refused.display.query.page, refused.display.cut, reads]).toEqual(["item", item.cut, 1]);
+  summary = "TEST short summary";
+  const small = await views.read("v", refused.display.cut, { page: "item" });
+  const replay = await views.act("v", small.cut, "view-diff");
+  expect(replay.result.structuredContent).toMatchObject({ held: true, truncated: false });
+  expect(replay.display.card!.body).toBe(text);
+  expect(replay.display.receipt).toBeUndefined();
+  expect(reads).toBe(1);
+});
+
 // Invariant: one view_act frame holds a read's text once, so an answer at the read's bound stays near that bound.
 test("a view_act frame and a view_read frame hold a read's text once", async () => {
   const MARK = "TEST-LINE-OF-THE-READ", body = `${MARK}\n`.repeat(1800);

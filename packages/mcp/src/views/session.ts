@@ -26,7 +26,7 @@ interface Instance {
   dispatches: Map<string, Promise<CallResult>>;
   pending: Map<string, Card["actions"][number]>;
   inputs: Map<string, { meaning: string; outcome: Promise<InputOpening> }>;
-  /** The exact reads this view holds, newest last, and the one its diff page shows. Each holds the exact version it belongs to. */
+  /** The displayed reads, newest last, and the one its diff page shows. Only complete answers replay without another read. */
   reads: HeldRead[];
   current?: HeldRead;
 }
@@ -35,10 +35,10 @@ interface HeldRead { of: string; read: ExactRead; text: string; shown: ShownRead
 export const VIEW_DIFF = "view-diff";
 const VIEW_INTERDIFF = "view-interdiff-";
 const VIEW_FILE = "view-file-";
-/** The latest file this view read. A press shows it again and signs nothing. */
+/** The latest file this view read. A complete answer replays without another signature. */
 const VIEW_LAST_FILE = "view-file";
 const isExactAction = (id: string): boolean => id === VIEW_DIFF || id === VIEW_LAST_FILE || id.startsWith(VIEW_INTERDIFF) || id.startsWith(VIEW_FILE);
-/** Reads one view holds. An answer's commits do not change, so a held read needs no second credential. */
+/** Displayed answers one view retains. Complete answers need no second credential. */
 const HELD_READS = 4;
 /** The files of one read that offer a File action. */
 const FILE_ACTIONS = 16;
@@ -387,7 +387,7 @@ export class ViewSessions {
     finally { instance.busy = false; }
   }
 
-  /** The exact reads this card offers, for its item page and its reader page. A card with View diff alone needs no list. */
+  /** The card's exact reads. A lone View diff needs a reader control when its current answer can run again. */
   #readers(instance: Instance, card: Card): { readers?: { action: string; label: string; current: boolean }[] } {
     const current = instance.query.page === "diff" ? instance.current?.read : undefined;
     const same = (read: ExactRead) => current !== undefined && canonicalize(current) === canonicalize(read);
@@ -395,7 +395,7 @@ export class ViewSessions {
     (card.interdiffReads ?? []).forEach((read, n) => { readers.push({ action: `${VIEW_INTERDIFF}${n}`, label: `Interdiff from ${read.from.label}`, current: same({ kind: "interdiff", ...read }) }); });
     const file = [...instance.reads].reverse().find(held => held.read.kind === "file" && held.of === canonicalize([card.identity, held.read]));
     if (file?.read.kind === "file") readers.push({ action: VIEW_LAST_FILE, label: `File: ${file.read.shown.length > FILE_LABEL ? `${file.read.shown.slice(0, FILE_LABEL)}...` : file.read.shown}`, current: same(file.read) });
-    return readers.length > 1 ? { readers } : {};
+    return readers.length > 1 || instance.query.page === "diff" && instance.current?.shown.truncated ? { readers } : {};
   }
   /** The server-held read that an action names, from this card and the read the page shows. A browser supplies only the action's ID. */
   #exactRead(instance: Instance, card: Card, action: string): ExactRead | null {
@@ -419,7 +419,7 @@ export class ViewSessions {
     instance.cut++;
     return true;
   }
-  /** The diff page shows the answer. A failure keeps the page and says why; another press signs another request. A read this view holds signs nothing. */
+  /** A complete retained answer signs nothing. A truncated answer can run again; a failure keeps the page and says why. */
   async #readExact(instance: Instance, cut: number, action: string): Promise<{ result: CallResult; display: Display }> {
     this.#admit(instance, cut);
     if (instance.busy) throw new ViewError("busy", "The card has an operation in progress. Retry its read.");
@@ -427,9 +427,14 @@ export class ViewSessions {
     if (!card || !read || !card.diffAvailable || !this.ports.readExact) throw new ViewError("shape", "This card offers no such read.");
     if (card.unresolvedOriginal) throw new ViewError("busy", "Check the original request before you read the diff.");
     const word = READ_WORD[read.kind], of = canonicalize([card.identity, read]);
-    const held = instance.reads.find(item => item.of === of);
+    const held = instance.reads.find(item => item.of === of && !item.shown.truncated);
     if (held) {
-      this.#showRead(instance, card, held);
+      const message = `${word} not shown: the card cannot hold the retained answer. No new request was signed.`;
+      if (!this.#showRead(instance, card, held)) {
+        instance.receipt = message;
+        return { result: { structuredContent: { error: "unavailable", message }, content: [{ type: "text", text: message }], isError: true }, display: this.#display(instance) };
+      }
+      if (instance.receipt === message) delete instance.receipt;
       return { result: { structuredContent: { held: true, commits: held.shown.commits, truncated: held.shown.truncated }, content: [{ type: "text", text: `${word} shown again. No new request was signed.` }], isError: false }, display: this.#display(instance) };
     }
     instance.busy = true;
@@ -456,7 +461,7 @@ export class ViewSessions {
         instance.receipt = `${word} not shown: the card cannot hold this answer. The one-time credential is spent.`;
         return { result, display: this.#display(instance) };
       }
-      instance.reads = [...instance.reads, answer].slice(-HELD_READS);
+      instance.reads = [...instance.reads.filter(item => item.of !== of), answer].slice(-HELD_READS);
       // The display holds the text. The result states what the read returned, and it does not repeat the text.
       const { text: _text, ...facts } = result.structuredContent;
       return { result: { structuredContent: facts, content: [{ type: "text", text: `${word} shown on the page.` }], isError: false }, display: this.#display(instance) };

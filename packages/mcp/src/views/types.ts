@@ -228,7 +228,7 @@ export interface Display {
   card?: Omit<Card, "actions" | "declared" | "diffRead" | "interdiffReads"> & {
     /** View diff goes through `view_act`, because it signs a read-token act. */
     diffSigned?: true;
-    /** The exact reads this card offers, as opaque actions. A read this view already holds signs nothing. */
+    /** The exact reads this card offers, as opaque actions. A complete retained answer signs nothing; a truncated one can run again. */
     readers?: { action: string; label: string; current: boolean }[];
     declared?: Omit<NonNullable<Card["declared"]>, "data"> & { data?: ApplicationProjectionData };
     actions: (Pick<CardAction, "id" | "label" | "purpose"> & { input?: "chat" })[];
