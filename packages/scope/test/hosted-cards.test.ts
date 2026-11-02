@@ -46,10 +46,11 @@ test.each([C, B])("hosted /mcp lists and reads the stdio cards, then records the
     { host: "claude", url: claudeUrl, domain: claudeCardDomain(claudeUrl) },
     { host: "chatgpt", url: chatgptUrl, domain: "https://dap-plugin.example.com" },
   ]);
-  const bindings = { ...env, ...applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX), MCP_ENABLED: "true", MCP_CARD_ORIGINS };
+  const MCP_RESOURCE_URLS = JSON.stringify([claudeUrl, chatgptUrl]);
+  const bindings = { ...env, ...applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust), env.SCOPE_INDEX), MCP_ENABLED: "true", MCP_CARD_ORIGINS, MCP_RESOURCE_URLS };
   life.applicationTrust(() => bindings.APPLICATION_TRUST);
   hostedTest.applicationSettings = { APPLICATION_TRUST: bindings.APPLICATION_TRUST };
-  hostedTest.toolSettings = { MCP_ENABLED: "true", MCP_CARD_ORIGINS };
+  hostedTest.toolSettings = { MCP_ENABLED: "true", MCP_CARD_ORIGINS, MCP_RESOURCE_URLS };
   hostedTest.now = life.now;
   let releaseOpening = () => {};
   let opening: Promise<Response> | undefined;

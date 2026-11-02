@@ -33,13 +33,16 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, isKeyId, isScopeRef, keyIdOfSecret, parseStrict, scopeIdOf, timeMs, timeOf, unb64url, utf8, verifyControl } from "@generalbusiness/dap-bytes";
 import { TransportError, agentKeyInvitationOf, secretSigner, signedIntent, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
 import { CustodyError, Lost, meaningOf, type Envelope, type Identity } from "./custody.ts";
-import { McpHttp, SessionFull, type SessionRow } from "./http.ts";
+import { McpHttp, SESSIONS_MOST, SessionFull, type SessionRow } from "./http.ts";
 import type { McpConfig, Root } from "./inventory.ts";
 import { McpService, type ServerPort } from "./service.ts";
 import { McpMetrics, mcpRead, type McpMetricOptions } from "./metrics.ts";
 import { sqliteStore, type Sql, type SqliteCustodyBounds } from "./sqlite-custody.ts";
 import { Wire } from "./wire.ts";
 import { remoteCardDomain, type RemoteCardOrigin } from "./views/remote-origins.ts";
+import { mcpChallengeResponse, mcpUnauthorized, publicRequestUrl } from "./oauth-resource.ts";
+import { OAuthAccess, equalTokenDigest, type OAuthAccessCandidate } from "./oauth-access.ts";
+import { OAuthHttpLayers, type OAuthHttpLayer } from "./oauth-http.ts";
 
 export const CONTROL_BUDGET = 16 * 1024 * 1024;
 export const RETIRE_RESERVE = 1024 * 1024;
@@ -349,6 +352,8 @@ export interface AgentPorts extends Authority {
   genericTools?: readonly string[];
   applicationTrust?: string | undefined;
   cardOrigins?: readonly RemoteCardOrigin[];
+  /** Exact public connector URL admitted by the current deployment policy. */
+  oauthResource?: (request: Request) => string | null;
   /** Immutable package bytes from the Worker's trusted content store. */
   applicationContent?: (release: Digest) => Promise<Uint8Array | null>;
   /** Separate MCP observation map; never a native input or an authority read. */
@@ -394,6 +399,9 @@ export class HostedAgent {
   #http: McpHttp | null = null;
   #opening: Promise<McpHttp> | null = null;
   #httpEpoch = 0;
+  #oauthEpoch = 0;
+  readonly #oauth: OAuthAccess;
+  readonly #oauthHttp: OAuthHttpLayers;
   readonly #failures = new BearerFailures();
   /** Control operations run one at a time in this object: a retry of `create` waits for the first and then finds its answer. */
   readonly #controls = new Queue();
@@ -401,8 +409,13 @@ export class HostedAgent {
     this.#metrics = new McpMetrics(ports.metrics);
     sql.exec(`CREATE TABLE IF NOT EXISTS agent (id INTEGER PRIMARY KEY CHECK (id = 1), op TEXT NOT NULL, seed BLOB NOT NULL, key TEXT NOT NULL, state TEXT NOT NULL, membership TEXT NOT NULL, handle TEXT NOT NULL, config TEXT NOT NULL, bearer TEXT, answer TEXT, created TEXT NOT NULL, updated TEXT NOT NULL)`);
     sql.exec(`CREATE TABLE IF NOT EXISTS session (id TEXT PRIMARY KEY, row TEXT NOT NULL, created INTEGER NOT NULL)`);
+    sql.exec(`CREATE TABLE IF NOT EXISTS oauth_session (id TEXT PRIMARY KEY, grant_id TEXT NOT NULL, row TEXT NOT NULL, created INTEGER NOT NULL)`);
     this.#control = new ControlPlane(sql, ports.controlBudget?.budget, ports.controlBudget?.reserve);
     this.#control.migrateBearerAnswers(true);
+    this.#oauth = new OAuthAccess(sql, { now: ports.now, observe: (membership, ask) => ports.observe(membership, ask),
+      agent: () => { const row = this.#row(); return row ? { state: row.state, membership: row.membership, key: row.key, handle: row.handle } : null; },
+      charge: bytes => { this.#control.charge(bytes, "retire"); } });
+    this.#oauthHttp = new OAuthHttpLayers(this.#oauth, { now: ports.now, ...(ports.scheduleExpiry ? { schedule: ports.scheduleExpiry } : {}) });
   }
 
   /** The control budget's used bytes, for a test's eyes. */
@@ -456,18 +469,20 @@ export class HostedAgent {
     finally { if (this.#opening === opening) this.#opening = null; }
   }
 
-  async #openHttp(row: AgentRow, epoch: number): Promise<McpHttp> {
+  async #openHttp(row: AgentRow, epoch: number, oauth?: OAuthHttpLayer): Promise<McpHttp> {
     const service = this.ports.applicationContent
       ? await McpService.fromInstalledApplication(this.#servicePort(row), this.ports.applicationContent)
       : this.#serviceOf(row);
     const wire = new Wire(service);
+    const table = oauth ? "oauth_session" : "session";
     const http = new McpHttp({
       wire, bodyBytes: 1024 * 1024, now: this.ports.now,
       resourceDomain: request => {
-        const url = new URL(request.url);
-        return remoteCardDomain(this.ports.cardOrigins ?? [], row.config.service + url.pathname + url.search);
+        return remoteCardDomain(this.ports.cardOrigins ?? [], publicRequestUrl(row.config.service, request.url));
       },
-      lifetime: { expires: timeMs(row.bearerExpires!)!, ...(this.ports.scheduleExpiry ? { schedule: this.ports.scheduleExpiry } : {}) },
+      lifetime: { get expires() { return oauth ? oauth.deadline : timeMs(row.bearerExpires!)!; }, ...(this.ports.scheduleExpiry ? { schedule: this.ports.scheduleExpiry } : {}) },
+      streamCount: () => (this.#http?.streams ?? 0) + this.#oauthHttp.streams,
+      ...(oauth ? { streamsChanged: () => this.#oauthHttp.watch(oauth.candidate) } : {}),
       mintSession: () => b64url(this.ports.random(16)),
       authorized: () => true,   // the bearer was checked before the request reached the layer
       persist: (session: SessionRow) => {
@@ -475,25 +490,37 @@ export class HostedAgent {
         const text = JSON.stringify(session);
         this.sql.transaction(() => {
           this.ports.sessionFault?.();
-          const before = this.sql.exec(`SELECT row FROM session WHERE id = ?`, session.id).toArray()[0];
+          const before = this.sql.exec(`SELECT row FROM ${table} WHERE id = ?`, session.id).toArray()[0];
+          if (!before) {
+            const total = Number(this.sql.exec(`SELECT (SELECT count(*) FROM session) + (SELECT count(*) FROM oauth_session) AS n`).toArray()[0]!["n"]);
+            const own = Number((oauth ? this.sql.exec(`SELECT count(*) AS n FROM oauth_session WHERE grant_id = ?`, oauth.candidate.id)
+              : this.sql.exec(`SELECT count(*) AS n FROM session`)).toArray()[0]!["n"]);
+            // Preserve the existing 17th-session eviction within one credential.
+            // Another grant cannot evict a different host's retained session.
+            if (total >= SESSIONS_MOST && own < SESSIONS_MOST) throw new SessionFull();
+          }
           const delta = utf8(text).length + ROW_OVERHEAD - (before ? utf8(String(before["row"])).length + ROW_OVERHEAD : 0);
           if (!this.#control.charge(delta, "session")) throw new SessionFull();
-          this.sql.exec(`INSERT INTO session (id, row, created) VALUES (?, ?, ?) ON CONFLICT (id) DO UPDATE SET row = excluded.row`, session.id, text, session.created);
+          if (oauth) this.sql.exec(`INSERT INTO oauth_session (id, grant_id, row, created) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO UPDATE SET row = excluded.row`, session.id, oauth.candidate.id, text, session.created);
+          else this.sql.exec(`INSERT INTO session (id, row, created) VALUES (?, ?, ?) ON CONFLICT (id) DO UPDATE SET row = excluded.row`, session.id, text, session.created);
         });
       },
       remove: (id) => {
         this.sql.transaction(() => {
-          const before = this.sql.exec(`SELECT row FROM session WHERE id = ?`, id).toArray()[0];
+          const before = this.sql.exec(`SELECT row FROM ${table} WHERE id = ?`, id).toArray()[0];
           if (before) this.#control.charge(-(utf8(String(before["row"])).length + ROW_OVERHEAD), "retire");
-          this.sql.exec(`DELETE FROM session WHERE id = ?`, id);
+          this.sql.exec(`DELETE FROM ${table} WHERE id = ?`, id);
         });
       },
     });
     // The sessions as persisted survive eviction; their streams do not, and the next GET reconciles.
-    if (epoch !== this.#httpEpoch) { http.abrupt(); return http; }
-    http.restore(this.sql.exec(`SELECT row FROM session ORDER BY created`).toArray().map((r) => JSON.parse(String(r["row"])) as SessionRow));
+    if (epoch !== (oauth ? this.#oauthEpoch : this.#httpEpoch) || oauth && !this.#oauth.current(oauth.candidate)) { http.abrupt(); return http; }
+    const sessions = oauth
+      ? this.sql.exec(`SELECT row FROM oauth_session WHERE grant_id = ? ORDER BY created`, oauth.candidate.id)
+      : this.sql.exec(`SELECT row FROM session ORDER BY created`);
+    http.restore(sessions.toArray().map((r) => JSON.parse(String(r["row"])) as SessionRow));
     this.#service = service;
-    this.#http = http;
+    if (!oauth) this.#http = http;
     return http;
   }
 
@@ -640,6 +667,12 @@ export class HostedAgent {
         : answer(200, { agent: this.ports.id, by: authority.by, retired: true });
       if (action === "bearer") this.sql.exec(`UPDATE agent SET bearer = ?, bearer_expires = ?, updated = ? WHERE id = 1`, digestBytes(utf8(secret!)), bearerExpires, timeOf(issued));
       else this.sql.exec(`UPDATE agent SET state = 'retired', bearer = NULL, bearer_expires = NULL, updated = ? WHERE id = 1`, timeOf(issued));
+      if (action === "retire") {
+        this.#oauth.endAll();
+        const held = this.sql.exec(`SELECT row FROM oauth_session`).toArray().reduce((n, s) => n + utf8(String(s["row"])).length + ROW_OVERHEAD, 0);
+        this.sql.exec(`DELETE FROM oauth_session`);
+        this.#control.charge(-held, "retire");
+      }
       const held = this.sql.exec(`SELECT row FROM session`).toArray().reduce((n, s) => n + utf8(String(s["row"])).length + ROW_OVERHEAD, 0);
       this.sql.exec(`DELETE FROM session`);
       this.#control.charge(-held, "retire");
@@ -655,51 +688,63 @@ export class HostedAgent {
       const http = this.#http;
       this.#http = null;
       await http?.closeAll();
+      if (action === "retire") { this.#oauthEpoch++; await this.#oauthHttp.closeAll(); }
     }
     return result;
   }
 
   /** The bearer check, in constant time over digests, with failures counted per connecting address. */
-  #authorized(authorization: string | null, address: string | null): "ok" | "unauthorized" | "limited" {
+  async #authorized(request: Request): Promise<"unauthorized" | "limited" | { oauth: OAuthAccessCandidate | null }> {
+    const authorization = request.headers.get("authorization"), address = request.headers.get("cf-connecting-ip");
     const now = this.ports.now();
-    return this.#failures.check(address, now, () => {
+    let oauth: OAuthAccessCandidate | null = null;
+    const checked = this.#failures.check(address, now, () => {
       const row = this.#row();
       let ok = false;
       const expires = row?.bearerExpires === null || row?.bearerExpires === undefined ? null : timeMs(row.bearerExpires);
-      if (authorization?.startsWith("Bearer ") && row?.state === "enrolled" && row.bearer && expires !== null && now < expires) {
-        const [id, secret, ...rest] = authorization.slice("Bearer ".length).split(".");
-        if (id === this.ports.id && secret && rest.length === 0) {
-          const given = utf8(digestBytes(utf8(secret)));
-          const expected = utf8(row.bearer);
-          let differ = given.length ^ expected.length;
-          for (let i = 0; i < Math.max(given.length, expected.length); i++) differ |= (given[i] ?? 0) ^ (expected[i] ?? 0);
-          ok = differ === 0;
+      if (authorization?.startsWith("Bearer ") && row?.state === "enrolled") {
+        const [id, second, third, ...rest] = authorization.slice("Bearer ".length).split(".");
+        if (id === this.ports.id && second && rest.length === 0) {
+          if (third === undefined && row.bearer && expires !== null && now < expires) ok = equalTokenDigest(row.bearer, second);
+          else if (third !== undefined) {
+            oauth = this.#oauth.inspect(second, third, this.ports.oauthResource?.(request) ?? null);
+            ok = oauth !== null;
+          }
         }
       }
       return ok;
     });
+    if (checked !== "ok") return checked;
+    if (oauth !== null && !await this.#oauth.standing(oauth)) return this.#failures.check(address, this.ports.now(), () => false) === "limited" ? "limited" : "unauthorized";
+    return { oauth };
   }
 
   /** `POST`, `GET` and `DELETE /mcp` for this agent. */
   async fetch(request: Request): Promise<Response> {
     if (request.headers.get("origin") !== null) return new Response(null, { status: 403 });
-    const checked = this.#authorized(request.headers.get("authorization"), request.headers.get("cf-connecting-ip"));
+    const checked = await this.#authorized(request);
     if (checked === "limited") return new Response(JSON.stringify({ error: "rate-limited" }), { status: 429, headers: { "content-type": "application/json" } });
-    if (checked === "unauthorized") return new Response(null, { status: 401 });
-    const http = await this.#httpOf(this.#row()!);
+    if (checked === "unauthorized") return mcpUnauthorized(request);
+    const http = checked.oauth
+      ? await this.#oauthHttp.open(checked.oauth, layer => this.#openHttp(this.#row()!, this.#oauthEpoch, layer))
+      : await this.#httpOf(this.#row()!);
+    if (http === null) return mcpUnauthorized(request);
     // Discovery may await native reads and package storage. Retirement or a
     // bearer rotation during that wait must take effect before dispatch.
-    const current = this.#authorized(request.headers.get("authorization"), request.headers.get("cf-connecting-ip"));
+    const current = await this.#authorized(request);
     if (current === "limited") return new Response(JSON.stringify({ error: "rate-limited" }), { status: 429, headers: { "content-type": "application/json" } });
-    if (current === "unauthorized") return new Response(null, { status: 401 });
-    return http.handle(request);
+    if (current === "unauthorized") return mcpUnauthorized(request);
+    if (checked.oauth && current.oauth?.row !== checked.oauth.row) return mcpUnauthorized(request);
+    const response = await http.handle(request);
+    if (checked.oauth) this.#oauthHttp.watch(checked.oauth);
+    return mcpChallengeResponse(request, response);
   }
 
   /** For a test: the service and the layer as this object holds them now. */
   inside(): { service: McpService | null; http: McpHttp | null } { return { service: this.#service, http: this.#http }; }
 
   /** What an eviction does to this instance's memory: every stream ends abruptly, with no event; nothing durable changes. */
-  abrupt(): void { this.#httpEpoch++; this.#opening = null; this.#http?.abrupt(); this.#http = null; this.#service = null; }
+  abrupt(): void { this.#httpEpoch++; this.#oauthEpoch++; this.#opening = null; this.#http?.abrupt(); this.#oauthHttp.abrupt(); this.#http = null; this.#service = null; }
 
   /** The durable facts of this agent a witness compares across a reset: its key, its state, and the digest of its kept enrol intent. */
   durable(): { key: string | null; state: string | null; enrol: string | null; bearer: boolean } {

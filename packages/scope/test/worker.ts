@@ -360,11 +360,13 @@ export const hostedTest: {
   failSession: boolean;
   /** While set, every configuration read of an agent, and with it every listing and snapshot, waits on this promise. */
   configHold: Promise<void> | null;
+  /** Scripted hosted credential timers. No wall-clock wait belongs in a witness. */
+  scheduleExpiry: AgentPorts["scheduleExpiry"] | null;
   /** Explicit hosted tool settings for the native MCP fixture; null enables its comprehensive historical tool contract. */
-  toolSettings: { MCP_ENABLED: string; MCP_TOOL_ADDITIONS?: string; MCP_CARD_ORIGINS?: string } | null;
+  toolSettings: { MCP_ENABLED: string; MCP_TOOL_ADDITIONS?: string; MCP_CARD_ORIGINS?: string; MCP_RESOURCE_URLS?: string } | null;
   /** Raw deployment setting for the native constructor witness, never an AgentPorts override. */
   applicationSettings: Pick<McpEnv, "APPLICATION_TRUST"> | null;
-} = { metrics: null, now: null, pause: null, lose: null, controlBudget: null, custodyBounds: null, failWrite: null, faultAt: null, failSession: false, configHold: null, toolSettings: null, applicationSettings: null };
+} = { metrics: null, now: null, pause: null, lose: null, controlBudget: null, custodyBounds: null, failWrite: null, faultAt: null, failSession: false, configHold: null, scheduleExpiry: null, toolSettings: null, applicationSettings: null };
 /** The scripted reset: thrown at a fence, once. */
 export class ScriptedReset extends Error { constructor(fence: string) { super(`scripted reset at ${fence}`); } }
 type HostedEnv = McpEnv & { PLATFORM: DurableObjectNamespace };
@@ -407,6 +409,7 @@ export class PlatformMcpAgent extends McpAgent<HostedEnv> {
       fault: (fence: string) => { if (hostedTest.faultAt === fence) { hostedTest.faultAt = null; this.evict(); throw new ScriptedReset(fence); } },
       sessionFault: () => { if (hostedTest.failSession) { hostedTest.failSession = false; throw new Error("SQLITE_FULL: scripted session write"); } },
       configHold: () => hostedTest.configHold ?? undefined,
+      ...(hostedTest.scheduleExpiry ? { scheduleExpiry: hostedTest.scheduleExpiry } : {}),
       now: () => hostedTest.now?.() ?? Date.now(), every: () => () => {},
       pause: (waiting: readonly string[]) => hostedTest.pause?.(waiting) ?? new Promise<void>((r) => setTimeout(r, 50)),
       ...(this.#productionHostedFetch ? {} : { fetch: (async (url: string, init?: RequestInit) => {

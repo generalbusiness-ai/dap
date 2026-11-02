@@ -160,6 +160,7 @@ failure behavior, health visibility and the other readers.
 | `LENDING` | binding | `dap-application-sandbox` | [`apps/sandbox/worker.ts`](../../apps/sandbox/worker.ts) |
 | `MCP_CARD_ORIGINS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `MCP_ENABLED` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
+| `MCP_RESOURCE_URLS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `MCP_TOOL_ADDITIONS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `METRICS` | binding | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `PLATFORM_CREATION_PINS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/creation-versions.ts`](../../packages/scope/src/creation-versions.ts) |
@@ -738,12 +739,34 @@ failure behavior, health visibility and the other readers.
       "status": "read",
       "readers": [
         "packages/mcp/src/hosted-tools.ts",
+        "packages/mcp/src/oauth-resource.ts",
         "packages/scope/src/worker.ts"
       ],
-      "parser": "Optional closed JSON array, at most 8192 UTF-8 bytes and two rows; distinct hosts and exact HTTPS /mcp connector URLs. Claude domain must equal the first 32 SHA-256 hex digits of that URL plus .claudemcpcontent.com; ChatGPT domain must be an HTTPS origin.",
+      "parser": "Optional closed JSON array, at most 8192 UTF-8 bytes and two rows; distinct hosts and exact HTTPS /mcp connector URLs. Claude domain must equal the first 32 SHA-256 hex digits of that URL plus .claudemcpcontent.com; ChatGPT domain must be an HTTPS origin. Each connector URL must also name a configured MCP resource.",
       "missing": "Resources declare no remote card domain.",
       "invalid": "Any malformed row, duplicate host or URL, or mismatched Claude hash closes the whole hosted endpoint.",
-      "health": "Not reported; this changes presentation only."
+      "health": "Not reported. Presentation URLs must agree with the resource policy."
+    },
+    {
+      "deployments": [
+        "artroom-scope",
+        "dap-celld-local",
+        "dap-demo",
+        "dap-commons",
+        "dap-lending",
+        "dap-grow"
+      ],
+      "name": "MCP_RESOURCE_URLS",
+      "kind": "text",
+      "status": "read",
+      "readers": [
+        "packages/mcp/src/hosted-tools.ts",
+        "packages/mcp/src/oauth-resource.ts"
+      ],
+      "parser": "Optional strict JSON array, at most 32800 UTF-8 bytes and eight distinct canonical HTTPS /mcp URLs; each URL at most 2048 UTF-8 bytes, with no credentials or fragment. Every MCP_CARD_ORIGINS URL must occur in the selected resource list.",
+      "missing": "HTTPS uses the canonical public service origin plus /mcp. Existing HTTP services keep static bearers and advertise no OAuth resource.",
+      "invalid": "Closes the whole hosted endpoint before body reads or namespace lookup. An access token also needs an exact full URL match, including the query.",
+      "health": "Not reported. This selects resource discovery and OAuth token audiences, not native authority."
     },
     {
       "deployments": [
