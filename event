@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:34ef50d4c9d1e9e7f40c17563e78eec8d1ca6031","text":"Merge retired a covered predecessor; the successor is at .github/workflows/views-browser.yml."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:373f3cddb0de9450cfdcbe6c52077a85d1b85072","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/declared-members.test.ts."}
