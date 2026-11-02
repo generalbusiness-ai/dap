@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-entry-points.test.mjs","body":{"commit":"892456defbfe41042d1a54d5b1d38159401b5c12","path":"scripts/security-entry-points.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:07ceb38a07cf3fd84a00a42d399d8abd917ac672","text":"Merge retired a covered predecessor; the successor is at .github/workflows/views-browser.yml."}
