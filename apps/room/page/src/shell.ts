@@ -35,15 +35,16 @@ export function roomContext(origin: string, place: { directory: string; membersh
   return JSON.stringify([origin, place.directory, place.membership.scope, place.membership.inc, place.membership.kind, key]);
 }
 
-/** Cache the pending read, rather than allowing a late old read to replace the new room. */
+/** Share pending reads and reuse completed rooms only while their identity remains usable. */
 export class RoomOpening<T> {
-  private current: { key: string; value: Promise<T> } | null = null;
+  private current: { key: string; value: Promise<T>; result?: { value: T } } | null = null;
+  constructor(private readonly reusable: (value: T) => boolean = () => true) {}
   clear(): void { this.current = null; }
   get(key: string, load: () => Promise<T>): Promise<T> {
-    if (this.current?.key === key) return this.current.value;
-    const pending = { key, value: load() };
+    if (this.current?.key === key && (!this.current.result || this.reusable(this.current.result.value))) return this.current.value;
+    const pending: NonNullable<RoomOpening<T>["current"]> = { key, value: load() };
     this.current = pending;
-    void pending.value.catch(() => { if (this.current === pending) this.current = null; });
+    void pending.value.then(value => { pending.result = { value }; }, () => { if (this.current === pending) this.current = null; });
     return pending.value;
   }
 }

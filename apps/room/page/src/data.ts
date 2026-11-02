@@ -206,14 +206,30 @@ export async function pageObservationSource(room: Room, scope: ScopeId, signal: 
   };
 }
 
-/** Refresh only the existing complete authenticated roster. Session renewal is
- * not a fresh permission observation; a failed roster read cannot retain old standing. */
+const rosterReads = new WeakMap<Room, Promise<{ summary: Summary; standing: Standing | null }>>();
+/** Keep the last complete identity visible while reading. Callers await this read before offering acts;
+ * a completed roster replaces standing atomically, and a failed read clears it. Concurrent draws share the read. */
+function refreshRoster(room: Room): Promise<{ summary: Summary; standing: Standing | null }> {
+  const pending = rosterReads.get(room);
+  if (pending) return pending;
+  const read = (async () => {
+    try {
+      const { summary } = await summaryOf(handleOf(room, room.membership.scope));
+      if (canonicalize(summary.scope) !== canonicalize(room.membership)) throw new Unreadable("The roster names another membership incarnation.");
+      const standing = currentStanding(summary.items, room.membership, room.key);
+      room.me = standing;
+      return { summary, standing };
+    } catch (error) { room.me = null; throw error; }
+  })();
+  rosterReads.set(room, read);
+  const clear = () => { if (rosterReads.get(room) === read) rosterReads.delete(room); };
+  // Both bookkeeping branches fulfill; callers keep the original read's rejection.
+  void read.then(clear, clear);
+  return read;
+}
+/** Session renewal supplies no permission observation; the complete authenticated roster does. */
 async function refreshStanding(room: Room): Promise<Standing | null> {
-  room.me = null;
-  const { summary } = await summaryOf(handleOf(room, room.membership.scope));
-  if (canonicalize(summary.scope) !== canonicalize(room.membership)) throw new Unreadable("The roster names another membership incarnation.");
-  room.me = currentStanding(summary.items, room.membership, room.key);
-  return room.me;
+  return (await refreshRoster(room)).standing;
 }
 
 /** Collect only a complete enumeration. Existing caller budgets stay unchanged. */
@@ -885,11 +901,8 @@ export async function loadChange(room: Room, scope: ScopeId): Promise<ChangeView
   let reviewMembersByExtent: ChangeView["reviewMembersByExtent"] = null;
   if (current) {
     try {
-      room.me = null;
-      const membership = await summaryOf(handleOf(room, room.membership.scope));
-      if (canonicalize(membership.summary.scope) !== canonicalize(room.membership)) throw new Unreadable("The reviewer roster names another membership incarnation.");
-      room.me = currentStanding(membership.summary.items, room.membership, room.key);
-      const candidates = reviewCandidates(membership.summary.items, room.membership, current.parties["authors"], rulesItem?.values["ownerMayReview"], extents);
+      const { summary: membership } = await refreshRoster(room);
+      const candidates = reviewCandidates(membership.items, room.membership, current.parties["authors"], rulesItem?.values["ownerMayReview"], extents);
       reviewMembers = candidates?.members ?? null;
       reviewMembersByExtent = candidates?.byExtent ?? null;
     } catch { /* Missing authority offers no invented reviewer choices. */ }
