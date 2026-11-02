@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/evidence/2026-11-02-readable-diff-design.manifest.json","body":{"commit":"2950cff9c7d36f476640685b429105f6536a82fb","path":"notes/implementation/evidence/2026-11-02-readable-diff-design.manifest.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8f2dac5274e5b48a73edd953d9245a4141392c7d","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-02-readable-diff-design.md."}
