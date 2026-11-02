@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d62862ab28c5e535defdc423fde5eb390f413650","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-01-j5-row-press.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dca8a1aaa1bac8d93310b437234345b98efbb008","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/row-press-probe.mjs."}
