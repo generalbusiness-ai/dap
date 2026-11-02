@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/evidence/2026-11-02-g3-mini-configuration.manifest.json","body":{"commit":"8e9f0942feba5e05429a5dd9aa2e138ca69f79f6","path":"notes/implementation/evidence/2026-11-02-g3-mini-configuration.manifest.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3ea5059b5cc72647c777244fb46f28a4e205061f","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-02-g3-mini-configuration/h3-read-baseline.mjs."}
