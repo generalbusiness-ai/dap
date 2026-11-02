@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:21e502fd647eef7ca13aba6e97bf0877d73250b4","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-02-repository-binding.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:228a2a9c093b91ca310d3711ea06cfd1d181fbce","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/github-repository-bindings.ts."}
