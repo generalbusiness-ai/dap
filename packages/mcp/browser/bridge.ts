@@ -10,6 +10,9 @@ export interface HostContext {
 }
 /** A message the app answers itself, with no server call behind it. */
 const HOST_WAIT_MS = 10_000;
+// Both revisions use the same initialization, tool, host-style, size, mode and teardown envelopes.
+// A version grants no tool authority. A host may still refuse an optional method.
+const APP_REVISIONS = ["2026-01-26", "2025-11-21"] as const;
 export class AppToolError extends Error {
   constructor(message: string, readonly reason?: string) { super(message); }
 }
@@ -18,6 +21,7 @@ export class AppToolError extends Error {
 export class AppBridge {
   #next = 0;
   #closed = false;
+  #negotiationError: Error | null = null;
   #pending = new Map<number, { resolve(value: Object_): void; reject(error: Error): void; timer: ReturnType<typeof setTimeout> }>();
   #listeners = new Set<(method: string, params: Object_) => void>();
   #input: Object_ | null = null;
@@ -25,11 +29,13 @@ export class AppBridge {
   context: HostContext = {};
   constructor() { window.addEventListener("message", this.#receive); }
   #send(message: Object_) {
+    if (this.#negotiationError) throw this.#negotiationError;
     if (this.#closed) throw new Error("The host closed this card.");
     window.parent.postMessage({ jsonrpc: "2.0", ...message }, "*");
   }
   notify(method: string, params: Object_ = {}) { this.#send({ method, params }); }
   request(method: string, params: Object_ = {}, wait = HOST_WAIT_MS): Promise<Object_> {
+    if (this.#negotiationError) return Promise.reject(this.#negotiationError);
     if (this.#closed) return Promise.reject(new Error("The host closed this card."));
     if (this.#pending.size >= 32) return Promise.reject(new Error("The card is waiting for too many host replies."));
     const id = ++this.#next;
@@ -80,8 +86,14 @@ export class AppBridge {
   }
   on(listener: (method: string, params: Object_) => void) { this.#listeners.add(listener); return () => this.#listeners.delete(listener); }
   async initialize() {
-    const reply = await this.request("ui/initialize", { protocolVersion: "2026-01-26", appInfo: { name: "dap cards", version: "0.1.0-dev.1" }, appCapabilities: { availableDisplayModes: ["inline", "fullscreen"] } });
-    if (reply["protocolVersion"] !== "2026-01-26") throw new Error("This host did not negotiate the supported MCP Apps revision.");
+    const reply = await this.request("ui/initialize", { protocolVersion: APP_REVISIONS[0], appInfo: { name: "dap cards", version: "0.1.0-dev.1" }, appCapabilities: { availableDisplayModes: ["inline", "fullscreen"] } });
+    const revision = reply["protocolVersion"];
+    if (!APP_REVISIONS.some(supported => supported === revision)) {
+      const named = typeof revision === "string" ? JSON.stringify(revision.slice(0, 128)) : revision === undefined ? "[missing]" : `[${typeof revision}]`;
+      this.#negotiationError = new Error(`This host returned unsupported MCP Apps revision ${named}. Supported revisions are ${APP_REVISIONS.join(" and ")}.`);
+      this.close();
+      throw this.#negotiationError;
+    }
     if (record(reply["hostContext"])) this.#context(reply["hostContext"] as HostContext);
     this.notify("ui/notifications/initialized");
   }

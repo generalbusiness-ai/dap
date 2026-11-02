@@ -4,5 +4,5 @@ import { defineConfig } from "vitest/config";
 // HTTP. The stories on real scopes, `*.scope.test.ts`, run from the root `vitest.config.ts` inside the scope project's Workers
 // runtime pool.
 export default defineConfig({
-  test: { include: ["test/**/*.test.ts"], exclude: ["test/**/*.scope.test.ts"], environment: "node", pool: "threads", testTimeout: 60_000 },
+  test: { include: ["test/**/*.test.ts", "browser/**/*.test.ts"], exclude: ["test/**/*.scope.test.ts"], environment: "node", pool: "threads", testTimeout: 60_000 },
 });
