@@ -7,7 +7,7 @@ import { custodyKind } from "./custody.ts";
 import { claimRoom, claimStatus, migrateRecoveryCustody, type ClaimOptions, type ClaimRegister, type ClaimStorage, type ClaimedRoom } from "./claim.ts";
 
 interface KeptStart { v: 1 | 2; origin: string; secret?: string; publicKey?: KeyId; configured: ClaimRegister; label: string; handle: "@founder"; operation?: string; recoverySaved?: true }
-export interface StartStatus { key: KeyId; configured: ClaimRegister; label: string; handle: "@founder"; state: "prepared" | "pending" | "complete"; operation?: string; recoverySaved?: true }
+export interface StartStatus { key: KeyId; configured: ClaimRegister; label: string; handle: "@founder"; state: "prepared" | "pending" | "complete" | "failed"; operation?: string; recoverySaved?: true }
 export interface StartOptions extends Pick<ClaimOptions, "locks" | "current" | "pause" | "tries" | "creationOffer" | "keys"> {
   mode: "new" | "continue" | "check";
   offer?: CreationOffer;
@@ -25,7 +25,7 @@ function decode(raw: string, origin: string): KeptStart {
     if (row["operation"] !== undefined && (typeof row["operation"] !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(row["operation"]))) throw unavailable();
     if (row["recoverySaved"] !== undefined && row["recoverySaved"] !== true) throw unavailable();
     const configured = row["configured"];
-    if (!isRecord(configured) || Object.keys(configured).sort().join(",") !== "definition,register" || !["platform:register@7", "platform:register@8", "platform:register@17"].includes(configured["definition"] as string) || !isScopeRef(configured["register"]) || configured["register"].kind !== "register") throw unavailable();
+    if (!isRecord(configured) || Object.keys(configured).sort().join(",") !== "definition,register" || !["platform:register@7", "platform:register@8", "platform:register@17", "platform:register@26"].includes(configured["definition"] as string) || !isScopeRef(configured["register"]) || configured["register"].kind !== "register") throw unavailable();
     if (row["v"] === 1) {
       if (typeof row["secret"] !== "string" || row["publicKey"] !== undefined) throw unavailable();
       secret = unb64url(row["secret"]);
@@ -83,13 +83,21 @@ export async function startRoom(origin: string, storage: ClaimStorage, options: 
     let row = read(origin, storage);
     const keys = options.keys ?? pageKeyStore();
     if (row) row = await migrateStart(row, storage, options);
+    let retryFailed = false;
     if (options.mode === "new") {
-      if (row) throw new Error("An original Start is already retained. Check status or explicitly Continue that original creation.");
-      if (!options.offer || !isCurrentCreationOffer(options.offer, origin)) throw new Error("A current same-origin configured register17 creation offer is required. Nothing was submitted.");
+      if (!options.offer || !isCurrentCreationOffer(options.offer, origin)) throw new Error("A current same-origin creation offer is required. Nothing was submitted.");
       const label = options.label?.trim() ?? "";
       if (!label || label.length > 256) throw new Error("Enter a personal room label of at most 256 characters.");
-      const signer = await keys.create(); current(options);
-      row = save({ v: 2, origin, publicKey: signer.key, configured: { register: structuredClone(options.offer.register), definition: options.offer.definition }, label, handle: "@founder" }, storage, options);
+      if (row) {
+        if (publicOf(row, storage).state !== "failed") throw new Error("An original Start is already retained. Check status or explicitly Continue that original creation.");
+        if (row.configured.definition !== options.offer.definition || canonicalize(row.configured.register) !== canonicalize(options.offer.register)) throw new Error("The configured register changed. The failed creation and its key remain saved; no new claim was submitted.");
+        // Reuse the creator key and keep the old operation in its private
+        // journal. claimRoom checks its failure natively before reserving anew.
+        retryFailed = true;
+      } else {
+        const signer = await keys.create(); current(options);
+        row = save({ v: 2, origin, publicKey: signer.key, configured: { register: structuredClone(options.offer.register), definition: options.offer.definition }, label, handle: "@founder" }, storage, options);
+      }
     }
     if (!row) throw unavailable();
     let held = row;
@@ -99,17 +107,18 @@ export async function startRoom(origin: string, storage: ClaimStorage, options: 
       const stillCurrent = () => options.current?.() !== false && storage.getItem(keyOf(origin)) === canonicalize(held);
       if (!stillCurrent()) throw unavailable();
       if (options.mode === "check" && !status.operation) return { key: status.key, configured: status.configured, handle: held.handle, operation: "", label: held.label, repository: null, pending: true, outcome: { code: 1, lines: ["The Start key is retained, but no original claim has been prepared. Check sent nothing. Continue explicitly to prepare the first request."] } };
-      const result = await claimRoom({ service: origin, signer, ...(options.fetch ? { fetch: options.fetch } : {}), ...(options.now ? { now: options.now } : {}) }, held.configured, storage, held.label, {
+      const nextLabel = retryFailed ? options.label!.trim() : held.label;
+      const result = await claimRoom({ service: origin, signer, ...(options.fetch ? { fetch: options.fetch } : {}), ...(options.now ? { now: options.now } : {}) }, held.configured, storage, nextLabel, {
         keys,
         ...(options.pause ? { pause: options.pause } : {}), ...(options.tries !== undefined ? { tries: options.tries } : {}), ...(options.creationOffer ? { creationOffer: async (register: ClaimRegister["register"]) => {
           const offered = await options.creationOffer!(register);
           if (!isCreationOffer(offered, origin, held.configured.register) || offered.definition !== held.configured.definition) throw unavailable();
           return offered;
-        } } : {}), mode: status.operation ? "resume" : "new", ...(status.operation ? { operation: status.operation } : {}),
+        } } : {}), mode: retryFailed ? "new" : status.operation ? "resume" : "new", ...(status.operation ? { operation: status.operation } : {}),
         handle: held.handle, readOnlyCheck: options.mode === "check", locks,
         retainOperation: operation => {
-          if (!stillCurrent() || held.operation && held.operation !== operation) throw unavailable();
-          if (!held.operation) held = save({ ...held, operation }, storage, options);
+          if (!stillCurrent() || held.operation && held.operation !== operation && !retryFailed) throw unavailable();
+          if (held.operation !== operation) held = save({ ...held, operation, label: nextLabel }, storage, options);
         },
         current: stillCurrent
       });

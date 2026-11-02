@@ -44,7 +44,7 @@ export interface ClaimedRoom {
 }
 interface Kept { v: 1; binding: string; label: string; config: Config; recovery?: string; recoveryKey?: KeyId; completed?: PendingClaim }
 interface Journal { v: 2; binding: string; active: string; claims: Record<string, string>; originalLegacy?: string }
-export interface ClaimStatus { operation: string; label: string; state: "pending" | "complete" }
+export interface ClaimStatus { operation: string; label: string; state: "pending" | "complete" | "failed" }
 /** A client storage bound, not native creation permission or capacity. No
  * archived or unknown operation is evicted to admit another one. */
 const MAX_CLAIMS = 64;
@@ -59,6 +59,7 @@ function originOf(session: { service: string }): void {
 
 /** A page has its Continue control and no `--again`, and this browser starts no other creation while one is unfinished. */
 const PAGE_STEPS: ClaimSteps = {
+  failed: () => "This creation failed and freed its place in the register. It cannot create a room. Start a new creation when the Git host is available.",
   directory: () => "The register accepted this claim, and its directory has not appeared. This page cannot tell whether the claim is still being tried or all its attempts have failed. Continuing this creation goes on waiting. That sends nothing new, and it cannot restart a failed claim, even after the Git host returns. This browser starts no other creation while this one is unfinished. If the directory does not appear, tell the register's operator.",
   children: () => "continue this creation to go on waiting. That sends nothing new.",
 };
@@ -113,7 +114,7 @@ export function claimStatus(session: Session | ClaimIdentity, configured: ClaimR
   const operation = selectedOperation ?? journal.active;
   if (!Object.hasOwn(journal.claims, operation)) throw new Error(`The exact original creation is missing from its private journal. ${CREATION_UNKNOWN}`);
   const kept = readKept(journal.claims[operation]!, binding, session, configured);
-  return { operation, label: kept.label, state: kept.completed ? "complete" : "pending" };
+  return { operation, label: kept.label, state: kept.completed ? "complete" : kept.config.claim?.failure ? "failed" : "pending" };
 }
 
 /** One journal write commits the operation ID and its complete private record
@@ -260,9 +261,9 @@ export async function claimRoom(session: Session, configured: ClaimRegister, sto
       if (!send) throw new Error("This runtime has no fetch; nothing was sent.");
       return send(url, init);
     };
-    async function runNative(privateStore: ReturnType<typeof storeFor>, localLabel: string): Promise<Outcome> {
+    async function runNative(privateStore: ReturnType<typeof storeFor>, localLabel: string, checkOnly = readOnlyCheck): Promise<Outcome> {
       const context = { store: privateStore.store, fetch: guardedFetch, claimSteps: PAGE_STEPS, ...session.now ? { now: session.now } : {}, ...waiting };
-      return readOnlyCheck ? checkClaim(context, localLabel) : claim(context, localLabel, handle !== undefined ? { handle } : {});
+      return checkOnly ? checkClaim(context, localLabel) : claim(context, localLabel, handle !== undefined ? { handle } : {});
     }
     const loaded = readJournal(session, configured, storage);
     const active = loaded.journal?.active;
@@ -277,9 +278,9 @@ export async function claimRoom(session: Session, configured: ClaimRegister, sto
       if (active) {
         const previous = storeFor(session, configured, storage, label.trim(), active, false, keys);
         const kept = previous.kept();
-        if (!kept.completed) return { outcome: { code: 1, lines: ["A creation is already in progress. Resume that exact original operation before creating another room."] }, operation: active, label: kept.label, repository: null, pending: true };
-        const verified = await runNative(previous, kept.label);
-        if (verified.code !== 0) return { outcome: verified, operation: active, label: kept.label, repository: null, pending: true };
+        if (!kept.completed && !kept.config.claim?.failure) return { outcome: { code: 1, lines: ["A creation is already in progress. Resume that exact original operation before creating another room."] }, operation: active, label: kept.label, repository: null, pending: true };
+        const verified = await runNative(previous, kept.label, !kept.completed);
+        if (verified.code !== 0 && verified.claimState !== "failed") return { outcome: verified, operation: active, label: kept.label, repository: null, pending: true };
       }
       checkCurrent();
       const eligible = options.creationOffer ? await (async () => {
@@ -302,6 +303,6 @@ export async function claimRoom(session: Session, configured: ClaimRegister, sto
     const native = await runNative(privateStore, before.label);
     const outcome: Outcome = blocked ? { code: 1, lines: ["The Page room, key or register changed. This continuation sent no new mutation after the context changed. The exact saved original claim is kept; earlier steps may already be accepted or unknown. Inspect or resume only under its original context."] } : native;
     const after = privateStore.kept();
-    return { outcome, operation, label: after.label, repository: outcome.code === 0 ? after.config.repository ?? null : null, pending: outcome.code !== 0 && (after.config.claim !== undefined || after.completed !== undefined) };
+    return { outcome, operation, label: after.label, repository: outcome.code === 0 ? after.config.repository ?? null : null, pending: outcome.code !== 0 && outcome.claimState !== "failed" && (after.config.claim !== undefined || after.completed !== undefined) };
   });
 }

@@ -108,7 +108,7 @@ export interface Git {
 }
 
 /** What a command ends with: its exit code, and the lines it prints. 0: done. 1: refused, unavailable or not found. 2: not a command this can run. */
-export interface Outcome { code: 0 | 1 | 2 | 3; lines: string[] }
+export interface Outcome { code: 0 | 1 | 2 | 3; lines: string[]; claimState?: "failed" }
 const short = (text: string): string => (text.length > 16 ? `${text.slice(0, 12)}...` : text);
 
 /** Node operator adapter. Constructing it reads local configuration only;

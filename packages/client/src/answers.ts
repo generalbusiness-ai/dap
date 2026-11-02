@@ -14,9 +14,9 @@
  * and it computes the hash itself.
  */
 
-import type { Answer, DeliveryRefusal, Created, CreationUnavailableReason, MismatchReason, RefusalReason, Read, ScopeApi, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Answer, DeliveryRefusal, Created, CreationUnavailableReason, MismatchReason, RefusalReason, Read, Settlement, ScopeApi, UnavailableReason } from "@generalbusiness/dap-contract";
 import { isScopeBoundName } from "@generalbusiness/dap-contract";
-import { REFUSAL_REASONS, isItemQueryRead, among, isOutboxItem, isFactRef, isHead, isItem, isListOf, isLogPage, isRead, isReceipt, isRecord, isRetainedInput, isSealed, isSummary } from "@generalbusiness/dap-bytes";
+import { REFUSAL_REASONS, canonicalize, isItemQueryRead, among, isOutboxItem, isFactRef, isHead, isItem, isListOf, isLogPage, isRead, isReceipt, isRecord, isRetainedInput, isSealed, isSummary } from "@generalbusiness/dap-bytes";
 import { isArchived } from "./journal-tail.ts";
 import { readApplicationProjectionReplyText } from "@generalbusiness/dap-platform/application-v2";
 
@@ -36,6 +36,19 @@ const MISMATCH: Record<MismatchReason, true> = { "idempotency-mismatch": true };
 
 /** A record with exactly these members. */
 const only = (v: Record<string, unknown>, ...members: string[]): boolean => Object.keys(v).length === members.length && members.every((m) => Object.hasOwn(v, m));
+
+/** A new-register claim projection stays bound to the exact original receipt. */
+function isSettlement(value: unknown): value is Settlement {
+  const ordinary = readAnswer(isReceipt);
+  if (ordinary(value)) return true;
+  if (!isRecord(value) || !Object.hasOwn(value, "claim")) return false;
+  const { claim, ...read } = value;
+  if (!ordinary(read) || !read.ok || read.complete !== true || read.next !== undefined
+    || read.value.definition !== "platform:register@26" || read.value.fact.at.kind !== "register" || read.at.seq < read.value.fact.seq
+    || !isRecord(claim) || !only(claim, "fact", "state") || !isFactRef(claim["fact"])
+    || !["pending", "failed", "active"].includes(claim["state"] as string)) return false;
+  return canonicalize(claim["fact"]) === canonicalize(read.value.fact);
+}
 
 /** The answer to a creation (section 7.1): it has no `mismatch`, and its refusal names no head. */
 function isCreated(v: unknown): v is Created {
@@ -67,7 +80,7 @@ export const ANSWERS: { [K in keyof ScopeApi]: (reply: unknown) => reply is Awai
   create: isCreated,
   submit: isAnswer,
   prepare: isAnswer,
-  settle: readAnswer(isReceipt),
+  settle: isSettlement,
   summary: readAnswer(isSummary),
   items: readAnswer(isListOf(isItem)),
   queryItems: isItemQueryRead,

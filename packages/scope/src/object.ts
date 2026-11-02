@@ -1,4 +1,4 @@
-import { REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
+import { FAILED_CLAIM_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
 import { readMinimum } from "@generalbusiness/dap-bytes";
 import { ReadWait, type ReadWaitRefusal } from "./read-wait.ts";
 import { offerFloor } from "./floor-writer.ts";
@@ -619,7 +619,18 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   }
   /** One step of a capability, asked for with the signed intent that it prepares for (section 5.5). */
   async prepare(signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer> { return this.#publicInvoke("preparations", async () => this.#sent(await this.#scope.prepare(signed, grants, capability, step))); }
-  settle(signed: SignedIntent): Settlement { this.#first(); return this.#scope.settle(signed); }
+  settle(signed: SignedIntent): Settlement {
+    this.#first();
+    const settled = this.#scope.settle(signed);
+    // The existing exact-original check grants no general item read. The new
+    // register adds only this claim's state at the reply's current head.
+    if (!settled.ok || settled.value.definition !== FAILED_CLAIM_COHORT.register || signed.intent.kind !== "found") return settled;
+    const claim = this.#store.item(settled.value.fact.seq);
+    if (!claim || claim.type !== "claim" || claim.opened !== settled.value.fact.hash || claim.values["intent"] !== settled.value.intent
+      || !["pending", "failed", "active"].includes(claim.state)
+      || claim.state === "failed" && ((claim.values["repository"] ?? null) !== null || (claim.refs["directory"] ?? null) !== null)) return settled;
+    return { ...settled, claim: { fact: settled.value.fact, state: claim.state as "pending" | "failed" | "active" } };
+  }
   checkpoint(): Promise<Checkpointed> { return this.#invoke("dispatch", () => { this.#first(); return this.#scope.checkpoint(); }); }
 
   /**
