@@ -1,0 +1,244 @@
+{
+  "actualSceneExit": 1,
+  "elapsedSeconds": 44.041,
+  "rowsOpened": 100,
+  "checksPassed": 35,
+  "checksFailed": 1,
+  "failedCheck": "the bounded probe has no browser errors",
+  "browser503s": 20,
+  "workerRefusalsCaptured": 20,
+  "bodyFiles": [
+    {
+      "path": "row-press/worker-503-001.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 1
+    },
+    {
+      "path": "row-press/worker-503-002.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 2
+    },
+    {
+      "path": "row-press/worker-503-003.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 3
+    },
+    {
+      "path": "row-press/worker-503-004.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 4
+    },
+    {
+      "path": "row-press/worker-503-005.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 5
+    },
+    {
+      "path": "row-press/worker-503-006.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 6
+    },
+    {
+      "path": "row-press/worker-503-007.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 7
+    },
+    {
+      "path": "row-press/worker-503-008.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 8
+    },
+    {
+      "path": "row-press/worker-503-009.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 9
+    },
+    {
+      "path": "row-press/worker-503-010.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 10
+    },
+    {
+      "path": "row-press/worker-503-011.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 11
+    },
+    {
+      "path": "row-press/worker-503-012.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 12
+    },
+    {
+      "path": "row-press/worker-503-013.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 13
+    },
+    {
+      "path": "row-press/worker-503-014.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 14
+    },
+    {
+      "path": "row-press/worker-503-015.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 15
+    },
+    {
+      "path": "row-press/worker-503-016.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 16
+    },
+    {
+      "path": "row-press/worker-503-017.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 17
+    },
+    {
+      "path": "row-press/worker-503-018.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 18
+    },
+    {
+      "path": "row-press/worker-503-019.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 19
+    },
+    {
+      "path": "row-press/worker-503-020.body",
+      "bytes": 35,
+      "sha256": "04fa1970ecf4853ff373c2ca1e4a1cf097c97c57205f1edc3a8109b5b9536e63",
+      "workerId": 20
+    }
+  ],
+  "allBodies": {
+    "ok": false,
+    "reason": "unavailable"
+  },
+  "allRefusalSamples": {
+    "open": 64,
+    "released": 0,
+    "windows": 0,
+    "waiting": 0
+  },
+  "refusalScope": {
+    "inc": "in_laszjkmsw5yjrcwof5q3yu3khu",
+    "kind": "directory",
+    "scope": "sc_tjlm6r7bebi3zex27fjpkdetqyq6d3ol6uoyjgnl2lwocfsjsddq"
+  },
+  "workerCaptureDropped": 0,
+  "workerCaptureErrors": 0,
+  "otherConsoleErrors": 0,
+  "browserActs": 0,
+  "nativeIssueHeadsAndItemsUnchanged": true,
+  "perScope": {
+    "sc_tjlm6r7bebi3zex27fjpkdetqyq6d3ol6uoyjgnl2lwocfsjsddq": {
+      "requests": 84,
+      "responses200": 64,
+      "responses503": 20,
+      "lastNativeSample": {
+        "cause": "page-closed",
+        "id": 21,
+        "at": "2026-11-02T05:24:57.697Z",
+        "streams": {
+          "open": 64,
+          "released": 0
+        },
+        "limits": {
+          "windows": 0,
+          "waiting": 0
+        }
+      }
+    },
+    "sc_7qncjvp4tlcez4omsibcgmz5z5ilyaxjpvow7pm5pubmbto4qc7a": {
+      "requests": 60,
+      "responses200": 60,
+      "responses503": 0,
+      "lastNativeSample": {
+        "cause": "page-closed",
+        "id": 21,
+        "at": "2026-11-02T05:24:57.698Z",
+        "streams": {
+          "open": 60,
+          "released": 0
+        },
+        "limits": {
+          "windows": 0,
+          "waiting": 0
+        }
+      }
+    },
+    "sc_4urjsx6pc55j7apgaldcrccbtx7c72heraobfekpumxoyg6xlmwa": {
+      "requests": 40,
+      "responses200": 40,
+      "responses503": 0,
+      "lastNativeSample": {
+        "cause": "page-closed",
+        "id": 21,
+        "at": "2026-11-02T05:24:57.699Z",
+        "streams": {
+          "open": 40,
+          "released": 0
+        },
+        "limits": {
+          "windows": 0,
+          "waiting": 0
+        }
+      }
+    }
+  },
+  "images": [
+    {
+      "path": "row-press/first-press.png",
+      "width": 1100,
+      "height": 1417,
+      "sha256": "ad6753896be74d825befbba00ebffb702ab2ca53a86ced873ca30f173cde7019"
+    },
+    {
+      "path": "row-press/last-list.png",
+      "width": 1100,
+      "height": 1417,
+      "sha256": "ad6753896be74d825befbba00ebffb702ab2ca53a86ced873ca30f173cde7019"
+    },
+    {
+      "path": "screens/1-first-screen.png",
+      "width": 1100,
+      "height": 1372,
+      "sha256": "21e55bf9a826de09b220600f511697500dc6d72f9aa149369ec7261f037c8a53"
+    },
+    {
+      "path": "screens/2-after-reload.png",
+      "width": 1100,
+      "height": 1372,
+      "sha256": "21e55bf9a826de09b220600f511697500dc6d72f9aa149369ec7261f037c8a53"
+    }
+  ],
+  "visualReview": "Builder inspected all four returned PNGs. List and issue screenshots show only the new fixture and Ana, with no credential or invitation. Duplicate file hashes denote identical pixels. This supports the evidence scan; it is no separate visual acceptance.",
+  "cleanup": {
+    "knownNodePid": 38435,
+    "psExit": 1,
+    "psOutput": "",
+    "loopback8819Closed": true,
+    "qualification": "Only the known Node PID and local listener. The scene awaited browser, MCP and Worker shutdown. No claim about unrelated processes."
+  },
+  "sourceUnchanged": true,
+  "qualification": "The local Worker wrapper clones only an already-decided HTTP503 response before returning the unchanged original. It samples the native scope through the same indexed binding, without changing production classes, session checks, stream cap, Page bytes, or release logic. Sampling and logging add overhead. Worker capture IDs and browser request IDs are separate; counts and scope agree, but no new correlation header is added. This proves the captured local refusal is unavailable at the 64-stream cap. It cannot identify old uncaptured response bodies or locate the cause of missing release calls, and it establishes no deployed behavior."
+}
