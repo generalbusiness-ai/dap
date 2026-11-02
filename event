@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-11-02-hosted-mcp-oauth.md","body":{"commit":"afdd8ee5288a7b33c90536c9489bcfc06eafc7d9","path":"notes/2026-11-02-hosted-mcp-oauth.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:70a3dbc5e0e5392daf614b06f6e3ba91a75151e2","text":"Merge retired a covered predecessor; the successor is at notes/2026-11-02-hosted-mcp-oauth.md."}
