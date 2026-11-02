@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import type { Fetch } from "@generalbusiness/dap-client";
-import { actsOn, openRoom, placeOf } from "../src/data.ts";
+import { actsOn, openRoom, placeOf, sessionKey, type Room } from "../src/data.ts";
+import { RoomOpening, roomContext } from "../src/shell.ts";
 import { demo } from "./support/demo.ts";
 
 // Invariant: concurrent callers keep the last complete identity while sharing one pending roster read; completed or failed reads publish standing atomically.
@@ -22,7 +23,11 @@ test("a pending roster refresh keeps the complete identity, and a failed refresh
       }
       return native(url, init);
     };
-    const room = await d.wait(() => openRoom({ ...session, fetch }, placeOf(JSON.stringify(d.config))!));
+    const place = placeOf(JSON.stringify(d.config))!;
+    const opening = new RoomOpening<Room>(room => !!room.me?.handle && room.key === sessionKey(room.session));
+    const context = roomContext(session.service, place, sessionKey(session));
+    const open = () => opening.get(context, () => openRoom({ ...session, fetch }, place));
+    const room = await d.wait(open);
     const identified = room.me;
     expect(identified?.handle).toBe("@rita");
     await d.wait(async () => {
@@ -45,6 +50,14 @@ test("a pending roster refresh keeps the complete identity, and a failed refresh
     await expect(d.wait(() => actsOn(room, d.D.name))).rejects.toThrow();
     expect(room.me, "A FAILED READ cannot keep the prior standing").toBeNull();
     mode = "normal";
+    const reopened = await d.wait(async () => {
+      const first = open(), concurrent = open();
+      expect(concurrent, "RECOVERY shares the pending fresh open").toBe(first);
+      return first;
+    });
+    expect(reopened, "THE NEXT DRAW cannot reuse the room whose standing failed").not.toBe(room);
+    expect(reopened.me, "THE NEXT DRAW authenticates the actual roster again").toEqual(identified);
+    expect((await d.wait(() => actsOn(reopened, d.D.name))).acts.map(act => act.kind)).toContain("open-issue");
     expect((await d.wait(() => actsOn(room, d.D.name))).acts.map(act => act.kind), "RECOVERY reads the actual roster again").toContain("open-issue");
     expect(room.me).toEqual(identified);
     // A new completed roster still changes permissions; retaining identity during a read grants no act.

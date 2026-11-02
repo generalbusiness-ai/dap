@@ -146,7 +146,7 @@ const showFor = (n: number, focus: boolean) => (...children: HTMLElement[]) => {
 };
 
 
-const opened = new RoomOpening<Room>();
+const opened = new RoomOpening<Room>(verifiedRoom);
 let lastVerifiedContext: string | null = null;
 /** The scope's answer to the last act sent from this page, by service/room/member/scope, for the states and the answer line. */
 const lastActs = new Map<string, Acted>();

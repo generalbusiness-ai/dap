@@ -1,0 +1,461 @@
+{
+  "version": 1,
+  "qualification": "One local scripted recovery with native authenticated membership and controlled GET failure, preceded by a demonstrated baseline and retained diagnostic failures. No person, provider, desktop AI app, or deployed recovery participates. The clean source gate and exact-source Page workflow passed.",
+  "checkpoint": {
+    "commit": "658aab954d7a017c5cbce0d7daf28bb798fa1f52",
+    "tree": "27936fcbfd752aef7a6fecf02961279f258c2628"
+  },
+  "retention": "Keep every unit for at least 30 days after landing.",
+  "fileCount": 180,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-01-roster-recovery-baseline",
+      "checkpoint": {
+        "commit": "313840592ee0f4d4c49dd617f969534998d99e50",
+        "tree": "ead96ec28b18a11e31c53a1de4f4067d9bb2e441"
+      },
+      "fileCount": 16,
+      "sha256sums": "67e55aa80f9ddc9bedbeba2d47f1be9cc8a4587d494ed692f23e9c6d398821a0",
+      "files": [
+        {
+          "path": "run.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "run.stdout",
+          "bytes": 24639,
+          "sha256": "c5e577f9a10827a0eaf5a71f4bb39da8d0b48a407964f799574012302473bb8a"
+        },
+        {
+          "path": "row-press/final-stop.json",
+          "bytes": 26587,
+          "sha256": "833eb517f1212ff313ee9f40324a58f3745685867208e7b727f40a25537d8972"
+        },
+        {
+          "path": "witness.mjs",
+          "bytes": 17484,
+          "sha256": "a964d73ada15075296b96cb9e10f4bef792c28f9b323b4e98903c349a729ac82"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1232,
+          "sha256": "67e55aa80f9ddc9bedbeba2d47f1be9cc8a4587d494ed692f23e9c6d398821a0"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-01-roster-recovery-baseline-2",
+      "checkpoint": {
+        "commit": "313840592ee0f4d4c49dd617f969534998d99e50",
+        "tree": "ead96ec28b18a11e31c53a1de4f4067d9bb2e441"
+      },
+      "fileCount": 20,
+      "sha256sums": "cd77bb9d9c7ac52f5ed63d3511a2ce82fd609b589301fbb8f1b2fa553587771d",
+      "files": [
+        {
+          "path": "run.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "run.stdout",
+          "bytes": 37009,
+          "sha256": "0ce1ee54bdf07d03253616ddd12f004812981bcc624ed62a1120c509ca19bb8c"
+        },
+        {
+          "path": "prior-run.json",
+          "bytes": 342,
+          "sha256": "d810e62a653180442421e7f0369214dc73311caf1f1ed7d318fa998ee302fefe"
+        },
+        {
+          "path": "1-read-failed.json",
+          "bytes": 338,
+          "sha256": "42fd8298b963c694edba8a4181aa172994fcf9f026017471efb39a7593ba1d11"
+        },
+        {
+          "path": "row-press/final-stop.json",
+          "bytes": 39908,
+          "sha256": "1be5281cfb685b62e7f33af6932613e08d7d806501f799e7602a502b32a64b9b"
+        },
+        {
+          "path": "witness.mjs",
+          "bytes": 17479,
+          "sha256": "f36a4169a8c9a8c18b19204ff25a97ad27fe9920da3691b616c1454371539f0a"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1575,
+          "sha256": "cd77bb9d9c7ac52f5ed63d3511a2ce82fd609b589301fbb8f1b2fa553587771d"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-01-roster-recovery-baseline-3",
+      "checkpoint": {
+        "commit": "313840592ee0f4d4c49dd617f969534998d99e50",
+        "tree": "ead96ec28b18a11e31c53a1de4f4067d9bb2e441"
+      },
+      "fileCount": 22,
+      "sha256sums": "acc843d2a420e7fe710e6fb1c8e3efa35c270ff79df0be328d18ea1f416fb931",
+      "files": [
+        {
+          "path": "run.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "run.stdout",
+          "bytes": 1576,
+          "sha256": "53918ebea054683e077d7366d846289ef469e2f9aad37403d7671bab94cff963"
+        },
+        {
+          "path": "prior-run.json",
+          "bytes": 482,
+          "sha256": "0638df452add0208d6d718e676d82a6a838eedf3590a8a88862ef1f3880ed764"
+        },
+        {
+          "path": "0-valid-list.json",
+          "bytes": 1577,
+          "sha256": "fc6f36758caaff1dad61605c0ef84077470317e117d114fe2612e993e06d4c9f"
+        },
+        {
+          "path": "1-read-failed.json",
+          "bytes": 338,
+          "sha256": "344ad0e2c468a342cb1d08e7b080470d9c8810ca23728482c9de0c3172b9d676"
+        },
+        {
+          "path": "2-navigation-refused.json",
+          "bytes": 284,
+          "sha256": "69eb17d91df59d0b6d1289f9fdc9d1df4e7b5b537c9fa54bcae7609d795b7bbc"
+        },
+        {
+          "path": "3-reload-recovers.json",
+          "bytes": 1582,
+          "sha256": "b05475ba51f5634994e88347b1a69badc28c0258ac71b00bef7c428812d8a872"
+        },
+        {
+          "path": "screens/2-navigation-refused.png",
+          "bytes": 19565,
+          "sha256": "ee27329e6ddb94b2833f553dbd72490725987166bbbeb82c85d60572e1a76396"
+        },
+        {
+          "path": "witness.mjs",
+          "bytes": 17521,
+          "sha256": "75e64fd8b27a1c41bffca2b5ccf915922e54a70f390f482078b7bdca7c038fe5"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1765,
+          "sha256": "acc843d2a420e7fe710e6fb1c8e3efa35c270ff79df0be328d18ea1f416fb931"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-01-roster-recovery-browser",
+      "checkpoint": {
+        "commit": "658aab954d7a017c5cbce0d7daf28bb798fa1f52",
+        "tree": "27936fcbfd752aef7a6fecf02961279f258c2628"
+      },
+      "fileCount": 24,
+      "sha256sums": "e97314ac896805a10d571678935d69a2ade4b5ccaa8ecf2a816c9f27eeabd321",
+      "files": [
+        {
+          "path": "run.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "run.stdout",
+          "bytes": 34709,
+          "sha256": "78941dd70775445169ca94821c86e6946bbfa08cd4171b918f82c1cf9ab2f378"
+        },
+        {
+          "path": "source.json",
+          "bytes": 197,
+          "sha256": "d15aa0bcf48de771d1c798ad204f309c01d24e8dc25d7c2f589d54763ecaf20c"
+        },
+        {
+          "path": "page-byte-guard.json",
+          "bytes": 195,
+          "sha256": "51562e4e9184f5b2434c9679cc414fe244ca681bee452447608514de89c03368"
+        },
+        {
+          "path": "1-read-failed.json",
+          "bytes": 338,
+          "sha256": "70efe72e2cd466d38c0a619122e20e68992fb366b0e6d83e691b0f1e25e86861"
+        },
+        {
+          "path": "2-navigation-recovers.json",
+          "bytes": 1206,
+          "sha256": "4b7f9cbd3009405b5f1bebb5da8ec49f9fd7d1bffc9356b19e9387092e75cf7d"
+        },
+        {
+          "path": "row-press/final-stop.json",
+          "bytes": 36650,
+          "sha256": "8f687e46b9a25df780b0c0930f3ce606d03d7ccd384ebb6ed9ba84db6ec9a59f"
+        },
+        {
+          "path": "witness.mjs",
+          "bytes": 17963,
+          "sha256": "4ad9c1c90e1e8776aa781ab5fad6bc61f0f56ba2190f54eac8f684bc7673a95a"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1945,
+          "sha256": "e97314ac896805a10d571678935d69a2ade4b5ccaa8ecf2a816c9f27eeabd321"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-01-roster-recovery-browser-2",
+      "checkpoint": {
+        "commit": "658aab954d7a017c5cbce0d7daf28bb798fa1f52",
+        "tree": "27936fcbfd752aef7a6fecf02961279f258c2628"
+      },
+      "fileCount": 29,
+      "sha256sums": "0435592a2737af223a1dbe0b83ae52126f5851bddff85dce915803ef588af3f8",
+      "files": [
+        {
+          "path": "run.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "run.stdout",
+          "bytes": 2769,
+          "sha256": "475b17e54583a6d7aa9076c83e71cba941e1d5860588b473be42bfe8c1937083"
+        },
+        {
+          "path": "run.stderr",
+          "bytes": 190,
+          "sha256": "6a61e64e9ceb80ad7d9d955b9369f4e72c05bf95236417c467a2c2a8e35569d8"
+        },
+        {
+          "path": "validation.json",
+          "bytes": 626,
+          "sha256": "2c007d82bdb7c71fd33a4cc73604071ab134ec7d7238c21f10769c3e1ef45981"
+        },
+        {
+          "path": "source.json",
+          "bytes": 197,
+          "sha256": "70d1c94e9681610d3164b769a99653aadfddcc568130a55f5fdfb69a9db268e3"
+        },
+        {
+          "path": "prior-run.json",
+          "bytes": 441,
+          "sha256": "a48bcc93177c40b0870aaf917a3f508370cef02b14839c8c3f888cc9bb0e1395"
+        },
+        {
+          "path": "page-byte-guard.json",
+          "bytes": 195,
+          "sha256": "51562e4e9184f5b2434c9679cc414fe244ca681bee452447608514de89c03368"
+        },
+        {
+          "path": "0-valid-list.json",
+          "bytes": 1577,
+          "sha256": "801e9d5bf23eec68da25f6cac3312a51ac68fe0498f9d47d09257f8cd8fa70ab"
+        },
+        {
+          "path": "1-read-failed.json",
+          "bytes": 338,
+          "sha256": "f2f45e3dbd175bfff38f9b6b3cee32f28d4dce4f25263a46e971b0d60e59ed80"
+        },
+        {
+          "path": "2-navigation-recovers.json",
+          "bytes": 1206,
+          "sha256": "1a8fba2f5563ea7331f02a935ccdcc3bf8d0db56630de83397a4708dcda9e8fe"
+        },
+        {
+          "path": "3-reload-recovers.json",
+          "bytes": 1202,
+          "sha256": "91ed764d782e3dc525a6d02e98a42fcebfd00aac379931f23944a8e4f248890f"
+        },
+        {
+          "path": "screens/2-navigation-recovers.png",
+          "bytes": 112182,
+          "sha256": "02f3ac46fe3cf9e3133ba20f672e3134c6f247981091f3b891333b65bb0deece"
+        },
+        {
+          "path": "row-press/recovered-draw.json",
+          "bytes": 48643,
+          "sha256": "5dcfadc7cb958ed720c34b2fa67469326512975e28bc5b42b100c18537350d81"
+        },
+        {
+          "path": "row-press/requests.ndjson",
+          "bytes": 33375,
+          "sha256": "c4a0ac3eda26de8056c72941fbdf26f5a10f4a7df3376f11de9d5bbf1c1062f5"
+        },
+        {
+          "path": "witness.mjs",
+          "bytes": 18103,
+          "sha256": "898ba0541ecd67fffbf13d07bb2d8c5c2412a6949d87003c3fe7d369ba277033"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2394,
+          "sha256": "0435592a2737af223a1dbe0b83ae52126f5851bddff85dce915803ef588af3f8"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-01-roster-recovery-checks",
+      "checkpoint": {
+        "baseCommitAtRun": "313840592ee0f4d4c49dd617f969534998d99e50",
+        "workingTreeModified": true,
+        "laterSourceCommit": "658aab954d7a017c5cbce0d7daf28bb798fa1f52",
+        "qualification": "Focused checks ran before commit. Source changes then remained unchanged through the later clean source gate; assets were generated before that gate. The control restored its source and reported child exits 0 and 1, but its outer exit was not captured."
+      },
+      "fileCount": 23,
+      "sha256sums": "e65e78a5050ccac6144c2658e3ac7097651b5afc2f4b98b09bd1ba2362be73c6",
+      "files": [
+        {
+          "path": "typecheck.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "typecheck.log",
+          "bytes": 134,
+          "sha256": "c6b78e5b48afa90e745987f7b5add060b67424ffce5a2f38bc8d7272cc99e5c5"
+        },
+        {
+          "path": "shell.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "shell.log",
+          "bytes": 235,
+          "sha256": "0fda75fa206aa1ddce7a986eeaf83dbf77b5f6572a6ec39b9689027e393caa37"
+        },
+        {
+          "path": "shell-corrected.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "shell-corrected.log",
+          "bytes": 270,
+          "sha256": "7da010bef90e0e826203654c8b89259e7514be651f084a3e11eb0d468c4e738f"
+        },
+        {
+          "path": "roster.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "roster.log",
+          "bytes": 257,
+          "sha256": "e419a8240773ae1b114fe1f5136e8522fe6a1b1e46be89777d88092e94da8265"
+        },
+        {
+          "path": "control.log",
+          "bytes": 6198,
+          "sha256": "e1c6797b0477354f98311686fa25d33b7981c2f313be0bf28f0e9aaf08111daa"
+        },
+        {
+          "path": "source.json",
+          "bytes": 601,
+          "sha256": "9960af2576190dfe2b3ee37479a1c2f989b00bbcc42426a59fecca12b433beae"
+        },
+        {
+          "path": "source.patch",
+          "bytes": 4816,
+          "sha256": "3d2be5898e26bcca3185e9c2a6ac0cf2c9a80729596c0affcb8ed867fd154420"
+        },
+        {
+          "path": "credential-scan.json",
+          "bytes": 481,
+          "sha256": "490cebe9d8327f942da6f1a420c3e98b3e7da3faab479038d56ea3f1a7c9ca9d"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1770,
+          "sha256": "e65e78a5050ccac6144c2658e3ac7097651b5afc2f4b98b09bd1ba2362be73c6"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-01-roster-recovery-src",
+      "checkpoint": {
+        "commit": "658aab954d7a017c5cbce0d7daf28bb798fa1f52",
+        "tree": "27936fcbfd752aef7a6fecf02961279f258c2628"
+      },
+      "fileCount": 46,
+      "sha256sums": "1b653da6525d2c64c529086f506dea137cdcfceb8a1efc9ebd6710dabc4921e1",
+      "files": [
+        {
+          "path": "gate/head.txt",
+          "bytes": 82,
+          "sha256": "05324efd08cb17c2d7882c5584d0f5bf8971e90366c37471df2ff3414cba68fa"
+        },
+        {
+          "path": "gate/gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "gate/gate.stdout.log",
+          "bytes": 6556,
+          "sha256": "229f06cefd04e7a05852654eef9699c28a3c67e6c8105c0276374b076b08f38a"
+        },
+        {
+          "path": "gate/gate.stderr.log",
+          "bytes": 37,
+          "sha256": "9be48e42fd9515676617836768b88e9d36bfcd6752fdbfaf196844632b639ee0"
+        },
+        {
+          "path": "gate/source-after.json",
+          "bytes": 154,
+          "sha256": "2811c7811de3e3c71c787520cf1d00d3ea26829eb7ec4ac5a912afeb11d0ef13"
+        },
+        {
+          "path": "gate-result.json",
+          "bytes": 1079,
+          "sha256": "a113a0eaa0e1fbaa6a05334f9cc4e58fe60b78207827ab02709685786403ca2d"
+        },
+        {
+          "path": "related-units-audit.json",
+          "bytes": 3496,
+          "sha256": "82fc6902950c891556727360f0c8492485d3f3828029ad17e0b40d9bb8601a2c"
+        },
+        {
+          "path": "page-workflow.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "page-workflow.json",
+          "bytes": 2606,
+          "sha256": "e6ab4540ac93c940cf59e7c7b22e9939638d0c5ccafd62641b5fbf1be7291646"
+        },
+        {
+          "path": "page-workflow-inputs.txt",
+          "bytes": 30820,
+          "sha256": "c8dbe4d54a50263353f87d327ef4af9eb63d6d686b747f47ac5f12a084ce5ed8"
+        },
+        {
+          "path": "credential-scan.json",
+          "bytes": 481,
+          "sha256": "4a56da4af4407ab52b114979e54c1208fdfd4ceb2045a61bc61aa5b78d89e6d8"
+        },
+        {
+          "path": "scan-evidence.py",
+          "bytes": 1640,
+          "sha256": "e0663d50eb0aec4ea71a45aef20e3cc1420e2f9ee021cd67e77be320debbcfff"
+        },
+        {
+          "path": "gate/run.py",
+          "bytes": 1012,
+          "sha256": "557b9cd47d1dc64a43e9e27d6724a4cc742975207a8b5286cbd46a13c8616628"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 4082,
+          "sha256": "1b653da6525d2c64c529086f506dea137cdcfceb8a1efc9ebd6710dabc4921e1"
+        }
+      ]
+    }
+  ]
+}
