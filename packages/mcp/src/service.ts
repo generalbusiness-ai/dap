@@ -37,7 +37,8 @@ import { PackageResources, type PackageBrief } from "./package-brief.ts";
 import { PRESENTATION } from "./views/generated.ts";
 import { ViewSessions } from "./views/session.ts";
 import { toolsForHost, viewTools } from "./views/tools.ts";
-import type { ExactRead, ViewSource } from "./views/types.ts";
+import { actSigner } from "./views/actor.ts";
+import type { ActSigner, ExactRead, ViewSource } from "./views/types.ts";
 import { DeclaredViewSource } from "./views/declared.ts";
 import { readMembershipDisplay } from "./views/member-reads.ts";
 import type { ApplicationInstallation } from "@generalbusiness/dap-platform/application";
@@ -226,6 +227,7 @@ export class McpService {
   readonly #fetch: Fetch | undefined;
   readonly #tools: readonly string[] | null;
   readonly #readReceipts = new WeakMap<CallResult, Receipt>();
+  readonly #actSigners = new WeakMap<CallResult, ActSigner>();
   /** Credential answers that say the mint has no outcome yet, so View diff waits and asks again. */
   readonly #mintPending = new WeakSet<CallResult>();
   #snapshot: Snapshot | null = null;
@@ -282,7 +284,7 @@ export class McpService {
     const source = declared ?? port.views;
     const presentation = new ViewResources(port.presentation ?? source?.presentation ?? PRESENTATION);
     this.resources = port.packageBrief ? new PackageResources(presentation, port.packageBrief) : presentation;
-    const views = source ? new ViewSessions(source, { call: (name, args) => this.call(name, args) }, (kind, args, admit) => this.#viewPerform(kind, args, admit), (args) => this.#viewSettle(args), result => this.#readReceipts.get(result) ?? null, { readExact: (read, admit) => this.#viewExact(read, admit), unresolved: target => this.#viewUnresolved(target) }) : null;
+    const views = source ? new ViewSessions(source, { call: (name, args) => this.call(name, args) }, (kind, args, admit) => this.#viewPerform(kind, args, admit), (args) => this.#viewSettle(args), result => this.#readReceipts.get(result) ?? null, { signerOf: result => this.#actSigners.get(result) ?? null, readExact: (read, admit) => this.#viewExact(read, admit), unresolved: target => this.#viewUnresolved(target) }) : null;
     const cards = views ? viewTools(views, source?.screens) : {};
     this.#viewTools = new Set(Object.keys(cards));
     this.#generic = { ...this.#genericTools(), ...cards };
@@ -717,8 +719,8 @@ export class McpService {
     }
     const kept = await this.#sendAct(s, membership, scope, identity, meaning, build, { ...(args["resubmit"] === true ? { resubmit: true } : {}), notAfter, bytes: carried });
     const tool = binding?.name ?? "act";
-    if ("lost" in kept) return failed({ error: "transport", scope, submitted: true });
-    if ("archivedSettlement" in kept) return ok(this.#archivedSettlementOf(kept.archivedSettlement, { scope, kind, tool }));
+    if ("lost" in kept) return this.#withSigner(failed({ error: "transport", scope, submitted: true }), kept.record, s);
+    if ("archivedSettlement" in kept) return this.#withSigner(ok(this.#archivedSettlementOf(kept.archivedSettlement, { scope, kind, tool })), kept.record, s);
     const said = answered(kept.answer, asked, guards);
     if (kept.answer.answer === "accepted" && !kept.retained) {
       // An accepted act on a membership can change whether it gives this key a session: ask again on the next read.
@@ -727,7 +729,7 @@ export class McpService {
     }
     const result = ok(this.#answerOf(kept.answer, { scope, kind, tool, retained: kept.retained, said, phase: kept.record.phase }));
     if (kept.answer.answer === "accepted") this.#readReceipts.set(result, kept.answer.receipt);
-    return result;
+    return this.#withSigner(result, kept.record, s);
   }
 
   /**
@@ -1236,6 +1238,13 @@ export class McpService {
       last: last ? { at: last.at, ...(last.archivedSettlement ? { answer: "archived", archived: last.archivedSettlement.archived, ...(last.archivedSettlement.fact ? { fact: last.archivedSettlement.fact } : {}) } : projectAnswer(last.answer)) } : null,
       steps, ...(nextStep !== null ? { cursor: cursorOf({ i: nextStep }), more: `Steps ${fromStep + 1} to ${nextStep} of ${allSteps.length}; call settle with cursor for the rest.` } : {}) });
     if (receipt) this.#readReceipts.set(result, receipt);
+    return this.#withSigner(result, record, s);
+  }
+
+  #withSigner(result: CallResult, record: CustodyRecord, snapshot: Snapshot): CallResult {
+    const key = record.envelope.signed.intent.actor, membership = record.identity.membership, room = snapshot.read.room;
+    this.#actSigners.set(result, membership && room && canonicalize(room.membership) === canonicalize(membership)
+      ? actSigner(room.membershipItems, membership, key) : { key, actor: null });
     return result;
   }
 

@@ -38,6 +38,8 @@ export interface ShownRead {
   /** Changed paths this read reached that have no action here. */
   moreFiles: number;
 }
+/** The key comes from the signed envelope; its optional display comes from that envelope's membership. */
+export interface ActSigner { key: string; actor: ActorChip | null }
 export interface ActorChip { kind: "person" | "agent" | "checker"; name: string; controller?: string }
 export type MemberFacts = Readonly<Record<number, { label: string; refs: readonly MemberRef[] }>>;
 export interface NativeCardAction {
@@ -94,6 +96,8 @@ export interface Card {
   title: string;
   summary: string;
   actor?: ActorChip;
+  /** Names which displayed act the chip attributes. */
+  actorLabel?: string;
   reasons: string[];
   /** Plain text, rendered without HTML. */
   body?: string;

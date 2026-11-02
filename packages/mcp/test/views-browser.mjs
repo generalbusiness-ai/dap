@@ -8,11 +8,13 @@ const { chromium } = require('playwright-core');
 assert.equal(require('playwright-core/package.json').version, '1.63.0');
 import { startViewsHost } from './support/views-host.ts';
 import { wordsFixture } from './support/card-words.ts';
+import { nativeActorCards, recordedActorFixture } from './support/actor-cards.ts';
 import { TOOL_WAIT_MS } from '../src/views/waits.ts';
 import { mkdir, writeFile } from 'node:fs/promises';
 const out=process.env.VIEW_CAPTURE_OUT;
 if (!/^\/(?:private\/)?tmp\//.test(out)) throw new Error('Browser evidence belongs in a scratch directory under /tmp.'); await mkdir(out,{recursive:true});
-const host=await startViewsHost({words:wordsFixture}); let browser;
+const nativeActors=nativeActorCards(out);
+const host=await startViewsHost({words:scene=>scene.startsWith('native-actor-')?Promise.resolve(recordedActorFixture(nativeActors.scenes.find(row=>row.kind===scene.slice('native-actor-'.length)))):wordsFixture(scene)}); let browser;
 const report={browserPlugin:'Browser plugin not available',playwright:'1.63.0',origin:host.url,sandbox:host.sandboxOrigin,cases:[],errors:[]};
 async function opened(params={},width=592){
   const page=await browser.newPage({viewport:{width:width+32,height:1000}}), errors=[];
@@ -83,6 +85,28 @@ try{
     const state=await page.evaluate(async()=>fetch('/proof?instance='+window.proof.config.id).then(r=>r.json()));assert.equal(state.signed.length,1);
     await page.screenshot({path:out+'/'+label+'-receipt.png'});
     report.cases.push({label,measure:evidence.measure,sizes:evidence.proof.sizes,chat:evidence.proof.chat,signatures:state.signed.length,actorMarks});await page.close();
+  }
+  // Actual native-room displays and receipts. This host replays them; the native owner above already judged each act.
+  for(const scene of nativeActors.scenes) for(const width of [592,320]) {
+    const page=await browser.newPage({viewport:{width:width+32,height:1100}}),errors=[];
+    page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(['error','warning'].includes(m.type()))errors.push(m.text())});
+    await page.goto(host.url+'/?'+new URLSearchParams({fixture:'words',scene:'native-actor-'+scene.kind,screen:'decision',theme:'light'}));
+    const app=page.frameLocator('#frame').frameLocator('iframe');
+    await app.locator('.actor').waitFor();
+    const actor=await app.locator('.actor').innerText();
+    assert.ok(actor.includes('Question text signed by: '+scene.actor.name),'NATIVE ACTOR: exact text author');
+    assert.ok(actor.includes(scene.actor.kind),'NATIVE ACTOR: kind');
+    if(scene.actor.kind==='agent')assert.ok(actor.includes('controlled by '+scene.actor.controller),'NATIVE ACTOR: controller');
+    await stable(page,app);await page.screenshot({path:out+'/native-'+scene.kind+'-'+width+'-card.png',fullPage:true});
+    await click(page,app,app.getByRole('button',{name:'Approve',exact:true}));
+    await app.locator('.receipt').filter({hasText:scene.receipt}).waitFor();
+    const receipt=await app.locator('.receipt').innerText();assert.equal(receipt,scene.receipt,'NATIVE RECEIPT: the other signer');
+    await page.waitForFunction(()=>window.proof.contexts.some(c=>c.structuredContent.receipt));
+    const measure=await metrics(app);assert.equal(measure.overflow,false,'NATIVE ACTOR: no overflow');
+    const proof=await page.evaluate(()=>window.proof);assert.deepEqual(proof.errors,[]);assert.deepEqual(errors,[]);assert.deepEqual(proof.chat,[]);
+    await stable(page,app);await page.screenshot({path:out+'/native-'+scene.kind+'-'+width+'-receipt.png',fullPage:true});
+    report.cases.push({label:'native-actor-'+scene.kind+'-'+width,qualification:nativeActors.qualification,actor,receipt,measure,console:errors,chat:proof.chat});
+    await page.close();
   }
   for(const fixture of ['updates','incomplete','checks-failed','loss','empty','denied','absent','unavailable']){
     const {page,app,errors}=await opened({fixture,theme:'dark'},390);

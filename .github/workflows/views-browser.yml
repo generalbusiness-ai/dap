@@ -11,6 +11,8 @@ on:
       - 'examples/grow/prepare-check.ts'
       - 'packages/mcp/test/support/views-host.ts'
       - 'packages/mcp/test/support/card-words.ts'
+      - 'packages/mcp/test/support/actor-cards.ts'
+      - 'packages/mcp/test/change-view.scope.test.ts'
       - 'apps/views/src/**'
       - 'packages/mcp/test/support/standin.ts'
       - 'packages/mcp/test/fixtures.ts'
@@ -27,6 +29,8 @@ on:
       - 'examples/grow/prepare-check.ts'
       - 'packages/mcp/test/support/views-host.ts'
       - 'packages/mcp/test/support/card-words.ts'
+      - 'packages/mcp/test/support/actor-cards.ts'
+      - 'packages/mcp/test/change-view.scope.test.ts'
       - 'apps/views/src/**'
       - 'packages/mcp/test/support/standin.ts'
       - 'packages/mcp/test/fixtures.ts'
@@ -70,6 +74,8 @@ jobs:
           set -euo pipefail
           node packages/mcp/scripts/views.mjs
           git diff --exit-code -- packages/mcp/src/views/generated.ts
+      - name: Prepare the owned Worker test dependency
+        run: node scripts/cloudflare-pool-compat.mjs
       - name: Run the card browser script
         env:
           VIEW_CAPTURE_OUT: /tmp/views-browser

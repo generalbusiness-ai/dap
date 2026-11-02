@@ -421,7 +421,7 @@ function scriptedChange(f, definition, extra = () => []) {
   return state;
 }
 
-// Every read of a room with no finding profile, as canonical bytes. The finding profile left these bytes alone at main 76cac675. J2 added a change's Earlier versions lines, the diff read's label and its interdiff reads. J5 added three reasons on each needs_you row, and entry lines on since and the updates card. The card words head took the raw row out of the card's body, into a disclosure, gave each card a kicker and each act its receipt words, gave the rule line words, added a merge row's holds, and said what an empty list means.
+// Every read of a room with no finding profile, as canonical bytes. The finding profile left these bytes alone at main 76cac675. J2 added a change's Earlier versions lines, the diff read's label and its interdiff reads. J5 added three reasons on each needs_you row, and entry lines on since and the updates card. The actor-chip head adds signer displays from the exact entry and its membership, with explicit unavailable words; the ordinary row records stay the same. The card words head took the raw row out of the card's body, into a disclosure, gave each card a kicker and each act its receipt words, gave the rule line words, added a merge row's holds, and said what an empty list means.
 test('a room with no finding profile reads byte for byte as it did before the finding profile', async t => {
   const f = fixture(t), source = decisionSource(f.app);
   const ready = scriptedChange(f, J4_DIGESTS.change);
@@ -445,11 +445,11 @@ test('a card says only what this page offers', async t => {
   const requested = scriptedChange(f, J4_DIGESTS.change, () => [item(10, 'review-request', 'open', {}, {}, { requested: f.viewer, requester: f.other }),
     item(11, 'merge', 'unknown', {}, { manifest: 6 }, { merger: f.viewer })]);
   const read = async (state, page) => (await source.read({ screen: 'change', subject: changeSubject(state.ref), position: 0, page })).card;
-  assert.deepEqual((await read(ready, 'summary')).reasons, ["Open this card to read the change or merge it. The room's rules decide each act."]);
-  assert.deepEqual((await read(ready, 'item')).reasons, ["The room's rules decide each act."]);
+  assert.deepEqual((await read(ready, 'summary')).reasons, ["Open this card to read the change or merge it. The room's rules decide each act.", "The signer of this entry is unavailable in this read."]);
+  assert.deepEqual((await read(ready, 'item')).reasons, ["The room's rules decide each act.", "The signer of this entry is unavailable in this read."]);
   assert.deepEqual((await read(requested, 'summary')).actions, []);
-  assert.deepEqual((await read(requested, 'summary')).reasons, ['Open this card to read the change.']);
-  assert.deepEqual((await read(requested, 'item')).reasons, []);
+  assert.deepEqual((await read(requested, 'summary')).reasons, ['Open this card to read the change.', 'The signer of this entry is unavailable in this read.']);
+  assert.deepEqual((await read(requested, 'item')).reasons, ['The signer of this entry is unavailable in this read.']);
 
   const q = await question(f, undefined, 'TEST-fixed-question');
   const asked = async page => (await source.read({ screen: 'decision', subject: questionSubject(q.state.ref, q.opening.entry.seq), position: 0, page })).card;

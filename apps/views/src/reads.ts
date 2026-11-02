@@ -2,7 +2,7 @@
 import { canonicalize, entryHash, isFactRef, isMemberRef, isScopeRef, readMinimum, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import type { Digest, FactRef, Head, Item, MemberRef, ReadMinimum, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
 import { ScopeHandle, type Fetch, type Signer } from "@generalbusiness/dap-client";
-import { Reads, type McpConfig } from "@generalbusiness/dap-mcp";
+import { actSigner, type ActSigner, Reads, type McpConfig } from "@generalbusiness/dap-mcp";
 import { ROLE_LISTS, type Role } from "@generalbusiness/dap-platform";
 import { LIMITS, controllerIn, keyHolder, laneRefs, laneWindow, type Frame } from "./needs-you.ts";
 import { sameOptional } from "./words.ts";
@@ -213,6 +213,17 @@ export class Collection {
     const size = utf8(got.value).length;
     if (!got.complete || textDigest(got.value) !== digest || size > LIMITS.textBytes || this.counters.textBytes + size > LIMITS.textsBytes) throw new Unread("text-unavailable");
     this.counters.textBytes += size; this.#texts.set(key, got.value); return got.value;
+  }
+  /** Attribution uses a pinned entry, not its item's current parties or the lane's latest writer. */
+  async signer(frame: Frame, fact: FactRef): Promise<ActSigner | null> {
+    const sealed = await this.entry(frame, fact.seq);
+    if (!sameOptional(fact.at, frame.ref) || sealed.hash !== fact.hash) throw new Unread("signer-entry-mismatch");
+    const input = sealed.entry.input;
+    return input.type === "act" || input.type === "preparation" ? actSigner(this.frames.get(this.membership.scope)!.items, this.membership, input.signed.intent.actor) : null;
+  }
+  async openingSigner(frame: Frame, item: Item): Promise<ActSigner | null> {
+    if (!item.opened) return null;
+    return this.signer(frame, { at: frame.ref, seq: item.id, hash: item.opened });
   }
   inRoom(ref: ScopeRef): boolean { return this.listed.some(listed => sameOptional(listed, ref)); }
   /** A member as the membership lists them now. A member that is not active reads as unknown. */

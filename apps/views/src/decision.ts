@@ -1,6 +1,6 @@
 import { canonicalize, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { FieldValue, Item, ScopeRef } from "@generalbusiness/dap-contract";
-import { ViewError, type ActLike, type Card, type CardAction, type LocalReviewCapture, type ViewSource } from "@generalbusiness/dap-mcp";
+import { ViewError, signerWords, type ActLike, type ActSigner, type Card, type CardAction, type LocalReviewCapture, type ViewSource } from "@generalbusiness/dap-mcp";
 import { APPROVAL_LIMIT, DECISION_RECORDED, LIST_GRANTS_NOTHING, READING_LEAVES_OPEN, lanesLeftOut, notShown, offerLabel, questionKicker, questionOffers, reasonLines, reviewRecorded, ruleLine, whyLine, workWords, type Reasons } from "./attention.ts";
 import { captureInput } from "./capture.ts";
 import { changeProjection } from "./change.ts";
@@ -72,8 +72,9 @@ export function decisionSource(app: RepoInAi): ViewSource {
           const actions = questionActions(context), at = actions[0] && !actions[0].local ? actions[0].args["at"] as Record<string, number> : { on: context.ask.revision };
           const whole = fitsFirstCard(context.body);
           const card: Card = { identity: { item: String(context.ask.id), kind: "ask", revision: String(context.ask.revision), subject: { scope: context.scope.scope, item: context.ask.id }, at },
+            ...(context.signer?.actor ? { actor: context.signer.actor, actorLabel: "Question text signed by" } : {}),
             kicker: questionKicker(context.ask.id), ...(whole ? { wholeText: true as const } : {}), title: String(context.ask.values["question"]), summary: context.brief === null ? "Legacy Question: no Brief binding." : context.briefMatches ? `Question text under its immutable Brief. ${APPROVAL_LIMIT}` : "The retained Brief resource does not match this Question.",
-            body: context.body, reasons: questionReasons(whole ? "item" : query.page, actions),
+            body: context.body, reasons: [...questionReasons(whole ? "item" : query.page, actions), ...(!context.signer?.actor ? [context.signer ? `Question text signed by ${signerWords(context.signer)}.` : "The signer of this text is unavailable in this read."] : [])],
             projection: [{ scope: context.scope.scope, seq: context.head.seq, hash: context.head.hash }], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], actions,
             fallback: "Use context for the exact text versions, requests, approvals, comments and conditions." };
           if (utf8(canonicalize(card)).length > 60 * 1024) return { status: "incomplete", position: 0, count: 0, fallback: "Question body exceeds this card's display budget. No approval is offered; read the bounded context." };
@@ -82,7 +83,7 @@ export function decisionSource(app: RepoInAi): ViewSource {
         if (query.screen === "change" && query.subject !== undefined) return await changeProjection(app, query.subject, minimum, query.page);
         if (minimum !== undefined) return { status: "unavailable", position: 0, count: 0, fallback: "This screen does not support a receipt read minimum." };
         const after = query.scope === undefined ? {} : { after: query.scope };
-        const response = query.screen === "work" ? await app.work() : query.screen === "change" ? await app.since(after) : await app.needsYou(after);
+        const response = query.screen === "work" ? await app.work(query.position) : query.screen === "change" ? await app.since(after) : await app.needsYou(after, query.position);
         if (response.isError) return { status: "unavailable", position: 0, count: 0, fallback: "This bounded read is unavailable." };
         const data = response.structuredContent, rows = data["rows"] as Row[];
         const left = lanesLeft(data, query.screen);
@@ -107,6 +108,12 @@ export function decisionSource(app: RepoInAi): ViewSource {
             reasons: ["Mark reviewed moves your place on this device and closes nothing. Another device keeps its own place, so it shows these changes again.", ...shortfall], projection, reviewIntended: ranges, unavailable: [], entries, waitsOn: [], settles: [], actions, fallback: `Read since for exact rows, heads and omissions.${left}` }
           : { identity, kicker: work!.kicker, title: work!.title, summary: work!.summary,
             reasons: [...work!.lines, ruleLine(current.rule.clause), LIST_GRANTS_NOTHING, ...(left ? [left.trim()] : [])], record, rule: current.rule, projection, reviewIntended: ranges, unavailable: [], entries, waitsOn: [], settles: [], actions, fallback: `Read the named bounded tool for exact rows, heads and omissions.${left}` };
+        if (query.screen !== "change") {
+          const attribution = data["cardSigner"] as { scope: ScopeRef; item: number; value: ActSigner | null } | null;
+          const signer = attribution && sameOptional(attribution.scope, current.scope) && attribution.item === current.item ? attribution.value : null;
+          if (signer?.actor) { card.actor = signer.actor; card.actorLabel = "Opening act signed by"; }
+          else card.reasons.push(signer ? `Opening act signed by ${signerWords(signer)}.` : "The opening act's signer is unavailable in this read.");
+        }
         return { status: "ready", position, count: rows.length, card, fallback: card.fallback };
       } catch (error) {
         if (!(error instanceof Unread) && !(error instanceof SyntaxError)) throw error;
