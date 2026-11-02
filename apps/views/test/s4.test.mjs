@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { after, test } from 'node:test';
 import { createServer } from 'node:http';
-import { mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { register } from 'tsx/esm/api';
@@ -294,6 +294,28 @@ test('since remains a pure read; a local mark survives restart and pre-publicati
   const published = readFileSync(path);
   assert.notDeepEqual(published, original, 'The later head actually publishes a new local mark');
   assert.equal(Buffer.isBuffer(observed) && observed.equals(published), true, 'Publication completes before a microtask queued by the final synchronous admission check');
+});
+
+test('review marks stay on one device while another device sees the same room changes (scope answers are stand-ins)', async t => {
+  const f = fixture(t), state = f.lane();
+  const secondHome = join(f.home, 'second-device');
+  mkdirSync(secondHome, { mode: 0o700 });
+  // The same room, key and native-head stand-ins isolate the storage boundary.
+  const second = new RepoInAi({ ...f.options, reviewStore: new ReviewStore(secondHome) });
+  const first = (await f.app.since()).structuredContent;
+  assert.ok(first.rows.some(row => row.scope.scope === state.ref.scope));
+  assert.deepEqual((await second.since()).structuredContent.rows, first.rows);
+  const source = decisionSource(f.app);
+  const card = (await source.read({ screen: 'change', position: 0, page: 'summary' })).card;
+  assert.ok(card.reasons.includes('Mark reviewed moves your place on this device and closes nothing. Another device keeps its own place, so it shows these changes again.'));
+  const action = card.actions.find(action => action.id === 'mark-reviewed');
+  assert.ok(action);
+  const before = f.peer.head(state);
+  assert.deepEqual((await source.markReviewed(action.capture, { view: 'TEST', cut: 1, admit() {} })).structuredContent, { localStatus: 'marked' });
+  assert.equal((await f.app.since()).structuredContent.rows.length, 0);
+  assert.equal((await new RepoInAi({ ...f.options, reviewStore: new ReviewStore(f.home) }).since()).structuredContent.rows.length, 0);
+  assert.deepEqual((await second.since()).structuredContent.rows, first.rows);
+  assert.deepEqual(f.peer.head(state), before, 'A local mark changes no native room head.');
 });
 
 test('the real static service catalogue and factory do not invoke room inventory or key reads; the collection refuses an unselected ninth scope', async t => {
