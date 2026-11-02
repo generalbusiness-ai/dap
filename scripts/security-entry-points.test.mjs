@@ -12,7 +12,7 @@ const namedOwners = {
     "packages/scope/src/object.ts:ScopeObject": "d6dacd29bed93cc5c8c262c325ae0ff68cbc5193674b1b4b026e1991ca863185", // Token refusal: the delivery's transaction keeps a key that a compromised notice named, and the authority asks for it.
   },
   "packages/scope/src/worker.ts": {
-    "packages/scope/src/worker.ts:$module": "f7bd61f6f10c65760aa5b3e50a41e9e161971c531ce894efa2256e923f29db11",
+    "packages/scope/src/worker.ts:$module": "aa92d5929fa080afacbbe7530086ea416a8cf4961febe3a0ae9a441d9797405b",
     "packages/scope/src/worker.ts:ScopeIndex": "c427427157118cacbc763f65d5523f598eeb72a0b9a01520f1b088c5bc6dbad5", // Reviewed empty Site wake deletion; route and authority gates unchanged.
     "packages/scope/src/worker.ts:MISSING": "e8958a6cf8d4cd2f412b30c76b38aca2f4523bc2b9df96606ac01059b6d4fb42",
     "packages/scope/src/worker.ts:api": "03bb00a1a523796ca66c26c23d91142ef46758ad62290fdc9a5cc74556e8c171",
@@ -38,12 +38,12 @@ const namedOwners = {
     "packages/scope/src/worker.ts:DeployedScope": "660756384c04ec84a02cd513cf7bc8e00a2542b596bf16a846afcc25bf04020d",
     "packages/scope/src/worker.ts:ApplicationStreamLifetime": "4c82d6b5ea8ae68089f2f80321e3361b6176c9725d0b46481b6f32b6d2093ba3",
     "packages/scope/src/worker.ts:ApplicationScreenService": "d0e151737f0a735c031d7bb134c45d0ce8e87e7ec6d7a03eaf5455acbb92ac25",
-    "packages/scope/src/worker.ts:mcpRoute": "1ab549b7363fa9deed65368e72c0a8fbde019972cd0d81321d5cabf00b4cd962",
+    "packages/scope/src/worker.ts:mcpRoute": "f40442b3466548398e72cb3c569ba059cc209b77f1a0d974ba3408a6b5363f44",
     "packages/scope/src/worker.ts:boundedBytes": "6553fab5e2b9129266d64c02f7c3c9317095f1888fd12a10d12490d9f5d90f40",
     "packages/scope/src/worker.ts:observeThrough": "7e507f9bd9233223446711d089eb6d6b4236b69642eb9d39260e4712d81dab7a",
     "packages/scope/src/worker.ts:sqlOf": "5631baea8c5029d6ba93da6b3d199e63897c5f5ac05ae61e16b8d6f3e337f7fb",
     "packages/scope/src/worker.ts:McpRegistry": "f03a3a5f89e4a5b77c63d82dc72eb60c1eb34801a8dc55e661d05f7c07c7325b",
-    "packages/scope/src/worker.ts:McpAgent": "b329c4c453b6db8d1346b9863fae58d16b73ccfb1eea4dded6170e2a25c3048d",
+    "packages/scope/src/worker.ts:McpAgent": "6f7bb70bbf2d442af1d36595440650635b3f79d36354a2e6c7019dfc75f219d2",
   },
   "packages/cli/src/commands.ts": {
     "packages/cli/src/commands.ts:$module": "b1e1e1e46bf94ba2045b63aa8c746326103d040a8463e274d008dc9176a624c6", // Reviewed room-proof import, both helper declarations, separate checker dispatch and retained-clone helpers; exit code 3 and the export of issueNamed for dap issue wait.
@@ -256,13 +256,17 @@ const seals = {
   "packages/scope/src/workspace-host.ts": "c65f21658fc1715bf417be22cc929dbac4234b451416607c559200e24a951f4f", // Reviewed SQL custody, setup revocation and full refs for recorded branch names.
   "packages/scope/src/workspace-lineage.ts": "8ab25e2b89e8438a7914c441aa9aca3c18e5e7335eb32488251d5631ed52a1ff", // Reviewed bounded authenticated Register, Directory and Destination creation lineage.
   "packages/scope/src/native-birth.ts": "ab9ecd331850e5f183fafaee07145c64adadb3ad904ea95bcc4ddf569da6ad6f", // Reviewed bounded genesis decoding and exact indexed scope and kind discovery.
-  "packages/mcp/src/hosted.ts": "50092ea0aaee76ee9aa71ec857f34ba0220be646f308019b039d38aff492fb73",
+  "packages/mcp/src/oauth-resource.ts": "895d3a1b241e5fe0d5228febff46fe6c921899110fef99056dd1b53199d341ae", // O1 resource discovery and grant transport boundary.
+  "packages/mcp/src/oauth-access.ts": "6b9e179f3ee3b3da4270832a2db8cfafe8c29af5b9c60d86bbd21e8c5720ca29", // O1 resource discovery and grant transport boundary.
+  "packages/mcp/src/oauth-http.ts": "cf2eef05ed09507feb4e71d5f08812d654396478f57a2bba7b143716db5aa20d", // O1 resource discovery and grant transport boundary.
+  "packages/mcp/src/index.ts": "d2502df3e0314f0b76ab19b7aa10c4c766b45a9eb05b9b1323581c65a8e440c2", // O1 resource discovery and grant transport boundary.
+  "packages/mcp/src/hosted.ts": "8b9fd396c9a8e6398be612f822359401e4b5079b6aafc8c5844ea8dd63fb369c",
   "packages/mcp/src/views/remote-origins.ts": "81c7e7a044690df7c00a30691ddc5e0da11531fabad2a9143d2d389ff8c0a1b1", // Exact remote presentation URL policy; no authority selection.
-  "packages/mcp/src/hosted-tools.ts": "1f1036d3bec7ef5bba5e125b137e27f948eb530b0e8261d6302c71cec342fc4f", // Reviewed R5 admission owner; actual maintained parser output.
+  "packages/mcp/src/hosted-tools.ts": "0455a72fc27ece68127100b5f17eced4fe43ba310669fcb2474186edf3c74ff6", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": namedOwners["packages/mcp/src/service.ts"],
   "packages/mcp/src/catalogue.ts": "8d1af74b33b07b063a1dad51477b51d22ac9cb7bb08d79ad366a0a3b717c3e53", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/inventory.ts": "0c14de294c6005379f9243d7283fc1dcaf2001fd009e0d361c06adf2b46871ea", // Reviewed parallel authority reads and target-only discovery; standing still reads fresh.
-  "packages/mcp/src/http.ts": "194e0c98d3f186d26e32e3d81cb6b7185116bdeaa66303b205f9aba01f73d044", // Reviewed Mcp-Name binding for prompts/get.
+  "packages/mcp/src/http.ts": "286f442c4c3ecc8390dc633d0f006315e2c9b3ecc5eedc7dd3d9b039d903b2d8", // Reviewed Mcp-Name binding for prompts/get.
   "packages/client/src/application-trust.ts": "137391c8b1ed6f59f66e9368012c1355ed77325fdb16f67b73296be1ccc856b3", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
   "packages/client/src/application-install.ts": "4046c6792d4671cdb259691dcf2171a2c3144450664c696cb722db161790164b", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
   "packages/scope/src/applications/resolve.ts": "6338c9357780846b115999454239b68f34c5d6be3c090ca3f18b8f6e8771d0e2", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
@@ -417,7 +421,8 @@ test("the bijection rejects a missing row, an extra row, and a changed gate", as
   // reachable. The real policy removes only its hosted dispatch rows.
   const disabled = await servedInventory({ hostedSettings: {} });
   for (const [worker, rows] of actual) {
-    assert.deepEqual(disabled.get(worker), rows.filter(row => !/^[A-Z]+ \/mcp(?:\/|$)/.test(row.route)));
+    assert.deepEqual(disabled.get(worker), rows.filter(row => !/^[A-Z]+ \/mcp(?:\/|$)/.test(row.route)
+      && row.route !== "GET /.well-known/oauth-protected-resource/mcp"));
   }
   assert.throws(() => assertInventory(disabled, document()), { code: "ERR_ASSERTION", message: /route\/method\/gate bijection/ });
   for (const fault of [rows => rows.slice(1), rows => [...rows, { route: "POST /unserved", gate: "none" }], rows => rows.map((row, i) => i === 0 ? { ...row, gate: "membership" } : row)]) {
