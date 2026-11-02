@@ -430,6 +430,140 @@ uncertain result. Use the [CLI commands](cli.md) from that home for later
 work and invitations, and set `NODE_EXTRA_CA_CERTS` for each command that
 connects to the host.
 
+### Bind a new room to GitHub
+
+Use the explicit `repository-binding` cohort. Its pins are Register 25,
+Directory 24, Membership 11, Rules 10, Destination 18, and Inbox 1. The
+reviewed [creation policy](../apps/room/celld/mac/repository-binding-policy.json)
+admits that cohort on the mini. The default creation policy does not.
+
+Earlier rooms, including the original H3 room, cannot bind a repository.
+Their pins keep their original meaning. To move, create a new room with
+this cohort, choose the content and members to bring across, and retain
+the old room for its history. This procedure does not migrate a room or
+rewrite its journal. Within the new cohort, a room can contain issues
+before binding; binding preserves those issues and their journals.
+
+Before the real G3 witness, the planner approves the repository and the
+person's GitHub steps. The proposed witness repository is the private,
+empty `generalbusiness-ai/dap-g3-binding-witness-20261102`, with branch
+`main`. A proposal does not create that repository or authorize its use.
+The source review covers the configuration procedure and cohort policy.
+Review the filled account, installation, register, and repository bindings
+before the planner applies them.
+
+1. At GitHub, create or select the approved repository. Select it in the
+   GitHub App installation. Give the App **Contents: read and write** and
+   **Metadata: read**. Record the App client ID, installation ID, account
+   ID and login, and repository's numeric stable ID.
+2. Prepare the App's PKCS #8 private key and an independent read token in
+   separate files owned by the service user, at mode `0600` or `0400`.
+   Restrict the read token to the selected private repository with
+   Contents read. See [GitHub host requirements](hosts.md#github-host-githubcom).
+   Keep credentials in private files, never in chat or command arguments.
+3. Plan a new register from a new persistent client home. Set the trusted
+   certificate for Node as in the first-room procedure. Finish planning,
+   initial deployment, and installation within 14 minutes.
+
+   ```sh
+   export DAP_HOME="$HOME/dap-binding-client"
+   export BASE=https://mac-name.local
+   export NODE_EXTRA_CA_CERTS="$HOME/dap-tls/cert.pem"
+   mkdir -m 700 "$DAP_HOME"
+   node packages/cli/bin/dap.js install --plan "$BASE" \
+     --host none --cohort repository-binding
+   node apps/room/celld/mac/prepare-project.mjs \
+     --origin "$BASE" --home "$DAP_HOME" --out "$HOME/dap-binding-project"
+   ```
+
+   `prepare-project.mjs` includes the reviewed creation policy for this
+   retained plan. It keeps the production Worker and bindings and creates
+   private session custody. It also continues to accept the earlier
+   host-none plan without changing its pins.
+4. Fill a nonsecret `github-app.json` with every
+   [GitHub configuration field](hosts.md#github-host-githubcom). Set
+   `registerScope` to the planned register. For the private witness, use
+   `privateRepositories: true`, `publicReads: false`, and
+   `credentialIdentity: "adapter-attempt"`. Set a deliberate `maxBytes`
+   allowance. Have the planner review these values.
+5. Stage a new private project from the original prepared project. These
+   example input paths name files prepared in the previous steps:
+
+   ```sh
+   node apps/room/celld/mac/prepare-github.mjs \
+     --project "$HOME/dap-binding-project" \
+     --config "$HOME/dap-github/github-app.json" \
+     --private-key "$HOME/dap-github/app-key.pk8.pem" \
+     --read-token "$HOME/dap-github/read-token" \
+     --out "$HOME/dap-binding-github-project"
+   ```
+
+   The helper uses the production GitHub readiness checks. It refuses a
+   foreign register, unsafe input paths or file modes, invalid settings,
+   and existing output. It preserves the original project, session secret,
+   Worker entry, and unrelated settings. It prints only nonsecret metadata.
+   Readiness validates syntax and configuration; it does not authenticate
+   the App at GitHub. No network or deployment runs in this helper.
+6. After source and configuration review, the planner deploys the staged
+   project through the normal `deploy.py` path. The planner supplies the
+   private files on the mini. Keep both projects and private deployment
+   logs after any uncertain result. Once health reports sessions ready,
+   install the retained plan and create the room:
+
+   ```sh
+   node packages/cli/bin/dap.js install --planned
+   node packages/cli/bin/dap.js create "G3 binding witness" --handle @owner
+   ```
+
+7. Activate the room's issue and change definitions through the
+   [CLI](cli.md), then write the content to preserve before binding:
+
+   ```sh
+   node packages/cli/bin/dap.js issue open \
+     --title "Content before binding" --body "Keep this issue and its history."
+   node packages/cli/bin/dap.js show destination
+   ```
+
+   Record the destination's full scope reference, including its
+   incarnation, and the branch chosen at creation. The register still
+   records host `none`.
+8. Write the exact authorization pair in a nonsecret `bindings.json`, in
+   the [binding format](hosts.md#github-host-githubcom). Use the actual
+   destination reference, GitHub account, repository name and stable ID,
+   and branch. Have the planner review that filled file. Stage another
+   new project from the same original project, with the same inputs and
+   `--bindings-file "$HOME/dap-github/bindings.json"`; use a fresh output
+   directory. The planner deploys that reviewed project.
+9. With the room administrator's client home, bind the reviewed repository.
+   Replace the account, name, and ID below with the approved values:
+
+   ```sh
+   node packages/cli/bin/dap.js act bind-repository --on destination --target 0 \
+     --set 'repository={"host":"github.com","namespace":"<account>","name":"<name>","id":"<numeric ID>"}' \
+     --set 'why=Attach the reviewed repository to this room'
+   node packages/cli/bin/dap.js show destination
+   node packages/cli/bin/dap.js remote
+   node packages/cli/bin/dap.js verify --all
+   ```
+
+   Membership 11 gives `destination.bind-repository` to administrators by
+   default. An ordinary member cannot bind. The destination binds once and
+   tells its recorded Directory which repository it chose. It records
+   `empty` while first-head publication waits, then records `ready` with
+   the accepted commit. Missing operator authorization sends no GitHub
+   request. A mismatched stable ID or unavailable installation yields no
+   credential mint. Choose an empty branch for the witness: first-head
+   publication uses compare-and-swap and does not overwrite existing history.
+10. Enrol the agent through the room's normal agent-key invitation. Have
+    the agent propose a head from a branch, then have the owner review and
+    merge it. Compare the destination's recorded commit with GitHub's
+    branch head. That real mini scene and its reviewed record close G3's
+    acceptance. Source tests and configuration preparation alone do not.
+
+The binding enables repository commands. The public Site route does not
+select repositories attached after creation. Archive export admission also
+retains its existing exact cohort list.
+
 ### Maintain the host
 
 Stop the services with the installed procedure:

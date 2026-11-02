@@ -189,6 +189,48 @@ test("scripted GitHub provider creation loss and mismatched cleanup stay pending
 });
 
 
+// Real provider and RSA signing over scripted REST replies. No GitHub
+// installation, scope authorization, custody or external credential exists.
+test("later-bound mint verifies repository name and stable ID and installation before any credential POST", async () => {
+  const keys = await crypto.subtle.generateKey({ name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" }, true, ["sign", "verify"]) as CryptoKeyPair;
+  const bytes = new Uint8Array(await crypto.subtle.exportKey("pkcs8", keys.privateKey) as ArrayBuffer);
+  const privateKey = `-----BEGIN PRIVATE KEY-----\n${btoa(Array.from(bytes, byte => String.fromCharCode(byte)).join(""))}\n-----END PRIVATE KEY-----\n`;
+  let stableId = 72, suspended = false;
+  const account = { id: 17, login: "demo", type: "Organization" } as const;
+  const seen = () => ({ id: stableId, name: "repo", owner: account, private: true, full_name: "demo/repo", html_url: "https://github.com/demo/repo", clone_url: "https://github.com/demo/repo.git" });
+  const calls: { method: string; path: string; permissions?: unknown }[] = [];
+  const provider = new GitHubProvider({ host: "github.com", namespace: "demo", maxBytes: 4096,
+    app: { issuer: "TEST", privateKey, installationId: 99, account, now: () => Date.parse("2026-10-06T12:00:00Z"), fetch: async request => {
+      const path = new URL(request.url).pathname;
+      const asked = request.method === "POST" ? await request.json() as { permissions: unknown } : null;
+      calls.push({ method: request.method, path, ...(asked ? { permissions: asked.permissions } : {}) });
+      if (path === "/repos/demo/repo") return Response.json(seen());
+      if (path === "/app/installations/99") return Response.json({ id: 99, account, suspended_at: suspended ? "2026-10-06T11:00:00Z" : null });
+      return Response.json({ token: "TEST-restricted-token", expires_at: "2026-10-06T13:00:00Z", repository_selection: "selected", permissions: asked!.permissions, repositories: [seen()] }, { status: 201 });
+    } },
+    readCredential: async () => "TEST-private-read", credentialHandle: async () => "TEST-local-handle",
+    verifyRepositoryBeforeMint: () => true,
+  });
+  const binding: DestinationBinding = { scope: { scope: "sc_scripted", inc: "in_scripted", kind: "destination" }, mint: "1:1", attempt: 1, write: "1:0", writeAttempt: 1, ref: "refs/heads/main" };
+  const refusal = (task: Promise<unknown>) => task.then(() => null, error => (error as { reason?: unknown }).reason);
+  const writeRefusal = await refusal(provider.mint(repository, binding));
+  const readRefusal = await refusal(provider.mintRead(repository, { handle: "TEST-read", seconds: 3600 }));
+  expect(calls).toEqual([{ method: "GET", path: "/repos/demo/repo" }, { method: "GET", path: "/repos/demo/repo" }]);
+  expect([writeRefusal, readRefusal]).toEqual(["unreadable", "unreadable"]);
+  stableId = 71; suspended = true;
+  await expect(provider.mintRead(repository, { handle: "TEST-read", seconds: 3600 })).rejects.toBeDefined();
+  expect(calls.filter(call => call.method === "POST")).toEqual([]);
+  suspended = false;
+  expect(await provider.mintRead(repository, { handle: "TEST-read", seconds: 3600 })).toMatchObject({ id: "TEST-read" });
+  expect(await provider.mint(repository, binding)).toMatchObject({ id: "TEST-local-handle" });
+  expect(calls.slice(-6)).toEqual([
+    { method: "GET", path: "/repos/demo/repo" }, { method: "GET", path: "/app/installations/99" },
+    { method: "POST", path: "/app/installations/99/access_tokens", permissions: { contents: "read" } },
+    { method: "GET", path: "/repos/demo/repo" }, { method: "GET", path: "/app/installations/99" },
+    { method: "POST", path: "/app/installations/99/access_tokens", permissions: { contents: "write" } },
+  ]);
+});
+
 // Scripted HTTP authority boundary; real isolated smart-HTTP parser and packs.
 // No actual GitHub repository or installation is contacted.
 test("scripted GitHub rules tree reads isolate the commit and trees with the configured read credential and stable identity", async () => {

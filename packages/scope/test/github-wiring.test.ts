@@ -1,11 +1,12 @@
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Entry, type FieldValue, type ScopeId, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Entry, type FieldValue, type PlatformDefinition, type ScopeId, type ScopeRef, type Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, entryHash, intentDigest, newIncarnation, scopeIdOf, signIntent, utf8 } from "@generalbusiness/dap-bytes";
 import { MemoryState, PROFILES, clockOf, judgeGenesis, judgeOutcome, validateDefinition } from "@generalbusiness/dap-derive";
 import { Ledger, T0, d } from "@generalbusiness/dap-derive/testing";
-import { DEMO_REGISTER, WEB_DEMO_REGISTER, DESTINATION, DIRECTORY, REGISTER, directoryIdOf, platform, repositoryName } from "@generalbusiness/dap-platform";
+import { REPOSITORY_BINDING_COHORT as B, DEMO_REGISTER, WEB_DEMO_REGISTER, DESTINATION, DIRECTORY, REGISTER, directoryIdOf, platform, repositoryName } from "@generalbusiness/dap-platform";
 import { installing, paul, registerDefinition, registerPlatform, rita, sam } from "../../../packages/platform/test/support-creation.ts";
 import { gitHubOutside, gitHubReadiness, type GitHubBindings } from "../src/github-wiring.ts";
+import { gitHubRepositoryBindings, gitHubRepositoryBindingAllowed } from "../src/github-repository-bindings.ts";
 import { outsideOf } from "../src/worker.ts";
 import type { OutsideGiven } from "../src/object.ts";
 import { NO_OUTSIDE, type EffectRequest } from "../src/operations.ts";
@@ -20,6 +21,42 @@ const CREATION = "operator_creation_secret";
 const READ = "independent_read_secret";
 const configuration = (registerScope: ScopeId) => ({ ...CONFIG, registerScope });
 const bindings = (registerScope: ScopeId): GitHubBindings => ({ GITHUB_APP_CONFIG: canonicalize(configuration(registerScope)), GITHUB_APP_PRIVATE_KEY: PRIVATE, GITHUB_CREATION_TOKEN: CREATION, GITHUB_READ_TOKEN: READ });
+
+// Pure configuration boundary: no scope, GitHub App or HTTP request runs here.
+test("later repository authorization names one destination incarnation, stable repository and branch", () => {
+  const destination: ScopeRef = { scope: "sc_" + "a".repeat(52) as ScopeId,
+    inc: newIncarnation(new Uint8Array(16).fill(3)), kind: "destination" };
+  const repository = { host: "github.com", namespace: ACCOUNT.login, name: "TEST-witness", id: "71" };
+  const row = { destination, repository, branch: "main" };
+  const allowed = gitHubRepositoryBindings(canonicalize([row]), ACCOUNT.login)!;
+  expect(allowed).toEqual([row]);
+  expect(gitHubRepositoryBindings(undefined, ACCOUNT.login)).toEqual([]);
+  expect(gitHubRepositoryBindingAllowed([], destination, repository, "main")).toBe(false);
+  expect(gitHubRepositoryBindingAllowed(allowed, destination, repository, "main")).toBe(true);
+  expect(gitHubRepositoryBindingAllowed(allowed, { ...destination, inc: newIncarnation(new Uint8Array(16).fill(4)) }, repository, "main")).toBe(false);
+  expect(gitHubRepositoryBindingAllowed(allowed, destination, { ...repository, id: "72" }, "main")).toBe(false);
+  expect(gitHubRepositoryBindingAllowed(allowed, destination, { ...repository, name: "TEST-other" }, "main")).toBe(false);
+  expect(gitHubRepositoryBindingAllowed(allowed, destination, repository, "other")).toBe(false);
+  const env = bindings(destination.scope);
+  expect(gitHubReadiness({ ...env, GITHUB_REPOSITORY_BINDINGS: canonicalize([row]) }).state).toBe("wired");
+  // Ambiguous ownership, another account, malformed full references and
+  // unbounded input cannot become deployment authority.
+  for (const rows of [
+    [row, { ...row }],
+    [row, { ...row, destination: { ...destination, inc: newIncarnation(new Uint8Array(16).fill(4)) } }],
+    [{ ...row, repository: { ...repository, namespace: "another-account" } }],
+    [{ ...row, destination: { ...destination, inc: "in_invalid" } }],
+    [{ ...row, branch: "../main" }],
+    [{ ...row, repository: { ...repository, id: "9007199254740992" } }],
+    [{ ...row, extra: true }],
+    Array(65).fill(row),
+  ]) {
+    const raw = canonicalize(rows);
+    expect(gitHubRepositoryBindings(raw, ACCOUNT.login)).toBeNull();
+    expect(gitHubReadiness({ ...env, GITHUB_REPOSITORY_BINDINGS: raw })).toEqual({ state: "off", reason: "repository-bindings" });
+  }
+  expect(gitHubRepositoryBindings(" ".repeat(65537), ACCOUNT.login)).toBeNull();
+});
 
 /** Real register judgments in memory, with real private SQLite supplied by a test Durable Object.
  * HTTP below is a STAND-IN; no GitHub App, repository or credential is created. */
@@ -53,12 +90,12 @@ const json = (body: unknown, status = 201) => new Response(JSON.stringify(body),
 /** SCRIPTED destination birth and state: no destination judge or mint runs.
  * Its retained register claim is the real judgment above. This fixture proves
  * the factory's authority gate only, not a complete directory creation. */
-function destinationGiven(register: Ledger, creator: ScopeRef): OutsideGiven {
+function destinationGiven(register: Ledger, creator: ScopeRef, definition: PlatformDefinition = DESTINATION): OutsideGiven {
   const claim = register.fact(1);
   const copy = register.own(1)!.entry;
   const bytes = canonicalize(copy);
   const content = digestBytes(utf8(bytes));
-  const seed: Seed = { v: 1, kind: "destination", definition: DESTINATION, creator, cause: d("e"), ordinal: 3 };
+  const seed: Seed = { v: 1, kind: "destination", definition, creator, cause: d("e"), ordinal: 3 };
   const at: ScopeRef = { scope: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(3)), kind: "destination" };
   const entry: Entry = {
     ...register.own(0)!.entry, at,
@@ -76,6 +113,47 @@ function destinationGiven(register: Ledger, creator: ScopeRef): OutsideGiven {
     clock: { read: () => register.now }, random: { bytes: (length) => new Uint8Array(length) },
   };
 }
+
+test("later-bound destination authority requires the reviewed full reference, repository and branch before any outside request", async () => {
+  // The register judgment and private SQLite are real. Destination birth and
+  // current state are scripted, as destinationGiven documents above.
+  const storage = await create();
+  await storage.inside(async state => {
+    const f = registerFixture(); f.claim();
+    const name = repositoryName(f.register.item(1).values["seed"] as never, 1);
+    const result = judgeOutcome(f.register.state, registerDefinition, { type: "outcome", operation: "1:0", attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: { name, id: "71" } } },
+      { clock: clockOf(f.register.state, T0), bounds: PROPOSED_BOUNDS, platform: registerPlatform, own: f.register.own });
+    expect(result.result).toBe("write");
+    if (result.result !== "write") return;
+    f.register.seal(result.draft);
+    const creator: ScopeRef = { scope: directoryIdOf(f.register.item(1).values["seed"] as never), inc: newIncarnation(new Uint8Array(16).fill(1)), kind: "directory" };
+    const given = destinationGiven(f.register, creator, B.destination), at = given.scope()!.at;
+    const repository = given.state.page("branch", ["empty"], null, 1).items[0]!.values["repository"];
+    const row = { destination: at, repository, branch: "main" };
+    let calls = 0;
+    const fetch = async () => { calls++; return json({}); };
+    const env = bindings(f.register.at.scope);
+    for (const rows of [undefined, [],
+      [{ ...row, destination: { ...at, inc: newIncarnation(new Uint8Array(16).fill(5)) } }],
+      [{ ...row, repository: { ...(repository as Record<string, unknown>), id: "72" } }],
+      [{ ...row, branch: "other" }],
+    ]) {
+      const settings = rows === undefined ? env : { ...env, GITHUB_REPOSITORY_BINDINGS: canonicalize(rows) };
+      const outside = gitHubOutside(given, state.storage.sql, settings, fetch);
+      expect(outside.accepts(B.destination, "mint")).toBe(false);
+      expect(outside.accepts(B.destination, "mint-read")).toBe(false);
+      expect(outside.replies?.(1)).toEqual({ answers: [], more: false });
+      expect(outside.credential?.("TEST-unknown", rita.key)).toBeNull();
+    }
+    expect(calls).toBe(0);
+    const permitted = gitHubOutside(given, state.storage.sql, { ...env, GITHUB_REPOSITORY_BINDINGS: canonicalize([row]) }, fetch);
+    expect(permitted.accepts(B.destination, "mint")).toBe(true);
+    expect(permitted.accepts(B.destination, "mint-read")).toBe(true);
+    const foreign = gitHubOutside({ ...given, retained: () => null }, state.storage.sql, { ...env, GITHUB_REPOSITORY_BINDINGS: canonicalize([row]) }, fetch);
+    expect(foreign.accepts(B.destination, "mint")).toBe(false);
+    expect(calls).toBe(0);
+  });
+});
 
 // Invariant: production configuration routes a real bound register request to
 // exactly one explicitly authorized provider creation and records only metadata.

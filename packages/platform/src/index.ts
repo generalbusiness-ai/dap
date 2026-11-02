@@ -1,4 +1,5 @@
 export { COMMONS_COHORT } from "./commons-cohort.ts";
+export { REPOSITORY_BINDING_COHORT } from "./repository-binding-cohort.ts";
 export { commons, commonsDirectory, commonsMembership } from "./commons.ts";
 import { NATIVE_DECLARATION_PINS, NATIVE_DECLARATION_TEXT } from "./native-declarations.generated.ts";
 import { VERSIONS } from "./native-catalog.ts";

@@ -29,6 +29,8 @@ export interface GitHubProviderOptions {
   readCredential(repository: DestinationRepository): Promise<string | undefined>;
   /** Caller's nonsecret, durable credential mapping, allocated BEFORE mint. Not a GitHub token ID. */
   credentialHandle(repository: DestinationRepository, binding: DestinationBinding): Promise<string>;
+  /** Later binding verifies name/stable ID and installation before any credential mint. */
+  verifyRepositoryBeforeMint?(): boolean;
   /** Separate configured creation authority. No default broad credential. */
   creation?: { plaintext: string; private: boolean };
   /** Exact sealed creation name and already durably held, ID-scoped cleanup token. No mint occurs inside delete. */
@@ -118,6 +120,7 @@ export class GitHubProvider implements RegisterProvider, DestinationProvider {
     binding = { ...binding, scope: { ...binding.scope } };
     this.#remote(repository);
     const id = handle(await this.#options.credentialHandle({ ...repository }, { ...binding, scope: { ...binding.scope } }));
+    await this.#mintIdentity(repository);
     const token = await this.#app.mintInstallationToken({ repositoryIds: [numericId(repository.id)], permissions: { contents: "write" } });
     // DestinationHost puts the plaintext in private custody before answering.
     // Lost replies or failed custody remain pending; this port never remints.
@@ -131,6 +134,7 @@ export class GitHubProvider implements RegisterProvider, DestinationProvider {
     repository = { ...repository };
     this.#remote(repository);
     const id = handle(request.handle);
+    await this.#mintIdentity(repository);
     const token = await this.#app.mintInstallationToken({ repositoryIds: [numericId(repository.id)], permissions: { contents: "read" } });
     return { id, ends: token.expiresAt, plaintext: token.plaintext };
   }
@@ -191,6 +195,12 @@ export class GitHubProvider implements RegisterProvider, DestinationProvider {
   }
   #transport(remote: string) {
     return { remote, maxBytes: this.#options.maxBytes, bounds: this.#bounds, ...(this.#options.app.fetch === undefined ? {} : { fetch: this.#options.app.fetch }), ...(this.#options.app.timeoutMs === undefined ? {} : { timeoutMs: this.#options.app.timeoutMs }) };
+  }
+  async #mintIdentity(repository: DestinationRepository): Promise<void> {
+    if (!this.#options.verifyRepositoryBeforeMint?.()) return;
+    const plaintext = await this.#options.readCredential({ ...repository });
+    await requireGitHubRepositoryIdentity((name, token) => this.#app.repository(name, token), repository, plaintext);
+    await this.#app.validateInstallation();
   }
   async #source(repository: DestinationRepository, rulesTree = false): Promise<SmartHttpSource> {
     repository = { ...repository };

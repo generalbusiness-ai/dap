@@ -31,7 +31,7 @@ export async function prepareProject(options) {
     const context = await contextForCelldSmoke({ base: origin, home, fetch: () => { throw Error('HTTP is disabled during preparation'); } });
     const config = await context.store.config();
     if (config?.v !== 1 || config.service !== origin || config.plan?.service !== origin
-      || config.plan.definition !== 'platform:register@21' || typeof config.plan.register !== 'string'
+      || !['platform:register@21', 'platform:register@25'].includes(config.plan.definition) || typeof config.plan.register !== 'string'
       || !/^sc_[a-z2-7]{52}$/.test(config.plan.register)
       || config.plan.founding?.intent?.fields?.host !== 'none' || config.plan.founding.intent.fields.namespace !== '') throw Error();
     const project = JSON.parse(await readFile(maintained, 'utf8'));
@@ -40,6 +40,10 @@ export async function prepareProject(options) {
     await chmod(out, 0o700);
     project.vars = { ...project.vars, REGISTER_SCOPE: config.plan.register, PUBLIC_ORIGIN: origin,
       MCP_ENABLED: 'true', MCP_TOOL_ADDITIONS: '[]', SESSION_SECRET: randomBytes(32).toString('base64url') };
+    if (config.plan.definition === 'platform:register@25') {
+      const policy = JSON.parse(await readFile(new URL('./repository-binding-policy.json', import.meta.url), 'utf8'));
+      project.vars.PLATFORM_CREATION_PINS = JSON.stringify(policy.PLATFORM_CREATION_PINS);
+    }
     for (const [name, text] of [
       ['wrangler.json', JSON.stringify(project, null, 2) + '\n'],
       ['worker.ts', `export * from ${JSON.stringify(worker)};\nexport { default } from ${JSON.stringify(worker)};\n`],

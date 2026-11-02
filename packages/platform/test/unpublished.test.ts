@@ -4,20 +4,21 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeDelivery, judgeGenesis, judgeOutcome, runnable, type Fetched, type PlatformRules, type RuleGiven } from "@generalbusiness/dap-derive";
 import { Ledger, T0, keys, t } from "@generalbusiness/dap-derive/testing";
-import { platform, repositoryName, UNPUBLISHED_COHORT as U } from "../src/index.ts";
+import { platform, repositoryName, firstHeadCommit, UNPUBLISHED_COHORT as U, REPOSITORY_BINDING_COHORT as B } from "../src/index.ts";
 import { checkedPlatformData, written } from "./fixtures.ts";
 
 // These are the actual native data, rules and pure judges in memory. No
 // Worker, provider, membership grant or independent replay runs here.
 const code = (named: PlatformDefinition): PlatformRules => ({ named, rules: platform(named)!.rules });
-function register(host: string, namespace = "TEST ignored under none") {
-  const definition = checkedPlatformData(platform(U.register)!.data), ledger = new Ledger(definition, "platform:register");
+type Cohort = typeof U | typeof B;
+function register(host: string, namespace = "TEST ignored under none", family: Cohort = U) {
+  const definition = checkedPlatformData(platform(family.register)!.data), ledger = new Ledger(definition, "platform:register");
   const signed = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "install", on: null, expected: {},
     fields: { host, namespace, policy: "keys", founders: [keys.rita.key] }, idempotencyKey: "TEST install", notAfter: t(60) }, keys.rita.secret);
-  const seed: Seed = { v: 1, kind: "register", definition: U.register, creator: null, cause: intentDigest(signed.intent), ordinal: 0 };
+  const seed: Seed = { v: 1, kind: "register", definition: family.register, creator: null, cause: intentDigest(signed.intent), ordinal: 0 };
   // Passive capture forwards the actual native guard, including its named
   // answer. A parentless refused genesis records no result envelope/reason.
-  const native = code(U.register), guard = native.rules["host-choice"]!, hostChecks: unknown[] = [];
+  const native = code(family.register), guard = native.rules["host-choice"]!, hostChecks: unknown[] = [];
   if (guard.place !== "guard") throw Error("Native host choice guard required");
   const observed: PlatformRules = { ...native, rules: { ...native.rules, "host-choice": { ...guard, run: (given: RuleGiven) => {
     const checked = guard.run(given); hostChecks.push(checked); return checked;
@@ -27,10 +28,10 @@ function register(host: string, namespace = "TEST ignored under none") {
   if (judgment.result === "write") ledger.seal(judgment.draft);
   return { ledger, judgment, hostChecks };
 }
-function found(ledger: Ledger, fields: Record<string, FieldValue> = {}) {
+function found(ledger: Ledger, fields: Record<string, FieldValue> = {}, family: Cohort = U) {
   return ledger.act(keys.rita, "found", { expected: { register: 1 }, fields: {
     branch: "main", founderHandle: "@rita", recoveryKey: keys.sam.key, ...fields,
-  } }, { platform: code(U.register), grants: [] });
+  } }, { platform: code(family.register), grants: [] });
 }
 function child(parent: Ledger, seq: number, ordinal: number, named: PlatformDefinition, facts: readonly Fetched[]) {
   const send = parent.entries[seq]!.entry.sends.find(send => send.n === ordinal)!;
@@ -54,10 +55,54 @@ function take(target: Ledger, named: PlatformDefinition, from: Ledger, seq: numb
 }
 
 test("new native versions are runnable under their complete validated declarations", () => {
-  for (const named of [U.register, U.directory, U.destination]) {
+  for (const named of [U.register, U.directory, U.destination, B.register, B.directory, B.membership, B.destination]) {
     const native = platform(named)!;
     expect(runnable(checkedPlatformData(native.data), native.rules)).toBe(true);
   }
+});
+
+test("an opt-in unpublished destination binds once, authenticates its directory update and opens the exact first publication", () => {
+  // The native judges and histories are real. Ledger grants and the host's
+  // mint/write answers below are scripted; no provider or deployed room runs.
+  const R = register("none", "", B).ledger;
+  expect(found(R, {}, B).result).toBe("write");
+  const facts = [{ fact: R.fact(1), entry: R.last, under: R.under }];
+  const D = child(R, 1, 0, B.directory, facts);
+  take(R, B.register, D, 0, D.last.sends.find(send => send.message.class === "result")!.n);
+  take(D, B.directory, R, R.head.seq, 0, facts);
+  const sent = D.entries[0]!.entry.sends.find(send => "kind" in send.to && send.to.kind === "destination")!;
+  const Q = child(D, 0, sent.n, B.destination, facts);
+  take(D, B.directory, Q, 0, Q.last.sends.find(send => send.message.class === "result")!.n, facts);
+  take(Q, B.destination, D, D.head.seq, D.last.sends.find(send => send.message.class === "control")!.n, facts);
+  expect(Q.state.scope()!.status).toBe("active");
+  expect(Q.item(0).state).toBe("unpublished");
+  const earlier = D.entries.slice(), repository = { host: "github.com", namespace: "TEST-account", name: "TEST-repo", id: "71" };
+  const fields = { repository, why: "TEST attach an empty repository to this room" };
+  const intent = { on: 0, expected: { on: Q.item(0).revision }, fields };
+  expect(Q.act(keys.rita, "bind-repository", intent, { platform: code(B.destination), grants: [] })).toMatchObject({ result: "refused", reason: "unauthorized" });
+  expect(Q.item(0).values["repository"]).toBeNull();
+  expect(Q.act(keys.rita, "bind-repository", { ...intent, fields: { ...fields, repository: { ...repository, host: "another-host" } } }, { platform: code(B.destination) })).toMatchObject({ result: "refused", name: "invalid-repository-binding" });
+  const binding = Q.act(keys.rita, "bind-repository", intent, { platform: code(B.destination) });
+  expect(binding.result, binding.result === "write" ? undefined : JSON.stringify(binding)).toBe("write");
+  const boundAt = Q.head.seq;
+  expect(Q.item(0)).toMatchObject({ state: "empty", values: { repository, head: null } });
+  expect(Q.state.operation(`${boundAt}:0`)).toMatchObject({ owner: B.destination, kind: "first-head", attempts: [{ attempt: 1 }] });
+  expect(Q.state.operation(`${boundAt}:1`)).toMatchObject({ owner: B.destination, kind: "mint", attempts: [{ attempt: 1 }] });
+  const update = Q.last.sends.find(send => send.message.class === "request" && send.message.type === "tell")!;
+  expect(update.message).toMatchObject({ type: "tell", body: { message: "repository-bound", fields: { repository } } });
+  take(D, B.directory, Q, boundAt, update.n);
+  expect(D.item(0).values["repository"]).toEqual(repository);
+  expect(D.entries.slice(0, earlier.length)).toEqual(earlier);
+  expect(Q.act(keys.rita, "bind-repository", { ...intent, expected: { on: Q.item(0).revision } }, { platform: code(B.destination) })).toMatchObject({ result: "refused", reason: "guard-failed" });
+  const first = Q.state.operation(`${boundAt}:0`)!;
+  const commit = firstHeadCommit(Q.state, Q.own, first, "sha1");
+  const answer = (operation: `${number}:${number}`, body: FieldValue) => Q.seal(written(judgeOutcome(Q.state, Q.definition,
+    { type: "outcome", operation, attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body } },
+    { clock: clockOf(Q.state, Q.now), bounds: Q.bounds, platform: code(B.destination), own: Q.own })));
+  answer(`${boundAt}:1`, { token: "TEST-token-handle", ends: t(600) });
+  answer(`${boundAt}:0`, { send: "accepted", seen: commit });
+  expect(Q.item(0)).toMatchObject({ state: "ready", values: { repository, head: commit } });
+  expect(Q.state.count("receipt", "owed")).toBe(1);
 });
 
 test("Register21 rejects an unknown host, normalizes none, and settles a hosted creation from a scripted outside answer", () => {

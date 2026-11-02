@@ -82,6 +82,47 @@ class DeploymentSafety(unittest.TestCase):
             self.assertEqual(result["exit"], 7)
             self.assertTrue(result["ownedProcessGroupClosed"])
 
+    def test_staged_github_authority_matches_the_register_and_private_reads(self):
+        # These are structural TEST settings, not an App or provider witness.
+        with tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
+            project = self.project(Path(scratch))
+            path = project / "wrangler.json"
+            config = json.loads(path.read_text())
+            github = {"issuer": "TEST-issuer", "installationId": 23,
+                      "account": {"id": 17, "login": "test-account", "type": "Organization"},
+                      "maxBytes": 10485760, "registerScope": config["vars"]["REGISTER_SCOPE"],
+                      "privateRepositories": True, "publicReads": False,
+                      "credentialIdentity": "adapter-attempt"}
+            config["vars"].update({"GITHUB_APP_CONFIG": json.dumps(github),
+                                  "GITHUB_APP_PRIVATE_KEY": "-----BEGIN PRIVATE KEY-----\nVEVTVA==\n-----END PRIVATE KEY-----\n",
+                                  "GITHUB_READ_TOKEN": "TEST.private.read.token"})
+            binding = {"destination": {"scope": "sc_" + "a" * 52, "inc": "in_" + "a" * 26, "kind": "destination"},
+                       "repository": {"host": "github.com", "namespace": "test-account", "name": "TEST-repo", "id": "71"},
+                       "branch": "main"}
+            config["vars"]["GITHUB_REPOSITORY_BINDINGS"] = json.dumps([binding])
+            path.write_text(json.dumps(config))
+            before = path.read_bytes()
+            self.assertEqual(deploy.prepared_project(project), project)
+            self.assertEqual(path.read_bytes(), before)
+            for rows in ([binding, binding],
+                         [{**binding, "repository": {**binding["repository"], "namespace": "another-account"}}],
+                         [{**binding, "destination": {**binding["destination"], "inc": "in_invalid"}}],
+                         [{**binding, "branch": "../main"}]):
+                config["vars"]["GITHUB_REPOSITORY_BINDINGS"] = json.dumps(rows)
+                path.write_text(json.dumps(config))
+                with self.assertRaises(Refusal):
+                    deploy.prepared_project(project)
+            config["vars"]["GITHUB_REPOSITORY_BINDINGS"] = json.dumps([binding])
+            config["vars"]["GITHUB_APP_CONFIG"] = json.dumps({**github, "registerScope": "sc_" + "b" * 51 + "a"})
+            path.write_text(json.dumps(config))
+            with self.assertRaises(Refusal):
+                deploy.prepared_project(project)
+            config["vars"]["GITHUB_APP_CONFIG"] = json.dumps(github)
+            del config["vars"]["GITHUB_READ_TOKEN"]
+            path.write_text(json.dumps(config))
+            with self.assertRaises(Refusal):
+                deploy.prepared_project(project)
+
     def test_scripted_cleanup_error_retains_an_unproved_group_without_provider_details(self):
         class ScriptedProcess:
             pid = 12345

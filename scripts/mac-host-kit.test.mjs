@@ -13,7 +13,8 @@ test('the Mac host kit runs its offline Node and Python owners', {
 }, t => {
   const commands = [
     { language: 'node', cwd: root, argv: [process.execPath, '--test', '--test-reporter=tap',
-      'apps/room/celld/mac/test/certificate.test.mjs', 'apps/room/celld/mac/test/prepare-project.test.mjs'] },
+      'apps/room/celld/mac/test/certificate.test.mjs', 'apps/room/celld/mac/test/prepare-project.test.mjs',
+      'apps/room/celld/mac/test/prepare-github.test.mjs'] },
     { language: 'python', cwd: kit, argv: ['/usr/bin/python3', '-B', '-m', 'unittest', '-v',
       'test_install', 'test_shutdown', 'test_deploy'] },
   ];

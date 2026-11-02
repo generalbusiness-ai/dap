@@ -1,0 +1,10 @@
+{
+  "PLATFORM_CREATION_PINS": [
+    "platform:register@25",
+    "platform:directory@24",
+    "platform:membership@11",
+    "platform:rules@10",
+    "platform:destination@18",
+    "platform:inbox@1"
+  ]
+}

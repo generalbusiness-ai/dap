@@ -15,10 +15,90 @@ import time
 import xml.etree.ElementTree as ET
 
 from kit import (Refusal, absolute, aws_request, configuration, private_credentials,
-                 read_installation, read_json, regular, require)
+                 parse_json, read_installation, read_json, regular, require)
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
+
+
+def github_repository_bindings(raw, namespace):
+    """Admit only bounded, exact destination/repository/branch authorization."""
+    import re
+    require(isinstance(raw, str) and len(raw.encode()) <= 65536, "invalid repository bindings")
+    rows = parse_json(raw)
+    require(isinstance(rows, list) and len(rows) <= 64, "invalid repository bindings")
+    destinations, repositories = set(), set()
+    for row in rows:
+        require(isinstance(row, dict) and set(row) == {"destination", "repository", "branch"},
+                "invalid repository binding")
+        destination, repository, branch = row["destination"], row["repository"], row["branch"]
+        require(isinstance(destination, dict) and set(destination) == {"scope", "inc", "kind"}
+                and destination["kind"] == "destination"
+                and isinstance(destination["scope"], str)
+                and re.fullmatch(r"sc_[a-z2-7]{51}[aq]", destination["scope"])
+                and isinstance(destination["inc"], str)
+                and re.fullmatch(r"in_[a-z2-7]{25}[aeimquy4]", destination["inc"]),
+                "invalid repository binding destination")
+        require(isinstance(repository, dict) and set(repository) == {"host", "namespace", "name", "id"}
+                and repository["host"] == "github.com" and repository["namespace"] == namespace
+                and isinstance(repository["name"], str)
+                and re.fullmatch(r"[A-Za-z0-9_.-]{1,100}", repository["name"])
+                and repository["name"] not in (".", "..") and not repository["name"].lower().endswith(".git")
+                and isinstance(repository["id"], str) and re.fullmatch(r"[1-9][0-9]*", repository["id"])
+                and len(repository["id"]) <= 16 and int(repository["id"]) <= 9007199254740991,
+                "invalid repository binding identity")
+        full = "refs/heads/" + branch if isinstance(branch, str) else ""
+        require(full and len(full) <= 255 and re.fullmatch(r"[A-Za-z0-9._/-]+", full)
+                and ".." not in full and not full.endswith(".")
+                and all(part and not part.startswith((".", "-")) and not part.endswith(".lock")
+                        for part in full.split("/")), "invalid repository binding branch")
+        destination_key = (destination["scope"], destination["inc"])
+        repository_key = (repository["id"], branch)
+        require(destination_key not in destinations and repository_key not in repositories,
+                "ambiguous repository binding")
+        destinations.add(destination_key)
+        repositories.add(repository_key)
+
+
+def github_project_settings(variables):
+    """Check staged GitHub settings before a deployment process can start."""
+    import re
+    names = {"GITHUB_APP_CONFIG", "GITHUB_APP_PRIVATE_KEY", "GITHUB_READ_TOKEN", "GITHUB_REPOSITORY_BINDINGS"}
+    selected = names & set(variables)
+    if not selected:
+        return selected
+    require({"GITHUB_APP_CONFIG", "GITHUB_APP_PRIVATE_KEY"} <= selected,
+            "incomplete GitHub settings")
+    raw = variables["GITHUB_APP_CONFIG"]
+    require(isinstance(raw, str) and len(raw.encode()) <= 4096, "invalid GitHub settings")
+    value = parse_json(raw)
+    fields = {"issuer", "installationId", "account", "maxBytes", "registerScope",
+              "privateRepositories", "publicReads", "credentialIdentity"}
+    require(isinstance(value, dict) and set(value) == fields, "invalid GitHub settings")
+    account = value["account"]
+    positive = lambda number: type(number) is int and 0 < number <= 9007199254740991
+    require(isinstance(account, dict) and set(account) == {"id", "login", "type"}
+            and positive(account["id"]) and isinstance(account["login"], str)
+            and re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?", account["login"])
+            and account["type"] in ("User", "Organization"), "invalid GitHub account")
+    require(isinstance(value["issuer"], str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,128}", value["issuer"])
+            and positive(value["installationId"]) and positive(value["maxBytes"])
+            and value["maxBytes"] >= 32 and value["registerScope"] == variables.get("REGISTER_SCOPE")
+            and type(value["privateRepositories"]) is bool and type(value["publicReads"]) is bool
+            and not (value["privateRepositories"] and value["publicReads"])
+            and value["credentialIdentity"] == "adapter-attempt", "invalid GitHub authority")
+    key = variables["GITHUB_APP_PRIVATE_KEY"]
+    require(isinstance(key, str) and len(key) <= 16384
+            and re.fullmatch(r"-----BEGIN PRIVATE KEY-----\r?\n[A-Za-z0-9+/=\r\n]+\r?\n-----END PRIVATE KEY-----\s*", key),
+            "invalid GitHub private key")
+    token = variables.get("GITHUB_READ_TOKEN")
+    require((value["publicReads"] or "GITHUB_READ_TOKEN" in selected)
+            and ("GITHUB_READ_TOKEN" not in selected
+                 or isinstance(token, str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,4096}", token)),
+            "invalid GitHub read authority")
+    if "GITHUB_REPOSITORY_BINDINGS" in selected:
+        github_repository_bindings(variables["GITHUB_REPOSITORY_BINDINGS"], account["login"])
+    return selected
 
 
 def prepared_project(directory):
@@ -35,8 +115,16 @@ def prepared_project(directory):
     require({k: v for k, v in config.items() if k != "vars"}
             == {k: v for k, v in maintained.items() if k != "vars"}, "project configuration differs")
     variables = config.get("vars", {})
+    require(isinstance(variables, dict), "project variables differ")
     required = {"REGISTER_SCOPE", "PUBLIC_ORIGIN", "MCP_ENABLED", "MCP_TOOL_ADDITIONS", "SESSION_SECRET"}
-    require(set(variables) == set(maintained["vars"]) | required, "project variables differ")
+    if "PLATFORM_CREATION_PINS" in variables:
+        policy = read_json(HERE / "repository-binding-policy.json", 4096)
+        require(isinstance(variables["PLATFORM_CREATION_PINS"], str)
+                and parse_json(variables["PLATFORM_CREATION_PINS"]) == policy["PLATFORM_CREATION_PINS"],
+                "creation policy differs")
+        required.add("PLATFORM_CREATION_PINS")
+    github = github_project_settings(variables)
+    require(set(variables) == set(maintained["vars"]) | required | github, "project variables differ")
     require(all(variables.get(k) == v for k, v in maintained["vars"].items()), "maintained variable differs")
     require(variables.get("MCP_ENABLED") == "true" and variables.get("MCP_TOOL_ADDITIONS") == "[]",
             "MCP configuration differs")

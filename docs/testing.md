@@ -876,7 +876,7 @@ Pin every GitHub Actions reference that way.
 
 The fixed Node stage also runs `scripts/mac-host-kit.test.mjs` once. Run it
 alone with `node --test scripts/mac-host-kit.test.mjs`. On Darwin, its one
-owner case runs the two Node files in `apps/room/celld/mac/test/` and the
+owner case runs the three Node files in `apps/room/celld/mac/test/` and the
 Python modules `test_install`, `test_shutdown`, and `test_deploy` with system
 Python. Each child has a 60-second timeout and a 2 MiB output bound. Child
 Node and Python counts remain separate from that parent case. Outside

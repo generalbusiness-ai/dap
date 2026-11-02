@@ -1,3 +1,4 @@
+import { REPOSITORY_BINDING_COHORT as RB } from "./repository-binding-cohort.ts";
 import { EVIDENCE_RULES_COHORT as ERC } from "./evidence-cohort.ts";
 import { DEVICE_APPLICATION_COHORT as D } from "./device-application-wire.ts";
 /** Bounded native metadata for the trusted-package route. No application
@@ -14,10 +15,10 @@ import { UNPUBLISHED_COHORT as U } from "./archive-binding-wire.ts";
 import { SEPARATE_RECOVERY_COHORT as SR } from "./separate-recovery-cohort.ts";
 export function applicationRoom(state: StateView, named: string): ApplicationRoom | null {
   const scope = state.scope();
-  if ((named !== SR.directory && named !== CC.directory && named !== U.directory && named !== C.directory && named !== C2.directory && named !== D.directory && named !== ADC.directory && named !== ADP.directory && named !== ERC.directory && named !== HCR.directory && named !== ACR.directory && named !== AC.directory && named !== AC2.directory) || scope?.status !== "active" || scope.at.kind !== "directory") return null;
+  if ((named !== RB.directory && named !== SR.directory && named !== CC.directory && named !== U.directory && named !== C.directory && named !== C2.directory && named !== D.directory && named !== ADC.directory && named !== ADP.directory && named !== ERC.directory && named !== HCR.directory && named !== ACR.directory && named !== AC.directory && named !== AC2.directory) || scope?.status !== "active" || scope.at.kind !== "directory") return null;
   const rules = state.page("repository", ["open"], null, 1).items[0]?.refs["rules"];
-  // Rules 10 serves two Membership pins, so only this Directory can name the one beside it.
-  return isScopeRef(rules) && rules.kind === "rules" ? { directory: scope.at, rules, ...(named === SR.directory ? { membershipDefinition: SR.membership } : {}) } : null;
+  // Rules 10 serves several Membership pins, so only this Directory can name the one beside it.
+  return isScopeRef(rules) && rules.kind === "rules" ? { directory: scope.at, rules, ...(named === RB.directory ? { membershipDefinition: RB.membership } : named === SR.directory ? { membershipDefinition: SR.membership } : {}) } : null;
 }
 export function applicationInstallation(state: StateView, named: string, directory: ScopeRef, item: number): ApplicationInstallation | null {
   const scope = state.scope();
