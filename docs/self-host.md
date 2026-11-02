@@ -452,6 +452,15 @@ The source review covers the configuration procedure and cohort policy.
 Review the filled account, installation, register, and repository bindings
 before the planner applies them.
 
+The G3 witness uses the existing **Artroom Demo** App. Its installation
+selects all 26 repositories in `generalbusiness-ai`, with Administration
+write, Contents write, and Metadata read. The App key on the mini can mint
+tokens for every repository in that installation. dap restricts each
+publication token to one recorded repository ID and Contents write, but
+that software check does not narrow the App key itself. Selecting only
+one repository limits what the key can mint for that installation. Use
+that stronger choice when your other rooms do not need the same App.
+
 1. At GitHub, create or select the approved repository. Select it in the
    GitHub App installation. Give the App **Contents: read and write** and
    **Metadata: read**. Record the App client ID, installation ID, account
