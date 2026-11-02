@@ -154,7 +154,10 @@ test("the shell fences the whole scope during a submit and keeps a lost reply re
     expect(root.textContent).not.toContain(banner); // Later denial retires the earlier positive read.
     initialization = "unknown"; rendered = gate(); redraw(); await fixture.wait(() => rendered.promise);
     expect(root.textContent).not.toContain(banner);
-    expect(root.textContent).toContain("The complete rules could not be read. Check status before editing.");
+    expect(root.textContent).toContain("The complete rules could not be read.");
+    expect(root.textContent).toContain("Scripted rules read unavailable");
+    expect(root.querySelector('[data-rules-retry]')).not.toBeNull();
+    expect(dataAct).not.toHaveBeenCalled();
     initialization = "configured"; rulesUnavailable = false; location.hash = "#/"; rendered = gate(); redraw(); await fixture.wait(() => rendered.promise);
     const beforePending = panels.length;
     send("comment", "", Object.fromEntries([["__proto__", "literal field"]]));
