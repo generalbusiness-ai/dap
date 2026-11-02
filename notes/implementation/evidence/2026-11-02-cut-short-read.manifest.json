@@ -1,0 +1,682 @@
+{
+ "version": 1,
+ "qualification": "A truncated exact read can run again through an ordinary card press without reopening the view. Complete retained answers replay without another read-token signature. A retained answer that no longer fits reports an error and no new signature, then can recover. Original cutoff and omission words remain. Qualified draft checks, three distinguishing controls, exact-source Card workflow and one frozen full gate supply the evidence. No producer-limit change, new diff renderer or deployment follows.",
+ "checkpoint": {
+  "commit": "ebc1e608e2e29432f2120cd4c63989d755d894d5",
+  "tree": "365e708ae18cc8b5748eaa4ac6fc06a607909853"
+ },
+ "retention": "Keep every readonly unit for at least 30 days after landing. Whole Native and CI consoles stay private, with byte counts and hashes in public metadata.",
+ "fileCount": 122,
+ "units": [
+  {
+   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-cut-short-read-focused",
+   "qualification": "Uncommitted implementation work atop c392901f. Initial compiler and whole 19-case session-owner checks precede later browser-fixture additions and the final receipt-clearing assertion. The frozen-source record and final patch name the later ebc1e608 checkpoint, not a claim that every earlier check ran on those bytes. The base fast-forward to landed main 08a16dc6 changes no tree or source bytes. The frozen gate owns final compiler and whole-suite acceptance.",
+   "checkpoint": {
+    "commit": "c392901f5d00ac4e2c72c6d156c20705eb0b62a9",
+    "tree": "141778fda416e079fd6d06c70da22fd0e24748c3"
+   },
+   "fileCount": 21,
+   "sha256sums": "92e435043a445bd1ba212d6967fd53f9297a496c667e639bf104b2ccae061cb2",
+   "files": [
+    {
+     "path": "SHA256SUMS",
+     "bytes": 1687,
+     "sha256": "92e435043a445bd1ba212d6967fd53f9297a496c667e639bf104b2ccae061cb2"
+    },
+    {
+     "path": "bring-main.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "bring-main.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "bring-main.stdout.log",
+     "bytes": 45,
+     "sha256": "fbce2d881e79bc5890edb2aacc3d2a5efea101145daaa4ea833aced16d130390"
+    },
+    {
+     "path": "build.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "build.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "build.stdout.log",
+     "bytes": 51,
+     "sha256": "4c1a2bf8e5b091d5863efe0cc2cf5d90d6a143c4b74b92e4180559d59bca58f9"
+    },
+    {
+     "path": "commands.json",
+     "bytes": 931,
+     "sha256": "b17cacfce7129e2f1546702d22debc4f7ce26f63ab0c0085f6cd5f467587a054"
+    },
+    {
+     "path": "compatibility.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "compatibility.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "compatibility.stdout.log",
+     "bytes": 364,
+     "sha256": "8a6a22e9558632747fe5dd007e7386854b39b0e3997955d4ba499baa9ef55f02"
+    },
+    {
+     "path": "draft-final.patch",
+     "bytes": 25159,
+     "sha256": "a55074f3b25ba4da56007974ea7684eeb3b942ef76d1488e47cfcf362ac5a71e"
+    },
+    {
+     "path": "draft.patch",
+     "bytes": 19376,
+     "sha256": "0b6d8e6892953b29c4c158e8c63fc30595b62ae0d402ab7ae1dc1b4fc164595d"
+    },
+    {
+     "path": "frozen-source.json",
+     "bytes": 1283,
+     "sha256": "21c13ca7a44d7ecaea65eef227b3bef5f96e637d806e5c656c8a9988bf4593c8"
+    },
+    {
+     "path": "qualification.json",
+     "bytes": 797,
+     "sha256": "cb37c48bad99e737624dda3e215c67a21a1798f5dcf6617340ff13270daa64d0"
+    },
+    {
+     "path": "sessions.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "sessions.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "sessions.stdout.log",
+     "bytes": 257,
+     "sha256": "3261081d0640ade5fd588895776eabb0adf4586e698652cc17b231691ee9809c"
+    },
+    {
+     "path": "typecheck.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "typecheck.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "typecheck.stdout.log",
+     "bytes": 165,
+     "sha256": "c1e1f1c2bbd0cff21cb159852caefece8652f03525b695b9f47a14976469405b"
+    }
+   ]
+  },
+  {
+   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-cut-short-read-browser-target",
+   "qualification": "Initial targeted ordinary browser scenario over an uncommitted draft atop c392901f. Real DOM, bridge/service/session and TEST scope signatures/custody; bounded stop and next complete Git answers are scripted. Both 592 and 320 widths pass, with original cutoff words visible and exactly two read-token signatures. A later held-fit receipt cleanup does not change this retry scenario. The controls unit repeats the same normal driver after all source changes, and exact-source CI owns final composition.",
+   "checkpoint": {
+    "commit": "c392901f5d00ac4e2c72c6d156c20705eb0b62a9",
+    "tree": "141778fda416e079fd6d06c70da22fd0e24748c3"
+   },
+   "fileCount": 17,
+   "sha256sums": "1d4eab34d4132f27ae13e5b0205dfad5c5c6e2ee718640fd9b39da1a2d65d228",
+   "files": [
+    {
+     "path": "SHA256SUMS",
+     "bytes": 1363,
+     "sha256": "1d4eab34d4132f27ae13e5b0205dfad5c5c6e2ee718640fd9b39da1a2d65d228"
+    },
+    {
+     "path": "browser-syntax.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "browser-syntax.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "browser-syntax.stdout.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "commands.json",
+     "bytes": 1128,
+     "sha256": "cf0d8bf64398752838d0b36dcb6a17cfacdf377183b98434b0ee9089421fe643"
+    },
+    {
+     "path": "driver-generator.py",
+     "bytes": 3971,
+     "sha256": "01af67f35757eb08d7291fe70941fe1b85c29fce15b3723ed8ff052e891795a6"
+    },
+    {
+     "path": "driver.mjs",
+     "bytes": 5943,
+     "sha256": "27aa07dab946417df4a43701927b429842d7bfa1e6ec19a18d53a20b5962365e"
+    },
+    {
+     "path": "qualification.json",
+     "bytes": 837,
+     "sha256": "ccbc6661a7351edc5acc4a52732153deeacded58e2e9a1861ef9b3930d1fcfc3"
+    },
+    {
+     "path": "report.json",
+     "bytes": 659,
+     "sha256": "d4e55900ad4eecc339d1edd8afe1d4f38717b0db953f12cfb1ccfdf60477f44c"
+    },
+    {
+     "path": "stopped-diff-320.png",
+     "bytes": 37180,
+     "sha256": "7b3ccec1bd80168af98841dfe44f5559658bae7eb3541003af4d1e40f3737ef3"
+    },
+    {
+     "path": "stopped-diff-592.png",
+     "bytes": 38785,
+     "sha256": "5bd9014c7f9116f40a407f2333cfd9b273701994091c3a88c83cdd127663bbda"
+    },
+    {
+     "path": "target.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "target.stderr.log",
+     "bytes": 191,
+     "sha256": "947454c24639358122be3b0e00526586b66fbaccdb1eea507ad5e99142a70d19"
+    },
+    {
+     "path": "target.stdout.log",
+     "bytes": 543,
+     "sha256": "a00b3c47baec05aa8015d4dc44bda2fbc5223569afaa9a2a04eb7b67852872e4"
+    },
+    {
+     "path": "test-compiler.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "test-compiler.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "test-compiler.stdout.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+   ]
+  },
+  {
+   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-cut-short-read-controls",
+   "qualification": "Three named controls after all runtime and test changes. Reusing a stopped answer and ignoring a failed retained fit each fail the expected whole session-owner assertion, with outer control exit 0. Disabling the current stopped-read button fails isEnabled by assertion at 592 pixels before any click or timeout; the later 320-pixel mutant case is unreached. The unchanged normal browser driver passes both widths. Exact session, main and generated bytes restore and match frozen ebc1e608. Original assertions and deadlines remain.",
+   "checkpoint": {
+    "commit": "c392901f5d00ac4e2c72c6d156c20705eb0b62a9",
+    "tree": "141778fda416e079fd6d06c70da22fd0e24748c3"
+   },
+   "fileCount": 24,
+   "sha256sums": "03aa5debe34a4cd671c8e2d2a4a515aa1cb13b2d7f2f3379105fd1f40644b107",
+   "files": [
+    {
+     "path": "SHA256SUMS",
+     "bytes": 2011,
+     "sha256": "03aa5debe34a4cd671c8e2d2a4a515aa1cb13b2d7f2f3379105fd1f40644b107"
+    },
+    {
+     "path": "browser-before.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "browser-before.stderr.log",
+     "bytes": 191,
+     "sha256": "4f29dcccfe41306707a5657d249f9a8bba7663901704b53946478e3cb5322d98"
+    },
+    {
+     "path": "browser-before.stdout.log",
+     "bytes": 543,
+     "sha256": "a00b3c47baec05aa8015d4dc44bda2fbc5223569afaa9a2a04eb7b67852872e4"
+    },
+    {
+     "path": "browser-driver.mjs",
+     "bytes": 5943,
+     "sha256": "27aa07dab946417df4a43701927b429842d7bfa1e6ec19a18d53a20b5962365e"
+    },
+    {
+     "path": "controls.json",
+     "bytes": 1890,
+     "sha256": "f2d98bfa3da8db182a38b82872030f434a21d214f88b7a994d07bbbe957368d0"
+    },
+    {
+     "path": "disabled-build.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "disabled-build.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "disabled-build.stdout.log",
+     "bytes": 51,
+     "sha256": "4c1a2bf8e5b091d5863efe0cc2cf5d90d6a143c4b74b92e4180559d59bca58f9"
+    },
+    {
+     "path": "disabled-current.exit",
+     "bytes": 2,
+     "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+     "path": "disabled-current.stderr.log",
+     "bytes": 571,
+     "sha256": "357cb9a91363209deb3cee4024a80b4ea0b46349586699f45b260305a9a73803"
+    },
+    {
+     "path": "disabled-current.stdout.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "ignore-fit.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "ignore-fit.stderr.log",
+     "bytes": 3673,
+     "sha256": "5d31cf731d95cfb73ca5bd8de0a4522e7b9bcd1928c73f1c54ad1adeaaeb73bf"
+    },
+    {
+     "path": "ignore-fit.stdout.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "normal-report.json",
+     "bytes": 659,
+     "sha256": "d4e55900ad4eecc339d1edd8afe1d4f38717b0db953f12cfb1ccfdf60477f44c"
+    },
+    {
+     "path": "normal-stopped-diff-320.png",
+     "bytes": 37180,
+     "sha256": "7b3ccec1bd80168af98841dfe44f5559658bae7eb3541003af4d1e40f3737ef3"
+    },
+    {
+     "path": "normal-stopped-diff-592.png",
+     "bytes": 38785,
+     "sha256": "5bd9014c7f9116f40a407f2333cfd9b273701994091c3a88c83cdd127663bbda"
+    },
+    {
+     "path": "qualification.json",
+     "bytes": 866,
+     "sha256": "f89fbcfa04b658c3e3887d09ab2cb2840bd088a856660e2a5bef31f02511e5e5"
+    },
+    {
+     "path": "restored.json",
+     "bytes": 293,
+     "sha256": "b76492fd58a273d0ec8f19d0c0ff7918dbb3aa1492a9e5187e4a7a89da77185d"
+    },
+    {
+     "path": "reuse-stop.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "reuse-stop.stderr.log",
+     "bytes": 4362,
+     "sha256": "e2b4c4a6bf769173f0746e8138f6a53acd4d666bfb522b6d27789e91f04d4db6"
+    },
+    {
+     "path": "reuse-stop.stdout.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "runner.py",
+     "bytes": 4646,
+     "sha256": "477f9ee4944073aab94ae5ece72d4fdaeb93ccbf990cd9d67f8e5a647aca228d"
+    }
+   ]
+  },
+  {
+   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-cut-short-read-ci",
+   "qualification": "Exact-source Card workflow 41433119112 succeeds at frozen ebc1e608, including generated-module integrity and all three browser owners. Initial empty run-list and later successful metadata remain separate observations. Whole console stays private.",
+   "checkpoint": {
+    "commit": "ebc1e608e2e29432f2120cd4c63989d755d894d5",
+    "tree": "365e708ae18cc8b5748eaa4ac6fc06a607909853"
+   },
+   "fileCount": 17,
+   "sha256sums": "afc79c77a222bf17a230aa78d045a3f590ede1766547f2639f29c67dbf41029a",
+   "files": [
+    {
+     "path": "SHA256SUMS",
+     "bytes": 1344,
+     "sha256": "afc79c77a222bf17a230aa78d045a3f590ede1766547f2639f29c67dbf41029a"
+    },
+    {
+     "path": "initial-runs.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "initial-runs.json",
+     "bytes": 3,
+     "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+     "path": "initial-runs.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "push-source.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "push-source.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "push-source.stderr.log",
+     "bytes": 500,
+     "sha256": "46c020c4763b167f8bf1118508f0c09499469cce53122e6582b56d782135972c"
+    },
+    {
+     "path": "qualification.json",
+     "bytes": 463,
+     "sha256": "65303bdd29f4ed17c4baebdb93a72dc83eeb5aa0df705005774f80360999da51"
+    },
+    {
+     "path": "runs-2.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "runs-2.json",
+     "bytes": 201,
+     "sha256": "4d4d093be8a78c5452ec9c911ef8edb8e48fe4c1c4df42fc6671b9f3eb6b8e93"
+    },
+    {
+     "path": "runs-2.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "withheld-output.json",
+     "bytes": 362,
+     "sha256": "2e13931a1cac98ed386089ad455caa3ef0ca6e2be6c975542d15593f473508a9"
+    },
+    {
+     "path": "workflow-log.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "workflow-log.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "workflow.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "workflow.json",
+     "bytes": 2907,
+     "sha256": "745a0df913540cb30826baf43e64db625b65eb3c78b90dd1b5adf085d7079f0b"
+    },
+    {
+     "path": "workflow.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+   ]
+  },
+  {
+   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-cut-short-read-gate",
+   "qualification": "One full cut-short-read gate at frozen ebc1e608. The actual exit and matching before/after source guards decide the result. Raw test.log stays private. The prior first-press failures and successful refresh gate remain separate records.",
+   "checkpoint": {
+    "commit": "ebc1e608e2e29432f2120cd4c63989d755d894d5",
+    "tree": "365e708ae18cc8b5748eaa4ac6fc06a607909853"
+   },
+   "fileCount": 43,
+   "sha256sums": "683a42c6eb3078b0093fd5774acf3dfae819b16c7d1fb07993adaa52d5127aaf",
+   "files": [
+    {
+     "path": "SHA256SUMS",
+     "bytes": 3632,
+     "sha256": "683a42c6eb3078b0093fd5774acf3dfae819b16c7d1fb07993adaa52d5127aaf"
+    },
+    {
+     "path": "collector.py",
+     "bytes": 4058,
+     "sha256": "9d84f7d7d2df42991798ec2c0d42d3639633323beb32c7ee7faffdf0f4c3b75d"
+    },
+    {
+     "path": "command.json",
+     "bytes": 562,
+     "sha256": "97673241a626230dc18ae9889fa31e160440b96982051eabdf7a8cfd5db871ca"
+    },
+    {
+     "path": "driver.py",
+     "bytes": 2435,
+     "sha256": "6dac18651030284df5498be61d277d2c77c04d0c074e4b109159509403b4f9c9"
+    },
+    {
+     "path": "fetch.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "fetch.stderr.log",
+     "bytes": 103,
+     "sha256": "4e319d1b8a041aeaef4946a5b0393e546346eee21c05a7007710e29e1039c5e2"
+    },
+    {
+     "path": "fetch.stdout.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "gate/citations.log",
+     "bytes": 1566962,
+     "sha256": "aa937d96cb883d88a742dacf73281adebf67fe399037108185eb5679503e033d"
+    },
+    {
+     "path": "gate/citations.time",
+     "bytes": 29,
+     "sha256": "bb92f1c692a0ccaca9ebd02049162e82ba646a2f3198305ed35e844bde54fb96"
+    },
+    {
+     "path": "gate/cite-test.log",
+     "bytes": 761,
+     "sha256": "9e5bec8a605d5d8c056a91cc5fe1cd4cdc673f06ff797cc93456eeab78f2c7f2"
+    },
+    {
+     "path": "gate/cite-test.time",
+     "bytes": 29,
+     "sha256": "a5f8d6bc828c5a8f120dc31084d3012d8d1b39bd49b21e5b6f926d5715a2d29b"
+    },
+    {
+     "path": "gate/commit-messages.log",
+     "bytes": 38,
+     "sha256": "e961aa82d898e3425096da8901160f918cd74166d8c76fd918aaac9c3386377d"
+    },
+    {
+     "path": "gate/commit-messages.time",
+     "bytes": 29,
+     "sha256": "66b019f3b91dd78b8a648f25e84fc8cee994db5eb175e39de9579bfdd75b994e"
+    },
+    {
+     "path": "gate/commit-test.log",
+     "bytes": 594,
+     "sha256": "96da515642348f5577478aa7602cf0d4705b2751d63e232fba0efb026847b395"
+    },
+    {
+     "path": "gate/commit-test.time",
+     "bytes": 29,
+     "sha256": "0971b12ab3b2e5618be5af20950a857c39abb4d500324a513765d8aa7e1aee00"
+    },
+    {
+     "path": "gate/doc-links.log",
+     "bytes": 36,
+     "sha256": "05d81cfdd4a20d7f249083d065c7dad85afba93032f10e5b73c1bec4e568c8b0"
+    },
+    {
+     "path": "gate/doc-links.time",
+     "bytes": 29,
+     "sha256": "f52206e212990f3da006017e7a3314f96cf4d8a4821d8a9cffedb1f8f69a4a95"
+    },
+    {
+     "path": "gate/helpers.log",
+     "bytes": 68,
+     "sha256": "614152ce2ba93fdad7a626086b8bacc122b5db084690b0d63daa5ddc746348d8"
+    },
+    {
+     "path": "gate/helpers.time",
+     "bytes": 29,
+     "sha256": "5d4523f514c929f27376df8c12eca4af5123aeecff87a93d9a3a9911d98c8e01"
+    },
+    {
+     "path": "gate/notes.log",
+     "bytes": 18,
+     "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+     "path": "gate/notes.time",
+     "bytes": 29,
+     "sha256": "2f00bb14f48e47d581a40c36302b3d8f94ecd53f8ccfa6825008731de11235d2"
+    },
+    {
+     "path": "gate/section-citations.json",
+     "bytes": 3938462,
+     "sha256": "d47881b82db403203e7919edd4ceaf59d5f0a1d16b77c1d5042ceddcfb522f7e"
+    },
+    {
+     "path": "gate/test-evidence/counting-sources.json",
+     "bytes": 996,
+     "sha256": "4d620d9ff364e4d4b4696e2814ab2c419c7c70c2831af5f3d55a301957af68b2"
+    },
+    {
+     "path": "gate/test-evidence/counting.jsonl",
+     "bytes": 136040,
+     "sha256": "a39c5392a54d5b46dc80efe98cae3fc6434d640a1662101a87f0b4200a4651db"
+    },
+    {
+     "path": "gate/test-evidence/native.jsonl",
+     "bytes": 1014547,
+     "sha256": "500be1b5e02577affe2b7bb8696867151fbb9f01d6b4225801fa58aee7a92d25"
+    },
+    {
+     "path": "gate/test-evidence/node.jsonl",
+     "bytes": 344570,
+     "sha256": "c98af2e4e664fd7198c554fd301c2301fc065b5c3d5f8d63947d8247ed5d46e6"
+    },
+    {
+     "path": "gate/test-evidence/plain.jsonl",
+     "bytes": 3078941,
+     "sha256": "d161bb5061631da2a7f929be9a8a798da40a377614dc74453260c77583c4fff1"
+    },
+    {
+     "path": "gate/test-evidence/stages.json",
+     "bytes": 967,
+     "sha256": "f605bbf606b2d483c35a2148b4d9d5419db8cd0ca77585021eb0618ca0660dbc"
+    },
+    {
+     "path": "gate/test.time",
+     "bytes": 37,
+     "sha256": "fbaaea04bff74d364cf7088c333621386f1518d577d7ad079ca0a86503ab5565"
+    },
+    {
+     "path": "gate/typecheck.log",
+     "bytes": 2112,
+     "sha256": "314b484b28a0c4bd57bef0aadea6797cbd7731897e547794f68cfb2e00c30264"
+    },
+    {
+     "path": "gate/typecheck.time",
+     "bytes": 31,
+     "sha256": "a41f7bd108f6e0147ef7d18909244fbe5c12b4fa92970a5f461faea228b10a4c"
+    },
+    {
+     "path": "gate/whitespace.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "gate/whitespace.time",
+     "bytes": 29,
+     "sha256": "b19caaf7f42fccf27d8c76a198f52fea0f91edf4f9fc11246dfb0c794d708d58"
+    },
+    {
+     "path": "gate.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "gate.stderr.log",
+     "bytes": 37,
+     "sha256": "5fcfdb77a05c2a6a6069e7ec9a389f3b36c9b832f237655bb908be9ca6247513"
+    },
+    {
+     "path": "gate.stdout.log",
+     "bytes": 6525,
+     "sha256": "3063a6672649f6cb20a56bfccb45f09cb64c13d7c2338ddc41bf22742c1c0a84"
+    },
+    {
+     "path": "gate.terminal.txt",
+     "bytes": 795,
+     "sha256": "de6976e445bc32954811c6dafaf7b8c8fda3076a63bec760046ad3e246373645"
+    },
+    {
+     "path": "progress.native.jsonl",
+     "bytes": 1159636,
+     "sha256": "ab75c364b5cead514d00beda23a3ab665ecfefb5140ca3f86cc3e6d51af4b54f"
+    },
+    {
+     "path": "progress.plain.jsonl",
+     "bytes": 3663227,
+     "sha256": "943cd22ae84d08a6071c22a6d6ca5baf1f16169592e80432c9cc71fadd44cdde"
+    },
+    {
+     "path": "qualification.json",
+     "bytes": 537,
+     "sha256": "93b953972f301fe6c1d8e608f959d77495540cc5860d7e44daf654c64c0380f4"
+    },
+    {
+     "path": "source-after.json",
+     "bytes": 211,
+     "sha256": "c23611c3d5973836717a582217c3737116a85c389da39c94ead720a8172d1438"
+    },
+    {
+     "path": "source-before.json",
+     "bytes": 211,
+     "sha256": "c23611c3d5973836717a582217c3737116a85c389da39c94ead720a8172d1438"
+    },
+    {
+     "path": "withheld-output.json",
+     "bytes": 420,
+     "sha256": "cd76149f86a83615d45f619ef990687bf1466041dde3b5a385b89375ef5951e5"
+    }
+   ]
+  }
+ ]
+}
