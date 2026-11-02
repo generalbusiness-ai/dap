@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c9602d3304fcf427543c244f5e96f0a6280ec14a"}
+{"kind":"artifact","text":".github/workflows/views-browser.yml at exact 66f7b0eb3c0be4a85ffdb9f96579ebddfaba6a41 on builder/actor-chip-20261101, under promise git:sha1…d2ac22a on request git:sha1…26abfc1","body":{"commit":"66f7b0eb3c0be4a85ffdb9f96579ebddfaba6a41","path":".github/workflows/views-browser.yml"}}
