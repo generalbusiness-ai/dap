@@ -4,11 +4,12 @@ import { expect, test } from "vitest";
 import { canonicalize, intentDigest, isSeed, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import type { Intent, PlatformDefinition, ScopeId, Seed } from "@generalbusiness/dap-contract";
 import { keys } from "@generalbusiness/dap-derive/testing";
-import { isCreationOffer, type Fetch } from "@generalbusiness/dap-client";
+import { isCreationOffer, secretSigner, type Fetch } from "@generalbusiness/dap-client";
 import { claim, checkClaim } from "../../cli/src/claim.ts";
 import { memoryStore } from "../../cli/src/store.ts";
 import { originalStart, startRoom } from "../../../apps/room/page/src/start-custody.ts";
 import { claimStatus, type ClaimLocks, type ClaimStorage } from "../../../apps/room/page/src/claim.ts";
+import { Collection } from "../../../apps/views/src/reads.ts";
 import { memoryPageKeys } from "../../../apps/room/page/test/private-key-fixture.ts";
 import { demoCreationRoute } from "../../../apps/room/demo-creation.ts";
 import type { Binding } from "../src/namespace.ts";
@@ -206,7 +207,14 @@ test("dap create reports a final failure, retains it past an hour, and can start
     control.failed = false;
     const recovered = await life.wait(() => claim(ctx, "retry-room", { again: true }));
     expect(recovered, recovered.lines.join("\n")).toMatchObject({ code: 0 });
-    expect((await store.config())!.repository?.directory).toBeDefined();
+    const configured = (await store.config())!;
+    expect(configured.repository?.directory).toBeDefined();
+    const collection = new Collection({ service, signer: secretSigner((await store.secret(configured.key))!), config: async () => configured, fetch: client.fetch, now: life.now });
+    await life.wait(() => collection.begin());
+    expect([collection.membership, collection.directory]).toEqual([configured.repository!.membership, configured.repository!.directory]);
+    expect(collection.frames.get(collection.membership.scope)!.summary.definition).toBe(C.membership);
+    expect(collection.frames.get(collection.directory.scope)!.summary.definition).toBe(C.directory);
+    collection.close();
   } finally { life.release(); }
 });
 

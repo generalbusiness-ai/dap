@@ -1371,12 +1371,12 @@ export class McpService {
    * room recorded in the configuration; the list is derived again on the next call.
    */
   /** The actual generic room and exact Rules sibling, never a caller alias. */
-  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof SEPARATE_RECOVERY_COHORT | typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT | typeof DEVICE_APPLICATION_COHORT | typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_PUBLICATION_COHORT | typeof UNPUBLISHED_COHORT | typeof REPOSITORY_BINDING_COHORT | typeof COMMONS_COHORT }> {
+  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof FAILED_CLAIM_COHORT | typeof SEPARATE_RECOVERY_COHORT | typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT | typeof DEVICE_APPLICATION_COHORT | typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_PUBLICATION_COHORT | typeof UNPUBLISHED_COHORT | typeof REPOSITORY_BINDING_COHORT | typeof COMMONS_COHORT }> {
     const config = await this.#port.config.read(), repository = config.repository;
     if (!repository || config.service !== this.#service) return stopCall({ error: "target", what: "configure a trusted-application room before installing" });
     const { summary: directory } = await this.#summary(repository.directory.scope, repository.membership);
     const row = directory.items.find(item => item.type === "repository" && item.state === "open"), rules = row?.refs["rules"], destination = row?.refs["destination"];
-    const cohort = [SEPARATE_RECOVERY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, REPOSITORY_BINDING_COHORT, COMMONS_COHORT].find(cohort => directory.definition === cohort.directory);
+    const cohort = [FAILED_CLAIM_COHORT, SEPARATE_RECOVERY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, REPOSITORY_BINDING_COHORT, COMMONS_COHORT].find(cohort => directory.definition === cohort.directory);
     if (!cohort || directory.status !== "active" || canonicalize(directory.scope) !== canonicalize(repository.directory)
       || !row || canonicalize(row.refs["membership"]) !== canonicalize(repository.membership)
       || !isScopeRef(rules) || rules.kind !== "rules" || rules.scope !== repository.rules

@@ -46,6 +46,23 @@ const rulesOf = f => item(1, 'rules', 'current', { revision: 7, approvals: 1, ow
 const finding = f => item(12, 'finding', 'open', { file: 'src/a.ts', start: 10, end: 12, class: 'race', severity: 'high', confidence: 80, scenario: 'TEST', source: 'security-review', sourceVersion: 'reviewer 1.2' }, { version: 6 }, { reporter: f.vic });
 const rowsOf = async f => (await f.app.needsYou()).structuredContent;
 
+// Scripted summaries witness exact family selection only; native room reads run in failed-claim-cohort.test.ts.
+test('Needs you reads each supported exact room family and refuses mixed siblings', async t => {
+  const f = fixture(t), lane = f.lane(QUESTION_DIGESTS.issue);
+  lane.items.push(asked(f, 1), request(f, 2, 1));
+  const M = f.peer.scopes.get(f.peer.membership.scope), D = f.peer.scopes.get(f.peer.directory.scope);
+  for (const [membership, directory] of [['platform:membership@8', 'platform:directory@16'], ['platform:membership@9', 'platform:directory@22'], ['platform:membership@12', 'platform:directory@25']]) {
+    M.definition = membership; D.definition = directory;
+    const result = await rowsOf(f);
+    assert.ok(result.rows.some(row => row.category === 'requested-review' && row.item === 2), `${membership}/${directory} reads the current request`);
+  }
+  for (const [membership, directory] of [['platform:membership@12', 'platform:directory@16'], ['platform:membership@8', 'platform:directory@25'], ['platform:membership@9', 'platform:directory@16']]) {
+    M.definition = membership; D.definition = directory;
+    assert.deepEqual(await rowsOf(f), { error: 'read-unavailable', reason: 'directory-unsupported', complete: false });
+  }
+});
+
+
 test('every kind of row says what needs you, why it is yours and what settles it, and names an act or delivery that its pinned definition holds', async t => {
   const f = fixture(t);
   const question = f.lane(QUESTION_DIGESTS.issue);

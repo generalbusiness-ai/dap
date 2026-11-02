@@ -194,10 +194,11 @@ const laneActive = async (handle: ScopeHandle, opened: string): Promise<Summary 
 // ---------------------------------------------------------------- the commands
 
 /** Named creation families; host none defaults to the unpublished family. */
-export type InstallCohort = "repository-binding" | "separate-recovery" | "commons" | "unpublished" | "file-publication" | "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-device-application" | "archive-device-publication" | "archive-certified-rules" | "hardened-certified-rules" | "archive-declared-application" | "invitation-key";
+export type InstallCohort = "failed-claim" | "repository-binding" | "separate-recovery" | "commons" | "unpublished" | "file-publication" | "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-device-application" | "archive-device-publication" | "archive-certified-rules" | "hardened-certified-rules" | "archive-declared-application" | "invitation-key";
 export type RegisterPolicy = "keys" | "open";
 export interface InstallOptions { host?: string; namespace?: string; cohort?: InstallCohort; registerPolicy?: RegisterPolicy }
 const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
+  "failed-claim": FAILED_CLAIM_COHORT.register,
   "repository-binding": REPOSITORY_BINDING_COHORT.register,
   "separate-recovery": SEPARATE_RECOVERY_COHORT.register,
   commons: COMMONS_COHORT.register,
@@ -218,9 +219,10 @@ const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
 };
 /** New plans only. Historical selectors remain in INSTALL_COHORTS for retained custody.
  * The owning test pins these register versions to Scope's CREATION_COHORTS. */
-export const CREATION_INSTALL_COHORTS = ["repository-binding", "separate-recovery", "commons", "unpublished", "application", "archive-device-application", "archive-device-publication", "archive-certified-rules", "hardened-certified-rules"] as const satisfies readonly InstallCohort[];
+export const CREATION_INSTALL_COHORTS = ["failed-claim", "repository-binding", "separate-recovery", "commons", "unpublished", "application", "archive-device-application", "archive-device-publication", "archive-certified-rules", "hardened-certified-rules"] as const satisfies readonly InstallCohort[];
 function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === undefined) return undefined;
+  if (cohort === "failed-claim") return INSTALL_COHORTS["failed-claim"];
   if (cohort === "repository-binding") return INSTALL_COHORTS["repository-binding"];
   if (cohort === "separate-recovery") return INSTALL_COHORTS["separate-recovery"];
   if (cohort === "commons") return INSTALL_COHORTS.commons;
@@ -250,7 +252,7 @@ function planSent(plan: PlannedInstall): string {
 function joinSent(pending: PendingJoin): string {
   return `This run sent nothing, and an earlier send of this join ${pending.accepted ? "went ahead" : "has no known outcome"}.`;
 }
-/** Public creation is an explicit fixed cohort, independent of future defaults. */
+/** Fresh creation uses the default family; retained plans keep their exact pin. */
 function installSelection(options: InstallOptions, retained = false): PlatformDefinition | undefined {
   if (!retained && options.host === undefined) return stopCommand(usage("--host is required: none, artifacts or github.com; this run signed and sent nothing."));
   if (options.host !== undefined && !["none", "artifacts", "github.com"].includes(options.host)) return stopCommand(usage("Refused: host-unknown. Choose --host none, artifacts or github.com; this run signed and sent nothing."));
@@ -262,9 +264,10 @@ function installSelection(options: InstallOptions, retained = false): PlatformDe
     if (selected !== undefined && selected !== REPOSITORY_BINDING_COHORT.register && selected !== UNPUBLISHED_COHORT.register && selected !== COMMONS_COHORT.register) return stopCommand(usage("--host none requires the unpublished, repository-binding or commons cohort; this run signed and sent nothing."));
     return selected ?? UNPUBLISHED_COHORT.register;
   }
-  if (options.registerPolicy !== "open" || selected === REPOSITORY_BINDING_COHORT.register || selected === UNPUBLISHED_COHORT.register || selected === COMMONS_COHORT.register) return selected;
+  if (options.registerPolicy !== "open" || selected === FAILED_CLAIM_COHORT.register || selected === REPOSITORY_BINDING_COHORT.register || selected === UNPUBLISHED_COHORT.register || selected === COMMONS_COHORT.register) return selected;
+  if (selected === undefined) return retained ? undefined : NEW_REGISTER;
   if (selected !== undefined && selected !== ARCHIVE_DEVICE_APPLICATION_COHORT.register) {
-    return stopCommand(usage("--register-policy open requires the archive-device-application cohort; this run signed and sent nothing."));
+    return stopCommand(usage("--register-policy open requires a cohort with an open register policy; this run signed and sent nothing."));
   }
   return ARCHIVE_DEVICE_APPLICATION_COHORT.register;
 }

@@ -1,7 +1,7 @@
 /**
- * DEFECT RECORD, request c19f25da. These tests pin today's behaviour, and a repair is meant to change them.
+ * DEFECT RECORD, request c19f25da. These tests retain the historical pins' behaviour. The failed-claim cohort has a separate repair witness.
  *
- * Today a claim whose three create attempts failed stays `pending`, and it counts toward `claim.max`, which is 64. So 64 such claims
+ * On these retained pins, a claim whose three create attempts failed stays `pending`, and it counts toward `claim.max`, which is 64. So 64 such claims
  * make the register refuse every later `found` with `type-full`, and nothing here frees a place, including the host's return.
  *
  * Real: the CLI's `command`, `McpService` in its two cases, the Worker's HTTP routes and the public creation offer route, the deployed scope class with the production
@@ -21,7 +21,7 @@ import type { Answer, Entry, Intent, KeyId, PlatformDefinition, Read, ScopeId } 
 import { secretSigner, type Fetch } from "@generalbusiness/dap-client";
 import type { Item } from "@generalbusiness/dap-derive";
 import { keys } from "@generalbusiness/dap-derive/testing";
-import { ARCHIVE_DEVICE_APPLICATION_COHORT as DEMO, NEWEST, platform } from "@generalbusiness/dap-platform";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT as DEMO, ARCHIVE_DEVICE_PUBLICATION_COHORT as RETAINED, FAILED_CLAIM_COHORT, platform } from "@generalbusiness/dap-platform";
 import { demoCreationRoute } from "../../../apps/room/demo-creation.ts";
 import type { ArtifactsNamespace } from "../../scope/src/artifacts-host.ts";
 import { artifactsOutside } from "../../scope/src/artifacts-wiring.ts";
@@ -214,7 +214,7 @@ test("DEFECT: each kind of host failure uses all three attempts within 3 seconds
     }
     expect(artifacts.control.creates).toHaveLength(12);
     const github = gitHubService();
-    const G = await installed(life, NEWEST["platform:register"]!, "github.com", ACCOUNT.login, R => life.outside(R.name, (given, sql) => gitHubOutside(given, sql, gitHubBindings(R.name), github.fetch)));
+    const G = await installed(life, RETAINED.register, "github.com", ACCOUNT.login, R => life.outside(R.name, (given, sql) => gitHubOutside(given, sql, gitHubBindings(R.name), github.fetch)));
     for (const mode of ["network", "503", "403", "422"] as const) {
       github.control.mode = mode;
       const answer = await found(life, G, rita);
@@ -387,8 +387,8 @@ test("DEFECT: on the public route, new keys fill the 64 places during an outage;
   } finally { life.release(); }
 }, 280_000);
 
-// Invariant: each register pin of CREATION_COHORTS behaves the same when it has a host: one founder fills `max`, and a second founder gets `type-full`.
-const PINS = [...new Set(CREATION_COHORTS.map(cohort => cohort.register))] as PlatformDefinition[];
+// Invariant: each historical register pin predating FAILED_CLAIM_COHORT behaves the same when it has a host: one founder fills `max`, and a second founder gets `type-full`.
+const PINS = [...new Set(CREATION_COHORTS.filter(cohort => cohort.register !== FAILED_CLAIM_COHORT.register).map(cohort => cohort.register))] as PlatformDefinition[];
 test.each(PINS)("DEFECT: %s under policy keys and a failing GitHub host: one founder fills 64, the other founder gets type-full, and a stranger gets unauthorized", async (pin) => {
   const life = fixture(false);
   try {
@@ -435,12 +435,12 @@ test.each(["platform:register@21", "platform:register@23"] as PlatformDefinition
 }, 60_000);
 
 // Invariant: under policy keys, the words depend on the key's recent entry, because the command reads the summary before it signs.
-test("DEFECT: the default dap install pin under policy keys: at 64 a founder in its window reads type-full, and any other founder reads forbidden", async () => {
+test("DEFECT: the retained Register18 install pin under policy keys: at 64 a founder in its window reads type-full, and any other founder reads forbidden", async () => {
   const life = fixture(true);
   try {
     const github = gitHubService();
     github.control.mode = "503";
-    const pin = NEWEST["platform:register"]!;
+    const pin = RETAINED.register;
     const R = await installed(life, pin, "github.com", ACCOUNT.login, R => life.outside(R.name, (given, sql) => gitHubOutside(given, sql, gitHubBindings(R.name), github.fetch)));
     for (let n = 1; n <= MAX; n++) {
       expect((await found(life, R, rita)).answer).toBe("accepted");

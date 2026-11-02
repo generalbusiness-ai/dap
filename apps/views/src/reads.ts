@@ -147,8 +147,10 @@ export class Collection {
     this.membership = this.config.repository.membership; this.directory = this.config.repository.directory;
     this.admit(this.membership); this.admit(this.directory);
     const M = await this.frame(this.membership), D = await this.frame(this.directory);
-    if (!["platform:membership@8", "platform:membership@9"].includes(M.summary.definition)) throw new Unread("membership-unsupported");
-    if (!["platform:directory@16", "platform:directory@22"].includes(D.summary.definition)) throw new Unread("directory-unsupported");
+    if (!["platform:membership@8", "platform:membership@9", "platform:membership@12"].includes(M.summary.definition)) throw new Unread("membership-unsupported");
+    if (!((M.summary.definition === "platform:membership@8" && D.summary.definition === "platform:directory@16")
+      || (M.summary.definition === "platform:membership@9" && D.summary.definition === "platform:directory@22")
+      || (M.summary.definition === "platform:membership@12" && D.summary.definition === "platform:directory@25"))) throw new Unread("directory-unsupported");
     const keys = M.items.filter(item => item.type === "key" && item.state === "active" && item.values["id"] === this.options.signer.key);
     const members = M.items.filter(item => item.type === "member" && item.state === "active" && keys.some(key => key.refs["member"] === item.id));
     const person = members[0], roster = M.items.find(item => item.type === "roster");

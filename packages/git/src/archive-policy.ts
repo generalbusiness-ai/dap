@@ -12,6 +12,8 @@ export interface ArchivePrivacyInventory { readonly customDomains: boolean; read
  * pins admit export inventory, never credentials, authority or a root journal.
  * The caller derives the digest from its installed VERSION_DATA, not input. */
 export const ARCHIVE_NATIVE_DATA: Readonly<Record<string, Digest>> = Object.freeze({
+  "platform:directory@25": "sha256:7977d787622498ec5e4a52abb5ecb4ce9e25188a907683ea2ea28dd1062b8595",
+  "platform:destination@19": "sha256:0cb5f11be6a55f4a49718ea297b6a26c4a533d9e9f436a542d8c4882dae17780",
   "platform:directory@16": "sha256:c8c40477f369a19213439eaa1a3263dad1ce16038e5df605b6f7322737380b55",
   "platform:rules@10": "sha256:e10d8861dd5a80168437187a84d5bb3efe70d73825faa0c61ecc368da359a854",
   "platform:destination@12": "sha256:f29353b2ca1f551ab6a7d622bbd57aa6dfc7fc3748358ce709ccee728e4c15df",
@@ -46,6 +48,9 @@ export const ARCHIVE_NATIVE_VALUE_PLACES = Object.freeze([
   { pin: "platform:destination@12", data: ARCHIVE_NATIVE_DATA["platform:destination@12"]!, domain: "artroom-changed-set-1", place: "owners.platform:destination@12.judge", max: 256 * 1024 },
   { pin: "platform:destination@13", data: ARCHIVE_NATIVE_DATA["platform:destination@13"]!, domain: "artroom-rules-extents-1", place: "outcomes.judge.observes.0.retains.0", max: 256 * 1024 },
   { pin: "platform:destination@13", data: ARCHIVE_NATIVE_DATA["platform:destination@13"]!, domain: "artroom-changed-set-1", place: "owners.platform:destination@13.judge", max: 256 * 1024 },
+  // Destination19 keeps the same two public judge value places. Its read token has no caller duration.
+  { pin: "platform:destination@19", data: ARCHIVE_NATIVE_DATA["platform:destination@19"]!, domain: "artroom-rules-extents-1", place: "outcomes.judge.observes.0.retains.0", max: 256 * 1024 },
+  { pin: "platform:destination@19", data: ARCHIVE_NATIVE_DATA["platform:destination@19"]!, domain: "artroom-changed-set-1", place: "owners.platform:destination@19.judge", max: 256 * 1024 },
   // Q11/G14 exact public configuration places; no credential or authority exception.
   { pin: "platform:rules@11", data: ARCHIVE_NATIVE_DATA["platform:rules@11"]!, domain: "artroom-check-configuration-1", place: "acts.keep-configuration.fields.digest.value", max: 32768 },
   { pin: "platform:rules@11", data: ARCHIVE_NATIVE_DATA["platform:rules@11"]!, domain: "dap-application-release-2", place: "acts.install-application.fields.release.value", max: 4096 },
