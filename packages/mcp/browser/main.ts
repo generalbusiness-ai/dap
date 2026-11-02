@@ -29,6 +29,7 @@ let alive = true;
 let connected = false;
 let focusKey: string | null = null;
 let refreshTimer = 0;
+let renderedCard = "";
 const surfaces = new SurfacePanels();
 interface DeclaredAddress { screen: string; items?: Readonly<Record<string, number>>; scope?: ScopeRef }
 const declaredHistory: DeclaredAddress[] = [];
@@ -256,6 +257,17 @@ function render() {
     const target = root.querySelector<HTMLElement>(`[data-focus="${CSS.escape(focusKey)}"]`);
     if (target && !(target instanceof HTMLButtonElement && target.disabled)) target.focus({ preventScroll: true });
   });
+  // Cuts and revisions can change while a reader stays on the same card.
+  // Navigation starts a new identity with its own section state.
+  const identity = JSON.stringify([view, display?.query.screen, display?.query.page,
+    display?.card?.identity.kind, display?.card?.identity.item,
+    display?.card?.identity.subject.scope, display?.card?.identity.subject.item,
+    scopeKey(display?.card?.declared?.scope ?? display?.scope ?? display?.data?.scope),
+    display?.query.subject, Object.entries(display?.query.items ?? {}).sort(([a], [b]) => a.localeCompare(b))]);
+  const sections = identity === renderedCard
+    ? new Map([...root.querySelectorAll<HTMLDetailsElement>("details[data-section]")].map(section => [section.dataset["section"]!, section.open]))
+    : new Map<string, boolean>();
+  renderedCard = identity;
   root.replaceChildren();
   root.setAttribute("aria-busy", String(busy));
   document.documentElement.dataset["mode"] = bridge.context.displayMode ?? "inline";
@@ -322,6 +334,7 @@ function render() {
   article.append(node("p", card.summary, "summary"));
   if (display.status === "unavailable" && card.declared?.routed) {
     const evidence = node("details", undefined, "read-points");
+    evidence.dataset["section"] = "read-points";
     evidence.append(node("summary", "Read points"));
     const points = node("ul");
     for (const point of card.projection) {
@@ -365,6 +378,7 @@ function render() {
   if (summary && card.wholeText && card.body) article.append(node("p", card.body, "body"));
   if (!summary && card.record) {
     const record = node("details", undefined, "read-points");
+    record.dataset["section"] = "exact-record";
     record.append(node("summary", card.record.label), node("pre", card.record.text, "diff"));
     article.append(record);
   }
@@ -406,6 +420,10 @@ function render() {
     const actions = node("div", undefined, "actions");
     for (const action of card.actions) { const control = button(action.label, () => act(action.id)); control.disabled ||= !display.active; actions.append(control); }
     root.append(actions);
+  }
+  for (const section of root.querySelectorAll<HTMLDetailsElement>("details[data-section]")) {
+    const open = sections.get(section.dataset["section"]!);
+    if (open !== undefined) section.open = open;
   }
 }
 function readerButton(reader: { action: string; label: string; current?: boolean }): HTMLButtonElement {

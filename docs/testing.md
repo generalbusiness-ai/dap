@@ -887,10 +887,12 @@ services and prove no installed-host, shutdown, or deployment outcome.
 ## Card browser scripts
 
 [`.github/workflows/views-browser.yml`](../.github/workflows/views-browser.yml)
-runs two scripts in Chromium on Linux. `packages/mcp/test/views-browser.mjs`
+runs three scripts in Chromium on Linux. `packages/mcp/test/views-browser.mjs`
 presses through the cards on a fixture host, in two themes and three widths.
 `packages/mcp/test/owned-scopes-browser.mjs` opens the Grow site, two rooms and
 their benches, and checks that each room keeps its own card state.
+`packages/mcp/test/grow-routing-browser.mjs` follows assignment and watering
+routes through native owned scopes and checks section state across refreshes.
 The workflow runs on a pull request and on a push to any branch, when the
 change touches the card source, the generated module, a script, a script's
 support files, the Grow check package or the workflow. Its `on:` block lists
@@ -899,10 +901,9 @@ browser step.
 
 A head that touches `packages/mcp/browser/**`, `packages/mcp/src/views/**`,
 `packages/mcp/src/service.ts`, `packages/mcp/test/support/actor-cards.ts`,
-`packages/mcp/test/change-view.scope.test.ts`, or either script cites this
-workflow's run at the head's own commit. That citation replaces running the
-scripts by hand and citing the result. A head's branch
-reaches `origin` only when you push it, and a run on `main` comes after the
+`packages/mcp/test/change-view.scope.test.ts`, or any of the three scripts cites
+this workflow's run at the head's own commit. That citation replaces running the
+scripts by hand and citing the result. A head's branch reaches `origin` only when you push it, and a run on `main` comes after the
 landing. To get the run:
 
 1. Push the branch: `git push origin <branch>`.
@@ -996,10 +997,11 @@ witnesses, and the gate's Counting stage runs it.
 | `notes/2026-10-17-journey-views-design/render.mjs` | a static server over the checkout | no: it checks a frozen design packet |
 | `notes/2026-10-17-compact-cards-design/verification/*.mjs`, `notes/plans/retired/027-artroom-usability/preview-qa.mjs` | absolute paths that no longer exist | no: they record past runs |
 
-`packages/mcp/test/grow-routing-browser.mjs` can fail at line 89. The card
-rebuilds its content at each refresh, every 2 seconds, and that rebuild closes
-the **Read points** section. The script times out when the rebuild comes before
-its wait for the section's text.
+`packages/mcp/test/grow-routing-browser.mjs` runs in the Card workflow.
+It opens **Read points**, waits for two automatic refreshes, and checks that
+the section stays open. It also closes the section and checks that a refresh
+keeps it closed. The card binds section state to the same view, page, item,
+and scope; another card starts with its own state.
 
 ## Settings inventory
 

@@ -19,6 +19,10 @@ const report={browserPlugin:'Browser plugin not available',playwright:'1.63.0',o
 async function opened(params={},width=592){
   const page=await browser.newPage({viewport:{width:width+32,height:1000}}), errors=[];
   page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(['error','warning'].includes(m.type()))errors.push(m.text())});
+  if(params.fixture==='refresh-sections'){
+    const time=new Date('2099-01-01T00:00:00Z');
+    await page.clock.install({time});await page.clock.pauseAt(time);
+  }
   await page.goto(host.url+'/?'+new URLSearchParams(params));
   assert.equal(await page.title(),'S2 card fixture host');
   const app=page.frameLocator('#frame').frameLocator('iframe');
@@ -85,6 +89,52 @@ try{
     const state=await page.evaluate(async()=>fetch('/proof?instance='+window.proof.config.id).then(r=>r.json()));assert.equal(state.signed.length,1);
     await page.screenshot({path:out+'/'+label+'-receipt.png'});
     report.cases.push({label,measure:evidence.measure,sizes:evidence.proof.sizes,chat:evidence.proof.chat,signatures:state.signed.length,actorMarks});await page.close();
+  }
+  // Real rendering and refresh timers over scripted projections. Each refresh
+  // changes revision/cut, while its item and scope stay the same.
+  for(const width of [592,320]){
+    const {page,app,errors}=await opened({fixture:'refresh-sections'},width);
+    const sized=async()=>{
+      for(let frame=0;frame<10;frame++){
+        await page.clock.runFor(50);
+        const height=await app.locator('#card-root').evaluate(root=>Math.ceil(root.getBoundingClientRect().height));
+        if(await page.evaluate(value=>Math.abs(parseFloat(document.querySelector('#frame').style.height)-value)<=1,height))return;
+      }
+      assert.fail('The controlled animation frames did not resize the fixture host');
+    };
+    const clickClock=async locator=>{await sized();await locator.click();await sized();};
+    await clickClock(app.getByRole('button',{name:'Open',exact:true}));
+    const section=app.locator('details[data-section="exact-record"]');
+    assert.equal(await section.evaluate(value=>value.open),false,'a new card starts closed');
+    await clickClock(section.locator('summary'));
+    const refresh=async()=>{
+      const prior=await page.evaluate(()=>proof.calls.filter(call=>call.name==='view_read'&&call.arguments.refresh===true).length);
+      await page.clock.runFor(2100);
+      await page.waitForFunction(count=>proof.calls.filter(call=>call.name==='view_read'&&call.arguments.refresh===true).length>count,prior);
+      await app.locator('#card-root[aria-busy="false"]').waitFor();await sized();
+    };
+    const initial=await app.locator('.revision').innerText();
+    await refresh();assert.equal(await section.evaluate(value=>value.open),true,'first refresh keeps the section open');
+    await refresh();assert.equal(await section.evaluate(value=>value.open),true,'second refresh keeps the section open');
+    assert.notEqual(await app.locator('.revision').innerText(),initial,'refresh changed the displayed revision');
+    await page.screenshot({path:out+'/refresh-open-'+width+'.png'});
+    await clickClock(section.locator('summary'));await refresh();
+    assert.equal(await section.evaluate(value=>value.open),false,'refresh keeps an explicit close');
+    await clickClock(section.locator('summary'));
+    const instance=await page.evaluate(()=>proof.config.id);
+    host.complete(instance,'q7');await refresh();
+    await app.getByRole('heading',{name:'Review the working terms',exact:true}).waitFor();
+    assert.equal(await section.evaluate(value=>value.open),false,'an item replaced during refresh does not borrow the old item section');
+    await clickClock(app.getByRole('button',{name:/Back/}));
+    await clickClock(app.getByRole('button',{name:'Next item',exact:true}));
+    await clickClock(app.getByRole('button',{name:'Open',exact:true}));
+    assert.equal(await section.evaluate(value=>value.open),false,'a different item does not borrow an open section');
+    await page.clock.resume();
+    await verify(page,app,errors,'refresh-sections-'+width);
+    const state=await page.evaluate(async()=>fetch('/proof?instance='+proof.config.id).then(response=>response.json()));
+    assert.equal(state.signed.length,0,'disclosure state and refreshes sign no act');
+    report.cases.push({label:'refresh-sections-'+width,openAcrossTwoRefreshes:true,closedAcrossRefresh:true,replacedItemStartsClosed:true,differentItemStartsClosed:true,signatures:0});
+    await page.close();
   }
   // Actual native-room displays and receipts. This host replays them; the native owner above already judged each act.
   for(const scene of nativeActors.scenes) for(const width of [592,320]) {

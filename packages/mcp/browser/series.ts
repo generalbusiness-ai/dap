@@ -27,6 +27,7 @@ export function seriesPanel(series: Series): HTMLElement {
   const fallback = document.createElement("p"); fallback.className = "series-fallback"; fallback.textContent = series.fallback; section.append(fallback);
   if (series.samples.length) {
     const details = document.createElement("details"), summary = document.createElement("summary"), list = document.createElement("ol");
+    details.dataset["section"] = "recorded-samples";
     summary.textContent = `Recorded samples (${series.samples.length})`; details.append(summary);
     for (const sample of series.samples) {
       const item = document.createElement("li"); item.textContent = `${formatInteger(sample.value, series.scale, series.unit)} at ${sample.time} (entry ${sample.entry.seq})`; list.append(item);
