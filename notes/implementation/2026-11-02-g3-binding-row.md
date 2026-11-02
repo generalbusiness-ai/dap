@@ -86,13 +86,35 @@ accepted those separate outcomes. This follow-up claims no passing full gate.
 [The earlier record](2026-11-02-g3-mini-configuration.md) retains both
 diagnostics and their limits.
 
-The focused production-parser checks and sealed evidence index follow in the
-final evidence account. They validate these operator inputs. They do not
-establish the later deployment, binding, GitHub write, or parent acceptance.
+The production App and binding parsers accept the filled files. Fourteen
+controls cover wrong live incarnation, scope, kind, repository ID, name,
+namespace, and branch, plus a missing map and six malformed-map cases.
+A separate read confirms that the mini's existing nonsecret App JSON matches
+the reviewed file byte for byte. Focused checks also confirm document links,
+commit subjects, whitespace, clean state, and notes-only Git differences.
+These checks establish no later deployment, binding, GitHub write, or parent
+acceptance. Health exposes no map identity. Planner request `9754e45b`
+asks for separate runtime proof that the second bundle serves before binding.
 
 ## Sealed evidence
 
-The final evidence account names the frozen checkpoint and manifest.
+[The manifest](evidence/2026-11-02-g3-room-before-binding.manifest.json) indexes
+53 read-only files in
+`/Users/hughpyle/play/artroom-evidence/2026-11-02-g3-room-before-binding`.
+Its checkpoint is `6884772d771c1f9a4d752fffc48e6ef5a3baa447`, tree
+`cb5a46008ec925d66e7e6f13bea066f99285fefe`. The final follow-up adds only
+this evidence account and its manifest. The private index names 12 withheld
+raw files. Keep both evidence sets for at least 30 days after landing.
+
+| File | Evidence |
+|---|---|
+| `02-create.json` through `06-issue.json` and their exit files | Actual fixed-source CLI processes and private output hashes |
+| `08-native-before-corrected.json` | Full references, verified journal prefixes, and detached issue body |
+| `09-binding-parser.stdout` | Actual production parser and fourteen controls |
+| `10-mini-app-comparison.stdout` | Existing App JSON equals the filled reviewed file |
+| `11-docs-checks.stdout` | Focused checks, clean checkpoint, and exact source equality |
+| `private-raw-index.json` | Private paths, sizes, and hashes |
+
 Raw CLI output stays private because native requests can contain credentials
-or signed envelopes. Public evidence contains only selected nonsecret results,
+or signed envelopes. Public evidence contains selected nonsecret results,
 producer source, command metadata, hashes, and exit files.
