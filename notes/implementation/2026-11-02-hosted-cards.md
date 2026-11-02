@@ -161,6 +161,7 @@ private keys. Keep the sealed units for at least 30 days after landing.
 | `2026-11-02-hosted-cards-card-ci` | Exact source Card workflow | 3 | `e376376afceb23ce7a1f3d100193ff3901899e8315b9bfd4fb9ad07038278401` |
 | `2026-11-02-hosted-cards-gate` | Frozen source; actual exit 0; unchanged before/after guards | 7 | `c23b36a65c74bb2e4346c42a805609b51ca74dc904b44556b7c506ff88f2b6e9` |
 | `2026-11-02-hosted-cards-documentation` | Documentation checks at their own checkpoint | 6 | `2e5ba8ca16b49827ac362a0fc60b18323254f870e28d8f44703604765e604806` |
+| `2026-11-02-hosted-cards-documentation-final` | Documentation checks at their own checkpoint | 6 | `052088daf2af287234117f9dfcca752e04328ae2fc6e1ede2cdd3cf4a3d858c2` |
 
 The focused unit indexes 43 attempts and 88 private files. Its summary
 keeps each outcome separate; the counts below do not add overlapping runs.
