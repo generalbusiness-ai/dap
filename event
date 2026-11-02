@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6e79d2c9482d7e9c1ae9d11f1714db93b54f74c2","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/mac/repository-binding-policy.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6ead2db8607828e7ab1073eb8ba09b1ae096cff8","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/membership.ts."}
