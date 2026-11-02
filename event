@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at .github/workflows/views-browser.yml","body":{"commit":"c9f9ed46760e5c961385125822bc0f6734b40ea8","path":".github/workflows/views-browser.yml"}}
+{"kind":"artifact","text":"Merge published the current artifact at apps/views/src/node.ts","body":{"commit":"c9f9ed46760e5c961385125822bc0f6734b40ea8","path":"apps/views/src/node.ts"}}
