@@ -6,7 +6,7 @@ This record answers request `5f87ccc243e67d8793ca1570a9a51e543369eb34`, promise 
 
 A corrected local replay retains 20 HTTP503 bodies. Every body is `{"ok":false,"reason":"unavailable"}`. Each Worker-side sample shows the directory holding 64 streams, with zero releases. The native per-scope limit explains those captured refusals.
 
-Both diagnostic scenes open all 100 rows in 20 fresh tabs. Each scene exits 1 because its original console-error check catches stream HTTP 503s. The other 35 checks pass, including unchanged issue heads and items, and zero browser acts. This record reports those diagnostic failures. 
+Both diagnostic scenes open all 100 rows in 20 fresh tabs. Each scene exits 1 because its original console-error check catches stream HTTP 503s. The other 35 checks pass, including unchanged issue heads and items, and zero browser acts. This record reports those diagnostic failures.
 
 ## The decisions and why
 
