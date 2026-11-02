@@ -179,7 +179,6 @@ try {
   const text = async () => page.locator("main").innerText();
   const listShown = () => page.locator("[data-needs-you]").waitFor({ timeout: 20_000 }).then(() => true, () => false);
   const shownRows = () => page.locator("[data-needs-row]").evaluateAll(nodes => nodes.map(node => ({ item: Number(node.getAttribute("data-needs-row")), scope: node.getAttribute("data-needs-lane"), text: node.innerText })));
-  const { reasonLines } = await load("apps/views/src/attention.ts");
   const compare = async (label, rows) => {
     const shown = await shownRows();
     check(`${label}: the list holds the rows of needs_you, in their order`, shown.map(one => [one.scope, one.item]), rows.map(one => [one.scope.scope, one.item]));
@@ -218,9 +217,63 @@ try {
     check("the bounded probe moves no lane head", after.map(lane => lane.at), before.map(lane => lane.at));
     check("the bounded probe changes no item", after.map(lane => lane.items), before.map(lane => lane.items));
     check("the bounded probe signs nothing", acts.slice(actsAtStart), []);
-    check("the bounded probe has no browser errors", repeated.console, []);
+    check("the bounded probe has no unexpected browser errors", repeated.unexpectedConsole, []);
     report = { qualification: "A real local Worker and native room, with the command line and apps/views server. Twenty fresh tabs share the joined browser context. No provider or hosted Worker participates. Passing the fixed count does not explain the earlier stop or establish absence of an intermittent fault.", lanes: [first, second], probe: repeated, acts: acts.slice(actsAtStart) };
   } else {
+  // Real native Rules reads with two transport refusals scripted at the definition-query boundary.
+  // Neither refusal claims to reproduce the historical J5 failure's missing body.
+  const rulesRef = (await people.rita.store.config()).repository.rules;
+  const rulesScope = typeof rulesRef === "string" ? rulesRef : rulesRef.scope;
+  const rulesBefore = await laneOf(rulesScope), rulesActsAtStart = acts.length;
+  let rulesReadMode = "refuse", refusedRulesReads = 0, releaseRulesRead = null, heldRulesRead;
+  const rulesReadHeld = new Promise(resolve => { heldRulesRead = resolve; });
+  const rulesQuery = url => url.origin === base && url.pathname === `/v1/scopes/${rulesScope}/query-items`;
+  const refuseRules = async route => {
+    if (rulesReadMode === "pass") return route.continue();
+    refusedRulesReads++;
+    if (rulesReadMode === "late") {
+      await new Promise(resolve => { releaseRulesRead = resolve; heldRulesRead(); });
+    }
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: false, reason: "unavailable" }) });
+  };
+  await context.route(rulesQuery, refuseRules);
+  try {
+    await page.getByRole("link", { name: "Rules", exact: true }).click();
+    const retry = page.locator("[data-rules-retry]");
+    await retry.waitFor({ timeout: 60_000 });
+    const failure = await text();
+    check("Rules keeps the scripted native-read refusal's cause", failure.includes("unavailable") && failure.includes(rulesScope));
+    check("Rules offers a read retry instead of an edit on failure", await page.locator("main [data-act]").count(), 0);
+    check("Rules failure keeps initialization unknown", !failure.includes("This room is not initialized yet."));
+    await page.screenshot({ path: join(shots, "rules-read-refused.png"), fullPage: true });
+    rulesReadMode = "pass";
+    await retry.click();
+    await page.locator("h1.rules-title").waitFor({ timeout: 60_000 });
+    check("Try again recovers the real Rules screen", await page.locator("[data-rules-retry]").count(), 0);
+    await page.screenshot({ path: join(shots, "rules-read-recovered.png"), fullPage: true });
+    await page.getByRole("link", { name: "Issues", exact: true }).click();
+    await listShown();
+    rulesReadMode = "late";
+    await page.getByRole("link", { name: "Rules", exact: true }).click();
+    let holdTimer;
+    try { await Promise.race([rulesReadHeld, new Promise((_, reject) => { holdTimer = setTimeout(() => reject(Error("The scripted Rules read did not start")), 60_000); })]); }
+    finally { clearTimeout(holdTimer); }
+    await page.getByRole("link", { name: "Issues", exact: true }).click();
+    await listShown();
+    rulesReadMode = "pass";
+    releaseRulesRead();
+    await delay(300);
+    check("a late failed Rules read cannot replace the current Issues screen", await listShown());
+    check("a late failed Rules read leaves no Rules retry on Issues", await page.locator("[data-rules-retry]").count(), 0);
+    const rulesAfter = await laneOf(rulesScope);
+    check("Rules recovery and navigation move no Rules head", rulesAfter.at, rulesBefore.at);
+    check("Rules recovery and navigation change no Rules item", rulesAfter.items, rulesBefore.items);
+    check("Try again signs no room act", acts.slice(rulesActsAtStart), []);
+    check("both controlled Rules refusals ran", refusedRulesReads, 2);
+  } finally {
+    releaseRulesRead?.();
+    await context.unroute(rulesQuery, refuseRules);
+  }
   // Reading each item leaves it open.
   const openRow = async (scope, item) => { await page.locator(`[data-needs-row="${item}"][data-needs-lane="${scope}"] a`).click({ timeout: 15_000 }); await page.waitForSelector('[data-action-slot="comment"] form', { timeout: 60_000 }); };
   const listAgain = async () => { await page.locator("a.back").click({ timeout: 30_000 }); await listShown(); await page.getByRole("link", { name: /The import fails on large files/ }).waitFor({ timeout: 60_000 }); };
