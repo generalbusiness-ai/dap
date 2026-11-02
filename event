@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"apps/room/page at exact 919a4c3b36f5028347b423e358192187cfcda2fa on builder/j5-leftovers-20261102, under promise git:sha1…d984030 on request git:sha1…2bdf7ee","body":{"commit":"919a4c3b36f5028347b423e358192187cfcda2fa","path":"apps/room/page"}}
+{"kind":"artifact","text":"apps/views at exact 919a4c3b36f5028347b423e358192187cfcda2fa on builder/j5-leftovers-20261102, under promise git:sha1…d984030 on request git:sha1…2bdf7ee","body":{"commit":"919a4c3b36f5028347b423e358192187cfcda2fa","path":"apps/views"}}
