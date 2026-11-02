@@ -309,7 +309,7 @@ function render() {
     const actor = node("p", undefined, `actor ${card.actor.kind}`);
     const mark = card.actor.kind === "person" ? "●" : card.actor.kind === "agent" ? "■" : "◇";
     const glyph = node("span", mark); glyph.setAttribute("aria-hidden", "true");
-    actor.append(glyph, document.createTextNode(` ${card.actor.name}${card.actor.controller ? ` · controlled by ${card.actor.controller}` : ""} · ${card.actor.kind}`));
+    actor.append(glyph, document.createTextNode(` ${card.actorLabel ? `${card.actorLabel}: ` : ""}${card.actor.name}${card.actor.controller ? ` · controlled by ${card.actor.controller}` : ""} · ${card.actor.kind}`));
     article.append(actor);
   }
   if (card.declared?.actor !== null && card.declared?.actor !== undefined) {

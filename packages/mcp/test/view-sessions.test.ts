@@ -4,6 +4,7 @@ import { REPLY_SECONDS } from "@generalbusiness/dap-client";
 import { readFileSync } from "node:fs";
 import { VIEW_DIFF_POLLS, type CallResult } from "../src/service.ts";
 import { cardOpens } from "../src/views/opens.ts";
+import { actSigner } from "../src/views/actor.ts";
 import { ViewSessions } from "../src/views/session.ts";
 import { viewTools } from "../src/views/tools.ts";
 import type { Card, Display, LocalReviewCapture, Projection, ViewSource } from "../src/views/types.ts";
@@ -371,4 +372,22 @@ test("a press's wait outlasts one stalled request at each stage of a signed read
   // This package's tests do not import the Git package, so the test reads the bound from its source.
   const gitRead = /const DIFF_READ_MS = ([\d_]+);/.exec(readFileSync(new URL("../../git/src/diff.ts", import.meta.url), "utf8"))!;
   expect(TOOL_WAIT_MS).toBeGreaterThanOrEqual(3 * REPLY_SECONDS * 1000 + VIEW_DIFF_POLLS * 1000 + Number(gitRead[1]!.replaceAll("_", "")));
+});
+
+
+// Invariant: a key or agent controller absent from this exact membership stays unknown, rather than borrowing an identity from another room or a removed person.
+test("signer display keeps an unverified key or controller unknown (membership rows are stand-ins)", () => {
+  const key = fixedSigner(89).key, peer = new StandIn(key), ref = { membership: peer.membership, member: "@una" as const };
+  const originals = peer.scopes.get(peer.membership.scope)!.items;
+  const controller = { membership: peer.membership, member: "@rita" as const };
+  const agent = { ...originals.find(item => item.type === "member")!, values: { kind: "agent", handle: "@una" }, parties: { member: ref, controller } };
+  const person = { ...agent, id: 3, values: { kind: "person", handle: "@rita" }, parties: { member: controller, controller: null } };
+  const items = [...originals.filter(item => item.type !== "member"), agent, person];
+  expect(actSigner(items, peer.membership, key).actor).toEqual({ kind: "agent", name: "@una", controller: "@rita" });
+  person.state = "removed";
+  expect(actSigner(items, peer.membership, key), "A REMOVED CONTROLLER is not the active person this display claims").toEqual({ key, actor: null });
+  person.state = "active";
+  const elsewhere = { ...peer.membership, scope: "sc_elsewhere" as const };
+  expect(actSigner(items, elsewhere, key), "ANOTHER MEMBERSHIP cannot supply the key's display").toEqual({ key, actor: null });
+  expect(actSigner(items.map(item => item.type === "key" ? { ...item, state: "revoked" } : item), peer.membership, key), "A REVOKED KEY has no current holder to invent").toEqual({ key, actor: null });
 });
