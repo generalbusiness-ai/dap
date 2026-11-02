@@ -6,8 +6,8 @@ repository witness. Parent `3c6ec378` keeps that acceptance.
 
 The configuration child is `9a3a705d`. Planner ruling `28287222` supplies
 the service user, new private paths, and the procedure that fills the register
-ID after review. Request `29c50395` asks the planner to correct the deployment
-prefix before any expiring plan runs.
+ID after review. Ruling `4943c76a` resolves request `29c50395`: it corrects
+the prefix, accepts the two H3 effects below, and requires a named rollback.
 
 ## Filled App configuration
 
@@ -36,7 +36,7 @@ permission. This configuration does not narrow the App installation itself.
 
 ## Mini paths and current observations
 
-All new G3 state belongs below `/Users/inguz/dap-host-g3-20261102`, mode0700.
+All new G3 state belongs below `/Users/inguz/dap-host-g3-20261102`, mode 0700.
 The planner owns private-key placement after checker approval.
 
 | Purpose | Path |
@@ -45,7 +45,7 @@ The planner owns private-key placement after checker approval.
 | Persistent G3 client home | `.../client` |
 | Original prepared project | `.../project` |
 | Reviewed filled App configuration | `.../github/github-app.json` |
-| Private App key, mode0600, owned by inguz | `.../github/app-key.pk8.pem` |
+| Private App key, mode 0600, owned by inguz | `.../github/app-key.pk8.pem` |
 | First staged GitHub project | `.../github-project` |
 | Later staged binding project | `.../binding-project` |
 | Existing per-command trust anchor | `/Users/inguz/dap-host-h3-20261029/tls/cert.pem` |
@@ -60,11 +60,12 @@ once its workspace package links resolve inside that export. No probe installs
 a package in a checkout.
 
 Read-only SSH as inguz found `/Library/dap-host` absent. The actual H3 prefix
-is `/Library/dap-host-h3-20261029`, a root-owned directory at mode0755.
+is `/Library/dap-host-h3-20261029`, a root-owned directory at mode 0755.
 Its installation record names node `h3-mac-20261029`, the fixed fleet bucket,
 and the existing loopback listeners. The new G3 root does not yet exist.
-The proposed procedure uses the actual prefix only after the planner resolves
-`29c50395`. It neither installs another fleet nor changes its node or storage.
+Ruling `4943c76a` selects this existing prefix and node. It replaces the
+generic `/Library/dap-host` path in `28287222`. No new installation step
+runs, and the procedure keeps the existing node and store.
 
 The standard Python TLS check could not use this endpoint certificate as an
 anchor. The observed peer certificate matches the supplied certificate's
@@ -75,7 +76,7 @@ and register `ready`. This Python refusal is no host-readiness failure.
 The original H3 client then reads its active Membership8 and Directory20.
 Their heads are respectively 21 and 7. The baseline script blocks local
 configuration, key, and private-custody writes, and permits only GET requests
-and read-session issuance. Its two CLI status commands return0. One read
+and read-session issuance. Its two CLI status commands return 0. One read
 session was requested. No content mutation was attempted. The public record
 contains status, definition, head, and hashes of CLI lines, with no scope IDs,
 keys, sessions, signatures, or room content.
@@ -106,14 +107,31 @@ The new bundle retains the old native pins. The creation policy retains the
 unpublished family, so H3's existing host-none family stays recognizable.
 No H3 home, scope pin, journal, node directory, bucket, or certificate changes
 in this procedure. These source facts support continued H3 reads, but the
-post-deployment witness is still required. The planner must accept the two
-losses above before deployment.
+post-deployment witness is still required. The planner accepts those two
+effects in `4943c76a` and requires a stop if either H3 read fails.
 
 [h3-read-baseline.mjs](2026-11-02-g3-mini-configuration/h3-read-baseline.mjs)
 records the successful before state. Running the same script after each G3
 deployment must again read the same configured H3 room with active Membership8
 and Directory20. Health alone does not establish that result. A failed read
 keeps the G3 deployment acceptance open and retains all projects and evidence.
+
+## Retained H3 rollback
+
+The original prepared project exists at
+`/Users/inguz/dap-host-h3-20261029/project`, owned by inguz, mode 0700.
+Read-only validation through the original H3 `deploy.py` accepts that project
+and its actual installation record. Its retained esbuild is executable,
+and the installed celld answers version 0.6.3, matching pin `v0.6.3`.
+The validator never calls deploy or a bucket mutation.
+
+The rollback uses the original H3 helper under its original source, not the
+new G3 helper. `prepared_project` binds the entry to its helper's source
+path, so the new helper must not validate an old project by relabeling it.
+The procedure names the complete original command and requires H3 health and
+room reads afterward. No rollback ran during this preparation. Replacing
+G3's bundle with H3's original bundle ends G3's active serving configuration;
+its private projects and data remain retained, and G3 acceptance stays open.
 
 ## Procedure and validation status
 
@@ -129,6 +147,30 @@ celld template equals H3's template at `7ea9d54e`: name, bindings, migrations,
 and settings. The actual H3 baseline above passes through the original Node
 runtime. These focused results precede the configuration head's gate.
 
-The planner's prefix and H3-effects ruling, evidence seal, required gate,
-exact review, and landing still follow. No validation in this record proves
-an App login, mini deployment, GitHub push, or parent acceptance.
+The gate at frozen draft `2f0e8295` reports `exit 1`; its source and clean
+state remain unchanged, and its owned process group closes. Kernel, 132 Node
+cases, and 56 Counting cases pass. The plain phase records 3,564 passes,
+15 failures, and one skip. All 15 failures are timeouts at their existing 5, 15, or 30
+second limits. Native never starts. The capture takes 540.796 seconds.
+
+A diagnostic selects exactly those 15 cases across 10 files, with one active
+file task and the same case limits. It records 11 passes, four timeouts, and 46
+unselected cases. It is no gate pass. Neither tests nor deadlines change.
+The four remaining timeouts belong to archive-git-v2-reader,
+application-examples, application-new, and push. That diagnostic also records
+one unhandled localhost `listen EPERM` error and Git `confstr` warnings.
+
+A second diagnostic runs only those four cases outside the sandbox. All four
+pass at their original deadlines, with five unselected cases. Tracked file
+bytes remain unchanged. The original gate has no recorded `EPERM`, so this
+follow-up does not establish the cause of its original timeouts. The full
+Native phase follows separately because the gate never reached it.
+
+Runtime modules, tests, package files, and configuration match the prior
+passing gate at `a612368f`. This record adds four files over `afdd8ee5`:
+the note, procedure, App configuration template, and baseline script. The
+configuration parser, actual H3 before reads, rollback input validation,
+script syntax, and document links pass. The full failed gate and focused
+failures remain in the evidence for exact review; no passing Native phase or
+passing gate at this head is claimed. No validation here proves an App login,
+mini deployment, GitHub push, rollback execution, or parent acceptance.
