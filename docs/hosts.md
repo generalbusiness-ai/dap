@@ -147,7 +147,9 @@ What it needs:
   [The creation credential](deploy.md#the-creation-credential). Without
   it, a room's repository creation is recorded and waits.
 - `GITHUB_READ_TOKEN`, which reads private repositories. It is not needed
-  when `publicReads` is true.
+  when `publicReads` is true or explicit `installationReads` is true.
+  The installation-read mode accepts only later-bound destinations with an
+  exact operator authorization and refuses a supplied static read token.
 - For a later binding, `GITHUB_REPOSITORY_BINDINGS`: nonsecret JSON with
   exact destination, repository, and branch authorizations. Missing pairs
   grant no later-binding authority. Malformed configuration disables the
@@ -159,7 +161,7 @@ What it needs:
   repository that a creation made but the register did not select.
   Without it, the deletion is recorded and waits.
 
-`GITHUB_APP_CONFIG` has exactly these fields. Without the setting, or with
+`GITHUB_APP_CONFIG` has these required fields and one optional field. Without the setting, or with
 an invalid one, the Worker sends nothing to GitHub. Attempts are recorded
 and wait.
 
@@ -172,6 +174,7 @@ and wait.
 | `registerScope` | The register's scope ID. It must equal `REGISTER_SCOPE`. Only that register's creations are sent. |
 | `privateRepositories` | Whether new repositories are private. |
 | `publicReads` | Whether the Worker reads repositories with no token. Must be false when `privateRepositories` is true. |
+| `installationReads` | Optional, exactly `true`: private later-bound reads mint one-repository Contents-read installation tokens. Requires `privateRepositories: true`, `publicReads: false`, and no `GITHUB_READ_TOKEN`. |
 | `credentialIdentity` | Always `"adapter-attempt"`. |
 
 [`packages/scope/src/github-wiring.ts`](../packages/scope/src/github-wiring.ts)
@@ -196,9 +199,19 @@ accepts at most 64 pairs and 64 KiB of UTF-8 JSON. It refuses duplicate
 destination references and duplicate repository-ID/branch pairs. The
 namespace must match the configured App account. A later-bound destination
 checks its live full reference, complete repository record, and branch on
-every outside entry point. Before minting a read or write credential, the
-provider verifies the repository name against its stable ID and verifies
-the App installation's account and suspension state.
+every outside entry point. With an independent read credential, the
+provider verifies the repository name against its stable ID and the App
+installation's account and suspension state before either credential mint.
+
+With `installationReads: true`, the provider first validates the App
+installation, then mints a Contents-read token for the recorded repository
+ID. It checks the returned token's exact scope and permissions, then uses
+that token to verify the repository name and stable ID before Git reads.
+The same verified token can answer a member's read-token operation. A
+publication token follows those checks and carries only that repository ID
+with Contents write. The port never requests an all-repository token or
+Administration permission. These restrictions follow
+[GitHub's installation-token controls](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation).
 
 ## How a member reads the repository
 

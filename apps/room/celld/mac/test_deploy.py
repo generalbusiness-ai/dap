@@ -123,6 +123,21 @@ class DeploymentSafety(unittest.TestCase):
             with self.assertRaises(Refusal):
                 deploy.prepared_project(project)
 
+            config["vars"]["GITHUB_APP_CONFIG"] = json.dumps({**github, "installationReads": True})
+            path.write_text(json.dumps(config))
+            self.assertEqual(deploy.prepared_project(project), project)
+            for changed in ({"installationReads": False}, {"installationReads": "true"},
+                            {"publicReads": True}, {"privateRepositories": False}):
+                config["vars"]["GITHUB_APP_CONFIG"] = json.dumps({**github, "installationReads": True, **changed})
+                path.write_text(json.dumps(config))
+                with self.assertRaises(Refusal):
+                    deploy.prepared_project(project)
+            config["vars"]["GITHUB_APP_CONFIG"] = json.dumps({**github, "installationReads": True})
+            config["vars"]["GITHUB_READ_TOKEN"] = "TEST.ambiguous.read.token"
+            path.write_text(json.dumps(config))
+            with self.assertRaises(Refusal):
+                deploy.prepared_project(project)
+
     def test_scripted_cleanup_error_retains_an_unproved_group_without_provider_details(self):
         class ScriptedProcess:
             pid = 12345

@@ -71,6 +71,25 @@ test('GitHub preparation stages a private copy, keeps session custody and never 
   assert.equal((await readFile(join(f.project, 'wrangler.json'))).equals(before), true);
 });
 
+test('App-only private preparation needs no static read token and retains exact binding authority', async t => {
+  const f = await fixture(t), before = await readFile(join(f.project, 'wrangler.json'));
+  await writeFile(f.configFile, JSON.stringify({ ...f.config, installationReads: true }));
+  await prepareGitHubProject({ ...f, readTokenFile: undefined });
+  const configured = JSON.parse(await readFile(join(f.out, 'wrangler.json')));
+  assert.equal(Object.hasOwn(configured.vars, 'GITHUB_READ_TOKEN'), false);
+  assert.equal(JSON.parse(configured.vars.GITHUB_APP_CONFIG).installationReads, true);
+  assert.deepEqual(JSON.parse(configured.vars.GITHUB_REPOSITORY_BINDINGS), f.bindings);
+  assert.equal(configured.vars.GITHUB_APP_PRIVATE_KEY, f.key);
+  const checked = spawnSync('/usr/bin/python3', ['-B', '-c',
+    'import deploy,sys; deploy.prepared_project(deploy.Path(sys.argv[1]))', f.out],
+  { cwd: fileURLToPath(new URL('../', import.meta.url)), encoding: 'utf8' });
+  assert.equal(checked.status, 0, checked.stderr);
+  assert.equal((await readFile(join(f.project, 'wrangler.json'))).equals(before), true);
+  await assert.rejects(prepareGitHubProject({ ...f, out: join(f.directory, 'ambiguous') }),
+    error => error instanceof GitHubProjectPreparationError && error.stage === 'github-readiness');
+  await assert.rejects(lstat(join(f.directory, 'ambiguous')), { code: 'ENOENT' });
+});
+
 test('repository authorization for another account cannot reach a prepared project', async t => {
   const f = await fixture(t), before = await readFile(join(f.project, 'wrangler.json'));
   f.bindings[0].repository.namespace = 'another-account';

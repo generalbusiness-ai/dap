@@ -5,7 +5,7 @@
  * No configuration, key, token or plaintext belongs in a scope's history.
  */
 import type { ScopeId } from "@generalbusiness/dap-contract";
-import { isScopeId, parseStrict, timeMs } from "@generalbusiness/dap-bytes";
+import { isRecord, isScopeId, parseStrict, timeMs } from "@generalbusiness/dap-bytes";
 import { destinationBranch, isOf, platform } from "@generalbusiness/dap-platform";
 import { gitHubPrivateKey } from "@generalbusiness/dap-git/github";
 import type { GitHubAccount, GitHubInstallationToken } from "@generalbusiness/dap-git/github";
@@ -35,6 +35,8 @@ export interface GitHubConfiguration {
   /** Pins host authority only. Installation authorization (N5) remains unimplemented. */
   registerScope: ScopeId;
   privateRepositories: boolean; publicReads: boolean; credentialIdentity: "adapter-attempt";
+  /** Opt-in private reads with one-repository, read-only installation tokens. */
+  installationReads?: true;
 }
 interface Cleanup { name: string; token: GitHubInstallationToken }
 const positive = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value > 0;
@@ -47,9 +49,14 @@ export function gitHubRegisterScope(raw: unknown): ScopeId | null {
 export function gitHubConfiguration(raw: unknown): GitHubConfiguration | null {
   if (typeof raw !== "string" || !raw || raw.length > 4096) return null;
   let value: ReturnType<typeof exact>;
-  try { value = exact(parseStrict(raw), ["issuer", "installationId", "account", "maxBytes", "registerScope", "privateRepositories", "publicReads", "credentialIdentity"]); } catch { return null; }
+  try {
+    const parsed = parseStrict(raw);
+    value = exact(parsed, ["issuer", "installationId", "account", "maxBytes", "registerScope", "privateRepositories", "publicReads", "credentialIdentity",
+      ...(isRecord(parsed) && Object.hasOwn(parsed, "installationReads") ? ["installationReads"] : [])]);
+  } catch { return null; }
   const account = exact(value?.["account"], ["id", "login", "type"]);
   if (!value || !account || typeof value["issuer"] !== "string" || !/^[A-Za-z0-9_.-]{1,128}$/.test(value["issuer"]) || !positive(value["installationId"]) || !isScopeId(value["registerScope"]) || !positive(account["id"]) || typeof account["login"] !== "string" || !/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/.test(account["login"]) || (account["type"] !== "User" && account["type"] !== "Organization") || !positive(value["maxBytes"]) || value["maxBytes"] < 32 || typeof value["privateRepositories"] !== "boolean" || typeof value["publicReads"] !== "boolean" || value["credentialIdentity"] !== "adapter-attempt" || (value["privateRepositories"] && value["publicReads"])) return null;
+  if (Object.hasOwn(value, "installationReads") && (value["installationReads"] !== true || value["privateRepositories"] !== true || value["publicReads"] !== false)) return null;
   return value as unknown as GitHubConfiguration;
 }
 function cleanupTokens(raw: unknown): ReadonlyMap<string, Cleanup> | null {
@@ -75,7 +82,7 @@ export function gitHubReadiness(env: { GITHUB_APP_CONFIG?: unknown; GITHUB_APP_P
   if (!config) return { state: "off", reason: "invalid-config" };
   const key = env.GITHUB_APP_PRIVATE_KEY, read = env.GITHUB_READ_TOKEN, creation = env.GITHUB_CREATION_TOKEN;
   if (!gitHubPrivateKey(key)) return { state: "off", reason: "private-key" };
-  if ((!config.publicReads && !secret(read)) || (read !== undefined && !secret(read))) return { state: "off", reason: "read-token" };
+  if ((!config.publicReads && !config.installationReads && !secret(read)) || (read !== undefined && (!secret(read) || config.installationReads))) return { state: "off", reason: "read-token" };
   if (creation !== undefined && !secret(creation)) return { state: "off", reason: "creation-token" };
   const cleanups = cleanupTokens(env.GITHUB_CLEANUP_TOKENS);
   if (!cleanups) return { state: "off", reason: "cleanup-tokens" };
@@ -102,7 +109,8 @@ export function gitHubOutside(given: OutsideGiven, sql: Pick<SqlStorage, "exec">
     const provider = new GitHubProvider({
       app: { issuer: config.issuer, privateKey: key, installationId: config.installationId, account: config.account, now: () => timeMs(given.clock.read()) ?? NaN, ...(fetch === undefined ? {} : { fetch }) },
       host, namespace, maxBytes: config.maxBytes,
-      readCredential: async () => config.publicReads ? undefined : read!,
+      readCredential: async () => config.publicReads || config.installationReads ? undefined : read!,
+      installationReads: config.installationReads === true,
       verifyRepositoryBeforeMint: laterBinding,
       credentialHandle: async (repository, binding) => credentialHandle(given, repository, binding, "artroom.github.credential-attempt.v1", "GitHub credential binding"),
       ...(creation === undefined ? {} : { creation: { plaintext: creation, private: config.privateRepositories } }),
@@ -114,7 +122,7 @@ export function gitHubOutside(given: OutsideGiven, sql: Pick<SqlStorage, "exec">
     const nativeBound = hostBound(given, config.registerScope, host, namespace);
     const bound = (owner: string): boolean => {
       if (!nativeBound(owner)) return false;
-      if (!laterBinding()) return true;
+      if (!laterBinding()) return config.installationReads !== true;
       const at = given.scope()?.at, branch = destinationBranch(given.state);
       return at !== undefined && gitHubRepositoryBindingAllowed(repositoryBindings, at, branch?.values["repository"], branch?.values["name"]);
     };

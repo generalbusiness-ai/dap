@@ -415,7 +415,7 @@ failure behavior, health visibility and the other readers.
         "packages/scope/src/health.ts",
         "packages/scope/src/site/host.ts"
       ],
-      "parser": "gitHubConfiguration: at most 4096 characters, strict closed fields for issuer, installationId, account, maxBytes, registerScope, privateRepositories, publicReads and adapter-attempt identity.",
+      "parser": "gitHubConfiguration: at most 4096 characters, strict closed fields for issuer, installationId, account, maxBytes, registerScope, privateRepositories, publicReads and adapter-attempt identity. Optional installationReads must be exactly true, with privateRepositories true and publicReads false; it enables only exactly authorized later-bound destinations.",
       "missing": "GitHub outside port off.",
       "invalid": "GitHub factory/site off; no fallback to partial config.",
       "health": "wiring.github off/unconfigured or off/invalid-config; configured off makes status 503."
@@ -481,8 +481,8 @@ failure behavior, health visibility and the other readers.
         "packages/scope/src/github-wiring.ts",
         "packages/scope/src/site/host.ts"
       ],
-      "parser": "Required unless publicReads; any supplied token must have the bounded supported secret syntax.",
-      "missing": "Allowed only when publicReads is true; reads then omit credentials. Otherwise the whole configured GitHub wiring closes with read-token.",
+      "parser": "Required for private reads unless installationReads is explicitly true; a supplied token must have the bounded supported secret syntax. Installation reads refuse a supplied static read token.",
+      "missing": "Allowed when publicReads is true or installationReads is explicitly true. Otherwise the whole configured GitHub wiring closes with read-token.",
       "invalid": "Configured malformed credential closes the whole GitHub wiring.",
       "health": "wiring.github off/read-token when configured; status 503. No credential is returned."
     },

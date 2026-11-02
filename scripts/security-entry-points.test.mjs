@@ -211,7 +211,7 @@ const seals = {
   "apps/room/fetch.ts": "0b1713cce239011343ffdad8c3ec94491509ff5b63a782cdf0d8ff215fd7d76c", // R2 owning AST value adopted on the reviewed branch.
   "apps/room/demo-creation.ts": "91d9ac8a8fa37e3c99c117be7d99dc2d9e370efeacd70f8f49a00a4062bcd67c",
   "packages/scope/src/demo-creation.ts": "a3db32b06d66dc08dc5c585514a02ed60929d3bcc05d0be9d433affea17fefe7", // Reviewed current demo projection or ordinary GitHub authority owner.
-  "packages/scope/src/github-wiring.ts": "325e7b5ac6abb2dbbfcc3ce64493f0c704b2032ec5c6f0ac54133603360d91ca", // Reviewed current demo projection or ordinary GitHub authority owner.
+  "packages/scope/src/github-wiring.ts": "988d741c82a54f2be987b2ade5e3653ae64ff21907e66896487e86d79a58ae68", // Reviewed current demo projection or ordinary GitHub authority owner.
   "apps/room/page/route.ts": "8eccc79a8a3e3cd8b33c38c65374db5d01583b5e9afd76384fc2133bae4cb475",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
   "packages/scope/src/worker.ts": namedOwners["packages/scope/src/worker.ts"],

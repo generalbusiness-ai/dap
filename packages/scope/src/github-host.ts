@@ -25,11 +25,13 @@ export interface GitHubProviderOptions {
   /** Caller-chosen transport allowance, not a platform quota. */
   maxBytes: number;
   bounds?: ReadBounds;
-  /** Independently held read credential; undefined explicitly selects public reads. No mint occurs on a read. */
+  /** Independently held read credential; undefined selects public reads unless installationReads is explicit. */
   readCredential(repository: DestinationRepository): Promise<string | undefined>;
+  /** Private later-bound reads mint one-ID contents-read tokens; the factory separately checks the exact operator pair. */
+  installationReads?: boolean;
   /** Caller's nonsecret, durable credential mapping, allocated BEFORE mint. Not a GitHub token ID. */
   credentialHandle(repository: DestinationRepository, binding: DestinationBinding): Promise<string>;
-  /** Later binding verifies name/stable ID and installation before any credential mint. */
+  /** Later binding verifies identity before publication; installationReads may first mint a restricted read token for lookup. */
   verifyRepositoryBeforeMint?(): boolean;
   /** Separate configured creation authority. No default broad credential. */
   creation?: { plaintext: string; private: boolean };
@@ -134,8 +136,8 @@ export class GitHubProvider implements RegisterProvider, DestinationProvider {
     repository = { ...repository };
     this.#remote(repository);
     const id = handle(request.handle);
-    await this.#mintIdentity(repository);
-    const token = await this.#app.mintInstallationToken({ repositoryIds: [numericId(repository.id)], permissions: { contents: "read" } });
+    const checked = await this.#mintIdentity(repository);
+    const token = checked ?? await this.#app.mintInstallationToken({ repositoryIds: [numericId(repository.id)], permissions: { contents: "read" } });
     return { id, ends: token.expiresAt, plaintext: token.plaintext };
   }
   remote(repository: DestinationRepository): string { return this.#remote({ ...repository }); }
@@ -196,8 +198,15 @@ export class GitHubProvider implements RegisterProvider, DestinationProvider {
   #transport(remote: string) {
     return { remote, maxBytes: this.#options.maxBytes, bounds: this.#bounds, ...(this.#options.app.fetch === undefined ? {} : { fetch: this.#options.app.fetch }), ...(this.#options.app.timeoutMs === undefined ? {} : { timeoutMs: this.#options.app.timeoutMs }) };
   }
-  async #mintIdentity(repository: DestinationRepository): Promise<void> {
+  async #installationRead(repository: DestinationRepository): Promise<GitHubInstallationToken> {
+    await this.#app.validateInstallation();
+    const token = await this.#app.mintInstallationToken({ repositoryIds: [numericId(repository.id)], permissions: { contents: "read" } });
+    await requireGitHubRepositoryIdentity((name, plaintext) => this.#app.repository(name, plaintext), repository, token.plaintext);
+    return token;
+  }
+  async #mintIdentity(repository: DestinationRepository): Promise<GitHubInstallationToken | undefined> {
     if (!this.#options.verifyRepositoryBeforeMint?.()) return;
+    if (this.#options.installationReads) return this.#installationRead(repository);
     const plaintext = await this.#options.readCredential({ ...repository });
     await requireGitHubRepositoryIdentity((name, token) => this.#app.repository(name, token), repository, plaintext);
     await this.#app.validateInstallation();
@@ -205,10 +214,11 @@ export class GitHubProvider implements RegisterProvider, DestinationProvider {
   async #source(repository: DestinationRepository, rulesTree = false): Promise<SmartHttpSource> {
     repository = { ...repository };
     const remote = this.#remote(repository);
-    const plaintext = await this.#options.readCredential({ ...repository });
+    const plaintext = this.#options.installationReads
+      ? (await this.#installationRead(repository)).plaintext : await this.#options.readCredential({ ...repository });
     // Lookup validates the configured account and the recorded stable ID.
     // A missing/unexposed lookup is uncertainty, never an absent Git object.
-    await requireGitHubRepositoryIdentity((name, token) => this.#app.repository(name, token), repository, plaintext);
+    if (!this.#options.installationReads) await requireGitHubRepositoryIdentity((name, token) => this.#app.repository(name, token), repository, plaintext);
     return new SmartHttpSource({ ...this.#transport(remote), ...(rulesTree ? rulesTreeIsolation(this.#options.maxBytes) : {}), ...(plaintext === undefined ? {} : { authorization: gitAuthorization(plaintext) }) });
   }
 }

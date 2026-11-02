@@ -42,6 +42,14 @@ test("later repository authorization names one destination incarnation, stable r
     expect(gitHubRepositoryBindings(canonicalize([{ ...row, branch }]), ACCOUNT.login)).toBeNull();
   }
   const env = bindings(destination.scope);
+  const { GITHUB_READ_TOKEN: _read, ...withoutRead } = env;
+  const installationConfig = { ...configuration(destination.scope), installationReads: true };
+  const installationEnv = { ...withoutRead, GITHUB_APP_CONFIG: canonicalize(installationConfig) };
+  expect(gitHubReadiness(installationEnv).state).toBe("wired");
+  expect(gitHubReadiness({ ...installationEnv, GITHUB_READ_TOKEN: READ })).toEqual({ state: "off", reason: "read-token" });
+  for (const changed of [{ installationReads: false }, { installationReads: "true" }, { publicReads: true }, { privateRepositories: false }]) {
+    expect(gitHubReadiness({ ...installationEnv, GITHUB_APP_CONFIG: canonicalize({ ...installationConfig, ...changed }) })).toEqual({ state: "off", reason: "invalid-config" });
+  }
   expect(gitHubReadiness({ ...env, GITHUB_REPOSITORY_BINDINGS: canonicalize([row]) }).state).toBe("wired");
   // Ambiguous ownership, another account, malformed full references and
   // unbounded input cannot become deployment authority.
@@ -136,7 +144,8 @@ test("later-bound destination authority requires the reviewed full reference, re
     const row = { destination: at, repository, branch: "main" };
     let calls = 0;
     const fetch = async () => { calls++; return json({}); };
-    const env = bindings(f.register.at.scope);
+    const { GITHUB_READ_TOKEN: _read, ...withoutRead } = bindings(f.register.at.scope);
+    const env = { ...withoutRead, GITHUB_APP_CONFIG: canonicalize({ ...configuration(f.register.at.scope), installationReads: true }) };
     for (const rows of [undefined, [],
       [{ ...row, destination: { ...at, inc: newIncarnation(new Uint8Array(16).fill(5)) } }],
       [{ ...row, repository: { ...(repository as Record<string, unknown>), id: "72" } }],
@@ -155,6 +164,9 @@ test("later-bound destination authority requires the reviewed full reference, re
     expect(permitted.accepts(B.destination, "mint-read")).toBe(true);
     const foreign = gitHubOutside({ ...given, retained: () => null }, state.storage.sql, { ...env, GITHUB_REPOSITORY_BINDINGS: canonicalize([row]) }, fetch);
     expect(foreign.accepts(B.destination, "mint")).toBe(false);
+    const historical = destinationGiven(f.register, creator, DESTINATION);
+    const old = gitHubOutside(historical, state.storage.sql, { ...env, GITHUB_REPOSITORY_BINDINGS: canonicalize([row]) }, fetch);
+    expect(old.accepts(DESTINATION, "mint")).toBe(false);
     expect(calls).toBe(0);
   });
 });

@@ -74,7 +74,10 @@ def github_project_settings(variables):
     value = parse_json(raw)
     fields = {"issuer", "installationId", "account", "maxBytes", "registerScope",
               "privateRepositories", "publicReads", "credentialIdentity"}
-    require(isinstance(value, dict) and set(value) == fields, "invalid GitHub settings")
+    require(isinstance(value, dict) and set(value) in (fields, fields | {"installationReads"}), "invalid GitHub settings")
+    installation_reads = value.get("installationReads", False)
+    require("installationReads" not in value or installation_reads is True,
+            "invalid GitHub installation reads")
     account = value["account"]
     positive = lambda number: type(number) is int and 0 < number <= 9007199254740991
     require(isinstance(account, dict) and set(account) == {"id", "login", "type"}
@@ -86,13 +89,15 @@ def github_project_settings(variables):
             and value["maxBytes"] >= 32 and value["registerScope"] == variables.get("REGISTER_SCOPE")
             and type(value["privateRepositories"]) is bool and type(value["publicReads"]) is bool
             and not (value["privateRepositories"] and value["publicReads"])
+            and (not installation_reads or value["privateRepositories"] and not value["publicReads"])
             and value["credentialIdentity"] == "adapter-attempt", "invalid GitHub authority")
     key = variables["GITHUB_APP_PRIVATE_KEY"]
     require(isinstance(key, str) and len(key) <= 16384
             and re.fullmatch(r"-----BEGIN PRIVATE KEY-----\r?\n[A-Za-z0-9+/=\r\n]+\r?\n-----END PRIVATE KEY-----\s*", key),
             "invalid GitHub private key")
     token = variables.get("GITHUB_READ_TOKEN")
-    require((value["publicReads"] or "GITHUB_READ_TOKEN" in selected)
+    require((value["publicReads"] or installation_reads or "GITHUB_READ_TOKEN" in selected)
+            and (not installation_reads or "GITHUB_READ_TOKEN" not in selected)
             and ("GITHUB_READ_TOKEN" not in selected
                  or isinstance(token, str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,4096}", token)),
             "invalid GitHub read authority")
