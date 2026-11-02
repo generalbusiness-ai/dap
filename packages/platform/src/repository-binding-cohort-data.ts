@@ -2,11 +2,10 @@
 import type { PlatformData } from "@generalbusiness/dap-contract";
 import { intentDigest, isFactRef, isRecord, isSeed, same, scopeIdOf } from "@generalbusiness/dap-bytes";
 import type { Rules } from "@generalbusiness/dap-derive";
-import { branchRef } from "@generalbusiness/dap-git/tree-proof";
 import { membership7, membershipRules7 } from "./application-install-grants.ts";
 import { DESTINATION_ATTEMPTS, DESTINATION_KINDS } from "./destination.ts";
 import { REPOSITORY } from "./register.ts";
-import { REPOSITORY_BINDING_COHORT as B } from "./repository-binding-cohort.ts";
+import { REPOSITORY_BINDING_COHORT as B, repositoryBindingBranch } from "./repository-binding-cohort.ts";
 import { unpublishedRegister, unpublishedRegisterRules } from "./unpublished-register.ts";
 import { unpublishedDirectory, unpublishedDirectoryRules } from "./unpublished-directory.ts";
 import { unpublishedDestination, unpublishedDestinationRules } from "./unpublished-destination.ts";
@@ -93,8 +92,7 @@ export const repositoryBindingDestinationRules: Rules = { ...unpublishedDestinat
         || [".", ".."].includes(repository["name"]) || repository["name"].toLowerCase().endsWith(".git")
         || typeof repository["id"] !== "string" || !/^[1-9][0-9]*$/.test(repository["id"])
         || !Number.isSafeInteger(Number(repository["id"])) || String(Number(repository["id"])) !== repository["id"]
-        || typeof branch?.values["name"] !== "string") throw Error();
-      branchRef("refs/heads/" + branch.values["name"], "binding branch");
+        || !repositoryBindingBranch(branch?.values["name"])) throw Error();
       return { holds: true };
     } catch { return { holds: false, name: "invalid-repository-binding" }; }
   } },

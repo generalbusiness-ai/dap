@@ -96,6 +96,14 @@ object dispatch. A verified creation can keep its genesis even when the
 scope refuses its founding act. Credential, session, projection, and query
 answers carry `no-store`.
 
+The opt-in repository-binding cohort uses these existing routes. Its
+Membership grants `destination.bind-repository` to admins by default.
+Later-bound GitHub destinations also need an exact operator-reviewed
+destination incarnation, repository, and branch in `GITHUB_REPOSITORY_BINDINGS`.
+Before either installation-token mint, the provider checks the repository's
+stable ID and the App installation through independent reads. Historical
+repositories recorded at birth retain their existing authority path.
+
 The three room configurations name [worker.ts](../../apps/room/worker.ts),
 which re-exports the scope classes and takes its default fetch from
 [apps/room/fetch.ts](../../apps/room/fetch.ts). That fetch composes health,

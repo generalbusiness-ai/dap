@@ -37,6 +37,10 @@ test("later repository authorization names one destination incarnation, stable r
   expect(gitHubRepositoryBindingAllowed(allowed, destination, { ...repository, id: "72" }, "main")).toBe(false);
   expect(gitHubRepositoryBindingAllowed(allowed, destination, { ...repository, name: "TEST-other" }, "main")).toBe(false);
   expect(gitHubRepositoryBindingAllowed(allowed, destination, repository, "other")).toBe(false);
+  expect(gitHubRepositoryBindings(canonicalize([{ ...row, branch: "release/v1.2" }]), ACCOUNT.login)).not.toBeNull();
+  for (const branch of ["", "a".repeat(245), "/main", "main/", "a//b", "a/.hidden", "a/-option", "a/b.lock", "main.", "a..b", "a b"]) {
+    expect(gitHubRepositoryBindings(canonicalize([{ ...row, branch }]), ACCOUNT.login)).toBeNull();
+  }
   const env = bindings(destination.scope);
   expect(gitHubReadiness({ ...env, GITHUB_REPOSITORY_BINDINGS: canonicalize([row]) }).state).toBe("wired");
   // Ambiguous ownership, another account, malformed full references and

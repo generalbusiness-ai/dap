@@ -1,7 +1,7 @@
 /** Operator authorization for a repository attached after a destination's birth. */
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isScopeRef, parseStrict, same, utf8 } from "@generalbusiness/dap-bytes";
-import { branchRef } from "@generalbusiness/dap-git";
+import { repositoryBindingBranch } from "@generalbusiness/dap-platform";
 import type { DestinationRepository } from "./destination-host.ts";
 import { exact } from "./host-wiring.ts";
 
@@ -30,8 +30,7 @@ export function gitHubRepositoryBindings(raw: unknown, namespace: string): reado
         || [".", ".."].includes(repository["name"]) || repository["name"].toLowerCase().endsWith(".git")
         || typeof repository["id"] !== "string" || !/^[1-9][0-9]*$/.test(repository["id"])
         || !Number.isSafeInteger(Number(repository["id"])) || String(Number(repository["id"])) !== repository["id"]
-        || typeof branch !== "string") return null;
-      branchRef("refs/heads/" + branch, "repository binding branch");
+        || !repositoryBindingBranch(branch)) return null;
       const destinationKey = canonicalize(destination);
       const repositoryKey = canonicalize({ id: repository["id"], branch });
       if (destinations.has(destinationKey) || repositories.has(repositoryKey)) return null;

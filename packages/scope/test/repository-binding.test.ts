@@ -3,7 +3,7 @@
  * No GitHub installation, celld deployment or real Git write runs here. */
 import { expect, test } from "vitest";
 import type { Intent, ScopeId, Seed } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, intentDigest, isSeed, scopeIdOf, signIntent, textDigest } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, intentDigest, isSeed, scopeIdOf, signIntent, textDigest, timeOf } from "@generalbusiness/dap-bytes";
 import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/dap-client";
 import { firstHeadCommit, REPOSITORY_BINDING_COHORT as B } from "@generalbusiness/dap-platform";
 import { issueDemo, DEMO_DIGESTS } from "../../../apps/room/lanes/src/index.ts";
@@ -11,9 +11,13 @@ import { driveFixture, nativeFixtureLifetime } from "./fixtures-native.ts";
 import { soon } from "./net.ts";
 import { rita, sam, vic } from "./repository.ts";
 import { beginSessionFixture } from "./session-settings.ts";
+import { net, ScriptedClock } from "../src/testing.ts";
+import { reader } from "./support.ts";
 
 test("native room content survives administrator binding and first-head publication; an enrolled member cannot bind", async () => {
-  const life = nativeFixtureLifetime(beginSessionFixture({ secret: null, sessions: false, inspector: null }), { required: false });
+  const previousClock = net.clock;
+  net.clock = new ScriptedClock(timeOf(Date.now()));
+  const life = nativeFixtureLifetime(beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader }));
   const nodes = new Map<ScopeId, ReturnType<typeof life.platform>>();
   const track = (name: ScopeId) => {
     let node = nodes.get(name);
@@ -104,5 +108,5 @@ test("native room content survives administrator binding and first-head publicat
     expect(calls.filter(kind => kind === "mint")).toHaveLength(1);
     expect(calls.filter(kind => kind === "first-head")).toHaveLength(1);
     expect(await bind(rita)).toMatchObject({ answer: "refused", reason: "guard-failed" });
-  } finally { await settle(); life.release(); }
+  } finally { await settle(); life.release(); net.clock = previousClock; }
 });
