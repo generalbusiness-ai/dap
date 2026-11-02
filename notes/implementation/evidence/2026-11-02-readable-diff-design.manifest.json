@@ -1,12 +1,12 @@
 {
   "version": 1,
-  "qualification": "Readable diff design only: primary-source survey, pinned disposable package/own probes, retained deployed two-file changed-base answer, successful isolated local J2 data fixtures with byte-identical historical code in synthetic local commits, static 592/320 light/dark renders, and measured proposed schema budgets. No product renderer, server payload, dependency or deployed-room change. Public comparisons allowed by a63f7698; local source ruling 09a2b61a. Original and corrected attempts remain distinct. Hugh decides after checker approval and landing.",
+  "qualification": "Readable diff design only: primary-source survey, pinned disposable package/own probes, retained deployed two-file changed-base answer, successful isolated local J2 data fixtures with byte-identical historical code in synthetic local commits, static 592/320 light/dark renders, and measured proposed schema budgets. No product renderer, server payload, dependency or deployed-room change. Public comparisons allowed by a63f7698; local source ruling 09a2b61a. Original and corrected attempts remain distinct. Hugh decides after checker approval and landing. Checker bfb0c27e requested one static gutter correction. A separate readonly follow-up retains the exact source, rejecting old-render counter, complete recapture, single-line gutter checks and three corrected key images. No producer measurement or product implementation changes.",
   "checkpoint": {
     "commit": "892456defbfe41042d1a54d5b1d38159401b5c12",
     "tree": "396fb1fa6e236e002dae4150a677ce3a4df28a84"
   },
-  "retention": "Keep the readonly evidence directory for at least 30 days after landing.",
-  "fileCount": 267,
+  "retention": "Keep both readonly evidence units for at least 30 days after landing.",
+  "fileCount": 318,
   "units": [
     {
       "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-readable-diff-design",
@@ -1351,6 +1351,272 @@
           "path": "unit.json",
           "bytes": 1310,
           "sha256": "851bb7b8db438ce9230152df6b71a3775c7c6f78d756542a12962e18556d707e"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-readable-diff-design-gutters",
+      "checkpoint": {
+        "commit": "4fecb193df8084dbeb6b1bfe8eaab0ef37819147",
+        "tree": "62c431dcb5ca3645f0c00f9824440142100b6de8"
+      },
+      "fileCount": 51,
+      "sha256sums": "e088b8ee7a27c8065cd5b52c9c20ef6495f9676e74ab8db9e877eaad8b10b83d",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 4718,
+          "sha256": "e088b8ee7a27c8065cd5b52c9c20ef6495f9676e74ab8db9e877eaad8b10b83d"
+        },
+        {
+          "path": "artroom-design-gutter-prepare.py",
+          "bytes": 1309,
+          "sha256": "11b36fd26bdd9f7397f89b075d16147769147aec551317d255419035e76ab87f"
+        },
+        {
+          "path": "artroom-design-gutter-render.mjs",
+          "bytes": 7895,
+          "sha256": "f1a945e0dd46ec2350968d3448a739d99df3fd561ddb3abccee2b7efc8e1acb0"
+        },
+        {
+          "path": "artroom-design-gutter-source.py",
+          "bytes": 1662,
+          "sha256": "7978564c5874b070f72e59485b0899135ed19843d3284221dd89f096d2ab5f2b"
+        },
+        {
+          "path": "artroom-design-gutter-truncated-key.mjs",
+          "bytes": 1627,
+          "sha256": "1d12b6c2c07fe3ca92406264da53262a71ea99cc63f0f44c752606f092c790d8"
+        },
+        {
+          "path": "correction.patch",
+          "bytes": 123551,
+          "sha256": "11d2a95d829dfa0db15d1de6a953032b3bfaffa0f7380516d43c2931bd4f7922"
+        },
+        {
+          "path": "evidence-scan.json",
+          "bytes": 1096,
+          "sha256": "cbfd5da9d54736f1f0e4a0410b2e2127baf78d8b551b3dc2a130553ed53fde0f"
+        },
+        {
+          "path": "interdiff-expected-rows.json",
+          "bytes": 2437,
+          "sha256": "4e5702b753a140b915336bcdf9acc9e625b727cd1037ea06827cc642c5de6fe9"
+        },
+        {
+          "path": "key-render-index.json",
+          "bytes": 403,
+          "sha256": "10d5826951870b3d7b0a4422831a3338111f210628e9787a59eddc9dfaf71f73"
+        },
+        {
+          "path": "key-renders/interdiff.png",
+          "bytes": 81715,
+          "sha256": "2399d21f9418009125a38dc1314b68ea760c1f0017373a30ec1654b025b3c69b"
+        },
+        {
+          "path": "key-renders/ten-file.png",
+          "bytes": 142272,
+          "sha256": "620e79baf1ce3d8d163cbf0060c8015a2f158adb8ca1a4c574ec7a1651bbe2af"
+        },
+        {
+          "path": "key-renders/truncated.png",
+          "bytes": 68618,
+          "sha256": "206f01488084b196075518d9c93f5f38a3601b25e37a14fa69c4cca60b9fd99a"
+        },
+        {
+          "path": "old-gutter-counter.json",
+          "bytes": 5766,
+          "sha256": "24e71dc8c22d5f309754f38f5e187820aa07766334730e924a06ad5dad66f266"
+        },
+        {
+          "path": "packet-source-README.md",
+          "bytes": 2293,
+          "sha256": "5cb76586eceb9438b2f5a0d9eab748bcc56240b4ffdbde1d10ffaff2a0cea05f"
+        },
+        {
+          "path": "packet-source-index.json",
+          "bytes": 3266,
+          "sha256": "5e23593d8ec4f328ba7e585f1c8dbd1b27e9c92b941555c346e307a0190bd416"
+        },
+        {
+          "path": "render-report.json",
+          "bytes": 5566,
+          "sha256": "d9a1cdf5af53f7cf86e01614315a0b0ef90181f8faa0824c77f580f8308ac0fa"
+        },
+        {
+          "path": "render.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "renders/interdiff-commits-light-592.png",
+          "bytes": 116630,
+          "sha256": "c0b1035322cd761f27ad5891a61b8475728c05c89b58fbb552cd37685eddb4c2"
+        },
+        {
+          "path": "renders/interdiff-context-expanded-dark-320.png",
+          "bytes": 86065,
+          "sha256": "ca52fffa3488bd14712cea454bcba6795e862e57dbf239c786debc664bb5928c"
+        },
+        {
+          "path": "renders/interdiff-dark-320.png",
+          "bytes": 81715,
+          "sha256": "2399d21f9418009125a38dc1314b68ea760c1f0017373a30ec1654b025b3c69b"
+        },
+        {
+          "path": "renders/interdiff-dark-592.png",
+          "bytes": 85475,
+          "sha256": "8fe1d63dfccbd8aea5e4a20ea2facce534dfcdb2be04d781c7e794d4a0e10b20"
+        },
+        {
+          "path": "renders/interdiff-light-320.png",
+          "bytes": 80347,
+          "sha256": "fb800afe2a621fd0fa44aebf1d9ee65a33aa8752e0f11ee070e6875502fab099"
+        },
+        {
+          "path": "renders/interdiff-light-592.png",
+          "bytes": 84083,
+          "sha256": "246bdc456af44e53d7a06776ea3d74493d092e17be0d49d38e61098033a1ffb9"
+        },
+        {
+          "path": "renders/ten-file-dark-320.png",
+          "bytes": 67564,
+          "sha256": "79f996244138cb86f76b76aa661ee7b196e24fb706823d3f4678f58adb116b68"
+        },
+        {
+          "path": "renders/ten-file-dark-592.png",
+          "bytes": 70583,
+          "sha256": "cdae1160bab890534331745cf65ef094a0038a6dbb991b7a5b4e886846915292"
+        },
+        {
+          "path": "renders/ten-file-light-320.png",
+          "bytes": 66478,
+          "sha256": "70b28a0886bc18118a8cf0233001755e55054eee188fd3bbcde3281dcad733bf"
+        },
+        {
+          "path": "renders/ten-file-light-592.png",
+          "bytes": 69947,
+          "sha256": "b50aaec3579147aeeab48d2a93c80d5ed82bbe987b646ca6498cc9781c368aa9"
+        },
+        {
+          "path": "renders/ten-file-opened-dark-320.png",
+          "bytes": 109327,
+          "sha256": "eb4d7982ca30d3eee406793d33ec05aa3b1f4024eca9fb786efa2fb146b08890"
+        },
+        {
+          "path": "renders/ten-file-opened-dark-592.png",
+          "bytes": 142272,
+          "sha256": "620e79baf1ce3d8d163cbf0060c8015a2f158adb8ca1a4c574ec7a1651bbe2af"
+        },
+        {
+          "path": "renders/ten-file-opened-light-320.png",
+          "bytes": 107961,
+          "sha256": "01e76f899ef7d0a430ce26afe9ad5cbf758da8cc9602f293c4a517162ecbde2a"
+        },
+        {
+          "path": "renders/ten-file-opened-light-592.png",
+          "bytes": 140855,
+          "sha256": "5bdab28963f0011ee0bcaf2ef126f3d9ffbad917519019ab227f40b6512b036c"
+        },
+        {
+          "path": "renders/truncated-collapsed-light-320.png",
+          "bytes": 79886,
+          "sha256": "68fe9a4d8e69b44873fa79df05b671ba6a9d82dedaf6896431bd2a7b63284e76"
+        },
+        {
+          "path": "renders/truncated-dark-320.png",
+          "bytes": 114578,
+          "sha256": "5e55d68cfb4cb3dc98fe6329eed614e6ca5fb5f1097e5e17cb639f32da787b79"
+        },
+        {
+          "path": "renders/truncated-dark-592.png",
+          "bytes": 149505,
+          "sha256": "6f78dfd7f8c489a1674a88a24f8efaab7a01ba9403c1c51f5b333124ef550f45"
+        },
+        {
+          "path": "renders/truncated-files-collapsed-light-320.png",
+          "bytes": 68618,
+          "sha256": "206f01488084b196075518d9c93f5f38a3601b25e37a14fa69c4cca60b9fd99a"
+        },
+        {
+          "path": "renders/truncated-light-320.png",
+          "bytes": 112811,
+          "sha256": "d913899cabbf889dc8994bf32756b0c1a9006ca93d0dc1a66e7f016c99358487"
+        },
+        {
+          "path": "renders/truncated-light-592.png",
+          "bytes": 147750,
+          "sha256": "fe4add4a1650495b91b21c8f251f67f92289a9647d7ab855cf0e90783b857281"
+        },
+        {
+          "path": "source/card-frame.css",
+          "bytes": 4028,
+          "sha256": "cef18a683af6f8c16b4d2b0c08cb0ff96bbe25a1391f1c3fb026458adc1d4514"
+        },
+        {
+          "path": "source/interdiff.DATA.json",
+          "bytes": 4712,
+          "sha256": "0ab8e727d82e25f5209b2fe0eab73f2bcdd1132ab51906abfe5ee302636d74b5"
+        },
+        {
+          "path": "source/interdiff.html",
+          "bytes": 17874,
+          "sha256": "e69ccaba6abdfe534eba3b5126de35faa5393bdc6a7e4c179df5c5c3713ed1f7"
+        },
+        {
+          "path": "source/proposal.css",
+          "bytes": 5920,
+          "sha256": "e6fde7f7a836985cb788d14d9d62e5fddae1be54551ce461eb57a16d831405eb"
+        },
+        {
+          "path": "source/ten-file.DATA.json",
+          "bytes": 78438,
+          "sha256": "ab369274bec63fc3fd96ed44e37a25f4fd13dc9d71dfb6d20141d716b97c6f41"
+        },
+        {
+          "path": "source/ten-file.html",
+          "bytes": 164326,
+          "sha256": "f47decb6a471fff58057c626d1b085b4099e07d8d2393c05af10896e01ef8ffa"
+        },
+        {
+          "path": "source/truncated.DATA.json",
+          "bytes": 76383,
+          "sha256": "97e8380412a0aaf2ef21cf283dc7a59536fc8ca0412ce32e0e20e027fed7da56"
+        },
+        {
+          "path": "source/truncated.html",
+          "bytes": 150273,
+          "sha256": "92c07b8c56a9fbbb47175e5adcc17d6a4cb55ee41433e1328e90724aa5f0dcb1"
+        },
+        {
+          "path": "source-after.json",
+          "bytes": 148,
+          "sha256": "0c0167ce7713eef02c1690e177ca43fd547e8b3d88f30343b7388b6a8ae28720"
+        },
+        {
+          "path": "source-before.json",
+          "bytes": 387,
+          "sha256": "115ec00931978664289139930303f3b3bd253e8893fd8b24b62330918ad8029e"
+        },
+        {
+          "path": "ten-file-expected-rows.json",
+          "bytes": 88328,
+          "sha256": "bf27973718f0a5a1fea29a7220674cd8319af48be51e28911b308ef7727e6d36"
+        },
+        {
+          "path": "truncated-expected-rows.json",
+          "bytes": 88125,
+          "sha256": "2c5b923bb31635a274355f5dedeef5989e765fb59a6ac1d010fd923e29caac3f"
+        },
+        {
+          "path": "truncated-key.json",
+          "bytes": 310,
+          "sha256": "ac4d08d5a53d863bee44cdabb6c9c4d9319f5bce1d4330178360215ec02a5eea"
+        },
+        {
+          "path": "unit.json",
+          "bytes": 1117,
+          "sha256": "05036123d86f8769b0698cf9694040e457b369260e74308e4b4a72bb6542641f"
         }
       ]
     }
