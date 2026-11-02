@@ -40,8 +40,8 @@ test("@ana opens the issue on a second device: each question reads in the words 
     expect(issue.questions.map(question => question.ask), "EACH OPEN QUESTION: both are listed").toEqual([agent.ask.seq, teammate.seq]);
     const [asked, other] = issue.questions as [typeof issue.questions[0], typeof issue.questions[0]];
     const row = (await rows()).find(one => one.item === agent.request.seq)!;
-    expect(asked.rows, "THE WORDS OF apps/views: what needs Ana, why, what settles it, who waits and the rule").toEqual([{ item: agent.request.seq, needs: row["needs"], why: `Why it is yours: ${String(row["why"])}`,
-      lines: [`What settles it: ${String(row["settles"])}`, "Waiting on this: @una.", `Rule: ${row.rule.definition} ${row.rule.clause}.`] }]);
+    expect(asked.rows, "THE WORDS OF apps/views: what needs Ana, why, what settles it, who waits and the rule").toEqual([{ item: agent.request.seq, needs: row["needs"], why: `Why it is yours: ${String(row["why"])}`, exact: `Definition ${row.rule.definition}, clause ${row.rule.clause}.`,
+      lines: [`What settles it: ${String(row["settles"])}`, "Waiting on this: @una.", "Rule: this lane's rule for an approval request."] }]);
     expect(asked.body, "THE TEXT: the question's body").toBeTruthy();
     expect(asked.answers.map(answer => answer.label), "THE ANSWERS: the labels of the card").toEqual(["Approve", "Request changes"]);
     expect(other.rows, "ANOTHER MEMBER'S REQUEST: nothing here is Ana's").toEqual([]);

@@ -190,7 +190,7 @@ try {
     check(`${label}: the list holds the rows of needs_you, in their order`, shown.map(one => [one.scope, one.item]), rows.map(one => [one.scope.scope, one.item]));
     for (const row of rows) {
       const one = shown.find(candidate => candidate.scope === row.scope.scope && candidate.item === row.item);
-      for (const [name, words] of [["what needs you", row.needs], ["why it is yours", `Why it is yours: ${row.why}`], ["what settles it", `What settles it: ${row.settles}`], ["the rule", `Rule: ${row.rule.definition} ${row.rule.clause}.`], ...row.waiting ? [["who waits", `Waiting on this: ${row.waiting.join(", ")}.`]] : []])
+      for (const [name, words] of [["what needs you", row.needs], ["why it is yours", `Why it is yours: ${row.why}`], ["what settles it", `What settles it: ${row.settles}`], ["the rule", "Rule: this lane's rule for "], ["the exact rule, behind its disclosure", "Exact rule"], ...row.waiting ? [["who waits", `Waiting on this: ${row.waiting.join(", ")}.`]] : []])
         check(`${label}: item ${row.item} says ${name}, in the words of apps/views`, !!one && one.text.includes(words));
     }
   };

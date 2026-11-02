@@ -95,7 +95,7 @@ test('the needs-you card says what needs the person, why and what settles it, na
   assert.deepEqual(card.settles, ['approve'], 'WHAT SETTLES IT: the kit field');
   assert.deepEqual(card.waitsOn, ['@una'], 'WHO WAITS: the kit field');
   const has = text => card.reasons.some(reason => reason.includes(text));
-  for (const text of ['What settles it: Your approve act on the current text', 'Waiting on this: @una', `Rule: ${QUESTION_DIGESTS.issue} acts.request-approval;items.approval-request`, 'Reading this item leaves it open.'])
+  for (const text of ['What settles it: Your approve act on the current text', 'Waiting on this: @una', `Rule: this lane's rule for an approval request.`, 'Reading this item leaves it open.'])
     assert.ok(has(text), `THE CARD says: ${text}`);
 });
 
