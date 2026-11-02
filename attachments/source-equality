@@ -1,0 +1,24 @@
+{
+  "head": "e4f22d19ba32cce9de0c646d7ac0ec9337f7f44f",
+  "tree": "4789fd430513d4cfefc3b4da7f0c238572e66d5d",
+  "source": "658aab954d7a017c5cbce0d7daf28bb798fa1f52",
+  "sourceTree": "27936fcbfd752aef7a6fecf02961279f258c2628",
+  "main": "cc09709a1927a3f93a2d20daddd5eb0053e6acc2",
+  "completeDiffFromSource": [
+    "notes/implementation/2026-11-01-j5-roster-acceptance.md",
+    "notes/implementation/2026-11-01-roster-recovery.md",
+    "notes/implementation/evidence/2026-11-01-j5-roster-acceptance.manifest.json",
+    "notes/implementation/evidence/2026-11-01-roster-recovery.manifest.json"
+  ],
+  "sourceUnchanged": true,
+  "gateExit": 0,
+  "pageWorkflow": 41381703886,
+  "pageWorkflowConclusion": "success",
+  "checks": {
+    "notes": 0,
+    "links": 0,
+    "messages": 0,
+    "diff": 0
+  },
+  "qualification": "A document-only merge and note follow the clean passing source checkpoint. No compiler, test, gate, or browser run repeats."
+}
