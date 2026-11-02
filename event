@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ae4f9293a459b0c7ef0560d7f9e5023551a075c6","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-02-actor-chip.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c8c0f2858174245390f3b5a94c8dc5cc87f994d7","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/service.ts."}
