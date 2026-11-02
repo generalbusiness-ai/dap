@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/evidence/2026-11-01-j5-page-acceptance.manifest.json","body":{"commit":"489adb02e256900abae1a6d02ef71ea4210959d5","path":"notes/implementation/evidence/2026-11-01-j5-page-acceptance.manifest.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1b68cb3097487ac3c410fcec524e25029481b67b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-01-j5-deployed.md."}
