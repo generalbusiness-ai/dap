@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/evidence/2026-11-02-stream-cause.manifest.json","body":{"commit":"ed908579870435778e1d82b7814975900c16ecd5","path":"notes/implementation/evidence/2026-11-02-stream-cause.manifest.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2def3e0a733d2a7aebd290d66547045b7d7f9a91","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-02-stream-cause.md."}
