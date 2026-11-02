@@ -1856,8 +1856,8 @@ agent's. One registry per repository creates agents.
 ### Hosted endpoint settings
 
 The endpoint is off unless `MCP_ENABLED` is exactly `"true"`, both
-`REGISTRIES` and `AGENTS` are bound, and both `MCP_TOOL_ADDITIONS` and
-`MCP_CARD_ORIGINS` are absent or valid. A closed endpoint returns `404`
+`REGISTRIES` and `AGENTS` are bound, and `MCP_TOOL_ADDITIONS`,
+`MCP_CARD_ORIGINS`, and `MCP_RESOURCE_URLS` are absent or valid. A closed endpoint returns `404`
 before reading the request body or addressing either namespace. This applies to the control routes too.
 
 `MCP_TOOL_ADDITIONS` is an optional JSON array of distinct known generic
@@ -1951,14 +1951,62 @@ hash close the whole hosted endpoint. These rows select presentation only;
 they change no signer, grant, tool authority or CSP. Stdio and local loopback
 HTTP never read this setting.
 
+### OAuth resources and access tokens
+
+`MCP_RESOURCE_URLS` selects exact connector identities. Its value is a JSON
+array of at most eight distinct canonical HTTPS URLs at `/mcp`. Each URL
+has at most 2,048 UTF-8 bytes, with no credentials or fragment. The whole
+setting has at most 32,800 UTF-8 bytes. Missing configuration selects the
+public service origin plus `/mcp`. Existing HTTP services keep static
+bearers and advertise no OAuth resource. Every `MCP_CARD_ORIGINS` URL must
+also occur in the selected resource list.
+
+For `https://example.com/mcp?connector=claude`, discovery uses
+`GET https://example.com/.well-known/oauth-protected-resource/mcp?connector=claude`.
+The response names that exact `resource`, the public service origin in
+`authorization_servers`, scope `mcp`, and bearer method `header`.
+An unknown metadata query returns `404`. A matching path with another
+method returns `405`. An unauthenticated `/mcp` request returns `401` with
+a `WWW-Authenticate` header naming its resource metadata. An invalid token
+also adds `error="invalid_token"`.
+
+An access token has the form `<agent>.<grant>.<secret>`. The object checks
+the durable grant, its token digest, and expiry before any authority read.
+The grant audience must equal the complete public request URL and one
+configured resource, including the exact query. Behind a proxy, the
+operator's `PUBLIC_ORIGIN` supplies the origin. Caller-supplied forwarding
+headers select no audience.
+
+The object then reads current membership standing: the agent and its key
+must be active, its controller must match the grant, and that controller
+must be active. A standing answer lasts at most 60 seconds from the start
+of the read. Clock rollback and a late authority answer fail closed.
+Proven inactive standing ends the grant. Unavailable authority refuses the
+request without recording a permanent revocation. Native scopes continue
+to judge acts under their existing authority and observation windows.
+
+Each grant owns its legacy sessions and streams. A grant cannot use a
+static-bearer session or another grant's session. Open streams refresh
+standing before the previous read expires, with a separate hard deadline
+while that refresh awaits. Access expiry or failed standing closes those
+streams. One agent keeps at most eight grant transport layers. Its four
+stream slots, sixteen retained sessions, and control storage budget span
+the static bearer and all grants.
+
+This slice implements the resource server only. It adds no production
+issuer, consent page, authorization code exchange, registration, refresh,
+or OAuth revocation endpoint. Tests write grant digests directly through
+Native SQL. Those test issuers create no public route or RPC method.
+
 ### Routes
 
 | Route | Authorization | What it does |
 |---|---|---|
 | `POST /mcp/agents` | `Control`, action `create` | Creates and enrolls an agent. Body: `{ "link": "<artroom-agent-key:…>" }`, the private agent-key invitation described below. A fresh successful issuance answers `201` with `{ agent, key, handle, member, bearer, bearerExpires }`. The plaintext bearer is returned only by that fresh response; replay returns its secret-free receipt |
-| `POST /mcp/agents/<agent>/bearer` | `Control`, action `bearer` | A new bearer. Every session of the agent ends, every 2025-11-25 stream closes with a final event and every listen completes with its result. A fresh operation renews the bearer lifetime. A replay returns the original secret-free receipt and ends nothing |
-| `DELETE /mcp/agents/<agent>` | `Control`, action `retire` | Retires the bearer; sessions and streams end the same way. A retired agent answers `401` from then on, and no later `bearer` or unfinished `create` revives it. An unfinished enrollment can be retired |
-| `POST /mcp` | `Bearer <agent>.<secret>` | One JSON-RPC request or notification, either revision |
+| `POST /mcp/agents/<agent>/bearer` | `Control`, action `bearer` | A new static bearer. Its sessions end, its 2025-11-25 streams close with a final event, and its listens complete with their result. OAuth grants keep their own sessions. A fresh operation renews the bearer lifetime. A replay returns the original secret-free receipt and ends nothing |
+| `DELETE /mcp/agents/<agent>` | `Control`, action `retire` | Retires the agent and ends every OAuth grant, session, and stream. A retired agent answers `401` from then on, and no later `bearer` or unfinished `create` revives it. An unfinished enrollment can be retired |
+| `GET /.well-known/oauth-protected-resource/mcp` | None | Exact configured-resource metadata, including the query |
+| `POST /mcp` | Static bearer or grant access token | One JSON-RPC request or notification, either revision |
 | `GET /mcp` | `Bearer`, `Mcp-Session-Id` | The 2025-11-25 server stream of that session |
 | `DELETE /mcp` | `Bearer`, `Mcp-Session-Id` | Ends that 2025-11-25 session |
 
@@ -2106,7 +2154,10 @@ session the request names. Then:
 The endpoint refuses a batch on every request. A body over 1 MiB answers
 `413`, and an `Origin` header answers `403`. An agent has at most 16
 sessions. A 17th `initialize` is accepted and then ends the oldest
-session, and a refused `initialize` ends nothing. An agent has at most 4
+session within that credential, and a refused `initialize` ends nothing.
+When other credentials occupy the agent's sixteen-session allowance,
+a new credential's `initialize` returns `507` without evicting their sessions.
+An agent has at most 4
 open streams, counting legacy streams and listens together. A 5th answers
 `409`. Every byte bound here counts UTF-8
 bytes. A legacy HTTP session expires after 30 minutes without a client
@@ -2129,7 +2180,7 @@ server tells once more of a list change that the client has not listed.
 |---|---|---|
 | Custody, per agent | 1 GiB | A new act whose completion need (its record up to 2 MiB plus a 512 KiB segment row) cannot be reserved is refused `full` before anything is signed. A resubmit, repeat step or settle that cannot reserve is refused before anything is dispatched. Retained answers stay readable. |
 | One identity's history | 64 MiB | Further attempts on that identity refuse `full`. Its retained answer stays readable. |
-| Control, per registry and per agent | 16 MiB, the last 1 MiB for `retire` alone. One total covers every persisted row: each operation (4 KiB reserved, its answer charged beyond that), each 2025-11-25 session row (its declared capabilities at most 16 KiB), and the agent's configuration. | `create` and `bearer` refuse `507`. A session cannot be issued (`507`, error `-32001`). A root cannot be added. `retire` still succeeds. If the reserve is also used up, the admin's `key.revoke` ends the agent's authority in the scope, whatever the hosted objects hold. |
+| Control, per registry and per agent | 16 MiB, the last 1 MiB for `retire` alone. One total covers every persisted row: each operation (4 KiB reserved, its answer charged beyond that), static and grant session rows (declared capabilities at most 16 KiB), grant rows (at most 4,096 UTF-8 bytes), and the agent's configuration. | `create` and `bearer` refuse `507`. A session cannot be issued (`507`, error `-32001`). A root cannot be added. `retire` still succeeds. If the reserve is also used up, the admin's `key.revoke` ends the agent's authority in the scope, whatever the hosted objects hold. |
 
 The endpoint deletes nothing. Terminal custody records move to an archive
 table in the same object. A storage failure rolls its transaction back and

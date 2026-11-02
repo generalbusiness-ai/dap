@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 import { parseAst } from "rolldown/parseAst";
 import { ITEM_QUERY_WIRE_BOUNDS, APPLICATION_PROJECTION_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
 import { remoteCardOrigins } from "../packages/mcp/src/views/remote-origins.ts";
+import { configuredMcpResources, hostedMcpResources, publicRequestUrl, RESOURCE_METADATA_PATH, resourceMetadataUrl, mcpUnauthorized, mcpChallengeResponse } from "../packages/mcp/src/oauth-resource.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const readSource = file => readFileSync(resolve(root, file), "utf8");
@@ -208,9 +209,10 @@ export async function scopeRows(text, snapshotDispatches = []) {
 }
 
 async function hostedInventory(source, settings) {
-  const { hostedMcpTools } = load(readSource("packages/mcp/src/hosted-tools.ts"), ["GENERIC_TOOL_NAMES", "HOSTED_TOOL_OMISSIONS", "hostedMcpTools"], { remoteCardOrigins });
+  const { hostedMcpTools } = load(readSource("packages/mcp/src/hosted-tools.ts"), ["GENERIC_TOOL_NAMES", "HOSTED_TOOL_OMISSIONS", "hostedMcpTools"], { remoteCardOrigins, configuredMcpResources });
   const { readPublicOrigin } = load(readSource("packages/scope/src/public-origin.ts"), ["PUBLIC_ORIGIN_MAX_BYTES", "readPublicOrigin"], { URL });
   const text = declaration(source, "mcpRoute"), agent = "a".repeat(64), paths = strings(text, value => value.startsWith("/") && !value.endsWith("/"));
+  paths.push(RESOURCE_METADATA_PATH);
   const { SCOPE_INDEX_NAME, scopeIndex } = load(readSource("packages/scope/src/scope-index.ts"), ["SCOPE_INDEX_NAME", "scopeIndex"], {});
   walk(parse(text), node => {
     if (node.type !== "VariableDeclarator" || node.id.name !== "agentPath") return;
@@ -227,6 +229,7 @@ async function hostedInventory(source, settings) {
   let action;
   const { mcpRoute } = load(source, ["mcpRoute", "boundedBytes"], {
     admittedRequestUrl: () => true, URL, Response, Uint8Array, CONTROL_BODY_BYTES: 64 * 1024, scopeIndex, hostedMcpTools, readPublicOrigin,
+    hostedMcpResources, publicRequestUrl, RESOURCE_METADATA_PATH, resourceMetadataUrl, mcpUnauthorized, mcpChallengeResponse,
     json: status => new Response(null, { status }),
     controlOf: () => ({ request: { action, agent: action === "create" ? null : agent, membership: { scope: "witness" } } }),
   });
@@ -243,7 +246,12 @@ async function hostedInventory(source, settings) {
   const methods = new Set([...methodsIn(text), ...methodsIn(readSource("packages/mcp/src/http.ts"))]);
   for (const path of paths) for (const method of methods) for (action of ["create", "bearer", "retire"]) {
     const request = new Request(`https://inventory.invalid${path}`, { method, headers: { authorization: `Bearer ${agent}.witness` } });
-    try { await mcpRoute(request, { ...settings, REGISTRIES: namespace, AGENTS: namespace, SCOPE_INDEX: index }); }
+    try {
+      const response = await mcpRoute(request, { ...settings, REGISTRIES: namespace, AGENTS: namespace, SCOPE_INDEX: index });
+      if (path === RESOURCE_METADATA_PATH && method === "GET" && response?.status === 200) {
+        const route = row(method, path, "none"); result.set(route.route, route);
+      }
+    }
     catch (error) {
       if (!error?.dispatch) throw error;
       const route = row(method, path.replace(agent, ":agent"), error.dispatch);

@@ -295,14 +295,20 @@ test("O1 test-issued access tokens bind exact connectors and lose Native reads a
     const missing = await room.wait(() => routed(claude, { method: "POST" }));
     expect(missing.status).toBe(401);
     expect(missing.headers.get("www-authenticate")).toContain("/.well-known/oauth-protected-resource/mcp?connector=claude");
-    const metadata = await room.wait(() => routed(SERVICE + "/.well-known/oauth-protected-resource/mcp?connector=claude"));
-    expect(metadata.status).toBe(200);
-    expect(await metadata.json()).toMatchObject({ resource: claude, authorization_servers: [SERVICE] });
+    for (const resource of [claude, chatgpt]) {
+      const metadata = await room.wait(() => routed(resource.replace("/mcp?", "/.well-known/oauth-protected-resource/mcp?")));
+      expect(metadata.status).toBe(200);
+      expect(await metadata.json()).toMatchObject({ resource, authorization_servers: [SERVICE] });
+    }
     expect((await room.wait(() => routed(SERVICE + "/.well-known/oauth-protected-resource/mcp?connector=unknown"))).status).toBe(404);
     expect((await list(claude, first.token)).status).toBe(200);
     expect((await list(chatgpt, first.token)).status).toBe(401);
     expect((await list(claude, second.token)).status).toBe(401);
     expect((await list(chatgpt, second.token)).status).toBe(200);
+    const wrongSecret = first.token.slice(0, first.token.lastIndexOf(".") + 1) + b64url(new Uint8Array(32).fill(7));
+    for (let n = 0; n < 10; n++) expect((await list(claude, wrongSecret, "192.0.2.99")).status).toBe(401);
+    expect((await list(claude, first.token, "192.0.2.99")).status, "OAuth failures share the existing address window").toBe(429);
+    expect((await list(claude, first.token, "192.0.2.100")).status).toBe(200);
     expect((await list(claude, bot.bearer)).status, "the static bearer still serves").toBe(200);
     const initialization = (resource: string, token: string) => room.wait(() => routed(resource, { method: "POST",
         headers: { authorization: `Bearer ${token}`, "content-type": "application/json", "mcp-protocol-version": LEGACY },
@@ -349,7 +355,14 @@ test("O1 test-issued access tokens bind exact connectors and lose Native reads a
       authorization: `Bearer ${peer.token}`, "mcp-protocol-version": LEGACY, "mcp-session-id": peer.id,
     } }))).status).toBe(200);
     expect(timers.size, "ending the last stream cancels both deadline and standing timers").toBe(0);
-    await initialize(claude, bot.bearer);
+    const staticSession = await initialize(claude, bot.bearer);
+    const rotation = await room.wait(() => post(`/mcp/agents/${bot.agent}/bearer`, control(room, rita.secret, "bearer", M, bot.agent, "", "TEST-oauth-static-rotation"), ""));
+    expect(rotation.status).toBe(200);
+    const replacement = await rotation.json() as IssuedBearer;
+    expect((await list(claude, bot.bearer)).status).toBe(401);
+    expect((await legacyList(claude, replacement.bearer, staticSession)).status).toBe(404);
+    expect((await legacyList(claude, first.token, session)).status, "static rotation preserves OAuth sessions").toBe(200);
+    await initialize(claude, replacement.bearer);
     const expired = await issue(claude, "@oauth-owner", 1000);
     const shortSession = await initialize(claude, expired.token);
     const shortStream = await room.wait(() => routed(claude, { method: "GET", headers: {
@@ -391,6 +404,15 @@ test("O1 test-issued access tokens bind exact connectors and lose Native reads a
     expect((await list(claude, retiredToken.token)).status).toBe(200);
     expect((await room.wait(() => post(`/mcp/agents/${retired.agent}`, control(room, rita.secret, "retire", M, retired.agent, "", "TEST-oauth-retire"), "", "DELETE"))).status).toBe(200);
     expect((await list(claude, retiredToken.token)).status).toBe(401);
+    const revoked = await hosted(room, rita, "@oauth-revoked", "TEST-oauth-revoked");
+    const revokedToken = await issue(claude, "@rita", 3_600_000, revoked.agent);
+    expect((await list(claude, revokedToken.token)).status).toBe(200);
+    const keyItem = (await allItems(rita, "membership")).find(item => item.type === "key" && item.values["id"] === revoked.key)!;
+    expect((await rita.ok("key.revoke", { on: keyItem.id, fields: { as: "retired" }, idempotencyKey: "TEST-revoke-oauth-key" }))["answer"]).toBe("accepted");
+    room.advance(OAUTH_STANDING_MS);
+    expect((await list(claude, revokedToken.token)).status, "a revoked Native agent key ends OAuth access within sixty seconds").toBe(401);
+    const revokedState = await room.wait(() => runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(revoked.agent)), (_instance, state) => state.storage.sql.exec(`SELECT state FROM oauth_grant WHERE id = ?`, revokedToken.id).toArray()[0]!["state"]));
+    expect(revokedState).toBe("ended");
   } finally { for (const response of streams) await response.body?.cancel(); hostedTest.toolSettings = null; done(room); }
 });
 
