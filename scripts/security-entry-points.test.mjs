@@ -12,7 +12,7 @@ const namedOwners = {
     "packages/scope/src/object.ts:ScopeObject": "cedf1bfc99d0da11def663dff1c66e655516b6616b6f92c2881c832b610fcaf0", // Token refusal: the delivery's transaction keeps a key that a compromised notice named, and the authority asks for it.
   },
   "packages/scope/src/worker.ts": {
-    "packages/scope/src/worker.ts:$module": "9a4a5a5ae5f70e7319629aba25d102e230da620acdd1047a3775d20cdf28c893",
+    "packages/scope/src/worker.ts:$module": "f7bd61f6f10c65760aa5b3e50a41e9e161971c531ce894efa2256e923f29db11",
     "packages/scope/src/worker.ts:ScopeIndex": "c427427157118cacbc763f65d5523f598eeb72a0b9a01520f1b088c5bc6dbad5", // Reviewed empty Site wake deletion; route and authority gates unchanged.
     "packages/scope/src/worker.ts:MISSING": "e8958a6cf8d4cd2f412b30c76b38aca2f4523bc2b9df96606ac01059b6d4fb42",
     "packages/scope/src/worker.ts:api": "03bb00a1a523796ca66c26c23d91142ef46758ad62290fdc9a5cc74556e8c171",
@@ -43,7 +43,7 @@ const namedOwners = {
     "packages/scope/src/worker.ts:observeThrough": "7e507f9bd9233223446711d089eb6d6b4236b69642eb9d39260e4712d81dab7a",
     "packages/scope/src/worker.ts:sqlOf": "5631baea8c5029d6ba93da6b3d199e63897c5f5ac05ae61e16b8d6f3e337f7fb",
     "packages/scope/src/worker.ts:McpRegistry": "f03a3a5f89e4a5b77c63d82dc72eb60c1eb34801a8dc55e661d05f7c07c7325b",
-    "packages/scope/src/worker.ts:McpAgent": "a36d308c7bd5a575e6784a307fb3b404eb2187d39da8a93294eea2217b765c8f",
+    "packages/scope/src/worker.ts:McpAgent": "b329c4c453b6db8d1346b9863fae58d16b73ccfb1eea4dded6170e2a25c3048d",
   },
   "packages/cli/src/commands.ts": {
     "packages/cli/src/commands.ts:$module": "3a13522dfb4a0d245014bff1c7776e30c7aa41b6c6789957cb9565782a0b6965", // Reviewed room-proof import, both helper declarations, separate checker dispatch and retained-clone helpers; exit code 3 and the export of issueNamed for dap issue wait.
@@ -133,7 +133,7 @@ const namedOwners = {
     "packages/cli/src/commands.ts:status": "f77f1396b4bed9f01c159ca07c991ef52da9cd9a50ea4e1aae3f5765d50504b4",
   },
   "packages/mcp/src/service.ts": {
-    "packages/mcp/src/service.ts:$module": "3fb4f78156298c7f62d57856eed448645cfe7bf9f1ff25852f30e3045db4556c", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
+    "packages/mcp/src/service.ts:$module": "21f856c11107d344329dae31192855c5da94198d006c889b6859d5c2e1579767", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
     "packages/mcp/src/service.ts:ListRestart": "83803f5cf365099c3ed7ad6d12153b68e7616977007feffed4ca4b01bd4ca95d",
     "packages/mcp/src/service.ts:SERVER_NAME": "1a22dd379fec10cbed8b5938dfd522ce9e8cffe176de5f4554e3cad8668764e2",
     "packages/mcp/src/service.ts:SERVER_VERSION": "93926c4b4205a41211c5dfd2e083d8a5d4eed978060ba4d0781fb54d9d3eb366",
@@ -163,7 +163,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:WRITE": "5920731b91c504f8bfb945b3edbe132bea0167ec1c9a44579e3dd658e5e9cd91",
     "packages/mcp/src/service.ts:scopeArg": "36e8957cdbc823f8e1bf9ab903a7a353df3b10d1292ed7d378362aabc41f6ef4",
     "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
-    "packages/mcp/src/service.ts:McpService": "b0a6d9fa79ef28db770945c3913798b2be41c202966625d825a631d30b3d0620", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
+    "packages/mcp/src/service.ts:McpService": "fa45315de91ca2bcde4234b0cd1eea2e95074f4edde980f38de92de5fcc921be", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
     "packages/mcp/src/service.ts:commitIdFault": "3614f1add9efc0a6aa08e7afe8ec461e46d5728284a77e668fa67fb962614527",
     "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
     "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",
@@ -247,17 +247,19 @@ const seals = {
   "packages/bytes/src/records.ts": "c1de770ab85f6f328166076ae3829289cab8b43ff0e8686820d89afe3719d7b8", // R11 named serving refusal; actual maintained parser output.
   "packages/scope/src/session-preparation.ts": "fdb5fd76103a82293e08b605a5ca7d604cf144c151b5a25f360b557c0e61e0ee",
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
+  "packages/scope/src/applications/projection-source.ts": "47f96e53c09b4eb153b260cb7cb5787b8ac9794ae6fc1a8116c2e1455c7bd498", // Closed native room metadata with optional supported membership pin.
   "packages/scope/src/applications/projection.ts": "8576f78bb68850421ca7843e6fd0e4ecfb18f136009b82296097feca603f5484",
   "packages/scope/src/destination-host.ts": "e902165d3c484579dda561794cdd3b1f0a4eff705ebac7f3c2f9b3d9c78c777c", // Token refusal: a key that a compromised notice named takes no read token.
   "packages/scope/src/workspace-host.ts": "c65f21658fc1715bf417be22cc929dbac4234b451416607c559200e24a951f4f", // Reviewed SQL custody, setup revocation and full refs for recorded branch names.
   "packages/scope/src/workspace-lineage.ts": "8ab25e2b89e8438a7914c441aa9aca3c18e5e7335eb32488251d5631ed52a1ff", // Reviewed bounded authenticated Register, Directory and Destination creation lineage.
   "packages/scope/src/native-birth.ts": "ab9ecd331850e5f183fafaee07145c64adadb3ad904ea95bcc4ddf569da6ad6f", // Reviewed bounded genesis decoding and exact indexed scope and kind discovery.
-  "packages/mcp/src/hosted.ts": "408713d777ced9eb3ea9d0c8e590071e08be433c58d35bd9e04ed094439b66b7",
-  "packages/mcp/src/hosted-tools.ts": "ef46fa061bb0ed440d81d08e0f1f537c4234dabdb861fb749123bdf93aa81a85", // Reviewed R5 admission owner; actual maintained parser output.
+  "packages/mcp/src/hosted.ts": "50092ea0aaee76ee9aa71ec857f34ba0220be646f308019b039d38aff492fb73",
+  "packages/mcp/src/views/remote-origins.ts": "81c7e7a044690df7c00a30691ddc5e0da11531fabad2a9143d2d389ff8c0a1b1", // Exact remote presentation URL policy; no authority selection.
+  "packages/mcp/src/hosted-tools.ts": "1f1036d3bec7ef5bba5e125b137e27f948eb530b0e8261d6302c71cec342fc4f", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": namedOwners["packages/mcp/src/service.ts"],
   "packages/mcp/src/catalogue.ts": "8d1af74b33b07b063a1dad51477b51d22ac9cb7bb08d79ad366a0a3b717c3e53", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/inventory.ts": "0c14de294c6005379f9243d7283fc1dcaf2001fd009e0d361c06adf2b46871ea", // Reviewed parallel authority reads and target-only discovery; standing still reads fresh.
-  "packages/mcp/src/http.ts": "6c14755074002c14b939c1a73a088ba0f98f085793c47ef9b93bd406db95bfb4", // Reviewed Mcp-Name binding for prompts/get.
+  "packages/mcp/src/http.ts": "194e0c98d3f186d26e32e3d81cb6b7185116bdeaa66303b205f9aba01f73d044", // Reviewed Mcp-Name binding for prompts/get.
   "packages/client/src/application-trust.ts": "137391c8b1ed6f59f66e9368012c1355ed77325fdb16f67b73296be1ccc856b3", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
   "packages/client/src/application-install.ts": "4046c6792d4671cdb259691dcf2171a2c3144450664c696cb722db161790164b", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
   "packages/scope/src/applications/resolve.ts": "6338c9357780846b115999454239b68f34c5d6be3c090ca3f18b8f6e8771d0e2", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.

@@ -17,7 +17,7 @@ import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FieldValue, Ite
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, isReceipt, entryHash, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, unb64url, utf8 } from "@generalbusiness/dap-bytes";
 import { TransportError, ScopeHandle, ApplicationPackageError, actBodyText, originalsAt, commonsInstallCheck, loadCommons, readApplicationPackage, applicationScreenPath, readApplicationInstallOptions, readDeviceApplicationInstallOptions, readApplicationReleaseUri, readApplicationTrust, applicationTrustForSource, signedApplicationInstall, signedApplicationInstall2, signedDeviceApplicationInstall, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/dap-client";
-import { SEPARATE_RECOVERY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, platform, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, COMMONS_COHORT } from "@generalbusiness/dap-platform";
+import { SEPARATE_RECOVERY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, platform, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, REPOSITORY_BINDING_COHORT, COMMONS_COHORT } from "@generalbusiness/dap-platform";
 import { readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/dap-git/application";
 import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
@@ -303,6 +303,41 @@ export class McpService {
   get key(): string { return this.#port.signer.key; }
   get reads(): Reads { return this.#reads; }
   get service(): string { return this.#service; }
+
+  /** Compose the same declared cards for local and hosted transports. A
+   * bounded, complete native read must select exactly one active install.
+   * Ambiguous, unsupported or unavailable rooms keep the ordinary service.
+   * Each card read still rechecks the exact native installation. */
+  static async fromInstalledApplication(port: ServerPort, load?: (release: Digest, uri: string) => Promise<Uint8Array | null>): Promise<McpService> {
+    const service = new McpService(port);
+    if (port.views || port.declaredViews) return service;
+    try {
+      const trusted = readApplicationTrust(port.applicationTrust);
+      if (trusted.length === 0) return service;
+      const room = await service.#applicationRoom();
+      const read = await service.#reads.read(room.membership, (t, r) => new ScopeHandle(t, room.rules.scope, r).queryItems({
+        v: 1, scope: room.rules, type: "installation", states: ["active"], ids: null, limit: 2, cursor: null,
+      }));
+      if (!read.ok || !read.complete || read.next !== undefined || read.value.items.length !== 1) return service;
+      const row = read.value.items[0]!, installation = await service.#declaredInstallation(row.id);
+      if (!installation || typeof row.values["uri"] !== "string") return service;
+      const uri = row.values["uri"], address = readApplicationReleaseUri(uri);
+      const trust = applicationTrustForSource(address, installation.ids.release, trusted);
+      if (!trust) return service;
+      let bytes: Uint8Array | null;
+      if (load) bytes = await load(installation.ids.release, uri);
+      else {
+        const source = applicationGitHttpSource(address, { blobBytes: 4 * 1024 * 1024, ...(port.applicationFetch ? { send: port.applicationFetch } : {}) });
+        try { bytes = await readApplicationGitBlob(address, source.source, 4 * 1024 * 1024); }
+        finally { await source.close(); }
+      }
+      if (bytes === null) return service;
+      const packet = readPublishedApplicationPackage2(bytes, installation.ids.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 });
+      if (canonicalize(packet.ids) !== canonicalize(installation.ids) || packet.package.semantic.entry !== installation.definition
+        || packet.package.release.manifest.publisher !== trust.publisher) return service;
+      return new McpService({ ...port, declaredViews: { bytes: packet.bytes, release: packet.ids.release, item: row.id } });
+    } catch { return service; }
+  }
   #readsOf(service: string): Reads { return new Reads({ ...(this.#port.readSessions ? { sessions: this.#port.readSessions } : {}), service, ...(this.#fetch ? { fetch: this.#fetch } : {}), signer: this.#port.signer, now: this.#port.now ?? Date.now }); }
   #now(): number { return (this.#port.now ?? Date.now)(); }
 
@@ -441,7 +476,7 @@ export class McpService {
   }
 
   #genericAdmitted(name: string): boolean {
-    return ((name !== "actions" && name !== "act") || this.mode !== "default") && (this.#genericPolicy === undefined || this.#genericPolicy.includes(name));
+    return ((name !== "actions" && name !== "act") || this.mode !== "default") && (this.#genericPolicy === undefined || this.#genericPolicy.includes(name) || this.#viewTools.has(name));
   }
 
   async #failure(error: unknown, given: Args): Promise<CallResult> {
@@ -1333,12 +1368,12 @@ export class McpService {
    * room recorded in the configuration; the list is derived again on the next call.
    */
   /** The actual generic room and exact Rules sibling, never a caller alias. */
-  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof SEPARATE_RECOVERY_COHORT | typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT | typeof DEVICE_APPLICATION_COHORT | typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_PUBLICATION_COHORT | typeof UNPUBLISHED_COHORT | typeof COMMONS_COHORT }> {
+  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof SEPARATE_RECOVERY_COHORT | typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT | typeof DEVICE_APPLICATION_COHORT | typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_PUBLICATION_COHORT | typeof UNPUBLISHED_COHORT | typeof REPOSITORY_BINDING_COHORT | typeof COMMONS_COHORT }> {
     const config = await this.#port.config.read(), repository = config.repository;
     if (!repository || config.service !== this.#service) return stopCall({ error: "target", what: "configure a trusted-application room before installing" });
     const { summary: directory } = await this.#summary(repository.directory.scope, repository.membership);
     const row = directory.items.find(item => item.type === "repository" && item.state === "open"), rules = row?.refs["rules"], destination = row?.refs["destination"];
-    const cohort = [SEPARATE_RECOVERY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, COMMONS_COHORT].find(cohort => directory.definition === cohort.directory);
+    const cohort = [SEPARATE_RECOVERY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, REPOSITORY_BINDING_COHORT, COMMONS_COHORT].find(cohort => directory.definition === cohort.directory);
     if (!cohort || directory.status !== "active" || canonicalize(directory.scope) !== canonicalize(repository.directory)
       || !row || canonicalize(row.refs["membership"]) !== canonicalize(repository.membership)
       || !isScopeRef(rules) || rules.kind !== "rules" || rules.scope !== repository.rules

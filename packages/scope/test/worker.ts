@@ -361,7 +361,7 @@ export const hostedTest: {
   /** While set, every configuration read of an agent, and with it every listing and snapshot, waits on this promise. */
   configHold: Promise<void> | null;
   /** Explicit hosted tool settings for the native MCP fixture; null enables its comprehensive historical tool contract. */
-  toolSettings: { MCP_ENABLED: string; MCP_TOOL_ADDITIONS?: string } | null;
+  toolSettings: { MCP_ENABLED: string; MCP_TOOL_ADDITIONS?: string; MCP_CARD_ORIGINS?: string } | null;
   /** Raw deployment setting for the native constructor witness, never an AgentPorts override. */
   applicationSettings: Pick<McpEnv, "APPLICATION_TRUST"> | null;
 } = { metrics: null, now: null, pause: null, lose: null, controlBudget: null, custodyBounds: null, failWrite: null, faultAt: null, failSession: false, configHold: null, toolSettings: null, applicationSettings: null };

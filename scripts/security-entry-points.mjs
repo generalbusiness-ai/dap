@@ -10,6 +10,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseAst } from "rolldown/parseAst";
 import { ITEM_QUERY_WIRE_BOUNDS, APPLICATION_PROJECTION_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
+import { remoteCardOrigins } from "../packages/mcp/src/views/remote-origins.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const readSource = file => readFileSync(resolve(root, file), "utf8");
@@ -207,7 +208,7 @@ export async function scopeRows(text, snapshotDispatches = []) {
 }
 
 async function hostedInventory(source, settings) {
-  const { hostedMcpTools } = load(readSource("packages/mcp/src/hosted-tools.ts"), ["GENERIC_TOOL_NAMES", "HOSTED_TOOL_OMISSIONS", "hostedMcpTools"], {});
+  const { hostedMcpTools } = load(readSource("packages/mcp/src/hosted-tools.ts"), ["GENERIC_TOOL_NAMES", "HOSTED_TOOL_OMISSIONS", "hostedMcpTools"], { remoteCardOrigins });
   const { readPublicOrigin } = load(readSource("packages/scope/src/public-origin.ts"), ["PUBLIC_ORIGIN_MAX_BYTES", "readPublicOrigin"], { URL });
   const text = declaration(source, "mcpRoute"), agent = "a".repeat(64), paths = strings(text, value => value.startsWith("/") && !value.endsWith("/"));
   const { SCOPE_INDEX_NAME, scopeIndex } = load(readSource("packages/scope/src/scope-index.ts"), ["SCOPE_INDEX_NAME", "scopeIndex"], {});

@@ -158,6 +158,7 @@ failure behavior, health visibility and the other readers.
 | `GROW_CLIMATE_SECRET` | secret | `dap-grow-simulator` | [`examples/grow/simulator-host.ts`](../../examples/grow/simulator-host.ts) |
 | `GROW_SENSORS_SECRET` | secret | `dap-grow-simulator` | [`examples/grow/simulator-host.ts`](../../examples/grow/simulator-host.ts) |
 | `LENDING` | binding | `dap-application-sandbox` | [`apps/sandbox/worker.ts`](../../apps/sandbox/worker.ts) |
+| `MCP_CARD_ORIGINS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `MCP_ENABLED` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `MCP_TOOL_ADDITIONS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `METRICS` | binding | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
@@ -722,6 +723,27 @@ failure behavior, health visibility and the other readers.
       "missing": "Uses narrow hosted defaults: create/install_application/credential/diff/prepare/join/record omitted.",
       "invalid": "Malformed, duplicate, unknown or oversized list closes the endpoint.",
       "health": "Not reported."
+    },
+    {
+      "deployments": [
+        "artroom-scope",
+        "dap-celld-local",
+        "dap-demo",
+        "dap-commons",
+        "dap-lending",
+        "dap-grow"
+      ],
+      "name": "MCP_CARD_ORIGINS",
+      "kind": "text",
+      "status": "read",
+      "readers": [
+        "packages/mcp/src/hosted-tools.ts",
+        "packages/scope/src/worker.ts"
+      ],
+      "parser": "Optional closed JSON array, at most 8192 UTF-8 bytes and two rows; distinct hosts and exact HTTPS /mcp connector URLs. Claude domain must equal the first 32 SHA-256 hex digits of that URL plus .claudemcpcontent.com; ChatGPT domain must be an HTTPS origin.",
+      "missing": "Resources declare no remote card domain.",
+      "invalid": "Any malformed row, duplicate host or URL, or mismatched Claude hash closes the whole hosted endpoint.",
+      "health": "Not reported; this changes presentation only."
     },
     {
       "deployments": [

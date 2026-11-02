@@ -175,7 +175,7 @@ export class Wire {
    * `owner` is the client stream the message came on: the connection on
    * stdio, the response stream of a `subscriptions/listen` over HTTP.
    */
-  async handle(message: unknown, session: LegacySession | null, send: Send, owner: object = send): Promise<Message | null> {
+  async handle(message: unknown, session: LegacySession | null, send: Send, owner: object = send, resourceDomain?: string): Promise<Message | null> {
     const kind = frameOf(message);
     if (kind === "invalid") return error(null, -32600, "Invalid Request: a JSON-RPC 2.0 request, notification or response is expected.");
     if (kind === "response") return null;   // a response to a request of ours: the server makes none
@@ -185,6 +185,28 @@ export class Wire {
     // received as a notification, is not run: it is counted and dropped before dispatch.
     if (notification && !isNotificationMethod(m.method!)) { this.ignored++; return null; }
     const answer = await this.#dispatch(m, notification, session, send, owner);
+    // Only the remote transport supplies this operator-validated value. Never
+    // mutate shared resources: concurrent hosts use different sandbox origins.
+    if (answer && isRecord(answer.result)) {
+      const params = isRecord(m.params) ? m.params : {};
+      const meta = isRecord(params["_meta"]) ? params["_meta"] : {};
+      const uiCapable = supportsViews(revisionOf(m, session) === "modern" ? meta[CAPABILITIES_META] : session?.capabilities);
+      const field = m.method === "resources/list" ? "resources" : m.method === "resources/read" ? "contents" : null;
+      if (field && Array.isArray(answer.result[field])) {
+        answer.result[field] = answer.result[field].map((entry: unknown) => {
+          if (!isRecord(entry) || entry["mimeType"] !== "text/html;profile=mcp-app") return entry;
+          const meta = isRecord(entry["_meta"]) ? entry["_meta"] : {};
+          if (!uiCapable) {
+            const { ui: _presentation, ...other } = meta;
+            const { _meta: _old, ...resource } = entry;
+            return { ...resource, ...(Object.keys(other).length ? { _meta: other } : {}) };
+          }
+          const declared = isRecord(meta["ui"]) ? meta["ui"] : {};
+          const { domain: _packageDomain, ...ui } = declared;
+          return { ...entry, _meta: { ...meta, ui: { ...ui, ...(resourceDomain === undefined ? {} : { domain: resourceDomain }) } } };
+        });
+      }
+    }
     return notification ? null : answer;
   }
 

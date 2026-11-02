@@ -35,10 +35,11 @@ import { TransportError, agentKeyInvitationOf, secretSigner, signedIntent, type 
 import { CustodyError, Lost, meaningOf, type Envelope, type Identity } from "./custody.ts";
 import { McpHttp, SessionFull, type SessionRow } from "./http.ts";
 import type { McpConfig, Root } from "./inventory.ts";
-import { McpService } from "./service.ts";
+import { McpService, type ServerPort } from "./service.ts";
 import { McpMetrics, mcpRead, type McpMetricOptions } from "./metrics.ts";
 import { sqliteStore, type Sql, type SqliteCustodyBounds } from "./sqlite-custody.ts";
 import { Wire } from "./wire.ts";
+import { remoteCardDomain, type RemoteCardOrigin } from "./views/remote-origins.ts";
 
 export const CONTROL_BUDGET = 16 * 1024 * 1024;
 export const RETIRE_RESERVE = 1024 * 1024;
@@ -347,6 +348,9 @@ export interface AgentPorts extends Authority {
   /** Hosted deployment policy, separate from the durable agent configuration. */
   genericTools?: readonly string[];
   applicationTrust?: string | undefined;
+  cardOrigins?: readonly RemoteCardOrigin[];
+  /** Immutable package bytes from the Worker's trusted content store. */
+  applicationContent?: (release: Digest) => Promise<Uint8Array | null>;
   /** Separate MCP observation map; never a native input or an authority read. */
   metrics?: McpMetricOptions;
   /** This object's own ID, as the registry allotted it. */
@@ -388,6 +392,8 @@ export class HostedAgent {
   readonly #metrics: McpMetrics;
   #service: McpService | null = null;
   #http: McpHttp | null = null;
+  #opening: Promise<McpHttp> | null = null;
+  #httpEpoch = 0;
   readonly #failures = new BearerFailures();
   /** Control operations run one at a time in this object: a retry of `create` waits for the first and then finds its answer. */
   readonly #controls = new Queue();
@@ -421,9 +427,12 @@ export class HostedAgent {
 
   /** The service of this agent: its key from the seed, its configuration from the row, its custody in this object's storage. */
   #serviceOf(row: AgentRow): McpService {
-    if (this.#service) return this.#service;
+    return this.#service ??= new McpService(this.#servicePort(row));
+  }
+
+  #servicePort(row: AgentRow): ServerPort {
     const read = async (): Promise<McpConfig> => { await this.ports.configHold?.(); return this.#row()?.config ?? row.config; };
-    this.#service = new McpService({
+    return {
       applicationTrust: this.ports.applicationTrust,
       service: row.config.service, fetch: this.ports.fetch, signer: secretSigner(row.seed), custody: sqliteStore(this.sql, this.ports.custodyBounds, this.ports.now), now: this.ports.now,
       ...(this.ports.genericTools !== undefined ? { genericTools: this.ports.genericTools } : {}),
@@ -435,15 +444,29 @@ export class HostedAgent {
         setRepository: async (repository) => { this.#setConfig({ ...(await read()), repository }); },
         joined: async (joined) => { this.#setConfig({ ...(await read()), service: joined.service, repository: joined.repository, handle: joined.handle }); },
       },
-    });
-    return this.#service;
+    };
   }
 
-  #httpOf(row: AgentRow): McpHttp {
+  async #httpOf(row: AgentRow): Promise<McpHttp> {
     if (this.#http) return this.#http;
-    const wire = new Wire(this.#serviceOf(row));
-    this.#http = new McpHttp({
+    if (this.#opening) return this.#opening;
+    const opening = this.#openHttp(row, this.#httpEpoch);
+    this.#opening = opening;
+    try { return await opening; }
+    finally { if (this.#opening === opening) this.#opening = null; }
+  }
+
+  async #openHttp(row: AgentRow, epoch: number): Promise<McpHttp> {
+    const service = this.ports.applicationContent
+      ? await McpService.fromInstalledApplication(this.#servicePort(row), this.ports.applicationContent)
+      : this.#serviceOf(row);
+    const wire = new Wire(service);
+    const http = new McpHttp({
       wire, bodyBytes: 1024 * 1024, now: this.ports.now,
+      resourceDomain: request => {
+        const url = new URL(request.url);
+        return remoteCardDomain(this.ports.cardOrigins ?? [], row.config.service + url.pathname + url.search);
+      },
       lifetime: { expires: timeMs(row.bearerExpires!)!, ...(this.ports.scheduleExpiry ? { schedule: this.ports.scheduleExpiry } : {}) },
       mintSession: () => b64url(this.ports.random(16)),
       authorized: () => true,   // the bearer was checked before the request reached the layer
@@ -467,8 +490,11 @@ export class HostedAgent {
       },
     });
     // The sessions as persisted survive eviction; their streams do not, and the next GET reconciles.
-    this.#http.restore(this.sql.exec(`SELECT row FROM session ORDER BY created`).toArray().map((r) => JSON.parse(String(r["row"])) as SessionRow));
-    return this.#http;
+    if (epoch !== this.#httpEpoch) { http.abrupt(); return http; }
+    http.restore(this.sql.exec(`SELECT row FROM session ORDER BY created`).toArray().map((r) => JSON.parse(String(r["row"])) as SessionRow));
+    this.#service = service;
+    this.#http = http;
+    return http;
   }
 
   /** Remove expired answer bodies from both copies: the control row's, and the agent row's redacted creation receipt. */
@@ -621,11 +647,14 @@ export class HostedAgent {
       this.#control.complete(r.op, "complete", done);
       return { result: done, fresh: true };
     });
-    if (fresh && this.#http) {
+    if (fresh) {
       // Graceful: every open stream closes with a final event, every listen with its result; the sessions are already gone.
+      // A package load that started under the old bearer cannot adopt a layer.
+      this.#httpEpoch++;
+      this.#opening = null;
       const http = this.#http;
       this.#http = null;
-      await http.closeAll();
+      await http?.closeAll();
     }
     return result;
   }
@@ -657,14 +686,20 @@ export class HostedAgent {
     const checked = this.#authorized(request.headers.get("authorization"), request.headers.get("cf-connecting-ip"));
     if (checked === "limited") return new Response(JSON.stringify({ error: "rate-limited" }), { status: 429, headers: { "content-type": "application/json" } });
     if (checked === "unauthorized") return new Response(null, { status: 401 });
-    return this.#httpOf(this.#row()!).handle(request);
+    const http = await this.#httpOf(this.#row()!);
+    // Discovery may await native reads and package storage. Retirement or a
+    // bearer rotation during that wait must take effect before dispatch.
+    const current = this.#authorized(request.headers.get("authorization"), request.headers.get("cf-connecting-ip"));
+    if (current === "limited") return new Response(JSON.stringify({ error: "rate-limited" }), { status: 429, headers: { "content-type": "application/json" } });
+    if (current === "unauthorized") return new Response(null, { status: 401 });
+    return http.handle(request);
   }
 
   /** For a test: the service and the layer as this object holds them now. */
   inside(): { service: McpService | null; http: McpHttp | null } { return { service: this.#service, http: this.#http }; }
 
   /** What an eviction does to this instance's memory: every stream ends abruptly, with no event; nothing durable changes. */
-  abrupt(): void { this.#http?.abrupt(); this.#http = null; this.#service = null; }
+  abrupt(): void { this.#httpEpoch++; this.#opening = null; this.#http?.abrupt(); this.#http = null; this.#service = null; }
 
   /** The durable facts of this agent a witness compares across a reset: its key, its state, and the digest of its kept enrol intent. */
   durable(): { key: string | null; state: string | null; enrol: string | null; bearer: boolean } {
