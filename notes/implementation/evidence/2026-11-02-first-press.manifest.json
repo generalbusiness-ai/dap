@@ -6,7 +6,7 @@
     "tree": "511ff0efec1037c34547fa5433d2f68d355a5185"
   },
   "retention": "Keep every readonly evidence unit for at least 30 days after landing. Whole raw Native and CI output stays private; metadata names bytes and hashes.",
-  "fileCount": 252,
+  "fileCount": 269,
   "units": [
     {
       "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-first-press-baseline",
@@ -1385,6 +1385,103 @@
           "path": "withheld-output.json",
           "bytes": 732,
           "sha256": "1a24472ea9cef2c589ad67f0e0307848cd413cb6e753a2dc7867cd35641b6a40"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-first-press-documentation",
+      "qualification": "Documentation, manifest and source-equality checks at ed06b98a. The final record adds only an evidence row and this unit to the note/manifest. No source or test changes. Final review checks repeat the cheap documentation verification separately.",
+      "checkpoint": {
+        "commit": "ed06b98af6aa34ef48132562004e2567710ba997",
+        "tree": "42f32f94b44f83fbb0c7261ef59167b26cc934ee"
+      },
+      "fileCount": 17,
+      "sha256sums": "8b49e586fcd72b8bc40ab51bc4c08723d156e7a1acfdd39c32efe2f2cf6a4fbe",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1359,
+          "sha256": "8b49e586fcd72b8bc40ab51bc4c08723d156e7a1acfdd39c32efe2f2cf6a4fbe"
+        },
+        {
+          "path": "commands.json",
+          "bytes": 846,
+          "sha256": "710d378cf1f7500473ceaef94575a9f8cdb07e714f3f93eee7e6129588d055c3"
+        },
+        {
+          "path": "commit-messages.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "commit-messages.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "commit-messages.stdout.log",
+          "bytes": 38,
+          "sha256": "daf3697b4539b36f4a4fa31279a6d955b0b3466bb1f19f50dc782ae33a24d7c3"
+        },
+        {
+          "path": "doc-links.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "doc-links.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "doc-links.stdout.log",
+          "bytes": 36,
+          "sha256": "05d81cfdd4a20d7f249083d065c7dad85afba93032f10e5b73c1bec4e568c8b0"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 4524,
+          "sha256": "62e5330d0c98151f47d90562badad3052f2357e2336218ecf983feb29d7b22e1"
+        },
+        {
+          "path": "note-manifest-audit.json",
+          "bytes": 1048,
+          "sha256": "c81ee6f2d7b08b157f26a61748277c545e7837fc5b87305c97a31f20dd6b6cb5"
+        },
+        {
+          "path": "notes.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "notes.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "notes.stdout.log",
+          "bytes": 132,
+          "sha256": "d7d4f292902706b33c4007c54d253fc34dab07536d174be60a57cfeec58f48d3"
+        },
+        {
+          "path": "scope-proof.json",
+          "bytes": 514,
+          "sha256": "37c9a290dbba650c093f460569abbb40ecfd4103d77ec17cde9092ced5a56bc7"
+        },
+        {
+          "path": "whitespace.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "whitespace.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "whitespace.stdout.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         }
       ]
     }

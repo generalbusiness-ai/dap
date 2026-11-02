@@ -11,7 +11,8 @@ The isolated test repair is `2f825e324073a692c6a0eab85da3d79686f04866`,
 tree `511ff0efec1037c34547fa5433d2f68d355a5185`. It adds only three lines to
 the unimported plain member-display stand-in. Production and shared inputs
 remain byte-identical to `3e2c000b`. The review head adds only this note and its manifest after the isolated test
-repair.
+repair. Documentation checkpoint ed06b98a verifies the initial record; the final
+record adds its audit row and manifest unit. No source or test changes follow.
 
 A first **View diff** press now makes four requests before its signed act.
 It reads Membership, Directory, and Rules together, then reads the actual target.
@@ -103,7 +104,7 @@ remain unchanged.
 
 ## The final evidence
 
-The [evidence manifest](evidence/2026-11-02-first-press.manifest.json) records 252 files in 10 readonly units. Its SHA-256 is `db87f4f3e6e385603c4fd17c2d77e3ced383a43e6b657252ed89f827e76dbee0`. Each unit names its own checkpoint and qualification; draft focused work does not stand in for the frozen source proof. Whole raw Native and CI logs stay private, with bytes, hashes and safe terminal extracts in the listed units. Keep every unit for at least 30 days after landing.
+The [evidence manifest](evidence/2026-11-02-first-press.manifest.json) records 269 files in 11 readonly units. Its SHA-256 is `7d30a2d81dcb3b605d194fdfabed23fbfb703896bbbf0718188459ebd36fa1e1`. Each unit names its own checkpoint and qualification; draft focused work does not stand in for the frozen source proof. Whole raw Native and CI logs stay private, with bytes, hashes and safe terminal extracts in the listed units. Keep every unit for at least 30 days after landing.
 
 The observed runs used one shared Mac, the same local stdio driver and logger,
 the enrolled agent-a witness, and isolated custody that starts fresh per phase.
@@ -189,6 +190,7 @@ Both units retain their exact traces; no later run overwrites an earlier one.
 | Changed compiler and whole owner | tsc -p packages/mcp/tsconfig.test.json; vitest run --project mcp packages/mcp/test/declared-members.test.ts | both exit 0; all four owning cases pass | fe245dfe779e2a4047ea49ad05d15ba9161a3ca2aa99ea910211eadeef250dc3 |
 | Sole unreached Native stage | node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts | exit 0; 1,029 cases pass and two skip; aggregate followup.exit 0; source unchanged | 2f2e1c9f27d75de601b8fab3bd8272033d8e1d577717592a17216e323a592d8d |
 | Card workflow | gh run view 41424913952 | success at exact 3e2c000b; generated module and both browser scripts pass | 3d30f5278ea859da06d9b39d28e6c7e66fb592ea578684c9ab05d6c3809b11de |
+| Documentation and manifest audit | documentation/commands.json and note-manifest-audit.json at ed06b98a | all four command exits 0; all 252 then-listed files and 19 evidence digests verify; note under 40 KB; manifest has one advisory size warning | c81ee6f2d7b08b157f26a61748277c545e7837fc5b87305c97a31f20dd6b6cb5 |
 
 [Card workflow 41424913952](https://github.com/generalbusiness-ai/dap/actions/runs/41424913952)
 runs at the final repaired source checkpoint. The earlier workflow
