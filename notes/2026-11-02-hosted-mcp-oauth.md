@@ -64,12 +64,15 @@ today's controller or admin check.
 
 On every membership version so far, `add-member` with `kind: agent`
 needs `membership.manage`, and `invite-key` needs `membership.invite`
-(`packages/platform/src/membership.ts:371-372`, `:426-427`). The default
-role table gives both only to `admin` (`:110`). An ordinary member
-therefore cannot add an agent today.
+(`packages/platform/src/membership.ts:428-429` and `:373-374`). The
+default role table gives both only to `admin` (`:110`). An ordinary
+member therefore cannot add an agent today.
 
-A new membership version, `platform:membership@11`, lets an active
-person add an agent that they control. It adds two steps under one new
+A new membership version lets an active person add an agent that they
+control. Slice O2 allocates the next free version number when it starts.
+Membership 11 already belongs to the G3 repository-binding cohort, and
+the next cohort `8a8902f3` can take another. This note calls the new
+version the own-agent membership. It adds two steps under one new
 action, `membership.own-agent`. The default table gives that action to
 `admin`, `maintainer` and `member`. The two steps are:
 
@@ -80,39 +83,47 @@ action, `membership.own-agent`. The default table gives that action to
   force; and the signer controls fewer than 8 active agents.
 - `invite-own-agent-key` invites a key for an agent member whose
   recorded controller is the signer's member. Its guards: the agent is
-  active, and the signer is its controller.
+  active, the signer is its controller, and the same subset check
+  passes, read from the role table in force.
 
 The subset guard matters because roles change. With the default table,
 the 18 actions of `agent` are all held by `member`, `maintainer` and
 `admin`, so each of them passes. A `checker` holds 2 actions, so a
-checker cannot add an agent. If an admin later widens the `agent` role
-with `set-actions`, that is an admin's decision, as it is today.
+checker cannot add an agent. An admin can later widen the `agent` role
+with `set-actions`. After that, a member's `invite-own-agent-key` and
+a grant signed by that member both refuse, because the subset check
+runs again on each. An admin signer is exempt, as for `create` today.
 
-The consent page then follows one path for every person. The browser
-key signs `add-own-agent`, then `invite-own-agent-key` through the
-existing issuer (`issueInvitation` with `kind: "agent-key"`, as the room
-page already does in `apps/room/page/src/main.ts:773`), then the grant.
-An admin can use `add-member` and `invite-key` instead, with the same
-result.
+The consent page then follows one path for every person. The browser key
+signs `add-own-agent`, then `invite-own-agent-key` through the existing
+issuer (`issueInvitation` with `kind: "agent-key"`, which the room page
+already calls in `apps/room/page/src/connection-custody.ts:117`), then
+the grant. An admin can use `add-member` and `invite-key` instead, with
+the same result.
 
-A room whose membership pin predates @11 keeps its rules. There, an
-admin adds the agent with controller `@una` and makes its invitation,
+A room pinned to an earlier membership version keeps its rules. There,
+an admin adds the agent with controller `@una` and makes its invitation,
 and Una opens the link on the consent page. Her key signs the grant as
 controller. The registry accepts that signer today.
 
-New rooms take @11 through a creation cohort, so the cohort that pins
-it must exist before the live runs.
+Slice O2 also adds the creation cohort that pins the own-agent
+membership. The rooms for the live runs on `dap-demo` use that cohort.
 
 The page reuses an existing agent when the same controller connects the
 same client to the same repository again. It renews by a fresh grant.
 
 ### What the person sees
 
-The consent page shows the client name and its redirect host, the
-repository and room, the agent handle and its controller, and the
-words "This lets <client> act as <agent> in this room until you revoke
-it or <date>." It also lists the person's connected clients for that
-repository, each with **Revoke**.
+The consent page shows the client name and the host of its client ID,
+because a client ID metadata document can call itself "Claude". It also
+shows the redirect host, the repository and room, the agent handle and
+its controller, and the words "This lets <client> act as <agent> in this
+room until you revoke it or <date>." It also lists the person's
+connected clients for that repository, each with **Revoke**.
+
+The page is served with `Content-Security-Policy: frame-ancestors
+'none'`, so no other site can frame it and click through the single
+press.
 
 The page refuses, with a named reason and no grant, when the browser
 holds no key of an active member, when the signer is neither an admin
@@ -140,15 +151,24 @@ checks that the token's audience equals the configured resource URL and
 that its grant is live. A token for another service or resource answers
 `401`.
 
+On each call with an access token, the object also checks current
+standing: the agent is an active member, the agent's key is active,
+and the controller is an active member. It reads that standing from
+the membership and keeps it for at most 60 seconds. When the standing
+fails, the grant ends and the call answers `401` with
+`error="invalid_token"`. So a removed controller's host loses reads
+within 60 seconds, and its acts refuse at once in the native scope
+(`packages/derive/src/grant.ts:311`).
+
 ### Authorization server
 
 | Route | What it does |
 |---|---|
-| `GET /.well-known/oauth-authorization-server` | RFC 8414 metadata. `issuer` is `https://<service>`. `code_challenge_methods_supported` is `["S256"]`. `token_endpoint_auth_methods_supported` is `["none"]`. `client_id_metadata_document_supported` is `true`. `authorization_response_iss_parameter_supported` is `true`. It names the four routes below |
+| `GET /.well-known/oauth-authorization-server` | RFC 8414 metadata: `issuer` `https://<service>`; `authorization_endpoint`, `token_endpoint`, `registration_endpoint` and `revocation_endpoint`, the four routes below; `response_types_supported` `["code"]`; `grant_types_supported` `["authorization_code", "refresh_token"]`; `code_challenge_methods_supported` `["S256"]`; `token_endpoint_auth_methods_supported` and `revocation_endpoint_auth_methods_supported` `["none"]`; `client_id_metadata_document_supported` `true`; `authorization_response_iss_parameter_supported` `true` |
 | `GET /oauth/authorize` | The consent page, served on the Worker origin, so it reads the same browser key store as `/page/` (`apps/room/page/src/browser-key-store.ts`) |
 | `POST /oauth/register` | RFC 7591 dynamic client registration, for a client that has no client ID metadata document |
 | `POST /oauth/token` | Code exchange with PKCE, and refresh |
-| `POST /oauth/revoke` | RFC 7009 revocation of an access or refresh token |
+| `POST /oauth/revoke` | RFC 7009 revocation of an access or refresh token. A public client sends `client_id`. An unknown or already revoked token answers `200`, as RFC 7009 section 2.2 requires |
 
 ### Client identification
 
@@ -166,8 +186,10 @@ list starts with:
   Code, with the path that the client registered
 
 No wildcard host is accepted. A registered client can name only URIs
-from the list. A deployment setting, `OAUTH_REDIRECT_URIS`, can replace
-the list, with the same exact-match rule.
+from the list. A registration that names another URI answers `400`
+with `invalid_redirect_uri`, as RFC 7591 section 3.2.2 requires. A
+deployment setting, `OAUTH_REDIRECT_URIS`, can replace the list, with
+the same exact-match rule.
 
 ### Grant
 
@@ -195,10 +217,13 @@ variant in `packages/bytes` that both the page and the tests use.
 The page posts the grant to `POST /mcp/agents/<agent>/grant`. The
 registry checks it with the existing control rules: signature, service,
 membership and incarnation, body digest, deadline, and the signer's
-current authority. It then asks the agent's object to record an
+current authority. When the signer is the controller and not an admin,
+it also runs the subset check against the role table in force. It then
+asks the agent's object to record an
 authorization code. The code is single use, lives 60 seconds, and binds
 the client, redirect URI, challenge, resource and agent. The page then
-redirects to `redirect_uri` with `code`, `state` and `iss`.
+redirects to `redirect_uri` with `code`, `state` and `iss`. Every
+authorization response carries `iss`, error redirects included.
 
 On a first connection the hosted agent does not exist yet. The page
 then posts the grant to `POST /mcp/agents/grant` with the agent-key
@@ -213,7 +238,8 @@ returns a token to the browser.
 
 `POST /oauth/token` with `grant_type=authorization_code` checks the
 code, the client ID, the redirect URI, and the verifier against the
-challenge. It answers within the client's limit, 10 seconds for Claude.
+challenge. It accepts form-encoded bodies. It answers a code exchange
+within 10 seconds and a refresh within 30 seconds, Claude's limits.
 It returns:
 
 - an access token `<agent>.<grant>.<secret>`, one hour, audience the
@@ -227,9 +253,10 @@ grant and answers `invalid_grant`. Before each refresh, the object reads
 the membership now and refuses when the agent or its controller is no
 longer an active member, or the agent's key is revoked.
 
-`retire`, `key.revoke` of the agent key, `member.remove` of the agent
-or its controller, and `POST /oauth/revoke` end the grant. The next
-call answers `401`. Native refusal of the agent's acts still follows
+`retire` and `POST /oauth/revoke` end the grant at once. `key.revoke`
+of the agent key and `member.remove` of the agent or its controller
+end it within the 60-second standing bound. The next call after that
+answers `401`. Native refusal of the agent's acts still follows
 the membership at once, as today.
 
 ### Origin
@@ -248,8 +275,8 @@ and the token endpoint takes the client's server-to-server call.
 Each grant, code and token row counts against the agent's existing
 16 MiB control budget (`packages/mcp/src/hosted.ts:43`). An agent holds
 at most 8 live grants. A ninth grant ends the oldest one. The
-registration route holds at most 1,000 registered clients per Worker
-and answers `507` when full.
+registration route holds at most 1,000 registered clients per Worker.
+When it is full, it answers `503` with `Retry-After`.
 
 ## Part three: slices and evidence
 
@@ -259,9 +286,9 @@ slice O4 only.
 
 | Slice | Builds | Evidence |
 |---|---|---|
-| O1 | Resource server: the protected-resource route, the `401` challenge, access-token checks beside the static bearer, audience binding | A scripted client gets `401` with the header, reads the metadata, and calls `/mcp` with a test-issued token. Controls: wrong audience, expired token, retired agent |
-| O2 | `platform:membership@11` with `add-own-agent` and `invite-own-agent-key`, and a creation cohort that pins it | Native tests: a member adds and invites an agent they control. Controls: a checker signer, a ninth agent, a controller who is not the signer, an `agent` role wider than the signer's role. Every earlier pin and declaration text stays unchanged |
-| O3 | Authorization server: metadata, client ID documents and registration, the redirect list, the consent page, the `grant` control action, codes, the token and revoke routes, refresh rotation | A browser test on a local Worker runs the full code flow with PKCE for an ordinary member on @11 and for an invited controller on an older pin. Controls: wrong verifier, reused code, unlisted redirect, a signer who is neither admin nor controller, reused refresh token |
+| O1 | Resource server: the protected-resource route, the `401` challenge, access-token checks beside the static bearer, audience binding, the per-call standing check | A scripted client gets `401` with the header, reads the metadata, and calls `/mcp` with a test-issued token. Controls: wrong audience, expired token, retired agent, a controller removed after consent and then one call after the 60-second bound |
+| O2 | The own-agent membership, at the next free version, with `add-own-agent` and `invite-own-agent-key`, and a creation cohort that pins it | Native tests: a member adds and invites an agent they control. Controls: a checker signer, a ninth agent, a controller who is not the signer, an `agent` role wider than the signer's role, and an `agent` role widened after the add, which refuses the member's invite. Every earlier pin and declaration text stays unchanged, Membership 11 included |
+| O3 | Authorization server: metadata, client ID documents and registration, the redirect list, the consent page, the `grant` control action, codes, the token and revoke routes, refresh rotation | A browser test on a local Worker runs the full code flow with PKCE for an ordinary member on the own-agent membership and for an invited controller on an older pin. Controls: wrong verifier, reused code, unlisted redirect, a signer who is neither admin nor controller, reused refresh token, an `agent` role widened after the add that refuses a member's grant, a framed consent page that does not load, and a client document that names itself "Claude" from another host |
 | O4 | Live runs, after O1 to O3 and hosted cards `288d5988` land | The builder adds dap as a custom connector in Claude web, then ChatGPT developer mode, controls each UI, consents as an ordinary member, makes one card press and one act, and revokes. Record host builds, the `initialize` and `ui/initialize` versions, any `Origin` sent, and screenshots |
 
 O1 and O2 do not depend on each other. O3 needs both.
