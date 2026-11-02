@@ -63,7 +63,7 @@ import { health } from "./health.ts";
  */
 
 import { DurableObject, RpcTarget, WorkerEntrypoint } from "cloudflare:workers";
-import { CONTROL_BODY_BYTES, HostedAgent, HostedRegistry, controlOf, hostedMcpTools, remoteCardOrigins, type HostedMcpSettings, type AgentPorts, type ControlAnswer, type RegistryPorts } from "@generalbusiness/dap-mcp";
+import { CONTROL_BODY_BYTES, HostedAgent, HostedRegistry, controlOf, hostedMcpTools, hostedMcpResources, mcpChallengeResponse, mcpUnauthorized, publicRequestUrl, RESOURCE_METADATA_PATH, resourceMetadataUrl, remoteCardOrigins, type HostedMcpSettings, type AgentPorts, type ControlAnswer, type RegistryPorts } from "@generalbusiness/dap-mcp";
 import { PROPOSED_BOUNDS, ITEM_QUERY_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
 import type { FactRef, Entry, ItemQueryRead, ItemQueryRefusal, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxId, Grant, LogPage, PlatformDefinition, Read, ReadRefusal, RetainedInput, ScopeApi, ScopeId, ScopeKind, Seed, SessionRefusal, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, entryHash, isEntry, same, parseStrict, readItemQueryReply, utf8, definitionDigest, intentDigest, isPlatformDefinition, isScopeId, positionOf, scopeIdOf } from "@generalbusiness/dap-bytes";
@@ -805,18 +805,27 @@ export async function mcpRoute(request: Request, env: HostedMcpSettings & Public
   if (!admittedRequestUrl(request.url)) return json(413, { error: "too-large" });
   const url = new URL(request.url);
   const path = url.pathname;
-  if (path !== "/mcp" && !path.startsWith("/mcp/")) return null;
+  if (path !== "/mcp" && !path.startsWith("/mcp/") && path !== RESOURCE_METADATA_PATH) return null;
   // Explicit opt-in and valid policy precede body reads or namespace addressing.
   if (hostedMcpTools(env) === null || !env.REGISTRIES || !env.AGENTS) return json(404, { error: "not-found" });
+  const origin = readPublicOrigin(env, request.url);
+  if (origin === null) return json(503, { error: "unavailable" });
+  const resources = hostedMcpResources(env, origin);
+  if (resources === null) return json(404, { error: "not-found" });
+  if (path === RESOURCE_METADATA_PATH) {
+    const resource = resources.find(value => resourceMetadataUrl(value) === publicRequestUrl(origin, request.url));
+    if (resource === undefined) return json(404, { error: "not-found" });
+    if (request.method !== "GET") return json(405, { error: "method-not-allowed" });
+    return json(200, { resource, authorization_servers: [origin], scopes_supported: ["mcp"], bearer_methods_supported: ["header"] });
+  }
   const { REGISTRIES, AGENTS } = env;
   const answered = (a: ControlAnswer): Response => new Response(JSON.stringify(a.body), { status: a.status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
   if (path === "/mcp") {
     const named = /^Bearer ([0-9a-f]{64})\./.exec(request.headers.get("authorization") ?? "");
-    if (!named) return new Response(null, { status: 401 });
-    if (readPublicOrigin(env, request.url) === null) return json(503, { error: "unavailable" });
+    if (!named) return mcpUnauthorized(request, origin);
     let id: DurableObjectId;
-    try { id = AGENTS.idFromString(named[1]!); } catch { return new Response(null, { status: 401 }); }
-    return AGENTS.get(id).fetch(request);
+    try { id = AGENTS.idFromString(named[1]!); } catch { return mcpUnauthorized(request, origin); }
+    return mcpChallengeResponse(request, await AGENTS.get(id).fetch(request), origin);
   }
   const agentPath = /^\/mcp\/agents\/([0-9a-f]{64})(\/bearer)?$/.exec(path);
   const control = path === "/mcp/agents" && request.method === "POST" ? { action: "create" as const, agent: null }
@@ -824,8 +833,6 @@ export async function mcpRoute(request: Request, env: HostedMcpSettings & Public
     : agentPath && !agentPath[2] && request.method === "DELETE" ? { action: "retire" as const, agent: agentPath[1]! }
     : null;
   if (!control) return json(path === "/mcp/agents" || agentPath ? 405 : 404, { error: path === "/mcp/agents" || agentPath ? "method-not-allowed" : "not-found" });
-  const origin = readPublicOrigin(env, request.url);
-  if (origin === null) return json(503, { error: "unavailable" });
   const signed = controlOf(request.headers.get("authorization"));
   if (!signed) return json(400, { error: "control", rule: "header" });
   if (signed.request.action !== control.action || signed.request.agent !== control.agent) return json(400, { error: "control", rule: "binding" });

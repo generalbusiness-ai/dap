@@ -40,6 +40,7 @@ import { McpMetrics, mcpRead, type McpMetricOptions } from "./metrics.ts";
 import { sqliteStore, type Sql, type SqliteCustodyBounds } from "./sqlite-custody.ts";
 import { Wire } from "./wire.ts";
 import { remoteCardDomain, type RemoteCardOrigin } from "./views/remote-origins.ts";
+import { mcpChallengeResponse, mcpUnauthorized } from "./oauth-resource.ts";
 
 export const CONTROL_BUDGET = 16 * 1024 * 1024;
 export const RETIRE_RESERVE = 1024 * 1024;
@@ -685,14 +686,15 @@ export class HostedAgent {
     if (request.headers.get("origin") !== null) return new Response(null, { status: 403 });
     const checked = this.#authorized(request.headers.get("authorization"), request.headers.get("cf-connecting-ip"));
     if (checked === "limited") return new Response(JSON.stringify({ error: "rate-limited" }), { status: 429, headers: { "content-type": "application/json" } });
-    if (checked === "unauthorized") return new Response(null, { status: 401 });
+    if (checked === "unauthorized") return mcpUnauthorized(request);
     const http = await this.#httpOf(this.#row()!);
     // Discovery may await native reads and package storage. Retirement or a
     // bearer rotation during that wait must take effect before dispatch.
     const current = this.#authorized(request.headers.get("authorization"), request.headers.get("cf-connecting-ip"));
     if (current === "limited") return new Response(JSON.stringify({ error: "rate-limited" }), { status: 429, headers: { "content-type": "application/json" } });
-    if (current === "unauthorized") return new Response(null, { status: 401 });
-    return http.handle(request);
+    if (current === "unauthorized") return mcpUnauthorized(request);
+    const response = await http.handle(request);
+    return mcpChallengeResponse(request, response);
   }
 
   /** For a test: the service and the layer as this object holds them now. */
