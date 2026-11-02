@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:df0b43b5dace48c0f0d4123455be5d9df9777ee6","text":"Merge retired a covered predecessor; the successor is at docs/security/entry-points.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f394c82a0b3de2f4797410bde106c48ef11cb0e9","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-02-oauth-resource-gate.manifest.json."}
