@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"notes/implementation/2026-11-01-goose-host.md at exact 9aefa2c9b3f28953c4529a3bcf98269a7b1ece9b on builder/goose-host-20261101, under promise git:sha1…b3ef412 on request git:sha1…d7e4449","body":{"commit":"9aefa2c9b3f28953c4529a3bcf98269a7b1ece9b","path":"notes/implementation/2026-11-01-goose-host.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:57d163af25f5c3c08866fe375481104f892382b4","text":"Republished at 9aefa2c9b3f28953c4529a3bcf98269a7b1ece9b; the successor stands at notes."}
