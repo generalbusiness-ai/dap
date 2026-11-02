@@ -5,7 +5,9 @@ import { decodeViewParameters } from "@generalbusiness/dap-platform/application-
 import { shapeAt } from "../shape.ts";
 import type { CallResult } from "../service.ts";
 import type { ViewKind } from "./resources.ts";
-import type { Card, CardAction, CardContext, Display, EntryRange, ExactRead, LocalReviewAction, NamedCommit, NativeCardAction, PageKind, Projection, ShownRead, ViewQuery, ViewSource } from "./types.ts";
+import type { ActSigner, Card, CardAction, CardContext, Display, EntryRange, ExactRead, LocalReviewAction, NamedCommit, NativeCardAction, PageKind, Projection, ShownRead, ViewQuery, ViewSource } from "./types.ts";
+
+import { signerWords } from "./actor.ts";
 
 export class ViewError extends Error {
   constructor(readonly reason: "shape" | "absent" | "superseded" | "stale" | "busy" | "unavailable", message: string) { super(message); }
@@ -59,6 +61,8 @@ function shownOf(read: ExactRead, answer: Record<string, unknown>): { shown: Sho
   return { shown, files };
 }
 export interface ViewPorts {
+  /** Identity of the actual envelope, retained by the service, never supplied by the browser or the source card. */
+  signerOf?: (result: CallResult) => ActSigner | null;
   /** Sign one read-token act and make one bounded read. `admit` runs before the signature. */
   readExact?: (read: ExactRead, admit: () => void | Promise<void>) => Promise<CallResult>;
   /** The key of an act sent at this scope with no outcome kept. */
@@ -491,6 +495,12 @@ export class ViewSessions {
       const result = await dispatch;
       const answer = result.structuredContent;
       const line = receiptLine(card, action, result);
+      if (this.ports.signerOf) {
+        const signer = this.ports.signerOf(result);
+        const attribution = signer ? ` Signed by ${signerWords(signer)}.` : " No signer confirmed.";
+        line.shown += attribution;
+        if (line.exact) line.exact += attribution;
+      }
       instance.receipt = line.shown;
       if (line.exact) instance.exactReceipt = { of: line.shown, text: line.exact };
       const receipt = this.receiptOf(result);

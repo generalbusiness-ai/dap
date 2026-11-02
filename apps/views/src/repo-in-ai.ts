@@ -2,7 +2,7 @@
 import { canonicalize, digestBytes, isDigest, isFactRef, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { Digest, FactRef, Item, ReadMinimum, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
 import { FINDING_DIGESTS, J4_DIGESTS, QUESTION_DIGESTS, QUESTION_BRIEF_DIGESTS, issueQuestions, issueQuestionsBrief } from "@generalbusiness/dap-lanes";
-import type { ApplicationReadCatalogue, CallResult, LocalReviewCapture } from "@generalbusiness/dap-mcp";
+import type { ActSigner, ApplicationReadCatalogue, CallResult, LocalReviewCapture } from "@generalbusiness/dap-mcp";
 import { Collection, LIMITS, Unread, sameOptional, minimumFor, type Frame, type ReadOptions } from "./reads.ts";
 import { ReviewStore, ReviewStoreError } from "./review-store.ts";
 import { readChange } from "./change.ts";
@@ -14,9 +14,10 @@ export interface Context {
   scope: ScopeRef; head: Frame["head"]; definition: Digest; ask: Item; bodyAt: FactRef; body: string;
   requests: Item[]; approvals: Item[]; approvalTexts: { approval: number; text: string | null }[]; comments: { item: Item; text: string | null }[];
   versions: { fact: FactRef; text: string }[]; conditions: unknown; brief: Digest | null; briefMatches: boolean;
+  signer: ActSigner | null;
   viewer: LocalReviewCapture["viewer"]; actions: readonly string[]; items: Item[];
 }
-export type PublicContext = Omit<Context, "items" | "versions"> & {
+export type PublicContext = Omit<Context, "items" | "versions" | "signer"> & {
   versions: ({ fact: FactRef; current: true } | { fact: FactRef; text: string })[];
 };
 export interface AdapterOptions extends ReadOptions { reviewStore: ReviewStore; brief: { bytes: Uint8Array; digest: Digest } }
@@ -65,13 +66,24 @@ export class RepoInAi {
     try { await collection.begin(target, only, after); return { value: await run(collection), collection }; }
     finally { collection.close(); }
   }
-  async #rows(run: (collection: Collection, frames: Frame[]) => Promise<Row[]>, after?: unknown, walks = true): Promise<CallResult> {
+  async #rows(run: (collection: Collection, frames: Frame[]) => Promise<Row[]>, after?: unknown, walks = true, cardPosition?: number): Promise<CallResult> {
     const position = (collection: Collection) => walks ? { next: collection.next } : {};
     if (after !== undefined && !isScopeRef(after)) return result({ error: "after-selector", complete: false }, true);
     try {
-      const { value, collection } = await this.collect(async collection => run(collection, await collection.lanes()), undefined, false, after);
-      const rows = value.slice(0, LIMITS.rows); let omittedRows = value.length - rows.length;
-      const reply = () => ({ rows, heads: collection.points(), unread: collection.unread, omittedScopes: collection.omitted, ...position(collection),
+      const { value, collection } = await this.collect(async collection => {
+        const frames = await collection.lanes(), rows = await run(collection, frames);
+        let signer: { scope: ScopeRef; item: number; value: ActSigner | null } | null = null;
+        if (cardPosition !== undefined && rows.length) {
+          const selected = rows[Math.min(cardPosition, LIMITS.rows - 1, rows.length - 1)]!, frame = frames.find(frame => sameOptional(frame.ref, selected.scope));
+          const item = frame?.items.find(item => item.id === selected.item);
+          signer = { scope: selected.scope, item: selected.item, value: null };
+          try { signer.value = frame && item ? await collection.openingSigner(frame, item) : null; }
+          catch { /* Attribution cannot hide the row or change its exact record. */ }
+        }
+        return { rows, signer };
+      }, undefined, false, after);
+      const rows = value.rows.slice(0, LIMITS.rows); let omittedRows = value.rows.length - rows.length;
+      const reply = () => ({ rows, ...(cardPosition === undefined ? {} : { cardSigner: value.signer }), heads: collection.points(), unread: collection.unread, omittedScopes: collection.omitted, ...position(collection),
         discoveryComplete: collection.discoveryComplete, omittedRows, counters: collection.counters, viewer: collection.viewer, directory: collection.directory, complete: collection.unread.length === 0 && collection.omitted.length === 0 && omittedRows === 0 });
       let answer = result(reply());
       while (resultBytes(answer) > RESULT_BYTES && rows.length) { rows.pop(); omittedRows++; answer = result(reply()); }
@@ -79,10 +91,10 @@ export class RepoInAi {
       return answer;
     } catch (error) { return result({ error: "read-unavailable", reason: error instanceof Unread || error instanceof ReviewStoreError ? error.reason : "read-failed", complete: false }, true); }
   }
-  needsYou(args: Readonly<Record<string, unknown>> = {}): Promise<CallResult> {
-    return this.#rows((collection, frames) => needsYouRows(frames, collection), args["after"]);
+  needsYou(args: Readonly<Record<string, unknown>> = {}, cardPosition?: number): Promise<CallResult> {
+    return this.#rows((collection, frames) => needsYouRows(frames, collection), args["after"], true, cardPosition);
   }
-  work(): Promise<CallResult> {
+  work(cardPosition?: number): Promise<CallResult> {
     return this.#rows(async (collection, frames) => {
       const rows: Row[] = [];
       for (const frame of frames) {
@@ -103,7 +115,7 @@ export class RepoInAi {
         }
       }
       return rows;
-    }, undefined, false);
+    }, undefined, false, cardPosition);
   }
   async question(scope: ScopeRef, id: number, minimum?: ReadMinimum): Promise<{ context: Context; collection: Collection }> {
     const floor = minimumFor(scope, minimum);
@@ -153,7 +165,7 @@ export class RepoInAi {
       const brief = pin === QUESTION_BRIEF_DIGESTS.issue && isDigest(ask.values["brief"]) ? ask.values["brief"] : null;
       return { scope, head: frame.head, definition: pin as Digest, ask, bodyAt, body: await collection.text(frame, body), requests, approvals, approvalTexts, comments, versions,
         conditions: frame.items.find(item => item.type === "intent")?.values["conditions"] ?? null, brief, briefMatches: brief === this.brief.digest,
-        viewer: collection.viewer, actions: collection.actions, items: [...frame.items, ...requests, ...approvals, ask] };
+        signer: await collection.signer(frame, bodyAt), viewer: collection.viewer, actions: collection.actions, items: [...frame.items, ...requests, ...approvals, ask] };
     }, scope);
     return { context: value, collection };
   }
@@ -162,7 +174,7 @@ export class RepoInAi {
     if (!q || !isScopeRef(q.scope) || !Number.isSafeInteger(q.ask) || Number(q.ask) < 0) return result({ error: "question-selector" }, true);
     try {
       const { context, collection } = await this.question(q.scope, Number(q.ask));
-      const { items: _items, versions, ...fields } = context;
+      const { items: _items, signer: _signer, versions, ...fields } = context;
       const publicContext: PublicContext = { ...fields, versions: versions.map(version => sameOptional(version.fact, context.bodyAt) && version.text === context.body ? { fact: version.fact, current: true as const } : version) };
       const answer = result({ context: publicContext, heads: collection.points(), counters: collection.counters, briefResource: { uri: "dap://package/brief", digest: this.brief.digest }, complete: true });
       return resultBytes(answer) > RESULT_BYTES ? result({ error: "context-output-limit", complete: false }, true) : answer;
@@ -173,7 +185,7 @@ export class RepoInAi {
     if (!isScopeRef(args["scope"])) return result({ error: "change-selector" }, true);
     try {
       const { context, collection } = await readChange(this, args["scope"]);
-      const { who, definition: _definition, items: _items, mergeKeys: _keys, key: _key, ...fields } = context;
+      const { who, signer: _signer, definition: _definition, items: _items, mergeKeys: _keys, key: _key, ...fields } = context;
       const named = (item: Item, party: string) => ({ ...item, [`${party}Is`]: who(item.parties[party]) });
       const answer = result({ change: { ...fields, reviews: fields.reviews.map(review => named(review, "reviewer")), results: fields.results.map(found => named(found, "checker")), merges: fields.merges.map(merge => named(merge, "merger")), ...(fields.findings ? { findings: fields.findings.map(({ item, required, holdsMerge, answerAt }) => ({ ...named(item, "reporter"), required, holdsMerge, answerAt })) } : {}) }, heads: collection.points(), counters: collection.counters, complete: true });
       return resultBytes(answer) > RESULT_BYTES ? result({ error: "change-output-limit", complete: false }, true) : answer;

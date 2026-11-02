@@ -2,7 +2,7 @@
 import { canonicalize, isMemberRef, isScopeRef, utf8 } from "@generalbusiness/dap-bytes";
 import type { FieldValue, Item, MemberRef, ReadMinimum, ScopeRef } from "@generalbusiness/dap-contract";
 import { changeFinding, changeJ4 } from "@generalbusiness/dap-lanes";
-import type { ActLike, Card, CardAction, Projection } from "@generalbusiness/dap-mcp";
+import { signerWords, type ActLike, type ActSigner, type Card, type CardAction, type Projection } from "@generalbusiness/dap-mcp";
 import { MERGE_STARTED, changeKicker, decidedLine, mergeHolds, reviewRecorded } from "./attention.ts";
 import { captureInput } from "./capture.ts";
 import { findingProfile, malformedRange, openFindings, requiredSource, shownText } from "./findings.ts";
@@ -27,6 +27,7 @@ export interface LinkedIssue { scope: ScopeRef; title?: string; conditions?: rea
 export interface ShownFinding { item: Item; required: boolean; holdsMerge: boolean; answerAt: Record<string, number> }
 export interface ChangeContext {
   scope: ScopeRef; head: Frame["head"]; definition: string; destination: string; viewer: MemberRef; key: string; actions: readonly string[];
+  signer: ActSigner | null;
   proposal: Item; manifest: Item | null; versions: number; rules: Item | null;
   reviews: Item[]; requests: Item[]; jobs: Item[]; results: Item[]; merges: Item[]; items: Item[];
   /** The merge items this viewer's key signed, with the request key of each. */
@@ -39,7 +40,7 @@ export interface ChangeContext {
 }
 
 /** Read one change. One linked issue that does not read says why; the card still shows the change. */
-export async function readChange(app: RepoInAi, scope: ScopeRef, minimum?: ReadMinimum): Promise<{ context: ChangeContext; collection: Collection }> {
+export async function readChange(app: RepoInAi, scope: ScopeRef, minimum?: ReadMinimum, withSigner = false): Promise<{ context: ChangeContext; collection: Collection }> {
   const { value, collection } = await app.collect(async collection => {
     const frame = await collection.frame(scope, minimum);
     if (!changeProfile(frame.summary.definition)) throw new Unread("change-profile-unsupported");
@@ -75,7 +76,9 @@ export async function readChange(app: RepoInAi, scope: ScopeRef, minimum?: ReadM
       const answer = changeFinding.acts["resolve-finding-any"] as unknown as ActLike;
       return { item, required, holdsMerge: required && proposal.state !== "merged", answerAt: captureInput(answer, [...frame.items, ...superseded, proposal], scope, item.id, {}).at };
     }) : undefined;
-    return { scope, head: frame.head, definition: frame.summary.definition, destination: collection.config.repository!.destination, viewer: collection.viewer, key: collection.options.signer.key, actions: collection.actions,
+    let signer: ActSigner | null = null;
+    try { if (withSigner) signer = await collection.openingSigner(frame, manifest ?? proposal); } catch { /* Attribution cannot hide the record or its controls. */ }
+    return { signer, scope, head: frame.head, definition: frame.summary.definition, destination: collection.config.repository!.destination, viewer: collection.viewer, key: collection.options.signer.key, actions: collection.actions,
       proposal, manifest, versions: live("manifest").length + superseded.length, rules,
       reviews: manifest ? live("review").filter(item => idOf(item.refs["manifest"]) === manifest.id) : [], requests: live("review-request"),
       jobs: manifest ? live("job").filter(item => idOf(item.refs["manifest"]) === manifest.id) : [], results, merges, items: [...frame.items, ...superseded, proposal], mergeKeys, linked, ...(findings ? { findings } : {}), who: owner };
@@ -233,7 +236,7 @@ function reasonsOf(page: string, actions: readonly CardAction[]): string[] {
 }
 
 export async function changeProjection(app: RepoInAi, subject: string | undefined, minimum?: ReadMinimum, page = "summary"): Promise<Projection> {
-  const scope = selector(subject), { context, collection } = await readChange(app, scope, minimum);
+  const scope = selector(subject), { context, collection } = await readChange(app, scope, minimum, true);
   const { manifest, proposal } = context;
   const unknown = context.merges.find(item => item.state === "unknown");
   let actions = changeActions(context);
@@ -248,8 +251,9 @@ export async function changeProjection(app: RepoInAi, subject: string | undefine
     from: { label: from, base: version.values["base"] as string, integration: version.values["integration"] as string }, to: { label, base, integration } })) : [];
   const held = holding(context).length;
   const card: Card = { identity: { item: String((manifest ?? proposal).id), kind: manifest ? "manifest" : "proposal", revision: String((manifest ?? proposal).revision), subject: { scope: scope.scope, item: proposal.id }, at },
+    ...(context.signer?.actor ? { actor: context.signer.actor, actorLabel: manifest ? "Version signed by" : "Opening act signed by" } : {}),
     kicker: changeKicker(proposal, manifest ? context.versions : null), title: String(proposal.values["title"]), summary: `${typeof proposal.values["number"] === "number" ? `Change ${proposal.values["number"]}` : "Change"}, ${proposal.state}${manifest ? `, version ${context.versions}` : ""}.${held ? ` ${held} open finding${held === 1 ? " holds" : "s hold"} the merge.` : ""}`,
-    body: bodyOf(context), reasons: reasonsOf(page, actions),
+    body: bodyOf(context), reasons: [...reasonsOf(page, actions), ...(!context.signer?.actor ? [context.signer ? `${manifest ? "Version" : "Opening act"} signed by ${signerWords(context.signer)}.` : "The signer of this entry is unavailable in this read."] : [])],
     projection: collection.points().map(point => ({ scope: point.scope.scope, seq: point.head.seq, hash: point.head.hash })),
     reviewIntended: [], unavailable: [], waitsOn: [], settles: [], actions, ...(original !== undefined ? { unresolvedOriginal: true } : {}),
     ...(diffable ? { diffAvailable: true, diffRead: { target: context.destination, base, integration, label }, ...(interdiffReads.length ? { interdiffReads } : {}) } : {}),

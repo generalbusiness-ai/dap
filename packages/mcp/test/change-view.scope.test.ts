@@ -15,7 +15,7 @@ import { changeSubject } from "../../../apps/views/src/change.ts";
 import { decisionSource, questionSubject } from "../../../apps/views/src/decision.ts";
 import { RepoInAi } from "../../../apps/views/src/repo-in-ai.ts";
 import type { ReviewStore } from "../../../apps/views/src/review-store.ts";
-import { McpService, memoryStore, type CustodyStore, type McpConfig } from "../src/index.ts";
+import { McpService, memoryStore, type CustodyStore, type Display, type McpConfig } from "../src/index.ts";
 import { created, mcpRoom, type Agent, type Room } from "./fixtures-native.ts";
 
 // Real: Native M8 authority, the J4 lane judgments, SQLite, Worker HTTP, read sessions under a TEST secret, McpService in app mode,
@@ -151,6 +151,7 @@ test("witness 1: an old card's approval is refused after a newer version and sig
     const v1 = await propose(f, lane, work, f.host.head, oid("c"), oid("3"));
     const a = application(f), b = application(f);
     const old = await card(a, "old", "view_change", changeSubject(lane));
+    expect((old.card as unknown as { actor: unknown }).actor, "THE VERSION identifies its signed manifest, including the agent controller").toEqual({ kind: "agent", name: "@una", controller: "@rita" });
     expect(old.card!.actions.map(action => action.id)).toEqual(["approve", "request-changes"]);
     expect(old.card!.body).toContain(`Integration: ${oid("c")}`);
     expect(old.card!.body).toContain(`Base: ${f.host.head}`);
@@ -974,7 +975,7 @@ test("a merge is refused while any request for changes stands on the current ver
     const opened = await card(a, "refuse", "view_change", changeSubject(lane));
     const refusal = await press(a, "refuse", opened, "request-changes");
     expect(refusal.answer["answer"], JSON.stringify(refusal.answer)).toBe("accepted");
-    expect(refusal.display.receipt, "RECEIPT: a person reads what was recorded, in words").toBe("Review recorded: changes requested.");
+    expect(refusal.display.receipt, "RECEIPT: a person reads what was recorded, in words").toBe("Review recorded: changes requested. Signed by @rita (person).");
     const refused = (refusal.answer["fact"] as FactRef).seq;
     expect(await merge(v1), "REFUSED, NO APPROVALS: the approvals guard answers first").toEqual(["refused", "approvals-needed"]);
     let row = await mergeRowOf(a);
@@ -1047,7 +1048,7 @@ test("the first card: a short question shows its text and acts, and the press bi
     const accepted = await press(b, "fresh", fresh, "request-changes");
     expect(accepted.answer["answer"], JSON.stringify(accepted.answer)).toBe("accepted");
     expect(b.signed.map(intent => [intent.kind, (intent.fields["bodyAt"] as FactRef).seq, intent.fields["verdict"]]), "THE PRESS BINDS the current text").toEqual([["approve", seq, "request-changes"]]);
-    expect(accepted.display.receipt, "RECEIPT").toBe("Review recorded: changes requested.");
+    expect(accepted.display.receipt, "RECEIPT").toBe("Review recorded: changes requested. Signed by @rita (person).");
 
     const long = "TEST long text. ".repeat(50);
     const asking = await act(f.una, issue, "ask", { fields: { question: "TEST long?", body: long, brief: BRIEF.digest } });
@@ -1059,5 +1060,58 @@ test("the first card: a short question shows its text and acts, and the press bi
     const item = await c.call("view_read", { view: "long", cut: kept.cut, page: "item" });
     expect(shown(item.structuredContent).card!.actions.map(action => action.id), "A LONG TEXT: Open offers both acts with the whole text").toEqual(["approve", "request-changes"]);
     expect(shown(item.structuredContent).card!.body).toBe(long);
+  } finally { await f.room.done(); }
+}, 180_000);
+
+
+// Invariant: a card attributes its exact text's signed entry, while its receipt attributes the actual submitted envelope; agents name their membership controller.
+test("signed entries and receipts name their different signers on native room rows (STAND-INS: OwnGit, WorkspaceStandIn)", async () => {
+  const f = await roomOf();
+  try {
+    const M = f.room.platform(f.repository.membership.scope), checkerKey = fresh(keys.paul), seed = new Uint8Array(32).fill(79);
+    const member = await M.did(f.person, "add-member", { idempotencyKey: crypto.randomUUID(), fields: { handle: "@check", kind: "checker" } });
+    const invitation = await M.did(f.person, "invite-key", { idempotencyKey: crypto.randomUUID(), expected: await M.expected({ member }), fields: { member, kind: "checker", inviteKey: keyIdOfSecret(seed), inviteEnds: timeOf(f.room.now() + 3_600_000) } });
+    await M.did(checkerKey, "enrol", { idempotencyKey: crypto.randomUUID(), on: 0, expected: await M.expected({ on: 0, member }), fields: { invitation, proof: signInvitationProof(seed, f.repository.membership, invitation, checkerKey.key) } });
+    for (const role of ["agent", "checker"] as const) {
+      const roster = await M.item(0), prior = roster.values[ROLE_LISTS[role]] as string[];
+      await M.did(f.person, "set-actions", { idempotencyKey: crypto.randomUUID(), on: 0, expected: await M.expected({ on: 0 }), fields: { role, actions: [...prior, ...["issue.comment", "issue.approve"].filter(action => !prior.includes(action))] } });
+    }
+    const { inbox: _inbox, ...shared } = f.repository;
+    const check = f.room.agent("actor-check", { mode: "generic", secret: checkerKey.secret, config: { service: f.owner.config.service, repository: shared, handle: "@check" } });
+    await act(f.owner, "rules", "activate", { fields: { name: "issue", digest: QUESTION_BRIEF_DIGESTS.issue }, values: [canonicalize(issueQuestionsBrief)] });
+    const opening = await act(f.owner, "directory", "open-issue", { fields: { definition: QUESTION_BRIEF_DIGESTS.issue, title: "TEST signer identities", conditions: ["TEST identify the signer"] } });
+    const issue = ((await f.owner.ok("wait", { scope: "directory", entry: opening.seq }))["created"] as { scope: ScopeId }[])[0]!.scope;
+    f.room.know(issue);
+    const lane = await refOf(f.owner, issue), checkRef: MemberRef = { membership: f.repository.membership, member: "@check" };
+    const identities = [
+      { agent: f.owner, ref: f.ownerRef, actor: { kind: "person", name: "@rita" }, words: "@rita (person)" },
+      { agent: f.una, ref: f.uva, actor: { kind: "agent", name: "@una", controller: "@rita" }, words: "@una (agent, controlled by @rita)" },
+      { agent: check, ref: checkRef, actor: { kind: "checker", name: "@check" }, words: "@check (checker)" },
+    ];
+    const scenes = [];
+    for (const [index, author] of identities.entries()) {
+      const reviewer = identities[(index + 1) % identities.length]!;
+      const asked = await act(author.agent, issue, "ask", { fields: { question: `TEST ${author.actor.kind}'s question`, body: `TEST text signed by ${author.actor.name}.`, brief: BRIEF.digest } });
+      await act(author.agent, issue, "request-approval", { fields: { ask: asked.seq, bodyAt: asked, requested: reviewer.ref } });
+      await act(reviewer.agent, issue, "comment", { fields: { about: asked, body: "TEST a different signer wrote later." } });
+      const a = application(f, memoryStore(), reviewer.agent), view = `actor-${index}`;
+      const opened = await a.call("view_decision", { view, subject: questionSubject(lane, asked.seq) });
+      const before = (await a.call("view_read", { view })).structuredContent["display"] as Display;
+      expect(before.card!.actor, "THE TEXT's envelope identifies its author, not the reviewer or the latest request's writer").toEqual(author.actor);
+      expect(before.card!.actorLabel).toBe("Question text signed by");
+      const result = await a.call("view_act", { view, cut: before.cut, action: "approve" });
+      const after = result.structuredContent["display"] as Display;
+      expect((result.structuredContent["result"] as { structuredContent: Record<string, unknown> }).structuredContent["answer"]).toBe("accepted");
+      expect(after.receipt, "THE RECEIPT identifies its different signer from the actual custody envelope").toBe(`Review recorded: approved. Signed by ${reviewer.words}.`);
+      expect(after.context.receipt).toContain(`Signed by ${reviewer.words}.`);
+      expect(a.signed.map(intent => [intent.kind, intent.actor])).toEqual([["approve", reviewer.agent === check ? checkerKey.key : reviewer.agent === f.una ? keyIdOfSecret(f.una.secret) : f.person.key]]);
+      const refreshed = (await a.call("view_read", { view, cut: after.cut, page: "summary", refresh: true })).structuredContent["display"] as Display;
+      expect(refreshed.receipt).toBe(after.receipt);
+      scenes.push({ kind: author.actor.kind, actor: author.actor, receipt: after.receipt, opened, before, pressed: result, refreshed });
+    }
+    const record = b64url(utf8(JSON.stringify({ qualification: "Native Membership and Brief issue judgments, real Worker HTTP, read sessions, custody and card adapter. OwnGit, WorkspaceStandIn, clock and pause scheduler are stand-ins. Browser replays these displays and signs nothing.", scenes })));
+    const chunks = record.match(/.{1,4096}/g)!;
+    chunks.forEach((text, index) => console.log(`ACTOR-RECORD ${index} ${text}`));
+    console.log(`ACTOR-RECORD end ${chunks.length} ${digestBytes(utf8(record))}`);
   } finally { await f.room.done(); }
 }, 180_000);
