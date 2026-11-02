@@ -86,7 +86,22 @@ try {
     assert.equal(await app.getByRole('button', { name: 'Take', exact: true }).count(), 0);
     assert.ok(!(await app.locator('#card-root').innerText()).includes(title));
     await app.locator('summary').filter({ hasText: 'Read points' }).click();
+    const readPoints = app.locator('details[data-section="read-points"]');
     await app.locator('.read-points code').filter({ hasText: session.site.at.scope }).first().waitFor();
+    // Count completed refreshes and wait for their final rendered state.
+    const refreshes = async count => {
+      const prior = await page.evaluate(() => proof.calls.filter(call => call.name === 'view_read' && call.arguments.refresh === true).length);
+      await page.waitForFunction(expected => proof.calls.filter(call => call.name === 'view_read' && call.arguments.refresh === true).length >= expected, prior + count);
+      await app.locator('#card-root[aria-busy="false"]').waitFor();
+      await app.getByRole('heading', { name: 'Assignment unavailable', exact: true }).waitFor();
+    };
+    await refreshes(2);
+    assert.equal(await readPoints.evaluate(section => section.open), true, 'Two automatic refreshes keep Read points open');
+    await app.locator('.read-points code').filter({ hasText: session.site.at.scope }).first().waitFor();
+    await readPoints.locator('summary').click();
+    await refreshes(1);
+    assert.equal(await readPoints.evaluate(section => section.open), false, "An automatic refresh keeps the reader's explicit close");
+    await readPoints.locator('summary').click();
     await layout(app, width); await capture(page, app, `unavailable-${width}.png`);
     const dayPresence = await provision('day'), nightPresence = await provision('night');
     assert.equal(session.site.state.item(dayPresence).state, 'unknown');
@@ -169,7 +184,7 @@ try {
     const replay = [];
     for (const scope of [session.site, session.scope, roomB.scope]) { const result = await scope.replay(); assert.equal(result.report.result, 'consistent'); assert.equal(result.why, null); replay.push({ scope: scope.at, result: result.report.result }); }
     await writeFile(join(out, `proof-${width}.json`), JSON.stringify({ proofs, errors, signed: { day: day.submitted, operator: operator.submitted, head: head.submitted }, presence: { item: dayPresence, scope: session.site.at, arrival: arrival.receipt.fact, rawReportPosition: stablePresence.refs.reportedAt, unrelatedReports: 101, wrongRoomRefusal: wrongRoom.name }, replay }, null, 2));
-    report.cases.push({ width, resizedTo: otherWidth, unavailableReadPoints: true, provisionedUnknown: true, durableAfterOtherReports: 101, wrongRoomRefused: true, quietRefresh: true, appOnlyRead: true,
+    report.cases.push({ width, resizedTo: otherWidth, unavailableReadPoints: true, openAcrossTwoRefreshes: true, closedAcrossRefresh: true, provisionedUnknown: true, durableAfterOtherReports: 101, wrongRoomRefused: true, quietRefresh: true, appOnlyRead: true,
       signatures: { day: 2, operator: 1, head: 2 }, nativeKinds: ['take-task', 'report-task', 'hold', 'approve-watering', 'decline-watering'], emptyBack: true, replay: 'consistent', errors });
   }
   await writeFile(join(out, 'report.json'), JSON.stringify(report, null, 2) + '\n'); console.log(JSON.stringify(report));

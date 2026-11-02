@@ -27,6 +27,7 @@ export function fixture(mode: string, custody: CustodyStore = memoryStore()) {
   const signed: Intent[] = [];
   const titles = ["Choose the first milestone", "Review the working terms", "Review the proposed change"];
   const source: ViewSource = { read: async (query, access) => {
+    if (mode === "refresh-sections") revision++;
     if (["empty", "denied", "absent", "unavailable"].includes(mode)) return { status: mode as "empty" | "denied" | "absent" | "unavailable", position: 0, count: 0, fallback: `${mode === "empty" ? "Nothing needs you." : `The ${mode} result is retained; retry the read.`}` };
     const read = await access.call("inspect", { scope: "rules" });
     if (read.isError) return { status: "denied", position: 0, count: 0, fallback: "The fixture scope refused this read." };
@@ -38,6 +39,7 @@ export function fixture(mode: string, custody: CustodyStore = memoryStore()) {
     const card: Card = {
       identity: { item: `q${7 + index}`, kind: updates ? "updates" : ["question", "work", "change"][index]!, revision: `v${revision + 2}`, subject: { scope: scope.rules.scope, item: 0 }, at: { on: revision } },
       title: updates ? "6 updates since your last review" : titles[index]!, summary: updates ? "Two scopes changed. Read the available entries before marking them reviewed." : "A small decision makes the next step clear.",
+      ...(mode === "refresh-sections" ? { record: { label: "Exact record", text: JSON.stringify({ item: index, revision }) } } : {}),
       actor: index === 0 ? { kind: "person", name: "Rita" } : index === 1 ? { kind: "agent", name: "Builder", controller: "Rita" } : { kind: "checker", name: "Checker" },
       reasons: ["Your decision is needed"], ...(query.page === "summary" ? {} : { body: query.page === "diff" ? "@@ first milestone @@\n-Start with every feature.\n+Start with the smallest useful path.\n".repeat(14) : "Choose a bounded first milestone.\n\nThe proposal keeps implementation and review separate.\n\nThe next person receives an exact decision and version." }),
       projection: [{ scope: scope.rules.scope, seq: 10, hash: "sha256:" + "a".repeat(64) }], reviewIntended: updates ? [{ scope: scope.rules.scope, from: 1, to: 6 }, ...(mode === "incomplete" ? [{ scope: "change-9", from: 9, to: 9 }] : [])] : [],
@@ -47,7 +49,7 @@ export function fixture(mode: string, custody: CustodyStore = memoryStore()) {
     };
     // Omitted optional properties stay omitted, as they do in an application's JSON projection.
     if (card.body === undefined) delete card.body;
-    return { status: mode === "incomplete" ? "incomplete" : "ready", position, count, card, fallback: card.fallback };
+    return { status: mode === "incomplete" ? "incomplete" : "ready", position, count, card, fallback: card.fallback, ...(mode === "refresh-sections" ? { refresh: 2000 } : {}) };
   } };
   /** Each call is another process of one home: its own views, over one custody store and one service. */
   const process_ = () => new McpService({ service: SERVICE, mode: "add", config: { read: async () => scope.config(), addRoot: async () => {} }, custody, views: source,
@@ -206,7 +208,13 @@ void(async()=>{input={view:config.id,subject:config.subject??config.screen,...(c
   });
   hostOrigin = await listen(host);
   sandboxOrigin = await listen(sandbox);
-  return { url: hostOrigin, sandboxOrigin, close: async () => {
+  return { url: hostOrigin, sandboxOrigin,
+    complete: (instance: string, item: string) => {
+      const fixture = instances.get(instance);
+      if (!fixture) throw new Error("Unknown fixture instance");
+      fixture.complete(item);
+    },
+    close: async () => {
     for (const instance of instances.values()) { instance.wire.endLegacy(instance.session); instance.wire.closeAll(); }
     instances.clear();
     await Promise.all([stop(host), stop(sandbox)]);

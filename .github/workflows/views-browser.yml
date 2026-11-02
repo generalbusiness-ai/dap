@@ -8,6 +8,7 @@ on:
       - 'packages/mcp/scripts/views.mjs'
       - 'packages/mcp/test/views-browser.mjs'
       - 'packages/mcp/test/owned-scopes-browser.mjs'
+      - 'packages/mcp/test/grow-routing-browser.mjs'
       - 'examples/grow/check/**'
       - 'examples/grow/prepare-check.ts'
       - 'packages/mcp/test/support/views-host.ts'
@@ -27,6 +28,7 @@ on:
       - 'packages/mcp/scripts/views.mjs'
       - 'packages/mcp/test/views-browser.mjs'
       - 'packages/mcp/test/owned-scopes-browser.mjs'
+      - 'packages/mcp/test/grow-routing-browser.mjs'
       - 'examples/grow/check/**'
       - 'examples/grow/prepare-check.ts'
       - 'packages/mcp/test/support/views-host.ts'
@@ -86,3 +88,7 @@ jobs:
         env:
           VIEW_CAPTURE_OUT: /tmp/owned-scopes-browser
         run: node --import tsx packages/mcp/test/owned-scopes-browser.mjs
+      - name: Run the Grow routing browser script
+        env:
+          VIEW_CAPTURE_OUT: /tmp/grow-routing-browser
+        run: node --import tsx packages/mcp/test/grow-routing-browser.mjs
