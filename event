@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/evidence/2026-11-01-j5-roster-acceptance.manifest.json","body":{"commit":"cc09709a1927a3f93a2d20daddd5eb0053e6acc2","path":"notes/implementation/evidence/2026-11-01-j5-roster-acceptance.manifest.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:34d37e71e29070ee46dba53b9f2eb084d3f79ba3","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-01-j5-roster-acceptance.manifest.json."}
