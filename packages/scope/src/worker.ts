@@ -934,6 +934,12 @@ export class McpAgent<E extends McpEnv = McpEnv> extends DurableObject<E> {
     this.#agent = new HostedAgent(sqlOf(this.ctx), {
       genericTools: hostedMcpTools(this.env) ?? [],
       cardOrigins: remoteCardOrigins(this.env.MCP_CARD_ORIGINS) ?? [],
+      oauthResource: request => {
+        const origin = readPublicOrigin(this.env, request.url);
+        if (origin === null) return null;
+        const resource = publicRequestUrl(origin, request.url);
+        return hostedMcpResources(this.env, origin)?.includes(resource) ? resource : null;
+      },
       applicationContent: async release => {
         if (!this.env.APPLICATION_CONTENT) return null;
         const store = new ApplicationContentStore(this.env.APPLICATION_CONTENT, readApplicationTrust(this.env.APPLICATION_TRUST), PROPOSED_BOUNDS);

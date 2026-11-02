@@ -36,7 +36,7 @@ export interface OAuthAccessCandidate {
   row: string;
   agent: OAuthAgentIdentity;
 }
-interface Standing { key: string; started: number; answer: Promise<"active" | "inactive" | "unavailable"> }
+interface Standing { key: string; started: number; answer: Promise<"active" | "inactive" | "unavailable">; active?: boolean }
 interface AccessPorts extends Authority {
   now(): number;
   agent(): OAuthAgentIdentity | null;
@@ -99,22 +99,30 @@ export class OAuthAccess {
 
   /** A revoked key or removed agent/controller ends the grant. Unavailable
    * authority fails this request without inventing a permanent revocation. */
-  async standing(candidate: OAuthAccessCandidate): Promise<boolean> {
+  async standing(candidate: OAuthAccessCandidate, refresh = false): Promise<boolean> {
     if (!this.current(candidate)) return false;
     const now = this.ports.now();
     const key = canonicalize([candidate.agent.membership, candidate.agent.key, candidate.agent.handle, candidate.grant.controller]);
     let held = this.#standing.get(candidate.id);
-    if (!held || held.key !== key || now < held.started || now >= held.started + OAUTH_STANDING_MS) {
+    if (!held || held.key !== key || now < held.started || now >= held.started + OAUTH_STANDING_MS || refresh && held.active !== undefined) {
       if (!held && this.#standing.size >= OAUTH_GRANTS_MOST) this.#standing.delete(this.#standing.keys().next().value!);
       held = { key, started: now, answer: this.#observe(candidate) };
       this.#standing.set(candidate.id, held);
     }
     const answer = await held.answer, after = this.ports.now();
     if (!this.current(candidate) || after < held.started || after >= held.started + OAUTH_STANDING_MS) return false;
+    held.active = answer === "active";
     if (answer === "inactive") this.end(candidate.id);
     // Do not cache a transient failure for the full standing window.
     if (answer === "unavailable" && this.#standing.get(candidate.id) === held) this.#standing.delete(candidate.id);
     return answer === "active";
+  }
+
+  /** The last successful read's hard deadline, measured from its start. */
+  standingDeadline(candidate: OAuthAccessCandidate): number | null {
+    const held = this.#standing.get(candidate.id), now = this.ports.now();
+    return held?.active === true && this.current(candidate) && now >= held.started && now < held.started + OAUTH_STANDING_MS
+      ? Math.min(held.started + OAUTH_STANDING_MS, candidate.grant.accessExpires, candidate.grant.ends) : null;
   }
 
   async #observe(candidate: OAuthAccessCandidate): Promise<"active" | "inactive" | "unavailable"> {

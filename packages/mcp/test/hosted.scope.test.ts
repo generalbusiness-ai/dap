@@ -24,6 +24,8 @@ import { BOUNDS, COMPLETION_BYTES, MODERN, MODERN_RESULT_EXTRA } from "../src/in
 import { INVITATION_LINK } from "@generalbusiness/dap-client";
 import { mcpRoom, SERVICE, type Agent, type Room, created as createRoom } from "./fixtures-native.ts";
 import { MCP_METRIC_SCHEMA, type McpMetricPoint } from "../src/metrics.ts";
+import { OAUTH_STANDING_MS, type OAuthAccessGrant } from "../src/oauth-access.ts";
+import { ROW_OVERHEAD } from "../src/hosted.ts";
 
 /** Production default dispatch, in this isolate. The actual native PLATFORM namespace is this fixture's Scope binding;
  * REGISTRIES and AGENTS keep their existing native subclasses, clocks, custody and control fences. */
@@ -58,9 +60,9 @@ async function allItems(agent: Agent, scope: string): Promise<{ id: number; type
 }
 
 /** An admin's two acts, and the agent-key invitation they make, as `dap invite --kind agent-key` would encode it. */
-async function invite(room: Room, rita: Agent, handle: string, definition: AgentKeyInvitation["definition"] = "platform:membership@2"): Promise<{ link: string; invitation: AgentKeyInvitation; secret: string }> {
+async function invite(room: Room, rita: Agent, handle: string, definition: AgentKeyInvitation["definition"] = "platform:membership@2", controller = "@rita"): Promise<{ link: string; invitation: AgentKeyInvitation; secret: string }> {
   const M = rita.config.repository!.membership;
-  const added = await rita.ok("member.add", { fields: { handle, kind: "agent", controller: "@rita" }, idempotencyKey: `add-${handle}` });
+  const added = await rita.ok("member.add", { fields: { handle, kind: "agent", controller }, idempotencyKey: `add-${handle}` });
   expect(added["answer"], JSON.stringify(added)).toBe("accepted");
   const member = added["fact"] as FactRef;
   const secret = b64url(crypto.getRandomValues(new Uint8Array(32)));
@@ -71,7 +73,7 @@ async function invite(room: Room, rita: Agent, handle: string, definition: Agent
   const memberItem = items.find((i) => i.type === "member" && i.values["handle"] === handle)!;
   const { inbox: _inbox, ...repository } = rita.config.repository!;
   const invitation: AgentKeyInvitation = {
-    v: 1, kind: "agent-key", service: SERVICE, repository, definition, handle, controller: { membership: M, member: "@rita" as MemberId },
+    v: 1, kind: "agent-key", service: SERVICE, repository, definition, handle, controller: { membership: M, member: controller as MemberId },
     member, invitation: invited["fact"] as FactRef, secret, expected: { on: roster.revision, member: memberItem.revision },
   };
   return { link: encodeAgentKeyInvitation(invitation), invitation, secret };
@@ -207,9 +209,9 @@ test.each(["platform:register@3", "platform:register@10"] as const)("H1, the who
 });
 
 /** A room created by rita with the issue definition active, and one agent created under `op`; the agent's answer. */
-async function hosted(room: Room, rita: Agent, handle: string, op: string, signer: Uint8Array = rita.secret, definition: AgentKeyInvitation["definition"] = "platform:membership@2"): Promise<{ agent: string; key: KeyId; bearer: string; link: string }> {
+async function hosted(room: Room, rita: Agent, handle: string, op: string, signer: Uint8Array = rita.secret, definition: AgentKeyInvitation["definition"] = "platform:membership@2", controller = "@rita"): Promise<{ agent: string; key: KeyId; bearer: string; link: string }> {
   const M = rita.config.repository!.membership;
-  const { link } = await invite(room, rita, handle, definition);
+  const { link } = await invite(room, rita, handle, definition, controller);
   const body = JSON.stringify({ link });
   const created = await room.wait(() => post("/mcp/agents", control(room, signer, "create", M, null, body, op), body));
   const answer = await created.json() as { agent: string; key: KeyId; bearer: string };
@@ -226,7 +228,7 @@ async function roomWithIssues(): Promise<{ room: Room; rita: Agent }> {
   expect((await rita.ok("rules.activate", { fields: { digest: DEMO_DIGESTS.issue, name: "issue" }, values: [canonicalize(issueDemo)], idempotencyKey: "activate-issue" }))["answer"]).toBe("accepted");
   return { room, rita };
 }
-const done = (room: Room) => { hostedTest.metrics = null; hostedTest.now = null; hostedTest.pause = null; hostedTest.lose = null; hostedTest.controlBudget = null; hostedTest.custodyBounds = null; hostedTest.failWrite = null; hostedTest.faultAt = null; hostedTest.failSession = false; room.done(); };
+const done = (room: Room) => { hostedTest.metrics = null; hostedTest.now = null; hostedTest.pause = null; hostedTest.lose = null; hostedTest.controlBudget = null; hostedTest.custodyBounds = null; hostedTest.failWrite = null; hostedTest.faultAt = null; hostedTest.failSession = false; hostedTest.scheduleExpiry = null; room.done(); };
 /** A raw request to the agent's endpoint with a bearer. */
 const mcp = async (bearer: string, method: string, headers: Record<string, string>, body?: unknown): Promise<Response> => {
   const response = await routed(`${SERVICE}/mcp`, { method, headers: { authorization: `Bearer ${bearer}`, "content-type": "application/json", ...headers }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
@@ -237,6 +239,160 @@ const mcp = async (bearer: string, method: string, headers: Record<string, strin
 const META = { "io.modelcontextprotocol/protocolVersion": MODERN, "io.modelcontextprotocol/clientCapabilities": {} };
 const modernCall = (bearer: string, name: string, args: Record<string, unknown>, id = 1) =>
   mcp(bearer, "POST", { "mcp-protocol-version": MODERN, "mcp-method": "tools/call", "mcp-name": name }, { jsonrpc: "2.0", id, method: "tools/call", params: { name, arguments: args, _meta: META } });
+
+// The issuer below is TEST-ONLY direct SQL. The production route, registry,
+// agent key, membership standing and removal are Native. No OAuth consent,
+// code exchange, deployed connector, or live host runs in this O1 witness.
+test("O1 test-issued access tokens bind exact connectors and lose Native reads after controller removal", async () => {
+  const { room, rita } = await roomWithIssues();
+  const claude = SERVICE + "/mcp?connector=claude", chatgpt = SERVICE + "/mcp?connector=chatgpt";
+  const streams: Response[] = [];
+  let timerId = 0;
+  let timerOwner: string | null = null;
+  const timers = new Map<number, { due: number; run: () => Promise<void> }>();
+  hostedTest.scheduleExpiry = (delay, run) => { const id = ++timerId; timers.set(id, { due: room.now() + delay, run }); return () => { timers.delete(id); }; };
+  const fireDue = async () => {
+    for (let n = 0; n < 32; n++) {
+      const next = [...timers].filter(([, job]) => job.due <= room.now()).sort((a, b) => a[1].due - b[1].due)[0];
+      if (!next) return;
+      if (timerOwner === null) throw Error("TEST hosted timer has no owning agent");
+      timers.delete(next[0]);
+      await room.wait(() => runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(timerOwner!)), () => next[1].run()));
+    }
+    throw Error("TEST hosted timer loop did not reach its bounded idle state");
+  };
+  hostedTest.toolSettings = { MCP_ENABLED: "true", MCP_RESOURCE_URLS: JSON.stringify([claude, chatgpt]) };
+  try {
+    const M = rita.config.repository!.membership;
+    const invitationSecret = b64url(crypto.getRandomValues(new Uint8Array(32)));
+    const invitation = await rita.ok("member.invite", { fields: { handle: "@oauth-owner", role: "member", inviteHash: textDigest(invitationSecret), inviteEnds: timeOf(room.now() + 3_600_000) }, idempotencyKey: "TEST-oauth-controller" });
+    const link = INVITATION_LINK + b64url(utf8(JSON.stringify({ v: 1, service: SERVICE,
+      repository: (({ inbox: _inbox, ...shared }) => shared)(rita.config.repository!),
+      invitation: (invitation["fact"] as FactRef).seq, secret: invitationSecret, handle: "@oauth-owner", definition: "platform:membership@2" })));
+    const owner = room.agent("oauth-owner", { config: { service: "" } });
+    expect((await owner.ok("join", { link, idempotencyKey: "TEST-oauth-controller-join" }))["answer"]).toBe("accepted");
+    const controller = (await allItems(rita, "membership")).find(item => item.type === "member" && item.values["handle"] === "@oauth-owner")!;
+    const bot = await hosted(room, rita, "@oauth-agent", "TEST-oauth-agent", rita.secret, "platform:membership@2", "@oauth-owner");
+    timerOwner = bot.agent;
+    const issue = async (resource: string, owner = "@oauth-owner", lifetime = 3_600_000, agent = bot.agent) => {
+      const id = b64url(crypto.getRandomValues(new Uint8Array(32))), secret = b64url(crypto.getRandomValues(new Uint8Array(32)));
+      const row: OAuthAccessGrant = { controller: owner as MemberId, resource, created: room.now(), ends: room.now() + 86_400_000,
+        accessIssued: room.now(), accessExpires: room.now() + lifetime, accessDigest: digestBytes(utf8(secret)) };
+      const text = canonicalize(row);
+      await room.wait(() => runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(agent)), (_instance, state) => state.storage.transactionSync(() => {
+        const charge = utf8(text).length + utf8(id).length + 6 + ROW_OVERHEAD;
+        const used = Number(state.storage.sql.exec(`SELECT v FROM control_budget WHERE k = 'used'`).toArray()[0]!["v"]);
+        expect(used + charge).toBeLessThan(15 * 1024 * 1024);
+        state.storage.sql.exec(`INSERT INTO oauth_grant (id, row, state, created) VALUES (?, ?, 'active', ?)`, id, text, row.created);
+        state.storage.sql.exec(`UPDATE control_budget SET v = v + ? WHERE k = 'used'`, charge);
+      })));
+      return { id, token: `${agent}.${id}.${secret}` };
+    };
+    const list = (resource: string, token: string, address = "192.0.2.11") => room.wait(() => routed(resource, { method: "POST",
+      headers: { authorization: `Bearer ${token}`, "cf-connecting-ip": address, "content-type": "application/json", "mcp-protocol-version": MODERN, "mcp-method": "tools/list" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: { _meta: META } }) }));
+    const first = await issue(claude), second = await issue(chatgpt);
+    const missing = await room.wait(() => routed(claude, { method: "POST" }));
+    expect(missing.status).toBe(401);
+    expect(missing.headers.get("www-authenticate")).toContain("/.well-known/oauth-protected-resource/mcp?connector=claude");
+    const metadata = await room.wait(() => routed(SERVICE + "/.well-known/oauth-protected-resource/mcp?connector=claude"));
+    expect(metadata.status).toBe(200);
+    expect(await metadata.json()).toMatchObject({ resource: claude, authorization_servers: [SERVICE] });
+    expect((await room.wait(() => routed(SERVICE + "/.well-known/oauth-protected-resource/mcp?connector=unknown"))).status).toBe(404);
+    expect((await list(claude, first.token)).status).toBe(200);
+    expect((await list(chatgpt, first.token)).status).toBe(401);
+    expect((await list(claude, second.token)).status).toBe(401);
+    expect((await list(chatgpt, second.token)).status).toBe(200);
+    expect((await list(claude, bot.bearer)).status, "the static bearer still serves").toBe(200);
+    const initialization = (resource: string, token: string) => room.wait(() => routed(resource, { method: "POST",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json", "mcp-protocol-version": LEGACY },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: LEGACY, capabilities: {}, clientInfo: { name: "TEST-oauth-resource", version: "1" } } }) }));
+    const initialize = async (resource: string, token: string) => {
+      const response = await initialization(resource, token);
+      expect(response.status).toBe(200);
+      const id = response.headers.get("mcp-session-id"); expect(id).not.toBeNull();
+      return id!;
+    };
+    const session = await initialize(claude, first.token);
+    const legacyList = (resource: string, token: string, id: string) => room.wait(() => routed(resource, { method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json", "mcp-protocol-version": LEGACY, "mcp-session-id": id },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list" }) }));
+    expect((await legacyList(claude, first.token, session)).status).toBe(200);
+    expect((await legacyList(chatgpt, second.token, session)).status, "grants never share a legacy session").toBe(404);
+    expect((await legacyList(claude, bot.bearer, session)).status, "static bearer has its own sessions").toBe(404);
+    const peers = [
+      { resource: claude, token: first.token, id: await initialize(claude, first.token) },
+      { resource: chatgpt, token: second.token, id: await initialize(chatgpt, second.token) },
+      { resource: claude, token: bot.bearer, id: await initialize(claude, bot.bearer) },
+      { resource: claude, token: first.token, id: await initialize(claude, first.token) },
+    ];
+    for (const peer of peers) {
+      const response = await room.wait(() => routed(peer.resource, { method: "GET", headers: {
+        authorization: `Bearer ${peer.token}`, "mcp-protocol-version": LEGACY, "mcp-session-id": peer.id,
+      } }));
+      streams.push(response); expect(response.status).toBe(200);
+    }
+    const fifth = await initialize(chatgpt, second.token);
+    expect((await room.wait(() => routed(chatgpt, { method: "GET", headers: {
+      authorization: `Bearer ${second.token}`, "mcp-protocol-version": LEGACY, "mcp-session-id": fifth,
+    } }))).status, "the four-stream limit spans grants and the static bearer").toBe(409);
+    for (const response of streams) {
+      const reader = response.body!.getReader();
+      await reader.read();
+      await reader.cancel();
+    }
+    streams.length = 0;
+    // This cross-object fetch fixture does not finish body cancellation at
+    // this barrier, including the static layer. Use authenticated teardown
+    // here. oauth-http.scope.test.ts checks the local cancellation hook.
+    for (const peer of peers) expect((await room.wait(() => routed(peer.resource, { method: "DELETE", headers: {
+      authorization: `Bearer ${peer.token}`, "mcp-protocol-version": LEGACY, "mcp-session-id": peer.id,
+    } }))).status).toBe(200);
+    expect(timers.size, "ending the last stream cancels both deadline and standing timers").toBe(0);
+    await initialize(claude, bot.bearer);
+    const expired = await issue(claude, "@oauth-owner", 1000);
+    const shortSession = await initialize(claude, expired.token);
+    const shortStream = await room.wait(() => routed(claude, { method: "GET", headers: {
+      authorization: `Bearer ${expired.token}`, "mcp-protocol-version": LEGACY, "mcp-session-id": shortSession,
+    } }));
+    streams.push(shortStream); expect(shortStream.status).toBe(200);
+    expect([...timers.values()].every(job => job.due === room.now() + 1000), "an access deadline schedules no zero-delay refresh loop").toBe(true);
+    room.advance(1000);
+    await fireDue();
+    expect(await shortStream.text(), "access expiry closes the existing stream").toContain("event: end");
+    streams.splice(streams.indexOf(shortStream), 1);
+    expect(timers.size).toBe(0);
+    const refusal = await list(claude, expired.token);
+    expect(refusal.status).toBe(401);
+    expect(refusal.headers.get("www-authenticate")).toContain('error="invalid_token"');
+    for (let n = 0; n < 13; n++) await initialize(claude, first.token);
+    expect((await initialization(chatgpt, second.token)).status, "the sixteen-session limit spans credentials without evicting another host").toBe(507);
+    expect((await legacyList(chatgpt, second.token, fifth)).status).toBe(200);
+    const count = await room.wait(() => runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(bot.agent)), (_instance, state) => Number(state.storage.sql.exec(`SELECT (SELECT count(*) FROM session) + (SELECT count(*) FROM oauth_session) AS n`).toArray()[0]!["n"])));
+    expect(count).toBe(16);
+    const standingStream = await room.wait(() => routed(claude, { method: "GET", headers: {
+      authorization: `Bearer ${first.token}`, "mcp-protocol-version": LEGACY, "mcp-session-id": session,
+    } }));
+    streams.push(standingStream); expect(standingStream.status).toBe(200);
+    const removed = await rita.ok("member.remove", { on: controller.id, idempotencyKey: "TEST-remove-oauth-controller" });
+    expect(removed["answer"]).toBe("accepted");
+    room.advance(30_000);
+    await fireDue();
+    expect(await standingStream.text(), "standing refresh ends a removed controller's existing stream").toContain("event: end");
+    streams.splice(streams.indexOf(standingStream), 1);
+    expect(timers.size).toBe(0);
+    room.advance(OAUTH_STANDING_MS);
+    expect((await list(claude, first.token)).status).toBe(401);
+    expect((await list(chatgpt, second.token)).status).toBe(401);
+    const states = await room.wait(() => runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(bot.agent)), (_instance, state) => state.storage.sql.exec(`SELECT id, state FROM oauth_grant WHERE id IN (?, ?) ORDER BY id`, first.id, second.id).toArray()));
+    expect(states.map(row => row["state"])).toEqual(["ended", "ended"]);
+    const retired = await hosted(room, rita, "@oauth-retired", "TEST-oauth-retired");
+    const retiredToken = await issue(claude, "@rita", 3_600_000, retired.agent);
+    expect((await list(claude, retiredToken.token)).status).toBe(200);
+    expect((await room.wait(() => post(`/mcp/agents/${retired.agent}`, control(room, rita.secret, "retire", M, retired.agent, "", "TEST-oauth-retire"), "", "DELETE"))).status).toBe(200);
+    expect((await list(claude, retiredToken.token)).status).toBe(401);
+  } finally { for (const response of streams) await response.body?.cancel(); hostedTest.toolSettings = null; done(room); }
+});
 
 // A rewritten Request is ONLY the Worker boundary of a proxy, not an actual
 // proxy/celld witness. Registry, agent, invitation/enrolment and MCP are real

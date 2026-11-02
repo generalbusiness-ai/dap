@@ -67,6 +67,10 @@ export interface HttpPort {
   authorized(authorization: string | null): boolean | Promise<boolean>;
   /** A fresh session ID. */
   mintSession(): string;
+  /** Hosted credential layers share the agent's four stream slots. */
+  streamCount?(): number;
+  /** Credential owner cancels its standing timer as the last stream ends. */
+  streamsChanged?(): void;
   /** Called with a session's row after issue, initialization, a listing or client activity. Awaited before the response. */
   persist?(row: SessionRow): void | Promise<void>;
   /** Called when a session ends. */
@@ -141,6 +145,7 @@ export class McpHttp {
     this.#stopLifetime = null;
   }
   #lifetime(): void {
+    this.port.streamsChanged?.();
     if (this.#closed || this.#open.size === 0) { this.#cancelLifetime(); return; }
     const lifetime = this.port.lifetime;
     if (!lifetime || this.#stopLifetime) return;
@@ -292,7 +297,7 @@ export class McpHttp {
       if (decoded === null || decoded !== params["name"]) return rpcJsonReply(400, rpcError(id, HEADER_MISMATCH, `Mcp-Name must name the ${m.method === "prompts/get" ? "prompt" : "tool"}.`));
     }
     if (m.method === "subscriptions/listen" && !notification) {
-      if (this.#open.size >= STREAMS_MOST) return rpcJsonReply(409, rpcError(id, TOO_MANY_STREAMS, `At most ${STREAMS_MOST} streams are open at once.`));
+      if ((this.port.streamCount?.() ?? this.#open.size) >= STREAMS_MOST) return rpcJsonReply(409, rpcError(id, TOO_MANY_STREAMS, `At most ${STREAMS_MOST} streams are open at once.`));
       return this.#listen(m);
     }
     const response = await this.port.wire.handle(m, null, () => {}, undefined, this.port.resourceDomain?.(request));
@@ -369,7 +374,7 @@ export class McpHttp {
   async #stream(session: LegacySession, request: Request): Promise<Response> {
     if (this.#closed || this.#due()) { if (!this.#discarded) await this.closeAll(); return bare(this.#due() ? 401 : 404); }
     const fresh = session.stream === null && !this.#pending.has(session);
-    if (fresh && this.#open.size >= STREAMS_MOST) return rpcJsonReply(409, rpcError(null, TOO_MANY_STREAMS, `At most ${STREAMS_MOST} streams are open at once.`));
+    if (fresh && (this.port.streamCount?.() ?? this.#open.size) >= STREAMS_MOST) return rpcJsonReply(409, rpcError(null, TOO_MANY_STREAMS, `At most ${STREAMS_MOST} streams are open at once.`));
     this.#open.add(session);
     this.#lifetime();
     this.#pending.set(session, (this.#pending.get(session) ?? 0) + 1);
