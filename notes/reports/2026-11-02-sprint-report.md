@@ -2,8 +2,8 @@
 
 Status: landed; describes work that is done.
 
-The sprint ran from 17:00 on 1 November to 17:00 on 2 November. Nineteen
-heads landed on `main`, counting the previous report. The three room Workers
+The sprint ran from 17:00 on 1 November to 17:00 on 2 November. Twenty heads
+landed on `main`, counting the previous report. The three room Workers
 were deployed six times, and the Mac mini once. A person returning to a room
 now finds everything that needs them on the Page, so J5 is accepted. Reading
 a change in the desktop AI app got faster and steadier. Hugh set the order
@@ -28,9 +28,9 @@ staying blank (`8093f9ce`).
 
 The first **View diff** press made twelve requests before its act. It now
 makes four, and still reads membership, the directory, the rules and the
-target fresh. In three runs on one Mac, the wait fell from 1.3 to 4.5 seconds
-to under 0.7 seconds (`c9f9ed46`). These are sequential runs on a shared
-machine, not a latency guarantee.
+target fresh. In three runs on one Mac, the wait fell from between 1.3 and 4.5
+seconds to under 0.7 seconds (`c9f9ed46`). These are sequential runs on a
+shared machine, not a latency guarantee.
 
 A section that the reader opens or closes now stays that way when the card
 refreshes itself (`08a16dc6`). When a diff read stops at its limit, the card
@@ -74,10 +74,12 @@ by its ID, with read or write as needed. The App key can still mint for every
 repository in the installation, and the self-host guide says so.
 
 The configuration record landed (`8e9f0942`), and the planner deployed it on
-the mini. The register installed three minutes into its fourteen-minute
+the mini. The register installed about one minute into its fourteen-minute
 window. The older H3 room on the same host reads exactly as before. The
 builder then created the witness room, with a test issue to keep through
-binding. The binding row goes to review next.
+binding. The row that binds that room to the repository landed after
+checker approval (`8f68994b`). The second deployment and the bind come
+next.
 
 ## Cost-of-change review
 
@@ -85,7 +87,8 @@ Each entry gives the cost, a cheaper path if one existed, and whether to
 revisit.
 
 - G3 source (`4be4c43f`). Cost: 63 paths and four full gates, three of which
-  failed: a security inventory, catalog goldens and a host fixture.
+  failed: a security inventory, catalog digest literals and two fixtures,
+  and a host fixture.
   Alternative: run the owning inventories before the first gate. Revisit:
   yes; inventories run before a gate on any head that adds a cohort.
 - OAuth note (`afdd8ee5`). Cost: three review rounds. Round one found a
