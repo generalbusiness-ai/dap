@@ -1,0 +1,272 @@
+{
+  "version": 1,
+  "qualification": "A controlled native roster gate and bounded local browser replay witness the cache-gap repair. No deployed, provider or person acceptance. J5 acceptance remains open for the planner.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-01-j5-row-press",
+  "checkpoint": {
+    "commit": "f51fbf5d0d933c8f3fb5168c67e347550709606b",
+    "tree": "0582e116f568350728c8409e22d9c048d038565c"
+  },
+  "fileCount": 193,
+  "files": [
+    {
+      "path": "capture-control-validation.json",
+      "bytes": 358,
+      "sha256": "ffdeb621f22524a13e88cb8e509542d3d3f91af4d191d0371357211fc857247e"
+    },
+    {
+      "path": "repeat/row-press/stopped.json",
+      "bytes": 391184,
+      "sha256": "07a4e90bee6e3be5939e91a5f2a7927743d4b4c70ed32ad848ffc70494839d36"
+    },
+    {
+      "path": "diagnostic/run.log",
+      "bytes": 2326081,
+      "sha256": "c731cd08026032423d395f5b4c659b729af9911b3e47b20019754f2511dff82d"
+    },
+    {
+      "path": "logger/run.log",
+      "bytes": 2317160,
+      "sha256": "2de3aeabecf6e599b60ff9bf1944c6e29bcd805f3b151035c5a9d78a57e9e102"
+    },
+    {
+      "path": "observer/run.log",
+      "bytes": 2319070,
+      "sha256": "75f9a6c97d17ea9e927d83040644f44491c9cd83029d0cb95f3b88c7fc7bf8a0"
+    },
+    {
+      "path": "replay/row-press/stopped.json",
+      "bytes": 1939350,
+      "sha256": "fc36b37ac9559575e3028a9746d4b555a4f942edb24b062218e07f1c49872f88"
+    },
+    {
+      "path": "causal/before.log",
+      "bytes": 6582,
+      "sha256": "e152a2d884bf851090853537bc8b506e9f469ac37ac8c3a47a75ca171c873902"
+    },
+    {
+      "path": "causal/after.log",
+      "bytes": 254,
+      "sha256": "4aa6bdcbce5da076e24b2a16f2677a1cf89971ebc5755780fae3387a32e1d2bc"
+    },
+    {
+      "path": "causal/null-gap-control-final.log",
+      "bytes": 7360,
+      "sha256": "80146304e528f30721907c884b16d7c89067b60b03c5cd74df31429cf2d42b20"
+    },
+    {
+      "path": "causal/failed-read-control-final.log",
+      "bytes": 7112,
+      "sha256": "417b8b66d5d6a465e329752ff2ff276dfb1b4bf7c46a957f73e9fb1c9e1e74b2"
+    },
+    {
+      "path": "causal/page-plain.log",
+      "bytes": 260,
+      "sha256": "c47215e9d8ae6a5a8bc52c7265126efb3715b7ce7a67a80cffa65838fa3aeea9"
+    },
+    {
+      "path": "causal/page-native-focused.log",
+      "bytes": 258,
+      "sha256": "d4501dc2076174733f041c981ffa3fd8d1f84fba6305215d46a0d497f12843b6"
+    },
+    {
+      "path": "fixed-validation.json",
+      "bytes": 417,
+      "sha256": "3554cc83f0a268e3f7e46b60fbbbf0f4f3e1c4ee163dacc9357a807e5c534bc9"
+    },
+    {
+      "path": "fixed-verification/result.json",
+      "bytes": 2626238,
+      "sha256": "451c41c5b88dd248a1183a8ed27b86a349fb93771658bf198303cc736a057f09"
+    },
+    {
+      "path": "visual-checks.json",
+      "bytes": 584,
+      "sha256": "8733da701b3fe0b57f6487ba2433c1f777dd13823b9a776501d6cc9f1e154a0b"
+    },
+    {
+      "path": "gate/gate.stdout.log",
+      "bytes": 6508,
+      "sha256": "7f85dad6d888693dbe1ac062057f07678554318f9202ddc228765ce498ba9642"
+    },
+    {
+      "path": "gate/gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "page-ci.json",
+      "bytes": 2689,
+      "sha256": "5d3d12c256e75d252f4ec21144069154c7b5754350536cb62dd66361a052b324"
+    },
+    {
+      "path": "credential-scan.json",
+      "bytes": 1608,
+      "sha256": "b11d41401251de54c747df482cccfaabac8fb2934fd8d0bafe984a65bf16f9d5"
+    },
+    {
+      "path": "causal/controls-command.json",
+      "bytes": 861,
+      "sha256": "27dd630ffb19fa37d20639402245309329f80442cee5f6841c735b7d267f8028"
+    },
+    {
+      "path": "causal/focused-commands.json",
+      "bytes": 576,
+      "sha256": "8305dfdd029a01cc66695ad81309c0aaed81596c28bfb3716ed4c259ac91c165"
+    },
+    {
+      "path": "gate/head.txt",
+      "bytes": 82,
+      "sha256": "80b59d2e261258c7a5e48ad3f7a144eb672ff7c46fa21d3cbb32f4885dbc4190"
+    },
+    {
+      "path": "gate/finished.json",
+      "bytes": 110,
+      "sha256": "c9c18bdc4892b3a04554082dac003fdbd027df3a1dd7448a5970436f44ca66b5"
+    },
+    {
+      "path": "fixed-inputs.json",
+      "bytes": 1373,
+      "sha256": "33d130b1d81996126d9173abe7f3b559642c207308fb22a858ca38289e9f27e0"
+    },
+    {
+      "path": "run.py",
+      "bytes": 1225,
+      "sha256": "7325d9679e0814c1f7c5d20b0dbb82acef3ec4a82dae61928b10c8d266252b16"
+    },
+    {
+      "path": "run-diagnostic.py",
+      "bytes": 1218,
+      "sha256": "29a0399ef1b3ebce1e4370a21cf849e32b95a2e118bdd6cbad5aa8c8db9095fa"
+    },
+    {
+      "path": "run-logger.py",
+      "bytes": 1210,
+      "sha256": "c4a25b90855bd0fb4b99b25c91f5c7885fd9afb7254c6e227f096561199f68e3"
+    },
+    {
+      "path": "run-observer.py",
+      "bytes": 1214,
+      "sha256": "23c718a10342cde701402db5d85ebf5a63303d6e2856158282c0ddff224220ca"
+    },
+    {
+      "path": "run-replay.py",
+      "bytes": 369,
+      "sha256": "df4858c2fd8c1c6837d3e26b652a98f9c32206cf8e9bd262a42c608927d15c87"
+    },
+    {
+      "path": "run-fixed.py",
+      "bytes": 828,
+      "sha256": "f58114487f83da3452ba4dc21d4ddb541b031433eaca9cc5f1a1f7db6f4696dd"
+    },
+    {
+      "path": "verify-fixed.mjs",
+      "bytes": 7971,
+      "sha256": "b7522efcb972df7edc1d489142c1cea8f0147f607f657dfd33e55e67ae70ab30"
+    },
+    {
+      "path": "scan-evidence.py",
+      "bytes": 1640,
+      "sha256": "e0663d50eb0aec4ea71a45aef20e3cc1420e2f9ee021cd67e77be320debbcfff"
+    },
+    {
+      "path": "fixed-verification/run.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "repeat/run.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "replay/run.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "fixed-verification/row-press/first-press.png",
+      "bytes": 136752,
+      "sha256": "bcb978a5fc8bb1c876708e0ce32c03e8347006ef03276352dccd4b53df48b3ce"
+    },
+    {
+      "path": "repeat/row-press/stopped.png",
+      "bytes": 19565,
+      "sha256": "ee27329e6ddb94b2833f553dbd72490725987166bbbeb82c85d60572e1a76396"
+    },
+    {
+      "path": "causal/after.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "causal/before.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "causal/null-gap-control-final.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "causal/failed-read-control-final.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "inputs.json",
+      "bytes": 1299,
+      "sha256": "1b24841c5dc93da56be2882d058df00b740f293c90751b8052933a536ff9447d"
+    },
+    {
+      "path": "diagnostic-inputs.json",
+      "bytes": 1516,
+      "sha256": "d19fba028368e81920769bb79a9e26630ce84ec1f1d3247eac68abd59fc08ec7"
+    },
+    {
+      "path": "logger-inputs.json",
+      "bytes": 1521,
+      "sha256": "b8e9e705f19e8fef2a7e6a3c73dbd2342b692df018ddb4f3f6572737c88b3a1c"
+    },
+    {
+      "path": "observer-inputs.json",
+      "bytes": 1552,
+      "sha256": "7651060902281758ab0b68c83c0a51ca3821853de304c199a7b3e67da7659021"
+    },
+    {
+      "path": "replay-inputs.json",
+      "bytes": 446,
+      "sha256": "a836e2b5cf3414dd44bdefc4c17031f82740332c4af86a2b76c2d1f4961afbcb"
+    },
+    {
+      "path": "replay-failed-room.mjs",
+      "bytes": 7509,
+      "sha256": "ce287cec48f7706a8a829f1f57f0ab406ac26cb94c05924687dc720533bb9db6"
+    },
+    {
+      "path": "diagnostic/run.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "logger/run.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "observer/run.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "capture-control/run.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 18041,
+      "sha256": "94dda70d8cee3dbe87c1969bec0c8ffd8be3c5198325809865ba8b62c9f269e3"
+    }
+  ]
+}
