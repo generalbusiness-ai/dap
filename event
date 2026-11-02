@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:44dcc49c78b9ecff36a744c340aa299512bb8ff0","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-02-hosted-cards.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:488dc45de4289da8239c32ffa280db118c104dd5","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/node.ts."}
