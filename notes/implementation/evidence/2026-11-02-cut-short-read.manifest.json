@@ -6,7 +6,7 @@
   "tree": "365e708ae18cc8b5748eaa4ac6fc06a607909853"
  },
  "retention": "Keep every readonly unit for at least 30 days after landing. Whole Native and CI consoles stay private, with byte counts and hashes in public metadata.",
- "fileCount": 122,
+ "fileCount": 139,
  "units": [
   {
    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-cut-short-read-focused",
@@ -675,6 +675,103 @@
      "path": "withheld-output.json",
      "bytes": 420,
      "sha256": "cd76149f86a83615d45f619ef990687bf1466041dde3b5a385b89375ef5951e5"
+    }
+   ]
+  },
+  {
+   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-cut-short-read-documentation",
+   "qualification": "Documentation checkpoint cb736c88 verifies the initial 122-file record, twelve output citations, one table and three local links. Only the final audit row and manifest expansion follow; production, tests, configuration and Card inputs remain equal to successful frozen gate and exact-source CI ebc1e608.",
+   "checkpoint": {
+    "commit": "cb736c885675e1c8fe5c0173d7f45b513652098a",
+    "tree": "8fde38059a4dcf7d53638f17d1153f245cf494ff"
+   },
+   "fileCount": 17,
+   "sha256sums": "63a68370d7748c12415415aed963181726ec56a6854ffefc99a414b5df46e8e7",
+   "files": [
+    {
+     "path": "SHA256SUMS",
+     "bytes": 1359,
+     "sha256": "63a68370d7748c12415415aed963181726ec56a6854ffefc99a414b5df46e8e7"
+    },
+    {
+     "path": "commands.json",
+     "bytes": 849,
+     "sha256": "74fc964ff626d6a05b499abf65478024e132a4a99fb656dade04fdda89478253"
+    },
+    {
+     "path": "commit-messages.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "commit-messages.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "commit-messages.stdout.log",
+     "bytes": 38,
+     "sha256": "8b64c7a412d0921e8f3c08e1c23ecbb1ca1092bff45a46a1aeeb30d2d35a0c5a"
+    },
+    {
+     "path": "doc-links.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "doc-links.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "doc-links.stdout.log",
+     "bytes": 36,
+     "sha256": "05d81cfdd4a20d7f249083d065c7dad85afba93032f10e5b73c1bec4e568c8b0"
+    },
+    {
+     "path": "driver.py",
+     "bytes": 4986,
+     "sha256": "b4265684a964b3e455135b8f6004394f124f1faff339f59c361e22a2adedf49c"
+    },
+    {
+     "path": "note-manifest-audit.json",
+     "bytes": 931,
+     "sha256": "a3f128ccfff105287af11e30ee25b624849b775648ea641117dd00e0b07e961a"
+    },
+    {
+     "path": "notes.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "notes.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "notes.stdout.log",
+     "bytes": 18,
+     "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+     "path": "scope-proof.json",
+     "bytes": 453,
+     "sha256": "4e4c133d80b66c5f682bd76ceeb92b288cc352f3af0a9e316ad3ae119831fce9"
+    },
+    {
+     "path": "whitespace.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "whitespace.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "whitespace.stdout.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     }
    ]
   }

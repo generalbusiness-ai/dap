@@ -7,7 +7,9 @@ Request `e4d0cfed4d9c5de0f2ed579c6f02e531df9e1336` and promise
 source freezes at `ebc1e608e2e29432f2120cd4c63989d755d894d5`, tree
 `365e708ae18cc8b5748eaa4ac6fc06a607909853`, directly above landed main
 `08a16dc652186e3d80c06abab98e2b4d9bc12690`.
-The review record adds only this note and its manifest after that frozen source. Product, tests, configuration, and every Card workflow input remain unchanged. The documentation follow-up rule applies.
+The review record adds only this note and its manifest after that frozen source. Product, tests, configuration, and every Card workflow input remain unchanged. The documentation follow-up rule applies. Documentation checkpoint
+`cb736c88`, tree `8fde3805`, verifies the initial record. The final record adds
+its audit row and manifest unit.
 
 After an exact read stops with a truncated answer, the card keeps the answer
 and offers the same read again. An ordinary press makes a new bounded read
@@ -81,8 +83,8 @@ read again replays it with two total signatures. No new view opens for retry.
 ## The final evidence
 
 The [evidence manifest](evidence/2026-11-02-cut-short-read.manifest.json) records
-122 files in 5 readonly units. Its SHA-256 is
-`b348234edc09ead3d384fde0f637ee1f064594ec06c233e23050959daa51bebb`. Keep every unit for at least 30 days after landing. Whole
+139 files in 6 readonly units. Its SHA-256 is
+`e251530ed372bb15fe159676608abd5bf5feb0f012420323bd9a29c3b16afb8a`. Keep every unit for at least 30 days after landing. Whole
 Native and CI consoles stay private; public metadata names their hashes and
 byte counts.
 
@@ -134,6 +136,7 @@ The actual full `gate.exit` is 0, and the terminal source guards match clean hea
 | Disabled current retry button distinguishes | node --import tsx /private/tmp/artroom-cut-short-read-target.mjs | child 1 at expected assertion; restored bytes | 357cb9a91363209deb3cee4024a80b4ea0b46349586699f45b260305a9a73803 |
 | Exact-source Card workflow at ebc1e608 | gh run view 41433119112 --repo generalbusiness-ai/dap --json headSha,conclusion,status,jobs,url,createdAt,startedAt,updatedAt | 0; workflow success | 745a0df913540cb30826baf43e64db625b65eb3c78b90dd1b5adf085d7079f0b |
 | Frozen full gate at ebc1e608; tree 365e708a | /usr/bin/time -p npm run gate | 0; matching source guards | 3063a6672649f6cb20a56bfccb45f09cb64c13d7c2338ddc41bf22742c1c0a84 |
+| Documentation checkpoint cb736c88; tree 8fde3805 | whitespace, commit-message, note, link, source and manifest checks in driver.py | 0; 122 initial files; twelve citations; three local links | a3f128ccfff105287af11e30ee25b624849b775648ea641117dd00e0b07e961a |
 
 ## The open limits
 
