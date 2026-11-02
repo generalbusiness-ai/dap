@@ -6,6 +6,22 @@ export const ROW_PRESS_BOUND = Object.freeze({ tabs: 20, perTab: 5, maximum: 100
 const redact = text => String(text).replace(/artroom-[a-z-]+:[^\s"<>]+/gi, "<link withheld>").replace(/Bearer\s+\S+/gi, "Bearer <withheld>").replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, "<token withheld>");
 const requestUrl = raw => { const url = new URL(raw); return `${url.origin}${url.pathname}`; };
 
+/** Instrument only the error-handler expression in this browser. The served Worker bundle remains unchanged. */
+export async function logDrawErrors(context, source) {
+  const at = source.indexOf('"This room did not open"'), prefix = source.slice(0, at);
+  const declaration = [...prefix.matchAll(/function ([\w$]+)\([\w$]+,[\w$]+=\[\]\)\{/g)].at(-1);
+  if (!declaration) throw Error("Cannot identify the frozen failure-screen function.");
+  const calls = [...source.matchAll(new RegExp(`\\b${declaration[1]}\\(([\\w$]+),[\\w$]+\\)`, "g"))];
+  if (calls.length !== 1) throw Error("The error logger requires one exact draw-failure call.");
+  const call = calls[0], variable = call[1];
+  const before = source.slice(0, call.index), draw = before.slice(before.lastIndexOf("async function"));
+  const count = /\{let ([\w$]+)=\+\+([\w$]+);/.exec(draw);
+  const counters = count ? `,draw:${count[1]},latest:${count[2]}` : "";
+  const logged = source.slice(0, call.index) + `(console.warn("ROW-PRESS-DRAW-ERROR "+JSON.stringify({name:${variable}?.name,message:${variable}?.message,stack:${variable}?.stack${counters}})),${call[0]})` + source.slice(call.index + call[0].length);
+  await context.route("**/page/page.js", route => route.fulfill({ status: 200, contentType: "text/javascript", body: logged }));
+  return { code: logged, handler: declaration[1], caughtVariable: variable, counters: !!count, qualification: "Browser-only logger at the existing caught-error expression. This enables routing and can affect cache/timing. It changes no Worker or production source byte." };
+}
+
 export function rowPressProbe(context, out, debug = {}) {
   const traffic = [], console = [], navigation = [], rows = [], drawErrors = [], ids = new WeakMap();
   let next = 0, page = null, started = false;
@@ -16,7 +32,7 @@ export function rowPressProbe(context, out, debug = {}) {
   context.on("response", response => traffic.push({ event: "response", id: ids.get(response.request()), at: new Date().toISOString(), status: response.status() }));
   context.on("requestfailed", request => traffic.push({ event: "failed", id: ids.get(request), at: new Date().toISOString(), error: redact(request.failure()?.errorText) }));
   const attach = value => {
-    value.on("console", message => { if (["error", "warning"].includes(message.type())) console.push({ at: new Date().toISOString(), type: message.type(), text: redact(message.text()) }); });
+    value.on("console", message => { if (message.text().startsWith("ROW-PRESS-DRAW-ERROR ")) { try { drawErrors.push(JSON.parse(message.text().slice("ROW-PRESS-DRAW-ERROR ".length))); } catch { /* The console record still retains an unreadable diagnostic. */ } } if (["error", "warning"].includes(message.type())) console.push({ at: new Date().toISOString(), type: message.type(), text: redact(message.text()) }); });
     value.on("pageerror", error => console.push({ at: new Date().toISOString(), type: "pageerror", text: redact(error) }));
     value.on("framenavigated", frame => { if (frame === value.mainFrame()) navigation.push({ at: new Date().toISOString(), url: redact(frame.url()) }); });
   };
