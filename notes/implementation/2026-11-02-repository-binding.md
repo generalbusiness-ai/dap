@@ -12,7 +12,9 @@ Product, tests and configuration freeze at
 `ac8386c7a2e6e2fa7741e04c89f559ae82a5ad20`, tree
 `fcbae5f7eaaf204cb2728f8153ced45f7af84b19`, above main
 `04f4af480be161c94f3df745747ab7fd68755314`. The review record adds only
-this note and its manifest after that source checkpoint.
+this note and its manifest after that source checkpoint. Documentation
+checkpoint `8395ec7065c775383d8e7e055448f1478b28e061`, tree `e788252e3dbaf9c81fa7c72873d69c271238956f`, records the first note and
+manifest check. The final record adds that check row and its sealed unit.
 
 The new opt-in `repository-binding` cohort has Register 25, Directory 24,
 Membership 11, Rules 10, Destination 18 and Inbox 1. A room starts without a
@@ -164,8 +166,8 @@ full gate. All three earlier runs remain failures.
 ## The final evidence
 
 The [evidence manifest](evidence/2026-11-02-repository-binding.manifest.json)
-records 189 files in 8 readonly units. Its SHA-256 is
-`d4510d23725d294b15e3f4debe84be238911b78fbdc671bb79ac6ce3c1076946`. Keep every unit and indexed private raw output for at least
+records 195 files in 9 readonly units. Its SHA-256 is
+`4eff8f21871ba804d34e0c1c5fb6af3eda1f17aef62bd8b46db40379bd895980`. Keep every unit and indexed private raw output for at least
 30 days after landing. Each table digest hashes a safe output record;
 those records identify the actual raw output by byte counts and hashes.
 Gate timings use `/usr/bin/time -p`; focused durations use the driver's
@@ -213,6 +215,7 @@ repository or the public evidence directory.
 | First empty-scope attempt remains inconclusive | `node scripts/control.mjs` with the original promise-matcher owner | 2 | `2026-11-02-repository-binding-app-only/empty-token-scope-control.json`; `59f67205364a2b6d81e968113b2193d0fa1da05e7b8fcbdda7149291ccb31807` | before assertion-order repair |
 | Frozen complete gate | `npm run gate` | 0 | `2026-11-02-repository-binding-app-only-gate/result.json`; `eb90171cd9eac7ab17e8eb0675bc87231288e152d5c402a3b3638402c87a85a6` | ac8386c7a2 |
 | Exact-source Page browser run | `gh run view 41456309428 --json databaseId,headSha,status,conclusion,url,jobs` | 0; success | `2026-11-02-repository-binding-app-only-page-ci/run.json`; `64802d46e9549f04f31a5ebc63aca3e0c5b5b090fedec838383ff007afb091f3` | ac8386c7a2 |
+| Documentation and manifest checks | Commands and actual exits in the safe check record | 0 | `2026-11-02-repository-binding-documentation/checks.json`; `f51441e593c450126329af7dbe821c90f99bb38f67e456ba449fabc7b430ef9e` | 8395ec7065 |
 
 The first foreign-register control survived because its proposed foreign scope
 ID was not canonical: the parser refused it before the intended register

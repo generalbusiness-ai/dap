@@ -6,7 +6,7 @@
   "tree": "fcbae5f7eaaf204cb2728f8153ced45f7af84b19"
  },
  "retention": "Keep every readonly public unit and indexed private raw output for at least30days after landing. Raw credentials or unredacted requests stay private.",
- "fileCount": 189,
+ "fileCount": 195,
  "units": [
   {
    "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-repository-binding-configuration",
@@ -1046,6 +1046,48 @@
      "path": "run.json",
      "bytes": 3795,
      "sha256": "64802d46e9549f04f31a5ebc63aca3e0c5b5b090fedec838383ff007afb091f3"
+    }
+   ]
+  },
+  {
+   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-repository-binding-documentation",
+   "qualification": "First documentation checkpoint after the frozen ac source. Six record, whitespace, commit-message, link, citation and note checks passed. All production, tests, configuration and workflow inputs equal ac. The final documentation record adds this check row and sealed unit to the manifest. Raw diagnostics remain private; no credential or request input ran.",
+   "checkpoint": {
+    "commit": "8395ec7065c775383d8e7e055448f1478b28e061",
+    "tree": "e788252e3dbaf9c81fa7c72873d69c271238956f"
+   },
+   "fileCount": 6,
+   "sha256sums": "b26e63b0493a1ab80ab423831006b1fdc4835dff470ed96cab280c3723623ed1",
+   "files": [
+    {
+     "path": "SHA256SUMS",
+     "bytes": 415,
+     "sha256": "b26e63b0493a1ab80ab423831006b1fdc4835dff470ed96cab280c3723623ed1"
+    },
+    {
+     "path": "checks.json",
+     "bytes": 4035,
+     "sha256": "f51441e593c450126329af7dbe821c90f99bb38f67e456ba449fabc7b430ef9e"
+    },
+    {
+     "path": "qualification.json",
+     "bytes": 518,
+     "sha256": "33d862a31fe0d5d2fa16ef2f4155e09c8a5b27638ccc71ec4988b1e4d5111b1d"
+    },
+    {
+     "path": "run-checks.py",
+     "bytes": 3128,
+     "sha256": "ee2cfae461f70af89c989741c53ee07d030354ae96e5b36c62250ca8cdf5656b"
+    },
+    {
+     "path": "source-continuity.json",
+     "bytes": 579,
+     "sha256": "983c373bb806dda903db1fea537cbee9e5cdf2cc95685b018e4c103db6705569"
+    },
+    {
+     "path": "verify-record.py",
+     "bytes": 1764,
+     "sha256": "808941d40e57a26195e02ccde7f2c4516cd4abae39d9fd85319546143635251d"
     }
    ]
   }
