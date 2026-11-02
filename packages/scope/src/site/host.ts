@@ -1,4 +1,4 @@
-import { REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
+import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
 /**
  * What the site route reads before it renders: the room that a directory
  * scope ID names, and the room's repository at its Git host.
@@ -138,7 +138,7 @@ export async function roomOf(scopes: Binding, directory: string): Promise<Room |
   const fields = recordOrNull(recordOrNull(input.message?.body)?.["fields"]);
   const repository = recordOrNull(fields?.["repository"]);
   const branch = fields?.["branch"];
-  if ((input.seed.definition === REPOSITORY_BINDING_COHORT.directory || input.seed.definition === UNPUBLISHED_COHORT.directory || input.seed.definition === COMMONS_COHORT.directory) && fields && !Object.hasOwn(fields, "repository")
+  if ((input.seed.definition === OWN_AGENT_COHORT.directory || input.seed.definition === REPOSITORY_BINDING_COHORT.directory || input.seed.definition === UNPUBLISHED_COHORT.directory || input.seed.definition === COMMONS_COHORT.directory) && fields && !Object.hasOwn(fields, "repository")
     && typeof branch === "string" && input.seed.kind === "directory" && scopeIdOf(input.seed) === directory
     && isScopeRef(entry.at) && canonicalize(entry.at) === canonicalize(sourced.at) && input.inc === sourced.at.inc
     && isScopeRef(input.seed.creator) && input.seed.creator.kind === "register") return { register: input.seed.creator.scope, repository: null, branch };

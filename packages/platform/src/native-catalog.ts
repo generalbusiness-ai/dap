@@ -3,6 +3,10 @@ import { COMMONS_COHORT as CC } from "./commons-cohort.ts";
 import { commons, commonsMembership } from "./commons.ts";
 import { commonsRegister, commonsRegisterRules, commonsDirectoryData, commonsDirectoryRules, commonsMembershipData, commonsMembershipRules } from "./commons-cohort-data.ts";
 import { SEPARATE_RECOVERY_COHORT as SR } from "./separate-recovery-cohort.ts";
+import { OWN_AGENT_COHORT as OA } from "./own-agent-cohort.ts";
+import { ownAgentRegister, ownAgentRegisterRules, ownAgentDirectory, ownAgentDirectoryRules, ownAgentDestination, ownAgentDestinationRules } from "./own-agent-cohort-data.ts";
+import { ownAgentMembership, ownAgentMembershipRules } from "./own-agent-membership.ts";
+import { ownAgentApplicationPublicationOrigin } from "./publishing-provenance.ts";
 import { REPOSITORY_BINDING_COHORT as RB } from "./repository-binding-cohort.ts";
 import { repositoryBindingRegister, repositoryBindingRegisterRules, repositoryBindingDirectory, repositoryBindingDirectoryRules, repositoryBindingMembership, repositoryBindingMembershipRules, repositoryBindingDestination, repositoryBindingDestinationRules } from "./repository-binding-cohort-data.ts";
 import { repositoryBindingApplicationPublicationOrigin } from "./publishing-provenance.ts";
@@ -121,6 +125,10 @@ export interface Platform {
  * cannot run.
  */
 const VERSION_DATA: Readonly<Record<string, Platform>> = {
+  [OA.register]: { data: ownAgentRegister, rules: ownAgentRegisterRules },
+  [OA.directory]: { data: ownAgentDirectory, rules: ownAgentDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
+  [OA.membership]: { data: ownAgentMembership, rules: ownAgentMembershipRules, observed: (state, asked) => standingOf(state, asked, OA.membership) },
+  [OA.destination]: { data: ownAgentDestination, rules: ownAgentDestinationRules, membership: unpublishedDestinationMembership, rulesScope: unpublishedDestinationRulesScope, applicationPublicationOrigin: ownAgentApplicationPublicationOrigin },
   [RB.register]: { data: repositoryBindingRegister, rules: repositoryBindingRegisterRules },
   [RB.directory]: { data: repositoryBindingDirectory, rules: repositoryBindingDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
   [RB.membership]: { data: repositoryBindingMembership, rules: repositoryBindingMembershipRules, observed: (state, asked) => standingOf(state, asked, RB.membership) },

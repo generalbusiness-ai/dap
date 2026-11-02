@@ -1,4 +1,4 @@
-import { REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
+import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
 import { readMinimum } from "@generalbusiness/dap-bytes";
 import { ReadWait, type ReadWaitRefusal } from "./read-wait.ts";
 import { offerFloor } from "./floor-writer.ts";
@@ -614,7 +614,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const scope = this.#store.scope();
     const judged = () => this.#scope.submit(signed, grants, beside);
     if (scope?.at.kind !== "membership" || !isJoin(signed)) return this.#sent(await judged());
-    return this.#sent(await this.#limits.serve({ address: typeof address === "string" ? address : null, now: timeMs(this.#clock.read()) ?? 0, head: scope.head, invitationProof: () => ["platform:membership@6", "platform:membership@7", "platform:membership@8", "platform:membership@9", "platform:membership@10", "platform:membership@11"].includes(this.#scope.pinned()?.named ?? "") }, signed, judged));
+    return this.#sent(await this.#limits.serve({ address: typeof address === "string" ? address : null, now: timeMs(this.#clock.read()) ?? 0, head: scope.head, invitationProof: () => ["platform:membership@6", "platform:membership@7", "platform:membership@8", "platform:membership@9", "platform:membership@10", "platform:membership@11", "platform:membership@13"].includes(this.#scope.pinned()?.named ?? "") }, signed, judged));
     });
   }
   /** One step of a capability, asked for with the signed intent that it prepares for (section 5.5). */
@@ -1018,7 +1018,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     if (key === "sessions-unavailable" || key === "clock-behind") return { ok: false, reason: key };
     const scope = this.#store.scope();
     if (key !== false && typeof handle === "string" && scope?.status === "active" && scope.at.kind === "destination"
-      && (this.#scope.pinned()?.named === UNPUBLISHED_COHORT.destination || this.#scope.pinned()?.named === REPOSITORY_BINDING_COHORT.destination)) {
+      && (this.#scope.pinned()?.named === UNPUBLISHED_COHORT.destination || this.#scope.pinned()?.named === REPOSITORY_BINDING_COHORT.destination || this.#scope.pinned()?.named === OWN_AGENT_COHORT.destination)) {
       const positions = this.#store.itemPositions("branch", null, 2);
       const branch = positions.length === 1 && positions[0]!.size <= 1024 * 1024 ? this.#store.item(positions[0]!.id) : null;
       if (branch?.state === "unpublished" && branch.values["repository"] == null && branch.values["head"] == null

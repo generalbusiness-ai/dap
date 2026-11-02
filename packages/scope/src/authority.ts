@@ -1,4 +1,4 @@
-import { REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
+import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
 /**
  * The observation read: the authority port of a scope whose grants are
  * judged on membership (scope contract, sections 5.1 and 16.1; authority
@@ -337,7 +337,7 @@ export function ownStanding(random: Random, genesis: Repository["genesis"]): Aut
         membership: scope,
         held(view, clock) {
           const named = genesis()?.seed.definition;
-          const observation = (named === "platform:membership@1" || named === "platform:membership@2" || named === "platform:membership@4" || named === "platform:membership@5" || named === "platform:membership@6" || named === "platform:membership@7" || named === "platform:membership@8" || named === "platform:membership@9" || named === "platform:membership@10" || named === "platform:membership@11") && platform(named)
+          const observation = (named === "platform:membership@1" || named === "platform:membership@2" || named === "platform:membership@4" || named === "platform:membership@5" || named === "platform:membership@6" || named === "platform:membership@7" || named === "platform:membership@8" || named === "platform:membership@9" || named === "platform:membership@10" || named === "platform:membership@11" || named === "platform:membership@13") && platform(named)
             ? observationOf(standingOf(view, { of: scope, key }, named), clock.reading) : null;
           // No answer: the scope is not an active membership scope at this head, so no grant rests on it (section 12.1.3, case e).
           if (!observation) return null;
@@ -416,7 +416,7 @@ export function repositorySessionBirth(config: Pick<Repository, "genesis" | "sta
   if (!definitions.length || !state || !same(state.scope()?.at, scope) || genesis?.decision !== "applied" || genesis.seed.kind !== scope.kind) return null;
   const directory = genesis.seed.creator;
   const item = scope.kind === "destination"
-    ? ((genesis.seed.definition === UNPUBLISHED_COHORT.destination || genesis.seed.definition === REPOSITORY_BINDING_COHORT.destination) ? unpublishedDestinationBranch(state) : destinationBranch(state))
+    ? ((genesis.seed.definition === UNPUBLISHED_COHORT.destination || genesis.seed.definition === REPOSITORY_BINDING_COHORT.destination || genesis.seed.definition === OWN_AGENT_COHORT.destination) ? unpublishedDestinationBranch(state) : destinationBranch(state))
     : state.page(scope.kind === "commons" ? "commons" : "rules", [scope.kind === "commons" ? "open" : "current"], null, 1).items[0];
   const held = item?.refs["directory"];
   const membership = recorded === undefined ? recordedMembership(config, scope) : recorded;

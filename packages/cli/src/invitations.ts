@@ -1,5 +1,5 @@
 import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/dap-client";
-import { UNPUBLISHED_COHORT, INVITATION_KEY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
+import { OWN_AGENT_COHORT, UNPUBLISHED_COHORT, INVITATION_KEY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
 /** Retained invitation creation and explicitly tagged agent, checker and device enrollment.
  * Store.private holds secrets/envelopes; public config holds only exact pointers.
  * Callers serialize one Store and fence their captured Page context. */
@@ -62,6 +62,7 @@ async function pinnedSummary(M: ScopeHandle, at: ScopeRef): Promise<{ summary: S
 }
 /** The directory definitions each membership pin is created beside: exact pairs of the cohorts, not names. */
 const DIRECTORIES_OF: Readonly<Record<AgentKeyMembership, readonly string[]>> = {
+  "platform:membership@13": ["platform:directory@26"],
   "platform:membership@11": ["platform:directory@24"],
   "platform:membership@10": ["platform:directory@23"],
   "platform:membership@9": ["platform:directory@22"],
@@ -533,7 +534,10 @@ async function enrolKey(ctx: Context, text: string, options: { mode?: "continue"
       if (!memberEntry || !invitationEntry || memberEntry.input.type !== "act" || invitationEntry.input.type !== "act") return bad();
       const opened = memberEntry.input.signed.intent, invited = invitationEntry.input.signed.intent;
       const openingFields = link.kind === "agent-key" ? { handle: link.handle, kind: "agent", controller: link.controller } : { handle: link.handle, kind: "checker" };
-      if (opened.kind !== "add-member" || !sameOptional(opened.fields, openingFields) || invited.kind !== "invite-key" || !sameOptional(invited.fields, { member: link.member.seq, kind: nativeKind, ...invitationIssueFields(link.definition, link.secret), inviteEnds: invited.fields["inviteEnds"] })) return bad();
+      const ownAgent = link.kind === "agent-key" && link.definition === OWN_AGENT_COHORT.membership;
+      const openingKind = opened.kind === "add-member" || ownAgent && opened.kind === "add-own-agent";
+      const invitationKind = invited.kind === "invite-key" || ownAgent && invited.kind === "invite-own-agent-key";
+      if (!openingKind || !sameOptional(opened.fields, openingFields) || !invitationKind || !sameOptional(invited.fields, { member: link.member.seq, kind: nativeKind, ...invitationIssueFields(link.definition, link.secret), inviteEnds: invited.fields["inviteEnds"] })) return bad();
       const member = s.items.find(i => i.type === "member" && i.id === link.member.seq), activeKey = s.items.find(i => i.type === "key" && i.id === link.invitation.seq);
       const controller = link.kind === "agent-key" ? s.items.find(item => item.type === "member" && item.state === "active" && item.values["kind"] === "person" && sameOptional(item.parties["member"], link.controller)) : null;
       const identity = link.kind === "agent-key"

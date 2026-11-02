@@ -1,4 +1,4 @@
-import { REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
+import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
 import { countedEntries } from "@generalbusiness/dap-derive";
 /**
  * Receiving (scope contract, sections 7.2 and 7.4): one delivered message,
@@ -194,12 +194,12 @@ export class Deliveries {
     }
     const resolver = reader ?? this.#ports.resolver;
     const destinationPin = pinned?.platform?.named;
-    const publicationStates = (destinationPin === UNPUBLISHED_COHORT.destination || destinationPin === REPOSITORY_BINDING_COHORT.destination) ? ["unpublished", "empty", "ready"] : ["empty", "ready"];
+    const publicationStates = (destinationPin === UNPUBLISHED_COHORT.destination || destinationPin === REPOSITORY_BINDING_COHORT.destination || destinationPin === OWN_AGENT_COHORT.destination) ? ["unpublished", "empty", "ready"] : ["empty", "ready"];
     if (file && !known) {
       const directory = store.page("branch", publicationStates, null, 1).items[0]?.refs["directory"];
       const destination = store.scope()?.at;
       if (!isScopeRef(directory) || !destination) return retry("dependency-unavailable");
-      const policy = destinationPin === "platform:destination@7" || destinationPin === "platform:destination@8" || destinationPin === "platform:destination@13" || destinationPin === "platform:destination@14" || destinationPin === "platform:destination@15" || destinationPin === "platform:destination@17" || (destinationPin === UNPUBLISHED_COHORT.destination || destinationPin === REPOSITORY_BINDING_COHORT.destination)
+      const policy = destinationPin === "platform:destination@7" || destinationPin === "platform:destination@8" || destinationPin === "platform:destination@13" || destinationPin === "platform:destination@14" || destinationPin === "platform:destination@15" || destinationPin === "platform:destination@17" || (destinationPin === UNPUBLISHED_COHORT.destination || destinationPin === REPOSITORY_BINDING_COHORT.destination || destinationPin === OWN_AGENT_COHORT.destination)
         ? this.#ports.definitions.platform(destinationPin)?.applicationPublicationOrigin : applicationPublicationOrigin;
       const native = reader?.mode === "partition-v1" ? await reader.publication(from, directory, destination, "application") : policy?.(from, directory, destination, read.origin ?? []) ?? null;
       if (native === null) return retry("dependency-unavailable");

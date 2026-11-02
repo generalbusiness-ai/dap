@@ -48,6 +48,15 @@ whole request.
 - **control**: a signed MCP control request, bound to its action, body,
   service, deadline, repository, and current member authority.
 
+Membership 13 adds `membership.own-agent` to the default admin, maintainer,
+and member roles. Native own-agent acts require an active person and bind
+the agent's controller to the signer. Both add and invite compare the
+agent role against the signer's current role; admin signers are exempt.
+The add step refuses a ninth active agent under that controller. These
+checks run in the Membership turn over its current state. They grant no
+HTTP route or OAuth token. The opt-in creation cohort changes no earlier
+Membership pin or deployment creation default.
+
 ## How to read a row
 
 The columns are the route and method, the gate class, the work before the
