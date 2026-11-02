@@ -103,7 +103,7 @@ const openIssue = async title => {
   throw new Error(`the issue did not open: ${title}`);
 };
 
-let browser = null, views = null, report = {}, probe = null;
+let browser = null, views = null, report = {}, probe = null, pageBytes = null;
 try {
   await run("rita", "install", "--plan", base, "--host", "none", "--cohort", "commons");
   const register = (await people.rita.store.config()).plan.register;
@@ -112,6 +112,7 @@ try {
     const source = readFileSync(join(root, "apps/room/page/assets.ts"), "utf8");
     const line = source.split("\n").find(line => line.startsWith("export const PAGE_JS: string = "));
     const expected = JSON.parse(line.slice("export const PAGE_JS: string = ".length, -1));
+    pageBytes = expected;
     const actual = await (await fetch(`${base}/page/page.js`)).text();
     const guard = { expected: bytes.digestBytes(bytes.utf8(expected)), actual: bytes.digestBytes(bytes.utf8(actual)), same: expected === actual };
     writeFileSync(join(WITNESS_DIR, "page-byte-guard.json"), JSON.stringify(guard, null, 2) + "\n");
@@ -163,7 +164,7 @@ try {
   const link = linkIn(await run("ana", "invite", "@ana", "--device"), "artroom-device-key:");
   browser = await chromium.launch({ executablePath: CHROMIUM, headless: true });
   const context = await browser.newContext({ viewport: { width: 1100, height: 1200 } }), page = await context.newPage(), errors = [], acts = [];
-  if (probing) probe = rowPressProbe(context, join(WITNESS_DIR, "row-press"));
+  if (probing) probe = rowPressProbe(context, join(WITNESS_DIR, "row-press"), process.env.ROW_PRESS_CAPTURE_ERROR === "1" ? { source: pageBytes } : {});
   page.on("pageerror", error => errors.push(String(error)));
   context.on("response", async reply => { if (reply.request().method() === "POST" && reply.url().endsWith("/acts")) acts.push({ scope: /scopes\/([^/]+)\/acts/.exec(reply.url())?.[1], status: reply.status() }); });
   await page.goto(`${base}/page/`);

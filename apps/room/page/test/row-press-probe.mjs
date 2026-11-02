@@ -6,8 +6,8 @@ export const ROW_PRESS_BOUND = Object.freeze({ tabs: 20, perTab: 5, maximum: 100
 const redact = text => String(text).replace(/artroom-[a-z-]+:[^\s"<>]+/gi, "<link withheld>").replace(/Bearer\s+\S+/gi, "Bearer <withheld>").replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, "<token withheld>");
 const requestUrl = raw => { const url = new URL(raw); return `${url.origin}${url.pathname}`; };
 
-export function rowPressProbe(context, out) {
-  const traffic = [], console = [], navigation = [], rows = [], ids = new WeakMap();
+export function rowPressProbe(context, out, debug = {}) {
+  const traffic = [], console = [], navigation = [], rows = [], drawErrors = [], ids = new WeakMap();
   let next = 0, page = null, started = false;
   context.on("request", request => {
     const id = ++next; ids.set(request, id);
@@ -22,7 +22,29 @@ export function rowPressProbe(context, out) {
   };
   for (const existing of context.pages()) attach(existing);
   context.on("page", attach);
-  const report = () => ({ bound: ROW_PRESS_BOUND, started, attempted: rows.length, passed: rows.filter(row => row.pass).length, rows, console, traffic, navigation });
+  async function debugDraw(value) {
+    if (!debug.source) return;
+    // Pause only at the existing draw-failure call. Successful draws and served production bytes stay untouched.
+    const at = debug.source.indexOf('"This room did not open"');
+    const prefix = debug.source.slice(0, at), declaration = [...prefix.matchAll(/function ([\w$]+)\([\w$]+,[\w$]+=\[\]\)\{/g)].at(-1);
+    if (!declaration) throw Error("The diagnostic could not identify the frozen failure-screen function.");
+    const name = declaration[1], calls = [...debug.source.matchAll(new RegExp(`\\b${name}\\(([\\w$]+),[\\w$]+\\)`, "g"))];
+    if (calls.length !== 1) throw Error("The diagnostic requires one exact draw-failure call.");
+    const call = calls[0], before = debug.source.slice(0, call.index), lines = before.split("\n"), variable = call[1];
+    const session = await context.newCDPSession(value);
+    await session.send("Debugger.enable");
+    session.on("Debugger.paused", event => { void (async () => {
+      try {
+        const frame = event.callFrames[0];
+        const got = await session.send("Debugger.evaluateOnCallFrame", { callFrameId: frame.callFrameId, expression: `({name:${variable}?.name,message:${variable}?.message,stack:${variable}?.stack})`, returnByValue: true });
+        drawErrors.push({ at: new Date().toISOString(), reason: event.reason, error: got.result.value ?? null, evaluationError: got.exceptionDetails?.text,
+          frames: event.callFrames.map(frame => ({ name: frame.functionName, url: requestUrl(frame.url || value.url()), line: frame.location.lineNumber, column: frame.location.columnNumber })) });
+        mkdirSync(out, { recursive: true }); writeFileSync(join(out, "draw-errors.json"), redact(JSON.stringify(drawErrors, null, 2)) + "\n");
+      } finally { await session.send("Debugger.resume"); }
+    })(); });
+    await session.send("Debugger.setBreakpointByUrl", { urlRegex: "/page/page\\.js$", lineNumber: lines.length - 1, columnNumber: lines.at(-1).length });
+  }
+  const report = () => ({ diagnosticBreakpoint: !!debug.source, drawErrors, bound: ROW_PRESS_BOUND, started, attempted: rows.length, passed: rows.filter(row => row.pass).length, rows, console, traffic, navigation });
   async function capture(label) {
     mkdirSync(out, { recursive: true });
     const kept = report();
@@ -47,6 +69,7 @@ export function rowPressProbe(context, out) {
     started = true;
     for (let tab = 0; tab < ROW_PRESS_BOUND.tabs; tab++) {
       page = await context.newPage();
+      await debugDraw(page);
       await page.goto(roomUrl);
       for (let press = 0; press < ROW_PRESS_BOUND.perTab; press++) {
         const target = targets[press % targets.length], row = { tab: tab + 1, press: press + 1, total: rows.length + 1, scope: target.scope, item: target.item, started: new Date().toISOString(), pass: false };
