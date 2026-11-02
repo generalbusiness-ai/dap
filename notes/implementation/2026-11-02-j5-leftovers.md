@@ -8,7 +8,7 @@ A failed Rules read also retains its actual cause through `failureText`. **Try a
 
 The existing **Mark reviewed** words already explain that another device keeps its own place. A new witness exercises two separate ReviewStores for the same room and key. A mark survives a restart on the first device, leaves the second device's rows unchanged, and changes no native room head. Scope answers remain stand-ins. Planner ruling `b749c2d76b798036cefbed288845ed6c6685cc90` accepts these words and device-local storage. Cross-device synchronization would need a new request.
 
-The next-touch work from `1580f866d92efe58caff0541c982c364ec402da5` also ships here. The row probe retains every console event and counts one exact stream HTTP503 diagnostic separately. All unexpected warnings, errors, and page errors still fail the probe. The unused `reasonLines` import is gone.
+The next-touch work from `1580f866d92efe58caff0541c982c364ec402da5` also ships here. The row probe retains every console event and counts one exact Chrome error for a stream request that returned HTTP 503 separately. All unexpected warnings, errors, and page errors still fail the probe. The unused `reasonLines` import is gone.
 
 ## The diagnosis distinguishes missing policy from a failed read
 
@@ -22,7 +22,7 @@ A separate read-only browser check substitutes the exact versioned product Page 
 
 The fresh local native browser scene tests the distinct transport-failure path. It scripts an unavailable response only at the Rules definition-query boundary, then checks recovery through the real reader. It also holds a failure until after navigation to Issues. Its 105 recorded checks pass in 13.304 seconds, measured by the driver around the browser process. Rules retry changes neither the Rules head nor items and sends no act. The existing scene separately submits its approval and decision acts. This run predates the missing-policy wording and actor merge. Its Rules catch, harness, and probe blobs match the final source. The later product render and exact-source workflow cover the combined result.
 
-The row-probe owner tests the actual report boundary with one recognized stream diagnostic and five unexpected events. Only an error with the exact Chrome HTTP503 text and a `/v1/scopes/sc_…/stream` URL qualifies. A different URL, status, warning, unexpected stream error, or page error remains unexpected. All six events stay in the original console list. No full 100-press stress probe repeats here, and this accounting does not repair stream availability.
+The row-probe owner tests the actual report boundary with one recognized stream diagnostic and five unexpected events. Only an error with the exact Chrome HTTP 503 text and a `/v1/scopes/sc_…/stream` URL qualifies. A different URL, status, warning, unexpected stream error, or page error remains unexpected. All six events stay in the original console list. No full 100-press stress probe repeats here, and this accounting does not repair stream availability.
 
 ## The failed gate and passing follow-up remain separate
 
