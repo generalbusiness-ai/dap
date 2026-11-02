@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4bf3c999364616643f696cbdf2bde28445d73b12","text":"Merge retired a covered predecessor; the successor is at scripts/mac-host-kit.test.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4d0be62631ec4eb53d396e2dcc58c0fd929b210e","text":"Merge retired a covered predecessor; the successor is at docs/security/entry-points.md."}
