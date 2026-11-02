@@ -11,7 +11,7 @@ import type { ReservationSnapshot, SignedIntent, Entry, FactRef, FactUse, FieldV
 import { canonicalize, b64url, entryHash, isEntry, isOperationId, isFactRef, rawRetainedJSON, verifySignedIntent, parseStrict, timeMs, utf8 } from "@generalbusiness/dap-bytes";
 import { isEntryOf, valueDigest, type Item, type Operation, type Own } from "@generalbusiness/dap-derive";
 import { isStandingDestination, publicationStandingRecord, certifiedPublicationState, certifiedPublicationStateV15, usesFilePublicationProtocol, usesStagedPublicationProtocol } from "@generalbusiness/dap-platform";
-import { DESTINATION_KINDS, READ_TOKEN_HOURS, destinationBranch, destinationMint, destinationRead, destinationReceipt, destinationRevokedMint, destinationSends, destinationStatement, destinationTarget, destinationWrite, editObjects, editTree, manifestCommit, editPath, fileOf, sourcesOf, manifestFiles, fileSound, firstHeadCommit, initialCommitOf, isOf, isRecordedJudgeEvidence, revokedToken, filePublicationCause, filePublicationCurrent, filePublicationCommit, type DestinationObject, type EditFile, type ObjectFormat, type RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
+import { FAILED_CLAIM_COHORT, DESTINATION_KINDS, READ_TOKEN_HOURS, destinationBranch, destinationMint, destinationRead, destinationReceipt, destinationRevokedMint, destinationSends, destinationStatement, destinationTarget, destinationWrite, editObjects, editTree, manifestCommit, editPath, fileOf, sourcesOf, manifestFiles, fileSound, firstHeadCommit, initialCommitOf, isOf, isRecordedJudgeEvidence, revokedToken, filePublicationCause, filePublicationCurrent, filePublicationCommit, type DestinationObject, type EditFile, type ObjectFormat, type RecordedJudgeEvidence } from "@generalbusiness/dap-platform";
 import { GitRefusal, READ_BOUNDS, Reader, type GitSource } from "@generalbusiness/dap-git";
 import { RULES_CERTIFICATE_KIND, RULES_POLICY_VALUE_V11, rulesCertificateOpening, rulesCertificateBranchMatches, rulesPolicyProposalV11, rulesPolicyPatternsV11, RULES_TREE_PROOF, RULES_TREE_BOUNDS, verifyRulesTree, type RulesTreeBinding } from "@generalbusiness/dap-platform";
 import { rulesCertificateOpeningV15, rulesCertificateDeclineV15 } from "@generalbusiness/dap-platform";
@@ -479,10 +479,12 @@ export class DestinationHost implements Outside {
       objects: objects.filter((object) => reached.has(object.id)).map((object) => ({ id: object.id, type: object.kind, data: new Uint8Array(object.body) })) };
   }
 
-  /** The lifetime that the `read-token` act asked for, in hours, from the entry that opened the `mint-read`. */
+  /** New default tokens last one hour; historical pins retain their requested hours. */
   #hours(operation: Operation): number | null {
     const input = this.#given.own(Number(operation.id.split(":")[0]))?.entry.input;
-    const hours = input?.type === "act" && input.signed.intent.kind === "read-token" ? input.signed.intent.fields["hours"] : null;
+    if (input?.type !== "act" || input.signed.intent.kind !== "read-token") return null;
+    if (operation.owner === FAILED_CLAIM_COHORT.destination) return Object.keys(input.signed.intent.fields).length === 0 ? 1 : null;
+    const hours = input.signed.intent.fields["hours"];
     return typeof hours === "number" && Number.isSafeInteger(hours) && hours >= READ_TOKEN_HOURS.min && hours <= READ_TOKEN_HOURS.max ? hours : null;
   }
   /** A read credential's nonsecret handle, fixed by the sealed operation and its attempt before the request leaves. */

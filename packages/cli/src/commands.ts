@@ -40,7 +40,7 @@ import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type EffectForm,
 import { READ_REFUSALS, readItemQuery, b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isReceipt, isSignedIntentShape, isFactRef, isEntry, isScopeId, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, ShapeError, TransportError, activeDirectory, partitionIndexes, wellFormedInvitation, readCredential, declaredHandle, create, shapeDeclaredAct, signedIntent, signedLogReader, type Fetch, type Session, type CreationOffer, type Signing, type Transport } from "@generalbusiness/dap-client";
 import { CAPABILITY_CODE as REPLAY_CAPABILITY_CODE } from "@generalbusiness/dap-derive";
-import { REPOSITORY_BINDING_COHORT, SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
+import { FAILED_CLAIM_COHORT, REPOSITORY_BINDING_COHORT, SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { SourceError, httpSource, otherRoomsLine, render, roomVerification, verify as replay, type FinishedRoom, type HistorySource } from "@generalbusiness/dap-replay";
 import { enrolAgentKey, enrolCheckerKey, enrolDeviceKey } from "./invitations.ts";
 import { AGENT_KEY_LINK, CHECKER_KEY_LINK, DEVICE_KEY_LINK, encodeDeviceKeyInvitation, isAgentKeyMembership, isDeviceKeyInvitation, type DeviceKeyInvitation } from "@generalbusiness/dap-client";
@@ -1110,6 +1110,9 @@ function cloneUsing(ctx: Context, directory: string | undefined, options: { hour
     if (!Number.isSafeInteger(hours) || hours < READ_TOKEN_HOURS.min || hours > READ_TOKEN_HOURS.max) return usage(`--hours is a whole number from ${READ_TOKEN_HOURS.min} to ${READ_TOKEN_HOURS.max}.`);
     const config = await configOf(ctx);
     const { summary, repository } = await destinationOf(ctx, config);
+    const fixedLifetime = summary.definition === FAILED_CLAIM_COHORT.destination;
+    if (fixedLifetime && hours !== 1) return usage("This room issues one-hour read tokens; --hours must be 1.");
+    const tokenFields = fixedLifetime ? {} : { hours };
     if (options.archive && !ctx.git?.archiveRun) return failed("Archive clone needs the hardened Git runner. No read token was requested.");
     const args = (url: string) => ["clone", "--", url, ...(directory === undefined ? [] : [directory])];
     if (!ctx.git || (await ctx.git.run(["--version"], {})) === null) {
@@ -1123,10 +1126,10 @@ function cloneUsing(ctx: Context, directory: string | undefined, options: { hour
     const signer = await signerOf(ctx, config);
     const branch = summary.items.find((item) => item.type === "branch")!;
     if (retained && (retained.signed.intent.actor !== signer.key || retained.signed.intent.on !== branch.id
-      || canonicalize(retained.signed.intent.fields) !== canonicalize({ hours })
+      || canonicalize(retained.signed.intent.fields) !== canonicalize(tokenFields)
       || Object.keys(retained.signed.intent.expected).length !== 1 || !Object.hasOwn(retained.signed.intent.expected, "on")
       || !Number.isSafeInteger(retained.signed.intent.expected["on"]) || retained.signed.intent.expected["on"]! < 0)) return failed("The retained read-token request does not match this signer, branch and requested hours. No credential was retrieved and nothing was cloned.");
-    const signed = retained?.signed ?? await signedIntent(signer, { to: summary.scope, kind: "read-token", on: branch.id, fields: { hours }, expected: { on: branch.revision } }, signing(ctx));
+    const signed = retained?.signed ?? await signedIntent(signer, { to: summary.scope, kind: "read-token", on: branch.id, fields: tokenFields, expected: { on: branch.revision } }, signing(ctx));
     const receipt = retained?.receipt ?? accepted(await (await handleOf(ctx, config, scope, null)).submit(signed), scope, "Read token").receipt;
     const proof = readTokenReceipt(receipt, summary, signed);
     if (!proof) return failed(`The accepted reply does not match this destination, definition and exact read-token request. It may still have been recorded at ${scope}; inspect dap log destination. No credential was retrieved and nothing was cloned.`);

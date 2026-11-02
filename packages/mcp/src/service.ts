@@ -1,3 +1,4 @@
+import { FAILED_CLAIM_COHORT } from "@generalbusiness/dap-platform";
 import { isRecord } from "@generalbusiness/dap-bytes";
 import { EXPIRY_MARGIN_MS, invitationRedemptionFields } from "@generalbusiness/dap-client";
 /**
@@ -545,7 +546,9 @@ export class McpService {
     try {
       if (!isScopeId(read.target)) return failed({ error: "target", what: "the exact read has no scope target" });
       const context = await this.#exactSnapshot(read.target);
-      const signed = await this.#perform(null, { target: read.target, on: 0, fields: { hours: 1 }, idempotencyKey: `view-diff-${crypto.randomUUID()}` }, "read-token", undefined, admit, context);
+      const pinned = context.read.inventory.scopes.find(held => held.scope === read.target)?.pinned;
+      const fields = pinned === FAILED_CLAIM_COHORT.destination ? {} : { hours: 1 };
+      const signed = await this.#perform(null, { target: read.target, on: 0, fields, idempotencyKey: `view-diff-${crypto.randomUUID()}` }, "read-token", undefined, admit, context);
       if (signed.structuredContent["answer"] !== "accepted") return signed;
       const entry = (signed.structuredContent["fact"] as { seq: number }).seq;
       const pause = this.#port.pause ?? (() => new Promise<void>((resolve) => { setTimeout(resolve, 1000); }));
