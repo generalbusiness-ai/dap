@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/test.mjs","body":{"commit":"f277867fedb2cf82417c439984096271354e30b4","path":"scripts/test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:10b2c8c60ba9135193643500b16ed93a6702244b","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/row-press-probe.mjs."}
