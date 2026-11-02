@@ -26,7 +26,7 @@ import { AT_INPUT, describeAct, grantAction, onOf, schemaOf, type ActLike, type 
 import { answered, archivedAnswer, clip, earlierSaid, finding, type Earlier, type Finding, type Said } from "./errors.ts";
 import { Kept, definitionOf, readInventory, readPartitionIndexes, standingIn, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
 import { KIB, bytesOf, cursorOf, fromCursor, pageBy, sliceText } from "./paging.ts";
-import { Reads } from "./reads.ts";
+import { ReadSessions, Reads } from "./reads.ts";
 import { Recent } from "./recent.ts";
 import { Unshaped, capturedExpected, effectiveFields, expectedOf, finalStates, needsOn, shapeAt, shapeFields, shapePresented, valuePlaces, viaLeft } from "./shape.ts";
 import { WORDS, type Words } from "./words.ts";
@@ -49,6 +49,8 @@ export interface ServerPort {
   service: string;
   /** Replaces the runtime's `fetch`: a test passes the Worker's routes. */
   fetch?: Fetch;
+  /** Process-local completed read credentials; no authority or shared transport. */
+  readSessions?: ReadSessions;
   /** The key the server signs with: a person's device key or an agent key, from `ARTROOM_HOME`. */
   signer: Signer;
   /** Public Git transport only; separate from authenticated native reads. */
@@ -301,7 +303,7 @@ export class McpService {
   get key(): string { return this.#port.signer.key; }
   get reads(): Reads { return this.#reads; }
   get service(): string { return this.#service; }
-  #readsOf(service: string): Reads { return new Reads({ service, ...(this.#fetch ? { fetch: this.#fetch } : {}), signer: this.#port.signer, now: this.#port.now ?? Date.now }); }
+  #readsOf(service: string): Reads { return new Reads({ ...(this.#port.readSessions ? { sessions: this.#port.readSessions } : {}), service, ...(this.#fetch ? { fetch: this.#fetch } : {}), signer: this.#port.signer, now: this.#port.now ?? Date.now }); }
   #now(): number { return (this.#port.now ?? Date.now)(); }
 
   // ---------------------------------------------------------------- the list
@@ -310,6 +312,17 @@ export class McpService {
   async snapshot(): Promise<Snapshot> {
     const config = await this.#port.config.read();
     const read = await readInventory(this.reads, this.kept, config);
+    const snapshot = this.#deriveSnapshot(config, read);
+    const generation = snapshot.generation;
+    this.#stale = false;
+    const previous = this.#snapshot?.generation ?? null;
+    this.#snapshot = snapshot;
+    if (previous !== null && previous !== generation) this.#raise(generation);
+    return snapshot;
+  }
+
+  /** Derive an act context without publishing a partial inventory as the ordinary catalogue. */
+  #deriveSnapshot(config: McpConfig, read: Read_): Snapshot {
     const bindings = bindingsOf(read.inventory, this.words);
     const baseGeneration = generationOf(bindings, read.inventory, { mode: this.mode, tools: this.#tools, words: this.words });
     const generation = digestBytes(utf8(canonicalize({ tools: baseGeneration, ...(this.#genericPolicy ? { generic: this.#genericPolicy } : {}), presentation: this.resources.generation, views: !!(this.#port.views || this.#port.declaredViews), declared: this.#port.declaredViews?.release ?? null })));
@@ -320,12 +333,12 @@ export class McpService {
     const hidden = shown.filter((b) => !listed(b, read.inventory)).map((b) => b.name);
     const acts = this.mode === "generic" ? [] : shown.filter((b) => listed(b, read.inventory)).map((b) => actTool(b, read.inventory, this.mode));
     const generic = Object.entries(this.#generic).filter(([name]) => this.#genericAdmitted(name)).map(([, g]) => g.tool);
-    const snapshot: Snapshot = { read, bindings, tools: [...generic, ...acts], generation, hidden, memberships, repository: config.repository?.membership ?? null, configured: configDigest(config) };
-    this.#stale = false;
-    const previous = this.#snapshot?.generation ?? null;
-    this.#snapshot = snapshot;
-    if (previous !== null && previous !== generation) this.#raise(generation);
-    return snapshot;
+    return { read, bindings, tools: [...generic, ...acts], generation, hidden, memberships, repository: config.repository?.membership ?? null, configured: configDigest(config) };
+  }
+
+  async #exactSnapshot(target: ScopeId): Promise<Snapshot> {
+    const config = await this.#port.config.read();
+    return this.#deriveSnapshot(config, await readInventory(this.reads, this.kept, config, target));
   }
 
   /** The snapshot the last list or call derived; derived again when none is held, or when this service changed the configuration since. */
@@ -495,12 +508,14 @@ export class McpService {
     const unreadable = commitIdFault(read.kind === "diff" ? { base: read.base, integration: read.integration } : read.kind === "file" ? { commit: read.commit } : { "from base": read.from.base, "from integration": read.from.integration, "to base": read.to.base, "to integration": read.to.integration });
     if (unreadable) return unreadable;
     try {
-      const signed = await this.#perform(null, { target: read.target, on: 0, fields: { hours: 1 }, idempotencyKey: `view-diff-${crypto.randomUUID()}` }, "read-token", undefined, admit);
+      if (!isScopeId(read.target)) return failed({ error: "target", what: "the exact read has no scope target" });
+      const context = await this.#exactSnapshot(read.target);
+      const signed = await this.#perform(null, { target: read.target, on: 0, fields: { hours: 1 }, idempotencyKey: `view-diff-${crypto.randomUUID()}` }, "read-token", undefined, admit, context);
       if (signed.structuredContent["answer"] !== "accepted") return signed;
       const entry = (signed.structuredContent["fact"] as { seq: number }).seq;
       const pause = this.#port.pause ?? (() => new Promise<void>((resolve) => { setTimeout(resolve, 1000); }));
       for (let polls = 0; ; polls++) {
-        const answer = await this.#exactAnswer(read, entry);
+        const answer = await this.#exactAnswer(read, entry, context);
         if (!this.#mintPending.has(answer) || polls >= VIEW_DIFF_POLLS) return answer;
         await pause([read.target as ScopeId]);
       }
@@ -618,7 +633,7 @@ export class McpService {
   async #perform(binding: Binding | null, args: Args, kind: string, preparing?: { resource: unknown; capability: string; step: string }, admit?: () => void | Promise<void>, suppliedSnapshot?: Snapshot): Promise<CallResult> {
     const key = args["idempotencyKey"];
     if (!validKey(key)) return failed({ error: "shape", field: "idempotencyKey", what: "is missing, or not 1 to 128 bytes of UTF-8", declared: "a key you choose and keep" });
-    // A named call passes the fresh snapshot it just used for admission.
+    // A named call or exact read passes the fresh context it just read for this attempt.
     // Other entrypoints refresh here; no snapshot is carried across attempts.
     const s = suppliedSnapshot ?? await this.snapshot();
     // The target: given, or the room's own scope of a singleton platform kind.
@@ -1596,8 +1611,8 @@ export class McpService {
     }
   }
 
-  async #credential(args: Args): Promise<CallResult> {
-    const s = await this.#current();
+  async #credential(args: Args, context?: Snapshot): Promise<CallResult> {
+    const s = context && configDigest(await this.#port.config.read()) === context.configured ? context : await this.#current();
     const target = args["target"] ?? "destination";
     const { scope, membership, held } = await this.#scope(s, target);
     const seq = Number(args["entry"]);
@@ -1664,8 +1679,8 @@ export class McpService {
   }
 
   /** One credential, spent on one bounded read that holds none of it. */
-  async #withCredential(args: Args, read: (credential: { remote: string; credential: string }) => Promise<Record<string, unknown> | { unavailable: string }>): Promise<CallResult> {
-    const got = await this.#credential(args);
+  async #withCredential(args: Args, read: (credential: { remote: string; credential: string }) => Promise<Record<string, unknown> | { unavailable: string }>, context?: Snapshot): Promise<CallResult> {
+    const got = await this.#credential(args, context);
     if (got.isError) return got;
     let answer;
     try { answer = await read(got.structuredContent as { credential: string; remote: string }); }
@@ -1675,14 +1690,14 @@ export class McpService {
   }
 
   /** The answer of a view's exact read. Its `commits` come from the read's own answer, so the page names what the read returned. */
-  #exactAnswer(read: ExactRead, entry: number): Promise<CallResult> {
+  #exactAnswer(read: ExactRead, entry: number, context: Snapshot): Promise<CallResult> {
     const args = { entry, target: read.target };
     if (read.kind === "diff") return this.#withCredential(args, async ({ remote, credential }) => {
       const diff = await this.#port.readDiff!({ remote, credential, base: read.base, integration: read.integration });
       if ("unavailable" in diff) return diff;
       const version = read.label ? ` of ${read.label}` : "";
       return { base: diff.base, integration: diff.integration, files: diff.files, truncated: diff.truncated, leftOut: diff.leftOut ?? null, paths: diff.paths ?? [], text: diff.text, commits: [{ label: `Base${version}`, id: diff.base }, { label: `Integration${version}`, id: diff.integration }] };
-    });
+    }, context);
     if (read.kind === "interdiff") return this.#withCredential(args, async ({ remote, credential }) => {
       const answer = await this.#port.readInterdiff!({ remote, credential, from: { base: read.from.base, integration: read.from.integration }, to: { base: read.to.base, integration: read.to.integration }, labels: { from: read.from.label, to: read.to.label } });
       if ("unavailable" in answer) return answer;
@@ -1690,14 +1705,14 @@ export class McpService {
       return { ...answer, commits: [
         ...(answer.rebased ? [{ label: `Base of ${read.from.label}`, id: from.base }, { label: `Integration of ${read.from.label}`, id: from.integration }, { label: `Base of ${read.to.label}`, id: to.base }] : [{ label: `Base of both versions`, id: to.base }, { label: `Integration of ${read.from.label}`, id: from.integration }]),
         { label: `Integration of ${read.to.label}`, id: to.integration }] };
-    });
+    }, context);
     return this.#withCredential(args, async ({ remote, credential }) => {
       const path = unb64url(read.path);
       if (!path) return { unavailable: "the file's path did not decode" };
       const file = await this.#port.readFile!({ remote, credential, commit: read.commit, path });
       if ("unavailable" in file) return file;
       return { ...file, commits: [{ label: `Commit of ${read.commitLabel}`, id: file.commit }] };
-    });
+    }, context);
   }
 
   async #actions(args: Args): Promise<CallResult> {

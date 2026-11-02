@@ -139,8 +139,8 @@ async function pinOf(reads: Reads, kept: Kept, scope: ScopeId, membership: Scope
   return pin;
 }
 
-/** Reads the inventory once. Each failure leaves that scope out and is reported in `unread`; a failure of membership leaves standing unknown. */
-export async function readInventory(reads: Reads, kept: Kept, config: McpConfig): Promise<Read_> {
+/** Read fresh room authority and the inventory. A target skips unrelated discovery and never supplies a catalogue. */
+export async function readInventory(reads: Reads, kept: Kept, config: McpConfig, target?: ScopeId): Promise<Read_> {
   const scopes: Held[] = [];
   const unread: { scope: string; reason: string }[] = [];
   const heads: Heads = {};
@@ -150,6 +150,7 @@ export async function readInventory(reads: Reads, kept: Kept, config: McpConfig)
   const key = reads.signer.key;
 
   const hold = async (place: Place, scope: ScopeId, membership: ScopeRef | null, summary?: Summary, lane?: Held["lane"]): Promise<void> => {
+    if (target !== undefined && scope !== target) return;
     const pin = await pinOf(reads, kept, scope, membership, summary);
     if ("unread" in pin) { unread.push({ scope, reason: pin.unread }); return; }
     const sources = [{ scope, membership }, ...(room?.rules ? [{ scope: room.rules.scope, membership: room.membership }] : [])];
@@ -164,7 +165,7 @@ export async function readInventory(reads: Reads, kept: Kept, config: McpConfig)
     const M = repository.membership;
     const pinned = config.pins?.[M.scope];
     if (pinned && !kept.pins.has(M.scope)) kept.pins.set(M.scope, { ref: M, pinned });
-    const [membershipRead, directoryRead, rulesRead] = [await summaryOf(M.scope, M), await summaryOf(repository.directory.scope, M), await summaryOf(repository.rules, M)];
+    const [membershipRead, directoryRead, rulesRead] = await Promise.all([summaryOf(M.scope, M), summaryOf(repository.directory.scope, M), summaryOf(repository.rules, M)]);
     if (membershipRead.ok) {
       heads[M.scope] = headText(membershipRead.at);
       standing[M.scope] = standingIn(membershipRead.value.items, key);
@@ -240,7 +241,7 @@ export async function readInventory(reads: Reads, kept: Kept, config: McpConfig)
 
   const applicationScopes = new Set(scopes.filter((s) => s.place === "application").map((s) => s.scope));
   for (const root of config.roots ?? []) {
-    if (applicationScopes.has(root.scope)) continue;
+    if (applicationScopes.has(root.scope) || target !== undefined && root.scope !== target) continue;
     const read = await summaryOf(root.scope, root.membership);
     if (!read.ok) { unread.push({ scope: root.scope, reason: read.reason }); continue; }
     heads[root.scope] = headText(read.at);
