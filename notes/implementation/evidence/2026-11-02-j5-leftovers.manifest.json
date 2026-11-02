@@ -1,0 +1,1108 @@
+{
+  "version": 1,
+  "qualification": "J5 Rules cause from current native policy state, exact product-bundle browser substitution, transport retry and route guards, cross-device local review marks, and exact stream-diagnostic accounting. One full gate fails on a stale test copy. An isolated one-file repair and the sole unreached Native phase pass separately under docs/testing.md. No deployment, historical transport failure, full stress rerun or Desktop acceptance follows.",
+  "checkpoint": {
+    "commit": "88b84adaf06d278ab1595fee06696e1bd75330ef",
+    "tree": "62378540ab5f183b0d1dbed6a2da2846a3f7d083"
+  },
+  "retention": "Keep all eleven readonly evidence units for at least 30 days after landing.",
+  "fileCount": 195,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-diagnosis",
+      "checkpoint": {
+        "commit": "ed908579870435778e1d82b7814975900c16ecd5",
+        "tree": "0eddadee4d0a4f918f104d22b4f82b8096baa507"
+      },
+      "fileCount": 6,
+      "sha256sums": "99298716ed0c34a0a393e1cbb9e56aefb2b91e1e9b5ec761f81656ea884b869a",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 411,
+          "sha256": "99298716ed0c34a0a393e1cbb9e56aefb2b91e1e9b5ec761f81656ea884b869a"
+        },
+        {
+          "path": "diagnose.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "diagnose.mjs",
+          "bytes": 5577,
+          "sha256": "21d1b52e611678ede7e0425df1a4e2b8dc0efd73eb6cd6a9ecb859e2495e600e"
+        },
+        {
+          "path": "evidence-scan.json",
+          "bytes": 812,
+          "sha256": "b23e3848efe22ffdd62b58b16bd7e2485784dfa20abaa09631442ebcf2bca912"
+        },
+        {
+          "path": "read-only-diagnosis.json",
+          "bytes": 1870,
+          "sha256": "cf2055cf0f4a554a122904f6911389ef43cd2ab35b69a560e85de70a942b94a3"
+        },
+        {
+          "path": "unit.json",
+          "bytes": 366,
+          "sha256": "a197d599bb6f2cb5d8e5781fdf30d12a6a432903031eb3c1be67a9507f23a1a4"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-diagnosis-2",
+      "checkpoint": {
+        "commit": "ed908579870435778e1d82b7814975900c16ecd5",
+        "tree": "0eddadee4d0a4f918f104d22b4f82b8096baa507"
+      },
+      "fileCount": 6,
+      "sha256sums": "99e7af32d5b7e700d83f24813eab3f54baef656a756598cdb1cc3b387341940d",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 411,
+          "sha256": "99e7af32d5b7e700d83f24813eab3f54baef656a756598cdb1cc3b387341940d"
+        },
+        {
+          "path": "diagnose.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "diagnose.mjs",
+          "bytes": 6009,
+          "sha256": "8b358625cd0a30fe8df2bdc345afc09cbb54588436158625610ec7dad82bea10"
+        },
+        {
+          "path": "evidence-scan.json",
+          "bytes": 812,
+          "sha256": "b23e3848efe22ffdd62b58b16bd7e2485784dfa20abaa09631442ebcf2bca912"
+        },
+        {
+          "path": "read-only-diagnosis.json",
+          "bytes": 4090,
+          "sha256": "9f2df68bb4b8c95f3c16e4c165008ff9972363a361eea7ab6b426beba9f1e4c4"
+        },
+        {
+          "path": "unit.json",
+          "bytes": 348,
+          "sha256": "44ae7baa30ce07611fc152192b4e4a9ca6a1f2c31596e8bf610279930c95ad0c"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-diagnosis-ana2",
+      "checkpoint": {
+        "commit": "ed908579870435778e1d82b7814975900c16ecd5",
+        "tree": "0eddadee4d0a4f918f104d22b4f82b8096baa507"
+      },
+      "fileCount": 6,
+      "sha256sums": "165b0a78197e9f0bf61738fb8c4d31565ec775d72da0daec0b45ee2ba1db5bd9",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 411,
+          "sha256": "165b0a78197e9f0bf61738fb8c4d31565ec775d72da0daec0b45ee2ba1db5bd9"
+        },
+        {
+          "path": "diagnose.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "diagnose.mjs",
+          "bytes": 6056,
+          "sha256": "da727aa40fb227e59b728bd74ea228b8f58c575ff86beeaa1878fb2211ddd421"
+        },
+        {
+          "path": "evidence-scan.json",
+          "bytes": 812,
+          "sha256": "b23e3848efe22ffdd62b58b16bd7e2485784dfa20abaa09631442ebcf2bca912"
+        },
+        {
+          "path": "read-only-diagnosis.json",
+          "bytes": 4134,
+          "sha256": "2ea396b28f8f559bd2d318a9f05dee7d339e221731a9ed948b99d6d8fe55e697"
+        },
+        {
+          "path": "unit.json",
+          "bytes": 322,
+          "sha256": "825eb534ea3b07d1e9d45e053d8320efb46d4e6c53c5a29e24b775fb3ffb2b40"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-browser-historical",
+      "checkpoint": {
+        "commit": "ed908579870435778e1d82b7814975900c16ecd5",
+        "tree": "0eddadee4d0a4f918f104d22b4f82b8096baa507"
+      },
+      "fileCount": 9,
+      "sha256sums": "71971050888afcb5ce027b36581a5992d54d7e72698c96e40f982e82673f9a94",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 652,
+          "sha256": "71971050888afcb5ce027b36581a5992d54d7e72698c96e40f982e82673f9a94"
+        },
+        {
+          "path": "browser-read.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "browser-read.json",
+          "bytes": 5730,
+          "sha256": "8c4e0b30d865ef225d9a70e5d049be81cfbf529f627f75242f1b904ae86c9dfa"
+        },
+        {
+          "path": "evidence-scan.json",
+          "bytes": 812,
+          "sha256": "f8e73267a7dfa7da5456c636068fc899766d69d10f2075de28e42f3f7618f8f4"
+        },
+        {
+          "path": "prepare.py",
+          "bytes": 2334,
+          "sha256": "1ff167546ba3d2a19dfc569ce4706abac64a42e344cb8f8c4ac286301ee250a8"
+        },
+        {
+          "path": "profile-copy.json",
+          "bytes": 690,
+          "sha256": "8d61d9ce3ba3ad8e9a0089f53cfc5b856e9a21e61da3b93454b329ea7e6d9c87"
+        },
+        {
+          "path": "read.mjs",
+          "bytes": 4724,
+          "sha256": "c6575cf0ca0f836f474db6b4dda3e5500e6e77184fab08d2e6787cbe492f05b1"
+        },
+        {
+          "path": "unit.json",
+          "bytes": 400,
+          "sha256": "1e2664de57ddff6cfbd02a31bd655eb22138b0cb9350d95981bb68b7921f92fb"
+        },
+        {
+          "path": "withheld-output.json",
+          "bytes": 269,
+          "sha256": "1330e4b081fd71f4f421cbf8351a9a81a1e2645102a3838ca70fdf5cc5684b95"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-browser-cause",
+      "checkpoint": {
+        "commit": "ed908579870435778e1d82b7814975900c16ecd5",
+        "tree": "0eddadee4d0a4f918f104d22b4f82b8096baa507"
+      },
+      "fileCount": 15,
+      "sha256sums": "7b9fe6b9dce1c4d8c13582d0da44867bed5f186944be2f8bf7f340498c740fbf",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1146,
+          "sha256": "7b9fe6b9dce1c4d8c13582d0da44867bed5f186944be2f8bf7f340498c740fbf"
+        },
+        {
+          "path": "browser-read.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "browser-read.json",
+          "bytes": 7513,
+          "sha256": "5f866a87aca81d55f5fec5c3acedd9776c3b3696eca65e7913eba5011964afc2"
+        },
+        {
+          "path": "build-proof.json",
+          "bytes": 1000,
+          "sha256": "5e20a36d6295407ab49cdefcc787fb5e2e76e7fe6916326876075bb02fa7a16a"
+        },
+        {
+          "path": "build.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "build.mjs",
+          "bytes": 3244,
+          "sha256": "db8556f2cc32ef0195d84bc0c51c0c5c469ef6a4eb180298ad259b4b9bd73fe0"
+        },
+        {
+          "path": "caught-errors.json",
+          "bytes": 3,
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+        },
+        {
+          "path": "diagnostic-page.js",
+          "bytes": 1211855,
+          "sha256": "987dda53bb325468620e433961b9fcfec04810e273895426c2fdf56942d8564e"
+        },
+        {
+          "path": "evidence-scan.json",
+          "bytes": 813,
+          "sha256": "e1e1906c6ec1c61abbcd21dab890b3a228e37915538a6739e672f4244affab13"
+        },
+        {
+          "path": "instrumentation.patch",
+          "bytes": 609,
+          "sha256": "8dfe44d30f7a2726842c92597d6d490aba3fd2d39771fdd383a1fc478c593a36"
+        },
+        {
+          "path": "prepare.py",
+          "bytes": 2659,
+          "sha256": "c1e8534bf3d9c66f9167831149874790ca0d6d08c82bed2e42b8ef498ec73be7"
+        },
+        {
+          "path": "profile-copy.json",
+          "bytes": 691,
+          "sha256": "ca4e1b58189f70ee7080467df153e058b2cffb12ac887021ca7126bf7dfa6d29"
+        },
+        {
+          "path": "read.mjs",
+          "bytes": 5997,
+          "sha256": "33f27c3191ed2f27d0832bf88b07210c481231899107859b850e4a3724c606a4"
+        },
+        {
+          "path": "unit.json",
+          "bytes": 475,
+          "sha256": "5391e6897c3a904f2cb7eb33de5adc5a2ea22440de9b7890e02d026b4ab08d4d"
+        },
+        {
+          "path": "withheld-output.json",
+          "bytes": 269,
+          "sha256": "d584565c2dac6e0f5cdb82608f17b2eaca7e8e62e4e5cef2f66574626677f536"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-rules-shape",
+      "checkpoint": {
+        "commit": "892456defbfe41042d1a54d5b1d38159401b5c12",
+        "tree": "396fb1fa6e236e002dae4150a677ce3a4df28a84"
+      },
+      "fileCount": 6,
+      "sha256sums": "025287c79c2c90badcc706f722f11b0101c7e9d1d7d544ef89999b6ccffe42b2",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 399,
+          "sha256": "025287c79c2c90badcc706f722f11b0101c7e9d1d7d544ef89999b6ccffe42b2"
+        },
+        {
+          "path": "evidence-scan.json",
+          "bytes": 812,
+          "sha256": "b23e3848efe22ffdd62b58b16bd7e2485784dfa20abaa09631442ebcf2bca912"
+        },
+        {
+          "path": "interpretation.json",
+          "bytes": 1715,
+          "sha256": "f93d6b9f8f09468a2d283c1644f1003a15d84a6595473a1fc78d008cce23ceea"
+        },
+        {
+          "path": "read.mjs",
+          "bytes": 3339,
+          "sha256": "f8e9eab837568246ab8f496d4d3faf4675ec4605fc6b5984ab3f0e68cd09a1ee"
+        },
+        {
+          "path": "shape.json",
+          "bytes": 2503,
+          "sha256": "e121cfb951a9c00aee9ebde5dc4a7498a0b23f0ca87d0b4a54b912a0149fa51b"
+        },
+        {
+          "path": "unit.json",
+          "bytes": 451,
+          "sha256": "c009836bf5616f74ce3f3bd71ca9f8f8953db1a520385a21be7846d3116aedc8"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-browser-render",
+      "checkpoint": {
+        "commit": "b64ad0261d3c6227b9a8fef4fabda33d0bbb1361",
+        "tree": "6f53350b9d1e4c39085ebe90ffb20bff1262f41b"
+      },
+      "fileCount": 13,
+      "sha256sums": "7fb0652ab816f9813b7d20815448cd73d0d358e53495939e8ff3667b0b0ff737",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 979,
+          "sha256": "7fb0652ab816f9813b7d20815448cd73d0d358e53495939e8ff3667b0b0ff737"
+        },
+        {
+          "path": "browser-read.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "browser-read.json",
+          "bytes": 6902,
+          "sha256": "0c663f239d138556f6ce6721848e54b6e7034dad42a5ac71bd0424dfc312ac9b"
+        },
+        {
+          "path": "evidence-scan.json",
+          "bytes": 980,
+          "sha256": "9a3394872ad5f8f68f4fb02b1ea2a2bf54378ecef274e39c6487906d8c9b3990"
+        },
+        {
+          "path": "prepare.py",
+          "bytes": 3394,
+          "sha256": "cd83013af474630efbc99f28715b12af25148e0363e3fdd21142c93fd88e214d"
+        },
+        {
+          "path": "product-page.js",
+          "bytes": 1212453,
+          "sha256": "b98d840bc4ea79f08538a94b5e4cababe3062d94e4e94d9da13ea8aa069a79ab"
+        },
+        {
+          "path": "product-source.json",
+          "bytes": 397,
+          "sha256": "c465cd3da9214181e089cb74a09b7c55e8024a99dc94a5caf2604c860c7b0efa"
+        },
+        {
+          "path": "profile-copy.json",
+          "bytes": 692,
+          "sha256": "03aa942a37b6da59a002a93eb511aa1dae6954569c5df988c60065610d126ee2"
+        },
+        {
+          "path": "read.mjs",
+          "bytes": 5577,
+          "sha256": "9676872434e6050a733622a68d068f28b2e01e5613cc9940d93a7744fb59a612"
+        },
+        {
+          "path": "rules.png",
+          "bytes": 28101,
+          "sha256": "5605ba6f08a34ad0c26dbabe1e7a8aff3611ef11fd773541c4535a57e4526caf"
+        },
+        {
+          "path": "unit.json",
+          "bytes": 473,
+          "sha256": "a7b547cb92e109678a3ac6c016925bd25bae9624bacc82c1dba42a5322a675b6"
+        },
+        {
+          "path": "visible-main.txt",
+          "bytes": 113,
+          "sha256": "69f2c684aac56fbad92a91e275d60af11402723a651cb0a6608a705a9f359dbb"
+        },
+        {
+          "path": "withheld-output.json",
+          "bytes": 269,
+          "sha256": "9247844b4215beb6251cd387d27723cbcaa6c17b68cf27724ae298ae8d3445b9"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-preparation",
+      "checkpoint": {
+        "commit": "b64ad0261d3c6227b9a8fef4fabda33d0bbb1361",
+        "tree": "6f53350b9d1e4c39085ebe90ffb20bff1262f41b"
+      },
+      "fileCount": 40,
+      "sha256sums": "23919c3d15dd801302b3281dcdb9fd677baa4428426acb0f7978ca7bd2fb059e",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 3547,
+          "sha256": "23919c3d15dd801302b3281dcdb9fd677baa4428426acb0f7978ca7bd2fb059e"
+        },
+        {
+          "path": "browser-syntax.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "browser-syntax.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "browser-syntax.stdout.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "cross-device-owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "cross-device-owner.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "cross-device-owner.stdout.log",
+          "bytes": 3398,
+          "sha256": "242217927afaaae44cbcbf95fdea65eae9defb7afb8f5e7f84174953ee44fa5a"
+        },
+        {
+          "path": "dependency-copy.json",
+          "bytes": 3070,
+          "sha256": "ca6bc5cc30854c6632f8d1b382856d728ac1f4f203d1c29eb0e3ccbad3b2b168"
+        },
+        {
+          "path": "evidence-scan.json",
+          "bytes": 813,
+          "sha256": "fdbb8d6132a51f6f4d87e1480136d6bc1e0a3f0e9979cdee16b5bfdb55b7876e"
+        },
+        {
+          "path": "focused-checks.json",
+          "bytes": 507,
+          "sha256": "e11268bd51623226e1f0af7d017e5f1354617dcff13c68facf92c2384df6470b"
+        },
+        {
+          "path": "page-build-final.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "page-build-final.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "page-build-final.stdout.log",
+          "bytes": 208,
+          "sha256": "7f19679f0a051038bdfda7bcd0468968e4edd1075c648fa62edfdf625f18b6c2"
+        },
+        {
+          "path": "page-build.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "page-build.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "page-build.stdout.log",
+          "bytes": 208,
+          "sha256": "ecadb947b9d4cd634565c2ecff98c4428471afe0944ea349129d44b8122cf915"
+        },
+        {
+          "path": "page-compiler-all-2.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "page-compiler-all-2.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "page-compiler-all-2.stdout.log",
+          "bytes": 134,
+          "sha256": "c6b78e5b48afa90e745987f7b5add060b67424ffce5a2f38bc8d7272cc99e5c5"
+        },
+        {
+          "path": "page-compiler-all.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "page-compiler-all.stderr.log",
+          "bytes": 466,
+          "sha256": "342c31969d0ac9043a4fde1a62cf852ed599177207d1c6ec5cd8d435f5d7e8c8"
+        },
+        {
+          "path": "page-compiler-all.stdout.log",
+          "bytes": 213,
+          "sha256": "cb1d091b3853fdbdcde0f2d603d73b0fe562fa1733abaf257ed259c723a864c4"
+        },
+        {
+          "path": "page-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "page-compiler.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "page-compiler.stdout.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "probe-and-runner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "probe-and-runner.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "probe-and-runner.stdout.log",
+          "bytes": 815,
+          "sha256": "e4b46e008b5a36b10fa072c8607b170afe2cb5b6cd412a70d8228aa6730b548a"
+        },
+        {
+          "path": "probe-final.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "probe-final.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "probe-final.stdout.log",
+          "bytes": 257,
+          "sha256": "098d022d7477f357958aaed91815dd83173f2757a76a765cd25beb93a663cd6b"
+        },
+        {
+          "path": "rules-editor-checks-second.json",
+          "bytes": 633,
+          "sha256": "e59ef8816d31ca263de7aa028d7d533c16074dd7c8db8815faa70c515855cd73"
+        },
+        {
+          "path": "rules-editor-checks.json",
+          "bytes": 457,
+          "sha256": "8e9b8bdeff7cf8035ac751ac8f02e5e992c63631bd6fbba7f7b3cee315956f46"
+        },
+        {
+          "path": "rules-editor-owner-2.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "rules-editor-owner-2.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "rules-editor-owner-2.stdout.log",
+          "bytes": 249,
+          "sha256": "99f8fcdcd07b644723e5413efc53f7142ad25ef1e61e6eca9879e9a2152d2462"
+        },
+        {
+          "path": "rules-editor-owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "rules-editor-owner.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "rules-editor-owner.stdout.log",
+          "bytes": 249,
+          "sha256": "2e19433bbad605b662c120acd8e54bfb10aa8d2c50baa9f33a342c11e58d6526"
+        },
+        {
+          "path": "unit.json",
+          "bytes": 447,
+          "sha256": "1ff870bc4cc6cb9c8fcb20c0db4b71afd8aabbd0fa30fac9b867e14dbb371238"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-browser",
+      "checkpoint": {
+        "commit": "70e955f8483e9b4c2891973488e1c5e37440600c",
+        "tree": "e999f2bd596a6a28ce47cd731ed2bb3e5d5e55af"
+      },
+      "fileCount": 19,
+      "sha256sums": "fe380016e109f2a5ee9f18d39042020fbf04200ed03200b274c030f17f0679c4",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1557,
+          "sha256": "fe380016e109f2a5ee9f18d39042020fbf04200ed03200b274c030f17f0679c4"
+        },
+        {
+          "path": "brief.txt",
+          "bytes": 11,
+          "sha256": "ae550150ab0619db86b175f49a3ec447806f6039920d6e6316627fd0b19970e7"
+        },
+        {
+          "path": "browser.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "evidence-scan.json",
+          "bytes": 1041,
+          "sha256": "4bd9acb6e8cb15ad870ca7465a9aa53ee0cf23aa33ca6ec9e6ba1c075973e37b"
+        },
+        {
+          "path": "report.json",
+          "bytes": 12688,
+          "sha256": "b09c54fba7f8458336833048a5ce32976a348465d948af968e4ac56d64a76f44"
+        },
+        {
+          "path": "run.json",
+          "bytes": 2021,
+          "sha256": "29c2bd9d8d86b7ae7fdf51c3783ee4871e8fc71080ff8652aee7d1cf6a54bb2f"
+        },
+        {
+          "path": "run.py",
+          "bytes": 3867,
+          "sha256": "549a486ffc65c5a765721a9a4e7fcd093e4998e78a5b1a3ef0f5c9a4bfa1d9a6"
+        },
+        {
+          "path": "running.json",
+          "bytes": 67,
+          "sha256": "8c8300a0dfe59cd3a522da76c7653983d2d12f8931206b4a2015087da31812d6"
+        },
+        {
+          "path": "screens/1-first-screen.png",
+          "bytes": 149963,
+          "sha256": "5f4b63a56d90da1a67c9e441977fc81cbea32827173f3a4d974a8be7ed486edc"
+        },
+        {
+          "path": "screens/2-after-reload.png",
+          "bytes": 149963,
+          "sha256": "5f4b63a56d90da1a67c9e441977fc81cbea32827173f3a4d974a8be7ed486edc"
+        },
+        {
+          "path": "screens/3-item-opened.png",
+          "bytes": 136439,
+          "sha256": "b920c79a9cd47c7457a54c5358fcd22cb507da0f6ab113c709f0e3c42ab66050"
+        },
+        {
+          "path": "screens/4-decided-on-issue.png",
+          "bytes": 136439,
+          "sha256": "b920c79a9cd47c7457a54c5358fcd22cb507da0f6ab113c709f0e3c42ab66050"
+        },
+        {
+          "path": "screens/5-after-deciding.png",
+          "bytes": 130679,
+          "sha256": "81a25fa0304149a8699d6923c87eb41369b6c5778f5301235476b6209b97e3df"
+        },
+        {
+          "path": "screens/6-first-window.png",
+          "bytes": 99926,
+          "sha256": "244e8a766aec2cd596e46e5b28c0122aeb7a1ee243b7251222deaf2bfa1ff0d4"
+        },
+        {
+          "path": "screens/7-last-window.png",
+          "bytes": 140257,
+          "sha256": "23def37044669a7b6c26a34d0bdd16f24183f977c981aeff711221560a8d257d"
+        },
+        {
+          "path": "screens/rules-read-recovered.png",
+          "bytes": 52279,
+          "sha256": "cf7766b9dcd35e5a7ec9bcb8f40af5022b1f7c8ede6e9c60f4a9d7057e558ee9"
+        },
+        {
+          "path": "screens/rules-read-refused.png",
+          "bytes": 32893,
+          "sha256": "62d847504f42606adc61f7343c4b5ea52c65256208416b88d97d7b792a9021f4"
+        },
+        {
+          "path": "source-before.json",
+          "bytes": 1456,
+          "sha256": "50dec1291b501bf9430ac89ccbd1f45fe1723f5ec616daa5182262db83afeb12"
+        },
+        {
+          "path": "unit.json",
+          "bytes": 506,
+          "sha256": "1fec225ba679afc123e3b565d73ece0f35f6b98ad8565e4222c7bdd81b3a61d2"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-src",
+      "checkpoint": {
+        "commit": "b64ad0261d3c6227b9a8fef4fabda33d0bbb1361",
+        "tree": "6f53350b9d1e4c39085ebe90ffb20bff1262f41b"
+      },
+      "fileCount": 45,
+      "sha256sums": "c9917f4bf2d35b8d93c38a01e757e8ef4a22fe7c4963bdb922fa50b694e8ba6a",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 4304,
+          "sha256": "c9917f4bf2d35b8d93c38a01e757e8ef4a22fe7c4963bdb922fa50b694e8ba6a"
+        },
+        {
+          "path": "card-workflow.json",
+          "bytes": 2667,
+          "sha256": "f94f5772a79516e7729a44922481ce5d742fedfcc1a7366ce848d8ecb21b06dd"
+        },
+        {
+          "path": "card-workflow.log",
+          "bytes": 73523,
+          "sha256": "c676fb3ea30de632b61e8f6fd9065f98ae470972072a383f37a045343ec753cf"
+        },
+        {
+          "path": "evidence-scan.json",
+          "bytes": 813,
+          "sha256": "99932ae4c42d4d1523b2542c760e549d5d322796ee3240415f51205dc6fc7bc4"
+        },
+        {
+          "path": "gate/gate.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "gate/gate.stderr.log",
+          "bytes": 34,
+          "sha256": "60ebea5b616a0d9f261f042f60695acd80e95807f9b4b67935156537fec52903"
+        },
+        {
+          "path": "gate/gate.stdout.log",
+          "bytes": 10037,
+          "sha256": "98a977dca46d6ce3933a8882aa03b3cf67b589ab6608c48ff31d0c47a377222b"
+        },
+        {
+          "path": "gate/progress.jsonl.plain.jsonl",
+          "bytes": 3632247,
+          "sha256": "07f1d262e8df1760260474616bffccbc938c1036c1b51d078d11b03948b6a66b"
+        },
+        {
+          "path": "gate/retained-scratch/citations.log",
+          "bytes": 1566962,
+          "sha256": "59789b60194810a01c91e50532e019dc5bcc014e352027e5b6aa44a626d1adc5"
+        },
+        {
+          "path": "gate/retained-scratch/citations.time",
+          "bytes": 29,
+          "sha256": "50eb1402eeffaa6f8128a4a9cf48644a038229e92dffea988f28464a99a61dc8"
+        },
+        {
+          "path": "gate/retained-scratch/cite-test.log",
+          "bytes": 763,
+          "sha256": "9b445a9d556ef455377bde188b90a8a4be45149bbaa9bf43e74bc6bf961c0cf7"
+        },
+        {
+          "path": "gate/retained-scratch/cite-test.time",
+          "bytes": 29,
+          "sha256": "10a723bc3b9c9f73c12f8f0f4dff4a202a179b8fbbe6f4d72a968e50311ebcd1"
+        },
+        {
+          "path": "gate/retained-scratch/commit-messages.log",
+          "bytes": 38,
+          "sha256": "daf3697b4539b36f4a4fa31279a6d955b0b3466bb1f19f50dc782ae33a24d7c3"
+        },
+        {
+          "path": "gate/retained-scratch/commit-messages.time",
+          "bytes": 29,
+          "sha256": "66b019f3b91dd78b8a648f25e84fc8cee994db5eb175e39de9579bfdd75b994e"
+        },
+        {
+          "path": "gate/retained-scratch/commit-test.log",
+          "bytes": 592,
+          "sha256": "fe738977c6cc3b25911cca26ccb5770fb3f8b877a9552d24a90c52f46770dadc"
+        },
+        {
+          "path": "gate/retained-scratch/commit-test.time",
+          "bytes": 29,
+          "sha256": "1b00768dfc4350ff2b728b5fbc2f412a9dbba0db7bc6bb86b0be0a3e03faedbc"
+        },
+        {
+          "path": "gate/retained-scratch/doc-links.log",
+          "bytes": 36,
+          "sha256": "05d81cfdd4a20d7f249083d065c7dad85afba93032f10e5b73c1bec4e568c8b0"
+        },
+        {
+          "path": "gate/retained-scratch/doc-links.time",
+          "bytes": 29,
+          "sha256": "92f857e5ccb11b0bff4685c413d1d9581985a0f529d31bfa74f25906bdaecb79"
+        },
+        {
+          "path": "gate/retained-scratch/helpers.log",
+          "bytes": 68,
+          "sha256": "614152ce2ba93fdad7a626086b8bacc122b5db084690b0d63daa5ddc746348d8"
+        },
+        {
+          "path": "gate/retained-scratch/helpers.time",
+          "bytes": 29,
+          "sha256": "b370cd3d8cb803c81c041f2abc6bd9569454f92643e5e6ed8706d8565ad62c30"
+        },
+        {
+          "path": "gate/retained-scratch/notes.log",
+          "bytes": 18,
+          "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+        },
+        {
+          "path": "gate/retained-scratch/notes.time",
+          "bytes": 29,
+          "sha256": "66b019f3b91dd78b8a648f25e84fc8cee994db5eb175e39de9579bfdd75b994e"
+        },
+        {
+          "path": "gate/retained-scratch/section-citations.json",
+          "bytes": 3938462,
+          "sha256": "5ffd092c14690f182ee83e6c167dcc79a15b2c4633aa1d4885837e7de90e98b2"
+        },
+        {
+          "path": "gate/retained-scratch/test-evidence/counting-sources.json",
+          "bytes": 988,
+          "sha256": "baf12983b432ec773e7bc1bc140dedb1de862a9523f152e83e85ad012c0cd166"
+        },
+        {
+          "path": "gate/retained-scratch/test-evidence/counting.jsonl",
+          "bytes": 136054,
+          "sha256": "4b7ff54108944d93795af7f203b76a9ccb3cbdf73bfa9ebc8cbfad28d5ab8151"
+        },
+        {
+          "path": "gate/retained-scratch/test-evidence/node.jsonl",
+          "bytes": 342051,
+          "sha256": "df72ae8f0270c47e2993ee2a5f29c893e8658e2f09b58e6aa4fbf8d60c40c6f9"
+        },
+        {
+          "path": "gate/retained-scratch/test-evidence/plain.jsonl",
+          "bytes": 3054813,
+          "sha256": "51b3bf2f4a38ebdb73936e00a60ae4ecd17a4e3db9947ef06da8c8e91014d626"
+        },
+        {
+          "path": "gate/retained-scratch/test-evidence/stages.json",
+          "bytes": 978,
+          "sha256": "f74fe15287e0f729d99cd58109f08414b16dbb664a4e388bdb5407e86e346a15"
+        },
+        {
+          "path": "gate/retained-scratch/test.log",
+          "bytes": 562507,
+          "sha256": "3d0545b66d686c8f4203f42a51ea2c8e77f93803cc0bb5ac642e58468cde13f4"
+        },
+        {
+          "path": "gate/retained-scratch/test.time",
+          "bytes": 34,
+          "sha256": "b2620cc08e6beff34aea38dce837c5c51d096ba9c19c4e0a6aef45b8e86569ff"
+        },
+        {
+          "path": "gate/retained-scratch/typecheck.log",
+          "bytes": 2112,
+          "sha256": "314b484b28a0c4bd57bef0aadea6797cbd7731897e547794f68cfb2e00c30264"
+        },
+        {
+          "path": "gate/retained-scratch/typecheck.time",
+          "bytes": 31,
+          "sha256": "8b2f619ad63e67953306670fb2d7c737d682034c16e988ccfc402396c9e4e72d"
+        },
+        {
+          "path": "gate/retained-scratch/whitespace.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "gate/retained-scratch/whitespace.time",
+          "bytes": 29,
+          "sha256": "5ed4b22c002d89a63842f002eeee0387686ebc2634e949e7a57ba49c480c4db8"
+        },
+        {
+          "path": "gate/run.py",
+          "bytes": 2893,
+          "sha256": "ddb6986e37e6e8084b3498a15deb97b4c5e5d84f649af825e45c50fa751a93fe"
+        },
+        {
+          "path": "gate/running.json",
+          "bytes": 154,
+          "sha256": "3089ce321ec46e07787ae7aa0982b8d9266498ef99f0916499512914bf22d260"
+        },
+        {
+          "path": "gate/source-after.json",
+          "bytes": 520,
+          "sha256": "4516cf7bdaef0ee7c0ed912ad8fba6a8275cd1b421f725f75365e90dbe14831d"
+        },
+        {
+          "path": "gate/source-before.json",
+          "bytes": 698,
+          "sha256": "46fcb2f1c41cae6ccdf478450ef32b09b354ffe742cfb8bfc1422bcd280442cc"
+        },
+        {
+          "path": "page-before-repair-workflow.json",
+          "bytes": 2621,
+          "sha256": "9e8b9340f2d1dc9b4783fdbde5472e9ebb2e96e5b04163a5fec758342749652a"
+        },
+        {
+          "path": "page-before-repair-workflow.log",
+          "bytes": 73127,
+          "sha256": "982fa71a92127ec38a08515339179089685756cc903c4ed8921f4773cdcbfb0c"
+        },
+        {
+          "path": "page-workflow.json",
+          "bytes": 2621,
+          "sha256": "36e6e27bca94be06d9c94a3781ad9815ad2e542700c5bedbf28764c881aa3d0a"
+        },
+        {
+          "path": "page-workflow.log",
+          "bytes": 73286,
+          "sha256": "14ca09e2222221e6ef86a53bea54863b4c4263a2c817e47d57ad9c60689e596e"
+        },
+        {
+          "path": "source-equality.json",
+          "bytes": 3347,
+          "sha256": "85691fa27014112bcbda3f1ac9e142c554d41fdd940940670c1b7d699e2526fe"
+        },
+        {
+          "path": "unit.json",
+          "bytes": 428,
+          "sha256": "f47860735287bc22a9f63802eeacf28454bbe9d0be3244eec6af94d52484e3e1"
+        },
+        {
+          "path": "workflow-capture.json",
+          "bytes": 360,
+          "sha256": "45a4d5b901a85dafbec683b61638ab194f901c7ed664190a9478e6337ca977d6"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-j5-leftovers-sending-followup",
+      "checkpoint": {
+        "commit": "88b84adaf06d278ab1595fee06696e1bd75330ef",
+        "tree": "62378540ab5f183b0d1dbed6a2da2846a3f7d083"
+      },
+      "fileCount": 30,
+      "sha256sums": "e295dadbd29e7430c38721b18250e09395008aab2d56bb5cb3e36c187a99f503",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2492,
+          "sha256": "e295dadbd29e7430c38721b18250e09395008aab2d56bb5cb3e36c187a99f503"
+        },
+        {
+          "path": "commands.json",
+          "bytes": 3051,
+          "sha256": "e6ac1c4504ed0c7d77119b0f5b50af2606d149b80b2bd8e87060d3bf756ea43a"
+        },
+        {
+          "path": "compatibility.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "compatibility.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "compatibility.stdout.log",
+          "bytes": 362,
+          "sha256": "bc788dff63908c4f2e2c577ff56808e0667bab5b6bc95df258192775adac00db"
+        },
+        {
+          "path": "evidence-scan.json",
+          "bytes": 813,
+          "sha256": "ad720f679e01ff7690eead77406181d05914df6a6b8129797c47ad423926e8bc"
+        },
+        {
+          "path": "followup-result.json",
+          "bytes": 800,
+          "sha256": "7e09386757bd3426f05bed6120788112a89df4a58c3bd3db2e1fdc19e1a6e61c"
+        },
+        {
+          "path": "followup.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "native-summary.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "native-summary.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "native-summary.stdout.log",
+          "bytes": 5099,
+          "sha256": "6128dda6b1c542614aea8f555456a70c5fecb9df192bd20f0446ddae0350fc7b"
+        },
+        {
+          "path": "native.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "native.terminal.txt",
+          "bytes": 207,
+          "sha256": "1ae06f96a925eaca97c51b9bb1e14d3a5023d6fcb6e318362e2b298fa636a227"
+        },
+        {
+          "path": "owning/plain.jsonl",
+          "bytes": 2178,
+          "sha256": "fc0e7282076c3217e2e26a3056220f11b5e53b4fada1c7482d8f5c0bad5c717a"
+        },
+        {
+          "path": "owning-progress.jsonl",
+          "bytes": 2170,
+          "sha256": "310069238efeff03a963b3c03cf32677535d9c06833ba22aee7ac4f7e7c1c49b"
+        },
+        {
+          "path": "owning-sending.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "owning-sending.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "owning-sending.stdout.log",
+          "bytes": 542,
+          "sha256": "f3f3d09ab173c5303125d5aaf6401cefce1a97adc2e735550d1dc6a6f4950dc4"
+        },
+        {
+          "path": "progress.native.jsonl",
+          "bytes": 1148388,
+          "sha256": "4a6c3f0d8aa4caddcf0e9b028ae0d4e3fea804005ec18fce069fd46a1c6c1dfe"
+        },
+        {
+          "path": "repair.diff",
+          "bytes": 1235,
+          "sha256": "e1f8b2a7d11ff650899fc79038396c3062acd95d7bc2133fa2a670d15101b109"
+        },
+        {
+          "path": "run.mjs",
+          "bytes": 5203,
+          "sha256": "ba14463eab5f0c7b82fa9f2ec17dbfb824c6f4de464c555bf4374c36eaa88e2f"
+        },
+        {
+          "path": "source-after.json",
+          "bytes": 148,
+          "sha256": "60ba34d48872ba1e82541550550ef077f2e6de621859fa0ad2d9b08e0a291f2c"
+        },
+        {
+          "path": "source-before.json",
+          "bytes": 651,
+          "sha256": "d9f3313d36664212c40a581b71d4249ae9dfce9ad75c170610ed77f3cd6d1709"
+        },
+        {
+          "path": "test-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "test-compiler.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "test-compiler.stdout.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "unit.json",
+          "bytes": 456,
+          "sha256": "f0c48881a7cabfebb43945a40c5a5617813e182ee74b611b37f7dd0b8de79eb3"
+        },
+        {
+          "path": "unreached/native.jsonl",
+          "bytes": 1003395,
+          "sha256": "f6a79f7d637cd37b9841c820c93d90838a83d3ae3e4b855d308cd7f74d65fef5"
+        },
+        {
+          "path": "unreached/stages.json",
+          "bytes": 1992,
+          "sha256": "5d5f6a8fa1a5d3318054cdcc6e106f1ddfbb6b58379295092091db46c6047cf3"
+        },
+        {
+          "path": "withheld-output.json",
+          "bytes": 772,
+          "sha256": "efc7abdc9e4d41683a390806fda5d01f3bd373a2ad19a3905a89a43dbf96f690"
+        }
+      ]
+    }
+  ]
+}
