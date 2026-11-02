@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"apps/views at exact 1c63410c8d01fce3c82b98856b3cd2f0423971b5 on builder/actor-chip-20261101, under promise git:sha1…d2ac22a on request git:sha1…26abfc1","body":{"commit":"1c63410c8d01fce3c82b98856b3cd2f0423971b5","path":"apps/views"}}
+{"kind":"artifact","text":"packages/mcp at exact 1c63410c8d01fce3c82b98856b3cd2f0423971b5 on builder/actor-chip-20261101, under promise git:sha1…d2ac22a on request git:sha1…26abfc1","body":{"commit":"1c63410c8d01fce3c82b98856b3cd2f0423971b5","path":"packages/mcp"}}
