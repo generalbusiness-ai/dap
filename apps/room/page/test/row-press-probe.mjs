@@ -4,48 +4,10 @@ import { join } from "node:path";
 
 export const ROW_PRESS_BOUND = Object.freeze({ tabs: 20, perTab: 5, maximum: 100 });
 const redact = text => String(text).replace(/artroom-[a-z-]+:[^\s"<>]+/gi, "<link withheld>").replace(/Bearer\s+\S+/gi, "Bearer <withheld>").replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, "<token withheld>");
-const requestUrl = raw => { const url = new URL(raw); return `${url.origin}${url.pathname}`; };
+const requestUrl = raw => { try { const url = new URL(raw); return ["http:", "https:"].includes(url.protocol) ? `${url.origin}${url.pathname}` : `<${url.protocol} URL>`; } catch { return "<URL unavailable>"; } };
 
-/** Instrument only the error-handler expression in this browser. The served Worker bundle remains unchanged. */
-export async function logDrawErrors(context, source) {
-  const at = source.indexOf('"This room did not open"'), prefix = source.slice(0, at);
-  const declaration = [...prefix.matchAll(/function ([\w$]+)\([\w$]+,[\w$]+=\[\]\)\{/g)].at(-1);
-  if (!declaration) throw Error("Cannot identify the frozen failure-screen function.");
-  const calls = [...source.matchAll(new RegExp(`\\b${declaration[1]}\\(([\\w$]+),[\\w$]+\\)`, "g"))];
-  if (calls.length !== 1) throw Error("The error logger requires one exact draw-failure call.");
-  const call = calls[0], variable = call[1];
-  const before = source.slice(0, call.index), draw = before.slice(before.lastIndexOf("async function"));
-  const count = /\{let ([\w$]+)=\+\+([\w$]+);/.exec(draw);
-  const counters = count ? `,draw:${count[1]},latest:${count[2]}` : "";
-  const logged = source.slice(0, call.index) + `(console.warn("ROW-PRESS-DRAW-ERROR "+JSON.stringify({name:${variable}?.name,message:${variable}?.message,stack:${variable}?.stack${counters}})),${call[0]})` + source.slice(call.index + call[0].length);
-  await context.route("**/page/page.js", route => route.fulfill({ status: 200, contentType: "text/javascript", body: logged }));
-  return { code: logged, handler: declaration[1], caughtVariable: variable, counters: !!count, qualification: "Browser-only logger at the existing caught-error expression. This enables routing and can affect cache/timing. It changes no Worker or production source byte." };
-}
-
-/** Observe the error already tested by failureScreen. No routing or debugger; native instanceof answers stay unchanged. */
-export async function logCheckedDrawErrors(context, source) {
-  const prefix = source.slice(0, source.indexOf('"This room did not open"'));
-  const declaration = [...prefix.matchAll(/function ([\w$]+)\([\w$]+,[\w$]+=\[\]\)\{/g)].at(-1);
-  if (!declaration) throw Error("Cannot identify the frozen failure-screen function.");
-  await context.addInitScript(({ handler }) => {
-    const original = Function.prototype[Symbol.hasInstance], seen = new WeakSet();
-    Object.defineProperty(Error, Symbol.hasInstance, { configurable: true, value: function(candidate) {
-      const answer = Reflect.apply(original, this, [candidate]);
-      try {
-        const checkedAt = new Error().stack ?? "";
-        if (candidate && typeof candidate === "object" && !seen.has(candidate) && checkedAt.includes(`at ${handler} (`)) {
-          seen.add(candidate);
-          console.warn("ROW-PRESS-DRAW-ERROR " + JSON.stringify({ name: candidate.name, message: candidate.message, stack: candidate.stack, checkedAt, testedBy: this.name }));
-        }
-      } catch { /* A diagnostic failure cannot change the Page's instanceof result. */ }
-      return answer;
-    } });
-  }, { handler: declaration[1] });
-  return { handler: declaration[1], qualification: "Test-only Error instanceof observer. No debugger, routing, cache override, Page byte change, or altered instanceof result. Observing an error check can still affect timing." };
-}
-
-export function rowPressProbe(context, out, debug = {}) {
-  const traffic = [], console = [], navigation = [], rows = [], drawErrors = [], ids = new WeakMap();
+export function rowPressProbe(context, out) {
+  const traffic = [], console = [], navigation = [], rows = [], ids = new WeakMap();
   let next = 0, page = null, started = false;
   context.on("request", request => {
     const id = ++next; ids.set(request, id);
@@ -54,35 +16,13 @@ export function rowPressProbe(context, out, debug = {}) {
   context.on("response", response => traffic.push({ event: "response", id: ids.get(response.request()), at: new Date().toISOString(), status: response.status() }));
   context.on("requestfailed", request => traffic.push({ event: "failed", id: ids.get(request), at: new Date().toISOString(), error: redact(request.failure()?.errorText) }));
   const attach = value => {
-    value.on("console", message => { if (message.text().startsWith("ROW-PRESS-DRAW-ERROR ")) { try { drawErrors.push(JSON.parse(message.text().slice("ROW-PRESS-DRAW-ERROR ".length))); } catch { /* The console record still retains an unreadable diagnostic. */ } } if (["error", "warning"].includes(message.type())) console.push({ at: new Date().toISOString(), type: message.type(), text: redact(message.text()) }); });
+    value.on("console", message => { if (["error", "warning"].includes(message.type())) console.push({ at: new Date().toISOString(), type: message.type(), text: redact(message.text()), url: requestUrl(message.location().url) }); });
     value.on("pageerror", error => console.push({ at: new Date().toISOString(), type: "pageerror", text: redact(error) }));
     value.on("framenavigated", frame => { if (frame === value.mainFrame()) navigation.push({ at: new Date().toISOString(), url: redact(frame.url()) }); });
   };
   for (const existing of context.pages()) attach(existing);
   context.on("page", attach);
-  async function debugDraw(value) {
-    if (!debug.source) return;
-    // Pause only at the existing draw-failure call. Successful draws and served production bytes stay untouched.
-    const at = debug.source.indexOf('"This room did not open"');
-    const prefix = debug.source.slice(0, at), declaration = [...prefix.matchAll(/function ([\w$]+)\([\w$]+,[\w$]+=\[\]\)\{/g)].at(-1);
-    if (!declaration) throw Error("The diagnostic could not identify the frozen failure-screen function.");
-    const name = declaration[1], calls = [...debug.source.matchAll(new RegExp(`\\b${name}\\(([\\w$]+),[\\w$]+\\)`, "g"))];
-    if (calls.length !== 1) throw Error("The diagnostic requires one exact draw-failure call.");
-    const call = calls[0], before = debug.source.slice(0, call.index), lines = before.split("\n"), variable = call[1];
-    const session = await context.newCDPSession(value);
-    await session.send("Debugger.enable");
-    session.on("Debugger.paused", event => { void (async () => {
-      try {
-        const frame = event.callFrames[0];
-        const got = await session.send("Debugger.evaluateOnCallFrame", { callFrameId: frame.callFrameId, expression: `({name:${variable}?.name,message:${variable}?.message,stack:${variable}?.stack})`, returnByValue: true });
-        drawErrors.push({ at: new Date().toISOString(), reason: event.reason, error: got.result.value ?? null, evaluationError: got.exceptionDetails?.text,
-          frames: event.callFrames.map(frame => ({ name: frame.functionName, url: requestUrl(frame.url || value.url()), line: frame.location.lineNumber, column: frame.location.columnNumber })) });
-        mkdirSync(out, { recursive: true }); writeFileSync(join(out, "draw-errors.json"), redact(JSON.stringify(drawErrors, null, 2)) + "\n");
-      } finally { await session.send("Debugger.resume"); }
-    })(); });
-    await session.send("Debugger.setBreakpointByUrl", { urlRegex: "/page/page\\.js$", lineNumber: lines.length - 1, columnNumber: lines.at(-1).length });
-  }
-  const report = () => ({ diagnosticBreakpoint: !!debug.source, drawErrors, bound: ROW_PRESS_BOUND, started, attempted: rows.length, passed: rows.filter(row => row.pass).length, rows, console, traffic, navigation });
+  const report = () => ({ bound: ROW_PRESS_BOUND, started, attempted: rows.length, passed: rows.filter(row => row.pass).length, rows, console, traffic, navigation });
   async function capture(label) {
     mkdirSync(out, { recursive: true });
     const kept = report();
@@ -95,7 +35,7 @@ export function rowPressProbe(context, out, debug = {}) {
         buttons: [...document.querySelectorAll("button")].filter(node => node.getClientRects().length).map(node => ({ text: node.textContent, disabled: node.disabled })) })).catch(error => ({ error: redact(error) }));
       if (!await page.locator('textarea[name="invitation"]').count()) writeFileSync(join(out, `${label}.html`), redact(await page.content()));
       else writeFileSync(join(out, `${label}-dom-withheld.json`), JSON.stringify({ reason: "The invitation field remains on screen." }));
-      await page.screenshot({ path: join(out, `${label}.png`), fullPage: true }).catch(error => { kept.screenshotError = redact(error); });
+      await page.screenshot({ path: join(out, `${label}.png`), fullPage: true, mask: [page.locator('textarea[name="invitation"]')] }).catch(error => { kept.screenshotError = redact(error); });
     }
     writeFileSync(join(out, `${label}.json`), redact(JSON.stringify(kept, null, 2)) + "\n");
     writeFileSync(join(out, "requests.ndjson"), traffic.map(row => JSON.stringify(row)).join("\n") + "\n");
@@ -107,7 +47,6 @@ export function rowPressProbe(context, out, debug = {}) {
     started = true;
     for (let tab = 0; tab < ROW_PRESS_BOUND.tabs; tab++) {
       page = await context.newPage();
-      await debugDraw(page);
       await page.goto(roomUrl);
       for (let press = 0; press < ROW_PRESS_BOUND.perTab; press++) {
         const target = targets[press % targets.length], row = { tab: tab + 1, press: press + 1, total: rows.length + 1, scope: target.scope, item: target.item, started: new Date().toISOString(), pass: false };
@@ -135,5 +74,5 @@ export function rowPressProbe(context, out, debug = {}) {
     }
     return report();
   }
-  return { run, capture, report };
+  return { run, capture, report, watch: value => { page = value; started = true; } };
 }

@@ -10,8 +10,11 @@
 // The command line in separate homes sets up the room. The real `apps/views` server, over stdio in Ana's first home, supplies the rows the list must show.
 // The browser fills one text box, the device link. After that it only presses and reloads, and the script counts each act the page sends.
 //
+// ROW_PRESS_PROBE=1 runs the fixed 20-tab/100-press read-only probe instead of the answering scene.
+// It requires WITNESS_PRIVATE_DIR for keys and Worker state, outside WITNESS_DIR. ROW_PRESS_STOP_CONTROL=1
+// deliberately stops after one successful opening to verify failure capture; it is no product failure.
 // Output: one JSON report on stdout, and screenshots under WITNESS_DIR. No link, session token or key leaves this process.
-import { logCheckedDrawErrors, logDrawErrors, rowPressProbe } from "./row-press-probe.mjs";
+import { rowPressProbe } from "./row-press-probe.mjs";
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -103,7 +106,7 @@ const openIssue = async title => {
   throw new Error(`the issue did not open: ${title}`);
 };
 
-let browser = null, views = null, report = {}, probe = null, pageBytes = null;
+let browser = null, views = null, report = {}, probe = null;
 try {
   await run("rita", "install", "--plan", base, "--host", "none", "--cohort", "commons");
   const register = (await people.rita.store.config()).plan.register;
@@ -112,7 +115,6 @@ try {
     const source = readFileSync(join(root, "apps/room/page/assets.ts"), "utf8");
     const line = source.split("\n").find(line => line.startsWith("export const PAGE_JS: string = "));
     const expected = JSON.parse(line.slice("export const PAGE_JS: string = ".length, -1));
-    pageBytes = expected;
     const actual = await (await fetch(`${base}/page/page.js`)).text();
     const guard = { expected: bytes.digestBytes(bytes.utf8(expected)), actual: bytes.digestBytes(bytes.utf8(actual)), same: expected === actual };
     writeFileSync(join(WITNESS_DIR, "page-byte-guard.json"), JSON.stringify(guard, null, 2) + "\n");
@@ -164,21 +166,14 @@ try {
   const link = linkIn(await run("ana", "invite", "@ana", "--device"), "artroom-device-key:");
   browser = await chromium.launch({ executablePath: CHROMIUM, headless: true });
   const context = await browser.newContext({ viewport: { width: 1100, height: 1200 } }), page = await context.newPage(), errors = [], acts = [];
-  if (probing && process.env.ROW_PRESS_ERROR_CHECK === "1") {
-    const instrumentation = await logCheckedDrawErrors(context, pageBytes);
-    writeFileSync(join(WITNESS_DIR, "error-check-instrumentation.json"), JSON.stringify(instrumentation, null, 2) + "\n");
-  }
-  if (probing && process.env.ROW_PRESS_LOG_ERROR === "1") {
-    const { code, ...instrumentation } = await logDrawErrors(context, pageBytes);
-    writeFileSync(join(WITNESS_DIR, "browser-instrumentation.json"), JSON.stringify({ ...instrumentation, served: bytes.digestBytes(bytes.utf8(pageBytes)), browser: bytes.digestBytes(bytes.utf8(code)) }, null, 2) + "\n");
-  }
-  if (probing) probe = rowPressProbe(context, join(WITNESS_DIR, "row-press"), process.env.ROW_PRESS_CAPTURE_ERROR === "1" ? { source: pageBytes } : {});
+  probe = rowPressProbe(context, join(WITNESS_DIR, "row-press"));
   page.on("pageerror", error => errors.push(String(error)));
   context.on("response", async reply => { if (reply.request().method() === "POST" && reply.url().endsWith("/acts")) acts.push({ scope: /scopes\/([^/]+)\/acts/.exec(reply.url())?.[1], status: reply.status() }); });
   await page.goto(`${base}/page/`);
   await page.getByRole("link", { name: /Join with an invitation link/ }).click();
   await page.fill('textarea[name="invitation"]', link); // The one value this script types.
   await page.waitForSelector("summary.account", { timeout: 90_000, state: "attached" });
+  probe.watch(page);
   await page.getByRole("link", { name: /The import fails on large files/ }).waitFor({ timeout: 60_000 });
   const actsAtStart = acts.length;
   const text = async () => page.locator("main").innerText();
