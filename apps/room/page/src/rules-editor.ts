@@ -20,8 +20,17 @@ export function rulesEditor(rules: Rules, send: Send, context: { blocked?: boole
     form.append(h("p", { role: "status" }, rules.readOnlyReason));
     return form;
   }
+  const missing: string[] = [];
+  if (rules.item === undefined) missing.push("the exact Rules record");
+  if (rules.approvals === null) missing.push("the default approval count");
+  if (rules.ownerMayReview === null) missing.push("the policy for agent controllers reviewing their agents");
+  if (rules.singleControllerException === null) missing.push("the single-controller exception");
+  if (rules.extents === null) missing.push("review requirements");
   if (rules.item === undefined || rules.approvals === null || rules.ownerMayReview === null || rules.singleControllerException === null || rules.extents === null) {
-    form.append(h("p", { role: "status" }, "The complete rules could not be read. Check status before editing."));
+    const cause = rules.revision === null && missing.length === 1 && rules.extents === null
+      ? "This room has no published review requirements."
+      : `This read does not provide ${missing.length === 1 ? missing[0] : missing.slice(0, -1).join(", ") + " and " + missing.at(-1)}.`;
+    form.append(h("p", { role: "status" }, `${cause} The editor needs a complete policy before you can edit it.`));
     return form;
   }
   const baseline = Object.fromEntries([

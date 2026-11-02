@@ -122,10 +122,16 @@ test("confirmed rules publish the exact observed item and preserve the complete 
 
 test("missing exact rules identity, incomplete values and pending custody offer no save mutation", () => {
   const { item: _item, ...withoutIdentity } = rules();
-  for (const read of [withoutIdentity, { ...rules(), extents: null }]) {
+  const incomplete: [RulesView, string[]][] = [
+    [withoutIdentity, ["the exact Rules record"]],
+    [{ ...rules(), extents: null }, ["review requirements"]],
+    [{ ...rules(), approvals: null, ownerMayReview: null, extents: null }, ["the default approval count", "the policy for agent controllers reviewing their agents", "review requirements"]],
+  ];
+  for (const [read, causes] of incomplete) {
     const form = asElement(rulesEditor(read, () => expect.fail("must not send")));
     expect(button(form, "Save changes")).toBeUndefined();
-    expect(form.textContent).toContain("complete rules could not be read");
+    for (const cause of causes) expect(form.textContent).toContain(cause);
+    expect(form.textContent).not.toContain("could not be read");
   }
   const pending = asElement(rulesEditor(rules(), () => expect.fail("must not send"), { blocked: true }));
   expect(button(pending, "Save changes").hasAttribute("disabled")).toBe(true);
@@ -134,6 +140,17 @@ test("missing exact rules identity, incomplete values and pending custody offer 
   expect(button(pending, "Save changes").hasAttribute("disabled")).toBe(true);
   pending.event("submit");
   expect(button(pending, "Confirm changes")).toBeUndefined();
+});
+
+test("unpublished review requirements explain the absent editor without inventing a policy (DOM stand-in)", () => {
+  const sent: unknown[] = [];
+  const form = asElement(rulesEditor({ ...rules(), item: 0, revision: null, extents: null }, (...args) => sent.push(args)));
+  expect(form.textContent).toContain("This room has no published review requirements.");
+  expect(form.textContent).toContain("The editor needs a complete policy before you can edit it.");
+  expect(form.textContent).not.toContain("could not be read");
+  expect(form.all().some(node => ["button", "input", "select", "textarea"].includes(node.tag))).toBe(false);
+  form.event("submit");
+  expect(sent).toEqual([]);
 });
 
 test("unsent rules edits survive navigation only in the same room, member and observed revision", () => {
