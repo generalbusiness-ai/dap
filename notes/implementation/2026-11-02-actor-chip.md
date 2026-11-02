@@ -2,7 +2,7 @@
 
 ## The cards and receipts name their own signers
 
-Request `c6ced04f91a6f3f6e1f3126a5541019ca26abfc1` asks cards and receipts to identify a person, an agent with its controller, or a checker. A question now names the signer of its exact text entry. A change names the signer of its recorded version, or its opening act before any version exists. Needs You and Work cards name the selected record's opening act. The chip names the entry it attributes.
+Request `c6ced04f91a6f3f6e1f3126a5541019ca26abfc1` asks cards and receipts to identify a person, an agent with its controller, or a checker. A question now names the signer of its exact text entry. A change names the signer of its recorded version, or its opening act before any version exists. Needs You and Work request attribution for the selected record's opening act. Their native witness remains pending. The chip names the entry it attributes.
 
 A receipt names the signer of the actual custody envelope. It does not copy the displayed card's author, the viewer, or the most recent writer. The service keeps this metadata in a private WeakMap keyed by its existing result. It leaves the tool result's public shape intact. Both the short receipt and its exact context retain the attribution across refresh.
 
@@ -59,6 +59,8 @@ The preliminary unit retains the early native, adapter, golden, and browser fail
 All four units have verified checksums and readonly modes. Keep them for at least 30 days after landing. The audit checks credential patterns and decodes tagged records. The preliminary ACTOR-RECORD payload passes its end hash and matches the saved JSON, with no secret or token field. The native follow-up console contains a bearer-shaped value, so the whole raw stdout stays private. Its byte count and whole-file hash remain in `withheld-output.json`. Actual exit files, structured observations, and a safe terminal extract supply the native result. The remaining retained files have no credential-pattern match. The six inspected native captures show public fixture text and no credential. Fixture key stores, browser profiles, private custody, session material, and Worker storage stay outside the units.
 
 ## The remaining limits have owners
+
+- **List-card witness — the next scheduled edit of `packages/mcp/test/change-view.scope.test.ts`.** Checker `c9602d33` approved the implementation and found no native assertion for Needs You or Work opening-act attribution. The current native case covers question cards and receipts. The list fixtures only exercise the unavailable fallback. Add a native `view_needs_you` opening-signer assertion at that owning-test edit. The Work path shares the selected-row adapter. This conditional witness does not block the approved source, and no claim of witnessed native list attribution follows.
 
 - **Exact review and deployment — this request and the planner.** This head awaits the checker's exact-head judgment. The planner owns deployment after landing. A passing local browser script or CI workflow makes no claim about a deployed host.
 - **Desktop host behavior — `1a44f0429e7d52b09dae7861de5c389083904ba7`.** The native rows and browser replay do not establish Goose Desktop iframe behavior, host tool timeouts, model hiding, or long presses. The separate Desktop request remains open.
