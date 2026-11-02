@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/evidence/2026-11-01-roster-recovery.manifest.json","body":{"commit":"8093f9cecdeac454761b027c56c0059ff0231348","path":"notes/implementation/evidence/2026-11-01-roster-recovery.manifest.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8b6e86468c9340726a45ad8b291d57f0632476b1","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/shell.ts."}
