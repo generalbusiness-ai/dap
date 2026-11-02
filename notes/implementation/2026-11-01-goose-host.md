@@ -97,4 +97,3 @@ Private raw Goose output stays outside evidence because it can contain opaque vi
 - Planner ruling request `8e5edae72b827999d6a646fcbd2dfb8593393b4e` owns whether this limited record closes the investigation or leaves the Desktop work open. The ruling remains open. Landing this child record does not decide it or close the parent.
 - A later Desktop attempt needs working native control and a bounded stable-version window from the planner before the long press. The planner owns deployments. No deployment hold is in force during these CLI probes.
 - The existing desktop AI app keeps its own sandbox, process, slow-press, and reopen acceptance. Goose source findings do not replace those checks.
-
