@@ -22,7 +22,14 @@ export function rowPressProbe(context, out) {
   };
   for (const existing of context.pages()) attach(existing);
   context.on("page", attach);
-  const report = () => ({ bound: ROW_PRESS_BOUND, started, attempted: rows.length, passed: rows.filter(row => row.pass).length, rows, console, traffic, navigation });
+  const streamDiagnostic = event => event.type === "error"
+    && event.text === "Failed to load resource: the server responded with a status of 503 (Service Unavailable)"
+    && /^https?:\/\/[^/]+\/v1\/scopes\/sc_[a-z0-9]+\/stream$/.test(event.url);
+  const report = () => {
+    const streamDiagnostics = console.filter(streamDiagnostic);
+    return { bound: ROW_PRESS_BOUND, started, attempted: rows.length, passed: rows.filter(row => row.pass).length, rows, console,
+      streamDiagnostics, streamDiagnosticCount: streamDiagnostics.length, unexpectedConsole: console.filter(event => !streamDiagnostic(event)), traffic, navigation };
+  };
   async function capture(label) {
     mkdirSync(out, { recursive: true });
     const kept = report();

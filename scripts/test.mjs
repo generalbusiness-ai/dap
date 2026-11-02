@@ -30,6 +30,7 @@ const nodeFiles = [
   'examples/commons-bill/test/witness.test.mjs',
   'apps/views/test/s4.test.mjs',
   'apps/views/test/decision.test.mjs',
+  'apps/room/page/test/row-press-probe.test.mjs',
   'apps/jam/test/managed-assets.test.mjs',
   'scripts/test.test.mjs',
   'scripts/control.test.mjs',

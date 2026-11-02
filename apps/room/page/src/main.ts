@@ -1168,12 +1168,20 @@ async function drawWorkbench(focus: boolean): Promise<void> {
       return showRoom(inspectedScreen(screen, panel, association, "Change record"));
     }
     if (destination === "rules") {
+      const routeAtRead = location.hash;
       let rules: Awaited<ReturnType<typeof loadRules>>;
       try { rules = await loadRules(room); }
-      catch {
+      catch (error) {
+        if (location.hash !== routeAtRead || !await presentationCurrent()) return;
         notice = null; // A later failed read cannot keep an earlier initialization claim current.
         const known = lastActs.get(actAssociation(room, room.rules));
-        return showRoom(h("main", { class: "screen" }, h("h1", {}, "Rules"), h("p", { class: "answer", role: "status" }, "The complete rules could not be read. Check status before editing."), ...(known ? [answerLine({ ...known, observation: known.observation ?? "The subsequent view could not be read." })] : [])));
+        const retry = h("button", { type: "button", "data-rules-retry": "" }, "Try again");
+        retry.addEventListener("click", () => {
+          if (location.hash !== routeAtRead || !viewCurrent()) return;
+          retry.setAttribute("disabled", "");
+          void draw(true);
+        });
+        return showRoom(h("main", { class: "screen" }, h("h1", {}, "Rules"), h("p", { class: "answer", role: "status" }, "The complete rules could not be read. ", failureText(error, "The cause is unavailable in this view.")), retry, ...(known ? [answerLine({ ...known, observation: known.observation ?? "The subsequent view could not be read." })] : [])));
       }
       const offered = await actsOn(room, room.rules);
       if (!await presentationCurrent()) return;
