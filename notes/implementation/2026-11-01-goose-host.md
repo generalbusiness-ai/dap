@@ -12,7 +12,7 @@ The observed bounds support these purpose judgments:
 
 - **Builder test host: not sufficient on the available evidence.** Native window access cannot reach the render, press, receipt, and restart checks that would replace a person’s session.
 - **Second supported host for people: not sufficient on the available evidence.** No Desktop card or four-view workflow runs. This result does not establish that Goose lacks those capabilities.
-- **Agent host: sufficient with named gaps.** The installed CLI runs `needs_you`, `work`, and `view_needs_you` against the real scratch-room server. Native acts, waits, large answers, restart behavior, and an enrolled agent-key identity remain untested.
+- **Agent host: not sufficient on the available evidence.** The installed CLI runs `needs_you`, `work`, and `view_needs_you` against the real scratch-room server, so those reads work. Acts, waits, restart behavior, and an enrolled agent-key identity remain untested. Those steps define dap’s agent workflow. The three reads do not establish that workflow.
 
 The actual MCP probes use only @gooseana’s scratch home. Setup also creates @gooseowner and @gooseagent as person identities. The last name does not make that identity an agent key. The probes never use a real-room owner home. All setup acts belong to the new scratch room.
 
@@ -60,23 +60,23 @@ Elapsed seconds come from each Python driver’s wall-clock span. Protocol elaps
 
 | Check | Command or observation | Exit and result | Output SHA256 |
 |---|---|---|---|
-| Installed identity | `Read the installed Info.plist; bundled `goose --version`` | Metadata read; CLI exit 0 | `installed.json`: `addb3f9749e9f4238f2588e5669fa7b96d30225305b8f9550bb02f0cdd247451` |
-| Existing provider | `Bundled `goose info --check`` | Actual exit 0; 0.773 s; original config unchanged | `provider-check.json`: `a492c82197c936d45ba6a9917e9b2aff2dea01ca70b5a84e93a7c760b89c4471` |
-| First fixture attempt | ``node --import tsx setup-fixture.mjs`` | Actual exit 1; unauthorized operator install; no room claim | `fixture-bootstrap-analysis.json`: `7fe5d36781bf868b40956825aa6a9ed0df43bbfa44b06bd76912cd9f2c358bdf` |
-| New public-register fixture | ``node --import tsx fixture2/setup-fixture.mjs`` | Actual exit 0; 18 successful CLI commands; new room only | `fixture2/fixture-steps.ndjson`: `10fe27c4ecadf847080202b0b262ebe5147d8c4c23ea6823976e939c71244d3d` |
-| CLI probe 1 | ``python3 run-agent-probe1.py`` | Actual exit 0; 4.698 s; one `needs_you` call | `agent-probe1.json`: `ca964b267dc64541dccfb0b2fe8845ff1e5e888bd5dc66cdc82ff1e3cc1d4097` |
-| CLI probe 2 | ``python3 run-agent-probe2.py`` | Actual exit 0; 5.494 s; `view_needs_you` and `work`; executed max turns 4 | `agent-probe2.json`: `8dcdeddbe34828f5eef66caa54048a44bd990f262cd00b82e597a526b8111efa` |
-| Probe 2 command correction | `Compare executed driver with descriptive record` | Inspection; descriptive command said 3; actual argv used 4 | `probe2-command-correction.json`: `fa32f51737555a391e7fb452ed5d886da93bbee9710da86adde62fcef8630078` |
-| CLI probe 3 | ``python3 run-agent-probe3.py`` | Actual exit 0; 5.747 s; three successful reads | `agent-probe3.json`: `1d41cb520eae8a6568000a975813dd195ffa88a09122a6d81156cc7d9ae8b117` |
-| Probe 3 protocol and process route | `Transparent stdio recorder during probe 3` | No UI extension; one real server; three successful structured replies | `agent-probe3.events.ndjson`: `5b32a04c72726788cdbc822840c130d5797072a75ff22927c74ef29250a2c188` |
-| Goose tool-message result | ``python3 record-analysis.py`` | Actual exit 0; retained structuredContent; plain fallback equality | `agent-tool-message-recomputed.json`: `fd8a09620c2dce3b11eab1617066da757e92bae4ff51a099f5fee86ff4493d80` |
-| Recorder byte control | ``node observer-control/run.mjs`` | Actual driver exit 0; both relay exits 0; corrected metadata matches split UTF-8 bytes | `observer-control/validation.json`: `f184af5f8207c0630c46a4a77d07a2adf97c7c2307fc9e47d432270f9f961839` |
-| Control interpretation | `Inspect actual relay exits and generated expectations` | The hypothetical old expected exit 1 is not an observed process exit | `observer-control-interpretation.json`: `5182bd593c473a522d0c73df281da80ac1305784feaf9d0188b14f6b341a6bf6` |
-| Native read after probes 1 and 2 | ``node --import tsx read-after-probes.mjs`` | Actual exit 0; issue and membership unchanged | `native-after-agent-probes.json`: `d1568d3fc4f18c982ab332dbfd1b48436f658c7b99bf1b6d9c92f621f74f7e17` |
-| Native read after probe 3 | ``node --import tsx read-after-probe3.mjs`` | Actual exit 0; issue sequence 6, membership sequence 11; both unchanged | `native-after-agent-probe3.json`: `d1568d3fc4f18c982ab332dbfd1b48436f658c7b99bf1b6d9c92f621f74f7e17` |
-| Desktop access | `Five native app acquisitions plus inventory calls` | Tool timeouts before window state; no screenshot or UI action | `computer-use-attempts.json`: `2134ab37032e978202f8552607669db0130448bbe3af4bc8a0fe45d673a47b94` |
-| Version-pinned ten-row analysis | ``python3 matrix-analysis.py`` | Actual exit 0; ten labeled rows and three purpose judgments | `result-matrix.json`: `9ac4dd26362c6f613f30fcbae1a3ec7e30dd1d80487a4f10c50d8f13cc2d3979` |
-| Source, exits, config, and process check | ``python3 record-analysis.py`` | Actual exit 0; 24 Git blobs and SHA256 digests verified; seven actual exit files read; config unchanged; probe PIDs absent | `record-validation.json`: `428502e4aa98c99d773dde0fdf439798ddc6028e80837e0e66c5558ff940869c` |
+| Installed identity | Read the installed `Info.plist`; bundled `goose --version` | Metadata read; CLI exit 0 | `installed.json`: `addb3f9749e9f4238f2588e5669fa7b96d30225305b8f9550bb02f0cdd247451` |
+| Existing provider | Bundled `goose info --check` | Actual exit 0; 0.773 s; original config unchanged | `provider-check.json`: `a492c82197c936d45ba6a9917e9b2aff2dea01ca70b5a84e93a7c760b89c4471` |
+| First fixture attempt | `node --import tsx setup-fixture.mjs` | Actual exit 1; unauthorized operator install; no room claim | `fixture-bootstrap-analysis.json`: `7fe5d36781bf868b40956825aa6a9ed0df43bbfa44b06bd76912cd9f2c358bdf` |
+| New public-register fixture | `node --import tsx fixture2/setup-fixture.mjs` | Actual exit 0; 18 successful CLI commands; new room only | `fixture2/fixture-steps.ndjson`: `10fe27c4ecadf847080202b0b262ebe5147d8c4c23ea6823976e939c71244d3d` |
+| CLI probe 1 | `python3 run-agent-probe1.py` | Actual exit 0; 4.698 s; one `needs_you` call | `agent-probe1.json`: `ca964b267dc64541dccfb0b2fe8845ff1e5e888bd5dc66cdc82ff1e3cc1d4097` |
+| CLI probe 2 | `python3 run-agent-probe2.py` | Actual exit 0; 5.494 s; `view_needs_you` and `work`; executed max turns 4 | `agent-probe2.json`: `8dcdeddbe34828f5eef66caa54048a44bd990f262cd00b82e597a526b8111efa` |
+| Probe 2 command correction | Compare executed driver with descriptive record | Inspection; descriptive command said 3; actual argv used 4 | `probe2-command-correction.json`: `fa32f51737555a391e7fb452ed5d886da93bbee9710da86adde62fcef8630078` |
+| CLI probe 3 | `python3 run-agent-probe3.py` | Actual exit 0; 5.747 s; three successful reads | `agent-probe3.json`: `1d41cb520eae8a6568000a975813dd195ffa88a09122a6d81156cc7d9ae8b117` |
+| Probe 3 protocol and process route | Transparent stdio recorder during probe 3 | No UI extension; one real server; three successful structured replies | `agent-probe3.events.ndjson`: `5b32a04c72726788cdbc822840c130d5797072a75ff22927c74ef29250a2c188` |
+| Goose tool-message result | `python3 record-analysis.py` | Actual exit 0; retained structuredContent; plain fallback equality | `agent-tool-message-recomputed.json`: `fd8a09620c2dce3b11eab1617066da757e92bae4ff51a099f5fee86ff4493d80` |
+| Recorder byte control | `node observer-control/run.mjs` | Actual driver exit 0; both relay exits 0; corrected metadata matches split UTF-8 bytes | `observer-control/validation.json`: `f184af5f8207c0630c46a4a77d07a2adf97c7c2307fc9e47d432270f9f961839` |
+| Control interpretation | Inspect actual relay exits and generated expectations | The hypothetical old expected exit 1 is not an observed process exit | `observer-control-interpretation.json`: `5182bd593c473a522d0c73df281da80ac1305784feaf9d0188b14f6b341a6bf6` |
+| Native read after probes 1 and 2 | `node --import tsx read-after-probes.mjs` | Actual exit 0; issue and membership unchanged | `native-after-agent-probes.json`: `d1568d3fc4f18c982ab332dbfd1b48436f658c7b99bf1b6d9c92f621f74f7e17` |
+| Native read after probe 3 | `node --import tsx read-after-probe3.mjs` | Actual exit 0; issue sequence 6, membership sequence 11; both unchanged | `native-after-agent-probe3.json`: `d1568d3fc4f18c982ab332dbfd1b48436f658c7b99bf1b6d9c92f621f74f7e17` |
+| Desktop access | Five native app acquisitions plus inventory calls | Tool timeouts before window state; no screenshot or UI action | `computer-use-attempts.json`: `2134ab37032e978202f8552607669db0130448bbe3af4bc8a0fe45d673a47b94` |
+| Version-pinned ten-row analysis | `python3 matrix-analysis.py` | Actual exit 0; ten labeled rows and three purpose judgments | `result-matrix.json`: `9ac4dd26362c6f613f30fcbae1a3ec7e30dd1d80487a4f10c50d8f13cc2d3979` |
+| Source, exits, config, and process check | `python3 record-analysis.py` | Actual exit 0; 24 Git blobs and SHA256 digests verified; seven actual exit files read; config unchanged; probe PIDs absent | `record-validation.json`: `428502e4aa98c99d773dde0fdf439798ddc6028e80837e0e66c5558ff940869c` |
 | Document-only source reuse | `python3 /private/tmp/artroom-goose-source-proof.py` | exit 0; prior gate.exit reads exit 0; runtime and tests match gated source `658aab95` | `source-equality.json`: `d65e17b9ff2ec752dc47c570fffbe1bc61702a717fc7d674993f1aa628c5de30` |
 
 The table names retained copies of the probe drivers. Their reports retain the executed Goose argv. The source gate ran at `658aab954d7a017c5cbce0d7daf28bb798fa1f52`, tree `27936fcbfd752aef7a6fecf02961279f258c2628`. Only four documents differ at the main checkpoint named above. This partial record adds only this note and its manifest. Under the document-only follow-up rule in `docs/testing.md`, the record reuses that gate instead of repeating source tests. The separate source-proof unit retains the exact Git-object comparison and verifies all 46 files in the prior gate unit.
@@ -84,6 +84,8 @@ The table names retained copies of the probe drivers. Their reports retain the e
 The first fixture tried an operator-only installation against an existing register and stopped unauthorized. The second reads the public creation offer, creates a new stored founder key in a scratch home, and claims through the existing public register. No Worker configuration or deployment changes.
 
 The recorder’s first two versions preserve transport bytes but do not prove exact metadata byte counts across a split UTF-8 character. Probe 3 uses the corrected StringDecoder recorder. The synthetic control covers that recorder only. Both actual relay child exits are 0. The old recorder’s generated expected exit 1 describes a hypothetical assertion.
+
+The sealed `result-matrix.json` calls the agent host “sufficient with named gaps.” This note replaces that judgment with **not sufficient on the available evidence**. Three read tools do not establish acts, waits, restart behavior, or an enrolled agent-key identity. The observed rows and their evidence remain unchanged.
 
 The copied qualification in `native-after-agent-probe3.json` says “after the two probes.” Its separate driver, output, and actual exit belong to the fresh read after probe 3. `record-validation.json` records that correction.
 
