@@ -32,6 +32,9 @@ test("member display sequences its bounded queries and preserves member and opti
   const rosterAt = { seq: at.seq + 1, hash: `sha256:${"b".repeat(64)}` as const };
   const reads = {
     signer,
+    // This query-sequencing stand-in has no prior session history.
+    hasHeld: () => false,
+    held: () => false,
     session: async () => ({ claims: { key: signer.key, membership }, reader: () => "scripted session" }),
     transport: { queryItems: async (_scope: string, _reader: unknown, encoded: string): Promise<ItemQueryRead> => {
       const query = readItemQueryParameter(encoded);
