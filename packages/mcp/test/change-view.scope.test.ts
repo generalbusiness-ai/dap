@@ -15,7 +15,7 @@ import { changeSubject } from "../../../apps/views/src/change.ts";
 import { decisionSource, questionSubject } from "../../../apps/views/src/decision.ts";
 import { RepoInAi } from "../../../apps/views/src/repo-in-ai.ts";
 import type { ReviewStore } from "../../../apps/views/src/review-store.ts";
-import { McpService, memoryStore, type CustodyStore, type Display, type McpConfig } from "../src/index.ts";
+import { McpService, ReadSessions, memoryStore, type CustodyStore, type Display, type McpConfig } from "../src/index.ts";
 import { created, mcpRoom, type Agent, type Room } from "./fixtures-native.ts";
 
 // Real: Native M8 authority, the J4 lane judgments, SQLite, Worker HTTP, read sessions under a TEST secret, McpService in app mode,
@@ -64,14 +64,19 @@ async function roomOf(fault?: (request: EffectRequest) => EffectAnswer | null | 
 /** The owner's app-mode service, with the Change and Decision adapter. Each call is a new connection with no cards. */
 function application(f: Fixture, custody: CustodyStore = memoryStore(), as?: Agent) {
   const config = structuredClone((as ?? f.owner).config), signer = secretSigner(as?.secret ?? f.person.secret);
-  const app = new RepoInAi({ service: config.service, signer, config: async () => structuredClone(config), fetch: f.room.fetch, now: f.room.now, reviewStore, brief: BRIEF });
+  const readSessions = new ReadSessions(), requests: { method: string; path: string }[] = [];
+  const fetch: typeof f.room.fetch = async (url, init) => {
+    requests.push({ method: init?.method ?? "GET", path: new URL(url).pathname });
+    return f.room.fetch(url, init);
+  };
+  const app = new RepoInAi({ readSessions, service: config.service, signer, config: async () => structuredClone(config), fetch, now: f.room.now, reviewStore, brief: BRIEF });
   const signed: Intent[] = [];
-  const service = new McpService({ service: config.service, fetch: f.room.fetch, custody, views: decisionSource(app), applicationReads: app.catalogue(), packageBrief: app.brief,
+  const service = new McpService({ readSessions, service: config.service, fetch, custody, views: decisionSource(app), applicationReads: app.catalogue(), packageBrief: app.brief,
     signer: { key: signer.key, sign: bytes => { const text = new TextDecoder().decode(bytes), prefix = `${DOMAINS.intent}\n`; if (text.startsWith(prefix)) signed.push(JSON.parse(text.slice(prefix.length)) as Intent); return signer.sign(bytes); } },
     readDiff: read => diffWithCredential(read, f.room.git.fetch), readInterdiff: read => interdiffWithCredential(read, f.room.git.fetch), readFile: read => fileWithCredential(read, f.room.git.fetch), now: f.room.now, every: () => () => {}, pause: async waiting => { f.room.advance(1000); await f.room.pause(waiting); },
     config: { read: async () => structuredClone(config), addRoot: async () => { throw new Error("no new root"); } } });
   const call = (name: string, args: Record<string, unknown>) => f.room.wait(() => service.call(name, args));
-  return { service, custody, signed, call };
+  return { service, custody, signed, call, requests };
 }
 
 
@@ -394,7 +399,16 @@ test("witness 4: View diff signs one read-token act and shows the bounded diff; 
     expect([early.isError, early.structuredContent["reason"]]).toEqual([true, "shape"]);
     expect(a.signed).toEqual([]);
 
+    const beforePress = a.requests.length;
     const shownDiff = await press(a, "large", item, "view-diff");
+    const atAct = a.requests.findIndex((request, index) => index >= beforePress && request.method === "POST" && request.path.endsWith("/acts"));
+    expect(atAct).toBeGreaterThanOrEqual(beforePress);
+    expect(a.requests.slice(beforePress, atAct), "first press reuses its opening credential, reads fresh authority and target, and discovers no unrelated scope").toEqual([
+      { method: "GET", path: "/v1/scopes/" + f.repository.membership.scope },
+      { method: "GET", path: "/v1/scopes/" + f.repository.directory.scope },
+      { method: "GET", path: "/v1/scopes/" + f.repository.rules },
+      { method: "GET", path: "/v1/scopes/" + f.repository.destination },
+    ]);
     expect(a.signed.map(intent => [intent.kind, intent.to!.scope])).toEqual([["read-token", f.repository.destination]]);
     expect(shownDiff.answer).toMatchObject({ base, integration: large.integration, truncated: true });
     const page = shownDiff.display as Shown & { query: { page: string } };
@@ -429,6 +443,18 @@ test("witness 4: View diff signs one read-token act and shows the bounded diff; 
     expect((none.display as Shown & { query: { page: string } }).query.page).toBe("item");
     expect(none.display.receipt).toContain("Diff not shown: The server shows no diff");
     expect(none.display.card!.body).not.toContain("truncated");
+
+    // A completed session from the opening read cannot preserve a grant removed before the press.
+    const revoked = application(f), revokedCard = await card(revoked, "revoked", "view_change", changeSubject(lane));
+    const membership = f.room.platform(f.repository.membership.scope), roster = await membership.item(0);
+    const priorActions = roster.values[ROLE_LISTS.admin] as string[];
+    expect(priorActions).toContain("destination.read-token");
+    await membership.did(f.person, "set-actions", { idempotencyKey: crypto.randomUUID(), on: 0, expected: await membership.expected({ on: 0 }),
+      fields: { role: "admin", actions: priorActions.filter(action => action !== "destination.read-token") } });
+    const denied = await press(revoked, "revoked", revokedCard, "view-diff");
+    expect(denied.answer["error"], "fresh standing denies the press despite the retained opening credential").toBe("unknown-tool");
+    expect(revoked.signed).toEqual([]);
+    await membership.did(f.person, "set-actions", { idempotencyKey: crypto.randomUUID(), on: 0, expected: await membership.expected({ on: 0 }), fields: { role: "admin", actions: priorActions } });
 
     // A SHA-256 commit, which this reader cannot take: the card signs nothing, and no credential goes.
     await propose(f, lane, work, base, "e".repeat(64), "f".repeat(64), hidden);
@@ -1095,6 +1121,10 @@ test("signed entries and receipts name their different signers on native room ro
       await act(author.agent, issue, "request-approval", { fields: { ask: asked.seq, bodyAt: asked, requested: reviewer.ref } });
       await act(reviewer.agent, issue, "comment", { fields: { about: asked, body: "TEST a different signer wrote later." } });
       const a = application(f, memoryStore(), reviewer.agent), view = `actor-${index}`;
+      await a.call("view_needs_you", { view: view + "-list" });
+      const list = (await a.call("view_read", { view: view + "-list" })).structuredContent["display"] as Display;
+      expect(list.card!.actor, "the list attributes the opening entry, not its viewer or later writer").toEqual(author.actor);
+      expect(list.card!.actorLabel).toBe("Opening act signed by");
       const opened = await a.call("view_decision", { view, subject: questionSubject(lane, asked.seq) });
       const before = (await a.call("view_read", { view })).structuredContent["display"] as Display;
       expect(before.card!.actor, "THE TEXT's envelope identifies its author, not the reviewer or the latest request's writer").toEqual(author.actor);

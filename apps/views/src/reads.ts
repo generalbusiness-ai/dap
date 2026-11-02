@@ -2,7 +2,7 @@
 import { canonicalize, entryHash, isFactRef, isMemberRef, isScopeRef, readMinimum, textDigest, utf8 } from "@generalbusiness/dap-bytes";
 import type { Digest, FactRef, Head, Item, MemberRef, ReadMinimum, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
 import { ScopeHandle, type Fetch, type Signer } from "@generalbusiness/dap-client";
-import { actSigner, type ActSigner, Reads, type McpConfig } from "@generalbusiness/dap-mcp";
+import { actSigner, type ActSigner, ReadSessions, Reads, type McpConfig } from "@generalbusiness/dap-mcp";
 import { ROLE_LISTS, type Role } from "@generalbusiness/dap-platform";
 import { LIMITS, controllerIn, keyHolder, laneRefs, laneWindow, type Frame } from "./needs-you.ts";
 import { sameOptional } from "./words.ts";
@@ -24,7 +24,7 @@ function requireMinimum(head: Head, floor?: ReadMinimum): void {
   if (head.seq < seq || typeof floor.head !== "number" && head.seq === seq && head.hash !== floor.head.hash) throw new Unread("read-minimum-behind");
 }
 export interface Point { scope: ScopeRef; head: Head }
-export interface ReadOptions { service: string; signer: Signer; config: () => Promise<McpConfig>; fetch?: Fetch; now?: () => number }
+export interface ReadOptions { service: string; signer: Signer; config: () => Promise<McpConfig>; fetch?: Fetch; now?: () => number; readSessions?: ReadSessions }
 export interface Counters { scopes: number; requests: number; bytes: number; pages: number; items: number; history: number; textBytes: number }
 
 export class Collection {
@@ -53,7 +53,7 @@ export class Collection {
   discoveryComplete = false;
 
   constructor(readonly options: ReadOptions) {
-    this.reads = new Reads({ service: options.service, signer: options.signer, now: options.now ?? Date.now, fetch: this.#fetch });
+    this.reads = new Reads({ ...(options.readSessions ? { sessions: options.readSessions } : {}), service: options.service, signer: options.signer, now: options.now ?? Date.now, fetch: this.#fetch });
   }
   close(): void { this.#closed = true; }
   fail(reason: string): never { this.#failure ??= new Unread(reason); throw this.#failure; }

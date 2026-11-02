@@ -897,9 +897,11 @@ support files, the Grow check package or the workflow. Its `on:` block lists
 the paths. The gate does not run the scripts, and `scripts/gate.sh` has no
 browser step.
 
-A head that touches `packages/mcp/browser/**`, `packages/mcp/src/views/**` or
-either script cites this workflow's run at the head's own commit. That citation
-replaces running the scripts by hand and citing the result. A head's branch
+A head that touches `packages/mcp/browser/**`, `packages/mcp/src/views/**`,
+`packages/mcp/src/service.ts`, `packages/mcp/test/support/actor-cards.ts`,
+`packages/mcp/test/change-view.scope.test.ts`, or either script cites this
+workflow's run at the head's own commit. That citation replaces running the
+scripts by hand and citing the result. A head's branch
 reaches `origin` only when you push it, and a run on `main` comes after the
 landing. To get the run:
 

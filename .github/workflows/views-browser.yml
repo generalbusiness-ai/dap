@@ -4,6 +4,7 @@ on:
     paths:
       - 'packages/mcp/browser/**'
       - 'packages/mcp/src/views/**'
+      - 'packages/mcp/src/service.ts'
       - 'packages/mcp/scripts/views.mjs'
       - 'packages/mcp/test/views-browser.mjs'
       - 'packages/mcp/test/owned-scopes-browser.mjs'
@@ -22,6 +23,7 @@ on:
     paths:
       - 'packages/mcp/browser/**'
       - 'packages/mcp/src/views/**'
+      - 'packages/mcp/src/service.ts'
       - 'packages/mcp/scripts/views.mjs'
       - 'packages/mcp/test/views-browser.mjs'
       - 'packages/mcp/test/owned-scopes-browser.mjs'

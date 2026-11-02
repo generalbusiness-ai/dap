@@ -133,7 +133,7 @@ const namedOwners = {
     "packages/cli/src/commands.ts:status": "f77f1396b4bed9f01c159ca07c991ef52da9cd9a50ea4e1aae3f5765d50504b4",
   },
   "packages/mcp/src/service.ts": {
-    "packages/mcp/src/service.ts:$module": "a29678dc0e1015ab163c2e9deabedfcb40c20cb7921ac7e95cf7954d69929be8", // Reviewed actSigner import; routes and gate classes unchanged.
+    "packages/mcp/src/service.ts:$module": "3fb4f78156298c7f62d57856eed448645cfe7bf9f1ff25852f30e3045db4556c", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
     "packages/mcp/src/service.ts:ListRestart": "83803f5cf365099c3ed7ad6d12153b68e7616977007feffed4ca4b01bd4ca95d",
     "packages/mcp/src/service.ts:SERVER_NAME": "1a22dd379fec10cbed8b5938dfd522ce9e8cffe176de5f4554e3cad8668764e2",
     "packages/mcp/src/service.ts:SERVER_VERSION": "93926c4b4205a41211c5dfd2e083d8a5d4eed978060ba4d0781fb54d9d3eb366",
@@ -163,7 +163,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:WRITE": "5920731b91c504f8bfb945b3edbe132bea0167ec1c9a44579e3dd658e5e9cd91",
     "packages/mcp/src/service.ts:scopeArg": "36e8957cdbc823f8e1bf9ab903a7a353df3b10d1292ed7d378362aabc41f6ef4",
     "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
-    "packages/mcp/src/service.ts:McpService": "9f6a1c63f7bc645cb3d62965f13d3ef4f77bbcbf67985e20e49c637cea62cb11", // Reviewed private result-to-signer metadata after existing send and settle gates.
+    "packages/mcp/src/service.ts:McpService": "b0a6d9fa79ef28db770945c3913798b2be41c202966625d825a631d30b3d0620", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
     "packages/mcp/src/service.ts:commitIdFault": "3614f1add9efc0a6aa08e7afe8ec461e46d5728284a77e668fa67fb962614527",
     "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
     "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",
@@ -256,7 +256,7 @@ const seals = {
   "packages/mcp/src/hosted-tools.ts": "ef46fa061bb0ed440d81d08e0f1f537c4234dabdb861fb749123bdf93aa81a85", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": namedOwners["packages/mcp/src/service.ts"],
   "packages/mcp/src/catalogue.ts": "8d1af74b33b07b063a1dad51477b51d22ac9cb7bb08d79ad366a0a3b717c3e53", // Reviewed R5 admission owner; actual maintained parser output.
-  "packages/mcp/src/inventory.ts": "4e7f7ebb2d669f5b7a6697de945174b37af821c619120953377adde4ade77219", // Reviewed R5 admission owner; actual maintained parser output.
+  "packages/mcp/src/inventory.ts": "0c14de294c6005379f9243d7283fc1dcaf2001fd009e0d361c06adf2b46871ea", // Reviewed parallel authority reads and target-only discovery; standing still reads fresh.
   "packages/mcp/src/http.ts": "6c14755074002c14b939c1a73a088ba0f98f085793c47ef9b93bd406db95bfb4", // Reviewed Mcp-Name binding for prompts/get.
   "packages/client/src/application-trust.ts": "137391c8b1ed6f59f66e9368012c1355ed77325fdb16f67b73296be1ccc856b3", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
   "packages/client/src/application-install.ts": "4046c6792d4671cdb259691dcf2171a2c3144450664c696cb722db161790164b", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
