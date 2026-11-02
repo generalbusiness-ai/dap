@@ -1,957 +1,1054 @@
 {
-  "version": 1,
-  "qualification": "Card refresh keeps explicitly open and closed named sections for the same card, resets them on replacement and navigation, and adds the unattended Grow routing owner to the Card workflow. Local draft observations and expected control failures remain qualified. Exact-source Card workflow succeeds and the full gate exits 0 at e0b21985. Later changes bring only the landed first-press note and manifest and this record. No deployment or diff renderer follows.",
-  "checkpoint": {
+ "version": 1,
+ "qualification": "Card refresh keeps explicitly open and closed named sections for the same card, resets them on replacement and navigation, and adds the unattended Grow routing owner to the Card workflow. Local draft observations and expected control failures remain qualified. Exact-source Card workflow succeeds and the full gate exits 0 at e0b21985. Later changes bring only the landed first-press note and manifest and this record. No deployment or diff renderer follows.",
+ "checkpoint": {
+  "commit": "e0b21985cac267abc5c0d2313e511d2201099302",
+  "tree": "e67e36e796691fc25434c23192a05540e2b83969"
+ },
+ "retention": "Keep every readonly unit at least 30 days after landing. Whole Native proof bodies, actor records and raw consoles stay private, with byte counts and hashes in public metadata.",
+ "fileCount": 194,
+ "units": [
+  {
+   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-card-refresh-target",
+   "qualification": "Implementation checks on the uncommitted refresh draft atop 7b691a39, before its base fast-forward to 2f825e32. No complete frozen draft snapshot was retained. These local observations support development; exact-source Card workflow 41426562339 at e0b21985 owns final composition. The original harness failures and their actual exits remain separate from later passes. Scripted projections prove no hosted outcome. Native Grow scope observations use the local owned fixture with TEST installation, membership, sessions and grants.",
+   "checkpoint": {
+    "commit": "7b691a39b756df584bbeaa1d73a1730dec509b4b",
+    "tree": "4351ad092ae3e586d3daf037606867ccda2d1f1d"
+   },
+   "fileCount": 23,
+   "sha256sums": "68a43b86735f0008415e4f4a8e2f97867a0c7e1aee5b37a597a3eab4dcadc6e0",
+   "files": [
+    {
+     "path": "SHA256SUMS",
+     "bytes": 2166,
+     "sha256": "68a43b86735f0008415e4f4a8e2f97867a0c7e1aee5b37a597a3eab4dcadc6e0"
+    },
+    {
+     "path": "artroom-card-refresh-target-replacement-20261102.report.json",
+     "bytes": 675,
+     "sha256": "de06a88942805258cdf974d17b7becd4955f4479f20dec919e40173548418d72"
+    },
+    {
+     "path": "artroom-card-refresh-target-settled-20261102.report.json",
+     "bytes": 595,
+     "sha256": "91126fd9fb3b11e49858e767b35e77c81594529911c05360cb80f6974013a6c9"
+    },
+    {
+     "path": "first-driver.mjs",
+     "bytes": 4385,
+     "sha256": "0d18e982331cfe434262ca9f9e8c6f0d19e4558b2c8d8c83703f5e12cf4b4c1b"
+    },
+    {
+     "path": "first-run.json",
+     "bytes": 384,
+     "sha256": "55889cd02ada28d151677f8728f98a178b25ef55f35093540b58112ec09084fa"
+    },
+    {
+     "path": "qualification.json",
+     "bytes": 878,
+     "sha256": "f447cf384ab10a05fe7cc60e81fa2c31516772f3e54a5c6a9c8435d3ead1e36d"
+    },
+    {
+     "path": "replacement-driver.mjs",
+     "bytes": 5340,
+     "sha256": "c25406cea1fcc6806087578b9d8b0d9a356050645f7cbd897f2675a5fd8bd725"
+    },
+    {
+     "path": "replacement.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "replacement.stderr.log",
+     "bytes": 191,
+     "sha256": "698faae6d78958537ce6680627f8a31a634bcde958f7babdb236aaef9d1779fd"
+    },
+    {
+     "path": "replacement.stdout.log",
+     "bytes": 543,
+     "sha256": "260e0d28895b6438c31b771cae8907489a7ef12a687f2e00229ebf986019237a"
+    },
+    {
+     "path": "screens/artroom-card-refresh-target-replacement-20261102/refresh-open-320.png",
+     "bytes": 37266,
+     "sha256": "7f8c450a5d4c9b35087de96f99f889a42b2a08c74eabf57cfd79a0cfbf704144"
+    },
+    {
+     "path": "screens/artroom-card-refresh-target-replacement-20261102/refresh-open-592.png",
+     "bytes": 38515,
+     "sha256": "08149b74daccdcd539857dd4b6a38d82e23a81531bfc1b4c3fd0b3a1745e82c1"
+    },
+    {
+     "path": "screens/artroom-card-refresh-target-settled-20261102/refresh-open-320.png",
+     "bytes": 37266,
+     "sha256": "7f8c450a5d4c9b35087de96f99f889a42b2a08c74eabf57cfd79a0cfbf704144"
+    },
+    {
+     "path": "screens/artroom-card-refresh-target-settled-20261102/refresh-open-592.png",
+     "bytes": 38515,
+     "sha256": "08149b74daccdcd539857dd4b6a38d82e23a81531bfc1b4c3fd0b3a1745e82c1"
+    },
+    {
+     "path": "settled-driver.mjs",
+     "bytes": 4970,
+     "sha256": "64e7c6818b3a25b40cbf40070fef057c694132c6f61eabd27efef9a70334cdaa"
+    },
+    {
+     "path": "settled.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "settled.stderr.log",
+     "bytes": 191,
+     "sha256": "72fd2e286cf0a2d117a7d8dcc53c1a7f7859322f56aa5837d58646f56dff2bc9"
+    },
+    {
+     "path": "settled.stdout.log",
+     "bytes": 479,
+     "sha256": "5a15df452b739aab2d1dbec3017a1efc37f94c9bb49ef6a8cb972dc5b4623bc1"
+    },
+    {
+     "path": "sized-driver.mjs",
+     "bytes": 4826,
+     "sha256": "a066b05e5ccb805bd0920c00c960ee8d21c231068cc687560962a44150f47bd6"
+    },
+    {
+     "path": "sized-first-driver.mjs",
+     "bytes": 4826,
+     "sha256": "a066b05e5ccb805bd0920c00c960ee8d21c231068cc687560962a44150f47bd6"
+    },
+    {
+     "path": "sized.exit",
+     "bytes": 2,
+     "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+     "path": "sized.stderr.log",
+     "bytes": 580,
+     "sha256": "7eb90fe2db82280644e91369ea8461add9cfe278b55a2043f23ff88db47d82a2"
+    },
+    {
+     "path": "sized.stdout.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+   ]
+  },
+  {
+   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-card-refresh-controls",
+   "qualification": "Implementation checks on the uncommitted refresh draft atop 7b691a39, before its base fast-forward to 2f825e32. No complete frozen draft snapshot was retained. These local observations support development; exact-source Card workflow 41426562339 at e0b21985 owns final composition. The original harness failures and their actual exits remain separate from later passes. Scripted projections prove no hosted outcome. Native Grow scope observations use the local owned fixture with TEST installation, membership, sessions and grants.",
+   "checkpoint": {
+    "commit": "7b691a39b756df584bbeaa1d73a1730dec509b4b",
+    "tree": "4351ad092ae3e586d3daf037606867ccda2d1f1d"
+   },
+   "fileCount": 19,
+   "sha256sums": "cf3437d05d48d2c76bb12f66857ab64a9e74870595a482679267c261c8bd6839",
+   "files": [
+    {
+     "path": "SHA256SUMS",
+     "bytes": 1586,
+     "sha256": "cf3437d05d48d2c76bb12f66857ab64a9e74870595a482679267c261c8bd6839"
+    },
+    {
+     "path": "borrow-item.build.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "borrow-item.build.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "borrow-item.build.stdout.log",
+     "bytes": 51,
+     "sha256": "4c1a2bf8e5b091d5863efe0cc2cf5d90d6a143c4b74b92e4180559d59bca58f9"
+    },
+    {
+     "path": "borrow-item.exit",
+     "bytes": 2,
+     "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+     "path": "borrow-item.result.json",
+     "bytes": 476,
+     "sha256": "28b473623c33654495fd09dde1d9774569a1440327135cb36b9f4b6cee8947f0"
+    },
+    {
+     "path": "borrow-item.stderr.log",
+     "bytes": 599,
+     "sha256": "ba1223e3b9342dabdd2f452e1b061397fa7fe7db0e3f5308fb90f7c888d59e23"
+    },
+    {
+     "path": "borrow-item.stdout.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "control-runner.py",
+     "bytes": 3116,
+     "sha256": "fc98055c3d4c42afdf6cccc6e6cd30add170e1ad34456327dc7acd249d659b63"
+    },
+    {
+     "path": "driver.mjs",
+     "bytes": 5340,
+     "sha256": "c25406cea1fcc6806087578b9d8b0d9a356050645f7cbd897f2675a5fd8bd725"
+    },
+    {
+     "path": "forget-open.build.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "forget-open.build.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "forget-open.build.stdout.log",
+     "bytes": 51,
+     "sha256": "4c1a2bf8e5b091d5863efe0cc2cf5d90d6a143c4b74b92e4180559d59bca58f9"
+    },
+    {
+     "path": "forget-open.exit",
+     "bytes": 2,
+     "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+     "path": "forget-open.result.json",
+     "bytes": 470,
+     "sha256": "0e4a0b87bfa256f8517631271a6c0ded2d0fd2e1f7e0faeba80635af2563877d"
+    },
+    {
+     "path": "forget-open.stderr.log",
+     "bytes": 567,
+     "sha256": "ff766e657369844a992236f2a2f6d5344616e6fb281f2cd7299b4489cf572533"
+    },
+    {
+     "path": "forget-open.stdout.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "qualification.json",
+     "bytes": 878,
+     "sha256": "507ad9928810d38b085646c0b27236dae8e9c37b6d0e09a11d7d00798adfc6e8"
+    },
+    {
+     "path": "restored.json",
+     "bytes": 208,
+     "sha256": "610ac930a82e1074361af5e5452ebcfa44566b56b7538f7b9e9433118d12777d"
+    }
+   ]
+  },
+  {
+   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-card-refresh-browser",
+   "qualification": "Implementation checks on the uncommitted refresh draft atop 7b691a39, before its base fast-forward to 2f825e32. No complete frozen draft snapshot was retained. These local observations support development; exact-source Card workflow 41426562339 at e0b21985 owns final composition. The original harness failures and their actual exits remain separate from later passes. Scripted projections prove no hosted outcome. Native Grow scope observations use the local owned fixture with TEST installation, membership, sessions and grants.",
+   "checkpoint": {
+    "commit": "7b691a39b756df584bbeaa1d73a1730dec509b4b",
+    "tree": "4351ad092ae3e586d3daf037606867ccda2d1f1d"
+   },
+   "fileCount": 87,
+   "sha256sums": "ff95a23064c02f41f998237f3fc714b71bbe628f0d986e92e8c152569ed3f116",
+   "files": [
+    {
+     "path": "SHA256SUMS",
+     "bytes": 9487,
+     "sha256": "ff95a23064c02f41f998237f3fc714b71bbe628f0d986e92e8c152569ed3f116"
+    },
+    {
+     "path": "commands.json",
+     "bytes": 792,
+     "sha256": "465209cc2882a9ab0be5699606678366280f119e8e102420907fef9d8b278d14"
+    },
+    {
+     "path": "grow-routing.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "grow-routing.summary.json",
+     "bytes": 1646,
+     "sha256": "3572ebc700dcdc57f9f652c0726b71a66471a5e86ff136fd21d2bacfa8d109a4"
+    },
+    {
+     "path": "qualification.json",
+     "bytes": 878,
+     "sha256": "6d201fb07bbb4398fdac138a631dd263b91b04100f8f4d010851ad7500a413f7"
+    },
+    {
+     "path": "screens/grow-routing/operator-320.png",
+     "bytes": 37553,
+     "sha256": "8cb7e7808c82c5322fcd202d7e4d90bcbdd0a6e5dae1cb3c8d13ae9226f990a9"
+    },
+    {
+     "path": "screens/grow-routing/operator-592.png",
+     "bytes": 40183,
+     "sha256": "a5abbac9fad6dd2e4a4248d3f5c090319fdf05382a427fa90d05419633c38ba7"
+    },
+    {
+     "path": "screens/grow-routing/task-320.png",
+     "bytes": 21361,
+     "sha256": "0543e838c1ff4b259b2a82647a3cce84da45af79f23cd5176b199a3554cffaba"
+    },
+    {
+     "path": "screens/grow-routing/task-592.png",
+     "bytes": 23145,
+     "sha256": "819fbe0fc96132f6dd8ebab54cc0a95de44b3978dbef21b42b40df0b15994b78"
+    },
+    {
+     "path": "screens/grow-routing/task-complete-320.png",
+     "bytes": 21302,
+     "sha256": "24f0ab72ca52357c10abf7bf2786982f94ca4c5065d91e4452b579720e89eb09"
+    },
+    {
+     "path": "screens/grow-routing/task-complete-592.png",
+     "bytes": 22573,
+     "sha256": "e61f3836e75b02883fce7dddaee63299a9a40d93e465c310704657a4e31bac9a"
+    },
+    {
+     "path": "screens/grow-routing/unavailable-320.png",
+     "bytes": 61302,
+     "sha256": "04cb1d892c7b9bc4ab8988b514c588ee5dfe8eb9291e6d5a847e9e6c97c6afb1"
+    },
+    {
+     "path": "screens/grow-routing/unavailable-592.png",
+     "bytes": 60278,
+     "sha256": "61096ed368763c237d0ebd362ce1ecb2c1b52c53747daaebaeba3f1532342fff"
+    },
+    {
+     "path": "screens/grow-routing/watering-320.png",
+     "bytes": 23833,
+     "sha256": "a004664c9b9844cebcc47d4c594a2d401d16593db3c689765074e0a14abd239d"
+    },
+    {
+     "path": "screens/grow-routing/watering-592.png",
+     "bytes": 25901,
+     "sha256": "51250af4d9671b7900638c3a43de7307cd6f421ad7d2df6636070ae0b115c60b"
+    },
+    {
+     "path": "screens/grow-routing/watering-complete-320.png",
+     "bytes": 21723,
+     "sha256": "428d89afb2305a577bb701dcdcee5a63c1da410b2023cd3de00ad45d27d4bbba"
+    },
+    {
+     "path": "screens/grow-routing/watering-complete-592.png",
+     "bytes": 23058,
+     "sha256": "c3e717cf4173a41363ebdae810abc408d3c3ae177128648ba07008af288e397f"
+    },
+    {
+     "path": "screens/views-browser/200-percent-dark-320.png",
+     "bytes": 60924,
+     "sha256": "732b405bd6676c1c5db7d00af21fdb4fc5668b39beef48c869b32f434e64c893"
+    },
+    {
+     "path": "screens/views-browser/absent.png",
+     "bytes": 12144,
+     "sha256": "910aa27142bde35ff3c2fac3505562c55a9a6a64c26b7427c531465e47720412"
+    },
+    {
+     "path": "screens/views-browser/checks-failed.png",
+     "bytes": 31954,
+     "sha256": "d50207ff21213958c327f76574068820cbc0bc00d11ad4f3d9e343c88888f8c0"
+    },
+    {
+     "path": "screens/views-browser/dark-320-carousel.png",
+     "bytes": 20457,
+     "sha256": "bbc8bd8214ea381ce6c0d019a632278dcb04111ba521c773821e76e5649230cf"
+    },
+    {
+     "path": "screens/views-browser/dark-320-receipt.png",
+     "bytes": 29763,
+     "sha256": "c620c5947d5842536fb415eaec29cfe9661f14a52f4cd5831e428a911e784562"
+    },
+    {
+     "path": "screens/views-browser/dark-390-carousel.png",
+     "bytes": 21058,
+     "sha256": "ff612fd291d42d06b91db169b8e04ca1c1c282eddc7c0b79a568b4cb3cff88c9"
+    },
+    {
+     "path": "screens/views-browser/dark-390-receipt.png",
+     "bytes": 30176,
+     "sha256": "68a6f37417e9afe690727ad5fd14b2e8af7d4a2fec60cfc73abb7e0e86790490"
+    },
+    {
+     "path": "screens/views-browser/dark-592-carousel.png",
+     "bytes": 22405,
+     "sha256": "fa2098e4e574f9aa5a9dc4f4597f304fa9068c079901cb93d7111b7a5e0ef8df"
+    },
+    {
+     "path": "screens/views-browser/dark-592-receipt.png",
+     "bytes": 31804,
+     "sha256": "6cab59886e9cb0f8282c4c5d9600e74bb637c5534ebed7254870f142b21a2309"
+    },
+    {
+     "path": "screens/views-browser/denied.png",
+     "bytes": 12019,
+     "sha256": "9940aeb8ee54103d1f160a3e013610adc8b02f25335eaa52be8b2673bbf31e45"
+    },
+    {
+     "path": "screens/views-browser/empty.png",
+     "bytes": 9147,
+     "sha256": "0679a4f49e1636b3eb0b780f02122f9d6c6dd6a2c99509182c91c3244a23b3b3"
+    },
+    {
+     "path": "screens/views-browser/incomplete.png",
+     "bytes": 84476,
+     "sha256": "aae191212f3e47f756b9350f23eb239390ff46cee4a1259c701437d5e4a49344"
+    },
+    {
+     "path": "screens/views-browser/light-320-carousel.png",
+     "bytes": 20492,
+     "sha256": "fa237733c902412b7bfe1097ddc3ad7f53e814a1a6805575ed98e0ea32e4629f"
+    },
+    {
+     "path": "screens/views-browser/light-320-receipt.png",
+     "bytes": 29663,
+     "sha256": "cfed692d011cc3ef90f915a8aaaf17b1d70c1219dea4948f613b30c3f5da5049"
+    },
+    {
+     "path": "screens/views-browser/light-390-carousel.png",
+     "bytes": 21094,
+     "sha256": "3d5aa8ebc536b489e04d0ebd37e6c2a55bab1164fd522c8d4b50e352599e8477"
+    },
+    {
+     "path": "screens/views-browser/light-390-receipt.png",
+     "bytes": 30158,
+     "sha256": "2bc080b1bd3fff4e05bb878f8da07c8df4e3406b7af69640eec45bacc4436685"
+    },
+    {
+     "path": "screens/views-browser/light-592-carousel.png",
+     "bytes": 22419,
+     "sha256": "396a2bdd45e8e5b91e185e65d9c5f40f79a58a0db9d8976ab5b464e8bb2a5ec8"
+    },
+    {
+     "path": "screens/views-browser/light-592-receipt.png",
+     "bytes": 31826,
+     "sha256": "c48dd3bb1591bfae967edc7f4d91dc66868611ccc3b1e5714b417c040cb03358"
+    },
+    {
+     "path": "screens/views-browser/loss.png",
+     "bytes": 29952,
+     "sha256": "94d7fe1e51f50ec719d781d3cfcdc7d351d346c7cc955cee987316a5b066c4e2"
+    },
+    {
+     "path": "screens/views-browser/native-agent-320-card.png",
+     "bytes": 31510,
+     "sha256": "67095ed198b36ec8ef1f7e25a32305241a6e55bd3953762e21b04c384ce0f6cc"
+    },
+    {
+     "path": "screens/views-browser/native-agent-320-receipt.png",
+     "bytes": 30413,
+     "sha256": "01ea347562afda6f6f14e65afb59d94a9e64074c80da35e2faa2b42ffffc737c"
+    },
+    {
+     "path": "screens/views-browser/native-agent-592-card.png",
+     "bytes": 33918,
+     "sha256": "f65c9e201f40e2e57c3b6a40d6e183fb57e7fb25c107e4ac45dc6f9b2192a20b"
+    },
+    {
+     "path": "screens/views-browser/native-agent-592-receipt.png",
+     "bytes": 32302,
+     "sha256": "8c3041bf3dcdea6bdb15a581e42c01f88104ca8555449952653ecf818b381295"
+    },
+    {
+     "path": "screens/views-browser/native-checker-320-card.png",
+     "bytes": 31242,
+     "sha256": "4c29bea56b4238461ba2bd13214cd8ea8a123d65fb37faff2156b36a72c24c79"
+    },
+    {
+     "path": "screens/views-browser/native-checker-320-receipt.png",
+     "bytes": 33616,
+     "sha256": "29eafbf77f568a45e6168a6d21b5e4973c0463754215f2bf383d0f5299c39a1f"
+    },
+    {
+     "path": "screens/views-browser/native-checker-592-card.png",
+     "bytes": 33795,
+     "sha256": "b76c01a010c64085239e8017809b65b32e85cf3e1ddd1c6023a9255d5a357168"
+    },
+    {
+     "path": "screens/views-browser/native-checker-592-receipt.png",
+     "bytes": 35816,
+     "sha256": "2e9c5190d80b54a3dc0ecfd7f12190d8f46fc4d61b4816adcf1116165c649537"
+    },
+    {
+     "path": "screens/views-browser/native-person-320-card.png",
+     "bytes": 31035,
+     "sha256": "bb7c538a85ded199d5a565e776f91381f3b44ef9c9d80bb88cdca5dfcffd99c1"
+    },
+    {
+     "path": "screens/views-browser/native-person-320-receipt.png",
+     "bytes": 30890,
+     "sha256": "c351977c80d455a3e870ecf364f97ac64a2928b46db99152110f71d8429ba990"
+    },
+    {
+     "path": "screens/views-browser/native-person-592-card.png",
+     "bytes": 33514,
+     "sha256": "217ac7c1bae028831dfd44484e9562dc0bf787f1b470d4af8b7622ea30bb256e"
+    },
+    {
+     "path": "screens/views-browser/native-person-592-receipt.png",
+     "bytes": 32813,
+     "sha256": "3ef0359af75d414a314d444cae28930dc1d4b5cc665c335094ad87adbcd4b619"
+    },
+    {
+     "path": "screens/views-browser/process-restart.png",
+     "bytes": 31808,
+     "sha256": "3e55d4cb1ce7b2a719f34d1de6b686ea72c345c098bcafa580fac9acf9ea9fb8"
+    },
+    {
+     "path": "screens/views-browser/read-outlasts-wait.png",
+     "bytes": 34503,
+     "sha256": "a606c2bf327994adecea3ff50a3fcd26f737bbf3c0be4db004891ebface70c70"
+    },
+    {
+     "path": "screens/views-browser/refresh-open-320.png",
+     "bytes": 36766,
+     "sha256": "afd6c23a11d8f4d6ab3234a1d25d652963882dd03cc64c1b2346ae2b5a2d94cf"
+    },
+    {
+     "path": "screens/views-browser/refresh-open-592.png",
+     "bytes": 38124,
+     "sha256": "7a808915d00206f7d192bdec1b376fdf8f59f816f338c326c9bd3286362f8a41"
+    },
+    {
+     "path": "screens/views-browser/reopen-refused.png",
+     "bytes": 18773,
+     "sha256": "a03221bd3530a96ef4f4d604efc28126038b25856f2fa8304821f4c906752112"
+    },
+    {
+     "path": "screens/views-browser/two-process.png",
+     "bytes": 31808,
+     "sha256": "3e55d4cb1ce7b2a719f34d1de6b686ea72c345c098bcafa580fac9acf9ea9fb8"
+    },
+    {
+     "path": "screens/views-browser/unavailable.png",
+     "bytes": 12330,
+     "sha256": "893b7ed4912e499240acc4b6d387c0e7fa3ec5e5ef3d83ed38d1f9f3c5f424a0"
+    },
+    {
+     "path": "screens/views-browser/updates.png",
+     "bytes": 84476,
+     "sha256": "aae191212f3e47f756b9350f23eb239390ff46cee4a1259c701437d5e4a49344"
+    },
+    {
+     "path": "screens/views-browser/words-change-first-dark.png",
+     "bytes": 24107,
+     "sha256": "71cc8a75317184509bbdf51f48ca0664589f41ab8fe798b31127a686f4c47686"
+    },
+    {
+     "path": "screens/views-browser/words-change-first-light.png",
+     "bytes": 24019,
+     "sha256": "b9c3517abf9f96cc8495df8aece33ad22444bdace7fc30268273c2f07f4a48ce"
+    },
+    {
+     "path": "screens/views-browser/words-change-opened-dark.png",
+     "bytes": 68274,
+     "sha256": "b13f0acb4d24ae200805a42e2e7126a498488bd0558ce85eea08f1e7e5dbfcd6"
+    },
+    {
+     "path": "screens/views-browser/words-change-opened-light.png",
+     "bytes": 68121,
+     "sha256": "52c9d9748ba08e3c396d681d847f8d84e1d3a1adf8fdf03a58e80e32bebc463e"
+    },
+    {
+     "path": "screens/views-browser/words-change-receipt-dark.png",
+     "bytes": 28122,
+     "sha256": "d78967d150b730259abee5efcbe42458b53443b003fbccf93211cf621e34f94c"
+    },
+    {
+     "path": "screens/views-browser/words-change-receipt-light.png",
+     "bytes": 28094,
+     "sha256": "5870b44c8b05f1a2cf33007efb29841c42e4827b58d4d21c559690661c9a41f8"
+    },
+    {
+     "path": "screens/views-browser/words-decision-long-dark.png",
+     "bytes": 30332,
+     "sha256": "ba3f18e41556847faa8531c123f9d3af01343c2fb1e852cbe372811d11143c6f"
+    },
+    {
+     "path": "screens/views-browser/words-decision-long-light.png",
+     "bytes": 30450,
+     "sha256": "6ed40bacc0093058ee23feb15a3dedcb10e47fb2815714d12a05caaa1eb3c121"
+    },
+    {
+     "path": "screens/views-browser/words-decision-long-opened-dark.png",
+     "bytes": 114074,
+     "sha256": "0f6f565cc6ecf9179c13cb8fe307f9c8c5db442cec2a26c8bdfac6a27ea5ed0f"
+    },
+    {
+     "path": "screens/views-browser/words-decision-long-opened-light.png",
+     "bytes": 114252,
+     "sha256": "a0ee6acd2a7824227693bcb91a9c33bfff89a732edbc9df08b41062cc51b1d46"
+    },
+    {
+     "path": "screens/views-browser/words-decision-short-dark.png",
+     "bytes": 37643,
+     "sha256": "cb10c7bb11fc13fc2c337ca382b85c6e327e000124f70be4b5eaba126f99d442"
+    },
+    {
+     "path": "screens/views-browser/words-decision-short-light.png",
+     "bytes": 37659,
+     "sha256": "ffa0c6edbc7a44e5408b00fd169538c6f20519fa68d3376f06695f63a737b730"
+    },
+    {
+     "path": "screens/views-browser/words-decision-short-receipt-dark.png",
+     "bytes": 36016,
+     "sha256": "cb2ff3f4d8f1499b95e9b4e9b42660c59a22467061fecc1c542ad061bcef6cc8"
+    },
+    {
+     "path": "screens/views-browser/words-decision-short-receipt-light.png",
+     "bytes": 36154,
+     "sha256": "2842724a0eee4a3c5732e818643232c73f1b0f64b48d5483f3f88f446b757e1c"
+    },
+    {
+     "path": "screens/views-browser/words-empty-work-dark.png",
+     "bytes": 10345,
+     "sha256": "629fdc61664d2be4dac14b3bb3bc954153be6623ebea72eaf36027b9092ae2a6"
+    },
+    {
+     "path": "screens/views-browser/words-empty-work-light.png",
+     "bytes": 10275,
+     "sha256": "13c8ea905a76bacf683fba3a3ad913275ad1a89cf13e9825313f78e4edf754b8"
+    },
+    {
+     "path": "screens/views-browser/words-merge-waits-disclosed-dark.png",
+     "bytes": 132257,
+     "sha256": "44d7a9f3b07e927341765807f12dbff01fe676d1a918cecac380f543f273153d"
+    },
+    {
+     "path": "screens/views-browser/words-merge-waits-disclosed-light.png",
+     "bytes": 132002,
+     "sha256": "deabceef5d895699082e4db6e1930a2864d8232cb29c93b64d2b1bd4461e2b1a"
+    },
+    {
+     "path": "screens/views-browser/words-merge-waits-first-dark.png",
+     "bytes": 41826,
+     "sha256": "4f16dd92a92f38dc0254567a0dd06bc97deeae3263f2a9c59938c418e5e7f1a6"
+    },
+    {
+     "path": "screens/views-browser/words-merge-waits-first-light.png",
+     "bytes": 42019,
+     "sha256": "4a20cdcba939af281a6bca88658725b64ee4e2f5c9a6c70a32aac8f0e721f1ee"
+    },
+    {
+     "path": "screens/views-browser/words-merge-waits-opened-dark.png",
+     "bytes": 43589,
+     "sha256": "723e6bad3ed256cbdd04e773bde7faabc096bea829fea1a2422b668691f2960e"
+    },
+    {
+     "path": "screens/views-browser/words-merge-waits-opened-light.png",
+     "bytes": 43699,
+     "sha256": "a5026a3080bfcdfd2192204933bb9606ed2b965d1171f80e78232622fc4d35f2"
+    },
+    {
+     "path": "screens/views-browser/words-question-row-dark.png",
+     "bytes": 40990,
+     "sha256": "ef97ca1bcdb8d4b78f75d5d76e9fe6f2f5fab099deb02d9cdd239401499e2c1b"
+    },
+    {
+     "path": "screens/views-browser/words-question-row-light.png",
+     "bytes": 41371,
+     "sha256": "8c1b2fa8292893ace8ba791e04cf80449dc13721519396a3e7d63594b981a677"
+    },
+    {
+     "path": "screens/views-browser/words-work-1-dark.png",
+     "bytes": 29204,
+     "sha256": "d8a655f6773157b9a324608d92fc8f974f7d88958b76536276552fd02e1ee7f6"
+    },
+    {
+     "path": "screens/views-browser/words-work-1-light.png",
+     "bytes": 29514,
+     "sha256": "ca6b2f079d74d89fdcd29b042dc526b0de83d001fa93a0c0c42a3fbdd5257eb3"
+    },
+    {
+     "path": "screens/views-browser/words-work-2-dark.png",
+     "bytes": 30326,
+     "sha256": "a9c5eaad596e26ee5bc754ea03b1fea3926af12411c93071916f0dc676794ce0"
+    },
+    {
+     "path": "screens/views-browser/words-work-2-light.png",
+     "bytes": 30438,
+     "sha256": "fda4457a75c45268246c5e72864cfc4f91f97978dcce0f48f59ff23908252cf0"
+    },
+    {
+     "path": "views-browser.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "views-browser.summary.json",
+     "bytes": 5357,
+     "sha256": "ab9d401241979f651a56b21f06b1e60f6cc5def3ab2f674b0747f682bd73e46f"
+    },
+    {
+     "path": "withheld-output.json",
+     "bytes": 3844,
+     "sha256": "7554fffc390eec57de61765020f23b20ebdeeeb0d234154b30f9ca7edd8b0372"
+    }
+   ]
+  },
+  {
+   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-card-refresh-ci",
+   "qualification": "Exact frozen source e0b21985: Card workflow 41426562339 succeeds, including the generated-module check and all three browser scripts. Whole console stays private with its hash and byte count.",
+   "checkpoint": {
     "commit": "e0b21985cac267abc5c0d2313e511d2201099302",
     "tree": "e67e36e796691fc25434c23192a05540e2b83969"
-  },
-  "retention": "Keep every readonly unit at least 30 days after landing. Whole Native proof bodies, actor records and raw consoles stay private, with byte counts and hashes in public metadata.",
-  "fileCount": 177,
-  "units": [
+   },
+   "fileCount": 8,
+   "sha256sums": "50cfb77c4ff58842411d391f7de925db14bd504764ae636652143f966236cf35",
+   "files": [
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-card-refresh-target",
-      "qualification": "Implementation checks on the uncommitted refresh draft atop 7b691a39, before its base fast-forward to 2f825e32. No complete frozen draft snapshot was retained. These local observations support development; exact-source Card workflow 41426562339 at e0b21985 owns final composition. The original harness failures and their actual exits remain separate from later passes. Scripted projections prove no hosted outcome. Native Grow scope observations use the local owned fixture with TEST installation, membership, sessions and grants.",
-      "checkpoint": {
-        "commit": "7b691a39b756df584bbeaa1d73a1730dec509b4b",
-        "tree": "4351ad092ae3e586d3daf037606867ccda2d1f1d"
-      },
-      "fileCount": 23,
-      "sha256sums": "68a43b86735f0008415e4f4a8e2f97867a0c7e1aee5b37a597a3eab4dcadc6e0",
-      "files": [
-        {
-          "path": "SHA256SUMS",
-          "bytes": 2166,
-          "sha256": "68a43b86735f0008415e4f4a8e2f97867a0c7e1aee5b37a597a3eab4dcadc6e0"
-        },
-        {
-          "path": "artroom-card-refresh-target-replacement-20261102.report.json",
-          "bytes": 675,
-          "sha256": "de06a88942805258cdf974d17b7becd4955f4479f20dec919e40173548418d72"
-        },
-        {
-          "path": "artroom-card-refresh-target-settled-20261102.report.json",
-          "bytes": 595,
-          "sha256": "91126fd9fb3b11e49858e767b35e77c81594529911c05360cb80f6974013a6c9"
-        },
-        {
-          "path": "first-driver.mjs",
-          "bytes": 4385,
-          "sha256": "0d18e982331cfe434262ca9f9e8c6f0d19e4558b2c8d8c83703f5e12cf4b4c1b"
-        },
-        {
-          "path": "first-run.json",
-          "bytes": 384,
-          "sha256": "55889cd02ada28d151677f8728f98a178b25ef55f35093540b58112ec09084fa"
-        },
-        {
-          "path": "qualification.json",
-          "bytes": 878,
-          "sha256": "f447cf384ab10a05fe7cc60e81fa2c31516772f3e54a5c6a9c8435d3ead1e36d"
-        },
-        {
-          "path": "replacement-driver.mjs",
-          "bytes": 5340,
-          "sha256": "c25406cea1fcc6806087578b9d8b0d9a356050645f7cbd897f2675a5fd8bd725"
-        },
-        {
-          "path": "replacement.exit",
-          "bytes": 2,
-          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
-        },
-        {
-          "path": "replacement.stderr.log",
-          "bytes": 191,
-          "sha256": "698faae6d78958537ce6680627f8a31a634bcde958f7babdb236aaef9d1779fd"
-        },
-        {
-          "path": "replacement.stdout.log",
-          "bytes": 543,
-          "sha256": "260e0d28895b6438c31b771cae8907489a7ef12a687f2e00229ebf986019237a"
-        },
-        {
-          "path": "screens/artroom-card-refresh-target-replacement-20261102/refresh-open-320.png",
-          "bytes": 37266,
-          "sha256": "7f8c450a5d4c9b35087de96f99f889a42b2a08c74eabf57cfd79a0cfbf704144"
-        },
-        {
-          "path": "screens/artroom-card-refresh-target-replacement-20261102/refresh-open-592.png",
-          "bytes": 38515,
-          "sha256": "08149b74daccdcd539857dd4b6a38d82e23a81531bfc1b4c3fd0b3a1745e82c1"
-        },
-        {
-          "path": "screens/artroom-card-refresh-target-settled-20261102/refresh-open-320.png",
-          "bytes": 37266,
-          "sha256": "7f8c450a5d4c9b35087de96f99f889a42b2a08c74eabf57cfd79a0cfbf704144"
-        },
-        {
-          "path": "screens/artroom-card-refresh-target-settled-20261102/refresh-open-592.png",
-          "bytes": 38515,
-          "sha256": "08149b74daccdcd539857dd4b6a38d82e23a81531bfc1b4c3fd0b3a1745e82c1"
-        },
-        {
-          "path": "settled-driver.mjs",
-          "bytes": 4970,
-          "sha256": "64e7c6818b3a25b40cbf40070fef057c694132c6f61eabd27efef9a70334cdaa"
-        },
-        {
-          "path": "settled.exit",
-          "bytes": 2,
-          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
-        },
-        {
-          "path": "settled.stderr.log",
-          "bytes": 191,
-          "sha256": "72fd2e286cf0a2d117a7d8dcc53c1a7f7859322f56aa5837d58646f56dff2bc9"
-        },
-        {
-          "path": "settled.stdout.log",
-          "bytes": 479,
-          "sha256": "5a15df452b739aab2d1dbec3017a1efc37f94c9bb49ef6a8cb972dc5b4623bc1"
-        },
-        {
-          "path": "sized-driver.mjs",
-          "bytes": 4826,
-          "sha256": "a066b05e5ccb805bd0920c00c960ee8d21c231068cc687560962a44150f47bd6"
-        },
-        {
-          "path": "sized-first-driver.mjs",
-          "bytes": 4826,
-          "sha256": "a066b05e5ccb805bd0920c00c960ee8d21c231068cc687560962a44150f47bd6"
-        },
-        {
-          "path": "sized.exit",
-          "bytes": 2,
-          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
-        },
-        {
-          "path": "sized.stderr.log",
-          "bytes": 580,
-          "sha256": "7eb90fe2db82280644e91369ea8461add9cfe278b55a2043f23ff88db47d82a2"
-        },
-        {
-          "path": "sized.stdout.log",
-          "bytes": 0,
-          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        }
-      ]
+     "path": "SHA256SUMS",
+     "bytes": 592,
+     "sha256": "50cfb77c4ff58842411d391f7de925db14bd504764ae636652143f966236cf35"
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-card-refresh-controls",
-      "qualification": "Implementation checks on the uncommitted refresh draft atop 7b691a39, before its base fast-forward to 2f825e32. No complete frozen draft snapshot was retained. These local observations support development; exact-source Card workflow 41426562339 at e0b21985 owns final composition. The original harness failures and their actual exits remain separate from later passes. Scripted projections prove no hosted outcome. Native Grow scope observations use the local owned fixture with TEST installation, membership, sessions and grants.",
-      "checkpoint": {
-        "commit": "7b691a39b756df584bbeaa1d73a1730dec509b4b",
-        "tree": "4351ad092ae3e586d3daf037606867ccda2d1f1d"
-      },
-      "fileCount": 19,
-      "sha256sums": "cf3437d05d48d2c76bb12f66857ab64a9e74870595a482679267c261c8bd6839",
-      "files": [
-        {
-          "path": "SHA256SUMS",
-          "bytes": 1586,
-          "sha256": "cf3437d05d48d2c76bb12f66857ab64a9e74870595a482679267c261c8bd6839"
-        },
-        {
-          "path": "borrow-item.build.exit",
-          "bytes": 2,
-          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
-        },
-        {
-          "path": "borrow-item.build.stderr.log",
-          "bytes": 0,
-          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        },
-        {
-          "path": "borrow-item.build.stdout.log",
-          "bytes": 51,
-          "sha256": "4c1a2bf8e5b091d5863efe0cc2cf5d90d6a143c4b74b92e4180559d59bca58f9"
-        },
-        {
-          "path": "borrow-item.exit",
-          "bytes": 2,
-          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
-        },
-        {
-          "path": "borrow-item.result.json",
-          "bytes": 476,
-          "sha256": "28b473623c33654495fd09dde1d9774569a1440327135cb36b9f4b6cee8947f0"
-        },
-        {
-          "path": "borrow-item.stderr.log",
-          "bytes": 599,
-          "sha256": "ba1223e3b9342dabdd2f452e1b061397fa7fe7db0e3f5308fb90f7c888d59e23"
-        },
-        {
-          "path": "borrow-item.stdout.log",
-          "bytes": 0,
-          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        },
-        {
-          "path": "control-runner.py",
-          "bytes": 3116,
-          "sha256": "fc98055c3d4c42afdf6cccc6e6cd30add170e1ad34456327dc7acd249d659b63"
-        },
-        {
-          "path": "driver.mjs",
-          "bytes": 5340,
-          "sha256": "c25406cea1fcc6806087578b9d8b0d9a356050645f7cbd897f2675a5fd8bd725"
-        },
-        {
-          "path": "forget-open.build.exit",
-          "bytes": 2,
-          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
-        },
-        {
-          "path": "forget-open.build.stderr.log",
-          "bytes": 0,
-          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        },
-        {
-          "path": "forget-open.build.stdout.log",
-          "bytes": 51,
-          "sha256": "4c1a2bf8e5b091d5863efe0cc2cf5d90d6a143c4b74b92e4180559d59bca58f9"
-        },
-        {
-          "path": "forget-open.exit",
-          "bytes": 2,
-          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
-        },
-        {
-          "path": "forget-open.result.json",
-          "bytes": 470,
-          "sha256": "0e4a0b87bfa256f8517631271a6c0ded2d0fd2e1f7e0faeba80635af2563877d"
-        },
-        {
-          "path": "forget-open.stderr.log",
-          "bytes": 567,
-          "sha256": "ff766e657369844a992236f2a2f6d5344616e6fb281f2cd7299b4489cf572533"
-        },
-        {
-          "path": "forget-open.stdout.log",
-          "bytes": 0,
-          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        },
-        {
-          "path": "qualification.json",
-          "bytes": 878,
-          "sha256": "507ad9928810d38b085646c0b27236dae8e9c37b6d0e09a11d7d00798adfc6e8"
-        },
-        {
-          "path": "restored.json",
-          "bytes": 208,
-          "sha256": "610ac930a82e1074361af5e5452ebcfa44566b56b7538f7b9e9433118d12777d"
-        }
-      ]
+     "path": "qualification.json",
+     "bytes": 517,
+     "sha256": "73bff7d8109e6f9f13df1ad8286d86de448fdc7869ebdb938659e49132218295"
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-card-refresh-browser",
-      "qualification": "Implementation checks on the uncommitted refresh draft atop 7b691a39, before its base fast-forward to 2f825e32. No complete frozen draft snapshot was retained. These local observations support development; exact-source Card workflow 41426562339 at e0b21985 owns final composition. The original harness failures and their actual exits remain separate from later passes. Scripted projections prove no hosted outcome. Native Grow scope observations use the local owned fixture with TEST installation, membership, sessions and grants.",
-      "checkpoint": {
-        "commit": "7b691a39b756df584bbeaa1d73a1730dec509b4b",
-        "tree": "4351ad092ae3e586d3daf037606867ccda2d1f1d"
-      },
-      "fileCount": 87,
-      "sha256sums": "ff95a23064c02f41f998237f3fc714b71bbe628f0d986e92e8c152569ed3f116",
-      "files": [
-        {
-          "path": "SHA256SUMS",
-          "bytes": 9487,
-          "sha256": "ff95a23064c02f41f998237f3fc714b71bbe628f0d986e92e8c152569ed3f116"
-        },
-        {
-          "path": "commands.json",
-          "bytes": 792,
-          "sha256": "465209cc2882a9ab0be5699606678366280f119e8e102420907fef9d8b278d14"
-        },
-        {
-          "path": "grow-routing.exit",
-          "bytes": 2,
-          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
-        },
-        {
-          "path": "grow-routing.summary.json",
-          "bytes": 1646,
-          "sha256": "3572ebc700dcdc57f9f652c0726b71a66471a5e86ff136fd21d2bacfa8d109a4"
-        },
-        {
-          "path": "qualification.json",
-          "bytes": 878,
-          "sha256": "6d201fb07bbb4398fdac138a631dd263b91b04100f8f4d010851ad7500a413f7"
-        },
-        {
-          "path": "screens/grow-routing/operator-320.png",
-          "bytes": 37553,
-          "sha256": "8cb7e7808c82c5322fcd202d7e4d90bcbdd0a6e5dae1cb3c8d13ae9226f990a9"
-        },
-        {
-          "path": "screens/grow-routing/operator-592.png",
-          "bytes": 40183,
-          "sha256": "a5abbac9fad6dd2e4a4248d3f5c090319fdf05382a427fa90d05419633c38ba7"
-        },
-        {
-          "path": "screens/grow-routing/task-320.png",
-          "bytes": 21361,
-          "sha256": "0543e838c1ff4b259b2a82647a3cce84da45af79f23cd5176b199a3554cffaba"
-        },
-        {
-          "path": "screens/grow-routing/task-592.png",
-          "bytes": 23145,
-          "sha256": "819fbe0fc96132f6dd8ebab54cc0a95de44b3978dbef21b42b40df0b15994b78"
-        },
-        {
-          "path": "screens/grow-routing/task-complete-320.png",
-          "bytes": 21302,
-          "sha256": "24f0ab72ca52357c10abf7bf2786982f94ca4c5065d91e4452b579720e89eb09"
-        },
-        {
-          "path": "screens/grow-routing/task-complete-592.png",
-          "bytes": 22573,
-          "sha256": "e61f3836e75b02883fce7dddaee63299a9a40d93e465c310704657a4e31bac9a"
-        },
-        {
-          "path": "screens/grow-routing/unavailable-320.png",
-          "bytes": 61302,
-          "sha256": "04cb1d892c7b9bc4ab8988b514c588ee5dfe8eb9291e6d5a847e9e6c97c6afb1"
-        },
-        {
-          "path": "screens/grow-routing/unavailable-592.png",
-          "bytes": 60278,
-          "sha256": "61096ed368763c237d0ebd362ce1ecb2c1b52c53747daaebaeba3f1532342fff"
-        },
-        {
-          "path": "screens/grow-routing/watering-320.png",
-          "bytes": 23833,
-          "sha256": "a004664c9b9844cebcc47d4c594a2d401d16593db3c689765074e0a14abd239d"
-        },
-        {
-          "path": "screens/grow-routing/watering-592.png",
-          "bytes": 25901,
-          "sha256": "51250af4d9671b7900638c3a43de7307cd6f421ad7d2df6636070ae0b115c60b"
-        },
-        {
-          "path": "screens/grow-routing/watering-complete-320.png",
-          "bytes": 21723,
-          "sha256": "428d89afb2305a577bb701dcdcee5a63c1da410b2023cd3de00ad45d27d4bbba"
-        },
-        {
-          "path": "screens/grow-routing/watering-complete-592.png",
-          "bytes": 23058,
-          "sha256": "c3e717cf4173a41363ebdae810abc408d3c3ae177128648ba07008af288e397f"
-        },
-        {
-          "path": "screens/views-browser/200-percent-dark-320.png",
-          "bytes": 60924,
-          "sha256": "732b405bd6676c1c5db7d00af21fdb4fc5668b39beef48c869b32f434e64c893"
-        },
-        {
-          "path": "screens/views-browser/absent.png",
-          "bytes": 12144,
-          "sha256": "910aa27142bde35ff3c2fac3505562c55a9a6a64c26b7427c531465e47720412"
-        },
-        {
-          "path": "screens/views-browser/checks-failed.png",
-          "bytes": 31954,
-          "sha256": "d50207ff21213958c327f76574068820cbc0bc00d11ad4f3d9e343c88888f8c0"
-        },
-        {
-          "path": "screens/views-browser/dark-320-carousel.png",
-          "bytes": 20457,
-          "sha256": "bbc8bd8214ea381ce6c0d019a632278dcb04111ba521c773821e76e5649230cf"
-        },
-        {
-          "path": "screens/views-browser/dark-320-receipt.png",
-          "bytes": 29763,
-          "sha256": "c620c5947d5842536fb415eaec29cfe9661f14a52f4cd5831e428a911e784562"
-        },
-        {
-          "path": "screens/views-browser/dark-390-carousel.png",
-          "bytes": 21058,
-          "sha256": "ff612fd291d42d06b91db169b8e04ca1c1c282eddc7c0b79a568b4cb3cff88c9"
-        },
-        {
-          "path": "screens/views-browser/dark-390-receipt.png",
-          "bytes": 30176,
-          "sha256": "68a6f37417e9afe690727ad5fd14b2e8af7d4a2fec60cfc73abb7e0e86790490"
-        },
-        {
-          "path": "screens/views-browser/dark-592-carousel.png",
-          "bytes": 22405,
-          "sha256": "fa2098e4e574f9aa5a9dc4f4597f304fa9068c079901cb93d7111b7a5e0ef8df"
-        },
-        {
-          "path": "screens/views-browser/dark-592-receipt.png",
-          "bytes": 31804,
-          "sha256": "6cab59886e9cb0f8282c4c5d9600e74bb637c5534ebed7254870f142b21a2309"
-        },
-        {
-          "path": "screens/views-browser/denied.png",
-          "bytes": 12019,
-          "sha256": "9940aeb8ee54103d1f160a3e013610adc8b02f25335eaa52be8b2673bbf31e45"
-        },
-        {
-          "path": "screens/views-browser/empty.png",
-          "bytes": 9147,
-          "sha256": "0679a4f49e1636b3eb0b780f02122f9d6c6dd6a2c99509182c91c3244a23b3b3"
-        },
-        {
-          "path": "screens/views-browser/incomplete.png",
-          "bytes": 84476,
-          "sha256": "aae191212f3e47f756b9350f23eb239390ff46cee4a1259c701437d5e4a49344"
-        },
-        {
-          "path": "screens/views-browser/light-320-carousel.png",
-          "bytes": 20492,
-          "sha256": "fa237733c902412b7bfe1097ddc3ad7f53e814a1a6805575ed98e0ea32e4629f"
-        },
-        {
-          "path": "screens/views-browser/light-320-receipt.png",
-          "bytes": 29663,
-          "sha256": "cfed692d011cc3ef90f915a8aaaf17b1d70c1219dea4948f613b30c3f5da5049"
-        },
-        {
-          "path": "screens/views-browser/light-390-carousel.png",
-          "bytes": 21094,
-          "sha256": "3d5aa8ebc536b489e04d0ebd37e6c2a55bab1164fd522c8d4b50e352599e8477"
-        },
-        {
-          "path": "screens/views-browser/light-390-receipt.png",
-          "bytes": 30158,
-          "sha256": "2bc080b1bd3fff4e05bb878f8da07c8df4e3406b7af69640eec45bacc4436685"
-        },
-        {
-          "path": "screens/views-browser/light-592-carousel.png",
-          "bytes": 22419,
-          "sha256": "396a2bdd45e8e5b91e185e65d9c5f40f79a58a0db9d8976ab5b464e8bb2a5ec8"
-        },
-        {
-          "path": "screens/views-browser/light-592-receipt.png",
-          "bytes": 31826,
-          "sha256": "c48dd3bb1591bfae967edc7f4d91dc66868611ccc3b1e5714b417c040cb03358"
-        },
-        {
-          "path": "screens/views-browser/loss.png",
-          "bytes": 29952,
-          "sha256": "94d7fe1e51f50ec719d781d3cfcdc7d351d346c7cc955cee987316a5b066c4e2"
-        },
-        {
-          "path": "screens/views-browser/native-agent-320-card.png",
-          "bytes": 31510,
-          "sha256": "67095ed198b36ec8ef1f7e25a32305241a6e55bd3953762e21b04c384ce0f6cc"
-        },
-        {
-          "path": "screens/views-browser/native-agent-320-receipt.png",
-          "bytes": 30413,
-          "sha256": "01ea347562afda6f6f14e65afb59d94a9e64074c80da35e2faa2b42ffffc737c"
-        },
-        {
-          "path": "screens/views-browser/native-agent-592-card.png",
-          "bytes": 33918,
-          "sha256": "f65c9e201f40e2e57c3b6a40d6e183fb57e7fb25c107e4ac45dc6f9b2192a20b"
-        },
-        {
-          "path": "screens/views-browser/native-agent-592-receipt.png",
-          "bytes": 32302,
-          "sha256": "8c3041bf3dcdea6bdb15a581e42c01f88104ca8555449952653ecf818b381295"
-        },
-        {
-          "path": "screens/views-browser/native-checker-320-card.png",
-          "bytes": 31242,
-          "sha256": "4c29bea56b4238461ba2bd13214cd8ea8a123d65fb37faff2156b36a72c24c79"
-        },
-        {
-          "path": "screens/views-browser/native-checker-320-receipt.png",
-          "bytes": 33616,
-          "sha256": "29eafbf77f568a45e6168a6d21b5e4973c0463754215f2bf383d0f5299c39a1f"
-        },
-        {
-          "path": "screens/views-browser/native-checker-592-card.png",
-          "bytes": 33795,
-          "sha256": "b76c01a010c64085239e8017809b65b32e85cf3e1ddd1c6023a9255d5a357168"
-        },
-        {
-          "path": "screens/views-browser/native-checker-592-receipt.png",
-          "bytes": 35816,
-          "sha256": "2e9c5190d80b54a3dc0ecfd7f12190d8f46fc4d61b4816adcf1116165c649537"
-        },
-        {
-          "path": "screens/views-browser/native-person-320-card.png",
-          "bytes": 31035,
-          "sha256": "bb7c538a85ded199d5a565e776f91381f3b44ef9c9d80bb88cdca5dfcffd99c1"
-        },
-        {
-          "path": "screens/views-browser/native-person-320-receipt.png",
-          "bytes": 30890,
-          "sha256": "c351977c80d455a3e870ecf364f97ac64a2928b46db99152110f71d8429ba990"
-        },
-        {
-          "path": "screens/views-browser/native-person-592-card.png",
-          "bytes": 33514,
-          "sha256": "217ac7c1bae028831dfd44484e9562dc0bf787f1b470d4af8b7622ea30bb256e"
-        },
-        {
-          "path": "screens/views-browser/native-person-592-receipt.png",
-          "bytes": 32813,
-          "sha256": "3ef0359af75d414a314d444cae28930dc1d4b5cc665c335094ad87adbcd4b619"
-        },
-        {
-          "path": "screens/views-browser/process-restart.png",
-          "bytes": 31808,
-          "sha256": "3e55d4cb1ce7b2a719f34d1de6b686ea72c345c098bcafa580fac9acf9ea9fb8"
-        },
-        {
-          "path": "screens/views-browser/read-outlasts-wait.png",
-          "bytes": 34503,
-          "sha256": "a606c2bf327994adecea3ff50a3fcd26f737bbf3c0be4db004891ebface70c70"
-        },
-        {
-          "path": "screens/views-browser/refresh-open-320.png",
-          "bytes": 36766,
-          "sha256": "afd6c23a11d8f4d6ab3234a1d25d652963882dd03cc64c1b2346ae2b5a2d94cf"
-        },
-        {
-          "path": "screens/views-browser/refresh-open-592.png",
-          "bytes": 38124,
-          "sha256": "7a808915d00206f7d192bdec1b376fdf8f59f816f338c326c9bd3286362f8a41"
-        },
-        {
-          "path": "screens/views-browser/reopen-refused.png",
-          "bytes": 18773,
-          "sha256": "a03221bd3530a96ef4f4d604efc28126038b25856f2fa8304821f4c906752112"
-        },
-        {
-          "path": "screens/views-browser/two-process.png",
-          "bytes": 31808,
-          "sha256": "3e55d4cb1ce7b2a719f34d1de6b686ea72c345c098bcafa580fac9acf9ea9fb8"
-        },
-        {
-          "path": "screens/views-browser/unavailable.png",
-          "bytes": 12330,
-          "sha256": "893b7ed4912e499240acc4b6d387c0e7fa3ec5e5ef3d83ed38d1f9f3c5f424a0"
-        },
-        {
-          "path": "screens/views-browser/updates.png",
-          "bytes": 84476,
-          "sha256": "aae191212f3e47f756b9350f23eb239390ff46cee4a1259c701437d5e4a49344"
-        },
-        {
-          "path": "screens/views-browser/words-change-first-dark.png",
-          "bytes": 24107,
-          "sha256": "71cc8a75317184509bbdf51f48ca0664589f41ab8fe798b31127a686f4c47686"
-        },
-        {
-          "path": "screens/views-browser/words-change-first-light.png",
-          "bytes": 24019,
-          "sha256": "b9c3517abf9f96cc8495df8aece33ad22444bdace7fc30268273c2f07f4a48ce"
-        },
-        {
-          "path": "screens/views-browser/words-change-opened-dark.png",
-          "bytes": 68274,
-          "sha256": "b13f0acb4d24ae200805a42e2e7126a498488bd0558ce85eea08f1e7e5dbfcd6"
-        },
-        {
-          "path": "screens/views-browser/words-change-opened-light.png",
-          "bytes": 68121,
-          "sha256": "52c9d9748ba08e3c396d681d847f8d84e1d3a1adf8fdf03a58e80e32bebc463e"
-        },
-        {
-          "path": "screens/views-browser/words-change-receipt-dark.png",
-          "bytes": 28122,
-          "sha256": "d78967d150b730259abee5efcbe42458b53443b003fbccf93211cf621e34f94c"
-        },
-        {
-          "path": "screens/views-browser/words-change-receipt-light.png",
-          "bytes": 28094,
-          "sha256": "5870b44c8b05f1a2cf33007efb29841c42e4827b58d4d21c559690661c9a41f8"
-        },
-        {
-          "path": "screens/views-browser/words-decision-long-dark.png",
-          "bytes": 30332,
-          "sha256": "ba3f18e41556847faa8531c123f9d3af01343c2fb1e852cbe372811d11143c6f"
-        },
-        {
-          "path": "screens/views-browser/words-decision-long-light.png",
-          "bytes": 30450,
-          "sha256": "6ed40bacc0093058ee23feb15a3dedcb10e47fb2815714d12a05caaa1eb3c121"
-        },
-        {
-          "path": "screens/views-browser/words-decision-long-opened-dark.png",
-          "bytes": 114074,
-          "sha256": "0f6f565cc6ecf9179c13cb8fe307f9c8c5db442cec2a26c8bdfac6a27ea5ed0f"
-        },
-        {
-          "path": "screens/views-browser/words-decision-long-opened-light.png",
-          "bytes": 114252,
-          "sha256": "a0ee6acd2a7824227693bcb91a9c33bfff89a732edbc9df08b41062cc51b1d46"
-        },
-        {
-          "path": "screens/views-browser/words-decision-short-dark.png",
-          "bytes": 37643,
-          "sha256": "cb10c7bb11fc13fc2c337ca382b85c6e327e000124f70be4b5eaba126f99d442"
-        },
-        {
-          "path": "screens/views-browser/words-decision-short-light.png",
-          "bytes": 37659,
-          "sha256": "ffa0c6edbc7a44e5408b00fd169538c6f20519fa68d3376f06695f63a737b730"
-        },
-        {
-          "path": "screens/views-browser/words-decision-short-receipt-dark.png",
-          "bytes": 36016,
-          "sha256": "cb2ff3f4d8f1499b95e9b4e9b42660c59a22467061fecc1c542ad061bcef6cc8"
-        },
-        {
-          "path": "screens/views-browser/words-decision-short-receipt-light.png",
-          "bytes": 36154,
-          "sha256": "2842724a0eee4a3c5732e818643232c73f1b0f64b48d5483f3f88f446b757e1c"
-        },
-        {
-          "path": "screens/views-browser/words-empty-work-dark.png",
-          "bytes": 10345,
-          "sha256": "629fdc61664d2be4dac14b3bb3bc954153be6623ebea72eaf36027b9092ae2a6"
-        },
-        {
-          "path": "screens/views-browser/words-empty-work-light.png",
-          "bytes": 10275,
-          "sha256": "13c8ea905a76bacf683fba3a3ad913275ad1a89cf13e9825313f78e4edf754b8"
-        },
-        {
-          "path": "screens/views-browser/words-merge-waits-disclosed-dark.png",
-          "bytes": 132257,
-          "sha256": "44d7a9f3b07e927341765807f12dbff01fe676d1a918cecac380f543f273153d"
-        },
-        {
-          "path": "screens/views-browser/words-merge-waits-disclosed-light.png",
-          "bytes": 132002,
-          "sha256": "deabceef5d895699082e4db6e1930a2864d8232cb29c93b64d2b1bd4461e2b1a"
-        },
-        {
-          "path": "screens/views-browser/words-merge-waits-first-dark.png",
-          "bytes": 41826,
-          "sha256": "4f16dd92a92f38dc0254567a0dd06bc97deeae3263f2a9c59938c418e5e7f1a6"
-        },
-        {
-          "path": "screens/views-browser/words-merge-waits-first-light.png",
-          "bytes": 42019,
-          "sha256": "4a20cdcba939af281a6bca88658725b64ee4e2f5c9a6c70a32aac8f0e721f1ee"
-        },
-        {
-          "path": "screens/views-browser/words-merge-waits-opened-dark.png",
-          "bytes": 43589,
-          "sha256": "723e6bad3ed256cbdd04e773bde7faabc096bea829fea1a2422b668691f2960e"
-        },
-        {
-          "path": "screens/views-browser/words-merge-waits-opened-light.png",
-          "bytes": 43699,
-          "sha256": "a5026a3080bfcdfd2192204933bb9606ed2b965d1171f80e78232622fc4d35f2"
-        },
-        {
-          "path": "screens/views-browser/words-question-row-dark.png",
-          "bytes": 40990,
-          "sha256": "ef97ca1bcdb8d4b78f75d5d76e9fe6f2f5fab099deb02d9cdd239401499e2c1b"
-        },
-        {
-          "path": "screens/views-browser/words-question-row-light.png",
-          "bytes": 41371,
-          "sha256": "8c1b2fa8292893ace8ba791e04cf80449dc13721519396a3e7d63594b981a677"
-        },
-        {
-          "path": "screens/views-browser/words-work-1-dark.png",
-          "bytes": 29204,
-          "sha256": "d8a655f6773157b9a324608d92fc8f974f7d88958b76536276552fd02e1ee7f6"
-        },
-        {
-          "path": "screens/views-browser/words-work-1-light.png",
-          "bytes": 29514,
-          "sha256": "ca6b2f079d74d89fdcd29b042dc526b0de83d001fa93a0c0c42a3fbdd5257eb3"
-        },
-        {
-          "path": "screens/views-browser/words-work-2-dark.png",
-          "bytes": 30326,
-          "sha256": "a9c5eaad596e26ee5bc754ea03b1fea3926af12411c93071916f0dc676794ce0"
-        },
-        {
-          "path": "screens/views-browser/words-work-2-light.png",
-          "bytes": 30438,
-          "sha256": "fda4457a75c45268246c5e72864cfc4f91f97978dcce0f48f59ff23908252cf0"
-        },
-        {
-          "path": "views-browser.exit",
-          "bytes": 2,
-          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
-        },
-        {
-          "path": "views-browser.summary.json",
-          "bytes": 5357,
-          "sha256": "ab9d401241979f651a56b21f06b1e60f6cc5def3ab2f674b0747f682bd73e46f"
-        },
-        {
-          "path": "withheld-output.json",
-          "bytes": 3844,
-          "sha256": "7554fffc390eec57de61765020f23b20ebdeeeb0d234154b30f9ca7edd8b0372"
-        }
-      ]
+     "path": "withheld-output.json",
+     "bytes": 355,
+     "sha256": "3189c1244be47922be59b766399f31c8ff7246bfe9f5ffe126344c0edcf1452f"
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-card-refresh-ci",
-      "qualification": "Exact frozen source e0b21985: Card workflow 41426562339 succeeds, including the generated-module check and all three browser scripts. Whole console stays private with its hash and byte count.",
-      "checkpoint": {
-        "commit": "e0b21985cac267abc5c0d2313e511d2201099302",
-        "tree": "e67e36e796691fc25434c23192a05540e2b83969"
-      },
-      "fileCount": 8,
-      "sha256sums": "50cfb77c4ff58842411d391f7de925db14bd504764ae636652143f966236cf35",
-      "files": [
-        {
-          "path": "SHA256SUMS",
-          "bytes": 592,
-          "sha256": "50cfb77c4ff58842411d391f7de925db14bd504764ae636652143f966236cf35"
-        },
-        {
-          "path": "qualification.json",
-          "bytes": 517,
-          "sha256": "73bff7d8109e6f9f13df1ad8286d86de448fdc7869ebdb938659e49132218295"
-        },
-        {
-          "path": "withheld-output.json",
-          "bytes": 355,
-          "sha256": "3189c1244be47922be59b766399f31c8ff7246bfe9f5ffe126344c0edcf1452f"
-        },
-        {
-          "path": "workflow-log.exit",
-          "bytes": 2,
-          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
-        },
-        {
-          "path": "workflow-log.stderr.log",
-          "bytes": 0,
-          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        },
-        {
-          "path": "workflow.exit",
-          "bytes": 2,
-          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
-        },
-        {
-          "path": "workflow.json",
-          "bytes": 4194,
-          "sha256": "1d72c6973d0083e848e1d8fdabc4626ec9025170e7edf1407c0fb90b472813aa"
-        },
-        {
-          "path": "workflow.stderr.log",
-          "bytes": 0,
-          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        }
-      ]
+     "path": "workflow-log.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
     },
     {
-      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-card-refresh-gate",
-      "qualification": "One full refresh gate at frozen e0b21985. The actual exit and matching before/after source guards decide the result. Raw test.log stays private. This run does not alter the two separately retained first-press gate failures.",
-      "checkpoint": {
-        "commit": "e0b21985cac267abc5c0d2313e511d2201099302",
-        "tree": "e67e36e796691fc25434c23192a05540e2b83969"
-      },
-      "fileCount": 40,
-      "sha256sums": "b67b1d838b31457cde0c12b84a85081b6c9653b3dd259c6dac19c0a4902c02af",
-      "files": [
-        {
-          "path": "SHA256SUMS",
-          "bytes": 3389,
-          "sha256": "b67b1d838b31457cde0c12b84a85081b6c9653b3dd259c6dac19c0a4902c02af"
-        },
-        {
-          "path": "collector.py",
-          "bytes": 4007,
-          "sha256": "f655ff06d12ff5d919e9c954e2ece9dbe2c211df7b6dd1b6cf9ece2b50295ec6"
-        },
-        {
-          "path": "command.json",
-          "bytes": 592,
-          "sha256": "13fbc9a4a4eb8e2f7b74e39029c18d3a3648f87f080de41b28114dec7087a7c6"
-        },
-        {
-          "path": "driver.py",
-          "bytes": 2175,
-          "sha256": "77e90d1705b253db8ff07675626a40a3ebb8d366a59689ea33f4e7ac079d34e3"
-        },
-        {
-          "path": "gate/citations.log",
-          "bytes": 1566962,
-          "sha256": "2e4f499b29c0b438b9fc5b7362fcf57498f48bd065ff5de4d4a0de78cfd9d3e7"
-        },
-        {
-          "path": "gate/citations.time",
-          "bytes": 29,
-          "sha256": "22289aaff8bf6c4c9b3e614abe7783e75b9b19d10f911f79840a94bb5baceb5d"
-        },
-        {
-          "path": "gate/cite-test.log",
-          "bytes": 760,
-          "sha256": "203f7277c137e9725eba48693e0285dbbc4336fa5b67cf0c8e074d70a39ec75d"
-        },
-        {
-          "path": "gate/cite-test.time",
-          "bytes": 29,
-          "sha256": "4888f1bb2d06f8a10868a54819bd92b9a3885a31551cc79710723df32ef023cd"
-        },
-        {
-          "path": "gate/commit-messages.log",
-          "bytes": 38,
-          "sha256": "95c32481a87cffe3e850fb0dcfc0dce82a3c17e8368e227d0271bbb66298b322"
-        },
-        {
-          "path": "gate/commit-messages.time",
-          "bytes": 29,
-          "sha256": "b2b892ce9a7c8ad29214199a33b154dab17a22613496aeb4905dbef44d49cb57"
-        },
-        {
-          "path": "gate/commit-test.log",
-          "bytes": 591,
-          "sha256": "c5e1964e65416deca3cc6f33aeaa1abc43f87d311842f95c60f302aa77c25c53"
-        },
-        {
-          "path": "gate/commit-test.time",
-          "bytes": 29,
-          "sha256": "0971b12ab3b2e5618be5af20950a857c39abb4d500324a513765d8aa7e1aee00"
-        },
-        {
-          "path": "gate/doc-links.log",
-          "bytes": 36,
-          "sha256": "05d81cfdd4a20d7f249083d065c7dad85afba93032f10e5b73c1bec4e568c8b0"
-        },
-        {
-          "path": "gate/doc-links.time",
-          "bytes": 29,
-          "sha256": "92f857e5ccb11b0bff4685c413d1d9581985a0f529d31bfa74f25906bdaecb79"
-        },
-        {
-          "path": "gate/helpers.log",
-          "bytes": 68,
-          "sha256": "614152ce2ba93fdad7a626086b8bacc122b5db084690b0d63daa5ddc746348d8"
-        },
-        {
-          "path": "gate/helpers.time",
-          "bytes": 29,
-          "sha256": "f13c228ecb23a37f9a043026a4ed1ea65fe020f9578cbee69fabdc0fbb73131a"
-        },
-        {
-          "path": "gate/notes.log",
-          "bytes": 18,
-          "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
-        },
-        {
-          "path": "gate/notes.time",
-          "bytes": 29,
-          "sha256": "66b019f3b91dd78b8a648f25e84fc8cee994db5eb175e39de9579bfdd75b994e"
-        },
-        {
-          "path": "gate/section-citations.json",
-          "bytes": 3938462,
-          "sha256": "4e5b98a9f465b98157e311b333339d08198c755d3e4e8f0c271340f71df2b53d"
-        },
-        {
-          "path": "gate/test-evidence/counting-sources.json",
-          "bytes": 988,
-          "sha256": "1e92d5c1d6fd318848d24e4afea58e8877ca1e609457cb44210d6459f3573f15"
-        },
-        {
-          "path": "gate/test-evidence/counting.jsonl",
-          "bytes": 136054,
-          "sha256": "1fd42e1d818cef26cfd48f1057f3fc5b9d915b8fad2395d1b1d5728a3c587f13"
-        },
-        {
-          "path": "gate/test-evidence/native.jsonl",
-          "bytes": 1009862,
-          "sha256": "5da86bb23fbb456987cd8310cfeffc7018ad4fa1e9c99374b2f2716bbab90251"
-        },
-        {
-          "path": "gate/test-evidence/node.jsonl",
-          "bytes": 342056,
-          "sha256": "bd088a04e49a5c65b7b1c00bd3b77ffb01fd92afe98645568f66a5a942ad1dc5"
-        },
-        {
-          "path": "gate/test-evidence/plain.jsonl",
-          "bytes": 3061803,
-          "sha256": "8d340b068abb612e726757b326280b1a43970e6a6027d0f60b0765d106b40a29"
-        },
-        {
-          "path": "gate/test-evidence/stages.json",
-          "bytes": 971,
-          "sha256": "d8ecd3e60225d5e2fd9f78b396a83bc6467c3e347e509a03a315ac22a9456edc"
-        },
-        {
-          "path": "gate/test.time",
-          "bytes": 37,
-          "sha256": "9f08845c1e377982e2d11e9e1942a9707eb7800c5caf9fc863c88446e99dd265"
-        },
-        {
-          "path": "gate/typecheck.log",
-          "bytes": 2112,
-          "sha256": "314b484b28a0c4bd57bef0aadea6797cbd7731897e547794f68cfb2e00c30264"
-        },
-        {
-          "path": "gate/typecheck.time",
-          "bytes": 31,
-          "sha256": "323cc9e81d9f726cbba452b3b99b80d987e581111979f5ecda20475ff5337bd4"
-        },
-        {
-          "path": "gate/whitespace.log",
-          "bytes": 0,
-          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        },
-        {
-          "path": "gate/whitespace.time",
-          "bytes": 29,
-          "sha256": "7649516202c97e13519bc5680080bc3f73da1f1608bf066281a11aa3e6c6aea7"
-        },
-        {
-          "path": "gate.exit",
-          "bytes": 2,
-          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
-        },
-        {
-          "path": "gate.stderr.log",
-          "bytes": 37,
-          "sha256": "f02d5c67ba2a7aa8c65a90ef542582605938956fe6295c700d9f2598767f388e"
-        },
-        {
-          "path": "gate.stdout.log",
-          "bytes": 6501,
-          "sha256": "e56dd9f87b1dace3fe7cebff24e82d8cfe50b7f48245f819f463b6c8c50e990c"
-        },
-        {
-          "path": "gate.terminal.txt",
-          "bytes": 591,
-          "sha256": "e161baa10938f768b2a277d0fcb9e96b71c0f8c096bbd813f5ea31702b3d0dc1"
-        },
-        {
-          "path": "progress.native.jsonl",
-          "bytes": 1152650,
-          "sha256": "b7f0b3cdfd66592b1b61b12aeea11d86cb7d0652739bba268dd9820b542a1f2d"
-        },
-        {
-          "path": "progress.plain.jsonl",
-          "bytes": 3639868,
-          "sha256": "c5f1bbde646d3282a73262890cdda9bceec60cab4c11596017bc340ac30387e7"
-        },
-        {
-          "path": "qualification.json",
-          "bytes": 525,
-          "sha256": "44ea1399a8e3fc1b9a101529e8fcdfe89d8c2365127ad30c63db70937a0f99e3"
-        },
-        {
-          "path": "source-after.json",
-          "bytes": 211,
-          "sha256": "e5b8a4e33a6f2faa0713f172bdf912cc20db1e64dfad6cb6734a8b5512c5883a"
-        },
-        {
-          "path": "source-before.json",
-          "bytes": 211,
-          "sha256": "e5b8a4e33a6f2faa0713f172bdf912cc20db1e64dfad6cb6734a8b5512c5883a"
-        },
-        {
-          "path": "withheld-output.json",
-          "bytes": 418,
-          "sha256": "335253db2c4cdfbedbc99385eabf96a0c29c1fc8b921a856ce7dcce91a6c8363"
-        }
-      ]
+     "path": "workflow-log.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "workflow.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "workflow.json",
+     "bytes": 4194,
+     "sha256": "1d72c6973d0083e848e1d8fdabc4626ec9025170e7edf1407c0fb90b472813aa"
+    },
+    {
+     "path": "workflow.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     }
-  ]
+   ]
+  },
+  {
+   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-card-refresh-gate",
+   "qualification": "One full refresh gate at frozen e0b21985. The actual exit and matching before/after source guards decide the result. Raw test.log stays private. This run does not alter the two separately retained first-press gate failures.",
+   "checkpoint": {
+    "commit": "e0b21985cac267abc5c0d2313e511d2201099302",
+    "tree": "e67e36e796691fc25434c23192a05540e2b83969"
+   },
+   "fileCount": 40,
+   "sha256sums": "b67b1d838b31457cde0c12b84a85081b6c9653b3dd259c6dac19c0a4902c02af",
+   "files": [
+    {
+     "path": "SHA256SUMS",
+     "bytes": 3389,
+     "sha256": "b67b1d838b31457cde0c12b84a85081b6c9653b3dd259c6dac19c0a4902c02af"
+    },
+    {
+     "path": "collector.py",
+     "bytes": 4007,
+     "sha256": "f655ff06d12ff5d919e9c954e2ece9dbe2c211df7b6dd1b6cf9ece2b50295ec6"
+    },
+    {
+     "path": "command.json",
+     "bytes": 592,
+     "sha256": "13fbc9a4a4eb8e2f7b74e39029c18d3a3648f87f080de41b28114dec7087a7c6"
+    },
+    {
+     "path": "driver.py",
+     "bytes": 2175,
+     "sha256": "77e90d1705b253db8ff07675626a40a3ebb8d366a59689ea33f4e7ac079d34e3"
+    },
+    {
+     "path": "gate/citations.log",
+     "bytes": 1566962,
+     "sha256": "2e4f499b29c0b438b9fc5b7362fcf57498f48bd065ff5de4d4a0de78cfd9d3e7"
+    },
+    {
+     "path": "gate/citations.time",
+     "bytes": 29,
+     "sha256": "22289aaff8bf6c4c9b3e614abe7783e75b9b19d10f911f79840a94bb5baceb5d"
+    },
+    {
+     "path": "gate/cite-test.log",
+     "bytes": 760,
+     "sha256": "203f7277c137e9725eba48693e0285dbbc4336fa5b67cf0c8e074d70a39ec75d"
+    },
+    {
+     "path": "gate/cite-test.time",
+     "bytes": 29,
+     "sha256": "4888f1bb2d06f8a10868a54819bd92b9a3885a31551cc79710723df32ef023cd"
+    },
+    {
+     "path": "gate/commit-messages.log",
+     "bytes": 38,
+     "sha256": "95c32481a87cffe3e850fb0dcfc0dce82a3c17e8368e227d0271bbb66298b322"
+    },
+    {
+     "path": "gate/commit-messages.time",
+     "bytes": 29,
+     "sha256": "b2b892ce9a7c8ad29214199a33b154dab17a22613496aeb4905dbef44d49cb57"
+    },
+    {
+     "path": "gate/commit-test.log",
+     "bytes": 591,
+     "sha256": "c5e1964e65416deca3cc6f33aeaa1abc43f87d311842f95c60f302aa77c25c53"
+    },
+    {
+     "path": "gate/commit-test.time",
+     "bytes": 29,
+     "sha256": "0971b12ab3b2e5618be5af20950a857c39abb4d500324a513765d8aa7e1aee00"
+    },
+    {
+     "path": "gate/doc-links.log",
+     "bytes": 36,
+     "sha256": "05d81cfdd4a20d7f249083d065c7dad85afba93032f10e5b73c1bec4e568c8b0"
+    },
+    {
+     "path": "gate/doc-links.time",
+     "bytes": 29,
+     "sha256": "92f857e5ccb11b0bff4685c413d1d9581985a0f529d31bfa74f25906bdaecb79"
+    },
+    {
+     "path": "gate/helpers.log",
+     "bytes": 68,
+     "sha256": "614152ce2ba93fdad7a626086b8bacc122b5db084690b0d63daa5ddc746348d8"
+    },
+    {
+     "path": "gate/helpers.time",
+     "bytes": 29,
+     "sha256": "f13c228ecb23a37f9a043026a4ed1ea65fe020f9578cbee69fabdc0fbb73131a"
+    },
+    {
+     "path": "gate/notes.log",
+     "bytes": 18,
+     "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+     "path": "gate/notes.time",
+     "bytes": 29,
+     "sha256": "66b019f3b91dd78b8a648f25e84fc8cee994db5eb175e39de9579bfdd75b994e"
+    },
+    {
+     "path": "gate/section-citations.json",
+     "bytes": 3938462,
+     "sha256": "4e5b98a9f465b98157e311b333339d08198c755d3e4e8f0c271340f71df2b53d"
+    },
+    {
+     "path": "gate/test-evidence/counting-sources.json",
+     "bytes": 988,
+     "sha256": "1e92d5c1d6fd318848d24e4afea58e8877ca1e609457cb44210d6459f3573f15"
+    },
+    {
+     "path": "gate/test-evidence/counting.jsonl",
+     "bytes": 136054,
+     "sha256": "1fd42e1d818cef26cfd48f1057f3fc5b9d915b8fad2395d1b1d5728a3c587f13"
+    },
+    {
+     "path": "gate/test-evidence/native.jsonl",
+     "bytes": 1009862,
+     "sha256": "5da86bb23fbb456987cd8310cfeffc7018ad4fa1e9c99374b2f2716bbab90251"
+    },
+    {
+     "path": "gate/test-evidence/node.jsonl",
+     "bytes": 342056,
+     "sha256": "bd088a04e49a5c65b7b1c00bd3b77ffb01fd92afe98645568f66a5a942ad1dc5"
+    },
+    {
+     "path": "gate/test-evidence/plain.jsonl",
+     "bytes": 3061803,
+     "sha256": "8d340b068abb612e726757b326280b1a43970e6a6027d0f60b0765d106b40a29"
+    },
+    {
+     "path": "gate/test-evidence/stages.json",
+     "bytes": 971,
+     "sha256": "d8ecd3e60225d5e2fd9f78b396a83bc6467c3e347e509a03a315ac22a9456edc"
+    },
+    {
+     "path": "gate/test.time",
+     "bytes": 37,
+     "sha256": "9f08845c1e377982e2d11e9e1942a9707eb7800c5caf9fc863c88446e99dd265"
+    },
+    {
+     "path": "gate/typecheck.log",
+     "bytes": 2112,
+     "sha256": "314b484b28a0c4bd57bef0aadea6797cbd7731897e547794f68cfb2e00c30264"
+    },
+    {
+     "path": "gate/typecheck.time",
+     "bytes": 31,
+     "sha256": "323cc9e81d9f726cbba452b3b99b80d987e581111979f5ecda20475ff5337bd4"
+    },
+    {
+     "path": "gate/whitespace.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "gate/whitespace.time",
+     "bytes": 29,
+     "sha256": "7649516202c97e13519bc5680080bc3f73da1f1608bf066281a11aa3e6c6aea7"
+    },
+    {
+     "path": "gate.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "gate.stderr.log",
+     "bytes": 37,
+     "sha256": "f02d5c67ba2a7aa8c65a90ef542582605938956fe6295c700d9f2598767f388e"
+    },
+    {
+     "path": "gate.stdout.log",
+     "bytes": 6501,
+     "sha256": "e56dd9f87b1dace3fe7cebff24e82d8cfe50b7f48245f819f463b6c8c50e990c"
+    },
+    {
+     "path": "gate.terminal.txt",
+     "bytes": 591,
+     "sha256": "e161baa10938f768b2a277d0fcb9e96b71c0f8c096bbd813f5ea31702b3d0dc1"
+    },
+    {
+     "path": "progress.native.jsonl",
+     "bytes": 1152650,
+     "sha256": "b7f0b3cdfd66592b1b61b12aeea11d86cb7d0652739bba268dd9820b542a1f2d"
+    },
+    {
+     "path": "progress.plain.jsonl",
+     "bytes": 3639868,
+     "sha256": "c5f1bbde646d3282a73262890cdda9bceec60cab4c11596017bc340ac30387e7"
+    },
+    {
+     "path": "qualification.json",
+     "bytes": 525,
+     "sha256": "44ea1399a8e3fc1b9a101529e8fcdfe89d8c2365127ad30c63db70937a0f99e3"
+    },
+    {
+     "path": "source-after.json",
+     "bytes": 211,
+     "sha256": "e5b8a4e33a6f2faa0713f172bdf912cc20db1e64dfad6cb6734a8b5512c5883a"
+    },
+    {
+     "path": "source-before.json",
+     "bytes": 211,
+     "sha256": "e5b8a4e33a6f2faa0713f172bdf912cc20db1e64dfad6cb6734a8b5512c5883a"
+    },
+    {
+     "path": "withheld-output.json",
+     "bytes": 418,
+     "sha256": "335253db2c4cdfbedbc99385eabf96a0c29c1fc8b921a856ce7dcce91a6c8363"
+    }
+   ]
+  },
+  {
+   "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-card-refresh-documentation",
+   "qualification": "Documentation checkpoint 60515b92 verifies the initial 177-file record, ten output citations and six local links. Only the final audit row and manifest expansion follow; production, tests, configuration and Card inputs remain equal to successful gate and workflow source e0b21985.",
+   "checkpoint": {
+    "commit": "60515b9224678983061323bb874ae4aabd744fcb",
+    "tree": "cac69b58206e5fc6541a7af502c68ba90a68e842"
+   },
+   "fileCount": 17,
+   "sha256sums": "85f5d95e4b5c512fcfb4f5b3200a7ed7e5334710e83f838e415f53b8ddeba7c1",
+   "files": [
+    {
+     "path": "SHA256SUMS",
+     "bytes": 1359,
+     "sha256": "85f5d95e4b5c512fcfb4f5b3200a7ed7e5334710e83f838e415f53b8ddeba7c1"
+    },
+    {
+     "path": "commands.json",
+     "bytes": 847,
+     "sha256": "e99a24e2f34f578fb8bcb806240e808454b52d46a6dc8741d93c99ae21cca8bd"
+    },
+    {
+     "path": "commit-messages.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "commit-messages.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "commit-messages.stdout.log",
+     "bytes": 38,
+     "sha256": "daf3697b4539b36f4a4fa31279a6d955b0b3466bb1f19f50dc782ae33a24d7c3"
+    },
+    {
+     "path": "doc-links.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "doc-links.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "doc-links.stdout.log",
+     "bytes": 36,
+     "sha256": "05d81cfdd4a20d7f249083d065c7dad85afba93032f10e5b73c1bec4e568c8b0"
+    },
+    {
+     "path": "driver.py",
+     "bytes": 4858,
+     "sha256": "028edbd5412a547b6515c9f5a338afd8f520fdba01c9085177d29d9dfeda5f64"
+    },
+    {
+     "path": "note-manifest-audit.json",
+     "bytes": 1088,
+     "sha256": "fc64b48e84887edac3dd7607623f65437130b239cebc9753a608b1678e57776f"
+    },
+    {
+     "path": "notes.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "notes.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "notes.stdout.log",
+     "bytes": 18,
+     "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+     "path": "scope-proof.json",
+     "bytes": 577,
+     "sha256": "c161deb043b4e1f33b6011156835889b4cc8043c4591fdc4b84045191cb6dce5"
+    },
+    {
+     "path": "whitespace.exit",
+     "bytes": 2,
+     "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+     "path": "whitespace.stderr.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+     "path": "whitespace.stdout.log",
+     "bytes": 0,
+     "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+   ]
+  }
+ ]
 }

@@ -6,7 +6,9 @@ Request `76a1c0209823f83d229b232b7645ac1440f5ede0` and promise
 `41aedfd1b36a381c85c51051d111a8df0b5cc92e` own this head. Product and test
 source freezes at `e0b21985cac267abc5c0d2313e511d2201099302`, tree
 `e67e36e796691fc25434c23192a05540e2b83969`.
-After the gate, merge checkpoint `2f006269794e771b565f3fbc78102d21b8dc3059`, tree `0d283229061673a2d598a00ed9d3e25691b60fb5`, brings the landed first-press note and manifest. The product, tests, configuration, and Card inputs remain byte-identical to the gated source. Only this note and its manifest follow.
+After the gate, merge checkpoint `2f006269794e771b565f3fbc78102d21b8dc3059`, tree `0d283229061673a2d598a00ed9d3e25691b60fb5`, brings the landed first-press note and manifest. The product, tests, configuration, and Card inputs remain byte-identical to the gated source. Only this note and its manifest follow. Documentation checkpoint
+`60515b92`, tree `cac69b58`, verifies the initial record. The final record adds
+its audit row and manifest unit.
 
 A card now keeps a reader's open and closed sections when a refresh replaces
 its DOM. **Read points**, **Exact record**, and **Recorded samples** keep their
@@ -65,8 +67,8 @@ module includes the rebuilt sources.
 ## The final evidence
 
 The [evidence manifest](evidence/2026-11-02-card-refresh.manifest.json) records
-177 files in 5 readonly units. Its SHA-256 is
-`30a4045e3fc65b9a5efee48699554775e0ea9b85fe461e26a4800a6841aa9f53`. Keep these units for at least 30 days after landing.
+194 files in 6 readonly units. Its SHA-256 is
+`368d4378de2c8ed52b46a10c86677272b1e6fd164b51671b1b6306a73f0dfc8f`. Keep these units for at least 30 days after landing.
 Each unit names its checkpoint and qualification. Whole Native proof bodies,
 actor records, and CI consoles stay private. Public records retain their byte
 counts, hashes, and safe result summaries.
@@ -117,6 +119,7 @@ The actual `gate.exit` is 0. The before-and-after guards match the clean source 
 | Whole local views owner; qualified draft | node --import tsx packages/mcp/test/views-browser.mjs | 0; 84 reported rows; no browser errors | ab9d401241979f651a56b21f06b1e60f6cc5def3ab2f674b0747f682bd73e46f |
 | Exact-source Card workflow at e0b21985 | gh run view 41426562339 --json conclusion,headSha,jobs,url | 0; workflow success | 1d72c6973d0083e848e1d8fdabc4626ec9025170e7edf1407c0fb90b472813aa |
 | Frozen full gate at e0b21985; tree e67e36e7 | /usr/bin/time -p npm run gate | 0; matching source guards | e56dd9f87b1dace3fe7cebff24e82d8cfe50b7f48245f819f463b6c8c50e990c |
+| Documentation checkpoint 60515b92; tree cac69b58 | whitespace, commit-message, note, link, source and manifest checks in driver.py | 0; 177 initial files; ten citations; six local links | fc64b48e84887edac3dd7607623f65437130b239cebc9753a608b1678e57776f |
 
 ## The open limits
 
