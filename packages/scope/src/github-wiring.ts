@@ -5,13 +5,14 @@
  * No configuration, key, token or plaintext belongs in a scope's history.
  */
 import type { ScopeId } from "@generalbusiness/dap-contract";
-import { isScopeId, parseStrict, timeMs } from "@generalbusiness/dap-bytes";
-import { isOf } from "@generalbusiness/dap-platform";
+import { isRecord, isScopeId, parseStrict, timeMs } from "@generalbusiness/dap-bytes";
+import { destinationBranch, isOf, platform } from "@generalbusiness/dap-platform";
 import { gitHubPrivateKey } from "@generalbusiness/dap-git/github";
 import type { GitHubAccount, GitHubInstallationToken } from "@generalbusiness/dap-git/github";
 import { CredentialStore } from "./credential-store.ts";
 import { DestinationHost, type SnapshotReader } from "./destination-host.ts";
 import { GitHubProvider } from "./github-host.ts";
+import { gitHubRepositoryBindings, gitHubRepositoryBindingAllowed, type GitHubRepositoryBinding } from "./github-repository-bindings.ts";
 import { credentialHandle, exact, hostBound } from "./host-wiring.ts";
 import type { OutsideGiven } from "./object.ts";
 import { NO_OUTSIDE, type EffectRequest, type Outside } from "./operations.ts";
@@ -26,12 +27,16 @@ export interface GitHubBindings {
   GITHUB_READ_TOKEN?: string;
   /** Secret JSON: repository ID -> {name, plaintext, expiresAt}. Each token is operator-attested as restricted to that one ID and administration:write. */
   GITHUB_CLEANUP_TOKENS?: string;
+  /** Nonsecret, reviewed destination incarnation/repository/branch pairs. No implicit later-binding authority. */
+  GITHUB_REPOSITORY_BINDINGS?: string;
 }
 export interface GitHubConfiguration {
   issuer: string; installationId: number; account: GitHubAccount; maxBytes: number;
   /** Pins host authority only. Installation authorization (N5) remains unimplemented. */
   registerScope: ScopeId;
   privateRepositories: boolean; publicReads: boolean; credentialIdentity: "adapter-attempt";
+  /** Opt-in private reads with one-repository, read-only installation tokens. */
+  installationReads?: true;
 }
 interface Cleanup { name: string; token: GitHubInstallationToken }
 const positive = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value > 0;
@@ -44,9 +49,14 @@ export function gitHubRegisterScope(raw: unknown): ScopeId | null {
 export function gitHubConfiguration(raw: unknown): GitHubConfiguration | null {
   if (typeof raw !== "string" || !raw || raw.length > 4096) return null;
   let value: ReturnType<typeof exact>;
-  try { value = exact(parseStrict(raw), ["issuer", "installationId", "account", "maxBytes", "registerScope", "privateRepositories", "publicReads", "credentialIdentity"]); } catch { return null; }
+  try {
+    const parsed = parseStrict(raw);
+    value = exact(parsed, ["issuer", "installationId", "account", "maxBytes", "registerScope", "privateRepositories", "publicReads", "credentialIdentity",
+      ...(isRecord(parsed) && Object.hasOwn(parsed, "installationReads") ? ["installationReads"] : [])]);
+  } catch { return null; }
   const account = exact(value?.["account"], ["id", "login", "type"]);
   if (!value || !account || typeof value["issuer"] !== "string" || !/^[A-Za-z0-9_.-]{1,128}$/.test(value["issuer"]) || !positive(value["installationId"]) || !isScopeId(value["registerScope"]) || !positive(account["id"]) || typeof account["login"] !== "string" || !/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/.test(account["login"]) || (account["type"] !== "User" && account["type"] !== "Organization") || !positive(value["maxBytes"]) || value["maxBytes"] < 32 || typeof value["privateRepositories"] !== "boolean" || typeof value["publicReads"] !== "boolean" || value["credentialIdentity"] !== "adapter-attempt" || (value["privateRepositories"] && value["publicReads"])) return null;
+  if (Object.hasOwn(value, "installationReads") && (value["installationReads"] !== true || value["privateRepositories"] !== true || value["publicReads"] !== false)) return null;
   return value as unknown as GitHubConfiguration;
 }
 function cleanupTokens(raw: unknown): ReadonlyMap<string, Cleanup> | null {
@@ -64,19 +74,21 @@ function cleanupTokens(raw: unknown): ReadonlyMap<string, Cleanup> | null {
   return cleanup;
 }
 
-export type GitHubReadiness = { state: "wired"; config: GitHubConfiguration; key: string; creation: string | undefined; read: string | undefined; cleanups: ReadonlyMap<string, Cleanup> }
-  | { state: "off"; reason: "unconfigured" | "invalid-config" | "private-key" | "read-token" | "creation-token" | "cleanup-tokens" };
-export function gitHubReadiness(env: { GITHUB_APP_CONFIG?: unknown; GITHUB_APP_PRIVATE_KEY?: unknown; GITHUB_CREATION_TOKEN?: unknown; GITHUB_READ_TOKEN?: unknown; GITHUB_CLEANUP_TOKENS?: unknown }): GitHubReadiness {
+export type GitHubReadiness = { state: "wired"; config: GitHubConfiguration; key: string; creation: string | undefined; read: string | undefined; cleanups: ReadonlyMap<string, Cleanup>; repositoryBindings: readonly GitHubRepositoryBinding[] }
+  | { state: "off"; reason: "unconfigured" | "invalid-config" | "private-key" | "read-token" | "creation-token" | "cleanup-tokens" | "repository-bindings" };
+export function gitHubReadiness(env: { GITHUB_APP_CONFIG?: unknown; GITHUB_APP_PRIVATE_KEY?: unknown; GITHUB_CREATION_TOKEN?: unknown; GITHUB_READ_TOKEN?: unknown; GITHUB_CLEANUP_TOKENS?: unknown; GITHUB_REPOSITORY_BINDINGS?: unknown }): GitHubReadiness {
   if (env.GITHUB_APP_CONFIG === undefined) return { state: "off", reason: "unconfigured" };
   const config = gitHubConfiguration(env.GITHUB_APP_CONFIG);
   if (!config) return { state: "off", reason: "invalid-config" };
   const key = env.GITHUB_APP_PRIVATE_KEY, read = env.GITHUB_READ_TOKEN, creation = env.GITHUB_CREATION_TOKEN;
   if (!gitHubPrivateKey(key)) return { state: "off", reason: "private-key" };
-  if ((!config.publicReads && !secret(read)) || (read !== undefined && !secret(read))) return { state: "off", reason: "read-token" };
+  if ((!config.publicReads && !config.installationReads && !secret(read)) || (read !== undefined && (!secret(read) || config.installationReads))) return { state: "off", reason: "read-token" };
   if (creation !== undefined && !secret(creation)) return { state: "off", reason: "creation-token" };
   const cleanups = cleanupTokens(env.GITHUB_CLEANUP_TOKENS);
   if (!cleanups) return { state: "off", reason: "cleanup-tokens" };
-  return { state: "wired", config, key, read: read as string | undefined, creation: creation as string | undefined, cleanups };
+  const repositoryBindings = gitHubRepositoryBindings(env.GITHUB_REPOSITORY_BINDINGS, config.account.login);
+  if (!repositoryBindings) return { state: "off", reason: "repository-bindings" };
+  return { state: "wired", config, key, read: read as string | undefined, creation: creation as string | undefined, cleanups, repositoryBindings };
 }
 
 /** Factory for one object life. Its scope/state reads stay live across genesis and later entries. */
@@ -84,13 +96,22 @@ export function gitHubOutside(given: OutsideGiven, sql: Pick<SqlStorage, "exec">
   try {
     const ready = gitHubReadiness(env);
     if (ready.state !== "wired") return NO_OUTSIDE;
-    const { config, cleanups, key, creation, read } = ready;
+    const { config, cleanups, key, creation, read, repositoryBindings } = ready;
     const host = "github.com";
     const namespace = config.account.login;
+    // Only a native definition that permits later binding needs the extra
+    // authority. A repository recorded at birth keeps its historical path.
+    const laterBinding = (): boolean => {
+      const pin = given.genesis()?.seed.definition;
+      return typeof pin === "string" && platform(pin)?.data.acts["bind-repository"] !== undefined
+        && !given.own(0)?.entry.effects.some(effect => effect.effect === "value" && effect.slot === "repository" && effect.value != null);
+    };
     const provider = new GitHubProvider({
       app: { issuer: config.issuer, privateKey: key, installationId: config.installationId, account: config.account, now: () => timeMs(given.clock.read()) ?? NaN, ...(fetch === undefined ? {} : { fetch }) },
       host, namespace, maxBytes: config.maxBytes,
-      readCredential: async () => config.publicReads ? undefined : read!,
+      readCredential: async () => config.publicReads || config.installationReads ? undefined : read!,
+      installationReads: config.installationReads === true,
+      verifyRepositoryBeforeMint: laterBinding,
       credentialHandle: async (repository, binding) => credentialHandle(given, repository, binding, "artroom.github.credential-attempt.v1", "GitHub credential binding"),
       ...(creation === undefined ? {} : { creation: { plaintext: creation, private: config.privateRepositories } }),
       cleanupRepository: async (id) => cleanups.get(id) ?? null,
@@ -98,7 +119,13 @@ export function gitHubOutside(given: OutsideGiven, sql: Pick<SqlStorage, "exec">
     const register = new RegisterHost(given, { host, namespace, provider });
     const custody = new CredentialStore(sql, () => given.scope()?.at ?? null);
     const destination = new DestinationHost(given, { host, namespace, provider, custody, ...(snapshotReader ? { snapshotReader } : {}) });
-    const bound = hostBound(given, config.registerScope, host, namespace);
+    const nativeBound = hostBound(given, config.registerScope, host, namespace);
+    const bound = (owner: string): boolean => {
+      if (!nativeBound(owner)) return false;
+      if (!laterBinding()) return config.installationReads !== true;
+      const at = given.scope()?.at, branch = destinationBranch(given.state);
+      return at !== undefined && gitHubRepositoryBindingAllowed(repositoryBindings, at, branch?.values["repository"], branch?.values["name"]);
+    };
     // accepts names a kind, not one operation. A nonempty cleanup map enables
     // that kind; a missing exact ID/name within it still yields no answer.
     // With no cleanup map, deletion stays recorded and unmarked.

@@ -72,8 +72,9 @@ test("scripted GitHub mint refuses widened or substituted scope and installation
   await expect(app(async () => json({ id: 99, account: { ...ACCOUNT, login: "elsewhere" }, suspended_at: null })).validateInstallation()).rejects.toMatchObject({ reason: "response" });
   let calls = 0;
   const client = app(async () => { calls++; return json(minted(), 201); });
-  await expect(client.mintInstallationToken({ repositoryIds: [], permissions: SCOPE.permissions })).rejects.toMatchObject({ reason: "input" });
+  const refused = await client.mintInstallationToken({ repositoryIds: [], permissions: SCOPE.permissions }).then(() => null, error => error);
   expect(calls).toBe(0);
+  expect(refused).toMatchObject({ reason: "input" });
 });
 
 // Invariant: create, lookup and delete stay in the configured account namespace

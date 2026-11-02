@@ -189,6 +189,107 @@ test("scripted GitHub provider creation loss and mismatched cleanup stay pending
 });
 
 
+// Real provider and RSA signing over scripted REST replies. No GitHub
+// installation, scope authorization, custody or external credential exists.
+test("later-bound mint verifies repository name and stable ID and installation before any credential POST", async () => {
+  const keys = await crypto.subtle.generateKey({ name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" }, true, ["sign", "verify"]) as CryptoKeyPair;
+  const bytes = new Uint8Array(await crypto.subtle.exportKey("pkcs8", keys.privateKey) as ArrayBuffer);
+  const privateKey = `-----BEGIN PRIVATE KEY-----\n${btoa(Array.from(bytes, byte => String.fromCharCode(byte)).join(""))}\n-----END PRIVATE KEY-----\n`;
+  let stableId = 72, suspended = false;
+  const account = { id: 17, login: "demo", type: "Organization" } as const;
+  const seen = () => ({ id: stableId, name: "repo", owner: account, private: true, full_name: "demo/repo", html_url: "https://github.com/demo/repo", clone_url: "https://github.com/demo/repo.git" });
+  const calls: { method: string; path: string; permissions?: unknown }[] = [];
+  const provider = new GitHubProvider({ host: "github.com", namespace: "demo", maxBytes: 4096,
+    app: { issuer: "TEST", privateKey, installationId: 99, account, now: () => Date.parse("2026-10-06T12:00:00Z"), fetch: async request => {
+      const path = new URL(request.url).pathname;
+      const asked = request.method === "POST" ? await request.json() as { permissions: unknown } : null;
+      calls.push({ method: request.method, path, ...(asked ? { permissions: asked.permissions } : {}) });
+      if (path === "/repos/demo/repo") return Response.json(seen());
+      if (path === "/app/installations/99") return Response.json({ id: 99, account, suspended_at: suspended ? "2026-10-06T11:00:00Z" : null });
+      return Response.json({ token: "TEST-restricted-token", expires_at: "2026-10-06T13:00:00Z", repository_selection: "selected", permissions: asked!.permissions, repositories: [seen()] }, { status: 201 });
+    } },
+    readCredential: async () => "TEST-private-read", credentialHandle: async () => "TEST-local-handle",
+    verifyRepositoryBeforeMint: () => true,
+  });
+  const binding: DestinationBinding = { scope: { scope: "sc_scripted", inc: "in_scripted", kind: "destination" }, mint: "1:1", attempt: 1, write: "1:0", writeAttempt: 1, ref: "refs/heads/main" };
+  const refusal = (task: Promise<unknown>) => task.then(() => null, error => (error as { reason?: unknown }).reason);
+  const writeRefusal = await refusal(provider.mint(repository, binding));
+  const readRefusal = await refusal(provider.mintRead(repository, { handle: "TEST-read", seconds: 3600 }));
+  expect(calls).toEqual([{ method: "GET", path: "/repos/demo/repo" }, { method: "GET", path: "/repos/demo/repo" }]);
+  expect([writeRefusal, readRefusal]).toEqual(["unreadable", "unreadable"]);
+  stableId = 71; suspended = true;
+  await expect(provider.mintRead(repository, { handle: "TEST-read", seconds: 3600 })).rejects.toBeDefined();
+  expect(calls.filter(call => call.method === "POST")).toEqual([]);
+  suspended = false;
+  expect(await provider.mintRead(repository, { handle: "TEST-read", seconds: 3600 })).toMatchObject({ id: "TEST-read" });
+  expect(await provider.mint(repository, binding)).toMatchObject({ id: "TEST-local-handle" });
+  expect(calls.slice(-6)).toEqual([
+    { method: "GET", path: "/repos/demo/repo" }, { method: "GET", path: "/app/installations/99" },
+    { method: "POST", path: "/app/installations/99/access_tokens", permissions: { contents: "read" } },
+    { method: "GET", path: "/repos/demo/repo" }, { method: "GET", path: "/app/installations/99" },
+    { method: "POST", path: "/app/installations/99/access_tokens", permissions: { contents: "write" } },
+  ]);
+});
+
+// Real provider and signing over scripted private-repository HTTP. No real App,
+// credential, GitHub repository or deployment participates.
+test("App-only private reads narrow every token and verify stable identity before Git or publication", async () => {
+  const keys = await crypto.subtle.generateKey({ name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" }, true, ["sign", "verify"]) as CryptoKeyPair;
+  const bytes = new Uint8Array(await crypto.subtle.exportKey("pkcs8", keys.privateKey) as ArrayBuffer);
+  const privateKey = `-----BEGIN PRIVATE KEY-----\n${btoa(Array.from(bytes, byte => String.fromCharCode(byte)).join(""))}\n-----END PRIVATE KEY-----\n`;
+  const account = { id: 17, login: "demo", type: "Organization" } as const;
+  const seen = (id = 71) => ({ id, name: "repo", owner: account, private: true, full_name: "demo/repo", html_url: "https://github.com/demo/repo", clone_url: "https://github.com/demo/repo.git" });
+  const calls: { method: string; path: string; body: unknown; authorization: string | null }[] = [];
+  let lookupId = 71, suspended = false, widened = false;
+  const pkt = (text: string) => `${(text.length + 4).toString(16).padStart(4, "0")}${text}`;
+  const provider = new GitHubProvider({ host: "github.com", namespace: "demo", maxBytes: 4096,
+    app: { issuer: "TEST", privateKey, installationId: 99, account, now: () => Date.parse("2026-10-06T12:00:00Z"), fetch: async request => {
+      const path = new URL(request.url).pathname;
+      const body = request.method === "POST" ? await request.json() as { permissions: Record<string, string> } : null;
+      calls.push({ method: request.method, path, body, authorization: request.headers.get("authorization") });
+      if (path === "/app/installations/99") return Response.json({ id: 99, account, suspended_at: suspended ? "2026-10-06T11:00:00Z" : null,
+        repository_selection: "all", permissions: { administration: "write", contents: "write", metadata: "read" } });
+      if (path === "/app/installations/99/access_tokens") return Response.json({ token: "TEST-narrow-" + body!.permissions["contents"],
+        expires_at: "2026-10-06T13:00:00Z", repository_selection: "selected", permissions: body!.permissions,
+        repositories: widened ? [seen(), seen(72)] : [seen()] }, { status: 201 });
+      if (path === "/repos/demo/repo") return Response.json(seen(lookupId));
+      return new Response(`${pkt("# service=git-upload-pack\n")}0000${pkt(`${"1".repeat(40)} refs/heads/main\0ofs-delta\n`)}0000`, { headers: { "content-type": "application/x-git-upload-pack-advertisement" } });
+    } }, installationReads: true, verifyRepositoryBeforeMint: () => true,
+    readCredential: async () => { throw Error("static read credential forbidden"); }, credentialHandle: async () => "TEST-write",
+  });
+  const binding: DestinationBinding = { scope: { scope: "sc_scripted", inc: "in_scripted", kind: "destination" }, mint: "1:1", attempt: 1, write: "1:0", writeAttempt: 1, ref: "refs/heads/main" };
+  const paths = () => calls.map(call => call.path);
+  const reset = () => { calls.length = 0; };
+  const refusal = (task: Promise<unknown>) => task.then(() => null, error => (error as { reason?: unknown }).reason);
+  expect(await provider.mint(repository, binding)).toMatchObject({ id: "TEST-write", plaintext: "TEST-narrow-write" });
+  expect(paths()).toEqual(["/app/installations/99", "/app/installations/99/access_tokens", "/repos/demo/repo", "/app/installations/99/access_tokens"]);
+  expect(calls.filter(call => call.method === "POST").map(call => call.body)).toEqual([
+    { repository_ids: [71], permissions: { contents: "read" } }, { repository_ids: [71], permissions: { contents: "write" } },
+  ]);
+  reset();
+  expect(await provider.mintRead(repository, { handle: "TEST-read", seconds: 3600 })).toMatchObject({ id: "TEST-read", plaintext: "TEST-narrow-read" });
+  expect(paths()).toEqual(["/app/installations/99", "/app/installations/99/access_tokens", "/repos/demo/repo"]);
+  expect(calls[1]!.body).toEqual({ repository_ids: [71], permissions: { contents: "read" } });
+  reset();
+  expect(await provider.ref(repository, "refs/heads/main")).toBe("1".repeat(40));
+  expect(paths()).toEqual(["/app/installations/99", "/app/installations/99/access_tokens", "/repos/demo/repo", "/demo/repo.git/info/refs"]);
+  expect(calls[2]!.authorization).toBe("Bearer TEST-narrow-read");
+  expect(calls[3]!.authorization).toBe(`Basic ${btoa("x-access-token:TEST-narrow-read")}`);
+  reset(); lookupId = 72;
+  const replaced = await refusal(provider.mint(repository, binding));
+  expect(paths()).toEqual(["/app/installations/99", "/app/installations/99/access_tokens", "/repos/demo/repo"]);
+  expect(replaced).toBe("unreadable");
+  reset(); lookupId = 71; suspended = true;
+  const unavailable = await refusal(provider.mintRead(repository, { handle: "TEST-read", seconds: 3600 }));
+  expect(paths()).toEqual(["/app/installations/99"]);
+  expect(unavailable).toBe("response");
+  reset(); suspended = false; widened = true;
+  const broad = await refusal(provider.ref(repository, "refs/heads/main"));
+  expect(paths()).toEqual(["/app/installations/99", "/app/installations/99/access_tokens"]);
+  expect(calls[1]!.body).toEqual({ repository_ids: [71], permissions: { contents: "read" } });
+  expect(broad).toBe("response");
+});
+
 // Scripted HTTP authority boundary; real isolated smart-HTTP parser and packs.
 // No actual GitHub repository or installation is contacted.
 test("scripted GitHub rules tree reads isolate the commit and trees with the configured read credential and stable identity", async () => {

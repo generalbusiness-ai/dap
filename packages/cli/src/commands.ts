@@ -40,7 +40,7 @@ import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type EffectForm,
 import { READ_REFUSALS, readItemQuery, b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isReceipt, isSignedIntentShape, isFactRef, isEntry, isScopeId, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, ShapeError, TransportError, activeDirectory, partitionIndexes, wellFormedInvitation, readCredential, declaredHandle, create, shapeDeclaredAct, signedIntent, signedLogReader, type Fetch, type Session, type CreationOffer, type Signing, type Transport } from "@generalbusiness/dap-client";
 import { CAPABILITY_CODE as REPLAY_CAPABILITY_CODE } from "@generalbusiness/dap-derive";
-import { SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
+import { REPOSITORY_BINDING_COHORT, SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { SourceError, httpSource, otherRoomsLine, render, roomVerification, verify as replay, type FinishedRoom, type HistorySource } from "@generalbusiness/dap-replay";
 import { enrolAgentKey, enrolCheckerKey, enrolDeviceKey } from "./invitations.ts";
 import { AGENT_KEY_LINK, CHECKER_KEY_LINK, DEVICE_KEY_LINK, encodeDeviceKeyInvitation, isAgentKeyMembership, isDeviceKeyInvitation, type DeviceKeyInvitation } from "@generalbusiness/dap-client";
@@ -194,10 +194,11 @@ const laneActive = async (handle: ScopeHandle, opened: string): Promise<Summary 
 // ---------------------------------------------------------------- the commands
 
 /** Named creation families; host none defaults to the unpublished family. */
-export type InstallCohort = "separate-recovery" | "commons" | "unpublished" | "file-publication" | "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-device-application" | "archive-device-publication" | "archive-certified-rules" | "hardened-certified-rules" | "archive-declared-application" | "invitation-key";
+export type InstallCohort = "repository-binding" | "separate-recovery" | "commons" | "unpublished" | "file-publication" | "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-device-application" | "archive-device-publication" | "archive-certified-rules" | "hardened-certified-rules" | "archive-declared-application" | "invitation-key";
 export type RegisterPolicy = "keys" | "open";
 export interface InstallOptions { host?: string; namespace?: string; cohort?: InstallCohort; registerPolicy?: RegisterPolicy }
 const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
+  "repository-binding": REPOSITORY_BINDING_COHORT.register,
   "separate-recovery": SEPARATE_RECOVERY_COHORT.register,
   commons: COMMONS_COHORT.register,
   unpublished: UNPUBLISHED_COHORT.register,
@@ -217,9 +218,10 @@ const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
 };
 /** New plans only. Historical selectors remain in INSTALL_COHORTS for retained custody.
  * The owning test pins these register versions to Scope's CREATION_COHORTS. */
-export const CREATION_INSTALL_COHORTS = ["separate-recovery", "commons", "unpublished", "application", "archive-device-application", "archive-device-publication", "archive-certified-rules", "hardened-certified-rules"] as const satisfies readonly InstallCohort[];
+export const CREATION_INSTALL_COHORTS = ["repository-binding", "separate-recovery", "commons", "unpublished", "application", "archive-device-application", "archive-device-publication", "archive-certified-rules", "hardened-certified-rules"] as const satisfies readonly InstallCohort[];
 function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === undefined) return undefined;
+  if (cohort === "repository-binding") return INSTALL_COHORTS["repository-binding"];
   if (cohort === "separate-recovery") return INSTALL_COHORTS["separate-recovery"];
   if (cohort === "commons") return INSTALL_COHORTS.commons;
   if (cohort === "unpublished") return INSTALL_COHORTS.unpublished;
@@ -257,10 +259,10 @@ function installSelection(options: InstallOptions, retained = false): PlatformDe
   }
   const selected = selectedRegister(options.cohort);
   if (options.host === "none") {
-    if (selected !== undefined && selected !== UNPUBLISHED_COHORT.register && selected !== COMMONS_COHORT.register) return stopCommand(usage("--host none requires the unpublished or commons cohort; this run signed and sent nothing."));
+    if (selected !== undefined && selected !== REPOSITORY_BINDING_COHORT.register && selected !== UNPUBLISHED_COHORT.register && selected !== COMMONS_COHORT.register) return stopCommand(usage("--host none requires the unpublished, repository-binding or commons cohort; this run signed and sent nothing."));
     return selected ?? UNPUBLISHED_COHORT.register;
   }
-  if (options.registerPolicy !== "open" || selected === UNPUBLISHED_COHORT.register || selected === COMMONS_COHORT.register) return selected;
+  if (options.registerPolicy !== "open" || selected === REPOSITORY_BINDING_COHORT.register || selected === UNPUBLISHED_COHORT.register || selected === COMMONS_COHORT.register) return selected;
   if (selected !== undefined && selected !== ARCHIVE_DEVICE_APPLICATION_COHORT.register) {
     return stopCommand(usage("--register-policy open requires the archive-device-application cohort; this run signed and sent nothing."));
   }
@@ -431,7 +433,7 @@ async function executePlannedInstall(ctx: Context, cohort?: InstallCohort, expec
   const before = await ctx.store.config();
   if (before?.register) return usage(`This config directory has a register already: ${before.register.scope}.`);
   const kept = before?.plan ?? stopCommand(usage("No install is planned here. Run: dap install --plan <base-url>."));
-  if (cohort === undefined && kept.definition === UNPUBLISHED_COHORT.register) selected = UNPUBLISHED_COHORT.register;
+  if (cohort === undefined && (kept.definition === UNPUBLISHED_COHORT.register || kept.definition === REPOSITORY_BINDING_COHORT.register)) selected = kept.definition;
   if (kept.definition === COUNTING_COHORT.register) return failed(`Refused: retired-cohort. Choose a currently admitted cohort for a new room. The old plan is kept. ${planSent(kept)}`);
   if (selected && kept.definition !== selected) return failed(`Refused: plan-mismatch. The selected cohort conflicts with the original install plan. The plan is kept. ${planSent(kept)}`);
   if (registerPolicy !== undefined && (!isSignedIntentShape(kept["founding"]) || kept["founding"].intent.fields["policy"] !== registerPolicy)) return failed(`Refused: plan-mismatch. The register policy conflicts with the original install plan. The plan is kept. ${planSent(kept)}`);
@@ -1045,7 +1047,7 @@ async function destinationStateOf(ctx: Context, config: Config): Promise<{ summa
   if (read.value.scope.scope !== scope || read.value.scope.kind !== "destination" || !knownPlatform(read.value.definition, "platform:destination")) return stopCommand(failed(`${scope} is no supported destination.`));
   const branch = read.value.items.find((item) => item.type === "branch");
   const repository = branch?.values["repository"] as Recorded | undefined;
-  if (read.complete && read.next === undefined && read.value.status === "active" && read.value.definition === UNPUBLISHED_COHORT.destination && branch?.state === "unpublished" && branch.values["repository"] == null && branch.values["head"] == null && branch.values["token"] == null) return { summary: read.value, reader, repository: null };
+  if (read.complete && read.next === undefined && read.value.status === "active" && (read.value.definition === UNPUBLISHED_COHORT.destination || read.value.definition === REPOSITORY_BINDING_COHORT.destination) && branch?.state === "unpublished" && branch.values["repository"] == null && branch.values["head"] == null && branch.values["token"] == null) return { summary: read.value, reader, repository: null };
   if (!branch || !repository || typeof repository.host !== "string" || typeof repository.name !== "string" || typeof repository.namespace !== "string" || typeof repository.id !== "string") return stopCommand(failed(`The destination ${scope} records no repository.`));
   return { summary: read.value, reader, repository };
 }

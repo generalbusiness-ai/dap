@@ -62,6 +62,7 @@ async function pinnedSummary(M: ScopeHandle, at: ScopeRef): Promise<{ summary: S
 }
 /** The directory definitions each membership pin is created beside: exact pairs of the cohorts, not names. */
 const DIRECTORIES_OF: Readonly<Record<AgentKeyMembership, readonly string[]>> = {
+  "platform:membership@11": ["platform:directory@24"],
   "platform:membership@10": ["platform:directory@23"],
   "platform:membership@9": ["platform:directory@22"],
   "platform:membership@2": [DIRECTORY_OF[DEMO_REGISTER]!, WEB_DEMO_COHORT.directory],

@@ -252,6 +252,11 @@ export function unpublishedApplicationPublicationOrigin(from: FactRef, directory
   return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@22", rules: "platform:rules@14", destination: "platform:destination@16", membership: "platform:membership@9", deviceCommand: true });
 }
 
+/** Exact later-binding family; earlier creation pins remain distinct. */
+export function repositoryBindingApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
+  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@24", rules: "platform:rules@10", destination: "platform:destination@18", membership: "platform:membership@11", deviceCommand: true });
+}
+
 /** Exact evidence family; admission still validates its recorded source chain. */
 export function evidenceRulesPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
   return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@21", rules: "platform:rules@13", destination: "platform:destination@17", membership: "platform:membership@8", deviceCommand: true });

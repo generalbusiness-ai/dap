@@ -3,13 +3,14 @@ import { expect, test } from "vitest";
 import type { PlatformDefinition, Receipt, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, timeMs } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
-import { SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
+import { REPOSITORY_BINDING_COHORT, SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
 import { CREATION_COHORTS } from "../../scope/src/creation-lineage.ts";
 import { CREATION_INSTALL_COHORTS, USAGE, command, install, installPlanned, memoryStore, planInstall, type Config, type Context, type Store } from "../src/index.ts";
 
 const SERVICE = "https://cohort.test";
 const COHORT = "trusted-application" as const;
 const COHORTS = [
+  { name: "repository-binding", definition: REPOSITORY_BINDING_COHORT.register, other: COHORT },
   { name: "separate-recovery", definition: SEPARATE_RECOVERY_COHORT.register, other: COHORT },
   { name: "commons", definition: COMMONS_COHORT.register, other: COHORT },
   { name: "unpublished", definition: UNPUBLISHED_COHORT.register, other: COHORT },
@@ -381,4 +382,13 @@ test("host is required and closed before custody; none selects the exact unpubli
   expect((await command(commons.ctx, ["install", "--planned", "--cohort", "commons", "--register-policy", "open"])).code).toBe(0);
   expect(JSON.parse(commons.bodies[0]!).creation).toEqual(commonsPlan["founding"]);
   expect(JSON.parse(commons.bodies[0]!).definition).toBe(COMMONS_COHORT.register);
+  const binding = scenario();
+  expect((await command(binding.ctx, ["install", "--plan", SERVICE, "--host", "none", "--cohort", "repository-binding", "--register-policy", "open"])).code).toBe(0);
+  const bindingPlan = (await binding.store.config())!.plan!;
+  expect(bindingPlan.definition).toBe(REPOSITORY_BINDING_COHORT.register);
+  expect(bindingPlan["founding"].intent.fields).toMatchObject({ host: "none", namespace: "", policy: "open" });
+  expect(binding.bodies).toHaveLength(0);
+  expect((await command(binding.ctx, ["install", "--planned", "--register-policy", "open"])).code).toBe(0);
+  expect(JSON.parse(binding.bodies[0]!).creation).toEqual(bindingPlan["founding"]);
+  expect(JSON.parse(binding.bodies[0]!).definition).toBe(REPOSITORY_BINDING_COHORT.register);
 });

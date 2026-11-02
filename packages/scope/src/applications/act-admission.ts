@@ -1,3 +1,4 @@
+import { REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
 /** Deployment admission for fresh acts only. Immutable native creation proves
  * which installed release owns a scope; current trust is never cached. */
 import type { Digest, Entry, FactRef } from "@generalbusiness/dap-contract";
@@ -28,7 +29,7 @@ export interface ApplicationActAdmissionOptions {
 export const APPLICATION_ACT_ADMISSION_BOUNDS = Object.freeze({ ancestors: 18, bodies: 37, bytes: 16 * 1024 * 1024, rpcs: 36, body: PROOF_BYTE_BOUNDS.body });
 const cohorts = [SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT,
   ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT,
-  ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, UNPUBLISHED_COHORT] as const;
+  REPOSITORY_BINDING_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, UNPUBLISHED_COHORT] as const;
 type Provenance = { kind: "unpackaged" } | { kind: "installed"; release: Digest };
 type Cache = { identity: string; provenance: Provenance };
 type AdmissionAnswer = { current(): FreshActAdmissionDecision };
