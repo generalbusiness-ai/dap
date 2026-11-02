@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b4e2f95d88f7101ef4c0ed486d5735d9c642b47d","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/main.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:cbaf2cf959dfca4fab4f3946ee024f3ed1775384","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-01-roster-recovery.manifest.json."}
