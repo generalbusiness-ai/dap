@@ -6,7 +6,7 @@
     "tree": "4795378606caceb8d98496f4deacf8ed301dd6d5"
   },
   "retention": "Keep every readonly public unit and indexed private raw output for at least 30 days after landing. Credentials and unredacted requests stay private.",
-  "fileCount": 102,
+  "fileCount": 108,
   "units": [
     {
       "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-hosted-cards-focused",
@@ -551,6 +551,48 @@
           "path": "terminal.txt",
           "bytes": 1104,
           "sha256": "d486d5412a2e47a036783d12d3ce6263cef9f224f9ea1887300e9464c81822a3"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-hosted-cards-documentation",
+      "qualification": "First documentation checkpoint after the frozen a612368f source. Six record, whitespace, commit-message, link, citation and note checks passed. All production, tests, configuration and workflow inputs equal a612368f. The final documentation record adds this check row and sealed unit to the manifest. Raw diagnostics remain private; no credential or request input ran.",
+      "checkpoint": {
+        "commit": "2e0685bd27f0bf3f10a94ef7ecd7bd3774e3a86e",
+        "tree": "c54f6fae0431ae2f022018097091a2feb5d25f9d"
+      },
+      "fileCount": 6,
+      "sha256sums": "2e5ba8ca16b49827ac362a0fc60b18323254f870e28d8f44703604765e604806",
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 415,
+          "sha256": "2e5ba8ca16b49827ac362a0fc60b18323254f870e28d8f44703604765e604806"
+        },
+        {
+          "path": "checks.json",
+          "bytes": 6007,
+          "sha256": "54118e682c7c775df041db457186c21a6888418b6b71d3a8bb1e2482891b3b18"
+        },
+        {
+          "path": "qualification.json",
+          "bytes": 530,
+          "sha256": "d94051d48990a96ffa79a0a99aa115402ec814086fa9477428522bcd07acd2b2"
+        },
+        {
+          "path": "run-checks.py",
+          "bytes": 3401,
+          "sha256": "a2c13718e22a2ee0eb7d03da80a1048b20fa120c5c83647e757e22f544c578ce"
+        },
+        {
+          "path": "source-continuity.json",
+          "bytes": 513,
+          "sha256": "fd6cf60948f501076f6e72a19a2777aed434c8adcd3f82e8fb4829d867c6ce12"
+        },
+        {
+          "path": "verify-record.py",
+          "bytes": 2746,
+          "sha256": "664cd900c76b185734ff49a768115ad79b1732c18101d5800255221ccd293607"
         }
       ]
     }

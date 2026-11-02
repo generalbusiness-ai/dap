@@ -1901,8 +1901,9 @@ bounded read must select exactly one active declared installation. The
 service checks the installation's full references, package IDs, definition
 and trusted publisher before it adds card tools. Missing, ambiguous or
 unavailable selections leave the ordinary tools in place. The selection
-lasts for that agent object's lifetime; an eviction selects again. Each card
-read checks that the exact installation remains active.
+lasts for that HTTP layer. A fresh bearer rotation or an object restart
+rebuilds the layer and selects again. Each card read checks that the exact
+installation remains active.
 
 The hosted Worker loads immutable bytes from `APPLICATION_CONTENT` under
 `APPLICATION_TRUST`. Local `dap mcp` uses the same selection and declared

@@ -17,7 +17,7 @@ landed; its real mini scene remains open under parent `3c6ec378`.
 | Frozen source | `a612368f9923b334741a5fecf8964f28e75bc2a4` |
 | Source tree | `4795378606caceb8d98496f4deacf8ed301dd6d5` |
 | Source paths over base | 19 |
-| Record follow-up | Only this note and its evidence manifest change after the source checkpoint. |
+| Record follow-up | Only `docs/mcp.md`, this note and its evidence manifest change after the source checkpoint. |
 
 The source worktree stayed clean during the full gate. The record's
 manifest names every evidence file and its bytes and digest. It includes
@@ -44,9 +44,10 @@ definition and trusted publisher. The Worker reads immutable bytes through
 immutable public Git source. The bounded codec accepts at most 4 MiB. The
 interpreter runs declarations as data and executes no package code.
 
-The selection lasts for the process or agent object's lifetime. Restarting
-selects again. Each card read rechecks the selected installation's current
-active state. Existing explicit `views` and `declaredViews` callers keep
+Stdio keeps the selection for its process lifetime. A hosted agent keeps
+it for its HTTP layer; a fresh bearer rotation or an object restart rebuilds
+the layer and selects again. Each card read rechecks the selected
+installation's current active state. Existing explicit `views` and `declaredViews` callers keep
 their exact source. Rooms without a supported declared installation retain
 the ordinary model tools; this change does not supply a Repo in AI adapter
 for an uninstalled room.
@@ -159,6 +160,7 @@ private keys. Keep the sealed units for at least 30 days after landing.
 | `2026-11-02-hosted-cards-focused` | Focused boundaries, controls and retained drafts | 92 | `93660f0b4e2e76fe5a9261ac195e82d4f38559b2a365334d8fff6f489c171e25` |
 | `2026-11-02-hosted-cards-card-ci` | Exact source Card workflow | 3 | `e376376afceb23ce7a1f3d100193ff3901899e8315b9bfd4fb9ad07038278401` |
 | `2026-11-02-hosted-cards-gate` | Frozen source; actual exit 0; unchanged before/after guards | 7 | `c23b36a65c74bb2e4346c42a805609b51ca74dc904b44556b7c506ff88f2b6e9` |
+| `2026-11-02-hosted-cards-documentation` | Documentation checks at their own checkpoint | 6 | `2e5ba8ca16b49827ac362a0fc60b18323254f870e28d8f44703604765e604806` |
 
 The focused unit indexes 43 attempts and 88 private files. Its summary
 keeps each outcome separate; the counts below do not add overlapping runs.
