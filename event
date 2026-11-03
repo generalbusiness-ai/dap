@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3343276ce92141f84f2b755e13aa27847272d504","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-02-own-agent-key-bounds-gate.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3373562b79d1e0622af59f30bd0ce50b239b096a","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/sessions.ts."}
