@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3ea47a38dab674cd3f444eaf551f9f4f07107e70","text":"Merge retired a covered predecessor; the successor is at scripts/security-entry-points.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:42c7b7b229482bcf86ef77fddd56e2e47b9630c1","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-oauth-browser-ci.manifest.json."}
