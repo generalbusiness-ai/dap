@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2e2461a7da5f72b477973b62f8466014f554b2f5","text":"Merge retired a covered predecessor; the successor is at packages/mcp/browser/bridge.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:370302f44e6b9293f5c5fced021ddaa3dd5c5f6c","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-goose-integrated-ci.manifest.json."}
