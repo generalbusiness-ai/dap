@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8f3c2f11ce153dd9662e21fae613a5fe5ad57639","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/oauth-clients.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:92cf284e61562223724ce4b2fce5822ed162c34f","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-oauth-registration-recovery-ci.manifest.json."}
