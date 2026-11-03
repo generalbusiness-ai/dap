@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d62251c3e5571ce1722d726eaa1ab26462e23ed9","text":"Retire the redundant notes/implementation/2026-11-03-oauth-registration-recovery.md pointer at4251ef12 after the explicit DCR main delivery6a67cc08; the factual preparation report and sealed receipt preserve its result."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:053d2b68317c824335c8148903afb843693e870d"}
