@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e696a28fcd845a65c4d7eb0b7fd91159d88a49e1"}
+{"kind":"artifact","text":"docs/self-host.md at exact 2a70e1081c68d7f30793d58c4341e369ce44d17b on builder/g3b-register-config-20261103, under promise git:sha1…f342217 on request git:sha1…ee7aa36","body":{"commit":"2a70e1081c68d7f30793d58c4341e369ce44d17b","path":"docs/self-host.md"}}
