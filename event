@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:352d10738711e0931671f0a9f2050ff97bb6c9cd","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-02-oauth-authorization-focused.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:35cbc894ecbd8983b1a4d2c71cda1673c79d0155","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/oauth-access.ts."}
