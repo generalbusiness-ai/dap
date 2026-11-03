@@ -116,3 +116,51 @@ test('a nonprivate App key refuses before output and exposes no credential in it
   await assert.rejects(lstat(f.out), { code: 'ENOENT' });
   assert.equal((await readFile(join(f.project, 'wrangler.json'))).equals(before), true);
 });
+
+// Real staging and the actual Python deployment validator; no App, provider,
+// installed root or deployment exists behind these public test Scope IDs.
+test('installed roots survive GitHub staging unchanged and reach the strict deployment validator', async t => {
+  const f = await fixture(t), path = join(f.project, 'wrangler.json');
+  const original = JSON.parse(await readFile(path));
+  const roots = ' [\n  ' + JSON.stringify(['sc_' + 'b'.repeat(51) + 'a', register, 'sc_' + 'c'.repeat(51) + 'a']).slice(1, -1) + '\n] ';
+  original.vars.INSTALLED_REGISTER_SCOPES = roots;
+  await writeFile(path, JSON.stringify(original));
+  const before = await readFile(path);
+  await prepareGitHubProject(f);
+  const staged = JSON.parse(await readFile(join(f.out, 'wrangler.json')));
+  assert.equal(staged.vars.INSTALLED_REGISTER_SCOPES, roots, 'staging preserves the reviewed setting bytes');
+  const checked = spawnSync('/usr/bin/python3', ['-B', '-c',
+    'import deploy,sys; deploy.prepared_project(deploy.Path(sys.argv[1]))', f.out],
+  { cwd: fileURLToPath(new URL('../', import.meta.url)), encoding: 'utf8' });
+  assert.equal(checked.status, 0, checked.stderr);
+  assert.equal((await readFile(path)).equals(before), true);
+  assert.equal(staged.vars.SESSION_SECRET, original.vars.SESSION_SECRET);
+  assert.deepEqual(JSON.parse(staged.vars.GITHUB_REPOSITORY_BINDINGS), f.bindings);
+});
+
+test('untrusted installed roots refuse before private key access and at the deployment boundary', async t => {
+  const f = await fixture(t), path = join(f.project, 'wrangler.json');
+  const original = JSON.parse(await readFile(path));
+  const alphabet = 'abcdefghijklmnopqrstuvwxyz234567';
+  const tooMany = Array.from({ length: 33 }, (_, i) => 'sc_' + alphabet[Math.floor(i / 32)] + alphabet[i % 32] + 'a'.repeat(50));
+  for (const [reason, roots] of [
+    ['missing current root', JSON.stringify(['sc_' + 'b'.repeat(51) + 'a'])],
+    ['duplicate root', JSON.stringify([register, register])],
+    ['noncanonical Scope ID', JSON.stringify([register, 'sc_' + 'a'.repeat(51) + 'b'])],
+    ['non-list', JSON.stringify({ register })],
+    ['too many roots', JSON.stringify(tooMany)],
+    ['oversize setting', JSON.stringify([register]) + ' '.repeat(4096)],
+  ]) {
+    await writeFile(path, JSON.stringify({ ...original, vars: { ...original.vars, INSTALLED_REGISTER_SCOPES: roots } }));
+    const before = await readFile(path);
+    await assert.rejects(prepareGitHubProject({ ...f, privateKeyFile: join(f.directory, 'unread-private-key') }),
+      error => error instanceof GitHubProjectPreparationError && error.stage === 'project', reason);
+    await assert.rejects(lstat(f.out), { code: 'ENOENT' });
+    const checked = spawnSync('/usr/bin/python3', ['-B', '-c',
+      'import deploy,sys; deploy.prepared_project(deploy.Path(sys.argv[1]))', f.project],
+    { cwd: fileURLToPath(new URL('../', import.meta.url)), encoding: 'utf8' });
+    assert.equal(checked.status, 1, 'deployment refuses ' + reason);
+    assert.match(checked.stderr, /Refusal:/, 'deployment names its own refusal');
+    assert.equal((await readFile(path)).equals(before), true);
+  }
+});

@@ -82,6 +82,30 @@ class DeploymentSafety(unittest.TestCase):
             self.assertEqual(result["exit"], 7)
             self.assertTrue(result["ownedProcessGroupClosed"])
 
+    def test_installed_roots_keep_the_project_variable_allowlist_closed(self):
+        with tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:
+            project = self.project(Path(scratch))
+            path = project / "wrangler.json"
+            config = json.loads(path.read_text())
+            alphabet = "abcdefghijklmnopqrstuvwxyz234567"
+            roots = ["sc_" + letter + "a" * 51 for letter in alphabet]
+            raw = " [\n" + json.dumps(roots)[1:-1] + "\n] "
+            config["vars"]["INSTALLED_REGISTER_SCOPES"] = raw
+            path.write_text(json.dumps(config))
+            before = path.read_bytes()
+            self.assertEqual(deploy.prepared_project(project), project)
+            self.assertEqual(path.read_bytes(), before)
+            self.assertEqual(json.loads(path.read_text())["vars"]["INSTALLED_REGISTER_SCOPES"], raw)
+            config["vars"]["UNREVIEWED_SETTING"] = "TEST"
+            path.write_text(json.dumps(config))
+            with self.assertRaisesRegex(Refusal, "project variables differ"):
+                deploy.prepared_project(project)
+            del config["vars"]["UNREVIEWED_SETTING"]
+            config["vars"]["INSTALLED_REGISTER_SCOPES"] = json.dumps(roots + ["sc_" + "ba" + "a" * 49 + "q"])
+            path.write_text(json.dumps(config))
+            with self.assertRaisesRegex(Refusal, "invalid installed registers"):
+                deploy.prepared_project(project)
+
     def test_staged_github_authority_matches_the_register_and_private_reads(self):
         # These are structural TEST settings, not an App or provider witness.
         with tempfile.TemporaryDirectory(dir="/private/tmp") as scratch:

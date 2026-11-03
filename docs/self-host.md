@@ -504,6 +504,16 @@ that stronger choice when your other rooms do not need the same App.
    retained plan. It keeps the production Worker and bindings and creates
    private session custody. It also continues to accept the earlier
    host-none plan without changing its pins.
+
+   To preserve child creation under earlier installed registers, add the
+   reviewed `INSTALLED_REGISTER_SCOPES` string to this new prepared
+   project's `vars` before GitHub staging. Include the new `REGISTER_SCOPE`
+   and every earlier root that must keep creating children. The list needs
+   1 to 32 distinct canonical Scope IDs and at most 4,096 UTF-8 bytes.
+   Both staging and deployment validate it and preserve its exact bytes.
+   Omitting it keeps the single-register behavior. The setting changes no
+   Native authority or GitHub binding; see
+   [Keep existing rooms able to create children](deploy.md#keep-existing-rooms-able-to-create-children).
 4. Fill a nonsecret `github-app.json` with every
    [GitHub configuration field](hosts.md#github-host-githubcom). Set
    `registerScope` to the planned register. For the private witness, use
