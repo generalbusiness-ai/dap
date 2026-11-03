@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import type { Digest, Message, Seed, SignedIntent } from "@generalbusiness/dap-contract";
+import type { ControlRequest, Digest, Message, Seed, SignedIntent } from "@generalbusiness/dap-contract";
 import {
   b64url, canonicalBytes, canonicalize, definitionDigest, deliveryCauseDigest, digestBytes, domainBytes, entryHash, factRefOf, intentDigest,
-  isOutboxId, isIncarnation, isKeyId, isMemberId, isOperationId, isPlatformDefinition, isRetainedInput, isScopeId, isScopeKind, keyIdOfSecret, messageDigest, newIncarnation, scopeIdOf, seedDigest, sign, signIntent, textDigest, unb64url, utf8, verifySignedIntent,
+  isOutboxId, isIncarnation, isKeyId, isMemberId, isOperationId, isPlatformDefinition, isRetainedInput, isScopeId, isScopeKind, keyIdOfSecret, messageDigest, newIncarnation, scopeIdOf, seedDigest, sign, signControl, signControlWith, signIntent, textDigest, unb64url, utf8, verifyControl, verifySignedIntent,
 } from "../src/index.ts";
 import { cause, definition, directory, entry, intent, message, otherSecret, secret, seed } from "./fixtures.ts";
 
@@ -105,6 +105,24 @@ describe("signed intents", () => {
     ];
     for (const value of malformed) expect(verifySignedIntent(value as SignedIntent), JSON.stringify(value)?.slice(0, 60)).toBe(false);
   });
+});
+
+test("an async control signer binds its own actor and the original request while signing waits", async () => {
+  const request: ControlRequest = { v: 1, action: "create", service: "https://control.test", membership: { ...directory, kind: "membership" }, agent: null, actor: keyIdOfSecret(secret), body: digestBytes(utf8("link")), op: "original-control", notAfter: intent.notAfter };
+  const original = structuredClone(request);
+  let release!: () => void, calls = 0;
+  const wait = new Promise<void>(resolve => { release = resolve; });
+  // Explicit signer stand-in: the consumer sees only key and sign, never a seed.
+  const signer = { key: request.actor, sign: async (bytes: Uint8Array) => { calls++; await wait; return sign(secret, bytes); } };
+  const pending = signControlWith(request, signer);
+  request.op = "changed-after-signing-started";
+  request.membership.inc = newIncarnation(new Uint8Array(16).fill(9));
+  release();
+  const signed = await pending;
+  expect(signed).toEqual(signControl(original, secret));
+  expect(verifyControl(signed)).toBe(true);
+  await expect(signControlWith({ ...original, actor: keyIdOfSecret(otherSecret) }, signer)).rejects.toThrow("actor");
+  expect(calls).toBe(1);
 });
 
 describe("entries", () => {
