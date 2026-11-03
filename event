@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/security-entry-points.test.mjs","body":{"commit":"40c4e0ea649c2b12ced52eb5ffb9785783163691","path":"scripts/security-entry-points.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0b4cd2b0f76f635c9568ad4ab935f9c7edc1be24","text":"Merge retired a covered predecessor; the successor is at packages/client/src/application-route.ts."}
