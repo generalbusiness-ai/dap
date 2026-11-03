@@ -1,0 +1,119 @@
+{
+  "qualification": "Public G3b configuration/source checks and explicit initial metadata correction; no real mini or key access.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-register-configuration",
+  "checkpoint": "9c7ae712d6281a1f32bbbf180e70cfa4329d6e7c",
+  "fileCount": 22,
+  "files": [
+    {
+      "path": "artroom-g3b-check-configuration-20261103.mjs",
+      "bytes": 3707,
+      "sha256": "6da4c1be23d7ec656b5c15bea044f56da3d200954aba370f34517f820e42ac0d"
+    },
+    {
+      "path": "artroom-g3b-verify-source-20261103.py",
+      "bytes": 1878,
+      "sha256": "640de7ad3756cb807a65dc148dc6c68d66332738cb85f2436545f5a7ea184e62"
+    },
+    {
+      "path": "doc-links.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "doc-links.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc-links.stdout",
+      "bytes": 36,
+      "sha256": "f0b46512a38e1e3884d9df1080f30379b442d5f44faa8db99f5ce8b9f9311984"
+    },
+    {
+      "path": "initial-artroom-g3b-check-configuration-20261103.mjs",
+      "bytes": 3414,
+      "sha256": "68aefac41e3116794c8373f988cbe55ed15b23813060aa1ac8a5adaee2f737ed"
+    },
+    {
+      "path": "initial-source-export.json",
+      "bytes": 1430,
+      "sha256": "c68949e1c27fae67fc2e8ef09f6fad2a9f680e7d29c6dfd48d2cc8d45d4f3443"
+    },
+    {
+      "path": "initial-template-check.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "initial-template-check.json",
+      "bytes": 767,
+      "sha256": "d968d193c820d130cf2b490ab320d41fbd3fb429469f22afc1d83078d071d4c8"
+    },
+    {
+      "path": "initial-template-check.stderr",
+      "bytes": 191,
+      "sha256": "a24c6b91a9e53e00e918195b9446a0a6541ba6006234b9a7a20b94f2f6272762"
+    },
+    {
+      "path": "initial-template-check.stdout",
+      "bytes": 705,
+      "sha256": "476181085318180789d30756d427abc60522366a8fa42d402f45efe132d846d9"
+    },
+    {
+      "path": "main-source.tar.gz",
+      "bytes": 65426980,
+      "sha256": "72f84d06863c2bcf72cfb5824703de15b8874fa779723392d38795188503737f"
+    },
+    {
+      "path": "metadata-correction.json",
+      "bytes": 553,
+      "sha256": "59c8c2fd3b62f19a9770611b67f168dbf86ad0be88a01df257891b8a93f0e54d"
+    },
+    {
+      "path": "seal-evidence.py",
+      "bytes": 3734,
+      "sha256": "21bef1146bf4bf86ddc547d3ab1c6cfb63a4a295c76a0c3e590fe09be97b813e"
+    },
+    {
+      "path": "source-check.json",
+      "bytes": 441,
+      "sha256": "89f1e389301719b3a6b18d3ce397636f677b309387bd679f99cce514e7248f97"
+    },
+    {
+      "path": "source-export.corrected.json",
+      "bytes": 1432,
+      "sha256": "b2689b76119ebe8843faba8ba73a82168ec6a8757331d140451628149d3462db"
+    },
+    {
+      "path": "source-export.json",
+      "bytes": 1432,
+      "sha256": "b2689b76119ebe8843faba8ba73a82168ec6a8757331d140451628149d3462db"
+    },
+    {
+      "path": "source-git-inventory.txt",
+      "bytes": 414571,
+      "sha256": "fb0fc1b2bf2a35dd600e744e4a3274b0b155d5cfce8847a98e8b2ee74e49e593"
+    },
+    {
+      "path": "template-check.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "template-check.json",
+      "bytes": 866,
+      "sha256": "2869f6709e83b4c601ef1c6d5edb90d3398c4a8735c87784b55a13c8b75223f1"
+    },
+    {
+      "path": "template-check.stderr",
+      "bytes": 191,
+      "sha256": "a3be83b91892cddcbcab92f51c64713b8355c96d2fc18bbe92caee3552df449c"
+    },
+    {
+      "path": "template-check.stdout",
+      "bytes": 796,
+      "sha256": "6d17c7bc0218d10939743eb3a26d5c6c20f7a2113511288af40f8457c6b04ba8"
+    }
+  ],
+  "sha256sumsSha256": "60f85d331c3e89f3652118a2bed59400a9ae39f581dc9702ad32f5ac64685e7c"
+}

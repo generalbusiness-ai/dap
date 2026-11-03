@@ -63,6 +63,42 @@ and the maintained Worker identity. The source check compares all archive
 files with the exact Git inventory and confirms both required ancestors.
 These checks run offline and read no real key or client home.
 
-The packet's one frozen gate, its actual exit, and the final evidence
-record follow these focused checks. No gate pass, deployment result,
-App authentication, rollback execution, or G3 acceptance is claimed here.
+The one frozen gate passes at `b6e7134a920f4e580f2f8e65101a235f5251b0bc`,
+tree `50dd7e0a51ac3875f305b16b45b29301b9a30b92`. The actual `gate.exit`
+reads `exit 0`. Head, tree, clean status, lockfile, and workspace bindings
+match before and after. All five stages pass, all four reporting phases
+complete, and the structured summary reports no contradictory record or
+report error. Terminal totals are 133 Node, 56 Counting, 3,601 plain with
+one skip, and 1,065 Native with two skips. Mac children separately pass
+15 Node and 18 Python tests. The outer run takes 1,237.708 seconds on this
+Mac, with focused bridge and browser work during part of the run.
+
+The first focused policy assertion named a nonexistent
+`MCP_DYNAMIC_REGISTRATION` field. The initial output remains in evidence.
+The corrected check reads `OAUTH_DYNAMIC_REGISTRATION` and calls the actual
+production `oauthPolicy`, which reports registration disabled. The
+source-export metadata now names that actual field. This correction
+changes only documentation metadata and adds no runtime setting.
+
+The final evidence record changes only documents over that frozen gate.
+Product source, tests, configuration, and dependencies stay unchanged.
+The final review names its separate record tree. No full gate repeats.
+
+The source archive remains selected main `9c7ae712`, from before the later
+stream-close landing. It includes the registration switch and Mac root
+support, and does not claim the later stream fix. The planner's separate
+stream ruling makes that fix no G3b prerequisite. This packet proves no
+deployment result, App authentication, rollback execution, or G3 acceptance.
+
+## Sealed evidence
+
+The [configuration manifest](evidence/2026-11-03-g3b-register-configuration.manifest.json)
+indexes 22 public files, including the exact source archive and Git inventory.
+Its SHA-256 is
+`9975e05c18bdeedbcadf0b26832746d650ca4c1187ea3bcf1040ff7ee69b7599`.
+The [gate manifest](evidence/2026-11-03-g3b-register-configuration-gate.manifest.json)
+indexes 10 public files and hashes 34 private raw gate files.
+Its SHA-256 is
+`b42bcaa5fe9509691097479059b5024dce5da32a6afd4ede5415e38c29eba980`.
+Both units have verified checksums and read-only modes. Retain them and
+the private raw files for at least 30 days after landing.

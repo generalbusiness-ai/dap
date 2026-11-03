@@ -18,5 +18,5 @@
   "bindingsSha256": "234755b04a7411602c42a7390e2e7146b6e91671a4260d231eec4918728bbfdc",
   "retainedRuntime": "/Users/inguz/dap-validate/bin/node-v26.12.1-darwin-arm64/bin/node",
   "fleetPrefix": "/Library/dap-host-h3-20261029",
-  "registrationPolicy": "Dynamic registration remains off unless MCP_DYNAMIC_REGISTRATION equals on; this packet adds no on setting."
+  "registrationPolicy": "Dynamic registration remains off unless OAUTH_DYNAMIC_REGISTRATION equals on; this packet adds no on setting."
 }
