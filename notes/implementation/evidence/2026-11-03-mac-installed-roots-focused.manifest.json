@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "qualification": "Focused tests and two named controls ran on the dirty source over ecf59e05. Source and tests remain exactly restored. Only operator documentation follows those runs. This snapshot was taken after focused work, not before a frozen gate. Actual filesystem, production JS parser, private staging, Python prepared_project and synthetic RSA key syntax run. No real App, installed register, provider, service or deployment runs. Node owner: 7 pass. Python owner: 6 pass. Each control: baseline 7 pass; changed source 6 pass and intended assertion failure, no timeout, exact restoration. The controls use a scratch package declaring node --test so the maintained helper selects Node without installing packages.",
+  "checkpoint": {
+    "commit": "ecf59e054f56528eb73f93ec4609185fe5e6a729",
+    "dirty": true
+  },
+  "retention": "Retain this readonly evidence at least 30 days after landing.",
+  "fileCount": 18,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-mac-installed-roots-focused",
+      "fileCount": 18,
+      "files": [
+        {
+          "path": "control-js.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "control-js.json",
+          "bytes": 851,
+          "sha256": "ef727c6c6ff1cabafc15257bff723fb8cb86cefec8211d7ab24d84b4f3cd4670"
+        },
+        {
+          "path": "control-js.stderr",
+          "bytes": 590,
+          "sha256": "52a713a353b67fe44a684b4035fd175e3765bd500dad19bd1b344ad107e8fd2c"
+        },
+        {
+          "path": "control-js.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "control-python.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "control-python.json",
+          "bytes": 788,
+          "sha256": "86bd91fb4a1ad134b34f4eed993aa3215de3c39c4a53b7d53635299d704afab5"
+        },
+        {
+          "path": "control-python.stderr",
+          "bytes": 609,
+          "sha256": "025336d925fbcbe2d42077ddecfb61080b7b75d117aeb33d7b02d10acf314cd1"
+        },
+        {
+          "path": "control-python.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "control-runner.package.json",
+          "bytes": 71,
+          "sha256": "a4d82a0649bbab749790b18e7e5f47b6a0514588c65e5a058b69875165d776dd"
+        },
+        {
+          "path": "dependency-record.json",
+          "bytes": 2663,
+          "sha256": "701e8d51d450e58a9ef2500de98c7c2795741660c708faad2aea1251878d90f7"
+        },
+        {
+          "path": "node-owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "node-owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "node-owner.tap",
+          "bytes": 2021,
+          "sha256": "9e69fdc2f3de566d09aee0b508b7cbf9a3f14e6ccd1df57039d275991b112b54"
+        },
+        {
+          "path": "python-owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "python-owner.stderr",
+          "bytes": 728,
+          "sha256": "48116849c7db624d35620f23431ad9041a991aee979d1e5e00a8dd1acd57cd01"
+        },
+        {
+          "path": "python-owner.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source-after.json",
+          "bytes": 1903,
+          "sha256": "09dda15743acc8830050607274a125360a98cf408a72cf579dec4e9329555a66"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1450,
+          "sha256": "7e0bff74e44b94a9ae02a20cb933fa65a22909a483efec857bc05b5fdce4f286"
+        }
+      ]
+    }
+  ]
+}

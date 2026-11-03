@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "qualification": "Actual frozen full gate exit 0. Preserve all failed, partial and unreached obligations. Counts retain their actual runner and phase; timings are not host acceptance.",
+  "checkpoint": {
+    "commit": "25146ccfec870e27e9373ff13a50f482dbb107ce",
+    "tree": "03add0b276b14bb2e1dab3a3aad1df878782eb29"
+  },
+  "retention": "Retain readonly public unit and indexed private originals at least 30 days after landing.",
+  "fileCount": 9,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-mac-installed-roots-gate",
+      "fileCount": 9,
+      "files": [
+        {
+          "path": "driver.py",
+          "bytes": 3055,
+          "sha256": "18e904d410a073b982a5b2ab08d0e06c896725eec08e047f520ef8f1b84fb4b4"
+        },
+        {
+          "path": "gate-record.json",
+          "bytes": 1254,
+          "sha256": "aba622c2b56c9d9d8239f251ec39ccc4ce6377ccd3a82b249bff32008bb83bf0"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "private-files.json",
+          "bytes": 6073,
+          "sha256": "741c08cac7e9c268faf88b509f139aa2ce8b1bb663a75c370c90822e75bf2f3f"
+        },
+        {
+          "path": "private-output.json",
+          "bytes": 398,
+          "sha256": "3d11c99a7e9a35975cb543a7242802b451a756f72a60ecf30eec860cc4fe12d3"
+        },
+        {
+          "path": "source-after.json",
+          "bytes": 302,
+          "sha256": "fd0f53714c2b2f2e1cc87d9752d6c1bdbbdecd7f400318feef5416a8f4e0bbea"
+        },
+        {
+          "path": "source-before.json",
+          "bytes": 646,
+          "sha256": "82565393371c6bbee4ae379c8a42d1ef22d32fb918c2ac6b27a54bb167fe8d1e"
+        },
+        {
+          "path": "terminal-summary.json",
+          "bytes": 3346,
+          "sha256": "2bcddb3fc4e82f9e71cb385264b334744a3a3475ca7c17d3c37e1b2f2f82aa28"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 663,
+          "sha256": "7a25f239c6363050fd0e96164bb7a4776941f156149dda7bff4d7dd8570038e8"
+        }
+      ]
+    }
+  ]
+}

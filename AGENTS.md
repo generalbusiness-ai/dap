@@ -12,7 +12,9 @@ Clarity is more valuable than features.  Clear and simple communication is a par
 
 Use gitseq requests to track all tasks in this project.
 
-USe the technical-writing skill for all user-facing notes, documentation and
+For each desired change, make the change easy (warning: this may be hard), then make the easy change.
+
+Use the technical-writing skill for all user-facing notes, documentation and
 other communications. Avoid passive voice, meta-voice and commentary.
 Review for narrative clarity within every sentence's context.
 

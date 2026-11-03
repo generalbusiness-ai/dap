@@ -3,6 +3,7 @@
 import { canonicalize, isRecord, parseStrict, within, LATE } from "@generalbusiness/dap-bytes";
 import { REPLY_SECONDS } from "@generalbusiness/dap-client";
 import { APPLICATION_SCREEN_HOST_PATH, applicationGatewayRoute, applicationScreenHostMatches, readApplicationScreenHost, type ApplicationScreenHost } from "@generalbusiness/dap-client/application";
+import { closeOnDisconnect } from "../../packages/scope/src/http-stream.ts";
 
 interface NativeStreamExchange { response: Response; lifetime: { close(): Promise<void> }; [Symbol.dispose]?(): void }
 interface ScreenService {
@@ -104,6 +105,7 @@ export default {
     // the same upstream body, including the existing bounded native stream.
     let body = response.body;
     if (exchange && body) {
+      closeOnDisconnect(request.signal, close, work => ctx.waitUntil(work));
       const from = body.getReader(); let finished = false, cancelled = false;
       body = new ReadableStream({
         type: "bytes",
