@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:aac55618b18be033581c86087f1aa2f670a013c3","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/wrangler.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b047aa6e7c325d32300f9b569d1b776691910510","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-stream-http-close-diagnostics.manifest.json."}
