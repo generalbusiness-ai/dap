@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "qualification": "Closed O4 configuration and actual production parser/settings owner/dry-run evidence only; no deployment or host acceptance. First failed draft retained.",
+  "checkpoint": {
+    "commit": "ecf59e054f56528eb73f93ec4609185fe5e6a729",
+    "dirty": true
+  },
+  "retention": "Retain readonly public unit and indexed private original at least 30 days after landing.",
+  "fileCount": 19,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-o4-connect-focused",
+      "fileCount": 19,
+      "files": [
+        {
+          "path": "config-check.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "config-check.json",
+          "bytes": 1198,
+          "sha256": "e630876603f77fab18ab7f2a7087199d79b6d7852414a39383abdd5f1fc9f3c7"
+        },
+        {
+          "path": "config-check.mjs",
+          "bytes": 3390,
+          "sha256": "9d9fff21e28e9c67adf8ae8960f88f7bffb3369e319da3c1dc441f1753c9690b"
+        },
+        {
+          "path": "config-check.stderr",
+          "bytes": 191,
+          "sha256": "e6f02c8837d11cd80d32e242f1850aee312b2956c21ed71ecc2103f87b18cae3"
+        },
+        {
+          "path": "dependency-record.json",
+          "bytes": 2589,
+          "sha256": "59c341984c9ddce5674defd588f19d4af4a3426fab0aff1461a0f583adb0a1e2"
+        },
+        {
+          "path": "private-files.json",
+          "bytes": 291,
+          "sha256": "5dd357ab54d21ddfba67c2e6f8dd69e72567c107a8465e751b17d47b43069e6e"
+        },
+        {
+          "path": "qualification.json",
+          "bytes": 1184,
+          "sha256": "e1c9fed95e0018e664f6ca92e003bed9b18dd39dd42b285443a2ae51eb5d763f"
+        },
+        {
+          "path": "settings-first-draft.md",
+          "bytes": 62774,
+          "sha256": "eeacd22dde3f40c52579ab3b7ef73cc2c2c3e7a6739f5b340892caf85bc82850"
+        },
+        {
+          "path": "settings-first.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "settings-first.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "settings-first.tap",
+          "bytes": 1363,
+          "sha256": "e2409518c6cc3a1e554c10a30bbc285f753a8266f7b31a0f8bb074a007022130"
+        },
+        {
+          "path": "settings-repaired.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "settings-repaired.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "settings-repaired.tap",
+          "bytes": 422,
+          "sha256": "87d9f6c018d627bc5c6ab548782224ecc14f8ac852be28e18fa94037980f4aaf"
+        },
+        {
+          "path": "source-after.json",
+          "bytes": 1058,
+          "sha256": "f9aca1da7dfe7440db771cb529d217e025c6ae8ddf9494e8f4b06a75d6ff64b5"
+        },
+        {
+          "path": "wrangler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "wrangler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "wrangler.stdout",
+          "bytes": 2568,
+          "sha256": "6821b915f423f1b7e7b10e56c875456e78d4d48abc401f7f4595f2ed01991e4d"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1541,
+          "sha256": "68b062a79627b05dc563e75520ba445202df21185f43f5c7665830b4585a0c09"
+        }
+      ]
+    }
+  ]
+}
