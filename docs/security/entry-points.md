@@ -54,8 +54,10 @@ Membership 13 adds `membership.own-agent` to the default admin, maintainer,
 and member roles. Native own-agent acts require an active person and bind
 the agent's controller to the signer. Both add and invite compare the
 agent role against the signer's current role; admin signers are exempt.
-The add step refuses a ninth active agent under that controller. These
-checks run in the Membership turn over its current state. They grant no
+The add step refuses a ninth active agent under that controller. The
+own-agent invitation step permits one live key per agent, counting invited
+and active keys together. Its expiry must fall after the act time and
+within 24 hours. These checks run in the Membership turn over its current state. They grant no
 HTTP route or OAuth token. The opt-in creation cohort changes no earlier
 Membership pin or deployment creation default.
 

@@ -24,7 +24,7 @@ const DIGESTS: Readonly<Record<string, string>> = {
   // Own-agent generation preserves all 92 earlier pin and declaration byte pairs.
   "platform:destination@20": "sha256:400ab350d2593ec2a8c6139810e1a0160fa2842833668ab4f9851043c057542a",
   "platform:directory@26": "sha256:7e0a9d4cb8c2227c35878c0db62dd4bc09b969f2f338fcec16de653b5d443f63",
-  "platform:membership@13": "sha256:7f688d5d2ba2767b2df6fb96ded1ed167cf1b1be335a863cf76ba2e108e8fd0a",
+  "platform:membership@13": "sha256:ceb8aac80b7b45d007d8b1bf9b26fe7dc877bd281646f70c6ec92beaae9c3c3c",
   "platform:register@27": "sha256:fbdc6072c321e201a966a2179a72db4519597dd262c81bd83f366b183e66125c",
   // Observed opt-in repository-binding generation; all 88 historical literals stay exact.
   "platform:destination@18": "sha256:400ab350d2593ec2a8c6139810e1a0160fa2842833668ab4f9851043c057542a",

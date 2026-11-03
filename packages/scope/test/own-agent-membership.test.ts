@@ -57,8 +57,8 @@ test("own-agent creation checks the controller, live role subset and eight activ
     } }));
     await life.wait(async () => M.did(una, "enrol", { on: 0, expected: await M.expected({ on: 0, member: checker }), fields: invitationRedemptionFields(C.membership, await M.at(), checkerInvitation, una.key, checkerSecret) }));
     const add = (who: typeof rita, handle: string, controller = "@vic") => life.wait(async () => M.act(who, "add-own-agent", { fields: { handle, kind: "agent", controller: { membership: await M.at(), member: controller as MemberId } } }));
-    const invite = (who: typeof rita, member: number, secret: string, revision?: number) => life.wait(async () => M.act(who, "invite-own-agent-key", { expected: revision === undefined ? await M.expected({ member }) : { member: revision }, fields: {
-      member, kind: "agent", ...invitationIssueFields(C.membership, secret), inviteEnds: soon(3600),
+    const invite = (who: typeof rita, member: number, secret: string, revision?: number, ends = soon(3600)) => life.wait(async () => M.act(who, "invite-own-agent-key", { expected: revision === undefined ? await M.expected({ member }) : { member: revision }, fields: {
+      member, kind: "agent", ...invitationIssueFields(C.membership, secret), inviteEnds: ends,
     } }));
     expect(await add(una, "@checker-agent", "@checker")).toMatchObject({ answer: "refused", reason: "unauthorized" });
     expect(await add(vic, "@other-controller", "@rita")).toMatchObject({ answer: "refused", reason: "guard-failed", name: "not-controller" });
@@ -83,9 +83,12 @@ test("own-agent creation checks the controller, live role subset and eight activ
     await setActions(originalActions);
     expect(await invite(rita, member, agentSecret)).toMatchObject({ answer: "refused", reason: "guard-failed", name: "not-controller" });
     expect(await invite(una, member, agentSecret)).toMatchObject({ answer: "refused", reason: "unauthorized" });
-    const invited = await invite(vic, member, agentSecret);
+    expect(await invite(vic, member, agentSecret, undefined, soon(24 * 3600 + 1))).toMatchObject({ answer: "refused", reason: "guard-failed", name: "own-agent-invitation-window" });
+    expect(await invite(vic, member, agentSecret, undefined, soon(0))).toMatchObject({ answer: "refused", reason: "guard-failed", name: "own-agent-invitation-window" });
+    const invited = await invite(vic, member, agentSecret, undefined, soon(24 * 3600));
     expect(invited).toMatchObject({ answer: "accepted" });
     if (invited.answer !== "accepted") return;
+    expect(await invite(vic, member, b64url(new Uint8Array(32).fill(27)))).toMatchObject({ answer: "refused", reason: "guard-failed", name: "own-agent-key-limit" });
     await settle();
     const membershipRef = await life.wait(() => M.at());
     const enrolExpected = await life.wait(() => M.expected({ on: 0, member }));
@@ -104,6 +107,7 @@ test("own-agent creation checks the controller, live role subset and eight activ
     }, link));
     expect(enrolled).toMatchObject({ code: 0 });
     expect((await store.config())?.handle).toBe("@first-agent");
+    expect(await invite(vic, member, b64url(new Uint8Array(32).fill(28)))).toMatchObject({ answer: "refused", reason: "guard-failed", name: "own-agent-key-limit" });
     for (let n = 2; n <= 8; n++) expect(await add(vic, `@agent-${n}`)).toMatchObject({ answer: "accepted" });
     expect(await add(vic, "@ninth-agent")).toMatchObject({ answer: "refused", reason: "guard-failed", name: "own-agent-limit" });
     const beforeRemoval = await life.wait(() => M.item(member));

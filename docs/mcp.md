@@ -2019,7 +2019,12 @@ kind and role `agent`, the signer's controller reference, fewer than eight
 active agents under that controller, and an agent role no wider than the
 signer's current role. `invite-own-agent-key` requires that active agent
 and controller and repeats the role-subset check. Admin signers are exempt
-from the subset check. Checker and agent roles gain no own-agent action.
+from the subset check. The own-agent invitation step permits only one live
+key per agent, invited and active together, and bounds its expiry to the
+next 24 hours after the act time. An expired or later deadline refuses.
+An active key must be revoked before this path invites a replacement; a
+pending invitation occupies the slot until it lapses. Checker and agent
+roles gain no own-agent action.
 
 These Native steps do not create OAuth grants or expose an MCP invitation
 tool. The retained enrollment client accepts their exact Native facts under
