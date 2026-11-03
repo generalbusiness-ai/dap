@@ -38,7 +38,7 @@ const namedOwners = {
     "packages/scope/src/worker.ts:DeployedScope": "660756384c04ec84a02cd513cf7bc8e00a2542b596bf16a846afcc25bf04020d",
     "packages/scope/src/worker.ts:ApplicationStreamLifetime": "4c82d6b5ea8ae68089f2f80321e3361b6176c9725d0b46481b6f32b6d2093ba3",
     "packages/scope/src/worker.ts:ApplicationScreenService": "d0e151737f0a735c031d7bb134c45d0ce8e87e7ec6d7a03eaf5455acbb92ac25",
-    "packages/scope/src/worker.ts:mcpRoute": "4297c8d4e37b4b7ca682b475295c027402a4ed4c61765d08065328d0d1a96cde",
+    "packages/scope/src/worker.ts:mcpRoute": "2701c498525ca35cf414385a0274b127ca833fc16fa683e86e6b821e07770ad1",
     "packages/scope/src/worker.ts:boundedBytes": "6553fab5e2b9129266d64c02f7c3c9317095f1888fd12a10d12490d9f5d90f40",
     "packages/scope/src/worker.ts:observeThrough": "7e507f9bd9233223446711d089eb6d6b4236b69642eb9d39260e4712d81dab7a",
     "packages/scope/src/worker.ts:sqlOf": "5631baea8c5029d6ba93da6b3d199e63897c5f5ac05ae61e16b8d6f3e337f7fb",
@@ -195,9 +195,9 @@ const namedOwners = {
 const seals = {
   "packages/bytes/src/session.ts": "71a16d6d2d02b2f424e711a80ca28fe8e10204d3daacc4d0cf23f85ebe80903e", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "packages/mcp/src/oauth-parameters.ts": "b48c22470c29dfa7c11260fc874128859650791294ec93d8ae0007bdca95534c", // O3 OAuth authority, public-client policy or retained browser consent owner.
-  "packages/mcp/src/oauth-clients.ts": "465f5d92bb65ab2a6ed7c86d30c6cead640d1730164cce4cd9b6984b191c6253", // O3 OAuth authority, public-client policy or retained browser consent owner.
+  "packages/mcp/src/oauth-clients.ts": "9b4471d0460979130cbd5e6f415b80f32f509e034d86be116e4d0b210949f66f", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "packages/mcp/src/oauth-issuer.ts": "ca5b2fa28e52999fcff61c8de6a1518eb62ae7224b4b4a16600640342eaa6791", // O3 OAuth authority, public-client policy or retained browser consent owner.
-  "packages/scope/src/oauth-routes.ts": "c757cb7e8dd8246eed01ddd5b384e8b40f378d6c2d0b0708ddbf4dc51dae531d", // O3 OAuth authority, public-client policy or retained browser consent owner.
+  "packages/scope/src/oauth-routes.ts": "2e2ba7beb770f7743dee85224a3f7b1b4e7f3959dc6e4fdb70e28febd1f69bd1", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "apps/room/page/oauth-route.ts": "859183c042ec2708d4d357ec49fffe0aae4fb9f4c44ea3cff734e9b2c33cbf1e", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "apps/room/page/src/oauth-context.ts": "15e8f1a89a49d4e403801efa2f9caefd83d6c3327ac897bb3b0475d4dbc37ff3", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "apps/room/page/src/oauth-custody.ts": "cedf10f00ac0135438b5cfba43056a2b78f86760f1ea9d528f7a81e78e3693dd", // O3 OAuth authority, public-client policy or retained browser consent owner.
@@ -451,7 +451,10 @@ test("the bijection rejects a missing row, an extra row, and a changed gate", as
   // The enabled table must not silently model a disabled deployment as
   // reachable. The real policy removes only its hosted dispatch rows.
   const disabled = await servedInventory({ hostedSettings: {} });
+  const registrationOff = await servedInventory({ hostedSettings: { MCP_ENABLED: "true" } });
   for (const [worker, rows] of actual) {
+    assert.deepEqual(registrationOff.get(worker), rows.filter(row => row.route !== "POST /oauth/register"),
+      "The enabled inventory covers the optional registration route; the default-off policy removes only that operation");
     assert.deepEqual(disabled.get(worker), rows.filter(row => !/^[A-Z]+ \/(?:mcp(?:\/|$)|oauth\/)/.test(row.route)
       && row.route !== "GET /.well-known/oauth-protected-resource/mcp" && row.route !== "GET /.well-known/oauth-authorization-server"));
   }

@@ -241,7 +241,7 @@ Missing or invalid settings refuse those families.
 | `GET, HEAD /oauth/authorize` | `none` | Hosted policy; same-origin consent assets with frame-ancestors none | None | Static bundle; no request body | None |
 | `GET, HEAD /oauth/consent.js` | `none` | Hosted policy; same-origin consent script | None | Static bundle; no request body | None |
 | `GET /oauth/authorize/context` | `none` | Exact client, redirect, audience, state and S256 checks | Client registry schema and bounded metadata cache | Client document 5 KiB and five seconds; cache at most one hour | Public-client registry RPC; explicitly admitted metadata origins only |
-| `POST /oauth/register` | `none` | Hosted policy; bounded public-client JSON and redirect checks | Client registry schema and one public registration | 5 KiB body; at most 1000 clients per Worker | Public-client registry RPC |
+| `POST /oauth/register` | `none` | Hosted policy and exact `OAUTH_DYNAMIC_REGISTRATION=on`; bounded public-client JSON and redirect checks | Client registry schema and one public registration | 5 KiB body; at most 1000 clients per Worker | Public-client registry RPC |
 | `POST /oauth/token` | `oauth` | Form bounds, client and token binding; issuer checks code with PKCE or refresh secret, then current standing | Agent schema before secret validation; token digests after verification | 8 KiB body; eight grants; eight-second code and 28-second refresh standing deadlines | Agent RPC; fresh Native membership read |
 | `POST /oauth/revoke` | `oauth` | Form bounds; known access or refresh secret and client ID before ending a grant; unknown tokens return 200 without effect | Agent schema before token check; grant, stream and session cleanup after proof | 8 KiB body; 16 MiB control budget | Agent RPC |
 | `POST /mcp/agents/grant` | `control` | Header and body binding; client resolution; current admin or controller authority and role subset | Client cache and object schemas before authority; Native enrollment and grant after authority | 64 KiB body; one-hour own invitation; eight grants; control budget | Metadata fetch; registry, agent and Native authority RPC |
@@ -307,7 +307,7 @@ publication still require their settings and authority checks.
 | `GET, HEAD /oauth/authorize` | `none` | Hosted policy; same-origin consent assets with frame-ancestors none | None | Static bundle; no request body | None |
 | `GET, HEAD /oauth/consent.js` | `none` | Hosted policy; same-origin consent script | None | Static bundle; no request body | None |
 | `GET /oauth/authorize/context` | `none` | Exact client, redirect, audience, state and S256 checks | Client registry schema and bounded metadata cache | Client document 5 KiB and five seconds; cache at most one hour | Public-client registry RPC; explicitly admitted metadata origins only |
-| `POST /oauth/register` | `none` | Hosted policy; bounded public-client JSON and redirect checks | Client registry schema and one public registration | 5 KiB body; at most 1000 clients per Worker | Public-client registry RPC |
+| `POST /oauth/register` | `none` | Hosted policy and exact `OAUTH_DYNAMIC_REGISTRATION=on`; bounded public-client JSON and redirect checks | Client registry schema and one public registration | 5 KiB body; at most 1000 clients per Worker | Public-client registry RPC |
 | `POST /oauth/token` | `oauth` | Form bounds, client and token binding; issuer checks code with PKCE or refresh secret, then current standing | Agent schema before secret validation; token digests after verification | 8 KiB body; eight grants; eight-second code and 28-second refresh standing deadlines | Agent RPC; fresh Native membership read |
 | `POST /oauth/revoke` | `oauth` | Form bounds; known access or refresh secret and client ID before ending a grant; unknown tokens return 200 without effect | Agent schema before token check; grant, stream and session cleanup after proof | 8 KiB body; 16 MiB control budget | Agent RPC |
 | `POST /mcp/agents/grant` | `control` | Header and body binding; client resolution; current admin or controller authority and role subset | Client cache and object schemas before authority; Native enrollment and grant after authority | 64 KiB body; one-hour own invitation; eight grants; control budget | Metadata fetch; registry, agent and Native authority RPC |
@@ -375,7 +375,7 @@ creates nothing. Existing Workers keep their configurations and registers.
 | `GET, HEAD /oauth/authorize` | `none` | Hosted policy; same-origin consent assets with frame-ancestors none | None | Static bundle; no request body | None |
 | `GET, HEAD /oauth/consent.js` | `none` | Hosted policy; same-origin consent script | None | Static bundle; no request body | None |
 | `GET /oauth/authorize/context` | `none` | Exact client, redirect, audience, state and S256 checks | Client registry schema and bounded metadata cache | Client document 5 KiB and five seconds; cache at most one hour | Public-client registry RPC; explicitly admitted metadata origins only |
-| `POST /oauth/register` | `none` | Hosted policy; bounded public-client JSON and redirect checks | Client registry schema and one public registration | 5 KiB body; at most 1000 clients per Worker | Public-client registry RPC |
+| `POST /oauth/register` | `none` | Hosted policy and exact `OAUTH_DYNAMIC_REGISTRATION=on`; bounded public-client JSON and redirect checks | Client registry schema and one public registration | 5 KiB body; at most 1000 clients per Worker | Public-client registry RPC |
 | `POST /oauth/token` | `oauth` | Form bounds, client and token binding; issuer checks code with PKCE or refresh secret, then current standing | Agent schema before secret validation; token digests after verification | 8 KiB body; eight grants; eight-second code and 28-second refresh standing deadlines | Agent RPC; fresh Native membership read |
 | `POST /oauth/revoke` | `oauth` | Form bounds; known access or refresh secret and client ID before ending a grant; unknown tokens return 200 without effect | Agent schema before token check; grant, stream and session cleanup after proof | 8 KiB body; 16 MiB control budget | Agent RPC |
 | `POST /mcp/agents/grant` | `control` | Header and body binding; client resolution; current admin or controller authority and role subset | Client cache and object schemas before authority; Native enrollment and grant after authority | 64 KiB body; one-hour own invitation; eight grants; control budget | Metadata fetch; registry, agent and Native authority RPC |
@@ -482,7 +482,7 @@ metadata replaces no source or host check.
 | `GET, HEAD /oauth/authorize` | `none` | Hosted policy; same-origin consent assets with frame-ancestors none | None | Static bundle; no request body | None |
 | `GET, HEAD /oauth/consent.js` | `none` | Hosted policy; same-origin consent script | None | Static bundle; no request body | None |
 | `GET /oauth/authorize/context` | `none` | Exact client, redirect, audience, state and S256 checks | Client registry schema and bounded metadata cache | Client document 5 KiB and five seconds; cache at most one hour | Public-client registry RPC; explicitly admitted metadata origins only |
-| `POST /oauth/register` | `none` | Hosted policy; bounded public-client JSON and redirect checks | Client registry schema and one public registration | 5 KiB body; at most 1000 clients per Worker | Public-client registry RPC |
+| `POST /oauth/register` | `none` | Hosted policy and exact `OAUTH_DYNAMIC_REGISTRATION=on`; bounded public-client JSON and redirect checks | Client registry schema and one public registration | 5 KiB body; at most 1000 clients per Worker | Public-client registry RPC |
 | `POST /oauth/token` | `oauth` | Form bounds, client and token binding; issuer checks code with PKCE or refresh secret, then current standing | Agent schema before secret validation; token digests after verification | 8 KiB body; eight grants; eight-second code and 28-second refresh standing deadlines | Agent RPC; fresh Native membership read |
 | `POST /oauth/revoke` | `oauth` | Form bounds; known access or refresh secret and client ID before ending a grant; unknown tokens return 200 without effect | Agent schema before token check; grant, stream and session cleanup after proof | 8 KiB body; 16 MiB control budget | Agent RPC |
 | `POST /mcp/agents/grant` | `control` | Header and body binding; client resolution; current admin or controller authority and role subset | Client cache and object schemas before authority; Native enrollment and grant after authority | 64 KiB body; one-hour own invitation; eight grants; control budget | Metadata fetch; registry, agent and Native authority RPC |
@@ -653,6 +653,13 @@ initialize schema and maintenance state. On denial, the census writes no
 index, journal, replay or alarm state.
 
 ### Hosted MCP
+
+The route inventory covers valid enabled settings, including dynamic
+registration. An unset `OAUTH_DYNAMIC_REGISTRATION` removes the registration
+operation: its POST refuses before body reads or registry lookup, and issuer
+metadata omits its endpoint. The exact value `on` enables it. Other supplied
+values close the OAuth routes. Metadata-document clients keep working when
+registration is off. See [OAuth settings](settings.md).
 
 Hosted MCP requires `MCP_ENABLED` to be exactly `"true"`, and both
 committed agent namespaces. `MCP_TOOL_ADDITIONS` can add known generic tool

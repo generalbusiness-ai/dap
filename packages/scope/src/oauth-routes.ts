@@ -34,7 +34,7 @@ export async function oauthRoute(request: Request, ports: Ports): Promise<Respon
   if (path === OAUTH_METADATA_PATH) {
     if (request.method !== "GET") return error(405, "method_not_allowed");
     const issuer = ports.origin;
-    return oauthAnswer({ status: 200, body: { issuer, authorization_endpoint: issuer + "/oauth/authorize", token_endpoint: issuer + "/oauth/token", registration_endpoint: issuer + "/oauth/register", revocation_endpoint: issuer + "/oauth/revoke",
+    return oauthAnswer({ status: 200, body: { issuer, authorization_endpoint: issuer + "/oauth/authorize", token_endpoint: issuer + "/oauth/token", ...(ports.policy.dynamicRegistration ? { registration_endpoint: issuer + "/oauth/register" } : {}), revocation_endpoint: issuer + "/oauth/revoke",
       response_types_supported: ["code"], grant_types_supported: ["authorization_code", "refresh_token"], scopes_supported: ["mcp"], code_challenge_methods_supported: ["S256"], token_endpoint_auth_methods_supported: ["none"], revocation_endpoint_auth_methods_supported: ["none"], client_id_metadata_document_supported: true, authorization_response_iss_parameter_supported: true } });
   }
   try {
@@ -48,6 +48,9 @@ export async function oauthRoute(request: Request, ports: Ports): Promise<Respon
     if (!["/oauth/register", "/oauth/token", "/oauth/revoke"].includes(path)) return null;
     if (request.method !== "POST") return error(405, "method_not_allowed");
     const registration = path === "/oauth/register";
+    // This deployment accepts no self-asserted registration metadata. Refuse
+    // before reading the body or obtaining a registry object.
+    if (registration && !ports.policy.dynamicRegistration) return error(400, "invalid_client_metadata");
     const type = request.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase();
     if (type !== (registration ? "application/json" : "application/x-www-form-urlencoded")) return error(400, "invalid_request");
     const bytes = await ports.read(request, registration ? OAUTH_CLIENT_BYTES : 8192);

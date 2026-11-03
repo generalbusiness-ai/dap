@@ -1,0 +1,99 @@
+{
+  "qualification": "Incremental source/Native compilers,10Nativecases,2expected-failure controls,settings and entry inventories,shared helpers; initial compiler and inventory failures retained. Not a frozen gate.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-registration-policy-focused",
+  "checkpoint": "d7f1ebf7b6246a936fa590d6fbe2c24bbb9c18c8",
+  "fileCount": 18,
+  "files": [
+    {
+      "path": "01-mcp-source-compiler.json",
+      "bytes": 1112,
+      "sha256": "540c6cefcd8b3eb5ec4435381dbfea8b34fe5c4db495b5830c07845cdeafb551"
+    },
+    {
+      "path": "02-scope-source-compiler.json",
+      "bytes": 1118,
+      "sha256": "fef8ce2c1051ec1cce601a3834f98cf99e9ffdc1eccc7a41f0df1e997516895b"
+    },
+    {
+      "path": "03-mcp-native-compiler.json",
+      "bytes": 1120,
+      "sha256": "bbb00f1750d6bf627ba6616b5d00f2fd426b28a8478fdf9511820e679f4e9390"
+    },
+    {
+      "path": "04-pool-compatibility.json",
+      "bytes": 1072,
+      "sha256": "71dfe8a455bc4cf1a0b0b71b90b3b8bbafec4b01641a0c45e649e46df9637c83"
+    },
+    {
+      "path": "05-mcp-native-compiler-corrected.json",
+      "bytes": 1138,
+      "sha256": "831fcceee9e44b983542577d1eb881fc1e15c28da86586c14271e2333c3ade55"
+    },
+    {
+      "path": "06-native-oauth-owners.json",
+      "bytes": 1260,
+      "sha256": "962703f63c5894f37b5435fb2899def75c00f7506dad90f065dd1c2b63dc52c8"
+    },
+    {
+      "path": "07-security-entry-and-settings.json",
+      "bytes": 1199,
+      "sha256": "e988caa348ce5636066b9146752e1307551ae6c377b7c2d4468332258614bd2f"
+    },
+    {
+      "path": "08-disabled-registration-guard-control.json",
+      "bytes": 552,
+      "sha256": "8174cff799be52f7e1b07f0129c654816578656ef628d88403f259bf498511f8"
+    },
+    {
+      "path": "08-disabled-registration-guard.json",
+      "bytes": 1274,
+      "sha256": "ef439045143482675b7d90a65f73c967414e6ff9ff4e69b9af258776ce0ae887"
+    },
+    {
+      "path": "09-invalid-setting-guard-control.json",
+      "bytes": 539,
+      "sha256": "9fa21a7506a3ccb16cc1e0819ee692f448b39a1f151a65686ef3f50340255b16"
+    },
+    {
+      "path": "09-invalid-setting-guard.json",
+      "bytes": 1262,
+      "sha256": "dfa99e880044825cca61f38e6ef1669bd5a601e6addf868939144156f6d21ce8"
+    },
+    {
+      "path": "10-entry-inventory-explicit-enabled-policy.json",
+      "bytes": 1264,
+      "sha256": "f20b98c8e1eb2305a5df42d2416fb92573ea1870d87f5e3426a94d7c43924f70"
+    },
+    {
+      "path": "11-shared-helper-inventory.json",
+      "bytes": 1211,
+      "sha256": "63ea107d53ca04695be72cf141316003bb325c1a58b56e9a95b104c12dca177d"
+    },
+    {
+      "path": "controls.py",
+      "bytes": 2386,
+      "sha256": "222d38a15abb981b032e90de863931c1369bdddee1420a73d6bbc8beffc63e18"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 5286,
+      "sha256": "066a4228262cc272c4b065e913fba06b48be483efa5fd323e9e7af3ff8bdc198"
+    },
+    {
+      "path": "reviewed-seals.json",
+      "bytes": 924,
+      "sha256": "8c9d3e974e58bb431ef65a6bde54c46fad28d747853b9539ea6927efd5f4fd90"
+    },
+    {
+      "path": "run-focused.py",
+      "bytes": 1426,
+      "sha256": "be06354ead3fcc855187709ef6e74db1086508e5753eee4c3685786f04d6ba56"
+    },
+    {
+      "path": "source-adoption.json",
+      "bytes": 1358,
+      "sha256": "939512b7f58518e6dac7dbfd6412f48eae6bdacd890d8d9537fb2007956d3a75"
+    }
+  ],
+  "sha256sumsSha256": "213af7b1a0e433c729515c177fbdc068cab93da2344280685f500509f858e001"
+}
