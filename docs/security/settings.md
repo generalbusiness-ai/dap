@@ -163,6 +163,8 @@ failure behavior, health visibility and the other readers.
 | `MCP_RESOURCE_URLS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `MCP_TOOL_ADDITIONS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `METRICS` | binding | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `OAUTH_CLIENT_METADATA_ORIGINS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/oauth-clients.ts`](../../packages/mcp/src/oauth-clients.ts) |
+| `OAUTH_REDIRECT_URIS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/oauth-clients.ts`](../../packages/mcp/src/oauth-clients.ts) |
 | `PLATFORM_CREATION_PINS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/creation-versions.ts`](../../packages/scope/src/creation-versions.ts) |
 | `PUBLIC_ORIGIN` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/public-origin.ts`](../../packages/scope/src/public-origin.ts) |
 | `REGISTER_SCOPE` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/register-setting.ts`](../../packages/scope/src/register-setting.ts) |
@@ -658,7 +660,8 @@ failure behavior, health visibility and the other readers.
       "kind": "binding",
       "status": "read",
       "readers": [
-        "packages/scope/src/worker.ts"
+        "packages/scope/src/worker.ts",
+        "apps/room/page/oauth-route.ts"
       ],
       "parser": "Wrangler hosted-MCP DurableObjectNamespace; mcpRoute requires both namespaces and a valid opt-in policy.",
       "missing": "Hosted MCP route 404 before body/target work.",
@@ -678,7 +681,8 @@ failure behavior, health visibility and the other readers.
       "kind": "binding",
       "status": "read",
       "readers": [
-        "packages/scope/src/worker.ts"
+        "packages/scope/src/worker.ts",
+        "apps/room/page/oauth-route.ts"
       ],
       "parser": "Wrangler hosted-MCP DurableObjectNamespace; mcpRoute requires both namespaces and a valid opt-in policy.",
       "missing": "Hosted MCP route 404 before body/target work.",
@@ -1133,6 +1137,46 @@ failure behavior, health visibility and the other readers.
       "missing": "Uses a valid Artifacts-only legacy pin; with neither source, deployed creation is unauthorized and lineage/census stay closed.",
       "invalid": "Malformed supplied pin/config or disagreement makes creation misconfigured before target lookup; lineage/census refuse. The explicit deployed open-creation escape does not bypass this check.",
       "health": "An explicit valid pin selects the existing bounded/cached readiness probe independently of provider wiring. Malformed or conflicting pins report register unavailable without a probe; a ready pin does not attest provider connectivity, creation policy or a census. With no explicit field, legacy host-root selection is unchanged."
+    },
+    {
+      "deployments": [
+        "artroom-scope",
+        "dap-celld-local",
+        "dap-demo",
+        "dap-commons",
+        "dap-lending",
+        "dap-grow"
+      ],
+      "name": "OAUTH_REDIRECT_URIS",
+      "kind": "text",
+      "status": "read",
+      "readers": [
+        "packages/mcp/src/oauth-clients.ts"
+      ],
+      "parser": "Optional strict JSON array, at most 32800 UTF-8 bytes and 32 distinct exact HTTPS redirects or HTTP redirects on localhost or 127.0.0.1; no credentials, fragment or backslash. A custom list replaces all defaults.",
+      "missing": "Allows the exact Claude and ChatGPT callbacks and HTTP localhost or 127.0.0.1 on any port, with the client-registered path. Every client still needs an exact registered redirect match.",
+      "invalid": "Closes the OAuth routes and signed grant, connection-list and grant-revocation routes with 404 before body reads or namespace lookup. The existing MCP resource and static bearer routes keep their own policy.",
+      "health": "Not reported. This deployment policy selects OAuth clients and redirects and grants no Native authority."
+    },
+    {
+      "deployments": [
+        "artroom-scope",
+        "dap-celld-local",
+        "dap-demo",
+        "dap-commons",
+        "dap-lending",
+        "dap-grow"
+      ],
+      "name": "OAUTH_CLIENT_METADATA_ORIGINS",
+      "kind": "text",
+      "status": "read",
+      "readers": [
+        "packages/mcp/src/oauth-clients.ts"
+      ],
+      "parser": "Optional strict JSON array, at most 8192 UTF-8 bytes and 32 distinct canonical HTTPS origins; no credentials, path, query or fragment. The listed origins and their DNS are trusted; the fetch does not inspect the socket address.",
+      "missing": "Trusts only https://claude.ai and https://chatgpt.com. Unknown origins refuse before fetch. Every metadata fetch still has a five-second deadline, a 5 KiB body bound, no redirects or credentials, exact client ID equality and at most one hour of cache.",
+      "invalid": "Closes the OAuth routes and signed grant, connection-list and grant-revocation routes with 404 before body reads or namespace lookup. The existing MCP resource and static bearer routes keep their own policy.",
+      "health": "Not reported. This deployment policy selects OAuth clients and redirects and grants no Native authority."
     }
   ]
 }

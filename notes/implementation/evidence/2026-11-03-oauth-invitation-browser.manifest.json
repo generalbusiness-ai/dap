@@ -1,0 +1,109 @@
+{
+  "qualification": "Actual local HTTPS Worker and Native scopes with browser consent/key custody. The OAuth/MCP host is an explicit scripted fixture. Earlier failed setup and failed control remain qualified; no deployed host acceptance.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-invitation-browser",
+  "checkpoint": "eb43ac23930a14bdd3102ff46266fe9adbf36426",
+  "fileCount": 20,
+  "files": [
+    {
+      "path": "fixture-lib.mjs",
+      "bytes": 2245,
+      "sha256": "edb8f2b9eda7a0b1aa2fce90047155619cc4300480b11704922a7227842f47df"
+    },
+    {
+      "path": "invitation-ui-flow-process.json",
+      "bytes": 53,
+      "sha256": "8710e489860777dd5941b605832c3549430a274e33117c7c6f2229f5d1e7e925"
+    },
+    {
+      "path": "invitation-ui-flow-result.json",
+      "bytes": 1553,
+      "sha256": "2da9b08012e7c00cf47aeb9e724bc091d8cd7339626a0926b6bf786ac4b32304"
+    },
+    {
+      "path": "invitation-ui-flow.mjs",
+      "bytes": 11530,
+      "sha256": "460f59f6359551c696617066740e272bf601cc2ec03436584f660bff71850151"
+    },
+    {
+      "path": "prepare-admin.mjs",
+      "bytes": 842,
+      "sha256": "e6d8c59a0e9abca366c56a65a38736041ea5575e5feacfa38bf9972c7dde1557"
+    },
+    {
+      "path": "prepare-admin.mjs.process.json",
+      "bytes": 85,
+      "sha256": "d9c6981d6c5fa8080ac19da2294f069bfeee9244729532d91ca450615e20d706"
+    },
+    {
+      "path": "prepare-agent.mjs",
+      "bytes": 3017,
+      "sha256": "fe5a08a14d0ed0a2212996cbf3109448ef1e0c647dfa63392eff1f3e34d864ab"
+    },
+    {
+      "path": "prepare-agent.mjs.process.json",
+      "bytes": 85,
+      "sha256": "0fc62d9441a201daea5b7d96bf6f797ae47566335b41948cc13b2396e49c7e25"
+    },
+    {
+      "path": "private-archive.json",
+      "bytes": 388,
+      "sha256": "23a2649bc6039dbe97515b9280befb6b8ebea2646d22414cd6146e009fdcf197"
+    },
+    {
+      "path": "screens/admin-before-allow-1280.png",
+      "bytes": 89319,
+      "sha256": "2cc3c09b4053cde56e9f5a230d87e08e810ae17d7a684d3b20232e5cab502a86"
+    },
+    {
+      "path": "screens/admin-before-allow-320.png",
+      "bytes": 81347,
+      "sha256": "b6fe0cef5ef4a92a27c1167332c27be5de6db46baa39a0cc0d7d3d01fbe88a30"
+    },
+    {
+      "path": "screens/admin-connected.png",
+      "bytes": 97985,
+      "sha256": "ce41c410e9c47b188ad989efa7f17f53b6249e858834a2b7d01b89b5630b094e"
+    },
+    {
+      "path": "screens/admin-revoked.png",
+      "bytes": 86392,
+      "sha256": "f5a3e765823a27e6524a5f133512281ef852e028acbad3e6337e97dd5e57a411"
+    },
+    {
+      "path": "screens/controller-before-allow-1280.png",
+      "bytes": 103190,
+      "sha256": "b4adfd8e26b167ae948399e828f9c5ac44aef2b3071a12b3745ddf9105f4bdcf"
+    },
+    {
+      "path": "screens/controller-before-allow-320.png",
+      "bytes": 94902,
+      "sha256": "d7d9b1d06ec290462a6426f202a21ca226adc803cdb0f6b1d27e48290f9e8ba2"
+    },
+    {
+      "path": "screens/controller-connected.png",
+      "bytes": 98280,
+      "sha256": "fa983ae87620bdf2186b3c490e9f3417575b00171955752b4fb966593273ac7d"
+    },
+    {
+      "path": "screens/controller-revoked.png",
+      "bytes": 86109,
+      "sha256": "01877dccd1f691a8931ea9bbb8607da9ef57fdb47fcee7f8c408012f719e60bd"
+    },
+    {
+      "path": "setup.json",
+      "bytes": 786,
+      "sha256": "17f2eb9fdfd2c1d570383730020490272fdcf9bcf928b750325bc488f44298af"
+    },
+    {
+      "path": "worker-stop.json",
+      "bytes": 176,
+      "sha256": "d93bb198da6c465de991f110493277e7d00d1fe85f758a3e0af2859c920f2fcd"
+    },
+    {
+      "path": "wrangler-older.json",
+      "bytes": 1715,
+      "sha256": "95eff60ccfbdce691107a74d3ddc0ebc74940e1ec2658cefacb2372c0b397a24"
+    }
+  ],
+  "sha256sumsSha256": "5f7ad7f745446992b7f2268bf72b0a0f9b4f0c3d645b44fe8939c4d3b237adca"
+}

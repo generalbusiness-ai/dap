@@ -1,0 +1,54 @@
+{
+  "qualification": "Successful Card and Page GitHub workflows at the exact isolated-repair head. Earlier observations remain recorded, and complete logs stay private. No deployment runs.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-browser-ci",
+  "checkpoint": "9bcb91f9931861fb47ef5fc6afb5ea60f58dfbb4",
+  "fileCount": 9,
+  "files": [
+    {
+      "path": "41592218975.json",
+      "bytes": 307,
+      "sha256": "427d9ff6476dc5af20f5746bb139ec20c2d7f0824d318f3f9376acd111e8eed8"
+    },
+    {
+      "path": "41592546780.json",
+      "bytes": 307,
+      "sha256": "2c9f2b1cce8601cd3020f7f3b2021793da6c07aeacbd4939dbbbb3cc42258652"
+    },
+    {
+      "path": "41596818010-final.json",
+      "bytes": 2935,
+      "sha256": "3cd2b76802dc4b924eec926589dde6f139487495ccfcbdc291cb4e25c68dbdc6"
+    },
+    {
+      "path": "41596818010.json",
+      "bytes": 307,
+      "sha256": "1256b613b51c8ef8fbeeb8e8d0d5fdc848c90d90727f0a61f941f5635eee4794"
+    },
+    {
+      "path": "41596824812-final.json",
+      "bytes": 2714,
+      "sha256": "035b64570745618416505c8959bd6f6ca165c35fdfca507a99f6eae7ceb5495f"
+    },
+    {
+      "path": "41596824812.json",
+      "bytes": 302,
+      "sha256": "e08bf9a3d338c53ca34fdc8b3b6ac23186fd8a18556fdd23883c94d337ccbeb3"
+    },
+    {
+      "path": "final-results.json",
+      "bytes": 9378,
+      "sha256": "12d4f0cae9054eb9c4cfd7a960df1f89c39ec8fa400804f44fefdb5d5e2b5382"
+    },
+    {
+      "path": "observed-at.json",
+      "bytes": 1740,
+      "sha256": "5398af1ccefff406f6a4e38f7de6da1872e8dd6f787c81f80f2a22fa74f23b47"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 445,
+      "sha256": "7635dd86e2f640843191fd9b9e92b722b5f687a08a9cd1335bff267566d1e7b7"
+    }
+  ],
+  "sha256sumsSha256": "78786e4fa331bb161951e10f4f5f886db3b4c9de6d743b8d4686f923d4f11c26"
+}

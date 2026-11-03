@@ -1,0 +1,64 @@
+{
+  "qualification": "Documentation and evidence follow-up checks only. Nine prior sealed manifests verify all 231 public files. Source/test equivalence to Native and CI head 9bcb91f9 is checked before the record commit.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-record-checks",
+  "checkpoint": "9bcb91f9931861fb47ef5fc6afb5ea60f58dfbb4",
+  "fileCount": 11,
+  "files": [
+    {
+      "path": "doc-links.json",
+      "bytes": 124,
+      "sha256": "1c1acc05d10a88afd45899be357831617ea5e664269c23fc3e9a12ad53370b89"
+    },
+    {
+      "path": "doc-links.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "doc-links.stdout",
+      "bytes": 36,
+      "sha256": "0a975f5a7c9f886bd294024bcb670708649a5a4bbb999a18c5b077c420f20b84"
+    },
+    {
+      "path": "documentation-scope-proof.json",
+      "bytes": 2977,
+      "sha256": "12f81ef8b5291f0e93bf022d9bade03090ea8ef146007c18120e5620c0ef8c97"
+    },
+    {
+      "path": "manifest-verification.json",
+      "bytes": 3024,
+      "sha256": "868ae005f931f0f1741709def67669851ef61d629916efa4bc4643115eda4bc9"
+    },
+    {
+      "path": "notes.json",
+      "bytes": 150,
+      "sha256": "1d867e34c1497df2dd8a35d895ef3fa7d568e1a27c204dea1bebce3fbf7ea422"
+    },
+    {
+      "path": "notes.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "notes.stdout",
+      "bytes": 18,
+      "sha256": "35f5140f008ef3bf10327a6430f244281b40bdfa97fd8e95da1c9634089d74d1"
+    },
+    {
+      "path": "whitespace.json",
+      "bytes": 116,
+      "sha256": "a0463fd7ee4396afc6305566f6bd028a03338a5e71a1ad25b098640fdef7c92e"
+    },
+    {
+      "path": "whitespace.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "whitespace.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "sha256sumsSha256": "08b58f9af83a18230621cc22417f804ffddb24dcfc28c22792e025c8655a5e20"
+}

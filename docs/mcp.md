@@ -1993,10 +1993,85 @@ streams. One agent keeps at most eight grant transport layers. Its four
 stream slots, sixteen retained sessions, and control storage budget span
 the static bearer and all grants.
 
-This slice implements the resource server only. It adds no production
-issuer, consent page, authorization code exchange, registration, refresh,
-or OAuth revocation endpoint. Tests write grant digests directly through
-Native SQL. Those test issuers create no public route or RPC method.
+### OAuth authorization and consent
+
+The authorization server serves public clients with authorization codes
+and PKCE `S256`. It advertises its routes at
+`/.well-known/oauth-authorization-server`. OAuth requires an open hosted
+endpoint, a configured HTTPS resource, and valid OAuth settings. Invalid
+OAuth settings close the authorization routes before namespace lookup.
+Existing HTTP services continue to serve static bearers.
+
+The client opens `/oauth/authorize` with its client ID, exact registered
+redirect URI, `response_type=code`, `code_challenge`,
+`code_challenge_method=S256`, resource, scope `mcp`, and state. The page
+checks that query through `/oauth/authorize/context` before it enables
+consent. Duplicate security parameters refuse.
+
+Consent uses the room selected in `/page/` and its existing nonextractable
+browser signing key. Open and select the room there first. Consent shows
+the client name, client-ID host and full ID, callback host, room ID,
+agent handle, controller, and grant expiry. A metadata document's name
+does not establish its publisher. The page accepts no framing and loads
+no client-supplied logo or script.
+
+On Membership 13, an eligible person can create their own agent. The page
+retains its original `add-own-agent` and `invite-own-agent-key` requests
+and requests a one-hour invitation. On an earlier pin, an admin prepares
+an agent-key invitation for the controller. Paste that invitation and
+press **Check invitation** before **Allow**. An admin can also use an
+invitation for another controller. The server checks the signer's current
+admin or controller authority and, for a non-admin, the current role subset.
+
+One controller and client reuse one hosted agent in that room. A fresh
+consent grants new access to that agent. The page lists connected clients
+and provides **Revoke**. An admin can check another controller's
+connections through that controller's invitation; ordinary members can
+list only their own connections.
+
+The browser keeps each original operation before sending it. An unknown
+answer offers **Check invitation**, when Native invitation work remains,
+or **Continue original request**. Continue preserves the original Native
+requests, operation, and grant meaning. It can renew the signed control's
+deadline. It creates no replacement agent. If the server already disclosed
+the code, replay returns only `codeShown`; a fresh Allow then reuses the
+known agent. The browser journal holds no authorization code or OAuth token.
+
+The callback carries `code`, the original `state`, and issuer `iss`.
+Cancel carries `error=access_denied`, state, and issuer, after redirect
+validation. The host exchanges the code at `/oauth/token` with its client
+ID, exact redirect URI, and verifier. Codes live for 60 seconds and work
+once. Access tokens live for one hour. Refresh tokens rotate and end no
+later than 30 days after consent. Reusing a spent code within its validity window, or reusing an old
+refresh token, ends that grant. The object stores token and code digests. Each agent
+admits eight pending or live grants; a ninth ends the oldest.
+
+Token and revocation requests use form encoding and public-client
+authentication method `none`. A supplied resource must match the grant.
+`/oauth/revoke` accepts an access or refresh token plus client ID. An
+unknown or already ended token answers `200`. Revocation and agent
+retirement end the grant's streams and sessions immediately. Refresh ends
+the old token's streams while preserving that grant's sessions. Other
+grants retain their sessions.
+
+`POST /oauth/register` registers a bounded JSON public-client record.
+The Worker keeps at most 1,000 registrations. A full registry answers
+`503` with `Retry-After`. Client IDs can instead name HTTPS client
+metadata documents. `OAUTH_CLIENT_METADATA_ORIGINS` admits exact origins;
+its defaults are `https://claude.ai` and `https://chatgpt.com`. A custom
+JSON array replaces those defaults. The Worker trusts each admitted
+origin and its DNS; it does not inspect the socket address. It refuses
+unlisted origins before fetch, follows no redirects, sends no credentials,
+limits the complete fetch and body read to five seconds and 5 KiB, and
+caches a valid document for at most one hour. Its `client_id` must equal
+the requested ID exactly.
+
+`OAUTH_REDIRECT_URIS` replaces the default redirect policy with an exact
+URI list. The defaults admit `https://claude.ai/api/mcp/auth_callback`,
+`https://chatgpt.com/connector_platform_oauth_redirect`, and registered
+HTTP loopback paths on `localhost` or `127.0.0.1`, on any port. A redirect
+must pass both the deployment policy and the client's registered list.
+See [hosted settings](security/settings.md) for configuration bounds.
 
 ### Routes
 
@@ -2006,6 +2081,17 @@ Native SQL. Those test issuers create no public route or RPC method.
 | `POST /mcp/agents/<agent>/bearer` | `Control`, action `bearer` | A new static bearer. Its sessions end, its 2025-11-25 streams close with a final event, and its listens complete with their result. OAuth grants keep their own sessions. A fresh operation renews the bearer lifetime. A replay returns the original secret-free receipt and ends nothing |
 | `DELETE /mcp/agents/<agent>` | `Control`, action `retire` | Retires the agent and ends every OAuth grant, session, and stream. A retired agent answers `401` from then on, and no later `bearer` or unfinished `create` revives it. An unfinished enrollment can be retired |
 | `GET /.well-known/oauth-protected-resource/mcp` | None | Exact configured-resource metadata, including the query |
+| `GET /.well-known/oauth-authorization-server` | None | Public-client issuer metadata |
+| `GET /oauth/authorize` | Existing selected browser key for consent | Consent HTML; `/oauth/consent.js` serves its same-origin script |
+| `GET /oauth/authorize/context` | None | Validated authorization query and client metadata; issues no grant |
+| `POST /oauth/register` | None | Registers a public client with allowed redirects |
+| `POST /oauth/token` | Code and PKCE verifier, or refresh token; client ID | Exchanges or refreshes a grant |
+| `POST /oauth/revoke` | Access or refresh token; client ID | Ends that grant |
+| `POST /mcp/agents/grant` | `Control`, action `grant` | Enrolls an invited agent and issues its first code, with no static bearer |
+| `POST /mcp/agents/<agent>/grant` | `Control`, action `grant` | Issues a fresh code for an existing agent |
+| `POST /mcp/agents/connections` | `Control`, action `connections` | Lists eight controller mappings per page. Body: `{ "after": null }`, then the returned cursor; optional `controller` requires that controller or an admin |
+| `POST /mcp/agents/<agent>/connections` | `Control`, action `connections` | Lists that agent's active grants. Body: `{}` |
+| `POST /mcp/agents/<agent>/revoke-grant` | `Control`, action `revoke-grant` | Ends one grant. Body: `{ "grant": "<grant ID>" }` |
 | `POST /mcp` | Static bearer or grant access token | One JSON-RPC request or notification, either revision |
 | `GET /mcp` | `Bearer`, `Mcp-Session-Id` | The 2025-11-25 server stream of that session |
 | `DELETE /mcp` | `Bearer`, `Mcp-Session-Id` | Ends that 2025-11-25 session |
@@ -2029,8 +2115,8 @@ lapses. Checker and agent roles gain no own-agent action.
 These Native steps do not create OAuth grants or expose an MCP invitation
 tool. The retained enrollment client accepts their exact Native facts under
 Membership 13. The existing `issueInvitation` helper continues to issue
-administrative add and invite requests; the separate consent slice will
-compose ordinary-member issuance. The recipe below describes the existing
+administrative add and invite requests. Consent uses the separate retained
+`issueOwnAgentInvitation` helper for ordinary-member issuance. The recipe below describes the existing
 administrative path, which earlier Membership pins keep.
 
 Enrollment belongs to the membership. Nothing here grants a permission.
@@ -2044,7 +2130,7 @@ Enrollment belongs to the membership. Nothing here grants a permission.
    legacy membership@2, @4 and @5.
    The CLI does not expose `dap invite --kind agent-key`; `dap invite
    --device` makes only a device key's link. The retained
-   issuer is `issueInvitation` in the [CLI API](../packages/cli/src/invitations.ts),
+issuer is `issueInvitation` in the [CLI API](../packages/cli/src/invitations.ts),
    with `kind: "agent-key"`, the full controller reference and an explicit
    private custody store. It keeps both signed requests before submission,
    checks their native results and encodes the private tagged invitation.

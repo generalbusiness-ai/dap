@@ -50,7 +50,7 @@ import {
   ScopeHandle, activeDirectory, collectItemQuery, partitionIndexes, completeSummary, declaredHandle, httpTransport, openHttpHeadStream, requestSession, secretSigner, signerSessionRequest, shapeDeclaredAct, signedIntent, signedReads, type Fetch, type Session as ReadSession, type Signer, type Signing, type Transport,
 } from "@generalbusiness/dap-client";
 import { LINK, describe, expectedOf, heldActs, linkOf, valueOf, type ActShape, type DefinitionShape, type Standing } from "@generalbusiness/dap-cli/browser";
-import { COMMONS_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, DEFINITION_DOMAIN, ROLE_LISTS, fileSound, firstExtents, isExtents, platform, type Role } from "@generalbusiness/dap-platform";
+import { COMMONS_COHORT, OWN_AGENT_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, DEFINITION_DOMAIN, ROLE_LISTS, fileSound, firstExtents, isExtents, platform, type Role } from "@generalbusiness/dap-platform";
 import type { Extent as PolicyExtent } from "@generalbusiness/dap-platform";
 import { Q11_READ_ONLY, rulesSummaryV11 } from "./rules-summary-v11.ts";
 import { knownLIST1 } from "./source-support.ts";
@@ -414,7 +414,7 @@ export async function openRoom(session: Session, place: Place): Promise<Room> {
   if (fullScopeRef(commons) && commons.kind === "commons") room.commons = commons;
   else if (commons !== undefined && commons !== null) throw new Unreadable("The directory has an invalid Commons reference.");
   const recordedRepository = repository.values["repository"];
-  if ((summary.definition === "platform:directory@20" || summary.definition === COMMONS_COHORT.directory) && summary.status === "active" && repository.state === "open" && recordedRepository == null) room.publication = "unpublished";
+  if ((summary.definition === "platform:directory@20" || summary.definition === COMMONS_COHORT.directory || summary.definition === OWN_AGENT_COHORT.directory) && summary.status === "active" && repository.state === "open" && recordedRepository == null) room.publication = "unpublished";
   else if (recordedRepository && typeof recordedRepository === "object" && !Array.isArray(recordedRepository) && ["host", "namespace", "name", "id"].every(field => field in recordedRepository && typeof (recordedRepository as Record<string, unknown>)[field] === "string")) room.publication = "repository";
   else throw new Unreadable(`The directory ${place.directory} records no valid publication metadata.`);
   if (recordedRepository && typeof recordedRepository === "object" && !Array.isArray(recordedRepository) && "name" in recordedRepository && typeof recordedRepository["name"] === "string") room.name = recordedRepository["name"];

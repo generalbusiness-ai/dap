@@ -12,7 +12,7 @@ const namedOwners = {
     "packages/scope/src/object.ts:ScopeObject": "d6dacd29bed93cc5c8c262c325ae0ff68cbc5193674b1b4b026e1991ca863185", // Token refusal: the delivery's transaction keeps a key that a compromised notice named, and the authority asks for it.
   },
   "packages/scope/src/worker.ts": {
-    "packages/scope/src/worker.ts:$module": "aa92d5929fa080afacbbe7530086ea416a8cf4961febe3a0ae9a441d9797405b",
+    "packages/scope/src/worker.ts:$module": "09f6f9995a4d5528b4094ea216714aa3bcdd944a475066edc1749db5da93fe7b",
     "packages/scope/src/worker.ts:ScopeIndex": "c427427157118cacbc763f65d5523f598eeb72a0b9a01520f1b088c5bc6dbad5", // Reviewed empty Site wake deletion; route and authority gates unchanged.
     "packages/scope/src/worker.ts:MISSING": "e8958a6cf8d4cd2f412b30c76b38aca2f4523bc2b9df96606ac01059b6d4fb42",
     "packages/scope/src/worker.ts:api": "03bb00a1a523796ca66c26c23d91142ef46758ad62290fdc9a5cc74556e8c171",
@@ -38,12 +38,12 @@ const namedOwners = {
     "packages/scope/src/worker.ts:DeployedScope": "660756384c04ec84a02cd513cf7bc8e00a2542b596bf16a846afcc25bf04020d",
     "packages/scope/src/worker.ts:ApplicationStreamLifetime": "4c82d6b5ea8ae68089f2f80321e3361b6176c9725d0b46481b6f32b6d2093ba3",
     "packages/scope/src/worker.ts:ApplicationScreenService": "d0e151737f0a735c031d7bb134c45d0ce8e87e7ec6d7a03eaf5455acbb92ac25",
-    "packages/scope/src/worker.ts:mcpRoute": "f40442b3466548398e72cb3c569ba059cc209b77f1a0d974ba3408a6b5363f44",
+    "packages/scope/src/worker.ts:mcpRoute": "4297c8d4e37b4b7ca682b475295c027402a4ed4c61765d08065328d0d1a96cde",
     "packages/scope/src/worker.ts:boundedBytes": "6553fab5e2b9129266d64c02f7c3c9317095f1888fd12a10d12490d9f5d90f40",
     "packages/scope/src/worker.ts:observeThrough": "7e507f9bd9233223446711d089eb6d6b4236b69642eb9d39260e4712d81dab7a",
     "packages/scope/src/worker.ts:sqlOf": "5631baea8c5029d6ba93da6b3d199e63897c5f5ac05ae61e16b8d6f3e337f7fb",
-    "packages/scope/src/worker.ts:McpRegistry": "f03a3a5f89e4a5b77c63d82dc72eb60c1eb34801a8dc55e661d05f7c07c7325b",
-    "packages/scope/src/worker.ts:McpAgent": "6f7bb70bbf2d442af1d36595440650635b3f79d36354a2e6c7019dfc75f219d2",
+    "packages/scope/src/worker.ts:McpRegistry": "ab3046751400481b13c079118b019a435a580893fe594f3dc74960f1c2a5c9af",
+    "packages/scope/src/worker.ts:McpAgent": "cea063ee2e6e3c67170c0b74ef86e6303018630abd5b38ffcb9311e9143aade9",
   },
   "packages/cli/src/commands.ts": {
     "packages/cli/src/commands.ts:$module": "b1e1e1e46bf94ba2045b63aa8c746326103d040a8463e274d008dc9176a624c6", // Reviewed room-proof import, both helper declarations, separate checker dispatch and retained-clone helpers; exit code 3 and the export of issueNamed for dap issue wait.
@@ -193,6 +193,15 @@ const namedOwners = {
 
 // Reviewed matcher/gate owners. These are change tripwires, not runtime proof.
 const seals = {
+  "packages/bytes/src/session.ts": "71a16d6d2d02b2f424e711a80ca28fe8e10204d3daacc4d0cf23f85ebe80903e", // O3 OAuth authority, public-client policy or retained browser consent owner.
+  "packages/mcp/src/oauth-parameters.ts": "a056c527d74ca65ba56f6c0c4a10f0530d8439288526cad55d44bdcb7d2a42dd", // O3 OAuth authority, public-client policy or retained browser consent owner.
+  "packages/mcp/src/oauth-clients.ts": "d9ff4d632176bac825411367b7fe910e2036c6fd77bf6c8e122c1522433f72ed", // O3 OAuth authority, public-client policy or retained browser consent owner.
+  "packages/mcp/src/oauth-issuer.ts": "51b1e8ad8211c4c8cb6894d90d3c79811565b6749e522a8d42a384477ebb2efe", // O3 OAuth authority, public-client policy or retained browser consent owner.
+  "packages/scope/src/oauth-routes.ts": "c757cb7e8dd8246eed01ddd5b384e8b40f378d6c2d0b0708ddbf4dc51dae531d", // O3 OAuth authority, public-client policy or retained browser consent owner.
+  "apps/room/page/oauth-route.ts": "859183c042ec2708d4d357ec49fffe0aae4fb9f4c44ea3cff734e9b2c33cbf1e", // O3 OAuth authority, public-client policy or retained browser consent owner.
+  "apps/room/page/src/oauth-context.ts": "15e8f1a89a49d4e403801efa2f9caefd83d6c3327ac897bb3b0475d4dbc37ff3", // O3 OAuth authority, public-client policy or retained browser consent owner.
+  "apps/room/page/src/oauth-custody.ts": "cedf10f00ac0135438b5cfba43056a2b78f86760f1ea9d528f7a81e78e3693dd", // O3 OAuth authority, public-client policy or retained browser consent owner.
+  "apps/room/page/src/oauth-main.ts": "8a110a1da61e83ef46ec007c0544cdf6b2619bfc25eec8159cc9119b1dc48efd", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "packages/platform/src/own-agent-membership.ts": "4155cefc45d92b7396511b6a7173b438b45ff203593ca328aa9d9f322f24804c", // O2 own-agent guard and exact opt-in cohort owner.
   "packages/platform/src/own-agent-cohort.ts": "5de494854f15f912b1ea19cbd556e3cb1d328050170aa497721918c70941ddc8", // O2 own-agent guard and exact opt-in cohort owner.
   "packages/platform/src/own-agent-cohort-data.ts": "5e018d8d4fa152ed3c827c64cbbf0587f5a7a2358b02e3e2cf90aec933fac502", // O2 own-agent guard and exact opt-in cohort owner.
@@ -211,7 +220,7 @@ const seals = {
   "packages/platform/src/versions.ts": "0e8cd35ebe10a80d0b5e3c7a77d72853636d3fbc6dc7cd2fe48297ad971ed4db", // Closed native publication protocol policy; actual maintained parser output.
   "apps/room/worker.ts": "aba04e12dc206f0be6bda4a8edeac64569e0edd44b7a87772595d7db40bb8b67",
   "apps/room/worker.commons.ts": "c525a1b0d13e6243099d03b80c5207b76f082c71432db2b8ecaf86ccf8cb1160", // Reviewed separate deployment entry; actual maintained parser output.
-  "apps/room/fetch.ts": "0b1713cce239011343ffdad8c3ec94491509ff5b63a782cdf0d8ff215fd7d76c", // R2 owning AST value adopted on the reviewed branch.
+  "apps/room/fetch.ts": "8c0163e66c74ff63227d55cb1b8a8ab8d30661b1eb154a95d0e3c5b580e443ba", // R2 owning AST value adopted on the reviewed branch.
   "apps/room/demo-creation.ts": "91d9ac8a8fa37e3c99c117be7d99dc2d9e370efeacd70f8f49a00a4062bcd67c",
   "packages/scope/src/demo-creation.ts": "a3db32b06d66dc08dc5c585514a02ed60929d3bcc05d0be9d433affea17fefe7", // Reviewed current demo projection or ordinary GitHub authority owner.
   "packages/scope/src/github-wiring.ts": "988d741c82a54f2be987b2ade5e3653ae64ff21907e66896487e86d79a58ae68", // Reviewed current demo projection or ordinary GitHub authority owner.
@@ -257,16 +266,16 @@ const seals = {
   "packages/scope/src/workspace-lineage.ts": "8ab25e2b89e8438a7914c441aa9aca3c18e5e7335eb32488251d5631ed52a1ff", // Reviewed bounded authenticated Register, Directory and Destination creation lineage.
   "packages/scope/src/native-birth.ts": "ab9ecd331850e5f183fafaee07145c64adadb3ad904ea95bcc4ddf569da6ad6f", // Reviewed bounded genesis decoding and exact indexed scope and kind discovery.
   "packages/mcp/src/oauth-resource.ts": "895d3a1b241e5fe0d5228febff46fe6c921899110fef99056dd1b53199d341ae", // O1 resource discovery and grant transport boundary.
-  "packages/mcp/src/oauth-access.ts": "6b9e179f3ee3b3da4270832a2db8cfafe8c29af5b9c60d86bbd21e8c5720ca29", // O1 resource discovery and grant transport boundary.
-  "packages/mcp/src/oauth-http.ts": "cf2eef05ed09507feb4e71d5f08812d654396478f57a2bba7b143716db5aa20d", // O1 resource discovery and grant transport boundary.
-  "packages/mcp/src/index.ts": "d2502df3e0314f0b76ab19b7aa10c4c766b45a9eb05b9b1323581c65a8e440c2", // O1 resource discovery and grant transport boundary.
-  "packages/mcp/src/hosted.ts": "8b9fd396c9a8e6398be612f822359401e4b5079b6aafc8c5844ea8dd63fb369c",
+  "packages/mcp/src/oauth-access.ts": "c9125c1cf737025ac1342e3219227b6f882d28a565978d9ca68300f7402ff2d6", // O1 resource discovery and grant transport boundary.
+  "packages/mcp/src/oauth-http.ts": "f04810c38e299cdf9e25d7e2022f095023b5bae6dfe9797ff6970e4871998836", // O1 resource discovery and grant transport boundary.
+  "packages/mcp/src/index.ts": "e8381ad33242af79c16cb57ddeff579a01d8a981f923e5aed549e6ab60c262fe", // O1 resource discovery and grant transport boundary.
+  "packages/mcp/src/hosted.ts": "1e0e3c486c76c6669da8a458bb59a454643c44accba38fb4c4a455c17a2d61a2",
   "packages/mcp/src/views/remote-origins.ts": "81c7e7a044690df7c00a30691ddc5e0da11531fabad2a9143d2d389ff8c0a1b1", // Exact remote presentation URL policy; no authority selection.
-  "packages/mcp/src/hosted-tools.ts": "0455a72fc27ece68127100b5f17eced4fe43ba310669fcb2474186edf3c74ff6", // Reviewed R5 admission owner; actual maintained parser output.
+  "packages/mcp/src/hosted-tools.ts": "bea3d3cea128bd76102e36d0876992c1b77a5bf2263f376082c1f329d2035a60", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": namedOwners["packages/mcp/src/service.ts"],
   "packages/mcp/src/catalogue.ts": "8d1af74b33b07b063a1dad51477b51d22ac9cb7bb08d79ad366a0a3b717c3e53", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/inventory.ts": "0c14de294c6005379f9243d7283fc1dcaf2001fd009e0d361c06adf2b46871ea", // Reviewed parallel authority reads and target-only discovery; standing still reads fresh.
-  "packages/mcp/src/http.ts": "286f442c4c3ecc8390dc633d0f006315e2c9b3ecc5eedc7dd3d9b039d903b2d8", // Reviewed Mcp-Name binding for prompts/get.
+  "packages/mcp/src/http.ts": "5c6fa6500e539648bb5f9d4a97307ebe07609b76a60883511557dd6d79f30adb", // Reviewed Mcp-Name binding for prompts/get.
   "packages/client/src/application-trust.ts": "137391c8b1ed6f59f66e9368012c1355ed77325fdb16f67b73296be1ccc856b3", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
   "packages/client/src/application-install.ts": "4046c6792d4671cdb259691dcf2171a2c3144450664c696cb722db161790164b", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
   "packages/scope/src/applications/resolve.ts": "6338c9357780846b115999454239b68f34c5d6be3c090ca3f18b8f6e8771d0e2", // Reviewed R10 trust-before-fetch owner; actual maintained parser output.
@@ -308,7 +317,7 @@ const pendingR8Seals = {
   "packages/cli/src/files.ts": "7d0d64f352787e5d30ea03265fb5137a17a1eef61e97454e5408959297ca1d5c", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/store.ts": "b2df92952a0584d615a9d939e0744454ad7251c6c7e8e2c6e4e15188f4a8804a", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/line.ts": "fd4c7c452dd6ef5aa1e7b75d3f5327db955fbc56ff8b0998434cfd51e2ef0067", // Reviewed CLI session or verification boundary; actual maintained parser output; dap issue wait signs no act.
-  "packages/cli/src/invitations.ts": "cd4152961b37783c2f110d39237a5bf1cdb461cf552f72b357108e310d04f6a6", // Reviewed CLI session or verification boundary; actual maintained parser output.
+  "packages/cli/src/invitations.ts": "96c0566ee9dddc578182799e64ee20fd2766ee95e6c30a8545147413bdd3a13c", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/scope-index-applications-command.ts": "e72f729f4232f674d0e132c865e4d7c359ac567a21e97b4e7b905342379d33b7", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/scope-index-manifest.ts": "393dc3b0c33b73b082ca0024370de8bdcad832be6349ee1414516dabe9739663", // Preserve trusted session refusal outcomes; actual maintained parser output.
   "packages/cli/src/status-report.ts": "200a440b06850a2d8773ae9c2ad82d6bf0b5864fbce92a714eafb622eba0484c", // Reviewed CLI session or verification boundary; actual maintained parser output.
@@ -369,6 +378,28 @@ test("snapshot body formats dispatch both actual membership-gated owners at the 
   assert.deepEqual(routes.filter(row => row.route === route), [{ route, gate: "membership" }]);
 });
 
+test("OAuth routes retain public, credential and signed-control gate classes and reject an undocumented method change", async () => {
+  // Actual matchers with object boundary stand-ins; this proves route and
+  // gate classification, not possession of a code, verifier or Native key.
+  const actual = await servedInventory(), routes = actual.get("artroom-scope");
+  for (const [route, gate] of [
+    ["GET /.well-known/oauth-authorization-server", "none"],
+    ["GET /oauth/authorize", "none"], ["HEAD /oauth/authorize", "none"],
+    ["GET /oauth/consent.js", "none"], ["HEAD /oauth/consent.js", "none"],
+    ["GET /oauth/authorize/context", "none"], ["POST /oauth/register", "none"],
+    ["POST /oauth/token", "oauth"], ["POST /oauth/revoke", "oauth"],
+    ["POST /mcp/agents/grant", "control"], ["POST /mcp/agents/:agent/grant", "control"],
+    ["POST /mcp/agents/connections", "control"], ["POST /mcp/agents/:agent/connections", "control"],
+    ["POST /mcp/agents/:agent/revoke-grant", "control"],
+  ]) assert.deepEqual(routes.find(row => row.route === route), { route, gate });
+  assertInventory(actual, document());
+  const source = sourceOf("packages/scope/src/oauth-routes.ts"), before = 'if (request.method !== "POST") return error';
+  const changed = await servedInventory({ oauthSource: replaceOnce(source, before, 'if (request.method !== "PUT") return error') });
+  assert.ok(changed.get("artroom-scope").some(row => row.route === "PUT /oauth/token" && row.gate === "oauth"));
+  assert.ok(!changed.get("artroom-scope").some(row => row.route === "POST /oauth/token"));
+  assert.throws(() => assertInventory(changed, document()), { code: "ERR_ASSERTION", message: /route\/method\/gate bijection/ });
+});
+
 test("a real matcher change fails the inventory bijection with the page unchanged", async () => {
   const source = readFileSync(new URL("../packages/scope/src/worker.ts", import.meta.url), "utf8");
   const baseline = await servedInventory({ scopeSource: source });
@@ -421,8 +452,8 @@ test("the bijection rejects a missing row, an extra row, and a changed gate", as
   // reachable. The real policy removes only its hosted dispatch rows.
   const disabled = await servedInventory({ hostedSettings: {} });
   for (const [worker, rows] of actual) {
-    assert.deepEqual(disabled.get(worker), rows.filter(row => !/^[A-Z]+ \/mcp(?:\/|$)/.test(row.route)
-      && row.route !== "GET /.well-known/oauth-protected-resource/mcp"));
+    assert.deepEqual(disabled.get(worker), rows.filter(row => !/^[A-Z]+ \/(?:mcp(?:\/|$)|oauth\/)/.test(row.route)
+      && row.route !== "GET /.well-known/oauth-protected-resource/mcp" && row.route !== "GET /.well-known/oauth-authorization-server"));
   }
   assert.throws(() => assertInventory(disabled, document()), { code: "ERR_ASSERTION", message: /route\/method\/gate bijection/ });
   for (const fault of [rows => rows.slice(1), rows => [...rows, { route: "POST /unserved", gate: "none" }], rows => rows.map((row, i) => i === 0 ? { ...row, gate: "membership" } : row)]) {
@@ -470,7 +501,7 @@ function changedRecords(before, after) {
 test("named seals isolate real router, same-module helper, and display-body changes", () => {
   for (const [file, name, from, to] of [
     ["packages/scope/src/worker.ts", "routedRequest", 'if (what === "requests") return read(await scopes.requests', 'if (what === "request-window") return read(await scopes.requests'],
-    ["packages/scope/src/worker.ts", "bodyText", 'new TextDecoder("utf-8", { fatal: true, ignoreBOM: false })', 'new TextDecoder("utf-8", { fatal: false, ignoreBOM: false })'],
+    ["packages/scope/src/worker.ts", "bodyText", 'const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: false })', 'const decoder = new TextDecoder("utf-8", { fatal: false, ignoreBOM: false })'],
     ["packages/cli/src/commands.ts", "entryLine", '`genesis ${input.kind}`', '`genesis-kind ${input.kind}`'],
   ]) {
     const source = sourceOf(file), baseline = ownerRecords(file);

@@ -1,7 +1,8 @@
 /** Deployment policy for hosted MCP only. Local services omit this policy. */
 import { remoteCardOrigins } from "./views/remote-origins.ts";
 import { configuredMcpResources, type ResourceSettings } from "./oauth-resource.ts";
-export interface HostedMcpSettings extends ResourceSettings { MCP_ENABLED?: string; MCP_TOOL_ADDITIONS?: string }
+import type { OAuthSettings } from "./oauth-clients.ts";
+export interface HostedMcpSettings extends ResourceSettings, OAuthSettings { MCP_ENABLED?: string; MCP_TOOL_ADDITIONS?: string }
 export const GENERIC_TOOL_NAMES = ["room", "commons", "inspect", "create", "join", "install_application", "application_installation", "prepare", "items", "steps", "step", "record", "sends", "text", "wait", "settle", "credential", "diff", "actions", "act"] as const;
 export const HOSTED_TOOL_OMISSIONS: readonly string[] = ["create", "install_application", "credential", "diff", "prepare", "join", "record"];
 

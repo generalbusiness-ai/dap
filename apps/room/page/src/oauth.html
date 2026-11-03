@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connect to dap</title>
+<link rel="icon" type="image/svg+xml" href="/brand/favicon.svg">
+<style>
+@font-face { font-family: "Open Runde"; font-weight: 400; src: url("/brand/fonts/OpenRunde-Regular.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Open Runde"; font-weight: 600; src: url("/brand/fonts/OpenRunde-Semibold.woff2") format("woff2"); font-display: swap; }
+:root { color-scheme: light dark; --paper: #F3F1EA; --ink: #16180F; --muted: #6B6A5F; --line: #D8D5CB; --surface: #fff; --accent: #123F2B; --on-accent: #fff; }
+@media (prefers-color-scheme: dark) { :root { --paper: #121410; --ink: #ECEAE2; --muted: #A3A295; --line: #2C2F27; --surface: #16180F; --accent: #5FA880; --on-accent: #16180F; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.5 "Open Runde", system-ui, sans-serif; }
+main { width: min(100%, 680px); margin: 0 auto; padding: 32px 24px 48px; }
+.brand { font-size: 24px; font-weight: 600; text-decoration: none; display: inline-block; margin-bottom: 28px; }
+h1 { font-size: 28px; line-height: 1.25; letter-spacing: -.5px; margin: 0 0 28px; }
+h2 { font-size: 19px; line-height: 1.35; margin: 0 0 8px; }
+p { margin: 0 0 12px; overflow-wrap: anywhere; }
+section { border-top: 1px solid var(--line); padding-top: 20px; margin-bottom: 24px; }
+a { color: var(--accent); text-underline-offset: 3px; }
+dl { margin: 0; }
+.detail { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 16px; padding: 6px 0; }
+dt { color: var(--muted); }
+dd { margin: 0; overflow-wrap: anywhere; }
+.client-host { color: var(--muted); margin-bottom: 16px; }
+label { display: block; margin-bottom: 6px; font-weight: 600; }
+input, textarea, button { font: inherit; color: inherit; }
+input, textarea { width: 100%; background: var(--surface); border: 1px solid var(--muted); border-radius: 4px; padding: 10px 12px; margin: 0 0 12px; }
+textarea { resize: vertical; overflow-wrap: anywhere; }
+button, .button-link { display: inline-block; min-height: 44px; padding: 9px 16px; border: 1px solid var(--muted); border-radius: 4px; background: transparent; color: var(--ink); cursor: pointer; margin: 0 8px 8px 0; text-decoration: none; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+button:disabled { opacity: .55; cursor: default; }
+:where(a, button, input, textarea):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.permission { margin: 4px 0 20px; }
+.muted { color: var(--muted); font-size: 14px; }
+.connections { margin: 0; padding: 0; list-style: none; }
+.connections li { display: flex; align-items: start; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.connections li div { min-width: 0; overflow-wrap: anywhere; }
+.connections li p { margin: 2px 0 0; }
+.connections button { flex: none; margin: 0; }
+.status { margin-bottom: 16px; }
+@media (max-width: 420px) { main { padding: 24px 18px 36px; } h1 { font-size: 25px; } .detail { grid-template-columns: 1fr; gap: 2px; padding: 8px 0; } }
+</style>
+</head>
+<body><main id="consent"><h1>Connect to your room</h1><p>Checking this authorization…</p></main><script type="module" src="/oauth/consent.js"></script></body>
+</html>

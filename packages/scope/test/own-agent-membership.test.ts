@@ -3,9 +3,10 @@
  * starts no Git provider, deployment, consent page or OAuth issuer. */
 import { expect, test } from "vitest";
 import type { Intent, MemberId, ScopeId, Seed } from "@generalbusiness/dap-contract";
-import { b64url, intentDigest, isSeed, scopeIdOf, signIntent, timeOf } from "@generalbusiness/dap-bytes";
-import { encodeAgentKeyInvitation, invitationIssueFields, invitationRedemptionFields, type Fetch } from "@generalbusiness/dap-client";
+import { b64url, intentDigest, isSeed, scopeIdOf, signIntent, timeOf, timeMs } from "@generalbusiness/dap-bytes";
+import { agentKeyInvitationOf, encodeAgentKeyInvitation, invitationIssueFields, invitationRedemptionFields, secretSigner, type Fetch } from "@generalbusiness/dap-client";
 import { enrolAgentKey, memoryStore } from "../../cli/src/index.ts";
+import { issueOwnAgentInvitation } from "../../cli/src/browser.ts";
 import { OWN_AGENT_COHORT as C } from "@generalbusiness/dap-platform";
 import { driveFixture, nativeFixtureLifetime } from "./fixtures-native.ts";
 import { soon } from "./net.ts";
@@ -108,7 +109,52 @@ test("own-agent creation checks the controller, live role subset and eight activ
     expect(enrolled).toMatchObject({ code: 0 });
     expect((await store.config())?.handle).toBe("@first-agent");
     expect(await invite(vic, member, b64url(new Uint8Array(32).fill(28)))).toMatchObject({ answer: "refused", reason: "guard-failed", name: "own-agent-key-limit" });
-    for (let n = 2; n <= 8; n++) expect(await add(vic, `@agent-${n}`)).toMatchObject({ answer: "accepted" });
+    // The ordinary member uses the production retained issuer. The signer
+    // and one-second clock skew are explicit TEST ports; Native owns acts.
+    const issuerBase = memoryStore(), privateRequests: string[] = [];
+    await issuerBase.save({ v: 1, service: "https://scopes.test", key: "browser", handle: "@vic",
+      repository: agentKeyInvitationOf(link)!.repository });
+    const issuerStore = { ...issuerBase,
+      signer: async () => secretSigner(vic.secret),
+      secret: async (): Promise<never> => { throw Error("The issuer must not export a seed"); },
+      keepPrivate: async (name: string, bytes: Uint8Array) => { await issuerBase.keepPrivate(name, bytes); privateRequests.push(name); },
+    };
+    let loseOpening = true, actPosts = 0;
+    const issuerFetch = (async (url, init) => {
+      const response = await life.wait(() => routed(url, init));
+      if (init?.method === "POST" && new URL(String(url)).pathname.endsWith("/acts")) {
+        actPosts++;
+        await settle();
+        if (loseOpening) { loseOpening = false; await response.body?.cancel(); throw Error("TEST lost accepted opening response"); }
+      }
+      return response;
+    }) as Fetch;
+    const issueContext = { store: issuerStore, fetch: issuerFetch, pause: async () => { await settle(); },
+      now: () => timeMs(net.clock.now)! + 1000 };
+    const issueInput = { handle: "@issued-agent", hours: 1, controller: { membership: membershipRef, member: "@vic" as MemberId } };
+    const operation = crypto.randomUUID();
+    const firstIssue = await life.wait(() => issueOwnAgentInvitation(issueContext, issueInput, { operation, privateRequests: [], mode: "new" }));
+    expect(firstIssue).toMatchObject({ kind: "own-agent-key", state: "unknown" });
+    expect(actPosts).toBe(1);
+    const checkedIssue = await life.wait(() => issueOwnAgentInvitation(issueContext, issueInput, { operation, privateRequests: [...privateRequests], mode: "check" }));
+    expect(checkedIssue).toMatchObject({ kind: "own-agent-key", state: "prepared" });
+    expect(actPosts).toBe(1);
+    const continuedIssue = await life.wait(() => issueOwnAgentInvitation(issueContext, issueInput, { operation, privateRequests: [...privateRequests], mode: "continue" }));
+    expect(continuedIssue).toMatchObject({ kind: "own-agent-key", state: "verified" });
+    expect(actPosts).toBe(2);
+    const issuedLink = agentKeyInvitationOf(continuedIssue.link!)!;
+    expect(issuedLink).toMatchObject({ definition: C.membership, handle: "@issued-agent", controller: issueInput.controller });
+    const issuedEntries = await life.wait(() => M.entries());
+    expect(issuedEntries[issuedLink.member.seq]!.input).toMatchObject({ type: "act", signed: { intent: { kind: "add-own-agent" } } });
+    expect(issuedEntries[issuedLink.invitation.seq]!.input).toMatchObject({ type: "act", signed: { intent: { kind: "invite-own-agent-key" } } });
+    const issuedInvitation = await life.wait(() => M.item(issuedLink.invitation.seq));
+    expect(timeMs(issuedInvitation.values["inviteEnds"] as string)! - timeMs(net.clock.now)!).toBeGreaterThanOrEqual(3600_000);
+    expect(timeMs(issuedInvitation.values["inviteEnds"] as string)! - timeMs(net.clock.now)!).toBeLessThanOrEqual(3601_000);
+    const issuedStore = memoryStore();
+    expect(await life.wait(() => enrolAgentKey({ store: issuedStore, fetch: issuerFetch,
+      pause: async () => { await settle(); } }, continuedIssue.link!))).toMatchObject({ code: 0 });
+    expect((await issuedStore.config())?.handle).toBe("@issued-agent");
+    for (let n = 3; n <= 8; n++) expect(await add(vic, `@agent-${n}`)).toMatchObject({ answer: "accepted" });
     expect(await add(vic, "@ninth-agent")).toMatchObject({ answer: "refused", reason: "guard-failed", name: "own-agent-limit" });
     const beforeRemoval = await life.wait(() => M.item(member));
     await life.wait(async () => M.did(rita, "remove-member", { on: member, expected: await M.expected({ on: member }) }));
