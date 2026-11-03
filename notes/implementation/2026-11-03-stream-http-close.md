@@ -1,10 +1,12 @@
 # Close streams when HTTP reports a disconnect
 
+**Local Chromium abort and active page close still leave subscriptions open.** The local runtime reports neither event through `request.signal`. This record preserves that failed browser witness.
+
 ## What changed
 
 The direct scope route and application sandbox retain the existing stream close when the HTTP runtime reports a client disconnect. The request context keeps the release work alive through `waitUntil`. An abort that arrives while opening still triggers cleanup after the opening returns. Body cancellation, EOF and disconnect cleanup share the existing cached close promise.
 
-Request `10200327d9d22d693c8b5ab1c8c1dcfdf1bf4bb3` and promise `414faa9888c7da844782808f16c551564c9be4f1` own this source child. Its scope is cleanup for a runtime-reported disconnect. **Chromium abort and active page close still leave subscriptions open in the local fixture.** This head does not close the original browser-cap obligation under `01e2c4c4`.
+Request `10200327d9d22d693c8b5ab1c8c1dcfdf1bf4bb3` and promise `414faa9888c7da844782808f16c551564c9be4f1` own this source child. Its scope is cleanup for a runtime-reported disconnect. **Chromium abort and active page close still leave subscriptions open in the local fixture.** The original parent `01e2c4c4` remains open until this follow-up record lands under the planner's remaining-limit ruling.
 
 The Room dispatcher and generic scope entry forward their request contexts. The sandbox connects the incoming signal to its existing explicit Native stream lifetime. The helper also handles a signal that already aborted before the opening returned. Low-level HTTP callers of `route` supply the request context; direct body owners retain their reader cancellation path.
 
@@ -18,7 +20,7 @@ The fresh Native baseline separates the release mechanism from HTTP notification
 
 Cloudflare requires the [request-signal flag for our compatibility date](https://developers.cloudflare.com/changelog/post/2025-05-22-handle-request-cancellation/). An [upstream workerd report](https://github.com/cloudflare/workerd/issues/6832) describes a matching response-pump cancellation defect. The local observations identify the missing callback boundary; they do not bisect the installed runtime or prove that upstream commit as its cause.
 
-The browser exposes an earlier gap. Its fixture visibly reaches **Aborted**, but the local runtime supplies no disconnect signal. Closing another actively streaming page also supplies none during the count reads. A callback cannot react to a notification that never arrives. The TCP reset pass therefore does not establish browser cleanup. Request `ac0c3a70fbe473586eafa893a55a08554d1db748` asks the planner to name the remaining transport owner or a separate close-protocol design task.
+The browser exposes an earlier gap. Its fixture visibly reaches **Aborted**, but the local runtime supplies no disconnect signal. Closing another actively streaming page also supplies none during the count reads. A callback cannot react to a notification that never arrives. The TCP reset pass therefore does not establish browser cleanup. Planner ruling `b608aa47` assigns one optional bounded deployed-browser observation to O4's live window. It must not delay the Claude or ChatGPT runs. If that runtime also reports no disconnect, the planner files a separate explicit-close design request before any authority or transport change. The existing hosted reopen trigger remains more than 20 open streams on one hosted scope.
 
 The early-abort probe has a different oracle. Native releases the subscription before the held opening returns, without constructing a relay or sending another release RPC. The first probe wrongly requires that RPC and exits 1. A fresh count-based observer confirms cleanup and makes no explicit acknowledgement claim. Both records remain intact.
 
@@ -71,3 +73,49 @@ Only this note and its four manifests follow the frozen gate. Source, tests, con
 - **Unreported local browser disconnect.** Chromium abort and active page close leave subscriptions open in the bounded observations. Parent `01e2c4c4` and planner request `ac0c3a70` own the remaining limit and any separate transport design. Three count reads do not establish an eventual forever state. The fixture uses a direct cleartext local listener and records no packet-level cause.
 - **Historical hosted ending.** The exact later J5 roster record has HTTP200, TypeError, a 305041 ms lifetime and a 300003 ms idle interval. Its recorder keeps only the error name. An earlier J5 Page record explicitly names `BodyTimeoutError`, `UND_ERR_BODY_TIMEOUT` and a 300000 ms HTTP/2 stream timeout, with a 300005 ms idle interval. Matching timing supports a client-timeout inference for the later run, but the discarded fields prevent an exact historical cause claim. Planner request `eff2fee0` owns that evidence limit and any further capture task. The local cap and cancellation observations do not explain that HTTP200 ending.
 - **Review and deployment.** The checker reviews this bounded source child. The planner deploys. This record changes no J5 acceptance, hosted configuration or workroom priority. Mac landing, G3b configuration, O4's Counter decision and the authorized host checks retain priority.
+
+## Historical ending and future recorder fields
+
+Parent request `01e2c4c40e1bd52f806d15e9a56d2ec8d0d91981` and promise
+`7d48bfc62529331fb7c8bc20ebdcd995a66828b6` own this follow-up.
+The [follow-up manifest](evidence/2026-11-03-stream-limit-record.manifest.json)
+seals 20 public files. Its SHA-256 is
+`6006f271e4e5331e868a7afafbbbcc8db1c59f8d6ecdb195e45ff87fd6d8b95d`.
+
+Planner ruling `65648a49` accepts these distinct evidence levels:
+
+- Observed in the earlier Page run: `BodyTimeoutError`,
+  `UND_ERR_BODY_TIMEOUT`, and `HTTP/2 stream timeout after 300000 ms`.
+- Inferred for the later roster run: its 305,041 ms lifetime and
+  300,003 ms idle interval agree with the earlier client body timeout.
+- Unknown in that later run: the exact cause. Its recorder retained only
+  `error.name` and discarded cause, code, and message.
+
+These hosted HTTP200 endings remain distinct from the local HTTP503 cap
+and the runtime-reported disconnect repair. No new hosted capture runs.
+The earlier sealed recorder and every original result stay unchanged.
+
+The future `record-node-streams.mjs` in the follow-up evidence unit
+copies that exact earlier recorder and adds bounded `errorDetails` to both
+opening errors and body-read errors. It retains name, code, message, and
+nested cause, with explicit text, depth, and cycle limits. It keeps the
+original error object on the caller's path. Error text and stream bodies
+belong in private evidence. A public projection must omit those raw fields.
+No prior event or historical cause is reconstructed by this change.
+
+The offline `record-node-streams.test.mjs` check
+uses real Response and stream readers over a scripted fetch. It checks
+body and opening cause fields, exact caller error identity, the retained
+head bytes, origin filtering, cycle handling, and declared text truncation.
+It contacts no service and proves no hosted timeout or Native outcome.
+The one baseline case passes. Omitting the body error's retained cause
+fields makes that same case fail its intended assertion.
+
+The exact approved source child `3693c9f8` landed as main `fdeeba88` through
+receipt `79f65b48`. Its actual act matches all 24 changed paths, 42
+retirements, and 24 successors in the clean plan. This follow-up changes
+only the note and evidence manifest. The diagnostic recorder and its check
+live in external evidence. Product runtime, tests,
+packages, and configuration still match that child's frozen passed gate.
+The document-only follow-up rule applies. The parent remains open until
+this record receives independent review and lands.

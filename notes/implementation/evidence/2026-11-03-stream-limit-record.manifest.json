@@ -1,0 +1,109 @@
+{
+  "qualification": "Read-only historical audit, planner remaining-limit rulings, future private recorder, one offline pass and one intended control assertion. No live capture or product source change.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-stream-limit-record",
+  "checkpoint": "3693c9f81d074c2b0f792959bf2a419a3594602a",
+  "fileCount": 20,
+  "files": [
+    {
+      "path": "browser-ruling.json",
+      "bytes": 1452,
+      "sha256": "77fc4fe9798d49c93dc741ffabcc057eb20e4a1da3f3737f88f53ac7d965f759"
+    },
+    {
+      "path": "control-result.json",
+      "bytes": 432,
+      "sha256": "2d1066fb8fd0de419e180ec43bb4caa4598152cb6ae26c76a93ab9b3f4d6bea6"
+    },
+    {
+      "path": "control.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "control.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "control.stdout",
+      "bytes": 1385,
+      "sha256": "d3f1fff74f4788fa983898da5f873d9f18f321bd443c91fd9e6ea28b8bb3f1f8"
+    },
+    {
+      "path": "historical-evidence-review.json",
+      "bytes": 3298,
+      "sha256": "d6c1651d360935e4d049b5a362a77099b2f5759c011b9d78cfa646ca870a3404"
+    },
+    {
+      "path": "historical-ruling.json",
+      "bytes": 1021,
+      "sha256": "1ee59353ebcb500f074a3b3112493cc7d532df56f4c0ff79451eb92702bb287f"
+    },
+    {
+      "path": "named-control/record-node-streams.mjs",
+      "bytes": 4760,
+      "sha256": "ac00ba0945b69ecbad953c5bc645c9415b44bc7737c96b3acd80ca95dfae4e4d"
+    },
+    {
+      "path": "named-control/record-node-streams.test.mjs",
+      "bytes": 3148,
+      "sha256": "002bd14add22a4707eb651bd26d0e53fe57a1470a98518b1a7f71345c19b3902"
+    },
+    {
+      "path": "offline-test.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "path": "offline-test.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "offline-test.stdout",
+      "bytes": 231,
+      "sha256": "84c9a7b073b15568cff6f3df98950b457709828316c4b8ce944fb5765e57bedd"
+    },
+    {
+      "path": "original-recorder.mjs",
+      "bytes": 3669,
+      "sha256": "aedcc59033b09e800fcaf60df263afcd1a6df4affc8214a7e7fcfc34c26d1a88"
+    },
+    {
+      "path": "qualification.json",
+      "bytes": 1125,
+      "sha256": "9ea3df795fb9ecd0b9b4cfdc6dd65d9dc4f05937f5714109434b6efbcf9092a3"
+    },
+    {
+      "path": "record-node-streams.mjs",
+      "bytes": 4760,
+      "sha256": "bdcc90ad8ba3c10bf231ced38ec81396b6753255fda23274d95255bc52c69045"
+    },
+    {
+      "path": "record-node-streams.test.mjs",
+      "bytes": 3148,
+      "sha256": "002bd14add22a4707eb651bd26d0e53fe57a1470a98518b1a7f71345c19b3902"
+    },
+    {
+      "path": "recorder.patch",
+      "bytes": 3458,
+      "sha256": "0df28fde6a489310dfbd1a1b95235e1d82bbca1551264f45f92b46d68940dc8a"
+    },
+    {
+      "path": "seal-evidence.py",
+      "bytes": 2950,
+      "sha256": "50a00fb15f1870242146b10f2bb726bd775f7a1e33bc949e5539bfd3227d8c1e"
+    },
+    {
+      "path": "source-equality.json",
+      "bytes": 1045,
+      "sha256": "a8376ca391f319d54920d8c1723877feffefaa404f25d52a4da84a366ad48525"
+    },
+    {
+      "path": "source-landing-proof.json",
+      "bytes": 331,
+      "sha256": "eff1fe20b91468cb42328424d5ea9e8b77814d9301292e26a189b3483790371e"
+    }
+  ],
+  "sha256sumsSha256": "7182f9492d85009aa63204acf0672ff6224c452276c9fa493149b29f115f43a8"
+}
