@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:814e93e31ceaa55f5a457dfbee267dc1234fa12e","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-receive-pack-flush-teardown-followup.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b2f219ad8016a45d8a49f9bcfcde745d581704c4","text":"Merge retired a covered predecessor; the successor is at packages/git/src/http.ts."}
