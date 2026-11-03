@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "qualification": "Documentation-only O4 actual card-origin stop. No further gate or runtime claim.",
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-o4-origin-runbook",
+      "fileCount": 6,
+      "files": [
+        {
+          "path": "checks.json",
+          "bytes": 594,
+          "sha256": "5d5c7ffcc5cae97f14c9badb7f0d6f733976fceb06c61529b9aa04f8882d2af1"
+        },
+        {
+          "path": "diff-check.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "diff-check.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "doc-links.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "doc-links.stdout",
+          "bytes": 36,
+          "sha256": "3a9c5f58a570290642a3dd27a8a48f55199f946d703e6fd515757f093c5f75d1"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 412,
+          "sha256": "77d63bbd1b21fbec2ed3feda1896f2f39b98701b12e6ad210b9d82b51c467c0f"
+        }
+      ]
+    }
+  ],
+  "fileCount": 6,
+  "retention": "Retain sealed evidence at least 30 days after landing."
+}
