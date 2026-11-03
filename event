@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"packages/contract at exact d33186062e5c5189ca55ad6fee536fa1960cd115 on builder/oauth-authorization-20261102, under promise git:sha1…dcb562e on request git:sha1…2f6be00","body":{"commit":"d33186062e5c5189ca55ad6fee536fa1960cd115","path":"packages/contract"}}
+{"kind":"artifact","text":"packages/mcp at exact d33186062e5c5189ca55ad6fee536fa1960cd115 on builder/oauth-authorization-20261102, under promise git:sha1…dcb562e on request git:sha1…2f6be00","body":{"commit":"d33186062e5c5189ca55ad6fee536fa1960cd115","path":"packages/mcp"}}
