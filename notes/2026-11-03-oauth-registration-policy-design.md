@@ -1,6 +1,6 @@
 # Default-off dynamic registration
 
-Request `94f65167222a2520449849cc79d4b3acd35416f4` implements planner ruling `c721a1e957597a6e4ae50287c018e35cda62e20e`.
+Request `d7c3da24e8647317d568f2ebd3a27267553ecc7f` replaces stale request `94f65167222a2520449849cc79d4b3acd35416f4` with the same conditions. It implements planner ruling `c721a1e957597a6e4ae50287c018e35cda62e20e`.
 
 An unset `OAUTH_DYNAMIC_REGISTRATION` disables new dynamic registrations. The exact value `on` enables them. Any other supplied value closes the OAuth routes, including signed grant and connection routes, through the existing policy check. The resource metadata and static bearer routes keep their separate policy. Operators remove the setting to disable registration. They do not set it to `off`.
 

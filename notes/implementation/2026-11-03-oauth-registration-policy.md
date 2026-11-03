@@ -1,6 +1,6 @@
 # Close dynamic registration by default
 
-Request `94f65167222a2520449849cc79d4b3acd35416f4` and promise `6639468e983a5de5edeed0329cefd79a29826e42` own this change. The [design](../2026-11-03-oauth-registration-policy-design.md) records the planner’s policy and the fixed registration error.
+Request `d7c3da24e8647317d568f2ebd3a27267553ecc7f` and promise `3ff36d7b82ee05d621f3e0f68fd7a0c2211312aa` own this change. The planner replaced stale request `94f65167222a2520449849cc79d4b3acd35416f4` with the same scope and conditions in `1b33f47f5c35c5c1274c61d915a717f212e344d3`. Source commit `07e1c765ac` followed the original request; this tracking correction changes only notes. The [design](../2026-11-03-oauth-registration-policy-design.md) records the planner’s policy and the fixed registration error.
 
 An unset `OAUTH_DYNAMIC_REGISTRATION` now disables new public-client registration. `POST /oauth/register` returns HTTP 400 with `invalid_client_metadata` before reading the body or obtaining a registry object. Authorization-server metadata omits `registration_endpoint`. The exact setting `on` restores registration and advertises the endpoint. Any other supplied value closes the OAuth routes through the existing policy check. Operators remove the setting to disable registration.
 
