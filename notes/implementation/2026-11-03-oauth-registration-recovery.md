@@ -73,8 +73,10 @@ The separate investigation runs only that complete two-case file at the
 same clean head and tree. Actual process exit is 0 in 5.514610 seconds.
 It is neither a full Native-stage follow-up nor a documented isolated-repair
 exception. The full gate stays failed, and no whole suite repeats to chase
-the error. The planner must rule on this DCR evidence gap before review.
-The flush-specific ruling does not decide this new authorization head.
+the error. Planner ruling `d01d06a5`, on this DCR record at `aff241ed`,
+authorizes independent checker assessment with no further full gate. The
+checker decides whether these results cover registration storage, expiry,
+and grant retention, and may require more. The gate remains failed.
 
 Focused runs record their actual incremental checkpoint and dirty paths;
 they are not one frozen aggregate. Both controls first change one real
@@ -116,17 +118,18 @@ final case identities and preserves the one-error end record.
 
 ## Open limits and owners
 
-Request `c37ba98f` still needs a planner ruling on this gate failure,
-independent exact-head review, retirement coverage and landing. A table
+Request `c37ba98f` still needs independent exact-head review, retirement
+coverage, and landing under its own planner ruling `d01d06a5`. A table
 whose 1,000 rows all remain protected can still return 503. Anonymous callers
 can consume a new one-hour window repeatedly; this is bounded reclamation,
 not a rate-limit claim. Only an authorized Native grant can protect a row
 for a grant lifetime.
 
-Request `df2abe35` owns the late module-resolution teardown race after
-registration recovery and installed registers `579489e0`. No harness
-change belongs in this head, and no gate-pass claim follows from the
-focused investigation.
+Request `df2abe35` owns the late module-resolution teardown race. Ruling
+`d01d06a5` moves its narrow investigation ahead of later gates; the distinct
+installed-register gate had already completed with exit 0 when that ruling
+arrived. No harness change belongs in this head, and no gate-pass claim
+follows from the focused investigation.
 
 O4 stays closed until this reviewed recovery lands and the planner deploys
 its new dedicated Worker. Existing live Workers keep hosted MCP closed.
