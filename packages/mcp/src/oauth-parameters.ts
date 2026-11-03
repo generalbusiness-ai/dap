@@ -3,6 +3,8 @@ import { b64url, digestBytes, unb64url, utf8 } from "@generalbusiness/dap-bytes"
 
 export const OAUTH_CLIENT_BYTES = 5 * 1024;
 export const OAUTH_CLIENT_CACHE_MS = 3_600_000;
+export const OAUTH_CLIENT_UNUSED_MS = 3_600_000;
+export const isRegisteredOAuthClient = (id: string): boolean => /^dap-client-[A-Za-z0-9_-]{43}$/.test(id);
 export const OAUTH_CLIENTS_MOST = 1000;
 export const OAUTH_CODE_MS = 60_000;
 export const OAUTH_OWN_INVITATION_MS = 3_600_000;

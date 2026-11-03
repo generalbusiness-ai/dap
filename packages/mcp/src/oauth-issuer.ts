@@ -109,7 +109,7 @@ export class OAuthIssuer {
       catch { finish("unavailable"); }
     });
   }
-  async issue(op: string, controller: MemberId, binding: OAuthBinding, clientName: string): Promise<OAuthResult> {
+  async issue(op: string, controller: MemberId, binding: OAuthBinding, clientName: string, registrationEnds?: number): Promise<OAuthResult> {
     const agent = this.ports.agent();
     if (!agent || agent.state !== "enrolled" || !isMemberId(controller) || !bounded(op, 128) || !bounded(clientName, 128)) return result(403, { error: "unauthorized" });
     const ended: string[] = [];
@@ -121,6 +121,8 @@ export class OAuthIssuer {
         return result(200, { agent: this.ports.id, grant: existingId, codeShown: true, state_digest: old.value.binding.state_digest });
       }
       const now = this.#now();
+      if (registrationEnds !== undefined && (!Number.isSafeInteger(registrationEnds) || registrationEnds < now + OAUTH_CODE_MS)) throw new OAuthError("temporarily_unavailable", 503);
+      const ends = Math.min(now + OAUTH_GRANT_MS, registrationEnds ?? now + OAUTH_GRANT_MS);
       for (const row of this.sql.exec(`SELECT id FROM oauth_issuer WHERE state = 'pending' ORDER BY created, id LIMIT ?`, OAUTH_GRANTS_MOST).toArray()) {
         const old = this.#read(String(row["id"]));
         if (old && now >= old.value.codeExpires) { this.#end(old); ended.push(old.id); }
@@ -135,7 +137,7 @@ export class OAuthIssuer {
       }
       const id = this.#secret(), secret = this.#secret();
       if (this.sql.exec(`SELECT id FROM oauth_issuer WHERE id = ?`, id).toArray().length) throw new OAuthError("temporarily_unavailable", 503);
-      const value: Details = { op, binding: structuredClone(binding), clientName, controller, created: now, ends: now + OAUTH_GRANT_MS, codeDigest: digest(secret), codeExpires: now + OAUTH_CODE_MS, codeUsed: false, refreshDigest: null, reserved: TOKEN_RESERVE, state: "pending" };
+      const value: Details = { op, binding: structuredClone(binding), clientName, controller, created: now, ends, codeDigest: digest(secret), codeExpires: now + OAUTH_CODE_MS, codeUsed: false, refreshDigest: null, reserved: TOKEN_RESERVE, state: "pending" };
       this.#write(id, value, null);
       return result(201, { agent: this.ports.id, grant: id, code: `${this.ports.id}.${id}.${secret}`, state_digest: binding.state_digest });
     });

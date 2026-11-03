@@ -63,7 +63,7 @@ import { health } from "./health.ts";
  */
 
 import { DurableObject, RpcTarget, WorkerEntrypoint } from "cloudflare:workers";
-import { CONTROL_BODY_BYTES, HostedAgent, HostedRegistry, OAuthClients, OAuthError, oauthPolicy, controlOf, hostedMcpTools, hostedMcpResources, mcpChallengeResponse, mcpUnauthorized, publicRequestUrl, RESOURCE_METADATA_PATH, resourceMetadataUrl, remoteCardOrigins, type OAuthPolicy, type HostedMcpSettings, type AgentPorts, type ControlAnswer, type RegistryPorts } from "@generalbusiness/dap-mcp";
+import { CONTROL_BODY_BYTES, HostedAgent, HostedRegistry, OAuthClients, OAuthError, oauthPolicy, controlOf, hostedMcpTools, hostedMcpResources, mcpChallengeResponse, mcpUnauthorized, publicRequestUrl, RESOURCE_METADATA_PATH, resourceMetadataUrl, remoteCardOrigins, type OAuthPolicy, type OAuthClient, type HostedMcpSettings, type AgentPorts, type ControlAnswer, type RegistryPorts } from "@generalbusiness/dap-mcp";
 import { OAUTH_METADATA_PATH, OAUTH_CLIENT_REGISTRY, oauthRoute, resolvedOAuthClient, oauthAnswer, type OAuthPublicClients, type OAuthTokenAgent } from "./oauth-routes.ts";
 import { PROPOSED_BOUNDS, ITEM_QUERY_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
 import type { FactRef, Entry, ItemQueryRead, ItemQueryRefusal, Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxId, Grant, LogPage, PlatformDefinition, Read, ReadRefusal, RetainedInput, ScopeApi, ScopeId, ScopeKind, Seed, SessionRefusal, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
@@ -928,9 +928,13 @@ const sqlOf = (ctx: DurableObjectState) => ({
 export class McpRegistry<E extends McpEnv = McpEnv> extends DurableObject<E> {
   #registry: HostedRegistry | null = null;
   #clients: OAuthClients | null = null;
-  #clientsOf(): OAuthClients { return this.#clients ??= new OAuthClients(sqlOf(this.ctx), { now: () => Date.now(), random: n => crypto.getRandomValues(new Uint8Array(n)), fetch: (url, init) => fetch(url, init) }); }
+  #clientsOf(): OAuthClients { return this.#clients ??= new OAuthClients(sqlOf(this.ctx), { now: () => this.now(), random: n => crypto.getRandomValues(new Uint8Array(n)), fetch: (url, init) => fetch(url, init) }); }
   async registerClient(bytes: Uint8Array, policy: OAuthPolicy): Promise<ControlAnswer> {
     try { return { status: 201, body: { ...this.#clientsOf().register(bytes, policy.redirects) } }; }
+    catch (error) { return { status: error instanceof OAuthError ? error.status : 503, body: { error: error instanceof OAuthError ? error.error : "temporarily_unavailable" } }; }
+  }
+  async retainClient(client: OAuthClient): Promise<ControlAnswer> {
+    try { return { status: 200, body: { expires: this.#clientsOf().retain(client) } }; }
     catch (error) { return { status: error instanceof OAuthError ? error.status : 503, body: { error: error instanceof OAuthError ? error.error : "temporarily_unavailable" } }; }
   }
   async resolveClient(id: string, policy: OAuthPolicy): Promise<ControlAnswer> {
@@ -969,12 +973,19 @@ export class McpAgent<E extends McpEnv = McpEnv> extends DurableObject<E> {
   #agent: HostedAgent | null = null;
   protected scopes(): Binding { return indexedScopes(this.env.SCOPES, this.env); }
   protected ports(): Partial<AgentPorts> { return {}; }
+  protected async retainClient(client: OAuthClient): Promise<number> {
+    const clients = this.env.REGISTRIES.get(this.env.REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY)) as unknown as Pick<McpRegistry, "retainClient">;
+    const response = await clients.retainClient(client);
+    if (response.status !== 200 || typeof response.body["expires"] !== "number") throw new OAuthError(typeof response.body["error"] === "string" ? response.body["error"] : "temporarily_unavailable", response.status === 200 ? 503 : response.status);
+    return response.body["expires"];
+  }
   #of(): HostedAgent {
     if (this.#agent) return this.#agent;
     const scopes = this.scopes();
     this.#agent = new HostedAgent(sqlOf(this.ctx), {
       genericTools: hostedMcpTools(this.env) ?? [],
       cardOrigins: remoteCardOrigins(this.env.MCP_CARD_ORIGINS) ?? [],
+      retainClient: client => this.retainClient(client),
       oauthResource: request => {
         const origin = readPublicOrigin(this.env, request.url);
         if (origin === null) return null;

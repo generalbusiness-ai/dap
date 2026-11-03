@@ -360,13 +360,15 @@ export const hostedTest: {
   failSession: boolean;
   /** While set, every configuration read of an agent, and with it every listing and snapshot, waits on this promise. */
   configHold: Promise<void> | null;
+  /** Hold only the reply of a real registration retention, after its SQL write. */
+  clientRetention: { entered(): void; waiting: Promise<void> } | null;
   /** Scripted hosted credential timers. No wall-clock wait belongs in a witness. */
   scheduleExpiry: AgentPorts["scheduleExpiry"] | null;
   /** Explicit hosted tool settings for the native MCP fixture; null enables its comprehensive historical tool contract. */
   toolSettings: { MCP_ENABLED: string; MCP_TOOL_ADDITIONS?: string; MCP_CARD_ORIGINS?: string; MCP_RESOURCE_URLS?: string } | null;
   /** Raw deployment setting for the native constructor witness, never an AgentPorts override. */
   applicationSettings: Pick<McpEnv, "APPLICATION_TRUST"> | null;
-} = { metrics: null, now: null, pause: null, lose: null, controlBudget: null, custodyBounds: null, failWrite: null, faultAt: null, failSession: false, configHold: null, scheduleExpiry: null, toolSettings: null, applicationSettings: null };
+} = { metrics: null, now: null, pause: null, lose: null, controlBudget: null, custodyBounds: null, failWrite: null, faultAt: null, failSession: false, configHold: null, clientRetention: null, scheduleExpiry: null, toolSettings: null, applicationSettings: null };
 /** The scripted reset: thrown at a fence, once. */
 export class ScriptedReset extends Error { constructor(fence: string) { super(`scripted reset at ${fence}`); } }
 type HostedEnv = McpEnv & { PLATFORM: DurableObjectNamespace };
@@ -389,6 +391,11 @@ export class PlatformMcpAgent extends McpAgent<HostedEnv> {
     this.#startup = index !== null;
   }
   protected override scopes() { return this.#startup ? this.#startupBinding ??= startupScopes(this.env.PLATFORM, this.startupReads) : this.env.PLATFORM; }
+  protected override async retainClient(client: Parameters<McpAgent["grant"]>[2]["client"]): Promise<number> {
+    const expires = await super.retainClient(client), held = hostedTest.clientRetention;
+    if (held) { held.entered(); await held.waiting; }
+    return expires;
+  }
   /** The harness's instance reset: what an eviction leaves. */
   reset(): void { this.evict(); }
   /** Fire the service's watch once, as 30 seconds passing would. */
