@@ -1,0 +1,39 @@
+{
+  "qualification": "Actual commit-message flags and planner ruling. Exact published merge identities remain unchanged; no product source, test, authority or deployment changes.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-stream-merge-flags",
+  "checkpoint": "fdeeba887617c0535644a3dc4ca4e7fce548e08a",
+  "fileCount": 6,
+  "files": [
+    {
+      "path": "check.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "check.stderr",
+      "bytes": 162,
+      "sha256": "ef943521e879198d1be723639ce77e90e7fb02f1dcca07a6c1c2e4d566675427"
+    },
+    {
+      "path": "check.stdout",
+      "bytes": 38,
+      "sha256": "fe0e82f55fecb67581a9c4805803618fd20450e49091716e3402e89cb0113147"
+    },
+    {
+      "path": "known-flags.json",
+      "bytes": 801,
+      "sha256": "34fd90c386d4276d7ee9d05cef63e78c3c0205482cd5722e4e526f12702b293d"
+    },
+    {
+      "path": "ruling.json",
+      "bytes": 1049,
+      "sha256": "3f64416753cf3c7ba1932b48a211757ea2ad58c68b7aa5f257f84efad126b064"
+    },
+    {
+      "path": "seal-evidence.py",
+      "bytes": 1256,
+      "sha256": "2b860f6a2ce408115a99b6737bf22ef858af85f19b1aa21d89eb5be073aa8e2f"
+    }
+  ],
+  "sha256sumsSha256": "7596c4e5d76dd971d05a0c85b10604ec6f8afe15c5119eafc1910ccb0c29b33e"
+}

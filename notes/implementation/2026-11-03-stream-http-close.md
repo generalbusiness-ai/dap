@@ -119,3 +119,20 @@ live in external evidence. Product runtime, tests,
 packages, and configuration still match that child's frozen passed gate.
 The document-only follow-up rule applies. The parent remains open until
 this record receives independent review and lands.
+
+## Preserve the known merge-message flags
+
+Planner ruling `e696a28f`, ratified by `55f932d8`, preserves both exact
+merge commits. The actual commit-message check flags `9c7ae712` at
+266 subject code points and `fdeeba88` at 394. Both durable receipts name
+those exact heads, and their retirements already apply. Rewriting either
+head would break that trace. The stream merge now stands on origin unchanged.
+
+[The message-flag manifest](evidence/2026-11-03-stream-merge-flags.manifest.json)
+retains the actual checker output, exit 1, counts, and ruling. These known
+flags do not change the approved code or turn the failed message check
+into a pass. Do not amend either commit to remove its flag.
+
+Every later `gs merge` uses a first line of at most 100 code points,
+a blank line, and then its body. Count that first line before running
+the command. Refuse the merge if its first line exceeds the bound.
