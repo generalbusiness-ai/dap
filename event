@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:12abe0968876ec3530e79f7b65521694ca547726","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/repository.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:141fe6c182b95f89a1021be700c4b5959422cd0f","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/http-stream.ts."}
