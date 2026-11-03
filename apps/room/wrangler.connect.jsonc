@@ -1,0 +1,69 @@
+// O4 only. The planner replaces the one register placeholder from a new
+// own-agent plan and deploys closed. SESSION_SECRET stays in the secret store.
+// No namespace or bucket belongs to another Worker. Dynamic registration,
+// metadata-origin overrides and redirect overrides remain unset.
+// Runbook: docs/o4-connect.md. Deployment and the live window belong to the planner.
+{
+  "name": "dap-connect",
+  "main": "worker.ts",
+  "compatibility_date": "2026-08-15",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "enable_request_signal"
+  ],
+  "version_metadata": {
+    "binding": "VERSION_METADATA"
+  },
+  "vars": {
+    "DEPLOYMENT": "dap-connect",
+    "SCOPE_INDEX_MODE": "enforce",
+    "REGISTER_SCOPE": "PLANNED_O4_REGISTER_SCOPE",
+    "PLATFORM_CREATION_PINS": "[\"platform:register@27\",\"platform:directory@26\",\"platform:membership@13\",\"platform:rules@10\",\"platform:destination@20\",\"platform:inbox@1\"]",
+    "MCP_ENABLED": "false",
+    "MCP_RESOURCE_URLS": "[\"https://dap-connect.inguz.workers.dev/mcp\",\"https://dap-connect.inguz.workers.dev/mcp?host=chatgpt\"]",
+    "MCP_CARD_ORIGINS": "[{\"host\":\"claude\",\"url\":\"https://dap-connect.inguz.workers.dev/mcp\",\"domain\":\"5334a0aa0cd45baa296121e471ac2759.claudemcpcontent.com\"},{\"host\":\"chatgpt\",\"url\":\"https://dap-connect.inguz.workers.dev/mcp?host=chatgpt\",\"domain\":\"https://dap-connect.inguz.workers.dev\"}]",
+    "APPLICATION_SCREEN_HOSTS": "[]",
+    "APPLICATION_TRUST": "[{\"release\":\"sha256:71e10ca9499e926a4de1d8294ed83a772051dff677d8b1687bbd8e28e61802fa\",\"publisher\":\"key_gg4rXwy4v-kVqveN37_W_FW_-Wvsn3fgsal5z6gxfS0\",\"host\":\"github.com\"}]",
+    "SERVING_CREATION_KEY_PER_HOUR": "10",
+    "SERVING_CREATION_ADDRESS_PER_HOUR": "30",
+    "SERVING_READ_KEY_PER_MINUTE": "240",
+    "SERVING_READ_ADDRESS_PER_MINUTE": "600"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SCOPES",
+        "class_name": "DeployedScope"
+      },
+      {
+        "name": "SCOPE_INDEX",
+        "class_name": "ScopeIndex"
+      },
+      {
+        "name": "REGISTRIES",
+        "class_name": "McpRegistry"
+      },
+      {
+        "name": "AGENTS",
+        "class_name": "McpAgent"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "DeployedScope",
+        "ScopeIndex",
+        "McpRegistry",
+        "McpAgent"
+      ]
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "APPLICATION_CONTENT",
+      "bucket_name": "dap-connect-application-content"
+    }
+  ]
+}
