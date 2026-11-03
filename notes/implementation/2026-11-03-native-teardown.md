@@ -32,4 +32,10 @@ These focused runs preceded the frozen candidate and do not form one aggregate g
 
 The callback-diagnostic manifest has SHA-256 `924ab973b8aef5ec642263eb1baa7ff6ac7739058550d2ccd0a56421240af5f9`. The focused manifest has SHA-256 `740375693f5c65e950be93bc767d90243936eb5778be55b6d228800b18018d0a`. The manifests name public records and hash private raw output. Their evidence directories are read-only.
 
-The candidate’s single required gate follows this source freeze. Its outcome remains open until `gate.exit` exists and has been read.
+## Frozen gate
+
+The single required gate at `03102b56c30cd583662863470da27565501cd809`, tree `898c138e1c59f803b9d14af4647e3e3e4a73b085`, exits 0 in 1,577.998246 seconds. I read the actual `gate.exit`. Every precheck and compiler context passes. The kernel, Node, Counting, plain, and Native phases finish with complete terminal records and no unhandled error. Reconciled counts are Node 133, Counting 56, plain 3,601 with one skip, and Native 1,062 with two skips. Native records 281 passed files and one skipped file. Reporter events can repeat; these counts use final reconciled identities.
+
+The [gate manifest](evidence/2026-11-03-native-teardown-gate.manifest.json) has SHA-256 `3726e709af91f98742184ace5618320f053b67360370478b28eb7c31330edc79`. It records the actual exit, before-and-after source identity, complete terminal summary, and hashes of the private raw stage archive. All four units contain 32 public files and hash 56 private originals. Each unit also has its checksum file. The initial diagnostic manifest has SHA-256 `85eef5b4dffefd0ff758f46d3543dcd7a62d65ba7cbbd1074488d77d91f6f63b`.
+
+The source and tests stay unchanged after the frozen gate; only this note and its gate manifest follow. Earlier O3, flush, and registration-recovery gates retain their failed outcomes. This passing candidate does not rewrite those records. The checker’s exact-head review and main landing still follow.
