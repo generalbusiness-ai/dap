@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:97ea868440b6be444637476a7dd9465f15170ee3","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/sessions.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9db3f51997d7a32e1508be78eb57ece85c3ae643","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-03-stream-http-close.md."}
