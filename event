@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at apps/sandbox/wrangler.jsonc","body":{"commit":"fdeeba887617c0535644a3dc4ca4e7fce548e08a","path":"apps/sandbox/wrangler.jsonc"}}
+{"kind":"artifact","text":"Merge published the current artifact at apps/sandbox/wrangler.rollout.jsonc","body":{"commit":"fdeeba887617c0535644a3dc4ca4e7fce548e08a","path":"apps/sandbox/wrangler.rollout.jsonc"}}
