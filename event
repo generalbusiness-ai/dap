@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1029cd7f1c763fdb3d251ee7a5a504a8af7ca0da","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-goose-supported-desktop.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:13274ca8e26cf55608870d4c8126afbdb9169e6f","text":"Merge retired a covered predecessor; the successor is at packages/mcp/vitest.config.ts."}
