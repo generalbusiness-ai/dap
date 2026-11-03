@@ -185,21 +185,28 @@ card act. The read-only card press and separate Native act remain distinct.
    the exact accepted fact and agent signer, controlled by `@o4-member`.
    A rendered card, a text claim or a tool's accepted request alone proves
    no completed Native outcome.
-5. Leave Claude connected. In ChatGPT developer mode, connect
+5. Before ChatGPT consent, record the actual origin of its card frame.
+   The configured presentation origin and the top-level ChatGPT page do
+   not prove the frame's origin. If the frame uses
+   `https://dap-connect.inguz.workers.dev`, stop before consent and report
+   it to the planner. If the host exposes no frame before consent, record
+   that limit and stop for the planner's ruling. Do not infer an origin
+   or consent to reveal it.
+6. Leave Claude connected. In ChatGPT developer mode, connect
    `https://dap-connect.inguz.workers.dev/mcp?host=chatgpt` and complete
    consent as the same ordinary member. Verify the metadata client's
    `chatgpt.com` origin and configured callback. Record its distinct agent
    and resource audience, card press and intended Native act.
-6. With both hosts connected at once, prove each can still read its own
+7. With both hosts connected at once, prove each can still read its own
    card. Record the exact connector URLs and distinct presentation domains.
    Confirm that the member controls both agents. Neither client gets the
    other resource's token or private credentials in public evidence.
-7. Revoke the Claude grant from the consent page. Confirm Claude's next
+8. Revoke the Claude grant from the consent page. Confirm Claude's next
    authenticated call fails with `401`, while ChatGPT still reads. Then
    revoke ChatGPT and confirm its next call fails with `401`. If a host
    hides the HTTP status, retain its UI result and a private bounded trace;
    qualify any status that cannot be observed.
-8. The planner sets `MCP_ENABLED` back to `"false"` and deploys before the
+9. The planner sets `MCP_ENABLED` back to `"false"` and deploys before the
    window closes. Confirm `/mcp`, its ChatGPT query and OAuth routes answer
    `404`. Record the closing version. The source configuration remains closed.
 
