@@ -100,7 +100,13 @@ export class OAuthAccess {
   /** A revoked key or removed agent/controller ends the grant. Unavailable
    * authority fails this request without inventing a permanent revocation. */
   async standing(candidate: OAuthAccessCandidate, refresh = false): Promise<boolean> {
-    if (!this.current(candidate)) return false;
+    return await this.standingResult(candidate, refresh) === "active";
+  }
+
+  /** Preserve unavailable authority for HTTP admission without charging an
+   * authentication failure to a cryptographically valid caller. */
+  async standingResult(candidate: OAuthAccessCandidate, refresh = false): Promise<"active" | "inactive" | "unavailable"> {
+    if (!this.current(candidate)) return "inactive";
     const now = this.ports.now();
     const key = canonicalize([candidate.agent.membership, candidate.agent.key, candidate.agent.handle, candidate.grant.controller]);
     let held = this.#standing.get(candidate.id);
@@ -110,12 +116,13 @@ export class OAuthAccess {
       this.#standing.set(candidate.id, held);
     }
     const answer = await held.answer, after = this.ports.now();
-    if (!this.current(candidate) || after < held.started || after >= held.started + OAUTH_STANDING_MS) return false;
+    if (!this.current(candidate)) return "inactive";
+    if (after < held.started || after >= held.started + OAUTH_STANDING_MS) return "unavailable";
     held.active = answer === "active";
     if (answer === "inactive") this.end(candidate.id);
     // Do not cache a transient failure for the full standing window.
     if (answer === "unavailable" && this.#standing.get(candidate.id) === held) this.#standing.delete(candidate.id);
-    return answer === "active";
+    return answer;
   }
 
   /** The last successful read's hard deadline, measured from its start. */

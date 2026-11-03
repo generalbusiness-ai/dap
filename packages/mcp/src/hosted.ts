@@ -694,7 +694,7 @@ export class HostedAgent {
   }
 
   /** The bearer check, in constant time over digests, with failures counted per connecting address. */
-  async #authorized(request: Request): Promise<"unauthorized" | "limited" | { oauth: OAuthAccessCandidate | null }> {
+  async #authorized(request: Request): Promise<"unauthorized" | "limited" | "unavailable" | { oauth: OAuthAccessCandidate | null }> {
     const authorization = request.headers.get("authorization"), address = request.headers.get("cf-connecting-ip");
     const now = this.ports.now();
     let oauth: OAuthAccessCandidate | null = null;
@@ -715,7 +715,11 @@ export class HostedAgent {
       return ok;
     });
     if (checked !== "ok") return checked;
-    if (oauth !== null && !await this.#oauth.standing(oauth)) return this.#failures.check(address, this.ports.now(), () => false) === "limited" ? "limited" : "unauthorized";
+    if (oauth !== null) {
+      const standing = await this.#oauth.standingResult(oauth);
+      if (standing === "unavailable") return "unavailable";
+      if (standing === "inactive") return this.#failures.check(address, this.ports.now(), () => false) === "limited" ? "limited" : "unauthorized";
+    }
     return { oauth };
   }
 
@@ -723,6 +727,7 @@ export class HostedAgent {
   async fetch(request: Request): Promise<Response> {
     if (request.headers.get("origin") !== null) return new Response(null, { status: 403 });
     const checked = await this.#authorized(request);
+    if (checked === "unavailable") return new Response(JSON.stringify({ error: "unavailable" }), { status: 503, headers: { "content-type": "application/json", "retry-after": "1" } });
     if (checked === "limited") return new Response(JSON.stringify({ error: "rate-limited" }), { status: 429, headers: { "content-type": "application/json" } });
     if (checked === "unauthorized") return mcpUnauthorized(request);
     const http = checked.oauth
@@ -732,6 +737,7 @@ export class HostedAgent {
     // Discovery may await native reads and package storage. Retirement or a
     // bearer rotation during that wait must take effect before dispatch.
     const current = await this.#authorized(request);
+    if (current === "unavailable") return new Response(JSON.stringify({ error: "unavailable" }), { status: 503, headers: { "content-type": "application/json", "retry-after": "1" } });
     if (current === "limited") return new Response(JSON.stringify({ error: "rate-limited" }), { status: 429, headers: { "content-type": "application/json" } });
     if (current === "unauthorized") return mcpUnauthorized(request);
     if (checked.oauth && current.oauth?.row !== checked.oauth.row) return mcpUnauthorized(request);
