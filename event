@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b399d6326ec6f58e93577a2e8a4ef3a1c17f3080","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-mac-installed-roots-gate.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b77ce11785b00741c345e494395d4e12771f3aaa","text":"Merge retired a covered predecessor; the successor is at apps/room/celld/mac/test_deploy.py."}
