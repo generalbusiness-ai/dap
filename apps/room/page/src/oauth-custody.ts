@@ -1,7 +1,7 @@
 /** One retained consent operation. Invitation snapshots and control meanings
  * survive unknown answers. Browser custody never exports the signing key. */
 import type { MemberRef, SignedControl } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, isKeyId, isMemberRef, isRecord, isScopeRef, parseStrict, timeMs, utf8, verifyControl } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, isKeyId, isMemberRef, isRecord, isScopeRef, parseStrict, same, timeMs, utf8, verifyControl } from "@generalbusiness/dap-bytes";
 import { agentKeyInvitationOf, type AgentKeyInvitation } from "@generalbusiness/dap-client";
 import { issueOwnAgentInvitation, type Config, type Store } from "@generalbusiness/dap-cli/browser";
 import { custodyKind, closedCustodyRecord as closed, type CustodyStorage } from "./custody.ts";
@@ -22,7 +22,6 @@ export interface OAuthConsentResult extends Omit<OAuthOriginal, "resume"> { redi
 const unavailable = () => new Error("The original connection is unavailable or changed. No replacement was created.");
 const uuid = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value);
 const agentId = (value: unknown): value is string | null => value === null || typeof value === "string" && /^[0-9a-f]{64}$/.test(value);
-const same = (a: unknown, b: unknown) => canonicalize(a) === canonicalize(b);
 function permittedController(selection: OAuthSelection, controller: MemberRef): boolean {
   return same(controller.membership, selection.room.membership) && (same(controller, selection.controller) || selection.room.me!.actions.includes("membership.manage"));
 }

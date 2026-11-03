@@ -1,7 +1,7 @@
 /** Durable single-use codes and rotating public-client tokens. Native authority
  * belongs to the caller's fresh standing port, never to these credentials. */
 import type { MemberId } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, isMemberId, parseStrict, same, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, digestBytes, isDigest, isMemberId, parseStrict, same, utf8 } from "@generalbusiness/dap-bytes";
 import { equalTokenDigest, OAUTH_ACCESS_MS, OAUTH_GRANT_BYTES, OAUTH_GRANT_MS, OAUTH_GRANTS_MOST, type OAuthAccess, type OAuthAccessGrant, type OAuthAgentIdentity } from "./oauth-access.ts";
 import { isPkceChallenge, OAUTH_CODE_MS, OAuthError, pkceChallenge, type OAuthBinding } from "./oauth-parameters.ts";
 import { isMcpResource } from "./oauth-resource.ts";
@@ -35,7 +35,6 @@ const result = (status: number, body: Record<string, unknown>): OAuthResult => (
 const invalid = () => result(400, { error: "invalid_grant" });
 const unavailable = () => result(503, { error: "temporarily_unavailable" });
 const digest = (value: string) => digestBytes(utf8(value));
-const isDigest = (value: unknown): value is string => typeof value === "string" && /^sha256:[0-9a-f]{64}$/.test(value);
 const bounded = (value: unknown, most: number): value is string => typeof value === "string" && utf8(value).length > 0 && utf8(value).length <= most;
 
 /** Called only after the signed grant's client, redirect, audience, controller
