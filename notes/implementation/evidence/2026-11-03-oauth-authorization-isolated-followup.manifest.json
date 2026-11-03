@@ -1,0 +1,74 @@
+{
+  "qualification": "Isolated test-file follow-up after failed gate 4. The owning compiler and whole file pass. Native passes 1060 cases and skips two; native.exit and followup.exit each record exit 0. The frozen source is unchanged. The full gate remains failed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-authorization-isolated-followup",
+  "checkpoint": "9bcb91f9931861fb47ef5fc6afb5ea60f58dfbb4",
+  "fileCount": 13,
+  "files": [
+    {
+      "path": "commands.json",
+      "bytes": 485,
+      "sha256": "afff750531a2e1f4a73bc5f6ce31ba12aef79bb7cd80785675d66e1802ba0c0c"
+    },
+    {
+      "path": "compatibility-process.json",
+      "bytes": 131,
+      "sha256": "8868226a1968e24b43d87c9c6aea1d21e6adcb3434feb6c0eb0fe3efd7c7a1dd"
+    },
+    {
+      "path": "compatibility.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "driver.py",
+      "bytes": 4472,
+      "sha256": "6a96c62678489a3add1d149fd891faf61e0bc79ffe717db98f32debbfbe5ce34"
+    },
+    {
+      "path": "followup.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "native-process.json",
+      "bytes": 215,
+      "sha256": "cd48838d0760209fe5c303aab23dff9bc6cf9b07563f28736661eeb0f08223dd"
+    },
+    {
+      "path": "native-result.json",
+      "bytes": 475,
+      "sha256": "5a69088076a2acfe90a45d545565dcdaacb72d658645b9515f4454ba0085064f"
+    },
+    {
+      "path": "native.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "native.jsonl",
+      "bytes": 1058119,
+      "sha256": "b02f31f53c038bab80a472996b0eadcc32d745d36b01944832cd2ec1bd290d44"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 1153,
+      "sha256": "cdfde9e37e1e9541a989c16ac93871d6e9e5b2c7a4df4767dedef8594c831495"
+    },
+    {
+      "path": "scope-proof.json",
+      "bytes": 2156,
+      "sha256": "64da97d5e2cd3bf42c8abe211410a54e8034daccb3afc2ffe643e026fec6ef49"
+    },
+    {
+      "path": "source-after.json",
+      "bytes": 211,
+      "sha256": "02f4dd5918316d3aadfe0b0f2632e075261f67a3e91a10858f5298cf784cad9b"
+    },
+    {
+      "path": "source-before.json",
+      "bytes": 211,
+      "sha256": "02f4dd5918316d3aadfe0b0f2632e075261f67a3e91a10858f5298cf784cad9b"
+    }
+  ],
+  "sha256sumsSha256": "0c778ccfc1ba6593c7c3f93cd12a7beac4de0263c09e02e5d290d21868b20818"
+}

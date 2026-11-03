@@ -2042,8 +2042,8 @@ Cancel carries `error=access_denied`, state, and issuer, after redirect
 validation. The host exchanges the code at `/oauth/token` with its client
 ID, exact redirect URI, and verifier. Codes live for 60 seconds and work
 once. Access tokens live for one hour. Refresh tokens rotate and end no
-later than 30 days after consent. Reusing a spent code or old refresh token
-ends that grant. The object stores token and code digests. Each agent
+later than 30 days after consent. Reusing a spent code within its validity window, or reusing an old
+refresh token, ends that grant. The object stores token and code digests. Each agent
 admits eight pending or live grants; a ninth ends the oldest.
 
 Token and revocation requests use form encoding and public-client
