@@ -1,0 +1,99 @@
+{
+  "qualification": "Two owning compilers and one three-case unsupported-revision control, with exact restoration. Parent/DOM stand-ins do not prove real host or Native authority. Selected UI assets equal the real-host checkpoint.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-goose-integrated-focused",
+  "checkpoint": "0bf8c76e3201901bfd97c3eaef0150059ec25ef3",
+  "fileCount": 18,
+  "files": [
+    {
+      "path": "after.json",
+      "bytes": 211,
+      "sha256": "8a242214d623240a012b0250cbb695a3f364db22f608f009f2fbffe70d03eb33"
+    },
+    {
+      "path": "before.json",
+      "bytes": 211,
+      "sha256": "8a242214d623240a012b0250cbb695a3f364db22f608f009f2fbffe70d03eb33"
+    },
+    {
+      "path": "browser-compiler.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "browser-compiler.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "browser-compiler.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "card-source-comparison.json",
+      "bytes": 1974,
+      "sha256": "3d0810a81d0c512a85340f0d1a7f3ba1186d1728d76d2b63ce246f92e903fbb2"
+    },
+    {
+      "path": "commands.json",
+      "bytes": 1122,
+      "sha256": "5fb25dfdc3f02e0d32047d4736cb1402bc2bc7f2b4f78ca44aa9da228331bc52"
+    },
+    {
+      "path": "compatibility.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "compatibility.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "compatibility.stdout",
+      "bytes": 364,
+      "sha256": "7a35ce5e0e30c20b375949259973778fde1bc4e6d574ce44dd36c9aa2598e25c"
+    },
+    {
+      "path": "result.json",
+      "bytes": 1512,
+      "sha256": "dfdf133ac85853c691dde1b185bf7ebf7459f3807f8abdeab79a439510cd3575"
+    },
+    {
+      "path": "run-focused.py",
+      "bytes": 2513,
+      "sha256": "2571e08b786818c48127aad8db691b28816b4bb5346878dd8e35304172f2dfba"
+    },
+    {
+      "path": "server-test-compiler.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "server-test-compiler.stderr",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "server-test-compiler.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "unsupported-revision-control.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "unsupported-revision-control.stderr",
+      "bytes": 2290,
+      "sha256": "fdb0b693c410fbcee9b4ea0979a3ad92795ee72da5b7d0d464fa5395651f3635"
+    },
+    {
+      "path": "unsupported-revision-control.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "sha256sumsSha256": "a9b5238f1b6806e4f38add7c227b6aedba9cc9f2a571743ea63041da2869e48a"
+}

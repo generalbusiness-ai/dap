@@ -1,0 +1,89 @@
+{
+  "qualification": "Failed exact workflow preserved, two unchanged-source local widths pass, explicit handoff wait passes both widths, new exact workflow succeeds. Precise original CI cause remains unknown. Two inspected TEST fixture images; raw originals remain private.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-goose-integrated-ci",
+  "checkpoint": "b8e3f0fb72214ca279586e9429da44002e3ed5fb",
+  "fileCount": 16,
+  "files": [
+    {
+      "path": "baseline-320-command.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "baseline-320-command.json",
+      "bytes": 461,
+      "sha256": "36f849bad22c149576521e8b86bebc5e6dbe1497e0d10bf29a78812e43dacb7a"
+    },
+    {
+      "path": "baseline-320-report.json",
+      "bytes": 1008,
+      "sha256": "5fac9cf713fb3830b546a1ecf1ec69ff4618773140252c7cfa253e444e64ada4"
+    },
+    {
+      "path": "baseline-592-command.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "baseline-592-command.json",
+      "bytes": 436,
+      "sha256": "04623aff9aae7c613869c2e2d2e848e32f1d42c5feb26c279196e8e71325c114"
+    },
+    {
+      "path": "baseline-592-report.json",
+      "bytes": 1008,
+      "sha256": "b48dd351ecc629fef7be1baae5701d8759bc01005ab2b07c2b592ac06ea80dee"
+    },
+    {
+      "path": "failed-workflow.json",
+      "bytes": 2827,
+      "sha256": "e230a02ad05a89b10753eaa672389c747d64b89e2fd0344f6f96eaf8609b2d74"
+    },
+    {
+      "path": "handoff-wait-command.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "handoff-wait-command.json",
+      "bytes": 461,
+      "sha256": "9236a7bac7accd267632bee736909d917501bd692da8a9c263e1062abb9f6e88"
+    },
+    {
+      "path": "handoff-wait-report.json",
+      "bytes": 1646,
+      "sha256": "8c3d5efbc6c60590d60a2f9bfb218dd76fcc7b18d6b02bbda6761a878c76a9e7"
+    },
+    {
+      "path": "initial-cache-refusal.json",
+      "bytes": 175,
+      "sha256": "df665d6a06db9137a4235a3d28390a6f9f81c56ffc9ce45ebc3addf416adc188"
+    },
+    {
+      "path": "passed-workflow.json",
+      "bytes": 2827,
+      "sha256": "9d4aa07289b9019167e632b47842d59c0422d2aeb17509973661b1b44f651317"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 8334,
+      "sha256": "b0f663dcbc407dbdd5149adb87a34f32c0e1c4fa37ac203646943f7d12355614"
+    },
+    {
+      "path": "qualification.json",
+      "bytes": 1225,
+      "sha256": "4aac527833a940d1938c13b903952b44628bbbe767f6119ca37797d819809535"
+    },
+    {
+      "path": "task-320.png",
+      "bytes": 21361,
+      "sha256": "0543e838c1ff4b259b2a82647a3cce84da45af79f23cd5176b199a3554cffaba"
+    },
+    {
+      "path": "task-complete-592.png",
+      "bytes": 22573,
+      "sha256": "e61f3836e75b02883fce7dddaee63299a9a40d93e465c310704657a4e31bac9a"
+    }
+  ],
+  "sha256sumsSha256": "7e084298e1fcfdca9f07e02dcdd3c23770b867e75d6c0baece71c1698ee25af7"
+}
