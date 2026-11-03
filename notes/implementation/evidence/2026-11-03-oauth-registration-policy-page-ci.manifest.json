@@ -1,0 +1,24 @@
+{
+  "qualification": "Actual Page workflow success at the exact source/fixture head, all four required browser commands. Local full gate remains failed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-registration-policy-page-ci",
+  "checkpoint": "450025c5a8b7838c1cd251d4999505b40a98bcc4",
+  "fileCount": 3,
+  "files": [
+    {
+      "path": "qualification.json",
+      "bytes": 1313,
+      "sha256": "8d8ea4555433aa60c93b76e3da94facb21e84b5c921bcdf086fa5997b258e5a7"
+    },
+    {
+      "path": "record-page-ci.py",
+      "bytes": 2534,
+      "sha256": "2afb98a018d21c0b43e57acb81403636176ef7f1921780a9fb58c405d78864d6"
+    },
+    {
+      "path": "run.json",
+      "bytes": 2676,
+      "sha256": "60810a01a661f6fd0042613848b81e67da8e3520c7c78b3ba22ed22c1cd49284"
+    }
+  ],
+  "sha256sumsSha256": "e92c16a65b529126650b5fb3d28b0e274024ea6fcf7c39bcaf0e336b5ca3fb26"
+}
