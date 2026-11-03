@@ -1,4 +1,4 @@
-import { REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
+import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
 import { readDeployment } from "./deployment-setting.ts";
 import type { PlatformCreationSettings } from "./creation-versions.ts";
 /** Serving policy before a parentless creation addresses a Durable Object.
@@ -36,7 +36,7 @@ export function parentlessCreationAdmission(settings: CreationAdmission, signed:
       && verifySignedIntent(signed) && scopeIdOf(seed) === register.scope;
     if (!allowed) return { ok: false, reason: "unauthorized" };
     if (deployed && seed.kind === "register" && signed.intent.kind === "install") {
-      if (signed.intent.fields["host"] === "none" && seed.definition !== REPOSITORY_BINDING_COHORT.register && seed.definition !== UNPUBLISHED_COHORT.register && seed.definition !== COMMONS_COHORT.register) return { ok: false, reason: "unsupported-definition" };
+      if (signed.intent.fields["host"] === "none" && seed.definition !== OWN_AGENT_COHORT.register && seed.definition !== REPOSITORY_BINDING_COHORT.register && seed.definition !== UNPUBLISHED_COHORT.register && seed.definition !== COMMONS_COHORT.register) return { ok: false, reason: "unsupported-definition" };
       if (signed.intent.fields["host"] === "artifacts" && !settings.ARTIFACTS) return { ok: false, reason: "host-unavailable" };
     }
     return { ok: true };

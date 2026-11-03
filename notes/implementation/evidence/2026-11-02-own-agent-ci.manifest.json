@@ -1,0 +1,44 @@
+{
+  "qualification": "Actual Card 41565388797 and Page 41565388918 browser workflow successes at frozen source. Only an unrelated isolated Native test changes afterwards; raw logs stay private.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-own-agent-ci",
+  "checkpoint": "5929ca7cd76f180e062fcbf0cd340243fdb2c729",
+  "tree": "9285a3daa4436aff5fd30010d3b84a3393b7f181",
+  "fileCount": 7,
+  "files": [
+    {
+      "path": "capture-ci.py",
+      "bytes": 2320,
+      "sha256": "cf71ade97330388312d0ca959e60c4dda624a76407763b473bf69d953f4937da"
+    },
+    {
+      "path": "capture.json",
+      "bytes": 1779,
+      "sha256": "f829c8936d89310beb629f47f800dfd1d042cbf999e1c6ee475813821bbe6e27"
+    },
+    {
+      "path": "card-run.json",
+      "bytes": 3003,
+      "sha256": "4bb0a8112708547e926defdf3c305164610bc553f905a61000003d9ca59acd7f"
+    },
+    {
+      "path": "page-browser.yml",
+      "bytes": 2855,
+      "sha256": "b6b4ab9e0cdaca7b8175fc8ea4c80f2ba61d6c7321b9e3c4727dfa13497dd967"
+    },
+    {
+      "path": "page-run.json",
+      "bytes": 2782,
+      "sha256": "5eb5b382e336e3f23cddec47bf65066f8a8f5f0ce5c5d501e002b949220f1b11"
+    },
+    {
+      "path": "views-browser.yml",
+      "bytes": 4467,
+      "sha256": "465939b798f8c840d839a72ad614f6cfc72b35b690bec6582c26f9b3b23cac1f"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 486,
+      "sha256": "345e125c47a8093df3d2184825f233b3b8dc6de27ec6ed01f646ef07cb126355"
+    }
+  ]
+}

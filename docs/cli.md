@@ -78,8 +78,8 @@ gives each end, and the steps for a stolen key.
 ### `dap install`
 
 ```
-dap install <base-url> --host none|artifacts|github.com [--namespace <name>] [--register-policy keys|open] [--cohort unpublished|application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|separate-recovery|commons]
-dap install --plan <base-url> --host none|artifacts|github.com [--namespace <name>] [--register-policy keys|open] [--cohort unpublished|application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|separate-recovery|commons]
+dap install <base-url> --host none|artifacts|github.com [--namespace <name>] [--register-policy keys|open] [--cohort own-agent|repository-binding|unpublished|application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|separate-recovery|commons]
+dap install --plan <base-url> --host none|artifacts|github.com [--namespace <name>] [--register-policy keys|open] [--cohort own-agent|repository-binding|unpublished|application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|separate-recovery|commons]
 dap install --planned [--register-policy keys|open] [--cohort <saved-cohort>]
 dap install <git+https-uri> --release <release-id> --request <kept-key> [--role <default-role> ...] [--values <genesis-JSON>] [--owner <full-member-JSON>]
 ```
@@ -176,6 +176,8 @@ the `platform:` prefix.
 | `hardened-certified-rules` | 20 | 19 | 8 | 12 | 15 | 1 |
 | `commons` | 23 | 22 | 9 | 14 | 16 | 1 |
 | `separate-recovery` | 24 | 23 | 10 | 10 | 13 | 1 |
+| `repository-binding` | 25 | 24 | 11 | 10 | 18 | 1 |
+| `own-agent` | 27 | 26 | 13 | 10 | 20 | 1 |
 
 The `commons` cohort also pins `platform:commons@1`.
 
@@ -186,12 +188,38 @@ and no journal archive export.
 says what a deployment does before it creates rooms on this cohort.
 
 Without `--cohort`, a host other than `none` selects
-`archive-device-publication`. `--host none` requires the `unpublished`
-cohort. The service's creation policy still decides whether it accepts a
+`archive-device-publication`. `--host none` selects `unpublished` by
+default and also accepts explicit `repository-binding`, `own-agent`, or
+`commons` selection. The service's creation policy still decides whether it accepts a
 new register. An unknown or repeated `--cohort`, or a conflict with a
 retained plan's cohort, service, host or namespace, is refused before
 anything is signed. Adding an explicit choice does not change the
 default or the pins of existing rooms.
+
+The `own-agent` cohort retains later repository binding and adds Membership
+13. Its default role table gives `membership.own-agent` to admin, maintainer,
+and member. An active person can call `add-own-agent` with their own full
+controller reference, an agent handle, and kind `agent`. The new member has
+role `agent`. The signer controls fewer than eight active agents, and every
+current agent-role action must occur in the signer's current role. An admin
+is exempt from that subset check.
+
+`invite-own-agent-key` takes an active agent member, kind `agent`, the public
+invitation key, and expiry. The signer must be that agent's controller. The
+step repeats the current-role subset check, including after a role-table
+change. This step permits only one live key for the agent, counting invited
+and active keys together. Its expiry must fall after the act time and no
+more than 24 hours later. An admin or recovery key must revoke an active
+key before this path invites its replacement. An unredeemed invitation
+occupies the slot until it lapses.
+An admin can still use the existing administrative add and invite steps. Earlier Membership pins retain their original acts and role tables.
+The retained agent enrollment client verifies the new opening and invitation
+acts only under the exact Membership 13 pin.
+
+The deployment must explicitly admit the `own-agent` cohort through
+`PLATFORM_CREATION_PINS`. Selecting it changes no existing room or default
+creation choice. Its R27/D26/M13/Destination20 identities leave
+R26/D25/M12/Destination19 to the separate failed-claim cohort.
 
 The device cohorts install `device-command@1` packages with an explicit
 existing owner, and accept an archive binding when the room is created

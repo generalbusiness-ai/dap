@@ -1,4 +1,4 @@
-import { REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
+import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
 /** Bounded operational readings. Each column owns its native head. */
 import { UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 import type { Head, Read, ScopeId } from "@generalbusiness/dap-contract";
@@ -52,7 +52,7 @@ export async function statusReport(http: Http, reader: string, known: readonly {
       if (!summary.ok) lines.push(`  summary: ${stateOf(summary.reason)}; head unknown.`);
       else {
         lines.push(`  summary: ${summary.value.status}, time ${summary.value.time}, counts ${JSON.stringify(summary.value.counts)}${summary.complete ? "" : " (more; partial)"}; ${headText(summary.at)}.`);
-        if (summary.complete && summary.next === undefined && (summary.value.definition === UNPUBLISHED_COHORT.destination || summary.value.definition === REPOSITORY_BINDING_COHORT.destination) && summary.value.status === "active" && summary.value.items.some(item => item.type === "branch" && item.state === "unpublished" && item.values["repository"] == null && item.values["head"] == null && item.values["token"] == null)) lines.push("  publication: unpublished; no-repository.");
+        if (summary.complete && summary.next === undefined && (summary.value.definition === UNPUBLISHED_COHORT.destination || summary.value.definition === REPOSITORY_BINDING_COHORT.destination || summary.value.definition === OWN_AGENT_COHORT.destination) && summary.value.status === "active" && summary.value.items.some(item => item.type === "branch" && item.state === "unpublished" && item.values["repository"] == null && item.values["head"] == null && item.values["token"] == null)) lines.push("  publication: unpublished; no-repository.");
         if (discover) for (const item of summary.value.items) for (const name of ["register", "membership", "rules", "destination", "root"]) {
           const reference = item.refs[name];
           if (isScopeRef(reference) && !add(reference.kind, reference.scope)) lines.push("  discovery: more; scope limit reached.");

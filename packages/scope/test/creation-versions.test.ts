@@ -6,7 +6,7 @@ import { expect, test } from "vitest";
 import type { Intent, PlatformDefinition, Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, isSignedIntentShape, parseStrict, scopeIdOf, signIntent, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { keys } from "@generalbusiness/dap-derive/testing";
-import { REPOSITORY_BINDING_COHORT, COMMONS_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, SEPARATE_RECOVERY_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
+import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT, COMMONS_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, SEPARATE_RECOVERY_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
 import { readPlatformCreationPolicy, injectedPlatformCreationPolicy, permitsNewPlatformScope } from "../src/creation-versions.ts";
 import { admitChildCreation, type CreationTimer } from "../src/creation-lineage.ts";
 import { indexedScopes, type ScopeIndexPort } from "../src/scope-index.ts";
@@ -188,20 +188,22 @@ test("a deployment creates on the separate-recovery cohort only after PLATFORM_C
   }
 });
 
-test("repository binding remains opt-in in the actual deployed creation policy", async () => {
-  const added = JSON.stringify(Object.values(REPOSITORY_BINDING_COHORT));
-  const absent = readPlatformCreationPolicy({}), named = readPlatformCreationPolicy({ PLATFORM_CREATION_PINS: added });
-  for (const pin of [REPOSITORY_BINDING_COHORT.register, REPOSITORY_BINDING_COHORT.directory, REPOSITORY_BINDING_COHORT.membership, REPOSITORY_BINDING_COHORT.destination]) {
-    expect(permitsNewPlatformScope(absent, pin)).toBe(false);
-    expect(permitsNewPlatformScope(named, pin)).toBe(true);
-  }
-  for (const [raw, answer] of [[undefined, "refused"], [added, "accepted"]] as const) {
-    const signed = install(undefined, "none"), name = scopeIdOf(seedOf(signed, REPOSITORY_BINDING_COHORT.register));
-    creationVersionSettings.set(name, raw);
-    const object = objectOf(name), native = object as unknown as Native;
-    try {
-      expect(await native.create(signed, REPOSITORY_BINDING_COHORT.register)).toMatchObject({ answer });
-      expect(await count(object)).toBe(answer === "accepted" ? 1 : 0);
-    } finally { await evictDurableObject(object); creationVersionSettings.delete(name); }
+test("repository binding and own-agent families remain opt-in in actual deployed creation policy", async () => {
+  for (const cohort of [REPOSITORY_BINDING_COHORT, OWN_AGENT_COHORT]) {
+    const added = JSON.stringify(Object.values(cohort));
+    const absent = readPlatformCreationPolicy({}), named = readPlatformCreationPolicy({ PLATFORM_CREATION_PINS: added });
+    for (const pin of [cohort.register, cohort.directory, cohort.membership, cohort.destination]) {
+      expect(permitsNewPlatformScope(absent, pin)).toBe(false);
+      expect(permitsNewPlatformScope(named, pin)).toBe(true);
+    }
+    for (const [raw, answer] of [[undefined, "refused"], [added, "accepted"]] as const) {
+      const signed = install(undefined, "none"), name = scopeIdOf(seedOf(signed, cohort.register));
+      creationVersionSettings.set(name, raw);
+      const object = objectOf(name), native = object as unknown as Native;
+      try {
+        expect(await native.create(signed, cohort.register)).toMatchObject({ answer });
+        expect(await count(object)).toBe(answer === "accepted" ? 1 : 0);
+      } finally { await evictDurableObject(object); creationVersionSettings.delete(name); }
+    }
   }
 });

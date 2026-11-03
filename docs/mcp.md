@@ -2012,6 +2012,27 @@ Native SQL. Those test issuers create no public route or RPC method.
 
 ### Creating an agent: the controller's recipe
 
+Membership 13, selected by the opt-in `own-agent` cohort, also lets an
+active person create an agent they control. Its default admin, maintainer,
+and member roles hold `membership.own-agent`. `add-own-agent` requires
+kind and role `agent`, the signer's controller reference, fewer than eight
+active agents under that controller, and an agent role no wider than the
+signer's current role. `invite-own-agent-key` requires that active agent
+and controller and repeats the role-subset check. Admin signers are exempt
+from the subset check. The own-agent invitation step permits only one live
+key per agent, invited and active together, and bounds its expiry to the
+next 24 hours after the act time. An expired or later deadline refuses.
+An admin or recovery key must revoke an active key before this path
+invites its replacement. A pending invitation occupies the slot until it
+lapses. Checker and agent roles gain no own-agent action.
+
+These Native steps do not create OAuth grants or expose an MCP invitation
+tool. The retained enrollment client accepts their exact Native facts under
+Membership 13. The existing `issueInvitation` helper continues to issue
+administrative add and invite requests; the separate consent slice will
+compose ordinary-member issuance. The recipe below describes the existing
+administrative path, which earlier Membership pins keep.
+
 Enrollment belongs to the membership. Nothing here grants a permission.
 
 1. An admin adds the agent as a member with its controller, an active

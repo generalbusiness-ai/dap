@@ -1,0 +1,39 @@
+{
+  "qualification": "Failed frozen gate at 6744f49de2a6603a6516e36120c6521e62812e80, tree b802ec968fdeda97b331bdf13585cd260cdfcc07: actual exit 1; three plain test files fail and Native is unreached. Later repairs and gate are separate; no passing claim for this unit.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-own-agent-gate",
+  "checkpoint": "6744f49de2a6603a6516e36120c6521e62812e80",
+  "tree": "b802ec968fdeda97b331bdf13585cd260cdfcc07",
+  "fileCount": 6,
+  "files": [
+    {
+      "path": "capture-gate.py",
+      "bytes": 1932,
+      "sha256": "df06576832f990b5cffe6b83693e949b8ce4e9111cdebc0d0cbac39d8697ec9c"
+    },
+    {
+      "path": "gate-private-files.json",
+      "bytes": 6247,
+      "sha256": "57bd9cfdafcb93b72228612e489cb049a4f57de40ccab1c09999068124db2373"
+    },
+    {
+      "path": "gate.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "gate.json",
+      "bytes": 1227,
+      "sha256": "eefc80cc657bd86fba50c35aaa2dc3929ad981cf1aac002aa424c93e33934095"
+    },
+    {
+      "path": "gate.started.json",
+      "bytes": 526,
+      "sha256": "202895cbfa37e96958a33b4bfcb97bbab56fe7e07e699e3b55fd53c8537eabc9"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 408,
+      "sha256": "07d7b502203960c1be4d1cbe6d76004cf4543ebfbdcc072d704a64d922b1f36a"
+    }
+  ]
+}
