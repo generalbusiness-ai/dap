@@ -42,8 +42,8 @@ const namedOwners = {
     "packages/scope/src/worker.ts:boundedBytes": "6553fab5e2b9129266d64c02f7c3c9317095f1888fd12a10d12490d9f5d90f40",
     "packages/scope/src/worker.ts:observeThrough": "7e507f9bd9233223446711d089eb6d6b4236b69642eb9d39260e4712d81dab7a",
     "packages/scope/src/worker.ts:sqlOf": "5631baea8c5029d6ba93da6b3d199e63897c5f5ac05ae61e16b8d6f3e337f7fb",
-    "packages/scope/src/worker.ts:McpRegistry": "ab3046751400481b13c079118b019a435a580893fe594f3dc74960f1c2a5c9af",
-    "packages/scope/src/worker.ts:McpAgent": "cea063ee2e6e3c67170c0b74ef86e6303018630abd5b38ffcb9311e9143aade9",
+    "packages/scope/src/worker.ts:McpRegistry": "720e5aa4e415319ebb3c4708bae78a3d14377ea6d46911b72ed12c626cb7429d",
+    "packages/scope/src/worker.ts:McpAgent": "30f972eb4222c7a8a772faa118fbb5dcf225b573b03f4c23217a595e9621d717",
   },
   "packages/cli/src/commands.ts": {
     "packages/cli/src/commands.ts:$module": "b1e1e1e46bf94ba2045b63aa8c746326103d040a8463e274d008dc9176a624c6", // Reviewed room-proof import, both helper declarations, separate checker dispatch and retained-clone helpers; exit code 3 and the export of issueNamed for dap issue wait.
@@ -194,9 +194,9 @@ const namedOwners = {
 // Reviewed matcher/gate owners. These are change tripwires, not runtime proof.
 const seals = {
   "packages/bytes/src/session.ts": "71a16d6d2d02b2f424e711a80ca28fe8e10204d3daacc4d0cf23f85ebe80903e", // O3 OAuth authority, public-client policy or retained browser consent owner.
-  "packages/mcp/src/oauth-parameters.ts": "a056c527d74ca65ba56f6c0c4a10f0530d8439288526cad55d44bdcb7d2a42dd", // O3 OAuth authority, public-client policy or retained browser consent owner.
-  "packages/mcp/src/oauth-clients.ts": "d9ff4d632176bac825411367b7fe910e2036c6fd77bf6c8e122c1522433f72ed", // O3 OAuth authority, public-client policy or retained browser consent owner.
-  "packages/mcp/src/oauth-issuer.ts": "51b1e8ad8211c4c8cb6894d90d3c79811565b6749e522a8d42a384477ebb2efe", // O3 OAuth authority, public-client policy or retained browser consent owner.
+  "packages/mcp/src/oauth-parameters.ts": "b48c22470c29dfa7c11260fc874128859650791294ec93d8ae0007bdca95534c", // O3 OAuth authority, public-client policy or retained browser consent owner.
+  "packages/mcp/src/oauth-clients.ts": "465f5d92bb65ab2a6ed7c86d30c6cead640d1730164cce4cd9b6984b191c6253", // O3 OAuth authority, public-client policy or retained browser consent owner.
+  "packages/mcp/src/oauth-issuer.ts": "ca5b2fa28e52999fcff61c8de6a1518eb62ae7224b4b4a16600640342eaa6791", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "packages/scope/src/oauth-routes.ts": "c757cb7e8dd8246eed01ddd5b384e8b40f378d6c2d0b0708ddbf4dc51dae531d", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "apps/room/page/oauth-route.ts": "859183c042ec2708d4d357ec49fffe0aae4fb9f4c44ea3cff734e9b2c33cbf1e", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "apps/room/page/src/oauth-context.ts": "15e8f1a89a49d4e403801efa2f9caefd83d6c3327ac897bb3b0475d4dbc37ff3", // O3 OAuth authority, public-client policy or retained browser consent owner.
@@ -269,7 +269,7 @@ const seals = {
   "packages/mcp/src/oauth-access.ts": "c9125c1cf737025ac1342e3219227b6f882d28a565978d9ca68300f7402ff2d6", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/oauth-http.ts": "f04810c38e299cdf9e25d7e2022f095023b5bae6dfe9797ff6970e4871998836", // O1 resource discovery and grant transport boundary.
   "packages/mcp/src/index.ts": "e8381ad33242af79c16cb57ddeff579a01d8a981f923e5aed549e6ab60c262fe", // O1 resource discovery and grant transport boundary.
-  "packages/mcp/src/hosted.ts": "1e0e3c486c76c6669da8a458bb59a454643c44accba38fb4c4a455c17a2d61a2",
+  "packages/mcp/src/hosted.ts": "a3db0a94298fdc34f622511152dd86748308fcbe4b344ac10db4bfa555f9229c",
   "packages/mcp/src/views/remote-origins.ts": "81c7e7a044690df7c00a30691ddc5e0da11531fabad2a9143d2d389ff8c0a1b1", // Exact remote presentation URL policy; no authority selection.
   "packages/mcp/src/hosted-tools.ts": "bea3d3cea128bd76102e36d0876992c1b77a5bf2263f376082c1f329d2035a60", // Reviewed R5 admission owner; actual maintained parser output.
   "packages/mcp/src/service.ts": namedOwners["packages/mcp/src/service.ts"],

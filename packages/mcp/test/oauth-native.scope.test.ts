@@ -105,6 +105,22 @@ test.each([false, true])("routed public-client grants enroll once for an ordinar
     await setActions([...actions, "change.check"]);
     expect((await control(`/mcp/agents/${id}/grant`, "grant", id, binding, "wider")).status).toBe(403);
     await setActions(actions);
+    if (own) {
+      let entered!: () => void, release!: () => void;
+      const reached = new Promise<void>(resolve => { entered = resolve; });
+      hostedTest.clientRetention = { entered, waiting: new Promise<void>(resolve => { release = resolve; }) };
+      try {
+        const held = control(`/mcp/agents/${id}/grant`, "grant", id, binding, "held-registration");
+        await reached;
+        await setActions([...actions, "change.check"]);
+        release();
+        expect((await held).status).toBe(403);
+        await room.wait(() => runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(id)), (_instance, state) => {
+          expect(state.storage.sql.exec(`SELECT id FROM oauth_issuer WHERE op = ?`, "held-registration").toArray()).toEqual([]);
+        }));
+      } finally { release(); hostedTest.clientRetention = null; }
+      await setActions(actions);
+    }
     const nextResponse = await exchanged(await grant("refresh")); expect(nextResponse.status).toBe(200);
     const next = await nextResponse.json() as typeof tokens;
     const refreshed = await form("/oauth/token", { grant_type: "refresh_token", refresh_token: next.refresh_token, resource: RESOURCE }); expect(refreshed.status).toBe(200);
@@ -135,5 +151,5 @@ test.each([false, true])("routed public-client grants enroll once for an ordinar
       const answers = JSON.stringify(state.storage.sql.exec(`SELECT answer FROM control`).toArray());
       expect(answers).not.toContain(code); expect(answers).not.toContain(tokens.access_token); expect(answers).not.toContain(tokens.refresh_token);
     }));
-  } finally { hostedTest.now = null; hostedTest.pause = null; hostedTest.faultAt = null; room.done(); }
+  } finally { hostedTest.now = null; hostedTest.pause = null; hostedTest.faultAt = null; hostedTest.clientRetention = null; room.done(); }
 });

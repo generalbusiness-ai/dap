@@ -10,6 +10,47 @@ const REF = "refs/heads/main";
 const TOKEN = "http-private-token-1";
 const one = { state: "closed", forwarded: 1 } as const;
 
+// Synthetic ASCII follows the public diagnosis's offsets, not its private
+// provider bytes: packets of 14 and 54 bytes, then flushes at 68 and 72. The
+// fetch port stands for HTTP only; it performs no GitHub write or read-back.
+const replyRef = "refs/heads/" + "t".repeat(35);
+const unpackReply = "000eunpack ok\n", ownReply = `0036ok ${replyRef}\n`;
+const observedReply = unpackReply + ownReply + "00000000";
+function replyClient(reply: string) {
+  let posts = 0;
+  const client = new SmartHttpGit({ remote: "https://git.example.invalid/repo.git", maxBytes: 1000, fetch: request => {
+    if (request.method === "POST") { posts++; return Promise.resolve(new Response(reply, { headers: { "content-type": "application/x-git-receive-pack-result" } })); }
+    const service = "001f# service=git-receive-pack\n0000", capabilities = `${"0".repeat(40)} capabilities^{}\0report-status\n`;
+    const packet = (capabilities.length + 4).toString(16).padStart(4, "0") + capabilities;
+    return Promise.resolve(new Response(service + packet + "0000", { headers: { "content-type": "application/x-git-receive-pack-advertisement" } }));
+  } });
+  return { client, posts: () => posts };
+}
+
+test("the observed receive-pack layout permits one extra terminal flush and still needs exact read-back", async () => {
+  expect([unpackReply.length, ownReply.length, observedReply.length]).toEqual([14, 54, 76]);
+  expect([observedReply.slice(68, 72), observedReply.slice(72)]).toEqual(["0000", "0000"]);
+  const update = { ref: replyRef, old: null, new: "2".repeat(40) }, f = replyClient(observedReply);
+  const answer = await f.client.send(update);
+  expect([answer.exit, answer.reported, f.posts()]).toEqual([0, "created", 1]);
+  expect(attemptOutcome(update, classifySend(answer, one), { ref: replyRef, value: update.new }).result).toBe("confirmed");
+  expect(attemptOutcome(update, classifySend(answer, one), { ref: replyRef, value: "3".repeat(40) }).result).toBe("unknown");
+});
+
+test.each([
+  ["two extra flushes", observedReply + "0000"],
+  ["trailing data", observedReply + "junk"],
+  ["missing flush", unpackReply + ownReply],
+  ["wrong ref", unpackReply + ownReply.replace(/t(?=\n)/, "u") + "00000000"],
+  ["status for another ref", unpackReply + ownReply + ownReply.replace(/t(?=\n)/, "u") + "0000"],
+  ["extra unpack line", unpackReply + unpackReply + ownReply + "00000000"],
+])("receive-pack refuses %s even when the exact ref appears applied", async (_name, reply) => {
+  const update = { ref: replyRef, old: null, new: "2".repeat(40) }, f = replyClient(reply!);
+  const answer = await f.client.send(update);
+  expect([answer.exit, answer.reported, f.posts()]).toEqual([null, null, 1]);
+  expect(attemptOutcome(update, classifySend(answer, one), { ref: replyRef, value: update.new }).result).toBe("unknown");
+});
+
 // Invariant: Web pack bytes reach real local Git as the exact supplied
 // objects; its CAS/report and the existing classifier distinguish success,
 // a writer racing after discovery, and a lost reply without a second POST.

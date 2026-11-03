@@ -2,9 +2,10 @@
  * and deadline are explicit stand-ins. No real network egress belongs here. */
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { utf8 } from "@generalbusiness/dap-bytes";
+import { canonicalize, utf8 } from "@generalbusiness/dap-bytes";
 import { OAuthClients, oauthMetadataOrigins, oauthPolicy, type OAuthClientPorts } from "../src/oauth-clients.ts";
-import { OAuthError, oauthRedirectPolicy } from "../src/oauth-parameters.ts";
+import { OAUTH_GRANT_MS } from "../src/oauth-access.ts";
+import { OAUTH_CLIENT_UNUSED_MS, OAuthError, oauthRedirectPolicy } from "../src/oauth-parameters.ts";
 import type { Sql } from "../src/sqlite-custody.ts";
 
 const ID = "https://claude.ai/oauth/client.json", REDIRECT = "https://claude.ai/api/mcp/auth_callback", START = Date.parse("2099-01-01T00:00:00Z");
@@ -62,21 +63,63 @@ test("a five-second metadata deadline cancels a held body and cannot populate th
   });
 });
 
-test("public registration survives a new registry instance and refuses client 1001 without replacing a prior client", async () => {
+test("public registration reclaims expired unused rows without renewing them on lookup or replacing protected clients", async () => {
   const stub = env.REGISTRIES.get(env.REGISTRIES.newUniqueId());
   await runInDurableObject(stub, async (_instance, state) => {
     const sql: Sql = { exec: (q, ...v) => state.storage.sql.exec(q, ...v), transaction: run => state.storage.transactionSync(run) };
-    const ports: OAuthClientPorts = { now: () => START, random: n => crypto.getRandomValues(new Uint8Array(n)), fetch: async () => { throw Error("Registered clients require no fetch"); } };
+    let now = START;
+    const ports: OAuthClientPorts = { now: () => now, random: n => crypto.getRandomValues(new Uint8Array(n)), fetch: async () => { throw Error("Registered clients require no fetch"); } };
     let clients = new OAuthClients(sql, ports);
     const bytes = utf8(JSON.stringify({ client_name: "TEST registered", redirect_uris: [REDIRECT] }));
     const first = clients.register(bytes, oauthRedirectPolicy()!);
     expect(first).not.toHaveProperty("client_secret"); expect(first.client_id_issued_at).toBe(START / 1000);
+    const protectedId = clients.register(bytes, oauthRedirectPolicy()!).client_id;
+    const protectedClient = await clients.resolve(protectedId, oauthPolicy({})!);
+    expect(clients.retain(protectedClient)).toBe(START + OAUTH_GRANT_MS);
+    expect(() => clients.retain({ ...protectedClient, client_name: "changed" })).toThrowError(OAuthError);
+    now += 1000;
+    for (let n = 2; n < 1000; n++) clients.register(bytes, oauthRedirectPolicy()!);
     clients = new OAuthClients(sql, ports);
     expect((await clients.resolve(first.client_id, oauthPolicy({})!)).client_name).toBe("TEST registered");
-    for (let n = 1; n < 1000; n++) clients.register(bytes, oauthRedirectPolicy()!);
-    expect(() => clients.register(bytes, oauthRedirectPolicy()!)).toThrowError(OAuthError);
-    try { clients.register(bytes, oauthRedirectPolicy()!); } catch (error) { expect(error).toMatchObject({ error: "temporarily_unavailable", status: 503 }); }
+    try { clients.register(bytes, oauthRedirectPolicy()!); throw Error("Full live table accepted another client"); }
+    catch (error) { expect(error).toMatchObject({ error: "temporarily_unavailable", status: 503 }); }
     expect(sql.exec(`SELECT count(*) AS n FROM oauth_client`).toArray()[0]!["n"]).toBe(1000);
-    expect((await clients.resolve(first.client_id, oauthPolicy({})!)).client_name).toBe("TEST registered");
+    now = START + OAUTH_CLIENT_UNUSED_MS - 1;
+    await clients.resolve(first.client_id, oauthPolicy({})!); // anonymous lookup must not renew it
+    now++;
+    await expect(clients.resolve(first.client_id, oauthPolicy({})!)).rejects.toMatchObject({ error: "invalid_client_metadata" });
+    expect(() => clients.retain({ ...protectedClient, client_id: first.client_id })).toThrowError(OAuthError);
+    const next = clients.register(bytes, oauthRedirectPolicy()!);
+    expect(next.client_id).not.toBe(first.client_id);
+    expect(sql.exec(`SELECT count(*) AS n FROM oauth_client`).toArray()[0]!["n"]).toBe(1000);
+    expect((await clients.resolve(protectedId, oauthPolicy({})!)).client_name).toBe("TEST registered");
+    clients = new OAuthClients(sql, ports);
+    expect(sql.exec(`SELECT expires FROM oauth_client WHERE id = ?`, protectedId).toArray()[0]!["expires"]).toBe(START + OAUTH_GRANT_MS);
+    now = START + OAUTH_GRANT_MS;
+    await expect(clients.resolve(protectedId, oauthPolicy({})!)).rejects.toMatchObject({ error: "invalid_client_metadata" });
+    expect(clients.register(bytes, oauthRedirectPolicy()!).client_id).not.toBe(protectedId);
+  });
+});
+
+test("pre-upgrade registrations receive one persisted migration deadline that reconstruction cannot extend", async () => {
+  const stub = env.REGISTRIES.get(env.REGISTRIES.newUniqueId());
+  await runInDurableObject(stub, async (_instance, state) => {
+    const sql: Sql = { exec: (q, ...v) => state.storage.sql.exec(q, ...v), transaction: run => state.storage.transactionSync(run) };
+    const id = "dap-client-" + "A".repeat(43), row = { client_id: id, client_name: "TEST old client", redirect_uris: [REDIRECT], token_endpoint_auth_method: "none" as const };
+    sql.exec(`CREATE TABLE oauth_client (id TEXT PRIMARY KEY, row TEXT NOT NULL, created INTEGER NOT NULL)`);
+    sql.exec(`INSERT INTO oauth_client VALUES (?, ?, ?)`, id, canonicalize(row), START - OAUTH_GRANT_MS);
+    let now = START;
+    const ports: OAuthClientPorts = { now: () => now, random: n => crypto.getRandomValues(new Uint8Array(n)), fetch: async () => { throw Error("No metadata fetch"); } };
+    let clients = new OAuthClients(sql, ports);
+    expect(await clients.resolve(id, oauthPolicy({})!)).toEqual(row);
+    now += OAUTH_CLIENT_UNUSED_MS + 1;
+    clients = new OAuthClients(sql, ports);
+    expect(await clients.resolve(id, oauthPolicy({})!)).toEqual(row);
+    expect(sql.exec(`SELECT expires FROM oauth_client WHERE id = ?`, id).toArray()[0]!["expires"]).toBe(START + OAUTH_GRANT_MS);
+    now = START + OAUTH_GRANT_MS;
+    clients = new OAuthClients(sql, ports);
+    await expect(clients.resolve(id, oauthPolicy({})!)).rejects.toMatchObject({ error: "invalid_client_metadata" });
+    clients.register(utf8(JSON.stringify({ client_name: "TEST replacement", redirect_uris: [REDIRECT] })), oauthRedirectPolicy()!);
+    expect(sql.exec(`SELECT id FROM oauth_client WHERE id = ?`, id).toArray()).toEqual([]);
   });
 });

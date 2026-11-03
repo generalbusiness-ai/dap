@@ -82,7 +82,7 @@ test("codes bind the request once, refresh survives access expiry, and reuse of 
   });
 });
 
-test("the live-grant bound, code expiry, budget refusal and authority waits preserve durable revocation", async () => {
+test("the live-grant bound, registration deadline, code expiry, budget refusal and authority waits preserve durable revocation", async () => {
   const stub = env.AGENTS.get(env.AGENTS.newUniqueId());
   await runInDurableObject(stub, async (_instance, state) => {
     const sql: Sql = { exec: (query, ...values) => state.storage.sql.exec(query, ...values), transaction: run => state.storage.transactionSync(run) };
@@ -98,7 +98,8 @@ test("the live-grant bound, code expiry, budget refusal and authority waits pres
     }
     expect(f.issuer.list()).toHaveLength(8); expect(f.state.ended).toEqual([grants[0]!.id]);
     const beforeExpired = f.used(); f.state.now = START + 60_010;
-    const fresh = await f.issuer.issue("after-expiry", "@owner" as MemberId, BINDING, "TEST"), [, id, code] = token(fresh, "code");
+    const registrationEnds = f.state.now + 90_000;
+    const fresh = await f.issuer.issue("after-expiry", "@owner" as MemberId, BINDING, "TEST", registrationEnds), [, id, code] = token(fresh, "code");
     expect(f.issuer.list()).toHaveLength(1); expect(f.used()).toBeLessThan(beforeExpired);
     expect((await f.issuer.exchange(grants[8]!.id, grants[8]!.secret, CLIENT, REDIRECT, VERIFIER)).body).toEqual({ error: "invalid_grant" });
     f.state.standing = "unavailable";
@@ -115,6 +116,9 @@ test("the live-grant bound, code expiry, budget refusal and authority waits pres
     late(); f.state.hold = null; delete f.ports.deadline;
     const admitted = await f.issuer.exchange(id, code, CLIENT, REDIRECT, VERIFIER); expect(admitted.status).toBe(200);
     const [, , refresh] = token(admitted, "refresh_token");
+    const [, , access] = token(admitted, "access_token");
+    expect(f.access.inspect(id, access, RESOURCE)?.grant.ends).toBe(registrationEnds);
+    expect(admitted.body["expires_in"]).toBe(90);
     let release!: () => void; f.state.hold = new Promise<void>(resolve => { release = resolve; });
     const waiting = f.issuer.refresh(id, refresh, CLIENT);
     await f.issuer.revokeGrant(id); release();
