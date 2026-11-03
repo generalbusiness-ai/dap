@@ -7,8 +7,8 @@ import * as cli from "../src/index.ts";
 
 // Invariant: the page's complete CLI API bundles through the actual package
 // subpath for a browser, with no command dispatcher, Node adapters or shims.
-test("the browser package boundary retains all ten page exports without the CLI command graph", async () => {
-  const names = ["LINK", "describe", "expectedOf", "heldActs", "linkOf", "valueOf", "claim", "checkClaim", "issueInvitation", "isInvitationIssueInput"] as const;
+test("the browser package boundary retains all eleven page exports without the CLI command graph", async () => {
+  const names = ["LINK", "describe", "expectedOf", "heldActs", "linkOf", "valueOf", "claim", "checkClaim", "issueInvitation", "issueOwnAgentInvitation", "isInvitationIssueInput"] as const;
   expect(Object.keys(browser).sort()).toEqual([...names].sort());
   for (const name of names) expect(browser[name], `Existing CLI export ${name} keeps its identity`).toBe(cli[name]);
 

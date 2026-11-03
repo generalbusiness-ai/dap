@@ -70,5 +70,19 @@ test("grant stream cancellation releases timers and a held standing refresh cann
     release(); await Promise.all(refreshing);
     expect(timers.size).toBe(0);
     await layers.closeAll();
+    hold = false;
+    expect(await access.standing(candidate, true)).toBe(true);
+    let releaseOpening!: () => void;
+    const heldOpening = new Promise<void>(resolve => { releaseOpening = resolve; });
+    const lateHttp = new McpHttp({ wire: new Wire(service), now: () => now, bodyBytes: 1024, authorized: () => true, mintSession: () => "TEST-late-session" });
+    const pendingOpen = layers.open(candidate, async () => { await heldOpening; return lateHttp; });
+    const order: string[] = [];
+    const retiring = layers.closeGrant(id, true).then(() => { order.push("closed"); });
+    // Explicit TEST scheduler event: release the held load on the next turn.
+    // This compares event order, not a measured timing threshold.
+    await new Promise<void>(resolve => setTimeout(() => { order.push("opening released"); releaseOpening(); resolve(); }, 0));
+    await retiring;
+    expect(await pendingOpen).toBeNull();
+    expect(order).toEqual(["closed", "opening released"]);
   });
 });

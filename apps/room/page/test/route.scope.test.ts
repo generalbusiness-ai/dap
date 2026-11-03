@@ -2,7 +2,19 @@ import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
 import worker, { type Env } from "../../worker.ts";
 import frameworkWorker from "@generalbusiness/dap-scope/worker";
-import { PAGE_HTML, PAGE_JS } from "../assets.ts";
+import { OAUTH_HTML, OAUTH_JS, PAGE_HTML, PAGE_JS } from "../assets.ts";
+
+test("the app serves separate consent assets only under valid hosted OAuth policy and forbids framing", async () => {
+  const get = (path: string, settings: Record<string, string> = {}, method = "GET") => worker.fetch(new Request(`https://scopes.test${path}`, { method }), { ...env, SCOPES: env.PLATFORM, MCP_ENABLED: "true", ...settings } as Env);
+  const html = await get("/oauth/authorize");
+  expect(html.status).toBe(200); expect(await html.text()).toBe(OAUTH_HTML);
+  expect(html.headers.get("content-security-policy")?.split("; ")).toEqual(expect.arrayContaining(["default-src 'none'", "script-src 'self'", "connect-src 'self'", "frame-ancestors 'none'", "form-action 'none'"]));
+  expect(html.headers.get("referrer-policy")).toBe("no-referrer"); expect(html.headers.get("cache-control")).toBe("no-store");
+  const script = await get("/oauth/consent.js"); expect(script.status).toBe(200); expect(await script.text()).toBe(OAUTH_JS);
+  const head = await get("/oauth/authorize", {}, "HEAD"); expect(head.status).toBe(200); expect(await head.text()).toBe("");
+  expect((await get("/oauth/authorize", {}, "POST")).status).toBe(405);
+  for (const settings of [{ MCP_ENABLED: "false" }, { OAUTH_REDIRECT_URIS: "{}" }, { OAUTH_CLIENT_METADATA_ORIGINS: "{}" }]) for (const path of ["/oauth/authorize", "/oauth/consent.js"]) expect((await get(path, settings)).status).toBe(404);
+});
 
 // Invariant: the deployed Worker's one entry serves the room's page at `/page/`, its HTML and its one script, from the module that
 // the page's build writes, each under a policy that runs this origin's scripts only; any other path under `/page/` is not found,

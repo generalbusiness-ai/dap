@@ -1,0 +1,214 @@
+{
+  "qualification": "Actual local HTTPS Worker and Native scopes with browser consent/key custody. The OAuth/MCP host is an explicit scripted fixture. Earlier failed setup and failed control remain qualified; no deployed host acceptance.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-browser-42a",
+  "checkpoint": "42a76281478942ba344b880fd433921f9ea1dbb1",
+  "fileCount": 41,
+  "files": [
+    {
+      "path": "earlier-and-failed-mixed/diagnose-own.mjs",
+      "bytes": 931,
+      "sha256": "cdc300281fb93a9ae849198ea4216dd7e983f8a4a87d0403b874cbf02550143e"
+    },
+    {
+      "path": "earlier-and-failed-mixed/first-screen-older.mjs",
+      "bytes": 5548,
+      "sha256": "8451a22caf2865dd488fac09117081523294b3f98ae32bd476aa6821256ce0d4"
+    },
+    {
+      "path": "earlier-and-failed-mixed/fixture-lib.mjs",
+      "bytes": 2238,
+      "sha256": "76dfe8925ee5eb5282950e158334af177e4153f9ac41f3ea6a05e7717276dfc1"
+    },
+    {
+      "path": "earlier-and-failed-mixed/older-first-screen-process.json",
+      "bytes": 296,
+      "sha256": "22d8170f8da602f91c7d783ef29b9b512633bfaabdfd5940a825a29bae67092c"
+    },
+    {
+      "path": "earlier-and-failed-mixed/older-first-screen-result.json",
+      "bytes": 702,
+      "sha256": "b6f466a89fc546fe8dd5220c7e916b44d2e213876d3eacf4ec97cae9dd363699"
+    },
+    {
+      "path": "earlier-and-failed-mixed/older-flow-process.json",
+      "bytes": 54,
+      "sha256": "213f6597deba75f6b7447722f9a4c342bee70f524463011761d04fee941bc8aa"
+    },
+    {
+      "path": "earlier-and-failed-mixed/older-flow-result.json",
+      "bytes": 820,
+      "sha256": "e28c73ce40383c27e7f4fd1a7d73a1310abf3c3e9a3c720533c235639907dc23"
+    },
+    {
+      "path": "earlier-and-failed-mixed/older-flow.mjs",
+      "bytes": 8384,
+      "sha256": "450b44f6f6e620929cdd4d1c566a2578f7fe0af1bcda8292929b15119e8ff8d8"
+    },
+    {
+      "path": "earlier-and-failed-mixed/prepare-older-agent-process.json",
+      "bytes": 54,
+      "sha256": "09eba2aefac4b1089ba794b5179182fc0f3957d7e8b1f55dfff7118bb98e7766"
+    },
+    {
+      "path": "earlier-and-failed-mixed/prepare-older-agent.mjs",
+      "bytes": 2926,
+      "sha256": "dbcf2a00f138199d0fd05a718c6397e5a2a3a94a0b8c9f96d6ff39c59b916479"
+    },
+    {
+      "path": "earlier-and-failed-mixed/screens/consent-older-first-1280.png",
+      "bytes": 91032,
+      "sha256": "def7acae6abb5f5530f2b995fdcfc4c28bc3679d59fd249ec528d3db739351ac"
+    },
+    {
+      "path": "earlier-and-failed-mixed/screens/consent-older-first-320.png",
+      "bytes": 82803,
+      "sha256": "f5e20ad595450abaa218ecb96aff79b92b280a6c1ecbb89106864096897dc20c"
+    },
+    {
+      "path": "earlier-and-failed-mixed/screens/older-before-allow.png",
+      "bytes": 91207,
+      "sha256": "fce0d3ef7948566783d5d84b6542fbbbca312158c434e0999b431b638bae5673"
+    },
+    {
+      "path": "earlier-and-failed-mixed/screens/older-connected-clients.png",
+      "bytes": 96894,
+      "sha256": "d3169a45bfa62dea6f0840539abdacebce3a00971a424d0d833bd5c542716a3a"
+    },
+    {
+      "path": "earlier-and-failed-mixed/screens/older-revoked.png",
+      "bytes": 84482,
+      "sha256": "fed5819f6c7ea3c7825a4bb0e38a2fb0d4055862ba9e0fe0369d9dad9fc8c76b"
+    },
+    {
+      "path": "earlier-and-failed-mixed/setup.json",
+      "bytes": 759,
+      "sha256": "b17253390824f121e7bdede318e8f880a181e268a2f473b69718b66fd00555f7"
+    },
+    {
+      "path": "earlier-and-failed-mixed/worker-stop-browser42a.json",
+      "bytes": 207,
+      "sha256": "fff1a5d2818735416ab62b1713be8a5a20375fd26294c28218665dafdaf15578"
+    },
+    {
+      "path": "earlier-and-failed-mixed/wrangler-older.json",
+      "bytes": 1715,
+      "sha256": "95eff60ccfbdce691107a74d3ddc0ebc74940e1ec2658cefacb2372c0b397a24"
+    },
+    {
+      "path": "own/browser-controls-2-process.json",
+      "bytes": 54,
+      "sha256": "5583243cb3efeb6872b3e6264d7d0e366920c8d21950b8b642797bc39f367baf"
+    },
+    {
+      "path": "own/browser-controls-2-result.json",
+      "bytes": 766,
+      "sha256": "02ddf8183a774c3db721f4b47af41551ab087e662ed33ac79ddc2e05e22ac9ac"
+    },
+    {
+      "path": "own/browser-controls-2.mjs",
+      "bytes": 4544,
+      "sha256": "bbee17da75c90c70a9b6e171a91699e1e6983164827b8fd3f9b2f748c13fad6e"
+    },
+    {
+      "path": "own/browser-controls-failure.json",
+      "bytes": 869,
+      "sha256": "625f522c3a67d83938681d5dad5533c28c9dde9650ff789f1593bbb53ac1839e"
+    },
+    {
+      "path": "own/browser-controls-process.json",
+      "bytes": 53,
+      "sha256": "6ed192a3488f5147311836d8d8907a8f5e255e52cb99c9a68a7e29fcfec2c8ef"
+    },
+    {
+      "path": "own/browser-controls.mjs",
+      "bytes": 4393,
+      "sha256": "58700a13def6e43a26843737ca53c3525a6d0a92a790757896d83d94035cf757"
+    },
+    {
+      "path": "own/first-screen-result.json",
+      "bytes": 700,
+      "sha256": "5be97f2513968bae2d0addb670d3c0e0d7760fbc2cf401ff6123fbeaa7f7e290"
+    },
+    {
+      "path": "own/first-screen.mjs",
+      "bytes": 5671,
+      "sha256": "0f37190d34aa110b205abed56a896f1232fccab58cca6f8ff4146d23fcda7a8e"
+    },
+    {
+      "path": "own/fixture-lib.mjs",
+      "bytes": 2238,
+      "sha256": "9849330456ef6539d3566711422c3c5d0386e76e97d81eba63b86553deb9bf63"
+    },
+    {
+      "path": "own/own-flow-result.json",
+      "bytes": 823,
+      "sha256": "caefe286cacbf34fdea31d71c2257c7bd048af0420f2d3bb301a781158999027"
+    },
+    {
+      "path": "own/own-flow.mjs",
+      "bytes": 8321,
+      "sha256": "6a57d835d1987df8b9610c29270afb41e522b4d97431db58e96a22964fd9c94c"
+    },
+    {
+      "path": "own/screens/consent-first-1280.png",
+      "bytes": 89441,
+      "sha256": "3bb301adf08d803ade9aeaaaa59ac422e0b6023673753c4f6a77773c93dfff7b"
+    },
+    {
+      "path": "own/screens/consent-first-320.png",
+      "bytes": 80551,
+      "sha256": "a602d8a9b2a8960bc4623ba103c98705d52c85ad02927e2f071e57bc0d5c0f39"
+    },
+    {
+      "path": "own/screens/consent-frame-blocked.png",
+      "bytes": 5562,
+      "sha256": "84d7b1be4e8b79836bdc0b5588d92c31f1fce7908522daf6a958162a1047a8cf"
+    },
+    {
+      "path": "own/screens/foreign-client-name.png",
+      "bytes": 81189,
+      "sha256": "76277e17778ba983343627260076c7d73d3d858795019a09d724abf96883ff61"
+    },
+    {
+      "path": "own/screens/own-before-allow.png",
+      "bytes": 89441,
+      "sha256": "3bb301adf08d803ade9aeaaaa59ac422e0b6023673753c4f6a77773c93dfff7b"
+    },
+    {
+      "path": "own/screens/own-connected-clients.png",
+      "bytes": 96812,
+      "sha256": "d06d6f8dfab763fa9a30cacf3f77cdc602aa321c69ef13c5b2bceeb540c69c58"
+    },
+    {
+      "path": "own/screens/own-revoked.png",
+      "bytes": 84726,
+      "sha256": "3f0bc627d4cc6a2ab0b9fbab023fbcb3a0659046559a150556f2326ceb593226"
+    },
+    {
+      "path": "own/setup.json",
+      "bytes": 788,
+      "sha256": "d2abb63cd2258af73abe192fdafa2388dfe2c2220e7a4965f0895ca71d4d5e41"
+    },
+    {
+      "path": "own/worker-stop-browser42a.json",
+      "bytes": 207,
+      "sha256": "dd196b0f2eceff730588ffa0358607b2d66fd85efff9bfce93754ff1f472b4a8"
+    },
+    {
+      "path": "own/wrangler.json",
+      "bytes": 1608,
+      "sha256": "a4540ee0e9d2c02d43ef247596ecd2322662ec66f604ce60ccabfea51f92f50c"
+    },
+    {
+      "path": "private-archive.json",
+      "bytes": 387,
+      "sha256": "e27680bd71b0ff013a0c161dc24a2fa84bdcd401913b416fe2b8fec0308f0e6b"
+    },
+    {
+      "path": "register-switch-source-finding.json",
+      "bytes": 925,
+      "sha256": "f901341ea5f4949cca24ed7ce4ba5c28cfa50bb1ec6ae09d7841cd4c0af64aee"
+    }
+  ],
+  "sha256sumsSha256": "029e1a136843ffb28038a10391e3ea5320a2b4dd9d3835a98872509c5fa75eb7"
+}

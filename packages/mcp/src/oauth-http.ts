@@ -28,7 +28,10 @@ export class OAuthHttpLayers {
     const deadline = this.access.standingDeadline(candidate);
     if (deadline === null) return null;
     if (!held) {
-      while (this.#layers.size >= OAUTH_GRANTS_MOST) await this.#close(this.#layers.values().next().value!);
+      // Only ended or replaced grants can release another client's slot.
+      // Opening a transport never evicts an otherwise live host.
+      for (const layer of [...this.#layers.values()]) if (!this.access.current(layer.candidate)) await this.#close(layer);
+      if (this.#layers.size >= OAUTH_GRANTS_MOST) return null;
       const layer: OAuthHttpLayer = { candidate, deadline, http: null, opening: null, closing: null, stop: null };
       this.#layers.set(candidate.id, layer);
       layer.opening = create(layer).catch(error => {
@@ -84,16 +87,28 @@ export class OAuthHttpLayers {
     return () => clearTimeout(timer);
   }
 
-  #close(layer: OAuthHttpLayer): Promise<void> {
+  #close(layer: OAuthHttpLayer, retainSessions = false): Promise<void> {
     if (layer.closing) return layer.closing;
     layer.stop?.(); layer.stop = null;
+    if (!layer.http && layer.opening) {
+      // A held package load cannot delay a token endpoint or admit its old
+      // layer later. Dispose its result when it arrives, without awaiting it.
+      void layer.opening.then(http => { if (retainSessions) http.detach(); else void http.closeAll().catch(() => {}); }, () => {});
+      if (this.#layers.get(layer.candidate.id) === layer) this.#layers.delete(layer.candidate.id);
+      layer.closing = Promise.resolve();
+      return layer.closing;
+    }
     layer.closing = (async () => {
-      try { await (layer.http ?? await layer.opening)?.closeAll(); }
+      try {
+        const http = layer.http ?? await layer.opening;
+        if (retainSessions) http?.detach(); else await http?.closeAll();
+      }
       finally { if (this.#layers.get(layer.candidate.id) === layer) this.#layers.delete(layer.candidate.id); }
     })();
     return layer.closing;
   }
 
+  async closeGrant(id: string, retainSessions = false): Promise<void> { const layer = this.#layers.get(id); if (layer) await this.#close(layer, retainSessions); }
   async closeAll(): Promise<void> { await Promise.all([...this.#layers.values()].map(layer => this.#close(layer))); }
   get streams(): number { return [...this.#layers.values()].reduce((n, layer) => n + (layer.http?.streams ?? 0), 0); }
   abrupt(): void {

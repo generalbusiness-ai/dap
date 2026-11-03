@@ -115,6 +115,6 @@ export type SignedReadName = "summary" | "history" | "entry" | "log" | "retained
  * canonical JSON of the request>.<signature>`.
  */
 export const CONTROL_DOMAIN = "artroom-mcp-control-1";
-export type ControlAction = "create" | "bearer" | "retire";
+export type ControlAction = "create" | "bearer" | "retire" | "grant" | "connections" | "revoke-grant";
 export interface ControlRequest { v: 1; action: ControlAction; service: string; membership: ScopeRef; agent: string | null; actor: KeyId; body: Digest; op: string; notAfter: Timestamp }
 export interface SignedControl { request: ControlRequest; sig: Base64Url }

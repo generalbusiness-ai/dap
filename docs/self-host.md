@@ -5,6 +5,18 @@ invite a person on another device. The scope Worker serves both the API and
 the room page. To run the service on one Mac, follow
 [Run on a Mac](#run-on-a-mac).
 
+## Keep a register for existing rooms
+
+A deployed Worker admits new child scopes only under its current
+`REGISTER_SCOPE`. If you replace that pin, earlier rooms remain readable
+but stop creating inboxes, lanes, and other child scopes. A successful
+health or room read does not show that child creation still works.
+
+To run a new creation cohort alongside live rooms, use a separate Worker
+with its own namespaces and register. Keep the existing Worker's register.
+The same restriction applies to a maintained Mac host when a new prepared
+project changes its register setting.
+
 ## Deploy a room
 
 You need Git, Node 26, and a Cloudflare account that supports Workers,

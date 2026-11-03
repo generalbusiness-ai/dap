@@ -8,6 +8,7 @@ import { credentialInUrl } from "../../packages/scope/src/sessions.ts";
 import { DEMO_OFFER_PATH, demoCreationRoute } from "./demo-creation.ts";
 import { isSite, site } from "../../packages/scope/src/site/route.ts";
 import { isPage, page } from "./page/route.ts";
+import { oauthPage } from "./page/oauth-route.ts";
 import { isBrand, brand } from "./brand/route.ts";
 import { measuredRequest } from "../../packages/scope/src/operational.ts";
 import { indexedScopes } from "../../packages/scope/src/scope-index.ts";
@@ -20,6 +21,8 @@ export default {
     if (credentialInUrl(new URL(request.url))) return json(400, { error: "credential-in-url" });
     const healthy = await health(request, lookups);
     if (healthy) return healthy;
+    const consent = oauthPage(request, env);
+    if (consent) return consent;
     const hosted = await mcpRoute(request, env);
     if (hosted) return hosted;
     const application = await applicationPage(request, lookups);

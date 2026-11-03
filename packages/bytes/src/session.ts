@@ -14,6 +14,7 @@ import type { ControlRequest, Digest, ReadRequest, RetainedInput, SessionRequest
 import { canonicalBytes, utf8 } from "./canonical.ts";
 import { sign, verify } from "./sign.ts";
 import { digestBytes } from "./hash.ts";
+import type { Signer } from "./signer.ts";
 
 /** A tag, one newline byte, then the bytes. */
 export function taggedBytes(tag: string, bytes: Uint8Array): Uint8Array {
@@ -66,6 +67,13 @@ const controlBytes = (request: ControlRequest): Uint8Array => taggedBytes(CONTRO
 /** Sign a hosted MCP control request with a member's own key. */
 export function signControl(request: ControlRequest, secret: Uint8Array): SignedControl {
   return { request, sig: sign(secret, controlBytes(request)) };
+}
+
+/** Sign a control request without exporting the member's private key. */
+export async function signControlWith(request: ControlRequest, signer: Signer): Promise<SignedControl> {
+  const kept = structuredClone(request);
+  if (kept.actor !== signer.key) throw new Error("The control actor does not match the signing key.");
+  return { request: kept, sig: await signer.sign(controlBytes(kept)) };
 }
 
 /** True when the signature is by the request's `actor` over the request's bytes under the control tag. Malformed input is false. Never throws. */

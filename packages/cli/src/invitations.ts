@@ -18,10 +18,20 @@ export interface InvitationIssueResult { operation: string; kind: "person" | "ag
 /** Separate API: browser person/agent inputs and results do not widen. */
 export interface CheckerInvitationIssueInput { handle: string; hours: number; role?: never; controller?: never }
 export interface CheckerInvitationIssueResult extends Omit<InvitationIssueResult, "kind"> { kind: "checker-key" }
-type IssuedInput = InvitationIssueInput | (CheckerInvitationIssueInput & { kind: "checker-key" });
+/** Own-agent issuance keeps a distinct private tag and never changes the
+ * administrative issuer's input or retained originals. */
+export interface OwnAgentInvitationIssueInput { handle: string; hours: number; controller: MemberRef }
+export interface OwnAgentInvitationIssueResult extends Omit<InvitationIssueResult, "kind"> { kind: "own-agent-key" }
+type IssuedInput = InvitationIssueInput | (CheckerInvitationIssueInput & { kind: "checker-key" }) | (OwnAgentInvitationIssueInput & { kind: "own-agent-key" });
 type IssuedResult = Omit<InvitationIssueResult, "kind"> & { kind: IssuedInput["kind"] };
 const checkerIssueInput = (value: unknown): value is CheckerInvitationIssueInput => closed(value, ["handle", "hours"]) && isHandle(value["handle"]) && utf8(value["handle"]).length <= 256 && typeof value["hours"] === "number" && Number.isFinite(value["hours"]) && value["hours"] > 0;
-const issuedInput = (value: unknown): value is IssuedInput => isInvitationIssueInput(value) || closed(value, ["kind", "handle", "hours"]) && value["kind"] === "checker-key" && checkerIssueInput({ handle: value["handle"], hours: value["hours"] });
+const ownAgentIssueInput = (value: unknown): value is OwnAgentInvitationIssueInput => closed(value, ["handle", "hours", "controller"]) && isHandle(value["handle"]) && utf8(value["handle"]).length <= 256 && typeof value["hours"] === "number" && Number.isFinite(value["hours"]) && value["hours"] > 0 && value["hours"] < 24 && isMemberRef(value["controller"]);
+const issuedInput = (value: unknown): value is IssuedInput => isInvitationIssueInput(value)
+  || closed(value, ["kind", "handle", "hours"]) && value["kind"] === "checker-key" && checkerIssueInput({ handle: value["handle"], hours: value["hours"] })
+  || closed(value, ["kind", "handle", "hours", "controller"]) && value["kind"] === "own-agent-key" && ownAgentIssueInput({ handle: value["handle"], hours: value["hours"], controller: value["controller"] });
+const agentIssue = (input: IssuedInput): boolean => input.kind === "agent-key" || input.kind === "own-agent-key";
+const openingKind = (input: IssuedInput) => input.kind === "own-agent-key" ? "add-own-agent" : "add-member";
+const invitationKind = (input: IssuedInput) => input.kind === "person" ? "invite-member" : input.kind === "own-agent-key" ? "invite-own-agent-key" : "invite-key";
 const memberFields = (input: IssuedInput): Record<string, FieldValue> => input.kind === "checker-key" ? { handle: input.handle, kind: "checker" } : { handle: input.handle, kind: "agent", controller: input.controller! };
 
 interface Stage { signed: SignedIntent; attempted: boolean; receipt?: Receipt; refused?: Extract<Answer, { answer: "refused" }> }
@@ -106,6 +116,7 @@ function issueValid(value: unknown): value is Issue {
     const row = value as unknown as Issue;
     if (row.definition !== undefined && !isAgentKeyMembership(row.definition)) return false;
     if (row.input?.kind === "checker-key" && row.definition !== CHECKER_KEY_MEMBERSHIP) return false;
+    if (row.input?.kind === "own-agent-key" && row.definition !== OWN_AGENT_COHORT.membership) return false;
     if (row.v !== 1 || !uuid(row.operation) || !issuedInput(row.input) || typeof row.secret !== "string" || typeof row.ends !== "string" || timeMs(row.ends) === null || !isKeyId(row.actor) || !repositoryValid(row.repository) || typeof row.service !== "string") return false;
     if (row.previous && (!closed(row.previous, ["request", "digest"]) || typeof row.previous.request !== "string" || !/^i-[0-9a-f]{30}$/.test(row.previous.request) || !/^sha256:[0-9a-f]{64}$/.test(row.previous.digest))) return false;
     const secret = unb64url(row.secret);
@@ -114,12 +125,12 @@ function issueValid(value: unknown): value is Issue {
     if (!Url) return false;
     const origin = new Url(row.service);
     if (origin.origin !== row.service || !["https:", "http:"].includes(origin.protocol) || origin.username || origin.password || origin.search || origin.hash || row.input.controller && !sameOptional(row.input.controller.membership, row.repository.membership)) return false;
-    if (row.member && (row.input.kind === "person" || !stageValid(row.member, row, "add-member") || !sameOptional(row.member.signed.intent.fields, memberFields(row.input)))) return false;
+    if (row.member && (row.input.kind === "person" || !stageValid(row.member, row, openingKind(row.input)) || !sameOptional(row.member.signed.intent.fields, memberFields(row.input)))) return false;
     const invited = row.invitation;
     if (invited) {
       if (row.input.kind !== "person" && !row.member?.receipt) return false;
       const fields = row.input.kind === "person" ? { handle: row.input.handle, role: row.input.role, ...invitationIssueFields(pinOf(row), row.secret), inviteEnds: row.ends } : { member: row.member!.receipt!.fact.seq, kind: row.input.kind === "checker-key" ? "checker" : "agent", ...invitationIssueFields(pinOf(row), row.secret), inviteEnds: row.ends };
-      if (!stageValid(invited, row, row.input.kind === "person" ? "invite-member" : "invite-key") || !sameOptional(invited.signed.intent.fields, fields)) return false;
+      if (!stageValid(invited, row, invitationKind(row.input)) || !sameOptional(invited.signed.intent.fields, fields)) return false;
     }
     if (row.link !== undefined) {
       if (typeof row.link !== "string" || !row.invitation?.receipt) return false;
@@ -129,7 +140,7 @@ function issueValid(value: unknown): value is Issue {
         if (!parsed || !sameOptional(parsed, { v: 1, service: row.service, repository, invitation: row.invitation.receipt.fact.seq, secret: row.secret, handle: row.input.handle, definition: pinOf(row) })) return false;
       } else {
         const parsed = row.input.kind === "checker-key" ? checkerKeyInvitationOf(row.link) : agentKeyInvitationOf(row.link);
-        if (!parsed || parsed.kind !== row.input.kind || !row.member?.receipt || parsed.definition !== pinOf(row) || parsed.service !== row.service || !sameOptional(parsed.repository, repository) || parsed.handle !== row.input.handle || (row.input.kind === "agent-key" && (parsed.kind !== "agent-key" || !sameOptional(parsed.controller, row.input.controller))) || !sameOptional(parsed.member, row.member.receipt.fact) || !sameOptional(parsed.invitation, row.invitation.receipt.fact) || parsed.secret !== row.secret) return false;
+        if (!parsed || parsed.kind !== (row.input.kind === "own-agent-key" ? "agent-key" : row.input.kind) || !row.member?.receipt || parsed.definition !== pinOf(row) || parsed.service !== row.service || !sameOptional(parsed.repository, repository) || parsed.handle !== row.input.handle || (agentIssue(row.input) && (parsed.kind !== "agent-key" || !sameOptional(parsed.controller, row.input.controller))) || !sameOptional(parsed.member, row.member.receipt.fact) || !sameOptional(parsed.invitation, row.invitation.receipt.fact) || parsed.secret !== row.secret) return false;
       }
     }
     return row.input.kind !== "person" || row.member === undefined;
@@ -226,7 +237,7 @@ export async function issueInvitation(ctx: Context, input: InvitationIssueInput,
   check(options);
   if (!isInvitationIssueInput(input)) throw blocked();
   const result = await issueRetainedInvitation(ctx, input, options);
-  if (result.kind === "checker-key") throw blocked();
+  if (result.kind === "checker-key" || result.kind === "own-agent-key") throw blocked();
   return { ...result, kind: result.kind };
 }
 /** Checker issuance has its own closed input and tag. It cannot call person
@@ -237,6 +248,14 @@ export async function issueCheckerInvitation(ctx: Context, input: CheckerInvitat
   const result = await issueRetainedInvitation(ctx, { kind: "checker-key", handle: input.handle, hours: input.hours }, options);
   if (result.kind !== "checker-key") throw blocked();
   return { ...result, kind: "checker-key" };
+}
+/** M13's ordinary-member path uses the same exact-original custody engine. */
+export async function issueOwnAgentInvitation(ctx: Context, input: OwnAgentInvitationIssueInput, options: InvitationIssueOptions): Promise<OwnAgentInvitationIssueResult> {
+  check(options);
+  if (!ownAgentIssueInput(input)) throw blocked();
+  const result = await issueRetainedInvitation(ctx, { ...input, kind: "own-agent-key" }, options);
+  if (result.kind !== "own-agent-key") throw blocked();
+  return { ...result, kind: "own-agent-key" };
 }
 async function issueRetainedInvitation(ctx: Context, input: IssuedInput, options: InvitationIssueOptions): Promise<IssuedResult> {
   check(options);
@@ -274,6 +293,7 @@ async function issueRetainedInvitation(ctx: Context, input: IssuedInput, options
       // The membership's exact pin is read once and kept with the retained issuance: every later read and receipt is held to it.
       const pinned = await wait(options, async () => pinnedSummary(await membershipHandle(), config!.repository!.membership));
       if (input.kind === "checker-key" && pinned.definition !== CHECKER_KEY_MEMBERSHIP) throw blocked();
+      if (input.kind === "own-agent-key" && pinned.definition !== OWN_AGENT_COHORT.membership) throw blocked();
       row = { v: 1, operation: options.operation, input: structuredClone(input), service: config.service, repository: structuredClone(config.repository), actor, secret: b64url(crypto.getRandomValues(new Uint8Array(32))), ends: timeOf(Math.floor(now(ctx) / 1000) * 1000 + input.hours * 3600_000), definition: pinned.definition };
     }
     const status = (state: InvitationIssueResult["state"], reason?: string): IssuedResult => ({ operation: row.operation, kind: row.input.kind, handle: row.input.handle, state, ...(reason ? { reason } : {}) });
@@ -300,7 +320,10 @@ async function issueRetainedInvitation(ctx: Context, input: IssuedInput, options
       const activeKey = member && s.items.find(i => i.type === "key" && i.state === "active" && i.refs["member"] === member.id && i.values["id"] === actor);
       const roster = s.items.find(i => i.type === "roster" && i.state === "open");
       const role = member?.values["role"], actions = typeof role === "string" ? roster?.values[role + "Actions"] : null;
-      if (!activeKey || !member || member.values["kind"] !== "person" || !Array.isArray(actions) || !actions.includes("membership.invite") || row.input.kind !== "person" && (!actions.includes("membership.manage") || row.input.kind === "agent-key" && !sameOptional(row.input.controller, member.parties["member"]))) throw blocked();
+      if (!activeKey || !member || member.values["kind"] !== "person" || !Array.isArray(actions)) throw blocked();
+      if (row.input.kind === "own-agent-key") {
+        if (pin !== OWN_AGENT_COHORT.membership || !actions.includes("membership.own-agent") || !sameOptional(row.input.controller, member.parties["member"])) throw blocked();
+      } else if (!actions.includes("membership.invite") || row.input.kind !== "person" && (!actions.includes("membership.manage") || row.input.kind === "agent-key" && !sameOptional(row.input.controller, member.parties["member"]))) throw blocked();
       const signed = await wait(options, () => signedIntent(key, { to: row.repository.membership, kind, fields, expected: expectedOf(shape.acts[kind]!, s.items, null, fields) }, { now: now(ctx) }));
       return { signed, attempted: false };
     };
@@ -326,7 +349,7 @@ async function issueRetainedInvitation(ctx: Context, input: IssuedInput, options
     if (row.input.kind !== "person") {
       if (!row.member) {
         if (options.mode === "check") return status("prepared", `Continue explicitly to prepare the original ${row.input.kind === "checker-key" ? "checker" : "agent"} opening.`);
-        row.member = await prepare("add-member", memberFields(row.input)); await persist();
+        row.member = await prepare(openingKind(row.input), memberFields(row.input)); await persist();
       }
       const result = await advance(row.member);
       if (result !== "verified") return status(result, result === "refused" ? `Native refusal: ${row.member.refused!.reason}${row.member.refused!.name ? " (" + row.member.refused!.name + ")" : ""}. The original ${row.input.kind === "checker-key" ? "checker" : "agent"} opening is retained.` : `The original ${row.input.kind === "checker-key" ? "checker" : "agent"} opening is retained.`);
@@ -334,7 +357,7 @@ async function issueRetainedInvitation(ctx: Context, input: IssuedInput, options
     if (!row.invitation) {
       if (options.mode === "check") return status("prepared", "Continue explicitly to prepare the original invitation.");
       const fields = row.input.kind === "person" ? { handle: row.input.handle, role: row.input.role!, ...invitationIssueFields(pinOf(row), row.secret), inviteEnds: row.ends } : { member: row.member!.receipt!.fact.seq, kind: row.input.kind === "checker-key" ? "checker" : "agent", ...invitationIssueFields(pinOf(row), row.secret), inviteEnds: row.ends };
-      row.invitation = await prepare(row.input.kind === "person" ? "invite-member" : "invite-key", fields); await persist();
+      row.invitation = await prepare(invitationKind(row.input), fields); await persist();
     }
     const result = await advance(row.invitation);
     if (result !== "verified") return status(result, result === "refused" ? `Native refusal: ${row.invitation.refused!.reason}${row.invitation.refused!.name ? " (" + row.invitation.refused!.name + ")" : ""}. The original invitation is retained.` : "The original invitation is retained.");
@@ -352,8 +375,8 @@ async function issueRetainedInvitation(ctx: Context, input: IssuedInput, options
     } else {
       const member = s.items.find(i => i.type === "member" && i.id === row.member!.receipt!.fact.seq), roster = s.items.find(i => i.type === "roster" && i.state === "open");
       const nativeKind = row.input.kind === "checker-key" ? "checker" : "agent";
-      const controller = row.input.kind === "agent-key" ? s.items.find(item => item.type === "member" && item.state === "active" && item.values["kind"] === "person" && sameOptional(item.parties["member"], row.input.controller)) : null;
-      const identity = row.input.kind === "agent-key"
+      const controller = agentIssue(row.input) ? s.items.find(item => item.type === "member" && item.state === "active" && item.values["kind"] === "person" && sameOptional(item.parties["member"], row.input.controller)) : null;
+      const identity = agentIssue(row.input)
         ? controller && s.items.some(item => item.type === "key" && item.state === "active" && item.refs["member"] === controller.id) && sameOptional(member?.parties["controller"], row.input.controller)
         : member && member.parties["controller"] === null;
       if (!identity || !member || member.state !== "active" || member.values["kind"] !== nativeKind || member.values["role"] !== nativeKind || member.values["handle"] !== row.input.handle || invited.values["kind"] !== nativeKind || invited.refs["member"] !== member.id || !isMemberRef(member.parties["member"]) || !roster) return status("unknown");
@@ -599,6 +622,7 @@ export async function invitePerson(ctx: Context, member: string | undefined, opt
     const retained = config.invitationIssue ? await retainedIssue(ctx, config.invitationIssue) : null;
     if (config.invitationIssue && !retained) return say(1, "The retained invitation's private record is unavailable. This command signed and sent nothing, and it cannot say whether an earlier send of that invitation went. Restore the record; do not issue the invitation again.");
     if (retained?.input.kind === "checker-key") return say(1, "A checker invitation is retained. Resume it through issueCheckerInvitation. This command signed and sent nothing, and an earlier send of that invitation can have gone.");
+    if (retained?.input.kind === "own-agent-key") return say(1, "An own-agent invitation is retained. Resume its original connection. This command signed and sent nothing.");
     if (options.mode !== "new") {
       if (!retained) return say(2, "No invitation is retained here.");
       return await finish(await issueInvitation(ctx, retained.input, { privateRequests: retained.names, mode: options.mode, operation: retained.operation }));
