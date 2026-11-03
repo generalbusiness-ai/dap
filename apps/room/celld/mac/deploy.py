@@ -128,6 +128,20 @@ def prepared_project(directory):
                 and parse_json(variables["PLATFORM_CREATION_PINS"]) == policy["PLATFORM_CREATION_PINS"],
                 "creation policy differs")
         required.add("PLATFORM_CREATION_PINS")
+    if "INSTALLED_REGISTER_SCOPES" in variables:
+        raw = variables["INSTALLED_REGISTER_SCOPES"]
+        try:
+            bounded = isinstance(raw, str) and len(raw.encode("utf-8")) <= 4096
+        except UnicodeError:
+            bounded = False
+        require(bounded, "invalid installed registers")
+        rows = parse_json(raw)
+        import re
+        require(isinstance(rows, list) and 1 <= len(rows) <= 32
+                and all(isinstance(row, str) and re.fullmatch(r"sc_[a-z2-7]{51}[aq]", row) for row in rows)
+                and len(set(rows)) == len(rows) and variables.get("REGISTER_SCOPE") in rows,
+                "invalid installed registers")
+        required.add("INSTALLED_REGISTER_SCOPES")
     github = github_project_settings(variables)
     require(set(variables) == set(maintained["vars"]) | required | github, "project variables differ")
     require(all(variables.get(k) == v for k, v in maintained["vars"].items()), "maintained variable differs")

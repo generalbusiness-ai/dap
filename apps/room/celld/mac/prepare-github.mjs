@@ -14,7 +14,11 @@ let native;
 const github = () => native ??= (async () => {
   // Use the checkout's pinned loader and production validation. No install or HTTP.
   const { tsImport } = await import(pathToFileURL(cliRequire.resolve('tsx/esm/api')).href);
-  return tsImport(new URL('../../../../packages/scope/src/github-wiring.ts', import.meta.url).href, import.meta.url);
+  const [wiring, registers] = await Promise.all([
+    tsImport(new URL('../../../../packages/scope/src/github-wiring.ts', import.meta.url).href, import.meta.url),
+    tsImport(new URL('../../../../packages/scope/src/register-setting.ts', import.meta.url).href, import.meta.url),
+  ]);
+  return { ...wiring, readInstalledRegisters: registers.readInstalledRegisters };
 })();
 
 export class GitHubProjectPreparationError extends Error {
@@ -41,8 +45,8 @@ async function originalProject(project) {
   const config = JSON.parse(await file(join(project, 'wrangler.json'), 64 * 1024, true));
   const template = JSON.parse(await readFile(maintained, 'utf8'));
   const { vars, ...settings } = config, { vars: defaults, ...maintainedSettings } = template;
-  const optional = vars && Object.hasOwn(vars, 'PLATFORM_CREATION_PINS') ? ['PLATFORM_CREATION_PINS'] : [];
-  if (optional.length) {
+  const optional = ['PLATFORM_CREATION_PINS', 'INSTALLED_REGISTER_SCOPES'].filter(key => vars && Object.hasOwn(vars, key));
+  if (optional.includes('PLATFORM_CREATION_PINS')) {
     const policy = JSON.parse(await readFile(new URL('./repository-binding-policy.json', import.meta.url), 'utf8'));
     if (vars.PLATFORM_CREATION_PINS !== JSON.stringify(policy.PLATFORM_CREATION_PINS)) throw Error();
   }
@@ -53,6 +57,10 @@ async function originalProject(project) {
     || !/^sc_[a-z2-7]{52}$/.test(vars.REGISTER_SCOPE)
     || vars.MCP_ENABLED !== 'true' || vars.MCP_TOOL_ADDITIONS !== '[]'
     || !/^[A-Za-z0-9_-]{43}$/.test(vars.SESSION_SECRET)) throw Error();
+  if (optional.includes('INSTALLED_REGISTER_SCOPES')) {
+    const { readInstalledRegisters } = await github();
+    if (readInstalledRegisters(vars).kind !== 'pinned') throw Error();
+  }
   const origin = new URL(vars.PUBLIC_ORIGIN);
   if (origin.protocol !== 'https:' || origin.origin !== vars.PUBLIC_ORIGIN || origin.username || origin.password) throw Error();
   const entry = await file(join(project, 'worker.ts'), 64 * 1024, true);
