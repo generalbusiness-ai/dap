@@ -246,7 +246,7 @@ async function handoff() {
   if (!display) return;
   const identity = display.context.identity;
   const text = identity ? `Help me with ${identity.kind} ${identity.item}, revision ${identity.revision}.` : `Help me with ${display.query.screen}.`;
-  await bridge.request("ui/message", { role: "user", content: { type: "text", text } });
+  await bridge.request("ui/message", { role: "user", content: [{ type: "text", text }] });
 }
 function render() {
   if (!alive) return;

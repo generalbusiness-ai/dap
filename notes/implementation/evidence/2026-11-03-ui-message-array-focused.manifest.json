@@ -1,0 +1,305 @@
+{
+  "version": 1,
+  "qualification": "Actual strict-host browser handoff and one caller-reversion control, compiler closure, pinned scratch browser tools, and the earlier observed Goose shape refusal. Scripted host and scope answers; production generated caller and bridge. No desktop-host repair acceptance or Native act is claimed.",
+  "fileCount": 56,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-ui-message-focused",
+      "fileCount": 44,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 3824,
+          "sha256": "7b4027fd799d2bc563311d96d94f9423932474748f13dbfa282196901e9bab1e"
+        },
+        {
+          "path": "browser-driver.mjs",
+          "bytes": 5977,
+          "sha256": "6677f3f277a4be67bed75d2b443e6494785c112977e66469b0e0c639dd3f124a"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 5230,
+          "sha256": "9280a0144e385c5eef84389010fee7aac259fab6e08bedd7185d92c896cdfc53"
+        },
+        {
+          "path": "preflight-refusal.json",
+          "bytes": 433,
+          "sha256": "0c951ccb383aabc167bedf9f7eec0d363a2e92588aea471db97e61ddcbd4c07a"
+        },
+        {
+          "path": "run2/after/failure.json",
+          "bytes": 10364,
+          "sha256": "08e00fe87c2de0ba6d2c8e5a8ebed7cb26013e84a75dd4a2038b416b310a678a"
+        },
+        {
+          "path": "run2/after/failure.png",
+          "bytes": 38249,
+          "sha256": "ca3a0959e792dabad35db632d31a4a5942f5c6f44223099534ae77f8e68d8ed9"
+        },
+        {
+          "path": "run2/after/report.json",
+          "bytes": 862,
+          "sha256": "39984e13542d3816e6d5720618c7ed487070fd44ddee6dc3b874e1fe64c73677"
+        },
+        {
+          "path": "run2/after.exit",
+          "bytes": 2,
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        },
+        {
+          "path": "run2/after.stderr",
+          "bytes": 837,
+          "sha256": "693370ae54aac709a2ae25753e23d42396169244af70ef818900c605125e1da6"
+        },
+        {
+          "path": "run2/after.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run2/before/explicit-handoff.png",
+          "bytes": 32971,
+          "sha256": "7cd5cc120ec960534fcb6e05087c6595e8bf25db0e7e32463d1fafe0091bce78"
+        },
+        {
+          "path": "run2/before/report.json",
+          "bytes": 782,
+          "sha256": "e0cbd703fccf665cd910f256d7f5ff1fda416747a8d8a5126f9b59cd279fb0be"
+        },
+        {
+          "path": "run2/before.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "run2/before.stderr",
+          "bytes": 191,
+          "sha256": "d897e023852a11371e1c42e9b76dc8227f472cd6c459b20e04580b0de02267de"
+        },
+        {
+          "path": "run2/before.stdout",
+          "bytes": 586,
+          "sha256": "0c0702f31e1cb09bcf124a1aa798e574bb41a32d047d56466f3e1f6a97f369cd"
+        },
+        {
+          "path": "run2/browser-compiler.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "run2/browser-compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run2/browser-compiler.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run2/browser-driver.mjs",
+          "bytes": 5977,
+          "sha256": "6677f3f277a4be67bed75d2b443e6494785c112977e66469b0e0c639dd3f124a"
+        },
+        {
+          "path": "run2/browser-owner-syntax.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "run2/browser-owner-syntax.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run2/browser-owner-syntax.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run2/bundle.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "run2/bundle.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run2/bundle.stdout",
+          "bytes": 51,
+          "sha256": "4c1a2bf8e5b091d5863efe0cc2cf5d90d6a143c4b74b92e4180559d59bca58f9"
+        },
+        {
+          "path": "run2/commands.json",
+          "bytes": 2964,
+          "sha256": "8dcf4c14a14c9bc2a918ddd5aa6c245410c60a581fa7a6280c5647f9b1d27cdb"
+        },
+        {
+          "path": "run2/compat.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "run2/compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run2/compat.stdout",
+          "bytes": 366,
+          "sha256": "52f9184fc98118bd41122bae595471e953593be44c5803b8bff8bfc5c4d2a786"
+        },
+        {
+          "path": "run2/control-result.json",
+          "bytes": 470,
+          "sha256": "a2ede8f6076963c82bc32ed56acd23fd870c2109d9bdb0e9789700c68e6190a1"
+        },
+        {
+          "path": "run2/control.json",
+          "bytes": 482,
+          "sha256": "932fdee7ea177c4ea7b62497515243bad4c2c901769880615876747c0a5bcb4c"
+        },
+        {
+          "path": "run2/diff-check.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "run2/diff-check.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run2/diff-check.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run2/driver.py",
+          "bytes": 5278,
+          "sha256": "87b7d63a756c3b7c0d9f4496c5387af30c9d02977271f767c6fab37239909b1d"
+        },
+        {
+          "path": "run2/mutant-bundle.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "run2/mutant-bundle.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run2/mutant-bundle.stdout",
+          "bytes": 51,
+          "sha256": "4c1a2bf8e5b091d5863efe0cc2cf5d90d6a143c4b74b92e4180559d59bca58f9"
+        },
+        {
+          "path": "run2/pinned-current-spec.types.ts",
+          "bytes": 29430,
+          "sha256": "f46212be3355fa0437c81b01659187efacdeef6fa50be23be02a47d03610bc6a"
+        },
+        {
+          "path": "run2/pinned-old-spec.types.ts",
+          "bytes": 20131,
+          "sha256": "1979f7e24373e43256753af07f61165557257ced8ca0b16e6448e515d016595b"
+        },
+        {
+          "path": "run2/source-inputs.json",
+          "bytes": 812,
+          "sha256": "3ff1aa5a1d9da0a2ae6d25cd6f0cc0c0f7af367f90cb63997e88c2af19730adf"
+        },
+        {
+          "path": "run2/test-compiler.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "run2/test-compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run2/test-compiler.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-ui-message-browser-tools",
+      "fileCount": 9,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 675,
+          "sha256": "5962aaa2fa2e73a6f8c045f78cf6f5540b4ec0e89984d45e8c1be364211bf70d"
+        },
+        {
+          "path": "commands.json",
+          "bytes": 856,
+          "sha256": "5e5128ab0d0046165104591966311a6e9dcab36fa74a62bdabbb2d53fb6f20d3"
+        },
+        {
+          "path": "pinned-chromium.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "pinned-chromium.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "pinned-chromium.stdout",
+          "bytes": 4538,
+          "sha256": "6a7ab82f62a42607c294cb5ee6e4b63457c4c9f87a06991e617c4e3458f3fc3c"
+        },
+        {
+          "path": "pinned-core.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "pinned-core.stderr",
+          "bytes": 209,
+          "sha256": "cd5ca9e3de4b9ada42211336319f8fce15ea47e43de722ad38b17564260eb963"
+        },
+        {
+          "path": "pinned-core.stdout",
+          "bytes": 26,
+          "sha256": "aab6a84bfcf1539dcb13d389ffb71cf36cfc1aa693668029c73d37b624e612bc"
+        },
+        {
+          "path": "tools.json",
+          "bytes": 563,
+          "sha256": "5ffae2a64989506dc85afab5413ea49e8cb562b2693437f843e32d110144fd8e"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-goose-message-shape",
+      "fileCount": 3,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 169,
+          "sha256": "1c5ceab86bfb6d61a411bcf1555707efdc314aa0bd4b067194a27261cd65d099"
+        },
+        {
+          "path": "comparison.json",
+          "bytes": 2684,
+          "sha256": "569a431a6d3933993dd051bb3c37d17cd7567adba2a247a15077a3f855b73531"
+        },
+        {
+          "path": "native-ui-error.json",
+          "bytes": 736,
+          "sha256": "f91867119b624f8f600d7800bcf09a9729279c3cc6d47b59ff47f2dbbf16970a"
+        }
+      ]
+    }
+  ]
+}

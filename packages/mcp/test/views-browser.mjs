@@ -243,7 +243,22 @@ try{
       await c.app.getByRole('button',{name:'Request changes',exact:true}).click();await c.app.getByText('Review recorded: changes requested.').waitFor();await c.shot('change-receipt');await c.done('change')}
     {const c=await words('empty','work');await c.app.getByText('No work is open in this room.').waitFor();assert.ok(!(await c.text()).includes('reviewed scope'),'EMPTY: no internal words');await c.shot('empty-work');await c.done('empty')}
   }
-  {const {page,app,errors}=await opened({},390);await click(page,app,app.getByRole('link'));await click(page,app,app.getByRole('button',{name:'Ask in chat',exact:true}));const evidence=await verify(page,app,errors,'explicit-handoff');assert.equal(evidence.proof.chat.length,1);report.cases.push({label:'explicit-handoff',chat:evidence.proof.chat});await page.close()}
+  {
+    // The host is scripted and strict about MCP Apps content. The button,
+    // browser caller and bridge are the generated production card.
+    const {page,app,errors}=await opened({},390);
+    await click(page,app,app.getByRole('link'));
+    await click(page,app,app.getByRole('button',{name:'Ask in chat',exact:true}));
+    const evidence=await verify(page,app,errors,'explicit-handoff');
+    const messages=evidence.proof.messages.filter(message=>message.method==='ui/message');
+    assert.deepEqual(messages.map(message=>message.params),[{role:'user',content:[{type:'text',text:'Help me with question q7, revision v2.'}]}],'EXPLICIT HANDOFF CONTENT ARRAY: the real caller sends one text content block with the exact card identity');
+    assert.deepEqual(evidence.proof.messageRefusals,[],'EXPLICIT HANDOFF CONTENT ARRAY: the strict host accepts the real caller');
+    assert.deepEqual(evidence.proof.chat,['Help me with question q7, revision v2.']);
+    assert.equal(evidence.proof.modelTurns,1,'Only the explicit handoff asks for a model turn');
+    await page.screenshot({path:out+'/explicit-handoff.png'});
+    report.cases.push({label:'explicit-handoff',messages:messages.map(message=>message.params),chat:evidence.proof.chat,refusals:evidence.proof.messageRefusals});
+    await page.close();
+  }
   // The desktop AI app's shape: the model's call opens the view on one process, and the card's calls reach another of the same home.
   const proofOf=page=>page.evaluate(async()=>fetch('/proof?instance='+window.proof.config.id).then(r=>r.json()));
   const calledTools=page=>page.evaluate(()=>window.proof.calls.map(call=>call.name));
