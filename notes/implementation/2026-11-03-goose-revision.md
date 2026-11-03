@@ -1,6 +1,6 @@
 # Accept the observed Goose card revision
 
-Request `d23fb0b6bd4e98968748273f4f04773103c78a6c` and promise `4c91b7e28773b96958fc13e9bcb9639c5976e5ae` own this work. Actual Goose and Claude four-card scenes now complete. Acceptance remains open: the integrated candidate gate, final workflow citation, independent review, and main landing still follow.
+Request `d23fb0b6bd4e98968748273f4f04773103c78a6c` and promise `4c91b7e28773b96958fc13e9bcb9639c5976e5ae` own this work. Actual Goose and Claude four-card scenes now complete. The integrated gate and exact-head Card workflow pass. Independent review and main landing still remain.
 
 Goose Desktop 1.57.0 returned MCP Apps revision `2025-11-21`. The production bridge at diagnostic source `08a16dc652186e3d80c06abab98e2b4d9bc12690` requested `2026-01-26` and refused the older reply. A passive diagnostic banner displayed only the parent-window reply’s revision. The [initial-reply manifest](evidence/2026-11-02-goose-initialize-reply.manifest.json) retains that observation, its injection hashes, pinned specification comparison, and configuration restoration.
 
@@ -50,9 +50,9 @@ scratch processes closed. The prior event-log prefix stayed unchanged.
 
 The branch now merges actual main `9c7ae712`, including the registration
 switch and Mac installed-root support. The two real-host scenes describe
-fixed `e32d7dfc` source before that integration. The final focused records,
-Card workflow citation, one frozen gate, checker review, and main landing
-still follow. No statement closes the request before those obligations finish.
+fixed `e32d7dfc` source before that integration. The focused records, exact-head Card workflow, and one frozen gate now
+complete. The checker's review and main landing remain. No statement closes
+the request before those obligations finish.
 
 ## Wait for the scripted model's actual chat handoff
 
@@ -69,4 +69,58 @@ now waits for exactly one observed chat message before its scripted model
 submits report text. The final exact chat-count assertion remains.
 This strengthens the scene's ordering without changing a deadline or any
 card behavior. It does not establish the original workflow's precise cause.
-The focused updated script and new exact-head workflow follow.
+The updated owning script passes at both widths. The new exact-head
+workflow also passes, as recorded below.
+
+## Frozen integrated validation
+
+The three [focused](evidence/2026-11-03-goose-integrated-focused.manifest.json),
+[CI](evidence/2026-11-03-goose-integrated-ci.manifest.json), and
+[gate](evidence/2026-11-03-goose-integrated-gate.manifest.json) units
+index 44 public files. Their manifests have these SHA-256 values:
+
+| Unit | SHA-256 |
+| --- | --- |
+| Focused | `e3cf3760ad27d9dafbf3e993e9da921f35a64d972ee01283b2a3a69fb1139c5d` |
+| CI | `3d88509234670ac2706d62a7e81ab7c9954d508c8d08adbf9fb155ac61a56f4b` |
+| Gate | `ac12293e254512229209911a1f9add7cddc8770b06d44b0168fb6c1344890819` |
+
+The two owning compilers pass. All three scripted-parent cases pass in
+the control's baseline. Removing the unsupported-revision refusal makes
+exactly its named assertion fail, with the other two cases still passing.
+The maintained control restores the exact file. These checks ran at
+`0bf8c76e`; afterward, only the Grow routing script and note change before
+the frozen gate. The bridge, main card code, and generated module still
+match the fixed real-host checkpoint byte for byte.
+
+[Card workflow 41689111296](https://github.com/generalbusiness-ai/dap/actions/runs/41689111296)
+succeeds at `b8e3f0fb72214ca279586e9429da44002e3ed5fb`. All three browser
+scripts and the generated-module check pass. The failed earlier workflow
+remains failed in the record. The two inspected local fixture pictures
+show the offered task at 320 pixels and its accepted completion at 592.
+The source script runs against owned Core/SQLite fixtures with TEST
+installation, membership, sessions, and grants. Its scripted model consumer
+proves no real LLM, provider, or device execution.
+
+The one full gate runs at that same frozen head. Its tree is
+`f341cbba98fd0d73cc72fedfaf976c0d52bcedfd`. The actual `gate.exit` reads `exit 0`.
+Head, tree, clean status, lockfile, and workspace bindings match before
+and after. Five stages pass and four reporting phases complete, with no
+report error or contradictory record. Terminal totals are 133 Node,
+56 Counting, 3,604 plain with one skip, and 1,065 Native with two skips.
+The Mac wrapper separately passes 15 Node and 18 Python child tests.
+The outer gate takes 1,237.332 seconds on this shared Mac. O4 focused work
+overlaps part of it. This duration makes no performance comparison.
+The recorded owned process group has no remaining process.
+
+Raw CI and gate originals remain separately private. Their indexes retain
+46 CI files and 34 gate files. Public summaries omit raw fixture
+proofs and unexpected output. Both checksum files and all public and private
+file hashes verify, and every durable unit is read-only. Retain them for
+at least 30 days after landing. The real-host screenshots remain only in
+the conversation, as their separate manifests state.
+
+The final record adds only this note and the three manifests over the
+frozen gate. Product runtime, tests, dependencies, and configuration stay
+unchanged. The review names the final record tree separately. No full gate
+repeats, no deployment runs, and J5's acceptance record does not change.

@@ -1,0 +1,59 @@
+{
+  "qualification": "Actual gate.exit0, unchanged clean head/tree/lock/workspace links, five passed stages and four complete reporting phases, zero contradictions and report errors. Complete raw output retained privately. No deployment or new real-host claim.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-goose-integrated-gate",
+  "checkpoint": "b8e3f0fb72214ca279586e9429da44002e3ed5fb",
+  "fileCount": 10,
+  "files": [
+    {
+      "path": "after.json",
+      "bytes": 1763,
+      "sha256": "acb3e907b90318babe6bb12365207e05930e234f4aab883862239d27d1cef2a7"
+    },
+    {
+      "path": "before.json",
+      "bytes": 1763,
+      "sha256": "acb3e907b90318babe6bb12365207e05930e234f4aab883862239d27d1cef2a7"
+    },
+    {
+      "path": "gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 5636,
+      "sha256": "814ca321cf809b4b081916a20c81d362d77b5e34872eaa9991a93a772e342e2f"
+    },
+    {
+      "path": "qualification.json",
+      "bytes": 2434,
+      "sha256": "d51ffc2e2bf4f2132f312fad65bf524557a2f03479ea146ebf9897f73ff9dabd"
+    },
+    {
+      "path": "receipt.json",
+      "bytes": 261,
+      "sha256": "12ddc23c366272c385c7ccd1f9bcfa4515a68ca71b82177ebd75a4d1f2c45221"
+    },
+    {
+      "path": "run-gate.py",
+      "bytes": 2283,
+      "sha256": "87b7a9688f9539ad618b367f7d978a9e8fd32a7e1dff196cf5e16aba4b71d011"
+    },
+    {
+      "path": "started.json",
+      "bytes": 234,
+      "sha256": "eee0893c57433ba055e1f3cd5bfce5e53b60450c33173cacbf4cf9f393f9da7e"
+    },
+    {
+      "path": "summarize-gate.mjs",
+      "bytes": 2019,
+      "sha256": "693d8b16f3ff770ea413983e8808561f12e1f91f80f9907cd5b12a4b2911232b"
+    },
+    {
+      "path": "terminal-summary.json",
+      "bytes": 2512,
+      "sha256": "3ab8ab1ad4e759fc3038cd254c01afa4410d020ed42371f1124b89852671f5e6"
+    }
+  ],
+  "sha256sumsSha256": "7319cd7e63d65438a7e0dbf6de44068dfe81921f8ab2ffddeac95bba2e74a824"
+}
