@@ -1,0 +1,54 @@
+{
+  "qualification": "Actual terminal gate and runner totals. Timing observations can repeat and are partial; their event counts are not runner case counts. Both prior O2 gates remain failures. No deployment or live-host acceptance.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-own-agent-key-bounds-gate",
+  "checkpoint": "faa45ac2dcf308ac651cb6ae2248f7f29132c769",
+  "tree": "99640d87d7c9cec6ce93f098c93a540e05bc9399",
+  "fileCount": 9,
+  "files": [
+    {
+      "path": "capture-gate.py",
+      "bytes": 1954,
+      "sha256": "8de924392712ddeef936cb9d0801236ec627940b920c4a2023f38d4234443d68"
+    },
+    {
+      "path": "collect-gate.py",
+      "bytes": 3903,
+      "sha256": "9ee06f74670d5bbecd3d16e63441924ffddc79ede3697ef74a3ed144d1de0ab3"
+    },
+    {
+      "path": "gate-observations.json",
+      "bytes": 2535,
+      "sha256": "d754a184c66b52d68a88acfb6488b443a42701d28ea53fc89a60dfc9aef0dbfb"
+    },
+    {
+      "path": "gate-private-files.json",
+      "bytes": 6914,
+      "sha256": "2ec2447340818384acace7dcb64520cbb2770d35d160b0addf54049925c4a62b"
+    },
+    {
+      "path": "gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gate.json",
+      "bytes": 1249,
+      "sha256": "3473b23b7355e501087c402e56adee4b0558c31f77c70dc5cef5046841b674ac"
+    },
+    {
+      "path": "gate.started.json",
+      "bytes": 526,
+      "sha256": "e53257a1d6c5969c31fab638a39cc6e9c2a2f2bef089124a6148d3a2df6dd085"
+    },
+    {
+      "path": "test-observations.txt",
+      "bytes": 1751,
+      "sha256": "c13be95bbedd56453e8a03a1778c8bada19daae7b95e00d2cb990c6509674144"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 667,
+      "sha256": "09be5726e5f15fc4ae9da1ef6a722963ea9cda6b35e5ad1f84c6af7654ff1ad9"
+    }
+  ]
+}

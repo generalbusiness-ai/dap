@@ -209,8 +209,9 @@ invitation key, and expiry. The signer must be that agent's controller. The
 step repeats the current-role subset check, including after a role-table
 change. This step permits only one live key for the agent, counting invited
 and active keys together. Its expiry must fall after the act time and no
-more than 24 hours later. Revoke an active key before using this path for
-a replacement; an unredeemed invitation occupies the slot until it lapses.
+more than 24 hours later. An admin or recovery key must revoke an active
+key before this path invites its replacement. An unredeemed invitation
+occupies the slot until it lapses.
 An admin can still use the existing administrative add and invite steps. Earlier Membership pins retain their original acts and role tables.
 The retained agent enrollment client verifies the new opening and invitation
 acts only under the exact Membership 13 pin.

@@ -1,0 +1,44 @@
+{
+  "qualification": "Actual successful Card 41571345366 and Page 41570732480 browser workflows at the frozen O2 key-bound repair. Raw logs stay private. No deployed or live-host acceptance.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-own-agent-key-bounds-ci",
+  "checkpoint": "faa45ac2dcf308ac651cb6ae2248f7f29132c769",
+  "tree": "99640d87d7c9cec6ce93f098c93a540e05bc9399",
+  "fileCount": 7,
+  "files": [
+    {
+      "path": "capture-ci.py",
+      "bytes": 2313,
+      "sha256": "7bad5280a1d2ed01fdb85dc563d49c0becc8873e65e68c4425b3a299b8c8a7b2"
+    },
+    {
+      "path": "capture.json",
+      "bytes": 1764,
+      "sha256": "19de1367455b11ac265f22d7edef4fc6b13cdc9aa999bd9a317380967d9e3071"
+    },
+    {
+      "path": "card-run.json",
+      "bytes": 3016,
+      "sha256": "9a9f61d44d74e83b2aaa70647f56ed775c513fabbd2b1aa0ef33353475dccd3c"
+    },
+    {
+      "path": "page-browser.yml",
+      "bytes": 2855,
+      "sha256": "b6b4ab9e0cdaca7b8175fc8ea4c80f2ba61d6c7321b9e3c4727dfa13497dd967"
+    },
+    {
+      "path": "page-run.json",
+      "bytes": 2782,
+      "sha256": "653275dfb1cb5004040873e4eef4e8287c73ede9e3e948f0c530c696449a537a"
+    },
+    {
+      "path": "views-browser.yml",
+      "bytes": 4467,
+      "sha256": "465939b798f8c840d839a72ad614f6cfc72b35b690bec6582c26f9b3b23cac1f"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 486,
+      "sha256": "bdf5ae5a275799c0c1965d91103ee0f4162bc34ee26788c9c209b1819c098751"
+    }
+  ]
+}
