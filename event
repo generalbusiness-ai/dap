@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dc74168898e2cc4ad6eddf6bf8d53edb0c05d02b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-stream-http-close-focused.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:de23d33c25c6107a7e196b15d80e066e785a3fbb","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/worker.ts."}
