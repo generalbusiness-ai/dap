@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "qualification": "Focused checks of final Grow configuration, including retained first reader refusal. No host/Native acceptance.",
+  "checkpoint": {
+    "commit": "081278561ba43e3be9b2ef274ef8d1626d2bd49a",
+    "tree": "61127fe7e6c839c18c67cae130c160a12f536f3d"
+  },
+  "retention": "Retain read-only public unit and indexed private originals at least 30 days after landing.",
+  "fileCount": 22,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-o4-grow-focused",
+      "fileCount": 22,
+      "files": [
+        {
+          "path": "artroom-o4-grow-guard-probe-20261103.exit",
+          "bytes": 2,
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        },
+        {
+          "path": "artroom-o4-grow-guard-probe-20261103.mjs",
+          "bytes": 3416,
+          "sha256": "31dc30d466f5084f83400c829740bb975ec3ef15f20f92dd79c86cf93b389736"
+        },
+        {
+          "path": "artroom-o4-grow-guard-probe-20261103.stderr",
+          "bytes": 1439,
+          "sha256": "26d60ad465d0bb5d8908721f554c9015ec6dec945e0859085d651c2179db3e9d"
+        },
+        {
+          "path": "artroom-o4-grow-guard-probe-20261103.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "artroom-o4-grow-guard-probe-published-20261103.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "artroom-o4-grow-guard-probe-published-20261103.mjs",
+          "bytes": 3444,
+          "sha256": "be999faff97023f459a2e4b4ce14c7b758423036a4e1d2ce72ecc9c92d19470e"
+        },
+        {
+          "path": "artroom-o4-grow-guard-probe-published-20261103.stderr",
+          "bytes": 191,
+          "sha256": "71eca895449e622c498615ee1cbcebc3bf8be654e36f79a4749cbc942da6e07a"
+        },
+        {
+          "path": "artroom-o4-grow-guard-probe-published-20261103.stdout",
+          "bytes": 229,
+          "sha256": "d23742159b9cc0b0a455aa8d698db4fea72411a2c08906924c619c1323ca28bc"
+        },
+        {
+          "path": "artroom-o4-grow-run-gate-20261103.py",
+          "bytes": 2552,
+          "sha256": "4d79a51196802bfa71149121afbb79ef16a2d34f916191ca1845733e252d655b"
+        },
+        {
+          "path": "config-check-grow.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "config-check-grow.json",
+          "bytes": 1198,
+          "sha256": "b3d0752acf7df5f610823b2de1f2838df7a46916b582e0aef43476f271fc5ac0"
+        },
+        {
+          "path": "config-check-grow.mjs",
+          "bytes": 3678,
+          "sha256": "769efa71d8ae803b1ac055b195fc2a80185edec84efc1a2c96a620023062dc3f"
+        },
+        {
+          "path": "config-check-grow.stderr",
+          "bytes": 191,
+          "sha256": "c6a76120600cc770e943dd9f53d3fd77d73120b31ff777c98939f200e815ab53"
+        },
+        {
+          "path": "grow-role-and-package.json",
+          "bytes": 3138,
+          "sha256": "a3be1c814fbafc970c49eb9637453349bbad9b6d9dd3f8b87040a049a8d53858"
+        },
+        {
+          "path": "node-owners.command.json",
+          "bytes": 357,
+          "sha256": "b59718419b60d90eec5a4f01abd8e26c75fdb76a402305a7a206c1256dce69b5"
+        },
+        {
+          "path": "node-owners.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "node-owners.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "node-owners.stdout",
+          "bytes": 1737,
+          "sha256": "d9c9f12c4bbb5950ac5165829aa4489b84ef2e0383f79caf86a3fe8038e4b17e"
+        },
+        {
+          "path": "private-files.json",
+          "bytes": 1385,
+          "sha256": "841f38e396e5374924e8ee6ab8ec2d9b614add0ce7cd1121e64e1eb25b59a008"
+        },
+        {
+          "path": "source-checkpoint.json",
+          "bytes": 290,
+          "sha256": "fd2755d1e4bb66d29db9afac515a1d93b46e7a10294de0d1fb3321ab2171e302"
+        },
+        {
+          "path": "wrangler-command.json",
+          "bytes": 698,
+          "sha256": "8a909abdce5ff701a6b7a58f060af2a9f4f53bfd63245496dd01548bb7a1eec0"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2069,
+          "sha256": "f10ed4e8e6bc0cdd737810714f893b402fe0334aa8055b34080b94b1f17b9494"
+        }
+      ]
+    }
+  ]
+}
