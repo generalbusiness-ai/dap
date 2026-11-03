@@ -157,6 +157,7 @@ failure behavior, health visibility and the other readers.
 | `GROW_BINDING` | text | `dap-grow-simulator` | [`examples/grow/simulator-host.ts`](../../examples/grow/simulator-host.ts) |
 | `GROW_CLIMATE_SECRET` | secret | `dap-grow-simulator` | [`examples/grow/simulator-host.ts`](../../examples/grow/simulator-host.ts) |
 | `GROW_SENSORS_SECRET` | secret | `dap-grow-simulator` | [`examples/grow/simulator-host.ts`](../../examples/grow/simulator-host.ts) |
+| `INSTALLED_REGISTER_SCOPES` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/register-setting.ts`](../../packages/scope/src/register-setting.ts) |
 | `LENDING` | binding | `dap-application-sandbox` | [`apps/sandbox/worker.ts`](../../apps/sandbox/worker.ts) |
 | `MCP_CARD_ORIGINS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `MCP_ENABLED` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
@@ -1125,6 +1126,28 @@ failure behavior, health visibility and the other readers.
         "dap-lending",
         "dap-grow"
       ],
+      "name": "INSTALLED_REGISTER_SCOPES",
+      "kind": "text",
+      "status": "read",
+      "readers": [
+        "packages/scope/src/register-setting.ts",
+        "packages/scope/src/scope-index.ts",
+        "packages/scope/src/health.ts"
+      ],
+      "parser": "readInstalledRegisters: JSON array within 4096 UTF-8 bytes, 1..32 distinct canonical scope IDs including the current selected register; strict parsing before a frozen copy.",
+      "missing": "Child admission uses only the current register, preserving existing single-register configurations.",
+      "invalid": "Parentless and child creation close; no list or caller fallback admits a root.",
+      "health": "Invalid installed-register configuration makes register health unavailable without a scope probe. Valid configuration probes only the current register."
+    },
+    {
+      "deployments": [
+        "artroom-scope",
+        "dap-celld-local",
+        "dap-demo",
+        "dap-commons",
+        "dap-lending",
+        "dap-grow"
+      ],
       "name": "REGISTER_SCOPE",
       "kind": "text",
       "status": "read",
@@ -1186,3 +1209,12 @@ failure behavior, health visibility and the other readers.
 ## Source
 
 Checked against main `ada88648` on 31 October 2026. Sources: [scripts/security-settings.mjs](../../scripts/security-settings.mjs), [packages/scope/src/register-setting.ts](../../packages/scope/src/register-setting.ts), [packages/scope/src/health.ts](../../packages/scope/src/health.ts), [packages/scope/src/creation-versions.ts](../../packages/scope/src/creation-versions.ts), [packages/scope/src/public-origin.ts](../../packages/scope/src/public-origin.ts).
+
+`INSTALLED_REGISTER_SCOPES` is an operator-maintained JSON array, at most
+4,096 UTF-8 bytes and 32 distinct canonical scope IDs. It includes the
+current register selected by `REGISTER_SCOPE` or its existing valid
+Artifacts fallback. Absent, child admission keeps the singleton current
+root. An invalid explicit array closes creation and register health.
+Every listed child lineage still proves its own indexed, applied Native
+root. The setting changes no parentless install, host binding or caller
+authority. See [Keep existing rooms able to create children](../deploy.md#keep-existing-rooms-able-to-create-children).

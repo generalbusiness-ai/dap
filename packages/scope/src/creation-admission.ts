@@ -6,11 +6,12 @@ import type { PlatformCreationSettings } from "./creation-versions.ts";
 import type { Seed, SignedIntent } from "@generalbusiness/dap-contract";
 import { isSignedIntentShape, scopeIdOf, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { COMMONS_COHORT, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
-import { readRegisterScope } from "./register-setting.ts";
+import { readInstalledRegisters } from "./register-setting.ts";
 
 export interface CreationAdmission extends PlatformCreationSettings {
   DEPLOYMENT?: string;
   REGISTER_SCOPE?: string;
+  INSTALLED_REGISTER_SCOPES?: string;
   ARTIFACTS_CONFIG?: string;
   ARTIFACTS?: unknown;
   /** Explicit local/test escape. A deployment still needs a valid Register pin. */
@@ -27,7 +28,7 @@ export type ParentlessCreationAdmission = { readonly ok: true }
 export function parentlessCreationAdmission(settings: CreationAdmission, signed: SignedIntent, seed: Seed): ParentlessCreationAdmission {
   if (settings.DEPLOYMENT !== undefined && readDeployment(settings.DEPLOYMENT) === null) return { ok: false, reason: "unauthorized" };
   try {
-    const register = readRegisterScope(settings), deployed = settings.DEPLOYMENT !== undefined;
+    const register = readInstalledRegisters(settings), deployed = settings.DEPLOYMENT !== undefined;
     if (register.kind === "misconfigured") return { ok: false, reason: "misconfigured" };
     // An explicit local/test escape never opens an unconfigured deployment.
     if (deployed && register.kind === "absent") return { ok: false, reason: "unauthorized" };

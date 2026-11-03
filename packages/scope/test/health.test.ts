@@ -111,11 +111,13 @@ test("health configuration, selector and request admission have closed answers w
   const independent = await health(request(), registerOnly, new HealthProbe());
   expect([independent?.status, (await independent!.json<{ register: string }>()).register]).toEqual([200, "ready"]);
   expect(selected.splice(0)).toEqual([name]);
+  expect((await health(request(), { ...registerOnly, INSTALLED_REGISTER_SCOPES: JSON.stringify([name, other]) }, new HealthProbe()))?.status).toBe(200);
+  expect(selected.splice(0)).toEqual([name]);
   // An older hosted room may have a different GitHub Register; provider
   // readiness is still evaluated, but does not replace the explicit probe.
   expect((await health(request(), { ...base, ...registerOnly, GITHUB_APP_CONFIG: github(other) }, new HealthProbe()))?.status).toBe(200);
   expect(selected.splice(0)).toEqual([name]);
-  for (const changed of [{ REGISTER_SCOPE: ` ${name}` }, { ARTIFACTS_CONFIG: "{}" }, { ARTIFACTS_CONFIG: artifacts(other) }]) {
+  for (const changed of [{ REGISTER_SCOPE: ` ${name}` }, { ARTIFACTS_CONFIG: "{}" }, { ARTIFACTS_CONFIG: artifacts(other) }, { INSTALLED_REGISTER_SCOPES: "{}" }, { INSTALLED_REGISTER_SCOPES: JSON.stringify([other]) }]) {
     const response = await health(request(), { ...registerOnly, ...changed }, new HealthProbe());
     expect([response?.status, (await response!.json<{ register: string }>()).register]).toEqual([503, "unavailable"]);
   }

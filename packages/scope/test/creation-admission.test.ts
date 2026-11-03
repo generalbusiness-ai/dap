@@ -9,7 +9,7 @@ import worker, { api, route, type Env } from "../src/worker.ts";
 import type { Binding } from "../src/namespace.ts";
 import type { CreationAdmission } from "../src/creation-admission.ts";
 import { parentlessCreationAdmission } from "../src/creation-admission.ts";
-import { readRegisterScope } from "../src/register-setting.ts";
+import { readInstalledRegisters, readRegisterScope } from "../src/register-setting.ts";
 import { COMMONS_COHORT, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
 
 // Invariant: a deployed parentless creation is refused before any namespace
@@ -90,6 +90,17 @@ test("Register selection is host-independent and deployed host checks follow exa
     expect(readRegisterScope(configured)).toEqual({ kind: "pinned", scope: name });
   }
   const other = scopeIdOf({ ...seed, ordinal: 1 });
+  expect(readInstalledRegisters(settings)).toEqual({ kind: "pinned", scope: name, scopes: [name] });
+  const admitted = JSON.stringify([other, name]);
+  expect(readInstalledRegisters({ ...settings, INSTALLED_REGISTER_SCOPES: admitted })).toEqual({ kind: "pinned", scope: name, scopes: [other, name] });
+  const most = Array.from({ length: 32 }, (_, ordinal) => scopeIdOf({ ...seed, ordinal }));
+  expect(readInstalledRegisters({ ...settings, INSTALLED_REGISTER_SCOPES: JSON.stringify(most) }).kind).toBe("pinned");
+  for (const INSTALLED_REGISTER_SCOPES of ["{}", "[]", JSON.stringify([other]), JSON.stringify([name, name]), JSON.stringify([name, " " + other]), JSON.stringify([...most, scopeIdOf({ ...seed, ordinal: 32 })]), JSON.stringify([name]) + " ".repeat(4096)]) {
+    expect(readInstalledRegisters({ ...settings, INSTALLED_REGISTER_SCOPES })).toEqual({ kind: "misconfigured" });
+    expect(parentlessCreationAdmission({ ...settings, INSTALLED_REGISTER_SCOPES, ALLOW_OPEN_CREATION: "true" }, signed, seed)).toEqual({ ok: false, reason: "misconfigured" });
+  }
+  expect(readInstalledRegisters({ INSTALLED_REGISTER_SCOPES: admitted })).toEqual({ kind: "misconfigured" });
+  expect(parentlessCreationAdmission({ ...settings, REGISTER_SCOPE: other, INSTALLED_REGISTER_SCOPES: admitted }, signed, seed)).toEqual({ ok: false, reason: "unauthorized" });
   for (const configured of [{ REGISTER_SCOPE: ` ${name}` }, { ARTIFACTS_CONFIG: "{}" }, { REGISTER_SCOPE: name, ARTIFACTS_CONFIG: "{}" }, { REGISTER_SCOPE: name, ARTIFACTS_CONFIG: config(other) }]) {
     expect(readRegisterScope(configured)).toEqual({ kind: "misconfigured" });
     expect(parentlessCreationAdmission({ ...settings, ...configured, ALLOW_OPEN_CREATION: "true" }, signed, seed)).toEqual({ ok: false, reason: "misconfigured" });
