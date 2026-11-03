@@ -1,0 +1,125 @@
+{
+  "qualification": "Fresh actual local HTTP Worker witness of old-room Inbox and lane births after a recorded register switch, with Native unlisted-root refusal and retained originals. Both verification mistakes and read-only corrections remain. No deployed-host acceptance.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-installed-registers-local-worker",
+  "checkpoint": "c3995f8508bc6573abe6e5cbb626dd9d8f51be20",
+  "tree": "32bdd9fd4f324991ddc87b82f7d099ba1121824b",
+  "fileCount": 23,
+  "files": [
+    {
+      "path": "bootstrap.mjs",
+      "bytes": 713,
+      "sha256": "a3457974afcdd6033a8570edb053bc2b20cab7721181605b8d261f38430340ad"
+    },
+    {
+      "path": "fixture-lib.mjs",
+      "bytes": 3157,
+      "sha256": "c399cd67be0fbef53404197fbe902ff0a9f3f0cffc344cf294ae239d6cd3939e"
+    },
+    {
+      "path": "init.mjs",
+      "bytes": 1945,
+      "sha256": "5cc9b59c41ca4f7c813ed1fa393e84b95cf4444ecf7e242af51e782f011d63f5"
+    },
+    {
+      "path": "phase-results.json",
+      "bytes": 5010,
+      "sha256": "b29ae4d6b27f5ae4b2c8c48cf1a6bc9a283272bed1da1a78dbf30b95ce7398cd"
+    },
+    {
+      "path": "positive-witness.json",
+      "bytes": 2854,
+      "sha256": "a97c5e3a66b7bad82950b917465763afd1dbe47a6c01cfdb64ea5b169fc8c803"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 118503,
+      "sha256": "8d5f1b7e75745038f67db858c015836ff431fb2903379695ed153d3f87e48440"
+    },
+    {
+      "path": "setup.json",
+      "bytes": 319,
+      "sha256": "cc723dbbef416a19365458584e374255de510d82bb6a79f730bb9712311f6021"
+    },
+    {
+      "path": "source-after.json",
+      "bytes": 311,
+      "sha256": "b4c636ad61413f7cd0581a6719759f23f49de35968e2a06c69889c4298b7bf99"
+    },
+    {
+      "path": "switched-positive-readback.mjs",
+      "bytes": 2786,
+      "sha256": "d030e6fd6e09d2f5f674dd7e00ad1dff9fafa712d7fac306adb8061154b45af0"
+    },
+    {
+      "path": "switched-positive.mjs",
+      "bytes": 2319,
+      "sha256": "3315f45df7ecbbbbff9465883d21fdd71816ae1464b15fbb7413a2835c79dbd3"
+    },
+    {
+      "path": "unlisted-control.mjs",
+      "bytes": 2998,
+      "sha256": "b6baa13739cd2d9d6621a0d022c9f0cdb793283d958a45fbfa28ef5599477dc8"
+    },
+    {
+      "path": "unlisted-readback.mjs",
+      "bytes": 2937,
+      "sha256": "efa310623d9865fd6b1b77025a3804c632ad190108a550159c6fe7ca0e660547"
+    },
+    {
+      "path": "unlisted-witness.json",
+      "bytes": 1799,
+      "sha256": "5fb4443b7704fdd7acf829c9fb8df6cb3fe4f5c7cf409ed9579afa588e3e5499"
+    },
+    {
+      "path": "worker-exit-bootstrap.json",
+      "bytes": 85,
+      "sha256": "b23b75b28fadd10e64496cc977078e235f018a33a93a82d5440debbd928a1f0c"
+    },
+    {
+      "path": "worker-exit-switched.json",
+      "bytes": 84,
+      "sha256": "4908538311a3b977212d7ee918ef2ccf6476eae9a7c56639dbf8b351641a7b37"
+    },
+    {
+      "path": "worker-run.py",
+      "bytes": 1419,
+      "sha256": "ac4199607c0d7fb32be8463711115bdd7e3a3c35c4ed3cbbacc2845bed3429db"
+    },
+    {
+      "path": "worker-start-bootstrap.json",
+      "bytes": 717,
+      "sha256": "052bec4e0bb0a0176080d2fdc7523487c8f2ed06e2c1ab4440b3f2b32295e008"
+    },
+    {
+      "path": "worker-start-switched.json",
+      "bytes": 715,
+      "sha256": "77c70767f830a5e7f78ca30509b9c5126fb5180b437e855830e28bd175e097a2"
+    },
+    {
+      "path": "worker-stop-bootstrap.json",
+      "bytes": 174,
+      "sha256": "f4a23fab4c8333ee36c9588c9d3d07222a6ede470661e3deb60a4ebff70247f0"
+    },
+    {
+      "path": "worker-stop-switched.json",
+      "bytes": 173,
+      "sha256": "62521a89bbdd319661d16841edfb9e3e4c7b9ff89799e2061655d58135cb036e"
+    },
+    {
+      "path": "worker-stop.py",
+      "bytes": 967,
+      "sha256": "8b8b924b8ae6cd0c687106c2087874cb2ab4833e0b34b7e6d32da6f9debe039e"
+    },
+    {
+      "path": "wrangler-bootstrap.json",
+      "bytes": 1548,
+      "sha256": "751d4ad85e7cc6e0127a41f7deb04eb0d028342919e8918d2c091f8200bf2e4b"
+    },
+    {
+      "path": "wrangler-switched.json",
+      "bytes": 1671,
+      "sha256": "013bf0ddb09296c434dd6f3af017b7890790cb61d3154c0b0baa6705775518e8"
+    }
+  ],
+  "sha256sumsSha256": "3b9b48812ca010f379366ee49c18a8b33d755b3d6554393dd6ecffd63eac65df"
+}

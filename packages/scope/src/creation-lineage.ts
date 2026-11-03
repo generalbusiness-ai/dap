@@ -9,7 +9,7 @@ import { creates, isObject, isScopeRef, same, sentBy, validateDefinition, type D
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { applicationJson } from "@generalbusiness/dap-platform/application";
 import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT, SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT, UNPUBLISHED_COHORT } from "@generalbusiness/dap-platform";
-import { readRegisterScope } from "./register-setting.ts";
+import { readInstalledRegisters } from "./register-setting.ts";
 import type { CreationAdmission } from "./creation-admission.ts";
 import { readNativeBirth, type NativeBirth } from "./native-birth.ts";
 import type { Binding, Peer } from "./namespace.ts";
@@ -108,7 +108,7 @@ export async function admitChildCreation(binding: Binding, settings: CreationAdm
         active(); // lookup permission only, never proof of an existing genesis
       }
       if (settings.DEPLOYMENT !== undefined && readDeployment(settings.DEPLOYMENT) === null) return unavailable();
-      const register = readRegisterScope(settings);
+      const register = readInstalledRegisters(settings);
       if (register.kind === "misconfigured" || settings.DEPLOYMENT !== undefined && register.kind === "absent") return unavailable();
       if (settings.DEPLOYMENT === undefined || settings.ALLOW_OPEN_CREATION === "true") return admitted(owned);
       if (register.kind !== "pinned") return unavailable();
@@ -128,7 +128,7 @@ export async function admitChildCreation(binding: Binding, settings: CreationAdm
         const genesis = creatorEntry.input;
         if (genesis.seed.creator === null) {
           cohort = CREATION_COHORTS.find(candidate => candidate.register === creator.named);
-          if (!cohort || from.at.scope !== register.scope || from.at.kind !== "register" || genesis.seed.kind !== "register"
+          if (!cohort || !register.scopes.includes(from.at.scope) || from.at.kind !== "register" || genesis.seed.kind !== "register"
             || genesis.source !== null || genesis.n !== null || genesis.message !== null || genesis.seed.ordinal !== 0
             || !genesis.founding || !isSignedIntentShape(genesis.founding) || !verifySignedIntent(genesis.founding)
             || genesis.founding.intent.kind !== "install" || genesis.founding.intent.to !== null || genesis.founding.intent.on !== null

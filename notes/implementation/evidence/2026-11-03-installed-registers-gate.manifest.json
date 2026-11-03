@@ -1,0 +1,50 @@
+{
+  "qualification": "Actual frozen full gate exit 0 at unchanged source. Every phase completes; no unhandled error. Raw complete stage evidence stays private. Earlier flush and DCR failed gates remain separately failed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-installed-registers-gate",
+  "checkpoint": "8cdd44cdcabdafead3bb418de25127ce31943fe0",
+  "tree": "fa3e9257aa1a49012bafd9bbd802aa2506218d51",
+  "fileCount": 8,
+  "files": [
+    {
+      "path": "driver.py",
+      "bytes": 2469,
+      "sha256": "50e22af42911a03b5de0547f150e6db87903d1cf5b27b57a10e832f7b14b7ca0"
+    },
+    {
+      "path": "gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "pass-record.json",
+      "bytes": 1298,
+      "sha256": "79e2f9fd5a713d316e101c1071c23d2ed5420dca19f3d545becd93aea5dd1c6a"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 6392,
+      "sha256": "94a87917baadf76af0b7f0f2cc881bbc52e50c470f72c226b6d346cbfd93f4cb"
+    },
+    {
+      "path": "private-output.json",
+      "bytes": 420,
+      "sha256": "8251fd5296be938e5ee93bf9c7e4429eaf01078dcade08ee9b42b68c5ceea3f7"
+    },
+    {
+      "path": "source-after.json",
+      "bytes": 231,
+      "sha256": "902f24f7d9410897aca4bb66a1a2223b93fdac5ac33616b11c02570778ec9dbf"
+    },
+    {
+      "path": "source-before.json",
+      "bytes": 552,
+      "sha256": "13cea493c680293cf31b188880dcfa27765be57d8ee56e0fedf507f6e4c55430"
+    },
+    {
+      "path": "terminal-summary.json",
+      "bytes": 3254,
+      "sha256": "0255b5ccf637420d195add35047d239490cc5c4922960ae63fc9eab1e9ee548f"
+    }
+  ],
+  "sha256sumsSha256": "327511a20b9f770069ffb4d1e7983fbd33cffaa9ece938195ec4795c90a5d132"
+}

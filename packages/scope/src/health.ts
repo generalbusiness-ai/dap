@@ -6,7 +6,7 @@ import { gitHubRegisterScope, gitHubReadiness } from "./github-wiring.ts";
 import type { Binding } from "./namespace.ts";
 import type { MetricEnvironment } from "./operational.ts";
 import { sessionsOf } from "./sessions.ts";
-import { readRegisterScope } from "./register-setting.ts";
+import { readInstalledRegisters } from "./register-setting.ts";
 import { LATE, within } from "./turn.ts";
 
 export type Readiness = "ready" | "absent" | "not-ready" | "unavailable";
@@ -16,6 +16,7 @@ interface HealthEnvironment extends Omit<MetricEnvironment, "DEPLOYMENT"> {
   SESSION_SECRET?: unknown;
   GITHUB_APP_CONFIG?: unknown;
   REGISTER_SCOPE?: unknown;
+  INSTALLED_REGISTER_SCOPES?: unknown;
   ARTIFACTS_CONFIG?: unknown;
   ARTIFACTS_NAMESPACE?: unknown;
   ARTIFACTS?: unknown;
@@ -67,7 +68,7 @@ export async function health(request: Request, env: HealthEnvironment, observer 
   const sessions = sessionsOf(env.SESSION_SECRET, env.DEPLOYMENT) ? "ok" : "unavailable";
   const github = gitHubRegisterScope(env.GITHUB_APP_CONFIG), artifacts = artifactsRegisterScope(env.ARTIFACTS_CONFIG);
   const selected = github ?? artifacts;
-  const explicit = env.REGISTER_SCOPE === undefined ? null : readRegisterScope(env);
+  const explicit = env.REGISTER_SCOPE === undefined && env.INSTALLED_REGISTER_SCOPES === undefined ? null : readInstalledRegisters(env);
   const register = explicit !== null ? explicit.kind === "pinned" ? await observer.read(env.SCOPES, explicit.scope) : "unavailable"
     : github && artifacts && github !== artifacts ? "ambiguous" : selected === null ? "unconfigured" : await observer.read(env.SCOPES, selected);
   const deployment = readDeployment(env.DEPLOYMENT) ?? "unknown";

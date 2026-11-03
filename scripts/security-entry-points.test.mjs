@@ -227,15 +227,15 @@ const seals = {
   "apps/room/page/route.ts": "8eccc79a8a3e3cd8b33c38c65374db5d01583b5e9afd76384fc2133bae4cb475",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
   "packages/scope/src/worker.ts": namedOwners["packages/scope/src/worker.ts"],
-  "packages/scope/src/scope-index.ts": "eafe7c6d87ae4ce32f190654b842546ee7cc214aab124c8381490ee629bbfc00", // Exact indexed scope and kind gate before internal native birth discovery.
-  "packages/scope/src/register-setting.ts": "c2f1f2a01229e29f627eb061ea551e57139a3512744d25de50195dda93473168", // Shared exact Register selector; actual maintained parser output.
+  "packages/scope/src/scope-index.ts": "69c37e61623d85db20567a30079a495b4d9012063b38196726dad2a209170a8f", // Exact indexed scope and kind gate before internal native birth discovery.
+  "packages/scope/src/register-setting.ts": "46afcd1a38e2ae5501aed393e36c8db92acfe08f521086be820036e8d154204c", // Shared exact Register selector; actual maintained parser output.
   "packages/scope/src/scope-index-census.ts": "1892fba9c476330693d9b8071bd7b2653d2261bef7e9487fd95018d74aba2769", // Address/key admission precedes owner proof; exact census authority and page guards retained, without duplicate owner charge.
-  "packages/scope/src/creation-admission.ts": "fc3a86c9d22cc368f030044572ad25efe55d8bc5488d282ac9e4addcc273d950", // Reviewed R1 ancestry owner; adopted AST value.
-  "packages/scope/src/creation-lineage.ts": "bed320f460b88447d3445bf9920ab44064d7448ab6c890cf7df4c4a6f27f467d", // Reviewed whole-lineage boundary; adopted AST value.
+  "packages/scope/src/creation-admission.ts": "e5b173474005b5c888e60e0f863311b952e75baf4e7ece8cb5f86d50f85da248", // Reviewed R1 ancestry owner; adopted AST value.
+  "packages/scope/src/creation-lineage.ts": "6d57fa071d053a5afd9828dbc14cbd878769b6c2b75a0029c1f2a709f2f16e58", // Reviewed whole-lineage boundary; adopted AST value.
   "packages/scope/src/creation-versions.ts": "c2ad4a9cf70d858a95b91bae148245c7496ef40b5a9c6e7b548444b3d03ce9d1", // Reviewed R6 creation-policy parser; actual maintained output.
   "packages/scope/src/creation-declaration.ts": "7e79dd1c770497ecb487492ec26072e6031ecfaf2348e990903262a970561cc8", // Bounded immutable native Directory custody, not authority.
   "packages/scope/src/namespace.ts": "11ce9daffdb384151dbd1ca9e204e0d062c1d3ff113d482b9980760f8eaad7e7", // Reviewed internal declaration RPC; adopted AST value.
-  "packages/scope/src/health.ts": "3d31d6c6d6413294cfe14d46430d357fb65a7949423642b642b139abefcdbdc8",
+  "packages/scope/src/health.ts": "1fc701231daac790f66cc4df748495d69bb9b171be2b5ea75d2eb28d819b49bd",
   "packages/scope/src/site/route.ts": "f4bbcdd1f53220ccce1337ec011e0c662f199f979513ca38ea891bda7add6ee8",
   "packages/scope/src/site/host.ts": "f458154b7fd58307034623517f22d0ec31a15bb8e9ef0e960a8dc04bdef50a7f", // Private Site token custody; actual maintained parser output.
   "packages/scope/src/site/token-reuse.ts": "ac9268b1d7718d40ee266d274fea29cb65a30f51a1a36985411e42d2eb71a540", // Reviewed pre-mint generation cleanup rescheduling; custody checks unchanged.
