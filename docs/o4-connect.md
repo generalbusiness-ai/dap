@@ -72,38 +72,96 @@ to work around an uncertain answer. See [the install order](deploy.md#the-order)
 
 ## Prepare the member and application
 
-Planner ruling `780fcb95` selects Counter, whose source configuration is
-`apps/counter/dap.application.json`. Before opening MCP, resolve decision
-`735f2a64`: obtain its reviewed immutable signed packet, exact release and
-publisher, and a supported ordinary-agent card action. The current live
-trust row is Grow's release, not Counter's. Counter's only declared card
-acts, Start and Pause, need `counting.control` and the controller's native
-signature; an ordinary member's agent lacks both. The other three views
-declare no acts. Keep this setup step pending until the reviewed package
-or explicit witness ruling supplies those prerequisites.
+Planner ruling `aa2284b3`, ratified by `e506a7d6`, selects the signed
+Grow demo release. It withdraws the earlier Counter choice.
+The immutable packet URI is:
 
-1. Invite an ordinary person with role `member` from the founder home:
+```text
+git+https://github.com/generalbusiness-ai/dap.git/@74e3251288b9ff3bfecbb0abfb73ec9b76e4d017/examples/grow/demo/application.dap.json
+```
+
+The release is
+`sha256:71e10ca9499e926a4de1d8294ed83a772051dff677d8b1687bbd8e28e61802fa`.
+Its publisher is `key_gg4rXwy4v-kVqveN37_W_FW_-Wvsn3fgsal5z6gxfS0`.
+The configuration trusts exactly that release, publisher, and `github.com`.
+The ordinary strict package reader rejects this historical package shape.
+The production published-package reader explicitly verifies this exact
+reviewed release and its signature. Use that installation boundary.
+
+O4 uses the ruling's fallback for both hosts: a read-only Grow card press,
+then a separate Native `issue.open` through the same host agent's model tool.
+The released member defaults contain `grow.tend`; agent defaults contain
+`grow.climate` and `grow.sense`. Installing both defaults would make the
+agent role wider than the ordinary member role, so the existing own-agent
+guard would refuse enrollment. `take-task` also needs `grow.tend`, and the
+vent acts require a fixed demo climate or operator signer.
+
+Install only the released **admin** and **member** defaults. Omit the
+**agent** defaults. This keeps the existing agent core actions and the
+ordinary member's own-agent guard. No role or guard widens to produce a
+card act. The read-only card press and separate Native act remain distinct.
+
+1. Invite `@o4-member` with role `member` from the founder home:
 
    ```sh
    DAP_HOME="$O4_FOUNDER_HOME" node packages/cli/bin/dap.js invite @o4-member --role member
    ```
 
    Keep the invitation private. Join it in `/page/` at the O4 origin with
-   a fresh browser identity. Select the witness room there. Confirm that
-   this key belongs to `@o4-member`, has role `member`, and holds
-   `membership.own-agent` without admin authority. Consent uses that
-   origin's existing nonextractable browser key; no key export is needed.
-2. Record the approved application's immutable URI, release, publisher,
-   selected roles and genesis values. Set exactly that `APPLICATION_TRUST`
-   row in the planner's deployment copy and the installing CLI environment.
-   The checked-in `[]` trusts no package. Keep `MCP_ENABLED` false during
-   this setup deployment. Use [trusted application installation](deploy.md#trusted-application-screens)
-   and the chosen application's reviewed install procedure.
-3. Confirm exactly one active declared installation with its full scope,
-   install item, release, semantic and presentation IDs. Hosted composition
-   selects that sole installation. A pending, missing or ambiguous install
-   supplies no cards. Record the application's intended bounded card press
-   and Native act before the live window.
+   a fresh browser identity. Confirm that this key belongs to `@o4-member`,
+   has role `member`, and holds `membership.own-agent` without admin
+   authority. Consent uses that origin's existing browser key.
+2. Prepare a third active fixture member `@o4-observer` through a separate
+   kept invitation and private client home. Retain its exact accepted
+   reference. The demo requires three distinct genesis principals.
+   Keep this fixture key separate from the ordinary member's browser key.
+3. Prepare a private genesis-values JSON file with `label: "O4 Grow"` and
+   full, distinct member references: `operator` is the founder,
+   `climate` is `@o4-member`, and `sensors` is `@o4-observer`.
+   Set `O4_GROW_OWNER` to the founder's full member reference and
+   `O4_GROW_VALUES_FILE` to that values file. Copy the configuration's
+   exact one-row `APPLICATION_TRUST` string into the installing CLI's
+   environment. Keep MCP closed during setup.
+4. Install the immutable packet once, retaining the request key:
+
+   ```sh
+   DAP_HOME="$O4_FOUNDER_HOME" node packages/cli/bin/dap.js install \
+     'git+https://github.com/generalbusiness-ai/dap.git/@74e3251288b9ff3bfecbb0abfb73ec9b76e4d017/examples/grow/demo/application.dap.json' \
+     --release sha256:71e10ca9499e926a4de1d8294ed83a772051dff677d8b1687bbd8e28e61802fa \
+     --owner "$O4_GROW_OWNER" --role admin --role member \
+     --values "$(cat "$O4_GROW_VALUES_FILE")" --request o4-grow-install-1
+   ```
+
+   This value contains public references, not keys. The Worker fetches
+   and verifies the exact packet and stores its immutable content in its
+   own private `APPLICATION_CONTENT` bucket. No direct upload route or
+   cross-Worker bucket forms part of this step. Retain an unknown result
+   under this exact request and arguments. Inspect it with `dap application`.
+5. Confirm exactly one active declared installation with its full scope,
+   install item, release, semantic, and presentation IDs. Record its actual
+   Grow site scope. With the founder, create the read-only navigation target:
+
+   ```sh
+   DAP_HOME="$O4_FOUNDER_HOME" node packages/cli/bin/dap.js act create-room \
+     --on "$O4_GROW_SITE" --set 'label=O4 room'
+   ```
+
+   Confirm the child room reaches `active`. The card press for each host
+   opens **O4 room** from the Grow site card and reads its bench grid.
+   It signs no Native act and proves no device execution.
+6. Read the actual Membership roster after installation. Require every
+   `agentActions` value to occur in `memberActions`. Confirm no Grow
+   agent defaults entered the role. Check the ordinary member's role,
+   controller identity, and `membership.own-agent` action again.
+   A failed subset check stops setup; no role change bypasses it.
+7. Prepare the room's reviewed issue profile through the founder's ordinary
+   Rules path before the live window. Record its exact definition and
+   activation fact. Confirm the existing agent role holds `issue.open`.
+   Each host then uses `open_issue` once, with a distinct bounded title:
+   **O4 Claude native act** and **O4 ChatGPT native act**. Record the real
+   tool schema from that connection. Confirm the Directory's created issue,
+   its actual lane genesis and title, and the exact host agent signer.
+   A tool's accepted request alone proves no completed Native outcome.
 
 ## Connect the two hosts in the live window
 
@@ -120,8 +178,10 @@ or explicit witness ruling supplies those prerequisites.
    selected room, ordinary member controller, agent handle and expiry.
    Press **Allow** with the member's browser key. Retain any unknown
    operation and continue its original request; do not replace the agent.
-4. Record MCP initialize, tools and card rendering. Perform the selected
-   card press and one intended Native act. Read the journal to confirm
+4. Record MCP initialize, tools, and the Grow site card. Press its
+   **Open O4 room** control, then ask that same agent to create its named
+   issue through `open_issue`. Keep these two operations separate.
+   Read the journal to confirm
    the exact accepted fact and agent signer, controlled by `@o4-member`.
    A rendered card, a text claim or a tool's accepted request alone proves
    no completed Native outcome.
@@ -148,6 +208,17 @@ registration disabled. Record that refusal and stop that host's scene;
 do not enable dynamic registration. The planner requires a reviewed
 per-address rate limit before any hosted Worker enables it.
 
+## Optional deployed-browser observation
+
+Planner ruling `b608aa47` assigns one optional bounded probe to this window.
+With a fresh fixture opening, record the Native stream count, observe one
+browser abort or active page close, and record the count afterward. Capture
+whether the deployed runtime reports `request.signal`. The configuration
+enables the same reviewed request-signal flag as the maintained Workers.
+Keep a missing signal or unreleased opening as a failed observation.
+This probe must not delay Claude or ChatGPT. If the deployed runtime also
+reports no disconnect, the planner owns a later explicit-close design request.
+
 ## Keep the evidence
 
 Retain each original privately and publish only a sanitized, sealed record:
@@ -170,6 +241,8 @@ Retain each original privately and publish only a sanitized, sealed record:
 - Native accepted facts and outcomes bound to their exact agent signers
   and ordinary controller; each grant's revocation result; any missing,
   refused, unknown or incomplete obligation.
+- The optional deployed-browser signal and Native count observation, if the
+  window permits it, with any failure or omitted probe stated explicitly.
 - Actual command exit files, source-before and source-after checks, raw
   output hashes, public file sizes and SHA-256 digests, private indexes
   and a read-only manifest. Preserve failed attempts and their limits.

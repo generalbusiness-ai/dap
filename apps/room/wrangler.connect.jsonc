@@ -8,7 +8,8 @@
   "main": "worker.ts",
   "compatibility_date": "2026-08-15",
   "compatibility_flags": [
-    "nodejs_compat"
+    "nodejs_compat",
+    "enable_request_signal"
   ],
   "version_metadata": {
     "binding": "VERSION_METADATA"
@@ -22,7 +23,7 @@
     "MCP_RESOURCE_URLS": "[\"https://dap-connect.inguz.workers.dev/mcp\",\"https://dap-connect.inguz.workers.dev/mcp?host=chatgpt\"]",
     "MCP_CARD_ORIGINS": "[{\"host\":\"claude\",\"url\":\"https://dap-connect.inguz.workers.dev/mcp\",\"domain\":\"5334a0aa0cd45baa296121e471ac2759.claudemcpcontent.com\"},{\"host\":\"chatgpt\",\"url\":\"https://dap-connect.inguz.workers.dev/mcp?host=chatgpt\",\"domain\":\"https://dap-connect.inguz.workers.dev\"}]",
     "APPLICATION_SCREEN_HOSTS": "[]",
-    "APPLICATION_TRUST": "[]",
+    "APPLICATION_TRUST": "[{\"release\":\"sha256:71e10ca9499e926a4de1d8294ed83a772051dff677d8b1687bbd8e28e61802fa\",\"publisher\":\"key_gg4rXwy4v-kVqveN37_W_FW_-Wvsn3fgsal5z6gxfS0\",\"host\":\"github.com\"}]",
     "SERVING_CREATION_KEY_PER_HOUR": "10",
     "SERVING_CREATION_ADDRESS_PER_HOUR": "30",
     "SERVING_READ_KEY_PER_MINUTE": "240",
