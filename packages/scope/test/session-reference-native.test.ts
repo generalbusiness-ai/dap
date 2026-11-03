@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 import { runInDurableObject } from "cloudflare:test";
 import type { SessionClaims } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
+import { OWN_AGENT_COHORT } from "@generalbusiness/dap-platform";
 import { SqliteStore } from "../src/sqlite.ts";
 import { mintSession, readerOf, sessionsOf } from "../src/sessions.ts";
 import { sessionReferenceReply } from "../src/session-reference.ts";
@@ -15,7 +16,8 @@ import { TEST_DEPLOYMENT, type PlatformScope } from "./worker.ts";
  * Host is OutsideDouble, clock scripted, setup reader is a test inspector.
  * The final token is deliberately restricted/minted, not an issuance claim. */
 test.each(sessionCohorts)("native %s session composition and directory RPC stay bounded without legacy bodies or activation", async (registerPin, directoryPin) => {
-  const { life, D, children, membership, rules, directory, claims, secret } = await sessionRoom(registerPin);
+  const host = registerPin === OWN_AGENT_COHORT.register ? { host: "github.com", namespace: "bounded-reference" } : undefined;
+  const { life, D, children, membership, rules, directory, claims, secret } = await sessionRoom(registerPin, undefined, host);
   try {
     const restricted = await life.wait(() => runInDurableObject(children[0]!.object, async instance => {
       // Test invokes the protected support entry directly. There is no public
