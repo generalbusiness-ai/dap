@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "qualification": "Actual frozen full gate exit0, read from gate.exit. Same clean head/tree/lock before and after. All5stages pass, all4reporting phases complete, no failed cases, report errors or unhandled errors. Node133,Counting56,plain3601+1skip,Native1070+2skip. Mac children13Node and17Python pass. This does not pass the independent local Chromium cleanup witness. The correction record fixes one prior focused-ledger caption without altering its original seal.",
+  "checkpoint": {
+    "commit": "b6d8a38eae30a3b39cdc0b710c64b9c3b1715303",
+    "tree": "29ce1ab880d1920507ec0c888cfc38331f71a40b"
+  },
+  "retention": "Retain this read-only evidence at least30days after landing.",
+  "fileCount": 10,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-stream-http-close-gate",
+      "fileCount": 10,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 745,
+          "sha256": "cb047a509242f032f6b9ef6c76bca4d50c435dc150f4b9dbf2709fa66c1fa9b9"
+        },
+        {
+          "path": "corrections.json",
+          "bytes": 1184,
+          "sha256": "ee7460ba6a3a3242a02ccffeaef7df9a2d6b14452371aaa80ddaf51893e4223a"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 2748,
+          "sha256": "e2539989310b3de87760e556e1318daec2f6b80d5a0f2843186c03a877602431"
+        },
+        {
+          "path": "evidence-scan.json",
+          "bytes": 414,
+          "sha256": "0824c0d5eb64ca7bf8404bc0e7f89e7da03979262b9535fb9c34b1ceb56937bf"
+        },
+        {
+          "path": "gate-record.json",
+          "bytes": 1377,
+          "sha256": "0b18391349ba2eefcb9096e65cd58a4f9699f6e8fae6b51d13bcab2b5da47043"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "private-files.json",
+          "bytes": 7488,
+          "sha256": "96bb1712275bd136a57fbed3de2b9191266bc96efa91379db46dccf42476239e"
+        },
+        {
+          "path": "source-after.json",
+          "bytes": 211,
+          "sha256": "b95717d186c634fd1a4fded88ce61512498eb3898d4c01f4c6da32143702c899"
+        },
+        {
+          "path": "source-before.json",
+          "bytes": 211,
+          "sha256": "b95717d186c634fd1a4fded88ce61512498eb3898d4c01f4c6da32143702c899"
+        },
+        {
+          "path": "terminal-summary.json",
+          "bytes": 7253,
+          "sha256": "a1ad1e58a13a8409ebf2bee69be35b328c757ba48bca91f090527dc05274d0aa"
+        }
+      ]
+    }
+  ],
+  "privateOutput": {
+    "directory": "/Users/hughpyle/play/artroom-private-evidence/2026-11-03-stream-http-close-gate",
+    "dataFiles": 29,
+    "checksumFile": "/Users/hughpyle/play/artroom-private-evidence/2026-11-03-stream-http-close-gate/SHA256SUMS"
+  }
+}
