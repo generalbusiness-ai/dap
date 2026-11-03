@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:92bd24870bfdd829ef62cc1ab7ed622c71a123b3","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-installed-registers-local-worker.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:aafd84fe258628de311ed12070a3337903f67166","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/scope-index.ts."}
