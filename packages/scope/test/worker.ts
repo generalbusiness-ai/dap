@@ -193,6 +193,8 @@ type PlatformEnv = Env & { PLATFORM: DurableObjectNamespace };
 export class PlatformScope extends DeployedScope<PlatformEnv> {
   protected override metricEnvironment(): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super.metricEnvironment(); }
   readonly #scheduledCallbacks: Promise<unknown>[];
+  #fixtureCallbackRelease: (() => void) | null = null;
+  #fixtureCallbackFinished = false;
 
   constructor(ctx: DurableObjectState, env: PlatformEnv) {
     // Retain the actual context and delegate each exact original promise.
@@ -220,6 +222,21 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
     } }));
     this.#scheduledCallbacks = scheduled;
   }
+
+  /** Test-only callback gate. Its promise and release stay in this object,
+   * rather than carrying an I/O context from the test runner into it. */
+  holdFixtureCallback(): void {
+    if (this.#fixtureCallbackRelease) throw new Error("Fixture callback is already held");
+    this.#fixtureCallbackFinished = false;
+    const held = new Promise<void>(resolve => { this.#fixtureCallbackRelease = resolve; });
+    this.ctx.waitUntil(held.then(() => { this.#fixtureCallbackFinished = true; }));
+  }
+  releaseFixtureCallback(): void {
+    const release = this.#fixtureCallbackRelease;
+    this.#fixtureCallbackRelease = null;
+    release?.();
+  }
+  fixtureCallbackFinished(): boolean { return this.#fixtureCallbackFinished; }
 
   /** Join only this actual object's scheduled callbacks; no driver, clock advance or read retry. */
   async awaitScheduledCallbacks(): Promise<{ batches: number; callbacks: number }> {

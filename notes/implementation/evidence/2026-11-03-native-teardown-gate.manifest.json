@@ -1,0 +1,50 @@
+{
+  "qualification": "Actual frozen full gate exit 0 with unchanged source. Every phase completes; no unhandled error. Earlier O3, flush and DCR gates remain failures on their separate records.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-native-teardown-gate",
+  "checkpoint": "03102b56c30cd583662863470da27565501cd809",
+  "tree": "898c138e1c59f803b9d14af4647e3e3e4a73b085",
+  "fileCount": 8,
+  "files": [
+    {
+      "path": "driver.py",
+      "bytes": 2456,
+      "sha256": "a54468666c06e23f18e0acb3bedc7521a3a5703135bd166204191d432d7af090"
+    },
+    {
+      "path": "gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "pass-record.json",
+      "bytes": 1267,
+      "sha256": "2a54c9b512377b89cc4da1c823498653cd015e15159685e1eb3171d11cd4f14f"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 6276,
+      "sha256": "743d9c88816fef9866a2c4081bae21e74014c76f7561e279e269e99d1c26408d"
+    },
+    {
+      "path": "private-output.json",
+      "bytes": 412,
+      "sha256": "27d817e7a61556b133f26f6e70f4df77a16bf1c3b2a1614cee1f2ecc60291265"
+    },
+    {
+      "path": "source-after.json",
+      "bytes": 231,
+      "sha256": "1cad9fda53c222da49e244a87a0662ee7d5039605fe0f8f3409a55a5c73ea198"
+    },
+    {
+      "path": "source-before.json",
+      "bytes": 552,
+      "sha256": "e29edd94b87bbb29b32a634e38c6ff87d44063f1e508c2edcaa1de1721ba1c09"
+    },
+    {
+      "path": "terminal-summary.json",
+      "bytes": 3323,
+      "sha256": "8698a6e9c3a6390fb09356c91db5a656a37d9bf8e5e3366d26ce9cc828f0effc"
+    }
+  ],
+  "sha256sumsSha256": "1102cbf0b9cc18b463c7c19bb419a32f844fac87cab9d5e10aa874b0863cb223"
+}

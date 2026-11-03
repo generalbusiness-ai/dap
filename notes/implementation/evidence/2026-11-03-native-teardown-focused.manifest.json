@@ -1,0 +1,69 @@
+{
+  "qualification": "Incremental Native compiler, complete owning files, expected-failure callback-join control with exact restoration, and shared-helper inventory. Initial failed witness retained.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-native-teardown-focused",
+  "checkpoint": "acdbc741608341f973793b6281d3abaf733ae9d6",
+  "fileCount": 12,
+  "files": [
+    {
+      "path": "01-native-owner-compiler.json",
+      "bytes": 936,
+      "sha256": "655c82db90bddd5438370fd6a9b6664a248201abc379d4bf6819aff490a78368"
+    },
+    {
+      "path": "02-callback-ownership-and-named-owner.json",
+      "bytes": 1088,
+      "sha256": "8ac63c8cb66eb9081baa4b59c4744f1a5886e81510d56c295c1e268abdf93cd8"
+    },
+    {
+      "path": "03-native-owner-compiler-corrected.json",
+      "bytes": 995,
+      "sha256": "d7646f9e41fce3778842c14b0a7ee5a695ef7598150cf0e1795f36bd9fd6b54a"
+    },
+    {
+      "path": "04-callback-ownership-and-named-owner-corrected.json",
+      "bytes": 1142,
+      "sha256": "a1c38fba1db77f6d467c09130c310ce134b094b41df0dd8b2f2f7379d995c3af"
+    },
+    {
+      "path": "05-callback-control-baseline.json",
+      "bytes": 1055,
+      "sha256": "64c1a1636b7a4119aa64453ebad55b4fa4e520ca9a33c96ab95a05c9cc8b5414"
+    },
+    {
+      "path": "06-control.json",
+      "bytes": 614,
+      "sha256": "a3de44ef414a182a14b2f55776971a03ff6e5c6e2081119a6a153d8006eef1c8"
+    },
+    {
+      "path": "06-skip-callback-join-control.json",
+      "bytes": 1058,
+      "sha256": "c32daad423f97ad88a42a991d4b1a431d2971ca07ccf1c9ab299f3f4a24999bc"
+    },
+    {
+      "path": "07-shared-helper-inventory.json",
+      "bytes": 915,
+      "sha256": "8c78178805a14c3f17347c82fc45c44d2de0e40b3af19857a5c4ea2fa2627a9f"
+    },
+    {
+      "path": "artroom-teardown-control.py",
+      "bytes": 2240,
+      "sha256": "c5722255dfd9ce21ccf225925bac5eaa36e1122632a200afcac80310f8a346bb"
+    },
+    {
+      "path": "artroom-teardown-run-focused.py",
+      "bytes": 1396,
+      "sha256": "00b7b4e3bdfa4776e6d7735b12f500ace6fe66a71057d8ea4bd553fe55952340"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 3299,
+      "sha256": "a25bfb2e718e59a22e98de011b23b08f2bce3ea40c54a8ab214846e917cb702a"
+    },
+    {
+      "path": "source-adoption.json",
+      "bytes": 1434,
+      "sha256": "b3d638c5e0490f9980cf364a6a4b6a9553219f1cbffc658f6457b4e8416ea2f4"
+    }
+  ],
+  "sha256sumsSha256": "1aa4f492a1a1d1cf798ddbf3a0349a9b940d8be2f5868a530cd8da965e6d2411"
+}
