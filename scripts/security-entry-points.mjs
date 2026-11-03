@@ -13,6 +13,9 @@ import { ITEM_QUERY_WIRE_BOUNDS, APPLICATION_PROJECTION_WIRE_BOUNDS } from "@gen
 import { remoteCardOrigins } from "../packages/mcp/src/views/remote-origins.ts";
 import { configuredMcpResources, hostedMcpResources, publicRequestUrl, RESOURCE_METADATA_PATH, resourceMetadataUrl, mcpUnauthorized, mcpChallengeResponse } from "../packages/mcp/src/oauth-resource.ts";
 
+import { parseStrict, utf8 } from "@generalbusiness/dap-bytes";
+import { oauthAuthorization, oauthRedirectPolicy, OAuthError, OAUTH_CLIENT_BYTES } from "../packages/mcp/src/oauth-parameters.ts";
+
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const readSource = file => readFileSync(resolve(root, file), "utf8");
 const scopeFile = "packages/scope/src/worker.ts";
@@ -64,6 +67,7 @@ function prefixesIn(text) {
 }
 const row = (method, path, gate) => ({ route: `${method} ${path}`, gate });
 const methodRows = (methods, paths, gate) => methods.flatMap(method => paths.map(path => row(method, path, gate)));
+const { oauthPolicy } = load(readSource("packages/mcp/src/oauth-clients.ts"), ["oauthMetadataOrigins", "oauthPolicy"], { utf8, URL, oauthRedirectPolicy });
 
 // Gate classes concern the effective read or operation, rather than the
 // Authorization header's spelling. A signature alone certifies any fresh key.
@@ -208,54 +212,74 @@ export async function scopeRows(text, snapshotDispatches = []) {
   return [...result.values()];
 }
 
-async function hostedInventory(source, settings) {
+async function hostedInventory(source, settings, oauthSource, consentSource) {
   const { hostedMcpTools } = load(readSource("packages/mcp/src/hosted-tools.ts"), ["GENERIC_TOOL_NAMES", "HOSTED_TOOL_OMISSIONS", "hostedMcpTools"], { remoteCardOrigins, configuredMcpResources });
   const { readPublicOrigin } = load(readSource("packages/scope/src/public-origin.ts"), ["PUBLIC_ORIGIN_MAX_BYTES", "readPublicOrigin"], { URL });
+  const wire = load(oauthSource, ["OAUTH_METADATA_PATH", "OAUTH_CLIENT_REGISTRY", "oauthAnswer", "error", "resolvedOAuthClient", "oauthRoute"], { oauthAuthorization, OAuthError, OAUTH_CLIENT_BYTES, URL, URLSearchParams, Response, TextDecoder });
+  const consent = load(consentSource, ["POLICY", "oauthPage"], { hostedMcpTools, hostedMcpResources, oauthPolicy, readPublicOrigin, OAUTH_HTML: "TEST consent HTML", OAUTH_JS: "TEST consent script", URL, Response });
   const text = declaration(source, "mcpRoute"), agent = "a".repeat(64), paths = strings(text, value => value.startsWith("/") && !value.endsWith("/"));
-  paths.push(RESOURCE_METADATA_PATH);
+  paths.push(RESOURCE_METADATA_PATH, wire.OAUTH_METADATA_PATH, ...strings(declaration(oauthSource, "oauthRoute"), value => value.startsWith("/oauth/")), ...strings(declaration(consentSource, "oauthPage"), value => value.startsWith("/oauth/")));
   const { SCOPE_INDEX_NAME, scopeIndex } = load(readSource("packages/scope/src/scope-index.ts"), ["SCOPE_INDEX_NAME", "scopeIndex"], {});
   walk(parse(text), node => {
     if (node.type !== "VariableDeclarator" || node.id.name !== "agentPath") return;
-    const pattern = node.init.callee.object.regex.pattern;
-    // The current finite route regex. An unsupported grammar refuses the
-    // inventory, rather than silently omitting a branch.
-    assert.ok(pattern.startsWith("^") && pattern.endsWith("$"), "Anchored hosted matcher");
-    for (const suffix of [false, true]) {
-      const path = pattern.slice(1, -1).replace("([0-9a-f]{64})", agent).replace(/\(([^()]*)\)\?/, (_, value) => suffix ? value : "").replaceAll("\\/", "/");
-      assert.ok(!/[()\[\]?$^]/.test(path), "Unsupported hosted route regex"); paths.push(path);
-    }
+    const pattern = node.init.callee.object.regex.pattern, pieces = pattern.split("([0-9a-f]{64})");
+    assert.equal(pieces.length, 2, "One hosted agent capture");
+    const prefix = pieces[0].replace(/^\^/, "").replaceAll("\\/", "/"), suffix = pieces[1];
+    assert.ok(pattern.startsWith("^") && /^\/(?:[a-z-]+\/)+$/.test(prefix), "Literal anchored hosted prefix");
+    // Only this finite optional suffix grammar is modeled. Every alternative
+    // comes from the actual matcher; unknown regex syntax refuses the model.
+    const opening = "(\\/(?:", ending = "))?$";
+    assert.ok(suffix.startsWith(opening) && suffix.endsWith(ending), "Unsupported hosted route regex");
+    const choices = suffix.slice(opening.length, -ending.length).split("|");
+    assert.ok(choices.length && choices.every(value => /^[a-z-]+$/.test(value)) && new Set(choices).size === choices.length, "Finite hosted suffixes");
+    paths.push(prefix + agent, ...choices.map(value => prefix + agent + "/" + value));
   });
-  const result = new Map(), marker = dispatch => { throw { dispatch }; };
-  let action;
+  const result = new Map(); let action, currentPath, dispatch;
   const { mcpRoute } = load(source, ["mcpRoute", "boundedBytes"], {
-    admittedRequestUrl: () => true, URL, Response, Uint8Array, CONTROL_BODY_BYTES: 64 * 1024, scopeIndex, hostedMcpTools, readPublicOrigin,
+    admittedRequestUrl: () => true, URL, Response, Uint8Array, TextDecoder, parseStrict, isObject: value => value !== null && typeof value === "object" && !Array.isArray(value),
+    CONTROL_BODY_BYTES: 64 * 1024, scopeIndex, hostedMcpTools, readPublicOrigin, oauthPolicy, OAuthError, ...wire,
     hostedMcpResources, publicRequestUrl, RESOURCE_METADATA_PATH, resourceMetadataUrl, mcpUnauthorized, mcpChallengeResponse,
     json: status => new Response(null, { status }),
-    controlOf: () => ({ request: { action, agent: action === "create" ? null : agent, membership: { scope: "witness" } } }),
+    controlOf: () => ({ request: { action, agent: currentPath.startsWith("/mcp/agents/" + agent) ? agent : null, membership: { scope: "witness" } } }),
   });
-  const object = { create: () => marker("control"), control: () => marker("control"), fetch: () => marker("bearer") };
+  const client = { client_id: "dap-client-" + "A".repeat(43), client_name: "TEST inventory client", redirect_uris: ["https://claude.ai/api/mcp/auth_callback"], token_endpoint_auth_method: "none" };
+  const reached = gate => { dispatch = gate; return { status: 200, body: {} }; };
+  const object = {
+    create: () => reached("control"), control: () => reached("control"), grant: () => reached("control"), grantExisting: () => reached("control"), connections: () => reached("control"), connectionControl: () => reached("control"),
+    fetch: () => { dispatch = "bearer"; return new Response(); },
+    resolveClient: () => ({ status: 200, body: client }), registerClient: () => ({ status: 201, body: client }),
+    exchangeCode: () => reached("oauth"), refreshGrant: () => reached("oauth"), revokeToken: () => reached("oauth"),
+  };
   const namespace = { idFromName: name => name, idFromString: name => name, get: () => object };
-  // A known-index stand-in reaches the actual control matcher; this is
-  // structural route coverage, not native index or authority evidence.
+  // Structural dispatch only: these object and standing ports establish no
+  // Native authority, valid signature, code, verifier or token possession.
   const index = {
     idFromName(name) { assert.equal(name, SCOPE_INDEX_NAME); return name; },
-    get(name) { assert.equal(name, SCOPE_INDEX_NAME); return { has(scope, kind) {
-      assert.equal(scope, "witness"); assert.equal(kind, "membership"); return true;
-    } }; },
+    get(name) { assert.equal(name, SCOPE_INDEX_NAME); return { has(scope, kind) { assert.equal(scope, "witness"); assert.equal(kind, "membership"); return true; } }; },
   };
-  const methods = new Set([...methodsIn(text), ...methodsIn(readSource("packages/mcp/src/http.ts"))]);
-  for (const path of paths) for (const method of methods) for (action of ["create", "bearer", "retire"]) {
-    const request = new Request(`https://inventory.invalid${path}`, { method, headers: { authorization: `Bearer ${agent}.witness` } });
-    try {
-      const response = await mcpRoute(request, { ...settings, REGISTRIES: namespace, AGENTS: namespace, SCOPE_INDEX: index });
-      if (path === RESOURCE_METADATA_PATH && method === "GET" && response?.status === 200) {
-        const route = row(method, path, "none"); result.set(route.route, route);
+  const mcpMethods = new Set([...methodsIn(text), ...methodsIn(readSource("packages/mcp/src/http.ts"))]);
+  const methods = new Set([...mcpMethods, ...methodsIn(declaration(oauthSource, "oauthRoute")), ...methodsIn(declaration(consentSource, "oauthPage"))]);
+  const token = agent + "." + "A".repeat(43) + "." + "A".repeat(43);
+  const binding = { client_id: client.client_id, redirect_uri: client.redirect_uris[0], code_challenge: "A".repeat(43), resource: "https://inventory.invalid/mcp", scope: "mcp", state_digest: "sha256:" + "a".repeat(64) };
+  const env = { ...settings, REGISTRIES: namespace, AGENTS: namespace, SCOPE_INDEX: index };
+  for (const path of new Set(paths)) for (const method of methods) for (action of ["create", "bearer", "retire", "grant", "connections", "revoke-grant"]) {
+    if (path.startsWith("/mcp") && !mcpMethods.has(method)) continue;
+    currentPath = path;
+    for (const grantType of path === "/oauth/token" ? ["authorization_code", "refresh_token"] : ["authorization_code"]) {
+      dispatch = null;
+      const url = new URL(path, "https://inventory.invalid"), headers = {}, init = { method, headers };
+      if (path === "/oauth/authorize/context") url.search = new URLSearchParams({ response_type: "code", client_id: client.client_id, redirect_uri: client.redirect_uris[0], code_challenge: binding.code_challenge, code_challenge_method: "S256", resource: binding.resource, scope: "mcp", state: "TEST state" }).toString();
+      if (path.startsWith("/mcp")) headers.authorization = path === "/mcp" ? `Bearer ${agent}.witness` : "Control witness";
+      if (!["GET", "HEAD"].includes(method)) {
+        if (["/oauth/token", "/oauth/revoke"].includes(path)) { headers["content-type"] = "application/x-www-form-urlencoded"; init.body = new URLSearchParams({ client_id: client.client_id, grant_type: grantType, code: token, refresh_token: token, token, redirect_uri: client.redirect_uris[0], code_verifier: "A".repeat(43), resource: binding.resource }).toString(); }
+        else { headers["content-type"] = "application/json"; init.body = JSON.stringify(path === "/oauth/register" ? { client_name: client.client_name, redirect_uris: client.redirect_uris } : path.endsWith("/grant") ? { ...binding, link: "TEST invitation" } : {}); }
       }
-    }
-    catch (error) {
-      if (!error?.dispatch) throw error;
-      const route = row(method, path.replace(agent, ":agent"), error.dispatch);
-      result.set(route.route, route);
+      const request = new Request(url, init), response = consent.oauthPage(request, env) ?? await mcpRoute(request, env);
+      if (dispatch !== null || response?.status >= 200 && response.status < 300 && (path.startsWith("/oauth/") || [RESOURCE_METADATA_PATH, wire.OAUTH_METADATA_PATH].includes(path))) {
+        const route = row(method, path.replace(agent, ":agent"), dispatch ?? "none");
+        if (result.has(route.route)) assert.equal(result.get(route.route).gate, route.gate, "Every request format keeps the same protected-result gate");
+        result.set(route.route, route);
+      }
     }
   }
   return [...result.values()];
@@ -399,7 +423,7 @@ function sandboxBindings(scopeSource) {
 }
 
 function jsonc(file) { return JSON.parse(readSource(file).replace(/^\s*\/\/.*$/gm, "")); }
-export async function servedInventory({ scopeSource = readSource(scopeFile), applicationSource = readSource("packages/scope/src/applications/route.ts"), hostedSettings = { MCP_ENABLED: "true" } } = {}) {
+export async function servedInventory({ scopeSource = readSource(scopeFile), applicationSource = readSource("packages/scope/src/applications/route.ts"), hostedSettings = { MCP_ENABLED: "true" }, oauthSource = readSource("packages/scope/src/oauth-routes.ts"), consentSource = readSource("apps/room/page/oauth-route.ts") } = {}) {
   assert.deepEqual(workerEntrypoints(scopeSource), ["ApplicationScreenService"], "Production WorkerEntrypoint exports");
   const scope = await scopeRows(scopeSource);
   const page = readSource("apps/room/page/route.ts"), pagePaths = [];
@@ -414,7 +438,7 @@ export async function servedInventory({ scopeSource = readSource(scopeFile), app
   ];
   // The table describes reachability with valid deployment settings. Do not
   // bypass the real hosted policy to reach the finite matcher.
-  const hostedRows = await hostedInventory(scopeSource, hostedSettings);
+  const hostedRows = await hostedInventory(scopeSource, hostedSettings, oauthSource, consentSource);
   const result = new Map();
   for (const [file, entry] of [
     ["apps/room/wrangler.jsonc", "worker.ts"],

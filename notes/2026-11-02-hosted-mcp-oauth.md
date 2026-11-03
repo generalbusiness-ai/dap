@@ -8,8 +8,8 @@ checks. Part three names the builder slices and the evidence for each.
 
 ### Scene
 
-Una is a member of a room on `dap-demo`. She opens Claude, adds a custom
-connector, and enters `https://dap-demo.inguz.workers.dev/mcp`. Claude
+Una is a member of a room on a dedicated OAuth Worker. She opens Claude,
+adds a custom connector, and enters that Worker's `/mcp` URL. Claude
 opens a browser page on that Worker. The page shows the client name
 "Claude", the room, and the agent that will act for her: `@una-claude`,
 controlled by `@una`. She presses **Allow**. Her browser key adds
@@ -107,7 +107,10 @@ and Una opens the link on the consent page. Her key signs the grant as
 controller. The registry accepts that signer today.
 
 Slice O2 also adds the creation cohort that pins the own-agent
-membership. The rooms for the live runs on `dap-demo` use that cohort.
+membership. The rooms for the live runs use that cohort on a new dedicated
+Worker. Ruling `a555fc77`, corrected by `8678baf0`, keeps existing hosted
+Workers on their current registers. The planner names and deploys the O4
+Worker after O3 lands.
 
 The page reuses an existing agent when the same controller connects the
 same client to the same repository again. It renews by a fresh grant.
@@ -243,7 +246,7 @@ A grant is a control request, `artroom-mcp-control-1`, with action
   "client_id": "https://chatgpt.com/oauth/client.json",
   "redirect_uri": "https://chatgpt.com/connector_platform_oauth_redirect",
   "code_challenge": "<base64url SHA-256 of the verifier>",
-  "resource": "https://dap-demo.inguz.workers.dev/mcp?host=chatgpt",
+  "resource": "https://oauth.example.com/mcp?host=chatgpt",
   "scope": "mcp",
   "state_digest": "<SHA-256 of the client's state>",
   "link": "<agent-key invitation, on a first connection only>"
@@ -323,8 +326,9 @@ When it is full, it answers `503` with `Retry-After`.
 ## Part three: slices and evidence
 
 Each slice is one reviewed head with a frozen gate. None of them opens
-hosted MCP on a deployed Worker. The planner opens it on `dap-demo` for
-slice O4 only.
+hosted MCP on a deployed Worker. The planner opens it on the new dedicated
+Worker for slice O4 only. Request `579489e0` follows O3 before a cohort
+deployment can move an existing Worker with live rooms to another register.
 
 | Slice | Builds | Evidence |
 |---|---|---|

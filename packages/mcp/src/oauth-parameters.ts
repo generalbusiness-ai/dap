@@ -38,7 +38,9 @@ export function oauthGrant(value: unknown, context: OAuthGrantContext, first: bo
   return { binding: { client_id: context.client.client_id, redirect_uri: redirect, code_challenge: row["code_challenge"], resource, scope: "mcp", state_digest: row["state_digest"] }, ...(first ? { link: row["link"] as string } : {}) };
 }
 export class OAuthError extends Error {
-  constructor(readonly error: string, readonly status = 400) { super(error); }
+  readonly error: string;
+  readonly status: number;
+  constructor(error: string, status = 400) { super(error); this.error = error; this.status = status; }
 }
 const fail = (reason: string): never => { throw new OAuthError(reason); };
 const bounded = (value: unknown, most: number): value is string => typeof value === "string" && utf8(value).length > 0 && utf8(value).length <= most && !/[\u0000-\u001f\u007f]/.test(value);

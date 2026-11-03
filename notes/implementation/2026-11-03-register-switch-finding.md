@@ -20,8 +20,9 @@ Workers, each with its original register fixed throughout. Their full
 browser code flows and revocations completed at `42a76281`. The public
 outcomes and masked screenshots live in evidence unit
 `2026-11-03-oauth-browser-42a`; the raw diagnostic, profiles, and test
-identities remain in its owner-only archive. This unit remains unsealed
-while the implementation record is in progress.
+identities remain in its owner-only archive. The sealed unit contains 41
+public files. Its [manifest](evidence/2026-11-03-oauth-browser-42a.manifest.json)
+records each digest.
 
 ## The check that causes the refusal
 
@@ -51,6 +52,12 @@ That is a source-derived consequence of the recorded deployment, not a
 new H3 write witness. The H3 baseline reads existing Membership8 and
 Directory20 objects; it cannot establish that a new Inbox or lane can be
 born. Existing stored objects and successful reads do not establish that
-property either. The planner must account for this additional effect when
-it rules on preserving H3. O3's local witnesses need no change to the
-creation policy.
+property either.
+
+Planner ruling `a555fc77`, corrected by `8678baf0`, accepts that loss for
+H3 because H3 is a retired witness with no ongoing work. The ruling keeps
+the live hosted Workers on their current registers. O4 uses a new dedicated
+Worker with a fresh own-agent register; the planner names and deploys it
+after O3 lands. Request `579489e0` asks for an operator-recorded set of
+installed registers and follows O3 before any cohort deployment on a
+Worker with live rooms. O3 changes no creation admission policy.
