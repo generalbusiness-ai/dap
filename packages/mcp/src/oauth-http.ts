@@ -90,6 +90,14 @@ export class OAuthHttpLayers {
   #close(layer: OAuthHttpLayer, retainSessions = false): Promise<void> {
     if (layer.closing) return layer.closing;
     layer.stop?.(); layer.stop = null;
+    if (!layer.http && layer.opening) {
+      // A held package load cannot delay a token endpoint or admit its old
+      // layer later. Dispose its result when it arrives, without awaiting it.
+      void layer.opening.then(http => { if (retainSessions) http.detach(); else void http.closeAll().catch(() => {}); }, () => {});
+      if (this.#layers.get(layer.candidate.id) === layer) this.#layers.delete(layer.candidate.id);
+      layer.closing = Promise.resolve();
+      return layer.closing;
+    }
     layer.closing = (async () => {
       try {
         const http = layer.http ?? await layer.opening;
