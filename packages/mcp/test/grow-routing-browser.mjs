@@ -143,6 +143,8 @@ try {
     await app.locator('#card-root[aria-busy="false"]').waitFor();
     assert.equal(day.signatures(), 1); assert.equal(session.scope.state.item(task.id).state, 'taken');
     await app.getByRole('button', { name: 'Report in chat', exact: true }).click();
+    // The scripted model follows the actual chat handoff. The revision can already be current before the click.
+    await page.waitForFunction(() => proof.chat.length === 1);
     await page.waitForFunction(revision => proof.contexts.at(-1)?.structuredContent?.identity?.revision === revision, String(session.scope.state.item(task.id).revision));
     const context = await page.evaluate(() => proof.contexts.at(-1).structuredContent);
     const denied = await page.evaluate(view => window.modelCall('view_read', { view }), context.view); assert.equal(denied.error.code, -32601);

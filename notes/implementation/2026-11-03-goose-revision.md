@@ -53,3 +53,20 @@ switch and Mac installed-root support. The two real-host scenes describe
 fixed `e32d7dfc` source before that integration. The final focused records,
 Card workflow citation, one frozen gate, checker review, and main landing
 still follow. No statement closes the request before those obligations finish.
+
+## Wait for the scripted model's actual chat handoff
+
+Card workflow `41686762791` fails at integrated source `0bf8c76e`.
+The generated-module check, card browser script, and owned-room script pass.
+Grow routing reaches the final chat count assertion with zero messages.
+Separate unchanged-source local checks pass at both configured widths.
+Those passes do not explain or erase the workflow failure.
+
+The routing script had waited for the task's current revision after
+**Report in chat**. That revision could already be current before the click,
+so the wait did not establish that the chat handoff occurred. The script
+now waits for exactly one observed chat message before its scripted model
+submits report text. The final exact chat-count assertion remains.
+This strengthens the scene's ordering without changing a deadline or any
+card behavior. It does not establish the original workflow's precise cause.
+The focused updated script and new exact-head workflow follow.
