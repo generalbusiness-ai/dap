@@ -18,9 +18,10 @@ none names another Worker's script. Its private content bucket is
 
 1. Record the reviewed source commit, clean tree, exact pinned Wrangler
    tool and the planner's deployment window. Run the CLI from that source
-   with locked dependencies. Create a new private `DAP_HOME` on this laptop
-   for O4's register and founder. Keep it separate from every existing
-   room's home. Keep another new home for the ordinary member.
+   with locked dependencies from the repository root. Create a new private
+   `DAP_HOME` on this laptop for O4's register and founder. Keep it separate
+   from every existing room's home. Use a fresh browser identity for the
+   ordinary member at the O4 origin.
 2. Provision the private content bucket. Set a fresh `SESSION_SECRET` of
    at least 32 cryptographically random bytes through standard input or a
    private file, as [Run your own service](self-host.md) describes. Never
@@ -28,7 +29,7 @@ none names another Worker's script. Its private content bucket is
 3. Plan the register from the new founder home:
 
    ```sh
-   DAP_HOME="$O4_FOUNDER_HOME" dap install --plan https://dap-connect.inguz.workers.dev --cohort own-agent --host none
+   DAP_HOME="$O4_FOUNDER_HOME" node packages/cli/bin/dap.js install --plan https://dap-connect.inguz.workers.dev --cohort own-agent --host none
    ```
 
    The plan creates no room or register. Record its public register ID and
@@ -47,7 +48,7 @@ none names another Worker's script. Its private content bucket is
 5. Install the retained plan from the same founder home before it expires:
 
    ```sh
-   DAP_HOME="$O4_FOUNDER_HOME" dap install --planned --cohort own-agent
+   DAP_HOME="$O4_FOUNDER_HOME" node packages/cli/bin/dap.js install --planned --cohort own-agent
    ```
 
    Record the accepted full register reference, including incarnation.
@@ -57,7 +58,7 @@ none names another Worker's script. Its private content bucket is
    install, while the founder can read this keys-policy register:
 
    ```sh
-   DAP_HOME="$O4_FOUNDER_HOME" dap create o4-connect-witness --handle @o4-owner
+   DAP_HOME="$O4_FOUNDER_HOME" node packages/cli/bin/dap.js create o4-connect-witness --handle @o4-owner
    ```
 
    Confirm its actual Directory, Membership, Rules and Destination pins.
@@ -84,7 +85,7 @@ or explicit witness ruling supplies those prerequisites.
 1. Invite an ordinary person with role `member` from the founder home:
 
    ```sh
-   DAP_HOME="$O4_FOUNDER_HOME" dap invite @o4-member --role member
+   DAP_HOME="$O4_FOUNDER_HOME" node packages/cli/bin/dap.js invite @o4-member --role member
    ```
 
    Keep the invitation private. Join it in `/page/` at the O4 origin with
