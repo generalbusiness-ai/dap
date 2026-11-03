@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:68118aded7253759df379ac801295689c53f225f","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-oauth-invitation-browser.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6e0f221242f6b263b65976c20aef9cd43aabeb7c","text":"Merge retired a covered predecessor; the successor is at apps/room/fetch.ts."}
