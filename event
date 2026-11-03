@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8096274a25cdfa91748d042ca18417993a93b98a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-02-own-agent-gate-fixed.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:815c2dcaed09de18a4447493846e718b5d06a056","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/line.ts."}
