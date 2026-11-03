@@ -1,0 +1,15 @@
+{
+  "issuer": "Iv23licaFliWCqmW3O3w",
+  "installationId": 168852986,
+  "account": {
+    "id": 285042784,
+    "login": "generalbusiness-ai",
+    "type": "Organization"
+  },
+  "maxBytes": 8388608,
+  "registerScope": "PLANNED_G3_REGISTER_SCOPE",
+  "privateRepositories": true,
+  "publicReads": false,
+  "installationReads": true,
+  "credentialIdentity": "adapter-attempt"
+}

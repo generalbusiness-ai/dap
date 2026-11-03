@@ -1,0 +1,45 @@
+{
+  "qualification": "Failed full gate at its actual clean immutable head. This run remains a failure; no later follow-up changes its exit. Raw stage logs and complete test evidence stay private.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-authorization-gate-4",
+  "checkpoint": "07af767b34eb2e1bfe5d1b1d734d3612cc027f87",
+  "tree": "8f9513a1a3f43eb2d2ddae7f767458a8ed255bc8",
+  "fileCount": 7,
+  "files": [
+    {
+      "path": "driver.py",
+      "bytes": 2430,
+      "sha256": "7620af5f95a4d6403f37f1366c9fb65f071ba7c2c4cf7489ef8d7be65a6731b5"
+    },
+    {
+      "path": "failure-record.json",
+      "bytes": 1273,
+      "sha256": "cbe4587364cfc301648bb7c33f1d6d47e0b602522259ad145dffa58c3b227685"
+    },
+    {
+      "path": "gate.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 6212,
+      "sha256": "7c17b9cb785b03fc7aa9b3e3d8762a39f7a549f21aac3959cae8996aed5f74ab"
+    },
+    {
+      "path": "private-output.json",
+      "bytes": 424,
+      "sha256": "2958e4b1aedb4ac5e9169581a6a9b8f03fc47108e62dc8e4dade794fe6b5c92b"
+    },
+    {
+      "path": "source-after.json",
+      "bytes": 231,
+      "sha256": "de2975e1f2acdab91be7637a520a9fc065623699bf30389991f440f07df0fc4b"
+    },
+    {
+      "path": "source-before.json",
+      "bytes": 552,
+      "sha256": "91524a06007e41264ee7e04471f17346f8d6bdff1d4f4becca723b49442c50b9"
+    }
+  ],
+  "sha256sumsSha256": "e0ef8828ff9d87934594da75d3fd920996db2e09f75fec39891caf60d68885ad"
+}

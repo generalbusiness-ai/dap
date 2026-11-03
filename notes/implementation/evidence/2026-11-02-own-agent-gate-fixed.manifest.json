@@ -1,0 +1,44 @@
+{
+  "qualification": "Second frozen O2 gate: actual exit 1, all plain cases passed, one Native R27 setup failed. Its isolated test-file repair and passing whole-owner follow-up stay separate.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-own-agent-gate-fixed",
+  "checkpoint": "5929ca7cd76f180e062fcbf0cd340243fdb2c729",
+  "tree": "9285a3daa4436aff5fd30010d3b84a3393b7f181",
+  "fileCount": 7,
+  "files": [
+    {
+      "path": "capture-gate.py",
+      "bytes": 1944,
+      "sha256": "04d75fb5949f43e5444caa1ac34cc722a5b1ec6ce2c29d03c9a6700d41ca357f"
+    },
+    {
+      "path": "gate-observations.json",
+      "bytes": 863,
+      "sha256": "4f08790f9fa9195f80f1691836612e5623c63def31c0bfc17a7c4999db3c6e69"
+    },
+    {
+      "path": "gate-private-files.json",
+      "bytes": 6665,
+      "sha256": "350ad19f4f4ad0f04b31dd161c5c8879ba49d7fcf7ad4726e6c19844cdf65dd0"
+    },
+    {
+      "path": "gate.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "gate.json",
+      "bytes": 1238,
+      "sha256": "c1d082578eadabe61e549d0af82e52d86e73b8901749b5c01eeaa076a9ae2b0c"
+    },
+    {
+      "path": "gate.started.json",
+      "bytes": 525,
+      "sha256": "90a443969f692d58609ef575192e7b04bf3063212f9110f22f9e1b7a0fc46cb0"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 497,
+      "sha256": "7dc9253294b4c5c1e51bc4570455f1db9b726ceb64c2725d3f46bd6e100c1878"
+    }
+  ]
+}

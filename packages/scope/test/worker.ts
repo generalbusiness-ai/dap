@@ -193,6 +193,8 @@ type PlatformEnv = Env & { PLATFORM: DurableObjectNamespace };
 export class PlatformScope extends DeployedScope<PlatformEnv> {
   protected override metricEnvironment(): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super.metricEnvironment(); }
   readonly #scheduledCallbacks: Promise<unknown>[];
+  #fixtureCallbackRelease: (() => void) | null = null;
+  #fixtureCallbackFinished = false;
 
   constructor(ctx: DurableObjectState, env: PlatformEnv) {
     // Retain the actual context and delegate each exact original promise.
@@ -220,6 +222,21 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
     } }));
     this.#scheduledCallbacks = scheduled;
   }
+
+  /** Test-only callback gate. Its promise and release stay in this object,
+   * rather than carrying an I/O context from the test runner into it. */
+  holdFixtureCallback(): void {
+    if (this.#fixtureCallbackRelease) throw new Error("Fixture callback is already held");
+    this.#fixtureCallbackFinished = false;
+    const held = new Promise<void>(resolve => { this.#fixtureCallbackRelease = resolve; });
+    this.ctx.waitUntil(held.then(() => { this.#fixtureCallbackFinished = true; }));
+  }
+  releaseFixtureCallback(): void {
+    const release = this.#fixtureCallbackRelease;
+    this.#fixtureCallbackRelease = null;
+    release?.();
+  }
+  fixtureCallbackFinished(): boolean { return this.#fixtureCallbackFinished; }
 
   /** Join only this actual object's scheduled callbacks; no driver, clock advance or read retry. */
   async awaitScheduledCallbacks(): Promise<{ batches: number; callbacks: number }> {
@@ -360,11 +377,15 @@ export const hostedTest: {
   failSession: boolean;
   /** While set, every configuration read of an agent, and with it every listing and snapshot, waits on this promise. */
   configHold: Promise<void> | null;
+  /** Hold only the reply of a real registration retention, after its SQL write. */
+  clientRetention: { entered(): void; waiting: Promise<void> } | null;
+  /** Scripted hosted credential timers. No wall-clock wait belongs in a witness. */
+  scheduleExpiry: AgentPorts["scheduleExpiry"] | null;
   /** Explicit hosted tool settings for the native MCP fixture; null enables its comprehensive historical tool contract. */
-  toolSettings: { MCP_ENABLED: string; MCP_TOOL_ADDITIONS?: string; MCP_CARD_ORIGINS?: string } | null;
+  toolSettings: { MCP_ENABLED: string; MCP_TOOL_ADDITIONS?: string; MCP_CARD_ORIGINS?: string; MCP_RESOURCE_URLS?: string } | null;
   /** Raw deployment setting for the native constructor witness, never an AgentPorts override. */
   applicationSettings: Pick<McpEnv, "APPLICATION_TRUST"> | null;
-} = { metrics: null, now: null, pause: null, lose: null, controlBudget: null, custodyBounds: null, failWrite: null, faultAt: null, failSession: false, configHold: null, toolSettings: null, applicationSettings: null };
+} = { metrics: null, now: null, pause: null, lose: null, controlBudget: null, custodyBounds: null, failWrite: null, faultAt: null, failSession: false, configHold: null, clientRetention: null, scheduleExpiry: null, toolSettings: null, applicationSettings: null };
 /** The scripted reset: thrown at a fence, once. */
 export class ScriptedReset extends Error { constructor(fence: string) { super(`scripted reset at ${fence}`); } }
 type HostedEnv = McpEnv & { PLATFORM: DurableObjectNamespace };
@@ -387,6 +408,11 @@ export class PlatformMcpAgent extends McpAgent<HostedEnv> {
     this.#startup = index !== null;
   }
   protected override scopes() { return this.#startup ? this.#startupBinding ??= startupScopes(this.env.PLATFORM, this.startupReads) : this.env.PLATFORM; }
+  protected override async retainClient(client: Parameters<McpAgent["grant"]>[2]["client"]): Promise<number> {
+    const expires = await super.retainClient(client), held = hostedTest.clientRetention;
+    if (held) { held.entered(); await held.waiting; }
+    return expires;
+  }
   /** The harness's instance reset: what an eviction leaves. */
   reset(): void { this.evict(); }
   /** Fire the service's watch once, as 30 seconds passing would. */
@@ -407,6 +433,7 @@ export class PlatformMcpAgent extends McpAgent<HostedEnv> {
       fault: (fence: string) => { if (hostedTest.faultAt === fence) { hostedTest.faultAt = null; this.evict(); throw new ScriptedReset(fence); } },
       sessionFault: () => { if (hostedTest.failSession) { hostedTest.failSession = false; throw new Error("SQLITE_FULL: scripted session write"); } },
       configHold: () => hostedTest.configHold ?? undefined,
+      ...(hostedTest.scheduleExpiry ? { scheduleExpiry: hostedTest.scheduleExpiry } : {}),
       now: () => hostedTest.now?.() ?? Date.now(), every: () => () => {},
       pause: (waiting: readonly string[]) => hostedTest.pause?.(waiting) ?? new Promise<void>((r) => setTimeout(r, 50)),
       ...(this.#productionHostedFetch ? {} : { fetch: (async (url: string, init?: RequestInit) => {

@@ -49,6 +49,11 @@ with its reader, parser and failure behavior. The order below uses these:
 - `REGISTER_SCOPE`: the register's scope ID. On a deployed Worker, a
   creation with no parent is accepted only when it is the exact signed
   install of this register.
+- `INSTALLED_REGISTER_SCOPES`: optional nonsecret JSON array for child
+  creation under earlier installed registers. It holds 1 to 32 distinct
+  scope IDs, includes the current register, and fits within 4,096 UTF-8
+  bytes. Without it, the current register alone admits child creation.
+  An invalid value closes creation and makes register health unavailable.
 - `ARTIFACTS_CONFIG` and `ARTIFACTS_NAMESPACE`: the Artifacts host. See
   [Configure a Git host](hosts.md#cloudflare-artifacts-host-artifacts).
 - `GITHUB_APP_CONFIG`, `GITHUB_APP_PRIVATE_KEY`, `GITHUB_CREATION_TOKEN`,
@@ -450,3 +455,28 @@ which only you can read. Its config file holds no secret.
 
 Checked against main `b0af01d2` on 1 November 2026. Sources: [package.json](../package.json), [packages/scope/src/creation-admission.ts](../packages/scope/src/creation-admission.ts), [packages/scope/src/register-setting.ts](../packages/scope/src/register-setting.ts), [packages/cli/src/commands.ts](../packages/cli/src/commands.ts), [apps/room/demo-creation.ts](../apps/room/demo-creation.ts), [packages/scope/src/applications/route.ts](../packages/scope/src/applications/route.ts).
 The commands on this page were not run for this revision.
+
+## Keep existing rooms able to create children
+
+Before you change a Worker's current register, retain every earlier
+register whose rooms still need new Inboxes, lanes, or other children.
+Record those scope IDs and the new current register in
+`INSTALLED_REGISTER_SCOPES`. Keep `REGISTER_SCOPE` as the current register
+for new rooms. A listed register still needs its own checked Native birth
+in this Worker's index. The list grants neither a birth nor authority.
+
+For hosted Workers, commit the array beside `REGISTER_SCOPE` in the
+Worker's Wrangler file: `apps/room/wrangler.grow.jsonc`,
+`apps/room/wrangler.lending.jsonc`, or `apps/room/wrangler.demo.jsonc`.
+Name that configuration commit in the deployment receipt. The operator
+alone changes the list. A request, readable scope, or index row cannot add
+a root. Existing single-register configurations need no new setting.
+
+For a self-hosted Worker, record the array in its operator configuration
+and name that record in the deployment receipt. Install the new register
+with its retained signed plan after the configuration change. Existing
+rooms continue to use their own register and ordinary Native authority.
+
+To remove a register, first record the affected rooms and the decision to
+stop their future child creation. Keep that record with the configuration
+change. No capacity rule or automatic expiry removes a register.

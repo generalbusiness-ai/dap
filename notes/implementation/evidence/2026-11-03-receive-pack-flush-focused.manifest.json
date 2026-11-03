@@ -1,0 +1,53 @@
+{
+  "qualification": "Incremental focused parser checks at actual dirty checkpoint; synthetic observed layout, existing local Git owner and two distinguishing controls. No frozen gate or deployed acceptance.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-receive-pack-flush-focused",
+  "fileCount": 9,
+  "files": [
+    {
+      "path": "01-git-owning-compiler.json",
+      "bytes": 1495,
+      "sha256": "15979b69ec39a519fc75fc1496418bcae9d6ebccace8c1fde494d37f4e3eed3b"
+    },
+    {
+      "path": "02-receive-pack-owner.json",
+      "bytes": 1532,
+      "sha256": "734bbc1be2b44458d10db01d2201b4452b64ddc295a73685a6eb99455c6defd0"
+    },
+    {
+      "path": "03-extra-flush-positive-control.json",
+      "bytes": 1719,
+      "sha256": "e8b451e189ca6b77d47710c92e99c79d5e0d270d84dab44e18bec1dfcc07b820"
+    },
+    {
+      "path": "04-extra-status-refusal-control.json",
+      "bytes": 1658,
+      "sha256": "2dff9fdf1dd104a7c1a4653c4f0cdd9511becb5dfee810d661f22bcf9f5fe390"
+    },
+    {
+      "path": "dependency-record.json",
+      "bytes": 2001,
+      "sha256": "be1c466665a72cface32f00ad52a7ffd78bd4d291ec32bfcdd56433d605b02c5"
+    },
+    {
+      "path": "driver.py",
+      "bytes": 1710,
+      "sha256": "e1d03d6f9c67f7ba14e3d715d1ffd03d68233b01fba911d57823762a16088a8e"
+    },
+    {
+      "path": "observations.json",
+      "bytes": 1202,
+      "sha256": "855af7c205ddc6b5a29d0e79db858107bdcdcedf5f3df6c96edf216db81fcd15"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 1862,
+      "sha256": "203c5fc9265e71db8dc2d90c6bd0c1429d2344b34c2957565d73c3192e274ce9"
+    },
+    {
+      "path": "source-bindings.json",
+      "bytes": 1168,
+      "sha256": "97e84bb4085b0c9ed2d7be28b505b5e6b1d32b796afb6e9ed5ce7264477e5d93"
+    }
+  ],
+  "sha256sumsSha256": "2bedc0ca6731ad26608decd604ff6fb7d75a14235856007f77d345903370cf57"
+}

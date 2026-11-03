@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "qualification": "Incremental draft-focused checks retain their actual per-run checkpoints and failures; the separate frozen gate passed at 1ca60fee. Fixture raw output stays private with hashes. No production OAuth issuer, deployment or live host acceptance.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-oauth-resource-gate",
+  "checkpoint": {
+    "commit": "1ca60fee5d8bebc2876ae1cb184061466ca28540",
+    "tree": "55bb1505488601f629d9fce3a540b1ba84010297"
+  },
+  "fileCount": 9,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 1128,
+      "sha256": "e62c3d4a5428b9cbd5bf2077b313cd12e43afec5d6eb5dcddbda0b8a66ac1728"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 661,
+      "sha256": "af350e3915d03f73c284f9a0efa43ce68b06d67ef95b0a052137d383d34f92fd"
+    },
+    {
+      "path": "capture-gate.py",
+      "bytes": 1925,
+      "sha256": "5a1ace2d1a6dea12d66b9689e72dc53d7186118f37ba7247cf8a26d353753880"
+    },
+    {
+      "path": "gate-observations.json",
+      "bytes": 3806,
+      "sha256": "a3075cc4c8e96411b230d0f87993dedfdaa86e825ed668723618d1e0b8f5dc61"
+    },
+    {
+      "path": "gate-private-files.json",
+      "bytes": 6368,
+      "sha256": "771c546dde883fa126a3277893817ef57eeadb49e210cc9bab380b294d24a2f0"
+    },
+    {
+      "path": "gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "gate.json",
+      "bytes": 1207,
+      "sha256": "adafc4dadc61fcaa4dff459261630274e73f883d285e140d06061120a37e35ad"
+    },
+    {
+      "path": "gate.started.json",
+      "bytes": 519,
+      "sha256": "d5db6dbed13978165aa9fcc5d0bca8036c3a72cb3dc0327f7085f01933f5e9a7"
+    },
+    {
+      "path": "test-observations.txt",
+      "bytes": 5059,
+      "sha256": "febaf41839e5be14a76d1ce96edc6925f80eec01485cb71fb58b5d5d3a61c21e"
+    }
+  ]
+}

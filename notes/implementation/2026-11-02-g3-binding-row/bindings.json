@@ -1,0 +1,16 @@
+[
+  {
+    "destination": {
+      "inc": "in_4cc2x4avk2mtipewqqhz2aj7ky",
+      "kind": "destination",
+      "scope": "sc_cctdph4kebiqgylk2lrea55a4yzsk52ovselgkidjjydqvjbksjq"
+    },
+    "repository": {
+      "host": "github.com",
+      "namespace": "generalbusiness-ai",
+      "name": "dap-g3-binding-witness-20261102",
+      "id": "1442980126"
+    },
+    "branch": "main"
+  }
+]

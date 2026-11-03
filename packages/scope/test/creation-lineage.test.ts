@@ -60,7 +60,7 @@ function recorded(nodes: readonly Platform[], target: string, overrides: (peer: 
   return { binding, index, env: { SCOPE_INDEX: { idFromName: (name: string) => name, get: () => index } }, counts: () => ({ targetNames, targetGets, forbidden }) };
 }
 
-test("three approved native cohorts admit their exact child chain and refuse another configured register before child lookup", async () => {
+test("three approved native cohorts admit only operator-listed roots and preserve immutable adapter policy after a switch", async () => {
   for (const cohort of [ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, APPLICATION_COHORT]) {
     const room = await sessionRoom(cohort.register);
     const { life, R, D, children } = room;
@@ -84,6 +84,15 @@ test("three approved native cohorts admit their exact child chain and refuse ano
       expect(await life.wait(() => namespace(indexedScopes(wrong.binding, { ...wrong.env, ...config(other.R.name) })).transport.send(delivered)))
         .toEqual({ answer: "routing", reason: "not-found" });
       expect(wrong.counts()).toEqual({ targetNames: 0, targetGets: 0, forbidden: 0 });
+      const listed = recorded([R, D, ...children], child.name);
+      const switched = { ...settings, SCOPE_INDEX: listed.env.SCOPE_INDEX, REGISTER_SCOPE: other.R.name, INSTALLED_REGISTER_SCOPES: JSON.stringify([R.name, other.R.name]) };
+      const kept = indexedScopes(listed.binding, switched);
+      switched.INSTALLED_REGISTER_SCOPES = JSON.stringify([other.R.name]);
+      const removed = indexedScopes(listed.binding, switched);
+      expect(removed).not.toBe(kept);
+      expect(await life.wait(() => namespace(kept).transport.send(delivered))).toMatchObject({ answer: "recorded" });
+      expect(await life.wait(() => namespace(removed).transport.send(delivered))).toEqual({ answer: "routing", reason: "not-found" });
+      expect(listed.counts()).toEqual({ targetNames: 1, targetGets: 1, forbidden: 0 });
 
       // A forged unknown ancestor must not reach even idFromName in register
       // mode. The index is a stand-in; every actual native answer above is not.

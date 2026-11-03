@@ -5,6 +5,25 @@ invite a person on another device. The scope Worker serves both the API and
 the room page. To run the service on one Mac, follow
 [Run on a Mac](#run-on-a-mac).
 
+## Keep a register for existing rooms
+
+With `INSTALLED_REGISTER_SCOPES` absent, a deployed Worker admits new child
+scopes only under its current `REGISTER_SCOPE`. Replacing that pin leaves
+earlier rooms readable but stops their new inboxes, lanes and other child
+scopes. A successful health or room read proves no child-creation continuity.
+
+To keep earlier rooms creating children, list the current register and all
+earlier installed roots in `INSTALLED_REGISTER_SCOPES`, as
+[Keep existing rooms able to create children](deploy.md#keep-existing-rooms-able-to-create-children)
+describes. `REGISTER_SCOPE` still selects the current primary register.
+Native lineage and authority checks still apply. A separate Worker with
+its own namespaces remains an option when you need a separate service.
+
+On a maintained Mac host, put the reviewed list in the new prepared project
+before GitHub staging. Both Mac project validators check it. After any
+register change, prove an actual child birth in an earlier room; a setting
+or existing-room read alone proves no deployed continuity.
+
 ## Deploy a room
 
 You need Git, Node 26, and a Cloudflare account that supports Workers,
@@ -492,6 +511,16 @@ that stronger choice when your other rooms do not need the same App.
    retained plan. It keeps the production Worker and bindings and creates
    private session custody. It also continues to accept the earlier
    host-none plan without changing its pins.
+
+   To preserve child creation under earlier installed registers, add the
+   reviewed `INSTALLED_REGISTER_SCOPES` string to this new prepared
+   project's `vars` before GitHub staging. Include the new `REGISTER_SCOPE`
+   and every earlier root that must keep creating children. The list needs
+   1 to 32 distinct canonical Scope IDs and at most 4,096 UTF-8 bytes.
+   Both staging and deployment validate it and preserve its exact bytes.
+   Omitting it keeps the single-register behavior. The setting changes no
+   Native authority or GitHub binding; see
+   [Keep existing rooms able to create children](deploy.md#keep-existing-rooms-able-to-create-children).
 4. Fill a nonsecret `github-app.json` with every
    [GitHub configuration field](hosts.md#github-host-githubcom). Set
    `registerScope` to the planned register. For the private witness, use

@@ -1,0 +1,90 @@
+{
+  "qualification": "Incremental owning compilers,15Nativecases, two expected-failure controls with exact restoration, reviewed source inventory, failed settings check and successful documentation repair. Not one frozen aggregate.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-installed-registers-focused",
+  "checkpoint": "c3995f8508bc6573abe6e5cbb626dd9d8f51be20",
+  "tree": "32bdd9fd4f324991ddc87b82f7d099ba1121824b",
+  "fileCount": 16,
+  "files": [
+    {
+      "path": "01-scope-source-compiler.json",
+      "bytes": 2151,
+      "sha256": "42d81b3bb3448dc428cb23ed4a8396da60f09268bf3eb1d3ad528d92b72c8e14"
+    },
+    {
+      "path": "02-scope-native-compiler.json",
+      "bytes": 2156,
+      "sha256": "fc94264a41add3a4f54ef96166d9abe29435f467ccbfa3fe3bfdbcbfac0fb7c8"
+    },
+    {
+      "path": "03-pool-compatibility.json",
+      "bytes": 2089,
+      "sha256": "8182a8485f85a544b14b4bf7bd0b661822609a0a67c052fbf39755d78965cd8b"
+    },
+    {
+      "path": "04-policy-lineage-health-owners.json",
+      "bytes": 2310,
+      "sha256": "cd6506f39d8f21f9a329e41796bccf07aa1bbe0be392489890491d025da5f292"
+    },
+    {
+      "path": "05-security-entry-settings.json",
+      "bytes": 2245,
+      "sha256": "440861a6ff61269a6ccce69799a4b9a98ab19a0e15286ae32fb4ba3a012877d8"
+    },
+    {
+      "path": "06-settings-owner.json",
+      "bytes": 2179,
+      "sha256": "ff1f74eaecb796e8a9daa3e71c7964f21de4e9858e38a80d2468e27ff6ab8a68"
+    },
+    {
+      "path": "07-singleton-root-control-control.json",
+      "bytes": 726,
+      "sha256": "67da3774bec493c32ecfb7ee72ad5a528338e618d8338bd4a062249a6e2beb1f"
+    },
+    {
+      "path": "07-singleton-root-control.json",
+      "bytes": 2291,
+      "sha256": "84f2e5ea95195bbe865744a5527c4f511506e10ca6cba371f5d8e2da4329f3a9"
+    },
+    {
+      "path": "08-unlisted-root-control-control.json",
+      "bytes": 726,
+      "sha256": "b56b776948bf4c89b8651301522bba0a782fadb93f2678c3e17c48c9ddc08ea1"
+    },
+    {
+      "path": "08-unlisted-root-control.json",
+      "bytes": 2289,
+      "sha256": "c825f1f11e27853280616fee7286e5fd8beb4b664c0f638e355f3b1e3cb95b55"
+    },
+    {
+      "path": "09-shared-helpers.json",
+      "bytes": 2163,
+      "sha256": "d7fcb4c0a4695bccaadc9049b8b2767a273e57f397441d778630c896e2334400"
+    },
+    {
+      "path": "controls.py",
+      "bytes": 2283,
+      "sha256": "74ab658e2ef23596918cab29625ff9ae317d1208d28aab51fe8f51459782d07c"
+    },
+    {
+      "path": "driver.py",
+      "bytes": 1713,
+      "sha256": "f249ee309da0a314746b3c14503525d51ebcdd4af3441c45a0c08cb5e0c3c2e8"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 4152,
+      "sha256": "5a75db12ee6dc6a113683854a51ae183c97ffc2bb4dc273d482aea32eba72941"
+    },
+    {
+      "path": "reviewed-seal-changes.json",
+      "bytes": 1446,
+      "sha256": "98e4c0f73ea21784402fae1667e1fd83d0b407a928bbf42221954cff3ce4ec1d"
+    },
+    {
+      "path": "source-adoption.json",
+      "bytes": 731,
+      "sha256": "1c4a8c1fe1a892b09e1eeca297a1bbcc8e130790adf626d0898070eeac1199ba"
+    }
+  ],
+  "sha256sumsSha256": "129dce532d9ca8d379b7c408bcf950325231bed6965e972f6836ba1b0006197a"
+}

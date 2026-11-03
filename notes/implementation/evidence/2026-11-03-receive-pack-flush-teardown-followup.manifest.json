@@ -1,0 +1,35 @@
+{
+  "qualification": "Focused investigation of the failed full-gate teardown owner. The unchanged source passes its two cases alone; the full gate remains failed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-receive-pack-flush-teardown-followup",
+  "checkpoint": "cc6c1c158052163e7183da5af3d89ca5dde5a577",
+  "tree": "1536e4931261b625240cc6293695b1377542bf69",
+  "fileCount": 5,
+  "files": [
+    {
+      "path": "01-archive-input-teardown-owner.json",
+      "bytes": 1453,
+      "sha256": "586befa166f3938b7ac20560d58fcf5337ffbddfe43e69e4425f8d4ae915117f"
+    },
+    {
+      "path": "driver.py",
+      "bytes": 1730,
+      "sha256": "73bb394601fa95632057a598a467a5448acd06dfeaf926ad366f7be512e85682"
+    },
+    {
+      "path": "followup.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 497,
+      "sha256": "b06d5c37ca4a79675bac53a97499ac2c110bb1906db9f379d673c90f98062005"
+    },
+    {
+      "path": "qualification.json",
+      "bytes": 443,
+      "sha256": "4ece54435dc56167f8fbde19fe01c9295f861b5004d782105a7a3d430e73c280"
+    }
+  ],
+  "sha256sumsSha256": "346e849c62d36e52ae16faf724da84f02c6154c0259803b32d32c67eb3260b96"
+}

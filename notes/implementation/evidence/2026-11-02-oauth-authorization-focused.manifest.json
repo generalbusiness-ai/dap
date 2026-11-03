@@ -1,0 +1,609 @@
+{
+  "qualification": "Actual incremental focused checks, with all failed and invalid attempts retained. Not a frozen aggregate pass.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-oauth-authorization-focused",
+  "checkpoint": "9bcb91f9931861fb47ef5fc6afb5ea60f58dfbb4",
+  "fileCount": 120,
+  "files": [
+    {
+      "path": "01-control-signer-types.json",
+      "bytes": 1515,
+      "sha256": "9aa5aaf8126d5a94574626959065bde61de5367cc346748f66723745676e2f57"
+    },
+    {
+      "path": "02-pool-compat.json",
+      "bytes": 1435,
+      "sha256": "451b2f246e00964d61f95c21c9b64b9708382ff75f42bbc83828fd6dd40360ba"
+    },
+    {
+      "path": "03-control-signer-owner.json",
+      "bytes": 1560,
+      "sha256": "44239097bbf81eefdb2fcc8a6797b71e7be594a959522619727b51b8564fcf2f"
+    },
+    {
+      "path": "04-control-signer-control.json",
+      "bytes": 1691,
+      "sha256": "5a473e453d9c0d1ecc717760bc998d32210f57c7daaa0da674c55ebc8ca84f07"
+    },
+    {
+      "path": "05-standing-types.json",
+      "bytes": 1595,
+      "sha256": "341a6c8a9fef7b9ca2da49e7f16b73f242839792965687c0a29d6fc0a382272e"
+    },
+    {
+      "path": "06-standing-owner.json",
+      "bytes": 1642,
+      "sha256": "7540e9d76b72390d1d66c3a3c2b0ff5269f40802f259fad423b4967bb1ea9c5c"
+    },
+    {
+      "path": "07-unavailable-standing-control.json",
+      "bytes": 1859,
+      "sha256": "ab904098e96e768dabfafa74ea0d2061f01a0125005e2d6c3bf8b1dc60767b21"
+    },
+    {
+      "path": "08-oauth-parameters-types.json",
+      "bytes": 1555,
+      "sha256": "e9960aa20c690848a706c0546e098e749e7aea7abc9b756f29b1354edcf72c06"
+    },
+    {
+      "path": "09-oauth-parameters-owner.json",
+      "bytes": 1605,
+      "sha256": "7df47a34e13bc89d62b65d71a299804067599e6ed1f32946dfdceeef1c17c87f"
+    },
+    {
+      "path": "10-connector-binding-control.json",
+      "bytes": 1724,
+      "sha256": "d30425f28dea04d91147de50a40a4a1798ba5a73b3681d4a9919c3d060408b21"
+    },
+    {
+      "path": "100-oauth-route-inventory-probe.json",
+      "bytes": 1970,
+      "sha256": "f8064a5c7ed77f4fc5110b83104de7d95aa7b882bd43a30f625a74d76d293f50"
+    },
+    {
+      "path": "101-oauth-route-inventory-probe.json",
+      "bytes": 1971,
+      "sha256": "90f40317004afb03c561708b66363d5c0e9b8c3de5ea28f59519c10057fd6605"
+    },
+    {
+      "path": "102-route-inventory-and-usage-owners.json",
+      "bytes": 1706,
+      "sha256": "6c2370334dace1b01a43407fb9393094c6ee8cb2ee996a248ac14c364d61bb2f"
+    },
+    {
+      "path": "103-route-inventory-and-usage-owners.json",
+      "bytes": 1705,
+      "sha256": "27c3a97c5ba151a3224e0d9d3f8ce19f1a589a0d7e57532928fd275cd44db6d3"
+    },
+    {
+      "path": "104-erasable-oauth-native-compiler.json",
+      "bytes": 1707,
+      "sha256": "a29ea0ec7402cb276bab22b8a4d3054eab269e7688ff0cc79e4b377f429c9bba"
+    },
+    {
+      "path": "105-oauth-error-and-issuer-owners.json",
+      "bytes": 1836,
+      "sha256": "69af6c701a5e0657157afc564514482f2ff898fbd1606c3421012c7e896763d4"
+    },
+    {
+      "path": "106-inventory-followup-assets.json",
+      "bytes": 1636,
+      "sha256": "aab8e7888265028df2ee9f3c7d446ac5da9ca05fb54c8c281f3a45be022583ae"
+    },
+    {
+      "path": "107-inventory-doc-links.json",
+      "bytes": 2191,
+      "sha256": "c052323a136223077a27508ccaf684a20c82abc395a8ba8f5399f4004ebf14fd"
+    },
+    {
+      "path": "108-inventory-shared-helpers.json",
+      "bytes": 2205,
+      "sha256": "2b24f5a25994a9c344f86e677f329f64fef0f67e8c462950b9db6e86249cfb06"
+    },
+    {
+      "path": "109-browser-api-owning-compiler.json",
+      "bytes": 1482,
+      "sha256": "85cafd2c5e99b4a368e6f6872d0824c58b3389e19bedb4ed4eab19fcda12a7c5"
+    },
+    {
+      "path": "11-issuer-source-types.json",
+      "bytes": 1434,
+      "sha256": "f4dcb6e61777ae357e17208727a4f86e954249e05f601d922f4e0ad83d56b7ef"
+    },
+    {
+      "path": "110-browser-api-whole-owner.json",
+      "bytes": 1525,
+      "sha256": "85275e14dec15a81429e9f9504a65183ced608fef857de58070440ee5352547a"
+    },
+    {
+      "path": "12-issuer-owner-types.json",
+      "bytes": 1538,
+      "sha256": "6f358701ae776becc7d6e6e4cdf0024e0cc86f8f37dba78eb3b972db72ac4ac0"
+    },
+    {
+      "path": "13-issuer-owner-types.json",
+      "bytes": 1536,
+      "sha256": "f34d55c8e317cf768f50f6104d7593127ff5e49063eda156173f708377b26db1"
+    },
+    {
+      "path": "14-issuer-owner.json",
+      "bytes": 1578,
+      "sha256": "0c3d4f56bd9cc3dd8875e9870571d4f11bc6ff556a50424adb884a631f0e86a0"
+    },
+    {
+      "path": "15-issuer-deadline-types.json",
+      "bytes": 1542,
+      "sha256": "1cf08db916960967956d30f5c4af5b8b7d33b0423fc0ae59ab990ff9cf6cfa54"
+    },
+    {
+      "path": "16-issuer-deadline-owner.json",
+      "bytes": 1595,
+      "sha256": "400fb0d5c7e57a36a5f18e8988709e0cc48b7c1a2fef41e5d5799ffb6f4d2c46"
+    },
+    {
+      "path": "17-code-single-use-control.json",
+      "bytes": 1756,
+      "sha256": "275d3213b097b4e78e88bf7322c85c22fe5d798dbf621ddb2927b4036cb573c8"
+    },
+    {
+      "path": "18-refresh-reuse-control.json",
+      "bytes": 1701,
+      "sha256": "b7aa188edea406b4260467e15da2a189e42c558f58c9e1f6e1f5f240eceb8241"
+    },
+    {
+      "path": "19-own-invitation-source-types.json",
+      "bytes": 1518,
+      "sha256": "6f3a7e86b84427cd361eaffb18b882225b1a8de28c4d66d42b10b3f75c7f6e00"
+    },
+    {
+      "path": "20-own-issuer-native-compiler.json",
+      "bytes": 1621,
+      "sha256": "d28d335777dca5d7ebf12f147fe539ca37332dced9862c40675103840908abc7"
+    },
+    {
+      "path": "21-own-issuer-native-workflow.json",
+      "bytes": 1678,
+      "sha256": "e4c354644fecfaf88b716e1d1d0bedb15fc16a025d2ddfdfb12ef42df5d5b23b"
+    },
+    {
+      "path": "22-own-issuer-native-workflow.json",
+      "bytes": 1679,
+      "sha256": "2b4ad858ab1eac01dfe48b82bd776435ed3f964b1d6465ea3433f502d536d2bf"
+    },
+    {
+      "path": "23-own-issuer-admin-kind-control.json",
+      "bytes": 1687,
+      "sha256": "f5a2e825edfef06e700d226b972aaa25bb2cdf63dc38d4e5de13d5a98192bc3e"
+    },
+    {
+      "path": "24-hosted-grant-source-compiler.json",
+      "bytes": 1672,
+      "sha256": "79182f6ed002727bb6de9b06e1d7e78f695400797a49e37f2ccab4f70c7ecb57"
+    },
+    {
+      "path": "25-hosted-grant-source-compiler.json",
+      "bytes": 1746,
+      "sha256": "0e906baa12d83ee42fff6030df3aa62cbd15fb0eb8092c2e14ef3ab937498815"
+    },
+    {
+      "path": "26-hosted-grant-scope-compiler.json",
+      "bytes": 1811,
+      "sha256": "a9e78cad9f99ff4b5c88483ca44d19d2d54efc18815cbe4e1d03bcdef621e64a"
+    },
+    {
+      "path": "27-hosted-grant-owner-compiler.json",
+      "bytes": 1907,
+      "sha256": "c6e93077e7a19c78d11697655dc5e751c38ce7f7dea07f011988b8d8ef8965f5"
+    },
+    {
+      "path": "28-hosted-grant-owner.json",
+      "bytes": 1952,
+      "sha256": "b042381a64d3c9ab5c55410c33b8e16560685f2d342a0b22ea93454145badabc"
+    },
+    {
+      "path": "29-hosted-grant-session-owner.json",
+      "bytes": 2019,
+      "sha256": "a11d3a9a721716f73f45bb35809ef4f5b799f05fa941c80e597156bd02d96013"
+    },
+    {
+      "path": "30-metadata-source-compiler.json",
+      "bytes": 2171,
+      "sha256": "33db232bb7b8fd47a30c61370c255947512fdb3d12deb17334748998897e1140"
+    },
+    {
+      "path": "31-hosted-session-owner.json",
+      "bytes": 2220,
+      "sha256": "d1995c221704d3c87bc2f75033abf499737fcc1d1837f17713cdd6db1fd16b28"
+    },
+    {
+      "path": "32-client-registry-owner-compiler.json",
+      "bytes": 2279,
+      "sha256": "e0223aa5b978a4b849cc7c27497867ca9998c38fc6ad874f77b57a9bc034015a"
+    },
+    {
+      "path": "33-client-registry-owner.json",
+      "bytes": 2317,
+      "sha256": "d4fcbe74e74dd4b728f32b6037950afc788d38fb6d69df35572cf5b0e7293a98"
+    },
+    {
+      "path": "34-metadata-origin-control.json",
+      "bytes": 2324,
+      "sha256": "00cb5f85ae82fc6fd94a51a39bf835649d9f36d7c511dca7c866810062c112f0"
+    },
+    {
+      "path": "35-metadata-mcp-source-compiler.json",
+      "bytes": 2280,
+      "sha256": "569d3634768443e4e70c4775cd3a46ca6310d738fb8de6aede29de4e05b7a393"
+    },
+    {
+      "path": "36-metadata-mcp-source-compiler.json",
+      "bytes": 2270,
+      "sha256": "dfd2b06e752ff5119a95101b3c5d99e76d102da1f67dfda7f664ee4e874b6840"
+    },
+    {
+      "path": "37-metadata-before-fetch-control.json",
+      "bytes": 2341,
+      "sha256": "7914ad5d1b1ae0e10a150ca2bb6bb2574f7830368af1c87082adb4cb2602674d"
+    },
+    {
+      "path": "38-client-registry-restored-owner.json",
+      "bytes": 2335,
+      "sha256": "f95ea68e984d68dedbdf521e08c7dfd771743e2c09b9fb84cb6a80d6831e7603"
+    },
+    {
+      "path": "39-hosted-stream-session-owner.json",
+      "bytes": 2328,
+      "sha256": "6b89f3c80a4fc87f7e916fc5b90ad03a591160fc8a6f864a0775773cd5d77f05"
+    },
+    {
+      "path": "40-oauth-routes-source-compiler.json",
+      "bytes": 1529,
+      "sha256": "5c76ce9f3cf3fb3f567cc02c2c4534826eb9256af1e157f395a232317c52cbba"
+    },
+    {
+      "path": "41-oauth-grant-routes-compiler.json",
+      "bytes": 1596,
+      "sha256": "2ef0564f5a250cee0411a7be5689329900a575b47a9e43fb6eb0d1c3c09c35ae"
+    },
+    {
+      "path": "42-oauth-route-owner-compiler.json",
+      "bytes": 1592,
+      "sha256": "74c9d43c39810f0112d7d5dba60ed089c49ead95a3a1082ce5452d680eb684df"
+    },
+    {
+      "path": "43-native-oauth-route-compiler.json",
+      "bytes": 1685,
+      "sha256": "9fdacb16a804ece983b1bb65baa361169971382a708d3f687013e6f351336128"
+    },
+    {
+      "path": "44-native-oauth-route-owner.json",
+      "bytes": 1740,
+      "sha256": "34d6877f5859b542dffea189cf1ca2730799b85acf8932e3b426d3652dcf65b0"
+    },
+    {
+      "path": "45-mcp-native-owners-compiler.json",
+      "bytes": 1684,
+      "sha256": "d3ca0abae662a3d7c3122d66c670a48c4bf3178906e32206d72c0c087fba6a13"
+    },
+    {
+      "path": "46-mcp-native-owners-compiler.json",
+      "bytes": 1689,
+      "sha256": "d2dd821a0784b513ece53ed4e4023a0921493d136ddbfda6eedd22d0a31849bb"
+    },
+    {
+      "path": "47-native-oauth-complete-owner.json",
+      "bytes": 1740,
+      "sha256": "7daf9a495549425117994db8793a2f1d9201f156a1451ceafc59db741bc90b65"
+    },
+    {
+      "path": "48-registry-existing-grant-compiler.json",
+      "bytes": 1694,
+      "sha256": "0396f8c3b17819213d48fad760e84d328d3601564f96f2369fc63aa4d1555662"
+    },
+    {
+      "path": "49-native-registry-grant-owner.json",
+      "bytes": 1740,
+      "sha256": "5fe8d3027758d7a1f4c250f2fa0430853352d428c3cc249cf7c4ba637732f789"
+    },
+    {
+      "path": "50-oauth-security-settings-owner.json",
+      "bytes": 1709,
+      "sha256": "a1d4f85ad55ea0ac8bfed06f1f1bba1f0d64db3ff94c56983e998bbf96c40e89"
+    },
+    {
+      "path": "51-oauth-security-settings-tracked-owner.json",
+      "bytes": 1725,
+      "sha256": "a585dcc4249bdf4491fe1b7a58770447e34c6e7236b0c18e740a5c1edfc64859"
+    },
+    {
+      "path": "52-native-route-resource-owner.json",
+      "bytes": 1802,
+      "sha256": "487fe65ff95cf5f6ff70ddf1a520293ca045d2d65e33bf4035324f402ba62441"
+    },
+    {
+      "path": "53-oauth-held-layer-owner.json",
+      "bytes": 1959,
+      "sha256": "bb367cedd12ba03a778dc90aabbc5fb4445c853d72a3e9ea3bb55de4c775db22"
+    },
+    {
+      "path": "54-held-opening-control.json",
+      "bytes": 1951,
+      "sha256": "496c84b3510d881594911ba7c44db82a2049eca3aecceb034710adcbde89ca75"
+    },
+    {
+      "path": "55-oauth-route-checkpoint-compiler.json",
+      "bytes": 1920,
+      "sha256": "85f2a44d1e2a1f6fb25d330c54dfae676872d8b43adde43676717ec8980ba91e"
+    },
+    {
+      "path": "56-oauth-route-checkpoint-compiler.json",
+      "bytes": 1918,
+      "sha256": "55d76c97abb90bfd03f94cebcaefbf027e3ad52bddd6391ed840dbadcd109a75"
+    },
+    {
+      "path": "57-oauth-native-and-layer-owners.json",
+      "bytes": 2026,
+      "sha256": "6aa559ec242d8b58d904089d48335630010f4c6ae6425ae1726421bb7b5a93c4"
+    },
+    {
+      "path": "58-oauth-browser-context-compiler.json",
+      "bytes": 1526,
+      "sha256": "ed0e2019c63d538cb2bd6b62a3ad1b3ef35b435a901ce48cf38e3412b4e61d2b"
+    },
+    {
+      "path": "59-oauth-browser-context-compiler.json",
+      "bytes": 1600,
+      "sha256": "aa02b5720b3b2cb2de52df038b1daa0dbd7119aa4aa97223e6f05186dda39c43"
+    },
+    {
+      "path": "60-metadata-bounded-reader-owner.json",
+      "bytes": 1657,
+      "sha256": "8de9d98c4a6dfb84eca2075da5462f27ea4bed69ead719445f8fb25ee1c41b75"
+    },
+    {
+      "path": "61-oauth-page-native-context-compiler.json",
+      "bytes": 1725,
+      "sha256": "74285da6ad3e16cf9037359774b1c87b5e83bfebf349b000702aa32ffbf87ef1"
+    },
+    {
+      "path": "62-oauth-page-native-context-owner.json",
+      "bytes": 1770,
+      "sha256": "86fbf66aa5f02ad89b522938615f542061df4b8bafb14afc8c97e98f85f29498"
+    },
+    {
+      "path": "63-oauth-page-context-owner.json",
+      "bytes": 1754,
+      "sha256": "51308a999d5d7e802aefe006efdcfb4cdbf26224f894f494734025d46253af92"
+    },
+    {
+      "path": "64-own-cohort-page-control.json",
+      "bytes": 1754,
+      "sha256": "97e0fba806047ef2d30e53bb53752eb44527acd64abf1e9c7f1d057799936ba3"
+    },
+    {
+      "path": "65-oauth-page-context-compiler.json",
+      "bytes": 1768,
+      "sha256": "6e6f126c1e882278662bce809c8320d66599392de5e6d33c56d0c39dabbc5cf5"
+    },
+    {
+      "path": "66-oauth-browser-custody-compiler.json",
+      "bytes": 1846,
+      "sha256": "1d8be9270ac892fd5766a7c51203ed5a8f37b132c1ca058ac4d0d97d91b1da83"
+    },
+    {
+      "path": "67-oauth-page-custody-native-compiler.json",
+      "bytes": 1860,
+      "sha256": "e9b48303bce48b463d2a888f63462231fcbe094268197a7bbfc1513b6bf6f44b"
+    },
+    {
+      "path": "68-oauth-page-custody-native-owner.json",
+      "bytes": 1910,
+      "sha256": "10d6b2e16b79e03afbbb93c49a68bb058b20ff26071292c7d86268c2812c1d7c"
+    },
+    {
+      "path": "69-oauth-consent-assets-build.json",
+      "bytes": 2183,
+      "sha256": "fa43425567156c240b23a2c18567578a1f73df25846cccfd0e787431d4d44b0d"
+    },
+    {
+      "path": "70-oauth-consent-page-compiler.json",
+      "bytes": 2230,
+      "sha256": "645a80ab8670ff0c6ba23d49fa8fc70bfbab8c5f06e933fc99028fdde202d483"
+    },
+    {
+      "path": "71-oauth-consent-native-compiler.json",
+      "bytes": 2240,
+      "sha256": "46906d7d6879923a0771e27fef0731c646bdc9d753f1fdd329efac3370152390"
+    },
+    {
+      "path": "72-oauth-consent-current-assets.json",
+      "bytes": 2216,
+      "sha256": "3c95ad5b33faa19b505a589dba86951bc9ebefb538374f6b773bc91949c1f1cd"
+    },
+    {
+      "path": "73-consent-native-and-route-owners.json",
+      "bytes": 2497,
+      "sha256": "da8e713a207b120353f3b73c995dfa01c6f60695f031ff0bfc44b251f92eed9f"
+    },
+    {
+      "path": "74-consent-settings-owner.json",
+      "bytes": 2328,
+      "sha256": "8f13db71aa7b111b4d177bc5cec482c83238ad7854f7b6a75f953d52d388de5a"
+    },
+    {
+      "path": "75-consent-asset-owner.json",
+      "bytes": 2418,
+      "sha256": "b2725f85bcfcc4f97de8c6ae9ff57e2a8857aa5728adb06cb3ce6d981903be30"
+    },
+    {
+      "path": "76-consent-page-native-compiler.json",
+      "bytes": 2388,
+      "sha256": "c0dc94a8736b784d437f2c5fb03a8151868f7f1b3cbc31bd32ff0f3ab78a6a06"
+    },
+    {
+      "path": "77-invitation-ui-source-compiler.json",
+      "bytes": 1684,
+      "sha256": "a6deace3c59e97e2603ee4ddf34b7c43526de0eb358c3c4e971ace9bbb516cde"
+    },
+    {
+      "path": "78-invitation-native-page-compiler.json",
+      "bytes": 1896,
+      "sha256": "f26d5fdf1af476a50426db9000f11890c7d0f5cbbfcac4873a4530e24eefcc22"
+    },
+    {
+      "path": "79-invitation-native-page-compiler.json",
+      "bytes": 1895,
+      "sha256": "b9ac149bbbae3efd3a5eb65814ce52e78ac635bc336b0730cc6b8d43201db430"
+    },
+    {
+      "path": "80-invitation-native-mcp-compiler.json",
+      "bytes": 1891,
+      "sha256": "82cfe98ba79451562ee7239af5c11733ce58fc33a90b86893eafaa9a4b3389bf"
+    },
+    {
+      "path": "81-invitation-native-owners.json",
+      "bytes": 1992,
+      "sha256": "621fab1f4e53592a7ccb1ea84b26fb2970c647e1ef08d128b83d1db1943021ca"
+    },
+    {
+      "path": "82-admin-browser-native-compiler.json",
+      "bytes": 1890,
+      "sha256": "c9c3df06dc549f08187d37d579c05cb8e38b7e1950ca2003570a3d965ff8ebe7"
+    },
+    {
+      "path": "83-admin-browser-native-owner.json",
+      "bytes": 1943,
+      "sha256": "9adfab5c39ced335e75f5ca45a32a9e641c7cec8af96863091dba9de52f9b95b"
+    },
+    {
+      "path": "84-admin-browser-native-owner.json",
+      "bytes": 1942,
+      "sha256": "15183f835e0c486825668522460a091c9920ba39c5286cc079293ade9eb12380"
+    },
+    {
+      "path": "85-admin-browser-native-owner.json",
+      "bytes": 1940,
+      "sha256": "135472bafa6aeed87bc946fcb0d04cb510ca4813e9a25f63e61dc047cefd98a8"
+    },
+    {
+      "path": "86-controller-list-authorization-control.json",
+      "bytes": 2295,
+      "sha256": "de68e2c3dd12301f82c589d79d9fed0da3325894fce9f1af88b99130f636599e"
+    },
+    {
+      "path": "87-controller-list-authorization-control.json",
+      "bytes": 2252,
+      "sha256": "4ae436e570e5083ab5785807598673dc0ce2279086b4bf2b10a0a2b424da0744"
+    },
+    {
+      "path": "88-invitation-page-assets.json",
+      "bytes": 1875,
+      "sha256": "e438af9d58fb830521d6f8a54921177bba1bc5246565b731e5110419f0cf58e4"
+    },
+    {
+      "path": "89-invitation-final-compilers.json",
+      "bytes": 1975,
+      "sha256": "a254bf2a14d8c174f3f9383d0faa9e215434efa870aa6f73153e71f94e657c41"
+    },
+    {
+      "path": "90-consent-assets-owner.json",
+      "bytes": 2004,
+      "sha256": "a731d775b6778a0a4aacc989d31fb904e1cdf5ffd8d97a3433691bda55526ea4"
+    },
+    {
+      "path": "91-invitation-page-source-compiler.json",
+      "bytes": 2105,
+      "sha256": "ad8002ee2fe0c215620a49085598a8da71158c97364f9e0368ef4e5b9a0e6f56"
+    },
+    {
+      "path": "92-shared-helper-check.json",
+      "bytes": 1461,
+      "sha256": "2a27627a7381451f7561256e845bd4f1e82cc582d36cc9a9f8d397eda984b39d"
+    },
+    {
+      "path": "93-shared-helper-native-compiler.json",
+      "bytes": 1547,
+      "sha256": "7c135ac7462c8e131dd1b5642296e49ceed04d92c11f9e26c63de7045a7e1da2"
+    },
+    {
+      "path": "94-shared-helper-native-owners.json",
+      "bytes": 1650,
+      "sha256": "df8cc791b26b16e30b26a3aba1a967531c3b1d494de18db73aa31bc5dc71f6d5"
+    },
+    {
+      "path": "95-shared-helper-page-assets.json",
+      "bytes": 1504,
+      "sha256": "62a9d220c48e7f3827591ae6fcff5854eb3e25fd0110ba7703665198b9cc6348"
+    },
+    {
+      "path": "96-shared-helper-assets-owner.json",
+      "bytes": 1640,
+      "sha256": "3a2a1f7e0518cf28662a3b27d528c91c6ba590745990ab890964301d6b8b3d61"
+    },
+    {
+      "path": "97-control-clone-workspace-typecheck.json",
+      "bytes": 1388,
+      "sha256": "bcbaea7a48e7ecf80ec051b74a8b4098c44e1b3982702c4477947b1f7caa9aa6"
+    },
+    {
+      "path": "98-oauth-route-inventory-probe.json",
+      "bytes": 1886,
+      "sha256": "717929ccd69dfba40201f24f48aeb3f29fad201adfca284d49ad6e5ddda0f836"
+    },
+    {
+      "path": "99-oauth-route-inventory-probe.json",
+      "bytes": 1884,
+      "sha256": "5383d0973b2ad989639bc2b53e7fd62bdc7b0067bcee4d346c52fda92e334858"
+    },
+    {
+      "path": "adopt-reviewed-seals.mjs",
+      "bytes": 2848,
+      "sha256": "ddbecfe85c9cd3958c91e7187aa15cc2193ff1b8e7676f00add9a3e43d41fe51"
+    },
+    {
+      "path": "consent-workflow-observations-20261103.json",
+      "bytes": 2265,
+      "sha256": "df8c2140f877929e6c54f598c92deaeb4979c61ab2e7ed3fefc7ac09b5fce172"
+    },
+    {
+      "path": "dependencies.json",
+      "bytes": 2015,
+      "sha256": "68d910a9b4e527e45a45e673dedfc90e7ce3d90ff9f41c2aca39884136b7b785"
+    },
+    {
+      "path": "final-checkpoint-9bcb.json",
+      "bytes": 8174,
+      "sha256": "c8a67b1ea3a2aa448ecc58228a99af92d35cdadfd4ecdb1395eec09fe03da892"
+    },
+    {
+      "path": "focused-driver.py",
+      "bytes": 1713,
+      "sha256": "c7e0805855763f5f8280d6f6b9668b43e1686176c56399620a13abcd625c09d0"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 51943,
+      "sha256": "e0247715da5753d8a1c81f74bf57cd454360b3dd5942618e6235f8e996014bc6"
+    },
+    {
+      "path": "reviewed-source-seal-changes.json",
+      "bytes": 5978,
+      "sha256": "e1aba1b9e366030717d299cef14fab7d126c133dbada2e0dc84cec1ff43e686b"
+    },
+    {
+      "path": "run-ledger-through-110.json",
+      "bytes": 45684,
+      "sha256": "62e73a4d0450794b36287ee1653d44db6bf58c8e61cb2cf7a0987dfee097748b"
+    },
+    {
+      "path": "server-workflow-observations-20261103.json",
+      "bytes": 2448,
+      "sha256": "c28f7172961aeaad5651c12fd6879a2e37e9c9435fae377a17a81fcb47c59dfa"
+    },
+    {
+      "path": "workflow-observations-20261103.json",
+      "bytes": 2313,
+      "sha256": "12faf7737757178fa87a7dc9b5393d1d3bb8fd090931cfefb5eae4783f34f07a"
+    }
+  ],
+  "sha256sumsSha256": "ca5e8652ba79514572cf2fb2e8bdffafcf8d603cf0eecb0d7a568627a6e3a370"
+}

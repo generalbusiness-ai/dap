@@ -157,11 +157,16 @@ failure behavior, health visibility and the other readers.
 | `GROW_BINDING` | text | `dap-grow-simulator` | [`examples/grow/simulator-host.ts`](../../examples/grow/simulator-host.ts) |
 | `GROW_CLIMATE_SECRET` | secret | `dap-grow-simulator` | [`examples/grow/simulator-host.ts`](../../examples/grow/simulator-host.ts) |
 | `GROW_SENSORS_SECRET` | secret | `dap-grow-simulator` | [`examples/grow/simulator-host.ts`](../../examples/grow/simulator-host.ts) |
+| `INSTALLED_REGISTER_SCOPES` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/register-setting.ts`](../../packages/scope/src/register-setting.ts) |
 | `LENDING` | binding | `dap-application-sandbox` | [`apps/sandbox/worker.ts`](../../apps/sandbox/worker.ts) |
 | `MCP_CARD_ORIGINS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `MCP_ENABLED` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
+| `MCP_RESOURCE_URLS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `MCP_TOOL_ADDITIONS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `METRICS` | binding | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
+| `OAUTH_CLIENT_METADATA_ORIGINS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/oauth-clients.ts`](../../packages/mcp/src/oauth-clients.ts) |
+| `OAUTH_DYNAMIC_REGISTRATION` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/oauth-clients.ts`](../../packages/mcp/src/oauth-clients.ts) |
+| `OAUTH_REDIRECT_URIS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/oauth-clients.ts`](../../packages/mcp/src/oauth-clients.ts) |
 | `PLATFORM_CREATION_PINS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/creation-versions.ts`](../../packages/scope/src/creation-versions.ts) |
 | `PUBLIC_ORIGIN` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/public-origin.ts`](../../packages/scope/src/public-origin.ts) |
 | `REGISTER_SCOPE` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/register-setting.ts`](../../packages/scope/src/register-setting.ts) |
@@ -657,7 +662,8 @@ failure behavior, health visibility and the other readers.
       "kind": "binding",
       "status": "read",
       "readers": [
-        "packages/scope/src/worker.ts"
+        "packages/scope/src/worker.ts",
+        "apps/room/page/oauth-route.ts"
       ],
       "parser": "Wrangler hosted-MCP DurableObjectNamespace; mcpRoute requires both namespaces and a valid opt-in policy.",
       "missing": "Hosted MCP route 404 before body/target work.",
@@ -677,7 +683,8 @@ failure behavior, health visibility and the other readers.
       "kind": "binding",
       "status": "read",
       "readers": [
-        "packages/scope/src/worker.ts"
+        "packages/scope/src/worker.ts",
+        "apps/room/page/oauth-route.ts"
       ],
       "parser": "Wrangler hosted-MCP DurableObjectNamespace; mcpRoute requires both namespaces and a valid opt-in policy.",
       "missing": "Hosted MCP route 404 before body/target work.",
@@ -738,12 +745,34 @@ failure behavior, health visibility and the other readers.
       "status": "read",
       "readers": [
         "packages/mcp/src/hosted-tools.ts",
+        "packages/mcp/src/oauth-resource.ts",
         "packages/scope/src/worker.ts"
       ],
-      "parser": "Optional closed JSON array, at most 8192 UTF-8 bytes and two rows; distinct hosts and exact HTTPS /mcp connector URLs. Claude domain must equal the first 32 SHA-256 hex digits of that URL plus .claudemcpcontent.com; ChatGPT domain must be an HTTPS origin.",
+      "parser": "Optional closed JSON array, at most 8192 UTF-8 bytes and two rows; distinct hosts and exact HTTPS /mcp connector URLs. Claude domain must equal the first 32 SHA-256 hex digits of that URL plus .claudemcpcontent.com; ChatGPT domain must be an HTTPS origin. Each connector URL must also name a configured MCP resource.",
       "missing": "Resources declare no remote card domain.",
       "invalid": "Any malformed row, duplicate host or URL, or mismatched Claude hash closes the whole hosted endpoint.",
-      "health": "Not reported; this changes presentation only."
+      "health": "Not reported. Presentation URLs must agree with the resource policy."
+    },
+    {
+      "deployments": [
+        "artroom-scope",
+        "dap-celld-local",
+        "dap-demo",
+        "dap-commons",
+        "dap-lending",
+        "dap-grow"
+      ],
+      "name": "MCP_RESOURCE_URLS",
+      "kind": "text",
+      "status": "read",
+      "readers": [
+        "packages/mcp/src/hosted-tools.ts",
+        "packages/mcp/src/oauth-resource.ts"
+      ],
+      "parser": "Optional strict JSON array, at most 32800 UTF-8 bytes and eight distinct canonical HTTPS /mcp URLs; each URL at most 2048 UTF-8 bytes, with no credentials or fragment. Every MCP_CARD_ORIGINS URL must occur in the selected resource list.",
+      "missing": "HTTPS uses the canonical public service origin plus /mcp. Existing HTTP services keep static bearers and advertise no OAuth resource.",
+      "invalid": "Closes the whole hosted endpoint before body reads or namespace lookup. An access token also needs an exact full URL match, including the query.",
+      "health": "Not reported. This selects resource discovery and OAuth token audiences, not native authority."
     },
     {
       "deployments": [
@@ -1098,6 +1127,28 @@ failure behavior, health visibility and the other readers.
         "dap-lending",
         "dap-grow"
       ],
+      "name": "INSTALLED_REGISTER_SCOPES",
+      "kind": "text",
+      "status": "read",
+      "readers": [
+        "packages/scope/src/register-setting.ts",
+        "packages/scope/src/scope-index.ts",
+        "packages/scope/src/health.ts"
+      ],
+      "parser": "readInstalledRegisters: JSON array within 4096 UTF-8 bytes, 1..32 distinct canonical scope IDs including the current selected register; strict parsing before a frozen copy.",
+      "missing": "Child admission uses only the current register, preserving existing single-register configurations.",
+      "invalid": "Parentless and child creation close; no list or caller fallback admits a root.",
+      "health": "Invalid installed-register configuration makes register health unavailable without a scope probe. Valid configuration probes only the current register."
+    },
+    {
+      "deployments": [
+        "artroom-scope",
+        "dap-celld-local",
+        "dap-demo",
+        "dap-commons",
+        "dap-lending",
+        "dap-grow"
+      ],
       "name": "REGISTER_SCOPE",
       "kind": "text",
       "status": "read",
@@ -1110,6 +1161,66 @@ failure behavior, health visibility and the other readers.
       "missing": "Uses a valid Artifacts-only legacy pin; with neither source, deployed creation is unauthorized and lineage/census stay closed.",
       "invalid": "Malformed supplied pin/config or disagreement makes creation misconfigured before target lookup; lineage/census refuse. The explicit deployed open-creation escape does not bypass this check.",
       "health": "An explicit valid pin selects the existing bounded/cached readiness probe independently of provider wiring. Malformed or conflicting pins report register unavailable without a probe; a ready pin does not attest provider connectivity, creation policy or a census. With no explicit field, legacy host-root selection is unchanged."
+    },
+    {
+      "deployments": [
+        "artroom-scope",
+        "dap-celld-local",
+        "dap-demo",
+        "dap-commons",
+        "dap-lending",
+        "dap-grow"
+      ],
+      "name": "OAUTH_REDIRECT_URIS",
+      "kind": "text",
+      "status": "read",
+      "readers": [
+        "packages/mcp/src/oauth-clients.ts"
+      ],
+      "parser": "Optional strict JSON array, at most 32800 UTF-8 bytes and 32 distinct exact HTTPS redirects or HTTP redirects on localhost or 127.0.0.1; no credentials, fragment or backslash. A custom list replaces all defaults.",
+      "missing": "Allows the exact Claude and ChatGPT callbacks and HTTP localhost or 127.0.0.1 on any port, with the client-registered path. Every client still needs an exact registered redirect match.",
+      "invalid": "Closes the OAuth routes and signed grant, connection-list and grant-revocation routes with 404 before body reads or namespace lookup. The existing MCP resource and static bearer routes keep their own policy.",
+      "health": "Not reported. This deployment policy selects OAuth clients and redirects and grants no Native authority."
+    },
+    {
+      "deployments": [
+        "artroom-scope",
+        "dap-celld-local",
+        "dap-demo",
+        "dap-commons",
+        "dap-lending",
+        "dap-grow"
+      ],
+      "name": "OAUTH_CLIENT_METADATA_ORIGINS",
+      "kind": "text",
+      "status": "read",
+      "readers": [
+        "packages/mcp/src/oauth-clients.ts"
+      ],
+      "parser": "Optional strict JSON array, at most 8192 UTF-8 bytes and 32 distinct canonical HTTPS origins; no credentials, path, query or fragment. The listed origins and their DNS are trusted; the fetch does not inspect the socket address.",
+      "missing": "Trusts only https://claude.ai and https://chatgpt.com. Unknown origins refuse before fetch. Every metadata fetch still has a five-second deadline, a 5 KiB body bound, no redirects or credentials, exact client ID equality and at most one hour of cache.",
+      "invalid": "Closes the OAuth routes and signed grant, connection-list and grant-revocation routes with 404 before body reads or namespace lookup. The existing MCP resource and static bearer routes keep their own policy.",
+      "health": "Not reported. This deployment policy selects OAuth clients and redirects and grants no Native authority."
+    },
+    {
+      "deployments": [
+        "artroom-scope",
+        "dap-celld-local",
+        "dap-demo",
+        "dap-commons",
+        "dap-lending",
+        "dap-grow"
+      ],
+      "name": "OAUTH_DYNAMIC_REGISTRATION",
+      "kind": "text",
+      "status": "read",
+      "readers": [
+        "packages/mcp/src/oauth-clients.ts"
+      ],
+      "parser": "Unset disables new public-client registration; the exact string on enables it. No trimming or coercion. Every other supplied value, including off and the empty string, is invalid.",
+      "missing": "POST /oauth/register answers fixed 400 invalid_client_metadata before reading a body or obtaining a registry; authorization-server metadata omits registration_endpoint. Metadata-document clients and existing registered-client resolution retain their normal checks.",
+      "invalid": "Closes the OAuth routes and signed grant, connection-list and grant-revocation routes with 404 before body reads or namespace lookup. The existing MCP resource and static bearer routes keep their own policy.",
+      "health": "Not reported. Enabling registration changes no client redirect, metadata-origin, signed-control or Native authority check. Hosted deployment policy requires a per-address rate limit before enabling it."
     }
   ]
 }
@@ -1119,3 +1230,12 @@ failure behavior, health visibility and the other readers.
 ## Source
 
 Checked against main `ada88648` on 31 October 2026. Sources: [scripts/security-settings.mjs](../../scripts/security-settings.mjs), [packages/scope/src/register-setting.ts](../../packages/scope/src/register-setting.ts), [packages/scope/src/health.ts](../../packages/scope/src/health.ts), [packages/scope/src/creation-versions.ts](../../packages/scope/src/creation-versions.ts), [packages/scope/src/public-origin.ts](../../packages/scope/src/public-origin.ts).
+
+`INSTALLED_REGISTER_SCOPES` is an operator-maintained JSON array, at most
+4,096 UTF-8 bytes and 32 distinct canonical scope IDs. It includes the
+current register selected by `REGISTER_SCOPE` or its existing valid
+Artifacts fallback. Absent, child admission keeps the singleton current
+root. An invalid explicit array closes creation and register health.
+Every listed child lineage still proves its own indexed, applied Native
+root. The setting changes no parentless install, host binding or caller
+authority. See [Keep existing rooms able to create children](../deploy.md#keep-existing-rooms-able-to-create-children).

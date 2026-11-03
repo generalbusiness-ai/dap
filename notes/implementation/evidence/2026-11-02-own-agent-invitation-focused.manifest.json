@@ -1,0 +1,139 @@
+{
+  "qualification": "Focused O2 key-invitation bound repair for checker 5cf22ef8; both new controls distinguish and all earlier main pins stay exact. Raw fixture output remains private. Full gate and current browser workflows remain separate.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-own-agent-invitation-focused",
+  "checkpoint": "faa45ac2dcf308ac651cb6ae2248f7f29132c769",
+  "tree": "99640d87d7c9cec6ce93f098c93a540e05bc9399",
+  "fileCount": 26,
+  "files": [
+    {
+      "path": "01-pin-generation.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "01-pin-generation.json",
+      "bytes": 1166,
+      "sha256": "baf80e74b2119e2b46ae4af431b26dfe23a9fa9f1ed70dfb0216c1b35f9e3be2"
+    },
+    {
+      "path": "02-page-bundle-build.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "02-page-bundle-build.json",
+      "bytes": 1311,
+      "sha256": "9812b9a59212a90b0e15c03958b68a2d0e0c8775e6eaa982515f3167833912ae"
+    },
+    {
+      "path": "03-owning-compiler.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "03-owning-compiler.json",
+      "bytes": 1335,
+      "sha256": "2cd9f07fd0713e55e5b9a673b52dd5584c913bfdbde17396f367c7cc81ec0bcd"
+    },
+    {
+      "path": "04-native-invitation-bounds.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "04-native-invitation-bounds.json",
+      "bytes": 1409,
+      "sha256": "f2a06caaf81d3d791c0cfb45dbf27a689f1c96437a5b6e361fb337d369b0712d"
+    },
+    {
+      "path": "05-entrypoint-owners.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "05-entrypoint-owners.json",
+      "bytes": 1296,
+      "sha256": "3d25843bce3eb1a3dd71f995cd31c1c833413f6f77e2d6cf42c6a079ebd5c645"
+    },
+    {
+      "path": "06-historical-version-owner.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "06-historical-version-owner.json",
+      "bytes": 1404,
+      "sha256": "3b0cb7bfb060bd6fb46eac9b6e25e4dadda8d210f92e45ef6ed89e8e64fcc997"
+    },
+    {
+      "path": "07-active-key-control.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "07-active-key-control.json",
+      "bytes": 1518,
+      "sha256": "b18c754f602a7ea92f313ca9058bd5ed61f654f281cb28ec1a55a66347487e1b"
+    },
+    {
+      "path": "08-invitation-window-control.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "08-invitation-window-control.json",
+      "bytes": 1686,
+      "sha256": "5c70f5c946cf213770f5b2d3806250de0d4e068ec33f14534e9615abaa008f87"
+    },
+    {
+      "path": "09-scoped-doc-links.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "09-scoped-doc-links.json",
+      "bytes": 1394,
+      "sha256": "21a42c891499612d0f98b133cc363fac17da97283b8ea351d5aa47db1cc34581"
+    },
+    {
+      "path": "README.md",
+      "bytes": 1827,
+      "sha256": "c8534aecb75ed717e5fc681804a07e072fd7498d62381e5741a9b1c6e7e05cb0"
+    },
+    {
+      "path": "capture-focused.py",
+      "bytes": 1607,
+      "sha256": "e917c40354ca29e00095bcc2381510fb77db1990fcdff3d41b95ae61bb3b8068"
+    },
+    {
+      "path": "compare-historical.mjs",
+      "bytes": 2227,
+      "sha256": "7ab5a0d44d5cf7ed1a6846a833c72e2d2d496ae0206c20749370647a76cf9a3e"
+    },
+    {
+      "path": "control-source-restoration.json",
+      "bytes": 423,
+      "sha256": "b39c38bee77336e3748de091871c6e506e8aaaa52f317ade25783b74d63f6dd3"
+    },
+    {
+      "path": "historical-comparison.json",
+      "bytes": 655,
+      "sha256": "011b691f7eb04c60a21c246fed0023e5cb688ca7a9c2b576901a1b791dd47c6e"
+    },
+    {
+      "path": "pin-and-owner-adoption.json",
+      "bytes": 633,
+      "sha256": "d13063315e561f495d2e14dd1e6bd91d8b003c0e8ddd414d6d4f8e61e390a62a"
+    },
+    {
+      "path": "wrong-cwd-doc-check.json",
+      "bytes": 646,
+      "sha256": "28b3337e26b94558e63aed104293285128909c13e5fe4cd23b53b69a89c364dd"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 2316,
+      "sha256": "8c4543ec1efe8d504608dee371bb3d79b7a77309957e67f499ce2f901e407d99"
+    }
+  ]
+}
