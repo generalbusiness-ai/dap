@@ -100,9 +100,12 @@ passed files and one skipped file. Every phase has complete terminal
 evidence, with zero failed cases and zero unhandled errors.
 
 This distinct candidate's successful gate does not change the earlier
-failed flush or registration-recovery gate records. Registration recovery
-still needs its own ruling, independent review, and prior landing. No
-source, tests, configuration, or dependencies change for this record.
+failed flush or registration-recovery gate records. DCR lands first at
+`6a67cc08`, under independent approval `d2bfa044` and its own ratified
+planner ruling `d01d06a5`; that gate remains failed. Integrating that main
+landing adds only the DCR note and four manifests. Every difference from
+the frozen installed-register gate stays under `notes/`: source, tests,
+configuration, and dependencies remain exact.
 
 ## Sealed evidence
 

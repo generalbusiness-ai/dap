@@ -1,0 +1,35 @@
+{
+  "qualification": "Focused investigation of DCR failed-gate teardown owner. Unchanged source passes the two cases alone; full gate remains failed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-registration-recovery-teardown-followup",
+  "checkpoint": "41a4a7e91a03edbce45c39e7fe8f1b556d74e308",
+  "tree": "94f916e1a79b8a9d7c44d0a1f1dec703e9f92044",
+  "fileCount": 5,
+  "files": [
+    {
+      "path": "01-archive-input-teardown-owner.json",
+      "bytes": 1480,
+      "sha256": "c892c3b96f47f2bb0bfce624cf806b8b38f46eb68643e565f7ced6dd61e21838"
+    },
+    {
+      "path": "driver.py",
+      "bytes": 1757,
+      "sha256": "3f0c808150db4e5b94d998c25df21364b4e36e0d51ba072e253c97cd8ac2dea4"
+    },
+    {
+      "path": "followup.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 515,
+      "sha256": "4abbd5ad654d6ad1da7f866fce3736d37583121622c1cf1d052b32b8ed63c607"
+    },
+    {
+      "path": "qualification.json",
+      "bytes": 432,
+      "sha256": "e1ba4ac5869684e11bdcc11b78f8965fb66b4ad61f4493897a4fe12fe599e511"
+    }
+  ],
+  "sha256sumsSha256": "a0790a5780256862ef2ea1a1253612045db5c0ea24621ba07c236a8c2814da5b"
+}
