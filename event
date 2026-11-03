@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:68e192d3fb74d0cc09c311737e6f937a52bafbb7","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-native-teardown-focused.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9f2a22b6838597448e512c8ab44fb707713de499","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/session-ownership.test.ts."}
