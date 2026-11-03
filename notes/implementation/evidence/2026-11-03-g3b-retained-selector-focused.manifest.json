@@ -1,0 +1,323 @@
+{
+  "version": 1,
+  "qualification": "Actual first G3b create refusal, read-only selector diagnosis, scripted offline CLI comparison, and focused repair checks. No room creation, deployment, Git binding or parent acceptance.",
+  "fileCount": 57,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-retained-selector-focused",
+      "fileCount": 42,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 3818,
+          "sha256": "b2eded0ba047edda7e4995e2468053af5832832d766f0faafa44f9f255ed3c56"
+        },
+        {
+          "path": "cli-compiler.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "cli-compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "cli-compiler.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "cli-selector.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "cli-selector.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "cli-selector.stdout",
+          "bytes": 262,
+          "sha256": "caac5efc01a576ed8c658f655d46b5c9919f448b9acee8a898efdcec7cffa6d9"
+        },
+        {
+          "path": "commands.json",
+          "bytes": 525,
+          "sha256": "82ebb498dcba3f967baf4a842c17160a931ba8a0a4f280f053cbae61e276f5db"
+        },
+        {
+          "path": "compat.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "compat.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "compat.stdout",
+          "bytes": 371,
+          "sha256": "605dd17404c93120a964b89f8b940620eaa91c98f19ef3c6e41d0c702b7fe214"
+        },
+        {
+          "path": "control-tmp/artroom-control-9JlX1G/before.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "control-tmp/artroom-control-9JlX1G/before.tap",
+          "bytes": 1230,
+          "sha256": "fdd6363b9c8c9e377948646b066d4476ea1eabed8a9316fe1a1d5fff69cb1770"
+        },
+        {
+          "path": "controls.json",
+          "bytes": 376,
+          "sha256": "879f4e4d650f59ad8b9ab7d9a3699bb4ad02d9ea6e77ef58f213ba829305afbe"
+        },
+        {
+          "path": "direct-controls/baseline/exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "direct-controls/baseline/report.json",
+          "bytes": 2328,
+          "sha256": "2a3a827e0e8fe2621add5cc0e9b586db7aa42b490eaa7313fec918c4b006df47"
+        },
+        {
+          "path": "direct-controls/baseline/stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "direct-controls/baseline/stdout.log",
+          "bytes": 455,
+          "sha256": "38d0acaf50434907d0030caea9b2cb659cd57c0317c4f242d240846c760ee22e"
+        },
+        {
+          "path": "direct-controls/missing-pin/exit",
+          "bytes": 2,
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        },
+        {
+          "path": "direct-controls/missing-pin/report.json",
+          "bytes": 3128,
+          "sha256": "aa0b7682dc3b5db90ad02f2bd9fe00407259d5e63548b15c0bca832f77e948a4"
+        },
+        {
+          "path": "direct-controls/missing-pin/stderr.log",
+          "bytes": 1586,
+          "sha256": "14165ab58266bc8addddfc6a084f10f7bac2f40a395c387b669eb88d7a13767b"
+        },
+        {
+          "path": "direct-controls/missing-pin/stdout.log",
+          "bytes": 1063,
+          "sha256": "a47e2004beb6ff4c05353b363a32f77d1875e001d485ac410dd6aec254e85a44"
+        },
+        {
+          "path": "direct-controls/operator-not-a-founder/exit",
+          "bytes": 2,
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+        },
+        {
+          "path": "direct-controls/operator-not-a-founder/report.json",
+          "bytes": 2720,
+          "sha256": "9abfa7e984cdbb853f6804b6e97c19815024a15a3dd636e660553367314dcb74"
+        },
+        {
+          "path": "direct-controls/operator-not-a-founder/stderr.log",
+          "bytes": 1067,
+          "sha256": "754539b412a28ad1cd50bcf841e8dd40fb05de3cf06bfbe103f4b8032baafe38"
+        },
+        {
+          "path": "direct-controls/operator-not-a-founder/stdout.log",
+          "bytes": 1076,
+          "sha256": "e1baaac5b492d0b8636d21927dec985ffeb4e5af8c2e76ada2875f9f681fbedd"
+        },
+        {
+          "path": "direct-controls/result.json",
+          "bytes": 1681,
+          "sha256": "44fd3507bd93bbce6bba1f21dbd1740d326dac1b00ee9cb44baabade797f098d"
+        },
+        {
+          "path": "direct-controls-driver.py",
+          "bytes": 3307,
+          "sha256": "8928f6ba769cff399eade9e3024678d6d25704fc972af9b0a70d94720dd4d673"
+        },
+        {
+          "path": "page-and-scope-commands.json",
+          "bytes": 533,
+          "sha256": "82fbd5bd5e0296d08f832c6bc119cf1192d0015b029775c75e28b0bebf245aa6"
+        },
+        {
+          "path": "page-assets-owner.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "page-assets-owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "page-assets-owner.stdout",
+          "bytes": 259,
+          "sha256": "7a94503f48e5403519c302f2937e80798435289bd8ec24d2b0fa09ef0af21c25"
+        },
+        {
+          "path": "page-assets.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "page-assets.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "page-assets.stdout",
+          "bytes": 143,
+          "sha256": "ead73d89b0275f24caae548bb99e9139f115eddd94d9f0eba338e6496867b848"
+        },
+        {
+          "path": "pin-control.exit",
+          "bytes": 2,
+          "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+        },
+        {
+          "path": "pin-control.stderr",
+          "bytes": 330,
+          "sha256": "f05ab966ec3c413ea2fd321058755cd42561cecc50c8f1e2b159e37b83052e66"
+        },
+        {
+          "path": "pin-control.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "scope-compiler.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "scope-compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "scope-compiler.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "snapshot.json",
+          "bytes": 1143,
+          "sha256": "8ff1d6563f7e0117a4e019723c347f22466c95c152585bd9d3efaac5fb044422"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-first-create-refused",
+      "fileCount": 3,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 167,
+          "sha256": "c911ad8b4d715f06d59cc2ffd7f88f9116062aae236ab68d7a36fe4f3f1b2b8f"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 1727,
+          "sha256": "cefbf3fe76a525db9ad2778a7b8154e54e2dd0ace00e772cf6ba493a1d7f56df"
+        },
+        {
+          "path": "result.json",
+          "bytes": 811,
+          "sha256": "a54b8e75965eff4b0aed2255a1631f7a9c3ec9e4fecc1537dd5edd3f6ac80000"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-register-selector-refusal",
+      "fileCount": 3,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 171,
+          "sha256": "c5d430d7b7784051e34a15a823b913012e56b106f92883a06726cf5c8f34120f"
+        },
+        {
+          "path": "config-metadata.json",
+          "bytes": 531,
+          "sha256": "e788a6f3933fa9dc2e593bc3929d90e4544fe0a7dea7a6b866941e1579abfabd"
+        },
+        {
+          "path": "source-proof.json",
+          "bytes": 1488,
+          "sha256": "f28a6ac289e159ebfa6ede3ae523837176c43664c15b43d12c46ef8b8a2cb1b8"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-selector-policy-addendum",
+      "fileCount": 3,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 179,
+          "sha256": "09bbd838c3915a1ad702971a11eb5378321bd170c6d89515ff0bba8dff87ac51"
+        },
+        {
+          "path": "plan-policy-metadata.json",
+          "bytes": 281,
+          "sha256": "8fba3edce5f51dd0dc26bc8be63c5eaf1beda7e182fe488560e14a0d7c079dee"
+        },
+        {
+          "path": "selector-guards.json",
+          "bytes": 881,
+          "sha256": "b5a465d94788bf0a7d1ec3e9f1ec4fa4e1fef373eee25ac02e48a481e15428ef"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-selector-offline",
+      "fileCount": 6,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 401,
+          "sha256": "3e9114ab7f9afc58b5c8cd02cfcf400e4721bab6104414561e979ba029347229"
+        },
+        {
+          "path": "probe.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "probe.mjs",
+          "bytes": 3746,
+          "sha256": "b39fe2fd4d161620f62f8dea573255241d712bbb8ecf76d9ff08248495020d37"
+        },
+        {
+          "path": "probe.stderr",
+          "bytes": 191,
+          "sha256": "ddcc1f9f1dec1ddb4a715b841e7d58a2e3c8db2bd36bca953c5812ce86b478f0"
+        },
+        {
+          "path": "probe.stdout",
+          "bytes": 1478,
+          "sha256": "cf03387f141b5085dbb9e45bb8738c259dddb72dda43a7ea412817cf5edea950"
+        },
+        {
+          "path": "source-equivalence.json",
+          "bytes": 253,
+          "sha256": "ab4a8b90430c100a746e93f7f63825a152f52485aacffbf0ed1bce6c5fc06d2e"
+        }
+      ]
+    }
+  ],
+  "retention": "Retain sealed units and indexed private originals at least 30 days after landing."
+}

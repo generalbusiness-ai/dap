@@ -155,7 +155,36 @@ test("the Native driver confirms 10,001 one-entry passes and preserves retained 
   };
   type NativeRead = { query: string; args: SqlValue[]; rowsRead: number; rowsWritten: number; returned: number };
   const defaultReceipt = (after: number, observations?: NativeRead[]) => lane.inside(async state => {
-    const budget = new ArchiveBudget(), refused: { quote: Partial<ArchiveCost>; used: ArchiveCost }[] = [];
+    // TEST-only failure observation. Keep the actual clock, allowance and
+    // rejected operation; report the boundary before generic error mapping.
+    let previousClock: number | null = null, backwardsClock: { before: number; after: number } | null = null;
+    const budget = new ArchiveBudget({}, () => {
+      const value = performance.now();
+      if (previousClock !== null && value < previousClock && backwardsClock === null) backwardsClock = { before: previousClock, after: value };
+      previousClock = value;
+      return value;
+    }), refused: { quote: Partial<ArchiveCost>; used: ArchiveCost }[] = [];
+    let firstFailure: { boundary: string; name: string; stack: string } | null = null;
+    const observeFailure = (boundary: string, error: unknown) => {
+      if (firstFailure !== null) return;
+      try { firstFailure = { boundary, name: error instanceof Error ? error.name : "non-error",
+        stack: error instanceof Error ? (error.stack ?? "").slice(0, 4096) : "" }; }
+      catch { /* Preserve the original failure. */ }
+    };
+    const stop = budget.stop.bind(budget), native = budget.native.bind(budget);
+    budget.stop = (reason, refusal) => {
+      if (reason === "unavailable") observeFailure("budget-stop", new Error("TEST archive unavailable boundary"));
+      return stop(reason, refusal);
+    };
+    budget.native = (sql, reserve, received) => native({ exec(query, ...args) {
+      try {
+        const cursor = sql.exec(query, ...args);
+        return { toArray() {
+          try { return cursor.toArray(); }
+          catch (error) { observeFailure("native-cursor", error); throw error; }
+        } };
+      } catch (error) { observeFailure("native-exec", error); throw error; }
+    } }, reserve, received);
     let limited = 0, blocked = 0;
     const canSpend = budget.canSpend.bind(budget), lookahead = budget.lookahead.bind(budget), lookaheadAsync = budget.lookaheadAsync.bind(budget);
     budget.canSpend = quote => { const fits = canSpend(quote); if (!fits) refused.push({ quote: { ...quote }, used: budget.admitted() }); return fits; };
@@ -197,7 +226,11 @@ test("the Native driver confirms 10,001 one-entry passes and preserves retained 
         const value = await action();
         if (ordinal > 0 && value === null && firstNull === null) firstNull = ordinal;
         return value;
-      } catch (error) { if (ordinal > 0) retain(error, "wait-action"); throw error; }
+      } catch (error) {
+        observeFailure("wait-action", error);
+        if (ordinal > 0) retain(error, "wait-action");
+        throw error;
+      }
     });
     host.sendArchive = async request => {
       sending = true;
@@ -218,6 +251,11 @@ test("the Native driver confirms 10,001 one-entry passes and preserves retained 
       }
     }
     const cost = budget.admitted();
+    if (result.state !== "confirmed") {
+      const observation = { after, result, firstFailure, backwardsClock, cost };
+      (context.task.meta as Record<string, unknown>)["nativeScalePlanningFailure"] = observation;
+      console.info("TEST Native scale planning failure", JSON.stringify(observation));
+    }
     // Separate, post-pass observation; mark/attempt/confirm share `budget`.
     return { result, cost, refused, limited, blocked, stored: new ArchiveRows(archiveSql(state), lane.at).load() };
   });
