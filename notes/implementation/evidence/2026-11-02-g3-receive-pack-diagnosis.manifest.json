@@ -1,0 +1,169 @@
+{
+  "qualification": "One isolated live scratch-ref reproduction plus offline reply replay; all raw Git bytes and logs remain private. No original G3 room call, retry, fix, deployment or G3 acceptance.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-g3-receive-pack-diagnosis",
+  "checkpoint": "ec48e2d526aa27c3746e7455c3eda6f8a3c87da4",
+  "tree": "a1060ed6d26462b5ea58753a6b791b8816033c75",
+  "fileCount": 32,
+  "files": [
+    {
+      "path": "artroom-build-receive-pack-probe.mjs",
+      "bytes": 7253,
+      "sha256": "de8bc534be2a9f3f1032072a57fa636ee7d49b2991c6e0fd4480d5adbafc390f"
+    },
+    {
+      "path": "artroom-capture-g3-transport-logs.py",
+      "bytes": 2850,
+      "sha256": "9aa04a6bae1446634d8d6bdde811338f6e9b56f710a7aeecfe0d2f12989c33bc"
+    },
+    {
+      "path": "artroom-inspect-g3-transport-logs.py",
+      "bytes": 1594,
+      "sha256": "03befece76ca1a7b6e2f23fa804a07f9c6e121cc2a58f960762d50d5f95f01d8"
+    },
+    {
+      "path": "check-scripted-probe.mjs",
+      "bytes": 4725,
+      "sha256": "842e42a510e3b1260c9417d58961d6ce3c2668e72c1fc5ea6744b860cee55719"
+    },
+    {
+      "path": "collect-stop.py",
+      "bytes": 3204,
+      "sha256": "313a566ec606019935e0762def1dbc9a605dbffa17bd99b5eb515d7e8ec81a65"
+    },
+    {
+      "path": "log-patterns.json",
+      "bytes": 1878,
+      "sha256": "a8e21d15309e2a9982fb27bce7a0dfcab50415695c8efcb3401ccc8b94e3aa98"
+    },
+    {
+      "path": "logs-capture-progress.json",
+      "bytes": 6097,
+      "sha256": "7fe2c3882694fa23e2e0cea3fc4cfac9dd9b0f74228b0d39114568d53e7b66a5"
+    },
+    {
+      "path": "official-source.json",
+      "bytes": 705,
+      "sha256": "99a85fd4bf2c73e4dd562deb7b3edb857014fecd110e8e7a0894ae334704a071"
+    },
+    {
+      "path": "planner-setup-request.json",
+      "bytes": 3561,
+      "sha256": "09df8cb522e18c302100f4dbcea43a0b3457217345f05cb3e6f3f8c52a35dc60"
+    },
+    {
+      "path": "planner-setup.json",
+      "bytes": 2435,
+      "sha256": "19715bcf48f757cf91617e5975edb94b5b0ee431c59d85fedd4f19ebfd085884"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 6046,
+      "sha256": "fcab3b12e089b331a9016f7884d4f0b9c00044a2ab89914ffb2195f7cc34183c"
+    },
+    {
+      "path": "probe-independent-ref-read.json",
+      "bytes": 769,
+      "sha256": "4637954239a928aa1869dbeba0c2727bed4243080f875d64fe1af806f52c8889"
+    },
+    {
+      "path": "probe-preflight.json",
+      "bytes": 2005,
+      "sha256": "5cd320da25cfc972a9b6351cc853ff418405708b781c542bb1c407393b886d2e"
+    },
+    {
+      "path": "probe-result.json",
+      "bytes": 2918,
+      "sha256": "51be3417931f3d066956b27f50ea6779f9349a8f2c0172acef2469e493ce6d8a"
+    },
+    {
+      "path": "probe-run.json",
+      "bytes": 2907,
+      "sha256": "6ee9f461e039d97ade796841952a81604d73eaa7868d475005477535e37d6187"
+    },
+    {
+      "path": "probe-source/local-bundle-check.json",
+      "bytes": 429,
+      "sha256": "02d864af30eb39db6fee5289777cae415adf8fb1533498adc86f596f8ca6baef"
+    },
+    {
+      "path": "probe-source/probe-identity.json",
+      "bytes": 677,
+      "sha256": "2ea40c3ba3c2e637c674203b982b2fd1ea80abb72281d5d96c5a4a5a967aa1bf"
+    },
+    {
+      "path": "probe-source/worker.ts",
+      "bytes": 5699,
+      "sha256": "c82d760f8240d5f7dcf9344514fb47a6e12d05280900331ef87667754cc4ea77"
+    },
+    {
+      "path": "probe-source/wrangler.json",
+      "bytes": 362,
+      "sha256": "bef2c67271ffc860da23e09981dcee8a7e29bf7750995b62e02d7c83ff7df143"
+    },
+    {
+      "path": "probe-stage-result.json",
+      "bytes": 2278,
+      "sha256": "3f123168a15b9c407a35c16066ff81dc0ae7eecc081f31a775b2d9d45ddfc96f"
+    },
+    {
+      "path": "probe-stop.json",
+      "bytes": 1007,
+      "sha256": "3a521ca04f368fb1aa94052909a2236ba81708bd65f276d70776af6d1fde21c7"
+    },
+    {
+      "path": "protocol-sources.json",
+      "bytes": 1032,
+      "sha256": "7f3d06448eae61d19f2729378b8010cc50dac51b544831c0ae22d7390bdb7b8e"
+    },
+    {
+      "path": "replay-reply.mjs",
+      "bytes": 4489,
+      "sha256": "3081880e762452ee1c4244485ec49feb478988c46bf43628479bc8befea1f359"
+    },
+    {
+      "path": "reply-replay.json",
+      "bytes": 2501,
+      "sha256": "d4169f9e56b4882ce525cf47b12e4b1748f91e28b1192ceefe6a1ea961c3dcc3"
+    },
+    {
+      "path": "run-probe.py",
+      "bytes": 2113,
+      "sha256": "74bbd66bf95bec43d04d636d20302050de552e2ce7225bd9d4bf36f869099135"
+    },
+    {
+      "path": "scripted-probe-check.json",
+      "bytes": 693,
+      "sha256": "206564ac99fbaf2703f730d26a43c0f3a44f1ce613770720d26fd48ade2f0f50"
+    },
+    {
+      "path": "seal-diagnosis.py",
+      "bytes": 4846,
+      "sha256": "aac53fbaf9873c84f9f7c4aae1d9674981827df426f5f9f16d3abdc5ce8cb3b7"
+    },
+    {
+      "path": "seal-first-refusal.json",
+      "bytes": 352,
+      "sha256": "d0e5e63dffda291a0abecd60eb1795fc2ebc3dcfd0a2cb751949936c2a1fda3a"
+    },
+    {
+      "path": "source-proof.json",
+      "bytes": 778,
+      "sha256": "c4891b2a8a9317ad87d0794b833d753305df14c57dbe416efcc65c0ed67ed163"
+    },
+    {
+      "path": "stage-receive-pack-probe.py",
+      "bytes": 2677,
+      "sha256": "01ece88612748b8eb4f1ff9445500bc07e96e51ffe95470b9dd31fbbcbb9231b"
+    },
+    {
+      "path": "stop-probe-first-wait.py",
+      "bytes": 1895,
+      "sha256": "8682127d51dcc21266f81c8d505f76dfce4b920fc6982d36af9baa6d55077edb"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 2784,
+      "sha256": "f44a701975d57a124dcbdfd87e03a0996b639e154861b4b5b3f5b2817916dfdb"
+    }
+  ]
+}
