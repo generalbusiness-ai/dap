@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I will add and land the reviewed O4 card-origin stop as a documentation-only follow-up.","body":{"branch":"builder/o4-origin-runbook-20261103"}}
+{"kind":"artifact","text":"docs/o4-connect.md at exact 10fe02abce32ceec35b20850f90cb2e0087cb240 on builder/o4-origin-runbook-20261103, under promise git:sha1…c6c1beb on request git:sha1…bf539af","body":{"commit":"10fe02abce32ceec35b20850f90cb2e0087cb240","path":"docs/o4-connect.md"}}
