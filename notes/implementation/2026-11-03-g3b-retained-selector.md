@@ -58,8 +58,29 @@ of the same name. The actual exit, stdout, stderr, complete request list,
 and private CLI outcome remain intact. The record does not reconstruct
 that lost local timestamp.
 
-This checkpoint awaits its required frozen-source gate and independent
-review. It creates no room, changes no remote source or home, deploys
-nothing, and prepares no new binding row. The planner retains the ruling
-on the exact same-home live continuation. G3 and Goose acceptance remain
-open.
+The required gate at clean `4e795071`, tree `0f2073fc`, exits 1 after
+104.717 seconds. Its kernel stage passes, and Node passes 132 of 133 cases.
+The sole failure is this changed claim file's old security source seal.
+Counting, plain, and Native remain unreached. Source and tree match before
+and after, and no owned process remains.
+
+The maintained parser confirms the reviewed claim seal as
+`13400cce66b828c18f964587e294baea073c5e5c3054a86ff29a466354846dbe`.
+The complete served-route inventory still matches its documentation:
+308 rows across eight Workers. The isolated repair adopts that seal in
+the failing test file. No production input changes after the failed gate.
+The limited follow-up in [Test dap](../../docs/testing.md#follow-up-after-a-gate)
+runs the whole security owner and the three unreached stages, preserving
+the original failed gate as a failure. It does not repeat the whole gate
+or the other Node owners.
+
+The outer gate log starts in durable custody. Despite `TMPDIR`, the
+unchanged gate writes its stage originals in the default OS temp directory.
+All 23 stage files have exact, hash-verified durable copies; their OS
+originals remain. The evidence does not claim those stage files started
+in durable custody.
+
+This checkpoint awaits that limited follow-up and independent review.
+It creates no room, changes no remote source or home, deploys nothing, and
+prepares no new binding row. The planner retains the ruling on the exact
+same-home live continuation. G3 and Goose acceptance remain open.
