@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:612091930933e9bea870ba7640352d76d0482afc","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-oauth-browser-42a.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:631e21dd934250629e4e616924edf00b9cc711e2","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/own-agent-membership.test.ts."}
