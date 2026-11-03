@@ -13,6 +13,9 @@ declare class TextDecoder {
   decode(input?: Uint8Array): string;
 }
 
+// Preserve a control request before an asynchronous signer can yield.
+declare function structuredClone<T>(value: T): T;
+
 // The timer and the abort signal of a deadline (`take.ts`).
 
 declare function setTimeout(run: () => void, ms: number): unknown;
