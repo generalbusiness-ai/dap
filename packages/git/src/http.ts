@@ -252,8 +252,10 @@ export class SmartHttpGit {
     const unknown: PushAnswer = { ran: true, refusal: null, exit: null, timedOut: false, reported: null, others: false, code: null };
     try {
       const lines = packets(await this.#request("git-receive-pack", "application/x-git-receive-pack-result", controller.signal, body));
-      // Plain report-status only: exactly one unpack line, one status, one flush.
-      if (lines.length !== 3 || !lines[0]?.startsWith("unpack ") || lines[0].length <= 7) return unknown;
+      // Plain report-status: one unpack line, one own status, one flush.
+      // GitHub may add exactly one more terminal flush, and no other record.
+      if ((lines.length !== 3 && lines.length !== 4) || lines[2] !== null || (lines.length === 4 && lines[3] !== null)
+        || !lines[0]?.startsWith("unpack ") || lines[0].length <= 7) return unknown;
       const status = lines[1];
       if (status === `ok ${update.ref}` && lines[0] === "unpack ok") {
         const reported: Reported = update.old === null ? "created" : update.new === null ? "deleted" : "updated";
