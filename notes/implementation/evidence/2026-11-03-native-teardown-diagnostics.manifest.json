@@ -1,0 +1,39 @@
+{
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-native-teardown-diagnostics",
+  "qualification": "Two unreproduced narrow teardown diagnostics; cause remains open.",
+  "checkpoint": "2df72186c3672cefd35d9b4c894cd68085eb2171",
+  "fileCount": 6,
+  "files": [
+    {
+      "path": "observations.json",
+      "bytes": 1826,
+      "sha256": "69b141d54ef15420aa6da626f3b388ae86bb786bc938ecd2483dda763f8dcd1e"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 1478,
+      "sha256": "6cf32bc122edbaee8c6d234ee2c232fc4b2c2d8dfe7d0654438c418b4fd99c2c"
+    },
+    {
+      "path": "trace-01.json",
+      "bytes": 523,
+      "sha256": "93d7642f0debdac3ca86a7f7ccdaa9915b8b37cca6b6da4b4bb9610bf6095138"
+    },
+    {
+      "path": "trace-01.py",
+      "bytes": 2578,
+      "sha256": "30ec520246a4d7e1ecb7d1952161fa8b1a5c9b58fc1448052a5bf9b5c6eb6cb3"
+    },
+    {
+      "path": "trace-02.json",
+      "bytes": 652,
+      "sha256": "8cc09bef8ca0e9107230dc9120616227b3f9a37151dc52554c5e24e00e686dee"
+    },
+    {
+      "path": "trace-02.py",
+      "bytes": 2992,
+      "sha256": "2480751f79bfa4609781d90bf45c31bafcdcd2be2e96e71afa867918ff9d4707"
+    }
+  ],
+  "sha256sumsSha256": "809a4e7f1b94dc9fa08e5d055ec8536d67ec0c389d708022005da720a228569d"
+}
