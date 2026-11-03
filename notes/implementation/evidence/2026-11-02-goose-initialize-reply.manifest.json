@@ -1,0 +1,89 @@
+{
+  "qualification": "Existing sealed initial Goose Desktop1.57.0 diagnostic: parent-window initialize reply names2025-11-21, unchanged production card refuses that revision, no Native act. Diagnostic listener injects only the returned revision banner. Exact old configuration restoration and public pinned spec comparison retained. No fresh scene or rendering claim.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-goose-initialize-reply",
+  "checkpoint": "08a16dc652186e3d80c06abab98e2b4d9bc12690",
+  "fileCount": 16,
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 2142,
+      "sha256": "ee45e21525bee6da6299322f552546fe48a2ffb5c03f001b7a795790cfc67ee0"
+    },
+    {
+      "path": "config-restoration.json",
+      "bytes": 250,
+      "sha256": "110aadd41336a5bc887bffc2653656c1eb35608c17a688d3574f52f51fdf9aaa"
+    },
+    {
+      "path": "desktop.events.ndjson",
+      "bytes": 6543,
+      "sha256": "20e93b7b04c605dbd6cc01099d643e0986136a7a5e3687752c72a62686ffdaaa"
+    },
+    {
+      "path": "live-initialize-observation.json",
+      "bytes": 1952,
+      "sha256": "b1485c313657a9fc66ee89fe46441be0c1e6cfc4649cf2e80029c4eabac61883"
+    },
+    {
+      "path": "observe-stdio.mjs",
+      "bytes": 7611,
+      "sha256": "25ca8b5d0f2f1be55126fd7df6c1df7e5601e28cb46f83edba0441b85dfa2d26"
+    },
+    {
+      "path": "resource-check-result.json",
+      "bytes": 333,
+      "sha256": "e2150dfc6f6c9fa9385a2b9551f491e3b9d9498c0648bd3122750a4fe334ba9f"
+    },
+    {
+      "path": "source-comparison.json",
+      "bytes": 4462,
+      "sha256": "4f8c48894710a3d7853b7f01a7dfa7ad2a26904f627b05d23def48cafa4bfe0a"
+    },
+    {
+      "path": "spec/current-specification-2026-01-26-apps.mdx",
+      "bytes": 59181,
+      "sha256": "ee452a7d1b9b7fb900acfeb4d6932d3963375b0f3f37d196a4b93eb80312af0e"
+    },
+    {
+      "path": "spec/current-src-app-bridge.ts",
+      "bytes": 75093,
+      "sha256": "e8137c95b6adeaf42df5b716e46c461203f0a9e6bb34326d9b7ab87b59586880"
+    },
+    {
+      "path": "spec/current-src-app.ts",
+      "bytes": 85148,
+      "sha256": "510843d5028ade5fc1a20090b0e2b09eb1ac5c83c9b70744647e1d6796f33d66"
+    },
+    {
+      "path": "spec/current-src-spec.types.ts",
+      "bytes": 29430,
+      "sha256": "f46212be3355fa0437c81b01659187efacdeef6fa50be23be02a47d03610bc6a"
+    },
+    {
+      "path": "spec/index.json",
+      "bytes": 2224,
+      "sha256": "326dd06bb931d51c4a3272963f48ddf871c1a347437046fb922d9d5e163dfc38"
+    },
+    {
+      "path": "spec/old-specification-draft-apps.mdx",
+      "bytes": 49969,
+      "sha256": "df3e4f10cc22fa59c6b2fe141c19af2f161e9124bcde29464b1deb655344d0bc"
+    },
+    {
+      "path": "spec/old-src-app-bridge.ts",
+      "bytes": 46230,
+      "sha256": "46cd9774d9b7a45426c35b290d049feba1cf0106f9f899e4d9add20d12cd39e1"
+    },
+    {
+      "path": "spec/old-src-app.ts",
+      "bytes": 35817,
+      "sha256": "0239033a8bdea262b6234bdf4bdfef6d242ed0c4864f3710757b78679df2e615"
+    },
+    {
+      "path": "spec/old-src-spec.types.ts",
+      "bytes": 20131,
+      "sha256": "1979f7e24373e43256753af07f61165557257ced8ca0b16e6448e515d016595b"
+    }
+  ],
+  "sha256sumsSha256": "13f9c8b23942c75220198a0cce5cd185a6f455cf75d77071b2de1a128f33eb36"
+}

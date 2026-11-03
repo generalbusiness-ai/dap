@@ -1,0 +1,59 @@
+{
+  "qualification": "Completed fixed-source Goose Desktop scene, allowlisted public projection, private original archive, one Native read-token press, exact configuration restoration; explicit UI and acceptance limits. No fresh UI success.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-goose-supported-desktop",
+  "checkpoint": "e32d7dfc4f972051714b3aa6b0afc2921a854248",
+  "fileCount": 10,
+  "files": [
+    {
+      "path": "baseline-git-points.json",
+      "bytes": 267,
+      "sha256": "a831b1773c4c6cd8b0967007b5bda219b40126eeac85ced799fc6262c3adc833"
+    },
+    {
+      "path": "before-registration.json",
+      "bytes": 501,
+      "sha256": "6483a63354d56517e01207b6adae7250ff6f9adb77099d22b4ed3361bbf0979c"
+    },
+    {
+      "path": "change-scene.json",
+      "bytes": 1305,
+      "sha256": "c9496188c8ecaf9c32af620b9490fab8bc92cfe560fa98d366d4536fb8ad0ea7"
+    },
+    {
+      "path": "configuration-restored.json",
+      "bytes": 696,
+      "sha256": "99bcb72502e8c4c13643342f4698e7bf6284d6a40762f7ee610e7f202279ba5f"
+    },
+    {
+      "path": "desktop.events.ndjson",
+      "bytes": 15790,
+      "sha256": "0c4952eb5b427d17efc591c1d35ef4fda2b1a1d1b2cf94a4fbc969d4051f7308"
+    },
+    {
+      "path": "native-diff-press.json",
+      "bytes": 1155,
+      "sha256": "17982e3e64923ebf32d7a7016546225e4f79ceec8dcf54a66a7d710b7e421585"
+    },
+    {
+      "path": "native-ui-observations.json",
+      "bytes": 3376,
+      "sha256": "135cec02b114a8e22a4622e2b66749ba2a7ca0bfc1a323ccc8c263a97cd6d94f"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 8052,
+      "sha256": "a6bc6d25892f6e31e7dd3a5ffa5adf88e45e73329de6305d5a5ac12dc250be03"
+    },
+    {
+      "path": "qualification.json",
+      "bytes": 1306,
+      "sha256": "054484276f3b0a1354eb354dab9e64d880de2e8e616085854806bf40f27a8b10"
+    },
+    {
+      "path": "seal-evidence.py",
+      "bytes": 4160,
+      "sha256": "622525e585bf5bf16b11f78e0e12591ed4750867b38158aee0848c1dd8fd6421"
+    }
+  ],
+  "sha256sumsSha256": "94ddb9aadc3ff7c65445e9312389bd069345bc03cb40d92e0eaeaaf7095c0c72"
+}
