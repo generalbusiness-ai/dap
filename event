@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/mcp/vitest.config.ts","body":{"commit":"79f7d1b8369a3b245164074eeb3a6f3f3bd9e1dc","path":"packages/mcp/vitest.config.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0f453d42f96b8ba1a73c7a2abb1649b5fee44e67","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-goose-integrated-gate.manifest.json."}
