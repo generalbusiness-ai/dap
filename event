@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:355aa1f85b7f124c491e17d8a92ce337ffb80315","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.connect.jsonc."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6f84e0352f69fd21262a759c3fe344665988f894","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-o4-connect-gate.manifest.json."}
