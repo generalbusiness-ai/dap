@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6103a651acfd171b8cb325c7b3c37c8b7e0e853c","text":"Merge retired a covered predecessor; the successor is at scripts/security-entry-points.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:63016282eaaf19591c9974e8b8c1971d375ed11d","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.lending.jsonc."}
