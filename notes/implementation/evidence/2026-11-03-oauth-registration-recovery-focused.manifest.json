@@ -1,0 +1,95 @@
+{
+  "qualification": "Incremental owning compilers, real-SQL and Native owners, two expected-failure controls with exact restoration, source inventory and helper checks. Not one frozen aggregate; the separate full gate retains its actual failure.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-registration-recovery-focused",
+  "checkpoint": "41a4a7e91a03edbce45c39e7fe8f1b556d74e308",
+  "tree": "94f916e1a79b8a9d7c44d0a1f1dec703e9f92044",
+  "fileCount": 17,
+  "files": [
+    {
+      "path": "01-mcp-source-compiler.json",
+      "bytes": 2113,
+      "sha256": "33d686a760155d54eac57c964fe51def3972de507c9bd8febd8dfc1f6e7e69e7"
+    },
+    {
+      "path": "02-mcp-native-compiler.json",
+      "bytes": 2119,
+      "sha256": "2ecf350cbf9002a21d5fdc3df4bea5e19fc016b15b73612a760c7cdcde500f20"
+    },
+    {
+      "path": "03-scope-source-compiler.json",
+      "bytes": 2120,
+      "sha256": "ed4fb6990d0d8667046ab39b58bf9fa679b6ddbd7bb53d67f6d8009a03b88c30"
+    },
+    {
+      "path": "04-pool-compatibility.json",
+      "bytes": 2057,
+      "sha256": "9d17d8d9c7e2f5a6ba0ce59f555ac0c6532cc1930718e5632cc6cc2fb6622250"
+    },
+    {
+      "path": "05-registry-issuer-native-owners.json",
+      "bytes": 2289,
+      "sha256": "e74a263603f8291092620f6a16996de281ccd06f08595078b4597c7e8080935e"
+    },
+    {
+      "path": "06-permanent-capacity-control-control.json",
+      "bytes": 716,
+      "sha256": "2b719627f5f414afa8ce37bb9ebdd0351dc997819ff1c3babdc8b204ed6d28d5"
+    },
+    {
+      "path": "06-permanent-capacity-control.json",
+      "bytes": 2181,
+      "sha256": "00ff59109cc05212894cc05f0e6714ad4e5db8b884b71bfa138f42391f191937"
+    },
+    {
+      "path": "07-anonymous-renewal-control-control.json",
+      "bytes": 709,
+      "sha256": "2154815ea37661d1cbe2e116ab380a2d80fff1b8e7553dfedb564ccf2fdb8343"
+    },
+    {
+      "path": "07-anonymous-renewal-control.json",
+      "bytes": 2180,
+      "sha256": "7fcf2f682a2616ee5bc017c114adf2c6386a176e7bc158a6466d78a1e9cec92d"
+    },
+    {
+      "path": "08-security-entry-owners.json",
+      "bytes": 2166,
+      "sha256": "2b9362383e460d1b0de5509ade104f6284f0e30c43855646e12f855d7f9ecf0d"
+    },
+    {
+      "path": "09-shared-helpers.json",
+      "bytes": 2162,
+      "sha256": "bad2f7ca16d1949aa133af1a182d2328540abfa14ead16c9ce546ec722ed8462"
+    },
+    {
+      "path": "10-usage-owner.json",
+      "bytes": 2170,
+      "sha256": "29b534b2986d9d76e8a7a13b2f8dc2d7e5daaab5beef53cf83409517528d03cf"
+    },
+    {
+      "path": "controls.py",
+      "bytes": 2492,
+      "sha256": "bfe56473e0fd959419805ee8a0224bc90da9fa4ea176341473022b53c2428b0a"
+    },
+    {
+      "path": "driver.py",
+      "bytes": 1737,
+      "sha256": "b1d5eeb0aa7897241b602ad2acd3ea47358955a2bd2e3f1ada9d6693a4133145"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 4770,
+      "sha256": "42459df022d410a28f17c697ec84080ee4ee53b0e797c37b25c9cf6666ea0485"
+    },
+    {
+      "path": "reviewed-seal-changes.json",
+      "bytes": 1672,
+      "sha256": "6a9ceaafa11293e3c4407337c6d9d3dc64eae4f817dae8329068698d3cb71c0a"
+    },
+    {
+      "path": "source-adoption.json",
+      "bytes": 1082,
+      "sha256": "6fef2ab46b30540c0fdbe68e27b23f875addfd987792b9bae7219ac04766beaf"
+    }
+  ],
+  "sha256sumsSha256": "597e118436da8caa0f93eab46a9604de8c15f81c5234b8342f91f85bec1889aa"
+}

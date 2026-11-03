@@ -44,7 +44,7 @@ import { mcpChallengeResponse, mcpUnauthorized, publicRequestUrl } from "./oauth
 import { OAuthAccess, equalTokenDigest, type OAuthAccessCandidate } from "./oauth-access.ts";
 import { OAuthHttpLayers, type OAuthHttpLayer } from "./oauth-http.ts";
 import { OAuthIssuer, type OAuthResult } from "./oauth-issuer.ts";
-import { oauthGrant, OAuthError, type OAuthGrantContext } from "./oauth-parameters.ts";
+import { isRegisteredOAuthClient, oauthGrant, OAuthError, type OAuthClient, type OAuthGrantContext } from "./oauth-parameters.ts";
 
 export const CONTROL_BUDGET = 16 * 1024 * 1024;
 export const RETIRE_RESERVE = 1024 * 1024;
@@ -454,6 +454,9 @@ export interface AgentPorts extends Authority {
   fetch: Fetch;
   now(): number;
   random(bytes: number): Uint8Array;
+  /** Internal registry retention after verified Native authority. The returned
+   * deadline caps this grant; anonymous resolution cannot call this port. */
+  retainClient?: (client: OAuthClient) => Promise<number>;
   /** A deterministic short expiry timer in tests; production uses setTimeout. */
   scheduleExpiry?: (delayMs: number, run: () => Promise<void>) => () => void;
   every?: (ms: number, run: () => void) => () => void;
@@ -589,7 +592,18 @@ export class HostedAgent {
       if (!reserved) return answer(507, { error: "full", rule: "control-budget" });
     }
     let result: ControlAnswer;
-    try { result = await this.#issuer.issue(request.op, controller, given.binding, context.client.client_name); }
+    try {
+      let registrationEnds: number | undefined;
+      if (isRegisteredOAuthClient(context.client.client_id)) {
+        if (!this.ports.retainClient) return answer(503, { error: "temporarily_unavailable" });
+        registrationEnds = await this.ports.retainClient(structuredClone(context.client));
+        const current = this.#row();
+        if (!current || current.state !== "enrolled" || await this.#grantAuthority(request, current) !== controller || this.#row()?.state !== "enrolled") return answer(403, { error: "unauthorized", rule: "controller-role" });
+        const late = bound(signed, service, "grant", first ? null : this.ports.id, body, this.ports.now());
+        if (late) return late;
+      }
+      result = await this.#issuer.issue(request.op, controller, given.binding, context.client.client_name, registrationEnds);
+    }
     catch (error) { if (!(error instanceof OAuthError)) throw error; return answer(error.status, { error: error.error }); }
     this.ports.fault?.("complete");
     this.sql.transaction(() => {

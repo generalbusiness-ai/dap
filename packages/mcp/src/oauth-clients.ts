@@ -1,7 +1,8 @@
 /** Bounded public-client registration and metadata cache. Listed origins and
  * their DNS are trusted. This policy does not inspect the socket address. */
 import { b64url, canonicalize, LATE, parseStrict, takeBytes, utf8 } from "@generalbusiness/dap-bytes";
-import { oauthClient, oauthRedirectPolicy, OAuthError, OAUTH_CLIENT_BYTES, OAUTH_CLIENT_CACHE_MS, OAUTH_CLIENTS_MOST, type OAuthClient, type OAuthRedirectPolicy } from "./oauth-parameters.ts";
+import { OAUTH_GRANT_MS } from "./oauth-access.ts";
+import { isRegisteredOAuthClient, OAUTH_CLIENT_UNUSED_MS, oauthClient, oauthRedirectPolicy, OAuthError, OAUTH_CLIENT_BYTES, OAUTH_CLIENT_CACHE_MS, OAUTH_CLIENTS_MOST, type OAuthClient, type OAuthRedirectPolicy } from "./oauth-parameters.ts";
 import type { Sql } from "./sqlite-custody.ts";
 
 export interface OAuthSettings { OAUTH_REDIRECT_URIS?: string; OAUTH_CLIENT_METADATA_ORIGINS?: string }
@@ -47,10 +48,19 @@ const invalid = (): never => { throw new OAuthError("invalid_client_metadata"); 
 export class OAuthClients {
   readonly #pending = new Map<string, Promise<OAuthClient>>();
   constructor(private readonly sql: Sql, private readonly ports: OAuthClientPorts) {
-    sql.exec(`CREATE TABLE IF NOT EXISTS oauth_client (id TEXT PRIMARY KEY, row TEXT NOT NULL, created INTEGER NOT NULL)`);
+    sql.exec(`CREATE TABLE IF NOT EXISTS oauth_client (id TEXT PRIMARY KEY, row TEXT NOT NULL, created INTEGER NOT NULL, expires INTEGER NOT NULL)`);
+    // One persisted conservative deadline covers pre-upgrade grants. Object
+    // reconstruction never renews an existing row.
+    if (!sql.exec(`PRAGMA table_info(oauth_client)`).toArray().some(row => row["name"] === "expires")) {
+      const expires = this.#now() + OAUTH_GRANT_MS;
+      sql.transaction(() => {
+        sql.exec(`ALTER TABLE oauth_client ADD COLUMN expires INTEGER`);
+        sql.exec(`UPDATE oauth_client SET expires = ?`, expires);
+      });
+    }
     sql.exec(`CREATE TABLE IF NOT EXISTS oauth_client_cache (id TEXT PRIMARY KEY, row TEXT NOT NULL, created INTEGER NOT NULL, expires INTEGER NOT NULL)`);
   }
-  #now(): number { const now = this.ports.now(); if (!Number.isSafeInteger(now) || now < 0 || !Number.isSafeInteger(now + OAUTH_CLIENT_CACHE_MS)) throw new OAuthError("temporarily_unavailable", 503); return now; }
+  #now(): number { const now = this.ports.now(); if (!Number.isSafeInteger(now) || now < 0 || !Number.isSafeInteger(now + OAUTH_GRANT_MS)) throw new OAuthError("temporarily_unavailable", 503); return now; }
   #read(table: "oauth_client" | "oauth_client_cache", id: string, policy: OAuthRedirectPolicy): OAuthClient | null {
     const scalar = this.sql.exec(`SELECT octet_length(row) AS bytes FROM ${table} WHERE id = ?`, id).toArray()[0];
     if (!scalar || typeof scalar["bytes"] !== "number" || scalar["bytes"] > 8192) return null;
@@ -65,15 +75,34 @@ export class OAuthClients {
     const now = this.#now(), text = canonicalize(client as never);
     if (utf8(text).length > 8192) return invalid();
     this.sql.transaction(() => {
+      this.sql.exec(`DELETE FROM oauth_client WHERE expires <= ?`, now);
       const n = Number(this.sql.exec(`SELECT count(*) AS n FROM oauth_client`).toArray()[0]!["n"]);
       if (n >= OAUTH_CLIENTS_MOST || this.sql.exec(`SELECT id FROM oauth_client WHERE id = ?`, id).toArray().length) throw new OAuthError("temporarily_unavailable", 503);
-      this.sql.exec(`INSERT INTO oauth_client (id, row, created) VALUES (?, ?, ?)`, id, text, now);
+      this.sql.exec(`INSERT INTO oauth_client (id, row, created, expires) VALUES (?, ?, ?, ?)`, id, text, now, now + OAUTH_CLIENT_UNUSED_MS);
     });
     return { ...client, client_id_issued_at: Math.floor(now / 1000), grant_types: ["authorization_code", "refresh_token"], response_types: ["code"] };
   }
+  /** Internal only: the agent calls after signed control and Native authority.
+   * Public resolution never writes or renews a registration. */
+  retain(client: OAuthClient): number {
+    if (!isRegisteredOAuthClient(client.client_id)) return invalid();
+    const now = this.#now();
+    return this.sql.transaction(() => {
+      const row = this.sql.exec(`SELECT row, expires, octet_length(row) AS bytes FROM oauth_client WHERE id = ?`, client.client_id).toArray()[0];
+      if (!row || typeof row["expires"] !== "number" || !Number.isSafeInteger(row["expires"]) || row["expires"] <= now
+        || typeof row["bytes"] !== "number" || row["bytes"] > 8192 || row["row"] !== canonicalize(client as never)) return invalid();
+      const expires = Math.max(row["expires"], now + OAUTH_GRANT_MS);
+      this.sql.exec(`UPDATE oauth_client SET expires = ? WHERE id = ?`, expires, client.client_id);
+      return expires;
+    });
+  }
   async resolve(id: string, policy: OAuthPolicy): Promise<OAuthClient> {
     if (typeof id !== "string" || utf8(id).length > 2048) return invalid();
-    if (/^dap-client-[A-Za-z0-9_-]{43}$/.test(id)) return this.#read("oauth_client", id, policy.redirects) ?? invalid();
+    if (isRegisteredOAuthClient(id)) {
+      const expires = this.sql.exec(`SELECT expires FROM oauth_client WHERE id = ?`, id).toArray()[0]?.["expires"];
+      if (typeof expires !== "number" || !Number.isSafeInteger(expires) || expires <= this.#now()) return invalid();
+      return this.#read("oauth_client", id, policy.redirects) ?? invalid();
+    }
     const url = oauthMetadataUrl(id, policy.origins); if (url === null) return invalid();
     const now = this.#now();
     const held = this.sql.exec(`SELECT created, expires FROM oauth_client_cache WHERE id = ?`, id).toArray()[0];

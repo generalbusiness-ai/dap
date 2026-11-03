@@ -2055,8 +2055,20 @@ the old token's streams while preserving that grant's sessions. Other
 grants retain their sessions.
 
 `POST /oauth/register` registers a bounded JSON public-client record.
-The Worker keeps at most 1,000 registrations. A full registry answers
-`503` with `Retry-After`. Client IDs can instead name HTTPS client
+The Worker keeps at most 1,000 registrations. An unused registration expires
+one hour after creation. Anonymous lookup does not renew it. Before checking
+capacity, registration removes expired rows. A full table whose rows remain
+valid answers `503` with `Retry-After`.
+
+After fresh signed-control and Native authority checks, a grant can protect
+its exact registered client for the grant's 30-day maximum lifetime. The
+issuer caps that grant at the registry's returned deadline and rechecks
+authority after the retention reply. A completed operation replay renews
+nothing. Pre-upgrade rows receive one persisted 30-day migration deadline;
+reconstructing a registry does not extend it. After expiry, a client must
+register again before starting another authorization.
+
+Client IDs can instead name HTTPS client
 metadata documents. `OAUTH_CLIENT_METADATA_ORIGINS` admits exact origins;
 its defaults are `https://claude.ai` and `https://chatgpt.com`. A custom
 JSON array replaces those defaults. The Worker trusts each admitted
