@@ -15,7 +15,7 @@ import { REGISTER_FULL, validStep, accepted, active, configOf, createdBy, done, 
 /** Saved envelopes are checked against their actual caller and destination,
  * never re-signed from metadata. An accepted marker belongs to that scope. */
 
-const RETAINED_OPEN_REGISTERS = new Set<PlatformDefinition>(["platform:register@5", "platform:register@17", "platform:register@18", "platform:register@19", "platform:register@20", "platform:register@21", "platform:register@24"]);
+const RETAINED_INSTALL_REGISTERS = new Set<PlatformDefinition>(["platform:register@5", "platform:register@17", "platform:register@18", "platform:register@19", "platform:register@20", "platform:register@21", "platform:register@24", "platform:register@25"]);
 /** Local revision selector from retained configured-service install custody.
  * These exact native pins open singleton item 0 at revision 1 and never
  * change it. This is neither a Summary nor proof of history or authority.
@@ -24,11 +24,16 @@ const RETAINED_OPEN_REGISTERS = new Set<PlatformDefinition>(["platform:register@
 function retainedRegisterSelector(config: Config, register: ScopeRef, key: KeyId): { definition: PlatformDefinition; expected: { register: 1 } } | null {
   try {
     const plan = config.plan;
-    if (!plan || !RETAINED_OPEN_REGISTERS.has(plan.definition) || !DIRECTORY_OF[plan.definition] || config.key !== "operator"
+    if (!plan || !RETAINED_INSTALL_REGISTERS.has(plan.definition) || !DIRECTORY_OF[plan.definition] || config.key !== "operator"
       || plan.service !== config.service || !isSignedIntentShape(plan.founding) || !verifySignedIntent(plan.founding)) return null;
     const intent = plan.founding.intent, definition = platform(plan.definition);
+    // The binding cohort keeps the same immutable register selector. Its
+    // original keys-policy operator must also occur in the signed founders.
+    const bindingFounder = plan.definition === "platform:register@25" && intent.fields["policy"] === "keys"
+      && intent.fields["host"] === "none" && intent.fields["namespace"] === ""
+      && Array.isArray(intent.fields["founders"]) && intent.fields["founders"].includes(key);
     if (!definition || definition.data.name !== "platform:register" || intent.actor !== key || intent.kind !== "install" || intent.to !== null || intent.on !== null
-      || Object.keys(intent.expected).length !== 0 || intent.fields["policy"] !== "open") return null;
+      || Object.keys(intent.expected).length !== 0 || (intent.fields["policy"] !== "open" && !bindingFounder)) return null;
     // These closed pins retain ordinary text/list/enum install fields;
     // PlatformAct's wider type also allows marks, which these fields omit.
     const shaped = readFields(definition.data.acts["install"]!.fields as ActType["fields"], intent.fields, PROPOSED_BOUNDS);

@@ -1,12 +1,17 @@
 import { expect, test } from "vitest";
 import type { Receipt, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, timeMs } from "@generalbusiness/dap-bytes";
-import type { Fetch } from "@generalbusiness/dap-client";
+import { secretSigner, signedIntent, type Fetch } from "@generalbusiness/dap-client";
 import { command, memoryStore, type Context } from "../src/index.ts";
 
 // Configured-service acknowledgements and refusal replies are SCRIPTED.
 // This tests local revision selection, not Native genesis or found authority.
-test("expired retained install custody selects a fresh open-register revision without a summary; a mismatched incarnation keeps the actual read path", async () => {
+test.each([
+  { name: "open unpublished", binding: false, policy: "open", selects: true },
+  { name: "open repository-binding", binding: true, policy: "open", selects: true },
+  { name: "keys repository-binding operator", binding: true, policy: "keys", selects: true },
+  { name: "keys unpublished operator", binding: false, policy: "keys", selects: false },
+])("$name: expired custody selects only the supported initial revision; mismatched custody keeps the actual read path", async ({ binding, policy, selects }) => {
   const service = "https://selector.test", store = memoryStore();
   let now = Date.parse("2099-01-01T00:00:00Z"), summaries = 0;
   let receipt!: Receipt;
@@ -27,7 +32,8 @@ test("expired retained install custody selects a fresh open-register revision wi
     return Response.json({ ok: false, reason: "forbidden" }, { status: 403 });
   };
   const ctx: Context = { store, fetch, now: () => now, trustedCreationService: { service, fetch } };
-  expect((await command(ctx, ["install", "--plan", service, "--host", "none", "--register-policy", "open"])).code).toBe(0);
+  expect((await command(ctx, ["install", "--plan", service, "--host", "none", "--register-policy", policy,
+    ...(binding ? ["--cohort", "repository-binding"] : [])])).code).toBe(0);
   expect((await command(ctx, ["install", "--planned"])).code).toBe(0);
   const kept = (await store.config())!, plan = kept.plan!;
   const original = canonicalize(plan.founding);
@@ -38,6 +44,13 @@ test("expired retained install custody selects a fresh open-register revision wi
   await store.save({ ...kept, plan: withoutMarker });
   const outcome = await command(ctx, ["create", "second", "--handle", "@owner"]);
   expect(outcome.code).toBe(1);
+  if (!selects) {
+    expect(outcome.lines.join("\n")).toContain("forbidden");
+    expect(summaries).toBe(1);
+    expect(submitted).toHaveLength(0);
+    expect(canonicalize((await store.config())!.plan!.founding)).toBe(original);
+    return;
+  }
   expect(outcome.lines[0]).toContain("Refused: unauthorized");
   expect(summaries).toBe(0);
   expect(submitted).toHaveLength(1);
@@ -58,4 +71,24 @@ test("expired retained install custody selects a fresh open-register revision wi
   expect((await command(ctx, ["create", "other", "--handle", "@owner"])).code).toBe(1);
   expect(summaries).toBe(2);
   expect(submitted).toHaveLength(1);
+  if (binding && policy === "keys") {
+    // A separate SCRIPTED installation names another founder. Its operator
+    // signed the install, but this exception must not select for that operator.
+    const operator = secretSigner((await store.secret("operator"))!);
+    const another = secretSigner(new Uint8Array(32).fill(9));
+    const founding = await signedIntent(operator, { to: null, kind: "install", fields: {
+      ...plan.founding.intent.fields, founders: [another.key],
+    } }, { now: now - 16 * 60_000 });
+    const register = scopeIdOf({ v: 1, kind: "register", definition: plan.definition, creator: null,
+      cause: intentDigest(founding.intent), ordinal: 0 });
+    const acknowledged = { ...plan.acknowledged!, receipt: { ...receipt,
+      intent: intentDigest(founding.intent), fact: { ...receipt.fact, at: { ...receipt.fact.at, scope: register } },
+    } };
+    const attempted = textDigest(canonicalize({ service, operator: operator.key, founding, definition: plan.definition, register }));
+    await store.save({ ...kept, register: acknowledged.receipt.fact.at,
+      plan: { ...plan, founding, register, attempted, acknowledged } });
+    expect((await command(ctx, ["create", "not-a-founder", "--handle", "@owner"])).lines.join("\n")).toContain("forbidden");
+    expect(summaries).toBe(3);
+    expect(submitted).toHaveLength(1);
+  }
 });

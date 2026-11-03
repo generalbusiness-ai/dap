@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "qualification": "One failed source gate plus the documented isolated-file follow-up. The gate remains exit 1; the corrected follow-up exits 0. No deployed G3 or parent acceptance.",
+  "fileCount": 13,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-selector-validation",
+      "fileCount": 13,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1049,
+          "sha256": "c3f3c812844a4baaa8f6dc4a480b2890a5f03fc15a9e3c332e6e1c6cd6fea927"
+        },
+        {
+          "path": "completion.json",
+          "bytes": 3345,
+          "sha256": "4cd31185b02b7e7455187e3245a22a1635ce8c567cbe6c0c80a60f040fa3e7b3"
+        },
+        {
+          "path": "failed-gate.json",
+          "bytes": 261,
+          "sha256": "bf742d3b7f96db485c8703a4cbac9a58efbd37414c08ad15dbb1c14e2b64708a"
+        },
+        {
+          "path": "followup-scope.json",
+          "bytes": 732,
+          "sha256": "9cb3523a71f8b3385290ecc6330832d775a4e56932da61ba41c98f87ee5cc472"
+        },
+        {
+          "path": "followup-source-after.json",
+          "bytes": 358,
+          "sha256": "38f86e0b07e748501a3320c3a79362e68d1ffeb1baec491d8fc58a26481cd294"
+        },
+        {
+          "path": "followup-source-before.json",
+          "bytes": 358,
+          "sha256": "38f86e0b07e748501a3320c3a79362e68d1ffeb1baec491d8fc58a26481cd294"
+        },
+        {
+          "path": "followup.json",
+          "bytes": 797,
+          "sha256": "7466dc9b24d898b5ed77644472a4f1ce5e40802d5174045406ff6c497a3e0fff"
+        },
+        {
+          "path": "gate-source-after.json",
+          "bytes": 1861,
+          "sha256": "0ced000a6efdeb8cf87b3c845cac9b18e5e471e10bd7643887ce0772d9a2d8ec"
+        },
+        {
+          "path": "gate-source-before.json",
+          "bytes": 1861,
+          "sha256": "0ced000a6efdeb8cf87b3c845cac9b18e5e471e10bd7643887ce0772d9a2d8ec"
+        },
+        {
+          "path": "preflight-limit.json",
+          "bytes": 449,
+          "sha256": "47b5f4dd2b33b9cdb72c7711e1bb4273e16f291a8417393936051b2f5d5e1274"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 15201,
+          "sha256": "8b58ce277cf23dfc778f2bb781c5e4400c5958c027cda655e2e86d3d39f9794e"
+        },
+        {
+          "path": "process-check.json",
+          "bytes": 176,
+          "sha256": "c8ed86501af17f5eed131fef3e442ff526594c3394d79600a752a2552c3512d7"
+        },
+        {
+          "path": "reviewed-claim-seal.json",
+          "bytes": 320,
+          "sha256": "90ede6041cc24bad06f96a5ba97d755572dfc0bbd32edf61b70fb0d6116601f4"
+        }
+      ]
+    }
+  ],
+  "retention": "Retain the read-only public unit and indexed private originals at least 30 days after landing."
+}
