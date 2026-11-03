@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9db3f51997d7a32e1508be78eb57ece85c3ae643","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-03-stream-http-close.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9eb37d0ee43440c00e0e1949e879913675715dd8","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.commons.jsonc."}
