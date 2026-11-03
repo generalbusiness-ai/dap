@@ -496,6 +496,11 @@ that stronger choice when your other rooms do not need the same App.
    certificate for Node as in the first-room procedure. Finish planning,
    initial deployment, and installation within 14 minutes.
 
+   A planned register's client home creates one room. Keep that home for
+   its room. To create another room, plan a new register from another new
+   home, retain the earlier installed roots, deploy, and install that plan.
+   A home that already claimed a room cannot create a second room.
+
    ```sh
    export DAP_HOME="$HOME/dap-binding-client"
    export BASE=https://mac-name.local
