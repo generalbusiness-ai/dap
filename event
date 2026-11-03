@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d48f7ef370ab92262a8e81a36d784a824c625579","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/http.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:df27c60e0884fb3206df4e20664c9fc44802ef57","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-oauth-authorization-gate-4.manifest.json."}
