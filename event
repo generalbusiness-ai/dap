@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d01d06a5d0c9690f4ca2456a2aff32c164c567d9"}
+{"kind":"promise","text":"I will identify the pending Native teardown resolve in the named file and its helpers, preserve every case and assertion, add a distinguishing witness and fix the owner, then file independent review. I will use narrow checks and no repeated full gates to chase the race.","body":{"branch":"builder/native-teardown-20261103"}}
