@@ -1,0 +1,30 @@
+{
+  "qualification": "Successful exact-source Page browser workflow; complete job logs stay private. No deployed-host or O4 acceptance.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-registration-recovery-ci",
+  "checkpoint": "41a4a7e91a03edbce45c39e7fe8f1b556d74e308",
+  "tree": "94f916e1a79b8a9d7c44d0a1f1dec703e9f92044",
+  "fileCount": 4,
+  "files": [
+    {
+      "path": "driver.py",
+      "bytes": 2572,
+      "sha256": "e17578d9dde820270be36bd28b96d4fe6b5bfda48a4a4aad4962f42a46ad55e9"
+    },
+    {
+      "path": "page-workflow.json",
+      "bytes": 4003,
+      "sha256": "73298e59bf577fef764b2c201ec4cca370e494fe3d8ea933e3cd50298b8cd9af"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 448,
+      "sha256": "779107add88ac4505ecbf3ec64496c664b9a572de71943c944cade53fed5e391"
+    },
+    {
+      "path": "qualification.json",
+      "bytes": 420,
+      "sha256": "457d6bdafcda840535e579fa38a6e67a9e4a9558ce7220620819ac00f875c751"
+    }
+  ],
+  "sha256sumsSha256": "a8c48ed5cbf1a07b282f50675291fbf65cc4ff1adc02835eab833aab4925dbb4"
+}

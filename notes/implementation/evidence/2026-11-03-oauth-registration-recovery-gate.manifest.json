@@ -1,0 +1,50 @@
+{
+  "qualification": "Failed frozen full gate. Every case passes, but Native teardown reports one unhandled EnvironmentTeardownError. The Native stage and gate remain failures. Raw output and all complete stage evidence stay private.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-registration-recovery-gate",
+  "checkpoint": "41a4a7e91a03edbce45c39e7fe8f1b556d74e308",
+  "tree": "94f916e1a79b8a9d7c44d0a1f1dec703e9f92044",
+  "fileCount": 8,
+  "files": [
+    {
+      "path": "driver.py",
+      "bytes": 2487,
+      "sha256": "5e551cba88afb1950f3ac03cc9f12db806f1b1868e7210a5fd4627b06b884999"
+    },
+    {
+      "path": "failure-record.json",
+      "bytes": 1319,
+      "sha256": "5c0f60e804fc3568016945ce0b4db7cd57444015d280a424ab7fff3a6bff94c5"
+    },
+    {
+      "path": "gate.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 6624,
+      "sha256": "137e59e98e854f24d61db4ecf516006bd820a029a6371f3899067823181f73fb"
+    },
+    {
+      "path": "private-output.json",
+      "bytes": 436,
+      "sha256": "85008f36555a29c09467564f7b6e3ed6a877be46a3a208ea6569b61163b1fb4a"
+    },
+    {
+      "path": "source-after.json",
+      "bytes": 231,
+      "sha256": "043abab56986ba691ed26119dc4b981c3b8bf82f9ccbfe25b371e24757fc196c"
+    },
+    {
+      "path": "source-before.json",
+      "bytes": 552,
+      "sha256": "23a269548bce647740dd209d6679d9a6c9ae1793a053185306a2a48934e8a082"
+    },
+    {
+      "path": "terminal-summary.json",
+      "bytes": 3512,
+      "sha256": "a3c1ade4ea00325e4a6cb04001b437a5ca70e8c89b33f3a616c5ee9e62238e09"
+    }
+  ],
+  "sha256sumsSha256": "689ef78e9d73eee758a97bfeb013cfa69084dac7ef3b59bece668bf693fdf0e1"
+}
