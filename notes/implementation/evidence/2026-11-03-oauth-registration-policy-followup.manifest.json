@@ -1,0 +1,59 @@
+{
+  "qualification": "One-file test-local registration opt-in repair, owning compiler and complete consent owner pass; unchanged complete archive-scale owner passes once alone. Frozen gate remains failed; no automatic exception claim.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-registration-policy-followup",
+  "checkpoint": "5183640a65eeef98d496289ab0e1bf0c552c5079",
+  "fileCount": 10,
+  "files": [
+    {
+      "path": "01-pool-compatibility.json",
+      "bytes": 828,
+      "sha256": "1ba0d54f791a0dbb0002129b8e0ff8ce5f1cf7cc501ee284676862a3bcba5c60"
+    },
+    {
+      "path": "02-page-native-compiler.json",
+      "bytes": 878,
+      "sha256": "c3687664d6f16cca41003c81da76f77378bb23d2764c34029932d6d94a5a2bab"
+    },
+    {
+      "path": "03-complete-consent-owner.json",
+      "bytes": 970,
+      "sha256": "38970fd839e197653f4e789aabbc5297145003b1fbe9b68408987ffe21f095ac"
+    },
+    {
+      "path": "04-unchanged-complete-archive-scale-owner.json",
+      "bytes": 1011,
+      "sha256": "207e21a9d89e8dc683296417e7dc6312b52220c906399b42ef9b63882994ebdc"
+    },
+    {
+      "path": "fixture-repair.patch",
+      "bytes": 1170,
+      "sha256": "d9d0519a1346f4f78d71c7b882793fb7f134f8ae874edbc7236ad90dae3cdd9d"
+    },
+    {
+      "path": "followup-boundary.json",
+      "bytes": 606,
+      "sha256": "09f1b7848d7aaec431c15c21960b384961aa280453b8d8a7d63c538b745f4ef4"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 1939,
+      "sha256": "c691fc3f9b84a10664638096bdcd74d1762c21dd4c3724d4290a3e90ecd97a7d"
+    },
+    {
+      "path": "qualification.json",
+      "bytes": 961,
+      "sha256": "423acb58b980e22820646dd47d02d9a2e69d433f221a6927d0299396e3565043"
+    },
+    {
+      "path": "repair-consent-fixture.py",
+      "bytes": 966,
+      "sha256": "cdbb5e08921e31affa93bcd636aa5e80ed492eeba1aa42c5acdf164dddaf1406"
+    },
+    {
+      "path": "run-followup.py",
+      "bytes": 1428,
+      "sha256": "06f05104cc6c3dbee82a46692d030ded5581cfa3695f8801e51b75234f4429dd"
+    }
+  ],
+  "sha256sumsSha256": "cf7b4fc64cfa676df77d5a6d7c3d4fe55c75b8a5437c624533c8c9f2d7b31a2e"
+}

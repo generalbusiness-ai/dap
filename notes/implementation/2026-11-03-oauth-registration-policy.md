@@ -1,6 +1,6 @@
 # Close dynamic registration by default
 
-Request `d7c3da24e8647317d568f2ebd3a27267553ecc7f` and promise `3ff36d7b82ee05d621f3e0f68fd7a0c2211312aa` own this change. The planner replaced stale request `94f65167222a2520449849cc79d4b3acd35416f4` with the same scope and conditions in `1b33f47f5c35c5c1274c61d915a717f212e344d3`. Source commit `07e1c765ac` followed the original request; this tracking correction changes only notes. The [design](../2026-11-03-oauth-registration-policy-design.md) records the planner’s policy and the fixed registration error.
+Request `d7c3da24e8647317d568f2ebd3a27267553ecc7f` and promise `3ff36d7b82ee05d621f3e0f68fd7a0c2211312aa` own this change. The planner replaced stale request `94f65167222a2520449849cc79d4b3acd35416f4` with the same scope and conditions in `1b33f47f5c35c5c1274c61d915a717f212e344d3`. The [design](../2026-11-03-oauth-registration-policy-design.md) records the planner’s policy and the fixed registration error.
 
 An unset `OAUTH_DYNAMIC_REGISTRATION` now disables new public-client registration. `POST /oauth/register` returns HTTP 400 with `invalid_client_metadata` before reading the body or obtaining a registry object. Authorization-server metadata omits `registration_endpoint`. The exact setting `on` restores registration and advertises the endpoint. Any other supplied value closes the OAuth routes through the existing policy check. Operators remove the setting to disable registration.
 
@@ -28,4 +28,19 @@ The [focused manifest](evidence/2026-11-03-oauth-registration-policy-focused.man
 
 The first Native compiler run failed because Cloudflare’s `RequestInit` type omits the stand-in’s credentials field. An explicit intersection type fixes that assertion, and the owning compiler passes. The initial inventory failures exposed its implicit enabled-registration assumption. Both failed records remain in the manifest. Only the reviewed policy, wire owner, and `mcpRoute` seals change.
 
-The required frozen gate remains open. This source enables no Worker setting and deploys nothing. O4 uses metadata-document clients with registration disabled. The planner requires a per-address rate limit before any hosted Worker enables dynamic registration.
+## Failed frozen gate and bounded follow-up
+
+The single frozen gate at `5183640a65eeef98d496289ab0e1bf0c552c5079`, tree `4d0448229ae466f2fd27b6e0cf3e063592952dc0`, exits 1 after 1,519.606917 seconds. I read the actual `gate.exit`. Every precheck and compiler context passes, as do the kernel, Node, Counting, and plain phases. Native records 1,063 passed cases, two failed cases, and two skips, across 279 passed files, two failed files, and one skipped file. Its terminal reports zero unhandled errors. Native remains partial, and the gate remains failed.
+
+The two failures are:
+
+- `apps/room/page/test/oauth-context.scope.test.ts` expected its dynamic registration to return 201, but default-off correctly returned 400. The fixture had not opted into registration.
+- `packages/scope/test/archive-one-entry-scale.test.ts` expected its original default-budget archive receipt to be confirmed. It returned `retry / unavailable` after the stored archive reached entry 14,601. No archive source, assertion, bound, or deadline changes in this head. The result does not establish the failure’s cause.
+
+After the gate’s terminal record and seal, the only code repair adds `OAUTH_DYNAMIC_REGISTRATION: "on"` to the consent test’s local Worker environment. Every original case, assertion, and deadline stays. Its owning Page Native compiler and complete consent owner pass. The complete archive-scale owner also passes once alone on bytes identical to the frozen gate, in 208.662011 seconds. These checks change no production source, other test, configuration, or dependency manifest. The repaired test has no importers in the tracked source search.
+
+The [failed-gate manifest](evidence/2026-11-03-oauth-registration-policy-gate.manifest.json) has SHA-256 `ec856c0ffd75ae2c043b009b49c8c359121537f60befb11143a290f92035d15c`. The [follow-up manifest](evidence/2026-11-03-oauth-registration-policy-followup.manifest.json) has SHA-256 `dc890fcf4b79beaf96cf31df3bfd21bbea7ae0e84f98532a03bc36fb47f28bf5`. They retain the actual failure, complete private stage archive, exact repair patch, compiler result, both complete owner results, and unchanged archive-owner digest. The three sealed units contain 36 public files and hash 59 private originals, plus one checksum file per unit.
+
+The gate failed two files, so this record does not automatically meet the documented single-file repair exception. A passing follow-up does not turn the gate into a pass. The planner must rule on assessment of this concrete record, and the checker can require more. No full suite repeats to chase either failure. If the same `EnvironmentTeardownError` returns in a later gate, the checker’s separate teardown ruling requires reopening `df2abe35`; this gate reports none.
+
+This source enables no Worker setting and deploys nothing. O4 uses metadata-document clients with registration disabled. The planner requires a per-address rate limit before any hosted Worker enables dynamic registration. The Page workflow citation and independent review still follow.

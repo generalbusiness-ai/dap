@@ -44,7 +44,7 @@ test("consent retains lost grants and reuses each controller's Native agent in t
     const fetch = async (url: string, init?: Parameters<typeof routed>[1]) => {
       requests.push(url); const path = new URL(url).pathname;
       if (path.startsWith("/mcp/") || path.startsWith("/oauth/")) {
-        const response = await worker.fetch(new Request(url, init), { ...env, SCOPES: env.PLATFORM, SCOPE_INDEX_MODE: "register", MCP_ENABLED: "true" });
+        const response = await worker.fetch(new Request(url, init), { ...env, SCOPES: env.PLATFORM, SCOPE_INDEX_MODE: "register", MCP_ENABLED: "true", OAUTH_DYNAMIC_REGISTRATION: "on" });
         if (path === "/mcp/agents/grant") {
           grantBodies.push(String(init?.body));
           if (loseGrant && response.status === 201) { loseGrant = false; await response.body?.cancel(); throw Error("TEST lost the completed first-grant reply"); }

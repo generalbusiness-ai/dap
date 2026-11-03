@@ -1,0 +1,50 @@
+{
+  "qualification": "Actual frozen full gate exit1 with unchanged source. The original archive-scale receipt and consent fixture fail. Native remains failed/partial, and this gate never becomes a pass. Earlier O3, flush and DCR gates also remain separately failed.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-oauth-registration-policy-gate",
+  "checkpoint": "5183640a65eeef98d496289ab0e1bf0c552c5079",
+  "tree": "4d0448229ae466f2fd27b6e0cf3e063592952dc0",
+  "fileCount": 8,
+  "files": [
+    {
+      "path": "driver.py",
+      "bytes": 2456,
+      "sha256": "a54468666c06e23f18e0acb3bedc7521a3a5703135bd166204191d432d7af090"
+    },
+    {
+      "path": "failure-record.json",
+      "bytes": 1345,
+      "sha256": "6d6bf6ed9912feed78c02683f3e7b9e961980edc4f012c83df6079b1040992e6"
+    },
+    {
+      "path": "gate.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 6566,
+      "sha256": "48c4756062620c8ab8f0fac553073020accbce8c8754119fd4eeea1870abe8e2"
+    },
+    {
+      "path": "private-output.json",
+      "bytes": 432,
+      "sha256": "66e0a64a70897ebb5e947e7fbf6e8df36cc7ee8fabd84eee19e6764e8671259a"
+    },
+    {
+      "path": "source-after.json",
+      "bytes": 227,
+      "sha256": "e172e72725f889700c4e00cfbe16d128d97385819d576173491e820ff79e9d37"
+    },
+    {
+      "path": "source-before.json",
+      "bytes": 552,
+      "sha256": "3c4b0e1e1e4958b7b92bb0aeb57c73fdd02e8249d681d6076cb77d3ee4ba60ca"
+    },
+    {
+      "path": "terminal-summary.json",
+      "bytes": 4110,
+      "sha256": "1ca4510c0d98b64259e894c71cf5e80f21a6c39cbaec6a1da0f99fe009c53493"
+    }
+  ],
+  "sha256sumsSha256": "c97c2175f447d04aac481e6b724dd84ee2d222f30f0437333cab296d4ac4f77c"
+}
