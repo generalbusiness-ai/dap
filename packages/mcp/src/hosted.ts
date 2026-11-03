@@ -43,6 +43,8 @@ import { remoteCardDomain, type RemoteCardOrigin } from "./views/remote-origins.
 import { mcpChallengeResponse, mcpUnauthorized, publicRequestUrl } from "./oauth-resource.ts";
 import { OAuthAccess, equalTokenDigest, type OAuthAccessCandidate } from "./oauth-access.ts";
 import { OAuthHttpLayers, type OAuthHttpLayer } from "./oauth-http.ts";
+import { OAuthIssuer, type OAuthResult } from "./oauth-issuer.ts";
+import { oauthGrant, OAuthError, type OAuthGrantContext } from "./oauth-parameters.ts";
 
 export const CONTROL_BUDGET = 16 * 1024 * 1024;
 export const RETIRE_RESERVE = 1024 * 1024;
@@ -93,10 +95,14 @@ export interface ControlAnswer { status: number; body: Record<string, unknown> }
 const answer = (status: number, body: Record<string, unknown>): ControlAnswer => ({ status, body });
 /** Only the winning call may return a bearer. SQL always receives this receipt. */
 const retainedAnswer = (result: ControlAnswer): ControlAnswer => {
-  if (!Object.hasOwn(result.body, "bearer")) return result;
+  if (!Object.hasOwn(result.body, "bearer") && !Object.hasOwn(result.body, "code")) return result;
   const body = { ...result.body };
-  delete body["bearer"];
-  return answer(result.status, { ...body, bearerShown: true, bearerExpires: typeof body["bearerExpires"] === "string" ? body["bearerExpires"] : null });
+  if (Object.hasOwn(body, "bearer")) {
+    delete body["bearer"]; body["bearerShown"] = true;
+    body["bearerExpires"] = typeof body["bearerExpires"] === "string" ? body["bearerExpires"] : null;
+  }
+  if (Object.hasOwn(body, "code")) { delete body["code"]; body["codeShown"] = true; }
+  return answer(result.status, body);
 };
 const closed = (v: unknown, keys: readonly string[]): v is Record<string, unknown> => isRecord(v) && Object.keys(v).length === keys.length && keys.every((k) => Object.hasOwn(v, k));
 
@@ -110,7 +116,7 @@ export function controlOf(authorization: string | null): SignedControl | null {
     if (!bytes) return null;
     const request = parseStrict(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes));
     if (!closed(request, ["v", "action", "service", "membership", "agent", "actor", "body", "op", "notAfter"]) || request["v"] !== 1) return null;
-    if (!["create", "bearer", "retire"].includes(request["action"] as string) || typeof request["service"] !== "string") return null;
+    if (!["create", "bearer", "retire", "grant", "connections", "revoke-grant"].includes(request["action"] as string) || typeof request["service"] !== "string") return null;
     if (!isScopeRef(request["membership"]) || (request["membership"] as ScopeRef).kind !== "membership") return null;
     if (request["agent"] !== null && (typeof request["agent"] !== "string" || !/^[0-9a-f]{64}$/.test(request["agent"]))) return null;
     if (!isKeyId(request["actor"]) || typeof request["body"] !== "string" || !/^sha256:[0-9a-f]{64}$/.test(request["body"])) return null;
@@ -275,7 +281,7 @@ export interface RegistryPorts extends Authority {
   /** A fresh, unique agent object ID. */
   mintId(): string;
   /** The agent object by its ID: its `create`. */
-  agent(id: string): { create(op: string, request: ControlRequest, link: AgentKeyInvitation): Promise<ControlAnswer> };
+  agent(id: string): { create(op: string, request: ControlRequest, link: AgentKeyInvitation): Promise<ControlAnswer>; grant?(signed: SignedControl, body: Uint8Array, context: OAuthGrantContext): Promise<ControlAnswer> };
 }
 
 /** One repository's registry: the only place that creates an agent object. Named by the membership scope ID. */
@@ -297,15 +303,22 @@ export class HostedRegistry {
 
   /** `service`: the origin the request arrived at, which the control request and the invitation must both name. */
   async create(signed: SignedControl, body: Uint8Array, service: string): Promise<ControlAnswer> {
+    return this.#creation(signed, body, service);
+  }
+  async grant(signed: SignedControl, body: Uint8Array, service: string, context: OAuthGrantContext): Promise<ControlAnswer> {
+    return this.#creation(signed, body, service, context);
+  }
+  async #creation(signed: SignedControl, body: Uint8Array, service: string, context?: OAuthGrantContext): Promise<ControlAnswer> {
     const now = this.ports.now();
-    const refused = bound(signed, service, "create", null, body, now);
+    const action = context ? "grant" : "create";
+    const refused = bound(signed, service, action, null, body, now);
     if (refused) return refused;
     const r = signed.request;
     let link: AgentKeyInvitation | null = null;
     try {
       const given = parseStrict(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(body));
-      link = closed(given, ["link"]) && typeof given["link"] === "string" ? agentKeyInvitationOf(given["link"]) : null;
-    } catch { link = null; }
+      link = context ? agentKeyInvitationOf(oauthGrant(given, context, true).link!) : closed(given, ["link"]) && typeof given["link"] === "string" ? agentKeyInvitationOf(given["link"]) : null;
+    } catch (error) { if (error instanceof OAuthError) return answer(error.status, { error: error.error }); link = null; }
     if (!link) return answer(400, { error: "link", rule: "agent-key-invitation" });
     if (link.service !== service) return answer(400, { error: "link", rule: "service" });
     if (!same(link.repository.membership, r.membership)) return answer(400, { error: "link", rule: "membership" });
@@ -322,14 +335,15 @@ export class HostedRegistry {
         if (row.state !== "reserved") return this.#control.retained(row, now) ?? answer(409, { error: "op", rule: "stale" });
         return { agent: row.agent! };
       }
-      if (!this.#control.reserve("create")) return answer(507, { error: "full", rule: "control-budget" });
+      if (!this.#control.reserve(action)) return answer(507, { error: "full", rule: "control-budget" });
       const agent = this.ports.mintId();
-      this.#control.insert(r.op, fingerprint, "create", agent, "reserved", r.notAfter, timeOf(now));
+      this.#control.insert(r.op, fingerprint, action, agent, "reserved", r.notAfter, timeOf(now));
       return { agent };
     });
     if ("status" in reserved) return reserved;
     this.ports.fault?.("reservation");
-    const result = await this.ports.agent(reserved.agent).create(r.op, r, link);
+    const target = this.ports.agent(reserved.agent);
+    const result = context ? await target.grant?.(signed, body, context) ?? answer(503, { error: "unavailable" }) : await target.create(r.op, r, link);
     this.ports.fault?.("complete");
     // Unresolved: the reservation stays, and the next request with the same op resumes it.
     if (result.status === 503) return result;
@@ -402,6 +416,7 @@ export class HostedAgent {
   #oauthEpoch = 0;
   readonly #oauth: OAuthAccess;
   readonly #oauthHttp: OAuthHttpLayers;
+  readonly #issuer: OAuthIssuer;
   readonly #failures = new BearerFailures();
   /** Control operations run one at a time in this object: a retry of `create` waits for the first and then finds its answer. */
   readonly #controls = new Queue();
@@ -416,6 +431,130 @@ export class HostedAgent {
       agent: () => { const row = this.#row(); return row ? { state: row.state, membership: row.membership, key: row.key, handle: row.handle } : null; },
       charge: bytes => { this.#control.charge(bytes, "retire"); } });
     this.#oauthHttp = new OAuthHttpLayers(this.#oauth, { now: ports.now, ...(ports.scheduleExpiry ? { schedule: ports.scheduleExpiry } : {}) });
+    this.#issuer = new OAuthIssuer(sql, { id: ports.id, now: ports.now, random: ports.random,
+      agent: () => { const row = this.#row(); return row ? { state: row.state, membership: row.membership, key: row.key, handle: row.handle } : null; },
+      charge: bytes => this.#control.charge(bytes, "grant"),
+      standing: controller => this.#grantStanding(controller),
+      rotated: id => this.#oauthHttp.closeGrant(id, true),
+      ended: async id => {
+        this.sql.transaction(() => {
+          const rows = this.sql.exec(`SELECT row FROM oauth_session WHERE grant_id = ?`, id).toArray();
+          this.sql.exec(`DELETE FROM oauth_session WHERE grant_id = ?`, id);
+          this.#control.charge(-rows.reduce((n, row) => n + utf8(String(row["row"])).length + ROW_OVERHEAD, 0), "retire");
+        });
+        await this.#oauthHttp.closeGrant(id);
+      },
+    }, this.#oauth);
+  }
+
+  async #grantStanding(controller: MemberId): Promise<"active" | "inactive" | "unavailable"> {
+    const row = this.#row();
+    if (!row || row.state !== "enrolled") return "inactive";
+    try {
+      const key = await this.ports.observe(row.membership, { key: row.key }) as KeyStanding | null;
+      const person = await this.ports.observe(row.membership, { member: controller }) as MemberStanding | null;
+      if (!key || !person) return "unavailable";
+      return key.keyState === "active" && key.memberState === "active" && key.member === row.handle && key.controller === controller && person.memberState === "active" ? "active" : "inactive";
+    } catch { return "unavailable"; }
+  }
+
+  /** Fresh signer and agent observations carry the role table in force. */
+  async #grantAuthority(request: ControlRequest, row: AgentRow): Promise<MemberId | null> {
+    const signer = await this.ports.observe(row.membership, { key: request.actor }) as KeyStanding | null;
+    const agent = await this.ports.observe(row.membership, { key: row.key }) as KeyStanding | null;
+    if (!signer || !agent || signer.keyState !== "active" || signer.memberState !== "active" || agent.keyState !== "active" || agent.memberState !== "active" || agent.member !== row.handle || agent.controller === null) return null;
+    const controller = await this.ports.observe(row.membership, { member: agent.controller }) as MemberStanding | null;
+    if (!controller || controller.memberState !== "active") return null;
+    if (signer.actions.includes("membership.manage")) return agent.controller;
+    return signer.member === agent.controller && agent.actions.every(action => signer.actions.includes(action)) ? agent.controller : null;
+  }
+
+  /** The trusted Worker supplies resolved client metadata, never the browser. */
+  grant(signed: SignedControl, body: Uint8Array, context: OAuthGrantContext): Promise<ControlAnswer> {
+    return this.#controls.run(() => this.#grant(signed, body, context));
+  }
+  async #grant(signed: SignedControl, body: Uint8Array, context: OAuthGrantContext): Promise<ControlAnswer> {
+    const first = signed.request.agent === null;
+    let given: ReturnType<typeof oauthGrant>, link: AgentKeyInvitation | null = null;
+    try {
+      given = oauthGrant(parseStrict(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(body)), context, first);
+      if (first) { link = agentKeyInvitationOf(given.link!); if (!link) return answer(400, { error: "invalid_request" }); }
+    } catch (error) { return answer(error instanceof OAuthError ? error.status : 400, { error: error instanceof OAuthError ? error.error : "invalid_request" }); }
+    const request = signed.request, before = this.#row();
+    const service = first ? link!.service : before?.config.service;
+    if (!service) return answer(404, { error: "agent" });
+    const refused = bound(signed, service, "grant", first ? null : this.ports.id, body, this.ports.now());
+    if (refused) return refused;
+    const membership = first ? link!.repository.membership : before!.membership;
+    if (!same(request.membership, membership)) return answer(403, { error: "unauthorized", rule: "membership" });
+    const fingerprint = fingerprintOf(request), existing = this.#control.row(request.op);
+    if (existing && existing.fingerprint !== fingerprint) return answer(409, { error: "op", rule: "fingerprint" });
+    if (first) {
+      const authority = await authorityOf(this.ports, membership, request.actor, link!.handle as MemberId);
+      if (!authority.ok || authority.by === "controller" && authority.member !== link!.controller.member) return answer(403, { error: "unauthorized" });
+      if (!existing || existing.state === "reserved") {
+        const made = await this.#create(request.op, request, link!);
+        if (made.status >= 300) return made;
+      }
+    }
+    const row = this.#row();
+    if (!row || row.state !== "enrolled") return answer(409, { error: "agent" });
+    const controller = await this.#grantAuthority(request, row);
+    if (controller === null) return answer(403, { error: "unauthorized", rule: "controller-role" });
+    const expired = bound(signed, service, "grant", first ? null : this.ports.id, body, this.ports.now());
+    if (expired) return expired;
+    const prior = this.#control.row(request.op);
+    if (prior?.state !== undefined && prior.state !== "reserved") return this.#control.retained(prior, this.ports.now()) ?? answer(409, { error: "op", rule: "stale" });
+    if (!prior) {
+      const reserved = this.sql.transaction(() => {
+        if (!this.#control.reserve("grant")) return false;
+        this.#control.insert(request.op, fingerprint, "grant", this.ports.id, "reserved", request.notAfter, timeOf(this.ports.now())); return true;
+      });
+      if (!reserved) return answer(507, { error: "full", rule: "control-budget" });
+    }
+    let result: ControlAnswer;
+    try { result = await this.#issuer.issue(request.op, controller, given.binding, context.client.client_name); }
+    catch (error) { if (!(error instanceof OAuthError)) throw error; return answer(error.status, { error: error.error }); }
+    this.ports.fault?.("complete");
+    this.sql.transaction(() => {
+      this.#control.complete(request.op, result.status < 300 ? "complete" : "refused", result);
+      if (first) this.sql.exec(`UPDATE agent SET answer = ? WHERE id = 1 AND op = ?`, JSON.stringify(retainedAnswer(result)), request.op);
+    });
+    return result;
+  }
+
+  exchangeCode(id: string, secret: string, client: string, redirect: string, verifier: string, resource?: string): Promise<OAuthResult> { return this.#issuer.exchange(id, secret, client, redirect, verifier, resource); }
+  refreshGrant(id: string, secret: string, client: string, resource?: string): Promise<OAuthResult> { return this.#issuer.refresh(id, secret, client, resource); }
+  revokeToken(id: string, secret: string, client: string): Promise<OAuthResult> { return this.#issuer.revokeToken(id, secret, client); }
+
+  connectionControl(signed: SignedControl, action: "connections" | "revoke-grant", body: Uint8Array): Promise<ControlAnswer> {
+    return this.#controls.run(async () => {
+      const row = this.#row(), request = signed.request;
+      if (!row) return answer(404, { error: "agent" });
+      const refused = bound(signed, row.config.service, action, this.ports.id, body, this.ports.now());
+      if (refused) return refused;
+      if (!same(request.membership, row.membership)) return answer(403, { error: "unauthorized", rule: "membership" });
+      const authority = await authorityOf(this.ports, row.membership, request.actor, row.handle as MemberId);
+      if (!authority.ok) return answer(403, { error: "unauthorized" });
+      let given: unknown;
+      try { given = parseStrict(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(body)); } catch { return answer(400, { error: "invalid_request" }); }
+      if (action === "connections" ? !closed(given, []) : !closed(given, ["grant"]) || typeof given["grant"] !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(given["grant"])) return answer(400, { error: "invalid_request" });
+      const expired = bound(signed, row.config.service, action, this.ports.id, body, this.ports.now());
+      if (expired) return expired;
+      const fingerprint = fingerprintOf(request), existing = this.#control.row(request.op);
+      if (existing) {
+        if (existing.fingerprint !== fingerprint) return answer(409, { error: "op", rule: "fingerprint" });
+        if (existing.state !== "reserved") return this.#control.retained(existing, this.ports.now()) ?? answer(409, { error: "op", rule: "stale" });
+      } else if (!this.sql.transaction(() => {
+        if (!this.#control.reserve(action)) return false;
+        this.#control.insert(request.op, fingerprint, action, this.ports.id, "reserved", request.notAfter, timeOf(this.ports.now())); return true;
+      })) return answer(507, { error: "full", rule: "control-budget" });
+      const result = action === "connections"
+        ? answer(200, { agent: this.ports.id, handle: row.handle, connections: this.#issuer.list() })
+        : await this.#issuer.revokeGrant((given as { grant: string }).grant);
+      this.sql.transaction(() => this.#control.complete(request.op, "complete", result));
+      return result;
+    });
   }
 
   /** The control budget's used bytes, for a test's eyes. */
@@ -542,19 +681,19 @@ export class HostedAgent {
     this.sql.transaction(() => this.#expire(now));
     let row = this.#row();
     if (row && row.op !== op) return answer(409, { error: "op", rule: "agent" });
-    if (row?.state === "enrolled" || row?.state === "refused") return row.answer ?? answer(409, { error: "op", rule: "stale" });
+    if (row?.state === "enrolled" || row?.state === "refused") return row.answer ?? (row.state === "enrolled" && request.action === "grant" ? answer(201, { agent: this.ports.id, key: row.key, handle: row.handle }) : answer(409, { error: "op", rule: "stale" }));
     if (row?.state === "retired") return answer(409, { error: "retired" });
     if (!row) {
       // The seed is written before the envelope is built; the control budget is reserved before the key exists.
       const made = this.sql.transaction((): ControlAnswer | null => {
-        if (!this.#control.reserve("create")) return answer(507, { error: "full", rule: "control-budget" });
+        if (!this.#control.reserve(request.action)) return answer(507, { error: "full", rule: "control-budget" });
         const seed = this.ports.random(32);
         const config: McpConfig = { service: link.service, repository: link.repository, handle: link.handle };
         const configText = canonicalize(config as never);
         if (!this.#control.charge(utf8(configText).length + 256 + ROW_OVERHEAD, "create")) return answer(507, { error: "full", rule: "control-budget" });
         this.sql.exec(`INSERT INTO agent (id, op, seed, key, state, membership, handle, config, bearer, answer, created, updated) VALUES (1, ?, ?, ?, 'enrolling', ?, ?, ?, NULL, NULL, ?, ?)`,
           op, seed, keyIdOfSecret(seed), canonicalize(link.repository.membership as never), link.handle, configText, timeOf(now), timeOf(now));
-        this.#control.insert(op, fingerprintOf(request), "create", this.ports.id, "reserved", request.notAfter, timeOf(now));
+        this.#control.insert(op, fingerprintOf(request), request.action, this.ports.id, "reserved", request.notAfter, timeOf(now));
         return null;
       });
       if (made) return made;
@@ -615,11 +754,15 @@ export class HostedAgent {
       const current = this.#row()!;
       if (current.state === "retired") return answer(409, { error: "retired" });
       if (current.state !== "enrolling") return current.answer ?? answer(409, { error: "op", rule: "stale" });
+      const config: McpConfig = { ...current.config, repository: { ...link.repository, ...(inbox ? { inbox } : {}) } };
+      if (request.action === "grant") {
+        this.sql.exec(`UPDATE agent SET state = 'enrolled', config = ?, updated = ? WHERE id = 1`, canonicalize(config as never), timeOf(this.ports.now()));
+        return answer(201, { agent: this.ports.id, key: signer.key, handle: link.handle, member: fact });
+      }
       const issued = this.ports.now(), bearerExpires = timeOf(issued + BEARER_LIFETIME_MS);
       if (!this.#control.charge(utf8(bearerExpires).length, "create")) throw new Error("SQLITE_FULL: the bearer expiry cannot be stored.");
       const secret = b64url(this.ports.random(32));
       const result = answer(201, { agent: this.ports.id, key: signer.key, handle: link.handle, member: fact, bearer: `${this.ports.id}.${secret}`, bearerExpires });
-      const config: McpConfig = { ...current.config, repository: { ...link.repository, ...(inbox ? { inbox } : {}) } };
       this.sql.exec(`UPDATE agent SET state = 'enrolled', bearer = ?, bearer_expires = ?, answer = ?, config = ?, updated = ? WHERE id = 1`, digestBytes(utf8(secret)), bearerExpires, JSON.stringify(retainedAnswer(result)), canonicalize(config as never), timeOf(issued));
       this.#control.complete(op, "complete", result);
       return result;
@@ -688,7 +831,7 @@ export class HostedAgent {
       const http = this.#http;
       this.#http = null;
       await http?.closeAll();
-      if (action === "retire") { this.#oauthEpoch++; await this.#oauthHttp.closeAll(); }
+      if (action === "retire") { this.#oauthEpoch++; await this.#issuer.revokeAll(); await this.#oauthHttp.closeAll(); }
     }
     return result;
   }

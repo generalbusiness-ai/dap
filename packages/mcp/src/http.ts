@@ -462,6 +462,11 @@ export class McpHttp {
    * restore into the next layer.
    */
   abrupt(): void {
+    this.#discard(false);
+  }
+  /** End the old credential's streams, retaining sessions for its new token. */
+  detach(): void { this.#discard(true); }
+  #discard(final: boolean): void {
     this.#closed = true;
     this.#discarded = true;
     this.#cancelLifetime();
@@ -469,10 +474,10 @@ export class McpHttp {
       const stream = session.stream;
       session.ended = true;
       this.port.wire.endLegacy(session);
-      if (stream) stream.close(false);
+      if (stream) stream.close(final);
     }
     this.#pending.clear();
-    for (const listen of [...this.#listens.values()]) listen.end(false);
+    for (const listen of [...this.#listens.values()]) listen.end(final);
     this.#open.clear();
   }
 

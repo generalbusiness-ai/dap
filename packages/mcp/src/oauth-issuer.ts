@@ -218,6 +218,16 @@ export class OAuthIssuer {
     if (held) { this.sql.transaction(() => this.#end(held)); await this.#notify([id]); }
     return result(200, { revoked: true });
   }
+  async revokeAll(): Promise<void> {
+    const ended: string[] = [];
+    this.sql.transaction(() => {
+      for (const row of this.sql.exec(`SELECT id FROM oauth_issuer WHERE state IN ('pending','active') ORDER BY created, id LIMIT ?`, OAUTH_GRANTS_MOST).toArray()) {
+        const held = this.#read(String(row["id"]));
+        if (held) { this.#end(held); ended.push(held.id); }
+      }
+    });
+    await this.#notify(ended);
+  }
   list(): { id: string; client_id: string; client_name: string; resource: string; controller: MemberId; ends: number }[] {
     const now = this.#now();
     return this.sql.exec(`SELECT id FROM oauth_issuer WHERE state IN ('pending','active') ORDER BY created, id LIMIT ?`, OAUTH_GRANTS_MOST).toArray().flatMap(row => {

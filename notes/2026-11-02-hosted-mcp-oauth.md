@@ -203,8 +203,21 @@ within 60 seconds, and its acts refuse at once in the native scope
 
 A client ID is either an HTTPS URL of a client ID metadata document or
 an ID from `POST /oauth/register`. The Worker fetches a metadata
-document with the existing bounded fetch, at most 5 KiB, and caches it
+document with a bounded fetch, at most 5 KiB, and caches it
 for at most one hour.
+
+The planner's ruling `4fd73a3f` names the exact HTTPS origin list
+`OAUTH_CLIENT_METADATA_ORIGINS`. The defaults are `https://claude.ai`
+and `https://chatgpt.com`. An operator can explicitly trust other
+origins. An invalid setting closes the OAuth routes. The Worker refuses
+an unlisted origin before fetch, follows no redirect, sends no
+credentials, and limits the complete fetch and body read to five seconds.
+The policy trusts the listed origins and their DNS and does not inspect
+the socket address. Client ID equality remains exact.
+
+The client metadata reference is
+[draft-ietf-oauth-client-id-metadata-document-02](https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-02.html),
+a work in progress.
 
 Redirect URIs must match one entry of a configured list exactly. The
 list starts with:

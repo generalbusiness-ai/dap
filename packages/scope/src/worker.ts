@@ -919,6 +919,7 @@ export class McpRegistry<E extends McpEnv = McpEnv> extends DurableObject<E> {
     return this.#registry;
   }
   async create(signed: Parameters<HostedRegistry["create"]>[0], body: Uint8Array, origin: string): Promise<ControlAnswer> { return this.#of().create(signed, body, origin); }
+  async grant(signed: Parameters<HostedRegistry["grant"]>[0], body: Uint8Array, origin: string, context: Parameters<HostedRegistry["grant"]>[3]): Promise<ControlAnswer> { return this.#of().grant(signed, body, origin, context); }
   agents(): ReturnType<HostedRegistry["agents"]> { return this.#of().agents(); }
   reservedAgent(op: string): string | null { return this.#of().reservedAgent(op); }
 }
@@ -954,6 +955,11 @@ export class McpAgent<E extends McpEnv = McpEnv> extends DurableObject<E> {
     return this.#agent;
   }
   async create(op: string, request: Parameters<HostedAgent["create"]>[1], link: Parameters<HostedAgent["create"]>[2]): Promise<ControlAnswer> { return this.#of().create(op, request, link); }
+  async grant(signed: Parameters<HostedAgent["grant"]>[0], body: Uint8Array, context: Parameters<HostedAgent["grant"]>[2]): Promise<ControlAnswer> { return this.#of().grant(signed, body, context); }
+  async connectionControl(signed: Parameters<HostedAgent["connectionControl"]>[0], action: "connections" | "revoke-grant", body: Uint8Array): Promise<ControlAnswer> { return this.#of().connectionControl(signed, action, body); }
+  async exchangeCode(...args: Parameters<HostedAgent["exchangeCode"]>): Promise<ControlAnswer> { return this.#of().exchangeCode(...args); }
+  async refreshGrant(...args: Parameters<HostedAgent["refreshGrant"]>): Promise<ControlAnswer> { return this.#of().refreshGrant(...args); }
+  async revokeToken(...args: Parameters<HostedAgent["revokeToken"]>): Promise<ControlAnswer> { return this.#of().revokeToken(...args); }
   async control(signed: Parameters<HostedAgent["control"]>[0], action: "bearer" | "retire", body: Uint8Array): Promise<ControlAnswer> { return this.#of().control(signed, action, body); }
   override async fetch(request: Request): Promise<Response> { return this.#of().fetch(request); }
   /** Drop this instance's memory, as an eviction would: streams end with no event, storage stays. For a test's subclass. */

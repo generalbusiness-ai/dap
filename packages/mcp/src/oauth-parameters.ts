@@ -20,6 +20,23 @@ export interface OAuthBinding {
   scope: "mcp";
   state_digest: string;
 }
+/** The Worker resolves this client and policy. Browser bodies cannot supply it. */
+export interface OAuthGrantContext { client: OAuthClient; resources: readonly string[]; redirects: OAuthRedirectPolicy }
+export function oauthGrant(value: unknown, context: OAuthGrantContext, first: boolean): { binding: OAuthBinding; link?: string } {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return fail("invalid_request");
+  const row = value as Record<string, unknown>;
+  const fields = ["client_id", "redirect_uri", "code_challenge", "resource", "scope", "state_digest", ...(first ? ["link"] : [])];
+  if (Object.keys(row).length !== fields.length || fields.some(key => !Object.hasOwn(row, key))) return fail("invalid_request");
+  if (row["client_id"] !== context.client.client_id) return fail("invalid_client");
+  const redirect = row["redirect_uri"];
+  if (typeof redirect !== "string" || !allowedOAuthRedirect(redirect, context.redirects) || !context.client.redirect_uris.includes(redirect)) return fail("invalid_redirect_uri");
+  if (!isPkceChallenge(row["code_challenge"])) return fail("invalid_request");
+  const resource = row["resource"];
+  if (typeof resource !== "string" || !context.resources.includes(resource)) return fail("invalid_target");
+  if (row["scope"] !== "mcp") return fail("invalid_scope");
+  if (typeof row["state_digest"] !== "string" || !/^sha256:[0-9a-f]{64}$/.test(row["state_digest"]) || first && !bounded(row["link"], 48 * 1024)) return fail("invalid_request");
+  return { binding: { client_id: context.client.client_id, redirect_uri: redirect, code_challenge: row["code_challenge"], resource, scope: "mcp", state_digest: row["state_digest"] }, ...(first ? { link: row["link"] as string } : {}) };
+}
 export class OAuthError extends Error {
   constructor(readonly error: string, readonly status = 400) { super(error); }
 }
