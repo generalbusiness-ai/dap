@@ -2,13 +2,13 @@
  * WebCrypto is real and nonextractable. Its record store, browser settings,
  * lock, clock and dispatcher are TEST stand-ins, not IndexedDB proof. */
 import { expect, test } from "vitest";
-import { b64url, canonicalize, isScopeId, isSeed, scopeIdOf, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, factRefOf, isScopeId, isSeed, scopeIdOf, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { env } from "cloudflare:test";
 import { OWN_AGENT_COHORT } from "@generalbusiness/dap-platform";
-import { invitationIssueFields } from "@generalbusiness/dap-client";
+import { encodeAgentKeyInvitation, invitationIssueFields } from "@generalbusiness/dap-client";
 import { joinInvitation } from "../src/join-custody.ts";
 import { selectedOAuthRoom, oauthControl, loadOAuthAuthorization } from "../src/oauth-context.ts";
-import { consentOAuth } from "../src/oauth-custody.ts";
+import { consentOAuth, preparedOAuthInvitation } from "../src/oauth-custody.ts";
 import { memoryPageKeys } from "./private-key-fixture.ts";
 import { sessionRoom } from "../../../../packages/scope/test/support/session-room.ts";
 import { drainScheduledFixture, driveFixture, type nativeFixtureLifetime } from "../../../../packages/scope/test/support/native-fixture-lifetime.ts";
@@ -16,7 +16,7 @@ import { rita, routed, type Platform } from "../../../../packages/scope/test/rep
 import { hostedTest } from "../../../../packages/scope/test/worker.ts";
 import worker from "../../worker.ts";
 
-test("consent retains a lost grant and reuses one Native agent in the selected unpublished room", async () => {
+test("consent retains lost grants and reuses each controller's Native agent in the selected unpublished room", async () => {
   let ownedLife: ReturnType<typeof nativeFixtureLifetime> | undefined, ownedMembership: Platform | undefined;
   try {
     const room = await sessionRoom(OWN_AGENT_COHORT.register, undefined, { host: "none", namespace: "" }, { finish: "external", capture: life => { ownedLife = life; } });
@@ -85,6 +85,43 @@ test("consent retains a lost grant and reuses one Native agent in the selected u
     const history = await life.wait(() => M.entries());
     expect(history.filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "enrol")).toHaveLength(1);
     expect(history.filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "add-own-agent")).toHaveLength(1);
+
+    // A second browser key joins as an admin. Workerd's key metadata differs
+    // from browsers, so this witness uses the real generated-key path too.
+    const adminValues = new Map<string, string>(), adminStorage = { getItem: (key: string) => adminValues.get(key) ?? null, setItem: (key: string, value: string) => { adminValues.set(key, value); } };
+    const adminSigner = await keys.create(), adminSecret = b64url(crypto.getRandomValues(new Uint8Array(32)));
+    const adminInvitation = await life.wait(() => M.did(rita, "invite-member", { fields: { handle: "@consent-admin", role: "admin", ...invitationIssueFields(OWN_AGENT_COHORT.membership, adminSecret), inviteEnds: timeOf(life.now() + 3_600_000) } }));
+    const adminLink = "artroom-invite:" + b64url(utf8(canonicalize({ v: 1, service: origin, repository: { directory: room.directory, membership: room.membership, rules: room.rules.scope, destination: destination.scope }, invitation: adminInvitation, secret: adminSecret, handle: "@consent-admin", definition: OWN_AGENT_COHORT.membership })));
+    const adminJoined = await life.wait(() => joinInvitation(origin, adminLink, adminStorage, { keys: { ...keys, create: async () => adminSigner }, now: life.now, lock: { run: run => run() }, fetch }));
+    expect(adminJoined).toMatchObject({ status: "verified", answer: { answer: "accepted" } });
+    adminValues.set("artroom-page", canonicalize({ publicKey: adminSigner.key, place: { directory: room.directory.scope, membership: room.membership } }));
+    const adminSelection = await life.wait(() => selectedOAuthRoom(origin, adminStorage, contextOptions));
+    const preparedMember = await life.wait(() => M.did(rita, "add-member", { fields: { handle: "@admin-connected", kind: "agent", controller: selection.controller } }));
+    const preparedSecret = b64url(crypto.getRandomValues(new Uint8Array(32)));
+    const preparedInvite = await life.wait(async () => M.did(rita, "invite-key", { fields: { member: preparedMember, kind: "agent", ...invitationIssueFields(OWN_AGENT_COHORT.membership, preparedSecret), inviteEnds: timeOf(life.now() + 3_600_000) }, expected: await M.expected({ member: preparedMember }) }));
+    const preparedHistory = await life.wait(() => M.entries());
+    const prepared = { v: 1 as const, kind: "agent-key" as const, service: origin, repository: { directory: room.directory, membership: room.membership, rules: room.rules.scope, destination: destination.scope }, definition: OWN_AGENT_COHORT.membership, handle: "@admin-connected", controller: selection.controller,
+      member: factRefOf(preparedHistory.find(entry => entry.seq === preparedMember)!), invitation: factRefOf(preparedHistory.find(entry => entry.seq === preparedInvite)!), secret: preparedSecret,
+      expected: { on: (await life.wait(() => M.item(0))).revision, member: (await life.wait(() => M.item(preparedMember))).revision } };
+    const preparedLink = encodeAgentKeyInvitation(prepared);
+    expect(preparedOAuthInvitation(adminSelection, preparedLink)).toMatchObject({ handle: "@admin-connected", controller: selection.controller });
+    expect(() => preparedOAuthInvitation(selection, encodeAgentKeyInvitation({ ...prepared, controller: adminSelection.controller }))).toThrow("another controller");
+    const secondRegistration = await life.wait(() => fetch(origin + "/oauth/register", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ client_name: "TEST admin browser host", redirect_uris: ["https://claude.ai/api/mcp/auth_callback"] }) }));
+    expect(secondRegistration.status).toBe(201);
+    const secondClient = await secondRegistration.json() as { client_id: string };
+    const adminQuery = new URLSearchParams(query); adminQuery.set("client_id", secondClient.client_id); adminQuery.set("state", "TEST admin browser state");
+    const adminAuthorization = await life.wait(() => loadOAuthAuthorization(origin, adminQuery, fetch));
+    loseGrant = true;
+    const adminOptions = { ...options, preparedLink };
+    const adminUnknown = await life.wait(() => consentOAuth(adminSelection, adminAuthorization, adminStorage, { ...adminOptions, mode: "new" }));
+    expect(adminUnknown).toMatchObject({ state: "unknown", handle: "@admin-connected", controller: selection.controller });
+    const adminContinued = await life.wait(() => consentOAuth(adminSelection, adminAuthorization, adminStorage, { ...adminOptions, mode: "continue" }));
+    expect(adminContinued.state).toBe("done"); expect(adminContinued.redirect).toBeUndefined();
+    const adminFresh = await life.wait(() => consentOAuth(adminSelection, adminAuthorization, adminStorage, { ...adminOptions, mode: "new" }));
+    expect(adminFresh).toMatchObject({ state: "done", handle: "@admin-connected", controller: selection.controller });
+    expect(adminFresh.agent).toBe(adminContinued.agent); expect(adminFresh.redirect).toBeTypeOf("string");
+    expect([...adminValues.values()].join("\n")).not.toContain(new URL(adminFresh.redirect!).searchParams.get("code"));
+    expect((await life.wait(() => M.entries())).filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "enrol")).toHaveLength(2);
     const before = (await life.wait(() => M.entries())).filter(entry => entry.input.type === "act").length;
     values.set("artroom-page", canonicalize({ publicKey: signer.key, place: null }));
     await expect(oauthControl(selection, "grant", null, "{}", crypto.randomUUID())).rejects.toThrow("selected room or browser key changed");
@@ -97,7 +134,7 @@ test("consent retains a lost grant and reuses one Native agent in the selected u
       const entries = await life.wait(() => M.entries());
       if (entries.length > 48) throw Error("OAuth context fixture exceeded its history bound");
       const inboxes = new Set(entries.flatMap(entry => entry.sends.flatMap(send => isSeed(send.to) && send.to.kind === "inbox" ? [scopeIdOf(send.to)] : [])));
-      if (inboxes.size > 3) throw Error("OAuth context fixture exceeded its three inbox births");
+      if (inboxes.size > 5) throw Error("OAuth context fixture exceeded its five inbox births");
       const tracked = new Set(life.platforms().map(node => node.name));
       for (const name of inboxes) if (!tracked.has(name)) life.platform(name);
       await drainScheduledFixture(() => life.platforms(), life.wait); life.release();

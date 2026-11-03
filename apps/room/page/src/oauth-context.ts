@@ -83,10 +83,11 @@ export async function postOAuthControl(selection: OAuthSelection, path: string, 
   currentOAuth(selection); return result;
 }
 export interface OAuthAgentConnection { agent: string; handle: string; client_id: string; created: string }
-export async function oauthConnections(selection: OAuthSelection): Promise<OAuthAgentConnection[]> {
+export async function oauthConnections(selection: OAuthSelection, controller?: MemberRef): Promise<OAuthAgentConnection[]> {
   const agents: OAuthAgentConnection[] = []; let after: string | null = null;
   for (let page = 0; page < 8; page++) {
-    const body = canonicalize({ after }), signed = await oauthControl(selection, "connections", null, body, crypto.randomUUID());
+    if (controller && canonicalize(controller.membership) !== canonicalize(selection.room.membership)) throw new Error("The agent belongs to another room.");
+    const body = canonicalize({ after, ...(controller ? { controller: controller.member } : {}) }), signed = await oauthControl(selection, "connections", null, body, crypto.randomUUID());
     const answer = await postOAuthControl(selection, "/mcp/agents/connections", body, signed), rows = answer.body["agents"];
     if (answer.status !== 200 || !Array.isArray(rows) || rows.length > 8 || rows.some(row => !isRecord(row) || Object.keys(row).length !== 4 || typeof row["agent"] !== "string" || !/^[0-9a-f]{64}$/.test(row["agent"]) || typeof row["handle"] !== "string" || typeof row["client_id"] !== "string" || typeof row["created"] !== "string")) throw new Error("The existing connections could not be read. Try again before allowing access.");
     agents.push(...rows as OAuthAgentConnection[]);
@@ -99,8 +100,8 @@ export async function oauthConnections(selection: OAuthSelection): Promise<OAuth
 }
 export interface OAuthConnectedGrant { id: string; client_id: string; client_name: string; resource: string; controller: string; ends: number }
 export interface OAuthConnectedAgent extends OAuthAgentConnection { state: string; grants: OAuthConnectedGrant[] }
-export async function oauthConnectedClients(selection: OAuthSelection): Promise<OAuthConnectedAgent[]> {
-  const connections = await oauthConnections(selection), result: OAuthConnectedAgent[] = [];
+export async function oauthConnectedClients(selection: OAuthSelection, controller?: MemberRef): Promise<OAuthConnectedAgent[]> {
+  const connections = await oauthConnections(selection, controller), result: OAuthConnectedAgent[] = [];
   for (const connection of connections) {
     const body = "{}", signed = await oauthControl(selection, "connections", connection.agent, body, crypto.randomUUID());
     const response = await postOAuthControl(selection, `/mcp/agents/${connection.agent}/connections`, body, signed), rows = response.body["connections"];

@@ -2,7 +2,7 @@
  * survive unknown answers. Browser custody never exports the signing key. */
 import type { MemberRef, SignedControl } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, isKeyId, isMemberRef, isRecord, isScopeRef, parseStrict, timeMs, utf8, verifyControl } from "@generalbusiness/dap-bytes";
-import { agentKeyInvitationOf } from "@generalbusiness/dap-client";
+import { agentKeyInvitationOf, type AgentKeyInvitation } from "@generalbusiness/dap-client";
 import { issueOwnAgentInvitation, type Config, type Store } from "@generalbusiness/dap-cli/browser";
 import { custodyKind, closedCustodyRecord as closed, type CustodyStorage } from "./custody.ts";
 import { currentOAuth, oauthCallback, oauthConnectedClients, oauthControl, postOAuthControl, type OAuthAuthorization, type OAuthSelection } from "./oauth-context.ts";
@@ -16,18 +16,30 @@ interface Row {
   private: Record<string, string>; agent: string | null; link: string | null; grant: Grant | null; state: State; reason?: string;
 }
 interface Journal { v: 1; binding: string; active: string; rows: Record<string, Row> }
-export interface OAuthOriginal { operation: string; state: State; client: string; handle: string; agent: string | null; canCheck: boolean; reason?: string; resume: string; matches?: boolean }
+export interface OAuthOriginal { operation: string; state: State; client: string; handle: string; controller: MemberRef; agent: string | null; canCheck: boolean; reason?: string; resume: string; matches?: boolean }
 export interface OAuthConsentOptions { mode: "new" | "check" | "continue"; locks?: ClaimLocks; handle?: string; preparedLink?: string; pause?: (waiting: readonly string[]) => Promise<void> }
 export interface OAuthConsentResult extends Omit<OAuthOriginal, "resume"> { redirect?: string }
 const unavailable = () => new Error("The original connection is unavailable or changed. No replacement was created.");
 const uuid = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value);
 const agentId = (value: unknown): value is string | null => value === null || typeof value === "string" && /^[0-9a-f]{64}$/.test(value);
 const same = (a: unknown, b: unknown) => canonicalize(a) === canonicalize(b);
+function permittedController(selection: OAuthSelection, controller: MemberRef): boolean {
+  return same(controller.membership, selection.room.membership) && (same(controller, selection.controller) || selection.room.me!.actions.includes("membership.manage"));
+}
+/** The display and the grant use the same checked invitation context. Native
+ * authority still checks the invitation and the signer's live standing. */
+export function preparedOAuthInvitation(selection: OAuthSelection, text: string): AgentKeyInvitation {
+  currentOAuth(selection);
+  const invitation = agentKeyInvitationOf(text.trim());
+  if (!invitation || invitation.service !== selection.origin || !same(invitation.repository.membership, selection.room.membership)) throw new Error("Enter a valid agent invitation for this room.");
+  if (!permittedController(selection, invitation.controller)) throw new Error("This agent has another controller. Ask an admin to connect it, or use an invitation controlled by you.");
+  return invitation;
+}
 function resume(row: Row): string {
   const b = row.authorization.binding, query = new URLSearchParams({ response_type: "code", client_id: b.client_id, redirect_uri: b.redirect_uri, code_challenge: b.code_challenge, code_challenge_method: "S256", resource: b.resource, scope: "mcp", state: row.authorization.state });
   return row.authorization.issuer + "/oauth/authorize?" + query.toString();
 }
-function publicRow(row: Row): OAuthOriginal { return { operation: row.operation, state: row.state, client: row.authorization.binding.client_id, handle: row.handle, agent: row.agent, canCheck: row.grant === null, ...(row.reason ? { reason: row.reason } : {}), resume: resume(row) }; }
+function publicRow(row: Row): OAuthOriginal { return { operation: row.operation, state: row.state, client: row.authorization.binding.client_id, handle: row.handle, controller: structuredClone(row.controller), agent: row.agent, canCheck: row.grant === null, ...(row.reason ? { reason: row.reason } : {}), resume: resume(row) }; }
 function decode(raw: string, binding: string): Journal {
   const parsed = parseStrict(raw);
   if (!closed(parsed, ["v", "binding", "active", "rows"]) || parsed["v"] !== 1 || parsed["binding"] !== binding || !uuid(parsed["active"]) || !isRecord(parsed["rows"]) || Object.keys(parsed["rows"]).length > 16 || !Object.hasOwn(parsed["rows"], parsed["active"])) throw unavailable();
@@ -60,7 +72,7 @@ export function originalOAuthConnection(selection: OAuthSelection, storage: Cust
   currentOAuth(selection);
   const journal = custody.read(selection.binding, storage); if (!journal) return null;
   const row = journal.rows[journal.active]!;
-  if (row.actor !== selection.signer.key || row.authorization.issuer !== selection.origin || row.config.service !== selection.origin || !same(row.config.repository?.membership, selection.room.membership)) throw unavailable();
+  if (row.actor !== selection.signer.key || row.authorization.issuer !== selection.origin || row.config.service !== selection.origin || !same(row.config.repository?.membership, selection.room.membership) || !permittedController(selection, row.controller)) throw unavailable();
   return { ...publicRow(row), ...(authorization ? { matches: same(row.authorization.binding, authorization.binding) && row.authorization.state === authorization.state } : {}) };
 }
 
@@ -75,7 +87,7 @@ export async function consentOAuth(selection: OAuthSelection, authorization: OAu
       repository: { directory: selection.room.directoryIndex!.scope, membership: selection.room.membership, rules: selection.room.rules, destination: selection.room.destination } };
     for (const stored of Object.values(journal?.rows ?? {})) {
       const { invitationIssue: _pointer, ...configuration } = stored.config;
-      if (stored.actor !== selection.signer.key || !same(configuration, base) || !same(stored.controller, selection.controller)) throw unavailable();
+      if (stored.actor !== selection.signer.key || !same(configuration, base) || !permittedController(selection, stored.controller)) throw unavailable();
     }
     const write = (next: Row): void => {
       currentOAuth(selection);
@@ -88,19 +100,20 @@ export async function consentOAuth(selection: OAuthSelection, authorization: OAu
       const active = journal?.rows[journal.active];
       if (active && !["done", "refused"].includes(active.state)) throw new Error("An original connection is unfinished. Continue it before allowing another.");
       if (Object.keys(journal?.rows ?? {}).length >= 16) throw new Error("This browser's connection history is full. No original was removed.");
-      const connections = await oauthConnectedClients(selection);
+      const prepared = options.preparedLink !== undefined ? preparedOAuthInvitation(selection, options.preparedLink) : null;
+      const controller = prepared?.controller ?? selection.controller;
+      const connections = await oauthConnectedClients(selection, controller);
       const existing = connections.find(connection => connection.client_id === authorization.binding.client_id && connection.state === "enrolled");
       let native: Row["native"] = "existing", handle = existing?.handle ?? options.handle ?? "", link: string | null = null;
       if (!existing) {
-        if (selection.room.me!.actions.includes("membership.own-agent")) native = "own";
+        if (!prepared && !selection.room.me!.actions.includes("membership.own-agent")) throw new Error("Enter an agent invitation for this room, prepared by an admin.");
+        if (!prepared) native = "own";
         else {
           native = "prepared"; link = options.preparedLink?.trim() ?? null;
-          const invitation = link && agentKeyInvitationOf(link);
-          if (!invitation || invitation.service !== selection.origin || !same(invitation.repository.membership, selection.room.membership) || !same(invitation.controller, selection.controller)) throw new Error("Enter an agent invitation for you in this room, prepared by an admin.");
-          handle = invitation.handle;
+          handle = prepared.handle;
         }
       }
-      row = { operation: crypto.randomUUID(), authorization: structuredClone(authorization), actor: selection.signer.key, controller: structuredClone(selection.controller), native, handle, config: structuredClone(base), private: {}, agent: existing?.agent ?? null, link, grant: null, state: native === "own" ? "inviting" : "ready" };
+      row = { operation: crypto.randomUUID(), authorization: structuredClone(authorization), actor: selection.signer.key, controller: structuredClone(controller), native, handle, config: structuredClone(base), private: {}, agent: existing?.agent ?? null, link, grant: null, state: native === "own" ? "inviting" : "ready" };
       write(row);
     } else {
       if (!journal) throw new Error("This browser has no original connection to continue.");

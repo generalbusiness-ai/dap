@@ -116,6 +116,13 @@ test.each([false, true])("routed public-client grants enroll once for an ordinar
     const revoked = await initialize(final.access_token); expect(revoked.status).toBe(401); await revoked.body?.cancel();
     const connections = await control("/mcp/agents/connections", "connections", null, { after: null }, "connections"); expect(connections.status).toBe(200);
     expect((await connections.json() as { agents: { agent: string }[] }).agents.map(a => a.agent)).toEqual([id]);
+    const forOwner = { after: null, controller: owner.config.handle! };
+    expect((await control("/mcp/agents/connections", "connections", null, forOwner, "foreign-connections", other)).status).toBe(403);
+    const adminConnections = await control("/mcp/agents/connections", "connections", null, forOwner, "admin-connections", admin);
+    expect(adminConnections.status).toBe(200);
+    expect((await adminConnections.json() as { agents: { agent: string }[] }).agents.map(a => a.agent)).toEqual([id]);
+    const ownAdminConnections = await control("/mcp/agents/connections", "connections", null, { after: null }, "admin-own-connections", admin);
+    expect((await ownAdminConnections.json() as { agents: unknown[] }).agents).toEqual([]);
     const entries = await room.wait(() => membership.entries());
     expect(entries.filter(e => e.input.type === "act" && e.input.signed.intent.kind === "enrol")).toHaveLength(1);
     await room.wait(() => runInDurableObject(env.AGENTS.get(env.AGENTS.idFromString(id)), (_instance, state) => {

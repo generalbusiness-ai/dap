@@ -1,4 +1,4 @@
-import { addressKey, isRecord, same } from "@generalbusiness/dap-bytes";
+import { addressKey, isMemberId, isRecord, same } from "@generalbusiness/dap-bytes";
 import { invitationRedemptionFields } from "@generalbusiness/dap-client";
 /**
  * The hosted MCP endpoint (notes/2026-10-13-hosted-mcp-endpoint.md): the
@@ -347,17 +347,18 @@ export class HostedRegistry {
   #mappingBytes(row: Record<string, unknown>): number { return ["controller", "client_id", "agent", "handle", "created"].reduce((n, key) => n + utf8(String(row[key])).length, ROW_OVERHEAD); }
   async connections(signed: SignedControl, body: Uint8Array, service: string): Promise<ControlAnswer> {
     const refused = bound(signed, service, "connections", null, body, this.ports.now()); if (refused) return refused;
-    let after: string;
-    try { const row = parseStrict(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(body)); if (!closed(row, ["after"]) || row["after"] !== null && (typeof row["after"] !== "string" || !/^[0-9a-f]{64}$/.test(row["after"]))) return answer(400, { error: "invalid_request" }); after = row["after"] as string ?? ""; }
+    let after: string, controller: MemberId | undefined;
+    try { const row = parseStrict(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(body)); if (!(closed(row, ["after"]) || closed(row, ["after", "controller"])) || row["after"] !== null && (typeof row["after"] !== "string" || !/^[0-9a-f]{64}$/.test(row["after"])) || Object.hasOwn(row, "controller") && !isMemberId(row["controller"])) return answer(400, { error: "invalid_request" }); after = row["after"] as string ?? ""; controller = row["controller"] as MemberId | undefined; }
     catch { return answer(400, { error: "invalid_request" }); }
     const request = signed.request, key = await this.ports.observe(request.membership, { key: request.actor }) as KeyStanding | null;
     if (!key || key.keyState !== "active" || key.memberState !== "active") return answer(403, { error: "unauthorized" });
+    if (controller !== undefined && controller !== key.member && !key.actions.includes("membership.manage")) return answer(403, { error: "unauthorized" });
     const expired = bound(signed, service, "connections", null, body, this.ports.now()); if (expired) return expired;
     return this.sql.transaction(() => {
       const fingerprint = fingerprintOf(request), existing = this.#control.row(request.op);
       if (existing) return existing.fingerprint !== fingerprint ? answer(409, { error: "op", rule: "fingerprint" }) : this.#control.retained(existing, this.ports.now()) ?? answer(409, { error: "op", rule: "stale" });
       if (!this.#control.reserve("connections")) return answer(507, { error: "full", rule: "control-budget" });
-      const rows = this.sql.exec(`SELECT agent, handle, client_id, created FROM oauth_agent WHERE controller = ? AND agent > ? ORDER BY agent LIMIT 9`, key.member, after).toArray();
+      const rows = this.sql.exec(`SELECT agent, handle, client_id, created FROM oauth_agent WHERE controller = ? AND agent > ? ORDER BY agent LIMIT 9`, controller ?? key.member, after).toArray();
       const result = answer(200, { agents: rows.slice(0, 8), next: rows.length > 8 ? rows[7]!["agent"] : null });
       this.#control.insert(request.op, fingerprint, "connections", null, "complete", request.notAfter, timeOf(this.ports.now())); this.#control.complete(request.op, "complete", result); return result;
     });
