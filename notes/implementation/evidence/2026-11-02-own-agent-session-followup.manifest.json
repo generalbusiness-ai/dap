@@ -1,0 +1,49 @@
+{
+  "qualification": "Isolated test-file repair after failed gate 5929ca7c under docs/testing.md. Compiler and all 24 whole-owner Native cases pass; no production, configuration, dependency, helper, assertion or deadline change. Both gates remain failures.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-02-own-agent-session-followup",
+  "checkpoint": "63023896a98cb49cf503dcccff767e8282117d20",
+  "tree": "7f47e97cb7405ea8132712c4574daf8992205cb6",
+  "fileCount": 8,
+  "files": [
+    {
+      "path": "01-owning-compiler.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "01-owning-compiler.json",
+      "bytes": 1171,
+      "sha256": "8cf9d675915b6a60e7d29131717560fb3ff2be3e9ec8abb0eac6062dc756d5f5"
+    },
+    {
+      "path": "02-whole-native-owner.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "02-whole-native-owner.json",
+      "bytes": 1240,
+      "sha256": "df4aca06e0376338823549260a822c0b3d81ac9374e9ece1519b93fce1b5487e"
+    },
+    {
+      "path": "README.md",
+      "bytes": 1106,
+      "sha256": "da5ae763e2f4be7b22e006dea62f3d59039843180a35fd1383a214fe815d7db0"
+    },
+    {
+      "path": "capture-followup.py",
+      "bytes": 1664,
+      "sha256": "b7596ce97e474cf0ee63dece1e147c7aa4a3000d43fc2a70e6aa7f179184f599"
+    },
+    {
+      "path": "source-proof.json",
+      "bytes": 764,
+      "sha256": "d430ab2da609259a1671c5a8b38fd8010f91bb5ae3ad6cb0b2f3b28ffd9968da"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 612,
+      "sha256": "2a1c22e6b8e7056f801982646e6f4a306132783056d36ade652e7d93827e1a3c"
+    }
+  ]
+}
