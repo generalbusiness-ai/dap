@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:257f11aed453a0e07043eede9460f4a93c7bb13e","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-g3b-retained-selector-focused.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2963f1b9ad8a3ee05ecd07eeba9e69af27d4056d","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/claim-selector.test.ts."}
