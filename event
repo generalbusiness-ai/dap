@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d6db447923655d49f3a559e88b508d3b67a34dcd","text":"Merge retired a covered predecessor; the successor is at packages/mcp/browser/bridge.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e20cca814b528013181d9bbc8403204a75d3abbb","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/grow-routing-browser.mjs."}
