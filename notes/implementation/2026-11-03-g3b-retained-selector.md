@@ -80,7 +80,39 @@ All 23 stage files have exact, hash-verified durable copies; their OS
 originals remain. The evidence does not claim those stage files started
 in durable custody.
 
-This checkpoint awaits that limited follow-up and independent review.
-It creates no room, changes no remote source or home, deploys nothing, and
-prepares no new binding row. The planner retains the ruling on the exact
-same-home live continuation. G3 and Goose acceptance remain open.
+Requester addendum `1a9b4e0e` adopts that documented validation exception
+for this source child, subject to independent review. At clean follow-up
+head `58e079d2`, tree `0d058f83`, only the security test seal and this note
+differ from the failed gate. The corrected follow-up's actual
+`followup.exit` reads `exit 0`. Its recorded stage loop runs for 1,506.621
+seconds, after the command-plan preflight.
+
+The whole security owner passes 11 cases. Counting passes 56; plain passes
+3,607 with one skip; Native passes 1,070 with two skips. All four terminal
+reports are complete, with no reconciliation issue and zero unhandled
+Vitest errors. Scope module timing remains partial because the skipped
+recording module reports no duration. No process matching this worktree
+or follow-up directory remains. The archive owner passes; that result
+identifies no cause for the earlier entry-14601 failure.
+
+The first follow-up driver preflight fails before any test body runs:
+a generated JavaScript string contains an incorrectly escaped newline.
+Its driver and diagnostics remain intact. The corrected driver uses fresh
+`run2` and `evidence2` directories and runs each scheduled body once.
+
+The [validation manifest](evidence/2026-11-03-g3b-retained-selector-validation.manifest.json)
+has SHA-256 `562a08d2232f6b022c6b2591fc960abe3fab061ccaaef5ba552be5aa30cce1fc`.
+It seals 13 public files and indexes 81 read-only private originals from
+the failed gate and limited follow-up. It keeps both actual outcomes
+separate, along with the custody and preflight limits above.
+
+[Page browser run 41726457947](https://github.com/generalbusiness-ai/dap/actions/runs/41726457947)
+succeeds at `4e795071`. The follow-up changes no Page or claim runtime
+input. The [CI manifest](evidence/2026-11-03-g3b-retained-selector-page-ci.manifest.json)
+has SHA-256 `7a165c67f0ca2df92f30e61cd51c5631a298c7fb2b03f4e858022d7d6521d116`
+and seals four files, including that source comparison.
+
+This head awaits independent review. It creates no room, changes no remote
+source or home, deploys nothing, and prepares no new binding row. The
+planner retains the ruling on the exact same-home live continuation.
+G3, Goose, and archive acceptance remain open.

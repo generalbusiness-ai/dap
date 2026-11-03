@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "qualification": "Actual successful Page browser workflow at the frozen runtime source; no deployment or live G3 acceptance.",
+  "fileCount": 4,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-selector-page-ci",
+      "fileCount": 4,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 242,
+          "sha256": "57feda29bb79376baaad89e70caf67e99c40c66b18d272aacebd5cfa1298d55a"
+        },
+        {
+          "path": "run.json",
+          "bytes": 2714,
+          "sha256": "bd7438fe8992f52c632eab181c55cebf3bd85083d494ece24b9928444c641c2b"
+        },
+        {
+          "path": "run.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source-equivalence.json",
+          "bytes": 326,
+          "sha256": "26819c578017c6030bca370f7cdd7eaa4ff48cc6c781e66e022ce70a8508dac0"
+        }
+      ]
+    }
+  ]
+}
