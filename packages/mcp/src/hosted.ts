@@ -625,7 +625,7 @@ export class HostedAgent {
         this.#control.insert(request.op, fingerprint, action, this.ports.id, "reserved", request.notAfter, timeOf(this.ports.now())); return true;
       })) return answer(507, { error: "full", rule: "control-budget" });
       const result = action === "connections"
-        ? answer(200, { agent: this.ports.id, handle: row.handle, connections: this.#issuer.list() })
+        ? answer(200, { agent: this.ports.id, handle: row.handle, state: row.state, connections: this.#issuer.list() })
         : await this.#issuer.revokeGrant((given as { grant: string }).grant);
       this.sql.transaction(() => this.#control.complete(request.op, "complete", result));
       return result;

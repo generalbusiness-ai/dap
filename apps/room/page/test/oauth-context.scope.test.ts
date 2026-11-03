@@ -1,0 +1,106 @@
+/** Native unpublished room, selected-room reads and retained OAuth consent.
+ * WebCrypto is real and nonextractable. Its record store, browser settings,
+ * lock, clock and dispatcher are TEST stand-ins, not IndexedDB proof. */
+import { expect, test } from "vitest";
+import { b64url, canonicalize, isScopeId, isSeed, scopeIdOf, timeOf, utf8 } from "@generalbusiness/dap-bytes";
+import { env } from "cloudflare:test";
+import { OWN_AGENT_COHORT } from "@generalbusiness/dap-platform";
+import { invitationIssueFields } from "@generalbusiness/dap-client";
+import { joinInvitation } from "../src/join-custody.ts";
+import { selectedOAuthRoom, oauthControl, loadOAuthAuthorization } from "../src/oauth-context.ts";
+import { consentOAuth } from "../src/oauth-custody.ts";
+import { memoryPageKeys } from "./private-key-fixture.ts";
+import { sessionRoom } from "../../../../packages/scope/test/support/session-room.ts";
+import { drainScheduledFixture, driveFixture, type nativeFixtureLifetime } from "../../../../packages/scope/test/support/native-fixture-lifetime.ts";
+import { rita, routed, type Platform } from "../../../../packages/scope/test/repository.ts";
+import { hostedTest } from "../../../../packages/scope/test/worker.ts";
+import worker from "../../worker.ts";
+
+test("consent retains a lost grant and reuses one Native agent in the selected unpublished room", async () => {
+  let ownedLife: ReturnType<typeof nativeFixtureLifetime> | undefined, ownedMembership: Platform | undefined;
+  try {
+    const room = await sessionRoom(OWN_AGENT_COHORT.register, undefined, { host: "none", namespace: "" }, { finish: "external", capture: life => { ownedLife = life; } });
+    const { life } = room, M = room.children[0]!; ownedMembership = M;
+    const track = (name: string) => {
+      if (!isScopeId(name) || life.platforms().some(node => node.name === name)) return;
+      if (life.platforms().length >= 16) throw Error("OAuth context fixture exceeded its scope bound");
+      life.platform(name);
+    };
+    life.setHold(envelope => { if (isSeed(envelope.to)) track(scopeIdOf(envelope.to)); return false; });
+    const pause = async (waiting: readonly string[] = []) => { for (const name of waiting) track(name); await driveFixture(life.platforms(), life.wait); };
+    hostedTest.now = life.now; hostedTest.pause = pause;
+    const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
+    await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));
+    const secret = b64url(crypto.getRandomValues(new Uint8Array(32)));
+    const invitation = await life.wait(() => M.did(rita, "invite-member", { fields: { handle: "@consent", role: "member", ...invitationIssueFields(OWN_AGENT_COHORT.membership, secret), inviteEnds: timeOf(life.now() + 3_600_000) } }));
+    const origin = "https://consent.test", keys = memoryPageKeys(), signer = await keys.create(), values = new Map<string, string>();
+    const storage = { getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); } };
+    const destination = await life.wait(() => room.children[2]!.at());
+    const link = "artroom-invite:" + b64url(utf8(canonicalize({ v: 1, service: origin, repository: { directory: room.directory, membership: room.membership, rules: room.rules.scope, destination: destination.scope }, invitation, secret, handle: "@consent", definition: OWN_AGENT_COHORT.membership })));
+    const joined = await life.wait(() => joinInvitation(origin, link, storage, { keys: { ...keys, create: async () => signer }, now: life.now, lock: { run: run => run() }, fetch: routed }));
+    expect(joined).toMatchObject({ status: "verified", answer: { answer: "accepted" } });
+    values.set("artroom-page", canonicalize({ publicKey: signer.key, place: { directory: room.directory.scope, membership: room.membership }, service: "https://obsolete.invalid" }));
+    const requests: string[] = [], grantBodies: string[] = []; let loseGrant = true;
+    const fetch = async (url: string, init?: Parameters<typeof routed>[1]) => {
+      requests.push(url); const path = new URL(url).pathname;
+      if (path.startsWith("/mcp/") || path.startsWith("/oauth/")) {
+        const response = await worker.fetch(new Request(url, init), { ...env, SCOPES: env.PLATFORM, SCOPE_INDEX_MODE: "register", MCP_ENABLED: "true" });
+        if (path === "/mcp/agents/grant") {
+          grantBodies.push(String(init?.body));
+          if (loseGrant && response.status === 201) { loseGrant = false; await response.body?.cancel(); throw Error("TEST lost the completed first-grant reply"); }
+        }
+        return response;
+      }
+      const response = await routed(url, init);
+      if (init?.method === "POST" && path.endsWith("/acts")) await pause();
+      return response;
+    };
+    const contextOptions = { keys, now: life.now, fetch };
+    const selection = await life.wait(() => selectedOAuthRoom(origin, storage, contextOptions));
+    expect(selection.room).toMatchObject({ publication: "unpublished", membership: room.membership, key: signer.key, me: { handle: "@consent" } });
+    expect(requests.length).toBeGreaterThan(0); expect(requests.every(url => new URL(url).origin === origin)).toBe(true);
+    expect(selection.controller).toEqual({ membership: room.membership, member: "@consent" });
+    const signed = await oauthControl(selection, "connections", null, '{"after":null}', crypto.randomUUID());
+    expect(signed.request.actor).toBe(signer.key);
+    const registered = await life.wait(() => fetch(origin + "/oauth/register", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ client_name: "TEST browser host", redirect_uris: ["https://claude.ai/api/mcp/auth_callback"] }) }));
+    expect(registered.status).toBe(201); const client = await registered.json() as { client_id: string };
+    const query = new URLSearchParams({ response_type: "code", client_id: client.client_id, redirect_uri: "https://claude.ai/api/mcp/auth_callback", code_challenge: "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM", code_challenge_method: "S256", resource: origin + "/mcp", state: "TEST browser state" });
+    const authorization = await life.wait(() => loadOAuthAuthorization(origin, query, fetch));
+    const options = { locks: { request: <T>(_name: string, work: () => Promise<T>) => work() }, pause, handle: "@consent-agent" };
+    const first = await life.wait(() => consentOAuth(selection, authorization, storage, { ...options, mode: "new" }));
+    expect(first.state).toBe("unknown"); expect(grantBodies).toHaveLength(1);
+    const restored = await life.wait(() => selectedOAuthRoom(origin, storage, contextOptions));
+    await expect(life.wait(() => consentOAuth(restored, authorization, storage, { ...options, mode: "new" }))).rejects.toThrow("original connection is unfinished");
+    const checked = await life.wait(() => consentOAuth(restored, authorization, storage, { ...options, mode: "check" }));
+    expect(checked.state).toBe("unknown"); expect(grantBodies).toHaveLength(1);
+    const continued = await life.wait(() => consentOAuth(restored, authorization, storage, { ...options, mode: "continue" }));
+    expect(continued.state).toBe("done"); expect(continued.redirect).toBeUndefined();
+    expect(grantBodies).toHaveLength(2); expect(grantBodies[1]).toBe(grantBodies[0]);
+    const fresh = await life.wait(() => consentOAuth(restored, authorization, storage, { ...options, mode: "new" }));
+    expect(fresh.state).toBe("done"); expect(fresh.redirect).toBeTypeOf("string");
+    const callback = new URL(fresh.redirect!);
+    expect(callback.searchParams.get("state")).toBe("TEST browser state"); expect(callback.searchParams.get("iss")).toBe(origin);
+    const code = callback.searchParams.get("code")!; expect(code).toMatch(/^[0-9a-f]{64}\.[A-Za-z0-9_-]{43}\.[A-Za-z0-9_-]{43}$/);
+    expect([...values.values()].join("\n")).not.toContain(code);
+    const history = await life.wait(() => M.entries());
+    expect(history.filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "enrol")).toHaveLength(1);
+    expect(history.filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "add-own-agent")).toHaveLength(1);
+    const before = (await life.wait(() => M.entries())).filter(entry => entry.input.type === "act").length;
+    values.set("artroom-page", canonicalize({ publicKey: signer.key, place: null }));
+    await expect(oauthControl(selection, "grant", null, "{}", crypto.randomUUID())).rejects.toThrow("selected room or browser key changed");
+    expect((await life.wait(() => M.entries())).filter(entry => entry.input.type === "act").length).toBe(before);
+  } finally {
+    hostedTest.now = null; hostedTest.pause = null;
+    const life = ownedLife, M = ownedMembership;
+    if (life) {
+      if (!M) throw Error("OAuth context setup retained Native ownership");
+      const entries = await life.wait(() => M.entries());
+      if (entries.length > 48) throw Error("OAuth context fixture exceeded its history bound");
+      const inboxes = new Set(entries.flatMap(entry => entry.sends.flatMap(send => isSeed(send.to) && send.to.kind === "inbox" ? [scopeIdOf(send.to)] : [])));
+      if (inboxes.size > 3) throw Error("OAuth context fixture exceeded its three inbox births");
+      const tracked = new Set(life.platforms().map(node => node.name));
+      for (const name of inboxes) if (!tracked.has(name)) life.platform(name);
+      await drainScheduledFixture(() => life.platforms(), life.wait); life.release();
+    }
+  }
+});

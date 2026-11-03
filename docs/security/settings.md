@@ -660,7 +660,8 @@ failure behavior, health visibility and the other readers.
       "kind": "binding",
       "status": "read",
       "readers": [
-        "packages/scope/src/worker.ts"
+        "packages/scope/src/worker.ts",
+        "apps/room/page/oauth-route.ts"
       ],
       "parser": "Wrangler hosted-MCP DurableObjectNamespace; mcpRoute requires both namespaces and a valid opt-in policy.",
       "missing": "Hosted MCP route 404 before body/target work.",
@@ -680,7 +681,8 @@ failure behavior, health visibility and the other readers.
       "kind": "binding",
       "status": "read",
       "readers": [
-        "packages/scope/src/worker.ts"
+        "packages/scope/src/worker.ts",
+        "apps/room/page/oauth-route.ts"
       ],
       "parser": "Wrangler hosted-MCP DurableObjectNamespace; mcpRoute requires both namespaces and a valid opt-in policy.",
       "missing": "Hosted MCP route 404 before body/target work.",

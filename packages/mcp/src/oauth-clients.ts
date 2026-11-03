@@ -1,6 +1,6 @@
 /** Bounded public-client registration and metadata cache. Listed origins and
  * their DNS are trusted. This policy does not inspect the socket address. */
-import { b64url, canonicalize, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
+import { b64url, canonicalize, LATE, parseStrict, takeBytes, utf8 } from "@generalbusiness/dap-bytes";
 import { oauthClient, oauthRedirectPolicy, OAuthError, OAUTH_CLIENT_BYTES, OAUTH_CLIENT_CACHE_MS, OAUTH_CLIENTS_MOST, type OAuthClient, type OAuthRedirectPolicy } from "./oauth-parameters.ts";
 import type { Sql } from "./sqlite-custody.ts";
 
@@ -96,25 +96,18 @@ export class OAuthClients {
     try { return await loading; } finally { if (this.#pending.get(id) === loading) this.#pending.delete(id); }
   }
   async #document(id: string, policy: OAuthRedirectPolicy): Promise<OAuthClient> {
-    const abort = new AbortController(); let reader: ReadableStreamDefaultReader<Uint8Array> | null = null, stop = () => {};
+    const abort = new AbortController(); let stop = () => {};
     const timeout = new Promise<never>((_resolve, reject) => {
-      const end = () => { abort.abort(); void reader?.cancel().catch(() => {}); reject(new OAuthError("temporarily_unavailable", 503)); };
+      const end = () => { abort.abort(); reject(new OAuthError("temporarily_unavailable", 503)); };
       if (this.ports.deadline) stop = this.ports.deadline(5000, end);
       else { const timer = setTimeout(end, 5000); stop = () => clearTimeout(timer); }
     });
     const request = async (): Promise<OAuthClient> => {
       const response = await this.ports.fetch(id, { redirect: "manual", credentials: "omit", signal: abort.signal, headers: { accept: "application/json" } });
       if (response.status !== 200 || response.redirected || !/^application\/json(?:\s*;|$)/i.test(response.headers.get("content-type") ?? "") || Number(response.headers.get("content-length") ?? 0) > OAUTH_CLIENT_BYTES || !response.body) { void response.body?.cancel().catch(() => {}); return invalid(); }
-      reader = response.body.getReader(); const chunks: Uint8Array[] = []; let length = 0;
-      try {
-        for (;;) {
-          const chunk = await reader.read(); if (chunk.done) break;
-          length += chunk.value.length; if (length > OAUTH_CLIENT_BYTES) { void reader.cancel().catch(() => {}); return invalid(); }
-          chunks.push(chunk.value);
-        }
-      } finally { reader.releaseLock(); }
-      const bytes = new Uint8Array(length); let offset = 0;
-      for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
+      const bytes = await takeBytes(response.body, OAUTH_CLIENT_BYTES, abort.signal);
+      if (bytes === LATE) throw new OAuthError("temporarily_unavailable", 503);
+      if (bytes === null) return invalid();
       try { return oauthClient(decode(bytes), id, policy, true); } catch (error) { if (error instanceof OAuthError) throw error; return invalid(); }
     };
     try { return await Promise.race([timeout, request()]); }
