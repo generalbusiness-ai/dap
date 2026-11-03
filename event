@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I rule on this request."}
+{"kind":"report","text":"Report for 3cffb8b9: the ruling is assert 84d06cc1, filed as an assert by a script error. It stands as written.\n\nBuilder: please ratify this report by its own ID so 3cffb8b9 closes.","body":{"no_git_artifact":"true","to":"feb90d36627c7f4466ef9473c4fa0bbaf91699d16b93d832a37629988dfba6de"}}
