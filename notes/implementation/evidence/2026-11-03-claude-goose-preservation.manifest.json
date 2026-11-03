@@ -1,0 +1,54 @@
+{
+  "qualification": "Actual four-card Claude preservation at fixed e32 source, including exact original configuration restoration and owned-process closure. No standalone screenshot file.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-claude-goose-preservation",
+  "checkpoint": "e32d7dfc4f972051714b3aa6b0afc2921a854248",
+  "fileCount": 9,
+  "files": [
+    {
+      "path": "applied.json",
+      "bytes": 156,
+      "sha256": "d6cbecb945ced0c021173abe5ee4cdb6ab19d3a34c5a6e0fb3fdbe2d321f1f19"
+    },
+    {
+      "path": "claude-resumed.events.ndjson",
+      "bytes": 37429,
+      "sha256": "eb55f4ed90d89c506df1de17ab5765d0f3f5185615df383233be6e7c47d58f58"
+    },
+    {
+      "path": "configuration-restored.json",
+      "bytes": 672,
+      "sha256": "4ebb9150c1fdfbeaf2753c2a083ce036fb4fdddc760596e837867c4859b491fa"
+    },
+    {
+      "path": "native-ui-observations.json",
+      "bytes": 2629,
+      "sha256": "18b81e596a2bec8d38d762484aaa7c26c644bc2f70c2b3ee1d99dafde53e372d"
+    },
+    {
+      "path": "prepared.json",
+      "bytes": 1286,
+      "sha256": "c5b01f66c6b84766cf5ae1adcdfdbd6d94c2742230bb3ae4915dc9b99662d5ef"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 1687,
+      "sha256": "cdc15b4ddf3501f84af268a6d918b1b7a63e24c08664d16879eeffbecdbf8af9"
+    },
+    {
+      "path": "qualification.json",
+      "bytes": 929,
+      "sha256": "51588c1dd0f76ad2d59a808446f71049de3632a8d5b17a5cb70eaca52ef700fb"
+    },
+    {
+      "path": "scene-summary.json",
+      "bytes": 11520,
+      "sha256": "e05e58c2fce51910fa4b61dfa441aca0693cc2d69b494743ca9fc2b755d65fb2"
+    },
+    {
+      "path": "seal-evidence.py",
+      "bytes": 3493,
+      "sha256": "480ed8c90230388eed48d5811fc6705e898782b2a586ccf59a0f18404f3243f6"
+    }
+  ],
+  "sha256sumsSha256": "6e672687119170d5a36635c44827efee3c96a9b9d9f4447322c7649b02a25f81"
+}
