@@ -1,0 +1,169 @@
+{
+  "version": 1,
+  "qualification": "Two fresh local Native Chromium runs against frozen source and maintained signal flag. Browser abort and active page close do not produce Worker disconnect signals in the bounded observations; subscriptions remain open. The release witness exits1 and stays failed. The second observer exits0 only because it completed observations; cleanup still fails. UI checks pass for the small fixture only. One initial missing-tool startup failure is retained. No gate, product UI, hosted or acceptance claim.",
+  "checkpoint": {
+    "commit": "b6d8a38eae30a3b39cdc0b710c64b9c3b1715303",
+    "tree": "29ce1ab880d1920507ec0c888cfc38331f71a40b"
+  },
+  "fileCount": 30,
+  "retention": "Retain this read-only evidence at least30days after landing.",
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-stream-http-close-browser",
+      "fileCount": 30,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2826,
+          "sha256": "ebfa2e6c1aa596c3f5a9b7a8da514a4f026cd0d37d3a44c7a4d9e9d4b83cdeb6"
+        },
+        {
+          "path": "abort-and-active-page-close/after-abort.png",
+          "bytes": 14682,
+          "sha256": "88f9a479c1ab8ef78ee690fd2967698386ab3fe86f77b9a79e7d3c6532591802"
+        },
+        {
+          "path": "abort-and-active-page-close/before-abort.png",
+          "bytes": 15465,
+          "sha256": "f1df0159f1a4717fd9f2936cf9ddf7116a4bf7805f733e9dc38871adf8fbbbb1"
+        },
+        {
+          "path": "abort-and-active-page-close/before-page-close.png",
+          "bytes": 15465,
+          "sha256": "f1df0159f1a4717fd9f2936cf9ddf7116a4bf7805f733e9dc38871adf8fbbbb1"
+        },
+        {
+          "path": "abort-and-active-page-close/closure-check.json",
+          "bytes": 256,
+          "sha256": "24711e7118631de6ad92d23ef50c5ad7751d93397bdd2390192c8003f9792a5f"
+        },
+        {
+          "path": "abort-and-active-page-close/command.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "abort-and-active-page-close/producer.mjs",
+          "bytes": 16271,
+          "sha256": "2440b0ce9be1d1a04ed6a9c93bb229f173a765a9e621cec3aa7e7821066ddb1b"
+        },
+        {
+          "path": "abort-and-active-page-close/public-result.json",
+          "bytes": 7059,
+          "sha256": "883e44162839dac0eed16591494c04e1099df3fb1fbad36af641bf2ad690176f"
+        },
+        {
+          "path": "abort-and-active-page-close/worker.ts",
+          "bytes": 4037,
+          "sha256": "05d09a288ddb84d0c3c3cf9373d0e20f3f1fb0fecc117f13fcf8ca69d073ca81"
+        },
+        {
+          "path": "abort-witness-failed/after-abort.png",
+          "bytes": 14682,
+          "sha256": "88f9a479c1ab8ef78ee690fd2967698386ab3fe86f77b9a79e7d3c6532591802"
+        },
+        {
+          "path": "abort-witness-failed/before-abort.png",
+          "bytes": 15465,
+          "sha256": "f1df0159f1a4717fd9f2936cf9ddf7116a4bf7805f733e9dc38871adf8fbbbb1"
+        },
+        {
+          "path": "abort-witness-failed/closure-check.json",
+          "bytes": 256,
+          "sha256": "10cdcc54fdf3c07880a50c053e9e2cbe6ce2895bec16fbfae31948b52aebe980"
+        },
+        {
+          "path": "abort-witness-failed/command.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "abort-witness-failed/producer.mjs",
+          "bytes": 14207,
+          "sha256": "e1727b8933fbebfc5f4804759f6e02cff3549a6080f3f14eb531c37da0f3879f"
+        },
+        {
+          "path": "abort-witness-failed/public-result.json",
+          "bytes": 5033,
+          "sha256": "077ca2b8694df882a51546b4178ecec695abe6f50b05518387e8c12e2cda83aa"
+        },
+        {
+          "path": "abort-witness-failed/worker.ts",
+          "bytes": 4037,
+          "sha256": "05d09a288ddb84d0c3c3cf9373d0e20f3f1fb0fecc117f13fcf8ca69d073ca81"
+        },
+        {
+          "path": "failed-startup/exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "failed-startup/producer.mjs",
+          "bytes": 14184,
+          "sha256": "6a2e3afe0013a7be64046e02c64acd1165e50c114f08628eec5c308e91fa3bcd"
+        },
+        {
+          "path": "failed-startup/stderr",
+          "bytes": 1096,
+          "sha256": "3e04249b4437af7b59e934efb3112019984f8710d34495112569842204429efb"
+        },
+        {
+          "path": "failed-startup/stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "qa.json",
+          "bytes": 2236,
+          "sha256": "09de8a6bea3d3ac7fb88eeba0c5de08dd551d496526503a7895919aba8b2e9f6"
+        },
+        {
+          "path": "scan.json",
+          "bytes": 430,
+          "sha256": "ab979bf8d94944238fd5cad8511e62de739c55ab0c67968efa5eba95db16b76c"
+        },
+        {
+          "path": "tools/browser-install.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "tools/browser-install.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "tools/browser-install.stdout",
+          "bytes": 4530,
+          "sha256": "f0fc90286dfd9d12ea271a391ce784fcd7b02577375fad1ca36e1fc5514e1173"
+        },
+        {
+          "path": "tools/install.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "tools/install.stderr",
+          "bytes": 209,
+          "sha256": "cd5ca9e3de4b9ada42211336319f8fce15ea47e43de722ad38b17564260eb963"
+        },
+        {
+          "path": "tools/install.stdout",
+          "bytes": 26,
+          "sha256": "03130f1f7f8332817c8cfbbbc61688bd046197ba4042a10969605a206901791e"
+        },
+        {
+          "path": "tools/package-lock.json",
+          "bytes": 627,
+          "sha256": "d6106a1f127deeee8a091ab0f62192c9eaf3ad3b8571754fadfc65177b03bc24"
+        },
+        {
+          "path": "tools/verified-pins.json",
+          "bytes": 460,
+          "sha256": "7b3a13887f42be857d23ad205836f1080c288d9055ee50ed3f25736ba3f7b255"
+        }
+      ]
+    }
+  ],
+  "withheld": "All private Native fixture custody, raw Worker logs, compiled bundles and browser profiles stay outside this unit."
+}

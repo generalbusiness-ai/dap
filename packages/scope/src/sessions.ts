@@ -456,14 +456,17 @@ export class SessionRequests {
  *   the comparison is made at each send (W6). So a stream whose session has
  *   ended sends nothing more, and is closed when the next send is due.
  * - **A reader that went away.** When the reader cancels the stream, or the
- *   transport drops it, the subscription is released at once: it does not
+ *   HTTP runtime reports its disconnect, the subscription is released: it does not
  *   wait for the next commit or for the session's end. The reader's pending
  *   read completes. Nothing here opens a stream again. The release is a
  *   call, `release`, with the stream's own ID: a stream's body crosses from
  *   the scope's object to the Worker's route, and in workerd a cancel of
  *   that body is not passed back to the object (observed in this package's
  *   tests; I3 deltas, entry ES7). So the route owns the reader's side: its
- *   body's cancel makes the call (`relay`, below).
+ *   body's cancel makes the call (`relay`, below). The HTTP route also retains
+ *   that same explicit close through request.signal and waitUntil, because a
+ *   runtime response pump can drop a body without calling its cancel callback.
+ *   A transport that has not yet detected a disconnect supplies no such signal.
  * - **A release that never comes**, as when the route's own run is cut
  *   short, leaves the subscription until its session's check fails: at the
  *   next send after the session's end, or when another stream is opened.

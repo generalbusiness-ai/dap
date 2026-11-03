@@ -80,7 +80,7 @@ const gates = {
   // Census is signed only by the pinned register's standing founding-install
   // signer. It is not an ordinary member/session read; its whole owner is sealed.
   census: "self-signed",
-  summary: readGate("summary"), items: readGate("items"), history: readGate("history"), entry: readGate("entry"), outbox: readGate("outbox"), outboxItem: readGate("outbox"), log: readGate("log"), retained: readGate("retained"), queryItems: readGate("query-items"), applicationProjection: "session", stream: "session", credential: "session",
+  summary: readGate("summary"), items: readGate("items"), history: readGate("history"), entry: readGate("entry"), outbox: readGate("outbox"), outboxItem: readGate("outbox"), log: readGate("log"), retained: readGate("retained"), queryItems: readGate("query-items"), applicationProjection: "session", stream: "session", streamExchange: "session", credential: "session",
   incidents: readGate("incidents"), requests: readGate("requests"), waiting: readGate("waiting"),
   // A session of the row's own member, checked against the object's own head on each request.
   keepOriginal: "session", listOriginals: "session", readOriginal: "session", endOriginal: "session",

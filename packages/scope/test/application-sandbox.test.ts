@@ -229,10 +229,27 @@ function cleanupGateway(body: ReadableStream<Uint8Array>, release: () => Promise
   const bindings: SandboxEnv = { SCREEN_HOSTS: JSON.stringify([{ host, service: "ROOM" }]), ROOM: service };
   const execution = { waitUntil: (work: Promise<unknown>) => { background.push(work); } };
   return {
-    send: () => sandbox.fetch(new Request(`${host.screenOrigin}/v1/scopes/${host.directory}/stream`), bindings, execution),
+    send: (signal?: AbortSignal) => sandbox.fetch(new Request(`${host.screenOrigin}/v1/scopes/${host.directory}/stream`, { signal: signal ?? null }), bindings, execution),
     headers, background, counts: () => ({ closes, disposals }),
   };
 }
+
+test.each([false, true])("sandbox HTTP disconnect during opening=%s retains one release without relying on body cancel", async duringOpening => {
+  const entered = pendingValue<void>(), ack = pendingValue<void>(), abort = new AbortController();
+  const fixture = cleanupGateway(new ReadableStream<Uint8Array>(), async () => { entered.resolve(); await ack.promise; }, duringOpening);
+  const pending = fixture.send(abort.signal);
+  if (duringOpening) { abort.abort(); fixture.headers.resolve(); }
+  const response = await pending;
+  if (!duringOpening) abort.abort();
+  try {
+    expect(fixture.background).toHaveLength(1);
+    await entered.promise;
+    expect([fixture.background.length, fixture.counts()]).toEqual([1, { closes: 1, disposals: 0 }]);
+    ack.resolve(); await Promise.all(fixture.background);
+    await response.body!.cancel();
+    expect(fixture.counts()).toEqual({ closes: 1, disposals: 1 });
+  } finally { ack.resolve(); await response.body!.cancel(); await Promise.all(fixture.background); }
+});
 
 test("sandbox cancellation waits for its deferred release acknowledgement before completing", async () => {
   const entered = pendingValue<void>(), ack = pendingValue<void>(); let released = false, cancelled = 0, settled = false;

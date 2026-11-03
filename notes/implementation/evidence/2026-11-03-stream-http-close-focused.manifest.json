@@ -1,0 +1,299 @@
+{
+  "version": 1,
+  "qualification": "Focused commands ran during implementation on dirty source over ecf59e05; all named control subjects restored. First failed compile, focused test, inventory checks and wrong-oracle opening probe remain failed. Clean frozen production-route Native witnesses and successful Page CI name b6d8a38eae30a3b39cdc0b710c64b9c3b1715303, tree 29ce1ab880d1920507ec0c888cfc38331f71a40b. No gate, browser or deployed acceptance claim belongs to this unit.",
+  "checkpoint": {
+    "commit": "ecf59e054f56528eb73f93ec4609185fe5e6a729",
+    "dirty": true
+  },
+  "retention": "Retain this read-only evidence at least 30 days after landing.",
+  "fileCount": 56,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-stream-http-close-focused",
+      "fileCount": 56,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 5613,
+          "sha256": "8e6e854df1fe16340a66d3ac3875ef54711e3872981598bd9ca87c3112094def"
+        },
+        {
+          "path": "dependency-record.json",
+          "bytes": 2627,
+          "sha256": "71781aa74232b7c0a37551df42ee6919d2426855ad2c155fb1e8454e521e643f"
+        },
+        {
+          "path": "early-abort-native-count/closure-check.json",
+          "bytes": 191,
+          "sha256": "2daaee0668a8604360088e188714faa6a0f5342274c0c0d34d6d3e24dc0af7f3"
+        },
+        {
+          "path": "early-abort-native-count/command.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "early-abort-native-count/producer.mjs",
+          "bytes": 12865,
+          "sha256": "9e2311e73be1285ecc57825ad9f465f43d80ed9d321bc86245c8becf5c40d772"
+        },
+        {
+          "path": "early-abort-native-count/public-result.json",
+          "bytes": 5205,
+          "sha256": "6d7357d62b2ab7dc7c5cb23dcc4d0acc259a65cac80fa5ebf44e6ef1d12c2f73"
+        },
+        {
+          "path": "early-abort-native-count/worker.ts",
+          "bytes": 4064,
+          "sha256": "59bce48746d8a157c969915a80e80894fa5a1e0736db136fcb76bc7144862f48"
+        },
+        {
+          "path": "early-abort-wrong-rpc-oracle/closure-check.json",
+          "bytes": 191,
+          "sha256": "6a72650600944c50b9a1104fe103570341c25838ed91f7cb0e4dd2175babcb6d"
+        },
+        {
+          "path": "early-abort-wrong-rpc-oracle/command.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "early-abort-wrong-rpc-oracle/producer.mjs",
+          "bytes": 12279,
+          "sha256": "6ef5ab63fe40d57b1d28bd550ac0dcbad512799bc346df8f431a4eb5ef1fc6e1"
+        },
+        {
+          "path": "early-abort-wrong-rpc-oracle/public-result.json",
+          "bytes": 4913,
+          "sha256": "bb7b3bf6a391596cd57f1cd0ecff6753ffd36d2f25d784195dc460601101eb28"
+        },
+        {
+          "path": "early-abort-wrong-rpc-oracle/worker.ts",
+          "bytes": 4064,
+          "sha256": "59bce48746d8a157c969915a80e80894fa5a1e0736db136fcb76bc7144862f48"
+        },
+        {
+          "path": "evidence-scan.json",
+          "bytes": 334,
+          "sha256": "5a011905a658087d1b04c5c506dec9a802ee3bbe172896e0e9c353bdb2b7b9c8"
+        },
+        {
+          "path": "implementation/control-native.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "implementation/control-native.stderr",
+          "bytes": 5457,
+          "sha256": "5e10c5d8d15a2f816b3f24db43b6b759c265a09914b0ef0619d41c3806e997fc"
+        },
+        {
+          "path": "implementation/control-native.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "implementation/control-opening.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "implementation/control-opening.stderr",
+          "bytes": 2412,
+          "sha256": "4cb947ec9b09f10f3fc730ceacfedbb6e7c950355089f2b3ea060260a944c314"
+        },
+        {
+          "path": "implementation/control-opening.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "implementation/control-sandbox.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "implementation/control-sandbox.stderr",
+          "bytes": 3143,
+          "sha256": "4c91d1fdc0f8bc57350aa31bac37023d4da97e19afe7d90fbffc73a83ab2538f"
+        },
+        {
+          "path": "implementation/control-sandbox.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "implementation/focused-followup.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "implementation/focused-followup.json",
+          "bytes": 7754,
+          "sha256": "85544ff130f651bd3117550b7d4aeaa363d501c3d7075b7b0fe5924fd464afd2"
+        },
+        {
+          "path": "implementation/focused-followup.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "implementation/focused-followup.stdout",
+          "bytes": 93,
+          "sha256": "635c5a3d8a60ea5591d906429d67e1c00eaaff6d863853eb21232776fdd26eeb"
+        },
+        {
+          "path": "implementation/focused.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "implementation/focused.json",
+          "bytes": 10645,
+          "sha256": "2e1ece373110c99e44a0575c42d7669fb9b7229281ba20f024ba6e73f6bd23c4"
+        },
+        {
+          "path": "implementation/focused.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "implementation/focused.stdout",
+          "bytes": 84,
+          "sha256": "88365799389aac8235eb745ac400e120f94e190d253e2462730eeda1e910f12d"
+        },
+        {
+          "path": "implementation/helpers.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "implementation/helpers.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "implementation/helpers.stdout",
+          "bytes": 68,
+          "sha256": "69c6e92f6bcf75e1531dd862a61a08d3abb45ccd2b192781282e34ba9f3bf5f5"
+        },
+        {
+          "path": "implementation/node-owners-followup.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "implementation/node-owners-followup.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "implementation/node-owners-followup.stdout",
+          "bytes": 3651,
+          "sha256": "9043266d31fa5df5d5f41c10bc7c9e1b4902f1bd9c93d5fec0786db976fd2446"
+        },
+        {
+          "path": "implementation/node-owners.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "implementation/node-owners.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "implementation/node-owners.stdout",
+          "bytes": 17146,
+          "sha256": "1f04904ebfda9a71bf4795a3fad3811333b236ef956f6293a15dfd8f594160f4"
+        },
+        {
+          "path": "implementation/sandbox-typecheck.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "implementation/sandbox-typecheck.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "implementation/sandbox-typecheck.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "implementation/scope-typecheck-followup.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "implementation/scope-typecheck-followup.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "implementation/scope-typecheck-followup.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "implementation/scope-typecheck.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "implementation/scope-typecheck.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "implementation/scope-typecheck.stdout",
+          "bytes": 515,
+          "sha256": "9afef713a235af7b9a44420beb6d3c63593a4542f400b2977e40f0bdae56dff3"
+        },
+        {
+          "path": "page-ci.json",
+          "bytes": 2606,
+          "sha256": "71d55ab233b4df64a18b9095fdeb03b16e442a837f1b25f2bb844ed11dd066ce"
+        },
+        {
+          "path": "production-after-head/closure-check.json",
+          "bytes": 191,
+          "sha256": "b6ab1b6216b569bb9e9fe93c9fe870eca3dd1edf402cc17c8657cc93842553ff"
+        },
+        {
+          "path": "production-after-head/command.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "production-after-head/producer.mjs",
+          "bytes": 11358,
+          "sha256": "9e20fec438319feb4c8f8b00fff02e9b63b8d5a43eaba18e1d1a1707b19c948c"
+        },
+        {
+          "path": "production-after-head/public-result.json",
+          "bytes": 4597,
+          "sha256": "5ac0411e4fd1dabc48d724dc3c47d4eac6a8bd5db7a9f13fae7a260558ff6366"
+        },
+        {
+          "path": "production-after-head/worker.ts",
+          "bytes": 3598,
+          "sha256": "6a6f78e6920db2e4459accfffbe129fc9bad750c855ac9a313c656e9eab0cefd"
+        },
+        {
+          "path": "source-after.json",
+          "bytes": 3573,
+          "sha256": "a985fe2dbe7bf4420f1870de7231bffbd5da8a62c9c5c35872d52e9e6e6599a2"
+        },
+        {
+          "path": "validation-ledger.json",
+          "bytes": 2439,
+          "sha256": "3fdedb93ce168531790d05c750b277210133c4e49058437180ebade59d909cce"
+        }
+      ]
+    }
+  ],
+  "withheld": "Private homes, keys, session inputs, prepared configuration, Native worker logs, raw CLI outcomes and compiled bundles remain outside this directory in their named private diagnostic roots. No private home tree was walked or copied."
+}

@@ -13,6 +13,7 @@ import type { ApplicationBindings } from "./applications/bindings.ts";
 import { ApplicationContentStore } from "./applications/content.ts";
 import { readApplicationTrust } from "./applications/admission.ts";
 import { health } from "./health.ts";
+import { closeOnDisconnect } from "./http-stream.ts";
 /**
  * The Worker (scope contract, sections 2.3, 7.1 and 9.1): the routes of a
  * deployment, addressed by scope, over the one scope namespace.
@@ -448,10 +449,10 @@ function projectionResponse(result: NativeApplicationProjection): Response {
 /** address is trusted transport metadata supplied only by an actual edge
  * fetch. Synthetic/service/hosted callers leave it null; forwarded headers
  * are not promoted into trusted identities here. */
-export async function route(request: Request, binding: Binding, env: MetricEnvironment & CreationAdmission & ServingEnvironment = {}, address: string | null = null): Promise<Response> {
-  return measuredRequest(request, env, () => routedRequest(request, binding, env, address));
+export async function route(request: Request, binding: Binding, env: MetricEnvironment & CreationAdmission & ServingEnvironment = {}, address: string | null = null, ctx?: Pick<ExecutionContext, "waitUntil">): Promise<Response> {
+  return measuredRequest(request, env, () => routedRequest(request, binding, env, address, ctx));
 }
-async function routedRequest(request: Request, binding: Binding, env: CreationAdmission & ServingEnvironment, address: string | null): Promise<Response> {
+async function routedRequest(request: Request, binding: Binding, env: CreationAdmission & ServingEnvironment, address: string | null, ctx?: Pick<ExecutionContext, "waitUntil">): Promise<Response> {
   if (!admittedRequestUrl(request.url)) return json(413, { error: "too-large" });
   const url = new URL(request.url);
   // Section 5.3: a credential in a URL is refused before anything is routed, and is not used. That does not undo the exposure.
@@ -559,9 +560,10 @@ async function routedRequest(request: Request, binding: Binding, env: CreationAd
     return new Response(JSON.stringify(answer), { status: answer.ok ? 200 : READ_STATUS[answer.reason], headers: { "content-type": "application/json", "cache-control": "no-store" } });
   }
   if (what === "stream") {
-    const stream = await scopes.stream(scope, reader);
-    // The body is the reader's side of the scope's stream. A reader that goes away cancels it, and the scope releases the subscription at once.
-    return stream instanceof ReadableStream ? new Response(stream, { status: 200, headers: { "content-type": "application/x-ndjson", "cache-control": "no-store" } }) : read(stream);
+    const opened = await scopes.streamExchange(scope, reader);
+    if (!("body" in opened)) return read(opened);
+    if (ctx) closeOnDisconnect(request.signal, opened.close, work => ctx.waitUntil(work));
+    return new Response(opened.body, { status: 200, headers: { "content-type": "application/x-ndjson", "cache-control": "no-store" } });
   }
   return json(404, { error: "not-found" });
 }
@@ -766,13 +768,13 @@ export class ApplicationScreenService<E extends Env = Env> extends WorkerEntrypo
     const host = this.screenHost(screenOrigin);
     if (!host || !this.#gateway(host, request)) return json(404, { error: "not-found" });
     if (credentialInUrl(new URL(request.url))) return json(400, { error: "credential-in-url" });
-    return isSite(request) ? site(request, { ...this.env, SCOPES: indexedScopes(this.env.SCOPES, this.env) }) : route(request, indexedScopes(this.env.SCOPES, this.env), this.env);
+    return isSite(request) ? site(request, { ...this.env, SCOPES: indexedScopes(this.env.SCOPES, this.env) }) : route(request, indexedScopes(this.env.SCOPES, this.env), this.env, null, this.ctx);
   }
 }
 
 /** Generic Scope, Site and MCP dispatch. Application pages and demo offers belong to apps/room. */
 export default {
-  fetch: async (request: Request, env: Env & Partial<Pick<McpEnv, "REGISTRIES" | "AGENTS">>): Promise<Response> => {
+  fetch: async (request: Request, env: Env & Partial<Pick<McpEnv, "REGISTRIES" | "AGENTS">>, ctx?: Pick<ExecutionContext, "waitUntil">): Promise<Response> => {
     return measuredRequest(request, env, async () => {
     const scopes = indexedScopes(env.SCOPES, env), lookups = { ...env, SCOPES: scopes };
     if (!admittedRequestUrl(request.url)) return json(413, { error: "too-large" });
@@ -781,7 +783,7 @@ export default {
     if (healthy) return healthy;
     const hosted = await mcpRoute(request, env);
     const application = hosted ? null : await applicationPage(request, lookups);
-    return hosted ?? application ?? (isSite(request) ? site(request, lookups, undefined, request.headers.get("cf-connecting-ip")) : route(request, scopes, env, request.headers.get("cf-connecting-ip")));
+    return hosted ?? application ?? (isSite(request) ? site(request, lookups, undefined, request.headers.get("cf-connecting-ip")) : route(request, scopes, env, request.headers.get("cf-connecting-ip"), ctx));
     });
   },
 };
