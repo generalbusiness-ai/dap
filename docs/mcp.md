@@ -2054,9 +2054,23 @@ retirement end the grant's streams and sessions immediately. Refresh ends
 the old token's streams while preserving that grant's sessions. Other
 grants retain their sessions.
 
-`POST /oauth/register` registers a bounded JSON public-client record.
-The Worker keeps at most 1,000 registrations. An unused registration expires
-one hour after creation. Anonymous lookup does not renew it. Before checking
+Dynamic registration defaults off. With `OAUTH_DYNAMIC_REGISTRATION` unset,
+`POST /oauth/register` answers `400` with the fixed JSON error
+`{ "error": "invalid_client_metadata" }`, reads no request body, and obtains
+no registry object. The authorization-server metadata omits
+`registration_endpoint`. HTTPS metadata-document clients still work.
+
+The exact setting `OAUTH_DYNAMIC_REGISTRATION=on` enables registration and
+advertises that endpoint. Every other supplied value, including `off`,
+closes the OAuth routes as an invalid setting. Remove the setting to disable
+registration. Existing registered clients keep their normal expiry and grant
+checks when new registration closes. Before a hosted Worker enables dynamic
+registration, its operator must add the per-address rate limit required by
+the deployment policy.
+
+When enabled, `POST /oauth/register` registers a bounded JSON public-client
+record. The Worker keeps at most 1,000 registrations. An unused registration
+expires one hour after creation. Anonymous lookup does not renew it. Before checking
 capacity, registration removes expired rows. A full table whose rows remain
 valid answers `503` with `Retry-After`.
 
@@ -2096,7 +2110,7 @@ See [hosted settings](security/settings.md) for configuration bounds.
 | `GET /.well-known/oauth-authorization-server` | None | Public-client issuer metadata |
 | `GET /oauth/authorize` | Existing selected browser key for consent | Consent HTML; `/oauth/consent.js` serves its same-origin script |
 | `GET /oauth/authorize/context` | None | Validated authorization query and client metadata; issues no grant |
-| `POST /oauth/register` | None | Registers a public client with allowed redirects |
+| `POST /oauth/register` | None | Registers a public client with allowed redirects only when dynamic registration is enabled |
 | `POST /oauth/token` | Code and PKCE verifier, or refresh token; client ID | Exchanges or refreshes a grant |
 | `POST /oauth/revoke` | Access or refresh token; client ID | Ends that grant |
 | `POST /mcp/agents/grant` | `Control`, action `grant` | Enrolls an invited agent and issues its first code, with no static bearer |

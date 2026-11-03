@@ -5,8 +5,8 @@ import { OAUTH_GRANT_MS } from "./oauth-access.ts";
 import { isRegisteredOAuthClient, OAUTH_CLIENT_UNUSED_MS, oauthClient, oauthRedirectPolicy, OAuthError, OAUTH_CLIENT_BYTES, OAUTH_CLIENT_CACHE_MS, OAUTH_CLIENTS_MOST, type OAuthClient, type OAuthRedirectPolicy } from "./oauth-parameters.ts";
 import type { Sql } from "./sqlite-custody.ts";
 
-export interface OAuthSettings { OAUTH_REDIRECT_URIS?: string; OAUTH_CLIENT_METADATA_ORIGINS?: string }
-export interface OAuthPolicy { redirects: OAuthRedirectPolicy; origins: readonly string[] }
+export interface OAuthSettings { OAUTH_REDIRECT_URIS?: string; OAUTH_CLIENT_METADATA_ORIGINS?: string; OAUTH_DYNAMIC_REGISTRATION?: string }
+export interface OAuthPolicy { redirects: OAuthRedirectPolicy; origins: readonly string[]; dynamicRegistration: boolean }
 export function oauthMetadataOrigins(setting?: string): readonly string[] | null {
   if (setting === undefined) return Object.freeze(["https://claude.ai", "https://chatgpt.com"]);
   if (utf8(setting).length > 8192) return null;
@@ -21,8 +21,10 @@ export function oauthMetadataOrigins(setting?: string): readonly string[] | null
   } catch { return null; }
 }
 export function oauthPolicy(settings: OAuthSettings): OAuthPolicy | null {
+  const dynamic = settings.OAUTH_DYNAMIC_REGISTRATION;
+  if (dynamic !== undefined && dynamic !== "on") return null;
   const redirects = oauthRedirectPolicy(settings.OAUTH_REDIRECT_URIS), origins = oauthMetadataOrigins(settings.OAUTH_CLIENT_METADATA_ORIGINS);
-  return redirects && origins ? { redirects, origins } : null;
+  return redirects && origins ? { redirects, origins, dynamicRegistration: dynamic === "on" } : null;
 }
 export function oauthMetadataUrl(id: string, origins: readonly string[]): string | null {
   if (utf8(id).length > 2048 || /[\u0000-\u0020\u007f\\#]/.test(id)) return null;

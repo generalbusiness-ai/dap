@@ -423,7 +423,7 @@ function sandboxBindings(scopeSource) {
 }
 
 function jsonc(file) { return JSON.parse(readSource(file).replace(/^\s*\/\/.*$/gm, "")); }
-export async function servedInventory({ scopeSource = readSource(scopeFile), applicationSource = readSource("packages/scope/src/applications/route.ts"), hostedSettings = { MCP_ENABLED: "true" }, oauthSource = readSource("packages/scope/src/oauth-routes.ts"), consentSource = readSource("apps/room/page/oauth-route.ts") } = {}) {
+export async function servedInventory({ scopeSource = readSource(scopeFile), applicationSource = readSource("packages/scope/src/applications/route.ts"), hostedSettings = { MCP_ENABLED: "true", OAUTH_DYNAMIC_REGISTRATION: "on" }, oauthSource = readSource("packages/scope/src/oauth-routes.ts"), consentSource = readSource("apps/room/page/oauth-route.ts") } = {}) {
   assert.deepEqual(workerEntrypoints(scopeSource), ["ApplicationScreenService"], "Production WorkerEntrypoint exports");
   const scope = await scopeRows(scopeSource);
   const page = readSource("apps/room/page/route.ts"), pagePaths = [];

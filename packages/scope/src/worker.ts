@@ -825,7 +825,10 @@ export async function mcpRoute(request: Request, env: HostedMcpSettings & Public
     const policy = oauthPolicy(env);
     if (!policy || resources.length === 0) return json(404, { error: "not-found" });
     return await oauthRoute(request, { origin, resources, policy, read: boundedBytes,
-      clients: REGISTRIES.get(REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY)) as unknown as OAuthPublicClients,
+      clients: {
+        registerClient: (bytes, given) => (REGISTRIES.get(REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY)) as unknown as OAuthPublicClients).registerClient(bytes, given),
+        resolveClient: (id, given) => (REGISTRIES.get(REGISTRIES.idFromName(OAUTH_CLIENT_REGISTRY)) as unknown as OAuthPublicClients).resolveClient(id, given),
+      },
       agent: id => { try { return AGENTS.get(AGENTS.idFromString(id)) as unknown as OAuthTokenAgent; } catch { return null; } },
     }) ?? json(404, { error: "not-found" });
   }

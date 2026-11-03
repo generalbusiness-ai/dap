@@ -165,6 +165,7 @@ failure behavior, health visibility and the other readers.
 | `MCP_TOOL_ADDITIONS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/hosted-tools.ts`](../../packages/mcp/src/hosted-tools.ts) |
 | `METRICS` | binding | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/worker.ts`](../../packages/scope/src/worker.ts) |
 | `OAUTH_CLIENT_METADATA_ORIGINS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/oauth-clients.ts`](../../packages/mcp/src/oauth-clients.ts) |
+| `OAUTH_DYNAMIC_REGISTRATION` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/oauth-clients.ts`](../../packages/mcp/src/oauth-clients.ts) |
 | `OAUTH_REDIRECT_URIS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/mcp/src/oauth-clients.ts`](../../packages/mcp/src/oauth-clients.ts) |
 | `PLATFORM_CREATION_PINS` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/creation-versions.ts`](../../packages/scope/src/creation-versions.ts) |
 | `PUBLIC_ORIGIN` | text | `artroom-scope`, `dap-celld-local`, `dap-demo`, `dap-commons`, `dap-lending`, `dap-grow` | [`packages/scope/src/public-origin.ts`](../../packages/scope/src/public-origin.ts) |
@@ -1200,6 +1201,26 @@ failure behavior, health visibility and the other readers.
       "missing": "Trusts only https://claude.ai and https://chatgpt.com. Unknown origins refuse before fetch. Every metadata fetch still has a five-second deadline, a 5 KiB body bound, no redirects or credentials, exact client ID equality and at most one hour of cache.",
       "invalid": "Closes the OAuth routes and signed grant, connection-list and grant-revocation routes with 404 before body reads or namespace lookup. The existing MCP resource and static bearer routes keep their own policy.",
       "health": "Not reported. This deployment policy selects OAuth clients and redirects and grants no Native authority."
+    },
+    {
+      "deployments": [
+        "artroom-scope",
+        "dap-celld-local",
+        "dap-demo",
+        "dap-commons",
+        "dap-lending",
+        "dap-grow"
+      ],
+      "name": "OAUTH_DYNAMIC_REGISTRATION",
+      "kind": "text",
+      "status": "read",
+      "readers": [
+        "packages/mcp/src/oauth-clients.ts"
+      ],
+      "parser": "Unset disables new public-client registration; the exact string on enables it. No trimming or coercion. Every other supplied value, including off and the empty string, is invalid.",
+      "missing": "POST /oauth/register answers fixed 400 invalid_client_metadata before reading a body or obtaining a registry; authorization-server metadata omits registration_endpoint. Metadata-document clients and existing registered-client resolution retain their normal checks.",
+      "invalid": "Closes the OAuth routes and signed grant, connection-list and grant-revocation routes with 404 before body reads or namespace lookup. The existing MCP resource and static bearer routes keep their own policy.",
+      "health": "Not reported. Enabling registration changes no client redirect, metadata-origin, signed-control or Native authority check. Hosted deployment policy requires a per-address rate limit before enabling it."
     }
   ]
 }

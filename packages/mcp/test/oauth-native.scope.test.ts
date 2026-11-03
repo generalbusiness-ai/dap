@@ -2,7 +2,7 @@
  * Session inspector, clock, signer custody and scheduling are explicit TEST
  * ports. No browser, deployed host or real Git provider belongs here. */
 import { env, runInDurableObject } from "cloudflare:test";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import type { ControlAction, FactRef, MemberId } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, keyIdOfSecret, signControlWith, timeOf, utf8 } from "@generalbusiness/dap-bytes";
 import { INVITATION_LINK, encodeAgentKeyInvitation, invitationIssueFields, secretSigner, signedIntent } from "@generalbusiness/dap-client";
@@ -16,13 +16,13 @@ import { created, mcpRoom, SERVICE, type Agent, type Room } from "./fixtures-nat
 import type { OAuthBinding } from "../src/oauth-parameters.ts";
 
 const REDIRECT = "https://claude.ai/api/mcp/auth_callback", RESOURCE = SERVICE + "/mcp", VERIFIER = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
-const routed = (path: string, init?: RequestInit) => worker.fetch(new Request(SERVICE + path, init), { ...env, SCOPES: env.PLATFORM, MCP_ENABLED: "true" });
+const routed = (path: string, init?: RequestInit, dynamicRegistration?: string) => worker.fetch(new Request(SERVICE + path, init), { ...env, SCOPES: env.PLATFORM, MCP_ENABLED: "true", ...(dynamicRegistration === undefined ? {} : { OAUTH_DYNAMIC_REGISTRATION: dynamicRegistration }) });
 
 test("closed or malformed OAuth policy refuses new routes before namespace lookup", async () => {
   let lookups = 0;
   const tripwire = { idFromName: () => { lookups++; throw Error("Unexpected namespace lookup"); }, idFromString: () => { lookups++; throw Error("Unexpected namespace lookup"); } };
   const paths = ["/.well-known/oauth-authorization-server", "/oauth/authorize", "/oauth/authorize/context", "/oauth/register", "/oauth/token", "/oauth/revoke", "/mcp/agents/grant", "/mcp/agents/connections", `/mcp/agents/${"a".repeat(64)}/grant`, `/mcp/agents/${"a".repeat(64)}/connections`, `/mcp/agents/${"a".repeat(64)}/revoke-grant`];
-  for (const settings of [{ MCP_ENABLED: "false" }, { MCP_ENABLED: "true", OAUTH_REDIRECT_URIS: "{}" }, { MCP_ENABLED: "true", OAUTH_CLIENT_METADATA_ORIGINS: "{}" }]) {
+  for (const settings of [{ MCP_ENABLED: "false" }, { MCP_ENABLED: "true", OAUTH_REDIRECT_URIS: "{}" }, { MCP_ENABLED: "true", OAUTH_CLIENT_METADATA_ORIGINS: "{}" }, ...["off", "true", "ON", "", " on"].map(OAUTH_DYNAMIC_REGISTRATION => ({ MCP_ENABLED: "true", OAUTH_DYNAMIC_REGISTRATION }))]) {
     for (const path of paths) {
       const response = await mcpRoute(new Request(SERVICE + path, { method: path.includes("well-known") || path.includes("authorize") ? "GET" : "POST" }), { ...settings, REGISTRIES: tripwire, AGENTS: tripwire } as unknown as Parameters<typeof mcpRoute>[1]);
       expect(response?.status, path).toBe(404);
@@ -33,6 +33,26 @@ test("closed or malformed OAuth policy refuses new routes before namespace looku
   expect(response?.status).toBe(200); expect(lookups).toBe(0);
   const insecure = await mcpRoute(new Request("http://room.example/.well-known/oauth-authorization-server"), { MCP_ENABLED: "true", REGISTRIES: tripwire, AGENTS: tripwire } as unknown as Parameters<typeof mcpRoute>[1]);
   expect(insecure?.status).toBe(404); expect(lookups).toBe(0);
+});
+test("default-off registration and metadata never obtain a registry or consume the body", async () => {
+  let lookups = 0, reads = 0;
+  const tripwire = { idFromName: () => { lookups++; throw Error("Unexpected namespace lookup"); }, idFromString: () => { lookups++; throw Error("Unexpected namespace lookup"); } };
+  const settings = { MCP_ENABLED: "true", REGISTRIES: tripwire, AGENTS: tripwire } as unknown as Parameters<typeof mcpRoute>[1];
+  const request = new Request(SERVICE + "/oauth/register", { method: "POST", headers: { "content-type": "application/json" }, body: "not client metadata" });
+  const read = vi.spyOn(request.body!, "getReader").mockImplementation(() => { reads++; throw Error("Unexpected body read"); });
+  try {
+    const response = await mcpRoute(request, settings);
+    expect(response?.status).toBe(400);
+    expect(await response!.json()).toEqual({ error: "invalid_client_metadata" });
+    expect(response?.headers.get("cache-control")).toBe("no-store");
+    expect(response?.headers.get("pragma")).toBe("no-cache");
+    const metadata = await mcpRoute(new Request(SERVICE + "/.well-known/oauth-authorization-server"), settings);
+    expect(metadata?.status).toBe(200);
+    expect(await metadata!.json()).not.toHaveProperty("registration_endpoint");
+    const enabled = await mcpRoute(new Request(SERVICE + "/.well-known/oauth-authorization-server"), { ...settings, OAUTH_DYNAMIC_REGISTRATION: "on" });
+    expect(await enabled!.json()).toHaveProperty("registration_endpoint", SERVICE + "/oauth/register");
+    expect(lookups).toBe(0); expect(reads).toBe(0);
+  } finally { read.mockRestore(); }
 });
 async function join(room: Room, admin: Agent, handle: string, definition: string): Promise<Agent> {
   const secret = b64url(crypto.getRandomValues(new Uint8Array(32)));
@@ -59,23 +79,51 @@ async function invitation(room: Room, admin: Agent, owner: Agent, own: boolean):
   return encodeAgentKeyInvitation({ v: 1, kind: "agent-key", service: SERVICE, repository, definition: "platform:membership@2", handle: "@oauth-agent", controller: { membership: M, member: owner.config.handle as MemberId }, member, invitation: invited["fact"] as FactRef, secret, expected: { on: roster.revision, member: item.revision } });
 }
 
-test.each([false, true])("routed public-client grants enroll once for an ordinary controller (own-agent pin: %s)", async own => {
+test.each([
+  { own: false, dynamic: "on", metadata: false },
+  { own: true, dynamic: "on", metadata: false },
+  { own: false, dynamic: undefined, metadata: true },
+  { own: false, dynamic: "on", metadata: true },
+])("routed public-client grants enroll once (own-agent: $own, registration: $dynamic, metadata document: $metadata)", async ({ own, dynamic, metadata }) => {
   const room = mcpRoom(); hostedTest.now = () => room.now(); hostedTest.pause = waiting => room.pause(waiting);
+  const route = (path: string, init?: RequestInit) => routed(path, init, dynamic);
+  const documentId = "https://claude.ai/oauth/" + crypto.randomUUID() + ".json";
+  let metadataFetches = 0;
+  // STAND-IN: the allowlisted HTTPS document's bytes. Production policy,
+  // registry SQL, signed control, Native enrollment and token flow stay real.
+  const documentFetch = metadata ? vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+    expect(String(input)).toBe(documentId); expect(init?.redirect).toBe("manual"); expect((init as RequestInit & { credentials?: string })?.credentials).toBe("omit");
+    metadataFetches++;
+    return new Response(JSON.stringify({ client_id: documentId, client_name: "TEST metadata host", redirect_uris: [REDIRECT], token_endpoint_auth_method: "none" }), { headers: { "content-type": "application/json" } });
+  }) : null;
   try {
+    const registrationsBefore = metadata ? await room.wait(() => runInDurableObject(env.REGISTRIES.get(env.REGISTRIES.idFromName("oauth-public-clients-1")), (_instance, state) => {
+      const exists = state.storage.sql.exec(`SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'oauth_client'`).toArray().length;
+      return exists ? state.storage.sql.exec(`SELECT id FROM oauth_client ORDER BY id`).toArray() : [];
+    })) : [];
     const admin = room.agent("rita"), definition = own ? OWN_AGENT_COHORT.membership : "platform:membership@2";
     await created(room, admin, "default", own ? OWN_AGENT_COHORT.register : "platform:register@3");
     const owner = await join(room, admin, "@oauth-owner", definition), other = await join(room, admin, "@other", definition);
     const M = owner.config.repository!.membership, link = await invitation(room, admin, owner, own);
-    const registration = await room.wait(() => routed("/oauth/register", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ client_name: "TEST OAuth host", redirect_uris: [REDIRECT] }) }));
-    expect(registration.status).toBe(201); expect(registration.headers.get("cache-control")).toBe("no-store");
-    const client = await registration.json() as { client_id: string };
+    let client: { client_id: string };
+    if (metadata) {
+      client = { client_id: documentId };
+      if (dynamic === undefined) {
+        const refused = await room.wait(() => route("/oauth/register", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ client_name: "TEST refused", redirect_uris: [REDIRECT] }) }));
+        expect(refused.status).toBe(400); expect(await refused.json()).toEqual({ error: "invalid_client_metadata" });
+      }
+    } else {
+      const registration = await room.wait(() => route("/oauth/register", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ client_name: "TEST OAuth host", redirect_uris: [REDIRECT] }) }));
+      expect(registration.status).toBe(201); expect(registration.headers.get("cache-control")).toBe("no-store");
+      client = await registration.json() as { client_id: string };
+    }
     const binding: OAuthBinding = { client_id: client.client_id, redirect_uri: REDIRECT, code_challenge: "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM", resource: RESOURCE, scope: "mcp", state_digest: digestBytes(utf8("TEST state")) };
     const control = async (path: string, action: ControlAction, agent: string | null, body: unknown, op: string, signer = owner) => {
       const bytes = utf8(canonicalize(body as never)), request = { v: 1 as const, action, service: SERVICE, membership: M, agent, actor: keyIdOfSecret(signer.secret), body: digestBytes(bytes), op, notAfter: timeOf(room.now() + 60_000) };
       const signed = await signControlWith(request, secretSigner(signer.secret));
-      return room.wait(() => routed(path, { method: "POST", headers: { authorization: `Control ${b64url(utf8(canonicalize(request)))}.${signed.sig}`, "content-type": "application/json" }, body: new Uint8Array(bytes) }));
+      return room.wait(() => route(path, { method: "POST", headers: { authorization: `Control ${b64url(utf8(canonicalize(request)))}.${signed.sig}`, "content-type": "application/json" }, body: new Uint8Array(bytes) }));
     };
-    const form = (path: string, values: Record<string, string>) => room.wait(() => routed(path, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ client_id: client.client_id, ...values }).toString() }));
+    const form = (path: string, values: Record<string, string>) => room.wait(() => route(path, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ client_id: client.client_id, ...values }).toString() }));
     const firstBody = { ...binding, link };
     if (own) {
       hostedTest.faultAt = "complete";
@@ -92,7 +140,7 @@ test.each([false, true])("routed public-client grants enroll once for an ordinar
     expect((await exchanged(code, "x".repeat(43))).status).toBe(400);
     const tokensResponse = await exchanged(code); expect(tokensResponse.status).toBe(200);
     const tokens = await tokensResponse.json() as { access_token: string; refresh_token: string };
-    const initialize = (bearer: string) => room.wait(() => routed("/mcp", { method: "POST", headers: { authorization: `Bearer ${bearer}`, "content-type": "application/json", accept: "application/json, text/event-stream" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "TEST Native OAuth host", version: "1" } } }) }));
+    const initialize = (bearer: string) => room.wait(() => route("/mcp", { method: "POST", headers: { authorization: `Bearer ${bearer}`, "content-type": "application/json", accept: "application/json, text/event-stream" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "TEST Native OAuth host", version: "1" } } }) }));
     const initialized = await initialize(tokens.access_token); expect(initialized.status).toBe(200); await initialized.body?.cancel();
     expect((await exchanged(code)).status).toBe(400);
     const reused = await initialize(tokens.access_token); expect(reused.status).toBe(401); await reused.body?.cancel();
@@ -151,5 +199,12 @@ test.each([false, true])("routed public-client grants enroll once for an ordinar
       const answers = JSON.stringify(state.storage.sql.exec(`SELECT answer FROM control`).toArray());
       expect(answers).not.toContain(code); expect(answers).not.toContain(tokens.access_token); expect(answers).not.toContain(tokens.refresh_token);
     }));
-  } finally { hostedTest.now = null; hostedTest.pause = null; hostedTest.faultAt = null; hostedTest.clientRetention = null; room.done(); }
+    if (metadata) {
+      expect(metadataFetches).toBe(1);
+      await room.wait(() => runInDurableObject(env.REGISTRIES.get(env.REGISTRIES.idFromName("oauth-public-clients-1")), (_instance, state) => {
+        expect(state.storage.sql.exec(`SELECT id FROM oauth_client ORDER BY id`).toArray()).toEqual(registrationsBefore);
+        expect(state.storage.sql.exec(`SELECT id FROM oauth_client_cache WHERE id = ?`, documentId).toArray()).toEqual([{ id: documentId }]);
+      }));
+    }
+  } finally { documentFetch?.mockRestore(); hostedTest.now = null; hostedTest.pause = null; hostedTest.faultAt = null; hostedTest.clientRetention = null; room.done(); }
 });
