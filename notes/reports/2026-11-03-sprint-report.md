@@ -2,14 +2,15 @@
 
 Status: landed; describes work that is done.
 
-The sprint ran from 17:00 on 2 November to 17:00 on 3 November. Seventeen
-heads landed on `main`, counting the previous report. The three room Workers
-were not deployed; they still serve `bcf88654` with hosted MCP closed. The Mac
-mini was deployed once. All the OAuth code that Claude and ChatGPT need is on
-`main`, and the dedicated Worker for the live runs is configured. Goose now
-renders dap's cards. The fault behind every unknown Git write on the mini is
-found and fixed. A new register on the mini is installed for the fresh G3
-witness. The cost-of-change review is below.
+The sprint ran from 17:00 on 2 November to 17:00 on 3 November. Sixteen heads
+landed on `main`, counting the previous report, beside one direct commit by
+Hugh to `AGENTS.md`. The three room Workers were not deployed; they still
+serve `bcf88654` with hosted MCP closed. The Mac mini was deployed once. All
+the OAuth code that Claude and ChatGPT need is on `main`, and the dedicated
+Worker for the live runs is configured. Goose now renders dap's cards. The
+cause of every unknown Git write on the mini is found, and its fix is on
+`main`. A new register on the mini is installed for the fresh G3 witness. The
+cost-of-change review is below.
 
 ## Story: signing in from Claude or ChatGPT
 
@@ -52,9 +53,12 @@ upgrade strands no room (`d7f1ebf7`). The Mac setup scripts carry that list
 (`9c7ae712`).
 
 With both in place, a new register for the fresh G3 witness is installed on the
-mini, listing H3's and the first G3 register beside it. A probe meant to prove
-that H3 creates an inbox again stopped at a read before it sent anything. The
-fresh room, its binding and the GitHub witness come next.
+mini, listing H3's and the first G3 register beside it. The mini now serves
+source that includes the parser fix, but no Git write has run on it yet; the
+next G3 witness proves it. A first probe of H3 stopped at a read before it
+sent anything. A corrected probe then proved that H3 creates an inbox again:
+its count went from 8 to 9. The fresh room, its binding and the GitHub
+witness come next.
 
 ## Story: gates that pass when every case passes
 
@@ -102,7 +106,6 @@ revisit.
 
 - The fresh G3 room on the new register, its binding row, and the GitHub
   witness.
-- A fixed H3 Inbox probe.
 - The archive-scale case that answered retry after 14,601 entries.
 - The next creation versions' source.
 
@@ -125,7 +128,6 @@ revisit.
 
 - Deploy `dap-connect`, and run the live Claude web and ChatGPT witnesses.
 - Create the fresh G3 room, bind it once, and run the GitHub witness.
-- Prove an H3 Inbox birth with a fixed probe.
 - Land the next creation versions' source, or say what holds it.
 - Delete the leftover J4 forks.
 - Half-hourly surveys; the daily report at 17:00; the worktree sweep after it.
