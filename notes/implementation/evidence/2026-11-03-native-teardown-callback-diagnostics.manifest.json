@@ -1,0 +1,39 @@
+{
+  "qualification": "Actual MCP lending owner before and after callback-finish patch; temporary instrumentation, complete original cases, no full suite.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-native-teardown-callback-diagnostics",
+  "checkpoint": "acdbc741608341f973793b6281d3abaf733ae9d6",
+  "fileCount": 6,
+  "files": [
+    {
+      "path": "observations.json",
+      "bytes": 2344,
+      "sha256": "bcbade6ad981503e524951b3f5887cb5a6aad3a479fc7468c5a857eac178f20f"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 1247,
+      "sha256": "abcda09180ff2ced6a1ad2952d76fe550b6ead79fbc848b458cb7499ee88a7ff"
+    },
+    {
+      "path": "trace-03.json",
+      "bytes": 879,
+      "sha256": "b497337931d38f16d53fdad248307acf6604f05b7eb81694f24d77de00e7e303"
+    },
+    {
+      "path": "trace-03.py",
+      "bytes": 3466,
+      "sha256": "8a5586c79d66fe68be599f3f860fac0f8333b6ec21ef2e5e41089b578e7173cf"
+    },
+    {
+      "path": "trace-04.json",
+      "bytes": 831,
+      "sha256": "cdb37ea876408883584d6eadf09c52de9e9a3f672b39e0690d35a0fc21228270"
+    },
+    {
+      "path": "trace-04.py",
+      "bytes": 3900,
+      "sha256": "46db9aa7cb5a27ba2e09534b59adafc2759cdba862223b3cc54df34d2684bbfa"
+    }
+  ],
+  "sha256sumsSha256": "066a18d6391c123051008d3bc24e6d45807db57df35280e52d4229dabc9e89df"
+}

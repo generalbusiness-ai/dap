@@ -2,7 +2,7 @@ import { expect, onTestFinished, test } from "vitest";
 import { b64url, entryHash, timeMs } from "@generalbusiness/dap-bytes";
 import { command, memoryStore } from "@generalbusiness/dap-cli";
 import { Gate, net } from "../src/testing.ts";
-import { routed } from "./repository.ts";
+import { Platform, routed } from "./repository.ts";
 import { beginSessionChild, beginSessionFixture, observeSessionReads, sessionSettings, type SessionReadChoice } from "./session-settings.ts";
 import { nativeFixtureLifetime } from "./fixtures-native.ts";
 import { NO_OUTSIDE } from "../src/index.ts";
@@ -91,5 +91,39 @@ test("stale session cleanup and one completed lease cannot expose a new owner's 
   } finally {
     stop(); gate.release(); await lateCleanup;
     lease1.close(); lease2.close(); fresh.close(); old.close();
+  }
+});
+
+// Invariant: retiring fixture authority does not let an already scheduled
+// native callback outlive the test's RPC channel. Both sides of this TEST
+// gate live inside the actual object; no timer advances a native clock.
+test("fixture finish joins a scheduled native callback after its owner retires", async () => {
+  const owner = beginSessionFixture({ sessions: false, inspector: null });
+  const life = nativeFixtureLifetime(owner, { required: false, finish: "external" });
+  let ending: Promise<void> | undefined;
+  let callback: { holdFixtureCallback(): Promise<void>; releaseFixtureCallback(): Promise<void>; fixtureCallbackFinished(): Promise<boolean> } | undefined;
+  try {
+    const store = memoryStore();
+    const installed = await command({ store, fetch: routed as never, now: () => timeMs(net.clock.now)! }, ["install", "https://scopes.test", "--host", "github.com", "--namespace", "callback-owner"]);
+    expect(installed.code).toBe(0);
+    const register = (await store.config())!.register!;
+    life.platform(register.scope);
+    callback = new Platform(register.scope).stub as unknown as NonNullable<typeof callback>;
+    await callback.holdFixtureCallback();
+    life.release();
+    expect(life.current()).toBe(false);
+    ending = life.finish();
+    // This real metadata RPC can answer while the callback is held. A
+    // cleanup that merely releases and returns wins the race incorrectly.
+    expect(await Promise.race([ending.then(() => "finished"), callback.fixtureCallbackFinished().then(() => "metadata")])).toBe("metadata");
+    expect(await callback.fixtureCallbackFinished()).toBe(false);
+    await callback.releaseFixtureCallback();
+    await ending;
+    expect(await callback.fixtureCallbackFinished()).toBe(true);
+    expect(life.current()).toBe(false);
+  } finally {
+    await callback?.releaseFixtureCallback();
+    await (ending ?? life.finish());
+    owner.close();
   }
 });

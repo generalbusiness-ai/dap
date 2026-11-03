@@ -112,10 +112,30 @@ export function nativeFixtureLifetime(owner: SessionOwner, options: { required?:
     if (cleanupFailed) throw new Error("Native fixture cleanup failed after releasing all owned resources.");
     // Same clock persists, including any legitimate advances. No physical drain.
   };
-  // An explicit parent fixture may own the sole join-before-release hook.
-  // Existing callers retain their automatic synchronous release unchanged.
-  if (options.finish !== "external") onTestFinished(release);
   const ownedPlatforms = new Map<ScopeId, Platform>();
+  let finishing: Promise<void> | undefined;
+  /** Release keeps its existing synchronous ownership fence. The finish hook
+   * then joins actual callbacks on known objects before Vitest closes RPC.
+   * These raw test-only joins do not borrow a retired owner's authority,
+   * run effects/dispatch, advance a clock, or claim transitive quiescence. */
+  const finish = (): Promise<void> => finishing ??= (async () => {
+    release();
+    let total = 0;
+    for (let round = 0; round < 64; round++) {
+      let callbacks = 0;
+      for (const node of ownedPlatforms.values()) {
+        const raw = new Platform(node.name);
+        const joined = await (raw.stub as unknown as { awaitScheduledCallbacks(): Promise<{ callbacks: number }> }).awaitScheduledCallbacks();
+        if (!Number.isSafeInteger(joined.callbacks) || joined.callbacks < 0) throw new Error("Native fixture callback count is invalid.");
+        callbacks += joined.callbacks; total += joined.callbacks;
+        if (total > 4096) throw new Error("Native fixture callback count exceeded its finite bound.");
+      }
+      if (callbacks === 0) return;
+    }
+    throw new Error("Native fixture callback joins exceeded their finite rounds.");
+  })();
+  // Explicit parent fixtures keep their own join-before-release hook.
+  if (options.finish !== "external") onTestFinished(finish);
   const platform = (name: ScopeId): Platform => {
     active();
     const node = new OwnedPlatform(name); ownedPlatforms.set(name, node);
@@ -138,7 +158,7 @@ export function nativeFixtureLifetime(owner: SessionOwner, options: { required?:
     override async created(seq: number, n = 0): Promise<Platform> { const made = await super.created(seq, n); active(); return platform(made.name); }
   }
   return {
-    owner, active, activeFor, wait, waitFor, release,
+    owner, active, activeFor, wait, waitFor, release, finish,
     /** Current ownership is required for new work, never identity-only cleanup. */
     current(): boolean { return !released && owner.isCurrent() && net.clock === clock && net.hold === hold && net.deaf === deaf; },
     unWire: (name: string): void => ports.remove(name),
