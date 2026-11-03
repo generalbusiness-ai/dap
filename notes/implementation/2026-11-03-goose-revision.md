@@ -22,7 +22,7 @@ The Open control entered fullscreen while the card reported that fullscreen was 
 
 ## Work that remains
 
-Claude Desktop preservation has three observed card renderings. Change did not complete its bounded read, and one Retry has no observed result. That record does not meet the four-card preservation requirement. The original Claude configuration was restored. A second registration attempt awaits separate user approval after automatic approval review rejected it. Goose UI approval does not authorize that Claude configuration change.
+Claude Desktop preservation has three observed card renderings. Change did not complete its bounded read, and one Retry has no observed result. That record does not meet the four-card preservation requirement. The original Claude configuration was restored after that scene. Automatic approval review initially rejected the second temporary setup. Hugh then explicitly approved the exact `dap-goose-preserve` setup with fixed `e32d7dfc` source and the existing Ana scratch identity, followed by exact configuration restoration. Fresh Claude acquisitions still fail at native-pipe startup before any configuration change. The second setup remains unexecuted; permission is no longer pending.
 
 A fresh Goose state read on 3 November failed at native-pipe startup before any UI action. The retained completed scene remains the evidence; no fresh window state or new UI success is claimed.
 
