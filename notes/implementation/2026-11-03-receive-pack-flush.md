@@ -54,8 +54,38 @@ Each run names its actual incremental checkpoint and dirty paths.
 | Observed-layout control | Final nine-case baseline passes; one assertion fails with the old limit; source restored | `03-extra-flush-positive-control.json` |
 | Foreign-ref control | Final nine-case baseline passes; one assertion fails without the interior flush check; source restored | `04-extra-status-refusal-control.json` |
 
-The full frozen gate and checker review remain pending. O3 keeps review
-and landing priority. The planner deploys before a fresh G3 witness runs
+The frozen full gate at `cc6c1c158052163e7183da5af3d89ca5dde5a577`,
+tree `1536e4931261b625240cc6293695b1377542bf69`, exits 1 after
+1,607.491329 seconds on the shared Mac. All prechecks, compilers and kernel
+pass. Node passes 133 cases, Counting 56, plain 3,601 with one skip, and
+Native 1,060 with two skips. Native passes 281 files and skips one. Its
+teardown raises one `EnvironmentTeardownError`: closing RPC while
+`resolve` remains pending. The reporter names
+`packages/scope/test/archive-input.test.ts`. It reports no failed case;
+the unhandled error still makes Native partial and the gate a failure.
+
+The separate investigation runs only that complete two-case file at the
+same clean head and tree. It exits 0 in 5.304144 seconds. This supplies no
+full Native-stage pass and claims no documented isolated-repair exception.
+No source changes between the failed gate and this investigation.
+
+| Check | Command | Exit | Public record SHA-256 |
+|---|---|---|---|
+| Frozen full gate | `npm run gate` | 1 | `1cb83f799214a2999cf61cbaecbb16e46f9e3f8e93f848a17b14b5c4466172e1` (`failure-record.json`) |
+| Named teardown owner | `node node_modules/vitest/vitest.mjs run --config vitest.native.config.ts packages/scope/test/archive-input.test.ts` | 0 | `586befa166f3938b7ac20560d58fcf5337ffbddfe43e69e4425f8d4ae915117f` (`01-archive-input-teardown-owner.json`) |
+
+The sealed [failed-gate manifest](evidence/2026-11-03-receive-pack-flush-gate.manifest.json)
+has SHA-256 `fcf103e4ea4729ec1e7474c51b38d887f587d2a4cd2e29af76d3b88c15e55bf3`; its eight public files index 29 private files.
+The sealed [focused investigation manifest](evidence/2026-11-03-receive-pack-flush-teardown-followup.manifest.json)
+has SHA-256 `113febc9f2adefae1900c6f1802a0656aea387af9fa6c73754844da58fc7c135`; its five public files index two private files.
+Raw output and complete stage records stay private because Native output
+can contain test credentials. The terminal summary reconciles final case
+identities rather than adding live progress callbacks.
+
+The test evidence gap needs a ruling and exact-head review before landing.
+No gate-pass claim follows from the focused investigation. O3 has landed at
+`331bf5f2`, and this candidate already includes it. The planner deploys
+before a fresh G3 witness runs
 in a new room on a new empty branch of the same repository. The original
 G3 room and its unknown operation remain untouched. Keep
 `builder-receive-pack-probe-20261102` until the fresh witness has its record.
