@@ -12,7 +12,7 @@ const namedOwners = {
     "packages/scope/src/object.ts:ScopeObject": "d6dacd29bed93cc5c8c262c325ae0ff68cbc5193674b1b4b026e1991ca863185", // Token refusal: the delivery's transaction keeps a key that a compromised notice named, and the authority asks for it.
   },
   "packages/scope/src/worker.ts": {
-    "packages/scope/src/worker.ts:$module": "09f6f9995a4d5528b4094ea216714aa3bcdd944a475066edc1749db5da93fe7b",
+    "packages/scope/src/worker.ts:$module": "41f2c0c505b5b75791c94504ca1a8ef654c85ba33f83dd575ba752a72266fd2d", // HTTP context forwarding and explicit disconnect close; route and authority gates stay fixed.
     "packages/scope/src/worker.ts:ScopeIndex": "c427427157118cacbc763f65d5523f598eeb72a0b9a01520f1b088c5bc6dbad5", // Reviewed empty Site wake deletion; route and authority gates unchanged.
     "packages/scope/src/worker.ts:MISSING": "e8958a6cf8d4cd2f412b30c76b38aca2f4523bc2b9df96606ac01059b6d4fb42",
     "packages/scope/src/worker.ts:api": "03bb00a1a523796ca66c26c23d91142ef46758ad62290fdc9a5cc74556e8c171",
@@ -30,14 +30,14 @@ const namedOwners = {
     "packages/scope/src/worker.ts:queryResponse": "3ce5909b0b8713f13903dc84328673d0cfa85910dff434b928e22fd3e2fe11b9",
     "packages/scope/src/worker.ts:PROJECTION_STATUS": "437dc39bac447f6fc149e3db253a2b2c5fbca4ef30410c0d0f3b58d94d1ac5bb",
     "packages/scope/src/worker.ts:projectionResponse": "e17f1f4aa800bc06b4f8d065f77e8a594c2738c77873a52671fa7f1b22bf249b",
-    "packages/scope/src/worker.ts:route": "8e41a02f0a9d01c802beea51c095d82f3720ca0d3d5dc178213f5de2a8ccde63",
-    "packages/scope/src/worker.ts:routedRequest": "f68dedc0f65de27b70a66c0da44601f9eeae151ad96331794815115e7725087e",
+    "packages/scope/src/worker.ts:route": "97d61bda3cbfe7b427c932d6839a46e73cb5b9b6e75e575bf798329ebdc210ad", // Forward the HTTP request context for release work.
+    "packages/scope/src/worker.ts:routedRequest": "3b0b751a7511500a15016f748d9a393ccaa3ad1860bfcdffe9008baadd7769be", // Same gates and stream bytes; retain the existing close on observed disconnect.
     "packages/scope/src/worker.ts:outsideOf": "35d046e6a7506ebb5394f6337cf6bb0d1abbf4c8b36dae91d1d98752614a733d",
     "packages/scope/src/worker.ts:sessionWiring": "cb8f4d0e2b06854a3fbf080e5b4ce72e4182060b60f27cc7fb7f5ed6ac8779c5",
     "packages/scope/src/worker.ts:snapshotReaderOf": "dac91fd4e800bdcd1a9f7e47bd077b6efd0acd4eb3c70bf63122a12bdb7446b5",
     "packages/scope/src/worker.ts:DeployedScope": "660756384c04ec84a02cd513cf7bc8e00a2542b596bf16a846afcc25bf04020d",
     "packages/scope/src/worker.ts:ApplicationStreamLifetime": "4c82d6b5ea8ae68089f2f80321e3361b6176c9725d0b46481b6f32b6d2093ba3",
-    "packages/scope/src/worker.ts:ApplicationScreenService": "d0e151737f0a735c031d7bb134c45d0ce8e87e7ec6d7a03eaf5455acbb92ac25",
+    "packages/scope/src/worker.ts:ApplicationScreenService": "1d14294e957015e16bf05110852f1ab75efa3d1e4af34fa4417dbbd6cfc128a7", // Forward the existing context to the shared route; no new RPC method or authority.
     "packages/scope/src/worker.ts:mcpRoute": "2701c498525ca35cf414385a0274b127ca833fc16fa683e86e6b821e07770ad1",
     "packages/scope/src/worker.ts:boundedBytes": "6553fab5e2b9129266d64c02f7c3c9317095f1888fd12a10d12490d9f5d90f40",
     "packages/scope/src/worker.ts:observeThrough": "7e507f9bd9233223446711d089eb6d6b4236b69642eb9d39260e4712d81dab7a",
@@ -193,6 +193,7 @@ const namedOwners = {
 
 // Reviewed matcher/gate owners. These are change tripwires, not runtime proof.
 const seals = {
+  "packages/scope/src/http-stream.ts": "ac798ac542c6295bda6495ef9c3f46f2c78511bfb89b88ee4b2d4df7711e2168", // Retain the exact existing close capability on observed HTTP disconnect.
   "packages/bytes/src/session.ts": "71a16d6d2d02b2f424e711a80ca28fe8e10204d3daacc4d0cf23f85ebe80903e", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "packages/mcp/src/oauth-parameters.ts": "b48c22470c29dfa7c11260fc874128859650791294ec93d8ae0007bdca95534c", // O3 OAuth authority, public-client policy or retained browser consent owner.
   "packages/mcp/src/oauth-clients.ts": "9b4471d0460979130cbd5e6f415b80f32f509e034d86be116e4d0b210949f66f", // O3 OAuth authority, public-client policy or retained browser consent owner.
@@ -220,7 +221,7 @@ const seals = {
   "packages/platform/src/versions.ts": "0e8cd35ebe10a80d0b5e3c7a77d72853636d3fbc6dc7cd2fe48297ad971ed4db", // Closed native publication protocol policy; actual maintained parser output.
   "apps/room/worker.ts": "aba04e12dc206f0be6bda4a8edeac64569e0edd44b7a87772595d7db40bb8b67",
   "apps/room/worker.commons.ts": "c525a1b0d13e6243099d03b80c5207b76f082c71432db2b8ecaf86ccf8cb1160", // Reviewed separate deployment entry; actual maintained parser output.
-  "apps/room/fetch.ts": "8c0163e66c74ff63227d55cb1b8a8ab8d30661b1eb154a95d0e3c5b580e443ba", // R2 owning AST value adopted on the reviewed branch.
+  "apps/room/fetch.ts": "83b2a56552c5f6874935d1491f487fd7d2b9e2651a9acceb87d731139897ad2c", // Forward the HTTP context to the existing scope route; dispatcher gates stay fixed.
   "apps/room/demo-creation.ts": "91d9ac8a8fa37e3c99c117be7d99dc2d9e370efeacd70f8f49a00a4062bcd67c",
   "packages/scope/src/demo-creation.ts": "a3db32b06d66dc08dc5c585514a02ed60929d3bcc05d0be9d433affea17fefe7", // Reviewed current demo projection or ordinary GitHub authority owner.
   "packages/scope/src/github-wiring.ts": "988d741c82a54f2be987b2ade5e3653ae64ff21907e66896487e86d79a58ae68", // Reviewed current demo projection or ordinary GitHub authority owner.
@@ -322,7 +323,7 @@ const pendingR8Seals = {
   "packages/cli/src/scope-index-manifest.ts": "393dc3b0c33b73b082ca0024370de8bdcad832be6349ee1414516dabe9739663", // Preserve trusted session refusal outcomes; actual maintained parser output.
   "packages/cli/src/status-report.ts": "200a440b06850a2d8773ae9c2ad82d6bf0b5864fbce92a714eafb622eba0484c", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/client/src/session.ts": "3e4dfcbab9c9ab8585929b4c75ba01ac86c4e9ea7978f70f6bf3681af15bddb6", // Reviewed CLI session or verification boundary; actual maintained parser output.
-  "apps/sandbox/worker.ts": "d354c1740d51e2b83e0b93272384607c609c65386c3fc4b8d977edfb89b6636a",
+  "apps/sandbox/worker.ts": "3208f16c0b3078736f7afe807340b17d0ca1c2966b7267eb90c36c6b4c6cef24", // Retain the existing Native lifetime close on an observed HTTP disconnect.
   "packages/client/src/application-gateway.ts": "daa1d28c02085bd6be7a9698a7120cd106cc7233aad92565aaa05e67427878ef",
   "packages/client/src/application-route.ts": "bbe23f8f9e629024facf74d5559edd6007740d9f410e07f19b54150a4d30d20f",
   "packages/scope/src/applications/bindings.ts": "b89e8155ad5479d5b4f9175b2e941ef80b54c75dc9af4a993401c544e150cd78",

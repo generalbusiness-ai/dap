@@ -9,6 +9,39 @@ import { route, type Api } from "../src/worker.ts";
 import { definition } from "./fixtures-native.ts";
 import { creation, rita, soon } from "./net.ts";
 
+test.each([false, true])("HTTP disconnect during opening=%s retains the shared close acknowledgement through overlapping body cancellation", async duringOpening => {
+  // Namespace/session/ExecutionContext STAND-INS isolate transport ownership.
+  // The sessions owner separately checks the actual Native release RPC.
+  const deferred = () => { let resolve!: () => void; const promise = new Promise<void>(done => { resolve = done; }); return { promise, resolve }; };
+  const entered = deferred(), opening = deferred(), releasing = deferred(), ack = deferred();
+  const abort = new AbortController(), background: Promise<unknown>[] = [];
+  let releases = 0;
+  const body = new ReadableStream<Uint8Array>();
+  const binding = { idFromName: (name: string) => name, get: () => ({
+    stream: async () => { entered.resolve(); await opening.promise; return { id: "TEST exact stream", body }; },
+    release: async (id: unknown) => { expect(id).toBe("TEST exact stream"); releases++; releasing.resolve(); await ack.promise; },
+  }) } as unknown as Parameters<typeof route>[1];
+  const name = creation(definition, { title: "Transport stand-in", opener: rita.member }).name;
+  const response = route(new Request(`https://scopes.test/v1/scopes/${name}/stream`, { signal: abort.signal }), binding, {}, null, { waitUntil: work => { background.push(work); } });
+  await entered.promise;
+  if (duringOpening) abort.abort();
+  opening.resolve();
+  const returned = await response;
+  expect(returned.status).toBe(200);
+  if (!duringOpening) abort.abort();
+  const cancellation = returned.body!.cancel();
+  try {
+    await releasing.promise;
+    expect([releases, background.length]).toEqual([1, 1]);
+    let settled = false;
+    const retained = Promise.all(background).then(() => { settled = true; });
+    await Promise.resolve();
+    expect(settled).toBe(false);
+    ack.resolve(); await Promise.all([retained, cancellation]);
+    expect(releases).toBe(1);
+  } finally { ack.resolve(); await cancellation; await Promise.all(background); }
+});
+
 test("one real route: a founding, an act and a request for a step through the Worker's fetch; the exact retry through the service binding returns the same receipt; a read states its position", async () => {
   const post = (path: string, body: unknown) => SELF.fetch(`https://scopes.test${path}`, { method: "POST", body: JSON.stringify(body) });
   const { signed, name } = creation(definition, { title: "A lane", opener: rita.member });

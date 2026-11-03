@@ -80,6 +80,32 @@ const streams = async (node: Platform) => (await (node.object as unknown as { se
 const head = async (node: Platform) => (await node.summary()).at;
 
 describe("read sessions (authority note, sections 3.9, 3.12 row W6, 5.3 and 5.5; the proof plan's key O12, the service's row)", () => {
+  test("HTTP request disconnect retains one actual Native release independently of response-body cancellation", async () => {
+    const owner = beginSessionFixture({ secret: testSecret(), sessions: false, inspector: null });
+    onTestFinished(owner.close);
+    try {
+      const { M } = await repository(), held = await session(owner, M, una), currentHead = await head(M);
+      await real(owner, async () => {
+        const abort = new AbortController(), background: Promise<unknown>[] = [];
+        // ExecutionContext STAND-IN retains the actual route's release RPC.
+        const response = await routed(url(M, "/stream"), { headers: { authorization: held.reader() }, signal: abort.signal }, { waitUntil: work => { background.push(work); } });
+        expect(response.status).toBe(200);
+        const reader = response.body!.getReader();
+        try {
+          expect(JSON.parse(new TextDecoder().decode((await reader.read()).value))).toEqual({ at: currentHead });
+          expect(await streams(M)).toEqual({ open: 1, released: 0 });
+          const pending = reader.read();
+          abort.abort();
+          expect(background).toHaveLength(1);
+          await Promise.all(background);
+          expect([(await pending).done, await streams(M)]).toEqual([true, { open: 0, released: 1 }]);
+          await reader.cancel(); abort.abort();
+          expect([background.length, await streams(M)]).toEqual([1, { open: 0, released: 1 }]);
+        } finally { await reader.cancel(); }
+      });
+    } finally { owner.close(); }
+  });
+
   test("T15: a session reads the scopes of its own repository and no other, until its end on the reading scope's clock; a revoked key keeps its session and gets no new one; an abandoned reader is released at once and once; and a session's end closes a stream at its next send, with no byte", async () => {
     const owner = beginSessionFixture({ secret: testSecret(), sessions: false, inspector: null });
     onTestFinished(owner.close);

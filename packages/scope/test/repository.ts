@@ -50,9 +50,9 @@ interface Surface {
 /** The Worker's routes over the namespace `PLATFORM`, called in the test's isolate, for a verifier that reads a history as bytes. */
 /** Explicit simulated edge metadata for this fixture; internal hosted calls
  * use route's null transport address instead. */
-export const routed = (url: string, init?: RequestInit): Promise<Response> => {
+export const routed = (url: string, init?: RequestInit, ctx?: Pick<ExecutionContext, "waitUntil">): Promise<Response> => {
   const request = new Request(url, init);
-  const action = () => route(request, env.PLATFORM, { SCOPE_INDEX: startupTest.index ?? env.SCOPE_INDEX }, request.headers.get("cf-connecting-ip"));
+  const action = () => route(request, env.PLATFORM, { SCOPE_INDEX: startupTest.index ?? env.SCOPE_INDEX }, request.headers.get("cf-connecting-ip"), ctx);
   return startupTest.owner ? startupTest.owner.wait(action) : action();
 };
 
