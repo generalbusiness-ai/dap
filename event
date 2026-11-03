@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/evidence/2026-11-03-receive-pack-flush-teardown-followup.manifest.json","body":{"commit":"5923297845f6fd9cdcb882e4e2fc20ff2716fe0c","path":"notes/implementation/evidence/2026-11-03-receive-pack-flush-teardown-followup.manifest.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/git/src/http.ts","body":{"commit":"5923297845f6fd9cdcb882e4e2fc20ff2716fe0c","path":"packages/git/src/http.ts"}}
