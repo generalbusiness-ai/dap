@@ -135,3 +135,15 @@ O4 stays closed until this reviewed recovery lands and the planner deploys
 its new dedicated Worker. Existing live Workers keep hosted MCP closed.
 The planner owns deployment and records any real host refresh retry.
 This head claims no O4 or G3 acceptance and continues no original G3 act.
+
+## Delivery tracking correction
+
+Builder filed the original request `c37ba98f` with
+`no_git_artifact=true` by mistake. Its artifacts remain exact pointers, but
+gitseq cannot use them as a delivery report. Explicit main-target child
+`b951e179`, under promise `304c4034`, carries this completed implementation
+and its ten reviewed paths. The source, tests, settings, dependencies, and
+sealed evidence stay unchanged. The child requires independent exact-head
+review under ruling `d01d06a5` and a sealed main landing. The original
+request retains its history and can close by a factual report of that
+delivery.
