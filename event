@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/evidence/2026-11-03-stream-merge-flags.manifest.json","body":{"commit":"6acd9a57872af26a9d5fc1fce66d252f61b73c7c","path":"notes/implementation/evidence/2026-11-03-stream-merge-flags.manifest.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0841efa61a57d240abf802408f3a687a378d34ff","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-stream-limit-record.manifest.json."}
