@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:893683ebde06d48fdd696eaef62852d8b6baa71e","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/creation-admission.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:89910688ea1e437b899e095f03a86a02af464969","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/commands.ts."}
