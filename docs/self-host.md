@@ -7,15 +7,22 @@ the room page. To run the service on one Mac, follow
 
 ## Keep a register for existing rooms
 
-A deployed Worker admits new child scopes only under its current
-`REGISTER_SCOPE`. If you replace that pin, earlier rooms remain readable
-but stop creating inboxes, lanes, and other child scopes. A successful
-health or room read does not show that child creation still works.
+With `INSTALLED_REGISTER_SCOPES` absent, a deployed Worker admits new child
+scopes only under its current `REGISTER_SCOPE`. Replacing that pin leaves
+earlier rooms readable but stops their new inboxes, lanes and other child
+scopes. A successful health or room read proves no child-creation continuity.
 
-To run a new creation cohort alongside live rooms, use a separate Worker
-with its own namespaces and register. Keep the existing Worker's register.
-The same restriction applies to a maintained Mac host when a new prepared
-project changes its register setting.
+To keep earlier rooms creating children, list the current register and all
+earlier installed roots in `INSTALLED_REGISTER_SCOPES`, as
+[Keep existing rooms able to create children](deploy.md#keep-existing-rooms-able-to-create-children)
+describes. `REGISTER_SCOPE` still selects the current primary register.
+Native lineage and authority checks still apply. A separate Worker with
+its own namespaces remains an option when you need a separate service.
+
+On a maintained Mac host, put the reviewed list in the new prepared project
+before GitHub staging. Both Mac project validators check it. After any
+register change, prove an actual child birth in an earlier room; a setting
+or existing-room read alone proves no deployed continuity.
 
 ## Deploy a room
 

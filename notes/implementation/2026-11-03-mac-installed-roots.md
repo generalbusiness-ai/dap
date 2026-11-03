@@ -57,5 +57,33 @@ checkout manifest change occurs.
 
 The owners use actual private scratch files and synthetic RSA key syntax.
 They contact no App, provider, installed register or deployed service.
-The full gate follows at a clean committed checkpoint, after the O4 gate
-finishes. Its actual exit and source hashes will govern the review record.
+## Frozen gate
+
+The one required gate runs at clean commit
+`25146ccfec870e27e9373ff13a50f482dbb107ce`, tree
+`03add0b276b14bb2e1dab3a3aad1df878782eb29`. Its actual `gate.exit` reads
+`exit 0` after 1,814.988 seconds. Source-before and source-after retain
+that exact head, tree and clean status. The run uses shared macOS arm64,
+Node 26.13.0 and owned locked dependency copies; initial machine load and
+OS cache state are unmeasured. It starts after O4’s gate finishes.
+
+Every precheck, compiler and test stage passes. Node records 133 cases,
+Counting 56, plain 3,601 with one skip, and Native 1,065 with two skips.
+Both Vitest phases report zero unhandled errors. Every phase is complete,
+and reconciliation reports zero issues or failed cases. The fixed Node
+stage’s Mac owner separately reports 15 Node and 18 Python child cases,
+each with exit 0 and no signal. The earlier
+archive failure stays open under `64552d40`; this required passing gate
+does not identify its cause. Teardown retains its existing reopening
+condition.
+
+The [gate manifest](evidence/2026-11-03-mac-installed-roots-gate.manifest.json)
+has SHA-256 `50223ca884a92785d0e26c6a5e57ffee9f1a7d0494ac132592e3a018f7ebe25e`.
+It seals nine public files and indexes 29 private originals, including the
+complete temporary pipeline. Together with focused evidence, the head
+retains 27 public files and 29 private originals.
+
+Only operator documentation, this record and the gate manifest follow
+the frozen checkpoint. The top-level self-hosting instruction now states
+the installed-root option consistently with its Mac procedure. Production
+source, tests, configuration and dependencies stay unchanged.
