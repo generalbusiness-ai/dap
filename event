@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:38f914b6c8cdad320461cceaa99a14c4a12deb3a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-oauth-authorization-gate-2.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3cd03e38967906af60f9ea1196b71806cb280dcf","text":"Merge retired a covered predecessor; the successor is at packages/contract/src/session.ts."}
