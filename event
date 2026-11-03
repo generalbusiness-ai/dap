@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/scope/test/worker.ts","body":{"commit":"c55c59da145c28beecff2b15e35b0d99b7d888b6","path":"packages/scope/test/worker.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:170501ff18b140bd6338e6d9ec86521d0396d59d","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-native-teardown-callback-diagnostics.manifest.json."}
