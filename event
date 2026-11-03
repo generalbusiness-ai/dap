@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:52f5b6de8bf5ce94f01c634675e8f938547b0565","text":"Merge retired a covered predecessor; the successor is at docs/cli.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:53060056301a195e6b65b655d0780969eadf09df","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/own-agent-membership.ts."}
