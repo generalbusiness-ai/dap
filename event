@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2e8d87b674c7bf4770a3df696e358fbc53fd5da9","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/register-setting.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:434bae737956b5f72db2cf9f653c3ca230bc3230","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-03-installed-registers-focused.manifest.json."}
