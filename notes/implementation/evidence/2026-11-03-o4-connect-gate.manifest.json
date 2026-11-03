@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "qualification": "Actual frozen full gate exit 0. Preserve all failed, partial and unreached obligations. Counts retain their actual runner and phase; timings are not host acceptance.",
+  "checkpoint": {
+    "commit": "767c825c8c26d102df848b5d1b18880d308546df",
+    "tree": "84db597c0638998260c91eadebd6989cb0d22f6f"
+  },
+  "retention": "Retain readonly public unit and indexed private originals at least 30 days after landing.",
+  "fileCount": 9,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-o4-connect-gate",
+      "fileCount": 9,
+      "files": [
+        {
+          "path": "driver.py",
+          "bytes": 2737,
+          "sha256": "b19bb56779a5357a9c863fae7bbd5dde3734d03d52f82f0b9c4f5f6b9a3161c4"
+        },
+        {
+          "path": "gate-record.json",
+          "bytes": 1245,
+          "sha256": "81ca464bfa8afd8217b08fe809e9db9c68721e9dd3c30b5eadf8da388a57620d"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "private-files.json",
+          "bytes": 5812,
+          "sha256": "ca291343886d9450a0682f8caee91d9879166b22d95125f1c553b8ed175b8ad9"
+        },
+        {
+          "path": "private-output.json",
+          "bytes": 380,
+          "sha256": "b30f37702ba16756738db6c7a04dbe0d259fe6a866a953d23b580f30ae45f327"
+        },
+        {
+          "path": "source-after.json",
+          "bytes": 310,
+          "sha256": "28dd0bc72b60144d0ffc199185887c40f6c8ea8444e778312045373b7b6df65b"
+        },
+        {
+          "path": "source-before.json",
+          "bytes": 646,
+          "sha256": "f91c373b904a9f12ff2078734f774410c72a834c71f5fce6f06060dd734b7cd7"
+        },
+        {
+          "path": "terminal-summary.json",
+          "bytes": 3348,
+          "sha256": "b7c61e59fa0d773023f772ecb1728eec5e66825eb5ea54a35191f1f36c22187d"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 663,
+          "sha256": "81d6bb9abadcffc8a04bfb8feea645d8ebbc893dc5f703ca60df5ebf6e677112"
+        }
+      ]
+    }
+  ]
+}

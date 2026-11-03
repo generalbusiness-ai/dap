@@ -71,11 +71,15 @@ to work around an uncertain answer. See [the install order](deploy.md#the-order)
 
 ## Prepare the member and application
 
-The planner's application ruling follows decision request `6146068a`.
-The local `apps/views` Repo in AI adapter has no installed package release
-on this head, and hosted MCP does not mount that local adapter. Do not
-claim an installed Repo in AI application from its presence in source.
-Finish the chosen supported application procedure before opening MCP.
+Planner ruling `780fcb95` selects Counter, whose source configuration is
+`apps/counter/dap.application.json`. Before opening MCP, resolve decision
+`735f2a64`: obtain its reviewed immutable signed packet, exact release and
+publisher, and a supported ordinary-agent card action. The current live
+trust row is Grow's release, not Counter's. Counter's only declared card
+acts, Start and Pause, need `counting.control` and the controller's native
+signature; an ordinary member's agent lacks both. The other three views
+declare no acts. Keep this setup step pending until the reviewed package
+or explicit witness ruling supplies those prerequisites.
 
 1. Invite an ordinary person with role `member` from the founder home:
 
