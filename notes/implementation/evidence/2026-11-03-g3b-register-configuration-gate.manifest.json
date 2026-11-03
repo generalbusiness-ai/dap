@@ -1,0 +1,59 @@
+{
+  "qualification": "Actual full gate exit0 with exact unchanged source, complete terminal phases and private raw custody. No deployment or G3 acceptance.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-register-configuration-gate",
+  "checkpoint": "b6e7134a920f4e580f2f8e65101a235f5251b0bc",
+  "fileCount": 10,
+  "files": [
+    {
+      "path": "after.json",
+      "bytes": 1833,
+      "sha256": "3431c9c665d2a91733aa3940e36725b4ab0701724529625222bb6ac5ec4fe4d9"
+    },
+    {
+      "path": "before.json",
+      "bytes": 1833,
+      "sha256": "3431c9c665d2a91733aa3940e36725b4ab0701724529625222bb6ac5ec4fe4d9"
+    },
+    {
+      "path": "gate.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "private-files.json",
+      "bytes": 5671,
+      "sha256": "cd1fee08ccdc763ee81335679c71c56364a01462191aebf3a910c2ef35c7a80a"
+    },
+    {
+      "path": "qualification.json",
+      "bytes": 428,
+      "sha256": "ebdb21c9cc7b8053c96a2a1c8e2541e5a884a98ef0ac52f9345ba448a061a7fd"
+    },
+    {
+      "path": "receipt.json",
+      "bytes": 261,
+      "sha256": "a1e595a4e41a9edfb8ded4447f095a3d3be780275619c184e43cce8d0a58d6e7"
+    },
+    {
+      "path": "run-gate.py",
+      "bytes": 2286,
+      "sha256": "57db115b351e90b94ba14ccffee6a0ee75f989fc644e91057cbf3ed05e6adea7"
+    },
+    {
+      "path": "started.json",
+      "bytes": 239,
+      "sha256": "9199a58de922cede483ba9d4491ed5bb81faec90d7fc4adea9a796e63b2e7ff5"
+    },
+    {
+      "path": "summarize-gate.mjs",
+      "bytes": 2022,
+      "sha256": "af324d77e9de24489b8f15a6cd98f0eef89e3ee9ebe89656ff2a6b27c0ddfc7d"
+    },
+    {
+      "path": "terminal-summary.json",
+      "bytes": 2517,
+      "sha256": "d9170d69db4212312090d9071b4fc1998bb3e2755f4330fce826f43d3317d1ff"
+    }
+  ],
+  "sha256sumsSha256": "f80c9635c2fcc96fe859a8a69ac66c12218483651390cc2f67d02271c35fd609"
+}

@@ -1,0 +1,22 @@
+{
+  "qualification": "Public exact Git export. No local checkout files, dependency directory, client home, key or private configuration enters the archive. Planner uses this source only after the packet lands.",
+  "mainCommit": "9c7ae712d6281a1f32bbbf180e70cfa4329d6e7c",
+  "mainTree": "3b5af4b5513fe576143cd3b9b7afd168472bf175",
+  "archive": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-register-configuration/main-source.tar.gz",
+  "archiveBytes": 65426980,
+  "archiveSha256": "72f84d06863c2bcf72cfb5824703de15b8874fa779723392d38795188503737f",
+  "gitInventory": "source-git-inventory.txt",
+  "gitInventorySha256": "fb0fc1b2bf2a35dd600e744e4a3274b0b155d5cfce8847a98e8b2ee74e49e593",
+  "gitFileCount": 3946,
+  "lockfileSha256": "c835dfee04d7dc8bb946ab08e38d79d54aa2bade3c03d917319a835431014fc6",
+  "newRoot": "/Users/inguz/dap-host-g3b-20261103",
+  "clientHome": "/Users/inguz/dap-host-g3b-20261103/client",
+  "priorRoots": [
+    "sc_7prhc2jyfaxm2wxyak56fcg5f2htof74sclpdsqcvsllao25tzoq",
+    "sc_wktzr3u2uv33drdyiqcehcgrro46adjdxl7vyy5iguddbjrlnybq"
+  ],
+  "bindingsSha256": "234755b04a7411602c42a7390e2e7146b6e91671a4260d231eec4918728bbfdc",
+  "retainedRuntime": "/Users/inguz/dap-validate/bin/node-v26.12.1-darwin-arm64/bin/node",
+  "fleetPrefix": "/Library/dap-host-h3-20261029",
+  "registrationPolicy": "Dynamic registration remains off unless OAUTH_DYNAMIC_REGISTRATION equals on; this packet adds no on setting."
+}
