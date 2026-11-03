@@ -82,7 +82,10 @@ Raw output and complete stage records stay private because Native output
 can contain test credentials. The terminal summary reconciles final case
 identities rather than adding live progress callbacks.
 
-The test evidence gap needs a ruling and exact-head review before landing.
+Planner ruling `6500f198` permits the checker to assess this sealed record
+without another full gate. Neither documented follow-up exception applies;
+the ruling decides this environmental gap, and the checker may require more.
+The gate remains failed, and exact-head review still precedes landing.
 No gate-pass claim follows from the focused investigation. O3 has landed at
 `331bf5f2`, and this candidate already includes it. The planner deploys
 before a fresh G3 witness runs
