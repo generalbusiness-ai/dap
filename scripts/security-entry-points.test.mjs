@@ -8,8 +8,8 @@ import { assertInventory, documentedInventory, servedInventory, sourceSeal, name
 // its own source-ordered line. Root adopts actual parser values after review.
 const namedOwners = {
   "packages/scope/src/object.ts": {
-    "packages/scope/src/object.ts:$module": "b84d162189a574ac89243b3d85eee2dd56bf740c4717506d5e0d8d8a50e07fba", // Token refusal: the delivery's transaction keeps a key that a compromised notice named.
-    "packages/scope/src/object.ts:ScopeObject": "d6dacd29bed93cc5c8c262c325ae0ff68cbc5193674b1b4b026e1991ca863185", // Token refusal: the delivery's transaction keeps a key that a compromised notice named, and the authority asks for it.
+    "packages/scope/src/object.ts:$module": "1fdab10d607e13009c34b387de859db08007f97feb549f48b1b8d85e1aaf3973", // Token refusal: the delivery's transaction keeps a key that a compromised notice named.
+    "packages/scope/src/object.ts:ScopeObject": "ebb1140ed7ec9e1501217b95e493f623920e304fbe44ba4a3514b2e0dd3e90ed", // Token refusal: the delivery's transaction keeps a key that a compromised notice named, and the authority asks for it.
   },
   "packages/scope/src/worker.ts": {
     "packages/scope/src/worker.ts:$module": "41f2c0c505b5b75791c94504ca1a8ef654c85ba33f83dd575ba752a72266fd2d", // HTTP context forwarding and explicit disconnect close; route and authority gates stay fixed.
@@ -46,7 +46,7 @@ const namedOwners = {
     "packages/scope/src/worker.ts:McpAgent": "30f972eb4222c7a8a772faa118fbb5dcf225b573b03f4c23217a595e9621d717",
   },
   "packages/cli/src/commands.ts": {
-    "packages/cli/src/commands.ts:$module": "b1e1e1e46bf94ba2045b63aa8c746326103d040a8463e274d008dc9176a624c6", // Reviewed room-proof import, both helper declarations, separate checker dispatch and retained-clone helpers; exit code 3 and the export of issueNamed for dap issue wait.
+    "packages/cli/src/commands.ts:$module": "a25a6f060d58ed0cc140e3501a3719a94baa80a5052657c2f39054bbd75f8c3f", // Reviewed room-proof import, both helper declarations, separate checker dispatch and retained-clone helpers; exit code 3 and the export of issueNamed for dap issue wait.
     "packages/cli/src/commands.ts:NEW_REGISTER": "f828e83eeb39a37566e323156efb63274fc43b1d6b9e95b38fbf0cdbba327fbf",
     "packages/cli/src/commands.ts:short": "62f9d565f48fc73fc6b282a941d6d37a48055c6c32f2ef88f21b22ead55f6e57",
     "packages/cli/src/commands.ts:scopeIndexAccess": "b54a6859075907491f4c19313b149572acd5b3bd94c492d61fb342601759c299",
@@ -55,12 +55,12 @@ const namedOwners = {
     "packages/cli/src/commands.ts:scopeNamed": "d16130a225872b6e96da8b6375ff41dcec104f7772f1e6c527c92d03cfd382e4",
     "packages/cli/src/commands.ts:definitionOf": "138ced231e1b804af138be95c50fdd958e478c196d21b11cba3a431658bedf0b",
     "packages/cli/src/commands.ts:laneActive": "8797076412cc4a14365ca99fc4faed2de3f34e7d0b7b62fc6283a446615a8aee",
-    "packages/cli/src/commands.ts:INSTALL_COHORTS": "aaa706754a6f384a3ad0cbf2f0f90901fd249e1b76b75cf6f75732fc11b67730",
-    "packages/cli/src/commands.ts:CREATION_INSTALL_COHORTS": "83a989197817612927c9b3f261c5bfaeaa11e8c8d2c30eeab1bb11d2897b7e2c",
-    "packages/cli/src/commands.ts:selectedRegister": "8c66a90a1c7c9fc47a2dea15226c521d97d0fb656b15bb326a399cb74bfc019b",
+    "packages/cli/src/commands.ts:INSTALL_COHORTS": "2d6ae86c0970f68089fce6e6387b0c4da738de6a71df15cde1542babd257d63e",
+    "packages/cli/src/commands.ts:CREATION_INSTALL_COHORTS": "0d7ce5d3e9756752ead7d5e4f644f07c29c1d955baee86ccbaf256973dc9ab9d",
+    "packages/cli/src/commands.ts:selectedRegister": "0b4142d8bac4adda31b5069dd28803215169f33e4c16b1e1d73ff182c70cceac",
     "packages/cli/src/commands.ts:planSent": "9419fa14ca00c84bfbc468192900fd822717cb76e1ba8e178d616c009ae054a6",
     "packages/cli/src/commands.ts:joinSent": "b8a644d194680aeaccda9873f7eb9ee6f9e71110cdefe87b0af35d5ce946d692",
-    "packages/cli/src/commands.ts:installSelection": "d4cada86b29b6e5cdbd0695d0112e828951aeeb297291fef4fc5759fe138dbb8",
+    "packages/cli/src/commands.ts:installSelection": "5b3583176b16d93a8029a40654ca79fd08487076838116b1dc95dd9cb014c6ce",
     "packages/cli/src/commands.ts:selectedPlan": "51a17a4e587f8994eb507cc70b4702969a997b57c86339a52f67c84e5117b7d8",
     "packages/cli/src/commands.ts:install": "0459a25a99cd5e54f3022e4074e722ca3823120075dcf3c6cea420889dd2ea7d",
     "packages/cli/src/commands.ts:installing": "848bc5a890238b9ee8e382ed5a958844ee8cd409e6e09236ff8c4fa3a10b72bd",
@@ -106,7 +106,7 @@ const namedOwners = {
     "packages/cli/src/commands.ts:headerEnv": "2b29643df8f13576381b9be7133dd6f5dc668a80d10822ac7fbc0d3bcb1ee878",
     "packages/cli/src/commands.ts:clone": "1d8aa445d3c5ea84144059b895b8ed3626f3070475a09a051f56e0ed5f2e809e",
     "packages/cli/src/commands.ts:cloneRetained": "d26b7b7a58c7c6b0d1c1ca056beecf1de47b194c27d5420abdb457c5556f9ced",
-    "packages/cli/src/commands.ts:cloneUsing": "c866d1d2a7f2d11024dba0ea6afad288f3a01cffe3fc46dc71971af91c2a6e41",
+    "packages/cli/src/commands.ts:cloneUsing": "758c5dfe4f9b1537989c9f9cba61721874cc2c794631262260de18adf98db6d9",
     "packages/cli/src/commands.ts:EDIT_BYTES": "9bbee0ea572e3aee4339d86e8e59defc86538133d2ad92449cdc827c7b86b2b5",
     "packages/cli/src/commands.ts:fileOf": "f2c2de1136cfd275c0b2003f3ae5abd2ff8d7ba508351a05dc8145664dada339",
     "packages/cli/src/commands.ts:textOf": "1ae1ce4970caf7b99eb7370475b4506f47b23c9f8b09fd93933a664f2406747a",
@@ -133,7 +133,7 @@ const namedOwners = {
     "packages/cli/src/commands.ts:status": "f77f1396b4bed9f01c159ca07c991ef52da9cd9a50ea4e1aae3f5765d50504b4",
   },
   "packages/mcp/src/service.ts": {
-    "packages/mcp/src/service.ts:$module": "ed37e301ed051a42ad607cfeb68f61c200a38efff1338bb75e3b27e355d895a7", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
+    "packages/mcp/src/service.ts:$module": "74ec4d7db3094a129f77b6d1c249ebd204cb15e6ef1834eacf72ad4a68a0f1ca", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
     "packages/mcp/src/service.ts:ListRestart": "83803f5cf365099c3ed7ad6d12153b68e7616977007feffed4ca4b01bd4ca95d",
     "packages/mcp/src/service.ts:SERVER_NAME": "1a22dd379fec10cbed8b5938dfd522ce9e8cffe176de5f4554e3cad8668764e2",
     "packages/mcp/src/service.ts:SERVER_VERSION": "93926c4b4205a41211c5dfd2e083d8a5d4eed978060ba4d0781fb54d9d3eb366",
@@ -163,7 +163,7 @@ const namedOwners = {
     "packages/mcp/src/service.ts:WRITE": "5920731b91c504f8bfb945b3edbe132bea0167ec1c9a44579e3dd658e5e9cd91",
     "packages/mcp/src/service.ts:scopeArg": "36e8957cdbc823f8e1bf9ab903a7a353df3b10d1292ed7d378362aabc41f6ef4",
     "packages/mcp/src/service.ts:keyArg": "368a6f3d59380df455b92a9478dc8c993a5535b2d40e9046a4e71df139cc5149",
-    "packages/mcp/src/service.ts:McpService": "91faf4cc532d331cbbf7324ef4a68790c11443694bbc64a5bcdd82b31708e891", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
+    "packages/mcp/src/service.ts:McpService": "41bf825d0c0e92d326fd596dccb61a20769e448b02464a4151e06be54339a76f", // Reviewed exact-read context; fresh authority, target, custody and signing admission remain.
     "packages/mcp/src/service.ts:commitIdFault": "3614f1add9efc0a6aa08e7afe8ec461e46d5728284a77e668fa67fb962614527",
     "packages/mcp/src/service.ts:lineOf": "b8fc3e8118f71914f365f08ff318da437f69ee1e5e693956e0e88101d5177e00",
     "packages/mcp/src/service.ts:creationName": "a7dd4dd268ace0088ef0be50510ccc654090f1ddcc09aa0a4271f161b05ca444",
@@ -208,7 +208,7 @@ const seals = {
   "packages/platform/src/own-agent-cohort-data.ts": "5e018d8d4fa152ed3c827c64cbbf0587f5a7a2358b02e3e2cf90aec933fac502", // O2 own-agent guard and exact opt-in cohort owner.
   "packages/bytes/src/read-minimum.ts": "5ead3e9579b2805c525bae5d1ad3bd6883c0a18f0022a202c01eea91a181939c", // DX-A2 reviewed minimum admission and wait owner; actual maintained AST value.
   "packages/scope/src/read-wait.ts": "0bf31ae0c52975c9e91b22dfac278c03ab04c575b88941c3a6480433fd79e2cb", // DX-A2 reviewed minimum admission and wait owner; actual maintained AST value.
-  "packages/scope/src/authority.ts": "47be6974c42f7c38142f2ff8c8b7acfdd6f8ee50de5a8c1c7338807758f50225", // Token refusal: the commit of read-token asks whether a compromised notice named the key; maintained whole-AST value.
+  "packages/scope/src/authority.ts": "793b80180b0f1d719e720ea781a3e6338e41ea9552a9a6bf3b7697954015281d", // Token refusal: the commit of read-token asks whether a compromised notice named the key; maintained whole-AST value.
   "packages/platform/src/reservation-v17.ts": "e00aa0f08f9b3b1f4aca5e794436367ab550dcd1966c5258f1e96e42ab97a856", // Reviewed retained-policy decoder; actual maintained parser output.
   "packages/platform/src/evidence.ts": "e3f0fa91c32d848b5bec7dc9ac047d4cc72815ddce70365ad8fade6884a7354b", // Reviewed platform binding codec under ruling 1bc4f7fd; actual maintained parser output.
   "packages/git/src/checkout-snapshot.ts": "82f53717d419b70fe208801b6d0bf2fc0c947ac2beffb27b2e2d01898f48ee25", // Detached object identity and closure bounds; imports do not seal this implementation.
@@ -218,12 +218,12 @@ const seals = {
   "packages/bytes/src/index.ts": "bb4abe5eadcce69b5979e8a02edd09e22bbd4f9eff0bfab550d15ef6aa5ab6b6", // Bind the shared address-key export to its reviewed owner.
   "apps/room/celld/worker.ts": "d1bc465525bd0af046fa0703464f14aeaaee8286b88415dfec3b9e03869fb644", // H1 reviewed production entry or public-origin gate owner.
   "packages/scope/src/public-origin.ts": "d6e867fc859db69b6fcf2d465d387a032966331cbae04310ea4c24cda3773269", // H1 reviewed production entry or public-origin gate owner.
-  "packages/platform/src/versions.ts": "0e8cd35ebe10a80d0b5e3c7a77d72853636d3fbc6dc7cd2fe48297ad971ed4db", // Closed native publication protocol policy; actual maintained parser output.
+  "packages/platform/src/versions.ts": "7a87b9322eae12c50cc95b43b6074029d3b9c13ed583584d62e1fd87329d561b", // Closed native publication protocol policy; actual maintained parser output.
   "apps/room/worker.ts": "aba04e12dc206f0be6bda4a8edeac64569e0edd44b7a87772595d7db40bb8b67",
   "apps/room/worker.commons.ts": "c525a1b0d13e6243099d03b80c5207b76f082c71432db2b8ecaf86ccf8cb1160", // Reviewed separate deployment entry; actual maintained parser output.
   "apps/room/fetch.ts": "83b2a56552c5f6874935d1491f487fd7d2b9e2651a9acceb87d731139897ad2c", // Forward the HTTP context to the existing scope route; dispatcher gates stay fixed.
   "apps/room/demo-creation.ts": "91d9ac8a8fa37e3c99c117be7d99dc2d9e370efeacd70f8f49a00a4062bcd67c",
-  "packages/scope/src/demo-creation.ts": "a3db32b06d66dc08dc5c585514a02ed60929d3bcc05d0be9d433affea17fefe7", // Reviewed current demo projection or ordinary GitHub authority owner.
+  "packages/scope/src/demo-creation.ts": "140d7a2751ddbca8dda3d78161ab720a7b40c127107510a256f4529f84385eb9", // Reviewed current demo projection or ordinary GitHub authority owner.
   "packages/scope/src/github-wiring.ts": "988d741c82a54f2be987b2ade5e3653ae64ff21907e66896487e86d79a58ae68", // Reviewed current demo projection or ordinary GitHub authority owner.
   "apps/room/page/route.ts": "8eccc79a8a3e3cd8b33c38c65374db5d01583b5e9afd76384fc2133bae4cb475",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
@@ -232,9 +232,9 @@ const seals = {
   "packages/scope/src/register-setting.ts": "46afcd1a38e2ae5501aed393e36c8db92acfe08f521086be820036e8d154204c", // Shared exact Register selector; actual maintained parser output.
   "packages/scope/src/scope-index-census.ts": "1892fba9c476330693d9b8071bd7b2653d2261bef7e9487fd95018d74aba2769", // Address/key admission precedes owner proof; exact census authority and page guards retained, without duplicate owner charge.
   "packages/scope/src/creation-admission.ts": "e5b173474005b5c888e60e0f863311b952e75baf4e7ece8cb5f86d50f85da248", // Reviewed R1 ancestry owner; adopted AST value.
-  "packages/scope/src/creation-lineage.ts": "6d57fa071d053a5afd9828dbc14cbd878769b6c2b75a0029c1f2a709f2f16e58", // Reviewed whole-lineage boundary; adopted AST value.
-  "packages/scope/src/creation-versions.ts": "c2ad4a9cf70d858a95b91bae148245c7496ef40b5a9c6e7b548444b3d03ce9d1", // Reviewed R6 creation-policy parser; actual maintained output.
-  "packages/scope/src/creation-declaration.ts": "7e79dd1c770497ecb487492ec26072e6031ecfaf2348e990903262a970561cc8", // Bounded immutable native Directory custody, not authority.
+  "packages/scope/src/creation-lineage.ts": "eec45fe2cd38344a5be9992cb6ddde7b03adcfeda8e2c7511e07c2131903feb0", // Reviewed whole-lineage boundary; adopted AST value.
+  "packages/scope/src/creation-versions.ts": "7a40c80e142a22f209ac3b69622b26f9dee359839403fa5b1519d636176ee358", // Reviewed R6 creation-policy parser; actual maintained output.
+  "packages/scope/src/creation-declaration.ts": "6af7d5b4d521a907579215bf8a6e1f6c3382825989919e0d1b43362335188973", // Bounded immutable native Directory custody, not authority.
   "packages/scope/src/namespace.ts": "11ce9daffdb384151dbd1ca9e204e0d062c1d3ff113d482b9980760f8eaad7e7", // Reviewed internal declaration RPC; adopted AST value.
   "packages/scope/src/health.ts": "1fc701231daac790f66cc4df748495d69bb9b171be2b5ea75d2eb28d819b49bd",
   "packages/scope/src/site/route.ts": "f4bbcdd1f53220ccce1337ec011e0c662f199f979513ca38ea891bda7add6ee8",
@@ -246,10 +246,10 @@ const seals = {
   "packages/scope/src/applications/projection-wire.ts": "289a66b25bf2dc63e0e7d4b0726c1eda067d21e9238bbf29737b4d8d89c1fa00",
   "packages/scope/src/object.ts": namedOwners["packages/scope/src/object.ts"],
   "packages/scope/src/core.ts": namedOwners["packages/scope/src/core.ts"],
-  "packages/scope/src/applications/act-admission.ts": "0a8e01f89de1d38eb038258e022aee23338cf671dbaea6393037a21f8084e2da", // Exact native provenance and current trust; actual maintained parser output.
+  "packages/scope/src/applications/act-admission.ts": "bec337cfdbc35247da587bf794715062537b89a1894c6c0829b7c5fa0c7b1884", // Exact native provenance and current trust; actual maintained parser output.
   "packages/derive/src/genesis.ts": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843",
   "packages/derive/src/judge.ts": "65a10677dd4da355e9edac490979cacf6911cfa1aa37020c41516f5c53ad94fb",
-  "packages/scope/src/sessions.ts": "efca0293b0ed5f8cfe044b56836445d357530d739351cf81d78603fdd282bd73",
+  "packages/scope/src/sessions.ts": "ee2afb1a928446d146b81a3adfd4794cbacac9322f9a9a5142658a7036005ebb",
   "packages/scope/src/originals.ts": "c8a5185ad8a57a851ecbe77d87649b0bbfd45bf9c93e685d7dc3a35982ef72cc", // Reviewed J1 owner: the member compare, the signature and actor check, and the caps.
   "packages/client/src/originals.ts": "4b77af1b7f1d97f573f072efbe278cd3fa38ee4809b031d648fa57c5d5d17cf4", // Reviewed J1 owner: the bytes that a second device verifies before it sends them again.
   "packages/scope/src/reads.ts": "1fbb2ae6de2566c33c5dc6e19bd8ef7660a30cab6707a12c02508d650085a2cb",
@@ -260,9 +260,9 @@ const seals = {
   "packages/bytes/src/records.ts": "c1de770ab85f6f328166076ae3829289cab8b43ff0e8686820d89afe3719d7b8", // R11 named serving refusal; actual maintained parser output.
   "packages/scope/src/session-preparation.ts": "34e29ea5d5e467400885fce77d80577d5bada13bc4300cdacdf49ea8e708f7a2",
   "packages/scope/src/item-queries.ts": "61ead9996d2c338a26331e04b8576c52425d8d2c88dc86173a7d79108c2ee418",
-  "packages/scope/src/applications/projection-source.ts": "6a5efc8acfec8603c04e136eb7d7c2d2911f88dea82963134adc897022c13400", // Closed native room metadata with optional supported membership pin.
+  "packages/scope/src/applications/projection-source.ts": "00edbc4215cbd8fc9bf35f5e001ad9e656cad5eee594546db2804a1cb84225ce", // Closed native room metadata with optional supported membership pin.
   "packages/scope/src/applications/projection.ts": "8576f78bb68850421ca7843e6fd0e4ecfb18f136009b82296097feca603f5484",
-  "packages/scope/src/destination-host.ts": "e902165d3c484579dda561794cdd3b1f0a4eff705ebac7f3c2f9b3d9c78c777c", // Token refusal: a key that a compromised notice named takes no read token.
+  "packages/scope/src/destination-host.ts": "e4f291079ed7a0ccd7fab4abd91489e55a8908bd4259c4520ba886966eec0e49", // Token refusal: a key that a compromised notice named takes no read token.
   "packages/scope/src/workspace-host.ts": "c65f21658fc1715bf417be22cc929dbac4234b451416607c559200e24a951f4f", // Reviewed SQL custody, setup revocation and full refs for recorded branch names.
   "packages/scope/src/workspace-lineage.ts": "8ab25e2b89e8438a7914c441aa9aca3c18e5e7335eb32488251d5631ed52a1ff", // Reviewed bounded authenticated Register, Directory and Destination creation lineage.
   "packages/scope/src/native-birth.ts": "ab9ecd331850e5f183fafaee07145c64adadb3ad904ea95bcc4ddf569da6ad6f", // Reviewed bounded genesis decoding and exact indexed scope and kind discovery.
@@ -291,7 +291,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-operator.ts": "422376afb07d7345290d1e821eb6410bc834c55edd86540fa058b94c405d08c9", // Private observation owner; actual maintained parser output.
   // Publication and floor owners were reviewed before these values were
   // computed by the maintained parser on the integrated source.
-  "packages/scope/src/archive-target.ts": "b679f2a125db53efe9fb96b2c048824dc388910b884547600776c8b7f7d727c4", // Read ceilings settle only after bounded replies; authority checks unchanged.
+  "packages/scope/src/archive-target.ts": "68012ccec4526fae304933e1a283cbb082521e713f5ea897f2f1fd768f709990", // Read ceilings settle only after bounded replies; authority checks unchanged.
   "packages/scope/src/archive-source-window.ts": "4db3f5885e7541f713b9668d1cde655e42be1950dd6af77d5711a323b3582e1c",
   "packages/scope/src/archive-publication.ts": "d8c39d220bc7eea59301478aa553960267aac16f06502b4103a85647c71eb457",
   "packages/scope/src/archive-build.ts": "b20a6d3c3572e702f92540021ff055c3126384fa17532bb16435ee5155b635fb", // Actual pin SQL payload settles; final identity fence unchanged.
@@ -302,7 +302,7 @@ const pendingArchiveSeals = {
   "apps/room/worker.grow.ts": "0cc4c1c63f79f8da8dad5e98b2ace5b69fcd818d41640ed4e316ee534adf749f",
   "apps/room/archive-policy.ts": "ed3b746b5a26c3e872e41b13ba133f43ade42b5612aa5028ba544fc013be5ce7",
   "apps/room/archive.ts": "9547f8b9a4a1dd842b6151287a9b15efdf3abed011cb6b12bc191d5e04b78e4d", // Valid source proof settles; source policy and identity checks unchanged.
-  "packages/scope/src/archive-host-item.ts": "44fd36bee675f5abc450ffb60b9858d820e20c88461589ecfeff61e36ef0e327",
+  "packages/scope/src/archive-host-item.ts": "0eb2a07702cbda350c4a884b3d32ca121aa13931ae51e1e70a8a6e76f4475a30",
   "packages/scope/src/archive-host.ts": "ad759aff6f090fab3401d2f75274af294269f7db488ae2d5c56954759cdf754a", // Migration collectors settle only checked POST byte receipts; decoder fees and authority fences unchanged.
   "packages/scope/src/artifacts-host.ts": "17169f775db94ec5544115119385ab979854b43679185f4360b07311e1a8a516", // Reviewed durable fork setup custody; the journal owns its later revocation.
   "packages/scope/src/artifacts-wiring.ts": "84b621543159fd6f0f539a1c59392ce70f56ebee3f7c1fc9544eaee890052027",
@@ -311,21 +311,21 @@ const pendingArchiveSeals = {
 const pendingR8Seals = {
   "packages/cli/src/commands.ts": namedOwners["packages/cli/src/commands.ts"],
   "packages/cli/src/browser-helpers.ts": "7e5f139e800efad56f08799f4e34700f2fde7c76de33422a2eb69d03de4f03fa", // Moved description, expectation and value helpers; actual maintained parser output.
-  "packages/cli/src/claim.ts": "13400cce66b828c18f964587e294baea073c5e5c3054a86ff29a466354846dbe", // Reviewed Register 25 operator/founder selection; served routes and Native authority stay fixed.
+  "packages/cli/src/claim.ts": "e98347fb01d8107fd0a048c718fb8b65088f35242f6df4ca567e04fa6a378a41", // Reviewed Register 25 operator/founder selection; served routes and Native authority stay fixed.
   "packages/cli/src/command-support.ts": "9659bd3c68857485218d0ce7a3d2c8be37d08893c6feda55524886fe09044f5e", // Moved shared read, session and signing support; actual maintained parser output.
   "packages/cli/src/read-session-cache.ts": "12a5cf131a166001f66672bc3c4b6daf70070645255c61db7b93f18b6fbb83b7", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/verification.ts": "3fb0f354c0d00dd1d21cf293e11dfc81738b9de4e8f5eb43ac9fd918dc9db557", // Reviewed unique-entry ledger, source conflicts and owner retirement; actual maintained output.
   "packages/cli/src/files.ts": "7d0d64f352787e5d30ea03265fb5137a17a1eef61e97454e5408959297ca1d5c", // Reviewed CLI session or verification boundary; actual maintained parser output.
-  "packages/cli/src/store.ts": "b2df92952a0584d615a9d939e0744454ad7251c6c7e8e2c6e4e15188f4a8804a", // Reviewed CLI session or verification boundary; actual maintained parser output.
-  "packages/cli/src/line.ts": "fd4c7c452dd6ef5aa1e7b75d3f5327db955fbc56ff8b0998434cfd51e2ef0067", // Reviewed CLI session or verification boundary; actual maintained parser output; dap issue wait signs no act.
-  "packages/cli/src/invitations.ts": "96c0566ee9dddc578182799e64ee20fd2766ee95e6c30a8545147413bdd3a13c", // Reviewed CLI session or verification boundary; actual maintained parser output.
+  "packages/cli/src/store.ts": "9b185a206c417ebbcc738d86419b0af5a3d46159eb4914d485b6bb3e0e50e0fd", // Reviewed CLI session or verification boundary; actual maintained parser output.
+  "packages/cli/src/line.ts": "a7633c2619611fb93c4f76d4710a0b48ad29c6161eeb5f94825296e82790bfe3", // Reviewed CLI session or verification boundary; actual maintained parser output; dap issue wait signs no act.
+  "packages/cli/src/invitations.ts": "a04361d412a202b8dc5eced17795ea96c3df63d40612f7389c57d710a61cdaa6", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/cli/src/scope-index-applications-command.ts": "e72f729f4232f674d0e132c865e4d7c359ac567a21e97b4e7b905342379d33b7", // Reviewed CLI session or verification boundary; actual maintained parser output.
-  "packages/cli/src/scope-index-manifest.ts": "393dc3b0c33b73b082ca0024370de8bdcad832be6349ee1414516dabe9739663", // Preserve trusted session refusal outcomes; actual maintained parser output.
+  "packages/cli/src/scope-index-manifest.ts": "b4ed87bcb7aab9633d50b01106ff73da4412d2e65809a2b0e45f42ba27b3c1af", // Preserve trusted session refusal outcomes; actual maintained parser output.
   "packages/cli/src/status-report.ts": "200a440b06850a2d8773ae9c2ad82d6bf0b5864fbce92a714eafb622eba0484c", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "packages/client/src/session.ts": "3e4dfcbab9c9ab8585929b4c75ba01ac86c4e9ea7978f70f6bf3681af15bddb6", // Reviewed CLI session or verification boundary; actual maintained parser output.
   "apps/sandbox/worker.ts": "3208f16c0b3078736f7afe807340b17d0ca1c2966b7267eb90c36c6b4c6cef24", // Retain the existing Native lifetime close on an observed HTTP disconnect.
   "packages/client/src/application-gateway.ts": "daa1d28c02085bd6be7a9698a7120cd106cc7233aad92565aaa05e67427878ef",
-  "packages/client/src/application-route.ts": "bbe23f8f9e629024facf74d5559edd6007740d9f410e07f19b54150a4d30d20f",
+  "packages/client/src/application-route.ts": "66c59740a8af2d1303eb610a0d6ded1a16a08ebfc1066ab210fde01e03989208",
   "packages/scope/src/applications/bindings.ts": "b89e8155ad5479d5b4f9175b2e941ef80b54c75dc9af4a993401c544e150cd78",
 };
 const sourceOf = file => readFileSync(new URL("../" + file, import.meta.url), "utf8");

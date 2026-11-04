@@ -113,11 +113,18 @@ retain 74 private units, 6,445 regular originals and 21 public files.
 Fresh durable units retain command arguments, cwd, source snapshots and hashes, dependency identity, stdout, stderr, actual exit, elapsed time and owned-process cleanup. The early merge helper, generator log and initial comparison helper began in scratch; the baseline records that limitation rather than claiming durable origin. The old draft's scratch checks supply no fresh validation claim.
 
 The retained failure history includes an unlocated network-loss exception in the
-new-cohort archive case, an incorrect raw-hash assertion in the first pin probe, a nonexistent invitation project selector that ran no body, obsolete default-pin and error-word assertions, the pre-fix cross-family refusal, and the expected wrong-duration control. Corrected focused owners pass. The source-seal check correctly fails until the reviewed inventory updates land.
+new-cohort archive case, an incorrect raw-hash assertion in the first pin probe, a nonexistent invitation project selector that ran no body, obsolete default-pin and error-word assertions, the pre-fix cross-family refusal, and the expected wrong-duration control. Corrected focused owners pass. The earlier source-seal check fails on the old inventory hashes. Hugh explicitly
+approved the exact 28-literal patch, SHA-256
+`c8aaf9d6a5429c15407a610215833cfd20426b328b1baebbcb36ff9331750e7e`.
+The applied patch changes only those hashes across 21 source owners; every
+other character in the inventory stays identical. The affected security
+entry-point owner passes all 11 cases after the update. Its original
+failure remains in the focused evidence.
 
-PENDING: Hugh's approval for the exact 28-literal source-seal patch, the final
-review head with those updates, one full gate, independent checker review
-and source landing. Page and Card workflows pass at the heads named above.
+PENDING: one full gate on the frozen source head, independent checker review
+and source landing. Hugh approved the exact source-seal patch above; its
+owner passes. Earlier sealed summaries record the approval as pending at
+the time of those runs. Page and Card workflow inputs remain unchanged.
 No gate-pass or parent-acceptance claim exists at this draft.
 
 ## Limits the planner retains
