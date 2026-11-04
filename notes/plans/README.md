@@ -6,6 +6,8 @@ status line is the first line after its title (see
 
 ## Current
 
+- [035: Give Dap derivations a typed, inspectable program](035-2026-11-04-typed-derivation-core.md): semantic contract complete; M1–M2 prototype scheduled behind a decision gate, M3–M8 not scheduled.
+
 - [034: Head outcome recovery after two stopped S1 attempts](034-2026-10-31-head-outcome-recovery.md): recovery reader not scheduled; diagnosis and lineage repair first. Its premise depends on the next attempt.
 - [Plan 029: a fork for each hold](029-2026-10-11-artifacts-forks.md): current.
 - [One MCP service for every dap application](031-2026-10-12-generic-mcp-service.md): current.
