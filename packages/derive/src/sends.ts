@@ -6,7 +6,7 @@
  * the state before them.
  */
 
-import type { Digest, FactRef, FieldType, Guard, Input, Notify, Operand, Range, Seed, SelfMark, Send, SendForm, SendMark, SendSource, ScopeRef, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Digest, FieldType, Guard, Input, Notify, Operand, Range, Seed, Send, SendForm, SendMark, SendSource, ScopeRef, UnavailableReason } from "@generalbusiness/dap-contract";
 import { isDigest, isSend } from "@generalbusiness/dap-bytes";
 import { creationContextOf, type CreationContext } from "./creation-context.ts";
 import type { Derived } from "./effects.ts";
@@ -15,6 +15,7 @@ import { judgeGuards, readsUnbound, slotOf, type Judging } from "./guards.ts";
 import { covered } from "./lists.ts";
 import { givenTo, markOf, outside, ruleFor, run } from "./marks.ts";
 import { operand } from "./operand.ts";
+import { sendValue } from "./send-value.ts";
 import type { Item } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { isFactRef, isLocalId, isObject, isScopeRef, own, same } from "./values.ts";
@@ -153,39 +154,13 @@ export function deriveSends(j: Judging, forms: readonly SendForm[], working: Rea
     if ("presented" in o) return { type: "fact", kind: [], under: "" };
     return "field" in o ? (own(j.fieldTypes, o.field) ?? null) : slotType(o.of === undefined ? on : o.of === "each" ? each : working.get(o.of), o.slot);
   };
-  /**
-   * Section 6.4: a local reference is not sent as a number. The entry being
-   * written is sent as the `self` mark, which the receiver reads as the
-   * envelope's `from`; an earlier entry is sent as its fact reference, whose
-   * hash already exists.
-   */
-  const local = (id: unknown): SelfMark | FactRef | null => {
-    if (id === j.self) return { self: true };
-    const opened = isLocalId(id) ? j.view.item(id)?.opened : null;
-    if (!opened) unresolved = `item ${String(id)}`;
-    return opened ? { at: j.scope.at, seq: id as number, hash: opened } : null;
-  };
-  /**
-   * Section 6.4: a local entry reference is sent as that entry's fact
-   * reference, and as the `self` mark when it is the entry being written. A
-   * fact that names another scope is sent as it is.
-   */
-  const fact = (v: unknown): unknown => {
-    if (!isLocalId(v)) return v;
-    if (v === j.self) return { self: true } satisfies SelfMark;
-    const kept = j.own?.(v);
-    if (!kept) unresolved = `entry ${v}`;
-    return kept ? ({ at: j.scope.at, seq: v, hash: kept.hash } satisfies FactRef) : null;
-  };
-  // By the declared type, to any depth: as `fields.ts` reads a local fact in a record or a list as its `seq`, it is sent as its reference.
+  /** Shared reference encoding keeps native and experimental sends on one leaf. */
   const wire = (value: unknown, type: FieldType | null): unknown => {
-    if (value === null) return null;
-    if (type?.type === "item") return local(value);
-    if (type?.type === "fact") return fact(value);
-    if (type?.type === "list" && Array.isArray(value)) return value.map((v) => wire(v, type.of));
-    if (type?.type === "record" && isObject(value)) return Object.fromEntries(Object.entries(value).map(([name, member]) => [name, wire(member, own(type.of, name) ?? null)]));
-    return value;
+    const sent = sendValue(j, value, type);
+    if (sent.unresolved !== null) unresolved = sent.unresolved;
+    return sent.value;
   };
+  const local = (id: unknown) => wire(id, { type: "item", of: "" });
 
   /**
    * The items a range covers, in ascending order of item ID, as the index
