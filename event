@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8ccdfeecbb02def88f404284be6abea091ff9cc5","text":"Merge retired a covered predecessor; the successor is at scripts/check-doc-links.test.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d12ea0a0e382ecd33faa2b2507e08492c67289cc","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-04-doc-links-tracked.manifest.json."}
