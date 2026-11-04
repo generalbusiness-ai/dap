@@ -121,6 +121,23 @@ describe("a refused act", () => {
     expect(scope.head).toEqual(head);
   });
 
+  test("a wrong requester fails its named guard with a grant and fails the grant check without it", () => {
+    const scope = laneWithCommitment();
+    // Both actors hold this explicit scripted grant. Only rita owns the
+    // requester party; the pair proves no real membership authority.
+    const grants = [rita, una].map(who => ({ grant: grantOf(who, scope.at, ["assign"]), current: true }));
+    const signed = scope.intent(una, "assign", { ...on(scope, 2), ...fields({ performer: una.member }) });
+    const guarded = scope.judge(signed, { grants });
+    const ungranted = scope.judge(signed, { grants: grants.filter(presented => presented.grant.key !== una.key) });
+    const expectRequesterGuard = (answer: ActJudgment) => expect(answer).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.1" });
+    const expectGrantCheck = (answer: ActJudgment) => expect(answer).toMatchObject({ result: "refused", reason: "unauthorized" });
+    expectRequesterGuard(guarded);
+    expectGrantCheck(ungranted);
+    // Neither expected check can accept the other real refusal.
+    expect(() => expectRequesterGuard(ungranted)).toThrow();
+    expect(() => expectGrantCheck(guarded)).toThrow();
+  });
+
   test("each guard family passes when its condition holds, so the refusals above are the guards' own", () => {
     const head = s.head.seq;
     // Owner, before the deadline, and no note listed: the edit is written. One second after the deadline, the late edit is.
@@ -207,7 +224,7 @@ describe("idempotency (section 4.2)", () => {
     // Nothing was read about the signer before the turn: the act is not judged at check 9, and nothing is written.
     expect(s.submit(signed, { grants: null })).toEqual({ result: "unavailable", reason: "authority-unavailable" });
     // Refused for want of a grant: the key is not consumed, and the same intent is judged again.
-    expect(s.submit(signed, { grants: [] }).result).toBe("refused");
+    expect(s.submit(signed, { grants: [] })).toMatchObject({ result: "refused", reason: "unauthorized" });
     expect(s.submit(signed).result).toBe("write");
     const first = s.head;
 
@@ -246,9 +263,9 @@ describe("attribution (sections 6.7 and 10.2)", () => {
 
     // `notIn: [authors]`: an author, a principal of one, and a key that acts for one are all refused; an outsider is not.
     const forPaul: Actor = { ...sam, principal: paul.member };
-    const review = (who: Actor) => s.act(who, "accept-report", on(s, report.seq), { grants: [{ grant: grantOf(who, s.at, ["review"]), current: true }] }).result;
-    expect([una, vic, paul, forPaul].map(review)).toEqual(["refused", "refused", "refused", "refused"]);
-    expect(review(rita)).toBe("write");
+    const review = (who: Actor) => s.act(who, "accept-report", on(s, report.seq), { grants: [{ grant: grantOf(who, s.at, ["review"]), current: true }] });
+    expect([una, vic, paul, forPaul].map(review)).toMatchObject(Array(4).fill({ result: "refused", reason: "guard-failed", detail: "guards.1" }));
+    expect(review(rita).result).toBe("write");
     expect(s.replay().snapshot()).toBe(s.state.snapshot());
   });
 });

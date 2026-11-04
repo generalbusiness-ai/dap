@@ -97,7 +97,7 @@ describe("the records of `hold@1` (scope contract, section 6.11; authority note,
     // A consumed preparation is not consumed twice: the same intent finds no provisional pin, and another intent has none of its own.
     const given = s.given({ intent: intentDigest(report.intent) });
     const other = s.intent(una, "report", { expected: { commitment: s.item(s.commitment).revision }, fields: source });
-    expect([cap.guard("hold@1", "staged", { commit: X, under: 2 }, given), cap.effect("hold@1", "pin-hold", { commit: X }, given), s.judge(other, { capabilities: cap }).result]).toEqual(["not-staged", [], "refused"]);
+    expect([cap.guard("hold@1", "staged", { commit: X, under: 2 }, given), cap.effect("hold@1", "pin-hold", { commit: X }, given), s.judge(other, { capabilities: cap })]).toMatchObject(["not-staged", [], { result: "refused", reason: "capability-refused", name: "not-staged" }]);
     // The reuse of the live root is the step `check`, for the other intent: its own pin and its own check, and no new root.
     expect([shape(s.asked(other, "check")), s.asked(other, "check"), s.asked(other, "stage"), s.state.recordCount("hold@1", "root")]).toEqual([["pin provisional", "opens check x1", "attempt 1 opened"], "repeat 12", "refused guard-failed", 1]);
 

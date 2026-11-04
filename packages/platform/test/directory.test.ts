@@ -244,7 +244,8 @@ test("a directory's genesis, by an outcome entry of its register, opens the repo
   expect([platform(DIRECTORY)!.membership?.(d.state), platform(DIRECTORY)!.membership?.(p.state), platform("platform:membership@1")!.membership]).toEqual([d.children.membership, null, undefined]);
   // Case b: `open-pr` before the destination's applied result is recorded. No destination.
   const pull = { expected: { repository: d.item(0).revision }, fields: { definition: ticketDefinition.digest, title: "A change", draft: false } };
-  expect(said(d.act(rita, "open-pr", pull, active(d)))).toEqual(["refused", "guard-failed", null]);
+  const missingDestination = d.act(rita, "open-pr", pull, active(d));
+  expect([said(missingDestination), "detail" in missingDestination ? missingDestination.detail : null]).toEqual([["refused", "guard-failed", null], "guards.0"]);
   // Row 7: the entry that records the destination's applied result opens the import, when the creation names one, and nothing otherwise.
   d.answered("destination");
   expect([d.item(0).refs["destination"], d.last.effects.map((effect) => effect.effect)]).toEqual([d.children.destination, ["ref"]]);

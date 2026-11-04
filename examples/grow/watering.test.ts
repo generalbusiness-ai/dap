@@ -19,12 +19,12 @@ const waterFields = (zone: number, amountMl = 400) => ({ zone, amountMl, reason:
 
 test("scheduled watering requires a policy, an open time window and its amount limit", async () => {
   const { ledger, zone } = await setup();
-  expect(await submit(ledger, irrigation, "water", { expected: expected(ledger, { zone }), fields: waterFields(zone) })).toMatchObject({ result: "refused", reason: "guard-failed" });
+  expect(await submit(ledger, irrigation, "water", { expected: expected(ledger, { zone }), fields: waterFields(zone) })).toMatchObject({ result: "refused", reason: "guard-failed", name: "watering-exceeds-schedule" });
   expect(await submit(ledger, operator, "configure-watering", { fields: { ...policyFields, closesAt: t(100) } })).toMatchObject({ result: "refused", reason: "guard-failed", name: "invalid-water-window" });
   wrote(await submit(ledger, operator, "configure-watering", { fields: policyFields })); const policy = ledger.last.seq;
-  for (const time of [99, 100, 200]) {
+  for (const [time, detail] of [[99, "guards.1"], [100, "guards.1"], [200, "guards.2"]] as const) {
     ledger.now = t(time);
-    expect(await submit(ledger, irrigation, "water", { expected: expected(ledger, { zone, policy }), fields: waterFields(zone) })).toMatchObject({ result: "refused", reason: "guard-failed" });
+    expect(await submit(ledger, irrigation, "water", { expected: expected(ledger, { zone, policy }), fields: waterFields(zone) })).toMatchObject({ result: "refused", reason: "guard-failed", detail });
   }
   ledger.now = t(101);
   expect(await submit(ledger, irrigation, "water", { expected: expected(ledger, { zone, policy }), fields: waterFields(zone, 401) })).toMatchObject({ result: "refused", reason: "guard-failed", name: "watering-exceeds-schedule" });
@@ -52,7 +52,7 @@ test("an exception needs a head-grower decision before the irrigation member rec
   expect(await submit(ledger, irrigation, "request-watering", { expected: expected(ledger, { zone, bench }), fields: { ...fields, basis: foreignBasis } }, [{ fact: foreignBasis, entry: foreign.last, under: room.name }])).toMatchObject({ result: "refused", reason: "guard-failed", name: "wrong-watering-room" });
   expect(await submit(ledger, irrigation, "request-watering", { expected: expected(ledger, { zone, bench }), fields: { ...fields, reason: " " } })).toMatchObject({ result: "refused", reason: "guard-failed", name: "empty-watering-reason" });
   wrote(await submit(ledger, irrigation, "request-watering", { expected: expected(ledger, { zone, bench }), fields })); const request = ledger.last.seq;
-  expect(await submit(ledger, irrigation, "fulfill-watering", on(ledger, request, {}))).toMatchObject({ result: "refused", reason: "guard-failed" });
+  expect(await submit(ledger, irrigation, "fulfill-watering", on(ledger, request, {}))).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.0" });
   for (const who of [irrigation, operator, climate]) expect(await submit(ledger, who, "approve-watering", on(ledger, request, { decision: "Proceed." }))).toMatchObject({ result: "refused", reason: "unauthorized" });
   wrote(await submit(ledger, head, "approve-watering", on(ledger, request, { decision: "Approve 800 ml now." }))); const approval = ledger.last.seq;
   ledger.now = t(50);
