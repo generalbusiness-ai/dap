@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b49ec7c71ef5f9d93998629d4f028463240c466f","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/mcp-apps-upstream/2025-11-21.schema.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:def7165f72b1db19e24951161cd6d1c507564cb9","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-04-mcp-contract-card-ci.manifest.json."}
