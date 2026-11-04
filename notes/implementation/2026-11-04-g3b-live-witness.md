@@ -129,6 +129,30 @@ builder repeated no admitted command to repair those checks.
 
 The source and configuration changes already passed their reviewed
 gates and landed. This record changes evidence and documentation only.
-Its focused link check exits 0. The single frozen-record gate remains pending.
+Its focused link check exits 0. The single frozen-record gate exits 0.
 No Card workflow applies to these paths. The original G3 room's unknown
 operation remains outside this new room's evidence.
+
+## The frozen record passed one complete gate
+
+The gate ran at `2ce9392cf23d6177b9772943c1cd3e2a884096e1`, tree
+`166307f47a04413f705087ffd664da0eadde82f1`. The actual `gate.exit` reads
+`exit 0`. Source and dependency snapshots match before and after, and the
+owned process group has closed. The run took 1,223.779 seconds.
+
+All four terminal phases complete: 134 Node cases, 56 Counting cases,
+3,607 plain cases with one skip, and 1,070 Native cases with two skips.
+The analyzer finds zero contradictory records and zero unhandled errors.
+The already-landed archive diagnostic owner passes in 225,814 ms. That
+pass establishes no cause for the historical failure; `64552d40` stays
+open.
+
+The [validation manifest](evidence/2026-11-04-g3b-live-record-validation.manifest.json)
+covers 23 read-only public files across gate validation and preparation,
+with SHA-256
+`4c9de8ce70b1fc5ca42d3391d9e4c6cbf8dbcf819b2ed32671aba5012faf9033`.
+It indexes all 2,276 owner-only raw originals. The gate used the unchanged
+source script; a recorded PATH wrapper placed its temporary stage directly
+in durable storage. After the gate, only this note and the validation
+manifest changed. The witness JSON and its 123-file manifest retain their
+frozen bytes.

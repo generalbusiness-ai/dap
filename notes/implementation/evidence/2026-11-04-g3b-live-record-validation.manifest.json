@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "qualification": "One actual frozen G3b live-record gate, all terminal phases, exact source and dependency identity, and private raw-original retention. No deployment, host acceptance or historical archive cause.",
+  "fileCount": 23,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-g3b-live-record-validation",
+      "fileCount": 13,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 976,
+          "sha256": "995d0fd56856add3570ee8e55d87a3a68fa064e694f61f2377a7738716075a4d"
+        },
+        {
+          "path": "after.json",
+          "bytes": 1881,
+          "sha256": "f2dc096b0ac235e164c4abceffffa14d4c0b42c135e921ae4665e28dfc33957f"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1838,
+          "sha256": "416361b27f34f0a4c0c61b411fe9a6769a4c1ef91cea30ccfd9a4a1ff2adbc50"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1881,
+          "sha256": "f2dc096b0ac235e164c4abceffffa14d4c0b42c135e921ae4665e28dfc33957f"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 6891,
+          "sha256": "5ee9f5a7b239fb35da22d3fd1af64a6c4d681c1bd5d2b60c22f7de57fdd79241"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 394,
+          "sha256": "e2d9e0a89f8ce45facb67ccbbd49041e74842ce4656f79458bf4d7d7e0016384"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1919,
+          "sha256": "aae29bedef9189bc3c2fe5139e1a8225835111130cc09dabac8f1799274dd2dc"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 973,
+          "sha256": "79640ae228150c7a2e852b917a80605a51a2dfdc99d7a11336d653226d3a0871"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 584,
+          "sha256": "5e719e72850f764f8712b82912355f4f310789a0232d2eeb0326af17baf224b0"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 5834,
+          "sha256": "86330fcb246008f8ad58e5886f7f95b206b881da7345236ae079d248519145de"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-g3b-live-record-preparation",
+      "fileCount": 10,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 724,
+          "sha256": "0f4ac1b0efd57d5cdf2c63ec3e1e57b73673a4c113c273e7e29a6a0951123fb8"
+        },
+        {
+          "path": "commit-message.txt",
+          "bytes": 271,
+          "sha256": "fb2c21fdb478b3a335121a5138cea11c0162f4064b73b0720d97aa5b1e19546e"
+        },
+        {
+          "path": "commit.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "commit.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "commit.stdout",
+          "bytes": 373,
+          "sha256": "5e94ed4538e1d9c8491c4544b136381b172d68c6ffd2bb8105447ffcb07fdddb"
+        },
+        {
+          "path": "doc-links.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "doc-links.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "doc-links.stdout",
+          "bytes": 36,
+          "sha256": "3a9c5f58a570290642a3dd27a8a48f55199f946d703e6fd515757f093c5f75d1"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 2529,
+          "sha256": "3989c393b5c184674f9d31b8451980ba533b0ce48fcf452b527f7e2e41cc7d2a"
+        },
+        {
+          "path": "frozen.json",
+          "bytes": 1106,
+          "sha256": "63804a15d7fb8cdeb740a0404cf44e74efa03407117963e111148eeacaaf531a"
+        }
+      ]
+    }
+  ]
+}
