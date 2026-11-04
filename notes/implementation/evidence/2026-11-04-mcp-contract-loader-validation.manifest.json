@@ -1,0 +1,175 @@
+{
+  "version": 1,
+  "qualification": "Initial exact-head Card CI success, early failed gate, explicit Node loader repair, all four final compiler contexts and final actual-caller reversion control. The initial Card run is historical; fresh corrected-head validation remains required.",
+  "fileCount": 30,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-mcp-contract-loader-validation",
+      "fileCount": 12,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 938,
+          "sha256": "f6af89efbbf02ca17179771a3f5edf4b1eb5bda64f3a0ee9e8a5b2a30150f687"
+        },
+        {
+          "path": "browser-summary.json",
+          "bytes": 933,
+          "sha256": "9568188257753accb876dc0645231220e5d2613f5114bef321364ff43248e484"
+        },
+        {
+          "path": "caller-reversion-control.json",
+          "bytes": 616,
+          "sha256": "afdf76760f6441cd28142d41771e7c968df4000e34e8c0c41b37b88551e54a33"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 7121,
+          "sha256": "50777c14d8d06d28379db25a0a3ded5520941f4d0b45a60838618850b4988184"
+        },
+        {
+          "path": "explicit-handoff.png",
+          "bytes": 32971,
+          "sha256": "7cd5cc120ec960534fcb6e05087c6595e8bf25db0e7e32463d1fafe0091bce78"
+        },
+        {
+          "path": "failed-after.json",
+          "bytes": 1923,
+          "sha256": "5f90cdfa219b062186f685bd835f25b2444160cef84ba00c3309458c73c3a7d3"
+        },
+        {
+          "path": "failed-before.json",
+          "bytes": 1923,
+          "sha256": "5f90cdfa219b062186f685bd835f25b2444160cef84ba00c3309458c73c3a7d3"
+        },
+        {
+          "path": "failed-gate.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "failed-receipt.json",
+          "bytes": 394,
+          "sha256": "250dd81d9bfa3289ecd2020e111cebb7e60e099654647c3d7144b0887b4adc12"
+        },
+        {
+          "path": "failed-typecheck.log",
+          "bytes": 3173,
+          "sha256": "73805762c5d15742a0f79336bf8ec8a2bb8ae511ee7eaf2e39f48f4bb9ba31d7"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 1632,
+          "sha256": "a6cac0fbc23c8b44aaf203553b9ac7e123593dc50134b69a5b6042b3da105ed7"
+        },
+        {
+          "path": "result.json",
+          "bytes": 3116,
+          "sha256": "4d4864859acac204cfa8bfc19da89e4462de566afcc7c77746d39c066912af35"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-mcp-contract-frozen",
+      "fileCount": 13,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 974,
+          "sha256": "a0aa5473f3b3a5ebf594c03db6879d7c8bbc3491a7a63c9724050e807818e84c"
+        },
+        {
+          "path": "commit-message.txt",
+          "bytes": 278,
+          "sha256": "7482b5b27d43a4b857b8729fabc0724e0b18283a063bec6387a41cdf2e026591"
+        },
+        {
+          "path": "commit.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "commit.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "commit.stdout",
+          "bytes": 822,
+          "sha256": "3dda1e0a3f69eca1180aff603e0562730dfa34daccbedabc9d962907b2b99e2e"
+        },
+        {
+          "path": "doc-links.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "doc-links.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "doc-links.stdout",
+          "bytes": 36,
+          "sha256": "3a9c5f58a570290642a3dd27a8a48f55199f946d703e6fd515757f093c5f75d1"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 1677,
+          "sha256": "18778415a7e43ac41cba144e1ec56abe1c755e53b754b7467d810da34461a210"
+        },
+        {
+          "path": "frozen.json",
+          "bytes": 1345,
+          "sha256": "b6acce34aec9e8ab2aec1a0a3da744412002e3df772fca2d076f874e6621a5e0"
+        },
+        {
+          "path": "whitespace.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "whitespace.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "whitespace.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-mcp-contract-card-validation",
+      "fileCount": 5,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 330,
+          "sha256": "4ef53fb785e6533a0588956da325f05933c3029da2ef78c7be02e3a7f7024bff"
+        },
+        {
+          "path": "browser-summary.json",
+          "bytes": 392,
+          "sha256": "b1a34ebd51668a5e3fa32b435d113d993d32d1aa23e9e9ab9a1e8be353b0e175"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 3358,
+          "sha256": "3166c1b929b854cccae66abbe658aaf966eaca3bec2f4220fd1d04f8528b000d"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 462,
+          "sha256": "7e041f2530c7cfb0c7e444566a931841a151ef71ecdd7a0baf87da2a01677977"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1879,
+          "sha256": "5e7c9def51e0dc02bba48fa2ff87b1cf486cd8671e58977af78dab164bb18bdb"
+        }
+      ]
+    }
+  ]
+}

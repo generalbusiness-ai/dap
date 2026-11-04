@@ -111,4 +111,42 @@ The focused harness uses the maintained owner's exact helpers and fifteen
 cases. It directs output to durable storage and omits unrelated Native
 actor setup. Browser tooling uses the existing scratch installation of
 Playwright `1.63.0` and Chromium revision `1243`; the Browser plugin was
-unavailable. Full exact-head Card CI and the single gate remain pending.
+unavailable.
+
+## The initial gate exposed a separate compiler context
+
+The complete Card workflow passed at initial head
+`e1899840c30a1c2e198ab0e12d37998d55e92756`, run
+[41788310069](https://github.com/generalbusiness-ai/dap/actions/runs/41788310069).
+It ran all three browser owners, including 100 card cases, and checked
+generated-module equality. That result belongs to the initial head.
+
+The initial local gate then stopped at typecheck with actual exit 1 after
+19.060 seconds. It reached no test phase. The MCP scope compiler includes
+Worker declarations alongside Node declarations; their global URL and
+filesystem byte types differ from the earlier focused compiler contexts.
+
+The Node-only schema helper now imports Node's URL explicitly and decodes
+its byte array through UTF-8 `TextDecoder`, with `fatal` and `ignoreBOM`
+both explicit. The schemas, payload validators, and assertions remain
+unchanged. Intermediate compile failures remain retained. All four MCP
+configurations now pass: scope, browser, production Node, and test Node.
+No compiler setting changed.
+
+The corrected helper's maintained explicit-handoff case passes and covers
+all seven methods. Restoring the actual caller's object shape still fails
+the unchanged contract assertion, with a strict-host refusal and zero
+chat messages or model turns. Exact production source and bundle hashes
+confirm restoration. A separate intermediate Node-URL run also passed the
+fifteen-case matrix and distinguished the same reversion.
+
+Both push and pull-request workflow filters now include the oracle helper
+and its vendored schema directory. Future changes to either therefore run
+the maintained browser owners.
+
+The [loader validation manifest](evidence/2026-11-04-mcp-contract-loader-validation.manifest.json)
+covers 30 read-only public files, including the historical initial Card
+run, and indexes 928 additional owner-only originals. Its SHA-256 is
+`6b355dca6d173d9b7523fd3ecdc104a43105553cf160697244aafe7238fb2870`.
+The failed gate remains a failure. Fresh Card CI and a complete gate at
+the corrected frozen head remain pending.

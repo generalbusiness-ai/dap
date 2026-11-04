@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { URL as NodeURL } from "node:url";
 import { z } from "zod/v4";
 import { CallToolRequestSchema, JSONRPCMessageSchema, JSONRPCNotificationSchema, JSONRPCRequestSchema } from "@modelcontextprotocol/core";
 
@@ -21,9 +22,9 @@ const validators = new Map<Definition, z.ZodType>();
 function contracts(revision: AppRevision): Map<string, Definition> {
   const existing = definitions.get(revision);
   if (existing) return existing;
-  const bytes = readFileSync(new URL(`./mcp-apps-upstream/${revision}.schema.json`, import.meta.url));
+  const bytes = readFileSync(new NodeURL(`./mcp-apps-upstream/${revision}.schema.json`, import.meta.url));
   assert.equal(createHash("sha256").update(bytes).digest("hex"), digests[revision], "Independent MCP contract: the unmodified upstream schema must match its pinned digest");
-  const root = JSON.parse(bytes.toString("utf8")) as { $defs: Record<string, Record_> };
+  const root = JSON.parse(new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes)) as { $defs: Record<string, Record_> };
   const methods = new Map<string, Definition>();
   for (const [name, schema] of Object.entries(root.$defs)) {
     const properties = schema["properties"];
