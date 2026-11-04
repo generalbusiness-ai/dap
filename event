@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/scope/test/settlement-ledger.test.ts","body":{"commit":"c44e311c2a31396e5c194e2fb20a8a7824e58bd3","path":"packages/scope/test/settlement-ledger.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:226175823b303b4524e93d4be4c8b32e0ea27863","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/fixtures-holds.ts."}
