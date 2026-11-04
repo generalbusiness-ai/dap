@@ -1,6 +1,6 @@
 # Plan 035: Give Dap derivations a typed, inspectable program
 
-Status: delivery 1 design complete. Planner scheduled the M1–M2 prototype only (request 504bd2dd); M3–M8 are not scheduled.
+Status: M1–M2 experiment stopped at its measured deletion gate. The [stop record](../implementation/2026-11-04-typed-core-stop.md) retains the bounded results and the 15.9% estimate. This delivery retains the design and stop record, without the prototype. M3–M8 are not scheduled.
 
 Planned against `7135dc3985694760ff8c80ad07f200ba8f6e767d` on 2026-11-04.
 Category: architecture and direction. Effort: large overall, split into small reviewed deliveries.
