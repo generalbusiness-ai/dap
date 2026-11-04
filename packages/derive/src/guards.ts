@@ -253,16 +253,21 @@ export function judgeGuard(j: Judging, g: Guard, of: Subject = "on"): GuardResul
   // Section 6.11: a guard that a capability declares, derived by the capability's own rules.
   if ("capability" in g) return capabilityGuard(j, g, item);
   if (!("rule" in g)) return "fail";
+  return preparedRule(j, g.rule).result;
+}
+
+/** Match one prepared Boolean against the complete prescribed input, or collect it. */
+export function preparedRule(j: Judging, rule: string): { result: GuardResult; input: unknown; digest: Digest } {
   const input = ruleInput(j);
   const digest = digestBytes(canonicalBytes(input));
   if (j.asked) {
     // Preparation: the result is not known yet, so the guard is passed over and the guards after it are met.
-    if (!j.asked.some((a) => a.rule === g.rule && a.digest === digest)) j.asked.push({ rule: g.rule, source: own(j.definition.declared.rules, g.rule)!, input, digest });
-    return "pass";
+    if (!j.asked.some((a) => a.rule === rule && a.digest === digest)) j.asked.push({ rule, source: own(j.definition.declared.rules, rule)!, input, digest });
+    return { result: "pass", input, digest };
   }
   // Section 5.2, step 6.4: a rule's result from preparation is reused only when it was prepared over these inputs.
-  const prepared = j.prepared.find((p) => p.rule === g.rule && p.input === digest);
-  if (!prepared) return "unavailable";
+  const prepared = j.prepared.find((p) => p.rule === rule && p.input === digest);
+  if (!prepared) return { result: "unavailable", input, digest };
   if (!j.used.includes(prepared)) j.used.push(prepared);
-  return ok(prepared.result);
+  return { result: ok(prepared.result), input, digest };
 }
