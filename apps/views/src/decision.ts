@@ -71,13 +71,23 @@ export function decisionSource(app: RepoInAi): ViewSource {
           const selected = selector(query.subject), { context } = await app.question(selected.scope, selected.ask, minimum);
           const actions = questionActions(context), at = actions[0] && !actions[0].local ? actions[0].args["at"] as Record<string, number> : { on: context.ask.revision };
           const whole = fitsFirstCard(context.body);
-          const card: Card = { identity: { item: String(context.ask.id), kind: "ask", revision: String(context.ask.revision), subject: { scope: context.scope.scope, item: context.ask.id }, at },
+          const attribution = !context.signer?.actor ? [context.signer ? `Question text signed by ${signerWords(context.signer)}.` : "The signer of this text is unavailable in this read."] : [];
+          const detail: Card = { identity: { item: String(context.ask.id), kind: "ask", revision: String(context.ask.revision), subject: { scope: context.scope.scope, item: context.ask.id }, at },
             ...(context.signer?.actor ? { actor: context.signer.actor, actorLabel: "Question text signed by" } : {}),
             kicker: questionKicker(context.ask.id), ...(whole ? { wholeText: true as const } : {}), title: String(context.ask.values["question"]), summary: context.brief === null ? "Legacy Question: no Brief binding." : context.briefMatches ? `Question text under its immutable Brief. ${APPROVAL_LIMIT}` : "The retained Brief resource does not match this Question.",
-            body: context.body, reasons: [...questionReasons(whole ? "item" : query.page, actions), ...(!context.signer?.actor ? [context.signer ? `Question text signed by ${signerWords(context.signer)}.` : "The signer of this text is unavailable in this read."] : [])],
+            body: context.body, reasons: [...questionReasons("item", actions), ...attribution],
             projection: [{ scope: context.scope.scope, seq: context.head.seq, hash: context.head.hash }], reviewIntended: [], unavailable: [], waitsOn: [], settles: [], actions,
             fallback: "Use context for the exact text versions, requests, approvals, comments and conditions." };
-          if (utf8(canonicalize(card)).length > 60 * 1024) return { status: "incomplete", position: 0, count: 0, fallback: "Question body exceeds this card's display budget. No approval is offered; read the bounded context." };
+          const incomplete = { status: "incomplete" as const, position: 0, count: 0, fallback: "Question body exceeds this card's display budget. No approval is offered; read the bounded context." };
+          // A navigation summary must lead to complete text that fits. Budget the
+          // detail first, then omit the long hidden body and its acts from summary.
+          if (utf8(canonicalize(detail)).length > 60 * 1024) return incomplete;
+          let card = detail;
+          if (query.page === "summary" && !whole) {
+            const { body: _body, ...navigation } = detail;
+            card = { ...navigation, reasons: [...questionReasons("summary", actions), ...attribution], actions: [] };
+            if (utf8(canonicalize(card)).length > 60 * 1024) return incomplete;
+          }
           return { status: "ready", position: 0, count: 1, card, fallback: card.fallback };
         }
         if (query.screen === "change" && query.subject !== undefined) return await changeProjection(app, query.subject, minimum, query.page);

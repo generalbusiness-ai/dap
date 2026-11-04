@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "qualification": "Complete affected Decision owner, compiler, owned dependency identity and the required unchanged-source distinguishing control. Preliminary dependency-unqualified results remain retained. No Native or host acceptance.",
+  "checkpoint": "2bd1ab4b930ed586e1a447a90f988bb3ae8c03e2",
+  "tree": "ec419dff6aedcdcd4f610a84808dada8f4276f3a",
+  "fileCount": 21,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-question-summary-focused",
+      "fileCount": 21,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1834,
+          "sha256": "28c305ab72aaeead09a6bba5db448ae7552241cc6ca43250e2b0453a05537494"
+        },
+        {
+          "path": "owned-s4-owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "owned-s4-owner.log",
+          "bytes": 3531,
+          "sha256": "095cc4d655aa997054cece395716735b8cbbfb59c1490c00ae89abba5492bc12"
+        },
+        {
+          "path": "owned-s4-owner.receipt.json",
+          "bytes": 1858,
+          "sha256": "5cf94fb8b72d56469390369dbf8058fe9da4e00a7fd69a75beb96b5cf9149ba2"
+        },
+        {
+          "path": "owned-source-pins.json",
+          "bytes": 533,
+          "sha256": "f620a259d2154df8d74ce46bb9be068d0b16df9a69307e200b701b24e739e9b2"
+        },
+        {
+          "path": "owned-unchanged-source-control.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "owned-unchanged-source-control.log",
+          "bytes": 1228,
+          "sha256": "7189d2f54b2637c49133f620679f8b0b3369f492de67cb606872dfeb88611f53"
+        },
+        {
+          "path": "owned-unchanged-source-control.receipt.json",
+          "bytes": 1928,
+          "sha256": "ffba984b52138348494e4e1c12063550717683dfa5f328e33fa8c4d58c89e890"
+        },
+        {
+          "path": "owned-views-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "owned-views-compiler.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "owned-views-compiler.receipt.json",
+          "bytes": 1907,
+          "sha256": "15ff70b87bd73b3f29a3e4adf97c3f4391736ac1d5cf746e721b1edc32adfcd7"
+        },
+        {
+          "path": "qualification.json",
+          "bytes": 752,
+          "sha256": "74918dd5c7f8a440d303c228313321e5df09e5cf266e63ac60b0b7c8a7c9bf60"
+        },
+        {
+          "path": "s4-owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "s4-owner.log",
+          "bytes": 3530,
+          "sha256": "1a64a052863c343ee097309e0b1971fdd0fcb7bd47733cf963a09e26077767dc"
+        },
+        {
+          "path": "s4-owner.receipt.json",
+          "bytes": 180,
+          "sha256": "ba7fd7894154e1cefd4a344ae3cd6453dbb11f95fd8fdfac2646e0d24bcfe170"
+        },
+        {
+          "path": "unchanged-source-control.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "unchanged-source-control.json",
+          "bytes": 284,
+          "sha256": "30eefec64597cbaeb2d2bb6530a7232ccce7e0f4adb8e4d1603d3a148e237d72"
+        },
+        {
+          "path": "unchanged-source-control.log",
+          "bytes": 1224,
+          "sha256": "cb9c97847aa21c4e53599c68050972b0c40b0b56b54fd30bb3eaf4df821d950b"
+        },
+        {
+          "path": "views-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "views-compiler.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "views-compiler.receipt.json",
+          "bytes": 227,
+          "sha256": "eab627b00ea0b50b443b262baba5af82af5f5bc11164de119b551c08f920220d"
+        }
+      ]
+    }
+  ]
+}
