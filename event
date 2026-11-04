@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3e21d509c460b09ad54b0dfcf97359dcb4b66747","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/card-history-ledger.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4b0a6ae4e03de3607414a4008c45264f3d373dd4","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/views/generated.ts."}
