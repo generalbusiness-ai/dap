@@ -128,6 +128,7 @@ const isStale = (error: unknown) => error instanceof AppToolError && error.reaso
 const CHANGED = "The card had changed, so this press sent nothing. It shows the current state now. Check it, then press again.";
 /** What the card knows when no answer came: only that it does not know. `what` names what that press can sign. */
 const NO_ANSWER = (what: string) => `The app gave no answer to this press, so the card does not know how it ended. The request may have gone, and ${what} may have been signed. The card read its view again. Check it before you press again.`;
+const LATE_REPLY = "A late reply arrived. Read the card again to check the original request.";
 async function read(move?: { page?: PageKind; position?: number; refresh?: boolean }) {
   if (busy || !alive) return;
   busy = true; notice = ""; readAgain = false; render();
@@ -216,9 +217,15 @@ async function act(action: string, signs = "an act") {
   if (!display || busy || !display.active) return;
   busy = true; notice = ""; readAgain = false; render();
   let accepted = false;
+  const requestedView = view;
+  let lateReply = false;
+  const recovered = () => {
+    if (!alive || view !== requestedView) return;
+    lateReply = true; readAgain = true; notice = LATE_REPLY; render();
+  };
   try {
     let data;
-    try { data = await bridge.tool("view_act", { view, cut: display.cut, action }); }
+    try { data = await bridge.tool("view_act", { view, cut: display.cut, action }, recovered); }
     catch (error) {
       if (error instanceof AppToolError && !isAbsent(error) && !isStale(error)) throw error;
       const words = isAbsent(error) ? NOT_REPEATED : isStale(error) ? CHANGED : NO_ANSWER(signs);
@@ -231,7 +238,12 @@ async function act(action: string, signs = "an act") {
     accept(data);
     const result = data["result"] as { structuredContent?: Record<string, unknown> } | undefined;
     accepted = result?.structuredContent?.["answer"] === "accepted";
-  } finally { busy = false; render(); }
+  } finally {
+    busy = false;
+    // A late reply can arrive while the uncertain-outcome reread still runs.
+    if (lateReply && alive && view === requestedView) { readAgain = true; notice = LATE_REPLY; }
+    render();
+  }
   if (accepted) {
     let modeNotice = "";
     const record = display.card?.declared?.kind === "record" || display.card?.declared?.kind === "log";

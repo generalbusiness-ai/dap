@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "qualification": "Exact Card source, focused histories, original failures, three controls and maintained workflow. Gate and live-host acceptance remain separate.",
+  "sourceHead": "ee9781b3398f35ac40e44a8acca85e5de14b3020",
+  "sourceTree": "030639b65693c9db6a43111d95849a31d07b5622",
+  "fileCount": 10,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-card-history-validation",
+      "fileCount": 10,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 763,
+          "sha256": "27be1f641a02ca29a8320ce0812c7969ff07db3e434fed1f6a14a74689c67c05"
+        },
+        {
+          "path": "boundary.json",
+          "bytes": 1103,
+          "sha256": "21c4510d3b35b84fe9851d4c05abf1edbe9f043647724134be89837d25411436"
+        },
+        {
+          "path": "command-receipts.json",
+          "bytes": 10816,
+          "sha256": "acda88a1dac1c6cbade6c3afb6b34b7cd48f339eb559e0b6c70e1b43519a90a1"
+        },
+        {
+          "path": "controls.json",
+          "bytes": 1345,
+          "sha256": "45a627ab4624d38dfbae2317ef469da26b03a3f849c070d5e9f1da62d46a471d"
+        },
+        {
+          "path": "finalization-driver.py",
+          "bytes": 8990,
+          "sha256": "a6c2dd38bdee2073ce1d0fcdf13f401d449feac38c1ada55f2d5c54a701ee056"
+        },
+        {
+          "path": "history-ledger.json",
+          "bytes": 765,
+          "sha256": "5e8b10d0ff303221f9dae14d953362f9535bb829b118d0dbdba5bff86bf28667"
+        },
+        {
+          "path": "metadata.stderr",
+          "bytes": 191,
+          "sha256": "d48ea3124748d2a19142cecd9f2b0e1521f333c9ba853dc45a36d8429e7ba16e"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 4004,
+          "sha256": "697716a7750853632d3a04d897f9079b746ef414014d5cc0cd7049e6c64ece3c"
+        },
+        {
+          "path": "source-inputs.json",
+          "bytes": 16721,
+          "sha256": "8faad6ee1e0f0fc42d122053c4d41de474fa64be9dbab8574730053be2e69abe"
+        },
+        {
+          "path": "unit-results.json",
+          "bytes": 14848,
+          "sha256": "8bbda7c2d1e9859b810cfcd74ed3fd6e5075c6c6b31b0c3c57776d895a693dbe"
+        }
+      ]
+    }
+  ]
+}
