@@ -56,4 +56,12 @@ The evidence keeps the initial source compiler failure, the later test compiler 
 
 The [prototype manifest](evidence/2026-11-04-typed-core-prototype.manifest.json) seals 13 summary files and points to 11 read-only units with 874 raw originals. Keep those originals at least through 4 December 2026. The consumer runner copy came after its unchanged successful invocation; its metadata states that timing. No result claims a complete transitive dependency-byte inventory.
 
-The final gate for this documentation-only delivery is pending. The review head will cite its actual exit and frozen tree. O4 remains open on browser access, and archive-scale cause `64552d40` remains open; this stop record closes neither.
+## Gate the stop delivery
+
+I read the actual `gate.exit`: **exit 0**. The unchanged `npm run gate` runs once at `105bcb9cd27ccb4971be073fd02285dc795d8e69`, tree `23fa5e10633e732d9f113d758e72898e1f655169`. It takes **1,604.8 elapsed seconds** and passes 135 Node, 56 Counting, 3,912 plain and 1,090 Native cases, with one plain and two Native skips. All four terminal phases are complete, with no contradictory records or unhandled errors. The analyzer keeps 99 suite or unknown observations separate from cases. The skipped Page recorder has no final module duration; it contributes no timing claim.
+
+The run uses an arm64 Mac on macOS 27.2 with 18 logical CPUs, an owned clone of the locked dependencies, and initially empty Vite directories. OS caches and other sessions remain uncontrolled. A load sample during the Native phase records 3.23, 3.67 and 2.91 for one, five and fifteen minutes; it is no start-of-run or idle-machine measurement. Source and dependency bindings stay unchanged, and the owned process group closes.
+
+The [gate manifest](evidence/2026-11-04-typed-core-stop-gate.manifest.json) seals 13 summary files and the hashes of 2,278 private raw originals. Every raw output starts in durable storage. The recorded `mktemp -d` wrapper changes placement only, with no command, deadline or pass-condition change. Together the two manifests cover 26 summary files. The archive-scale owner passes in 262,306 ms; its historical retry cause `64552d40` remains open.
+
+The follow-up changes only this note and the gate manifest. Source and tests remain exactly those of the gated tree and main `61497e21`; the review request records both the gated and review trees. No second gate runs. Planner act `acb58af3` accepts the stop and orders the next-cohort source after this record lands. O4 still takes precedence when browser access returns. This delivery needs no deployment and closes neither O4 nor the archive investigation.
