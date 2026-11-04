@@ -40,7 +40,7 @@ test("only an eligible configured founder sees creation; an in-flight or stale c
   let settings: { place: { directory: string; membership: { kind: string; scope: string; inc: string } }; publicKey: string; register: typeof register; label?: { text: string; place: { directory: string; membership: { kind: string; scope: string; inc: string } }; register: typeof register } } = { place: { directory: "room", membership: { kind: "membership", scope: "membership", inc: "one" } }, publicKey: "key", register };
   settings.label = { text: "Original local label", place: settings.place, register };
   let eligible = true, locked = true, failSave = false;
-  let journal: { operation: string; label: string; state: "pending" | "complete" } | null = null;
+  let journal: { operation: string; label: string; state: "pending" | "complete" | "failed" } | null = null;
   let redraw!: () => void;
   let finish!: (value: unknown) => void;
   let attempted = gate();
@@ -114,11 +114,13 @@ test("only an eligible configured founder sees creation; an in-flight or stale c
     expect(settings.label).toEqual({ text: "Useful local name", place: settings.place, register });
     expect(root.textContent).toContain("Useful local name");
     expect(root.textContent).toContain("Recorded repository");
+    // An unrelated failed creation keeps its original pointer but offers a new room.
+    journal = { operation: "failed-second", label: "Failed local room", state: "failed" };
     root.find((element) => element.tag === "button" && element.textContent === "Create room")!.fire("click");
     const secondDialog = body.children.filter((element): element is Element => element instanceof Element && element.tag === "dialog").at(-1)!;
     secondDialog.find((element) => element.tag === "input")!.value = "Second local room";
     attempted = gate(); secondDialog.find((element) => element.tag === "form")!.fire("submit"); await attempted.promise;
-    expect(claim.mock.calls.at(-1)![4]).toMatchObject({ mode: "new", operation: "first" });
+    expect(claim.mock.calls.at(-1)![4]).toMatchObject({ mode: "new", operation: "failed-second" });
     journal = { operation: "second", label: "Second local room", state: "complete" };
     rendered = gate(); finish({ operation: "second", repository: { directory: { scope: "second-verified-room" }, membership: settings.place.membership }, label: "Second local room", pending: false, outcome: { code: 0, lines: [] } }); await rendered.promise;
     expect(settings.place.directory).toBe("second-verified-room");

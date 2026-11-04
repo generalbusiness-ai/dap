@@ -1,4 +1,7 @@
 import { commonsRulesScope, commonsRules } from "./commons-rules.ts";
+import { FAILED_CLAIM_COHORT as FC } from "./failed-claim-cohort.ts";
+import { failedClaimRegister, failedClaimRegisterRules, failedClaimDirectory, failedClaimDirectoryRules, failedClaimMembership, failedClaimMembershipRules, failedClaimDestination, failedClaimDestinationRules } from "./failed-claim-cohort-data.ts";
+import { failedClaimApplicationPublicationOrigin } from "./publishing-provenance.ts";
 import { COMMONS_COHORT as CC } from "./commons-cohort.ts";
 import { commons, commonsMembership } from "./commons.ts";
 import { commonsRegister, commonsRegisterRules, commonsDirectoryData, commonsDirectoryRules, commonsMembershipData, commonsMembershipRules } from "./commons-cohort-data.ts";
@@ -129,6 +132,11 @@ const VERSION_DATA: Readonly<Record<string, Platform>> = {
   [OA.directory]: { data: ownAgentDirectory, rules: ownAgentDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
   [OA.membership]: { data: ownAgentMembership, rules: ownAgentMembershipRules, observed: (state, asked) => standingOf(state, asked, OA.membership) },
   [OA.destination]: { data: ownAgentDestination, rules: ownAgentDestinationRules, membership: unpublishedDestinationMembership, rulesScope: unpublishedDestinationRulesScope, applicationPublicationOrigin: ownAgentApplicationPublicationOrigin },
+  [FC.register]: { data: failedClaimRegister, rules: failedClaimRegisterRules },
+  [FC.directory]: { data: failedClaimDirectory, rules: failedClaimDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
+  [FC.membership]: { data: failedClaimMembership, rules: failedClaimMembershipRules, observed: (state, asked) => standingOf(state, asked, FC.membership) },
+  [FC.destination]: { data: failedClaimDestination, rules: failedClaimDestinationRules, membership: destinationMembership, rulesScope: destinationRulesScope, applicationPublicationOrigin: failedClaimApplicationPublicationOrigin },
+
   [RB.register]: { data: repositoryBindingRegister, rules: repositoryBindingRegisterRules },
   [RB.directory]: { data: repositoryBindingDirectory, rules: repositoryBindingDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
   [RB.membership]: { data: repositoryBindingMembership, rules: repositoryBindingMembershipRules, observed: (state, asked) => standingOf(state, asked, RB.membership) },

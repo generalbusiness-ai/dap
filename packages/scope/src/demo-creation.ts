@@ -1,16 +1,18 @@
 import { readDeployment } from "./deployment-setting.ts";
 import { readPublicOrigin } from "./public-origin.ts";
-/** One configured Register17 projection; grants nothing and wakes no work. */
+/** One configured native register projection; grants nothing and wakes no work. */
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord as record, parseStrict, utf8 } from "@generalbusiness/dap-bytes";
 import { isScopeRef } from "@generalbusiness/dap-derive";
 import type { CreationOffer } from "@generalbusiness/dap-client";
-import { ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
+import { FAILED_CLAIM_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { artifactsConfiguration, ARTIFACTS_HOST, ARTIFACTS_NAMESPACE, type ArtifactsBindings } from "./artifacts-wiring.ts";
 import type { Store } from "./store.ts";
 export interface DemoCreationBindings extends Pick<ArtifactsBindings, "ARTIFACTS_CONFIG" | "ARTIFACTS_NAMESPACE"> { DEMO_START_CONFIG?: string; DEPLOYMENT?: string }
 /** Checked internal native projection context, not the public config wire. */
-interface CurrentDemoCreationConfig { v: 2; origin: string; deployment: string; register: ScopeRef; definition: typeof ARCHIVE_DEVICE_APPLICATION_COHORT.register; namespace: string }
+type DemoDefinition = typeof ARCHIVE_DEVICE_APPLICATION_COHORT.register | typeof FAILED_CLAIM_COHORT.register;
+const demoDefinition = (value: unknown): value is DemoDefinition => value === FAILED_CLAIM_COHORT.register || value === ARCHIVE_DEVICE_APPLICATION_COHORT.register;
+interface CurrentDemoCreationConfig { v: 2; origin: string; deployment: string; register: ScopeRef; definition: DemoDefinition; namespace: string }
 export type DemoCreationConfig = CurrentDemoCreationConfig;
 interface DemoCreationSettings { current: CurrentDemoCreationConfig }
 export type DemoCreationOffer = CreationOffer;
@@ -21,18 +23,18 @@ export function demoCreationConfig(raw: string | undefined, deployment: string |
     const value = parseStrict(raw), artifacts = artifactsConfiguration(bindings.ARTIFACTS_CONFIG);
     if (!record(value) || Object.keys(value).sort().join() !== "definition,deployment,origin,register,v" || value["v"] !== 3
       || typeof deployment !== "string" || readDeployment(deployment) === null || value["deployment"] !== deployment
-      || typeof value["origin"] !== "string" || value["definition"] !== ARCHIVE_DEVICE_APPLICATION_COHORT.register || !registerRef(value["register"])
+      || typeof value["origin"] !== "string" || !demoDefinition(value["definition"]) || !registerRef(value["register"])
       || !artifacts || artifacts.namespace !== (bindings.ARTIFACTS_NAMESPACE ?? ARTIFACTS_NAMESPACE)
       || value["register"].scope !== artifacts.registerScope) return null;
     const origin = readPublicOrigin({ PUBLIC_ORIGIN: value["origin"] }, value["origin"]);
     if (origin === null) return null;
-    return { current: { v: 2, origin, deployment, register: structuredClone(value["register"]), definition: ARCHIVE_DEVICE_APPLICATION_COHORT.register, namespace: artifacts.namespace } };
+    return { current: { v: 2, origin, deployment, register: structuredClone(value["register"]), definition: value["definition"], namespace: artifacts.namespace } };
   } catch { return null; }
 }
 /** Recorded state only; actual incarnation is checked after this native lookup. */
 export function demoCreationOffer(store: Pick<Store, "scope" | "page">, pinned: string | undefined, config: DemoCreationConfig): DemoCreationOffer | null {
   const scope = store.scope();
-  if (config.v !== 2 || config.definition !== ARCHIVE_DEVICE_APPLICATION_COHORT.register || !scope || scope.status !== "active"
+  if (config.v !== 2 || !demoDefinition(config.definition) || !scope || scope.status !== "active"
     || pinned !== config.definition || canonicalize(scope.at) !== canonicalize(config.register)) return null;
   const page = store.page("register", ["open"], null, 1), item = page.items[0];
   if (page.more || page.items.length !== 1 || !item || item.type !== "register" || item.state !== "open"

@@ -508,7 +508,7 @@ function claimDialog(room: Room, kept: Settings, configured: ClaimRegister, open
   try { status = claimStatus(sessionOf(kept), configured, localStorage); }
   catch (error) { alert(error instanceof Error ? error.message : "The private claim status could not be read."); return; }
   const selected = status?.state === "complete" && kept.claimSelection?.operation === status.operation;
-  let mode: "new" | "resume" = status && !selected ? "resume" : "new";
+  let mode: "new" | "resume" = status && status.state !== "failed" && !selected ? "resume" : "new";
   let operation = status?.operation;
   const name = h("input", { name: "name", required: "", maxlength: "256", value: mode === "resume" ? status!.label : claimDrafts.get(binding) ?? "", autocomplete: "off" }) as HTMLInputElement;
   const message = h("p", { role: "status", hidden: "" });
@@ -546,6 +546,7 @@ function claimDialog(room: Room, kept: Settings, configured: ClaimRegister, open
           }
           opened.clear(); close(false); location.hash = "#/"; await draw(true);
         } else {
+          if (result.outcome.claimState === "failed") mode = "new";
           message.textContent = result.outcome.lines.join(" "); submit.textContent = result.pending ? "Resume creation" : "Create room";
           if (result.pending) name.setAttribute("disabled", ""); else name.removeAttribute("disabled");
         }
@@ -721,11 +722,17 @@ function startScreen(): HTMLElement {
   const heading = h("h1", {}, "Start a room");
   const intro = h("p", { class: "entry-intro" }, "Choose a personal room name.");
   let original: ReturnType<typeof originalStart> = null;
+  const failedOriginal = () => original?.state === "failed";
   let blocked = false;
   const restore = () => {
     try {
       original = originalStart(location.origin, localStorage);
-      if (original) { name.value = original.label; name.setAttribute("disabled", ""); submit.textContent = "Continue creation"; if (ready.hasAttribute("hidden")) check.removeAttribute("hidden"); }
+      if (original) {
+        name.value = original.state === "failed" ? startDraft || original.label : original.label;
+        if (original.state === "failed") name.removeAttribute("disabled"); else name.setAttribute("disabled", "");
+        submit.textContent = original.state === "failed" ? "Start new room" : "Continue creation";
+        if (ready.hasAttribute("hidden")) check.removeAttribute("hidden");
+      }
     } catch { blocked = true; name.setAttribute("disabled", ""); submit.setAttribute("disabled", ""); check.setAttribute("disabled", ""); tell("Original Start custody is unavailable. Nothing will be replaced.", true); }
   };
   restore();
@@ -741,7 +748,9 @@ function startScreen(): HTMLElement {
     h("a", { href: "https://dap-demo.inguz.workers.dev/page/#/start" }, "Start a new room on dap-demo")) : null;
   if (moved && !original && !blocked) return h("main", { class: "screen entry-screen entry-start" },
     h("a", { class: "entry-back", href: "#/join" }, "‹", "Back"), heading, moved);
-  if (original) tell("Your original Start and creator key are retained. Check status only reads; Continue creation explicitly resumes its original requests.");
+  if (original) tell(failedOriginal()
+    ? "Your last creation failed. Its original request and your creator key stay saved. Start a new room when the Git host is available."
+    : "Your original Start and creator key are retained. Check status only reads; Continue creation explicitly resumes its original requests.");
   name.addEventListener("input", () => { startDraft = name.value; });
   const download = (filename: string, text: string, type: string) => {
     const url = URL.createObjectURL(new Blob([text], { type }));
@@ -867,7 +876,7 @@ function startScreen(): HTMLElement {
     } catch (error) { tell(failureText(error, "The original creation remains unresolved. Check status without replacing its key."), true); }
     finally { connectionBusy = false; if (current()) { restore(); if (!blocked) { submit.removeAttribute("disabled"); check.removeAttribute("disabled"); } } }
   };
-  form.addEventListener("submit", event => { event.preventDefault(); void run(original ? "continue" : "new"); });
+  form.addEventListener("submit", event => { event.preventDefault(); void run(original && original.state !== "failed" ? "continue" : "new"); });
   check.addEventListener("click", () => { void run("check"); });
   const about = h("details", {}, h("summary", {}, "About your account"), h("p", {}, "Your creator key stays in this browser and cannot be downloaded. Clearing this browser’s saved data removes its access to the room."));
   return h("main", { class: "screen entry-screen entry-start" }, h("a", { class: "entry-back", href: "#/join" }, "‹", "Back"),

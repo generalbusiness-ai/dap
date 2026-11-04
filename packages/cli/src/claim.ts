@@ -1,10 +1,10 @@
 /** Room creation and exact retained claim recovery, shared with the browser. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { readFields } from "@generalbusiness/dap-derive";
-import type { ActType, Digest, Entry, FactRef, Item, KeyId, PlatformDefinition, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, factRefOf, intentDigest, isDigest, isFactRef, isReceipt, isSignedIntentShape, textDigest, verifySignedIntent, isIncarnation, isScopeId, parseStrict, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
+import type { ActType, Digest, Entry, FactRef, Item, KeyId, PlatformDefinition, ScopeId, ScopeRef, Seed, Settlement, Summary } from "@generalbusiness/dap-contract";
+import { canonicalize, factRefOf, intentDigest, isDigest, isFactRef, isHead, isReceipt, isSignedIntentShape, textDigest, verifySignedIntent, isIncarnation, isScopeId, parseStrict, scopeIdOf, seedDigest } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, TransportError, creationOffer, isCreationOffer, isCurrentCreationOffer, signedIntent, signedReads, type CreationOffer } from "@generalbusiness/dap-client";
-import { DIRECTORY_OF, SIBLINGS_OF, platform } from "@generalbusiness/dap-platform";
+import { FAILED_CLAIM_COHORT, DIRECTORY_OF, SIBLINGS_OF, platform } from "@generalbusiness/dap-platform";
 import type { Context, Outcome } from "./commands.ts";
 import type { ClaimStep, Config, PendingClaim, Repository } from "./store.ts";
 import { expectedOf, type DefinitionShape } from "./browser-helpers.ts";
@@ -15,7 +15,8 @@ import { REGISTER_FULL, validStep, accepted, active, configOf, createdBy, done, 
 /** Saved envelopes are checked against their actual caller and destination,
  * never re-signed from metadata. An accepted marker belongs to that scope. */
 
-const RETAINED_INSTALL_REGISTERS = new Set<PlatformDefinition>(["platform:register@5", "platform:register@17", "platform:register@18", "platform:register@19", "platform:register@20", "platform:register@21", "platform:register@24", "platform:register@25"]);
+const RETAINED_INSTALL_REGISTERS = new Set<PlatformDefinition>(["platform:register@5", "platform:register@17", "platform:register@18", "platform:register@19", "platform:register@20", "platform:register@21", "platform:register@24", "platform:register@25", "platform:register@26"]);
+
 /** Local revision selector from retained configured-service install custody.
  * These exact native pins open singleton item 0 at revision 1 and never
  * change it. This is neither a Summary nor proof of history or authority.
@@ -92,10 +93,13 @@ export interface ClaimSteps {
   directory(name: string): string;
   /** The directory exists, so the claim's repository exists. This follows "What was asked may still take effect;". */
   children(name: string): string;
+  /** A verified final failed claim frees its native place and cannot create a room. */
+  failed?(name: string): string;
   /** A next step after a full register's words, where this surface has one. */
   afterFull?(name: string): string;
 }
 const COMMAND_STEPS: ClaimSteps = {
+  failed: name => `This claim failed and freed its place in the register. It cannot create a room. When the Git host is available, run dap create ${name} --again to start a new claim.`,
   directory: (name) => `The register accepted this claim, and its directory has not appeared. This command cannot tell whether the claim is still being tried or all its attempts have failed. Run dap create ${name} to go on waiting. That sends nothing new, and it cannot restart a failed claim, even after the Git host returns. When the Git host is up, dap create ${name} --again signs a new claim. The new claim takes a new place in the register, the old claim keeps its place, and if the old claim still finishes you have a second repository.`,
   children: (name) => `run dap create ${name} again to go on waiting for this claim, or with --again to sign a new one, which takes a new place in the register and creates a second repository.`,
   afterFull: (name) => `dap create ${name} --again asks the register again with a new request.`,
@@ -237,6 +241,14 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
       if (!matched) return failed(`This pending claim has only a digest and no readable admitted directory with its exact creation signature (${unread}). This step sent nothing, and an earlier send of this claim has no known outcome. Retry the reads later, or recover it manually. --again signs a new claim, which takes a new place in the register and can create a second repository.`);
       await keep({ ...pending, "found": matched });
     }
+    let observedFailure: PendingClaim["failure"] | null = null;
+    const failureProof = (settled: Settlement, fact: FactRef): PendingClaim["failure"] | null => {
+      if (!settled.ok || settled.complete !== true || settled.next !== undefined || settled.value.definition !== FAILED_CLAIM_COHORT.register
+        || settled.value.intent !== pending.intent || canonicalize(settled.value.fact) !== canonicalize(fact)
+        || !isHead(settled.at) || settled.at.seq < fact.seq || settled.claim?.state !== "failed" || !isFactRef(settled.claim.fact)
+        || canonicalize(settled.claim.fact) !== canonicalize(fact)) return null;
+      return { found: fact, observed: { at: register, seq: settled.at.seq, hash: settled.at.hash } };
+    };
     const submitted = async (step: ClaimStep, at: ScopeRef, handle: ScopeHandle, took: string): Promise<FactRef> => {
       const digest = intentDigest(step.signed.intent);
       if (readOnly) {
@@ -244,6 +256,10 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
         if (!settled.ok) return stopCommand(failed(`The original ${step.signed.intent.kind === "found" ? "create" : step.signed.intent.kind} is not confirmed: ${settled.reason}. It remains pending; Check submitted nothing.`));
         const receipt = settled.value;
         if (!isFactRef(receipt.fact) || canonicalize(receipt.fact.at) !== canonicalize(at) || receipt.intent !== digest || step.accepted && canonicalize(receipt.fact) !== canonicalize(step.accepted)) return stopCommand(failed("The checked receipt does not match the exact original stage. It remains pending; Check submitted nothing."));
+        if (step.signed.intent.kind === "found" && canonicalize(at) === canonicalize(register)) {
+          observedFailure = failureProof(settled, receipt.fact);
+          if (observedFailure) { registerDefinition = receipt.definition; return receipt.fact; }
+        }
         const followed = await handle.followReceipt(receipt);
         if (!followed.ok || followed.entry.input.type !== "act" || canonicalize(followed.entry.input.signed) !== canonicalize(step.signed)) return stopCommand(failed("The original accepted stage could not be followed exactly. It remains pending; Check submitted nothing."));
         if (step.signed.intent.kind === "found" && canonicalize(at) === canonicalize(register)) registerDefinition = receipt.definition;
@@ -255,7 +271,10 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
         const settled = await handle.settle(step.signed);
         if (!settled.ok) return stopCommand(failed(`Cannot confirm the saved ${step.signed.intent.kind === "found" ? "create" : step.signed.intent.kind} step: ${settled.reason}. The exact request remains pending. ${CLAIM_WENT}`));
         if (settled.value.intent !== digest || canonicalize(settled.value.fact) !== canonicalize(step.accepted)) return stopCommand(failed(`The saved accepted fact does not match this exact claim step. ${CLAIM_WENT}`));
-        if (step.signed.intent.kind === "found" && canonicalize(at) === canonicalize(register)) registerDefinition = settled.value.definition;
+        if (step.signed.intent.kind === "found" && canonicalize(at) === canonicalize(register)) {
+          registerDefinition = settled.value.definition;
+          observedFailure = failureProof(settled, step.accepted);
+        }
         return step.accepted;
       }
       const receipt = accepted(await handle.submit(step.signed), at.scope, took, step.signed.intent.kind === "found" && at.kind === "register" ? registerFull : undefined).receipt;
@@ -286,9 +305,22 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
     const seed: Seed = { v: 1, kind: "directory", definition: directoryDefinition, creator: register, cause: pending.intent, ordinal: 0 };
     let repository = pending.repository;
     if (!repository) {
+      const finalFailure = (): Outcome => ({ ...failed(steps.failed?.(name) ?? "This claim failed and freed its place in the register. It cannot create a room. Start a new creation when the Git host is available."), claimState: "failed" });
+      if (observedFailure) { await keep({ ...pending, failure: observedFailure }); return finalFailure(); }
+      const readFailure = async (): Promise<PendingClaim["failure"] | null> => {
+        if (registerDefinition !== FAILED_CLAIM_COHORT.register) return null;
+        try { return failureProof(await R.settle(pending["found"]!.signed), creationFact); }
+        catch { return null; } // An unreadable or incomplete original remains unknown.
+      };
       const D = await handleOf(ctx, config, scopeIdOf(seed), null);
       const children: ScopeId[] = [];
-      const directory = await waitFor(waiting, () => [register.scope, D.scope, ...children], () => active(D), "the directory", { stated: steps.directory(name) });
+      const directory = await waitFor(waiting, () => [register.scope, D.scope, ...children], async () => {
+        const activeDirectory = await active(D);
+        if (activeDirectory) return activeDirectory;
+        const failure = await readFailure();
+        if (failure) { await keep({ ...pending, failure }); return stopCommand(finalFailure()); }
+        return null;
+      }, "the directory", { stated: steps.directory(name) });
       const made = await createdBy(D, 0);
       const kind = (k: string) => made.find((m) => m.seed.kind === k)?.scope ?? stopCommand(failed(`The directory's genesis creates no ${k}.`));
       children.push(kind("membership"), kind("rules"), kind("destination"));

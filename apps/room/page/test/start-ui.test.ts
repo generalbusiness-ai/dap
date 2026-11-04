@@ -190,6 +190,23 @@ test("Start is explicit; Back fences late discovery, reload only offers Check an
     expect((await selectedOffer).definition).toBe("platform:register@7");
     const wrongOffer = selectOriginal(legacyRegister); finishOffer(offer);
     await expect(wrongOffer).rejects.toThrow("offered register changed");
+    // Scripted final-failure status must unlock a fresh explicit Start, never Continue.
+    // The real adapter separately verifies the failure and preserves key/journal custody.
+    const retainedOriginal = original!;
+    const failedRegister = { ...register, scope: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@26", creator: null, cause: textDigest("SCRIPTED failed Start UI"), ordinal: 0 }) };
+    original = { ...retainedOriginal, configured: { register: failedRegister, definition: "platform:register@26" }, state: "failed" };
+    redraw(); await flush();
+    expect(find("button", "Start new room")).toBeDefined();
+    expect(find("input").hasAttribute("disabled")).toBe(false);
+    expect(root.textContent).toContain("Your last creation failed");
+    expect(root.textContent).toContain("your creator key stay saved");
+    const priorStartCalls = start.mock.calls.length;
+    find("input").value = "After the outage"; find("form").fire("submit");
+    expect(start.mock.calls.length).toBe(priorStartCalls);
+    finishOffer({ ...offer, register: failedRegister, definition: "platform:register@26" }); await flush();
+    expect(start.mock.calls.at(-1)![2]).toMatchObject({ mode: "new", label: "After the outage", offer: { register: failedRegister, definition: "platform:register@26" } });
+    expect(save).not.toHaveBeenCalled();
+    original = retainedOriginal; redraw(); await flush();
     complete = true; find("button", "Check status").fire("click"); await flush();
     expect(save).not.toHaveBeenCalled(); expect(root.textContent).toContain("has not verified"); expect(document.title).toBe("dap - workroom");
     verified = true; find("button", "Check status").fire("click"); await flush();

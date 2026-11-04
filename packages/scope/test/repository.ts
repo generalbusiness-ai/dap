@@ -17,7 +17,7 @@
 
 import { env } from "cloudflare:workers";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
-import type { Answer, Beside, Digest, Entry, FactRef, FieldValue, Grant, Intent, PlatformDefinition, Read, RetainedInput, ScopeId, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Answer, Beside, Digest, Entry, FactRef, FieldValue, Grant, Intent, PlatformDefinition, Read, RetainedInput, ScopeId, ScopeRef, Seed, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, factRefOf, intentDigest, isDigest, isScopeRef, newIncarnation, scopeIdOf, signIntent, textDigest, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { hashOfBytes, type MemoryScope } from "@generalbusiness/dap-replay";
 import type { Delivered, Item } from "@generalbusiness/dap-derive";
@@ -37,6 +37,7 @@ export const { rita, una, vic, sam } = keys;
 interface Surface {
   create(creation: SignedIntent, definition: unknown): Promise<{ answer: string }>;
   submit(signed: SignedIntent, grants: readonly Grant[], beside?: Beside): Promise<Answer>;
+  settle(signed: SignedIntent): Promise<Settlement>;
   summary(reader: unknown): Promise<Read<Summary>>;
   history(reader: unknown, cursor?: string): Promise<Read<readonly Sealed[]>>;
   entry(reader: unknown, seq: number): Promise<Read<Sealed>>;

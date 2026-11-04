@@ -1,7 +1,8 @@
 /** Operator observations, not registration proof or a global scope inventory. */
 import type { Digest, ScopeRef, Seed, Sealed, Read } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, isDigest, isRecord, isScopeRef, isSeed, isSealed, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
-import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT, SEPARATE_RECOVERY_COHORT, APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, COMMONS_COHORT, HARDENED_CERTIFIED_RULES_COHORT, platform } from "@generalbusiness/dap-platform";
+import { OWN_AGENT_COHORT, FAILED_CLAIM_COHORT, REPOSITORY_BINDING_COHORT, SEPARATE_RECOVERY_COHORT, APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, COMMONS_COHORT, HARDENED_CERTIFIED_RULES_COHORT, platform } from "@generalbusiness/dap-platform";
+
 import { Stop } from "./command-support.ts";
 
 export const INDEX_INVENTORY_BOUNDS = Object.freeze({ scopes: 4096, pages: 4096, pagesPerScope: 1000, bytes: 16 * 1024 * 1024 });
@@ -162,6 +163,7 @@ export async function verifyIndexManifest(manifest: IndexManifest, reads: IndexR
 /** Saved identities only. A known catalog pin is not a creation-lineage grant. */
 export async function indexManifestVersions(manifest: IndexManifest, reads: IndexReads) {
   const cohorts = [
+    { name: "failed-claim", pins: FAILED_CLAIM_COHORT },
     { name: "archive-device-publication", pins: ARCHIVE_DEVICE_PUBLICATION_COHORT },
     { name: "archive-device-application", pins: ARCHIVE_DEVICE_APPLICATION_COHORT },
     { name: "application", pins: APPLICATION_COHORT },
@@ -172,7 +174,7 @@ export async function indexManifestVersions(manifest: IndexManifest, reads: Inde
     { name: "repository-binding", pins: REPOSITORY_BINDING_COHORT },
     { name: "own-agent", pins: OWN_AGENT_COHORT },
   ] as const;
-  const newest = new Set<string>(Object.values(ARCHIVE_DEVICE_PUBLICATION_COHORT));
+  const newest = new Set<string>(Object.values(FAILED_CLAIM_COHORT));
   const lineage = new Set<string>(cohorts.flatMap(cohort => Object.values(cohort.pins)));
   const observed = new Set<string>();
   const rows: { at: ScopeRef; result: "verified" | "unavailable" | "mismatch" | "unsupported"; definition?: string; reason?: string }[] = [];

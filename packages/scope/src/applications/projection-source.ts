@@ -28,7 +28,8 @@ export function applicationDeclarationsIn(binding: Binding): ApplicationDeclarat
       if (!isRecord(room)) return null;
       const keys = Object.keys(room).sort().join();
       if (keys !== "directory,rules" && (keys !== "directory,membershipDefinition,rules"
-        || (room["membershipDefinition"] !== "platform:membership@10" && room["membershipDefinition"] !== "platform:membership@11" && room["membershipDefinition"] !== "platform:membership@13"))) return null;
+        || (room["membershipDefinition"] !== "platform:membership@10" && room["membershipDefinition"] !== "platform:membership@11" && room["membershipDefinition"] !== "platform:membership@12" && room["membershipDefinition"] !== "platform:membership@13"))) return null;
+
       if (!isScopeRef(room["directory"])
         || canonicalize(room["directory"]) !== canonicalize(directory) || !isScopeRef(room["rules"]) || room["rules"].kind !== "rules") return null;
       const declared = await (binding.get(binding.idFromName(room["rules"].scope)) as RulesPeer).applicationProjectionDeclarationBytes(directory, install, name);

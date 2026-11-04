@@ -60,7 +60,7 @@ with its reader, parser and failure behavior. The order below uses these:
   `GITHUB_READ_TOKEN` and the optional `GITHUB_CLEANUP_TOKENS`: the GitHub
   host. See [Configure a Git host](hosts.md#github-host-githubcom).
 - `PLATFORM_CREATION_PINS`: optional. Earlier platform pins that new
-  scopes may use besides the default cohorts, `archive-device-publication`,
+  scopes may use besides the default cohorts, `failed-claim`, `archive-device-publication`,
   `unpublished` and `commons`. See
   [Roll out new creation versions](#roll-out-new-creation-versions).
 - `ALLOW_OPEN_CREATION`: local and test deployments only. Never set it on

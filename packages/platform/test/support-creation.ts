@@ -18,7 +18,7 @@
  */
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Digest, Entry, FactRef, Request, ScopeRef, Seed, Send, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Digest, Entry, FactRef, PlatformDefinition, Request, ScopeRef, Seed, Send, SignedIntent } from "@generalbusiness/dap-contract";
 import { factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/dap-bytes";
 import { clockOf, judgeDelivery, judgeGenesis, judgeOutcome, ownersOf } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Judgment, PlatformRules, Source, ValidDefinition } from "@generalbusiness/dap-derive";
@@ -53,16 +53,23 @@ export const registerSeed = (install: SignedIntent, over: Partial<Seed> = {}): S
  * with the register's own rules.
  */
 export class Register extends Ledger {
-  constructor(policy: "keys" | "open" = "keys", creators: readonly string[] | undefined = [rita.key]) {
-    super(registerDefinition, "platform:register");
+  readonly #nativeDefinition: ValidDefinition;
+  readonly #nativePlatform: PlatformRules;
+  constructor(policy: "keys" | "open" = "keys", creators: readonly string[] | undefined = [rita.key], named: PlatformDefinition = REGISTER) {
+    const source = platform(named);
+    if (!source) throw Error("Known native register required");
+    const definition = checked(source.data);
+    super(definition, "platform:register");
+    this.#nativeDefinition = definition;
+    this.#nativePlatform = { named, rules: source.rules };
     const install = installing(paul, policy, creators);
-    const seed = registerSeed(install);
-    this.seal(written(judgeGenesis(this.state, registerDefinition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(7)), seed, creation: install }, { clock: clockOf(this.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: registerPlatform })));
+    const seed = registerSeed(install, { definition: named });
+    this.seal(written(judgeGenesis(this.state, this.#nativeDefinition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(7)), seed, creation: install }, { clock: clockOf(this.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform: this.#nativePlatform })));
   }
 
   /** An act, judged with the register's rules. No grant is presented: no act of the register is judged on one. */
   override act(who: Actor, kind: string, over: Over = {}, context: Context = {}): ActJudgment {
-    return super.act(who, kind, over, { platform: registerPlatform, grants: [], ...context });
+    return super.act(who, kind, over, { platform: this.#nativePlatform, grants: [], ...context });
   }
 
   /** A creation by that key: the `found` act, with the fields of a creation intent. Returns the judgment. */
@@ -76,7 +83,7 @@ export class Register extends Ledger {
    * result, null.
    */
   outcome(operation: `${number}:${number}`, attempt: number, result: "confirmed" | "refused" | "unknown", body?: unknown, basis: "own-answer" | "read" | "none" = result === "unknown" ? "none" : "own-answer"): Judgment {
-    const judgment = judgeOutcome(this.state, registerDefinition, { type: "outcome", operation, attempt, result, evidence: { basis, body: body === undefined ? unknownBody(this, registerDefinition, registerPlatform, operation, attempt, result) : body } }, { clock: clockOf(this.state, this.now), bounds: this.bounds, platform: registerPlatform, own: this.own });
+    const judgment = judgeOutcome(this.state, this.#nativeDefinition, { type: "outcome", operation, attempt, result, evidence: { basis, body: body === undefined ? unknownBody(this, this.#nativeDefinition, this.#nativePlatform, operation, attempt, result) : body } }, { clock: clockOf(this.state, this.now), bounds: this.bounds, platform: this.#nativePlatform, own: this.own });
     if (judgment.result === "write") this.seal(judgment.draft);
     return judgment;
   }

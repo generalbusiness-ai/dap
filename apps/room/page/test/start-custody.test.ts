@@ -97,8 +97,8 @@ test("scripted retained register7 Start keeps its founder key before the CLI bou
 test("scripted dropped, malformed or stale Start custody stops before the workflow; a retained key alone permits only explicit Continue", async () => {
   cli.claim.mockReset(); cli.checkClaim.mockReset();
   const legacyNew = fixture();
-  await expect(startRoom(origin, legacyNew.storage, { mode: "new", label: "Room", offer: { ...offer, v: 1, definition: "platform:register@7", registerItem: { ...offer.registerItem, purpose: "demo-start" } }, locks })).rejects.toThrow("register17");
-  await expect(startRoom(origin, legacyNew.storage, { mode: "new", label: "Room", offer: { ...offer, v: 1, definition: "platform:register@8", registerItem: { ...offer.registerItem, purpose: "demo-start" } }, locks })).rejects.toThrow("register17");
+  await expect(startRoom(origin, legacyNew.storage, { mode: "new", label: "Room", offer: { ...offer, v: 1, definition: "platform:register@7", registerItem: { ...offer.registerItem, purpose: "demo-start" } }, locks })).rejects.toThrow("current same-origin creation offer");
+  await expect(startRoom(origin, legacyNew.storage, { mode: "new", label: "Room", offer: { ...offer, v: 1, definition: "platform:register@8", registerItem: { ...offer.registerItem, purpose: "demo-start" } }, locks })).rejects.toThrow("current same-origin creation offer");
   expect(legacyNew.values.size).toBe(0); expect(cli.claim).not.toHaveBeenCalled();
   const mismatched = fixture();
   await expect(startRoom(origin, mismatched.storage, { mode: "new", label: "Room", offer, locks, creationOffer: async () => ({ ...offer, v: 1, definition: "platform:register@7", registerItem: { ...offer.registerItem, purpose: "demo-start" } }) })).rejects.toThrow("private Start");

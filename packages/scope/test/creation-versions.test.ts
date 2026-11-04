@@ -6,7 +6,7 @@ import { expect, test } from "vitest";
 import type { Intent, PlatformDefinition, Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, isSignedIntentShape, parseStrict, scopeIdOf, signIntent, timeMs, timeOf } from "@generalbusiness/dap-bytes";
 import { keys } from "@generalbusiness/dap-derive/testing";
-import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT, COMMONS_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, SEPARATE_RECOVERY_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
+import { FAILED_CLAIM_COHORT, OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT, COMMONS_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, SEPARATE_RECOVERY_COHORT, UNPUBLISHED_COHORT, platform } from "@generalbusiness/dap-platform";
 import { readPlatformCreationPolicy, injectedPlatformCreationPolicy, permitsNewPlatformScope } from "../src/creation-versions.ts";
 import { admitChildCreation, type CreationTimer } from "../src/creation-lineage.ts";
 import { indexedScopes, type ScopeIndexPort } from "../src/scope-index.ts";
@@ -15,7 +15,7 @@ import type { ScopeObject } from "../src/object.ts";
 import { creationVersionSettings } from "./worker.ts";
 
 const legacy = "platform:register@2";
-const newest = ARCHIVE_DEVICE_PUBLICATION_COHORT.register;
+const newest = FAILED_CLAIM_COHORT.register;
 const install = (now?: number, host = "git.example") => signIntent({ v: 1, to: null, actor: keys.paul.key, kind: "install", on: null, expected: {},
   fields: { host, namespace: "versions", policy: "keys", founders: [keys.rita.key] },
   idempotencyKey: crypto.randomUUID(), notAfter: timeOf((now ?? Date.now()) + 60_000) } satisfies Intent, keys.paul.secret);
@@ -31,8 +31,8 @@ test("install fixture is a valid signed intent at an exact-second deadline", () 
 });
 
 test("creation policy owns bounded known pins; absent and explicit undefined default, invalid configuration closes", () => {
-  // The Commons family adds admission without changing hosted creation pins.
-  const expected = [...new Set([...Object.values(ARCHIVE_DEVICE_PUBLICATION_COHORT), ...Object.values(UNPUBLISHED_COHORT), ...Object.values(COMMONS_COHORT)])];
+  // The new default joins retained hosted and explicit host-none families.
+  const expected = [...new Set([...Object.values(FAILED_CLAIM_COHORT), ...Object.values(ARCHIVE_DEVICE_PUBLICATION_COHORT), ...Object.values(UNPUBLISHED_COHORT), ...Object.values(COMMONS_COHORT)])];
   for (const settings of [{}, { PLATFORM_CREATION_PINS: undefined }, { PLATFORM_CREATION_PINS: "[]" }]) {
     const policy = readPlatformCreationPolicy(settings);
     expect(policy?.pins).toEqual(expected);

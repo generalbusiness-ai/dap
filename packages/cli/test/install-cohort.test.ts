@@ -3,7 +3,8 @@ import { expect, test } from "vitest";
 import type { PlatformDefinition, Receipt, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, timeMs } from "@generalbusiness/dap-bytes";
 import type { Fetch } from "@generalbusiness/dap-client";
-import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT, SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
+import { OWN_AGENT_COHORT, FAILED_CLAIM_COHORT, REPOSITORY_BINDING_COHORT, SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, ARCHIVE_CERTIFIED_RULES_COHORT, HARDENED_CERTIFIED_RULES_COHORT } from "@generalbusiness/dap-platform";
+
 import { CREATION_COHORTS } from "../../scope/src/creation-lineage.ts";
 import { CREATION_INSTALL_COHORTS, USAGE, command, install, installPlanned, memoryStore, planInstall, type Config, type Context, type Store } from "../src/index.ts";
 
@@ -11,6 +12,8 @@ const SERVICE = "https://cohort.test";
 const COHORT = "trusted-application" as const;
 const COHORTS = [
   { name: "own-agent", definition: OWN_AGENT_COHORT.register, other: COHORT },
+  { name: "failed-claim", definition: FAILED_CLAIM_COHORT.register, other: COHORT },
+
   { name: "repository-binding", definition: REPOSITORY_BINDING_COHORT.register, other: COHORT },
   { name: "separate-recovery", definition: SEPARATE_RECOVERY_COHORT.register, other: COHORT },
   { name: "commons", definition: COMMONS_COHORT.register, other: COHORT },
@@ -56,7 +59,7 @@ function scenario(fault: "none" | "reply" | "save" = "none", replaceUnsentLegacy
       const kept = (await store.config())!;
       if (replaceUnsentLegacy && kept.plan?.definition === "platform:register@3" && kept.plan.attempted === undefined) {
         // This one direct-default path may replace a definitely-unsent old plan.
-        expect(request.definition).toBe("platform:register@18");
+        expect(request.definition).toBe("platform:register@26");
       } else if (COHORTS.some(cohort => cohort.definition === request.definition)) {
         expect(kept.plan?.attempted).toMatch(/^sha256:/);
         expect(canonicalize(kept.plan?.["founding"])).toBe(canonicalize(request.creation));
@@ -127,7 +130,7 @@ test("closed cohort selection uses the new default and preserves retained histor
   const legacy = scenario("none", true);
   expect((await command(legacy.ctx, ["install", "--plan", SERVICE, "--host", "github.com"])).code).toBe(0);
   const fresh = (await legacy.store.config())!;
-  expect(fresh.plan!.definition).toBe("platform:register@18");
+  expect(fresh.plan!.definition).toBe("platform:register@26");
   // A pre-upgrade, definitely-unsent plan keeps its exact old version/ID.
   const legacyPlan = { ...fresh.plan!, definition: "platform:register@3" as const, register: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@3", creator: null, cause: intentDigest(fresh.plan!["founding"].intent), ordinal: 0 }) };
   await legacy.store.save({ ...fresh, plan: legacyPlan });
@@ -323,7 +326,7 @@ test("application install syntax and custody failures never create a register", 
 
 // Fake acknowledgements show CLI custody/selection only; the native policy
 // and indexed lineage witness is demo-register.test.ts in the Scope project.
-test("open register install is explicit, fixed to Register17 and retained across planned delivery", async () => {
+test("open register install uses the new default and preserves an explicit Register17 plan across delivery", async () => {
   const invalid = scenario();
   for (const args of [
     ["install", SERVICE, "--register-policy", "public", "--host", "github.com"],
@@ -334,7 +337,7 @@ test("open register install is explicit, fixed to Register17 and retained across
   const planned = scenario();
   expect((await command(planned.ctx, ["install", "--plan", SERVICE, "--register-policy", "open", "--host", "artifacts", "--namespace", "dap-demo"])).code).toBe(0);
   const original = (await planned.store.config())!;
-  expect(original.plan!.definition).toBe("platform:register@17");
+  expect(original.plan!.definition).toBe("platform:register@26");
   expect(original.plan!["founding"].intent.fields).toMatchObject({ policy: "open", founders: [original.plan!["founding"].intent.actor] });
   expect(planned.bodies).toEqual([]);
   for (const args of [["install", "--planned", "--register-policy", "keys"], ["install", "--plan", SERVICE, "--register-policy", "keys", "--cohort", "archive-device-application", "--host", "github.com"]]) {
@@ -345,7 +348,14 @@ test("open register install is explicit, fixed to Register17 and retained across
   expect(JSON.parse(planned.bodies[0]!).creation).toEqual(original.plan!["founding"]);
   const direct = scenario();
   expect((await command(direct.ctx, ["install", SERVICE, "--register-policy", "open", "--host", "github.com"])).code).toBe(0);
-  expect(JSON.parse(direct.bodies[0]!)).toMatchObject({ definition: "platform:register@17", creation: { intent: { fields: { policy: "open" } } } });
+  expect(JSON.parse(direct.bodies[0]!)).toMatchObject({ definition: "platform:register@26", creation: { intent: { fields: { policy: "open" } } } });
+  const retained = scenario();
+  expect((await command(retained.ctx, ["install", "--plan", SERVICE, "--register-policy", "open", "--cohort", "archive-device-application", "--host", "artifacts", "--namespace", "dap-demo"])).code).toBe(0);
+  const old = (await retained.store.config())!.plan!;
+  expect(old.definition).toBe("platform:register@17");
+  expect((await command(retained.ctx, ["install", "--planned", "--register-policy", "open"])).code).toBe(0);
+  expect(JSON.parse(retained.bodies[0]!).creation).toEqual(old["founding"]);
+  expect(JSON.parse(retained.bodies[0]!).definition).toBe("platform:register@17");
   const keys = scenario();
   expect((await command(keys.ctx, ["install", "--plan", SERVICE, "--cohort", "archive-device-application", "--host", "github.com"])).code).toBe(0);
   expect((await keys.store.config())!.plan!["founding"].intent.fields["policy"]).toBe("keys");

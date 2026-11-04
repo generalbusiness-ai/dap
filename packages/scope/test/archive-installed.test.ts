@@ -9,7 +9,7 @@ import { b64url, canonicalize, digestBytes, encodeItemQueryParameter, isDigest, 
 import { readApplicationPackage2, readPublishedApplicationPackage2 } from "@generalbusiness/dap-platform/application-v2";
 import { inputTexts, outcomeValueDomains, ownersOf, validateDefinition, type OperationRules, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
-import { ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
+import { ARCHIVE_REPLAY_CODE, FAILED_CLAIM_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
 import { ScopeHandle, httpTransport, invitationIssueFields, invitationRedemptionFields, requestSession, secretSigner, sessionRequest } from "@generalbusiness/dap-client";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { archiveSource, verifyArchive, TRUSTS } from "@generalbusiness/dap-replay";
@@ -142,10 +142,10 @@ function commandReportDiagnostic(value: unknown) {
 // Each offline follower immediately follows its own native producer. No
 // Native owner, private key or plaintext read token crosses this boundary.
 interface NativeCommandHandoff { producer: string; id: string; lines: readonly string[]; refs: readonly { ref: string; id: string }[] }
-for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation warm", "Grow activation evicted", "Grow publication", "Grow Room A shape"]) {
+for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation warm", "Grow activation evicted", "Grow publication", "Grow failed-claim", "Grow Room A shape"]) {
   const producerTitle = scenario === "Grow Room A shape"
     ? "installed old R17 Grow advances a published thirty-seven-pass history from sequence 146 with an exact remainder"
-    : `installed ${scenario} scopes export genesis zero after a late native Membership8 directory binding`;
+    : `installed ${scenario} scopes export genesis zero after a late native membership directory binding`;
   let retainedCommand: NativeCommandHandoff | null = null;
   test(producerTitle, { timeout: 30_000 }, async context => {
   const activationScenario = scenario.startsWith("Grow activation"), productionScenario = scenario === "Grow production" || scenario === "Grow Room A shape" || activationScenario, kind = scenario === "fixture" ? "fixture" : "Grow";
@@ -163,8 +163,9 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
     expect(packet.package.release.manifest.publisher).toBe(DEMO_PUBLISHER);
     expect([rootId, childId]).toEqual(GROW_ARCHIVE_DEFINITIONS);
   }
-  const C = scenario === "Grow publication" ? ARCHIVE_DEVICE_PUBLICATION_COHORT
+  const C = scenario === "Grow failed-claim" ? FAILED_CLAIM_COHORT : scenario === "Grow publication" ? ARCHIVE_DEVICE_PUBLICATION_COHORT
     : kind === "fixture" ? ARCHIVE_DECLARED_APPLICATION_COHORT : ARCHIVE_DEVICE_APPLICATION_COHORT;
+  const replayPlatform = scenario === "Grow failed-claim" ? ARCHIVE_REPLAY_CODE.platform : platform;
   // Original byte-cost receipts use whole-second timestamps. Other native
   // witnesses may advance this shared clock by milliseconds. Advance it
   // monotonically before creating any scope; keep its identity and history.
@@ -182,7 +183,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));
     for (const node of [D, A]) { life.outside(node.name, (given, sql) => hostOutside(given, sql, bindings, peer.fetch)); await life.wait(() => node.restart()); }
     const membership = await life.wait(() => M.at()), directory = await life.wait(() => D.at());
-    expect((await life.wait(() => M.summary())).value.definition).toBe("platform:membership@8");
+    expect((await life.wait(() => M.summary())).value.definition).toBe(C.membership);
     const operator = { membership, member: "@rita" as const };
     const demoMembers = { operator, sensors: { membership, member: "@demo-sensors" as const }, climate: { membership, member: "@demo-climate" as const } };
     if (productionScenario) {
@@ -599,7 +600,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
     // Record only references and counts at the credential refusal boundary.
     // No membership journal or body is selected for an archive.
     const credentialCopies = allHistories.flatMap(({ scope, read }) => read.value.flatMap(sealed => sealed.entry.uses
-      .filter(use => fixtureSources.get(use.fact.at, new ArchiveBudget())?.pin === "platform:membership@8")
+      .filter(use => fixtureSources.get(use.fact.at, new ArchiveBudget())?.pin === C.membership)
       .map(use => ({ consumer: { at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash },
         input: sealed.entry.input.type, source: use.fact, content: use.content, journal: scope.name }))));
     const credentialCounts = allHistories.map(({ scope }) => ({ scope: scope.name,
@@ -617,6 +618,16 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
         return metadata.selection().map(held => ({ fact: held.fact, content: held.content }));
       }));
       expect(admitted).toContainEqual({ fact: copy.source, content: copy.content });
+      // A genuine public copy from either family must not authorize the other
+      // family's distinct producer pin. Rules10 is shared and stays compatible.
+      if (scenario === "Grow" || scenario === "Grow failed-claim") {
+        const otherProducer = scenario === "Grow" ? FAILED_CLAIM_COHORT.directory : ARCHIVE_DEVICE_APPLICATION_COHORT.directory;
+        await life.wait(() => runInDurableObject(history.scope.object, (_instance, state) => {
+          const metadata = new ArchiveForeignMetadata(archiveSql(state), fixtureSources, policies, PROPOSED_BOUNDS, new ArchiveBudget(), new Set(), otherProducer);
+          expect(() => metadata.scan({ seq: sealed.entry.seq, hash: sealed.hash, bytes: new TextEncoder().encode(canonicalize(sealed.entry)).length }, sealed.entry.uses.length))
+            .toThrow("unsupported-credential-cohort");
+        }));
+      }
     }
     if (scenario === "Grow Room A shape") {
       // Room A's payload/producer union is unavailable. This is the real
@@ -1367,7 +1378,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       const offline = await life.wait(() => verifyArchive(archiveSource({ open: (at, work) => readJournalRepositoryArchive({
         format: async () => "sha1", resolve: async ref => diagnosticRefs.get(ref) ?? null,
         object: async (id, limit) => { const object = diagnosticObjects.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null; },
-      }, at, work) }), { mode: "replay", platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: probe.scope.name, head: probe.read.at, anchors: supplied }));
+      }, at, work) }), { mode: "replay", platform: replayPlatform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: probe.scope.name, head: probe.read.at, anchors: supplied }));
       expect(offline.kind).toBe("verification"); if (offline.kind !== "verification") return;
       if (!wrong) expect(offline.verification.report).toMatchObject({ result: "missing-dependency", dependencies: { missing: [missing] } });
       else expect(offline.verification.report).toMatchObject({ result: "mismatch", dependencies: { missing: [] } });
@@ -1378,7 +1389,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       const offline = await life.wait(() => verifyArchive(archiveSource({ open: (at, work) => readJournalRepositoryArchive({
         format: async () => "sha1", resolve: async ref => diagnosticRefs.get(ref) ?? null,
         object: async (id, limit) => { const object = diagnosticObjects.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null; },
-      }, at, work) }), { mode: "replay", platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: scope.name, head: read.at, anchors }));
+      }, at, work) }), { mode: "replay", platform: replayPlatform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: scope.name, head: read.at, anchors }));
       offlineResults.push({ scope: scope.name, head: read.at, offline });
       if (offline.kind === "verification" && offline.verification.report.result === "consistent") {
         expect(offline.verification.report.anchors.every(fact => anchorFacts.some(anchor => canonicalize(anchor) === canonicalize(fact)))).toBe(true);
@@ -1457,7 +1468,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
       const replayed = await life.wait(() => verifyArchive(archiveSource({ open: (at, work) => readJournalRepositoryArchive({
         format: async () => "sha1", resolve: async ref => clonedRefs.get(ref) ?? null,
         object: async (id, limit) => { const object = clonedObjects.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null; },
-      }, at, work) }), { mode: "replay", platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: scope.name, head: read.at, anchors }));
+      }, at, work) }), { mode: "replay", platform: replayPlatform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: scope.name, head: read.at, anchors }));
       expect(replayed.kind).toBe("verification"); if (replayed.kind !== "verification") return;
       const original = offlineResults.find(result => result.scope === scope.name)!.offline;
       expect(original.kind).toBe("verification"); if (original.kind !== "verification") return;
@@ -1488,7 +1499,7 @@ for (const scenario of ["fixture", "Grow", "Grow production", "Grow activation w
         object: async (id, limit) => { const object = objects.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null; },
       }, scope, work) });
       const directory = allHistories.find(history => history.scope.name === D.name)!;
-      const replayed = await life.wait(() => verifyArchive(source, { mode: "replay", platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: D.name, head: directory.read.at, anchors }));
+      const replayed = await life.wait(() => verifyArchive(source, { mode: "replay", platform: replayPlatform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: D.name, head: directory.read.at, anchors }));
       const expectedAt = productionScenario ? nativeStageOracle!.fact : { at: directory.read.value[5]!.entry.at, seq: 5, hash: directory.read.value[5]!.hash };
       // At most two metadata-only results; record BEFORE any assertion so an
       // unexpected category retains its actual reason without payload bodies.

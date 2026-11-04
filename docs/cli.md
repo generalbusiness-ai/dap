@@ -78,8 +78,8 @@ gives each end, and the steps for a stolen key.
 ### `dap install`
 
 ```
-dap install <base-url> --host none|artifacts|github.com [--namespace <name>] [--register-policy keys|open] [--cohort own-agent|repository-binding|unpublished|application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|separate-recovery|commons]
-dap install --plan <base-url> --host none|artifacts|github.com [--namespace <name>] [--register-policy keys|open] [--cohort own-agent|repository-binding|unpublished|application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|separate-recovery|commons]
+dap install <base-url> --host none|artifacts|github.com [--namespace <name>] [--register-policy keys|open] [--cohort failed-claim|own-agent|repository-binding|unpublished|application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|separate-recovery|commons]
+dap install --plan <base-url> --host none|artifacts|github.com [--namespace <name>] [--register-policy keys|open] [--cohort failed-claim|own-agent|repository-binding|unpublished|application|archive-device-application|archive-device-publication|archive-certified-rules|hardened-certified-rules|separate-recovery|commons]
 dap install --planned [--register-policy keys|open] [--cohort <saved-cohort>]
 dap install <git+https-uri> --release <release-id> --request <kept-key> [--role <default-role> ...] [--values <genesis-JSON>] [--owner <full-member-JSON>]
 ```
@@ -102,7 +102,7 @@ creator key.
 - `--cohort` selects a [creation cohort](#creation-cohorts).
 
 ```
-Installed: register sc_hinqqbm4..., under platform:register@18.
+Installed: register sc_hinqqbm4..., under platform:register@26.
 The operator key key_baqzbaDy... is kept in the config directory, readable only by you. It is the one creator key.
 ```
 
@@ -123,7 +123,7 @@ keeps the signed intent, the version and the ID in the config. With
 operator must back up the service.
 
 ```
-Planned: register sc_4kq2v7..., under platform:register@18, on host artifacts, namespace artroom-demo. The seed's time is 2026-10-08T09:14:00Z.
+Planned: register sc_4kq2v7..., under platform:register@26, on host artifacts, namespace artroom-demo. The seed's time is 2026-10-08T09:14:00Z.
 Set REGISTER_SCOPE to sc_4kq2v7... in the Worker's settings, then run dap install --planned before 2026-10-08T09:14:00Z.
 ```
 
@@ -139,7 +139,7 @@ them. Before it sends anything, it checks the plan:
 - `retired-cohort`: the plan is for the retired register@6 cohort.
 
 ```
-Installed: register sc_4kq2v7..., under platform:register@18, as planned.
+Installed: register sc_4kq2v7..., under platform:register@26, as planned.
 Service-acknowledged identity recovery. The original plan and receipt are retained for later history verification.
 ```
 
@@ -168,10 +168,11 @@ the `platform:` prefix.
 
 | `--cohort` | register | directory | membership | rules | destination | inbox |
 |---|---|---|---|---|---|---|
-| `archive-device-publication` (the default) | 18 | 17 | 8 | 10 | 13 | 1 |
+| `failed-claim` (the default) | 26 | 25 | 12 | 10 | 19 | 1 |
+| `archive-device-publication` | 18 | 17 | 8 | 10 | 13 | 1 |
 | `unpublished` (selected by `--host none`) | 21 | 20 | 8 | 10 | 16 | 1 |
 | `application` | 5 | 5 | 4 | 3 | 2 | 1 |
-| `archive-device-application` (selected by `--register-policy open`) | 17 | 16 | 8 | 10 | 12 | 1 |
+| `archive-device-application` | 17 | 16 | 8 | 10 | 12 | 1 |
 | `archive-certified-rules` | 19 | 18 | 8 | 11 | 14 | 1 |
 | `hardened-certified-rules` | 20 | 19 | 8 | 12 | 15 | 1 |
 | `commons` | 23 | 22 | 9 | 14 | 16 | 1 |
@@ -181,6 +182,21 @@ the `platform:` prefix.
 
 The `commons` cohort also pins `platform:commons@1`.
 
+The `failed-claim` cohort requires separate founder and recovery keys. After
+all three repository-creation attempts fail, the claim enters a final failed
+state and frees its register place. A later confirmation only opens cleanup.
+`dap create` reports that failure; `--again` signs a new claim. Page Start
+keeps the creator key and original request, checks the failure again, and
+lets you start a new room on the same register. Its private journal retains
+at most 64 operations and removes none to admit another. Older registers
+keep their existing pending-claim behavior. An operator can provision a
+separate register on the new cohort for future rooms. Keep the old register,
+claims, keys and room pins; installing a new register repairs none of them.
+
+The new cohort also supports checker-key invitations, journal export and
+offline replay. Its Destination19 issues one-hour Git read tokens and accepts
+no duration field. Existing rooms retain their recorded pins and token rules.
+
 The `separate-recovery` cohort refuses a room whose founder key is also its
 recovery key, by the name `recovery-key`. It offers no checker-key invitation
 and no journal archive export.
@@ -188,7 +204,7 @@ and no journal archive export.
 says what a deployment does before it creates rooms on this cohort.
 
 Without `--cohort`, a host other than `none` selects
-`archive-device-publication`. `--host none` selects `unpublished` by
+`failed-claim`, including with `--register-policy open`. `--host none` selects `unpublished` by
 default and also accepts explicit `repository-binding`, `own-agent`, or
 `commons` selection. The service's creation policy still decides whether it accepts a
 new register. An unknown or repeated `--cohort`, or a conflict with a
@@ -509,7 +525,7 @@ output only: the `found` act has no name field.
 
 ```
 Created demo: directory sc_hs5f27fz..., membership sc_p6xp2lmd..., rules sc_sfbjwioy..., destination sc_e5xgdizd...; each created and confirmed.
-Definitions: platform:directory@17, platform:membership@8, platform:rules@10, platform:destination@13.
+Definitions: platform:directory@25, platform:membership@12, platform:rules@10, platform:destination@19.
 You are @rita, an admin, on key key_baqzbaDy...; your inbox is sc_u5joavqp....
 ```
 
@@ -999,11 +1015,12 @@ Clones the repository with a read token of your own:
 
 1. If there is no `git` program, the command signs nothing and prints
    the clone command with the token's place marked.
-2. It signs the destination's `read-token` act with `--hours`, from 1 to
-   24. The default is 1. Every role holds this grant, so any active member
-   can sign it. The destination opens a `mint-read` operation, and the
-   host mints a read token for that lifetime. On GitHub the lifetime is
-   GitHub's own, one hour.
+2. It signs the destination's `read-token` act. Destination19 accepts no
+   duration field and fixes the lifetime at one hour; `--hours` must be 1.
+   Historical destinations accept `--hours` from 1 to 24, with a default of
+   1. Every role holds this grant. The destination opens a `mint-read`
+   operation, and the host mints a token for that lifetime. GitHub fixes
+   its own lifetime at one hour.
 3. It waits for the outcome, which names the token by a handle that is
    not secret, and its end. Then it reads the token once, with your read
    session, from the destination's credential route. No other session can

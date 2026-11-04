@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
 import { base32, newIncarnation, parseStrictBytes, unb64url, verifySignedRead } from "@generalbusiness/dap-bytes";
 import * as bytes from "@generalbusiness/dap-bytes";
-import type { SignedRead, SignedSessionRequest } from "@generalbusiness/dap-contract";
+import type { SignedIntent, SignedRead, SignedSessionRequest } from "@generalbusiness/dap-contract";
 import { secretSigner, type Fetch, type Signer } from "@generalbusiness/dap-client";
 const DESTINATION = "platform:destination@1" as const;
 import { command } from "../src/line.ts";
@@ -19,16 +19,20 @@ test("remote reads the recorded repository; missing Git and the pinned @1 withou
   const config: Config = { v: 1 as const, service: "https://service.test", key: "operator", repository: { directory: { ...at, kind: "directory" }, membership, destination: at.scope, rules: `sc_${"c".repeat(52)}` as const }, remote: "https://git.test/git/demo/r.git" };
   await store.save(config);
   const calls: string[] = [];
+  const signedActs: SignedIntent[] = [];
   let definition: string = DESTINATION;
   let category: "unavailable" | "mismatch" | "archived" = "unavailable";
   let sessionMode: "absent" | "issued" | "read-refused" = "absent";
   const readers: string[] = [];
   const fetch: Fetch = async (url, init) => {
     calls.push(url);
-    if (url.endsWith("/acts")) return Response.json(category === "archived" ? { answer: "archived",
+    if (url.endsWith("/acts")) {
+      signedActs.push((JSON.parse(init!.body!) as { signed: SignedIntent }).signed);
+      return Response.json(category === "archived" ? { answer: "archived",
       fact: { at, seq: 1, hash: `sha256:${"b".repeat(64)}` },
       archived: { floor: 2, commit: "c".repeat(40), through: { seq: 3, hash: `sha256:${"d".repeat(64)}` } },
     } : { answer: category, reason: category === "unavailable" ? "busy" : "idempotency-mismatch" });
+    }
     if (url.endsWith("/sessions")) {
       if (sessionMode === "absent") return new Response(JSON.stringify({ ok: false, reason: "sessions-unavailable" }));
       const asked = JSON.parse(init!.body!) as SignedSessionRequest;
@@ -117,6 +121,19 @@ test("remote reads the recorded repository; missing Git and the pinned @1 withou
     expect(result.lines.join(" ")).toContain("same original signed envelope");
     expect(result.lines.join(" ")).not.toMatch(/was accepted|Read token:|Nothing was written/);
   }
+  // Actual CLI signing over scripted answers. Native mint lifetime runs in the new-cohort scope witness.
+  category = "unavailable";
+  for (const [pin, fields] of [["platform:destination@19", {}], ["platform:destination@13", { hours: 1 }]] as const) {
+    definition = pin;
+    const before = signedActs.length;
+    expect((await command(running, ["clone"])).code).toBe(1);
+    expect(signedActs.length).toBe(before + 1);
+    expect(signedActs.at(-1)!.intent.fields).toEqual(fields);
+  }
+  definition = "platform:destination@19";
+  const before = signedActs.length;
+  expect(await command(running, ["clone", "--hours", "2"])).toEqual({ code: 2, lines: ["This room issues one-hour read tokens; --hours must be 1."] });
+  expect(signedActs.length).toBe(before);
 });
 
 // Scripted summaries distinguish the exact unpublished pin from malformed old

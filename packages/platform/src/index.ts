@@ -4,7 +4,7 @@ export { REPOSITORY_BINDING_COHORT, repositoryBindingBranch } from "./repository
 export { commons, commonsDirectory, commonsMembership } from "./commons.ts";
 import { NATIVE_DECLARATION_PINS, NATIVE_DECLARATION_TEXT } from "./native-declarations.generated.ts";
 import { VERSIONS } from "./native-catalog.ts";
-import { ARCHIVE_DEVICE_PUBLICATION_COHORT } from "./archive-binding-wire.ts";
+import { FAILED_CLAIM_COHORT } from "./failed-claim-cohort.ts";
 export { VERSIONS, platform, type Platform } from "./native-catalog.ts";
 export { applicationRoom, applicationInstallation } from "./application-install-reader.ts";
 export { applicationProjectionDeclaration } from "./application-projection-reader.ts";
@@ -84,7 +84,7 @@ export type { Extent, ExtentClass, ExtentJudged, ExtentsAsked, ExtentsJudged, Ho
 
 /** New creation defaults only. Existing scopes and explicit cohort pins stay fixed. */
 export const NEWEST: Readonly<Record<string, PlatformDefinition>> = {
-  "platform:inbox": ARCHIVE_DEVICE_PUBLICATION_COHORT.inbox, "platform:membership": ARCHIVE_DEVICE_PUBLICATION_COHORT.membership, "platform:register": ARCHIVE_DEVICE_PUBLICATION_COHORT.register, "platform:directory": ARCHIVE_DEVICE_PUBLICATION_COHORT.directory, "platform:rules": ARCHIVE_DEVICE_PUBLICATION_COHORT.rules, "platform:destination": ARCHIVE_DEVICE_PUBLICATION_COHORT.destination,
+  "platform:inbox": FAILED_CLAIM_COHORT.inbox, "platform:membership": FAILED_CLAIM_COHORT.membership, "platform:register": FAILED_CLAIM_COHORT.register, "platform:directory": FAILED_CLAIM_COHORT.directory, "platform:rules": FAILED_CLAIM_COHORT.rules, "platform:destination": FAILED_CLAIM_COHORT.destination,
 };
 
 /** The data of the newest version of each platform definition, by name without the version. */
@@ -129,3 +129,6 @@ export { destinationPublishedChecksPending, destinationEvidenceFundingPending, d
 export { destinationEvidenceAuditPending } from "./destination-evidence-v17.ts";
 export { evidenceIncidentAdmissionPositionV17, EVIDENCE_INCIDENT_PINS_V17 } from "./evidence-incident-origin-v17.ts";
 export { readEvidenceBatchWireV17, type EvidenceBatchRecordV17 } from "./evidence-batch-v17.ts";
+
+/** Default creation family with final failed claims and one-hour read tokens. */
+export { FAILED_CLAIM_COHORT } from "./failed-claim-cohort.ts";

@@ -5,7 +5,7 @@ import { OWN_AGENT_COHORT, UNPUBLISHED_COHORT, INVITATION_KEY_COHORT, TRUSTED_AP
  * Callers serialize one Store and fence their captured Page context. */
 import type { Answer, Entry, FactRef, FieldValue, MemberRef, Receipt, SignedIntent, Summary, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, entryHash, factRefOf, intentDigest, isMemberRef, isScopeRef, isScopeId, isRecord, isHead, isKeyId, REFUSAL_REASONS, unb64url, timeMs, isReceipt, isSignedIntentShape, keyIdOfSecret, parseStrict, scopeIdOf, textDigest, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
-import { agentKeyInvitationOf, encodeAgentKeyInvitation, checkerKeyInvitationOf, deviceKeyInvitationOf, encodeCheckerKeyInvitation, CHECKER_KEY_MEMBERSHIP, httpTransport, isAgentKeyMembership, ScopeHandle, secretSigner, signedIntent, type AgentKeyMembership, type DeviceKeyInvitation, type Signer } from "@generalbusiness/dap-client";
+import { agentKeyInvitationOf, encodeAgentKeyInvitation, checkerKeyInvitationOf, deviceKeyInvitationOf, encodeCheckerKeyInvitation, isCheckerKeyMembership, httpTransport, isAgentKeyMembership, ScopeHandle, secretSigner, signedIntent, type AgentKeyMembership, type DeviceKeyInvitation, type Signer } from "@generalbusiness/dap-client";
 import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, DEMO_REGISTER, DIRECTORY_OF, WEB_DEMO_COHORT, isHandle, platform } from "@generalbusiness/dap-platform";
 import { expectedOf, LINK, linkOf, type DefinitionShape, type Link } from "./browser-helpers.ts";
 import type { Context, Outcome } from "./commands.ts";
@@ -73,6 +73,8 @@ async function pinnedSummary(M: ScopeHandle, at: ScopeRef): Promise<{ summary: S
 /** The directory definitions each membership pin is created beside: exact pairs of the cohorts, not names. */
 const DIRECTORIES_OF: Readonly<Record<AgentKeyMembership, readonly string[]>> = {
   "platform:membership@13": ["platform:directory@26"],
+  "platform:membership@12": ["platform:directory@25"],
+
   "platform:membership@11": ["platform:directory@24"],
   "platform:membership@10": ["platform:directory@23"],
   "platform:membership@9": ["platform:directory@22"],
@@ -115,8 +117,9 @@ function issueValid(value: unknown): value is Issue {
     if (!closed(value, ["v", "operation", "input", "service", "repository", "actor", "secret", "ends"], ["member", "invitation", "link", "previous", "definition"])) return false;
     const row = value as unknown as Issue;
     if (row.definition !== undefined && !isAgentKeyMembership(row.definition)) return false;
-    if (row.input?.kind === "checker-key" && row.definition !== CHECKER_KEY_MEMBERSHIP) return false;
+    if (row.input?.kind === "checker-key" && !isCheckerKeyMembership(row.definition)) return false;
     if (row.input?.kind === "own-agent-key" && row.definition !== OWN_AGENT_COHORT.membership) return false;
+
     if (row.v !== 1 || !uuid(row.operation) || !issuedInput(row.input) || typeof row.secret !== "string" || typeof row.ends !== "string" || timeMs(row.ends) === null || !isKeyId(row.actor) || !repositoryValid(row.repository) || typeof row.service !== "string") return false;
     if (row.previous && (!closed(row.previous, ["request", "digest"]) || typeof row.previous.request !== "string" || !/^i-[0-9a-f]{30}$/.test(row.previous.request) || !/^sha256:[0-9a-f]{64}$/.test(row.previous.digest))) return false;
     const secret = unb64url(row.secret);
@@ -292,8 +295,9 @@ async function issueRetainedInvitation(ctx: Context, input: IssuedInput, options
       if (options.mode !== "new") throw blocked();
       // The membership's exact pin is read once and kept with the retained issuance: every later read and receipt is held to it.
       const pinned = await wait(options, async () => pinnedSummary(await membershipHandle(), config!.repository!.membership));
-      if (input.kind === "checker-key" && pinned.definition !== CHECKER_KEY_MEMBERSHIP) throw blocked();
+      if (input.kind === "checker-key" && !isCheckerKeyMembership(pinned.definition)) throw blocked();
       if (input.kind === "own-agent-key" && pinned.definition !== OWN_AGENT_COHORT.membership) throw blocked();
+
       row = { v: 1, operation: options.operation, input: structuredClone(input), service: config.service, repository: structuredClone(config.repository), actor, secret: b64url(crypto.getRandomValues(new Uint8Array(32))), ends: timeOf(Math.floor(now(ctx) / 1000) * 1000 + input.hours * 3600_000), definition: pinned.definition };
     }
     const status = (state: InvitationIssueResult["state"], reason?: string): IssuedResult => ({ operation: row.operation, kind: row.input.kind, handle: row.input.handle, state, ...(reason ? { reason } : {}) });
@@ -385,7 +389,7 @@ async function issueRetainedInvitation(ctx: Context, input: IssuedInput, options
       if (!opening || !await activeInbox(ctx, options, reads!, opening, row.repository.membership, owner)) return status("unknown", `The native ${nativeKind} inbox creation could not be verified.`);
       const handoff = { v: 1 as const, service: row.service, repository, definition: pin, handle: row.input.handle, member: row.member!.receipt!.fact, invitation: receipt.fact, secret: row.secret, expected: { on: roster.revision, member: member.revision } };
       if (row.input.kind === "checker-key") {
-        if (pin !== CHECKER_KEY_MEMBERSHIP) throw blocked();
+        if (!isCheckerKeyMembership(pin)) throw blocked();
         link = encodeCheckerKeyInvitation({ ...handoff, kind: "checker-key", definition: pin });
       } else link = encodeAgentKeyInvitation({ ...handoff, kind: "agent-key", controller: row.input.controller! });
     }

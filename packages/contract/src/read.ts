@@ -26,7 +26,10 @@ export type Read<T> =
   | { ok: false; reason: Exclude<ReadRefusal, "archived" | "behind">; detail?: FactRef | ScopeRef };
 
 /** Settlement of one signed intent: one receipt or `not-found` (section 4.2). */
-export type Settlement = Read<Receipt>;
+export type Settlement = Read<Receipt> & {
+  /** Register26 alone projects the state of this exact accepted found. No item values or read permission. */
+  readonly claim?: { readonly fact: FactRef; readonly state: "pending" | "failed" | "active" };
+};
 
 /** The page bounds of section 9.1. */
 export const RETAINED_ITEMS_PAGE = 100;

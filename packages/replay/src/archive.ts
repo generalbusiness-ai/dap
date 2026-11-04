@@ -174,8 +174,8 @@ class Session implements HistorySource {
       for (const source of archive.foreignSources ?? []) {
         this.work.spend({ metadata: 256, inputWork: 512 });
         if (!this.#anchorScopes.has(source.at.scope)) continue;
-        if (source.pin === "platform:membership@8" && source.at.kind === "membership"
-          || (source.pin === "platform:register@17" || source.pin === "platform:register@18" || source.pin === "platform:register@19" || source.pin === "platform:register@20") && source.at.kind === "register") selected.set(canonicalize(source.at), platformName(source.pin));
+        if ((source.pin === "platform:membership@8" || source.pin === "platform:membership@12") && source.at.kind === "membership"
+          || (source.pin === "platform:register@17" || source.pin === "platform:register@18" || source.pin === "platform:register@19" || source.pin === "platform:register@20" || source.pin === "platform:register@26") && source.at.kind === "register") selected.set(canonicalize(source.at), platformName(source.pin));
       }
       names = selected; this.#privateNames.set(archive.scope.scope, names);
     }
