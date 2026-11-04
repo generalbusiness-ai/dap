@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/check-doc-links.test.mjs","body":{"commit":"333fe65f7f96f51a28f60c65ba69d7917e057662","path":"scripts/check-doc-links.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0d08123499eb1219e4e43e6215fff27dc5630266","text":"Merge retired a covered predecessor; the successor is at scripts/check-doc-links.mjs."}
