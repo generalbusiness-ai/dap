@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c9930528086eb9865cd378384b1daa58539f45cb","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/fixed-index.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d855807be2513c548023f3bb3c0155071af0622a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-04-fixed-slot-histories-gate-validation.manifest.json."}
