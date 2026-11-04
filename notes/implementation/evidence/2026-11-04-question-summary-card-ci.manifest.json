@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "qualification": "Frozen Question adapter identity and complete exact-head Card workflow. All three browser owners and regenerated-module equality passed. No gate result or desktop-host acceptance.",
+  "fileCount": 11,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-question-summary-frozen",
+      "fileCount": 6,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 413,
+          "sha256": "575bb68b034d99364af6f033d4d815e89a0cf6e8d42bbcdf7c2f43fee4e070c3"
+        },
+        {
+          "path": "decision.ts",
+          "bytes": 16636,
+          "sha256": "cde8d602f1e4f031a711f4765fa32d8b909b12530a1c2beff96da763664f3fad"
+        },
+        {
+          "path": "preflight-correction.json",
+          "bytes": 736,
+          "sha256": "742653961116a625380fe7b35ec1f5c4eb405725af5e661afde900e014a5a65b"
+        },
+        {
+          "path": "s4.test.mjs",
+          "bytes": 70088,
+          "sha256": "59ffd4a84c4f9ebe340c7a40288496c2323cc1efaff99795979abb144c6b31bd"
+        },
+        {
+          "path": "source-identity.json",
+          "bytes": 528,
+          "sha256": "f7c8abd20abed749e0488bd4478f775f099dd88c5de5506243d34033da568dc5"
+        },
+        {
+          "path": "source.diff",
+          "bytes": 7570,
+          "sha256": "61bc6a86490f1b6266ca35f1c6656fea2ec7156943ca1b5095f12e64a2373655"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-question-summary-card-validation",
+      "fileCount": 5,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 330,
+          "sha256": "2c57d05c695a0e9c72013ecc5d2ec2e415dbcc548d9cabc4fc77eb55fb4818b0"
+        },
+        {
+          "path": "browser-summary.json",
+          "bytes": 405,
+          "sha256": "2549610928d0702b4198ccbc79b0981f1c1505f8071d17c0e0f07b4fef324771"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 3370,
+          "sha256": "03cdd582a8b444d5de56e88490b03dd3d9b214fc5f64f2cbea320155cf4aa405"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 466,
+          "sha256": "5b9450a22910f7664d8250df58232900decda697dff2389e8827ba0c1949b4ce"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1896,
+          "sha256": "aca4892e17c52f711052209cf80cd96673e31e126435cf44fa94e74a2e14a8c6"
+        }
+      ]
+    }
+  ],
+  "checkpoint": "2bd1ab4b930ed586e1a447a90f988bb3ae8c03e2",
+  "tree": "ec419dff6aedcdcd4f610a84808dada8f4276f3a"
+}
