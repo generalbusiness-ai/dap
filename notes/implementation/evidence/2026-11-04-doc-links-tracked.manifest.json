@@ -1,0 +1,133 @@
+{
+  "version": 1,
+  "qualification": "Two real-Git-index Node cases, one original-scanner assertion control, repaired actual shared-checkout scan, and owned dependency clone. No application runtime or Native authority evidence.",
+  "fileCount": 24,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-doc-links-tracked-focused",
+      "fileCount": 24,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1973,
+          "sha256": "912668b9312a8b1825876eab765961c8d20a0045b0e8e9012563088323424b02"
+        },
+        {
+          "path": "check-owner.test.mjs",
+          "bytes": 4015,
+          "sha256": "9716c6f7d0fb807ccd361a86d1ac9d0385faeca04a6bc3b68015d7021684644b"
+        },
+        {
+          "path": "check-source.mjs",
+          "bytes": 6151,
+          "sha256": "98a773ceae785bedc297489ae021bc113b8900e6796cef4bac3167a106315006"
+        },
+        {
+          "path": "current-shared-root.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "current-shared-root.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "current-shared-root.stdout",
+          "bytes": 36,
+          "sha256": "3a9c5f58a570290642a3dd27a8a48f55199f946d703e6fd515757f093c5f75d1"
+        },
+        {
+          "path": "dependency-copy.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "dependency-copy.json",
+          "bytes": 148,
+          "sha256": "0a82e417d19bf960c389e69ce85f7e78fa8a98186a8212b8a3ca2870fb0ffdae"
+        },
+        {
+          "path": "dependency-copy.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "dependency-copy.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "diff-check.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "diff-check.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "diff-check.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "original-scanner.mjs",
+          "bytes": 6048,
+          "sha256": "5a0ad4ae3c3ecf0fdcd7f57af2f1591642022b225e6325c19734e9249a373719"
+        },
+        {
+          "path": "owner-before.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "owner-before.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "owner-before.stdout",
+          "bytes": 349,
+          "sha256": "b75880217a206c2a859e55c2d0f89d6a8574bdb60cd530d62ccb3b845352715d"
+        },
+        {
+          "path": "owner-control.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "owner-control.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "owner-control.stdout",
+          "bytes": 1396,
+          "sha256": "fd29ad4bee3a020d8963fe1b38f3225f67a2efc35fc72dbd0e6985b15f1c89c0"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1477,
+          "sha256": "13347264e054539d3c1e387f4904198291a8a9200f417152d7d7664cc2b5ccc1"
+        },
+        {
+          "path": "worktree.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "worktree.stderr",
+          "bytes": 69,
+          "sha256": "07c3439935c0b9401274196ef199fc3173d1c5691dd74ee5e84786c1d2f4bbb5"
+        },
+        {
+          "path": "worktree.stdout",
+          "bytes": 65,
+          "sha256": "7f3d68e359b1e446317ddcf03d69be924741834ef63e3b5db13ac65282350618"
+        }
+      ]
+    }
+  ]
+}
