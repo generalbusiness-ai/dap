@@ -100,4 +100,3 @@ The committed manifests list every retained public file and its hash:
 Only this note and the three manifests follow the validated source head.
 The source correction needs the planner's deployment decision. This record
 establishes no real-host acceptance or Goose answer-size limit.
-
