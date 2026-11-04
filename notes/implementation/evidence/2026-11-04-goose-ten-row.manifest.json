@@ -1,0 +1,452 @@
+{
+  "version": 1,
+  "qualification": "Historical real Goose Desktop observations, injected unchanged read-reply waits, bounded native approval and final native cleanup. Public TEST text and metadata only; no configuration contents. Sealing or this inventory runs no producer or host scene. No agent authority, large-reply host limit, changed-file diff, interdiff or new late-reply recovery acceptance. Earlier source/initialization/four-card records retain their existing separate reviewed manifests.",
+  "fileCount": 79,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-goose-lifecycle",
+      "fileCount": 8,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 633,
+          "sha256": "fc0632c15ffb12a8aa3f4a6fc3e915f4be98980fd5a16838a86fafdc45e5eb74"
+        },
+        {
+          "path": "after-reload-observation.json",
+          "bytes": 2342,
+          "sha256": "f43809c74f1d2a44c95eaeccd3b175df5cc3bea3478ddcdc4721e438eeec5510"
+        },
+        {
+          "path": "before-reload-observation.json",
+          "bytes": 666,
+          "sha256": "564726342c0f6ed25ae705cbfc35a0172d0583f710ee374bb232ed2a08843b54"
+        },
+        {
+          "path": "configuration-attempts.ndjson",
+          "bytes": 398,
+          "sha256": "ef749dc8154a2647a08e0f71a3b8b1843b7973d7925848eadf50984052fa80a9"
+        },
+        {
+          "path": "desktop.events.ndjson",
+          "bytes": 12938,
+          "sha256": "a8b1e4aea929f7f76dbcd2f44c07c17ca8096adb7fc6528ac94f5122ae7597cd"
+        },
+        {
+          "path": "observe-stdio.mjs",
+          "bytes": 6225,
+          "sha256": "82554ac197830069ae19969c01f66dcac3aacc99292bcea923d12273d59b008a"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1229,
+          "sha256": "f97bf3028f660e071eebd8cd6d32fcfaaf88ad055f720e2668c4e7f76b578d8d"
+        },
+        {
+          "path": "ui-message-shape-error.json",
+          "bytes": 736,
+          "sha256": "f91867119b624f8f600d7800bcf09a9729279c3cc6d47b59ff47f2dbbf16970a"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-goose-review-card",
+      "fileCount": 14,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1145,
+          "sha256": "394093a0b6bde6c4af76aa0c697376170a4d0c8ebf17ea3ea425afb296255b19"
+        },
+        {
+          "path": "approval-entry.json",
+          "bytes": 8074,
+          "sha256": "906d4a4b03546f8a097054cb74742d58b86876b4bbbdb76cfce8b2e98aa365ee"
+        },
+        {
+          "path": "configuration-before.json",
+          "bytes": 307,
+          "sha256": "b1eb7e70b7acbbb6c2bba918fd7e11bf92253c3c7f2db347077abc0e22f39186"
+        },
+        {
+          "path": "configuration-registered.json",
+          "bytes": 185,
+          "sha256": "720e3f567e1f9f0622f6ec66c8c1b10cfed5eeccdb64528844149a811bd9f679"
+        },
+        {
+          "path": "configuration-restored.json",
+          "bytes": 189,
+          "sha256": "0ad985384a6815bd6c786977f6394e4ffe812c148afc715f9b107767e2652534"
+        },
+        {
+          "path": "desktop.events.ndjson",
+          "bytes": 9785,
+          "sha256": "e3e2253c2a8d515b98c9e17eeed3b6d2b209a61878205baac219dbc349f5b95b"
+        },
+        {
+          "path": "native-read.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "native-read.mjs",
+          "bytes": 3949,
+          "sha256": "6dda40417947ec2d54aeea872bc1234dd903fe1bc3d8e51bfdad29f6020655c6"
+        },
+        {
+          "path": "native-read.stderr",
+          "bytes": 191,
+          "sha256": "249e794a88fd11fbf3d64ad1b0215f6443b89fb0cc2b59ea92ad2d1ea98b124b"
+        },
+        {
+          "path": "native-read.stdout",
+          "bytes": 869,
+          "sha256": "5c7f0aacadb17cb373844a13cd2b0d43f15ea9b805169615fda517e0a543ab08"
+        },
+        {
+          "path": "native-verification.json",
+          "bytes": 1036,
+          "sha256": "e370d9e19d5c1318dc2b19106b5d290eeee08c8bb55a9c40cb8e462db2168fff"
+        },
+        {
+          "path": "observe-stdio.mjs",
+          "bytes": 6246,
+          "sha256": "f4243e855f45062372f2eddb7fbe00ae924cf0550780bf3339217af8878f13d2"
+        },
+        {
+          "path": "ui-observation.json",
+          "bytes": 1430,
+          "sha256": "9c7764ceddd637d64b695cda2db23e08466cdab5a6193d0ed067cb8094233e6e"
+        },
+        {
+          "path": "verification-requests.json",
+          "bytes": 815,
+          "sha256": "d239539ae7e61c58919c1d9e8a5b59ea7ecf7e8c9d5ee80a393e8c1aea6b60f1"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-goose-message-shape",
+      "fileCount": 3,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 169,
+          "sha256": "1c5ceab86bfb6d61a411bcf1555707efdc314aa0bd4b067194a27261cd65d099"
+        },
+        {
+          "path": "comparison.json",
+          "bytes": 2684,
+          "sha256": "569a431a6d3933993dd051bb3c37d17cd7567adba2a247a15077a3f855b73531"
+        },
+        {
+          "path": "native-ui-error.json",
+          "bytes": 736,
+          "sha256": "f91867119b624f8f600d7800bcf09a9729279c3cc6d47b59ff47f2dbbf16970a"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-goose-waits",
+      "fileCount": 28,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2494,
+          "sha256": "5f1f4e9e67a9fc8999380643460c95f3529ec383520b77b2120fa789cba329f6"
+        },
+        {
+          "path": "card-limit-body.txt",
+          "bytes": 60659,
+          "sha256": "a00af229008778a761c088aedd22836a68a42db25604034d68b9ba8e5eca2281"
+        },
+        {
+          "path": "card-limit-sizing.json",
+          "bytes": 317,
+          "sha256": "dd65b94f6cb94b0ab872d9b8814543e5185a90f2cdbf1b63765e8b914a006419"
+        },
+        {
+          "path": "create-large-question-once.mjs",
+          "bytes": 5402,
+          "sha256": "38ff67b1cab839dfa377d55b71558d26e477796d4e5f9e81cc949a178134131c"
+        },
+        {
+          "path": "desktop.events.ndjson",
+          "bytes": 13847,
+          "sha256": "3489865834c12fd107ac46a6a4a54c92ed2befae6dc9a217dd010c399b26df7a"
+        },
+        {
+          "path": "large-question-body.txt",
+          "bytes": 65536,
+          "sha256": "f5c99ea1f81558bfeb0a754e00766cd9e9d6038d705199862dcc81b11ad956ed"
+        },
+        {
+          "path": "large-question-create.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "large-question-create.once.json",
+          "bytes": 487,
+          "sha256": "ef33a7106762163d6e55a821f83d595db5c7468283f8c2bb8e246b6dc28ad192"
+        },
+        {
+          "path": "large-question-created.json",
+          "bytes": 807,
+          "sha256": "d320a3ffa10d2e41d3c6c5cb0ce243558d3f0b2e7475efd985df00682c2975ad"
+        },
+        {
+          "path": "large-question-preflight.json",
+          "bytes": 137,
+          "sha256": "629a0d0c91577c8fcbe46feb8f4d003db35fba94c86201383cbcc3678c4b143a"
+        },
+        {
+          "path": "large-question-requests.json",
+          "bytes": 2620,
+          "sha256": "82425a3406a14642082b6236f2d08ff0e8c3e42dd2c277fd6beecbb48ad1a94e"
+        },
+        {
+          "path": "large-question-revise-requests.json",
+          "bytes": 6224,
+          "sha256": "85089f568d92e9095f42b9f9f5b209270714dcd5d88fe5edd0eb87db354a19fe"
+        },
+        {
+          "path": "large-question-revise.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "large-question-revise.once.json",
+          "bytes": 589,
+          "sha256": "3688cec773a938eb258fafb0e32ba7dc5441f8fbe452cc4bc68d6aeedb5ab0b5"
+        },
+        {
+          "path": "large-question-revised.json",
+          "bytes": 795,
+          "sha256": "7875ad3ffeffe8dfcad2a08d8eeb306e6eb444ad77a40b03f73d3b164d43c15e"
+        },
+        {
+          "path": "observe-stdio.mjs",
+          "bytes": 6592,
+          "sha256": "a49b97d1f2a264062db7f140365b05aa40f40af4156b94cbd491c4c25d2daf02"
+        },
+        {
+          "path": "observer-qualification.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "observer-qualification.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "observer-qualification.stdout",
+          "bytes": 255,
+          "sha256": "0670b4e4f61c99294d4bc88b81b61ee2e98f49b77a557609c1f2deb40b60a95f"
+        },
+        {
+          "path": "preparation.json",
+          "bytes": 656,
+          "sha256": "4b224805a7645e8f84fbc3e0a6785947cb1a57570186689c505f636ab84dacd6"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 1148,
+          "sha256": "639f75f9501a1264b1d1f5a72742b1b0b60beea7e6f62a13c7eef9fb3577636f"
+        },
+        {
+          "path": "registered-config-metadata.json",
+          "bytes": 494,
+          "sha256": "788a8f1857e4e799d0d90b8a50be48c752acbd468f6bf4b665e200bd80e944bd"
+        },
+        {
+          "path": "reply-delay.mjs",
+          "bytes": 1979,
+          "sha256": "4536dd25de168a9543a8305f3667f4f55e7ddaf4842d62da068b9e31007aff1f"
+        },
+        {
+          "path": "reply-delay.test.mjs",
+          "bytes": 2056,
+          "sha256": "140707f35e101f95b5f7d76dd7926148d97cd53e49ec085c0f2f239caae5efd6"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1797,
+          "sha256": "ce5a2a1b880fc90d2e3c2de74c2da7bc0a8758d07c9713b1f911618b1c3d7877"
+        },
+        {
+          "path": "revise-card-limit-question-once.mjs",
+          "bytes": 6495,
+          "sha256": "448cdeb6bb4650d9ebddfc3cca7036b0b104c302e9681800f2720c5c33e3fdf3"
+        },
+        {
+          "path": "session-restoration.json",
+          "bytes": 1373,
+          "sha256": "a242cce3baf82b5426bd48338dae543d78106233398f5f747ec4720db32f51ec"
+        },
+        {
+          "path": "theme-and-window-observations.json",
+          "bytes": 1358,
+          "sha256": "e045c92a665cb49e4e563f05cecb53a3a98ed1f865b0142917100f4818cf210d"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-goose-waits-followup",
+      "fileCount": 24,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1982,
+          "sha256": "74f17497a7e274a118942e8b93cbbfad13deb07d6948a471985fe0ec4c5a2355"
+        },
+        {
+          "path": "bridge.ts",
+          "bytes": 8012,
+          "sha256": "be969e585048963a911a05087ec38f5562d3596160ab90a81fb95fdc38697558"
+        },
+        {
+          "path": "config-restored.json",
+          "bytes": 225,
+          "sha256": "7a98b1a51d2f1275856f870a55c76cce8661f470cc76fff81e7837d89a07699d"
+        },
+        {
+          "path": "dependency-copy.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "dependency-copy.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "dependency-copy.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "goose.events.ndjson",
+          "bytes": 14415,
+          "sha256": "4ef19603338ef42c7671b5dbb8d7c58f049a4d2cc7808e541a9712d1e8c4bd1e"
+        },
+        {
+          "path": "handoff-observation.json",
+          "bytes": 437,
+          "sha256": "041dc161568ba207f4881a2eb0765d33b0c1f0fd2fd804b39769ea07b0ce36a3"
+        },
+        {
+          "path": "large-card-result.json",
+          "bytes": 1012,
+          "sha256": "13d36ceedf1d5f26fa6a6e2ef3209449df47b36725e1729c1785bcd210e582e8"
+        },
+        {
+          "path": "observe-stdio.mjs",
+          "bytes": 6615,
+          "sha256": "8f51132da7a50c6300c55f393a4e361d1e5093bc47fcb6da8c5faf5487845866"
+        },
+        {
+          "path": "preparation.json",
+          "bytes": 1291,
+          "sha256": "4fe753503d1b07453901bceed941acd3202f52ac5ea485c97044bbb36507bc0c"
+        },
+        {
+          "path": "process-cleanup.json",
+          "bytes": 400,
+          "sha256": "881c30b7c96d5a1eedda4c9a4812c5ef86eb872a5bc654c5f351f1835c371d2b"
+        },
+        {
+          "path": "reply-delay.mjs",
+          "bytes": 1979,
+          "sha256": "4536dd25de168a9543a8305f3667f4f55e7ddaf4842d62da068b9e31007aff1f"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1855,
+          "sha256": "a5763347c9a517e0e62f101b476191dab287298ceea2f77f09b7f785c3ed9beb"
+        },
+        {
+          "path": "session-active.json",
+          "bytes": 2081,
+          "sha256": "01113adb7c013b7c6266e41adb26ca35c5bd6e5dc56dd326e4ffe45534cdd268"
+        },
+        {
+          "path": "timeout-source-attribution.json",
+          "bytes": 684,
+          "sha256": "b6dfe249c2767906b8170dd104fb062de2efb04b8fde6dea94882bf50410f535"
+        },
+        {
+          "path": "wait-130-arm.json",
+          "bytes": 121,
+          "sha256": "1d0f0965c651b498363a72ca7f1c50e96804a36249679b317255f318858b0cec"
+        },
+        {
+          "path": "wait-130-result.json",
+          "bytes": 1774,
+          "sha256": "a9dbcb9b2ecb26e083f19ac1d0eedeea524e24d63ad529f32a11fa6d5e32afe0"
+        },
+        {
+          "path": "wait-130-ui-observations.json",
+          "bytes": 377,
+          "sha256": "1fedc18f121bb03b72e848187294a1d72894f5f52bcc6ec26fcf70b11fa82409"
+        },
+        {
+          "path": "wait-40-arm.json",
+          "bytes": 169,
+          "sha256": "96c39060fab2090ee27be6d58cebe0fd426163d604d103e399ea23f0b674568e"
+        },
+        {
+          "path": "waits.ts",
+          "bytes": 380,
+          "sha256": "18165010123838a7c987bd1fb1b5f562a15a0d0fc0983a784e9942689f49a04d"
+        },
+        {
+          "path": "worktree-create.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "worktree-create.stderr",
+          "bytes": 72,
+          "sha256": "a4a8871d3c45c08325ab0940cb4c6db895776003fdc86a687a46b1c8e89cb0c3"
+        },
+        {
+          "path": "worktree-create.stdout",
+          "bytes": 65,
+          "sha256": "7f3d68e359b1e446317ddcf03d69be924741834ef63e3b5db13ac65282350618"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-goose-cleanup-recheck-6",
+      "fileCount": 2,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 78,
+          "sha256": "9fde277f2399029206acf920bf8531e2a06c83453be25fc1d75b5043cd20744d"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1561,
+          "sha256": "3b281fb8ca8d5d376d42bf1eca473136784ea9880c49d9552c5539d8ae909347"
+        }
+      ]
+    }
+  ],
+  "checkpoints": [
+    {
+      "head": "18f16811ff4f4eaa123fe7580c766f6d5c2c3690",
+      "tree": "60464d8217cf20d8dabb6dfe2d42cbf6d92b32c2"
+    },
+    {
+      "head": "bf3bceb667e99876d2edc4880c3c337f944f5fbe",
+      "tree": "0db11883ddfbc7d6435ba5d921a4fd375aab494e"
+    }
+  ],
+  "cleanupCheckpoint": {
+    "kind": "Native UI and exact original configuration check on2026-11-04; no dap server executed.",
+    "unit": "2026-11-04-goose-cleanup-recheck-6"
+  }
+}
