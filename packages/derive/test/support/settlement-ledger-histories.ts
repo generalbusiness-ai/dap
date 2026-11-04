@@ -78,6 +78,7 @@ export const histories: History[] = Array.from({ length: 100 }, (_, index) => {
     seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
     const options = choices(model), command = options[(seed >>> 0) % options.length]!;
     commands.push(command); model.apply(command);
+    if (command.kind === "checkpoint") break;
   }
   const named = (family === "marker" ? markerNames : worksNames)[local];
   return { name: `${String(index).padStart(3, "0")} ${family}: ${named ?? "obligations follow legal history"}`, family, capacity, commands };
