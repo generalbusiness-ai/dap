@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/mcp/test/views-browser.mjs","body":{"commit":"d372812e0bcc3c8d84e66f04266a26f78b1e5fdd","path":"packages/mcp/test/views-browser.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:15dbc8292b8d2a44fefed992bfe94ac29dbea362","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/views-browser.mjs."}
