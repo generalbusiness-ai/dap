@@ -75,7 +75,7 @@ export class Works extends Scope {
     begin: () => [], derives: () => ({ effects: [], sends: [], opens: [] }), report: () => null, after: () => [], retries: false,
   };
 
-  constructor(definition: ValidDefinition) { super(definition); }
+  constructor(definition: ValidDefinition, ordinal = 0) { super(definition, keys.rita.member, true, ordinal); }
 
   get rules(): PlatformRules {
     const outcome = (kind: string): PlatformRule => ({ place: "outcome", rules: { selects: false, read: false, retries: () => this.script.retries, derives: (given, operation) => this.script.derives(kind, given, operation) } });
