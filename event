@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:219018e7a5ee108f83e2b74e4ad0f6ef010aec73","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/views-host.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2c7f61527e93ad1d774b64d9f5d6bab79037fb5d","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/mcp-apps-upstream/2025-11-21.LICENSE."}
