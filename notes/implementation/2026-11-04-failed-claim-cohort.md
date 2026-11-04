@@ -68,6 +68,42 @@ passes all four browser steps at `0594ecc6`. The four changed paths after
 the successful Card run affect only Page test fixtures, the Page demo
 script and this note. Card runtime inputs remain unchanged.
 
+## The first gate stops before Native tests
+
+The gate at `bda18815`, tree `61b6a50076b5ee27f218ee2bade6c12686cdf695`,
+returns actual exit 1 after 189.55 seconds. Its source stays unchanged and
+its owned process group closes. Node passes 135 cases and Counting passes
+56. Plain tests record 3,920 passes, five failures and one skip across
+three failed files. Native is unreached. The terminal audit finds zero
+contradictory records, zero unhandled plain errors and 99 separate unknown
+or suite observations. This gate does not pass.
+
+The failures name obsolete expectations in three existing owners. CLI
+`nothing-sent` still names only the old open-policy cohort. The scope-index
+owner expects the old default creation family while its observed historical
+pins remain correct. Page's independent join fixture omits Membership12
+from the exact proof-encoding list. The repair changes seven expected lines
+across those three files. All 17 cases in their complete owners and both
+affected test compiler contexts pass. Production, configuration, shared
+helpers, case sets, refusal and custody assertions, and deadlines stay
+unchanged.
+
+The [failed-gate manifest](evidence/2026-11-04-failed-claim-cohort-failed-gate.manifest.json)
+has SHA-256
+`0d7030a4dcb3b83c280d674e8368f508b632e7732548c4403ade8e177fdbf0de`.
+Its 14 public files include the actual exit, result, stage ledger, terminal
+summary and preparation proof. Private custody retains 2,261 indexed gate
+originals and seven sealed preparation units with 428 regular originals.
+The preparation proof includes Hugh's exact approval and the successful
+security owner. No original failure becomes a pass through this record.
+
+Planner ruling request `0e35e6c8` asks whether the three-owner repair,
+affected compilers and one run of the unreached Native stage supply the
+required follow-up coverage. The documented single-file exception does not
+cover three files. The request preserves the failed gate as failed and
+avoids repeating completed whole suites. Review awaits that ruling and the
+remaining validation.
+
 ## Evidence and review status
 
 The [focused manifest](evidence/2026-11-04-failed-claim-cohort-validation.manifest.json)
@@ -109,6 +145,7 @@ retain 74 private units, 6,445 regular originals and 21 public files.
 | [Limit witnesses](evidence/2026-11-04-failed-claim-cohort-limits/limit-witnesses.json) | Local custody bound, same-register retry, retained host-none families and unwired-host continuation. |
 | [Integration commands](evidence/2026-11-04-failed-claim-cohort-integration/command-results.json) | CLI and Page protocol fixes, recorded demo expectation and historical recovery fixtures. |
 | [Workflow results](evidence/2026-11-04-failed-claim-cohort-rendered/workflow-results.json) and [input identity](evidence/2026-11-04-failed-claim-cohort-rendered/input-identity.json) | Passing Page and Card browser workflows at the named heads. |
+| [Failed-gate manifest](evidence/2026-11-04-failed-claim-cohort-failed-gate.manifest.json), `result.json`, `stages.json` and `preparation-proof.json` | Actual exit 1, five plain failures, Native unreached and explicit source-seal approval. |
 
 Fresh durable units retain command arguments, cwd, source snapshots and hashes, dependency identity, stdout, stderr, actual exit, elapsed time and owned-process cleanup. The early merge helper, generator log and initial comparison helper began in scratch; the baseline records that limitation rather than claiming durable origin. The old draft's scratch checks supply no fresh validation claim.
 
@@ -121,11 +158,12 @@ other character in the inventory stays identical. The affected security
 entry-point owner passes all 11 cases after the update. Its original
 failure remains in the focused evidence.
 
-PENDING: one full gate on the frozen source head, independent checker review
-and source landing. Hugh approved the exact source-seal patch above; its
-owner passes. Earlier sealed summaries record the approval as pending at
-the time of those runs. Page and Card workflow inputs remain unchanged.
-No gate-pass or parent-acceptance claim exists at this draft.
+PENDING: the planner's validation ruling, unreached Native coverage,
+independent checker review and source landing. Hugh approved the exact
+source-seal patch above; its owner passes. Earlier sealed summaries record
+the approval as pending at the time of those runs. Page and Card runtime
+inputs remain unchanged. The first gate failed; no gate-pass or
+parent-acceptance claim exists at this draft.
 
 ## Limits the planner retains
 

@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "qualification": "One actual failed frozen source gate: five plain assertion failures and Native unreached. Exact source/dependency identity, explicit source-seal approval and seven preparation units remain verified. No gate pass, deployment, parent acceptance or historical archive cause.",
+  "fileCount": 14,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-failed-gate-validation",
+      "fileCount": 14,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1065,
+          "sha256": "840a64148703d7017a3507d9b08992b6f95e17e6114a4c1602cd7dbc5b1a2139"
+        },
+        {
+          "path": "after.json",
+          "bytes": 1923,
+          "sha256": "fc1529514792916d2b3d7f973b26502f825194e700aa21b3419e6bdea01744a6"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 2010,
+          "sha256": "ae0155f73507d85f5bfdb1a38ed091afe63dc4bc4ff2c628b96ba46706fb271b"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1923,
+          "sha256": "fc1529514792916d2b3d7f973b26502f825194e700aa21b3419e6bdea01744a6"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "preparation-proof.json",
+          "bytes": 5341,
+          "sha256": "7bdecc456995056fbbec729b382c5ab3a99451faf4ebf7212ab4f53b8e7cd397"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 10671,
+          "sha256": "1739c966f6fb3e05e9e32e0a1ca0031eadad719d309ae1966c988f0376e5f722"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 394,
+          "sha256": "e3ac2f451bb173feec0a0292bfd7e06425918aa2a7d2649f822d2d796456e24c"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2181,
+          "sha256": "387569d52c9874438ea83641bbdac0941d3bdb83faa77ecd1643ae0b9e395d3c"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 965,
+          "sha256": "f87f4b7780fed4f28ac6548a5848dcd37cadc8830e2b1d00577e2ad4f5d5cc12"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 592,
+          "sha256": "c2c4f15f46e5340b8be9d121ef851e3a8cdb07feeb70449f1e195ab0a8ac44fd"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 4773,
+          "sha256": "ccd3ec34dc2794ed085444f6859bdead196cd562c11bc24e70232053c7f3776a"
+        }
+      ]
+    }
+  ],
+  "sourceHead": "bda188150cfe4afae28cd2fe2288475a80c3b831",
+  "sourceTree": "61b6a50076b5ee27f218ee2bade6c12686cdf695"
+}
