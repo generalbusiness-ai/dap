@@ -92,9 +92,10 @@ scheduled.
 - The O4 window. Cost: setup finished at 03:10, then a full day blocked on
   the browser connection. Alternative: check the builder's browser before the
   closed setup, not after. Revisit: yes.
-- The typed-core prototype. Cost: about one builder day for a stop decision.
-  Alternative: none cheaper; the gate turned a 24-to-40-day migration into a
-  one-day measurement. Revisit: no.
+- The typed-core prototype. Cost: about an hour of builder time, from the
+  promise at 11:50 to the stop decision at 12:48. Alternative: none cheaper;
+  the gate turned a 24-to-40-day migration into an hour's measurement.
+  Revisit: no.
 - The shared checkout. Cost: about two hours with no landing while another
   planner conversation edited files in it. Alternative: every planner
   conversation works in its own worktree. Revisit: yes.
@@ -116,7 +117,10 @@ scheduled.
 ## In progress
 
 - The next creation versions' source (`12a718fe`). Hugh approved its
-  security-hash change; its full test run started at 15:58.
+  security-hash change. Its full test run failed at 16:07 on five outdated
+  expectations in three test files, before the native stage ran. The builder
+  repaired those three files at 16:12 and asked the planner how to validate
+  the repair.
 - The archive-scale case that answered retry after 14,601 entries.
 - The O4 member join and live runs, waiting on the browser connection.
 
@@ -125,7 +129,9 @@ scheduled.
 - The live Claude and ChatGPT runs: the builder's browser connection was
   unavailable.
 - The next creation versions did not land. The builder resumed them at 13:50
-  after the typed-core stop.
+  after the typed-core stop, and their full test run failed at 16:07 on
+  outdated test expectations. The repair waited on the planner's ruling when
+  the sprint closed.
 - The leftover J4 forks are not deleted. Deleting them needs a separate
   packet, and the J4 record calls them not urgent. They stay listed as
   leftovers and leave the daily commitments.
