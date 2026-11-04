@@ -1,0 +1,574 @@
+{
+  "version": 1,
+  "qualification": "Includes the two failed content preflights and diagnostic read, the one successful authorized producer and complete-prefix verification, the exact immutable main export, and offline parser refusal controls. No private custody or deployment proof.",
+  "fileCount": 105,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-client-continuation",
+      "fileCount": 14,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1117,
+          "sha256": "2a9f311face8600707a85bb21dad7448614d60def5e125671f868bc464e0c9a3"
+        },
+        {
+          "path": "actual-create.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "client-source-ready.json",
+          "bytes": 4448,
+          "sha256": "f15ce440bb63362cb718eb582c01427013690861cabe871359bae79701d0cd98"
+        },
+        {
+          "path": "create-commands.json",
+          "bytes": 1526,
+          "sha256": "e57939599e4400a541249551c9788e2059857a79eace8351de706aba6b6aa440"
+        },
+        {
+          "path": "create-same-home-once.mjs",
+          "bytes": 8803,
+          "sha256": "52df064a1b37237ebb91aead6758cb8e53caf22ea0ec18b79e5a88d9304fb5d5"
+        },
+        {
+          "path": "ending.json",
+          "bytes": 269,
+          "sha256": "e74f3f52a8d275ae168f0596d4dd27fe0a6ed63a9cf9cf211a8a50433ebd5b75"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 4654,
+          "sha256": "713e21307a17f598f5823b9ed29f2509fd4da07847d5c52923ae0fe8949d10b5"
+        },
+        {
+          "path": "requests.json",
+          "bytes": 2661,
+          "sha256": "c2e5f3fdac168b5c3c3bbecf7438e7097a36ba075b397ee1632a7815a97de6b1"
+        },
+        {
+          "path": "result.json",
+          "bytes": 780,
+          "sha256": "8e38ae9351f586b8488c60638239412c7682af594b64fa63080ef606d76fbb82"
+        },
+        {
+          "path": "room.json",
+          "bytes": 2136,
+          "sha256": "e1d516aec78141895fef5b32270afb79bb2c082c2a070ca1980a78fb040f37db"
+        },
+        {
+          "path": "source-original.manifest.json",
+          "bytes": 842468,
+          "sha256": "c7dc0683d984e4555e61e39500ab287201c0d7668f88bd809533b0a08854c391"
+        },
+        {
+          "path": "source-selected.manifest.json",
+          "bytes": 850772,
+          "sha256": "bc69e90244a431220a63c0bbf532997e9200c3f623dcc9f4012d24e44d7d0939"
+        },
+        {
+          "path": "stage-client.mjs",
+          "bytes": 4096,
+          "sha256": "bd1aba30d229637efda4326eab9e63b24c1b6b51f734a294de76e26b30e68670"
+        },
+        {
+          "path": "stage-commands.json",
+          "bytes": 1378,
+          "sha256": "8af145d4d32ba70cfc782245570b9a505bf47cc93309e621f65719f21b971677"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-binding-draft",
+      "fileCount": 12,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 892,
+          "sha256": "df7a3eda5df08726f896453d9f14f965a51f8c28a114e73f1b8422f43859cd41"
+        },
+        {
+          "path": "bindings.json",
+          "bytes": 763,
+          "sha256": "1972d94994267daf93773125400a6914a0de180b377994cf75c78fd5178baf21"
+        },
+        {
+          "path": "check.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "check.mjs",
+          "bytes": 3409,
+          "sha256": "42c6e4c8a21e360a095c9ac02ff3d3d4726e2cd55a5989d691907ade0a6d2984"
+        },
+        {
+          "path": "check.stderr",
+          "bytes": 191,
+          "sha256": "39d77ecf069fa694c6d1f0df3cfff43f1156e33abd2f77a92fd258fbb53cf24c"
+        },
+        {
+          "path": "check.stdout",
+          "bytes": 2636,
+          "sha256": "acde1dfb940725ee331c62f619b80a5637ea61e7c481e3cd794c682494a72fdf"
+        },
+        {
+          "path": "github-app.json",
+          "bytes": 401,
+          "sha256": "0aaed32c7058659d9936f4387f3244c5173673a112be860ece2d90197f81dd10"
+        },
+        {
+          "path": "inputs.json",
+          "bytes": 2401,
+          "sha256": "253bc31558bbfaaad69781f33780ffa7ed1e54a67c271ccc97593c72f96b77bf"
+        },
+        {
+          "path": "installed-register-scopes.json",
+          "bytes": 186,
+          "sha256": "79fa815ac1949796588436b18d37c01171d700e4ea26379d0f46ef1f17ee28a7"
+        },
+        {
+          "path": "original-bindings.json",
+          "bytes": 379,
+          "sha256": "234755b04a7411602c42a7390e2e7146b6e91671a4260d231eec4918728bbfdc"
+        },
+        {
+          "path": "prepare.py",
+          "bytes": 8246,
+          "sha256": "238b75d242e1145ce59033ed9ccc9e79e8f691dfba7b34c2b9b4b5e46a49c1f3"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2636,
+          "sha256": "acde1dfb940725ee331c62f619b80a5637ea61e7c481e3cd794c682494a72fdf"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-content-before-binding",
+      "fileCount": 11,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 822,
+          "sha256": "b72a6f438e98a02f907b39024f5d91ffb5874e3609d37872a22bd40b2e0b3b19"
+        },
+        {
+          "path": "actual-content.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "approval.json",
+          "bytes": 468,
+          "sha256": "d46ffb74e92f0b7e7b84b280655befaa36468a3554304535f429242f55daf0ed"
+        },
+        {
+          "path": "ending.json",
+          "bytes": 109,
+          "sha256": "c07b416972349541308aed70122ea1db5a8aab32a59a1346849cf999bbd763c3"
+        },
+        {
+          "path": "failure-analysis.json",
+          "bytes": 814,
+          "sha256": "272a36004bd53b4a8f6520ccbbe4c1d47a3954f564b33ca15bd3031f061f7245"
+        },
+        {
+          "path": "failure.stderr",
+          "bytes": 720,
+          "sha256": "a5e279c15d3587650736770dc9bd097b02d1b9f17e65cba369c2f11379739dfb"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 3162,
+          "sha256": "1fd93c474a0f79f37ab2e933ea7d791b58efe97f40085c5c3993498be3f7ba5c"
+        },
+        {
+          "path": "producer.mjs",
+          "bytes": 10620,
+          "sha256": "c6507d7aedeec2d1b287cffa6b23df74dd2e1579137f94eac755002b61dd0df0"
+        },
+        {
+          "path": "requests.json",
+          "bytes": 239,
+          "sha256": "43b181d48935c2e715c3b55ca065cea2335b6c6e8ecba8983a0cc674c988db5d"
+        },
+        {
+          "path": "run-status.json",
+          "bytes": 156,
+          "sha256": "df0abfb3f96731592773e2d0ad755d3e9425e7db643d32eaa855f11590fb6771"
+        },
+        {
+          "path": "started.json",
+          "bytes": 340,
+          "sha256": "4bf4576ed63d79a2c131d2d0d76524174479f04e2599c62efa14594eb3d7c3df"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-content-handle-fix",
+      "fileCount": 12,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 912,
+          "sha256": "64bc6a9e9ab90aaa1b73308a629212552ec5e3c8d1f29102a8bb32af83c63f59"
+        },
+        {
+          "path": "actual-content.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "approval.json",
+          "bytes": 778,
+          "sha256": "5a36158d8c19dafbc7e1ed110d526caba73de87aefd5a61cb5ba038bdb2fb7ea"
+        },
+        {
+          "path": "ending.json",
+          "bytes": 109,
+          "sha256": "40c60597b5bd38b69971f8c6bd0c3b704d8dbcf417c623ea7e76078ab65fb75c"
+        },
+        {
+          "path": "failure-analysis.json",
+          "bytes": 722,
+          "sha256": "b2396aa0f4b7bf97ff1883551c7c313addde45e0e797c1b9fa1da602fda18ec8"
+        },
+        {
+          "path": "failure.stderr",
+          "bytes": 692,
+          "sha256": "cf9d57fc5f37e988ab38e8b59f4da8b3a0f8fd3c3c78ed432cb53ec9504121ba"
+        },
+        {
+          "path": "prior-read-failure.json",
+          "bytes": 542,
+          "sha256": "c33d8c7bb5200461713345cbb6ad62a3a143f3ae7db0a811d2767ac9cf82d1e1"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 3281,
+          "sha256": "f464884471a1b5e15e2405107d2a2cdc0d8f34179c865a0f14f16cc17ecc5155"
+        },
+        {
+          "path": "producer.mjs",
+          "bytes": 11417,
+          "sha256": "260ecd88dbb19cea9356fb884895e4694e62134f0b7a6c9895e8b72342f7928c"
+        },
+        {
+          "path": "requests.json",
+          "bytes": 263,
+          "sha256": "284e0e6a5b0cd215e30fdd19a2352bda8459b937772a65275c2e45eafd6c3c76"
+        },
+        {
+          "path": "run-status.json",
+          "bytes": 156,
+          "sha256": "868175adf0e8f7e61b3a3e00211f227490475e6d0345824d19780d767012cf00"
+        },
+        {
+          "path": "started.json",
+          "bytes": 340,
+          "sha256": "f7e777c2d43a6f0ed396dd36828c0a4f0f8cb925a51fc1b1688e64fc9b7a8ffc"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-rules-preflight-readonly",
+      "fileCount": 11,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 844,
+          "sha256": "466b0bfb9512c83bdd6af7299d0742dc160755526875c281e4f4dd22425e47f2"
+        },
+        {
+          "path": "actual-readonly.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "destination-summary.json",
+          "bytes": 3629,
+          "sha256": "1039a24714fe935a80c0f78c58ca1b71c490dabbe560b2e064538d2b6591cdd4"
+        },
+        {
+          "path": "ending.json",
+          "bytes": 130,
+          "sha256": "65f6ef33097c3fadedaf6ed5e90fe49da999269bada6b036d13955d44cbd5a2f"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 2872,
+          "sha256": "c19f25783e9b6d8d086a27123d9338e62ccd808f63ad52e394fb345d5d4f7955"
+        },
+        {
+          "path": "producer.mjs",
+          "bytes": 4061,
+          "sha256": "0ba920134ccf9ad7e2f5dc85d75574af4bf799f8918767282c871cc598baf96a"
+        },
+        {
+          "path": "requests.json",
+          "bytes": 541,
+          "sha256": "8a573f8d5ff8d21eb596b7a4dd541306c21cef91c3af5ad464ce3601fd481d3f"
+        },
+        {
+          "path": "result.json",
+          "bytes": 3188,
+          "sha256": "e024c347c98e05578548710b3cd5136de7073f46bf9a73c7e4f80b42ec1da1cd"
+        },
+        {
+          "path": "rules-history-page-0.json",
+          "bytes": 6494,
+          "sha256": "8484bbff51b6aede84c38988f21f30ab42333bb331d9d622b47404e8b1788997"
+        },
+        {
+          "path": "rules-history.json",
+          "bytes": 6615,
+          "sha256": "e1e274aa50a68e360d76ecda7ba28238bb1f0621c02a24b79f5ddbc5001aa42c"
+        },
+        {
+          "path": "rules-summary.json",
+          "bytes": 1799,
+          "sha256": "7fde6a3377713fc92294ea2368442cfa7b56c98879215497bbd20b773cb122e8"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-content-prefix",
+      "fileCount": 24,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1953,
+          "sha256": "830de68d38ff4d4127611e88e184a22da614d32ea986596b31ae99462fa4638c"
+        },
+        {
+          "path": "actual-content.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "approval.json",
+          "bytes": 821,
+          "sha256": "9e00c07ee3fef0a7136a445930c43acb49a6d2921e30c1ecdd43749e83eea8f1"
+        },
+        {
+          "path": "content.json",
+          "bytes": 2842,
+          "sha256": "4d6af29fd853fbb49401e9e0010efeb70a12ed298f9754851eccb10b287c0f34"
+        },
+        {
+          "path": "destination-preflight.json",
+          "bytes": 3629,
+          "sha256": "ab459b06ccf1bad33c6811ecdc61a8c0abcc51a95556653034f8e2896fc3d0b8"
+        },
+        {
+          "path": "ending.json",
+          "bytes": 109,
+          "sha256": "b50e8adf8557038adbac18c531ef6eb55799c97b0a32244202559165b0ebe345"
+        },
+        {
+          "path": "inputs.json",
+          "bytes": 1583,
+          "sha256": "c973c22e1cb5c0f575b716fdb281daee7dfb6a2a0078298a779aefa8bc9cf5c1"
+        },
+        {
+          "path": "issue-body.txt",
+          "bytes": 111,
+          "sha256": "ac3b95d47ad279e5de0216bc39c9e3b956215d14ac7675e58c7d62918bac3be8"
+        },
+        {
+          "path": "issue-history.json",
+          "bytes": 8963,
+          "sha256": "4cbcb9f8156a9acc7fecbaf9fc9c4e50d2debef956368d856a087da87415797b"
+        },
+        {
+          "path": "issue-summary.json",
+          "bytes": 4217,
+          "sha256": "23cd54b0cf60d0a23cc35ebf3b2050ddc66b81a810f469a2734ee475b60006fb"
+        },
+        {
+          "path": "preflight.json",
+          "bytes": 1265,
+          "sha256": "a355fd3b7bbb8e9aa665f25d9e42755ddf779f4281bda16872f9c271c341690d"
+        },
+        {
+          "path": "prior-prefix-preflight-failure.json",
+          "bytes": 603,
+          "sha256": "ad96ea8fb1ef8564c293d83acd5c7c798ec033725bc1c0cb317aa35de65ca782"
+        },
+        {
+          "path": "prior-read-failure.json",
+          "bytes": 542,
+          "sha256": "c33d8c7bb5200461713345cbb6ad62a3a143f3ae7db0a811d2767ac9cf82d1e1"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 7095,
+          "sha256": "ba0458c554eff5a9d6cfa7ab95ee5f103cb993a8cdd44be0dd20fafa348b2fef"
+        },
+        {
+          "path": "producer.mjs",
+          "bytes": 13323,
+          "sha256": "e8cc0d601ce14c8f58fc6582d46ac4250289b493b5291b829e7de303bc0e2f6f"
+        },
+        {
+          "path": "requests.json",
+          "bytes": 2965,
+          "sha256": "1a8ae98064e214cefd4bfd4d167790d0f32efd63d420427147293e97d3cb6e23"
+        },
+        {
+          "path": "rules-prefix-before-content.json",
+          "bytes": 6494,
+          "sha256": "8484bbff51b6aede84c38988f21f30ab42333bb331d9d622b47404e8b1788997"
+        },
+        {
+          "path": "rules-preflight.json",
+          "bytes": 1799,
+          "sha256": "7fde6a3377713fc92294ea2368442cfa7b56c98879215497bbd20b773cb122e8"
+        },
+        {
+          "path": "run-status.json",
+          "bytes": 156,
+          "sha256": "b1fcc705ea4e94900a7a300d392a78095e684794468f997030540e3bead6baa8"
+        },
+        {
+          "path": "started.json",
+          "bytes": 340,
+          "sha256": "7e4cc2a77c33a98b3e30d49d52b9eb341f74cfd2fae1c83e16126a125dadfe14"
+        },
+        {
+          "path": "verification.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "verification.stderr",
+          "bytes": 191,
+          "sha256": "395f4c533498fc741120b3181e2d56274f8ba0f85d64b0d3918d803e1ade8fc0"
+        },
+        {
+          "path": "verification.stdout",
+          "bytes": 1346,
+          "sha256": "62c0dcef63f8345ed51e6e0e5384c1f6d9507e896f45f7536a96c2720e12e992"
+        },
+        {
+          "path": "verify-prefix.mjs",
+          "bytes": 3452,
+          "sha256": "8aa9f09cdea64fe8b27f5f6602c62975957ae86fe78c792f2361cb7430eaade8"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-binding-packet",
+      "fileCount": 21,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1734,
+          "sha256": "4e1e26e0afbfe0f697488ab05469b8f0e060bdcbb3f0b2cf5ad2dd12b64669f0"
+        },
+        {
+          "path": "check-packet.mjs",
+          "bytes": 3648,
+          "sha256": "caea5a14f3a6f44409b40b9e515827bf444f5f26aedebd9d8165825e8e4e1fb0"
+        },
+        {
+          "path": "dependency-copy.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "dependency-copy.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "dependency-copy.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "inputs.json",
+          "bytes": 2349,
+          "sha256": "6272d206868bf8f65ffcbbdaaeb84fedd47695707bec4930eb6035273825133a"
+        },
+        {
+          "path": "main-source.tar.gz",
+          "bytes": 65590391,
+          "sha256": "f4649a86b24a7726a077c8b04eab7c007c71d3d29cdc14ebe7322e04c61cf7fb"
+        },
+        {
+          "path": "original-bindings.json",
+          "bytes": 379,
+          "sha256": "234755b04a7411602c42a7390e2e7146b6e91671a4260d231eec4918728bbfdc"
+        },
+        {
+          "path": "packet-check-result.json",
+          "bytes": 2532,
+          "sha256": "e12a4ba3316189877130a0c339dca447768b44bce8a455b9af254fbcb1494b0a"
+        },
+        {
+          "path": "packet-check.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "packet-check.stderr",
+          "bytes": 191,
+          "sha256": "a83089fe84fb05977733caabf2179c97c032f4f8bd344cc35c7ebee45920addf"
+        },
+        {
+          "path": "packet-check.stdout",
+          "bytes": 2532,
+          "sha256": "e12a4ba3316189877130a0c339dca447768b44bce8a455b9af254fbcb1494b0a"
+        },
+        {
+          "path": "result.json",
+          "bytes": 555,
+          "sha256": "6faea251bc01106627e42fbbcd77b9caca23fb09e4627bc38f30f4ac4be16710"
+        },
+        {
+          "path": "source-export.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "source-export.json",
+          "bytes": 2156,
+          "sha256": "1e20a9980671994c72bdfc93e9bd7c0cff1bdbe9a58dc034699986918fbe29eb"
+        },
+        {
+          "path": "source-export.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source-git-inventory.ndjson",
+          "bytes": 568615,
+          "sha256": "6f22babe4f7937f4406e8259f3edd7394fbf5e5dce47a90e69878e70b05f22f5"
+        },
+        {
+          "path": "source-template-delta.json",
+          "bytes": 670,
+          "sha256": "b965b48f9a645efa15f1a8116cee4417cc103d9746a4071aa98af4dc8b2f5b24"
+        },
+        {
+          "path": "worktree-create.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "worktree-create.stderr",
+          "bytes": 67,
+          "sha256": "3c249fb3e65eba37d0acc4295f6289d1ae72c750db4c1a916799cf2dd2057da1"
+        },
+        {
+          "path": "worktree-create.stdout",
+          "bytes": 65,
+          "sha256": "7f3d68e359b1e446317ddcf03d69be924741834ef63e3b5db13ac65282350618"
+        }
+      ]
+    }
+  ]
+}

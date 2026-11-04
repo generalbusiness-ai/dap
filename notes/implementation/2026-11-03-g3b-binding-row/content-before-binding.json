@@ -1,0 +1,86 @@
+{
+  "qualification": "Actual supported pre-binding content in the one new G3b room. Rules require one independent review, both reviewed profiles are active, and the TEST issue body and complete native prefix were read back. No repository binding, Git write, App key use or G3 acceptance.",
+  "sourceCommit": "bb66b1ab18d0fd3726c41a7d6538e6fb1de0439b",
+  "outcomes": [
+    {
+      "step": "rules",
+      "code": 0
+    },
+    {
+      "step": "issue-profile",
+      "code": 0
+    },
+    {
+      "step": "change-profile",
+      "code": 0
+    },
+    {
+      "step": "issue",
+      "code": 0
+    }
+  ],
+  "rules": {
+    "at": {
+      "inc": "in_zw7ecuvjlkjfhwyhzwzknb7sgy",
+      "kind": "rules",
+      "scope": "sc_n5fwgxvacfg5nmiw4p5yar76e7odokdvn2mlxldn5q3rzpruwweq"
+    },
+    "head": {
+      "hash": "sha256:bb99e0cfdca0aca7fd89f25417bfc06acbe5b166b607f612dd80e1e40b95addc",
+      "seq": 4
+    },
+    "approvals": 1,
+    "ownerMayReview": false,
+    "issueDigest": "sha256:82a938c8f54ddcac7974ca688ebea7d51c35d2aa70f4e3729965e9f915bc464e",
+    "changeDigest": "sha256:4945948396a0417aabc5bc66520036d39d179d131aaade1428da55ee96ed7b77"
+  },
+  "issue": {
+    "at": {
+      "inc": "in_pa4prtjr7t4o4v4bvi4t6ck7xa",
+      "kind": "lane",
+      "scope": "sc_nqmsfn6w5e5ba3mvmjhrues7xe44kwdhfe7p3dmxn65dohkf7bba"
+    },
+    "title": "TEST G3b content before repository binding",
+    "body": "Keep this issue, its original text, and its native history when this room gains its reviewed GitHub repository.",
+    "bodyDigest": "sha256:489e2d124a3e6e49b9f85b1082383212838ca6d34625bfb11be1cfe870c9d23e",
+    "bodyBytes": 111,
+    "head": {
+      "hash": "sha256:05b3fd5cebbdb73bc5f6f0501db3b4f48ee3b0547f149f18fca056715515f983",
+      "seq": 1
+    },
+    "historyEntries": 2,
+    "historySha256": "4a97851acb226f2a51aaed92248388732e814e303ccb438b92c2630d2672a808",
+    "allEntryHashesVerified": true
+  },
+  "destination": {
+    "at": {
+      "inc": "in_252sukzzwfnbmmt25jtenekatm",
+      "kind": "destination",
+      "scope": "sc_xfpp7pd775e2b7aoeglflzgnrzursvhtbeoyaojp6lfhdytspuha"
+    },
+    "head": {
+      "hash": "sha256:99b006d1360c7dc7554dd83f99f5d251fe13557ff5317d064a82fb7ec06da122",
+      "seq": 1
+    },
+    "definition": "platform:destination@18",
+    "branch": {
+      "state": "unpublished",
+      "values": {
+        "founderHandle": "@g3bwitness",
+        "head": null,
+        "import": false,
+        "judging": null,
+        "membership": "sc_2m6groa2mxxgqzmaawhwddvzyjcgnpmqhgnv46aygcowabhnxn5q",
+        "name": "g3-witness-2",
+        "repository": null,
+        "rules": "sc_n5fwgxvacfg5nmiw4p5yar76e7odokdvn2mlxldn5q3rzpruwweq",
+        "rulesCertificateRequest": null,
+        "slot": null,
+        "token": null
+      }
+    }
+  },
+  "operatorKeyUnchanged": true,
+  "recoveryKeyUnchanged": true,
+  "retainedPlanUnchanged": true
+}

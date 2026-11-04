@@ -1,0 +1,33 @@
+{
+  "qualification": "Exact immutable public main export; tracked Git files only. No dependencies, client home, private project or key enters the archive. Reviewed configuration inputs travel separately. No deployment or G3 acceptance.",
+  "mainCommit": "bf3bceb667e99876d2edc4880c3c337f944f5fbe",
+  "mainTree": "0db11883ddfbc7d6435ba5d921a4fd375aab494e",
+  "archive": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-binding-packet/main-source.tar.gz",
+  "archiveBytes": 65590391,
+  "archiveSha256": "f4649a86b24a7726a077c8b04eab7c007c71d3d29cdc14ebe7322e04c61cf7fb",
+  "gitInventory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-binding-packet/source-git-inventory.ndjson",
+  "gitInventorySha256": "6f22babe4f7937f4406e8259f3edd7394fbf5e5dce47a90e69878e70b05f22f5",
+  "gitFileCount": 3987,
+  "everyGitBlobAndExecutableModeVerified": true,
+  "lockfileSha256": "c835dfee04d7dc8bb946ab08e38d79d54aa2bade3c03d917319a835431014fc6",
+  "sourceDestination": "/Users/inguz/dap-host-g3b-20261103/source-binding-bf3bceb6",
+  "existingSourceDonor": "/Users/inguz/dap-host-g3b-20261103/source-cli-bb66b1ab",
+  "dependencyManifestsUnchangedFromPriorRuntime": true,
+  "newPlanOrRegisterRequired": false,
+  "clientHome": "/Users/inguz/dap-host-g3b-20261103/client",
+  "fleetPrefix": "/Library/dap-host-h3-20261029",
+  "bindingRows": 2,
+  "bindingsSha256": "1972d94994267daf93773125400a6914a0de180b377994cf75c78fd5178baf21",
+  "retainedOriginalBindingSha256": "234755b04a7411602c42a7390e2e7146b6e91671a4260d231eec4918728bbfdc",
+  "publicAppConfigSha256": "0aaed32c7058659d9936f4387f3244c5173673a112be860ece2d90197f81dd10",
+  "installedRootsSha256": "79fa815ac1949796588436b18d37c01171d700e4ea26379d0f46ef1f17ee28a7",
+  "sourceTemplateDelta": "/Users/hughpyle/play/artroom-evidence/2026-11-03-g3b-binding-packet/source-template-delta.json",
+  "requiredAncestorsVerified": [
+    "5923297845f6fd9cdcb882e4e2fc20ff2716fe0c",
+    "554a2666faae0460b12c7b2c06bf00cacb95ce13",
+    "bb66b1ab18d0fd3726c41a7d6538e6fb1de0439b",
+    "1ec3a2526636fa99858b0625a8e7d600d79ba772",
+    "6d0bd190f3ce1129928c3678c5690cdbcc170bd2"
+  ],
+  "ownedDependencyLinksVerified": 32
+}
