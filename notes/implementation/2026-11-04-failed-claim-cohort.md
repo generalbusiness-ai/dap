@@ -46,7 +46,24 @@ The Native CLI edit owner, Page recorder, retained-editor Native owner,
 closed-protocol controls, compiler contexts and regenerated Page assets pass.
 The recorder's fixture identities stay in private raw custody. The initial
 [Card browser run](https://github.com/generalbusiness-ai/dap/actions/runs/41901584043)
-passed at `cbc46369`; rendered checks for the repair head still follow.
+passed at `cbc46369`. The [Card repair run](https://github.com/generalbusiness-ai/dap/actions/runs/41904637587)
+passes at `044c3fd0`.
+
+The [Page repair run](https://github.com/generalbusiness-ai/dap/actions/runs/41904371095)
+passes its screen capture step, then fails in the recorded demo. The verifier
+correctly includes the new cohort's cleanup-status line, but the rehearsal's
+exact output expectation omitted that cohort. The expectation now includes
+Register26 without changing verification or disclosure checks. All six Native
+demo rehearsal cases pass with recording enabled; the script compiler passes.
+
+Two historical recovery witnesses intentionally share the founder and recovery
+key. The new default correctly refuses that setup. Their fixture now explicitly
+selects the historical publication cohort and trusts only its own exact
+in-process Worker transport for the configured-service acknowledgement. Both
+original recovery and revocation assertions remain and pass. The fixture
+compiler passes. Private evidence retains the initial default-cohort refusal
+and the explicit selection's first refusal without that transport trust.
+A new Page workflow must validate this follow-up.
 
 ## Evidence and review status
 

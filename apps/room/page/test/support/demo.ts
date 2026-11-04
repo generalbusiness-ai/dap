@@ -141,7 +141,11 @@ export async function demo(wrap: (fetch: Fetch, owner: SessionOwner) => Fetch = 
     const paul = person();
     const run = (who: Context, ...argv: string[]): Promise<Outcome> => wait(() => command(who, argv));
 
-    ok(await run(rita, "install", SERVICE, "--host", at.host, "--namespace", at.namespace));
+    // This explicit historical selection trusts only the fixture's own exact
+    // in-process Worker transport for its configured-service acknowledgement.
+    if (setup.recoveryIsFounder) rita.trustedCreationService = { service: SERVICE, fetch: rita.fetch! };
+    // Shared-key recovery witnesses retain R18; the current default refuses that setup.
+    ok(await run(rita, "install", SERVICE, "--host", at.host, "--namespace", at.namespace, ...(setup.recoveryIsFounder ? ["--cohort", "archive-device-publication"] : [])));
     active();
     const installed = (await rita.store.config())!;
     active();

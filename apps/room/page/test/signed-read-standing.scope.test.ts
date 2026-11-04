@@ -617,8 +617,8 @@ test("a new scope: a lane that a revoked key opened in the delay ends at the sam
 });
 
 // STAND-IN for a creation made by hand: the demo's store names the founder's key as the recovery key. The command line and the page each
-// make a separate recovery key. The signed `found` and `first-key` are real, and no rule of either refuses this choice on the demo's default pins.
-// The `separate-recovery` cohort refuses it, so this witness stays on those pins.
+// make a separate recovery key. The signed `found` and `first-key` are real on the historical publication cohort.
+// The current default and separate-recovery cohort refuse this setup, so these two witnesses explicitly retain R18.
 test("a key that is also the room's recovery key keeps signing at membership after its revocation, and each act restarts its read of membership; only a rotation ends that", async () => {
   const d = await demo(undefined, null, { recoveryIsFounder: true });
   try {
