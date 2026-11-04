@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "qualification": "One actual frozen independent MCP contract-oracle gate, all terminal phases, exact source and dependency identity, and private raw-original retention. No deployment, host acceptance or historical archive cause.",
+  "fileCount": 13,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-mcp-contract-gate-validation",
+      "fileCount": 13,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 976,
+          "sha256": "2f29a2391d5ebedd0678f3f5c175f1ac52fe24d552402a67b554574b1535c9ef"
+        },
+        {
+          "path": "after.json",
+          "bytes": 1923,
+          "sha256": "26682a227e919a3262a4727a71dfc33afcebc602c771a1801e1076364daa39e1"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1841,
+          "sha256": "2057b657d254470257db2c892b0009530231e78111ef7603d70b7ccb42bb79f1"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1923,
+          "sha256": "26682a227e919a3262a4727a71dfc33afcebc602c771a1801e1076364daa39e1"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 6894,
+          "sha256": "b632f337807d9c79bade575c8db1fce538c38fd4466965a7c111d28655c31177"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 394,
+          "sha256": "79d420f643d74bd0af0543ece0461b11647e11d6d586f176015613f853c58799"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1922,
+          "sha256": "64a6b7d4e48797b9ff8d8a0014d7498e15163cb323660ed4f837592fb312b0df"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 973,
+          "sha256": "4dc0b686441c7c5a824afccbf7cba12f22191e3da8eb5cf52f3de79c0d7250eb"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 590,
+          "sha256": "132b593a0769a5a98fdcca3db47bcf6b675f06d3a3f2fb4bc7a7764d57e553d3"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 5841,
+          "sha256": "ec2803c6af9b1b516bfe78ebf546115e2e16c4d8916f5f0949b98359e105a355"
+        }
+      ]
+    }
+  ]
+}

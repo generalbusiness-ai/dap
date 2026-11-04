@@ -1,0 +1,31 @@
+{
+  "qualification": "Unmodified generated upstream schemas and licenses. The future test oracle must not derive admitted shapes from dap types or fixture handlers.",
+  "revisions": {
+    "2026-01-26": "cf599cc462406accc90ec3ca7879e3a22a9fc2a8",
+    "2025-11-21": "4c51eb0301aece4fe55ae6136bf6444f6a484569"
+  },
+  "repository": "https://github.com/modelcontextprotocol/ext-apps",
+  "schemaPath": "src/generated/schema.json",
+  "files": [
+    {
+      "path": "2026-01-26.schema.json",
+      "bytes": 221278,
+      "sha256": "3823abdec2ab00069420812520c20f561428e1bf328c8f61189094f5160e33d9"
+    },
+    {
+      "path": "2025-11-21.schema.json",
+      "bytes": 168380,
+      "sha256": "0cf806f95572908e472a68baba92a5a5b351af2c28703bff40563b897f73bae9"
+    },
+    {
+      "path": "2026-01-26.LICENSE",
+      "bytes": 12227,
+      "sha256": "0382b0057770ca05e9c350a50aa3b1c1fea84da0bc81d723bf00b9aa841be58a"
+    },
+    {
+      "path": "2025-11-21.LICENSE",
+      "bytes": 1071,
+      "sha256": "e27cb5bb5b65571ef40e3054243cddbd58a0b6406e62555790a6948ebbdaca1b"
+    }
+  ]
+}

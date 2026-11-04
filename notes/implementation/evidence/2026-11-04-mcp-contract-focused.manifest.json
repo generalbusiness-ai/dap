@@ -1,0 +1,370 @@
+{
+  "version": 1,
+  "qualification": "Independent pinned contract provenance, unchanged dependency resolution, focused real-caller reversion control and visible malformed initialization proof. No full Card CI or gate result yet.",
+  "fileCount": 69,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-mcp-contract-upstream",
+      "fileCount": 25,
+      "files": [
+        {
+          "path": "LICENSE",
+          "bytes": 12227,
+          "sha256": "0382b0057770ca05e9c350a50aa3b1c1fea84da0bc81d723bf00b9aa841be58a"
+        },
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2134,
+          "sha256": "f9bedcfc75d3612ce110e033022740b4d37cee8c4b9c75fcc17bf4528043e6e7"
+        },
+        {
+          "path": "files-read.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "older-LICENSE",
+          "bytes": 1071,
+          "sha256": "e27cb5bb5b65571ef40e3054243cddbd58a0b6406e62555790a6948ebbdaca1b"
+        },
+        {
+          "path": "older-files-read.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "older-package.json",
+          "bytes": 4659,
+          "sha256": "13d004e99324f7194c624e37e6a06f90d088f4393f62676eb3029090ea1decff"
+        },
+        {
+          "path": "older-src-generated-schema.json",
+          "bytes": 168380,
+          "sha256": "0cf806f95572908e472a68baba92a5a5b351af2c28703bff40563b897f73bae9"
+        },
+        {
+          "path": "older-src-generated-schema.ts",
+          "bytes": 26420,
+          "sha256": "6b2cd3d3f4dcb968234b74346dba8cc3227d7299dd689c87b9f5850e48a59794"
+        },
+        {
+          "path": "older-upstream-files.json",
+          "bytes": 1757,
+          "sha256": "b12eba2f303dd0f0280b0eb42e8e5ed27f1fe304f251a1b96a9a38ef3a29ccd3"
+        },
+        {
+          "path": "older-upstream-tree.json",
+          "bytes": 79936,
+          "sha256": "04e85b88e7bd7022764101175c17873ef2ba0b380966178bec924661f438abf7"
+        },
+        {
+          "path": "outbound-contract-declarations.json",
+          "bytes": 5253,
+          "sha256": "0254cc4a38391a7b2d58f0df71ffb7eefac0d0e5b3b82c172f9363bfa4d8e28d"
+        },
+        {
+          "path": "package.json",
+          "bytes": 6221,
+          "sha256": "5fed481cfba7b91365361e483fbf488de55d4d14ce9b0fcff1c612c5e290a450"
+        },
+        {
+          "path": "revision-coverage-limit.json",
+          "bytes": 729,
+          "sha256": "801969850cfc210687ae0eaf5df56aeb4658bff2fa1ef3d32280369d955e6b27"
+        },
+        {
+          "path": "schema-candidates.json",
+          "bytes": 10158,
+          "sha256": "7ca9806bf86318aedf26fa8b8d248f0278d1b7a0cb3880e5620ba47d3c9ce2cb"
+        },
+        {
+          "path": "schema-loader-probe-result.json",
+          "bytes": 648,
+          "sha256": "cfccf96d4d190ce008b5c55627284aa30f17fd22da1e7c83a0bbe4346cf6647a"
+        },
+        {
+          "path": "schema-loader-probe.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "schema-loader-probe.mjs",
+          "bytes": 1468,
+          "sha256": "105207aef0c2e38c64bdc757657a4e386e5afe24953a539e16aa661bf9fe66e1"
+        },
+        {
+          "path": "schema-loader-probe.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "schema-loader-probe.stdout",
+          "bytes": 210,
+          "sha256": "bed03fb95c85e8278aa0821814fb81a59dc7a8782c0be77c24e2d03536a32776"
+        },
+        {
+          "path": "src-generated-schema.json",
+          "bytes": 221278,
+          "sha256": "3823abdec2ab00069420812520c20f561428e1bf328c8f61189094f5160e33d9"
+        },
+        {
+          "path": "src-generated-schema.ts",
+          "bytes": 40219,
+          "sha256": "678f11a9288642ab4cf6c765a31238ee508027961f25941f9b13cce28de298d0"
+        },
+        {
+          "path": "src-spec.types.ts",
+          "bytes": 29430,
+          "sha256": "f46212be3355fa0437c81b01659187efacdeef6fa50be23be02a47d03610bc6a"
+        },
+        {
+          "path": "tree-read.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "upstream-files.json",
+          "bytes": 2208,
+          "sha256": "15cd3c70cdee432c3e3f83f8ef80ffccb42aadbbda3908e3ae8d2d8c15a3f385"
+        },
+        {
+          "path": "upstream-tree.json",
+          "bytes": 151482,
+          "sha256": "9447a7563f28c9995a9a28b7a0b0d2180ba36fb0d0db0be78c757d0550d41c70"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-mcp-contract-preparation",
+      "fileCount": 12,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 972,
+          "sha256": "3690826b86c21d1897a8031b378a018ae1c5250b386cb94e74b225de8062a8fd"
+        },
+        {
+          "path": "declared-dependencies.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "declared-dependencies.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "declared-dependencies.stdout",
+          "bytes": 1457,
+          "sha256": "21dc602154bbf08d87833051bd2667f3c673d027d0978b98f5ad3cbab91ac8b3"
+        },
+        {
+          "path": "dependency-copy.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "dependency-copy.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "dependency-copy.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "dependency-declaration-proof.json",
+          "bytes": 730,
+          "sha256": "7f92b3c7cff6812faddd89e3390497cf995b0a820af5b7e81ae1e984abdc8a27"
+        },
+        {
+          "path": "prepared.json",
+          "bytes": 1327,
+          "sha256": "11e1ee5befdba334a63f5bd417d4edffd4be8a09daee96c03353d25ac38014c0"
+        },
+        {
+          "path": "worktree.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "worktree.stderr",
+          "bytes": 71,
+          "sha256": "7a956f3e3eb45b00b6da4af28d280097666e691de08ca7a8821c54b8990bcf3a"
+        },
+        {
+          "path": "worktree.stdout",
+          "bytes": 65,
+          "sha256": "7f3d68e359b1e446317ddcf03d69be924741834ef63e3b5db13ac65282350618"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-mcp-contract-focused-validation",
+      "fileCount": 32,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 2900,
+          "sha256": "fbbc5206670c390d235e32520868b9b12dd08debd8f5c0053be946e4ffa48e56"
+        },
+        {
+          "path": "browser-compiler.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "browser-compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "browser-compiler.stdout",
+          "bytes": 2065,
+          "sha256": "ae63ca9f9178076ab02d8604cb206c105b4ea6275ba25a0fdb53a33f817beb88"
+        },
+        {
+          "path": "browser-extraction.json",
+          "bytes": 563,
+          "sha256": "7627f3d1670dcbada56336a05d2eb1f9f60f92c4ed57756a1ecedd11a50ee452"
+        },
+        {
+          "path": "caller-reversion-control.json",
+          "bytes": 616,
+          "sha256": "afdf76760f6441cd28142d41771e7c968df4000e34e8c0c41b37b88551e54a33"
+        },
+        {
+          "path": "contract-2025-11-21-refused-0.png",
+          "bytes": 43947,
+          "sha256": "763df9312cc25a9b7527a2cdb8674b8d39cd662263d8416f3269c88f505504ba"
+        },
+        {
+          "path": "contract-2026-01-26-available-0.png",
+          "bytes": 35260,
+          "sha256": "4663d777e23fbe397b2777687780b597d810108de51f25bef6f5b5c6984f75d0"
+        },
+        {
+          "path": "contract-malformed-missing-version.png",
+          "bytes": 18404,
+          "sha256": "e32f0f266503218058b5bdcf675643b11ed238b23bb70730168c396b6e4323d6"
+        },
+        {
+          "path": "contract-malformed-primitive.png",
+          "bytes": 13261,
+          "sha256": "8a92d161a4dcebc28525330fa469136a9fa803438fa342b860d8ed31dcba0078"
+        },
+        {
+          "path": "dependency-declaration-proof.json",
+          "bytes": 730,
+          "sha256": "7f92b3c7cff6812faddd89e3390497cf995b0a820af5b7e81ae1e984abdc8a27"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 7447,
+          "sha256": "02e4ea40ce7f47e07d38ea5a7a00766c785b1ff5111aa9f047ccfdef776129e4"
+        },
+        {
+          "path": "explicit-handoff.png",
+          "bytes": 32971,
+          "sha256": "7cd5cc120ec960534fcb6e05087c6595e8bf25db0e7e32463d1fafe0091bce78"
+        },
+        {
+          "path": "malformed-visible-browser.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "malformed-visible-browser.stderr",
+          "bytes": 191,
+          "sha256": "ef683cf5c22f2f14261cd402bfac3f7df6e2dd2fa61471222b37eb33319c147f"
+        },
+        {
+          "path": "malformed-visible-browser.stdout",
+          "bytes": 57,
+          "sha256": "8645f9e277dc47c32b4a5d0979a953bc0f8841d8e6ca50d8da2acfe0645056b4"
+        },
+        {
+          "path": "malformed-visible-test-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "malformed-visible-test-compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "malformed-visible-test-compiler.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "malformed-visual-correction.json",
+          "bytes": 569,
+          "sha256": "8fffe57d252b44d5ee222cd4435aa0bdbad123139936c500657ac5a38ff0a93e"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 558,
+          "sha256": "82b0eb0a16cedb0855201775899f65884130aa032d75702dbf72e4d88379af14"
+        },
+        {
+          "path": "result.json",
+          "bytes": 21413,
+          "sha256": "ec52a4a0d389afd859a1feffe855a09d24711b5df30a459b470444e4095b97a5"
+        },
+        {
+          "path": "run2-test-compiler.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "run2-test-compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run2-test-compiler.stdout",
+          "bytes": 150,
+          "sha256": "cb00b9be70d1a0b5167b1299163b8029f9cc9ebaa001543f3bd978877c6201c7"
+        },
+        {
+          "path": "run3-bridge-owner.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "run3-bridge-owner.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run3-bridge-owner.stdout",
+          "bytes": 258,
+          "sha256": "e8ef33cd967f9e1261c7b22229b3997b2b79c159cf04c250edb52e0aefdc0e95"
+        },
+        {
+          "path": "run3-test-compiler.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "run3-test-compiler.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "run3-test-compiler.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "source-files.json",
+          "bytes": 2159,
+          "sha256": "1f31f1c360482cbebc19c80aab90fe9900d3b8bc93b5200d8904a2f6fa518a4d"
+        }
+      ]
+    }
+  ]
+}

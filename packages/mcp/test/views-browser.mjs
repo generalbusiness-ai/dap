@@ -10,12 +10,13 @@ import { startViewsHost } from './support/views-host.ts';
 import { wordsFixture } from './support/card-words.ts';
 import { nativeActorCards, recordedActorFixture } from './support/actor-cards.ts';
 import { TOOL_WAIT_MS } from '../src/views/waits.ts';
+import { assertAppMessages } from './support/mcp-apps-contract.ts';
 import { mkdir, writeFile } from 'node:fs/promises';
 const out=process.env.VIEW_CAPTURE_OUT;
 if (!/^\/(?:private\/)?tmp\//.test(out)) throw new Error('Browser evidence belongs in a scratch directory under /tmp.'); await mkdir(out,{recursive:true});
 const nativeActors=nativeActorCards(out);
 const host=await startViewsHost({words:scene=>scene.startsWith('native-actor-')?Promise.resolve(recordedActorFixture(nativeActors.scenes.find(row=>row.kind===scene.slice('native-actor-'.length)))):wordsFixture(scene)}); let browser;
-const report={browserPlugin:'Browser plugin not available',playwright:'1.63.0',origin:host.url,sandbox:host.sandboxOrigin,cases:[],errors:[]};
+const report={browserPlugin:'Browser plugin not available',playwright:'1.63.0',origin:host.url,sandbox:host.sandboxOrigin,cases:[],contracts:[],errors:[]};
 async function opened(params={},width=592){
   const page=await browser.newPage({viewport:{width:width+32,height:1000}}), errors=[];
   page.on('pageerror',e=>errors.push(String(e)));page.on('console',m=>{if(['error','warning'].includes(m.type()))errors.push(m.text())});
@@ -54,11 +55,14 @@ async function actorMark(app,kind,mark,text){
 }
 
 async function verify(page,app,errors,label){
+  const proof=await page.evaluate(()=>window.proof);
+  const contract=assertAppMessages(proof.messages,proof.config.uiRevision,proof.hostReplies);
+  report.contracts.push({label,...contract});
   const measure=await metrics(app);assert.equal(measure.overflow,false,label+' overflow');
   for(const control of measure.controls){assert.ok(control.width>=43.9&&control.height>=43.9,label+' target '+JSON.stringify(control))}
-  const proof=await page.evaluate(()=>window.proof);assert.deepEqual(proof.errors,[],label+' host errors');assert.deepEqual(errors,[],label+' console');
+  assert.deepEqual(proof.errors,[],label+' host errors');assert.deepEqual(errors,[],label+' console');
   const context=JSON.stringify(proof.contexts);for(const privateText of ['Choose the first milestone','Review the working terms','Rita','controlled by','A small decision','The proposal keeps'])assert.ok(!context.includes(privateText),label+' private context '+privateText);
-  return {measure,proof};
+  return {measure,proof,contract};
 }
 try{
   browser=await chromium.launch({executablePath:process.env.CHROMIUM,headless:true}); report.browser=browser.version();
@@ -249,6 +253,7 @@ try{
     const {page,app,errors}=await opened({},390);
     await click(page,app,app.getByRole('link'));
     await click(page,app,app.getByRole('button',{name:'Ask in chat',exact:true}));
+    await page.waitForFunction(()=>window.proof.messages.some(message=>message.method==='ui/message'));
     const evidence=await verify(page,app,errors,'explicit-handoff');
     const messages=evidence.proof.messages.filter(message=>message.method==='ui/message');
     assert.deepEqual(messages.map(message=>message.params),[{role:'user',content:[{type:'text',text:'Help me with question q7, revision v2.'}]}],'EXPLICIT HANDOFF CONTENT ARRAY: the real caller sends one text content block with the exact card identity');
@@ -258,6 +263,54 @@ try{
     await page.screenshot({path:out+'/explicit-handoff.png'});
     report.cases.push({label:'explicit-handoff',messages:messages.map(message=>message.params),chat:evidence.proof.chat,refusals:evidence.proof.messageRefusals});
     await page.close();
+  }
+  // Bounded identity/text enumeration over the generated production caller.
+  // Scope projections and optional host refusals are scripted. No LLM or
+  // Native authority follows from a fixture model-turn counter.
+  for(const uiRevision of ['2026-01-26','2025-11-21'])for(const noOptional of [false,true])for(const [seed,identity] of [
+    {kind:'question',item:'q7',revision:'v2'},
+    {kind:'manifest',item:'21',revision:'23'},
+    {kind:'question',item:'問"7\n続き',revision:'版é-2'},
+  ].entries()){
+    const width=noOptional?320:592,label=`contract-${uiRevision}-${noOptional?'refused':'available'}-${seed}`;
+    const page=await browser.newPage({viewport:{width:width+32,height:1100}}),errors=[];
+    page.on('pageerror',error=>errors.push(String(error)));page.on('console',message=>{if(['error','warning'].includes(message.type()))errors.push(message.text())});
+    await page.goto(host.url+'/?'+new URLSearchParams({fixture:'contract',identity:JSON.stringify(identity),uiRevision,...(noOptional?{noOptional:'1'}:{})}));
+    assert.equal(await page.title(),'S2 card fixture host');
+    const app=page.frameLocator('#frame').frameLocator('iframe');
+    await app.getByRole('link',{name:'Choose the first milestone',exact:true}).waitFor();
+    await click(page,app,app.getByRole('link',{name:'Choose the first milestone',exact:true}));
+    assert.equal(await page.evaluate(()=>proof.modelTurns),0,'Context and navigation request no model turn');
+    await click(page,app,app.getByRole('button',{name:'Ask in chat',exact:true}));
+    await page.waitForFunction(()=>{const message=proof.messages.find(value=>value.method==='ui/message');return message&&proof.hostReplies.some(reply=>reply.id===message.id)});
+    // A legacy context extension must have actually refused before the oracle
+    // can classify it outside that revision's admitted method set.
+    await page.waitForFunction(()=>proof.messages.filter(message=>message.id!==undefined&&message.method).every(message=>proof.hostReplies.some(reply=>reply.id===message.id)));
+    const evidence=await verify(page,app,errors,label),said=`Help me with ${identity.kind} ${identity.item}, revision ${identity.revision}.`;
+    const messages=evidence.proof.messages.filter(message=>message.method==='ui/message');
+    assert.deepEqual(messages.map(message=>message.params),[{role:'user',content:[{type:'text',text:said}]}],'INDEPENDENT HANDOFF: exact generated identity and text');
+    assert.equal(evidence.proof.modelTurns,noOptional?0:1,'Only an accepted explicit handoff makes a fixture model turn');
+    assert.deepEqual(evidence.proof.chat,noOptional?[]:[said]);
+    assert.equal(evidence.contract.refusedExtensions.length>0,uiRevision==='2025-11-21','A refused newer context method is not legacy conformance');
+    if(seed===0)await page.screenshot({path:out+'/'+label+'.png'});
+    report.cases.push({label,identity,modelTurns:evidence.proof.modelTurns,contract:evidence.contract});
+    await page.evaluate(()=>window.sendHost({id:901,method:'ui/resource-teardown',params:{}}));
+    await page.waitForFunction(()=>proof.messages.some(message=>message.id===901&&message.result!==undefined));
+    const closed=await page.evaluate(()=>window.proof);
+    assert.equal(closed.modelTurns,evidence.proof.modelTurns,'Teardown makes no model turn');
+    report.contracts.push({label:label+'-teardown',...assertAppMessages(closed.messages,uiRevision,closed.hostReplies)});
+    await page.close();
+  }
+  for(const [malformed,notice] of [['primitive','The host returned a malformed reply.'],['missing-version','This host returned unsupported MCP Apps revision [missing].']]){
+    const page=await browser.newPage({viewport:{width:624,height:1000}}),errors=[];
+    page.on('pageerror',error=>errors.push(String(error)));page.on('console',message=>{if(['error','warning'].includes(message.type()))errors.push(message.text())});await page.goto(host.url+'/?'+new URLSearchParams({malformed}));
+    assert.equal(await page.title(),'S2 card fixture host');
+    const app=page.frameLocator('#frame').frameLocator('iframe');await app.getByText(notice,{exact:false}).waitFor();
+    const proof=await page.evaluate(()=>window.proof),contract=assertAppMessages(proof.messages,'2026-01-26',proof.hostReplies);
+    assert.deepEqual(proof.messages.map(message=>message.method),['ui/initialize'],'Malformed initialization sends no follow-up');
+    assert.equal(proof.modelTurns,0);assert.deepEqual(proof.chat,[]);assert.deepEqual(proof.errors,[]);assert.deepEqual(errors,[]);
+    await page.screenshot({path:out+'/contract-malformed-'+malformed+'.png'});
+    report.contracts.push({label:'contract-malformed-'+malformed,...contract});report.cases.push({label:'contract-malformed-'+malformed,contract});await page.close();
   }
   // The desktop AI app's shape: the model's call opens the view on one process, and the card's calls reach another of the same home.
   const proofOf=page=>page.evaluate(async()=>fetch('/proof?instance='+window.proof.config.id).then(r=>r.json()));
@@ -389,6 +442,8 @@ try{
     assert.deepEqual((await calledTools(page)).slice(0,3),['view_read','view_board','view_read'],'A declared card names its own opening tool');
     assert.deepEqual(errors,[]);report.cases.push({label:'declared-two-process'});await page.close();
   }
+  const covered=new Set(report.contracts.flatMap(row=>Object.keys(row.counts)));
+  for(const method of ['ui/initialize','ui/notifications/initialized','ui/notifications/size-changed','ui/update-model-context','ui/request-display-mode','ui/message','tools/call'])assert.ok(covered.has(method),'INDEPENDENT MCP CONTRACT: exercised outbound method '+method);
   await writeFile(out+'/report.json',JSON.stringify(report,null,2));console.log(JSON.stringify({cases:report.cases.length,browser:report.browser,errors:report.errors,output:out}));
 }catch(error){for(const context of browser?.contexts()??[])for(const page of context.pages()){try{await page.screenshot({path:out+'/failure.png'});await writeFile(out+'/failure.json',JSON.stringify({url:page.url(),proof:await page.evaluate(()=>window.proof),body:await page.frameLocator('#frame').frameLocator('iframe').locator('body').innerText(),state:await page.evaluate(async()=>fetch('/proof?instance='+window.proof.config.id).then(r=>r.json()))},null,2))}catch(capture){console.error('capture: '+capture)}}report.errors.push(String(error));await writeFile(out+'/report.json',JSON.stringify(report,null,2));console.error(error);process.exitCode=1}
 finally{if(browser)await browser.close();await host.close()}
