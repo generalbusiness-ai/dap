@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "qualification": "Planner-accepted retained limits and exact follow-up witness inputs, including the initial no-body run. No gate, review, landing, deployment or real one-hour token crossing.",
+  "fileCount": 5,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom/.builder-worktrees/failed-claim-cohort-20261104/notes/implementation/evidence/2026-11-04-failed-claim-cohort-limits",
+      "fileCount": 5,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 349,
+          "sha256": "539bc0e6dbb75cf5ef7275f4e5914be1958f48900cf742ec7dabdf6956b6e855"
+        },
+        {
+          "path": "command-results.json",
+          "bytes": 4900,
+          "sha256": "e5570daae60d2929ade3fd8ab521e2912a86c62287c9665df4f189a32ea2ac15"
+        },
+        {
+          "path": "limit-witnesses.json",
+          "bytes": 1583,
+          "sha256": "a1ea7e6171c8fe36599de55f66f2b073b3cd74a22aa7e5254fb93dc95ecec141"
+        },
+        {
+          "path": "planner-ruling.json",
+          "bytes": 2172,
+          "sha256": "2c7b7c5a37b629c113ad2d74a74091d9104e67f7d6c62066342c70867bc2fd63"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 2899,
+          "sha256": "75b7831394cd545d581e248e5622f5e3a2c1b8b2c815969902f2e248fdfb2e2b"
+        }
+      ]
+    }
+  ]
+}

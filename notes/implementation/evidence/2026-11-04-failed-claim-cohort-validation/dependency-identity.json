@@ -1,0 +1,21 @@
+{
+  "packageLockSha256": "5a717d43fd1c1c54bb029db4067806940b640f60e320c9ebe33fe099dfd2e73c",
+  "qualification": "Owned APFS clone of the previously verified dependency view; no packages installed. Each compiler/body keeps its exact source and command. Startup Vite cache condition appears per command, not as a global cold-cache claim.",
+  "node": "v26.13.0",
+  "workspaceLinks": {
+    "dap-package-graph": "/Users/hughpyle/play/artroom/.builder-worktrees/failed-claim-cohort-20261104/packages/package-graph",
+    "dap-client": "/Users/hughpyle/play/artroom/.builder-worktrees/failed-claim-cohort-20261104/packages/client",
+    "dap-checkers": "/Users/hughpyle/play/artroom/.builder-worktrees/failed-claim-cohort-20261104/packages/checkers",
+    "dap-mcp": "/Users/hughpyle/play/artroom/.builder-worktrees/failed-claim-cohort-20261104/packages/mcp",
+    "dap-contract": "/Users/hughpyle/play/artroom/.builder-worktrees/failed-claim-cohort-20261104/packages/contract",
+    "dap-cli": "/Users/hughpyle/play/artroom/.builder-worktrees/failed-claim-cohort-20261104/packages/cli",
+    "dap-replay": "/Users/hughpyle/play/artroom/.builder-worktrees/failed-claim-cohort-20261104/packages/replay",
+    "dap-platform": "/Users/hughpyle/play/artroom/.builder-worktrees/failed-claim-cohort-20261104/packages/platform",
+    "dap-derive": "/Users/hughpyle/play/artroom/.builder-worktrees/failed-claim-cohort-20261104/packages/derive",
+    "dap-page": "/Users/hughpyle/play/artroom/.builder-worktrees/failed-claim-cohort-20261104/apps/room/page",
+    "dap-git": "/Users/hughpyle/play/artroom/.builder-worktrees/failed-claim-cohort-20261104/packages/git",
+    "dap-bytes": "/Users/hughpyle/play/artroom/.builder-worktrees/failed-claim-cohort-20261104/packages/bytes",
+    "dap-lanes": "/Users/hughpyle/play/artroom/.builder-worktrees/failed-claim-cohort-20261104/apps/room/lanes",
+    "dap-scope": "/Users/hughpyle/play/artroom/.builder-worktrees/failed-claim-cohort-20261104/packages/scope"
+  }
+}

@@ -1,0 +1,481 @@
+{
+  "qualification": "The named baseline and42completed command units are sealed. The raw collection directory stays writable so later validation may add new units; this immutable index does not claim those future units. Early scratch-origin copies stay qualified in the baseline.",
+  "unitCount": 43,
+  "regularFiles": 3468,
+  "unitSeals": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-baseline",
+      "regularFiles": 148,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "6ef7c0545656b1e8da2752d19f3dd77a3b3961a04b6d6ba20a2f0c3e15509898"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/archive-cross-family-before-fix",
+      "regularFiles": 91,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "e75f809d4631626711e0447066767b4a8c71f342edad662660f3b60340d1c276"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/archive-cross-family-fixed",
+      "regularFiles": 91,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "1e8c20921789add73a3402bde701e6e640d15edcd51fe87594cef6d9b14d631a"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/checkpoint-commit-messages",
+      "regularFiles": 91,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "fb35543bf1bb02ecb1d7d52d17ae39697ea75bce7ea9f9e6aa9696d05185caa4"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/cli-types",
+      "regularFiles": 74,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "b545f0db8d9ee4d2b523abba4e94b0f354f6bdc84319b22fbe760d984778a3a8"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/client-scope-mcp-types",
+      "regularFiles": 74,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "37859fac26586a73f8a9be0710dc831172c3a6de07a4e57fa56274f71999c433"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/core-plain",
+      "regularFiles": 74,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "3131a8ba279365f0c996f30f8c05e56fd059556b8c562e5e4705c3b4473a0f65"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/creation-policy-native",
+      "regularFiles": 79,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "0cfa2eabc5486ee3e219d7e14be1a4e7305095bb68475cfd8f7a857b8a0e175c"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/default-claim-and-story-corrected",
+      "regularFiles": 91,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "38fbab27d5cf90f99836b9d974f34a64592311adb3e5e4afaf84f86717d1ff9d"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/default-fixture-types",
+      "regularFiles": 91,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "2c276f152ab0501b80c785a53c7530c47d66b61f6b664b7fa6720e0c33a03cd8"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/default-install-and-page-native",
+      "regularFiles": 88,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "6bc5ef68ead93d46e6aa8e72af111140deb647249a65a0816d2cfec9a3638662"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/failed-claim-archive",
+      "regularFiles": 74,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "f0950b7a076a52d1b54f3c0e36c344830d598f57517be2f99a96be529d2f4d6a"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/failed-claim-archive-after-network-loss",
+      "regularFiles": 91,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "dd0003958f2c10200fd54b7dc1ce3417ddc5df2bf59b084eab88d1dac1d4cfed"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/failed-claim-invitations",
+      "regularFiles": 74,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "4186ffc4dceabcfdd285d42c75507768d332888b2970f239168262e2524abae5"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/failed-claim-invitations-correct-project",
+      "regularFiles": 74,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "87e4fd1c2eae6bfc69ef19127adaf33c1df5778c254ccddc2d91e11f27f98b1e"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/failed-claim-native",
+      "regularFiles": 74,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "ef36d9155ba47991f53d51f605c94c7d29da15e9bee414b0f8bb1140fa9810c9"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/final-archive-source-types",
+      "regularFiles": 91,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "f030bc16c12c40b7e14b98ecfd7e59e204279d3c1ab93023adff4a0c24edd4d0"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/final-mcp-test-types",
+      "regularFiles": 88,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "bd92398c3e4b7f719035bebe6acfb44d1582b67103be6ddecf78606096ec0079"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/native-catalog-check",
+      "regularFiles": 74,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "f0bd69399e283ea2a2851ca2b1600d61c365b6c2fe5a21ff8631d49dfea9a1f7"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/page-and-views-types",
+      "regularFiles": 78,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "86ff86ed7e3abd56c0eb42bb035f9a9753c7cf26c70ba8b23e87566bc9bdb6da"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/page-assets-generation",
+      "regularFiles": 14,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "ea024f0a5c0ec00e1252927064f886d66baa57d65078fb99033483cfdbd3e707"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/page-assets-owner",
+      "regularFiles": 88,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "3a927c6e3135374c49cab31567221eb3ec540630ccb27f48227ddfbe8267ba2e"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/page-custody-and-ui",
+      "regularFiles": 84,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "c36833462525ca5d1a941c54fe71fdb8e0091d2147b51b3d87d96458f61b354f"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/page-failure-controls",
+      "regularFiles": 87,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "050e82d92404f436143e77484e7f94c4b86ef73dccb2ad45f270d8dee7d25cae"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/page-native-fixture-types",
+      "regularFiles": 91,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "3a0d13e2d204ac45a12e6002c46ffba3b38b3abf40d481dc4140ee2c66041f44"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/page-test-types",
+      "regularFiles": 87,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "8bf0cfd5336b5b79b1efc1d4df024268a401db6a02ce75831e4503aba17cc93f"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/page-types",
+      "regularFiles": 78,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "9dd1afc6feabba5bacbd316219fc76bd6151475df31d3c361fa5e368c7c2f862"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/pin-preservation",
+      "regularFiles": 74,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "52b7ff4e46da44f9a18968c5986e6b0ce645a5679e484562e574b8e59f77f298"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/pin-preservation-corrected",
+      "regularFiles": 75,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "ce754d2089393d1f3209c48319de3ac344cf2878ae18f587392a1f5b23ebbc7d"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/platform-types",
+      "regularFiles": 74,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "5f79fcc93c4e6242e053408c6fe22f65d189c275278c05cef83123f24df353d4"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/pool-compat",
+      "regularFiles": 74,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "7f1e48577ff52fa76b53bdad6711c06826ab77a9d8e931f583f19951d3129f74"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/retained-claim-selector",
+      "regularFiles": 88,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "53bf6bae61014e10d880669f64e55395ccb4c89fef1d8b4e9849b1f6b24879cb"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/retained-host-none-native",
+      "regularFiles": 84,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "52b43aff7e653156538b4b6ce20d85d0ffdcccbb413f672971bbc294bcdea6d2"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/settings-and-source-seals",
+      "regularFiles": 79,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "85a9e836b1762b5550d5067741e5748fbd8788cbcba3f9a4cb2a72adf6056d02"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/shared-helper-owners",
+      "regularFiles": 91,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "541740f0bf46b2e30ecb7748c2d0c3603348d554864a193093a05fcdc5e844be"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/source-checkpoint",
+      "regularFiles": 14,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "9c9aa7437f739e0f4dbc4da855f0dccddea9187d434d89f23a06f10452807e67"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/source-doc-links",
+      "regularFiles": 87,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "565474703a8595c29010b6f1fd81a4fdeb4d73b1928fd63753fd567d13fb61bf"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/token-cli-and-mcp-inventory",
+      "regularFiles": 84,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "cf54ac66b08d3d100948884a9fe8b5e4137d8c4c521e1503642f89ec1c108757"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/updated-default-owners",
+      "regularFiles": 78,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "9f4c8580e6110fea51dc6705da1ae12f89c8e5401435c1d1322c8a5f0b9e25b3"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/updated-settings-inventory",
+      "regularFiles": 91,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "3338ad5ce17c99e7e22bdb2caea29c576d02f9002d50504d4cc090984f989679"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/view-diff-both-families",
+      "regularFiles": 75,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "6043fa9156f8b17602c46572bb8d1e0b18d0ce437698720658e560424f9259a5"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/view-diff-wrong-duration-control",
+      "regularFiles": 77,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "198fa074b95c1c3c4190c5a911dfd6ce2831d365499cb72efd8fd3aa71569f17"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/views-family-boundary",
+      "regularFiles": 84,
+      "symlinks": 0,
+      "privateInventory": {
+        "path": "originals.private.json",
+        "sha256": "824bc8810e04ad897c4c41e9baa811ee0f132f26d1b4ae1cd66a1132463c5aee"
+      },
+      "allRegularFilesVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    }
+  ],
+  "completeIndexSha256": "bac5efd7f969fe7135df76b3c2532cb995daafeec79ab032960c49992e6c023f"
+}

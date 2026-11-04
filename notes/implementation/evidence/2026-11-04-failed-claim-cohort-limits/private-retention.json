@@ -1,0 +1,63 @@
+{
+  "unitCount": 7,
+  "regularFiles": 701,
+  "seals": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/unwired-host-native",
+      "regularFiles": 100,
+      "symlinks": 0,
+      "privateInventorySha256": "796248190fbbda685ab8c55e6fefc40bbb636d60425f2cf3f7a4e25abb76bd72",
+      "allRegularOriginalsVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/unwired-host-native-added",
+      "regularFiles": 100,
+      "symlinks": 0,
+      "privateInventorySha256": "97ef648010e620534d8a3b87b3c699e838a2069d8d1bff312823ffe14635a3eb",
+      "allRegularOriginalsVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/unwired-host-test-types",
+      "regularFiles": 100,
+      "symlinks": 0,
+      "privateInventorySha256": "53d7e4c0a3593d6badab61e818515d9a9e89b30afa03a420c707a2e94efacd58",
+      "allRegularOriginalsVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/focused-note-doc-links",
+      "regularFiles": 100,
+      "symlinks": 0,
+      "privateInventorySha256": "af99312f0f0dcc0d14bf7dd0d245e3b874b1446fb24251ea13f045556a893f7c",
+      "allRegularOriginalsVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/retained-start-register-limit",
+      "regularFiles": 100,
+      "symlinks": 0,
+      "privateInventorySha256": "11d5f18a89d3e428f54acab447daba4530ec06463d8460edb09a545b7cfbf331",
+      "allRegularOriginalsVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/retained-host-family-limit",
+      "regularFiles": 100,
+      "symlinks": 0,
+      "privateInventorySha256": "a382f073fabf34ad31d3526a82eb6662442b7919aa443a62cf732346ea8819b1",
+      "allRegularOriginalsVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-validation/retained-limit-fixture-types",
+      "regularFiles": 101,
+      "symlinks": 0,
+      "privateInventorySha256": "c01a6549862fa200ed985a16c60e2af75c983e9ed4a73b1a1e425b562e27c50d",
+      "allRegularOriginalsVerifiedReadOnly": true,
+      "noLinkTargetsReadOrChanged": true
+    }
+  ],
+  "qualification": "These seven completed follow-up units only; prior43units stay sealed under their original manifest. Raw parent directory permits future unit additions."
+}

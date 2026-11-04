@@ -365,7 +365,7 @@ test("open register install uses the new default and preserves an explicit Regis
 
 // These are scripted service answers; Native host admission is witnessed separately.
 test("host is required and closed before custody; none selects the exact unpublished open plan and keeps its identity", async () => {
-  for (const args of [["install", "--plan", SERVICE], ["install", SERVICE, "--host", "other"], ["install", "--plan", SERVICE, "--host", "none", "--cohort", "archive-device-application"]]) {
+  for (const args of [["install", "--plan", SERVICE], ["install", SERVICE, "--host", "other"], ["install", "--plan", SERVICE, "--host", "none", "--cohort", "archive-device-application"], ["install", "--plan", SERVICE, "--host", "none", "--cohort", "failed-claim"]]) {
     const s = scenario();
     const answer = await command(s.ctx, args);
     expect(answer.code).toBe(2);
@@ -393,13 +393,15 @@ test("host is required and closed before custody; none selects the exact unpubli
   expect((await command(commons.ctx, ["install", "--planned", "--cohort", "commons", "--register-policy", "open"])).code).toBe(0);
   expect(JSON.parse(commons.bodies[0]!).creation).toEqual(commonsPlan["founding"]);
   expect(JSON.parse(commons.bodies[0]!).definition).toBe(COMMONS_COHORT.register);
-  const binding = scenario();
-  expect((await command(binding.ctx, ["install", "--plan", SERVICE, "--host", "none", "--cohort", "repository-binding", "--register-policy", "open"])).code).toBe(0);
-  const bindingPlan = (await binding.store.config())!.plan!;
-  expect(bindingPlan.definition).toBe(REPOSITORY_BINDING_COHORT.register);
-  expect(bindingPlan["founding"].intent.fields).toMatchObject({ host: "none", namespace: "", policy: "open" });
-  expect(binding.bodies).toHaveLength(0);
-  expect((await command(binding.ctx, ["install", "--planned", "--register-policy", "open"])).code).toBe(0);
-  expect(JSON.parse(binding.bodies[0]!).creation).toEqual(bindingPlan["founding"]);
-  expect(JSON.parse(binding.bodies[0]!).definition).toBe(REPOSITORY_BINDING_COHORT.register);
+  for (const [name, cohort] of [["repository-binding", REPOSITORY_BINDING_COHORT], ["own-agent", OWN_AGENT_COHORT]] as const) {
+    const binding = scenario();
+    expect((await command(binding.ctx, ["install", "--plan", SERVICE, "--host", "none", "--cohort", name, "--register-policy", "open"])).code).toBe(0);
+    const bindingPlan = (await binding.store.config())!.plan!;
+    expect(bindingPlan.definition).toBe(cohort.register);
+    expect(bindingPlan["founding"].intent.fields).toMatchObject({ host: "none", namespace: "", policy: "open" });
+    expect(binding.bodies).toHaveLength(0);
+    expect((await command(binding.ctx, ["install", "--planned", "--register-policy", "open"])).code).toBe(0);
+    expect(JSON.parse(binding.bodies[0]!).creation).toEqual(bindingPlan["founding"]);
+    expect(JSON.parse(binding.bodies[0]!).definition).toBe(cohort.register);
+  }
 });

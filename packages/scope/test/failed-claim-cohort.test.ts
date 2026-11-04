@@ -28,7 +28,7 @@ type Life = ReturnType<typeof fixture>;
 type Node = ReturnType<Life["platform"]>;
 
 async function installed(life: Life, policy: "keys" | "open" = "keys", pin: PlatformDefinition = C.register) {
-  const control = { failed: true, creates: 0, deleted: [] as string[], reads: [] as { scope: string; seconds: number }[] };
+  const control = { bound: true, failed: true, creates: 0, deleted: [] as string[], reads: [] as { scope: string; seconds: number }[] };
   const ns: ArtifactsNamespace = {
     create: async name => {
       control.creates++;
@@ -47,7 +47,7 @@ async function installed(life: Life, policy: "keys" | "open" = "keys", pin: Plat
   const R = life.platform(scopeIdOf({ v: 1, kind: "register", definition: pin, creator: null, cause: intentDigest(intent), ordinal: 0 }));
   life.outside(R.name, (given, sql) => artifactsOutside(given, sql, {
     ARTIFACTS_CONFIG: canonicalize({ registerScope: R.name, namespace: NAMESPACE, host: HOST, maxBytes: 10485760, credentialIdentity: "adapter-attempt" }),
-    ARTIFACTS_NAMESPACE: NAMESPACE, ARTIFACTS: ns,
+    ARTIFACTS_NAMESPACE: NAMESPACE, ...(control.bound ? { ARTIFACTS: ns } : {}),
   }));
   expect(await life.wait(() => R.stub.create(signIntent(intent, paul.secret), pin))).toMatchObject({ answer: "accepted" });
   return { R, control, ns };
@@ -86,6 +86,33 @@ test("failed claims release all64 places, and the returning host can serve a new
     expect(summary.items.find(item => item.id === recovered.receipt.fact.seq)?.values["repository"]).toBeTruthy();
     expect(summary.counts).toContainEqual(["claim", "failed", 65]);
     expect(control.creates).toBe(65 * 3 + 1);
+  } finally { life.release(); }
+});
+
+// Invariant: absent wiring consumes no provider attempt and cannot turn an accepted claim into final failure.
+test("an unwired host leaves the claim pending after an hour and resumes when its binding returns", async () => {
+  const life = fixture();
+  try {
+    const { R, control } = await installed(life);
+    control.bound = false;
+    await life.wait(() => R.restart());
+    const accepted = await found(life, R);
+    expect(accepted.answer).toBe("accepted");
+    if (accepted.answer !== "accepted") throw Error("Expected an accepted claim");
+    await exhaust(life, R);
+    life.advance(3_600_000);
+    await effectFixture([R], life.wait);
+    expect(control.creates).toBe(0);
+    const waiting = (await life.wait(() => R.summary())).value;
+    expect(waiting.counts).toContainEqual(["claim", "pending", 1]);
+    expect(waiting.counts).toContainEqual(["claim", "failed", 0]);
+    control.bound = true; control.failed = false;
+    await life.wait(() => R.restart());
+    await effectFixture([R], life.wait);
+    expect(control.creates).toBe(1);
+    const resumed = (await life.wait(() => R.summary())).value;
+    expect(resumed.counts).toContainEqual(["claim", "failed", 0]);
+    expect(resumed.items.find(item => item.id === accepted.receipt.fact.seq)?.values["repository"]).toBeTruthy();
   } finally { life.release(); }
 });
 
@@ -250,6 +277,17 @@ test("Page Start rejects a forged failed hint, then keeps its creator key and or
     expect(failed.outcome.claimState).toBe("failed");
     expect(failed.pending).toBe(false);
     expect(originalStart(service, storage)?.state).toBe("failed");
+    // A genuine current offer for another register cannot retarget retained Start custody.
+    const { R: otherRegister } = await installed(life, "open");
+    const otherClient = await clientSurface(life, otherRegister);
+    const otherOffer = await otherClient.creationOffer();
+    const beforeRetarget = [...values], callsBeforeRetarget = counters.acts;
+    expect(otherOffer.register).not.toEqual(register);
+    await expect(life.wait(() => startRoom(service, storage, { ...options, mode: "new", offer: otherOffer, label: "Must keep original register" })))
+      .rejects.toThrow("The configured register changed");
+    expect([...values]).toEqual(beforeRetarget);
+    expect(counters.acts).toBe(callsBeforeRetarget);
+    expect(originalStart(service, storage)).toMatchObject({ key: creator, operation: originalOperation, state: "failed", configured: { register } });
     control.failed = false;
     const retryOffer = await client.creationOffer();
     const recovered = await life.wait(() => startRoom(service, storage, { ...options, mode: "new", offer: retryOffer, label: "New Page room" }));

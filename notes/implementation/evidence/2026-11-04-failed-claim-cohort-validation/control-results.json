@@ -1,0 +1,25 @@
+{
+  "viewDiff": {
+    "before": "view-diff-both-families: both pass",
+    "wrongDuration": "view-diff-wrong-duration-control: historical passes, new cohort fails",
+    "restoration": {
+      "sourceRestored": true,
+      "restoredSha256": "f04509955a4e58fa093de7106bb4e84686e0248441c84e8b6011adb00e6c2d09",
+      "control": "Force caller hours into the new native destination; shipped witness still passes, new cohort witness fails.",
+      "expectedFailureExit": 1
+    }
+  },
+  "archiveFamilies": {
+    "beforeFix": "archive-cross-family-before-fix: old-family source wrongly accepted for new producer; new-family positive and reverse refusal pass",
+    "afterFixHistorical": "archive-cross-family-fixed: historical family passes; new-family stops on unlocated network loss",
+    "afterFixNew": "failed-claim-archive-after-network-loss: passes alone on unchanged source",
+    "networkCause": "Unknown. This differs from the 10001-pass archive-scale request64552d40; no cause claim for either."
+  },
+  "retainedCorrections": {
+    "pin-preservation": "Pair comparisons passed before an incorrect raw-hash assertion. Corrected probe delegates domain-digest verification to the native generator.",
+    "failed-claim-invitations": "Nonexistent project selector; no body ran. Correct scope project passes.",
+    "page-custody-and-ui": "Obsolete error wording expected register17; corrected assertion and strengthened failure/retry controls pass.",
+    "default-install-and-page-native": "Two real-claim owners expected old default pins; corrected owners and full new-default CLI story pass.",
+    "settings-and-source-seals": "12pass/2fail. Both failures stop on obsolete security source hashes. Exact28literal patch awaits explicit approval and remains unapplied."
+  }
+}
