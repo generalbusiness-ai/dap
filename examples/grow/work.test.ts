@@ -59,10 +59,10 @@ test("the tender who takes a maintenance task reports it without changing device
   wrote(await submit(ledger, sensors, "report-device", on(ledger, vent, { reported: "error", level: 0, description: "Vane jammed." })));
   wrote(await submit(ledger, climate, "raise-alert", { expected: revisions(ledger, { zone, vent, fan, heater }), fields: { zone, text: "Zone 2 hot.", proposal: "Cut heater.", target: "off", level: 0 } })); const alert = ledger.last.seq;
   wrote(await submit(ledger, climate, "offer-task", { expected: revisions(ledger, { device: vent, alert }), fields: { device: vent, alert, text: "Free vent 2's jammed vane." } })); const task = ledger.last.seq;
-  expect(await submit(ledger, day, "report-task", on(ledger, task, { report: "Freed." }))).toMatchObject({ result: "refused", reason: "guard-failed" });
+  expect(await submit(ledger, day, "report-task", on(ledger, task, { report: "Freed." }))).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.0" });
   wrote(await submit(ledger, day, "take-task", on(ledger, task, {})));
-  expect(await submit(ledger, night, "take-task", on(ledger, task, {}))).toMatchObject({ result: "refused", reason: "guard-failed" });
-  expect(await submit(ledger, night, "report-task", on(ledger, task, { report: "Freed." }))).toMatchObject({ result: "refused", reason: "guard-failed" });
+  expect(await submit(ledger, night, "take-task", on(ledger, task, {}))).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.0" });
+  expect(await submit(ledger, night, "report-task", on(ledger, task, { report: "Freed." }))).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.1" });
   expect(await submit(ledger, day, "report-task", on(ledger, task, { report: "  " }))).toMatchObject({ result: "refused", reason: "guard-failed", name: "empty-task-report" });
   const observation = structuredClone(ledger.item(vent));
   wrote(await submit(ledger, day, "report-task", on(ledger, task, { report: "Freed the jammed vane by hand." })));

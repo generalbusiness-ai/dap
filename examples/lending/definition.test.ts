@@ -31,7 +31,7 @@ test("Nasruddin and the pot: nine steps, two refusals, every accepted act sends 
  const path = s.item(big).values["page"];
  wrote(await act(s, keys.una, "borrow", big));
  expect(s.item(big)).toMatchObject({ state: "lent", parties: { borrower: keys.una.member } });
- expect(await act(s, keys.vic, "borrow", big)).toMatchObject({ result: "refused", reason: "guard-failed" });
+ expect(await act(s, keys.vic, "borrow", big)).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.0" });
  wrote(await act(s, keys.una, "return", big));
  expect(s.item(big).parties["borrower"]).toBeNull();
  const small = await donate(s, keys.una, "Small pot", "Baby born when the big pot was with me");
@@ -49,12 +49,12 @@ test("Nasruddin and the pot: nine steps, two refusals, every accepted act sends 
 
 test("shelf paths belong to one thing forever, publication repairs a gone thing without changing it, and oversized content is refused", async () => {
  const s = make(), fixed = "shelf/0123456789abcdef.md";
- for (const page of ["README.md", "shelf/../x.md", "shelf/x.txt"]) expect(await submit(s, keys.rita, "donate", donation(s, "Pot", "Copper", page))).toMatchObject({result:"refused",reason:"guard-failed"});
+ for (const page of ["README.md", "shelf/../x.md", "shelf/x.txt"]) expect(await submit(s, keys.rita, "donate", donation(s, "Pot", "Copper", page))).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.0" });
  wrote(await submit(s, keys.rita, "donate", donation(s, "Pot", "Copper", fixed))); const id = s.last.seq;
- expect(await submit(s, keys.una, "donate", donation(s, "Other", "Copper", fixed))).toMatchObject({result:"refused",reason:"guard-failed"});
+ expect(await submit(s, keys.una, "donate", donation(s, "Other", "Copper", fixed))).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.1" });
  wrote(await act(s, keys.una, "borrow", id)); wrote(await act(s, keys.vic, "return", id)); wrote(await act(s, keys.rita, "cancel", id, {reason:"Lost"}));
- for (const kind of ["borrow", "return", "cancel"]) expect(await act(s, keys.rita, kind, id, {reason:"Again"})).toMatchObject({result:"refused"});
- expect(await submit(s, keys.una, "donate", donation(s, "Other", "Copper", fixed))).toMatchObject({result:"refused",reason:"guard-failed"});
+ for (const kind of ["borrow", "return", "cancel"]) expect(await act(s, keys.rita, kind, id, kind === "cancel" ? { reason: "Again" } : {})).toMatchObject({ result: "refused", reason: "final" });
+ expect(await submit(s, keys.una, "donate", donation(s, "Other", "Copper", fixed))).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.1" });
  const before = [s.item(0), s.item(id)];
  wrote(await submit(s, keys.una, "publish", {on:0, expected:{on:s.item(0).revision, thing:s.item(id).revision}, fields:{thing:id,content:"Corrected gone page"}}, room(s)));
  expect([s.item(0), s.item(id)]).toEqual(before);

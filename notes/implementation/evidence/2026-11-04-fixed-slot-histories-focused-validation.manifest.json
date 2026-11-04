@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "sourceHead": "410a94667cb4702327a54375c24913dd7fc93145",
+  "sourceTree": "ba93294dca04a3dd4cfff1a497b66a57e2b9c9ae",
+  "qualification": "Independent item-scan counts through 12 SQLite lifecycle histories with 192 commands. All 20 affected cases pass; one head-binding fault causes two count assertions. Real storage, fold, rollback and eviction use scripted entries. No native authority, deployment, gate or host acceptance claim.",
+  "fileCount": 10,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-fixed-slot-histories-focused-validation",
+      "fileCount": 10,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 754,
+          "sha256": "3fdb7fc9f2b46cb67d888d6930ffe529def761360cf2fac212704b56703474f3"
+        },
+        {
+          "path": "case-ledger.json",
+          "bytes": 11378,
+          "sha256": "be373ec37b72a86f4d990c1c6e668a4fc2e13c94a14c8aa541e8db5b23ac8c0f"
+        },
+        {
+          "path": "commands.json",
+          "bytes": 2707,
+          "sha256": "e6c087424bd70acfa4b6004cf3c665723ea28458c1e205834f5ac509075a7f0c"
+        },
+        {
+          "path": "control-result.json",
+          "bytes": 954,
+          "sha256": "644c56db990ce8478b74c46018dcffc866f0dcbc79ebc3e64bf60c8e374f877f"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 8510,
+          "sha256": "2305e8e3d3385279e0bd364b9ac39c737b8393c786c6af7318fb798e3f73cbb8"
+        },
+        {
+          "path": "result.json",
+          "bytes": 778,
+          "sha256": "e86a6adacec8d70595698f2a470fff2833884a94a797dd40af11bc51d202881c"
+        },
+        {
+          "path": "sealing-driver.py",
+          "bytes": 7006,
+          "sha256": "cdd484fd310503450ef1e016ceca3476e66037e8f12e89e68502af4bfd9e471c"
+        },
+        {
+          "path": "setup-limit.json",
+          "bytes": 495,
+          "sha256": "983003cd98fa5e5249110b5f5b1f96a5320716d81f9b428ec3a487e7361721ae"
+        },
+        {
+          "path": "source-audit.json",
+          "bytes": 746,
+          "sha256": "2e360d06f071ce603d660b3ef3b9a31e53a6f553d4740296e082461880794706"
+        },
+        {
+          "path": "source-identity.json",
+          "bytes": 1947,
+          "sha256": "b436db388b4707c085ef7cf52703afd4650b62594a8b1323c39fc21dc5e4b27c"
+        }
+      ]
+    }
+  ]
+}

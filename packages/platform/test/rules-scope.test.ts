@@ -218,8 +218,10 @@ test("activate opens an active definition when its bytes and its whole named clo
   // A definition with no closure but itself needs its own bytes alone.
   expect([said(activate(r, ticketDigest, "ticket", [ticketBytes])), kept(activate(r, ticketDigest, "ticket", [ticketBytes]))]).toEqual([WRITTEN, null]);
   // The written guard: a digest that is `active` is not activated again. After `retire-definition` it may be.
-  const again = () => said(activate(r, deskDigest, "desk", [deskBytes, ticketBytes]));
-  expect(again()).toEqual(["refused", "guard-failed", null]);
+  const activation = () => activate(r, deskDigest, "desk", [deskBytes, ticketBytes]);
+  const again = () => said(activation());
+  const alreadyActive = activation();
+  expect([said(alreadyActive), "detail" in alreadyActive ? alreadyActive.detail : null]).toEqual([["refused", "guard-failed", null], "guards.1"]);
   expect([said(r.act(rita, "retire-definition", { on: item.id, expected: { on: item.revision } })), r.item(item.id).state, again()]).toEqual([WRITTEN, "retired", WRITTEN]);
 });
 

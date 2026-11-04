@@ -65,7 +65,7 @@ test("thingsOf reads every thing from the record, with the gone ones and their r
   const cancelled = await did(keys.rita, "cancel", over(s, big, { reason: "Nasruddin says the pot died" }));
   const lent = await did(keys.vic, "borrow", over(s, small));
   // A refused act writes no entry and changes no thing.
-  expect((await submit(s, keys.vic, "borrow", over(s, small), grants)).result).toBe("refused");
+  expect((await submit(s, keys.vic, "borrow", over(s, small), grants))).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.0" });
   const things = thingsOf(s.entries.map((sealed) => sealed.entry));
   expect(things).toEqual([
     { id: big, revision: 5, page: String(s.item(big).values["page"]), state: "gone", name: "Big pot", description: "Copper.", donor: "@rita", borrower: null, reason: "Nasruddin says the pot died", seq: cancelled },

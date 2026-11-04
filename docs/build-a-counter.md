@@ -118,6 +118,12 @@ show(0);
 `@vic`, `@paul` and `@sam`. The published release names the function that
 makes a test counter `founded`. The source on main names it `created`.
 
+The fixture grants every declared action to all five test keys by default.
+These grants stand in for membership. To test authorization, present the
+grants that the test needs. For a refusal, match the expected `reason`.
+If you mean to test a guard, also match its `name` or `detail`. A missing
+grant must not stand in for the business guard you meant to test.
+
 Run it:
 
 ```sh
