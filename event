@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/replay/test/weighing.ts","body":{"commit":"eadafafef98efe6eb9c6e69835ff22b41376dbd9","path":"packages/replay/test/weighing.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:09c2e10cfd4f0a3e07560701aa1da2df20b5c0aa","text":"Merge retired a covered predecessor; the successor is at examples/grow/room.test.ts."}
