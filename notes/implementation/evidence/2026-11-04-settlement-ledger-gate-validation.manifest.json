@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "qualification": "One actual frozen settlement ledger gate, all terminal phases, exact source and dependency identity, and private raw-original retention. No deployment, host acceptance or historical archive cause.",
+  "fileCount": 13,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-settlement-ledger-gate-validation",
+      "fileCount": 13,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 976,
+          "sha256": "69d43dd978080813985a4cea9f2f10ffee4af6b4ac2a6b24ebd861ed875213db"
+        },
+        {
+          "path": "after.json",
+          "bytes": 1895,
+          "sha256": "f07ea6ce10284a97daea7e7a33e051700d0f9de4e42041ac67a0b0cb69260870"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1839,
+          "sha256": "94a069b4ba2db35626769c152881477e1d6bc1ca264956f93f9434e018664073"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1895,
+          "sha256": "f07ea6ce10284a97daea7e7a33e051700d0f9de4e42041ac67a0b0cb69260870"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 6896,
+          "sha256": "b074320c1d2861cb76c71d6ff0ae9abc2b146ceacd671b19212731226132802c"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 393,
+          "sha256": "dd2754c50ced1dbcd2a71d841cdcb1d5441a8a77ec23c85055f7a919e02584ef"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1919,
+          "sha256": "9601e0d3cca3c9da2c86be88dbffea3ef9db35e517d09c345610e68a7af318f2"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 969,
+          "sha256": "c970de532930eb52a266aff6c21bc33dd4d3efa8a87d19e495042c3910a1ebf5"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 594,
+          "sha256": "ed3236e15d1034756445a59f8bc612f25e3e3ad508ec424ddd4db0ca87ef5e6a"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 5829,
+          "sha256": "aa0ee4acf92f79714cf8f6ebd7cc0c0847b1a0f5dc06feb2dba32956a2800bab"
+        }
+      ]
+    }
+  ],
+  "checkpoint": "d059b8df7f065c42027be60b0de0eb8173b67f3c",
+  "tree": "ba7805ae96b5e5499b4eae37671f72a128265e94"
+}

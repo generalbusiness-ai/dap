@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "checkpoint": "d059b8df7f065c42027be60b0de0eb8173b67f3c",
+  "tree": "ba7805ae96b5e5499b4eae37671f72a128265e94",
+  "qualification": "Independent expected ledger. Earlier focused owners and controls retain their exact outcomes; shortened final histories pass affected owners. The interrupted original gate is not a pass. Final source has a separate gate. Storage histories use actual SQLite eviction/replay but bypass native admission and dispatch.",
+  "fileCount": 22,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-settlement-ledger-validation",
+      "fileCount": 7,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 515,
+          "sha256": "3921c86dc14eb49be208a1ce48eb94c226dca5920fcf0f2f528702da072cea23"
+        },
+        {
+          "path": "control-changes.json",
+          "bytes": 13578,
+          "sha256": "99472e125ae68d31ffe46c056dc38848211a06bd66545cebed672602d0466601"
+        },
+        {
+          "path": "history-ledger.json",
+          "bytes": 22613,
+          "sha256": "adf989f5c296d581687427087b65afe799c9691bb3afa14b37741ef26be807f1"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 503,
+          "sha256": "43b14b9fd2095941255e2d1abc86abe20e25fbc4bb9e0ef96fb9ee5ad311caea"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2691,
+          "sha256": "1d4c89935fb9b83b916a80b7ee5bdefc455b65ff49ac2ff6ea7bbf5f53343fde"
+        },
+        {
+          "path": "retention-change.json",
+          "bytes": 447,
+          "sha256": "3c343c16d38168b98c92e635a51be8290af146c642cce20006dbd2adeed040f5"
+        },
+        {
+          "path": "source-identity.json",
+          "bytes": 1438,
+          "sha256": "d81ea4fa4e224f7b66593f27fc77a13c42bd3faa55ae792288b76cfa82bac750"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-settlement-ledger-revision-validation",
+      "fileCount": 6,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 439,
+          "sha256": "6684d3152ecd604314f080eda59b8cf456722aed2056637d5cb41a073b6c10bb"
+        },
+        {
+          "path": "history-ledger.json",
+          "bytes": 18141,
+          "sha256": "e19e9b4f4cd04ee4e031edae8d02404647b80d6983b302e935aa3b45296f6fd7"
+        },
+        {
+          "path": "initial-validation.manifest.json",
+          "bytes": 1671,
+          "sha256": "39e08b1dabf64c0f249ac47b82b799ea0ade92954cc4be8e6fff2ed8145cdbf6"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 441,
+          "sha256": "623189b858044addf890b3ec5bab9edcfa406f3a6fc7f3a198947fd4e2d0d130"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1457,
+          "sha256": "34d2ba52516f041b149ad21239a1f0c75128db2414e3c1fac3352997af876811"
+        },
+        {
+          "path": "source-identity.json",
+          "bytes": 1438,
+          "sha256": "534846d24fedf810a1698c2054b28fd2b150293e2f8ca5bd85e32a827cc44024"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-settlement-ledger-interrupted-gate-validation",
+      "fileCount": 9,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 654,
+          "sha256": "364491da93911d52a7bc0d0a924fe25bee1bbe0e92e727c6963bac9070ca611b"
+        },
+        {
+          "path": "after.json",
+          "bytes": 1895,
+          "sha256": "2661a15a01ef924315ff1c7af3468c0f4a2f9b8eec0b7bdeece9f502b10fb22c"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1895,
+          "sha256": "2661a15a01ef924315ff1c7af3468c0f4a2f9b8eec0b7bdeece9f502b10fb22c"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 9,
+          "sha256": "6bf82388a813435c1d418cfec114177611df8930c3c644baefde545ea889292a"
+        },
+        {
+          "path": "interruption-followup.json",
+          "bytes": 120,
+          "sha256": "95eacf6ea784b18de0b90cb8c05d3068f6decfb840c089becb00941e0c2e3112"
+        },
+        {
+          "path": "interruption.json",
+          "bytes": 390,
+          "sha256": "931b35f36799ec256def87c513d3f391d018b3f8f2a0a309d25d6a44f158c4e5"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 434,
+          "sha256": "bf11d4e720e3bb25bede2c981f3300802f2868ff66971d4a26f1e2522cc6c2a6"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 1620,
+          "sha256": "67ffdcfb90e01f67a09968d560aa22141332b36e0ce772702bac477b67cc1b5a"
+        },
+        {
+          "path": "result.json",
+          "bytes": 588,
+          "sha256": "a694ff8603be6e72d6ef82128107303587d2aedd761d68b4db991ba46a3092e2"
+        }
+      ]
+    }
+  ],
+  "preliminaryLogCustody": "The earliest development logs began under /private/tmp. The first focused private unit retains byte copies under preliminary/. Later focused owners, controls, final affected checks and both gates wrote directly to durable evidence directories. The original preliminary files remain under their named temporary paths; copies do not establish durable custody from the start."
+}
