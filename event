@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:58f071724f186e2211bcfc39db43fc51106139a9","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/card-history-fixture.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:677ad3ed8c63b23b8dfc7cec56903189122340f7","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/card-histories-browser.mjs."}
