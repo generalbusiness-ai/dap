@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "sourceHead": "af21a3f4adb7a9d3274f767b9bcfc3a20048a978",
+  "sourceTree": "44a7ba382282addfd859dcdc3e7b98ce4a394ce3",
+  "qualification": "Explicit fixture grants, 64 existing refusal assertion sites, one paired grant-versus-guard witness, focused compiler and owning-file results with all earlier failures retained. No production change, native authority or gate claim.",
+  "fileCount": 10,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-explicit-grants-focused-validation",
+      "fileCount": 10,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 779,
+          "sha256": "d0188699292143a46ba219359c591746592b258853b152b5739e568a2ac831c7"
+        },
+        {
+          "path": "classified-assertions.json",
+          "bytes": 19920,
+          "sha256": "139e1f3b38c3caa957b9f65b04844171926c77a8507f5dfa5b8fd3ccab0af6aa"
+        },
+        {
+          "path": "commands.json",
+          "bytes": 12295,
+          "sha256": "637aaf58ea52dfb82a2d8c3990098cc93d2d4da039a660590cb43eba14dea841"
+        },
+        {
+          "path": "expectation-corrections.json",
+          "bytes": 1199,
+          "sha256": "3fb8a99bdc6561d4034b6bf9d6c4b8f2cb280db9b5df0ff066385ced8ba4ae37"
+        },
+        {
+          "path": "focused-result.json",
+          "bytes": 1339,
+          "sha256": "a5ebac6fc2779e03fc44451bcb887e337bcdbe22f67d7fc51c8a83ef8bd7c3ae"
+        },
+        {
+          "path": "freeze.json",
+          "bytes": 1447,
+          "sha256": "9c5a0273c54dea4c397f4113c21feea2c6196be406f7230b7db845bb71b4f0ca"
+        },
+        {
+          "path": "inventory-command.json",
+          "bytes": 506,
+          "sha256": "07992191069c9d2504bd4499f202e2718802c09ca4e1ee8b7f031da17ebcd280"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 22063,
+          "sha256": "1cf51d71474d734886419410f56b0cdaf4b5ad1201e0f3dc486812532734663f"
+        },
+        {
+          "path": "sealing-driver.py",
+          "bytes": 6070,
+          "sha256": "07b358c1954de9536b84579b687f7f9cd55a115d7c1640074e53c73c837bca02"
+        },
+        {
+          "path": "tooling-limit.json",
+          "bytes": 455,
+          "sha256": "fd7dc14b5cd05aaedc562363845f1f93cf81080a6edb7fb8a239ada391077e9a"
+        }
+      ]
+    }
+  ]
+}

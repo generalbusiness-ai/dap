@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "qualification": "One actual frozen explicit-grants gate, all terminal phases, exact source and dependency identity, and private raw-original retention. No deployment, native membership, host acceptance or historical archive cause.",
+  "fileCount": 13,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-explicit-grants-gate-validation",
+      "fileCount": 13,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 976,
+          "sha256": "68cf341d6759eb425fa77c50e70c628971ad42d417c6e04c1625d69d2abb4850"
+        },
+        {
+          "path": "after.json",
+          "bytes": 1867,
+          "sha256": "9caf4562f3d07275bff287f0f4fde19dcba908406784abcd5963c8ccb27319f4"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1837,
+          "sha256": "138803bf698c6b58df0b79faa1176fd1332e99df0267e7a1579457f147dd6dba"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1867,
+          "sha256": "9caf4562f3d07275bff287f0f4fde19dcba908406784abcd5963c8ccb27319f4"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 7038,
+          "sha256": "0187925f64d057c73d3827a07eea3bc951123752af0b94c8f22f1f61fd44164b"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 394,
+          "sha256": "842490aaafeb10594a65243d471eccfc9cc4975f205fc633df09a7a05bcba6f1"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2091,
+          "sha256": "de51467af72b96b54fe46f6c093c2a051db627180a035d1a63aa19cf21022fc7"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 980,
+          "sha256": "8756c15d9f5a9c00831b5b45409b9c44a26ece053c4b5fe8a1a5571a9846843c"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 584,
+          "sha256": "b8328ad8686d202b149650752a2c8b54770e94cbee3d304e0675dee63da0a147"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 5835,
+          "sha256": "22e921a43f12843f04a2cb2d338c72d8bf56bd18939d51145397a81cfe8bf696"
+        }
+      ]
+    }
+  ],
+  "sourceHead": "af21a3f4adb7a9d3274f767b9bcfc3a20048a978",
+  "sourceTree": "44a7ba382282addfd859dcdc3e7b98ce4a394ce3"
+}
