@@ -33,6 +33,21 @@ unchanged source. The original failure remains; its cause is unknown.
 
 MCP View diff reads the destination's exact pin before signing. It sends empty fields for Destination19 and retains `{ hours: 1 }` for historical destinations. The existing Native Change-card witness now runs on both cohorts. A control that forces an `hours` field passes on the historical cohort and fails on the new one; its driver restores the exact source.
 
+## Editing closes the new default's protocol path
+
+The first [Page browser run](https://github.com/generalbusiness-ai/dap/actions/runs/41901584069)
+at `cbc46369` failed before capture. A focused recorder diagnostic showed
+that CLI `edit` omitted Destination19 from its closed manifest-protocol list.
+After that exact-pin admission, the recorder reached Page text editing and
+found the same omission in its separate closed list. Both lists now admit
+Destination19. Other unsupported and future pins keep their refusals.
+
+The Native CLI edit owner, Page recorder, retained-editor Native owner,
+closed-protocol controls, compiler contexts and regenerated Page assets pass.
+The recorder's fixture identities stay in private raw custody. The initial
+[Card browser run](https://github.com/generalbusiness-ai/dap/actions/runs/41901584043)
+passed at `cbc46369`; rendered checks for the repair head still follow.
+
 ## Evidence and review status
 
 The [focused manifest](evidence/2026-11-04-failed-claim-cohort-validation.manifest.json)
