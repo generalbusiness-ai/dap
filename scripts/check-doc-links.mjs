@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Check relative links and canonical repository links in every Markdown file.
+// Check relative links and canonical repository links in tracked Markdown files.
 //
 // A link fails when its target file does not exist, or when it names a
 // heading anchor that the target Markdown file does not have. Canonical
@@ -21,7 +21,8 @@
 // node scripts/check-doc-links.mjs --self-test checks the anchor rules on a
 // small fixture in this file, reads no other file, and exits 0 when they hold.
 
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { dirname, join, relative, resolve } from "node:path";
 
 const args = process.argv.slice(2);
@@ -31,20 +32,17 @@ const root = resolve(args.find((arg) => !arg.startsWith("--")) ?? new URL("..", 
 const skipAnywhere = new Set(["node_modules", ".git", "test"]);
 const canonicalRepository = "https://github.com/generalbusiness-ai/artroom/blob/main/";
 
-function* markdown(dir) {
-	for (const name of readdirSync(dir)) {
-		if (skipAnywhere.has(name)) continue;
-		const path = join(dir, name);
-		const at = relative(root, path);
-		if (at === "notes") {
-			// Of notes/, only notes/plans/ is read, and only with --history.
-			if (history && existsSync(join(path, "plans"))) yield* markdown(join(path, "plans"));
-			continue;
-		}
-		if (!history && at === "spikes/parked") continue;
-		const stat = statSync(path);
-		if (stat.isDirectory()) yield* markdown(path);
-		else if (name.endsWith(".md")) yield path;
+function* markdown() {
+	// NUL framing keeps spaces and newlines in tracked paths intact. Read the
+	// working bytes so a tracked document's uncommitted edits are checked too.
+	const tracked = execFileSync("git", ["-C", root, "ls-files", "--cached", "-z"], { encoding: "utf8" });
+	for (const at of tracked.split("\0")) {
+		if (!at.endsWith(".md")) continue;
+		const parts = at.split("/");
+		if (parts.some(part => skipAnywhere.has(part))) continue;
+		if (parts[0] === "notes" && (!history || parts[1] !== "plans")) continue;
+		if (!history && parts[0] === "spikes" && parts[1] === "parked") continue;
+		yield join(root, at);
 	}
 }
 
@@ -124,7 +122,7 @@ const anchorsOf = (path) => {
 
 const failures = [];
 let checked = 0;
-for (const file of markdown(root)) {
+for (const file of markdown()) {
 	const lines = prose(readFileSync(file, "utf8")).split("\n");
 	lines.forEach((line, index) => {
 		const targets = [
