@@ -21,7 +21,7 @@ export function nativeScenario(definition: DeclaredDefinition, permissions: read
   expect(checked.ok ? [] : checked.problems).toEqual([]);
   const ledger = created(valid(checked), fields, foundingKey);
   retained.set(ledger, new Map());
-  ledger.grants = () => permissions.map(([who, actions]) => ({ grant: grantOf(who, ledger.at, actions), current: true }));
+  ledger.presentedGrants = () => permissions.map(([who, actions]) => ({ grant: grantOf(who, ledger.at, actions), current: true }));
   return ledger;
 }
 /** Receive a real parent's create send, without inventing a child genesis,
@@ -43,7 +43,7 @@ export async function nativeChild(parent: Ledger, seq: number, definition: Decla
       if (result.draft.prepared.some(prepared => prepared.input === digest)) retained.get(child)!.set(digest, { kind: "rule", digest, bytes: canonicalize(input.input) });
     }
   }
-  child.grants = () => permissions.map(([who, actions]) => ({ grant: grantOf(who, child.at, actions), current: true }));
+  child.presentedGrants = () => permissions.map(([who, actions]) => ({ grant: grantOf(who, child.at, actions), current: true }));
   return child;
 }
 /** A created Site Lane, with a labelled Directory launcher and complete

@@ -108,7 +108,7 @@ export class Lane extends Ledger {
   proof(who: Actor): Grant {
     return proofOf(who, [...Object.values(this.definition.declared.acts).flatMap((a) => actionOf(a) ?? []), RETIRE_ACTION], ++this.#reads, this.now);
   }
-  override grants() { return Object.values(keys).map((who) => ({ grant: this.proof(who), current: true })); }
+  override presentedGrants() { return Object.values(keys).map((who) => ({ grant: this.proof(who), current: true })); }
   override context(over: Context = {}) { return super.context({ snapshot: (digest) => snapshots.get(digest) ?? null, capabilities: cap, membership, ...over }); }
 
   /** Ask for one step with that signed intent, and seal the preparation entry. */
@@ -235,7 +235,7 @@ export class Gate extends Ledger {
     return (named) => (named === OWNER ? { data: data as never, rules: rules.rules, ...(recorded ? { membership: recorded } : {}), ...(rulesScope ? { rulesScope } : {}) } : null);
   }
 
-  override grants() {
+  override presentedGrants() {
     const actions = ["gate.establish", "gate.issue", "gate.enter"];
     return Object.values(keys).map((who) => ({ grant: proofOf(who, actions, ++this.#reads, this.now), current: true }));
   }

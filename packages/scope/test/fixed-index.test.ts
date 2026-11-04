@@ -146,8 +146,8 @@ test("rollforward rebuilds a formerly ready index after a base writer advances t
       scope, self: scope.head.seq + 1, kind: "TEST uniqueness", fields: { needle: "base-two" }, fieldTypes: { needle: { type: "text", max: 64 } },
       subjects: new Map(), signer: null, facts: new Map(), prepared: [], used: [] },
     { none: { type: "job", states: ["live"], where: [{ equals: { a: { slot: "name" }, b: { field: "needle" } } }] }, reason: "handle-in-use" });
-    expect(duplicate).toBe("fail");
     expect(store.fixedCount("job", "name", '"base-two"', ["live"], "normalized")).toBe(1);
+    expect(duplicate).toBe("fail");
     expect(store.fixedReady(indexed.digest, scope.at, scope.head)).toBe(true);
     expect(stateDigest(store.all())).toBe(advanced.checkpoint);
     expect(readyBefore).toBe(false);
@@ -296,3 +296,129 @@ test("a fixture-judged floor rekeys a retained final structural value before act
     expect(store.fixedCount("job", "stamp", canonicalize(history.reference), ["passed"], "normalized")).toBe(1);
   });
 });
+
+const historyIndexed = variant(definition.declared, data => {
+  data.items["job"] = {
+    many: true, max: 8, states: { live: { final: false }, gone: { final: true } }, initial: "live", parties: {}, refs: {},
+    values: {
+      name: { fixed: true, required: false, of: { type: "text", max: 16 } },
+      flag: { fixed: true, required: false, of: { type: "bool" } },
+    },
+  };
+});
+
+type ScanItem = { id: number; state: "live" | "gone"; name: string | null; flag: boolean | null };
+// Independent oracle: null means the declared optional slot is empty.
+// No production index, normalization, fold or MemoryState helper supplies an expectation.
+const scanCount = (items: readonly ScanItem[], slot: "name" | "flag", value: string | boolean | null, states: readonly string[]) =>
+  items.filter(item => states.includes(item.state) && item[slot] === value).length;
+
+const historyOrders = [
+  ["create-a", "repeat-a", "create-b", "abort-close-a", "restart", "close-a", "rebuild", "create-c", "repeat-b", "legacy-restart", "close-b", "restart", "rebuild", "repeat-a", "abort-create", "restart"],
+  ["create-a", "create-b", "repeat-b", "rebuild", "abort-close-b", "create-c", "restart", "close-b", "repeat-b", "legacy-restart", "abort-close-a", "close-a", "rebuild", "restart", "abort-create", "repeat-a"],
+  ["create-a", "repeat-a", "create-b", "restart", "abort-create", "rebuild", "close-b", "repeat-b", "legacy-restart", "create-c", "abort-close-a", "restart", "close-a", "repeat-a", "rebuild", "restart"],
+  ["create-a", "rebuild", "create-b", "abort-close-a", "repeat-b", "restart", "legacy-restart", "repeat-a", "close-a", "create-c", "rebuild", "abort-close-b", "close-b", "restart", "abort-create", "repeat-b"],
+] as const;
+const historyValues = [
+  { a: { name: "same", flag: true }, b: { name: "same", flag: false }, c: { name: "other", flag: null } },
+  { a: { name: "same", flag: false }, b: { name: null, flag: true }, c: { name: "other", flag: false } },
+  { a: { name: null, flag: null }, b: { name: "same", flag: true }, c: { name: null, flag: false } },
+] as const;
+
+for (const [orderIndex, commands] of historyOrders.entries()) for (const [valuesIndex, values] of historyValues.entries()) {
+  test(`native fixed counts equal a direct item scan through storage history ${orderIndex + 1}.${valuesIndex + 1}`, async context => {
+    // Real SQLite fold, transaction and eviction; Entry-shaped storage inputs
+    // bypass admission. This proves no signer authority or application journey.
+    const lane = await create({}, {}, historyIndexed), items: ScanItem[] = [];
+    const ids = new Map<string, number>();
+    let nextSeq = 1;
+    const check = async (command: string) => lane.inside(state => {
+      const sql: Sql = { exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) };
+      const store = new SqliteStore(sql);
+      store.ensureFixed(historyIndexed);
+      const actual = sql.exec("SELECT record FROM item WHERE type=? ORDER BY id", "job").toArray().map(row => {
+        const item = JSON.parse(row["record"] as string) as Item;
+        return { id: item.id, state: item.state, name: item.values["name"], flag: item.values["flag"] };
+      });
+      expect(actual, `${command}: authoritative items`).toEqual(items);
+      for (const [slot, needles] of [["name", ["same", "other", "absent", null]], ["flag", [true, false, null]]] as const) {
+        for (const value of needles) for (const states of [["live"], ["gone"], ["live", "gone"]]) for (const mode of ["raw", "normalized"] as const) {
+          expect(store.fixedCount("job", slot, JSON.stringify(value), states, mode), `${command}: ${slot}=${value}, ${states}, ${mode}`)
+            .toBe(scanCount(items, slot, value, states));
+        }
+      }
+    });
+    await check("initial");
+    for (const command of commands) {
+      const tag = command.endsWith("-b") ? "b" : command.endsWith("-c") ? "c" : "a";
+      const descriptor = command === "abort-create" ? { name: "other", flag: false } : values[tag];
+      const opening = command.startsWith("create-") || command === "abort-create" || command === "legacy-restart";
+      const closing = command.startsWith("close-") || command.startsWith("abort-close-");
+      const aborting = command.startsWith("abort-");
+      const target = ids.get(tag);
+      const signed = lane.remark(`TEST fixed history ${orderIndex}.${valuesIndex}: ${command}`);
+      if (command === "restart") await lane.restart();
+      else await lane.inside(state => {
+        const sql: Sql = { exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) };
+        const store = new SqliteStore(sql);
+        if (command === "rebuild") {
+          const checkpoint = stateDigest(store.all());
+          for (const table of ["fixed_control", "fixed_dependency", "fixed_count", "fixed_slot"]) sql.exec(`DELETE FROM ${table}`).toArray();
+          store.ensureFixed(historyIndexed);
+          expect(stateDigest(store.all())).toBe(checkpoint);
+        } else if (command.startsWith("repeat-")) {
+          expect(target).toBeDefined();
+          store.transaction(() => {
+            for (const write of fixedRowsOf(historyIndexed, store.item(target!)!, store.scope()!.at, seq => store.fixedHash(seq))) {
+              store.putFixed(write.row, write.dependencies);
+              store.putFixed(write.row, write.dependencies);
+            }
+          });
+        } else {
+          const scope = store.scope()!, template = JSON.parse(store.stored(0)!.bytes) as Entry;
+          expect(scope.head.seq + 1).toBe(nextSeq);
+          const effects: Entry["effects"][number][] = [];
+          if (opening) {
+            effects.push({ effect: "open", item: nextSeq, type: "job", state: "live" });
+            if (descriptor.name !== null) effects.push({ effect: "value", item: nextSeq, slot: "name", value: descriptor.name });
+            if (descriptor.flag !== null) effects.push({ effect: "value", item: nextSeq, slot: "flag", value: descriptor.flag });
+          } else {
+            expect(closing && target !== undefined && items.some(item => item.id === target && item.state === "live")).toBe(true);
+            effects.push({ effect: "state", item: target!, state: "gone" });
+          }
+          const entry: Entry = { ...template, seq: nextSeq, prev: scope.head.hash, input: { type: "act", signed, authority: [], presented: {} }, uses: [], prepared: [], effects, sends: [] };
+          const bytes = canonicalize(entry), hash = entryHash(entry);
+          const write = () => {
+            store.append(entry, hash, bytes, utf8(bytes).length);
+            if (command === "legacy-restart") {
+              // Base writer: matching journal/current rows, no fixed writes.
+              store.putItem({ id: nextSeq, type: "job", state: "live", revision: 1, opened: hash, parties: {}, refs: {}, values: { ...descriptor }, attributed: [] });
+              store.addCount("job", "live", 1);
+              store.setScope({ ...scope, head: { seq: nextSeq, hash }, time: entry.time });
+            } else applyEntry(store, historyIndexed, entry, hash);
+          };
+          if (aborting) {
+            const checkpoint = stateDigest(store.all());
+            expect(() => store.transaction(() => { write(); throw Error("TEST abort complete fixed fold"); })).toThrow("TEST abort complete fixed fold");
+            expect(stateDigest(store.all())).toBe(checkpoint);
+          } else {
+            const marker = sql.exec("SELECT value FROM fixed_control WHERE id=1").toArray();
+            expect(store.fixedReady(historyIndexed.digest, scope.at, scope.head)).toBe(true);
+            store.transaction(write);
+            if (command === "legacy-restart") expect(sql.exec("SELECT value FROM fixed_control WHERE id=1").toArray()).toEqual(marker);
+          }
+        }
+      });
+      if (command === "legacy-restart") await lane.restart(); // No intervening index query or rebuild.
+      if (!aborting && (opening || closing)) {
+        if (opening) {
+          items.push({ id: nextSeq, state: "live", ...descriptor });
+          if (command !== "legacy-restart") ids.set(tag, nextSeq);
+        } else items.find(item => item.id === target)!.state = "gone";
+        nextSeq++;
+      }
+      await check(command);
+    }
+    (context.task.meta as Record<string, unknown>)["fixedIndexScanHistory"] = { commands: [...commands], items: items.length, oracle: "literal item array with direct primitive equality", authority: "storage fold fixture, not native act admission" };
+  });
+}

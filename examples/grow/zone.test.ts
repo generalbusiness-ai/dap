@@ -63,10 +63,14 @@ test("a real summary from another room cannot classify this room's identically n
 test("a threshold cannot substitute another summary, time, zone or inconsistent classification", async () => {
   const ledger = make(), zone = await commission(ledger), other = await commission(ledger);
   const first = await observe(ledger, [normal(zone), normal(other)], 0);
-  for (const override of [
-    { sampledAt: t(1) }, { zones: [{ ...hot(zone) }, { ...normal(other) }] }, { min: 2200 }, { inBand: 24 }, { max: 2200 },
-    { zones: [{ ...hot(zone) }, { ...normal(other) }], min: 2400, max: 2740, mean: 2650, inBand: 10 },
-  ]) expect(await report(ledger, normal(zone), first, override)).toMatchObject({ result: "refused", reason: "guard-failed" });
+  for (const { override, name } of [
+    { override: { sampledAt: t(1) }, name: "summary-mismatch" },
+    { override: { zones: [{ ...hot(zone) }, { ...normal(other) }] }, name: "summary-mismatch" },
+    { override: { min: 2200 }, name: "invalid-zone-evidence" },
+    { override: { inBand: 24 }, name: "invalid-zone-evidence" },
+    { override: { max: 2200 }, name: "invalid-zone-evidence" },
+    { override: { zones: [{ ...hot(zone) }, { ...normal(other) }], min: 2400, max: 2740, mean: 2650, inBand: 10 }, name: "summary-mismatch" },
+  ]) expect(await report(ledger, normal(zone), first, override)).toMatchObject({ result: "refused", reason: "guard-failed", name });
   // The summary is a sensor claim, but impossible counts are not enough to
   // classify a zone: extrema themselves account for one or two cells.
   for (const stats of [

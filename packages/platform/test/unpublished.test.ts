@@ -93,7 +93,7 @@ test("an opt-in unpublished destination binds once, authenticates its directory 
   take(D, B.directory, Q, boundAt, update.n);
   expect(D.item(0).values["repository"]).toEqual(repository);
   expect(D.entries.slice(0, earlier.length)).toEqual(earlier);
-  expect(Q.act(keys.rita, "bind-repository", { ...intent, expected: { on: Q.item(0).revision } }, { platform: code(B.destination) })).toMatchObject({ result: "refused", reason: "guard-failed" });
+  expect(Q.act(keys.rita, "bind-repository", { ...intent, expected: { on: Q.item(0).revision } }, { platform: code(B.destination) })).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.0" });
   const first = Q.state.operation(`${boundAt}:0`)!;
   const commit = firstHeadCommit(Q.state, Q.own, first, "sha1");
   const answer = (operation: `${number}:${number}`, body: FieldValue) => Q.seal(written(judgeOutcome(Q.state, Q.definition,

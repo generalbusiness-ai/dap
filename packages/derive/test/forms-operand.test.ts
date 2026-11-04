@@ -47,7 +47,7 @@ describe("operands, parts and a local fact (sections 6.2 and 6.5; witness 18.1)"
     expect(release(5)).toMatchObject({ result: "refused", reason: "guard-failed", name: "not-this-ask", detail: "guards.3" });
     // M.2 is an `ask`, which is not a kind the field states: the `fact` guard fails, and it declares no name.
     const asked = L.act(rita, "release-block", { ...on(L, block), ...fields({ answer: M.fact(2) }) }, { facts: [fetched(M, 2)] });
-    expect([asked.result, "name" in asked]).toEqual(["refused", false]);
+    expect([asked, "name" in asked]).toMatchObject([{ result: "refused", reason: "guard-failed", detail: "guards.1" }, false]);
     // M.4 answers ask 2: its scope is M and its `on` is 2. Only the entry that was read is in `uses`. The slot's fact was compared and not read.
     expect(release(4).result).toBe("write");
     expect([L.last.uses.map((u) => u.fact), L.item(block).state]).toEqual([[M.fact(4)], "released"]);
@@ -140,8 +140,8 @@ describe("operands, parts and a local fact (sections 6.2 and 6.5; witness 18.1)"
     expect(P.last.input).toMatchObject({ clause: "refused", message: { reason } });
 
     // The entry that recorded the first update is a delivery of the request `closes`: that is its kind, for a fact of this scope's own.
-    const cite = (seq: number) => I.act(rita, "cite", { ...on(I, 0), ...fields({ closed: I.fact(seq) }) }).result;
-    expect([cite(applied), cite(0)]).toEqual(["write", "refused"]);
+    const cite = (seq: number) => I.act(rita, "cite", { ...on(I, 0), ...fields({ closed: I.fact(seq) }) });
+    expect([cite(applied), cite(0)]).toMatchObject([{ result: "write" }, { result: "refused", reason: "guard-failed", detail: "guards.1" }]);
 
     // A field of this scope's own delivery is read by the types of the handler that received it: I's `madeAt` is a fact, so the mark is P.2.
     const cited = (closed: Fetched | FactRef, given: Record<string, FieldValue>, link = 2) => {

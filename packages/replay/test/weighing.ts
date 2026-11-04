@@ -117,7 +117,7 @@ export class Weighing extends Ledger {
   }
 
   /** A grant of every action of the made-up data, on the next read of the one run, begun now. STAND-IN: the observation is written by hand. */
-  override grants() {
+  override presentedGrants() {
     const actions = Object.values(this.definition.declared.acts).map((act) => act.grant);
     const seen = keySeen(rita.key, "@rita", ++this.#reads, this.now);
     return [{ grant: grantFrom({ ...seen, observation: { ...seen.observation, actions } as never }), current: true }];

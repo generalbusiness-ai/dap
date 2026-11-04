@@ -75,7 +75,7 @@ test("four-zone climate fault holds, refuses stale authority, authorizes only ta
   };
   const initial = await summary(ledger, zones, 0, null);
   for (const zone of zones) wrote(await classify(ledger, zone, initial));
-  expect(await raise(ledger, zone)).toMatchObject({ result: "refused", reason: "guard-failed" });
+  expect(await raise(ledger, zone)).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.0" });
   const hot = await summary(ledger, zones, 300, zone.id); wrote(await classify(ledger, zone, hot));
   expect(await raise(ledger, zone)).toMatchObject({ result: "refused", reason: "guard-failed", name: "climate-actions-remain" });
   wrote(await submit(ledger, climate, "set-vent", on(ledger, zone.vent, { target: "open", level: 100 }))); outcome("refused");
@@ -106,7 +106,7 @@ test("four-zone climate fault holds, refuses stale authority, authorizes only ta
   wrote(await submit(ledger, sensors, "report-device", on(ledger, zone.heater, { reported: "on", level: 100, description: "" })));
   expect(ledger.item(zone.heater).values).toMatchObject({ target: "off", reported: "on" });
   expect(await submit(ledger, climate, "set-heater", on(ledger, zone.heater, { target: "on", level: 100 }))).toMatchObject({ result: "refused", reason: "unauthorized" });
-  expect(await submit(ledger, climate, "close-incident", { on: alert, expected: revisions(ledger, { on: alert, incident, zone: zone.id }), fields: { incident } })).toMatchObject({ result: "refused", reason: "guard-failed" });
+  expect(await submit(ledger, climate, "close-incident", { on: alert, expected: revisions(ledger, { on: alert, incident, zone: zone.id }), fields: { incident } })).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.2" });
   wrote(await submit(ledger, sensors, "report-device", on(ledger, zone.heater, { reported: "off", level: 0, description: "" })));
   wrote(await submit(ledger, day, "report-task", on(ledger, task, { report: "Freed the jammed vane by hand." })));
   expect(ledger.item(zone.vent).values["reported"]).toBe("error");
@@ -148,7 +148,7 @@ test("an authorization cannot command an errored or disabled heater or give its 
   expect(ledger.item(zone.heater)).toEqual(before); expect(ledger.item(alert).state).toBe("open");
   wrote(await submit(ledger, sensors, "report-device", on(ledger, zone.heater, { reported: "off", level: 0, description: "" })));
   wrote(await authorize(ledger, alert, zone.heater));
-  expect(await submit(ledger, climate, "propose-restoration", { on: alert, expected: revisions(ledger, { on: alert, zone: zone.id, vent: zone.vent }), fields: { text: "Vent status unknown.", proposal: "Restore heater?" } })).toMatchObject({ result: "refused", reason: "guard-failed" });
+  expect(await submit(ledger, climate, "propose-restoration", { on: alert, expected: revisions(ledger, { on: alert, zone: zone.id, vent: zone.vent }), fields: { text: "Vent status unknown.", proposal: "Restore heater?" } })).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.4" });
   wrote(await submit(ledger, sensors, "report-device", on(ledger, zone.vent, { reported: "open", level: 100, description: "" })));
   wrote(await submit(ledger, climate, "propose-restoration", { on: alert, expected: revisions(ledger, { on: alert, zone: zone.id, vent: zone.vent }), fields: { text: "Vent responds.", proposal: "Restore heater?" } }));
   expect(await authorize(ledger, alert, zone.heater)).toMatchObject({ result: "refused", reason: "guard-failed", name: "device-limit" });
@@ -172,6 +172,6 @@ test("one alert has one incident, and recovery must cite a summary recorded afte
 test("room commissioning refuses duplicate kinds and bindings from another zone", async () => {
   const { ledger, zones } = await setup(), first = zones[0]!, second = zones[1]!;
   expect(await submit(ledger, operator, "commission-device", { expected: revisions(ledger, { zone: first.id }), fields: { zone: first.id, kind: "vent", label: "Duplicate", minLevel: 0, maxLevel: 100, target: "closed", level: 0 } })).toMatchObject({ result: "refused", reason: "guard-failed", name: "device-already-commissioned" });
-  expect(await submit(ledger, operator, "bind-zone-devices", { on: first.id, expected: revisions(ledger, { on: first.id, vent: second.vent, fan: first.fan, heater: first.heater }), fields: { vent: second.vent, fan: first.fan, heater: first.heater } })).toMatchObject({ result: "refused", reason: "guard-failed" });
+  expect(await submit(ledger, operator, "bind-zone-devices", { on: first.id, expected: revisions(ledger, { on: first.id, vent: second.vent, fan: first.fan, heater: first.heater }), fields: { vent: second.vent, fan: first.fan, heater: first.heater } })).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.3" });
   expect((await replay(ledger)).report.result).toBe("consistent");
 });

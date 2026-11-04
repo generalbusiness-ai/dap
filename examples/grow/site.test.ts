@@ -32,7 +32,7 @@ async function setup(childDefinition = room) {
 // presence; unrelated reports and wrong-room/other-member attempts cannot.
 test("native Site presence keeps explicit report facts beyond the activity window", async () => {
   const { launcher, parent, rooms, rows } = await setup(), a = rows[0]!, b = rows[1]!;
-  expect(await submit(parent, operator, "create-room", { fields: { label: "Room D" } })).toMatchObject({ result: "refused" });
+  expect(await submit(parent, operator, "create-room", { fields: { label: "Room D" } })).toMatchObject({ result: "refused", reason: "type-full" });
   expect(await submit(parent, keys.rita, "provision-presence", { fields: { member: keys.rita.member } })).toMatchObject({ result: "refused", reason: "unauthorized" });
   wrote(await submit(parent, operator, "provision-presence", { fields: { member: keys.rita.member } })); const dayId = parent.last.seq;
   wrote(await submit(parent, operator, "provision-presence", { fields: { member: night.member } })); const nightId = parent.last.seq;

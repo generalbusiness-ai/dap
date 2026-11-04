@@ -65,11 +65,11 @@ test("commitments declaration has a distinct exact canonical pin and finite own-
 
 test("competing complete claims leave one pledge; fulfilled numbers, activity and anti-consecutive fairness refold", async () => {
   const s = make(3), a = await activate(s, keys.una), b = await activate(s, keys.vic), c = await activate(s, keys.paul);
+  expect(await act(s, keys.vic, "start")).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.1" }); // Broad scripted control grant is not controller ownership.
   await wrote(act(s, keys.rita, "start"));
-  expect(await act(s, keys.vic, "start")).toMatchObject({ result: "refused" }); // Broad scripted control grant is not controller ownership.
   const fields = claimFields(s, a);
-  expect(await act(s, keys.una, "commit", { ...fields, basis: active(s).reverse() })).toMatchObject({ result: "refused" });
-  expect(await act(s, keys.una, "commit", { ...fields, basis: active(s).map((p, i) => i === 0 ? { ...p, member: keys.rita.member } : p) })).toMatchObject({ result: "refused" });
+  expect(await act(s, keys.una, "commit", { ...fields, basis: active(s).reverse() })).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.5" });
+  expect(await act(s, keys.una, "commit", { ...fields, basis: active(s).map((p, i) => i === 0 ? { ...p, member: keys.rita.member } : p) })).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.5" });
   const winner = preparedIntent(s, keys.una, "commit", fields);
   const competitor = preparedIntent(s, keys.vic, "commit", claimFields(s, b));
   await wrote(send(s, winner));
@@ -80,14 +80,14 @@ test("competing complete claims leave one pledge; fulfilled numbers, activity an
   expect(admitted.at).toEqual(s.at); // Full fact is derived from this sealed admission, not a JSON field.
   const d = await activate(s, keys.sam);
   expect(s.item(held.id).values["basis"]).toEqual(fields["basis"]); // New activity affects future claims, not this pledge.
-  expect(await act(s, keys.una, "deactivate", {}, a)).toMatchObject({ result: "refused" });
-  expect(await act(s, keys.rita, "force-deactivate", {}, a)).toMatchObject({ result: "refused" });
+  expect(await act(s, keys.una, "deactivate", {}, a)).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.2" });
+  expect(await act(s, keys.rita, "force-deactivate", {}, a)).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.3" });
   const completion = preparedIntent(s, keys.una, "fulfill", resolution(s), held.id);
-  expect(await act(s, keys.vic, "fulfill", resolution(s), held.id)).toMatchObject({ result: "refused" });
+  expect(await act(s, keys.vic, "fulfill", resolution(s), held.id)).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.4" });
   await wrote(send(s, completion));
   expect(await send(s, completion)).toMatchObject({ result: "accepted-before" });
   expect([s.item(held.id).state, board(s).state, board(s).values["lastNumber"], board(s).parties["lastSpeaker"], board(s).refs["pledge"]]).toEqual(["fulfilled", "open", 1, keys.una.member, null]);
-  expect(await act(s, keys.una, "commit", claimFields(s, a))).toMatchObject({ result: "refused" });
+  expect(await act(s, keys.una, "commit", claimFields(s, a))).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.6" });
   await wrote(act(s, keys.una, "deactivate", {}, a));
   await wrote(act(s, keys.rita, "force-deactivate", {}, c));
   await wrote(act(s, keys.rita, "remove-participant", {}, c));
@@ -98,7 +98,7 @@ test("competing complete claims leave one pledge; fulfilled numbers, activity an
   await wrote(act(s, keys.vic, "commit", claimFields(s, b)));
   const third = promise(s).id; await wrote(act(s, keys.vic, "fulfill", resolution(s), third));
   expect([board(s).state, board(s).values["lastNumber"], board(s).refs["pledge"], board(s).values["until"]]).toEqual(["finished", 3, null, null]);
-  expect(await act(s, keys.rita, "initialize", {}, 0)).toMatchObject({ result: "refused" });
+  expect(await act(s, keys.rita, "initialize", {}, 0)).toMatchObject({ result: "refused", reason: "type-full" });
   await wrote(act(s, keys.rita, "reset", { generation: 1 }));
   expect([board(s).state, board(s).values["generation"], board(s).values["serial"], board(s).values["lastNumber"], board(s).parties["lastSpeaker"], board(s).refs["lastFulfilledAt"]]).toEqual(["paused", 1, 0, 0, null, null]);
   expect(s.item(b).state).toBe("active"); expect(s.item(c).state).toBe("removed");
@@ -113,8 +113,8 @@ test("failure, cancellation and paired board-first expiry fence old callbacks an
   expect([board(s).state, board(s).values["lastNumber"], s.item(failed).state, s.item(failed).values["reason"]]).toEqual(["paused", 0, "failed", "speech-uncertain"]);
   await wrote(act(s, keys.rita, "start")); await wrote(act(s, keys.vic, "commit", claimFields(s, b)));
   const cancelled = promise(s).id;
-  expect(await send(s, late)).toMatchObject({ result: "refused" });
-  expect(await act(s, keys.una, "cancel", resolution(s), cancelled)).toMatchObject({ result: "refused" });
+  expect(await send(s, late)).toMatchObject({ result: "refused", reason: "revision-moved" });
+  expect(await act(s, keys.una, "cancel", resolution(s), cancelled)).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.4" });
   await wrote(act(s, keys.rita, "cancel", resolution(s), cancelled));
   await wrote(act(s, keys.rita, "start")); await wrote(act(s, keys.una, "commit", claimFields(s, a)));
   const expired = promise(s).id, deadline = s.item(expired).values["until"];
@@ -136,7 +136,7 @@ test("failure, cancellation and paired board-first expiry fence old callbacks an
   await wrote(act(s, keys.una, "deactivate", {}, a)); await wrote(act(s, keys.una, "activate", {}, a));
   await wrote(act(s, keys.rita, "reset", { generation: 1 })); await wrote(act(s, keys.rita, "start"));
   await wrote(act(s, keys.una, "commit", claimFields(s, a)));
-  expect(await act(s, keys.una, "fulfill", resolution(s, expired), expired)).toMatchObject({ result: "refused" });
+  expect(await act(s, keys.una, "fulfill", resolution(s, expired), expired)).toMatchObject({ result: "refused", reason: "final" });
   await wrote(act(s, keys.rita, "cancel", resolution(s), promise(s).id));
   await wrote(act(s, keys.rita, "start")); await wrote(act(s, keys.rita, "pause")); refold(s);
 });
@@ -150,18 +150,18 @@ test("live participant cap and exact ownership survive removal, re-entry and non
   const ids: number[] = [];
   for (const who of actors.slice(0, 16)) ids.push(await participate(s, who));
   expect(s.state.count("participant", "inactive")).toBe(16);
-  expect(await act(s, actors[0]!, "participate")).toMatchObject({ result: "refused" });
+  expect(await act(s, actors[0]!, "participate")).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.0" });
   expect(await act(s, actors[16]!, "participate")).toMatchObject({ result: "refused", reason: "type-full" });
-  expect(await act(s, actors[1]!, "activate", {}, ids[0]!)).toMatchObject({ result: "refused" });
-  expect(await act(s, actors[1]!, "remove-participant", {}, ids[0]!)).toMatchObject({ result: "refused" });
+  expect(await act(s, actors[1]!, "activate", {}, ids[0]!)).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.1" });
+  expect(await act(s, actors[1]!, "remove-participant", {}, ids[0]!)).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.1" });
   await wrote(act(s, actors[0]!, "activate", {}, ids[0]!));
-  expect(await act(s, keys.rita, "remove-participant", {}, ids[0]!)).toMatchObject({ result: "refused" });
+  expect(await act(s, keys.rita, "remove-participant", {}, ids[0]!)).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.0" });
   await wrote(act(s, keys.rita, "force-deactivate", {}, ids[0]!));
   await wrote(act(s, keys.rita, "remove-participant", {}, ids[0]!));
   const again = await participate(s, actors[0]!);
   expect(again).not.toBe(ids[0]); expect(s.item(ids[0]!).state).toBe("removed");
   expect(s.state.count("participant", "inactive")).toBe(16);
-  expect(await act(s, keys.vic, "reset", { generation: 1 })).toMatchObject({ result: "refused" });
+  expect(await act(s, keys.vic, "reset", { generation: 1 })).toMatchObject({ result: "refused", reason: "guard-failed", detail: "guards.1" });
   await wrote(act(s, keys.rita, "start")); // No active participant: open waits, without a promise.
   expect(s.state.count("promise", "pledged")).toBe(0);
   await wrote(act(s, keys.rita, "pause")); refold(s);
