@@ -89,9 +89,47 @@ The exact packet passes the production parser checks (actual exit 0).
 Duplicate repository/branch, other-incarnation, and unauthorized `main`
 controls all refuse. The [evidence manifest](evidence/2026-11-03-g3b-binding-row.manifest.json)
 covers 105 files across seven sealed public units, including both failed
-preflights. The required gate has not run yet; review follows its actual exit.
-The already-landed archive instrumentation runs within that required gate;
-its historical failure cause remains unresolved.
+preflights. Its SHA-256 is
+`1f0452b183f6311bdb5a86fa9accf7897570db591f619e9913b12d34fe297c3f`.
+
+The one full gate runs at frozen head
+`74628997238b328bd70bdc040523bfc70e47e3ed`, tree
+`81ac679fcc92ae16c33d2b00c17a0b58939ccd3a`. The actual `gate.exit`
+reads `exit 0`. The [validation manifest](evidence/2026-11-04-g3b-binding-validation.manifest.json)
+has SHA-256
+`33a31032057e1501e6cb2701616836acfb5442bd9e05f265935b97673b8ecdc8`
+and adds 13 public files. Together, the manifests cover 118 public files
+across eight sealed units.
+
+| Check | Actual result | Manifest unit and files |
+| --- | --- | --- |
+| One authorized content producer | Exit 0, all four commands succeed | `2026-11-03-g3b-content-prefix`: `actual-content.exit`, `content.json` |
+| Complete-prefix verification | Exit 0, both issue entries and original text agree | `2026-11-03-g3b-content-prefix`: `verification.exit` |
+| Exact production parsers and refusal controls | Exit 0, two bindings and three roots | `2026-11-03-g3b-binding-packet`: `packet-check.exit`, `packet-check-result.json` |
+| Immutable source | All 3,987 blobs and executable modes match main | `2026-11-03-g3b-binding-packet`: `source-export.json`, `source-git-inventory.ndjson` |
+| Full gate | Exit 0, all four reporting phases complete | `2026-11-04-g3b-binding-validation`: `gate.exit`, `result.json`, `test-summary.json` |
+
+Terminal totals are 133 Node, 56 Counting, 3,607 plain with one skip, and
+1,070 Native with two skips. The reports contain zero contradictions and
+zero unhandled errors. The skipped Page recorder supplies no module
+duration, so the module-timing inventory remains partial. Head, tree,
+clean status, lockfile, and workspace bindings match before and after.
+The owned process group has closed.
+
+The gate takes 1,199.281 seconds on the shared Mac. The small doc-links
+owner and its one control overlap this run; no performance comparison
+follows. All raw output began in durable storage. Its owner-only,
+read-only inventory retains 2,276 original files, including TEST custody;
+the public validation unit retains no private fixture content.
+
+The already-landed archive instrumentation records another owner pass at
+215,252 ms. Its historical failure cause remains unresolved. No extra
+gate ran to pursue that cause.
+
+After the gate, only this note and its validation manifest change.
+Runtime, tests, dependencies, and the exact configuration packet remain
+unchanged. The review names the final record tree separately. No Card
+workflow applies to these documentation and nonsecret packet paths.
 
 The planner must retain four actual served-bundle readings and prove H3
 continuity, including a new Inbox birth. Only then can the builder bind

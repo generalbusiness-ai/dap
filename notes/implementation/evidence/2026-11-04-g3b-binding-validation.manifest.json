@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "qualification": "One actual frozen G3b binding-packet gate, all terminal phases, exact source and dependency identity, and private raw-original retention. No deployment, host acceptance or historical archive cause.",
+  "fileCount": 13,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-g3b-binding-validation",
+      "fileCount": 13,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 976,
+          "sha256": "1991f9498513f72483d2d5f76c039f5b57aa8af4b11f94ced4ffcbf30e13ee81"
+        },
+        {
+          "path": "after.json",
+          "bytes": 1867,
+          "sha256": "616111a92062a9125d7d82a3c425f98d6d108a39e9a093865c0617f2719e5a41"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1837,
+          "sha256": "098ca63d67f1a58b69b83c5cac5555274d109d122eb0eeab9fa39b33e67c53a5"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1867,
+          "sha256": "616111a92062a9125d7d82a3c425f98d6d108a39e9a093865c0617f2719e5a41"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 6887,
+          "sha256": "c021b256cdda136808afe752715dda535104ae6656cd5a084c1a1b3a5bade905"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 394,
+          "sha256": "07bea3d1a523c235452e64c3176c849e3371c6cdf58c1e44440ea652c9c1663f"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1918,
+          "sha256": "bfa79c1a9d00b374f845faf10e4bfbb3ede0ebc9518c8b328343fe5eaa98159b"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 980,
+          "sha256": "3695925c39206ea9fe07974e4e960c7632cf81f7a0eb6334e35fc2ce380bec5b"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 576,
+          "sha256": "83c0b1d7e0d459ed74270ad09fe89bef310d879c1a8712fe5a363fb1ff5bbe58"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 5828,
+          "sha256": "045ca09b6b9e0c175385ab83357c96ce04f32a9e969ae8f1d1232dd4cf445226"
+        }
+      ]
+    }
+  ]
+}
