@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/scope/test/fixed-index.test.ts","body":{"commit":"61497e21bc0cbffab4a7e3ace5c12cd699240c51","path":"packages/scope/test/fixed-index.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4ecd6dbb5e4f31f8cd988c2c93cf9b9d621efeb1","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-04-fixed-slot-histories.md."}
