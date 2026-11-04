@@ -11,6 +11,7 @@ import { wordsFixture } from './support/card-words.ts';
 import { nativeActorCards, recordedActorFixture } from './support/actor-cards.ts';
 import { TOOL_WAIT_MS } from '../src/views/waits.ts';
 import { assertAppMessages } from './support/mcp-apps-contract.ts';
+import { cardHistoriesBrowser } from './support/card-histories-browser.mjs';
 import { mkdir, writeFile } from 'node:fs/promises';
 const out=process.env.VIEW_CAPTURE_OUT;
 if (!/^\/(?:private\/)?tmp\//.test(out)) throw new Error('Browser evidence belongs in a scratch directory under /tmp.'); await mkdir(out,{recursive:true});
@@ -442,6 +443,7 @@ try{
     assert.deepEqual((await calledTools(page)).slice(0,3),['view_read','view_board','view_read'],'A declared card names its own opening tool');
     assert.deepEqual(errors,[]);report.cases.push({label:'declared-two-process'});await page.close();
   }
+  await cardHistoriesBrowser({browser,host,out,report,click,verify});
   const covered=new Set(report.contracts.flatMap(row=>Object.keys(row.counts)));
   for(const method of ['ui/initialize','ui/notifications/initialized','ui/notifications/size-changed','ui/update-model-context','ui/request-display-mode','ui/message','tools/call'])assert.ok(covered.has(method),'INDEPENDENT MCP CONTRACT: exercised outbound method '+method);
   await writeFile(out+'/report.json',JSON.stringify(report,null,2));console.log(JSON.stringify({cases:report.cases.length,browser:report.browser,errors:report.errors,output:out}));

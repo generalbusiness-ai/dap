@@ -16,13 +16,42 @@ import { fixedSigner } from "../fixtures.ts";
 import type { CustodyStore } from "../../src/custody.ts";
 
 const fields = { approvals: 0, ownerMayReview: false, checks: [], labels: [], extents: firstExtents({ approvals: 0, checks: [] }) };
+/** Test-only gates hold actual service reads after their fixture credentials
+ * are signed. The browser clock controls waiting; no elapsed delay does. */
+function historyReads() {
+  type Outcome = "complete" | "truncated";
+  const latch = () => { let release!: () => void; const promise = new Promise<void>(resolve => { release = resolve; }); return { promise, release }; };
+  const rows = new Map<number, { started: boolean; entered: ReturnType<typeof latch>; result: Promise<Outcome>; release(value: Outcome): void }>();
+  let calls = 0, closed = false;
+  const row = (ordinal: number) => {
+    if (!Number.isInteger(ordinal) || ordinal < 1 || ordinal > 4) throw new Error("History fixture read ordinal exceeds its bound.");
+    if (!rows.has(ordinal)) {
+      let release!: (value: Outcome) => void;
+      const result = new Promise<Outcome>(resolve => { release = resolve; });
+      rows.set(ordinal, { started: false, entered: latch(), result, release });
+    }
+    return rows.get(ordinal)!;
+  };
+  return {
+    next: async (): Promise<Outcome> => { const next = row(++calls); next.started = true; next.entered.release(); return closed ? "complete" : next.result; },
+    entered: (ordinal: number) => row(ordinal).entered.promise,
+    release: (ordinal: number, result: Outcome) => {
+      const pending = row(ordinal);
+      if (!pending.started) throw new Error("Release follows the actual history read's entry.");
+      pending.release(result);
+    },
+    state: () => ({ calls }),
+    close: () => { closed = true; for (const pending of rows.values()) pending.release("complete"); },
+  };
+}
 /** Shared scripted card/scope source for the custom host and actual basic-host.
  * Its signer is a public test fixture; no live room or provider is contacted. */
 export function fixture(mode: string, custody: CustodyStore = memoryStore(), identity?: Pick<Card["identity"], "kind" | "item" | "revision">) {
   const signer = fixedSigner(17), scope = new StandIn(signer.key);
   /** `signed-diff-<ms>`: the diff signs a read-token through the real service, and its Git read takes this long. */
   const stoppedRead = mode === "stopped-diff";
-  const slowRead = /^signed-diff-(\d+)$/.exec(mode), readMs = stoppedRead ? 0 : slowRead ? Number(slowRead[1]) : null;
+  const history = mode === "history-gated-diff" ? historyReads() : null;
+  const slowRead = /^signed-diff-(\d+)$/.exec(mode), readMs = stoppedRead || history ? 0 : slowRead ? Number(slowRead[1]) : null;
   const completed = new Set<number>();
   let revision = 0, exactReads = 0, lose = mode === "loss";
   const signed: Intent[] = [];
@@ -58,7 +87,8 @@ export function fixture(mode: string, custody: CustodyStore = memoryStore(), ide
       if (readMs > 0) await new Promise(resolve => { setTimeout(resolve, readMs); });
       // Script the bounded stop, then a complete answer. The real service
       // still signs and spends one read-token credential for each call.
-      if (stoppedRead && ++exactReads === 1) return { base: "a".repeat(40), integration: "b".repeat(40), files: 0, paths: [], truncated: true,
+      const controlled = history ? await history.next() : null;
+      if (controlled === "truncated" || stoppedRead && ++exactReads === 1) return { base: "a".repeat(40), integration: "b".repeat(40), files: 0, paths: [], truncated: true,
         leftOut: "every changed path, because the read stopped before it reached one", text: "TEST diff stopped at its time bound.\nNo changed path was reached.\n" };
       return { base: "a".repeat(40), integration: "b".repeat(40), files: 1, truncated: false, text: "@@ the slow read @@\n-before\n+after\n" };
     } }),
@@ -72,7 +102,7 @@ export function fixture(mode: string, custody: CustodyStore = memoryStore(), ide
       return answer;
     },
   });
-  return { service: process_(), process: process_, signed, scope, complete: (item: string) => completed.add(Number(item.slice(1)) - 7) };
+  return { service: process_(), process: process_, signed, scope, ...(history ? { history } : {}), complete: (item: string) => completed.add(Number(item.slice(1)) - 7) };
 }
 
 /** Pure declared-view browser fixture. Native projection, install and role
@@ -220,13 +250,25 @@ void(async()=>{input={view:config.id,subject:config.subject??config.screen,...(c
   hostOrigin = await listen(host);
   sandboxOrigin = await listen(sandbox);
   return { url: hostOrigin, sandboxOrigin,
+    waitHistoryRead: (instance: string, ordinal: number) => {
+      const history = instances.get(instance)?.history;
+      if (!history) throw new Error("No controlled read on this fixture instance.");
+      return history.entered(ordinal);
+    },
+    releaseHistoryRead: (instance: string, ordinal: number, result: "complete" | "truncated") => {
+      const history = instances.get(instance)?.history;
+      if (!history) throw new Error("No controlled read on this fixture instance.");
+      history.release(ordinal, result);
+    },
+    historyReadState: (instance: string) => instances.get(instance)?.history?.state() ?? null,
+    closeHistoryReads: (instance: string) => instances.get(instance)?.history?.close(),
     complete: (instance: string, item: string) => {
       const fixture = instances.get(instance);
       if (!fixture) throw new Error("Unknown fixture instance");
       fixture.complete(item);
     },
     close: async () => {
-    for (const instance of instances.values()) { instance.wire.endLegacy(instance.session); instance.wire.closeAll(); }
+    for (const instance of instances.values()) { instance.history?.close(); instance.wire.endLegacy(instance.session); instance.wire.closeAll(); }
     instances.clear();
     await Promise.all([stop(host), stop(sandbox)]);
   } };

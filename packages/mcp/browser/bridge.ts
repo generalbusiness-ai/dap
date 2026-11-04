@@ -22,7 +22,7 @@ export class AppBridge {
   #next = 0;
   #closed = false;
   #negotiationError: Error | null = null;
-  #pending = new Map<number, { resolve(value: Object_): void; reject(error: Error): void; timer: ReturnType<typeof setTimeout> }>();
+  #pending = new Map<number, { resolve(value: Object_): void; reject(error: Error): void; timer: ReturnType<typeof setTimeout>; timedOut: boolean; onLate?: () => void }>();
   #listeners = new Set<(method: string, params: Object_) => void>();
   #input: Object_ | null = null;
   #inputWaiters = new Set<{ resolve(input: Object_): void; reject(error: Error): void; timer: ReturnType<typeof setTimeout> }>();
@@ -34,14 +34,21 @@ export class AppBridge {
     window.parent.postMessage({ jsonrpc: "2.0", ...message }, "*");
   }
   notify(method: string, params: Object_ = {}) { this.#send({ method, params }); }
-  request(method: string, params: Object_ = {}, wait = HOST_WAIT_MS): Promise<Object_> {
+  request(method: string, params: Object_ = {}, wait = HOST_WAIT_MS, onLate?: () => void): Promise<Object_> {
     if (this.#negotiationError) return Promise.reject(this.#negotiationError);
     if (this.#closed) return Promise.reject(new Error("The host closed this card."));
     if (this.#pending.size >= 32) return Promise.reject(new Error("The card is waiting for too many host replies."));
     const id = ++this.#next;
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => { this.#pending.delete(id); reject(new Error(`The app did not answer ${method} in ${wait / 1000} seconds.`)); }, wait);
-      this.#pending.set(id, { resolve, reject, timer });
+      const timer = setTimeout(() => {
+        const pending = this.#pending.get(id);
+        if (!pending) return;
+        // The caller's wait ends once. An interested card can still learn
+        // that this exact request replied later, without repeating it.
+        if (onLate) pending.timedOut = true; else this.#pending.delete(id);
+        reject(new Error(`The app did not answer ${method} in ${wait / 1000} seconds.`));
+      }, wait);
+      this.#pending.set(id, { resolve, reject, timer, timedOut: false, ...(onLate ? { onLate } : {}) });
       try { this.#send({ id, method, params }); }
       catch (error) { clearTimeout(timer); this.#pending.delete(id); reject(error); }
     });
@@ -54,6 +61,7 @@ export class AppBridge {
       if (!pending) return;
       clearTimeout(pending.timer);
       this.#pending.delete(message["id"]);
+      if (pending.timedOut) { pending.onLate?.(); return; }
       if (record(message["error"])) pending.reject(new Error(String(message["error"]["message"] ?? "The host refused the request.")));
       else if (record(message["result"])) pending.resolve(message["result"]);
       else pending.reject(new Error("The host returned a malformed reply."));
@@ -104,8 +112,8 @@ export class AppBridge {
       this.#inputWaiters.add(waiter);
     });
   }
-  async tool(name: string, args: Object_): Promise<Object_> {
-    const reply = await this.request("tools/call", { name, arguments: args }, TOOL_WAIT_MS);
+  async tool(name: string, args: Object_, onLate?: () => void): Promise<Object_> {
+    const reply = await this.request("tools/call", { name, arguments: args }, TOOL_WAIT_MS, onLate);
     let data = reply["structuredContent"];
     if (!record(data) && Array.isArray(reply["content"])) {
       const text = reply["content"].find((part: unknown) => record(part) && part["type"] === "text");
@@ -126,7 +134,10 @@ export class AppBridge {
     if (this.#closed) return;
     this.#closed = true;
     window.removeEventListener("message", this.#receive);
-    for (const pending of this.#pending.values()) { clearTimeout(pending.timer); pending.reject(new Error("The host closed this card.")); }
+    for (const pending of this.#pending.values()) {
+      clearTimeout(pending.timer);
+      if (!pending.timedOut) pending.reject(new Error("The host closed this card."));
+    }
     this.#pending.clear();
     this.#listeners.clear();
     for (const waiter of this.#inputWaiters) { clearTimeout(waiter.timer); waiter.reject(new Error("The host closed this card.")); }
