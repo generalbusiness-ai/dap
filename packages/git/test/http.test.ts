@@ -1,5 +1,5 @@
-import { afterAll, expect, test } from "vitest";
-import { SmartHttpGit, buildPack, type RawGitObject } from "../src/http.ts";
+import { afterAll, describe, expect, test } from "vitest";
+import { SmartHttpGit, buildPack, type HttpUpdate, type RawGitObject } from "../src/http.ts";
 import { READ_BOUNDS } from "../src/reader.ts";
 import { attemptOutcome, classifySend } from "../src/push-outcome.ts";
 import { Host } from "./support/host.ts";
@@ -49,6 +49,87 @@ test.each([
   const answer = await f.client.send(update);
   expect([answer.exit, answer.reported, f.posts()]).toEqual([null, null, 1]);
   expect(attemptOutcome(update, classifySend(answer, one), { ref: replyRef, value: update.new }).result).toBe("unknown");
+});
+
+describe("generated receive-pack grammar", () => {
+  type Variant = { name: string; update: HttpUpdate; reported: "created" | "updated" | "deleted"; rejected: boolean; lf: string; flushes: number };
+  type Fault = "bad packet length" | "missing terminal flush" | "wrong ref" | "extra own status" | "extra other status"
+    | "extra unpack status" | "third terminal flush" | "trailing bytes" | "missing unpack status" | "missing ref status";
+  const updates = [
+    { name: "create", update: { ref: REF, old: null, new: "2".repeat(40) }, reported: "created" as const },
+    { name: "update", update: { ref: REF, old: "1".repeat(40), new: "2".repeat(40) }, reported: "updated" as const },
+    { name: "delete", update: { ref: REF, old: "1".repeat(40), new: null }, reported: "deleted" as const },
+  ];
+  const variants: Variant[] = [];
+  for (const update of updates) for (const rejected of [false, true]) for (const lf of ["\n", ""]) for (const flushes of [1, 2])
+    variants.push({ ...update, name: `${update.name}, rejected=${rejected}, LF=${JSON.stringify(lf)}, flushes=${flushes}`, rejected, lf, flushes });
+  const faults: Fault[] = ["bad packet length", "missing terminal flush", "wrong ref", "extra own status", "extra other status",
+    "extra unpack status", "third terminal flush", "trailing bytes", "missing unpack status", "missing ref status"];
+  const baseline: Variant = { ...updates[0]!, rejected: false, lf: "\n", flushes: 1 };
+  const packet = (text: string) => Buffer.concat([Buffer.from((Buffer.byteLength(text) + 4).toString(16).padStart(4, "0")), Buffer.from(text)]);
+  // Separate receive grammar: report-status has one unpack line and one own
+  // ref status. A second terminal flush is dap's retained provider compatibility
+  // case (920029d52c); it is not a report-status-v2 option or a general extra-record rule.
+  function report(v: Variant, fault?: Fault) {
+    const text = (line: string) => packet(line + v.lf), flush = Buffer.from("0000");
+    const frames = [text("unpack ok"), text(v.rejected ? `ng ${v.update.ref} TEST refused` : `ok ${v.update.ref}`),
+      ...Array.from({ length: v.flushes }, () => flush)];
+    switch (fault) {
+      case "bad packet length": frames[0] = Buffer.concat([Buffer.from("zzzz"), frames[0]!.subarray(4)]); break;
+      case "missing terminal flush": frames.pop(); break;
+      case "wrong ref": frames[1] = text("ok refs/heads/other"); break;
+      case "extra own status": frames.splice(2, 0, text(`ok ${v.update.ref}`)); break;
+      case "extra other status": frames.splice(2, 0, text("ok refs/heads/other")); break;
+      case "extra unpack status": frames.splice(1, 0, text("unpack ok")); break;
+      case "third terminal flush": frames.push(flush); break;
+      case "trailing bytes": frames.push(Buffer.from("junk")); break;
+      case "missing unpack status": frames.shift(); break;
+      case "missing ref status": frames.splice(1, 1); break;
+    }
+    return Buffer.concat(frames);
+  }
+  function send(v: Variant, fault?: Fault) {
+    let gets = 0, posts = 0;
+    const capabilities = v.lf ? ["report-status", "delete-refs"] : ["delete-refs", "report-status"];
+    const advertised = `${v.update.old ?? "0".repeat(40)} ${v.update.old === null ? "capabilities^{}" : v.update.ref}\0${capabilities.join(" ")}${v.lf}`;
+    const advertisement = Buffer.concat([packet(`# service=git-receive-pack${v.lf}`), Buffer.from("0000"), packet(advertised), Buffer.from("0000")]);
+    const reply = report(v, fault);
+    const client = new SmartHttpGit({ remote: "https://git.example.invalid/repo.git", maxBytes: 1000, fetch: request => {
+      if (request.method === "GET") {
+        gets++;
+        return Promise.resolve(new Response(advertisement, { headers: { "content-type": "application/x-git-receive-pack-advertisement" } }));
+      }
+      expect(request.method).toBe("POST"); posts++;
+      return Promise.resolve(new Response(reply, { headers: { "content-type": "application/x-git-receive-pack-result" } }));
+    } });
+    return { outcome: client.send(v.update), counts: () => ({ gets, posts }) };
+  }
+  // HTTP replies stand in for a server here. The existing fixed real-Git test
+  // below independently witnesses create, update, delete, CAS refusal and loss.
+  for (const variant of variants) test(`${variant.name} preserves its report and attempt classification`, async () => {
+    const check = send(variant), answer = await check.outcome;
+    expect([answer.exit, answer.reported]).toEqual(variant.rejected ? [1, "remote-rejected"] : [0, variant.reported]);
+    const classified = classifySend(answer, one);
+    expect(classified).toEqual(variant.rejected ? { class: "refused", why: "rejected" } : { class: "unknown", reported: variant.reported });
+    expect(attemptOutcome(variant.update, classified, { ref: REF, value: variant.update.new }).result).toBe(variant.rejected ? "refused" : "confirmed");
+    if (!variant.rejected) {
+      expect(attemptOutcome(variant.update, classified, { ref: REF, value: "3".repeat(40) }).result).toBe("unknown");
+      expect(attemptOutcome(variant.update, classified, { ref: "refs/heads/other", value: variant.update.new }).result).toBe("unknown");
+    }
+    expect(check.counts()).toEqual({ gets: 1, posts: 1 });
+  });
+  for (const fault of faults) test(`one invalid edit: ${fault} stays unknown even beside a matching ref`, async () => {
+    const check = send({ ...baseline, flushes: fault === "third terminal flush" ? 2 : 1 }, fault), answer = await check.outcome;
+    expect([answer.exit, answer.reported]).toEqual([null, null]);
+    expect(attemptOutcome(baseline.update, classifySend(answer, one), { ref: REF, value: baseline.update.new }).result).toBe("unknown");
+    expect(check.counts()).toEqual({ gets: 1, posts: 1 });
+  });
+  test("historical receive seed: unpack ok then own ref then two terminal flushes", async () => {
+    const check = send({ ...baseline, flushes: 2 }), answer = await check.outcome;
+    expect([answer.exit, answer.reported], "The second terminal flush must retain this send's own report.").toEqual([0, "created"]);
+    expect(attemptOutcome(baseline.update, classifySend(answer, one), { ref: REF, value: baseline.update.new }).result).toBe("confirmed");
+    expect(check.counts()).toEqual({ gets: 1, posts: 1 });
+  });
 });
 
 // Invariant: Web pack bytes reach real local Git as the exact supplied

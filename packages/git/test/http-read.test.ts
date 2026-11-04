@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { inflateSync } from "node:zlib";
-import { afterAll, expect, test, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import { advertisementRefusalDetail, httpResponseRefusalDetail, decodePack, SmartHttpSource } from "../src/http-read.ts";
 import { buildPack } from "../src/http.ts";
 import { GitRefusal } from "../src/names.ts";
@@ -397,6 +397,103 @@ const v2Bytes = (pack: Uint8Array, before: readonly Uint8Array[] = [], lineEndin
   return Buffer.concat([...pieces, Buffer.from("0000")]);
 };
 const v2Response = (body: Uint8Array) => new Response(body, { headers: { "content-type": "application/x-git-upload-pack-result" } });
+
+describe("generated upload-pack grammar", () => {
+  type Variant = { name: string; lf: string; preamble: string | null; reverse: boolean; shallow: boolean; segment: number; minimal?: boolean };
+  type Fault = "bad advertisement length" | "missing preamble flush" | "duplicate fetch" | "duplicate object format"
+    | "missing advertisement flush" | "trailing advertisement bytes" | "missing section delimiter" | "wrong shallow ref"
+    | "unexpected section" | "bad response length" | "extra response flush" | "trailing response bytes";
+  const variants: Variant[] = [];
+  for (const lf of ["\n", ""]) for (const preamble of [null, "\n", ""]) for (const reverse of [false, true])
+    for (const shallow of [false, true]) for (const segment of [0, 7]) variants.push({
+      name: `LF=${JSON.stringify(lf)}, preamble=${JSON.stringify(preamble)}, reverse=${reverse}, shallow=${shallow}, segment=${segment}`,
+      lf, preamble, reverse, shallow, segment,
+    });
+  const faults: [Fault, 0 | 1][] = [["bad advertisement length", 0], ["missing preamble flush", 0], ["duplicate fetch", 0], ["duplicate object format", 0],
+    ["missing advertisement flush", 0], ["trailing advertisement bytes", 0], ["missing section delimiter", 1], ["wrong shallow ref", 1],
+    ["unexpected section", 1], ["bad response length", 1], ["extra response flush", 1], ["trailing response bytes", 1]];
+  const baseline: Variant = { name: "baseline", lf: "\n", preamble: "\n", reverse: false, shallow: true, segment: 7 };
+  let fixture: { head: string; data: Uint8Array; pack: Uint8Array };
+  beforeAll(() => {
+    const remote = bare(), root = put(remote, "tree", new Uint8Array());
+    const data = Buffer.from(commitText(root, [], "TEST framing object\nUTF-8: é")), head = put(remote, "commit", data);
+    const bytes = onePack(remote, head);
+    // Fixed real Git and Node zlib supply the object truth once. None of the
+    // generated variants calls our pack encoder or starts another Git process.
+    expect(execFileSync("git", ["-C", remote, "cat-file", "commit", head])).toEqual(data);
+    expect(packEntries(bytes)).toEqual([{ kind: 1, bytes: data.length }]);
+    fixture = { head, data: new Uint8Array(data), pack: bytes };
+  });
+  // Test-only grammar for the admitted upload subset. The optional text LF
+  // and sideband rules come from protocol-common/protocol-v2. The HTTP marker
+  // compatibility seed is retained from a03d3153db, not inferred from dap's parser.
+  function wire(v: Variant, fault?: Fault) {
+    const text = (line: string) => pkt(line + v.lf), flush = Buffer.from("0000");
+    const fetch = v.reverse ? "fetch=filter shallow" : "fetch=shallow filter";
+    const capabilities = v.minimal ? [fetch] : [fetch, "object-format=sha1", "x-test=ignored"];
+    if (v.reverse) capabilities.reverse();
+    const advertisement = [
+      ...(v.preamble === null ? [] : [pkt(`# service=git-upload-pack${v.preamble}`), flush]),
+      text("version 2"), ...capabilities.map(text), flush,
+    ];
+    const response = [...(v.shallow ? [text("shallow-info"), text(`shallow ${fixture.head}`), Buffer.from("0001")] : []), text("packfile")];
+    if (v.segment) response.push(band(1), band(2, Buffer.from([255, 0, 10])));
+    const segment = v.segment || fixture.pack.length;
+    for (let at = 0; at < fixture.pack.length; at += segment) response.push(band(1, fixture.pack.subarray(at, at + segment)));
+    response.push(flush);
+    // Each case edits one grammar component of the same admitted baseline.
+    switch (fault) {
+      case "bad advertisement length": advertisement[0] = Buffer.concat([Buffer.from("zzzz"), advertisement[0]!.subarray(4)]); break;
+      case "missing preamble flush": advertisement.splice(1, 1); break;
+      case "duplicate fetch": advertisement.splice(-1, 0, text(fetch)); break;
+      case "duplicate object format": advertisement.splice(-1, 0, text("object-format=sha1")); break;
+      case "missing advertisement flush": advertisement.pop(); break;
+      case "trailing advertisement bytes": advertisement.push(Buffer.from("junk")); break;
+      case "missing section delimiter": response.splice(2, 1); break;
+      case "wrong shallow ref": response[1] = text(`shallow ${fixture.head[0] === "a" ? "b" : "a"}${fixture.head.slice(1)}`); break;
+      case "unexpected section": response.splice(3, 0, text("acknowledgments")); break;
+      case "bad response length": response[0] = Buffer.concat([Buffer.from("zzzz"), response[0]!.subarray(4)]); break;
+      case "extra response flush": response.push(flush); break;
+      case "trailing response bytes": response.push(Buffer.from("junk")); break;
+    }
+    return { advertisement: Buffer.concat(advertisement), response: Buffer.concat(response) };
+  }
+  function read(v: Variant, fault?: Fault) {
+    const bytes = wire(v, fault);
+    let gets = 0, posts = 0;
+    const source = new SmartHttpSource({ ...v2Options, fetch: request => {
+      expect(request.headers.get("git-protocol")).toBe("version=2");
+      if (request.method === "GET") {
+        gets++;
+        return Promise.resolve(new Response(bytes.advertisement, { headers: { "content-type": "application/x-git-upload-pack-advertisement" } }));
+      }
+      expect(request.method).toBe("POST"); posts++;
+      return Promise.resolve(v2Response(bytes.response));
+    } });
+    return { outcome: source.object(fixture.head, isolatedWire), counts: () => ({ gets, posts }) };
+  }
+  for (const variant of variants) test(`${variant.name} preserves exact Git object bytes`, async () => {
+    const check = read(variant);
+    await expect(check.outcome).resolves.toEqual({ type: "commit", size: fixture.data.length, data: fixture.data });
+    expect(check.counts()).toEqual({ gets: 1, posts: 1 });
+  });
+  for (const [fault, posts] of faults) test(`one invalid edit: ${fault} refuses without fallback or another POST`, async () => {
+    const check = read(baseline, fault);
+    await expect(check.outcome).rejects.toBeInstanceOf(GitRefusal);
+    expect(check.counts()).toEqual({ gets: 1, posts });
+  });
+  for (const seed of [
+    { name: "LF-free version 2", lf: "", preamble: null },
+    { name: "service marker then flush then version 2", lf: "\n", preamble: "\n" },
+  ]) test(`historical upload seed: ${seed.name}`, async () => {
+    // Shrunk witnesses remove optional capabilities, sections, keepalives,
+    // progress and segmentation; only the historical framing choice remains.
+    const check = read({ ...seed, reverse: false, shallow: false, segment: 0, minimal: true });
+    const answer = await check.outcome.then(value => ({ value }), error => ({ error }));
+    expect(answer, "The historical framing seed must preserve exact Git bytes.").toEqual({ value: { type: "commit", size: fixture.data.length, data: fixture.data } });
+    expect(check.counts()).toEqual({ gets: 1, posts: 1 });
+  });
+});
 
 // Actual Git, with filter enabled but v0 nonadvertised-want permissions
 // explicitly disabled. This is a local boundary witness, not hosted support.
