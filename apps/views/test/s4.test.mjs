@@ -573,6 +573,48 @@ test('a question fits the first card up to the named bound, in characters and in
   assert.equal(long.wholeText, undefined, 'THAT DOES NOT FIT: the card does not claim the whole text, so the session keeps its acts behind Open');
 });
 
+test('a Question detail at the UTF-8 card budget remains reachable through a summary with no hidden body or native acts', async t => {
+  const f = fixture(t), q = await question(f), { context } = await f.app.question(q.state.ref, q.opening.entry.seq);
+  const subject = questionSubject(q.state.ref, q.opening.entry.seq), bytes = card => utf8(canonicalize(card)).length;
+  // Only the body varies in this scripted context. The actual adapter and mounted
+  // session run unchanged; these reads prove no Native judgment or host limit.
+  let body;
+  const source = decisionSource({ question: async () => ({ context: { ...context, body } }) });
+  const read = page => source.read({ screen: 'decision', subject, position: 0, page });
+  const unexpected = async () => { assert.fail('This projection test sends no generic read or act.'); };
+  for (const prefix of ['x'.repeat(601), 'é😀"\\\n'.repeat(103)]) {
+    body = prefix;
+    const seed = await read('item');
+    assert.equal(seed.status, 'ready');
+    body += 'x'.repeat(60 * 1024 - bytes(seed.card));
+    const exact = body, detail = await read('item');
+    assert.equal(bytes(detail.card), 60 * 1024, 'The complete detail reaches the canonical UTF-8 byte limit exactly.');
+    const sessions = new ViewSessions(source, { call: unexpected }, unexpected, unexpected);
+    assert.equal((await sessions.open('TEST-budget', 'decision', subject)).status, 'ready', 'A detail that fits remains reachable.');
+    const summary = sessions.display('TEST-budget');
+    assert.deepEqual(summary.context.navigation, ['open']);
+    assert.equal(summary.card.body, undefined, 'The navigation summary carries no hidden or partial text.');
+    assert.deepEqual(summary.card.actions, [], 'The summary offers no native act before the whole text.');
+    assert.equal(summary.card.wholeText, undefined);
+    for (const field of ['identity', 'actor', 'actorLabel', 'projection']) assert.deepEqual(summary.card[field], detail.card[field], `Open retains ${field}.`);
+    const opened = await sessions.read('TEST-budget', summary.cut, { page: 'item' });
+    assert.equal(opened.status, 'ready');
+    assert.equal(opened.card.body, exact, 'Open reads the exact whole text, including UTF-8 and JSON escapes.');
+    assert.deepEqual(opened.card.actions.map(action => action.id), ['approve', 'request-changes']);
+    assert.deepEqual(opened.card.identity, summary.card.identity);
+    body += 'x';
+    for (const page of ['summary', 'item']) {
+      const refused = await read(page);
+      assert.equal(refused.status, 'incomplete', 'One additional body byte refuses both pages.');
+      assert.equal(refused.card, undefined);
+    }
+    const refused = await sessions.read('TEST-budget', opened.cut, { page: 'summary' });
+    assert.equal(refused.status, 'incomplete');
+    assert.equal(refused.card, undefined);
+    assert.ok(!refused.context.navigation.includes('open'));
+  }
+});
+
 // The finding profile over scripted scope answers. No scope judges these rows, so nothing here shows a guard: `packages/mcp/test/change-view.scope.test.ts` runs the real lane.
 const FILE = 'src/a.ts';
 const scriptedFinding = (f, id, source, values = {}, refs = {}, parties = {}) => item(id, 'finding', 'open', { file: FILE, start: 10, end: 12, class: 'race', severity: 'high', confidence: 80, scenario: 'TEST two writers', source, sourceVersion: 'reviewer 1.2', tree: '3'.repeat(40), ...values }, { version: 6, ...refs }, { reporter: f.other, ...parties });
