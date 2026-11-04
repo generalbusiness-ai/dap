@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "checkpoint": "10f753176dfc8427a6cea2e663bcc4787d60377e",
+  "tree": "2f92120a04dcfaed4d4b04ba4df774d9d0b14bd4",
+  "qualification": "Focused working-tree owner/control evidence with explicit source identity and retained initial limitations; the later actual frozen gate independently validates this head. No hosted Git or deployment.",
+  "fileCount": 9,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-git-framing-validation",
+      "fileCount": 9,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 674,
+          "sha256": "2ce4653a50dbf337753584e7ceab1f116ab4a56dab9f080a522b1274153e0506"
+        },
+        {
+          "path": "control-retention-change.json",
+          "bytes": 583,
+          "sha256": "4adfcb66378fd369ea8bbd28cb7e040c6f706f287c79a91db0242615c7b1dc76"
+        },
+        {
+          "path": "controls.json",
+          "bytes": 1257,
+          "sha256": "01ce2096516eaa563c6c74850f656552b52e8177f62fcf2b5642c257e36adf72"
+        },
+        {
+          "path": "history.json",
+          "bytes": 963,
+          "sha256": "2ed580fa80444260e9ae34d5d56cf9077d92b14efd413a36ab7774456ceb9c2f"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 1331,
+          "sha256": "55470049f9536f02b37d9da26969a85f722f29832447a3a76839b01297eff06b"
+        },
+        {
+          "path": "references.json",
+          "bytes": 910,
+          "sha256": "cfe735374bbb8f28e4512df41264299247c7d208818b3b2a5c61f5caf4d5282c"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2441,
+          "sha256": "71eaec17ce8b545b7f13dd85ecc52b38d9e2f01fc8f6a58fda1cac957fb567d3"
+        },
+        {
+          "path": "source-identity.json",
+          "bytes": 954,
+          "sha256": "e742fbbb2cfab16ce85313df408f7765d9c02981fe89cfe5b72a02925e551545"
+        },
+        {
+          "path": "test-inputs.diff",
+          "bytes": 15497,
+          "sha256": "3be6aba7dc28eb5e92ad3554c65f203e3f600d4624193f43a66672d2d1a64e83"
+        }
+      ]
+    }
+  ]
+}
