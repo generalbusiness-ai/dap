@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2fc398b30ba1dc270f64e447c8ccdb5239caee28","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-04-question-summary-card-ci.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4f9db08801802b1b7f1d39c753db4e8aaf997c30","text":"Merge retired a covered predecessor; the successor is at apps/views/test/s4.test.mjs."}
