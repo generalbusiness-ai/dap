@@ -1,0 +1,297 @@
+{
+  "bind": {
+    "qualification": "One actual owner bind-repository command through the reviewed mini runtime. Native first-head publication reached ready; original issue text and complete two-entry prefix are unchanged. This is not the later agent proposal, owner review/merge or final G3 acceptance.",
+    "sourceCommit": "bf3bceb667e99876d2edc4880c3c337f944f5fbe",
+    "servedVersionFromPlanner": "0fb0960fcd57a16d",
+    "bindPosts": 1,
+    "bindCommandExit": 0,
+    "bindFact": {
+      "at": {
+        "inc": "in_252sukzzwfnbmmt25jtenekatm",
+        "kind": "destination",
+        "scope": "sc_xfpp7pd775e2b7aoeglflzgnrzursvhtbeoyaojp6lfhdytspuha"
+      },
+      "seq": 2,
+      "hash": "sha256:2bd4c22ef579a3453696b935c79616dbd1c9638566a0bfe856ff1bedc702a928"
+    },
+    "bindSignatureVerified": true,
+    "bindEntryHashVerified": true,
+    "destination": {
+      "at": {
+        "inc": "in_252sukzzwfnbmmt25jtenekatm",
+        "kind": "destination",
+        "scope": "sc_xfpp7pd775e2b7aoeglflzgnrzursvhtbeoyaojp6lfhdytspuha"
+      },
+      "head": {
+        "hash": "sha256:407461edf97eb63b252f6bbcfc1c1d1d6ab2aacee42bb6f94dd40a9bbff3428d",
+        "seq": 5
+      },
+      "state": "ready",
+      "repository": {
+        "host": "github.com",
+        "id": "1442980126",
+        "name": "dap-g3-binding-witness-20261102",
+        "namespace": "generalbusiness-ai"
+      },
+      "branch": "g3-witness-2",
+      "commit": "253b121310003bcb0995c1f2d9322d568b1da5d7"
+    },
+    "issueBefore": {
+      "scope": {
+        "inc": "in_pa4prtjr7t4o4v4bvi4t6ck7xa",
+        "kind": "lane",
+        "scope": "sc_nqmsfn6w5e5ba3mvmjhrues7xe44kwdhfe7p3dmxn65dohkf7bba"
+      },
+      "head": {
+        "hash": "sha256:05b3fd5cebbdb73bc5f6f0501db3b4f48ee3b0547f149f18fca056715515f983",
+        "seq": 1
+      },
+      "bodyDigest": "sha256:489e2d124a3e6e49b9f85b1082383212838ca6d34625bfb11be1cfe870c9d23e",
+      "bodyBytes": 111,
+      "historyEntries": 2,
+      "historySha256": "4a97851acb226f2a51aaed92248388732e814e303ccb438b92c2630d2672a808"
+    },
+    "issueAfter": {
+      "scope": {
+        "inc": "in_pa4prtjr7t4o4v4bvi4t6ck7xa",
+        "kind": "lane",
+        "scope": "sc_nqmsfn6w5e5ba3mvmjhrues7xe44kwdhfe7p3dmxn65dohkf7bba"
+      },
+      "head": {
+        "hash": "sha256:05b3fd5cebbdb73bc5f6f0501db3b4f48ee3b0547f149f18fca056715515f983",
+        "seq": 1
+      },
+      "bodyDigest": "sha256:489e2d124a3e6e49b9f85b1082383212838ca6d34625bfb11be1cfe870c9d23e",
+      "bodyBytes": 111,
+      "historyEntries": 2,
+      "historySha256": "4a97851acb226f2a51aaed92248388732e814e303ccb438b92c2630d2672a808"
+    },
+    "remoteReportsGithub": true,
+    "verifyAllExit": 0,
+    "configUnchanged": true,
+    "planUnchanged": true
+  },
+  "proposal": {
+    "nativeWrites": 0,
+    "cloneExit": 0,
+    "cloneRuns": 1,
+    "originalNativePosts": 6,
+    "proposalCommandExit": 1,
+    "expectedAgentMergeRefusal": "unauthorized",
+    "lane": {
+      "inc": "in_5nonicijwch3xs3rs7s2lpnb6a",
+      "kind": "lane",
+      "scope": "sc_fxzwognk7luowedi4wbvpoevxfkdcvznpesuc6u6wrtvtaow3cya"
+    },
+    "manifest": 6,
+    "author": {
+      "member": "@g3b-agent-20261104",
+      "membership": {
+        "inc": "in_y3a6f4jvjatrpvilxilktqhr2a",
+        "kind": "membership",
+        "scope": "sc_2m6groa2mxxgqzmaawhwddvzyjcgnpmqhgnv46aygcowabhnxn5q"
+      }
+    },
+    "base": "253b121310003bcb0995c1f2d9322d568b1da5d7",
+    "localTip": "a2767e4786c468c2a66ad37e665be7957b56de43",
+    "branch": "g3b-proposal-20261104",
+    "path": "G3B-WITNESS.md",
+    "bytes": 232,
+    "digest": "sha256:89f4e6cf3f230162c8f26fedaf5746e1ec16587643b892cd4c78a420bfe2ad07",
+    "sourceFact": {
+      "at": {
+        "inc": "in_5nonicijwch3xs3rs7s2lpnb6a",
+        "kind": "lane",
+        "scope": "sc_fxzwognk7luowedi4wbvpoevxfkdcvznpesuc6u6wrtvtaow3cya"
+      },
+      "seq": 5,
+      "hash": "sha256:9780500fba91a90ee55909b515913dd3324e6abf1df63900a39dac32bf699901"
+    },
+    "destinationUnchanged": true,
+    "allEntryHashesAndActSignaturesVerified": true,
+    "qualification": "Read-only correction uses raw file digestBytes, as dap propose does. The original metadata field digest mistakenly used detached textDigest; sha256 and proposed bytes were already correct. No second clone or proposal."
+  },
+  "review": {
+    "nativePosts": 1,
+    "originalControlPosts": 1,
+    "lane": {
+      "inc": "in_5nonicijwch3xs3rs7s2lpnb6a",
+      "kind": "lane",
+      "scope": "sc_fxzwognk7luowedi4wbvpoevxfkdcvznpesuc6u6wrtvtaow3cya"
+    },
+    "manifest": 6,
+    "beforeReviewControl": {
+      "commandExit": 1,
+      "scope": "change lane",
+      "state": "refused",
+      "reason": "guard-failed (approvals-needed)",
+      "publicationOpened": false,
+      "destinationUnchanged": true
+    },
+    "review": {
+      "commandExit": 0,
+      "at": {
+        "inc": "in_5nonicijwch3xs3rs7s2lpnb6a",
+        "kind": "lane",
+        "scope": "sc_fxzwognk7luowedi4wbvpoevxfkdcvznpesuc6u6wrtvtaow3cya"
+      },
+      "seq": 7,
+      "hash": "sha256:752584b5858e98de77d563958716d2596f258419c7b4d34966c5f907fc6ca0af",
+      "reviewer": {
+        "member": "@g3b-reviewer-20261104",
+        "membership": {
+          "inc": "in_y3a6f4jvjatrpvilxilktqhr2a",
+          "kind": "membership",
+          "scope": "sc_2m6groa2mxxgqzmaawhwddvzyjcgnpmqhgnv46aygcowabhnxn5q"
+        }
+      },
+      "key": "key_GH1O2gXw4J9saafZnHQFbk-CL6bW76robSfxpHEqf78",
+      "extent": "source",
+      "verdict": "approve"
+    },
+    "allEntryHashesAndActSignaturesVerified": true,
+    "qualification": "Real no-approval control refused publication; a distinct native principal then approved the exact original manifest. All scratch identities are operated by builder. Owner merge and final GitHub comparison remain."
+  },
+  "publication": {
+    "sourceCommit": "bf3bceb667e99876d2edc4880c3c337f944f5fbe",
+    "nativeWrites": 0,
+    "originalMergePosts": 1,
+    "mergeCommandExit": 0,
+    "lane": {
+      "inc": "in_5nonicijwch3xs3rs7s2lpnb6a",
+      "kind": "lane",
+      "scope": "sc_fxzwognk7luowedi4wbvpoevxfkdcvznpesuc6u6wrtvtaow3cya"
+    },
+    "manifest": 6,
+    "merge": {
+      "at": {
+        "inc": "in_5nonicijwch3xs3rs7s2lpnb6a",
+        "kind": "lane",
+        "scope": "sc_fxzwognk7luowedi4wbvpoevxfkdcvznpesuc6u6wrtvtaow3cya"
+      },
+      "seq": 8,
+      "hash": "sha256:2fbdff87e64dcfef4ab90df47edacb8f71904f82e166cb8b0869a3c3aeba0ee4",
+      "merger": {
+        "member": "@g3bwitness",
+        "membership": {
+          "inc": "in_y3a6f4jvjatrpvilxilktqhr2a",
+          "kind": "membership",
+          "scope": "sc_2m6groa2mxxgqzmaawhwddvzyjcgnpmqhgnv46aygcowabhnxn5q"
+        }
+      },
+      "key": "key_TfP4r7z2Q9la9yRbXYcMvoI_Dg1syJk60uWvXS63szs",
+      "commit": "cfa22fb3af6db3d249ea7b010d03bb165365a2e0"
+    },
+    "destination": {
+      "at": {
+        "inc": "in_252sukzzwfnbmmt25jtenekatm",
+        "kind": "destination",
+        "scope": "sc_xfpp7pd775e2b7aoeglflzgnrzursvhtbeoyaojp6lfhdytspuha"
+      },
+      "head": {
+        "hash": "sha256:dd5bf9afa1924d086e43e1c3ddaffad688beab61a704b2631b397c1f5f9d3e90",
+        "seq": 27
+      },
+      "state": "ready",
+      "repository": {
+        "host": "github.com",
+        "id": "1442980126",
+        "name": "dap-g3-binding-witness-20261102",
+        "namespace": "generalbusiness-ai"
+      },
+      "branch": "g3-witness-2",
+      "commit": "cfa22fb3af6db3d249ea7b010d03bb165365a2e0"
+    },
+    "agentLocalTip": "a2767e4786c468c2a66ad37e665be7957b56de43",
+    "roomCreatedOwnCommit": true,
+    "review": {
+      "commandExit": 0,
+      "at": {
+        "inc": "in_5nonicijwch3xs3rs7s2lpnb6a",
+        "kind": "lane",
+        "scope": "sc_fxzwognk7luowedi4wbvpoevxfkdcvznpesuc6u6wrtvtaow3cya"
+      },
+      "seq": 7,
+      "hash": "sha256:752584b5858e98de77d563958716d2596f258419c7b4d34966c5f907fc6ca0af",
+      "reviewer": {
+        "member": "@g3b-reviewer-20261104",
+        "membership": {
+          "inc": "in_y3a6f4jvjatrpvilxilktqhr2a",
+          "kind": "membership",
+          "scope": "sc_2m6groa2mxxgqzmaawhwddvzyjcgnpmqhgnv46aygcowabhnxn5q"
+        }
+      },
+      "key": "key_GH1O2gXw4J9saafZnHQFbk-CL6bW76robSfxpHEqf78",
+      "extent": "source",
+      "verdict": "approve"
+    },
+    "beforeReviewControl": {
+      "commandExit": 1,
+      "scope": "change lane",
+      "state": "refused",
+      "reason": "guard-failed (approvals-needed)",
+      "publicationOpened": false,
+      "destinationUnchanged": true
+    },
+    "issueBefore": {
+      "at": {
+        "inc": "in_pa4prtjr7t4o4v4bvi4t6ck7xa",
+        "kind": "lane",
+        "scope": "sc_nqmsfn6w5e5ba3mvmjhrues7xe44kwdhfe7p3dmxn65dohkf7bba"
+      },
+      "head": {
+        "hash": "sha256:05b3fd5cebbdb73bc5f6f0501db3b4f48ee3b0547f149f18fca056715515f983",
+        "seq": 1
+      },
+      "bodyBytes": 111,
+      "bodyDigest": "sha256:489e2d124a3e6e49b9f85b1082383212838ca6d34625bfb11be1cfe870c9d23e",
+      "historyEntries": 2,
+      "historySha256": "4a97851acb226f2a51aaed92248388732e814e303ccb438b92c2630d2672a808"
+    },
+    "issueAfter": {
+      "at": {
+        "inc": "in_pa4prtjr7t4o4v4bvi4t6ck7xa",
+        "kind": "lane",
+        "scope": "sc_nqmsfn6w5e5ba3mvmjhrues7xe44kwdhfe7p3dmxn65dohkf7bba"
+      },
+      "head": {
+        "hash": "sha256:05b3fd5cebbdb73bc5f6f0501db3b4f48ee3b0547f149f18fca056715515f983",
+        "seq": 1
+      },
+      "bodyBytes": 111,
+      "bodyDigest": "sha256:489e2d124a3e6e49b9f85b1082383212838ca6d34625bfb11be1cfe870c9d23e",
+      "historyEntries": 2,
+      "historySha256": "4a97851acb226f2a51aaed92248388732e814e303ccb438b92c2630d2672a808"
+    },
+    "verifyAllExit": 0,
+    "ownerConfigUnchanged": true,
+    "allChangeEntryHashesAndActSignaturesVerified": true,
+    "sourceFilesVerified": 3987,
+    "qualification": "Actual G3b proposal, distinct-principal source approval and owner publication completed; original issue text and two-entry history unchanged. Final independent GitHub comparison, evidence review and main record landing remain."
+  },
+  "github": {
+    "actualGhExits": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "ref": "refs/heads/g3-witness-2",
+    "commit": "cfa22fb3af6db3d249ea7b010d03bb165365a2e0",
+    "parent": "253b121310003bcb0995c1f2d9322d568b1da5d7",
+    "tree": "fd08ef2fb7c5c9f03d19c1c0b036e996a5dea0ef",
+    "file": {
+      "path": "G3B-WITNESS.md",
+      "blob": "611b40de767b68aeda144bd1f8db16e12af8fe7b",
+      "mode": "100644",
+      "bytes": 232,
+      "sha256": "89f4e6cf3f230162c8f26fedaf5746e1ec16587643b892cd4c78a420bfe2ad07"
+    },
+    "matchesDestination": true,
+    "matchesAgentBytes": true,
+    "roomCommitDiffersFromLocalTip": true,
+    "originalIssuePreserved": true,
+    "qualification": "Actual read-only GitHub branch, commit parent, tree and blob match the Native owner publication and the agent proposed bytes. Scratch identities ran the scene; checker review and main record landing remain."
+  },
+  "qualification": "Actual scene completed. Checker review and main record landing remain. Scratch identities share builder operation; native membership and signing keys are distinct."
+}
