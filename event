@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a82b08735f42e7bceeb99dbc1171a902bc04acc1","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/settlement-ledger.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bd7d8f68b4a95c795f6d02d61d35c4402ab2818b","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/support/settlement-ledger-model.ts."}
