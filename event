@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:117f5bcafa445aba2bc64155cf9e41e580a5155b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-04-card-history-validation.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:377aaf1745eaeb77fdd8447660d8e307de22f284","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/view-sessions-history.test.ts."}
