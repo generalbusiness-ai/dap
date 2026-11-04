@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/mcp/test/views-browser.mjs","body":{"commit":"bf3bceb667e99876d2edc4880c3c337f944f5fbe","path":"packages/mcp/test/views-browser.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:01f7434daae8f4d0be83ed00a2e4baba89bcf4d4","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-03-ui-message-array.md."}
