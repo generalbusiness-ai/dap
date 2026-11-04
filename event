@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/git/test/http.test.ts","body":{"commit":"da94f450048723d2f40e22a0273b745ebb34bf75","path":"packages/git/test/http.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:00fe413c40b8f1eaea5a622afb648215e0425850","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-04-git-framing-variants.md."}
