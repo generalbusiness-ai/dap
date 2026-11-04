@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d15b347117e9d44a208ea1068f4e96fc4d0ff735","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/card-histories.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:df7b74620aff8910e83f34b529e8b869a3a7dcf5","text":"Merge retired a covered predecessor; the successor is at .github/workflows/views-browser.yml."}
