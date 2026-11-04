@@ -67,7 +67,7 @@ export const deskDefinition = valid(validateDefinition(desk, PROPOSED_BOUNDS));
 /** A stand-in: these grants carry no freshness proof, as the first delivery's judges take every recorded grant as current. Its bytes are `null`, so no digest here moves. */
 const NO_PROOF = null as unknown as ObservationUse;
 
-/** A grant of every action of the definition to that actor's key, in that scope. A test authority, and named as one. */
+/** A scripted grant of the listed actions to one actor's key in this scope. */
 export function grantOf(who: Actor, within: ScopeRef, actions: readonly string[], notAfter: Timestamp | null = null): Grant {
   return { issued: { at: membership, seq: 3, hash: d("3") }, subject: who.member, key: who.key, principal: who.principal, actions, within, notAfter, fresh: NO_PROOF };
 }
@@ -116,15 +116,19 @@ export class Ledger {
     const intent: Intent = { v: 1, to: this.at, actor: who.key, kind, on: null, expected: {}, fields: {}, idempotencyKey: `k${this.#keys++}`, notAfter: timeOf(timeMs(this.now)! + 60_000), ...over };
     return signIntent(intent, who.secret);
   }
-  /** Every actor of the key set holds every action here, unless the test presents other grants. */
-  grants(): Presented[] {
+  /** The fixture default grants every declared action to every test actor.
+   * Pass explicit grants to context() to test a narrower authority. */
+  allActionGrants(): Presented[] {
     // In platform data the `grant` of an act may be a mark, which states an action or none.
     const actions = Object.values(this.definition.declared.acts).flatMap((a) => actionOf(a) ?? []);
     return Object.values(keys).map((who) => ({ grant: grantOf(who, this.at, actions), current: true }));
   }
+  /** Effective scripted authority. Fixtures may replace the broad default
+   * with explicit per-key permissions. */
+  presentedGrants(): Presented[] { return this.allActionGrants(); }
   context(over: Context = {}): JudgeContext {
     const { reading, ...rest } = over;
-    return { clock: clockOf(this.state, reading ?? this.now), grants: this.grants(), facts: [], prepared: [], bounds: this.bounds, own: this.own, ...rest };
+    return { clock: clockOf(this.state, reading ?? this.now), grants: this.presentedGrants(), facts: [], prepared: [], bounds: this.bounds, own: this.own, ...rest };
   }
   /** Judge only: nothing is written. */
   judge(signed: SignedIntent, over: Context = {}): ActJudgment {

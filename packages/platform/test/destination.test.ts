@@ -478,9 +478,11 @@ test("a compromised notice for a key behind the held publication sets aborting, 
 test("a resend is refused `resend-not-due` while an attempt of the publication's push is not used, and opens one push with its mint once every stated attempt has an outcome; the base with an attempt not known opens one read; a commit of another writer holds the slot and opens nothing", () => {
   const b = new Branch(false).ready();
   const { publication, push } = b.reserved();
-  const resend = () => said(b.act(rita, "resend", { on: publication, expected: { on: b.item(publication).revision } }));
+  const resendJudgment = () => b.act(rita, "resend", { on: publication, expected: { on: b.item(publication).revision } });
+  const resend = () => said(resendJudgment());
   // `reserved` is no state of a resend: the written guard refuses, with no name.
-  expect(resend()).toEqual(["refused", "guard-failed", null]);
+  const reserved = resendJudgment();
+  expect([said(reserved), "detail" in reserved ? reserved.detail : null]).toEqual([["refused", "guard-failed", null], "guards.0"]);
   // Attempts 1 and 2 are not known, and each read back shows the base: the ledger opens the next.
   const unknown = (attempt: number, seen: string) => said(b.outcome(push, attempt, "unknown", { basis: "none", body: { send: "unknown", seen } }));
   expect([unknown(1, HEAD), b.item(publication).state, resend(), unknown(2, HEAD), b.state.operation(push)!.attempts.length, resend()])
@@ -522,7 +524,8 @@ test("a resend is refused `resend-not-due` while an attempt of the publication's
 // Section 6.9 and the rows `adopt-head` and `adopt-read` (ER13), with row 36 of the table of marks.
 test("adopt-head names a commit and why, and opens one read of the branch only while no publication holds the slot; the read's outcome sets the head only when it shows that commit", () => {
   const r = new Branch(false).ready();
-  const adopting = (b: Branch, fields: Record<string, FieldValue>) => said(b.act(rita, "adopt-head", { on: 0, expected: { on: b.branch.revision }, fields }));
+  const adoption = (b: Branch, fields: Record<string, FieldValue>) => b.act(rita, "adopt-head", { on: 0, expected: { on: b.branch.revision }, fields });
+  const adopting = (b: Branch, fields: Record<string, FieldValue>) => said(adoption(b, fields));
   const adopt = (fields: Record<string, FieldValue>) => adopting(r, fields);
   // The act records what is adopted and why: both fields are required.
   expect(adopt({ commit: OTHER })).toEqual(["refused", "bad-field", null]);
@@ -535,7 +538,8 @@ test("adopt-head names a commit and why, and opens one read of the branch only w
   // While a publication is reserved the act is refused.
   const held = new Branch(false).ready();
   const { publication } = held.reserved();
-  expect([adopting(held, { commit: OTHER, why: "no" }), held.item(publication).state, held.branch.values["head"]]).toEqual([["refused", "guard-failed", null], "reserved", HEAD]);
+  const occupied = adoption(held, { commit: OTHER, why: "no" });
+  expect([said(occupied), "detail" in occupied ? occupied.detail : null, held.item(publication).state, held.branch.values["head"]]).toEqual([["refused", "guard-failed", null], "guards.0", "reserved", HEAD]);
   // An act that was admitted before the reservation, and whose read is answered after it, changes nothing: the base of the push stays.
   const racing = new Branch(false).ready();
   adopting(racing, { commit: OTHER, why: "before the reservation" });

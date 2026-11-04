@@ -77,7 +77,7 @@ test("new native pin retains exact v2 proof and projection while Rules5 refuses 
     semantic: unsupportedPacket.ids.semantic, release: unsupportedPacket.ids.release } }, {
     values: [canonicalize(unsupportedPacket.package.semantic), canonicalize(unsupportedPacket.package.release)],
     texts: digest => digest === textDigest(unsupportedText) ? utf8(unsupportedText).length : undefined,
-  }).result).toBe("refused");
+  })).toMatchObject({ result: "refused", reason: "bad-field", name: "invalid-application-package" });
 });
 
 test.each([
@@ -152,7 +152,7 @@ test("archive v2 admission retains the requirement while the shipped Rules6 pin 
   const { packet, fields, values, texts } = await fixture(true);
   const next = new Rulebook(true, membership.scope, C.rules), old = new Rulebook(true, membership.scope, DECLARED_APPLICATION_RULES);
   const before = old.state.snapshot();
-  expect(old.act(keys.rita, "install-application", { fields }, { values, texts })).toMatchObject({ result: "refused" });
+  expect(old.act(keys.rita, "install-application", { fields }, { values, texts })).toMatchObject({ result: "refused", reason: "bad-field", name: "invalid-application-package" });
   expect(old.state.snapshot()).toEqual(before);
   expect(next.act(keys.rita, "install-application", { fields }, { values, texts })).toMatchObject({ result: "write" });
   expect(next.item(next.head.seq)).toMatchObject({ state: "pending", values: { semantic: packet.ids.semantic, requirements: { archive: true, destination: false } } });

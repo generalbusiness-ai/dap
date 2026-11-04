@@ -44,7 +44,7 @@ async function fixture(requireArchive = false) {
 test("install admission retains signed semantics, requires authority and exact answers, and refolds", async () => {
   const { r, fields, values, packet, outcome } = await fixture();
   expect(r.act(keys.rita, "install-application", { fields: fields as never }, { values, grants: [] })).toMatchObject({ result: "refused", reason: "unauthorized" });
-  expect(r.act(keys.rita, "install-application", { fields: fields as never }, { values, texts: () => undefined })).toMatchObject({ result: "refused" });
+  expect(r.act(keys.rita, "install-application", { fields: fields as never }, { values, texts: () => undefined })).toMatchObject({ result: "refused", reason: "bad-field", detail: expect.stringContaining("definitionText0") });
   const written = r.act(keys.rita, "install-application", { fields: fields as never }, { values });
   expect(written.result).toBe("write");
   const seq = r.head.seq;
@@ -77,7 +77,7 @@ test("install admission retains signed semantics, requires authority and exact a
 test("install rejects altered proof and records a bounded host refusal", async () => {
   const { r, fields, values, outcome } = await fixture();
   for (const over of [{ values: "{}" }, { roles: ["member", "member"] }, { roles: ["admin"] }, { values: '{"opener":null}' }, { uri: "https://git.example/floating" }]) {
-    expect(r.act(keys.rita, "install-application", { fields: { ...fields, ...over } as never }, { values })).toMatchObject({ result: "refused" });
+    expect(r.act(keys.rita, "install-application", { fields: { ...fields, ...over } as never }, { values })).toMatchObject({ result: "refused", reason: "bad-field", name: "invalid-application-package" });
   }
   expect(r.act(keys.rita, "install-application", { fields: fields as never }, { values: [values[0]!, values[1]!.replace('"version":"1"', '"version":"2"')] }).result).not.toBe("write");
   expect(r.act(keys.rita, "install-application", { fields: fields as never }, { values }).result).toBe("write");
