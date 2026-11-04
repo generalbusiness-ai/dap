@@ -79,15 +79,15 @@ the public unit.
 All raw output began in durable storage. The unchanged gate calls bare
 `mktemp -d`; a recorded PATH wrapper gives that call an absolute durable
 prefix and forwards every other argument unchanged. The driver sets a
-durable `TMPDIR` too. The wrapper changes no test, deadline, command or
-pass condition. The gate's temporary TEST custody stays private beside
+durable `TMPDIR` too. The wrapper changes the temporary-directory path. Test commands,
+deadlines and pass conditions remain unchanged. The gate's temporary TEST custody stays private beside
 its original reports.
 
 [Card browser run 41741932669](https://github.com/generalbusiness-ai/dap/actions/runs/41741932669)
 passed at the same frozen source. It ran the card, owned-room and Grow
 routing browser scripts. Its five-file unit appears in
 [`2026-11-03-ui-message-array-card-ci.manifest.json`](evidence/2026-11-03-ui-message-array-card-ci.manifest.json),
-SHA-256 `8f44ebe35ee2cf4ecafa7f50b52d34e6385b7eae315a3928f2fbcb59a855321d`.
+SHA-256 `2c13e9bd113f42ac1e24dfea331af1a95dd16c37f24b49e3b155ffacc3ee733d`.
 
 The gate carries the archive diagnostics already landed at `bb66b1ab`
 under ruling `15cee681`. The unchanged 10,001-pass owner passed in
