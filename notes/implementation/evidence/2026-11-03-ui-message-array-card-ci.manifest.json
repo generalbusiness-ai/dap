@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "qualification": "Actual successful Card browser workflow at the exact frozen source99617147; no desktop-host acceptance or deployment.",
+  "fileCount": 5,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-03-ui-message-card-ci",
+      "fileCount": 5,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 312,
+          "sha256": "2ea95adda7bac33bb79f81904dc69c78d27101e5d442fe099efc01c2dc09605b"
+        },
+        {
+          "path": "qualification.json",
+          "bytes": 382,
+          "sha256": "15758a145bc904cb62c87278ca38eca09337689938fdeea40f64b5adeb663c1e"
+        },
+        {
+          "path": "run.exit",
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        {
+          "path": "run.json",
+          "bytes": 2961,
+          "sha256": "52fbe345f3d1de94b1ec224ea285ea06ec96d536f68ef1f90035ccc7c6359ae4"
+        },
+        {
+          "path": "run.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ]
+}
