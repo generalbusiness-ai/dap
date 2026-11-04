@@ -63,7 +63,10 @@ in-process Worker transport for the configured-service acknowledgement. Both
 original recovery and revocation assertions remain and pass. The fixture
 compiler passes. Private evidence retains the initial default-cohort refusal
 and the explicit selection's first refusal without that transport trust.
-A new Page workflow must validate this follow-up.
+The [Page follow-up run](https://github.com/generalbusiness-ai/dap/actions/runs/41908543431)
+passes all four browser steps at `0594ecc6`. The four changed paths after
+the successful Card run affect only Page test fixtures, the Page demo
+script and this note. Card runtime inputs remain unchanged.
 
 ## Evidence and review status
 
@@ -82,12 +85,40 @@ strengthened limit owners. An initial filtered command skipped all bodies
 after a preparation guard stopped before the test edit; the supplement
 identifies that run and the later actual witness separately.
 
+The [integration supplement](evidence/2026-11-04-failed-claim-cohort-integration.manifest.json)
+seals five public summaries and 21 private units with 1,938 regular originals.
+Its SHA-256 is
+`4b08a99a5b8cba3aabe5a3ac93424db693ffe8ab6650de3d955e1808d9881c63`.
+It records 18 command units and three commit receipts. Four diagnostic
+commands fail as described above; the supplement preserves their actual exits
+and the later successful follow-ups. The three supplements together retain
+71 private units, 6,107 regular originals and 17 public files. These totals
+count custody records, not unique test cases.
+
+The [rendered-workflow supplement](evidence/2026-11-04-failed-claim-cohort-rendered.manifest.json)
+seals four public summaries and three private units with 338 regular originals.
+Its SHA-256 is
+`db334a1b3f2967c2ec23ff96669c56c3276b2bb9be33202f07a8a93dca2efb97`.
+It retains both successful workflow logs, the earlier failed workflows,
+exact input snapshots and two local audit receipts. All four supplements
+retain 74 private units, 6,445 regular originals and 21 public files.
+
+| Evidence | Boundary |
+|---|---|
+| [Focused commands](evidence/2026-11-04-failed-claim-cohort-validation/focused-commands.json) and [controls](evidence/2026-11-04-failed-claim-cohort-validation/control-results.json) | Exact pins, final failure, replay and token fields; original failures remain separate. |
+| [Limit witnesses](evidence/2026-11-04-failed-claim-cohort-limits/limit-witnesses.json) | Local custody bound, same-register retry, retained host-none families and unwired-host continuation. |
+| [Integration commands](evidence/2026-11-04-failed-claim-cohort-integration/command-results.json) | CLI and Page protocol fixes, recorded demo expectation and historical recovery fixtures. |
+| [Workflow results](evidence/2026-11-04-failed-claim-cohort-rendered/workflow-results.json) and [input identity](evidence/2026-11-04-failed-claim-cohort-rendered/input-identity.json) | Passing Page and Card browser workflows at the named heads. |
+
 Fresh durable units retain command arguments, cwd, source snapshots and hashes, dependency identity, stdout, stderr, actual exit, elapsed time and owned-process cleanup. The early merge helper, generator log and initial comparison helper began in scratch; the baseline records that limitation rather than claiming durable origin. The old draft's scratch checks supply no fresh validation claim.
 
 The retained failure history includes an unlocated network-loss exception in the
 new-cohort archive case, an incorrect raw-hash assertion in the first pin probe, a nonexistent invitation project selector that ran no body, obsolete default-pin and error-word assertions, the pre-fix cross-family refusal, and the expected wrong-duration control. Corrected focused owners pass. The source-seal check correctly fails until the reviewed inventory updates land.
 
-PENDING: the final review head with updated source seals, one full gate, rendered Page and Card workflows, independent checker review, and source landing. No gate-pass or parent-acceptance claim exists at this draft.
+PENDING: Hugh's approval for the exact 28-literal source-seal patch, the final
+review head with those updates, one full gate, independent checker review
+and source landing. Page and Card workflows pass at the heads named above.
+No gate-pass or parent-acceptance claim exists at this draft.
 
 ## Limits the planner retains
 

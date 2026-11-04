@@ -1,0 +1,183 @@
+{
+  "cardRun": 41904637587,
+  "cardHead": "044c3fd025755c6338189d97f58859d6c44ab438",
+  "pageRun": 41908543431,
+  "pageHead": "0594ecc67fa18b29daf737b5675a51cd6c79c1a7",
+  "changedPathsAfterCardRun": [
+    "apps/room/page/test/signed-read-standing.scope.test.ts",
+    "apps/room/page/test/support/demo.ts",
+    "notes/implementation/2026-11-04-failed-claim-cohort.md",
+    "scripts/demo/rehearse.ts"
+  ],
+  "qualification": "After the Card run, only Page historical test fixtures, the Page demo rehearsal script and its implementation note change. Card/browser/runtime sources, generated modules, package manifests, lock, workflow, compiler configuration and MCP fixture inputs are identical. The Page workflow reruns at the follow-up head. Later documentation-only evidence additions do not change these rendered inputs.",
+  "snapshots": [
+    {
+      "head": "044c3fd025755c6338189d97f58859d6c44ab438",
+      "path": ".github/workflows/page-browser.yml",
+      "bytes": 2855,
+      "sha256": "b6b4ab9e0cdaca7b8175fc8ea4c80f2ba61d6c7321b9e3c4727dfa13497dd967"
+    },
+    {
+      "head": "044c3fd025755c6338189d97f58859d6c44ab438",
+      "path": ".github/workflows/views-browser.yml",
+      "bytes": 4821,
+      "sha256": "7a9f1d92e4143b25ef1d5663649f874b26de64a852e26e239b434ca33905b82f"
+    },
+    {
+      "head": "044c3fd025755c6338189d97f58859d6c44ab438",
+      "path": "package.json",
+      "bytes": 1391,
+      "sha256": "bf3eaf5a240a64436e53ec245b0b12a5ff1c81cf6a4cf63b195096bbda9bedb1"
+    },
+    {
+      "head": "044c3fd025755c6338189d97f58859d6c44ab438",
+      "path": "package-lock.json",
+      "bytes": 134487,
+      "sha256": "5a717d43fd1c1c54bb029db4067806940b640f60e320c9ebe33fe099dfd2e73c"
+    },
+    {
+      "head": "044c3fd025755c6338189d97f58859d6c44ab438",
+      "path": "vitest.config.ts",
+      "bytes": 154,
+      "sha256": "b83c75643706c5c32acb56a65964bf7fde6130ac9e7dc94d7b3120587de8e901"
+    },
+    {
+      "head": "044c3fd025755c6338189d97f58859d6c44ab438",
+      "path": "vitest.projects.mjs",
+      "bytes": 5578,
+      "sha256": "aba642e65e98e01a50adc9f13717efc3c2f0fb438af68900791a3946d6c01b99"
+    },
+    {
+      "head": "044c3fd025755c6338189d97f58859d6c44ab438",
+      "path": "scripts/demo/rehearse.ts",
+      "bytes": 47998,
+      "sha256": "19168f7508f6d7b372089546096c4abfdcea63b6704f16836f9fdf4e4b928bca"
+    },
+    {
+      "head": "044c3fd025755c6338189d97f58859d6c44ab438",
+      "path": "apps/room/page/test/support/demo.ts",
+      "bytes": 13838,
+      "sha256": "d98afbdd6cdd84eaedb4c1006b3675df015271772c506fc5649831923d686573"
+    },
+    {
+      "head": "044c3fd025755c6338189d97f58859d6c44ab438",
+      "path": "apps/room/page/test/signed-read-standing.scope.test.ts",
+      "bytes": 51865,
+      "sha256": "0c74fe9312e23acdd67145d68639be32092f81559d08416a9522be99acb6e4ba"
+    },
+    {
+      "head": "044c3fd025755c6338189d97f58859d6c44ab438",
+      "path": "apps/room/page/assets.ts",
+      "bytes": 2305648,
+      "sha256": "638cc144e15c9815c0d2d905c2b12b6822ab640193c3b23b69b05b0ed69e3821"
+    },
+    {
+      "head": "044c3fd025755c6338189d97f58859d6c44ab438",
+      "path": "apps/room/page/src/retained-editor-data.ts",
+      "bytes": 32350,
+      "sha256": "4d09aaacc5cac02ba42501cfbe3a14a7c4f1862074732bf29d3fd66f06c333c2"
+    },
+    {
+      "head": "044c3fd025755c6338189d97f58859d6c44ab438",
+      "path": "packages/cli/src/destination-protocol.ts",
+      "bytes": 873,
+      "sha256": "8ad9de3ed4814811f1c136e5e3c2da0d4771a7e75b16d8306d70cdbf9e4206dc"
+    },
+    {
+      "head": "044c3fd025755c6338189d97f58859d6c44ab438",
+      "path": "packages/mcp/src/service.ts",
+      "bytes": 152960,
+      "sha256": "f04509955a4e58fa093de7106bb4e84686e0248441c84e8b6011adb00e6c2d09"
+    },
+    {
+      "head": "044c3fd025755c6338189d97f58859d6c44ab438",
+      "path": "packages/mcp/src/views/generated.ts",
+      "bytes": 200365,
+      "sha256": "4cb4bb0297637edf27a78d3a16e3138c65a7d44681b060ec29d0079c71d373e8"
+    },
+    {
+      "head": "0594ecc67fa18b29daf737b5675a51cd6c79c1a7",
+      "path": ".github/workflows/page-browser.yml",
+      "bytes": 2855,
+      "sha256": "b6b4ab9e0cdaca7b8175fc8ea4c80f2ba61d6c7321b9e3c4727dfa13497dd967"
+    },
+    {
+      "head": "0594ecc67fa18b29daf737b5675a51cd6c79c1a7",
+      "path": ".github/workflows/views-browser.yml",
+      "bytes": 4821,
+      "sha256": "7a9f1d92e4143b25ef1d5663649f874b26de64a852e26e239b434ca33905b82f"
+    },
+    {
+      "head": "0594ecc67fa18b29daf737b5675a51cd6c79c1a7",
+      "path": "package.json",
+      "bytes": 1391,
+      "sha256": "bf3eaf5a240a64436e53ec245b0b12a5ff1c81cf6a4cf63b195096bbda9bedb1"
+    },
+    {
+      "head": "0594ecc67fa18b29daf737b5675a51cd6c79c1a7",
+      "path": "package-lock.json",
+      "bytes": 134487,
+      "sha256": "5a717d43fd1c1c54bb029db4067806940b640f60e320c9ebe33fe099dfd2e73c"
+    },
+    {
+      "head": "0594ecc67fa18b29daf737b5675a51cd6c79c1a7",
+      "path": "vitest.config.ts",
+      "bytes": 154,
+      "sha256": "b83c75643706c5c32acb56a65964bf7fde6130ac9e7dc94d7b3120587de8e901"
+    },
+    {
+      "head": "0594ecc67fa18b29daf737b5675a51cd6c79c1a7",
+      "path": "vitest.projects.mjs",
+      "bytes": 5578,
+      "sha256": "aba642e65e98e01a50adc9f13717efc3c2f0fb438af68900791a3946d6c01b99"
+    },
+    {
+      "head": "0594ecc67fa18b29daf737b5675a51cd6c79c1a7",
+      "path": "scripts/demo/rehearse.ts",
+      "bytes": 48049,
+      "sha256": "3eb674a37f8c80441ebcea6355b844fa764d0d974b1a2d92422939fbd7975fe9"
+    },
+    {
+      "head": "0594ecc67fa18b29daf737b5675a51cd6c79c1a7",
+      "path": "apps/room/page/test/support/demo.ts",
+      "bytes": 14269,
+      "sha256": "dd566397ab96ca51c011c04ce88cac872047f7ceb820cc3eb68109ee150d5e3e"
+    },
+    {
+      "head": "0594ecc67fa18b29daf737b5675a51cd6c79c1a7",
+      "path": "apps/room/page/test/signed-read-standing.scope.test.ts",
+      "bytes": 51866,
+      "sha256": "7992eb023d5e053ab5d901af6e7b0646800ac219c032adb1dcc22079cdf619ec"
+    },
+    {
+      "head": "0594ecc67fa18b29daf737b5675a51cd6c79c1a7",
+      "path": "apps/room/page/assets.ts",
+      "bytes": 2305648,
+      "sha256": "638cc144e15c9815c0d2d905c2b12b6822ab640193c3b23b69b05b0ed69e3821"
+    },
+    {
+      "head": "0594ecc67fa18b29daf737b5675a51cd6c79c1a7",
+      "path": "apps/room/page/src/retained-editor-data.ts",
+      "bytes": 32350,
+      "sha256": "4d09aaacc5cac02ba42501cfbe3a14a7c4f1862074732bf29d3fd66f06c333c2"
+    },
+    {
+      "head": "0594ecc67fa18b29daf737b5675a51cd6c79c1a7",
+      "path": "packages/cli/src/destination-protocol.ts",
+      "bytes": 873,
+      "sha256": "8ad9de3ed4814811f1c136e5e3c2da0d4771a7e75b16d8306d70cdbf9e4206dc"
+    },
+    {
+      "head": "0594ecc67fa18b29daf737b5675a51cd6c79c1a7",
+      "path": "packages/mcp/src/service.ts",
+      "bytes": 152960,
+      "sha256": "f04509955a4e58fa093de7106bb4e84686e0248441c84e8b6011adb00e6c2d09"
+    },
+    {
+      "head": "0594ecc67fa18b29daf737b5675a51cd6c79c1a7",
+      "path": "packages/mcp/src/views/generated.ts",
+      "bytes": 200365,
+      "sha256": "4cb4bb0297637edf27a78d3a16e3138c65a7d44681b060ec29d0079c71d373e8"
+    }
+  ]
+}

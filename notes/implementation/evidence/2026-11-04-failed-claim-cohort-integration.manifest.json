@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "qualification": "Local integration follow-up, including original protocol and fixture failures and exact source checkpoints. CI, gate, review, source landing and parent acceptance remain separate.",
+  "fileCount": 5,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom/.builder-worktrees/failed-claim-cohort-20261104/notes/implementation/evidence/2026-11-04-failed-claim-cohort-integration",
+      "fileCount": 5,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 353,
+          "sha256": "5a8daca132f20083a05c2a9349eb47adbcb661fa20780e35ce21774c4a4f36ce"
+        },
+        {
+          "path": "command-results.json",
+          "bytes": 12607,
+          "sha256": "f5eae031143508e0abb15d30c71961dea156a853304adc97e33c60c23e428ed5"
+        },
+        {
+          "path": "failure-history.json",
+          "bytes": 1071,
+          "sha256": "d11d7dfc12f0d46e42fa1e1f7d118b3b4c2a631f153a48d23f3f52b65abe999a"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 8211,
+          "sha256": "7f96e17d7f26d467db254787f55143af6de19b43b494da13ef0bc9106660a15f"
+        },
+        {
+          "path": "source-checkpoints.json",
+          "bytes": 3947,
+          "sha256": "c4a68030055a5e0f381682a63869808da45b78dadb472cbd70eb38998746bb73"
+        }
+      ]
+    }
+  ]
+}

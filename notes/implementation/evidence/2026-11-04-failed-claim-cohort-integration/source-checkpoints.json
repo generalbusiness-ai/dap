@@ -1,0 +1,72 @@
+{
+  "checkpoints": [
+    {
+      "unit": "demo-rehearsal-checkpoint",
+      "head": "0594ecc67fa18b29daf737b5675a51cd6c79c1a7",
+      "tree": "13e3d3aa3954174daecd81308497df91da0d435d",
+      "parent": "044c3fd025755c6338189d97f58859d6c44ab438",
+      "changedPaths": [
+        "apps/room/page/test/signed-read-standing.scope.test.ts",
+        "apps/room/page/test/support/demo.ts",
+        "notes/implementation/2026-11-04-failed-claim-cohort.md",
+        "scripts/demo/rehearse.ts"
+      ],
+      "sourceUnchangedDuringCommit": true,
+      "sourceSealPatchUnapplied": true,
+      "timestamp": "2026-11-04T20:38:19.655117+00:00",
+      "receiptSha256": "56a72a23338bef6417ae7c2247294b02c56f096fda920903d5770614a8380f8b"
+    },
+    {
+      "unit": "focused-record-checkpoint",
+      "head": "cbc46369a3fbbe0ce512f599598740f2350df202",
+      "tree": "75192636135cbf32828a070613328e23be165182",
+      "parent": "7425c61963d0339f4d488e821e4ff2120557ff08",
+      "changedPaths": [
+        "notes/implementation/2026-11-04-failed-claim-cohort.md",
+        "notes/implementation/evidence/2026-11-04-failed-claim-cohort-limits.manifest.json",
+        "notes/implementation/evidence/2026-11-04-failed-claim-cohort-limits/SHA256SUMS",
+        "notes/implementation/evidence/2026-11-04-failed-claim-cohort-limits/command-results.json",
+        "notes/implementation/evidence/2026-11-04-failed-claim-cohort-limits/limit-witnesses.json",
+        "notes/implementation/evidence/2026-11-04-failed-claim-cohort-limits/planner-ruling.json",
+        "notes/implementation/evidence/2026-11-04-failed-claim-cohort-limits/private-retention.json",
+        "notes/implementation/evidence/2026-11-04-failed-claim-cohort-validation.manifest.json",
+        "notes/implementation/evidence/2026-11-04-failed-claim-cohort-validation/SHA256SUMS",
+        "notes/implementation/evidence/2026-11-04-failed-claim-cohort-validation/control-results.json",
+        "notes/implementation/evidence/2026-11-04-failed-claim-cohort-validation/dependency-identity.json",
+        "notes/implementation/evidence/2026-11-04-failed-claim-cohort-validation/focused-commands.json",
+        "notes/implementation/evidence/2026-11-04-failed-claim-cohort-validation/pin-preservation.json",
+        "notes/implementation/evidence/2026-11-04-failed-claim-cohort-validation/private-retention.json",
+        "notes/implementation/evidence/2026-11-04-failed-claim-cohort-validation/source-checkpoint.json",
+        "packages/cli/test/install-cohort.test.ts",
+        "packages/scope/test/failed-claim-cohort.test.ts"
+      ],
+      "productionUnchanged": true,
+      "sourceSealsUnchanged": true,
+      "workingTreeClean": true,
+      "timestamp": "2026-11-04T19:45:22.098474+00:00",
+      "receiptSha256": "af49336ba53659640bd3fc55051b2e8b72cf32dd9369a437ad3f4ccf92ebf89d"
+    },
+    {
+      "unit": "protocol-repair-checkpoint",
+      "head": "044c3fd025755c6338189d97f58859d6c44ab438",
+      "tree": "381413ef37489b2b4f1700b7fbcf852a6eabf803",
+      "parent": "cbc46369a3fbbe0ce512f599598740f2350df202",
+      "changedPaths": [
+        "apps/room/page/assets.ts",
+        "apps/room/page/src/retained-editor-data.ts",
+        "apps/room/page/test/record.scope.test.ts",
+        "apps/room/page/test/retained-editor.scope.test.ts",
+        "apps/room/page/test/retained-editor.test.ts",
+        "notes/implementation/2026-11-04-failed-claim-cohort.md",
+        "packages/cli/src/destination-protocol.ts"
+      ],
+      "sourceUnchangedDuringCommit": true,
+      "sourceSealPatchUnapplied": true,
+      "timestamp": "2026-11-04T20:10:46.767869+00:00",
+      "receiptSha256": "f76507f5f09b944448104a42a08788c9d5c10c2ee2a15e4f36cbbeece5ef8efd"
+    }
+  ],
+  "currentSourceHead": "0594ecc67fa18b29daf737b5675a51cd6c79c1a7",
+  "currentSourceTree": "13e3d3aa3954174daecd81308497df91da0d435d",
+  "pendingSourceSeals": "Exact28hash-literal patch remains unapplied pending Hugh approval. No gate or review."
+}
