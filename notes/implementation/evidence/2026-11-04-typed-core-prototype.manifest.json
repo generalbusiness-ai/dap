@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "sourceHead": "27d0e2687687dce9cd242717d0d4b34eee11ce3b",
+  "sourceTree": "b9bab8500fa4731b0820603ad9754d7ac799c478",
+  "qualification": "Bounded first-slice comparisons and two one-fault controls; no proof of general dependency soundness, full vocabulary migration, browser/host acceptance, deployment, or prototype full gate.",
+  "fileCount": 13,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-typed-core-prototype-validation",
+      "fileCount": 13,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 986,
+          "sha256": "715e3dacb5e6013a71857f82941b510d5d739fa7d9ab96e2938d7e88c712ff93"
+        },
+        {
+          "path": "cases.json",
+          "bytes": 13302,
+          "sha256": "dee0df5ae2895026cd3b95d6041e2920482cbe2c0211938df84b7e71689c15f3"
+        },
+        {
+          "path": "commands.json",
+          "bytes": 7535,
+          "sha256": "463f3e926c32f9d2bd064a13e695698f4679bbc6ad4d824720a994825e6bc36a"
+        },
+        {
+          "path": "commit-messages.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "commit-messages.log",
+          "bytes": 38,
+          "sha256": "e961aa82d898e3425096da8901160f918cd74166d8c76fd918aaac9c3386377d"
+        },
+        {
+          "path": "consumer.txt",
+          "bytes": 1057,
+          "sha256": "1d0b11a31272d4ded0aba0837597604915b2f196191034bad0104a4b17f63263"
+        },
+        {
+          "path": "controls.json",
+          "bytes": 2557,
+          "sha256": "8627220ccadc2763c6a390cb8900c13eba171375702a618cf499950b58dff3c9"
+        },
+        {
+          "path": "deletion.json",
+          "bytes": 7626,
+          "sha256": "05808e0c5c246bdd8c604115716cf00dab9d43b6ce2bd920539279c6d696ddc0"
+        },
+        {
+          "path": "failed-attempts.json",
+          "bytes": 824,
+          "sha256": "aab204e8292df2eb2f26c3f03ee8f3cb4a000a1bc90bc7bbb3a7b5c7b3dc4e71"
+        },
+        {
+          "path": "result.json",
+          "bytes": 902,
+          "sha256": "c5cea6cdb835d66a7fe15ee5aca068faf403967d44dcfe2e2250a3406caca977"
+        },
+        {
+          "path": "retention.json",
+          "bytes": 3979,
+          "sha256": "667fec9d44bda56146aaf3e93e5ae51068d9e6b4d3bcaa2993c46bd140a1679b"
+        },
+        {
+          "path": "sealing-driver.py",
+          "bytes": 10784,
+          "sha256": "06e5c96e7e8a1a494b44a27c7d50958d6b3d953a08907f634b337b65e4c616d9"
+        },
+        {
+          "path": "source-identity.json",
+          "bytes": 4304,
+          "sha256": "d9b550e6b992e2719be7e728037978e50d7f036495ae340e55e6454043e1762a"
+        }
+      ]
+    }
+  ]
+}

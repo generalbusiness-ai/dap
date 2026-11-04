@@ -1,0 +1,28 @@
+{
+  "commit": "7135dc3985694760ff8c80ad07f200ba8f6e767d",
+  "purpose": "Reviewed source bytes. This detects drift and does not prove semantic or test coverage.",
+  "sha256": {
+    "packages/contract/src/definition.ts": "80f50177b757b60acb326889ce94ab968a8112f873b6c68683f70029695b1dc0",
+    "packages/contract/src/platform.ts": "fa67773874bb944afc9ef9af237a2fd340d8f2f6db1fda2b9a85d160d6f42694",
+    "packages/contract/src/observes.ts": "5f406a5097a5ca99be04aa48fae7c85262988d4afe0f87b7c695ddd3b8450915",
+    "packages/contract/src/capability.ts": "c094f04eb7519b0009c751a2929c56244917a45289a88ce1ae2e0cf7c89d90d4",
+    "packages/derive/src/handlers.ts": "34605e16af8ed83b8822a1618b7151d3204c872661374f2a5f6a1b7964a22767",
+    "packages/derive/src/guards.ts": "21bb8b4566ed1fe2553d68c3c4a9463194dc4fc1377a892bcc5b33f32e7476af",
+    "packages/derive/src/lists.ts": "23d6d51ec8e9042557c052841fdb587e8548f90489ee1a6bb754fcb5d14ce5e8",
+    "packages/derive/src/operand.ts": "f289a3fcc67d1802f0beb7b2fabb15811a2ab1aedc8ed2dfddb51c55624c3934",
+    "packages/derive/src/effects.ts": "9e70d2f804b343d5b252e5c14954c254bb9f247531a1dc5e9dc73000fe0daf8b",
+    "packages/derive/src/sends.ts": "05583bafc1471f778f3813579c286d87034bf6c2580bad35374a61b395deda63",
+    "packages/derive/src/marks.ts": "9452ed2f2ae48ff43fc3d515ff21447561bc4daa402cba55f73cca33f9f401ac",
+    "packages/derive/src/rules.ts": "44495872bc02f0705fa00faed2b754684cf414cb4de2ba20a485f9fc8ee0290c",
+    "packages/derive/src/rule/index.ts": "1779f5cab94cf4a989cfb306e2ebc9fc988939f160a1be7dcf199fbdcb564963",
+    "packages/derive/src/rule/evaluator.ts": "1b8e75258c6accd3fe73571737436e5df4ce7b355597040305a26c61cf25b0bb",
+    "packages/derive/src/validate/operands.ts": "f005258787ff6e04556653179ddb25180406c7a1a552b22e9a3dd504ad09e701",
+    "packages/derive/src/validate/handlers.ts": "0a0b8ff46525073e57a9757557d61863bcf5cb8466d12c4bf0ee38f7644f015c",
+    "packages/derive/src/validate/timed.ts": "d0556b3a39905c97c497e8b70ad58b4f6e1e1ef4b9f00580b061c6962f5ed8f2",
+    "packages/derive/src/validate/format-1.ts": "de4340c9aed8eb3da92c6c80c203d9df3767e00942bf0f2e2729e02c41fb164a",
+    "packages/derive/src/validate/capability.ts": "c825e36beaae4d5d2c818e1ebdc17376bad79bf18272f357df6fbfcd71f80000",
+    "examples/grow/watering.ts": "8f821f4f6c26fd7738ec989cf2819b9d1e0f5532533781ef42cbba1bd4590f6c",
+    "packages/derive/test/definition-corpus/marks-data.ts": "a2d8663e842e68c0e7def804fe8d4876e8a9def245f3d52adbd73a6dd86174b5",
+    "packages/derive/test/fixtures-marks.ts": "8029e5c70190f89541bc2065622569eb2db2a2cb6e34da156f376c9f786feebf"
+  }
+}
