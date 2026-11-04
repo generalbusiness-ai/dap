@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:ee5252f1bbea3ff545b344c051e4eec3f5cbe17f","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-04-explicit-grants-gate-validation.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f0932681615a236a285ec872f87c422c1b4a83bc","text":"Merge retired a covered predecessor; the successor is at packages/platform/test/rules-scope.test.ts."}
