@@ -148,5 +148,38 @@ The [loader validation manifest](evidence/2026-11-04-mcp-contract-loader-validat
 covers 30 read-only public files, including the historical initial Card
 run, and indexes 928 additional owner-only originals. Its SHA-256 is
 `6b355dca6d173d9b7523fd3ecdc104a43105553cf160697244aafe7238fb2870`.
-The failed gate remains a failure. Fresh Card CI and a complete gate at
-the corrected frozen head remain pending.
+The failed gate remains a failure. The corrected frozen head passed fresh
+Card CI and its complete gate, as recorded below.
+
+
+## The corrected frozen head passed the complete validation
+
+The complete gate ran at `c0ab999fd9098f51489eebb58aa60323ded9fce3`, tree
+`d0a3e1060d28bb5d8d3ec8fd7f085d0573945ab6`. I read its actual `gate.exit`: `exit 0`.
+Source and dependency snapshots match before and after, and the owned
+process group closed. The run took 1215.944 seconds.
+
+All four terminal phases complete: 134 Node cases, 56 Counting
+cases, 3614 plain cases with 1 skip, and 1070 Native cases with
+2 skips. The analyzer finds zero contradictory records and zero
+unhandled errors. The archive diagnostic owner passes in 214804 ms.
+The historical cause remains unproved under `64552d40`.
+
+Fresh [Card run 41791544431](https://github.com/generalbusiness-ai/dap/actions/runs/41791544431)
+passes at that exact frozen head. All three maintained browser owners and
+regenerated-card equality pass, with 100 card cases and no browser errors.
+The [Card CI manifest](evidence/2026-11-04-mcp-contract-card-ci.manifest.json)
+has SHA-256
+`c793e3dc40efde5e55c520b3f0f387bb49b59ef86e2731103d79e45a014785a6`.
+
+The [complete gate manifest](evidence/2026-11-04-mcp-contract-gate-validation.manifest.json)
+has SHA-256
+`cf7911578265c4b5f5a370dc22ec50fbd3ab374e9c17be9601537a091df3cd0e`.
+Its raw-file inventory retains every original owner-only. Every raw stage
+began in durable storage through the recorded temporary-directory wrapper;
+the gate script and pass conditions stayed unchanged.
+
+After the complete gate, only this note and the two validation manifests
+changed. The oracle, schemas, fixtures, workflow, dependencies, runtime
+source, and generated card retain their frozen bytes. The initial failed
+gate and intermediate compiler failures remain separate retained results.

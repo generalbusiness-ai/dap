@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "qualification": "Frozen test-only oracle identity and complete exact-head Card workflow. All three browser owners and regenerated-module equality passed. No gate result or desktop-host acceptance.",
+  "fileCount": 18,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-mcp-contract-frozen-fixed",
+      "fileCount": 13,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 974,
+          "sha256": "90ff450f2d824dae7ec26b43e4d03dcce95651f9e05b754d920ce84ad7b6569d"
+        },
+        {
+          "path": "commit-message.txt",
+          "bytes": 273,
+          "sha256": "a728240759bffae7320aa92b7618d5383e7400238e5a6f91d72409d15d9f380c"
+        },
+        {
+          "path": "commit.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "commit.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "commit.stdout",
+          "bytes": 261,
+          "sha256": "fe7f7191a22d99bb88ffd63eb7820a563fb5847b8dca8e2f2a167aea198abb4c"
+        },
+        {
+          "path": "doc-links.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "doc-links.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "doc-links.stdout",
+          "bytes": 36,
+          "sha256": "3a9c5f58a570290642a3dd27a8a48f55199f946d703e6fd515757f093c5f75d1"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 1715,
+          "sha256": "e014edd501a44e482fb613cc97170860852251b1bd6526e427213d50d98aeaa2"
+        },
+        {
+          "path": "frozen.json",
+          "bytes": 2812,
+          "sha256": "4ffa595c5d098446e46399117f3dd063e24bbd52fc58cc8b56565a22bb2c11cc"
+        },
+        {
+          "path": "whitespace.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "whitespace.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "whitespace.stdout",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-mcp-contract-fixed-card-validation",
+      "fileCount": 5,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 330,
+          "sha256": "55ff039720b81ed37618fa487e00556aeae7af88f631e5b3b30ea18a61ba1a07"
+        },
+        {
+          "path": "browser-summary.json",
+          "bytes": 392,
+          "sha256": "b1a34ebd51668a5e3fa32b435d113d993d32d1aa23e9e9ab9a1e8be353b0e175"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 3370,
+          "sha256": "c8173a47aa50c8e3e8343e45cf7bf5845ad85a907540ce23f6a54325a69ec91f"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 468,
+          "sha256": "a294c3d18e11a7bae26a78ff4c46b1768884ecfee95417f558fdcc0ff2683821"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1879,
+          "sha256": "b45f4977330fb896607a3652755a8b935065c9d98696f1fd84fa9295f090cfe1"
+        }
+      ]
+    }
+  ]
+}
