@@ -220,6 +220,41 @@ requirement with ordinary checker review of the exact literals and head.
 The mini is unavailable under that ruling. This candidate needs no mini
 command; the planner owns deployment and hosted acceptance.
 
+## The production gate stops on one stale timed-opener expectation
+
+The complete gate runs at `edf8e2da`, tree `b27bd77e`, from a clean
+candidate. Its actual `gate.exit` is 1. The receipt records 190.818 seconds,
+unchanged source, and no remaining owned processes. Node passes 135 cases;
+Counting passes 56. Plain finishes with 3,924 passes, one failure, and one
+skip. Native is unreached. The terminal audit finds no contradictory
+records or unhandled errors; it keeps 99 unknown/suite observations separate.
+[The failed final-gate manifest](evidence/2026-11-05-failed-claim-cohort-final-gate-failure.manifest.json)
+retains nine public files and the hash inventory for 2,258 raw originals.
+The outer custody driver's successful exit reports its checks only; the
+actual gate exit remains 1.
+
+The sole failure is `packages/platform/test/timed-opener.test.ts`. Its
+negative loop still treats Destination19 as unsupported. The repaired
+production judge correctly writes both cleanup operations under owner19.
+The test-only follow-up moves 19 into the existing positive loop, which
+checks both complete operation/attempt pairs. It keeps unsupported4/12
+and adds unsupported sibling20 and unknown9999. The platform-only,
+wrong-kind, excessive-attempt, malformed-callback, and wrong-scope checks
+remain intact. No production source, imported helper, dependency,
+configuration, original case, or deadline changes.
+
+The changed platform compiler context and complete owning file pass,
+actual exit 0. This repair follows the one-file failed-gate exception in
+`docs/testing.md`: keep the failed gate, check the isolated repair, and
+run the unreached Native phase once. The reviewer must assess those
+separate records; no follow-up turns a failed gate into a pass.
+
+The gate also flags 21 public evidence files still tracked below
+`notes/implementation/evidence`. After the gate ends, the documentation
+follow-up removes those redundant copies and points four existing manifests
+to byte-identical, hash-verified external copies. Their file hashes stay
+unchanged. Git now retains the manifests alone for those evidence units.
+
 ## Evidence and review status
 
 The [focused manifest](evidence/2026-11-04-failed-claim-cohort-validation.manifest.json)
@@ -294,8 +329,9 @@ other character in the inventory stays identical. The affected security
 entry-point owner passes all 11 cases after the update. Its original
 failure remains in the focused evidence.
 
-PENDING: one complete final gate, current-head Page and Card workflow
-evidence, independent checker review, and source landing. Hugh approved the earlier 28-literal patch above. Earlier sealed
+PENDING: the unreached Native phase under the one-file follow-up rule,
+current-runtime-head Page and Card workflow evidence, independent checker
+review, and source landing. Hugh approved the earlier 28-literal patch above. Earlier sealed
 summaries describe the state at the time of those runs. The original gate
 and Native follow-up remain failed; no parent-acceptance claim exists.
 

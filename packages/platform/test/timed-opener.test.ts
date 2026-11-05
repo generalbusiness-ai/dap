@@ -27,7 +27,7 @@ test("timed cleanup is platform-only and refuses different kinds, oversized atte
     if (!checked.ok) return expect.fail(JSON.stringify(checked.problems));
     return judgeTimed(state, checked.definition, selected, { clock: clockOf(state, due), bounds: PROPOSED_BOUNDS, platform: { named: pin, rules: native.rules } });
   };
-  for (const pin of ["platform:destination@3", "platform:destination@13"] as const) {
+  for (const pin of ["platform:destination@3", "platform:destination@13", "platform:destination@19"] as const) {
     const result = judge(pin);
     expect(result.result, pin).toBe("write");
     if (result.result !== "write") return expect.fail("The exact supported native timer must write.");
@@ -39,7 +39,7 @@ test("timed cleanup is platform-only and refuses different kinds, oversized atte
       { effect: "attempt", operation: { k: 1 }, attempt: 1, result: "opened", selected: null },
     ]);
   }
-  for (const pin of ["platform:destination@4", "platform:destination@12", "platform:destination@19"] as const) {
+  for (const pin of ["platform:destination@4", "platform:destination@12", "platform:destination@20", "platform:destination@9999"] as const) {
     expect(judge(pin)).toEqual({ result: "unavailable", reason: "unavailable" });
   }
   const originalScope = state.scope()!;
