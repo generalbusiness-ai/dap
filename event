@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:14d67674d9b8f75f5660576bfee8bdf0915c005a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-05-installed-host-roots-failed-diagnostic-gate.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:15a0e23746d04a4381f0fc0dc82a17bfc517e4fd","text":"Merge retired a covered predecessor; the successor is at scripts/security-entry-points.test.mjs."}
