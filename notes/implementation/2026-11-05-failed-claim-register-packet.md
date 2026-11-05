@@ -100,7 +100,8 @@ The procedure creates one new TEST room through the real default CLI, checks
 its exact six pins, and verifies the actual default Page offer.
 The [token observer](2026-11-05-failed-claim-register/token-clone.mjs) wraps the
 existing clone command and hardened Git runner. It retains only this TEST
-credential in new private custody for a later comparison. It changes no
+credential in new private custody for a later comparison. The procedure records
+and checks the credential file digest across the real hour. It changes no
 production CLI behavior. Its wrong-home guard runs before signing or custody
 creation; the dry check uses a synthetic invalid home.
 
@@ -118,7 +119,7 @@ live room in this packet.
 
 ## Evidence
 
-The [focused manifest](evidence/2026-11-05-failed-claim-register-focused.manifest.json) seals 18 public files and indexes four private original units. Its SHA256 is `5b3ee8cb600f846de6834bc0d02e91fbd9b84ed683ca8c27a9c6be88b26d650a`. The complete gate remains pending before review.
+The [focused manifest](evidence/2026-11-05-failed-claim-register-focused.manifest.json) seals 18 public files and indexes four private original units. Its SHA256 is `5b3ee8cb600f846de6834bc0d02e91fbd9b84ed683ca8c27a9c6be88b26d650a`. The complete gate also passes at its frozen head; independent review remains pending.
 The current checks retain exact commands, actual exits, source hashes, synthetic
 filled files, and every attempted read. The initial Python public-health probe
 received HTTP 403 before saving a response; it made no offer request. The later
@@ -133,12 +134,40 @@ Node's loader deprecation warning remains in the parser output.
 | Filled install, offer, and rollback | `render.mjs --stage <stage> --scope <synthetic ID> ...` | 0 each | `checks-render-install.log` (`31db2369e5e356d02f501b5cadac8c5010f898215035f4657e4d037e236a48ed`); `checks-render-offer.log` (`4daaa2bc0809323b9738862a710eb48d8af21b644ec2585859f6d6ebca6b9d60`); `checks-render-rollback.log` (`211e1776275e624617bc1abf4ead20205087cf6f5d474a1cd65a6cec31e41263`) |
 | Token observer imports and usage | `token-clone.mjs --help` | 0 | `checks-token-observer-help.log` (`21c5b78b6aba9c943af306f4819f39e5b32a82d0dcc9ff56ac91cfe53701a55e`) |
 | Wrong-home refusal before signing | `token-clone.mjs before <new custody> <new clone>` with synthetic invalid config | 1, expected refusal | `checks-token-observer-wrong-home.log` (`e7a47210729b7da8903157a4fae429babe7be6f9a7a73722f7835fe6d95c1e52`) |
-| Complete gate | `npm run gate` | Not run yet | Pending |
+| Complete gate | `npm run gate` | 0 | `result.json` (`5bad356f1d22b687a656feb4858bc10e5accef515348bb5c0a16fcd237edee0f`) in the gate manifest |
+
+The [gate manifest](evidence/2026-11-05-failed-claim-register-packet-gate.manifest.json)
+has SHA256 `0e327cb81c035daf4f1798d8839596a3d5a817adef633af61a48cc9c343d3764`. Its 13 public files index 2,281 private originals.
+The actual `gate.exit` reads `exit 0` at
+`62faea1350d4c1d11518127741e747e9c24fb947`, tree
+`721f9ca92405fc73ef6c40f57a930e41a502f922`. Kernel, 135 Node cases, 56
+Counting cases, 3,925 plain passes with one skip, and 1,103 Native passes with
+two skips all have complete terminal evidence. Both Vitest ends report zero
+unhandled errors; the summary reports no contradictions. Its 99 extra Node
+events describe 33 entry-file wrappers, outside the case count. The only absent
+final module duration belongs to the skipped Page record owner.
+
+The gate records UTC 05:41:20.776461–06:08:57.410433 on 5 November.
+Python monotonic time measures 1,656.629607 seconds; the retained outer `time`
+reports 1,656.54 seconds. These are distinct measurements. The checkout and
+dependency identity stay unchanged, and its owned process group closes.
+The M1–M2 gate had already closed at 05:40:49.715631, so the gates do not overlap.
+An idle-sleep assertion applies only while the actual gate runs. The passing
+archive owner takes 265,038 ms and establishes no cause for request `64552d40`.
+Earlier cohort failures remain failed.
+
+After the gate, only the procedure, this note, and the new gate manifest change.
+The procedure adds the private credential digest check. All helper code,
+templates, production code, tests, dependencies, and live Wrangler bytes retain
+the exact gate inputs. The documentation follow-up rule needs no second gate.
+Planner ruling `ef31035a8d14c68d2d402f928ca946bfee63bb04` accepts demo as the
+right Worker and requires an actual old-room child birth before the new scratch
+room. The procedure keeps that order.
 
 ## Open limits
 
-- Request `c448c870cf6a2f93a30c285a1a4d4a6c9f4bd8ad` still needs its complete
-  gate, independent review, and landing. The planner fills the reviewed copy;
+- Request `c448c870cf6a2f93a30c285a1a4d4a6c9f4bd8ad` still needs independent review
+  and landing. The planner fills the reviewed copy;
   the later record names every actual value and deployment.
 - Parent `8a8902f3e9ad526371cb0a73db4117bc0197cd60` owns the actual new register,
   existing-room continuity, default Page and CLI scenes, actual one-hour token,

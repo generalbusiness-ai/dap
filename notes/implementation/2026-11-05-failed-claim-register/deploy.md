@@ -22,6 +22,7 @@ export FAILED_CLAIM_SOURCE=/absolute/path/to/reviewed/checkout
 export FAILED_CLAIM_ROLLOUT_ROOT=/absolute/path/to/new/private/rollout
 export FAILED_CLAIM_PACKET="$FAILED_CLAIM_SOURCE/notes/implementation/2026-11-05-failed-claim-register"
 export DAP_HOME="$FAILED_CLAIM_ROLLOUT_ROOT/client"
+umask 077
 ```
 
 Create the rollout root and client directory at mode 0700. Require that the
@@ -161,6 +162,13 @@ This executes the existing clone command and hardened Git runner. Only the
 observer retains this TEST token's header in its new private custody directory;
 normal CLI behavior retains no token. Keep it out of arguments, public logs,
 Git config, and committed evidence. Require both actual Git calls to pass.
+Record the private credential file's digest after those calls:
+
+```sh
+shasum -a 256 "$FAILED_CLAIM_ROLLOUT_ROOT/token-custody/credential.json" \
+  > "$FAILED_CLAIM_ROLLOUT_ROOT/token-custody/credential.sha256"
+```
+
 Retain the actual token end and read-token opening. Verify Destination 19's
 accepted act has fields `{}` and the fixed one-hour lifetime. Before claiming
 replay, verify the fetched journal set offline:
@@ -177,7 +185,14 @@ coverage and trust qualification. A missing dependency or untrusted published
 anchor remains a finding; do not silently add an anchor-trust flag to pass.
 
 Wait until the recorded real expiry, without changing any clock or token end.
-Continue other work during that hour. Then run:
+Continue other work during that hour. Verify the retained file's digest before
+the comparison. Stop if its bytes changed:
+
+```sh
+shasum -a 256 -c "$FAILED_CLAIM_ROLLOUT_ROOT/token-custody/credential.sha256"
+```
+
+Keep both digest-check outputs with the private record. Then run:
 
 ```sh
 node --import "$FAILED_CLAIM_SOURCE/node_modules/tsx/dist/loader.mjs" \
