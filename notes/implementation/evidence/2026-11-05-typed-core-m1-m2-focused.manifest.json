@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "sourceHead": "1b8454bb17f9b62ec4b3ba9bf992d6c35ebff19d",
+  "sourceTree": "ec014c218e37d4c2fe8394276e4a715ebb4d2fe9",
+  "qualification": "Focused M1\u2013M2 evidence, including initial failures and restored-source controls. No gate or production acceptance claim.",
+  "fileCount": 10,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-05-typed-core-m1-m2-focused-evidence",
+      "fileCount": 10,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 741,
+          "sha256": "aa94d52153d7b2fdfdafa2833422a643525ba1f5272cd82ac6418c18f4986a83"
+        },
+        {
+          "path": "cases.json",
+          "bytes": 10872,
+          "sha256": "fb7087f8ca63f3521f42a8d47c34a4f210558e2a0a1312836ae66fb0a54ceaef"
+        },
+        {
+          "path": "commands.json",
+          "bytes": 13041,
+          "sha256": "48bf46e08990a0525c8baad208a8f7694b7ff7fd244481cc4203ba988707290f"
+        },
+        {
+          "path": "consumer.txt",
+          "bytes": 1057,
+          "sha256": "f119082a69ebc3007ca6a9cd79d0ee651502711ee757c0bf4f0546b95ace40ab"
+        },
+        {
+          "path": "controls.json",
+          "bytes": 2342,
+          "sha256": "4ff4348db18629d65b60aa73fe1c0ee332db1b18c3b6613bcb5c38a195c3f5e0"
+        },
+        {
+          "path": "failed-attempts.json",
+          "bytes": 952,
+          "sha256": "6786f1a6d0840725ecffa37580ab2337ba711c988423e73570cf54eb8dc9019e"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 1494,
+          "sha256": "7b9c5d796f9729cbcb9f27f32bd50ac0443c4302060abc3f38aa8e6e8a1cbc0e"
+        },
+        {
+          "path": "result.json",
+          "bytes": 380,
+          "sha256": "b453a08c7ee182d2701b3b1c041f6016cd12e13ab14335e7da12ed124d27b9c6"
+        },
+        {
+          "path": "sealing-driver.py",
+          "bytes": 8982,
+          "sha256": "cbce1bac729db05945ff095e1a750d9beec8a844793f16f0a290b341c5d5005a"
+        },
+        {
+          "path": "source-identity.json",
+          "bytes": 4269,
+          "sha256": "7dc3b275a8504a5872476588d57a5da46211900ed5f5761297779aa6efe9ce93"
+        }
+      ]
+    }
+  ]
+}
