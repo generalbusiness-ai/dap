@@ -1,0 +1,48 @@
+diff --git a/packages/scope/test/installed-host-roots-cache-probe.test.ts b/packages/scope/test/installed-host-roots-cache-probe.test.ts
+index 38a45a2d0f..fad0c63002 100644
+--- a/packages/scope/test/installed-host-roots-cache-probe.test.ts
++++ b/packages/scope/test/installed-host-roots-cache-probe.test.ts
+@@ -25,7 +25,6 @@ for (const host of ["artifacts", "github.com"] as const) {
+     const life = nativeFixtureLifetime(owner, { required: false });
+     life.advance(Date.parse("2099-01-01T09:35:03.001Z") - life.now());
+     try {
+-      let inspectCustody: (handle: unknown) => unknown = () => "outside not initialized";
+       const calls = { creates: [] as string[], mints: [] as unknown[] };
+       const credentialReads: { answered: boolean; now: string; custody: unknown[]; rootList: string | undefined; keyReads: number; policyAfter: boolean }[] = [];
+       let name = "", enabled = false;
+@@ -121,11 +120,23 @@ for (const host of ["artifacts", "github.com"] as const) {
+       await life.wait(async () => membership.did(rita, "first-key", { fields: { member: seat }, expected: await membership.expected({ roster: 0, member: seat }) }));
+       life.outside(destination.name, (given, sql) => {
+         const port = outsideOf(given, sql, env, fetch);
+-        inspectCustody = handle => ({
+-          totalRows: sql.exec("SELECT COUNT(*) AS rows FROM private_credential").toArray()[0]!["rows"],
+-          requested: typeof handle === "string" ? sql.exec("SELECT state, ends, plaintext IS NOT NULL AS held FROM private_credential WHERE id = ?", handle).toArray() : "no string handle",
+-        });
+         return { ...port, accepts: (owner, kind) => kind === "mint-read" && port.accepts(owner, kind),
++          judged: (at, sealed) => {
++            port.judged?.(at, sealed);
++            const input = sealed?.entry.input;
++            if (input?.type === "outcome" && input.kind === "mint-read") {
++              const body = input.evidence.body;
++              const handle = body !== null && typeof body === "object" && "token" in body ? body.token : undefined;
++              console.info("exact-clock-native-judged-custody", JSON.stringify({
++                now: given.clock.read(), result: input.result,
++                handlePresent: body !== null && typeof body === "object" && Object.hasOwn(body, "token"),
++                handleType: typeof handle,
++                publicExpiry: body !== null && typeof body === "object" && "ends" in body ? body.ends : null,
++                totalRows: sql.exec("SELECT COUNT(*) AS rows FROM private_credential").toArray()[0]!["rows"],
++                requested: typeof handle === "string" ? sql.exec("SELECT state, ends, plaintext IS NOT NULL AS held FROM private_credential WHERE id = ?", handle).toArray() : "no string handle",
++              }));
++            }
++          },
+           credential: (handle, key) => {
+             const custody = sql.exec("SELECT state, ends, plaintext IS NOT NULL AS held FROM private_credential WHERE id = ?", handle).toArray();
+             const start = settingsGets.length;
+@@ -154,7 +165,6 @@ for (const host of ["artifacts", "github.com"] as const) {
+         handlePresent: body !== null && typeof body === "object" && Object.hasOwn(body, "token"),
+         handleType: typeof handle,
+         publicExpiry: body !== null && typeof body === "object" && "ends" in body ? body.ends : null,
+-        custodyAfterMint: inspectCustody(handle),
+       }));
+       expect(canonicalize(journal)).not.toContain("test_read_plaintext");
+       owner.configure({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
