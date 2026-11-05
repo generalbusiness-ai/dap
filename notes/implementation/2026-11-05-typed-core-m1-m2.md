@@ -96,21 +96,51 @@ frozen parent with mutable children. Filtered cases are not passes.
 | Prepared-rule owner | `node node_modules/vitest/vitest.mjs run --project derive packages/derive/test/rule.test.ts` | 0, 3 cases | `commands.json` (`48bf46e08990a0525c8baad208a8f7694b7ff7fd244481cc4203ba988707290f`), `cases.json` |
 | Four restored-source controls | Retained `control.mjs`, one fault per invocation | 0, distinguishes | `controls.json` (`4ff4348db18629d65b60aa73fe1c0ee332db1b18c3b6613bcb5c38a195c3f5e0`) |
 | Grow refusal display | Recorded Node command with the existing pinned `tsx` loader | 0 | `consumer.txt` (`f119082a69ebc3007ca6a9cd79d0ee651502711ee757c0bf4f0546b95ace40ab`) |
-| Complete gate | `npm run gate` | Pending | No gate result yet |
+| Complete gate | `npm run gate` | 0 | Gate manifest, `result.json` (`0df62b264be169deff86e80f429f974d8c0c7f935e8f279e9c008fa73aa3ac3b`) |
 
 `commands.json` retains exact commands, actual exits, and per-command wall and
 child CPU measurements. Those sums are not a pipeline measurement. The consumer
 retains Node's loader deprecation warning. The first test compiler attempt
 failed on the new witness's invariant generic annotation; its body never ran.
 The corrected compiler and later whole owner pass. The setup recovery also
-retains its rejected relative-link guard and the stale continuation hash guard.
+retains its rejected relative-link guard and a whole-file guard that mistook a
+source-seal digest for a file hash.
 Neither guard changed source before stopping. No package installation occurred.
+
+The [gate manifest](evidence/2026-11-05-typed-core-m1-m2-gate.manifest.json)
+has SHA256 `da627ed4df01ecb967a8d383f268bf9d0c62714df987f88bd19fa4eca1876bcf`. Its 13 public files index 2,283 private originals.
+The actual `gate.exit` reads `exit 0` at head
+`1ccf37e021e21ef4f119cc969468dbc7fe1f0fd3`, tree
+`9b9d523126eecde6955c9032a8f64f206cbdc087`. All five terminal stages pass:
+kernel; 135 Node cases; 56 Counting cases; 3,943 plain passes with one skip;
+and 1,103 Native passes with two skips. Both Vitest ends report zero unhandled
+errors. The summary reports complete terminal coverage and no contradictions.
+Its 99 extra Node events describe 33 entry-file wrappers outside the case count.
+The only missing final module duration belongs to the skipped Page record owner.
+
+The gate records UTC 05:14:30.125262–05:40:49.715631 on 5 November.
+Its Python monotonic measurement is 1,579.596911 seconds; the retained outer
+`time` reports 1,579.50 seconds. Keep these measurements distinct. The source
+and dependency identity stay unchanged, and the owned process group closes.
+An idle-sleep assertion applies only during that actual gate command. This
+passing run establishes no cause for the earlier cohort failures, which remain
+failed. The 10,001-entry archive owner passes in 250,360 ms; request
+`64552d409314e82829b263a430cb8ec04c06ab84` still owns its earlier unexplained stop.
+
+An adapted finalizer first wrote the new manifest to a historical scratch
+pathname. The builder retained the verified new bytes at the correct path and
+restored the old scratch file from its committed manifest. No durable original
+or committed historical manifest changed. A note-update attempt stopped before
+changes when the expected new scratch path was absent.
+
+Only notes change after the gate. The final review record will name that
+documentation tree; production source and tests retain the exact gate bytes.
 
 ## Open limits
 
 - Parent `e99550e9bfedcde3bed05bae1d345fcbfe5f7c9a` owns M3–M8, full vocabulary
   coverage, every production cutover, and deletion of the remaining dispatchers.
-- This source request still requires its complete gate and independent review.
+- This source request still requires independent review and landing.
   Earlier cohort failures and passing diagnostics do not excuse a new failure.
   The next gate that reaches Native must pass on its own.
 - Request `64552d409314e82829b263a430cb8ec04c06ab84` retains the separate archive

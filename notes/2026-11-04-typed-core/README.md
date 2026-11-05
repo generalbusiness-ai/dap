@@ -1,6 +1,6 @@
 # Typed derivation contract
 
-Status: M1–M2 implements the first slice on the branch scheduled by gitseq request `e99550e9bfedcde3bed05bae1d345fcbfe5f7c9a`. Focused witnesses cover bounded equivalence; the review candidate still needs its gate and independent review. Production routing remains unchanged.
+Status: M1–M2 implements the first slice on the branch scheduled by gitseq request `e99550e9bfedcde3bed05bae1d345fcbfe5f7c9a`. Focused witnesses cover bounded equivalence; the complete M1–M2 gate passes, and independent review remains pending. Production routing remains unchanged.
 
 Source baseline: `7135dc3985694760ff8c80ad07f200ba8f6e767d`, 2026-11-04.
 This packet supplies delivery 1 of [plan 035](../plans/035-2026-11-04-typed-derivation-core.md).
