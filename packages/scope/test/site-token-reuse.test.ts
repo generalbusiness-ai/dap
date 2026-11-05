@@ -3,7 +3,7 @@
 import { expect, test, vi } from "vitest";
 import { env } from "cloudflare:workers";
 import { evictDurableObject, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
-import { canonicalize } from "@generalbusiness/dap-bytes";
+import { canonicalize, digestBytes, scopeIdOf, utf8 } from "@generalbusiness/dap-bytes";
 import { otherLane } from "@generalbusiness/dap-derive/testing";
 import { SiteTokenReuse, type SiteTokenRequest, type SiteTokenPort } from "../src/site/token-reuse.ts";
 import { readerOf, type Room, type SiteEnv } from "../src/site/host.ts";
@@ -289,4 +289,32 @@ test("Artifacts Site close releases only the local reader and network refusal ne
     await two.close();
     expect(p.counts()).toEqual({ mints: 1, infos: 2, revokes: 0 });
   } finally { siteTokenTestSettings.delete(SCOPE_INDEX_NAME); }
+});
+
+// Real private SQLite; scripted provider and clock. A removed root cannot
+// commit a mint that was already in flight, or remint its unknown token.
+test("Site token custody rechecks installed roots after a provider wait and retains the unknown mint bound", async () => {
+  const holder = await create();
+  await holder.inside(async state => {
+    const sql: Sql = { exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: run => state.storage.transactionSync(run) };
+    const now = Date.parse("2099-01-01T00:00:00Z"), p = provider(() => now);
+    const current = scopeIdOf({ v: 1, kind: "register", definition: "platform:register@1", creator: null,
+      cause: digestBytes(utf8("TEST current token owner root")), ordinal: 0 });
+    const config = { ...configuration, registerScope: current };
+    const settings: ArtifactsBindings = { ...p.settings, REGISTER_SCOPE: current, ARTIFACTS_CONFIG: canonicalize(config),
+      INSTALLED_REGISTER_SCOPES: canonicalize([otherLane.scope, current]) };
+    const entered = gate<void>(), release = gate<unknown>();
+    p.hold(() => { entered.release(); return release.promise; });
+    const tokens = new SiteTokenReuse(sql, () => artifactsReadiness(settings), () => now, async () => {}, () => settings);
+    const asked = { ...request(), configuration: canonicalize(config) };
+    const pending = tokens.acquire(asked);
+    await entered.promise;
+    settings.INSTALLED_REGISTER_SCOPES = canonicalize([current]);
+    release.release({ scope: "read", plaintext: "removed-root-plaintext", expiresAt: new Date(now + 120_000).toISOString() });
+    expect((await pending).ok).toBe(false);
+    expect(sql.exec("SELECT plaintext FROM private_site_token").toArray()).toEqual([{ plaintext: null }]);
+    settings.INSTALLED_REGISTER_SCOPES = canonicalize([otherLane.scope, current]);
+    expect(await tokens.acquire(asked)).toEqual({ ok: false, reason: "mint-pending" });
+    expect(p.counts().mints).toBe(1);
+  });
 });

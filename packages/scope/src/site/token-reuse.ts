@@ -2,6 +2,7 @@
  * Provider answers are not native authority. Unknown mints have the bounded
  * hold accepted by planner ruling 3fdb03b9; they are never retried inline. */
 import { canonicalize, isScopeId, timeMs, utf8 } from "@generalbusiness/dap-bytes";
+import { hostRegisterScopes } from "../installed-registers.ts";
 import { refName } from "@generalbusiness/dap-git";
 import { READ_TTL } from "../artifacts-host.ts";
 import { ARTIFACTS_HOST, type ArtifactsReadiness } from "../artifacts-wiring.ts";
@@ -37,12 +38,13 @@ const nowIs = (now: number): boolean => Number.isSafeInteger(now) && now >= 0 &&
 export class SiteTokenReuse {
   readonly #sql: Sql;
   readonly #readiness: () => ArtifactsReadiness;
+  readonly #settings: () => Parameters<typeof hostRegisterScopes>[1];
   readonly #clock: () => number;
   readonly #schedule: () => Promise<void>;
   readonly #flights = new Map<string, Flight>();
   #waiters = 0;
-  constructor(sql: Sql, readiness: () => ArtifactsReadiness, clock: () => number, schedule: () => Promise<void>) {
-    this.#sql = sql; this.#readiness = readiness; this.#clock = clock; this.#schedule = schedule;
+  constructor(sql: Sql, readiness: () => ArtifactsReadiness, clock: () => number, schedule: () => Promise<void>, settings: () => Parameters<typeof hostRegisterScopes>[1] = () => ({})) {
+    this.#sql = sql; this.#readiness = readiness; this.#clock = clock; this.#schedule = schedule; this.#settings = settings;
   }
   #exists(): boolean { return this.#sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='private_site_token'").toArray().length === 1; }
   maintain(now: number): void {
@@ -64,15 +66,16 @@ export class SiteTokenReuse {
   }
   async acquire(request: SiteTokenRequest): Promise<SiteTokenAnswer> {
     const ready = this.#readiness(), supplied = record(request), repository = record(supplied?.["repository"]);
+    const roots = ready.state === "wired" ? hostRegisterScopes(ready.config.registerScope, this.#settings()) : null;
     if (ready.state !== "wired" || !supplied || Object.keys(supplied).length !== 4 || !repository || Object.keys(repository).length !== 4
-      || supplied["register"] !== ready.config.registerScope || !isScopeId(supplied["register"])
+      || !isScopeId(supplied["register"]) || !roots?.includes(supplied["register"])
       || supplied["configuration"] !== canonicalize(ready.config)
       || repository["host"] !== ARTIFACTS_HOST || repository["namespace"] !== ready.config.namespace
       || typeof repository["name"] !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/.test(repository["name"])
       || repository["name"].toLowerCase().endsWith(".git") || repository["id"] !== repository["name"]
       || typeof supplied["ref"] !== "string" || supplied["ref"].length > 1024 || utf8(supplied["ref"]).length > 1024 || !supplied["ref"].startsWith("refs/")) return NO_TOKEN;
     try { refName(supplied["ref"], "Site token ref"); } catch (error) { return failed(error); }
-    const name = repository["name"];
+    const register = supplied["register"], name = repository["name"];
     const now = this.#clock();
     if (!nowIs(now)) return NO_TOKEN;
     const key = canonicalize({ configuration: ready.config, repository, ref: supplied["ref"] });
@@ -93,7 +96,8 @@ export class SiteTokenReuse {
     const generation = selected.row["generation"] as string;
     const current = () => {
       const actual = this.#readiness();
-      return actual.state === "wired" && actual.binding === ready.binding && canonicalize(actual.config) === canonicalize(ready.config);
+      return actual.state === "wired" && actual.binding === ready.binding && canonicalize(actual.config) === canonicalize(ready.config)
+        && hostRegisterScopes(actual.config.registerScope, this.#settings())?.includes(register) === true;
     };
     const remote = async (wait: Wait) => {
       let handle;

@@ -1,5 +1,10 @@
 # Keep host authority for installed registers
 
+Status: Site review correction prepared, with passing focused checks.
+Review `1a71cdd7` requested this correction at `b0d3c165`; planner ruling
+`0e593489` requires old-room Sites to keep working. The revised full gate
+and independent review remain pending.
+
 Switching a Worker's current register previously stranded old rooms' Git
 credentials even when `INSTALLED_REGISTER_SCOPES` retained their root.
 The Artifacts and GitHub adapters now accept every root in that validated
@@ -20,7 +25,7 @@ adapter's cache key, so list changes take effect on the next call.
 The separate workspace capability path keeps its configured register.
 This change touches no Native definition, grant, wire format, dependency,
 Worker configuration, or derive source. The source-seal inventory updates
-four existing values and adds the two small shared authority owners; all
+seven existing values and adds the two small shared authority owners; all
 route and gate assertions stay in place.
 
 ## Evidence and limits
@@ -51,7 +56,9 @@ failures: the new helper and Worker cache read the register settings, but
 the documentation had not named those readers. Its actual `gate.exit` is
 `exit 1`; Counting, Plain and Native never ran. The
 [failed-gate manifest](evidence/2026-11-05-installed-host-roots-failed-gate.manifest.json)
-retains that result. The settings inventory and host/self-host references
+retains that result. Its SHA256 is
+`d389daf38f6b154575f11c514391877e29bbe88aa2723ff94ccdf538da8f5b7e`.
+The settings inventory and host/self-host references
 now describe the new readers and retained-root authority. Runtime and test
 bytes remain identical to `25000b56`. The three settings-owner cases and
 local links pass after the repair; the
@@ -70,8 +77,9 @@ owned process group closed.
 
 The [gate manifest](evidence/2026-11-05-installed-host-roots-gate.manifest.json)
 retains the terminal analysis, checkout identity and complete raw originals.
-Its SHA256 is `78b0f9ea55db59def75be27220c74023fd093a740cf97aa6397edc7256bceffc`. Only this implementation
-note and the gate manifest change after that frozen gate. The first gate
+Its SHA256 is `78b0f9ea55db59def75be27220c74023fd093a740cf97aa6397edc7256bceffc`. Candidate `b0d3c165` changed only this implementation note and the gate
+manifest after that frozen gate. The Site correction below changes runtime
+and test files and therefore needs a new complete gate. The first gate
 remains failed; this later pass explains no historical Native or archive
 failure. The archive scale owner passed independently, and source
 `64552d40` remains open.
@@ -83,6 +91,66 @@ The planner then checks old-room child creation and Git access before a
 new scratch room and the actual clone after its token's hour. Neither
 this source nor its tests close parent `8a8902f3` or historical source
 `64552d40`.
+
+## Site correction and reader audit
+
+`site/host.ts` now uses the same installed-root helper for Artifacts and
+GitHub. Cached readers recheck membership when opening and before source
+access. The fixed `SiteTokenReuse` owner receives a fresh root-settings
+snapshot from `ScopeIndex`; acquisition and post-provider checks use that
+same helper. The change keeps namespace, repository name, configuration
+identity, expiry, generation, capacity and unknown-mint bounds.
+
+The [Site focused manifest](evidence/2026-11-05-installed-host-roots-site-focused.manifest.json)
+records 30 passing cases across four complete owners, both source and test
+compilers, and 14 security inventory cases. Its SHA256 is
+`d2326c926f022766097264ee1ced5033135c3c222ad0c1325fbcebb4d363f8c8`.
+The native Site route witness installs genuine old and current registers,
+serves the old room after the switch, refuses its new and cached readers
+when unlisted, refuses the fixed owner's cached token, and restores service
+without another mint when the root returns. The GitHub witness covers
+public and private readers. Another witness removes the root during a
+provider mint, refuses its plaintext and preserves the unknown-mint hold.
+Providers and clocks remain explicit stand-ins.
+
+Two bounded controls distinguish the Site change. Restoring a single-root
+Site check makes the actual old-room route answer 503 instead of 200.
+Removing the token owner's post-provider membership check admits the
+removed root's minted plaintext. Both fail at the intended assertions and
+restore exact source bytes.
+
+The candidate scan uses `rg -n 'registerScope|room\.register'
+packages/scope/src apps/room`, excluding generated files, followed by the
+register and `hostBound` consumers and workspace lineage. The manifest
+records the command, candidate working directory, source hashes and output.
+An initial scan ran on main `8b063123`; it remains only a qualified baseline.
+The corrected scan ran on the Site candidate after controls restored.
+Every remaining selector has a named boundary:
+
+- `archive-host-item.ts` compares the directory creator and retained claim
+  against one configured root and calls `hostBound` with that root.
+  `apps/room/archive.ts` supplies it; only `worker.grow.ts` enables
+  `archiveHost`. The demo packet does not switch Grow. A future Grow root
+  switch needs this bridge's own review and continuity witness, as checker
+  `1a71cdd7` records.
+- `artifactsWorkspaceOutside` supplies one root to `WorkspaceHost`.
+  `workspaceRepository` in `workspace-lineage.ts` compares the directory's
+  source register to that root. This is the separate `hold@2` capability
+  path. A lane with that capability and workspace sources can reach it;
+  the scan establishes no absence of such lanes in old demo rooms. The
+  adapter and Site changes do not change it. The builder has asked the
+  planner whether route A must include it before this source lands.
+- `demo-creation.ts` compares the public offer to the configured current
+  register. It intentionally selects the current offer; historical roots
+  do not become default offers.
+- `register-setting.ts` checks current-root agreement and the Artifacts
+  fallback. Parentless creation still selects that current root.
+- The two native adapters and `host-wiring.ts` use membership in validated
+  roots. The corrected Site reader and token owner now use that helper too.
+
+No new full-gate or acceptance claim follows from these focused checks.
+Resolve the workspace scope, freeze the complete correction, run its gate,
+and request a new exact-head review before landing.
 
 ## Workroom
 

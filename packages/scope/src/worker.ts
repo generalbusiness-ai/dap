@@ -141,7 +141,7 @@ export class ScopeIndex extends DurableObject<Env> {
       ...(namespace === undefined ? {} : { ARTIFACTS_NAMESPACE: namespace }),
       ARTIFACTS: binding,
     });
-  }, () => Date.now(), () => this.#scheduleSiteTokens());
+  }, () => Date.now(), () => this.#scheduleSiteTokens(), () => ({ REGISTER_SCOPE: this.env.REGISTER_SCOPE, INSTALLED_REGISTER_SCOPES: this.env.INSTALLED_REGISTER_SCOPES }));
   #siteAlarm: Promise<void> | null = null;
   #siteAlarmRevision = 0;
   async #scheduleSiteTokens(): Promise<void> {

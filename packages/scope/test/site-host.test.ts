@@ -99,3 +99,37 @@ test("scripted GitHub Site acquisition binds stable identity before Git reads an
   await expect(invalid!()).rejects.toMatchObject({ step: "info" });
   expect(invalidRequests).toBe(0);
 });
+
+// Scripted room/GitHub metadata; production reader and smart Git parser.
+test("GitHub Sites retain listed old roots and close cached readers when the list removes them", async () => {
+  const current = scopeIdOf({ v: 1, kind: "register", definition: "platform:register@1", creator: null,
+    cause: digestBytes(utf8("TEST switched GitHub Site register")), ordinal: 0 });
+  for (const publicReads of [true, false]) {
+    const settings = environment(publicReads);
+    settings.REGISTER_SCOPE = current;
+    settings.GITHUB_APP_CONFIG = canonicalize({ ...JSON.parse(settings.GITHUB_APP_CONFIG!), registerScope: current });
+    settings.INSTALLED_REGISTER_SCOPES = canonicalize([room.register, current]);
+    let requests = 0;
+    const fetch = async (request: Request) => {
+      requests++;
+      if (new URL(request.url).origin === "https://api.github.com") return json(repository());
+      return new Response(`${packet("# service=git-upload-pack\n")}0000${packet(`${"1".repeat(40)} refs/heads/main\0object-format=sha1\n`)}0000`,
+        { headers: { "content-type": "application/x-git-upload-pack-advertisement" } });
+    };
+    const open = readerOf(settings, room, fetch)!;
+    const cached = await open();
+    expect(await cached.source.refs("refs/heads/", 1)).toEqual([{ ref: "refs/heads/main", target: "1".repeat(40) }]);
+    settings.INSTALLED_REGISTER_SCOPES = canonicalize([current]);
+    const before = requests;
+    expect(readerOf(settings, room, fetch)).toBeNull();
+    await expect(open()).rejects.toBeDefined();
+    expect(() => cached.source.refs("refs/heads/", 1)).toThrow();
+    expect(requests).toBe(before);
+    settings.INSTALLED_REGISTER_SCOPES = canonicalize([room.register, current]);
+    expect(await cached.source.refs("refs/heads/", 1)).toHaveLength(1);
+    settings.INSTALLED_REGISTER_SCOPES = canonicalize([current, current]);
+    expect(readerOf(settings, room, fetch)).toBeNull();
+    await expect(open()).rejects.toBeDefined();
+    await cached.close();
+  }
+});
