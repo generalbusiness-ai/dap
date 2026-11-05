@@ -25,6 +25,7 @@ for (const host of ["artifacts", "github.com"] as const) {
     const life = nativeFixtureLifetime(owner, { required: false });
     try {
       const calls = { creates: [] as string[], mints: [] as unknown[] };
+      const credentialReads: { answered: boolean; now: string; custody: unknown[] }[] = [];
       let name = "", enabled = false;
       const repository = () => ({ id: 71, name, owner: ACCOUNT, private: true, full_name: `${NAMESPACE}/${name}`,
         html_url: `https://github.com/${NAMESPACE}/${name}`, clone_url: `https://github.com/${NAMESPACE}/${name}.git` });
@@ -111,7 +112,13 @@ for (const host of ["artifacts", "github.com"] as const) {
       await life.wait(async () => membership.did(rita, "first-key", { fields: { member: seat }, expected: await membership.expected({ roster: 0, member: seat }) }));
       life.outside(destination.name, (given, sql) => {
         const port = outsideOf(given, sql, env, fetch);
-        return { ...port, accepts: (owner, kind) => kind === "mint-read" && port.accepts(owner, kind) };
+        return { ...port, accepts: (owner, kind) => kind === "mint-read" && port.accepts(owner, kind),
+          credential: (handle, key) => {
+            const custody = sql.exec("SELECT state, ends, plaintext IS NOT NULL AS held FROM private_credential WHERE id = ?", handle).toArray();
+            const answer = port.credential?.(handle, key) ?? null;
+            credentialReads.push({ answered: answer !== null, now: given.clock.read(), custody });
+            return answer;
+          } };
       });
       await life.wait(() => destination.restart());
       const accepted = await life.wait(async () => destination.act(rita, "read-token", { on: 0,
@@ -135,8 +142,12 @@ for (const host of ["artifacts", "github.com"] as const) {
       // Removing a root closes an already-cached adapter and preserves custody.
       env.INSTALLED_REGISTER_SCOPES = canonicalize([current.name]);
       expect((await credential()).status).toBe(403);
+      // The real session reached the adapter, so this refusal tests root policy.
+      expect(credentialReads).toHaveLength(1);
+      expect(credentialReads[0]!.answered).toBe(false);
       env.INSTALLED_REGISTER_SCOPES = canonicalize([old.name, current.name]);
-      const read = await credential(); expect(read.status).toBe(200);
+      const read = await credential();
+      expect(read.status, JSON.stringify({ response: read.status === 200 ? "ok" : await read.clone().json(), credentialReads })).toBe(200);
       expect(await read.json()).toMatchObject({ value: { token: "test_read_plaintext" } });
       expect((await credential()).status).toBe(403);
       owner.configure({ secret: null, sessions: false, inspector: null });

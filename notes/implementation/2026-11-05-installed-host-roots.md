@@ -3,8 +3,9 @@
 Status: adapter, Site and workspace continuity corrections have passing
 focused evidence. Review `1a71cdd7` requested the Site correction at
 `b0d3c165`. Rulings `0e593489` and `56a48952` require old-room Sites and
-workspace provider work to keep working. The final frozen gate and new
-independent review remain pending.
+workspace provider work to keep working. The combined gate failed. Its
+cause remains unexplained. A passing frozen gate and new independent
+review remain pending.
 
 Switching a Worker's current register previously stranded old rooms' Git
 credentials even when `INSTALLED_REGISTER_SCOPES` retained their root.
@@ -198,7 +199,8 @@ configured root loses the proven old repository, and omitting the list
 from the workspace cache key lets removed-root work reach the provider.
 Both fail at their intended assertions. Their exact source bytes are
 restored. The preceding Site and adapter controls remain separate retained
-records. The final full gate has not run yet.
+records. The combined gate below failed. The final correction has no
+passing full gate yet.
 
 ## Workroom
 
@@ -208,3 +210,38 @@ Source request `071b437de80f7d88b4377a3bc8286b370624cb12`, promise
 The base is main `8b06312366635b7619abb2080d88a225fc063e17`, with M1–M2
 already landed. Blocking packet review `bf2e724f` identified the original
 single-root mismatch by source inspection; no live cutover caused it.
+
+
+## Combined continuity gate failure
+
+The combined gate at `99d3c7f619397a52c309e956030310c6c7740804`, tree
+`7ed691c95b507f3f520977c0a022898b277c9e45`, failed. I read its actual
+`gate.exit`: `exit 1`. Node passed 135 cases, Counting passed 56, Plain
+passed 3,943 with one skip, and Native passed 1,110 with two skips and
+one failure. The reconciler marks Native observations partial because
+one owner failed. It found no contradictions or unhandled errors.
+
+The GitHub retained-root credential witness returned HTTP 403 after the
+root returned to the installed list. It expected HTTP 200. The unchanged
+three-case owner passed in isolation. A diagnostic run with its five
+neighboring gate owners passed all 31 cases. These passes do not explain
+the gate failure or replace a full gate.
+
+The [failed continuity gate manifest](evidence/2026-11-05-installed-host-roots-failed-continuity-gate.manifest.json)
+has SHA256 `9ee56cfe2c2b6e23b26172f2df3f5bbb9411a4641bfec0ec90439a84e2ee16b7`
+and 13 public files. The raw originals began in durable storage, retain
+exact hashes, and are read-only. The source stayed unchanged, and the
+owned process group closed. The archive owner passed in this run; its
+historical failure remains unexplained.
+
+The witness now checks that its first refused read reached the adapter
+through the real session. Its failure diagnostic records adapter answers,
+clock readings, and custody state and expiry. It excludes plaintext and
+session tokens. No runtime change follows from the unexplained failure.
+A diagnostic full gate must stand on its own before renewed review.
+
+The strengthened witness and six related owners passed all 46 cases, and
+the test compiler passed. The [credential diagnostic manifest](evidence/2026-11-05-installed-host-roots-credential-diagnostic.manifest.json)
+has SHA256 `d3a7aad7c365db4aaa37ea68841a139d6f067a294e1c8acc1f6527ef79cca9da` and 20 files. Its exact tracked input hashes
+match before and after the final focused run. Imported investigation
+logs retain their separate source-identity limits.
