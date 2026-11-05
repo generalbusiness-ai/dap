@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/derive/test/program.test.ts","body":{"commit":"8b06312366635b7619abb2080d88a225fc063e17","path":"packages/derive/test/program.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:006c3f6e46314aa4183f6bfd1c0f8530d5fb8bbb","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/program/dependencies.ts."}
