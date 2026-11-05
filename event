@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1460ad0d280e8e33364fcd923683f36fa7d7c6f3","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/worker.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:14d67674d9b8f75f5660576bfee8bdf0915c005a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-05-installed-host-roots-failed-diagnostic-gate.manifest.json."}
