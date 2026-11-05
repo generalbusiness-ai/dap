@@ -12,6 +12,15 @@ The builder creates no live register or room and deploys nothing in this packet.
 Keep parent `8a8902f3e9ad526371cb0a73db4117bc0197cd60` open until its actual
 hosted acceptance record lands.
 
+## Scope: demo only
+
+Planner ruling `56a48952` keeps the Grow archive bridge as a known limit.
+Do not use this packet to switch `dap-grow` to another register.
+`packages/scope/src/archive-host-item.ts`, through `apps/room/archive.ts`,
+still checks one configured root. Fix and review that bridge before any
+Grow register switch. This retained packet changes only `dap-demo` and
+still waits for the host source and a new packet review.
+
 ## Prepare before the fourteen-minute window
 
 Use a clean source checkout at the packet's approved landing. Its production

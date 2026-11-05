@@ -6,6 +6,12 @@ Planner ruling `3b239919dd4e5683d1fcfdd9b51d5c23c4b1a9d7` chooses a separate
 multi-root host-binding source child. This packet waits for that reviewed source
 and another packet review; ruling request `5ff294e1` is answered.
 
+Planner ruling `56a48952` explicitly defers the Grow archive bridge.
+This packet switches only `dap-demo`; a `dap-grow` register switch needs
+`archive-host-item.ts` through `apps/room/archive.ts` fixed and reviewed
+first. The host source must also preserve old-room Sites and workspace
+provider work before this packet resumes.
+
 ## What changed
 
 Request `c448c870cf6a2f93a30c285a1a4d4a6c9f4bd8ad`, builder promise
