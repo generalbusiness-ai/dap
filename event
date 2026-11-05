@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:15fc71309272af4e26a24a9e9d1c527dacceb22e","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/application-install-reader.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:175a076bcd387780bb83bfed700843d479174e84","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-04-failed-claim-cohort-validation.manifest.json."}
