@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "qualification": "Invalid exact-clock diagnostic: one Native execution stopped on an introduced cross-Durable-Object SQL context error before the target403 assertion. Compiler passed. No original-failure reproduction, clearance, full-gate or acceptance claim.",
+  "fileCount": 14,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-05-installed-host-roots-exact-clock-invalid",
+      "fileCount": 14,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1072,
+          "sha256": "0f4a0f4046974bb06e290ce0b5a39ccb98f63011d5c1d9d9caba0b49d50b183f"
+        },
+        {
+          "path": "before-probe-source.ts",
+          "bytes": 14166,
+          "sha256": "0db59781e3f4c6d1d6ba6fd72e04f847e58064b49f1ab7d10477996667e33981"
+        },
+        {
+          "path": "commit-message.txt",
+          "bytes": 423,
+          "sha256": "c8d7a56e89ecd5c2148bbc2e26da3086c43cbd9cfa3b14d8c01f6706baf4adfd"
+        },
+        {
+          "path": "identity.json",
+          "bytes": 20645,
+          "sha256": "5d076ba24f3277ef31e6d66ecc082102e9a4149023ec943fc9c05e4b93dd9706"
+        },
+        {
+          "path": "native-command.json",
+          "bytes": 198,
+          "sha256": "0b5c507e6a2b02bedbf3e4014240570dad6f044700d41b097ca910d8af39d576"
+        },
+        {
+          "path": "native.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "native.log",
+          "bytes": 7100,
+          "sha256": "0ac7705df2b17d0a958bbb05403b91815a1a11edb32f41bdb31234fe8ef7b4a8"
+        },
+        {
+          "path": "probe-source.ts",
+          "bytes": 15269,
+          "sha256": "0b60d03c2d1e4129992cfd4d6b21598d703e475cb316e87e4dcbcfee92cf9a6f"
+        },
+        {
+          "path": "raw-retention.json",
+          "bytes": 228,
+          "sha256": "41752c37b94acfc824a8679ce041a5cb0cb03d7b2df5bf1baff636b931fa4006"
+        },
+        {
+          "path": "result.json",
+          "bytes": 694,
+          "sha256": "19619ee2ab2ea9625b70fc384779f5d33343b0fe0c1a9b0ea7f6af145a829e09"
+        },
+        {
+          "path": "run-result.json",
+          "bytes": 429,
+          "sha256": "a40b7019f84b5786beec3f8beecd78f44bf85a7d0098e02b30b06ffaf4ab2ddf"
+        },
+        {
+          "path": "typecheck-command.json",
+          "bytes": 111,
+          "sha256": "2c971aa634159898ee6bc06b79f2bd349b26e21ae1cfe6150fd3aa180d947770"
+        },
+        {
+          "path": "typecheck.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "typecheck.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ]
+}

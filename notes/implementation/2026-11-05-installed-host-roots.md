@@ -1,11 +1,11 @@
 # Keep host authority for installed registers
 
-Status: adapter, Site and workspace continuity corrections have passing
-focused evidence. Review `1a71cdd7` requested the Site correction at
-`b0d3c165`. Rulings `0e593489` and `56a48952` require old-room Sites and
-workspace provider work to keep working. The combined gate failed. Its
-cause remains unexplained. A passing frozen gate and new independent
-review remain pending.
+Status: adapter, Site and workspace corrections have focused evidence.
+The repeated GitHub 403 came from a scripted fractional expiry, reproduced
+and reported in `de36e7d7`. The fixture repair passes its three-case Native
+owner and test compiler. The corrected final gate and new independent
+review remain pending. Reviews and failed runs below keep their exact
+original heads and limits.
 
 Switching a Worker's current register previously stranded old rooms' Git
 credentials even when `INSTALLED_REGISTER_SCOPES` retained their root.
@@ -245,3 +245,70 @@ the test compiler passed. The [credential diagnostic manifest](evidence/2026-11-
 has SHA256 `d3a7aad7c365db4aaa37ea68841a139d6f067a294e1c8acc1f6527ef79cca9da` and 20 files. Its exact tracked input hashes
 match before and after the final focused run. Imported investigation
 logs retain their separate source-identity limits.
+
+
+## Diagnostic gate and fixture cause
+
+Diagnostic gate 4 at `a7d22d7cb6f927860eb13e0379317a54f823aa5e`, tree
+`a52d66dcac0f48653783104072fec12173dd2ac6`, failed the same GitHub read.
+I read its actual `gate.exit`: `exit 1`. It recorded 135 Node passes,
+56 Counting passes, 3,943 Plain passes with one skip, and 1,110 Native
+passes with two skips and one failure. Native observations are partial;
+there are no contradictory records or unhandled errors. Source identity
+stayed unchanged and the owned process group closed. Both credential
+accesses reached the adapter; the requested handle had no custody row.
+
+The isolated cache trace at scratch `073800da` passed one selected Native
+case and its compiler. It observed fresh construction on removal and
+restoration, then a cache hit on an unchanged third read. The first two
+accesses read the key setting twice, and the third once. The probe counted
+property names and public root selectors; it recorded no key or token
+values. The policy probe ran after each actual access, so it could not
+warm that access. Planner `deee21d6` accepted that the cache key changed
+as intended and scoped an exact-clock diagnostic.
+
+The first exact-clock run at `771092e4` was invalid. My added SQL closure
+crossed from the Durable Object into test context and hit Cloudflare's I/O
+guard before the target assertion. Its compiler passed, but its Native
+failure proves neither reproduction nor clearance. I reported that error
+in `1f6714f9` and retained the failed run. The owner-safe correction at
+`923d9092` keeps SQL inside the actual judged/credential callbacks.
+
+Under ruling `6836170f`, that correction ran once at the observed clock,
+`2099-01-01T09:35:03.001Z`, and reproduced the original 403. The scripted
+provider emitted `2099-01-01T10:35:03.001Z`. GitHub documents REST response
+timestamps as whole-second UTC in its [REST guide](https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api#about-the-response-body).
+`GitHubApp.mintInstallationToken` rejects the fractional value before
+returning a token. `DestinationHost.send` catches that failure before
+`custody.putRead`; `Operations` then records `unknown`. The actual outcome
+has no token field, an undefined handle type, and no public expiry.
+
+The test had required only an outcome before casting its body to a
+string-handle shape. Its credential path therefore coerced an absent
+handle into a string, whose lookup found no row. No successful handle row
+later disappeared. The restored cache policy was true, with fresh
+construction, while the read failed for lack of a credential. This is a
+fixture defect; production correctly keeps the failed mint unknown.
+Gate 3 lacked this boundary capture, so its original clock/handle is not
+independently attested. Both full gates remain failed.
+
+Cause report `de36e7d7` preceded every candidate edit. The repair emits the
+scripted GitHub expiry at whole-second precision, makes the existing
+witness exercise subsecond Native time, and requires a confirmed mint
+with a string handle before credential reads. All existing listed-root,
+unlisted-root, cache, session and one-use assertions remain. No production
+source or source-seal value changed for this repair. All three Native
+cases and the test compiler pass; a new complete gate is still required.
+
+The additional retained manifests are:
+
+- [Failed diagnostic gate](evidence/2026-11-05-installed-host-roots-failed-diagnostic-gate.manifest.json): 13 files;
+  SHA256 `a92746d21473610c49090bfc01edcf7cc6658700af45645081c116bd0fce610c`.
+- [Cache construction trace](evidence/2026-11-05-installed-host-roots-cache-accounting.manifest.json): 11 files;
+  SHA256 `deca4ed01170abd9d68663e4dbad1e051273bc1a2f57fe49bf369424467f991e`.
+- [Invalid cross-object diagnostic](evidence/2026-11-05-installed-host-roots-exact-clock-invalid.manifest.json): 14 files;
+  SHA256 `477e091865cae0f14e16f8a8de47755c47e410cc2902c3dcd3539570022a6694`.
+- [Valid reproduction and source cause](evidence/2026-11-05-installed-host-roots-mint-cause.manifest.json): 13 files;
+  SHA256 `2dbb8687306a3f30f4f19dd0025fa56d7de076a980741943b74ed1b58ad6bb4f`.
+- [Passing fixture repair](evidence/2026-11-05-installed-host-roots-fixture-focused.manifest.json): 13 files;
+  SHA256 `a501a7846c62c835b9acd7ad3102ca1043b3d68f30e2dbc2fecf127cded7f61e`.

@@ -24,6 +24,8 @@ for (const host of ["artifacts", "github.com"] as const) {
     const owner = beginSessionFixture({ secret: null, sessions: false, inspector: null });
     const life = nativeFixtureLifetime(owner, { required: false });
     try {
+      // Exercise subsecond Native time from the failed full gate.
+      if (life.now() % 1000 === 0) life.advance(1);
       const calls = { creates: [] as string[], mints: [] as unknown[] };
       const credentialReads: { answered: boolean; now: string; custody: unknown[] }[] = [];
       let name = "", enabled = false;
@@ -40,7 +42,8 @@ for (const host of ["artifacts", "github.com"] as const) {
         if (request.method === "POST" && url.pathname === "/app/installations/99/access_tokens") {
           const mint = await request.json(); calls.mints.push(mint);
           expect(mint).toEqual({ repository_ids: [71], permissions: { contents: "read" } });
-          return json({ token: "test_read_plaintext", expires_at: soon(3600), repository_selection: "selected",
+          // GitHub encodes REST timestamps at whole-second precision.
+          return json({ token: "test_read_plaintext", expires_at: soon(3600).replace(/\.\d{3}Z$/, "Z"), repository_selection: "selected",
             permissions: { contents: "read", metadata: "read" }, repositories: [repository()] }, 201);
         }
         throw Error("Unexpected scripted GitHub request");
@@ -129,6 +132,7 @@ for (const host of ["artifacts", "github.com"] as const) {
       const journal = await life.wait(() => destination.entries());
       const outcome = journal.find(entry => entry.input.type === "outcome" && entry.input.kind === "mint-read");
       if (outcome?.input.type !== "outcome") throw Error("No sealed token outcome");
+      expect(outcome.input).toMatchObject({ result: "confirmed", evidence: { body: { token: expect.any(String) } } });
       const handle = (outcome.input.evidence.body as { token: string }).token;
       expect(canonicalize(journal)).not.toContain("test_read_plaintext");
       owner.configure({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
