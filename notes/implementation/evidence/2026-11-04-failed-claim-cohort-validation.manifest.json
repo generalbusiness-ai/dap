@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "sourceCheckpoint": "7425c61963d0339f4d488e821e4ff2120557ff08",
+  "sourceTree": "878321d520f2abaef4e428a2fc20646a161113cb",
+  "qualification": "Focused dirty-source integration checks plus a clean local checkpoint; actual per-run source snapshots, original failures, the two-family diff control, cross-family archive repair, exact pins and sealed private originals. Source-seal approval, one frozen gate, rendered workflows, independent review, source landing and deployed parent acceptance remain pending.",
+  "fileCount": 7,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-05-failed-claim-cohort-retained-public-files/validation",
+      "fileCount": 7,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 532,
+          "sha256": "14ea7b8a4b2c5a0e0a0a264a050caa58ccb5b31a04f824cdf2b908cc35070c19"
+        },
+        {
+          "path": "control-results.json",
+          "bytes": 1768,
+          "sha256": "6adfbd7ad30baac6397856f33717304cdf26aa107d17ee09e4f68399a71fca33"
+        },
+        {
+          "path": "dependency-identity.json",
+          "bytes": 1983,
+          "sha256": "6a68a643aebc754ef44c13d9e2fe2fb05872343c4407f683f2af3cbf8951b062"
+        },
+        {
+          "path": "focused-commands.json",
+          "bytes": 25983,
+          "sha256": "24e6a30273c590e4e3616aa9e94e5ba18a05b53cfa5bbb7c5d7cac3ae7376582"
+        },
+        {
+          "path": "pin-preservation.json",
+          "bytes": 525,
+          "sha256": "72fb62aae61887489e20f9214d6d24cdf75cc3fb64f571de0463acb09bd69582"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 19216,
+          "sha256": "fe4a265af1e46dc718a82c739c8d1aed88b8d91598764935339faa8ee6c48ee1"
+        },
+        {
+          "path": "source-checkpoint.json",
+          "bytes": 406,
+          "sha256": "8c82debc72c0a53bd2479367418dfb583612bc25f0035ee68fc3a145cf86a387"
+        }
+      ]
+    }
+  ]
+}

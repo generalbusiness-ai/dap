@@ -36,6 +36,8 @@ export interface PendingClaim {
   repository?: Repository;
   seat?: ClaimStep;
   firstKey?: ClaimStep;
+  /** The checked original projected a final failed state. A hint; every retry rechecks it natively. */
+  failure?: { found: FactRef; observed: FactRef };
 }
 
 /** A join keeps its secret-bearing envelope in private storage, never config. */

@@ -1,4 +1,5 @@
-import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
+import { OWN_AGENT_COHORT, FAILED_CLAIM_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/dap-platform";
+
 import { readMinimum } from "@generalbusiness/dap-bytes";
 import { ReadWait, type ReadWaitRefusal } from "./read-wait.ts";
 import { offerFloor } from "./floor-writer.ts";
@@ -614,12 +615,24 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const scope = this.#store.scope();
     const judged = () => this.#scope.submit(signed, grants, beside);
     if (scope?.at.kind !== "membership" || !isJoin(signed)) return this.#sent(await judged());
-    return this.#sent(await this.#limits.serve({ address: typeof address === "string" ? address : null, now: timeMs(this.#clock.read()) ?? 0, head: scope.head, invitationProof: () => ["platform:membership@6", "platform:membership@7", "platform:membership@8", "platform:membership@9", "platform:membership@10", "platform:membership@11", "platform:membership@13"].includes(this.#scope.pinned()?.named ?? "") }, signed, judged));
+    return this.#sent(await this.#limits.serve({ address: typeof address === "string" ? address : null, now: timeMs(this.#clock.read()) ?? 0, head: scope.head, invitationProof: () => ["platform:membership@6", "platform:membership@7", "platform:membership@8", "platform:membership@9", "platform:membership@10", "platform:membership@11", "platform:membership@12", "platform:membership@13"].includes(this.#scope.pinned()?.named ?? "") }, signed, judged));
+
     });
   }
   /** One step of a capability, asked for with the signed intent that it prepares for (section 5.5). */
   async prepare(signed: SignedIntent, grants: readonly Grant[], capability: string, step: string): Promise<Answer> { return this.#publicInvoke("preparations", async () => this.#sent(await this.#scope.prepare(signed, grants, capability, step))); }
-  settle(signed: SignedIntent): Settlement { this.#first(); return this.#scope.settle(signed); }
+  settle(signed: SignedIntent): Settlement {
+    this.#first();
+    const settled = this.#scope.settle(signed);
+    // The existing exact-original check grants no general item read. The new
+    // register adds only this claim's state at the reply's current head.
+    if (!settled.ok || settled.value.definition !== FAILED_CLAIM_COHORT.register || signed.intent.kind !== "found") return settled;
+    const claim = this.#store.item(settled.value.fact.seq);
+    if (!claim || claim.type !== "claim" || claim.opened !== settled.value.fact.hash || claim.values["intent"] !== settled.value.intent
+      || !["pending", "failed", "active"].includes(claim.state)
+      || claim.state === "failed" && ((claim.values["repository"] ?? null) !== null || (claim.refs["directory"] ?? null) !== null)) return settled;
+    return { ...settled, claim: { fact: settled.value.fact, state: claim.state as "pending" | "failed" | "active" } };
+  }
   checkpoint(): Promise<Checkpointed> { return this.#invoke("dispatch", () => { this.#first(); return this.#scope.checkpoint(); }); }
 
   /**

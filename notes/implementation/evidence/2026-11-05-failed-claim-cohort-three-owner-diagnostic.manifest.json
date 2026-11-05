@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "sourceHead": "852d2611eddc49f9393c796b3854f11a6e56bf2d",
+  "sourceTree": "17b4b1b8b8648033686b69c89439239ba0de4b41",
+  "qualification": "Passing unchanged34-case diagnostic under temporary caffeinate-i. Original recording driver failed after the child exit during its signal-zero cleanup probe; this separate recovery verifies cases, unchanged source and closure. Earlier gate and Native failures remain failed. Sleep causation is not proved; no deployed or parent acceptance claim.",
+  "fileCount": 7,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-05-failed-claim-cohort-three-owner-diagnostic",
+      "fileCount": 7,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 505,
+          "sha256": "da49c9178b40b0275634e3fffed4072b77769fc080b208bcd537ccd98da5fe36"
+        },
+        {
+          "path": "case-ledger.json",
+          "bytes": 10554,
+          "sha256": "6c581d16e69f5d146678d5237a17ebf4129c88237b2e09b9875d4454c152347f"
+        },
+        {
+          "path": "exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "power-events.json",
+          "bytes": 242,
+          "sha256": "023002f733c0a23ea38720f8755e6150f8f210d59fc16f0be3208fdb86794a8b"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 535,
+          "sha256": "c19664dee27e6aa3d6e4f4f707192c4635487d7c70a8371285bd69e5be66cae2"
+        },
+        {
+          "path": "recording-failure.json",
+          "bytes": 371,
+          "sha256": "cac20368694db2438fd27e3d402a4aec95c4cd5edf2d950928343882413eca6b"
+        },
+        {
+          "path": "recovered-receipt.json",
+          "bytes": 1732,
+          "sha256": "7cd1538cb36cc59870644270af19c4101f1636fe595a32aeb39973dfa37ff3a6"
+        }
+      ]
+    }
+  ]
+}

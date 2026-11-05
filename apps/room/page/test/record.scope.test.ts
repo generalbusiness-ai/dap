@@ -56,7 +56,8 @@ test.skipIf(!inject("pageRecord"))("record the Worker's answers to the page's re
     await d.pause([d.D.name]);
     const issue = (await listLanes(forUna)).issues[0]!.scope;
     await act(forPaul, issue, "comment", { fields: { body: "I will write it with artroom edit." } });
-    expect((await d.run(d.rita, "edit", "README.md", "--file", "readme.md", "--title", "Write the handbook")).code).toBe(0);
+    const editedReadme = await d.run(d.rita, "edit", "README.md", "--file", "readme.md", "--title", "Write the handbook");
+    expect(editedReadme.code, editedReadme.lines.join("\n")).toBe(0);
     expect((await d.run(d.paul, "edit", "AGENTS.md", "--file", "agents.md", "--title", "Rules for agents")).code).toBe(1);
     const changes = (await listLanes(forPaul)).changes;
     const readme = changes.find((row) => row.title === "Write the handbook")!.scope;

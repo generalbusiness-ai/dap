@@ -4,7 +4,7 @@ import { b64url, canonicalize, digestBytes, keyIdOfSecret, signInvitationProof, 
 import { INVITATION_LINK, invitationIssueFields, secretSigner } from "@generalbusiness/dap-client";
 import { keys, type Actor } from "@generalbusiness/dap-derive/testing";
 import { valueDigest } from "@generalbusiness/dap-derive";
-import { ARCHIVE_DEVICE_APPLICATION_COHORT, CONFIGURATION_DOMAIN, ROLE_LISTS, firstExtents } from "@generalbusiness/dap-platform";
+import { FAILED_CLAIM_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, CONFIGURATION_DOMAIN, ROLE_LISTS, firstExtents } from "@generalbusiness/dap-platform";
 import { FINDING_DIGESTS, J4_DIGESTS, QUESTION_BRIEF_DIGESTS, changeFinding, changeJ4, issueQuestionsBrief } from "@generalbusiness/dap-lanes";
 import { diffWithCredential, fileWithCredential, interdiffWithCredential } from "../../git/src/diff.ts";
 import { idOf, type ObjectType } from "../../git/src/reader.ts";
@@ -36,7 +36,7 @@ const act = async (agent: Pick<Agent, "ok">, target: string | number, kind: stri
   return answer["fact"] as FactRef;
 };
 
-async function roomOf(fault?: (request: EffectRequest) => EffectAnswer | null | undefined): Promise<Fixture> {
+async function roomOf(fault?: (request: EffectRequest) => EffectAnswer | null | undefined, cohort: typeof ARCHIVE_DEVICE_APPLICATION_COHORT | typeof FAILED_CLAIM_COHORT = ARCHIVE_DEVICE_APPLICATION_COHORT): Promise<Fixture> {
   const clock = { room: null as Room | null };
   const host = new WorkspaceStandIn("", () => timeOf(clock.room!.now() + 600_000));
   const room = mcpRoom(undefined, { hold: host, ...(fault ? { fault } : {}) });
@@ -44,7 +44,7 @@ async function roomOf(fault?: (request: EffectRequest) => EffectAnswer | null | 
   // A key per room: the register's identity follows from its founder, and these rooms share one isolate.
   const person = fresh(keys.rita), agentKey = fresh(keys.una);
   const owner = room.agent("owner", { mode: "generic", secret: person.secret });
-  await created(room, owner, "generic", ARCHIVE_DEVICE_APPLICATION_COHORT.register);
+  await created(room, owner, "generic", cohort.register);
   const repository = owner.config.repository!, M = room.platform(repository.membership.scope);
   const ownerRef: MemberRef = { membership: repository.membership, member: "@rita" };
   const member = await M.did(person, "add-member", { fields: { handle: "@una", kind: "agent", controller: ownerRef } });
@@ -382,8 +382,9 @@ function published(f: Fixture, base: string, file: string, name = "big.txt"): { 
   return { integration: add("commit", utf8(`tree ${tree}\nparent ${base}\nauthor ${who}\ncommitter ${who}\n\nTEST\n`)), tree };
 }
 
-test("witness 4: View diff signs one read-token act and shows the bounded diff; over the bound the answer says truncated; a commit the host does not hold shows no diff", async () => {
-  const f = await roomOf();
+test.each([ARCHIVE_DEVICE_APPLICATION_COHORT, FAILED_CLAIM_COHORT] as const)("witness 4 (%j): View diff signs one read-token act and shows the bounded diff; over the bound the answer says truncated; a commit the host does not hold shows no diff", async cohort => {
+  const f = await roomOf(undefined, cohort);
+  const tokenFields = cohort.destination === FAILED_CLAIM_COHORT.destination ? {} : { hours: 1 };
   try {
     const lane = await changeLane(f, "TEST diff");
     const work = await workspace(f, lane);
@@ -410,6 +411,8 @@ test("witness 4: View diff signs one read-token act and shows the bounded diff; 
       { method: "GET", path: "/v1/scopes/" + f.repository.destination },
     ]);
     expect(a.signed.map(intent => [intent.kind, intent.to!.scope])).toEqual([["read-token", f.repository.destination]]);
+    // The actual signed envelope reaches the Native Destination: C accepts no duration field.
+    expect(a.signed[0]!.fields).toEqual(tokenFields);
     expect(shownDiff.answer).toMatchObject({ base, integration: large.integration, truncated: true });
     const page = shownDiff.display as Shown & { query: { page: string } };
     expect(page.query.page).toBe("diff");
@@ -424,7 +427,7 @@ test("witness 4: View diff signs one read-token act and shows the bounded diff; 
 
     // The ordinary tool: under the bound, exact endpoints and no truncation; the credential goes once.
     const small = published(f, base, "one short file\n", "small.txt");
-    const token = await act(f.owner, "destination", "read-token", { on: 0, fields: { hours: 1 } });
+    const token = await act(f.owner, "destination", "read-token", { on: 0, fields: tokenFields });
     await settle(f, f.repository.destination);
     const whole = await f.owner.ok("diff", { entry: token.seq, base, integration: small.integration });
     expect(whole).toMatchObject({ base, integration: small.integration, truncated: false, files: expect.any(Number) });
@@ -464,7 +467,7 @@ test("witness 4: View diff signs one read-token act and shows the bounded diff; 
     expect(refused.answer["error"], JSON.stringify(refused.answer)).toBe("shape");
     expect(c.signed).toEqual([]);
     expect(refused.display.receipt).toContain("Diff not shown");
-    const token2 = await act(f.owner, "destination", "read-token", { on: 0, fields: { hours: 1 } });
+    const token2 = await act(f.owner, "destination", "read-token", { on: 0, fields: tokenFields });
     await settle(f, f.repository.destination);
     const direct = await f.owner.call("diff", { entry: token2.seq, base: "e".repeat(64), integration: small.integration });
     expect([direct.isError, direct.structuredContent["error"]]).toEqual([true, "shape"]);

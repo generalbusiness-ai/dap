@@ -17,7 +17,7 @@ import { describe, expect, test } from "vitest";
 import type { Digest, Item, OperationId, Read, Receipt, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, keyIdOfSecret, scopeIdOf, timeOf } from "@generalbusiness/dap-bytes";
 import { AGENT_KEY_LINK, CHECKER_KEY_LINK, checkerKeyInvitationOf, agentKeyInvitationOf, encodeAgentKeyInvitation, requestSession, sessionRequest, type AgentKeyInvitation, type Fetch } from "@generalbusiness/dap-client";
-import { APPLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, repositoryName } from "@generalbusiness/dap-platform";
+import { FAILED_CLAIM_COHORT, APPLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, repositoryName } from "@generalbusiness/dap-platform";
 import { beginSessionFixture } from "../../scope/test/session-settings.ts";
 import { Platform, routed } from "../../scope/test/repository.ts";
 import { outsideOf } from "../../scope/test/outside.ts";
@@ -39,7 +39,7 @@ describe("tagged agent-key enrolment on the trusted application and historical a
     const lifetime=nativeFixtureLifetime(owner);
     try{await story(lifetime,"declared-application");}finally{lifetime.release();}
   },60_000);
-  test.each(["archive-application", "archive-declared-application", "archive-device-application"] as const)("%s: native Membership8 issues private person and agent invitations; the device cohort also enrolls an independent checker", async cohort => {
+  test.each(["archive-application", "archive-declared-application", "archive-device-application", "failed-claim"] as const)("%s: native membership issues private person and agent invitations; the device and failed-claim cohorts also enroll an independent checker", async cohort => {
     const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
     const lifetime = nativeFixtureLifetime(owner);
     try { await story(lifetime, cohort); } finally { lifetime.release(); }
@@ -53,7 +53,7 @@ describe("tagged agent-key enrolment on the trusted application and historical a
 
 type Lifetime = ReturnType<typeof nativeFixtureLifetime>;
 
-type SelectedCohort = "declared-application" | "archive-application" | "archive-declared-application" | "archive-device-application";
+type SelectedCohort = "failed-claim" | "declared-application" | "archive-application" | "archive-declared-application" | "archive-device-application";
 async function story(lifetime: Lifetime, selected?: SelectedCohort, inboxWaitOnly = false): Promise<void> {
   const now = lifetime.now;
   const node = lifetime.platform;
@@ -113,12 +113,12 @@ async function story(lifetime: Lifetime, selected?: SelectedCohort, inboxWaitOnl
 
   /** A room on its exact pin: retain historical plans or prepare an admitted cohort, deliver through the command, wire the host stand-in, create. */
   const create = async (admin: Context, cohort: "trusted-application" | SelectedCohort | "application", namespace: string, name: string, handle: string) => {
-    if (cohort !== "application" && cohort !== "archive-device-application") {
+    if (cohort !== "application" && cohort !== "archive-device-application" && cohort !== "failed-claim") {
       const historical = { "trusted-application": TRUSTED_APPLICATION_COHORT, "declared-application": DECLARED_APPLICATION_COHORT,
         "archive-application": ARCHIVE_APPLICATION_COHORT, "archive-declared-application": ARCHIVE_DECLARED_APPLICATION_COHORT }[cohort];
       await lifetime.wait(() => retainHistoricalInstallPlan(admin, SERVICE, historical.register, { host: "git.example", namespace }));
     }
-    const installed = cohort === "application" || cohort === "archive-device-application"
+    const installed = cohort === "application" || cohort === "archive-device-application" || cohort === "failed-claim"
       ? await run(admin, "install", SERVICE, "--host", "github.com", "--namespace", namespace, "--cohort", cohort)
       : await run(admin, "install", "--planned", "--cohort", cohort);
     expect(installed.code, installed.lines.join("\n")).toBe(0);
@@ -206,7 +206,7 @@ async function story(lifetime: Lifetime, selected?: SelectedCohort, inboxWaitOnl
   };
 
   if(selected){
-    const pins = { "declared-application": DECLARED_APPLICATION_COHORT, "archive-application": ARCHIVE_APPLICATION_COHORT, "archive-declared-application": ARCHIVE_DECLARED_APPLICATION_COHORT, "archive-device-application": ARCHIVE_DEVICE_APPLICATION_COHORT }[selected];
+    const pins = { "failed-claim": FAILED_CLAIM_COHORT, "declared-application": DECLARED_APPLICATION_COHORT, "archive-application": ARCHIVE_APPLICATION_COHORT, "archive-declared-application": ARCHIVE_DECLARED_APPLICATION_COHORT, "archive-device-application": ARCHIVE_DEVICE_APPLICATION_COHORT }[selected];
     const admin=person(),room=await create(admin,selected,"artroom",selected,"@rita");
     const config=(await admin.store.config())!;
     for(const [scope,pin]of [[config.register!.scope,pins.register],[room.repository.directory.scope,pins.directory],[room.membership.scope,pins.membership],[room.repository.rules,pins.rules],[room.repository.destination,pins.destination]] as const){
@@ -262,8 +262,8 @@ async function story(lifetime: Lifetime, selected?: SelectedCohort, inboxWaitOnl
     }
     const agentLink = await link(admin,room.membership,"@declared-agent","@rita");
     await enrol(room,person(),agentLink,"@declared-agent",pins.membership);
-    if (selected === "archive-device-application") {
-      // Genuine Membership8 checker, not a person invitation or controller-bound
+    if (selected === "archive-device-application" || selected === "failed-claim") {
+      // Genuine checker on the exact membership pin, not a person invitation or controller-bound
       // agent. The existing HTTP/scheduler/host qualifications above still apply.
       const issued = await lifetime.wait(() => issueCheckerInvitation({ ...admin, store: issuanceStore(admin) }, { handle: "@checker", hours: 1 }, { privateRequests: [], mode: "new", operation: crypto.randomUUID() }));
       expect([issued.state, issued.kind, issued.reason]).toEqual(["verified", "checker-key", undefined]);

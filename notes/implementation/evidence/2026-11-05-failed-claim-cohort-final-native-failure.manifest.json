@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "sourceHead": "852d2611eddc49f9393c796b3854f11a6e56bf2d",
+  "sourceTree": "17b4b1b8b8648033686b69c89439239ba0de4b41",
+  "qualification": "Failed first Native run unreached by complete production gate at edf8e2da, under planner a9d94547. Original gate and Native failures remain failed. No review, landing, deployment, parent acceptance or closure of archive-cause request64552d40.",
+  "fileCount": 9,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-05-failed-claim-cohort-final-native-failure",
+      "fileCount": 9,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 691,
+          "sha256": "324a12025ef8b68c04bf1378f2f0e09deb4e07197157cd17753aeced32d7c83e"
+        },
+        {
+          "path": "exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "failure-classification.json",
+          "bytes": 2463,
+          "sha256": "d9cbee3289c5493fd32c56554d67ea3f3cf9e929aa0d19f489b1a835775bcfe1"
+        },
+        {
+          "path": "host-power-events.json",
+          "bytes": 1087,
+          "sha256": "1a00063f52594c306e7c36e2d5039dc321d38957fbbcc856117c41a042177484"
+        },
+        {
+          "path": "prior-run-comparison.json",
+          "bytes": 2007,
+          "sha256": "4a0e2465886b6a78d19a65885289e5768bea610e95db826d85fcfd8bef7a02ed"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 612,
+          "sha256": "0c98d99a8ce186b66510294ec255d8d06ea2639a8dd6631398b28ed1e097dbc6"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 17194,
+          "sha256": "b351f3ad344ffa328575ade4558469d6fcef7a1a92808facec9a97a356ae48e8"
+        },
+        {
+          "path": "terminal-analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "terminal-summary.json",
+          "bytes": 2227,
+          "sha256": "bf9ecffaac75f9dff23833b532ea1233ce5fe49f8bb602d8d6055a954ca93d67"
+        }
+      ]
+    }
+  ]
+}

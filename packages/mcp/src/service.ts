@@ -1,3 +1,4 @@
+import { FAILED_CLAIM_COHORT } from "@generalbusiness/dap-platform";
 import { isRecord } from "@generalbusiness/dap-bytes";
 import { EXPIRY_MARGIN_MS, invitationRedemptionFields } from "@generalbusiness/dap-client";
 /**
@@ -545,7 +546,9 @@ export class McpService {
     try {
       if (!isScopeId(read.target)) return failed({ error: "target", what: "the exact read has no scope target" });
       const context = await this.#exactSnapshot(read.target);
-      const signed = await this.#perform(null, { target: read.target, on: 0, fields: { hours: 1 }, idempotencyKey: `view-diff-${crypto.randomUUID()}` }, "read-token", undefined, admit, context);
+      const pinned = context.read.inventory.scopes.find(held => held.scope === read.target)?.pinned;
+      const fields = pinned === FAILED_CLAIM_COHORT.destination ? {} : { hours: 1 };
+      const signed = await this.#perform(null, { target: read.target, on: 0, fields, idempotencyKey: `view-diff-${crypto.randomUUID()}` }, "read-token", undefined, admit, context);
       if (signed.structuredContent["answer"] !== "accepted") return signed;
       const entry = (signed.structuredContent["fact"] as { seq: number }).seq;
       const pause = this.#port.pause ?? (() => new Promise<void>((resolve) => { setTimeout(resolve, 1000); }));
@@ -1368,12 +1371,14 @@ export class McpService {
    * room recorded in the configuration; the list is derived again on the next call.
    */
   /** The actual generic room and exact Rules sibling, never a caller alias. */
-  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof SEPARATE_RECOVERY_COHORT | typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT | typeof DEVICE_APPLICATION_COHORT | typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_PUBLICATION_COHORT | typeof UNPUBLISHED_COHORT | typeof REPOSITORY_BINDING_COHORT | typeof OWN_AGENT_COHORT | typeof COMMONS_COHORT }> {
+  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof SEPARATE_RECOVERY_COHORT | typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT | typeof DEVICE_APPLICATION_COHORT | typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_APPLICATION_COHORT | typeof ARCHIVE_DEVICE_PUBLICATION_COHORT | typeof UNPUBLISHED_COHORT | typeof REPOSITORY_BINDING_COHORT | typeof OWN_AGENT_COHORT | typeof FAILED_CLAIM_COHORT | typeof COMMONS_COHORT }> {
+
     const config = await this.#port.config.read(), repository = config.repository;
     if (!repository || config.service !== this.#service) return stopCall({ error: "target", what: "configure a trusted-application room before installing" });
     const { summary: directory } = await this.#summary(repository.directory.scope, repository.membership);
     const row = directory.items.find(item => item.type === "repository" && item.state === "open"), rules = row?.refs["rules"], destination = row?.refs["destination"];
-    const cohort = [SEPARATE_RECOVERY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, REPOSITORY_BINDING_COHORT, OWN_AGENT_COHORT, COMMONS_COHORT].find(cohort => directory.definition === cohort.directory);
+    const cohort = [FAILED_CLAIM_COHORT, SEPARATE_RECOVERY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT, REPOSITORY_BINDING_COHORT, OWN_AGENT_COHORT, COMMONS_COHORT].find(cohort => directory.definition === cohort.directory);
+
     if (!cohort || directory.status !== "active" || canonicalize(directory.scope) !== canonicalize(repository.directory)
       || !row || canonicalize(row.refs["membership"]) !== canonicalize(repository.membership)
       || !isScopeRef(rules) || rules.kind !== "rules" || rules.scope !== repository.rules

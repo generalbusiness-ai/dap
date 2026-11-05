@@ -40,7 +40,8 @@ import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type EffectForm,
 import { READ_REFUSALS, readItemQuery, b64url, canonicalize, definitionDigest, digestBytes, factRefOf, intentDigest, isReceipt, isSignedIntentShape, isFactRef, isEntry, isScopeId, parseStrict, scopeIdOf, textDigest, timeMs, timeOf, utf8, verifySignedIntent } from "@generalbusiness/dap-bytes";
 import { ScopeHandle, ShapeError, TransportError, activeDirectory, partitionIndexes, wellFormedInvitation, readCredential, declaredHandle, create, shapeDeclaredAct, signedIntent, signedLogReader, type Fetch, type Session, type CreationOffer, type Signing, type Transport } from "@generalbusiness/dap-client";
 import { CAPABILITY_CODE as REPLAY_CAPABILITY_CODE } from "@generalbusiness/dap-derive";
-import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT, SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
+import { OWN_AGENT_COHORT, FAILED_CLAIM_COHORT, REPOSITORY_BINDING_COHORT, SEPARATE_RECOVERY_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
+
 import { SourceError, httpSource, otherRoomsLine, render, roomVerification, verify as replay, type FinishedRoom, type HistorySource } from "@generalbusiness/dap-replay";
 import { enrolAgentKey, enrolCheckerKey, enrolDeviceKey } from "./invitations.ts";
 import { AGENT_KEY_LINK, CHECKER_KEY_LINK, DEVICE_KEY_LINK, encodeDeviceKeyInvitation, isAgentKeyMembership, isDeviceKeyInvitation, type DeviceKeyInvitation } from "@generalbusiness/dap-client";
@@ -108,7 +109,7 @@ export interface Git {
 }
 
 /** What a command ends with: its exit code, and the lines it prints. 0: done. 1: refused, unavailable or not found. 2: not a command this can run. */
-export interface Outcome { code: 0 | 1 | 2 | 3; lines: string[] }
+export interface Outcome { code: 0 | 1 | 2 | 3; lines: string[]; claimState?: "failed" }
 const short = (text: string): string => (text.length > 16 ? `${text.slice(0, 12)}...` : text);
 
 /** Node operator adapter. Constructing it reads local configuration only;
@@ -194,10 +195,12 @@ const laneActive = async (handle: ScopeHandle, opened: string): Promise<Summary 
 // ---------------------------------------------------------------- the commands
 
 /** Named creation families; host none defaults to the unpublished family. */
-export type InstallCohort = "own-agent" | "repository-binding" | "separate-recovery" | "commons" | "unpublished" | "file-publication" | "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-device-application" | "archive-device-publication" | "archive-certified-rules" | "hardened-certified-rules" | "archive-declared-application" | "invitation-key";
+export type InstallCohort = "own-agent" | "failed-claim" | "repository-binding" | "separate-recovery" | "commons" | "unpublished" | "file-publication" | "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-device-application" | "archive-device-publication" | "archive-certified-rules" | "hardened-certified-rules" | "archive-declared-application" | "invitation-key";
+
 export type RegisterPolicy = "keys" | "open";
 export interface InstallOptions { host?: string; namespace?: string; cohort?: InstallCohort; registerPolicy?: RegisterPolicy }
 const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
+  "failed-claim": FAILED_CLAIM_COHORT.register,
   "repository-binding": REPOSITORY_BINDING_COHORT.register,
   "own-agent": OWN_AGENT_COHORT.register,
   "separate-recovery": SEPARATE_RECOVERY_COHORT.register,
@@ -219,10 +222,12 @@ const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
 };
 /** New plans only. Historical selectors remain in INSTALL_COHORTS for retained custody.
  * The owning test pins these register versions to Scope's CREATION_COHORTS. */
-export const CREATION_INSTALL_COHORTS = ["own-agent", "repository-binding", "separate-recovery", "commons", "unpublished", "application", "archive-device-application", "archive-device-publication", "archive-certified-rules", "hardened-certified-rules"] as const satisfies readonly InstallCohort[];
+export const CREATION_INSTALL_COHORTS = ["own-agent", "failed-claim", "repository-binding", "separate-recovery", "commons", "unpublished", "application", "archive-device-application", "archive-device-publication", "archive-certified-rules", "hardened-certified-rules"] as const satisfies readonly InstallCohort[];
 function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === undefined) return undefined;
   if (cohort === "own-agent") return INSTALL_COHORTS["own-agent"];
+  if (cohort === "failed-claim") return INSTALL_COHORTS["failed-claim"];
+
   if (cohort === "repository-binding") return INSTALL_COHORTS["repository-binding"];
   if (cohort === "separate-recovery") return INSTALL_COHORTS["separate-recovery"];
   if (cohort === "commons") return INSTALL_COHORTS.commons;
@@ -252,7 +257,7 @@ function planSent(plan: PlannedInstall): string {
 function joinSent(pending: PendingJoin): string {
   return `This run sent nothing, and an earlier send of this join ${pending.accepted ? "went ahead" : "has no known outcome"}.`;
 }
-/** Public creation is an explicit fixed cohort, independent of future defaults. */
+/** Fresh creation uses the default family; retained plans keep their exact pin. */
 function installSelection(options: InstallOptions, retained = false): PlatformDefinition | undefined {
   if (!retained && options.host === undefined) return stopCommand(usage("--host is required: none, artifacts or github.com; this run signed and sent nothing."));
   if (options.host !== undefined && !["none", "artifacts", "github.com"].includes(options.host)) return stopCommand(usage("Refused: host-unknown. Choose --host none, artifacts or github.com; this run signed and sent nothing."));
@@ -264,9 +269,11 @@ function installSelection(options: InstallOptions, retained = false): PlatformDe
     if (selected !== undefined && selected !== OWN_AGENT_COHORT.register && selected !== REPOSITORY_BINDING_COHORT.register && selected !== UNPUBLISHED_COHORT.register && selected !== COMMONS_COHORT.register) return stopCommand(usage("--host none requires the unpublished, repository-binding, own-agent or commons cohort; this run signed and sent nothing."));
     return selected ?? UNPUBLISHED_COHORT.register;
   }
-  if (options.registerPolicy !== "open" || selected === OWN_AGENT_COHORT.register || selected === REPOSITORY_BINDING_COHORT.register || selected === UNPUBLISHED_COHORT.register || selected === COMMONS_COHORT.register) return selected;
+  if (options.registerPolicy !== "open" || selected === OWN_AGENT_COHORT.register || selected === FAILED_CLAIM_COHORT.register || selected === REPOSITORY_BINDING_COHORT.register || selected === UNPUBLISHED_COHORT.register || selected === COMMONS_COHORT.register) return selected;
+  if (selected === undefined) return retained ? undefined : NEW_REGISTER;
+
   if (selected !== undefined && selected !== ARCHIVE_DEVICE_APPLICATION_COHORT.register) {
-    return stopCommand(usage("--register-policy open requires the archive-device-application cohort; this run signed and sent nothing."));
+    return stopCommand(usage("--register-policy open requires a cohort with an open register policy; this run signed and sent nothing."));
   }
   return ARCHIVE_DEVICE_APPLICATION_COHORT.register;
 }
@@ -1112,6 +1119,9 @@ function cloneUsing(ctx: Context, directory: string | undefined, options: { hour
     if (!Number.isSafeInteger(hours) || hours < READ_TOKEN_HOURS.min || hours > READ_TOKEN_HOURS.max) return usage(`--hours is a whole number from ${READ_TOKEN_HOURS.min} to ${READ_TOKEN_HOURS.max}.`);
     const config = await configOf(ctx);
     const { summary, repository } = await destinationOf(ctx, config);
+    const fixedLifetime = summary.definition === FAILED_CLAIM_COHORT.destination;
+    if (fixedLifetime && hours !== 1) return usage("This room issues one-hour read tokens; --hours must be 1.");
+    const tokenFields = fixedLifetime ? {} : { hours };
     if (options.archive && !ctx.git?.archiveRun) return failed("Archive clone needs the hardened Git runner. No read token was requested.");
     const args = (url: string) => ["clone", "--", url, ...(directory === undefined ? [] : [directory])];
     if (!ctx.git || (await ctx.git.run(["--version"], {})) === null) {
@@ -1125,10 +1135,10 @@ function cloneUsing(ctx: Context, directory: string | undefined, options: { hour
     const signer = await signerOf(ctx, config);
     const branch = summary.items.find((item) => item.type === "branch")!;
     if (retained && (retained.signed.intent.actor !== signer.key || retained.signed.intent.on !== branch.id
-      || canonicalize(retained.signed.intent.fields) !== canonicalize({ hours })
+      || canonicalize(retained.signed.intent.fields) !== canonicalize(tokenFields)
       || Object.keys(retained.signed.intent.expected).length !== 1 || !Object.hasOwn(retained.signed.intent.expected, "on")
       || !Number.isSafeInteger(retained.signed.intent.expected["on"]) || retained.signed.intent.expected["on"]! < 0)) return failed("The retained read-token request does not match this signer, branch and requested hours. No credential was retrieved and nothing was cloned.");
-    const signed = retained?.signed ?? await signedIntent(signer, { to: summary.scope, kind: "read-token", on: branch.id, fields: { hours }, expected: { on: branch.revision } }, signing(ctx));
+    const signed = retained?.signed ?? await signedIntent(signer, { to: summary.scope, kind: "read-token", on: branch.id, fields: tokenFields, expected: { on: branch.revision } }, signing(ctx));
     const receipt = retained?.receipt ?? accepted(await (await handleOf(ctx, config, scope, null)).submit(signed), scope, "Read token").receipt;
     const proof = readTokenReceipt(receipt, summary, signed);
     if (!proof) return failed(`The accepted reply does not match this destination, definition and exact read-token request. It may still have been recorded at ${scope}; inspect dap log destination. No credential was retrieved and nothing was cloned.`);

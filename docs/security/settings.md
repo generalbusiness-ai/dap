@@ -103,8 +103,8 @@ caller-selected root nor a membership session supplies that authority.
 
 [Roll out new creation versions](../deploy.md#roll-out-new-creation-versions)
 describes the procedure. `PLATFORM_CREATION_PINS` adds earlier platform pins that new scopes may use
-besides the default cohorts, `archive-device-publication`, `unpublished` and
-`commons`. It does not change the pins of existing scopes or open another
+besides the default cohorts, `failed-claim`, `archive-device-publication`,
+`unpublished` and `commons`. It does not change the pins of existing scopes or open another
 native lineage cohort. An index
 entry allows lookup only. A pin outside the setting can repeat only an
 exact existing birth that the target validates. Health does not read this
@@ -602,8 +602,8 @@ failure behavior, health visibility and the other readers.
         "packages/scope/src/worker.ts",
         "packages/scope/src/scope-index.ts"
       ],
-      "parser": "readPlatformCreationPolicy: a JSON string of at most 8192 UTF-8 bytes containing at most 128 distinct exact pins supported by platform(). The ARCHIVE_DEVICE_PUBLICATION_COHORT and UNPUBLISHED_COHORT pins are always included. An absent field or explicit undefined selects that baseline; an empty array adds no historical pins.",
-      "missing": "DeployedScope permits new platform genesis under the hosted publication and unpublished baseline cohorts. Raw internal engine wiring without an injected deployment policy retains its compatibility behavior.",
+      "parser": "readPlatformCreationPolicy: a JSON string of at most 8192 UTF-8 bytes containing at most 128 distinct exact pins supported by platform(). FAILED_CLAIM_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, UNPUBLISHED_COHORT and COMMONS_COHORT pins are always included. An absent field or explicit undefined selects that baseline; an empty array adds no historical pins.",
+      "missing": "DeployedScope permits new platform genesis under the failed-claim, retained hosted publication, unpublished and commons baseline cohorts. Raw internal engine wiring without an injected deployment policy retains its compatibility behavior.",
       "invalid": "Null, malformed JSON, a non-array, duplicate or unknown pins, or an exceeded bound closes new platform genesis. An exact existing repeat requires an active scope and a bounded applied birth with canonical bytes and a matching hash. Scope address, kind, incarnation, pin and seed must match. The predecessor must be null and native support current. Original routing and authority checks remain. Reads, later acts and replay retain their recorded pins.",
       "health": "Not validated or reported by /health. Its session, register and host checks can pass while this policy closes new platform creation."
     },
@@ -896,7 +896,7 @@ failure behavior, health visibility and the other readers.
         "apps/room/demo-creation.ts",
         "apps/room/fetch.ts"
       ],
-      "parser": "demoCreationConfig accepts closed wire version 3 and binds its explicit canonical origin, deployment, full Register17 reference and Artifacts adapter register/namespace. Its checked native context and public offer are version 2. The effective request origin must match; forwarded headers supply no identity. The Page route exposes only a boolean for setting presence.",
+      "parser": "demoCreationConfig accepts closed wire version 3 and binds its explicit canonical origin, deployment, full Register17 or Register26 reference and Artifacts adapter register/namespace. Its checked native context and public offer are version 2. The effective request origin must match; forwarded headers supply no identity. The Page route exposes only a boolean for setting presence.",
       "missing": "Demo creation route unavailable. Page Start shows the CLI instruction and makes no creation-offer request.",
       "invalid": "Invalid config or origin mismatch returns 404 before namespace lookup. Legacy versions 1 and 2 return no offer, including for an exact retained-reference query; no fallback.",
       "health": "Not reported separately."

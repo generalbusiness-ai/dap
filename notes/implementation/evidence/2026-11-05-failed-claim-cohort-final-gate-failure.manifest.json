@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "sourceHead": "edf8e2dadf1ad576b13129e94e0898cc9829e060",
+  "sourceTree": "b27bd77e80d5c7c1c695acaa1b32cc4086c82a42",
+  "qualification": "Complete production gate failed on one stale test expectation; Native is unreached. Original failed records remain failed.",
+  "fileCount": 9,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-05-failed-claim-cohort-final-gate-failure",
+      "fileCount": 9,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 650,
+          "sha256": "f2621f326fa7e569e5c1fb24f7b9e48c90237ac5079ce4f15e57c8858d26e120"
+        },
+        {
+          "path": "after.json",
+          "bytes": 1923,
+          "sha256": "d514f7b3e357520ca97b909eaf65f80861686a4dcc66bb25a82caeb92746635c"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1923,
+          "sha256": "d514f7b3e357520ca97b909eaf65f80861686a4dcc66bb25a82caeb92746635c"
+        },
+        {
+          "path": "environment.json",
+          "bytes": 919,
+          "sha256": "6d86d83a95d39123cbccbecb1b72ba6e9f2126d8df1948fb852f19d787cadb2c"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 479,
+          "sha256": "d10becb02feb086d9ee33b83cc966c290168e06c883cb552c48b8969523918fe"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 394,
+          "sha256": "ae6416fb5a8eb0abe4b6e5d0a9a9b1f98c7dae5a5b9ff65b2743a9d77c078bc4"
+        },
+        {
+          "path": "summary.json",
+          "bytes": 2951,
+          "sha256": "de5313329c3354f7aa65cf9372395fbe25736596dbc7612b9641a89f8f36ae5b"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 604,
+          "sha256": "617d0592db29dbe8c4003de9a0b669e33413821fb692eefc96383b4092ea2385"
+        }
+      ]
+    }
+  ]
+}

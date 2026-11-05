@@ -181,7 +181,7 @@ test("editor reads the inherited destination head through partition6 for both wo
   const room = { session: { service: "https://editor.test", secret, fetch }, directory: directory.scope, membership, rules: rules.scope, destination: destination.scope, key: keyIdOfSecret(secret), me: null, reader: null, directoryIndex: null, definitions: new Map() } as Room;
   const refresh = vi.spyOn(data, "openRoom").mockResolvedValue(room);
   try {
-    for (const [version, workflow, supported] of [[2, "legacy", true], [3, "legacy", true], [4, "legacy", true], [5, "legacy", true], [3, "list1", true], [4, "list1", true], [5, "list1", true], [2, "list1", false], [6, "legacy", true], [6, "list1", true], [7, "legacy", false], [7, "list1", false]] as const) {
+    for (const [version, workflow, supported] of [[2, "legacy", true], [3, "legacy", true], [4, "legacy", true], [5, "legacy", true], [3, "list1", true], [4, "list1", true], [5, "list1", true], [2, "list1", false], [6, "legacy", true], [6, "list1", true], [7, "legacy", false], [7, "list1", false], [19, "legacy", true], [19, "list1", true], [20, "legacy", false], [20, "list1", false], [99, "legacy", false], [99, "list1", false]] as const) {
       pin = `platform:destination@${version}`;
       const task: EditTask = { association: actAssociation(room, source.scope), source: { definition: digest, manifestFact: { at: source, seq: 1, hash: opening }, sourceFact: { at: source, seq: 1, hash: opening }, scope: source, manifest: 1, opened: opening, base: "a".repeat(40), path: "a.md", digest: opening, size: 0, content: "" },
         draft: { title: "Head route", path: "a.md", content: "" }, base: "a".repeat(40), definition: digest, definitionBytes: canonicalize(changeDemo), declared: changeDemo, workflow,

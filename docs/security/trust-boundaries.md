@@ -71,7 +71,7 @@ Replacing `SESSION_SECRET` ends every session of the deployment at once. It does
 
 ### A Git read token outlasts the bound
 
-The `read-token` act at the destination gives a member a Git read token, and every role holds its grant. The token reads the repository until its own end. On Cloudflare Artifacts the member asks for 1 to 24 hours. On GitHub the lifetime is GitHub's own, one hour.
+The `read-token` act at the destination gives a member a Git read token, and every role holds its grant. The token reads the repository until its own end. Destination19 accepts no duration field and fixes the token lifetime at one hour. Historical destinations on Cloudflare Artifacts accept 1 to 24 hours. GitHub fixes its own lifetime at one hour.
 
 A `compromised` notice closes two routes for the key that it names. Membership tells the directory, and the directory tells the destination. Once the destination applies the notice:
 
@@ -88,7 +88,7 @@ These things stay open:
 - **A lane's workspace token.** The notice reaches no lane, so the lane's credential route still gives the key a workspace token that the key prepared with `hold@2:token`, while its session lasts. That token lasts at most 900 seconds, and it reads and writes one fork. It does not open the room's repository.
 - **The key's other acts at the destination.** The notice refuses `read-token` only. Other acts keep the 300-second limit.
 
-So a new request with the token can read the repository for at most 24 hours and 600 seconds after the revocation on Cloudflare Artifacts, plus clock difference. On GitHub that time is about one hour and 600 seconds. On Artifacts, a download under way ran past its token's end in one run at 30 MB, as [the stolen-key section](#respond-to-a-stolen-key) states. No run shows what a download under way meets on GitHub. Replay cannot check the `read-token` refusal, because no definition states it and a refused act writes no entry.
+A new request with a Destination19 token can read the repository for at most one hour and 600 seconds after revocation, plus clock difference. Historical Artifacts destinations retain a bound of 24 hours and 600 seconds. On GitHub that time is about one hour and 600 seconds. On Artifacts, a download under way ran past its token's end in one run at 30 MB, as [the stolen-key section](#respond-to-a-stolen-key) states. No run shows what a download under way meets on GitHub. No clone has run across a real one-hour token expiry. If expiry falls between requests, the next request fails; a new `dap clone` starts again. Replay cannot check the `read-token` refusal, because no definition states it and a refused act writes no entry.
 
 ### A Git read token lists and fetches staged work
 

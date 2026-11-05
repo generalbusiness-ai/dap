@@ -127,6 +127,8 @@ export const ROLE_TABLE: readonly (readonly [actions: readonly string[], roles: 
 export const ROLE_TABLE_OF: Readonly<Record<string, typeof ROLE_TABLE>> = { [MEMBERSHIP_1]: ROLE_TABLE_1, [MEMBERSHIP]: ROLE_TABLE, "platform:membership@4": [...ROLE_TABLE, [["application.establish"], ["admin"]]], "platform:membership@5": [...ROLE_TABLE, [["application.establish"], ["admin"]]], "platform:membership@6": [...ROLE_TABLE, [["application.establish"], ["admin"]]], "platform:membership@7": [...ROLE_TABLE, [["application.install"], ["admin"]]], "platform:membership@8": [...ROLE_TABLE, [["application.install", "directory.archive"], ["admin"]]],
   "platform:membership@10": [...ROLE_TABLE, [["application.install", "directory.archive"], ["admin"]]],
   "platform:membership@13": [...ROLE_TABLE, [["application.install", "directory.archive", "destination.bind-repository"], ["admin"]], [["membership.own-agent"], ["admin", "maintainer", "member"]]],
+  "platform:membership@12": [...ROLE_TABLE, [["application.install", "directory.archive"], ["admin"]]],
+
   "platform:membership@11": [...ROLE_TABLE, [["application.install", "directory.archive", "destination.bind-repository"], ["admin"]]],
   "platform:membership@9": [...ROLE_TABLE, [["application.install", "directory.archive"], ["admin"]], [["commons.write"], ["admin", "maintainer", "member", "agent", "checker"]]],
 };
@@ -171,6 +173,8 @@ export const FIRST_ACTIONS: { readonly [role in Role]: readonly string[] } = {
 export const FIRST_ACTIONS_OF: Readonly<Record<string, typeof FIRST_ACTIONS>> = { [MEMBERSHIP_1]: FIRST_ACTIONS_1, [MEMBERSHIP]: FIRST_ACTIONS, "platform:membership@4": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.establish"] }, "platform:membership@5": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.establish"] }, "platform:membership@6": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.establish"] }, "platform:membership@7": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.install"] }, "platform:membership@8": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.install", "directory.archive"] },
   "platform:membership@10": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.install", "directory.archive"] },
   "platform:membership@13": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.install", "directory.archive", "destination.bind-repository", "membership.own-agent"], maintainer: [...FIRST_ACTIONS.maintainer, "membership.own-agent"], member: [...FIRST_ACTIONS.member, "membership.own-agent"] },
+  "platform:membership@12": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.install", "directory.archive"] },
+
   "platform:membership@11": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.install", "directory.archive", "destination.bind-repository"] },
   "platform:membership@9": {
     admin: [...FIRST_ACTIONS.admin, "application.install", "directory.archive", "commons.write"],

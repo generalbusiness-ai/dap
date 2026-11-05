@@ -19,10 +19,10 @@ export interface LegacyCreationOffer extends CreationOfferBase {
   readonly definition: "platform:register@7" | "platform:register@8";
   readonly registerItem: CreationRegisterItem & { readonly purpose: "demo-start" };
 }
-/** Register17 has no native purpose field; no such value is invented here. */
+/** These native register pins have no purpose field; the offer invents none. */
 export interface CurrentCreationOffer extends CreationOfferBase {
   readonly v: 2;
-  readonly definition: "platform:register@17";
+  readonly definition: "platform:register@17" | "platform:register@26";
   readonly registerItem: CreationRegisterItem;
 }
 export type CreationOffer = LegacyCreationOffer | CurrentCreationOffer;
@@ -47,7 +47,7 @@ function exactOrigin(value: string): string {
 export function isCreationOffer(value: unknown, origin: string, register?: ScopeRef): value is CreationOffer {
   try {
     const expectedOrigin = exactOrigin(origin);
-    if (!closed(value, ["v", "origin", "register", "definition", "at", "registerItem"]) || value["origin"] !== expectedOrigin || !(value["v"] === 1 && ["platform:register@7", "platform:register@8"].includes(value["definition"] as string) || value["v"] === 2 && value["definition"] === "platform:register@17")
+    if (!closed(value, ["v", "origin", "register", "definition", "at", "registerItem"]) || value["origin"] !== expectedOrigin || !(value["v"] === 1 && ["platform:register@7", "platform:register@8"].includes(value["definition"] as string) || value["v"] === 2 && ["platform:register@17", "platform:register@26"].includes(value["definition"] as string))
       || !closed(value["register"], ["scope", "kind", "inc"]) || !isScopeRef(value["register"]) || value["register"].kind !== "register"
       || !closed(value["at"], ["seq", "hash"]) || !isHead(value["at"])) return false;
     const ref = value["register"], at = value["at"], item = value["registerItem"];
@@ -63,7 +63,7 @@ export function isCreationOffer(value: unknown, origin: string, register?: Scope
 export function isCurrentCreationOffer(value: unknown, origin: string, register?: ScopeRef): value is CurrentCreationOffer {
   return isCreationOffer(value, origin, register) && value.v === 2;
 }
-/** One anonymous GET: fresh register17, or an explicitly retained full reference. */
+/** One anonymous GET for the configured current register, or an exact retained reference. */
 export async function creationOffer(origin: string, options: { fetch?: CreationOfferFetch; register?: ScopeRef } = {}): Promise<CreationOffer> {
   try {
     if (options.register && (!closed(options.register, ["scope", "kind", "inc"]) || !isScopeRef(options.register) || options.register.kind !== "register")) throw failed();

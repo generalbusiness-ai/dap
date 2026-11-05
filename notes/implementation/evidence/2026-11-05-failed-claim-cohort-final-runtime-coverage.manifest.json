@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "qualification": "Passing isolated timed-opener compiler/complete-owner follow-up and successful Page/Card workflows at unchanged runtime head edf8e2da. Complete gate remains failed; Native is a separate pending run.",
+  "fileCount": 5,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-05-failed-claim-cohort-final-runtime-coverage",
+      "fileCount": 5,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 361,
+          "sha256": "15be5dd0704eb5e6b300e515a9d2b4d9026de58ec197ca4270b8022b1a307cee"
+        },
+        {
+          "path": "command-results.json",
+          "bytes": 722,
+          "sha256": "e6509381dce4f8a66ffa53b6c360b20e215a06e2c5b473be0d061b024f71509e"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 943,
+          "sha256": "3937b4f429edd17102fc367d8f8d41655ff8d0630ec60b0fdcfda5689aed704b"
+        },
+        {
+          "path": "runtime-input-equivalence.json",
+          "bytes": 3015,
+          "sha256": "e6dafb8c6cc3bfb97d5ec02b680e062dda7ee80f7f6254de3930659d5b2ae83f"
+        },
+        {
+          "path": "workflow-results.json",
+          "bytes": 3823,
+          "sha256": "34f8e4413c58e2a3a99b01a7647440aaef4959bad1de5e1a5892525f6a1aa5c8"
+        }
+      ]
+    }
+  ]
+}
