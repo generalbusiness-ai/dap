@@ -327,8 +327,11 @@ Ruling `125c878b` permits the reviewer to assess these separate records:
 | First unreached Native at `852d2611` | Failed; 1,099 passed, four failed, two skipped | [Failed Native](evidence/2026-11-05-failed-claim-cohort-final-native-failure.manifest.json) |
 | Unchanged three-owner diagnostic at `852d2611` | Child exit 0; all 34 cases pass; original recording-driver failure retained | [Diagnostic](evidence/2026-11-05-failed-claim-cohort-three-owner-diagnostic.manifest.json) |
 
-The workflow metadata and complete job logs remain sealed. Only the isolated
-Plain test and explanatory notes change after the workflow head; browser
+[Page run 41958073454](https://github.com/generalbusiness-ai/dap/actions/runs/41958073454)
+and [Card run 41958157135](https://github.com/generalbusiness-ai/dap/actions/runs/41958157135)
+both conclude `success` at `edf8e2da`. Their metadata and complete job logs
+remain sealed. Only the isolated Plain test and explanatory notes change
+after the workflow head; browser
 source, runtime, configuration, dependencies, and workflow inputs remain
 unchanged. A passing fixture workflow supplies no O4 or real-provider claim.
 
