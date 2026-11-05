@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3b1d6e1b4514aad1c33b4d7cc67f7a95503b66bd","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/site/token-reuse.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3c492ca1273609f28cdb3548aca1f9cac9efe1dd","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/github-wiring.ts."}
