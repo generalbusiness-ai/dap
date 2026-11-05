@@ -286,15 +286,15 @@ reads them with no token. `GITHUB_READ_TOKEN` is then not needed.
 
 ## What closes a register
 
-A register holds at most 64 live claims. A claim is live until a directory's `applied` result reaches it. When a claim's three attempts fail during an outage, the claim stays `pending` and keeps its place.
+A register holds at most 64 live claims. Register 26 closes a claim as final `failed` when its last repository-creation attempt ends with nothing selected. That claim frees its place; a late confirmed reply goes to cleanup. An unwired host has made no attempt, so its claim remains pending.
 
-At 64 live claims, the register refuses every later `found` with `type-full`. The Git host's return does not reopen it. Neither does a rerun, `--again`, a restart, or time, and no act or setting frees a place. [An outage can close a register](security/trust-boundaries.md#an-outage-can-close-a-register) gives what fails an attempt and who can fill the places.
+Earlier registers retain their historical behavior. In particular, Register 17 keeps a claim `pending` after all three attempts fail. At 64 live claims, it refuses later `found` requests with `type-full`. A returning host, rerun, `--again`, restart, or elapsed time does not free those places. [An outage can close a register](security/trust-boundaries.md#an-outage-can-close-a-register) describes that retained failure mode.
 
-The way out of a full register is a new register. Install it on a separate Worker, as [the Commons steps](#provision-the-commons-worker) show, and keep the old Worker serving the rooms that it has. A cutover on one Worker strands the old rooms, because each room's host authority names the old register.
+The way out of a full historical register is a new register. A separate Worker can serve it while the old Worker keeps its rooms. A reviewed cutover on one Worker must [retain the old roots](#keep-existing-rooms-able-to-create-children) in `INSTALLED_REGISTER_SCOPES`, preserve their checked Native births and storage, and verify existing-room continuity. Changing `REGISTER_SCOPE` alone does not retain that child-creation policy. Existing rooms keep their original pins.
 
-### Count a register's claims from its log
+### Count Register 17 claims from its log
 
-Count live claims before people report `type-full`, and after any outage of the Git host.
+This historical procedure describes Register 17, whose failed attempts leave claims pending. Register 26 also closes final failed claims; do not count them as live. Count live claims before people report `type-full`, and after any outage of the Git host.
 
 1. Choose a config directory that holds a room of this register.
 
@@ -342,7 +342,7 @@ is nonsecret JSON with exactly these fields:
 | `origin` | The Worker's canonical public origin. `dap-demo` uses `https://dap-demo.inguz.workers.dev`. |
 | `deployment` | The Worker's actual `DEPLOYMENT` value. |
 | `register` | The full reference of the installed register, `{ inc, kind, scope }`. A scope ID alone does not work. |
-| `definition` | `platform:register@17`. |
+| `definition` | `platform:register@26` for the new default, or retained `platform:register@17`. |
 
 The register must be open, and its recorded host must be `artifacts`. Its
 namespace must equal both `ARTIFACTS_CONFIG.namespace` and
@@ -351,7 +351,7 @@ namespace must equal both `ARTIFACTS_CONFIG.namespace` and
 separate from the recorded host.
 
 The Worker reads the version 3 setting into a checked internal version 2
-context and returns a version 2 offer. Register 17 has no `purpose` field.
+context and returns a version 2 offer. These registers have no `purpose` field.
 The request's effective origin must equal `origin`. Behind a proxy, set
 `PUBLIC_ORIGIN`. When it is unset, the Worker uses the URL's origin.
 Forwarded headers supply no identity. A different register, a different
