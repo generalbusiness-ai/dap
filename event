@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a224f3a36d875dfeef0979d728857b4efe9fb1ee","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-05-typed-core-m1-m2-focused.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a307296f7f1cad8ee90152b37c2d753951c0392e","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/sends.ts."}
