@@ -1,0 +1,40 @@
+# Trace restored-root cache selection
+
+The scratch GitHub witness passes one selected Native case. Its compiler
+passes. Two other cases were filtered out. The production tree equals
+frozen a7d22d7c; only the added scratch test differs. No candidate source
+or dependency changed, and no package was installed.
+
+The actual credential access reads GITHUB_APP_PRIVATE_KEY twice after
+root removal and twice after restoration. worker.ts reads it once while
+building its cache tuple. github-wiring.ts reads it once in readiness,
+which runs only when the factory builds an adapter. The unchanged third
+access reads it once and therefore reuses the adapter. The probe counts
+property names only; it never records the private-key value. Its policy
+check runs after the credential access, so it cannot warm that access.
+
+The removed root denies access and leaves live plaintext in custody. The
+restored list permits one read. The unchanged third read finds no
+plaintext. Both earlier accesses reach the real adapter through a real
+membership-issued session. The observed list strings differ at restore.
+
+At worker.ts wiring(), the map stores only the latest tuple per host.
+Both register settings occupy that tuple. Its equality check compares
+these string values. A different list makes the comparison fail, calls
+the factory synchronously, and replaces the tuple and adapter together.
+No await lies between tuple capture and installed-root parsing. The
+helper parses a fresh frozen root array. For the fixture's two stable
+list strings, the cache cannot reuse its removed-root adapter on restore.
+The runtime trace witnesses this construction boundary directly.
+
+The earlier stale-cache control removed the root setting from the tuple.
+Both provider cases then answered 200 at root removal, where 403 was
+required. Its original sealed control record remains in the focused
+manifest; this probe does not repeat that control or relabel it as a pass.
+
+These facts establish the synchronous cache transition under the tested
+stable settings. They do not identify the original Gate3 refusal as a
+session refusal or a custody refusal: that run did not record the
+boundary. Its 403 remains unexplained. A passing Gate4 does not itself
+close this finding. The planner must assess whether this trace and
+source argument satisfy ruling f115404f before review proceeds.
