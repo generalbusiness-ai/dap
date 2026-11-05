@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "sourceHead": "12ae3f18a3457788845f17f51571d6eac5941ebf",
+  "sourceTree": "59187c2e837f8ee75e93e16f3c17fcc3df0bfd49",
+  "qualification": "Passing exact three-owner/compilation follow-up and Page CI, with unchanged runtime inputs and seven sealed private units. Original gate failed; Native is separate and has recorded a failure. No gate pass or parent acceptance.",
+  "fileCount": 6,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-three-owner-followup",
+      "fileCount": 6,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 446,
+          "sha256": "11cf290c7049628c4fe1b4866e225314db2002932f46d5ac61334053f2a77694"
+        },
+        {
+          "path": "command-results.json",
+          "bytes": 2507,
+          "sha256": "0fe13723f817b1f7677481fc4771357e534b11f515d045f94f2dab9ef3290945"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 2888,
+          "sha256": "abdf97402610abf0c15b85381be5abc472c1692de4e33d784ccf4c10ab183bca"
+        },
+        {
+          "path": "source-checkpoints.json",
+          "bytes": 2147,
+          "sha256": "32ad7b0f9cd6a83caf9e0c466aa516714f2f14659f3e9eff5a2ecf4226dea9bd"
+        },
+        {
+          "path": "source-input-identity.json",
+          "bytes": 1544,
+          "sha256": "3d9bf42b5ed231abf666d3b7cc491145e03ee95893ee82096d499ba325e61cb7"
+        },
+        {
+          "path": "workflow-result.json",
+          "bytes": 4253,
+          "sha256": "7bec98a1b6290dac8de1331dd4d133b5231e95490baafd0a5412fffb29c3f5ce"
+        }
+      ]
+    }
+  ]
+}

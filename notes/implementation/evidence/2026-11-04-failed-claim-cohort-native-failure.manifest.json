@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "sourceHead": "12ae3f18a3457788845f17f51571d6eac5941ebf",
+  "sourceTree": "59187c2e837f8ee75e93e16f3c17fcc3df0bfd49",
+  "qualification": "Actual failed first Native follow-up:1097passed3failed2skipped, no unhandled errors/contradictions/unknowns; exact unchanged source and closed group. No gate pass, repair, review, landing, deployment or parent acceptance.",
+  "fileCount": 9,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-04-failed-claim-cohort-native-failure",
+      "fileCount": 9,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 686,
+          "sha256": "7a50efcd47ee92f23c3a6e7c828711d90befaddd75409fd71c12f8063c9613ae"
+        },
+        {
+          "path": "actual-native.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 2410,
+          "sha256": "bbc03f012d5e8ff22c84ea506e46b3662d2268070ac7f8ed69015ed246907843"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "failure-explanations.json",
+          "bytes": 673,
+          "sha256": "2119987e0d07a69beb50eca94a8bd7da69ec518f8c93baa97ebb5998c51c0cb5"
+        },
+        {
+          "path": "planner-ruling.json",
+          "bytes": 1191,
+          "sha256": "2733561003f7ad246ddc9c951a22138d3c77dd0760a7750cf25c28ed36feb0bf"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 1996,
+          "sha256": "606d1cb073cf11eebe1e06b4af76bff4690b67aa2758e516a34fd836ae783b96"
+        },
+        {
+          "path": "result.json",
+          "bytes": 3606,
+          "sha256": "63d1533d403cb8272668e692e068d2266d844793da79c802dfefb8aa5129bd74"
+        },
+        {
+          "path": "source-and-process.json",
+          "bytes": 907,
+          "sha256": "765ace4506dc2cec4d6075f16ea347d4a4899b41029a6fadf7b40f85594ca68d"
+        }
+      ]
+    }
+  ]
+}

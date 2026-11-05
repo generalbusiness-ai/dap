@@ -97,12 +97,51 @@ originals and seven sealed preparation units with 428 regular originals.
 The preparation proof includes Hugh's exact approval and the successful
 security owner. No original failure becomes a pass through this record.
 
-Planner ruling request `0e35e6c8` asks whether the three-owner repair,
-affected compilers and one run of the unreached Native stage supply the
-required follow-up coverage. The documented single-file exception does not
-cover three files. The request preserves the failed gate as failed and
-avoids repeating completed whole suites. Review awaits that ruling and the
-remaining validation.
+Planner `60280dd6` authorizes the three-owner repair, affected compilers and
+one run of the unreached Native stage at `12ae3f18`. The documented
+single-file exception does not cover three files, so request `0e35e6c8`
+names this explicit ruling. It keeps the original gate failed and requires
+a stop and report before any further repair if Native fails.
+
+## The first Native follow-up also fails
+
+The separately authorized Native command runs once at `12ae3f18`, tree
+`59187c2e837f8ee75e93e16f3c17fcc3df0bfd49`, and returns actual exit 1.
+The driver measures 1,447.66 seconds. Source stays unchanged and the owned
+process group closes. The same-run reporter records 1,097 passes, three
+failures and two skips. Every case has a final record. The three failed
+modules match the three failed-case owners; there is no additional module
+failure, unhandled error, contradictory record or unknown observation.
+
+The failures expose three assumptions about the old default:
+
+- The default-creation manifest-tree case expects Destination13 and receives
+  the required Destination19.
+- The Native clone story requests two hours, then expects success. The new
+  default correctly requires one hour. The same story also exercises
+  variable-hour retained requests, so those historical invariants must stay
+  covered alongside the current fixed-hour contract.
+- The Page wording case expects legacy pending/GAVE_UP behavior and fills
+  the register with 64 failed claims. The new default correctly returns
+  final failure and frees capacity. The original pending and type-full
+  assertions belong to historical Register18 and must remain covered there.
+
+Terminal report `67ea636c` records the complete failure set before any
+repair. Request `85321bc6` proposes repairs only in those three owners,
+including both current and retained clone contracts, followed by their
+compiler contexts and complete owning files. No repair or retry has started.
+Both the original gate and the Native follow-up remain failed.
+
+The unchanged 10,001-pass archive-scale owner passes in 280,877 ms. That
+observation does not diagnose its earlier failure after entry 14,601;
+parent `64552d40` remains open.
+
+These timings describe separate invocations on macOS 27.2 arm64 with 18
+logical CPUs and Node v26.13.0. The gate starts with empty Vite caches and
+load averages 1.50, 1.68 and 1.53. Native starts with warm Vite caches;
+its initial system load was not recorded. OS caches and other host activity
+remain uncontrolled. The timings are not one pipeline duration or a
+performance comparison.
 
 ## Evidence and review status
 
@@ -146,6 +185,26 @@ retain 74 private units, 6,445 regular originals and 21 public files.
 | [Integration commands](evidence/2026-11-04-failed-claim-cohort-integration/command-results.json) | CLI and Page protocol fixes, recorded demo expectation and historical recovery fixtures. |
 | [Workflow results](evidence/2026-11-04-failed-claim-cohort-rendered/workflow-results.json) and [input identity](evidence/2026-11-04-failed-claim-cohort-rendered/input-identity.json) | Passing Page and Card browser workflows at the named heads. |
 | [Failed-gate manifest](evidence/2026-11-04-failed-claim-cohort-failed-gate.manifest.json), `result.json`, `stages.json` and `preparation-proof.json` | Actual exit 1, five plain failures, Native unreached and explicit source-seal approval. |
+| [Three-owner follow-up](evidence/2026-11-04-failed-claim-cohort-three-owner-followup.manifest.json), `command-results.json` and `workflow-result.json` | Seventeen cases, affected compilers and Page CI pass separately from Native. |
+| [Failed Native follow-up](evidence/2026-11-04-failed-claim-cohort-native-failure.manifest.json), `result.json`, `source-and-process.json` and `actual-native.exit` | Actual exit 1, 1,097 passes, three failures and two skips; unchanged source and closed process group. |
+
+The [three-owner follow-up manifest](evidence/2026-11-04-failed-claim-cohort-three-owner-followup.manifest.json)
+has SHA-256
+`4762e5a334b9f1a48346a0318a60a532d5c36da84f456cbbc587685a268f558e`.
+It seals six public files and seven completed private units with 563 regular
+originals: the 17-case repair, compiler contexts, note links, source/push
+receipts and passing Page workflow `41913694022` at `12ae3f18`. Its Native
+qualification remains separate from these successful checks.
+
+The [failed Native manifest](evidence/2026-11-04-failed-claim-cohort-native-failure.manifest.json)
+has SHA-256
+`f0ca41ba5a8cabd947790b385520a02d5638524375c2cb11eb58323415076bd9`.
+It seals nine public audit files and 365 private originals. Its actual
+Native exit is 1; analysis exit 0 means only that the failed terminal record
+parsed and reconciled. The original output, all three failed cases, exact
+ruling and closed-group receipt remain read-only. The seven manifests
+identify 50 public evidence files; file counts include input snapshots and
+do not count unique test cases.
 
 Fresh durable units retain command arguments, cwd, source snapshots and hashes, dependency identity, stdout, stderr, actual exit, elapsed time and owned-process cleanup. The early merge helper, generator log and initial comparison helper began in scratch; the baseline records that limitation rather than claiming durable origin. The old draft's scratch checks supply no fresh validation claim.
 
@@ -158,12 +217,12 @@ other character in the inventory stays identical. The affected security
 entry-point owner passes all 11 cases after the update. Its original
 failure remains in the focused evidence.
 
-PENDING: the planner's validation ruling, unreached Native coverage,
-independent checker review and source landing. Hugh approved the exact
-source-seal patch above; its owner passes. Earlier sealed summaries record
-the approval as pending at the time of those runs. Page and Card runtime
-inputs remain unchanged. The first gate failed; no gate-pass or
-parent-acceptance claim exists at this draft.
+PENDING: the planner's ruling on the three failed Native owners, their
+bounded repair and validation, independent checker review and source
+landing. Hugh approved the exact source-seal patch above; its owner passes.
+Earlier sealed summaries record approval and Native coverage as pending at
+the time of those runs. Page and Card runtime inputs remain unchanged.
+Both validation runs failed; no gate-pass or parent-acceptance claim exists.
 
 ## Limits the planner retains
 
