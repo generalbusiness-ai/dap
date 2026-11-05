@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c18716e91c1b6530589c52bc46a6f6aec1b71984","text":"Replace the review request with adbec29a on corrected source-child report 5f02ca55. The exact a41c09e4 candidate and all reviewed source, tests, notes and evidence stay unchanged. Checker 2b8b4898 requires the corrected binding before filing its formal verdict."}
+{"kind":"promise","text":"Checker files the M1-M2 verdict at exact head a41c09e4 on the corrected binding."}
