@@ -292,7 +292,7 @@ Earlier registers retain their historical behavior. In particular, Register 17 k
 
 The way out of a full historical register is a new register. A separate Worker can serve it while the old Worker keeps its rooms. A reviewed cutover on one Worker must [retain the old roots](#keep-existing-rooms-able-to-create-children) in `INSTALLED_REGISTER_SCOPES`, preserve their checked Native births and storage, and verify existing-room continuity. Changing `REGISTER_SCOPE` alone does not retain that child-creation policy. Existing rooms keep their original pins.
 
-### Count Register 17 claims from its log
+### Count a register's claims from its log
 
 This historical procedure describes Register 17, whose failed attempts leave claims pending. Register 26 also closes final failed claims; do not count them as live. Count live claims before people report `type-full`, and after any outage of the Git host.
 

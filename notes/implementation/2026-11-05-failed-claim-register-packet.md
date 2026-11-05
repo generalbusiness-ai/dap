@@ -118,7 +118,7 @@ live room in this packet.
 
 ## Evidence
 
-The focused manifest and full gate record are pending before review.
+The [focused manifest](evidence/2026-11-05-failed-claim-register-focused.manifest.json) seals 18 public files and indexes four private original units. Its SHA256 is `5b3ee8cb600f846de6834bc0d02e91fbd9b84ed683ca8c27a9c6be88b26d650a`. The complete gate remains pending before review.
 The current checks retain exact commands, actual exits, source hashes, synthetic
 filled files, and every attempted read. The initial Python public-health probe
 received HTTP 403 before saving a response; it made no offer request. The later
@@ -127,12 +127,12 @@ Node's loader deprecation warning remains in the parser output.
 
 | Check | Command | Actual exit | Output digest |
 |---|---|---|---|
-| Three read-only censuses | `dap scope-index census --out <new file>` with each existing operator home | 0 each | Pending manifest |
-| Public demo health and offer | Two bounded Node `fetch` reads | 200 each | Pending manifest |
-| Production parser distinctions | Retained synthetic parser probe | 0 | Pending manifest |
-| Filled install, offer, and rollback | `render.mjs --stage <stage> --scope <synthetic ID> ...` | 0 each | Pending manifest |
-| Token observer imports and usage | `token-clone.mjs --help` | 0 | Pending manifest |
-| Wrong-home refusal before signing | `token-clone.mjs before <new custody> <new clone>` with synthetic invalid config | 1, expected refusal | Pending manifest |
+| Three read-only censuses | `dap scope-index census --out <new file>` with each existing operator home | 0 each | `census-summary.json` (`4efbd7b4d3fa61e820c09b550b21702138e35bfa5aa7f9e648abbca22b429f28`) |
+| Public demo health and offer | Two bounded Node `fetch` reads | 200 each | `demo-health.json` (`7e98dbfa81274f702bfb07306ebde7838238fde34571511cbe03e2679bf54332`); `demo-current-offer.json` (`ae730c29d3f913d428b8c55a04779130061cee4e24c2b885b05475ffa78a54bb`) |
+| Production parser distinctions | Retained synthetic parser probe | 0 | `checks-production-parsers.log` (`5a51ad33c6a23daa697dd881b9a0bc6cfb29ad38209161dbddd9239ee88efbfc`) |
+| Filled install, offer, and rollback | `render.mjs --stage <stage> --scope <synthetic ID> ...` | 0 each | `checks-render-install.log` (`31db2369e5e356d02f501b5cadac8c5010f898215035f4657e4d037e236a48ed`); `checks-render-offer.log` (`4daaa2bc0809323b9738862a710eb48d8af21b644ec2585859f6d6ebca6b9d60`); `checks-render-rollback.log` (`211e1776275e624617bc1abf4ead20205087cf6f5d474a1cd65a6cec31e41263`) |
+| Token observer imports and usage | `token-clone.mjs --help` | 0 | `checks-token-observer-help.log` (`21c5b78b6aba9c943af306f4819f39e5b32a82d0dcc9ff56ac91cfe53701a55e`) |
+| Wrong-home refusal before signing | `token-clone.mjs before <new custody> <new clone>` with synthetic invalid config | 1, expected refusal | `checks-token-observer-wrong-home.log` (`e7a47210729b7da8903157a4fae429babe7be6f9a7a73722f7835fe6d95c1e52`) |
 | Complete gate | `npm run gate` | Not run yet | Pending |
 
 ## Open limits
