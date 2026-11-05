@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:561afbf4c83e058d4fa675e2d6ed795433d1efad","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/creation-lineage.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:582a305eef8f047932a725ac31a2e5ab60122bfc","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-04-failed-claim-cohort-native-failure.manifest.json."}
