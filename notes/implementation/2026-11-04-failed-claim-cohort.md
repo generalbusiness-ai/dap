@@ -337,16 +337,26 @@ unchanged. A passing fixture workflow supplies no O4 or real-provider claim.
 
 ## Evidence and review status
 
+The five 5 November manifests have these SHA-256 digests:
+
+| Manifest | SHA-256 |
+|---|---|
+| [Production repair](evidence/2026-11-05-failed-claim-cohort-production-repair.manifest.json) | `79beeb3164c6ec50e61a7e9683dd7a3b155da1f961408ee8bb2e92bb3eda5c36` |
+| [Failed final gate](evidence/2026-11-05-failed-claim-cohort-final-gate-failure.manifest.json) | `5ef7716a06c7f0ff2617ca8833b4aed507aee17240214e006cc9396587e7ffb4` |
+| [Runtime coverage](evidence/2026-11-05-failed-claim-cohort-final-runtime-coverage.manifest.json) | `7a5a841f061a5af3a4c6c4e1a21dd2e99b641d8a53da016bc29903e4268a34b5` |
+| [Failed final Native](evidence/2026-11-05-failed-claim-cohort-final-native-failure.manifest.json) | `06e3d86f7863fa6aaed47441c4d417216998a653b240ad1a7fd81cb83a59f401` |
+| [Unchanged 34-case diagnostic](evidence/2026-11-05-failed-claim-cohort-three-owner-diagnostic.manifest.json) | `76dca67ef011e3248715e8bd981dcc44164bc5878ffd05eacb91324240aefe9b` |
+
 The [focused manifest](evidence/2026-11-04-failed-claim-cohort-validation.manifest.json)
 seals seven public summaries and 43 private units with 3,468 regular originals.
-Its SHA-256 is `b68bc0b21aa716dc5853c1cd07466dfba467d9b34178b6f3b0483d157cadbe47`.
+Its SHA-256 is `506d13f3c66493167b2223c2f8f8d7ce41c492046d18fc84efc0f13480abd97d`.
 The 42 command units include the original failures and expected controls; their
 counts do not add up to a unique-case total.
 
 The [limit-witness supplement](evidence/2026-11-04-failed-claim-cohort-limits.manifest.json)
 seals five more public summaries and seven private units with 701 regular
 originals. Its SHA-256 is
-`19a0ab0cf01a7aeaa2bad9ff8f94f4c1d509dca0b1b3153cb76c2a03d25df91f`.
+`f117b32e70a5b868ba4abb6af9b0a839f8371e6de8d57580e3446438279461d8`.
 It includes the planner's ruling, the unwired-host witness and the two
 strengthened limit owners. An initial filtered command skipped all bodies
 after a preparation guard stopped before the test edit; the supplement
@@ -355,7 +365,7 @@ identifies that run and the later actual witness separately.
 The [integration supplement](evidence/2026-11-04-failed-claim-cohort-integration.manifest.json)
 seals five public summaries and 21 private units with 1,938 regular originals.
 Its SHA-256 is
-`4b08a99a5b8cba3aabe5a3ac93424db693ffe8ab6650de3d955e1808d9881c63`.
+`5b7e4e42650feaad6f99bfa598330670f24554403a880bc5a30e594043e53711`.
 It records 18 command units and three commit receipts. Four diagnostic
 commands fail as described above; the supplement preserves their actual exits
 and the later successful follow-ups. The three supplements together retain
@@ -365,17 +375,17 @@ count custody records, not unique test cases.
 The [rendered-workflow supplement](evidence/2026-11-04-failed-claim-cohort-rendered.manifest.json)
 seals four public summaries and three private units with 338 regular originals.
 Its SHA-256 is
-`db334a1b3f2967c2ec23ff96669c56c3276b2bb9be33202f07a8a93dca2efb97`.
+`0d3ae586ac2773be2ad8d95f81bc888115d85d8c3d255db69a88aa755c09b62b`.
 It retains both successful workflow logs, the earlier failed workflows,
 exact input snapshots and two local audit receipts. All four supplements
 retain 74 private units, 6,445 regular originals and 21 public files.
 
 | Evidence | Boundary |
 |---|---|
-| [Focused commands](evidence/2026-11-04-failed-claim-cohort-validation/focused-commands.json) and [controls](evidence/2026-11-04-failed-claim-cohort-validation/control-results.json) | Exact pins, final failure, replay and token fields; original failures remain separate. |
-| [Limit witnesses](evidence/2026-11-04-failed-claim-cohort-limits/limit-witnesses.json) | Local custody bound, same-register retry, retained host-none families and unwired-host continuation. |
-| [Integration commands](evidence/2026-11-04-failed-claim-cohort-integration/command-results.json) | CLI and Page protocol fixes, recorded demo expectation and historical recovery fixtures. |
-| [Workflow results](evidence/2026-11-04-failed-claim-cohort-rendered/workflow-results.json) and [input identity](evidence/2026-11-04-failed-claim-cohort-rendered/input-identity.json) | Passing Page and Card browser workflows at the named heads. |
+| [Validation manifest](evidence/2026-11-04-failed-claim-cohort-validation.manifest.json), `focused-commands.json` and `control-results.json` | Exact pins, final failure, replay and token fields; original failures remain separate. |
+| [Limits manifest](evidence/2026-11-04-failed-claim-cohort-limits.manifest.json), `limit-witnesses.json` | Local custody bound, same-register retry, retained host-none families and unwired-host continuation. |
+| [Integration manifest](evidence/2026-11-04-failed-claim-cohort-integration.manifest.json), `command-results.json` | CLI and Page protocol fixes, recorded demo expectation and historical recovery fixtures. |
+| [Rendered-workflow manifest](evidence/2026-11-04-failed-claim-cohort-rendered.manifest.json), `workflow-results.json` and `input-identity.json` | Passing Page and Card browser workflows at the named heads. |
 | [Failed-gate manifest](evidence/2026-11-04-failed-claim-cohort-failed-gate.manifest.json), `result.json`, `stages.json` and `preparation-proof.json` | Actual exit 1, five plain failures, Native unreached and explicit source-seal approval. |
 | [Three-owner follow-up](evidence/2026-11-04-failed-claim-cohort-three-owner-followup.manifest.json), `command-results.json` and `workflow-result.json` | Seventeen cases, affected compilers and Page CI pass separately from Native. |
 | [Failed Native follow-up](evidence/2026-11-04-failed-claim-cohort-native-failure.manifest.json), `result.json`, `source-and-process.json` and `actual-native.exit` | Actual exit 1, 1,097 passes, three failures and two skips; unchanged source and closed process group. |
