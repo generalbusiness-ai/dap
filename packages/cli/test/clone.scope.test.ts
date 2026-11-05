@@ -52,19 +52,28 @@ function recordingGit(lifetime: ReturnType<typeof nativeFixtureLifetime>): Git &
 // | The destination's Git host | The real `artifacts-wiring.ts` port over a STAND-IN binding that the test scripts. Only `mint-read` reaches it. |
 // | git | A STAND-IN: a function that records its arguments and environment. Node's runner over a stand-in `git` script on the PATH is `git.test.ts`. |
 // | The scheduler | A STAND-IN: while a command waits, its `pause` runs the operations driver and the dispatchers, as a deployment's alarms would. |
+// The same custody invariants run on the current fixed-hour contract and the
+// retained variable-hour contract. These literal protocol choices are independent
+// of the command's field-selection implementation.
+const CLONE_COHORTS = [
+  { name: "current default", install: [], hours: "1", readTokenArgs: [], fixed: true },
+  { name: "retained publication", install: ["--cohort", "archive-device-publication"], hours: "2", readTokenArgs: ["--set", "hours=1"], fixed: false },
+] as const;
+type CloneCohort = typeof CLONE_COHORTS[number];
+
 describe("dap clone and dap remote on real scopes. The Git hosts, git and the scheduler are STAND-INs", () => {
-  test("remote prints the host's form; a member reads the destination with her session before any act there and after the claim window; clone without git signs nothing; clone signs read-token, reads the token once and gives it to git only in its environment's header configuration; a member clones with her own token; GitHub's remote is whole, and is read with the founder's session after the signed-read window", async () => {
+  for (const cohort of CLONE_COHORTS) test(`remote prints the host's form; a member reads the destination with her session before any act there and after the claim window; clone without git signs nothing; clone signs read-token, reads the token once and gives it to git only in its environment's header configuration; a member clones with her own token; GitHub's remote is whole, and is read with the founder's session after the signed-read window (${cohort.name})`, async () => {
     const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
     const lifetime = nativeFixtureLifetime(owner);
     try {
-      await story(lifetime);
+      await story(lifetime, cohort);
     } finally {
       lifetime.release();
     }
   });
 });
 
-async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promise<void> {
+async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>, cohort: CloneCohort): Promise<void> {
   const fetch = ((url: string, init?: RequestInit) => lifetime.wait(() => routed(url, init))) as unknown as Fetch;
   const now = lifetime.now;
   const registers: Platform[] = [];
@@ -85,13 +94,13 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
     await driveFixture([...registers, ...destinations, ...waiting.map(scope => lifetime.platform(scope as never))], lifetime.wait);
   };
   const git = recordingGit(lifetime);
-  const rita: Context = { store: memoryStore(), fetch, now, pause, git };
-  const una: Context = { store: memoryStore(), fetch, now, pause, git };
+  const rita: Context = { store: memoryStore(), fetch, trustedCreationService: { service: SERVICE, fetch }, now, pause, git };
+  const una: Context = { store: memoryStore(), fetch, trustedCreationService: { service: SERVICE, fetch }, now, pause, git };
   const run = (who: Context, ...argv: string[]): Promise<Outcome> => lifetime.wait(() => command(who, argv));
   const ok = (outcome: Outcome) => { expect(outcome.code, outcome.lines.join("\n")).toBe(0); return outcome; };
 
   // A room on Artifacts.
-  ok(await run(rita, "install", SERVICE, "--host", "artifacts", "--namespace", NAMESPACE));
+  ok(await run(rita, "install", SERVICE, "--host", "artifacts", "--namespace", NAMESPACE, ...cohort.install));
   const R = lifetime.platform((await lifetime.wait(() => rita.store.config()))!.register!.scope);
   lifetime.wire(R.name, () => ({ outside: outsideOf(R.name) }));
   await R.restart();
@@ -127,8 +136,13 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
     expect(without).toEqual({ code: 1, lines: ["git is not installed here, so nothing was signed. With git installed, run dap clone again; it runs:", `git -c http.extraHeader="Authorization: Bearer <read token>" clone -- https://<service host>/git/${NAMESPACE}/${name.name}.git here`] });
     expect([(await G.summary()).at, service.minted, git.runs]).toEqual([head, [], []]);
 
-    // clone: one read token of 2 hours, read once, and one run of git whose arguments hold the remote and the directory and no token.
-    const cloned = ok(await run(rita, "clone", "here", "--hours", "2"));
+    if (cohort.fixed) {
+      expect(await run(rita, "clone", "here", "--hours", "2")).toEqual({ code: 2, lines: ["This room issues one-hour read tokens; --hours must be 1."] });
+      expect([(await G.summary()).at, service.minted, git.runs]).toEqual([head, [], []]);
+    }
+    // One valid read token is read once; Git receives it only in its environment.
+    // The retained cohort still exercises a two-hour token.
+    const cloned = ok(await run(rita, "clone", "here", "--hours", cohort.hours));
     expect(service.minted).toEqual(["read-plaintext-1"]);
     expect(git.runs).toEqual([
       { args: ["--version"], env: {} },
@@ -146,7 +160,7 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
     expect([service.minted, git.runs.at(-1)]).toEqual([["read-plaintext-1", "read-plaintext-2"], { args: ["clone", "--", remoteUrl], env: { GIT_CONFIG_COUNT: "1", GIT_CONFIG_KEY_0: "http.extraHeader", GIT_CONFIG_VALUE_0: "Authorization: Bearer read-plaintext-2" } }]);
     expect(hers.lines.at(-1)).toBe(`Cloned into ${name.name}.`);
     expect(hers.lines.join("\n")).not.toContain("read-plaintext");
-    // --hours is from 1 to 24; outside that nothing is signed.
+    // The historical 1-to-24 range remains bounded; the current one-hour refusal is above.
     const before = (await G.summary()).at;
     expect((await run(una, "clone", "--hours", "25")).code).toBe(2);
     expect((await G.summary()).at).toEqual(before);
@@ -302,7 +316,7 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
         }
         return response;
       };
-      ok(await run({ ...rita, fetch: retaining }, "act", "read-token", "--on", "destination", "--target", "0", "--set", "hours=1"));
+      ok(await run({ ...rita, fetch: retaining }, "act", "read-token", "--on", "destination", "--target", "0", ...cohort.readTokenArgs));
       expect(originals).toHaveLength(1);
       const original = originals[0]!, originalBytes = canonicalize(original), beforeActs = await readTokenActs();
       let actPosts = 0, credentialGets = 0;
@@ -313,9 +327,11 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
         return fetch(url, init);
       };
       git.runs.length = 0;
+      const wrongHours = await lifetime.wait(() => cloneRetained({ ...rita, fetch: consuming }, "wrong-hours", original, { hours: 2 }));
+      if (cohort.fixed) expect(wrongHours).toEqual({ code: 2, lines: ["This room issues one-hour read tokens; --hours must be 1."] });
       for (const result of [
         await lifetime.wait(() => cloneRetained({ ...una, fetch: consuming }, "foreign-signer", original)),
-        await lifetime.wait(() => cloneRetained({ ...rita, fetch: consuming }, "wrong-hours", original, { hours: 2 })),
+        ...(cohort.fixed ? [] : [wrongHours]),
         await lifetime.wait(() => cloneRetained({ ...rita, fetch: consuming }, "foreign-receipt", { signed: original.signed, receipt: { ...original.receipt, definition: "platform:destination@1" } })),
       ]) {
         expect(result.code).toBe(1);
@@ -359,7 +375,7 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
       };
       ok(await run({ ...una, fetch: holding }, "clone", "before-the-revocation"));
       originals.length = 0;
-      ok(await run({ ...una, fetch: holding }, "act", "read-token", "--on", "destination", "--target", "0", "--set", "hours=1"));
+      ok(await run({ ...una, fetch: holding }, "act", "read-token", "--on", "destination", "--target", "0", ...cohort.readTokenArgs));
       const M = lifetime.platform(repository.membership.scope);
       const items = (await M.summary()).value.items;
       const member = items.find((item) => item.type === "member" && item.values["handle"] === "@una")!;
@@ -387,8 +403,8 @@ async function story(lifetime: ReturnType<typeof nativeFixtureLifetime>): Promis
   }
 
   // GitHub: the remote URL is whole from the branch item alone.
-  const vic: Context = { store: memoryStore(), fetch, now, pause };
-  ok(await run(vic, "install", SERVICE, "--host", "github.com", "--namespace", "generalbusiness-ai"));
+  const vic: Context = { store: memoryStore(), fetch, trustedCreationService: { service: SERVICE, fetch }, now, pause };
+  ok(await run(vic, "install", SERVICE, "--host", "github.com", "--namespace", "generalbusiness-ai", ...cohort.install));
   const H = lifetime.platform((await lifetime.wait(() => vic.store.config()))!.register!.scope);
   lifetime.wire(H.name, () => ({ outside: outsideOf(H.name) }));
   await H.restart();

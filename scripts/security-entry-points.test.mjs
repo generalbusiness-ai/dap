@@ -248,7 +248,7 @@ const seals = {
   "packages/scope/src/core.ts": namedOwners["packages/scope/src/core.ts"],
   "packages/scope/src/applications/act-admission.ts": "bec337cfdbc35247da587bf794715062537b89a1894c6c0829b7c5fa0c7b1884", // Exact native provenance and current trust; actual maintained parser output.
   "packages/derive/src/genesis.ts": "df7722143f01c8084b8f045ef959b203ae1756c4dfde170d0454cfe0b0392843",
-  "packages/derive/src/judge.ts": "65a10677dd4da355e9edac490979cacf6911cfa1aa37020c41516f5c53ad94fb",
+  "packages/derive/src/judge.ts": "70cfbfe4332813d559ee2b7c63b4a98e21c4ac9bcb286695ea482be3a7c49c84",
   "packages/scope/src/sessions.ts": "ee2afb1a928446d146b81a3adfd4794cbacac9322f9a9a5142658a7036005ebb",
   "packages/scope/src/originals.ts": "c8a5185ad8a57a851ecbe77d87649b0bbfd45bf9c93e685d7dc3a35982ef72cc", // Reviewed J1 owner: the member compare, the signature and actor check, and the caps.
   "packages/client/src/originals.ts": "4b77af1b7f1d97f573f072efbe278cd3fa38ee4809b031d648fa57c5d5d17cf4", // Reviewed J1 owner: the bytes that a second device verifies before it sends them again.

@@ -129,7 +129,8 @@ The failures expose three assumptions about the old default:
 Terminal report `67ea636c` records the complete failure set before any
 repair. Request `85321bc6` proposes repairs only in those three owners,
 including both current and retained clone contracts, followed by their
-compiler contexts and complete owning files. No repair or retry has started.
+compiler contexts and complete owning files. Ruling `488ff9b0` authorizes
+that bounded repair; the follow-up below records its result.
 Both the original gate and the Native follow-up remain failed.
 
 The unchanged 10,001-pass archive-scale owner passes in 280,877 ms. That
@@ -142,6 +143,82 @@ load averages 1.50, 1.68 and 1.53. Native starts with warm Vite caches;
 its initial system load was not recorded. OS caches and other host activity
 remain uncontrolled. The timings are not one pipeline duration or a
 performance comparison.
+
+## The bounded repair exposes an omitted checker pin
+
+Ruling `488ff9b0` permits repairs in the three failed Native owners.
+The current and retained clone stories preserve their distinct token
+contracts. The Page wording owner explicitly selects historical Register18
+and keeps its pending, GAVE_UP, and 64-live-claim assertions.
+All three compiler contexts pass. The three complete files return exit 1:
+24 cases pass, and the current-default manifest case fails. Its valid
+Destination19 snapshot reaches `originOf`, whose closed outcome-owner list
+in `packages/checkers/src/job.ts` omits 19. Stop report `fefd3ef1` records
+that production defect before any production repair.
+
+Ruling `1311f76e` authorizes the exact-pin repair and a search of every
+reachable destination list before testing. It requires a complete final
+gate because production source now changes. The audit finds four omissions:
+
+- `packages/checkers/src/job.ts`: admit 19 as a reservation outcome owner;
+  retain the signature, fact, object, source, tree, stage, and bound checks.
+- `packages/derive/src/judge.ts`: admit 19 for timed openings and name 19
+  as the owner of the cleanup operations they open. This source has a seal.
+- `packages/scope/src/delivery.ts`: select 19's installed-application
+  provenance policy in the resolver path outside partition mode.
+- `packages/scope/src/operations.ts`: select the same policy when an
+  operation resolves an application publication's origin.
+
+The platform protocol lists, CLI manifest protocol, Page retained editor,
+archive host/target membership selectors, and Git archive pin/data/place
+rows already include 19. The native registry selects its exact membership,
+Rules, and publication-origin reader. Those lists need no further change.
+The remaining narrow lists keep their protocol boundaries: standing-only
+Destinations5/6, certified Rules Destinations14/15/17, evidence-only
+Destination17, and the legacy publication replay path for Destinations4/5/6/7.
+Destination19 uses the archive-backed publication reader. The timed byte
+estimate's literal owner is a size term, not an admission list; its existing
+allowance already covers two-digit destination revisions.
+
+The pure checker owner now tests supported 19, refused 20, and missing
+manifest proof under 19 alongside its retained controls. The Native manifest
+owner adds default-family expiry to its existing cleanup story. The existing
+application-publication owner adds the new family to its complete install,
+publication, restart, and supersession story. These tests use real scopes
+with their existing Git, transport, and scheduler stand-ins. They establish
+no deployed provider or real token-expiry acceptance.
+
+The timed cleanup changes two lines of `judge.ts`. Its proposed inventory
+patch changes one hash literal, SHA-256
+`5bebaa97267efa0b24816bab90dfff52457021119387536b0b4d46feaf457152`.
+The `judge.ts` inventory literal changes from
+`65a10677dd4da355e9edac490979cacf6911cfa1aa37020c41516f5c53ad94fb`
+to `70cfbfe4332813d559ee2b7c63b4a98e21c4ac9bcb286695ea482be3a7c49c84`.
+Hugh explicitly approves this exact one-hash patch in this session. The
+applied patch changes no other inventory byte. The security owner then
+passes all 11 cases. Its earlier old-inventory run remains failed: the first
+apply command refused the zero-context patch, and the check still ran.
+`git apply --unidiff-zero` then applies the approved bytes. C owns
+`derive/src` until its source freezes; plan035 M1-M2 has not started source
+work and cannot overlap that ownership.
+
+The four affected compiler contexts and four complete owners pass: 36 cases,
+zero failures, actual exit 0, unchanged source snapshots, and closed owned
+process groups. The direct expiry-owner assertion also passes after its
+compiler context. A provenance control removes only 19 from the operation
+selector; the new publication case fails its `published` assertion. The
+first timed-owner control reaches a TypeError before an assertion, so it
+proves nothing. After adding a direct assertion for the timed operation's
+owner, the same fault fails that assertion. Both controls restore exact
+source bytes. The passing baselines and all failed attempts remain in
+[the production-repair manifest](evidence/2026-11-05-failed-claim-cohort-production-repair.manifest.json):
+10 sealed private units, 1,398 original files, and five public files. These
+focused checks do not replace the final gate required by `1311f76e`.
+
+Ruling `c858a1d1` subsequently replaces the separate source-seal approval
+requirement with ordinary checker review of the exact literals and head.
+The mini is unavailable under that ruling. This candidate needs no mini
+command; the planner owns deployment and hosted acceptance.
 
 ## Evidence and review status
 
@@ -217,12 +294,10 @@ other character in the inventory stays identical. The affected security
 entry-point owner passes all 11 cases after the update. Its original
 failure remains in the focused evidence.
 
-PENDING: the planner's ruling on the three failed Native owners, their
-bounded repair and validation, independent checker review and source
-landing. Hugh approved the exact source-seal patch above; its owner passes.
-Earlier sealed summaries record approval and Native coverage as pending at
-the time of those runs. Page and Card runtime inputs remain unchanged.
-Both validation runs failed; no gate-pass or parent-acceptance claim exists.
+PENDING: one complete final gate, current-head Page and Card workflow
+evidence, independent checker review, and source landing. Hugh approved the earlier 28-literal patch above. Earlier sealed
+summaries describe the state at the time of those runs. The original gate
+and Native follow-up remain failed; no parent-acceptance claim exists.
 
 ## Limits the planner retains
 

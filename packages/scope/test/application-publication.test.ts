@@ -4,7 +4,7 @@ import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { DeclaredDefinition, FactRef, Intent, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, factRefOf, intentDigest, isSeed, scopeIdOf, signIntent, textDigest, timeOf } from "@generalbusiness/dap-bytes";
-import { applicationPublicationOrigin, archiveDevicePublicationOrigin, ARCHIVE_DEVICE_PUBLICATION_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, FILE_PUBLICATION_COHORT, fileReceiptRef, platform } from "@generalbusiness/dap-platform";
+import { applicationPublicationOrigin, archiveDevicePublicationOrigin, FAILED_CLAIM_COHORT, ARCHIVE_DEVICE_PUBLICATION_COHORT, COMMONS_COHORT, UNPUBLISHED_COHORT, FILE_PUBLICATION_COHORT, fileReceiptRef, platform } from "@generalbusiness/dap-platform";
 import { Reader } from "@generalbusiness/dap-git";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { SqliteStore } from "../src/index.ts";
@@ -325,6 +325,7 @@ test("a native application publishes once after missing proof, keeps later sourc
 // physical device runs. Historical profile bytes and defaults stay fixed.
 test.each([
   { name: "an archive-device-publication", cohort: ARCHIVE_DEVICE_PUBLICATION_COHORT },
+  { name: "a failed-claim", cohort: FAILED_CLAIM_COHORT },
   { name: "an unpublished-family", cohort: UNPUBLISHED_COHORT },
   { name: "a Commons", cohort: COMMONS_COHORT },
 ])("$name application automatically publishes device reports and supersedes an unsent older report", async ({ cohort }) => {

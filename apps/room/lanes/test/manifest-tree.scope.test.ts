@@ -5,7 +5,7 @@ import { inject, expect, test, onTestFinished } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type FactRef, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, timeOf, unb64url, definitionDigest, sign, keyIdOfSecret, digestBytes, factRefOf, scopeIdOf, timeMs, utf8, textDigest } from "@generalbusiness/dap-bytes";
 import { requestSession, sessionRequest, signedReader, type Fetch } from "@generalbusiness/dap-client";
-import { ARCHIVE_DEVICE_PUBLICATION_COHORT, firstExtents, CONFIGURATION_DOMAIN, platform, revokedToken, destinationWrite, destinationRevokedMint } from "@generalbusiness/dap-platform";
+import { FAILED_CLAIM_COHORT, firstExtents, CONFIGURATION_DOMAIN, platform, revokedToken, destinationWrite, destinationRevokedMint } from "@generalbusiness/dap-platform";
 import { httpSource, verify } from "@generalbusiness/dap-replay";
 import { SqliteStore, CAPABILITY_CODE } from "@generalbusiness/dap-scope";
 import { ownOf } from "../../../../packages/scope/src/core.ts";
@@ -145,12 +145,12 @@ test("a refused publication push retains and settles its staged-ref cleanup inst
 }, 120_000);
 // Expiry records the bounded cleanup in the real timed turn; a host refusal
 // leaves a named live obligation after precisely three attempts, without resend.
-test.each(["ref", "token", "token-unknown"] as const)("expired reservations retain named owed %s cleanup after three refusals (real scopes; host and scheduler STAND-INs)", async (resource) => {
+test.each([["ref", false], ["token", false], ["token-unknown", false], ["ref", true]] as const)("expired reservations retain named owed %s cleanup after three refusals (real scopes; host and scheduler STAND-INs; default creation %s)", async (resource, newestCreation) => {
   net.hold = net.deaf = null;
   const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
   onTestFinished(owner.close);
   const wired = new Set<ScopeId>();
-  try { await story(ownHost(), wired, false, false, false, false, false, undefined, resource); }
+  try { await story(ownHost(), wired, false, false, false, false, false, undefined, resource, false, undefined, undefined, false, undefined, newestCreation); }
   finally { owner.close(); net.hold = null; for (const name of wired) platformOutside.delete(name); }
 }, 120_000);
 test("unknown staging and exhausted token cleanup retain independent duties across late original and earlier deletion answers (real scopes; host and scheduler STAND-INs)", async () => {
@@ -307,7 +307,7 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
   const repository = (await creator.store.config())!.repository!;
   const G = new Platform(repository.destination); known.push(G); await pause([]);
   expect((await G.summary()).value.definition).toBe(newestCreation
-    ? ARCHIVE_DEVICE_PUBLICATION_COHORT.destination : "platform:destination@3");
+    ? FAILED_CLAIM_COHORT.destination : "platform:destination@3");
   const first = host.refs.get("refs/heads/main")!;
   if (receiptRecoveryOnly) {
     ok(await run(creator, "act", "publish", "--on", "rules", "--target", "0", "--set", "approvals=0", "--set", "ownerMayReview=false", "--set", "checks=[]", "--set", "labels=[]", "--set", `extents=${JSON.stringify(firstExtents({ approvals: 0, checks: [] }))}`));
@@ -596,7 +596,9 @@ async function story(at: Stand, wired: Set<ScopeId>, startedOnly = false, unknow
       net.clock.now = timeOf(timeMs(net.clock.now)! + 1800_000);
     }
     await run(creator, "act", "add-room", "--on", "destination", "--target", String(expiring.id));
-    expect((await G.entries()).filter((entry) => entry.input.type === "timed" && entry.input.item === expiring.id && entry.effects.some((effect) => effect.effect === "operation" && effect.kind === "reservation-delete" && effect.attempts === 3))).toHaveLength(1);
+    const expired = (await G.entries()).filter((entry) => entry.input.type === "timed" && entry.input.item === expiring.id && entry.effects.some((effect) => effect.effect === "operation" && effect.kind === "reservation-delete" && effect.attempts === 3));
+    expect(expired).toHaveLength(1);
+    if (newestCreation) expect(expired[0]!.effects).toContainEqual({ effect: "operation", k: 0, owner: FAILED_CLAIM_COHORT.destination, kind: "reservation-delete", attempts: 3, for: expiring.id });
     for (let attempt = 0; attempt < 4; attempt++) { await pause([repository.destination]); net.clock.now = timeOf(timeMs(net.clock.now)! + 2000); }
     const owed = (await G.summary()).value.items.find((item) => item.type === "publication" && item.state === "cleanup-owed")!;
     if (unknownMintOnly) {
