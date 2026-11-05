@@ -129,6 +129,7 @@ export function body(context: Schema, guards: All, effects: readonly Effect[], s
   const expression = (value: ExpressionData) => {
     if (!expressions.has(value)) throw new TypeError("unchecked expression");
     if (value.op === "field" || value.op === "slot") handle(value.handle);
+    if (value.op === "self" && (value.type.type !== "fact" || !value.type.kind.includes(context.kind) || value.type.under !== context.definition.declared.name)) throw new TypeError("self needs this act's fact type");
   };
   const guard = (value: Guard): void => {
     if (value.op === "all") { value.guards.forEach(guard); return; }
@@ -170,7 +171,7 @@ export function body(context: Schema, guards: All, effects: readonly Effect[], s
 }
 /** Freeze the graph in place: copying would discard its checked expression identities. */
 function freezeNodes<T>(value: T): T {
-  if (value !== null && typeof value === "object" && !Object.isFrozen(value)) { Object.values(value).forEach(freezeNodes); Object.freeze(value); }
+  if (value !== null && typeof value === "object") { Object.values(value).forEach(freezeNodes); Object.freeze(value); }
   return value;
 }
 export function checkedProgram(program: Program): void {

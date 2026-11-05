@@ -148,6 +148,26 @@ describe("typed derivation program", () => {
     expect(() => m.before(time as unknown as m.Expr<{ type: "time" }, "before">, { path: "guard", subject: on })).toThrow("before-state time slot");
     expect(() => m.literal({ type: "int", min: 1, max: 2 }, 3, "working", "literal", bounds)).toThrow("literal outside descriptor");
   });
+  test.each([
+    { type: "fact", kind: ["found"], under: raw.name },
+    { type: "fact", kind: ["send"], under: "another-definition" },
+  ] as const)("a manual self expression cannot claim the nominal fact type %j", descriptor => {
+    const definition = variant(raw, data => { data.items.note.refs.record = { fixed: false, required: false, to: descriptor }; });
+    const context = m.schema(definition, "send"), on = m.subject(context, "on"), target = m.slot(on, "record") as m.Slot<typeof descriptor>;
+    const from = m.self(descriptor, "working", "acts.send.effects.0.ref.from");
+    const effect: m.Effect = { op: "ref", slot: target, source: m.assign(target, from), condition: {}, path: "acts.send.effects.0" };
+    expect(() => m.body(context, { op: "all", guards: [], path: "acts.send.guards" }, [effect], [])).toThrow("self needs this act's fact type");
+  });
+  test("a checked program keeps its meaning when a caller freezes only the outer guard", () => {
+    const schema = m.schema(fixture, "send"), on = m.subject(schema, "on"), states = ["live"];
+    const guards = Object.freeze<m.All>({ op: "all", path: "acts.send.guards", guards: [{ op: "state", states, metadata: { subject: on, path: "acts.send.guards.0" } }] });
+    const body = m.body(schema, guards, [], []), j = context(fixture, "send");
+    j.subjects = new Map([["on", item(fixture, "note", 1)]]);
+    const before = evaluate(body, j, cause).ran;
+    expect(before).toMatchObject({ result: "ran", effects: [], sends: [] });
+    expect(() => { states[0] = "done"; }).toThrow(TypeError);
+    expect(evaluate(body, j, cause).ran).toEqual(before);
+  });
   test("a Grow refusal display names the source and the actual deadline and supplied time", async () => {
     const j = await water(400, 100), body = program(grow, "water"), result = evaluate(body, j, cause, 0, 100);
     expect(explain(body, result)).toEqual({ sourcePath: "acts.water.guards.1", values: { subject: "also.policy", deadline: t(100), clock: t(100) }, opaque: false, incomplete: false,

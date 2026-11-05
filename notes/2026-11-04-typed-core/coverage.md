@@ -1,7 +1,7 @@
 # Frozen form coverage
 
 Status: complete design inventory at `7135dc3985694760ff8c80ad07f200ba8f6e767d`.
-Implementation coverage is zero. No production route has changed.
+M1–M2 implements only the first slice described in the contract. No production route has changed; the remaining rows retain their scheduled migration boundaries.
 
 This inventory covers the admitted definition vocabulary and its rule boundaries.
 It does not claim to enumerate arbitrary JavaScript rule bodies. The existing

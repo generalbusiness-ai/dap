@@ -1,6 +1,6 @@
 # Plan 035: Give Dap derivations a typed, inspectable program
 
-Status: M1–M2 experiment stopped at its measured deletion gate. The [stop record](../implementation/2026-11-04-typed-core-stop.md) retains the bounded results and the 15.9% estimate. This delivery retains the design and stop record, without the prototype. M3–M8 are not scheduled.
+Status: implementation scheduled through M8 by gitseq request `e99550e9bfedcde3bed05bae1d345fcbfe5f7c9a`. M1–M2 is in progress on the retained prototype. Hugh overrides the deletion-size gate; the semantic contract, witness map, file boundaries, and other stop criteria still apply. The [stop record](../implementation/2026-11-04-typed-core-stop.md) preserves the earlier 15.9% estimate and disposition as history.
 
 Planned against `7135dc3985694760ff8c80ad07f200ba8f6e767d` on 2026-11-04.
 Category: architecture and direction. Effort: large overall, split into small reviewed deliveries.
@@ -22,7 +22,11 @@ This plan specifies a bounded prototype and the conditions for a production
 migration. Complete deliveries 1–3 before committing to the wider migration.
 Do not infer authorization to change published semantics from this plan.
 
-## Planner disposition, 4 November 2026
+## Implementation schedule, 4 November 2026
+
+Request `e99550e9bfedcde3bed05bae1d345fcbfe5f7c9a` schedules M1–M8 in table order, with one reviewed landing per migration and a combined first landing for M1–M2. Hugh's decision overrides the deletion-size gate and the earlier restriction on scheduling M3–M8. Keep the other acceptance criteria below. After M3, re-estimate and report the remaining rows. The planner deploys the first production cutover at M3; M1–M2 needs no deployment.
+
+## Earlier planner disposition, 4 November 2026
 
 The planner accepts the semantic contract and stop criteria, and schedules only
 the M1–M2 prototype. M3–M8 need a passed decision gate and Hugh's approval.
@@ -498,7 +502,7 @@ the witness map.
 
 Focused existing tests passed on 2026-11-04: 130 tests across 12 derive files,
 and both tests in Grow's `watering.test.ts`. These establish the existing
-semantic baseline. The proposed program has no implementation or tests yet.
+semantic baseline. At that design checkpoint, the proposed program had no implementation or tests.
 The 22 reviewed source hashes match the frozen baseline. Separate checks cover
 local document links, cited source paths, and whitespace because the new files
 are untracked and the tracked-document gate does not inspect them.

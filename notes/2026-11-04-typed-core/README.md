@@ -1,6 +1,6 @@
 # Typed derivation contract
 
-Status: design complete for the first slice. Implementation and equivalence remain unproved.
+Status: M1–M2 implements the first slice on the branch scheduled by gitseq request `e99550e9bfedcde3bed05bae1d345fcbfe5f7c9a`. Focused witnesses cover bounded equivalence; the review candidate still needs its gate and independent review. Production routing remains unchanged.
 
 Source baseline: `7135dc3985694760ff8c80ad07f200ba8f6e767d`, 2026-11-04.
 This packet supplies delivery 1 of [plan 035](../plans/035-2026-11-04-typed-derivation-core.md).
@@ -232,6 +232,8 @@ See [Compiling to Categories](https://conal.net/papers/compiling-to-categories/c
 The boundary, first-slice grammar, operational obligations, source inventory,
 and acceptance witnesses now have concrete definitions. This supports an
 implementation estimate and exposes known semantic traps before source edits.
-It does not prove that lowering typechecks, that two evaluators agree, that
-dependencies are sound, or that the representation reduces code. Deliveries 2
-and 3 test those claims before production migration.
+That design evidence alone does not prove that lowering typechecks, that two
+evaluators agree, that dependencies are sound, or that the representation
+reduces code. The M1–M2 implementation note records the later bounded witnesses.
+Hugh's scheduling decision overrides the deletion-size gate, while the semantic
+contract and other stop criteria still apply.
