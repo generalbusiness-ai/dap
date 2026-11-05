@@ -13,12 +13,13 @@ import { CredentialStore } from "./credential-store.ts";
 import { DestinationHost, type SnapshotReader } from "./destination-host.ts";
 import { GitHubProvider } from "./github-host.ts";
 import { gitHubRepositoryBindings, gitHubRepositoryBindingAllowed, type GitHubRepositoryBinding } from "./github-repository-bindings.ts";
+import { hostRegisterScopes, type HostRegisterSettings } from "./installed-registers.ts";
 import { credentialHandle, exact, hostBound } from "./host-wiring.ts";
 import type { OutsideGiven } from "./object.ts";
 import { NO_OUTSIDE, type EffectRequest, type Outside } from "./operations.ts";
 import { RegisterHost } from "./register-host.ts";
 
-export interface GitHubBindings {
+export interface GitHubBindings extends HostRegisterSettings {
   /** Nonsecret JSON; every field is explicit. Precompute the install's register scope ID and pin it here before deployment. */
   GITHUB_APP_CONFIG?: string;
   /** Deployment secrets; no default creation or private read authority. */
@@ -97,6 +98,8 @@ export function gitHubOutside(given: OutsideGiven, sql: Pick<SqlStorage, "exec">
     const ready = gitHubReadiness(env);
     if (ready.state !== "wired") return NO_OUTSIDE;
     const { config, cleanups, key, creation, read, repositoryBindings } = ready;
+    const roots = hostRegisterScopes(ready.config.registerScope, env);
+    if (!roots) return NO_OUTSIDE;
     const host = "github.com";
     const namespace = config.account.login;
     // Only a native definition that permits later binding needs the extra
@@ -119,7 +122,7 @@ export function gitHubOutside(given: OutsideGiven, sql: Pick<SqlStorage, "exec">
     const register = new RegisterHost(given, { host, namespace, provider });
     const custody = new CredentialStore(sql, () => given.scope()?.at ?? null);
     const destination = new DestinationHost(given, { host, namespace, provider, custody, ...(snapshotReader ? { snapshotReader } : {}) });
-    const nativeBound = hostBound(given, config.registerScope, host, namespace);
+    const nativeBound = hostBound(given, roots, host, namespace);
     const bound = (owner: string): boolean => {
       if (!nativeBound(owner)) return false;
       if (!laterBinding()) return config.installationReads !== true;

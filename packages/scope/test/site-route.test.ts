@@ -10,7 +10,8 @@ import { buildPack, type RawGitObject } from "@generalbusiness/dap-git/http";
 import type { ArtifactsNamespace } from "../src/artifacts-host.ts";
 import { artifactsOutside } from "../src/artifacts-wiring.ts";
 import type { Binding } from "../src/namespace.ts";
-import type { SiteEnv } from "../src/site/host.ts";
+import { readerOf, roomOf, type SiteEnv } from "../src/site/host.ts";
+import type { SiteTokenPort } from "../src/site/token-reuse.ts";
 import { FILE_BYTES, redacted, refused, site } from "../src/site/route.ts";
 import { ServingAdmission, type ServingRequest } from "../src/serving-admission.ts";
 import { SCOPE_INDEX_NAME } from "../src/scope-index.ts";
@@ -332,6 +333,42 @@ const page = async (response: Response) => ({ status: response.status, type: res
 
 // Invariant: a markdown file at a ref of the room's repository answers as HTML, its relative links and images under the same
 // prefix, raw HTML and a javascript: address made inert; closing each read leaves the shared expiring token alive.
+// Genuine old/current register births and the real Site route/token owner;
+// only Artifacts and smart Git HTTP are scripted provider boundaries.
+test("an old Native room Site reads after switching roots; removing it closes cached readers and fixed-owner custody", async () => {
+  const install: Intent = { v: 1, to: null, actor: paul.key, kind: "install", on: null, expected: {},
+    fields: { host: "artifacts", namespace: NAMESPACE, policy: "keys", founders: [rita.key] }, idempotencyKey: crypto.randomUUID(), notAfter: soon(60) };
+  const current = new Platform(scopeIdOf({ v: 1, kind: "register", definition: REGISTER, creator: null, cause: intentDigest(install), ordinal: 0 }));
+  expect(await current.stub.create(signIntent(install, paul.secret), REGISTER)).toMatchObject({ answer: "accepted" });
+  const config = { ...JSON.parse(siteEnv.ARTIFACTS_CONFIG!), registerScope: current.name };
+  const switched: SiteEnv = { ...siteEnv, SCOPE_INDEX: env.SCOPE_INDEX, REGISTER_SCOPE: current.name,
+    ARTIFACTS_CONFIG: canonicalize(config), INSTALLED_REGISTER_SCOPES: canonicalize([R.name, current.name]) };
+  const mints = host.minted.length;
+  siteTokenTestSettings.set(SCOPE_INDEX_NAME, switched);
+  try {
+    const first = await get(`/site/${D.name}/HEAD/README.md`, {}, switched);
+    expect(first.status).toBe(200); expect(await first.text()).toContain("Handbook");
+    expect(host.minted.length).toBe(mints + 1);
+    const room = await roomOf(publishedScopes, D.name);
+    if (!room?.repository) throw Error("Expected the genuine Native room repository");
+    const open = readerOf(switched, room, host.fetch)!;
+    const cached = await open();
+    expect(await cached.source.ref("refs/heads/main")).toBeTruthy();
+    switched.INSTALLED_REGISTER_SCOPES = canonicalize([current.name]);
+    expect((await get(`/site/${D.name}/HEAD/README.md`, {}, switched)).status).toBe(503);
+    await expect(open()).rejects.toBeDefined();
+    expect(() => cached.source.ref("refs/heads/main")).toThrow();
+    const owner = env.SCOPE_INDEX.get(env.SCOPE_INDEX.idFromName(SCOPE_INDEX_NAME)) as unknown as SiteTokenPort;
+    expect(await owner.acquireSiteRead({ register: R.name, repository: room.repository, ref: "refs/heads/main", configuration: canonicalize(config) }))
+      .toEqual({ ok: false, reason: "unavailable" });
+    expect(host.minted.length).toBe(mints + 1);
+    switched.INSTALLED_REGISTER_SCOPES = canonicalize([R.name, current.name]);
+    expect((await get(`/site/${D.name}/HEAD/README.md`, {}, switched)).status).toBe(200);
+    expect(host.minted.length).toBe(mints + 1); // restore reuses the same bounded token
+    await cached.close();
+  } finally { siteTokenTestSettings.set(SCOPE_INDEX_NAME, siteEnv); }
+});
+
 test("a page: a markdown file at HEAD, at its branch and at a tag renders as HTML with relative links under /site, headings with GitHub's ids, and raw HTML escaped (STAND-IN host)", async () => {
   const at = `/site/${D.name}/HEAD/docs/guide.md`;
   const response = await get(at);

@@ -141,7 +141,7 @@ export class ScopeIndex extends DurableObject<Env> {
       ...(namespace === undefined ? {} : { ARTIFACTS_NAMESPACE: namespace }),
       ARTIFACTS: binding,
     });
-  }, () => Date.now(), () => this.#scheduleSiteTokens());
+  }, () => Date.now(), () => this.#scheduleSiteTokens(), () => ({ REGISTER_SCOPE: this.env.REGISTER_SCOPE, INSTALLED_REGISTER_SCOPES: this.env.INSTALLED_REGISTER_SCOPES }));
   #siteAlarm: Promise<void> | null = null;
   #siteAlarmRevision = 0;
   async #scheduleSiteTokens(): Promise<void> {
@@ -593,14 +593,14 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
   let workspaceLate: Parameters<NonNullable<Outside["late"]>>[0] | null = null;
   const workspace = (): Outside => {
     if (given.scope()?.at.kind !== "lane" || !given.definition?.()?.declared.capabilities?.some(capability => capability.name === "hold" && capability.version === 2)) return NO_OUTSIDE;
-    const outside = wiring("artifacts-workspace", [env.ARTIFACTS_CONFIG, env.ARTIFACTS_NAMESPACE, env.ARTIFACTS], () => artifactsWorkspaceOutside(given, sql, env, workspaceSources, fetch));
+    const outside = wiring("artifacts-workspace", [env.REGISTER_SCOPE, env.INSTALLED_REGISTER_SCOPES, env.ARTIFACTS_CONFIG, env.ARTIFACTS_NAMESPACE, env.ARTIFACTS], () => artifactsWorkspaceOutside(given, sql, env, workspaceSources, fetch));
     if (workspaceLate) outside.late?.(workspaceLate);
     return outside;
   };
   const pick = (): Outside => {
     const host = recordedHost(given);
-    if (host === "github.com" && env.GITHUB_APP_CONFIG) return wiring(host, [env.GITHUB_APP_CONFIG, env.GITHUB_APP_PRIVATE_KEY, env.GITHUB_CREATION_TOKEN, env.GITHUB_READ_TOKEN, env.GITHUB_CLEANUP_TOKENS, env.GITHUB_REPOSITORY_BINDINGS], () => gitHubOutside(given, sql, env, fetch, snapshotReader));
-    if (host === ARTIFACTS_HOST && env.ARTIFACTS_CONFIG) return wiring(host, [env.ARTIFACTS_CONFIG, env.ARTIFACTS_NAMESPACE, env.ARTIFACTS], () => artifactsOutside(given, sql, env, fetch, snapshotReader));
+    if (host === "github.com" && env.GITHUB_APP_CONFIG) return wiring(host, [env.REGISTER_SCOPE, env.INSTALLED_REGISTER_SCOPES, env.GITHUB_APP_CONFIG, env.GITHUB_APP_PRIVATE_KEY, env.GITHUB_CREATION_TOKEN, env.GITHUB_READ_TOKEN, env.GITHUB_CLEANUP_TOKENS, env.GITHUB_REPOSITORY_BINDINGS], () => gitHubOutside(given, sql, env, fetch, snapshotReader));
+    if (host === ARTIFACTS_HOST && env.ARTIFACTS_CONFIG) return wiring(host, [env.REGISTER_SCOPE, env.INSTALLED_REGISTER_SCOPES, env.ARTIFACTS_CONFIG, env.ARTIFACTS_NAMESPACE, env.ARTIFACTS], () => artifactsOutside(given, sql, env, fetch, snapshotReader));
     return NO_OUTSIDE;
   };
   const selected = (owner: Parameters<Outside["accepts"]>[0], kind: string): Outside => {

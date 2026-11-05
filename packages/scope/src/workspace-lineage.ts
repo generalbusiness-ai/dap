@@ -18,7 +18,8 @@ const factOf = (entry: Entry): FactRef => ({ at: entry.at, seq: entry.seq, hash:
 /** Each invocation makes at most six bounded immutable reads. The selected
  * repository outcome and its opening found act are distinct facts. No caller
  * repository, current summary, legacy source fallback, or host request enters. */
-export async function workspaceRepository(given: OutsideGiven, sources: WorkspaceSources, register: ScopeId, host: string, namespace: string): Promise<WorkspaceRepository | null> {
+export async function workspaceRepository(given: OutsideGiven, sources: WorkspaceSources, registers: ScopeId | readonly ScopeId[], host: string, namespace: string): Promise<WorkspaceRepository | null> {
+  const roots = typeof registers === "string" ? [registers] : registers;
   const deadline = performance.now() + MILLISECONDS;
   let calls = 0;
   const read = async <T>(work: (remaining: number) => Promise<T>): Promise<T | null> => {
@@ -52,8 +53,8 @@ export async function workspaceRepository(given: OutsideGiven, sources: Workspac
     if (!creation || !sentBy(creation, { from: input.source, n: input.n, to: input.seed, message: input.message })) return null;
     const dirInput = directory.entry.input;
     if (dirInput.type !== "genesis" || !isFactRef(dirInput.source) || dirInput.source.at.kind !== "register"
-      || dirInput.source.at.scope !== register || dirInput.n === null || !dirInput.message) return null;
-    const outcomeFact = dirInput.source;
+      || !roots.includes(dirInput.source.at.scope) || dirInput.n === null || !dirInput.message) return null;
+    const outcomeFact = dirInput.source, register = outcomeFact.at.scope;
     const created = await source(outcomeFact), installed = await birth(register, "register");
     if (!created || !installed || !same(installed.entry.at, outcomeFact.at)
       || DIRECTORY_OF[installed.named] !== directory.named || created.input.type !== "outcome"

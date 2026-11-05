@@ -7,14 +7,14 @@ import { OWN_AGENT_COHORT, REPOSITORY_BINDING_COHORT } from "@generalbusiness/da
  * record `{ host, namespace, name, id }` and the published branch, which
  * the register's `create` gave it. The entry is read through the object's
  * `siteRoom` method, which checks no reader and starts no outside work.
- * Only a directory that the register pinned in the host's
- * setting created is a room here, as only that register and its
- * destinations may use the host (`host-wiring.ts`, `hostBound`).
+ * Only a directory born under a configured or operator-listed register
+ * is a room here, matching native host authority (`hostBound`).
  *
  * The repository is read over smart HTTP, as the destinations read it: on
  * Cloudflare Artifacts with a privately shared expiring read token; on GitHub with the deployment's `GITHUB_READ_TOKEN`, or
  * with none when the setting says reads are public.
  */
+import { hostRegisterScopes } from "../installed-registers.ts";
 import { isRecord } from "@generalbusiness/dap-bytes";
 import type { Entry, ScopeId } from "@generalbusiness/dap-contract";
 import { canonicalize, isScopeId, isScopeRef, parseStrict, scopeIdOf } from "@generalbusiness/dap-bytes";
@@ -156,6 +156,7 @@ export async function roomOf(scopes: Binding, directory: string): Promise<Room |
  */
 export function readerOf(env: SiteEnv, room: Room, fetch?: (request: Request) => Promise<Response>, publishedRef = `refs/heads/${room.branch}`): (() => Promise<Opened>) | null {
   const { repository } = room;
+  const bound = (current: ScopeId) => hostRegisterScopes(current, env)?.includes(room.register) === true;
   const send = fetch ?? ((request: Request) => globalThis.fetch(request));
   // Each source records its last request and answer, for the log line of a failed read. No header and no query is kept.
   const transport = (remote: string, maxBytes: number, authorization?: string) => {
@@ -178,10 +179,11 @@ export function readerOf(env: SiteEnv, room: Room, fetch?: (request: Request) =>
     const ready = artifactsReadiness(env);
     if (ready.state !== "wired") return null;
     const { config } = ready, service = config.host;
-    if (config.namespace !== repository.namespace || config.registerScope !== room.register) return null;
+    if (config.namespace !== repository.namespace || !bound(config.registerScope)) return null;
     if (!REPOSITORY_NAME.test(repository.name) || repository.name.toLowerCase().endsWith(".git") || repository.id !== repository.name) return null;
     const remote = `https://${service}/git/${repository.namespace}/${repository.name}.git`;
     return async () => {
+      if (!bound(config.registerScope)) throw new SiteTokenUnavailable();
       // The fixed owner derives provider authority from its own current env.
       // This expected identity prevents a changed owner config being paired
       // with this request's older transport or native publication selection.
@@ -195,9 +197,10 @@ export function readerOf(env: SiteEnv, room: Room, fetch?: (request: Request) =>
         if (answer.reason === "provider") throw new StepError(answer.step, "Artifacts Site acquisition failed");
         throw new SiteTokenUnavailable();
       }
+      if (!bound(config.registerScope)) throw new SiteTokenUnavailable();
       let local: ReturnType<typeof transport> | null = transport(remote, config.maxBytes, `Bearer ${answer.plaintext}`);
       const secrets = [answer.plaintext];
-      const active = () => { if (!local) throw new Error("Site reader closed"); return local; };
+      const active = () => { if (!local) throw new Error("Site reader closed"); if (!bound(config.registerScope)) throw new SiteTokenUnavailable(); return local; };
       return {
         source: { ref: name => active().source.ref(name), refs: (prefix, limit) => active().source.refs(prefix, limit), object: (id, limit) => active().source.object(id, limit) },
         last: () => local?.last() ?? "", secrets,
@@ -209,15 +212,20 @@ export function readerOf(env: SiteEnv, room: Room, fetch?: (request: Request) =>
     const ready = gitHubReadiness(env);
     if (ready.state !== "wired") return null;
     const { config, read: token } = ready, login = config.account.login;
-    if (login !== repository.namespace || config.registerScope !== room.register) return null;
+    if (login !== repository.namespace || !bound(config.registerScope)) return null;
     if (!/^[A-Za-z0-9_.-]{1,100}$/.test(repository.name) || repository.name === "." || repository.name === ".." || repository.name.toLowerCase().endsWith(".git")) return null;
     const publicReads = config["publicReads"] === true;
     if (!publicReads && (typeof token !== "string" || !/^[A-Za-z0-9_.-]{1,4096}$/.test(token))) return null;
     const remote = `https://github.com/${repository.namespace}/${repository.name}.git`;
     const authorization = publicReads ? undefined : `Basic ${btoa(`x-access-token:${token!}`)}`;
     return async () => {
+      if (!bound(config.registerScope)) throw new SiteTokenUnavailable();
       await step("info", () => requireGitHubRepositoryIdentity((name, plaintext) => githubRepository({ account: config["account"] as unknown as GitHubAccount, fetch: send }, name, plaintext), repository, publicReads ? undefined : token!));
-      return { ...transport(remote, config.maxBytes, authorization), secrets: publicReads ? [] : [token!], close: async () => {} };
+      if (!bound(config.registerScope)) throw new SiteTokenUnavailable();
+      const local = transport(remote, config.maxBytes, authorization);
+      const active = () => { if (!bound(config.registerScope)) throw new SiteTokenUnavailable(); return local; };
+      return { source: { ref: name => active().source.ref(name), refs: (prefix, limit) => active().source.refs(prefix, limit), object: (id, limit) => active().source.object(id, limit) },
+        last: local.last, secrets: publicReads ? [] : [token!], close: async () => {} };
     };
   }
   return null;

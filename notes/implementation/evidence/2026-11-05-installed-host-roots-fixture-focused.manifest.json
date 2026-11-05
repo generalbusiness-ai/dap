@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "qualification": "Test-only repair after valid exact-clock reproduction and cause reportde36e7d7. Three retained-root Native cases and test compiler pass at subsecond fixture time. All original root/one-use assertions retained; production and seals unchanged. No full-gate or acceptance claim.",
+  "fileCount": 13,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-05-installed-host-roots-fixture-focused-evidence",
+      "fileCount": 13,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 960,
+          "sha256": "d1f72ae8fe0f21c25f50242a00e8c0a10bbbac8a69b4543ced71a59d9853e5d8"
+        },
+        {
+          "path": "cases.json",
+          "bytes": 1774,
+          "sha256": "25563b68cf1b991bd6e07cde45d73281a5c252b0da05d6567b93cd7daa152f3c"
+        },
+        {
+          "path": "commands.json",
+          "bytes": 1137,
+          "sha256": "6e533425580c80176f4d35f28a26f90fac0361f7d724bc4ca77301545edc613f"
+        },
+        {
+          "path": "compat.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "compat.log",
+          "bytes": 370,
+          "sha256": "b7c0bda7ca7d7fc3881b6384f86b249644bc1ecfc531213d95d79acf5c23a038"
+        },
+        {
+          "path": "native.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "native.log",
+          "bytes": 120,
+          "sha256": "5b79fef6b739ce71795c006b64333a027a792467a0c7310f43724c8bba68f479"
+        },
+        {
+          "path": "raw-retention.json",
+          "bytes": 369,
+          "sha256": "18057289ad4cf6c1ac922903d113cba461400c631669942a873b2e9fa1db4e8d"
+        },
+        {
+          "path": "result.json",
+          "bytes": 468,
+          "sha256": "371d5b5eaa2d23bdd919bb6849713971e55ba41fb8b9a9262df05c38140be5ac"
+        },
+        {
+          "path": "source-after.json",
+          "bytes": 767,
+          "sha256": "ce562a0bacef8564e333f59061f49e5845189890637d28f10a66028edd4200f5"
+        },
+        {
+          "path": "source-before.json",
+          "bytes": 1033,
+          "sha256": "601b4b2b45df8694d906b979bc2db3f83cf7c81bef5991181d3a19de641cc914"
+        },
+        {
+          "path": "typecheck.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "typecheck.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ]
+}

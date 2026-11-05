@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "qualification": "Final workspace/Site correction development evidence:46 cases across7 complete Native-project owners,14 security cases,2 workspace controls, exact before/after runtime/test identities and final source/test compilers. Earlier focused runs overlap; do not sum their case counts. No full gate or hosted acceptance claim.",
+  "fileCount": 15,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-05-installed-host-roots-workspace-focused-evidence",
+      "fileCount": 15,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1184,
+          "sha256": "1f51fec3acf12d53959287beab29afee7a22e6aeafd52bfa8cd292f916f277ab"
+        },
+        {
+          "path": "cases.json",
+          "bytes": 18388,
+          "sha256": "ffb950e59df91415bf74e685623119badd92cd64ae325e14cd97d3e4bf68f533"
+        },
+        {
+          "path": "controls.json",
+          "bytes": 1613,
+          "sha256": "72e3dfa79694007953cb764cc249b862a66c4b3ebe8961c1d91c3e2e9638ebdc"
+        },
+        {
+          "path": "final-reader-scan.txt",
+          "bytes": 6837,
+          "sha256": "30139b7a90dd689ae1dee21bbd8f78a9e224c162b6f8365f088e0610f311c578"
+        },
+        {
+          "path": "final-source-typecheck.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "final-tests-typecheck.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "final-typechecks.json",
+          "bytes": 614,
+          "sha256": "d1196241d15f118df6ecccba273a36813a09f2118456b56f14e184bf1057c11f"
+        },
+        {
+          "path": "native-result.json",
+          "bytes": 813,
+          "sha256": "4a7d0807ce6cafd9dec29806bf052f910ba23e4e2e9c90a151427a093cfcd701"
+        },
+        {
+          "path": "native.log",
+          "bytes": 122,
+          "sha256": "48f0a84576ff78be4d58c0cf53840b9d7245fef40a43bced40b3342e2a348ce5"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 509,
+          "sha256": "70b6b0807f821eacbea5e91248944ee3864fd8a900e76fe39dc6cc012a147ad0"
+        },
+        {
+          "path": "result.json",
+          "bytes": 719,
+          "sha256": "097ef4dc13988d4125782835fbf5b4c80f596ee02dd055e6292505a3453bb931"
+        },
+        {
+          "path": "sealing-driver.py",
+          "bytes": 4167,
+          "sha256": "0e1d92e31a6aa48a0e87479124b3867a9478ab43086087a9b4d4961060c41c2c"
+        },
+        {
+          "path": "security-result.json",
+          "bytes": 324,
+          "sha256": "5e879c86f9626cd99dca6800848b707461af08cf3cc6c1974ce28a5c2e49f3e2"
+        },
+        {
+          "path": "security.log",
+          "bytes": 1737,
+          "sha256": "c34b826138164de3e07f108b6af3f579da7552e660824f19505a760f52ca598b"
+        },
+        {
+          "path": "source-identity.json",
+          "bytes": 2146,
+          "sha256": "e123fadc12db9e3957b5f1a3acf65e837de53a3b730c9aaaf45e5d5d8177cc57"
+        }
+      ]
+    }
+  ]
+}

@@ -27,12 +27,12 @@ export class WorkspaceHost implements Outside {
   readonly #sql: Pick<Sql, "exec">;
   readonly #provider: ArtifactsProvider;
   readonly #sources: WorkspaceSources;
-  readonly #register: ScopeId;
+  readonly #registers: ScopeId | readonly ScopeId[];
   readonly #namespace: string;
   readonly #tokens: TokenDriver;
   readonly #minting = new Map<number, { repository: DestinationRepository; actor: string; mint: string }>();
-  constructor(given: OutsideGiven, sql: Pick<Sql, "exec">, provider: ArtifactsProvider, sources: WorkspaceSources, register: ScopeId, namespace: string) {
-    this.#given = given; this.#sql = sql; this.#provider = provider; this.#sources = sources; this.#register = register; this.#namespace = namespace;
+  constructor(given: OutsideGiven, sql: Pick<Sql, "exec">, provider: ArtifactsProvider, sources: WorkspaceSources, registers: ScopeId | readonly ScopeId[], namespace: string) {
+    this.#given = given; this.#sql = sql; this.#provider = provider; this.#sources = sources; this.#registers = registers; this.#namespace = namespace;
     sql.exec(SCHEMA).toArray();
     this.#tokens = new TokenDriver({ host: { mint: ask => this.#mint(ask), revoke: ask => this.#revoke(ask) }, custody: { take: token => this.#take(token) } });
   }
@@ -83,7 +83,7 @@ export class WorkspaceHost implements Outside {
     return fork?.state === "selected" && typeof name === "string" && id === name && /^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/.test(name)
       ? { ...base, name, id } : null;
   }
-  #lineage(): Promise<WorkspaceRepository | null> { return workspaceRepository(this.#given, this.#sources, this.#register, "artifacts", this.#namespace); }
+  #lineage(): Promise<WorkspaceRepository | null> { return workspaceRepository(this.#given, this.#sources, this.#registers, "artifacts", this.#namespace); }
   #token(number: number): Held | null {
     const row = this.#sql.exec("SELECT id,ends,repository,plaintext,actor,mint FROM private_workspace_token WHERE scope=? AND token=?", this.#scope(), number).toArray()[0];
     if (!row || typeof row["id"] !== "string" || typeof row["ends"] !== "string" || typeof row["repository"] !== "string" || typeof row["plaintext"] !== "string" || typeof row["actor"] !== "string" || typeof row["mint"] !== "string") return null;

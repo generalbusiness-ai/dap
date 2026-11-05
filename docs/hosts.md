@@ -83,6 +83,14 @@ What it needs:
   `REGISTER_SCOPE` is absent, the Worker reads the pin from
   `registerScope`, as older deployments do.
 
+With `INSTALLED_REGISTER_SCOPES`, both Native Git host adapters also serve
+the validated historical roots. The list must include the configured current
+register; an explicit `REGISTER_SCOPE` must agree with it. Invalid lists
+close authority. Exact host, namespace, pinned owner, retained destination
+birth and GitHub repository binding checks still apply. Without a list,
+each adapter keeps its existing single-root behavior. See
+[Keep existing rooms able to create children](deploy.md#keep-existing-rooms-able-to-create-children).
+
 What it does:
 
 - **Creation.** One create for the room's own repository name, which is
@@ -171,7 +179,7 @@ and wait.
 | `installationId` | The number of the App's installation on the account. |
 | `account` | `{ "id", "login", "type" }` of that installation's account. `type` is `User` or `Organization`. `login` is where repositories are made. |
 | `maxBytes` | The most bytes of Git objects that one push sends or one read takes. At least 32. |
-| `registerScope` | The register's scope ID. It must equal `REGISTER_SCOPE`. Only that register's creations are sent. |
+| `registerScope` | The register's scope ID. It must equal `REGISTER_SCOPE`. Without an installed list, only that register's creations are sent. |
 | `privateRepositories` | Whether new repositories are private. |
 | `publicReads` | Whether the Worker reads repositories with no token. Must be false when `privateRepositories` is true. |
 | `installationReads` | Optional, exactly `true`: private later-bound reads mint one-repository Contents-read installation tokens. Requires `privateRepositories: true`, `publicReads: false`, and no `GITHUB_READ_TOKEN`. |

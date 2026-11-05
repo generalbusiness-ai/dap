@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "qualification": "Site review correction development evidence:30 Native-project cases,14 security cases,2 distinguishing restored controls and reader audit. Source hashes captured after focused runs. No full gate, hosted acceptance or scope ruling claim.",
+  "fileCount": 14,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-05-installed-host-roots-site-focused-evidence",
+      "fileCount": 14,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1086,
+          "sha256": "b4f7c0a01049057bff0b9af42ccf0792229a1039c61a3695543691021e6d2585"
+        },
+        {
+          "path": "candidate-reader-scan.txt",
+          "bytes": 7372,
+          "sha256": "4271f95e31bc487983156d067708032b78a498bc6d1004cc90b6026df5cef38d"
+        },
+        {
+          "path": "cases.json",
+          "bytes": 12443,
+          "sha256": "98f172482b33588a33177c1074a3a11875721909728095d879c9fbad33783fc0"
+        },
+        {
+          "path": "controls.json",
+          "bytes": 1535,
+          "sha256": "d7cccfadcc5d0a83124551800d232210782be7f84040da641f24687f2cf213f9"
+        },
+        {
+          "path": "main-reader-scan.txt",
+          "bytes": 5983,
+          "sha256": "4287f6e79870618bbb79d553f2cbfbb0f33be50ece9ebac6ec0de9071ea7e102"
+        },
+        {
+          "path": "native.log",
+          "bytes": 86,
+          "sha256": "56461e50cc43d0044651e8b47bc2cb01b52d23cfd9528d812892d11083aca240"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 235,
+          "sha256": "e054a0c8c6740a8e48eb0d5ff09e58c0c4cee0a3231a9e06f3265aa4776c73b0"
+        },
+        {
+          "path": "reader-audit.json",
+          "bytes": 1495,
+          "sha256": "6cdc55b22827bff0035118cfb378551f6bfa7611cb60bfc016ea72d99b218e9d"
+        },
+        {
+          "path": "result.json",
+          "bytes": 526,
+          "sha256": "4d6661b951a1abacc58cee5f377ba6f962582b495a120807229e46ee842322b3"
+        },
+        {
+          "path": "sealing-driver.py",
+          "bytes": 5658,
+          "sha256": "6a9fe3f15c45e29a854cc9cc9f045fd9bb51ace7ed3b7f85edfb4b3147d015f9"
+        },
+        {
+          "path": "security.log",
+          "bytes": 1741,
+          "sha256": "6b81b325c8b446ede1bed0d2d4d4bc769d9716bba2baf85219d74898897815b9"
+        },
+        {
+          "path": "source-identity.json",
+          "bytes": 1269,
+          "sha256": "8873f08a9b380d7aa8ec89ae05ebbae887934eba918ecfd0196e1156615ad43e"
+        },
+        {
+          "path": "source-typecheck.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "test-typecheck.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ]
+}

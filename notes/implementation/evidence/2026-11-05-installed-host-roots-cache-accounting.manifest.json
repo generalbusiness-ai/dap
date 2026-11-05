@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "qualification": "One selected Native scratch cache trace and compiler against exact frozen runtime. Source argument establishes synchronous root-list cache replacement for this stable transition. Original Gate3 adapter/session cause remains unknown; rulingf115 alternative awaits planner assessment. No full-gate, deployment or acceptance claim.",
+  "fileCount": 11,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-05-installed-host-roots-cache-accounting",
+      "fileCount": 11,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 841,
+          "sha256": "43b457bf42dd7038396ed344517630e68f7ee3a2f39f5f73997748ef3ea0df43"
+        },
+        {
+          "path": "cache-accounting.md",
+          "bytes": 2351,
+          "sha256": "db8540234b566b48ee5cc702ca4d3df38a2323e6f5c9405acd67d89d28cd4b72"
+        },
+        {
+          "path": "identity.json",
+          "bytes": 23023,
+          "sha256": "7d5d77b957d814ba4aa3c9b138211b12b1515f13ec321e99389477c08343a921"
+        },
+        {
+          "path": "native-final.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "native-final.log",
+          "bytes": 6309,
+          "sha256": "8da72ecdabe1188986e882724f1fdddcbea58b0537b108131579742168a1ac95"
+        },
+        {
+          "path": "probe-record.json",
+          "bytes": 871,
+          "sha256": "97e6cff9af21f42b37a60b289871059186ae6c78aaced11a5ca1b225dc163abb"
+        },
+        {
+          "path": "probe-source-fixed.ts",
+          "bytes": 14166,
+          "sha256": "0db59781e3f4c6d1d6ba6fd72e04f847e58064b49f1ab7d10477996667e33981"
+        },
+        {
+          "path": "raw-retention.json",
+          "bytes": 415,
+          "sha256": "afae4c9451da8929f275d95e614ba538cb263c95319e9eff0c9490ece7f22fce"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2370,
+          "sha256": "019710d7bab97a498f38063a9cbbf5c1f646c87eb4b2cf12e57f3c9899573af8"
+        },
+        {
+          "path": "typecheck-final.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "typecheck-final.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ]
+}
