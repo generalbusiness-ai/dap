@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a90bec0dadf796045204cfde56a656861cf747e8","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-05-installed-host-roots-focused.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:aab586d2d543d5af6a912976299cd8d436040c23","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/artifacts-wiring.ts."}
