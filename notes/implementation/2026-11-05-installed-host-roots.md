@@ -3,8 +3,8 @@
 Status: adapter, Site and workspace corrections have focused evidence.
 The repeated GitHub 403 came from a scripted fractional expiry, reproduced
 and reported in `de36e7d7`. The fixture repair passes its three-case Native
-owner and test compiler. The corrected final gate and new independent
-review remain pending. Reviews and failed runs below keep their exact
+owner and test compiler. The corrected final gate passed; new independent exact-head review
+remains pending. Reviews and failed runs below keep their exact
 original heads and limits.
 
 Switching a Worker's current register previously stranded old rooms' Git
@@ -199,8 +199,7 @@ configured root loses the proven old repository, and omitting the list
 from the workspace cache key lets removed-root work reach the provider.
 Both fail at their intended assertions. Their exact source bytes are
 restored. The preceding Site and adapter controls remain separate retained
-records. The combined gate below failed. The final correction has no
-passing full gate yet.
+records. The combined gate below failed. The final gate at the end covers this complete correction.
 
 ## Workroom
 
@@ -290,7 +289,7 @@ later disappeared. The restored cache policy was true, with fresh
 construction, while the read failed for lack of a credential. This is a
 fixture defect; production correctly keeps the failed mint unknown.
 Gate 3 lacked this boundary capture, so its original clock/handle is not
-independently attested. Both full gates remain failed.
+independently attested. Both earlier full gates remain failed.
 
 Cause report `de36e7d7` preceded every candidate edit. The repair emits the
 scripted GitHub expiry at whole-second precision, makes the existing
@@ -298,7 +297,7 @@ witness exercise subsecond Native time, and requires a confirmed mint
 with a string handle before credential reads. All existing listed-root,
 unlisted-root, cache, session and one-use assertions remain. No production
 source or source-seal value changed for this repair. All three Native
-cases and the test compiler pass; a new complete gate is still required.
+cases and the test compiler pass; the final gate below covers this repair.
 
 The additional retained manifests are:
 
@@ -312,3 +311,34 @@ The additional retained manifests are:
   SHA256 `2dbb8687306a3f30f4f19dd0025fa56d7de076a980741943b74ed1b58ad6bb4f`.
 - [Passing fixture repair](evidence/2026-11-05-installed-host-roots-fixture-focused.manifest.json): 13 files;
   SHA256 `a501a7846c62c835b9acd7ad3102ca1043b3d68f30e2dbc2fecf127cded7f61e`.
+
+
+## Final corrected gate
+
+The complete adapter, Site and workspace candidate at
+`db7634eeb46bd4f5d96f79eaaa26e0a3de701fb3`, tree `a0a4e7367d2aaebaaf36a3d5c4f988fe84f5ac4f`,
+passed its final gate. I read its actual `gate.exit`: `exit 0`.
+It records 135 Node passes, 56 Counting passes,
+3943 Plain passes with 1 skip, and
+1111 Native passes with 2 skips. All phases are complete;
+there are no unhandled errors or contradictions. All eight added adapter,
+Site and workspace cases pass. Source identity stayed unchanged, and the
+owned process group closed.
+
+The [continuity gate manifest](evidence/2026-11-05-installed-host-roots-continuity-gate.manifest.json)
+has 13 files and SHA256 `fc1ae77d8d150195da0085e7b4b71ffb34f2697ce809f65dc7020e6ed6bbfdca`.
+Only this implementation note and that continuity manifest follow the
+frozen gate; no runtime or test file changes follow it.
+
+Planner `aa761ded` accepts the fixture cause and keeps production cache,
+session and custody behavior unchanged.
+
+The earlier inventory and two combined gates remain failed. The invalid
+cross-object diagnostic stays invalid. The valid exact-clock reproduction
+and immutable source trace establish the scripted-expiry cause separately
+from this pass. Gate3's original boundary was not captured. Later archive
+passes do not establish the historical archive-stop cause; source
+`64552d40` stays open. Parent `8a8902f3` also stays open. No deployment,
+live root, provider token, real Git clone or hosted acceptance follows
+from these source checks. Renewed independent exact-head review gates
+landing. The planner deploys only the subsequently reviewed register packet.
