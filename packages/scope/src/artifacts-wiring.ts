@@ -144,13 +144,14 @@ export function artifactsOutside(given: OutsideGiven, sql: Pick<Sql, "exec">, en
 export function artifactsWorkspaceOutside(given: OutsideGiven, sql: Pick<Sql, "exec">, env: ArtifactsBindings, sources: WorkspaceSources | undefined, fetch?: (request: Request) => Promise<Response>): Outside {
   try {
     const ready = artifactsReadiness(env);
-    if (!sources || ready.state !== "wired" || given.scope()?.at.kind !== "lane"
+    const roots = ready.state === "wired" ? hostRegisterScopes(ready.config.registerScope, env) : null;
+    if (!sources || ready.state !== "wired" || !roots || given.scope()?.at.kind !== "lane"
       || !given.definition?.()?.declared.capabilities?.some(capability => capability.name === "hold" && capability.version === 2)) return NO_OUTSIDE;
     const provider = new ArtifactsProvider({ binding: ready.binding, host: ARTIFACTS_HOST, namespace: ready.config.namespace,
       service: ready.config.host, maxBytes: ready.config.maxBytes, ...(fetch ? { fetch } : {}),
       credentialHandle: async () => { throw Error("native-destination-mint-required"); },
       creation: creationCustody(sql, () => given.scope() ? canonicalize(given.scope()!.at) : null),
     });
-    return new WorkspaceHost(given, sql, provider, sources, ready.config.registerScope, ready.config.namespace);
+    return new WorkspaceHost(given, sql, provider, sources, roots, ready.config.namespace);
   } catch { return NO_OUTSIDE; }
 }

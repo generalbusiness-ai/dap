@@ -7,6 +7,7 @@ import { canonicalize, digestBytes, entryHash, factRefOf, intentDigest, platform
 import type { RecordState } from "@generalbusiness/dap-derive";
 import { grantOf, keys, variant } from "@generalbusiness/dap-derive/testing";
 import { outsideOf } from "../src/worker.ts";
+import type { ArtifactsBindings } from "../src/artifacts-wiring.ts";
 import type { ArtifactsNamespace } from "../src/artifacts-host.ts";
 import type { OutsideGiven } from "../src/given.ts";
 import { CAPABILITY_CODE, ScopeObject, type EffectRequest, type Wiring } from "../src/index.ts";
@@ -74,7 +75,7 @@ function ancestors(definition: ReturnType<typeof variant>) {
   return { register, laneSeed, opening, laneMessage, sources, confirmation, readMetadata: () => ({ count: reads, last: trace.slice(-16) }) };
 }
 
-async function fixture(mode: Mode) {
+async function fixture(mode: Mode, retainedRoot = false) {
   const definition = variant(staged.declared, draft => {
     draft.capabilities.find((cap: { name: string }) => cap.name === "hold").version = 2;
     // This witness creates no link child or unrelated child declaration.
@@ -135,6 +136,13 @@ async function fixture(mode: Mode) {
     async create() { return expect.fail("a workspace fork must not call namespace create"); },
     async delete(name) { calls.deletes.push(name); return true; },
   };
+  const current = retainedRoot ? scopeIdOf({ v: 1, kind: "register", definition: "platform:register@17", creator: null,
+    cause: digestBytes(utf8("TEST switched workspace selector " + lineage.register.scope)), ordinal: 0 }) : lineage.register.scope;
+  const hostSettings: ArtifactsBindings = {
+    ARTIFACTS_CONFIG: JSON.stringify({ registerScope: current, namespace: NAMESPACE, host: SERVICE, maxBytes: 1024 * 1024, credentialIdentity: "adapter-attempt" }),
+    ARTIFACTS_NAMESPACE: NAMESPACE, ARTIFACTS: binding,
+    ...(retainedRoot ? { REGISTER_SCOPE: current, INSTALLED_REGISTER_SCOPES: canonicalize([lineage.register.scope, current]) } : {}),
+  };
   // The maintained operations fixture uses a test-local ScopeObject over its
   // actual native context. Its production readonly OutsideGiven sees the live
   // SqliteStore. Test authority is explicit; deployed authority and application
@@ -147,10 +155,7 @@ async function fixture(mode: Mode) {
           definitions: { ...defaults.definitions, read: async (digest, holder) => digest === definition.digest ? { ok: true, bytes: canonicalize(definition.declared) } : defaults.definitions.read(digest, holder) } },
         outside: actual => {
           given = actual;
-          const outside = outsideOf(actual, this.ctx.storage.sql, {
-            ARTIFACTS_CONFIG: JSON.stringify({ registerScope: lineage.register.scope, namespace: NAMESPACE, host: SERVICE, maxBytes: 1024 * 1024, credentialIdentity: "adapter-attempt" }),
-            ARTIFACTS_NAMESPACE: NAMESPACE, ARTIFACTS: binding,
-          }, async request => {
+          const outside = outsideOf(actual, this.ctx.storage.sql, hostSettings, async request => {
             gitReads++;
             expect(request.method).toBe("GET");
             expect(request.url.endsWith("/info/refs?service=git-upload-pack")).toBe(true);
@@ -363,5 +368,20 @@ test("native late unselected fork confirmation owes both deletion and setup revo
     expect(setup.values["revocation"]).toBe(`${outcome.seq}:1`);
     expect(await f.life.wait(() => f.surface.operation(reader, `${outcome.seq}:0`))).toMatchObject({ ok: true, value: { operation: { kind: "deletion" } } });
     expect(await f.life.wait(() => f.surface.operation(reader, `${outcome.seq}:1`))).toMatchObject({ ok: true, value: { operation: { kind: "revoke" } } });
+  } finally { await f.close(); }
+}, 20_000);
+
+// Native lane, held workspace operations and custody; ancestors use their real
+// judges in memory. Current selector, transport and provider remain stand-ins.
+test("a retained old-root Native workspace forks and retires its setup credential after the current selector switches", async () => {
+  const f = await fixture("created", true);
+  try {
+    const held = await f.until(f.snapshot, value => value.tokens.some(token => token.state === "revoking"));
+    expect(f.calls.forks).toHaveLength(1);
+    expect(held.rows).toEqual([{ handle: tokenOf(held.tokens).values["id"], name: f.calls.forks[0], plaintext: `SETUP-${f.calls.forks[0]}` }]);
+    f.releaseRevoke();
+    const ended = await f.until(f.snapshot, value => tokenOf(value.tokens).state === "ended");
+    expect(ended.rows[0]?.["plaintext"]).toBeNull();
+    expect(f.calls.revokes).toEqual([f.calls.forks[0]]);
   } finally { await f.close(); }
 }, 20_000);

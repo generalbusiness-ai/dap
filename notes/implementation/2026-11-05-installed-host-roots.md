@@ -1,9 +1,10 @@
 # Keep host authority for installed registers
 
-Status: Site review correction prepared, with passing focused checks.
-Review `1a71cdd7` requested this correction at `b0d3c165`; planner ruling
-`0e593489` requires old-room Sites to keep working. The revised full gate
-and independent review remain pending.
+Status: adapter, Site and workspace continuity corrections have passing
+focused evidence. Review `1a71cdd7` requested the Site correction at
+`b0d3c165`. Rulings `0e593489` and `56a48952` require old-room Sites and
+workspace provider work to keep working. The final frozen gate and new
+independent review remain pending.
 
 Switching a Worker's current register previously stranded old rooms' Git
 credentials even when `INSTALLED_REGISTER_SCOPES` retained their root.
@@ -22,10 +23,11 @@ its historical single-root behavior, including configurations without
 register. The Worker includes both register settings in each native host
 adapter's cache key, so list changes take effect on the next call.
 
-The separate workspace capability path keeps its configured register.
+The workspace capability path now follows the same validated root list
+while retaining its own Native lineage proof.
 This change touches no Native definition, grant, wire format, dependency,
 Worker configuration, or derive source. The source-seal inventory updates
-seven existing values and adds the two small shared authority owners; all
+nine existing values and adds the two small shared authority owners; all
 route and gate assertions stay in place.
 
 ## Evidence and limits
@@ -125,7 +127,8 @@ register and `hostBound` consumers and workspace lineage. The manifest
 records the command, candidate working directory, source hashes and output.
 An initial scan ran on main `8b063123`; it remains only a qualified baseline.
 The corrected scan ran on the Site candidate after controls restored.
-Every remaining selector has a named boundary:
+The Site-stage scan found these consumers. The final scan in the workspace
+manifest records the corrected code and the one deferred bridge:
 
 - `archive-host-item.ts` compares the directory creator and retained claim
   against one configured root and calls `hostBound` with that root.
@@ -137,9 +140,9 @@ Every remaining selector has a named boundary:
   `workspaceRepository` in `workspace-lineage.ts` compares the directory's
   source register to that root. This is the separate `hold@2` capability
   path. A lane with that capability and workspace sources can reach it;
-  the scan establishes no absence of such lanes in old demo rooms. The
-  adapter and Site changes do not change it. The builder has asked the
-  planner whether route A must include it before this source lands.
+  the scan establishes no absence of such lanes in old demo rooms.
+  Ruling `56a48952` requires this path too. The workspace correction below
+  now selects the actual listed root before its existing proof.
 - `demo-creation.ts` compares the public offer to the configured current
   register. It intentionally selects the current offer; historical roots
   do not become default offers.
@@ -148,9 +151,54 @@ Every remaining selector has a named boundary:
 - The two native adapters and `host-wiring.ts` use membership in validated
   roots. The corrected Site reader and token owner now use that helper too.
 
-No new full-gate or acceptance claim follows from these focused checks.
-Resolve the workspace scope, freeze the complete correction, run its gate,
-and request a new exact-head review before landing.
+No new full-gate or acceptance claim follows from the Site focused checks.
+Ruling `56a48952` resolves the workspace scope and explicitly defers the Grow
+archive bridge. The deploy guide and the retained packet both state that
+a Grow register switch needs that bridge fixed first. The demo packet
+switches only demo. Freeze the complete correction, run its gate and obtain
+a new exact-head review before landing.
+
+## Workspace continuity
+
+Ruling `56a48952cd65920861b07f870a43a545bc34d06e` answers scope request
+`bf5b77bf`. `artifactsWorkspaceOutside` now validates the same installed
+list before constructing its host. `WorkspaceHost` passes those roots to
+`workspaceRepository`, which selects the actual register from the checked
+directory source before reading that register's Native birth. It keeps all
+six immutable reads within the existing five-second bound. Cohort pins,
+selected outcome, found claim, directory/destination sends, repository and
+namespace checks remain. No root-by-root network search or caller-selected
+repository enters the proof. Singleton callers keep their existing route.
+
+The workspace cache key now includes both register settings. Removing a
+root replaces the cached host, so new provider work cannot retain the old
+list. Native hold, lease, credential, setup-revocation and unknown-reply
+semantics remain unchanged.
+
+The [workspace focused manifest](evidence/2026-11-05-installed-host-roots-workspace-focused.manifest.json)
+records the latest complete focused run: 46 passing cases across seven
+owners, 14 security cases, final source/test compilers and exact runtime/test
+hashes captured before the commands and checked afterwards. Its SHA256 is
+`0ef78dbd8f1c8543ef855cd6e96c99e6ea813912c258e025a92049a8f368c095`.
+This run includes the Site and adapter owners; earlier focused case counts
+overlap and must not be added to it.
+
+The workspace factory witness proves six reads to the old register's own
+birth, refuses an unlisted old root without a provider call, restores work
+when listed again and closes invalid lists. It exercises the production
+factory and cache. Ancestor entries pass their actual Native judges; lane
+state, operation and provider replies remain labelled stand-ins. The Native
+workspace witness forks and retires its setup credential with a different
+current selector and the old root retained. Its lane, operations and custody
+are Native; ancestors use their real judges in memory, and current selector,
+transport, clock and provider remain TEST boundaries.
+
+Two controls distinguish the workspace change: selecting only the first
+configured root loses the proven old repository, and omitting the list
+from the workspace cache key lets removed-root work reach the provider.
+Both fail at their intended assertions. Their exact source bytes are
+restored. The preceding Site and adapter controls remain separate retained
+records. The final full gate has not run yet.
 
 ## Workroom
 

@@ -476,6 +476,13 @@ Name that configuration commit in the deployment receipt. The operator
 alone changes the list. A request, readable scope, or index row cannot add
 a root. Existing single-register configurations need no new setting.
 
+A `dap-grow` register switch also needs its archive bridge fixed first.
+The installed list does not update the single-root checks in
+[`archive-host-item.ts`](../packages/scope/src/archive-host-item.ts), supplied
+through [`apps/room/archive.ts`](../apps/room/archive.ts). Fix and review
+that bridge before switching Grow. The demo register packet switches only
+`dap-demo`.
+
 For a self-hosted Worker, record the array in its operator configuration
 and name that record in the deployment receipt. Install the new register
 with its retained signed plan after the configuration change. Existing
