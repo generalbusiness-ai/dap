@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "qualification": "Focused documentation-inventory repair after failed gate. Three settings-owner cases pass; earlier failed attempts remain qualified. No full gate claim.",
+  "fileCount": 8,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-05-installed-host-roots-settings-repair",
+      "fileCount": 8,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 658,
+          "sha256": "9f3afe6422b86a0a7a451668161d85a526f8de86deb3d1f028d1aa2a0550cba5"
+        },
+        {
+          "path": "artroom-host-roots-settings-docs-20261105.log",
+          "bytes": 999,
+          "sha256": "7c7f79b97afe34db8c0a7af093666d9ad94679639131743e350b0ad220b409a3"
+        },
+        {
+          "path": "artroom-host-roots-settings-owner-2-20261105.log",
+          "bytes": 419,
+          "sha256": "59135e901c0a7ae5318a43a1cde50022be5fb1faa604c9a9e0fd4a2134aa7180"
+        },
+        {
+          "path": "artroom-host-roots-settings-owner-20261105.log",
+          "bytes": 2410,
+          "sha256": "030992dae5292f4d5a9a4e198cb1d4edae74fa8150956bc94a9ad4abd3930196"
+        },
+        {
+          "path": "doc-links.log",
+          "bytes": 36,
+          "sha256": "3e327eddbdb20dc226fcf3288835a1ae420de9ab40ca5ca52d00e547675df722"
+        },
+        {
+          "path": "result.json",
+          "bytes": 1026,
+          "sha256": "8eb6d807a51d599b577aefd9610a01663ba089761fe812e673d1a833f850d8da"
+        },
+        {
+          "path": "sealing-driver.py",
+          "bytes": 2512,
+          "sha256": "d5127e1c4b7fb04b524366a62023ef28ba92bf2313cee2751a152877f94a22d7"
+        },
+        {
+          "path": "test.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        }
+      ]
+    }
+  ]
+}

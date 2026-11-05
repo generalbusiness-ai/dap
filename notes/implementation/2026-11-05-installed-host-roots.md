@@ -46,7 +46,21 @@ read after root removal. Both controls fail at their intended assertions,
 and their exact source bytes are restored. The manifest retains initial
 compiler, synthetic-ID and documentation-link failures with their limits.
 
-The full gate has not run yet. No builder deployment, live root switch,
+The first full gate at `25000b56` failed with two Node settings-inventory
+failures: the new helper and Worker cache read the register settings, but
+the documentation had not named those readers. Its actual `gate.exit` is
+`exit 1`; Counting, Plain and Native never ran. The
+[failed-gate manifest](evidence/2026-11-05-installed-host-roots-failed-gate.manifest.json)
+retains that result. The settings inventory and host/self-host references
+now describe the new readers and retained-root authority. Runtime and test
+bytes remain identical to `25000b56`. The three settings-owner cases and
+local links pass after the repair; the
+[settings manifest](evidence/2026-11-05-installed-host-roots-settings.manifest.json)
+retains those checks and the initial repair attempts. Its SHA256 is
+`68039058d7463c8f146ec54cb4cc7a88d75d5b348b3834c3692e90c0271cfdd6`.
+A corrected gate is pending.
+
+No builder deployment, live root switch,
 room creation, provider token or real Git clone ran. The register packet
 remains unlanded and needs revision and review after this source lands.
 The planner then checks old-room child creation and Git access before a
