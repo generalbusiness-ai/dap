@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:db63923b8f87cb655ffb6105e6a8c32ed1d65bb7","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-foreign.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:db7b44c07273a9db95b2ce67586103184b2f76dd","text":"Merge retired a covered predecessor; the successor is at docs/mcp.md."}
