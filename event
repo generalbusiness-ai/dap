@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c61c5fb398aa4a353dc4f4eee2a9c4c8fbd4bd20","text":"Merge retired a covered predecessor; the successor is at docs/cli.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c6cbb9ec65fac323fe3a122db3a4f972f34d2b45","text":"Merge retired a covered predecessor; the successor is at packages/client/src/checker-key-invitation.ts."}
