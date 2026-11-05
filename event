@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b03e176238a1e3f748f57e2ff869079b6a8f601d","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-05-failed-claim-cohort-final-native-failure.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b2ad9f6b25e6f2f156a00345740b7c3a6766f0f8","text":"Merge retired a covered predecessor; the successor is at apps/room/page/test/failed-claim-words.scope.test.ts."}
