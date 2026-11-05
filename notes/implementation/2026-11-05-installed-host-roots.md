@@ -58,7 +58,23 @@ local links pass after the repair; the
 [settings manifest](evidence/2026-11-05-installed-host-roots-settings.manifest.json)
 retains those checks and the initial repair attempts. Its SHA256 is
 `68039058d7463c8f146ec54cb4cc7a88d75d5b348b3834c3692e90c0271cfdd6`.
-A corrected gate is pending.
+The corrected gate at `ec607a83dbc712d28add245148c31938abfcf94c`, tree
+`0c5e4f99158d71ea610d9a658fc5c57cabe546d3`, passed. I read its actual `gate.exit`: `exit 0`.
+The terminal records contain 135 Node passes,
+56 Counting passes, 3943 Plain passes
+with 1 skip, and 1106 Native passes
+with 2 skips. All phases are complete, with no
+unhandled errors or contradictory records. All three new host-root cases
+pass in the full Native stage. The source identity is unchanged and the
+owned process group closed.
+
+The [gate manifest](evidence/2026-11-05-installed-host-roots-gate.manifest.json)
+retains the terminal analysis, checkout identity and complete raw originals.
+Its SHA256 is `78b0f9ea55db59def75be27220c74023fd093a740cf97aa6397edc7256bceffc`. Only this implementation
+note and the gate manifest change after that frozen gate. The first gate
+remains failed; this later pass explains no historical Native or archive
+failure. The archive scale owner passed independently, and source
+`64552d40` remains open.
 
 No builder deployment, live root switch,
 room creation, provider token or real Git clone ran. The register packet
