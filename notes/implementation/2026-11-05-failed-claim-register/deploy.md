@@ -1,5 +1,11 @@
 # Deploy the failed-claim register on dap-demo
 
+Status: changes requested in `bf2e724f0f39cdfb799abf924a1a3eb189b335eb`.
+Do not run this retained procedure or deploy its templates yet. The current
+host adapters bind Git authority to one root; retaining child-admission roots
+does not preserve old-room Git hosting. Planner ruling `3b239919` chooses a
+separate multi-root host-binding source child before this packet can continue.
+
 The planner runs this procedure after request
 `c448c870cf6a2f93a30c285a1a4d4a6c9f4bd8ad` passes review and lands.
 The builder creates no live register or room and deploys nothing in this packet.
@@ -132,6 +138,21 @@ chosen old room's ordinary child birth under the retained old root, using its
 existing member authority. Verify the child's checked birth and creator. Stop
 on a failed continuity check. A health response or parser pass closes none of
 these Native obligations.
+
+Before the scratch room, require a real Git clone from an existing TEST room
+under the old Register 17 root. Set `FAILED_CLAIM_OLD_ROOM_HOME` to that room's
+existing member home, excluding G3, J4, and O4 custody. Keep the ordinary CLI's
+token handling; capture no old-room credential bytes:
+
+```sh
+DAP_HOME="$FAILED_CLAIM_OLD_ROOM_HOME" \
+  node "$FAILED_CLAIM_SOURCE/packages/cli/bin/dap.js" clone \
+  "$FAILED_CLAIM_ROLLOUT_ROOT/old-room-clone"
+```
+
+Require the actual clone exit 0 and retain its accepted read-token result.
+This tests host authority after the root switch. Status reads and a child birth
+cannot replace it. Stop before the new scratch room if the old-room clone fails.
 
 ## Run the real scratch-room and token scenes
 

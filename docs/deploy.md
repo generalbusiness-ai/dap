@@ -290,7 +290,7 @@ A register holds at most 64 live claims. Register 26 closes a claim as final `fa
 
 Earlier registers retain their historical behavior. In particular, Register 17 keeps a claim `pending` after all three attempts fail. At 64 live claims, it refuses later `found` requests with `type-full`. A returning host, rerun, `--again`, restart, or elapsed time does not free those places. [An outage can close a register](security/trust-boundaries.md#an-outage-can-close-a-register) describes that retained failure mode.
 
-The way out of a full historical register is a new register. A separate Worker can serve it while the old Worker keeps its rooms. A reviewed cutover on one Worker must [retain the old roots](#keep-existing-rooms-able-to-create-children) in `INSTALLED_REGISTER_SCOPES`, preserve their checked Native births and storage, and verify existing-room continuity. Changing `REGISTER_SCOPE` alone does not retain that child-creation policy. Existing rooms keep their original pins.
+The way out of a full historical register is a new register. Install it on a separate Worker and keep the old Worker serving its rooms. A cutover on one Worker strands the old rooms, because each room's host authority names the old register. `INSTALLED_REGISTER_SCOPES` can [retain child creation](#keep-existing-rooms-able-to-create-children), but the current host adapters still bind Git operations to one register. Supporting Git hosting for multiple installed roots needs a reviewed source change before that cutover. Existing rooms keep their original pins.
 
 ### Count a register's claims from its log
 

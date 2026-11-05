@@ -1,5 +1,11 @@
 # Prepare the failed-claim register on dap-demo
 
+Status: changes requested by checker report
+`bf2e724f0f39cdfb799abf924a1a3eb189b335eb`. Do not deploy this packet.
+Planner ruling `3b239919dd4e5683d1fcfdd9b51d5c23c4b1a9d7` chooses a separate
+multi-root host-binding source child. This packet waits for that reviewed source
+and another packet review; ruling request `5ff294e1` is answered.
+
 ## What changed
 
 Request `c448c870cf6a2f93a30c285a1a4d4a6c9f4bd8ad`, builder promise
@@ -22,6 +28,26 @@ The builder independently read demo health and its current public offer on
 Source landing `12a718fe` and deployment alone meet no new-register acceptance.
 
 ## Decisions and reasons
+
+### Resolve the host-authority finding before any cutover
+
+The checker found a blocking source fact at main `28839920`.
+`artifactsOutside` and `githubOutside` bind host authority to the single host
+setting's `registerScope`. `hostBound` requires a Destination's retained claim
+to name that exact root. The installed-register list reaches child admission,
+the index, and health; it does not reach this host-binding check.
+
+The retained install and offer templates would therefore disable Git hosting
+for the thirteen existing demo rooms. The rollback would deny it to new-root
+rooms. Their status reads and child births could still pass. This finding
+comes from source inspection; no live cutover or failure run occurred.
+The passing gate and parser checks establish their recorded boundaries and
+do not establish multi-root host authority.
+
+The builder restores the deployment warning and adds an actual old-room clone
+after the switch, before the scratch room. The templates and helper code stay
+unchanged until the chosen multi-root host-binding source lands.
+The remaining sections preserve the rejected proposal and its evidence.
 
 ### Keep the existing Page acceptance path
 
@@ -156,10 +182,12 @@ An idle-sleep assertion applies only while the actual gate runs. The passing
 archive owner takes 265,038 ms and establishes no cause for request `64552d40`.
 Earlier cohort failures remain failed.
 
-After the gate, only the procedure, this note, and the new gate manifest change.
-The procedure adds the private credential digest check. All helper code,
+At reviewed head `f9941195`, the post-gate changes were only the procedure,
+this note, and the new gate manifest. The procedure adds the private credential
+digest check. The later response to `bf2e724f` also restores the host-authority
+warning in `docs/deploy.md` and adds the old-room Git check. All helper code,
 templates, production code, tests, dependencies, and live Wrangler bytes retain
-the exact gate inputs. The documentation follow-up rule needs no second gate.
+the exact gate inputs. These documentation follow-ups need no second gate.
 Planner ruling `ef31035a8d14c68d2d402f928ca946bfee63bb04` accepts demo as the
 right Worker and requires an actual old-room child birth before the new scratch
 room. The procedure keeps that order.
