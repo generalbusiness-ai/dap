@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dacbdf9e3a3f496962fc899dba279120546e7911","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-04-failed-claim-cohort-limits.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:db312f54cb1e79e8475e22bad7e5d2aac7757f57","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/failed-claim-cohort-data.ts."}
