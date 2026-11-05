@@ -3,6 +3,13 @@
 Source request `12a718fe` implements parent `8a8902f3` under promise `aee92e4b`. The branch combines main `b63bce02` with the retained draft `d5e6fc92`. The clean integration checkpoint is `7425c61963d0339f4d488e821e4ff2120557ff08`, tree
 `878321d520f2abaef4e428a2fc20646a161113cb`. The original draft worktree remains unchanged. This record covers source and local evidence. The planner retains deployment, the real scratch-room commands, the configured Page offer, the deployed creation-pin record and parent acceptance.
 
+Planner ruling `125c878b` permits qualified review after the unchanged
+34-case diagnostic passes. It passes at `852d2611`. The failed complete
+gates and failed Native runs remain failed; the separate compiler/owner
+follow-ups and Page/Card workflows retain their own passing results.
+Production source still matches the complete gate's `edf8e2da` exactly.
+No deployment or parent-acceptance claim follows from these local records.
+
 ## The new default keeps failed creation final
 
 The failed-claim cohort uses Register26, Directory25, Membership12, Rules10, Destination19 and Inbox1. Register26 marks a claim failed when its last repository-creation attempt closes with nothing selected. That final state frees the claim's place in the 64-live-item bound. A late confirmation opens credential revocation and repository deletion; it cannot make the claim active. An unwired host sends no attempt and leaves the claim pending. A focused
@@ -255,6 +262,76 @@ follow-up removes those redundant copies and points four existing manifests
 to byte-identical, hash-verified external copies. Their file hashes stay
 unchanged. Git now retains the manifests alone for those evidence units.
 
+## The terminal Native record and unchanged diagnostic stay separate
+
+Ruling `a9d94547` accepts the documented one-file follow-up and rules out
+another whole gate. The first unreached Native run at `852d2611`, tree
+`17b4b1b8`, ends with actual exit 1: 1,099 passes, four failures, and two
+skips. All 1,105 cases and 284 modules have unique final records. The
+failed-module and failed-case sets agree; the audit finds zero contradictory,
+unknown, or unhandled runner records. Source stays unchanged and the owned
+process group closes. Analysis exit 0 validates this failed record only.
+
+The failures establish no obsolete expected value:
+
+| Owner and case | Actual failure | Classification |
+|---|---|---|
+| Historical Register27 and Register21 in `failed-claims-close-register.defect.scope.test.ts` | Their configured 120,000 ms test timeouts | Execution/deadline failure; cause unresolved |
+| Existing first-publication story in `application-publication.test.ts` | Its configured 30,000 ms test timeout | Execution/deadline failure; cause unresolved |
+| Six/thirty-seven-pass migration in `archive-parent-bootstrap.test.ts` | `archive-timeout` from `ArchiveBudget.check` via `confirmRetainedArchivePass` | Real archive-budget deadline; no semantic defect established |
+
+The two historical owner files are unchanged from `12ae3f18`; the existing
+publication case's body is unchanged. All four passed the earlier sealed
+Native run. That history neither erases the failures nor identifies their
+cause. The stdout also contains cross-Durable-Object I/O errors, without
+conclusive attribution to one failed case.
+
+This run spans UTC 03:01:45.080627–03:46:05.785206: 2,660.704579 seconds.
+Vitest reports 2,659.77 seconds; Python's monotonic command timer reports
+1,529.458465 seconds. Keep these clock bases distinct. A bounded read of
+power records shows sleep/wake events within the run; the evidence retains
+only same-window timestamps and event kinds. These observations establish
+host conditions, not each failure's cause or a controlled performance result.
+The separate 10,001-pass archive owner passes in 269,449 ms. Neither that
+pass nor this different parent-bootstrap timeout closes `64552d40`.
+
+Terminal report `250a290e` classifies the failures before any source change.
+Ruling `125c878b` then authorizes one unchanged diagnostic of the three
+complete owners under `/usr/bin/caffeinate -i` for that command only. The
+exact ledger contains 34 cases: 23 historical failed-claim cases, five
+application-publication cases, and six archive-parent-bootstrap cases.
+Every case, deadline, budget, configuration, dependency, and helper stays
+unchanged. The child exits 0 and all 34 cases pass. The native final records
+and JSON reporter agree with the exact ledger. No same-window sleep/wake
+event appears in the retained power record.
+
+The recording driver fails after child completion when its signal-zero
+process probe returns EPERM. The original driver failure remains recorded.
+A separate read-only `ps` check finds no remaining process in that exact
+group, and recovery verifies unchanged source, the clean head, and all 34
+case identities. The original driver's exact monotonic command duration is
+unavailable. Vitest reports 24.69 seconds; the UTC interval to the exit
+file's timestamp is approximately 25.444430 seconds. The recovered receipt
+labels both facts and does not substitute later recovery time for execution.
+No test runs again to repair that recording failure.
+
+The diagnostic establishes the isolated owners' behavior under its recorded
+host condition. It does not prove that sleep caused each earlier failure,
+turn either Native failure into a pass, or prove deployed acceptance.
+Ruling `125c878b` permits the reviewer to assess these separate records:
+
+| Record | Result | Manifest |
+|---|---|---|
+| Complete production gate at `edf8e2da` | Failed; one stale Plain expectation, Native unreached | [Failed final gate](evidence/2026-11-05-failed-claim-cohort-final-gate-failure.manifest.json) |
+| Isolated timed-opener compiler/complete owner; Page and Card workflows | Pass; workflows `41958073454` and `41958157135` at unchanged runtime head `edf8e2da` | [Runtime coverage](evidence/2026-11-05-failed-claim-cohort-final-runtime-coverage.manifest.json) |
+| First unreached Native at `852d2611` | Failed; 1,099 passed, four failed, two skipped | [Failed Native](evidence/2026-11-05-failed-claim-cohort-final-native-failure.manifest.json) |
+| Unchanged three-owner diagnostic at `852d2611` | Child exit 0; all 34 cases pass; original recording-driver failure retained | [Diagnostic](evidence/2026-11-05-failed-claim-cohort-three-owner-diagnostic.manifest.json) |
+
+The workflow metadata and complete job logs remain sealed. Only the isolated
+Plain test and explanatory notes change after the workflow head; browser
+source, runtime, configuration, dependencies, and workflow inputs remain
+unchanged. A passing fixture workflow supplies no O4 or real-provider claim.
+
 ## Evidence and review status
 
 The [focused manifest](evidence/2026-11-04-failed-claim-cohort-validation.manifest.json)
@@ -329,9 +406,9 @@ other character in the inventory stays identical. The affected security
 entry-point owner passes all 11 cases after the update. Its original
 failure remains in the focused evidence.
 
-PENDING: the unreached Native phase under the one-file follow-up rule,
-current-runtime-head Page and Card workflow evidence, independent checker
-review, and source landing. Hugh approved the earlier 28-literal patch above. Earlier sealed
+PENDING: independent checker review and source landing under the qualified
+validation plan in `125c878b`. The planner retains deployment and parent
+acceptance. Hugh approved the earlier 28-literal patch above. Earlier sealed
 summaries describe the state at the time of those runs. The original gate
 and Native follow-up remain failed; no parent-acceptance claim exists.
 
