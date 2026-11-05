@@ -1,9 +1,9 @@
 /**
  * Opt-in wiring of Cloudflare Artifacts. It takes effect only with
  * the `ARTIFACTS` binding and the explicit setting `ARTIFACTS_CONFIG`, and
- * only for the one register pinned there, whose recorded host is
+ * only for its configured register or the validated installed registers, whose recorded host is
  * `artifacts` and whose namespace is the configured one, and for the
- * destinations born of that register's claims. Missing or invalid
+ * destinations born of those registers' claims. Missing or invalid
  * configuration leaves every outside effect unsent. No configuration, token
  * or plaintext belongs in a scope's history.
  */
@@ -14,6 +14,7 @@ import { destinationBranch, isOf } from "@generalbusiness/dap-platform";
 import { ArtifactsProvider, artifactsService, type ArtifactsNamespace, type CreationCustody } from "./artifacts-host.ts";
 import { CredentialStore } from "./credential-store.ts";
 import { DestinationHost, type SnapshotReader, type DestinationRepository } from "./destination-host.ts";
+import { hostRegisterScopes, type HostRegisterSettings } from "./installed-registers.ts";
 import { credentialHandle, exact, hostBound } from "./host-wiring.ts";
 import type { OutsideGiven } from "./given.ts";
 import { NO_OUTSIDE, type EffectRequest, type Outside } from "./operations.ts";
@@ -26,7 +27,7 @@ export const ARTIFACTS_HOST = "artifacts";
 /** Must match the one namespace of the deployed ARTIFACTS binding. */
 export const ARTIFACTS_NAMESPACE = "artroom-demo";
 
-export interface ArtifactsBindings {
+export interface ArtifactsBindings extends HostRegisterSettings {
   /** Nonsecret JSON; every field is explicit: `{ registerScope, namespace, host, maxBytes, credentialIdentity: "adapter-attempt" }`. Precompute the install's register scope ID and pin it here. */
   ARTIFACTS_CONFIG?: string;
   /** Namespace of the ARTIFACTS binding; absent preserves the original deployment. */
@@ -102,6 +103,8 @@ export function artifactsOutside(given: OutsideGiven, sql: Pick<Sql, "exec">, en
     const ready = artifactsReadiness(env);
     if (ready.state !== "wired") return NO_OUTSIDE;
     const { config, binding: namespaceBinding } = ready;
+    const roots = hostRegisterScopes(ready.config.registerScope, env);
+    if (!roots) return NO_OUTSIDE;
     const host = ARTIFACTS_HOST;
     const namespace = config.namespace;
     const current = () => { const scope = given.scope()?.at; return scope ? canonicalize(scope) : null; };
@@ -114,7 +117,7 @@ export function artifactsOutside(given: OutsideGiven, sql: Pick<Sql, "exec">, en
     const register = new RegisterHost(given, { host, namespace, provider });
     const custody = new CredentialStore(sql, () => given.scope()?.at ?? null);
     const destination = new DestinationHost(given, { host, namespace, provider, custody, ...(snapshotReader ? { snapshotReader } : {}) });
-    const bound = hostBound(given, config.registerScope, host, namespace);
+    const bound = hostBound(given, roots, host, namespace);
     const accepts = (owner: string, kind: string): boolean => bound(owner) && (isOf(owner, "platform:register") ? register.accepts(owner, kind) : destination.accepts(owner, kind));
     const send = (request: EffectRequest) => !accepts(request.owner, request.kind) ? Promise.resolve(null) : isOf(request.owner, "platform:register") ? register.send(request) : destination.send(request);
     // No `recovery`: each read of this service mints a read token, so a

@@ -599,8 +599,8 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
   };
   const pick = (): Outside => {
     const host = recordedHost(given);
-    if (host === "github.com" && env.GITHUB_APP_CONFIG) return wiring(host, [env.GITHUB_APP_CONFIG, env.GITHUB_APP_PRIVATE_KEY, env.GITHUB_CREATION_TOKEN, env.GITHUB_READ_TOKEN, env.GITHUB_CLEANUP_TOKENS, env.GITHUB_REPOSITORY_BINDINGS], () => gitHubOutside(given, sql, env, fetch, snapshotReader));
-    if (host === ARTIFACTS_HOST && env.ARTIFACTS_CONFIG) return wiring(host, [env.ARTIFACTS_CONFIG, env.ARTIFACTS_NAMESPACE, env.ARTIFACTS], () => artifactsOutside(given, sql, env, fetch, snapshotReader));
+    if (host === "github.com" && env.GITHUB_APP_CONFIG) return wiring(host, [env.REGISTER_SCOPE, env.INSTALLED_REGISTER_SCOPES, env.GITHUB_APP_CONFIG, env.GITHUB_APP_PRIVATE_KEY, env.GITHUB_CREATION_TOKEN, env.GITHUB_READ_TOKEN, env.GITHUB_CLEANUP_TOKENS, env.GITHUB_REPOSITORY_BINDINGS], () => gitHubOutside(given, sql, env, fetch, snapshotReader));
+    if (host === ARTIFACTS_HOST && env.ARTIFACTS_CONFIG) return wiring(host, [env.REGISTER_SCOPE, env.INSTALLED_REGISTER_SCOPES, env.ARTIFACTS_CONFIG, env.ARTIFACTS_NAMESPACE, env.ARTIFACTS], () => artifactsOutside(given, sql, env, fetch, snapshotReader));
     return NO_OUTSIDE;
   };
   const selected = (owner: Parameters<Outside["accepts"]>[0], kind: string): Outside => {

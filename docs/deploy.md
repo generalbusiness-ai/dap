@@ -50,10 +50,11 @@ with its reader, parser and failure behavior. The order below uses these:
   creation with no parent is accepted only when it is the exact signed
   install of this register.
 - `INSTALLED_REGISTER_SCOPES`: optional nonsecret JSON array for child
-  creation under earlier installed registers. It holds 1 to 32 distinct
+  creation and Git host authority under earlier installed registers. It holds 1 to 32 distinct
   scope IDs, includes the current register, and fits within 4,096 UTF-8
-  bytes. Without it, the current register alone admits child creation.
-  An invalid value closes creation and makes register health unavailable.
+  bytes. Without it, creation admits only the current register, and each host keeps
+  its configured single register. An invalid list closes creation and Git
+  host authority and makes register health unavailable.
 - `ARTIFACTS_CONFIG` and `ARTIFACTS_NAMESPACE`: the Artifacts host. See
   [Configure a Git host](hosts.md#cloudflare-artifacts-host-artifacts).
 - `GITHUB_APP_CONFIG`, `GITHUB_APP_PRIVATE_KEY`, `GITHUB_CREATION_TOKEN`,
@@ -290,7 +291,7 @@ A register holds at most 64 live claims. A claim is live until a directory's `ap
 
 At 64 live claims, the register refuses every later `found` with `type-full`. The Git host's return does not reopen it. Neither does a rerun, `--again`, a restart, or time, and no act or setting frees a place. [An outage can close a register](security/trust-boundaries.md#an-outage-can-close-a-register) gives what fails an attempt and who can fill the places.
 
-The way out of a full register is a new register. Install it on a separate Worker, as [the Commons steps](#provision-the-commons-worker) show, and keep the old Worker serving the rooms that it has. A cutover on one Worker strands the old rooms, because each room's host authority names the old register.
+The way out of a full register is a new register. On the same Worker, retain the old root in `INSTALLED_REGISTER_SCOPES` before you switch `REGISTER_SCOPE` and the host's configured register to the new root. The installed list preserves child creation and Git host authority for old rooms, including pending register operations. After the switch, check an old room's child creation and Git access before creating a new scratch room. You can also keep separate Workers, as [the Commons steps](#provision-the-commons-worker) show.
 
 ### Count a register's claims from its log
 
@@ -459,11 +460,14 @@ The commands on this page were not run for this revision.
 ## Keep existing rooms able to create children
 
 Before you change a Worker's current register, retain every earlier
-register whose rooms still need new Inboxes, lanes, or other children.
+register whose rooms still need new Inboxes, lanes, other children, or Git access.
 Record those scope IDs and the new current register in
 `INSTALLED_REGISTER_SCOPES`. Keep `REGISTER_SCOPE` as the current register
 for new rooms. A listed register still needs its own checked Native birth
-in this Worker's index. The list grants neither a birth nor authority.
+in this Worker's index. Both Git host adapters accept the listed roots while
+preserving the exact host, namespace, pinned owner and destination birth
+at its own register. GitHub also keeps its repository binding checks.
+The list supplies no birth, credential, or repository binding.
 
 For hosted Workers, commit the array beside `REGISTER_SCOPE` in the
 Worker's Wrangler file: `apps/room/wrangler.grow.jsonc`,

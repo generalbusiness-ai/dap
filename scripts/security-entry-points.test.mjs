@@ -32,7 +32,7 @@ const namedOwners = {
     "packages/scope/src/worker.ts:projectionResponse": "e17f1f4aa800bc06b4f8d065f77e8a594c2738c77873a52671fa7f1b22bf249b",
     "packages/scope/src/worker.ts:route": "97d61bda3cbfe7b427c932d6839a46e73cb5b9b6e75e575bf798329ebdc210ad", // Forward the HTTP request context for release work.
     "packages/scope/src/worker.ts:routedRequest": "3b0b751a7511500a15016f748d9a393ccaa3ad1860bfcdffe9008baadd7769be", // Same gates and stream bytes; retain the existing close on observed disconnect.
-    "packages/scope/src/worker.ts:outsideOf": "35d046e6a7506ebb5394f6337cf6bb0d1abbf4c8b36dae91d1d98752614a733d",
+    "packages/scope/src/worker.ts:outsideOf": "5c7059fcf1a84db1e4189bee2cd816c5726ac7665b06f4471f7a49ece3bb6b38",
     "packages/scope/src/worker.ts:sessionWiring": "cb8f4d0e2b06854a3fbf080e5b4ce72e4182060b60f27cc7fb7f5ed6ac8779c5",
     "packages/scope/src/worker.ts:snapshotReaderOf": "dac91fd4e800bdcd1a9f7e47bd077b6efd0acd4eb3c70bf63122a12bdb7446b5",
     "packages/scope/src/worker.ts:DeployedScope": "660756384c04ec84a02cd513cf7bc8e00a2542b596bf16a846afcc25bf04020d",
@@ -224,12 +224,14 @@ const seals = {
   "apps/room/fetch.ts": "83b2a56552c5f6874935d1491f487fd7d2b9e2651a9acceb87d731139897ad2c", // Forward the HTTP context to the existing scope route; dispatcher gates stay fixed.
   "apps/room/demo-creation.ts": "91d9ac8a8fa37e3c99c117be7d99dc2d9e370efeacd70f8f49a00a4062bcd67c",
   "packages/scope/src/demo-creation.ts": "140d7a2751ddbca8dda3d78161ab720a7b40c127107510a256f4529f84385eb9", // Reviewed current demo projection or ordinary GitHub authority owner.
-  "packages/scope/src/github-wiring.ts": "988d741c82a54f2be987b2ade5e3653ae64ff21907e66896487e86d79a58ae68", // Reviewed current demo projection or ordinary GitHub authority owner.
+  "packages/scope/src/github-wiring.ts": "6bccc5a379825c66d77723394fe7b37c2cfdfc722953e6cebca13ff1befaf66d", // Reviewed current demo projection or ordinary GitHub authority owner.
   "apps/room/page/route.ts": "8eccc79a8a3e3cd8b33c38c65374db5d01583b5e9afd76384fc2133bae4cb475",
   "apps/room/brand/route.ts": "71b45ff9b41b3bea31c775a16525349591e0d4f7dfdc65da79f095816b1c343c",
   "packages/scope/src/worker.ts": namedOwners["packages/scope/src/worker.ts"],
   "packages/scope/src/scope-index.ts": "69c37e61623d85db20567a30079a495b4d9012063b38196726dad2a209170a8f", // Exact indexed scope and kind gate before internal native birth discovery.
-  "packages/scope/src/register-setting.ts": "46afcd1a38e2ae5501aed393e36c8db92acfe08f521086be820036e8d154204c", // Shared exact Register selector; actual maintained parser output.
+  "packages/scope/src/host-wiring.ts": "1fd252906b38aeaea52fcd04fe3a533aed0335147e4de678d7c49b7744e39f93", // Installed-register authority retains exact Native birth and host binding.
+  "packages/scope/src/installed-registers.ts": "39618d91dba4884b866f1823d5bc2ee89e7ca0b78b47b884387e7bfeba2dee5e", // Installed-register authority retains exact Native birth and host binding.
+  "packages/scope/src/register-setting.ts": "1ead9e620589e3707e2a6515951cc095b44308a34aee6855b3bb8da37bd230ca", // Shared exact Register selector; actual maintained parser output.
   "packages/scope/src/scope-index-census.ts": "1892fba9c476330693d9b8071bd7b2653d2261bef7e9487fd95018d74aba2769", // Address/key admission precedes owner proof; exact census authority and page guards retained, without duplicate owner charge.
   "packages/scope/src/creation-admission.ts": "e5b173474005b5c888e60e0f863311b952e75baf4e7ece8cb5f86d50f85da248", // Reviewed R1 ancestry owner; adopted AST value.
   "packages/scope/src/creation-lineage.ts": "eec45fe2cd38344a5be9992cb6ddde7b03adcfeda8e2c7511e07c2131903feb0", // Reviewed whole-lineage boundary; adopted AST value.
@@ -305,7 +307,7 @@ const pendingArchiveSeals = {
   "packages/scope/src/archive-host-item.ts": "0eb2a07702cbda350c4a884b3d32ca121aa13931ae51e1e70a8a6e76f4475a30",
   "packages/scope/src/archive-host.ts": "ad759aff6f090fab3401d2f75274af294269f7db488ae2d5c56954759cdf754a", // Migration collectors settle only checked POST byte receipts; decoder fees and authority fences unchanged.
   "packages/scope/src/artifacts-host.ts": "17169f775db94ec5544115119385ab979854b43679185f4360b07311e1a8a516", // Reviewed durable fork setup custody; the journal owns its later revocation.
-  "packages/scope/src/artifacts-wiring.ts": "84b621543159fd6f0f539a1c59392ce70f56ebee3f7c1fc9544eaee890052027",
+  "packages/scope/src/artifacts-wiring.ts": "ba45155bee9124f82235b92cc790b4cf5ad63ffa593e528bbaf11e64c4c69e4b",
 };
 // Actual maintained parser outputs adopted by root; never infer hashes from intent.
 const pendingR8Seals = {
