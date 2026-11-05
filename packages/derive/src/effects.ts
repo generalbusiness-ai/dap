@@ -70,7 +70,7 @@ function stated(j: Judging, o: Operand): boolean {
  * list and a member of a record are each checked by their declared type, to
  * any depth, as `readFacts` checks the fields of an input.
  */
-function held(j: Judging, type: FieldType, value: unknown): FieldValue | undefined {
+export function held(j: Judging, type: FieldType, value: unknown): FieldValue | undefined {
   if (type.type === "list") {
     if (!Array.isArray(value) || value.length > Math.min(type.max, j.bounds.listElements)) return undefined;
     const each = value.map((v) => held(j, type.of, v));
