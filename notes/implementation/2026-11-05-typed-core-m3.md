@@ -1,16 +1,17 @@
 # Replace structural clock traversals
 
-Status: implementation in progress. The validator now carries owner and binder
-identities. Production clock analysis and its callers remain unchanged.
-Request `21d8e638e266295ff7f0a39a5718185b4cb0cd94` and promise
-`287adf75f90ab89d086f62c047c3544fa2f4bcac` own M3 under scheduling request
-`e99550e9`. Planner ruling `3b239919`, step 5, permits M3 while an independent
+Status: production clock cutover implemented at `395326e6`. The validator records
+the complete structural graph, and both production callers consume it. The
+final frozen checks, gate, independent review, and landing remain pending.
+Original request `21d8e638` and promise `287adf75` became stale through a
+retired ruling. Renewed full-scope request `f012c968e9254ebf224c003961f7fd578d2f89ca`
+owns this delivery under active scheduling request `e99550e9`. Planner ruling `3b239919`, step 5, permits M3 while an independent
 review waits. The revised register packet landed on origin main at `26fc8e0b`, with
 approval `af97b88e` and receipt `cce90dd3`. Its actual deployment and hosted
 acceptance record remain planner work. O4 takes precedence when browser
 access returns.
 
-The checkout now includes packet main `26fc8e0b`. Before M3 source changes,
+The checkout now includes main `93c1600b`, including packet `26fc8e0b`. Before M3 source changes,
 reconciliation at host main `a4e62771` found no drift in the preparation's eleven
 derive, contract, and design inputs. `judge.ts` retains SHA256
 `86222a9f4c1ff665232b470384bc82c095c0e1e175636eb8fae7859277f54959`.
@@ -91,6 +92,9 @@ roots to those validated contexts. Keep future clauses outside the sending
 body's clock root, including clauses attached to platform send marks.
 
 ## Intermediate validator checks
+
+The following checkpoints retain the state and limits of each development step.
+Later sections record the completed production cutover.
 
 The [foundation manifest](evidence/2026-11-06-m3-foundation.manifest.json)
 seals 33 files, including exact input patches at base `c5dc2502`. Its SHA256 is
@@ -299,23 +303,83 @@ The [structure-probe manifest](evidence/2026-11-06-m3-structure-probe.manifest.j
 
 The [structure-witnesses manifest](evidence/2026-11-06-m3-structure-witnesses.manifest.json) seals 15 public files; SHA-256 `ad05108f0fac5d511396b8f794326b83730d9ac212c937bbe67e4a360e565acc`.
 
-## Prove the production cutover
+## Use the graph at both production callers
 
-Use public clock-behind judgments, or clause `judgesTime` where that is the
-boundary, for every root in the fixed witness map: value-time source,
-omitted effect if/unless, skipped tell and relate conditions, skipped
-attention, clause execution, future-clause exclusion and actual Native
-clock use. Add the historical-entry-time distinction. Reuse existing
-forms-fields/guards and fixed-slot-index cases where they already prove
-the same invariant. Static visitor assertions alone do not prove caller
-integration.
+`derive` resolves its actual admitted body before any primitive runs. It uses
+that root's declared clock reads and retains `j.ran.clock` from Native hooks
+that ran. `runClause` reconstructs its actual origin body and selects the root
+by send identity, clause name, origin root, and operation kind. Outcome clauses
+have no parent body. Neither caller resets actual Native clock use.
 
-The checker also assigned M3 the unused `evaluate` `_cause` parameter:
-remove it or give it a use when connecting its caller boundary. Preserve
-full `Ran` values, ordering, prepared inputs, refusal selection and
-runtime/replay behavior. Change no Native definition, grant, wire format,
-provider, scheduler, authentication, persistence or dependency.
+The cutover deletes `readsClock`, `conditionsReadClock`, and `timesEffect`.
+The exact query above returns no matches in derive source or tests. Concrete
+execution still uses the existing whole-body route. The graph holds no
+whole-legacy callback, and this delivery makes no general lowering claim.
+The internal experimental `evaluate` function loses its unused `_cause`
+argument; its nine owned test calls follow the new signature.
 
-The complete M3 focused checks and frozen-head gate remain pending. The
-intermediate checks establish no production cutover, deployment, or acceptance.
-The planner deploys M3 after review. Re-estimate M4–M8 from observed M3 work.
+Seven public witnesses join their owning forms files. Deliveries distinguish
+commit-time values, omitted effect conditions, skipped tell and relate
+conditions, omitted attention, future-clause exclusion, and historical entry
+time. Direct `runClause` judgments distinguish its value-time and omitted
+condition roots. The existing skipped-guard witness remains unchanged.
+The Native stand-in checks both public write `judgesTime` and clock-behind,
+including the hook that runs before the body. It proves no production hook or
+provider outcome.
+
+The first cutover passes both compilers and 1512 cases in sixteen complete
+selected owners. A preceding unit passes all seven new public witnesses while
+the old callers remain, establishing the behavioral baseline. The later Native
+assertion strengthens the same case and changes no production source.
+
+Three chosen fault controls distinguish the new integration. Removing declared
+clock use fails exactly five selected assertions. Removing the actual Native
+contribution fails only the Native witness. Including a future clause in its
+parent fails only the future-clause witness. All eight selected witnesses pass
+before and after the revised controls; 71 unrelated cases remain filtered.
+Each control restores source bytes in `finally`, and the restored hashes match
+checkpoint `395326e6`. These are three targeted controls, not a sweep.
+
+The initial Native control survived because the witness asserted only the
+behind-clock refusal, which `prepareHandler` independently enforces. The revised
+witness also checks the successful public write draft. The initial driver stops
+at that unexpected survival, restores source, and never runs its third control.
+Its partial output remains sealed alongside the revised evidence.
+
+The [clock-before-cutover manifest](evidence/2026-11-06-m3-clock-before-cutover.manifest.json) seals 16 files; SHA-256 `64b7d085e31355ebe7750991e2b36d70fe75e22b9ac8e3cf3bfe527c9eda1d93`.
+
+The [clock-cutover-first manifest](evidence/2026-11-06-m3-clock-cutover-first.manifest.json) seals 16 files; SHA-256 `336f676ba30c7b36a48ed268caccb258130cef15ae20390533ee7dfda4baf35b`.
+
+The [clock-controls manifest](evidence/2026-11-06-m3-clock-controls.manifest.json) seals 11 files; SHA-256 `1dfff40542770f3bc4c900bdbd68596ec0ef99d66e16e1bc003d1f85b74a412d`.
+
+The [clock-controls-revised manifest](evidence/2026-11-06-m3-clock-controls-revised.manifest.json) seals 33 files; SHA-256 `e9f3786f93a1aeba84e5ceb1c749275a9bc956b2d996709f8ae39c84b765d855`.
+
+The revised control unit reconstructs the final cutover checkpoint from its
+tracked patch and copied added files. Earlier units retain their own inputs;
+they do not claim to check the later strengthened Native assertion. The final
+frozen source gate and independent review remain pending. `judge.ts`, Native
+pins, grants, wire formats, dependencies, and application APIs stay unchanged.
+The planner deploys after the reviewed landing.
+
+## Estimate the remaining migrations
+
+M3 required separate owner and binder capture, admitted-result binding, six
+body contexts, complete structure capture, public caller evidence, and controls.
+Those checkpoints show that preserving validation and execution identities
+costs more than the old traversal's small size suggests. The graph now supplies
+that foundation, but it does not implement the remaining concrete semantics.
+
+| Migration | Revised effort | Main remaining risk |
+|---|---|---|
+| M4 | 4–6 working days | Guard outcome combinations, scan strategies, lexical binders, and refusal paths. |
+| M5 | 4–6 working days | Missing versus clear values, before/working phases, Native effect joining, and settlement. |
+| M6 | 4–6 working days | Send ordinals, fanout, creation context, and current-state clause reconstruction. |
+| M7 | 5–8 working days | Seven hook places, capability argument trees, retained evidence, and whole public judgments. |
+| M8 | 4–6 working days | Every runtime/replay body caller, full corpus lowering, and deletion of fallback orchestration. |
+
+The remaining estimate is 21–32 working days of effort. It is a planning range,
+not measured throughput or a delivery date. Each row keeps its original scope,
+its reviewed landing, and every semantic stop criterion. Hugh's deletion-size
+override remains the only exception. No accepted-definition bytes, execution
+order, resource refusal, retained evidence, or judgment may change. Stop the
+affected delivery if one of those invariants cannot hold.

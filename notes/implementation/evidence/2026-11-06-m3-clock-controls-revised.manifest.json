@@ -1,0 +1,174 @@
+{
+  "qualification": "Revised public Native witness asserts successful delivery draft judgesTime as well as a behind-clock refusal. Baseline/restored8 pass; declared-clock5, native-clock1 and future-leak1 exact expected assertion failures.71 unrelated cases filtered. Both source files restored. Three targeted controls, no sweep; no live operation.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-clock-controls-revised",
+  "fileCount": 33,
+  "files": [
+    {
+      "path": "baseline.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "baseline.log",
+      "bytes": 16641,
+      "sha256": "00a1eaf4a4384b4b6c43cb4213b422124ffeaa060caaae7ff4983df1d758b9a9"
+    },
+    {
+      "path": "baseline.vitest.json",
+      "bytes": 35818,
+      "sha256": "bcd22b46253fae1762f05b9a3eacbaf835c14cb599ee7d93a4799a05c9c3c965"
+    },
+    {
+      "path": "checkpoint-proof.json",
+      "bytes": 420,
+      "sha256": "e6307e6f641612196577967019cabe1b7660ac6f0462cec8fff6c265f261056c"
+    },
+    {
+      "path": "compat.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "compat.log",
+      "bytes": 363,
+      "sha256": "6895d900b5d3fab4381f76d0d78404eb80ff989050b9c1bd150e115ff8a243f9"
+    },
+    {
+      "path": "declared-clock.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "declared-clock.log",
+      "bytes": 20850,
+      "sha256": "a3743d847a29c3e045ac39f2f69d7d265a9b847b72f8c700f06c5223a50b691c"
+    },
+    {
+      "path": "declared-clock.patch",
+      "bytes": 495,
+      "sha256": "5ffc0c72826376c158bc1d16b59bccc3f2d3ff9adb2ec0628a4b8628a4171549"
+    },
+    {
+      "path": "declared-clock.vitest.json",
+      "bytes": 42555,
+      "sha256": "68df1a9ce79e860ce0b462ce2ec3004a3ffe46c00e9960aa6882044feeb4db53"
+    },
+    {
+      "path": "driver.py",
+      "bytes": 5310,
+      "sha256": "6ded369e9c355d0381a336f288deefe3301225bd9d39a3f6e81b6a01d297b7ef"
+    },
+    {
+      "path": "extra-inputs/packages/derive/test/definition-corpus/clock-cutover-data.ts",
+      "bytes": 4305,
+      "sha256": "312b8234b9c75474e7c567d0ad9b0a28335af737023c9b84df59b36edd77a75f"
+    },
+    {
+      "path": "extra-inputs/packages/derive/test/fixtures-clock-cutover.ts",
+      "bytes": 1451,
+      "sha256": "3595f38a7330c650cd7c29dfdf3043deece4099dd029d3faa0ef5d6172daabbe"
+    },
+    {
+      "path": "future-leak.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "future-leak.log",
+      "bytes": 17523,
+      "sha256": "6cbd30574d46972cc7e5fbbb31fd6a29ed697866a846a583a835ca865456f463"
+    },
+    {
+      "path": "future-leak.patch",
+      "bytes": 611,
+      "sha256": "5eeb9e561036cae7124e5a59405a47b4a14fdf193febbe503cfbf59ff7360ea6"
+    },
+    {
+      "path": "future-leak.vitest.json",
+      "bytes": 37141,
+      "sha256": "7ae03c6617135a886b2d29eb219e36d183175d6b8b5c2a133cc53b127f550bea"
+    },
+    {
+      "path": "handlers.ts.original",
+      "bytes": 51113,
+      "sha256": "c04215b5561c744632e1ac292ed23cea48235fd59bab17930a93deca16608eec"
+    },
+    {
+      "path": "input.patch",
+      "bytes": 30232,
+      "sha256": "5c1bdfc0da9da74917151a3ebc62cb5df7f1d0cc0a7b96ab688d9342df7c6de8"
+    },
+    {
+      "path": "native-clock.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "native-clock.log",
+      "bytes": 17562,
+      "sha256": "0ed49b67ddbfc596d68bc0716693c517424619a655d93e43f771b75d5f5cd134"
+    },
+    {
+      "path": "native-clock.patch",
+      "bytes": 908,
+      "sha256": "8bd5fcdcb3289eb13bbb9efa72297471a365cfa5638ae4dfa41515c57f1a4215"
+    },
+    {
+      "path": "native-clock.vitest.json",
+      "bytes": 37125,
+      "sha256": "864901b590b701d68e744903f95cd31423ccd5b0020b7caf2e64a2136aa839f3"
+    },
+    {
+      "path": "old-symbol-query.json",
+      "bytes": 250,
+      "sha256": "56cf98627a9a9cf5764e73247d84487dc7a73c921211cfe565da3791bd647632"
+    },
+    {
+      "path": "restored.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "restored.log",
+      "bytes": 16642,
+      "sha256": "8d9bc40ccec7f7ebcaccfc0b8cd7c46570debf19780e6c6867711659f8242de0"
+    },
+    {
+      "path": "restored.vitest.json",
+      "bytes": 35818,
+      "sha256": "7ee20175513a93eaa2c948004f4575ffaaaaedb9d1fc4e34d7239a9f7239ef1c"
+    },
+    {
+      "path": "result.json",
+      "bytes": 6426,
+      "sha256": "0340d2758daf3d82d0e6e501c792bcf6817fbbbb6c50c97b52f25591705702ad"
+    },
+    {
+      "path": "results-partial.json",
+      "bytes": 5748,
+      "sha256": "38592e8c42991b35c4361e4b9c7dc59843f9ddc408f15ece9d6f1e06b7fc0e02"
+    },
+    {
+      "path": "structure.ts.original",
+      "bytes": 14403,
+      "sha256": "7a964b23ff2675f4be2edb2ca1835a8e5bda13c7715887fcd0c759d3e13e67d1"
+    },
+    {
+      "path": "test-compiler.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "test-compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 2785,
+      "sha256": "ad0be7c6eeb693495fca3ef1a69bcaa9dea9eeca4d5342c95fd05e2ba4a11392"
+    }
+  ],
+  "finalCutoverCheckpoint": "395326e65ffc32512a808e3b5790f81d0e3dfa9a",
+  "checkpointQualification": "Only revised controls unit reconstructs this final checkpoint exactly; older units describe their own saved source inputs."
+}

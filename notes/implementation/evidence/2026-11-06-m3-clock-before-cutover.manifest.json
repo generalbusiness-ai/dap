@@ -1,0 +1,89 @@
+{
+  "qualification": "Seven new public witnesses pass with old production clock callers. This local development unit predates the cutover; it is not the final source gate.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-clock-before-cutover",
+  "fileCount": 16,
+  "files": [
+    {
+      "path": "compat.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "compat.log",
+      "bytes": 363,
+      "sha256": "6895d900b5d3fab4381f76d0d78404eb80ff989050b9c1bd150e115ff8a243f9"
+    },
+    {
+      "path": "driver.py",
+      "bytes": 2666,
+      "sha256": "178eed7c35221f7350f7fe955408f8bc0b68f0fc0bf1c8a4802ea52840690927"
+    },
+    {
+      "path": "extra-inputs/packages/derive/test/definition-corpus/clock-cutover-data.ts",
+      "bytes": 4305,
+      "sha256": "312b8234b9c75474e7c567d0ad9b0a28335af737023c9b84df59b36edd77a75f"
+    },
+    {
+      "path": "extra-inputs/packages/derive/test/fixtures-clock-cutover.ts",
+      "bytes": 1451,
+      "sha256": "3595f38a7330c650cd7c29dfdf3043deece4099dd029d3faa0ef5d6172daabbe"
+    },
+    {
+      "path": "forms.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "forms.log",
+      "bytes": 15082,
+      "sha256": "e7ae1c8cef107129bad59ab4848c2b1bf393dbe6108c645b1aa8316b2266c947"
+    },
+    {
+      "path": "input.patch",
+      "bytes": 9961,
+      "sha256": "6692aa6491b63a44e0087ee0e909c6309805c1d3601a652b3a17737e7be461d2"
+    },
+    {
+      "path": "result.json",
+      "bytes": 1491,
+      "sha256": "d12e55fa47c9bd3b7ed92e685b8491b0bfaf7ee5dd24dd24eca5e5c89dd7fd4d"
+    },
+    {
+      "path": "source-compiler.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "source-compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "source.json",
+      "bytes": 1411,
+      "sha256": "3efe2a090d3ae3d3eb96c2ce3a0b9cb8eda55177a508e016af8798bbbe862374"
+    },
+    {
+      "path": "test-compiler.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "test-compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "vitest.json",
+      "bytes": 32349,
+      "sha256": "d590ccaf8aca3fda3f8209dd44cc433828c396c98412ed85f95925b353545b72"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 1304,
+      "sha256": "7c93f806050a441a0ac5dde627ae6843da7c7d5f3f925ca39fe4cc5603ade522"
+    }
+  ],
+  "finalCutoverCheckpoint": "395326e65ffc32512a808e3b5790f81d0e3dfa9a",
+  "checkpointQualification": "Only revised controls unit reconstructs this final checkpoint exactly; older units describe their own saved source inputs."
+}
