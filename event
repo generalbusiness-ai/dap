@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b15638e26a35cd25344c5525a91838d9ee2af3bf","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-06-m3-clock-controls-revised.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b15fd7ab0419a0322cf659031435a6b0d0e00549","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/program/structure.ts."}
