@@ -4,6 +4,8 @@ import { canonicalize, digestBytes, entryHash, factRefOf, intentDigest, newIncar
 import { MemoryState } from "@generalbusiness/dap-derive";
 import { keys, variant } from "@generalbusiness/dap-derive/testing";
 import type { OutsideGiven } from "../src/given.ts";
+import { outsideOf } from "../src/worker.ts";
+import type { ArtifactsBindings } from "../src/artifacts-wiring.ts";
 import { WorkspaceHost } from "../src/workspace-host.ts";
 import { ArtifactsProvider } from "../src/artifacts-host.ts";
 import { create } from "./fixtures-native.ts";
@@ -228,5 +230,43 @@ test("workspace head keeps an unknown answer and fixed diagnoses when its provid
     expect(refused.diagnoses).toEqual([{ event: "workspace-lineage-unavailable", step: "workspace-lineage", name: "null", request: "0123456789abcdef" }]);
     expect(refused.points.filter(point => point.blobs[0] === "diagnosis").map(point => point.blobs.slice(3, 6))).toEqual([["workspace-lineage", "error", "workspace-lineage-unavailable"]]);
     expect(providerCalls).toBe(1);
+  });
+});
+
+// Ancestor entries pass their actual Native judges; lane state/operation and
+// provider answers remain explicit stand-ins. Actual SQL, factory and proofs run.
+test("workspace factory retains an old proven root after a switch and invalidates cached authority when it is unlisted", async () => {
+  const f = fixture(), storage = await create();
+  const current = scopeIdOf({ v: 1, kind: "register", definition: "platform:register@17", creator: null,
+    cause: digestBytes(utf8("TEST workspace current selector")), ordinal: 0 });
+  expect(await workspaceRepository(f.given, f.sources, [current, f.register.scope], "artifacts", "actual-room-space"))
+    .toEqual({ destination: f.destination, repository: f.repository, branch: "main" });
+  expect(f.calls()).toBe(6); // read the old register's own birth, never probe the new selector
+  await storage.inside(async native => {
+    const definition = f.given.definition!()!, type = definition.holdTypes[0]!, shape = definition.declared.items[type]!;
+    const timer = Object.values(definition.declared.timed).find(rule => rule.on === type && rule.effects.some(effect => "hold" in effect && effect.hold.do === "end"));
+    f.state.putItem({ id: 4, type, state: shape.initial, revision: 0, opened: entryHash(f.born), parties: {}, refs: {}, attributed: [],
+      values: { epoch: 1, ...(timer ? { [timer.deadline]: "2026-10-30T11:00:00Z" } : {}) } });
+    f.state.putRecord({ capability: "hold@2", kind: "fork", key: [4], state: "creating", seq: 4,
+      values: { operation: "4:0", seed: { commit: "1".repeat(40) } } });
+    const entry: Entry = { ...f.born, seq: 4, effects: [{ effect: "operation", k: 0, owner: "hold@2", kind: "fork", attempts: 3 }] };
+    const request = { scope: entry.at, operation: "4:0" as const, attempt: 1, owner: "hold@2" as const, kind: "fork", origin: { entry, hash: entryHash(entry) } };
+    const settings: ArtifactsBindings = { REGISTER_SCOPE: current, INSTALLED_REGISTER_SCOPES: canonicalize([f.register.scope, current]),
+      ARTIFACTS_NAMESPACE: "actual-room-space", ARTIFACTS_CONFIG: canonicalize({ registerScope: current, namespace: "actual-room-space", host: "service.invalid", maxBytes: 1024, credentialIdentity: "adapter-attempt" }),
+      ARTIFACTS: { get: async () => { throw Error("provider boundary is scripted below"); }, create: async () => null, delete: async () => null } };
+    const fork = vi.spyOn(ArtifactsProvider.prototype, "workspaceFork").mockImplementation(async (_repository, name) => ({ name, id: name }));
+    try {
+      const outside = outsideOf(f.given, native.storage.sql, settings, undefined, undefined, f.sources);
+      expect((await outside.send(request))?.result).toBe("confirmed");
+      expect(fork).toHaveBeenCalledTimes(1);
+      settings.INSTALLED_REGISTER_SCOPES = canonicalize([current]);
+      expect(await outside.send({ ...request, attempt: 2 })).toBeNull();
+      expect(fork).toHaveBeenCalledTimes(1);
+      settings.INSTALLED_REGISTER_SCOPES = canonicalize([f.register.scope, current]);
+      expect((await outside.send({ ...request, attempt: 2 }))?.result).toBe("confirmed");
+      expect(fork).toHaveBeenCalledTimes(2);
+      settings.INSTALLED_REGISTER_SCOPES = canonicalize([current, current]);
+      expect(outside.accepts("hold@2", "fork")).toBe(false);
+    } finally { fork.mockRestore(); }
   });
 });

@@ -2,7 +2,7 @@
   "worker": "dap-demo",
   "origin": "https://dap-demo.inguz.workers.dev",
   "deployment": "dap-demo",
-  "baseSource": "2883992093b5b2ea54a220dea7f81da0f34cee44",
+  "baseSource": "a4e62771c3dc8547b0e0065761df71799242bff6",
   "baseConfig": "apps/room/wrangler.demo.jsonc",
   "baseConfigSha256": "87bb65bbb8bdd4e4239a947cd999726b0ffdbf5c4f4eb3ceb7a529a488d3505e",
   "requiredInstalledRegisters": [
@@ -12,5 +12,8 @@
   "host": "artifacts",
   "namespace": "dap-demo",
   "pageOfferStages": "install preserves the old offer setting, which closes while host/register selection differs; offer fills the exact installed incarnation after successful install.",
-  "inventoryQualification": "Three read-only registered-scope censuses at the recorded windows; one old register on demo. The previous singleton setting already selected that root. This does not prove global legacy-scope completeness or authorize dropping any discovered root."
+  "inventoryQualification": "Three read-only registered-scope censuses at the recorded windows; one old register on demo. The previous singleton setting already selected that root. This does not prove global legacy-scope completeness or authorize dropping any discovered root.",
+  "inventorySource": "2883992093b5b2ea54a220dea7f81da0f34cee44",
+  "hostAuthorityApproval": "dde2c6de901d718cc90052d920c64d8ea9907f43",
+  "hostAuthorityReceipt": "168243a091ef2ebdebc1ba226e7bc1206ffae0c9"
 }

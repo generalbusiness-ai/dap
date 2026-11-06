@@ -1,6 +1,6 @@
 # Typed core witnesses
 
-Status: design acceptance map. The proposed interpreter does not yet exist.
+Status: acceptance map for the scheduled migration. M1–M2 implements the bounded first slice in `program/*`; later migrations retain the obligations below.
 
 All paths below are relative to the repository root. Test files belong to
 `packages/derive/test/` unless another path appears. Existing tests establish
@@ -41,8 +41,8 @@ Retain failures and unreached stages in the evidence instead of claiming a pass.
 
 ## New prototype evidence
 
-Use `packages/derive/test/program.test.ts` for these witnesses when implementing
-M1 and M2. Do not create those tests in this design-only delivery.
+`packages/derive/test/program.test.ts` owns these M1–M2 witnesses. The
+implementation note records their actual outcomes and controls.
 
 | Witness | Explicit expected result |
 |---|---|
@@ -101,5 +101,6 @@ stress: composition around native code without pretending to inspect that code.
 
 ## Recorded verification
 
-The design packet's final verification results accompany plan 035. No result
-here claims a working typed interpreter or measured implementation speedup.
+The historical design verification accompanies plan 035. The M1–M2
+implementation note records the later compiler and interpreter checks.
+Neither record claims a measured implementation speedup or general dependency soundness.

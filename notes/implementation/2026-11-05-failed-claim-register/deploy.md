@@ -1,10 +1,9 @@
 # Deploy the failed-claim register on dap-demo
 
-Status: changes requested in `bf2e724f0f39cdfb799abf924a1a3eb189b335eb`.
-Do not run this retained procedure or deploy its templates yet. The current
-host adapters bind Git authority to one root; retaining child-admission roots
-does not preserve old-room Git hosting. Planner ruling `3b239919` chooses a
-separate multi-root host-binding source child before this packet can continue.
+Status: revised after host source landing
+`a4e62771c3dc8547b0e0065761df71799242bff6`, approval `dde2c6de` and
+receipt `168243a0`. This revised packet still needs independent exact-head
+review and landing before the planner runs it.
 
 The planner runs this procedure after request
 `c448c870cf6a2f93a30c285a1a4d4a6c9f4bd8ad` passes review and lands.
@@ -19,15 +18,21 @@ Do not use this packet to switch `dap-grow` to another register.
 `packages/scope/src/archive-host-item.ts`, through `apps/room/archive.ts`,
 still checks one configured root. Fix and review that bridge before any
 Grow register switch. This retained packet changes only `dap-demo` and
-still waits for the host source and a new packet review.
+still waits for its new packet review.
 
 ## Prepare before the fourteen-minute window
 
 Use a clean source checkout at the packet's approved landing. Its production
-source starts at `2883992093b5b2ea54a220dea7f81da0f34cee44`. Verify the
+source includes host landing `a4e62771c3dc8547b0e0065761df71799242bff6`. Verify the
 reviewed templates, `packet.json`, and owned locked dependencies. Keep the same
 Worker name, Durable Object bindings, migrations, index, Artifacts namespace,
 secrets, serving limits, and compatibility flags.
+
+Planner ruling `3433fee8` deploys this same approved source to all three
+Workers after the packet lands. Grow and Lending keep their current root
+selectors and configurations; this packet renders only demo's register
+cutover. Retain each source deployment ID. Complete unrelated rollout
+preparation before starting demo's fourteen-minute plan window.
 
 Set these paths to new private directories and the reviewed checkout. Do not
 reuse an earlier install home or any G3, J4, or O4 custody.
@@ -163,6 +168,12 @@ Require the actual clone exit 0 and retain its accepted read-token result.
 This tests host authority after the root switch. Status reads and a child birth
 cannot replace it. Stop before the new scratch room if the old-room clone fails.
 
+Before the scratch room, open an existing old-root room's Site and fetch a
+known file through its existing published URL. Retain the actual response,
+content digest, and unchanged room identity. Require successful source access
+after the root switch. A Page shell or health response cannot replace this
+Site check. Stop before the scratch room if the Site check fails.
+
 ## Run the real scratch-room and token scenes
 
 Using the new client home, create one clearly named TEST room:
@@ -259,13 +270,17 @@ npx --offline wrangler@4.147.0 deploy --keep-vars \
 
 The rollback uses the same reviewed runtime, selects the original Register 17
 and host setting, restores its exact Page offer, and retains both roots in the
-child-admission array. It changes no namespace, stored scope, or secret.
+installed-root list for child admission, Git hosts, Sites, and workspace work.
+It changes no namespace, stored scope, or secret.
 Do not roll back to a singleton list after an accepted or uncertain new install.
 Listing the new root proves no Native birth and grants no new authority.
 
 Require health, original offer identity, existing-room reads, and old-room child
-continuity again. If a new room was created, verify its continuity separately;
-retained root syntax alone cannot prove it. Keep new-register creation and the
+continuity and the old-room Site check again. If a new-root TEST room exists,
+use its existing member home and the ordinary clone command to require a real successful Git clone after rollback.
+Keep that probe separate from the same-token expiry comparison. Also verify
+its unchanged pins and child continuity. Retained-root syntax and status reads
+cannot replace these host checks. Keep new-register creation and the
 parent's acceptance held after rollback. A failed continuity check needs a
 planner ruling before another deployment or Native producer.
 

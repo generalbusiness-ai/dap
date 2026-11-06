@@ -50,10 +50,11 @@ with its reader, parser and failure behavior. The order below uses these:
   creation with no parent is accepted only when it is the exact signed
   install of this register.
 - `INSTALLED_REGISTER_SCOPES`: optional nonsecret JSON array for child
-  creation under earlier installed registers. It holds 1 to 32 distinct
+  creation and Git host authority under earlier installed registers. It holds 1 to 32 distinct
   scope IDs, includes the current register, and fits within 4,096 UTF-8
-  bytes. Without it, the current register alone admits child creation.
-  An invalid value closes creation and makes register health unavailable.
+  bytes. Without it, creation admits only the current register, and each host keeps
+  its configured single register. An invalid list closes creation and Git
+  host authority and makes register health unavailable.
 - `ARTIFACTS_CONFIG` and `ARTIFACTS_NAMESPACE`: the Artifacts host. See
   [Configure a Git host](hosts.md#cloudflare-artifacts-host-artifacts).
 - `GITHUB_APP_CONFIG`, `GITHUB_APP_PRIVATE_KEY`, `GITHUB_CREATION_TOKEN`,
@@ -290,7 +291,9 @@ A register holds at most 64 live claims. Register 26 closes a claim as final `fa
 
 Earlier registers retain their historical behavior. In particular, Register 17 keeps a claim `pending` after all three attempts fail. At 64 live claims, it refuses later `found` requests with `type-full`. A returning host, rerun, `--again`, restart, or elapsed time does not free those places. [An outage can close a register](security/trust-boundaries.md#an-outage-can-close-a-register) describes that retained failure mode.
 
-The way out of a full historical register is a new register. Install it on a separate Worker and keep the old Worker serving its rooms. A cutover on one Worker strands the old rooms, because each room's host authority names the old register. `INSTALLED_REGISTER_SCOPES` can [retain child creation](#keep-existing-rooms-able-to-create-children), but the current host adapters still bind Git operations to one register. Supporting Git hosting for multiple installed roots needs a reviewed source change before that cutover. Existing rooms keep their original pins.
+The way out of a full register is a new register. On the same Worker, retain the old root in `INSTALLED_REGISTER_SCOPES` before you switch `REGISTER_SCOPE` and the host's configured register to the new root. The installed list preserves child creation and Git host authority for old rooms, including pending register operations. After the switch, check an old room's child creation and Git access before creating a new scratch room. You can also keep separate Workers, as [the Commons steps](#provision-the-commons-worker) show.
+
+The [demo register packet](../notes/implementation/2026-11-05-failed-claim-register/deploy.md) stages one same-Worker cutover and rollback. Keep both roots and verify old-room child creation, Git access, and Site source access before the new scratch room. The packet changes only demo; a Grow register switch still needs its archive bridge fixed and reviewed.
 
 ### Count a register's claims from its log
 
@@ -459,11 +462,14 @@ The commands on this page were not run for this revision.
 ## Keep existing rooms able to create children
 
 Before you change a Worker's current register, retain every earlier
-register whose rooms still need new Inboxes, lanes, or other children.
+register whose rooms still need new Inboxes, lanes, other children, or Git access.
 Record those scope IDs and the new current register in
 `INSTALLED_REGISTER_SCOPES`. Keep `REGISTER_SCOPE` as the current register
 for new rooms. A listed register still needs its own checked Native birth
-in this Worker's index. The list grants neither a birth nor authority.
+in this Worker's index. Both Git host adapters accept the listed roots while
+preserving the exact host, namespace, pinned owner and destination birth
+at its own register. GitHub also keeps its repository binding checks.
+The list supplies no birth, credential, or repository binding.
 
 For hosted Workers, commit the array beside `REGISTER_SCOPE` in the
 Worker's Wrangler file: `apps/room/wrangler.grow.jsonc`,
@@ -471,6 +477,13 @@ Worker's Wrangler file: `apps/room/wrangler.grow.jsonc`,
 Name that configuration commit in the deployment receipt. The operator
 alone changes the list. A request, readable scope, or index row cannot add
 a root. Existing single-register configurations need no new setting.
+
+A `dap-grow` register switch also needs its archive bridge fixed first.
+The installed list does not update the single-root checks in
+[`archive-host-item.ts`](../packages/scope/src/archive-host-item.ts), supplied
+through [`apps/room/archive.ts`](../apps/room/archive.ts). Fix and review
+that bridge before switching Grow. The demo register packet switches only
+`dap-demo`.
 
 For a self-hosted Worker, record the array in its operator configuration
 and name that record in the deployment receipt. Install the new register

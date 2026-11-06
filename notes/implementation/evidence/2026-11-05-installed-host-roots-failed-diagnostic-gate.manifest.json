@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "qualification": "Repeated failed diagnostic continuity gate4; source work stopped per plannerf115: one GitHub retained-root credential witness returned403 instead of200. Native failed; this run supplies no pass. Earlier failed gates remain failed. No builder deployment, live register or provider token, real Git clone, hosted acceptance, or historical archive cause.",
+  "fileCount": 13,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-05-installed-host-roots-gate-4-failed-validation",
+      "fileCount": 13,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 976,
+          "sha256": "51ce0c6565ade40e382c3ede0cfdd79a562cf3db3739ac23c6ec8324ba665e8b"
+        },
+        {
+          "path": "after.json",
+          "bytes": 1937,
+          "sha256": "fd8139d8b5bd7ba85a308ef365a9b3d70bb1a45b47de2e06d3502a4c042ad086"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1842,
+          "sha256": "9d4aaf3a28a0ffabb84664e25e12bb0347fec96228c1dfb89698fd23f6f41eed"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1937,
+          "sha256": "fd8139d8b5bd7ba85a308ef365a9b3d70bb1a45b47de2e06d3502a4c042ad086"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 7046,
+          "sha256": "8665c00e6918528912eaafe8893c0773d334ff8453f4998cfe5f01f886ec9479"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "a891a762c084ad81ff8fb5230fa717d82f4033f39ccd6d77fefce8f53515a6a1"
+        },
+        {
+          "path": "result.json",
+          "bytes": 3341,
+          "sha256": "85c57479ce5b056e3d269b66700767255487f00c7ec4f24823487843c943c26e"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 981,
+          "sha256": "bdb341e541378c542ae6ec6555530e4ebbac7441671e554fe8735275e2d68633"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 598,
+          "sha256": "464187c792ceb71a14a9a5dec7aea904bf9a61acdba9564e768c0b30abc4bb2d"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 5860,
+          "sha256": "ebaeae00aba288bae6965950dbbcbf6ea59964d472900a5f7c89204acbda3a97"
+        }
+      ]
+    }
+  ],
+  "sourceHead": "a7d22d7cb6f927860eb13e0379317a54f823aa5e",
+  "sourceTree": "a52d66dcac0f48653783104072fec12173dd2ac6"
+}

@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "sourceHead": "8b06312366635b7619abb2080d88a225fc063e17",
+  "qualification": "Development source hashes identify the exact runtime and test bytes. 24 focused cases, two distinguishing controls on both adapter paths, compiler and security checks. No full gate or hosted acceptance claim.",
+  "fileCount": 17,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-05-installed-host-roots-focused-evidence",
+      "fileCount": 17,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1344,
+          "sha256": "f49df362a0b48098bfd803f7fd071214778ad53e315321bc9498600d04403450"
+        },
+        {
+          "path": "cases.json",
+          "bytes": 10976,
+          "sha256": "e790a21777f160c3561a20227e5510df284e0e9f23ffaa2a2fadc648896de7ad"
+        },
+        {
+          "path": "commands.json",
+          "bytes": 2323,
+          "sha256": "b0ac5ff3498e9e1c14abdba32efe66895727cd8d764a3ba6b822a6e4d9abbf52"
+        },
+        {
+          "path": "control-singleton.json",
+          "bytes": 3359,
+          "sha256": "02a3f60abea210a06ec05fa07af937691d624d15ae878237090d14ff88a7f158"
+        },
+        {
+          "path": "control-stale-cache.json",
+          "bytes": 2459,
+          "sha256": "6f2c6a42f00a66b4e79d2e43de0550d556af5c5fbed89e428e44f4a283d93eee"
+        },
+        {
+          "path": "doc-links.log",
+          "bytes": 36,
+          "sha256": "3a9c5f58a570290642a3dd27a8a48f55199f946d703e6fd515757f093c5f75d1"
+        },
+        {
+          "path": "initial-failures.json",
+          "bytes": 737,
+          "sha256": "0c9eedfc7329c60b85333bd74ecd8013a32b10ac66bb5b423e41302db8a0cfc5"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 866,
+          "sha256": "5641898a536ad8bceebcfa434a2b7abf406edb7e08070483c5b6f9250c6b9bbd"
+        },
+        {
+          "path": "result.json",
+          "bytes": 173,
+          "sha256": "75f883c7e4ca5b29aae1ab520a634e4f0fb0268e321dad18c009c8876d9194b2"
+        },
+        {
+          "path": "sealing-driver.py",
+          "bytes": 4126,
+          "sha256": "4d79124ec91f5d00b7ffb5fd68caba13f66330ac036b3cd7d81f9a5534546099"
+        },
+        {
+          "path": "security.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "security.log",
+          "bytes": 1433,
+          "sha256": "ba42248767c3e4add4a01209cd2dfcc666ff60bfce3eac321a71bd4e832ead3f"
+        },
+        {
+          "path": "shared-helpers.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "shared-helpers.log",
+          "bytes": 68,
+          "sha256": "9c8d6f9e615cdb9e0b98f6a2ec69b11e56952868572d5d71545f872cbac4d720"
+        },
+        {
+          "path": "source-identity.json",
+          "bytes": 1078,
+          "sha256": "09cdba8340fa1f60a525cd6c9653d56f0d9ed06fcf44580356af27c0eff1c8c2"
+        },
+        {
+          "path": "test-typecheck.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "test-typecheck.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ]
+}

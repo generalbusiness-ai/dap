@@ -1,16 +1,14 @@
 # Prepare the failed-claim register on dap-demo
 
-Status: changes requested by checker report
-`bf2e724f0f39cdfb799abf924a1a3eb189b335eb`. Do not deploy this packet.
-Planner ruling `3b239919dd4e5683d1fcfdd9b51d5c23c4b1a9d7` chooses a separate
-multi-root host-binding source child. This packet waits for that reviewed source
-and another packet review; ruling request `5ff294e1` is answered.
+Status: this revision follows host source landing
+`a4e62771c3dc8547b0e0065761df71799242bff6`, checker approval `dde2c6de`,
+and merge receipt `168243a0`. The packet still needs its own independent
+exact-head review and landing. The planner then deploys and runs the real
+commands under ruling `3433fee8`.
 
-Planner ruling `56a48952` explicitly defers the Grow archive bridge.
-This packet switches only `dap-demo`; a `dap-grow` register switch needs
-`archive-host-item.ts` through `apps/room/archive.ts` fixed and reviewed
-first. The host source must also preserve old-room Sites and workspace
-provider work before this packet resumes.
+This packet switches only `dap-demo`. Planner ruling `56a48952` defers the
+Grow archive bridge. A Grow register switch needs `archive-host-item.ts`,
+through `apps/room/archive.ts`, fixed and reviewed first.
 
 ## What changed
 
@@ -27,7 +25,10 @@ installation returns the full reference. The filled values and deployments
 need their own later reviewed record. No live Wrangler file changes here.
 
 The existing Workers run source `2883992093b5b2ea54a220dea7f81da0f34cee44`,
-according to planner deployment `f419b883ce11119a90a3956acd7520ea39c206fd`.
+according to planner deployment `f419b883ce11119a90a3956acd7520ea39c206fd`
+and survey `4e1abd30`. The packet source includes `a4e62771`; the planner
+deploys that approved source to all three Workers while retaining Grow and
+Lending root settings. Only demo receives the rendered register switch.
 The builder independently read demo health and its current public offer on
 5 November at 05:23 UTC. Health returned 200 and version
 `5cc78f9e-3fce-4201-8182-454459e79b07`; the offer still names Register 17.
@@ -35,25 +36,26 @@ Source landing `12a718fe` and deployment alone meet no new-register acceptance.
 
 ## Decisions and reasons
 
-### Resolve the host-authority finding before any cutover
+### Preserve host authority across the switch
 
-The checker found a blocking source fact at main `28839920`.
-`artifactsOutside` and `githubOutside` bind host authority to the single host
-setting's `registerScope`. `hostBound` requires a Destination's retained claim
-to name that exact root. The installed-register list reaches child admission,
-the index, and health; it does not reach this host-binding check.
+Checker report `bf2e724f` rejected packet head `f9941195` because source
+`28839920` bound Artifacts and GitHub authority to one configured root.
+The installed-register list reached child admission but not host binding.
+That source could strand old rooms after cutover and new rooms after rollback.
+No live cutover or failure run occurred.
 
-The retained install and offer templates would therefore disable Git hosting
-for the thirteen existing demo rooms. The rollback would deny it to new-root
-rooms. Their status reads and child births could still pass. This finding
-comes from source inspection; no live cutover or failure run occurred.
-The passing gate and parser checks establish their recorded boundaries and
-do not establish multi-root host authority.
+The separate host source request `071b437d` now lands at `a4e62771`.
+Both Native adapters, both Site hosts, the fixed Site token owner, and workspace
+lineage use the validated installed-root list. Their existing birth, host,
+namespace, repository, and credential checks remain. The renderer now invokes
+the production host-root policy and requires the same two roots as child
+admission. These checks establish configuration policy, not live continuity.
 
-The builder restores the deployment warning and adds an actual old-room clone
-after the switch, before the scratch room. The templates and helper code stay
-unchanged until the chosen multi-root host-binding source lands.
-The remaining sections preserve the rejected proposal and its evidence.
+This branch merges the landed main into its retained packet history.
+The procedure requires an actual old-room child birth, Git clone, and Site
+source fetch after cutover, before the new scratch room. Rollback also requires
+a real clone from any new-root TEST room with its existing member home.
+The separate same-token expiry comparison keeps its original credential.
 
 ### Keep the existing Page acceptance path
 
@@ -107,16 +109,19 @@ deployment follows successful installation; it uses that actual incarnation
 without inventing one or making another plan.
 
 Rollback selects the original current root and host setting while retaining
-both roots for child admission. It grants neither root a Native birth. The
+both roots for child admission, Git hosts, Sites, and workspace work.
+It grants neither root a Native birth. The
 planner still needs actual old-room and any new-room continuity checks; parser
 acceptance alone cannot establish them.
 
 ### Preserve the distinction between syntax and root authorization
 
-Production `readInstalledRegisters`, `artifactsConfiguration`,
-`readPlatformCreationPolicy`, and `demoCreationConfig` accept the filled
-configurations with canonical synthetic IDs. They refuse unfilled templates,
-a list missing the current root, and a mismatched offer root.
+The renderer checks the filled configurations through production
+`readInstalledRegisters`, `hostRegisterScopes`, `artifactsConfiguration`,
+`readPlatformCreationPolicy`, and `demoCreationConfig`. Historical synthetic
+checks covered the earlier parser set. The revision checks below cover the
+added host-root policy, unfilled templates, a missing root, and a mismatched
+offer root.
 
 Omitting a historical root is valid parser syntax when the current root remains.
 The parser cannot infer the operator's retained inventory. The renderer therefore
@@ -151,8 +156,9 @@ live room in this packet.
 
 ## Evidence
 
-The [focused manifest](evidence/2026-11-05-failed-claim-register-focused.manifest.json) seals 18 public files and indexes four private original units. Its SHA256 is `5b3ee8cb600f846de6834bc0d02e91fbd9b84ed683ca8c27a9c6be88b26d650a`. The complete gate also passes at its frozen head; independent review remains pending.
-The current checks retain exact commands, actual exits, source hashes, synthetic
+The [focused manifest](evidence/2026-11-05-failed-claim-register-focused.manifest.json) seals 18 public files and indexes four private original units. Its SHA256 is `5b3ee8cb600f846de6834bc0d02e91fbd9b84ed683ca8c27a9c6be88b26d650a`. This evidence belongs to the original packet at source `28839920`. It does
+not cover this revision's host-policy call or merged runtime.
+Those historical checks retain exact commands, actual exits, source hashes, synthetic
 filled files, and every attempted read. The initial Python public-health probe
 received HTTP 403 before saving a response; it made no offer request. The later
 Node reads returned 200 for health and the offer. Both outcomes remain recorded.
@@ -188,15 +194,16 @@ An idle-sleep assertion applies only while the actual gate runs. The passing
 archive owner takes 265,038 ms and establishes no cause for request `64552d40`.
 Earlier cohort failures remain failed.
 
-At reviewed head `f9941195`, the post-gate changes were only the procedure,
-this note, and the new gate manifest. The procedure adds the private credential
-digest check. The later response to `bf2e724f` also restores the host-authority
-warning in `docs/deploy.md` and adds the old-room Git check. All helper code,
-templates, production code, tests, dependencies, and live Wrangler bytes retain
-the exact gate inputs. These documentation follow-ups need no second gate.
-Planner ruling `ef31035a8d14c68d2d402f928ca946bfee63bb04` accepts demo as the
-right Worker and requires an actual old-room child birth before the new scratch
-room. The procedure keeps that order.
+At previous reviewed head `f9941195`, post-gate changes touched only the
+procedure, this note, and the gate manifest. Later retained checkpoints added
+the old-room clone and Grow prerequisite. Their exact evidence remains above.
+This revision changes the renderer and incorporates host and M1–M2 source.
+It needs fresh focused checks and a complete gate before review.
+
+## Revision checks
+
+Fresh synthetic renderer checks and the final gate remain pending. No command
+in this revision creates a register, room, token, deployment, or live clone.
 
 ## Open limits
 
@@ -206,10 +213,9 @@ room. The procedure keeps that order.
 - Parent `8a8902f3e9ad526371cb0a73db4117bc0197cd60` owns the actual new register,
   existing-room continuity, default Page and CLI scenes, actual one-hour token,
   and same-token post-hour clone refusal. None has run in this packet.
-- M1–M2 request `1d235b6afb9d435e2d26a334bf08b01da7c7f499` already froze its
-  source and started its gate before the builder read this new request. It
-  remains frozen while this packet takes priority; this packet edits no derive
-  source. Gates do not run concurrently.
+- M1–M2 request `1d235b6afb9d435e2d26a334bf08b01da7c7f499` landed at
+  `8b063123`. M3 request `21d8e638` follows this packet. This revision changes
+  no derive source.
 - O4 request `c7a090dcf0816675808ba081dc04fc8cc702e224` retains its separate
   host window. Browser control remains unavailable and its invite unread.
   The mini stays off limits.

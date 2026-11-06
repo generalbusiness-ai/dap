@@ -19,12 +19,13 @@ export function exact(value: unknown, keys: readonly string[]): Record<string, u
 
 /** The creator is the actual directory derived by this verified register claim,
  * not an independently created directory that merely cites the same claim. */
-export function destinationBirth(given: OutsideGiven, registerScope: ScopeId): boolean {
+export function destinationBirth(given: OutsideGiven, registerScope: ScopeId | readonly ScopeId[]): boolean {
+  const registerScopes = typeof registerScope === "string" ? [registerScope] : registerScope;
   try {
     const genesis = given.own(0)?.entry;
     const branch = destinationBranch(given.state);
     const claim = branch?.refs["claim"];
-    if (genesis?.input.type !== "genesis" || genesis.input.seed.creator?.kind !== "directory" || !same(branch?.refs["directory"], genesis.input.seed.creator) || !isFactRef(claim) || claim.at.kind !== "register" || claim.at.scope !== registerScope) return false;
+    if (genesis?.input.type !== "genesis" || genesis.input.seed.creator?.kind !== "directory" || !same(branch?.refs["directory"], genesis.input.seed.creator) || !isFactRef(claim) || claim.at.kind !== "register" || !registerScopes.includes(claim.at.scope)) return false;
     const use = genesis.uses.find((use) => same(use.fact, claim));
     const retained = use ? given.retained("entry", use.content) : null;
     if (!retained) return false;
@@ -38,22 +39,23 @@ export function destinationBirth(given: OutsideGiven, registerScope: ScopeId): b
 
 /**
  * Whether this object may use one host's authority for an owner: the pinned
- * register, when its recorded host and namespace are this host's; or a
- * destination born of that register's claim, whose recorded repository is
+ * registers, when their recorded host and namespace are this host's; or a
+ * destination born of a listed register's claim, whose recorded repository is
  * at this host and namespace.
  */
-export function hostBound(given: OutsideGiven, registerScope: ScopeId, host: string, namespace: string): (owner: string) => boolean {
+export function hostBound(given: OutsideGiven, registerScope: ScopeId | readonly ScopeId[], host: string, namespace: string): (owner: string) => boolean {
+  const registerScopes = typeof registerScope === "string" ? [registerScope] : registerScope;
   return (owner) => {
     const scope = given.scope();
     const genesis = given.genesis();
     // The owner is a version of the register or of the destination, and the one that this scope pinned at its genesis.
-    if (isOf(owner, "platform:register") && scope?.at.kind === "register" && scope.at.scope === registerScope && genesis?.seed.definition === owner) {
+    if (isOf(owner, "platform:register") && scope?.at.kind === "register" && registerScopes.includes(scope.at.scope) && genesis?.seed.definition === owner) {
       const item = given.state.page("register", ["open"], null, 1).items[0];
       return item?.values["host"] === host && item.values["namespace"] === namespace;
     }
     if (isOf(owner, "platform:destination") && scope?.at.kind === "destination" && genesis?.seed.definition === owner) {
       const repository = destinationBranch(given.state)?.values["repository"] as Record<string, unknown> | undefined;
-      return destinationBirth(given, registerScope) && repository?.["host"] === host && repository["namespace"] === namespace;
+      return destinationBirth(given, registerScopes) && repository?.["host"] === host && repository["namespace"] === namespace;
     }
     return false;
   };

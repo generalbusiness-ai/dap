@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { isScopeId, isScopeRef } from "@generalbusiness/dap-bytes";
 import { FAILED_CLAIM_COHORT } from "@generalbusiness/dap-platform";
 import { readInstalledRegisters } from "../../../packages/scope/src/register-setting.ts";
+import { hostRegisterScopes } from "../../../packages/scope/src/installed-registers.ts";
 import { artifactsConfiguration } from "../../../packages/scope/src/artifacts-wiring.ts";
 import { demoCreationConfig } from "../../../packages/scope/src/demo-creation.ts";
 import { readPlatformCreationPolicy } from "../../../packages/scope/src/creation-versions.ts";
@@ -33,6 +34,9 @@ export function validateConfig(config, stage, scope, inc) {
   const artifacts = artifactsConfiguration(vars.ARTIFACTS_CONFIG);
   assert.ok(artifacts, "production Artifacts parser refused the configuration");
   assert.equal(artifacts.registerScope, current);
+  const hosted = hostRegisterScopes(artifacts.registerScope, vars);
+  assert.ok(hosted, "production host-root policy refused the configuration");
+  assert.deepEqual(hosted, selected.scopes, "host authority must retain the same reviewed roots");
   assert.equal(artifacts.namespace, packet.namespace);
   assert.deepEqual({ ...artifacts, registerScope: baseConfig.vars.REGISTER_SCOPE }, artifactsConfiguration(baseConfig.vars.ARTIFACTS_CONFIG));
   const policy = readPlatformCreationPolicy(vars);
@@ -59,7 +63,7 @@ export function validateConfig(config, stage, scope, inc) {
   assert.deepEqual(normalized, baseConfig, "non-variable Wrangler settings changed");
   return { stage, register: selected.scope, installedRegisters: selected.scopes, definition: stage === "rollback" ? JSON.parse(baseConfig.vars.DEMO_START_CONFIG).definition : packet.newDefinition,
     pageOffer: stage === "install" ? "closed during installation" : "configured; installed Native state still needs checking",
-    creationPins: policy.pins, qualification: "Parser and retained-root checks only; no Native birth, live provider, or acceptance claim." };
+    creationPins: policy.pins, qualification: "Production child, host-root and offer policy checks only; no Native birth, live provider, or acceptance claim." };
 }
 
 export async function renderConfig(stage, scope, inc) {
