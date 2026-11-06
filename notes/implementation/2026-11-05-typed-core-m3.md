@@ -2,9 +2,10 @@
 
 Status: production clock cutover implemented at `395326e6`. The validator records
 the complete structural graph, and both production callers consume it. The
-final frozen focused checks pass. The first gate failed on three fixture/build
-checks; its corrections pass. A new frozen gate, independent review, and landing
+frozen focused checks at `cb614e2f` pass. The first gate failed on three fixture
+and build checks; its corrections pass. A new frozen gate, independent review, and landing
 remain pending.
+
 Original request `21d8e638` and promise `287adf75` became stale through a
 retired ruling. Renewed full-scope request `f012c968e9254ebf224c003961f7fd578d2f89ca`
 owns this delivery under active scheduling request `e99550e9`. Planner ruling `3b239919`, step 5, permits M3 while an independent
@@ -435,4 +436,3 @@ The [final-focused-2 manifest](evidence/2026-11-06-m3-final-focused-2.manifest.j
 The [final-focused-custody manifest](evidence/2026-11-06-m3-final-focused-custody.manifest.json) seals 10 files; SHA-256 `32dd53bdc9ec93758d7313c5522eca54378093d34c63d3318292693bd6bc697e`.
 
 The [gate-fixes-focused manifest](evidence/2026-11-06-m3-gate-fixes-focused.manifest.json) seals 14 files; SHA-256 `46ab6503994b958e39261e837736187f760b9fe3697cdc7741cd2bc22c0280c8`.
-
