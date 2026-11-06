@@ -2,11 +2,11 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { validateDefinition, type ValidDefinition } from "../src/validate/index.ts";
-import { bodyJudgesClock, bodyStructure, clauseStructure, declaredClockReads, structureOf, type StructureNode } from "../src/program/structure.ts";
+import { bodyJudgesClock, bodyStructure, clauseStructure, declaredClockReads, formStructures, structureOf, timedStructure, type StructureNode } from "../src/program/structure.ts";
 import { resolvedReads } from "../src/program/reads.ts";
 import { handlerBranch } from "../src/handler-branch.ts";
 import { lower } from "../src/program/lower.ts";
-import { small } from "./definition-corpus/fixture-data.ts";
+import { lane, small } from "./definition-corpus/fixture-data.ts";
 import { asks } from "./definition-corpus/forms-operand-data.ts";
 import { gate } from "./definition-corpus/marks-data.ts";
 import { lateDefinition } from "./definition-corpus/source-order-data.ts";
@@ -97,6 +97,10 @@ test("aliased act and send objects keep distinct body and clause contexts", () =
   const checked = admitted(input), original = bodyStructure(checked, act, "edit")!, alias = bodyStructure(checked, act, "alias")!;
   expect(bodyStructure(checked, act)).toBeNull();
   expect(original.id).not.toBe(alias.id);
+  const guard = act.guards[0]!;
+  expect(formStructures(checked, original, guard)).toEqual([original.nodes[0]]);
+  expect(formStructures(checked, alias, guard)).toEqual([alias.nodes[0]]);
+  expect(formStructures(checked, original, guard)[0]).not.toBe(formStructures(checked, alias, guard)[0]);
   expect(declaredClockReads(original)).toEqual([]); expect(declaredClockReads(alias)).toEqual([]);
   const owner = act.sends[0]!, first = clauseStructure(checked, owner, "applied", original, "edit")!, second = clauseStructure(checked, owner, "applied", alias, "alias")!;
   expect(first.id).not.toBe(second.id); expect(first.origin).toBe(original.id); expect(second.origin).toBe(alias.id);
@@ -136,8 +140,23 @@ test("compiled data owns its inputs and cannot be borrowed through a copied vali
   effect.value.from.time.plusSeconds = 999; act.guards = [];
   expect(JSON.stringify(structureOf(first))).toBe(before);
   expect(structureOf({ ...first })).toBeNull();
+  expect(() => formStructures(second, body, act.effects[0]!)).toThrow("another validation");
+  expect(() => formStructures(first, { ...body }, act.effects[0]!)).toThrow("another validation");
+  expect(formStructures(first, body, { ...act.effects[0]! })).toEqual([]);
   expect(() => declaredClockReads({ ...body })).toThrow("not admitted");
   const hasFunction = (value: unknown): boolean => typeof value === "function" || value !== null && typeof value === "object" && Object.values(value).some(hasFunction);
   expect(hasFunction(structureOf(first))).toBe(false);
   expect([Object.isFrozen(body), Object.isFrozen(body.nodes), Object.isFrozen(body.nodes[0]?.data), Object.isFrozen(structureOf(first)?.rules)]).toEqual([true, true, true, true]);
+});
+
+test("timed execution binds only its admitted rule and original form arrays", () => {
+  const input = structuredClone(lane), checked = admitted(input), rule = input.timed["hold-end"]!;
+  const body = timedStructure(checked, "hold-end", rule.effects, rule.attention);
+  expect(body).toBe(bodyStructure(checked, rule, "timed:hold-end"));
+  expect(body?.frame.kind).toBe("timed");
+  expect(formStructures(checked, body!, rule.effects[0]!)).toEqual([body!.nodes[0]]);
+  expect(timedStructure(checked, "hold-end", [...rule.effects], rule.attention)).toBeNull();
+  expect(timedStructure(checked, "hold-end", rule.effects, [...rule.attention])).toBeNull();
+  expect(timedStructure(checked, "unknown", rule.effects, rule.attention)).toBeNull();
+  expect(timedStructure({ ...checked }, "hold-end", rule.effects, rule.attention)).toBeNull();
 });

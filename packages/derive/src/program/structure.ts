@@ -77,8 +77,10 @@ interface Compiled {
   readonly bodies: WeakMap<object, readonly BodyStructure[]>;
   readonly replacements: readonly { readonly source: object; readonly body: BodyStructure }[];
   readonly clauses: WeakMap<object, ReadonlyMap<string, readonly BodyStructure[]>>;
+  readonly forms: WeakMap<object, readonly { readonly body: BodyStructure; readonly node: StructureNode }[]>;
 }
 const compiled = new WeakMap<ValidDefinition, Compiled>(), checkedRoots = new WeakSet<BodyStructure>();
+const rootOwners = new WeakMap<BodyStructure, ValidDefinition>();
 function traceOf(d: Defining): Trace {
   let trace = pending.get(d);
   if (!trace) { trace = { roots: [], active: null }; pending.set(d, trace); }
@@ -135,20 +137,28 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
   const trace = pending.get(d);
   if (!trace) return;
   if (trace.active !== null) throw new TypeError("unclosed definition structure");
+  const bindings: { source: object; node: StructureNode }[] = [];
   const nodeOf = (node: PendingNode): StructureNode => {
     const data = immutable(node.data), children = Object.freeze(node.children.map(nodeOf));
     if (node.category === "effect" && node.op === "value" && !node.source) throw new TypeError("value form has no captured source");
     // Each discriminant came from the existing validator's admitted form branch.
-    return Object.freeze({ category: node.category, op: node.op, path: node.path, data, children,
+    const owned = Object.freeze({ category: node.category, op: node.op, path: node.path, data, children,
       reads: ownResolutions(node.reads), ...(node.category === "send" ? { future: Object.freeze(node.future.map(link => Object.freeze({ ...link }))) } : {}),
       ...(node.source ? { source: node.source } : {}) }) as StructureNode;
+    if (typeof node.data !== "object" || node.data === null) throw new TypeError("structural form has no source object");
+    bindings.push({ source: node.data, node: owned });
+    return owned;
   };
   const bodies = new WeakMap<object, BodyStructure[]>(), clauses = new WeakMap<object, Map<string, BodyStructure[]>>();
+  const forms = new WeakMap<object, readonly { readonly body: BodyStructure; readonly node: StructureNode }[]>();
   const replacements: { source: object; body: BodyStructure }[] = [];
   const roots = trace.roots.map((root): BodyStructure => {
     if (!root.frame) throw new TypeError("structural body has no validator frame");
+    bindings.length = 0;
     const body = Object.freeze({ id: root.id, origin: root.origin?.id ?? null, frame: root.frame, nodes: Object.freeze(root.nodes.map(nodeOf)), reads: ownResolutions(root.reads) });
     checkedRoots.add(body);
+    rootOwners.set(body, definition);
+    for (const { source, node } of bindings) forms.set(source, Object.freeze([...(forms.get(source) ?? []), Object.freeze({ body, node })]));
     if (root.binding.kind === "body") {
       const existing = bodies.get(root.binding.source) ?? []; existing.push(body); bodies.set(root.binding.source, existing);
       if (root.frame.kind === "replacement") replacements.push({ source: root.binding.source, body });
@@ -161,7 +171,7 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
   const structure: DefinitionStructure = Object.freeze({ validation: reads.validation, digest: definition.digest,
     profile: immutable(definition.declared.profile), rules: immutable(definition.declared.rules), capabilities: immutable(definition.declared.capabilities),
     roots: Object.freeze(roots), marks: reads.marks, underived: reads.underived });
-  compiled.set(definition, { structure, bodies, clauses, replacements: Object.freeze(replacements) });
+  compiled.set(definition, { structure, bodies, clauses, forms, replacements: Object.freeze(replacements) });
   pending.delete(d);
 }
 export const structureOf = (definition: ValidDefinition): DefinitionStructure | null => compiled.get(definition)?.structure ?? null;
@@ -189,6 +199,20 @@ export function clauseStructure(definition: ValidDefinition, owner: object, clau
   const found = compiled.get(definition)?.clauses.get(owner)?.get(clause)?.filter(body =>
     body.origin === (origin?.id ?? null) && body.frame.context.kind === kind);
   return found?.length === 1 ? found[0]! : null;
+}
+
+/** Resolve occurrences by their source object and admitted body, including lexical aliases. */
+export function formStructures(definition: ValidDefinition, body: BodyStructure, source: object): readonly StructureNode[] {
+  if (rootOwners.get(body) !== definition) throw new TypeError("body structure belongs to another validation");
+  return Object.freeze((compiled.get(definition)?.forms.get(source) ?? []).filter(binding => binding.body === body).map(binding => binding.node));
+}
+
+/** Timed judges pass their exact effect and attention arrays rather than a body object. */
+export function timedStructure(definition: ValidDefinition, kind: string, effects: readonly unknown[], attention: readonly unknown[]): BodyStructure | null {
+  const source = Object.hasOwn(definition.declared.timed, kind) ? definition.declared.timed[kind] : undefined;
+  if (!source || source.effects !== effects || source.attention !== attention) return null;
+  const body = bodyStructure(definition, source, `timed:${kind}`);
+  return body?.frame.kind === "timed" ? body : null;
 }
 
 export interface ClockRead { readonly path: string; readonly kind: "before" | "after" | "value-time" }
