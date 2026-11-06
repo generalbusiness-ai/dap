@@ -1,0 +1,77 @@
+{
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-gate-fixes-focused",
+  "qualification": "Scope addendum907088f9. Replay/Page test compilers and all56 cases in3 owning files pass. Source patch reconstructs correction checkpoint exactly. No production replay change.",
+  "fileCount": 14,
+  "files": [
+    {
+      "path": "checkpoint-proof.json",
+      "bytes": 158,
+      "sha256": "dc4320de38bb0fc988247347d8e75b3b959fa1430bbb126dcb73c98d0bd09384"
+    },
+    {
+      "path": "compat.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "compat.log",
+      "bytes": 363,
+      "sha256": "6895d900b5d3fab4381f76d0d78404eb80ff989050b9c1bd150e115ff8a243f9"
+    },
+    {
+      "path": "driver.py",
+      "bytes": 2280,
+      "sha256": "48dfd57906c1f9cb97e3e2504be0d0b94e804e610decf605870e6a6167208597"
+    },
+    {
+      "path": "input.patch",
+      "bytes": 801528,
+      "sha256": "7724fce646726c8cd62acbfec5bc3e07ce987ef62d0dc9efd8100277da1c59ad"
+    },
+    {
+      "path": "owners.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "owners.log",
+      "bytes": 14778,
+      "sha256": "a14b7f11555166a6f481f77587a4d7793cc17d693aaaef6128ad2ef61848010a"
+    },
+    {
+      "path": "page-test-compiler.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "page-test-compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "replay-test-compiler.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "replay-test-compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "result.json",
+      "bytes": 1762,
+      "sha256": "9b368d9a2ee0139e8241da9189122fe7c1dd18204ffe7efd974721c0633adf2f"
+    },
+    {
+      "path": "source.json",
+      "bytes": 731,
+      "sha256": "bf6a345ca37aea78d01ef7ca84c35e79851b3e1d37e0c22b7b53383c36daa9b1"
+    },
+    {
+      "path": "vitest.json",
+      "bytes": 32710,
+      "sha256": "f3d8c30e937cc18f3c4290ae68f4d3bc449fd9483622f3d3e03b413ea334a2c9"
+    }
+  ]
+}

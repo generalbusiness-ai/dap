@@ -2,7 +2,9 @@
 
 Status: production clock cutover implemented at `395326e6`. The validator records
 the complete structural graph, and both production callers consume it. The
-final frozen checks, gate, independent review, and landing remain pending.
+final frozen focused checks pass. The first gate failed on three fixture/build
+checks; its corrections pass. A new frozen gate, independent review, and landing
+remain pending.
 Original request `21d8e638` and promise `287adf75` became stale through a
 retired ruling. Renewed full-scope request `f012c968e9254ebf224c003961f7fd578d2f89ca`
 owns this delivery under active scheduling request `e99550e9`. Planner ruling `3b239919`, step 5, permits M3 while an independent
@@ -383,3 +385,54 @@ its reviewed landing, and every semantic stop criterion. Hugh's deletion-size
 override remains the only exception. No accepted-definition bytes, execution
 order, resource refusal, retained evidence, or judgment may change. Stop the
 affected delivery if one of those invariants cannot hold.
+
+## Retain the failed gate and repair its inputs
+
+The first source gate at `cb614e2f`, tree `3be83703`, ends with actual
+`gate.exit` 1. Its source remains unchanged and its process group closes.
+Kernel, Node (135), Counting (56), prechecks, and typecheck pass. Plain records
+3984 passes, one skip, and three unique failing cases. Native remains unreached.
+This gate stays failed; no result from it establishes Native coverage.
+
+Two replay tests intentionally passed copied unsupported definitions to the
+fixture `created` function. The new admitted-root check rejects those copies
+before replay can inspect their retained bytes. Scope addendum `907088f9`
+records the fixture change before source edits. A narrow helper in replay's
+`test/world.ts` now creates a genuine admitted notes genesis, then changes the
+retained declaration, seed pin, scope identity, and entry hash as untrusted
+synthetic bytes. The unsupported format and durability tests retain their
+literal replay refusals. Production replay and admission checks stay intact.
+
+The third failure compares the generated Page asset with its current source.
+The validator's metadata now joins that bundle. The existing command
+`npm run build --workspace @generalbusiness/dap-page` regenerates
+`apps/room/page/assets.ts`; it changes no Page source flow or dependency.
+The required Page browser workflow checks the published candidate separately.
+
+Correction checkpoint `c4faff56` changes only those three replay test files and
+the generated Page asset. Replay and Page test compilers pass, and all 56 cases
+in the three complete owning files pass. Their saved patch equals that exact
+checkpoint relative to `cb614e2f`. A new frozen gate must pass after these
+concrete corrections; the earlier failed run supplies no substitute.
+
+The frozen focused pipeline before the first gate passes both compilers and
+111 cases across eight complete derive owners. Its first verification attempt
+retains a ledger-name mismatch: both compilers and all cases pass, but the
+verifier exits 1 because JSON and structured reporter names use different
+separators. The corrected ledger passes on unchanged source. An earlier plan
+setup names a nonexistent compiler file and runs no compiler or body. All
+preparation and verification failures remain qualified in the custody record.
+The failed-gate analyzer also first expects a Native output file that the
+unreached stage never creates. Its retained error remains private; the corrected
+analyzer records Native as unreached rather than inventing observations.
+
+The [failed-gate manifest](evidence/2026-11-06-m3-failed-gate.manifest.json) seals 7 files; SHA-256 `711dd54af46665d05873a8921f7851ea20ac54e1a2ada44257acdb39389d892c`.
+
+The [final-focused manifest](evidence/2026-11-06-m3-final-focused.manifest.json) seals 9 files; SHA-256 `ce8d8841e0498718ab6b5d2cdb262ded60cc47480e454532ce00ed4838821186`.
+
+The [final-focused-2 manifest](evidence/2026-11-06-m3-final-focused-2.manifest.json) seals 9 files; SHA-256 `8e253990ca8ff92f5c98a3673a171b46ad5b714a6890a0c75d6f0c6eb072b187`.
+
+The [final-focused-custody manifest](evidence/2026-11-06-m3-final-focused-custody.manifest.json) seals 10 files; SHA-256 `32dd53bdc9ec93758d7313c5522eca54378093d34c63d3318292693bd6bc697e`.
+
+The [gate-fixes-focused manifest](evidence/2026-11-06-m3-gate-fixes-focused.manifest.json) seals 14 files; SHA-256 `46ab6503994b958e39261e837736187f760b9fe3697cdc7741cd2bc22c0280c8`.
+

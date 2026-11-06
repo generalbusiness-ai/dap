@@ -1,0 +1,57 @@
+{
+  "directory": "/private/tmp/artroom-m3-final-focused-custody-20261106",
+  "qualification": "Sealed supplementary tool/config/plan copies, outer timings and actual exits. Retains setup and ledger failure qualifications.",
+  "fileCount": 10,
+  "files": [
+    {
+      "path": "artroom-m3-build-final-focused-plan-20261106.py",
+      "bytes": 4218,
+      "sha256": "c3b9b3c1835fbe7eed15b106cad4bb378ee1ae859b4346a739bf6416e0cf250e"
+    },
+    {
+      "path": "artroom-m3-final-focused-2-20261106.time",
+      "bytes": 29,
+      "sha256": "84b14cd72118abbabc084b205313bfc7e6f0a2103f62f4afbe18f87621c749a5"
+    },
+    {
+      "path": "artroom-m3-final-focused-20261106-complete.time",
+      "bytes": 29,
+      "sha256": "87db0102ff45e1dfeda8808bfd772b4bd17b56e2d1c4ca44fc4612f8aa857a54"
+    },
+    {
+      "path": "artroom-m3-final-focused-20261106.time",
+      "bytes": 29,
+      "sha256": "1f00c70a85b25c45237e698754bbdddf8fd5ead47ffa49dd985ec51b93d2688a"
+    },
+    {
+      "path": "artroom-m3-final-focused-config-20261106.mjs",
+      "bytes": 8741,
+      "sha256": "52af1ba146edeaf467caec1a59dbfced83848f0c1c8b451190dd13dab129cfc6"
+    },
+    {
+      "path": "artroom-m3-final-focused-plan-20261106.json",
+      "bytes": 367950,
+      "sha256": "32d534d6bc89a8f814a2e31f3dc5901ed5f125995d1f686eb3db16e123d623e0"
+    },
+    {
+      "path": "focused-1.exit",
+      "bytes": 7,
+      "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+    },
+    {
+      "path": "focused-2.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 1686,
+      "sha256": "97efe7f0cf7a0bd0a2ae1de4d6588523144fc8b95d00227048028d533a08bb4e"
+    },
+    {
+      "path": "preparation-failure.json",
+      "bytes": 1001,
+      "sha256": "658a229aa1466a5bff106caf0898ad50cb92fa8a8ccaabc8b85384e4f8704980"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-final-focused",
+  "qualification": "First frozen focused verification exits1 for ledger-name mismatch despite both compilers and111 selected cases passing. Earlier planning-script copy absent; its hash remains in the plan. Failed evidence retained.",
+  "fileCount": 9,
+  "files": [
+    {
+      "path": "body.log",
+      "bytes": 21591,
+      "sha256": "87afa81c620599366af7ca7375e8cc983ec406ec42465f6563369808f38d0047"
+    },
+    {
+      "path": "coverage-ledger.json",
+      "bytes": 141144,
+      "sha256": "4abc0a540fb45d1b2787df76bc9392fb8e3757bee6328d43bed5f38a69ed3214"
+    },
+    {
+      "path": "coverage.jsonl",
+      "bytes": 167761,
+      "sha256": "f274b7669b32c40c57fc89aba03dc614bdcadf6e8f0f58e12ec5980ce69c922c"
+    },
+    {
+      "path": "derive-source.log",
+      "bytes": 29,
+      "sha256": "ffddaf0b3aebeafe11509b0843dfab6aec7fb32ace090397283f08da24d4e2fb"
+    },
+    {
+      "path": "derive-test.log",
+      "bytes": 29,
+      "sha256": "29af65244d1fe9726bf856aa52bacd85b1c04f9afa67fde3bc680c2524d245f2"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 1057,
+      "sha256": "c0c516978a46bcde10002b5784334165333583c828c4b57bbd3bb159cf10add8"
+    },
+    {
+      "path": "plan.json",
+      "bytes": 367770,
+      "sha256": "d9a4a0b83cb3218ce419a269cad3f6d999d56c1acfef3f356117dab30cb224ea"
+    },
+    {
+      "path": "result.json",
+      "bytes": 9161,
+      "sha256": "54095980b57c223c8c1fa0c4038a64c980d7be0e9706b78d733069a51a160985"
+    },
+    {
+      "path": "vitest.json",
+      "bytes": 49287,
+      "sha256": "15d4d692f2a1eb886e6ec5a31a333d54f11c51dde05cba5c8ac275e84844447c"
+    }
+  ]
+}
