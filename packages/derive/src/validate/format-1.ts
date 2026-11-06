@@ -11,7 +11,7 @@ import { definitionDigest } from "@generalbusiness/dap-bytes";
 import { isObject, own } from "../values.ts";
 import { capabilities } from "./capability.ts";
 import { capacityOf } from "./capacity.ts";
-import { mark, marked, type Defining } from "./context.ts";
+import { mark, marked, naming, type Defining } from "./context.ts";
 import { acts, receives } from "./handlers.ts";
 import { heldUnderBytes, holdForms, holdTypes } from "./hold.ts";
 import { prepareReserving, reserving, type ReservationPlan } from "./holds.ts";
@@ -25,7 +25,7 @@ import { timedEntryBytes, timedGraph, timedKinds, timedRules } from "./timed.ts"
 import { standingOf } from "./standing.ts";
 import { AmountError } from "../held.ts";
 import type { Profile, ValidateOptions, Validation } from "./index.ts";
-import { bindReads } from "../program/reads.ts";
+import { bindReads, recordFrame } from "../program/reads.ts";
 
 /** The sole currently supported definition-format binding; not a new format. */
 export const FORMAT_1 = "artroom-definition-1";
@@ -140,6 +140,7 @@ export function validateFormat1(input: unknown, bounds: Bounds, profiles: Readon
       const send = marked(o["send"]) ? mark(d, o["send"], p, "send", ["result"], ["once"]) : bad("shape", p, "an outcome's mark holds at most one send, and it is a mark: an outcome's row writes no send");
       const clauses = send ? rec(send["result"], at(p, "result"), [], ["applied", "refused", "superseded", "undelivered", "conflict"]) : null;
       for (const [clause, effects] of Object.entries(clauses ?? {})) {
+        recordFrame(d, { ...naming(), clause: true, fields: new Map(), kind }, at(at(p, "result"), clause), "outcome-clause");
         d.list(effects, at(at(p, "result"), clause), bounds.effects).forEach((e, i) => {
           const q = at(at(at(p, "result"), clause), i);
           if (marked(e)) mark(d, e, q, "effect", [], ["most"]);

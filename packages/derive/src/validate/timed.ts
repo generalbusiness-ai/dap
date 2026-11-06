@@ -11,6 +11,7 @@ import { effectBytes, effects } from "./effects.ts";
 import { endedState, holdDoes } from "./hold.ts";
 import { attention, notifyBytes } from "./sends.ts";
 import { at } from "./shape.ts";
+import { recordFrame } from "../program/reads.ts";
 import { ENTRY_BYTES, RECORD_BYTES, memberBytes, mostBytes, stated } from "./sizes.ts";
 
 /** What the kind of a timed entry begins with (section 6.2). Its rule's key follows. */
@@ -104,6 +105,7 @@ export function timedRules(d: Defining, v: unknown, timedTypes: Set<string>, out
     if (to === null) bad("timed", at(path, "effects"), "a timed rule takes its item out of the rule's states");
     else moves.push({ name, type: t.name, states, to, deadline: String(o["deadline"]) });
     attention(d, o["attention"], at(path, "attention"), ctx);
+    recordFrame(d, ctx, path, "timed");
   }
   return moves;
 }

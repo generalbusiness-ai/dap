@@ -11,7 +11,7 @@ import { clauseObserves } from "./observes.ts";
 import { isDetached, operand } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
 import { RECORD_BYTES, stated } from "./sizes.ts";
-import { recordSlot } from "../program/reads.ts";
+import { recordFrame, recordSlot } from "../program/reads.ts";
 
 /**
  * A range that a send reads whole: the items of a fan-out, and of a
@@ -94,7 +94,9 @@ function clauses(d: Defining, v: unknown, path: string, ctx: Ctx, conflict: bool
     // Section 6.6: a clause's subjects are those of the entry that made the send, as that entry resolved them. A name that was
     // selected through a slot that is not fixed cannot be selected again when the clause runs, so a clause names none.
     const settled = new Map([...ctx.also].filter(([also]) => !ctx.unsettled?.has(also)));
-    effects(d, e, at(path, name), { ...ctx, also: settled, clause: true, senderKind }, true);
+    const within: Ctx = { ...ctx, also: settled, clause: true, senderKind };
+    effects(d, e, at(path, name), within, true);
+    recordFrame(d, within, at(path, name), "clause");
     if (d.clause) { d.clauseSets.push(d.clause); d.clauseRetains.set(d.clause, own(rows, name)); d.clausePaths.set(d.clause, at(path, name)); reserved.push(d.clause); }
     d.clause = null;
   }

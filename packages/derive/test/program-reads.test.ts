@@ -11,6 +11,9 @@ import { notes, small } from "./definition-corpus/fixture-data.ts";
 import { jobs } from "./definition-corpus/forms-guards-data.ts";
 import { gate } from "./definition-corpus/marks-data.ts";
 import { capabilityStagingData } from "./definition-corpus/capability-staging-data.ts";
+import { board } from "./definition-corpus/forms-data.ts";
+import { lateDefinition } from "./definition-corpus/source-order-data.ts";
+import { handlerBranch } from "../src/handler-branch.ts";
 
 function fixture() {
   const bounds = structuredClone(PROPOSED_BOUNDS);
@@ -189,10 +192,46 @@ test("native marks and capability range slots remain owned evidence rather than 
   guard.row = "changed";
   expect(reads.marks.find(mark => mark.path === "acts.enter.guards.1")).toMatchObject({ code: "fresh", row: "P14", kind: "guard" });
   expect([Object.isFrozen(reads.marks), Object.isFrozen(reads.marks[0])]).toEqual([true, true]);
+  expect(reads.operands.find(read => read.path === "acts.enter.effects.1.value.from")?.type).toMatchObject({ kind: "native", mark: { code: "even", row: "P22", type: "code" } });
   const capability = validateDefinition(capabilityStagingData(), PROPOSED_BOUNDS);
   if (!capability.ok) return expect.fail(JSON.stringify(capability.problems));
   const capabilityReads = resolvedReads(capability.definition)!;
   expect(capabilityReads.slots.find(read => read.path === "acts.stage.guards.2.capability.with.earlier.slot")).toMatchObject({ access: "read", slot: { name: "text", subject: { identity: { kind: "range", path: "acts.stage.guards.2.capability.with.earlier.items", type: "note" } } } });
   expect(capabilityReads.underived).toContainEqual({ path: "acts.stage.guards.2.capability", capability: "git-read@1", form: "guard", name: "ancestry" });
   expect(Object.isFrozen(capabilityReads.underived)).toBe(true);
+});
+
+test("validated frames separate normal, replacement, timed and future result bodies", () => {
+  const input = lateDefinition(true), send = input.acts["emit"]!.sends[0]!;
+  if (!("tell" in send)) return expect.fail("expected tell");
+  send.tell.result.applied = [{ value: { slot: "last", from: { field: "first" } } }];
+  const checked = validateDefinition(input, PROPOSED_BOUNDS);
+  if (!checked.ok) return expect.fail(JSON.stringify(checked.problems));
+  const reads = resolvedReads(checked.definition)!, frames = reads.frames;
+  const normal = frames.find(frame => frame.path === "receives.sample"), replacement = frames.find(frame => frame.path === "receives.sample.late.then");
+  expect(normal).toMatchObject({ kind: "handler", on: null, signer: false, context: { kind: "sample", clause: false, handler: { update: false, under: null } } });
+  expect(replacement).toMatchObject({ kind: "replacement", on: null, signer: false, fields: [["value", { kind: "declared", type: { type: "int", min: 0, max: 100 } }]], also: [{ identity: { kind: "subject", name: "also.board" }, type: "board" }] });
+  const clause = frames.find(frame => frame.path === "acts.emit.sends.0.tell.result.applied");
+  expect(clause).toMatchObject({ kind: "clause", on: { type: "board" }, context: { kind: "emit", clause: true, senderKind: "directory" } });
+  expect(frames.find(frame => frame.path === "acts.emit")).toMatchObject({ kind: "act", context: { clause: false } });
+  expect(frames.every(frame => frame.context.validation === reads.validation)).toBe(true);
+  const handler = input.receives["sample"]!, first = handlerBranch(handler, { reason: "old-sample" }), second = handlerBranch(handler, { reason: "old-sample" });
+  expect(first).not.toBe(second);
+  expect(first?.effects).toBe(handler.late!.then!.effects);
+  const timed = validateDefinition(board, PROPOSED_BOUNDS);
+  if (!timed.ok) return expect.fail(JSON.stringify(timed.problems));
+  expect(resolvedReads(timed.definition)!.frames.find(frame => frame.path === "timed.job-deadline")).toMatchObject({ kind: "timed", timed: true, fields: [], on: { type: "job" }, context: { kind: "timed:job-deadline" } });
+  const nativeInput = structuredClone(gate);
+  nativeInput.outcomes["probe"]!.send = { code: "probe-send", row: "P18", result: { applied: [{ code: "clause", row: "P18" }] } };
+  const native = validateDefinition(nativeInput, PROPOSED_BOUNDS, undefined, { platform: true });
+  if (!native.ok) return expect.fail(JSON.stringify(native.problems));
+  const nativeReads = resolvedReads(native.definition)!;
+  expect(nativeReads.frames.find(frame => frame.path === "acts.enter.sends.0.result.applied")).toMatchObject({ kind: "clause", context: { clause: true } });
+  expect(nativeReads.frames.find(frame => frame.path === "outcomes.probe.send.result.applied")).toMatchObject({ kind: "outcome-clause", on: null, also: [], fields: [], signer: false, context: { kind: "probe", clause: true } });
+  expect(nativeReads.frames.find(frame => frame.path === "acts.enter")?.fields).toContainEqual(["note", expect.objectContaining({ kind: "native", mark: expect.objectContaining({ code: "even" }) })]);
+  const field = input.acts["emit"]!.fields["first"]!;
+  if ("code" in field || field.type !== "int") return expect.fail("expected integer");
+  field.max = 1;
+  expect(clause?.fields).toContainEqual(["first", expect.objectContaining({ kind: "declared", type: expect.objectContaining({ max: 100 }) })]);
+  expect([Object.isFrozen(replacement), Object.isFrozen(replacement?.fields), Object.isFrozen(nativeReads.frames)]).toEqual([true, true, true]);
 });

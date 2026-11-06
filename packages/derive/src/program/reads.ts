@@ -1,24 +1,31 @@
 /** Owned data from the validator's resolutions; no name checker or executable fallback. */
-import type { Bounds, FieldType, FieldValue } from "@generalbusiness/dap-contract";
+import type { Bounds, FieldType, FieldValue, TypeMark } from "@generalbusiness/dap-contract";
 import type { Ctx, Defining, MarkPlace, OwnerIdentity, Slot, Type } from "../validate/context.ts";
 import type { Underived } from "../validate/capability.ts";
 import type { ValidDefinition } from "../validate/index.ts";
 import { immutable, type Phase } from "./model.ts";
 
-export type ReadType = { readonly kind: "declared"; readonly type: FieldType } | { readonly kind: "unknown" };
+export type ReadType = { readonly kind: "declared"; readonly type: FieldType }
+  | { readonly kind: "native"; readonly mark: TypeMark } | { readonly kind: "unknown" };
 const unknown: ReadType = Object.freeze({ kind: "unknown" });
-export const readType = (type: FieldType | null): ReadType => type === null ? unknown : Object.freeze({ kind: "declared", type: immutable(type) });
+export function readType(type: FieldType | null): ReadType {
+  if (type === null) return unknown;
+  // The existing validator keeps admitted type marks in its FieldType table.
+  // Preserve that resolution without presenting an opaque mark as a concrete type.
+  if (Object.hasOwn(type, "code")) return Object.freeze({ kind: "native", mark: immutable(type as unknown as TypeMark) });
+  return Object.freeze({ kind: "declared", type: immutable(type) });
+}
 
 /** Each validator invocation has its own identity, even when declaration digests agree. */
 export interface ReadValidation { readonly bounds: Bounds; readonly definition: string | null; readonly platform: boolean }
 const validations = new WeakMap<Defining, ReadValidation>();
-interface ReadCollection { operands: OperandRead[]; subjects: SubjectResolution[]; slots: SlotResolution[]; fields: FieldResolution[]; foreignFields: ForeignFieldResolution[]; ranges: RangeResolution[] }
+interface ReadCollection { operands: OperandRead[]; subjects: SubjectResolution[]; slots: SlotResolution[]; fields: FieldResolution[]; foreignFields: ForeignFieldResolution[]; ranges: RangeResolution[]; frames: FrameRead[] }
 const captured = new WeakMap<Defining, ReadCollection>();
 const admitted = new WeakMap<ValidDefinition, ResolvedReads>();
 
 function collection(d: Defining): ReadCollection {
   let reads = captured.get(d);
-  if (!reads) { reads = { operands: [], subjects: [], slots: [], fields: [], foreignFields: [], ranges: [] }; captured.set(d, reads); }
+  if (!reads) { reads = { operands: [], subjects: [], slots: [], fields: [], foreignFields: [], ranges: [], frames: [] }; captured.set(d, reads); }
   return reads;
 }
 
@@ -33,6 +40,7 @@ export interface ResolvedReads {
   readonly foreignFields: readonly ForeignFieldResolution[];
   readonly marks: readonly MarkPlace[];
   readonly underived: readonly Underived[];
+  readonly frames: readonly FrameRead[];
 }
 
 /** Called only where the existing operand validator returns its successful resolution. */
@@ -45,7 +53,7 @@ export function bindReads(d: Defining, definition: ValidDefinition): ValidDefini
   const reads = collection(d);
   admitted.set(definition, Object.freeze({ validation: validation(d), operands: Object.freeze([...reads.operands]),
     subjects: Object.freeze([...reads.subjects]), slots: Object.freeze([...reads.slots]), fields: Object.freeze([...reads.fields]),
-    foreignFields: Object.freeze([...reads.foreignFields]), ranges: Object.freeze([...reads.ranges]), marks: immutable(d.marks), underived: immutable(d.underived) }));
+    foreignFields: Object.freeze([...reads.foreignFields]), ranges: Object.freeze([...reads.ranges]), frames: Object.freeze([...reads.frames]), marks: immutable(d.marks), underived: immutable(d.underived) }));
   return definition;
 }
 
@@ -81,6 +89,29 @@ export interface SlotResolution extends ResolutionSite { readonly slot: SlotRead
 export interface FieldResolution extends ResolutionSite { readonly name: string; readonly type: ReadType }
 export interface ForeignFieldResolution extends ResolutionSite { readonly factField: string; readonly name: string; readonly type: ReadType }
 export interface RangeResolution extends ResolutionSite { readonly subject: SubjectRead; readonly states: readonly string[] }
+export type FrameKind = "act" | "handler" | "replacement" | "timed" | "clause" | "outcome-clause";
+/** The existing validator frame, before a structural graph groups its forms. */
+export interface FrameRead extends ResolutionSite {
+  readonly kind: FrameKind;
+  readonly on: SubjectRead | null;
+  readonly also: readonly SubjectRead[];
+  readonly fields: readonly (readonly [string, ReadType])[] | null;
+  readonly presented: readonly (readonly [string, ReadType])[];
+  readonly signer: boolean;
+  readonly timed: boolean;
+  readonly nascent: boolean;
+  readonly unsettled: readonly string[];
+}
+
+export function recordFrame(d: Defining, ctx: Ctx, path: string, kind: FrameKind): void {
+  const fields = (entries: ReadonlyMap<string, FieldType>): readonly (readonly [string, ReadType])[] =>
+    Object.freeze([...entries].map(([name, type]) => Object.freeze([name, readType(type)] as const)));
+  collection(d).frames.push(Object.freeze({ path, context: contextOf(d, ctx), kind,
+    on: ctx.on ? subjectRead(ctx.on, { kind: "subject", name: "on" }) : null,
+    also: Object.freeze([...ctx.also].map(([name, type]) => subjectRead(type, { kind: "subject", name: `also.${name}` }))),
+    fields: ctx.fields === null ? null : fields(ctx.fields), presented: fields(ctx.presented), signer: ctx.signer, timed: ctx.timed,
+    nascent: ctx.nascent, unsettled: Object.freeze([...(ctx.unsettled ?? [])]) }));
+}
 
 export function recordSubject(d: Defining, ctx: Ctx, path: string, type: Type | "scope", name: string): void {
   collection(d).subjects.push(Object.freeze({ path, context: contextOf(d, ctx), subject: type === "scope" ? "scope" : subjectRead(type, { kind: "subject", name }) }));
