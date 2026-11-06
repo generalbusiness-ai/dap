@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b9a8bbf6aadc390adf9030d60b30eb7ec51d1743","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-05-failed-claim-register/token-clone.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bcafd227882001829b8ced6771c8fa475adc415a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-11-05-failed-claim-register/rollback-vars.template.json."}
