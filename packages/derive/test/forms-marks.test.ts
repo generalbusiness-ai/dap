@@ -3,12 +3,30 @@ import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, MemberId, ObservationUse, OperationId, PlatformDefinition, Request, ScopeRef, Seed, Send } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, factRefOf, intentDigest, isEntry, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/dap-bytes";
-import { PROFILES, clockOf, judgeDelivery, settleOutcome, validateDefinition, valueDigest, type ActJudgment, type OutcomeRule, type PlatformRule, type RuleGiven } from "../src/index.ts";
+import { PROFILES, clockOf, judgeDelivery, settleOutcome, validateDefinition, valueDigest, type ActJudgment, type OutcomeRule, type PlatformRule, type PlatformRules, type RuleGiven } from "../src/index.ts";
 import { Scope, T0, arriving, d, forged, keys, membership, otherLane, small, t, type Actor, gate, gateRules, gateWith } from "./fixtures-entry.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Change = (d: any) => void;
 import { PLACE, markFormCases } from "./definition-corpus/forms-marks-cases.ts";
+import { nativeClockCutoverData } from "./definition-corpus/clock-cutover-data.ts";
+import { clockScene } from "./fixtures-clock-cutover.ts";
+
+test("M3: a native type hook before the body contributes actual clock use only when it runs", () => {
+  const checked = validateDefinition(nativeClockCutoverData(), PROPOSED_BOUNDS, PROFILES, { platform: true });
+  if (!checked.ok) return expect.fail(JSON.stringify(checked.problems));
+  const outcomes = [false, true].map(present => {
+    let calls = 0;
+    const platform: PlatformRules = { named: "platform:m3-clock@1" as PlatformDefinition, rules: {
+      "clock-value": { place: "type", clock: true, run: (_given, value) => { calls++; return typeof value === "number" && value % 2 === 0; } },
+    } };
+    const scene = clockScene(checked.definition, present ? { note: 2 } : {}, platform);
+    const current = scene.judge(false), behind = scene.judge();
+    return [current.result, current.result === "write" && current.draft.judgesTime,
+      behind.result === "unavailable" ? behind.reason : behind.result, calls];
+  });
+  expect(outcomes).toEqual([["write", false, "write", 0], ["write", true, "clock-behind", 2]]);
+});
 /** A made-up place: a byte domain that the made-up data declares, and its bound on one value. */
 
 

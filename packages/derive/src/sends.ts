@@ -6,7 +6,7 @@
  * the state before them.
  */
 
-import type { Digest, FieldType, Guard, Input, Notify, Operand, Range, Seed, Send, SendForm, SendMark, SendSource, ScopeRef, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { Digest, FieldType, Guard, Input, Operand, Range, Seed, Send, SendForm, SendMark, SendSource, ScopeRef, UnavailableReason } from "@generalbusiness/dap-contract";
 import { isDigest, isSend } from "@generalbusiness/dap-bytes";
 import { creationContextOf, type CreationContext } from "./creation-context.ts";
 import type { Derived } from "./effects.ts";
@@ -53,14 +53,6 @@ export function membershipOf(genesis: Pick<Extract<Input, { type: "genesis" }>, 
   const named = isObject(genesis.message?.body) ? genesis.message.body["membership"] : null;
   return isScopeRef(named) && named.kind === "membership" ? named : null;
 }
-
-/** True when a guard of the list reads the clock, as written at the top of it or nested in a list form. Whether it is evaluated is not asked. */
-export const readsClock = (guards: readonly Guard[] | undefined): boolean => (guards ?? []).some((g) =>
-  "before" in g || "after" in g || ("anyOf" in g ? g.anyOf.some(readsClock) : "each" in g ? readsClock(g.each.guards) : "has" in g && readsClock(g.has.guards)));
-
-/** True when the condition of a send or of a notice reads the clock: the entry then judges time (section 5.3). */
-export const conditionsReadClock = (sends: readonly SendForm[], attention: readonly Notify[]): boolean =>
-  sends.some((s) => readsClock("tell" in s ? s.tell.if : "relate" in s ? s.relate.if : undefined)) || attention.some((n) => readsClock(n.notify.if));
 
 /**
  * Section 6.6: a send with `if` is made only when every guard holds, on the

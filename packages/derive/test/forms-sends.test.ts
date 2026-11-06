@@ -18,6 +18,27 @@ const { rita, una } = keys;
  * is one; and sends an index row.
  */
 import { pull } from "./definition-corpus/forms-sends-data.ts";
+import { clockCutoverData } from "./definition-corpus/clock-cutover-data.ts";
+import { clockScene } from "./fixtures-clock-cutover.ts";
+
+test("M3: omitted tell and relate sends still declare their clock conditions", () => {
+  const outcomes = (["tell-condition", "relate-condition"] as const).map(kind => [false, true].map(clock => {
+    const judgment = clockScene(valid(validateDefinition(clockCutoverData(kind, clock), PROPOSED_BOUNDS))).judge();
+    if (judgment.result === "write") expect(judgment.draft.sends.filter(send => send.message.class === "request")).toEqual([]);
+    return judgment.result === "unavailable" ? judgment.reason : judgment.result;
+  }));
+  expect(outcomes).toEqual([["write", "clock-behind"], ["write", "clock-behind"]]);
+});
+
+test("M3: a future clock-reading result clause adds no clock use to its sending delivery", () => {
+  for (const clock of [false, true]) {
+    const judgment = clockScene(valid(validateDefinition(clockCutoverData("future-clause", clock), PROPOSED_BOUNDS))).judge();
+    expect(judgment.result).toBe("write");
+    if (judgment.result !== "write") return expect.fail(JSON.stringify(judgment));
+    expect(judgment.draft.judgesTime).toBe(false);
+    expect(judgment.draft.sends.some(send => send.message.class === "request" && send.message.type === "tell")).toBe(true);
+  }
+});
 
 /** The fan-out is at its limit here: the type takes three live links, and one fan-out makes at most three sends. */
 const tight = { ...PROPOSED_BOUNDS, fanOut: 3 };

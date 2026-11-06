@@ -15,6 +15,17 @@ const { rita, una } = keys;
  * answer to that same ask.
  */
 import { asks } from "./definition-corpus/forms-operand-data.ts";
+import { clockCutoverData } from "./definition-corpus/clock-cutover-data.ts";
+import { clockScene } from "./fixtures-clock-cutover.ts";
+
+test("M3: copying historical source time does not judge the commit clock", () => {
+  const checked = valid(validateDefinition(clockCutoverData("historical-time"), PROPOSED_BOUNDS)), scene = clockScene(checked);
+  const judgment = scene.judge();
+  expect(judgment.result).toBe("write");
+  if (judgment.result !== "write") return expect.fail(JSON.stringify(judgment));
+  expect(judgment.draft.judgesTime).toBe(false);
+  expect(judgment.draft.effects).toEqual([{ effect: "value", item: 0, slot: "due", value: scene.source.entry.time }]);
+});
 
 const asksDefinition = valid(validateDefinition(asks, PROPOSED_BOUNDS));
 

@@ -6,6 +6,7 @@ import { laneAppsDefinitions } from "./lane-apps.ts";
 import { laneApplicationDefinitions } from "./lane-applications.ts";
 import { scopeCapacityFloorDefinitions } from "./scope-capacity-floor.ts";
 import { generalCreationDefinitions } from "./general-creation.ts";
+import { clockCutoverDefinitions } from "./clock-cutover-data.ts";
 /** Registration is explicit; a constructor locator alone is not corpus coverage. */
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { lane, small, notes, ticket, desk } from "./fixture-data.ts";
@@ -31,6 +32,7 @@ export const definitionCorpus: readonly DefinitionCorpusRow[] = withFixtureOrigi
   ...laneApplicationDefinitions,
   ...scopeCapacityFloorDefinitions,
   ...generalCreationDefinitions,
+  ...clockCutoverDefinitions,
   ...platformFixtureDefinitions,
   ...holdsVariantDefinitions,
   ...settlesVariantDefinitions,

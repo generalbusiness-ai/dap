@@ -15,8 +15,48 @@ const { rita, una, vic, paul, sam } = keys;
  * with further sources.
  */
 import { cards } from "./definition-corpus/forms-effects-data.ts";
+import { clockCutoverData } from "./definition-corpus/clock-cutover-data.ts";
+import { clockScene } from "./fixtures-clock-cutover.ts";
+import { runClause } from "../src/handlers.ts";
+import { t } from "./fixtures-entry.ts";
 
 const definition = valid(validateDefinition(cards, PROPOSED_BOUNDS));
+
+test("M3: value time and omitted if/unless conditions each prevent a delivery while its clock is behind", () => {
+  const outcomes = (["value-time", "effect-if", "effect-unless"] as const).map(kind => [false, true].map(clock => {
+    const checked = valid(validateDefinition(clockCutoverData(kind, clock), PROPOSED_BOUNDS));
+    const judgment = clockScene(checked).judge();
+    return judgment.result === "unavailable" ? judgment.reason : judgment.result;
+  }));
+  expect(outcomes).toEqual([["write", "clock-behind"], ["write", "clock-behind"], ["write", "clock-behind"]]);
+});
+
+test("M3: a result clause judges its own value time and an omitted clock condition", () => {
+  const outcomes = (["clause-value", "clause-condition"] as const).map(kind => [false, true].map(clock => {
+    const checked = valid(validateDefinition(clockCutoverData(kind, clock), PROPOSED_BOUNDS)), scene = clockScene(checked);
+    const parent = scene.judge(false);
+    if (parent.result !== "write") return expect.fail(JSON.stringify(parent));
+    scene.receiver.seal(parent.draft);
+    const origin = scene.receiver.last, sent = origin.sends.find(send => send.message.class === "request" && send.message.type === "tell")!;
+    const request = scene.receiver.state.request(origin.seq, sent.n)!;
+    scene.receiver.now = t(-10);
+    const result = runClause(scene.receiver.state, checked, { ...scene.receiver.context(), origin }, scene.receiver.state.scope()!, request, "applied");
+    expect(result.result).toBe("ran");
+    if (result.result !== "ran") return expect.fail(JSON.stringify(result));
+    if (kind === "clause-condition") expect(result.effects).toEqual([]);
+    return result.judgesTime;
+  }));
+  expect(outcomes).toEqual([[false, true], [false, true]]);
+});
+
+test("M3: an omitted attention condition still declares its clock read", () => {
+  const outcomes = [false, true].map(clock => {
+    const judgment = clockScene(valid(validateDefinition(clockCutoverData("attention", clock), PROPOSED_BOUNDS))).judge();
+    if (judgment.result === "write") expect(judgment.draft.effects).toEqual([]);
+    return judgment.result === "unavailable" ? judgment.reason : judgment.result;
+  });
+  expect(outcomes).toEqual(["write", "clock-behind"]);
+});
 
 const names = (list: unknown) => (list as readonly MemberRef[]).map((m) => m.member);
 /** An act on a card, and an act that names its parent card. */
