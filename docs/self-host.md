@@ -10,9 +10,11 @@ the room page. To run the service on one Mac, follow
 With `INSTALLED_REGISTER_SCOPES` absent, a deployed Worker admits new child
 scopes only under its current `REGISTER_SCOPE`. Replacing that pin leaves
 earlier rooms readable but stops their new inboxes, lanes and other child
-scopes. A successful health or room read proves no child-creation continuity.
+scopes. Switching the host configuration without retaining that root also
+stops old-room Git authority. A successful health or room read proves
+neither child-creation nor Git continuity.
 
-To keep earlier rooms creating children, list the current register and all
+To keep earlier rooms creating children and using Git, list the current register and all
 earlier installed roots in `INSTALLED_REGISTER_SCOPES`, as
 [Keep existing rooms able to create children](deploy.md#keep-existing-rooms-able-to-create-children)
 describes. `REGISTER_SCOPE` still selects the current primary register.

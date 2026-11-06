@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "qualification": "One actual frozen corrected host-authority gate, all terminal phases including Native, exact checkout/dependency identity and raw retention. Earlier inventory and combined gates remain failed. Cause recordde36e7d7 reproduces the fractional scripted expiry and traces rejection before custody. Earlier failed runs and invalid instrumentation stay failed; Gate3 original boundary was not captured. No builder deployment, live register or provider token, real Git clone, hosted acceptance, or historical archive cause.",
+  "fileCount": 13,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-05-installed-host-roots-gate-5-validation",
+      "fileCount": 13,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 976,
+          "sha256": "50803be5b401efc3dfe8e69a6e923dc3ae00d31a43b1d3cc4118d3de3bec597f"
+        },
+        {
+          "path": "after.json",
+          "bytes": 1937,
+          "sha256": "af3da982d7b448dada3793c16d39458792d93e20bafec8cebdbfefc2c51a822a"
+        },
+        {
+          "path": "analysis-driver.mjs",
+          "bytes": 1842,
+          "sha256": "9d4aaf3a28a0ffabb84664e25e12bb0347fec96228c1dfb89698fd23f6f41eed"
+        },
+        {
+          "path": "analysis.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "analysis.stderr",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1937,
+          "sha256": "af3da982d7b448dada3793c16d39458792d93e20bafec8cebdbfefc2c51a822a"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 7046,
+          "sha256": "9c2695afb7b9e2c45dfbb8980e31d9950330a6fea4033fe13658932af7cbf4fd"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "55e399dd7de2f0479b0378d026549ddf0375c4eaf097a803e9379963e9be4925"
+        },
+        {
+          "path": "result.json",
+          "bytes": 2440,
+          "sha256": "376ebd4141a144f80174b51d69020e0eecfd1f7119aff3d8e7abb614f155dca9"
+        },
+        {
+          "path": "stages.json",
+          "bytes": 978,
+          "sha256": "3d97b5c544ee53e73f31beb631637376d6029cbb75b3113f537f6c93e7dcebc9"
+        },
+        {
+          "path": "temporary-routing.json",
+          "bytes": 598,
+          "sha256": "c00e509f10362b8811376a4a8efc781bbe15c3fa9f60dba9c0f82311d795796e"
+        },
+        {
+          "path": "test-summary.json",
+          "bytes": 5844,
+          "sha256": "c973a3f0bb0f21e4997cd68262deeca4e61ad5260c8de85ae9d6156bae9f84b4"
+        }
+      ]
+    }
+  ],
+  "sourceHead": "db7634eeb46bd4f5d96f79eaaa26e0a3de701fb3",
+  "sourceTree": "a0a4e7367d2aaebaaf36a3d5c4f988fe84f5ac4f"
+}

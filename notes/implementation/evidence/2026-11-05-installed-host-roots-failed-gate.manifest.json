@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "sourceHead": "25000b561a995ede189c6f3cf062725bb472dc95",
+  "qualification": "Failed gate exit1, two Node settings inventory failures; later phases unreached. No success inference.",
+  "fileCount": 9,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-05-installed-host-roots-failed-gate-evidence",
+      "fileCount": 9,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 636,
+          "sha256": "480d266d1e8bfc680a14b54450411d77a3f5d306c3e366be4ec911f959d48c6c"
+        },
+        {
+          "path": "after.json",
+          "bytes": 1937,
+          "sha256": "a8c5890271fc0a778467beb35e53e7a2cf443deeaaa7688313ddad123bbf932f"
+        },
+        {
+          "path": "before.json",
+          "bytes": 1937,
+          "sha256": "a8c5890271fc0a778467beb35e53e7a2cf443deeaaa7688313ddad123bbf932f"
+        },
+        {
+          "path": "gate.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "gate.log",
+          "bytes": 8697,
+          "sha256": "429fdc03906856d39b1916e2153a7b2aaacf3ab5c09ec94a54f70a535e04ba7f"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 278,
+          "sha256": "1cb78ffec22b15a4f93b882f436586b6eff5c3c56e459515d1c1b9c01140ceb4"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 538,
+          "sha256": "06cbf277c98a1f3853694b29ecfb5773e7eb0a92f68bc27e78a0f337b5c3ea90"
+        },
+        {
+          "path": "result.json",
+          "bytes": 380,
+          "sha256": "92c91aa02c9f5c43b580886f70bc3f45891bcf63a1475d298cf2a2609a01c36b"
+        },
+        {
+          "path": "sealing-driver.py",
+          "bytes": 2740,
+          "sha256": "5e6725b138327af66985a888e1076a641217b0850f9dace221d4f2ba0c62a1be"
+        }
+      ]
+    }
+  ]
+}

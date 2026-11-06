@@ -1181,11 +1181,13 @@ failure behavior, health visibility and the other readers.
       "readers": [
         "packages/scope/src/register-setting.ts",
         "packages/scope/src/scope-index.ts",
-        "packages/scope/src/health.ts"
+        "packages/scope/src/health.ts",
+        "packages/scope/src/installed-registers.ts",
+        "packages/scope/src/worker.ts"
       ],
-      "parser": "readInstalledRegisters: JSON array within 4096 UTF-8 bytes, 1..32 distinct canonical scope IDs including the current selected register; strict parsing before a frozen copy.",
-      "missing": "Child admission uses only the current register, preserving existing single-register configurations.",
-      "invalid": "Parentless and child creation close; no list or caller fallback admits a root.",
+      "parser": "installedRegisterScopes: strict JSON array within 4096 UTF-8 bytes, 1..32 distinct canonical scope IDs including the current register; frozen copy shared by creation and Native Git host wiring. With a supplied list, explicit REGISTER_SCOPE must agree with the adapter configuration.",
+      "missing": "Child admission uses only the current register. Each Native host adapter preserves its existing configured single root, including configurations without REGISTER_SCOPE.",
+      "invalid": "Parentless and child creation close; both Native host adapters refuse authority before provider effects. No caller or malformed-list fallback admits a root.",
       "health": "Invalid installed-register configuration makes register health unavailable without a scope probe. Valid configuration probes only the current register."
     },
     {
@@ -1204,9 +1206,11 @@ failure behavior, health visibility and the other readers.
       "readers": [
         "packages/scope/src/register-setting.ts",
         "packages/scope/src/scope-index.ts",
-        "packages/scope/src/health.ts"
+        "packages/scope/src/health.ts",
+        "packages/scope/src/installed-registers.ts",
+        "packages/scope/src/worker.ts"
       ],
-      "parser": "readRegisterScope: one exact ScopeId string, without trimming or coercion; primary identity for creation, child lineage and census. Supplied ARTIFACTS_CONFIG must parse and name the same register. No provider or binding is consulted.",
+      "parser": "readRegisterScope: one exact ScopeId string, without trimming or coercion; primary identity for creation, child lineage and census. Supplied ARTIFACTS_CONFIG must parse and name the same register. No provider or binding is consulted. With an installed list, each Native Git host requires this pin to agree with its configured register; the pin and list also invalidate cached host wiring.",
       "missing": "Uses a valid Artifacts-only legacy pin; with neither source, deployed creation is unauthorized and lineage/census stay closed.",
       "invalid": "Malformed supplied pin/config or disagreement makes creation misconfigured before target lookup; lineage/census refuse. The explicit deployed open-creation escape does not bypass this check.",
       "health": "An explicit valid pin selects the existing bounded/cached readiness probe independently of provider wiring. Malformed or conflicting pins report register unavailable without a probe; a ready pin does not attest provider connectivity, creation policy or a census. With no explicit field, legacy host-root selection is unchanged."
@@ -1287,7 +1291,11 @@ Checked against main `ada88648` on 31 October 2026. Sources: [scripts/security-s
 4,096 UTF-8 bytes and 32 distinct canonical scope IDs. It includes the
 current register selected by `REGISTER_SCOPE` or its existing valid
 Artifacts fallback. Absent, child admission keeps the singleton current
-root. An invalid explicit array closes creation and register health.
+root. An invalid explicit array closes creation, Native Git host authority and
+register health.
 Every listed child lineage still proves its own indexed, applied Native
-root. The setting changes no parentless install, host binding or caller
-authority. See [Keep existing rooms able to create children](../deploy.md#keep-existing-rooms-able-to-create-children).
+root. Both Native Git host adapters accept the listed roots while retaining
+the exact host, namespace, pinned owner, destination birth and GitHub
+repository binding checks. With a list, an explicit current register must
+agree with the host configuration. The setting changes no parentless
+install or caller authority and supplies no credential. See [Keep existing rooms able to create children](../deploy.md#keep-existing-rooms-able-to-create-children).

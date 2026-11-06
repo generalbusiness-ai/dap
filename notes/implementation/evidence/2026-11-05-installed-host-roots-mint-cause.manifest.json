@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "qualification": "One valid owner-safe Native reproduction at exact failed clock plus immutable source/primary-contract analysis. Fixture-generated fractional expiry prevents a handle entering custody. Native case intentionally fails original403 assertion; not a pass, gate or acceptance.",
+  "fileCount": 13,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-05-installed-host-roots-mint-cause",
+      "fileCount": 13,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 969,
+          "sha256": "8c3481a57278ba6b5bf6cfb56839129ba4b6dd517045dc10d85c916f81e00b1e"
+        },
+        {
+          "path": "authorization.json",
+          "bytes": 145,
+          "sha256": "734d861febd661f97794426efc6f86b4b3e557bae7992cbbf950eddc433a60da"
+        },
+        {
+          "path": "cause-result.json",
+          "bytes": 913,
+          "sha256": "1b2dbdd86c6b6c61eadfe21a661b085b02aa9b65bad04b960e38d30ccab2c209"
+        },
+        {
+          "path": "cause.md",
+          "bytes": 2816,
+          "sha256": "e4e47dcf9a89110ac7ee9af24421c036dc9931f607a2530fca62d65cba4bbcec"
+        },
+        {
+          "path": "command.json",
+          "bytes": 238,
+          "sha256": "d42cd9b1865ba3331a1353790b3c41ce37c33e0cfbac310f969f85010ecc3c87"
+        },
+        {
+          "path": "contract-sources.json",
+          "bytes": 681,
+          "sha256": "3344bebe55af48a76c6220b7f5a96e2aa407af91cb2ec7140e240cb3e50312fb"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 3656,
+          "sha256": "c4d4b9d80c7f5da5416d37b429fb2a1d0592053bcd85225261cd641da25bc39b"
+        },
+        {
+          "path": "identity.json",
+          "bytes": 21093,
+          "sha256": "5ab655f83fa0eef8bc636fd30858615497ccef71b7e8914c7c1ed260d880e4fd"
+        },
+        {
+          "path": "native.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "native.log",
+          "bytes": 7865,
+          "sha256": "f5adc15073b4871db7c6587cccabb2b2adb8ec263703a48e137ffc4bd3ae825d"
+        },
+        {
+          "path": "raw-retention.json",
+          "bytes": 388,
+          "sha256": "94e115c1881057cff79b78195d05d03a3c5abf0890d879abdd822a1043dc43e1"
+        },
+        {
+          "path": "result.json",
+          "bytes": 412,
+          "sha256": "dbc9d8fbed64ad9f696f52aef67e5bb457bf73d1da996bdbdae05d18d02ba9fd"
+        },
+        {
+          "path": "source-trace.json",
+          "bytes": 1827,
+          "sha256": "61b63e96f61f2d0b2e7134db9821b7d7696081df11381d1d794e7d9068052f98"
+        }
+      ]
+    }
+  ]
+}
