@@ -1,0 +1,86 @@
+{
+  "qualification": "Compiler and four descriptor/context witnesses only. No structural body graph, production caller cutover, final gate, deployment, or acceptance.",
+  "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-m3-admitted-read-binding",
+  "checkpoint": "2eee9a46d331323da12ea7abc7df3d200428d2e6",
+  "tree": "e3d033d81cf1475a73476fc6d3b1d732aeb6e1e4",
+  "fileCount": 15,
+  "files": [
+    {
+      "path": "checkpoint-proof.json",
+      "bytes": 503,
+      "sha256": "7a757574c07ba66eb798f1b10e47a14fbbcca6eb39d1cd71df148307469e197e"
+    },
+    {
+      "path": "compat.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "compat.log",
+      "bytes": 363,
+      "sha256": "6895d900b5d3fab4381f76d0d78404eb80ff989050b9c1bd150e115ff8a243f9"
+    },
+    {
+      "path": "driver.py",
+      "bytes": 2507,
+      "sha256": "8b363f3daa6b3490dffc640ee64adae0ebe8391e4f99aae1080817f9c26412b3"
+    },
+    {
+      "path": "forms.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "forms.log",
+      "bytes": 928,
+      "sha256": "66ef9cdf0ab1ce00c8cf7a6824c9cfc3a50702611e3e4c1ec2aa4caf485809e1"
+    },
+    {
+      "path": "input.patch",
+      "bytes": 9357,
+      "sha256": "9f3b4d85ce1b7ff69525bed50566a407d8952f2dc294327c17728b524b158301"
+    },
+    {
+      "path": "result.json",
+      "bytes": 1375,
+      "sha256": "7abcdad498795f3ead5ee724f55815e09df24121f3c82f63db655abdcadca8c5"
+    },
+    {
+      "path": "source-compiler.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "source-compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "source.json",
+      "bytes": 934,
+      "sha256": "033113dfbd64f97313140439357f9976de7a96e38deaba751d401cc60659ab0a"
+    },
+    {
+      "path": "test-compiler.exit",
+      "bytes": 7,
+      "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+    },
+    {
+      "path": "test-compiler.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "vitest.json",
+      "bytes": 2005,
+      "sha256": "bcea84c3400f1424a78b3933edd8bb4fd6e10579005169a956ebcccd548d8f9b"
+    },
+    {
+      "path": "SHA256SUMS",
+      "bytes": 1126,
+      "sha256": "34d6e0546718d5f3226db55f13810e43f7aa46c284cce0494cea9e231f1986ed"
+    }
+  ],
+  "inputBase": "b0a6372171529851a9081ebdade6af578ba67169",
+  "inputPatchSha256": "9f3b4d85ce1b7ff69525bed50566a407d8952f2dc294327c17728b524b158301"
+}

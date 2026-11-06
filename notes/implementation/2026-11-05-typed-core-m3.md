@@ -134,6 +134,31 @@ retained. The initial compiler unit has a stated identity limit: it copied the
 new untracked read-model module after compilation. Later units copy all extra
 inputs before their checks.
 
+## Bind reads to the admitted result
+
+The validator retains its operand resolutions with the exact returned
+`ValidDefinition` object. It attaches them after all admission checks succeed.
+Equal declaration digests keep separate validation contexts, and a copied
+result object has no metadata. The retained array and each descriptor stay
+owned and frozen after later input mutation.
+
+The new witness checks equal digests under separate bounds and profile tables,
+resolved field and subject-slot paths, later input mutation, and a copied
+result without evidence. All four descriptor witnesses and both compilers pass
+at checkpoint `2eee9a46`, tree `e3d033d8`. The input patch applied to base
+`b0a63721` equals that committed diff exactly. These checks establish neither
+the structural body graph nor the production clock cutover.
+
+| Check | Command | Exit | Output SHA-256 |
+|---|---|---|---|
+| source-compiler | `node node_modules/typescript/bin/tsc -p packages/derive/tsconfig.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| test-compiler | `node node_modules/typescript/bin/tsc -p packages/derive/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| forms | `node node_modules/vitest/vitest.mjs run --project derive program-reads` | 0 | `66ef9cdf0ab1ce00c8cf7a6824c9cfc3a50702611e3e4c1ec2aa4caf485809e1` |
+
+The [admitted-read manifest](evidence/2026-11-06-m3-admitted-read-binding.manifest.json)
+seals 15 public files. Its SHA-256 is
+`80c3e7f58cb3189024070965abdd2cc8c8efc545346fbe12f8390750c8480305`. The complete final M3 checks and gate remain pending.
+
 ## Prove the production cutover
 
 Use public clock-behind judgments, or clause `judgesTime` where that is the
