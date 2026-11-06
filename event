@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:841fd803ff4ff8a36bcaecf1ff981726c7d3d06c","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/validate/observes.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:90e504a2cca4c03416c7aaec4a1540d1314f5487","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/definition-corpus/clock-cutover-data.ts."}
