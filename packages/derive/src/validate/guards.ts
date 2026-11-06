@@ -3,7 +3,7 @@
 import type { FieldType } from "@generalbusiness/dap-contract";
 import { isObject } from "../values.ts";
 import { capabilityGuard } from "./capability.ts";
-import { mark, marked, onSubject, subject, type Ctx, type Defining, type Type } from "./context.ts";
+import { bindElement, mark, marked, onSubject, ownerOf, subject, type Ctx, type Defining, type ReadOwner, type Type } from "./context.ts";
 import { fieldOf, isDetached, operand, type Read } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
 
@@ -17,7 +17,7 @@ interface Nesting { count: number }
  * two operands. A slot with no `of` is read from the item that `owner`
  * gives. Returns the slots of that item which the clauses read.
  */
-function clauses(d: Defining, v: unknown, path: string, ctx: Ctx, owner: () => Type | null, guard: boolean): Set<string> {
+function clauses(d: Defining, v: unknown, path: string, ctx: Ctx, owner: ReadOwner, guard: boolean): Set<string> {
   const slots = new Set<string>();
   d.list(v, path, d.bounds.guards).forEach((w, i) => {
     const f = d.form(w, at(path, i), ["equals", "differs"]);
@@ -47,7 +47,7 @@ export function range(d: Defining, x: unknown, p: string, ctx: Ctx, more: readon
   if (!t) return bad("name", at(p, "type"), "names no item type");
   names(r["states"], at(p, "states"), t.states, "state");
   // In a `where`, a slot with no `of` is a slot of each item the range covers.
-  const slots = clauses(d, r["where"] ?? [], at(p, "where"), ctx, () => t, guard);
+  const slots = clauses(d, r["where"] ?? [], at(p, "where"), ctx, ownerOf(() => t, { kind: "range", path: p, type: t.name }), guard);
   if (slots.size > 0 || (Array.isArray(r["where"]) && r["where"].length > 0)) indexes.push({ path: p, type: t.name, slots: [...slots].sort() });
   // Section 6.5: the items of those subjects are left out. A subject of another type could leave nothing out.
   if ("except" in r) list(r["except"], at(p, "except"), bounds.also + 1).forEach((s, i) => {
@@ -72,12 +72,12 @@ export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: 
   // Section 6.5: a nested guard takes the enclosing guard's subject unless it names its own.
   const of = "of" in o ? o["of"] : inherited;
   /** The subject as an item this guard reads. The item an `open` act opens has nothing to read yet. */
-  const item = (): Type | null => {
+  const item = ownerOf((): Type | null => {
     const s = subject(d, of, path, ctx, false);
     if (s === null || s === "scope") return null;
     if (ctx.nascent && onSubject(of)) return bad("nascent-guard", path, "a guard may not read the item its act opens");
     return s;
-  };
+  }, { kind: "subject", name: typeof of === "string" ? of : "on" });
   let namesField = false;
   /** A field or a presented fact that the operand names: what `ifPresent` is for. */
   const named = (read: Read | null) => { if (read && (read.fields.length > 0 || read.form === "presented")) namesField = true; };
@@ -106,7 +106,7 @@ export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: 
     if (!read || as === null) return null;
     if (read.type !== null && read.type.type !== "list") return bad("name", at(p, "list"), "names no list");
     const element: FieldType | null = read.type?.type === "list" ? read.type.of : null;
-    return { ...ctx, elements: new Map(ctx.elements).set(as, element), live: new Set() };
+    return { ...bindElement(ctx, as, element, at(p, "as")), live: new Set() };
   };
   switch (k) {
     case "state": {
@@ -228,7 +228,7 @@ export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: 
       const items = range(d, r["items"], at(p, "items"), ctx);
       if (!items) break;
       if (key?.type?.type === "item" && key.type.of !== items.type.name) bad("name", at(p, "key"), `names no item of type ${items.type.name}`);
-      clauses(d, r["match"] ?? [], at(p, "match"), inner, () => items.type, true);
+      clauses(d, r["match"] ?? [], at(p, "match"), inner, ownerOf(() => items.type, { kind: "range", path: at(p, "items"), type: items.type.name }), true);
       if ("ordered" in r) bool(r["ordered"], at(p, "ordered"));
       break;
     }

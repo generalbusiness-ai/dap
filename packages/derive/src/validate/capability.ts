@@ -15,7 +15,7 @@
 import type { Capability, CapabilityName } from "@generalbusiness/dap-contract";
 import { declaredBy } from "../capability.ts";
 import { isObject, own } from "../values.ts";
-import type { Ctx, Defining, Type } from "./context.ts";
+import { bindElement, type Ctx, type Defining, type ReadOwner } from "./context.ts";
 import { range } from "./guards.ts";
 import { operand } from "./operands.ts";
 import { at } from "./shape.ts";
@@ -62,7 +62,7 @@ function listed(d: Defining, name: unknown, path: string): { version: Capability
  * value for each element of a list; or one slot of each item a range covers.
  * `item`: the guard's own subject, whose slot an operand with no `of` reads.
  */
-export function capabilityGuard(d: Defining, x: unknown, p: string, ctx: Ctx, item: () => Type | null): void {
+export function capabilityGuard(d: Defining, x: unknown, p: string, ctx: Ctx, item: ReadOwner): void {
   const { bad, rec, entries, str } = d;
   const r = rec(x, p, ["name", "guard", "with"]);
   const cap = r && listed(d, r["name"], at(p, "name"));
@@ -79,7 +79,7 @@ export function capabilityGuard(d: Defining, x: unknown, p: string, ctx: Ctx, it
       if (!e || !read || !as) continue;
       if (as.includes(".")) bad("shape", at(ap, "as"), "a dot names a member of a record element, so the name has none");
       else if (read.type !== null && read.type.type !== "list") bad("name", at(ap, "each"), "names no list");
-      else operand(d, e["value"], at(ap, "value"), { ...ctx, elements: new Map(ctx.elements).set(as, read.type?.type === "list" ? read.type.of : null) }, item);
+      else operand(d, e["value"], at(ap, "value"), bindElement(ctx, as, read.type?.type === "list" ? read.type.of : null, at(ap, "as")), item);
     } else if (isObject(arg) && "items" in arg) {
       const e = rec(arg, ap, ["items", "slot"]);
       const items = e && range(d, e["items"], at(ap, "items"), ctx);
@@ -96,7 +96,7 @@ export function capabilityGuard(d: Defining, x: unknown, p: string, ctx: Ctx, it
  * records and no item, so it needs no subject: `owner` gives the item whose
  * slot an operand with no `of` reads, when the form has one.
  */
-export function capabilityEffect(d: Defining, x: unknown, p: string, ctx: Ctx, owner: () => Type | null): void {
+export function capabilityEffect(d: Defining, x: unknown, p: string, ctx: Ctx, owner: ReadOwner): void {
   const { bad, rec, entries } = d;
   const r = rec(x, p, ["name", "do", "with"]);
   const cap = r && listed(d, r["name"], at(p, "name"));

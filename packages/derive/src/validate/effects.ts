@@ -5,7 +5,7 @@ import { canonicalize } from "@generalbusiness/dap-bytes";
 import { LAST_MS } from "../time.ts";
 import { isObject, isValue } from "../values.ts";
 import { capabilityEffect } from "./capability.ts";
-import { mark, marked, onSubject, subject, type Ctx, type Defining, type Slot, type Type } from "./context.ts";
+import { bindElement, mark, marked, onSubject, ownerOf, subject, type Ctx, type Defining, type Slot, type Type } from "./context.ts";
 import { assignable } from "./fields.ts";
 import { guards, range } from "./guards.ts";
 import { holdEffect } from "./hold.ts";
@@ -52,7 +52,7 @@ export function effect(d: Defining, v: unknown, path: string, ctx: Ctx, later: b
     // A slot with no `of` belongs to the named subject, or the primary item.
     const named = "of" in o ? subject(d, of, at(path, "of"), ctx, false) : null;
     if ("of" in o && (named === null || named === "scope")) return null;
-    capabilityEffect(d, x, p, ctx, () => (named as Type | null) ?? ctx.on ?? bad("name", p, "there is no primary item whose slot this could be"));
+    capabilityEffect(d, x, p, ctx, ownerOf(() => (named as Type | null) ?? ctx.on ?? bad("name", p, "there is no primary item whose slot this could be"), { kind: "subject", name: typeof of === "string" ? of : "on" }));
     return { what: `the capability effect at ${p}`, successive: false };
   }
   const s = subject(d, of, at(path, "of"), ctx, false);
@@ -74,7 +74,7 @@ export function effect(d: Defining, v: unknown, path: string, ctx: Ctx, later: b
    * commit knows it, the commit checks the value against the slot.
    */
   const source = (from: unknown, fp: string, to: FieldType): void => {
-    const read = operand(d, from, fp, ctx, () => s, false, true);
+    const read = operand(d, from, fp, ctx, ownerOf(() => s, { kind: "subject", name: sk }), false, true);
     if (!read) return;
     if (read.form === "none") bad("shape", fp, "a source that is none is never applied; null empties a slot");
     // Section 6.2: the bytes of a detached text are kept for the field that names it. So a slot for one is set only from a
@@ -164,7 +164,7 @@ export function effect(d: Defining, v: unknown, path: string, ctx: Ctx, later: b
       subject(d, r["of"], at(p, "of"), ctx, false);
       /** A list of members, or a value whose type only the commit knows. */
       const members = (v: unknown, lp: string, inner: Ctx) => {
-        const read = operand(d, v, lp, inner, () => s, false);
+        const read = operand(d, v, lp, inner, ownerOf(() => s, { kind: "subject", name: sk }), false);
         if (read?.type && !(read.type.type === "list" && read.type.of.type === "member")) bad("name", lp, "names no list of members");
       };
       // Section 6.7: further sources. The result is the union of the base attribution and every source.
@@ -177,12 +177,12 @@ export function effect(d: Defining, v: unknown, path: string, ctx: Ctx, later: b
         if (!wo) return;
         if (wk === "each") {
           // A list read from each element of a list, as from each fetched fact that a field names.
-          const read = operand(d, wo["each"], at(wp, "each"), ctx, () => s, false);
+          const read = operand(d, wo["each"], at(wp, "each"), ctx, ownerOf(() => s, { kind: "subject", name: sk }), false);
           const as = str(wo["as"], at(wp, "as"));
           if (as?.includes(".")) { bad("shape", at(wp, "as"), "a dot names a member of a record element, so the name has none"); return; }
           if (!read || as === null) return;
           if (read.type !== null && read.type.type !== "list") { bad("name", at(wp, "each"), "names no list"); return; }
-          members(wo["list"], at(wp, "list"), { ...ctx, elements: new Map(ctx.elements).set(as, read.type?.type === "list" ? read.type.of : null) });
+          members(wo["list"], at(wp, "list"), bindElement(ctx, as, read.type?.type === "list" ? read.type.of : null, at(wp, "as")));
         } else if (wk === "list") members(wo["list"], at(wp, "list"), ctx);
         else {
           // A party slot of each local item that a range covers, or of another subject.

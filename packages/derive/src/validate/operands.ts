@@ -12,7 +12,7 @@
 import type { FieldType } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { isObject } from "../values.ts";
-import { onSubject, subject, type Ctx, type Defining, type Type } from "./context.ts";
+import { onSubject, subject, type Ctx, type Defining, type ReadOwner, type Type } from "./context.ts";
 import { carried } from "./capability.ts";
 import { assignable, memberType } from "./fields.ts";
 import { at, type Rec } from "./shape.ts";
@@ -49,7 +49,7 @@ const POSITION: FieldType = { type: "int", min: 0, max: Number.MAX_SAFE_INTEGER 
  * of a send. Every other place is refused one, as `redactable-read`
  * (section 6.2). Null: it is not an operand here, which is reported.
  */
-export function operand(d: Defining, v: unknown, path: string, ctx: Ctx, owner: () => Type | null, guard = true, detached = false): Read | null {
+export function operand(d: Defining, v: unknown, path: string, ctx: Ctx, owner: ReadOwner, guard = true, detached = false): Read | null {
   const { bad, rec, str } = d;
   const f = d.form(v, path, OPERANDS, ["of", "part"]);
   if (!f) return null;

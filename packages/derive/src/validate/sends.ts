@@ -4,7 +4,7 @@ import type { Notify } from "@generalbusiness/dap-contract";
 import type { FieldType } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isPlatformDefinition, isScopeKind } from "@generalbusiness/dap-bytes";
 import { isObject, own } from "../values.ts";
-import { mark, marked, subject, type ClauseSet, type Ctx, type Defining, type PendingWork, type Type } from "./context.ts";
+import { mark, marked, ownerOf, subject, type ClauseSet, type Ctx, type Defining, type PendingWork, type Type } from "./context.ts";
 import { effects } from "./effects.ts";
 import { guards, range } from "./guards.ts";
 import { clauseObserves } from "./observes.ts";
@@ -52,7 +52,7 @@ function source(d: Defining, v: unknown, path: string, ctx: Ctx, field: boolean,
     }
     return { type: null };
   }
-  const read = operand(d, v, path, ctx, () => ctx.on ?? bad("name", path, "there is no primary item whose slot this could be"), false, true);
+  const read = operand(d, v, path, ctx, ownerOf(() => ctx.on ?? bad("name", path, "there is no primary item whose slot this could be"), { kind: "subject", name: "on" }), false, true);
   if (read && isDetached(read.type) && !lane) return redactable();
   return read && { type: read.type };
 }
@@ -185,7 +185,7 @@ export function sends(d: Defining, v: unknown, path: string, ctx: Ctx, top: Rec,
       const written = each && isObject(top["items"]) ? own(top["items"], each.type.name) : null;
       const max = !each ? 1 : isObject(written) && typeof written["max"] === "number" ? written["max"] : Infinity;
       if (each && (!each.live || max > bounds.fanOut)) bad("fan-out-unbounded", at(p, "each"), `a fan-out reads live items only, of a type whose max is at most ${bounds.fanOut}`);
-      const within: Ctx = each ? { ...ctx, each: each.type } : ctx;
+      const within: Ctx = each ? { ...ctx, each: each.type, eachPath: at(p, "each") } : ctx;
       const to = source(d, r["to"], at(p, "to"), within, false);
       if (r["to"] === "self" || (to?.type && to.type.type !== "scope")) bad("name", at(p, "to"), "names nothing that holds a scope");
       const item = source(d, r["item"], at(p, "item"), within, false);

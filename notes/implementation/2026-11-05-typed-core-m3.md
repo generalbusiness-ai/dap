@@ -1,6 +1,7 @@
 # Replace structural clock traversals
 
-Status: implementation preparation. Production derive source remains unchanged.
+Status: implementation in progress. The validator now carries owner and binder
+identities. Production clock analysis and its callers remain unchanged.
 Request `21d8e638e266295ff7f0a39a5718185b4cb0cd94` and promise
 `287adf75f90ab89d086f62c047c3544fa2f4bcac` own M3 under scheduling request
 `e99550e9`. Planner ruling `3b239919`, step 5, permits M3 while an independent
@@ -88,6 +89,23 @@ object. `runClause` selects a result container and clause name. Bind structural
 roots to those validated contexts. Keep future clauses outside the sending
 body's clock root, including clauses attached to platform send marks.
 
+## Intermediate validator checks
+
+The [foundation manifest](evidence/2026-11-06-m3-foundation.manifest.json)
+seals 33 files, including exact input patches at base `c5dc2502`. Its SHA256 is
+`f91be15144c5ecb86a305a981522e92f9e9ffa00b29903a3e0681b878d61ed68`.
+The source compiler passes after restoring a missing `Type` import. The test
+compiler then identifies one direct operand fixture whose owner lacks identity.
+That fixture now supplies the owner and lexical binding explicitly, and the
+test compiler passes. Both earlier failures remain recorded.
+
+The complete existing `forms-fields`, `forms-guards`, and `fixed-slot-index`
+owners pass all fourteen cases. Their expected judgments and assertions stay
+unchanged. The source patch stays unchanged during that run. These checks cover
+the intermediate context refactor; they establish no clock cutover or general
+metadata coverage. The complete Operand and EntryPart descriptors, structural
+visitor, two production caller changes, and cutover witnesses remain unfinished.
+
 ## Prove the production cutover
 
 Use public clock-behind judgments, or clause `judgesTime` where that is the
@@ -105,6 +123,6 @@ full `Ran` values, ordering, prepared inputs, refusal selection and
 runtime/replay behavior. Change no Native definition, grant, wire format,
 provider, scheduler, authentication, persistence or dependency.
 
-Focused checks and a complete frozen-head gate remain pending. No
-production cutover, deployment or acceptance follows from this preparation.
+The complete M3 focused checks and frozen-head gate remain pending. The
+intermediate checks establish no production cutover, deployment, or acceptance.
 The planner deploys M3 after review. Re-estimate M4–M8 from observed M3 work.
