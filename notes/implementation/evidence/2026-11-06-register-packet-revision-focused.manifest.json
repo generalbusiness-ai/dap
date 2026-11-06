@@ -1,0 +1,168 @@
+{
+  "version": 1,
+  "sourceHead": "1e7dfa84bff844e6017071297614de4fd659bc16",
+  "sourceTree": "c3811848dfe53de3da1a8712e7ecad28ea06ac92",
+  "qualification": "Synthetic renderer and production policy checks only. First attempt failed because the probe expected the wrong refusal message; corrected probe also uses the actual misconfigured parser tag. Both attempts retain exact inputs and output; no production edit occurred between them. No live service, Native birth, credential, deployment, or acceptance.",
+  "fileCount": 29,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-register-packet-revision-focused",
+      "fileCount": 14,
+      "actualExit": 1,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1012,
+          "sha256": "87a1a0e3e5bed9a14f2b668058e2050265bd45893d6bdcf349129ab47ebabcb6"
+        },
+        {
+          "path": "after.json",
+          "bytes": 211,
+          "sha256": "4e6df2af0b693a05bbf330de82f8f45f0eeefbf39a1efb17ee36b101e33e5888"
+        },
+        {
+          "path": "before.json",
+          "bytes": 211,
+          "sha256": "4e6df2af0b693a05bbf330de82f8f45f0eeefbf39a1efb17ee36b101e33e5888"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 1710,
+          "sha256": "8e0e6a0e1b8c20ec2ae0b712d3c8a058fff19e461bdd82093f623d33f455c73f"
+        },
+        {
+          "path": "focused.exit",
+          "bytes": 7,
+          "sha256": "0c6868c2c44f053619cef1cc383e1d530743b574ca192ace9168a9ccf46a86e3"
+        },
+        {
+          "path": "focused.log",
+          "bytes": 1869,
+          "sha256": "e3ebf32ffbc62f484dd9e7ba65f94dcdebb7ae1f842e01b672c6b1407f664597"
+        },
+        {
+          "path": "install.json",
+          "bytes": 2807,
+          "sha256": "9ead948996f188d04e6138bd881f2945ae52b5a7ac49b0b0b9c1636f678ed198"
+        },
+        {
+          "path": "install.log",
+          "bytes": 1364,
+          "sha256": "5ed94d1e58aacc3c9a2f1471e5bba242195cd63b4dae6a4efa2cd61a1df67a6d"
+        },
+        {
+          "path": "offer.json",
+          "bytes": 2807,
+          "sha256": "64b4bcf25ad160d3453b3fa6cfc763581459bd88dc36444e81006a345dde391a"
+        },
+        {
+          "path": "offer.log",
+          "bytes": 1389,
+          "sha256": "7dbb532fa73d93d2a2b9bed5731b5c986a5a0dbe8f4264c7954d227b6b7c89a1"
+        },
+        {
+          "path": "probe.mjs",
+          "bytes": 4226,
+          "sha256": "002d944a19e81dfc47aa0f51c0f4664c21e588e6b41d83cbe028f38310a4289c"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 590,
+          "sha256": "17c5028f72a96d7508385ba87933f93b687f6ce9ed1c0a87cc033efc6dd27ecf"
+        },
+        {
+          "path": "rollback.json",
+          "bytes": 2807,
+          "sha256": "731eebbe1e146ab1c22e4b08c192b79a791f7f568acf609d355a6d719056e045"
+        },
+        {
+          "path": "rollback.log",
+          "bytes": 1395,
+          "sha256": "da0b35d9e8146ff24c985293c283f68ecbcf7e2ae1451c55c1dc7e889482db62"
+        }
+      ]
+    },
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-06-register-packet-revision-focused-2",
+      "fileCount": 15,
+      "actualExit": 0,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1091,
+          "sha256": "1167686a15e75f6be04dfd1ae9f62bd9d1a1bac8bd7362aaa29cf18079b833ca"
+        },
+        {
+          "path": "after.json",
+          "bytes": 211,
+          "sha256": "4e6df2af0b693a05bbf330de82f8f45f0eeefbf39a1efb17ee36b101e33e5888"
+        },
+        {
+          "path": "before.json",
+          "bytes": 211,
+          "sha256": "4e6df2af0b693a05bbf330de82f8f45f0eeefbf39a1efb17ee36b101e33e5888"
+        },
+        {
+          "path": "driver.py",
+          "bytes": 1712,
+          "sha256": "13f9eafab266f1b77a498a41e9aeb07b93916398df3a72bf1341bce730089d50"
+        },
+        {
+          "path": "focused.exit",
+          "bytes": 7,
+          "sha256": "28d3b9e880a77975493dc7e359144c0295a4f694cfe0af4f928c22307bc5c320"
+        },
+        {
+          "path": "focused.log",
+          "bytes": 400,
+          "sha256": "5897b880b31da5f2d85af3eada9b9e48c05bb933d4e8ce868fd99c0732923509"
+        },
+        {
+          "path": "install.json",
+          "bytes": 2807,
+          "sha256": "9ead948996f188d04e6138bd881f2945ae52b5a7ac49b0b0b9c1636f678ed198"
+        },
+        {
+          "path": "install.log",
+          "bytes": 1366,
+          "sha256": "3f0dc3ffbb390ba9085d99da4a8b4f67364229bac2ed236e31728ff7e02a5aef"
+        },
+        {
+          "path": "offer.json",
+          "bytes": 2807,
+          "sha256": "64b4bcf25ad160d3453b3fa6cfc763581459bd88dc36444e81006a345dde391a"
+        },
+        {
+          "path": "offer.log",
+          "bytes": 1391,
+          "sha256": "b519e27225bde821d0bf283e11efee333f2477fd2165621d73f56139608bc16c"
+        },
+        {
+          "path": "probe.mjs",
+          "bytes": 4251,
+          "sha256": "87f6508e3a8a643d6bcfa8e2648fc11ddb4f2f044fe4bcc133e1dc5c9dfe3c4e"
+        },
+        {
+          "path": "receipt.json",
+          "bytes": 594,
+          "sha256": "e7007ae8bf5ed1904e27c562e4d978adbf1582234cbf1d842604897dc1bfc818"
+        },
+        {
+          "path": "results.json",
+          "bytes": 4875,
+          "sha256": "3bc860e3e52bb171307ddb85a788c058511533e412f112087b8cf616f2f20a73"
+        },
+        {
+          "path": "rollback.json",
+          "bytes": 2807,
+          "sha256": "731eebbe1e146ab1c22e4b08c192b79a791f7f568acf609d355a6d719056e045"
+        },
+        {
+          "path": "rollback.log",
+          "bytes": 1397,
+          "sha256": "7050e9d26a6cad9a7fc03e3a322db9a4ef99dffcffeb0a05bd7790bd8064e7f4"
+        }
+      ]
+    }
+  ]
+}

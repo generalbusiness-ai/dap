@@ -202,8 +202,23 @@ It needs fresh focused checks and a complete gate before review.
 
 ## Revision checks
 
-Fresh synthetic renderer checks and the final gate remain pending. No command
-in this revision creates a register, room, token, deployment, or live clone.
+The [revision focused manifest](evidence/2026-11-06-register-packet-revision-focused.manifest.json)
+seals 29 public files at source `1e7dfa84bff844e6017071297614de4fd659bc16`,
+tree `c3811848dfe53de3da1a8712e7ecad28ea06ac92`. Its SHA256 is
+`6c370f1d5541f805acff55519713b3c1b32c539df08041615891894a53c476bc`.
+The corrected probe exits 0. All three CLI profiles render private files and
+pass the production configuration checks. Six altered configurations refuse,
+as do all three unfilled templates. Direct host-policy checks preserve legacy
+singleton selection and refuse conflicting current or configured roots.
+
+The first probe exits 1 because it expected a different refusal message.
+The corrected probe also names the parser's actual `misconfigured` tag.
+Both attempts retain their inputs and outputs. Production bytes stay unchanged
+between attempts. Node's loader deprecation warning remains in the output.
+These synthetic checks prove no Native birth or live provider access.
+
+The final gate remains pending. No command in this revision creates a register,
+room, token, deployment, or live clone.
 
 ## Open limits
 
