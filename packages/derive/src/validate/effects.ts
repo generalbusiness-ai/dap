@@ -189,7 +189,10 @@ export function effect(d: Defining, v: unknown, path: string, ctx: Ctx, later: b
         else {
           // A party slot of each local item that a range covers, or of another subject.
           const from: Type | "scope" | null = wk === "items" ? (range(d, wo["items"], at(wp, "items"), ctx, [], false)?.type ?? null) : subject(d, wo["subject"], at(wp, "subject"), ctx, false);
-          if (from && from !== "scope" && !(typeof wo["slot"] === "string" && from.slots.get(wo["slot"])?.kind === "party")) bad("name", at(wp, "slot"), `names no party slot of ${from.name}`);
+          const slot = from && from !== "scope" && typeof wo["slot"] === "string" ? from.slots.get(wo["slot"]) : undefined;
+          if (from && from !== "scope" && slot?.kind !== "party") bad("name", at(wp, "slot"), `names no party slot of ${from.name}`);
+          if (from && from !== "scope" && slot) recordSlot(d, ctx, at(wp, "slot"), from, wk === "items"
+            ? { kind: "range", path: at(wp, "items"), type: from.name } : { kind: "subject", name: wo["subject"] as string }, wo["slot"] as string, slot, "read");
         }
       });
       return sets(r["slot"]);
@@ -202,6 +205,7 @@ export function effect(d: Defining, v: unknown, path: string, ctx: Ctx, later: b
       if (!r) return null;
       const matched = typeof r["slot"] === "string" ? s.slots.get(r["slot"]) : undefined;
       if (matched?.kind !== "value" || !isDetached(matched.type)) return bad("name", p, `names no value slot of ${s.name} that holds a detached text`);
+      recordSlot(d, ctx, at(p, "slot"), s, { kind: "subject", name: sk }, r["slot"] as string, matched, "redact");
       if (!ctx.signer || later) bad("shape", p, "a redaction is an effect of an act: its entry records who removed the text, and under which grant");
       return { what: `the texts of slot ${String(r["slot"])} of ${sk}`, successive: false };
     }

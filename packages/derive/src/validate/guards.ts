@@ -6,7 +6,7 @@ import { capabilityGuard } from "./capability.ts";
 import { bindElement, mark, marked, onSubject, ownerOf, subject, type Ctx, type Defining, type ReadOwner, type Type } from "./context.ts";
 import { fieldOf, isDetached, operand, type Read } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
-import { recordField, recordRange, recordSlot } from "../program/reads.ts";
+import { recordField, recordForeignField, recordRange, recordSlot } from "../program/reads.ts";
 
 const GUARDS = ["state", "signer", "notIn", "set", "unset", "equals", "differs", "some", "none", "count", "every", "fact", "before", "after", "rule", "each", "has", "anyOf", "distinct", "sameSet", "capability"];
 
@@ -192,7 +192,13 @@ export function guard(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: 
       // `a` is a field of the named entry's intent or message, which this definition cannot resolve; `b` is read in this act.
       list(r["where"] ?? [], at(p, "where"), bounds.guards).forEach((w, i) => {
         const wo = rec(w, at(at(p, "where"), i), ["equals"]);
-        if (wo) pair(wo["equals"], at(at(p, "where"), i), (a, ap) => (isObject(a) && Object.keys(a).length === 1 && typeof a["field"] === "string" ? null : bad("shape", ap, "must be a field of the entry's intent or message")));
+        if (wo) pair(wo["equals"], at(at(p, "where"), i), (a, ap) => {
+          if (isObject(a) && Object.keys(a).length === 1 && typeof a["field"] === "string") {
+            recordForeignField(d, ctx, ap, by[1] as string, a["field"]);
+            return null;
+          }
+          return bad("shape", ap, "must be a field of the entry's intent or message");
+        });
       });
       break;
     }

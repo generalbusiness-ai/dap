@@ -7,8 +7,10 @@ import { shapes } from "../src/validate/shape.ts";
 import { resolvedReads } from "../src/program/reads.ts";
 import { validateDefinition } from "../src/validate/index.ts";
 import { asks } from "./definition-corpus/forms-operand-data.ts";
-import { small } from "./definition-corpus/fixture-data.ts";
+import { notes, small } from "./definition-corpus/fixture-data.ts";
 import { jobs } from "./definition-corpus/forms-guards-data.ts";
+import { gate } from "./definition-corpus/marks-data.ts";
+import { capabilityStagingData } from "./definition-corpus/capability-staging-data.ts";
 
 function fixture() {
   const bounds = structuredClone(PROPOSED_BOUNDS);
@@ -151,4 +153,46 @@ test("implicit guard reads retain the chosen field or slot, inherited subject, r
   const range = resolvedReads(ranges.definition)!.ranges.find(read => read.path === "acts.merge.guards.0.each.guards.0.none");
   expect(range).toMatchObject({ states: ["failed"], subject: { type: "job", identity: { kind: "range", path: "acts.merge.guards.0.each.guards.0.none", type: "job" } } });
   expect([Object.isFrozen(range), Object.isFrozen(range?.states), Object.isFrozen(reads.slots)]).toEqual([true, true, true]);
+});
+
+test("foreign fields, attribution sources, collection slots, attention and redaction retain their actual owners", () => {
+  const input = structuredClone(small);
+  input.acts["cite"]!.fields["performer"] = { type: "text", max: 9, required: false };
+  const edit = input.acts["edit"]!;
+  edit.effects = [...edit.effects, { attribute: { slot: "readers", of: "on", with: [
+    { subject: "also.other", slot: "owner" }, { items: { type: "note", states: ["draft"] }, slot: "owner" },
+  ] } }];
+  edit.sends = [{ tell: { to: { slot: "peer" }, message: "collected", fields: {
+    rows: { collect: { items: { type: "note", states: ["draft"] }, fields: { body: "text", item: "item", state: "state" } } },
+  }, result: {} } }];
+  edit.attention = [{ notify: { slot: "owner", of: "also.other", when: "before", reason: "check" } }];
+  const checked = validateDefinition(input, PROPOSED_BOUNDS);
+  if (!checked.ok) return expect.fail(JSON.stringify(checked.problems));
+  const reads = resolvedReads(checked.definition)!;
+  expect(reads.foreignFields.find(read => read.path === "acts.cite.guards.1.fact.where.0.a")).toMatchObject({ factField: "proof", name: "performer", type: { kind: "unknown" } });
+  expect(reads.slots.find(read => read.path === "acts.edit.effects.1.attribute.with.0.slot")).toMatchObject({ access: "read", slot: { name: "owner", subject: { identity: { kind: "subject", name: "also.other" } } } });
+  expect(reads.slots.find(read => read.path === "acts.edit.effects.1.attribute.with.1.slot")).toMatchObject({ access: "read", slot: { name: "owner", subject: { identity: { kind: "range", path: "acts.edit.effects.1.attribute.with.1.items", type: "note" } } } });
+  expect(reads.slots.find(read => read.path === "acts.edit.sends.0.tell.fields.rows.collect.fields.body")).toMatchObject({ slot: { name: "text", subject: { identity: { kind: "range", path: "acts.edit.sends.0.tell.fields.rows.collect.items", type: "note" } } } });
+  expect(reads.slots.filter(read => read.path.startsWith("acts.edit.sends.0.tell.fields.rows.collect.fields.")).map(read => read.slot.name)).toEqual(["text"]);
+  expect(reads.slots.find(read => read.path === "acts.edit.attention.0.slot")).toMatchObject({ slot: { name: "owner", subject: { identity: { kind: "subject", name: "also.other" } } } });
+  const redacted = validateDefinition(notes, PROPOSED_BOUNDS);
+  if (!redacted.ok) return expect.fail(JSON.stringify(redacted.problems));
+  expect(resolvedReads(redacted.definition)!.slots.find(read => read.path === "acts.strike.effects.1.redact.slot")).toMatchObject({ access: "redact", slot: { name: "body", kind: "value", type: { kind: "declared", type: { type: "text", detached: true } } } });
+});
+
+test("native marks and capability range slots remain owned evidence rather than inspected hook code", () => {
+  const input = structuredClone(gate), marked = validateDefinition(input, PROPOSED_BOUNDS, undefined, { platform: true });
+  if (!marked.ok) return expect.fail(JSON.stringify(marked.problems));
+  const reads = resolvedReads(marked.definition)!;
+  const guard = input.acts["enter"]!.guards[1]!;
+  if (!("code" in guard)) return expect.fail("expected native guard");
+  guard.row = "changed";
+  expect(reads.marks.find(mark => mark.path === "acts.enter.guards.1")).toMatchObject({ code: "fresh", row: "P14", kind: "guard" });
+  expect([Object.isFrozen(reads.marks), Object.isFrozen(reads.marks[0])]).toEqual([true, true]);
+  const capability = validateDefinition(capabilityStagingData(), PROPOSED_BOUNDS);
+  if (!capability.ok) return expect.fail(JSON.stringify(capability.problems));
+  const capabilityReads = resolvedReads(capability.definition)!;
+  expect(capabilityReads.slots.find(read => read.path === "acts.stage.guards.2.capability.with.earlier.slot")).toMatchObject({ access: "read", slot: { name: "text", subject: { identity: { kind: "range", path: "acts.stage.guards.2.capability.with.earlier.items", type: "note" } } } });
+  expect(capabilityReads.underived).toContainEqual({ path: "acts.stage.guards.2.capability", capability: "git-read@1", form: "guard", name: "ancestry" });
+  expect(Object.isFrozen(capabilityReads.underived)).toBe(true);
 });

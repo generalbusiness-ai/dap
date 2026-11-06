@@ -11,6 +11,7 @@ import { clauseObserves } from "./observes.ts";
 import { isDetached, operand } from "./operands.ts";
 import { at, type Rec } from "./shape.ts";
 import { RECORD_BYTES, stated } from "./sizes.ts";
+import { recordSlot } from "../program/reads.ts";
 
 /**
  * A range that a send reads whole: the items of a fan-out, and of a
@@ -49,6 +50,9 @@ function source(d: Defining, v: unknown, path: string, ctx: Ctx, field: boolean,
     for (const [name, member] of entries(r["fields"], at(at(path, "collect"), "fields"), bounds.sendFields)) {
       if (items && !(member === "item" || member === "state" || (typeof member === "string" && items.type.slots.has(member)))) bad("name", at(at(at(path, "collect"), "fields"), name), `is item, state or a slot of ${items.type.name}`);
       if (!lane && items && typeof member === "string" && isDetached(items.type.slots.get(member)?.type)) redactable();
+      const slot = items && typeof member === "string" ? items.type.slots.get(member) : undefined;
+      if (items && slot && member !== "item" && member !== "state") recordSlot(d, ctx, at(at(at(path, "collect"), "fields"), name), items.type,
+        { kind: "range", path: at(at(path, "collect"), "items"), type: items.type.name }, member as string, slot, "read");
     }
     return { type: null };
   }
@@ -252,6 +256,8 @@ export function attention(d: Defining, v: unknown, path: string, ctx: Ctx): numb
     const slot = s && s !== "scope" && typeof r["slot"] === "string" ? s.slots.get(r["slot"]) : undefined;
     if (s && s !== "scope" && slot?.kind !== "party") bad("name", at(path, i), "names no party slot");
     if (slot?.kind === "party") told += slot.type.type === "list" ? slot.type.max : 1;
+    if (s && s !== "scope" && slot) recordSlot(d, ctx, at(at(path, i), "slot"), s,
+      { kind: "subject", name: r["of"] as string }, r["slot"] as string, slot, "read");
     if (r["when"] !== "before" && r["when"] !== "after") bad("shape", at(path, i), "when is before or after");
     str(r["reason"], at(path, i));
     // A timed entry is always written (section 6.4). A condition that is not completed would leave it not judged, so a timed rule's notice has none.

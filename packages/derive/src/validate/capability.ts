@@ -21,6 +21,7 @@ import { operand } from "./operands.ts";
 import { at } from "./shape.ts";
 import { nativeLicense } from "./native-capacity.ts";
 import { deviceCommandOpen } from "./device-command.ts";
+import { recordSlot } from "../program/reads.ts";
 
 /**
  * One form of a definition that this package does not derive by itself,
@@ -84,6 +85,9 @@ export function capabilityGuard(d: Defining, x: unknown, p: string, ctx: Ctx, it
       const e = rec(arg, ap, ["items", "slot"]);
       const items = e && range(d, e["items"], at(ap, "items"), ctx);
       if (items && !(typeof e["slot"] === "string" && items.type.slots.has(e["slot"]))) bad("name", at(ap, "slot"), `names no slot of ${items.type.name}`);
+      const slot = items && e && typeof e["slot"] === "string" ? items.type.slots.get(e["slot"]) : undefined;
+      if (items && slot) recordSlot(d, ctx, at(ap, "slot"), items.type,
+        { kind: "range", path: at(ap, "items"), type: items.type.name }, e!["slot"] as string, slot, "read");
     } else operand(d, arg, ap, ctx, item);
   }
   d.underived.push({ path: p, capability: cap.version, form: "guard", name: String(r["guard"]) });
