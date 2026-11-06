@@ -217,6 +217,41 @@ The [source-owner manifest](evidence/2026-11-06-m3-owner-read-capture.manifest.j
 seals 15 public files. Its SHA-256 is
 `e6d9d8ffadb97e39846732583af7a8ef5a3d38955cdb4381e5de2f9fb802e503`. The complete final M3 checks and gate remain pending.
 
+## Retain separate validator frames
+
+The metadata retains the actual fields, subjects, signer availability, and
+validation context of acts, normal handlers, late replacement bodies, timed
+rules, request result clauses, and native outcome clauses. It copies those
+frames while the existing validator reads them. Future clauses keep separate
+paths and contexts from the bodies that send their requests.
+
+A late handler rebuilds its replacement object at runtime. The new witness
+checks that the rebuilt objects differ while their declared effect array stays
+shared. The future graph lookup must account for this branch; object identity
+alone cannot identify every runtime body. The witness also checks all six frame
+kinds, native send and outcome clauses, and ownership after input mutation.
+
+Native type marks now have an explicit `native` metadata variant. The validator
+historically stores these marks in its `FieldType` table; the representation
+retains that actual resolution without calling it a concrete type. This change
+adds no admission decision or production execution route.
+
+Both compilers and all 82 cases in six complete selected owners pass at
+checkpoint `eefb1a0b`, tree `d9b9595c`. The input patch applied to base
+`2d39ffe1` equals that committed diff. The actual files are `program-reads`,
+`late`, `late-reservation-identity`, `forms-handlers`, `forms-marks`, and `timed`.
+The graph, two clock callers, their controls, and the final M3 gate remain work.
+
+| Check | Command | Exit | Output SHA-256 |
+|---|---|---|---|
+| source-compiler | `node node_modules/typescript/bin/tsc -p packages/derive/tsconfig.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| test-compiler | `node node_modules/typescript/bin/tsc -p packages/derive/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| forms | `node node_modules/vitest/vitest.mjs run --project derive program-reads late forms-handlers forms-marks timed` | 0 | `28a79c66216803f87d8181252463ead83a72e82496c3ce4573c20ba3c0319106` |
+
+The [body-frame manifest](evidence/2026-11-06-m3-body-frames.manifest.json)
+seals 15 public files. Its SHA-256 is
+`52eaf15092f17f8d5fa7fc25a5672066478e9c86c9099cdbea09f33c94ad2a67`. The complete final M3 checks and gate remain pending.
+
 ## Prove the production cutover
 
 Use public clock-behind judgments, or clause `judgesTime` where that is the
