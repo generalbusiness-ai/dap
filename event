@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:94d482f91b6b060fbc84826f5ecf8b813c38cac2","text":"Merge retired a covered predecessor; the successor is at packages/replay/test/world.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:977b919c7b9d240f0fb93155e28f0e6d8a90b32f","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-06-m3-failed-gate.manifest.json."}
