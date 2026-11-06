@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:31e4db36e61fec4804d8f7e7f8d05b8040879bc9","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-06-m3-owner-read-capture.manifest.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:354a2a67a3d8f719f9b4dd5f1fafff7d7b89b770","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/validate/sends.ts."}
