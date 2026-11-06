@@ -1,0 +1,6 @@
+{
+  "REGISTER_SCOPE": "PLANNED_FAILED_CLAIM_REGISTER_SCOPE",
+  "INSTALLED_REGISTER_SCOPES": "[\"sc_b5q435os6lggypatelcltqzvul4kqxzdaaxpmybvwumsmxwj2djq\",\"PLANNED_FAILED_CLAIM_REGISTER_SCOPE\"]",
+  "ARTIFACTS_CONFIG": "{\"registerScope\":\"PLANNED_FAILED_CLAIM_REGISTER_SCOPE\",\"namespace\":\"dap-demo\",\"host\":\"6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net\",\"maxBytes\":10485760,\"credentialIdentity\":\"adapter-attempt\"}",
+  "DEMO_START_CONFIG": "{\"v\":3,\"origin\":\"https://dap-demo.inguz.workers.dev\",\"deployment\":\"dap-demo\",\"register\":{\"kind\":\"register\",\"scope\":\"PLANNED_FAILED_CLAIM_REGISTER_SCOPE\",\"inc\":\"INSTALLED_FAILED_CLAIM_REGISTER_INC\"},\"definition\":\"platform:register@26\"}"
+}

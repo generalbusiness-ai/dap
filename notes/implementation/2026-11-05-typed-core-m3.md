@@ -10,9 +10,9 @@ approval `af97b88e` and receipt `cce90dd3`. Its actual deployment and hosted
 acceptance record remain planner work. O4 takes precedence when browser
 access returns.
 
-The checkout now merges landed main `a4e62771`. Reconciliation against the
-retained preparation found no drift in its eleven derive, contract, and design
-inputs. `judge.ts` retains SHA256
+The checkout now includes packet main `26fc8e0b`. Before M3 source changes,
+reconciliation at host main `a4e62771` found no drift in the preparation's eleven
+derive, contract, and design inputs. `judge.ts` retains SHA256
 `86222a9f4c1ff665232b470384bc82c095c0e1e175636eb8fae7859277f54959`.
 The dependency lock and all fourteen owned workspace links still agree.
 

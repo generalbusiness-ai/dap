@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "sourceHead": "9e2682c54d3c41b285346245ec39f588afc5c6a0",
+  "sourceTree": "a017de41666ca50972cacbc0af77b5dd8d205118",
+  "qualification": "Read-only hosted census, public protocol observations, and synthetic configuration checks. No deployment or live producer. Initial urllib403 retained separately; missing historical root is an operator-record coverage refusal, not a syntax refusal.",
+  "fileCount": 18,
+  "units": [
+    {
+      "directory": "/Users/hughpyle/play/artroom-evidence/2026-11-05-failed-claim-register-focused-evidence",
+      "fileCount": 18,
+      "files": [
+        {
+          "path": "SHA256SUMS",
+          "bytes": 1524,
+          "sha256": "33e76192780b2b59df7685d945db9539c545087607a8a20cb5353c2907b2f50b"
+        },
+        {
+          "path": "census-summary.json",
+          "bytes": 3341,
+          "sha256": "4efbd7b4d3fa61e820c09b550b21702138e35bfa5aa7f9e648abbca22b429f28"
+        },
+        {
+          "path": "checks-production-parsers.log",
+          "bytes": 4301,
+          "sha256": "5a51ad33c6a23daa697dd881b9a0bc6cfb29ad38209161dbddd9239ee88efbfc"
+        },
+        {
+          "path": "checks-render-install.log",
+          "bytes": 1360,
+          "sha256": "31db2369e5e356d02f501b5cadac8c5010f898215035f4657e4d037e236a48ed"
+        },
+        {
+          "path": "checks-render-offer.log",
+          "bytes": 1385,
+          "sha256": "4daaa2bc0809323b9738862a710eb48d8af21b644ec2585859f6d6ebca6b9d60"
+        },
+        {
+          "path": "checks-render-rollback.log",
+          "bytes": 1391,
+          "sha256": "211e1776275e624617bc1abf4ead20205087cf6f5d474a1cd65a6cec31e41263"
+        },
+        {
+          "path": "checks-result.json",
+          "bytes": 5934,
+          "sha256": "d0151d829cbce78f36df83eabfc3e82c662835898db54886931b7c21bc491118"
+        },
+        {
+          "path": "checks-token-observer-help.log",
+          "bytes": 427,
+          "sha256": "21c5b78b6aba9c943af306f4819f39e5b32a82d0dcc9ff56ac91cfe53701a55e"
+        },
+        {
+          "path": "checks-token-observer-wrong-home.log",
+          "bytes": 470,
+          "sha256": "e7a47210729b7da8903157a4fae429babe7be6f9a7a73722f7835fe6d95c1e52"
+        },
+        {
+          "path": "demo-census.log",
+          "bytes": 141,
+          "sha256": "26297bc09312e5205c2e09b0523341c5a096d8abc8c78eb4376bcd73ddf8898a"
+        },
+        {
+          "path": "demo-current-offer.json",
+          "bytes": 761,
+          "sha256": "ae730c29d3f913d428b8c55a04779130061cee4e24c2b885b05475ffa78a54bb"
+        },
+        {
+          "path": "demo-health.json",
+          "bytes": 469,
+          "sha256": "7e98dbfa81274f702bfb07306ebde7838238fde34571511cbe03e2679bf54332"
+        },
+        {
+          "path": "grow-census.log",
+          "bytes": 140,
+          "sha256": "d85fc92b4e064b7d58c89d9a0c0b73ba4282acb7f63477362b2ed46e94d23760"
+        },
+        {
+          "path": "lending-census.log",
+          "bytes": 139,
+          "sha256": "118d4157a1871fc9d88aa85e6f0cd4f8b2a3414d065999a52d51a48e27fc9d99"
+        },
+        {
+          "path": "private-retention.json",
+          "bytes": 870,
+          "sha256": "1d5f4fc8d79b19e872fa6f9e547b82bfbfdaadea83ec432f5306ff8d15a22581"
+        },
+        {
+          "path": "public-probe-initial-failure.json",
+          "bytes": 305,
+          "sha256": "a8a33671fc03373557ec885008959c76e588f87dc98995fafe2308464a4b733e"
+        },
+        {
+          "path": "sealing-driver.py",
+          "bytes": 5918,
+          "sha256": "403f5e345ca78bf4d0ac960da843a6e65fdff50e3536ef3b2ad720e195497e81"
+        },
+        {
+          "path": "source-identity.json",
+          "bytes": 1719,
+          "sha256": "e8374fabf45b5667c1ad72abae9416a35e9d6146e11bf2eed9041359528eea29"
+        }
+      ]
+    }
+  ]
+}

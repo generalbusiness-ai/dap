@@ -1,0 +1,6 @@
+{
+  "REGISTER_SCOPE": "sc_b5q435os6lggypatelcltqzvul4kqxzdaaxpmybvwumsmxwj2djq",
+  "ARTIFACTS_CONFIG": "{\"registerScope\":\"sc_b5q435os6lggypatelcltqzvul4kqxzdaaxpmybvwumsmxwj2djq\",\"namespace\":\"dap-demo\",\"host\":\"6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net\",\"maxBytes\":10485760,\"credentialIdentity\":\"adapter-attempt\"}",
+  "DEMO_START_CONFIG": "{\"v\":3,\"origin\":\"https://dap-demo.inguz.workers.dev\",\"deployment\":\"dap-demo\",\"register\":{\"inc\":\"in_rjfrmifznpi65vm6y2kbc36xpi\",\"kind\":\"register\",\"scope\":\"sc_b5q435os6lggypatelcltqzvul4kqxzdaaxpmybvwumsmxwj2djq\"},\"definition\":\"platform:register@17\"}",
+  "INSTALLED_REGISTER_SCOPES": "[\"sc_b5q435os6lggypatelcltqzvul4kqxzdaaxpmybvwumsmxwj2djq\",\"PLANNED_FAILED_CLAIM_REGISTER_SCOPE\"]"
+}
