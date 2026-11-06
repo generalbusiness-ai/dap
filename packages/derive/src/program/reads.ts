@@ -129,13 +129,15 @@ export function recordSubject(d: Defining, ctx: Ctx, path: string, type: Type | 
   const read = Object.freeze({ path, context: contextOf(d, ctx), subject: type === "scope" ? "scope" as const : subjectRead(type, { kind: "subject", name }) });
   collection(d).subjects.push(read); recordResolution(d, "subjects", read);
 }
-export function recordSlot(d: Defining, ctx: Ctx, path: string, type: Type, identity: SubjectRead["identity"], name: string, slot: Slot, access: SlotResolution["access"]): void {
+export function recordSlot(d: Defining, ctx: Ctx, path: string, type: Type, identity: SubjectRead["identity"], name: string, slot: Slot, access: SlotResolution["access"]): SlotResolution {
   const read = Object.freeze({ path, context: contextOf(d, ctx), slot: slotRead(subjectRead(type, identity), name, slot), access });
   collection(d).slots.push(read); recordResolution(d, "slots", read);
+  return read;
 }
-export function recordField(d: Defining, ctx: Ctx, path: string, name: string, type: FieldType): void {
+export function recordField(d: Defining, ctx: Ctx, path: string, name: string, type: FieldType): FieldResolution {
   const read = Object.freeze({ path, context: contextOf(d, ctx), name, type: readType(type) });
   collection(d).fields.push(read); recordResolution(d, "fields", read);
+  return read;
 }
 export function recordForeignField(d: Defining, ctx: Ctx, path: string, factField: string, name: string): void {
   const read = Object.freeze({ path, context: contextOf(d, ctx), factField, name, type: unknown });
@@ -152,11 +154,12 @@ export interface ElementBinding {
   readonly type: ReadType;
 }
 /** Keep the binder identity created by the existing lexical validation step. */
-export function recordElementBinding(d: Defining, ctx: Ctx, name: string, type: FieldType | null, path: string): void {
+export function recordElementBinding(d: Defining, ctx: Ctx, name: string, type: FieldType | null, path: string): ElementBinding {
   const identity = ctx.elementIdentities.get(name);
   if (!identity) throw new TypeError("element binder has no lexical identity");
   const binding = Object.freeze({ name, identity, declaration: path, type: readType(type) });
   collection(d).bindings.push(binding); recordResolution(d, "bindings", binding);
+  return binding;
 }
 export interface SubjectRead { readonly identity: OwnerIdentity | { readonly kind: "fan-out"; readonly path: string | null }; readonly type: string; readonly declaration: string }
 export const subjectRead = (type: Type, identity: SubjectRead["identity"]): SubjectRead =>

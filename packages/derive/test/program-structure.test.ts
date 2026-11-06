@@ -2,7 +2,7 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { validateDefinition, type ValidDefinition } from "../src/validate/index.ts";
-import { bodyJudgesClock, bodyStructure, clauseStructure, declaredClockReads, formStructures, structureOf, timedStructure, type StructureNode } from "../src/program/structure.ts";
+import { bodyJudgesClock, bodyStructure, clauseStructure, declaredClockReads, formStructures, guardPlan, structureOf, timedStructure, type BodyStructure, type StructureNode } from "../src/program/structure.ts";
 import { resolvedReads } from "../src/program/reads.ts";
 import { handlerBranch } from "../src/handler-branch.ts";
 import { lower } from "../src/program/lower.ts";
@@ -33,7 +33,12 @@ function clockData(): DeclaredDefinition {
 
 test("the admitted corpus supplies every structural opcode and binds every root to its exact validation", async () => {
   const seen = new Set<string>();
-  const visit = (node: StructureNode) => { seen.add(`${node.category}:${node.op}`); node.children.forEach(visit); };
+  const visit = (definition: ValidDefinition, body: BodyStructure, node: StructureNode) => {
+    seen.add(`${node.category}:${node.op}`);
+    // This checks complete capture, not concrete execution or caller integration.
+    if (node.category === "guard" && node.op !== "native") expect(guardPlan(definition, body, node)?.code.op).toBe(node.op);
+    node.children.forEach(child => visit(definition, body, child));
+  };
   for (const row of definitionCorpus) {
     const checked = validateDefinition(await row.declaration(), row.bounds, row.profiles, row.options);
     if (!checked.ok) return expect.fail(`${row.name}: ${JSON.stringify(checked.problems)}`);
@@ -44,7 +49,7 @@ test("the admitted corpus supplies every structural opcode and binds every root 
     for (const root of graph!.roots) {
       expect(reads.frames.includes(root.frame), row.name).toBe(true);
       expect(root.frame.context.validation, row.name).toBe(graph!.validation);
-      root.nodes.forEach(visit);
+      root.nodes.forEach(node => visit(checked.definition, root, node));
     }
   }
   expect([...seen].sort()).toEqual([

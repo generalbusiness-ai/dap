@@ -4,6 +4,7 @@ import type { Defining } from "../validate/context.ts";
 import type { ValidDefinition } from "../validate/index.ts";
 import type { ElementBinding, FieldResolution, ForeignFieldResolution, FrameRead, OperandRead, RangeResolution, ReadValidation, ResolvedReads, SlotResolution, SubjectResolution } from "./reads.ts";
 import { immutable } from "./model.ts";
+import { mapGuardChildren, type GuardPlan } from "./guard-plan.ts";
 
 type Keys<T> = T extends unknown ? keyof T : never;
 export type GuardOp = Exclude<Keys<Guard>, "of" | "reason" | "ifPresent">;
@@ -66,6 +67,7 @@ export type RootBinding = { readonly kind: "body"; readonly source: object }
 interface PendingNode {
   readonly category: Category; readonly op: Opcode; readonly path: string; readonly data: unknown;
   readonly reads: MutableResolutions; readonly children: PendingNode[]; readonly future: FutureClause[]; source?: ValueSource;
+  guard?: GuardPlan<FormTrace>;
 }
 export interface BodyTrace {
   readonly id: RootIdentity; readonly binding: RootBinding; readonly origin: BodyTrace | null;
@@ -82,6 +84,7 @@ interface Compiled {
 }
 const compiled = new WeakMap<ValidDefinition, Compiled>(), checkedRoots = new WeakSet<BodyStructure>();
 const rootOwners = new WeakMap<BodyStructure, ValidDefinition>();
+const nodeRoots = new WeakMap<StructureNode, BodyStructure>(), guardPlans = new WeakMap<GuardNode, GuardPlan<GuardNode>>();
 function traceOf(d: Defining): Trace {
   let trace = pending.get(d);
   if (!trace) { trace = { roots: [], active: null }; pending.set(d, trace); }
@@ -117,6 +120,11 @@ export function leaveForm(d: Defining, form: FormTrace | null): void {
   if (!form) return;
   if (pending.get(d)?.active !== form.body || form.body.stack.pop() !== form.node) throw new TypeError("unclosed structural form scope");
 }
+export function recordGuardPlan(form: FormTrace | null, plan: GuardPlan<FormTrace>): void {
+  if (!form) return;
+  if (form.node.category !== "guard" || form.node.op !== plan.code.op) throw new TypeError("guard instruction has no matching guard scope");
+  form.node.guard = plan;
+}
 export function recordResolution<K extends keyof ResolutionGroup>(d: Defining, kind: K, value: ResolutionGroup[K][number]): void {
   const body = pending.get(d)?.active;
   if (!body) return;
@@ -139,7 +147,10 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
   if (!trace) return;
   if (trace.active !== null) throw new TypeError("unclosed definition structure");
   const bindings: { source: object; node: StructureNode }[] = [];
+  const ownedNodes = new WeakMap<PendingNode, StructureNode>();
   const nodeOf = (node: PendingNode): StructureNode => {
+    const existing = ownedNodes.get(node);
+    if (existing) return existing;
     const data = immutable(node.data), children = Object.freeze(node.children.map(nodeOf));
     if (node.category === "effect" && node.op === "value" && !node.source) throw new TypeError("value form has no captured source");
     // Each discriminant came from the existing validator's admitted form branch.
@@ -148,6 +159,12 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
       ...(node.source ? { source: node.source } : {}) }) as StructureNode;
     if (typeof node.data !== "object" || node.data === null) throw new TypeError("structural form has no source object");
     bindings.push({ source: node.data, node: owned });
+    ownedNodes.set(node, owned);
+    if (owned.category === "guard" && node.guard) guardPlans.set(owned, mapGuardChildren(node.guard, trace => {
+      const child = nodeOf(trace.node);
+      if (child.category !== "guard") throw new TypeError("guard instruction has a non-guard child");
+      return child;
+    }));
     return owned;
   };
   const bodies = new WeakMap<object, BodyStructure[]>(), clauses = new WeakMap<object, Map<string, BodyStructure[]>>();
@@ -159,7 +176,10 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
     const body = Object.freeze({ id: root.id, origin: root.origin?.id ?? null, frame: root.frame, nodes: Object.freeze(root.nodes.map(nodeOf)), reads: ownResolutions(root.reads) });
     checkedRoots.add(body);
     rootOwners.set(body, definition);
-    for (const { source, node } of bindings) forms.set(source, Object.freeze([...(forms.get(source) ?? []), Object.freeze({ body, node })]));
+    for (const { source, node } of bindings) {
+      nodeRoots.set(node, body);
+      forms.set(source, Object.freeze([...(forms.get(source) ?? []), Object.freeze({ body, node })]));
+    }
     if (root.binding.kind === "body") {
       const existing = bodies.get(root.binding.source) ?? []; existing.push(body); bodies.set(root.binding.source, existing);
       if (root.frame.kind === "replacement") replacements.push({ source: root.binding.source, body });
@@ -206,6 +226,11 @@ export function clauseStructure(definition: ValidDefinition, owner: object, clau
 export function formStructures(definition: ValidDefinition, body: BodyStructure, source: object): readonly StructureNode[] {
   if (rootOwners.get(body) !== definition) throw new TypeError("body structure belongs to another validation");
   return Object.freeze((compiled.get(definition)?.forms.get(source) ?? []).filter(binding => binding.body === body).map(binding => binding.node));
+}
+/** Unsupported instructions stay explicit until the complete M4 capture reaches its callers. */
+export function guardPlan(definition: ValidDefinition, body: BodyStructure, node: GuardNode): GuardPlan<GuardNode> | null {
+  if (rootOwners.get(body) !== definition || nodeRoots.get(node) !== body) throw new TypeError("guard instruction belongs to another admitted body");
+  return guardPlans.get(node) ?? null;
 }
 
 /** Timed judges pass their exact effect and attention arrays rather than a body object. */
