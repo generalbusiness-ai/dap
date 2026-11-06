@@ -189,6 +189,34 @@ The [implicit-read manifest](evidence/2026-11-06-m3-implicit-read-capture.manife
 seals 15 public files. Its SHA-256 is
 `5cbf14781ecf8267684ca02688b77023cb378efed99443639863cc7af77dae2b`. The complete final M3 checks and gate remain pending.
 
+## Retain foreign fields and source owners
+
+Foreign fields in `fact.where` retain an explicit unknown type and the field
+that names their fact. They do not resolve against a same-named local field.
+Attribution sources, collection fields, attention slots, redaction targets, and
+capability range arguments retain their actual subject or range handles. A
+collection's built-in `item` and `state` projections name no same-named slot.
+
+The admitted metadata also owns frozen copies of native marks and capability
+requirements. These records describe opaque hooks and inspect no hook code.
+The seven descriptor witnesses cover these choices, native mark ownership,
+and capability range slots. They establish no body graph or clock cutover.
+
+Both compilers and all 22 cases in four complete selected owners pass at
+checkpoint `e8207d27`, tree `90560961`. The input patch applied to base
+`ac9045c6` equals that committed diff. The selected owners are `program-reads`,
+`forms-effects`, `forms-sends`, and `forms-capability`.
+
+| Check | Command | Exit | Output SHA-256 |
+|---|---|---|---|
+| source-compiler | `node node_modules/typescript/bin/tsc -p packages/derive/tsconfig.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| test-compiler | `node node_modules/typescript/bin/tsc -p packages/derive/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| forms | `node node_modules/vitest/vitest.mjs run --project derive program-reads forms-effects forms-sends forms-capability` | 0 | `1a526d40d04f0d7b57b5fca6d6ecc45fe4b9aca09c95c434e42e33f1f79ac5b0` |
+
+The [source-owner manifest](evidence/2026-11-06-m3-owner-read-capture.manifest.json)
+seals 15 public files. Its SHA-256 is
+`e6d9d8ffadb97e39846732583af7a8ef5a3d38955cdb4381e5de2f9fb802e503`. The complete final M3 checks and gate remain pending.
+
 ## Prove the production cutover
 
 Use public clock-behind judgments, or clause `judgesTime` where that is the
