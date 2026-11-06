@@ -1,1 +1,1 @@
-{"kind":"promise","text":"Accept request git:sha1…25eb00a: Report the sprint ending 5 November 2026","body":{"branch":"planner/sprint-report-20261105"}}
+{"kind":"artifact","text":"notes/reports/2026-11-05-sprint-report.md at exact 4f1a648afc9bbfba4e1065341ba4de9c2e21b09e on planner/sprint-report-20261105, under promise git:sha1…dc9abb1 on request git:sha1…25eb00a","body":{"commit":"4f1a648afc9bbfba4e1065341ba4de9c2e21b09e","path":"notes/reports/2026-11-05-sprint-report.md"}}
