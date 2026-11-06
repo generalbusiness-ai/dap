@@ -1,11 +1,11 @@
 # Keep host authority for installed registers
 
-Status: adapter, Site and workspace corrections have focused evidence.
-The repeated GitHub 403 came from a scripted fractional expiry, reproduced
-and reported in `de36e7d7`. The fixture repair passes its three-case Native
-owner and test compiler. The corrected final gate passed; new independent exact-head review
-remains pending. Reviews and failed runs below keep their exact
-original heads and limits.
+Status: main `a4e62771c3dc8547b0e0065761df71799242bff6` contains this
+source. Checker approval `dde2c6de` covers candidate `0fb93d74`; merge receipt
+`168243a0` records its landing. The corrected final gate passed after the
+fractional-expiry fixture repair. Reviews and failed runs below retain their
+original heads and limits. The planner deploys after the revised register
+packet lands. Parent `8a8902f3` remains open.
 
 Switching a Worker's current register previously stranded old rooms' Git
 credentials even when `INSTALLED_REGISTER_SCOPES` retained their root.
@@ -81,15 +81,15 @@ owned process group closed.
 The [gate manifest](evidence/2026-11-05-installed-host-roots-gate.manifest.json)
 retains the terminal analysis, checkout identity and complete raw originals.
 Its SHA256 is `78b0f9ea55db59def75be27220c74023fd093a740cf97aa6397edc7256bceffc`. Candidate `b0d3c165` changed only this implementation note and the gate
-manifest after that frozen gate. The Site correction below changes runtime
-and test files and therefore needs a new complete gate. The first gate
+manifest after that frozen gate. The later Site correction changed runtime
+and test files. The final gate below covers those changes. The first gate
 remains failed; this later pass explains no historical Native or archive
 failure. The archive scale owner passed independently, and source
 `64552d40` remains open.
 
 No builder deployment, live root switch,
 room creation, provider token or real Git clone ran. The register packet
-remains unlanded and needs revision and review after this source lands.
+remains unlanded and needs revision and review against this landed source.
 The planner then checks old-room child creation and Git access before a
 new scratch room and the actual clone after its token's hour. Neither
 this source nor its tests close parent `8a8902f3` or historical source
@@ -237,7 +237,8 @@ The witness now checks that its first refused read reached the adapter
 through the real session. Its failure diagnostic records adapter answers,
 clock readings, and custody state and expiry. It excludes plaintext and
 session tokens. No runtime change follows from the unexplained failure.
-A diagnostic full gate must stand on its own before renewed review.
+Diagnostic gate 4 below retained that failure. The later cause report, fixture
+repair, and final gate provide the evidence for renewed review.
 
 The strengthened witness and six related owners passed all 46 cases, and
 the test compiler passed. The [credential diagnostic manifest](evidence/2026-11-05-installed-host-roots-credential-diagnostic.manifest.json)
