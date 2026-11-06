@@ -2,7 +2,7 @@ import { replayHolding, replayChained } from "../../derive/test/definition-corpu
 import { replayReservedSource, replayReservedReceiver, replayQualifiedReceiver } from "../../derive/test/definition-corpus/replay-literals-data.ts";
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Entry, type ObservationUse, type Report } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, textDigest } from "@generalbusiness/dap-bytes";
+import { canonicalize, textDigest } from "@generalbusiness/dap-bytes";
 import { grantFrom, namedBy, observationOf, validateDefinition } from "@generalbusiness/dap-derive";
 import { created, keys, notesDefinition, on, otherLane, t, type Actor, type Ledger } from "@generalbusiness/dap-derive/testing";
 import { C, cap, clean } from "../../derive/test/fixtures-hold.ts";
@@ -13,7 +13,7 @@ import { MemorySource, TRUSTS, platformCode, render, verify, type MemoryScope, t
 import { View } from "../src/view.ts";
 import { Gate, Lane, OWNER, RULES_SCOPE } from "./staging.ts";
 import { VALUE, Weighing } from "./weighing.ts";
-import { entryOf, histories as ledgers, rewrite, served, sourceOf, world, type World } from "./world.ts";
+import { entryOf, histories as ledgers, rewrite, served, sourceOf, unsupportedDefinitionHistory, world, type World } from "./world.ts";
 
 /**
  * The fixture histories were written under the test authority of derive's fixtures, a STAND-IN whose grants hold no freshness
@@ -670,16 +670,14 @@ describe("the rows of `observes`, replayed: the origin, the subject lists, the g
   });
 });
 
-// The input journal is untrusted. This synthetic producer bypasses validation;
+// The input journal is untrusted. This synthetic producer alters retained bytes;
 // its fixture judge/authority is a stand-in, not a runtime admission witness.
 // Invariant: replay never interprets an unsupported durability pin as Recorded.
 test("a well-hashed journal declaring unsupported durability is unsupported at its genesis", async () => {
   for (const name of ["live", "sequenced"] as const) {
     const declared = { ...notesDefinition.declared, level: { name, version: 1 as const } };
-    const unchecked = { ...notesDefinition, declared, digest: definitionDigest(declared) };
-    const L = created(unchecked, {}, `unsupported-${name}`);
-    const history = served(L, [L]);
-    const result = await verify(new MemorySource([history]), { mode: "replay", scope: L.at.scope, ...AS_RECORDED });
+    const history = unsupportedDefinitionHistory(declared, `unsupported-${name}`);
+    const result = await verify(new MemorySource([history]), { mode: "replay", scope: history.scope.scope, ...AS_RECORDED });
     expect([result.report.result, result.report.at?.seq, result.why]).toEqual([
       "unsupported-definition", 0, "the pinned definition does not pass validation under the bounds given: unsupported-definition at level",
     ]);
