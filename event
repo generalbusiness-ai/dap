@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c27b7b03f5a75f70779ede0181e61305c12691ff","text":"Merge retired a covered predecessor; the successor is at packages/replay/test/definition-format.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c647bfb6518bdf97fa929dfa87c890e1a3a85391","text":"Merge retired a covered predecessor; the successor is at notes/implementation/evidence/2026-11-06-m3-implicit-read-capture.manifest.json."}
