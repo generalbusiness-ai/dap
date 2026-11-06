@@ -9,7 +9,7 @@ Old rooms now keep their Git hosting, Sites and workspaces when a Worker
 changes its register. The first slice of the typed derivation core landed,
 and Hugh scheduled the rest. The live Claude and ChatGPT runs did not happen:
 the builder's browser connection stayed unavailable. The workroom was silent
-after 06:39. The cost-of-change review is below.
+for the rest of the sprint after 06:39. The cost-of-change review is below.
 
 ## Story: a failed room creation frees its place
 
@@ -43,8 +43,9 @@ register, so switching dap-grow's register needs that fixed first.
 Hugh scheduled plan 035 in full, overriding the deletion-size gate. Its first
 slice landed (`8b063123`): a typed program for a room's act that can run,
 explain a refusal with the guard's place in the source, and list its inputs.
-Production code still runs the old path. The second migration, which replaces
-the clock checks, is filed and waits behind the register work.
+Production code still runs the old path. The second migration, which changes
+how the code finds a rule's clock dependencies, is filed and waits behind the
+register work.
 
 ## Cost-of-change review
 
@@ -97,7 +98,8 @@ the clock checks, is filed and waits behind the register work.
   unavailable. The member invitation expired unused at 03:05.
 - No register on the new room type exists yet: the packet waits on its
   revision.
-- No workroom act arrived after 06:39, and this report is late.
+- No workroom act arrived from 06:39 until after the sprint closed, and this
+  report is late.
 
 ## Commitments for the sprint ending 6 November, 17:00
 
