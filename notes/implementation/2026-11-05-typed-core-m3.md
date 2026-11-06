@@ -106,6 +106,24 @@ the intermediate context refactor; they establish no clock cutover or general
 metadata coverage. The complete Operand and EntryPart descriptors, structural
 visitor, two production caller changes, and cutover witnesses remain unfinished.
 
+## Resolved-read checkpoint
+
+The validator now returns owned descriptors for all fourteen Operand variants,
+all eleven EntryPart variants, Part projections, and nested `set.item` operands.
+The new `program/reads.ts` model retains base and final types, before/working
+phase, subject identity, slot rules, lexical bindings, and validation identity.
+The structural body graph and the production clock cutover remain unfinished.
+
+Intermediate compiler checks pass. The first new test compile found a missing
+`required` flag in the fixture's record member; the corrected fixture compiles.
+The first targeted descriptor run still has a failing witness. Its raw output
+and exact source copies remain in
+`~/play/artroom-evidence/2026-11-06-m3-resolved-read-checks-2/`.
+This checkpoint pauses descriptor work for the approved register packet landing.
+It claims no descriptor test pass or M3 acceptance. The initial compiler unit
+also retains an explicit limit: it copied the new untracked read-model module
+after compilation; the later test units copy untracked inputs before execution.
+
 ## Prove the production cutover
 
 Use public clock-behind judgments, or clause `judgesTime` where that is the
