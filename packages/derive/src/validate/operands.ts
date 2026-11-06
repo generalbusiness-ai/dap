@@ -12,7 +12,7 @@
 import type { FieldType, FieldValue } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/dap-bytes";
 import { immutable } from "../program/model.ts";
-import { readSite, readType, slotRead, subjectRead, type EntryData, type EntryRead, type EntryWord, type OperandData, type OperandKind, type OperandRead, type PartRead } from "../program/reads.ts";
+import { readSite, readType, recordRead, slotRead, subjectRead, type EntryData, type EntryRead, type EntryWord, type OperandData, type OperandKind, type OperandRead, type PartRead } from "../program/reads.ts";
 import { isObject } from "../values.ts";
 import { onSubject, subject, type Ctx, type Defining, type ReadOwner, type Type } from "./context.ts";
 import { carried } from "./capability.ts";
@@ -211,6 +211,7 @@ export function operand(d: Defining, v: unknown, path: string, ctx: Ctx, owner: 
     projection = read.node;
   }
   const node: OperandRead = Object.freeze({ ...readSite(d, ctx, path, guard, type), ...data, baseType, projection });
+  recordRead(d, node);
   return { form: k, type, open: type === POSITION, fields, slot, node };
 }
 

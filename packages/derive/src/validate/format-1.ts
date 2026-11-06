@@ -25,6 +25,7 @@ import { timedEntryBytes, timedGraph, timedKinds, timedRules } from "./timed.ts"
 import { standingOf } from "./standing.ts";
 import { AmountError } from "../held.ts";
 import type { Profile, ValidateOptions, Validation } from "./index.ts";
+import { bindReads } from "../program/reads.ts";
 
 /** The sole currently supported definition-format binding; not a new format. */
 export const FORMAT_1 = "artroom-definition-1";
@@ -184,7 +185,7 @@ export function validateFormat1(input: unknown, bounds: Bounds, profiles: Readon
   if (problems.length > 0) return { ok: false, problems };
   try {
     const keyed = [...d.types.values()].flatMap((type): [string, readonly string[]][] => (type.indexes ? [[type.name, type.indexes]] : []));
-    return { ok: true, definition: { declared, digest: definitionDigest(declared), timedTypes: [...timedTypes].sort(), holdTypes: [...d.holdTypes].sort(), indexes: d.indexes, ...persistedCapacity, underived: d.underived, marks: d.marks, observing: d.observing, ...(d.ruleInputBytes > 0 ? { ruleInputBytes: d.ruleInputBytes } : {}), ...(reserved ? { reserving: reserved } : {}), ...(standing ? { standing } : {}), ...(keyed.length > 0 ? { keyed: Object.fromEntries(keyed) } : {}) } };
+    return { ok: true, definition: bindReads(d, { declared, digest: definitionDigest(declared), timedTypes: [...timedTypes].sort(), holdTypes: [...d.holdTypes].sort(), indexes: d.indexes, ...persistedCapacity, underived: d.underived, marks: d.marks, observing: d.observing, ...(d.ruleInputBytes > 0 ? { ruleInputBytes: d.ruleInputBytes } : {}), ...(reserved ? { reserving: reserved } : {}), ...(standing ? { standing } : {}), ...(keyed.length > 0 ? { keyed: Object.fromEntries(keyed) } : {}) }) };
   } catch {
     return { ok: false, problems: [{ code: "shape", path: "", message: "has no canonical bytes" }] };
   }

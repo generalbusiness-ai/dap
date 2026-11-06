@@ -1,6 +1,7 @@
 /** Owned data from the validator's resolutions; no name checker or executable fallback. */
 import type { Bounds, FieldType, FieldValue } from "@generalbusiness/dap-contract";
 import type { Ctx, Defining, OwnerIdentity, Slot, Type } from "../validate/context.ts";
+import type { ValidDefinition } from "../validate/index.ts";
 import { immutable, type Phase } from "./model.ts";
 
 export type ReadType = { readonly kind: "declared"; readonly type: FieldType } | { readonly kind: "unknown" };
@@ -10,6 +11,30 @@ export const readType = (type: FieldType | null): ReadType => type === null ? un
 /** Each validator invocation has its own identity, even when declaration digests agree. */
 export interface ReadValidation { readonly bounds: Bounds; readonly definition: string | null; readonly platform: boolean }
 const validations = new WeakMap<Defining, ReadValidation>();
+const captured = new WeakMap<Defining, OperandRead[]>();
+const admitted = new WeakMap<ValidDefinition, ResolvedReads>();
+
+/** A validation result owns its reads; equal declaration digests do not share this evidence. */
+export interface ResolvedReads {
+  readonly validation: ReadValidation;
+  readonly operands: readonly OperandRead[];
+}
+
+/** Called only where the existing operand validator returns its successful resolution. */
+export function recordRead(d: Defining, node: OperandRead): void {
+  const reads = captured.get(d);
+  if (reads) reads.push(node);
+  else captured.set(d, [node]);
+}
+
+/** Attach only after every admission check has succeeded, using the actual returned object. */
+export function bindReads(d: Defining, definition: ValidDefinition): ValidDefinition {
+  admitted.set(definition, Object.freeze({ validation: validation(d), operands: Object.freeze([...(captured.get(d) ?? [])]) }));
+  return definition;
+}
+
+/** No digest cache or reconstruction from caller-supplied declarations. */
+export const resolvedReads = (definition: ValidDefinition): ResolvedReads | null => admitted.get(definition) ?? null;
 function validation(d: Defining): ReadValidation {
   let found = validations.get(d);
   if (!found) {

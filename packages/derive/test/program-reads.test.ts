@@ -4,6 +4,9 @@ import { PROPOSED_BOUNDS, type FieldType, type Operand, type Part } from "@gener
 import { bindElement, naming, ownerOf, type Defining, type Type } from "../src/validate/context.ts";
 import { operand } from "../src/validate/operands.ts";
 import { shapes } from "../src/validate/shape.ts";
+import { resolvedReads } from "../src/program/reads.ts";
+import { validateDefinition } from "../src/validate/index.ts";
+import { asks } from "./definition-corpus/forms-operand-data.ts";
 
 function fixture() {
   const bounds = structuredClone(PROPOSED_BOUNDS);
@@ -93,4 +96,30 @@ test("descriptor ownership survives later mutation of types, bindings, constants
   expect(historical.context.validation.bounds.textBytes).toBe(PROPOSED_BOUNDS.textBytes);
   expect([Object.isFrozen(slot), Object.isFrozen(historical.baseType), Object.isFrozen(literal.op === "const" && literal.value)]).toEqual([true, true, true]);
   expect(slot.context.validation).not.toBe(fixture().read({ slot: "amount" }).node.context.validation);
+});
+
+test("the actual validation result retains its own resolved reads across equal digests and later input mutation", () => {
+  const input = structuredClone(asks), bounds = structuredClone(PROPOSED_BOUNDS);
+  const first = validateDefinition(input, bounds);
+  const otherBounds = validateDefinition(input, { ...bounds, textBytes: bounds.textBytes - 1 });
+  const otherProfiles = validateDefinition(input, bounds, { "restricted@1": {} });
+  if (!first.ok || !otherBounds.ok || !otherProfiles.ok) return expect.fail("all three contexts must admit the fixture");
+  const firstReads = resolvedReads(first.definition)!, secondReads = resolvedReads(otherBounds.definition)!, thirdReads = resolvedReads(otherProfiles.definition)!;
+  expect([first.definition.digest, otherBounds.definition.digest, otherProfiles.definition.digest]).toEqual(Array(3).fill(first.definition.digest));
+  expect(firstReads.validation).not.toBe(secondReads.validation);
+  expect(firstReads.validation).not.toBe(thirdReads.validation);
+  expect(secondReads.validation.bounds.textBytes).toBe(bounds.textBytes - 1);
+  expect(firstReads.operands.every(node => node.context.validation === firstReads.validation)).toBe(true);
+  const field = firstReads.operands.find(node => node.path === "acts.ask.effects.2.value.from");
+  const slot = firstReads.operands.find(node => node.path === "acts.accept.guards.1.equals.b");
+  expect(field).toMatchObject({ op: "field", name: "text", phase: "working", type: { kind: "declared", type: { type: "text", max: 100, required: true } } });
+  expect(slot).toMatchObject({ op: "slot", phase: "before", slot: { name: "termsAt", subject: { identity: { kind: "subject", name: "on" }, type: "ask" } } });
+  const text = input.acts["ask"]!.fields["text"]!;
+  if ("code" in text || text.type !== "text") return expect.fail("expected text field");
+  text.max = 1; bounds.textBytes = 1;
+  expect(field?.type).toEqual({ kind: "declared", type: { type: "text", max: 100, required: true } });
+  expect(firstReads.validation.bounds.textBytes).toBe(PROPOSED_BOUNDS.textBytes);
+  expect([Object.isFrozen(firstReads), Object.isFrozen(firstReads.operands)]).toEqual([true, true]);
+  expect(resolvedReads({ ...first.definition })).toBeNull();
+  expect(validateDefinition({ ...input, genesis: "missing" }, PROPOSED_BOUNDS).ok).toBe(false);
 });
