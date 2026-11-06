@@ -1,12 +1,18 @@
 # Replace structural clock traversals
 
-Status: preparation. Production source remains unchanged. Request
-`21d8e638e266295ff7f0a39a5718185b4cb0cd94` and promise
+Status: implementation preparation. Production derive source remains unchanged.
+Request `21d8e638e266295ff7f0a39a5718185b4cb0cd94` and promise
 `287adf75f90ab89d086f62c047c3544fa2f4bcac` own M3 under scheduling request
-`e99550e9`. Ruling `3b239919` permits this work while host-source review
-`1160f05e` waits. The host source and register packet retain landing
-priority. The starting main is `8b063123`; the isolated dependency clone
-matches its lock file and keeps all fourteen workspace links local.
+`e99550e9`. Planner ruling `3b239919`, step 5, permits M3 while an independent
+review waits. The revised register packet now waits for review `b0d59473` at
+`6756b53c`; it retains landing priority. O4 takes precedence when browser
+access returns.
+
+The checkout now merges landed main `a4e62771`. Reconciliation against the
+retained preparation found no drift in its eleven derive, contract, and design
+inputs. `judge.ts` retains SHA256
+`86222a9f4c1ff665232b470384bc82c095c0e1e175636eb8fae7859277f54959`.
+The dependency lock and all fourteen owned workspace links still agree.
 
 M3 replaces the complete structural clock analysis while concrete
 execution keeps its existing route. The
@@ -61,6 +67,26 @@ M1 expression constructors checked and phase-safe. Unsupported executable
 bodies still select the existing whole-body route before execution. An
 opaque callback that runs the entire legacy interpreter supplies no
 structural coverage.
+
+## Preserve the validator's subject and binder identities
+
+An implicit slot currently reaches `operand` through an `owner` callback that
+returns only an item type. A type alone cannot distinguish two subjects of the
+same type, or a range item from the enclosing subject. Carry the resolved owner
+identity through that boundary before constructing shared operand descriptors.
+Keep the validator's existing decisions and problem paths unchanged.
+
+`Ctx.elements` currently maps a name to its type or unknown. Guard lists,
+attribution, capability arguments, and observation sources create those maps.
+Preserve each lexical binding's declaration path alongside its type, including
+shadowing and record-member projections. Capture an operand's base type before
+its Part projection changes the final read type. Copy and freeze descriptor
+data so later caller mutation cannot change the compiled graph.
+
+The production `derive` callers supply the actual admitted act or handler
+object. `runClause` selects a result container and clause name. Bind structural
+roots to those validated contexts. Keep future clauses outside the sending
+body's clock root, including clauses attached to platform send marks.
 
 ## Prove the production cutover
 
