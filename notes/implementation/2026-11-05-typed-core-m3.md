@@ -252,6 +252,53 @@ The [body-frame manifest](evidence/2026-11-06-m3-body-frames.manifest.json)
 seals 15 public files. Its SHA-256 is
 `52eaf15092f17f8d5fa7fc25a5672066478e9c86c9099cdbea09f33c94ad2a67`. The complete final M3 checks and gate remain pending.
 
+## Record the complete body structure
+
+The existing validator now records typed guard, effect, send, and attention
+nodes as it reads each form. Resolved operands, subjects, slots, fields, foreign
+fields, and ranges attach to the active node. The graph does not infer their
+names or types again. Value sources distinguish clear, resolved read, and the
+commit clock. Native forms retain opaque mark data.
+
+Future result clauses temporarily enter a separate root. Their send retains a
+link to that root, and the clock visitor follows only declared child forms.
+It includes every skipped condition and alternative but excludes those future
+clauses. Historical entry time remains a resolved read. Native actual clock use
+still belongs to the existing runtime; neither production caller has changed.
+
+The graph binds to the exact returned validation object. Aliased act and send
+objects keep distinct origins and kinds. Replacement bodies resolve through
+preserved header references and declared form arrays, since `handlerBranch`
+creates a new object. Data and resolved evidence freeze after successful
+admission; a copied validation result owns no graph. No graph node holds an
+executable callback. Unsupported concrete bodies keep their existing route.
+
+The initial source checkpoint is `70d12b3d`, tree `d919f795`. Both compilers and
+1458 cases in fourteen existing admission/form files pass there. The later
+witness checkpoint is `9f063f18`, tree `b4ce8d52`. Its test compiler and all six
+new graph witnesses pass. One witness checks the whole admitted corpus and all
+37 operator tags; the others assert literal clock sites, future exclusion,
+historical time, alias and replacement/native identities, and ownership.
+
+Each unit retains the patch from base `0aabad6c` and copies its new files before
+checking. The reconstruction proof compares the tracked patch, added blobs,
+and complete changed-path set with its checkpoint. The first unit has the new
+structure module; the second adds the new test file. These are separate runs,
+not one combined case total. The two production callers, public cutover
+witnesses, meaningful controls, and final frozen M3 gate remain pending.
+
+| Check | Command | Exit | Output SHA-256 |
+|---|---|---|---|
+| structure-probe/source-compiler | `node node_modules/typescript/bin/tsc -p packages/derive/tsconfig.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| structure-probe/test-compiler | `node node_modules/typescript/bin/tsc -p packages/derive/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| structure-probe/forms | `node node_modules/vitest/vitest.mjs run --project derive program-reads definition-corpus forms-fields forms-guards forms-effects forms-sends forms-handlers forms-marks forms-capability forms-operand fixed-slot-index late timed` | 0 | `eefdd363059697ee71f39b56f04f3834b4f64aa8c68363f9a145e0015c717305` |
+| structure-witnesses/test-compiler | `node node_modules/typescript/bin/tsc -p packages/derive/tsconfig.test.json` | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
+| structure-witnesses/forms | `node node_modules/vitest/vitest.mjs run --project derive program-structure` | 0 | `20adff3d4c9b6477aa89dfe0afe05bace549aa25b51db3f25468177b169a8c0e` |
+
+The [structure-probe manifest](evidence/2026-11-06-m3-structure-probe.manifest.json) seals 16 public files; SHA-256 `9d4f043a760f46d4510eebcfa1bffc3fbd9538259de6a031ca30f8cae16afab6`.
+
+The [structure-witnesses manifest](evidence/2026-11-06-m3-structure-witnesses.manifest.json) seals 15 public files; SHA-256 `ad05108f0fac5d511396b8f794326b83730d9ac212c937bbe67e4a360e565acc`.
+
 ## Prove the production cutover
 
 Use public clock-behind judgments, or clause `judgesTime` where that is the
