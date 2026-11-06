@@ -212,7 +212,7 @@ function rulesFor(j: Judging, name: string, form: "guard" | "effect", of: string
  * guard does not hold, the refusal is `capability-refused` with the name
  * that the capability gives: `declined` keeps it for the judge.
  */
-export function capabilityGuard(j: Judging, g: Extract<Guard, { capability: unknown }>, item: Item | null): GuardResult {
+export function capabilityGuard(j: Judging, g: Extract<Guard, { capability: unknown }>, item: Item | null, identity: Guard = g): GuardResult {
   const { name, guard, with: written } = g.capability;
   const matched = rulesFor(j, name, "guard", guard);
   if (!matched) return "unavailable";
@@ -233,7 +233,7 @@ export function capabilityGuard(j: Judging, g: Extract<Guard, { capability: unkn
   if (answer === true) return "pass";
   if (typeof answer !== "string") return "unavailable";
   if (!own(matched.declared.guards, guard)?.refusals.includes(answer)) throw new Error(`${matched.version} declares no refusal ${answer} for its guard ${guard}`);
-  (j.declined ??= new Map()).set(g, answer);
+  (j.declined ??= new Map()).set(identity, answer);
   return "fail";
 }
 

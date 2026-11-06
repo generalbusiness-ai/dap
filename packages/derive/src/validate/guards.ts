@@ -1,6 +1,6 @@
 /** Guard forms (scope contract, section 6.5). */
 
-import type { FieldType } from "@generalbusiness/dap-contract";
+import type { FieldType, Subject } from "@generalbusiness/dap-contract";
 import { isObject } from "../values.ts";
 import { capabilityGuard } from "./capability.ts";
 import { bindElement, mark, marked, onSubject, ownerOf, subject, type Ctx, type Defining, type ReadOwner, type Type } from "./context.ts";
@@ -62,13 +62,13 @@ export function range(d: Defining, x: unknown, p: string, ctx: Ctx, more: readon
   const where = clauses(d, r["where"] ?? [], at(p, "where"), ctx, ownerOf(() => t, { kind: "range", path: p, type: t.name }), guard), slots = where.slots;
   if (slots.size > 0 || (Array.isArray(r["where"]) && r["where"].length > 0)) indexes.push({ path: p, type: t.name, slots: [...slots].sort() });
   // Section 6.5: the items of those subjects are left out. A subject of another type could leave nothing out.
-  const except: string[] = [];
+  const except: Subject[] = [];
   if ("except" in r) list(r["except"], at(p, "except"), bounds.also + 1).forEach((s, i) => {
     const named = subject(d, s, at(at(p, "except"), i), ctx, false);
     if (named === null || named === "scope") return;
     if (named.name !== t.name) bad("name", at(at(p, "except"), i), `names no subject of type ${t.name}`);
     else if (ctx.nascent && onSubject(s)) bad("nascent-guard", at(at(p, "except"), i), "the item this entry opens is not in the range yet");
-    except.push(typeof s === "string" ? s : "on");
+    except.push(typeof s === "string" ? s as Subject : "on");
   });
   return { type: t, read: r, program: Object.freeze({ type: t.name, states: Object.freeze([...states]), where: where.plan, except: Object.freeze(except) }) };
 }
@@ -304,7 +304,8 @@ function guardBody(d: Defining, v: unknown, path: string, ctx: Ctx, nesting: Nes
       // A slot with no `of` is a slot of the guard's own subject: only a range has items of its own.
       const where = clauses(d, r["where"] ?? [], at(p, "where"), inner.ctx, item, true);
       const guards = nested(r["guards"] ?? [], at(p, "guards"), inner.ctx);
-      code = { op: k, list: inner.list, binding: inner.binding, where: where.plan, guards };
+      const bound = { list: inner.list, binding: inner.binding, where: where.plan, guards };
+      code = k === "each" ? { op: "each", ...bound } : { op: "has", ...bound };
       break;
     }
     case "anyOf": {

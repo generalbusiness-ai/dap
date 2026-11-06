@@ -85,6 +85,7 @@ interface Compiled {
 const compiled = new WeakMap<ValidDefinition, Compiled>(), checkedRoots = new WeakSet<BodyStructure>();
 const rootOwners = new WeakMap<BodyStructure, ValidDefinition>();
 const nodeRoots = new WeakMap<StructureNode, BodyStructure>(), guardPlans = new WeakMap<GuardNode, GuardPlan<GuardNode>>();
+const guardSources = new WeakMap<GuardNode, object>();
 function traceOf(d: Defining): Trace {
   let trace = pending.get(d);
   if (!trace) { trace = { roots: [], active: null }; pending.set(d, trace); }
@@ -178,6 +179,7 @@ export function finishStructure(d: Defining, definition: ValidDefinition, reads:
     rootOwners.set(body, definition);
     for (const { source, node } of bindings) {
       nodeRoots.set(node, body);
+      if (node.category === "guard") guardSources.set(node, source);
       forms.set(source, Object.freeze([...(forms.get(source) ?? []), Object.freeze({ body, node })]));
     }
     if (root.binding.kind === "body") {
@@ -224,13 +226,23 @@ export function clauseStructure(definition: ValidDefinition, owner: object, clau
 
 /** Resolve occurrences by their source object and admitted body, including lexical aliases. */
 export function formStructures(definition: ValidDefinition, body: BodyStructure, source: object): readonly StructureNode[] {
-  if (rootOwners.get(body) !== definition) throw new TypeError("body structure belongs to another validation");
+  checkedBody(definition, body);
   return Object.freeze((compiled.get(definition)?.forms.get(source) ?? []).filter(binding => binding.body === body).map(binding => binding.node));
+}
+export function checkedBody(definition: ValidDefinition, body: BodyStructure): void {
+  if (rootOwners.get(body) !== definition) throw new TypeError("body structure belongs to another validation");
 }
 /** Unsupported instructions stay explicit until the complete M4 capture reaches its callers. */
 export function guardPlan(definition: ValidDefinition, body: BodyStructure, node: GuardNode): GuardPlan<GuardNode> | null {
   if (rootOwners.get(body) !== definition || nodeRoots.get(node) !== body) throw new TypeError("guard instruction belongs to another admitted body");
   return guardPlans.get(node) ?? null;
+}
+/** Native and capability refusal maps keep the original declared object's identity. */
+export function guardSource(definition: ValidDefinition, body: BodyStructure, node: GuardNode): Guard {
+  if (rootOwners.get(body) !== definition || nodeRoots.get(node) !== body) throw new TypeError("guard source belongs to another admitted body");
+  const source = guardSources.get(node);
+  if (!source) throw new TypeError("guard instruction has no source identity");
+  return source as Guard;
 }
 
 /** Timed judges pass their exact effect and attention arrays rather than a body object. */

@@ -48,7 +48,7 @@ export const holds = (j: Judging, w: Where, item: Item | null): boolean =>
   ("equals" in w ? equal(j, operand(j, w.equals.a, item), operand(j, w.equals.b, item)) : !equal(j, operand(j, w.differs.a, item), operand(j, w.differs.b, item)));
 
 /** The items of the `except` subjects, once each. An unbound subject leaves nothing out. */
-export function excepted(j: Judging, r: Range): Item[] {
+export function excepted(j: Judging, r: Pick<Range, "except">): Item[] {
   const left = new Map<number, Item>();
   for (const s of r.except ?? []) {
     const item = j.subjects.get(s);
@@ -65,9 +65,14 @@ export function excepted(j: Judging, r: Range): Item[] {
  * `unfinished`: the scan stopped at the work limit, and completes nothing.
  */
 export function scan(j: Judging, r: Range, each: (item: Item) => boolean): "all" | "stopped" | "unfinished" {
+  const where = r.where ?? [];
+  return scanItems(j, r, item => where.every(w => holds(j, w, item)), each);
+}
+
+/** Shared paging strategy; callers supply their already selected clause evaluator. */
+export function scanItems(j: Judging, r: Pick<Range, "type" | "states" | "except">, matches: (item: Item) => boolean, each: (item: Item) => boolean): "all" | "stopped" | "unfinished" {
   const states = [...new Set(r.states)];
   const left = new Set(excepted(j, r).map((i) => i.id));
-  const where = r.where ?? [];
   let read = 0;
   let after: number | null = null;
   for (;;) {
@@ -77,7 +82,7 @@ export function scan(j: Judging, r: Range, each: (item: Item) => boolean): "all"
     for (const item of page.items) {
       read++;
       after = item.id;
-      if (left.has(item.id) || !where.every((w) => holds(j, w, item))) continue;
+      if (left.has(item.id) || !matches(item)) continue;
       if (each(item)) return "stopped";
     }
     if (!page.more) return "all";

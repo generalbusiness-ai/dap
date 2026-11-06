@@ -1,5 +1,5 @@
 /** Closed guard instructions captured by admission; child references stay local to the owning graph. */
-import type { FieldType, Guard } from "@generalbusiness/dap-contract";
+import type { FieldType, Guard, Subject } from "@generalbusiness/dap-contract";
 import type { ElementBinding, FieldResolution, OperandRead, SlotRead } from "./reads.ts";
 
 export interface MissingRead { readonly kind: "field" | "presented"; readonly name: string }
@@ -15,7 +15,7 @@ export interface RangePlan {
   readonly type: string;
   readonly states: readonly string[];
   readonly where: readonly WherePlan[];
-  readonly except: readonly string[];
+  readonly except: readonly Subject[];
 }
 export type BoundPlan = { readonly op: "absent" } | { readonly op: "literal"; readonly value: number } | { readonly op: "read"; readonly read: OperandRead };
 export type FactSource = { readonly op: "field"; readonly field: FieldResolution } | { readonly op: "read"; readonly read: OperandRead };
@@ -35,7 +35,7 @@ export type GuardCode<N> =
   | { readonly op: "rule"; readonly rule: string }
   | { readonly op: "capability"; readonly capability: Extract<Guard, { capability: unknown }>["capability"] }
   | { readonly op: "anyOf"; readonly alternatives: readonly (readonly N[])[] }
-  | (BoundList & { readonly op: "each" | "has"; readonly where: readonly WherePlan[]; readonly guards: readonly N[] })
+  | { [K in "each" | "has"]: BoundList & { readonly op: K; readonly where: readonly WherePlan[]; readonly guards: readonly N[] } }["each" | "has"]
   | (BoundList & { readonly op: "distinct"; readonly key: OperandRead })
   | (BoundList & { readonly op: "sameSet"; readonly key: OperandRead; readonly items: RangePlan; readonly match: readonly WherePlan[]; readonly ordered: boolean });
 export interface GuardPlan<N> { readonly site: GuardSite; readonly code: GuardCode<N> }
