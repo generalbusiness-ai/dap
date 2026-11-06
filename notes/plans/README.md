@@ -6,7 +6,7 @@ status line is the first line after its title (see
 
 ## Current
 
-- [035: Give Dap derivations a typed, inspectable program](035-2026-11-04-typed-derivation-core.md): implementation scheduled through M8 by gitseq request `e99550e9bfedcde3bed05bae1d345fcbfe5f7c9a`; M1–M2 in progress. Hugh overrides the deletion-size gate; the other acceptance criteria still apply.
+- [035: Give Dap derivations a typed, inspectable program](035-2026-11-04-typed-derivation-core.md): implementation scheduled through M8 by gitseq request `e99550e9bfedcde3bed05bae1d345fcbfe5f7c9a`; M1–M2 landed and M3 passes its complete source gate, awaiting review. Hugh overrides only the deletion-size gate; the other acceptance criteria still apply.
 
 - [034: Head outcome recovery after two stopped S1 attempts](034-2026-10-31-head-outcome-recovery.md): recovery reader not scheduled; diagnosis and lineage repair first. Its premise depends on the next attempt.
 - [Plan 029: a fork for each hold](029-2026-10-11-artifacts-forks.md): current.
